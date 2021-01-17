@@ -167,18 +167,6 @@ extern int __signbit_double(double x);
 		__isfinite_float(x) :		\
 		__isfinite_double(x))
 
-#define isinf(x) \
-	((sizeof(x) == sizeof(float) ?	\
-		__fpclassify_float(x) :		\
-		__fpclassify_double(x))		\
-	== FP_INFINITE)
-
-#define isnan(x) \
-	((sizeof(x) == sizeof(float) ?	\
-		__fpclassify_float(x) :		\
-		__fpclassify_double(x))		\
-	== FP_NAN)
-
 #define isnormal(x) \
 	((sizeof(x) == sizeof(float) ?	\
 		__fpclassify_float(x) :		\
@@ -278,6 +266,9 @@ extern float scalbnf (float x, int n);
 extern float tgammaf(float x);
 extern float truncf(float x);
 extern int ilogbf(float x);
+extern int finite(double x);
+extern int isinf(double x);
+extern int isnan(double x);
 
 /****************************************************************************/
 

@@ -103,7 +103,9 @@ MATH_LIB := \
 	math_inf.o \
 	math_inff.o \
 	math_init_exit.o \
+	math_isinf.o \
 	math_isfinite.o \
+	math_isnan.o \
 	math_isunordered.o \
 	math_kernel_cos.o \
 	math_kernel_cosf.o \

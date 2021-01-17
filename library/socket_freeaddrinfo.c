@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbstowcs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: socket_freeaddrinfo.c,v 1.0 2021-01-13 10:41:15 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,16 +31,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#if defined(SOCKET_SUPPORT)
 
 /****************************************************************************/
 
-size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
+#ifndef _SOCKET_HEADERS_H
+#include "socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
+
+/****************************************************************************/
+
+void freeaddrinfo(struct addrinfo *ai)
 {
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+	while (ai)
+	{
+		struct addrinfo *cur;
+
+		cur = ai;
+		ai = ai->ai_next;
+
+		if (cur->ai_canonname)
+			free(cur->ai_canonname);
+		free(cur);
+	}
 }
+
+#endif

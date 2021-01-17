@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbstowcs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: wchar_wcsrchr.c,v 1.0 2021-01-15 00:42:27 obarthel Exp $
  *
  * :ts=4
  *
@@ -31,16 +31,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#ifndef _WCHAR_HEADERS_H
+#include "wchar_headers.h"
+#endif /* _WCHAR_HEADERS_H */
 
 /****************************************************************************/
 
-size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
+/* Find the last occurrence of WC in WCS.  */
+wchar_t *
+wcsrchr(const wchar_t *wcs, const wchar_t wc)
 {
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+    const wchar_t *retval = NULL;
+    do
+        if (*wcs == wc)
+            retval = wcs;
+    while (*wcs++ != L'\0');
+    return (wchar_t *)retval;
 }

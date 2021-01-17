@@ -51,6 +51,10 @@
 #include <netinet/in.h>
 #endif /* _NETINET_IN_H */
 
+#ifndef _STDBOOL_H
+#include <stdbool.h>
+#endif
+
 /****************************************************************************/
 
 /* The following is not part of the ISO 'C' (1994) standard. */
@@ -137,6 +141,121 @@ struct protoent
 
 /****************************************************************************/
 
+/* Possible values for `ai_flags' field in `addrinfo' structure.  */
+#ifndef AI_PASSIVE
+# define AI_PASSIVE     0x0001  /* Socket address is intended for `bind'.  */
+#endif
+#ifndef AI_CANONNAME
+# define AI_CANONNAME   0x0002  /* Request for canonical name.  */
+#endif
+#ifndef AI_NUMERICSERV
+# define AI_NUMERICSERV 0x0400  /* Don't use name resolution.  */
+#endif
+#ifndef AI_ADDRCONFIG
+# define AI_ADDRCONFIG  0x0020  /* Use configuration of this host to choose returned address type..  */
+#endif
+#ifndef NI_DGRAM
+# define NI_DGRAM       16      /* Look up UDP service rather than TCP.  */
+#endif
+
+/* Possible flags for getnameinfo.  */
+#ifndef NI_NUMERICHOST
+# define NI_NUMERICHOST 1
+#endif
+#ifndef NI_NUMERICSERV
+# define NI_NUMERICSERV 2
+#endif
+
+#define NI_MAXHOST      1025
+#define NI_MAXSERV      32
+
+#define EAI_NOERROR 0
+
+/* Error values for `getaddrinfo' function.  */
+#ifndef EAI_BADFLAGS
+# define EAI_BADFLAGS     -1    /* Invalid value for `ai_flags' field.  */
+# define EAI_NONAME       -2    /* NAME or SERVICE is unknown.  */
+# define EAI_AGAIN        -3    /* Temporary failure in name resolution.  */
+# define EAI_FAIL         -4    /* Non-recoverable failure in name res.  */
+# define EAI_NODATA       -5    /* No address associated with NAME.  */
+# define EAI_FAMILY       -6    /* `ai_family' not supported.  */
+# define EAI_SOCKTYPE     -7    /* `ai_socktype' not supported.  */
+# define EAI_SERVICE      -8    /* SERVICE not supported for `ai_socktype'.  */
+# define EAI_MEMORY       -10   /* Memory allocation failure.  */
+#endif
+#ifndef EAI_OVERFLOW
+/* Not defined on mingw32. */
+# define EAI_OVERFLOW     -12   /* Argument buffer overflow.  */
+#endif
+#ifndef EAI_ADDRFAMILY
+/* Not defined on mingw32. */
+# define EAI_ADDRFAMILY  -9     /* Address family for NAME not supported.  */
+#endif
+#ifndef EAI_SYSTEM
+/* Not defined on mingw32. */
+# define EAI_SYSTEM       -11   /* System error returned in `errno'.  */
+#endif
+
+#ifdef __USE_GNU
+# ifndef EAI_INPROGRESS
+#  define EAI_INPROGRESS        -100    /* Processing request in progress.  */
+#  define EAI_CANCELED          -101    /* Request canceled.  */
+#  define EAI_NOTCANCELED       -102    /* Request not canceled.  */
+#  define EAI_ALLDONE           -103    /* All requests done.  */
+#  define EAI_INTR              -104    /* Interrupted by a signal.  */
+#  define EAI_IDN_ENCODE        -105    /* IDN encoding failed.  */
+# endif
+#endif
+
+/****************************************************************************/
+
+/* gai_strerror defines */
+static struct {
+    int code;
+    const char *str;
+}
+errors[] = {
+        {EAI_NOERROR,           "No error"},
+        {EAI_ADDRFAMILY,        "Address family for nodename not supported"},
+        {EAI_AGAIN,             "Temporary failure in name resolution"},
+        {EAI_BADFLAGS,          "Invalid value for ai_flags"},
+        {EAI_FAIL,              "Non-recoverable failure in name resolution"},
+        {EAI_FAMILY,            "ai_family not supported"},
+        {EAI_MEMORY,            "Memory allocation failure"},
+        {EAI_NODATA,            "No address associated with nodename"},
+        {EAI_NONAME,            "Nodename nor servname provided, or not known"},
+        {EAI_SERVICE,           "Servname not supported for ai_socktype"},
+        {EAI_SOCKTYPE,          "ai_socktype not supported"},
+        {EAI_SYSTEM,            "System error returned in errno"},
+	{EAI_OVERFLOW, 		"Argument buffer too small" },
+#ifdef EAI_INPROGRESS
+    	{EAI_INPROGRESS, 	"Processing request in progress" },
+    	{EAI_CANCELED, 		"Request canceled" },
+    	{EAI_NOTCANCELED, 	"Request not canceled" },
+    	{EAI_ALLDONE, 		"All requests done" },
+    	{EAI_INTR, 		"Interrupted by a signal" },
+    	{EAI_IDN_ENCODE, 	"Parameter string not correctly encoded" }
+#endif
+        {0,                     NULL},
+};
+
+/****************************************************************************/
+
+/* Structure to contain information about address of a service provider.  */
+struct addrinfo
+{
+  int ai_flags;                 /* Input flags.  */
+  int ai_family;                /* Protocol family for socket.  */
+  int ai_socktype;              /* Socket type.  */
+  int ai_protocol;              /* Protocol for socket.  */
+  socklen_t ai_addrlen;         /* Length of socket address.  */
+  struct sockaddr *ai_addr;     /* Socket address for socket.  */
+  char *ai_canonname;           /* Canonical name for service location.  */
+  struct addrinfo *ai_next;     /* Pointer to next in list.  */
+};
+
+/****************************************************************************/
+
 extern int h_errno;
 
 /****************************************************************************/
@@ -157,6 +276,11 @@ extern struct protoent *getprotobynumber(int proto);
 extern struct servent *getservbyname(const char *name, const char *proto);
 extern struct servent *getservbyport(int port, const char *proto);
 extern const char *hstrerror(int err);
+
+extern const char *gai_strerror(int ecode);
+extern int getaddrinfo (const char *name, const char *service, const struct addrinfo *req, struct addrinfo **pai);
+extern void freeaddrinfo (struct addrinfo *ai);
+extern int getnameinfo(const struct sockaddr *sa, socklen_t salen, char *node, socklen_t nodelen, char *service, socklen_t servicelen, int flags);
 
 #endif /* __NO_NET_API */
 

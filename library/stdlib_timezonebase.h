@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbstowcs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: stdlib_timebasebase.h,v 1.0 2021-01-15 10:06:25 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,16 +31,58 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#ifndef _STDLIB_TIMEZONEBASE_H
+#define _STDLIB_TIMEZONEBASE_H
 
 /****************************************************************************/
 
-size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
-{
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
-}
+#ifndef __NOLIBBASE__
+#define __NOLIBBASE__
+#endif /* __NOLIBBASE__ */
+
+#ifndef __NOGLOBALIFACE__
+#define __NOGLOBALIFACE__
+#endif /* __NOGLOBALIFACE__ */
+
+#include <proto/timezone.h>
+
+/****************************************************************************/
+
+#ifndef _MACROS_H
+#include "macros.h"
+#endif /* _MACROS_H */
+
+/****************************************************************************/
+
+extern struct Library * NOCOMMON __TimezoneBase;
+
+/****************************************************************************/
+
+#if defined(__amigaos4__)
+
+/****************************************************************************/
+
+extern struct TimezoneIFace NOCOMMON * __ITimezone;
+
+/****************************************************************************/
+
+#define DECLARE_TIMEZONEBASE() \
+	struct Library *		UNUSED	TimezoneBase	= __TimezoneBase; \
+	struct TimezoneIFace *			ITimezone		= __ITimezone
+
+/****************************************************************************/
+
+#else
+
+/****************************************************************************/
+
+#define DECLARE_TIMEZONEBASE() \
+	struct Library * TimezoneBase = __TimezoneBase
+
+/****************************************************************************/
+
+#endif /* __amigaos4__ */
+
+/****************************************************************************/
+
+#endif /* _STDLIB_TIMEZONEBASE_H */

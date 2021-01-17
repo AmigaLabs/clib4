@@ -1,5 +1,5 @@
 /*
- * $Id: dirent.h,v 1.7 2006-01-08 12:06:14 obarthel Exp $
+ * $Id: timezone_headers.h,v 1.0 2020-01-15 10:00:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,85 +29,78 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
- *****************************************************************************
- *
- * Documentation and source code for this library, and the most recent library
- * build are available from <http://sourceforge.net/projects/clib2>.
- *
- *****************************************************************************
  */
 
-#ifndef _DIRENT_H
-#define _DIRENT_H
+#ifndef _TIMEZONE_HEADERS_H
+#define _TIMEZONE_HEADERS_H
 
 /****************************************************************************/
 
-/* The following is not part of the ISO 'C' (1994) standard. */
+#ifndef EXEC_LIBRARIES_H
+#include <exec/libraries.h>
+#endif /* EXEC_LIBRARIES_H */
 
 /****************************************************************************/
 
-#ifndef _SYS_TYPES_H
-#include <sys/types.h>
-#endif /* _SYS_TYPES_H */
-
-#ifndef _STDIO_H
-#include <stdio.h>
-#endif /* _STDIO_H */
+#ifndef PROTO_EXEC_H
+#include <proto/exec.h>
+#endif /* PROTO_EXEC_H */
 
 /****************************************************************************/
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include <locale.h>
+#include <limits.h>
+#include <string.h>
+#include <errno.h>
+#include <sys/time.h>
 
 /****************************************************************************/
 
-#define NAME_MAX FILENAME_MAX
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 /****************************************************************************/
 
-typedef long DIR;
+#ifndef _STDLIB_PROFILE_H
+#include "stdlib_profile.h"
+#endif /* _STDLIB_PROFILE_H */
 
 /****************************************************************************/
 
-/* Note: each one of these is exactly one more than the high nibble of
-   the corresponding S_IF* constant defined on sys/stat.h.  If you
-   break that, DTTOIF will stop working!  */
-#define DT_REG      0x1
-#define DT_BLK      0x2
-#define DT_CHR      0x3
-#define DT_DIR      0x4
-#define DT_FIFO     0x5
-#define DT_LABEL    0x6
-#define DT_LNK      0x7
-#define DT_SOCK     0x8
-#define DT_UNKNOWN  0xf
-
-#define DTTOIF(dt)  (((dt) == DT_UNKNOWN ? 0 : (dt) - 1) << 12)
-
-struct dirent {
-    ino_t          d_ino;       /* Inode number */
-    off_t          d_off;       /* Not an offset; see below */
-    unsigned short d_reclen;    /* Length of this record */
-    unsigned char  d_type;      /* Type of file; not supported
-                                  by all filesystem types */
-    char           d_name[NAME_MAX+1]; /* Null-terminated filename */
-};
+#ifndef _TIME_HEADERS_H
+#include "time_headers.h"
+#endif /* _TIME_HEADERS_H */
 
 /****************************************************************************/
 
-extern DIR * opendir(const char * path_name);
-extern struct dirent * readdir(DIR * directory_pointer);
-extern void rewinddir(DIR * directory_pointer);
-extern int closedir(DIR * directory_pointer);
-extern int alphasort(const struct dirent **a, const struct dirent **b);
+#ifndef _MACROS_H
+#include "macros.h"
+#endif /* _MACROS_H */
+
+#ifndef _DEBUG_H
+#include "debug.h"
+#endif /* _DEBUG_H */
+
+#include <time.h>
+
+#if defined(__THREAD_SAFE)
+
 /****************************************************************************/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+extern void __timezone_lock(void);
+extern void __timezone_unlock(void);
 
 /****************************************************************************/
 
-#endif /* _DIRENT_H */
+#else
+
+/****************************************************************************/
+
+#define __timezone_lock()		((void)0)
+#define __timezone_unlock()	((void)0)
+
+/****************************************************************************/
+
+#endif /* __THREAD_SAFE */
+#endif /* _TIMEZONE_HEADERS_H */

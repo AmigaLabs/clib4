@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbstowcs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: math_isfinite.c,v 1.0 2021-01-16 18:15:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,16 +31,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
 
 /****************************************************************************/
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
 
-size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
+
+int 
+finite(double x)
 {
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+	int32 hx;
+	GET_HIGH_WORD(hx,x);
+	return  (int)((uint32)((hx&0x7fffffff)-0x7ff00000)>>31);
 }

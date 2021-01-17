@@ -46,7 +46,8 @@ int poll(struct pollfd *fds, nfds_t nfds, int timeout)
         int rc;
         nfds_t i;
 
-        if ((fds == NULL) && (nfds != 0)) {
+        if ((fds == NULL) && (nfds != 0))
+        {
                 errno = EFAULT;
                 return -1;
         }
@@ -59,79 +60,98 @@ int poll(struct pollfd *fds, nfds_t nfds, int timeout)
         max_fd = 0;
 
         /* compute fd_sets and find largest descriptor */
-        for (i = 0; i < nfds; i++) {
-                if ((fds[i].fd < 0) || (fds[i].fd >= FD_SETSIZE)) {
+        for (i = 0; i < nfds; i++)
+        {
+                if ((fds[i].fd < 0) || (fds[i].fd >= FD_SETSIZE))
+                {
                         fds[i].revents = POLLNVAL;
                         continue;
                 }
 
-                if (fds[i].events & (POLLIN | POLLRDNORM)) {
+                if (fds[i].events & (POLLIN | POLLRDNORM))
+                {
                         FD_SET(fds[i].fd, &rfds);
                 }
-                if (fds[i].events & (POLLOUT | POLLWRNORM | POLLWRBAND)) {
+                if (fds[i].events & (POLLOUT | POLLWRNORM | POLLWRBAND))
+                {
                         FD_SET(fds[i].fd, &wfds);
                 }
-                if (fds[i].events & (POLLPRI | POLLRDBAND)) {
+                if (fds[i].events & (POLLPRI | POLLRDBAND))
+                {
                         FD_SET(fds[i].fd, &efds);
                 }
                 if (fds[i].fd > max_fd &&
                     (fds[i].events & (POLLIN | POLLOUT | POLLPRI |
                                       POLLRDNORM | POLLRDBAND |
-                                      POLLWRNORM | POLLWRBAND))) {
+                                      POLLWRNORM | POLLWRBAND)))
+                {
                         max_fd = fds[i].fd;
                 }
         }
 
-        if (timeout < 0) {
+        if (timeout < 0)
+        {
                 ptv = NULL;
-        } else {
+        }
+        else
+        {
                 ptv = &tv;
-                if (timeout == 0) {
+                if (timeout == 0)
+                {
                         tv.tv_sec = 0;
                         tv.tv_usec = 0;
-                } else {
+                }
+                else
+                {
                         tv.tv_sec = timeout / 1000;
                         tv.tv_usec = (timeout % 1000) * 1000;
                 }
         }
 
         rc = select(max_fd + 1, &rfds, &wfds, &efds, ptv);
-        if (rc < 0) {
+        if (rc < 0)
+        {
                 return -1;
         }
 
-        for (rc = 0, i = 0; i < nfds; i++) {
-                if ((fds[i].fd < 0) || (fds[i].fd >= FD_SETSIZE)) {
+        for (rc = 0, i = 0; i < nfds; i++)
+        {
+                if ((fds[i].fd < 0) || (fds[i].fd >= FD_SETSIZE))
+                {
                         continue;
                 }
 
                 fds[i].revents = 0;
 
-                if (FD_ISSET(fds[i].fd, &rfds)) {
+                if (FD_ISSET(fds[i].fd, &rfds))
+                {
                         int err = errno;
                         int available = 0;
                         int ret;
 
                         /* support for POLLHUP */
                         ret = ioctl(fds[i].fd, FIONREAD, &available);
-                        if ((ret == -1) || (available == 0)) {
+                        if ((ret == -1) || (available == 0))
+                        {
                                 fds[i].revents |= POLLHUP;
-                        } else {
-                                fds[i].revents |= fds[i].events
-                                        & (POLLIN | POLLRDNORM);
+                        }
+                        else
+                        {
+                                fds[i].revents |= fds[i].events & (POLLIN | POLLRDNORM);
                         }
 
                         errno = err;
                 }
-                if (FD_ISSET(fds[i].fd, &wfds)) {
-                        fds[i].revents |= fds[i].events
-                                & (POLLOUT | POLLWRNORM | POLLWRBAND);
+                if (FD_ISSET(fds[i].fd, &wfds))
+                {
+                        fds[i].revents |= fds[i].events & (POLLOUT | POLLWRNORM | POLLWRBAND);
                 }
-                if (FD_ISSET(fds[i].fd, &efds)) {
-                        fds[i].revents |= fds[i].events
-                                & (POLLPRI | POLLRDBAND);
+                if (FD_ISSET(fds[i].fd, &efds))
+                {
+                        fds[i].revents |= fds[i].events & (POLLPRI | POLLRDBAND);
                 }
-                if (fds[i].revents & ~POLLHUP) {
+                if (fds[i].revents & ~POLLHUP)
+                {
                         rc++;
                 }
         }

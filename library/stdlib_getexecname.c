@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbstowcs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: stdlib_getexecname.c,v 1.0 2020-01-13 13:28:26 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,12 +35,14 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
-size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
-{
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+const char *
+getexecname(void) {
+        char pathBuffer[PATH_MAX] = {0};
+        if (GetCliProgramName(pathBuffer, PATH_MAX - 1)) {
+		char *ret = calloc(1, strlen(pathBuffer) + 1);
+		return ret;
+        }
+        else {
+                return "?";
+	}
 }

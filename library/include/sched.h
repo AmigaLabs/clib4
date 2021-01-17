@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbstowcs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: sched.h,v 1.7 2021-01-14 12:06:14 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,18 +29,44 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ *
+ * Documentation and source code for this library, and the most recent library
+ * build are available from <http://sourceforge.net/projects/clib2>.
+ *
+ *****************************************************************************
  */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#ifndef _SCHED_H
+#define _SCHED_H
 
 /****************************************************************************/
 
-size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
-{
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/****************************************************************************/
+
+#define SCHED_OTHER    0
+#define SCHED_FIFO     1
+#define SCHED_RR       2
+
+struct sched_param {
+  int sched_priority;           /* Process execution scheduling priority */
+};
+
+/****************************************************************************/
+
+extern int sched_yield(void);
+
+/****************************************************************************/
+
+#ifdef __cplusplus
 }
+#endif /* __cplusplus */
+
+/****************************************************************************/
+
+#endif

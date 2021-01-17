@@ -1,5 +1,5 @@
 /*
- * $Id: locale_init_exit.c,v 1.15 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: timezone_init_exit.c,v 1.0 2021-01-15 10:01:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,9 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _LOCALE_HEADERS_H
-#include "locale_headers.h"
-#endif /* _LOCALE_HEADERS_H */
+#ifndef _TIMEZONE_HEADERS_H
+#include "timezone_headers.h"
+#endif /* _TIMEZONE_HEADERS_H */
 
 /****************************************************************************/
 
@@ -43,93 +43,46 @@
 
 /****************************************************************************/
 
-struct Library * NOCOMMON __LocaleBase;
+struct Library * NOCOMMON __TimezoneBase;
+
+char *tzname[2];  /* Current timezone names.  */
+int  daylight;                      /* If daylight-saving time is ever in use.  */
+long int timezone;                  /* Seconds west of UTC.  */
 
 /****************************************************************************/
 
 #if defined(__amigaos4__)
-struct LocaleIFace * NOCOMMON __ILocale;
+struct TimezoneIFace * NOCOMMON __ITimezone;
 #endif /* __amigaos4__ */
 
 /****************************************************************************/
 
-struct Locale * NOCOMMON __default_locale;
-struct Locale * NOCOMMON __locale_table[NUM_LOCALES];
-
-/****************************************************************************/
-
-char NOCOMMON __locale_name_table[NUM_LOCALES][MAX_LOCALE_NAME_LEN];
-
-/****************************************************************************/
-
 void
-__close_all_locales(void)
-{
-	__locale_lock();
-
-	if(__LocaleBase != NULL)
-	{
-		DECLARE_LOCALEBASE();
-
-		int i;
-
-		for(i = 0 ; i < NUM_LOCALES ; i++)
-		{
-			if(i == LC_ALL)
-				continue;
-
-			if(__locale_table[i] != NULL)
-			{
-				if(__locale_table[i] != __locale_table[LC_ALL])
-					CloseLocale(__locale_table[i]);
-
-				__locale_table[i] = NULL;
-			}
-		}
-
-		CloseLocale(__locale_table[LC_ALL]);
-		__locale_table[LC_ALL] = NULL;
-	}
-
-	__locale_unlock();
-}
-
-/****************************************************************************/
-
-void
-__locale_exit(void)
+__timezone_exit(void)
 {
 	ENTER();
 
-	__locale_lock();
+	__timezone_lock();
 
-	if(__LocaleBase != NULL)
+	if(__TimezoneBase != NULL)
 	{
-		DECLARE_LOCALEBASE();
-
-		__close_all_locales();
-
-		if(__default_locale != NULL)
-		{
-			CloseLocale(__default_locale);
-			__default_locale = NULL;
-		}
+		DECLARE_TIMEZONEBASE();
 
 		#if defined(__amigaos4__)
 		{
-			if(__ILocale != NULL)
+			if(__ITimezone != NULL)
 			{
-				DropInterface((struct Interface *)__ILocale);
-				__ILocale = NULL;
+				DropInterface((struct Interface *)__ITimezone);
+				__ITimezone = NULL;
 			}
 		}
 		#endif /* __amigaos4__ */
 
-		CloseLibrary(__LocaleBase);
-		__LocaleBase = NULL;
+		CloseLibrary(__TimezoneBase);
+		__TimezoneBase = NULL;
 	}
 
-	__locale_unlock();
+	__timezone_unlock();
 
 	LEAVE();
 }
@@ -137,7 +90,7 @@ __locale_exit(void)
 /****************************************************************************/
 
 int
-__locale_init(void)
+__timezone_init(void)
 {
 	int result = ERROR;
 
@@ -145,39 +98,58 @@ __locale_init(void)
 
 	PROFILE_OFF();
 
-	__locale_lock();
+	__timezone_lock();
 
-	if(__LocaleBase == NULL)
+	if(__TimezoneBase == NULL)
 	{
-		__LocaleBase = OpenLibrary("locale.library",38);
+		__TimezoneBase = OpenLibrary("timezone.library", 52);
 
 		#if defined(__amigaos4__)
 		{
-			if (__LocaleBase != NULL)
+			if (__TimezoneBase != NULL)
 			{
-				__ILocale = (struct LocaleIFace *)GetInterface(__LocaleBase, "main", 1, 0);
-				if(__ILocale == NULL)
+				__ITimezone = (struct TimezoneIFace *)GetInterface(__TimezoneBase, "main", 1, 0);
+				if(__ITimezone == NULL)
 				{
-					CloseLibrary(__LocaleBase);
-					__LocaleBase = NULL;
+					CloseLibrary(__TimezoneBase);
+					__TimezoneBase = NULL;
 				}
 			}
 		}
 		#endif /* __amigaos4__ */
 	}
 
-	if(__LocaleBase != NULL && __default_locale == NULL)
+	if(__TimezoneBase != NULL)
 	{
-		DECLARE_LOCALEBASE();
+        DECLARE_TIMEZONEBASE();
 
-		__default_locale = OpenLocale(NULL);
-	}
+		// Set global timezone variable
+        uint32 gmtoffset = 0;
+        int8 dstime = -1;
+        tzname[0] = calloc(1, MAX_TZSIZE);
+        tzname[1] = calloc(1, MAX_TZSIZE);
 
-	if(__default_locale != NULL) {
+        GetTimezoneAttrs(NULL, 
+            TZA_Timezone, tzname[0], 
+            TZA_TimezoneSTD, tzname[1], 
+            TZA_UTCOffset, &gmtoffset, 
+            TZA_TimeFlag, &dstime, 
+            TAG_DONE);
+            
+		timezone = 60 * gmtoffset;
+		daylight = dstime & TFLG_ISDST;
+
 		result = OK;
 	}
+	else {
+		/* default values */
+		timezone = 0;
+		daylight = 0;
+		tzname[0] = (char *) "GMT";
+		tzname[1] = (char *) "AMT";
+	}
 
-	__locale_unlock();
+	__timezone_unlock();
 
 	PROFILE_ON();
 
@@ -191,24 +163,24 @@ __locale_init(void)
 
 /****************************************************************************/
 
-static struct SignalSemaphore * locale_lock;
+static struct SignalSemaphore * timezone_lock;
 
 /****************************************************************************/
 
 void
-__locale_lock(void)
+__timezone_lock(void)
 {
-	if(locale_lock != NULL)
-		ObtainSemaphore(locale_lock);
+	if(timezone_lock != NULL)
+		ObtainSemaphore(timezone_lock);
 }
 
 /****************************************************************************/
 
 void
-__locale_unlock(void)
+__timezone_unlock(void)
 {
-	if(locale_lock != NULL)
-		ReleaseSemaphore(locale_lock);
+	if(timezone_lock != NULL)
+		ReleaseSemaphore(timezone_lock);
 }
 
 /****************************************************************************/
@@ -217,16 +189,16 @@ __locale_unlock(void)
 
 /****************************************************************************/
 
-CLIB_DESTRUCTOR(locale_exit)
+CLIB_DESTRUCTOR(timezone_exit)
 {
 	ENTER();
 
-	__locale_exit();
+	__timezone_exit();
 
 	#if defined(__THREAD_SAFE)
 	{
-		__delete_semaphore(locale_lock);
-		locale_lock = NULL;
+		__delete_semaphore(timezone_lock);
+		timezone_lock = NULL;
 	}
 	#endif /* __THREAD_SAFE */
 
@@ -235,8 +207,9 @@ CLIB_DESTRUCTOR(locale_exit)
 
 /****************************************************************************/
 
-CLIB_CONSTRUCTOR(locale_init)
+CLIB_CONSTRUCTOR(timezone_init)
 {
+    printf("timezone_init");
 	BOOL success = FALSE;
 	int i;
 
@@ -244,17 +217,13 @@ CLIB_CONSTRUCTOR(locale_init)
 
 	#if defined(__THREAD_SAFE)
 	{
-		locale_lock = __create_semaphore();
-		if(locale_lock == NULL)
+		timezone_lock = __create_semaphore();
+		if(timezone_lock == NULL)
 			goto out;
 	}
 	#endif /* __THREAD_SAFE */
 
-	for(i = 0 ; i < NUM_LOCALES ; i++)
-		strcpy(__locale_name_table[i],"C");
-
-	if(__open_locale)
-		__locale_init();
+    __timezone_init();
 
 	success = TRUE;
 

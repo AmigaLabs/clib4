@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbstowcs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: nl_types.h,v 1.0 2021-01-15 22:35:54 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,18 +29,54 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ *
+ * Documentation and source code for this library, and the most recent library
+ * build are available from <http://sourceforge.net/projects/clib2>.
+ *
+ *****************************************************************************
  */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#ifndef _NL_TYPES_H
+#define _NL_TYPES_H
 
 /****************************************************************************/
 
-size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
+#ifdef __cplusplus
+extern "C"
 {
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+#endif /* __cplusplus */
+
+/****************************************************************************/
+
+/**
+ * catopen() flag to use the current locale.
+ */
+#define NL_CAT_LOCALE 1
+/**
+ * catgets() default set number.
+ */
+#define NL_SETD 1
+/** Message catalog type. */
+typedef void* nl_catd;
+/** The type of the constants in `<langinfo.h>`, used by nl_langinfo(). */
+typedef int nl_item;
+
+/****************************************************************************/
+
+#if 0
+extern nl_catd catopen(const char* name, int flag);
+extern char* catgets(nl_catd catalog, int set_number, int msg_number, const char* msg);
+extern int catclose(nl_catd catalog);
+#endif
+
+/****************************************************************************/
+
+#ifdef __cplusplus
 }
+#endif /* __cplusplus */
+
+/****************************************************************************/
+
+#endif /* _NL_TYPES_H */

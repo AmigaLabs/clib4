@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbstowcs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: socket_getnameinfo.c,v 1.0 2021-01-13 11:31:35 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,16 +31,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#if defined(SOCKET_SUPPORT)
 
 /****************************************************************************/
 
-size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
+#ifndef _SOCKET_HEADERS_H
+#include "socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
+
+/****************************************************************************/
+
+const char *
+gai_strerror(int code)
 {
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+	size_t i;
+	for (i = 0; i < sizeof(errors) / sizeof(errors[0]); ++i)
+		if (errors[i].code == code)
+			return errors[i].str;
+
+	return "Unknown error";
 }
+
+#endif

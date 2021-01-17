@@ -134,6 +134,7 @@ extern int atexit(void (*)(void));
 /****************************************************************************/
 
 extern char * getenv(const char *name);
+extern char * secure_getenv(const char *name);
 
 /****************************************************************************/
 
@@ -424,6 +425,7 @@ extern int unsetenv(const char *name);
 extern char * mktemp(char * name_template);
 extern int mkstemp(char *name_template);
 extern char * mkdtemp(char *name_template);
+extern const char *getexecname(void);
 
 /****************************************************************************/
 

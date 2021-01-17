@@ -59,7 +59,22 @@ extern "C" {
  * Divide the number returned by clock() by CLOCKS_PER_SEC to obtain
  * the elapsed time in seconds
  */
-#define CLOCKS_PER_SEC 50
+#define CLOCKS_PER_SEC 1000000
+#define CLK_TCK CLOCKS_PER_SEC
+
+/****************************************************************************/
+
+#define CLOCK_REALTIME           (clockid_t)0
+#define CLOCK_MONOTONIC          (clockid_t)1
+#define CLOCK_PROCESS_CPUTIME_ID (clockid_t)2 	/* Not used in clock_ functions yet */
+#define CLOCK_THREAD_CPUTIME_ID  (clockid_t)3	/* Not used in clock_ functions yet */
+
+#define _CLOCK_T_       unsigned long long      /* clock() */
+#define _TIME_T_        long                    /* time() */
+#define _CLOCKID_T_     unsigned long
+#define _TIMER_T_       unsigned long
+
+typedef _CLOCKID_T_ clockid_t;
 
 /****************************************************************************/
 
@@ -125,6 +140,15 @@ extern struct tm * gmtime_r(const time_t *t,struct tm * tm_ptr);
 extern struct tm * localtime_r(const time_t *t,struct tm * tm_ptr);
 extern void tzset(void);
 extern int nanosleep(const struct timespec *req, struct timespec *rem);
+
+extern int clock_gettime(clockid_t clk_id, struct timespec *t);
+extern int clock_settime(clockid_t clk_id, const struct timespec* t);
+extern int clock_getres(clockid_t clock_id, struct timespec *res);
+
+/* Defined in localtime.c.  */
+extern char *tzname[2];       /* Current timezone names.  */
+extern int daylight;          /* If daylight-saving time is ever in use.  */
+extern long int timezone;     /* Seconds west of UTC.  */
 
 /****************************************************************************/
 

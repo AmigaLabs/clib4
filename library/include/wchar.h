@@ -107,7 +107,7 @@ extern size_t wcslen(const wchar_t *s);
 extern wchar_t * wcschr(const wchar_t *s, wchar_t c);
 extern size_t wcsspn(const wchar_t *s, const wchar_t *set);
 extern wchar_t *wcspbrk(const wchar_t *s, const wchar_t *set);
-extern wchar_t *wcstok(wchar_t *str, const wchar_t *set);
+extern wchar_t *wcstok(wchar_t *str, const wchar_t* delim, wchar_t ** ptr);
 extern wchar_t *wcsstr(const wchar_t *src, const wchar_t *sub);
 
 /****************************************************************************/

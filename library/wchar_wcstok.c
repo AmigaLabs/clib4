@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wcstok.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wcstok.c,v 1.4 2021-01-14 23:53:27 obarthel Exp $
  *
  * :ts=4
  *
@@ -38,7 +38,7 @@
 /****************************************************************************/
 
 wchar_t *
-wcstok(wchar_t *str, const wchar_t *set)
+wcstok(wchar_t *str, const wchar_t* delim, wchar_t ** ptr)
 {
 	/* ZZZ unimplemented */
 	return(NULL);

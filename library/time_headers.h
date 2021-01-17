@@ -80,6 +80,14 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
+#ifndef PROTO_TIMER_H
+#include <proto/timer.h>
+#endif
+
+#ifndef PROTO_TIMEZONE_H
+#include <proto/timezone.h>
+#endif
+
 /****************************************************************************/
 
 #include <string.h>

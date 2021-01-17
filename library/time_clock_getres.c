@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbstowcs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: time_getres.c,v 1.0 2020-01-13 17:27:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,16 +31,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#include <time.h>
 
-/****************************************************************************/
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
 
-size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
+/* Get resolution of clock.  */
+int clock_getres(clockid_t clock_id, struct timespec *res)
 {
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+   ENTER();
+
+   int result = -1;
+
+   switch (clock_id)
+   {
+   case CLOCK_MONOTONIC:
+   case CLOCK_REALTIME:
+   {
+      long int clk_tck = CLOCKS_PER_SEC;
+
+      /* This implementation assumes that the realtime clock has a
+              resolution higher than 1 second.  This is the case for any
+              reasonable implementation.  */
+      res->tv_sec = 0;
+      res->tv_nsec = 1000000000 / CLOCKS_PER_SEC;
+
+      result = 0;
+   }
+   break;
+
+   default:
+      __set_errno(EINVAL);
+      break;
+   }
+
+   RETURN(result);
+   return result;
 }

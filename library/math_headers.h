@@ -99,7 +99,25 @@ extern struct Library * NOCOMMON MathIeeeDoubTransBase;
 #endif /* IEEE_FLOATING_POINT_SUPPORT */
 
 /****************************************************************************/
+typedef const union
+{
+  long l[2];
+  double d;
+} udouble;
 
+typedef const union
+{
+  long l;
+  float f;
+} ufloat;
+
+ufloat z_hugeval_f  = { 0x7f800000 };
+ufloat z_infinity_f = { 0x7f800000 };
+ufloat z_notanum_f  = { 0xffd00000 };
+
+udouble z_hugeval  = {{ 0x7ff00000, 0 }};
+udouble z_infinity = {{ 0x7ff00000, 0 }};
+udouble z_notanum  = {{ 0xfff80000, 0 }};
 /*
  * ====================================================
  * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.

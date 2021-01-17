@@ -79,6 +79,8 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
+#include <time.h>
+
 /****************************************************************************/
 
 #define NUM_LOCALES			(LC_TIME - LC_ALL + 1)

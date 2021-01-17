@@ -1,5 +1,5 @@
 /*
- * $Id: dirent.h,v 1.7 2006-01-08 12:06:14 obarthel Exp $
+ * $Id: langinfo.h,v 1.0 2021-01-15 22:32:14 apalmate Exp $
  *
  * :ts=4
  *
@@ -38,70 +38,86 @@
  *****************************************************************************
  */
 
-#ifndef _DIRENT_H
-#define _DIRENT_H
+#ifndef _LANGINFO_H
+#define _LANGINFO_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-#ifndef _SYS_TYPES_H
-#include <sys/types.h>
-#endif /* _SYS_TYPES_H */
-
-#ifndef _STDIO_H
-#include <stdio.h>
-#endif /* _STDIO_H */
+#include <nl_types.h>
+#if 0
+#include <xlocale.h>
+#endif
 
 /****************************************************************************/
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
 
 /****************************************************************************/
 
-#define NAME_MAX FILENAME_MAX
+#define CODESET 1
+#define D_T_FMT 2
+#define D_FMT 3
+#define T_FMT 4
+#define T_FMT_AMPM 5
+#define AM_STR 6
+#define PM_STR 7
+#define DAY_1 8
+#define DAY_2 9
+#define DAY_3 10
+#define DAY_4 11
+#define DAY_5 12
+#define DAY_6 13
+#define DAY_7 14
+#define ABDAY_1 15
+#define ABDAY_2 16
+#define ABDAY_3 17
+#define ABDAY_4 18
+#define ABDAY_5 19
+#define ABDAY_6 20
+#define ABDAY_7 21
+#define MON_1 22
+#define MON_2 23
+#define MON_3 24
+#define MON_4 25
+#define MON_5 26
+#define MON_6 27
+#define MON_7 28
+#define MON_8 29
+#define MON_9 30
+#define MON_10 31
+#define MON_11 32
+#define MON_12 33
+#define ABMON_1 34
+#define ABMON_2 35
+#define ABMON_3 36
+#define ABMON_4 37
+#define ABMON_5 38
+#define ABMON_6 39
+#define ABMON_7 40
+#define ABMON_8 41
+#define ABMON_9 42
+#define ABMON_10 43
+#define ABMON_11 44
+#define ABMON_12 45
+#define ERA 46
+#define ERA_D_FMT 47
+#define ERA_D_T_FMT 48
+#define ERA_T_FMT 49
+#define ALT_DIGITS 50
+#define RADIXCHAR 51
+#define THOUSEP 52
+#define YESEXPR 53
+#define NOEXPR 54
+#define CRNCYSTR 55
 
 /****************************************************************************/
 
-typedef long DIR;
+extern char *nl_langinfo(nl_item item);
+#if 0
+extern char *nl_langinfo_l(nl_item item, locale_t l);
+#endif
 
-/****************************************************************************/
-
-/* Note: each one of these is exactly one more than the high nibble of
-   the corresponding S_IF* constant defined on sys/stat.h.  If you
-   break that, DTTOIF will stop working!  */
-#define DT_REG      0x1
-#define DT_BLK      0x2
-#define DT_CHR      0x3
-#define DT_DIR      0x4
-#define DT_FIFO     0x5
-#define DT_LABEL    0x6
-#define DT_LNK      0x7
-#define DT_SOCK     0x8
-#define DT_UNKNOWN  0xf
-
-#define DTTOIF(dt)  (((dt) == DT_UNKNOWN ? 0 : (dt) - 1) << 12)
-
-struct dirent {
-    ino_t          d_ino;       /* Inode number */
-    off_t          d_off;       /* Not an offset; see below */
-    unsigned short d_reclen;    /* Length of this record */
-    unsigned char  d_type;      /* Type of file; not supported
-                                  by all filesystem types */
-    char           d_name[NAME_MAX+1]; /* Null-terminated filename */
-};
-
-/****************************************************************************/
-
-extern DIR * opendir(const char * path_name);
-extern struct dirent * readdir(DIR * directory_pointer);
-extern void rewinddir(DIR * directory_pointer);
-extern int closedir(DIR * directory_pointer);
-extern int alphasort(const struct dirent **a, const struct dirent **b);
 /****************************************************************************/
 
 #ifdef __cplusplus
@@ -110,4 +126,4 @@ extern int alphasort(const struct dirent **a, const struct dirent **b);
 
 /****************************************************************************/
 
-#endif /* _DIRENT_H */
+#endif /* _LANGINFO_H */

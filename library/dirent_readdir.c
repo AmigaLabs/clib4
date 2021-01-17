@@ -42,22 +42,22 @@
 /****************************************************************************/
 
 struct dirent *
-readdir(DIR * directory_pointer)
+readdir(DIR *directory_pointer)
 {
-	struct dirent * result = NULL;
-	struct DirectoryHandle * dh;
+	struct dirent *result = NULL;
+	struct DirectoryHandle *dh;
 	BPTR parent_directory = ZERO;
 
 	ENTER();
 
 	SHOWPOINTER(directory_pointer);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	PROFILE_OFF();
 
-	if(directory_pointer == NULL)
+	if (directory_pointer == NULL)
 	{
 		SHOWMSG("ouch. invalid parameter");
 
@@ -67,66 +67,66 @@ readdir(DIR * directory_pointer)
 
 	dh = (struct DirectoryHandle *)directory_pointer;
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics && dh->dh_ScanVolumeList)
+		if (__unix_path_semantics && dh->dh_ScanVolumeList)
 		{
 			SHOWMSG("we are scanning the volume list");
 
-			if(dh->dh_Position == 0)
+			if (dh->dh_Position == 0)
 			{
 				SHOWMSG("returning the .");
 
 				dh->dh_Position++;
 
-//				dh->dh_DirectoryEntry.d_ino = 0;
-				strcpy(dh->dh_DirectoryEntry.d_name,".");
-                                dh->dh_DirectoryEntry.d_namlen = 2;
-                                dh->dh_DirectoryEntry.d_type = DT_DIR;
+				dh->dh_DirectoryEntry.d_ino = 0;
+				strcpy(dh->dh_DirectoryEntry.d_name, ".");
+				dh->dh_DirectoryEntry.d_reclen = 2;
+				dh->dh_DirectoryEntry.d_type = DT_DIR;
 
 				result = &dh->dh_DirectoryEntry;
 			}
 			else
 			{
-				D_S(struct FileInfoBlock,fib);
-				D_S(struct bcpl_name,bcpl_name);
-				char * name = (char *)bcpl_name->name;
+				D_S(struct FileInfoBlock, fib);
+				D_S(struct bcpl_name, bcpl_name);
+				char *name = (char *)bcpl_name->name;
 				BPTR dir_lock;
 
-				assert( (((ULONG)name) & 3) == 0 );
+				assert((((ULONG)name) & 3) == 0);
 
-				if(dh->dh_VolumeNode == NULL && NOT IsMinListEmpty(&dh->dh_VolumeList))
+				if (dh->dh_VolumeNode == NULL && NOT IsMinListEmpty(&dh->dh_VolumeList))
 					dh->dh_VolumeNode = (struct Node *)dh->dh_VolumeList.mlh_Head;
 
-				strcpy(name,"\1:"); /* BSTR for ":" */
+				strcpy(name, "\1:"); /* BSTR for ":" */
 
-				while(result == NULL && dh->dh_VolumeNode != NULL && dh->dh_VolumeNode->ln_Succ != NULL)
+				while (result == NULL && dh->dh_VolumeNode != NULL && dh->dh_VolumeNode->ln_Succ != NULL)
 				{
-					if(IsFileSystem(dh->dh_VolumeNode->ln_Name))
+					if (IsFileSystem(dh->dh_VolumeNode->ln_Name))
 					{
-						struct DevProc * dvp;
+						struct DevProc *dvp;
 
-						dvp = GetDeviceProc(dh->dh_VolumeNode->ln_Name,NULL);
-						if(dvp != NULL)
+						dvp = GetDeviceProc(dh->dh_VolumeNode->ln_Name, NULL);
+						if (dvp != NULL)
 						{
-							dir_lock = DoPkt(dvp->dvp_Port,ACTION_LOCATE_OBJECT,ZERO,MKBADDR(name),SHARED_LOCK,	0,0);
-							if(dir_lock != ZERO)
+							dir_lock = DoPkt(dvp->dvp_Port, ACTION_LOCATE_OBJECT, ZERO, MKBADDR(name), SHARED_LOCK, 0, 0);
+							if (dir_lock != ZERO)
 							{
-								if(Examine(dir_lock,fib))
+								if (Examine(dir_lock, fib))
 								{
-									assert( sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(fib->fib_FileName) );
+									assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(fib->fib_FileName));
 
-									strcpy(dh->dh_DirectoryEntry.d_name,fib->fib_FileName);
+									strcpy(dh->dh_DirectoryEntry.d_name, fib->fib_FileName);
 
-									//dh->dh_DirectoryEntry.d_ino = fib->fib_DiskKey;
-					                                dh->dh_DirectoryEntry.d_namlen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
-					                                if (dh->dh_FileInfo.fib_DirEntryType > 0)
-					                                        dh->dh_DirectoryEntry.d_type = DT_DIR;
-					                                else
-					                                {
-					                                        dh->dh_DirectoryEntry.d_type = DT_REG;
-					                                        //TODO - add other files type
-					                                }
+									dh->dh_DirectoryEntry.d_ino = fib->fib_DiskKey;
+									dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
+									if (dh->dh_FileInfo.fib_DirEntryType > 0)
+										dh->dh_DirectoryEntry.d_type = DT_DIR;
+									else
+									{
+										dh->dh_DirectoryEntry.d_type = DT_REG;
+										//TODO - add other files type
+									}
 
 									result = &dh->dh_DirectoryEntry;
 								}
@@ -143,38 +143,37 @@ readdir(DIR * directory_pointer)
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	if(NOT dh->dh_ScanVolumeList)
+	if (NOT dh->dh_ScanVolumeList)
 	{
-		#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 		{
-			if(__unix_path_semantics)
+			if (__unix_path_semantics)
 			{
-				if(dh->dh_Position == 0)
+				if (dh->dh_Position == 0)
 				{
 					SHOWMSG("returning .");
 
 					dh->dh_Position++;
 
-					//dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo.fib_DiskKey;
-
-					strcpy(dh->dh_DirectoryEntry.d_name,".");
-	                                dh->dh_DirectoryEntry.d_namlen = 2;
-                                        dh->dh_DirectoryEntry.d_type = DT_DIR;
+					dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo.fib_DiskKey;
+					strcpy(dh->dh_DirectoryEntry.d_name, ".");
+					dh->dh_DirectoryEntry.d_reclen = 2;
+					dh->dh_DirectoryEntry.d_type = DT_DIR;
 
 					result = &dh->dh_DirectoryEntry;
 				}
 				else if (dh->dh_Position == 1)
 				{
-					D_S(struct FileInfoBlock,fib);
+					D_S(struct FileInfoBlock, fib);
 
 					dh->dh_Position++;
 
 					parent_directory = ParentDir(dh->dh_DirLock);
-					if(parent_directory != ZERO)
+					if (parent_directory != ZERO)
 					{
-						if(CANNOT Examine(parent_directory,fib))
+						if (CANNOT Examine(parent_directory, fib))
 						{
 							__set_errno(__translate_io_error_to_errno(IoErr()));
 							goto out;
@@ -188,29 +187,29 @@ readdir(DIR * directory_pointer)
 
 					SHOWMSG("returning ..");
 
-					//dh->dh_DirectoryEntry.d_ino = fib->fib_DiskKey;
-	                                dh->dh_DirectoryEntry.d_namlen = 3;
-                                        dh->dh_DirectoryEntry.d_type = DT_DIR;
+					dh->dh_DirectoryEntry.d_ino = fib->fib_DiskKey;
+					dh->dh_DirectoryEntry.d_reclen = 3;
+					dh->dh_DirectoryEntry.d_type = DT_DIR;
 
-					strcpy(dh->dh_DirectoryEntry.d_name,"..");
+					strcpy(dh->dh_DirectoryEntry.d_name, "..");
 
 					result = &dh->dh_DirectoryEntry;
 				}
 			}
 		}
-		#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-		if(result == NULL)
+		if (result == NULL)
 		{
-			assert( (((ULONG)&dh->dh_FileInfo) & 3) == 0 );
+			assert((((ULONG)&dh->dh_FileInfo) & 3) == 0);
 
-			if(ExNext(dh->dh_DirLock,&dh->dh_FileInfo))
+			if (ExNext(dh->dh_DirLock, &dh->dh_FileInfo))
 			{
-//				dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo.fib_DiskKey;
-				assert( sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(dh->dh_FileInfo.fib_FileName) );
+				dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo.fib_DiskKey;
+				assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(dh->dh_FileInfo.fib_FileName));
 
-				strcpy(dh->dh_DirectoryEntry.d_name,dh->dh_FileInfo.fib_FileName);
-				dh->dh_DirectoryEntry.d_namlen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
+				strcpy(dh->dh_DirectoryEntry.d_name, dh->dh_FileInfo.fib_FileName);
+				dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
 
 				if (dh->dh_FileInfo.fib_DirEntryType > 0)
 					dh->dh_DirectoryEntry.d_type = DT_DIR;
@@ -223,7 +222,7 @@ readdir(DIR * directory_pointer)
 			}
 			else
 			{
-				if(IoErr() != ERROR_NO_MORE_ENTRIES)
+				if (IoErr() != ERROR_NO_MORE_ENTRIES)
 				{
 					SHOWMSG("error scanning directory");
 
@@ -236,17 +235,17 @@ readdir(DIR * directory_pointer)
 		}
 	}
 
-	if(result != NULL)
-		D(("next entry to return is '%s'",result->d_name));
+	if (result != NULL)
+		D(("next entry to return is '%s'", result->d_name));
 	else
 		SHOWMSG("end of directory reached");
 
- out:
+out:
 
 	UnLock(parent_directory);
 
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

@@ -55,8 +55,8 @@
 
 static	const float	one	= 1.0, tiny=1.0e-30;
 
-float
-sqrtf(float x)
+INLINE STATIC float
+__sqrtf(float x)
 {
 	volatile float z;	/* to prevent GCC from optimizing it away */
 	LONG	sign = (LONG)0x80000000U; 
@@ -119,6 +119,26 @@ sqrtf(float x)
 	ix += (m <<23);
 	SET_FLOAT_WORD(z,ix);
 	return z;
+}
+
+/****************************************************************************/
+
+float
+sqrtf(float x)
+{
+	float result;
+
+	if (x >= 0.0)
+	{
+		result = __sqrtf(x);
+	}
+	else
+	{
+		result = z_notanum_f.f;
+		__set_errno(EDOM);
+	}
+
+	return (result);
 }
 
 /****************************************************************************/

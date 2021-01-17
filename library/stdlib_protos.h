@@ -75,6 +75,11 @@ extern void	__stdlib_exit(void);
 
 /****************************************************************************/
 
+extern int __timezone_init(void);
+extern void __timezone_exit(void);
+
+/****************************************************************************/
+
 /* stdlib_atexit.c */
 extern void	__exit_trap_trigger(void);
 

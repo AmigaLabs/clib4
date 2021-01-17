@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbstowcs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: stdlib_secure_getenv.c,v 1.0 2020-01-13 16:12:45 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,12 +35,11 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
+#include <unistd.h>
 
-size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
-{
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+char *secure_getenv(const char *name) {
+ 	if (geteuid () != getuid () || getegid () != getgid ())
+		return NULL;
+ 	return getenv(name);
 }
+

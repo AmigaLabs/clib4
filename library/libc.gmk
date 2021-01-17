@@ -58,6 +58,7 @@ C_LIB := \
 	inttypes_imaxabs.o \
 	inttypes_strtoimax.o \
 	inttypes_strtoumax.o \
+	langinfo_langinfo.o \
 	libgen_basename.o \
 	libgen_dirname.o \
 	locale_init_exit.o \
@@ -68,6 +69,7 @@ C_LIB := \
 	mount_fstatfs.o \
 	mount_statfs.o \
 	profile_profil.o \
+	sched_sched_yield.o \
 	signal_checkabort.o \
 	signal_data.o \
 	signal_kill.o \
@@ -214,6 +216,7 @@ C_LIB := \
 	stdlib_exit.o \
 	stdlib_free.o \
 	stdlib_decay_unused_slabs.o \
+	stdlib_getexecname.o \
 	stdlib_free_unused_slabs.o \
 	stdlib_getdefstacksize.o \
 	stdlib_getenv.o \
@@ -235,6 +238,7 @@ C_LIB := \
 	stdlib_main_stub.o \
 	stdlib_malloc.o \
 	stdlib_math.o \
+	stdlib_mbstowcs.o \
 	stdlib_mbtowc.o \
 	stdlib_mkdtemp.o \
 	stdlib_mkstemp.o \
@@ -254,6 +258,7 @@ C_LIB := \
 	stdlib_realloc.o \
 	stdlib_red_black.o \
 	stdlib_resetmemstats.o \
+	stdlib_secure_getenv.o \
 	stdlib_semaphore.o \
 	stdlib_setenv.o \
 	stdlib_setjmp.o \
@@ -284,6 +289,7 @@ C_LIB := \
 	stdlib_udivsi4.o \
 	stdlib_umodsi3.o \
 	stdlib_unsetenv.o \
+	stdlib_wcstombs.o \
 	strings_ffs.o \
 	strings_strcasecmp.o \
 	strings_strncasecmp.o \
@@ -323,6 +329,8 @@ C_LIB := \
 	time_asctime.o \
 	time_asctime_r.o \
 	time_clock.o \
+	time_clock_getres.o \
+	time_clock_gettime.o \
 	time_converttime.o \
 	time_convert_datestamp.o \
 	time_convert_time.o \
@@ -338,10 +346,12 @@ C_LIB := \
 	time_mktime.o \
 	time_nanosleep.o \
 	time_numbertostring.o \
+	time_clock_settime.o \
 	time_strftime.o \
 	time_time.o \
 	time_tzset.o \
 	time_weekday.o \
+	timezone_init_exit.o \
 	uio_readv.o \
 	uio_writev.o \
 	ulimit_ulimit.o \
@@ -366,6 +376,8 @@ C_LIB := \
 	unistd_lchown.o \
 	unistd_link.o \
 	unistd_lockf.o \
+	unistd_pipe.o \
+	unistd_pipe2.o \
 	unistd_readlink.o \
 	unistd_realpath.o \
 	unistd_sleep.o \
@@ -414,6 +426,7 @@ C_LIB := \
 	wchar_wcsncpy.o \
 	wchar_wscoll.o \
 	wchar_wcspbrk.o \
+	wchar_wcsrchr.o \
 	wchar_wcsrtombs.o \
 	wchar_wcsspn.o \
 	wchar_wcstod.o \

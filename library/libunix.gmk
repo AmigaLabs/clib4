@@ -32,7 +32,7 @@ UNIX_LIB := \
 	getopt_getopt_long.o \
 	mount_convertinfo.o \
 	mount_statfs.o \
-	poll.o \
+	poll_poll.o \
 	resource_getrlimit.o \
 	resource_setrlimit.o \
 	stat_chmod.o \

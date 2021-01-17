@@ -212,6 +212,9 @@ extern long fpathconf(int file_descriptor,int name);
 
 /****************************************************************************/
 
+extern int pipe (int fd[2]);
+extern int pipe2 (int fd[2], int flags);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

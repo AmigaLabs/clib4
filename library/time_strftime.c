@@ -520,7 +520,7 @@ format_date(const char *format,const struct tm *tm,struct Hook * hook)
 				if(__default_locale != NULL)
 				{
 					int hours_west_of_gmt;
-					char sign;
+					char sign = '?';
 
 					hours_west_of_gmt = __default_locale->loc_GMTOffset / 60;
 					if(hours_west_of_gmt < 0)
