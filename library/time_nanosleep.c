@@ -48,14 +48,13 @@
 int 
 nanosleep(const struct timespec *req, struct timespec *rem)
 {
-	/* TODO - Implement EINTR and set rem accordingly */
-
         ENTER();
 
 	unsigned long microseconds = (req->tv_sec * 1000000) + (req->tv_nsec / 1000);
 
         SHOWVALUE(microseconds);
 
+	// errno is set in __time_delay if it is break by a signal
         __time_delay(0,microseconds);
 
         RETURN(0);

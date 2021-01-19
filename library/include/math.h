@@ -59,10 +59,6 @@ extern double __huge_val;
 
 /****************************************************************************/
 
-#define	HUGE_VAL ((const double)__huge_val)
-
-/****************************************************************************/
-
 extern double acos(double x);
 extern double asin(double x);
 extern double atan(double x);
@@ -125,7 +121,9 @@ extern float __huge_val_float;
 
 /****************************************************************************/
 
+#define	HUGE_VAL  ((const double)__huge_val)
 #define	HUGE_VALF ((const float)__huge_val_float)
+#define HUGE_VALL (__builtin_huge_vall ())
 
 /****************************************************************************/
 
@@ -142,8 +140,7 @@ extern float __nan;
 #define FP_INFINITE		0	/* -/+ infinity */
 #define FP_NAN			1	/* not a number */
 #define FP_NORMAL		2	/* normalized floating point number */
-#define FP_SUBNORMAL	3	/* very small floating point number; special
-							   case of IEEE 754 */
+#define FP_SUBNORMAL	3	/* very small floating point number; special case of IEEE 754 */
 #define FP_ZERO			4	/* exponent/fraction are zero */
 
 /****************************************************************************/

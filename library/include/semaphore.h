@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_usleep.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: semaphore.h,v 1.00 2021-01-17 12:09:49 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,33 +29,39 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ *
+ * Documentation and source code for this library, and the most recent library
+ * build are available from <http://sourceforge.net/projects/clib2>.
+ *
+ *****************************************************************************
  */
 
-#ifndef _UNISTD_HEADERS_H
-#include "unistd_headers.h"
-#endif /* _UNISTD_HEADERS_H */
+#ifndef _SEMAPHORE_H
+#define _SEMAPHORE_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int usleep(unsigned long microseconds)
+#ifdef __cplusplus
+extern "C"
 {
-	int retval = 0;
-	ENTER();
+#endif
 
-	SHOWVALUE(microseconds);
+#ifndef _STDLIB_H
+#include <stdlib.h>
+#endif /* _STDLIB_H */
 
-	__time_delay(0, microseconds);
+    typedef void *sem_t;
 
-	// errno is set in __time_delay if it is break by a signal
-	if (errno != 0)
-		retval = -1;
+    extern int sem_init(sem_t *sem, int pshared, unsigned int value);
+    extern int sem_destroy(sem_t *sem);
+    extern int sem_trywait(sem_t *sem);
+    extern int sem_wait(sem_t *sem);
+    extern int sem_timedwait(sem_t *sem, const struct timespec *timeout);
+    extern int sem_post(sem_t *sem);
+    extern int sem_getvalue(sem_t *sem, int *sval);
 
-	LEAVE();
-
-	RETURN(retval);
-	return retval;
+#ifdef __cplusplus
 }
+#endif
+
+#endif

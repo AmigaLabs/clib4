@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_usleep.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: stdlib_valloc.c,v 1.0 2021-01-19 10:03:00 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,31 +31,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNISTD_HEADERS_H
-#include "unistd_headers.h"
-#endif /* _UNISTD_HEADERS_H */
+/*#define DEBUG*/
 
-/****************************************************************************/
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
-/* The following is not part of the ISO 'C' (1994) standard. */
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
+#include <malloc.h>
 
-int usleep(unsigned long microseconds)
+void *valloc(size_t size)
 {
-	int retval = 0;
-	ENTER();
+    long pagesize = sysconf(_SC_PAGESIZE);
 
-	SHOWVALUE(microseconds);
-
-	__time_delay(0, microseconds);
-
-	// errno is set in __time_delay if it is break by a signal
-	if (errno != 0)
-		retval = -1;
-
-	LEAVE();
-
-	RETURN(retval);
-	return retval;
+    if (pagesize < 0)
+        pagesize = 4096;
+    return (void *)memalign(pagesize, size);
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_usleep.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: mman_munmap.c,v 1.0 2021-01-18 20:17:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,27 +35,13 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
+#include <sys/mman.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int usleep(unsigned long microseconds)
+int 
+munmap(void *map, size_t length)
 {
-	int retval = 0;
-	ENTER();
+        if (map != NULL)
+                free(map);
 
-	SHOWVALUE(microseconds);
-
-	__time_delay(0, microseconds);
-
-	// errno is set in __time_delay if it is break by a signal
-	if (errno != 0)
-		retval = -1;
-
-	LEAVE();
-
-	RETURN(retval);
-	return retval;
+        return 0;
 }

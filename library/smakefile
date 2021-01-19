@@ -312,6 +312,7 @@ LIB_C_OBJS3 = \
 	stdlib_arg.o \
 	stdlib_stdio_window_spec.o \
 	stdlib_strtol.o \
+	stdlib_strtold.o \
 	stdlib_strtoll.o \
 	stdlib_strtoul.o \
 	stdlib_strtoull.o \

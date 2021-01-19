@@ -117,7 +117,7 @@ extern int readlink(const char * path_name, char * buffer, int buffer_size);
 extern int chdir(const char * path_name);
 extern int lockf(int file_descriptor, int function, off_t size);
 extern unsigned int sleep(unsigned int seconds);
-extern void usleep(unsigned long microseconds);
+extern int usleep(useconds_t microseconds);
 extern int getopt(int argc, char * const argv[], const char *opts);
 extern pid_t getpid(void);
 extern char *realpath(const char *file_name, char *resolved_name);
@@ -133,6 +133,7 @@ extern int execv(const char *path,char * const argv[]);
 extern int execve(const char *path,char *const argv[],char *const envp[]);
 extern int execvp(const char *command,char * const argv[]);
 extern int profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale);
+extern long sysconf(int name);
 
 /****************************************************************************/
 
@@ -207,6 +208,15 @@ extern int setuid(uid_t uid);
 
 /****************************************************************************/
 
+/* The following is for use with sysconf(). Only the implemented one */
+
+#define _SC_CLK_TCK                 2
+#define _SC_OPEN_MAX                4
+#define _SC_PAGESIZE                8
+#define _SC_TZNAME_MAX             20
+
+/****************************************************************************/
+
 extern long pathconf(const char *path,int name);
 extern long fpathconf(int file_descriptor,int name);
 
@@ -214,6 +224,8 @@ extern long fpathconf(int file_descriptor,int name);
 
 extern int pipe (int fd[2]);
 extern int pipe2 (int fd[2], int flags);
+
+/****************************************************************************/
 
 #ifdef __cplusplus
 }

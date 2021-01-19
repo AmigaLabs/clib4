@@ -93,6 +93,7 @@ extern void *malloc(size_t size);
 extern void *calloc(size_t num_elements,size_t element_size);
 extern void free(void *ptr);
 extern void *realloc(void *ptr,size_t size);
+extern void *valloc(size_t size);
 
 #ifdef __MEM_DEBUG
 extern void *__malloc(size_t size,const char *file,int line);
@@ -439,6 +440,7 @@ extern const char *getexecname(void);
 /****************************************************************************/
 
 extern long long strtoll(const char *str, char **ptr, int base);
+extern long double strtold(const char *str, char **ptr);
 extern unsigned long long strtoull(const char *str, char **ptr, int base);
 extern long long atoll(const char *str);
 

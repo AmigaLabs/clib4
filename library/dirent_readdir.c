@@ -1,5 +1,5 @@
 /*
- * $Id: dirent_readdir.c,v 1.10 2006-09-25 14:51:15 obarthel Exp $
+ * $Id: dirent_readdir.c,v 1.11 2021-01-18 10:32:15 apalmate Exp $
  *
  * :ts=4
  *
@@ -120,11 +120,13 @@ readdir(DIR *directory_pointer)
 
 									dh->dh_DirectoryEntry.d_ino = fib->fib_DiskKey;
 									dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
-									if (dh->dh_FileInfo.fib_DirEntryType > 0)
-										dh->dh_DirectoryEntry.d_type = DT_DIR;
+									if (dh->dh_FileInfo.fib_DirEntryType < 0)
+										dh->dh_DirectoryEntry.d_type = DT_REG;
+									else if (dh->dh_FileInfo.fib_DirEntryType == 3 || dh->dh_FileInfo.fib_DirEntryType == 4)
+										dh->dh_DirectoryEntry.d_type = DT_LNK;
 									else
 									{
-										dh->dh_DirectoryEntry.d_type = DT_REG;
+										dh->dh_DirectoryEntry.d_type = DT_DIR;
 										//TODO - add other files type
 									}
 
@@ -210,12 +212,13 @@ readdir(DIR *directory_pointer)
 
 				strcpy(dh->dh_DirectoryEntry.d_name, dh->dh_FileInfo.fib_FileName);
 				dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
-
-				if (dh->dh_FileInfo.fib_DirEntryType > 0)
-					dh->dh_DirectoryEntry.d_type = DT_DIR;
+				if (dh->dh_FileInfo.fib_DirEntryType < 0)
+					dh->dh_DirectoryEntry.d_type = DT_REG;
+				else if (dh->dh_FileInfo.fib_DirEntryType == 3 || dh->dh_FileInfo.fib_DirEntryType == 4)
+					dh->dh_DirectoryEntry.d_type = DT_LNK;
 				else
 				{
-					dh->dh_DirectoryEntry.d_type = DT_REG;
+					dh->dh_DirectoryEntry.d_type = DT_DIR;
 					//TODO - add other files type
 				}
 				result = &dh->dh_DirectoryEntry;

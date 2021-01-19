@@ -111,13 +111,13 @@ typedef const union
   float f;
 } ufloat;
 
-ufloat z_hugeval_f  = { 0x7f800000 };
-ufloat z_infinity_f = { 0x7f800000 };
-ufloat z_notanum_f  = { 0xffd00000 };
+STATIC ufloat z_hugeval_f  = { 0x7f800000 };
+STATIC ufloat z_infinity_f = { 0x7f800000 };
+STATIC ufloat z_notanum_f  = { 0xffd00000 };
 
-udouble z_hugeval  = {{ 0x7ff00000, 0 }};
-udouble z_infinity = {{ 0x7ff00000, 0 }};
-udouble z_notanum  = {{ 0xfff80000, 0 }};
+STATIC udouble z_hugeval  = {{ 0x7ff00000, 0 }};
+STATIC udouble z_infinity = {{ 0x7ff00000, 0 }};
+STATIC udouble z_notanum  = {{ 0xfff80000, 0 }};
 /*
  * ====================================================
  * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.

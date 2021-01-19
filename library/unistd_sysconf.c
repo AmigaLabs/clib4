@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_usleep.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: unistd_sysconf.c,v 1.0 2021-01-19 10:09:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,27 +35,25 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
+long sysconf(int name) {
+    int retval = -1;
+    switch (name) {
+        case _SC_CLK_TCK:
+            return CLK_TCK;
+            break;
+        case _SC_OPEN_MAX:
+            return FOPEN_MAX;
+            break;
+        case _SC_PAGESIZE:
+            GetCPUInfoTags(GCIT_CPUPageSize, &retval, TAG_DONE);
+            break;
+        case _SC_TZNAME_MAX:
+            return MAX_TZSIZE;
+            break;
+        default:
+            __set_errno(EINVAL);
+            break;
+    }
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int usleep(unsigned long microseconds)
-{
-	int retval = 0;
-	ENTER();
-
-	SHOWVALUE(microseconds);
-
-	__time_delay(0, microseconds);
-
-	// errno is set in __time_delay if it is break by a signal
-	if (errno != 0)
-		retval = -1;
-
-	LEAVE();
-
-	RETURN(retval);
-	return retval;
+    return retval;
 }

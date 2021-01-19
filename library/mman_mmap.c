@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_usleep.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: mman_mmap.c,v 1.0 2021-01-18 20:17:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,27 +35,55 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
+#include <sys/mman.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int usleep(unsigned long microseconds)
+void *
+mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
 {
-	int retval = 0;
-	ENTER();
+    if (fd > 0)
+    {
+        if (addr != NULL)
+        {
+            if ((addr = calloc(1, len)))
+            {
+                lseek(fd, offset, SEEK_SET);
+                read(fd, addr, len);
+            }
 
-	SHOWVALUE(microseconds);
+            if (!addr)
+            {
+                __set_errno(ENOMEM);
+                return NULL;
+            }
 
-	__time_delay(0, microseconds);
+            return addr;
+        }
+        else
+        {
+            void *data = calloc(1, len);
+            if (data != NULL)
+            {
+                lseek(fd, offset, SEEK_SET);
+                read(fd, data, len);
+            }
 
-	// errno is set in __time_delay if it is break by a signal
-	if (errno != 0)
-		retval = -1;
+            if (!data)
+            {
+                __set_errno(ENOMEM);
+                return NULL;
+            }
 
-	LEAVE();
-
-	RETURN(retval);
-	return retval;
+            return data;
+        }
+    }
+    else
+    {
+        if ((addr = calloc(1, len)))
+            return addr;
+        else
+        {
+            __set_errno(ENOMEM);
+            return NULL;
+        }
+    }
 }
