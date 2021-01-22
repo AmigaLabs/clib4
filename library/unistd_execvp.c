@@ -41,68 +41,16 @@
 
 /****************************************************************************/
 
-/* A local version of the BSD strsep() function. */
-static char *
-local_strsep(char ** string_ptr, const char * delimiter)
+int execvp(const char *command, char *const argv[])
 {
-	char * result = NULL;
-	char * string;
-
-	assert( string_ptr != NULL && delimiter != NULL );
-
-	string = (*string_ptr);
-	if(string != NULL)
-	{
-		char * token = string;
-		char c;
-
-		while(TRUE)
-		{
-			c = (*string++);
-
-			/* Reached the end of the string? */
-			if(c == '\0')
-			{
-				/* No further string data available. */
-				(*string_ptr) = NULL;
-
-				result = token;
-				break;
-			}
-
-			/* Is that character a delimiter? */
-			if(strchr(delimiter,c) != NULL)
-			{
-				/* NUL-terminate the string, overwriting
-				   the delimiter character */
-				string[-1] = '\0';
-
-				/* Scanning can resume with the next following
-				   character. */
-				(*string_ptr) = string;
-
-				result = token;
-				break;
-			}
-		}
-	}
-
-	return(result);
-}
-
-/****************************************************************************/
-
-int
-execvp(const char *command,char * const argv[])
-{
-	char * command_buffer = NULL;
-	size_t command_name_len,i;
-	char * path_copy = NULL;
+	char *command_buffer = NULL;
+	size_t command_name_len, i;
+	char *path_copy = NULL;
 	int result = -1;
 	BOOL found_path_separators;
 
 	/* Do not allow null command */
-	if(command == NULL || (*command) == '\0')
+	if (command == NULL || (*command) == '\0')
 	{
 		__set_errno(ENOENT);
 		goto out;
@@ -114,9 +62,9 @@ execvp(const char *command,char * const argv[])
 	   command name. */
 	found_path_separators = FALSE;
 
-	for(i = 0 ; i < command_name_len ; i++)
+	for (i = 0; i < command_name_len; i++)
 	{
-		if(command[i] == '/' || command[i] == ':')
+		if (command[i] == '/' || command[i] == ':')
 		{
 			found_path_separators = TRUE;
 			break;
@@ -124,16 +72,16 @@ execvp(const char *command,char * const argv[])
 	}
 
 	/* If it's an absolute or relative path name, it's easy. */
-	if(found_path_separators)
+	if (found_path_separators)
 	{
 		result = execve(command, argv, environ);
 	}
 	else
 	{
 		size_t command_buffer_size = 0;
-		const char * path_delimiter;
-		char * path;
-		const char * search_prefix;
+		const char *path_delimiter;
+		char *path;
+		const char *search_prefix;
 		size_t search_prefix_len;
 		size_t complete_path_len;
 		int error;
@@ -142,11 +90,11 @@ execvp(const char *command,char * const argv[])
 		   we will be making a copy of it. This avoids trouble
 		   lateron when we will be calling getenv() again. */
 		path = getenv("PATH");
-		if(path == NULL)
+		if (path == NULL)
 			path = (char *)__default_path;
 
 		path_copy = strdup(path);
-		if(path_copy == NULL)
+		if (path_copy == NULL)
 		{
 			__set_errno(ENOMEM);
 			goto out;
@@ -155,41 +103,41 @@ execvp(const char *command,char * const argv[])
 		path = path_copy;
 
 		path_delimiter = getenv("PATH_SEPARATOR");
-		if(path_delimiter == NULL)
+		if (path_delimiter == NULL)
 			path_delimiter = __default_path_delimiter;
 
-		while((search_prefix = local_strsep(&path,path_delimiter)) != NULL)
+		while ((search_prefix = strsep(&path, path_delimiter)) != NULL)
 		{
-			if((*search_prefix) == '\0')
+			if ((*search_prefix) == '\0')
 				search_prefix = ".";
 
 			search_prefix_len = strlen(search_prefix);
 
 			complete_path_len = search_prefix_len + 1 + command_name_len;
-			if(complete_path_len + 1 > command_buffer_size)
+			if (complete_path_len + 1 > command_buffer_size)
 			{
-				char * new_command_buffer;
+				char *new_command_buffer;
 
 				/* Allocate a little more memory than we
 				   really need. */
 				new_command_buffer = malloc(complete_path_len + 10);
-				if(new_command_buffer == NULL)
+				if (new_command_buffer == NULL)
 				{
 					__set_errno(ENOMEM);
 					goto out;
 				}
 
-				if(command_buffer != NULL)
+				if (command_buffer != NULL)
 					free(command_buffer);
 
-				command_buffer		= new_command_buffer;
-				command_buffer_size	= complete_path_len + 10;
+				command_buffer = new_command_buffer;
+				command_buffer_size = complete_path_len + 10;
 			}
 
 			/* Combine the search prefix with the command name. */
-			memcpy(command_buffer,search_prefix,search_prefix_len);
+			memcpy(command_buffer, search_prefix, search_prefix_len);
 			command_buffer[search_prefix_len] = '/';
-			memcpy(&command_buffer[search_prefix_len+1],command,command_name_len);
+			memcpy(&command_buffer[search_prefix_len + 1], command, command_name_len);
 			command_buffer[complete_path_len] = '\0';
 
 			/* Now try to run that command. */
@@ -199,12 +147,12 @@ execvp(const char *command,char * const argv[])
 			   the command to be run could not be executed? */
 			error = __get_errno();
 
-			if(result == 0 ||
-			   (error != EACCES &&
-			    error != EISDIR &&
-			    error != ENOENT &&
-			    error != ENOEXEC &&
-			    error != EPERM))
+			if (result == 0 ||
+				(error != EACCES &&
+				 error != EISDIR &&
+				 error != ENOENT &&
+				 error != ENOEXEC &&
+				 error != EPERM))
 			{
 				break;
 			}
@@ -214,13 +162,13 @@ execvp(const char *command,char * const argv[])
 		}
 	}
 
- out:
+out:
 
-	if(path_copy != NULL)
+	if (path_copy != NULL)
 		free(path_copy);
 
-	if(command_buffer != NULL)
+	if (command_buffer != NULL)
 		free(command_buffer);
 
-	return(result);
+	return (result);
 }

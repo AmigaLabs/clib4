@@ -71,6 +71,8 @@ extern size_t strcspn(const char *s, const char *set);
 extern char *strpbrk(const char *s, const char *set);
 extern char *strtok(char *str, const char *set);
 extern char *strstr(const char *src, const char *sub);
+extern char *strsep(char ** src, const char *delim);
+extern char *stpcpy(char *dest, const char *src);
 
 /****************************************************************************/
 

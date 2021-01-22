@@ -1,5 +1,5 @@
 /*
- * $Id: math_isnan.c,v 1.0 2021-01-16 16:47:23 apalmate Exp $
+ * $Id: argz_create_sep.c,v 1.0 2021-01-21 11:14:32 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,25 +29,63 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ *
+ * Documentation and source code for this library, and the most recent library
+ * build are available from <http://sourceforge.net/projects/clib2>.
+ *
+ *****************************************************************************
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-#ifndef _MATH_HEADERS_H
-#include "math_headers.h"
-#endif /* _MATH_HEADERS_H */
-/****************************************************************************/
+#include <argz.h>
 
-int 
-__isnan(double x)
+error_t
+argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len)
 {
-    int32 hx,lx;
-	EXTRACT_WORDS(hx,lx,x);
-	hx &= 0x7fffffff;
-	hx |= (uint32)(lx|(-lx))>>31;	
-	hx = 0x7ff00000 - hx;
-	return (int)(((uint32)(hx))>>31);
+    int len = 0;
+    int i = 0;
+    int num_strings = 0;
+    char delim[2];
+    char *running = 0;
+    char *old_running = 0;
+    char *token = 0;
+    char *iter = 0;
+
+    delim[0] = sep;
+    delim[1] = '\0';
+
+    running = strdup(string);
+    old_running = running;
+
+    while ((token = strsep(&running, delim)))
+    {
+        len = strlen(token);
+        *argz_len += (len + 1);
+        num_strings++;
+    }
+
+    if (!(*argz = (char *)malloc(*argz_len)))
+        return ENOMEM;
+
+    free(old_running);
+
+    running = strdup(string);
+    old_running = running;
+
+    iter = *argz;
+    for (i = 0; i < num_strings; i++)
+    {
+        token = strsep(&running, delim);
+        len = strlen(token) + 1;
+        memcpy(iter, token, len);
+        iter += len;
+    }
+
+    free(old_running);
+    return 0;
 }

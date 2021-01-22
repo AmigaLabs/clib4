@@ -46,7 +46,8 @@
    be part of ISO/IEC 9899:1999, also known as "C99". */
 
 /****************************************************************************/
-int isinf(double x)
+int 
+__isinf(double x)
 {
     int32 hx,lx;
 	EXTRACT_WORDS(hx,lx,x);

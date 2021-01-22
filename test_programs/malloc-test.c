@@ -304,7 +304,7 @@ bin_test()
 
         for(b=0; b<bins; b++) {
                 if(v = mem_check(m[b].ptr, m[b].size)) {
-                        printf("bin_test: memory corrupt! m[%d].ptr = %x, m[%d].size = %d\n",
+                        printf("bin_test: memory corrupt! m[%d].ptr = %x, m[%d].size = %ld\n",
 							   b, m[b].ptr, b, m[b].size);
 						printf ("error = %d\n", v);
                         exit(1);
@@ -312,7 +312,7 @@ bin_test()
         }
         for(b=0; b<sbins; b++) {
                 if(mem_check(sm[b].ptr, sm[b].size)) {
-                        printf("bin_test: memory corrupt! sm[%d].ptr = %x, sm[%d].size = %d\n",
+                        printf("bin_test: memory corrupt! sm[%d].ptr = %x, sm[%d].size = %ld\n",
 							   b, sm[b].ptr, b, sm[b].size);
                         exit(1);
                 }
@@ -322,7 +322,7 @@ bin_test()
 void
 print_times()
 {
-#if !defined(_WIN32) && !defined(AMIGA)
+#if !defined(_WIN32)
         struct rusage ru;
         long total_sec, total_usec;
 

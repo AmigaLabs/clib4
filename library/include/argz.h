@@ -1,5 +1,5 @@
 /*
- * $Id: malloc_memalign.c,v 1.0 2021-01-10 10:52:18 apalmate Exp $
+ * $Id: argz.h,v 1.0 2021-01-21 10:03:49 apalmate Exp $
  *
  * :ts=4
  *
@@ -37,61 +37,45 @@
  *
  *****************************************************************************
  */
+#ifndef _ARGZ_H
+#define _ARGZ_H
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#include <sys/types.h>
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
+/****************************************************************************/
 
-#include <stdint.h>
-#include <malloc.h>
-
-struct alignlist
+#ifdef __cplusplus
+extern "C"
 {
-   struct alignlist *next;
-   void *aligned;  /* The address that mmemaligned returned.  */
-   void *exact;    /* The address that malloc returned.  */
-};
-struct alignlist *_aligned_blocks = NULL;
+#endif /* __cplusplus */
 
-void *memalign(size_t alignment, size_t size)
-{
-    void *result;
-    unsigned long int adj;
+/****************************************************************************/
+#ifndef __error_t_defined
+#define __error_t_defined 1
+    typedef int error_t;
+#endif
 
-    size = ((size + alignment - 1) / alignment) * alignment;
+/****************************************************************************/
 
-    result = malloc(size);
-    if (result == NULL)
-        return NULL;
+extern error_t argz_create(char *const argv[], char **argz, size_t *argz_len);
+extern error_t argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len);
+extern size_t argz_count(const char *argz, size_t argz_len);
+extern void argz_extract(char *argz, size_t argz_len, char **argv);
+extern void argz_stringify(char *argz, size_t argz_len, int sep);
+extern error_t argz_add(char **argz, size_t *argz_len, const char *str);
+extern error_t argz_add_sep(char **argz, size_t *argz_len, const char *str, int sep);
+extern error_t argz_append(char **argz, size_t *argz_len, const char *buf, size_t buf_len);
+extern error_t argz_delete(char **argz, size_t *argz_len, char *entry);
+extern error_t argz_insert(char **argz, size_t *argz_len, char *before, const char *entry);
+extern char *argz_next(char *argz, size_t argz_len, const char *entry);
+extern error_t argz_replace(char **argz, size_t *argz_len, const char *str, const char *with, unsigned *replace_count);
 
-    adj = (unsigned long int)((unsigned long int)((char *)result - (char *)NULL)) % alignment;
-    if (adj != 0)
-    {
-        struct alignlist *l;
-        for (l = _aligned_blocks; l != NULL; l = l->next) {
-            /* This slot is free.  Use it.  */
-            if (l->aligned == NULL) {
-                break;
-            }
-        }
-        if (l == NULL)
-        {
-            l = (struct alignlist *)malloc(sizeof(struct alignlist));
-            if (l == NULL)
-            {
-                free(result);
-                return NULL;
-            }
-        }
-        l->exact = result;
-        result = l->aligned = (char *)result + alignment - adj;
-        l->next = _aligned_blocks;
-        _aligned_blocks = l;
-    }
+/****************************************************************************/
 
-    return result;
+#ifdef __cplusplus
 }
+#endif /* __cplusplus */
+
+/****************************************************************************/
+
+#endif // _ARGZ_H

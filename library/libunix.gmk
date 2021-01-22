@@ -35,6 +35,7 @@ UNIX_LIB := \
 	poll_poll.o \
 	resource_getrlimit.o \
 	resource_setrlimit.o \
+	resource_getrusage.o \
 	stat_chmod.o \
 	stat_fstat.o \
 	stat_lstat.o \

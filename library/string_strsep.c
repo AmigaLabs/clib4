@@ -1,5 +1,5 @@
 /*
- * $Id: math_isnan.c,v 1.0 2021-01-16 16:47:23 apalmate Exp $
+ * $Id: string_strsep.c,v 1.0 2021-01-21 11:20:32 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,25 +29,61 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ *
+ * Documentation and source code for this library, and the most recent library
+ * build are available from <http://sourceforge.net/projects/clib2>.
+ *
+ *****************************************************************************
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-#ifndef _MATH_HEADERS_H
-#include "math_headers.h"
-#endif /* _MATH_HEADERS_H */
-/****************************************************************************/
-
-int 
-__isnan(double x)
+char *
+strsep(char **src, const char *delim)
 {
-    int32 hx,lx;
-	EXTRACT_WORDS(hx,lx,x);
-	hx &= 0x7fffffff;
-	hx |= (uint32)(lx|(-lx))>>31;	
-	hx = 0x7ff00000 - hx;
-	return (int)(((uint32)(hx))>>31);
+    char *result = NULL;
+    char *string;
+
+    string = (*src);
+    if (string != NULL)
+    {
+        char *token = string;
+        char c;
+
+        while (TRUE)
+        {
+            c = (*string++);
+
+            /* Reached the end of the string? */
+            if (c == '\0')
+            {
+                /* No further string data available. */
+                (*src) = NULL;
+
+                result = token;
+                break;
+            }
+
+            /* Is that character a delim? */
+            if (strchr(delim, c) != NULL)
+            {
+                /* NUL-terminate the string, overwriting
+				   the delim character */
+                string[-1] = '\0';
+
+                /* Scanning can resume with the next following
+				   character. */
+                (*src) = string;
+
+                result = token;
+                break;
+            }
+        }
+    }
+
+    return (result);
 }

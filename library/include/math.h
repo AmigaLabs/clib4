@@ -151,9 +151,11 @@ extern int __isfinite_float(float x);
 extern int __isfinite_double(double x);
 extern int __signbit_float(float x);
 extern int __signbit_double(double x);
+extern int __isnan (double x);
+extern int __isinf (double x);
 
 /****************************************************************************/
-
+#if defined(__GNUC__)
 #define fpclassify(x) \
 	(sizeof(x) == sizeof(float) ?	\
 		__fpclassify_float(x) :		\
@@ -174,6 +176,20 @@ extern int __signbit_double(double x);
 	(sizeof(x) == sizeof(float) ?	\
 		__signbit_float(x) :		\
 		__signbit_double(x))
+
+#define isinf(x) \
+	((sizeof(x) == sizeof(float) ?	\
+		__fpclassify_float(x) :		\
+		__fpclassify_double(x))		\
+	== FP_INFINITE)
+
+#define isnan(x) \
+	((sizeof(x) == sizeof(float) ?	\
+		__fpclassify_float(x) :		\
+		__fpclassify_double(x))		\
+	== FP_NAN)
+
+#endif //defined(__GNUC__)
 
 /****************************************************************************/
 
@@ -264,8 +280,11 @@ extern float tgammaf(float x);
 extern float truncf(float x);
 extern int ilogbf(float x);
 extern int finite(double x);
-extern int isinf(double x);
-extern int isnan(double x);
+
+#if !defined(__GNUC__)
+#define isinf(x) __isinf(x)
+#define isnan(x) __isnan(x)
+#endif
 
 /****************************************************************************/
 

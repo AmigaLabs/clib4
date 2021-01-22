@@ -1,5 +1,5 @@
 /*
- * $Id: math_isnan.c,v 1.0 2021-01-16 16:47:23 apalmate Exp $
+ * $Id: unistd_spawnvp.c,v 1.0 2021-01-21 19:58:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,23 +31,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
+#ifndef _UNISTD_HEADERS_H
+#include "unistd_headers.h"
+#endif /* _UNISTD_HEADERS_H */
 
 /****************************************************************************/
-#ifndef _MATH_HEADERS_H
-#include "math_headers.h"
-#endif /* _MATH_HEADERS_H */
+
+/* The following is not part of the ISO 'C' (1994) standard. */
+
 /****************************************************************************/
 
-int 
-__isnan(double x)
+int spawnvp(int mode, const char *path, const char *const *argv)
 {
-    int32 hx,lx;
-	EXTRACT_WORDS(hx,lx,x);
-	hx &= 0x7fffffff;
-	hx |= (uint32)(lx|(-lx))>>31;	
-	hx = 0x7ff00000 - hx;
-	return (int)(((uint32)(hx))>>31);
+    return spawnv(mode, path, argv);
 }

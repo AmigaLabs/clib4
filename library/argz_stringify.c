@@ -1,5 +1,5 @@
 /*
- * $Id: math_isnan.c,v 1.0 2021-01-16 16:47:23 apalmate Exp $
+ * $Id: argz_stringify.c,v 1.0 2021-01-21 11:39:35 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,25 +29,29 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ *
+ * Documentation and source code for this library, and the most recent library
+ * build are available from <http://sourceforge.net/projects/clib2>.
+ *
+ *****************************************************************************
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-#ifndef _MATH_HEADERS_H
-#include "math_headers.h"
-#endif /* _MATH_HEADERS_H */
-/****************************************************************************/
+#include <argz.h>
 
-int 
-__isnan(double x)
+void argz_stringify(char *argz, size_t argz_len, int sep)
 {
-    int32 hx,lx;
-	EXTRACT_WORDS(hx,lx,x);
-	hx &= 0x7fffffff;
-	hx |= (uint32)(lx|(-lx))>>31;	
-	hx = 0x7ff00000 - hx;
-	return (int)(((uint32)(hx))>>31);
+    size_t i;
+
+    /* len includes trailing \0, which we don't want to replace. */
+    for (i = 0; i < argz_len - 1; i++)
+    {
+        if (argz[i] == '\0')
+            argz[i] = sep;
+    }
 }

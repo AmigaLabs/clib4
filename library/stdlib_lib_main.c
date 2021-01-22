@@ -57,6 +57,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#include <proto/dos.h>
+
 /****************************************************************************/
 
 STATIC BOOL lib_init_successful;
@@ -64,82 +66,82 @@ STATIC BOOL lib_init_successful;
 /****************************************************************************/
 
 STATIC BOOL
-open_libraries(struct Library * sys_base)
+open_libraries(struct Library *sys_base)
 {
 	BOOL success = FALSE;
 	int os_version;
 
 	SysBase = sys_base;
 
-	#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 	{
 		/* Get exec interface */
 		IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 	}
-	#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
 	/* Check which minimum operating system version we actually require. */
 	os_version = 37;
-	if(__minimum_os_lib_version > 37)
+	if (__minimum_os_lib_version > 37)
 		os_version = __minimum_os_lib_version;
 
 	/* Open the minimum required libraries. */
-	DOSBase = (struct Library *)OpenLibrary("dos.library",os_version);
-	if(DOSBase == NULL)
+	DOSBase = (struct Library *)OpenLibrary("dos.library", os_version);
+	if (DOSBase == NULL)
 		goto out;
 
-	__UtilityBase = OpenLibrary("utility.library",os_version);
-	if(__UtilityBase == NULL)
+	__UtilityBase = OpenLibrary("utility.library", os_version);
+	if (__UtilityBase == NULL)
 		goto out;
 
-	#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 	{
 		/* Obtain the interfaces for these libraries. */
 		IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
-		if(IDOS == NULL)
+		if (IDOS == NULL)
 			goto out;
 
 		__IUtility = (struct UtilityIFace *)GetInterface(__UtilityBase, "main", 1, 0);
-		if(__IUtility == NULL)
+		if (__IUtility == NULL)
 			goto out;
 	}
-	#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
 	success = TRUE;
 
- out:
+out:
 
-	return(success);
+	return (success);
 }
 
 /****************************************************************************/
 
 STATIC VOID
-close_libraries(VOID)
+	close_libraries(VOID)
 {
-	#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 	{
-		if(__IUtility != NULL)
+		if (__IUtility != NULL)
 		{
 			DropInterface((struct Interface *)__IUtility);
 			__IUtility = NULL;
 		}
 
-		if(IDOS != NULL)
+		if (IDOS != NULL)
 		{
 			DropInterface((struct Interface *)IDOS);
 			IDOS = NULL;
 		}
 	}
-	#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
-	if(__UtilityBase != NULL)
+	if (__UtilityBase != NULL)
 	{
 		CloseLibrary(__UtilityBase);
 		__UtilityBase = NULL;
 	}
 
-	if(DOSBase != NULL)
+	if (DOSBase != NULL)
 	{
 		CloseLibrary(DOSBase);
 		DOSBase = NULL;
@@ -149,11 +151,11 @@ close_libraries(VOID)
 /****************************************************************************/
 
 VOID
-__lib_exit(VOID)
+	__lib_exit(VOID)
 {
 	ENTER();
 
-	if(lib_init_successful)
+	if (lib_init_successful)
 	{
 		/* Enable exit() again. */
 		__exit_blocked = FALSE;
@@ -176,8 +178,7 @@ __lib_exit(VOID)
 
 /****************************************************************************/
 
-BOOL
-__lib_init(struct Library * sys_base)
+BOOL __lib_init(struct Library *sys_base)
 {
 	int result = FALSE;
 
@@ -188,11 +189,11 @@ __lib_init(struct Library * sys_base)
 	__lib_startup = TRUE;
 
 	/* Open dos.library and utility.library. */
-	if(CANNOT open_libraries(sys_base))
+	if (CANNOT open_libraries(sys_base))
 		goto out;
 
 	/* This plants the return buffer for _exit(). */
-	if(setjmp(__exit_jmp_buf) != 0)
+	if (setjmp(__exit_jmp_buf) != 0)
 	{
 		SHOWMSG("invoking the destructors");
 
@@ -220,13 +221,13 @@ __lib_init(struct Library * sys_base)
 
 	result = TRUE;
 
- out:
+out:
 
-	if(NOT lib_init_successful)
+	if (NOT lib_init_successful)
 		close_libraries();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

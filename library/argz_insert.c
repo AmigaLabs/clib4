@@ -1,5 +1,5 @@
 /*
- * $Id: math_isnan.c,v 1.0 2021-01-16 16:47:23 apalmate Exp $
+ * $Id: argz_insert.c,v 1.0 2021-01-21 10:08:32 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,25 +29,44 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ *
+ * Documentation and source code for this library, and the most recent library
+ * build are available from <http://sourceforge.net/projects/clib2>.
+ *
+ *****************************************************************************
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-#ifndef _MATH_HEADERS_H
-#include "math_headers.h"
-#endif /* _MATH_HEADERS_H */
-/****************************************************************************/
+#include <argz.h>
 
-int 
-__isnan(double x)
+error_t
+argz_insert(char **argz, size_t *argz_len, char *before, const char *entry)
 {
-    int32 hx,lx;
-	EXTRACT_WORDS(hx,lx,x);
-	hx &= 0x7fffffff;
-	hx |= (uint32)(lx|(-lx))>>31;	
-	hx = 0x7ff00000 - hx;
-	return (int)(((uint32)(hx))>>31);
+    int len = 0;
+
+    if (before == NULL)
+        return argz_add(argz, argz_len, entry);
+
+    if (before < *argz || before >= *argz + *argz_len)
+        return EINVAL;
+
+    while (before != *argz && before[-1])
+        before--;
+
+    len = strlen(entry) + 1;
+
+    if (!(*argz = (char *)realloc(*argz, *argz_len + len)))
+        return ENOMEM;
+
+    memmove(before + len, before, *argz + *argz_len - before);
+    memcpy(before, entry, len);
+
+    *argz_len += len;
+
+    return 0;
 }

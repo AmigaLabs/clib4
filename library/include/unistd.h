@@ -55,6 +55,10 @@
 #include <stdio.h>
 #endif /* _STDIO_H */
 
+#ifndef _STDINT_H
+#include <stdint.h>
+#endif /* _STDINT_H */
+
 #if !defined(__NO_NET_API) && !defined(_SYS_SELECT_H)
 #include <sys/select.h>
 #endif /* __NO_NET_API && _SYS_SELECT_H */
@@ -132,6 +136,10 @@ extern int execlp(const char *path,const char *arg0,...);
 extern int execv(const char *path,char * const argv[]);
 extern int execve(const char *path,char *const argv[],char *const envp[]);
 extern int execvp(const char *command,char * const argv[]);
+
+extern int spawnv(int mode, const char *file, const char * const *argv);
+extern int spawnvp(int mode, const char *path, const char * const *argv);
+
 extern int profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale);
 extern long sysconf(int name);
 
@@ -224,6 +232,22 @@ extern long fpathconf(int file_descriptor,int name);
 
 extern int pipe (int fd[2]);
 extern int pipe2 (int fd[2], int flags);
+
+/****************************************************************************/
+
+#define _P_WAIT         1
+#define _P_NOWAIT       2
+#define _P_OVERLAY      3
+#define _P_NOWAITO      4
+#define _P_DETACH       5
+
+#define P_WAIT          _P_WAIT
+#define P_NOWAIT        _P_NOWAIT
+#define P_OVERLAY       _P_OVERLAY
+#define P_NOWAITO       _P_NOWAITO
+#define P_DETACH        _P_DETACH
+
+#define WAIT_CHILD 1
 
 /****************************************************************************/
 

@@ -80,7 +80,7 @@ struct TimerIFace * NOCOMMON __ITimer;
 CLIB_CONSTRUCTOR(timer_init)
 {
 	BOOL success = FALSE;
-
+	
 	ENTER();
 
 	__timer_port = CreateMsgPort();

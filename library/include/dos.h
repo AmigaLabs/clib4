@@ -55,6 +55,10 @@
 #include <stddef.h>
 #endif /* _STDDEF_H */
 
+#ifndef _RESOURCE_H
+#include <sys/resource.h>
+#endif /* _RESOURCE_H */
+
 /****************************************************************************/
 
 #ifndef EXEC_LIBRARIES_H
@@ -64,6 +68,10 @@
 #ifndef WORKBENCH_STARTUP_H
 #include <workbench/startup.h>
 #endif /* WORKBENCH_STARTUP_H */
+
+#ifndef DEVICES_TIMER_H
+#include <devices/timer.h>
+#endif
 
 /****************************************************************************/
 
@@ -562,6 +570,18 @@ extern void __execve_exit(int return_code);
  * deletion to fail instead, set '__unlink_retries' to FALSE.
  */
 extern BOOL __unlink_retries;
+
+/*
+ * Initial _clib2 structure. This shoulr be replaced with a _reent structure 
+ * and populated with all its fields. At momen it holds just global fields
+ */
+
+struct _clib2 {
+	struct TimeVal clock;
+	struct rusage ru;
+};
+
+extern struct _clib2 *__global_clib2;
 
 /****************************************************************************/
 

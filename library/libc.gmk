@@ -21,6 +21,18 @@ LIBS += \
 
 C_LIB := \
 	c.lib_rev.o \
+	argz_add.o \
+	argz_add_sep.o \
+	argz_append.o \
+	argz_count.o \
+	argz_create.o \
+	argz_create_sep.o \
+	argz_delete.o \
+	argz_extract.o \
+	argz_insert.o \
+	argz_next.o \
+	argz_replace.o \
+	argz_stringify.o \
 	ctype_isalnum.o \
 	ctype_isalpha.o \
 	ctype_isascii.o \
@@ -54,6 +66,8 @@ C_LIB := \
 	fcntl_write.o \
 	ftw_ftw.o \
 	ftw_nftw.o \
+	glob_glob.o \
+	glob_globfree.o \
 	inttypes_imaxdiv.o \
 	inttypes_imaxabs.o \
 	inttypes_strtoimax.o \
@@ -315,6 +329,7 @@ C_LIB := \
 	string_memmove.o \
 	string_memset.o \
 	string_rindex.o \
+	string_stpcpy.o \
 	string_strcat.o \
 	string_strchr.o \
 	string_strcmp.o \
@@ -333,6 +348,7 @@ C_LIB := \
 	string_strnlen.o \
 	string_strpbrk.o \
 	string_strrchr.o \
+	string_strsep.o \
 	string_strspn.o \
 	string_strstr.o \
 	string_strtok.o \
@@ -393,6 +409,8 @@ C_LIB := \
 	unistd_readlink.o \
 	unistd_realpath.o \
 	unistd_sleep.o \
+	unistd_spawnv.o \
+	unistd_spawnvp.o \
 	unistd_symlink.o \
 	unistd_sync_fd.o \
 	unistd_sysconf.o \

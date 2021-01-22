@@ -209,7 +209,6 @@ CLIB_DESTRUCTOR(timezone_exit)
 
 CLIB_CONSTRUCTOR(timezone_init)
 {
-    printf("timezone_init");
 	BOOL success = FALSE;
 	int i;
 

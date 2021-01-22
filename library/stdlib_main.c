@@ -53,6 +53,14 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef _TIME_HEADERS_H
+#include "time_headers.h"
+#endif /* _TIME_HEADERS_H */
+
+#ifndef _UNISTD_HEADERS_H
+#include "unistd_headers.h"
+#endif /* _UNISTD_HEADERS_H */
+
 /****************************************************************************/
 
 #ifndef _STDLIB_PROFILE_MONITORING_H
@@ -71,12 +79,13 @@
 
 /****************************************************************************/
 
-extern int main(int arg_c,char ** arg_v);
+extern int main(int arg_c, char **arg_v);
 
 /****************************************************************************/
 
 /* This will be set to TRUE in case a stack overflow was detected. */
 BOOL NOCOMMON __stack_overflow;
+struct _clib2 *__global_clib2 = NULL;
 
 /****************************************************************************/
 
@@ -88,7 +97,7 @@ call_main(void)
 	ENTER();
 
 	/* This plants the return buffer for _exit(). */
-	if(setjmp(__exit_jmp_buf) != 0)
+	if (setjmp(__exit_jmp_buf) != 0)
 		goto out;
 
 	SHOWMSG("now invoking the constructors");
@@ -96,60 +105,73 @@ call_main(void)
 	/* Go through the constructor list */
 	_init();
 
+
+	/* Initialize global structure */	
+	__global_clib2 = (struct _clib2 *)AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+	if (!__global_clib2)
+	{
+		goto out;
+	}
+	else {
+#if defined(__amigaos4__)
+	struct TimerIFace *ITimer = __ITimer;
+#endif
+		GetSysTime(&__global_clib2->clock);
+	}
+	
 	SHOWMSG("done.");
 
 	/* If the SAS/C profiling code is set up for printing function
 	   call chains, switch it on now. */
 	__show_profile_names();
 
-	/* This can be helpful for debugging purposes: print the name of the current
+/* This can be helpful for debugging purposes: print the name of the current
 	   directory, followed by the name of the command and all the parameters
 	   passed to it. */
-	#ifndef NDEBUG
+#ifndef NDEBUG
 	{
 		UBYTE value_str[10];
 		LONG value;
 
 		/* Careful: only echo this information if a global environment
 		            variable is set to enable this feature! */
-		if(GetVar("_echo",value_str,sizeof(value_str),GVF_GLOBAL_ONLY) > 0 && StrToLong(value_str,&value) > 0 && value != 0)
+		if (GetVar("_echo", value_str, sizeof(value_str), GVF_GLOBAL_ONLY) > 0 && StrToLong(value_str, &value) > 0 && value != 0)
 		{
-			struct Process * this_process = (struct Process *)FindTask(NULL);
-			UBYTE * arg_str = GetArgStr();
+			struct Process *this_process = (struct Process *)FindTask(NULL);
+			UBYTE *arg_str = GetArgStr();
 			size_t arg_str_len = strlen(arg_str);
-			UBYTE * arg_str_copy;
+			UBYTE *arg_str_copy;
 			UBYTE current_dir_name[256];
 
-			#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 			{
-				arg_str_copy = AllocVec(arg_str_len+1,MEMF_PRIVATE);
+				arg_str_copy = AllocVec(arg_str_len + 1, MEMF_PRIVATE);
 			}
-			#else
+#else
 			{
-				arg_str_copy = AllocVec(arg_str_len+1,MEMF_ANY);
+				arg_str_copy = AllocVec(arg_str_len + 1, MEMF_ANY);
 			}
-			#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
-
-			if(arg_str_copy != NULL && NameFromLock(this_process->pr_CurrentDir,current_dir_name,sizeof(current_dir_name)))
+			if (arg_str_copy != NULL && NameFromLock(this_process->pr_CurrentDir, current_dir_name, sizeof(current_dir_name)))
 			{
-				strcpy(arg_str_copy,arg_str);
+				strcpy(arg_str_copy, arg_str);
 
-				while(arg_str_len > 0 && arg_str_copy[arg_str_len-1] <= ' ')
+				while (arg_str_len > 0 && arg_str_copy[arg_str_len - 1] <= ' ')
 					arg_str_copy[--arg_str_len] = '\0';
 
-				kprintf("[%s] %s %s\n",current_dir_name,__program_name,arg_str_copy);
+				kprintf("[%s] %s %s\n", current_dir_name, __program_name, arg_str_copy);
 			}
 
 			FreeVec(arg_str_copy);
 		}
 	}
-	#endif /* NDEBUG */
+#endif /* NDEBUG */
 
 	/* After all these preparations, get this show on the road... */
-	exit(main((int)__argc,(char **)__argv));
+	exit(main((int)__argc, (char **)__argv));
 
- out:
+out:
 
 	/* Save the current IoErr() value in case it is needed later. */
 	saved_io_err = IoErr();
@@ -165,7 +187,7 @@ call_main(void)
 	   longjmp() and exit() did not get called. This
 	   means that we will have to show the error message
 	   and invoke exit() all on our own. */
-	if(__stack_overflow)
+	if (__stack_overflow)
 	{
 		SHOWMSG("we have a stack overflow");
 
@@ -174,16 +196,16 @@ call_main(void)
 
 		__show_error("Stack overflow detected");
 
-		if(setjmp(__exit_jmp_buf) == 0)
+		if (setjmp(__exit_jmp_buf) == 0)
 			exit(RETURN_FAIL);
 	}
 
-	/* If necessary, print stack size usage information. */
-	#ifndef NDEBUG
+/* If necessary, print stack size usage information. */
+#ifndef NDEBUG
 	{
 		__stack_usage_exit();
 	}
-	#endif /* NDEBUG */
+#endif /* NDEBUG */
 
 	SHOWMSG("invoking the destructors");
 
@@ -201,79 +223,79 @@ call_main(void)
 	SetIoErr(saved_io_err);
 
 	RETURN(__exit_value);
-	return(__exit_value);
+	return (__exit_value);
 }
 
 /****************************************************************************/
 
 STATIC BOOL
-open_libraries(VOID)
+	open_libraries(VOID)
 {
 	BOOL success = FALSE;
 	int os_version;
 
 	/* Check which minimum operating system version we actually require. */
 	os_version = 37;
-	if(__minimum_os_lib_version > 37)
+	if (__minimum_os_lib_version > 37)
 		os_version = __minimum_os_lib_version;
 
 	/* Open the minimum required libraries. */
-	DOSBase = (struct Library *)OpenLibrary("dos.library",os_version);
-	if(DOSBase == NULL)
+	DOSBase = (struct Library *)OpenLibrary("dos.library", os_version);
+	if (DOSBase == NULL)
 		goto out;
 
-	__UtilityBase = OpenLibrary("utility.library",os_version);
-	if(__UtilityBase == NULL)
+	__UtilityBase = OpenLibrary("utility.library", os_version);
+	if (__UtilityBase == NULL)
 		goto out;
 
-	#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 	{
 		/* Obtain the interfaces for these libraries. */
 		IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
-		if(IDOS == NULL)
+		if (IDOS == NULL)
 			goto out;
 
 		__IUtility = (struct UtilityIFace *)GetInterface(__UtilityBase, "main", 1, 0);
-		if(__IUtility == NULL)
+		if (__IUtility == NULL)
 			goto out;
 	}
-	#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
 	success = TRUE;
 
- out:
+out:
 
-	return(success);
+	return (success);
 }
 
 /****************************************************************************/
 
 STATIC VOID
-close_libraries(VOID)
+	close_libraries(VOID)
 {
-	#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 	{
-		if(__IUtility != NULL)
+		if (__IUtility != NULL)
 		{
 			DropInterface((struct Interface *)__IUtility);
 			__IUtility = NULL;
 		}
 
-		if(IDOS != NULL)
+		if (IDOS != NULL)
 		{
 			DropInterface((struct Interface *)IDOS);
 			IDOS = NULL;
 		}
 	}
-	#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
-	if(__UtilityBase != NULL)
+	if (__UtilityBase != NULL)
 	{
 		CloseLibrary(__UtilityBase);
 		__UtilityBase = NULL;
 	}
 
-	if(DOSBase != NULL)
+	if (DOSBase != NULL)
 	{
 		CloseLibrary(DOSBase);
 		DOSBase = NULL;
@@ -283,12 +305,12 @@ close_libraries(VOID)
 /****************************************************************************/
 
 STATIC VOID ASM
-detach_cleanup(REG(d0, LONG UNUSED unused_return_code),REG(d1, BPTR segment_list))
+	detach_cleanup(REG(d0, LONG UNUSED unused_return_code), REG(d1, BPTR segment_list))
 {
-	#if NOT defined(__amigaos4__)
+#if NOT defined(__amigaos4__)
 	{
 		/* The following trick is necessary only under dos.library V40 and below. */
-		if(((struct Library *)DOSBase)->lib_Version < 50)
+		if (((struct Library *)DOSBase)->lib_Version < 50)
 		{
 			/* Now for the slightly shady part. We need to unload the segment
 			   list this program was originally loaded with. We have to close
@@ -302,7 +324,14 @@ detach_cleanup(REG(d0, LONG UNUSED unused_return_code),REG(d1, BPTR segment_list
 			UnLoadSeg(segment_list);
 		}
 	}
-	#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
+
+	/* Free global reent structure */
+	if (__global_clib2)
+	{
+		FreeVec(__global_clib2);
+		Printf("__global_clib2 destroyed\n");
+	}
 
 	close_libraries();
 }
@@ -312,8 +341,8 @@ detach_cleanup(REG(d0, LONG UNUSED unused_return_code),REG(d1, BPTR segment_list
 STATIC ULONG
 get_stack_size(void)
 {
-	struct Task * tc = FindTask(NULL);
-	ULONG upper,lower;
+	struct Task *tc = FindTask(NULL);
+	ULONG upper, lower;
 	ULONG result;
 
 	/* How much stack size was provided? */
@@ -322,37 +351,36 @@ get_stack_size(void)
 
 	result = upper - lower;
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
-int
-_main(void)
+int _main(void)
 {
-	struct Process * volatile child_process = NULL;
-	struct WBStartup * volatile startup_message;
+	struct Process *volatile child_process = NULL;
+	struct WBStartup *volatile startup_message;
 	volatile APTR old_window_pointer = NULL;
 	volatile BOOL old_window_pointer_valid = FALSE;
-	struct Process * this_process;
+	struct Process *this_process;
 	int return_code = RETURN_FAIL;
 	ULONG current_stack_size;
 
 	SysBase = *(struct Library **)4;
 
-	#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 	{
 		/* Get exec interface */
 		IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 	}
-	#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
 	/* Pick up the Workbench startup message, if available. */
 	this_process = (struct Process *)FindTask(NULL);
 
-	if(this_process->pr_CLI == ZERO)
+	if (this_process->pr_CLI == ZERO)
 	{
-		struct MsgPort * mp = &this_process->pr_MsgPort;
+		struct MsgPort *mp = &this_process->pr_MsgPort;
 
 		WaitPort(mp);
 
@@ -366,30 +394,30 @@ _main(void)
 	__WBenchMsg = (struct WBStartup *)startup_message;
 
 	/* Try to open the libraries we need to proceed. */
-	if(CANNOT open_libraries())
+	if (CANNOT open_libraries())
 	{
-		const char * error_message;
+		const char *error_message;
 
 		/* If available, use the error message provided by the client. */
 		error_message = __minimum_os_lib_error;
 
-		#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 		{
-			if(error_message == NULL)
+			if (error_message == NULL)
 				error_message = "This program requires AmigaOS 4.0 or higher.";
 		}
-		#else
+#else
 		{
-			if(error_message == NULL)
+			if (error_message == NULL)
 				error_message = "This program requires AmigaOS 2.04 or higher.";
 		}
-		#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
 		__show_error(error_message);
 		goto out;
 	}
 
-	if(__disable_dos_requesters)
+	if (__disable_dos_requesters)
 	{
 		/* Don't display any requesters. */
 		old_window_pointer = __set_process_window((APTR)-1);
@@ -407,12 +435,12 @@ _main(void)
 	/* If a callback was provided which can fill us in on which
 	   minimum stack size should be used, invoke it now and
 	   store its result in the global __stack_size variable. */
-	if(__get_default_stack_size != NULL)
+	if (__get_default_stack_size != NULL)
 	{
 		unsigned int size;
 
 		size = (*__get_default_stack_size)();
-		if(size > 0)
+		if (size > 0)
 			__stack_size = size;
 	}
 
@@ -422,7 +450,7 @@ _main(void)
 	/* If this is a resident program, don't allow for the detach
 	   code to run. Same goes for launching the program from
 	   Workbench. */
-	if(__is_resident || startup_message != NULL)
+	if (__is_resident || startup_message != NULL)
 	{
 		__detach = FALSE;
 	}
@@ -434,19 +462,19 @@ _main(void)
 
 	/* The following code will be executed if the program is to keep
 	   running in the shell or was launched from Workbench. */
-	if(DO_NOT __detach)
+	if (DO_NOT __detach)
 	{
 		int old_priority = this_process->pr_Task.tc_Node.ln_Pri;
 
 		/* Change the task priority, if requested. */
-		if(-128 <= __priority && __priority <= 127)
-			SetTaskPri((struct Task *)this_process,__priority);
+		if (-128 <= __priority && __priority <= 127)
+			SetTaskPri((struct Task *)this_process, __priority);
 
 		/* Was a minimum stack size requested and do we
 		   need more stack space than was provided for? */
-		if(__stack_size > 0 && current_stack_size < (ULONG)__stack_size)
+		if (__stack_size > 0 && current_stack_size < (ULONG)__stack_size)
 		{
-			struct StackSwapStruct * stk;
+			struct StackSwapStruct *stk;
 			unsigned int stack_size;
 			APTR new_stack;
 
@@ -455,32 +483,36 @@ _main(void)
 
 			/* Allocate the stack swapping data structure
 			   and the stack space separately. */
-			stk = AllocVec(sizeof(*stk),MEMF_PUBLIC|MEMF_ANY);
-			if(stk == NULL)
+			stk = AllocVec(sizeof(*stk), MEMF_PUBLIC | MEMF_ANY);
+			if (stk == NULL) {
+				FreeVec(__global_clib2);
 				goto out;
+			}
 
-			new_stack = AllocMem(stack_size,MEMF_PUBLIC|MEMF_ANY);
-			if(new_stack == NULL)
+			new_stack = AllocMem(stack_size, MEMF_PUBLIC | MEMF_ANY);
+			if (new_stack == NULL)
 			{
+				FreeVec(__global_clib2);
 				FreeVec(stk);
 				goto out;
 			}
 
 			/* Fill in the lower and upper bounds, then take care of
 			   the stack pointer itself. */
-			stk->stk_Lower		= new_stack;
-			stk->stk_Upper		= (ULONG)(new_stack) + stack_size;
-			stk->stk_Pointer	= (APTR)(stk->stk_Upper - 32);
+			stk->stk_Lower = new_stack;
+			stk->stk_Upper = (ULONG)(new_stack) + stack_size;
+			stk->stk_Pointer = (APTR)(stk->stk_Upper - 32);
 
-			/* If necessary, set up for stack size usage measurement. */
-			#ifndef NDEBUG
+/* If necessary, set up for stack size usage measurement. */
+#ifndef NDEBUG
 			{
 				__stack_usage_init(stk);
 			}
-			#endif /* NDEBUG */
+#endif /* NDEBUG */
 
-			return_code = __swap_stack_and_call(stk,(APTR)call_main);
+			return_code = __swap_stack_and_call(stk, (APTR)call_main);
 
+			FreeVec(__global_clib2);
 			FreeMem(new_stack, stack_size);
 			FreeVec(stk);
 		}
@@ -491,11 +523,11 @@ _main(void)
 		}
 
 		/* Restore the task priority. */
-		SetTaskPri((struct Task *)this_process,old_priority);
+		SetTaskPri((struct Task *)this_process, old_priority);
 	}
 	else
 	{
-		struct CommandLineInterface * cli = Cli();
+		struct CommandLineInterface *cli = Cli();
 		struct TagItem tags[12];
 		TEXT program_name[256];
 		unsigned int stack_size;
@@ -507,47 +539,48 @@ _main(void)
 
 		stack_size = __stack_size;
 
-		if(stack_size < current_stack_size)
+		if (stack_size < current_stack_size)
 			stack_size = current_stack_size;
 
-		if(stack_size < cli->cli_DefaultStack * sizeof(LONG))
+		if (stack_size < cli->cli_DefaultStack * sizeof(LONG))
 			stack_size = cli->cli_DefaultStack * sizeof(LONG);
 
-		GetProgramName(program_name,(LONG)sizeof(program_name));
+		GetProgramName(program_name, (LONG)sizeof(program_name));
 
 		i = 0;
 
-		tags[i].	ti_Tag	= NP_Entry;
-		tags[i++].	ti_Data	= (ULONG)call_main;
-		tags[i].	ti_Tag	= NP_StackSize;
-		tags[i++].	ti_Data	= stack_size;
-		tags[i].	ti_Tag	= NP_Name;
-		tags[i++].	ti_Data	= (ULONG)(__process_name != NULL ? __process_name : (char *)FilePart(program_name));
-		tags[i].	ti_Tag	= NP_CommandName;
-		tags[i++].	ti_Data	= (ULONG)FilePart(program_name);
-		tags[i].	ti_Tag	= NP_Cli;
-		tags[i++].	ti_Data	= TRUE;
-		tags[i].	ti_Tag	= NP_Arguments;
-		tags[i++].	ti_Data	= (ULONG)GetArgStr();
-		tags[i].	ti_Tag	= NP_ExitCode;
-		tags[i++].	ti_Data	= (ULONG)detach_cleanup;
-		tags[i].	ti_Tag	= NP_ExitData;
-		tags[i++].	ti_Data	= (ULONG)cli->cli_Module;
+		tags[i].ti_Tag = NP_Entry;
+		tags[i++].ti_Data = (ULONG)call_main;
+		tags[i].ti_Tag = NP_StackSize;
+		tags[i++].ti_Data = stack_size;
+		tags[i].ti_Tag = NP_Name;
+		tags[i++].ti_Data = (ULONG)(__process_name != NULL ? __process_name : (char *)FilePart(program_name));
+		tags[i].ti_Tag = NP_CommandName;
+		tags[i++].ti_Data = (ULONG)FilePart(program_name);
+		tags[i].ti_Tag = NP_Cli;
+		tags[i++].ti_Data = TRUE;
+		tags[i].ti_Tag = NP_Arguments;
+		tags[i++].ti_Data = (ULONG)GetArgStr();
+		tags[i].ti_Tag = NP_ExitCode;
+		tags[i++].ti_Data = (ULONG)detach_cleanup;
+		tags[i].ti_Tag = NP_ExitData;
+		tags[i++].ti_Data = (ULONG)cli->cli_Module;
 
 		/* Use a predefined task priority, if requested. */
-		if(-128 <= __priority && __priority <= 127)
+		if (-128 <= __priority && __priority <= 127)
 		{
-			tags[i].	ti_Tag	= NP_Priority;
-			tags[i++].	ti_Data	= (ULONG)__priority;
+			tags[i].ti_Tag = NP_Priority;
+			tags[i++].ti_Data = (ULONG)__priority;
 		}
 
 		/* dos.library V50 will free the segment list upon exit. */
-		if(((struct Library *)DOSBase)->lib_Version >= 50)
+		if (((struct Library *)DOSBase)->lib_Version >= 50)
 		{
-			tags[i].	ti_Tag	= NP_Seglist;
-			tags[i++].	ti_Data	= (ULONG)cli->cli_Module;;
-			tags[i].	ti_Tag	= NP_FreeSeglist;
-			tags[i++].	ti_Data	= TRUE;
+			tags[i].ti_Tag = NP_Seglist;
+			tags[i++].ti_Data = (ULONG)cli->cli_Module;
+			;
+			tags[i].ti_Tag = NP_FreeSeglist;
+			tags[i++].ti_Data = TRUE;
 		}
 
 		tags[i].ti_Tag = TAG_END;
@@ -555,11 +588,11 @@ _main(void)
 		Forbid();
 
 		child_process = CreateNewProc(tags);
-		if(child_process == NULL)
+		if (child_process == NULL)
 		{
 			Permit();
 
-			PrintFault(IoErr(),program_name);
+			PrintFault(IoErr(), program_name);
 
 			return_code = RETURN_FAIL;
 			goto out;
@@ -575,20 +608,20 @@ _main(void)
 		Permit();
 	}
 
- out:
+out:
 
-	if(old_window_pointer_valid)
+	if (old_window_pointer_valid)
 		__set_process_window(old_window_pointer);
 
-	if(child_process == NULL)
+	if (child_process == NULL)
 		close_libraries();
 
-	if(startup_message != NULL)
+	if (startup_message != NULL)
 	{
 		Forbid();
 
 		ReplyMsg((struct Message *)startup_message);
 	}
 
-	return(return_code);
+	return (return_code);
 }
