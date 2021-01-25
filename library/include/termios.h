@@ -129,11 +129,18 @@ struct termios {
 
 /* c_lflag */
 
-#define ISIG	(1<<0L)	/* Send SIGINT for ^C, SIGQUIT for ^\ etc. */
-#define ICANON	(1<<1L)	/* Canonical mode. Line buffered with EOF, EOL etc. enabled. */
-#define ECHO	(1<<2L)	/* Echo input characters. */
-#define ECHONL	(1<<3L)	/* Echo newline characters even if ECHO is not set. */
-#define IEXTEN	(1<<4L)	/* Enable implementation defined input processing. (none) */
+#define ISIG    0x0001
+#define ICANON  0x0002
+#define ECHO    0x0004
+#define ECHOE   0x0008
+#define ECHOK   0x0010
+#define ECHONL  0x0020
+#define NOFLSH  0x0040
+#define TOSTOP  0x0080
+#define IEXTEN  0x0100
+#define FLUSHO  0x0200
+#define ECHOKE  0x0400
+#define ECHOCTL 0x0800
 
 /* Speeds  */
 

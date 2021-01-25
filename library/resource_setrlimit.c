@@ -45,39 +45,38 @@
 
 /****************************************************************************/
 
-int
-setrlimit(int resource,const struct rlimit *rlp)
+int setrlimit(int resource, const struct rlimit *rlp)
 {
 	int ret = -1;
 
-	if(rlp == NULL)
+	if (rlp == NULL)
 	{
 		__set_errno(EFAULT);
 		goto out;
 	}
 
-	switch(resource)
+	switch (resource)
 	{
-		case RLIM_VMEM:
-		case RLIM_CORE:
-		case RLIM_CPU:
-		case RLIM_DATA:
-		case RLIM_FSIZE:
-		case RLIM_NOFILE:
-		case RLIM_STACK:	/* TODO: See if it might be possible to set the stacksize here. */
+	case RLIM_VMEM:
+	case RLIM_CORE:
+	case RLIM_CPU:
+	case RLIM_DATA:
+	case RLIM_FSIZE:
+	case RLIM_NOFILE:
+	case RLIM_STACK: /* TODO: See if it might be possible to set the stacksize here. */
 
-			__set_errno(EPERM);
-			goto out;
+		__set_errno(EPERM);
+		goto out;
 
-		default:
+	default:
 
-			__set_errno(EINVAL);
-			goto out;
+		__set_errno(EINVAL);
+		goto out;
 	}
 
 	ret = 0;
 
- out:
+out:
 
-	return(ret);
+	return (ret);
 }

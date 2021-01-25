@@ -104,6 +104,7 @@ extern int feclearexcept(int excepts);
 /****************************************************************************/
 
 extern int fegetround(void);
+extern int fesetround(int mode);
 extern int fetestround(int rounds);
 
 /****************************************************************************/

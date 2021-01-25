@@ -77,6 +77,7 @@ extern "C" {
 #define O_NOCTTY	(0)
 #define O_ASYNC		(1<<7)
 
+#define O_CLOEXEC   02000000
 /****************************************************************************/
 
 #define F_DUPFD		0

@@ -43,17 +43,16 @@
 
 /****************************************************************************/
 
-int
-__open_iob(const char *filename, const char *mode, int file_descriptor, int slot_number)
+int __open_iob(const char *filename, const char *mode, int file_descriptor, int slot_number)
 {
-	struct SignalSemaphore * lock;
+	struct SignalSemaphore *lock;
 	ULONG file_flags;
 	int result = ERROR;
 	int open_mode;
-	struct fd * fd = NULL;
+	struct fd *fd = NULL;
 	STRPTR buffer = NULL;
 	STRPTR aligned_buffer;
-	struct iob * file;
+	struct iob *file;
 
 	ENTER();
 
@@ -61,26 +60,26 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
 	SHOWSTRING(mode);
 	SHOWVALUE(slot_number);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	__stdio_lock();
 
-	assert( mode != NULL && 0 <= slot_number && slot_number < __num_iob );
+	assert(mode != NULL && 0 <= slot_number && slot_number < __num_iob);
 
 	file = __iob[slot_number];
 
-	assert( FLAG_IS_CLEAR(file->iob_Flags,IOBF_IN_USE) );
+	assert(FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE));
 
 	/* Figure out if the file descriptor provided is any use. */
-	if(file_descriptor >= 0)
+	if (file_descriptor >= 0)
 	{
-		assert( file_descriptor < __num_fd );
-		assert( __fd[file_descriptor] != NULL );
-		assert( FLAG_IS_SET(__fd[file_descriptor]->fd_Flags,FDF_IN_USE) );
+		assert(file_descriptor < __num_fd);
+		assert(__fd[file_descriptor] != NULL);
+		assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
 		fd = __get_file_descriptor(file_descriptor);
-		if(fd == NULL)
+		if (fd == NULL)
 		{
 			__set_errno(EBADF);
 			goto out;
@@ -88,53 +87,53 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
 	}
 
 	/* The first character selects the access mode: read, write or append. */
-	switch(mode[0])
+	switch (mode[0])
 	{
-		case 'r':
+	case 'r':
 
-			SHOWMSG("read mode");
+		SHOWMSG("read mode");
 
-			open_mode = O_RDONLY;
-			break;
+		open_mode = O_RDONLY;
+		break;
 
-		case 'w':
+	case 'w':
 
-			SHOWMSG("write mode");
+		SHOWMSG("write mode");
 
-			open_mode = O_WRONLY | O_CREAT | O_TRUNC;
-			break;
+		open_mode = O_WRONLY | O_CREAT | O_TRUNC;
+		break;
 
-		case 'a':
+	case 'a':
 
-			SHOWMSG("append mode");
+		SHOWMSG("append mode");
 
-			open_mode = O_WRONLY | O_CREAT | O_APPEND;
-			break;
+		open_mode = O_WRONLY | O_CREAT | O_APPEND;
+		break;
 
-		default:
+	default:
 
-			D(("unsupported file open mode '%lc'",mode[0]));
+		D(("unsupported file open mode '%lc'", mode[0]));
 
-			__set_errno(EINVAL);
-			goto out;
+		__set_errno(EINVAL);
+		goto out;
 	}
 
 	/* If the second or third character is a '+', switch to read/write mode. */
-	if((mode[1] == '+') || (mode[1] != '\0' && mode[2] == '+'))
+	if ((mode[1] == '+') || (mode[1] != '\0' && mode[2] == '+'))
 	{
 		SHOWMSG("read/write access");
 
-		CLEAR_FLAG(open_mode,O_RDONLY);
-		CLEAR_FLAG(open_mode,O_WRONLY);
+		CLEAR_FLAG(open_mode, O_RDONLY);
+		CLEAR_FLAG(open_mode, O_WRONLY);
 
-		SET_FLAG(open_mode,O_RDWR);
+		SET_FLAG(open_mode, O_RDWR);
 	}
 
 	SHOWMSG("allocating file buffer");
 
 	/* Allocate a little more memory than necessary. */
-	buffer = malloc(BUFSIZ + (__cache_line_size-1));
-	if(buffer == NULL)
+	buffer = malloc(BUFSIZ + (__cache_line_size - 1));
+	if (buffer == NULL)
 	{
 		SHOWMSG("that didn't work");
 
@@ -143,14 +142,14 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
 	}
 
 	/* Align the buffer start address to a cache line boundary. */
-	aligned_buffer = (char *)((ULONG)(buffer + (__cache_line_size-1)) & ~(__cache_line_size-1));
+	aligned_buffer = (char *)((ULONG)(buffer + (__cache_line_size - 1)) & ~(__cache_line_size - 1));
 
-	if(file_descriptor < 0)
+	if (file_descriptor < 0)
 	{
-		assert( filename != NULL );
+		assert(filename != NULL);
 
-		file_descriptor = open(filename,open_mode);
-		if(file_descriptor < 0)
+		file_descriptor = open(filename, open_mode);
+		if (file_descriptor < 0)
 		{
 			SHOWMSG("couldn't open the file");
 			goto out;
@@ -159,54 +158,54 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
 	else
 	{
 		/* Update the append flag. */
-		if(FLAG_IS_SET(open_mode,O_APPEND))
-			SET_FLAG(fd->fd_Flags,FDF_APPEND);
+		if (FLAG_IS_SET(open_mode, O_APPEND))
+			SET_FLAG(fd->fd_Flags, FDF_APPEND);
 		else
-			CLEAR_FLAG(fd->fd_Flags,FDF_APPEND);
+			CLEAR_FLAG(fd->fd_Flags, FDF_APPEND);
 	}
 
-	#if defined(__THREAD_SAFE)
+#if defined(__THREAD_SAFE)
 	{
 		/* Allocate memory for an arbitration mechanism, then
 		   initialize it. */
 		lock = __create_semaphore();
-		if(lock == NULL)
+		if (lock == NULL)
 			goto out;
 	}
-	#else
+#else
 	{
 		lock = NULL;
 	}
-	#endif /* __THREAD_SAFE */
+#endif /* __THREAD_SAFE */
 
 	/* Figure out the buffered file access mode by looking at the open mode. */
 	file_flags = IOBF_IN_USE | IOBF_NO_NUL;
 
-	if(FLAG_IS_SET(open_mode,O_RDONLY) || FLAG_IS_SET(open_mode,O_RDWR))
-		SET_FLAG(file_flags,IOBF_READ);
+	if (FLAG_IS_SET(open_mode, O_RDONLY) || FLAG_IS_SET(open_mode, O_RDWR))
+		SET_FLAG(file_flags, IOBF_READ);
 
-	if(FLAG_IS_SET(open_mode,O_WRONLY) || FLAG_IS_SET(open_mode,O_RDWR))
-		SET_FLAG(file_flags,IOBF_WRITE);
+	if (FLAG_IS_SET(open_mode, O_WRONLY) || FLAG_IS_SET(open_mode, O_RDWR))
+		SET_FLAG(file_flags, IOBF_WRITE);
 
-	__initialize_iob(file,__iob_hook_entry,
-		buffer,
-		aligned_buffer,BUFSIZ,
-		file_descriptor,
-		slot_number,
-		file_flags,
-		lock);
+	__initialize_iob(file, __iob_hook_entry,
+					 buffer,
+					 aligned_buffer, BUFSIZ,
+					 file_descriptor,
+					 slot_number,
+					 file_flags,
+					 lock);
 
 	buffer = NULL;
 
 	result = OK;
 
- out:
+out:
 
-	if(buffer != NULL)
+	if (buffer != NULL)
 		free(buffer);
 
 	__stdio_unlock();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

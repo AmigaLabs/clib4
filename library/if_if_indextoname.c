@@ -1,5 +1,5 @@
 /*
- * $Id: unix.lib_rev.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: if_if_indextoname.c,v 1.0 2021-01-24 19:34:26 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,8 +31,54 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "unix.lib_rev.h"
+#include <net/if.h>
 
-/****************************************************************************/
 
-char __unix_lib_version[] = VERSTAG;
+#ifndef _UNISTD_HEADERS_H
+#include "unistd_headers.h"
+#endif /* _UNISTD_HEADERS_H */
+
+#ifndef _SOCKET_HEADERS_H
+#include "socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
+
+
+char *
+if_indextoname (unsigned int ifindex, char *ifname)
+{
+    unsigned int index = 1;
+    char *name = NULL;
+    if (ifname == NULL || strlen(ifname) > IF_NAMESIZE) {
+        __set_errno(ENXIO);
+        return NULL;
+    }
+
+    struct List *netiflist = NULL;
+    struct Node *node = NULL;
+
+    netiflist = __ISocket->ObtainInterfaceList();
+    if (netiflist != NULL)
+    {
+        node = GetHead(netiflist);
+        if (node != NULL)
+        {
+            while (node != NULL)
+            {
+                if (node->ln_Name != NULL)
+                {
+                    if (index == ifindex)
+                    {
+                        // Found our interface
+                        strncpy(ifname, node->ln_Name, IF_NAMESIZE);
+                        return ifname;
+                    }
+                }
+                index++;
+                node = GetSucc(node);
+            }
+        }
+    }
+
+    __set_errno(ENXIO);
+    return NULL;
+}

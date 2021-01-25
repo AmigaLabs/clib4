@@ -16,7 +16,6 @@
 #define __THROW
 
 #define __ptr_t void *
-#define __long_double_t  long double
 
 #define __attribute_malloc__
 #define __attribute_pure__

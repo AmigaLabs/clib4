@@ -41,11 +41,11 @@
 
 /****************************************************************************/
 
-/* ZZZ unimplemented */
 int
 fegetround(void)
 {
-	return(0);
+    // We always round towards the nearest number.
+    return FLT_ROUNDS;
 }
 
 /****************************************************************************/

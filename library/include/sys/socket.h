@@ -143,7 +143,7 @@ struct linger
  */
 #define	AF_UNSPEC		0			/* unspecified */
 #define	AF_LOCAL		1			/* local to host (pipes, portals) */
-#define	AF_UNIX			AF_LOCAL	/* backward compatibility */
+#define	AF_UNIX			AF_INET		/* backward compatibility */
 #define	AF_INET			2			/* internetwork: UDP, TCP, etc. */
 #define AF_INET6		10			/* IP version 6	 */
 #define	AF_IMPLINK		3			/* arpanet imp addresses */
@@ -348,6 +348,7 @@ extern ssize_t sendto(int socket, const void *message, size_t length,int flags, 
 extern int setsockopt(int socket, int level, int option_name, const void *option_value, socklen_t option_len);
 extern int shutdown(int socket, int how);
 extern int socket(int domain, int type, int protocol);
+extern int socketpair (int domain, int type, int protocol, int fds[2]);
 
 #endif /* __NO_NET_API */
 

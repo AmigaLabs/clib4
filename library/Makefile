@@ -1,5 +1,5 @@
 #
-# $Id: GNUmakefile.os4,v 1.116 2008-11-06 14:44:07 obarthel Exp $
+# $Id: Makefile,v 1.117 2021-01-25 11:28:07 apalmate Exp $
 #
 # :ts=8
 #
@@ -70,7 +70,7 @@ OPTIMIZE   := -DNDEBUG -O3
 #DEBUG     := -ggdb
 #MEMDEBUG  := -D__USE_MEM_TREES -D__MEM_DEBUG
 
-CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES)
+CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DSOCKET_SUPPORT -DUSERGROUP_SUPPORT -DUNIX_PATH_SEMANTICS
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
 LARGEDATA  := -msdata=data
@@ -92,9 +92,9 @@ all: all-targets
 LIBS :=
 
 include libc.gmk
-include libunix.gmk
+#include libunix.gmk
 include libm.gmk
-include libnet.gmk
+#include libnet.gmk
 include libdebug.gmk
 include libamiga.gmk
 include libprofile.gmk

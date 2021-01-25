@@ -214,6 +214,8 @@ extern int setuid(uid_t uid);
 /* Amiga Specific */
 #define	_PC_DOSTYPE					300
 
+#define _POSIX_THREADS              1
+
 /****************************************************************************/
 
 /* The following is for use with sysconf(). Only the implemented one */

@@ -1,5 +1,5 @@
 #
-# $Id: GNUmakefile.68k,v 1.2 2006-01-08 12:06:14 obarthel Exp $
+# $Id: Makefile,v 1.6 2021-01-25 11:30:25 apalmate Exp $
 #
 # :ts=4
 #
@@ -35,33 +35,44 @@ WARNINGS = \
 	-Wall -W -Wshadow -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wbad-function-cast -Wmissing-declarations -Wconversion
 
-CC = gcc
-CPU = -m68000
-OPTIONS = -DNDEBUG
+CC = ppc-amigaos-gcc
+CPU =
+OPTIONS = -DNDEBUG -mcrt=clib2-ts
 OPTIMIZE = -O
-DEBUG = -g
+DEBUG = -ggdb
+CRTBEGIN = /usr/local/amiga/ppc-amigaos/clib2/lib/crtbegin.o
+CRTEND = /usr/local/amiga/ppc-amigaos/clib2/lib/crtend.o
 
 ###############################################################################
 
-CFLAGS = $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(CPU) $(OPTIONS) -I. -I/V/include
+CFLAGS = $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(CPU) $(OPTIONS) -I/V/include -I. -Iinclude
 
 ###############################################################################
 
 OBJS = \
-	lib_base.o lib_user.o
+	lib_base.o lib_user.o skeleton_68k.o
 
 ###############################################################################
 
-LIBS = -lc -lamiga
+LIBS = $(CRTBEGIN) -lc -lamiga $(CRTEND)
 
 ###############################################################################
 
-all: skeleton.library
+all: skeleton_68k.c skeleton.library
+
+###############################################################################
 
 skeleton.library: $(OBJS)
 	$(CC) -o $@.debug $(OBJS) $(CFLAGS) -Wl,--cref,-M,-Map=$@.map \
 		-nostartfiles -nostdlib $(LIBS)
-	strip --strip-all -o $@ $@.debug
+	ppc-amigaos-strip -R.comment -o $@ $@.debug
+
+###############################################################################
+
+# This will rebuild the library header files and stub code when necessary
+skeleton_68k.c : skeleton_lib.sfd skeleton.xml
+	idltool --proto --interface --inline skeleton.xml
+	fdtrans --c68k skeleton_lib.sfd
 
 ###############################################################################
 

@@ -67,6 +67,7 @@ extern "C" {
 #define SIGKILL 9       /* kill (cannot be caught or ignored) */
 #define SIGCHLD 20      /* to parent on child stop or exit */
 #define SIGPIPE 13      /* write on a pipe with no one to read it */
+#define NSIG	 32      /* signal 0 implied */
 
 /****************************************************************************/
 

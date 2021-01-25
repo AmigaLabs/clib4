@@ -57,44 +57,43 @@
    dos.library V40 and below: a "NIL:" file handle will crash the
    caller of the ChangeMode() function. */
 STATIC LONG
-safe_change_mode(LONG type,BPTR file_handle,LONG mode)
+safe_change_mode(LONG type, BPTR file_handle, LONG mode)
 {
 	LONG result = DOSFALSE;
 
-	#ifndef __amigaos4__
+#ifndef __amigaos4__
 	{
-		struct FileHandle * fh = (struct FileHandle *)BADDR(file_handle);
+		struct FileHandle *fh = (struct FileHandle *)BADDR(file_handle);
 
-		assert( type == CHANGE_FH );
+		assert(type == CHANGE_FH);
 
-		if(fh == NULL || fh->fh_Type == NULL)
+		if (fh == NULL || fh->fh_Type == NULL)
 		{
 			SetIoErr(ERROR_OBJECT_WRONG_TYPE);
 			goto out;
 		}
 	}
-	#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
 	PROFILE_OFF();
-	result = ChangeMode(type,file_handle,mode);
+	result = ChangeMode(type, file_handle, mode);
 	PROFILE_ON();
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
-int
-open(const char *path_name, int open_flag, ... /* mode_t mode */ )
+int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 {
 	DECLARE_UTILITYBASE();
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
-	D_S(struct FileInfoBlock,fib);
-	struct SignalSemaphore * fd_lock;
+#endif /* UNIX_PATH_SEMANTICS */
+	D_S(struct FileInfoBlock, fib);
+	struct SignalSemaphore *fd_lock;
 	LONG is_file_system = FALSE;
 	LONG open_mode;
 	BPTR lock = ZERO;
@@ -102,7 +101,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 	BOOL create_new_file = FALSE;
 	LONG is_interactive;
 	int fd_slot_number;
-	struct fd * fd;
+	struct fd *fd;
 	int access_mode;
 	int result = ERROR;
 	int i;
@@ -113,16 +112,16 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 	SHOWVALUE(open_flag);
 
 	assert(path_name != NULL);
-	assert( UtilityBase != NULL );
+	assert(UtilityBase != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	__stdio_lock();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(path_name == NULL)
+		if (path_name == NULL)
 		{
 			SHOWMSG("path name is invalid");
 
@@ -130,10 +129,10 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	access_mode = (open_flag & 3);
-	if(access_mode < O_RDONLY && access_mode > O_RDWR)
+	if (access_mode < O_RDONLY && access_mode > O_RDWR)
 	{
 		SHOWMSG("access mode is invalid");
 
@@ -142,23 +141,23 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 	}
 
 	fd_slot_number = __find_vacant_fd_entry();
-	if(fd_slot_number < 0)
+	if (fd_slot_number < 0)
 	{
-		if(__grow_fd_table(0) < 0)
+		if (__grow_fd_table(0) < 0)
 		{
 			SHOWMSG("couldn't find a vacant file descriptor, and couldn't allocate one either");
 			goto out;
 		}
 
 		fd_slot_number = __find_vacant_fd_entry();
-		assert( fd_slot_number >= 0 );
+		assert(fd_slot_number >= 0);
 	}
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
-			if(path_name[0] == '\0')
+			if (path_name[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -166,35 +165,35 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&path_name,&path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 				goto out;
 
-			if(path_name_nti.is_root)
+			if (path_name_nti.is_root)
 			{
 				__set_errno(EACCES);
 				goto out;
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	if (Strnicmp(path_name, "PIPE:",5) == SAME && FLAG_IS_SET(open_flag, O_CREAT))
+	if (Strnicmp(path_name, "PIPE:", 5) == SAME && FLAG_IS_SET(open_flag, O_CREAT))
 	{
 		open_mode = MODE_NEWFILE;
 	}
-	else if (Strnicmp(path_name,"NIL:",4) != SAME && FLAG_IS_SET(open_flag,O_CREAT))
+	else if (Strnicmp(path_name, "NIL:", 4) != SAME && FLAG_IS_SET(open_flag, O_CREAT))
 	{
-		if(FLAG_IS_SET(open_flag,O_EXCL))
+		if (FLAG_IS_SET(open_flag, O_EXCL))
 		{
 			LONG error;
 
 			SHOWMSG("checking if the file to create already exists");
 
 			PROFILE_OFF();
-			lock = Lock((STRPTR)path_name,SHARED_LOCK);
+			lock = Lock((STRPTR)path_name, SHARED_LOCK);
 			PROFILE_ON();
 
-			if(lock != ZERO)
+			if (lock != ZERO)
 			{
 				SHOWMSG("the file already exists");
 
@@ -204,7 +203,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 
 			error = IoErr();
 
-			if(error == ERROR_OBJECT_WRONG_TYPE)
+			if (error == ERROR_OBJECT_WRONG_TYPE)
 			{
 				SHOWMSG("there's something not a directory on the path");
 
@@ -224,23 +223,23 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 
 		open_mode = MODE_READWRITE;
 
-		if(FLAG_IS_SET(open_flag,O_TRUNC))
+		if (FLAG_IS_SET(open_flag, O_TRUNC))
 		{
 			SHOWMSG("checking if the file to create already exists");
 
 			PROFILE_OFF();
-			lock = Lock((STRPTR)path_name,SHARED_LOCK);
+			lock = Lock((STRPTR)path_name, SHARED_LOCK);
 			PROFILE_ON();
 
-			if(lock != ZERO)
+			if (lock != ZERO)
 			{
 				LONG status;
 
 				PROFILE_OFF();
-				status = Examine(lock,fib);
+				status = Examine(lock, fib);
 				PROFILE_ON();
 
-				if(status == DOSFALSE)
+				if (status == DOSFALSE)
 				{
 					SHOWMSG("could not examine the object");
 
@@ -249,7 +248,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 				}
 
 				/* We can open only files, but never directories. */
-				if(fib->fib_DirEntryType >= 0)
+				if (fib->fib_DirEntryType >= 0)
 				{
 					SHOWMSG("can't open a directory");
 
@@ -257,8 +256,8 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 					goto out;
 				}
 
-				if(FLAG_IS_SET(fib->fib_Protection,FIBF_WRITE) ||
-				   FLAG_IS_SET(fib->fib_Protection,FIBF_DELETE))
+				if (FLAG_IS_SET(fib->fib_Protection, FIBF_WRITE) ||
+					FLAG_IS_SET(fib->fib_Protection, FIBF_DELETE))
 				{
 					SHOWMSG("this object is not write enabled");
 
@@ -281,7 +280,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 
 				error = IoErr();
 
-				if(error == ERROR_OBJECT_WRONG_TYPE)
+				if (error == ERROR_OBJECT_WRONG_TYPE)
 				{
 					SHOWMSG("there's something not a directory on the path");
 
@@ -308,26 +307,26 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 	SHOWSTRING(path_name);
 
 	PROFILE_OFF();
-	handle = Open((STRPTR)path_name,open_mode);
+	handle = Open((STRPTR)path_name, open_mode);
 	PROFILE_ON();
 
-	if(handle == ZERO)
+	if (handle == ZERO)
 	{
 		LONG io_err = IoErr();
 
-		D(("the file '%s' didn't open in mode %ld",path_name,open_mode));
+		D(("the file '%s' didn't open in mode %ld", path_name, open_mode));
 		__set_errno(__translate_access_io_error_to_errno(io_err));
 
 		/* Check if ended up trying to open a directory as if
 		   it were a plain file. */
-		if(io_err == ERROR_OBJECT_WRONG_TYPE)
+		if (io_err == ERROR_OBJECT_WRONG_TYPE)
 		{
 			PROFILE_OFF();
 
-			lock = Lock((STRPTR)path_name,SHARED_LOCK);
-			if(lock != ZERO)
+			lock = Lock((STRPTR)path_name, SHARED_LOCK);
+			if (lock != ZERO)
 			{
-				if(Examine(lock,fib) && fib->fib_DirEntryType >= 0)
+				if (Examine(lock, fib) && fib->fib_DirEntryType >= 0)
 					__set_errno(EISDIR);
 			}
 
@@ -337,40 +336,40 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 		goto out;
 	}
 
-	#if defined(__THREAD_SAFE)
+#if defined(__THREAD_SAFE)
 	{
 		fd_lock = __create_semaphore();
-		if(fd_lock == NULL)
+		if (fd_lock == NULL)
 		{
 			__set_errno(ENOMEM);
 			goto out;
 		}
 	}
-	#else
+#else
 	{
 		fd_lock = NULL;
 	}
-	#endif /* __THREAD_SAFE */
+#endif /* __THREAD_SAFE */
 
 	fd = __fd[fd_slot_number];
 
-	__initialize_fd(fd,__fd_hook_entry,handle,0,fd_lock);
+	__initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
 
 	/* Figure out if this stream is attached to a console. */
 	PROFILE_OFF();
 	is_interactive = IsInteractive(handle);
 	PROFILE_ON();
 
-	if(is_interactive)
+	if (is_interactive)
 	{
-		SET_FLAG(fd->fd_Flags,FDF_IS_INTERACTIVE);
+		SET_FLAG(fd->fd_Flags, FDF_IS_INTERACTIVE);
 
-		if(FLAG_IS_SET(open_flag,O_NONBLOCK))
+		if (FLAG_IS_SET(open_flag, O_NONBLOCK))
 		{
 			SHOWMSG("enabling non-blocking mode");
 
-			if(SetMode(handle,DOSTRUE)) /* single character mode */
-				SET_FLAG(fd->fd_Flags,FDF_NON_BLOCKING);
+			if (SetMode(handle, DOSTRUE)) /* single character mode */
+				SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
 		}
 	}
 	else
@@ -379,23 +378,23 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 
 		len = 0;
 
-		for(i = 0 ; path_name[i] != '\0' ; i++)
+		for (i = 0; path_name[i] != '\0'; i++)
 		{
-			if(path_name[i] == ':')
+			if (path_name[i] == ':')
 			{
-				len = i+1;
+				len = i + 1;
 				break;
 			}
 		}
 
-		if(len > 0)
+		if (len > 0)
 		{
-			char * path_name_copy;
+			char *path_name_copy;
 
-			path_name_copy = malloc(len+1);
-			if(path_name_copy != NULL)
+			path_name_copy = malloc(len + 1);
+			if (path_name_copy != NULL)
 			{
-				memmove(path_name_copy,path_name,len);
+				memmove(path_name_copy, path_name, len);
 				path_name_copy[len] = '\0';
 
 				PROFILE_OFF();
@@ -412,65 +411,65 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 			PROFILE_ON();
 		}
 
-		if(is_file_system)
+		if (is_file_system)
 		{
 			/* We opened the file in exclusive access mode. Switch it back
 			   into shared access mode so that its contents can be read
 			   while it's still open. */
-			if(open_mode == MODE_NEWFILE)
-				safe_change_mode(CHANGE_FH,handle,SHARED_LOCK);
+			if (open_mode == MODE_NEWFILE)
+				safe_change_mode(CHANGE_FH, handle, SHARED_LOCK);
 
 			/* We should be able to seek in this file. */
-			SET_FLAG(fd->fd_Flags,FDF_CACHE_POSITION);
+			SET_FLAG(fd->fd_Flags, FDF_CACHE_POSITION);
 		}
 	}
 
-	if(FLAG_IS_SET(open_flag,O_APPEND))
+	if (FLAG_IS_SET(open_flag, O_APPEND))
 	{
 		SHOWMSG("appending; seeking to end of file");
 
 		PROFILE_OFF();
-		Seek(handle,0,OFFSET_END);
+		Seek(handle, 0, OFFSET_END);
 		PROFILE_ON();
 
-		SET_FLAG(fd->fd_Flags,FDF_APPEND);
+		SET_FLAG(fd->fd_Flags, FDF_APPEND);
 	}
 
-	switch(access_mode)
+	switch (access_mode)
 	{
-		case O_RDONLY:
+	case O_RDONLY:
 
-			SET_FLAG(fd->fd_Flags,FDF_READ);
-			break;
+		SET_FLAG(fd->fd_Flags, FDF_READ);
+		break;
 
-		case O_WRONLY:
+	case O_WRONLY:
 
-			SET_FLAG(fd->fd_Flags,FDF_WRITE);
-			break;
+		SET_FLAG(fd->fd_Flags, FDF_WRITE);
+		break;
 
-		case O_RDWR:
+	case O_RDWR:
 
-			SET_FLAG(fd->fd_Flags,FDF_READ);
-			SET_FLAG(fd->fd_Flags,FDF_WRITE);
-			break;
+		SET_FLAG(fd->fd_Flags, FDF_READ);
+		SET_FLAG(fd->fd_Flags, FDF_WRITE);
+		break;
 	}
 
-	if(create_new_file && is_file_system)
-		SET_FLAG(fd->fd_Flags,FDF_CREATED);
+	if (create_new_file && is_file_system)
+		SET_FLAG(fd->fd_Flags, FDF_CREATED);
 
-	SET_FLAG(fd->fd_Flags,FDF_IN_USE);
+	SET_FLAG(fd->fd_Flags, FDF_IN_USE);
 
 	result = fd_slot_number;
 
 	handle = ZERO;
 
-	assert( result != ERROR );
+	assert(result != ERROR);
 
- out:
+out:
 
 	PROFILE_OFF();
 
-	if(handle != ZERO)
+	if (handle != ZERO)
 		Close(handle);
 
 	UnLock(lock);
@@ -480,5 +479,5 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */ )
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

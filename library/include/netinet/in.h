@@ -156,6 +156,8 @@ struct in6_addr {
 #define	INADDR_ALLHOSTS_GROUP	0xe0000001UL	/* 224.0.0.1 */
 #define	INADDR_MAX_LOCAL_GROUP	0xe00000ffUL	/* 224.0.0.255 */
 
+#define INADDR_LOOPBACK 		0x7f000001UL	/* 127.0.0.1 */
+
 #define	IN_LOOPBACKNET			127				/* official! */
 
 /*
