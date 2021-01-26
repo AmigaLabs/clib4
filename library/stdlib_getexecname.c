@@ -36,13 +36,16 @@
 #endif /* _STDLIB_HEADERS_H */
 
 const char *
-getexecname(void) {
-        char pathBuffer[PATH_MAX] = {0};
-        if (GetCliProgramName(pathBuffer, PATH_MAX - 1)) {
-		char *ret = calloc(1, strlen(pathBuffer) + 1);
-		return ret;
-        }
-        else {
-                return "?";
-	}
+getexecname(void)
+{
+    char pathBuffer[PATH_MAX] = {0};
+    if (GetCliProgramName(pathBuffer, PATH_MAX - 1))
+    {
+        char *ret = calloc(1, strlen(pathBuffer) + 1);
+        return ret;
+    }
+    else
+    {
+        return "?";
+    }
 }

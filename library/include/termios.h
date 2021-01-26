@@ -93,17 +93,21 @@ struct termios {
 
 /* c_iflag */
 
-#define IGNBRK	(1<<0L)		/* Ignore VINTR */
-#define BRKINT	(1<<1L)		/* Unimpl. */
-#define IGNPAR	(1<<2L)		/* Unimpl. */
-#define PARMRK	(1<<3L)		/* Unimpl. */
-#define INPCK	(1<<4L)		/* Unimpl. */
-#define ISTRIP	(1<<5L)		/* 7-bit data (strip high bit) */
-#define INLCR	(1<<6L)		/* Map NL->CR */
-#define IGNCR	(1<<7L)		/* Map CR->nothing   */
-#define ICRNL	(1<<8L)		/* Map CR->NL */
-#define IXON	(1<<9L)		/* Unimpl. Enable XON/XOFF for output. */
-#define IXOFF	(1<<10L)	/* Unimpl. Enable XON/XOFF for input. */
+#define IGNBRK  0x00001		/* Ignore VINTR */
+#define BRKINT  0x00002		/* Unimpl. */
+#define IGNPAR  0x00004		/* Unimpl. */
+#define IMAXBEL 0x00008		/* Unimpl. */
+#define INPCK   0x00010		/* Unimpl. */
+#define ISTRIP  0x00020		/* 7-bit data (strip high bit) */
+#define INLCR   0x00040		/* Map NL->CR */
+#define IGNCR   0x00080		/* Map CR->nothing   */
+#define ICRNL   0x00100		/* Map CR->NL */
+#define IXON    0x00400		/* Unimpl. Enable XON/XOFF for output. */
+#define IXOFF   0x01000		/* Unimpl. Enable XON/XOFF for input. */
+#define IUCLC   0x04000		/* Unimpl. */
+#define IXANY   0x08000		/* Unimpl. */
+#define PARMRK  0x10000		/* Unimpl. */
+#define IUTF8   0x20000		/* Unimpl. */
 
 /* c_oflag */
 

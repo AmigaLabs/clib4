@@ -51,13 +51,12 @@
 
 /****************************************************************************/
 
-int
-readlink(const char * path_name, char * buffer, int buffer_size)
+int readlink(const char *path_name, char *buffer, int buffer_size)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
 	struct name_translation_info buffer_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 	BPTR lock = ZERO;
 	int result = ERROR;
 	int target_length = -1;
@@ -68,14 +67,14 @@ readlink(const char * path_name, char * buffer, int buffer_size)
 	SHOWPOINTER(buffer);
 	SHOWVALUE(buffer_size);
 
-	assert( path_name != NULL && buffer != NULL );
+	assert(path_name != NULL && buffer != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(path_name == NULL || buffer == NULL)
+		if (path_name == NULL || buffer == NULL)
 		{
 			SHOWSTRING("invalid parameters");
 
@@ -83,13 +82,13 @@ readlink(const char * path_name, char * buffer, int buffer_size)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
-			if(path_name[0] == '\0')
+			if (path_name[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -97,19 +96,19 @@ readlink(const char * path_name, char * buffer, int buffer_size)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&path_name,&path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 				goto out;
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	D(("trying to get a lock on '%s'",path_name));
+	D(("trying to get a lock on '%s'", path_name));
 
 	PROFILE_OFF();
-	lock = __lock((STRPTR)path_name,SHARED_LOCK,&target_length,buffer,(size_t)buffer_size);
+	lock = __lock((STRPTR)path_name, SHARED_LOCK, &target_length, buffer, (size_t)buffer_size);
 	PROFILE_ON();
 
-	if(lock != ZERO)
+	if (lock != ZERO)
 	{
 		__set_errno(EINVAL);
 		goto out;
@@ -120,30 +119,30 @@ readlink(const char * path_name, char * buffer, int buffer_size)
 		goto out;
 	}
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
-			if(__translate_amiga_to_unix_path_name((char const **)&buffer,&buffer_nti) != 0)
+			if (__translate_amiga_to_unix_path_name((char const **)&buffer, &buffer_nti) != 0)
 				goto out;
 
-			__restore_path_name((char const **)&buffer,&buffer_nti);
+			__restore_path_name((char const **)&buffer, &buffer_nti);
 
-			strcpy(buffer,buffer_nti.substitute);
+			strcpy(buffer, buffer_nti.substitute);
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
 	result = strlen(buffer);
 
 	SHOWSTRING(buffer);
 
- out:
+out:
 
 	PROFILE_OFF();
 	UnLock(lock);
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

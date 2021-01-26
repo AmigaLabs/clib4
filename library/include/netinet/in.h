@@ -160,6 +160,8 @@ struct in6_addr {
 
 #define	IN_LOOPBACKNET			127				/* official! */
 
+#define INET_ADDRSTRLEN 		16
+
 /*
  * Socket address, internet style.
  */

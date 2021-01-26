@@ -51,23 +51,23 @@
 
 /****************************************************************************/
 
-extern struct ElfIFace *	__IElf;
-extern Elf32_Handle			__dl_elf_handle;
-Elf32_Error			__elf_error_code;
+extern struct ElfIFace *__IElf;
+extern Elf32_Handle __dl_elf_handle;
+Elf32_Error __elf_error_code;
 
 /****************************************************************************/
 
-int dlclose(void * handle)
+int dlclose(void *handle)
 {
 	int result = -1;
 
-	if(__dl_elf_handle != NULL)
+	if (__dl_elf_handle != NULL)
 	{
-		struct ElfIFace * IElf = __IElf;
+		struct ElfIFace *IElf = __IElf;
 		Elf32_Error error;
 
-		error = DLClose(__dl_elf_handle,handle);
-		if(error != ELF32_NO_ERROR)
+		error = DLClose(__dl_elf_handle, handle);
+		if (error != ELF32_NO_ERROR)
 		{
 			__elf_error_code = error;
 			goto out;
@@ -76,9 +76,9 @@ int dlclose(void * handle)
 
 	result = 0;
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

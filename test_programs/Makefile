@@ -1,5 +1,5 @@
 #
-# $Id: GNUmakefile.os4,v 1.13 2006-04-18 08:29:46 obarthel Exp $
+# $Id: Makefile,v 1.14 2021-01-25 11:29:46 apalmate Exp $
 #
 # :ts=8
 #

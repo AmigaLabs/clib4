@@ -154,6 +154,9 @@ struct protoent
 #ifndef AI_ADDRCONFIG
 # define AI_ADDRCONFIG  0x0020  /* Use configuration of this host to choose returned address type..  */
 #endif
+#ifndef AI_NUMERICHOST
+# define AI_NUMERICHOST 0x4
+#endif
 #ifndef NI_DGRAM
 # define NI_DGRAM       16      /* Look up UDP service rather than TCP.  */
 #endif

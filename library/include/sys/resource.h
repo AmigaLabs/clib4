@@ -75,6 +75,9 @@ extern "C"
 #define RLIM_OFILE RLIMIT_NOFILE
 #define RLIM_STACK 7
 
+#define RLIMIT_NLIMITS  8               /* upper bound of RLIMIT_* defines */
+#define RLIM_NLIMITS    RLIMIT_NLIMITS
+
 #define RLIMIT_NOFILE RLIM_NOFILE /* max number of open files */
 #define RLIMIT_CPU RLIM_CPU		  /* CPU time in sec */
 #define RLIMIT_FSIZE RLIM_FSIZE	  /* Maximum filesize */
