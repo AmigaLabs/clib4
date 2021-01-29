@@ -72,40 +72,15 @@ extern "C" {
 
 /****************************************************************************/
 
-/* Basic types; imaginary is assumed not to be implemented yet. */
 #define complex _Complex
-
-/****************************************************************************/
-
-/* Constants */
-#define _Complex_I (__extension__ 0.0+1.0fi)
+#ifdef __GNUC__
+#define _Complex_I (__extension__ 1.0fi)
+#else
+#define _Complex_I 1.0fi
+#endif
 #define I _Complex_I
 
 /****************************************************************************/
-
-extern double creal(double complex z);
-extern float crealf(float complex z);
-extern long double creall(long double complex z);
-
-extern double cimag(double complex z);
-extern float cimagf(float complex z);
-extern long double cimagl(long double complex z);
-
-extern double complex conj(double complex z);
-extern float complex conjf(float complex z);
-extern long double complex conjl(long double complex z);
-
-extern double carg(double complex z);
-extern float cargf(float complex z);
-extern long double cargl(long double complex z);
-
-/****************************************************************************/
-
-/* Unimplemented functions (so far)... */
-
-/****************************************************************************/
-
-#if 0
 
 extern double complex cacos(double complex z);
 extern float complex cacosf(float complex z);
@@ -167,19 +142,56 @@ extern double cabs(double complex z);
 extern float cabsf(float complex z);
 extern long double cabsl(long double complex z);
 
-extern double complex cpow(double complex z);
-extern float complex cpowf(float complex z);
-extern long double complex cpowl(long double complex z);
+extern double complex cpow(double complex z, double complex c);
+extern float complex cpowf(float complex z, float complex c);
+extern long double complex cpowl(long double complex z, long double complex c);
 
 extern double complex csqrt(double complex z);
 extern float complex csqrtf(float complex z);
 extern long double complex csqrtl(long double complex z);
 
+extern double complex carg(double complex z);
+extern float complex cargf(float complex z);
+extern long double complex cargl(long double complex z);
+
+extern double complex conj(double complex z);
+extern float complex conjf(float complex z);
+extern long double complex conjl(long double complex z);
+
 extern double complex cproj(double complex z);
 extern float complex cprojf(float complex z);
 extern long double complex cprojl(long double complex z);
 
-#endif
+/****************************************************************************/
+
+double complex cimag(double complex z);
+float complex cimagf(float complex z);
+long double complex cimagl(long double complex z);
+
+
+double complex creal(double complex z);
+float complex crealf(float complex z);
+long double complex creall(long double complex z);
+
+/****************************************************************************/
+
+#define __CIMAG(x, t) \
+	((union { _Complex t __z; t __xy[2]; }){(_Complex t)(x)}.__xy[1])
+
+#define creal(x) ((double)(x))
+#define crealf(x) ((float)(x))
+#define creall(x) ((long double)(x))
+
+#define cimag(x) __CIMAG(x, double)
+#define cimagf(x) __CIMAG(x, float)
+#define cimagl(x) __CIMAG(x, long double)
+
+#define __CMPLX(x, y, t) \
+	((union { _Complex t __z; t __xy[2]; }){.__xy = {(x),(y)}}.__z)
+
+#define CMPLX(x, y) __CMPLX(x, y, double)
+#define CMPLXF(x, y) __CMPLX(x, y, float)
+#define CMPLXL(x, y) __CMPLX(x, y, long double)
 
 /****************************************************************************/
 

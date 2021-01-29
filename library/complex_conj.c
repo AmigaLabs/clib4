@@ -44,7 +44,7 @@
 double complex
 conj(double complex z)
 {
-	return(CONJ(z));
+    return CMPLX(creal(z), -cimag(z));
 }
 
 /****************************************************************************/

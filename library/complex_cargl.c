@@ -41,10 +41,10 @@
 
 /****************************************************************************/
 
-long double
+long double complex
 cargl(long double complex z)
 {
-	return(atan2(IMAG(z),REAL(z))); /* ZZZ this really needs to call atan2l(). */
+    return atan2l(cimagl(z), creall(z));
 }
 
 /****************************************************************************/
