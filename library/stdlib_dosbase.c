@@ -43,8 +43,4 @@ struct Library * DOSBase;
 
 /****************************************************************************/
 
-#if defined(__amigaos4__)
-
 struct DOSIFace * IDOS;
-
-#endif /* __amigaos4__ */

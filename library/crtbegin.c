@@ -34,13 +34,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__amigaos4__)
-
-/****************************************************************************/
-
 #ifndef EXEC_TYPES_H
 #include <exec/types.h>
 #endif /* EXEC_TYPES_H */
+
+#include <proto/dos.h>
+
+#include "stdlib_sysvbase.h"
 
 /****************************************************************************/
 
@@ -72,8 +72,7 @@ _init(void)
 	int num_ctors,i;
 	int j;
 
-	/* The shared objects need to be set up before any local
-	   constructors are invoked. */
+	/* The shared objects need to be set up before any local constructors are invoked. */
 	shared_obj_init();
 
 	for(i = 1, num_ctors = 0 ; __CTOR_LIST__[i] != NULL ; i++)
@@ -98,11 +97,6 @@ _fini(void)
 	while(j++ < num_dtors)
 		__DTOR_LIST__[j]();
 
-	/* The shared objects need to be cleaned up after all local
-	   destructors have been invoked. */
+	/* The shared objects need to be cleaned up after all local destructors have been invoked. */
 	shared_obj_exit();
 }
-
-/****************************************************************************/
-
-#endif /*__amigaos4__ */

@@ -43,12 +43,5 @@
 
 /****************************************************************************/
 
-struct Library * NOCOMMON __UtilityBase;
-
-/****************************************************************************/
-
-#if defined(__amigaos4__)
-
-struct UtilityIFace * NOCOMMON __IUtility;
-
-#endif /* __amigaos4__ */
+struct Library      NOCOMMON *__UtilityBase;
+struct UtilityIFace NOCOMMON *__IUtility;
