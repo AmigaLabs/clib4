@@ -72,6 +72,7 @@ C_LIB := \
 	inttypes_imaxabs.o \
 	inttypes_strtoimax.o \
 	inttypes_strtoumax.o \
+	ipc_ftok.o \
 	langinfo_langinfo.o \
 	libgen_basename.o \
 	libgen_dirname.o \
@@ -85,6 +86,12 @@ C_LIB := \
 	mount_convertinfo.o \
 	mount_fstatfs.o \
 	mount_statfs.o \
+	msg_msgctl.o \
+	msg_msgget.o \
+	msg_msgids.o \
+	msg_msgrcv.o \
+	msg_msgsnd.o \
+	msg_msgsnap.o \
 	profile_profil.o \
 	sched_sched_yield.o \
 	semaphore_sem_destroy.o \
@@ -94,6 +101,11 @@ C_LIB := \
 	semaphore_sem_timedwait.o \
 	semaphore_sem_trywait.o \
 	semaphore_sem_wait.o \
+	shm_shmat.o \
+	shm_shmctl.o \
+	shm_shmdt.o \
+	shm_shmget.o \
+	shm_shmids.o \
 	signal_checkabort.o \
 	signal_data.o \
 	signal_kill.o \
@@ -308,6 +320,7 @@ C_LIB := \
 	stdlib_swapstack.o \
 	stdlib_sysbase.o \
 	stdlib_system.o \
+	stdlib_sysvbase.o \
 	stdlib_termination_message.o \
 	stdlib_threshold.o \
 	stdlib_utilitybase.o \

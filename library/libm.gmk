@@ -23,15 +23,63 @@ MATH_LIB := \
 	complex_carg.o \
 	complex_cargf.o \
 	complex_cargl.o \
-	complex_cimag.o \
-	complex_cimagf.o \
-	complex_cimagl.o \
+	complex_cabs.o \
+	complex_cabsf.o \
+	complex_cabsl.o \
+	complex_cacos.o \
+	complex_cacosf.o \
+	complex_cacosl.o \
+	complex_cacosh.o \
+	complex_cacoshf.o \
+	complex_cacoshl.o \
+	complex_casin.o \
+	complex_casinf.o \
+	complex_casinl.o \
+	complex_catan.o \
+	complex_catan.o \
+	complex_catanl.o \
+	complex_catanh.o \
+	complex_catanh.o \
+	complex_catanhl.o \
+	complex_ctan.o \
+	complex_ctanf.o \
+	complex_ctanl.o \
+	complex_ctanh.o \
+	complex_ctanhf.o \
+	complex_ctanhl.o \
+	complex_ccos.o \
+	complex_ccosf.o \
+	complex_ccosl.o \
+	complex_ccosh.o \
+	complex_ccoshf.o \
+	complex_ccoshl.o \
+	complex_cexp.o \
+	complex_cexpf.o \
+	complex_cexpl.o \
+	complex_clog.o \
+	complex_clogf.o \
+	complex_clogl.o \
 	complex_conj.o \
 	complex_conjf.o \
 	complex_conjl.o \
-	complex_creal.o \
-	complex_crealf.o \
-	complex_creall.o \
+	complex_cpow.o \
+	complex_cpowf.o \
+	complex_cpowl.o \
+	complex_csin.o \
+	complex_csinf.o \
+	complex_csinl.o \
+	complex_csinh.o \
+	complex_csinhf.o \
+	complex_csinhl.o \
+	complex_cproj.o \
+	complex_cprojf.o \
+	complex_cprojl.o \
+	complex_csqrt.o \
+	complex_csqrtf.o \
+	complex_csqrtl.o \
+	complex_casinh.o \
+	complex_casinhf.o \
+	complex_casinhl.o \
 	fenv_feclearexcept.o \
 	fenv_fegetenv.o \
 	fenv_fegetexceptflag.o \

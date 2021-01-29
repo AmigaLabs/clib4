@@ -73,6 +73,9 @@
 #include <devices/timer.h>
 #endif
 
+#include <libraries/elf.h>
+#include <proto/elf.h>
+
 /****************************************************************************/
 
 #ifdef __cplusplus
@@ -449,6 +452,7 @@ extern int __translate_io_error_to_errno(LONG io_error);
  */
 extern VOID __lib_exit(VOID);
 extern BOOL __lib_init(struct Library * _SysBase);
+extern BOOL __shlib_init(struct Library * _SysBase);
 
 /****************************************************************************/
 
@@ -579,6 +583,19 @@ extern BOOL __unlink_retries;
 struct _clib2 {
 	struct TimeVal clock;
 	struct rusage ru;
+	
+	/* 
+	 * Check if SYSV library is available in the system. Otherwise the functions
+	 * will return ENOSYS
+	 */
+	BOOL haveShm;
+
+	/* This is used with the dlopen(), dlclose() and dlsym() functions. */
+	Elf32_Handle __dl_elf_handle;
+	Elf32_Error __elf_error_code;
+
+	/* This is the pointer to itself */
+	struct Process* self;
 };
 
 extern struct _clib2 *__global_clib2;

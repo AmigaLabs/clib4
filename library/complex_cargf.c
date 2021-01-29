@@ -41,10 +41,10 @@
 
 /****************************************************************************/
 
-float
+float complex
 cargf(float complex z)
 {
-	return(atan2(IMAG(z),REAL(z))); /* ZZZ this really needs to call ata2f(). */
+    return atan2f(cimagf(z), crealf(z));
 }
 
 /****************************************************************************/

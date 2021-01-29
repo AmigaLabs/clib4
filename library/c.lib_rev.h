@@ -1,6 +1,6 @@
-#define VERSION		1
-#define REVISION	215
-#define DATE		"26.6.2017"
-#define VERS		"c.lib 1.215"
-#define VSTRING		"c.lib 1.215 (26.6.2017)\r\n"
-#define VERSTAG		"\0$VER: c.lib 1.215 (26.6.2017)"
+#define VERSION		2
+#define REVISION	0
+#define DATE		"28.1.2021"
+#define VERS		"c.lib 2.0"
+#define VSTRING		"c.lib 2.0 (28.1.2021)\r\n"
+#define VERSTAG		"\0$VER: c.lib 2.0 (28.1.2021)"
