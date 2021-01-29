@@ -1,4 +1,4 @@
-/* inet_ntop.c -- convert IPv4 and IPv6 addresses from binary to text form
+/* socket_inet_ntop.c -- convert IPv4 and IPv6 addresses from binary to text form
 
    Copyright (C) 2005-2006, 2008-2020 Free Software Foundation, Inc.
 
@@ -44,18 +44,17 @@
 #include <errno.h>
 */
 
-# define NS_IN6ADDRSZ 16
-# define NS_INT16SZ 2
+#define NS_IN6ADDRSZ 16
+#define NS_INT16SZ 2
 
 /*
  * WARNING: Don't even consider trying to compile this on a system where
  * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
  */
-typedef int verify_int_size[4 <= sizeof (int) ? 1 : -1];
+typedef int verify_int_size[4 <= sizeof(int) ? 1 : -1];
 
-static const char *inet_ntop4 (const unsigned char *src, char *dst, socklen_t size);
-static const char *inet_ntop6 (const unsigned char *src, char *dst, socklen_t size);
-
+static const char *inet_ntop4(const unsigned char *src, char *dst, socklen_t size);
+static const char *inet_ntop6(const unsigned char *src, char *dst, socklen_t size);
 
 /* char *
  * inet_ntop(af, src, dst, size)
@@ -66,25 +65,25 @@ static const char *inet_ntop6 (const unsigned char *src, char *dst, socklen_t si
  *      Paul Vixie, 1996.
  */
 const char *
-inet_ntop (int af, const void *restrict src,
-           char *restrict dst, socklen_t cnt)
+inet_ntop(int af, const void *restrict src,
+          char *restrict dst, socklen_t cnt)
 {
   ENTER();
   switch (af)
-    {
-    case AF_INET:
-      RETURN(inet_ntop4 (src, dst, cnt)); 
-      return(inet_ntop4 (src, dst, cnt));
+  {
+  case AF_INET:
+    RETURN(inet_ntop4(src, dst, cnt));
+    return (inet_ntop4(src, dst, cnt));
 
-    case AF_INET6:
-      RETURN(inet_ntop6 (src, dst, cnt));
-      return(inet_ntop6 (src, dst, cnt));
+  case AF_INET6:
+    RETURN(inet_ntop6(src, dst, cnt));
+    return (inet_ntop6(src, dst, cnt));
 
-    default:
-      __set_errno(EAFNOSUPPORT);
-      RETURN(NULL);
-      return(NULL);
-    }
+  default:
+    __set_errno(EAFNOSUPPORT);
+    RETURN(NULL);
+    return (NULL);
+  }
   /* NOTREACHED */
 }
 
@@ -100,22 +99,22 @@ inet_ntop (int af, const void *restrict src,
  *      Paul Vixie, 1996.
  */
 static const char *
-inet_ntop4 (const unsigned char *src, char *dst, socklen_t size)
+inet_ntop4(const unsigned char *src, char *dst, socklen_t size)
 {
   char tmp[sizeof "255.255.255.255"];
   int len;
 
-  len = sprintf (tmp, "%u.%u.%u.%u", src[0], src[1], src[2], src[3]);
+  len = sprintf(tmp, "%u.%u.%u.%u", src[0], src[1], src[2], src[3]);
   if (len < 0)
     return NULL;
 
-  if (len > size)
-    {
-      __set_errno(ENOSPC);
-      return NULL;
-    }
+  if ((socklen_t) len > size)
+  {
+    __set_errno(ENOSPC);
+    return NULL;
+  }
 
-  return strcpy (dst, tmp);
+  return strcpy(dst, tmp);
 }
 
 /* const char *
@@ -125,7 +124,7 @@ inet_ntop4 (const unsigned char *src, char *dst, socklen_t size)
  *      Paul Vixie, 1996.
  */
 static const char *
-inet_ntop6 (const unsigned char *src, char *dst, socklen_t size)
+inet_ntop6(const unsigned char *src, char *dst, socklen_t size)
 {
   /*
    * Note that int32_t and int16_t need only be "at least" large enough
@@ -147,7 +146,7 @@ inet_ntop6 (const unsigned char *src, char *dst, socklen_t size)
    *      Copy the input (bytewise) array into a wordwise array.
    *      Find the longest run of 0x00's in src[] for :: shorthanding.
    */
-  memset (words, '\0', sizeof words);
+  memset(words, '\0', sizeof words);
   for (i = 0; i < NS_IN6ADDRSZ; i += 2)
     words[i / 2] = (src[i] << 8) | src[i + 1];
   best.base = -1;
@@ -155,29 +154,29 @@ inet_ntop6 (const unsigned char *src, char *dst, socklen_t size)
   best.len = 0;
   cur.len = 0;
   for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++)
+  {
+    if (words[i] == 0)
     {
-      if (words[i] == 0)
-        {
-          if (cur.base == -1)
-            cur.base = i, cur.len = 1;
-          else
-            cur.len++;
-        }
+      if (cur.base == -1)
+        cur.base = i, cur.len = 1;
       else
-        {
-          if (cur.base != -1)
-            {
-              if (best.base == -1 || cur.len > best.len)
-                best = cur;
-              cur.base = -1;
-            }
-        }
+        cur.len++;
     }
-  if (cur.base != -1)
+    else
     {
-      if (best.base == -1 || cur.len > best.len)
-        best = cur;
+      if (cur.base != -1)
+      {
+        if (best.base == -1 || cur.len > best.len)
+          best = cur;
+        cur.base = -1;
+      }
     }
+  }
+  if (cur.base != -1)
+  {
+    if (best.base == -1 || cur.len > best.len)
+      best = cur;
+  }
   if (best.base != -1 && best.len < 2)
     best.base = -1;
 
@@ -186,50 +185,49 @@ inet_ntop6 (const unsigned char *src, char *dst, socklen_t size)
    */
   tp = tmp;
   for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++)
+  {
+    /* Are we inside the best run of 0x00's? */
+    if (best.base != -1 && i >= best.base && i < (best.base + best.len))
     {
-      /* Are we inside the best run of 0x00's? */
-      if (best.base != -1 && i >= best.base && i < (best.base + best.len))
-        {
-          if (i == best.base)
-            *tp++ = ':';
-          continue;
-        }
-      /* Are we following an initial run of 0x00s or any real hex? */
-      if (i != 0)
+      if (i == best.base)
         *tp++ = ':';
-      /* Is this address an encapsulated IPv4? */
-      if (i == 6 && best.base == 0 &&
-          (best.len == 6 || (best.len == 5 && words[5] == 0xffff)))
-        {
-          if (!inet_ntop4 (src + 12, tp, sizeof tmp - (tp - tmp)))
-            return (NULL);
-          tp += strlen (tp);
-          break;
-        }
-      {
-        int len = sprintf (tp, "%x", words[i]);
-        if (len < 0)
-          return NULL;
-        tp += len;
-      }
+      continue;
     }
+    /* Are we following an initial run of 0x00s or any real hex? */
+    if (i != 0)
+      *tp++ = ':';
+    /* Is this address an encapsulated IPv4? */
+    if (i == 6 && best.base == 0 &&
+        (best.len == 6 || (best.len == 5 && words[5] == 0xffff)))
+    {
+      if (!inet_ntop4(src + 12, tp, sizeof tmp - (tp - tmp)))
+        return (NULL);
+      tp += strlen(tp);
+      break;
+    }
+    {
+      int len = sprintf(tp, "%x", words[i]);
+      if (len < 0)
+        return NULL;
+      tp += len;
+    }
+  }
   /* Was it a trailing run of 0x00's? */
   if (best.base != -1 && (best.base + best.len) ==
-      (NS_IN6ADDRSZ / NS_INT16SZ))
+                             (NS_IN6ADDRSZ / NS_INT16SZ))
     *tp++ = ':';
   *tp++ = '\0';
 
   /*
    * Check for overflow, copy, and we're done.
    */
-  if ((socklen_t) (tp - tmp) > size)
-    {
-      __set_errno(ENOSPC);
-      return NULL;
-    }
+  if ((socklen_t)(tp - tmp) > size)
+  {
+    __set_errno(ENOSPC);
+    return NULL;
+  }
 
-  return strcpy (dst, tmp);
+  return strcpy(dst, tmp);
 }
 
 #endif
-

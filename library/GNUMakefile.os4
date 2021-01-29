@@ -64,10 +64,10 @@ WARNINGS := \
 #	-Wconversion -Wshadow -Wbad-function-cast
 
 INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE)
- OPTIONS   := -DUSE_64_BIT_INTS -D__USE_INLINE__ -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -Wno-error=array-bounds -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter -std=c99 -nostdlib
-OPTIMIZE   := -DNDEBUG -O3
+ OPTIONS   := -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -fno-common -Wno-array-bounds -DUNIX_PATH_SEMANTICS -Wno-error=array-bounds -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter -std=c99 -nostdlib
+OPTIMIZE   := -DNDEBUG -O3 -fno-inline
 
-#DEBUG     := -ggdb
+DEBUG     := -ggdb
 #MEMDEBUG  := -D__USE_MEM_TREES -D__MEM_DEBUG
 
 CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DSOCKET_SUPPORT -DUSERGROUP_SUPPORT -DUNIX_PATH_SEMANTICS
@@ -92,9 +92,7 @@ all: all-targets
 LIBS :=
 
 include libc.gmk
-#include libunix.gmk
 include libm.gmk
-#include libnet.gmk
 include libdebug.gmk
 include libamiga.gmk
 include libprofile.gmk

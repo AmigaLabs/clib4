@@ -1,10 +1,7 @@
 /*
- * $Id: sas_cxferr.c,v 1.1.1.1 2004-07-26 16:31:03 obarthel Exp $
+ * $Id: shm_shmat.c,v 1.1 2021-01-26 12:28:14 apalmate Exp $
  *
  * :ts=4
- *
- * Adapted from SAS/C runtime library code.
- *
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -32,16 +29,37 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ *
+ * Documentation and source code for this library, and the most recent library
+ * build are available from <http://sourceforge.net/projects/clib2>.
+ *
+ *****************************************************************************
  */
 
-#ifndef _SIGNAL_HEADERS_H
-#include "signal_headers.h"
-#endif /* _SIGNAL_HEADERS_H */
+#ifndef _SHM_HEADERS_H
+#include "shm_headers.h"
+#endif /* _SHM_HEADERS_H */
 
-/****************************************************************************/
-
-void __stdargs
-_CXFERR(int code)
+void *
+_shmat(int shmid, const void *prefadds, int flags)
 {
-	raise(SIGFPE);
+    DECLARE_SYSVYBASE();
+
+    if (__global_clib2->haveShm)
+    {
+        void *ret;
+        ret = shmat(shmid, prefadds, flags);
+        if (ret == ((void *)-1))
+        {
+            __set_errno(GetIPCErr());
+        }
+        return ret;
+    }
+    else
+    {
+        __set_errno(ENOSYS);
+        return NULL;
+    }
 }
