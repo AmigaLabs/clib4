@@ -22,7 +22,7 @@ before_script:
 # specify a list of variables to test (here we test the build for our supported
 # list of operating systems).
 env:
-  - BUILD="-f Makefile OS=os4"
+  - BUILD="-f GNUMakefile.os4 OS=os4"
 
 # the build command to execute for each test
 script:
