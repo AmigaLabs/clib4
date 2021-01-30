@@ -35,7 +35,7 @@
  *****************************************************************************
  *
  * Documentation and source code for this library, and the most recent library
- * build are available from <http://sourceforge.net/projects/clib2>.
+ * build are available from <https://github.com/afxgroup/clib2>.
  *
  *****************************************************************************
  */
