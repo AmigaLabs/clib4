@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_free.c,v 1.13 2006-01-08 12:04:25 obarthel Exp $
+ * $Id: stdlib_free.c,v 1.14 2031-01-31 12:04:25 apalmate Exp $
  *
  * :ts=4
  *
@@ -389,7 +389,7 @@ remove_and_free_memory_node(struct MemoryNode *mn)
 #if defined(__MEM_DEBUG)
 				{
 					PROFILE_OFF();
-					FreeMem(mn, allocation_size);
+					FreeVec(mn);
 					mn = NULL;
 					PROFILE_ON();
 				}
@@ -402,7 +402,7 @@ remove_and_free_memory_node(struct MemoryNode *mn)
 					Remove((struct Node *)mln);
 
 					PROFILE_OFF();
-					FreeMem(mln, sizeof(*mln) + allocation_size);
+					FreeVec(mln);
 					mln = NULL;
 					PROFILE_ON();
 				}
@@ -423,7 +423,7 @@ remove_and_free_memory_node(struct MemoryNode *mn)
 #if defined(__MEM_DEBUG)
 			{
 				PROFILE_OFF();
-				FreeMem(mn, allocation_size);
+				FreeVec(mn);
 				mn = NULL;
 				PROFILE_ON();
 			}
@@ -436,7 +436,7 @@ remove_and_free_memory_node(struct MemoryNode *mn)
 				Remove((struct Node *)mln);
 
 				PROFILE_OFF();
-				FreeMem(mln, sizeof(*mln) + allocation_size);
+				FreeVec(mln);
 				mln = NULL;
 				PROFILE_ON();
 			}

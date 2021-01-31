@@ -48,29 +48,28 @@
 /****************************************************************************/
 
 /* ZZZ chdir() must be reentrant according to POSIX.1 */
-int
-chdir(const char * path_name)
+int chdir(const char *path_name)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
-	D_S(struct FileInfoBlock,fib);
+#endif /* UNIX_PATH_SEMANTICS */
+	D_S(struct FileInfoBlock, fib);
 	BPTR dir_lock = ZERO;
-	LONG status;
+	struct ExamineData *status = NULL;
 	int result = ERROR;
 
 	ENTER();
 
 	SHOWSTRING(path_name);
 
-	assert( path_name != NULL );
+	assert(path_name != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(path_name == NULL)
+		if (path_name == NULL)
 		{
 			SHOWMSG("invalid path name");
 
@@ -78,13 +77,13 @@ chdir(const char * path_name)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
-			if(path_name[0] == '\0')
+			if (path_name[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -92,18 +91,18 @@ chdir(const char * path_name)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&path_name,&path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 				goto out;
 
 			/* The pseudo root directory is a very special case indeed. We
 			 * just accept it and don't pretend to have obtained a lock
 			 * on anything.
 			 */
-			if(path_name_nti.is_root)
+			if (path_name_nti.is_root)
 			{
 				SHOWMSG("this is the / directory");
 
-				__restore_path_name(&path_name,&path_name_nti);
+				__restore_path_name(&path_name, &path_name_nti);
 
 				/* ZZZ this must not fail */
 				__set_current_path(path_name);
@@ -114,31 +113,31 @@ chdir(const char * path_name)
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	D(("trying to get a lock on '%s'",path_name));
+	D(("trying to get a lock on '%s'", path_name));
 
 	PROFILE_OFF();
-	dir_lock = Lock((STRPTR)path_name,SHARED_LOCK);
+	dir_lock = Lock((STRPTR)path_name, SHARED_LOCK);
 	PROFILE_ON();
 
-	if(dir_lock == ZERO)
+	if (dir_lock == ZERO)
 	{
 		__set_errno(__translate_access_io_error_to_errno(IoErr()));
 		goto out;
 	}
 
 	PROFILE_OFF();
-	status = Examine(dir_lock,fib);
+	status = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
 	PROFILE_ON();
 
-	if(status == DOSFALSE)
+	if (status == NULL)
 	{
 		__set_errno(__translate_io_error_to_errno(IoErr()));
 		goto out;
 	}
 
-	if(fib->fib_DirEntryType < 0)
+	if (!EXD_IS_DIRECTORY(status))
 	{
 		SHOWMSG("this is not a directory");
 
@@ -148,13 +147,13 @@ chdir(const char * path_name)
 
 	PROFILE_OFF();
 
-	if(__current_directory_changed)
+	if (__current_directory_changed)
 	{
 		BPTR old_dir;
 
 		old_dir = CurrentDir(dir_lock);
 
-		if(__unlock_current_directory)
+		if (__unlock_current_directory)
 			UnLock(old_dir);
 	}
 	else
@@ -170,24 +169,28 @@ chdir(const char * path_name)
 
 	dir_lock = ZERO;
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
-			__restore_path_name(&path_name,&path_name_nti);
+		if (__unix_path_semantics)
+			__restore_path_name(&path_name, &path_name_nti);
 
 		/* ZZZ this must not fail */
 		__set_current_path(path_name);
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
 	result = OK;
 
- out:
+out:
 
+	if (status != NULL) {
+		FreeDosObject(DOS_EXAMINEDATA, status);
+	}
+	
 	PROFILE_OFF();
 	UnLock(dir_lock);
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

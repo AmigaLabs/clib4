@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_invertstring.c,v 1.4 2006-01-08 12:04:22 obarthel Exp $
+ * $Id: amiga_invertstring.c,v 1.5 2021-01-31 12:04:22 apalmate Exp $
  *
  * :ts=4
  *
@@ -54,81 +54,81 @@ do_escape(int cc)
 {
 	int result;
 
-	switch(cc)
+	switch (cc)
 	{
-		case 'n':
-        case 'r':
+	case 'n':
+	case 'r':
 
-			result = '\r';
-			break;
+		result = '\r';
+		break;
 
-        case 't':
+	case 't':
 
-			result = '\t';
-			break;
+		result = '\t';
+		break;
 
-        case '0':
+	case '0':
 
-			result = '\0';
-			break;
+		result = '\0';
+		break;
 
-        case '\\':
-        case '\"':
-        case '\'':
-        case '<':
+	case '\\':
+	case '\"':
+	case '\'':
+	case '<':
 
-			result = cc;
-			break;
+		result = cc;
+		break;
 
-        default:
+	default:
 
-			result = -1;
-			break;
-    }
+		result = -1;
+		break;
+	}
 
-    return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
 STATIC ULONG
-do_angle(STRPTR * strp, struct InputEvent *ie)
+do_angle(STRPTR *strp, struct InputEvent *ie)
 {
 	ULONG result;
-	char * cp;
+	char *cp;
 	IX ix;
 
 	/* find closing angle '>', put a null there   */
-	for(cp = (*strp) ; (*cp) ; cp++)
+	for (cp = (*strp); (*cp); cp++)
 	{
-		if((*cp) == '>')
+		if ((*cp) == '>')
 		{
 			(*cp) = '\0';
 			break;
 		}
 	}
 
-	result = ParseIX((*strp),&ix);
+	result = ParseIX((*strp), &ix);
 
-	if(cp != NULL)
+	if (cp != NULL)
 	{
-		(*cp)	= '>';	/* fix it */
-		(*strp)	= cp;	/* point to char following '>' */
+		(*cp) = '>';  /* fix it */
+		(*strp) = cp; /* point to char following '>' */
 	}
 	else
 	{
-		(*strp) = cp - 1;   /* ++will point to terminating null */
+		(*strp) = cp - 1; /* ++will point to terminating null */
 	}
 
-	if(result == 0)
+	if (result == 0)
 	{
 		/* use IX to describe a suitable InputEvent */
-		ie->ie_Class		= ix.ix_Class;
-		ie->ie_Code			= ix.ix_Code;
-		ie->ie_Qualifier	= ix.ix_Qualifier;
+		ie->ie_Class = ix.ix_Class;
+		ie->ie_Code = ix.ix_Code;
+		ie->ie_Qualifier = ix.ix_Qualifier;
 	}
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -146,19 +146,19 @@ InvertString(CONST_STRPTR str, CONST struct KeyMap *km)
 
 	/* allocate input event for each character in string   */
 
-	struct InputEvent * result = NULL;
-	struct InputEvent * chain = NULL;
-	struct InputEvent * ie;
+	struct InputEvent *result = NULL;
+	struct InputEvent *chain = NULL;
+	struct InputEvent *ie;
 	int cc;
 
-	if(CxBase == NULL || str == NULL || (*str) == '\0')
+	if (CxBase == NULL || str == NULL || (*str) == '\0')
 		goto out;
 
 	do /* have checked that str is not null    */
 	{
 		/* allocate the next ie and link it in */
-		ie = AllocVec(sizeof(*ie),MEMF_ANY|MEMF_CLEAR|MEMF_PUBLIC);
-		if(ie == NULL)
+		ie = AllocVecTags(sizeof(*ie), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+		if (ie == NULL)
 			goto out;
 
 		ie->ie_NextEvent = chain;
@@ -166,43 +166,42 @@ InvertString(CONST_STRPTR str, CONST struct KeyMap *km)
 
 		/* now fill in the input event   */
 		cc = (*str);
-		switch(cc)
+		switch (cc)
 		{
-			case '<':
+		case '<':
 
-		        str++;
+			str++;
 
-				if(do_angle((STRPTR*)&str, ie) != 0)
-					goto out;
+			if (do_angle((STRPTR *)&str, ie) != 0)
+				goto out;
 
-				break;
+			break;
 
-			case '\\':
+		case '\\':
 
-		        str++;
+			str++;
 
-				cc = do_escape(*str); /* get escaped character */
-				if(cc < 0)
-					goto out;
+			cc = do_escape(*str); /* get escaped character */
+			if (cc < 0)
+				goto out;
 
-				/* fall through  */
+			/* fall through  */
 
-			default:
+		default:
 
-				InvertKeyMap((ULONG) cc, ie, (struct KeyMap *)km);
-				break;
+			InvertKeyMap((ULONG)cc, ie, (struct KeyMap *)km);
+			break;
 		}
 
 		str++;
-	}
-	while((*str) != '\0');
+	} while ((*str) != '\0');
 
 	result = chain;
 
- out:
+out:
 
-	if(result == NULL && chain != NULL)
+	if (result == NULL && chain != NULL)
 		FreeIEvents(chain);
 
-	return(result);
+	return (result);
 }

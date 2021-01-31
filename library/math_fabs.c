@@ -1,5 +1,5 @@
 /*
- * $Id: math_fabs.c,v 1.8 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_fabs.c,v 1.9 2021-01-31 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -63,24 +63,19 @@ extern double __fabs(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubBasBase
-	.globl	___fabs
-
-___fabs:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubBasBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-54:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubBasBase\n\t"
+	".globl	___fabs\n\t"
+"___fabs:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubBasBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-54:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 

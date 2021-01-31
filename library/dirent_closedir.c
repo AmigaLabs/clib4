@@ -62,23 +62,21 @@ struct MinList NOCOMMON __directory_list;
 
 /****************************************************************************/
 
-static struct SignalSemaphore * dirent_lock;
+static struct SignalSemaphore *dirent_lock;
 
 /****************************************************************************/
 
-void
-__dirent_lock(void)
+void __dirent_lock(void)
 {
-	if(dirent_lock != NULL)
+	if (dirent_lock != NULL)
 		ObtainSemaphore(dirent_lock);
 }
 
 /****************************************************************************/
 
-void
-__dirent_unlock(void)
+void __dirent_unlock(void)
 {
-	if(dirent_lock != NULL)
+	if (dirent_lock != NULL)
 		ReleaseSemaphore(dirent_lock);
 }
 
@@ -96,22 +94,22 @@ CLIB_CONSTRUCTOR(dirent_init)
 
 	NewList((struct List *)&__directory_list);
 
-	#if defined(__THREAD_SAFE)
+#if defined(__THREAD_SAFE)
 	{
 		dirent_lock = __create_semaphore();
-		if(dirent_lock == NULL)
+		if (dirent_lock == NULL)
 			goto out;
 	}
-	#endif /* __THREAD_SAFE */
+#endif /* __THREAD_SAFE */
 
 	success = TRUE;
 
- out:
+out:
 
 	SHOWVALUE(success);
 	LEAVE();
 
-	if(success)
+	if (success)
 		CONSTRUCTOR_SUCCEED();
 	else
 		CONSTRUCTOR_FAIL();
@@ -123,82 +121,82 @@ CLIB_DESTRUCTOR(dirent_exit)
 {
 	ENTER();
 
-	if(__directory_list.mlh_Head != NULL)
+	if (__directory_list.mlh_Head != NULL)
 	{
-		while(NOT IsMinListEmpty(&__directory_list))
+		while (NOT IsMinListEmpty(&__directory_list))
 			closedir((DIR *)__directory_list.mlh_Head);
 	}
 
-	#if defined(__THREAD_SAFE)
+#if defined(__THREAD_SAFE)
 	{
 		__delete_semaphore(dirent_lock);
 		dirent_lock = NULL;
 	}
-	#endif /* __THREAD_SAFE */
+#endif /* __THREAD_SAFE */
 
 	LEAVE();
 }
 
 /****************************************************************************/
 
-int
-closedir(DIR * directory_pointer)
+int closedir(DIR *directory_pointer)
 {
-	struct DirectoryHandle * dh;
+	struct DirectoryHandle *dh;
 	int result = ERROR;
 
 	ENTER();
 
 	SHOWPOINTER(directory_pointer);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	__dirent_lock();
 
-	if(directory_pointer == NULL)
+	if (directory_pointer == NULL)
 	{
 		__set_errno(EBADF);
 		goto out;
 	}
 
-	#ifndef NDEBUG
+#ifndef NDEBUG
 	{
 		BOOL directory_pointer_is_valid = FALSE;
 
-		for(dh = (struct DirectoryHandle *)__directory_list.mlh_Head ;
-		    dh->dh_MinNode.mln_Succ != NULL ;
-		    dh = (struct DirectoryHandle *)dh->dh_MinNode.mln_Succ)
+		for (dh = (struct DirectoryHandle *)__directory_list.mlh_Head;
+			 dh->dh_MinNode.mln_Succ != NULL;
+			 dh = (struct DirectoryHandle *)dh->dh_MinNode.mln_Succ)
 		{
-			if(dh == (struct DirectoryHandle *)directory_pointer)
+			if (dh == (struct DirectoryHandle *)directory_pointer)
 			{
 				directory_pointer_is_valid = TRUE;
 				break;
 			}
 		}
 
-		if(NOT directory_pointer_is_valid)
+		if (NOT directory_pointer_is_valid)
 		{
 			__set_errno(EBADF);
 			goto out;
 		}
 	}
-	#endif /* NDEBUG */
+#endif /* NDEBUG */
 
 	dh = (struct DirectoryHandle *)directory_pointer;
 
 	Remove((struct Node *)dh);
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		struct Node * node;
+		struct Node *node;
 
-		while((node = RemHead((struct List *)&dh->dh_VolumeList)) != NULL)
+		while ((node = RemHead((struct List *)&dh->dh_VolumeList)) != NULL)
 			free(node);
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
 	PROFILE_OFF();
+	FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 	UnLock(dh->dh_DirLock);
 	PROFILE_ON();
 
@@ -206,10 +204,10 @@ closedir(DIR * directory_pointer)
 
 	result = OK;
 
- out:
+out:
 
 	__dirent_unlock();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

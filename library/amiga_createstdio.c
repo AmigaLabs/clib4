@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_createstdio.c,v 1.5 2006-09-25 15:12:47 obarthel Exp $
+ * $Id: amiga_createstdio.c,v 1.6 2021-09-31 15:12:47 apalmate Exp $
  *
  * :ts=4
  *
@@ -50,23 +50,22 @@
 
 /****************************************************************************/
 
-struct IOStdReq * CreateStdIO(CONST struct MsgPort * port);
+struct IOStdReq *CreateStdIO(CONST struct MsgPort *port);
 
 /****************************************************************************/
 
 struct IOStdReq *
-CreateStdIO(CONST struct MsgPort * port)
+CreateStdIO(CONST struct MsgPort *port)
 {
-	struct IOStdReq * result = NULL;
+	struct IOStdReq *result = NULL;
 
-	assert( port != NULL );
+	assert(port != NULL);
 
-	if(port == NULL)
+	if (port == NULL)
 		goto out;
 
-	result = (struct IOStdReq *)CreateIORequest((struct MsgPort *)port,sizeof(*result));
+	result = AllocSysObjectTags(ASOT_IOREQUEST, ASOIOR_Size, sizeof(struct IOStdReq), ASOIOR_ReplyPort, port, TAG_END);
+out:
 
- out:
-
-	return(result);
+	return (result);
 }

@@ -54,6 +54,50 @@ extern "C"
 #endif /* __cplusplus */
 
 /****************************************************************************/
+#ifdef __amigaos4__
+#undef DAY_1
+#undef DAY_2
+#undef DAY_3
+#undef DAY_4
+#undef DAY_5
+#undef DAY_6
+#undef DAY_7
+#undef ABDAY_1
+#undef ABDAY_2
+#undef ABDAY_3
+#undef ABDAY_4
+#undef ABDAY_5
+#undef ABDAY_6
+#undef ABDAY_7
+#undef MON_1
+#undef MON_2
+#undef MON_3
+#undef MON_4
+#undef MON_5
+#undef MON_6
+#undef MON_7
+#undef MON_8
+#undef MON_9
+#undef MON_10
+#undef MON_11
+#undef MON_12
+#undef ABMON_1
+#undef ABMON_2
+#undef ABMON_3
+#undef ABMON_4
+#undef ABMON_5
+#undef ABMON_6
+#undef ABMON_7
+#undef ABMON_8
+#undef ABMON_9
+#undef ABMON_10
+#undef ABMON_11
+#undef ABMON_12
+#undef YESSTR
+#undef NOSTR
+#undef AM_STR
+#undef PM_STR
+#endif
 
 #define CODESET 1
 #define D_T_FMT 2

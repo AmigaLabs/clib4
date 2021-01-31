@@ -1,5 +1,5 @@
 /*
- * $Id: math_tan.c,v 1.5 2006-01-08 12:04:24 obarthel Exp $
+ * $Id: math_tan.c,v 1.6 2021-01-31 12:04:24 apalmate Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ extern double __tan(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubTransBase
-	.globl	___tan
-
-___tan:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubTransBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-48:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubTransBase\n\t"
+	".globl	___tan\n\t"
+"___tan:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-48:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 
@@ -104,7 +99,7 @@ __tan(double x)
 
 	result = IEEEDPTan(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -124,11 +119,11 @@ __tan(double x)
 {
 	double result;
 
-	__asm ("ftan%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("ftan%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -140,23 +135,26 @@ __tan(double x)
 INLINE STATIC double
 __tan(double x)
 {
-	double y[2],z=0.0;
-	int n,ix;
+	double y[2], z = 0.0;
+	int n, ix;
 
-    /* High word of x. */
-	GET_HIGH_WORD(ix,x);
+	/* High word of x. */
+	GET_HIGH_WORD(ix, x);
 
-    /* |x| ~< pi/4 */
+	/* |x| ~< pi/4 */
 	ix &= 0x7fffffff;
-	if(ix <= 0x3fe921fb) return __kernel_tan(x,z,1);
+	if (ix <= 0x3fe921fb)
+		return __kernel_tan(x, z, 1);
 
-    /* tan(Inf or NaN) is NaN */
-	else if (ix>=0x7ff00000) return x-x;		/* NaN */
+	/* tan(Inf or NaN) is NaN */
+	else if (ix >= 0x7ff00000)
+		return x - x; /* NaN */
 
-    /* argument reduction needed */
-	else {
-	    n = __rem_pio2(x,y);
-	    return __kernel_tan(y[0],y[1],1-((n&1)<<1)); /*   1 -- n even
+	/* argument reduction needed */
+	else
+	{
+		n = __rem_pio2(x, y);
+		return __kernel_tan(y[0], y[1], 1 - ((n & 1) << 1)); /*   1 -- n even
 							-1 -- n odd */
 	}
 }
@@ -171,7 +169,7 @@ tan(double x)
 
 	result = __tan(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

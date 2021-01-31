@@ -1,5 +1,5 @@
 /*
- * $Id: math_sinh.c,v 1.5 2006-01-08 12:04:24 obarthel Exp $
+ * $Id: math_sinh.c,v 1.6 2021-01-31 12:04:24 apalmate Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ extern double __sinh(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubTransBase
-	.globl	___sinh
-
-___sinh:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubTransBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-60:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubTransBase\n\t"
+	".globl	___sinh\n\t"
+"___sinh:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-60:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 

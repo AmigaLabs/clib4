@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_createport.c,v 1.5 2006-09-25 15:12:47 obarthel Exp $
+ * $Id: amiga_createport.c,v 1.6 2021-01-31 15:12:47 apalmate Exp $
  *
  * :ts=4
  *
@@ -50,22 +50,22 @@
 
 /****************************************************************************/
 
-struct MsgPort * CreatePort(CONST_STRPTR name, LONG pri);
+struct MsgPort *CreatePort(CONST_STRPTR name, LONG pri);
 
 /****************************************************************************/
 
 struct MsgPort *
 CreatePort(CONST_STRPTR name, LONG pri)
 {
-	struct MsgPort * result = NULL;
+	struct MsgPort *result = NULL;
 
-	assert( -128 <= pri && pri <= 127 );
+	assert(-128 <= pri && pri <= 127);
 
-	if(pri < -128 || pri > 127)
+	if (pri < -128 || pri > 127)
 		goto out;
 
-	result = CreateMsgPort();
-	if(result != NULL && name != NULL)
+	result = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
+	if (result != NULL && name != NULL)
 	{
 		result->mp_Node.ln_Name = (char *)name;
 		result->mp_Node.ln_Pri = pri;
@@ -73,7 +73,7 @@ CreatePort(CONST_STRPTR name, LONG pri)
 		AddPort(result);
 	}
 
- out:
+out:
 
-	return(result);
+	return (result);
 }

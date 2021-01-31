@@ -28,7 +28,6 @@ AMIGA_LIB = \
 	amiga_argint.o \
 	amiga_argstring.o \
 	amiga_beginio.o \
-	amiga_callhooka.o \
 	amiga_coercemethod.o \
 	amiga_createextio.o \
 	amiga_createport.o \

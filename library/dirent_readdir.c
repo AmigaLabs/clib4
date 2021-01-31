@@ -88,7 +88,7 @@ readdir(DIR *directory_pointer)
 			}
 			else
 			{
-				D_S(struct FileInfoBlock, fib);
+				struct ExamineData *fib;
 				D_S(struct bcpl_name, bcpl_name);
 				char *name = (char *)bcpl_name->name;
 				BPTR dir_lock;
@@ -112,27 +112,33 @@ readdir(DIR *directory_pointer)
 							dir_lock = DoPkt(dvp->dvp_Port, ACTION_LOCATE_OBJECT, ZERO, MKBADDR(name), SHARED_LOCK, 0, 0);
 							if (dir_lock != ZERO)
 							{
-								if (Examine(dir_lock, fib))
+								fib = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
+								if (fib)
 								{
-									assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(fib->fib_FileName));
+									assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(fib->Name));
 
-									strcpy(dh->dh_DirectoryEntry.d_name, fib->fib_FileName);
+									strcpy(dh->dh_DirectoryEntry.d_name, fib->Name);
 
-									dh->dh_DirectoryEntry.d_ino = fib->fib_DiskKey;
+									dh->dh_DirectoryEntry.d_ino = fib->ObjectID;
 									dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
-									if (dh->dh_FileInfo.fib_DirEntryType < 0)
-										dh->dh_DirectoryEntry.d_type = DT_REG;
-									else if (dh->dh_FileInfo.fib_DirEntryType == 3 || dh->dh_FileInfo.fib_DirEntryType == 4)
+									if (EXD_IS_SOFTLINK(dh->dh_FileInfo))
 										dh->dh_DirectoryEntry.d_type = DT_LNK;
-									else
+									else if (EXD_IS_FILE(dh->dh_FileInfo))
+										dh->dh_DirectoryEntry.d_type = DT_REG;
+									else if (EXD_IS_SOCKET(dh->dh_FileInfo))
+										dh->dh_DirectoryEntry.d_type = DT_SOCK;
+									else if (EXD_IS_DIRECTORY(dh->dh_FileInfo))
 									{
 										dh->dh_DirectoryEntry.d_type = DT_DIR;
-										//TODO - add other files type
 									}
-
+									else
+									{
+										dh->dh_DirectoryEntry.d_type = DT_UNKNOWN;
+									}
 									result = &dh->dh_DirectoryEntry;
-								}
 
+									FreeDosObject(DOS_EXAMINEDATA, fib);
+								}
 								UnLock(dir_lock);
 							}
 
@@ -159,7 +165,7 @@ readdir(DIR *directory_pointer)
 
 					dh->dh_Position++;
 
-					dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo.fib_DiskKey;
+					dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo->ObjectID;
 					strcpy(dh->dh_DirectoryEntry.d_name, ".");
 					dh->dh_DirectoryEntry.d_reclen = 2;
 					dh->dh_DirectoryEntry.d_type = DT_DIR;
@@ -168,14 +174,15 @@ readdir(DIR *directory_pointer)
 				}
 				else if (dh->dh_Position == 1)
 				{
-					D_S(struct FileInfoBlock, fib);
+					struct ExamineData *fib;
 
 					dh->dh_Position++;
 
 					parent_directory = ParentDir(dh->dh_DirLock);
 					if (parent_directory != ZERO)
 					{
-						if (CANNOT Examine(parent_directory, fib))
+						fib = ExamineObjectTags(EX_LockInput, parent_directory, TAG_DONE);
+						if (fib == NULL)
 						{
 							__set_errno(__translate_io_error_to_errno(IoErr()));
 							goto out;
@@ -184,18 +191,20 @@ readdir(DIR *directory_pointer)
 					else
 					{
 						/* This is the virtual root directory's key. */
-						fib->fib_DiskKey = 0;
+						fib->ObjectID = 0;
 					}
 
 					SHOWMSG("returning ..");
 
-					dh->dh_DirectoryEntry.d_ino = fib->fib_DiskKey;
+					dh->dh_DirectoryEntry.d_ino = fib->ObjectID;
 					dh->dh_DirectoryEntry.d_reclen = 3;
 					dh->dh_DirectoryEntry.d_type = DT_DIR;
 
 					strcpy(dh->dh_DirectoryEntry.d_name, "..");
 
 					result = &dh->dh_DirectoryEntry;
+
+					FreeDosObject(DOS_EXAMINEDATA, fib);
 				}
 			}
 		}
@@ -203,37 +212,54 @@ readdir(DIR *directory_pointer)
 
 		if (result == NULL)
 		{
-			assert((((ULONG)&dh->dh_FileInfo) & 3) == 0);
+			APTR context = context = ObtainDirContextTags(EX_FileLockInput, dh->dh_DirLock,
+																EX_DoCurrentDir, TRUE,
+																EX_DataFields, EXF_ALL,
+																TAG_END);
+			if (context) {
+				dh->dh_FileInfo = ExamineDir(context);
+				if (dh->dh_FileInfo != NULL)
+				{
+					dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo->ObjectID;
+					assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(dh->dh_FileInfo.fib_FileName));
 
-			if (ExNext(dh->dh_DirLock, &dh->dh_FileInfo))
-			{
-				dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo.fib_DiskKey;
-				assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(dh->dh_FileInfo.fib_FileName));
+					strcpy(dh->dh_DirectoryEntry.d_name, dh->dh_FileInfo->Name);
+					dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
+					if (EXD_IS_SOFTLINK(dh->dh_FileInfo))
+						dh->dh_DirectoryEntry.d_type = DT_LNK;
+					else if (EXD_IS_FILE(dh->dh_FileInfo))
+						dh->dh_DirectoryEntry.d_type = DT_REG;
+					else if (EXD_IS_SOCKET(dh->dh_FileInfo))
+						dh->dh_DirectoryEntry.d_type = DT_SOCK;
+					else if (EXD_IS_DIRECTORY(dh->dh_FileInfo))
+					{
+						dh->dh_DirectoryEntry.d_type = DT_DIR;
+					}
+					else
+					{
+						dh->dh_DirectoryEntry.d_type = DT_UNKNOWN;
+					}
 
-				strcpy(dh->dh_DirectoryEntry.d_name, dh->dh_FileInfo.fib_FileName);
-				dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
-				if (dh->dh_FileInfo.fib_DirEntryType < 0)
-					dh->dh_DirectoryEntry.d_type = DT_REG;
-				else if (dh->dh_FileInfo.fib_DirEntryType == 3 || dh->dh_FileInfo.fib_DirEntryType == 4)
-					dh->dh_DirectoryEntry.d_type = DT_LNK;
+					result = &dh->dh_DirectoryEntry;
+
+					ReleaseDirContext(context);
+				}
 				else
 				{
-					dh->dh_DirectoryEntry.d_type = DT_DIR;
-					//TODO - add other files type
+					if (IoErr() != ERROR_NO_MORE_ENTRIES)
+					{
+						SHOWMSG("error scanning directory");
+
+						__set_errno(__translate_io_error_to_errno(IoErr()));
+						goto out;
+					}
+
+					SHOWMSG("that was the end of the line");
 				}
-				result = &dh->dh_DirectoryEntry;
 			}
-			else
-			{
-				if (IoErr() != ERROR_NO_MORE_ENTRIES)
-				{
-					SHOWMSG("error scanning directory");
-
-					__set_errno(__translate_io_error_to_errno(IoErr()));
-					goto out;
-				}
-
-				SHOWMSG("that was the end of the line");
+			else {
+				__set_errno(__translate_io_error_to_errno(IoErr()));
+				goto out;
 			}
 		}
 	}

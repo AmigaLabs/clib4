@@ -58,8 +58,8 @@ extern mode_t NOCOMMON __current_umask;
 
 /****************************************************************************/
 
-extern void __convert_file_info_to_stat(const struct MsgPort * file_system,const struct FileInfoBlock * fib,struct stat * st);
-extern BPTR __lock(const char *name,const int mode,int * link_length,char * real_name,size_t real_name_size);
+extern void __convert_file_info_to_stat(const struct MsgPort *file_system, const struct ExamineData *fib, struct stat *st);
+extern BPTR __lock(const char *name, const int mode, int *link_length, char *real_name, size_t real_name_size);
 
 /****************************************************************************/
 

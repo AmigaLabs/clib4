@@ -1,5 +1,5 @@
 /*
- * $Id: stat_fstat.c,v 1.10 2006-01-08 12:04:24 obarthel Exp $
+ * $Id: stat_fstat.c,v 1.11 2021-01-31 12:04:24 apalmate Exp $
  *
  * :ts=4
  *
@@ -47,12 +47,11 @@
 
 /****************************************************************************/
 
-int
-fstat(int file_descriptor, struct stat * buffer)
+int fstat(int file_descriptor, struct stat *buffer)
 {
 	struct file_action_message fam;
-	D_S(struct FileInfoBlock,fib);
-	struct fd * fd = NULL;
+	struct ExamineData *fib;
+	struct fd *fd = NULL;
 	int result = ERROR;
 
 	ENTER();
@@ -60,16 +59,16 @@ fstat(int file_descriptor, struct stat * buffer)
 	SHOWVALUE(file_descriptor);
 	SHOWPOINTER(buffer);
 
-	assert( buffer != NULL );
+	assert(buffer != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	__stdio_lock();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(buffer == NULL)
+		if (buffer == NULL)
 		{
 			SHOWMSG("invalid buffer parameter");
 
@@ -77,14 +76,14 @@ fstat(int file_descriptor, struct stat * buffer)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	assert( file_descriptor >= 0 && file_descriptor < __num_fd );
-	assert( __fd[file_descriptor] != NULL );
-	assert( FLAG_IS_SET(__fd[file_descriptor]->fd_Flags,FDF_IN_USE) );
+	assert(file_descriptor >= 0 && file_descriptor < __num_fd);
+	assert(__fd[file_descriptor] != NULL);
+	assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
 	fd = __get_file_descriptor(file_descriptor);
-	if(fd == NULL)
+	if (fd == NULL)
 	{
 		__set_errno(EBADF);
 		goto out;
@@ -94,28 +93,28 @@ fstat(int file_descriptor, struct stat * buffer)
 
 	SHOWMSG("calling the hook");
 
-	fam.fam_Action		= file_action_examine;
-	fam.fam_FileInfo	= fib;
-	fam.fam_FileSystem	= NULL;
+	fam.fam_Action = file_action_examine;
+	fam.fam_FileInfo = fib;
+	fam.fam_FileSystem = NULL;
 
-	assert( fd->fd_Action != NULL );
+	assert(fd->fd_Action != NULL);
 
-	if((*fd->fd_Action)(fd,&fam) < 0)
+	if ((*fd->fd_Action)(fd, &fam) < 0)
 	{
 		__set_errno(fam.fam_Error);
 		goto out;
 	}
 
-	__convert_file_info_to_stat(fam.fam_FileSystem,fib,buffer);
+	__convert_file_info_to_stat(fam.fam_FileSystem, fib, buffer);
 
 	result = OK;
 
- out:
+out:
 
 	__fd_unlock(fd);
 
 	__stdio_unlock();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

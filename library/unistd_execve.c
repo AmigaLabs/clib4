@@ -124,7 +124,7 @@ get_first_script_line(const char *path, char **line_ptr)
 	}
 
 	/* Make file access a little more robust. */
-	SetVBuf(script_file, NULL, BUF_LINE, 1024);
+	SetFileHandleAttrTags(script_file, FH_BufferMode, BUF_LINE, FH_BufferSize, 1024, TAG_DONE);
 
 	while ((c = FGetC(script_file)) != -1)
 	{
@@ -432,11 +432,10 @@ find_command(const char *path, struct program_info **result_ptr)
 				file_lock = Lock((STRPTR)path, SHARED_LOCK);
 				if (file_lock != ZERO)
 				{
-					D_S(struct FileInfoBlock, fib);
-
-					if (Examine(file_lock, fib))
+					struct ExamineData *status = ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE);
+					if (status)
 					{
-						if (fib->fib_Protection & FIBF_SCRIPT)
+						if (status->Protection & EXDB_SCRIPT)
 						{
 							/* That's an AmigaDOS script */
 							pi->interpreter_name = strdup("Execute");
@@ -445,6 +444,7 @@ find_command(const char *path, struct program_info **result_ptr)
 							else
 								error = ENOMEM;
 						}
+						FreeDosObject(DOS_EXAMINEDATA, status);
 					}
 					else
 					{

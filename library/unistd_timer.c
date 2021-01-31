@@ -56,23 +56,23 @@
 
 #if defined(__NEW_TIMEVAL_DEFINITION_USED__)
 
-#define timerequest	TimeRequest
-#define tr_node		Request
+#define timerequest TimeRequest
+#define tr_node Request
 
 #endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
 
 /****************************************************************************/
 
 /* Local timer I/O. */
-struct MsgPort *		NOCOMMON __timer_port;
-struct timerequest *	NOCOMMON __timer_request;
-BOOL					NOCOMMON __timer_busy;
-struct Library *		NOCOMMON __TimerBase;
+struct MsgPort *NOCOMMON __timer_port;
+struct timerequest *NOCOMMON __timer_request;
+BOOL NOCOMMON __timer_busy;
+struct Library *NOCOMMON __TimerBase;
 
 /****************************************************************************/
 
 #if defined(__amigaos4__)
-struct TimerIFace * NOCOMMON __ITimer;
+struct TimerIFace *NOCOMMON __ITimer;
 #endif /* __amigaos4__ */
 
 /****************************************************************************/
@@ -80,50 +80,45 @@ struct TimerIFace * NOCOMMON __ITimer;
 CLIB_CONSTRUCTOR(timer_init)
 {
 	BOOL success = FALSE;
-	
+
 	ENTER();
 
-	__timer_port = CreateMsgPort();
-	if(__timer_port == NULL)
+	__timer_port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
+	if (__timer_port == NULL)
 	{
 		__show_error("The timer message port could not be created.");
 		goto out;
 	}
 
-	__timer_request = (struct timerequest *)CreateIORequest(__timer_port,sizeof(*__timer_request));
-	if(__timer_request == NULL)
+	__timer_request = AllocSysObjectTags(ASOT_MESSAGE, ASOMSG_Size, sizeof(struct TimeRequest), ASOMSG_ReplyPort, __timer_port, TAG_DONE);
+	if (__timer_request == NULL)
 	{
 		__show_error("The timer I/O request could not be created.");
 		goto out;
 	}
 
-	if(OpenDevice(TIMERNAME,UNIT_VBLANK,(struct IORequest *)__timer_request,0) != OK)
+	if (OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)__timer_request, 0) != OK)
 	{
 		__show_error("The timer could not be opened.");
 		goto out;
 	}
 
 	__TimerBase = (struct Library *)__timer_request->tr_node.io_Device;
-
-	#if defined(__amigaos4__)
+	__ITimer = (struct TimerIFace *)GetInterface(__TimerBase, "main", 1, 0);
+	if (__ITimer == NULL)
 	{
-		__ITimer = (struct TimerIFace *)GetInterface(__TimerBase, "main", 1, 0);
-		if(__ITimer == NULL)
-		{
-			__show_error("The timer interface could not be obtained.");
-			goto out;
-		}
+		__show_error("The timer interface could not be obtained.");
+		goto out;
 	}
-	#endif /* __amigaos4__ */
 
 	success = TRUE;
 
- out:
+out:
 
 	SHOWVALUE(success);
 	LEAVE();
 
-	if(success)
+	if (success)
 		CONSTRUCTOR_SUCCEED();
 	else
 		CONSTRUCTOR_FAIL();
@@ -135,29 +130,25 @@ CLIB_DESTRUCTOR(timer_exit)
 {
 	ENTER();
 
-	#if defined(__amigaos4__)
-	{
-		if(__ITimer != NULL)
-			DropInterface((struct Interface *)__ITimer);
+	if (__ITimer != NULL)
+		DropInterface((struct Interface *)__ITimer);
 
-		__ITimer = NULL;
-	}
-	#endif /* __amigaos4__ */
+	__ITimer = NULL;
 
 	__TimerBase = NULL;
 
-	if(__timer_request != NULL)
+	if (__timer_request != NULL)
 	{
-		if(__timer_request->tr_node.io_Device != NULL)
+		if (__timer_request->tr_node.io_Device != NULL)
 			CloseDevice((struct IORequest *)__timer_request);
 
-		DeleteIORequest((struct IORequest *)__timer_request);
+		FreeSysObject(ASOT_MESSAGE, __timer_request);
 		__timer_request = NULL;
 	}
 
-	if(__timer_port != NULL)
+	if (__timer_port != NULL)
 	{
-		DeleteMsgPort(__timer_port);
+		FreeSysObject(ASOT_PORT, __timer_port);
 		__timer_port = NULL;
 	}
 

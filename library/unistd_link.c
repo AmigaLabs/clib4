@@ -47,13 +47,12 @@
 
 /****************************************************************************/
 
-int
-link(const char * existing_path,const char * new_path)
+int link(const char *existing_path, const char *new_path)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info existing_path_name_nti;
 	struct name_translation_info new_path_name_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 	BPTR existing_path_lock = ZERO;
 	int result = ERROR;
 	LONG status;
@@ -63,14 +62,14 @@ link(const char * existing_path,const char * new_path)
 	SHOWSTRING(existing_path);
 	SHOWSTRING(new_path);
 
-	assert( existing_path != NULL && new_path != NULL );
+	assert(existing_path != NULL && new_path != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(existing_path == NULL || new_path == NULL)
+		if (existing_path == NULL || new_path == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -78,13 +77,13 @@ link(const char * existing_path,const char * new_path)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
-			if(existing_path[0] == '\0' || new_path[0] == '\0')
+			if (existing_path[0] == '\0' || new_path[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -92,28 +91,28 @@ link(const char * existing_path,const char * new_path)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&existing_path,&existing_path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&existing_path, &existing_path_name_nti) != 0)
 				goto out;
 
-			if(__translate_unix_to_amiga_path_name(&new_path,&new_path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&new_path, &new_path_name_nti) != 0)
 				goto out;
 
-			if(existing_path_name_nti.is_root || new_path_name_nti.is_root)
+			if (existing_path_name_nti.is_root || new_path_name_nti.is_root)
 			{
 				__set_errno(EACCES);
 				goto out;
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	D(("trying to get a lock on '%s'",existing_path));
+	D(("trying to get a lock on '%s'", existing_path));
 
 	PROFILE_OFF();
-	existing_path_lock = Lock((STRPTR)existing_path,SHARED_LOCK);
+	existing_path_lock = Lock((STRPTR)existing_path, SHARED_LOCK);
 	PROFILE_ON();
 
-	if(existing_path_lock == ZERO)
+	if (existing_path_lock == ZERO)
 	{
 		SHOWMSG("that didn't work");
 
@@ -121,13 +120,13 @@ link(const char * existing_path,const char * new_path)
 		goto out;
 	}
 
-	D(("trying to make a link named '%s'",new_path));
+	D(("trying to make a link named '%s'", new_path));
 
 	PROFILE_OFF();
-	status = MakeLink((STRPTR)new_path,existing_path_lock,LINK_HARD);
+	status = MakeLink((STRPTR)new_path, (APTR) existing_path_lock, LINK_HARD);
 	PROFILE_ON();
 
-	if(status == DOSFALSE)
+	if (status == DOSFALSE)
 	{
 		SHOWMSG("that didn't work");
 
@@ -137,12 +136,12 @@ link(const char * existing_path,const char * new_path)
 
 	result = OK;
 
- out:
+out:
 
 	PROFILE_OFF();
 	UnLock(existing_path_lock);
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

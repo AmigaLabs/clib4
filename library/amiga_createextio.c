@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_createextio.c,v 1.5 2006-09-25 15:12:47 obarthel Exp $
+ * $Id: amiga_createextio.c,v 1.6 2021-01-31 15:12:47 apalmate Exp $
  *
  * :ts=4
  *
@@ -63,8 +63,7 @@ CreateExtIO(CONST struct MsgPort * port, LONG io_size)
 
 	if(port == NULL || io_size < (LONG)sizeof(*result))
 		goto out;
-
-	result = CreateIORequest(port,(ULONG)io_size);
+	result = AllocSysObjectTags(ASOT_IOREQUEST, ASOIOR_Size, sizeof(struct IORequest), ASOIOR_ReplyPort, port, TAG_END);
 
  out:
 

@@ -1,5 +1,5 @@
 /*
- * $Id: math_sqrt.c,v 1.9 2006-09-22 07:54:24 obarthel Exp $
+ * $Id: math_sqrt.c,v 1.12 2021-01-31 07:54:24 apalmate Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ extern double __sqrt(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubTransBase
-	.globl	___sqrt
-
-___sqrt:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubTransBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-96:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubTransBase\n\t"
+	".globl	___sqrt\n\t"
+"___sqrt:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-96:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 

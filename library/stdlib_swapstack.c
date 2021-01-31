@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_swapstack.c,v 1.4 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: stdlib_swapstack.c,v 1.5 2021-01-31 12:04:26 apalmate Exp $
  *
  * :ts=4
  *
@@ -51,54 +51,12 @@
 
 /****************************************************************************/
 
-#ifndef __PPC__
-
-/****************************************************************************/
-
-asm("                                                                     \n\
-	.text                                                                  \n\
-	.even                                                                  \n\
-                                                                          \n\
-_LVOStackSwap = -732                                                      \n\
-                                                                          \n\
-	.globl	_SysBase                                                      \n\
-	.globl	___swap_stack_and_call                                        \n\
-                                                                          \n\
-___swap_stack_and_call:                                                   \n\
-                                                                          \n\
-	moveml	d2/a2/a3/a6,sp@-                                              \n\
-	movel	sp@(20),a2                                                       \n\
-	movel	sp@(24),a3                                                       \n\
-	movel	"A4(_SysBase)",a6                                                \n\
-                                                                          \n\
-	movel	a2,a0                                                            \n\
-	jsr		a6@(_LVOStackSwap:W)                                          \n\
-                                                                          \n\
-	jsr		a3@                                                           \n\
-	movel	d0,d2                                                            \n\
-                                                                          \n\
-	movel	a2,a0                                                            \n\
-	jsr		a6@(_LVOStackSwap:W)                                          \n\
-	                                                                       \n\
-	movel	d2,d0                                                            \n\
-                                                                          \n\
-	moveml	sp@+,d2/a2/a3/a6                                              \n\
-                                                                          \n\
-	rts                                                                    \n\
-                                                                          \n\
-");
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
 /* Swap the current stack configuration out, call a function provided,
    swap the stack configuration back and return. */
 int
 __swap_stack_and_call(struct StackSwapStruct * stk,APTR function)
 {
+	// TODO - Check if it is needed since StacSkwap is deprecated
 	register int result;
 
 	StackSwap(stk);
@@ -108,9 +66,6 @@ __swap_stack_and_call(struct StackSwapStruct * stk,APTR function)
 	return(result);
 }
 
-/****************************************************************************/
-
-#endif /* __PPC__ */
 
 /****************************************************************************/
 

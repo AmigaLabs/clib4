@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_open.c,v 1.18 2006-01-08 12:04:22 obarthel Exp $
+ * $Id: fcntl_open.c,v 1.19 2021-01-31 12:04:22 apalmate Exp $
  *
  * :ts=4
  *
@@ -92,7 +92,7 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 #if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
 #endif /* UNIX_PATH_SEMANTICS */
-	D_S(struct FileInfoBlock, fib);
+	struct ExamineData *fib = NULL;
 	struct SignalSemaphore *fd_lock;
 	LONG is_file_system = FALSE;
 	LONG open_mode;
@@ -233,13 +233,11 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 
 			if (lock != ZERO)
 			{
-				LONG status;
-
 				PROFILE_OFF();
-				status = Examine(lock, fib);
+				fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
 				PROFILE_ON();
 
-				if (status == DOSFALSE)
+				if (fib == NULL)
 				{
 					SHOWMSG("could not examine the object");
 
@@ -248,7 +246,7 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 				}
 
 				/* We can open only files, but never directories. */
-				if (fib->fib_DirEntryType >= 0)
+				if (EXD_IS_DIRECTORY(fib))
 				{
 					SHOWMSG("can't open a directory");
 
@@ -256,8 +254,8 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 					goto out;
 				}
 
-				if (FLAG_IS_SET(fib->fib_Protection, FIBF_WRITE) ||
-					FLAG_IS_SET(fib->fib_Protection, FIBF_DELETE))
+				if (FLAG_IS_SET(fib->Protection, EXDF_NO_WRITE) ||
+					FLAG_IS_SET(fib->Protection, EXDF_NO_DELETE))
 				{
 					SHOWMSG("this object is not write enabled");
 
@@ -326,8 +324,10 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 			lock = Lock((STRPTR)path_name, SHARED_LOCK);
 			if (lock != ZERO)
 			{
-				if (Examine(lock, fib) && fib->fib_DirEntryType >= 0)
+				fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
+				if (fib != NULL && !EXD_IS_DIRECTORY(fib)) {
 					__set_errno(EISDIR);
+				}
 			}
 
 			PROFILE_ON();
@@ -429,7 +429,7 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 		SHOWMSG("appending; seeking to end of file");
 
 		PROFILE_OFF();
-		Seek(handle, 0, OFFSET_END);
+		ChangeFilePosition(handle, 0, OFFSET_END);
 		PROFILE_ON();
 
 		SET_FLAG(fd->fd_Flags, FDF_APPEND);
@@ -472,6 +472,9 @@ out:
 	if (handle != ZERO)
 		Close(handle);
 
+	if (fib != NULL) {
+		FreeDosObject(DOS_EXAMINEDATA, fib);
+	}
 	UnLock(lock);
 
 	__stdio_unlock();

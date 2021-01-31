@@ -595,18 +595,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm)
 		data.max_size	= maxsize-1;
 
 		memset(&hook,0,sizeof(hook));
-
-		#if defined(__amigaos4__)
-		{
-			hook.h_Entry	= (HOOKFUNC)format_hook_function;
-		}
-		#else
-		{
-			hook.h_Entry	= (HOOKFUNC)HookEntry;
-			hook.h_SubEntry	= (HOOKFUNC)format_hook_function;
-		}
-		#endif /* __amigaos4__ */
-
+		hook.h_Entry	= (HOOKFUNC)format_hook_function;
 		hook.h_Data = &data;
 
 		__locale_lock();

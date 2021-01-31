@@ -188,7 +188,7 @@ extern void __duplicate_fd(struct fd * duplicate_fd,struct fd * original_fd);
 /****************************************************************************/
 
 /* stdio_examine_fh.c */
-extern LONG __safe_examine_file_handle(BPTR file_handle,struct FileInfoBlock *fib);
+extern LONG __safe_examine_file_handle(BPTR file_handle,struct ExamineData *fib);
 
 /****************************************************************************/
 

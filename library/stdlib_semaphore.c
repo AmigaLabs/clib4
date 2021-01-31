@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_semaphore.c,v 1.2 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: stdlib_semaphore.c,v 1.3 2021-01-31 12:04:26 apalmate Exp $
  *
  * :ts=4
  *
@@ -46,7 +46,7 @@ __create_semaphore(void)
 	}
 	#else
 	{
-		semaphore = AllocVec(sizeof(*semaphore),MEMF_ANY|MEMF_PUBLIC);
+		semaphore = AllocVecTag(sizeof(*semaphore), AVT_Type, MEMF_SHARED, TAG_DONE);
 		if(semaphore != NULL)
 			InitSemaphore(semaphore);
 	}

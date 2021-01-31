@@ -165,6 +165,15 @@
 
 /****************************************************************************/
 
+#ifndef USED
+#ifdef __GNUC__
+#define USED __attribute__((used))
+#else
+#define USED /* USED */
+#endif /* __GNUC__ */
+#endif /* USED */
+
+/****************************************************************************/
 #ifndef NOCOMMON
 #ifdef __GNUC__
 #define NOCOMMON __attribute__((nocommon))
