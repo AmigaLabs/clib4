@@ -52,7 +52,6 @@
 /****************************************************************************/
 
 extern struct ElfIFace *	__IElf;
-extern Elf32_Handle			__dl_elf_handle;
 
 /****************************************************************************/
 
@@ -88,7 +87,7 @@ void * dlopen(const char * path_name,int mode)
 	}
 	#endif /* UNIX_PATH_SEMANTICS */
 
-	if(__dl_elf_handle != NULL)
+	if(__global_clib2->__dl_elf_handle != NULL)
 	{
 		struct ElfIFace * IElf = __IElf;
 		uint32 flags = 0;
@@ -99,9 +98,11 @@ void * dlopen(const char * path_name,int mode)
 		if(mode & RTLD_GLOBAL)
 			flags = ELF32_RTLD_GLOBAL;
 
-		result = DLOpen(__dl_elf_handle,path_name,flags);
+		result = DLOpen(__global_clib2->__dl_elf_handle,path_name,flags);
 	}
-
+	else {
+		__set_errno(ENOSYS);
+	}
  out:
 
 	return(result);

@@ -35,13 +35,6 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
-/* The shared object API is available only on AmigaOS 4.0. */
-#if defined(__amigaos4__)
-
-/****************************************************************************/
-
 #include <dlfcn.h>
 
 /****************************************************************************/
@@ -52,8 +45,6 @@
 /****************************************************************************/
 
 extern struct ElfIFace *__IElf;
-extern Elf32_Handle __dl_elf_handle;
-Elf32_Error __elf_error_code;
 
 /****************************************************************************/
 
@@ -61,26 +52,25 @@ int dlclose(void *handle)
 {
 	int result = -1;
 
-	if (__dl_elf_handle != NULL)
+	if (__global_clib2->__dl_elf_handle != NULL)
 	{
 		struct ElfIFace *IElf = __IElf;
 		Elf32_Error error;
 
-		error = DLClose(__dl_elf_handle, handle);
+		error = DLClose(__global_clib2->__dl_elf_handle, handle);
 		if (error != ELF32_NO_ERROR)
 		{
-			__elf_error_code = error;
+			__global_clib2->__elf_error_code = error;
 			goto out;
 		}
 	}
-
+	else {
+		__set_errno(ENOSYS);
+	}
+	
 	result = 0;
 
 out:
 
 	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* __amigaos4__ */

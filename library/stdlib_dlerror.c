@@ -48,9 +48,6 @@
 
 #include <libraries/elf.h>
 
-/****************************************************************************/
-
-extern Elf32_Error __elf_error_code;
 
 /****************************************************************************/
 
@@ -58,7 +55,7 @@ const char * dlerror(void)
 {
 	const char * result;
 
-	switch(__elf_error_code)
+	switch(__global_clib2->__elf_error_code)
 	{
 		case ELF32_NO_ERROR:
 
@@ -122,7 +119,8 @@ const char * dlerror(void)
 	}
 
 	/* Calling dlerror() will clear the error code. */
-	__elf_error_code = ELF32_NO_ERROR;
+	if (__global_clib2 != NULL)
+		__global_clib2->__elf_error_code = ELF32_NO_ERROR;
 
 	return(result);
 }
