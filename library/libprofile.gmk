@@ -10,11 +10,9 @@
 LIBS += \
 	lib/libprofile.a \
 	lib/soft-float/libprofile.a \
-	lib/small-data/libprofile.a \
 	lib/baserel/libprofile.a \
 	lib.threadsafe/libprofile.a \
 	lib.threadsafe/soft-float/libprofile.a \
-	lib.threadsafe/small-data/libprofile.a \
 	lib.threadsafe/baserel/libprofile.a
 
 ##############################################################################
@@ -30,11 +28,9 @@ PROFILE_LIB = \
 
 obj/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
 obj/soft-float/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
-obj/small-data/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
 obj/baserel/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
 obj.threadsafe/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
 obj.threadsafe/soft-float/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
-obj.threadsafe/small-data/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
 obj.threadsafe/baserel/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
 
 ##############################################################################
@@ -47,10 +43,6 @@ obj/soft-float/libprofile/%.o : AFLAGS += $(SOFTFLOAT)
 obj/soft-float/libprofile/%.o : %.S
 	@$(ASSEMBLE)
 
-obj/small-data/libprofile/%.o : AFLAGS += $(SMALLDATA)
-obj/small-data/libprofile/%.o : %.S
-	@$(ASSEMBLE)
-
 obj/baserel/libprofile/%.o : AFLAGS += $(BASEREL)
 obj/baserel/libprofile/%.o : %.S
 	@$(ASSEMBLE)
@@ -61,10 +53,6 @@ obj.threadsafe/libprofile/%.o : %.S
 
 obj.threadsafe/soft-float/libprofile/%.o : AFLAGS += $(SOFTFLOAT)
 obj.threadsafe/soft-float/libprofile/%.o : %.S
-	@$(ASSEMBLE)
-
-obj.threadsafe/small-data/libprofile/%.o : AFLAGS += $(SMALLDATA)
-obj.threadsafe/small-data/libprofile/%.o : %.S
 	@$(ASSEMBLE)
 
 obj.threadsafe/baserel/libprofile/%.o : AFLAGS += $(BASEREL)
@@ -81,10 +69,6 @@ obj/soft-float/libprofile/%.o : CFLAGS += $(SOFTFLOAT)
 obj/soft-float/libprofile/%.o : %.c
 	@$(COMPILE)
 
-obj/small-data/libprofile/%.o : CFLAGS += $(SMALLDATA)
-obj/small-data/libprofile/%.o : %.c
-	@$(COMPILE)
-
 obj/baserel/libprofile/%.o : CFLAGS += $(BASEREL)
 obj/baserel/libprofile/%.o : %.c
 	@$(COMPILE)
@@ -95,10 +79,6 @@ obj.threadsafe/libprofile/%.o : %.c
 
 obj.threadsafe/soft-float/libprofile/%.o : CFLAGS += $(THREADSAFE) $(SOFTFLOAT)
 obj.threadsafe/soft-float/libprofile/%.o : %.c
-	@$(COMPILE)
-
-obj.threadsafe/small-data/libprofile/%.o : CFLAGS += $(THREADSAFE) $(SMALLDATA)
-obj.threadsafe/small-data/libprofile/%.o : %.c
 	@$(COMPILE)
 
 obj.threadsafe/baserel/libprofile/%.o : CFLAGS += $(THREADSAFE) $(BASEREL)
@@ -113,9 +93,6 @@ lib/libprofile.a : $(addprefix obj/libprofile/,$(PROFILE_LIB))
 lib/soft-float/libprofile.a : $(addprefix obj/soft-float/libprofile/,$(PROFILE_LIB))
 	@$(MAKELIB)
 
-lib/small-data/libprofile.a : $(addprefix obj/small-data/libprofile/,$(PROFILE_LIB))
-	@$(MAKELIB)
-
 lib/baserel/libprofile.a : $(addprefix obj/baserel/libprofile/,$(PROFILE_LIB))
 	@$(MAKELIB)
 
@@ -123,9 +100,6 @@ lib.threadsafe/libprofile.a : $(addprefix obj.threadsafe/libprofile/,$(PROFILE_L
 	@$(MAKELIB)
 
 lib.threadsafe/soft-float/libprofile.a : $(addprefix obj.threadsafe/soft-float/libprofile/,$(PROFILE_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/small-data/libprofile.a : $(addprefix obj.threadsafe/small-data/libprofile/,$(PROFILE_LIB))
 	@$(MAKELIB)
 
 lib.threadsafe/baserel/libprofile.a : $(addprefix obj.threadsafe/baserel/libprofile/,$(PROFILE_LIB))

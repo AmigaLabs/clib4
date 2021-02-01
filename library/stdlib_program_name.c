@@ -103,7 +103,7 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init)
 
 		free_program_name = TRUE;
 
-		if (CANNOT GetProgramName(__program_name, program_name_size))
+		if (CANNOT GetCliProgramName(__program_name, program_name_size))
 			goto out;
 	}
 	else

@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_timer.c,v 1.10 2006-04-05 06:43:56 obarthel Exp $
+ * $Id: unistd_timer.c,v 1.11 2021-02-01 16:35:56 apalmate Exp $
  *
  * :ts=4
  *
@@ -89,7 +89,7 @@ CLIB_CONSTRUCTOR(timer_init)
 		__show_error("The timer message port could not be created.");
 		goto out;
 	}
-
+	
 	__timer_request = AllocSysObjectTags(ASOT_MESSAGE, ASOMSG_Size, sizeof(struct TimeRequest), ASOMSG_ReplyPort, __timer_port, TAG_DONE);
 	if (__timer_request == NULL)
 	{

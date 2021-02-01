@@ -157,7 +157,7 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 			if (__memory_pool != NULL)
 			{
 				PROFILE_OFF();
-				mn = AllocPooled(__memory_pool, allocation_size);
+				mn = ItemPoolAlloc(__memory_pool);
 				PROFILE_ON();
 			}
 			else
@@ -196,7 +196,7 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 		if (__memory_pool != NULL)
 		{
 			PROFILE_OFF();
-			mn = AllocPooled(__memory_pool, allocation_size);
+			mn = ItemPoolAlloc(__memory_pool);
 			PROFILE_ON();
 		}
 		else
@@ -552,7 +552,9 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
 											   ASO_NoTrack, FALSE,
 											   ASOITEM_MFlags, MEMF_PRIVATE,
 											   ASOITEM_ItemSize, (ULONG)__default_pool_size,
-											   ASOPOOL_Puddle, (ULONG)__default_puddle_size,
+											   ASOITEM_BatchSize, 408,
+											   ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
+											   ASOITEM_GCParameter, 1000,
 											   TAG_DONE);
 		}
 	}
@@ -562,7 +564,9 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
 										   ASO_NoTrack, FALSE,
 										   ASOITEM_MFlags, MEMF_PRIVATE,
 										   ASOITEM_ItemSize, (ULONG)__default_pool_size,
-										   ASOPOOL_Puddle, (ULONG)__default_puddle_size,
+										   ASOITEM_BatchSize, 408,
+										   ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
+										   ASOITEM_GCParameter, 1000,
 										   TAG_DONE);
 	}
 #endif /* __USE_SLAB_ALLOCATOR) */

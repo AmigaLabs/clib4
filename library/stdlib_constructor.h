@@ -44,30 +44,6 @@
 
 /****************************************************************************/
 
-#ifdef __SASC
-
-#define CONSTRUCTOR(name,pri) \
-	int __stdargs _STI_##pri##_##name(void); \
-	int __stdargs _STI_##pri##_##name(void)
-
-#define DESTRUCTOR(name,pri) \
-	void __stdargs _STD_##pri##_##name(void); \
-	void __stdargs _STD_##pri##_##name(void)
-
-#define CONSTRUCTOR_SUCCEED() \
-	return(0)
-
-#define CONSTRUCTOR_FAIL() \
-	return(1)
-
-#endif /* __SASC */
-
-/****************************************************************************/
-
-#ifdef __GNUC__
-
-#if defined(__amigaos4__)
-
 #define CONSTRUCTOR(name,pri) \
 	STATIC VOID __attribute__((used)) name##_ctor(VOID); \
 	STATIC VOID (*__##name##_ctor)(VOID) __attribute__((used,section(".ctors._" #pri))) = name##_ctor; \
@@ -78,29 +54,11 @@
 	STATIC VOID (*__##name##_dtor)(VOID) __attribute__((used,section(".dtors._" #pri))) = name##_dtor; \
 	STATIC VOID name##_dtor(VOID)
 
-#else
-
-#define CONSTRUCTOR(name,pri) \
-	asm(".stabs \"___INIT_LIST__\",22,0,0,___ctor_" #name); \
-	asm(".stabs \"___INIT_LIST__\",20,0,0," #pri); \
-	VOID __ctor_##name##(VOID); \
-	VOID __ctor_##name##(VOID)
-
-#define DESTRUCTOR(name,pri) \
-	asm(".stabs \"___EXIT_LIST__\",22,0,0,___dtor_" #name); \
-	asm(".stabs \"___EXIT_LIST__\",20,0,0," #pri); \
-	VOID __dtor_##name##(VOID); \
-	VOID __dtor_##name##(VOID)
-
-#endif /* __amigaos4__ */
-
 #define CONSTRUCTOR_SUCCEED() \
 	return
 
 #define CONSTRUCTOR_FAIL() \
 	exit(RETURN_FAIL)
-
-#endif /* __GNUC__ */
 
 /****************************************************************************/
 

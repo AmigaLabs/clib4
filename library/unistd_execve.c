@@ -790,8 +790,8 @@ int execve(const char *path, char *const argv[], char *const envp[])
 	}
 
 	/* Change the shell's program name */
-	GetProgramName(old_program_name, sizeof(old_program_name));
-	SetProgramName(pi->program_name);
+	GetCliProgramName(old_program_name, sizeof(old_program_name));
+	SetCliProgramName(pi->program_name);
 
 	/* Change the command's home directory, so that "PROGDIR:"
 	   can be used */
@@ -807,7 +807,7 @@ int execve(const char *path, char *const argv[], char *const envp[])
 	SetProgramDir(old_dir);
 
 	/* Restore the program name */
-	SetProgramName(old_program_name);
+	SetCliProgramName(old_program_name);
 
 	/* Did we launch the program? */
 	if (result == -1)

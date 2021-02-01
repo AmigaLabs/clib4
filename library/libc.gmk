@@ -10,11 +10,9 @@
 LIBS += \
 	lib/libc.a \
 	lib/soft-float/libc.a \
-	lib/small-data/libc.a \
 	lib/baserel/libc.a \
 	lib.threadsafe/libc.a \
 	lib.threadsafe/soft-float/libc.a \
-	lib.threadsafe/small-data/libc.a \
 	lib.threadsafe/baserel/libc.a
 
 ##############################################################################
@@ -235,7 +233,6 @@ C_LIB := \
 	stdlib_calloc.o \
 	stdlib_checkdetach.o \
 	stdlib_constructor.o \
-	stdlib_constructor_begin.o \
 	stdlib_default_pool_size.o \
 	stdlib_default_puddle_size.o \
 	stdlib_destructor.o \
@@ -283,7 +280,6 @@ C_LIB := \
 	stdlib_mulsi3.o \
 	stdlib_never_free.o \
 	stdlib_osliberror.o \
-	stdlib_oslibversion.o \
 	stdlib_priority.o \
 	stdlib_process_name.o \
 	stdlib_program_name.o \
@@ -710,11 +706,9 @@ C_LIB := \
 
 obj/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
 obj/soft-float/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
-obj/small-data/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
 obj/baserel/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
 obj.threadsafe/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
 obj.threadsafe/soft-float/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
-obj.threadsafe/small-data/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
 obj.threadsafe/baserel/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
 
 ##############################################################################
@@ -725,10 +719,6 @@ obj/libc/%.o : %.c
 
 obj/soft-float/libc/%.o : CFLAGS += $(SOFTFLOAT)
 obj/soft-float/libc/%.o : %.c
-	@$(COMPILE)
-
-obj/small-data/libc/%.o : CFLAGS += $(SMALLDATA)
-obj/small-data/libc/%.o : %.c
 	@$(COMPILE)
 
 obj/baserel/libc/%.o : CFLAGS += $(BASEREL)
@@ -743,10 +733,6 @@ obj.threadsafe/soft-float/libc/%.o : CFLAGS += $(THREADSAFE) $(SOFTFLOAT)
 obj.threadsafe/soft-float/libc/%.o : %.c
 	@$(COMPILE)
 
-obj.threadsafe/small-data/libc/%.o : CFLAGS += $(THREADSAFE) $(SMALLDATA)
-obj.threadsafe/small-data/libc/%.o : %.c
-	@$(COMPILE)
-
 obj.threadsafe/baserel/libc/%.o : CFLAGS += $(THREADSAFE) $(BASEREL)
 obj.threadsafe/baserel/libc/%.o : %.c
 	@$(COMPILE)
@@ -759,9 +745,6 @@ lib/libc.a : $(addprefix obj/libc/,$(C_LIB))
 lib/soft-float/libc.a : $(addprefix obj/soft-float/libc/,$(C_LIB))
 	@$(MAKELIB)
 
-lib/small-data/libc.a : $(addprefix obj/small-data/libc/,$(C_LIB))
-	@$(MAKELIB)
-
 lib/baserel/libc.a : $(addprefix obj/baserel/libc/,$(C_LIB))
 	@$(MAKELIB)
 
@@ -769,9 +752,6 @@ lib.threadsafe/libc.a : $(addprefix obj.threadsafe/libc/,$(C_LIB))
 	@$(MAKELIB)
 
 lib.threadsafe/soft-float/libc.a : $(addprefix obj.threadsafe/soft-float/libc/,$(C_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/small-data/libc.a : $(addprefix obj.threadsafe/small-data/libc/,$(C_LIB))
 	@$(MAKELIB)
 
 lib.threadsafe/baserel/libc.a : $(addprefix obj.threadsafe/baserel/libc/,$(C_LIB))
