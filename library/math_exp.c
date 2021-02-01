@@ -1,5 +1,5 @@
 /*
- * $Id: math_exp.c,v 1.8 2006-09-22 09:02:51 obarthel Exp $
+ * $Id: math_exp.c,v 1.8 2021-01-31 09:02:51 apalmate Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ extern double __exp(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubTransBase
-	.globl	___exp
-
-___exp:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubTransBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-78:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubTransBase\n\t"
+	".globl	___exp\n\t"
+"___exp:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-78:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 
@@ -104,7 +99,7 @@ __exp(double x)
 
 	result = IEEEDPExp(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -124,11 +119,11 @@ __exp(double x)
 {
 	double result;
 
-	__asm ("fetox%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("fetox%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -158,78 +153,80 @@ P5   =  4.13813679705723846039e-08;        /* 0x3E663769, 0x72BEA4D0 */
 INLINE STATIC double
 __exp(double x)
 {
-	double y,hi=0,lo=0,c,t;
-	int k=0,xsb;
+	double y, hi = 0, lo = 0, c, t;
+	int k = 0, xsb;
 	unsigned int hx;
 
-	GET_HIGH_WORD(hx,x);
-	xsb = (hx>>31)&1;		/* sign bit of x */
-	hx &= 0x7fffffff;		/* high word of |x| */
+	GET_HIGH_WORD(hx, x);
+	xsb = (hx >> 31) & 1; /* sign bit of x */
+	hx &= 0x7fffffff;	  /* high word of |x| */
 
-    /* filter out non-finite argument */
-	if(hx >= 0x40862E42) 
-	{			/* if |x|>=709.78... */
-        if(hx>=0x7ff00000) 
+	/* filter out non-finite argument */
+	if (hx >= 0x40862E42)
+	{ /* if |x|>=709.78... */
+		if (hx >= 0x7ff00000)
 		{
 			unsigned int lx;
 
-			GET_LOW_WORD(lx,x);
-			if(((hx&0xfffff)|lx)!=0) 
-				return x+x; 		/* NaN */
-			else 
-				return (xsb==0)? x:0.0;	/* exp(+-inf)={inf,0} */
-	    }
-	    if(x > o_threshold) 
-			return huge*huge; /* overflow */
-	    if(x < u_threshold) 
-			return twom1000*twom1000; /* underflow */
+			GET_LOW_WORD(lx, x);
+			if (((hx & 0xfffff) | lx) != 0)
+				return x + x; /* NaN */
+			else
+				return (xsb == 0) ? x : 0.0; /* exp(+-inf)={inf,0} */
+		}
+		if (x > o_threshold)
+			return huge * huge; /* overflow */
+		if (x < u_threshold)
+			return twom1000 * twom1000; /* underflow */
 	}
 
-    /* argument reduction */
-	if(hx > 0x3fd62e42) 
-	{		/* if  |x| > 0.5 ln2 */ 
-	    if(hx < 0x3FF0A2B2) 
-		{	/* and |x| < 1.5 ln2 */
-			hi = x-ln2HI[xsb]; lo=ln2LO[xsb]; k = 1-xsb-xsb;
-	    } 
-		else 
+	/* argument reduction */
+	if (hx > 0x3fd62e42)
+	{ /* if  |x| > 0.5 ln2 */
+		if (hx < 0x3FF0A2B2)
+		{ /* and |x| < 1.5 ln2 */
+			hi = x - ln2HI[xsb];
+			lo = ln2LO[xsb];
+			k = 1 - xsb - xsb;
+		}
+		else
 		{
-			k  = (int)(invln2*x+halF[xsb]);
-			t  = k;
-			hi = x - t*ln2HI[0];	/* t*ln2HI is exact here */
-			lo = t*ln2LO[0];
-	    }
-	    x  = hi - lo;
-	} 
-	else if(hx < 0x3e300000)  
-	{	/* when |x|<2**-28 */
-	    if(huge+x>one) 
-			return one+x;  /* trigger inexact */
+			k = (int)(invln2 * x + halF[xsb]);
+			t = k;
+			hi = x - t * ln2HI[0]; /* t*ln2HI is exact here */
+			lo = t * ln2LO[0];
+		}
+		x = hi - lo;
 	}
-	else 
+	else if (hx < 0x3e300000)
+	{ /* when |x|<2**-28 */
+		if (huge + x > one)
+			return one + x; /* trigger inexact */
+	}
+	else
 		k = 0;
 
-    /* x is now in primary range */
-	t  = x*x;
-	c  = x - t*(P1+t*(P2+t*(P3+t*(P4+t*P5))));
-	if(k==0) 	
-		return one-((x*c)/(c-2.0)-x); 
+	/* x is now in primary range */
+	t = x * x;
+	c = x - t * (P1 + t * (P2 + t * (P3 + t * (P4 + t * P5))));
+	if (k == 0)
+		return one - ((x * c) / (c - 2.0) - x);
 	else
- 		y = one-((lo-(x*c)/(2.0-c))-hi);
+		y = one - ((lo - (x * c) / (2.0 - c)) - hi);
 
-	if(k >= -1021) 
+	if (k >= -1021)
 	{
-	    unsigned int hy;
-	    GET_HIGH_WORD(hy,y);
-	    SET_HIGH_WORD(y,hy+(k<<20));	/* add k to y's exponent */
-	    return y;
-	} 
-	else 
+		unsigned int hy;
+		GET_HIGH_WORD(hy, y);
+		SET_HIGH_WORD(y, hy + (k << 20)); /* add k to y's exponent */
+		return y;
+	}
+	else
 	{
-	    unsigned int hy;
-	    GET_HIGH_WORD(hy,y);
-	    SET_HIGH_WORD(y,hy+((k+1000)<<20));	/* add k to y's exponent */
-	    return y*twom1000;
+		unsigned int hy;
+		GET_HIGH_WORD(hy, y);
+		SET_HIGH_WORD(y, hy + ((k + 1000) << 20)); /* add k to y's exponent */
+		return y * twom1000;
 	}
 }
 
@@ -244,7 +241,7 @@ exp(double x)
 
 	result = __exp(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

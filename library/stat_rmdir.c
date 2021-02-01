@@ -1,5 +1,5 @@
 /*
- * $Id: stat_rmdir.c,v 1.8 2006-01-08 12:04:24 obarthel Exp $
+ * $Id: stat_rmdir.c,v 1.9 2021-01-31 12:04:24 apalmate Exp $
  *
  * :ts=4
  *
@@ -47,29 +47,28 @@
 
 /****************************************************************************/
 
-int
-rmdir(const char * path_name)
+int rmdir(const char *path_name)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
-	D_S(struct FileInfoBlock,fib);
+#endif /* UNIX_PATH_SEMANTICS */
 	BPTR dir_lock = ZERO;
 	int result = ERROR;
+	struct ExamineData *fib = NULL;
 	LONG status;
 
 	ENTER();
 
 	SHOWSTRING(path_name);
 
-	assert( path_name != NULL );
+	assert(path_name != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(path_name == NULL)
+		if (path_name == NULL)
 		{
 			SHOWMSG("invalid path name parameter");
 
@@ -77,13 +76,13 @@ rmdir(const char * path_name)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
-			if(path_name[0] == '\0')
+			if (path_name[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -91,25 +90,25 @@ rmdir(const char * path_name)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&path_name,&path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 				goto out;
 
-			if(path_name_nti.is_root)
+			if (path_name_nti.is_root)
 			{
 				__set_errno(EACCES);
 				goto out;
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	D(("trying to get a lock on '%s'",path_name));
+	D(("trying to get a lock on '%s'", path_name));
 
 	PROFILE_OFF();
-	dir_lock = Lock((STRPTR)path_name,SHARED_LOCK);
+	dir_lock = Lock((STRPTR)path_name, SHARED_LOCK);
 	PROFILE_ON();
 
-	if(dir_lock == ZERO)
+	if (dir_lock == ZERO)
 	{
 		SHOWMSG("that didn't work");
 
@@ -118,10 +117,10 @@ rmdir(const char * path_name)
 	}
 
 	PROFILE_OFF();
-	status = Examine(dir_lock,fib);
+	fib = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
 	PROFILE_ON();
 
-	if(status == DOSFALSE)
+	if (fib == NULL)
 	{
 		SHOWMSG("couldn't examine it");
 
@@ -129,7 +128,7 @@ rmdir(const char * path_name)
 		goto out;
 	}
 
-	if(fib->fib_DirEntryType < 0)
+	if (!EXD_IS_DIRECTORY(fib))
 	{
 		SHOWMSG("this is not a directory");
 
@@ -149,7 +148,7 @@ rmdir(const char * path_name)
 	status = DeleteFile((STRPTR)path_name);
 	PROFILE_ON();
 
-	if(status == DOSFALSE)
+	if (status == DOSFALSE)
 	{
 		SHOWMSG("that didn't work");
 
@@ -159,12 +158,15 @@ rmdir(const char * path_name)
 
 	result = OK;
 
- out:
+out:
+	if (fib != NULL) {
+		FreeDosObject(DOS_EXAMINEDATA, fib);
+	}
 
 	PROFILE_OFF();
 	UnLock(dir_lock);
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

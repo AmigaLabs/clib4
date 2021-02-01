@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_deleteextio.c,v 1.5 2006-09-25 15:12:47 obarthel Exp $
+ * $Id: amiga_deleteextio.c,v 1.6 2021-01-31 15:12:47 apalmate Exp $
  *
  * :ts=4
  *
@@ -50,15 +50,14 @@
 
 /****************************************************************************/
 
-VOID DeleteExtIO(struct IORequest * io);
+VOID DeleteExtIO(struct IORequest *io);
 
 /****************************************************************************/
 
-VOID
-DeleteExtIO(struct IORequest * io)
+VOID DeleteExtIO(struct IORequest *io)
 {
 	assert(io != NULL);
 
-	if(io != NULL)
-		DeleteIORequest((struct IORequest *)io);
+	if (io != NULL)
+		FreeSysObject(ASOT_IOREQUEST, io);
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_argarrayinit.c,v 1.7 2008-09-30 14:09:00 obarthel Exp $
+ * $Id: amiga_argarrayinit.c,v 1.7 2021-01-31 14:09:00 apalmate Exp $
  *
  * :ts=4
  *
@@ -60,48 +60,48 @@
 
 /****************************************************************************/
 
-const unsigned char ** CXLIB_argarray;
+const unsigned char **CXLIB_argarray;
 
-struct DiskObject * CXLIB_disko;
+struct DiskObject *CXLIB_disko;
 
 /****************************************************************************/
 
 STRPTR *
-ArgArrayInit(LONG argc, CONST_STRPTR * argv)
+ArgArrayInit(LONG argc, CONST_STRPTR *argv)
 {
-	STRPTR * result = NULL;
+	STRPTR *result = NULL;
 
-	if(argc != 0) /* run from CLI */
+	if (argc != 0) /* run from CLI */
 	{
 		LONG i;
 
-		if(argc == 1)
+		if (argc == 1)
 			goto out; /* skip command name */
 
-		CXLIB_argarray = (const unsigned char **)AllocVec(sizeof(char *) * argc,MEMORY_TYPE|MEMF_CLEAR);
-		if(CXLIB_argarray == NULL)
+		CXLIB_argarray = (const unsigned char **)AllocVecTags(sizeof(char *) * argc, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+		if (CXLIB_argarray == NULL)
 			goto out;
 
-		for(i = 1 ; i < argc ; i++)
-			CXLIB_argarray[i-1] = (unsigned char *)argv[i];
+		for (i = 1; i < argc; i++)
+			CXLIB_argarray[i - 1] = (unsigned char *)argv[i];
 
 		result = (STRPTR *)CXLIB_argarray;
 	}
 	else if (IconBase != NULL)
 	{
-		struct WBStartup * msg;
+		struct WBStartup *msg;
 
 		/* run from WB */
 		msg = (struct WBStartup *)argv;
 
 		CXLIB_disko = GetDiskObject(msg->sm_ArgList[0].wa_Name);
-		if(CXLIB_disko == NULL)
+		if (CXLIB_disko == NULL)
 			goto out;
 
 		result = (STRPTR *)CXLIB_disko->do_ToolTypes;
 	}
 
- out:
+out:
 
-	return(result);
+	return (result);
 }

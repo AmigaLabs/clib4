@@ -64,7 +64,7 @@ struct DirectoryHandle
 {
 	struct MinNode			dh_MinNode;
 	BPTR					dh_DirLock;
-	struct FileInfoBlock	dh_FileInfo;
+	struct ExamineData *	dh_FileInfo;
 	struct dirent			dh_DirectoryEntry;
 
 	int						dh_Position;

@@ -224,19 +224,15 @@ FILE_CONSTRUCTOR(stdio_file_init)
 	   going to use for disk I/O. The default is 32 bytes, which should
 	   be OK for most cases. If possible, ask the operating system for
 	   its preferred alignment size. */
-	#if defined(__amigaos4__)
+	if(SysBase->lib_Version >= 50)
 	{
-		if(SysBase->lib_Version >= 50)
-		{
-			uint32 physical_alignment = 0;
+		uint32 physical_alignment = 0;
 
-			GetCPUInfoTags(GCIT_CacheLineSize,&physical_alignment,TAG_DONE);
+		GetCPUInfoTags(GCIT_CacheLineSize,&physical_alignment,TAG_DONE);
 
-			if(__cache_line_size < physical_alignment)
-				__cache_line_size = physical_alignment;
-		}
+		if(__cache_line_size < physical_alignment)
+			__cache_line_size = physical_alignment;
 	}
-	#endif /* __amigaos4__ */
 
 	/* If we were invoked from Workbench, set up the standard I/O streams. */
 	if(__WBenchMsg != NULL)

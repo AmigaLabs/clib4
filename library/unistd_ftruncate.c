@@ -41,12 +41,11 @@
 
 /****************************************************************************/
 
-int
-ftruncate(int file_descriptor, off_t length)
+int ftruncate(int file_descriptor, off_t length)
 {
-	D_S(struct FileInfoBlock,fib);
+	struct ExamineData *fib;
 	int result = ERROR;
-	struct fd * fd = NULL;
+	struct fd *fd = NULL;
 	off_t current_file_size;
 	LONG initial_position = 0;
 	BOOL initial_position_valid = FALSE;
@@ -56,11 +55,11 @@ ftruncate(int file_descriptor, off_t length)
 	SHOWVALUE(file_descriptor);
 	SHOWVALUE(length);
 
-	assert( file_descriptor >= 0 && file_descriptor < __num_fd );
-	assert( __fd[file_descriptor] != NULL );
-	assert( FLAG_IS_SET(__fd[file_descriptor]->fd_Flags,FDF_IN_USE) );
+	assert(file_descriptor >= 0 && file_descriptor < __num_fd);
+	assert(__fd[file_descriptor] != NULL);
+	assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	PROFILE_OFF();
@@ -68,7 +67,7 @@ ftruncate(int file_descriptor, off_t length)
 	__stdio_lock();
 
 	fd = __get_file_descriptor(file_descriptor);
-	if(fd == NULL)
+	if (fd == NULL)
 	{
 		__set_errno(EBADF);
 		goto out;
@@ -76,19 +75,19 @@ ftruncate(int file_descriptor, off_t length)
 
 	__fd_lock(fd);
 
-	if(FLAG_IS_SET(fd->fd_Flags,FDF_IS_SOCKET))
+	if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET))
 	{
 		__set_errno(EINVAL);
 		goto out;
 	}
 
-	if(FLAG_IS_SET(fd->fd_Flags,FDF_STDIO))
+	if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO))
 	{
 		__set_errno(EBADF);
 		goto out;
 	}
 
-	if(length < 0)
+	if (length < 0)
 	{
 		SHOWMSG("invalid length");
 
@@ -96,9 +95,9 @@ ftruncate(int file_descriptor, off_t length)
 		goto out;
 	}
 
-	assert( FLAG_IS_SET(fd->fd_Flags,FDF_IN_USE) );
+	assert(FLAG_IS_SET(fd->fd_Flags, FDF_IN_USE));
 
-	if(FLAG_IS_CLEAR(fd->fd_Flags,FDF_WRITE))
+	if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE))
 	{
 		SHOWMSG("file descriptor is not write-enabled");
 
@@ -107,7 +106,7 @@ ftruncate(int file_descriptor, off_t length)
 	}
 
 	/* Figure out how large the file is right now. */
-	if(CANNOT __safe_examine_file_handle(fd->fd_File,fib))
+	if (CANNOT __safe_examine_file_handle(fd->fd_File, fib))
 	{
 		SHOWMSG("couldn't examine file");
 
@@ -115,33 +114,33 @@ ftruncate(int file_descriptor, off_t length)
 		goto out;
 	}
 
-	current_file_size = (off_t)fib->fib_Size;
+	current_file_size = (off_t)fib->FileSize;
 
 	/* Is the file to be made shorter than it is right now? */
-	if(length < current_file_size)
+	if (length < current_file_size)
 	{
 		/* Remember where we started. */
-		if(NOT initial_position_valid)
+		if (NOT initial_position_valid)
 		{
-			initial_position = Seek(fd->fd_File,0,OFFSET_CURRENT);
-			if(initial_position == SEEK_ERROR && IoErr() != OK)
+			initial_position = GetFilePosition(fd->fd_File);
+			if (initial_position == SEEK_ERROR && IoErr() != OK)
 				goto out;
 
 			initial_position_valid = TRUE;
 		}
 
 		/* Careful: seek to a position where the file can be safely truncated. */
-		if(Seek(fd->fd_File,length,OFFSET_BEGINNING) == SEEK_ERROR && IoErr() != OK)
+		if (ChangeFilePosition(fd->fd_File, length, OFFSET_BEGINNING) == SEEK_ERROR && IoErr() != OK)
 		{
-			D(("could not move to file offset %ld",length));
+			D(("could not move to file offset %ld", length));
 
 			__set_errno(__translate_io_error_to_errno(IoErr()));
 			goto out;
 		}
 
-		if(SetFileSize(fd->fd_File,length,OFFSET_BEGINNING) == SEEK_ERROR)
+		if (ChangeFileSize(fd->fd_File, length, OFFSET_BEGINNING) == SEEK_ERROR)
 		{
-			D(("could not reduce file to size %ld",length));
+			D(("could not reduce file to size %ld", length));
 
 			__set_errno(__translate_io_error_to_errno(IoErr()));
 			goto out;
@@ -150,7 +149,7 @@ ftruncate(int file_descriptor, off_t length)
 		/* If the file is now shorter than the file position, which must
 		   not be changed by a call to ftruncate(), extend the file again,
 		   filling the extension with 0 bytes. */
-		if((off_t)initial_position > length)
+		if ((off_t)initial_position > length)
 		{
 			current_file_size = length;
 
@@ -159,22 +158,22 @@ ftruncate(int file_descriptor, off_t length)
 	}
 
 	/* Is the size of the file to grow? */
-	if(length > current_file_size)
+	if (length > current_file_size)
 	{
 		/* Remember where we started. */
-		if(NOT initial_position_valid)
+		if (NOT initial_position_valid)
 		{
-			initial_position = Seek(fd->fd_File,0,OFFSET_CURRENT);
-			if(initial_position == SEEK_ERROR && IoErr() != OK)
+			initial_position = GetFilePosition(fd->fd_File);
+			if (initial_position == SEEK_ERROR && IoErr() != OK)
 				goto out;
 
 			initial_position_valid = TRUE;
 		}
 
 		/* Move to what should be the end of the file. */
-		if(Seek(fd->fd_File,current_file_size,OFFSET_BEGINNING) == SEEK_ERROR && IoErr() != OK)
+		if (ChangeFilePosition(fd->fd_File, current_file_size, OFFSET_BEGINNING) == SEEK_ERROR && IoErr() != OK)
 		{
-			D(("could not move to file offset %ld",current_file_size));
+			D(("could not move to file offset %ld", current_file_size));
 
 			__set_errno(__translate_io_error_to_errno(IoErr()));
 			goto out;
@@ -182,9 +181,9 @@ ftruncate(int file_descriptor, off_t length)
 
 		/* Add as many bytes to the end of the file as are required
 		   to make it as large as requested. */
-		if(__grow_file_size(fd,length - current_file_size) != OK)
+		if (__grow_file_size(fd, length - current_file_size) != OK)
 		{
-			D(("could not extend file to size %ld",length));
+			D(("could not extend file to size %ld", length));
 
 			__set_errno(__translate_io_error_to_errno(IoErr()));
 			goto out;
@@ -193,13 +192,16 @@ ftruncate(int file_descriptor, off_t length)
 
 	result = OK;
 
- out:
+out:
 
 	/* ftruncate() may change the size of the file, but it may
 	   not change the current file position. */
-	if(initial_position_valid)
-		Seek(fd->fd_File,initial_position,OFFSET_CURRENT);
+	if (initial_position_valid)
+		ChangeFilePosition(fd->fd_File, initial_position, OFFSET_CURRENT);
 
+	if (fib != NULL)
+		FreeDosObject(DOS_EXAMINEDATA, fib);
+		
 	__fd_unlock(fd);
 
 	__stdio_unlock();
@@ -207,5 +209,5 @@ ftruncate(int file_descriptor, off_t length)
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

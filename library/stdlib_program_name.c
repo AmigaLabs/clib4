@@ -67,7 +67,7 @@ static BOOL free_program_name;
 
 /****************************************************************************/
 
-char * NOCOMMON __program_name;
+char *NOCOMMON __program_name;
 
 /****************************************************************************/
 
@@ -75,7 +75,7 @@ STDLIB_DESTRUCTOR(stdlib_program_name_exit)
 {
 	ENTER();
 
-	if(free_program_name && __program_name != NULL)
+	if (free_program_name && __program_name != NULL)
 	{
 		FreeVec(__program_name);
 		__program_name = NULL;
@@ -92,18 +92,18 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init)
 
 	ENTER();
 
-	if(__WBenchMsg == NULL)
+	if (__WBenchMsg == NULL)
 	{
 		const size_t program_name_size = 256;
 
 		/* Make a copy of the current command name string. */
-		__program_name = AllocVec((ULONG)program_name_size,MEMORY_TYPE);
-		if(__program_name == NULL)
+		__program_name = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+		if (__program_name == NULL)
 			goto out;
 
 		free_program_name = TRUE;
 
-		if(CANNOT GetProgramName(__program_name,program_name_size))
+		if (CANNOT GetCliProgramName(__program_name, program_name_size))
 			goto out;
 	}
 	else
@@ -113,12 +113,12 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init)
 
 	success = TRUE;
 
- out:
+out:
 
 	SHOWVALUE(success);
 	LEAVE();
 
-	if(success)
+	if (success)
 		CONSTRUCTOR_SUCCEED();
 	else
 		CONSTRUCTOR_FAIL();

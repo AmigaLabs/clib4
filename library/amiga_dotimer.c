@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_dotimer.c,v 1.8 2006-04-05 06:43:56 obarthel Exp $
+ * $Id: amiga_dotimer.c,v 1.9 2021-01-31 06:43:56 apalmate Exp $
  *
  * :ts=4
  *
@@ -75,7 +75,7 @@
 LONG
 DoTimer(struct timeval *tv,LONG unit,LONG command)
 {
-	struct timerequest * tr = NULL;
+	struct TimeRequest * tr = NULL;
 	struct MsgPort * mp;
 	LONG error;
 
@@ -83,40 +83,21 @@ DoTimer(struct timeval *tv,LONG unit,LONG command)
 
 	assert( tv != NULL );
 
-	#if defined(__amigaos4__)
+	mp = AllocSysObjectTags(ASOT_PORT,
+		ASOPORT_Action,		PA_SIGNAL,
+		ASOPORT_AllocSig,	FALSE,
+		ASOPORT_Signal,		SIGB_SINGLE,
+		ASOPORT_Target,		FindTask(NULL),
+	TAG_DONE);
+
+	if(mp == NULL)
 	{
-		mp = AllocSysObjectTags(ASOT_PORT,
-			ASOPORT_Action,		PA_SIGNAL,
-			ASOPORT_AllocSig,	FALSE,
-			ASOPORT_Signal,		SIGB_SINGLE,
-			ASOPORT_Target,		FindTask(NULL),
-		TAG_DONE);
-
-		if(mp == NULL)
-		{
-			error = IOERR_OPENFAIL;
-			goto out;
-		}
+		error = IOERR_OPENFAIL;
+		goto out;
 	}
-	#else
-	{
-		mp = AllocVec(sizeof(*mp),MEMF_ANY|MEMF_PUBLIC|MEMF_CLEAR);
-		if(mp == NULL)
-		{
-			error = IOERR_OPENFAIL;
-			goto out;
-		}
 
-		mp->mp_Node.ln_Type	= NT_MSGPORT;
-		mp->mp_Flags		= PA_SIGNAL;
-		mp->mp_SigBit		= SIGB_SINGLE;
-		mp->mp_SigTask		= FindTask(NULL);
 
-		NewList(&mp->mp_MsgList);
-	}
-	#endif /* __amigaos4__ */
-
-	tr = (struct timerequest *)CreateIORequest(mp,sizeof(*tr));
+	tr = AllocSysObjectTags(ASOT_IOREQUEST, ASOIOR_Size, sizeof(struct TimeRequest), ASOIOR_ReplyPort, mp, TAG_END);
 	if(tr == NULL)
 	{
 		error = IOERR_OPENFAIL;
@@ -145,19 +126,11 @@ DoTimer(struct timeval *tv,LONG unit,LONG command)
 		if(tr->tr_node.io_Device != NULL)
 			CloseDevice((struct IORequest *)tr);
 
-		DeleteIORequest((struct IORequest *)tr);
+		FreeSysObject(ASOT_IOREQUEST, tr);
 	}
 
-	#if defined(__amigaos4__)
-	{
-		if(mp != NULL)
-			FreeSysObject(ASOT_PORT,mp);
-	}
-	#else
-	{
-		FreeVec(mp);
-	}
-	#endif /* __amigaos4__ */
+	if(mp != NULL)
+		FreeSysObject(ASOT_PORT,mp);
 
 	PROFILE_ON();
 

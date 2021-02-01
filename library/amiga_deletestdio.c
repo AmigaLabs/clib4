@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_deletestdio.c,v 1.5 2006-09-25 15:12:47 obarthel Exp $
+ * $Id: amiga_deletestdio.c,v 1.6 2021-01-31 15:12:47 apalmate Exp $
  *
  * :ts=4
  *
@@ -50,13 +50,12 @@
 
 /****************************************************************************/
 
-VOID DeleteStdIO(struct IOStdReq * io);
+VOID DeleteStdIO(struct IOStdReq *io);
 
 /****************************************************************************/
 
-VOID
-DeleteStdIO(struct IOStdReq * io)
+VOID DeleteStdIO(struct IOStdReq *io)
 {
-	if(io != NULL)
-		DeleteIORequest((struct IORequest *)io);
+	if (io != NULL)
+		FreeSysObject(ASOT_IOREQUEST, io);
 }

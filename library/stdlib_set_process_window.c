@@ -42,19 +42,7 @@ __set_process_window(APTR new_window_pointer)
 {
 	APTR result;
 
-	#if defined(__amigaos4__)
-	{
-		result = SetProcWindow(new_window_pointer);
-	}
-	#else
-	{
-		struct Process * this_process = (struct Process *)FindTask(NULL);
-
-		result = this_process->pr_WindowPtr;
-
-		this_process->pr_WindowPtr = new_window_pointer;
-	}
-	#endif /* __amigaos4__ */
+	result = SetProcWindow(new_window_pointer);
 
 	return(result);
 }

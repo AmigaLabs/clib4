@@ -37,34 +37,17 @@
 
 /****************************************************************************/
 
-/* This is used in place of ExamineFH() in order to work around a bug in
- * dos.library V40 and below: a "NIL:" file handle will crash the
- * ExamineFH() function.
- */
-LONG
-__safe_examine_file_handle(BPTR file_handle,struct FileInfoBlock *fib)
+LONG __safe_examine_file_handle(BPTR file_handle, struct ExamineData *fib)
 {
 	LONG result = DOSFALSE;
 
-	assert( fib != NULL );
-
-	#ifndef __amigaos4__
-	{
-		struct FileHandle * fh = (struct FileHandle *)BADDR(file_handle);
-
-		if(fh == NULL || fh->fh_Type == NULL)
-		{
-			SetIoErr(ERROR_OBJECT_WRONG_TYPE);
-			goto out;
-		}
-	}
-	#endif /* __amigaos4__ */
+	assert(fib != NULL);
 
 	PROFILE_OFF();
-	result = ExamineFH(file_handle,fib);
+	fib = ExamineObjectTags(EX_FileHandleInput, file_handle, TAG_DONE);
 	PROFILE_ON();
 
- out:
+out:
 
-	return(result);
+	return (result);
 }

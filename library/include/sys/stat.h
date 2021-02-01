@@ -115,22 +115,57 @@ extern "C" {
 #define S_ISSOCK(m)	(((m) & S_IFSOCK) == S_IFSOCK)	/* socket */
 
 /****************************************************************************/
+#ifdef __LARGE64_FILES
+struct  stat64
+{
+	dev_t         st_dev;
+	u_short       st_spare_1;
+	mode_t        st_mode;
+	ino_t         st_ino;
+	nlink_t       st_nlink;
+	u_short       st_spare_2;
+	uid_t         st_uid;
+	u_short       st_spare_3;
+	gid_t         st_gid;
+	dev_t         st_rdev;
+	long          st_spare_4;
+	time_t        st_atime;
+	long          st_spare_5;
+	long          st_spare_6;
+	time_t        st_mtime;
+	long          st_spare_7;
+	long          st_spare_8;
+	time_t        st_ctime;
+	long          st_spare_9;
+	long          st_spare_10;
+	time_t        st_birthtime;
+	long          st_spare_11;
+	_off64_t      st_size;
+	long long     st_blocks;
+	long          st_blksize;
+	long          st_spare_12[4];
+};
+#endif
 
 struct stat
 {
-	mode_t	st_mode;
-	ino_t	st_ino;
 	dev_t	st_dev;
-	dev_t	st_rdev;
+	ino_t	st_ino;
+	mode_t	st_mode;
 	nlink_t	st_nlink;
 	uid_t	st_uid;
 	gid_t	st_gid;
+	dev_t	st_rdev;
 	off_t	st_size;
 	time_t	st_atime;
-	time_t	st_mtime;
+	long	st_spare1;
+  	time_t	st_mtime;
+	long	st_spare2;
 	time_t	st_ctime;
+	long	st_spare3;
 	long	st_blksize;
 	long	st_blocks;
+	long	st_spare4[2];
 };
 
 /****************************************************************************/

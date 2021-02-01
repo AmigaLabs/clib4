@@ -45,11 +45,10 @@
 
 /****************************************************************************/
 
-void
-__convert_file_info_to_stat(
-	const struct MsgPort *			file_system,
-	const struct FileInfoBlock *	fib,
-	struct stat *					st)
+void __convert_file_info_to_stat(
+	const struct MsgPort *file_system,
+	const struct ExamineData *fib,
+	struct stat *st) // TODO - Change to stat64
 {
 	time_t mtime;
 	mode_t mode;
@@ -57,86 +56,87 @@ __convert_file_info_to_stat(
 
 	ENTER();
 
-	assert( fib != NULL && st != NULL );
+	assert(fib != NULL && st != NULL);
 
-	SHOWVALUE(fib->fib_DiskKey);
-	SHOWVALUE(fib->fib_DirEntryType);
-	SHOWSTRING(fib->fib_FileName);
-	SHOWVALUE(fib->fib_Protection);
-	SHOWVALUE(fib->fib_EntryType);
-	SHOWVALUE(fib->fib_Size);
+	SHOWVALUE(fib->ObjectID);
+	SHOWVALUE(fib->Type);
+	SHOWSTRING(fib->Name);
+	SHOWVALUE(fib->Protection);
+	SHOWVALUE(fib->FileSize);
 	SHOWVALUE(fib->fib_NumBlocks);
-	SHOWVALUE(fib->fib_Date.ds_Days);
-	SHOWVALUE(fib->fib_Date.ds_Minute);
-	SHOWVALUE(fib->fib_Date.ds_Tick);
-	SHOWSTRING(fib->fib_Comment);
-	SHOWVALUE(fib->fib_OwnerUID);
-	SHOWVALUE(fib->fib_OwnerGID);
+	SHOWVALUE(fib->Date.ds_Days);
+	SHOWVALUE(fib->Date.ds_Minute);
+	SHOWVALUE(fib->Date.ds_Tick);
+	SHOWSTRING(fib->Comment);
+	SHOWVALUE(fib->OwnerUID);
+	SHOWVALUE(fib->OwnerGID);
 
-	memset(st,0,sizeof(*st));
+	memset(st, 0, sizeof(*st));
 
-	flags = fib->fib_Protection ^ (FIBF_READ|FIBF_WRITE|FIBF_EXECUTE|FIBF_DELETE);
+	flags = fib->Protection;
 
-	if(fib->fib_DirEntryType == ST_PIPEFILE)
+	if (EXD_IS_PIPE(fib))
 		mode = S_IFIFO;
-	else if (fib->fib_DirEntryType == ST_SOCKET)
+	else if (EXD_IS_SOCKET(fib))
 		mode = S_IFSOCK;
-	else if (fib->fib_DirEntryType == ST_CONSOLE || fib->fib_DirEntryType == ST_NIL)
-		mode = S_IFCHR;
-	else if (fib->fib_DirEntryType < 0)
+	else if (EXD_IS_FILE(fib))
 		mode = S_IFREG;
-	else
+	else if (EXD_IS_DIRECTORY(fib))
 		mode = S_IFDIR;
+	else if (EXD_IS_SOFTLINK(fib))
+		mode = S_IFLNK;
+	else
+		mode = S_IFREG; // CHeck for ST_CONSOLE and ST_NIL that should became S_IFCHR
 
-	if(FLAG_IS_SET(flags,FIBF_READ))
-		SET_FLAG(mode,S_IRUSR);
+	if (FLAG_IS_CLEAR(flags, EXDF_NO_READ))
+		SET_FLAG(mode, S_IRUSR);
 
-	if(FLAG_IS_SET(flags,FIBF_WRITE) && FLAG_IS_SET(flags,FIBF_DELETE))
-		SET_FLAG(mode,S_IWUSR);
+	if (FLAG_IS_CLEAR(flags, EXDF_NO_WRITE) && FLAG_IS_CLEAR(flags, EXDF_NO_DELETE))
+		SET_FLAG(mode, S_IWUSR);
 
-	if(FLAG_IS_SET(flags,FIBF_EXECUTE))
-		SET_FLAG(mode,S_IXUSR);
+	if (FLAG_IS_CLEAR(flags, EXDF_NO_EXECUTE))
+		SET_FLAG(mode, S_IXUSR);
 
-	if(FLAG_IS_SET(flags,FIBF_GRP_READ))
-		SET_FLAG(mode,S_IRGRP);
+	if (FLAG_IS_SET(flags, EXDF_GRP_READ))
+		SET_FLAG(mode, S_IRGRP);
 
-	if(FLAG_IS_SET(flags,FIBF_GRP_WRITE) && FLAG_IS_SET(flags,FIBF_GRP_DELETE))
-		SET_FLAG(mode,S_IWGRP);
+	if (FLAG_IS_SET(flags, EXDF_GRP_WRITE) && FLAG_IS_SET(flags, EXDF_GRP_DELETE))
+		SET_FLAG(mode, S_IWGRP);
 
-	if(FLAG_IS_SET(flags,FIBF_GRP_EXECUTE))
-		SET_FLAG(mode,S_IXGRP);
+	if (FLAG_IS_SET(flags, EXDF_GRP_EXECUTE))
+		SET_FLAG(mode, S_IXGRP);
 
-	if(FLAG_IS_SET(flags,FIBF_OTR_READ))
-		SET_FLAG(mode,S_IROTH);
+	if (FLAG_IS_SET(flags, EXDF_OTR_READ))
+		SET_FLAG(mode, S_IROTH);
 
-	if(FLAG_IS_SET(flags,FIBF_OTR_WRITE) && FLAG_IS_SET(flags,FIBF_OTR_DELETE))
-		SET_FLAG(mode,S_IWOTH);
+	if (FLAG_IS_SET(flags, EXDF_OTR_WRITE) && FLAG_IS_SET(flags, EXDF_OTR_DELETE))
+		SET_FLAG(mode, S_IWOTH);
 
-	if(FLAG_IS_SET(flags,FIBF_OTR_EXECUTE))
-		SET_FLAG(mode,S_IXOTH);
+	if (FLAG_IS_SET(flags, EXDF_OTR_EXECUTE))
+		SET_FLAG(mode, S_IXOTH);
 
-	mtime = __convert_datestamp_to_time(&fib->fib_Date);
+	mtime = __convert_datestamp_to_time(&fib->Date);
 
-	if(fib->fib_DirEntryType < 0)
+	if (EXD_IS_DIRECTORY(fib))
 	{
 		st->st_nlink = 1;
-		st->st_size  = fib->fib_Size;
+		st->st_size = fib->FileSize;
 	}
 	else
 	{
 		st->st_nlink = 2;
 	}
 
-	st->st_ino		= fib->fib_DiskKey;
-	st->st_dev		= (dev_t)file_system;
-	st->st_mode		= mode;
-	st->st_mtime	= mtime;
-	st->st_atime	= mtime;
-	st->st_ctime	= mtime;
-	st->st_uid		= fib->fib_OwnerUID;
-	st->st_gid		= fib->fib_OwnerGID;
-	st->st_blksize	= 512;
-	st->st_blocks	= (st->st_size + st->st_blksize-1) / st->st_blksize;
+	st->st_ino = fib->ObjectID;
+	st->st_dev = (dev_t)file_system;
+	st->st_mode = mode;
+	st->st_mtime = mtime;
+	st->st_atime = mtime;
+	st->st_ctime = mtime;
+	st->st_uid = fib->OwnerUID;
+	st->st_gid = fib->OwnerGID;
+	st->st_blksize = 512;
+	st->st_blocks = (st->st_size + st->st_blksize - 1) / st->st_blksize;
 
 	SHOWVALUE(st->st_nlink);
 	SHOWVALUE(st->st_size);

@@ -1,5 +1,5 @@
 /*
- * $Id: math_fabsf.c,v 1.3 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_fabsf.c,v 1.4 2021-01-31 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -63,24 +63,19 @@ extern float __fabsf(float x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeSingBasBase
-	.globl	___fabsf
-
-___fabsf:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeSingBasBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-54:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeSingBasBase\n\t"
+	".globl	___fabsf\n\t"
+"___fabsf:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeSingBasBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-54:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts"
+);
 
 /****************************************************************************/
 

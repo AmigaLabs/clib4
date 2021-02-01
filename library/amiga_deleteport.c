@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_deleteport.c,v 1.5 2006-09-25 15:12:47 obarthel Exp $
+ * $Id: amiga_deleteport.c,v 1.6 2021-01-31 15:12:47 apalmate Exp $
  *
  * :ts=4
  *
@@ -62,5 +62,5 @@ DeletePort(struct MsgPort * port)
 	if(port->mp_Node.ln_Name != NULL)
 		RemPort(port);
 
-	DeleteMsgPort(port);
+	FreeSysObject(ASOT_PORT, port);
 }

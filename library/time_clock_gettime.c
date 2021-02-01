@@ -1,5 +1,5 @@
 /*
- * $Id: time_gettime.c,v 1.0 2020-01-13 16:55:42 apalmate Exp $
+ * $Id: time_gettime.c,v 1.1 2020-01-31 16:55:42 apalmate Exp $
  *
  * :ts=4
  *
@@ -62,18 +62,11 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
     //Set default value for tv
     tv.tv_secs = tv.tv_micro = 0;
 
-#ifdef __amigaos4__
     GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
-#endif
-
     if (result == 0)
     {
         struct MsgPort *Timer_Port;
-#ifdef __amigaos4__
         Timer_Port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
-#else
-        Timer_Port = AllocVec(sizeof(*Timer_Port), MEMF_ANY | MEMF_PUBLIC | MEMF_CLEAR);
-#endif
         if (Timer_Port == NULL)
         {
             SHOWMSG("Cannot create Timer port\n");
@@ -81,19 +74,13 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
         }
         else
         {
-#ifdef __amigaos4__
             tr = AllocSysObjectTags(ASOT_IOREQUEST, ASOIOR_Size, sizeof(struct TimeRequest), ASOIOR_ReplyPort, Timer_Port, TAG_END);
-#else
-            tr = (struct timerequest *)CreateIORequest(Timer_Port, sizeof(*tr));
-#endif
             if (tr != NULL)
             {
                 if (!(OpenDevice(TIMERNAME, UNIT_MICROHZ, (struct IORequest *)tr, 0)))
                 {
                     struct Library *TimerBase = (struct Library *)tr->tr_node.io_Device;
-#if defined(__amigaos4__)
                     struct TimerIFace *ITimer = (struct TimerIFace *)GetInterface(TimerBase, "main", 1, NULL);
-#endif
                     if (ITimer != NULL)
                     {
                         if (clk_id == CLOCK_MONOTONIC)
@@ -121,9 +108,7 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
                             GetSysTime((struct TimeVal *)&tv);
                         }
 
-#if defined(__amigaos4__)
                         DropInterface((struct Interface *)ITimer);
-#endif
                     }
                     else
                     {
@@ -134,23 +119,16 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
                 }
                 else
                     result = -1;
-#ifdef __amigaos4__
                 FreeSysObject(ASOT_IOREQUEST, tr);
-#else
-                DeleteIORequest(tr);
-#endif
             }
             else
             {
                 SHOWMSG("Cannot allocate IORequest\n");
                 result = -1;
             }
-#ifdef __amigaos4__
             FreeSysObject(ASOT_PORT, Timer_Port);
-#else
-            FreeVec(Timer_Port);
-#endif
         }
+
         if (result == 0)
         {
             if (clk_id == CLOCK_MONOTONIC)

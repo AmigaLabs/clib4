@@ -1,5 +1,5 @@
 /*
- * $Id: math_cos.c,v 1.6 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_cos.c,v 1.7 2021-01-31 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ extern double __cos(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubTransBase
-	.globl	___cos
-
-___cos:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubTransBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-42:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubTransBase\n\t"
+	".globl	___cos\n\t"
+"___cos:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-42:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 
@@ -104,7 +99,7 @@ __cos(double x)
 
 	result = IEEEDPCos(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -124,11 +119,11 @@ __cos(double x)
 {
 	double result;
 
-	__asm ("fcos%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("fcos%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -140,36 +135,36 @@ __cos(double x)
 INLINE STATIC double
 __cos(double x)
 {
-	double y[2],z=0.0;
-	int n,ix;
+	double y[2], z = 0.0;
+	int n, ix;
 
-    /* High word of x. */
-	GET_HIGH_WORD(ix,x);
+	/* High word of x. */
+	GET_HIGH_WORD(ix, x);
 
-    /* |x| ~< pi/4 */
+	/* |x| ~< pi/4 */
 	ix &= 0x7fffffff;
-	if(ix <= 0x3fe921fb) 
-		return __kernel_cos(x,z);
+	if (ix <= 0x3fe921fb)
+		return __kernel_cos(x, z);
 
-    /* cos(Inf or NaN) is NaN */
-	else if (ix>=0x7ff00000) 
-		return x-x;
+	/* cos(Inf or NaN) is NaN */
+	else if (ix >= 0x7ff00000)
+		return x - x;
 
-    /* argument reduction needed */
-	else 
+	/* argument reduction needed */
+	else
 	{
-	    n = __rem_pio2(x,y);
-	    switch(n&3) 
+		n = __rem_pio2(x, y);
+		switch (n & 3)
 		{
-		case 0: 
-			return  __kernel_cos(y[0],y[1]);
-		case 1: 
-			return -__kernel_sin(y[0],y[1],1);
-		case 2: 
-			return -__kernel_cos(y[0],y[1]);
+		case 0:
+			return __kernel_cos(y[0], y[1]);
+		case 1:
+			return -__kernel_sin(y[0], y[1], 1);
+		case 2:
+			return -__kernel_cos(y[0], y[1]);
 		default:
-			return  __kernel_sin(y[0],y[1],1);
-	    }
+			return __kernel_sin(y[0], y[1], 1);
+		}
 	}
 }
 
@@ -184,7 +179,7 @@ cos(double x)
 
 	result = __cos(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

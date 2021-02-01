@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_spawn.c,v 1.0 2021-01-21 18:26:47 apalmate Exp $
+ * $Id: unistd_spawnv.c,v 1.0 2021-01-21 18:26:47 apalmate Exp $
  *
  * :ts=4
  *
@@ -192,7 +192,7 @@ int spawnv(int mode, const char *file, const char *const *argv)
     __set_errno(0);
 
 #if defined(UNIX_PATH_SEMANTICS)
-    if (__translate_unix_to_amiga_path_name(file, &path_nti) != 0)
+    if (__translate_unix_to_amiga_path_name(&file, &path_nti) != 0)
     {
         __set_errno(EINVAL);
         return ret;

@@ -1,5 +1,5 @@
 /*
- * $Id: math_cosh.c,v 1.5 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_cosh.c,v 1.6 2021-01-31 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ extern double __cosh(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubTransBase
-	.globl	___cosh
-
-___cosh:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubTransBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-66:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubTransBase\n\t"
+	".globl	___cosh\n\t"
+"___cosh:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-66:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 
@@ -104,7 +99,7 @@ __cosh(double x)
 
 	result = IEEEDPCosh(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -124,11 +119,11 @@ __cosh(double x)
 {
 	double result;
 
-	__asm ("fcosh%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("fcosh%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -141,51 +136,51 @@ static const double one = 1.0, half=0.5, huge = 1.0e300;
 
 INLINE STATIC double
 __cosh(double x)
-{	
-	double t,w;
+{
+	double t, w;
 	int ix;
 	unsigned int lx;
 
-    /* High word of |x|. */
-	GET_HIGH_WORD(ix,x);
+	/* High word of |x|. */
+	GET_HIGH_WORD(ix, x);
 	ix &= 0x7fffffff;
 
-    /* x is INF or NaN */
-	if(ix>=0x7ff00000) 
-		return x*x;	
+	/* x is INF or NaN */
+	if (ix >= 0x7ff00000)
+		return x * x;
 
-    /* |x| in [0,0.5*ln2], return 1+__expm1(|x|)^2/(2*exp(|x|)) */
-	if(ix<0x3fd62e43) 
+	/* |x| in [0,0.5*ln2], return 1+__expm1(|x|)^2/(2*exp(|x|)) */
+	if (ix < 0x3fd62e43)
 	{
-	    t = __expm1(fabs(x));
-	    w = one+t;
-	    if (ix<0x3c800000)
-			return w;	/* cosh(tiny) = 1 */
-	    return one+(t*t)/(w+w);
+		t = __expm1(fabs(x));
+		w = one + t;
+		if (ix < 0x3c800000)
+			return w; /* cosh(tiny) = 1 */
+		return one + (t * t) / (w + w);
 	}
 
-    /* |x| in [0.5*ln2,22], return (exp(|x|)+1/exp(|x|)/2; */
-	if (ix < 0x40360000) 
+	/* |x| in [0.5*ln2,22], return (exp(|x|)+1/exp(|x|)/2; */
+	if (ix < 0x40360000)
 	{
 		t = exp(fabs(x));
-		return half*t+half/t;
+		return half * t + half / t;
 	}
 
-    /* |x| in [22, log(maxdouble)] return half*exp(|x|) */
-	if (ix < 0x40862E42)  
-		return half*exp(fabs(x));
+	/* |x| in [22, log(maxdouble)] return half*exp(|x|) */
+	if (ix < 0x40862E42)
+		return half * exp(fabs(x));
 
-    /* |x| in [log(maxdouble), overflowthresold] */
-	GET_LOW_WORD(lx,x);
-	if (ix<0x408633CE || (ix==0x408633ce && lx<=(unsigned int)0x8fb9f87d)) 
+	/* |x| in [log(maxdouble), overflowthresold] */
+	GET_LOW_WORD(lx, x);
+	if (ix < 0x408633CE || (ix == 0x408633ce && lx <= (unsigned int)0x8fb9f87d))
 	{
-	    w = exp(half*fabs(x));
-	    t = half*w;
-	    return t*w;
+		w = exp(half * fabs(x));
+		t = half * w;
+		return t * w;
 	}
 
-    /* |x| > overflowthresold, cosh(x) overflow */
-	return huge*huge;
+	/* |x| > overflowthresold, cosh(x) overflow */
+	return huge * huge;
 }
 
 #endif /* PPC_FLOATING_POINT_SUPPORT */
@@ -199,7 +194,7 @@ cosh(double x)
 
 	result = __cosh(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

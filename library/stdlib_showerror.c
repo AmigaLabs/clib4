@@ -94,15 +94,15 @@
 INLINE STATIC size_t
 local_strlen(const char *s)
 {
-	const char * start = s;
+	const char *start = s;
 	size_t result = 0;
 
-	while((*s) != '\0')
+	while ((*s) != '\0')
 		s++;
 
 	result = (size_t)(s - start);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -110,16 +110,16 @@ local_strlen(const char *s)
 INLINE STATIC void
 local_bzero(void *ptr, size_t len)
 {
-	unsigned char * m = ptr;
+	unsigned char *m = ptr;
 
-	while(len-- > 0)
+	while (len-- > 0)
 		(*m++) = 0;
 }
 
 /****************************************************************************/
 
-#define strlen(s)			local_strlen(s)
-#define memset(ptr,val,len)	local_bzero((ptr),(len))
+#define strlen(s) local_strlen(s)
+#define memset(ptr, val, len) local_bzero((ptr), (len))
 
 /****************************************************************************/
 
@@ -127,35 +127,34 @@ local_bzero(void *ptr, size_t len)
 
 /****************************************************************************/
 
-void
-__show_error(const char * message)
+void __show_error(const char *message)
 {
-	#if defined(__amigaos4__)
-	struct IntuitionIFace *	IIntuition	= NULL;
-	struct DOSIFace *		IDOS		= NULL;
-	#endif /* __amigaos4__ */
+#if defined(__amigaos4__)
+	struct IntuitionIFace *IIntuition = NULL;
+	struct DOSIFace *IDOS = NULL;
+#endif /* __amigaos4__ */
 
-	struct Library * IntuitionBase = NULL;
-	struct Library * DOSBase = NULL;
+	struct Library *IntuitionBase = NULL;
+	struct Library *DOSBase = NULL;
 
 	PROFILE_OFF();
 
-	/* Don't show anything if this is the thread-safe library and
+/* Don't show anything if this is the thread-safe library and
 	   we were invoked indirectly by shared library startup code. */
-	#if defined(__THREAD_SAFE)
+#if defined(__THREAD_SAFE)
 	{
-		if(__lib_startup)
+		if (__lib_startup)
 			goto out;
 	}
-	#endif /* __THREAD_SAFE */
+#endif /* __THREAD_SAFE */
 
-	DOSBase			= OpenLibrary("dos.library",0);
-	IntuitionBase	= OpenLibrary("intuition.library",0);
+	DOSBase = OpenLibrary("dos.library", 0);
+	IntuitionBase = OpenLibrary("intuition.library", 0);
 
-	if(DOSBase == NULL || IntuitionBase == NULL)
+	if (DOSBase == NULL || IntuitionBase == NULL)
 		goto out;
 
-	#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 	{
 		IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
 		if (IDOS == NULL)
@@ -165,95 +164,95 @@ __show_error(const char * message)
 		if (IIntuition == NULL)
 			goto out;
 	}
-	#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
 	/* If we can't hope to print the error message, show a requester instead. */
-	if(__no_standard_io || __WBenchMsg != NULL)
+	if (__no_standard_io || __WBenchMsg != NULL)
 	{
 		UBYTE program_name[256];
 		struct EasyStruct es;
 		STRPTR title_string;
 
-		/* The following does not make great sense on OS4. */
-		#if NOT defined(__amigaos4__)
+/* The following does not make great sense on OS4. */
+#if NOT defined(__amigaos4__)
 		{
-			if(IntuitionBase->lib_Version < 37)
+			if (IntuitionBase->lib_Version < 37)
 			{
-				static struct TextAttr default_font	= { (STRPTR)"topaz.font",8,FS_NORMAL,FPF_ROMFONT|FPF_DESIGNED };
-				static struct IntuiText sorry_text	= {0,1,JAM1,6,3,(struct TextAttr *)NULL,(STRPTR)"Sorry",(struct IntuiText *)NULL};
-				static struct IntuiText body_text	= {0,1,JAM1,5,3,(struct TextAttr *)NULL,(STRPTR)NULL,(struct IntuiText *)NULL};
+				static struct TextAttr default_font = {(STRPTR) "topaz.font", 8, FS_NORMAL, FPF_ROMFONT | FPF_DESIGNED};
+				static struct IntuiText sorry_text = {0, 1, JAM1, 6, 3, (struct TextAttr *)NULL, (STRPTR) "Sorry", (struct IntuiText *)NULL};
+				static struct IntuiText body_text = {0, 1, JAM1, 5, 3, (struct TextAttr *)NULL, (STRPTR)NULL, (struct IntuiText *)NULL};
 
-				sorry_text.ITextFont	= &default_font;
-				body_text.ITextFont		= &default_font;
+				sorry_text.ITextFont = &default_font;
+				body_text.ITextFont = &default_font;
 
 				body_text.IText = (STRPTR)message;
 
-				AutoRequest(NULL,&body_text,NULL,&sorry_text,0,0,37 + 8 * strlen(message),46);
+				AutoRequest(NULL, &body_text, NULL, &sorry_text, 0, 0, 37 + 8 * strlen(message), 46);
 
 				goto out;
 			}
 		}
-		#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
-		if(__WBenchMsg != NULL)
+		if (__WBenchMsg != NULL)
 		{
 			title_string = (STRPTR)FilePart(__WBenchMsg->sm_ArgList[0].wa_Name);
 		}
 		else
 		{
-			if(GetProgramName((STRPTR)program_name,sizeof(program_name)))
+			if (GetCliProgramName((STRPTR)program_name, sizeof(program_name)))
 				title_string = FilePart((STRPTR)program_name);
 			else
-				title_string = (STRPTR)"Error";
+				title_string = (STRPTR) "Error";
 		}
 
-		memset(&es,0,sizeof(es));
+		memset(&es, 0, sizeof(es));
 
-		es.es_StructSize	= sizeof(es);
-		es.es_Title			= title_string;
-		es.es_TextFormat	= (STRPTR)message;
-		es.es_GadgetFormat	= (STRPTR)"Sorry";
+		es.es_StructSize = sizeof(es);
+		es.es_Title = title_string;
+		es.es_TextFormat = (STRPTR)message;
+		es.es_GadgetFormat = (STRPTR) "Sorry";
 
-		EasyRequestArgs(NULL,&es,NULL,NULL);
+		EasyRequestArgs(NULL, &es, NULL, NULL);
 	}
 	else
 	{
 		BPTR output;
 
-		#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 		{
 			/* Try to print the error message on the default error output stream. */
 			output = ErrorOutput();
 		}
-		#else
+#else
 		{
-			struct Process * this_process = (struct Process *)FindTask(NULL);
+			struct Process *this_process = (struct Process *)FindTask(NULL);
 
 			output = this_process->pr_CES;
 		}
-		#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
-		if(output == ZERO)
+		if (output == ZERO)
 			output = Output();
 
-		if(output != ZERO)
+		if (output != ZERO)
 		{
-			Write(output,(STRPTR)message,(LONG)strlen(message));
-			Write(output,"\n",1);
+			Write(output, (STRPTR)message, (LONG)strlen(message));
+			Write(output, "\n", 1);
 		}
 	}
 
- out:
+out:
 
-	#if defined(__amigaos4__)
-	{
-		if(IIntuition != NULL)
-			DropInterface((struct Interface *)IIntuition);
+#if defined(__amigaos4__)
+{
+	if (IIntuition != NULL)
+		DropInterface((struct Interface *)IIntuition);
 
-		if(IDOS != NULL)
-			DropInterface((struct Interface *)IDOS);
-	}
-	#endif /* __amigaos4__ */
+	if (IDOS != NULL)
+		DropInterface((struct Interface *)IDOS);
+}
+#endif /* __amigaos4__ */
 
 	if (IntuitionBase != NULL)
 		CloseLibrary(IntuitionBase);

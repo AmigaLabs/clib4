@@ -1,5 +1,5 @@
 /*
- * $Id: math_log.c,v 1.10 2007-11-08 11:23:53 damato Exp $
+ * $Id: math_log.c,v 1.11 2021-01-31 11:23:53 apalmatep Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ extern double __log(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubTransBase
-	.globl	___log
-
-___log:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubTransBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-84:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubTransBase\n\t"
+	".globl	___log\n\t"
+"___log:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-84:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 
@@ -104,7 +99,7 @@ __log(double x)
 
 	result = IEEEDPLog(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -124,11 +119,11 @@ __log(double x)
 {
 	double result;
 
-	__asm ("flogn%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("flogn%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -153,85 +148,85 @@ zero = 0.0;
 INLINE STATIC double
 __log(double x)
 {
-	double hfsq,f,s,z,R,w,t1,t2,dk;
-	int k,hx,i,j;
+	double hfsq, f, s, z, R, w, t1, t2, dk;
+	int k, hx, i, j;
 	unsigned int lx;
 
-	EXTRACT_WORDS(hx,lx,x);
+	EXTRACT_WORDS(hx, lx, x);
 
-	k=0;
-	if (hx < 0x00100000)          			/* x < 2**-1022  */
+	k = 0;
+	if (hx < 0x00100000) /* x < 2**-1022  */
 	{
-	    if (((hx&0x7fffffff)|lx)==0) 
-			return -two54/zero;		/* log(+-0)=-inf */
-	    if (hx<0) 
-			return (x-x)/zero;	/* log(-#) = NaN */
-	    k -= 54; 
+		if (((hx & 0x7fffffff) | lx) == 0)
+			return -two54 / zero; /* log(+-0)=-inf */
+		if (hx < 0)
+			return (x - x) / zero; /* log(-#) = NaN */
+		k -= 54;
 		x *= two54; /* subnormal number, scale up x */
-	    GET_HIGH_WORD(hx,x);
-	} 
+		GET_HIGH_WORD(hx, x);
+	}
 
-	if (hx >= 0x7ff00000) 
-		return x+x;
-	
-	k += (hx>>20)-1023;
+	if (hx >= 0x7ff00000)
+		return x + x;
+
+	k += (hx >> 20) - 1023;
 	hx &= 0x000fffff;
-	i = (hx+0x95f64)&0x100000;
+	i = (hx + 0x95f64) & 0x100000;
 
-	SET_HIGH_WORD(x,hx|(i^0x3ff00000));	/* normalize x or x/2 */
+	SET_HIGH_WORD(x, hx | (i ^ 0x3ff00000)); /* normalize x or x/2 */
 
-	k += (i>>20);
-	f = x-1.0;
+	k += (i >> 20);
+	f = x - 1.0;
 
-	if((0x000fffff&(2+hx))<3) 	      /* |f| < 2**-20 */
+	if ((0x000fffff & (2 + hx)) < 3) /* |f| < 2**-20 */
 	{
-		if(f==zero) 
-		{ 
-			if(k==0) 
-				return zero;  
-			else 
+		if (f == zero)
+		{
+			if (k == 0)
+				return zero;
+			else
 			{
-				dk=(double)k;
-				return dk*ln2_hi+dk*ln2_lo;
+				dk = (double)k;
+				return dk * ln2_hi + dk * ln2_lo;
 			}
 		}
 
-	    R = f*f*(0.5-0.33333333333333333*f);
+		R = f * f * (0.5 - 0.33333333333333333 * f);
 
-	    if(k==0) 
-			return f-R; 
-		else 
+		if (k == 0)
+			return f - R;
+		else
 		{
-			dk=(double)k;
-			return dk*ln2_hi-((R-dk*ln2_lo)-f);
+			dk = (double)k;
+			return dk * ln2_hi - ((R - dk * ln2_lo) - f);
 		}
 	}
 
- 	s = f/(2.0+f); 
+	s = f / (2.0 + f);
 	dk = (double)k;
-	z = s*s;
-	i = hx-0x6147a;
-	w = z*z;
-	j = 0x6b851-hx;
-	t1= w*(Lg2+w*(Lg4+w*Lg6)); 
-	t2= z*(Lg1+w*(Lg3+w*(Lg5+w*Lg7))); 
+	z = s * s;
+	i = hx - 0x6147a;
+	w = z * z;
+	j = 0x6b851 - hx;
+	t1 = w * (Lg2 + w * (Lg4 + w * Lg6));
+	t2 = z * (Lg1 + w * (Lg3 + w * (Lg5 + w * Lg7)));
 	i |= j;
-	R = t2+t1;
+	R = t2 + t1;
 
-	if(i>0) 
+	if (i > 0)
 	{
-	    hfsq=0.5*f*f;
-	    if(k==0) 
-			return f-(hfsq-s*(hfsq+R)); 
+		hfsq = 0.5 * f * f;
+		if (k == 0)
+			return f - (hfsq - s * (hfsq + R));
 		else
-			return dk*ln2_hi-((hfsq-(s*(hfsq+R)+dk*ln2_lo))-f);
+			return dk * ln2_hi - ((hfsq - (s * (hfsq + R) + dk * ln2_lo)) - f);
 	}
-	else 
+	else
 	{
-	    if(k==0) 
-			return f-s*(f-R); 
+		if (k == 0)
+			return f - s * (f - R);
 		else
-			return dk*ln2_hi-((s*(f-R)-dk*ln2_lo)-f);
+			return dk * ln2_hi - ((s * (f - R) - dk * ln2_lo) - f);
 	}
 }
 
@@ -244,7 +239,7 @@ log(double x)
 {
 	double result;
 
-	if(x > 0)
+	if (x > 0)
 	{
 		result = __log(x);
 	}
@@ -255,7 +250,7 @@ log(double x)
 		result = -__inf();
 	}
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

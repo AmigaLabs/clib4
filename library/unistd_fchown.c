@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_fchown.c,v 1.15 2006-11-16 14:39:23 obarthel Exp $
+ * $Id: unistd_fchown.c,v 1.16 2021-01-31 14:39:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -41,15 +41,14 @@
 
 /****************************************************************************/
 
-int
-fchown(int file_descriptor, uid_t owner, gid_t group)
+int fchown(int file_descriptor, uid_t owner, gid_t group)
 {
-	D_S(struct FileInfoBlock,fib);
+	struct ExamineData *fib;
 	BPTR parent_dir = ZERO;
 	BPTR old_current_dir = ZERO;
 	BOOL current_dir_changed = FALSE;
 	int result = ERROR;
-	struct fd * fd = NULL;
+	struct fd *fd = NULL;
 	LONG success;
 
 	ENTER();
@@ -58,17 +57,17 @@ fchown(int file_descriptor, uid_t owner, gid_t group)
 	SHOWVALUE(owner);
 	SHOWVALUE(group);
 
-	assert( file_descriptor >= 0 && file_descriptor < __num_fd );
-	assert( __fd[file_descriptor] != NULL );
-	assert( FLAG_IS_SET(__fd[file_descriptor]->fd_Flags,FDF_IN_USE) );
+	assert(file_descriptor >= 0 && file_descriptor < __num_fd);
+	assert(__fd[file_descriptor] != NULL);
+	assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	__stdio_lock();
 
 	fd = __get_file_descriptor(file_descriptor);
-	if(fd == NULL)
+	if (fd == NULL)
 	{
 		__set_errno(EBADF);
 		goto out;
@@ -76,23 +75,23 @@ fchown(int file_descriptor, uid_t owner, gid_t group)
 
 	__fd_lock(fd);
 
-	if(FLAG_IS_SET(fd->fd_Flags,FDF_IS_SOCKET))
+	if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET))
 	{
 		__set_errno(EINVAL);
 		goto out;
 	}
 
-	if(FLAG_IS_SET(fd->fd_Flags,FDF_STDIO))
+	if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO))
 	{
 		__set_errno(EBADF);
 		goto out;
 	}
 
 	PROFILE_OFF();
-	success = (__safe_examine_file_handle(fd->fd_File,fib) && (parent_dir = __safe_parent_of_file_handle(fd->fd_File)) != ZERO);
+	success = (__safe_examine_file_handle(fd->fd_File, fib) && (parent_dir = __safe_parent_of_file_handle(fd->fd_File)) != ZERO);
 	PROFILE_ON();
 
-	if(NO success)
+	if (NO success)
 	{
 		SHOWMSG("couldn't find parent directory");
 
@@ -105,17 +104,17 @@ fchown(int file_descriptor, uid_t owner, gid_t group)
 
 	/* A value of -1 for either the owner or the group ID means
 	   that what's currently being used should not be changed. */
-	if(owner == (uid_t)-1)
-		owner = fib->fib_OwnerUID;
+	if (owner == (uid_t)-1)
+		owner = fib->OwnerUID;
 
-	if(group == (gid_t)-1)
-		group = fib->fib_OwnerGID;
+	if (group == (gid_t)-1)
+		group = fib->OwnerGID;
 
 	/* Check if the owner and group IDs are usable. This test
 	   follows the comparison against -1 above just so that we
 	   can be sure that we are not mistaking a -1 for a
 	   large unsigned number. */
-	if(owner > 65535 || group > 65535)
+	if (owner > 65535 || group > 65535)
 	{
 		SHOWMSG("owner or group not OK");
 
@@ -127,56 +126,15 @@ fchown(int file_descriptor, uid_t owner, gid_t group)
 	}
 
 	/* Did anything change at all? */
-	if(group != fib->fib_OwnerUID || owner != fib->fib_OwnerUID)
+	if (group != fib->OwnerUID || owner != fib->OwnerUID)
 	{
 		PROFILE_OFF();
 
-		#if defined(__amigaos4__)
-		{
-			success = SetOwner(fib->fib_FileName,(LONG)((((ULONG)owner) << 16) | (ULONG)group));
-		}
-		#else
-		{
-			if(((struct Library *)DOSBase)->lib_Version >= 39)
-			{
-				success = SetOwner(fib->fib_FileName,(LONG)((((ULONG)owner) << 16) | (ULONG)group));
-			}
-			else
-			{
-				D_S(struct bcpl_name,new_name);
-				struct DevProc * dvp;
-				unsigned int len;
-
-				SHOWMSG("have to do this manually...");
-
-				success = DOSFALSE;
-
-				len = strlen(fib->fib_FileName);
-
-				assert( len < sizeof(new_name->name) );
-
-				dvp = GetDeviceProc(fib->fib_FileName,NULL);
-				if(dvp != NULL)
-				{
-					LONG error;
-
-					new_name->name[0] = len;
-					memmove(&new_name->name[1],fib->fib_FileName,len);
-
-					success	= DoPkt(dvp->dvp_Port,ACTION_SET_OWNER,0,dvp->dvp_Lock,MKBADDR(new_name),(LONG)((((ULONG)owner) << 16) | (ULONG)group),0);
-					error	= IoErr();
-
-					FreeDeviceProc(dvp);
-
-					SetIoErr(error);
-				}
-			}
-		}
-		#endif /* __amigaos4__ */
+		success = SetOwnerInfoTags(OI_StringNameInput, fib->Name, OI_OwnerUID, (LONG)((((ULONG)owner) << 16) | (ULONG)group), TAG_DONE);
 
 		PROFILE_ON();
 
-		if(NO success)
+		if (NO success)
 		{
 			SHOWMSG("couldn't change owner/group");
 
@@ -187,7 +145,7 @@ fchown(int file_descriptor, uid_t owner, gid_t group)
 
 	result = OK;
 
- out:
+out:
 
 	__fd_unlock(fd);
 
@@ -195,7 +153,7 @@ fchown(int file_descriptor, uid_t owner, gid_t group)
 
 	UnLock(parent_dir);
 
-	if(current_dir_changed)
+	if (current_dir_changed)
 		CurrentDir(old_current_dir);
 
 	PROFILE_ON();
@@ -203,5 +161,5 @@ fchown(int file_descriptor, uid_t owner, gid_t group)
 	__stdio_unlock();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

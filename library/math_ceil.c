@@ -1,5 +1,5 @@
 /*
- * $Id: math_ceil.c,v 1.6 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_ceil.c,v 1.7 2021-01-31 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ extern double __ceil(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubBasBase
-	.globl	___ceil
-
-___ceil:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubBasBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-96:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubBasBase\n\t"
+	".globl	___ceil\n\t"
+"___ceil:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubBasBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-96:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 
@@ -104,7 +99,7 @@ __ceil(double x)
 
 	result = IEEEDPCeil(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -125,23 +120,23 @@ __ceil(double x)
 	int rounding_mode, round_up;
 	double result;
 
-	__asm __volatile ("fmove%.l fpcr,%0"
-	                  : "=dm" (rounding_mode)
-	                  : /* no inputs */ );
+	__asm __volatile("fmove%.l fpcr,%0"
+					 : "=dm"(rounding_mode)
+					 : /* no inputs */);
 
 	round_up = rounding_mode | 0x30;
 
-	__asm __volatile ("fmove%.l %0,fpcr"
-	                  : /* no outputs */
-	                  : "dmi" (round_up));
-	__asm __volatile ("fint%.x %1,%0"
-	                  : "=f" (result)
-	                  : "f" (x));
-	__asm __volatile ("fmove%.l %0,fpcr"
-	                  : /* no outputs */
-	                  : "dmi" (rounding_mode));
+	__asm __volatile("fmove%.l %0,fpcr"
+					 : /* no outputs */
+					 : "dmi"(round_up));
+	__asm __volatile("fint%.x %1,%0"
+					 : "=f"(result)
+					 : "f"(x));
+	__asm __volatile("fmove%.l %0,fpcr"
+					 : /* no outputs */
+					 : "dmi"(rounding_mode));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -155,82 +150,83 @@ static const double huge = 1.0e300;
 INLINE STATIC double
 __ceil(double x)
 {
-	int i0,i1,j0;
-	unsigned int i,j;
+	int i0, i1, j0;
+	unsigned int i, j;
 
-	EXTRACT_WORDS(i0,i1,x);
+	EXTRACT_WORDS(i0, i1, x);
 
-	j0 = ((i0>>20)&0x7ff)-0x3ff;
+	j0 = ((i0 >> 20) & 0x7ff) - 0x3ff;
 
-	if(j0<20) 
+	if (j0 < 20)
 	{
-	    if(j0<0) 
+		if (j0 < 0)
 		{
-			if(huge+x>0.0) 
+			if (huge + x > 0.0)
 			{
-				if(i0<0) 
+				if (i0 < 0)
 				{
-					i0=0x80000000;
-					i1=0;
-				} 
-				else if((i0|i1)!=0) 
-				{ 
-					i0=0x3ff00000;
-					i1=0;
+					i0 = 0x80000000;
+					i1 = 0;
+				}
+				else if ((i0 | i1) != 0)
+				{
+					i0 = 0x3ff00000;
+					i1 = 0;
 				}
 			}
-	    } 
-		else 
+		}
+		else
 		{
-			i = (0x000fffff)>>j0;
-			if(((i0&i)|i1)==0) 
+			i = (0x000fffff) >> j0;
+			if (((i0 & i) | i1) == 0)
 				return x;
-			if(huge+x>0.0) 
-			{	
-				if(i0>0) 
-					i0 += (0x00100000)>>j0;
-				i0 &= (~i); i1=0;
+			if (huge + x > 0.0)
+			{
+				if (i0 > 0)
+					i0 += (0x00100000) >> j0;
+				i0 &= (~i);
+				i1 = 0;
 			}
-	    }
-	} 
-	else if (j0>51) 
+		}
+	}
+	else if (j0 > 51)
 	{
-	    if(j0==0x400) 
-			return x+x;
-	    else 
+		if (j0 == 0x400)
+			return x + x;
+		else
 			return x;
 	}
-	else 
+	else
 	{
-	    i = ((unsigned int)(0xffffffff))>>(j0-20);
+		i = ((unsigned int)(0xffffffff)) >> (j0 - 20);
 
-	    if((i1&i)==0) 
+		if ((i1 & i) == 0)
 			return x;
 
-	    if(huge+x>0.0)
+		if (huge + x > 0.0)
 		{
-			
-			if(i0>0)
+
+			if (i0 > 0)
 			{
-				if(j0==20)
-					i0+=1; 
-				else 
+				if (j0 == 20)
+					i0 += 1;
+				else
 				{
-					j = i1 + (1<<(52-j0));
-					if(j<i1) 
-						i0+=1;	
+					j = i1 + (1 << (52 - j0));
+					if (j < i1)
+						i0 += 1;
 					i1 = j;
 				}
 			}
 			i1 &= (~i);
-	    }
+		}
 	}
 
-	INSERT_WORDS(x,i0,i1);
+	INSERT_WORDS(x, i0, i1);
 
 	return x;
 }
-	
+
 #endif /* PPC_FLOATING_POINT_SUPPORT */
 
 /****************************************************************************/
@@ -242,7 +238,7 @@ ceil(double x)
 
 	result = __ceil(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

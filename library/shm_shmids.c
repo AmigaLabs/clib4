@@ -50,7 +50,7 @@ _shmids(int *buf, size_t nids, size_t *idcnt)
     int ret = -1;
     if (__global_clib2->haveShm)
     {
-        ret = shmids((APTR)buf, nids, (uint32_t *)idcnt);
+        ret = shmids((APTR)buf, nids, (uint32 *)idcnt);
         if (ret < 0)
         {
             __set_errno(GetIPCErr());

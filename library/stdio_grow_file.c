@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_grow_file.c,v 1.8 2008-09-04 12:07:58 obarthel Exp $
+ * $Id: stdio_grow_file.c,v 1.9 2021-01-31 17:35:41 apalmate Exp $
  *
  * :ts=4
  *
@@ -41,15 +41,14 @@
 
 /****************************************************************************/
 
-/* Seek to the end of a file, then add a certain number of 0 bytes. Note that
+/* Change file position to the end of a file, then add a certain number of 0 bytes. Note that
    this function will change the current file position! */
-int
-__grow_file_size(struct fd * fd,int num_bytes)
+int __grow_file_size(struct fd *fd, int num_bytes)
 {
-	unsigned char * aligned_buffer;
-	unsigned char * buffer;
-	struct FileHandle * fh;
-	D_S(struct InfoData,id);
+	unsigned char *aligned_buffer;
+	unsigned char *buffer;
+	struct FileHandle *fh;
+	D_S(struct InfoData, id);
 	LONG block_size;
 	int bytes_written;
 	int buffer_size;
@@ -60,23 +59,23 @@ __grow_file_size(struct fd * fd,int num_bytes)
 	int alignment_skip;
 	int result = ERROR;
 
-	assert( fd != NULL );
+	assert(fd != NULL);
 
-	D(("we have to grow the file by %ld bytes",num_bytes));
+	D(("we have to grow the file by %ld bytes", num_bytes));
 
 	block_size = 0;
 
 	PROFILE_OFF();
 
-	assert( FLAG_IS_CLEAR(fd->fd_Flags,FDF_STDIO) );
+	assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
 
 	fh = BADDR(fd->fd_File);
-	if(fh != NULL && fh->fh_Type != NULL && DoPkt(fh->fh_Type,ACTION_DISK_INFO,MKBADDR(id),0,0,0,0))
+	if (fh != NULL && fh->fh_Type != NULL && DoPkt(fh->fh_Type, ACTION_DISK_INFO, MKBADDR(id), 0, 0, 0, 0))
 		block_size = id->id_BytesPerBlock;
 
 	PROFILE_ON();
 
-	if(block_size < 512)
+	if (block_size < 512)
 		block_size = 512;
 
 	/* We have to fill up the file with zero bytes.
@@ -84,14 +83,14 @@ __grow_file_size(struct fd * fd,int num_bytes)
 	 * large can we make it?
 	 */
 	buffer_size = 8 * block_size;
-	if(buffer_size > num_bytes)
+	if (buffer_size > num_bytes)
 		buffer_size = num_bytes;
 
 	/* Allocate a little more memory than required to allow for
 	 * the buffer to be aligned to a cache line boundary.
 	 */
-	buffer = malloc((size_t)buffer_size + (__cache_line_size-1));
-	if(buffer == NULL)
+	buffer = malloc((size_t)buffer_size + (__cache_line_size - 1));
+	if (buffer == NULL)
 	{
 		SHOWMSG("not enough memory for write buffer");
 
@@ -100,15 +99,15 @@ __grow_file_size(struct fd * fd,int num_bytes)
 	}
 
 	/* Align the buffer to a cache line boundary. */
-	aligned_buffer = (unsigned char *)(((ULONG)(buffer + (__cache_line_size-1))) & ~(__cache_line_size-1));
+	aligned_buffer = (unsigned char *)(((ULONG)(buffer + (__cache_line_size - 1))) & ~(__cache_line_size - 1));
 
-	memset(aligned_buffer,0,(size_t)buffer_size);
+	memset(aligned_buffer, 0, (size_t)buffer_size);
 
 	PROFILE_OFF();
-	seek_position = Seek(fd->fd_File,0,OFFSET_END);
+	seek_position = ChangeFilePosition(fd->fd_File, 0, OFFSET_END);
 	PROFILE_ON();
 
-	if(seek_position == SEEK_ERROR && IoErr() != OK)
+	if (seek_position == SEEK_ERROR && IoErr() != OK)
 	{
 		SHOWMSG("could not move to the end of the file");
 		goto out;
@@ -117,7 +116,7 @@ __grow_file_size(struct fd * fd,int num_bytes)
 	position = (off_t)seek_position;
 
 	PROFILE_OFF();
-	seek_position = Seek(fd->fd_File,0,OFFSET_CURRENT);
+	seek_position = GetFilePosition(fd->fd_File);
 	PROFILE_ON();
 
 	current_position = (off_t)seek_position;
@@ -126,31 +125,31 @@ __grow_file_size(struct fd * fd,int num_bytes)
 	 * to a block offset. Subsequent writes will then access the
 	 * file at positions that are multiples of the block size.
 	 */
-	if(num_bytes > block_size && (current_position % block_size) != 0)
+	if (num_bytes > block_size && (current_position % block_size) != 0)
 		alignment_skip = block_size - (current_position % block_size);
 	else
 		alignment_skip = 0;
 
-	while(num_bytes > 0)
+	while (num_bytes > 0)
 	{
-		if(__check_abort_enabled)
+		if (__check_abort_enabled)
 			__check_abort();
 
 		size = buffer_size;
-		if(size > num_bytes)
+		if (size > num_bytes)
 			size = num_bytes;
 
 		/* If possible, even out the block offset. */
-		if(alignment_skip > 0 && size > alignment_skip)
+		if (alignment_skip > 0 && size > alignment_skip)
 			size = alignment_skip;
 
 		alignment_skip = 0;
 
 		PROFILE_OFF();
-		bytes_written = Write(fd->fd_File,aligned_buffer,size);
+		bytes_written = Write(fd->fd_File, aligned_buffer, size);
 		PROFILE_ON();
 
-		if(bytes_written != size)
+		if (bytes_written != size)
 			goto out;
 
 		num_bytes -= size;
@@ -160,10 +159,10 @@ __grow_file_size(struct fd * fd,int num_bytes)
 
 	result = OK;
 
- out:
+out:
 
-	if(buffer != NULL)
+	if (buffer != NULL)
 		free(buffer);
 
-	return(result);
+	return (result);
 }

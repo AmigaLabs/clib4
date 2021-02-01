@@ -41,27 +41,26 @@
 
 /****************************************************************************/
 
-void
-rewinddir(DIR * directory_pointer)
+void rewinddir(DIR *directory_pointer)
 {
 	ENTER();
 
 	SHOWPOINTER(directory_pointer);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	PROFILE_OFF();
 
-	if(directory_pointer != NULL)
+	if (directory_pointer != NULL)
 	{
-		struct DirectoryHandle * dh;
+		struct DirectoryHandle *dh;
 
 		dh = (struct DirectoryHandle *)directory_pointer;
 
 		dh->dh_Position = 0;
 
-		if(dh->dh_ScanVolumeList)
+		if (dh->dh_ScanVolumeList)
 		{
 			SHOWMSG("returning to first volume");
 
@@ -70,10 +69,8 @@ rewinddir(DIR * directory_pointer)
 		else
 		{
 			SHOWMSG("calling Examine() again");
-
-			assert( (((ULONG)&dh->dh_FileInfo) & 3) == 0 );
-
-			if(CANNOT Examine(dh->dh_DirLock,&dh->dh_FileInfo))
+			dh->dh_FileInfo = ExamineObjectTags(EX_FileLockInput, dh->dh_DirLock, TAG_DONE);
+			if (dh->dh_FileInfo == NULL)
 			{
 				SHOWMSG("ouch. that didn't work");
 				__set_errno(__translate_io_error_to_errno(IoErr()));

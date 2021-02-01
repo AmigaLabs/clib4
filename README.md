@@ -10,13 +10,14 @@ This is a for of <a href="https://github.com/adtools/clib2">official clib2</a> p
 The point of this library is to make it Amiga OS4 only to maintain it easily and add all missing clib2 features that are hard to add also on classic amigas.
 Classic amigas has also ixemul that is the most complete, posix compliant, library we have. Is useless share code that most probably no one will use.
 I'm trying (yeah.. trying) to make it posix compliant and fix also all C++ problems we have with newer compilers.
+All warnings produced by GCC 10 are now gone. 
+All **deprecated** OS4 functions are replaced by modern one (except for StackSwap i don't find the replacement)
 
 For the original readme follow this <a href="https://github.com/adtools/clib2">link</a>
 
 ## Limitations and caveats
 
 The added code is most of the time tested. I've also added some test programs to test the added featrues. Of course it can contain errors and bugs. If you find an issue please report it
-
 
 ### Libraries
 

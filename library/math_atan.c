@@ -1,5 +1,5 @@
 /*
- * $Id: math_atan.c,v 1.5 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_atan.c,v 1.6 2021-01-31 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ extern double __atan(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubTransBase
-	.globl	___atan
-
-___atan:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubTransBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-30:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubTransBase\n\t"
+	".globl	___atan\n\t"
+"___atan:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-30:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 
@@ -104,7 +99,7 @@ __atan(double x)
 
 	result = IEEEDPAtan(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -124,11 +119,11 @@ __atan(double x)
 {
 	double result;
 
-	__asm ("fatan%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("fatan%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -172,84 +167,84 @@ huge   = 1.0e300;
 INLINE STATIC double
 __atan(double x)
 {
-	double w,s1,s2,z;
-	int ix,hx,id;
+	double w, s1, s2, z;
+	int ix, hx, id;
 
-	GET_HIGH_WORD(hx,x);
+	GET_HIGH_WORD(hx, x);
 
-	ix = hx&0x7fffffff;
+	ix = hx & 0x7fffffff;
 
-	if(ix>=0x44100000)         	              /* if |x| >= 2^66 */
+	if (ix >= 0x44100000) /* if |x| >= 2^66 */
 	{
-	    unsigned int low;
+		unsigned int low;
 
-	    GET_LOW_WORD(low,x);
+		GET_LOW_WORD(low, x);
 
-	    if(ix>0x7ff00000|| (ix==0x7ff00000&&(low!=0)))
-			return x+x;		                 /* NaN */
+		if (ix > 0x7ff00000 || (ix == 0x7ff00000 && (low != 0)))
+			return x + x; /* NaN */
 
-	    if(hx>0) 
-			return  atanhi[3]+atanlo[3];
-	    else
-			return -atanhi[3]-atanlo[3];
-	} 
+		if (hx > 0)
+			return atanhi[3] + atanlo[3];
+		else
+			return -atanhi[3] - atanlo[3];
+	}
 
-	if (ix < 0x3fdc0000) 	                 /* |x| < 0.4375 */
+	if (ix < 0x3fdc0000) /* |x| < 0.4375 */
 	{
-	    if (ix < 0x3e200000)         	     /* |x| < 2^-29 */
+		if (ix < 0x3e200000) /* |x| < 2^-29 */
 		{
-			if(huge+x>one) 
-				return x;	                 /* raise inexact */
-	    }
-	    id = -1;
-	} 
-	else 
+			if (huge + x > one)
+				return x; /* raise inexact */
+		}
+		id = -1;
+	}
+	else
 	{
 		x = fabs(x);
-		if (ix < 0x3ff30000) 		        /* |x| < 1.1875 */
+		if (ix < 0x3ff30000) /* |x| < 1.1875 */
 		{
-			if (ix < 0x3fe60000)     	    /* 7/16 <=|x|<11/16 */
+			if (ix < 0x3fe60000) /* 7/16 <=|x|<11/16 */
 			{
-				id = 0; 
-				x = (2.0*x-one)/(2.0+x); 
+				id = 0;
+				x = (2.0 * x - one) / (2.0 + x);
 			}
-			else                            /* 11/16<=|x|< 19/16 */
+			else /* 11/16<=|x|< 19/16 */
 			{
-				id = 1; 
-				x  = (x-one)/(x+one); 
+				id = 1;
+				x = (x - one) / (x + one);
 			}
-		} 
-		else 
+		}
+		else
 		{
-			if (ix < 0x40038000)   	        /* |x| < 2.4375 */
+			if (ix < 0x40038000) /* |x| < 2.4375 */
 			{
-				id = 2; 
-				x  = (x-1.5)/(one+1.5*x);
+				id = 2;
+				x = (x - 1.5) / (one + 1.5 * x);
 			}
-			else 			                /* 2.4375 <= |x| < 2^66 */
+			else /* 2.4375 <= |x| < 2^66 */
 			{
-				id = 3; 
-				x  = -1.0/x;
+				id = 3;
+				x = -1.0 / x;
 			}
 		}
 	}
 
-    /* end of argument reduction */
-	z = x*x;
-	w = z*z;
+	/* end of argument reduction */
+	z = x * x;
+	w = z * z;
 
-    /* break sum from i=0 to 10 aT[i]z**(i+1) into odd and even poly */
-	s1 = z*(aT[0]+w*(aT[2]+w*(aT[4]+w*(aT[6]+w*(aT[8]+w*aT[10])))));
-	s2 = w*(aT[1]+w*(aT[3]+w*(aT[5]+w*(aT[7]+w*aT[9]))));
+	/* break sum from i=0 to 10 aT[i]z**(i+1) into odd and even poly */
+	s1 = z * (aT[0] + w * (aT[2] + w * (aT[4] + w * (aT[6] + w * (aT[8] + w * aT[10])))));
+	s2 = w * (aT[1] + w * (aT[3] + w * (aT[5] + w * (aT[7] + w * aT[9]))));
 
-	if (id<0) 
+	if (id < 0)
 	{
-		return x - x*(s1+s2);
+		return x - x * (s1 + s2);
 	}
-	else 
+	else
 	{
-	    z = atanhi[id] - ((x*(s1+s2) - atanlo[id]) - x);
-	    return (hx<0)? -z:z;
+		z = atanhi[id] - ((x * (s1 + s2) - atanlo[id]) - x);
+		return (hx < 0) ? -z : z;
 	}
 }
 
@@ -265,7 +260,7 @@ atan(double x)
 
 	result = __atan(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

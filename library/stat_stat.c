@@ -1,5 +1,5 @@
 /*
- * $Id: stat_stat.c,v 1.10 2006-01-08 12:04:24 obarthel Exp $
+ * $Id: stat_stat.c,v 1.11 2021-01-31 12:04:24 apalmate Exp $
  *
  * :ts=4
  *
@@ -55,16 +55,14 @@
 
 /****************************************************************************/
 
-int
-stat(const char * path_name, struct stat * st)
+int stat(const char *path_name, struct stat *st)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
-	D_S(struct FileInfoBlock,fib);
-	struct FileLock * fl;
+#endif /* UNIX_PATH_SEMANTICS */
+	struct ExamineData *fib = NULL;
+	struct FileLock *fl;
 	int result = ERROR;
-	LONG status;
 	BPTR file_lock = ZERO;
 
 	ENTER();
@@ -72,14 +70,14 @@ stat(const char * path_name, struct stat * st)
 	SHOWSTRING(path_name);
 	SHOWPOINTER(st);
 
-	assert( path_name != NULL && st != NULL );
+	assert(path_name != NULL && st != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(path_name == NULL || st == NULL)
+		if (path_name == NULL || st == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -87,13 +85,13 @@ stat(const char * path_name, struct stat * st)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
-			if(path_name[0] == '\0')
+			if (path_name[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -101,20 +99,20 @@ stat(const char * path_name, struct stat * st)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&path_name,&path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 				goto out;
 
 			/* The pseudo root directory is a very special case indeed.
 			 * We make up some pseudo data for it.
 			 */
-			if(path_name_nti.is_root)
+			if (path_name_nti.is_root)
 			{
 				struct DateStamp ds;
 				time_t mtime;
 
 				SHOWMSG("seting up the root directory info");
 
-				memset(st,0,sizeof(*st));
+				memset(st, 0, sizeof(*st));
 
 				PROFILE_OFF();
 				DateStamp(&ds);
@@ -122,12 +120,12 @@ stat(const char * path_name, struct stat * st)
 
 				mtime = __convert_datestamp_to_time(&ds);
 
-				st->st_mode		= S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-				st->st_mtime	= mtime;
-				st->st_atime	= mtime;
-				st->st_ctime	= mtime;
-				st->st_nlink	= 2;
-				st->st_blksize	= 512;
+				st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+				st->st_mtime = mtime;
+				st->st_atime = mtime;
+				st->st_ctime = mtime;
+				st->st_nlink = 2;
+				st->st_blksize = 512;
 
 				result = OK;
 
@@ -135,15 +133,15 @@ stat(const char * path_name, struct stat * st)
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	D(("trying to get a lock on '%s'",path_name));
+	D(("trying to get a lock on '%s'", path_name));
 
 	PROFILE_OFF();
-	file_lock = Lock((STRPTR)path_name,SHARED_LOCK);
+	file_lock = Lock((STRPTR)path_name, SHARED_LOCK);
 	PROFILE_ON();
 
-	if(file_lock == ZERO)
+	if (file_lock == ZERO)
 	{
 		SHOWMSG("that didn't work");
 
@@ -152,10 +150,10 @@ stat(const char * path_name, struct stat * st)
 	}
 
 	PROFILE_OFF();
-	status = Examine(file_lock,fib);
+	fib = ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE);
 	PROFILE_ON();
 
-	if(status == DOSFALSE)
+	if (fib == NULL)
 	{
 		SHOWMSG("couldn't examine it");
 
@@ -165,16 +163,20 @@ stat(const char * path_name, struct stat * st)
 
 	fl = BADDR(file_lock);
 
-	__convert_file_info_to_stat(fl->fl_Task,fib,st);
+	__convert_file_info_to_stat(fl->fl_Task, fib, st);
 
 	result = OK;
 
- out:
+out:
 
 	PROFILE_OFF();
+	if (fib != NULL) {
+		FreeDosObject(DOS_EXAMINEDATA, fib);
+	}
+
 	UnLock(file_lock);
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

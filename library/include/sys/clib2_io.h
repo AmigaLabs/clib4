@@ -81,7 +81,7 @@ struct file_action_message
 											   this file should be set non-blocking or
 											   use asynchronous I/O */
 
-	struct FileInfoBlock *	fam_FileInfo;	/* File information to be filled in */
+	struct ExamineData *	fam_FileInfo;	/* File information to be filled in */
 	struct MsgPort *		fam_FileSystem;	/* File system pointer to be filled in */
 
 	int						fam_Error;		/* Error code, if any... */

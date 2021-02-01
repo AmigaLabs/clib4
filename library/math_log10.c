@@ -1,5 +1,5 @@
 /*
- * $Id: math_log10.c,v 1.9 2007-11-08 11:23:53 damato Exp $
+ * $Id: math_log10.c,v 1.9 2021-01-31 11:23:53 apalmate Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ extern double __log10(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubTransBase
-	.globl	___log10
-
-___log10:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubBasBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-126:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"\n\t
+	".globl	_MathIeeeDoubTransBase\n\t"
+	".globl	___log10\n\t"
+"___log10:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubBasBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-126:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 
@@ -104,7 +99,7 @@ __log10(double x)
 
 	result = IEEEDPLog10(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -124,11 +119,11 @@ __log10(double x)
 {
 	double result;
 
-	__asm ("flog10%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("flog10%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -147,34 +142,35 @@ zero       =  0.0;
 INLINE STATIC double
 __log10(double x)
 {
-	double y,z;
-	int i,k,hx;
+	double y, z;
+	int i, k, hx;
 	unsigned int lx;
 
-	EXTRACT_WORDS(hx,lx,x);
+	EXTRACT_WORDS(hx, lx, x);
 
-	k=0;
-	if (hx < 0x00100000)                    /* x < 2**-1022  */
+	k = 0;
+	if (hx < 0x00100000) /* x < 2**-1022  */
 	{
-		if (((hx&0x7fffffff)|lx)==0)
-			return -two54/zero;             /* log(+-0)=-inf */
-		if (hx<0) 
-			return (x-x)/zero;              /* log(-#) = NaN */
-		k -= 54; x *= two54;                /* subnormal number, scale up x */
-	    GET_HIGH_WORD(hx,x);
+		if (((hx & 0x7fffffff) | lx) == 0)
+			return -two54 / zero; /* log(+-0)=-inf */
+		if (hx < 0)
+			return (x - x) / zero; /* log(-#) = NaN */
+		k -= 54;
+		x *= two54; /* subnormal number, scale up x */
+		GET_HIGH_WORD(hx, x);
 	}
 
 	if (hx >= 0x7ff00000)
-		return x+x;
+		return x + x;
 
-	k += (hx>>20)-1023;
-	i  = ((unsigned int)k&0x80000000)>>31;
-	hx = (hx&0x000fffff)|((0x3ff-i)<<20);
-	y  = (double)(k+i);
-	SET_HIGH_WORD(x,hx);
-	z  = y*log10_2lo + ivln10*log(x);
+	k += (hx >> 20) - 1023;
+	i = ((unsigned int)k & 0x80000000) >> 31;
+	hx = (hx & 0x000fffff) | ((0x3ff - i) << 20);
+	y = (double)(k + i);
+	SET_HIGH_WORD(x, hx);
+	z = y * log10_2lo + ivln10 * log(x);
 
-	return  z+y*log10_2hi;
+	return z + y * log10_2hi;
 }
 
 #endif /* PPC_FLOATING_POINT_SUPPORT */
@@ -186,7 +182,7 @@ log10(double x)
 {
 	double result;
 
-	if(x > 0)
+	if (x > 0)
 	{
 		result = __log10(x);
 	}
@@ -197,7 +193,7 @@ log10(double x)
 		result = -__inf();
 	}
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

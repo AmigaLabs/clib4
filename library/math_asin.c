@@ -1,5 +1,5 @@
 /*
- * $Id: math_asin.c,v 1.7 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_asin.c,v 1.8 2021-01-31 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -72,24 +72,19 @@ double __asin(double x);
 
 /****************************************************************************/
 
-asm("
-
-	.text
-	.even
-
-	.globl	_MathIeeeDoubTransBase
-	.globl	___asin
-
-___asin:
-
-	movel	a6,sp@-
-	movel	"A4(_MathIeeeDoubTransBase)",a6
-	moveml	sp@(8),d0/d1
-	jsr		a6@(-114:W)
-	movel	sp@+,a6
-	rts
-
-");
+asm(
+	".text\n\t"
+	".even\n\t"
+	".globl	_MathIeeeDoubTransBase\n\t"
+	".globl	___asin\n\t"
+"___asin:\n\t"
+	"movel	a6,sp@-\n\t"
+	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
+	"moveml	sp@(8),d0/d1\n\t"
+	"jsr		a6@(-114:W)\n\t"
+	"movel	sp@+,a6\n\t"
+	"rts\n\t"
+);
 
 /****************************************************************************/
 
@@ -104,7 +99,7 @@ __asin(double x)
 
 	result = IEEEDPAsin(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -124,11 +119,11 @@ __asin(double x)
 {
 	double result;
 
-	__asm ("fasin%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("fasin%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -159,66 +154,66 @@ qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 INLINE STATIC double
 __asin(double x)
 {
-	double t,w,p,q,c,r,s;
-	int hx,ix;
+	double t, w, p, q, c, r, s;
+	int hx, ix;
 
-	GET_HIGH_WORD(hx,x);
+	GET_HIGH_WORD(hx, x);
 
-	ix = hx&0x7fffffff;
+	ix = hx & 0x7fffffff;
 
-	if(ix>= 0x3ff00000) 		            /* |x|>= 1 */
+	if (ix >= 0x3ff00000) /* |x|>= 1 */
 	{
-	    unsigned int lx;
-	    GET_LOW_WORD(lx,x);
-	 
-		if(((ix-0x3ff00000)|lx)==0)		    /* asin(1)=+-pi/2 with inexact */
-			return x*pio2_hi+x*pio2_lo;	
+		unsigned int lx;
+		GET_LOW_WORD(lx, x);
 
-	    return (x-x)/(x-x);		            /* asin(|x|>1) is NaN */   
-	} 
-	else if (ix<0x3fe00000) 	            /* |x|<0.5 */
+		if (((ix - 0x3ff00000) | lx) == 0) /* asin(1)=+-pi/2 with inexact */
+			return x * pio2_hi + x * pio2_lo;
+
+		return (x - x) / (x - x); /* asin(|x|>1) is NaN */
+	}
+	else if (ix < 0x3fe00000) /* |x|<0.5 */
 	{
-	    if(ix<0x3e400000)          	        /* if |x| < 2**-27 */
+		if (ix < 0x3e400000) /* if |x| < 2**-27 */
 		{
-			if(huge+x>one) 
-				return x;                   /* return x with inexact if x!=0*/
-		} 
-		else 
+			if (huge + x > one)
+				return x; /* return x with inexact if x!=0*/
+		}
+		else
 		{
-			t = x*x;
-			p = t*(pS0+t*(pS1+t*(pS2+t*(pS3+t*(pS4+t*pS5)))));
-			q = one+t*(qS1+t*(qS2+t*(qS3+t*qS4)));
-			w = p/q;
-			return x+x*w;
+			t = x * x;
+			p = t * (pS0 + t * (pS1 + t * (pS2 + t * (pS3 + t * (pS4 + t * pS5)))));
+			q = one + t * (qS1 + t * (qS2 + t * (qS3 + t * qS4)));
+			w = p / q;
+			return x + x * w;
 		}
 	}
 
 	/* 1> |x|>= 0.5 */
-	w = one-fabs(x);
-	t = w*0.5;
-	p = t*(pS0+t*(pS1+t*(pS2+t*(pS3+t*(pS4+t*pS5)))));
-	q = one+t*(qS1+t*(qS2+t*(qS3+t*qS4)));
+	w = one - fabs(x);
+	t = w * 0.5;
+	p = t * (pS0 + t * (pS1 + t * (pS2 + t * (pS3 + t * (pS4 + t * pS5)))));
+	q = one + t * (qS1 + t * (qS2 + t * (qS3 + t * qS4)));
 	s = sqrt(t);
-	
-	if(ix>=0x3FEF3333)               	    /* if |x| > 0.975 */
+
+	if (ix >= 0x3FEF3333) /* if |x| > 0.975 */
 	{
-	    w = p/q;
-	    t = pio2_hi-(2.0*(s+s*w)-pio2_lo);
+		w = p / q;
+		t = pio2_hi - (2.0 * (s + s * w) - pio2_lo);
 	}
-	else 
+	else
 	{
-	    w  = s;
-	    SET_LOW_WORD(w,0);
-	    c  = (t-w*w)/(s+w);
-	    r  = p/q;
-	    p  = 2.0*s*r-(pio2_lo-2.0*c);
-	    q  = pio4_hi-2.0*w;
-	    t  = pio4_hi-(p-q);
-	}   
- 
-	if(hx>0) 
-		return t; 
-	else 
+		w = s;
+		SET_LOW_WORD(w, 0);
+		c = (t - w * w) / (s + w);
+		r = p / q;
+		p = 2.0 * s * r - (pio2_lo - 2.0 * c);
+		q = pio4_hi - 2.0 * w;
+		t = pio4_hi - (p - q);
+	}
+
+	if (hx > 0)
+		return t;
+	else
 		return -t;    
 }
 
@@ -231,7 +226,7 @@ asin(double x)
 {
 	double result;
 
-	if(-1.0 <= x && x <= 1.0)
+	if (-1.0 <= x && x <= 1.0)
 	{
 		result = __asin(x);
 	}
@@ -241,7 +236,7 @@ asin(double x)
 		__set_errno(EDOM);
 	}
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/

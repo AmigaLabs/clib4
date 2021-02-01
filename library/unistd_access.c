@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_access.c,v 1.8 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: unistd_access.c,v 1.9 2021-01-31 12:04:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -47,28 +47,28 @@
 
 /****************************************************************************/
 
-int
-access(const char * path_name, int mode)
+int access(const char *path_name, int mode)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 	int result = ERROR;
 	BPTR lock = ZERO;
+	struct ExamineData *status = NULL;
 
 	ENTER();
 
 	SHOWSTRING(path_name);
 	SHOWVALUE(mode);
 
-	assert( path_name != NULL );
+	assert(path_name != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(path_name == NULL)
+		if (path_name == NULL)
 		{
 			SHOWMSG("invalid path name");
 
@@ -76,9 +76,9 @@ access(const char * path_name, int mode)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	if(mode < 0 || mode > (R_OK|W_OK|X_OK|F_OK))
+	if (mode < 0 || mode > (R_OK | W_OK | X_OK | F_OK))
 	{
 		SHOWMSG("invalid mode");
 
@@ -86,13 +86,13 @@ access(const char * path_name, int mode)
 		goto out;
 	}
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
 		STRPTR actual_path_name = NULL;
 
-		if(__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
-			if(path_name[0] == '\0')
+			if (path_name[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -100,66 +100,64 @@ access(const char * path_name, int mode)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&path_name,&path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 				goto out;
 
-			if(NOT path_name_nti.is_root)
+			if (NOT path_name_nti.is_root)
 				actual_path_name = (STRPTR)path_name;
 		}
 
-		if(actual_path_name != NULL)
+		if (actual_path_name != NULL)
 		{
-			D(("trying to get a lock on '%s'",actual_path_name));
+			D(("trying to get a lock on '%s'", actual_path_name));
 
-			lock = Lock(actual_path_name,SHARED_LOCK);
-			if(lock == ZERO)
+			lock = Lock(actual_path_name, SHARED_LOCK);
+			if (lock == ZERO)
 			{
 				__set_errno(__translate_access_io_error_to_errno(IoErr()));
 				goto out;
 			}
 		}
 	}
-	#else
+#else
 	{
-		D(("trying to get a lock on '%s'",path_name));
+		D(("trying to get a lock on '%s'", path_name));
 
 		PROFILE_OFF();
-		lock = Lock((STRPTR)path_name,SHARED_LOCK);
+		lock = Lock((STRPTR)path_name, SHARED_LOCK);
 		PROFILE_ON();
 
-		if(lock == ZERO)
+		if (lock == ZERO)
 		{
 			__set_errno(__translate_access_io_error_to_errno(IoErr()));
 			goto out;
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	if((mode != F_OK) && (mode & (R_OK|W_OK|X_OK)) != 0)
+	if ((mode != F_OK) && (mode & (R_OK | W_OK | X_OK)) != 0)
 	{
-		D_S(struct FileInfoBlock,fib);
-
-		#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 		{
-			if(lock == ZERO)
+			if (lock == ZERO)
 			{
-				memset(fib,0,sizeof(*fib));
+				memset(status, 0, sizeof(*status));
 
 				/* This is a simulated directory which cannot be
 				 * modified under program control.
+				 * TODO - CHECK THIS UNDER OS4 AND EXAMINEOBJECT!
 				 */
-				fib->fib_Protection		= FIBF_WRITE;
-				fib->fib_DirEntryType	= ST_ROOT;
+				status->Protection = EXDF_NO_WRITE;
+				status->Type = FSO_TYPE_DIRECTORY;
 			}
 			else
 			{
-				LONG status;
 
 				PROFILE_OFF();
-				status = Examine(lock,fib);
+				status = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
 				PROFILE_ON();
 
-				if(status == DOSFALSE)
+				if (status == NULL)
 				{
 					SHOWMSG("couldn't examine");
 
@@ -168,15 +166,13 @@ access(const char * path_name, int mode)
 				}
 			}
 		}
-		#else
+#else
 		{
-			LONG status;
-
 			PROFILE_OFF();
-			status = Examine(lock,fib);
+			status = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
 			PROFILE_ON();
 
-			if(status == DOSFALSE)
+			if (status == DOSFALSE)
 			{
 				SHOWMSG("couldn't examine");
 
@@ -184,13 +180,11 @@ access(const char * path_name, int mode)
 				goto out;
 			}
 		}
-		#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-		fib->fib_Protection ^= FIBF_READ|FIBF_WRITE|FIBF_EXECUTE|FIBF_DELETE;
-
-		if(FLAG_IS_SET(mode,R_OK))
+		if (FLAG_IS_SET(mode, R_OK))
 		{
-			if(FLAG_IS_CLEAR(fib->fib_Protection,FIBF_READ))
+			if (FLAG_IS_SET(status->Protection, EXDB_NO_READ))
 			{
 				SHOWMSG("not readable");
 
@@ -199,41 +193,44 @@ access(const char * path_name, int mode)
 			}
 		}
 
-		if(FLAG_IS_SET(mode,W_OK))
+		if (FLAG_IS_SET(mode, W_OK))
 		{
-			if(FLAG_IS_CLEAR(fib->fib_Protection,FIBF_WRITE) ||
-			   FLAG_IS_CLEAR(fib->fib_Protection,FIBF_DELETE))
+			if (FLAG_IS_SET(status->Protection, EXDF_NO_WRITE) ||
+				FLAG_IS_SET(status->Protection, EXDF_NO_DELETE))
 			{
 				SHOWMSG("not writable");
 
 				__set_errno(EACCES);
 				goto out;
-			}	
+			}
 		}
 
-		if(FLAG_IS_SET(mode,X_OK))
+		if (FLAG_IS_SET(mode, X_OK))
 		{
 			/* Note: 'X' means 'search' for directories, which is always
 			 *       permitted on the Amiga.
 			 */
-			if((fib->fib_DirEntryType < 0) && FLAG_IS_CLEAR(fib->fib_Protection,FIBF_EXECUTE))
+			if ((!EXD_IS_DIRECTORY(status)) && FLAG_IS_SET(status->Protection, EXDF_NO_EXECUTE))
 			{
 				SHOWMSG("not executable");
 
 				__set_errno(EACCES);
 				goto out;
-			}	
+			}
 		}
 	}
 
 	result = OK;
 
- out:
+out:
+	if (status != NULL) {
+		FreeDosObject(DOS_EXAMINEDATA, status);
+	}
 
 	PROFILE_OFF();
 	UnLock(lock);
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

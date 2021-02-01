@@ -43,8 +43,7 @@
 
 /****************************************************************************/
 
-void
-setbuf(FILE *stream,char *buf)
+void setbuf(FILE *stream, char *buf)
 {
 	ENTER();
 
@@ -53,12 +52,12 @@ setbuf(FILE *stream,char *buf)
 
 	assert(stream != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(stream == NULL)
+		if (stream == NULL)
 		{
 			SHOWMSG("invalid stream parameter");
 
@@ -66,14 +65,14 @@ setbuf(FILE *stream,char *buf)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	if(buf == NULL)
-		setvbuf(stream,NULL,IOBF_BUFFER_MODE_NONE,0);
+	if (buf == NULL)
+		setvbuf(stream, NULL, IOBF_BUFFER_MODE_NONE, 0);
 	else
-		setvbuf(stream,buf,IOBF_BUFFER_MODE_FULL,BUFSIZ);
+		setvbuf(stream, buf, IOBF_BUFFER_MODE_FULL, BUFSIZ);
 
- out:
+out:
 
 	LEAVE();
 }

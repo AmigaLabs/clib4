@@ -47,13 +47,12 @@
 
 /****************************************************************************/
 
-int
-symlink(const char * actual_path, const char * symbolic_path)
+int symlink(const char *actual_path, const char *symbolic_path)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info actual_path_name_nti;
 	struct name_translation_info symbolic_path_name_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 	int result = ERROR;
 	LONG status;
 
@@ -62,14 +61,14 @@ symlink(const char * actual_path, const char * symbolic_path)
 	SHOWSTRING(actual_path);
 	SHOWSTRING(symbolic_path);
 
-	assert( actual_path != NULL && symbolic_path != NULL );
+	assert(actual_path != NULL && symbolic_path != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(actual_path == NULL || symbolic_path == NULL)
+		if (actual_path == NULL || symbolic_path == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -77,13 +76,13 @@ symlink(const char * actual_path, const char * symbolic_path)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
-			if(actual_path[0] == '\0' || symbolic_path[0] == '\0')
+			if (actual_path[0] == '\0' || symbolic_path[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -91,28 +90,28 @@ symlink(const char * actual_path, const char * symbolic_path)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&actual_path,&actual_path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&actual_path, &actual_path_name_nti) != 0)
 				goto out;
 
-			if(__translate_unix_to_amiga_path_name(&symbolic_path,&symbolic_path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&symbolic_path, &symbolic_path_name_nti) != 0)
 				goto out;
 
-			if(actual_path_name_nti.is_root || symbolic_path_name_nti.is_root)
+			if (actual_path_name_nti.is_root || symbolic_path_name_nti.is_root)
 			{
 				__set_errno(EACCES);
 				goto out;
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
 	SHOWMSG("trying to make that link");
 
 	PROFILE_OFF();
-	status = MakeLink((STRPTR)symbolic_path,(LONG)actual_path,LINK_SOFT);
+	status = MakeLink((STRPTR)symbolic_path, (APTR)actual_path, LINK_SOFT);
 	PROFILE_ON();
 
-	if(status == DOSFALSE)
+	if (status == DOSFALSE)
 	{
 		SHOWMSG("that didn't work");
 
@@ -122,8 +121,8 @@ symlink(const char * actual_path, const char * symbolic_path)
 
 	result = OK;
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

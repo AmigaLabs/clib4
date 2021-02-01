@@ -1,5 +1,5 @@
 /*
- * $Id$
+ * $Id: profile_gmn.c,v 1.0 2021-01-18 12:04:26 apalmate Exp $
  *
  * :ts=4
  *
@@ -43,25 +43,24 @@
 
 #include "profile_gmon.h"
 #undef DebugPrintF
-#define dprintf(format, args...)((struct ExecIFace *)((*(struct ExecBase **)4)->MainInterface))->DebugPrintF("[%s] " format, __PRETTY_FUNCTION__ , ## args)
+#define dprintf(format, args...) ((struct ExecIFace *)((*(struct ExecBase **)4)->MainInterface))->DebugPrintF("[%s] " format, __PRETTY_FUNCTION__, ##args)
 
 struct gmonparam _gmonparam =
-{
-	state: kGmonProfOn
-};
+	{
+		state : kGmonProfOn
+	};
 
 static unsigned int s_scale;
 
 void moncontrol(int);
 void monstartup(uint32, uint32);
 void moncleanup(void);
-void mongetpcs(uint32* lowpc, uint32 *highpc);
+void mongetpcs(uint32 *lowpc, uint32 *highpc);
 
 extern int profil(uint16 *buffer, uint32 bufSize,
-	uint32 offset, uint32 scale);
+				  uint32 offset, uint32 scale);
 
-void
-monstartup(uint32 low_pc, uint32 high_pc)
+void monstartup(uint32 low_pc, uint32 high_pc)
 {
 	uint8 *cp;
 	uint32 lowpc, highpc;
@@ -85,8 +84,8 @@ monstartup(uint32 low_pc, uint32 high_pc)
 	 * Round lowpc and highpc to multiples of the density
 	 * to prevent using floating point scaling
 	 */
-	p->lowpc 	= ROUNDDOWN(lowpc, HISTFRACTION * sizeof(HISTCOUNTER));
-	p->highpc	= ROUNDUP(highpc, HISTFRACTION * sizeof(HISTCOUNTER));
+	p->lowpc = ROUNDDOWN(lowpc, HISTFRACTION * sizeof(HISTCOUNTER));
+	p->highpc = ROUNDUP(highpc, HISTFRACTION * sizeof(HISTCOUNTER));
 
 	/* Size of the text segment */
 	p->textsize = p->highpc - p->lowpc;
@@ -118,8 +117,7 @@ monstartup(uint32 low_pc, uint32 high_pc)
 	dprintf("fromssize = %d\n", p->fromssize);
 	dprintf("tolimit = %d, tossize = %d\n", p->tolimit, p->tossize);
 
-	cp = (uint8*)AllocMem(p->kcountsize + p->fromssize + p->tossize,
-		MEMF_CLEAR);
+	cp = (uint8 *)AllocVecTags(p->kcountsize + p->fromssize + p->tossize, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
 	if (!cp)
 	{
 		p->state = kGmonProfError;
@@ -149,8 +147,7 @@ monstartup(uint32 low_pc, uint32 high_pc)
 	moncontrol(1);
 }
 
-void
-moncontrol(int mode)
+void moncontrol(int mode)
 {
 	struct gmonparam *p = &_gmonparam;
 
@@ -158,7 +155,7 @@ moncontrol(int mode)
 	{
 		/* Start profiling. */
 		profil((uint16 *)p->kcount, (size_t)p->kcountsize,
-		   p->lowpc, s_scale);
+			   p->lowpc, s_scale);
 		p->state = kGmonProfOn;
 	}
 	else
@@ -169,8 +166,7 @@ moncontrol(int mode)
 	}
 }
 
-void
-moncleanup(void)
+void moncleanup(void)
 {
 	BPTR fd;
 	int fromindex;
@@ -217,35 +213,36 @@ moncleanup(void)
 
 	for (fromindex = 0; fromindex < endfrom; fromindex++)
 	{
-		if (p->froms[fromindex] == 0) continue;
+		if (p->froms[fromindex] == 0)
+			continue;
 
 		frompc = 0; /* FIXME: was p->lowpc; needs to be 0 and assumes
 		               -Ttext=0 on compile. Better idea? */
-		frompc += fromindex * p->hashfraction * sizeof (*p->froms);
+		frompc += fromindex * p->hashfraction * sizeof(*p->froms);
 		for (toindex = p->froms[fromindex]; toindex != 0;
-			toindex = p->tos[toindex].link)
+			 toindex = p->tos[toindex].link)
 		{
 #ifdef DEBUG
-			if (log) fprintf(log, "%p called from %p: %d times\n", frompc,
-				p->tos[toindex].selfpc,
-				p->tos[toindex].count);
+			if (log)
+				fprintf(log, "%p called from %p: %d times\n", frompc,
+						p->tos[toindex].selfpc,
+						p->tos[toindex].count);
 #endif
 			rawarc.raw_frompc = frompc;
 			rawarc.raw_selfpc = p->tos[toindex].selfpc;
-			rawarc.raw_count  = p->tos[toindex].count;
+			rawarc.raw_count = p->tos[toindex].count;
 			Write(fd, &rawarc, sizeof(rawarc));
 		}
 	}
 
 #ifdef DEBUG
-	if (log) fclose(log);
+	if (log)
+		fclose(log);
 #endif
 	Close(fd);
-
 }
 
-void
-mongetpcs(uint32* lowpc, uint32 *highpc)
+void mongetpcs(uint32 *lowpc, uint32 *highpc)
 {
 	struct Library *ElfBase = NULL;
 	struct ElfIFace *IElf = NULL;
@@ -260,36 +257,39 @@ mongetpcs(uint32* lowpc, uint32 *highpc)
 	*highpc = 0;
 
 	ElfBase = OpenLibrary("elf.library", 0L);
-	if (!ElfBase) goto out;
+	if (!ElfBase)
+		goto out;
 
 	IElf = (struct ElfIFace *)GetInterface(ElfBase, "main", 1, NULL);
-	if (!IElf) goto out;
+	if (!IElf)
+		goto out;
 
 	self = (struct Process *)FindTask(0);
 	seglist = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
 
 	GetSegListInfoTags(seglist,
-		GSLI_ElfHandle,		&elfHandle,
-	TAG_DONE);
+					   GSLI_ElfHandle, &elfHandle,
+					   TAG_DONE);
 
 	elfHandle = OpenElfTags(
-		OET_ElfHandle,		elfHandle,
-	TAG_DONE);
+		OET_ElfHandle, elfHandle,
+		TAG_DONE);
 
-	if (!elfHandle) goto out;
+	if (!elfHandle)
+		goto out;
 
 	GetElfAttrsTags(elfHandle, EAT_NumSections, &numSections, TAG_DONE);
 
 	for (i = 0; i < numSections; i++)
 	{
 		shdr = GetSectionHeaderTags(elfHandle,
-			GST_SectionIndex, i,
-		TAG_DONE);
+									GST_SectionIndex, i,
+									TAG_DONE);
 		if (shdr && (shdr->sh_flags & SWF_EXECINSTR))
 		{
 			uint32 base = (uint32)GetSectionTags(elfHandle,
-				GST_SectionIndex, i,
-			TAG_DONE);
+												 GST_SectionIndex, i,
+												 TAG_DONE);
 			*lowpc = base;
 			*highpc = base + shdr->sh_size;
 			break;
@@ -299,10 +299,11 @@ mongetpcs(uint32* lowpc, uint32 *highpc)
 	CloseElfTags(elfHandle, CET_ReClose, TRUE, TAG_DONE);
 
 out:
-	if (IElf) DropInterface((struct Interface *)IElf);
-	if (ElfBase) CloseLibrary(ElfBase);
+	if (IElf)
+		DropInterface((struct Interface *)IElf);
+	if (ElfBase)
+		CloseLibrary(ElfBase);
 }
-
 
 #include "macros.h"
 
@@ -311,7 +312,7 @@ void __profiler_exit(void) __attribute__((destructor));
 
 int __profiler_init(void)
 {
-	monstartup(0,0);
+	monstartup(0, 0);
 	return OK;
 }
 

@@ -10,11 +10,9 @@
 LIBS += \
 	lib/libamiga.a \
 	lib/soft-float/libamiga.a \
-	lib/small-data/libamiga.a \
 	lib/baserel/libamiga.a \
 	lib.threadsafe/libamiga.a \
 	lib.threadsafe/soft-float/libamiga.a \
-	lib.threadsafe/small-data/libamiga.a \
 	lib.threadsafe/baserel/libamiga.a
 
 ##############################################################################
@@ -28,7 +26,6 @@ AMIGA_LIB = \
 	amiga_argint.o \
 	amiga_argstring.o \
 	amiga_beginio.o \
-	amiga_callhooka.o \
 	amiga_coercemethod.o \
 	amiga_createextio.o \
 	amiga_createport.o \
@@ -59,11 +56,9 @@ AMIGA_LIB = \
 
 obj/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
 obj/soft-float/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
-obj/small-data/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
 obj/baserel/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
 obj.threadsafe/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
 obj.threadsafe/soft-float/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
-obj.threadsafe/small-data/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
 obj.threadsafe/baserel/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
 
 ##############################################################################
@@ -74,10 +69,6 @@ obj/libamiga/%.o : %.c
 
 obj/soft-float/libamiga/%.o : CFLAGS += $(SOFTFLOAT)
 obj/soft-float/libamiga/%.o : %.c
-	@$(COMPILE)
-
-obj/small-data/libamiga/%.o : CFLAGS += $(SMALLDATA)
-obj/small-data/libamiga/%.o : %.c
 	@$(COMPILE)
 
 obj/baserel/libamiga/%.o : CFLAGS += $(BASEREL)
@@ -92,10 +83,6 @@ obj.threadsafe/soft-float/libamiga/%.o : CFLAGS += $(THREADSAFE) $(SOFTFLOAT)
 obj.threadsafe/soft-float/libamiga/%.o : %.c
 	@$(COMPILE)
 
-obj.threadsafe/small-data/libamiga/%.o : CFLAGS += $(THREADSAFE) $(SMALLDATA)
-obj.threadsafe/small-data/libamiga/%.o : %.c
-	@$(COMPILE)
-
 obj.threadsafe/baserel/libamiga/%.o : CFLAGS += $(THREADSAFE) $(BASEREL)
 obj.threadsafe/baserel/libamiga/%.o : %.c
 	@$(COMPILE)
@@ -108,9 +95,6 @@ lib/libamiga.a : $(addprefix obj/libamiga/,$(AMIGA_LIB))
 lib/soft-float/libamiga.a : $(addprefix obj/soft-float/libamiga/,$(AMIGA_LIB))
 	@$(MAKELIB)
 
-lib/small-data/libamiga.a : $(addprefix obj/small-data/libamiga/,$(AMIGA_LIB))
-	@$(MAKELIB)
-
 lib/baserel/libamiga.a : $(addprefix obj/baserel/libamiga/,$(AMIGA_LIB))
 	@$(MAKELIB)
 
@@ -118,9 +102,6 @@ lib.threadsafe/libamiga.a : $(addprefix obj.threadsafe/libamiga/,$(AMIGA_LIB))
 	@$(MAKELIB)
 
 lib.threadsafe/soft-float/libamiga.a : $(addprefix obj.threadsafe/soft-float/libamiga/,$(AMIGA_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/small-data/libamiga.a : $(addprefix obj.threadsafe/small-data/libamiga/,$(AMIGA_LIB))
 	@$(MAKELIB)
 
 lib.threadsafe/baserel/libamiga.a : $(addprefix obj.threadsafe/baserel/libamiga/,$(AMIGA_LIB))
