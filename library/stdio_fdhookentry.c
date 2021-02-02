@@ -56,7 +56,7 @@ int __fd_hook_entry(
 	struct fd *fd,
 	struct file_action_message *fam)
 {
-	struct ExamineData *fib = NULL;
+	struct ExamineData *exd = NULL;
 	BOOL fib_is_valid = FALSE;
 	struct FileHandle *fh;
 	off_t current_position;
@@ -137,7 +137,7 @@ int __fd_hook_entry(
 				   to check whether this was an error or a numeric
 				   overflow. */
 			position = ChangeFilePosition(file, 0, OFFSET_END);
-			if (position != SEEK_ERROR || IoErr() == OK)
+			if (position != 0)
 				fd->fd_Position = GetFilePosition(file);
 
 			PROFILE_ON();
@@ -386,12 +386,12 @@ int __fd_hook_entry(
 			position = GetFilePosition(file);
 			PROFILE_ON();
 
-			/* Note that a return value of -1 (= SEEK_ERROR) may be a
+			/* Note that a return value of -1 (= CHANGE_FILE_ERROR) may be a
 				   valid file position in files larger than 2 GBytes. Just
 				   to be sure, we therefore also check the secondary error
 				   to verify that what could be a file position is really
 				   an error indication. */
-			if (position == SEEK_ERROR && IoErr() != OK)
+			if (position == CHANGE_FILE_ERROR || IoErr() != OK)
 			{
 				fam->fam_Error = EBADF;
 				goto out;
@@ -415,12 +415,13 @@ int __fd_hook_entry(
 			break;
 
 		case OFFSET_END:
-			fib = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
-			if (fib != NULL)
+			exd = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
+			if (exd != NULL)
 			{
-				new_position = fib->FileSize + fam->fam_Offset;
+				new_position = exd->FileSize + fam->fam_Offset;
 
 				fib_is_valid = TRUE;
+				FreeDosObject(DOS_EXAMINEDATA, exd);
 			}
 
 			break;
@@ -437,7 +438,7 @@ int __fd_hook_entry(
 			/* Same as above: verify that what we got out of
 				   Seek() is really an error and not a valid
 				   file position. */
-			if (position == SEEK_ERROR && IoErr() != OK)
+			if (position == CHANGE_FILE_ERROR)
 			{
 				D(("seek failed, fam->fam_Mode=%ld (%ld), offset=%ld, ioerr=%ld", new_mode, fam->fam_Mode, fam->fam_Offset, IoErr()));
 
@@ -449,16 +450,18 @@ int __fd_hook_entry(
 						   the new file position. First, we need to find out if the file
 						   is really shorter than required. If not, then it must have
 						   been a different error. */
-					fib = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
-					if ((NOT fib_is_valid && fib == NULL) || (new_position <= (off_t)fib->FileSize))
+					exd = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
+					if ((NOT fib_is_valid && exd == NULL) || (exd == NULL) || (new_position <= (off_t)exd->FileSize))
 						goto out;
 
 					/* Now try to make that file larger. */
-					if (__grow_file_size(fd, new_position - (off_t)fib->FileSize) < 0)
+					if (__grow_file_size(fd, new_position - (off_t)exd->FileSize) < 0)
 					{
 						fam->fam_Error = __translate_io_error_to_errno(IoErr());
+						FreeDosObject(DOS_EXAMINEDATA, exd);
 						goto out;
 					}
+					FreeDosObject(DOS_EXAMINEDATA, exd);
 				}
 #else
 				{
@@ -555,6 +558,9 @@ int __fd_hook_entry(
 					goto out;
 				}
 
+				/* Create an empty examineData struct */
+				struct ExamineData *examineData = malloc(sizeof (struct ExamineData));
+				fam->fam_FileInfo = examineData;
 				/* Make up some stuff for this stream. */
 				memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
 
@@ -580,9 +586,6 @@ int __fd_hook_entry(
 	}
 
 out:
-	if (fib != NULL)
-		FreeDosObject(DOS_EXAMINEDATA, fib);
-
 	__fd_unlock(fd);
 
 	if (fam->fam_Action == file_action_close)

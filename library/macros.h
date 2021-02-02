@@ -51,6 +51,7 @@
 #define OK (0)
 #define SAME (0)
 #define SEEK_ERROR (-1)
+#define CHANGE_FILE_ERROR (0)
 #define ERROR (-1)
 
 /****************************************************************************/

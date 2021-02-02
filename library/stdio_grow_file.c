@@ -107,7 +107,7 @@ int __grow_file_size(struct fd *fd, int num_bytes)
 	seek_position = ChangeFilePosition(fd->fd_File, 0, OFFSET_END);
 	PROFILE_ON();
 
-	if (seek_position == SEEK_ERROR && IoErr() != OK)
+	if (seek_position == CHANGE_FILE_ERROR)
 	{
 		SHOWMSG("could not move to the end of the file");
 		goto out;

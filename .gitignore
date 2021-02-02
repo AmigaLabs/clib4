@@ -4,3 +4,4 @@
 /library/netinclude
 *.map
 .vscode
+build/

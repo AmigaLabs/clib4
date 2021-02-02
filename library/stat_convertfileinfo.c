@@ -117,7 +117,7 @@ void __convert_file_info_to_stat(
 
 	mtime = __convert_datestamp_to_time(&fib->Date);
 
-	if (EXD_IS_DIRECTORY(fib))
+	if (!EXD_IS_DIRECTORY(fib))
 	{
 		st->st_nlink = 1;
 		st->st_size = fib->FileSize;

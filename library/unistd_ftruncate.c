@@ -116,79 +116,14 @@ int ftruncate(int file_descriptor, off_t length)
 	}
 
 	current_file_size = (off_t)fib->FileSize;
+	initial_position = GetFilePosition(fd->fd_File);
 
-	/* Is the file to be made shorter than it is right now? */
-	if (length < current_file_size)
+	if (ChangeFileSize(fd->fd_File, length, OFFSET_BEGINNING) == CHANGE_FILE_ERROR || IoErr() != OK)
 	{
-		/* Remember where we started. */
-		if (NOT initial_position_valid)
-		{
-			initial_position = GetFilePosition(fd->fd_File);
-			if (initial_position == SEEK_ERROR && IoErr() != OK)
-				goto out;
+		D(("could not reduce file to size %ld", length));
 
-			initial_position_valid = TRUE;
-		}
-
-		/* Careful: seek to a position where the file can be safely truncated. */
-		if (ChangeFilePosition(fd->fd_File, length, OFFSET_BEGINNING) == SEEK_ERROR && IoErr() != OK)
-		{
-			D(("could not move to file offset %ld", length));
-
-			__set_errno(__translate_io_error_to_errno(IoErr()));
-			goto out;
-		}
-
-		if (ChangeFileSize(fd->fd_File, length, OFFSET_BEGINNING) == SEEK_ERROR)
-		{
-			D(("could not reduce file to size %ld", length));
-
-			__set_errno(__translate_io_error_to_errno(IoErr()));
-			goto out;
-		}
-
-		/* If the file is now shorter than the file position, which must
-		   not be changed by a call to ftruncate(), extend the file again,
-		   filling the extension with 0 bytes. */
-		if ((off_t)initial_position > length)
-		{
-			current_file_size = length;
-
-			length = (off_t)initial_position;
-		}
-	}
-
-	/* Is the size of the file to grow? */
-	if (length > current_file_size)
-	{
-		/* Remember where we started. */
-		if (NOT initial_position_valid)
-		{
-			initial_position = GetFilePosition(fd->fd_File);
-			if (initial_position == SEEK_ERROR && IoErr() != OK)
-				goto out;
-
-			initial_position_valid = TRUE;
-		}
-
-		/* Move to what should be the end of the file. */
-		if (ChangeFilePosition(fd->fd_File, current_file_size, OFFSET_BEGINNING) == SEEK_ERROR && IoErr() != OK)
-		{
-			D(("could not move to file offset %ld", current_file_size));
-
-			__set_errno(__translate_io_error_to_errno(IoErr()));
-			goto out;
-		}
-
-		/* Add as many bytes to the end of the file as are required
-		   to make it as large as requested. */
-		if (__grow_file_size(fd, length - current_file_size) != OK)
-		{
-			D(("could not extend file to size %ld", length));
-
-			__set_errno(__translate_io_error_to_errno(IoErr()));
-			goto out;
-		}
+		__set_errno(__translate_io_error_to_errno(IoErr()));
+		goto out;
 	}
 
 	result = OK;
@@ -197,8 +132,7 @@ out:
 
 	/* ftruncate() may change the size of the file, but it may
 	   not change the current file position. */
-	if (initial_position_valid)
-		ChangeFilePosition(fd->fd_File, initial_position, OFFSET_CURRENT);
+	ChangeFilePosition(fd->fd_File, initial_position, OFFSET_BEGINNING);
 
 	if (fib != NULL)
 		FreeDosObject(DOS_EXAMINEDATA, fib);

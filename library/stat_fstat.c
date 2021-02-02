@@ -50,7 +50,7 @@
 int fstat(int file_descriptor, struct stat *buffer)
 {
 	struct file_action_message fam;
-	struct ExamineData *fib = NULL;
+	struct ExamineData fib;
 	struct fd *fd = NULL;
 	int result = ERROR;
 
@@ -94,7 +94,7 @@ int fstat(int file_descriptor, struct stat *buffer)
 	SHOWMSG("calling the hook");
 
 	fam.fam_Action = file_action_examine;
-	fam.fam_FileInfo = fib;
+	fam.fam_FileInfo = &fib;
 	fam.fam_FileSystem = NULL;
 
 	assert(fd->fd_Action != NULL);
@@ -105,7 +105,7 @@ int fstat(int file_descriptor, struct stat *buffer)
 		goto out;
 	}
 
-	__convert_file_info_to_stat(fam.fam_FileSystem, fib, buffer);
+	__convert_file_info_to_stat(fam.fam_FileSystem, fam.fam_FileInfo, buffer);
 
 	result = OK;
 
