@@ -543,38 +543,41 @@ int __termios_console_hook(
 
 			fam->fam_FileInfo->Type = ST_NIL;
 		}
-		else if (CANNOT __safe_examine_file_handle(file, fam->fam_FileInfo))
+		else
 		{
-			LONG error;
+			fam->fam_FileInfo = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
+			if (fam->fam_FileInfo == NULL) {
+				LONG error;
 
-			/* So that didn't work. Did the file system simply fail to
-				   respond to the request or is something more sinister
-				   at work? */
-			error = IoErr();
-			if (error != ERROR_ACTION_NOT_KNOWN)
-			{
-				SHOWMSG("couldn't examine the file");
+				/* So that didn't work. Did the file system simply fail to
+					respond to the request or is something more sinister
+					at work? */
+				error = IoErr();
+				if (error != ERROR_ACTION_NOT_KNOWN)
+				{
+					SHOWMSG("couldn't examine the file");
 
-				fam->fam_Error = __translate_io_error_to_errno(error);
-				goto out;
+					fam->fam_Error = __translate_io_error_to_errno(error);
+					goto out;
+				}
+
+				/* OK, let's have another look at this file. Could it be a
+					console stream? */
+				if (NOT IsInteractive(file))
+				{
+					SHOWMSG("whatever it is, we don't know");
+
+					fam->fam_Error = ENOSYS;
+					goto out;
+				}
+
+				/* Make up some stuff for this stream. */
+				memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
+
+				DateStamp(&fam->fam_FileInfo->Date);
+
+				fam->fam_FileInfo->Type = ST_CONSOLE;
 			}
-
-			/* OK, let's have another look at this file. Could it be a
-				   console stream? */
-			if (NOT IsInteractive(file))
-			{
-				SHOWMSG("whatever it is, we don't know");
-
-				fam->fam_Error = ENOSYS;
-				goto out;
-			}
-
-			/* Make up some stuff for this stream. */
-			memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
-
-			DateStamp(&fam->fam_FileInfo->Date);
-
-			fam->fam_FileInfo->Type = ST_CONSOLE;
 		}
 
 		fam->fam_FileSystem = fh->fh_Type;

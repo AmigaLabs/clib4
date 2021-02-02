@@ -87,7 +87,11 @@ struct _clib2 *__global_clib2 = NULL;
 
 extern struct Library NOCOMMON *__ElfBase;
 extern struct ElfIFace NOCOMMON *__IElf;
+
 /****************************************************************************/
+BOOL open_libraries(struct ExecIFace *iexec);
+/****************************************************************************/
+
 
 STATIC int
 call_main(void)

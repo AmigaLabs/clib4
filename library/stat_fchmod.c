@@ -43,7 +43,7 @@
 
 int fchmod(int file_descriptor, mode_t mode)
 {
-	struct ExamineData *fib;
+	struct ExamineData *fib = NULL;
 	ULONG protection;
 	BPTR parent_dir = ZERO;
 	BPTR old_current_dir = ZERO;
@@ -138,7 +138,8 @@ int fchmod(int file_descriptor, mode_t mode)
 	}
 
 	PROFILE_OFF();
-	success = __safe_examine_file_handle(fd->fd_File, fib);
+	fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+	success = (fib != NULL);
 	PROFILE_ON();
 
 	if (NO success)

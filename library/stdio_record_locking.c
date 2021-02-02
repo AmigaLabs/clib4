@@ -387,7 +387,8 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr)
 	 * and the name of the file for later use in
 	 * comparisons.
 	 */
-	if (CANNOT __safe_examine_file_handle(fd->fd_File, fib))
+	fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+	if (fib == NULL)
 	{
 		SHOWMSG("couldn't examine file handle");
 
@@ -518,7 +519,8 @@ find_file_lock_node_by_file_handle(
 
 	(*result_ptr) = NULL;
 
-	if (CANNOT __safe_examine_file_handle(file_handle, this_fib))
+	this_fib = ExamineObjectTags(EX_FileHandleInput, file_handle, TAG_DONE);
+	if (this_fib == NULL)
 	{
 		SHOWMSG("couldn't examine file handle");
 
@@ -813,8 +815,8 @@ int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_
 	case SEEK_END:
 
 		SHOWMSG("SEEK_END");
-
-		if (CANNOT __safe_examine_file_handle(file_handle, fib))
+		fib = ExamineObjectTags(EX_FileHandleInput, file_handle, TAG_DONE);
+		if (fib == NULL)
 		{
 			SHOWMSG("could not examine file");
 
@@ -895,8 +897,8 @@ int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_
 		SHOWMSG("F_SETLKW");
 
 		D(("  locking %ld..%ld", start, stop));
-
-		if (NOT fib_is_valid && CANNOT __safe_examine_file_handle(file_handle, fib))
+		fib = ExamineObjectTags(EX_FileHandleInput, file_handle, TAG_DONE);
+		if (NOT fib_is_valid && fib == NULL)
 		{
 			SHOWMSG("couldn't read this file's name");
 

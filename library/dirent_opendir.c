@@ -241,6 +241,18 @@ DIR *opendir(const char *path_name)
 			__set_errno(ENOTDIR);
 			goto out;
 		}
+
+		dh->dh_Context = ObtainDirContextTags(EX_FileLockInput, dh->dh_DirLock,
+											  EX_DoCurrentDir, TRUE,
+											  EX_DataFields, EXF_ALL,
+											  TAG_END);
+		if (dh->dh_Context == NULL)
+		{
+			SHOWMSG("couldn't examine it");
+
+			__set_errno(__translate_io_error_to_errno(IoErr()));
+			goto out;
+		}
 	}
 
 	SHOWMSG("OK, done");
