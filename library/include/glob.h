@@ -2,7 +2,8 @@
 #ifndef _GLOB_H_
 #define	_GLOB_H_
 
-#include <sys/cdefs.h>
+#include <features.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -40,7 +41,6 @@ typedef struct {
 #define	GLOB_NOMATCH    (-3)	/* No match, and GLOB_NOCHECK was not set. */
 #define	GLOB_NOSYS      (-4)	/* Implementation does not support function. */
 
-#if !defined(_POSIX_SOURCE) && !defined(_XOPEN_SOURCE)
 #define	GLOB_ALTDIRFUNC 0x0040	/* Use alternately specified directory funcs. */
 #define	GLOB_BRACE      0x0080	/* Expand braces ala csh. */
 #define	GLOB_MAGCHAR    0x0100	/* Pattern had globbing characters. */
@@ -50,7 +50,6 @@ typedef struct {
 #define	GLOB_QUOTE      0x0000	/* source compatibility */
 
 #define	GLOB_ABEND GLOB_ABORTED	/* source compatibility */
-#endif
 
 __BEGIN_DECLS
 

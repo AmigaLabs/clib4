@@ -42,6 +42,7 @@
 #define _NETDB_H
 
 /****************************************************************************/
+#include <features.h>
 
 #ifndef _SYS_SOCKET_H
 #include <sys/socket.h>
@@ -237,7 +238,7 @@ errors[] = {
     	{EAI_NOTCANCELED, 	"Request not canceled" },
     	{EAI_ALLDONE, 		"All requests done" },
     	{EAI_INTR, 		"Interrupted by a signal" },
-    	{EAI_IDN_ENCODE, 	"Parameter string not correctly encoded" }
+    	{EAI_IDN_ENCODE, 	"Parameter string not correctly encoded" },
 #endif
         {0,                     NULL},
 };

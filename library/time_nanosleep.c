@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_usleep.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: unistd_usleep.c,v 1.4 2021-02-02 18:49:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -48,15 +48,13 @@
 int 
 nanosleep(const struct timespec *req, struct timespec *rem)
 {
+        struct timeval tv;
         ENTER();
 
-	unsigned long microseconds = (req->tv_sec * 1000000) + (req->tv_nsec / 1000);
+        TIMESPEC_TO_TIMEVAL(&tv, req);
 
-        SHOWVALUE(microseconds);
+        int result = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
 
-	// errno is set in __time_delay if it is break by a signal
-        __time_delay(0,microseconds);
-
-        RETURN(0);
-        return 0;
+        RETURN(result);
+        return result;
 }

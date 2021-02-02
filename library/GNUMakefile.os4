@@ -65,7 +65,7 @@ WARNINGS := \
 
 INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE)
 #WARNINGS   := -Werror -Wno-cast-function-type -Wno-array-bounds -Wno-unused-value 
- OPTIONS   := -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -fno-common $(WARNINGS) -DUNIX_PATH_SEMANTICS -Wno-error=array-bounds -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter -std=c99 -nostdlib
+ OPTIONS   := -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common $(WARNINGS) -DUNIX_PATH_SEMANTICS -Wno-error=array-bounds -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter -std=c99 -nostdlib
 OPTIMIZE   := -DNDEBUG -O3 -fno-inline
 
 DEBUG     := -ggdb

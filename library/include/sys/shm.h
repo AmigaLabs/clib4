@@ -112,15 +112,6 @@ struct msqid_ds
 
 #define SEM_UNDO 020000
 
-/* for semop() */
-
-struct sembuf
-{
-    uint16_t sem_num;
-    int16_t sem_op;
-    int16_t sem_flg;
-};
-
 struct semid_ds
 {
     struct ipc_perm sem_perm;
