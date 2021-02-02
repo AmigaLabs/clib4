@@ -60,8 +60,12 @@
 #include <proto/dos.h>
 
 /****************************************************************************/
+extern struct Library NOCOMMON *__ElfBase;
+extern struct ElfIFace NOCOMMON *__IElf;
 
 STATIC BOOL lib_init_successful;
+extern void _clib_exit(void);
+extern void _start(void);
 
 /****************************************************************************/
 
@@ -69,44 +73,39 @@ STATIC BOOL
 open_libraries(struct Library *sys_base)
 {
 	BOOL success = FALSE;
-	int os_version;
 
 	SysBase = sys_base;
 
-#if defined(__amigaos4__)
-	{
-		/* Get exec interface */
-		IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
-	}
-#endif /* __amigaos4__ */
-
-	/* Check which minimum operating system version we actually require. */
-	os_version = 37;
-	if (__minimum_os_lib_version > 37)
-		os_version = __minimum_os_lib_version;
+	/* Get exec interface */
+	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 
 	/* Open the minimum required libraries. */
-	DOSBase = (struct Library *)OpenLibrary("dos.library", os_version);
+	DOSBase = (struct Library *)OpenLibrary("dos.library", 54);
 	if (DOSBase == NULL)
 		goto out;
 
-	__UtilityBase = OpenLibrary("utility.library", os_version);
+	__UtilityBase = OpenLibrary("utility.library", 54);
 	if (__UtilityBase == NULL)
 		goto out;
 
-#if defined(__amigaos4__)
-	{
-		/* Obtain the interfaces for these libraries. */
-		IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
-		if (IDOS == NULL)
-			goto out;
+	/* Obtain the interfaces for these libraries. */
+	IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
+	if (IDOS == NULL)
+		goto out;
 
-		__IUtility = (struct UtilityIFace *)GetInterface(__UtilityBase, "main", 1, 0);
-		if (__IUtility == NULL)
-			goto out;
-	}
-#endif /* __amigaos4__ */
+	__IUtility = (struct UtilityIFace *)GetInterface(__UtilityBase, "main", 1, 0);
+	if (__IUtility == NULL)
+		goto out;
 
+	/* We need elf.library V52.2 or higher. */
+	__ElfBase = OpenLibrary("elf.library", 0);
+	if (__ElfBase == NULL || (__ElfBase->lib_Version < 52) || (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision < 2))
+		goto out;
+
+	__IElf = (struct ElfIFace *)GetInterface(__ElfBase, "main", 1, NULL);
+	if (__IElf == NULL)
+		goto out;
+	Printf("__IElf from stdlib_lib_main = %ld\n", __IElf);
 	success = TRUE;
 
 out:
@@ -117,23 +116,19 @@ out:
 /****************************************************************************/
 
 STATIC VOID
-	close_libraries(VOID)
+close_libraries(VOID)
 {
-#if defined(__amigaos4__)
+	if (__IUtility != NULL)
 	{
-		if (__IUtility != NULL)
-		{
-			DropInterface((struct Interface *)__IUtility);
-			__IUtility = NULL;
-		}
-
-		if (IDOS != NULL)
-		{
-			DropInterface((struct Interface *)IDOS);
-			IDOS = NULL;
-		}
+		DropInterface((struct Interface *)__IUtility);
+		__IUtility = NULL;
 	}
-#endif /* __amigaos4__ */
+
+	if (IDOS != NULL)
+	{
+		DropInterface((struct Interface *)IDOS);
+		IDOS = NULL;
+	}
 
 	if (__UtilityBase != NULL)
 	{
@@ -146,12 +141,24 @@ STATIC VOID
 		CloseLibrary(DOSBase);
 		DOSBase = NULL;
 	}
+
+	if (__IElf != NULL)
+	{
+		DropInterface((struct Interface *)__IElf);
+		__IElf = NULL;
+	}
+
+	if (__ElfBase != NULL)
+	{
+		CloseLibrary(__ElfBase);
+		__ElfBase = NULL;
+	}
 }
 
 /****************************************************************************/
 
 VOID
-	__lib_exit(VOID)
+__lib_exit(VOID)
 {
 	ENTER();
 
@@ -166,7 +173,7 @@ VOID
 		(void)setjmp(__exit_jmp_buf);
 
 		/* Go through the destructor list */
-		_fini();
+		_clib_exit();
 
 		close_libraries();
 
@@ -203,7 +210,7 @@ BOOL __lib_init(struct Library *sys_base)
 		(void)setjmp(__exit_jmp_buf);
 
 		/* Go through the destructor list */
-		_fini();
+		_clib_exit();
 
 		goto out;
 	}
@@ -211,7 +218,7 @@ BOOL __lib_init(struct Library *sys_base)
 	SHOWMSG("now invoking the constructors");
 
 	/* Go through the constructor list */
-	_init();
+	_start();
 
 	/* Disable exit() and its kin. */
 	__exit_blocked = TRUE;

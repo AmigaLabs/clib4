@@ -326,7 +326,8 @@ map_descriptor_sets(
 
 					/* Let's see if we can examine the file. Some file systems
 					   may not support this. */
-					if (CANNOT __safe_examine_file_handle(fd->fd_File, fib))
+					fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+					if (fib == NULL)
 					{
 						SHOWMSG("file is unusable; we cannot examine the file.");
 						continue;
@@ -826,7 +827,8 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 									   unread data in the file, we will be able to read from it.
 									   For pipes, any data reported to be in the "file" indicates
 									   that there is something worth reading available. */
-									if (__safe_examine_file_handle(fd->fd_File, fib))
+									fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+									if (fib)
 									{
 										if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION))
 										{
@@ -1020,9 +1022,8 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 								}
 								else
 								{
-									struct ExamineData *fib;
-
-									if (__safe_examine_file_handle(fd->fd_File, fib))
+									struct ExamineData *fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+									if (fib != NULL)
 									{
 										if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION))
 										{
@@ -1034,8 +1035,6 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 											if (fib->FileSize != 0)
 												got_input = TRUE;
 										}
-									}
-									if (fib != NULL) {
 										FreeDosObject(DOS_EXAMINEDATA, fib);
 									}
 								}

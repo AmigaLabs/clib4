@@ -132,7 +132,6 @@ C_LIB := \
 	stdio_clearerr.o \
 	stdio_dropiobreadbuffer.o \
 	stdio_duplicate_fd.o \
-	stdio_examine_fh.o \
 	stdio_fclose.o \
 	stdio_fdhookentry.o \
 	stdio_feof.o \

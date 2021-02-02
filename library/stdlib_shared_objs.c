@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__amigaos4__)
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
@@ -48,11 +44,8 @@
 
 /* These are used to initialize the shared objects linked to this binary,
    and for the dlopen(), dlclose() and dlsym() functions. */
-struct Library *	__ElfBase;
-struct ElfIFace *	__IElf;
-
-/* This is used with the dlopen(), dlclose() and dlsym() functions. */
-Elf32_Handle __dl_elf_handle;
+struct Library  NOCOMMON *__ElfBase;
+struct ElfIFace NOCOMMON *__IElf;
 
 /****************************************************************************/
 
@@ -61,132 +54,51 @@ static Elf32_Handle elf_handle;
 
 /****************************************************************************/
 
-void shared_obj_init(void);
+void shared_obj_init(struct ExecIFace *iexec);
 void shared_obj_exit(void);
-
-/****************************************************************************/
-
-static VOID close_elf_library(void)
-{
-	if(__IElf != NULL)
-	{
-		DropInterface((struct Interface *)__IElf);
-		__IElf = NULL;
-	}
-		
-	if(__ElfBase != NULL)
-	{
-		CloseLibrary(__ElfBase);
-		__ElfBase = NULL;
-	}
-}
-
-/****************************************************************************/
-
-static BOOL open_elf_library(void)
-{
-	BOOL success = FALSE;
-
-	/* We need elf.library V52.2 or higher. */
-	__ElfBase = OpenLibrary("elf.library",0);
-	if(__ElfBase == NULL || (__ElfBase->lib_Version < 52) || (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision < 2))
-		goto out;
-
-	__IElf = (struct ElfIFace *)GetInterface(__ElfBase,"main",1,NULL);
-	if(__IElf == NULL)
-		goto out;
-
-	success = TRUE;
-
- out:
-
-	return(success);
-}
+extern BOOL open_libraries(struct ExecIFace *iexec);
 
 /****************************************************************************/
 
 void shared_obj_exit(void)
 {
-	struct ElfIFace * IElf = __IElf;
+	struct ElfIFace *IElf = __IElf;
 
-	#ifndef __THREAD_SAFE
+	/* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
+	if (elf_handle != NULL)
 	{
-		/* Release this program's Elf handle, if we grabbed it below. */
-		if(__dl_elf_handle != NULL)
-		{
-			CloseElfTags(__dl_elf_handle,
-				CET_ReClose,TRUE,
-			TAG_DONE);
-			
-			__dl_elf_handle = NULL;
-		}
-	}
-	#endif /* __THREAD_SAFE */
-	
-	/* If we got what we wanted, trigger the destructors,
-	   etc. in the shared objects linked to this binary. */
-	if(elf_handle != NULL)
-	{
-		InitSHLibs(elf_handle,FALSE);
+		InitSHLibs(elf_handle, FALSE);
 		elf_handle = NULL;
 	}
-
-	close_elf_library();
 }
 
 /****************************************************************************/
 
-void shared_obj_init(void)
+void shared_obj_init(struct ExecIFace *iexec)
 {
-	if(open_elf_library())
-	{
-		struct ElfIFace * IElf = __IElf;
+	/* 
+	 * if IExec is null this means we are loaded as shared object file.
+	 * We need to init all stuff we need to work correctly
+	 */
+	if (open_libraries(iexec)) {
+		struct ElfIFace *IElf = __IElf;
 		BPTR segment_list;
 
-		/* Try to find the Elf handle associated with this
-		   program's segment list. */
-		segment_list = GetProcSegList(NULL,GPSLF_CLI | GPSLF_SEG);
-		if(segment_list != ZERO)
+		/* Try to find the Elf handle associated with this program's segment list. */
+		struct Process *self = (struct Process *) FindTask(0);
+		segment_list = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
+		if (segment_list != ZERO)
 		{
-			if(GetSegListInfoTags(segment_list,
-				GSLI_ElfHandle,&elf_handle,
-			TAG_DONE) == 1)
+			int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &elf_handle, TAG_DONE);
+			if (ret == 1)
 			{
-				if(elf_handle != NULL)
+				if (elf_handle != NULL)
 				{
-					/* Trigger the constructors, etc. in the shared objects
-					   linked to this binary. */
-					InitSHLibs(elf_handle,TRUE);
+					/* Trigger the constructors, etc. in the shared objects linked to this binary. */
+					InitSHLibs(elf_handle, TRUE);
 				}
 			}
 		}
-		
-		/* Next: try to grab the Elf handle associated with the currently
-		   running process. This is not thread-safe! */
-		#ifndef __THREAD_SAFE
-		{
-			segment_list = GetProcSegList(NULL,GPSLF_RUN);
-			if(segment_list != ZERO)
-			{
-				Elf32_Handle handle = NULL;
-
-				if(GetSegListInfoTags(segment_list,
-					GSLI_ElfHandle,&handle,
-				TAG_DONE) == 1)
-				{
-					if(handle != NULL)
-					{
-						__dl_elf_handle = OpenElfTags(
-							OET_ElfHandle,handle,
-						TAG_DONE);
-					}
-				}
-			}
-		}
-		#endif /* __THREAD_SAFE */
 	}
 }
 
-/****************************************************************************/
-
-#endif /*__amigaos4__ */

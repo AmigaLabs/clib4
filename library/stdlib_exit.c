@@ -37,39 +37,36 @@
 
 /****************************************************************************/
 
-jmp_buf	NOCOMMON __exit_jmp_buf;
-int		NOCOMMON __exit_value = RETURN_FAIL;
-BOOL	NOCOMMON __exit_blocked;
+jmp_buf NOCOMMON __exit_jmp_buf;
+int NOCOMMON __exit_value = RETURN_FAIL;
+BOOL NOCOMMON __exit_blocked;
 
 /****************************************************************************/
 
-void
-_exit(int return_code)
+void _exit(int return_code)
 {
-	if(NOT __exit_blocked)
+	if (NOT __exit_blocked)
 	{
 		__exit_value = return_code;
 
-		longjmp(__exit_jmp_buf,1);
+		longjmp(__exit_jmp_buf, 1);
 	}
 }
 
 /****************************************************************************/
 
 /* The C99 version of _exit(). */
-void
-_Exit(int return_code)
+void _Exit(int return_code)
 {
-	if(NOT __exit_blocked)
+	if (NOT __exit_blocked)
 		_exit(return_code);
 }
 
 /****************************************************************************/
 
-void
-exit(int return_code)
+void exit(int return_code)
 {
-	if(NOT __exit_blocked)
+	if (NOT __exit_blocked)
 	{
 		__exit_trap_trigger();
 

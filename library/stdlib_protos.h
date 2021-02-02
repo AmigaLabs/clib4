@@ -127,12 +127,6 @@ extern void	_exit(int return_code);
 
 /****************************************************************************/
 
-/* stdlib_constructor_begin.c */
-void _init(void);
-void _fini(void);
-
-/****************************************************************************/
-
 /* stdlib_arg.c */
 extern int __arg_init(void);
 
@@ -164,7 +158,7 @@ extern void __red_black_tree_remove(struct MemoryTree * tree, struct MemoryNode 
 /****************************************************************************/
 
 /* stdlib_main.c */
-extern int _main(void);
+extern int _main(struct ExecIFace *IExec);
 
 /****************************************************************************/
 

@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_main.c,v 1.34 2008-09-30 14:09:00 obarthel Exp $
+ * $Id: stdlib_main.c,v 1.35 2021-01-31 14:09:00 apalmate Exp $
  *
  * :ts=4
  *
@@ -61,25 +61,23 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#ifndef _SHM_HEADERS_H
+#include "shm_headers.h"
+#endif /* _SHM_HEADERS_H */
+
 /****************************************************************************/
 
 #ifndef _STDLIB_PROFILE_MONITORING_H
 #include "stdlib_profile_monitoring.h"
 #endif /* _STDLIB_PROFILE_MONITORING_H */
 
-/****************************************************************************/
-
-/* On OS4 memory of type MEMF_ANY may not be paged out. Where this is desirable
-   MEMF_PRIVATE should be used instead. */
-#ifdef __amigaos4__
-#define MEMORY_TYPE MEMF_PRIVATE
-#else
-#define MEMORY_TYPE MEMF_ANY
-#endif /* __amigaos4__ */
+#include <proto/elf.h>
 
 /****************************************************************************/
 
 extern int main(int arg_c, char **arg_v);
+extern void _start(void);
+extern void _clib_exit(void);
 
 /****************************************************************************/
 
@@ -87,7 +85,13 @@ extern int main(int arg_c, char **arg_v);
 BOOL NOCOMMON __stack_overflow;
 struct _clib2 *__global_clib2 = NULL;
 
+extern struct Library NOCOMMON *__ElfBase;
+extern struct ElfIFace NOCOMMON *__IElf;
+
 /****************************************************************************/
+BOOL open_libraries(struct ExecIFace *iexec);
+/****************************************************************************/
+
 
 STATIC int
 call_main(void)
@@ -100,25 +104,70 @@ call_main(void)
 	if (setjmp(__exit_jmp_buf) != 0)
 		goto out;
 
-	SHOWMSG("now invoking the constructors");
+	struct ElfIFace *IElf = __IElf;
 
-	/* Go through the constructor list */
-	_init();
-
-
-	/* Initialize global structure */	
+	/* Initialize global structure */
 	__global_clib2 = (struct _clib2 *)AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-	if (!__global_clib2)
+	if (__global_clib2 == NULL)
 	{
 		goto out;
 	}
-	else {
-#if defined(__amigaos4__)
-	struct TimerIFace *ITimer = __ITimer;
-#endif
+	else
+	{
+		struct TimerIFace *ITimer = __ITimer;
+		uint32_t uid, gid;
+		BPTR segment_list;
+
+		/* Get the current task pointer */
+		__global_clib2->self = (struct Process *)FindTask(0);
+
+		/* Set system time for rusage */
 		GetSysTime(&__global_clib2->clock);
+
+		/* Check is SYSV library is available in the system */
+		__global_clib2->haveShm = FALSE;
+		__SysVBase = OpenLibrary("sysvipc.library", 53);
+		if (__SysVBase != NULL)
+		{
+			__ISysVIPC = (struct SYSVIFace *)GetInterface(__SysVBase, "main", 1, NULL);
+			if (__ISysVIPC != NULL)
+			{
+				__global_clib2->haveShm = TRUE;
+			}
+			else
+			{
+				CloseLibrary(__SysVBase);
+				__SysVBase = NULL;
+			}
+		}
+
+		/* 
+		 * Next: Get Elf handle associated with the currently running process. 
+		 * __ElfBase is opened in stdlib_shared_objs.c that is called before the
+		 * call_main()
+		 */
+
+		if (__ElfBase != NULL)
+		{
+			segment_list = GetProcSegList(__global_clib2->self, GPSLF_RUN);
+			if (segment_list != ZERO)
+			{
+				Elf32_Handle handle = NULL;
+
+				if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1)
+				{
+					if (handle != NULL)
+					{
+						if (__global_clib2 != NULL)
+						{
+							__global_clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, TAG_DONE);
+						}
+					}
+				}
+			}
+		}
 	}
-	
+
 	SHOWMSG("done.");
 
 	/* If the SAS/C profiling code is set up for printing function
@@ -141,18 +190,8 @@ call_main(void)
 			UBYTE *arg_str = GetArgStr();
 			size_t arg_str_len = strlen(arg_str);
 			UBYTE *arg_str_copy;
-			UBYTE current_dir_name[256];
-
-#if defined(__amigaos4__)
-			{
-				arg_str_copy = AllocVec(arg_str_len + 1, MEMF_PRIVATE);
-			}
-#else
-			{
-				arg_str_copy = AllocVec(arg_str_len + 1, MEMF_ANY);
-			}
-#endif /* __amigaos4__ */
-
+			UBYTE current_dir_name[256] = {0};
+			arg_str_copy = AllocVecTags(arg_str_len + 1, AVT_Type, MEMF_PRIVATE, TAG_DONE);
 			if (arg_str_copy != NULL && NameFromLock(this_process->pr_CurrentDir, current_dir_name, sizeof(current_dir_name)))
 			{
 				strcpy(arg_str_copy, arg_str);
@@ -207,20 +246,35 @@ out:
 	}
 #endif /* NDEBUG */
 
-	SHOWMSG("invoking the destructors");
-
 	/* If one of the destructors drops into exit(), either directly
 	   or through a failed assert() call, processing will resume with
 	   the next following destructor. */
 	(void)setjmp(__exit_jmp_buf);
 
-	/* Go through the destructor list */
-	_fini();
-
-	SHOWMSG("done.");
-
 	/* Restore the IoErr() value before we return. */
 	SetIoErr(saved_io_err);
+
+	/* Restore IElf handler */
+	IElf = __IElf;
+
+	/* Free global reent structure */
+	if (__global_clib2)
+	{
+		if (__global_clib2->__dl_elf_handle != NULL)
+		{
+			CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
+			__global_clib2->__dl_elf_handle = NULL;
+		}
+
+		FreeVec(__global_clib2);
+	}
+
+	SHOWMSG("invoking the destructors");
+
+	/* Go through the destructor list */
+	_clib_exit();
+
+	SHOWMSG("done.");
 
 	RETURN(__exit_value);
 	return (__exit_value);
@@ -228,38 +282,37 @@ out:
 
 /****************************************************************************/
 
-STATIC BOOL
-	open_libraries(VOID)
+BOOL 
+open_libraries(struct ExecIFace *iexec)
 {
 	BOOL success = FALSE;
-	int os_version;
-
-	/* Check which minimum operating system version we actually require. */
-	os_version = 37;
-	if (__minimum_os_lib_version > 37)
-		os_version = __minimum_os_lib_version;
 
 	/* Open the minimum required libraries. */
-	DOSBase = (struct Library *)OpenLibrary("dos.library", os_version);
+	DOSBase = (struct Library *)OpenLibrary("dos.library", 54);
 	if (DOSBase == NULL)
 		goto out;
 
-	__UtilityBase = OpenLibrary("utility.library", os_version);
+	__UtilityBase = OpenLibrary("utility.library", 54);
 	if (__UtilityBase == NULL)
 		goto out;
+	
+	/* Obtain the interfaces for these libraries. */
+	IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
+	if (IDOS == NULL)
+		goto out;
 
-#if defined(__amigaos4__)
-	{
-		/* Obtain the interfaces for these libraries. */
-		IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
-		if (IDOS == NULL)
-			goto out;
+	__IUtility = (struct UtilityIFace *)GetInterface(__UtilityBase, "main", 1, 0);
+	if (__IUtility == NULL)
+		goto out;
 
-		__IUtility = (struct UtilityIFace *)GetInterface(__UtilityBase, "main", 1, 0);
-		if (__IUtility == NULL)
-			goto out;
-	}
-#endif /* __amigaos4__ */
+	/* We need elf.library V52.2 or higher. */
+	__ElfBase = OpenLibrary("elf.library", 0);
+	if (__ElfBase == NULL || (__ElfBase->lib_Version < 52) || (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision < 2))
+		goto out;
+
+	__IElf = (struct ElfIFace *)GetInterface(__ElfBase, "main", 1, NULL);
+	if (__IElf == NULL)
+		goto out;
 
 	success = TRUE;
 
@@ -271,23 +324,31 @@ out:
 /****************************************************************************/
 
 STATIC VOID
-	close_libraries(VOID)
+close_libraries(VOID)
 {
-#if defined(__amigaos4__)
+	if (__ISysVIPC != NULL)
 	{
-		if (__IUtility != NULL)
-		{
-			DropInterface((struct Interface *)__IUtility);
-			__IUtility = NULL;
-		}
-
-		if (IDOS != NULL)
-		{
-			DropInterface((struct Interface *)IDOS);
-			IDOS = NULL;
-		}
+		DropInterface((struct Interface *)__ISysVIPC);
+		__ISysVIPC = NULL;
 	}
-#endif /* __amigaos4__ */
+
+	if (__SysVBase != NULL)
+	{
+		CloseLibrary(__SysVBase);
+		__SysVBase = NULL;
+	}
+
+	if (__IUtility != NULL)
+	{
+		DropInterface((struct Interface *)__IUtility);
+		__IUtility = NULL;
+	}
+
+	if (IDOS != NULL)
+	{
+		DropInterface((struct Interface *)IDOS);
+		IDOS = NULL;
+	}
 
 	if (__UtilityBase != NULL)
 	{
@@ -300,35 +361,39 @@ STATIC VOID
 		CloseLibrary(DOSBase);
 		DOSBase = NULL;
 	}
+
+	if (__IElf != NULL)
+	{
+		DropInterface((struct Interface *)__IElf);
+		__IElf = NULL;
+	}
+
+	if (__ElfBase != NULL)
+	{
+		CloseLibrary(__ElfBase);
+		__ElfBase = NULL;
+	}
 }
 
 /****************************************************************************/
 
-STATIC VOID ASM
-	detach_cleanup(REG(d0, LONG UNUSED unused_return_code), REG(d1, BPTR segment_list))
+STATIC VOID 
+	detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
 {
-#if NOT defined(__amigaos4__)
-	{
-		/* The following trick is necessary only under dos.library V40 and below. */
-		if (((struct Library *)DOSBase)->lib_Version < 50)
-		{
-			/* Now for the slightly shady part. We need to unload the segment
-			   list this program was originally loaded with. We have to close
-			   dos.library, though, which means that either we can close the
-			   library or unload the code, but not both. But there's a loophole
-			   in that we can enter Forbid(), unload the code, close the library
-			   and exit and nobody will be able to allocate this program's
-			   memory until after the process has been terminated. */
-			Forbid();
+	struct ElfIFace *IElf = __IElf;
+	Printf("detach_cleanup: %ld - %ld\n", return_code, exit_data);
 
-			UnLoadSeg(segment_list);
-		}
-	}
-#endif /* __amigaos4__ */
+	_clib_exit();
 
 	/* Free global reent structure */
 	if (__global_clib2)
 	{
+		if (__global_clib2->__dl_elf_handle != NULL)
+		{
+			CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
+			__global_clib2->__dl_elf_handle = NULL;
+		}
+
 		FreeVec(__global_clib2);
 		Printf("__global_clib2 destroyed\n");
 	}
@@ -356,7 +421,7 @@ get_stack_size(void)
 
 /****************************************************************************/
 
-int _main(void)
+int _main(struct ExecIFace *IExec)
 {
 	struct Process *volatile child_process = NULL;
 	struct WBStartup *volatile startup_message;
@@ -365,15 +430,6 @@ int _main(void)
 	struct Process *this_process;
 	int return_code = RETURN_FAIL;
 	ULONG current_stack_size;
-
-	SysBase = *(struct Library **)4;
-
-#if defined(__amigaos4__)
-	{
-		/* Get exec interface */
-		IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
-	}
-#endif /* __amigaos4__ */
 
 	/* Pick up the Workbench startup message, if available. */
 	this_process = (struct Process *)FindTask(NULL);
@@ -392,31 +448,7 @@ int _main(void)
 	}
 
 	__WBenchMsg = (struct WBStartup *)startup_message;
-
-	/* Try to open the libraries we need to proceed. */
-	if (CANNOT open_libraries())
-	{
-		const char *error_message;
-
-		/* If available, use the error message provided by the client. */
-		error_message = __minimum_os_lib_error;
-
-#if defined(__amigaos4__)
-		{
-			if (error_message == NULL)
-				error_message = "This program requires AmigaOS 4.0 or higher.";
-		}
-#else
-		{
-			if (error_message == NULL)
-				error_message = "This program requires AmigaOS 2.04 or higher.";
-		}
-#endif /* __amigaos4__ */
-
-		__show_error(error_message);
-		goto out;
-	}
-
+	
 	if (__disable_dos_requesters)
 	{
 		/* Don't display any requesters. */
@@ -483,13 +515,14 @@ int _main(void)
 
 			/* Allocate the stack swapping data structure
 			   and the stack space separately. */
-			stk = AllocVec(sizeof(*stk), MEMF_PUBLIC | MEMF_ANY);
-			if (stk == NULL) {
+			stk = AllocVecTags(sizeof(*stk), AVT_Type, MEMF_SHARED, TAG_DONE);
+			if (stk == NULL)
+			{
 				FreeVec(__global_clib2);
 				goto out;
 			}
 
-			new_stack = AllocMem(stack_size, MEMF_PUBLIC | MEMF_ANY);
+			new_stack = AllocVecTags(stack_size, AVT_Type, MEMF_SHARED, TAG_DONE);
 			if (new_stack == NULL)
 			{
 				FreeVec(__global_clib2);
@@ -513,7 +546,7 @@ int _main(void)
 			return_code = __swap_stack_and_call(stk, (APTR)call_main);
 
 			FreeVec(__global_clib2);
-			FreeMem(new_stack, stack_size);
+			FreeVec(new_stack);
 			FreeVec(stk);
 		}
 		else
@@ -529,7 +562,7 @@ int _main(void)
 	{
 		struct CommandLineInterface *cli = Cli();
 		struct TagItem tags[12];
-		TEXT program_name[256];
+		TEXT program_name[256] = {0};
 		unsigned int stack_size;
 		int i;
 
@@ -545,10 +578,10 @@ int _main(void)
 		if (stack_size < cli->cli_DefaultStack * sizeof(LONG))
 			stack_size = cli->cli_DefaultStack * sizeof(LONG);
 
-		GetProgramName(program_name, (LONG)sizeof(program_name));
+		GetCliProgramName(program_name, (LONG)sizeof(program_name));
 
 		i = 0;
-
+		
 		tags[i].ti_Tag = NP_Entry;
 		tags[i++].ti_Data = (ULONG)call_main;
 		tags[i].ti_Tag = NP_StackSize;
@@ -559,11 +592,13 @@ int _main(void)
 		tags[i++].ti_Data = (ULONG)FilePart(program_name);
 		tags[i].ti_Tag = NP_Cli;
 		tags[i++].ti_Data = TRUE;
+		tags[i].ti_Tag = NP_Child;
+		tags[i++].ti_Data = TRUE;
 		tags[i].ti_Tag = NP_Arguments;
 		tags[i++].ti_Data = (ULONG)GetArgStr();
-		tags[i].ti_Tag = NP_ExitCode;
+		tags[i].ti_Tag = NP_FinalCode;
 		tags[i++].ti_Data = (ULONG)detach_cleanup;
-		tags[i].ti_Tag = NP_ExitData;
+		tags[i].ti_Tag = NP_FinalData;
 		tags[i++].ti_Data = (ULONG)cli->cli_Module;
 
 		/* Use a predefined task priority, if requested. */

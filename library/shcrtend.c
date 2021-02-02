@@ -1,7 +1,10 @@
 /*
- * $Id: stdio_examine_fh.c,v 1.2 2006-01-08 12:04:24 obarthel Exp $
+ * $Id: shcrtend.c,v 1.0 2021-01-02 19:35:03 apalmate Exp $
  *
  * :ts=4
+ *
+ * Handles global constructors and destructors for the OS4 GCC build.
+ *
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -31,23 +34,5 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
-
-/****************************************************************************/
-
-LONG __safe_examine_file_handle(BPTR file_handle, struct ExamineData *fib)
-{
-	LONG result = DOSFALSE;
-
-	assert(fib != NULL);
-
-	PROFILE_OFF();
-	fib = ExamineObjectTags(EX_FileHandleInput, file_handle, TAG_DONE);
-	PROFILE_ON();
-
-out:
-
-	return (result);
-}
+static void (*__CTOR_LIST__[1]) (void) __attribute__(( used, section(".ctors"), aligned(sizeof(void (*)(void))) ));
+static void (*__DTOR_LIST__[1]) (void) __attribute__(( used, section(".dtors"), aligned(sizeof(void (*)(void))) ));

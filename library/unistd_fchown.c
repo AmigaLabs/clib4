@@ -88,7 +88,8 @@ int fchown(int file_descriptor, uid_t owner, gid_t group)
 	}
 
 	PROFILE_OFF();
-	success = (__safe_examine_file_handle(fd->fd_File, fib) && (parent_dir = __safe_parent_of_file_handle(fd->fd_File)) != ZERO);
+	fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+	success = (fib != NULL && (parent_dir = __safe_parent_of_file_handle(fd->fd_File)) != ZERO);
 	PROFILE_ON();
 
 	if (NO success)

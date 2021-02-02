@@ -88,7 +88,7 @@ readdir(DIR *directory_pointer)
 			}
 			else
 			{
-				struct ExamineData *fib;
+				struct ExamineData *fib = NULL;
 				D_S(struct bcpl_name, bcpl_name);
 				char *name = (char *)bcpl_name->name;
 				BPTR dir_lock;
@@ -174,37 +174,33 @@ readdir(DIR *directory_pointer)
 				}
 				else if (dh->dh_Position == 1)
 				{
-					struct ExamineData *fib;
+					ino_t ino = 0;
 
 					dh->dh_Position++;
 
 					parent_directory = ParentDir(dh->dh_DirLock);
 					if (parent_directory != ZERO)
 					{
-						fib = ExamineObjectTags(EX_LockInput, parent_directory, TAG_DONE);
+						struct ExamineData *fib = ExamineObjectTags(EX_LockInput, parent_directory, TAG_DONE);
 						if (fib == NULL)
 						{
 							__set_errno(__translate_io_error_to_errno(IoErr()));
 							goto out;
 						}
-					}
-					else
-					{
-						/* This is the virtual root directory's key. */
-						fib->ObjectID = 0;
+						ino = fib->ObjectID;
+
+						FreeDosObject(DOS_EXAMINEDATA, fib);
 					}
 
 					SHOWMSG("returning ..");
 
-					dh->dh_DirectoryEntry.d_ino = fib->ObjectID;
+					dh->dh_DirectoryEntry.d_ino = ino;
 					dh->dh_DirectoryEntry.d_reclen = 3;
 					dh->dh_DirectoryEntry.d_type = DT_DIR;
 
 					strcpy(dh->dh_DirectoryEntry.d_name, "..");
 
 					result = &dh->dh_DirectoryEntry;
-
-					FreeDosObject(DOS_EXAMINEDATA, fib);
 				}
 			}
 		}
@@ -212,12 +208,8 @@ readdir(DIR *directory_pointer)
 
 		if (result == NULL)
 		{
-			APTR context = context = ObtainDirContextTags(EX_FileLockInput, dh->dh_DirLock,
-																EX_DoCurrentDir, TRUE,
-																EX_DataFields, EXF_ALL,
-																TAG_END);
-			if (context) {
-				dh->dh_FileInfo = ExamineDir(context);
+			if (dh->dh_Context) {
+				dh->dh_FileInfo = ExamineDir(dh->dh_Context);
 				if (dh->dh_FileInfo != NULL)
 				{
 					dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo->ObjectID;
@@ -242,7 +234,6 @@ readdir(DIR *directory_pointer)
 
 					result = &dh->dh_DirectoryEntry;
 
-					ReleaseDirContext(context);
 				}
 				else
 				{

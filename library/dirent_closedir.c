@@ -196,7 +196,16 @@ int closedir(DIR *directory_pointer)
 #endif /* UNIX_PATH_SEMANTICS */
 
 	PROFILE_OFF();
-	FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
+	if (dh->dh_Context != NULL) {
+		ReleaseDirContext(dh->dh_Context);
+		dh->dh_Context = NULL;
+	}
+
+	if (dh->dh_FileInfo != NULL) {
+		FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
+		dh->dh_FileInfo = NULL;
+	}
+
 	UnLock(dh->dh_DirLock);
 	PROFILE_ON();
 

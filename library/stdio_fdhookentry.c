@@ -56,7 +56,7 @@ int __fd_hook_entry(
 	struct fd *fd,
 	struct file_action_message *fam)
 {
-	struct ExamineData *fib;
+	struct ExamineData *fib = NULL;
 	BOOL fib_is_valid = FALSE;
 	struct FileHandle *fh;
 	off_t current_position;
@@ -194,7 +194,7 @@ int __fd_hook_entry(
 			if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE))
 			{
 				BOOL name_and_path_valid = FALSE;
-				struct ExamineData *fib;
+				struct ExamineData *fib = NULL;
 				BPTR parent_dir;
 
 				/* Call a cleanup function, such as the one which releases locked records. */
@@ -206,7 +206,8 @@ int __fd_hook_entry(
 				parent_dir = __safe_parent_of_file_handle(fd->fd_File);
 				if (parent_dir != ZERO)
 				{
-					if (__safe_examine_file_handle(fd->fd_File, fib))
+					fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+					if (fib != NULL)
 						name_and_path_valid = TRUE;
 				}
 
@@ -414,8 +415,8 @@ int __fd_hook_entry(
 			break;
 
 		case OFFSET_END:
-
-			if (__safe_examine_file_handle(file, fib))
+			fib = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
+			if (fib != NULL)
 			{
 				new_position = fib->FileSize + fam->fam_Offset;
 
@@ -448,7 +449,8 @@ int __fd_hook_entry(
 						   the new file position. First, we need to find out if the file
 						   is really shorter than required. If not, then it must have
 						   been a different error. */
-					if ((NOT fib_is_valid && CANNOT __safe_examine_file_handle(file, fib)) || (new_position <= (off_t)fib->FileSize))
+					fib = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
+					if ((NOT fib_is_valid && fib == NULL) || (new_position <= (off_t)fib->FileSize))
 						goto out;
 
 					/* Now try to make that file larger. */
@@ -525,39 +527,42 @@ int __fd_hook_entry(
 			// TODO - Check this on OS4 with NIL:
 			fam->fam_FileInfo->Type = ST_NIL;
 		}
-		else if (CANNOT __safe_examine_file_handle(file, fam->fam_FileInfo))
+		else
 		{
-			LONG error;
+			fam->fam_FileInfo = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
+			if (fam->fam_FileInfo == NULL) {
+				LONG error;
 
-			/* So that didn't work. Did the file system simply fail to
-				   respond to the request or is something more sinister
-				   at work? */
-			error = IoErr();
-			if (error != ERROR_ACTION_NOT_KNOWN)
-			{
-				SHOWMSG("couldn't examine the file");
+				/* So that didn't work. Did the file system simply fail to
+					respond to the request or is something more sinister
+					at work? */
+				error = IoErr();
+				if (error != ERROR_ACTION_NOT_KNOWN)
+				{
+					SHOWMSG("couldn't examine the file");
 
-				fam->fam_Error = __translate_io_error_to_errno(error);
-				goto out;
+					fam->fam_Error = __translate_io_error_to_errno(error);
+					goto out;
+				}
+
+				/* OK, let's have another look at this file. Could it be a
+					console stream? */
+				if (NOT IsInteractive(file))
+				{
+					SHOWMSG("whatever it is, we don't know");
+
+					fam->fam_Error = ENOSYS;
+					goto out;
+				}
+
+				/* Make up some stuff for this stream. */
+				memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
+
+				DateStamp(&fam->fam_FileInfo->Date);
+
+				// TODO - Check this on OS4 with CON:
+				fam->fam_FileInfo->Type = ST_CONSOLE;
 			}
-
-			/* OK, let's have another look at this file. Could it be a
-				   console stream? */
-			if (NOT IsInteractive(file))
-			{
-				SHOWMSG("whatever it is, we don't know");
-
-				fam->fam_Error = ENOSYS;
-				goto out;
-			}
-
-			/* Make up some stuff for this stream. */
-			memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
-
-			DateStamp(&fam->fam_FileInfo->Date);
-
-			// TODO - Check this on OS4 with CON:
-			fam->fam_FileInfo->Type = ST_CONSOLE;
 		}
 
 		fam->fam_FileSystem = fh->fh_Type;

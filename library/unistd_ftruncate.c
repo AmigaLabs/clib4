@@ -43,7 +43,7 @@
 
 int ftruncate(int file_descriptor, off_t length)
 {
-	struct ExamineData *fib;
+	struct ExamineData *fib = NULL;
 	int result = ERROR;
 	struct fd *fd = NULL;
 	off_t current_file_size;
@@ -106,7 +106,8 @@ int ftruncate(int file_descriptor, off_t length)
 	}
 
 	/* Figure out how large the file is right now. */
-	if (CANNOT __safe_examine_file_handle(fd->fd_File, fib))
+	fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+	if (fib == NULL)
 	{
 		SHOWMSG("couldn't examine file");
 

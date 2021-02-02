@@ -50,7 +50,7 @@
 int fstat(int file_descriptor, struct stat *buffer)
 {
 	struct file_action_message fam;
-	struct ExamineData *fib;
+	struct ExamineData *fib = NULL;
 	struct fd *fd = NULL;
 	int result = ERROR;
 
