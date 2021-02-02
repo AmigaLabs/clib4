@@ -1,5 +1,5 @@
 /*
- * $Id: semaphore.h,v 1.00 2021-01-17 12:09:49 apalmate Exp $
+ * $Id: sem.h,v 1.00 2021-02-02 17:03:49 apalmate Exp $
  *
  * :ts=4
  *
@@ -38,24 +38,44 @@
  *****************************************************************************
  */
 
-#ifndef _SEMAPHORE_H
-#define _SEMAPHORE_H
+#ifndef _SYS_SEM_H
+#define _SYS_SEM_H
 
-#include <sys/cdefs.h>
-#include <stdlib.h>
+#include <features.h>
+/* Get common definition of System V style IPC.  */
+#include <sys/ipc.h>
+
+/* The following System V style IPC functions implement a semaphore
+   handling.  The definition is found in XPG2.  */
+
+/* Structure used for argument to `semop' to describe operations.  */
+struct sembuf
+{
+    unsigned short int sem_num; /* semaphore number */
+    short int sem_op;           /* semaphore operation */
+    short int sem_flg;          /* operation flag */
+};
 
 __BEGIN_DECLS
 
-typedef void *sem_t;
+/* Semaphore control operation.  */
+extern int _semctl(int semid, int semnum, int cmd, union semun aun);
+/* Get semaphore.  */
+extern int _semget(key_t key, int nsems, int flags);
+/* Operate on semaphore.  */
+extern int _semop(int semid, const struct sembuf *ops, int nops);
+#ifdef __USE_GNU
+/* Operate on semaphore with timeout.  */
+extern int _semtimedop(int semid, const struct sembuf *ops, int nops, struct timespec *to);
+#endif
 
-extern int sem_init(sem_t *sem, int pshared, unsigned int value);
-extern int sem_destroy(sem_t *sem);
-extern int sem_trywait(sem_t *sem);
-extern int sem_wait(sem_t *sem);
-extern int sem_timedwait(sem_t *sem, const struct timespec *timeout);
-extern int sem_post(sem_t *sem);
-extern int sem_getvalue(sem_t *sem, int *sval);
+#define semctl(a, b, c, d)     _semctl(a, b, c, d)
+#define semget(a, b, c)        _semget(a, b, c)
+#define semop(a, b, c)         _semop(a, b, c)
+#ifdef __USE_GNU
+#define semtimedop(a, b, c, d) _semtimedop(a, b, c, d)
+#endif
 
 __END_DECLS
 
-#endif
+#endif /* sys/sem.h */

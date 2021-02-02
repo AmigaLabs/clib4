@@ -1,7 +1,9 @@
 #include <string.h>
 #include <stdio.h>
 
-static char buf[256];
+static char buf[256] = {0};
+
+void addsomething(void);
 
 void addsomething(void)
 {

@@ -43,18 +43,16 @@
 
 int usleep(unsigned long microseconds)
 {
-	int retval = 0;
+	int retval;
 	ENTER();
 
 	SHOWVALUE(microseconds);
 
-	__time_delay(0, microseconds);
+	struct timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = microseconds;
 
-	// errno is set in __time_delay if it is break by a signal
-	if (errno != 0)
-		retval = -1;
-
-	LEAVE();
+	retval = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
 
 	RETURN(retval);
 	return retval;

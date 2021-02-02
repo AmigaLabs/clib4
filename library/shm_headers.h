@@ -6,6 +6,7 @@
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <sys/sem.h>
 
 #ifndef _STDLIB_SYSVBASE_H
 #include "stdlib_sysvbase.h"

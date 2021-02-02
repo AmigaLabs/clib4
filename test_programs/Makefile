@@ -70,7 +70,7 @@ ${BUILDDIR}:
 
 simple_sprintf : simple_sprintf
 	@echo "Linking $(BUILDDIR)/$@"
-	@$(CC) $(CFLAGS) -nostdlib -o $(BUILDDIR)/$@ simple_sprintf.o -lc -lgcc $(LFLAGS) -Wl,--cref,-M,-Map=$(BUILDDIR)/$@.map
+	@$(CC) $(CFLAGS) -nostdlib -o $(BUILDDIR)/$@ simple_sprintf.c -lc -lgcc $(LFLAGS) -Wl,--cref,-M,-Map=$(BUILDDIR)/$@.map
 
 semaphore_test : semaphore_test
 	@echo "Linking $(BUILDDIR)/$@"

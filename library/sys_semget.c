@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_sleep.c,v 1.6 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: sys_semget.c,v 1.00 2021-02-02 17:39:33 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,36 +29,38 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ *
+ * Documentation and source code for this library, and the most recent library
+ * build are available from <https://github.com/afxgroup/clib2>.
+ *
+ *****************************************************************************
  */
 
-#ifndef _UNISTD_HEADERS_H
-#include "unistd_headers.h"
-#endif /* _UNISTD_HEADERS_H */
+#ifndef _SHM_HEADERS_H
+#include "shm_headers.h"
+#endif /* _SHM_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-unsigned int
-sleep(unsigned int seconds)
+int 
+_semget(key_t key, int nsems, int flags)
 {
-	unsigned int result;
+    DECLARE_SYSVYBASE();
 
-	ENTER();
+    int ret = -1;
+    if (__global_clib2->haveShm)
+    {
+        ret = semget(key, nsems, flags);
+        if (ret < 0)
+        {
+            __set_errno(GetIPCErr());
+        }
+        return (ret);
+    }
+    else
+    {
+        __set_errno(ENOSYS);
+    }
 
-	SHOWVALUE(seconds);
-
-	int microseconds = seconds * 1000000;
-	SHOWVALUE(microseconds);
-
-	struct timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = microseconds;
-
-	result = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
-
-	RETURN(result);
-	return(result);
+    return ret;
 }

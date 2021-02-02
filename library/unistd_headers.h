@@ -109,7 +109,7 @@ extern int __strip_double_slash(char * file_name,int len);
 
 /****************************************************************************/
 
-extern unsigned int __time_delay(unsigned long seconds,unsigned long microseconds);
+extern int __time_delay(ULONG timercmd, struct timeval *tv);
 
 /****************************************************************************/
 
