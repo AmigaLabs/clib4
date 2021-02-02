@@ -7,8 +7,10 @@
 ##############################################################################
 
 CC = ppc-amigaos-gcc
-DELETE = rm -r
-
+DELETE = rm -rf
+MKDIR = mkdir -p
+BUILDDIR = build
+SOURCEDIR = .
 ##############################################################################
 
 .c.o:
@@ -19,7 +21,8 @@ DELETE = rm -r
 
 WARNINGS = \
 	-Wall -W -Wshadow -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
-	-Wundef -Wbad-function-cast -Wmissing-declarations -Wconversion
+	-Wundef -Wbad-function-cast -Wmissing-declarations -Wconversion \
+	-Wno-unused-parameter -Wno-missing-prototypes
 
 V = /V
 INCLUDE = -I$(V)/include -I../library/include
@@ -40,101 +43,40 @@ INCLUDE = -I$(V)/include -I../library/include
 CFLAGS = -mcrt=clib2 -fno-builtin $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(OPTIONS) $(INCLUDE)
 LFLAGS = -Wl,-d
 
+SOURCES = $(shell find $(SOURCEDIR) -name '*.cpp' -or -name '*.c')
+OBJECTS = $(patsubst %.c, %, $(notdir $(wildcard *.c)))
+
 ##############################################################################
 
-LIBS = -ldebug -lm -lc
+LIBS = -ldebug -lm
 
 ##############################################################################
 
-all: test fgets_test iotest sscanf_test printf_test sprintf_test \
-	stack_size_test translate_test strtok_test uname simple \
-	fstat_stdout_test simple_sprintf date_test sscanf_64 \
-	factorial setlocale rand malloc-test slab-test
+all: builddir $(OBJECTS)
+	
+builddir: ${BUILDDIR}
 
 clean:
-	$(DELETE) *.o *.map test fgets_test iotest sscanf_test printf_test \
-		sprintf_test stack_size_test translate_test strtok_test \
-		uname simple fstat_stdout_test simple_sprintf date_test \
-		sscanf_64 factorial setlocale rand malloc-test slab-test
+	$(DELETE) $(BUILDDIR)
 
 ##############################################################################
 
-setlocale : setlocale.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ setlocale.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
+${BUILDDIR}:
+	$(MKDIR) $(BUILDDIR)
 
-test : test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
+%: %.c
+	@echo "Linking $(BUILDDIR)/$@"
+	@$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$(BUILDDIR)/$@.map
 
-date_test : date_test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
+simple_sprintf : simple_sprintf
+	@echo "Linking $(BUILDDIR)/$@"
+	@$(CC) $(CFLAGS) -nostdlib -o $(BUILDDIR)/$@ simple_sprintf.o -lc -lgcc $(LFLAGS) -Wl,--cref,-M,-Map=$(BUILDDIR)/$@.map
 
-fgets_test : fgets_test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ fgets_test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
+semaphore_test : semaphore_test
+	@echo "Linking $(BUILDDIR)/$@"
+	@$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ semaphore_test.c -lpthread $(LFLAGS) -Wl,--cref,-M,-Map=$(BUILDDIR)/$@.map
 
-strtok_test : strtok_test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ strtok_test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
+pthread_join: pthread_join
+	@echo "Linking $(BUILDDIR)/$@"
+	@$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ pthread_join.c -lpthread $(LFLAGS) -Wl,--cref,-M,-Map=$(BUILDDIR)/$@.map
 
-iotest : iotest.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ iotest.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-sscanf_test : sscanf_test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ sscanf_test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-printf_test : printf_test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ printf_test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-sprintf_test : sprintf_test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ sprintf_test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-stack_size_test : stack_size_test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ stack_size_test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-translate_test : translate_test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ translate_test.o -lunix $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-uname : uname.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ uname.o -lunix $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-simple : simple.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ simple.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-fstat_stdout_test : fstat_stdout_test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ fstat_stdout_test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-simple_sprintf : simple_sprintf.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -nostdlib -o $@ simple_sprintf.o -lc -lgcc $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-sscanf_64 : sscanf_64.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ sscanf_64.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-factorial : factorial.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ factorial.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-rand : rand.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ rand.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-malloc-test : malloc-test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ malloc-test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
-
-slab-test : slab-test.o
-	@echo "Linking $@"
-	$(CC) $(CFLAGS) -o $@ slab-test.o $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$@.map
