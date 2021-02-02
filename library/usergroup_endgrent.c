@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
@@ -47,8 +43,7 @@
 
 /****************************************************************************/
 
-void
-endgrent(void)
+void endgrent(void)
 {
 	ENTER();
 
@@ -58,12 +53,8 @@ endgrent(void)
 	__endgrent();
 	PROFILE_ON();
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	LEAVE();
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

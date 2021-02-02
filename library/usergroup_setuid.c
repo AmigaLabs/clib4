@@ -31,18 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
 /****************************************************************************/
 
-int
-setuid(uid_t id)
+int setuid(uid_t id)
 {
 	int result;
 
@@ -52,7 +47,7 @@ setuid(uid_t id)
 
 	assert(__UserGroupBase != NULL);
 
-	if(__root_mode)
+	if (__root_mode)
 	{
 		__root_uid = id;
 
@@ -65,13 +60,9 @@ setuid(uid_t id)
 		PROFILE_ON();
 	}
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

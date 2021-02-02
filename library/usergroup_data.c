@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
@@ -45,7 +41,3 @@ int NOCOMMON __root_uid;
 int NOCOMMON __root_gid;
 int NOCOMMON __root_euid;
 int NOCOMMON __root_egid;
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

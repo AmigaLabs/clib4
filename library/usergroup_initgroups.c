@@ -35,20 +35,13 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
 /****************************************************************************/
 
-int
-initgroups(const char *name, gid_t basegroup)
+int initgroups(const char *name, gid_t basegroup)
 {
 	int result = ERROR;
 
@@ -60,9 +53,9 @@ initgroups(const char *name, gid_t basegroup)
 	assert(name != NULL);
 	assert(__UserGroupBase != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(name == NULL)
+		if (name == NULL)
 		{
 			SHOWMSG("invalid name");
 
@@ -70,21 +63,17 @@ initgroups(const char *name, gid_t basegroup)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	PROFILE_OFF();
-	result = __initgroups((STRPTR)name,(LONG)basegroup);
+	result = __initgroups((STRPTR)name, (LONG)basegroup);
 	PROFILE_ON();
 
- out:
+out:
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

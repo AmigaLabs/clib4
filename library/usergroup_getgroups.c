@@ -35,20 +35,13 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
 /****************************************************************************/
 
-int
-getgroups(int ngroups, gid_t *groups)
+int getgroups(int ngroups, gid_t *groups)
 {
 	int result = ERROR;
 
@@ -60,9 +53,9 @@ getgroups(int ngroups, gid_t *groups)
 	assert(ngroups == 0 || groups != NULL);
 	assert(__UserGroupBase != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(ngroups != 0 && groups == NULL)
+		if (ngroups != 0 && groups == NULL)
 		{
 			SHOWMSG("invalid groups parameter");
 
@@ -70,12 +63,12 @@ getgroups(int ngroups, gid_t *groups)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	if(ngroups > 0)
+	if (ngroups > 0)
 	{
 		PROFILE_OFF();
-		result = __getgroups(ngroups,(LONG *)groups);
+		result = __getgroups(ngroups, (LONG *)groups);
 		PROFILE_ON();
 	}
 	else
@@ -83,15 +76,11 @@ getgroups(int ngroups, gid_t *groups)
 		result = OK;
 	}
 
- out:
+out:
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

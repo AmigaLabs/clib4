@@ -31,18 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
 /****************************************************************************/
 
-int
-setregid(gid_t real, gid_t eff)
+int setregid(gid_t real, gid_t eff)
 {
 	int result;
 
@@ -53,12 +48,12 @@ setregid(gid_t real, gid_t eff)
 
 	assert(__UserGroupBase != NULL);
 
-	if(__root_mode)
+	if (__root_mode)
 	{
-		if(real != (gid_t)-1)
+		if (real != (gid_t)-1)
 			__root_gid = real;
 
-		if(eff != (gid_t)-1)
+		if (eff != (gid_t)-1)
 			__root_egid = eff;
 
 		result = OK;
@@ -66,17 +61,13 @@ setregid(gid_t real, gid_t eff)
 	else
 	{
 		PROFILE_OFF();
-		result = __setregid((LONG)real,(LONG)eff);
+		result = __setregid((LONG)real, (LONG)eff);
 		PROFILE_ON();
 	}
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

@@ -31,15 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
-
-/****************************************************************************/
 
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
@@ -52,13 +46,8 @@
 
 /****************************************************************************/
 
-struct Library * NOCOMMON __UserGroupBase;
-
-/****************************************************************************/
-
-#if defined(__amigaos4__)
-struct UserGroupIFace * NOCOMMON __IUserGroup;
-#endif /* __amigaos4__ */
+struct Library *NOCOMMON __UserGroupBase;
+struct UserGroupIFace *NOCOMMON __IUserGroup;
 
 /****************************************************************************/
 
@@ -66,17 +55,13 @@ CLIB_DESTRUCTOR(usergroup_exit)
 {
 	ENTER();
 
-	#if defined(__amigaos4__)
+	if (__IUserGroup != NULL)
 	{
-		if(__IUserGroup != NULL)
-		{
-			DropInterface((struct Interface *)__IUserGroup);
-			__IUserGroup = NULL;
-		}
+		DropInterface((struct Interface *)__IUserGroup);
+		__IUserGroup = NULL;
 	}
-	#endif /* __amigaos4__ */
 
-	if(__UserGroupBase != NULL)
+	if (__UserGroupBase != NULL)
 	{
 		CloseLibrary(__UserGroupBase);
 		__UserGroupBase = NULL;
@@ -96,23 +81,19 @@ CLIB_CONSTRUCTOR(usergroup_init)
 
 	PROFILE_OFF();
 
-	__UserGroupBase = OpenLibrary("usergroup.library",0);
+	__UserGroupBase = OpenLibrary("usergroup.library", 0);
 
-	#if defined(__amigaos4__)
+	if (__UserGroupBase != NULL)
 	{
-		if(__UserGroupBase != NULL)
+		__IUserGroup = (struct UserGroupIFace *)GetInterface(__UserGroupBase, "main", 1, 0);
+		if (__IUserGroup == NULL)
 		{
-			__IUserGroup = (struct UserGroupIFace *)GetInterface(__UserGroupBase, "main", 1, 0);
-			if (__IUserGroup == NULL)
-			{
-				CloseLibrary(__UserGroupBase);
-				__UserGroupBase = NULL;
-			}
+			CloseLibrary(__UserGroupBase);
+			__UserGroupBase = NULL;
 		}
 	}
-	#endif /* __amigaos4__ */
 
-	if(__UserGroupBase == NULL)
+	if (__UserGroupBase == NULL)
 	{
 		SHOWMSG("usergroup.library did not open");
 
@@ -121,12 +102,12 @@ CLIB_CONSTRUCTOR(usergroup_init)
 	}
 
 	/* Wire the library's errno variable to our local errno. */
-	tags[0].ti_Tag	= UGT_ERRNOLPTR;
-	tags[0].ti_Data	= (ULONG)&errno;
+	tags[0].ti_Tag = UGT_ERRNOLPTR;
+	tags[0].ti_Data = (ULONG)&errno;
 
 	tags[1].ti_Tag = TAG_END;
 
-	if(__ug_SetupContextTagList(__program_name,tags) != 0)
+	if (__ug_SetupContextTagList(__program_name, tags) != 0)
 	{
 		SHOWMSG("could not initialize usergroup.library");
 
@@ -136,19 +117,15 @@ CLIB_CONSTRUCTOR(usergroup_init)
 
 	success = TRUE;
 
- out:
+out:
 
 	PROFILE_ON();
 
 	SHOWVALUE(success);
 	LEAVE();
 
-	if(success)
+	if (success)
 		CONSTRUCTOR_SUCCEED();
 	else
 		CONSTRUCTOR_FAIL();
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

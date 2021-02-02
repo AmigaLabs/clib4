@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
@@ -76,7 +72,3 @@ setreuid(uid_t real, uid_t eff)
 	RETURN(result);
 	return(result);
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

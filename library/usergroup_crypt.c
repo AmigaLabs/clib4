@@ -37,10 +37,6 @@
 
 /****************************************************************************/
 
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
@@ -54,7 +50,7 @@
 /****************************************************************************/
 
 char *
-crypt(const char *key,const char *salt)
+crypt(const char *key, const char *salt)
 {
 	char *result = NULL;
 
@@ -66,9 +62,9 @@ crypt(const char *key,const char *salt)
 	assert(key != NULL && salt != NULL);
 	assert(__UserGroupBase != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(key == NULL || salt == NULL)
+		if (key == NULL || salt == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -76,23 +72,19 @@ crypt(const char *key,const char *salt)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	PROFILE_OFF();
-	result = (char *)__crypt((UBYTE *)key,(UBYTE *)salt);
+	result = (char *)__crypt((UBYTE *)key, (UBYTE *)salt);
 	PROFILE_ON();
 
 	SHOWSTRING(result);
 
- out:
+out:
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */
