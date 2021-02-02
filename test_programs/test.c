@@ -17,6 +17,13 @@
 #include <math.h>
 #include <sys/stat.h>
 
+void __attribute__ ((constructor)) constructor_test1(void);
+void __attribute__ ((constructor)) constructor_test2(void);
+void __attribute__ ((constructor)) constructor_test3(void);
+void __attribute__ ((destructor)) destructor_test1(void);
+void __attribute__ ((destructor)) destructor_test2(void);
+void __attribute__ ((destructor)) destructor_test3(void);
+
 /****************************************************************************/
 
 /*int __stack_size = 20000;*/

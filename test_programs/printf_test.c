@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+void print_format_int(const char * format_string,int parameter1,int parameter2);
+void print_format_char(const char * format_string,char parameter);
+void print_format_string(const char * format_string,const char *parameter1,const char *parameter2);
+void print_format_float(const char * format_string,double parameter1,double parameter2);
+
 double x;
 
 void

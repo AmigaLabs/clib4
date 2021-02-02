@@ -5,16 +5,19 @@
 #define FILE_SIZE 2048
 #define WRITE_SIZE 32
 
-char FileData[FILE_SIZE];
+char FileData[FILE_SIZE] = {0};
+void CreateFile(char *filename);
+void ReadWriteFile(char *filename);
 
 void CreateFile(char *filename)
 {
    FILE *file;
 
-   if (file = fopen(filename,"w")) {
-      memset(FileData,'0',FILE_SIZE);
-      memset(FileData,'-',WRITE_SIZE);
-      fwrite(FileData,1,FILE_SIZE,file);
+   if (file = fopen(filename, "w"))
+   {
+      memset(FileData, '0', FILE_SIZE);
+      memset(FileData, '-', WRITE_SIZE);
+      fwrite(FileData, 1, FILE_SIZE, file);
       fclose(file);
    }
 }
@@ -23,19 +26,21 @@ void ReadWriteFile(char *filename)
 {
    FILE *file;
 
-   if (file = fopen(filename,"r+")) {
-      fseek(file,0,SEEK_SET);
-      fread(FileData,1,FILE_SIZE,file);
-      fseek(file,0,SEEK_SET);
-      memset(FileData,'1',WRITE_SIZE);
-      fwrite(FileData,1,WRITE_SIZE,file);
+   if (file = fopen(filename, "r+"))
+   {
+      fseek(file, 0, SEEK_SET);
+      fread(FileData, 1, FILE_SIZE, file);
+      fseek(file, 0, SEEK_SET);
+      memset(FileData, '1', WRITE_SIZE);
+      fwrite(FileData, 1, WRITE_SIZE, file);
       fclose(file);
    }
 }
 
 int main(int argc, char **argv)
 {
-   if (argc > 1) {
+   if (argc > 1)
+   {
       CreateFile(argv[1]);
       ReadWriteFile(argv[1]);
    }
