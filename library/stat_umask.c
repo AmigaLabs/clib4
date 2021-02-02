@@ -45,10 +45,6 @@ mode_t NOCOMMON __current_umask = S_IWGRP | S_IWOTH;
 
 /****************************************************************************/
 
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
@@ -77,30 +73,3 @@ umask(mode_t new_mask)
 	RETURN(result);
 	return(result);
 }
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
-mode_t
-umask(mode_t new_mask)
-{
-	mode_t result;
-
-	ENTER();
-
-	SHOWVALUE(new_mask);
-
-	result = __current_umask;
-
-	__current_umask = new_mask & (S_IRWXU | S_IRWXG | S_IRWXO);
-
-	RETURN(result);
-	return(result);
-}
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

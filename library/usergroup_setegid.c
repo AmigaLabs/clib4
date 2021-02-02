@@ -31,18 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
 /****************************************************************************/
 
-int
-setegid(gid_t g)
+int setegid(gid_t g)
 {
 	int result;
 
@@ -52,15 +47,11 @@ setegid(gid_t g)
 
 	assert(__UserGroupBase != NULL);
 
-	result = setregid((ULONG)-1,(ULONG)g);
+	result = setregid((ULONG)-1, (ULONG)g);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

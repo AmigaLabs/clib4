@@ -35,12 +35,6 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
@@ -56,12 +50,12 @@ getpass(const char *prompt)
 
 	SHOWSTRING(prompt);
 
-	assert( prompt != NULL );
+	assert(prompt != NULL);
 	assert(__UserGroupBase != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(prompt == NULL)
+		if (prompt == NULL)
 		{
 			SHOWMSG("invalid prompt");
 
@@ -69,7 +63,7 @@ getpass(const char *prompt)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	PROFILE_OFF();
 	result = __getpass((STRPTR)prompt);
@@ -77,15 +71,11 @@ getpass(const char *prompt)
 
 	SHOWSTRING(result);
 
- out:
+out:
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */

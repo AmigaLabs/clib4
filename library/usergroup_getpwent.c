@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(USERGROUP_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
@@ -44,7 +40,7 @@
 struct passwd *
 getpwent(void)
 {
-	struct passwd * result;
+	struct passwd *result;
 
 	ENTER();
 
@@ -54,13 +50,9 @@ getpwent(void)
 	result = __getpwent();
 	PROFILE_ON();
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* USERGROUP_SUPPORT */
