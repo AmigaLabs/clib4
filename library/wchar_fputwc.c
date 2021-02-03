@@ -38,8 +38,8 @@
 /****************************************************************************/
 
 wint_t
-fputwc(wchar_t c,FILE *stream)
+fputwc(wchar_t c, FILE *stream)
 {
 	/* ZZZ unimplemented */
-	return(0);
+	return (0);
 }

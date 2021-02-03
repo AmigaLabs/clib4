@@ -73,6 +73,9 @@ typedef unsigned int ino_t;
 typedef unsigned int mode_t;
 typedef unsigned int nlink_t;
 typedef long int off_t;
+#ifdef __USE_LARGEFILE64
+typedef long long _off64_t;
+#endif
 typedef int pid_t;
 typedef unsigned int rlim_t;
 typedef int ssize_t;

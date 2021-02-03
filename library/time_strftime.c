@@ -49,24 +49,24 @@
 
 struct format_hook_data
 {
-	char *	buffer;
-	int		max_size;
-	int		len;
+	char *buffer;
+	int max_size;
+	int len;
 };
 
 /****************************************************************************/
 
 STATIC VOID
 format_hook_function(
-	struct Hook *			hook,
-	struct Locale *	UNUSED	unused_locale,
-	ULONG					c)
+	struct Hook *hook,
+	struct Locale *UNUSED unused_locale,
+	ULONG c)
 {
-	struct format_hook_data * data = hook->h_Data;
+	struct format_hook_data *data = hook->h_Data;
 
-	if(c != '\0')
+	if (c != '\0')
 	{
-		if(data->max_size > 0)
+		if (data->max_size > 0)
 		{
 			/* There's still room for another character. */
 			(*data->buffer++) = (char)c;
@@ -86,18 +86,18 @@ format_hook_function(
 /****************************************************************************/
 
 STATIC VOID
-store_string_via_hook(const char * string,int len,struct Hook * hook)
+store_string_via_hook(const char *string, int len, struct Hook *hook)
 {
 	DECLARE_UTILITYBASE();
 
-	assert( string != NULL && hook != NULL );
-	assert( UtilityBase != NULL );
+	assert(string != NULL && hook != NULL);
+	assert(UtilityBase != NULL);
 
-	if(len < 0)
+	if (len < 0)
 		len = strlen(string);
 
-	while(len-- > 0)
-		CallHookPkt(hook,NULL,(APTR)((ULONG)(*string++)));
+	while (len-- > 0)
+		CallHookPkt(hook, NULL, (APTR)((ULONG)(*string++)));
 }
 
 /****************************************************************************/
@@ -105,9 +105,9 @@ store_string_via_hook(const char * string,int len,struct Hook * hook)
 /* The algorithm for calculating the ISO 8601 week number value comes from
    the "Calendar FAQ" at <http://www.tondering.dk/claus/calendar.html>. */
 INLINE STATIC int
-julian_day(int day,int month,int year)
+julian_day(int day, int month, int year)
 {
-	int a,y,m,result;
+	int a, y, m, result;
 
 	a = (14 - month) / 12;
 	y = year + 4800 - a;
@@ -115,14 +115,14 @@ julian_day(int day,int month,int year)
 
 	result = day + (153 * m + 2) / 5 + 365 * y + (y / 4) - (y / 100) + (y / 400) - 32045;
 
-	return(result);
+	return (result);
 }
 
 STATIC void
-iso8601_calendar_week_and_year(int day,int month,int year,int * week_ptr,int * year_ptr)
+iso8601_calendar_week_and_year(int day, int month, int year, int *week_ptr, int *year_ptr)
 {
-	int J = julian_day(day,month,year);
-	int d1,d4,L;
+	int J = julian_day(day, month, year);
+	int d1, d4, L;
 	int week;
 
 	d4 = (J + 31741 - (J % 7)) % 146097 % 36524 % 1461;
@@ -136,34 +136,34 @@ iso8601_calendar_week_and_year(int day,int month,int year,int * week_ptr,int * y
 	else if (month == 12 && week == 1)
 		year++;
 
-	if(week_ptr != NULL)
+	if (week_ptr != NULL)
 		(*week_ptr) = week;
 
-	if(year_ptr != NULL)
+	if (year_ptr != NULL)
 		(*year_ptr) = year;
 }
 
 /****************************************************************************/
 
 STATIC VOID
-format_date(const char *format,const struct tm *tm,struct Hook * hook)
+format_date(const char *format, const struct tm *tm, struct Hook *hook)
 {
 	int gmt_offset;
 	int week_number;
 	int year_number;
 	int hour;
 	char buffer[40];
-	const char * str;
+	const char *str;
 	char c;
 
-	assert( format != NULL && tm != NULL && hook != NULL);
+	assert(format != NULL && tm != NULL && hook != NULL);
 
-	while((c = (*format++)) != '\0')
+	while ((c = (*format++)) != '\0')
 	{
 		/* This is the simple case. */
-		if(c != '%')
+		if (c != '%')
 		{
-			store_string_via_hook(&c,1,hook);
+			store_string_via_hook(&c, 1, hook);
 			continue;
 		}
 
@@ -172,385 +172,385 @@ format_date(const char *format,const struct tm *tm,struct Hook * hook)
 
 		/* For C99, check if the 'E' or 'O' modifiers are present. If so,
 		   skip them for now. */
-		if(c == 'E' || c == 'O')
+		if (c == 'E' || c == 'O')
 			c = (*format++);
 
 		/* We stop if the string ends here. Hm... should this count as an error? */
-		if(c == '\0')
+		if (c == '\0')
 			break;
 
-		switch(c)
+		switch (c)
 		{
-			/* Abbreviated weekday name ("Sun"). */
-			case 'a':
+		/* Abbreviated weekday name ("Sun"). */
+		case 'a':
 
-				assert( 0 <= tm->tm_wday && tm->tm_wday <= 6 );
+			assert(0 <= tm->tm_wday && tm->tm_wday <= 6);
 
-				if(0 <= tm->tm_wday && tm->tm_wday <= 6)
-					str = __abbreviated_week_day_names[tm->tm_wday];
-				else
-					str = "-";
+			if (0 <= tm->tm_wday && tm->tm_wday <= 6)
+				str = __abbreviated_week_day_names[tm->tm_wday];
+			else
+				str = "-";
 
-				store_string_via_hook(str,-1,hook);
-				break;
+			store_string_via_hook(str, -1, hook);
+			break;
 
-			/* Full weekday name ("Sunday"). */
-			case 'A':
+		/* Full weekday name ("Sunday"). */
+		case 'A':
 
-				assert( 0 <= tm->tm_wday && tm->tm_wday <= 6 );
+			assert(0 <= tm->tm_wday && tm->tm_wday <= 6);
 
-				if(0 <= tm->tm_wday && tm->tm_wday <= 6)
-					str = __week_day_names[tm->tm_wday];
-				else
-					str = "-";
+			if (0 <= tm->tm_wday && tm->tm_wday <= 6)
+				str = __week_day_names[tm->tm_wday];
+			else
+				str = "-";
 
-				store_string_via_hook(str,-1,hook);
-				break;
+			store_string_via_hook(str, -1, hook);
+			break;
 
-			/* Abbreviated month name ("Jan"). */
-			case 'b':
+		/* Abbreviated month name ("Jan"). */
+		case 'b':
 
-				assert( 0 <= tm->tm_mon && tm->tm_mon <= 11 );
+			assert(0 <= tm->tm_mon && tm->tm_mon <= 11);
 
-				if(0 <= tm->tm_mon && tm->tm_mon <= 11)
-					str = __abbreviated_month_names[tm->tm_mon];
-				else
-					str = "-";
+			if (0 <= tm->tm_mon && tm->tm_mon <= 11)
+				str = __abbreviated_month_names[tm->tm_mon];
+			else
+				str = "-";
 
-				store_string_via_hook(str,-1,hook);
-				break;
+			store_string_via_hook(str, -1, hook);
+			break;
 
-			/* Full month name ("January"). */
-			case 'B':
+		/* Full month name ("January"). */
+		case 'B':
 
-				assert( 0 <= tm->tm_mon && tm->tm_mon <= 11 );
+			assert(0 <= tm->tm_mon && tm->tm_mon <= 11);
 
-				if(0 <= tm->tm_mon && tm->tm_mon <= 11)
-					str = __month_names[tm->tm_mon];
-				else
-					str = "";
+			if (0 <= tm->tm_mon && tm->tm_mon <= 11)
+				str = __month_names[tm->tm_mon];
+			else
+				str = "";
 
-				store_string_via_hook(str,-1,hook);
-				break;
+			store_string_via_hook(str, -1, hook);
+			break;
 
-			/* Locale specific date and time ("%a %b %e %T %Y"). */
-			case 'c':
+		/* Locale specific date and time ("%a %b %e %T %Y"). */
+		case 'c':
 
-				format_date("%a %b %e %T %Y",tm,hook);
-				break;
+			format_date("%a %b %e %T %Y", tm, hook);
+			break;
 
-			/* The century number ("00"-"99"; C99). */
-			case 'C':
+		/* The century number ("00"-"99"; C99). */
+		case 'C':
 
-				__number_to_string((unsigned int)(tm->tm_year / 100),buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			__number_to_string((unsigned int)(tm->tm_year / 100), buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* Day of the month ("01"-"31"). */
-			case 'd':
+		/* Day of the month ("01"-"31"). */
+		case 'd':
 
-				assert( 1 <= tm->tm_mday && tm->tm_mday <= 31 );
+			assert(1 <= tm->tm_mday && tm->tm_mday <= 31);
 
-				__number_to_string((unsigned int)tm->tm_mday,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			__number_to_string((unsigned int)tm->tm_mday, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* Date ("12/31/00"; C99) */
-			case 'D':
+		/* Date ("12/31/00"; C99) */
+		case 'D':
 
-				format_date("%m/%d/%y",tm,hook);
-				break;
+			format_date("%m/%d/%y", tm, hook);
+			break;
 
-			/* Month with a leading space rather than a zero (" 1"-"12"; C99). */
-			case 'e':
+		/* Month with a leading space rather than a zero (" 1"-"12"; C99). */
+		case 'e':
 
-				assert( 0 <= tm->tm_mon && tm->tm_mon <= 11 );
+			assert(0 <= tm->tm_mon && tm->tm_mon <= 11);
 
-				__number_to_string((unsigned int)tm->tm_mon+1,buffer,sizeof(buffer),2);
-				if(buffer[0] == '0')
-					buffer[0] = ' ';
+			__number_to_string((unsigned int)tm->tm_mon + 1, buffer, sizeof(buffer), 2);
+			if (buffer[0] == '0')
+				buffer[0] = ' ';
 
-				store_string_via_hook(buffer,2,hook);
-				break;
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* ISO 8601 date format ("2005-05-14"; C99). */
-			case 'F':
+		/* ISO 8601 date format ("2005-05-14"; C99). */
+		case 'F':
 
-				format_date("%Y-%m-%d",tm,hook);
-				break;
+			format_date("%Y-%m-%d", tm, hook);
+			break;
 
-			/* The last two digits of the week-based year ("00"-"99"; C99). */
-			case 'g':
+		/* The last two digits of the week-based year ("00"-"99"; C99). */
+		case 'g':
 
-				assert( 1 <= tm->tm_mday && tm->tm_mday <= 31 );
-				assert( 0 <= tm->tm_mon && tm->tm_mon <= 11 );
-				assert( 0 <= tm->tm_year );
+			assert(1 <= tm->tm_mday && tm->tm_mday <= 31);
+			assert(0 <= tm->tm_mon && tm->tm_mon <= 11);
+			assert(0 <= tm->tm_year);
 
-				iso8601_calendar_week_and_year(tm->tm_mday,tm->tm_mon+1,tm->tm_year + 1900,NULL,&year_number);
-				__number_to_string(year_number % 100,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			iso8601_calendar_week_and_year(tm->tm_mday, tm->tm_mon + 1, tm->tm_year + 1900, NULL, &year_number);
+			__number_to_string(year_number % 100, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* The number of the week-based year ("2005"; C99). */
-			case 'G':
+		/* The number of the week-based year ("2005"; C99). */
+		case 'G':
 
-				assert( 1 <= tm->tm_mday && tm->tm_mday <= 31 );
-				assert( 0 <= tm->tm_mon && tm->tm_mon <= 11 );
-				assert( 0 <= tm->tm_year );
+			assert(1 <= tm->tm_mday && tm->tm_mday <= 31);
+			assert(0 <= tm->tm_mon && tm->tm_mon <= 11);
+			assert(0 <= tm->tm_year);
 
-				iso8601_calendar_week_and_year(tm->tm_mday,tm->tm_mon+1,tm->tm_year + 1900,NULL,&year_number);
-				__number_to_string(year_number,buffer,sizeof(buffer),0);
-				store_string_via_hook(buffer,-1,hook);
-				break;
+			iso8601_calendar_week_and_year(tm->tm_mday, tm->tm_mon + 1, tm->tm_year + 1900, NULL, &year_number);
+			__number_to_string(year_number, buffer, sizeof(buffer), 0);
+			store_string_via_hook(buffer, -1, hook);
+			break;
 
-			/* Abbreviated month name ("Jan"; C99). */
-			case 'h':
+		/* Abbreviated month name ("Jan"; C99). */
+		case 'h':
 
-				format_date("%b",tm,hook);
-				break;
+			format_date("%b", tm, hook);
+			break;
 
-			/* Hour ("00"-"23"). */
-			case 'H':
+		/* Hour ("00"-"23"). */
+		case 'H':
 
-				assert( 0 <= tm->tm_hour && tm->tm_hour <= 23 );
+			assert(0 <= tm->tm_hour && tm->tm_hour <= 23);
 
-				__number_to_string((unsigned int)tm->tm_hour,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			__number_to_string((unsigned int)tm->tm_hour, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* Hour ("01"-"12"). */
-			case 'I':
+		/* Hour ("01"-"12"). */
+		case 'I':
 
-				assert( 0 <= tm->tm_hour && tm->tm_hour <= 23 );
+			assert(0 <= tm->tm_hour && tm->tm_hour <= 23);
 
-				hour = tm->tm_hour % 12;
-				if(hour == 0)
-					hour = 12;
+			hour = tm->tm_hour % 12;
+			if (hour == 0)
+				hour = 12;
 
-				__number_to_string(hour,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			__number_to_string(hour, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* Day of the year ("001"-"366"). */
-			case 'j':
+		/* Day of the year ("001"-"366"). */
+		case 'j':
 
-				__number_to_string(1 + __calculate_days_per_date(tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday) - __calculate_days_per_date(tm->tm_year+1900,1,1),buffer,sizeof(buffer),3);
-				store_string_via_hook(buffer,-1,hook);
-				break;
+			__number_to_string(1 + __calculate_days_per_date(tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday) - __calculate_days_per_date(tm->tm_year + 1900, 1, 1), buffer, sizeof(buffer), 3);
+			store_string_via_hook(buffer, -1, hook);
+			break;
 
-			/* Month ("01"-"12"). */
-			case 'm':
+		/* Month ("01"-"12"). */
+		case 'm':
 
-				assert( 0 <= tm->tm_mon && tm->tm_mon <= 11 );
+			assert(0 <= tm->tm_mon && tm->tm_mon <= 11);
 
-				__number_to_string((unsigned int)tm->tm_mon+1,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			__number_to_string((unsigned int)tm->tm_mon + 1, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* Minute ("00"-"59"). */
-			case 'M':
+		/* Minute ("00"-"59"). */
+		case 'M':
 
-				assert( 0 <= tm->tm_min && tm->tm_min <= 59 );
+			assert(0 <= tm->tm_min && tm->tm_min <= 59);
 
-				__number_to_string((unsigned int)tm->tm_min,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			__number_to_string((unsigned int)tm->tm_min, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* Line feed character (C99). */
-			case 'n':
+		/* Line feed character (C99). */
+		case 'n':
 
-				store_string_via_hook("\n",1,hook);
-				break;
+			store_string_via_hook("\n", 1, hook);
+			break;
 
-			/* 'Ante meridiem'/'Post meridiem' indicator. */
-			case 'p':
+		/* 'Ante meridiem'/'Post meridiem' indicator. */
+		case 'p':
 
-				assert( 0 <= tm->tm_hour && tm->tm_hour <= 23 );
+			assert(0 <= tm->tm_hour && tm->tm_hour <= 23);
 
-				store_string_via_hook((tm->tm_hour < 12) ? "AM" : "PM",2,hook);
-				break;
+			store_string_via_hook((tm->tm_hour < 12) ? "AM" : "PM", 2, hook);
+			break;
 
-			/* 12 hour clock time (C99). */
-			case 'r':
+		/* 12 hour clock time (C99). */
+		case 'r':
 
-				format_date("%I:%M:%S %p",tm,hook);
-				break;
+			format_date("%I:%M:%S %p", tm, hook);
+			break;
 
-			/* Locale-specific time (C99). */
-			case 'R':
+		/* Locale-specific time (C99). */
+		case 'R':
 
-				format_date("%H:%M",tm,hook);
-				break;
+			format_date("%H:%M", tm, hook);
+			break;
 
-			/* Seconds ("00"-"59"). */
-			case 'S':
+		/* Seconds ("00"-"59"). */
+		case 'S':
 
-				assert( 0 <= tm->tm_sec && tm->tm_sec <= 59 );
+			assert(0 <= tm->tm_sec && tm->tm_sec <= 59);
 
-				__number_to_string((unsigned int)tm->tm_sec,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			__number_to_string((unsigned int)tm->tm_sec, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* Horizontal tabulator character (C99). */
-			case 't':
+		/* Horizontal tabulator character (C99). */
+		case 't':
 
-				store_string_via_hook("\t",1,hook);
-				break;
+			store_string_via_hook("\t", 1, hook);
+			break;
 
-			/* ISO 8601 time format ("23:59:59"; C99). */
-			case 'T':
+		/* ISO 8601 time format ("23:59:59"; C99). */
+		case 'T':
 
-				format_date("%H:%M:%S",tm,hook);
-				break;
+			format_date("%H:%M:%S", tm, hook);
+			break;
 
-			/* ISO 8601 week day number ("1"-"7"; 1 is Monday; C99). */
-			case 'u':
+		/* ISO 8601 week day number ("1"-"7"; 1 is Monday; C99). */
+		case 'u':
 
-				assert( 0 <= tm->tm_wday && tm->tm_wday <= 6 );
+			assert(0 <= tm->tm_wday && tm->tm_wday <= 6);
 
-				__number_to_string((unsigned int)(tm->tm_wday > 0 ? tm->tm_wday : 7),buffer,sizeof(buffer),0);
-				store_string_via_hook(buffer,1,hook);
-				break;
+			__number_to_string((unsigned int)(tm->tm_wday > 0 ? tm->tm_wday : 7), buffer, sizeof(buffer), 0);
+			store_string_via_hook(buffer, 1, hook);
+			break;
 
-			/* Week number of the year; first week is the one that contains
+		/* Week number of the year; first week is the one that contains
 			 * the first Sunday of the year ("00"-"53").
 			 */
-			case 'U':
+		case 'U':
 
-				__number_to_string((tm->tm_yday + 7 - tm->tm_wday) / 7,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			__number_to_string((tm->tm_yday + 7 - tm->tm_wday) / 7, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* ISO 8601 week number ("01"-"53"; C99). */
-			case 'V':
+		/* ISO 8601 week number ("01"-"53"; C99). */
+		case 'V':
 
-				assert( 1 <= tm->tm_mday && tm->tm_mday <= 31 );
-				assert( 0 <= tm->tm_mon && tm->tm_mon <= 11 );
-				assert( 0 <= tm->tm_year );
+			assert(1 <= tm->tm_mday && tm->tm_mday <= 31);
+			assert(0 <= tm->tm_mon && tm->tm_mon <= 11);
+			assert(0 <= tm->tm_year);
 
-				iso8601_calendar_week_and_year(tm->tm_mday,tm->tm_mon+1,tm->tm_year + 1900,&week_number,NULL);
-				__number_to_string(week_number,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			iso8601_calendar_week_and_year(tm->tm_mday, tm->tm_mon + 1, tm->tm_year + 1900, &week_number, NULL);
+			__number_to_string(week_number, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* Week day ("0"-"6"). */
-			case 'w':
+		/* Week day ("0"-"6"). */
+		case 'w':
 
-				assert( 0 <= tm->tm_wday && tm->tm_wday <= 6 );
+			assert(0 <= tm->tm_wday && tm->tm_wday <= 6);
 
-				__number_to_string((unsigned int)tm->tm_wday,buffer,sizeof(buffer),0);
-				store_string_via_hook(buffer,1,hook);
-				break;
+			__number_to_string((unsigned int)tm->tm_wday, buffer, sizeof(buffer), 0);
+			store_string_via_hook(buffer, 1, hook);
+			break;
 
-			/* Week number of the year; first week is the one that contains
+		/* Week number of the year; first week is the one that contains
 			 * the first Monday of the year ("00"-"53").
 			 */
-			case 'W':
+		case 'W':
 
-				__number_to_string((tm->tm_yday + 7 - ((tm->tm_wday + 6) % 7)) / 7,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			__number_to_string((tm->tm_yday + 7 - ((tm->tm_wday + 6) % 7)) / 7, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* Locale-specific date ("%m/%d/%y"). */
-			case 'x':
+		/* Locale-specific date ("%m/%d/%y"). */
+		case 'x':
 
-				format_date("%m/%d/%y",tm,hook);
-				break;
+			format_date("%m/%d/%y", tm, hook);
+			break;
 
-			/* Locale-specific time ("%T"). */
-			case 'X':
+		/* Locale-specific time ("%T"). */
+		case 'X':
 
-				format_date("%T",tm,hook);
-				break;
+			format_date("%T", tm, hook);
+			break;
 
-			/* Year without century ("00"-"99"). */
-			case 'y':
+		/* Year without century ("00"-"99"). */
+		case 'y':
 
-				assert( 0 <= tm->tm_year );
+			assert(0 <= tm->tm_year);
 
-				__number_to_string((unsigned int)tm->tm_year % 100,buffer,sizeof(buffer),2);
-				store_string_via_hook(buffer,2,hook);
-				break;
+			__number_to_string((unsigned int)tm->tm_year % 100, buffer, sizeof(buffer), 2);
+			store_string_via_hook(buffer, 2, hook);
+			break;
 
-			/* Year with century ("1970"-"2147483647"). */
-			case 'Y':
+		/* Year with century ("1970"-"2147483647"). */
+		case 'Y':
 
-				assert( 0 <= tm->tm_year );
+			assert(0 <= tm->tm_year);
 
-				__number_to_string((unsigned int)1900 + tm->tm_year,buffer,sizeof(buffer),0);
-				store_string_via_hook(buffer,-1,hook);
-				break;
+			__number_to_string((unsigned int)1900 + tm->tm_year, buffer, sizeof(buffer), 0);
+			store_string_via_hook(buffer, -1, hook);
+			break;
 
-			/* ISO 8601 offset of time zone from UTC (C99). */
-			case 'z':
+		/* ISO 8601 offset of time zone from UTC (C99). */
+		case 'z':
 
-				__locale_lock();
+			__locale_lock();
 
-				if(__default_locale != NULL)
-				{
-					gmt_offset = __default_locale->loc_GMTOffset;
-					if(gmt_offset < 0)
-						gmt_offset = (-gmt_offset);
-					else if (gmt_offset > 0)
-						store_string_via_hook("-",1,hook);
-				}
-				else
-				{
-					gmt_offset = 0;
-				}
+			if (__default_locale != NULL)
+			{
+				gmt_offset = __default_locale->loc_GMTOffset;
+				if (gmt_offset < 0)
+					gmt_offset = (-gmt_offset);
+				else if (gmt_offset > 0)
+					store_string_via_hook("-", 1, hook);
+			}
+			else
+			{
+				gmt_offset = 0;
+			}
 
-				__locale_unlock();
+			__locale_unlock();
 
-				/* The GMT offset is given in minutes. We need to print
+			/* The GMT offset is given in minutes. We need to print
 				   it as a decimal number. */
-				gmt_offset = (100 * (gmt_offset / 60)) + (gmt_offset % 60);
+			gmt_offset = (100 * (gmt_offset / 60)) + (gmt_offset % 60);
 
-				__number_to_string((unsigned int)gmt_offset,buffer,sizeof(buffer),0);
-				store_string_via_hook(buffer,-1,hook);
+			__number_to_string((unsigned int)gmt_offset, buffer, sizeof(buffer), 0);
+			store_string_via_hook(buffer, -1, hook);
 
-				break;
+			break;
 
-			/* Time zone name. */
-			case 'Z':
+		/* Time zone name. */
+		case 'Z':
 
-				store_string_via_hook("GMT",3,hook);
+			store_string_via_hook("GMT", 3, hook);
 
-				__locale_lock();
+			__locale_lock();
 
-				if(__default_locale != NULL)
+			if (__default_locale != NULL)
+			{
+				int hours_west_of_gmt;
+				char sign = '?';
+
+				hours_west_of_gmt = __default_locale->loc_GMTOffset / 60;
+				if (hours_west_of_gmt < 0)
 				{
-					int hours_west_of_gmt;
-					char sign = '?';
+					sign = '+';
 
-					hours_west_of_gmt = __default_locale->loc_GMTOffset / 60;
-					if(hours_west_of_gmt < 0)
-					{
-						sign = '+';
-
-						hours_west_of_gmt = (-hours_west_of_gmt);
-					}
-					else if (hours_west_of_gmt > 0)
-					{
-						sign = '-';
-					}
-
-					if(hours_west_of_gmt != 0)
-					{
-						store_string_via_hook(&sign,1,hook);
-						__number_to_string((unsigned int)hours_west_of_gmt,buffer,sizeof(buffer),2);
-						store_string_via_hook(buffer,-1,hook);
-					}
+					hours_west_of_gmt = (-hours_west_of_gmt);
+				}
+				else if (hours_west_of_gmt > 0)
+				{
+					sign = '-';
 				}
 
-				__locale_unlock();
+				if (hours_west_of_gmt != 0)
+				{
+					store_string_via_hook(&sign, 1, hook);
+					__number_to_string((unsigned int)hours_west_of_gmt, buffer, sizeof(buffer), 2);
+					store_string_via_hook(buffer, -1, hook);
+				}
+			}
 
-				break;
+			__locale_unlock();
 
-			/* Store that character 'as is'. */
-			default:
+			break;
 
-				store_string_via_hook(&c,1,hook);
-				break;
+		/* Store that character 'as is'. */
+		default:
+
+			store_string_via_hook(&c, 1, hook);
+			break;
 		}
 	}
 }
@@ -570,12 +570,12 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm)
 	SHOWSTRING(format);
 	SHOWPOINTER(tm);
 
-	assert( s != NULL && format != NULL && tm != NULL );
-	assert( (int)maxsize >= 0 );
+	assert(s != NULL && format != NULL && tm != NULL);
+	assert((int)maxsize >= 0);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(s == NULL || format == NULL || tm == NULL)
+		if (s == NULL || format == NULL || tm == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -583,25 +583,25 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	if(maxsize > 0)
+	if (maxsize > 0)
 	{
 		struct format_hook_data data;
 		struct Hook hook;
 
-		data.len		= 0;
-		data.buffer		= s;
-		data.max_size	= maxsize-1;
+		data.len = 0;
+		data.buffer = s;
+		data.max_size = maxsize - 1;
 
-		memset(&hook,0,sizeof(hook));
-		hook.h_Entry	= (HOOKFUNC)format_hook_function;
+		memset(&hook, 0, sizeof(hook));
+		hook.h_Entry = (HOOKFUNC)format_hook_function;
 		hook.h_Data = &data;
 
 		__locale_lock();
 
 		/* Try to use the locale.library date/time conversion function. */
-		if(__locale_table[LC_TIME] != NULL)
+		if (__locale_table[LC_TIME] != NULL)
 		{
 			struct DateStamp ds;
 			struct tm tm_copy;
@@ -610,7 +610,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm)
 			tm_copy = (*tm);
 
 			time_value = mktime(&tm_copy);
-			if(time_value == (time_t)-1)
+			if (time_value == (time_t)-1)
 			{
 				SHOWMSG("invalid time");
 				goto out;
@@ -618,33 +618,33 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm)
 
 			/* Convert the number of seconds into a DateStamp, as to be
 			   submitted to the FormatDate() function below. */
-			if(CANNOT __convert_time_to_datestamp(time_value,&ds))
+			if (CANNOT __convert_time_to_datestamp(time_value, &ds))
 			{
 				SHOWMSG("time conversion to datestamp failed");
 				goto out;
 			}
 
-			assert( LocaleBase != NULL );
+			assert(LocaleBase != NULL);
 
-			FormatDate(__locale_table[LC_TIME],(STRPTR)format,&ds,&hook);
+			FormatDate(__locale_table[LC_TIME], (STRPTR)format, &ds, &hook);
 		}
 		else
 		{
 			struct tm copy_tm;
 
 			/* Fill in the week day if it's not in proper range. */
-			if(tm->tm_wday < 0 || tm->tm_wday > 6)
+			if (tm->tm_wday < 0 || tm->tm_wday > 6)
 			{
 				/* We use a peculiar algorithm rather than falling back onto
 				   mktime() here in order to avoid trouble with skewed results
 				   owing to time zone influence. */
 				copy_tm = (*tm);
-				copy_tm.tm_wday = __calculate_weekday(tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday);
+				copy_tm.tm_wday = __calculate_weekday(tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday);
 
 				tm = &copy_tm;
 			}
 
-			format_date(format,tm,&hook);
+			format_date(format, tm, &hook);
 		}
 
 		__locale_unlock();
@@ -656,8 +656,8 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm)
 		result = data.len;
 	}
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
