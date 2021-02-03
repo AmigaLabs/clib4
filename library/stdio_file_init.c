@@ -53,8 +53,8 @@
 
 /****************************************************************************/
 
-static struct MsgPort *	old_console_task;
-static BOOL				restore_console_task;
+static struct MsgPort *old_console_task;
+static BOOL restore_console_task;
 
 /****************************************************************************/
 
@@ -72,7 +72,7 @@ static BPTR input;
 
 /****************************************************************************/
 
-struct WBStartup * NOCOMMON __WBenchMsg;
+struct WBStartup *NOCOMMON __WBenchMsg;
 
 /****************************************************************************/
 
@@ -88,7 +88,7 @@ FILE_DESTRUCTOR(workbench_exit)
 	PROFILE_OFF();
 
 	/* Now clean up after the streams set up for Workbench startup... */
-	if(restore_console_task)
+	if (restore_console_task)
 	{
 		SetConsoleTask((struct MsgPort *)old_console_task);
 		old_console_task = NULL;
@@ -96,7 +96,7 @@ FILE_DESTRUCTOR(workbench_exit)
 		restore_console_task = FALSE;
 	}
 
-	if(restore_streams)
+	if (restore_streams)
 	{
 		SelectInput(old_input);
 		old_input = ZERO;
@@ -107,13 +107,13 @@ FILE_DESTRUCTOR(workbench_exit)
 		restore_streams = FALSE;
 	}
 
-	if(input != ZERO)
+	if (input != ZERO)
 	{
 		Close(input);
 		input = ZERO;
 	}
 
-	if(output != ZERO)
+	if (output != ZERO)
 	{
 		Close(output);
 		output = ZERO;
@@ -138,11 +138,11 @@ wb_file_init(void)
 
 	if (__stdio_window_specification != NULL)
 	{
-		input = Open(__stdio_window_specification,MODE_NEWFILE);	
+		input = Open(__stdio_window_specification, MODE_NEWFILE);
 	}
 	else if (__WBenchMsg->sm_ToolWindow != NULL)
 	{
-		input = Open(__WBenchMsg->sm_ToolWindow,MODE_NEWFILE);	
+		input = Open(__WBenchMsg->sm_ToolWindow, MODE_NEWFILE);
 	}
 	else
 	{
@@ -156,66 +156,66 @@ wb_file_init(void)
 
 		len = strlen(console_prefix) + strlen(tool_name) + strlen(console_suffix);
 
-		window_specifier = malloc(len+1);
-		if(window_specifier == NULL)
+		window_specifier = malloc(len + 1);
+		if (window_specifier == NULL)
 			goto out;
 
-		strcpy(window_specifier,console_prefix);
-		strcat(window_specifier,tool_name);
-		strcat(window_specifier,console_suffix);
+		strcpy(window_specifier, console_prefix);
+		strcat(window_specifier, tool_name);
+		strcat(window_specifier, console_suffix);
 
-		input = Open(window_specifier,MODE_NEWFILE);
+		input = Open(window_specifier, MODE_NEWFILE);
 
 		free(window_specifier);
 	}
 
-	if(input == ZERO)
-		input = Open("NIL:",MODE_NEWFILE);
+	if (input == ZERO)
+		input = Open("NIL:", MODE_NEWFILE);
 
-	if(input != ZERO)
+	if (input != ZERO)
 	{
-		struct FileHandle * fh = BADDR(input);
+		struct FileHandle *fh = BADDR(input);
 
 		old_console_task = SetConsoleTask(fh->fh_Type);
 
-		output = Open("CONSOLE:",MODE_NEWFILE);
-		if(output != ZERO)
+		output = Open("CONSOLE:", MODE_NEWFILE);
+		if (output != ZERO)
 			restore_console_task = TRUE;
 		else
 			SetConsoleTask((struct MsgPort *)old_console_task);
 	}
 
-	if(output == ZERO)
-		output = Open("NIL:",MODE_NEWFILE);
+	if (output == ZERO)
+		output = Open("NIL:", MODE_NEWFILE);
 
-	if(input == ZERO || output == ZERO)
+	if (input == ZERO || output == ZERO)
 		goto out;
 
-	old_input	= SelectInput(input);
-	old_output	= SelectOutput(output);
+	old_input = SelectInput(input);
+	old_output = SelectOutput(output);
 
 	restore_streams = TRUE;
 
 	result = OK;
 
- out:
+out:
 
 	PROFILE_ON();
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
 FILE_CONSTRUCTOR(stdio_file_init)
 {
-	struct SignalSemaphore * stdio_lock;
-	struct SignalSemaphore * fd_lock;
+	struct SignalSemaphore *stdio_lock;
+	struct SignalSemaphore *fd_lock;
 	BPTR default_file;
-	ULONG fd_flags,iob_flags;
+	ULONG fd_flags, iob_flags;
 	BOOL success = FALSE;
-	char * buffer;
-	char * aligned_buffer;
+	char *buffer;
+	char *aligned_buffer;
 	int i;
 
 	ENTER();
@@ -224,68 +224,68 @@ FILE_CONSTRUCTOR(stdio_file_init)
 	   going to use for disk I/O. The default is 32 bytes, which should
 	   be OK for most cases. If possible, ask the operating system for
 	   its preferred alignment size. */
-	if(SysBase->lib_Version >= 50)
+	if (SysBase->lib_Version >= 50)
 	{
 		uint32 physical_alignment = 0;
 
-		GetCPUInfoTags(GCIT_CacheLineSize,&physical_alignment,TAG_DONE);
+		GetCPUInfoTags(GCIT_CacheLineSize, &physical_alignment, TAG_DONE);
 
-		if(__cache_line_size < physical_alignment)
+		if (__cache_line_size < physical_alignment)
 			__cache_line_size = physical_alignment;
 	}
 
 	/* If we were invoked from Workbench, set up the standard I/O streams. */
-	if(__WBenchMsg != NULL)
+	if (__WBenchMsg != NULL)
 	{
-		if(wb_file_init() < 0)
+		if (wb_file_init() < 0)
 			goto out;
 	}
 
 	/* Now initialize the standard I/O streams (input, output, error). */
-	for(i = STDIN_FILENO ; i <= STDERR_FILENO ; i++)
+	for (i = STDIN_FILENO; i <= STDERR_FILENO; i++)
 	{
 		PROFILE_OFF();
 
-		switch(i)
+		switch (i)
 		{
-			case STDIN_FILENO:
+		case STDIN_FILENO:
 
-				iob_flags		= IOBF_IN_USE | IOBF_READ | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-				fd_flags		= FDF_IN_USE | FDF_READ | FDF_NO_CLOSE;
-				default_file	= Input();
-				break;
+			iob_flags = IOBF_IN_USE | IOBF_READ | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
+			fd_flags = FDF_IN_USE | FDF_READ | FDF_NO_CLOSE;
+			default_file = Input();
+			break;
 
-			case STDOUT_FILENO:
+		case STDOUT_FILENO:
 
-				iob_flags		= IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-				fd_flags		= FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE;
-				default_file	= Output();
-				break;
+			iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
+			fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE;
+			default_file = Output();
+			break;
 
-			case STDERR_FILENO:
-			default:
+		case STDERR_FILENO:
+		default:
 
-				iob_flags		= IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_NONE;
-				fd_flags		= FDF_IN_USE | FDF_WRITE;
-				default_file	= ZERO; /* NOTE: this is really initialized later; see below... */
-				break;
+			iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_NONE;
+			fd_flags = FDF_IN_USE | FDF_WRITE;
+			default_file = ZERO; /* NOTE: this is really initialized later; see below... */
+			break;
 		}
 
 		PROFILE_ON();
 
 		/* Allocate a little more memory than necessary. */
 		buffer = malloc(BUFSIZ + (__cache_line_size - 1));
-		if(buffer == NULL)
+		if (buffer == NULL)
 			goto out;
 
-		#if defined(__THREAD_SAFE)
+#if defined(__THREAD_SAFE)
 		{
 			/* Allocate memory for an arbitration mechanism, then
 			   initialize it. */
-			stdio_lock	= __create_semaphore();
-			fd_lock		= __create_semaphore();
+			stdio_lock = __create_semaphore();
+			fd_lock = __create_semaphore();
 
-			if(stdio_lock == NULL || fd_lock == NULL)
+			if (stdio_lock == NULL || fd_lock == NULL)
 			{
 				__delete_semaphore(stdio_lock);
 				__delete_semaphore(fd_lock);
@@ -300,50 +300,50 @@ FILE_CONSTRUCTOR(stdio_file_init)
 
 			fd_flags |= FDF_NO_CLOSE | FDF_STDIO;
 		}
-		#else
+#else
 		{
-			stdio_lock	= NULL;
-			fd_lock		= NULL;
+			stdio_lock = NULL;
+			fd_lock = NULL;
 
 			/* Check if this stream is attached to a console window. */
-			if(default_file != ZERO)
+			if (default_file != ZERO)
 			{
 				PROFILE_OFF();
 
-				if(IsInteractive(default_file))
-					SET_FLAG(fd_flags,FDF_IS_INTERACTIVE);
+				if (IsInteractive(default_file))
+					SET_FLAG(fd_flags, FDF_IS_INTERACTIVE);
 
 				PROFILE_ON();
 			}
 		}
-		#endif /* __THREAD_SAFE */
+#endif /* __THREAD_SAFE */
 
 		/* Align the buffer start address to a cache line boundary. */
-		aligned_buffer = (char *)((ULONG)(buffer + (__cache_line_size-1)) & ~(__cache_line_size-1));
+		aligned_buffer = (char *)((ULONG)(buffer + (__cache_line_size - 1)) & ~(__cache_line_size - 1));
 
-		__initialize_fd(__fd[i],__fd_hook_entry,default_file,fd_flags,fd_lock);
+		__initialize_fd(__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
 
-		__initialize_iob(__iob[i],__iob_hook_entry,
-			buffer,
-			aligned_buffer,BUFSIZ,
-			i,
-			i,
-			iob_flags,
-			stdio_lock);
+		__initialize_iob(__iob[i], __iob_hook_entry,
+						 buffer,
+						 aligned_buffer, BUFSIZ,
+						 i,
+						 i,
+						 iob_flags,
+						 stdio_lock);
 	}
 
-	#if NOT defined(__THREAD_SAFE)
+#if NOT defined(__THREAD_SAFE)
 	{
 		/* If the program was launched from Workbench, we continue by
 		   duplicating the default output stream for use as the
 		   standard error stream. */
-		if(__WBenchMsg != NULL)
+		if (__WBenchMsg != NULL)
 		{
 			PROFILE_OFF();
 			__fd[STDERR_FILENO]->fd_File = Output();
 			PROFILE_ON();
 
-			SET_FLAG(__fd[STDERR_FILENO]->fd_Flags,FDF_NO_CLOSE);
+			SET_FLAG(__fd[STDERR_FILENO]->fd_Flags, FDF_NO_CLOSE);
 		}
 		else
 		{
@@ -351,56 +351,56 @@ FILE_CONSTRUCTOR(stdio_file_init)
 
 			PROFILE_OFF();
 
-			/* Figure out what the default error output stream is. */
-			#if defined(__amigaos4__)
+/* Figure out what the default error output stream is. */
+#if defined(__amigaos4__)
 			{
 				ces = ErrorOutput();
 			}
-			#else
+#else
 			{
-				struct Process * this_process = (struct Process *)FindTask(NULL);
+				struct Process *this_process = (struct Process *)FindTask(NULL);
 
 				ces = this_process->pr_CES;
 			}
-			#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
 			PROFILE_ON();
 
 			/* Is the standard error stream configured? If so, use it.
 			   Otherwise, try to duplicate the standard output stream. */
-			if(ces != ZERO)
+			if (ces != ZERO)
 			{
 				__fd[STDERR_FILENO]->fd_File = ces;
 
-				SET_FLAG(__fd[STDERR_FILENO]->fd_Flags,FDF_NO_CLOSE);
+				SET_FLAG(__fd[STDERR_FILENO]->fd_Flags, FDF_NO_CLOSE);
 			}
 			else
 			{
-				__fd[STDERR_FILENO]->fd_File = Open("CONSOLE:",MODE_NEWFILE);
+				__fd[STDERR_FILENO]->fd_File = Open("CONSOLE:", MODE_NEWFILE);
 			}
 		}
 
 		PROFILE_OFF();
 
 		/* Figure out if the standard error stream is bound to a console. */
-		if(FLAG_IS_CLEAR(__fd[STDERR_FILENO]->fd_Flags,FDF_STDIO))
+		if (FLAG_IS_CLEAR(__fd[STDERR_FILENO]->fd_Flags, FDF_STDIO))
 		{
-			if(IsInteractive(__fd[STDERR_FILENO]->fd_File))
-				SET_FLAG(__fd[STDERR_FILENO]->fd_Flags,FDF_IS_INTERACTIVE);
+			if (IsInteractive(__fd[STDERR_FILENO]->fd_File))
+				SET_FLAG(__fd[STDERR_FILENO]->fd_Flags, FDF_IS_INTERACTIVE);
 		}
 
 		PROFILE_ON();
 	}
-	#endif /* __THREAD_SAFE */
+#endif /* __THREAD_SAFE */
 
 	success = TRUE;
 
- out:
+out:
 
 	SHOWVALUE(success);
 	LEAVE();
 
-	if(success)
+	if (success)
 		CONSTRUCTOR_SUCCEED();
 	else
 		CONSTRUCTOR_FAIL();

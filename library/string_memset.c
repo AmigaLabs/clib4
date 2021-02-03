@@ -44,21 +44,21 @@
 /****************************************************************************/
 
 INLINE STATIC VOID
-__memset(unsigned char * to,unsigned char value,size_t len)
+__memset(unsigned char *to, unsigned char value, size_t len)
 {
 	/* The setup below is intended to speed up changing larger
 	 * memory blocks. This can be very elaborate and should not be
 	 * done unless a payoff can be expected.
 	 */
-	if(len > 4 * sizeof(long))
+	if (len > 4 * sizeof(long))
 	{
-		if(IS_UNALIGNED(to))
+		if (IS_UNALIGNED(to))
 		{
 			(*to++) = value;
 			len--;
 		}
 
-		if(len >= sizeof(short) && IS_SHORT_ALIGNED(to))
+		if (len >= sizeof(short) && IS_SHORT_ALIGNED(to))
 		{
 			(*to++) = value;
 			(*to++) = value;
@@ -66,15 +66,15 @@ __memset(unsigned char * to,unsigned char value,size_t len)
 			len -= sizeof(short);
 		}
 
-		if(len >= sizeof(long) && IS_LONG_ALIGNED(to))
+		if (len >= sizeof(long) && IS_LONG_ALIGNED(to))
 		{
-			unsigned long *	_to		= (unsigned long *)to;
-			unsigned long	_value	= value;
+			unsigned long *_to = (unsigned long *)to;
+			unsigned long _value = value;
 
-			_value |= (_value <<  8);
+			_value |= (_value << 8);
 			_value |= (_value << 16);
 
-			while(len >= 8 * sizeof(long))
+			while (len >= 8 * sizeof(long))
 			{
 				/* The following should translate into load/store
 				   opcodes which encode the access offsets (0..7)
@@ -109,18 +109,18 @@ __memset(unsigned char * to,unsigned char value,size_t len)
 				len -= 8 * sizeof(long);
 			}
 
-			while(len >= sizeof(long))
+			while (len >= sizeof(long))
 			{
 				(*_to++) = _value;
 
 				len -= sizeof(long);
-			}		
+			}
 
 			to = (unsigned char *)_to;
 		}
 	}
 
-	while(len-- > 0)
+	while (len-- > 0)
 		(*to++) = value;
 }
 
@@ -137,33 +137,33 @@ void *
 memset(void *ptr, int val, size_t len)
 #endif /* __GNUC__ && __GNUC__ < 3 */
 {
-	void * result = ptr;
-	unsigned char * m = ptr;
+	void *result = ptr;
+	unsigned char *m = ptr;
 
-	assert( (len == 0) || (ptr != NULL && (int)len > 0) );
+	assert((len == 0) || (ptr != NULL && (int)len > 0));
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(ptr == NULL)
+		if (ptr == NULL)
 		{
 			__set_errno(EFAULT);
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if 0
+#if 0
 	{
 		while(len-- > 0)
 			(*m++) = val;
 	}
-	#else
+#else
 	{
-		__memset(m,(unsigned char)(val & 255),len);
+		__memset(m, (unsigned char)(val & 255), len);
 	}
-	#endif
+#endif
 
- out:
+out:
 
-	return(result);
+	return (result);
 }

@@ -381,7 +381,7 @@ remove_and_free_memory_node(struct MemoryNode *mn)
 			if (__memory_pool != NULL)
 			{
 				PROFILE_OFF();
-				ItemPoolFree(__memory_pool, mn);
+				FreePooled(__memory_pool, mn, allocation_size);
 				PROFILE_ON();
 			}
 			else
@@ -415,7 +415,7 @@ remove_and_free_memory_node(struct MemoryNode *mn)
 		if (__memory_pool != NULL)
 		{
 			PROFILE_OFF();
-			ItemPoolFree(__memory_pool, mn);
+			FreePooled(__memory_pool, mn, allocation_size);
 			PROFILE_ON();
 		}
 		else
