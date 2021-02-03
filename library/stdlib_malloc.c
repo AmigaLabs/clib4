@@ -157,7 +157,7 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 			if (__memory_pool != NULL)
 			{
 				PROFILE_OFF();
-				mn = ItemPoolAlloc(__memory_pool);
+				mn = AllocPooled(__memory_pool, allocation_size);
 				PROFILE_ON();
 			}
 			else
@@ -196,7 +196,7 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 		if (__memory_pool != NULL)
 		{
 			PROFILE_OFF();
-			mn = ItemPoolAlloc(__memory_pool);
+			mn = AllocPooled(__memory_pool, allocation_size);
 			PROFILE_ON();
 		}
 		else
@@ -445,7 +445,7 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
 			{
 				NewList((struct List *)&__memory_list);
 
-				FreeSysObject(ASOT_ITEMPOOL, __memory_pool);
+				FreeSysObject(ASOT_MEMPOOL, __memory_pool);
 				__memory_pool = NULL;
 			}
 			else if (__memory_list.mlh_Head != NULL)
@@ -470,7 +470,7 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
 		{
 			NewList((struct List *)&__memory_list);
 
-			FreeSysObject(ASOT_ITEMPOOL, __memory_pool);
+			FreeSysObject(ASOT_MEMPOOL, __memory_pool);
 			__memory_pool = NULL;
 		}
 		else if (__memory_list.mlh_Head != NULL)
@@ -548,25 +548,23 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
 		}
 		else
 		{
-			__memory_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+			__memory_pool = AllocSysObjectTags(ASOT_MEMPOOL,
 											   ASO_NoTrack, FALSE,
-											   ASOITEM_MFlags, MEMF_PRIVATE,
-											   ASOITEM_ItemSize, (ULONG)__default_pool_size,
-											   ASOITEM_BatchSize, 408,
-											   ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
-											   ASOITEM_GCParameter, 1000,
+											   ASO_MemoryOvr, MEMF_PRIVATE,
+											   ASOPOOL_MFlags, MEMF_PRIVATE,
+											   ASOPOOL_Threshold, (ULONG)__default_pool_size,
+											   ASOPOOL_Puddle, (ULONG)__default_pool_size,
 											   TAG_DONE);
 		}
 	}
 #else
 	{
-		__memory_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+		__memory_pool = AllocSysObjectTags(ASOT_MEMPOOL,
 										   ASO_NoTrack, FALSE,
-										   ASOITEM_MFlags, MEMF_PRIVATE,
-										   ASOITEM_ItemSize, (ULONG)__default_pool_size,
-										   ASOITEM_BatchSize, 408,
-										   ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
-										   ASOITEM_GCParameter, 1000,
+										   ASO_MemoryOvr, MEMF_PRIVATE,
+										   ASOPOOL_MFlags, MEMF_PRIVATE,
+										   ASOPOOL_Threshold, (ULONG)__default_pool_size,
+										   ASOPOOL_Puddle, (ULONG)__default_pool_size,
 										   TAG_DONE);
 	}
 #endif /* __USE_SLAB_ALLOCATOR) */
