@@ -53,20 +53,15 @@
 
 /****************************************************************************/
 
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
 /****************************************************************************/
 
-float
-strtof(const char *str, char ** ptr)
+float strtof(const char *str, char **ptr)
 {
-	const char * stop = str;
+	const char *stop = str;
 	float sum = 0.0;
 	float result;
 	int is_negative;
@@ -77,11 +72,11 @@ strtof(const char *str, char ** ptr)
 	SHOWSTRING(str);
 	SHOWPOINTER(ptr);
 
-	assert( str != NULL );
+	assert(str != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(str == NULL)
+		if (str == NULL)
 		{
 			SHOWMSG("invalid str parameter");
 
@@ -91,19 +86,19 @@ strtof(const char *str, char ** ptr)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	/* Skip all leading blanks. */
-	while((c = (*str)) != '\0')
+	while ((c = (*str)) != '\0')
 	{
-		if(NOT isspace(c))
+		if (NOT isspace(c))
 			break;
 
 		str++;
 	}
 
 	/* The first character may be a sign. */
-	if((*str) == '-')
+	if ((*str) == '-')
 	{
 		/* It's a negative number. */
 		is_negative = 1;
@@ -117,12 +112,12 @@ strtof(const char *str, char ** ptr)
 
 		/* But there may be a sign we will choose to
 		   ignore. */
-		if((*str) == '+')
+		if ((*str) == '+')
 			str++;
 	}
 
 	/* We begin by checking for the "inf" and "nan" strings. */
-	if(strcasecmp(str,"inf") == SAME || strcasecmp(str,"infinity") == SAME)
+	if (strcasecmp(str, "inf") == SAME || strcasecmp(str, "infinity") == SAME)
 	{
 		SHOWMSG("infinity");
 
@@ -132,19 +127,19 @@ strtof(const char *str, char ** ptr)
 
 		stop = str;
 	}
-	else if (strncasecmp(str,"nan",3) == SAME && (str[3] == '(' || str[3] == '\0'))
+	else if (strncasecmp(str, "nan", 3) == SAME && (str[3] == '(' || str[3] == '\0'))
 	{
 		SHOWMSG("not a number");
 
 		str += 3;
 
 		/* Does NaN data follow the header? If so, skip it. */
-		if((*str) == '(')
+		if ((*str) == '(')
 		{
-			while((*str) != '\0' && (*str) != ')')
+			while ((*str) != '\0' && (*str) != ')')
 				str++;
 
-			if((*str) == ')')
+			if ((*str) == ')')
 				str++;
 		}
 
@@ -161,7 +156,7 @@ strtof(const char *str, char ** ptr)
 		int radix;
 
 		/* Check for the hex prefix. */
-		if(strncasecmp(str,"0x",2) == SAME)
+		if (strncasecmp(str, "0x", 2) == SAME)
 		{
 			str += 2;
 
@@ -173,7 +168,7 @@ strtof(const char *str, char ** ptr)
 		}
 
 		/* Convert all the digits preceding the decimal point. */
-		while((c = (*str)) != '\0')
+		while ((c = (*str)) != '\0')
 		{
 			if ('0' <= c && c <= '9')
 				c = c - '0';
@@ -184,17 +179,17 @@ strtof(const char *str, char ** ptr)
 			else
 				c = radix;
 
-			if(c >= radix)
+			if (c >= radix)
 				break;
 
 			str++;
 
 			num_digits_converted++;
 
-			if(error == 0)
+			if (error == 0)
 			{
 				new_sum = (radix * sum) + c;
-				if(new_sum < sum) /* overflow? */
+				if (new_sum < sum) /* overflow? */
 					error = ERANGE;
 				else
 					sum = new_sum;
@@ -208,12 +203,12 @@ strtof(const char *str, char ** ptr)
 
 		__locale_lock();
 
-		if(__locale_table[LC_NUMERIC] != NULL)
+		if (__locale_table[LC_NUMERIC] != NULL)
 		{
-			const char * point;
+			const char *point;
 
 			point = (const char *)__locale_table[LC_NUMERIC]->loc_DecimalPoint;
-			if((*point) == (*str))
+			if ((*point) == (*str))
 			{
 				decimal_point_matches = 1;
 
@@ -224,9 +219,9 @@ strtof(const char *str, char ** ptr)
 
 		__locale_unlock();
 
-		if(NOT decimal_point_matches)
+		if (NOT decimal_point_matches)
 		{
-			if((*str) == '.')
+			if ((*str) == '.')
 			{
 				decimal_point_matches = 1;
 
@@ -235,12 +230,12 @@ strtof(const char *str, char ** ptr)
 			}
 		}
 
-		if(decimal_point_matches)
+		if (decimal_point_matches)
 		{
 			float divisor = 1.0 / radix;
 
 			/* Process all digits following the decimal point. */
-			while((c = (*str)) != '\0')
+			while ((c = (*str)) != '\0')
 			{
 				if ('0' <= c && c <= '9')
 					c = c - '0';
@@ -251,17 +246,17 @@ strtof(const char *str, char ** ptr)
 				else
 					c = radix;
 
-				if(c >= radix)
+				if (c >= radix)
 					break;
 
 				str++;
 
 				num_digits_converted++;
 
-				if(error == 0 && divisor != 0.0)
+				if (error == 0 && divisor != 0.0)
 				{
 					new_sum = sum + c * divisor;
-					if(new_sum < sum) /* overflow? */
+					if (new_sum < sum) /* overflow? */
 						error = ERANGE;
 					else
 						sum = new_sum;
@@ -272,8 +267,8 @@ strtof(const char *str, char ** ptr)
 		}
 
 		/* If there is a scale indicator attached, process it. */
-		if((radix == 10 && ((*str) == 'e' || (*str) == 'E')) ||
-		   (radix == 16 && ((*str) == 'p' || (*str) == 'P')))
+		if ((radix == 10 && ((*str) == 'e' || (*str) == 'E')) ||
+			(radix == 16 && ((*str) == 'p' || (*str) == 'P')))
 		{
 			int exponent_is_negative;
 			int new_exponent;
@@ -283,7 +278,7 @@ strtof(const char *str, char ** ptr)
 			/* If we are processing a hexadecimal encoded
 			   floating point number, switch to a binary
 			   exponent. */
-			if(radix == 16)
+			if (radix == 16)
 				exponent_radix = 2;
 			else
 				exponent_radix = 10;
@@ -292,7 +287,7 @@ strtof(const char *str, char ** ptr)
 			str++;
 
 			/* Take care of the exponent's sign. */
-			if((*str) == '-')
+			if ((*str) == '-')
 			{
 				exponent_is_negative = 1;
 				str++;
@@ -301,27 +296,27 @@ strtof(const char *str, char ** ptr)
 			{
 				exponent_is_negative = 0;
 
-				if((*str) == '+')
+				if ((*str) == '+')
 					str++;
 			}
 
 			/* Again, process all digits to follow. */
-			while((c = (*str)) != '\0')
+			while ((c = (*str)) != '\0')
 			{
-				if('0' <= c && c <= '9')
+				if ('0' <= c && c <= '9')
 					c -= '0';
 				else
 					c = exponent_radix;
 
-				if(c >= exponent_radix)
+				if (c >= exponent_radix)
 					break;
 
 				str++;
 
-				if(error == 0)
+				if (error == 0)
 				{
 					new_exponent = (exponent_radix * exponent) + c;
-					if(new_exponent < exponent) /* overflow? */
+					if (new_exponent < exponent) /* overflow? */
 						error = ERANGE;
 					else
 						exponent = new_exponent;
@@ -329,18 +324,18 @@ strtof(const char *str, char ** ptr)
 			}
 
 			/* If the exponent is valid, scale the number accordingly. */
-			if(exponent != 0)
+			if (exponent != 0)
 			{
-				if(exponent_is_negative)
+				if (exponent_is_negative)
 				{
 					float divisor;
 
 					/* A negative exponent means division. */
-					divisor = powf((float)radix,(float)exponent);
-					if(divisor != 0.0)
+					divisor = powf((float)radix, (float)exponent);
+					if (divisor != 0.0)
 					{
 						new_sum = sum / divisor;
-						if(new_sum == 0.0 && sum != 0.0)
+						if (new_sum == 0.0 && sum != 0.0)
 							error = ERANGE;
 						else
 							sum = new_sum;
@@ -353,8 +348,8 @@ strtof(const char *str, char ** ptr)
 				else
 				{
 					/* A positive exponent means multiplication. */
-					new_sum = sum * powf((float)radix,(float)exponent);
-					if(new_sum < sum)
+					new_sum = sum * powf((float)radix, (float)exponent);
+					if (new_sum < sum)
 						error = ERANGE;
 					else
 						sum = new_sum;
@@ -362,7 +357,7 @@ strtof(const char *str, char ** ptr)
 			}
 		}
 
-		if(num_digits_converted == 0)
+		if (num_digits_converted == 0)
 		{
 			sum = 0;
 		}
@@ -370,7 +365,7 @@ strtof(const char *str, char ** ptr)
 		{
 			stop = str;
 
-			if(error != 0)
+			if (error != 0)
 			{
 				__set_errno(error);
 
@@ -379,22 +374,18 @@ strtof(const char *str, char ** ptr)
 		}
 	}
 
-	if(is_negative)
+	if (is_negative)
 		sum = (-sum);
 
 	result = sum;
 
- out:
+out:
 
 	/* If desired, remember where we stopped reading the
 	   number from the buffer. */
-	if(ptr != NULL)
+	if (ptr != NULL)
 		(*ptr) = (char *)stop;
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

@@ -35,19 +35,13 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined (FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 /* The following is not part of the ISO 'C' (1994) standard, but it should
    be part of ISO/IEC 9899:1999, also known as "C99". */
 
 /****************************************************************************/
 
 double
-nan(const char * UNUSED unused_tagp)
+nan(const char *UNUSED unused_tagp)
 {
 	union ieee_double x;
 
@@ -55,9 +49,5 @@ nan(const char * UNUSED unused_tagp)
 	x.raw[0] = 0x7ff80000;
 	x.raw[1] = 0x00000001;
 
-	return(x.value);
+	return (x.value);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

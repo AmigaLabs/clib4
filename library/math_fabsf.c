@@ -35,12 +35,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 
 /****************************************************************************/
@@ -68,14 +62,13 @@ asm(
 	".even\n\t"
 	".globl	_MathIeeeSingBasBase\n\t"
 	".globl	___fabsf\n\t"
-"___fabsf:\n\t"
+	"___fabsf:\n\t"
 	"movel	a6,sp@-\n\t"
-	"movel	"A4(_MathIeeeSingBasBase)",a6\n\t"
-	"moveml	sp@(8),d0/d1\n\t"
-	"jsr		a6@(-54:W)\n\t"
-	"movel	sp@+,a6\n\t"
-	"rts"
-);
+	"movel	" A4(_MathIeeeSingBasBase) ",a6\n\t"
+									   "moveml	sp@(8),d0/d1\n\t"
+									   "jsr		a6@(-54:W)\n\t"
+									   "movel	sp@+,a6\n\t"
+									   "rts");
 
 /****************************************************************************/
 
@@ -90,7 +83,7 @@ __fabsf(float x)
 
 	result = IEEESPAbs(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -113,7 +106,7 @@ __fabsf(float number)
 	/* Knock off the sign bit. */
 	x.raw[0] &= 0x7fffffff;
 
-	return(x.value);
+	return (x.value);
 }
 
 /****************************************************************************/
@@ -122,16 +115,11 @@ __fabsf(float number)
 
 /****************************************************************************/
 
-float
-fabsf(float x)
+float fabsf(float x)
 {
 	float result;
 
 	result = __fabsf(x);
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

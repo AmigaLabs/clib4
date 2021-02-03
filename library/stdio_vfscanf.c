@@ -49,9 +49,9 @@
 
 /****************************************************************************/
 
-#if defined(FLOATING_POINT_SUPPORT) && !defined(_MATH_HEADERS_H)
+#if !defined(_MATH_HEADERS_H)
 #include "math_headers.h"
-#endif /* FLOATING_POINT_SUPPORT && !_MATH_HEADERS_H */
+#endif /* !_MATH_HEADERS_H */
 
 /****************************************************************************/
 
@@ -511,300 +511,207 @@ vfscanf(FILE *stream, const char *format, va_list arg)
 		}
 		else if (conversion_type == 'f')
 		{
-			#if defined(FLOATING_POINT_SUPPORT)
+			__long_double_t sum = 0.0;
+			__long_double_t new_sum;
+			BOOL is_negative = FALSE;
+			BOOL decimal_point_matches = FALSE;
+			BOOL have_exponent = FALSE;
+			void * next_parameter = NULL;
+
+			/* We boldly try to initialize the parameter to a well-
+				defined value before we begin the conversion. */
+			if(NOT assignment_suppressed)
 			{
-				__long_double_t sum = 0.0;
-				__long_double_t new_sum;
-				BOOL is_negative = FALSE;
-				BOOL decimal_point_matches = FALSE;
-				BOOL have_exponent = FALSE;
-				void * next_parameter = NULL;
+				assert( arg != NULL );
 
-				/* We boldly try to initialize the parameter to a well-
-				   defined value before we begin the conversion. */
-				if(NOT assignment_suppressed)
+				#if defined(CHECK_FOR_NULL_POINTERS)
 				{
-					assert( arg != NULL );
-
-					#if defined(CHECK_FOR_NULL_POINTERS)
+					if(arg == NULL)
 					{
-						if(arg == NULL)
-						{
-							__set_errno(EFAULT);
-							goto out;
-						}
+						__set_errno(EFAULT);
+						goto out;
 					}
-					#endif /* CHECK_FOR_NULL_POINTERS */
+				}
+				#endif /* CHECK_FOR_NULL_POINTERS */
 
-					if(parameter_size == parameter_size_default)
+				if(parameter_size == parameter_size_default)
+				{
+					SHOWMSG("short format (float)");
+
+					next_parameter = va_arg(arg,float *);
+				}
+				else if (parameter_size == parameter_size_long)
+				{
+					SHOWMSG("long format (double)");
+
+					next_parameter = va_arg(arg,double *);
+				}
+				else
+				{
+					SHOWMSG("extended format (long double)");
+
+					next_parameter = va_arg(arg,__long_double_t *);
+				}
+
+				assert( next_parameter != NULL );
+
+				#if defined(CHECK_FOR_NULL_POINTERS)
+				{
+					if(next_parameter == NULL)
 					{
-						SHOWMSG("short format (float)");
-
-						next_parameter = va_arg(arg,float *);
+						__set_errno(EFAULT);
+						goto out;
 					}
-					else if (parameter_size == parameter_size_long)
-					{
-						SHOWMSG("long format (double)");
+				}
+				#endif /* CHECK_FOR_NULL_POINTERS */
 
-						next_parameter = va_arg(arg,double *);
+				if(parameter_size == parameter_size_default)
+				{
+					*((float *)next_parameter) = 0;
+				}
+				else if (parameter_size == parameter_size_long)
+				{
+					*((double *)next_parameter) = 0;
+				}
+				else
+				{
+					*((__long_double_t *)next_parameter) = 0;
+				}
+			}
+
+			if(maximum_field_width != 0)
+			{
+				c = __getc(stream);
+				if(c != EOF)
+				{
+					/* Skip the sign. */
+					if(c == '-')
+					{
+						SHOWMSG("negative floating point number");
+
+						is_negative = 1;
+
+						total_num_chars_read++;
+
+						if(maximum_field_width > 0)
+							maximum_field_width--;
+					}
+					else if (c == '+')
+					{
+						SHOWMSG("ignoring positive sign");
+
+						total_num_chars_read++;
+
+						if(maximum_field_width > 0)
+							maximum_field_width--;
 					}
 					else
 					{
-						SHOWMSG("extended format (long double)");
+						D(("first character '%lc' is not a sign",c));
 
-						next_parameter = va_arg(arg,__long_double_t *);
-					}
-
-					assert( next_parameter != NULL );
-
-					#if defined(CHECK_FOR_NULL_POINTERS)
-					{
-						if(next_parameter == NULL)
+						/* It's not a sign; reread this later. */
+						if(ungetc(c,stream) == EOF)
 						{
-							__set_errno(EFAULT);
+							SHOWMSG("couldn't push this character back");
 							goto out;
 						}
 					}
-					#endif /* CHECK_FOR_NULL_POINTERS */
-
-					if(parameter_size == parameter_size_default)
-					{
-						*((float *)next_parameter) = 0;
-					}
-					else if (parameter_size == parameter_size_long)
-					{
-						*((double *)next_parameter) = 0;
-					}
-					else
-					{
-						*((__long_double_t *)next_parameter) = 0;
-					}
 				}
+			}
 
-				if(maximum_field_width != 0)
+			/* Now it gets complicated. We need to pick up a keyword
+				such as "inf", "infinity" or "nan" if it's present.
+				This is tricky because we won't be able to push all
+				the characters back we read during scanning. */
+			if(maximum_field_width != 0)
+			{
+				const char infinity_string[] = "infinity";
+				const char infinity_nan[] = "nan";
+				char chars_read_so_far[80];
+				size_t num_chars_read_so_far = 0;
+				size_t infinity_match = 0;
+				size_t nan_match = 0;
+
+				while(maximum_field_width != 0 && num_chars_read_so_far < sizeof(chars_read_so_far) && (c = __getc(stream)) != EOF)
 				{
-					c = __getc(stream);
-					if(c != EOF)
+					D(("c = '%lc'",c));
+
+					if(tolower(c) == infinity_string[infinity_match])
 					{
-						/* Skip the sign. */
-						if(c == '-')
+						SHOWVALUE(infinity_match);
+
+						nan_match = 0;
+
+						chars_read_so_far[num_chars_read_so_far++] = c;
+						if(maximum_field_width > 0)
+							maximum_field_width--;
+
+						/* Did we match the complete word? */
+						infinity_match++;
+						if(infinity_match == sizeof(infinity_string)-1)
 						{
-							SHOWMSG("negative floating point number");
-
-							is_negative = 1;
-
-							total_num_chars_read++;
-
-							if(maximum_field_width > 0)
-								maximum_field_width--;
-						}
-						else if (c == '+')
-						{
-							SHOWMSG("ignoring positive sign");
-
-							total_num_chars_read++;
-
-							if(maximum_field_width > 0)
-								maximum_field_width--;
-						}
-						else
-						{
-							D(("first character '%lc' is not a sign",c));
-
-							/* It's not a sign; reread this later. */
-							if(ungetc(c,stream) == EOF)
-							{
-								SHOWMSG("couldn't push this character back");
-								goto out;
-							}
-						}
-					}
-				}
-
-				/* Now it gets complicated. We need to pick up a keyword
-				   such as "inf", "infinity" or "nan" if it's present.
-				   This is tricky because we won't be able to push all
-				   the characters back we read during scanning. */
-				if(maximum_field_width != 0)
-				{
-					const char infinity_string[] = "infinity";
-					const char infinity_nan[] = "nan";
-					char chars_read_so_far[80];
-					size_t num_chars_read_so_far = 0;
-					size_t infinity_match = 0;
-					size_t nan_match = 0;
-
-					while(maximum_field_width != 0 && num_chars_read_so_far < sizeof(chars_read_so_far) && (c = __getc(stream)) != EOF)
-					{
-						D(("c = '%lc'",c));
-
-						if(tolower(c) == infinity_string[infinity_match])
-						{
-							SHOWVALUE(infinity_match);
-
-							nan_match = 0;
-
-							chars_read_so_far[num_chars_read_so_far++] = c;
-							if(maximum_field_width > 0)
-								maximum_field_width--;
-
-							/* Did we match the complete word? */
-							infinity_match++;
-							if(infinity_match == sizeof(infinity_string)-1)
-							{
-								SHOWMSG("we have a match for infinity");
-								break;
-							}
-						}
-						else if (infinity_match == 3) /* Did we match the "inf" of "infinity"? */
-						{
-							SHOWVALUE(infinity_match);
-
-							nan_match = 0;
-
-							if(ungetc(c,stream) == EOF)
-							{
-								SHOWMSG("couldn't push this character back");
-								goto out;
-							}
-
-							SHOWMSG("we have a match for inf");
+							SHOWMSG("we have a match for infinity");
 							break;
 						}
-						else if (tolower(c) == infinity_nan[nan_match])
+					}
+					else if (infinity_match == 3) /* Did we match the "inf" of "infinity"? */
+					{
+						SHOWVALUE(infinity_match);
+
+						nan_match = 0;
+
+						if(ungetc(c,stream) == EOF)
 						{
-							SHOWVALUE(nan_match);
+							SHOWMSG("couldn't push this character back");
+							goto out;
+						}
 
-							infinity_match = 0;
+						SHOWMSG("we have a match for inf");
+						break;
+					}
+					else if (tolower(c) == infinity_nan[nan_match])
+					{
+						SHOWVALUE(nan_match);
 
-							chars_read_so_far[num_chars_read_so_far++] = c;
-							if(maximum_field_width > 0)
-								maximum_field_width--;
+						infinity_match = 0;
 
-							/* Did we match the complete word? */
-							nan_match++;
-							if(nan_match == sizeof(infinity_nan)-1)
+						chars_read_so_far[num_chars_read_so_far++] = c;
+						if(maximum_field_width > 0)
+							maximum_field_width--;
+
+						/* Did we match the complete word? */
+						nan_match++;
+						if(nan_match == sizeof(infinity_nan)-1)
+						{
+							SHOWMSG("we have a match for nan");
+
+							/* Check for the () to follow the nan. */
+							if(maximum_field_width != 0 && num_chars_read_so_far < sizeof(chars_read_so_far) && (c = __getc(stream)) != EOF)
 							{
-								SHOWMSG("we have a match for nan");
-
-								/* Check for the () to follow the nan. */
-								if(maximum_field_width != 0 && num_chars_read_so_far < sizeof(chars_read_so_far) && (c = __getc(stream)) != EOF)
+								/* Is this the opening parenthesis of the "nan()" keyword? */
+								if(c == '(')
 								{
-									/* Is this the opening parenthesis of the "nan()" keyword? */
-									if(c == '(')
-									{
-										SHOWMSG("there's something following the nan");
+									SHOWMSG("there's something following the nan");
 
+									nan_match++;
+
+									if(maximum_field_width > 0)
+										maximum_field_width--;
+
+									/* Look for the closing parenthesis. */
+									while(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
+									{
 										nan_match++;
 
 										if(maximum_field_width > 0)
 											maximum_field_width--;
 
-										/* Look for the closing parenthesis. */
-										while(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
-										{
-											nan_match++;
-
-											if(maximum_field_width > 0)
-												maximum_field_width--;
-
-											if(c == ')')
-												break;
-										}
+										if(c == ')')
+											break;
 									}
-									else
-									{
-										if(ungetc(c,stream) == EOF)
-										{
-											SHOWMSG("couldn't push this character back");
-											goto out;
-										}
-									}
-								}
-
-								break;
-							}
-						}
-						else
-						{
-							SHOWMSG("we didn't find a match for infinity/nan");
-
-							nan_match = infinity_match = 0;
-
-							if(ungetc(c,stream) == EOF)
-							{
-								SHOWMSG("couldn't push this character back");
-								goto out;
-							}
-
-							maximum_field_width += num_chars_read_so_far;
-
-							/* Let's try our best here... */
-							while(num_chars_read_so_far > 0)
-								ungetc(chars_read_so_far[--num_chars_read_so_far],stream);
-
-							break;
-						}
-					}
-
-					SHOWVALUE(infinity_match);
-
-					if(infinity_match >= 3)
-					{
-						SHOWMSG("infinity");
-
-						sum = __inf();
-
-						total_num_chars_read = num_chars_processed = infinity_match;
-					}
-					else if (nan_match >= 3)
-					{
-						SHOWMSG("not a number");
-
-						sum = nan(NULL);
-
-						total_num_chars_read = num_chars_processed = nan_match;
-					}
-				}
-
-				/* If we didn't find a keyword above, look for digits. */
-				if(num_chars_processed == 0)
-				{
-					int radix = 10;
-
-					/* Check if there's a hex prefix introducing this number. */
-					if(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
-					{
-						D(("c = '%lc'",c));
-
-						if(c == '0')
-						{
-							/* Use the leading zero as is. */
-							total_num_chars_read++;
-							num_chars_processed++;
-
-							if(maximum_field_width > 0)
-								maximum_field_width--;
-
-							if(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
-							{
-								if(tolower(c) == 'x')
-								{
-									SHOWMSG("found the 0x prefix; setting radix to 16");
-
-									/* The floating point number will be encoded
-									   in hexadecimal/binary notation. */
-									radix = 16;
-
-									total_num_chars_read++;
-									num_chars_processed++;
-
-									if(maximum_field_width > 0)
-										maximum_field_width--;
 								}
 								else
 								{
-									/* Put this back. */
 									if(ungetc(c,stream) == EOF)
 									{
 										SHOWMSG("couldn't push this character back");
@@ -812,10 +719,238 @@ vfscanf(FILE *stream, const char *format, va_list arg)
 									}
 								}
 							}
+
+							break;
+						}
+					}
+					else
+					{
+						SHOWMSG("we didn't find a match for infinity/nan");
+
+						nan_match = infinity_match = 0;
+
+						if(ungetc(c,stream) == EOF)
+						{
+							SHOWMSG("couldn't push this character back");
+							goto out;
+						}
+
+						maximum_field_width += num_chars_read_so_far;
+
+						/* Let's try our best here... */
+						while(num_chars_read_so_far > 0)
+							ungetc(chars_read_so_far[--num_chars_read_so_far],stream);
+
+						break;
+					}
+				}
+
+				SHOWVALUE(infinity_match);
+
+				if(infinity_match >= 3)
+				{
+					SHOWMSG("infinity");
+
+					sum = __inf();
+
+					total_num_chars_read = num_chars_processed = infinity_match;
+				}
+				else if (nan_match >= 3)
+				{
+					SHOWMSG("not a number");
+
+					sum = nan(NULL);
+
+					total_num_chars_read = num_chars_processed = nan_match;
+				}
+			}
+
+			/* If we didn't find a keyword above, look for digits. */
+			if(num_chars_processed == 0)
+			{
+				int radix = 10;
+
+				/* Check if there's a hex prefix introducing this number. */
+				if(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
+				{
+					D(("c = '%lc'",c));
+
+					if(c == '0')
+					{
+						/* Use the leading zero as is. */
+						total_num_chars_read++;
+						num_chars_processed++;
+
+						if(maximum_field_width > 0)
+							maximum_field_width--;
+
+						if(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
+						{
+							if(tolower(c) == 'x')
+							{
+								SHOWMSG("found the 0x prefix; setting radix to 16");
+
+								/* The floating point number will be encoded
+									in hexadecimal/binary notation. */
+								radix = 16;
+
+								total_num_chars_read++;
+								num_chars_processed++;
+
+								if(maximum_field_width > 0)
+									maximum_field_width--;
+							}
+							else
+							{
+								/* Put this back. */
+								if(ungetc(c,stream) == EOF)
+								{
+									SHOWMSG("couldn't push this character back");
+									goto out;
+								}
+							}
+						}
+					}
+					else
+					{
+						/* Put this back. */
+						if(ungetc(c,stream) == EOF)
+						{
+							SHOWMSG("couldn't push this character back");
+							goto out;
+						}
+					}
+				}
+
+				if(maximum_field_width != 0)
+				{
+					int digit;
+
+					while(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
+					{
+						/* Is this a digit? */
+						if('0' <= c && c <= '9')
+							digit = c - '0';
+						else if ('a' <= c && c <= 'f')
+							digit = c - 'a' + 10;
+						else if ('A' <= c && c <= 'F')
+							digit = c - 'A' + 10;
+						else
+							digit = radix;
+
+						if(digit < radix)
+						{
+							D(("got another digit '%lc'",c));
+
+							new_sum = (radix * sum) + digit;
+							if(new_sum < sum) /* overflow? */
+							{
+								/* Put this back. */
+								if(ungetc(c,stream) == EOF)
+								{
+									SHOWMSG("couldn't push this character back");
+									goto out;
+								}
+
+								break;
+							}
+
+							sum = new_sum;
 						}
 						else
 						{
-							/* Put this back. */
+							D(("'%lc' is not a digit",c));
+
+							/* It's not a digit; reread this later. */
+							if(ungetc(c,stream) == EOF)
+							{
+								SHOWMSG("couldn't push this character back");
+								goto out;
+							}
+
+							break;
+						}
+
+						total_num_chars_read++;
+						num_chars_processed++;
+
+						if(maximum_field_width > 0)
+							maximum_field_width--;
+					}
+
+					if(c == EOF && num_chars_processed == 0 && num_conversions == 0)
+						goto out;
+				}
+
+				if(maximum_field_width != 0)
+				{
+					SHOWMSG("looking for decimal point");
+
+					c = __getc(stream);
+					if(c != EOF)
+					{
+						D(("c = '%lc'",c));
+
+						__locale_lock();
+
+						/* Did we find the decimal point? We accept both the
+							* locale configured decimal point and the plain old
+							* dot.
+							*/
+						if(__locale_table[LC_NUMERIC] != NULL)
+						{
+							const unsigned char * point;
+
+							point = (const unsigned char *)__locale_table[LC_NUMERIC]->loc_DecimalPoint;
+
+							if(c == (*point) || c == '.')
+							{
+								SHOWMSG("found a decimal point");
+
+								decimal_point_matches = TRUE;
+							}
+							else
+							{
+								D(("'%lc' is not a decimal point",c));
+							}
+						}
+						else
+						{
+							if(c == '.')
+							{
+								SHOWMSG("found a decimal point");
+
+								decimal_point_matches = TRUE;
+							}
+							else
+							{
+								D(("'%lc' is not a decimal point",c));
+							}
+						}
+
+						__locale_unlock();
+
+						if(decimal_point_matches)
+						{
+							total_num_chars_read++;
+
+							if(maximum_field_width > 0)
+								maximum_field_width--;
+						}
+						else if ((radix == 10 && (c == 'e' || c == 'E')) ||
+									(radix == 16 && (c == 'p' || c == 'P')))
+						{
+							SHOWMSG("found an exponent specifier");
+
+							total_num_chars_read++;
+
+							have_exponent = TRUE;
+
+							if(maximum_field_width > 0)
+								maximum_field_width--;
+						}
+						else
+						{
 							if(ungetc(c,stream) == EOF)
 							{
 								SHOWMSG("couldn't push this character back");
@@ -824,10 +959,15 @@ vfscanf(FILE *stream, const char *format, va_list arg)
 						}
 					}
 
-					if(maximum_field_width != 0)
+					if(decimal_point_matches)
 					{
+						double multiplier = 1.0 / radix;
 						int digit;
 
+						SHOWMSG("found a decimal point");
+						num_chars_processed++;
+
+						/* Process all digits following the decimal point. */
 						while(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
 						{
 							/* Is this a digit? */
@@ -844,26 +984,50 @@ vfscanf(FILE *stream, const char *format, va_list arg)
 							{
 								D(("got another digit '%lc'",c));
 
-								new_sum = (radix * sum) + digit;
-								if(new_sum < sum) /* overflow? */
+								if(multiplier != 0.0)
 								{
-									/* Put this back. */
-									if(ungetc(c,stream) == EOF)
+									new_sum = sum + digit * multiplier;
+									if(new_sum < sum) /* overflow? */
 									{
-										SHOWMSG("couldn't push this character back");
-										goto out;
+										SHOWMSG("got an overflow");
+
+										/* Put this back. */
+										if(ungetc(c,stream) == EOF)
+										{
+											SHOWMSG("couldn't push this character back");
+											goto out;
+										}
+
+										break;
 									}
 
-									break;
+									sum = new_sum;
+
+									multiplier = multiplier / radix;
 								}
 
-								sum = new_sum;
+								total_num_chars_read++;
+								num_chars_processed++;
+
+								if(maximum_field_width > 0)
+									maximum_field_width--;
+							}
+							else if ((radix == 10 && (c == 'e' || c == 'E')) ||
+										(radix == 16 && (c == 'p' || c == 'P')))
+							{
+								SHOWMSG("found an exponent specifier");
+
+								total_num_chars_read++;
+								num_chars_processed++;
+
+								if(maximum_field_width > 0)
+									maximum_field_width--;
+
+								have_exponent = TRUE;
+								break;
 							}
 							else
 							{
-								D(("'%lc' is not a digit",c));
-
-								/* It's not a digit; reread this later. */
 								if(ungetc(c,stream) == EOF)
 								{
 									SHOWMSG("couldn't push this character back");
@@ -872,128 +1036,78 @@ vfscanf(FILE *stream, const char *format, va_list arg)
 
 								break;
 							}
-
-							total_num_chars_read++;
-							num_chars_processed++;
-
-							if(maximum_field_width > 0)
-								maximum_field_width--;
 						}
-
-						if(c == EOF && num_chars_processed == 0 && num_conversions == 0)
-							goto out;
 					}
 
-					if(maximum_field_width != 0)
+					if(have_exponent)
 					{
-						SHOWMSG("looking for decimal point");
+						BOOL exponent_is_negative = FALSE;
+						int new_exponent;
+						int exponent = 0;
+						int exponent_radix;
 
-						c = __getc(stream);
-						if(c != EOF)
+						SHOWMSG("processing exponent");
+
+						/* The exponent may be a binary number. */
+						if(radix == 16)
+							exponent_radix = 2;
+						else
+							exponent_radix = 10;
+
+						if(maximum_field_width != 0)
 						{
-							D(("c = '%lc'",c));
-
-							__locale_lock();
-
-							/* Did we find the decimal point? We accept both the
-							 * locale configured decimal point and the plain old
-							 * dot.
-							 */
-							if(__locale_table[LC_NUMERIC] != NULL)
+							c = __getc(stream);
+							if(c != EOF)
 							{
-								const unsigned char * point;
+								int digit;
 
-								point = (const unsigned char *)__locale_table[LC_NUMERIC]->loc_DecimalPoint;
+								D(("c = '%lc'",c));
 
-								if(c == (*point) || c == '.')
+								/* Skip the sign. */
+								if(c == '-')
 								{
-									SHOWMSG("found a decimal point");
+									exponent_is_negative = TRUE;
 
-									decimal_point_matches = TRUE;
+									total_num_chars_read++;
+									num_chars_processed++;
+
+									if(maximum_field_width > 0)
+										maximum_field_width--;
+								}
+								else if (c == '+')
+								{
+									total_num_chars_read++;
+									num_chars_processed++;
+
+									if(maximum_field_width > 0)
+										maximum_field_width--;
 								}
 								else
 								{
-									D(("'%lc' is not a decimal point",c));
-								}
-							}
-							else
-							{
-								if(c == '.')
-								{
-									SHOWMSG("found a decimal point");
-
-									decimal_point_matches = TRUE;
-								}
-								else
-								{
-									D(("'%lc' is not a decimal point",c));
-								}
-							}
-
-							__locale_unlock();
-
-							if(decimal_point_matches)
-							{
-								total_num_chars_read++;
-
-								if(maximum_field_width > 0)
-									maximum_field_width--;
-							}
-							else if ((radix == 10 && (c == 'e' || c == 'E')) ||
-							         (radix == 16 && (c == 'p' || c == 'P')))
-							{
-								SHOWMSG("found an exponent specifier");
-
-								total_num_chars_read++;
-
-								have_exponent = TRUE;
-
-								if(maximum_field_width > 0)
-									maximum_field_width--;
-							}
-							else
-							{
-								if(ungetc(c,stream) == EOF)
-								{
-									SHOWMSG("couldn't push this character back");
-									goto out;
-								}
-							}
-						}
-
-						if(decimal_point_matches)
-						{
-							double multiplier = 1.0 / radix;
-							int digit;
-
-							SHOWMSG("found a decimal point");
-							num_chars_processed++;
-
-							/* Process all digits following the decimal point. */
-							while(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
-							{
-								/* Is this a digit? */
-								if('0' <= c && c <= '9')
-									digit = c - '0';
-								else if ('a' <= c && c <= 'f')
-									digit = c - 'a' + 10;
-								else if ('A' <= c && c <= 'F')
-									digit = c - 'A' + 10;
-								else
-									digit = radix;
-
-								if(digit < radix)
-								{
-									D(("got another digit '%lc'",c));
-
-									if(multiplier != 0.0)
+									/* It's not a sign; reread this later. */
+									if(ungetc(c,stream) == EOF)
 									{
-										new_sum = sum + digit * multiplier;
-										if(new_sum < sum) /* overflow? */
-										{
-											SHOWMSG("got an overflow");
+										SHOWMSG("couldn't push this character back");
+										goto out;
+									}
+								}
 
-											/* Put this back. */
+								while(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
+								{
+									if('0' <= c && c <= '9')
+										digit = c - '0';
+									else
+										digit = exponent_radix;
+
+									if(digit < exponent_radix)
+									{
+										D(("got another digit '%lc'",c));
+
+										new_exponent = (exponent_radix * exponent) + digit;
+										if(new_exponent < exponent) /* overflow? */
+										{
+											SHOWMSG("overflow!");
+
 											if(ungetc(c,stream) == EOF)
 											{
 												SHOWMSG("couldn't push this character back");
@@ -1003,81 +1117,8 @@ vfscanf(FILE *stream, const char *format, va_list arg)
 											break;
 										}
 
-										sum = new_sum;
+										exponent = new_exponent;
 
-										multiplier = multiplier / radix;
-									}
-
-									total_num_chars_read++;
-									num_chars_processed++;
-
-									if(maximum_field_width > 0)
-										maximum_field_width--;
-								}
-								else if ((radix == 10 && (c == 'e' || c == 'E')) ||
-								         (radix == 16 && (c == 'p' || c == 'P')))
-								{
-									SHOWMSG("found an exponent specifier");
-
-									total_num_chars_read++;
-									num_chars_processed++;
-
-									if(maximum_field_width > 0)
-										maximum_field_width--;
-
-									have_exponent = TRUE;
-									break;
-								}
-								else
-								{
-									if(ungetc(c,stream) == EOF)
-									{
-										SHOWMSG("couldn't push this character back");
-										goto out;
-									}
-
-									break;
-								}
-							}
-						}
-
-						if(have_exponent)
-						{
-							BOOL exponent_is_negative = FALSE;
-							int new_exponent;
-							int exponent = 0;
-							int exponent_radix;
-
-							SHOWMSG("processing exponent");
-
-							/* The exponent may be a binary number. */
-							if(radix == 16)
-								exponent_radix = 2;
-							else
-								exponent_radix = 10;
-
-							if(maximum_field_width != 0)
-							{
-								c = __getc(stream);
-								if(c != EOF)
-								{
-									int digit;
-
-									D(("c = '%lc'",c));
-
-									/* Skip the sign. */
-									if(c == '-')
-									{
-										exponent_is_negative = TRUE;
-
-										total_num_chars_read++;
-										num_chars_processed++;
-
-										if(maximum_field_width > 0)
-											maximum_field_width--;
-									}
-									else if (c == '+')
-									{
 										total_num_chars_read++;
 										num_chars_processed++;
 
@@ -1086,178 +1127,83 @@ vfscanf(FILE *stream, const char *format, va_list arg)
 									}
 									else
 									{
-										/* It's not a sign; reread this later. */
+										SHOWMSG("invalid digit");
+
 										if(ungetc(c,stream) == EOF)
 										{
 											SHOWMSG("couldn't push this character back");
 											goto out;
 										}
+
+										break;
 									}
+								}
 
-									while(maximum_field_width != 0 && (c = __getc(stream)) != EOF)
+								/* If the exponent is valid, scale the number
+									* accordingly.
+									*/
+								if(exponent != 0)
+								{
+									if(exponent_is_negative)
 									{
-										if('0' <= c && c <= '9')
-											digit = c - '0';
-										else
-											digit = exponent_radix;
+										double divisor;
 
-										if(digit < exponent_radix)
-										{
-											D(("got another digit '%lc'",c));
-
-											new_exponent = (exponent_radix * exponent) + digit;
-											if(new_exponent < exponent) /* overflow? */
-											{
-												SHOWMSG("overflow!");
-
-												if(ungetc(c,stream) == EOF)
-												{
-													SHOWMSG("couldn't push this character back");
-													goto out;
-												}
-
-												break;
-											}
-
-											exponent = new_exponent;
-
-											total_num_chars_read++;
-											num_chars_processed++;
-
-											if(maximum_field_width > 0)
-												maximum_field_width--;
-										}
-										else
-										{
-											SHOWMSG("invalid digit");
-
-											if(ungetc(c,stream) == EOF)
-											{
-												SHOWMSG("couldn't push this character back");
-												goto out;
-											}
-
-											break;
-										}
+										/* A negative exponent means division. */
+										divisor = pow((double)radix,(double)exponent);
+										if(divisor != 0.0)
+											sum = sum / divisor;
 									}
-
-									/* If the exponent is valid, scale the number
-									 * accordingly.
-									 */
-									if(exponent != 0)
+									else
 									{
-										if(exponent_is_negative)
-										{
-											double divisor;
-
-											/* A negative exponent means division. */
-											divisor = pow((double)radix,(double)exponent);
-											if(divisor != 0.0)
-												sum = sum / divisor;
-										}
+										/* A positive exponent means multiplication. */
+										new_sum = sum * pow((double)radix,(double)exponent);
+										if(new_sum >= sum)
+											sum = new_sum;
 										else
-										{
-											/* A positive exponent means multiplication. */
-											new_sum = sum * pow((double)radix,(double)exponent);
-											if(new_sum >= sum)
-												sum = new_sum;
-											else
-												sum = __get_huge_val();
-										}
+											sum = __get_huge_val();
 									}
 								}
 							}
 						}
 					}
 				}
-
-				SHOWMSG("conversion finished..");
-
-				if(num_chars_processed > 0)
-				{
-					if(NOT assignment_suppressed)
-					{
-						if(is_negative)
-							sum = (-sum);
-
-						if(parameter_size == parameter_size_default)
-						{
-							*((float *)next_parameter) = sum;
-						}
-						else if (parameter_size == parameter_size_long)
-						{
-							*((double *)next_parameter) = sum;
-						}
-						else
-						{
-							*((__long_double_t *)next_parameter) = sum;
-						}
-
-						num_assignments++;
-
-						D(("number of assignments = %ld\n", num_assignments));
-					}
-
-					num_conversions++;
-
-					D(("number of conversions = %ld\n", num_conversions));
-				}
-				else
-				{
-					SHOWMSG("no characters were actually processed");
-				}
 			}
-			#else
+
+			SHOWMSG("conversion finished..");
+
+			if(num_chars_processed > 0)
 			{
 				if(NOT assignment_suppressed)
 				{
-					void * next_parameter;
-
-					assert( arg != NULL );
-
-					#if defined(CHECK_FOR_NULL_POINTERS)
-					{
-						if(arg == NULL)
-						{
-							__set_errno(EFAULT);
-							goto out;
-						}
-					}
-					#endif /* CHECK_FOR_NULL_POINTERS */
+					if(is_negative)
+						sum = (-sum);
 
 					if(parameter_size == parameter_size_default)
 					{
-						SHOWMSG("short format (float)");
-
-						next_parameter = va_arg(arg,float *);
+						*((float *)next_parameter) = sum;
 					}
 					else if (parameter_size == parameter_size_long)
 					{
-						SHOWMSG("long format (double)");
-
-						next_parameter = va_arg(arg,double *);
+						*((double *)next_parameter) = sum;
 					}
 					else
 					{
-						SHOWMSG("extended format (long double)");
-
-						next_parameter = va_arg(arg,__long_double_t *);
+						*((__long_double_t *)next_parameter) = sum;
 					}
 
-					assert( next_parameter != NULL );
+					num_assignments++;
 
-					#if defined(CHECK_FOR_NULL_POINTERS)
-					{
-						if(next_parameter == NULL)
-						{
-							__set_errno(EFAULT);
-							goto out;
-						}
-					}
-					#endif /* CHECK_FOR_NULL_POINTERS */
+					D(("number of assignments = %ld\n", num_assignments));
 				}
+
+				num_conversions++;
+
+				D(("number of conversions = %ld\n", num_conversions));
 			}
-			#endif /* FLOATING_POINT_SUPPORT */
+			else
+			{
+				SHOWMSG("no characters were actually processed");
+			}
 		}
 		else if (conversion_type == 'd' ||
 		         conversion_type == 'i' ||

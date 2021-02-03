@@ -44,12 +44,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT) || defined(M68881_FLOATING_POINT_SUPPORT)
 
 /****************************************************************************/
@@ -61,7 +55,7 @@ __logb(double x)
 
 	result = log(x) / log((double)FLT_RADIX);
 
-	return(result);
+	return (result);
 }
 
 #endif /* IEEE_FLOATING_POINT_SUPPORT || M68881_FLOATING_POINT_SUPPORT */
@@ -73,21 +67,21 @@ __logb(double x)
 INLINE STATIC double
 __logb(double x)
 {
-	unsigned int lx,ix;
+	unsigned int lx, ix;
 
-	EXTRACT_WORDS(ix,lx,x);
+	EXTRACT_WORDS(ix, lx, x);
 
-	ix &= 0x7fffffff;	/* high |x| */
-	if((ix|lx)==0)
-		return -1.0/fabs(x);
+	ix &= 0x7fffffff; /* high |x| */
+	if ((ix | lx) == 0)
+		return -1.0 / fabs(x);
 
-	if(ix>=0x7ff00000)
-		return x*x;
+	if (ix >= 0x7ff00000)
+		return x * x;
 
-	if((ix>>=20)==0)	/* IEEE 754 logb */
+	if ((ix >>= 20) == 0) /* IEEE 754 logb */
 		return -1022.0;
 	else
-		return (double) (ix-1023);
+		return (double)(ix - 1023);
 }
 
 #endif /* PPC_FLOATING_POINT_SUPPORT */
@@ -99,21 +93,21 @@ logb(double x)
 {
 	double result;
 
-	if(x == 0.0)
+	if (x == 0.0)
 	{
 		result = -__inf();
 		goto out;
 	}
 
-	if(isnan(x))
+	if (isnan(x))
 	{
 		result = x;
 		goto out;
 	}
 
-	if(isinf(x))
+	if (isinf(x))
 	{
-		if(x < 0)
+		if (x < 0)
 			result = (-x);
 		else
 			result = x;
@@ -123,11 +117,7 @@ logb(double x)
 
 	result = __logb(x);
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

@@ -37,20 +37,12 @@
 
 /****************************************************************************/
 
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 double
-difftime(time_t t1,time_t t0)
+difftime(time_t t1, time_t t0)
 {
 	double result;
 
 	result = ((double)t1) - ((double)t0);
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

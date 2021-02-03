@@ -47,47 +47,45 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 static const float one = 1.0;
 
-float
-modff(float x, float *iptr)
+float modff(float x, float *iptr)
 {
-	LONG i0,j_0;
+	LONG i0, j_0;
 	ULONG i;
-	GET_FLOAT_WORD(i0,x);
-	j_0 = ((i0>>23)&0xff)-0x7f;	/* exponent of x */
-	if(j_0<23) {			/* integer part in x */
-	    if(j_0<0) {			/* |x|<1 */
-	        SET_FLOAT_WORD(*iptr,i0&0x80000000U);	/* *iptr = +-0 */
-		return x;
-	    } else {
-		i = (0x007fffff)>>j_0;
-		if((i0&i)==0) {			/* x is integral */
-		    ULONG ix;
-		    *iptr = x;
-		    GET_FLOAT_WORD(ix,x);
-		    SET_FLOAT_WORD(x,ix&0x80000000U);	/* return +-0 */
-		    return x;
-		} else {
-		    SET_FLOAT_WORD(*iptr,i0&(~i));
-		    return x - *iptr;
+	GET_FLOAT_WORD(i0, x);
+	j_0 = ((i0 >> 23) & 0xff) - 0x7f; /* exponent of x */
+	if (j_0 < 23)
+	{ /* integer part in x */
+		if (j_0 < 0)
+		{											 /* |x|<1 */
+			SET_FLOAT_WORD(*iptr, i0 & 0x80000000U); /* *iptr = +-0 */
+			return x;
 		}
-	    }
-	} else {			/* no fraction part */
-	    ULONG ix;
-	    *iptr = x*one;
-	    GET_FLOAT_WORD(ix,x);
-	    SET_FLOAT_WORD(x,ix&0x80000000U);	/* return +-0 */
-	    return x;
+		else
+		{
+			i = (0x007fffff) >> j_0;
+			if ((i0 & i) == 0)
+			{ /* x is integral */
+				ULONG ix;
+				*iptr = x;
+				GET_FLOAT_WORD(ix, x);
+				SET_FLOAT_WORD(x, ix & 0x80000000U); /* return +-0 */
+				return x;
+			}
+			else
+			{
+				SET_FLOAT_WORD(*iptr, i0 & (~i));
+				return x - *iptr;
+			}
+		}
+	}
+	else
+	{ /* no fraction part */
+		ULONG ix;
+		*iptr = x * one;
+		GET_FLOAT_WORD(ix, x);
+		SET_FLOAT_WORD(x, ix & 0x80000000U); /* return +-0 */
+		return x;
 	}
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

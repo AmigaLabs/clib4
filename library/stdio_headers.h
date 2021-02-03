@@ -114,11 +114,7 @@
 #include <fcntl.h>
 #include <dos.h>
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
 #include <math.h>
-#endif /* FLOATING_POINT_SUPPORT */
 
 /****************************************************************************/
 

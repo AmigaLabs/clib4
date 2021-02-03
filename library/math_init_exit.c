@@ -59,27 +59,23 @@
 
 /****************************************************************************/
 
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 
-struct Library * NOCOMMON MathIeeeSingBasBase;
-struct Library * NOCOMMON MathIeeeDoubBasBase;
-struct Library * NOCOMMON MathIeeeDoubTransBase;
+struct Library *NOCOMMON MathIeeeSingBasBase;
+struct Library *NOCOMMON MathIeeeDoubBasBase;
+struct Library *NOCOMMON MathIeeeDoubTransBase;
 
 #endif /* IEEE_FLOATING_POINT_SUPPORT */
 
 /****************************************************************************/
 
-float	NOCOMMON __infinity;
-float	NOCOMMON __nan;
+float NOCOMMON __infinity;
+float NOCOMMON __nan;
 
 /****************************************************************************/
 
-float	NOCOMMON __huge_val_float;
-double	NOCOMMON __huge_val;
+float NOCOMMON __huge_val_float;
+double NOCOMMON __huge_val;
 
 /****************************************************************************/
 
@@ -91,19 +87,19 @@ MATH_DESTRUCTOR(math_exit)
 {
 	ENTER();
 
-	if(MathIeeeSingBasBase != NULL)
+	if (MathIeeeSingBasBase != NULL)
 	{
 		CloseLibrary(MathIeeeSingBasBase);
 		MathIeeeSingBasBase = NULL;
 	}
 
-	if(MathIeeeDoubBasBase != NULL)
+	if (MathIeeeDoubBasBase != NULL)
 	{
 		CloseLibrary(MathIeeeDoubBasBase);
 		MathIeeeDoubBasBase = NULL;
 	}
 
-	if(MathIeeeDoubTransBase != NULL)
+	if (MathIeeeDoubTransBase != NULL)
 	{
 		CloseLibrary(MathIeeeDoubTransBase);
 		MathIeeeDoubTransBase = NULL;
@@ -120,56 +116,56 @@ MATH_DESTRUCTOR(math_exit)
 
 MATH_CONSTRUCTOR(math_init)
 {
-	union ieee_double * double_x;
-	union ieee_single * single_x;
+	union ieee_double *double_x;
+	union ieee_single *single_x;
 	BOOL success = FALSE;
 
 	ENTER();
 
-	#if defined(M68881_FLOATING_POINT_SUPPORT)
+#if defined(M68881_FLOATING_POINT_SUPPORT)
 	{
-		if(FLAG_IS_CLEAR(((struct ExecBase *)SysBase)->AttnFlags,AFF_68881))
+		if (FLAG_IS_CLEAR(((struct ExecBase *)SysBase)->AttnFlags, AFF_68881))
 		{
 			__show_error("This program requires a floating point processor.");
 
 			goto out;
 		}
 	}
-	#endif /* M68881_FLOATING_POINT_SUPPORT */
+#endif /* M68881_FLOATING_POINT_SUPPORT */
 
-	#if defined(IEEE_FLOATING_POINT_SUPPORT)
+#if defined(IEEE_FLOATING_POINT_SUPPORT)
 	{
-		char * failed_library = NULL;
+		char *failed_library = NULL;
 
 		PROFILE_OFF();
 
 		/* Try to get the soft floating point libraries open. */
-		MathIeeeSingBasBase		= OpenLibrary("mathieeesingbas.library",33);
-		MathIeeeDoubBasBase		= OpenLibrary("mathieeedoubbas.library",33);
-		MathIeeeDoubTransBase	= OpenLibrary("mathieeedoubtrans.library",33);
+		MathIeeeSingBasBase = OpenLibrary("mathieeesingbas.library", 33);
+		MathIeeeDoubBasBase = OpenLibrary("mathieeedoubbas.library", 33);
+		MathIeeeDoubTransBase = OpenLibrary("mathieeedoubtrans.library", 33);
 
 		PROFILE_ON();
 
-		if(MathIeeeSingBasBase == NULL)
+		if (MathIeeeSingBasBase == NULL)
 			failed_library = "mathieeesingbas.library";
 		else if (MathIeeeDoubBasBase == NULL)
 			failed_library = "mathieeedoubbas.library";
 		else if (MathIeeeDoubTransBase == NULL)
 			failed_library = "mathieeedoubtrans.library";
 
-		if(failed_library != NULL)
+		if (failed_library != NULL)
 		{
 			char message[60];
 
-			strlcpy(message,failed_library,sizeof(message));
-			strlcat(message," could not be opened.",sizeof(message));
+			strlcpy(message, failed_library, sizeof(message));
+			strlcat(message, " could not be opened.", sizeof(message));
 
 			__show_error(message);
 
 			goto out;
 		}
 	}
-	#endif /* IEEE_FLOATING_POINT_SUPPORT */
+#endif /* IEEE_FLOATING_POINT_SUPPORT */
 
 	/* Now fill in HUGE_VAL and HUGE_VALF, respectively. TODO:
 	   also take care of HUGE_VALL. */
@@ -183,16 +179,16 @@ MATH_CONSTRUCTOR(math_init)
 	double_x->raw[0] = 0x7fefffff;
 	double_x->raw[1] = 0xffffffff;
 
-	#if defined(USE_LONG_DOUBLE)
+#if defined(USE_LONG_DOUBLE)
 	{
-		union ieee_long_double * x = (union ieee_long_double *)&__huge_val_long_double;
+		union ieee_long_double *x = (union ieee_long_double *)&__huge_val_long_double;
 
 		/* Exponent = +32766, Mantissa = 18,446,744,073,709,551,615 */
 		x->raw[0] = 0x7ffe0000;
 		x->raw[1] = 0xffffffff;
 		x->raw[2] = 0xffffffff;
 	}
-	#endif /* USE_LONG_DOUBLE */
+#endif /* USE_LONG_DOUBLE */
 
 	/* Finally, fill in the constants behind INFINITY and NAN. */
 	single_x = (union ieee_single *)&__infinity;
@@ -203,17 +199,13 @@ MATH_CONSTRUCTOR(math_init)
 
 	success = TRUE;
 
- out:
+out:
 
 	SHOWVALUE(success);
 	LEAVE();
 
-	if(success)
+	if (success)
 		CONSTRUCTOR_SUCCEED();
 	else
 		CONSTRUCTOR_FAIL();
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

@@ -44,12 +44,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 
 /****************************************************************************/
@@ -77,14 +71,13 @@ asm(
 	".even\n\t"
 	".globl	_MathIeeeDoubTransBase\n\t"
 	".globl	___cosh\n\t"
-"___cosh:\n\t"
+	"___cosh:\n\t"
 	"movel	a6,sp@-\n\t"
-	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
-	"moveml	sp@(8),d0/d1\n\t"
-	"jsr		a6@(-66:W)\n\t"
-	"movel	sp@+,a6\n\t"
-	"rts\n\t"
-);
+	"movel	" A4(_MathIeeeDoubTransBase) ",a6\n\t"
+										 "moveml	sp@(8),d0/d1\n\t"
+										 "jsr		a6@(-66:W)\n\t"
+										 "movel	sp@+,a6\n\t"
+										 "rts\n\t");
 
 /****************************************************************************/
 
@@ -132,7 +125,7 @@ __cosh(double x)
 
 #if defined(PPC_FLOATING_POINT_SUPPORT)
 
-static const double one = 1.0, half=0.5, huge = 1.0e300;
+static const double one = 1.0, half = 0.5, huge = 1.0e300;
 
 INLINE STATIC double
 __cosh(double x)
@@ -196,7 +189,3 @@ cosh(double x)
 
 	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

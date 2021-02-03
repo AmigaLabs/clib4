@@ -37,17 +37,12 @@
 
 /****************************************************************************/
 
-#if defined (FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 /* The following is not part of the ISO 'C' (1994) standard, but it should
    be part of ISO/IEC 9899:1999, also known as "C99". */
 
 /****************************************************************************/
 
-int
-__isunordered_float(float number_x,float number_y)
+int __isunordered_float(float number_x, float number_y)
 {
 	union ieee_single x;
 	union ieee_single y;
@@ -57,20 +52,19 @@ __isunordered_float(float number_x,float number_y)
 	y.value = number_y;
 
 	/* Exponent = 255 and fraction != 0.0 -> not a number */
-	if((x.raw[0] & 0x7f800000) == 0x7f800000 && (x.raw[0] & 0x007fffff) != 0)
+	if ((x.raw[0] & 0x7f800000) == 0x7f800000 && (x.raw[0] & 0x007fffff) != 0)
 		result = 1;
-	else if((y.raw[0] & 0x7f800000) == 0x7f800000 && (y.raw[0] & 0x007fffff) != 0)
+	else if ((y.raw[0] & 0x7f800000) == 0x7f800000 && (y.raw[0] & 0x007fffff) != 0)
 		result = 1;
 	else
 		result = 0;
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
-int
-__isunordered_float_double(float number_x,double number_y)
+int __isunordered_float_double(float number_x, double number_y)
 {
 	union ieee_single x;
 	union ieee_double y;
@@ -79,20 +73,19 @@ __isunordered_float_double(float number_x,double number_y)
 	x.value = number_x;
 	y.value = number_y;
 
-	if((x.raw[0] & 0x7f800000) == 0x7f800000 && (x.raw[0] & 0x007fffff) != 0)
+	if ((x.raw[0] & 0x7f800000) == 0x7f800000 && (x.raw[0] & 0x007fffff) != 0)
 		result = 1; /* Exponent = 255 and fraction != 0.0 -> not a number */
 	else if (((y.raw[0] & 0x7ff00000) == 0x7ff00000) && ((y.raw[0] & 0x000fffff) != 0 || (y.raw[1] != 0)))
 		result = 1; /* Exponent = 2047 and fraction != 0.0 -> not a number */
 	else
 		result = 0;
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
-int
-__isunordered_double(double number_x,double number_y)
+int __isunordered_double(double number_x, double number_y)
 {
 	union ieee_double x;
 	union ieee_double y;
@@ -102,16 +95,12 @@ __isunordered_double(double number_x,double number_y)
 	y.value = number_y;
 
 	/* Exponent = 2047 and fraction != 0.0 -> not a number */
-	if(((x.raw[0] & 0x7ff00000) == 0x7ff00000) && ((x.raw[0] & 0x000fffff) != 0 || (x.raw[1] != 0)))
+	if (((x.raw[0] & 0x7ff00000) == 0x7ff00000) && ((x.raw[0] & 0x000fffff) != 0 || (x.raw[1] != 0)))
 		result = 1;
 	else if (((y.raw[0] & 0x7ff00000) == 0x7ff00000) && ((y.raw[0] & 0x000fffff) != 0 || (y.raw[1] != 0)))
 		result = 1;
 	else
 		result = 0;
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

@@ -35,15 +35,9 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
 double
 wcstod(const wchar_t *str, wchar_t **ptr)
 {
 	/* ZZZ unimplemented */
-	return(0);
+	return (0);
 }
-
-#endif /* FLOATING_POINT_SUPPORT */

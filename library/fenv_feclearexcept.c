@@ -37,17 +37,8 @@
 
 /****************************************************************************/
 
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 /* ZZZ unimplemented */
-int
-feclearexcept(int excepts)
+int feclearexcept(int excepts)
 {
-	return(0);
+	return (0);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */
