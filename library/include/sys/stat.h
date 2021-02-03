@@ -115,7 +115,7 @@ extern "C" {
 #define S_ISSOCK(m)	(((m) & S_IFSOCK) == S_IFSOCK)	/* socket */
 
 /****************************************************************************/
-#ifdef __LARGE64_FILES
+#ifdef __USE_LARGEFILE64
 struct  stat64
 {
 	dev_t         st_dev;

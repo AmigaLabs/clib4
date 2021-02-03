@@ -221,5 +221,9 @@ extern int __stdio_file_init(void);
 extern int __flush_all_files(int buffer_mode);
 
 /****************************************************************************/
+#ifdef __USE_LARGEFILE64
+/* stat_fchmod.c */
+void __convert_stat64_to_stat(const struct stat64 *st64, struct stat *st);
+#endif
 
 #endif /* _STDIO_PROTOS_H */

@@ -389,6 +389,7 @@ C_LIB := \
 	time_numbertostring.o \
 	time_clock_settime.o \
 	time_strftime.o \
+	time_strptime.o \
 	time_time.o \
 	time_tzset.o \
 	time_weekday.o \

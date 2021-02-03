@@ -181,7 +181,7 @@ out:
 	return (result);
 }
 
-#ifdef __LARGE64_FILES
+#ifdef __USE_LARGEFILE64
 void __convert_stat64_to_stat(const struct stat64 *st64, struct stat *st)
 {
 	ENTER();

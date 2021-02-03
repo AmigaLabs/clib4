@@ -12,8 +12,8 @@ install:
   - sudo apt-get -qq update || true
   - sudo apt-get -qq install libc6:i386
   # Install all adtools related stuff we need
-  - curl -L https://www.amigasoft.net/downloads/adtools-utils.tgz | sudo tar -xz /
-  - if [[ ${BUILD} =~ os4|release ]]; then curl -L https://www.amigasoft.net/downloads/adtools-ppc-amigaos.tgz | sudo | tar -xz / ; fi
+  - curl -L https://www.amigasoft.net/downloads/adtools-utils.tgz | sudo tar -xz 
+  - if [[ ${BUILD} =~ os4|release ]]; then curl -L https://www.amigasoft.net/downloads/adtools-ppc-amigaos.tgz | sudo | tar -xz ; fi
 
 # set the PATH variable to the directories the cross compilers are installed.
 before_script:
