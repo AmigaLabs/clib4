@@ -44,24 +44,14 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 double
 copysign(double x, double y)
 {
-	unsigned long hx,hy;
+	unsigned long hx, hy;
 
-	GET_HIGH_WORD(hx,x);
-	GET_HIGH_WORD(hy,y);
-	SET_HIGH_WORD(x,(hx&0x7fffffff)|(hy&0x80000000U));
+	GET_HIGH_WORD(hx, x);
+	GET_HIGH_WORD(hy, y);
+	SET_HIGH_WORD(x, (hx & 0x7fffffff) | (hy & 0x80000000U));
 
 	return x;
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

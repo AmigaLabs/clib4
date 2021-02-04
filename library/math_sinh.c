@@ -44,12 +44,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 
 /****************************************************************************/
@@ -77,14 +71,13 @@ asm(
 	".even\n\t"
 	".globl	_MathIeeeDoubTransBase\n\t"
 	".globl	___sinh\n\t"
-"___sinh:\n\t"
+	"___sinh:\n\t"
 	"movel	a6,sp@-\n\t"
-	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
-	"moveml	sp@(8),d0/d1\n\t"
-	"jsr		a6@(-60:W)\n\t"
-	"movel	sp@+,a6\n\t"
-	"rts\n\t"
-);
+	"movel	" A4(_MathIeeeDoubTransBase) ",a6\n\t"
+										 "moveml	sp@(8),d0/d1\n\t"
+										 "jsr		a6@(-60:W)\n\t"
+										 "movel	sp@+,a6\n\t"
+										 "rts\n\t");
 
 /****************************************************************************/
 
@@ -99,7 +92,7 @@ __sinh(double x)
 
 	result = IEEEDPSinh(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -119,11 +112,11 @@ __sinh(double x)
 {
 	double result;
 
-	__asm ("fsinh%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("fsinh%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -136,42 +129,49 @@ static const double one = 1.0, shuge = 1.0e307;
 
 INLINE STATIC double
 __sinh(double x)
-{	
-	double t,w,h;
-	int ix,jx;
+{
+	double t, w, h;
+	int ix, jx;
 	unsigned int lx;
 
-    /* High word of |x|. */
-	GET_HIGH_WORD(jx,x);
-	ix = jx&0x7fffffff;
+	/* High word of |x|. */
+	GET_HIGH_WORD(jx, x);
+	ix = jx & 0x7fffffff;
 
-    /* x is INF or NaN */
-	if(ix>=0x7ff00000) return x+x;	
+	/* x is INF or NaN */
+	if (ix >= 0x7ff00000)
+		return x + x;
 
 	h = 0.5;
-	if (jx<0) h = -h;
-    /* |x| in [0,22], return sign(x)*0.5*(E+E/(E+1))) */
-	if (ix < 0x40360000) {		/* |x|<22 */
-	    if (ix<0x3e300000) 		/* |x|<2**-28 */
-		if(shuge+x>one) return x;/* sinh(tiny) = tiny with inexact */
-	    t = __expm1(fabs(x));
-	    if(ix<0x3ff00000) return h*(2.0*t-t*t/(t+one));
-	    return h*(t+t/(t+one));
+	if (jx < 0)
+		h = -h;
+	/* |x| in [0,22], return sign(x)*0.5*(E+E/(E+1))) */
+	if (ix < 0x40360000)
+	{						 /* |x|<22 */
+		if (ix < 0x3e300000) /* |x|<2**-28 */
+			if (shuge + x > one)
+				return x; /* sinh(tiny) = tiny with inexact */
+		t = __expm1(fabs(x));
+		if (ix < 0x3ff00000)
+			return h * (2.0 * t - t * t / (t + one));
+		return h * (t + t / (t + one));
 	}
 
-    /* |x| in [22, log(maxdouble)] return 0.5*exp(|x|) */
-	if (ix < 0x40862E42)  return h*exp(fabs(x));
+	/* |x| in [22, log(maxdouble)] return 0.5*exp(|x|) */
+	if (ix < 0x40862E42)
+		return h * exp(fabs(x));
 
-    /* |x| in [log(maxdouble), overflowthresold] */
-	GET_LOW_WORD(lx,x);
-       if (ix<0x408633CE || (ix==0x408633ce && lx<=(unsigned int)0x8fb9f87d)) {
-	    w = exp(0.5*fabs(x));
-	    t = h*w;
-	    return t*w;
+	/* |x| in [log(maxdouble), overflowthresold] */
+	GET_LOW_WORD(lx, x);
+	if (ix < 0x408633CE || (ix == 0x408633ce && lx <= (unsigned int)0x8fb9f87d))
+	{
+		w = exp(0.5 * fabs(x));
+		t = h * w;
+		return t * w;
 	}
 
-    /* |x| > overflowthresold, sinh(x) overflow */
-	return x*shuge;
+	/* |x| > overflowthresold, sinh(x) overflow */
+	return x * shuge;
 }
 
 #endif /* PPC_FLOATING_POINT_SUPPORT */
@@ -185,9 +185,5 @@ sinh(double x)
 
 	result = __sinh(x);
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

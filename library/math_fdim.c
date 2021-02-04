@@ -35,25 +35,15 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 double
-fdim(double x,double y)
+fdim(double x, double y)
 {
 	double result;
 
-	if(x > y)
+	if (x > y)
 		result = x - y;
 	else
 		result = 0;
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

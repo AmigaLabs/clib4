@@ -47,43 +47,50 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 static const float huge = 1.0e30;
 
-float
-ceilf(float x)
+float ceilf(float x)
 {
-	LONG i0,j_0;
+	LONG i0, j_0;
 	ULONG i;
-	GET_FLOAT_WORD(i0,x);
-	j_0 = ((i0>>23)&0xff)-0x7f;
-	if(j_0<23) {
-	    if(j_0<0) { 	/* raise inexact if x != 0 */
-		if(huge+x>(float)0.0) {/* return 0*sign(x) if |x|<1 */
-		    if(i0<0) {i0=0x80000000U;} 
-		    else if(i0!=0) { i0=0x3f800000;}
+	GET_FLOAT_WORD(i0, x);
+	j_0 = ((i0 >> 23) & 0xff) - 0x7f;
+	if (j_0 < 23)
+	{
+		if (j_0 < 0)
+		{ /* raise inexact if x != 0 */
+			if (huge + x > (float)0.0)
+			{ /* return 0*sign(x) if |x|<1 */
+				if (i0 < 0)
+				{
+					i0 = 0x80000000U;
+				}
+				else if (i0 != 0)
+				{
+					i0 = 0x3f800000;
+				}
+			}
 		}
-	    } else {
-		i = (0x007fffff)>>j_0;
-		if((i0&i)==0) return x; /* x is integral */
-		if(huge+x>(float)0.0) {	/* raise inexact flag */
-		    if(i0>0) i0 += (0x00800000)>>j_0;
-		    i0 &= (~i);
+		else
+		{
+			i = (0x007fffff) >> j_0;
+			if ((i0 & i) == 0)
+				return x; /* x is integral */
+			if (huge + x > (float)0.0)
+			{ /* raise inexact flag */
+				if (i0 > 0)
+					i0 += (0x00800000) >> j_0;
+				i0 &= (~i);
+			}
 		}
-	    }
-	} else {
-	    if(j_0==0x80) return x+x;	/* inf or NaN */
-	    else return x;		/* x is integral */
 	}
-	SET_FLOAT_WORD(x,i0);
+	else
+	{
+		if (j_0 == 0x80)
+			return x + x; /* inf or NaN */
+		else
+			return x; /* x is integral */
+	}
+	SET_FLOAT_WORD(x, i0);
 	return x;
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

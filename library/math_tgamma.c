@@ -44,21 +44,11 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 double
 tgamma(double x)
 {
 	int gamma_sign;
-    double y = __lgamma(x, &gamma_sign);
+	double y = __lgamma(x, &gamma_sign);
 
 	return gamma_sign * exp(y);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

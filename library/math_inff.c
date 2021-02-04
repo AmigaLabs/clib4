@@ -37,15 +37,11 @@
 
 /****************************************************************************/
 
-#if defined (FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 /* The following is not part of the ISO 'C' (1994) standard. */
 
 /****************************************************************************/
 
-float
+float 
 __inff(void)
 {
 	union ieee_single x;
@@ -53,9 +49,5 @@ __inff(void)
 	/* Exponent = 255 and fraction = 0.0 -> infinity */
 	x.raw[0] = 0x7f800000;
 
-	return(x.value);
+	return (x.value);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

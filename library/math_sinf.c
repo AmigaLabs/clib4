@@ -47,40 +47,36 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-float
-sinf(float x)
+float sinf(float x)
 {
-	float y[2],z=0.0;
-	LONG n,ix;
+	float y[2], z = 0.0;
+	LONG n, ix;
 
-	GET_FLOAT_WORD(ix,x);
+	GET_FLOAT_WORD(ix, x);
 
-    /* |x| ~< pi/4 */
+	/* |x| ~< pi/4 */
 	ix &= 0x7fffffff;
-	if(ix <= 0x3f490fd8) return __kernel_sinf(x,z,0);
+	if (ix <= 0x3f490fd8)
+		return __kernel_sinf(x, z, 0);
 
-    /* sin(Inf or NaN) is NaN */
-	else if (ix>=0x7f800000) return x-x;
+	/* sin(Inf or NaN) is NaN */
+	else if (ix >= 0x7f800000)
+		return x - x;
 
-    /* argument reduction needed */
-	else {
-	    n = __rem_pio2f(x,y);
-	    switch(n&3) {
-		case 0: return  __kernel_sinf(y[0],y[1],1);
-		case 1: return  __kernel_cosf(y[0],y[1]);
-		case 2: return -__kernel_sinf(y[0],y[1],1);
+	/* argument reduction needed */
+	else
+	{
+		n = __rem_pio2f(x, y);
+		switch (n & 3)
+		{
+		case 0:
+			return __kernel_sinf(y[0], y[1], 1);
+		case 1:
+			return __kernel_cosf(y[0], y[1]);
+		case 2:
+			return -__kernel_sinf(y[0], y[1], 1);
 		default:
-			return -__kernel_cosf(y[0],y[1]);
-	    }
+			return -__kernel_cosf(y[0], y[1]);
+		}
 	}
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

@@ -44,32 +44,22 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 double
 ldexp(double x, int exp)
 {
 	double result;
 
-	if(isinf(x) || fpclassify(x) == FP_ZERO)
+	if (isinf(x) || fpclassify(x) == FP_ZERO)
 	{
 		result = x;
 	}
 	else
 	{
-		result = scalbn(x,exp);
+		result = scalbn(x, exp);
 
-		if(isinf(result) || (result < DBL_MIN || result > -DBL_MIN))
+		if (isinf(result) || (result < DBL_MIN || result > -DBL_MIN))
 			__set_errno(ERANGE);
 	}
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

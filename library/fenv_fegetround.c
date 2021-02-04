@@ -35,19 +35,8 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-int
-fegetround(void)
+int fegetround(void)
 {
     // We always round towards the nearest number.
     return FLT_ROUNDS;
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

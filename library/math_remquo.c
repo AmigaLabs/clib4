@@ -41,14 +41,8 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 double
-remquo(double x,double y,int * quo)
+remquo(double x, double y, int *quo)
 {
   int signx, signy, signres;
   int mswx;
@@ -67,9 +61,5 @@ remquo(double x,double y,int * quo)
 
   *quo = signres * (lrint(x_over_y) & 0x7f);
 
-  return remainder(x,y);
+  return remainder(x, y);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

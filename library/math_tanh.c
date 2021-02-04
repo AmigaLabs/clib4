@@ -44,12 +44,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 
 /****************************************************************************/
@@ -77,14 +71,13 @@ asm(
 	".even\n\t"
 	".globl	_MathIeeeDoubTransBase\n\t"
 	".globl	___tanh\n\t"
-"___tanh:\n\t"
+	"___tanh:\n\t"
 	"movel	a6,sp@-\n\t"
-	"movel	"A4(_MathIeeeDoubTransBase)",a6\n\t"
-	"moveml	sp@(8),d0/d1\n\t"
-	"jsr		a6@(-72:W)\n\t"
-	"movel	sp@+,a6\n\t"
-	"rts\n\t"
-);
+	"movel	" A4(_MathIeeeDoubTransBase) ",a6\n\t"
+										 "moveml	sp@(8),d0/d1\n\t"
+										 "jsr		a6@(-72:W)\n\t"
+										 "movel	sp@+,a6\n\t"
+										 "rts\n\t");
 
 /****************************************************************************/
 
@@ -99,7 +92,7 @@ __tanh(double x)
 
 	result = IEEEDPTanh(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -119,11 +112,11 @@ __tanh(double x)
 {
 	double result;
 
-	__asm ("ftanh%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("ftanh%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -132,40 +125,49 @@ __tanh(double x)
 
 #if defined(PPC_FLOATING_POINT_SUPPORT)
 
-static const double one=1.0, two=2.0, tiny = 1.0e-300;
+static const double one = 1.0, two = 2.0, tiny = 1.0e-300;
 
 INLINE STATIC double
 __tanh(double x)
 {
-	double t,z;
-	int jx,ix;
+	double t, z;
+	int jx, ix;
 
-    /* High word of |x|. */
-	GET_HIGH_WORD(jx,x);
-	ix = jx&0x7fffffff;
+	/* High word of |x|. */
+	GET_HIGH_WORD(jx, x);
+	ix = jx & 0x7fffffff;
 
-    /* x is INF or NaN */
-	if(ix>=0x7ff00000) { 
-	    if (jx>=0) return one/x+one;    /* tanh(+-inf)=+-1 */
-	    else       return one/x-one;    /* tanh(NaN) = NaN */
+	/* x is INF or NaN */
+	if (ix >= 0x7ff00000)
+	{
+		if (jx >= 0)
+			return one / x + one; /* tanh(+-inf)=+-1 */
+		else
+			return one / x - one; /* tanh(NaN) = NaN */
 	}
 
-    /* |x| < 22 */
-	if (ix < 0x40360000) {		/* |x|<22 */
-	    if (ix<0x3c800000) 		/* |x|<2**-55 */
-		return x*(one+x);    	/* tanh(small) = small */
-	    if (ix>=0x3ff00000) {	/* |x|>=1  */
-		t = __expm1(two*fabs(x));
-		z = one - two/(t+two);
-	    } else {
-	        t = __expm1(-two*fabs(x));
-	        z= -t/(t+two);
-	    }
-    /* |x| > 22, return +-1 */
-	} else {
-	    z = one - tiny;		/* raised inexact flag */
+	/* |x| < 22 */
+	if (ix < 0x40360000)
+	{							  /* |x|<22 */
+		if (ix < 0x3c800000)	  /* |x|<2**-55 */
+			return x * (one + x); /* tanh(small) = small */
+		if (ix >= 0x3ff00000)
+		{ /* |x|>=1  */
+			t = __expm1(two * fabs(x));
+			z = one - two / (t + two);
+		}
+		else
+		{
+			t = __expm1(-two * fabs(x));
+			z = -t / (t + two);
+		}
+		/* |x| > 22, return +-1 */
 	}
-	return (jx>=0)? z: -z;
+	else
+	{
+		z = one - tiny; /* raised inexact flag */
+	}
+	return (jx >= 0) ? z : -z;
 }
 
 #endif /* PPC_FLOATING_POINT_SUPPORT */
@@ -179,9 +181,5 @@ tanh(double x)
 
 	result = __tanh(x);
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

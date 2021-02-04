@@ -35,32 +35,21 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-float
-ldexpf(float x,int exp)
+float ldexpf(float x, int exp)
 {
 	float result;
 
-	if(isinf(x) || fpclassify(x) == FP_ZERO)
+	if (isinf(x) || fpclassify(x) == FP_ZERO)
 	{
 		result = x;
 	}
 	else
 	{
-		result = scalbnf(x,exp);
+		result = scalbnf(x, exp);
 
-		if(isinf(result) || (result < FLT_MIN || result > -FLT_MIN))
+		if (isinf(result) || (result < FLT_MIN || result > -FLT_MIN))
 			__set_errno(ERANGE);
 	}
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

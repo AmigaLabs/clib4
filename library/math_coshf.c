@@ -47,54 +47,49 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
+static const float one = 1.0, half = 0.5, huge = 1.0e30;
 
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-static const float one = 1.0, half=0.5, huge = 1.0e30;
-
-float
-coshf(float x)
+float coshf(float x)
 {
-	float t,w;
+	float t, w;
 	LONG ix;
 
-	GET_FLOAT_WORD(ix,x);
+	GET_FLOAT_WORD(ix, x);
 	ix &= 0x7fffffff;
 
-    /* x is INF or NaN */
-	if(ix>=0x7f800000) return x*x;	
+	/* x is INF or NaN */
+	if (ix >= 0x7f800000)
+		return x * x;
 
-    /* |x| in [0,0.5*ln2], return 1+expm1(|x|)^2/(2*exp(|x|)) */
-	if(ix<0x3eb17218) {
-	    t = expm1f(fabsf(x));
-	    w = one+t;
-	    if (ix<0x24000000) return w;	/* cosh(tiny) = 1 */
-	    return one+(t*t)/(w+w);
+	/* |x| in [0,0.5*ln2], return 1+expm1(|x|)^2/(2*exp(|x|)) */
+	if (ix < 0x3eb17218)
+	{
+		t = expm1f(fabsf(x));
+		w = one + t;
+		if (ix < 0x24000000)
+			return w; /* cosh(tiny) = 1 */
+		return one + (t * t) / (w + w);
 	}
 
-    /* |x| in [0.5*ln2,22], return (exp(|x|)+1/exp(|x|)/2; */
-	if (ix < 0x41b00000) {
+	/* |x| in [0.5*ln2,22], return (exp(|x|)+1/exp(|x|)/2; */
+	if (ix < 0x41b00000)
+	{
 		t = expf(fabsf(x));
-		return half*t+half/t;
+		return half * t + half / t;
 	}
 
-    /* |x| in [22, log(maxdouble)] return half*exp(|x|) */
-	if (ix < 0x42b17180)  return half*expf(fabsf(x));
+	/* |x| in [22, log(maxdouble)] return half*exp(|x|) */
+	if (ix < 0x42b17180)
+		return half * expf(fabsf(x));
 
-    /* |x| in [log(maxdouble), overflowthresold] */
-	if (ix<=0x42b2d4fc) {
-	    w = expf(half*fabsf(x));
-	    t = half*w;
-	    return t*w;
+	/* |x| in [log(maxdouble), overflowthresold] */
+	if (ix <= 0x42b2d4fc)
+	{
+		w = expf(half * fabsf(x));
+		t = half * w;
+		return t * w;
 	}
 
-    /* |x| > overflowthresold, cosh(x) overflow */
-	return huge*huge;
+	/* |x| > overflowthresold, cosh(x) overflow */
+	return huge * huge;
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

@@ -35,20 +35,14 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 double
-fmin(double x,double y)
+fmin(double x, double y)
 {
 	double result;
 
-	if(isnan(x))
+	if (isnan(x))
 	{
-		if(isnan(y))
+		if (isnan(y))
 			result = nan(NULL);
 		else
 			result = y;
@@ -59,15 +53,11 @@ fmin(double x,double y)
 	}
 	else
 	{
-		if(x < y)
+		if (x < y)
 			result = x;
 		else
 			result = y;
 	}
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

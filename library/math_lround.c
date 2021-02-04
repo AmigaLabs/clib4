@@ -44,12 +44,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 long int
 lround(double x)
 {
@@ -57,7 +51,7 @@ lround(double x)
   /* Most significant word, least significant word. */
   ULONG msw, lsw;
   long int result;
-  
+
   EXTRACT_WORDS(msw, lsw, x);
 
   /* Extract sign. */
@@ -68,39 +62,35 @@ lround(double x)
   msw |= 0x00100000;
 
   if (exponent_less_1023 < 20)
+  {
+    if (exponent_less_1023 < 0)
     {
-      if (exponent_less_1023 < 0)
-        {
-          if (exponent_less_1023 < -1)
-            return 0;
-          else
-            return sign;
-        }
+      if (exponent_less_1023 < -1)
+        return 0;
       else
-        {
-          msw += 0x80000 >> exponent_less_1023;
-          result = msw >> (20 - exponent_less_1023);
-        }
+        return sign;
     }
-  else if (exponent_less_1023 < (LONG)(8 * sizeof (long int)) - 1)
+    else
     {
-      if (exponent_less_1023 >= 52)
-        result = ((long int) msw << (exponent_less_1023 - 20)) | (lsw << (exponent_less_1023 - 52));
-      else
-        {
-          unsigned int tmp = lsw + (0x80000000 >> (exponent_less_1023 - 20));
-          if (tmp < lsw)
-            ++msw;
-          result = ((long int) msw << (exponent_less_1023 - 20)) | (tmp >> (52 - exponent_less_1023));
-        }
+      msw += 0x80000 >> exponent_less_1023;
+      result = msw >> (20 - exponent_less_1023);
     }
+  }
+  else if (exponent_less_1023 < (LONG)(8 * sizeof(long int)) - 1)
+  {
+    if (exponent_less_1023 >= 52)
+      result = ((long int)msw << (exponent_less_1023 - 20)) | (lsw << (exponent_less_1023 - 52));
+    else
+    {
+      unsigned int tmp = lsw + (0x80000000 >> (exponent_less_1023 - 20));
+      if (tmp < lsw)
+        ++msw;
+      result = ((long int)msw << (exponent_less_1023 - 20)) | (tmp >> (52 - exponent_less_1023));
+    }
+  }
   else
     /* Result is too large to be represented by a long int. */
     return (long int)x;
 
   return sign * result;
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

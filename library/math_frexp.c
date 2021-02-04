@@ -44,27 +44,19 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 
 INLINE STATIC const double
-__frexp(double x,int * nptr)
+__frexp(double x, int *nptr)
 {
 	int int_exponent = 0;
 	BOOL is_negative;
 
-	if(x < 0)
+	if (x < 0)
 	{
 		is_negative = TRUE;
 
@@ -75,9 +67,9 @@ __frexp(double x,int * nptr)
 		is_negative = FALSE;
 	}
 
-	if(x >= 1)
+	if (x >= 1)
 	{
-		while(x >= 1)
+		while (x >= 1)
 		{
 			int_exponent++;
 			x /= 2;
@@ -85,7 +77,7 @@ __frexp(double x,int * nptr)
 	}
 	else if (0 < x && x < 0.5)
 	{
-		while(x < 0.5)
+		while (x < 0.5)
 		{
 			int_exponent--;
 			x *= 2;
@@ -94,10 +86,10 @@ __frexp(double x,int * nptr)
 
 	(*nptr) = int_exponent;
 
-	if(is_negative)
+	if (is_negative)
 		x = (-x);
 
-	return(x);
+	return (x);
 }
 
 #endif /* IEEE_FLOATING_POINT_SUPPORT */
@@ -107,34 +99,34 @@ __frexp(double x,int * nptr)
 #if defined(M68881_FLOATING_POINT_SUPPORT)
 
 INLINE STATIC const double
-__frexp(double x,int * nptr)
+__frexp(double x, int *nptr)
 {
 	double float_exponent;
 	int int_exponent;
 	double mantissa;
 
-	__asm ("fgetexp%.x %1,%0"
-	       : "=f" (float_exponent) /* integer-valued float */
-	       : "f" (x));
+	__asm("fgetexp%.x %1,%0"
+		  : "=f"(float_exponent) /* integer-valued float */
+		  : "f"(x));
 
 	int_exponent = (int)float_exponent;
 
-	__asm ("fgetman%.x %1,%0"
-	       : "=f" (mantissa) /* 1.0 <= mantissa < 2.0 */
-	       : "f" (x));
+	__asm("fgetman%.x %1,%0"
+		  : "=f"(mantissa) /* 1.0 <= mantissa < 2.0 */
+		  : "f"(x));
 
 	if (mantissa != 0)
 	{
-		__asm ("fscale%.b %#-1,%0"
-		       : "=f" (mantissa) /* mantissa /= 2.0 */
-		       : "0" (mantissa));
+		__asm("fscale%.b %#-1,%0"
+			  : "=f"(mantissa) /* mantissa /= 2.0 */
+			  : "0"(mantissa));
 
 		int_exponent += 1;
 	}
 
 	(*nptr) = int_exponent;
 
-	return(mantissa);
+	return (mantissa);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -144,32 +136,32 @@ __frexp(double x,int * nptr)
 #if defined(PPC_FLOATING_POINT_SUPPORT)
 
 static const double
-two54 =  1.80143985094819840000e+16; /* 0x43500000, 0x00000000 */
+	two54 = 1.80143985094819840000e+16; /* 0x43500000, 0x00000000 */
 
 INLINE STATIC double
-__frexp(double x,int * eptr)
+__frexp(double x, int *eptr)
 {
 	int hx, ix, lx;
 
-	EXTRACT_WORDS(hx,lx,x);
+	EXTRACT_WORDS(hx, lx, x);
 
-	ix = 0x7fffffff&hx;
+	ix = 0x7fffffff & hx;
 	*eptr = 0;
 
-	if(ix>=0x7ff00000||((ix|lx)==0))
-		return x;	                          /* 0,inf,nan */
-	if (ix<0x00100000)  		              /* subnormal */
+	if (ix >= 0x7ff00000 || ((ix | lx) == 0))
+		return x;		 /* 0,inf,nan */
+	if (ix < 0x00100000) /* subnormal */
 	{
-	    x *= two54;
-	    GET_HIGH_WORD(hx,x);
-	    ix = hx&0x7fffffff;
-	    *eptr = -54;
+		x *= two54;
+		GET_HIGH_WORD(hx, x);
+		ix = hx & 0x7fffffff;
+		*eptr = -54;
 	}
 
-	*eptr += (ix>>20)-1022;
+	*eptr += (ix >> 20) - 1022;
 
-	hx = (hx&0x800fffff)|0x3fe00000;
-	SET_HIGH_WORD(x,hx);
+	hx = (hx & 0x800fffff) | 0x3fe00000;
+	SET_HIGH_WORD(x, hx);
 
 	return x;
 }
@@ -179,15 +171,15 @@ __frexp(double x,int * eptr)
 /****************************************************************************/
 
 double
-frexp(double x,int *nptr)
+frexp(double x, int *nptr)
 {
 	double result;
 
-	assert( nptr != NULL );
+	assert(nptr != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(nptr == NULL)
+		if (nptr == NULL)
 		{
 			__set_errno(EFAULT);
 
@@ -195,11 +187,11 @@ frexp(double x,int *nptr)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	if(x != 0.0)
+	if (x != 0.0)
 	{
-		result = __frexp(x,nptr);
+		result = __frexp(x, nptr);
 	}
 	else
 	{
@@ -208,11 +200,7 @@ frexp(double x,int *nptr)
 		(*nptr) = 0;
 	}
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

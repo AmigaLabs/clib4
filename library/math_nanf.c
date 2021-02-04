@@ -35,28 +35,17 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined (FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 /* The following is not part of the ISO 'C' (1994) standard, but it should
    be part of ISO/IEC 9899:1999, also known as "C99". */
 
 /****************************************************************************/
 
-float
-nanf(const char * UNUSED unused_tagp)
+float nanf(const char *UNUSED unused_tagp)
 {
 	union ieee_single x;
 
 	/* Exponent = 255 and fraction != 0.0; this must be a quiet nan. */
 	x.raw[0] = 0x7fc00001;
 
-	return(x.value);
+	return (x.value);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

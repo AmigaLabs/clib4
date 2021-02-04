@@ -44,19 +44,13 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 /* Adding a float, x, to 2^23 will cause the result to be rounded based on
    the fractional part of x, according to the implementation's current rounding
    mode.  2^23 is the smallest float that can be represented using all 23 significant
    digits. */
-static const float TWO23[2]={
-  8.3886080000e+06, /* 0x4b000000 */
- -8.3886080000e+06, /* 0xcb000000 */
+static const float TWO23[2] = {
+    8.3886080000e+06,  /* 0x4b000000 */
+    -8.3886080000e+06, /* 0xcb000000 */
 };
 
 /****************************************************************************/
@@ -64,48 +58,44 @@ static const float TWO23[2]={
 long int
 lrintf(float x)
 {
-  LONG j0,sx;
+  LONG j0, sx;
   ULONG i0;
   float t;
   volatile float w;
   long int result;
 
-  GET_FLOAT_WORD(i0,x);
+  GET_FLOAT_WORD(i0, x);
 
   /* Extract sign bit. */
   sx = (i0 >> 31);
 
   /* Extract exponent field. */
   j0 = ((i0 & 0x7f800000) >> 23) - 127;
-  
-  if (j0 < (int)(sizeof (long int) * 8) - 1)
+
+  if (j0 < (int)(sizeof(long int) * 8) - 1)
+  {
+    if (j0 < -1)
+      return 0;
+    else if (j0 >= 23)
+      result = (long int)((i0 & 0x7fffff) | 0x800000) << (j0 - 23);
+    else
     {
-      if (j0 < -1)
-        return 0;
-      else if (j0 >= 23)
-        result = (long int) ((i0 & 0x7fffff) | 0x800000) << (j0 - 23);
-      else
-        {
-          w = TWO23[sx] + x;
-          t = w - TWO23[sx];
-          GET_FLOAT_WORD (i0, t);
-          /* Detect the all-zeros representation of plus and
+      w = TWO23[sx] + x;
+      t = w - TWO23[sx];
+      GET_FLOAT_WORD(i0, t);
+      /* Detect the all-zeros representation of plus and
              minus zero, which fails the calculation below. */
-          if ((i0 & ~(1 << 31)) == 0)
-              return 0;
-          j0 = ((i0 >> 23) & 0xff) - 0x7f;
-          i0 &= 0x7fffff;
-          i0 |= 0x800000;
-          result = i0 >> (23 - j0);
-        }
+      if ((i0 & ~(1 << 31)) == 0)
+        return 0;
+      j0 = ((i0 >> 23) & 0xff) - 0x7f;
+      i0 &= 0x7fffff;
+      i0 |= 0x800000;
+      result = i0 >> (23 - j0);
     }
+  }
   else
-    {
-      return (long int) x;
-    }
+  {
+    return (long int)x;
+  }
   return sx ? -result : result;
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

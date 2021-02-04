@@ -35,20 +35,10 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 double
-fma(double x,double y,double z)
+fma(double x, double y, double z)
 {
 	/* ZZZ this should be a *fused* multiply & add, and
 	   not a sequential operation as declared below! */
-	return((x * y) + z);
+	return ((x * y) + z);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

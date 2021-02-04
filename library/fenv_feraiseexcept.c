@@ -35,19 +35,8 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 /* ZZZ unimplemented */
-int
-feraiseexcept(int excepts)
+int feraiseexcept(int excepts)
 {
-	return(0);
+	return (0);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

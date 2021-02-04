@@ -47,50 +47,54 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
+#define SQRT_FLT_MAX 1.84467429742e+19 /* 0x5f7fffff */
 
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-#define	SQRT_FLT_MAX	1.84467429742e+19  /* 0x5f7fffff */
-
-float
-hypotf(float x, float y)
+float hypotf(float x, float y)
 {
-	float a=x,b=y,t1,t2,w;
-	LONG j,ha,hb;
+	float a = x, b = y, t1, t2, w;
+	LONG j, ha, hb;
 
-	if (isunordered(x,y))
-		return (x-x)/(y-y);
-	if (!isfinite(x) || !isfinite(y)) {
+	if (isunordered(x, y))
+		return (x - x) / (y - y);
+	if (!isfinite(x) || !isfinite(y))
+	{
 		__set_errno(ERANGE);
 		return __get_huge_valf();
 	}
 
-	GET_FLOAT_WORD(ha,x);
+	GET_FLOAT_WORD(ha, x);
 	ha &= 0x7fffffff;
-	GET_FLOAT_WORD(hb,y);
+	GET_FLOAT_WORD(hb, y);
 	hb &= 0x7fffffff;
-	if(hb < ha) {a=y;b=x;j=ha; ha=hb;hb=j;} else {a=x;b=y;}
-	SET_FLOAT_WORD(a,ha);	/* a <- |a| */
-	SET_FLOAT_WORD(b,hb);	/* b <- |b| */
-	t1 = (a > 0) ? (a/b) : 0;
-	if ((t1 >= SQRT_FLT_MAX) && isfinite(x) && isfinite(y)) {
+	if (hb < ha)
+	{
+		a = y;
+		b = x;
+		j = ha;
+		ha = hb;
+		hb = j;
+	}
+	else
+	{
+		a = x;
+		b = y;
+	}
+	SET_FLOAT_WORD(a, ha); /* a <- |a| */
+	SET_FLOAT_WORD(b, hb); /* b <- |b| */
+	t1 = (a > 0) ? (a / b) : 0;
+	if ((t1 >= SQRT_FLT_MAX) && isfinite(x) && isfinite(y))
+	{
 		__set_errno(ERANGE);
 		return __get_huge_valf();
 	}
 	t1 *= t1;
 	t2 = sqrtf(++t1);
-	if ((t2 > 1) && (b >= FLT_MAX)) {
+	if ((t2 > 1) && (b >= FLT_MAX))
+	{
 		__set_errno(ERANGE);
 		return __get_huge_valf();
 	}
 	w = t2 * b;
 
-	       return w;
+	return w;
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */
