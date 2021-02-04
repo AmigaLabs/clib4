@@ -64,6 +64,7 @@ void _start(char *args, int arglen, struct ExecBase *sysBase);
 void _clib_exit(void);
 extern int _main(struct ExecIFace *IExec);
 extern struct ExecIFace * NOCOMMON IExec;
+
 /****************************************************************************/
 
 void

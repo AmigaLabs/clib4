@@ -31,20 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
-int
-listen(int sockfd,int backlog)
+int listen(int sockfd, int backlog)
 {
-	struct fd * fd;
+	struct fd *fd;
 	int result = ERROR;
 
 	ENTER();
@@ -54,28 +47,24 @@ listen(int sockfd,int backlog)
 
 	assert(__SocketBase != NULL);
 
-	assert( sockfd >= 0 && sockfd < __num_fd );
-	assert( __fd[sockfd] != NULL );
-	assert( FLAG_IS_SET(__fd[sockfd]->fd_Flags,FDF_IN_USE) );
-	assert( FLAG_IS_SET(__fd[sockfd]->fd_Flags,FDF_IS_SOCKET) );
+	assert(sockfd >= 0 && sockfd < __num_fd);
+	assert(__fd[sockfd] != NULL);
+	assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
+	assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
 	fd = __get_file_descriptor_socket(sockfd);
-	if(fd == NULL)
+	if (fd == NULL)
 		goto out;
 
 	PROFILE_OFF();
-	result = __listen(fd->fd_Socket,backlog);
+	result = __listen(fd->fd_Socket, backlog);
 	PROFILE_ON();
 
- out:
+out:
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

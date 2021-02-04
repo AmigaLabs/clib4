@@ -34,19 +34,13 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-/*
- * Uncomment this to activate '%lld' support and the like. Better still,
- * define this is in the Makefile!
- */
-/*#define USE_64_BIT_INTS*/
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
 
 /****************************************************************************/
 
@@ -81,24 +75,7 @@ get_num_leading_digits(__long_double_t v, int radix)
 	}
 	else
 	{
-/* For some reason log() can crash on GCC 68k... */
-#if (!defined(__GNUC__) || defined(__PPC__))
-		{
-			num_digits = 1 + floor(log(v) / log((double)radix));
-		}
-#else
-		{
-			/* Perform the conversion one digit at a time... */
-			num_digits = 0;
-
-			while (floor(v) > 0.0)
-			{
-				num_digits++;
-
-				v /= radix;
-			}
-		}
-#endif /* __GNUC__ && !__PPC__ */
+		num_digits = 1 + floor(log(v) / log((double)radix));
 	}
 
 	return (num_digits);

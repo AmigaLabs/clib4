@@ -31,15 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
-
-/****************************************************************************/
 
 char *
 inet_ntoa(struct in_addr in)
@@ -58,15 +52,11 @@ inet_ntoa(struct in_addr in)
 
 	SHOWSTRING(result);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

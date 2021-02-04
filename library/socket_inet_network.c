@@ -35,17 +35,9 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
-
-/****************************************************************************/
 
 in_addr_t
 inet_network(const char *cp)
@@ -57,9 +49,9 @@ inet_network(const char *cp)
 	assert(cp != NULL);
 	assert(__SocketBase != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(cp == NULL)
+		if (cp == NULL)
 		{
 			SHOWMSG("invalid cp parameter");
 
@@ -67,21 +59,17 @@ inet_network(const char *cp)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	PROFILE_OFF();
 	result = __inet_network((char *)cp);
 	PROFILE_ON();
 
- out:
+out:
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

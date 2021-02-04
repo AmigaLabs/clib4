@@ -31,23 +31,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
 #include <sys/ioctl.h>
 
-/****************************************************************************/
-
-int __socket_hook_entry(
-	struct fd *fd,
-	struct file_action_message *fam)
+int 
+__socket_hook_entry(struct fd *fd, struct file_action_message *fam)
 {
 	struct ExamineData *fib;
 	BOOL is_aliased;
@@ -219,7 +210,3 @@ int __socket_hook_entry(
 	RETURN(result);
 	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

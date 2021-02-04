@@ -31,26 +31,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
-int
-select(int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *except_fds,struct timeval *timeout)
+int 
+select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, struct timeval *timeout)
 {
 	int result;
 
-	result = __select(num_fds,read_fds,write_fds,except_fds,timeout,NULL);
+	result = __select(num_fds, read_fds, write_fds, except_fds, timeout, NULL);
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

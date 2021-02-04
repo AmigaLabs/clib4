@@ -31,15 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
-
-/****************************************************************************/
 
 unsigned long
 inet_lnaof(struct in_addr in)
@@ -54,13 +48,9 @@ inet_lnaof(struct in_addr in)
 	result = __Inet_LnaOf(in.s_addr);
 	PROFILE_ON();
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

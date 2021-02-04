@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wcstok.c,v 1.4 2021-01-14 23:53:27 obarthel Exp $
+ * $Id: wchar_wcsnrtombs.c,v 1.0 2021-02-04 11:26:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,56 +35,63 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-wchar_t *
-wcstok(wchar_t *s, const wchar_t *delim, wchar_t **lasts)
+size_t
+wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps)
 {
-	register const wchar_t *spanp;
-	register int c, sc;
-	wchar_t *tok;
+    char *ptr = dst;
+    char buff[10] = {0};
+    wchar_t *pwcs;
+    size_t n;
+    int i;
 
-	if (s == NULL && (s = *lasts) == NULL)
-		return (NULL);
+    if (ps == NULL)
+    {
+        ps = &__global_clib2->wide_status->_wcsrtombs_state;
+    }
 
-	/*
-	 * Skip (span) leading delimiters (s += wcsspn(s, delim), sort of).
-	 */
-cont:
-	c = *s++;
-	for (spanp = delim; (sc = *spanp++) != L'\0';)
-	{
-		if (c == sc)
-			goto cont;
-	}
+    /* If no dst pointer, treat len as maximum possible value. */
+    if (dst == NULL)
+        len = (size_t)-1;
 
-	if (c == L'\0')
-	{ /* no non-delimiter characters */
-		*lasts = NULL;
-		return (NULL);
-	}
-	tok = s - 1;
+    n = 0;
+    pwcs = (wchar_t *)(*src);
 
-	/*
-	 * Scan token (scan for delimiters: s += wcscspn(s, delim), sort of).
-	 * Note that delim must have one NUL; we stop if we see that, too.
-	 */
-	for (;;)
-	{
-		c = *s++;
-		spanp = delim;
-		do
-		{
-			if ((sc = *spanp++) == c)
-			{
-				if (c == L'\0')
-					s = NULL;
-				else
-					s[-1] = L'\0';
-				*lasts = s;
-				return (tok);
-			}
-		} while (sc != L'\0');
-	}
-	/* NOTREACHED */
+    while (n < len && nwc-- > 0)
+    {
+        int count = ps->__count;
+        wint_t wch = ps->__value.__wch;
+        int bytes = wcrtomb(buff, *pwcs, ps);
+        if (bytes == -1)
+        {
+            __set_errno(EILSEQ);
+            ps->__count = 0;
+            return (size_t)-1;
+        }
+        if (n + bytes <= len)
+        {
+            n += bytes;
+            if (dst)
+            {
+                for (i = 0; i < bytes; ++i)
+                    *ptr++ = buff[i];
+                ++(*src);
+            }
+            if (*pwcs++ == 0x00)
+            {
+                if (dst)
+                    *src = NULL;
+                ps->__count = 0;
+                return n - 1;
+            }
+        }
+        else
+        {
+            /* not enough room, we must back up state to before __WCTOMB call */
+            ps->__count = count;
+            ps->__value.__wch = wch;
+            len = 0;
+        }
+    }
+
+    return n;
 }

@@ -31,15 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
-
-/****************************************************************************/
 
 const char *
 gai_strerror(int code)
@@ -51,5 +45,3 @@ gai_strerror(int code)
 
 	return "Unknown error";
 }
-
-#endif

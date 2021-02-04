@@ -31,18 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
 BOOL __is_daemon;
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

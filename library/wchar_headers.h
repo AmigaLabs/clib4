@@ -46,6 +46,10 @@
 #include <errno.h>
 #include <string.h>
 
+#ifndef _LOCALE_HEADERS_H
+#include "locale_headers.h"
+#endif /* _LOCALE_HEADERS_H */
+
 /****************************************************************************/
 #ifdef ERROR
 #undef ERROR
@@ -237,5 +241,51 @@ extern const uint32_t bittab[];
 #endif
 
 #define __AUTO(x) __attribute__((cleanup(x)))
+
+/* Wchar init and check stuff */
+/* Generic _REENT check macro.  */
+#define _CLIB2_CHECK(var, what, type, size, init) do { \
+  struct _reent *_r = (var); \
+  if (_r->what == NULL) { \
+    _r->what = (type)malloc(size); \
+    assert(_r->what); \
+    init; \
+  } \
+} while (0)
+
+#define _CLIB2_INIT_WCHAR(var) do { \
+  struct _clib2 *_r = (var); \
+  _r->_wchar->_strtok_last = _NULL; \
+  _r->_wchar->_mblen_state.__count = 0; \
+  _r->_wchar->_mblen_state.__value.__wch = 0; \
+  _r->_wchar->_wctomb_state.__count = 0; \
+  _r->_wchar->_wctomb_state.__value.__wch = 0; \
+  _r->_wchar->_mbtowc_state.__count = 0; \
+  _r->_wchar->_mbtowc_state.__value.__wch = 0; \
+  _r->_wchar->_mbrlen_state.__count = 0; \
+  _r->_wchar->_mbrlen_state.__value.__wch = 0; \
+  _r->_wchar->_mbrtowc_state.__count = 0; \
+  _r->_wchar->_mbrtowc_state.__value.__wch = 0; \
+  _r->_wchar->_mbsrtowcs_state.__count = 0; \
+  _r->_wchar->_mbsrtowcs_state.__value.__wch = 0; \
+  _r->_wchar->_wcrtomb_state.__count = 0; \
+  _r->_wchar->_wcrtomb_state.__value.__wch = 0; \
+  _r->_wchar->_wcsrtombs_state.__count = 0; \
+  _r->_wchar->_wcsrtombs_state.__value.__wch = 0; \
+  _r->_wchar->_l64a_buf[0] = '\0'; \
+  _r->_wchar->_getdate_err = 0; \
+} while (0)
+#define _CLIB2_CHECK_WCHAR(var) \
+  _REENT_CHECK(var, _wchar, struct _wchar *, sizeof *((var)->_wchar), _CLIB2_INIT_WCHAR(var))
+
+#define _REENT_STRTOK_LAST(ptr)	((ptr)->_misc->_strtok_last)
+#define _REENT_MBLEN_STATE(ptr)	((ptr)->_misc->_mblen_state)
+#define _REENT_MBTOWC_STATE(ptr)((ptr)->_misc->_mbtowc_state)
+#define _REENT_WCTOMB_STATE(ptr)((ptr)->_misc->_wctomb_state)
+#define _REENT_MBRLEN_STATE(ptr) ((ptr)->_misc->_mbrlen_state)
+#define _REENT_MBRTOWC_STATE(ptr) ((ptr)->_misc->_mbrtowc_state)
+#define _REENT_MBSRTOWCS_STATE(ptr) ((ptr)->_misc->_mbsrtowcs_state)
+#define _REENT_WCRTOMB_STATE(ptr) ((ptr)->_misc->_wcrtomb_state)
+#define _REENT_WCSRTOMBS_STATE(ptr) ((ptr)->_misc->_wcsrtombs_state)
 
 #endif /* _WCHAR_HEADERS_H */

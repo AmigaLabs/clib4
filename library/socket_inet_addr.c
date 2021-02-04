@@ -35,17 +35,9 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
-
-/****************************************************************************/
 
 unsigned long
 inet_addr(const char *addr)
@@ -59,9 +51,9 @@ inet_addr(const char *addr)
 	assert(addr != NULL);
 	assert(__SocketBase != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(addr == NULL)
+		if (addr == NULL)
 		{
 			SHOWMSG("invalid parameter");
 
@@ -69,21 +61,17 @@ inet_addr(const char *addr)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	PROFILE_OFF();
 	result = __inet_addr((char *)addr);
 	PROFILE_ON();
 
- out:
+out:
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

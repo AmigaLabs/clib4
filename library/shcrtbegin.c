@@ -107,18 +107,6 @@ out:
 STATIC VOID
 close_libraries(VOID)
 {
-   if (__ISysVIPC != NULL)
-   {
-      DropInterface((struct Interface *)__ISysVIPC);
-      __ISysVIPC = NULL;
-   }
-
-   if (__SysVBase != NULL)
-   {
-      CloseLibrary(__SysVBase);
-      __SysVBase = NULL;
-   }
-
    if (__IUtility != NULL)
    {
       DropInterface((struct Interface *)__IUtility);
@@ -173,6 +161,14 @@ __shlib_call_constructors(void)
 
    for (j = 0; j < num_ctors; j++)
       __CTOR_LIST__[num_ctors - j]();
+   
+   // Create global clib structure
+
+   /*
+	__global_clib2 = InitGlobal();
+	if (__global_clib2 == NULL)
+		abort();
+      */
 }
 
 void 
@@ -180,6 +176,9 @@ __shlib_call_destructors(void)
 {
    int num_dtors, i;
    static int j;
+
+   /* Free global clib structure */
+   //FiniGlobal();
 
    for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
       num_dtors++;

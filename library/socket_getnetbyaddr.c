@@ -31,18 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
 struct netent *
-getnetbyaddr(in_addr_t net,int type)
+getnetbyaddr(in_addr_t net, int type)
 {
 	struct netent *result = NULL;
 
@@ -51,18 +45,14 @@ getnetbyaddr(in_addr_t net,int type)
 	assert(__SocketBase != NULL);
 
 	PROFILE_OFF();
-	result = __getnetbyaddr((ULONG)net,type);
+	result = __getnetbyaddr((ULONG)net, type);
 	PROFILE_ON();
 
- out:
+out:
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

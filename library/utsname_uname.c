@@ -41,73 +41,51 @@
 
 /****************************************************************************/
 
-#if defined(SOCKET_SUPPORT) && !defined(_SOCKET_HEADERS_H)
+#ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
-#endif /* SOCKET_SUPPORT && !_SOCKET_HEADERS_H */
+#endif /* _SOCKET_HEADERS_H */
 
-#ifndef	_STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
-
-/****************************************************************************/
-
-#define	OSNAME "AmigaOS"
+#define OSNAME "AmigaOS"
+#define ARCH "ppc"
 
 /****************************************************************************/
 
-#ifdef	__amigaos4__
-#define	ARCH "ppc"
-#else
-#define	ARCH "m68k" /* XXX: How should Coldfire accelerators be handled? */
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
-
-int
+int 
 uname(struct utsname *info)
 {
-	struct Library * VersionBase;
-	int Version,Revision;
-	const char * version_string;
+	struct Library *VersionBase;
+	int Version, Revision;
+	const char *version_string;
 	int result = ERROR;
 
 	ENTER();
 
 	SHOWPOINTER(info);
 
-	if(info == NULL)
+	if (info == NULL)
 	{
 		__set_errno(EFAULT);
 		goto out;
 	}
 
-	strlcpy(info->sysname,OSNAME,sizeof(info->sysname));
+	strlcpy(info->sysname, OSNAME, sizeof(info->sysname));
+	__gethostname((STRPTR)info->nodename, sizeof(info->nodename));
 
-	#if defined(SOCKET_SUPPORT)
+	VersionBase = OpenLibrary("version.library", 0L);
+	if (VersionBase != NULL)
 	{
-		__gethostname((STRPTR)info->nodename,sizeof(info->nodename));
-	}
-	#else
-	{
-		strlcpy(info->nodename,"localhost",sizeof(info->nodename));
-	}
-	#endif /* SOCKET_SUPPORT */
-
-	VersionBase = OpenLibrary("version.library",0L);
-	if(VersionBase != NULL)
-	{
-		Version		= VersionBase->lib_Version;
-		Revision	= VersionBase->lib_Revision;
+		Version = VersionBase->lib_Version;
+		Revision = VersionBase->lib_Revision;
 
 		CloseLibrary(VersionBase);
 	}
 	else
 	{
-		Version		= 0;
-		Revision	= 0;
+		Version = 0;
+		Revision = 0;
 	}
 
-	snprintf(info->release,sizeof(info->release),"%d.%d",Version,Revision);
+	snprintf(info->release, sizeof(info->release), "%d.%d", Version, Revision);
 
 	/*
 	 * This is mostly a stab in the dark. Is there any "official" way of finding out the OS version?
@@ -154,9 +132,9 @@ uname(struct utsname *info)
 	else
 		version_string = "unknown";
 
-	strlcpy(info->version,version_string,sizeof(info->version));
+	strlcpy(info->version, version_string, sizeof(info->version));
 
-	strlcpy(info->machine,ARCH,sizeof(info->machine));
+	strlcpy(info->machine, ARCH, sizeof(info->machine));
 
 	SHOWSTRING(info->sysname);
 	SHOWSTRING(info->nodename);
@@ -169,5 +147,5 @@ uname(struct utsname *info)
 out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

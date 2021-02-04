@@ -35,22 +35,14 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
-int
-getpeername(int sockfd,struct sockaddr *name,socklen_t *namelen)
+int 
+getpeername(int sockfd, struct sockaddr *name, socklen_t *namelen)
 {
-	struct fd * fd;
+	struct fd *fd;
 	int result = ERROR;
 
 	ENTER();
@@ -59,12 +51,12 @@ getpeername(int sockfd,struct sockaddr *name,socklen_t *namelen)
 	SHOWPOINTER(name);
 	SHOWPOINTER(namelen);
 
-	assert( name != NULL && namelen != NULL );
+	assert(name != NULL && namelen != NULL);
 	assert(__SocketBase != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(name == NULL || namelen == NULL)
+		if (name == NULL || namelen == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -72,30 +64,26 @@ getpeername(int sockfd,struct sockaddr *name,socklen_t *namelen)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	assert( sockfd >= 0 && sockfd < __num_fd );
-	assert( __fd[sockfd] != NULL );
-	assert( FLAG_IS_SET(__fd[sockfd]->fd_Flags,FDF_IN_USE) );
-	assert( FLAG_IS_SET(__fd[sockfd]->fd_Flags,FDF_IS_SOCKET) );
+	assert(sockfd >= 0 && sockfd < __num_fd);
+	assert(__fd[sockfd] != NULL);
+	assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
+	assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
 	fd = __get_file_descriptor_socket(sockfd);
-	if(fd == NULL)
+	if (fd == NULL)
 		goto out;
 
 	PROFILE_OFF();
-	result = __getpeername(fd->fd_Socket,name,(LONG *)namelen);
+	result = __getpeername(fd->fd_Socket, name, (LONG *)namelen);
 	PROFILE_ON();
 
- out:
+out:
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

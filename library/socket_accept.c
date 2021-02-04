@@ -35,24 +35,18 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
 /****************************************************************************/
 
-int
-accept(int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen)
+int 
+accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen)
 {
-	struct SignalSemaphore * lock = NULL;
-	struct fd * fd = NULL;
-	struct fd * new_fd;
+	struct SignalSemaphore *lock = NULL;
+	struct fd *fd = NULL;
+	struct fd *new_fd;
 	int new_fd_slot_number;
 	int result = ERROR;
 	LONG socket_fd;
@@ -65,12 +59,12 @@ accept(int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen)
 	SHOWPOINTER(cliaddr);
 	SHOWPOINTER(addrlen);
 
-	assert( cliaddr != NULL && addrlen != NULL );
+	assert(cliaddr != NULL && addrlen != NULL);
 	assert(__SocketBase != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(cliaddr == NULL || addrlen == NULL)
+		if (cliaddr == NULL || addrlen == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -78,12 +72,12 @@ accept(int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	assert( sockfd >= 0 && sockfd < __num_fd );
-	assert( __fd[sockfd] != NULL );
-	assert( FLAG_IS_SET(__fd[sockfd]->fd_Flags,FDF_IN_USE) );
-	assert( FLAG_IS_SET(__fd[sockfd]->fd_Flags,FDF_IS_SOCKET) );
+	assert(sockfd >= 0 && sockfd < __num_fd);
+	assert(__fd[sockfd] != NULL);
+	assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
+	assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
 	/* We need to know which parameter to submit to the accept()
 	   call first. */
@@ -91,7 +85,7 @@ accept(int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen)
 	stdio_locked = TRUE;
 
 	fd = __get_file_descriptor_socket(sockfd);
-	if(fd == NULL)
+	if (fd == NULL)
 		goto out;
 
 	/* Remember the socket number for later. */
@@ -105,10 +99,10 @@ accept(int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen)
 	/* Wait for the accept() to complete, then hook up the socket
 	   with a file descriptor. */
 	PROFILE_OFF();
-	new_socket_fd = __accept(socket_fd,cliaddr,(LONG *)addrlen);
+	new_socket_fd = __accept(socket_fd, cliaddr, (LONG *)addrlen);
 	PROFILE_ON();
 
-	if(new_socket_fd < 0)
+	if (new_socket_fd < 0)
 	{
 		SHOWMSG("could not accept connection");
 		goto out;
@@ -120,32 +114,32 @@ accept(int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen)
 	stdio_locked = TRUE;
 
 	new_fd_slot_number = __find_vacant_fd_entry();
-	if(new_fd_slot_number < 0)
+	if (new_fd_slot_number < 0)
 	{
-		if(__grow_fd_table(0) < 0)
+		if (__grow_fd_table(0) < 0)
 		{
 			SHOWMSG("couldn't find a vacant fd slot and no memory to create one");
 			goto out;
 		}
 
 		new_fd_slot_number = __find_vacant_fd_entry();
-		assert( new_fd_slot_number >= 0 );
+		assert(new_fd_slot_number >= 0);
 	}
 
-	#if defined(__THREAD_SAFE)
+#if defined(__THREAD_SAFE)
 	{
 		lock = __create_semaphore();
-		if(lock == NULL)
+		if (lock == NULL)
 		{
 			__set_errno(ENOMEM);
 			goto out;
 		}
 	}
-	#endif /* __THREAD_SAFE */
+#endif /* __THREAD_SAFE */
 
 	new_fd = __fd[new_fd_slot_number];
 
-	__initialize_fd(new_fd,__socket_hook_entry,(BPTR)new_socket_fd,FDF_IN_USE | FDF_IS_SOCKET | FDF_READ | FDF_WRITE,lock);
+	__initialize_fd(new_fd, __socket_hook_entry, (BPTR)new_socket_fd, FDF_IN_USE | FDF_IS_SOCKET | FDF_READ | FDF_WRITE, lock);
 
 	lock = NULL;
 
@@ -153,9 +147,9 @@ accept(int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen)
 
 	new_socket_fd = -1;
 
- out:
+out:
 
-	if(new_socket_fd != -1)
+	if (new_socket_fd != -1)
 	{
 		PROFILE_OFF();
 
@@ -164,22 +158,18 @@ accept(int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen)
 		PROFILE_ON();
 	}
 
-	if(stdio_locked)
+	if (stdio_locked)
 		__stdio_unlock();
 
-	#if defined(__THREAD_SAFE)
+#if defined(__THREAD_SAFE)
 	{
 		__delete_semaphore(lock);
 	}
-	#endif /* __THREAD_SAFE */
+#endif /* __THREAD_SAFE */
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

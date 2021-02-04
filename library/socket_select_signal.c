@@ -31,21 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
 
 STATIC VOID
 copy_fd_set(fd_set *to, fd_set *from, int num_fds)
@@ -769,7 +761,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 
 				/* Check for socket input. */
 				PROFILE_OFF();
-				result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal*) &zero, &break_mask);
+				result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal *)&zero, &break_mask);
 				PROFILE_ON();
 
 				/* Stop if a break signal arrives. */
@@ -843,7 +835,8 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 												got_input = TRUE;
 										}
 									}
-									if (fib != NULL) {
+									if (fib != NULL)
+									{
 										FreeDosObject(DOS_EXAMINEDATA, fib);
 									}
 								}
@@ -929,7 +922,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 				break_mask |= __break_signal_mask;
 
 			PROFILE_OFF();
-			result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal*) timeout, &break_mask);
+			result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal *)timeout, &break_mask);
 			PROFILE_ON();
 
 			if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __break_signal_mask))
@@ -1142,7 +1135,3 @@ out:
 	RETURN(result);
 	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

@@ -574,7 +574,7 @@ struct _clib2
 {
 	struct TimeVal clock;
 	struct rusage ru;
-	struct _wchar wide_status;
+	struct _wchar *wide_status;
 	
 	/* 
 	 * Check if SYSV library is available in the system. Otherwise the functions
@@ -591,6 +591,9 @@ struct _clib2
 };
 
 extern struct _clib2 *__global_clib2;
+
+extern struct _clib2 *InitGlobal(void);
+extern void FiniGlobal(void);
 
 __END_DECLS
 

@@ -106,6 +106,7 @@ extern wchar_t *wcsstr(const wchar_t *src, const wchar_t *sub);
 
 extern double wcstod(const wchar_t *str, wchar_t **ptr);
 extern long wcstol(const wchar_t *str, wchar_t **ptr, int base);
+extern long double wcstold(const wchar_t *nptr, wchar_t **endptr);
 extern unsigned long wcstoul(const wchar_t *str, wchar_t **ptr, int base);
 
 /****************************************************************************/
