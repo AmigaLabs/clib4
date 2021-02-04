@@ -37,9 +37,9 @@ A lot of other functions has been added trying to make OS4 ports easier.
 
 ### Shared objects
 
-Shared objects **are working correctly** also with clib2 (there is an example under test_programs/dlopen folder).
-using dlopen/dlsym will not crash anymore however due a bug on libgcc.so you have to use the static version. Don't use the flag
--static-libgcc because it isn't working too. Just remove (or move somewhere) libgcc.so so the linker will use the static one
+Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).
+using dlopen/dlsym will not crash anymore however due a bug on libgcc.so you have to use the static version. Don't use the flag -static-libgcc because it isn't working too. Just remove (or move somewhere) libgcc.so so the linker will use the static one.
+**Keep in mind** that libc is not a shared library at moment and so the shared object will link **always** the entire libc. This means that shared objects doesn't share the same space.
 
 ### Wctype
 
