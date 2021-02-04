@@ -75,7 +75,6 @@ CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
 LARGEDATA  := -msdata=data
-SOFTFLOAT  := -msdata=data -msoft-float
 BASEREL    := -mbaserel -DBASEREL_DATA
 THREADSAFE := -D__THREAD_SAFE
 
@@ -99,32 +98,23 @@ include libprofile.gmk
 
 all-targets: \
 	lib/crt0.o \
-	lib/soft-float/crt0.o \
 	lib/baserel/crt0.o \
 	lib/crtbegin.o \
 	lib/shcrtbegin.o \
-	lib/soft-float/crtbegin.o \
-	lib/soft-float/shcrtbegin.o \
 	lib/baserel/crtbegin.o \
 	lib/baserel/shcrtbegin.o \
 	lib/crtend.o \
 	lib/shcrtend.o \
-	lib/soft-float/crtend.o \
-	lib/soft-float/shcrtend.o \
 	lib/baserel/crtend.o \
 	lib/baserel/shcrtend.o \
 	lib.threadsafe/crt0.o \
 	lib.threadsafe/baserel/crt0.o \
 	lib.threadsafe/crtbegin.o \
 	lib.threadsafe/shcrtbegin.o \
-	lib.threadsafe/soft-float/crtbegin.o \
-	lib.threadsafe/soft-float/shcrtbegin.o \
 	lib.threadsafe/baserel/crtbegin.o \
 	lib.threadsafe/baserel/shcrtbegin.o \
 	lib.threadsafe/crtend.o \
 	lib.threadsafe/shcrtend.o \
-	lib.threadsafe/soft-float/crtend.o \
-	lib.threadsafe/soft-float/shcrtend.o \
 	lib.threadsafe/baserel/crtend.o \
 	lib.threadsafe/baserel/shcrtend.o \
 	$(LIBS)
@@ -186,28 +176,6 @@ lib/%.o : %.S
 lib/%.o : %.c
 	@$(COMPILE)
 
-################ SOFT FLOAT STANDARD LIBRARY ################
-
-lib/soft-float/%.o : AFLAGS += $(SOFTFLOAT)
-lib/soft-float/%.o : %.S
-	@$(ASSEMBLE)
-
-lib/soft-float/crtbegin.o : CFLAGS += $(SOFTFLOAT) -fno-aggressive-loop-optimizations
-lib/soft-float/crtbegin.o : crtbegin.c
-	@$(COMPILE)
-
-lib/soft-float/shcrtbegin.o : CFLAGS += $(SOFTFLOAT) -fPIC -fno-aggressive-loop-optimizations
-lib/soft-float/shcrtbegin.o : shcrtbegin.c
-	@$(COMPILE)
-
-lib/soft-float/shcrtend.o : CFLAGS += $(SOFTFLOAT) -fPIC -fno-aggressive-loop-optimizations
-lib/soft-float/shcrtend.o : shcrtend.c
-	@$(COMPILE)
-
-lib/soft-float/%.o : CFLAGS += $(SOFTFLOAT)
-lib/soft-float/%.o : %.c
-	@$(COMPILE)
-
 ################ BASEREL STANDARD LIBRARY ################
 
 lib/baserel/%.o : AFLAGS += $(BASEREL)
@@ -250,28 +218,6 @@ lib.threadsafe/shcrtend.o : shcrtend.c
 
 lib.threadsafe/%.o : CFLAGS += $(THREADSAFE) $(LARGEDATA)
 lib.threadsafe/%.o : %.c
-	@$(COMPILE)
-
-################ SOFT FLOAT THREAD SAFE LIBRARY ################
-
-lib.threadsafe/soft-float/%.o : AFLAGS += $(SOFTFLOAT) $(THREADSAFE)
-lib.threadsafe/soft-float/%.o : %.S
-	@$(ASSEMBLE)
-
-lib.threadsafe/soft-float/crtbegin.o : CFLAGS += $(THREADSAFE) $(SOFTFLOAT) -fno-aggressive-loop-optimizations
-lib.threadsafe/soft-float/crtbegin.o : crtbegin.c
-	@$(COMPILE)
-
-lib.threadsafe/soft-float/shcrtbegin.o : CFLAGS += $(THREADSAFE) $(SOFTFLOAT) -fPIC -fno-aggressive-loop-optimizations
-lib.threadsafe/soft-float/shcrtbegin.o : shcrtbegin.c
-	@$(COMPILE)
-
-lib.threadsafe/soft-float/shcrtend.o : CFLAGS += $(THREADSAFE) $(SOFTFLOAT) -fPIC -fno-aggressive-loop-optimizations
-lib.threadsafe/soft-float/shcrtend.o : shcrtend.c
-	@$(COMPILE)
-
-lib.threadsafe/soft-float/%.o : CFLAGS += $(THREADSAFE) $(SOFTFLOAT)
-lib.threadsafe/soft-float/%.o : %.c
 	@$(COMPILE)
 
 ################ BASEREL THREAD SAFE LIBRARY ################

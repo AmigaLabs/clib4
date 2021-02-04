@@ -35,20 +35,13 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-float
-fmaxf(float x,float y)
+float fmaxf(float x, float y)
 {
 	float result;
 
-	if(isnan(x))
+	if (isnan(x))
 	{
-		if(isnan(y))
+		if (isnan(y))
 			result = nanf(NULL);
 		else
 			result = y;
@@ -59,15 +52,11 @@ fmaxf(float x,float y)
 	}
 	else
 	{
-		if(x > y)
+		if (x > y)
 			result = x;
 		else
 			result = y;
 	}
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

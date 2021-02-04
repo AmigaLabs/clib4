@@ -35,18 +35,8 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-float
+float 
 log2f(float x)
 {
-	return(logf(x) / logf(2.0));
+	return (logf(x) / logf(2.0));
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

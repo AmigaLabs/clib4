@@ -47,34 +47,25 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
+static const float two25 = 3.3554432000e+07; /* 0x4c000000 */
 
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-static const float two25 =  3.3554432000e+07; /* 0x4c000000 */
-
-float
-frexpf(float x, int *eptr)
+float frexpf(float x, int *eptr)
 {
 	LONG hx, ix;
-	GET_FLOAT_WORD(hx,x);
-	ix = 0x7fffffff&hx;
+	GET_FLOAT_WORD(hx, x);
+	ix = 0x7fffffff & hx;
 	*eptr = 0;
-	if(ix>=0x7f800000||(ix==0)) return x;	/* 0,inf,nan */
-	if (ix<0x00800000) {		/* subnormal */
-	    x *= two25;
-	    GET_FLOAT_WORD(hx,x);
-	    ix = hx&0x7fffffff;
-	    *eptr = -25;
+	if (ix >= 0x7f800000 || (ix == 0))
+		return x; /* 0,inf,nan */
+	if (ix < 0x00800000)
+	{ /* subnormal */
+		x *= two25;
+		GET_FLOAT_WORD(hx, x);
+		ix = hx & 0x7fffffff;
+		*eptr = -25;
 	}
-	*eptr += (ix>>23)-126;
-	hx = (hx&0x807fffffU)|0x3f000000;
-	SET_FLOAT_WORD(x,hx);
+	*eptr += (ix >> 23) - 126;
+	hx = (hx & 0x807fffffU) | 0x3f000000;
+	SET_FLOAT_WORD(x, hx);
 	return x;
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

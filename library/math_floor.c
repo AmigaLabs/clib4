@@ -44,12 +44,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 
 /****************************************************************************/
@@ -77,14 +71,13 @@ asm(
 	".even\n\t"
 	".globl	_MathIeeeDoubBasBase\n\t"
 	".globl	___floor\n\t"
-"___floor:\n\t"
+	"___floor:\n\t"
 	"movel	a6,sp@-\n\t"
-	"movel	"A4(_MathIeeeDoubBasBase)",a6\n\t"
-	"moveml	sp@(8),d0/d1\n\t"
-	"jsr		a6@(-90:W)\n\t"
-	"movel	sp@+,a6\n\t"
-	"rts\n\t"
-);
+	"movel	" A4(_MathIeeeDoubBasBase) ",a6\n\t"
+									   "moveml	sp@(8),d0/d1\n\t"
+									   "jsr		a6@(-90:W)\n\t"
+									   "movel	sp@+,a6\n\t"
+									   "rts\n\t");
 
 /****************************************************************************/
 
@@ -241,7 +234,3 @@ floor(double x)
 
 	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

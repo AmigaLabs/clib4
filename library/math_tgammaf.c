@@ -44,13 +44,7 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-float
+float 
 tgammaf(float x)
 {
 	int gamma_sign;
@@ -58,7 +52,3 @@ tgammaf(float x)
 
 	return gamma_sign * expf(y);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

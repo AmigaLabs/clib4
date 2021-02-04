@@ -35,12 +35,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 
 /****************************************************************************/
@@ -68,14 +62,13 @@ asm(
 	".even\n\t"
 	".globl	_MathIeeeDoubBasBase\n\t"
 	".globl	___fabs\n\t"
-"___fabs:\n\t"
+	"___fabs:\n\t"
 	"movel	a6,sp@-\n\t"
-	"movel	"A4(_MathIeeeDoubBasBase)",a6\n\t"
-	"moveml	sp@(8),d0/d1\n\t"
-	"jsr		a6@(-54:W)\n\t"
-	"movel	sp@+,a6\n\t"
-	"rts\n\t"
-);
+	"movel	" A4(_MathIeeeDoubBasBase) ",a6\n\t"
+									   "moveml	sp@(8),d0/d1\n\t"
+									   "jsr		a6@(-54:W)\n\t"
+									   "movel	sp@+,a6\n\t"
+									   "rts\n\t");
 
 /****************************************************************************/
 
@@ -90,7 +83,7 @@ __fabs(double x)
 
 	result = IEEEDPAbs(x);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -110,11 +103,11 @@ __fabs(double x)
 {
 	double result;
 
-	__asm ("fabs%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("fabs%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -134,12 +127,11 @@ __fabs(double x)
 {
 	double res;
 
-	__asm volatile ("fabs %0, %1"
-					: "=f" (res)
-					: "f" (x));
+	__asm volatile("fabs %0, %1"
+				   : "=f"(res)
+				   : "f"(x));
 
 	return res;
-
 }
 
 /****************************************************************************/
@@ -153,7 +145,7 @@ __fabs(double x)
 {
 	double res;
 
-	if(x < 0)
+	if (x < 0)
 		res = (-x);
 	else
 		res = x;
@@ -178,9 +170,5 @@ fabs(double x)
 
 	result = __fabs(x);
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

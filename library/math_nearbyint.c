@@ -35,19 +35,9 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 double
 nearbyint(double x)
 {
 	/* ZZZ is this such a good idea? */
-	return(rint(x));
+	return (rint(x));
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

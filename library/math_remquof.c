@@ -41,14 +41,7 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-float
-remquof(float x,float y,int * quo)
+float remquof(float x, float y, int *quo)
 {
   int signx, signy, signres;
   int wx;
@@ -67,9 +60,5 @@ remquof(float x,float y,int * quo)
 
   *quo = signres * (lrintf(x_over_y) & 0x7f);
 
-  return remainderf(x,y);
+  return remainderf(x, y);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

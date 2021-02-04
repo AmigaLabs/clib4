@@ -44,12 +44,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 
 /****************************************************************************/
@@ -77,14 +71,13 @@ asm(
 	".even\n\t"\n\t
 	".globl	_MathIeeeDoubTransBase\n\t"
 	".globl	___log10\n\t"
-"___log10:\n\t"
+	"___log10:\n\t"
 	"movel	a6,sp@-\n\t"
-	"movel	"A4(_MathIeeeDoubBasBase)",a6\n\t"
-	"moveml	sp@(8),d0/d1\n\t"
-	"jsr		a6@(-126:W)\n\t"
-	"movel	sp@+,a6\n\t"
-	"rts\n\t"
-);
+	"movel	" A4(_MathIeeeDoubBasBase) ",a6\n\t"
+									   "moveml	sp@(8),d0/d1\n\t"
+									   "jsr		a6@(-126:W)\n\t"
+									   "movel	sp@+,a6\n\t"
+									   "rts\n\t");
 
 /****************************************************************************/
 
@@ -133,11 +126,11 @@ __log10(double x)
 #if defined(PPC_FLOATING_POINT_SUPPORT)
 
 static const double
-two54      =  1.80143985094819840000e+16, /* 0x43500000, 0x00000000 */
-ivln10     =  4.34294481903251816668e-01, /* 0x3FDBCB7B, 0x1526E50E */
-log10_2hi  =  3.01029995663611771306e-01, /* 0x3FD34413, 0x509F6000 */
-log10_2lo  =  3.69423907715893078616e-13, /* 0x3D59FEF3, 0x11F12B36 */
-zero       =  0.0;
+	two54 = 1.80143985094819840000e+16,		/* 0x43500000, 0x00000000 */
+	ivln10 = 4.34294481903251816668e-01,	/* 0x3FDBCB7B, 0x1526E50E */
+	log10_2hi = 3.01029995663611771306e-01, /* 0x3FD34413, 0x509F6000 */
+	log10_2lo = 3.69423907715893078616e-13, /* 0x3D59FEF3, 0x11F12B36 */
+	zero = 0.0;
 
 INLINE STATIC double
 __log10(double x)
@@ -195,7 +188,3 @@ log10(double x)
 
 	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

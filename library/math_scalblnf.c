@@ -6,17 +6,11 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if LDBL_MANT_DIG == DBL_MANT_DIG && LDBL_MAX_EXP == DBL_MAX_EXP
 
 /****************************************************************************/
 
-float
+float 
 scalblnf(float x, long n)
 {
     return scalbnf(x, n > INT_MAX ? INT_MAX : n < INT_MIN ? INT_MIN : n);
@@ -25,7 +19,3 @@ scalblnf(float x, long n)
 /****************************************************************************/
 
 #endif /* LDBL_MANT_DIG == DBL_MANT_DIG && LDBL_MAX_EXP == DBL_MAX_EXP */
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

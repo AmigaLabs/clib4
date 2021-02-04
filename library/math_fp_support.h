@@ -36,15 +36,6 @@
 
 /****************************************************************************/
 
-/* If any of the three supported floating point support flavours is
-   enabled, make sure that the generic 'FLOATING_POINT_SUPPORT' symbol
-   is defined, too.*/
-#if (defined(IEEE_FLOATING_POINT_SUPPORT) || defined(M68881_FLOATING_POINT_SUPPORT) || defined(PPC_FLOATING_POINT_SUPPORT))
-#define FLOATING_POINT_SUPPORT
-#endif /* IEEE_FLOATING_POINT_SUPPORT || M68881_FLOATING_POINT_SUPPORT || PPC_FLOATING_POINT_SUPPORT */
-
-/****************************************************************************/
-
 /* This selects whether or not the 'long double' type should be used. So far,
    only 'double' can be supported, and 'long double' defaults to 'double'. */
 /*#define USE_LONG_DOUBLE*/

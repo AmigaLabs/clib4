@@ -47,26 +47,17 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-float
-logbf(float x)
+float logbf(float x)
 {
 	LONG ix;
-	GET_FLOAT_WORD(ix,x);
-	ix &= 0x7fffffff;			/* high |x| */
-	if(ix==0) return (float)-1.0/fabsf(x);
-	if(ix>=0x7f800000) return x*x;
-	if((ix>>=23)==0) 			/* IEEE 754 logb */
-		return -126.0; 
+	GET_FLOAT_WORD(ix, x);
+	ix &= 0x7fffffff; /* high |x| */
+	if (ix == 0)
+		return (float)-1.0 / fabsf(x);
+	if (ix >= 0x7f800000)
+		return x * x;
+	if ((ix >>= 23) == 0) /* IEEE 754 logb */
+		return -126.0;
 	else
-		return (float) (ix-127); 
+		return (float)(ix - 127);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

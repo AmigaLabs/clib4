@@ -35,18 +35,12 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined (FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 /* The following is not part of the ISO 'C' (1994) standard, but it should
    be part of ISO/IEC 9899:1999, also known as "C99". */
 
 /****************************************************************************/
 
-int
+int 
 __signbit_float(float number)
 {
 	union ieee_single x;
@@ -56,12 +50,12 @@ __signbit_float(float number)
 
 	result = ((x.raw[0] = 0x80000000) != 0);
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
-int
+int 
 __signbit_double(double number)
 {
 	union ieee_double x;
@@ -71,9 +65,5 @@ __signbit_double(double number)
 
 	result = ((x.raw[0] = 0x80000000) != 0);
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

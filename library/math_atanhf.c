@@ -46,12 +46,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 static const float zero = 0.0;
 static const float one = 1.0, huge = 1e30;
 
@@ -60,23 +54,25 @@ static const float one = 1.0, huge = 1e30;
 float atanhf(float x)
 {
 	float t;
-	LONG hx,ix;
-	GET_FLOAT_WORD(hx,x);
-	ix = hx&0x7fffffff;
-	if (ix>0x3f800000) 		/* |x|>1 */
-	    return (x-x)/(x-x);
-	if(ix==0x3f800000) 
-	    return x/zero;
-	if(ix<0x31800000&&(huge+x)>zero) return x;	/* x<2**-28 */
-	SET_FLOAT_WORD(x,ix);
-	if(ix<0x3f000000) {		/* x < 0.5 */
-	    t = x+x;
-	    t = (float)0.5*log1pf(t+t*x/(one-x));
-	} else 
-	    t = (float)0.5*log1pf((x+x)/(one-x));
-	if(hx>=0) return t; else return -t;
+	LONG hx, ix;
+	GET_FLOAT_WORD(hx, x);
+	ix = hx & 0x7fffffff;
+	if (ix > 0x3f800000) /* |x|>1 */
+		return (x - x) / (x - x);
+	if (ix == 0x3f800000)
+		return x / zero;
+	if (ix < 0x31800000 && (huge + x) > zero)
+		return x; /* x<2**-28 */
+	SET_FLOAT_WORD(x, ix);
+	if (ix < 0x3f000000)
+	{ /* x < 0.5 */
+		t = x + x;
+		t = (float)0.5 * log1pf(t + t * x / (one - x));
+	}
+	else
+		t = (float)0.5 * log1pf((x + x) / (one - x));
+	if (hx >= 0)
+		return t;
+	else
+		return -t;
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

@@ -6,17 +6,11 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
 
 /****************************************************************************/
 
-float
+float 
 nexttowardf(float x, long double y)
 {
     return nextafterf(x, y);
@@ -25,7 +19,3 @@ nexttowardf(float x, long double y)
 /****************************************************************************/
 
 #endif /* LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024 */
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

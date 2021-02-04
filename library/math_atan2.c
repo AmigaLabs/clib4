@@ -44,12 +44,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 
 /****************************************************************************/
@@ -63,24 +57,24 @@ extern double __atan(double x);
 /****************************************************************************/
 
 INLINE STATIC const double
-__atan2(double y,double x)
+__atan2(double y, double x)
 {
 	const double pi = 3.14159265358979323846;
 	const double pi_over_2 = pi / 2.0;
 	double result;
 
-	if(x > 0.0)
+	if (x > 0.0)
 	{
-		if(y > 0.0)
+		if (y > 0.0)
 		{
-			if(x > y)
+			if (x > y)
 				result = __atan(y / x);
 			else
 				result = pi_over_2 - __atan(x / y);
 		}
 		else
 		{
-			if(x > -y)
+			if (x > -y)
 				result = __atan(y / x);
 			else
 				result = -(pi_over_2 + __atan(x / y));
@@ -88,16 +82,16 @@ __atan2(double y,double x)
 	}
 	else
 	{
-		if(y > 0.0)
+		if (y > 0.0)
 		{
-			if((-x) > y)
-				result = pi + __atan (y / x);
+			if ((-x) > y)
+				result = pi + __atan(y / x);
 			else
 				result = pi_over_2 - __atan(x / y);
-        }
+		}
 		else
 		{
-			if((-x) > (-y))
+			if ((-x) > (-y))
 			{
 				result = -(pi - __atan(y / x));
 			}
@@ -113,7 +107,7 @@ __atan2(double y,double x)
 		}
 	}
 
-	return(result);
+	return (result);
 }
 
 #endif /* IEEE_FLOATING_POINT_SUPPORT */
@@ -127,39 +121,39 @@ __atan(double x)
 {
 	double result;
 
-	__asm ("fatan%.x %1,%0"
-	       : "=f" (result)
-	       : "f" (x));
+	__asm("fatan%.x %1,%0"
+		  : "=f"(result)
+		  : "f"(x));
 
-	return(result);
+	return (result);
 }
 
 INLINE STATIC const double
-__atan2(double y,double x)
+__atan2(double y, double x)
 {
-	double pi,pi_over_2;
+	double pi, pi_over_2;
 	double result;
 
-	__asm ("fmovecr%.x %#0,%0"	/* extended precision pi */
-	       : "=f" (pi)
-	       : /* no inputs */ );
+	__asm("fmovecr%.x %#0,%0" /* extended precision pi */
+		  : "=f"(pi)
+		  : /* no inputs */);
 
-	__asm ("fscale%.b %#-1,%0"	/* no loss of accuracy */
-	       : "=f" (pi_over_2)
-	       : "0" (pi));
+	__asm("fscale%.b %#-1,%0" /* no loss of accuracy */
+		  : "=f"(pi_over_2)
+		  : "0"(pi));
 
-	if(x > 0.0)
+	if (x > 0.0)
 	{
-		if(y > 0.0)
+		if (y > 0.0)
 		{
-			if(x > y)
+			if (x > y)
 				result = __atan(y / x);
 			else
 				result = pi_over_2 - __atan(x / y);
 		}
 		else
 		{
-			if(x > -y)
+			if (x > -y)
 				result = __atan(y / x);
 			else
 				result = -(pi_over_2 + __atan(x / y));
@@ -167,16 +161,16 @@ __atan2(double y,double x)
 	}
 	else
 	{
-		if(y > 0.0)
+		if (y > 0.0)
 		{
-			if((-x) > y)
-				result = pi + __atan (y / x);
+			if ((-x) > y)
+				result = pi + __atan(y / x);
 			else
 				result = pi_over_2 - __atan(x / y);
-        }
+		}
 		else
 		{
-			if((-x) > (-y))
+			if ((-x) > (-y))
 			{
 				result = -(pi - __atan(y / x));
 			}
@@ -192,7 +186,7 @@ __atan2(double y,double x)
 		}
 	}
 
-	return(result);
+	return (result);
 }
 
 #endif /* M68881_FLOATING_POINT_SUPPORT */
@@ -201,116 +195,115 @@ __atan2(double y,double x)
 
 #if defined(PPC_FLOATING_POINT_SUPPORT)
 
-static const double 
-tiny  = 1.0e-300,
-zero  = 0.0,
-pi_o_4  = 7.8539816339744827900E-01, /* 0x3FE921FB, 0x54442D18 */
-pi_o_2  = 1.5707963267948965580E+00, /* 0x3FF921FB, 0x54442D18 */
-pi      = 3.1415926535897931160E+00, /* 0x400921FB, 0x54442D18 */
-pi_lo   = 1.2246467991473531772E-16; /* 0x3CA1A626, 0x33145C07 */
+static const double
+	tiny = 1.0e-300,
+	zero = 0.0,
+	pi_o_4 = 7.8539816339744827900E-01, /* 0x3FE921FB, 0x54442D18 */
+	pi_o_2 = 1.5707963267948965580E+00, /* 0x3FF921FB, 0x54442D18 */
+	pi = 3.1415926535897931160E+00,		/* 0x400921FB, 0x54442D18 */
+	pi_lo = 1.2246467991473531772E-16;	/* 0x3CA1A626, 0x33145C07 */
 
 INLINE STATIC double
-__atan2(double y,double x)
+__atan2(double y, double x)
 {
 	double z;
-	int k,m,hx,hy,ix,iy;
-	unsigned int lx,ly;
+	int k, m, hx, hy, ix, iy;
+	unsigned int lx, ly;
 
-	EXTRACT_WORDS(hx,lx,x);
-	ix = hx&0x7fffffff;
+	EXTRACT_WORDS(hx, lx, x);
+	ix = hx & 0x7fffffff;
 
-	EXTRACT_WORDS(hy,ly,y);
-	iy = hy&0x7fffffff;
+	EXTRACT_WORDS(hy, ly, y);
+	iy = hy & 0x7fffffff;
 
-	if( ((ix|((lx|-lx)>>31))>0x7ff00000) || ((iy|((ly|-ly)>>31))>0x7ff00000) )	/* x or y is NaN */
-	   return x+y;
+	if (((ix | ((lx | -lx) >> 31)) > 0x7ff00000) || ((iy | ((ly | -ly) >> 31)) > 0x7ff00000)) /* x or y is NaN */
+		return x + y;
 
-	if(((hx-0x3ff00000)|lx)==0) 
-		return atan(y);                                                         /* x=1.0 */
+	if (((hx - 0x3ff00000) | lx) == 0)
+		return atan(y); /* x=1.0 */
 
-	m = ((hy>>31)&1)|((hx>>30)&2);	                                            /* 2*sign(x)+sign(y) */
+	m = ((hy >> 31) & 1) | ((hx >> 30) & 2); /* 2*sign(x)+sign(y) */
 
-    /* when y = 0 */
-	if((iy|ly)==0) 
+	/* when y = 0 */
+	if ((iy | ly) == 0)
 	{
-	    switch(m) 
+		switch (m)
 		{
-		case 0: 
-		case 1: 
-			return y; 	                                                        /* atan(+-0,+anything)=+-0 */
-		case 2: 
-			return pi+tiny;                                                     /* atan(+0,-anything) = pi */
-		case 3: 
-			return -pi-tiny;                                                    /* atan(-0,-anything) =-pi */
-	    }
+		case 0:
+		case 1:
+			return y; /* atan(+-0,+anything)=+-0 */
+		case 2:
+			return pi + tiny; /* atan(+0,-anything) = pi */
+		case 3:
+			return -pi - tiny; /* atan(-0,-anything) =-pi */
+		}
 	}
 
-    /* when x = 0 */
-	if((ix|lx)==0) 
-		return (hy<0)?  -pi_o_2-tiny: pi_o_2+tiny;
-	    
-    /* when x is INF */
-	if(ix==0x7ff00000) 
+	/* when x = 0 */
+	if ((ix | lx) == 0)
+		return (hy < 0) ? -pi_o_2 - tiny : pi_o_2 + tiny;
+
+	/* when x is INF */
+	if (ix == 0x7ff00000)
 	{
-	    if(iy==0x7ff00000) 
+		if (iy == 0x7ff00000)
 		{
-			switch(m) 
+			switch (m)
 			{
-			case 0: 
-				return  pi_o_4+tiny;                                            /* atan(+INF,+INF) */
-			case 1: 
-				return -pi_o_4-tiny;                                            /* atan(-INF,+INF) */
-			case 2: 
-				return  3.0*pi_o_4+tiny;                                        /*atan(+INF,-INF)*/
-			case 3: 
-				return -3.0*pi_o_4-tiny;                                        /*atan(-INF,-INF)*/
+			case 0:
+				return pi_o_4 + tiny; /* atan(+INF,+INF) */
+			case 1:
+				return -pi_o_4 - tiny; /* atan(-INF,+INF) */
+			case 2:
+				return 3.0 * pi_o_4 + tiny; /*atan(+INF,-INF)*/
+			case 3:
+				return -3.0 * pi_o_4 - tiny; /*atan(-INF,-INF)*/
 			}
-	    }
-		else 
+		}
+		else
 		{
-			switch(m) 
+			switch (m)
 			{
-		    case 0: 
-				return  zero  ;	                                                /* atan(+...,+INF) */
-		    case 1: 
-				return -zero  ;	                                                /* atan(-...,+INF) */
-		    case 2: 
-				return  pi+tiny  ;	                                            /* atan(+...,-INF) */
-		    case 3: 
-				return -pi-tiny  ;	                                            /* atan(-...,-INF) */
+			case 0:
+				return zero; /* atan(+...,+INF) */
+			case 1:
+				return -zero; /* atan(-...,+INF) */
+			case 2:
+				return pi + tiny; /* atan(+...,-INF) */
+			case 3:
+				return -pi - tiny; /* atan(-...,-INF) */
 			}
-	    }
+		}
 	}
 
-    /* when y is INF */
-	if(iy==0x7ff00000) 
-		return (hy<0)? -pi_o_2-tiny: pi_o_2+tiny;
+	/* when y is INF */
+	if (iy == 0x7ff00000)
+		return (hy < 0) ? -pi_o_2 - tiny : pi_o_2 + tiny;
 
-    /* compute y/x */
-	k = (iy-ix)>>20;
-	if(k > 60) 
-		z=pi_o_2+0.5*pi_lo; 	                                                /* |y/x| >  2**60 */
-	else 
-		if(hx<0&&k<-60) 
-			z=0.0; 	                                                            /* |y|/x < -2**60 */
-	else 
-		z=atan(fabs(y/x));		                                                /* safe to do y/x */
+	/* compute y/x */
+	k = (iy - ix) >> 20;
+	if (k > 60)
+		z = pi_o_2 + 0.5 * pi_lo; /* |y/x| >  2**60 */
+	else if (hx < 0 && k < -60)
+		z = 0.0; /* |y|/x < -2**60 */
+	else
+		z = atan(fabs(y / x)); /* safe to do y/x */
 
-	switch (m) 
+	switch (m)
 	{
-	case 0: 
-		return z;       	                                                    /* atan(+,+) */
-	case 1: 
-	    {
-			unsigned int  zh;
-			GET_HIGH_WORD(zh,z);
-			SET_HIGH_WORD(z,zh ^ 0x80000000);
-	    }
-		return z;       	                                                    /* atan(-,+) */
-	case 2: 
-		return  pi-(z-pi_lo);                                                   /* atan(+,-) */
-	default: 
-		return  (z-pi_lo)-pi;                                                   /* atan(-,-) */
+	case 0:
+		return z; /* atan(+,+) */
+	case 1:
+	{
+		unsigned int zh;
+		GET_HIGH_WORD(zh, z);
+		SET_HIGH_WORD(z, zh ^ 0x80000000);
+	}
+		return z; /* atan(-,+) */
+	case 2:
+		return pi - (z - pi_lo); /* atan(+,-) */
+	default:
+		return (z - pi_lo) - pi; /* atan(-,-) */
 	}
 }
 
@@ -319,15 +312,11 @@ __atan2(double y,double x)
 /****************************************************************************/
 
 double
-atan2(double y,double x)
+atan2(double y, double x)
 {
 	double result;
 
-	result = __atan2(y,x);
+	result = __atan2(y, x);
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */
