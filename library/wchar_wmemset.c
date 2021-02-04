@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wmemset.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wmemset.c,v 1.4 2021-02-04 11:15:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,14 +35,17 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-/* Implementation based on musl */
-
 wchar_t *
 wmemset(wchar_t *ptr, int val, size_t len)
 {
-	wchar_t *ret = ptr;
-	while (len--) *ptr++ = val;
-	return ret;
+	size_t i;
+	wchar_t *p;
+
+	p = (wchar_t *)ptr;
+	for (i = 0; i < len; i++)
+	{
+		*p = val;
+		p++;
+	}
+	return ptr;
 }

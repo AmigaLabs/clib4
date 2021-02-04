@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wmemchr.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wmemchr.c,v 1.4 2021-02-04 11:16:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,13 +35,19 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-/* Implementation based on musl */
-
 wchar_t *
 wmemchr(const wchar_t *ptr, wchar_t val, size_t len)
 {
-	for (; len && *ptr != val; len--, ptr++);
-	return len ? (wchar_t *)ptr : 0;
+	size_t i;
+
+	for (i = 0; i < len; i++)
+	{
+		if (*ptr == val)
+		{
+			/* LINTED const castaway */
+			return (wchar_t *)ptr;
+		}
+		ptr++;
+	}
+	return NULL;
 }

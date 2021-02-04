@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_btowc.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_btowc.c,v 1.4 2021-02-03 19:11:16 apalmate Exp $
  *
  * :ts=4
  *
@@ -40,6 +40,15 @@
 wint_t
 btowc(int c)
 {
-	/* ZZZ unimplemented */
-	return(0);
+	wchar_t wc;
+	char cc = (char)c;
+
+	if (
+		((c > 0) && (c < 128)) &&
+		(mbrtowc(&wc, &cc, 1, 0) == 1))
+	{
+		return (wc);
+	}
+
+	return L'\0';
 }

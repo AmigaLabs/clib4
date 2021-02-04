@@ -41,6 +41,9 @@
 #endif /* DOS_DOS_H */
 
 /****************************************************************************/
+#ifdef ERROR
+#undef ERROR
+#endif
 
 #define BUSY ((struct IORequest *)NULL)
 #define CANNOT !

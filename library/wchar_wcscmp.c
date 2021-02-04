@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wcscmp.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wcscmp.c,v 1.4 2021-02-04 00:30:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -37,9 +37,11 @@
 
 /****************************************************************************/
 
-int
-wcscmp(const wchar_t *s1, const wchar_t * s2)
+int 
+wcscmp(const wchar_t *s1, const wchar_t *s2)
 {
-	for (; *s1==*s2 && *s1 && *s2; s1++, s2++);
-	return *s1 - *s2;
+	while (*s1 == *s2++)
+		if (*s1++ == 0)
+			return (0);
+	return (*s1 - *--s2);
 }

@@ -328,7 +328,6 @@ C_LIB := \
 	stdlib_umodsi3.o \
 	stdlib_unsetenv.o \
 	stdlib_valloc.o \
-	stdlib_wcstombs.o \
 	strings_ffs.o \
 	strings_strcasecmp.o \
 	strings_strncasecmp.o \
@@ -435,6 +434,7 @@ C_LIB := \
 	unistd_usleep.o \
 	utime_utime.o \
 	utsname_uname.o \
+	wchar_bittab.o \
 	wchar_btowc.o \
 	wchar_fgetwc.o \
 	wchar_fgetws.o \
@@ -482,6 +482,7 @@ C_LIB := \
 	wchar_wcstoull.o \
 	wchar_wcsxfrm.o \
 	wchar_wctob.o \
+	wchar_wctomb.o \
 	wchar_wmemchr.o \
 	wchar_wmemcmp.o \
 	wchar_wmemcpy.o \
@@ -503,6 +504,7 @@ C_LIB := \
 	wctype_iswspace.o \
 	wctype_iswupper.o \
 	wctype_iswxdigit.o \
+	wctype_jp2uc.o \
 	wctype_towctrans.o \
 	wctype_towlower.o \
 	wctype_towupper.o \

@@ -42,15 +42,7 @@
 #endif /* _DIRENT_HEADERS_H */
 
 /****************************************************************************/
-
-#ifndef _STDLIB_MEMORY_H
-#include "stdlib_memory.h"
-#endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
-
 /* The following is not part of the ISO 'C' (1994) standard. */
-
 /****************************************************************************/
 
 #if defined(UNIX_PATH_SEMANTICS)

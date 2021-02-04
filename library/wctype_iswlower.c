@@ -1,5 +1,5 @@
 /*
- * $Id: wctype_iswlower.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wctype_iswlower.c,v 1.4 2021-02-04 00:02:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -39,8 +39,8 @@
 
 /****************************************************************************/
 
-int
+int 
 iswlower(wint_t c)
 {
-	return islower(c);
+	return (towupper(c) != c);
 }

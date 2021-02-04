@@ -39,9 +39,19 @@
 
 /* Implementation based on musl */
 
-int
-wmemcmp(const wchar_t *ptr1, const wchar_t *ptr2, size_t len)
+int wmemcmp(const wchar_t *ptr1, const wchar_t *ptr2, size_t len)
 {
-	for (; len && *ptr1==*ptr2; len--, ptr1++, ptr2++);
-	return len ? *ptr1-*ptr2 : 0;
+	size_t i;
+
+	for (i = 0; i < len; i++)
+	{
+		if (*ptr1 != *ptr2)
+		{
+			/* wchar might be unsigned */
+			return *ptr1 > *ptr2 ? 1 : -1;
+		}
+		ptr1++;
+		ptr2++;
+	}
+	return 0;
 }

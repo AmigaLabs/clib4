@@ -64,7 +64,7 @@ typedef unsigned int size_t;
 
 /* wchar_t is a built-in type in C++ */
 #ifndef __cplusplus
-typedef unsigned short wchar_t;
+typedef int wchar_t;
 #endif
 
 /****************************************************************************/

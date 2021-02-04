@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_mbrlen.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_mbrlen.c,v 1.4 2021-02-03 19:11:16 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,30 +35,74 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-/* Mostly non-working stub based on bionic */
-
-#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 size_t
-mbrtowc(wchar_t *restrict pwc, const char *restrict s, size_t n, mbstate_t *restrict ps)
+mbrtowc(wchar_t *restrict pwc, const char *restrict src, size_t n, mbstate_t *restrict ps)
 {
-	if (s == NULL)
+	static unsigned is = 0U;
+	unsigned int c;
+	const unsigned char *s = (const void *)src;
+	const unsigned int N = (unsigned int)n;
+
+	if (!ps)
 	{
-		s = "";
-		pwc = NULL;
+		ps = (void *)&is;
+	}
+	c = *(unsigned *)ps;
+
+	if (!s)
+	{
+		if (c)
+			goto ilseq;
+		return ((size_t)0);
+	}
+	else if (!pwc)
+	{
+		pwc = (void *)&pwc;
+	}
+	if (!n)
+	{
+		return ((size_t)-2);
+	}
+	if (!c)
+	{
+		if (*s < 0x80)
+		{
+			return !!(*pwc = *s);
+		}
+		if ((*s - __SA) > (__SB - __SA))
+		{
+			goto ilseq;
+		}
+		c = bittab[(*s++ - __SA)];
+		n--;
+	}
+	if (n)
+	{
+		if (__OOB(c, *s))
+			goto ilseq;
+	loop:
+		c = ((c << 6) | (*s++ - 0x80U));
+		n--;
+		if (!(c & (1U << 31)))
+		{
+			*(unsigned *)ps = 0U;
+			*pwc = (wchar_t)c;
+			return (size_t)(N - n);
+		}
+		if (n)
+		{
+			if ((*s - 0x80U) >= 0x40)
+			{
+				goto ilseq;
+			}
+			goto loop;
+		}
 	}
 
-	if (n == 0)
-	{
-		if (pwc)
-			*pwc = 0;
-		return 0;
-	}
-
-	if (pwc)
-		*pwc = *s;
-
-	return (*s != 0);
+	*(unsigned *)ps = c;
+	return ((size_t)-2);
+ilseq:
+	errno = EILSEQ;
+	*(unsigned *)ps = 0;
+	return ((size_t)-1);
 }
-#endif /* __STDC_VERSION__ && __STDC_VERSION__ >= 199901L */

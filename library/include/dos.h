@@ -41,48 +41,20 @@
 #ifndef _DOS_H
 #define _DOS_H
 
-/****************************************************************************/
+#include <features.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-#ifndef _STDIO_H
 #include <stdio.h>
-#endif /* _STDIO_H */
-
-#ifndef _STDDEF_H
 #include <stddef.h>
-#endif /* _STDDEF_H */
-
-#ifndef _RESOURCE_H
 #include <sys/resource.h>
-#endif /* _RESOURCE_H */
+#include <wchar.h>
 
-/****************************************************************************/
-
-#ifndef EXEC_LIBRARIES_H
 #include <exec/libraries.h>
-#endif /* EXEC_LIBRARIES_H */
-
-#ifndef WORKBENCH_STARTUP_H
 #include <workbench/startup.h>
-#endif /* WORKBENCH_STARTUP_H */
-
-#ifndef DEVICES_TIMER_H
 #include <devices/timer.h>
-#endif
-
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /*
  * The Workbench startup message passed to this program; this may be NULL
@@ -113,13 +85,13 @@ extern "C" {
  * global variable initialized by the startup code, whose name you might
  * not even know exactly.
  */
-extern struct WBStartup * __WBenchMsg;
+extern struct WBStartup *__WBenchMsg;
 #define WBenchMsg __WBenchMsg
 
 /****************************************************************************/
 
 /* This is filled in with a pointer to the name of the program being run. */
-extern char * __program_name;
+extern char *__program_name;
 
 /****************************************************************************/
 
@@ -179,7 +151,7 @@ extern void __set_a4(unsigned long value);
  * error code, too). Put a pointer to the file handle variable you
  * want to be filled in into the second parameter to this function.
  */
-extern int __get_default_file(int file_descriptor,long * file_ptr);
+extern int __get_default_file(int file_descriptor, long *file_ptr);
 
 /****************************************************************************/
 
@@ -237,8 +209,8 @@ extern ULONG __free_memory_threshold;
  * Parameters called with NULL instead of pointer to the counters to
  * be filled in will be ignored.
  */
-extern void __get_mem_stats(size_t * current_memory,size_t * max_memory,
-	size_t * current_chunks,size_t * max_chunks);
+extern void __get_mem_stats(size_t *current_memory, size_t *max_memory,
+							size_t *current_chunks, size_t *max_chunks);
 
 /*
  * The following function will reset the counters for "maximum amount
@@ -287,7 +259,7 @@ extern void (*__alloca_trap)(void);
  * request a minimum version number lower than 37.
  */
 extern int __minimum_os_lib_version;
-extern char * __minimum_os_lib_error;
+extern char *__minimum_os_lib_error;
 
 /*
  * If your program is launched from Workbench it will not necessarily
@@ -299,7 +271,7 @@ extern char * __minimum_os_lib_error;
  * request a specific window specification, this will also override
  * any tool window definition stored in the program's icon.
  */
-extern char * __stdio_window_specification;
+extern char *__stdio_window_specification;
 
 /*
  * If set to TRUE, your program's process->pr_WindowPtr will be set to -1
@@ -327,14 +299,14 @@ extern BOOL __detach;
  * At the time this function is invoked, dos.library and utility.library
  * have already been opened for you.
  */
-extern BOOL (* __check_detach)(void);
+extern BOOL (*__check_detach)(void);
 
 /*
  * If this pointer is not NULL, it refers the name that will be given to
  * the process which is created when the program detaches. The default
  * is to reuse the program name instead.
  */
-extern char * __process_name;
+extern char *__process_name;
 
 /*
  * This variable controls the task priority of the program, when running.
@@ -363,7 +335,7 @@ extern unsigned int __stack_size;
  * At the time this function is invoked, dos.library and utility.library
  * have already been opened for you.
  */
-extern unsigned int (* __get_default_stack_size)(void);
+extern unsigned int (*__get_default_stack_size)(void);
 
 /****************************************************************************/
 
@@ -408,17 +380,17 @@ extern BOOL __unix_path_semantics;
 /* A data structures used by the path translation routines below. */
 struct name_translation_info
 {
-	char	substitute[MAXPATHLEN];
-	char *	original_name;
-	int		is_root;
+	char substitute[MAXPATHLEN];
+	char *original_name;
+	int is_root;
 };
 
 /****************************************************************************/
 
-extern int __translate_relative_path_name(char const ** name_ptr,char *replace,size_t max_replace_len);
-extern void __restore_path_name(char const ** name_ptr,struct name_translation_info * nti);
-extern int __translate_amiga_to_unix_path_name(char const ** name_ptr,struct name_translation_info * nti);
-extern int __translate_unix_to_amiga_path_name(char const ** name_ptr,struct name_translation_info * nti);
+extern int __translate_relative_path_name(char const **name_ptr, char *replace, size_t max_replace_len);
+extern void __restore_path_name(char const **name_ptr, struct name_translation_info *nti);
+extern int __translate_amiga_to_unix_path_name(char const **name_ptr, struct name_translation_info *nti);
+extern int __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translation_info *nti);
 extern int __translate_io_error_to_errno(LONG io_error);
 
 /****************************************************************************/
@@ -451,8 +423,8 @@ extern int __translate_io_error_to_errno(LONG io_error);
  * linker library.
  */
 extern VOID __lib_exit(VOID);
-extern BOOL __lib_init(struct Library * _SysBase);
-extern BOOL __shlib_init(struct Library * _SysBase);
+extern BOOL __lib_init(struct Library *_SysBase);
+extern BOOL __shlib_init(struct Library *_SysBase);
 
 /****************************************************************************/
 
@@ -521,8 +493,8 @@ extern BOOL (*__expand_wildcard_args_check)(void);
  * ("/gcc/bin:/SDK/C:/SDK/Local/C:/C:.") as used by the execvp()
  * function.
  */
-extern const char * __default_path_delimiter;
-extern const char * __default_path;
+extern const char *__default_path_delimiter;
+extern const char *__default_path;
 
 /****************************************************************************/
 
@@ -547,10 +519,10 @@ extern const char * __default_path;
  * which essentially do nothing at all. You will have to implement these
  * yourself if you want to use them.
  */
-extern char ** environ;
+extern char **environ;
 
-extern int __execve_environ_init(char * const envp[]);
-extern void __execve_environ_exit(char * const envp[]);
+extern int __execve_environ_init(char *const envp[]);
+extern void __execve_environ_exit(char *const envp[]);
 
 /****************************************************************************/
 
@@ -576,13 +548,33 @@ extern void __execve_exit(int return_code);
 extern BOOL __unlink_retries;
 
 /*
+ * wide char status structure
+ */
+struct _wchar
+{
+	/* miscellaneous reentrant data */
+	char *_strtok_last;
+	_mbstate_t _mblen_state;
+	_mbstate_t _wctomb_state;
+	_mbstate_t _mbtowc_state;
+	char _l64a_buf[8];
+	int _getdate_err;
+	_mbstate_t _mbrlen_state;
+	_mbstate_t _mbrtowc_state;
+	_mbstate_t _mbsrtowcs_state;
+	_mbstate_t _wcrtomb_state;
+	_mbstate_t _wcsrtombs_state;
+};
+/*
  * Initial _clib2 structure. This shoulr be replaced with a _reent structure 
  * and populated with all its fields. At momen it holds just global fields
  */
 
-struct _clib2 {
+struct _clib2
+{
 	struct TimeVal clock;
 	struct rusage ru;
+	struct _wchar wide_status;
 	
 	/* 
 	 * Check if SYSV library is available in the system. Otherwise the functions
@@ -595,17 +587,11 @@ struct _clib2 {
 	Elf32_Error __elf_error_code;
 
 	/* This is the pointer to itself */
-	struct Process* self;
+	struct Process *self;
 };
 
 extern struct _clib2 *__global_clib2;
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _DOS_H */

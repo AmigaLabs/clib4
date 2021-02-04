@@ -53,9 +53,9 @@ extern "C" {
 #define LC_COLLATE	1	/* behaviour of strcoll() and strxfrm() */
 #define LC_CTYPE	2	/* character handling */
 #define LC_MONETARY	3	/* monetary information returned by localeconv() */
-#define LC_NUMERIC	4	/* decimal point and non-monetary information
-						   returned by localeconv() */
+#define LC_NUMERIC	4	/* decimal point and non-monetary information returned by localeconv() */
 #define LC_TIME		5	/* behaviour of strftime() */
+#define LC_MESSAGES 6
 
 /****************************************************************************/
 

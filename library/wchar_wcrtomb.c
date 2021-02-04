@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wcrtomb.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wcrtomb.c,v 1.4 2021-02-03 18:48:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -38,8 +38,37 @@
 /****************************************************************************/
 
 size_t
-wcrtomb(char *s, wchar_t wc, mbstate_t *ps)
+wcrtomb(char *s, wchar_t wc, mbstate_t *st)
 {
-	/* ZZZ unimplemented */
-	return(0);
+	(void)st;
+	if (!s)
+		return 1;
+	if ((unsigned)wc < 0x80U)
+	{
+		*s = (char)wc;
+		return 1;
+	}
+	else if ((unsigned)wc < 0x800U)
+	{
+		*s++ = (char)(0xc0 | (wc >> 6));
+		*s = (char)(0x80 | (wc & 0x3f));
+		return 2;
+	}
+	else if (((unsigned)wc < 0xd800U) || (((unsigned)wc - 0xe000U) < 0x2000U))
+	{
+		*s++ = (char)(0xe0 | (wc >> 12));
+		*s++ = (char)(0x80 | ((wc >> 6) & 0x3f));
+		*s = (char)(0x80 | (wc & 0x3f));
+		return 3;
+	}
+	else if (((unsigned)wc - 0x10000U) < 0x100000U)
+	{
+		*s++ = (char)(0xf0 | (wc >> 18));
+		*s++ = (char)(0x80 | ((wc >> 12) & 0x3f));
+		*s++ = (char)(0x80 | ((wc >> 6) & 0x3f));
+		*s = (char)(0x80 | (wc & 0x3f));
+		return 4;
+	}
+	errno = EILSEQ;
+	return (size_t)-1;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wmemmove.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wmemmove.c,v 1.4 2021-02-04 11:13:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,17 +35,8 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-/* Implementation based on musl */
-
 wchar_t *
-wmemmove(wchar_t *dest, const wchar_t * src, size_t len)
+wmemmove(wchar_t *dest, const wchar_t *src, size_t len)
 {
-	wchar_t *d0 = dest;
-	if ((size_t)(dest-src) < len)
-		while (len--) dest[len] = src[len];
-	else
-		while (len--) *dest++ = *src++;
-	return d0;
+	return (wchar_t *)memmove(dest, src, len * sizeof(wchar_t));
 }
