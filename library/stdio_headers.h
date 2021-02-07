@@ -160,7 +160,7 @@ struct iob;
 /****************************************************************************/
 
 /* The file action function for buffered files. */
-typedef int (*file_action_iob_t)(struct iob * iob, struct file_action_message * fam);
+typedef int64_t (*file_action_iob_t)(struct iob * iob, struct file_action_message * fam);
 
 /****************************************************************************/
 
@@ -203,7 +203,8 @@ typedef int (*file_action_iob_t)(struct iob * iob, struct file_action_message * 
 /* Each file handle is represented by the following structure. Note that this
    must match the layout of the public 'FILE' structure in <stdio.h> or
    things will take a turn for the worse! */
-struct iob
+#ifdef __USE_LARGEFILE64
+typedef struct iob
 {
 	ULONG				iob_Flags;				/* Properties and options
 												   associated with this file */
@@ -263,7 +264,71 @@ struct iob
 												   files */
 
 	struct SignalSemaphore * iob_Lock;			/* For thread locking */
-};
+} __iob64;
+#else
+typedef struct iob
+{
+	ULONG				iob_Flags;				/* Properties and options
+												   associated with this file */
+
+	UBYTE *				iob_Buffer;				/* Points to the file buffer */
+	LONG				iob_BufferSize;			/* Size of the buffer in bytes */
+	LONG				iob_BufferPosition;		/* Current read position
+												   in the buffer (grows when any
+												   data is read from the buffer) */
+	LONG				iob_BufferReadBytes;	/* Number of bytes available for
+												   reading (shrinks when any data
+												   is read from the buffer) */
+	LONG				iob_BufferWriteBytes;	/* Number of bytes written to the
+												   buffer which still need to be
+												   flushed to disk (grows when any
+												   data is written to the buffer) */
+
+	_mbstate_t 			_mbstate; 				/* for wide char stdio functions. */
+
+	int   				iob_Flags2;				/* for future use */	
+
+	/************************************************************************/
+	/* Public portion ends here                                             */
+	/************************************************************************/
+
+	file_action_iob_t	iob_Action;				/* The function to invoke for file
+												   operations, such as read,
+												   write and seek. */
+
+	int					iob_SlotNumber;			/* Points back to the iob table
+												   entry number. */
+
+	int					iob_Descriptor;			/* Associated file descriptor */
+
+	STRPTR				iob_String;				/* Alternative source of data;
+												   a pointer to a string */
+	LONG				iob_StringSize;			/* Number of bytes that may be
+												   stored in the string */
+	LONG				iob_StringPosition;		/* Current read/write position
+												   in the string */
+	LONG				iob_StringLength;		/* Number of characters stored
+												   in the string */
+
+	char *				iob_File;				/* For access tracking with the
+												   memory allocator. */
+	int					iob_Line;
+
+	APTR				iob_CustomBuffer;		/* A custom buffer allocated
+												   by setvbuf() */
+
+	char *				iob_TempFileName;		/* If this is a temporary
+												   file, this is its name */
+	BPTR				iob_TempFileLock;		/* The directory in which this
+												   temporary file is stored */
+
+	UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered'
+												   files */
+
+	struct SignalSemaphore * iob_Lock;			/* For thread locking */
+} __iob32;
+#endif
+
 
 /****************************************************************************/
 
@@ -298,7 +363,7 @@ struct iob
 /****************************************************************************/
 
 /* The file action function for unbuffered files. */
-typedef int (*file_action_fd_t)(struct fd * fd,struct file_action_message * fam);
+typedef int64_t (*file_action_fd_t)(struct fd * fd,struct file_action_message * fam);
 
 /****************************************************************************/
 

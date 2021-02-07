@@ -97,7 +97,6 @@ ftello64(FILE *stream)
     assert(file->iob_Action != NULL);
 
     position = (*file->iob_Action)(file, &fam);
-printf("position0 = %lld\n", position);
     if (fam.fam_Error != OK)
     {
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
@@ -107,7 +106,6 @@ printf("position0 = %lld\n", position);
         goto out;
     }
 
-printf("position1 = %lld\n", position);
     if (__iob_read_buffer_is_valid(file))
     {
         /* Subtract the number of bytes still in the buffer which have
@@ -122,7 +120,6 @@ printf("position1 = %lld\n", position);
 		 */
         position += __iob_num_unwritten_bytes(file);
     }
-printf("position2 = %lld\n", position);
 
     result = position;
 

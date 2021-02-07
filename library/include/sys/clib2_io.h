@@ -95,7 +95,7 @@ struct _fd;
 /****************************************************************************/
 
 /* The file action function for unbuffered files. */
-typedef int (*_file_action_fd_t)(struct _fd * _fd,struct file_action_message * fam);
+typedef int64_t (*_file_action_fd_t)(struct _fd * _fd,struct file_action_message * fam);
 
 /****************************************************************************/
 

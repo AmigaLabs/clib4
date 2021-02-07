@@ -44,8 +44,6 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
 #include <sys/resource.h>
 
 int getrusage(int who, struct rusage *rusage)
@@ -57,11 +55,7 @@ int getrusage(int who, struct rusage *rusage)
 
     struct TimeVal clock;
     int status = 0;
-#if defined(__amigaos4__)
     struct TimerIFace *ITimer = __ITimer;
-#else
-    struct Library *TimerBase = __TimerBase;
-#endif /* __amigaos4__ */
     if (__global_clib2 == NULL)  {
         __set_errno(EINVAL);
         return -1;

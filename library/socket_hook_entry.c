@@ -37,7 +37,7 @@
 
 #include <sys/ioctl.h>
 
-int 
+int64_t 
 __socket_hook_entry(struct fd *fd, struct file_action_message *fam)
 {
 	struct ExamineData *fib;

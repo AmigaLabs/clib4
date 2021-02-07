@@ -375,7 +375,7 @@ int64_t __fd_hook_entry(
 
 		if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION))
 		{
-			current_position = (int64_t)fd->fd_Position;
+			current_position = fd->fd_Position;
 		}
 		else
 		{
@@ -391,7 +391,7 @@ int64_t __fd_hook_entry(
 				goto out;
 			}
 
-			current_position = (int64_t)position;
+			current_position = position;
 		}
 
 		new_position = current_position;
@@ -407,9 +407,7 @@ int64_t __fd_hook_entry(
 			break;
 
 		case OFFSET_END:
-			Printf("CURRENT_POSITION %lld\n", current_position);
 			new_position = GetFileSize(file);
-			Printf("OFFSET_END1 %lld\n", new_position);
 			if (new_position != GETPOSITION_ERROR)
 			{
 				if (fam->fam_Offset < 0)
@@ -417,7 +415,6 @@ int64_t __fd_hook_entry(
 
 				fib_is_valid = TRUE;
 			}
-			Printf("OFFSET_END2 %lld\n", new_position);
 
 			break;
 		}
@@ -472,8 +469,6 @@ int64_t __fd_hook_entry(
 				if (new_position == GETPOSITION_ERROR) {
 					fam->fam_Error = __translate_io_error_to_errno(IoErr());
 				}
-				Printf("NEW_POSITION ==== %lld\n", new_position);
-
 			}
 
 			fd->fd_Position = new_position;
@@ -600,7 +595,6 @@ out:
 		free(buffer);
 
 	SHOWVALUE(result);
-				Printf("NEW_POSITION RESULT ==== %lld\n", result);
 
 	RETURN(result);
 	return (result);

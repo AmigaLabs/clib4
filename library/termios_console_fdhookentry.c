@@ -66,10 +66,10 @@
 /*
  * Emulate canonical no-echo mode with a simple line-editor in raw mode.
  */
-static int
+static int64_t
 LineEditor(BPTR file, char *buf, const int buflen, struct termios *tios)
 {
-	int pos = 0, len = 0;
+	int64_t pos = 0, len = 0;
 	unsigned char z;
 	int do_edit = 1;
 	int shift_mode = 0;
@@ -167,14 +167,13 @@ LineEditor(BPTR file, char *buf, const int buflen, struct termios *tios)
 
 /****************************************************************************/
 
-int __termios_console_hook(
-	struct fd *fd,
-	struct file_action_message *fam)
+int64_t 
+__termios_console_hook(struct fd *fd, struct file_action_message *fam)
 {
 	const unsigned char CR = '\r', NL = '\n';
 	struct FileHandle *fh;
 	char *buffer = NULL;
-	int result = EOF;
+	int64_t result = EOF;
 	int actual_out;
 	BOOL is_aliased;
 	BPTR file;
@@ -546,7 +545,8 @@ int __termios_console_hook(
 		else
 		{
 			fam->fam_FileInfo = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
-			if (fam->fam_FileInfo == NULL) {
+			if (fam->fam_FileInfo == NULL)
+			{
 				LONG error;
 
 				/* So that didn't work. Did the file system simply fail to

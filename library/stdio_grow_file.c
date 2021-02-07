@@ -43,7 +43,8 @@
 
 /* Change file position to the end of a file, then add a certain number of 0 bytes. Note that
    this function will change the current file position! */
-int __grow_file_size(struct fd *fd, int num_bytes)
+int64_t 
+__grow_file_size(struct fd *fd, int num_bytes)
 {
 	unsigned char *aligned_buffer;
 	unsigned char *buffer;

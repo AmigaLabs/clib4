@@ -43,39 +43,39 @@
 
 /****************************************************************************/
 
-int
+int64_t
 __sscanf_hook_entry(
-	struct iob *					string_iob,
-	struct file_action_message *	fam)
+	struct iob *string_iob,
+	struct file_action_message *fam)
 {
-	int result = EOF;
-	int num_bytes;
+	int64_t result = EOF;
+	int64_t num_bytes;
 
-	assert( fam != NULL && string_iob != NULL );
+	assert(fam != NULL && string_iob != NULL);
 
-	if(fam->fam_Action != file_action_read)
+	if (fam->fam_Action != file_action_read)
 	{
 		fam->fam_Error = EBADF;
 		goto out;
 	}
 
-	assert( string_iob->iob_StringPosition >= 0 );
-	assert( string_iob->iob_StringLength >= 0 );
+	assert(string_iob->iob_StringPosition >= 0);
+	assert(string_iob->iob_StringLength >= 0);
 
-	if(string_iob->iob_StringPosition < string_iob->iob_StringLength)
+	if (string_iob->iob_StringPosition < string_iob->iob_StringLength)
 	{
-		int num_bytes_left;
+		int64_t num_bytes_left;
 
 		num_bytes_left = string_iob->iob_StringLength - string_iob->iob_StringPosition;
 
 		num_bytes = fam->fam_Size;
-		if(num_bytes > num_bytes_left)
+		if (num_bytes > num_bytes_left)
 			num_bytes = num_bytes_left;
 
-		assert( fam->fam_Data != NULL );
-		assert( num_bytes >= 0 );
+		assert(fam->fam_Data != NULL);
+		assert(num_bytes >= 0);
 
-		memmove(fam->fam_Data,&string_iob->iob_String[string_iob->iob_StringPosition],(size_t)num_bytes);
+		memmove(fam->fam_Data, &string_iob->iob_String[string_iob->iob_StringPosition], (size_t)num_bytes);
 		string_iob->iob_StringPosition += num_bytes;
 	}
 	else
@@ -85,7 +85,7 @@ __sscanf_hook_entry(
 
 	result = num_bytes;
 
- out:
+out:
 
-	return(result);
+	return (result);
 }

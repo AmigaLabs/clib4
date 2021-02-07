@@ -761,7 +761,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 
 				/* Check for socket input. */
 				PROFILE_OFF();
-				result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal *)&zero, &break_mask);
+				result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct timeval *)&zero, &break_mask);
 				PROFILE_ON();
 
 				/* Stop if a break signal arrives. */
@@ -922,7 +922,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 				break_mask |= __break_signal_mask;
 
 			PROFILE_OFF();
-			result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal *)timeout, &break_mask);
+			result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct timeval *)timeout, &break_mask);
 			PROFILE_ON();
 
 			if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __break_signal_mask))

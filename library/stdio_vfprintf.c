@@ -45,16 +45,14 @@
 /****************************************************************************/
 
 /* Data conversion flags for vfprintf() below. */
-#define FORMATF_LeftJustified (1 << 0)		 /* Output must be left justified */
-#define FORMATF_ProduceSign (1 << 1)		 /* Numbers always begin with a leading \
-												sign character */
-#define FORMATF_ProduceSpace (1 << 2)		 /* Numbers always begin with a '-' \
-												character or a blank space */
-#define FORMATF_AlternateConversion (1 << 3) /* Use alternative conversion format */
-#define FORMATF_CapitalLetters (1 << 4)		 /* Output must use upper case characters */
-#define FORMATF_IsNegative (1 << 5)			 /* Number is negative */
-#define FORMATF_HexPrefix (1 << 6)			 /* Prepend '0x' to the output */
-#define FORMATF_ZeroPrefix (1 << 7)			 /* Prepend '0' to the output */
+#define FORMATF_LeftJustified 			(1 << 0)	/* Output must be left justified */
+#define FORMATF_ProduceSign 			(1 << 1)	/* Numbers always begin with a leading  sign character */
+#define FORMATF_ProduceSpace 			(1 << 2)	/* Numbers always begin with a '-'  character or a blank space */
+#define FORMATF_AlternateConversion 	(1 << 3) 	/* Use alternative conversion format */
+#define FORMATF_CapitalLetters 			(1 << 4)	/* Output must use upper case characters */
+#define FORMATF_IsNegative 				(1 << 5)	/* Number is negative */
+#define FORMATF_HexPrefix 				(1 << 6)	/* Prepend '0x' to the output */
+#define FORMATF_ZeroPrefix 				(1 << 7)	/* Prepend '0' to the output */
 
 /****************************************************************************/
 
@@ -728,7 +726,6 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 				v = va_arg(arg, __long_double_t);
 			else
 				v = va_arg(arg, double);
-
 
 			if (isinf(v))
 			{

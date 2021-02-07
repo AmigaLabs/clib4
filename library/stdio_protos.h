@@ -89,7 +89,7 @@ extern struct fd *__get_file_descriptor_dont_resolve(int file_descriptor);
 /****************************************************************************/
 
 /* stdio_iobhookentry.c */
-extern int __iob_hook_entry(struct iob *iob, struct file_action_message *fam);
+extern int64_t __iob_hook_entry(struct iob *iob, struct file_action_message *fam);
 
 /****************************************************************************/
 
@@ -163,22 +163,22 @@ extern int __fputc(int c, FILE *stream, int buffer_mode);
 /****************************************************************************/
 
 /* stdio_sscanf_hook_entry.c */
-extern int __sscanf_hook_entry(struct iob *string, struct file_action_message *fam);
+extern int64_t __sscanf_hook_entry(struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_vasprintf_hook_entry.c */
-extern int __vasprintf_hook_entry(struct iob *string, struct file_action_message *fam);
+extern int64_t __vasprintf_hook_entry(struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_vsprintf_hook_entry.c */
-extern int __vsprintf_hook_entry(struct iob *string, struct file_action_message *fam);
+extern int64_t __vsprintf_hook_entry(struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_vsnprintf_hook_entry.c */
-extern int __vsnprintf_hook_entry(struct iob *string, struct file_action_message *fam);
+extern int64_t __vsnprintf_hook_entry(struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
@@ -193,7 +193,7 @@ extern BPTR __safe_parent_of_file_handle(BPTR file_handle);
 /****************************************************************************/
 
 /* stdio_grow_file.c */
-extern int __grow_file_size(struct fd *fd, int num_bytes);
+extern int64_t __grow_file_size(struct fd *fd, int num_bytes);
 
 /****************************************************************************/
 
