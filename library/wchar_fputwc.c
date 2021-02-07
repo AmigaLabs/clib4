@@ -40,6 +40,7 @@
 wint_t
 fputwc(wchar_t wc, FILE *fp)
 {
+#ifdef LIBWCHAR
     char buf[MB_LEN_MAX] = {0};
     size_t i, len;
 
@@ -62,8 +63,37 @@ fputwc(wchar_t wc, FILE *fp)
     }
 
     for (i = 0; i < len; i++)
-        if (fputc((unsigned char)buf[i], fp) == 0)
+        if (fputc((unsigned char)buf[i], fp) == EOF)
             return L'\0';
 
     return ((wint_t)wc);
+#else
+    char buf[MB_LEN_MAX] = {0};
+    size_t i, len;
+
+    if (MB_CUR_MAX == 1 && wc > 0 && wc <= UCHAR_MAX)
+    {
+        /*
+       * Assume single-byte locale with no special encoding.
+       * A more careful test would be to check
+       * _CurrentRuneLocale->encoding.
+       */
+        *buf = (unsigned char)wc;
+        len = 1;
+    }
+    else
+    {
+        if ((len = wcrtomb(buf, wc, &fp->_mbstate)) == (size_t)-1)
+        {
+            fp->_flags |= __SERR;
+            return WEOF;
+        }
+    }
+
+    for (i = 0; i < len; i++)
+        if (fputc((unsigned char)buf[i], fp) == EOF)
+            return WEOF;
+
+    return (wint_t)wc;
+#endif
 }

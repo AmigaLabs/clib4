@@ -83,39 +83,39 @@ extern int __translate_access_io_error_to_errno(LONG io_error);
 /****************************************************************************/
 
 /* stdio_get_file_descriptor.c */
-extern struct fd * __get_file_descriptor(int file_descriptor);
-extern struct fd * __get_file_descriptor_dont_resolve(int file_descriptor);
+extern struct fd *__get_file_descriptor(int file_descriptor);
+extern struct fd *__get_file_descriptor_dont_resolve(int file_descriptor);
 
 /****************************************************************************/
 
 /* stdio_iobhookentry.c */
-extern int __iob_hook_entry(struct iob * iob,struct file_action_message * fam);
+extern int __iob_hook_entry(struct iob *iob, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_fdhookentry.c */
-extern int __fd_hook_entry(struct fd * fd,struct file_action_message * fam);
+extern int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_initializefd.c */
-extern void __initialize_fd(struct fd * fd,file_action_fd_t action_function,BPTR default_file,ULONG flags,struct SignalSemaphore * lock);
+extern void __initialize_fd(struct fd *fd, file_action_fd_t action_function, BPTR default_file, ULONG flags, struct SignalSemaphore *lock);
 
 /****************************************************************************/
 
 /* stdio_findvacantfdentry.c */
-extern BOOL __is_valid_fd(struct fd * fd);
+extern BOOL __is_valid_fd(struct fd *fd);
 extern int __find_vacant_fd_entry(void);
 
 /****************************************************************************/
 
 /* stdio_initializeiob.c */
-extern void __initialize_iob(struct iob * iob,file_action_iob_t action_function,STRPTR custom_buffer,STRPTR buffer,int buffer_size,int file_descriptor,int slot_number,ULONG flags,struct SignalSemaphore * lock);
+extern void __initialize_iob(struct iob *iob, file_action_iob_t action_function, STRPTR custom_buffer, STRPTR buffer, int64_t buffer_size, int file_descriptor, int slot_number, ULONG flags, struct SignalSemaphore *lock);
 
 /****************************************************************************/
 
 /* stdio_findvacantiobentry.c */
-extern BOOL __is_valid_iob(struct iob * iob);
+extern BOOL __is_valid_iob(struct iob *iob);
 extern int __find_vacant_iob_entry(void);
 
 /****************************************************************************/
@@ -136,54 +136,54 @@ extern int __open_iob(const char *filename, const char *mode, int file_descripto
 /****************************************************************************/
 
 /* stdio_filliobreadbuffer.c */
-extern int __fill_iob_read_buffer(struct iob * file);
+extern int __fill_iob_read_buffer(struct iob *file);
 
 /****************************************************************************/
 
 /* stdio_dropiobreadbuffer.c */
-extern int __drop_iob_read_buffer(struct iob * file);
+extern int __drop_iob_read_buffer(struct iob *file);
 
 /****************************************************************************/
 
 /* stdio_flushiobwritebuffer.c */
-extern int __flush_iob_write_buffer(struct iob * file);
+extern int __flush_iob_write_buffer(struct iob *file);
 
 /****************************************************************************/
 
 /* stdio_fgetc.c */
-extern int __fgetc_check(FILE * stream);
+extern int __fgetc_check(FILE *stream);
 extern int __fgetc(FILE *stream);
 
 /****************************************************************************/
 
 /* stdio_fputc.c */
 extern int __fputc_check(FILE *stream);
-extern int __fputc(int c,FILE *stream,int buffer_mode);
+extern int __fputc(int c, FILE *stream, int buffer_mode);
 
 /****************************************************************************/
 
 /* stdio_sscanf_hook_entry.c */
-extern int __sscanf_hook_entry(struct iob *string,struct file_action_message *fam);
+extern int __sscanf_hook_entry(struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_vasprintf_hook_entry.c */
-extern int __vasprintf_hook_entry(struct iob *string,struct file_action_message *fam);
+extern int __vasprintf_hook_entry(struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_vsprintf_hook_entry.c */
-extern int __vsprintf_hook_entry(struct iob *string,struct file_action_message *fam);
+extern int __vsprintf_hook_entry(struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_vsnprintf_hook_entry.c */
-extern int __vsnprintf_hook_entry(struct iob *string,struct file_action_message *fam);
+extern int __vsnprintf_hook_entry(struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_duplicate_fd.c */
-extern void __duplicate_fd(struct fd * duplicate_fd,struct fd * original_fd);
+extern void __duplicate_fd(struct fd *duplicate_fd, struct fd *original_fd);
 
 /****************************************************************************/
 
@@ -193,22 +193,22 @@ extern BPTR __safe_parent_of_file_handle(BPTR file_handle);
 /****************************************************************************/
 
 /* stdio_grow_file.c */
-extern int __grow_file_size(struct fd * fd,int num_bytes);
+extern int __grow_file_size(struct fd *fd, int num_bytes);
 
 /****************************************************************************/
 
 /* unistd_sync_fd.c */
-extern int __sync_fd(struct fd * fd,int mode);
+extern int __sync_fd(struct fd *fd, int mode);
 
 /****************************************************************************/
 
 /* stdio_record_locking.c */
-extern int __handle_record_locking(int cmd,struct flock * l,struct fd * fd,int * error_ptr);
+extern int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr);
 
 /****************************************************************************/
 
 /* stdio_remove_fd_alias.c */
-extern void __remove_fd_alias(struct fd * fd);
+extern void __remove_fd_alias(struct fd *fd);
 
 /****************************************************************************/
 

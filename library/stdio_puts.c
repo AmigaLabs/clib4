@@ -84,7 +84,7 @@ puts(const char *s)
 		goto out;
 
 	while((c = (*s++)) != '\0')
-	{
+	{ 
 		if(__putc(c,stdout,buffer_mode) == EOF)
 			goto out;
 	}

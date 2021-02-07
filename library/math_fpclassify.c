@@ -42,7 +42,8 @@
 
 /****************************************************************************/
 
-int __fpclassify_float(float number)
+int 
+__fpclassify_float(float number)
 {
 	union ieee_single x;
 	int result;
@@ -93,7 +94,8 @@ int __fpclassify_float(float number)
 
 /****************************************************************************/
 
-int __fpclassify_double(double number)
+int 
+__fpclassify_double(double number)
 {
 	union ieee_double x;
 	int result;

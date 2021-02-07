@@ -1,0 +1,59 @@
+#
+# $Id: libm.gmk,v 1.3 2007-01-06 10:09:48 obarthel Exp $
+#
+# :ts=8
+#
+# -*- mode: makefile; -*-
+
+##############################################################################
+
+LIBS += \
+	lib/libm.a \
+	lib/baserel/libm.a \
+	lib.threadsafe/libm.a \
+	lib.threadsafe/baserel/libm.a
+
+##############################################################################
+
+MATH_LIB := 
+
+##############################################################################
+
+# Dependencies to rebuild if the library version changes
+
+obj/libm/m.lib_rev.o : m.lib_rev.c m.lib_rev.h
+obj/baserel/libm/m.lib_rev.o : m.lib_rev.c m.lib_rev.h
+obj.threadsafe/libm/m.lib_rev.o : m.lib_rev.c m.lib_rev.h
+obj.threadsafe/baserel/libm/m.lib_rev.o : m.lib_rev.c m.lib_rev.h
+
+##############################################################################
+
+obj/libm/%.o : CFLAGS += $(LARGEDATA) -DPPC_FLOATING_POINT_SUPPORT
+obj/libm/%.o : %.c
+	@$(COMPILE)
+
+obj/baserel/libm/%.o : CFLAGS += $(BASEREL) -DPPC_FLOATING_POINT_SUPPORT
+obj/baserel/libm/%.o : %.c
+	@$(COMPILE)
+
+obj.threadsafe/libm/%.o : CFLAGS += $(THREADSAFE) $(LARGEDATA) -DPPC_FLOATING_POINT_SUPPORT
+obj.threadsafe/libm/%.o : %.c
+	@$(COMPILE)
+
+obj.threadsafe/baserel/libm/%.o : CFLAGS += $(THREADSAFE) $(BASEREL) -DPPC_FLOATING_POINT_SUPPORT
+obj.threadsafe/baserel/libm/%.o : %.c
+	@$(COMPILE)
+
+##############################################################################
+
+lib/libm.a : $(addprefix obj/libm/,$(MATH_LIB))
+	@$(MAKELIB)
+
+lib/baserel/libm.a : $(addprefix obj/baserel/libm/,$(MATH_LIB))
+	@$(MAKELIB)
+
+lib.threadsafe/libm.a : $(addprefix obj.threadsafe/libm/,$(MATH_LIB))
+	@$(MAKELIB)
+
+lib.threadsafe/baserel/libm.a : $(addprefix obj.threadsafe/baserel/libm/,$(MATH_LIB))
+	@$(MAKELIB)

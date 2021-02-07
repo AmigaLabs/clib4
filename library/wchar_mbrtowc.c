@@ -38,6 +38,7 @@
 size_t
 mbrtowc(wchar_t *restrict pwc, const char *restrict src, size_t n, mbstate_t *restrict ps)
 {
+#ifdef LIBWCHAR
 	static unsigned is = 0U;
 	unsigned int c;
 	const unsigned char *s = (const void *)src;
@@ -102,7 +103,29 @@ mbrtowc(wchar_t *restrict pwc, const char *restrict src, size_t n, mbstate_t *re
 	*(unsigned *)ps = c;
 	return ((size_t)-2);
 ilseq:
-	errno = EILSEQ;
+	__set_errno(EILSEQ);
 	*(unsigned *)ps = 0;
 	return ((size_t)-1);
+#else
+	int retval = 0;
+
+	if (ps == NULL)
+	{
+		ps = &__global_clib2->wide_status->_mbrtowc_state;
+	}
+
+	if (src == NULL)
+		retval = _mbtowc(NULL, "", 1, ps);
+	else
+		retval = _mbtowc(pwc, src, n, ps);
+
+	if (retval == -1)
+	{
+		ps->__count = 0;
+		__set_errno(EILSEQ);
+		return (size_t)(-1);
+	}
+	else
+		return (size_t)retval;
+#endif
 }

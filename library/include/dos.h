@@ -572,9 +572,11 @@ struct _wchar
 
 struct _clib2
 {
-	struct TimeVal clock;
-	struct rusage ru;
-	struct _wchar *wide_status;
+	struct ExecIFace *IExec; 	/* Main IExec interface */
+
+	struct TimeVal clock; 		/* Populated when clib starts with current time */
+	struct rusage ru;			/* rusage struct used in rlimit function */
+	struct _wchar *wide_status;	/* wide char functions status */
 	
 	/* 
 	 * Check if SYSV library is available in the system. Otherwise the functions

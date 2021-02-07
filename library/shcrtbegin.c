@@ -164,11 +164,9 @@ __shlib_call_constructors(void)
    
    // Create global clib structure
 
-   /*
 	__global_clib2 = InitGlobal();
 	if (__global_clib2 == NULL)
 		abort();
-      */
 }
 
 void 
@@ -178,7 +176,7 @@ __shlib_call_destructors(void)
    static int j;
 
    /* Free global clib structure */
-   //FiniGlobal();
+   FiniGlobal();
 
    for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
       num_dtors++;

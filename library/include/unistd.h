@@ -114,6 +114,11 @@ extern int fchown(int file_descriptor, uid_t owner, gid_t group);
 extern int lchown(const char * path_name, uid_t owner, gid_t group);
 extern int truncate(const char * path_name, off_t length);
 extern int ftruncate(int file_descriptor, off_t length);
+#ifdef __USE_LARGEFILE64
+extern int ftruncate64(int file_descriptor, _off64_t length);
+extern int truncate64(const char *path_name, _off64_t length);
+#endif
+
 extern int link(const char * existing_path,const char * new_path);
 extern int unlink(const char * path_name);
 extern int symlink(const char * actual_path, const char * symbolic_path);

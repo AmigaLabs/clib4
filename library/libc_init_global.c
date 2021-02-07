@@ -84,6 +84,8 @@ struct _clib2 * InitGlobal() {
             __global_clib2 = NULL;
 			goto out;
 		}
+		/* Set main Exec interface pointer */
+		__global_clib2->IExec = IExec;
 
 		__global_clib2->wide_status->_strtok_last = NULL;
 		__global_clib2->wide_status->_mblen_state.__count = 0;

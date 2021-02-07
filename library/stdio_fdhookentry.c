@@ -52,18 +52,18 @@
 
 /****************************************************************************/
 
-int __fd_hook_entry(
+int64_t __fd_hook_entry(
 	struct fd *fd,
 	struct file_action_message *fam)
 {
 	struct ExamineData *exd = NULL;
 	BOOL fib_is_valid = FALSE;
 	struct FileHandle *fh;
-	off_t current_position;
-	off_t new_position;
+	int64_t current_position;
+	int64_t new_position;
 	int new_mode;
 	char *buffer = NULL;
-	int result = EOF;
+	int64_t result = EOF;
 	BOOL is_aliased;
 	BPTR file;
 
@@ -114,7 +114,7 @@ int __fd_hook_entry(
 			goto out;
 		}
 
-		fd->fd_Position += (ULONG)result;
+		fd->fd_Position += (int64_t)result;
 
 		break;
 
@@ -127,7 +127,7 @@ int __fd_hook_entry(
 
 		if (FLAG_IS_SET(fd->fd_Flags, FDF_APPEND))
 		{
-			LONG position;
+			int64_t position;
 
 			SHOWMSG("appending data");
 
@@ -142,7 +142,7 @@ int __fd_hook_entry(
 
 			PROFILE_ON();
 
-			if (position == SEEK_ERROR)
+			if (position == GETPOSITION_ERROR)
 			{
 				D(("seek to end of file failed; ioerr=%ld", IoErr()));
 
@@ -167,7 +167,7 @@ int __fd_hook_entry(
 			goto out;
 		}
 
-		fd->fd_Position += (ULONG)result;
+		fd->fd_Position += (int64_t)result;
 
 		break;
 
@@ -362,8 +362,9 @@ int __fd_hook_entry(
 		break;
 
 	case file_action_seek:
-
 		SHOWMSG("file_action_seek");
+		/* Reset error to OK */
+		fam->fam_Error = OK;
 
 		if (fam->fam_Mode == SEEK_CUR)
 			new_mode = OFFSET_CURRENT;
@@ -372,32 +373,25 @@ int __fd_hook_entry(
 		else
 			new_mode = OFFSET_END;
 
-		D(("seek to offset %ld, new_mode %ld; current position = %ld", fam->fam_Offset, new_mode, Seek(file, 0, OFFSET_CURRENT)));
-
 		if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION))
 		{
-			current_position = (off_t)fd->fd_Position;
+			current_position = (int64_t)fd->fd_Position;
 		}
 		else
 		{
-			LONG position;
+			int64_t position;
 
 			PROFILE_OFF();
 			position = GetFilePosition(file);
 			PROFILE_ON();
 
-			/* Note that a return value of -1 (= CHANGE_FILE_ERROR) may be a
-				   valid file position in files larger than 2 GBytes. Just
-				   to be sure, we therefore also check the secondary error
-				   to verify that what could be a file position is really
-				   an error indication. */
-			if (position == CHANGE_FILE_ERROR || IoErr() != OK)
+			if (position == GETPOSITION_ERROR || IoErr() != OK)
 			{
 				fam->fam_Error = EBADF;
 				goto out;
 			}
 
-			current_position = (off_t)position;
+			current_position = (int64_t)position;
 		}
 
 		new_position = current_position;
@@ -405,31 +399,36 @@ int __fd_hook_entry(
 		switch (new_mode)
 		{
 		case OFFSET_CURRENT:
-
 			new_position += fam->fam_Offset;
 			break;
 
 		case OFFSET_BEGINNING:
-
 			new_position = fam->fam_Offset;
 			break;
 
 		case OFFSET_END:
-			exd = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
-			if (exd != NULL)
+			Printf("CURRENT_POSITION %lld\n", current_position);
+			new_position = GetFileSize(file);
+			Printf("OFFSET_END1 %lld\n", new_position);
+			if (new_position != GETPOSITION_ERROR)
 			{
-				new_position = exd->FileSize + fam->fam_Offset;
+				if (fam->fam_Offset < 0)
+					new_position += fam->fam_Offset;
 
 				fib_is_valid = TRUE;
-				FreeDosObject(DOS_EXAMINEDATA, exd);
 			}
+			Printf("OFFSET_END2 %lld\n", new_position);
 
 			break;
 		}
-
-		if (new_position != current_position)
+		/* if new_position is < 0. Force it to 0 */
+		if (new_position < 0) {
+			ChangeFilePosition(file, 0, OFFSET_BEGINNING);
+			fd->fd_Position = new_position = 0;
+		}
+		else if (new_position != current_position)
 		{
-			LONG position;
+			int64_t position;
 
 			PROFILE_OFF();
 			position = ChangeFilePosition(file, fam->fam_Offset, new_mode);
@@ -440,8 +439,6 @@ int __fd_hook_entry(
 				   file position. */
 			if (position == CHANGE_FILE_ERROR)
 			{
-				D(("seek failed, fam->fam_Mode=%ld (%ld), offset=%ld, ioerr=%ld", new_mode, fam->fam_Mode, fam->fam_Offset, IoErr()));
-
 				fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
 #if defined(UNIX_PATH_SEMANTICS)
@@ -451,16 +448,17 @@ int __fd_hook_entry(
 						   is really shorter than required. If not, then it must have
 						   been a different error. */
 					exd = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
-					if ((NOT fib_is_valid && exd == NULL) || (exd == NULL) || (new_position <= (off_t)exd->FileSize))
+					if ((NOT fib_is_valid && exd == NULL) || (exd == NULL) || (new_position <= (int64_t)exd->FileSize))
 						goto out;
 
 					/* Now try to make that file larger. */
-					if (__grow_file_size(fd, new_position - (off_t)exd->FileSize) < 0)
+					if (__grow_file_size(fd, new_position - (int64_t)exd->FileSize) < 0)
 					{
 						fam->fam_Error = __translate_io_error_to_errno(IoErr());
 						FreeDosObject(DOS_EXAMINEDATA, exd);
 						goto out;
 					}
+					fam->fam_Error = OK;
 					FreeDosObject(DOS_EXAMINEDATA, exd);
 				}
 #else
@@ -469,12 +467,19 @@ int __fd_hook_entry(
 				}
 #endif /* UNIX_PATH_SEMANTICS */
 			}
+			else {
+				new_position = GetFilePosition(file);
+				if (new_position == GETPOSITION_ERROR) {
+					fam->fam_Error = __translate_io_error_to_errno(IoErr());
+				}
+				Printf("NEW_POSITION ==== %lld\n", new_position);
+
+			}
 
 			fd->fd_Position = new_position;
 		}
 
 		result = new_position;
-
 		break;
 
 	case file_action_set_blocking:
@@ -595,6 +600,7 @@ out:
 		free(buffer);
 
 	SHOWVALUE(result);
+				Printf("NEW_POSITION RESULT ==== %lld\n", result);
 
 	RETURN(result);
 	return (result);

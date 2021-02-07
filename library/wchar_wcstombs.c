@@ -31,16 +31,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+// LibWChar
+
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 size_t
-wcstombs(char *s, const wchar_t *pwcs, size_t n)
+wcstombs(char *s, const wchar_t *ws, size_t n)
 {
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+
+    return wcsrtombs(s, &(const wchar_t *)
+    {
+        ws
+    }, n, 0);
 }

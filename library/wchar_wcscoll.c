@@ -40,6 +40,5 @@
 int
 wcscoll(const wchar_t *ws1, const wchar_t *ws2)
 {
-	/* ZZZ unimplemented */
-	return(0);
+	return wcscmp (ws1, ws2);
 }

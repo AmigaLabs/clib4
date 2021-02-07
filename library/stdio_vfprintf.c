@@ -729,6 +729,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 			else
 				v = va_arg(arg, double);
 
+
 			if (isinf(v))
 			{
 				SHOWMSG("infinity");

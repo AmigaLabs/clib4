@@ -34,12 +34,84 @@
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
-
-/****************************************************************************/
-
+ 
 size_t
-wcsrtombs(char *s, const wchar_t **src, size_t n, mbstate_t *ps)
+wcsrtombs(char *s, const wchar_t **ws, size_t n, mbstate_t *st)
 {
-	/* ZZZ unimplemented */
-	return(0);
+#ifdef LIBWCHAR
+	(void)st;
+	char buf[2]; // original 4
+	size_t N = n, l;
+	if (!s)
+	{
+		const wchar_t *ws2;
+		for (n = 0, ws2 = *ws; *ws2; ws2++)
+		{
+			if (*ws2 >= 0x80u)
+			{
+				if (!(l = wcrtomb(buf, *ws2, 0)))
+				{
+					return (size_t)-1;
+				}
+				n += l;
+			}
+			else
+			{
+				n++;
+			}
+		}
+		return n;
+	}
+	if (n < 2)
+	{
+		return (size_t)-1;
+	}
+	while ((n >= 2) && (**ws))
+	{
+		if (**ws >= 0x80u)
+		{
+			if (!(l = wcrtomb(s, **ws, 0)))
+			{
+				return (size_t)-1;
+			}
+			s += l;
+			n -= l;
+		}
+		else
+		{
+			*s++ = (char)**ws;
+			n--;
+		}
+		(*ws)++;
+	}
+	while (n && **ws)
+	{
+		if (**ws >= 0x80u)
+		{
+			if (!(l = wcrtomb(buf, **ws, 0)))
+			{
+				return (size_t)-1;
+			}
+			if (l > n)
+			{
+				return (N - n);
+			}
+			wcrtomb(s, **ws, 0);
+			s += l;
+			n -= l;
+		}
+		else
+		{
+			*s++ = (char)**ws;
+			n--;
+		}
+		(*ws)++;
+	}
+	if (n)
+		*s = 0;
+	*ws = 0;
+	return (N - n);
+#else
+	return wcsnrtombs(s, ws, (size_t) -1, n, st);
+#endif
 }

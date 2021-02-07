@@ -35,13 +35,22 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 int 
 wcscmp(const wchar_t *s1, const wchar_t *s2)
 {
-	while (*s1 == *s2++)
-		if (*s1++ == 0)
-			return (0);
-	return (*s1 - *--s2);
+	wchar_t c1, c2;
+
+	if ((!s1) || (!s2))
+		return -1;
+
+	do
+	{
+		c1 = *s1++;
+		c2 = *s2++;
+		if (c2 == L'\0')
+			return c1 - c2;
+
+	} while (c1 == c2);
+
+	return c1 < c2 ? -1 : 1;
 }

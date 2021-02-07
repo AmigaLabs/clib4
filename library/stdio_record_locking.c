@@ -85,13 +85,11 @@ struct FileLockNode
 struct LockedRegionNode
 {
 	struct MinNode lrn_MinNode; /* Standard node */
-	LONG lrn_Start;				/* Where the region begins */
-	LONG lrn_Stop;				/* Where the region ends (inclusive) */
-	LONG lrn_Length;			/* Original length requested */
+	_off64_t lrn_Start;			/* Where the region begins */
+	_off64_t lrn_Stop;			/* Where the region ends (inclusive) */
+	_off64_t lrn_Length;		/* Original length requested */
 	pid_t lrn_Owner;			/* Which process owns the region */
-	BOOL lrn_Shared;			/* Whether or not this region has been locked
-											 * for shared access.
-											 */
+	BOOL lrn_Shared;			/* Whether or not this region has been locked for shared access. */
 };
 
 /****************************************************************************/
@@ -102,14 +100,14 @@ static struct FileLockSemaphore *FileLockSemaphore;
 
 STATIC VOID release_file_lock_semaphore(struct FileLockSemaphore *fls);
 STATIC struct FileLockSemaphore *obtain_file_lock_semaphore(BOOL shared);
-STATIC VOID remove_locked_region_node(struct FileLockSemaphore *fls, struct fd *fd, LONG start, LONG stop, LONG original_length);
+STATIC VOID remove_locked_region_node(struct FileLockSemaphore *fls, struct fd *fd, _off64_t start, _off64_t stop, _off64_t original_length);
 STATIC VOID delete_locked_region_node(struct LockedRegionNode *lrn);
 STATIC LONG create_locked_region_node(struct LockedRegionNode **result_ptr);
 STATIC VOID delete_file_lock_node(struct FileLockNode *fln);
 STATIC LONG create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr);
 STATIC LONG find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_handle, struct FileLockNode **result_ptr);
 STATIC LONG find_file_lock_node_by_drawer_and_name(struct FileLockSemaphore *fls, BPTR dir_lock, STRPTR file_name, struct FileLockNode **result_ptr);
-STATIC struct LockedRegionNode *find_colliding_region(struct FileLockNode *fln, LONG start, LONG stop, BOOL shared);
+STATIC struct LockedRegionNode *find_colliding_region(struct FileLockNode *fln, _off64_t start, _off64_t stop, BOOL shared);
 STATIC VOID cleanup_locked_records(struct fd *fd);
 
 /****************************************************************************/
@@ -237,7 +235,7 @@ obtain_file_lock_semaphore(BOOL shared)
 /****************************************************************************/
 
 STATIC VOID
-remove_locked_region_node(struct FileLockSemaphore *fls, struct fd *fd, LONG start, LONG UNUSED stop, LONG original_length)
+remove_locked_region_node(struct FileLockSemaphore *fls, struct fd *fd, _off64_t start, _off64_t UNUSED stop, _off64_t original_length)
 {
 	ENTER();
 
@@ -563,7 +561,7 @@ out:
 /****************************************************************************/
 
 STATIC struct LockedRegionNode *
-find_colliding_region(struct FileLockNode *fln, LONG start, LONG stop, BOOL shared)
+find_colliding_region(struct FileLockNode *fln, _off64_t start, _off64_t stop, BOOL shared)
 {
 	struct LockedRegionNode *result = NULL;
 	struct LockedRegionNode *lrn;
@@ -704,14 +702,14 @@ int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_
 	struct ExamineData *fib;
 	BOOL fib_is_valid = FALSE;
 	BPTR parent_dir = ZERO;
-	LONG seek_position;
-	off_t current_position;
+	_off64_t seek_position;
+	_off64_t current_position;
 	int result = ERROR;
-	off_t original_len;
+	_off64_t original_len;
 	LONG error = OK;
-	off_t start = 0;
-	off_t len = 0;
-	off_t stop;
+	_off64_t start = 0;
+	_off64_t len = 0;
+	_off64_t stop;
 
 	ENTER();
 
@@ -790,7 +788,7 @@ int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_
 		seek_position = GetFilePosition(file_handle);
 		PROFILE_ON();
 
-		if (seek_position == SEEK_ERROR && IoErr() != OK)
+		if (seek_position == GETPOSITION_ERROR && IoErr() != OK)
 		{
 			SHOWMSG("could not obtain current seek position");
 
@@ -798,7 +796,7 @@ int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_
 			goto out;
 		}
 
-		current_position = (off_t)seek_position;
+		current_position = (_off64_t)seek_position;
 
 		start = current_position + l->l_start;
 
@@ -826,7 +824,7 @@ int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_
 
 		fib_is_valid = TRUE;
 
-		start = (off_t)fib->FileSize + l->l_start;
+		start = (_off64_t)fib->FileSize + l->l_start;
 
 		if (l->l_len == 0)
 			len = LONG_MAX;

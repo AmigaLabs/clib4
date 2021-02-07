@@ -38,9 +38,7 @@
 /****************************************************************************/
 
 size_t
-mbstowcs(wchar_t *pwcs, const char *s, size_t n)
+mbstowcs(wchar_t *ws, const char *s, size_t wn)
 {
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
+	return mbsrtowcs(ws, (void*)&s, wn, 0);
 }

@@ -48,7 +48,6 @@
 #include <features.h>
 
 #include <stddef.h>
-#include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
 #include <locale.h>
@@ -78,13 +77,20 @@ typedef struct
 typedef _mbstate_t mbstate_t;
 #endif /* _MBSTATE_T */
 
+#ifdef __USE_LARGEFILE64
+typedef struct __sFILE64 FILE;
+#else
+typedef struct __sFILE FILE;
+#endif
+
+
 /****************************************************************************/
 
 extern wint_t btowc(int c);
 extern int wctob(wint_t c);
 extern int mbsinit(const mbstate_t *ps);
 extern size_t wcrtomb(char *s, wchar_t wc, mbstate_t *ps);
-extern size_t mbsrtowcs(wchar_t *pwcs, const char **src, size_t n, mbstate_t *ps);
+extern size_t mbsrtowcs(wchar_t *ws, const char **src, size_t wn, mbstate_t *st);
 extern size_t wcsrtombs(char *s, const wchar_t **src, size_t n, mbstate_t *ps);
 
 /****************************************************************************/
@@ -100,7 +106,7 @@ extern wchar_t *wcschr(const wchar_t *s, wchar_t c);
 extern size_t wcsspn(const wchar_t *s, const wchar_t *set);
 extern wchar_t *wcspbrk(const wchar_t *s, const wchar_t *set);
 extern wchar_t *wcstok(wchar_t *str, const wchar_t *delim, wchar_t **ptr);
-extern wchar_t *wcsstr(const wchar_t *src, const wchar_t *sub);
+extern wchar_t *wcsstr(const wchar_t *big, const wchar_t *little);
 
 /****************************************************************************/
 
@@ -157,7 +163,7 @@ extern wint_t fputws(const wchar_t *s, FILE *stream);
 
 extern int fwprintf(FILE *stream, const wchar_t *format, ...);
 extern int wprintf(const wchar_t *format, ...);
-extern int swprintf(wchar_t *s, const wchar_t *format, ...);
+extern int swprintf(wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, ...);
 
 /****************************************************************************/
 

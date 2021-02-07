@@ -38,8 +38,12 @@
 /****************************************************************************/
 
 int
-swprintf(wchar_t *s, const wchar_t *format, ...)
+swprintf(wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, ...)
 {
-	/* ZZZ unimplemented */
-	return(0);
+    int ret;
+    va_list ap;
+    va_start(ap, fmt);
+    ret = vswprintf(s, l, fmt, ap);
+    va_end(ap);
+    return ret;
 }

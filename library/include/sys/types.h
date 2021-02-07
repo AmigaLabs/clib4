@@ -41,29 +41,13 @@
 #ifndef _SYS_TYPES_H
 #define _SYS_TYPES_H
 
-/****************************************************************************/
+#include <features.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-#ifndef _TIME_H
 #include <time.h>
-#endif /* _TIME_H */
-
-/****************************************************************************/
-
-#ifndef _STDDEF_H
 #include <stddef.h>
-#endif /* _STDDEF_H */
+#include <stdint.h>
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 typedef char * caddr_t;
 typedef unsigned int comp_t;
@@ -74,7 +58,8 @@ typedef unsigned int mode_t;
 typedef unsigned int nlink_t;
 typedef long int off_t;
 #ifdef __USE_LARGEFILE64
-typedef long long _off64_t;
+typedef int64_t _off64_t;
+typedef int64_t _fpos64_t;
 #endif
 typedef int pid_t;
 typedef unsigned int rlim_t;
@@ -92,12 +77,6 @@ typedef unsigned long   u_long;
 typedef unsigned long useconds_t;
 typedef long suseconds_t;
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_TYPES_H */

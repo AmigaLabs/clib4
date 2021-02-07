@@ -74,7 +74,7 @@ struct file_action_message
 	char *					fam_Data;		/* Where to read/write the data */
 	int						fam_Size;		/* How much data to write */
 
-	long int				fam_Offset;		/* The seek offset */
+	_off64_t				fam_Offset;		/* The seek offset */
 	int						fam_Mode;		/* The seek mode */
 
 	int						fam_Arg;		/* Action parameters, e.g. whether or not

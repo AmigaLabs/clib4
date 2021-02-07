@@ -35,11 +35,12 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
+#include "wchar_wprintf_core.h"
 
 wint_t
 btowc(int c)
 {
+#ifdef LIBWCHAR
 	wchar_t wc;
 	char cc = (char)c;
 
@@ -51,4 +52,22 @@ btowc(int c)
 	}
 
 	return L'\0';
+#else
+	mbstate_t mbs;
+	int retval = 0;
+	wchar_t pwc;
+	char b;
+
+	b = (char)c;
+
+	/* Put mbs in initial state. */
+	memset(&mbs, '\0', sizeof(mbs));
+
+	retval = _mbtowc(&pwc, &b, 1, &mbs);
+
+	if (c == EOF || retval != 1)
+		return WEOF;
+	else
+		return (wint_t)pwc;
+#endif
 }

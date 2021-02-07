@@ -72,19 +72,9 @@
 #include <utility/hooks.h>
 #endif /* UTILITY_HOOKS_H */
 
-/****************************************************************************/
-
-#if defined(__amigaos4__)
-#include <dos/obsolete.h>
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
-
 #ifndef CLIB_ALIB_PROTOS_H
 #include <clib/alib_protos.h>
 #endif /* CLIB_ALIB_PROTOS_H */
-
-/****************************************************************************/
 
 #ifndef PROTO_EXEC_H
 #include <proto/exec.h>
@@ -94,7 +84,7 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
-/****************************************************************************/
+#include <features.h>
 
 #include <signal.h>
 #include <stdlib.h>
@@ -170,7 +160,7 @@ struct iob;
 /****************************************************************************/
 
 /* The file action function for buffered files. */
-typedef int (*file_action_iob_t)(struct iob * iob,struct file_action_message * fam);
+typedef int (*file_action_iob_t)(struct iob * iob, struct file_action_message * fam);
 
 /****************************************************************************/
 
@@ -219,17 +209,21 @@ struct iob
 												   associated with this file */
 
 	UBYTE *				iob_Buffer;				/* Points to the file buffer */
-	LONG				iob_BufferSize;			/* Size of the buffer in bytes */
-	LONG				iob_BufferPosition;		/* Current read position
+	int64_t				iob_BufferSize;			/* Size of the buffer in bytes */
+	int64_t				iob_BufferPosition;		/* Current read position
 												   in the buffer (grows when any
 												   data is read from the buffer) */
-	LONG				iob_BufferReadBytes;	/* Number of bytes available for
+	int64_t				iob_BufferReadBytes;	/* Number of bytes available for
 												   reading (shrinks when any data
 												   is read from the buffer) */
-	LONG				iob_BufferWriteBytes;	/* Number of bytes written to the
+	int64_t				iob_BufferWriteBytes;	/* Number of bytes written to the
 												   buffer which still need to be
 												   flushed to disk (grows when any
 												   data is written to the buffer) */
+
+	_mbstate_t 			_mbstate; 				/* for wide char stdio functions. */
+
+	int   				iob_Flags2;				/* for future use */	
 
 	/************************************************************************/
 	/* Public portion ends here                                             */
@@ -246,11 +240,11 @@ struct iob
 
 	STRPTR				iob_String;				/* Alternative source of data;
 												   a pointer to a string */
-	LONG				iob_StringSize;			/* Number of bytes that may be
+	int64_t				iob_StringSize;			/* Number of bytes that may be
 												   stored in the string */
-	LONG				iob_StringPosition;		/* Current read/write position
+	int64_t				iob_StringPosition;		/* Current read/write position
 												   in the string */
-	LONG				iob_StringLength;		/* Number of characters stored
+	int64_t				iob_StringLength;		/* Number of characters stored
 												   in the string */
 
 	char *				iob_File;				/* For access tracking with the
@@ -333,7 +327,7 @@ struct fd
 	/************************************************************************/
 
 	struct SignalSemaphore *	fd_Lock;			/* For thread locking */
-	ULONG						fd_Position;		/* Cached file position (seek offset). */
+	_off64_t					fd_Position;		/* Cached file position (seek offset). */
 	fd_cleanup_t				fd_Cleanup;			/* Cleanup function, if any. */
 
 	struct fd *					fd_Original;		/* NULL if this is not a dup()ed file
@@ -481,12 +475,8 @@ extern BPTR __resolve_fd_file(struct fd * fd);
 
 #endif /* __THREAD_SAFE */
 
-/****************************************************************************/
-
 #ifndef _STDIO_PROTOS_H
 #include "stdio_protos.h"
 #endif /* _STDIO_PROTOS_H */
-
-/****************************************************************************/
 
 #endif /* _STDIO_HEADERS_H */

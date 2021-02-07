@@ -68,6 +68,7 @@ typedef enum
     OTHER,
     JIS_C_NUM
 } JIS_CHAR_TYPE;
+
 typedef enum
 {
     ASCII,
@@ -80,6 +81,7 @@ typedef enum
     INV,
     JIS_S_NUM
 } JIS_STATE;
+
 typedef enum
 {
     COPY_A,
@@ -188,6 +190,8 @@ int _issjis2(int c);
 int _iseucjp(int c);
 int _isjis(int c);
 
+extern int _mbtowc(wchar_t *, const char *, size_t, _mbstate_t *);
+
 #define _issjis1(c) (((c) >= 0x81 && (c) <= 0x9f) || ((c) >= 0xe0 && (c) <= 0xef))
 #define _issjis2(c) (((c) >= 0x40 && (c) <= 0x7e) || ((c) >= 0x80 && (c) <= 0xfc))
 #define _iseucjp(c) ((c) >= 0xa1 && (c) <= 0xfe)
@@ -230,11 +234,7 @@ int _isjis(int c);
 #define __ODD_TYPES
 #endif
 
-#if (defined(_WIN32) || defined(_WIN64) || defined(__CYGWIN__) || defined(__MINGW32__))
-#define __PSEP '\\'
-#else
 #define __PSEP '/'
-#endif
 
 #if !defined(__WCHAR_INTERNAL_LIB)
 extern const uint32_t bittab[];
@@ -287,5 +287,23 @@ extern const uint32_t bittab[];
 #define _REENT_MBSRTOWCS_STATE(ptr) ((ptr)->_misc->_mbsrtowcs_state)
 #define _REENT_WCRTOMB_STATE(ptr) ((ptr)->_misc->_wcrtomb_state)
 #define _REENT_WCSRTOMBS_STATE(ptr) ((ptr)->_misc->_wcsrtombs_state)
+
+/*
+ * Set the orientation for a stream. If o > 0, the stream has wide-
+ * orientation. If o < 0, the stream has byte-orientation.
+ */
+#define ORIENT(fp,ori)					\
+  do								\
+    {								\
+      if (!((fp)->_flags & __SORD))	\
+	{							\
+	  (fp)->_flags |= __SORD;				\
+	  if (ori > 0)						\
+	    (fp)->_flags2 |= __SWID;				\
+	  else							\
+	    (fp)->_flags2 &= ~__SWID;				\
+	}							\
+    }								\
+  while (0)
 
 #endif /* _WCHAR_HEADERS_H */

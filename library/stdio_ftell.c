@@ -46,37 +46,37 @@
 long int
 ftell(FILE *stream)
 {
-	struct iob * file = (struct iob *)stream;
+	struct iob *file = (struct iob *)stream;
 	struct file_action_message fam;
-	long int result = ERROR;
-	int position;
+	_off64_t result = ERROR;
+	_off64_t position;
 
-	assert( stream != NULL );
+	assert(stream != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	flockfile(stream);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(stream == NULL)
+		if (stream == NULL)
 		{
 			__set_errno(EFAULT);
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	assert( __is_valid_iob(file) );
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+	assert(__is_valid_iob(file));
+	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+	assert(file->iob_BufferSize > 0);
 
-	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_IN_USE))
+	if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE))
 	{
 		SHOWMSG("this file is not even in use");
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+		SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 		__set_errno(EBADF);
 
@@ -87,24 +87,19 @@ ftell(FILE *stream)
 
 	SHOWPOINTER(&fam);
 
-	fam.fam_Action	= file_action_seek;
-	fam.fam_Offset	= 0;
-	fam.fam_Mode	= SEEK_CUR;
+	fam.fam_Action = file_action_seek;
+	fam.fam_Offset = 0;
+	fam.fam_Mode = SEEK_CUR;
 
 	SHOWVALUE(fam.fam_Offset);
 	SHOWVALUE(fam.fam_Mode);
 
-	assert( file->iob_Action != NULL );
+	assert(file->iob_Action != NULL);
 
-	/* Note that a return value of -1 (= SEEK_ERROR) may be a
-	   valid file position in files larger than 2 GBytes. Just
-	   to be sure, we therefore also check the secondary error
-	   to verify that what could be a file position is really
-	   an error indication. */
-	position = (*file->iob_Action)(file,&fam);
-	if(position == SEEK_ERROR && fam.fam_Error != OK)
+	position = (_off64_t)(*file->iob_Action)(file, &fam);
+	if (position == GETPOSITION_ERROR && fam.fam_Error != OK)
 	{
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+		SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 		__set_errno(fam.fam_Error);
 
@@ -113,10 +108,10 @@ ftell(FILE *stream)
 
  	/* If this is a valid file position, clear 'errno' so that
 	   it cannot be mistaken for an error. */
-	if(position < 0)
+	if (position < 0)
 		__set_errno(OK);
 
-	if(__iob_read_buffer_is_valid(file))
+	if (__iob_read_buffer_is_valid(file))
 	{
 		/* Subtract the number of bytes still in the buffer which have
 		 * not been read before.
@@ -133,9 +128,9 @@ ftell(FILE *stream)
 
 	result = position;
 
- out:
+out:
 
 	funlockfile(stream);
 
-	return(result);
+	return (result);
 }

@@ -35,17 +35,9 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 int
 truncate(const char * path_name, off_t length)

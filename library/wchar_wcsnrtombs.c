@@ -38,6 +38,60 @@
 size_t
 wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps)
 {
+#ifdef LIBWCHAR
+    (void)ps;
+    size_t l, cnt = 0, n2;
+    char *s, buf[256];
+    const wchar_t *ws = *src;
+
+    if (!dst)
+    {
+        s = buf;
+        len = sizeof buf;
+    }
+    else
+        s = dst;
+
+    while ((ws) && (len) && (((n2 = nwc) >= len) || (n2 > 32)))
+    {
+        if (n2 >= len)
+            n2 = len;
+        nwc -= n2;
+        if (!(l = wcsrtombs(s, &ws, n2, 0)))
+        {
+            cnt = l;
+            len = 0;
+            break;
+        }
+        if (s != buf)
+        {
+            s += l;
+            len -= l;
+        }
+        cnt += l;
+    }
+    if (ws)
+        while (len && nwc)
+        {
+            if (!(l = wcrtomb(s, *ws, 0)))
+            {
+                if (!l)
+                    ws = 0;
+                else
+                    cnt = l;
+                break;
+            }
+            ws++;
+            nwc--;
+            /* safe - this loop runs fewer than sizeof(buf) times */
+            s += l;
+            len -= l;
+            cnt++;
+        }
+    if (dst)
+        *src = ws;
+    return cnt;
+#else
     char *ptr = dst;
     char buff[10] = {0};
     wchar_t *pwcs;
@@ -94,4 +148,5 @@ wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps
     }
 
     return n;
+#endif
 }
