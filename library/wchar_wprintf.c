@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wprintf.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wprintf.c,v 1.4 2021-02-05 00:42:44 apalmate Exp $
  *
  * :ts=4
  *
@@ -30,16 +30,20 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+// LibWChar
 
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
 
-int
+int 
 wprintf(const wchar_t *format, ...)
 {
-	/* ZZZ unimplemented */
-	return(0);
+	int ret;
+	va_list ap;
+	va_start(ap, format);
+	ret = vfwprintf(stdout, format, ap);
+	va_end(ap);
+	return ret;
 }

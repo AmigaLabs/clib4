@@ -1,5 +1,6 @@
+
 /*
- * $Id: stdlib_wcstombs.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: wchar_bittab.c,v 1.0 2021-02-03 19:11:16 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,12 +36,17 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _WCHAR_HEADERS_H
+#include "wchar_headers.h"
+#endif /* _WCHAR_HEADERS_H */
 
-size_t
-wcstombs(char *s, const wchar_t *pwcs, size_t n)
+const uint32_t bittab[] =
 {
-	// TODO - Implement this
-	/* ZZZ unimplemented */
-	return(0);
-}
+    C(0x2), C(0x3), C(0x4), C(0x5), C(0x6), C(0x7),
+    C(0x8), C(0x9), C(0xa), C(0xb), C(0xc), C(0xd), C(0xe), C(0xf),
+    K(0x0), K(0x1), K(0x2), K(0x3), K(0x4), K(0x5), K(0x6), K(0x7),
+    K(0x8), K(0x9), K(0xa), K(0xb), K(0xc), K(0xd), K(0xe), K(0xf),
+    E(0x0), E(0x1), E(0x2), E(0x3), E(0x4), E(0x5), E(0x6), E(0x7),
+    E(0x8), E(0x9), E(0xa), E(0xb), E(0xc), E(0xd), E(0xe), E(0xf),
+    F(0x0), F(0x1), F(0x2), F(0x3), F(0x4)
+};

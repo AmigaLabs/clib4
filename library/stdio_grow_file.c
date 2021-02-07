@@ -43,7 +43,8 @@
 
 /* Change file position to the end of a file, then add a certain number of 0 bytes. Note that
    this function will change the current file position! */
-int __grow_file_size(struct fd *fd, int num_bytes)
+int64_t 
+__grow_file_size(struct fd *fd, int num_bytes)
 {
 	unsigned char *aligned_buffer;
 	unsigned char *buffer;
@@ -53,9 +54,9 @@ int __grow_file_size(struct fd *fd, int num_bytes)
 	int bytes_written;
 	int buffer_size;
 	int size;
-	LONG seek_position;
-	off_t position;
-	off_t current_position;
+	_off64_t seek_position;
+	_off64_t position;
+	_off64_t current_position;
 	int alignment_skip;
 	int result = ERROR;
 
@@ -113,13 +114,13 @@ int __grow_file_size(struct fd *fd, int num_bytes)
 		goto out;
 	}
 
-	position = (off_t)seek_position;
+	position = (_off64_t)seek_position;
 
 	PROFILE_OFF();
 	seek_position = GetFilePosition(fd->fd_File);
 	PROFILE_ON();
 
-	current_position = (off_t)seek_position;
+	current_position = (_off64_t)seek_position;
 
 	/* Try to make the first write access align the file position
 	 * to a block offset. Subsequent writes will then access the

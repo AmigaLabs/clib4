@@ -43,11 +43,10 @@
 
 /****************************************************************************/
 
-int
-fseek(FILE *stream, long int offset, int wherefrom)
+int fseek(FILE *stream, long int offset, int wherefrom)
 {
-	struct iob * file = (struct iob *)stream;
-	int result = SEEK_ERROR;
+	struct iob *file = (struct iob *)stream;
+	int result = GETPOSITION_ERROR;
 
 	ENTER();
 
@@ -57,14 +56,14 @@ fseek(FILE *stream, long int offset, int wherefrom)
 
 	assert(stream != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	flockfile(stream);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(stream == NULL)
+		if (stream == NULL)
 		{
 			SHOWMSG("invalid stream parameter");
 
@@ -72,28 +71,28 @@ fseek(FILE *stream, long int offset, int wherefrom)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	assert( __is_valid_iob(file) );
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+	assert(__is_valid_iob(file));
+	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+	assert(file->iob_BufferSize > 0);
 
- 	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_IN_USE))
- 	{
- 		SHOWMSG("this file is not even in use");
+	if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE))
+	{
+		SHOWMSG("this file is not even in use");
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+		SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 		__set_errno(EBADF);
- 
- 		goto out;
- 	}
 
-	if(wherefrom < SEEK_SET || wherefrom > SEEK_END)
+		goto out;
+	}
+
+	if (wherefrom < SEEK_SET || wherefrom > SEEK_END)
 	{
 		SHOWMSG("invalid wherefrom parameter");
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+		SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 		__set_errno(EBADF);
 
@@ -103,12 +102,12 @@ fseek(FILE *stream, long int offset, int wherefrom)
 	/* Try to turn the absolute position into a relative seek
 	 * within the buffer, if possible.
 	 */
-	if(wherefrom == SEEK_SET && __iob_read_buffer_is_valid(file))
+	if (wherefrom == SEEK_SET && __iob_read_buffer_is_valid(file))
 	{
 		long int current_position;
 
 		current_position = ftell(stream);
-		if(current_position != SEEK_ERROR || __get_errno() == OK)
+		if (current_position != CHANGE_FILE_ERROR)
 		{
 			offset -= current_position;
 
@@ -117,22 +116,22 @@ fseek(FILE *stream, long int offset, int wherefrom)
 	}
 
 	/* We have to clear the EOF condition */
-	CLEAR_FLAG(file->iob_Flags,IOBF_EOF_REACHED);
+	CLEAR_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
 
-	if(wherefrom != SEEK_CUR || offset != 0)
+	if (wherefrom != SEEK_CUR || offset != 0)
 	{
 		BOOL buffer_position_adjusted = FALSE;
 
 		/* Try to adjust the buffer position rather than adjusting
 		 * the file position itself, which is very costly.
 		 */
-		if(wherefrom == SEEK_CUR && __iob_read_buffer_is_valid(file))
+		if (wherefrom == SEEK_CUR && __iob_read_buffer_is_valid(file))
 		{
 			/* Try to adjust the buffer read position. This also
 			 * affects the number of bytes that can still be read.
 			 */
 			if ((offset < 0 && (-offset) <= file->iob_BufferPosition) ||
-			    (offset > 0 && offset <= __iob_num_unread_bytes(file)))
+				(offset > 0 && offset <= __iob_num_unread_bytes(file)))
 			{
 				file->iob_BufferPosition += offset;
 
@@ -140,7 +139,7 @@ fseek(FILE *stream, long int offset, int wherefrom)
 			}
 		}
 
-		if(NOT buffer_position_adjusted)
+		if (NOT buffer_position_adjusted)
 		{
 			struct file_action_message fam;
 			LONG position;
@@ -149,14 +148,14 @@ fseek(FILE *stream, long int offset, int wherefrom)
 			 * current buffer contents and start with a clean
 			 * slate.
 			 */
-			if(__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(file) < 0)
+			if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(file) < 0)
 			{
 				SHOWMSG("couldn't flush write buffer");
 
 				goto out;
 			}
 
-			if(__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(file) < 0)
+			if (__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(file) < 0)
 			{
 				SHOWMSG("couldn't drop read buffer");
 
@@ -167,43 +166,38 @@ fseek(FILE *stream, long int offset, int wherefrom)
 
 			SHOWPOINTER(&fam);
 
-			fam.fam_Action	= file_action_seek;
-			fam.fam_Offset	= offset;
-			fam.fam_Mode	= wherefrom;
+			fam.fam_Action = file_action_seek;
+			fam.fam_Offset = offset;
+			fam.fam_Mode = wherefrom;
 
 			SHOWVALUE(fam.fam_Offset);
 			SHOWVALUE(fam.fam_Mode);
 
-			assert( file->iob_Action != NULL );
+			assert(file->iob_Action != NULL);
 
-			/* Note that a return value of -1 (= SEEK_ERROR) may be a
-			   valid file position in files larger than 2 GBytes. Just
-			   to be sure, we therefore also check the secondary error
-			   to verify that what could be a file position is really
-			   an error indication. */
-			position = (*file->iob_Action)(file,&fam);
-			if(position == SEEK_ERROR && fam.fam_Error != OK)
+			position = (*file->iob_Action)(file, &fam);
+			if (fam.fam_Error != OK)
 			{
-				SET_FLAG(file->iob_Flags,IOBF_ERROR);
+				SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 				__set_errno(fam.fam_Error);
 
 				goto out;
 			}
 
-		 	/* If this is a valid file position, clear 'errno' so that
+			/* If this is a valid file position, clear 'errno' so that
 			   it cannot be mistaken for an error. */
-			if(position < 0)
+			if (position < 0)
 				__set_errno(OK);
 		}
 	}
 
 	result = OK;
 
- out:
+out:
 
 	funlockfile(stream);
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

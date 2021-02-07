@@ -1,5 +1,5 @@
 /*
- * $Id: wctype_iswalnum.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wctype_iswalnum.c,v 1.4 2021-02-04 00:16:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -34,10 +34,6 @@
 #ifndef _WCTYPE_HEADERS_H
 #include <wctype.h>
 #endif /* _WCTYPE_HEADERS_H */
-
-/****************************************************************************/
-
-/* Implementation based on musl */
 
 int
 iswalnum(wint_t c)

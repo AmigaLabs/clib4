@@ -42,8 +42,7 @@
 
 /****************************************************************************/
 
-int
-__flush_iob_write_buffer(struct iob * file)
+int __flush_iob_write_buffer(struct iob *file)
 {
 	int result = OK;
 
@@ -51,37 +50,37 @@ __flush_iob_write_buffer(struct iob * file)
 
 	SHOWPOINTER(file);
 
-	assert( file != NULL );
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+	assert(file != NULL);
+	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+	assert(file->iob_BufferSize > 0);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	if(FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) && file->iob_BufferWriteBytes > 0)
+	if (FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE) && file->iob_BufferWriteBytes > 0)
 	{
 		struct file_action_message fam;
 
-		assert( FLAG_IS_SET(file->iob_Flags,IOBF_WRITE) );
-		assert( file->iob_BufferSize > 0 );
+		assert(FLAG_IS_SET(file->iob_Flags, IOBF_WRITE));
+		assert(file->iob_BufferSize > 0);
 
-		D(("%ld bytes are to be written",file->iob_BufferWriteBytes));
+		D(("%ld bytes are to be written", file->iob_BufferWriteBytes));
 
 		SHOWMSG("calling the hook");
 
-		fam.fam_Action	= file_action_write;
-		fam.fam_Data	= (char *)file->iob_Buffer;
-		fam.fam_Size	= file->iob_BufferWriteBytes;
+		fam.fam_Action = file_action_write;
+		fam.fam_Data = (char *)file->iob_Buffer;
+		fam.fam_Size = file->iob_BufferWriteBytes;
 
-		assert( file->iob_Action != NULL );
+		assert(file->iob_Action != NULL);
 
-		if((*file->iob_Action)(file,&fam) == EOF)
+		if ((*file->iob_Action)(file, &fam) == EOF)
 		{
 			SHOWMSG("that didn't work");
 
 			result = ERROR;
 
-			SET_FLAG(file->iob_Flags,IOBF_ERROR);
+			SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 			__set_errno(fam.fam_Error);
 
@@ -91,8 +90,8 @@ __flush_iob_write_buffer(struct iob * file)
 		file->iob_BufferWriteBytes = 0;
 	}
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

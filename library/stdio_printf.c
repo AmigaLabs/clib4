@@ -43,7 +43,7 @@
 
 /****************************************************************************/
 
-int
+int 
 printf(const char *format, ...)
 {
 	int result = EOF;
@@ -53,27 +53,27 @@ printf(const char *format, ...)
 
 	SHOWSTRING(format);
 
-	assert( format != NULL );
+	assert(format != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(format == NULL)
+		if (format == NULL)
 		{
 			__set_errno(EFAULT);
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	va_start(arg,format);
-	result = vfprintf(stdout,format,arg);
+	va_start(arg, format);
+	result = vfprintf(stdout, format, arg);
 	va_end(arg);
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

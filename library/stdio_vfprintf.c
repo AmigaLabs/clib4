@@ -34,33 +34,25 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-/*
- * Uncomment this to activate '%lld' support and the like. Better still,
- * define this is in the Makefile!
- */
-/*#define USE_64_BIT_INTS*/
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
 
 /****************************************************************************/
 
 /* Data conversion flags for vfprintf() below. */
-#define FORMATF_LeftJustified (1 << 0)		 /* Output must be left justified */
-#define FORMATF_ProduceSign (1 << 1)		 /* Numbers always begin with a leading \
-												sign character */
-#define FORMATF_ProduceSpace (1 << 2)		 /* Numbers always begin with a '-' \
-												character or a blank space */
-#define FORMATF_AlternateConversion (1 << 3) /* Use alternative conversion format */
-#define FORMATF_CapitalLetters (1 << 4)		 /* Output must use upper case characters */
-#define FORMATF_IsNegative (1 << 5)			 /* Number is negative */
-#define FORMATF_HexPrefix (1 << 6)			 /* Prepend '0x' to the output */
-#define FORMATF_ZeroPrefix (1 << 7)			 /* Prepend '0' to the output */
+#define FORMATF_LeftJustified 			(1 << 0)	/* Output must be left justified */
+#define FORMATF_ProduceSign 			(1 << 1)	/* Numbers always begin with a leading  sign character */
+#define FORMATF_ProduceSpace 			(1 << 2)	/* Numbers always begin with a '-'  character or a blank space */
+#define FORMATF_AlternateConversion 	(1 << 3) 	/* Use alternative conversion format */
+#define FORMATF_CapitalLetters 			(1 << 4)	/* Output must use upper case characters */
+#define FORMATF_IsNegative 				(1 << 5)	/* Number is negative */
+#define FORMATF_HexPrefix 				(1 << 6)	/* Prepend '0x' to the output */
+#define FORMATF_ZeroPrefix 				(1 << 7)	/* Prepend '0' to the output */
 
 /****************************************************************************/
 
@@ -81,24 +73,7 @@ get_num_leading_digits(__long_double_t v, int radix)
 	}
 	else
 	{
-/* For some reason log() can crash on GCC 68k... */
-#if (!defined(__GNUC__) || defined(__PPC__))
-		{
-			num_digits = 1 + floor(log(v) / log((double)radix));
-		}
-#else
-		{
-			/* Perform the conversion one digit at a time... */
-			num_digits = 0;
-
-			while (floor(v) > 0.0)
-			{
-				num_digits++;
-
-				v /= radix;
-			}
-		}
-#endif /* __GNUC__ && !__PPC__ */
+		num_digits = 1 + floor(log(v) / log((double)radix));
 	}
 
 	return (num_digits);

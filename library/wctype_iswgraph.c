@@ -1,5 +1,5 @@
 /*
- * $Id: wctype_iswgraph.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wctype_iswgraph.c,v 1.4 2021-02-04 00:01:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -42,5 +42,5 @@
 int
 iswgraph(wint_t c)
 {
-	return isgraph(c);
+	return (iswprint (c) && !iswspace (c));
 }

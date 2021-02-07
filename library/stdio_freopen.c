@@ -35,19 +35,15 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 FILE *
 freopen(const char *filename, const char *mode, FILE *stream)
 {
-	struct iob * file = (struct iob *)stream;
-	FILE * result = NULL;
+	struct iob *file = (struct iob *)stream;
+	FILE *result = NULL;
 	int slot_number;
 
 	ENTER();
@@ -56,14 +52,14 @@ freopen(const char *filename, const char *mode, FILE *stream)
 	SHOWSTRING(mode);
 	SHOWPOINTER(stream);
 
-	assert( filename != NULL && mode != NULL && stream != NULL );
+	assert(filename != NULL && mode != NULL && stream != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(filename == NULL || mode == NULL || stream == NULL)
+		if (filename == NULL || mode == NULL || stream == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -71,11 +67,11 @@ freopen(const char *filename, const char *mode, FILE *stream)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	assert( __is_valid_iob(file) );
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+	assert(__is_valid_iob(file));
+	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+	assert(file->iob_BufferSize > 0);
 
 	/* We need to remember this; it'll go away when we close
 	   the file. */
@@ -83,16 +79,20 @@ freopen(const char *filename, const char *mode, FILE *stream)
 
 	fclose(stream);
 
-	if(__open_iob(filename, mode, -1, slot_number) < 0)
+	if (__open_iob(filename, mode, -1, slot_number) < 0)
 	{
 		SHOWMSG("couldn't reopen the file");
 		goto out;
 	}
 
 	result = (FILE *)file;
+	/* Reset flags */
+	result->_flags &= ~__SORD;
+	result->_flags2 &= ~__SWID;
+	memset (&result->_mbstate, 0, sizeof (_mbstate_t));
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

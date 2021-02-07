@@ -49,30 +49,35 @@ struct ElfIFace NOCOMMON *__IElf;
 
 /****************************************************************************/
 
-/* This is used to initialize the shared objects only. */
-static Elf32_Handle elf_handle;
-
-/****************************************************************************/
-
 void shared_obj_init(struct ExecIFace *iexec);
 void shared_obj_exit(void);
 extern BOOL open_libraries(struct ExecIFace *iexec);
 
-/****************************************************************************/
-
-void shared_obj_exit(void)
-{
+static void SHLibsInit(BOOL init) {
 	struct ElfIFace *IElf = __IElf;
-
-	/* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
-	if (elf_handle != NULL)
-	{
-		InitSHLibs(elf_handle, FALSE);
-		elf_handle = NULL;
+	if (IElf) {
+		BPTR segment_list = GetProcSegList(NULL, GPSLF_CLI | GPSLF_SEG);
+		Elf32_Handle hSelf = (Elf32_Handle)NULL;
+		if (segment_list != ZERO)
+		{
+			int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
+			if (ret == 1)
+			{
+				if (hSelf != NULL)
+				{
+					/* Trigger the constructors, etc. in the shared objects linked to this binary. */
+					InitSHLibs(hSelf, init);
+				}
+			}
+		}
 	}
 }
 
-/****************************************************************************/
+void shared_obj_exit(void)
+{
+	/* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
+	SHLibsInit(FALSE);
+}
 
 void shared_obj_init(struct ExecIFace *iexec)
 {
@@ -81,24 +86,6 @@ void shared_obj_init(struct ExecIFace *iexec)
 	 * We need to init all stuff we need to work correctly
 	 */
 	if (open_libraries(iexec)) {
-		struct ElfIFace *IElf = __IElf;
-		BPTR segment_list;
-
-		/* Try to find the Elf handle associated with this program's segment list. */
-		struct Process *self = (struct Process *) FindTask(0);
-		segment_list = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
-		if (segment_list != ZERO)
-		{
-			int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &elf_handle, TAG_DONE);
-			if (ret == 1)
-			{
-				if (elf_handle != NULL)
-				{
-					/* Trigger the constructors, etc. in the shared objects linked to this binary. */
-					InitSHLibs(elf_handle, TRUE);
-				}
-			}
-		}
+		SHLibsInit(TRUE);
 	}
 }
-

@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_mbrlen.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_mbrlen.c,v 1.4 2021-02-03 19:11:16 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,14 +35,18 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 size_t
 mbrlen(const char *restrict s, size_t n, mbstate_t *restrict ps)
 {
-	/* ZZZ unimplemented */
-	return(0);
-}
-#endif /* __STDC_VERSION__ && __STDC_VERSION__ >= 199901L */
+#ifdef LIBWCHAR
+    static unsigned internal;
+    return mbrtowc(0, s, n, ((ps) ? ps : (mbstate_t *)&internal));
+#else
+    if (ps == NULL)
+    {
+        ps = &__global_clib2->wide_status->_mbrlen_state;
+    }
 
+    return mbrtowc(NULL, s, n, ps);
+#endif
+}

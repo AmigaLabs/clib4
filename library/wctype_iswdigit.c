@@ -1,5 +1,5 @@
 /*
- * $Id: wctype_iswdigit.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wctype_iswdigit.c,v 1.4 2021-02-04 00:00:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -39,8 +39,8 @@
 
 /****************************************************************************/
 
-int
+int 
 iswdigit(wint_t c)
 {
-	return isdigit(c);
+	return (unsigned)c - '0' < 10;
 }

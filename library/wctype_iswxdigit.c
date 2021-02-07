@@ -1,5 +1,5 @@
 /*
- * $Id: wctype_iswxdigit.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wctype_iswxdigit.c,v 1.4 2021-02-04 00:17:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -37,10 +37,10 @@
 
 #include <ctype.h>
 
-/****************************************************************************/
-
-int
+int 
 iswxdigit(wint_t c)
 {
-	return isxdigit(c);
+	return ((c >= (wint_t)'0' && c <= (wint_t)'9') ||
+			(c >= (wint_t)'a' && c <= (wint_t)'f') ||
+			(c >= (wint_t)'A' && c <= (wint_t)'F'));
 }

@@ -46,7 +46,7 @@
 FILE *
 fopen(const char *filename, const char *mode)
 {
-	FILE * result = NULL;
+	FILE *result = NULL;
 	int slot_number;
 
 	ENTER();
@@ -54,16 +54,16 @@ fopen(const char *filename, const char *mode)
 	SHOWSTRING(filename);
 	SHOWSTRING(mode);
 
-	assert( filename != NULL && mode != NULL );
+	assert(filename != NULL && mode != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	__stdio_lock();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(filename == NULL || mode == NULL)
+		if (filename == NULL || mode == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -71,22 +71,22 @@ fopen(const char *filename, const char *mode)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	slot_number = __find_vacant_iob_entry();
-	if(slot_number < 0)
+	if (slot_number < 0)
 	{
-		if(__grow_iob_table(0) < 0)
+		if (__grow_iob_table(0) < 0)
 		{
 			SHOWMSG("couldn't find a free file table, and no memory for a new one");
 			goto out;
 		}
 
 		slot_number = __find_vacant_iob_entry();
-		assert( slot_number >= 0 );
+		assert(slot_number >= 0);
 	}
 
-	if(__open_iob(filename,mode,-1,slot_number) < 0)
+	if (__open_iob(filename, mode, -1, slot_number) < 0)
 	{
 		SHOWMSG("couldn't open the file");
 		goto out;
@@ -94,10 +94,10 @@ fopen(const char *filename, const char *mode)
 
 	result = (FILE *)__iob[slot_number];
 
- out:
+out:
 
 	__stdio_unlock();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

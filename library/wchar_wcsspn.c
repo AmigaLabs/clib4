@@ -35,11 +35,43 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
+#include "wchar_wprintf_core.h"
 
 size_t
 wcsspn(const wchar_t *s, const wchar_t *set)
 {
-	/* ZZZ unimplemented */
-	return(0);
+#ifdef LIBWCHAR
+	size_t n = 0;
+	for (;;)
+	{
+		wchar_t wc = s[n];
+		if (wc == L'\0')
+			break;
+		if (!__wc_indelim(wc, set))
+			break;
+		++n;
+	}
+	return n;
+#else
+	const wchar_t *p;
+	const wchar_t *q;
+
+	p = s;
+	while (*p)
+	{
+		q = set;
+		while (*q)
+		{
+			if (*p == *q)
+				break;
+			q++;
+		}
+		if (!*q)
+			goto done;
+		p++;
+	}
+
+done:
+	return (p - s);
+#endif
 }

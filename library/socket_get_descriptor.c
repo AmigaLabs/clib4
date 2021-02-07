@@ -31,30 +31,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
 struct fd *
 __get_file_descriptor_socket(int socket_descriptor)
 {
-	struct fd * result = NULL;
-	struct fd * fd;
+	struct fd *result = NULL;
+	struct fd *fd;
 
 	fd = __get_file_descriptor(socket_descriptor);
-	if(fd == NULL)
+	if (fd == NULL)
 	{
 		__set_errno(EBADF);
 		goto out;
 	}
 
-	if(FLAG_IS_CLEAR(fd->fd_Flags,FDF_IS_SOCKET))
+	if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET))
 	{
 		__set_errno(ENOTSOCK);
 		goto out;
@@ -62,11 +56,7 @@ __get_file_descriptor_socket(int socket_descriptor)
 
 	result = fd;
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

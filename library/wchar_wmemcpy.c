@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wmemcpy.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wmemcpy.c,v 1.4 2021-02-04 11:14:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,14 +35,8 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-/* Implementation based on musl */
-
 wchar_t *
 wmemcpy(wchar_t *dest, const wchar_t *src, size_t len)
 {
-	wchar_t *a = dest;
-	while (len--) *dest++ = *src++;
-	return a;
+	return (wchar_t *)memcpy(dest, src, len * sizeof(wchar_t));
 }

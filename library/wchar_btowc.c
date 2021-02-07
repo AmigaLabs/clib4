@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_btowc.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_btowc.c,v 1.4 2021-02-03 19:11:16 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,11 +35,39 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
+#include "wchar_wprintf_core.h"
 
 wint_t
 btowc(int c)
 {
-	/* ZZZ unimplemented */
-	return(0);
+#ifdef LIBWCHAR
+	wchar_t wc;
+	char cc = (char)c;
+
+	if (
+		((c > 0) && (c < 128)) &&
+		(mbrtowc(&wc, &cc, 1, 0) == 1))
+	{
+		return (wc);
+	}
+
+	return L'\0';
+#else
+	mbstate_t mbs;
+	int retval = 0;
+	wchar_t pwc;
+	char b;
+
+	b = (char)c;
+
+	/* Put mbs in initial state. */
+	memset(&mbs, '\0', sizeof(mbs));
+
+	retval = _mbtowc(&pwc, &b, 1, &mbs);
+
+	if (c == EOF || retval != 1)
+		return WEOF;
+	else
+		return (wint_t)pwc;
+#endif
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wcscmp.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wcscmp.c,v 1.4 2021-02-04 00:30:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,11 +35,22 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-int
-wcscmp(const wchar_t *s1, const wchar_t * s2)
+int 
+wcscmp(const wchar_t *s1, const wchar_t *s2)
 {
-	for (; *s1==*s2 && *s1 && *s2; s1++, s2++);
-	return *s1 - *s2;
+	wchar_t c1, c2;
+
+	if ((!s1) || (!s2))
+		return -1;
+
+	do
+	{
+		c1 = *s1++;
+		c2 = *s2++;
+		if (c2 == L'\0')
+			return c1 - c2;
+
+	} while (c1 == c2);
+
+	return c1 < c2 ? -1 : 1;
 }

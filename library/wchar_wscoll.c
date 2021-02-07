@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wscoll.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wscoll.c,v 1.4 2021-02-04 00:29:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -37,9 +37,8 @@
 
 /****************************************************************************/
 
-int
+int 
 wscoll(const wchar_t *s1, const wchar_t *s2)
 {
-	/* ZZZ unimplemented */
-	return(0);
+	return wcscmp(s1, s2);
 }

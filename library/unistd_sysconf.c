@@ -35,25 +35,36 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-long sysconf(int name) {
+#include <sys/syslimits.h>
+#include <netdb.h>
+
+long 
+sysconf(int name) {
     int retval = -1;
+    ULONG query;
+
     switch (name) {
+        case _SC_ARG_MAX:
+            return ARG_MAX;
+        case _SC_HOST_NAME_MAX:
+            return MAXHOSTNAMELEN;
         case _SC_CLK_TCK:
             return CLK_TCK;
-            break;
         case _SC_OPEN_MAX:
             return FOPEN_MAX;
-            break;
         case _SC_PAGESIZE:
-            GetCPUInfoTags(GCIT_CPUPageSize, &retval, TAG_DONE);
+            GetCPUInfoTags(GCIT_ExecPageSize, (ULONG)&query, TAG_DONE);
             break;
         case _SC_TZNAME_MAX:
             return MAX_TZSIZE;
+        case _SC_NPROCESSORS_CONF:
+            GetCPUInfoTags(GCIT_NumberOfCPUs, (ULONG)&query, TAG_DONE);
             break;
         default:
             __set_errno(EINVAL);
             break;
     }
+    retval = query;
 
     return retval;
 }

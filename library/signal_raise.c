@@ -38,15 +38,41 @@
 /****************************************************************************/
 
 /* This table holds pointers to all signal handlers configured at a time. */
-signal_handler_t NOCOMMON __signal_handler_table[NUM_SIGNALS] =
-{
-	SIG_DFL,	/* SIGABRT */
-	SIG_DFL,	/* SIGFPE */
-	SIG_DFL,	/* SIGILL */
-	SIG_DFL,	/* SIGINT */
-	SIG_DFL,	/* SIGSEGV */
-	SIG_DFL		/* SIGTERM */
-};
+signal_handler_t NOCOMMON __signal_handler_table[NSIG] =
+	{
+		SIG_DFL, /* SIGHUP */
+		SIG_DFL, /* SIGINT */
+		SIG_DFL, /* SIGQUIT */
+		SIG_DFL, /* SIGILL */
+		SIG_DFL, /* SIGTRAP */
+		SIG_DFL, /* SIGABRT */
+		SIG_DFL, /* SIGEMT */
+		SIG_DFL, /* SIGFPE */
+		SIG_DFL, /* SIGKILL */
+		SIG_DFL, /* SIGBUS */
+		SIG_DFL, /* SIGSEGV */
+		SIG_DFL, /* SIGSYS */
+		SIG_DFL, /* SIGPIPE */
+		SIG_DFL, /* SIGQUIT */
+		SIG_DFL, /* SIGALRM */
+		SIG_DFL, /* SIGTERM */
+		SIG_DFL, /* SIGURG */
+		SIG_DFL, /* SIGSTOP */
+		SIG_DFL, /* SIGTSTP */
+		SIG_DFL, /* SIGCONT */
+		SIG_DFL, /* SIGCHLD */
+		SIG_DFL, /* SIGTTIN */
+		SIG_DFL, /* SIGTTOU */
+		SIG_DFL, /* SIGIO */
+		SIG_DFL, /* SIGXCPU */
+		SIG_DFL, /* SIGXFSZ */
+		SIG_DFL, /* SIGVTALRM */
+		SIG_DFL, /* SIGPROF */
+		SIG_DFL, /* SIGWINCH */
+		SIG_DFL, /* SIGLOST */
+		SIG_DFL, /* SIGUSR1 */
+		SIG_DFL /* SIGUSR2 */
+	};
 
 /****************************************************************************/
 
@@ -57,7 +83,7 @@ int NOCOMMON __signals_blocked;
 
 /****************************************************************************/
 
-int
+int 
 raise(int sig)
 {
 	static int local_signals_blocked;
@@ -68,10 +94,10 @@ raise(int sig)
 
 	SHOWVALUE(sig);
 
-	assert( SIGABRT <= sig && sig <= SIGTERM );
+	assert(NSIG <= sig && sig <= SIGTERM);
 
 	/* This has to be a well-known and supported signal. */
-	if(sig < SIGABRT || sig > SIGTERM)
+	if (sig < SIGHUP || sig > NSIG)
 	{
 		SHOWMSG("unknown signal number");
 
@@ -80,34 +106,34 @@ raise(int sig)
 	}
 
 	/* Can we deliver the signal? */
-	if(FLAG_IS_CLEAR(__signals_blocked,		(1 << sig)) &&
-	   FLAG_IS_CLEAR(local_signals_blocked,	(1 << sig)))
+	if (FLAG_IS_CLEAR(__signals_blocked, (1 << sig)) &&
+		FLAG_IS_CLEAR(local_signals_blocked, (1 << sig)))
 	{
 		signal_handler_t handler;
 
 		/* Which handler is installed for this signal? */
-		handler = __signal_handler_table[sig - SIGABRT];
+		handler = __signal_handler_table[sig - SIGHUP];
 
 		/* Should we ignore this signal? */
-		if(handler != SIG_IGN)
+		if (handler != SIG_IGN)
 		{
 			/* Block delivery of this signal to prevent recursion. */
-			SET_FLAG(local_signals_blocked,(1 << sig));
+			SET_FLAG(local_signals_blocked, (1 << sig));
 
 			/* The default behaviour is to drop into abort(), or do
 			   something very much like it. */
-			if(handler == SIG_DFL)
+			if (handler == SIG_DFL)
 			{
 				SHOWMSG("this is the default handler");
 
-				if(sig == SIGINT)
+				if (sig == SIGINT)
 				{
 					char break_string[80];
 
 					/* Turn off ^C checking for good. */
 					__check_abort_enabled = FALSE;
 
-					Fault(ERROR_BREAK,NULL,break_string,(LONG)sizeof(break_string));
+					Fault(ERROR_BREAK, NULL, break_string, (LONG)sizeof(break_string));
 
 					__print_termination_message(break_string);
 
@@ -119,7 +145,7 @@ raise(int sig)
 				   land us in _exit(). */
 				abort();
 			}
-			else 
+			else
 			{
 				SHOWMSG("calling the handler");
 
@@ -129,7 +155,7 @@ raise(int sig)
 			}
 
 			/* Unblock signal delivery again. */
-			CLEAR_FLAG(local_signals_blocked,(1 << sig));
+			CLEAR_FLAG(local_signals_blocked, (1 << sig));
 		}
 	}
 	else
@@ -139,8 +165,8 @@ raise(int sig)
 
 	result = OK;
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

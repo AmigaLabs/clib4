@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_vfwprintf.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_vfwprintf.c,v 1.4 2021-02-05 00:41:13 apalmate Exp $
  *
  * :ts=4
  *
@@ -30,16 +30,31 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+// LibWChar
 
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
+#include "wchar_wprintf_core.h"
 
-int
-vfwprintf(FILE *stream,const wchar_t *format,va_list arg)
+int 
+vfwprintf(FILE *f, const wchar_t *format, va_list ap)
 {
-	/* ZZZ unimplemented */
-	return(0);
+	va_list ap2;
+	int ret, nl_type[__ARGMAX] = {0};
+	union arg nl_arg[__ARGMAX];
+	FOut _out[1];
+	out_init_file(_out, f);
+	va_copy(ap2, ap);
+
+	// Check for error in format string before writing anything to file.
+	if (wprintf_core(0, format, &ap2, nl_arg, nl_type) < 0)
+	{
+		va_end(ap2);
+		return -1;
+	}
+	ret = wprintf_core(_out, format, &ap2, nl_arg, nl_type);
+	va_end(ap2);
+	return ret;
 }

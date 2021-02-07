@@ -35,52 +35,50 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
+// TODO - Check for memmove 64bits
 
-int
+int64_t
 __vsnprintf_hook_entry(
-	struct iob *					string_iob,
-	struct file_action_message *	fam)
+	struct iob *string_iob,
+	struct file_action_message *fam)
 {
-	int result = EOF;
+	int64_t result = EOF;
 
-	assert( fam != NULL && string_iob != NULL );
+	assert(fam != NULL && string_iob != NULL);
 
-	if(fam->fam_Action != file_action_write)
+	if (fam->fam_Action != file_action_write)
 	{
 		fam->fam_Error = EBADF;
 		goto out;
 	}
 
-	if(fam->fam_Size > 0 && string_iob->iob_StringSize > 0 && string_iob->iob_StringPosition < string_iob->iob_StringSize)
+	if (fam->fam_Size > 0 && string_iob->iob_StringSize > 0 && string_iob->iob_StringPosition < string_iob->iob_StringSize)
 	{
-		int num_bytes_left;
-		int num_bytes;
+		int64_t num_bytes_left;
+		int64_t num_bytes;
 
 		num_bytes_left = string_iob->iob_StringSize - string_iob->iob_StringPosition;
 
 		num_bytes = fam->fam_Size;
-		if(num_bytes > num_bytes_left)
+		if (num_bytes > num_bytes_left)
 			num_bytes = num_bytes_left;
 
-		assert( num_bytes >= 0 );
+		assert(num_bytes >= 0);
 
-		assert( fam->fam_Data != NULL );
-		assert( string_iob->iob_String != NULL );
+		assert(fam->fam_Data != NULL);
+		assert(string_iob->iob_String != NULL);
 
-		memmove(&string_iob->iob_String[string_iob->iob_StringPosition],fam->fam_Data,(size_t)num_bytes);
+		memmove(&string_iob->iob_String[string_iob->iob_StringPosition], fam->fam_Data, (size_t)num_bytes);
 		string_iob->iob_StringPosition += num_bytes;
 	}
 
 	result = fam->fam_Size;
 
- out:
+out:
 
-	return(result);
+	return (result);
 }

@@ -43,7 +43,7 @@
 
 /****************************************************************************/
 
-int
+int 
 fsetpos(FILE *stream, fpos_t *pos)
 {
 	int result = EOF;
@@ -53,16 +53,16 @@ fsetpos(FILE *stream, fpos_t *pos)
 	SHOWPOINTER(stream);
 	SHOWPOINTER(pos);
 
-	assert( stream != NULL && pos != NULL );
+	assert(stream != NULL && pos != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	flockfile(stream);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(stream == NULL || pos == NULL)
+		if (stream == NULL || pos == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -70,9 +70,9 @@ fsetpos(FILE *stream, fpos_t *pos)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	if(fseek(stream,(long int)(*pos),SEEK_SET) == SEEK_ERROR && __get_errno() != OK)
+	if (fseek(stream, (long int)(*pos), SEEK_SET) == CHANGE_FILE_ERROR && __get_errno() != OK)
 	{
 		SHOWMSG("fseek failed");
 		goto out;
@@ -80,10 +80,10 @@ fsetpos(FILE *stream, fpos_t *pos)
 
 	result = OK;
 
- out:
+out:
 
 	funlockfile(stream);
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

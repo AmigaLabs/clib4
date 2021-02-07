@@ -129,10 +129,8 @@ local_bzero(void *ptr, size_t len)
 
 void __show_error(const char *message)
 {
-#if defined(__amigaos4__)
 	struct IntuitionIFace *IIntuition = NULL;
 	struct DOSIFace *IDOS = NULL;
-#endif /* __amigaos4__ */
 
 	struct Library *IntuitionBase = NULL;
 	struct Library *DOSBase = NULL;
@@ -154,45 +152,20 @@ void __show_error(const char *message)
 	if (DOSBase == NULL || IntuitionBase == NULL)
 		goto out;
 
-#if defined(__amigaos4__)
-	{
-		IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
-		if (IDOS == NULL)
-			goto out;
+	IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
+	if (IDOS == NULL)
+		goto out;
 
-		IIntuition = (struct IntuitionIFace *)GetInterface(IntuitionBase, "main", 1, 0);
-		if (IIntuition == NULL)
-			goto out;
-	}
-#endif /* __amigaos4__ */
+	IIntuition = (struct IntuitionIFace *)GetInterface(IntuitionBase, "main", 1, 0);
+	if (IIntuition == NULL)
+		goto out;
 
 	/* If we can't hope to print the error message, show a requester instead. */
 	if (__no_standard_io || __WBenchMsg != NULL)
 	{
-		UBYTE program_name[256];
+		UBYTE program_name[256] = {0};
 		struct EasyStruct es;
 		STRPTR title_string;
-
-/* The following does not make great sense on OS4. */
-#if NOT defined(__amigaos4__)
-		{
-			if (IntuitionBase->lib_Version < 37)
-			{
-				static struct TextAttr default_font = {(STRPTR) "topaz.font", 8, FS_NORMAL, FPF_ROMFONT | FPF_DESIGNED};
-				static struct IntuiText sorry_text = {0, 1, JAM1, 6, 3, (struct TextAttr *)NULL, (STRPTR) "Sorry", (struct IntuiText *)NULL};
-				static struct IntuiText body_text = {0, 1, JAM1, 5, 3, (struct TextAttr *)NULL, (STRPTR)NULL, (struct IntuiText *)NULL};
-
-				sorry_text.ITextFont = &default_font;
-				body_text.ITextFont = &default_font;
-
-				body_text.IText = (STRPTR)message;
-
-				AutoRequest(NULL, &body_text, NULL, &sorry_text, 0, 0, 37 + 8 * strlen(message), 46);
-
-				goto out;
-			}
-		}
-#endif /* __amigaos4__ */
 
 		if (__WBenchMsg != NULL)
 		{
@@ -201,7 +174,7 @@ void __show_error(const char *message)
 		else
 		{
 			if (GetCliProgramName((STRPTR)program_name, sizeof(program_name)))
-				title_string = FilePart((STRPTR)program_name);
+				title_string = (STRPTR)FilePart((STRPTR)program_name);
 			else
 				title_string = (STRPTR) "Error";
 		}

@@ -1,5 +1,5 @@
 /*
- * $Id: wctype_iswupper.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wctype_iswupper.c,v 1.4 2021-02-04 00:16:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -37,10 +37,8 @@
 
 #include <ctype.h>
 
-/****************************************************************************/
-
 int
 iswupper(wint_t c)
 {
-	return isupper(c);
+	return (towlower (c) != c);
 }

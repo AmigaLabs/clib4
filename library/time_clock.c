@@ -64,49 +64,25 @@ CLIB_CONSTRUCTOR(clock_init)
 clock_t
 clock(void)
 {
-	struct DateStamp now;
-	LONG minutes_now,ticks_now;
-	LONG minutes_start,ticks_start;
+	struct timeval now;
+	uint64 usec_now, usec_start;
 	clock_t result;
 
 	ENTER();
 
-	/* Get the current time. */
-
 	PROFILE_OFF();
-	DateStamp(&now);
+	/* Get the current time. */
+	gettimeofday(&now, NULL);
 	PROFILE_ON();
 
-	/* Break the current and start time down into minutes and ticks. */
-	minutes_now		= now.ds_Days * 24 * 60 + now.ds_Minute;
-	ticks_now		= now.ds_Tick;
+	usec_now = now.tv_sec * 1000000ULL + now.tv_usec;
+	usec_start = ((struct TimeVal *)(&__global_clib2->clock))->Seconds * 1000000ULL + ((struct TimeVal *)(&__global_clib2->clock))->Microseconds;
 
-	minutes_start	= start_time.ds_Days * 24 * 60 + start_time.ds_Minute;
-	ticks_start		= start_time.ds_Tick;
+	/* Subtract the start time from the current time. */
+	usec_now -= usec_start;
 
-	/* Subtract the start time from the current time. We start
-	 * with the ticks.
-	 */
-	ticks_now -= ticks_start;
-
-	/* Check for underflow. */
-	while(ticks_now < 0)
-	{
-		/* Borrow a minute from the current time. */
-		ticks_now += 60 * TICKS_PER_SECOND;
-
-		minutes_now--;
-	}
-
-	/* Now for the minutes. */
-	minutes_now -= minutes_start;
-
-	/* Check if any time has passed at all, then return the difference. */
-	if(minutes_now >= 0)
-		result = (clock_t)(minutes_now * 60 * TICKS_PER_SECOND + ticks_now);
-	else
-		result = (clock_t)0;
+	result = (clock_t)(usec_now * CLK_TCK / 1000000);
 
 	RETURN(result);
-	return(result);
+	return result;
 }

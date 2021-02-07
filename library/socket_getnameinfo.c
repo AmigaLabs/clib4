@@ -31,17 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
-int getnameinfo(const struct sockaddr *sa, socklen_t salen, char *node, socklen_t nodelen, char *service, socklen_t servicelen, int flags)
+int 
+getnameinfo(const struct sockaddr *sa, socklen_t salen, char *node, socklen_t nodelen, char *service, socklen_t servicelen, int flags)
 {
   /* FIXME: Support other flags. */
   if (flags & ~(NI_NUMERICHOST | NI_NUMERICSERV))
@@ -99,5 +94,3 @@ int getnameinfo(const struct sockaddr *sa, socklen_t salen, char *node, socklen_
 
   return 0;
 }
-
-#endif

@@ -41,7 +41,7 @@
 #ifndef _LIMITS_H
 #define _LIMITS_H
 
-/****************************************************************************/
+#include <features.h>
 
 #define CHAR_BIT 8
 
@@ -132,7 +132,7 @@
  * ARG_MAX, CHILD_MAX, LINK_MAX, MAX_CANON, MAX_INPUT, NAME_MAX, NGROUPS_MAX,
  * OPEN_MAX, PATH_MAX, PIPE_BUF, SSIZE_MAX, STREAM_MAX and TZNAME_MAX.
  */
-
+#ifdef _POSIX_SOURCE
 #define _POSIX_AIO_LISTIO_MAX		2
 #define _POSIX_AIO_MAX				1
 #define _POSIX_ARG_MAX				4096
@@ -152,16 +152,16 @@
 #define _POSIX_RTSIG_MAX			8
 #define _POSIX_SEM_NSEMS_MAX		256
 #define _POSIX_SEM_VALUE_MAX		32767
-#define _POSIX_SIGQUEUE_MAX			32
+#define _POSIX_SIGQUEUE_MAX		32
 #define _POSIX_SSIZE_MAX			32767
 #define _POSIX_STREAM_MAX			8
 #define _POSIX_THREAD_DESTRUCTOR_ITERATIONS	4
-#define _POSIX_THREAD_KEYS_MAX		128
+#define _POSIX_THREAD_KEYS_MAX	128
 #define _POSIX_THREADS_MAX			64
 #define _POSIX_TIMER_MAX			32
-#define _POSIX_TTY_NAME_MAX			9
+#define _POSIX_TTY_NAME_MAX		9
 #define _POSIX_TZNAME_MAX			3
-#define _POSIX2_BC_BASE_MAX			99
+#define _POSIX2_BC_BASE_MAX		99
 #define _POSIX2_BC_DIM_MAX			2048
 #define _POSIX2_BC_SCALE_MAX		99
 #define _POSIX2_BC_STRING_MAX		1000
@@ -173,7 +173,7 @@
 
 /* And a maximum minimum value. */
 #define _POSIX_CLOCKRES_MIN		20000000 /* Nanoseconds */
+#endif
 
-/****************************************************************************/
 
 #endif /* _LIMITS_H */

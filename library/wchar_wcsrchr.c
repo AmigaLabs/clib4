@@ -41,10 +41,27 @@
 wchar_t *
 wcsrchr(const wchar_t *wcs, const wchar_t wc)
 {
+#ifdef LIBCHAR
     const wchar_t *retval = NULL;
     do
         if (*wcs == wc)
             retval = wcs;
     while (*wcs++ != L'\0');
     return (wchar_t *)retval;
+#else
+    const wchar_t *p;
+    p = wcs;
+    while (*p)
+        p++;
+    while (wcs <= p)
+    {
+        if (*p == wc)
+        {
+            /* LINTED interface specification */
+            return (wchar_t *)p;
+        }
+        p--;
+    }
+    return NULL;
+#endif
 }

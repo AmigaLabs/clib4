@@ -35,15 +35,25 @@
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
 
-/****************************************************************************/
+#include <unistd.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
 
-/****************************************************************************/
+static APTR hook_function(struct Hook *hook, APTR userdata, struct Process *process)
+{
+	uint32 pid = (uint32)userdata;
 
-int
+	if (process->pr_ProcessID == pid)
+	{
+		return process;
+	}
+
+	return NULL;
+}
+
+int 
 kill(pid_t pid, int signal_number)
 {
+	struct Process *cli_process;
 	int result = ERROR;
 
 	ENTER();
@@ -51,46 +61,53 @@ kill(pid_t pid, int signal_number)
 	SHOWVALUE(pid);
 	SHOWVALUE(signal_number);
 
-	Forbid();
-
-	if(pid > 0)
+	if (signal_number < 0 || signal_number >= NSIG)
 	{
-		ULONG max_cli_number,i;
-		BOOL found = FALSE;
-
-		max_cli_number = MaxCli();
-
-		for(i = 1 ; i <= max_cli_number ; i++)
-		{
-			if(FindCliProc(i) == (struct Process *)pid)
-			{
-				found = TRUE;
-				break;
-			}
-		}
-
-		if(NOT found)
-		{
-			SHOWMSG("didn't find the process");
-
-			__set_errno(ESRCH);
-			goto out;
-		}
-
-		SHOWMSG("found the process");
-
-		if(signal_number == SIGTERM || signal_number == SIGINT)
-			Signal((struct Task *)pid,__break_signal_mask);
-		else
-			SHOWMSG("but won't shut it down");
+		__set_errno(EINVAL);
+		return result;
 	}
 
-	result = OK;
+	if (pid > 0)
+	{
+		if (pid == getpid())
+		{
+			result = raise(signal_number);
+		}
+		else
+		{
+			struct Hook h = {{NULL, NULL}, (HOOKFUNC)hook_function, NULL, NULL};
 
- out:
+			Forbid();
 
-	Permit();
+			cli_process = (struct Process *)ProcessScan(&h, (CONST_APTR)pid, 0);
+			if (cli_process != NULL)
+			{
+				SHOWMSG("found the process");
+
+				result = 0;
+
+				if (signal_number == SIGTERM || signal_number == SIGINT)
+				{
+					Signal((struct Task *)cli_process, SIGBREAKF_CTRL_C);
+				}
+				else
+				{
+					SHOWMSG("but won't shut it down");
+				}
+			}
+			else
+			{
+				SHOWMSG("didn't find the process");
+
+				__set_errno(ESRCH);
+			}
+
+			Permit();
+		}
+	}
+
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

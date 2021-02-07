@@ -35,180 +35,84 @@
 #include <sys/utsname.h>
 
 /****************************************************************************/
-
 /* The following is not part of the ISO 'C' (1994) standard. */
-
 /****************************************************************************/
 
-#if defined(SOCKET_SUPPORT) && !defined(_SOCKET_HEADERS_H)
+#ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
-#endif /* SOCKET_SUPPORT && !_SOCKET_HEADERS_H */
+#endif /* _SOCKET_HEADERS_H */
 
-#ifndef	_STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
-
-/****************************************************************************/
-
-#if !defined(__amigaos4__)
-#include <exec/execbase.h>
-
-/* The order here is important. */
-static const struct { UWORD flags; char *name; } isanames[] =
-{
-	/* Apparently there is a 060 card sans FPU, but how to detect it without a LineF exception?
-	   Perhaps I should see if I can find my old MC68060 manual. */
-	{AFF_68060|AFF_68060,	"68060+fpu060 "},
-	{AFF_68060|AFF_68060,	"68060+fpu "},
-	{AFF_68040|AFF_FPU40,	"68040+fpu040 "},
-	{AFF_68040|AFF_68882,	"68040+fpu "},
-	{AFF_68040|AFF_68881,	"68040+fpu "},
-	{AFF_68040,				"68040 "},
-	{AFF_68030|AFF_68882,	"68030+fpu "},
-	{AFF_68030|AFF_68881,	"68030+fpu "},
-	{AFF_68020|AFF_68882,	"68020+fpu "},
-	{AFF_68020|AFF_68881,	"68020+fpu "},
-	{AFF_68030,				"68030 "},
-	{AFF_68020,				"68020 "},
-	{AFF_68010,				"68010 "},
-};
-#endif /* !__amigaos4__ */
-
-/****************************************************************************/
-
-long
-sysinfo(int cmd,char *buf,long buflen)
+long 
+sysinfo(int cmd, char *buf, long buflen)
 {
 	struct utsname info;
 	long ret = -1;
-	
+
 	ENTER();
-	
-	if(buf == NULL)
+
+	if (buf == NULL)
 	{
 		__set_errno(EFAULT);
 		goto out;
 	}
-	
+
 	uname(&info); /* Most of the keys use this. */
 
-	switch(cmd)
+	switch (cmd)
 	{
-		case SI_SYSNAME:
+	case SI_SYSNAME:
+		ret = strlcpy(buf, info.sysname, buflen);
+		break;
+	case SI_HOSTNAME:
+		ret = strlcpy(buf, info.nodename, buflen);
+		break;
+	case SI_SET_HOSTNAME:
+		__set_errno(EPERM);
+		goto out;
+	case SI_RELEASE:
+		ret = strlcpy(buf, info.release, buflen);
+		break;
+	case SI_VERSION:
+		ret = strlcpy(buf, info.version, buflen);
+		break;
+	case SI_MACHINE:
+		ret = strlcpy(buf, "amiga", buflen);
+		break;
+	case SI_ARCHITECTURE:
+		ret = strlcpy(buf, info.machine, buflen);
+		break;
+	case SI_ISALIST:
+	{
+		/* Solaris uses "ppc" as the isa name, but gcc uses powerpc. "ppc+altivec" follows the
+				convention of specifying isa+ext from Solaris on SPARC machines. This way of implementing
+				SI_ISALIST seemed like a good idea at the time. */
+		const char *s;
+		uint32 vecu;
 
-			ret = strlcpy(buf,info.sysname,buflen);
-			break;
-
-		case SI_HOSTNAME:
-
-			ret = strlcpy(buf,info.nodename,buflen);
-			break;
-
-		case SI_SET_HOSTNAME:
-
-			__set_errno(EPERM);
-			goto out;
-
-		case SI_RELEASE:
-
-			ret = strlcpy(buf,info.release,buflen);
-			break;
-
-		case SI_VERSION:
-
-			ret = strlcpy(buf,info.version,buflen);
-			break;
-
-		case SI_MACHINE:
-
-			ret = strlcpy(buf,"amiga",buflen);
-			break;
-
-		case SI_ARCHITECTURE:
-
-			ret = strlcpy(buf,info.machine,buflen);
-			break;
-
-		case SI_ISALIST:
-
-			#if defined(__amigaos4__)
-			{
-				/* Solaris uses "ppc" as the isa name, but gcc uses powerpc. "ppc+altivec" follows the
-				   convention of specifying isa+ext from Solaris on SPARC machines. This way of implementing
-				   SI_ISALIST seemed like a good idea at the time. */
-				const char * s;
-				uint32 vecu;
-
-				GetCPUInfoTags(GCIT_VectorUnit,&vecu,TAG_DONE);
-
-				if(vecu == VECTORTYPE_ALTIVEC || vecu == 2 /* VECTORTYPE_VMX == 2 */) /* AltiVec and VMX are the same. */
-					s = "ppc+altivec ppc common";
-				else
-					s = "ppc common";
-
-				ret = strlcpy(buf,s,buflen);
-			}
-			#else
-			{
-				UWORD attention_flags = ((struct ExecBase *)SysBase)->AttnFlags; 
-				char * last_added = "";
-				size_t i;
-
-				ret = 0;
-
-				strlcpy(buf,"",buflen);
-
-				for(i = 0 ; i < NUM_ENTRIES(isanames) ; i++)
-				{
-					if((attention_flags & isanames[i].flags) == isanames[i].flags)
-					{
-						if(strcmp(last_added,isanames[i].name) != SAME)
-						{
-							ret += strlcat(buf,isanames[i].name,buflen);
-
-							last_added = isanames[i].name;
-						}
-					}
-				}
-
-				ret += strlcat(buf,"68000",buflen);
-			}
-			#endif
-
-			break;
-
-		case SI_PLATFORM:	/* TODO: Figure out a good way of checking this. */
-
-			ret = strlcpy(buf,"Amiga,Unknown",buflen);
-			break;
-
-		case SI_HW_PROVIDER:	/* TODO: Figure out a good way of checking this. */
-
-			ret = strlcpy(buf,"Unknown",buflen);
-			break;
-
-		case SI_HW_SERIAL:
-
-			#if defined(SOCKET_SUPPORT)
-			{
-				ret = snprintf(buf,buflen,"%lu",gethostid());
-			}
-			#else
-			{
-				ret = strlcpy(buf,"0",buflen);
-			}
-			#endif
-
-			break;
-
-		default:
-
-			__set_errno(EINVAL);
-			goto out;
+		GetCPUInfoTags(GCIT_VectorUnit, &vecu, TAG_DONE);
+		if (vecu == VECTORTYPE_ALTIVEC || vecu == 2 /* VECTORTYPE_VMX == 2 */) /* AltiVec and VMX are the same. */
+			s = "ppc+altivec ppc common";
+		else
+			s = "ppc common";
+		ret = strlcpy(buf, s, buflen);
 	}
-	
- out:
-	
+	break;
+	case SI_PLATFORM: /* TODO: Figure out a good way of checking this. */
+		ret = strlcpy(buf, "Amiga,Unknown", buflen);
+		break;
+	case SI_HW_PROVIDER: /* TODO: Figure out a good way of checking this. */
+		ret = strlcpy(buf, "Unknown", buflen);
+		break;
+	case SI_HW_SERIAL:
+		ret = snprintf(buf, buflen, "%lu", gethostid());
+		break;
+	default:
+		__set_errno(EINVAL);
+		goto out;
+	}
+
+out:
+
 	RETURN(ret);
-	return(ret);
+	return (ret);
 }

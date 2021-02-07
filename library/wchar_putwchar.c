@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_putwchar.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_putwchar.c,v 1.4 2021-02-04 19:42:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -40,6 +40,5 @@
 wint_t
 putwchar(wchar_t c)
 {
-	/* ZZZ unimplemented */
-	return(0);
+	return fputwc(c, stdout);
 }

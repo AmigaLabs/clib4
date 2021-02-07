@@ -106,67 +106,9 @@ call_main(void)
 
 	struct ElfIFace *IElf = __IElf;
 
-	/* Initialize global structure */
-	__global_clib2 = (struct _clib2 *)AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+	__global_clib2 = InitGlobal();
 	if (__global_clib2 == NULL)
-	{
 		goto out;
-	}
-	else
-	{
-		struct TimerIFace *ITimer = __ITimer;
-		uint32_t uid, gid;
-		BPTR segment_list;
-
-		/* Get the current task pointer */
-		__global_clib2->self = (struct Process *)FindTask(0);
-
-		/* Set system time for rusage */
-		GetSysTime(&__global_clib2->clock);
-
-		/* Check is SYSV library is available in the system */
-		__global_clib2->haveShm = FALSE;
-		__SysVBase = OpenLibrary("sysvipc.library", 53);
-		if (__SysVBase != NULL)
-		{
-			__ISysVIPC = (struct SYSVIFace *)GetInterface(__SysVBase, "main", 1, NULL);
-			if (__ISysVIPC != NULL)
-			{
-				__global_clib2->haveShm = TRUE;
-			}
-			else
-			{
-				CloseLibrary(__SysVBase);
-				__SysVBase = NULL;
-			}
-		}
-
-		/* 
-		 * Next: Get Elf handle associated with the currently running process. 
-		 * __ElfBase is opened in stdlib_shared_objs.c that is called before the
-		 * call_main()
-		 */
-
-		if (__ElfBase != NULL)
-		{
-			segment_list = GetProcSegList(__global_clib2->self, GPSLF_RUN);
-			if (segment_list != ZERO)
-			{
-				Elf32_Handle handle = NULL;
-
-				if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1)
-				{
-					if (handle != NULL)
-					{
-						if (__global_clib2 != NULL)
-						{
-							__global_clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, TAG_DONE);
-						}
-					}
-				}
-			}
-		}
-	}
 
 	SHOWMSG("done.");
 
@@ -258,16 +200,7 @@ out:
 	IElf = __IElf;
 
 	/* Free global reent structure */
-	if (__global_clib2)
-	{
-		if (__global_clib2->__dl_elf_handle != NULL)
-		{
-			CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
-			__global_clib2->__dl_elf_handle = NULL;
-		}
-
-		FreeVec(__global_clib2);
-	}
+	FiniGlobal();
 
 	SHOWMSG("invoking the destructors");
 
@@ -326,18 +259,6 @@ out:
 STATIC VOID
 close_libraries(VOID)
 {
-	if (__ISysVIPC != NULL)
-	{
-		DropInterface((struct Interface *)__ISysVIPC);
-		__ISysVIPC = NULL;
-	}
-
-	if (__SysVBase != NULL)
-	{
-		CloseLibrary(__SysVBase);
-		__SysVBase = NULL;
-	}
-
 	if (__IUtility != NULL)
 	{
 		DropInterface((struct Interface *)__IUtility);
@@ -385,18 +306,7 @@ STATIC VOID
 
 	_clib_exit();
 
-	/* Free global reent structure */
-	if (__global_clib2)
-	{
-		if (__global_clib2->__dl_elf_handle != NULL)
-		{
-			CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
-			__global_clib2->__dl_elf_handle = NULL;
-		}
-
-		FreeVec(__global_clib2);
-		Printf("__global_clib2 destroyed\n");
-	}
+	FiniGlobal();
 
 	close_libraries();
 }

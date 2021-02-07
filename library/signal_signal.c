@@ -39,7 +39,7 @@
 
 void (*signal(int sig, void (* handler)(int)))(int)
 {
-	int table_entry = sig - SIGABRT;
+	int table_entry = sig - SIGHUP;
 	void (*result)(int) = SIG_ERR;
 
 	ENTER();
@@ -47,7 +47,7 @@ void (*signal(int sig, void (* handler)(int)))(int)
 	SHOWVALUE(sig);
 	SHOWPOINTER(handler);
 
-	if(sig < SIGABRT || sig > SIGTERM || handler == SIG_ERR)
+	if(sig < SIGHUP || sig > NSIG || handler == SIG_ERR)
 	{
 		SHOWMSG("unsupported signal");
 

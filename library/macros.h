@@ -41,6 +41,9 @@
 #endif /* DOS_DOS_H */
 
 /****************************************************************************/
+#ifdef ERROR
+#undef ERROR
+#endif
 
 #define BUSY ((struct IORequest *)NULL)
 #define CANNOT !
@@ -52,6 +55,7 @@
 #define SAME (0)
 #define SEEK_ERROR (-1)
 #define CHANGE_FILE_ERROR (0)
+#define GETPOSITION_ERROR (-1LL)
 #define ERROR (-1)
 
 /****************************************************************************/
@@ -182,6 +186,14 @@
 #define NOCOMMON /* NOCOMMON */
 #endif /* __GNUC__ */
 #endif /* NOCOMMON */
+
+#ifndef HIDDEN
+#ifdef __GNUC__
+# define HIDDEN __attribute__ ((__visibility__ ("hidden")))
+#else
+# define HIDDEN
+#endif /* __GNUC__ */
+#endif /* HIDDEN */
 
 /****************************************************************************/
 

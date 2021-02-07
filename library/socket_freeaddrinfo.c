@@ -31,17 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
-void freeaddrinfo(struct addrinfo *ai)
+void 
+freeaddrinfo(struct addrinfo *ai)
 {
 	while (ai)
 	{
@@ -55,5 +50,3 @@ void freeaddrinfo(struct addrinfo *ai)
 		free(cur);
 	}
 }
-
-#endif

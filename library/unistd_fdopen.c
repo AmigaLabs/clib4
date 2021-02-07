@@ -42,15 +42,13 @@
 #endif /* _UNISTD_HEADERS_H */
 
 /****************************************************************************/
-
 /* The following is not part of the ISO 'C' (1994) standard. */
-
 /****************************************************************************/
 
 FILE *
-fdopen(int file_descriptor, const char * type)
+fdopen(int file_descriptor, const char *type)
 {
-	FILE * result = NULL;
+	FILE *result = NULL;
 	int slot_number;
 
 	ENTER();
@@ -60,14 +58,14 @@ fdopen(int file_descriptor, const char * type)
 
 	assert(type != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	__stdio_lock();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(type == NULL)
+		if (type == NULL)
 		{
 			SHOWMSG("invalid type parameter");
 
@@ -75,26 +73,26 @@ fdopen(int file_descriptor, const char * type)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	slot_number = __find_vacant_iob_entry();
-	if(slot_number < 0)
+	if (slot_number < 0)
 	{
-		if(__grow_iob_table(0) < 0)
+		if (__grow_iob_table(0) < 0)
 		{
 			SHOWMSG("not enough memory for a file buffer slot");
 			goto out;
 		}
 
 		slot_number = __find_vacant_iob_entry();
-		assert( slot_number >= 0 );
+		assert(slot_number >= 0);
 	}
 
-	assert( file_descriptor >= 0 && file_descriptor < __num_fd );
-	assert( __fd[file_descriptor] != NULL );
-	assert( FLAG_IS_SET(__fd[file_descriptor]->fd_Flags,FDF_IN_USE) );
+	assert(file_descriptor >= 0 && file_descriptor < __num_fd);
+	assert(__fd[file_descriptor] != NULL);
+	assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-	if(__open_iob(NULL, type, file_descriptor, slot_number) < 0)
+	if (__open_iob(NULL, type, file_descriptor, slot_number) < 0)
 	{
 		SHOWMSG("couldn't open the file for the file descriptor");
 		goto out;
@@ -102,10 +100,10 @@ fdopen(int file_descriptor, const char * type)
 
 	result = (FILE *)__iob[slot_number];
 
- out:
+out:
 
 	__stdio_unlock();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

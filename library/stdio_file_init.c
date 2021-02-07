@@ -152,7 +152,7 @@ wb_file_init(void)
 		STRPTR tool_name;
 		size_t len;
 
-		tool_name = FilePart(__WBenchMsg->sm_ArgList[0].wa_Name);
+		tool_name = (STRPTR)FilePart(__WBenchMsg->sm_ArgList[0].wa_Name);
 
 		len = strlen(console_prefix) + strlen(tool_name) + strlen(console_suffix);
 

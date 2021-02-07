@@ -31,15 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
-
-/****************************************************************************/
 
 static inline bool
 validate_family(int family)
@@ -219,5 +213,3 @@ int getaddrinfo(const char *nodename,
 
   return 0;
 }
-
-#endif

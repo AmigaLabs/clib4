@@ -114,6 +114,11 @@ extern int fchown(int file_descriptor, uid_t owner, gid_t group);
 extern int lchown(const char * path_name, uid_t owner, gid_t group);
 extern int truncate(const char * path_name, off_t length);
 extern int ftruncate(int file_descriptor, off_t length);
+#ifdef __USE_LARGEFILE64
+extern int ftruncate64(int file_descriptor, _off64_t length);
+extern int truncate64(const char *path_name, _off64_t length);
+#endif
+
 extern int link(const char * existing_path,const char * new_path);
 extern int unlink(const char * path_name);
 extern int symlink(const char * actual_path, const char * symbolic_path);
@@ -124,6 +129,7 @@ extern unsigned int sleep(unsigned int seconds);
 extern int usleep(useconds_t microseconds);
 extern int getopt(int argc, char * const argv[], const char *opts);
 extern pid_t getpid(void);
+extern pid_t getppid(void);
 extern char *realpath(const char *file_name, char *resolved_name);
 extern int fsync(int file_descriptor);
 extern int fdatasync(int file_descriptor);
@@ -220,10 +226,13 @@ extern int setuid(uid_t uid);
 
 /* The following is for use with sysconf(). Only the implemented one */
 
+#define _SC_ARG_MAX                 0
 #define _SC_CLK_TCK                 2
 #define _SC_OPEN_MAX                4
 #define _SC_PAGESIZE                8
+#define _SC_NPROCESSORS_CONF        9 // Used on cygwin but useful to get number of processors 
 #define _SC_TZNAME_MAX             20
+#define _SC_HOST_NAME_MAX          65
 
 /****************************************************************************/
 

@@ -41,26 +41,19 @@
 #ifndef _STDLIB_H
 #define _STDLIB_H
 
-/****************************************************************************/
+#include <features.h>
 
-#ifndef _STDDEF_H
 #include <stddef.h>
-#endif /* _STDDEF_H */
+#include <wchar.h>
 
 #ifndef _SYS_CLIB2_STDC_H
 #include <sys/clib2_stdc.h>
 #endif /* _SYS_CLIB2_STDC_H */
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /* Maximum number of bytes in a multibyte character */
-#define MB_CUR_MAX 2
+extern int MB_CUR_MAX;
 
 /****************************************************************************/
 
@@ -83,8 +76,10 @@ typedef struct { long quot; long rem; } ldiv_t;
 
 extern int mblen(const char *s, size_t n);
 extern int mbtowc(wchar_t *pwc, const char *s, size_t n);
+extern int _mbtowc(wchar_t *pwc, const char *s, size_t n, _mbstate_t *st);
+
 extern int wctomb(char *s, wchar_t wchar);
-extern size_t mbstowcs(wchar_t *pwcs, const char *s, size_t n);
+extern size_t mbstowcs(wchar_t *ws, const char *s, size_t wn);
 extern size_t wcstombs(char *s, const wchar_t *pwcs, size_t n);
 
 /****************************************************************************/
@@ -424,11 +419,6 @@ extern lldiv_t lldiv(long long n,long long d);
 
 /****************************************************************************/
 
-extern int mbtowc(wchar_t *restrict pwc, const char *restrict s, size_t n);
-extern int wctomb(char *s, wchar_t wchar);
-
-/****************************************************************************/
-
 #endif /* __GNUC__ || (__STDC_VERSION__ && __STDC_VERSION__ >= 199901L) */
 
 /****************************************************************************/
@@ -439,12 +429,6 @@ extern float strtof(const char *str, char ** ptr);
 
 extern void _Exit(int status);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _STDLIB_H */

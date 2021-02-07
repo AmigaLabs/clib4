@@ -31,16 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-static int msnprintf(char *str, size_t str_m, const char *fmt, /*args*/...)
+static int 
+msnprintf(char *str, size_t str_m, const char *fmt, /*args*/...)
 {
     va_list ap;
     int str_l;
@@ -53,7 +49,8 @@ static int msnprintf(char *str, size_t str_m, const char *fmt, /*args*/...)
     return str_l;
 }
 
-int socketpair(int domain, int type, int protocol, int socks[2])
+int 
+socketpair(int domain, int type, int protocol, int socks[2])
 {
     union
     {
@@ -119,5 +116,3 @@ error:
     close(socks[1]);
     return -1;
 }
-
-#endif

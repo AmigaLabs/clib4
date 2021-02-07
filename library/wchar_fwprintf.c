@@ -37,9 +37,13 @@
 
 /****************************************************************************/
 
-int
-fwprintf(FILE *stream,const wchar_t *format,...)
+int 
+fwprintf(FILE *f, const wchar_t *fmt, ...)
 {
-	/* ZZZ unimplemented */
-	return(0);
+	int ret;
+	va_list ap;
+	va_start(ap, fmt);
+	ret = vfwprintf(f, fmt, ap);
+	va_end(ap);
+	return ret;
 }

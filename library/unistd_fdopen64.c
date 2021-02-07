@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_wctomb.c,v 1.3 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: unistd_fdopen64.c,v 1.0 2021-02-05 13:28:00 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,15 +31,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#ifndef _STDLIB_NULL_POINTER_CHECK_H
+#include "stdlib_null_pointer_check.h"
+#endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
 /****************************************************************************/
 
-int
-wctomb(char *s, wchar_t wchar)
-{
-	/* ZZZ unimplemented */
-	return(-1);
+#ifndef _UNISTD_HEADERS_H
+#include "unistd_headers.h"
+#endif /* _UNISTD_HEADERS_H */
+
+FILE *
+fdopen64(int file_descriptor, const char *type) {
+    return fdopen(file_descriptor, type);
 }

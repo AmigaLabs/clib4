@@ -35,11 +35,29 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
+#include "wchar_wprintf_core.h"
 
 int
-vswprintf(wchar_t *s, size_t maxlen, const wchar_t *format, va_list arg)
+vswprintf(wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, va_list ap)
 {
-	/* ZZZ unimplemented */
-	return(0);
+    va_list ap2;
+    int ret, nl_type[__ARGMAX] = {0};
+    union arg nl_arg[__ARGMAX];
+    FOut _out[1];
+
+    va_copy(ap2, ap);
+
+    if ((!s) || (!l))
+    {
+        ret = wprintf_core(0, fmt, &ap2, nl_arg, nl_type);
+        va_end(ap2);
+        return ret;
+    }
+    out_init_buffer(_out, s, l);
+    ret = wprintf_core(_out, fmt, &ap2, nl_arg, nl_type);
+    va_end(ap2);
+
+    if (out_overflow(_out))
+        return -1;
+    return ret;
 }

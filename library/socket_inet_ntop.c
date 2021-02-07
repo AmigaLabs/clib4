@@ -32,17 +32,9 @@
  * SOFTWARE.
  */
 
-#if defined(SOCKET_SUPPORT)
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
-/*
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-*/
 
 #define NS_IN6ADDRSZ 16
 #define NS_INT16SZ 2
@@ -108,7 +100,7 @@ inet_ntop4(const unsigned char *src, char *dst, socklen_t size)
   if (len < 0)
     return NULL;
 
-  if ((socklen_t) len > size)
+  if ((socklen_t)len > size)
   {
     __set_errno(ENOSPC);
     return NULL;
@@ -229,5 +221,3 @@ inet_ntop6(const unsigned char *src, char *dst, socklen_t size)
 
   return strcpy(dst, tmp);
 }
-
-#endif

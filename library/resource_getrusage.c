@@ -44,8 +44,6 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
 #include <sys/resource.h>
 
 int getrusage(int who, struct rusage *rusage)
@@ -55,13 +53,10 @@ int getrusage(int who, struct rusage *rusage)
         return -1;
     }
 
-    struct TimeVal clock;
+    long clock[2];
     int status = 0;
-#if defined(__amigaos4__)
     struct TimerIFace *ITimer = __ITimer;
-#else
-    struct Library *TimerBase = __TimerBase;
-#endif /* __amigaos4__ */
+
     if (__global_clib2 == NULL)  {
         __set_errno(EINVAL);
         return -1;
@@ -71,17 +66,17 @@ int getrusage(int who, struct rusage *rusage)
     {
     case RUSAGE_SELF:
     {
-        GetSysTime(&clock);
-        clock.Seconds -= __global_clib2->clock.Seconds;
-        if (__global_clib2->clock.Microseconds < clock.Microseconds) {
-            clock.Microseconds += 1000000;
-            clock.Microseconds -= __global_clib2->clock.Microseconds;
-            clock.Seconds--;
+        GetSysTime((struct TimeVal *)clock);
+        clock[0] -= __global_clib2->clock.Seconds;
+        clock[1] -= __global_clib2->clock.Microseconds;
+        if (clock[1] < 0) {
+            clock[1] += 1000000;
+            clock[0]--;
         }
 
         memcpy(rusage, &__global_clib2->ru, sizeof(struct rusage));
-        rusage->ru_utime.tv_sec = clock.Seconds;
-        rusage->ru_utime.tv_usec = clock.Microseconds;
+        rusage->ru_utime.tv_sec = clock[0];
+        rusage->ru_utime.tv_usec = clock[1];
     }
     break;
 

@@ -42,15 +42,7 @@
 #endif /* _DIRENT_HEADERS_H */
 
 /****************************************************************************/
-
-#ifndef _STDLIB_MEMORY_H
-#include "stdlib_memory.h"
-#endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
-
 /* The following is not part of the ISO 'C' (1994) standard. */
-
 /****************************************************************************/
 
 #if defined(UNIX_PATH_SEMANTICS)
@@ -253,6 +245,7 @@ DIR *opendir(const char *path_name)
 			__set_errno(__translate_io_error_to_errno(IoErr()));
 			goto out;
 		}
+		FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 	}
 
 	SHOWMSG("OK, done");
@@ -273,6 +266,8 @@ out:
 	if (dh != NULL)
 	{
 		SHOWMSG("ouch. cleaning up");
+		if (dh->dh_FileInfo != NULL)
+			FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 
 #if defined(UNIX_PATH_SEMANTICS)
 		{

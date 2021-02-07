@@ -35,20 +35,11 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
-int 
-getsockname(int sockfd, struct sockaddr *name, socklen_t *namelen)
+int getsockname(int sockfd, struct sockaddr *name, socklen_t *namelen)
 {
 	struct fd *fd;
 	int result = ERROR;
@@ -95,7 +86,3 @@ out:
 	RETURN(result);
 	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

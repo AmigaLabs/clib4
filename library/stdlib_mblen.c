@@ -40,6 +40,5 @@
 int
 mblen(const char *s, size_t n)
 {
-	/* ZZZ unimplemented */
-	return(-1);
+	return mbtowc(0, s, n);	
 }

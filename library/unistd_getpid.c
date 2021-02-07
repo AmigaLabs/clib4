@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_getpid.c,v 1.4 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: unistd_getpid.c,v 1.5 2021-02-07 19:24:11 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,51 +35,22 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-pid_t
+pid_t 
 getpid(void)
 {
 	pid_t result;
 
 	ENTER();
 
-	#if 0
-	{
-		struct Process * this_process;
-		ULONG max_cli_number,i;
+	struct Task *t = FindTask(NULL);
 
-		this_process = (struct Process *)FindTask(NULL);
+	if (t->tc_Node.ln_Type != NT_PROCESS)
+	{
 		result = 0;
-
-		Forbid();
-
-		max_cli_number = MaxCli();
-
-		for(i = 1 ; i <= max_cli_number ; i++)
-		{
-			if(FindCliProc(i) == this_process)
-			{
-				result = (pid_t)i;
-				break;
-			}
-		}
-
-		Permit();
 	}
-	#else
-	{
-		result = (pid_t)FindTask(NULL);
-	}
-	#endif
 
-	/* ZZZ what should we do if are about to return zero? */
-	assert( result != 0 );
+	result = ((struct Process *)t)->pr_ProcessID;
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

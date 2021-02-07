@@ -42,8 +42,7 @@
 
 /****************************************************************************/
 
-int
-__drop_iob_read_buffer(struct iob * file)
+int __drop_iob_read_buffer(struct iob *file)
 {
 	int result = OK;
 
@@ -51,71 +50,66 @@ __drop_iob_read_buffer(struct iob * file)
 
 	SHOWPOINTER(file);
 
-	assert( file != NULL );
+	assert(file != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+	assert(file->iob_BufferSize > 0);
 
-	if(FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE))
+	if (FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE))
 	{
-		CLEAR_FLAG(file->iob_Flags,IOBF_EOF_REACHED);
+		CLEAR_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
 
-		if(__iob_read_buffer_is_valid(file))
+		if (__iob_read_buffer_is_valid(file))
 		{
 			LONG num_unread_bytes;
 
 			num_unread_bytes = __iob_num_unread_bytes(file);
 
-			D(("%ld bytes are to be dropped",num_unread_bytes));
+			D(("%ld bytes are to be dropped", num_unread_bytes));
 
-			if(num_unread_bytes > 0)
+			if (num_unread_bytes > 0)
 			{
 				struct file_action_message fam;
 				LONG position;
 
 				SHOWMSG("calling the action function");
 
-				fam.fam_Action	= file_action_seek;
-				fam.fam_Offset	= -num_unread_bytes;
-				fam.fam_Mode	= SEEK_CUR;
+				fam.fam_Action = file_action_seek;
+				fam.fam_Offset = -num_unread_bytes;
+				fam.fam_Mode = SEEK_CUR;
 
-				assert( file->iob_Action != NULL );
+				assert(file->iob_Action != NULL);
 
-				/* Note that a return value of -1 (= SEEK_ERROR) may be a
-				   valid file position in files larger than 2 GBytes. Just
-				   to be sure, we therefore also check the secondary error
-				   to verify that what could be a file position is really
-				   an error indication. */
-				position = (*file->iob_Action)(file,&fam);
-				if(position == SEEK_ERROR && fam.fam_Error != OK)
+				position = (*file->iob_Action)(file, &fam);
+				if (fam.fam_Error != OK)
 				{
 					SHOWMSG("that didn't work");
 
 					result = ERROR;
 
-					SET_FLAG(file->iob_Flags,IOBF_ERROR);
+					SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 					__set_errno(fam.fam_Error);
 
 					goto out;
 				}
 
-			 	/* If this is a valid file position, clear 'errno' so that
+				/* If this is a valid file position, clear 'errno' so that
 				   it cannot be mistaken for an error. */
-				if(position < 0)
+				if (position < 0)
 					__set_errno(OK);
 			}
 
-			file->iob_BufferReadBytes	= 0;
-			file->iob_BufferPosition	= 0;
+			file->iob_BufferReadBytes = 0;
+			file->iob_BufferPosition = 0;
 		}
 	}
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

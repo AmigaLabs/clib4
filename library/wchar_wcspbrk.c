@@ -35,11 +35,41 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
+#include "wchar_wprintf_core.h"
 
 wchar_t *
 wcspbrk(const wchar_t *s, const wchar_t *set)
 {
-	/* ZZZ unimplemented */
-	return(0);
+#ifdef LIBWCHAR
+	size_t n = 0;
+	for (;;)
+	{
+		wchar_t wc = s[n];
+		if (!wc)
+			return NULL;
+		if (__wc_indelim(wc, set))
+			return (wchar_t *)&s[n];
+		n++;
+	}
+#else
+	const wchar_t *p;
+	const wchar_t *q;
+
+	p = s;
+	while (*p)
+	{
+		q = set;
+		while (*q)
+		{
+			if (*p == *q)
+			{
+				/* LINTED interface specification */
+				return (wchar_t *)p;
+			}
+			q++;
+		}
+		p++;
+	}
+	return NULL;
+#endif
 }

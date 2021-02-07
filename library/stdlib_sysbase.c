@@ -43,5 +43,5 @@
 
 /****************************************************************************/
 
-struct ExecBase * NOCOMMON SysBase;
-struct ExecIFace * NOCOMMON IExec;
+struct ExecBase  NOCOMMON *SysBase;
+struct ExecIFace NOCOMMON HIDDEN *IExec;

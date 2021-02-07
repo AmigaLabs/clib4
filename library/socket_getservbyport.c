@@ -35,31 +35,23 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
-#if defined(SOCKET_SUPPORT)
-
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
 struct servent *
 getservbyport(int port, const char *proto)
 {
-	struct servent * result = NULL;
+	struct servent *result = NULL;
 
 	ENTER();
 
 	assert(proto != NULL);
 	assert(__SocketBase != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(proto == NULL)
+		if (proto == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -67,21 +59,17 @@ getservbyport(int port, const char *proto)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	PROFILE_OFF();
-	result = __getservbyport(port,(char *)proto);
+	result = __getservbyport(port, (char *)proto);
 	PROFILE_ON();
 
- out:
+out:
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* SOCKET_SUPPORT */

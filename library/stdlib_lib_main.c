@@ -187,7 +187,7 @@ __lib_exit(VOID)
 
 BOOL __lib_init(struct Library *sys_base)
 {
-	int result = FALSE;
+	volatile int result = FALSE;
 
 	ENTER();
 

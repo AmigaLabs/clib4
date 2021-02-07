@@ -35,19 +35,13 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int ftruncate(int file_descriptor, off_t length)
 {
 	struct ExamineData *fib = NULL;
 	int result = ERROR;
 	struct fd *fd = NULL;
 	off_t current_file_size;
-	LONG initial_position = 0;
+	off_t initial_position = 0;
 	BOOL initial_position_valid = FALSE;
 
 	ENTER();
@@ -116,7 +110,7 @@ int ftruncate(int file_descriptor, off_t length)
 	}
 
 	current_file_size = (off_t)fib->FileSize;
-	initial_position = GetFilePosition(fd->fd_File);
+	initial_position = (off_t)GetFilePosition(fd->fd_File);
 
 	if (ChangeFileSize(fd->fd_File, length, OFFSET_BEGINNING) == CHANGE_FILE_ERROR || IoErr() != OK)
 	{

@@ -59,7 +59,7 @@ LOG_COMMAND :=
 WARNINGS := \
 	-Wall -W -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-unused-value \
-	-Wno-deprecated-declarations -Wno-unused-label \
+	-Wno-deprecated-declarations -Wno-unused-label -Wno-sign-compare \
 
 #	-Wconversion -Wshadow -Wbad-function-cast
 
@@ -71,7 +71,7 @@ OPTIMIZE   := -DNDEBUG -O3 -fno-inline
 DEBUG     := -ggdb
 #MEMDEBUG  := -D__USE_MEM_TREES -D__MEM_DEBUG
 
-CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DSOCKET_SUPPORT -DUNIX_PATH_SEMANTICS
+CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DPPC_FLOATING_POINT_SUPPORT -DUNIX_PATH_SEMANTICS
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
 LARGEDATA  := -msdata=data
@@ -97,8 +97,6 @@ include libamiga.gmk
 include libprofile.gmk
 
 all-targets: \
-	lib/crt0.o \
-	lib/baserel/crt0.o \
 	lib/crtbegin.o \
 	lib/shcrtbegin.o \
 	lib/baserel/crtbegin.o \
@@ -107,8 +105,6 @@ all-targets: \
 	lib/shcrtend.o \
 	lib/baserel/crtend.o \
 	lib/baserel/shcrtend.o \
-	lib.threadsafe/crt0.o \
-	lib.threadsafe/baserel/crt0.o \
 	lib.threadsafe/crtbegin.o \
 	lib.threadsafe/shcrtbegin.o \
 	lib.threadsafe/baserel/crtbegin.o \
@@ -135,23 +131,11 @@ clean:
 version:
 	$(COPY) c.lib_rev.rev amiga.lib_rev.rev
 	$(COPY) c.lib_rev.rev debug.lib_rev.rev
-	$(COPY) c.lib_rev.rev m.lib_rev.rev
-	$(COPY) c.lib_rev.rev net.lib_rev.rev
-	$(COPY) c.lib_rev.rev unix.lib_rev.rev
 	$(COPY) c.lib_rev.rev profile.lib_rev.rev
 	bumprev 1 amiga.lib
 	bumprev 1 c.lib
 	bumprev 1 debug.lib
-	bumprev 1 m.lib
-	bumprev 1 net.lib
-	bumprev 1 unix.lib
 	bumprev 1 profile.lib
-
-##############################################################################
-
-# Tag all files with a certain version number
-cvs-tag:
-	cvs -q tag V1_`cat c.lib_rev.rev`
 
 ##############################################################################
 

@@ -72,12 +72,8 @@ __BEGIN_DECLS
 
 typedef _CLOCKID_T_ clockid_t;
 
-/****************************************************************************/
-
 typedef unsigned long clock_t;
 typedef unsigned long time_t;
-
-/****************************************************************************/
 
 struct tm
 {
