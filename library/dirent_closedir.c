@@ -201,11 +201,6 @@ int closedir(DIR *directory_pointer)
 		dh->dh_Context = NULL;
 	}
 
-	if (dh->dh_FileInfo != NULL) {
-		FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
-		dh->dh_FileInfo = NULL;
-	}
-
 	UnLock(dh->dh_DirLock);
 	PROFILE_ON();
 

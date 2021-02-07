@@ -208,12 +208,12 @@ readdir(DIR *directory_pointer)
 
 		if (result == NULL)
 		{
-			if (dh->dh_Context) {
+			if (dh->dh_Context)
+			{
 				dh->dh_FileInfo = ExamineDir(dh->dh_Context);
 				if (dh->dh_FileInfo != NULL)
 				{
 					dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo->ObjectID;
-					assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(dh->dh_FileInfo.fib_FileName));
 
 					strcpy(dh->dh_DirectoryEntry.d_name, dh->dh_FileInfo->Name);
 					dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
@@ -233,7 +233,7 @@ readdir(DIR *directory_pointer)
 					}
 
 					result = &dh->dh_DirectoryEntry;
-
+					/* Don't free dh_FileInfo. ReleaseDirContext will do all the work */
 				}
 				else
 				{
@@ -248,7 +248,8 @@ readdir(DIR *directory_pointer)
 					SHOWMSG("that was the end of the line");
 				}
 			}
-			else {
+			else
+			{
 				__set_errno(__translate_io_error_to_errno(IoErr()));
 				goto out;
 			}

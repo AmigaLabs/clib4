@@ -399,6 +399,7 @@ C_LIB := \
 	time_time.o \
 	time_tzset.o \
 	time_weekday.o \
+	times_times.o \
 	timezone_init_exit.o \
 	uio_readv.o \
 	uio_writev.o \
@@ -421,6 +422,7 @@ C_LIB := \
 	unistd_getcwd.o \
 	unistd_getopt.o \
 	unistd_getpid.o \
+	unistd_getppid.o \
 	unistd_init_exit.o \
 	unistd_isatty.o \
 	unistd_lchown.o \

@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_getpid.c,v 1.5 2021-02-07 19:24:11 apalmate Exp $
+ * $Id: unistd_getppid.c,v 1.5 2021-02-07 19:24:11 apalmate Exp $
  *
  * :ts=4
  *
@@ -36,7 +36,7 @@
 #endif /* _UNISTD_HEADERS_H */
 
 pid_t 
-getpid(void)
+getppid(void)
 {
 	pid_t result;
 
@@ -49,7 +49,7 @@ getpid(void)
 		result = 0;
 	}
 
-	result = ((struct Process *)t)->pr_ProcessID;
+	result = ((struct Process *)t)->pr_ParentID;
 
 	RETURN(result);
 	return (result);

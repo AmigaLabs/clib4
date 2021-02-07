@@ -95,7 +95,7 @@
 #include <errno.h>
 #include <time.h>
 #include <dos.h>
-
+#include <sys/times.h>
 /****************************************************************************/
 
 #ifndef _STDLIB_LOCALEBASE_H

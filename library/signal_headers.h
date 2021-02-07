@@ -74,15 +74,11 @@
 
 /****************************************************************************/
 
-#define NUM_SIGNALS (SIGTERM - SIGABRT + 1)
-
-/****************************************************************************/
-
 typedef void (*signal_handler_t)(int sig);
 
 /****************************************************************************/
 
-extern signal_handler_t	NOCOMMON __signal_handler_table[NUM_SIGNALS];
+extern signal_handler_t	NOCOMMON __signal_handler_table[NSIG];
 
 /****************************************************************************/
 

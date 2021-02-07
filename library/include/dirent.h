@@ -41,35 +41,15 @@
 #ifndef _DIRENT_H
 #define _DIRENT_H
 
-/****************************************************************************/
+#include <features.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-#ifndef _SYS_TYPES_H
 #include <sys/types.h>
-#endif /* _SYS_TYPES_H */
-
-#ifndef _STDIO_H
+#include <sys/syslimits.h>
 #include <stdio.h>
-#endif /* _STDIO_H */
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
-
-#define NAME_MAX FILENAME_MAX
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 typedef long DIR;
-
-/****************************************************************************/
 
 /* Note: each one of these is exactly one more than the high nibble of
    the corresponding S_IF* constant defined on sys/stat.h.  If you
@@ -94,8 +74,6 @@ struct dirent {
     char           d_name[NAME_MAX+1];  /* Null-terminated filename */
 };
 
-/****************************************************************************/
-
 extern DIR * opendir(const char * path_name);
 extern struct dirent * readdir(DIR * directory_pointer);
 extern void rewinddir(DIR * directory_pointer);
@@ -103,10 +81,6 @@ extern int closedir(DIR * directory_pointer);
 extern int alphasort(const struct dirent **a, const struct dirent **b);
 /****************************************************************************/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _DIRENT_H */

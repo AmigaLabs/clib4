@@ -129,6 +129,7 @@ extern unsigned int sleep(unsigned int seconds);
 extern int usleep(useconds_t microseconds);
 extern int getopt(int argc, char * const argv[], const char *opts);
 extern pid_t getpid(void);
+extern pid_t getppid(void);
 extern char *realpath(const char *file_name, char *resolved_name);
 extern int fsync(int file_descriptor);
 extern int fdatasync(int file_descriptor);
@@ -225,10 +226,13 @@ extern int setuid(uid_t uid);
 
 /* The following is for use with sysconf(). Only the implemented one */
 
+#define _SC_ARG_MAX                 0
 #define _SC_CLK_TCK                 2
 #define _SC_OPEN_MAX                4
 #define _SC_PAGESIZE                8
+#define _SC_NPROCESSORS_CONF        9 // Used on cygwin but useful to get number of processors 
 #define _SC_TZNAME_MAX             20
+#define _SC_HOST_NAME_MAX          65
 
 /****************************************************************************/
 
