@@ -7,11 +7,7 @@
 
 ##############################################################################
 
-LIBS += \
-	lib/libdebug.a \
-	lib/baserel/libdebug.a \
-	lib.threadsafe/libdebug.a \
-	lib.threadsafe/baserel/libdebug.a
+LIBS += lib/libdebug.a
 
 ##############################################################################
 
@@ -51,39 +47,10 @@ DEBUG_LIB = \
 # Dependencies to rebuild if the library version changes
 
 obj/libdebug/debug.lib_rev.o : debug.lib_rev.c debug.lib_rev.h
-obj/baserel/libdebug/debug.lib_rev.o : debug.lib_rev.c debug.lib_rev.h
-obj.threadsafe/libdebug/debug.lib_rev.o : debug.lib_rev.c debug.lib_rev.h
-obj.threadsafe/baserel/libdebug/debug.lib_rev.o : debug.lib_rev.c debug.lib_rev.h
-
-##############################################################################
-
 
 obj/libdebug/%.o : CFLAGS += $(LARGEDATA)
 obj/libdebug/%.o : %.c
-	@$(COMPILE)
-
-obj/baserel/libdebug/%.o : CFLAGS += $(BASEREL)
-obj/baserel/libdebug/%.o : %.c
-	@$(COMPILE)
-
-obj.threadsafe/libdebug/%.o : CFLAGS += $(THREADSAFE) $(LARGEDATA)
-obj.threadsafe/libdebug/%.o : %.c
-	@$(COMPILE)
-
-obj.threadsafe/baserel/libdebug/%.o : CFLAGS += $(THREADSAFE) $(BASEREL)
-obj.threadsafe/baserel/libdebug/%.o : %.c
-	@$(COMPILE)
-
-##############################################################################
+	$(VERBOSE)$(COMPILE)
 
 lib/libdebug.a : $(addprefix obj/libdebug/,$(DEBUG_LIB))
-	@$(MAKELIB)
-
-lib/baserel/libdebug.a : $(addprefix obj/baserel/libdebug/,$(DEBUG_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/libdebug.a : $(addprefix obj.threadsafe/libdebug/,$(DEBUG_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/baserel/libdebug.a : $(addprefix obj.threadsafe/baserel/libdebug/,$(DEBUG_LIB))
-	@$(MAKELIB)
+	$(VERBOSE)$(MAKELIB)

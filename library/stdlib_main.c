@@ -92,6 +92,45 @@ extern struct ElfIFace NOCOMMON *__IElf;
 BOOL open_libraries(struct ExecIFace *iexec);
 /****************************************************************************/
 
+STATIC VOID
+close_libraries(VOID)
+{
+	if (__IUtility != NULL)
+	{
+		DropInterface((struct Interface *)__IUtility);
+		__IUtility = NULL;
+	}
+
+	if (IDOS != NULL)
+	{
+		DropInterface((struct Interface *)IDOS);
+		IDOS = NULL;
+	}
+
+	if (__UtilityBase != NULL)
+	{
+		CloseLibrary(__UtilityBase);
+		__UtilityBase = NULL;
+	}
+
+	if (DOSBase != NULL)
+	{
+		CloseLibrary(DOSBase);
+		DOSBase = NULL;
+	}
+
+	if (__IElf != NULL)
+	{
+		DropInterface((struct Interface *)__IElf);
+		__IElf = NULL;
+	}
+
+	if (__ElfBase != NULL)
+	{
+		CloseLibrary(__ElfBase);
+		__ElfBase = NULL;
+	}
+}
 
 STATIC int
 call_main(void)
@@ -148,9 +187,20 @@ call_main(void)
 		}
 	}
 #endif /* NDEBUG */
-
 	/* After all these preparations, get this show on the road... */
-	exit(main((int)__argc, (char **)__argv));
+	__exit_value = main((int)__argc, (char **)__argv);
+	
+	/* Free global reent structure */
+	FiniGlobal();
+
+	SHOWMSG("invoking the destructors");
+
+	/* Go through the destructor list */
+	_clib_exit();
+
+	//close_libraries();
+	
+	return __exit_value;
 
 out:
 
@@ -256,53 +306,10 @@ out:
 
 /****************************************************************************/
 
-STATIC VOID
-close_libraries(VOID)
-{
-	if (__IUtility != NULL)
-	{
-		DropInterface((struct Interface *)__IUtility);
-		__IUtility = NULL;
-	}
-
-	if (IDOS != NULL)
-	{
-		DropInterface((struct Interface *)IDOS);
-		IDOS = NULL;
-	}
-
-	if (__UtilityBase != NULL)
-	{
-		CloseLibrary(__UtilityBase);
-		__UtilityBase = NULL;
-	}
-
-	if (DOSBase != NULL)
-	{
-		CloseLibrary(DOSBase);
-		DOSBase = NULL;
-	}
-
-	if (__IElf != NULL)
-	{
-		DropInterface((struct Interface *)__IElf);
-		__IElf = NULL;
-	}
-
-	if (__ElfBase != NULL)
-	{
-		CloseLibrary(__ElfBase);
-		__ElfBase = NULL;
-	}
-}
-
-/****************************************************************************/
-
 STATIC VOID 
-	detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
+detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
 {
 	struct ElfIFace *IElf = __IElf;
-	Printf("detach_cleanup: %ld - %ld\n", return_code, exit_data);
 
 	_clib_exit();
 

@@ -49,25 +49,22 @@ struct ElfIFace NOCOMMON *__IElf;
 
 /****************************************************************************/
 
-void shared_obj_init(struct ExecIFace *iexec);
+void shared_obj_init(void);
 void shared_obj_exit(void);
-extern BOOL open_libraries(struct ExecIFace *iexec);
 
 static void SHLibsInit(BOOL init) {
 	struct ElfIFace *IElf = __IElf;
-	if (IElf) {
-		BPTR segment_list = GetProcSegList(NULL, GPSLF_CLI | GPSLF_SEG);
-		Elf32_Handle hSelf = (Elf32_Handle)NULL;
-		if (segment_list != ZERO)
+	Elf32_Handle hSelf = (Elf32_Handle)NULL;
+	BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+	if (segment_list != ZERO)
+	{
+		int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
+		if (ret == 1)
 		{
-			int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
-			if (ret == 1)
+			if (hSelf != NULL)
 			{
-				if (hSelf != NULL)
-				{
-					/* Trigger the constructors, etc. in the shared objects linked to this binary. */
-					InitSHLibs(hSelf, init);
-				}
+				/* Trigger the constructors, etc. in the shared objects linked to this binary. */
+				InitSHLibs(hSelf, init);
 			}
 		}
 	}
@@ -79,13 +76,7 @@ void shared_obj_exit(void)
 	SHLibsInit(FALSE);
 }
 
-void shared_obj_init(struct ExecIFace *iexec)
+void shared_obj_init()
 {
-	/* 
-	 * if IExec is null this means we are loaded as shared object file.
-	 * We need to init all stuff we need to work correctly
-	 */
-	if (open_libraries(iexec)) {
-		SHLibsInit(TRUE);
-	}
+	SHLibsInit(TRUE);
 }

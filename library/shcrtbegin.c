@@ -167,11 +167,13 @@ __shlib_call_constructors(void)
 	__global_clib2 = InitGlobal();
 	if (__global_clib2 == NULL)
 		abort();
+   Printf("__shlib_call_constructors\n");
 }
 
 void 
 __shlib_call_destructors(void)
 {
+   Printf("__shlib_call_destructors\n");
    int num_dtors, i;
    static int j;
 
