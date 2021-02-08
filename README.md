@@ -1,4 +1,4 @@
-# clib2 – An ISO 'C' (1994) compliant runtime library for AmigaOS
+# clib2 – A C runtime library for AmigaOS4
 
 [![Build Status](https://travis-ci.org/afxgroup/clib2.svg?branch=master)](https://travis-ci.org/afxgroup/clib2)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
@@ -6,7 +6,7 @@
 
 ## What is this?
 
-This is a fork of <a href="https://github.com/adtools/clib2">official clib2</a> present in adtool.
+This is a fork of <a href="https://github.com/adtools/clib2">official clib2</a> present in adtools.
 The point of this library is to make it Amiga OS4 only to maintain it easily and add all missing clib2 features that are hard to add also on classic amigas.
 Classic amigas has also ixemul that is the most complete, posix compliant, library we have. Is useless share code that most probably no one will use.
 I'm trying (yeah.. trying) to make it posix compliant and fix also all C++ problems we have with newer compilers.
@@ -21,9 +21,13 @@ The added code is most of the time tested. I've also added some test programs to
 
 ### Libraries
 
-The plain `libc.a` now contains also `libnet.a`, `libunix.a` and `libm.a`. Is useless to link against those libraries when everything can be added in `libc.a`. 
+The plain `libc.a` now contains also `libnet.a`, `libunix.a`. `libm.a` is just a stub because GCC is searching it. But ll code now is in `libc.a`. 
 Socket support and floating point support is always enabled
 Soft float version is no longer available.
+
+### Large file support
+
+Large files are now supported and tested (i've ported p7zip and tested it with a 8GB file without any problem). To use it you have to add `#define _LARGEFILE64_SOURCE` at top of your file before `<stdio.h>` 
 
 ### SYSV functions
 
@@ -47,7 +51,7 @@ All **wctype** functions should be working correctly now. We need a valid test s
 
 ### Wchar
 
-Some **wchar** functions are now implemented. There are no valid tests so use at your own risk..
+Some **wchar** functions are now implemented. There are no valid tests except little few so use at your own risk..
 
 ## Legal status
 

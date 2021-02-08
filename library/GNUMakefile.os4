@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.117 2021-01-25 11:28:07 apalmate Exp $
+# $Id: Makefile,v 1.118 2021-01-25 11:28:07 apalmate Exp $
 #
 # :ts=8
 #
@@ -21,8 +21,8 @@
 # These are for the cross compiler, with the operating system header files
 # stored in "/V/include" and the network header files in a local directory
 # called "netinclude".
+INSTALL_PREFIX = /usr/ppc-amigaos/SDK/clib2
 SDK_INCLUDE := /usr/ppc-amigaos/SDK/include
-NET_INCLUDE := netinclude
 CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
 RANLIB := ppc-amigaos-ranlib
@@ -44,7 +44,6 @@ LOG_COMMAND :=
 # LOG_COMMAND should not be enabled unless you have a shell
 # installed which supports it.
 #SDK_INCLUDE := /SDK/Include/include_h
-#NET_INCLUDE := /SDK/Include/netinclude
 #CC := distcc gcc
 #AR := ar -q
 #RANLIB := ranlib
@@ -132,10 +131,12 @@ version:
 	$(COPY) c.lib_rev.rev amiga.lib_rev.rev
 	$(COPY) c.lib_rev.rev debug.lib_rev.rev
 	$(COPY) c.lib_rev.rev profile.lib_rev.rev
-	bumprev 1 amiga.lib
-	bumprev 1 c.lib
-	bumprev 1 debug.lib
-	bumprev 1 profile.lib
+	$(COPY) c.lib_rev.rev m.lib_rev.rev
+	bumprev amiga.lib
+	bumprev c.lib
+	bumprev debug.lib
+	bumprev profile.lib
+	bumprev m.lib
 
 ##############################################################################
 
@@ -247,3 +248,10 @@ echo "Making $@"
 $(AR) $@ $^ $(LOG_COMMAND)
 $(RANLIB) $@ $(LOG_COMMAND)
 endef
+
+install:
+	$(COPY) -r lib/* $(INSTALL_PREFIX)/lib/
+	$(COPY) -r include/* $(INSTALL_PREFIX)/include/
+
+release:
+	jlha -a clib2.lha $(INSTALL_PREFIX)

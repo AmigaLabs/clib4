@@ -5,3 +5,4 @@
 *.map
 .vscode
 build/
+clib2.lha

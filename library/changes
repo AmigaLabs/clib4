@@ -1,3 +1,12 @@
 c.lib 2.000 (xxx)
 
 - Rework of main clib2 library. Starting to remove 68k code and implementing new functions.
+
+c.lib 2.001 (2021-02-08)
+
+- Largefile support added. All file pointer now are 64bit
+- Some signal fixes.
+- Fix to readdir that was closing the ExamineDir examine data pointer.
+- Added some wchar functions and relative tests
+- Added and tested all wctype functions
+- libm is just a stub now. All code is in libc
