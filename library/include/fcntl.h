@@ -41,27 +41,11 @@
 #ifndef _FCNTL_H
 #define _FCNTL_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-#ifndef _SYS_TYPES_H
+#include <features.h>
 #include <sys/types.h>
-#endif /* _SYS_TYPES_H */
-
-#ifndef _STDDEF_H
 #include <stddef.h>
-#endif /* _STDDEF_H */
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #define O_RDONLY	0
 #define O_WRONLY	1
@@ -77,7 +61,6 @@ extern "C" {
 #define O_NOCTTY	(0)
 #define O_ASYNC		(1<<7)
 
-#define O_CLOEXEC   02000000
 /****************************************************************************/
 
 #define F_DUPFD		0
@@ -123,12 +106,6 @@ extern ssize_t read(int file_descriptor, void * buffer, size_t num_bytes);
 extern ssize_t write(int file_descriptor, const void * buffer, size_t num_bytes);
 extern int fcntl(int file_descriptor, int cmd, ... /* int arg */ );
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _FCNTL_H */

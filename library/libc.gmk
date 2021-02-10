@@ -7,11 +7,7 @@
 
 ##############################################################################
 
-LIBS += \
-	lib/libc.a \
-	lib/baserel/libc.a \
-	lib.threadsafe/libc.a \
-	lib.threadsafe/baserel/libc.a
+LIBS += lib/libc.a
 
 ##############################################################################
 
@@ -1171,38 +1167,10 @@ C_LIB := \
 # Dependencies to rebuild if the library version changes
 
 obj/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
-obj/baserel/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
-obj.threadsafe/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
-obj.threadsafe/baserel/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
-
-##############################################################################
 
 obj/libc/%.o : CFLAGS += $(LARGEDATA)
 obj/libc/%.o : %.c
-	@$(COMPILE)
-
-obj/baserel/libc/%.o : CFLAGS += $(BASEREL)
-obj/baserel/libc/%.o : %.c
-	@$(COMPILE)
-
-obj.threadsafe/libc/%.o : CFLAGS += $(THREADSAFE) $(LARGEDATA)
-obj.threadsafe/libc/%.o : %.c
-	@$(COMPILE)
-
-obj.threadsafe/baserel/libc/%.o : CFLAGS += $(THREADSAFE) $(BASEREL)
-obj.threadsafe/baserel/libc/%.o : %.c
-	@$(COMPILE)
-
-##############################################################################
+	$(VERBOSE)$(COMPILE)
 
 lib/libc.a : $(addprefix obj/libc/,$(C_LIB))
-	@$(MAKELIB)
-
-lib/baserel/libc.a : $(addprefix obj/baserel/libc/,$(C_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/libc.a : $(addprefix obj.threadsafe/libc/,$(C_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/baserel/libc.a : $(addprefix obj.threadsafe/baserel/libc/,$(C_LIB))
-	@$(MAKELIB)
+	$(VERBOSE)@$(MAKELIB)

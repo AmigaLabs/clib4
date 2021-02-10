@@ -52,37 +52,11 @@
 #include "macros.h"
 #endif /* _MACROS_H */
 
-/****************************************************************************/
-
 extern struct Library * NOCOMMON __TimezoneBase;
-
-/****************************************************************************/
-
-#if defined(__amigaos4__)
-
-/****************************************************************************/
-
 extern struct TimezoneIFace NOCOMMON * __ITimezone;
-
-/****************************************************************************/
 
 #define DECLARE_TIMEZONEBASE() \
 	struct Library *		UNUSED	TimezoneBase	= __TimezoneBase; \
 	struct TimezoneIFace *			ITimezone		= __ITimezone
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
-#define DECLARE_TIMEZONEBASE() \
-	struct Library * TimezoneBase = __TimezoneBase
-
-/****************************************************************************/
-
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
 
 #endif /* _STDLIB_TIMEZONEBASE_H */

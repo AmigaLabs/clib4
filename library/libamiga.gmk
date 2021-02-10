@@ -8,10 +8,7 @@
 ##############################################################################
 
 LIBS += \
-	lib/libamiga.a \
-	lib/baserel/libamiga.a \
-	lib.threadsafe/libamiga.a \
-	lib.threadsafe/baserel/libamiga.a
+	lib/libamiga.a
 
 ##############################################################################
 
@@ -53,38 +50,10 @@ AMIGA_LIB = \
 # Dependencies to rebuild if the library version changes
 
 obj/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
-obj/baserel/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
-obj.threadsafe/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
-obj.threadsafe/baserel/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
-
-##############################################################################
 
 obj/libamiga/%.o : CFLAGS += $(LARGEDATA)
 obj/libamiga/%.o : %.c
-	@$(COMPILE)
-
-obj/baserel/libamiga/%.o : CFLAGS += $(BASEREL)
-obj/baserel/libamiga/%.o : %.c
-	@$(COMPILE)
-
-obj.threadsafe/libamiga/%.o : CFLAGS += $(THREADSAFE) $(LARGEDATA)
-obj.threadsafe/libamiga/%.o : %.c
-	@$(COMPILE)
-
-obj.threadsafe/baserel/libamiga/%.o : CFLAGS += $(THREADSAFE) $(BASEREL)
-obj.threadsafe/baserel/libamiga/%.o : %.c
-	@$(COMPILE)
-
-##############################################################################
+	$(VERBOSE)$(COMPILE)
 
 lib/libamiga.a : $(addprefix obj/libamiga/,$(AMIGA_LIB))
-	@$(MAKELIB)
-
-lib/baserel/libamiga.a : $(addprefix obj/baserel/libamiga/,$(AMIGA_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/libamiga.a : $(addprefix obj.threadsafe/libamiga/,$(AMIGA_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/baserel/libamiga.a : $(addprefix obj.threadsafe/baserel/libamiga/,$(AMIGA_LIB))
-	@$(MAKELIB)
+	$(VERBOSE)$(MAKELIB)

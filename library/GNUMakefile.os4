@@ -34,11 +34,6 @@ MAKEDIR := mkdir -p
 # will be considered
 #LOG_COMMAND := 2>&1 | tee -a compiler.log
 LOG_COMMAND :=
-# You may need to request a specific compiler version in order to
-# build the baserel versions of the library. At this time of
-# writing (2008-11-06) GCC 4.0.4 and below support the -mbaserel
-# feature, but more recent versions, including GCC 4.2.4, do not.
-#COMPILER_VERSION := -V4.0.2
 
 # The following are for the native OS4 compiler; note that the
 # LOG_COMMAND should not be enabled unless you have a shell
@@ -58,13 +53,12 @@ LOG_COMMAND :=
 WARNINGS := \
 	-Wall -W -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-unused-value \
-	-Wno-deprecated-declarations -Wno-unused-label -Wno-sign-compare \
-
-#	-Wconversion -Wshadow -Wbad-function-cast
+	-Wno-deprecated-declarations -Wno-unused-label -Wno-sign-compare -Wno-cast-function-type \
+	-Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter
+#	-Werror -Wconversion -Wshadow -Wbad-function-cast 
 
 INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE)
-#WARNINGS   := -Werror -Wno-cast-function-type -Wno-array-bounds -Wno-unused-value 
- OPTIONS   := -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common $(WARNINGS) -DUNIX_PATH_SEMANTICS -Wno-error=array-bounds -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter -std=c99 -nostdlib
+ OPTIONS   := -DUSE_64_BIT_INTS -D__THREAD_SAFE -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -std=c99 -nostdlib
 OPTIMIZE   := -DNDEBUG -O3 -fno-inline
 
 DEBUG     := -ggdb
@@ -74,8 +68,7 @@ CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
 LARGEDATA  := -msdata=data
-BASEREL    := -mbaserel -DBASEREL_DATA
-THREADSAFE := -D__THREAD_SAFE
+VERBOSE	   := 
 
 ##############################################################################
 
@@ -97,21 +90,9 @@ include libprofile.gmk
 
 all-targets: \
 	lib/crtbegin.o \
-	lib/shcrtbegin.o \
-	lib/baserel/crtbegin.o \
-	lib/baserel/shcrtbegin.o \
 	lib/crtend.o \
+	lib/shcrtbegin.o \
 	lib/shcrtend.o \
-	lib/baserel/crtend.o \
-	lib/baserel/shcrtend.o \
-	lib.threadsafe/crtbegin.o \
-	lib.threadsafe/shcrtbegin.o \
-	lib.threadsafe/baserel/crtbegin.o \
-	lib.threadsafe/baserel/shcrtbegin.o \
-	lib.threadsafe/crtend.o \
-	lib.threadsafe/shcrtend.o \
-	lib.threadsafe/baserel/crtend.o \
-	lib.threadsafe/baserel/shcrtend.o \
 	$(LIBS)
 
 ##############################################################################
@@ -119,9 +100,7 @@ all-targets: \
 # Delete all object files and libraries
 clean:
 	-$(DELETE) obj
-	-$(DELETE) obj.threadsafe
 	-$(DELETE) lib
-	-$(DELETE) lib.threadsafe
 	-$(DELETE) compiler.log
 
 ##############################################################################
@@ -142,90 +121,27 @@ version:
 
 # General build rules for all object files and the individual libraries
 
-lib/crtbegin.o : CFLAGS += -fno-aggressive-loop-optimizations
-lib/crtbegin.o : crtbegin.c
-	@$(COMPILE)
-
-lib/shcrtbegin.o : CFLAGS += -fPIC -fno-aggressive-loop-optimizations
-lib/shcrtbegin.o : shcrtbegin.c
-	@$(COMPILE)
-
-lib/shcrtend.o : CFLAGS += -fPIC -fno-aggressive-loop-optimizations
-lib/shcrtend.o : shcrtend.c
-	@$(COMPILE)
+################ THREAD SAFE LIBRARY ################
 
 lib/%.o : AFLAGS += $(LARGEDATA)
 lib/%.o : %.S
-	@$(ASSEMBLE)
+	$(VERBOSE)$(ASSEMBLE)
 
+lib/crtbegin.o : CFLAGS += $(LARGEDATA) -fno-aggressive-loop-optimizations
+lib/crtbegin.o : crtbegin.c
+	$(VERBOSE)$(COMPILE)
+
+lib/shcrtbegin.o : CFLAGS += $(LARGEDATA) -fPIC -fno-aggressive-loop-optimizations
+lib/shcrtbegin.o : shcrtbegin.c
+	$(VERBOSE)$(COMPILE)
+
+lib/shcrtend.o : CFLAGS += $(LARGEDATA) -fPIC -fno-aggressive-loop-optimizations
+lib/shcrtend.o : shcrtend.c
+	$(VERBOSE)$(COMPILE)
+
+lib/%.o : CFLAGS += $(LARGEDATA)
 lib/%.o : %.c
-	@$(COMPILE)
-
-################ BASEREL STANDARD LIBRARY ################
-
-lib/baserel/%.o : AFLAGS += $(BASEREL)
-lib/baserel/%.o : %.S
-	@$(ASSEMBLE)
-
-lib/baserel/crtbegin.o : CFLAGS += $(BASEREL) -fno-aggressive-loop-optimizations
-lib/baserel/crtbegin.o : crtbegin.c
-	@$(COMPILE)
-
-lib/baserel/shcrtbegin.o : CFLAGS += $(BASEREL) -fPIC -fno-aggressive-loop-optimizations
-lib/baserel/shcrtbegin.o : shcrtbegin.c
-	@$(COMPILE)
-
-lib/baserel/shcrtend.o : CFLAGS += $(BASEREL) -fPIC -fno-aggressive-loop-optimizations
-lib/baserel/shcrtend.o : shcrtend.c
-	@$(COMPILE)
-
-lib/baserel/%.o : CFLAGS += $(BASEREL)
-lib/baserel/%.o : %.c
-	@$(COMPILE)
-
-################ THREAD SAFE LIBRARY ################
-
-lib.threadsafe/%.o : AFLAGS += $(LARGEDATA) $(THREADSAFE)
-lib.threadsafe/%.o : %.S
-	@$(ASSEMBLE)
-
-lib.threadsafe/crtbegin.o : CFLAGS += $(THREADSAFE) $(LARGEDATA) -fno-aggressive-loop-optimizations
-lib.threadsafe/crtbegin.o : crtbegin.c
-	@$(COMPILE)
-
-lib.threadsafe/shcrtbegin.o : CFLAGS += $(THREADSAFE) $(LARGEDATA) -fPIC -fno-aggressive-loop-optimizations
-lib.threadsafe/shcrtbegin.o : shcrtbegin.c
-	@$(COMPILE)
-
-lib.threadsafe/shcrtend.o : CFLAGS += $(THREADSAFE) $(LARGEDATA) -fPIC -fno-aggressive-loop-optimizations
-lib.threadsafe/shcrtend.o : shcrtend.c
-	@$(COMPILE)
-
-lib.threadsafe/%.o : CFLAGS += $(THREADSAFE) $(LARGEDATA)
-lib.threadsafe/%.o : %.c
-	@$(COMPILE)
-
-################ BASEREL THREAD SAFE LIBRARY ################
-
-lib.threadsafe/baserel/%.o : AFLAGS += $(BASEREL) $(THREADSAFE)
-lib.threadsafe/baserel/%.o : %.S
-	@$(ASSEMBLE)
-
-lib.threadsafe/baserel/crtbegin.o : CFLAGS += $(THREADSAFE) $(BASEREL) -fno-aggressive-loop-optimizations
-lib.threadsafe/baserel/crtbegin.o : crtbegin.c
-	@$(COMPILE)
-
-lib.threadsafe/baserel/shcrtbegin.o : CFLAGS += $(THREADSAFE) $(BASEREL) -fPIC -fno-aggressive-loop-optimizations
-lib.threadsafe/baserel/shcrtbegin.o : shcrtbegin.c
-	@$(COMPILE)
-
-lib.threadsafe/baserel/shcrtend.o : CFLAGS += $(THREADSAFE) $(BASEREL) -fPIC -fno-aggressive-loop-optimizations
-lib.threadsafe/baserel/shcrtend.o : shcrtend.c
-	@$(COMPILE)
-
-lib.threadsafe/baserel/%.o : CFLAGS += $(THREADSAFE) $(BASEREL)
-lib.threadsafe/baserel/%.o : %.c
-	@$(COMPILE)
+	$(VERBOSE)$(COMPILE)
 
 ##############################################################################
 

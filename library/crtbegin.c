@@ -64,21 +64,23 @@ void _start(char *args, int arglen, struct ExecBase *sysBase);
 void _clib_exit(void);
 extern int _main(struct ExecIFace *IExec);
 extern struct ExecIFace * NOCOMMON IExec;
+extern BOOL open_libraries(struct ExecIFace *iexec);
 
 /****************************************************************************/
 
 void
 _start(char *args, int arglen, struct ExecBase *sysBase)
 {
-	extern void shared_obj_init(struct ExecIFace *iexec);
+	extern void shared_obj_init(void);
 	int num_ctors,i;
 	int j;
 
 	SysBase = (struct Library *)sysBase;
 	IExec = (struct ExecIFace *)((struct ExecBase *)sysBase)->MainInterface;
+	open_libraries(IExec);
 
 	/* The shared objects need to be set up before any local constructors are invoked. */
-	shared_obj_init(IExec);
+	shared_obj_init();
 
 	for(i = 1, num_ctors = 0 ; __CTOR_LIST__[i] != NULL ; i++)
 		num_ctors++;

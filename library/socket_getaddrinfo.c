@@ -47,8 +47,7 @@ validate_family(int family)
   return FALSE;
 }
 
-/* Translate name of a service location and/or a service name to set of
-   socket addresses. */
+/* Translate name of a service location and/or a service name to set of socket addresses. */
 int getaddrinfo(const char *nodename,
                 const char *servname,
                 const struct addrinfo *hints,

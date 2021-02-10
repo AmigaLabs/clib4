@@ -7,11 +7,7 @@
 
 ##############################################################################
 
-LIBS += \
-	lib/libprofile.a \
-	lib/baserel/libprofile.a \
-	lib.threadsafe/libprofile.a \
-	lib.threadsafe/baserel/libprofile.a
+LIBS += lib/libprofile.a
 
 ##############################################################################
 
@@ -25,56 +21,14 @@ PROFILE_LIB = \
 # Dependencies to rebuild if the library version changes
 
 obj/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
-obj/baserel/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
-obj.threadsafe/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
-obj.threadsafe/baserel/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
-
-##############################################################################
 
 obj/libprofile/%.o : AFLAGS += $(LARGEDATA)
 obj/libprofile/%.o : %.S
-	@$(ASSEMBLE)
-
-obj/baserel/libprofile/%.o : AFLAGS += $(BASEREL)
-obj/baserel/libprofile/%.o : %.S
-	@$(ASSEMBLE)
-
-obj.threadsafe/libprofile/%.o : AFLAGS += $(LARGEDATA)
-obj.threadsafe/libprofile/%.o : %.S
-	@$(ASSEMBLE)
-
-obj.threadsafe/baserel/libprofile/%.o : AFLAGS += $(BASEREL)
-obj.threadsafe/baserel/libprofile/%.o : %.S
-	@$(ASSEMBLE)
-
-##############################################################################
+	$(VERBOSE)$(ASSEMBLE)
 
 obj/libprofile/%.o : CFLAGS += $(LARGEDATA)
 obj/libprofile/%.o : %.c
-	@$(COMPILE)
-
-obj/baserel/libprofile/%.o : CFLAGS += $(BASEREL)
-obj/baserel/libprofile/%.o : %.c
-	@$(COMPILE)
-
-obj.threadsafe/libprofile/%.o : CFLAGS += $(THREADSAFE) $(LARGEDATA)
-obj.threadsafe/libprofile/%.o : %.c
-	@$(COMPILE)
-
-obj.threadsafe/baserel/libprofile/%.o : CFLAGS += $(THREADSAFE) $(BASEREL)
-obj.threadsafe/baserel/libprofile/%.o : %.c
-	@$(COMPILE)
-
-##############################################################################
+	$(VERBOSE)$(COMPILE)
 
 lib/libprofile.a : $(addprefix obj/libprofile/,$(PROFILE_LIB))
-	@$(MAKELIB)
-
-lib/baserel/libprofile.a : $(addprefix obj/baserel/libprofile/,$(PROFILE_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/libprofile.a : $(addprefix obj.threadsafe/libprofile/,$(PROFILE_LIB))
-	@$(MAKELIB)
-
-lib.threadsafe/baserel/libprofile.a : $(addprefix obj.threadsafe/baserel/libprofile/,$(PROFILE_LIB))
-	@$(MAKELIB)
+	$(VERBOSE)$(MAKELIB)
