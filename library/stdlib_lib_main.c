@@ -64,7 +64,6 @@ extern struct Library NOCOMMON *__ElfBase;
 extern struct ElfIFace NOCOMMON *__IElf;
 
 STATIC BOOL lib_init_successful;
-extern void _clib_exit(void);
 extern int _start(char *args, int arglen, struct ExecBase *sysBase);
 
 /****************************************************************************/

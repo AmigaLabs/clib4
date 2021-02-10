@@ -75,9 +75,11 @@
 
 /****************************************************************************/
 
+static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
+static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
+
 extern int main(int arg_c, char **arg_v);
 extern int _start(char *args, int arglen, struct Library *sysBase);
-extern void _clib_exit(void);
 
 /****************************************************************************/
 
@@ -93,7 +95,7 @@ BOOL open_libraries(struct ExecIFace *iexec);
 /****************************************************************************/
 
 STATIC VOID
-close_libraries(VOID)
+	close_libraries(VOID)
 {
 	if (__IUtility != NULL)
 	{
@@ -143,6 +145,8 @@ call_main(void)
 	if (setjmp(__exit_jmp_buf) != 0)
 		goto out;
 
+	//open_libraries(iexec);
+
 	struct ElfIFace *IElf = __IElf;
 
 	__global_clib2 = InitGlobal();
@@ -169,7 +173,7 @@ call_main(void)
 		{
 			struct Process *this_process = (struct Process *)FindTask(NULL);
 			UBYTE *arg_str = GetArgStr();
-			size_t arg_str_len = strlen(arg_str);
+			size_t arg_str_len = strlen((const char *)arg_str);
 			UBYTE *arg_str_copy;
 			UBYTE current_dir_name[256] = {0};
 			arg_str_copy = AllocVecTags(arg_str_len + 1, AVT_Type, MEMF_PRIVATE, TAG_DONE);
@@ -189,17 +193,18 @@ call_main(void)
 #endif /* NDEBUG */
 	/* After all these preparations, get this show on the road... */
 	__exit_value = main((int)__argc, (char **)__argv);
-	
+
 	/* Free global reent structure */
 	FiniGlobal();
 
 	SHOWMSG("invoking the destructors");
 
 	/* Go through the destructor list */
+
 	_clib_exit();
 
 	//close_libraries();
-	
+
 	return __exit_value;
 
 out:
@@ -265,8 +270,7 @@ out:
 
 /****************************************************************************/
 
-BOOL 
-open_libraries(struct ExecIFace *iexec)
+BOOL open_libraries(struct ExecIFace *iexec)
 {
 	BOOL success = FALSE;
 
@@ -278,7 +282,7 @@ open_libraries(struct ExecIFace *iexec)
 	__UtilityBase = OpenLibrary("utility.library", 54);
 	if (__UtilityBase == NULL)
 		goto out;
-	
+
 	/* Obtain the interfaces for these libraries. */
 	IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
 	if (IDOS == NULL)
@@ -306,7 +310,7 @@ out:
 
 /****************************************************************************/
 
-STATIC VOID 
+STATIC VOID
 detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
 {
 	struct ElfIFace *IElf = __IElf;
@@ -338,7 +342,7 @@ get_stack_size(void)
 
 /****************************************************************************/
 
-int _main(struct ExecIFace *IExec)
+int _main(struct ExecIFace *iexec)
 {
 	struct Process *volatile child_process = NULL;
 	struct WBStartup *volatile startup_message;
@@ -347,6 +351,23 @@ int _main(struct ExecIFace *IExec)
 	struct Process *this_process;
 	int return_code = RETURN_FAIL;
 	ULONG current_stack_size;
+
+	IExec = iexec;
+
+	int num_ctors = 0, i;
+	static int j = 0;
+
+	/* Open LibC libraries */
+	open_libraries(iexec);
+
+	/* Calling LibC constructors */
+	for (i = 1, num_ctors = 0; __CTOR_LIST__[i] != NULL; i++)
+		num_ctors++;
+
+	for (j = 0; j < num_ctors; j++)
+	{
+		__CTOR_LIST__[num_ctors - j]();
+	}
 
 	/* Pick up the Workbench startup message, if available. */
 	this_process = (struct Process *)FindTask(NULL);
@@ -365,7 +386,7 @@ int _main(struct ExecIFace *IExec)
 	}
 
 	__WBenchMsg = (struct WBStartup *)startup_message;
-	
+
 	if (__disable_dos_requesters)
 	{
 		/* Don't display any requesters. */
@@ -498,7 +519,7 @@ int _main(struct ExecIFace *IExec)
 		GetCliProgramName(program_name, (LONG)sizeof(program_name));
 
 		i = 0;
-		
+
 		tags[i].ti_Tag = NP_Entry;
 		tags[i++].ti_Data = (ULONG)call_main;
 		tags[i].ti_Tag = NP_StackSize;
@@ -576,4 +597,22 @@ out:
 	}
 
 	return (return_code);
+}
+
+void 
+_clib_exit(void)
+{
+	extern void shared_obj_exit(void);
+	int num_dtors, i;
+	static int j = 0;
+
+	for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
+		num_dtors++;
+
+	while (j++ < num_dtors) {
+		__DTOR_LIST__[j]();
+	}
+
+	/* The shared objects need to be cleaned up after all local destructors have been invoked. */
+	shared_obj_exit();
 }

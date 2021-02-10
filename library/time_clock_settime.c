@@ -43,65 +43,74 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+extern struct MsgPort     NOCOMMON *__timer_port;
+extern struct TimeRequest NOCOMMON *__timer_request;
+extern BOOL NOCOMMON __timer_busy;
+
 int clock_settime(clockid_t clk_id, const struct timespec *t)
 {
-    int result = -1;
-    __set_errno(EINVAL);
-
     ENTER();
+
+    int result = -1;
+    
+    if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME)) != 0)
+    {
+        __set_errno(EINVAL);
+        RETURN(-1);
+        return -1;
+    }
+    
+    if (__timer_busy)
+    {
+        __set_errno(EAGAIN);
+        RETURN(result);
+        return result;
+    }
+
     
     DECLARE_TIMEZONEBASE();
 
-	struct Library * TimerBase = __TimerBase;
-    struct TimerIFace *ITimer = __ITimer;
-
     switch (clk_id)
     {
-    case CLOCK_REALTIME:
-    {
-        struct MsgPort *Timer_Port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
-        if (Timer_Port)
+        case CLOCK_REALTIME:
         {
-            struct TimeRequest *Time_Req;
-            Time_Req = AllocSysObjectTags(ASOT_MESSAGE, ASOMSG_Size, sizeof(struct TimeRequest), ASOMSG_ReplyPort, Timer_Port, TAG_DONE);
-            if (Time_Req)
+            int32 __gmtoffset = 0;
+            int8 __dstime = -1;
+
+            if (ITimezone)
             {
-                if (!OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)Time_Req, 0))
-                {
-                    int32 __gmtoffset = 0;
-                    int8 __dstime = -1;
-
-                    if (ITimezone)
-                    {
-                        GetTimezoneAttrs(NULL, TZA_UTCOffset, &__gmtoffset, TZA_TimeFlag, &__dstime, TAG_DONE);
-                    }
-
-                    Time_Req->Request.io_Message.mn_ReplyPort = Timer_Port;
-                    Time_Req->Request.io_Command = TR_SETSYSTIME;
-                    /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
-                    Time_Req->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
-                    Time_Req->Time.Microseconds = t->tv_nsec / 1000;
-
-                    DoIO((struct IORequest *)Time_Req);
-                    GetMsg(Timer_Port);
-                    CloseDevice((struct IORequest *)Time_Req);
-
-                    result = 0;
-                    __set_errno(0);
-                }
-
-                FreeSysObject(ASOT_MESSAGE, Time_Req);
+                GetTimezoneAttrs(NULL, TZA_UTCOffset, &__gmtoffset, TZA_TimeFlag, &__dstime, TAG_DONE);
             }
+            __timer_busy = TRUE;
+            __timer_request->Request.io_Message.mn_ReplyPort = __timer_port;
+            __timer_request->Request.io_Command = TR_SETSYSTIME;
+            /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
+            __timer_request->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
+            __timer_request->Time.Microseconds = t->tv_nsec / 1000;
 
-            FreeSysObject(ASOT_PORT, Timer_Port);
+            DoIO((struct IORequest *)__timer_request);
+            GetMsg(__timer_port);
+
+            result = 0;
+            __set_errno(0);
         }
-    }
-    break;
-
-    default:
-        __set_errno(EINVAL);
         break;
+        
+        case CLOCK_MONOTONIC:
+        {
+            struct timeval tv;
+            TIMESPEC_TO_TIMEVAL(&tv, t);
+            __global_clib2->clock.Seconds = tv.tv_sec;
+            __global_clib2->clock.Microseconds = tv.tv_usec;
+        }
+        break;
+        
+        default:
+            __set_errno(EINVAL);
+            break;
     }
+    
+    __timer_busy = FALSE;
 
     RETURN(result);
     return result;

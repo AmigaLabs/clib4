@@ -23,11 +23,11 @@ PROFILE_LIB = \
 
 obj/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
 
-obj/libprofile/%.o : AFLAGS += $(LARGEDATA)
+obj/libprofile/%.o : AFLAGS += $(PIC) $(LARGEDATA)
 obj/libprofile/%.o : %.S
 	$(VERBOSE)$(ASSEMBLE)
 
-obj/libprofile/%.o : CFLAGS += $(LARGEDATA)
+obj/libprofile/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 obj/libprofile/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 

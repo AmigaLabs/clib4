@@ -49,7 +49,7 @@ DEBUG_LIB = \
 
 obj/libdebug/debug.lib_rev.o : debug.lib_rev.c debug.lib_rev.h
 
-obj/libdebug/%.o : CFLAGS += $(LARGEDATA)
+obj/libdebug/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 obj/libdebug/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 

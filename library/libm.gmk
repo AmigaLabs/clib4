@@ -20,7 +20,7 @@ MATH_LIB := m.lib_rev.o
 
 obj/libm/m.lib_rev.o : m.lib_rev.c m.lib_rev.h
 
-obj/libm/%.o : CFLAGS += $(LARGEDATA) -DPPC_FLOATING_POINT_SUPPORT
+obj/libm/%.o : CFLAGS += $(PIC) $(LARGEDATA) -DPPC_FLOATING_POINT_SUPPORT
 obj/libm/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 

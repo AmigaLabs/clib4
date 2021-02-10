@@ -158,7 +158,7 @@ extern void __red_black_tree_remove(struct MemoryTree * tree, struct MemoryNode 
 /****************************************************************************/
 
 /* stdlib_main.c */
-extern int _main(struct ExecIFace *IExec);
+extern int _main(struct ExecIFace *iexec);
 
 /****************************************************************************/
 

@@ -57,8 +57,9 @@ WARNINGS := \
 	-Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter
 #	-Werror -Wconversion -Wshadow -Wbad-function-cast 
 
+PIC		   := -fPIC 
 INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE)
- OPTIONS   := -fPIC -DUSE_64_BIT_INTS -D__THREAD_SAFE -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -std=c99 -nostdlib
+ OPTIONS   := -DUSE_64_BIT_INTS -D__THREAD_SAFE -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -std=c99 -nostdlib
 OPTIMIZE   := -DNDEBUG -O3 -fno-inline
 
 DEBUG     := -ggdb
@@ -68,7 +69,7 @@ CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
 #LARGEDATA  := -msdata=data
-VERBOSE	   := 
+VERBOSE	   := @
 
 ##############################################################################
 
@@ -127,21 +128,27 @@ lib/%.o : AFLAGS += $(LARGEDATA)
 lib/%.o : %.S
 	$(VERBOSE)$(ASSEMBLE)
 
+lib/%.o : CFLAGS += $(LARGEDATA)
+lib/%.o : %.c
+	$(VERBOSE)$(COMPILE)
+	
 lib/crtbegin.o : CFLAGS += $(LARGEDATA) -fno-aggressive-loop-optimizations
 lib/crtbegin.o : crtbegin.c
 	$(VERBOSE)$(COMPILE)
 
-lib/shcrtbegin.o : CFLAGS += $(LARGEDATA) -fPIC -fno-aggressive-loop-optimizations
+lib/crtend.o : CFLAGS += $(LARGEDATA) -fno-aggressive-loop-optimizations
+lib/crtend.o : crtend.c
+	$(VERBOSE)$(COMPILE)
+
+lib/shcrtbegin.o : CFLAGS += $(LARGEDATA) $(PIC) -fno-aggressive-loop-optimizations
 lib/shcrtbegin.o : shcrtbegin.c
 	$(VERBOSE)$(COMPILE)
 
-lib/shcrtend.o : CFLAGS += $(LARGEDATA) -fPIC -fno-aggressive-loop-optimizations
+lib/shcrtend.o : CFLAGS += $(LARGEDATA) $(PIC) -fno-aggressive-loop-optimizations
 lib/shcrtend.o : shcrtend.c
 	$(VERBOSE)$(COMPILE)
 
-lib/%.o : CFLAGS += $(LARGEDATA)
-lib/%.o : %.c
-	$(VERBOSE)$(COMPILE)
+
 
 ##############################################################################
 

@@ -61,8 +61,7 @@ static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), al
 /****************************************************************************/
 
 int _start(char *args, int arglen, struct ExecBase *sysBase);
-void _clib_exit(void);
-extern int _main(struct ExecIFace *IExec);
+extern int _main(struct ExecIFace *iexec);
 extern struct ExecIFace * NOCOMMON IExec;
 extern BOOL open_libraries(struct ExecIFace *iexec);
 
@@ -72,48 +71,17 @@ int
 _start(char *args, int arglen, struct ExecBase *sysBase)
 {
 	extern void shared_obj_init(void);
-	int num_ctors,i;
-	int j;
-	int result;
+	int result = 0;
 
-	__asm__ __volatile__ (
-	    "lis	%%r9, SysBase@ha\n\t"
-	    "stw	%0, SysBase@l(%%r9)"
-	    :: "r"(sysBase) : "r9"
-	);
-
-	IExec = (struct ExecIFace *)((struct ExecBase *)4)->MainInterface;
+	
+	SysBase = (struct Library *)sysBase;
+	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 	open_libraries(IExec);
 
 	/* The shared objects need to be set up before any local constructors are invoked. */
 	shared_obj_init();
-
-	for(i = 1, num_ctors = 0 ; __CTOR_LIST__[i] != NULL ; i++)
-		num_ctors++;
-
-	for(j = 0 ; j < num_ctors ; j++)
-		__CTOR_LIST__[num_ctors - j]();
 	
 	result = _main(IExec);
 
 	return result;
-}
-
-/****************************************************************************/
-
-void
-_clib_exit(void)
-{
-	extern void shared_obj_exit(void);
-	int num_dtors,i;
-	static int j;
-
-	for(i = 1, num_dtors = 0 ; __DTOR_LIST__[i] != NULL ; i++)
-		num_dtors++;
-
-	while(j++ < num_dtors)
-		__DTOR_LIST__[j]();
-
-	/* The shared objects need to be cleaned up after all local destructors have been invoked. */
-	shared_obj_exit();
 }
