@@ -15,23 +15,46 @@ All **deprecated** OS4 functions are replaced by modern one (except for StackSwa
 
 For the original readme follow this <a href="https://github.com/adtools/clib2">link</a>
 
+
 ## Limitations and caveats
 
 The added code is most of the time tested. I've also added some test programs to test the added featrues. Of course it can contain errors and bugs. If you find an issue please report it
 
+
 ### Libraries
+
+Clib2 now has also a working shared version called `libc.so`. And of course also all other libs. Don't use newlib .so files when linking because **it will not work**
+If you want to use `dlopen`/`dlsym` with shared objects:
+
+**YOU HAVE** to compile your Clib2 version! 
+
+**DON'T TRY TO USE** newlib shared objects because it will crash everything!
+
+**DON'T USE** static libraries otherwise you could have undefined symbols!
 
 The plain `libc.a` now contains also `libnet.a`, `libunix.a`. `libm.a` is just a stub because GCC is searching it. But ll code now is in `libc.a`. 
 Socket support and floating point support is always enabled
 Soft float version is no longer available.
 
+If you want to use the shared version remember to pack your OS4 software with all CLib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.
+Don't overwrite SOBJS: files with your Clib2 files othwerise OS4 most probably will not load or you could have problems running software!
+
+### Shared objects
+
+Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).
+using dlopen/dlsym will not crash anymore however due a bug on `libgcc.so` you have to use the static version. Don't use the flag -static-libgcc because it isn't working too. Just remove (or move somewhere) libgcc.so so the linker will use the static one.
+If you are compiling linking with C++ it is better to remove `libstdc++.so` too and add -lgcc_eh othweriswe .so is linked against it will not work.
+
+
 ### Large file support
 
 Large files are now supported and tested (i've ported p7zip and tested it with a 8GB file without any problem). To use it you have to add `#define _LARGEFILE64_SOURCE` at top of your file before `<stdio.h>` 
 
+
 ### SYSV functions
 
 This library version conatin shm* and msg* functions. It needs SYSV IPC library. You can find an outdated version on OS4 Depot. If you don't install it those functions will not work and will return to you an **ENOSYS** error.
+
 
 ### Complex numbers
 
@@ -39,20 +62,16 @@ Complex numbers has been added to libm (thanks to sodero port) and i've added a 
 
 A lot of other functions has been added trying to make OS4 ports easier.
 
-### Shared objects
-
-Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).
-using dlopen/dlsym will not crash anymore however due a bug on `libgcc.so` you have to use the static version. Don't use the flag -static-libgcc because it isn't working too. Just remove (or move somewhere) libgcc.so so the linker will use the static one.
-If you are compiling linking with C++ it is better to remove `libstdc++.so` too and add -lgcc_eh othweriswe .so is linked against it will not work.
-**Keep in mind** that libc is not a shared library at moment and so the shared object will link **always** the entire libc. This means that shared objects doesn't share the same space (and you have all problems above).
 
 ### Wctype
 
 All **wctype** functions should be working correctly now. We need a valid test suite
 
+
 ### Wchar
 
 Some **wchar** functions are now implemented. There are no valid tests except little few so use at your own risk..
+
 
 ## Legal status
 
