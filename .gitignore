@@ -1,5 +1,6 @@
 *.o
 *.a
+*.so
 /library/compiler.log
 /library/netinclude
 *.map
