@@ -7,7 +7,8 @@
 
 ##############################################################################
 
-LIBS += lib/libc.a
+LIBS += lib/libc.so \
+		lib/libc.a
 
 ##############################################################################
 
@@ -244,7 +245,6 @@ C_LIB := \
 	stdlib_disablerequesters.o \
 	stdlib_div.o \
 	stdlib_divsi3.o \
-	stdlib_divsi4.o \
 	stdlib_dlclose.o \
 	stdlib_dlerror.o \
 	stdlib_dlopen.o \
@@ -1174,3 +1174,6 @@ obj/libc/%.o : %.c
 
 lib/libc.a : $(addprefix obj/libc/,$(C_LIB))
 	$(VERBOSE)@$(MAKELIB)
+
+lib/libc.so : $(addprefix obj/libc/,$(C_LIB))
+	$(VERBOSE)@$(MAKESHARED)

@@ -76,7 +76,7 @@
 /****************************************************************************/
 
 extern int main(int arg_c, char **arg_v);
-extern void _start(void);
+extern int _start(char *args, int arglen, struct Library *sysBase);
 extern void _clib_exit(void);
 
 /****************************************************************************/

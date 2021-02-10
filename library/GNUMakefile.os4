@@ -26,7 +26,7 @@ SDK_INCLUDE := /usr/ppc-amigaos/SDK/include
 CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
 RANLIB := ppc-amigaos-ranlib
-COPY := cp -p
+COPY := cp -r
 DELETE := rm -rf
 MAKEDIR := mkdir -p
 # Enabling the LOG_COMMAND has the consequence that a rule will not
@@ -58,7 +58,7 @@ WARNINGS := \
 #	-Werror -Wconversion -Wshadow -Wbad-function-cast 
 
 INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE)
- OPTIONS   := -DUSE_64_BIT_INTS -D__THREAD_SAFE -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -std=c99 -nostdlib
+ OPTIONS   := -fPIC -DUSE_64_BIT_INTS -D__THREAD_SAFE -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -std=c99 -nostdlib
 OPTIMIZE   := -DNDEBUG -O3 -fno-inline
 
 DEBUG     := -ggdb
@@ -67,7 +67,7 @@ DEBUG     := -ggdb
 CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DPPC_FLOATING_POINT_SUPPORT -DUNIX_PATH_SEMANTICS
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
-LARGEDATA  := -msdata=data
+#LARGEDATA  := -msdata=data
 VERBOSE	   := 
 
 ##############################################################################
@@ -160,14 +160,23 @@ endef
 define MAKELIB
 -$(MAKEDIR) $(@D)
 $(DELETE) $@
-echo "Making $@"
+echo "Making Static $@"
 $(AR) $@ $^ $(LOG_COMMAND)
 $(RANLIB) $@ $(LOG_COMMAND)
 endef
 
+define MAKESHARED
+-$(MAKEDIR) $(@D)
+$(DELETE) $@
+echo "Making Shared $@"
+$(CC) -shared -o $@ $^ $(LOG_COMMAND)
+endef
+
 install:
-	$(COPY) -r lib/* $(INSTALL_PREFIX)/lib/
-	$(COPY) -r include/* $(INSTALL_PREFIX)/include/
+	$(DELETE) $(INSTALL_PREFIX)/include/*
+	$(DELETE) $(INSTALL_PREFIX)/lib/*
+	$(COPY) lib/* $(INSTALL_PREFIX)/lib/
+	$(COPY) include/* $(INSTALL_PREFIX)/include/
 
 release:
 	jlha -a clib2.lha $(INSTALL_PREFIX)

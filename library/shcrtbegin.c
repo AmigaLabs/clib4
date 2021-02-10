@@ -147,6 +147,7 @@ close_libraries(VOID)
 void 
 __shlib_call_constructors(void)
 {
+#if 0   
    int num_ctors, i;
    int j;
 
@@ -154,7 +155,7 @@ __shlib_call_constructors(void)
    IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 
    /* The libraries needs to be set up before any local constructors are invoked. */
-   open_libraries(IExec);
+   //open_libraries(IExec);
 
    for (i = 1, num_ctors = 0; __CTOR_LIST__[i] != NULL; i++)
       num_ctors++;
@@ -163,22 +164,26 @@ __shlib_call_constructors(void)
       __CTOR_LIST__[num_ctors - j]();
    
    // Create global clib structure
-
+/*
 	__global_clib2 = InitGlobal();
 	if (__global_clib2 == NULL)
 		abort();
-   Printf("__shlib_call_constructors\n");
+   Printf("__shlib_call_constructors1\n");
+   */
+#endif
 }
 
 void 
 __shlib_call_destructors(void)
 {
-   Printf("__shlib_call_destructors\n");
+#if 0
+   //Printf("__shlib_call_destructors\n");
    int num_dtors, i;
    static int j;
 
    /* Free global clib structure */
-   FiniGlobal();
+
+   //FiniGlobal();
 
    for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
       num_dtors++;
@@ -187,5 +192,6 @@ __shlib_call_destructors(void)
       __DTOR_LIST__[j]();
 
    /* The libraries needs to be cleaned up after all local destructors have been invoked. */
-   close_libraries();
+   //close_libraries();
+#endif
 }

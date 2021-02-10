@@ -8,6 +8,7 @@
 ##############################################################################
 
 LIBS += \
+	lib/libamiga.so \
 	lib/libamiga.a
 
 ##############################################################################
@@ -57,3 +58,6 @@ obj/libamiga/%.o : %.c
 
 lib/libamiga.a : $(addprefix obj/libamiga/,$(AMIGA_LIB))
 	$(VERBOSE)$(MAKELIB)
+
+lib/libamiga.so : $(addprefix obj/libamiga/,$(AMIGA_LIB))
+	$(VERBOSE)$(MAKESHARED)

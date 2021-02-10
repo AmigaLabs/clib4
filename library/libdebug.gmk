@@ -7,7 +7,8 @@
 
 ##############################################################################
 
-LIBS += lib/libdebug.a
+LIBS += lib/libdebug.so \
+		lib/libdebug.a
 
 ##############################################################################
 
@@ -54,3 +55,6 @@ obj/libdebug/%.o : %.c
 
 lib/libdebug.a : $(addprefix obj/libdebug/,$(DEBUG_LIB))
 	$(VERBOSE)$(MAKELIB)
+
+lib/libdebug.so : $(addprefix obj/libdebug/,$(DEBUG_LIB))
+	$(VERBOSE)$(MAKESHARED)

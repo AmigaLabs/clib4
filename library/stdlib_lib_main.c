@@ -65,7 +65,7 @@ extern struct ElfIFace NOCOMMON *__IElf;
 
 STATIC BOOL lib_init_successful;
 extern void _clib_exit(void);
-extern void _start(void);
+extern int _start(char *args, int arglen, struct ExecBase *sysBase);
 
 /****************************************************************************/
 
@@ -218,7 +218,7 @@ BOOL __lib_init(struct Library *sys_base)
 	SHOWMSG("now invoking the constructors");
 
 	/* Go through the constructor list */
-	_start();
+	_start(NULL, 0, sys_base);
 
 	/* Disable exit() and its kin. */
 	__exit_blocked = TRUE;

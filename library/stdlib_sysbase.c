@@ -37,11 +37,7 @@
 #include <proto/exec.h>
 #endif /* PROTO_EXEC_H */
 
-/****************************************************************************/
-
 #include "macros.h"
 
-/****************************************************************************/
-
-struct ExecBase  NOCOMMON *SysBase;
-struct ExecIFace NOCOMMON HIDDEN *IExec;
+struct ExecBase  *SysBase;
+struct ExecIFace *IExec;
