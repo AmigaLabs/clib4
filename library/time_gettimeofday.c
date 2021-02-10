@@ -60,11 +60,8 @@
 int
 gettimeofday(struct timeval *tp, struct timezone *tzp)
 {
-	#if defined(__amigaos4__)
 	struct TimerIFace * ITimer = __ITimer;
-	#else
 	struct Library * TimerBase = __TimerBase;
-	#endif /* __amigaos4__ */
 
 	ULONG seconds,microseconds;
 

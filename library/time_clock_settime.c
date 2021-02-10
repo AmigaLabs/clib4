@@ -39,56 +39,61 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef _UNISTD_HEADERS_H
+#include "unistd_headers.h"
+#endif /* _UNISTD_HEADERS_H */
+
 int clock_settime(clockid_t clk_id, const struct timespec *t)
 {
     int result = -1;
     __set_errno(EINVAL);
 
     ENTER();
+    
+    DECLARE_TIMEZONEBASE();
+
+	struct Library * TimerBase = __TimerBase;
+    struct TimerIFace *ITimer = __ITimer;
 
     switch (clk_id)
     {
     case CLOCK_REALTIME:
     {
-        struct TimerIFace *ITimer = (struct TimerIFace *)GetInterface((struct Library *)TimerBase, "main", 1, NULL);
-        if (ITimer)
+        struct MsgPort *Timer_Port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
+        if (Timer_Port)
         {
-            struct MsgPort *Timer_Port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
-            if (Timer_Port)
+            struct TimeRequest *Time_Req;
+            Time_Req = AllocSysObjectTags(ASOT_MESSAGE, ASOMSG_Size, sizeof(struct TimeRequest), ASOMSG_ReplyPort, Timer_Port, TAG_DONE);
+            if (Time_Req)
             {
-                struct TimeRequest *Time_Req;
-                Time_Req = AllocSysObjectTags(ASOT_MESSAGE, ASOMSG_Size, sizeof(struct TimeRequest), ASOMSG_ReplyPort, Timer_Port, TAG_DONE);
-                if (Time_Req)
+                if (!OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)Time_Req, 0))
                 {
-                    if (!OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)Time_Req, 0))
+                    int32 __gmtoffset = 0;
+                    int8 __dstime = -1;
+
+                    if (ITimezone)
                     {
-                        int32 __gmtoffset = 0;
-                        int8 __dstime = -1;
-
-                        if (ITimezone)
-                        {
-                            GetTimezoneAttrs(NULL, TZA_UTCOffset, &__gmtoffset, TZA_TimeFlag, &__dstime, TAG_DONE);
-                        }
-
-                        Time_Req->Request.io_Message.mn_ReplyPort = Timer_Port;
-                        Time_Req->Request.io_Command = TR_SETSYSTIME;
-                        /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
-                        Time_Req->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
-                        Time_Req->Time.Microseconds = t->tv_nsec / 1000;
-
-                        DoIO((struct IORequest *)Time_Req);
-                        GetMsg(Timer_Port);
-                        CloseDevice((struct IORequest *)Time_Req);
-
-                        result = 0;
-                        __set_errno(0);
+                        GetTimezoneAttrs(NULL, TZA_UTCOffset, &__gmtoffset, TZA_TimeFlag, &__dstime, TAG_DONE);
                     }
 
-                    FreeSysObject(ASOT_MESSAGE, Time_Req);
+                    Time_Req->Request.io_Message.mn_ReplyPort = Timer_Port;
+                    Time_Req->Request.io_Command = TR_SETSYSTIME;
+                    /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
+                    Time_Req->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
+                    Time_Req->Time.Microseconds = t->tv_nsec / 1000;
+
+                    DoIO((struct IORequest *)Time_Req);
+                    GetMsg(Timer_Port);
+                    CloseDevice((struct IORequest *)Time_Req);
+
+                    result = 0;
+                    __set_errno(0);
                 }
 
-                FreeSysObject(ASOT_PORT, Timer_Port);
+                FreeSysObject(ASOT_MESSAGE, Time_Req);
             }
+
+            FreeSysObject(ASOT_PORT, Timer_Port);
         }
     }
     break;

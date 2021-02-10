@@ -44,18 +44,11 @@
 /****************************************************************************/
 
 struct Library * NOCOMMON __TimezoneBase;
+struct TimezoneIFace * NOCOMMON __ITimezone;
 
 char *tzname[2];  /* Current timezone names.  */
 int  daylight;                      /* If daylight-saving time is ever in use.  */
 long int timezone;                  /* Seconds west of UTC.  */
-
-/****************************************************************************/
-
-#if defined(__amigaos4__)
-struct TimezoneIFace * NOCOMMON __ITimezone;
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
 
 void
 __timezone_exit(void)
@@ -68,15 +61,11 @@ __timezone_exit(void)
 	{
 		DECLARE_TIMEZONEBASE();
 
-		#if defined(__amigaos4__)
+		if(__ITimezone != NULL)
 		{
-			if(__ITimezone != NULL)
-			{
-				DropInterface((struct Interface *)__ITimezone);
-				__ITimezone = NULL;
-			}
+			DropInterface((struct Interface *)__ITimezone);
+			__ITimezone = NULL;
 		}
-		#endif /* __amigaos4__ */
 
 		CloseLibrary(__TimezoneBase);
 		__TimezoneBase = NULL;
@@ -104,19 +93,15 @@ __timezone_init(void)
 	{
 		__TimezoneBase = OpenLibrary("timezone.library", 52);
 
-		#if defined(__amigaos4__)
+		if (__TimezoneBase != NULL)
 		{
-			if (__TimezoneBase != NULL)
+			__ITimezone = (struct TimezoneIFace *)GetInterface(__TimezoneBase, "main", 1, 0);
+			if(__ITimezone == NULL)
 			{
-				__ITimezone = (struct TimezoneIFace *)GetInterface(__TimezoneBase, "main", 1, 0);
-				if(__ITimezone == NULL)
-				{
-					CloseLibrary(__TimezoneBase);
-					__TimezoneBase = NULL;
-				}
+				CloseLibrary(__TimezoneBase);
+				__TimezoneBase = NULL;
 			}
 		}
-		#endif /* __amigaos4__ */
 	}
 
 	if(__TimezoneBase != NULL)
