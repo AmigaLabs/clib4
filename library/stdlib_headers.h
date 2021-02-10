@@ -205,4 +205,6 @@ extern void kprintf(const char * format,...);
 
 /****************************************************************************/
 
+extern void _clib_exit(void);;
+
 #endif /* _STDLIB_HEADERS_H */

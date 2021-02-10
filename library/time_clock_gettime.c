@@ -41,8 +41,13 @@
 #include "timezone_headers.h"
 #endif /* _TIMEZONE_HEADERS_H */
 
+extern struct TimerIFace *NOCOMMON __ITimer;
+extern BOOL NOCOMMON __timer_busy;
+
 int clock_gettime(clockid_t clk_id, struct timespec *t)
 {
+    ENTER();
+    
     /* Check the supported flags.  */
     if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME)) != 0)
     {
@@ -51,11 +56,18 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
         return -1;
     }
 
+    if (__timer_busy)
+    {
+        __set_errno(EAGAIN);
+        RETURN(-1);
+        return -1;
+    }
+
     DECLARE_TIMEZONEBASE();
+    struct TimerIFace *ITimer = __ITimer;
 
     struct timeval tv;
     int result = 0;
-    struct timerequest *tr = NULL;
     uint32 gmtoffset = 0;
     int8 dstime = -1;
 
@@ -65,68 +77,30 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
     GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
     if (result == 0)
     {
-        struct MsgPort *Timer_Port;
-        Timer_Port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
-        if (Timer_Port == NULL)
+        __timer_busy = TRUE;
+        if (clk_id == CLOCK_MONOTONIC)
         {
-            SHOWMSG("Cannot create Timer port\n");
-            result = -1;
+            /*
+            CLOCK_MONOTONIC
+                A nonsettable system-wide clock that represents monotonic
+                time since—as described by POSIX—"some unspecified point
+                in the past". On clib2, that point corresponds to the
+                number of seconds that the system has been running since
+                it was booted.
+            */
+            GetUpTime((struct TimeVal *)&tv);
         }
         else
         {
-            tr = AllocSysObjectTags(ASOT_IOREQUEST, ASOIOR_Size, sizeof(struct TimeRequest), ASOIOR_ReplyPort, Timer_Port, TAG_END);
-            if (tr != NULL)
-            {
-                if (!(OpenDevice(TIMERNAME, UNIT_MICROHZ, (struct IORequest *)tr, 0)))
-                {
-                    struct Library *TimerBase = (struct Library *)tr->tr_node.io_Device;
-                    struct TimerIFace *ITimer = (struct TimerIFace *)GetInterface(TimerBase, "main", 1, NULL);
-                    if (ITimer != NULL)
-                    {
-                        if (clk_id == CLOCK_MONOTONIC)
-                        {
-                            /*
-                            CLOCK_MONOTONIC
-                                A nonsettable system-wide clock that represents monotonic
-                                time since—as described by POSIX—"some unspecified point
-                                in the past". On clib2, that point corresponds to the
-                                number of seconds that the system has been running since
-                                it was booted.
-                            */
-                            GetUpTime((struct TimeVal *)&tv);
-                        }
-                        else
-                        {
-                            /*
-                            A settable system-wide clock that measures real (i.e.,
-                                wall-clock) time.  Setting this clock requires appropriate
-                                privileges.  This clock is affected by discontinuous jumps
-                                in the system time (e.g., if the system administrator
-                                manually changes the clock), and by the incremental
-                                adjustments performed by adjtime(3) and NTP.
-                            */
-                            GetSysTime((struct TimeVal *)&tv);
-                        }
-
-                        DropInterface((struct Interface *)ITimer);
-                    }
-                    else
-                    {
-                        SHOWMSG("Cannot get Timer interface\n");
-                        result = -1;
-                    }
-                    CloseDevice((struct IORequest *)tr);
-                }
-                else
-                    result = -1;
-                FreeSysObject(ASOT_IOREQUEST, tr);
-            }
-            else
-            {
-                SHOWMSG("Cannot allocate IORequest\n");
-                result = -1;
-            }
-            FreeSysObject(ASOT_PORT, Timer_Port);
+            /*
+            A settable system-wide clock that measures real (i.e.,
+                wall-clock) time.  Setting this clock requires appropriate
+                privileges.  This clock is affected by discontinuous jumps
+                in the system time (e.g., if the system administrator
+                manually changes the clock), and by the incremental
+                adjustments performed by adjtime(3) and NTP.
+            */
+            GetSysTime((struct TimeVal *)&tv);
         }
 
         if (result == 0)
@@ -145,5 +119,8 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
             }
         }
     }
+
+    __timer_busy = FALSE;
+    RETURN(result);
     return result;
 }

@@ -118,18 +118,12 @@ extern double tanh(double x);
 extern float __huge_val_float;
 
 /****************************************************************************/
-#ifndef __amigaos4__
-#define HUGE_VAL ((const double)__huge_val)
-#define HUGE_VALF ((const float)__huge_val_float)
-#define HUGE_VALL (__builtin_huge_vall())
-#else
 /* HUGE_VALF is a 'float' Infinity.  */
 #define HUGE_VALF (1.0f / 0.0f)
 /* HUGE_VAL is a 'double' Infinity.  */
 #define HUGE_VAL (1.0 / 0.0)
 /* HUGE_VALL is a 'long double' Infinity.  */
 #define HUGE_VALL (1.0L / 0.0L)
-#endif
 
 /****************************************************************************/
 

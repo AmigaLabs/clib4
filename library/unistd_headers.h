@@ -68,6 +68,7 @@ extern struct SignalSemaphore NOCOMMON	__unlink_semaphore;
 extern struct MsgPort *	NOCOMMON __timer_port;
 extern BOOL				NOCOMMON __timer_busy;
 extern struct Library *	NOCOMMON __TimerBase;
+extern struct TimerIFace * NOCOMMON __ITimer;
 
 /****************************************************************************/
 
@@ -84,13 +85,6 @@ extern struct timerequest *	NOCOMMON __timer_request;
 
 #endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
 
-/****************************************************************************/
-
-#if defined(__amigaos4__)
-extern struct TimerIFace * NOCOMMON __ITimer;
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
 
 /* If the program's current directory was changed, here is where
    we find out about it. */

@@ -57,38 +57,38 @@
 /* The following is not part of the ISO 'C' (1994) standard. */
 /****************************************************************************/
 
-int
+int 
 gettimeofday(struct timeval *tp, struct timezone *tzp)
 {
-	struct TimerIFace * ITimer = __ITimer;
-	struct Library * TimerBase = __TimerBase;
+	struct TimerIFace *ITimer = __ITimer;
+	struct Library *TimerBase = __TimerBase;
 
-	ULONG seconds,microseconds;
+	ULONG seconds, microseconds;
 
 	ENTER();
 
 	/* Obtain the current system time. */
 	PROFILE_OFF();
 
-	#if defined(__NEW_TIMEVAL_DEFINITION_USED__)
+#if defined(__NEW_TIMEVAL_DEFINITION_USED__)
 	{
 		struct TimeVal tv;
 
 		GetSysTime(&tv);
 
-		seconds		= tv.Seconds;
-		microseconds	= tv.Microseconds;
+		seconds = tv.Seconds;
+		microseconds = tv.Microseconds;
 	}
-	#else
+#else
 	{
 		struct timeval tv;
 
 		GetSysTime(&tv);
 
-		seconds		= tv.tv_sec;
-		microseconds	= tv.tv_usec;
+		seconds = tv.tv_sec;
+		microseconds = tv.tv_usec;
 	}
-	#endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
+#endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
 
 	PROFILE_ON();
 
@@ -101,21 +101,21 @@ gettimeofday(struct timeval *tp, struct timezone *tzp)
 	/* If possible, adjust for the local time zone. We do this because the
 	   AmigaOS system time is returned in local time and we want to return
 	   it in UTC. */
-	if(__default_locale != NULL)
+	if (__default_locale != NULL)
 		seconds += 60 * __default_locale->loc_GMTOffset;
 
-	if(tp != NULL)
+	if (tp != NULL)
 	{
-		tp->tv_sec	= (long)seconds;
-		tp->tv_usec	= (long)microseconds;
+		tp->tv_sec = (long)seconds;
+		tp->tv_usec = (long)microseconds;
 
 		SHOWVALUE(tp->tv_sec);
 		SHOWVALUE(tp->tv_usec);
 	}
 
-	if(tzp != NULL)
+	if (tzp != NULL)
 	{
-		if(__default_locale != NULL)
+		if (__default_locale != NULL)
 			tzp->tz_minuteswest = __default_locale->loc_GMTOffset;
 		else
 			tzp->tz_minuteswest = 0;
@@ -131,5 +131,5 @@ gettimeofday(struct timeval *tp, struct timezone *tzp)
 	__locale_unlock();
 
 	RETURN(0);
-	return(0);
+	return (0);
 }

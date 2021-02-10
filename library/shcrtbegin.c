@@ -54,8 +54,20 @@
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
+#ifndef _STDLIB_CONSTRUCTOR_H
+#include "stdlib_constructor.h"
+#endif /* _STDLIB_CONSTRUCTOR_H */
+
+/* A quick workaround for the timeval/timerequest->TimeVal/TimeRequest
+   change in the recent OS4 header files. */
+
+#if defined(__NEW_TIMEVAL_DEFINITION_USED__)
+
+#define timerequest TimeRequest
+#define tr_node Request
+
+#endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
+
 
 /* Avoid gcc warnings.. */
 void __shlib_call_constructors(void);
@@ -65,84 +77,93 @@ extern struct ExecIFace NOCOMMON *IExec;
 extern struct Library NOCOMMON *__ElfBase;
 extern struct ElfIFace NOCOMMON *__IElf;
 
-STATIC BOOL
-open_libraries(struct ExecIFace *iexec)
+/* Local timer I/O. */
+struct MsgPort *NOCOMMON __timer_port;
+struct timerequest *NOCOMMON __timer_request;
+struct Library *NOCOMMON __TimerBase;
+struct TimerIFace *NOCOMMON __ITimer;
+
+/****************************************************************************/
+
+CLIB_CONSTRUCTOR(timer_init)
 {
-   BOOL success = FALSE;
+	BOOL success = FALSE;
 
-   /* Open the minimum required libraries. */
-   DOSBase = (struct Library *)OpenLibrary("dos.library", 54);
-   if (DOSBase == NULL)
-      goto out;
+	ENTER();
 
-   __UtilityBase = OpenLibrary("utility.library", 54);
-   if (__UtilityBase == NULL)
-      goto out;
+	__timer_port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
+	if (__timer_port == NULL)
+	{
+		__show_error("The timer message port could not be created.");
+		goto out;
+	}
+	
+	__timer_request = AllocSysObjectTags(ASOT_MESSAGE, ASOMSG_Size, sizeof(struct TimeRequest), ASOMSG_ReplyPort, __timer_port, TAG_DONE);
+	if (__timer_request == NULL)
+	{
+		__show_error("The timer I/O request could not be created.");
+		goto out;
+	}
 
-   /* Obtain the interfaces for these libraries. */
-   IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
-   if (IDOS == NULL)
-      goto out;
+	if (OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)__timer_request, 0) != OK)
+	{
+		__show_error("The timer could not be opened.");
+		goto out;
+	}
 
-   __IUtility = (struct UtilityIFace *)GetInterface(__UtilityBase, "main", 1, 0);
-   if (__IUtility == NULL)
-      goto out;
+	__TimerBase = (struct Library *)__timer_request->tr_node.io_Device;
+	__ITimer = (struct TimerIFace *)GetInterface(__TimerBase, "main", 1, 0);
+	if (__ITimer == NULL)
+	{
+		__show_error("The timer interface could not be obtained.");
+		goto out;
+	}
 
-   /* We need elf.library V52.2 or higher. */
-   __ElfBase = OpenLibrary("elf.library", 0);
-   if (__ElfBase == NULL || (__ElfBase->lib_Version < 52) || (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision < 2))
-      goto out;
-
-   __IElf = (struct ElfIFace *)GetInterface(__ElfBase, "main", 1, NULL);
-   if (__IElf == NULL)
-      goto out;
-
-   success = TRUE;
+	success = TRUE;
 
 out:
 
-   return (success);
+	SHOWVALUE(success);
+	LEAVE();
+
+	if (success)
+		CONSTRUCTOR_SUCCEED();
+	else
+		CONSTRUCTOR_FAIL();
 }
 
-STATIC VOID
-close_libraries(VOID)
+
+CLIB_DESTRUCTOR(timer_exit)
 {
-   if (__IUtility != NULL)
-   {
-      DropInterface((struct Interface *)__IUtility);
-      __IUtility = NULL;
-   }
+	ENTER();
 
-   if (IDOS != NULL)
-   {
-      DropInterface((struct Interface *)IDOS);
-      IDOS = NULL;
-   }
+	if (__ITimer != NULL)
+		DropInterface((struct Interface *)__ITimer);
 
-   if (__UtilityBase != NULL)
-   {
-      CloseLibrary(__UtilityBase);
-      __UtilityBase = NULL;
-   }
+	__ITimer = NULL;
 
-   if (DOSBase != NULL)
-   {
-      CloseLibrary(DOSBase);
-      DOSBase = NULL;
-   }
+	__TimerBase = NULL;
 
-   if (__IElf != NULL)
-   {
-      DropInterface((struct Interface *)__IElf);
-      __IElf = NULL;
-   }
+	if (__timer_request != NULL)
+	{
+		if (__timer_request->tr_node.io_Device != NULL)
+			CloseDevice((struct IORequest *)__timer_request);
 
-   if (__ElfBase != NULL)
-   {
-      CloseLibrary(__ElfBase);
-      __ElfBase = NULL;
-   }
+		FreeSysObject(ASOT_MESSAGE, __timer_request);
+		__timer_request = NULL;
+	}
+
+	if (__timer_port != NULL)
+	{
+		FreeSysObject(ASOT_PORT, __timer_port);
+		__timer_port = NULL;
+	}
+
+	LEAVE();
 }
+
+static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
+static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
 
 void 
 __shlib_call_constructors(void)
@@ -152,33 +173,22 @@ __shlib_call_constructors(void)
 
    SysBase = *(struct Library **)4;
    IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
-
+  
    /* The libraries needs to be set up before any local constructors are invoked. */
-   open_libraries(IExec);
+   //open_libraries(IExec);
 
    for (i = 1, num_ctors = 0; __CTOR_LIST__[i] != NULL; i++)
       num_ctors++;
 
    for (j = 0; j < num_ctors; j++)
       __CTOR_LIST__[num_ctors - j]();
-   
-   // Create global clib structure
-
-	__global_clib2 = InitGlobal();
-	if (__global_clib2 == NULL)
-		abort();
-   Printf("__shlib_call_constructors\n");
 }
 
 void 
 __shlib_call_destructors(void)
 {
-   Printf("__shlib_call_destructors\n");
    int num_dtors, i;
-   static int j;
-
-   /* Free global clib structure */
-   FiniGlobal();
+   static int j = 0;
 
    for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
       num_dtors++;
@@ -187,5 +197,5 @@ __shlib_call_destructors(void)
       __DTOR_LIST__[j]();
 
    /* The libraries needs to be cleaned up after all local destructors have been invoked. */
-   close_libraries();
+   //close_libraries();
 }

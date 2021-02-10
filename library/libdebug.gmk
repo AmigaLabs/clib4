@@ -7,7 +7,8 @@
 
 ##############################################################################
 
-LIBS += lib/libdebug.a
+LIBS += lib/libdebug.so \
+		lib/libdebug.a
 
 ##############################################################################
 
@@ -48,9 +49,12 @@ DEBUG_LIB = \
 
 obj/libdebug/debug.lib_rev.o : debug.lib_rev.c debug.lib_rev.h
 
-obj/libdebug/%.o : CFLAGS += $(LARGEDATA)
+obj/libdebug/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 obj/libdebug/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 
 lib/libdebug.a : $(addprefix obj/libdebug/,$(DEBUG_LIB))
 	$(VERBOSE)$(MAKELIB)
+
+lib/libdebug.so : $(addprefix obj/libdebug/,$(DEBUG_LIB))
+	$(VERBOSE)$(MAKESHARED)

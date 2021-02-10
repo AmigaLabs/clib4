@@ -7,7 +7,8 @@
 
 ##############################################################################
 
-LIBS += lib/libm.a
+LIBS += lib/libm.so \
+		lib/libm.a
 
 ##############################################################################
 
@@ -19,9 +20,12 @@ MATH_LIB := m.lib_rev.o
 
 obj/libm/m.lib_rev.o : m.lib_rev.c m.lib_rev.h
 
-obj/libm/%.o : CFLAGS += $(LARGEDATA) -DPPC_FLOATING_POINT_SUPPORT
+obj/libm/%.o : CFLAGS += $(PIC) $(LARGEDATA) -DPPC_FLOATING_POINT_SUPPORT
 obj/libm/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 
 lib/libm.a : $(addprefix obj/libm/,$(MATH_LIB))
 	$(VERBOSE)$(MAKELIB)
+
+lib/libm.so : $(addprefix obj/libm/,$(MATH_LIB))
+	$(VERBOSE)$(MAKESHARED)

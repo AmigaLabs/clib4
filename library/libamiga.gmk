@@ -8,6 +8,7 @@
 ##############################################################################
 
 LIBS += \
+	lib/libamiga.so \
 	lib/libamiga.a
 
 ##############################################################################
@@ -51,9 +52,12 @@ AMIGA_LIB = \
 
 obj/libamiga/amiga.lib_rev.o : amiga.lib_rev.c amiga.lib_rev.h
 
-obj/libamiga/%.o : CFLAGS += $(LARGEDATA)
+obj/libamiga/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 obj/libamiga/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 
 lib/libamiga.a : $(addprefix obj/libamiga/,$(AMIGA_LIB))
 	$(VERBOSE)$(MAKELIB)
+
+lib/libamiga.so : $(addprefix obj/libamiga/,$(AMIGA_LIB))
+	$(VERBOSE)$(MAKESHARED)

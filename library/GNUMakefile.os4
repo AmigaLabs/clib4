@@ -26,7 +26,7 @@ SDK_INCLUDE := /usr/ppc-amigaos/SDK/include
 CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
 RANLIB := ppc-amigaos-ranlib
-COPY := cp -p
+COPY := cp -r
 DELETE := rm -rf
 MAKEDIR := mkdir -p
 # Enabling the LOG_COMMAND has the consequence that a rule will not
@@ -57,6 +57,7 @@ WARNINGS := \
 	-Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter
 #	-Werror -Wconversion -Wshadow -Wbad-function-cast 
 
+PIC		   := -fPIC 
 INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE)
  OPTIONS   := -DUSE_64_BIT_INTS -D__THREAD_SAFE -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -std=c99 -nostdlib
 OPTIMIZE   := -DNDEBUG -O3 -fno-inline
@@ -67,8 +68,8 @@ DEBUG     := -ggdb
 CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DPPC_FLOATING_POINT_SUPPORT -DUNIX_PATH_SEMANTICS
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
-LARGEDATA  := -msdata=data
-VERBOSE	   := 
+#LARGEDATA  := -msdata=data
+VERBOSE	   := @
 
 ##############################################################################
 
@@ -127,21 +128,27 @@ lib/%.o : AFLAGS += $(LARGEDATA)
 lib/%.o : %.S
 	$(VERBOSE)$(ASSEMBLE)
 
+lib/%.o : CFLAGS += $(LARGEDATA)
+lib/%.o : %.c
+	$(VERBOSE)$(COMPILE)
+	
 lib/crtbegin.o : CFLAGS += $(LARGEDATA) -fno-aggressive-loop-optimizations
 lib/crtbegin.o : crtbegin.c
 	$(VERBOSE)$(COMPILE)
 
-lib/shcrtbegin.o : CFLAGS += $(LARGEDATA) -fPIC -fno-aggressive-loop-optimizations
+lib/crtend.o : CFLAGS += $(LARGEDATA) -fno-aggressive-loop-optimizations
+lib/crtend.o : crtend.c
+	$(VERBOSE)$(COMPILE)
+
+lib/shcrtbegin.o : CFLAGS += $(LARGEDATA) $(PIC) -fno-aggressive-loop-optimizations
 lib/shcrtbegin.o : shcrtbegin.c
 	$(VERBOSE)$(COMPILE)
 
-lib/shcrtend.o : CFLAGS += $(LARGEDATA) -fPIC -fno-aggressive-loop-optimizations
+lib/shcrtend.o : CFLAGS += $(LARGEDATA) $(PIC) -fno-aggressive-loop-optimizations
 lib/shcrtend.o : shcrtend.c
 	$(VERBOSE)$(COMPILE)
 
-lib/%.o : CFLAGS += $(LARGEDATA)
-lib/%.o : %.c
-	$(VERBOSE)$(COMPILE)
+
 
 ##############################################################################
 
@@ -160,14 +167,23 @@ endef
 define MAKELIB
 -$(MAKEDIR) $(@D)
 $(DELETE) $@
-echo "Making $@"
+echo "Making Static $@"
 $(AR) $@ $^ $(LOG_COMMAND)
 $(RANLIB) $@ $(LOG_COMMAND)
 endef
 
+define MAKESHARED
+-$(MAKEDIR) $(@D)
+$(DELETE) $@
+echo "Making Shared $@"
+$(CC) -shared -o $@ $^ $(LOG_COMMAND)
+endef
+
 install:
-	$(COPY) -r lib/* $(INSTALL_PREFIX)/lib/
-	$(COPY) -r include/* $(INSTALL_PREFIX)/include/
+	$(DELETE) $(INSTALL_PREFIX)/include/*
+	$(DELETE) $(INSTALL_PREFIX)/lib/*
+	$(COPY) lib/* $(INSTALL_PREFIX)/lib/
+	$(COPY) include/* $(INSTALL_PREFIX)/include/
 
 release:
 	jlha -a clib2.lha $(INSTALL_PREFIX)
