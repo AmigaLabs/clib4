@@ -112,7 +112,6 @@ extern wchar_t *wcsstr(const wchar_t *big, const wchar_t *little);
 
 extern double wcstod(const wchar_t *str, wchar_t **ptr);
 extern long wcstol(const wchar_t *str, wchar_t **ptr, int base);
-extern long double wcstold(const wchar_t *nptr, wchar_t **endptr);
 extern unsigned long wcstoul(const wchar_t *str, wchar_t **ptr, int base);
 
 /****************************************************************************/
@@ -145,10 +144,14 @@ extern wchar_t *fgetws(wchar_t *s, int n, FILE *stream);
 
 /****************************************************************************/
 
+#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)
 extern int fwscanf(FILE *stream, const wchar_t *format, ...);
-extern int wscanf(const wchar_t *format, ...);
 extern int swscanf(wchar_t *s, const wchar_t *format, ...);
-
+//vfwscanf
+//vswscanf
+//vwscanf
+extern int wscanf(const wchar_t *format, ...);
+#endif
 /****************************************************************************/
 
 extern wint_t fputwc(wchar_t c, FILE *stream);
@@ -160,18 +163,14 @@ extern wint_t putwchar(wchar_t c);
 extern wint_t fputws(const wchar_t *s, FILE *stream);
 
 /****************************************************************************/
-
+#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)
 extern int fwprintf(FILE *stream, const wchar_t *format, ...);
-extern int wprintf(const wchar_t *format, ...);
 extern int swprintf(wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, ...);
-
-/****************************************************************************/
-
 extern int vfwprintf(FILE *stream, const wchar_t *format, va_list arg);
-extern int vwprintf(const wchar_t *format, va_list arg);
 extern int vswprintf(wchar_t *s, size_t maxlen, const wchar_t *format, va_list arg);
-
-/****************************************************************************/
+extern int vwprintf(const wchar_t *format, va_list arg);
+extern int wprintf(const wchar_t *format, ...);
+#endif
 
 extern size_t wcsftime(wchar_t *s, size_t maxsize, const wchar_t *format, const struct tm *timeptr);
 
@@ -197,10 +196,12 @@ extern size_t wcscspn(const wchar_t *s, const wchar_t *c);
 extern size_t wcsnrtombs(char *restrict dst, const wchar_t **restrict src, size_t nwc, size_t len, mbstate_t *restrict ps);
 extern wchar_t *wcsrchr(const wchar_t *ws, wchar_t wc);
 extern size_t wcsrtombs(char *restrict dst, const wchar_t **restrict src, size_t len, mbstate_t *restrict ps);
+#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)
 extern long long wcstoll(const wchar_t *str, wchar_t **ptr, int base);
 extern unsigned long long wcstoull(const wchar_t *str, wchar_t **ptr, int base);
-
+extern long double wcstold(const wchar_t *nptr, wchar_t **endptr);
 #endif /* __STDC_VERSION__ && __STDC_VERSION__ >= 199901L */
+#endif
 
 extern int wctomb(char *s, wchar_t wchar);
 extern int _wctomb_r(char *s, wchar_t wchar, mbstate_t *state);

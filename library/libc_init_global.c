@@ -130,6 +130,17 @@ struct _clib2 * InitGlobal() {
 			}
 		}
 
+		/* Check if .unix file exists in the current dir. If the file exists enable 
+		 * unix path semantics
+		 */
+		__global_clib2->__unix_path_semantics = FALSE;
+		struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
+		if (exd != NULL) {
+			if (EXD_IS_FILE(exd))
+				__global_clib2->__unix_path_semantics = TRUE;
+			FreeDosObject(DOS_EXAMINEDATA, exd);
+		}
+
 		/* 
 		 * Next: Get Elf handle associated with the currently running process. 
 		 * __ElfBase is opened in stdlib_shared_objs.c that is called before the

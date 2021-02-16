@@ -94,10 +94,6 @@ extern BOOL NOCOMMON __unlock_current_directory;
 
 /****************************************************************************/
 
-extern BOOL NOCOMMON __unix_path_semantics;
-
-/****************************************************************************/
-
 extern int __set_current_path(const char * path_name);
 extern int __strip_double_slash(char * file_name,int len);
 

@@ -124,12 +124,15 @@ extern int unlink(const char * path_name);
 extern int symlink(const char * actual_path, const char * symbolic_path);
 extern int readlink(const char * path_name, char * buffer, int buffer_size);
 extern int chdir(const char * path_name);
+extern int fchdir(int file_descriptor);
 extern int lockf(int file_descriptor, int function, off_t size);
 extern unsigned int sleep(unsigned int seconds);
 extern int usleep(useconds_t microseconds);
 extern int getopt(int argc, char * const argv[], const char *opts);
 extern pid_t getpid(void);
 extern pid_t getppid(void);
+extern pid_t getpgrp(void );
+extern pid_t tcgetpgrp(int fildes);
 extern char *realpath(const char *file_name, char *resolved_name);
 extern int fsync(int file_descriptor);
 extern int fdatasync(int file_descriptor);
@@ -239,7 +242,7 @@ extern int setuid(uid_t uid);
 extern long pathconf(const char *path,int name);
 extern long fpathconf(int file_descriptor,int name);
 
-/****************************************************************************/
+extern ssize_t write(int fildes, const void *buf, size_t nbyte);
 
 extern int pipe (int fd[2]);
 extern int pipe2 (int fd[2], int flags);

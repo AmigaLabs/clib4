@@ -226,6 +226,7 @@ typedef struct iob
 
 	int   				iob_Flags2;				/* for future use */	
 
+	long				pad[5];					/* Padding for function pointers */
 	/************************************************************************/
 	/* Public portion ends here                                             */
 	/************************************************************************/
@@ -287,6 +288,8 @@ typedef struct iob
 	_mbstate_t 			_mbstate; 				/* for wide char stdio functions. */
 
 	int   				iob_Flags2;				/* for future use */	
+
+	long				pad[4];					/* Padding for function pointers */
 
 	/************************************************************************/
 	/* Public portion ends here                                             */

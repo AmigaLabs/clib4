@@ -117,7 +117,7 @@ DIR *opendir(const char *path_name)
 
 		NewList((struct List *)&dh->dh_VolumeList);
 
-		if (__unix_path_semantics)
+		if (__global_clib2->__unix_path_semantics)
 		{
 			if (path_name[0] == '\0')
 			{

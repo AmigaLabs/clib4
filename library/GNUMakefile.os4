@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.118 2021-01-25 11:28:07 apalmate Exp $
+# $Id: Makefile,v 2.0 2021-01-25 11:28:07 apalmate Exp $
 #
 # :ts=8
 #
@@ -35,19 +35,6 @@ MAKEDIR := mkdir -p
 #LOG_COMMAND := 2>&1 | tee -a compiler.log
 LOG_COMMAND :=
 
-# The following are for the native OS4 compiler; note that the
-# LOG_COMMAND should not be enabled unless you have a shell
-# installed which supports it.
-#SDK_INCLUDE := /SDK/Include/include_h
-#CC := distcc gcc
-#AR := ar -q
-#RANLIB := ranlib
-#COPY := copy
-#DELETE := delete all quiet force
-#MAKEDIR := makedir all force
-#COMPILER_VERSION := -V4.0.2
-#LOG_COMMAND := *>< | tee >>compiler.log
-
 ##############################################################################
 
 WARNINGS := \
@@ -58,8 +45,8 @@ WARNINGS := \
 #	-Werror -Wconversion -Wshadow -Wbad-function-cast 
 
 PIC		   := -fPIC 
-INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE)
- OPTIONS   := -DUSE_64_BIT_INTS -D__THREAD_SAFE -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -std=c99 -nostdlib
+INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE) -Idebug -Iamiga -Iprofile
+ OPTIONS   := -DUSE_64_BIT_INTS -D__THREAD_SAFE -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -nostdlib
 OPTIMIZE   := -DNDEBUG -O3 -fno-inline
 
 DEBUG     := -ggdb
@@ -68,8 +55,8 @@ DEBUG     := -ggdb
 CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DPPC_FLOATING_POINT_SUPPORT -DUNIX_PATH_SEMANTICS
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
-#LARGEDATA  := -msdata=data
-VERBOSE	   := @
+#LARGEDATA := -msdata=data
+VERBOSE   := @
 
 ##############################################################################
 
@@ -101,6 +88,7 @@ all-targets: \
 # Delete all object files and libraries
 clean:
 	-$(DELETE) obj
+	-$(DELETE) obj.shared	
 	-$(DELETE) lib
 	-$(DELETE) compiler.log
 
@@ -142,41 +130,47 @@ lib/crtend.o : crtend.c
 
 lib/shcrtbegin.o : CFLAGS += $(LARGEDATA) $(PIC) -fno-aggressive-loop-optimizations
 lib/shcrtbegin.o : shcrtbegin.c
-	$(VERBOSE)$(COMPILE)
+	$(VERBOSE)$(COMPILE_SHARED)
 
 lib/shcrtend.o : CFLAGS += $(LARGEDATA) $(PIC) -fno-aggressive-loop-optimizations
 lib/shcrtend.o : shcrtend.c
-	$(VERBOSE)$(COMPILE)
+	$(VERBOSE)$(COMPILE_SHARED)
 
 
 
 ##############################################################################
 
 define COMPILE
--$(MAKEDIR) $(@D)
-echo "Compiling $< [$(@D)]"
-$(CC) $(CFLAGS) -o $@ -c $< $(LOG_COMMAND)
+@$(MAKEDIR) $(@D)
+$(VERBOSE)echo "Compiling Static \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)$(CC) $(CFLAGS) -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_SHARED
+@$(MAKEDIR) $(@D)
+$(VERBOSE)echo "Compiling Shared \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)$(CC) $(CFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define ASSEMBLE
--$(MAKEDIR) $(@D)
-echo "Assembling $< [$(@D)]"
-$(CC) $(AFLAGS) -o $@ -c $< $(LOG_COMMAND)
+@$(MAKEDIR) $(@D)
+$(VERBOSE)echo "Assembling \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)$(CC) $(AFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define MAKELIB
--$(MAKEDIR) $(@D)
-$(DELETE) $@
-echo "Making Static $@"
-$(AR) $@ $^ $(LOG_COMMAND)
-$(RANLIB) $@ $(LOG_COMMAND)
+@$(MAKEDIR) $(@D)
+@$(DELETE) $@
+$(VERBOSE)echo "Making Static \033[0;31m$@\033[0m"
+@$(AR) $@ $^ $(LOG_COMMAND)
+@$(RANLIB) $@ $(LOG_COMMAND)
 endef
 
 define MAKESHARED
--$(MAKEDIR) $(@D)
-$(DELETE) $@
-echo "Making Shared $@"
-$(CC) -shared -o $@ $^ $(LOG_COMMAND)
+@$(MAKEDIR) $(@D)
+@$(DELETE) $@
+$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
+$(VERBOSE)$(CC) -fPIC -mcrt=clib2 -shared -o $@ lib/shcrtbegin.o lib/shcrtend.o -nostartfiles $^ $(LOG_COMMAND)
 endef
 
 install:

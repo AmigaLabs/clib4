@@ -45,6 +45,7 @@
 
 #include <stddef.h>
 #include <wchar.h>
+#include <alloca.h>
 
 #ifndef _SYS_CLIB2_STDC_H
 #include <sys/clib2_stdc.h>
@@ -69,8 +70,16 @@ extern int MB_CUR_MAX;
 /****************************************************************************/
 
 /* Data structures used by the div() and ldiv() functions */
-typedef struct { int quot; int rem; } div_t;
-typedef struct { long quot; long rem; } ldiv_t;
+typedef struct
+{
+	int quot;
+	int rem;
+} div_t;
+typedef struct
+{
+	long quot;
+	long rem;
+} ldiv_t;
 
 /****************************************************************************/
 
@@ -85,29 +94,29 @@ extern size_t wcstombs(char *s, const wchar_t *pwcs, size_t n);
 /****************************************************************************/
 
 extern void *malloc(size_t size);
-extern void *calloc(size_t num_elements,size_t element_size);
+extern void *calloc(size_t num_elements, size_t element_size);
 extern void free(void *ptr);
-extern void *realloc(void *ptr,size_t size);
+extern void *realloc(void *ptr, size_t size);
 extern void *valloc(size_t size);
 
 #ifdef __MEM_DEBUG
-extern void *__malloc(size_t size,const char *file,int line);
-extern void *__calloc(size_t num_elements,size_t element_size,const char *file,int line);
-extern void __free(void *ptr,const char *file,int line);
-extern void *__realloc(void *ptr,size_t size,const char *file,int line);
+extern void *__malloc(size_t size, const char *file, int line);
+extern void *__calloc(size_t num_elements, size_t element_size, const char *file, int line);
+extern void __free(void *ptr, const char *file, int line);
+extern void *__realloc(void *ptr, size_t size, const char *file, int line);
 
-#define malloc(size) __malloc((size),__FILE__,__LINE__)
-#define calloc(num_elements,element_size) __calloc((num_elements),(element_size),__FILE__,__LINE__)
-#define free(ptr) __free((ptr),__FILE__,__LINE__)
-#define realloc(ptr,size) __realloc((ptr),(size),__FILE__,__LINE__)
+#define malloc(size) __malloc((size), __FILE__, __LINE__)
+#define calloc(num_elements, element_size) __calloc((num_elements), (element_size), __FILE__, __LINE__)
+#define free(ptr) __free((ptr), __FILE__, __LINE__)
+#define realloc(ptr, size) __realloc((ptr), (size), __FILE__, __LINE__)
 #endif /* __MEM_DEBUG */
 
 /****************************************************************************/
 
 extern int abs(int x);
 extern long labs(long x);
-extern div_t div(int n,int d);
-extern ldiv_t ldiv(long n,long d);
+extern div_t div(int n, int d);
+extern ldiv_t ldiv(long n, long d);
 
 /****************************************************************************/
 
@@ -130,19 +139,19 @@ extern int atexit(void (*)(void));
 
 /****************************************************************************/
 
-extern char * getenv(const char *name);
-extern char * secure_getenv(const char *name);
+extern char *getenv(const char *name);
+extern char *secure_getenv(const char *name);
 
 /****************************************************************************/
 
-extern void * bsearch(const void *key, const void *base, size_t count, size_t size,
-	int (*compare)(const void * key,const void * value));
-extern void qsort(void *base,size_t count,size_t size,
-	int (*compare)(const void * element1,const void * element2));
+extern void *bsearch(const void *key, const void *base, size_t count, size_t size,
+					 int (*compare)(const void *key, const void *value));
+extern void qsort(void *base, size_t count, size_t size,
+				  int (*compare)(const void *element1, const void *element2));
 
 /****************************************************************************/
 
-extern double strtod(const char *str, char ** ptr);
+extern double strtod(const char *str, char **ptr);
 extern long strtol(const char *str, char **ptr, int base);
 extern unsigned long strtoul(const char *str, char **ptr, int base);
 
@@ -159,7 +168,7 @@ extern long atol(const char *str);
 /****************************************************************************/
 
 extern void _exit(int status);
-extern int rand_r(unsigned int * seed);
+extern int rand_r(unsigned int *seed);
 
 /****************************************************************************/
 
@@ -239,30 +248,30 @@ extern void __decay_unused_slabs(void);
 struct __slab_usage_information
 {
 	/* The size of all slabs, in bytes. */
-	size_t	sui_slab_size;
+	size_t sui_slab_size;
 
 	/* Number of allocations which are not managed by slabs, but
 	 * are handled separate.
 	 */
-	size_t	sui_num_single_allocations;
+	size_t sui_num_single_allocations;
 
 	/* Total number of bytes allocated for memory not managed
 	 * by slabs. This includes the management overhead for
 	 * each allocation.
 	 */
-	size_t	sui_total_single_allocation_size;
+	size_t sui_total_single_allocation_size;
 
 	/* Number of slabs currently in play. This can be 0. */
-	size_t	sui_num_slabs;
+	size_t sui_num_slabs;
 
 	/* Number of currently unused slabs which contain no data. */
-	size_t	sui_num_empty_slabs;
+	size_t sui_num_empty_slabs;
 
 	/* Number of slabs in use which are completely filled with data. */
-	size_t	sui_num_full_slabs;
+	size_t sui_num_full_slabs;
 
 	/* Total number of bytes allocated for all slabs. */
-	size_t	sui_total_slab_allocation_size;
+	size_t sui_total_slab_allocation_size;
 
 	/*
 	 * The following data is updated for each slab which
@@ -270,26 +279,26 @@ struct __slab_usage_information
 	 */
 
 	/* Index number of the slab being reported (0 = no slabs are in use). */
-	int		sui_slab_index;
+	int sui_slab_index;
 
 	/* How large are the memory chunks managed by this slab? */
-	size_t	sui_chunk_size;
+	size_t sui_chunk_size;
 
 	/* How many memory chunks fit into this slab? */
-	size_t	sui_num_chunks;
+	size_t sui_num_chunks;
 
 	/* How many memory chunks in this slab are being used? */
-	size_t	sui_num_chunks_used;
+	size_t sui_num_chunks_used;
 
 	/* How many time was this slab reused without reinitializing
 	 * it all over again from scratch?
 	 */
-	size_t	sui_num_reused;
+	size_t sui_num_reused;
 };
 
 /****************************************************************************/
 
-typedef int (*__slab_usage_callback)(const struct __slab_usage_information * sui);
+typedef int (*__slab_usage_callback)(const struct __slab_usage_information *sui);
 
 /****************************************************************************/
 
@@ -320,13 +329,13 @@ struct __slab_allocation_information
 	/* Number of allocations which are not managed by slabs, but
 	 * are handled separate.
 	 */
-	size_t	sai_num_single_allocations;
+	size_t sai_num_single_allocations;
 
 	/* Total number of bytes allocated for memory not managed
 	 * by slabs. This includes the management overhead for
 	 * each allocation.
 	 */
-	size_t	sai_total_single_allocation_size;
+	size_t sai_total_single_allocation_size;
 
 	/*
 	 * The following data is updated for each slab which
@@ -336,22 +345,22 @@ struct __slab_allocation_information
 	/* Index number of the allocation being reported (0 = no allocations
 	 * outside of slabs are in use).
 	 */
-	int		sai_allocation_index;
+	int sai_allocation_index;
 
 	/* Size of this allocation, as requested by the program which
 	 * called malloc(), realloc() or alloca().
 	 */
-	size_t	sai_allocation_size;
+	size_t sai_allocation_size;
 
 	/* Total size of this allocation, including management data
 	 * structure overhead.
 	 */
-	size_t	sai_total_allocation_size;
+	size_t sai_total_allocation_size;
 };
 
 /****************************************************************************/
 
-typedef int (*__slab_allocation_callback)(const struct __slab_allocation_information * sui);
+typedef int (*__slab_allocation_callback)(const struct __slab_allocation_information *sui);
 
 /****************************************************************************/
 
@@ -376,28 +385,22 @@ void __get_slab_allocations(__slab_allocation_callback callback);
  * break a Forbid() or Disable() condition.
  */
 
-typedef int (* __slab_status_callback)(void * user_data, const char * line, size_t line_length);
+typedef int (*__slab_status_callback)(void *user_data, const char *line, size_t line_length);
 
 /****************************************************************************/
 
-extern void __get_slab_stats(void * user_data, __slab_status_callback callback);
+extern void __get_slab_stats(void *user_data, __slab_status_callback callback);
 
 /****************************************************************************/
 
-extern int setenv(const char *name, const char *value, int overwrite);
+extern char *mktemp(char *name_template);
+extern int mkstemp(char *name_template);
 extern int putenv(const char *string);
 extern int unsetenv(const char *name);
-extern char * mktemp(char * name_template);
-extern int mkstemp(char *name_template);
-extern char * mkdtemp(char *name_template);
+extern int setenv(const char *name, const char *value, int overwrite);
+
+extern char *mkdtemp(char *name_template);
 extern const char *getexecname(void);
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-
-/****************************************************************************/
 
 #if defined(__GNUC__) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L))
 
@@ -408,14 +411,14 @@ extern long double strtold(const char *str, char **ptr);
 extern unsigned long long strtoull(const char *str, char **ptr, int base);
 extern long long atoll(const char *str);
 
-/****************************************************************************/
-
-typedef struct { long long quot; long long rem; } lldiv_t;
-
-/****************************************************************************/
+typedef struct
+{
+	long long quot;
+	long long rem;
+} lldiv_t;
 
 extern long long llabs(long long x);
-extern lldiv_t lldiv(long long n,long long d);
+extern lldiv_t lldiv(long long n, long long d);
 
 /****************************************************************************/
 
@@ -423,11 +426,16 @@ extern lldiv_t lldiv(long long n,long long d);
 
 /****************************************************************************/
 
-extern float strtof(const char *str, char ** ptr);
+extern float strtof(const char *str, char **ptr);
 
-/****************************************************************************/
+#ifndef __STRICT_ANSI__
+/* the following strtodf interface is deprecated...use strtof instead */
+# ifndef strtodf 
+#  define strtodf strtof
+# endif
 
 extern void _Exit(int status);
+#endif
 
 __END_DECLS
 

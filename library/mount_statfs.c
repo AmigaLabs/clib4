@@ -47,13 +47,12 @@
 
 /****************************************************************************/
 
-int
-statfs(const char *path, struct statfs *buf)
+int statfs(const char *path, struct statfs *buf)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
-	D_S(struct InfoData,id);
+#endif /* UNIX_PATH_SEMANTICS */
+	D_S(struct InfoData, id);
 	LONG status;
 	BPTR lock = ZERO;
 	int result = ERROR;
@@ -63,14 +62,14 @@ statfs(const char *path, struct statfs *buf)
 	SHOWSTRING(path);
 	SHOWPOINTER(buf);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	assert( path != NULL && buf != NULL );
+	assert(path != NULL && buf != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(path == NULL || buf == NULL)
+		if (path == NULL || buf == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -78,13 +77,13 @@ statfs(const char *path, struct statfs *buf)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__global_clib2->__unix_path_semantics)
 		{
-			if(path[0] == '\0')
+			if (path[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -92,7 +91,7 @@ statfs(const char *path, struct statfs *buf)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&path,&path_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&path, &path_nti) != 0)
 				goto out;
 
 			SHOWSTRING(path);
@@ -100,18 +99,18 @@ statfs(const char *path, struct statfs *buf)
 			/* The pseudo root directory is a very special case indeed.
 			 * We make up some pseudo data for it.
 			 */
-			if(path_nti.is_root)
+			if (path_nti.is_root)
 			{
 				SHOWMSG("returning data for / directory");
 
-				memset(buf,0,sizeof(*buf));
+				memset(buf, 0, sizeof(*buf));
 
-				buf->f_bsize	= 512;
-				buf->f_blocks	= 1;
-				buf->f_bfree	= 1;
-				buf->f_iosize	= buf->f_bsize;
-				buf->f_bavail	= buf->f_bfree;
-				buf->f_flags	= MNT_NOATIME|MNT_SYMPERM|MNT_LOCAL|MNT_RDONLY;
+				buf->f_bsize = 512;
+				buf->f_blocks = 1;
+				buf->f_bfree = 1;
+				buf->f_iosize = buf->f_bsize;
+				buf->f_bavail = buf->f_bfree;
+				buf->f_flags = MNT_NOATIME | MNT_SYMPERM | MNT_LOCAL | MNT_RDONLY;
 
 				result = OK;
 
@@ -119,15 +118,15 @@ statfs(const char *path, struct statfs *buf)
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	D(("trying to get a lock on '%s'",path));
+	D(("trying to get a lock on '%s'", path));
 
 	PROFILE_OFF();
-	lock = Lock((STRPTR)path,SHARED_LOCK);
+	lock = Lock((STRPTR)path, SHARED_LOCK);
 	PROFILE_ON();
 
-	if(lock == ZERO)
+	if (lock == ZERO)
 	{
 		SHOWMSG("that didn't work");
 
@@ -136,10 +135,10 @@ statfs(const char *path, struct statfs *buf)
 	}
 
 	PROFILE_OFF();
-	status = Info(lock,id);
+	status = Info(lock, id);
 	PROFILE_ON();
 
-	if(status == DOSFALSE)
+	if (status == DOSFALSE)
 	{
 		SHOWMSG("didn't get the info");
 
@@ -147,11 +146,11 @@ statfs(const char *path, struct statfs *buf)
 		goto out;
 	}
 
-	__convert_info_to_statfs(id,buf);
+	__convert_info_to_statfs(id, buf);
 
 	result = OK;
 
- out:
+out:
 
 	PROFILE_OFF();
 
@@ -160,5 +159,5 @@ statfs(const char *path, struct statfs *buf)
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

@@ -37,77 +37,54 @@
 
 /****************************************************************************/
 
-/* The shared object API is available only on AmigaOS 4.0. */
-#if defined(__amigaos4__)
-
-/****************************************************************************/
-
 #include <dlfcn.h>
-
-/****************************************************************************/
-
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
-/****************************************************************************/
+extern struct ElfIFace *__IElf;
 
-extern struct ElfIFace *	__IElf;
-
-/****************************************************************************/
-
-void * dlopen(const char * path_name,int mode)
+void *dlopen(const char *path_name, int mode)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+	void *result = NULL;
+
+	if (path_name == NULL || path_name[0] == '\0') {
+		__set_errno(ENOENT);
+		goto out;
+	}
+	
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
-
-	void * result = NULL;
-
-	#if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2 != NULL && __global_clib2->__unix_path_semantics)
 	{
-		if(__unix_path_semantics)
+		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+			goto out;
+
+		if (path_name_nti.is_root)
 		{
-			if(path_name[0] == '\0')
-			{
-				SHOWMSG("no name given");
-
-				__set_errno(ENOENT);
-				goto out;
-			}
-
-			if(__translate_unix_to_amiga_path_name(&path_name,&path_name_nti) != 0)
-				goto out;
-
-			if(path_name_nti.is_root)
-			{
-				__set_errno(EACCES);
-				goto out;
-			}
+			__set_errno(EACCES);
+			goto out;
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	if(__global_clib2->__dl_elf_handle != NULL)
+	if (__global_clib2->__dl_elf_handle != NULL)
 	{
-		struct ElfIFace * IElf = __IElf;
+		struct ElfIFace *IElf = __IElf;
 		uint32 flags = 0;
 
-		if(mode & RTLD_LOCAL)
+		if (mode & RTLD_LOCAL)
 			flags = ELF32_RTLD_LOCAL;
 
-		if(mode & RTLD_GLOBAL)
+		if (mode & RTLD_GLOBAL)
 			flags = ELF32_RTLD_GLOBAL;
 
-		result = DLOpen(__global_clib2->__dl_elf_handle,path_name,flags);
+		result = DLOpen(__global_clib2->__dl_elf_handle, path_name, flags);
 	}
-	else {
+	else
+	{
 		__set_errno(ENOSYS);
 	}
- out:
+out:
 
-	return(result);
+	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* __amigaos4__ */

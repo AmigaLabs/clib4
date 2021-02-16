@@ -53,8 +53,7 @@
 
 /****************************************************************************/
 
-int
-pclose(FILE *stream)
+int pclose(FILE *stream)
 {
 	int result = ERROR;
 
@@ -64,12 +63,12 @@ pclose(FILE *stream)
 
 	assert(stream != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(stream == NULL)
+		if (stream == NULL)
 		{
 			SHOWMSG("invalid stream parameter");
 
@@ -77,7 +76,7 @@ pclose(FILE *stream)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	fclose(stream);
 
@@ -86,10 +85,10 @@ pclose(FILE *stream)
 	 */
 	result = OK;
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
@@ -97,14 +96,14 @@ pclose(FILE *stream)
 FILE *
 popen(const char *command, const char *type)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info command_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
-	char * command_copy = NULL;
+#endif /* UNIX_PATH_SEMANTICS */
+	char *command_copy = NULL;
 	BPTR input = ZERO;
 	BPTR output = ZERO;
 	char pipe_file_name[40];
-	FILE * result = NULL;
+	FILE *result = NULL;
 	LONG status;
 	unsigned long task_address;
 	time_t now;
@@ -117,12 +116,12 @@ popen(const char *command, const char *type)
 
 	assert(command != NULL && type != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(command == NULL || type == NULL)
+		if (command == NULL || type == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -130,48 +129,48 @@ popen(const char *command, const char *type)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	/* The first character selects the access mode: read or write. We don't
 	   support anything else. */
-	switch(type[0])
+	switch (type[0])
 	{
-		case 'r':
+	case 'r':
 
-			SHOWMSG("read mode");
-			break;
+		SHOWMSG("read mode");
+		break;
 
-		case 'w':
+	case 'w':
 
-			SHOWMSG("write mode");
-			break;
+		SHOWMSG("write mode");
+		break;
 
-		default:
+	default:
 
-			D(("unsupported access mode '%lc'",type[0]));
-
-			__set_errno(EINVAL);
-			goto out;
-	}
-
-	/* The current PIPE: device only supports unidirectional connections. Worse: even if
-	   a PIPE: device with bidirectional connection support were available, we would
-	   be unable to detect this property. */
-	if((type[1] == '+') || (type[1] != '\0' && type[2] == '+'))
-	{
-		D(("unsupported access mode '%s'",type));
+		D(("unsupported access mode '%lc'", type[0]));
 
 		__set_errno(EINVAL);
 		goto out;
 	}
 
-	#if defined(UNIX_PATH_SEMANTICS)
+	/* The current PIPE: device only supports unidirectional connections. Worse: even if
+	   a PIPE: device with bidirectional connection support were available, we would
+	   be unable to detect this property. */
+	if ((type[1] == '+') || (type[1] != '\0' && type[2] == '+'))
 	{
-		if(__unix_path_semantics)
+		D(("unsupported access mode '%s'", type));
+
+		__set_errno(EINVAL);
+		goto out;
+	}
+
+#if defined(UNIX_PATH_SEMANTICS)
+	{
+		if (__global_clib2->__unix_path_semantics)
 		{
-			char just_the_command_name[MAXPATHLEN+1];
+			char just_the_command_name[MAXPATHLEN + 1];
 			BOOL quotes_needed = FALSE;
-			char * command_name;
+			char *command_name;
 			size_t command_len;
 			BOOL have_quote;
 			size_t len;
@@ -183,16 +182,16 @@ popen(const char *command, const char *type)
 			command_len = len;
 
 			have_quote = FALSE;
-			for(i = 0 ; i < (int)len ; i++)
+			for (i = 0; i < (int)len; i++)
 			{
-				if(command[i] == '\"')
+				if (command[i] == '\"')
 				{
 					quotes_needed = TRUE;
 
 					have_quote ^= TRUE;
 				}
 
-				if((command[i] == ' ' || command[i] == '\t') && NOT have_quote)
+				if ((command[i] == ' ' || command[i] == '\t') && NOT have_quote)
 				{
 					command_len = i;
 					break;
@@ -200,7 +199,7 @@ popen(const char *command, const char *type)
 			}
 
 			/* This may be too long for proper translation... */
-			if(command_len > MAXPATHLEN)
+			if (command_len > MAXPATHLEN)
 			{
 				__set_errno(ENAMETOOLONG);
 
@@ -210,9 +209,9 @@ popen(const char *command, const char *type)
 
 			/* Grab the command name itself, then have it translated. */
 			command_name = just_the_command_name;
-			for(i = 0; (size_t)i < command_len; i++)
+			for (i = 0; (size_t)i < command_len; i++)
 			{
-				if(command[i] != '\"')
+				if (command[i] != '\"')
 					(*command_name++) = command[i];
 			}
 
@@ -220,7 +219,7 @@ popen(const char *command, const char *type)
 
 			command_name = just_the_command_name;
 
-			if(__translate_unix_to_amiga_path_name((const char **)&command_name,&command_nti) != 0)
+			if (__translate_unix_to_amiga_path_name((const char **)&command_name, &command_nti) != 0)
 			{
 				result = NULL;
 				goto out;
@@ -228,7 +227,7 @@ popen(const char *command, const char *type)
 
 			/* Now put it all together again */
 			command_copy = malloc(1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
-			if(command_copy == NULL)
+			if (command_copy == NULL)
 			{
 				__set_errno(ENOMEM);
 
@@ -236,33 +235,33 @@ popen(const char *command, const char *type)
 				goto out;
 			}
 
-			if(quotes_needed)
+			if (quotes_needed)
 			{
 				command_copy[0] = '\"';
-				strcpy(&command_copy[1],command_name);
-				strcat(command_copy,"\"");
+				strcpy(&command_copy[1], command_name);
+				strcat(command_copy, "\"");
 			}
 			else
 			{
-				strcpy(command_copy,command_name);
+				strcpy(command_copy, command_name);
 			}
 
-			strcat(command_copy,&command[command_len]);
+			strcat(command_copy, &command[command_len]);
 
 			command = command_copy;
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
 	/* Build a (hopefully) unique name for the pipe stream to open. We
 	   construct it from the current process address, converted into
 	   an octal number, followed by the current time (in seconds),
 	   converted into another octal number. */
-	strcpy(pipe_file_name,"PIPE:");
+	strcpy(pipe_file_name, "PIPE:");
 
 	task_address = (unsigned long)FindTask(NULL);
 
-	for(i = strlen(pipe_file_name) ; task_address != 0 && i < (int)sizeof(pipe_file_name)-1 ; i++)
+	for (i = strlen(pipe_file_name); task_address != 0 && i < (int)sizeof(pipe_file_name) - 1; i++)
 	{
 		pipe_file_name[i] = '0' + (task_address % 8);
 		task_address = task_address / 8;
@@ -272,7 +271,7 @@ popen(const char *command, const char *type)
 
 	time(&now);
 
-	for( ; now != 0 && i < (int)sizeof(pipe_file_name)-1 ; i++)
+	for (; now != 0 && i < (int)sizeof(pipe_file_name) - 1; i++)
 	{
 		pipe_file_name[i] = '0' + (now % 8);
 		now = now / 8;
@@ -285,27 +284,27 @@ popen(const char *command, const char *type)
 	PROFILE_OFF();
 
 	/* Now open the input and output streams for the program to launch. */
-	if(type[0] == 'r')
+	if (type[0] == 'r')
 	{
 		/* Read mode: we want to read the output of the program; the program
 		   should read from "NIL:". */
-		input = Open("NIL:",MODE_NEWFILE);
-		if(input != ZERO)
-			output = Open(pipe_file_name,MODE_NEWFILE);
+		input = Open("NIL:", MODE_NEWFILE);
+		if (input != ZERO)
+			output = Open(pipe_file_name, MODE_NEWFILE);
 	}
 	else
 	{
 		/* Write mode: we want to send data to the program; the program
 		   should write to "NIL:". */
-		input = Open(pipe_file_name,MODE_NEWFILE);
-		if(input != ZERO)
-			output = Open("NIL:",MODE_NEWFILE);
+		input = Open(pipe_file_name, MODE_NEWFILE);
+		if (input != ZERO)
+			output = Open("NIL:", MODE_NEWFILE);
 	}
 
 	PROFILE_ON();
 
 	/* Check if both I/O streams could be opened. */
-	if(input == ZERO || output == ZERO)
+	if (input == ZERO || output == ZERO)
 	{
 		SHOWMSG("couldn't open the streams");
 
@@ -317,17 +316,17 @@ popen(const char *command, const char *type)
 
 	/* Now try to launch the program. */
 	status = SystemTags((STRPTR)command,
-		SYS_Input,		input,
-		SYS_Output,		output,
-		SYS_Asynch,		TRUE,
-		SYS_UserShell,	TRUE,
-	TAG_END);
+						SYS_Input, input,
+						SYS_Output, output,
+						SYS_Asynch, TRUE,
+						SYS_UserShell, TRUE,
+						TAG_END);
 
 	PROFILE_ON();
 
 	/* If launching the program returned -1 then it could not be started.
 	   We'll need to close the I/O streams we opened above. */
-	if(status == -1)
+	if (status == -1)
 	{
 		SHOWMSG("SystemTagList() failed");
 
@@ -340,23 +339,23 @@ popen(const char *command, const char *type)
 	input = output = ZERO;
 
 	/* Now try to open the pipe we will use to exchange data with the program. */
-	result = fopen(pipe_file_name,type);
+	result = fopen(pipe_file_name, type);
 
- out:
+out:
 
-	if(command_copy != NULL)
+	if (command_copy != NULL)
 		free(command_copy);
 
 	PROFILE_OFF();
 
-	if(input != ZERO)
+	if (input != ZERO)
 		Close(input);
 
-	if(output != ZERO)
+	if (output != ZERO)
 		Close(output);
 
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

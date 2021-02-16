@@ -53,13 +53,12 @@
 
 /****************************************************************************/
 
-int
-unlink(const char * path_name)
+int unlink(const char *path_name)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	DECLARE_UTILITYBASE();
 	struct name_translation_info path_name_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 	BPTR current_dir = ZERO;
 	int result = ERROR;
 	LONG status;
@@ -68,14 +67,14 @@ unlink(const char * path_name)
 
 	SHOWSTRING(path_name);
 
-	assert( path_name != NULL );
+	assert(path_name != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(path_name == NULL)
+		if (path_name == NULL)
 		{
 			SHOWMSG("invalid path name");
 
@@ -83,13 +82,13 @@ unlink(const char * path_name)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__global_clib2->__unix_path_semantics)
 		{
-			if(path_name[0] == '\0')
+			if (path_name[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -97,35 +96,35 @@ unlink(const char * path_name)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&path_name,&path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 				goto out;
 
-			if(path_name_nti.is_root)
+			if (path_name_nti.is_root)
 			{
 				__set_errno(EACCES);
 				goto out;
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	D(("trying to delete '%s'",path_name));
+	D(("trying to delete '%s'", path_name));
 
 	PROFILE_OFF();
 	status = DeleteFile((STRPTR)path_name);
 	PROFILE_ON();
 
-	if(status == DOSFALSE)
+	if (status == DOSFALSE)
 	{
-		#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 		{
-			struct UnlinkNode * uln = NULL;
-			struct UnlinkNode * node;
+			struct UnlinkNode *uln = NULL;
+			struct UnlinkNode *node;
 			BOOL found = FALSE;
 
-			assert( UtilityBase != NULL );
+			assert(UtilityBase != NULL);
 
-			if(NOT __unlink_retries || IoErr() != ERROR_OBJECT_IN_USE)
+			if (NOT __unlink_retries || IoErr() != ERROR_OBJECT_IN_USE)
 			{
 				__set_errno(__translate_access_io_error_to_errno(IoErr()));
 				goto out;
@@ -137,10 +136,10 @@ unlink(const char * path_name)
 			   and then just remember what the last part of the path
 			   pointed to. */
 			PROFILE_OFF();
-			current_dir = Lock("",SHARED_LOCK);
+			current_dir = Lock("", SHARED_LOCK);
 			PROFILE_ON();
 
-			if(current_dir == ZERO)
+			if (current_dir == ZERO)
 			{
 				__set_errno(__translate_io_error_to_errno(IoErr()));
 				goto out;
@@ -150,13 +149,13 @@ unlink(const char * path_name)
 
 			ObtainSemaphore(&__unlink_semaphore);
 
-			assert( __unlink_list.mlh_Head != NULL );
+			assert(__unlink_list.mlh_Head != NULL);
 
-			for(node = (struct UnlinkNode *)__unlink_list.mlh_Head ;
-			    node->uln_MinNode.mln_Succ != NULL ;
-			    node = (struct UnlinkNode *)node->uln_MinNode.mln_Succ)
+			for (node = (struct UnlinkNode *)__unlink_list.mlh_Head;
+				 node->uln_MinNode.mln_Succ != NULL;
+				 node = (struct UnlinkNode *)node->uln_MinNode.mln_Succ)
 			{
-				if(Stricmp(node->uln_Name,path_name) == SAME && SameLock(node->uln_Lock,current_dir) == LOCK_SAME)
+				if (Stricmp(node->uln_Name, path_name) == SAME && SameLock(node->uln_Lock, current_dir) == LOCK_SAME)
 				{
 					found = TRUE;
 					break;
@@ -165,16 +164,16 @@ unlink(const char * path_name)
 
 			PROFILE_ON();
 
-			if(NOT found)
+			if (NOT found)
 			{
 				uln = malloc(sizeof(*uln) + strlen(path_name) + 1);
-				if(uln != NULL)
+				if (uln != NULL)
 				{
 					uln->uln_Lock = current_dir;
 					uln->uln_Name = (char *)(uln + 1);
 
-					strcpy(uln->uln_Name,path_name);
-					AddTail((struct List *)&__unlink_list,(struct Node *)uln);
+					strcpy(uln->uln_Name, path_name);
+					AddTail((struct List *)&__unlink_list, (struct Node *)uln);
 
 					current_dir = ZERO;
 				}
@@ -182,28 +181,28 @@ unlink(const char * path_name)
 
 			ReleaseSemaphore(&__unlink_semaphore);
 
-			if(NOT found && uln == NULL)
+			if (NOT found && uln == NULL)
 			{
 				__set_errno(ENOMEM);
 				goto out;
 			}
 		}
-		#else
+#else
 		{
 			__set_errno(__translate_io_error_to_errno(IoErr()));
 			goto out;
 		}
-		#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 	}
 
 	result = OK;
 
- out:
+out:
 
 	PROFILE_OFF();
 	UnLock(current_dir);
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

@@ -43,13 +43,12 @@
 
 /****************************************************************************/
 
-int
-rename(const char *oldname,const char *newname)
+int rename(const char *oldname, const char *newname)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info old_nti;
 	struct name_translation_info new_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 	int result = ERROR;
 	LONG status;
 
@@ -58,16 +57,16 @@ rename(const char *oldname,const char *newname)
 	SHOWSTRING(oldname);
 	SHOWSTRING(newname);
 
-	assert( oldname != NULL && newname != NULL );
+	assert(oldname != NULL && newname != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	PROFILE_OFF();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(oldname == NULL || newname == NULL)
+		if (oldname == NULL || newname == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -75,13 +74,13 @@ rename(const char *oldname,const char *newname)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__global_clib2->__unix_path_semantics)
 		{
-			if(oldname[0] == '\0' || newname[0] == '\0')
+			if (oldname[0] == '\0' || newname[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -89,35 +88,35 @@ rename(const char *oldname,const char *newname)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&oldname,&old_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&oldname, &old_nti) != 0)
 				goto out;
 
-			if(__translate_unix_to_amiga_path_name(&newname,&new_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&newname, &new_nti) != 0)
 				goto out;
 
-			if(old_nti.is_root || new_nti.is_root)
+			if (old_nti.is_root || new_nti.is_root)
 			{
 				__set_errno(EACCES);
 				goto out;
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	D(("renaming '%s' to '%s'",oldname,newname));
+	D(("renaming '%s' to '%s'", oldname, newname));
 
-	status = Rename((STRPTR)oldname,(STRPTR)newname);
+	status = Rename((STRPTR)oldname, (STRPTR)newname);
 
-	if(status == DOSFALSE)
+	if (status == DOSFALSE)
 	{
 		SHOWMSG("that didn't work");
 
-		#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 		{
 			LONG error;
 
 			error = IoErr();
-			if(error != ERROR_OBJECT_EXISTS)
+			if (error != ERROR_OBJECT_EXISTS)
 			{
 				SHOWMSG("that was some other error");
 
@@ -129,7 +128,7 @@ rename(const char *oldname,const char *newname)
 
 			/* ZZZ there should be a safer solution for this */
 
-			if(CANNOT DeleteFile((STRPTR)newname))
+			if (CANNOT DeleteFile((STRPTR)newname))
 			{
 				SHOWMSG("couldn't delete the file");
 
@@ -137,7 +136,7 @@ rename(const char *oldname,const char *newname)
 				goto out;
 			}
 
-			if(CANNOT Rename((STRPTR)oldname,(STRPTR)newname))
+			if (CANNOT Rename((STRPTR)oldname, (STRPTR)newname))
 			{
 				SHOWMSG("that didn't work");
 
@@ -145,20 +144,20 @@ rename(const char *oldname,const char *newname)
 				goto out;
 			}
 		}
-		#else
+#else
 		{
 			__set_errno(__translate_io_error_to_errno(IoErr()));
 			goto out;
 		}
-		#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 	}
 
 	result = OK;
 
- out:
+out:
 
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
