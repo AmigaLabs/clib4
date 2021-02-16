@@ -13,26 +13,40 @@ LIBS += lib/libprofile.so \
 ##############################################################################
 
 PROFILE_LIB = \
-	profile__mcount.o \
-	profile_gmon.o \
-	profile_mcount.o
+	profile/profile__mcount.o \
+	profile/profile_gmon.o \
+	profile/profile_mcount.o
 
 ##############################################################################
 
 # Dependencies to rebuild if the library version changes
 
-obj/libprofile/profile.lib_rev.o : profile.lib_rev.c profile.lib_rev.h
+obj/libprofile/profile.lib_rev.o : profile/profile.lib_rev.c profile/profile.lib_rev.h
 
-obj/libprofile/%.o : AFLAGS += $(PIC) $(LARGEDATA)
+obj.shared/libprofile/profile.lib_rev.o : profile/profile.lib_rev.c profile/profile.lib_rev.h
+
+obj/libprofile/%.o : AFLAGS += $(LARGEDATA)
+
+obj.shared/libprofile/%.o : AFLAGS += $(PIC) $(LARGEDATA)
+
 obj/libprofile/%.o : %.S
 	$(VERBOSE)$(ASSEMBLE)
 
-obj/libprofile/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+obj.shared/libprofile/%.o : %.S
+	$(VERBOSE)$(ASSEMBLE)
+
+obj/libprofile/%.o : CFLAGS += $(LARGEDATA)
+
+obj.shared/libprofile/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+
 obj/libprofile/%.o : %.c
 	$(VERBOSE)$(COMPILE)
+
+obj.shared/libprofile/%.o : %.c
+	$(VERBOSE)$(COMPILE_SHARED)
 
 lib/libprofile.a : $(addprefix obj/libprofile/,$(PROFILE_LIB))
 	$(VERBOSE)$(MAKELIB)
 
-lib/libprofile.so : $(addprefix obj/libprofile/,$(PROFILE_LIB))
+lib/libprofile.so : $(addprefix obj.shared/libprofile/,$(PROFILE_LIB))
 	$(VERBOSE)$(MAKESHARED)

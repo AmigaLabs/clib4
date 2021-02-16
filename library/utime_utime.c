@@ -47,36 +47,35 @@
 
 /****************************************************************************/
 
-int
-utime(const char * path_name,const struct utimbuf * times)
+int utime(const char *path_name, const struct utimbuf *times)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 	struct DateStamp ds;
 	int result = ERROR;
 	LONG status;
 
-	assert( path_name != NULL );
+	assert(path_name != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(path_name == NULL)
+		if (path_name == NULL)
 		{
 			__set_errno(EFAULT);
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	/* If a modification time is provided, convert it into the local
 	   DateStamp format, as used by the SetFileDate() function. */
-	if(times != NULL)
+	if (times != NULL)
 	{
-		if(CANNOT __convert_time_to_datestamp(times->modtime,&ds))
+		if (CANNOT __convert_time_to_datestamp(times->modtime, &ds))
 		{
 			__set_errno(EINVAL);
 			goto out;
@@ -89,11 +88,11 @@ utime(const char * path_name,const struct utimbuf * times)
 		DateStamp(&ds);
 	}
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__global_clib2->__unix_path_semantics)
 		{
-			if(path_name[0] == '\0')
+			if (path_name[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -101,23 +100,23 @@ utime(const char * path_name,const struct utimbuf * times)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&path_name,&path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 				goto out;
 
-			if(path_name_nti.is_root)
+			if (path_name_nti.is_root)
 			{
 				__set_errno(EACCES);
 				goto out;
 			}
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
 	PROFILE_OFF();
-	status = SetFileDate((STRPTR)path_name,&ds);
+	status = SetFileDate((STRPTR)path_name, &ds);
 	PROFILE_ON();
 
-	if(status == DOSFALSE)
+	if (status == DOSFALSE)
 	{
 		__set_errno(__translate_io_error_to_errno(IoErr()));
 		goto out;
@@ -125,7 +124,7 @@ utime(const char * path_name,const struct utimbuf * times)
 
 	result = OK;
 
- out:
+out:
 
-	return(result);
+	return (result);
 }

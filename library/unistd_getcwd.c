@@ -181,7 +181,7 @@ __getcwd(char * buffer,size_t buffer_size,const char *file,int line)
 
 		#if defined(UNIX_PATH_SEMANTICS)
 		{
-			if(__unix_path_semantics)
+			if(__global_clib2->__unix_path_semantics)
 			{
 				const char * path_name = buffer;
 

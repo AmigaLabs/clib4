@@ -1,5 +1,5 @@
 /*
- * $Id: ctype_isascii.c,v 1.3 2006-01-08 12:04:22 obarthel Exp $
+ * $Id: ctype_isascii.c,v 1.4 2021-02-10 23:46:22 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,22 +35,8 @@
 #include "ctype_headers.h"
 #endif /* _CTYPE_HEADERS_H */
 
-/****************************************************************************/
-
-#undef isascii
-
-/****************************************************************************/
-
-int isascii(int c);
-
-/****************************************************************************/
-
-int
+int 
 isascii(int c)
 {
-	int result;
-
-	result = (0 <= c && c <= 127);
-
-	return(result);
+	return c >= 0 && c < 128;
 }

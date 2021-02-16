@@ -35,6 +35,14 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
+#ifdef log2
+# undef log2
+#endif
+
+#ifndef __cplusplus
+double log2(double x);
+#endif
+
 double
 log2(double x)
 {

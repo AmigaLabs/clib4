@@ -80,7 +80,7 @@ int rmdir(const char *path_name)
 
 #if defined(UNIX_PATH_SEMANTICS)
 	{
-		if (__unix_path_semantics)
+		if (__global_clib2->__unix_path_semantics)
 		{
 			if (path_name[0] == '\0')
 			{
@@ -159,7 +159,8 @@ int rmdir(const char *path_name)
 	result = OK;
 
 out:
-	if (fib != NULL) {
+	if (fib != NULL)
+	{
 		FreeDosObject(DOS_EXAMINEDATA, fib);
 	}
 

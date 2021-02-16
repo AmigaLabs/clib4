@@ -45,13 +45,12 @@
 
 __BEGIN_DECLS
 
-/****************************************************************************/
-
 #ifndef _STDLIB_H
 #include <stdlib.h>
 #endif /* _STDLIB_H */
 
-/****************************************************************************/
+/* Natural log of 2 */
+#define _M_LN2        0.693147180559945309417
 
 extern double __huge_val;
 
@@ -155,7 +154,7 @@ extern int __isnan(double x);
 extern int __isinf(double x);
 
 /****************************************************************************/
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__cplusplus)
 #define fpclassify(x) \
 	(sizeof(x) == sizeof(float) ? __fpclassify_float(x) : __fpclassify_double(x))
 
@@ -263,7 +262,7 @@ extern float truncf(float x);
 extern int ilogbf(float x);
 extern int finite(double x);
 
-#if !defined(__GNUC__)
+#if defined(__cplusplus)
 #define isinf(x) __isinf(x)
 #define isnan(x) __isnan(x)
 #endif
@@ -308,7 +307,11 @@ extern int ilogb(double x);
 extern float exp2f(float x);
 extern double exp2(double x);
 extern long double exp2l(long double x);
+#if !defined(__cplusplus)
+#define log2(x) (log (x) / _M_LN2)
+#else
 extern double log2(double x);
+#endif
 extern float log2f(float x);
 extern long double log2l(long double x);
 

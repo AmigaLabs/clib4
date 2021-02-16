@@ -90,7 +90,7 @@ int access(const char *path_name, int mode)
 	{
 		STRPTR actual_path_name = NULL;
 
-		if (__unix_path_semantics)
+		if (__global_clib2->__unix_path_semantics)
 		{
 			if (path_name[0] == '\0')
 			{

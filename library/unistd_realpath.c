@@ -48,13 +48,13 @@
 /****************************************************************************/
 
 char *
-realpath(const char * path_name, char * buffer)
+realpath(const char *path_name, char *buffer)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
 	struct name_translation_info buffer_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
-	struct DevProc * dvp = NULL;
+#endif /* UNIX_PATH_SEMANTICS */
+	struct DevProc *dvp = NULL;
 	BPTR lock = ZERO;
 	char *result = NULL;
 
@@ -63,14 +63,14 @@ realpath(const char * path_name, char * buffer)
 	SHOWSTRING(path_name);
 	SHOWPOINTER(buffer);
 
-	assert( path_name != NULL && buffer != NULL );
+	assert(path_name != NULL && buffer != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(path_name == NULL || buffer == NULL)
+		if (path_name == NULL || buffer == NULL)
 		{
 			SHOWSTRING("invalid parameters");
 
@@ -78,13 +78,13 @@ realpath(const char * path_name, char * buffer)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__global_clib2->__unix_path_semantics)
 		{
-			if(path_name[0] == '\0')
+			if (path_name[0] == '\0')
 			{
 				SHOWMSG("no name given");
 
@@ -92,29 +92,29 @@ realpath(const char * path_name, char * buffer)
 				goto out;
 			}
 
-			if(__translate_unix_to_amiga_path_name(&path_name,&path_name_nti) != 0)
+			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 				goto out;
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
-	D(("trying to get a lock on '%s'",path_name));
+	D(("trying to get a lock on '%s'", path_name));
 
 	PROFILE_OFF();
-	lock = Lock((STRPTR)path_name,SHARED_LOCK);
+	lock = Lock((STRPTR)path_name, SHARED_LOCK);
 	PROFILE_ON();
 
-	if(lock != ZERO)
+	if (lock != ZERO)
 	{
 		LONG status;
 
 		SHOWMSG("trying to obtain the absolute path");
 
-		PROFILE_OFF();	
-		status = NameFromLock(lock,buffer,PATH_MAX);
+		PROFILE_OFF();
+		status = NameFromLock(lock, buffer, PATH_MAX);
 		PROFILE_ON();
 
-		if(status == DOSFALSE)
+		if (status == DOSFALSE)
 		{
 			SHOWMSG("that didn't work");
 
@@ -130,25 +130,25 @@ realpath(const char * path_name, char * buffer)
 		goto out;
 	}
 
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	{
-		if(__unix_path_semantics)
+		if (__global_clib2->__unix_path_semantics)
 		{
-			if(__translate_amiga_to_unix_path_name((char const **)&buffer,&buffer_nti) != 0)
+			if (__translate_amiga_to_unix_path_name((char const **)&buffer, &buffer_nti) != 0)
 				goto out;
 
-			__restore_path_name((char const **)&buffer,&buffer_nti);
+			__restore_path_name((char const **)&buffer, &buffer_nti);
 
-			strcpy(buffer,buffer_nti.substitute);
+			strcpy(buffer, buffer_nti.substitute);
 		}
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
 	result = buffer;
 
 	SHOWSTRING(buffer);
 
- out:
+out:
 
 	PROFILE_OFF();
 
@@ -158,5 +158,5 @@ realpath(const char * path_name, char * buffer)
 	PROFILE_ON();
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

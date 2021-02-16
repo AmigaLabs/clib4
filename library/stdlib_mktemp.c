@@ -53,15 +53,15 @@
 /****************************************************************************/
 
 char *
-mktemp(char * name_template)
+mktemp(char *name_template)
 {
-	#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info name_template_nti;
-	#endif /* UNIX_PATH_SEMANTICS */
-	char * test_name;
-	struct Process * this_process;
+#endif /* UNIX_PATH_SEMANTICS */
+	char *test_name;
+	struct Process *this_process;
 	APTR old_window_pointer;
-	char * result = NULL;
+	char *result = NULL;
 	size_t template_offset;
 	size_t template_len;
 	size_t name_len;
@@ -77,12 +77,12 @@ mktemp(char * name_template)
 
 	assert(name_template != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(name_template == NULL)
+		if (name_template == NULL)
 		{
 			SHOWMSG("invalid name template");
 
@@ -90,7 +90,7 @@ mktemp(char * name_template)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	this_process = (struct Process *)FindTask(NULL);
 
@@ -98,7 +98,7 @@ mktemp(char * name_template)
 
 	/* So, how long is that name template? */
 	name_len = strlen(name_template);
-	if(name_len == 0)
+	if (name_len == 0)
 	{
 		SHOWMSG("invalid name template");
 
@@ -110,16 +110,16 @@ mktemp(char * name_template)
 	   the template. There should be at least 6. We also want
 	   to know where to find the first 'X' and how many of the
 	   'X' characters there are. */
-	template_offset	= 0;
-	template_len	= 0;
+	template_offset = 0;
+	template_len = 0;
 
-	for(i = 0 ; i < name_len ; i++)
+	for (i = 0; i < name_len; i++)
 	{
-		assert( name_len >= (i + 1) );
+		assert(name_len >= (i + 1));
 
 		offset = name_len - (i + 1);
 
-		if(name_template[offset] != 'X')
+		if (name_template[offset] != 'X')
 			break;
 
 		template_offset = offset;
@@ -129,7 +129,7 @@ mktemp(char * name_template)
 	SHOWVALUE(template_offset);
 	SHOWVALUE(template_len);
 
-	if(template_len == 0)
+	if (template_len == 0)
 	{
 		SHOWMSG("invalid name template");
 
@@ -145,14 +145,14 @@ mktemp(char * name_template)
 
 	/* Fill the template 'X' characters with letters made up by
 	   converting the pseudo-random number. */
-	for(i = 0 ; i < template_len ; i++)
+	for (i = 0; i < template_len; i++)
 	{
 		name_template[template_offset + i] = 'A' + (pseudo_random_number % 26);
 
 		/* One more letter taken; if we run out of letters,
 		   cook up another pseudo-random number. */
 		pseudo_random_number = (pseudo_random_number / 26);
-		if(pseudo_random_number == 0)
+		if (pseudo_random_number == 0)
 		{
 			time(&now);
 
@@ -163,50 +163,50 @@ mktemp(char * name_template)
 	SHOWSTRING(name_template);
 
 	/* Now check if the name we picked is unique. If not, make another name. */
-	while(TRUE)
+	while (TRUE)
 	{
-		if(__check_abort_enabled)
+		if (__check_abort_enabled)
 			__check_abort();
 
-		D(("checking '%s'",name_template));
+		D(("checking '%s'", name_template));
 
 		test_name = name_template;
 
-		/* If necessary, quickly translate the semantics of the file name
+/* If necessary, quickly translate the semantics of the file name
 		   we cooked up above. */
-		#if defined(UNIX_PATH_SEMANTICS)
+#if defined(UNIX_PATH_SEMANTICS)
 		{
-			if(__unix_path_semantics)
+			if (__global_clib2->__unix_path_semantics)
 			{
-				if(__translate_unix_to_amiga_path_name((char const **)&test_name,&name_template_nti) != 0)
+				if (__translate_unix_to_amiga_path_name((char const **)&test_name, &name_template_nti) != 0)
 					goto out;
 
-				if(name_template_nti.is_root)
+				if (name_template_nti.is_root)
 				{
 					__set_errno(EACCES);
 					goto out;
 				}
 			}
 		}
-		#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
 		/* Turn off DOS error requesters. */
 		old_window_pointer = __set_process_window((APTR)-1);
 
 		/* Does this object exist already? */
 		PROFILE_OFF();
-		lock = Lock(test_name,SHARED_LOCK);
+		lock = Lock(test_name, SHARED_LOCK);
 		PROFILE_ON();
 
 		/* Restore DOS requesters. */
 		__set_process_window(old_window_pointer);
 
-		if(lock == ZERO)
+		if (lock == ZERO)
 		{
 			/* If the object does not exist yet then we
 			 * are finished.
 			 */
-			if(IoErr() == ERROR_OBJECT_NOT_FOUND)
+			if (IoErr() == ERROR_OBJECT_NOT_FOUND)
 			{
 				result = name_template;
 				break;
@@ -225,10 +225,10 @@ mktemp(char * name_template)
 
 		/* Change one letter; if that 'overflows', start
 		   over with 'A' and move on to the next position. */
-		for(i = 0 ; i < template_len ; i++)
+		for (i = 0; i < template_len; i++)
 		{
 			name_template[template_offset + i]++;
-			if(name_template[template_offset + i] <= 'Z')
+			if (name_template[template_offset + i] <= 'Z')
 				break;
 
 			name_template[template_offset + i] = 'A';
@@ -237,8 +237,8 @@ mktemp(char * name_template)
 
 	SHOWSTRING(name_template);
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

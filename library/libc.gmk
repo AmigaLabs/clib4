@@ -41,6 +41,7 @@ C_LIB := \
 	ctype_isupper.o \
 	ctype_isxdigit.o \
 	ctype_table.o \
+	ctype_toascii.o \
 	ctype_tolower.o \
 	ctype_toupper.o \
 	dirent_alphasort.o \
@@ -86,7 +87,7 @@ C_LIB := \
 	msg_msgrcv.o \
 	msg_msgsnd.o \
 	msg_msgsnap.o \
-	profile_profil.o \
+	profile/profile_profil.o \
 	sched_sched_yield.o \
 	semaphore_sem_destroy.o \
 	semaphore_sem_getvalue.o \
@@ -592,10 +593,12 @@ C_LIB := \
 	usergroup_getgrnam.o \
 	usergroup_getgroups.o \
 	usergroup_getpass.o \
+	usergroup_getpgrp.o \
 	usergroup_getpwent.o \
 	usergroup_getpwnam.o \
 	usergroup_getpwuid.o \
 	usergroup_getuid.o \
+	usergroup_tcgetpgrp.o \
 	usergroup_initgroups.o \
 	usergroup_init_exit.o \
 	usergroup_rootmode.o \
@@ -681,6 +684,7 @@ C_LIB := \
 	uio_writev.o \
 	unistd_access.o \
 	unistd_chdir.o \
+	unistd_fchdir.o \
 	unistd_chdir_exit.o \
 	unistd_chown.o \
 	unistd_common_pathconf.o \
@@ -714,7 +718,6 @@ C_LIB := \
 	unistd_truncate.o \
 	unistd_ttyname.o \
 	unistd_ttyname_r.o \
-	unistd_unix_path_semantics.o \
 	unistd_unlink.o \
 	unistd_unlink_retries.o \
 	unistd_wildcard_expand.o \
@@ -1167,13 +1170,20 @@ C_LIB := \
 # Dependencies to rebuild if the library version changes
 
 obj/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
+obj.shared/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
 
-obj/libc/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+obj/libc/%.o : CFLAGS += $(LARGEDATA)
+
+obj.shared/libc/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+
 obj/libc/%.o : %.c
 	$(VERBOSE)$(COMPILE)
+
+obj.shared/libc/%.o : %.c
+	$(VERBOSE)$(COMPILE_SHARED)
 
 lib/libc.a : $(addprefix obj/libc/,$(C_LIB))
 	$(VERBOSE)@$(MAKELIB)
 
-lib/libc.so : $(addprefix obj/libc/,$(C_LIB))
+lib/libc.so : $(addprefix obj.shared/libc/,$(C_LIB))
 	$(VERBOSE)@$(MAKESHARED)

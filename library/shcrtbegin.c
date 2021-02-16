@@ -78,13 +78,14 @@ extern struct Library NOCOMMON *__ElfBase;
 extern struct ElfIFace NOCOMMON *__IElf;
 
 /* Local timer I/O. */
-struct MsgPort *NOCOMMON __timer_port;
-struct timerequest *NOCOMMON __timer_request;
-struct Library *NOCOMMON __TimerBase;
-struct TimerIFace *NOCOMMON __ITimer;
+extern struct MsgPort *NOCOMMON __timer_port;
+extern struct timerequest *NOCOMMON __timer_request;
+
+extern struct Library *NOCOMMON __TimerBase;
+extern struct TimerIFace *NOCOMMON __ITimer;
 
 /****************************************************************************/
-
+/*
 CLIB_CONSTRUCTOR(timer_init)
 {
 	BOOL success = FALSE;
@@ -161,7 +162,7 @@ CLIB_DESTRUCTOR(timer_exit)
 
 	LEAVE();
 }
-
+*/
 static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
 static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
 

@@ -79,6 +79,8 @@ typedef unsigned long   u_long;
 typedef unsigned long useconds_t;
 typedef long suseconds_t;
 
+typedef int32_t blksize_t;
+
 __END_DECLS
 
 #endif /* _SYS_TYPES_H */

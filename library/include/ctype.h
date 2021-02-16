@@ -41,34 +41,27 @@
 #ifndef _CTYPE_H
 #define _CTYPE_H
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 extern int isalnum(int c);
 extern int isalpha(int c);
 extern int iscntrl(int c);
-
 extern int isdigit(int c);
-extern int isxdigit(int c);
-
 extern int isgraph(int c);
-extern int ispunct(int c);
-extern int isprint(int c);
-
 extern int islower(int c);
-extern int isupper(int c);
-
+extern int isprint(int c);
+extern int ispunct(int c);
 extern int isspace(int c);
-extern int isblank(int c);
-
+extern int isupper(int c);
+extern int isxdigit(int c);
 extern int tolower(int c);
 extern int toupper(int c);
 
+extern int isblank(int c);
+extern int isascii(int c);
+extern int toascii(int c);
 /****************************************************************************/
 
 /*
@@ -77,13 +70,9 @@ extern int toupper(int c);
  * 'C' locale rules.
  */
 
-#ifdef __C_MACROS__
-
-/****************************************************************************/
+#ifndef __cplusplus
 
 extern const unsigned char __ctype_table[];
-
-/****************************************************************************/
 
 #define __CTYPE_CONTROL		0x01	/* This is a control character */
 #define __CTYPE_DIGIT		0x02	/* This is a 'decimal' digit */
@@ -109,22 +98,8 @@ extern const unsigned char __ctype_table[];
 #define isspace(c)	((__ctype_table[(c) & 255] & __CTYPE_WHITE_SPACE) != 0)
 #define isblank(c)	((c) == ' ' || (c) == '\t')
 
-/****************************************************************************/
-
-#endif /* __C_MACROS__ */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-#define isascii(c) ((unsigned)(c) <= 127)
-
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
 #endif /* __cplusplus */
 
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _CTYPE_H */

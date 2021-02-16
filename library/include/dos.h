@@ -365,18 +365,6 @@ extern void __locale_exit(void);
 
 /****************************************************************************/
 
-/*
- * If linked with -lunix, Unix path names are translated to Amiga path
- * names (and the other way round). If you wish to disable this, set the
- * following variable to FALSE. Only the path name translation is affected
- * by setting this variable to FALSE. You will always get Unix-like behaviour
- * from certain functions regardless of whether the path names are translated
- * or not.
- */
-extern BOOL __unix_path_semantics;
-
-/****************************************************************************/
-
 /* A data structures used by the path translation routines below. */
 struct name_translation_info
 {
@@ -590,6 +578,17 @@ struct _clib2
 
 	/* This is the pointer to itself */
 	struct Process *self;
+
+	/*
+	* Unix path names are not translated to Amiga path names (and the other way round)
+	* by default. If you wish to enable this, set the following variable to TRUE. 
+	* Only the path name translation is affected by setting this variable to TRUE.
+	* You will always get Unix-like behaviour from certain functions regardless of
+	* whether the path names are translated or not.
+	* It is possible to enable this variable creating a file called .unix in the program
+	* directory. In this case the unix translation will be enabled at start
+	*/
+	BOOL __unix_path_semantics; /* Enable / Disable unix path semantics */
 };
 
 extern struct _clib2 *__global_clib2;

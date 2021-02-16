@@ -47,49 +47,47 @@
 
 /****************************************************************************/
 
-int
-system(const char * command)
+int system(const char *command)
 {
-	char * command_copy = NULL;
+	char *command_copy = NULL;
 	int result;
 
 	ENTER();
 
-	if(command == NULL)
+	if (command == NULL)
 		SHOWPOINTER(command);
 	else
 		SHOWSTRING(command);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	/* A NULL pointer for the name of the command to execute is
 	 * really a query to find out whether a shell is available.
 	 * We return 1 (TRUE).
 	 */
-	if(command == NULL)
+	if (command == NULL)
 	{
 		result = 1;
 	}
 	else
 	{
 		static const struct TagItem system_tags[2] =
-		{
-			{ SYS_UserShell,	TRUE },
-			{ TAG_END,			0 }
-		};
-
-		#if defined(UNIX_PATH_SEMANTICS)
-		struct name_translation_info command_nti;
-		#endif /* UNIX_PATH_SEMANTICS */
-
-		#if defined(UNIX_PATH_SEMANTICS)
-		{
-			if(__unix_path_semantics)
 			{
-				char just_the_command_name[MAXPATHLEN+1];
+				{SYS_UserShell, TRUE},
+				{TAG_END, 0}};
+
+#if defined(UNIX_PATH_SEMANTICS)
+		struct name_translation_info command_nti;
+#endif /* UNIX_PATH_SEMANTICS */
+
+#if defined(UNIX_PATH_SEMANTICS)
+		{
+			if (__global_clib2->__unix_path_semantics)
+			{
+				char just_the_command_name[MAXPATHLEN + 1];
 				BOOL need_quotes = FALSE;
-				char * command_name;
+				char *command_name;
 				size_t command_len;
 				BOOL have_quote;
 				size_t len;
@@ -102,15 +100,15 @@ system(const char * command)
 				command_len = len;
 
 				have_quote = FALSE;
-				for(i = 0 ; i < len ; i++)
+				for (i = 0; i < len; i++)
 				{
-					if(command[i] == '\"')
+					if (command[i] == '\"')
 					{
 						need_quotes = TRUE;
 						have_quote ^= TRUE;
 					}
 
-					if((command[i] == ' ' || command[i] == '\t') && NOT have_quote)
+					if ((command[i] == ' ' || command[i] == '\t') && NOT have_quote)
 					{
 						command_len = i;
 						break;
@@ -118,7 +116,7 @@ system(const char * command)
 				}
 
 				/* This may be too long for proper translation... */
-				if(command_len > MAXPATHLEN)
+				if (command_len > MAXPATHLEN)
 				{
 					__set_errno(ENAMETOOLONG);
 
@@ -128,9 +126,9 @@ system(const char * command)
 
 				/* Grab the command name itself, then have it translated. */
 				command_name = just_the_command_name;
-				for(i = 0 ; i < command_len ; i++)
+				for (i = 0; i < command_len; i++)
 				{
-					if(command[i] != '\"')
+					if (command[i] != '\"')
 						(*command_name++) = command[i];
 				}
 
@@ -140,7 +138,7 @@ system(const char * command)
 
 				/* Don't try to translate the name of the command unless it has
 				   path name separator characters in it. */
-				if(strchr(command_name,'/') != NULL && __translate_unix_to_amiga_path_name((const char **)&command_name,&command_nti) != 0)
+				if (strchr(command_name, '/') != NULL && __translate_unix_to_amiga_path_name((const char **)&command_name, &command_nti) != 0)
 				{
 					result = ERROR;
 					goto out;
@@ -148,7 +146,7 @@ system(const char * command)
 
 				/* Now put it all together again */
 				command_copy = malloc(1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
-				if(command_copy == NULL)
+				if (command_copy == NULL)
 				{
 					__set_errno(ENOMEM);
 
@@ -156,24 +154,24 @@ system(const char * command)
 					goto out;
 				}
 
-				if(need_quotes)
+				if (need_quotes)
 				{
 					command_copy[0] = '\"';
 
-					strcpy(&command_copy[1],command_name);
-					strcat(command_copy,"\"");
+					strcpy(&command_copy[1], command_name);
+					strcat(command_copy, "\"");
 				}
 				else
 				{
-					strcpy(command_copy,command_name);
+					strcpy(command_copy, command_name);
 				}
 
-				strcat(command_copy,&command[command_len]);
+				strcat(command_copy, &command[command_len]);
 
 				command = command_copy;
 			}
 		}
-		#endif /* UNIX_PATH_SEMANTICS */
+#endif /* UNIX_PATH_SEMANTICS */
 
 		SHOWSTRING(command);
 
@@ -189,11 +187,11 @@ system(const char * command)
 		PROFILE_ON();
 	}
 
- out:
+out:
 
-	if(command_copy != NULL)
+	if (command_copy != NULL)
 		free(command_copy);
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
