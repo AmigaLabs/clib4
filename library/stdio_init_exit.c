@@ -109,8 +109,6 @@ STDIO_DESTRUCTOR(stdio_exit)
 
 	__close_all_files();
 
-	__stdio_lock_exit();
-
 	LEAVE();
 }
 

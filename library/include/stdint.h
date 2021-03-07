@@ -167,16 +167,14 @@ typedef	unsigned long		 	uintmax_t;
 #define	SIZE_MAX				UINT_MAX
 #endif	/* not C++ or LIMIT_MACROS */
 
-#if	!defined(__cplusplus) || defined(__STDC_CONSTANT_MACROS)
+#if !defined(__cplusplus) || defined(__STDC_CONSTANT_MACROS)
 #define	INT8_C(x)		x
 #define	INT16_C(x)		x
 #define	INT32_C(x)		x
-#define	INT64_C(x)		x ## LL
 
 #define	UINT8_C(x)		x ## U
 #define	UINT16_C(x)		x ## U
 #define	UINT32_C(x)		x ## U
-#define	UINT64_C(x)		x ## ULL
 
 #if defined(__GNUC__) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L))
 #define	INTMAX_C(x)		x ## LL
@@ -187,6 +185,9 @@ typedef	unsigned long		 	uintmax_t;
 #endif /* __GNUC__ || (__STDC_VERSION__ && __STDC_VERSION__ >= 199901L) */
 
 #endif	/* not C++ or CONSTANT_MACROS */
+
+#define INT64_C(x)	x##LL
+#define UINT64_C(x)	x##ULL
 
 /****************************************************************************/
 

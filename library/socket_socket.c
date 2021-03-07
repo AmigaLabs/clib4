@@ -65,16 +65,12 @@ socket(int domain, int type, int protocol)
 		assert(fd_slot_number >= 0);
 	}
 
-#if defined(__THREAD_SAFE)
+	lock = __create_semaphore();
+	if (lock == NULL)
 	{
-		lock = __create_semaphore();
-		if (lock == NULL)
-		{
-			__set_errno(ENOMEM);
-			goto out;
-		}
+		__set_errno(ENOMEM);
+		goto out;
 	}
-#endif /* __THREAD_SAFE */
 
 	PROFILE_OFF();
 	socket_fd = __socket(domain, type, protocol);
@@ -98,11 +94,7 @@ out:
 
 	__stdio_unlock();
 
-#if defined(__THREAD_SAFE)
-	{
-		__delete_semaphore(lock);
-	}
-#endif /* __THREAD_SAFE */
+	__delete_semaphore(lock);
 
 	if (__check_abort_enabled)
 		__check_abort();

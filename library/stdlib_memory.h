@@ -336,28 +336,7 @@ extern unsigned long NOCOMMON __current_num_memory_chunks_allocated;
 extern int NOCOMMON __default_pool_size;
 extern int NOCOMMON __default_puddle_size;
 
-/****************************************************************************/
-
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 extern void __memory_lock(void);
 extern void __memory_unlock(void);
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
-#define __memory_lock()		((void)0)
-#define __memory_unlock()	((void)0)
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */
-
-/****************************************************************************/
 
 #endif /* _STDLIB_MEMORY_H */

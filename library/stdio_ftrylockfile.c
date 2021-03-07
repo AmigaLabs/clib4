@@ -41,12 +41,6 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 int
 ftrylockfile(FILE *stream)
 {
@@ -95,7 +89,3 @@ ftrylockfile(FILE *stream)
 	RETURN(result);
 	return(result);
 }
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */

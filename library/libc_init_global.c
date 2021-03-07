@@ -113,6 +113,11 @@ struct _clib2 * InitGlobal() {
 		/* Set system time for rusage */
 		GetSysTime(&__global_clib2->clock);
 
+		/* clear tempnam stuff */
+		srand(time(NULL));
+		__global_clib2->inc = 0;
+		memset(__global_clib2->emergency, 0, sizeof(__global_clib2->emergency));
+		
 		/* Check is SYSV library is available in the system */
 		__global_clib2->haveShm = FALSE;
 		__SysVBase = OpenLibrary("sysvipc.library", 53);

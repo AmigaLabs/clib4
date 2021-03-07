@@ -6,16 +6,8 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-#if LDBL_MANT_DIG == DBL_MANT_DIG && LDBL_MAX_EXP == DBL_MAX_EXP
-
-/****************************************************************************/
-
 long long int
 llroundl(long double x)
 {
-    return round(x);
+    return llround(x);
 }
-
-/****************************************************************************/
-
-#endif /* LDBL_MANT_DIG == DBL_MANT_DIG && LDBL_MAX_EXP == DBL_MAX_EXP */

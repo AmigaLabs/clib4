@@ -44,87 +44,6 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-#if defined(IEEE_FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-#if defined(__GNUC__)
-
-/****************************************************************************/
-
-#if defined(SMALL_DATA)
-#define A4(x) "a4@(" #x ":W)"
-#elif defined(SMALL_DATA32)
-#define A4(x) "a4@(" #x ":L)"
-#else
-#define A4(x) #x
-#endif /* SMALL_DATA */
-
-/****************************************************************************/
-
-extern double __cos(double x);
-
-/****************************************************************************/
-
-asm(
-	".text\n\t"
-	".even\n\t"
-	".globl	_MathIeeeDoubTransBase\n\t"
-	".globl	___cos\n\t"
-	"___cos:\n\t"
-	"movel	a6,sp@-\n\t"
-	"movel	" A4(_MathIeeeDoubTransBase) ",a6\n\t"
-										 "moveml	sp@(8),d0/d1\n\t"
-										 "jsr		a6@(-42:W)\n\t"
-										 "movel	sp@+,a6\n\t"
-										 "rts\n\t");
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
-INLINE STATIC const double
-__cos(double x)
-{
-	double result;
-
-	result = IEEEDPCos(x);
-
-	return (result);
-}
-
-/****************************************************************************/
-
-#endif /* __GNUC__ */
-
-/****************************************************************************/
-
-#endif /* IEEE_FLOATING_POINT_SUPPORT */
-
-/****************************************************************************/
-
-#if defined(M68881_FLOATING_POINT_SUPPORT)
-
-INLINE STATIC const double
-__cos(double x)
-{
-	double result;
-
-	__asm("fcos%.x %1,%0"
-		  : "=f"(result)
-		  : "f"(x));
-
-	return (result);
-}
-
-#endif /* M68881_FLOATING_POINT_SUPPORT */
-
-/****************************************************************************/
-
-#if defined(PPC_FLOATING_POINT_SUPPORT)
-
 INLINE STATIC double
 __cos(double x)
 {
@@ -160,10 +79,6 @@ __cos(double x)
 		}
 	}
 }
-
-#endif /* PPC_FLOATING_POINT_SUPPORT */
-
-/****************************************************************************/
 
 double
 cos(double x)

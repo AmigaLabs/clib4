@@ -142,15 +142,7 @@ __timezone_init(void)
 	return(result);
 }
 
-/****************************************************************************/
-
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 static struct SignalSemaphore * timezone_lock;
-
-/****************************************************************************/
 
 void
 __timezone_lock(void)
@@ -159,8 +151,6 @@ __timezone_lock(void)
 		ObtainSemaphore(timezone_lock);
 }
 
-/****************************************************************************/
-
 void
 __timezone_unlock(void)
 {
@@ -168,24 +158,14 @@ __timezone_unlock(void)
 		ReleaseSemaphore(timezone_lock);
 }
 
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */
-
-/****************************************************************************/
-
 CLIB_DESTRUCTOR(timezone_exit)
 {
 	ENTER();
 
 	__timezone_exit();
 
-	#if defined(__THREAD_SAFE)
-	{
-		__delete_semaphore(timezone_lock);
-		timezone_lock = NULL;
-	}
-	#endif /* __THREAD_SAFE */
+	__delete_semaphore(timezone_lock);
+	timezone_lock = NULL;
 
 	LEAVE();
 }
@@ -199,13 +179,9 @@ CLIB_CONSTRUCTOR(timezone_init)
 
 	ENTER();
 
-	#if defined(__THREAD_SAFE)
-	{
-		timezone_lock = __create_semaphore();
-		if(timezone_lock == NULL)
-			goto out;
-	}
-	#endif /* __THREAD_SAFE */
+	timezone_lock = __create_semaphore();
+	if(timezone_lock == NULL)
+		goto out;
 
     __timezone_init();
 

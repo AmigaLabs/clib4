@@ -1,8 +1,6 @@
 #
 # $Id: libc.gmk,v 1.9 2010-10-20 13:50:17 obarthel Exp $
-#
 # :ts=8
-#
 # -*- mode: makefile; -*-
 
 ##############################################################################
@@ -10,7 +8,6 @@
 LIBS += lib/libc.so \
 		lib/libc.a
 
-##############################################################################
 
 C_LIB := \
 	c.lib_rev.o \
@@ -46,6 +43,7 @@ C_LIB := \
 	ctype_toupper.o \
 	dirent_alphasort.o \
 	dirent_closedir.o \
+	dirent_dirfd.o \
 	dirent_opendir.o \
 	dirent_readdir.o \
 	dirent_rewinddir.o \
@@ -105,6 +103,15 @@ C_LIB := \
 	sys_semget.o \
 	sys_semop.o \
 	sys_semtimedop.o \
+	search_hash_func.o \
+	search_hcreate.o \
+	search_lfind.o \
+	search_lsearch.o \
+	search_tdelete.o \
+	search_tdestroy.o \
+	search_tfind.o \
+	search_tsearch.o \
+	search_twalk.o \
 	signal_checkabort.o \
 	signal_data.o \
 	signal_kill.o \
@@ -172,6 +179,8 @@ C_LIB := \
 	stdio_getc_unlocked.o \
 	stdio_getchar.o \
 	stdio_getchar_unlocked.o \
+	stdio_getdelim.o \
+	stdio_getline.o \
 	stdio_gets.o \
 	stdio_get_fd.o \
 	stdio_get_file_descriptor.o \
@@ -208,6 +217,7 @@ C_LIB := \
 	stdio_sprintf.o \
 	stdio_sscanf.o \
 	stdio_sscanf_hook_entry.o \
+	stdio_tempnam.o \
 	stdio_tmpfile.o \
 	stdio_tmpfile64.o \
 	stdio_tmpnam.o \
@@ -293,6 +303,7 @@ C_LIB := \
 	stdlib_qsort.o \
 	stdlib_rand.o \
 	stdlib_rand_r.o \
+	stdlib_rand48.o \
 	stdlib_realloc.o \
 	stdlib_red_black.o \
 	stdlib_resetmemstats.o \
@@ -343,9 +354,11 @@ C_LIB := \
 	string_memcmp.o \
 	string_memcpy.o \
 	string_memmove.o \
+	string_memrchr.o \
 	string_memset.o \
 	string_rindex.o \
 	string_stpcpy.o \
+	string_strcasestr.o \
 	string_strcat.o \
 	string_strchr.o \
 	string_strcmp.o \
@@ -361,6 +374,7 @@ C_LIB := \
 	string_strncat.o \
 	string_strncmp.o \
 	string_strncpy.o \
+	string_strndup.o \
 	string_strnlen.o \
 	string_strpbrk.o \
 	string_strrchr.o \
@@ -375,6 +389,7 @@ C_LIB := \
 	time_clock.o \
 	time_clock_getres.o \
 	time_clock_gettime.o \
+	time_clock_nanosleep.o \
 	time_converttime.o \
 	time_convert_datestamp.o \
 	time_convert_time.o \
@@ -427,6 +442,8 @@ C_LIB := \
 	unistd_lockf.o \
 	unistd_pipe.o \
 	unistd_pipe2.o \
+	unistd_pread.o \
+	unistd_pwrite.o \
 	unistd_readlink.o \
 	unistd_realpath.o \
 	unistd_sleep.o \
@@ -494,9 +511,11 @@ C_LIB := \
 	wchar_wcstoll.o \
 	wchar_wcstoul.o \
 	wchar_wcstoull.o \
+	wchar_wcswidth.o \
 	wchar_wcsxfrm.o \
 	wchar_wctob.o \
 	wchar_wctomb.o \
+	wchar_wcwidth.o \
 	wchar_wmemchr.o \
 	wchar_wmemcmp.o \
 	wchar_wmemcpy.o \
@@ -504,7 +523,6 @@ C_LIB := \
 	wchar_wmemset.o \
 	wchar_wprintf.o \
 	wchar_wscanf.o \
-	wchar_wscoll.o \
 	wctype_iswalnum.o \
 	wctype_iswalpha.o \
 	wctype_iswblank.o \
@@ -580,7 +598,6 @@ C_LIB := \
 	socket_get_h_errno.o \
 	socket_set_h_errno.o \
 	systeminfo_sysinfo.o \
-	stat_umask.o \
 	usergroup_crypt.o \
 	usergroup_data.o \
 	usergroup_endgrent.o \
@@ -612,60 +629,17 @@ C_LIB := \
 	usergroup_setreuid.o \
 	usergroup_setsid.o \
 	usergroup_setuid.o \
-	utsname_uname.o \
-	dirent_closedir.o \
-	dirent_rewinddir.o \
-	dirent_opendir.o \
-	dirent_readdir.o \
-	fcntl_creat.o \
-	fcntl_fcntl.o \
-	fcntl_open.o \
-	fcntl_get_default_file.o \
 	getopt_getopt_long.o \
-	mount_convertinfo.o \
-	mount_statfs.o \
 	poll_poll.o \
 	resource_getrlimit.o \
 	resource_setrlimit.o \
 	resource_getrusage.o \
-	stat_chmod.o \
-	stat_fstat.o \
-	stat_lstat.o \
-	stat_lock.o \
-	stat_mkdir.o \
-	stat_rmdir.o \
-	stat_stat.o \
 	stdio_ctermid.o \
-	stdio_fdhookentry.o \
-	stdio_fflush.o \
-	stdio_fopen.o \
 	stdio_fopen64.o \
-	stdio_file_init.o \
-	stdio_init_exit.o \
-	stdio_locksemaphorename.o \
-	stdio_openiob.o \
-	stdio_popen.o \
 	stdio_record_locking.o \
-	stdio_remove.o \
-	stdio_rename.o \
-	stdlib_alloca.o \
-	stdlib_alloca_cleanup.o \
-	stdlib_alloca_trap.o \
-	stdlib_arg.o \
-	stdlib_dlopen.o \
+	stdlib_aligned_alloc.o \
 	stdlib_expand_wildcard.o \
 	stdlib_expand_wildcard_check.o \
-	stdlib_getmemstats.o \
-	stdlib_main.o \
-	stdlib_main_stub.o \
-	stdlib_mkdtemp.o \
-	stdlib_mkstemp.o \
-	stdlib_mktemp.o \
-	stdlib_malloc.o \
-	stdlib_realloc.o \
-	stdlib_resetmemstats.o \
-	stdlib_system.o \
-	systeminfo_sysinfo.o \
 	termios_cfgetispeed.o \
 	termios_cfgetospeed.o \
 	termios_cfmakeraw.o \
@@ -680,13 +654,7 @@ C_LIB := \
 	termios_tcsendbreak.o \
 	termios_tcsetattr.o \
 	timeb_ftime.o \
-	uio_readv.o \
-	uio_writev.o \
-	unistd_access.o \
-	unistd_chdir.o \
 	unistd_fchdir.o \
-	unistd_chdir_exit.o \
-	unistd_chown.o \
 	unistd_common_pathconf.o \
 	unistd_def_path.o \
 	unistd_def_path_delimiter.o \
@@ -701,27 +669,17 @@ C_LIB := \
 	unistd_execve_exit.o \
 	unistd_execvp.o \
 	unistd_fpathconf.o \
-	unistd_getcwd.o \
-	unistd_lchown.o \
-	unistd_link.o \
-	unistd_lockf.o \
 	unistd_pathconf.o \
-	unistd_readlink.o \
-	unistd_realpath.o \
 	unistd_restorepathname.o \
 	unistd_setcurrentpath.o \
 	unistd_strip_double_slash.o \
-	unistd_symlink.o \
 	unistd_translatea2u.o \
 	unistd_translaterel.o \
 	unistd_translateu2a.o \
-	unistd_truncate.o \
 	unistd_ttyname.o \
 	unistd_ttyname_r.o \
-	unistd_unlink.o \
 	unistd_unlink_retries.o \
 	unistd_wildcard_expand.o \
-	utime_utime.o \
 	math_fabs.o \
 	math_fabsf.o \
 	math_fabsl.o \
@@ -833,6 +791,7 @@ C_LIB := \
 	math_rintl.o \
 	math_round.o \
 	math_roundf.o \
+	math_roundl.o \
 	math_scalbln.o \
 	math_scalblnf.o \
 	math_scalblnl.o \
@@ -861,24 +820,6 @@ C_LIB := \
 	math_trunc.o \
 	math_truncf.o \
 	math_truncl.o \
-	stdio_asprintf.o \
-	stdio_flush.o \
-	stdio_flush_all_files.o \
-	stdio_fprintf.o \
-	stdio_fscanf.o \
-	stdio_printf.o \
-	stdio_scanf.o \
-	stdio_snprintf.o \
-	stdio_sprintf.o \
-	stdio_sscanf.o \
-	stdio_vasprintf.o \
-	stdio_vfprintf.o \
-	stdio_vfscanf.o \
-	stdio_vsscanf.o \
-	stdio_vscanf.o \
-	stdio_vprintf.o \
-	stdio_vsnprintf.o \
-	stdio_vsprintf.o \
 	stdlib_atof.o \
 	stdlib_strtod.o \
 	stdlib_strtof.o \
@@ -899,9 +840,7 @@ C_LIB := \
 	complex_casinf.o \
 	complex_casinl.o \
 	complex_catan.o \
-	complex_catan.o \
 	complex_catanl.o \
-	complex_catanh.o \
 	complex_catanh.o \
 	complex_catanhl.o \
 	complex_ctan.o \
@@ -1004,168 +943,7 @@ C_LIB := \
 	math_expm1.o \
 	math_expm1f.o \
 	math_expm1l.o \
-	math_fabs.o \
-	math_fabsf.o \
-	math_fabsl.o \
-	math_fdim.o \
-	math_fdimf.o \
-	math_fdiml.o \
-	math_floor.o \
-	math_floorf.o \
-	math_floorl.o \
-	math_fma.o \
-	math_fmaf.o \
-	math_fmal.o \
-	math_fmax.o \
-	math_fmaxf.o \
-	math_fmaxl.o \
-	math_fmin.o \
-	math_fminf.o \
-	math_fminl.o \
-	math_fmod.o \
-	math_fmodf.o \
-	math_fmodl.o \
-	math_fpclassify.o \
-	math_frexp.o \
-	math_frexpf.o \
-	math_frexpl.o \
-	math_huge_val.o \
-	math_huge_valf.o \
-	math_hypot.o \
-	math_hypotf.o \
-	math_hypotl.o \
-	math_ilogb.o \
-	math_ilogbf.o \
-	math_ilogbl.o \
-	math_inf.o \
-	math_inff.o \
-	math_init_exit.o \
-	math_isinf.o \
-	math_isfinite.o \
-	math_isnan.o \
-	math_isunordered.o \
-	math_kernel_cos.o \
-	math_kernel_cosf.o \
-	math_kernel_expm1.o \
-	math_kernel_rem_pio2.o \
-	math_kernel_sin.o \
-	math_kernel_sinf.o \
-	math_kernel_tan.o \
-	math_kernel_tanf.o \
-	math_ldexp.o \
-	math_ldexpf.o \
-	math_ldexpl.o \
-	math_lgamma.o \
-	math_lgammaf.o \
-	math_lgammal.o \
-	math_llrint.o \
-	math_llrintf.o \
-	math_llrintl.o \
-	math_llround.o \
-	math_llroundf.o \
-	math_llroundl.o \
-	math_log.o \
-	math_log10.o \
-	math_log10f.o \
-	math_log10l.o \
-	math_log1p.o \
-	math_log1pf.o \
-	math_log1pl.o \
-	math_log2.o \
-	math_log2f.o \
-	math_log2l.o \
-	math_logb.o \
-	math_logbf.o \
-	math_logbl.o \
-	math_logf.o \
-	math_logl.o \
-	math_lrint.o \
-	math_lrintf.o \
-	math_lrintl.o \
-	math_lround.o \
-	math_lroundf.o \
-	math_lroundl.o \
-	math_modf.o \
-	math_modff.o \
-	math_modfl.o \
-	math_nan.o \
-	math_nanf.o \
-	math_nanl.o \
-	math_nearbyint.o \
-	math_nearbyintf.o \
-	math_nearbyintl.o \
-	math_nextafter.o \
-	math_nextafterf.o \
-	math_nextafterl.o \
-	math_nexttoward.o \
-	math_nexttowardf.o \
-	math_nexttowardl.o \
-	math_pow.o \
-	math_powf.o \
-	math_powl.o \
-	math_remainder.o \
-	math_remainderf.o \
-	math_remainderl.o \
-	math_remquo.o \
-	math_remquof.o \
-	math_remquol.o \
-	math_rem_pio2f.o \
-	math_rint.o \
-	math_rintf.o \
-	math_rintl.o \
-	math_round.o \
-	math_roundf.o \
-	math_scalbln.o \
-	math_scalblnf.o \
-	math_scalblnl.o \
-	math_scalbn.o \
-	math_scalbnf.o \
-	math_scalbnl.o \
-	math_signbit.o \
-	math_sin.o \
-	math_sinf.o \
-	math_sinh.o \
-	math_sinhf.o \
-	math_sinhl.o \
-	math_sinl.o \
-	math_sqrt.o \
-	math_sqrtf.o \
-	math_sqrtl.o \
-	math_tan.o \
-	math_tanf.o \
-	math_tanh.o \
-	math_tanhf.o \
-	math_tanhl.o \
-	math_tanl.o \
-	math_tgamma.o \
-	math_tgammaf.o \
-	math_tgammal.o \
-	math_trunc.o \
-	math_truncf.o \
-	math_truncl.o \
-	stdio_asprintf.o \
-	stdio_flush.o \
-	stdio_flush_all_files.o \
-	stdio_fprintf.o \
-	stdio_fscanf.o \
-	stdio_printf.o \
-	stdio_scanf.o \
-	stdio_snprintf.o \
-	stdio_sprintf.o \
-	stdio_sscanf.o \
-	stdio_vasprintf.o \
-	stdio_vfprintf.o \
-	stdio_vfscanf.o \
-	stdio_vsscanf.o \
-	stdio_vscanf.o \
-	stdio_vprintf.o \
-	stdio_vsnprintf.o \
-	stdio_vsprintf.o \
-	stdlib_atof.o \
-	stdlib_strtod.o \
-	stdlib_strtof.o \
 	time_difftime.o	
-##############################################################################
 
 # Dependencies to rebuild if the library version changes
 

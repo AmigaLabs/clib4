@@ -247,6 +247,8 @@ extern float logbf(float x);
 extern long int llrintf(float x);
 extern long int lrintf(float x);
 extern long int lroundf(float x);
+extern long long int llround(double x);
+extern long long int llroundf (float x);
 extern float nanf(const char *tagp);
 extern float nearbyintf(float x);
 extern float nextafterf(float x, float y);

@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 #ifndef EXEC_EXECBASE_H
 #include <exec/execbase.h>
 #endif /* EXEC_EXECBASE_H */
@@ -217,7 +213,7 @@ BOOL __lib_init(struct Library *sys_base)
 	SHOWMSG("now invoking the constructors");
 
 	/* Go through the constructor list */
-	_start(NULL, 0, sys_base);
+	_start(NULL, 0, (struct ExecBase*)sys_base);
 
 	/* Disable exit() and its kin. */
 	__exit_blocked = TRUE;
@@ -235,7 +231,3 @@ out:
 	RETURN(result);
 	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */

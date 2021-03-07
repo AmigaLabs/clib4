@@ -166,6 +166,8 @@ extern int errno;
 
 #define EILSEQ			85	/* Encoding error detected */
 
+#define EPROTO          86  /* Protocol error */
+
 #define ENOTSUP         1134 /* Not supported */
 /****************************************************************************/
 

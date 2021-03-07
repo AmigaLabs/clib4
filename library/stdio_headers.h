@@ -501,47 +501,15 @@ extern ULONG __cache_line_size;
 
 /****************************************************************************/
 
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 extern void	__stdio_lock(void);
 extern void	__stdio_unlock(void);
 extern void	__stdio_lock_exit(void);
 extern int	__stdio_lock_init(void);
 
-/****************************************************************************/
-
 extern void __fd_lock(struct fd *fd);
 extern void __fd_unlock(struct fd *fd);
 
-/****************************************************************************/
-
 extern BPTR __resolve_fd_file(struct fd * fd);
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
-#define __stdio_lock()		((void)0)
-#define __stdio_unlock()	((void)0)
-#define __stdio_lock_exit()	((void)0)
-#define __stdio_lock_init()	(0)
-
-/****************************************************************************/
-
-#define __fd_lock(fd)		((void)0)
-#define __fd_unlock(fd)		((void)0)
-
-/****************************************************************************/
-
-#define __resolve_fd_file(fd) (fd->fd_File)
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */
 
 #ifndef _STDIO_PROTOS_H
 #include "stdio_protos.h"

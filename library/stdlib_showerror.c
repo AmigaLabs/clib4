@@ -137,14 +137,10 @@ void __show_error(const char *message)
 
 	PROFILE_OFF();
 
-/* Don't show anything if this is the thread-safe library and
+	/* Don't show anything if this is the thread-safe library and
 	   we were invoked indirectly by shared library startup code. */
-#if defined(__THREAD_SAFE)
-	{
-		if (__lib_startup)
-			goto out;
-	}
-#endif /* __THREAD_SAFE */
+	if (__lib_startup)
+		goto out;
 
 	DOSBase = OpenLibrary("dos.library", 0);
 	IntuitionBase = OpenLibrary("intuition.library", 0);

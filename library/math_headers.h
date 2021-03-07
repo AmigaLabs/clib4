@@ -70,7 +70,11 @@
 #include "stdlib_profile.h"
 #endif /* _STDLIB_PROFILE_H */
 
-/****************************************************************************/
+#define SAFE_LEFT_SHIFT(op,amt)					\
+  (((amt) < 8 * sizeof(op)) ? ((op) << (amt)) : 0)
+
+#define SAFE_RIGHT_SHIFT(op,amt)				\
+  (((amt) < 8 * sizeof(op)) ? ((op) >> (amt)) : 0)
 
 #if defined(IEEE_FLOATING_POINT_SUPPORT)
 

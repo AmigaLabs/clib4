@@ -1,5 +1,5 @@
 /*
- * $Id: math_atan.c,v 1.6 2021-01-31 12:04:23 apalmate Exp $
+ * $Id: math_atan.c,v 1.7 2021-02-16 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -43,87 +43,6 @@
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
-
-#if defined(IEEE_FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-#if defined(__GNUC__)
-
-/****************************************************************************/
-
-#if defined(SMALL_DATA)
-#define A4(x) "a4@(" #x ":W)"
-#elif defined(SMALL_DATA32)
-#define A4(x) "a4@(" #x ":L)"
-#else
-#define A4(x) #x
-#endif /* SMALL_DATA */
-
-/****************************************************************************/
-
-extern double __atan(double x);
-
-/****************************************************************************/
-
-asm(
-	".text\n\t"
-	".even\n\t"
-	".globl	_MathIeeeDoubTransBase\n\t"
-	".globl	___atan\n\t"
-	"___atan:\n\t"
-	"movel	a6,sp@-\n\t"
-	"movel	" A4(_MathIeeeDoubTransBase) ",a6\n\t"
-										 "moveml	sp@(8),d0/d1\n\t"
-										 "jsr		a6@(-30:W)\n\t"
-										 "movel	sp@+,a6\n\t"
-										 "rts\n\t");
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
-INLINE STATIC const double
-__atan(double x)
-{
-	double result;
-
-	result = IEEEDPAtan(x);
-
-	return (result);
-}
-
-/****************************************************************************/
-
-#endif /* __GNUC__ */
-
-/****************************************************************************/
-
-#endif /* IEEE_FLOATING_POINT_SUPPORT */
-
-/****************************************************************************/
-
-#if defined(M68881_FLOATING_POINT_SUPPORT)
-
-INLINE STATIC const double
-__atan(double x)
-{
-	double result;
-
-	__asm("fatan%.x %1,%0"
-		  : "=f"(result)
-		  : "f"(x));
-
-	return (result);
-}
-
-#endif /* M68881_FLOATING_POINT_SUPPORT */
-
-/****************************************************************************/
-
-#if defined(PPC_FLOATING_POINT_SUPPORT)
 
 static const double atanhi[] = {
 	4.63647609000806093515e-01, /* atan(0.5)hi 0x3FDDAC67, 0x0561BB4F */
@@ -240,10 +159,6 @@ __atan(double x)
 		return (hx < 0) ? -z : z;
 	}
 }
-
-#endif /* PPC_FLOATIN_POINT_SUPPORT */
-
-/****************************************************************************/
 
 double
 atan(double x)

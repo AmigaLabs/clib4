@@ -164,19 +164,11 @@ int __open_iob(const char *filename, const char *mode, int file_descriptor, int 
 			CLEAR_FLAG(fd->fd_Flags, FDF_APPEND);
 	}
 
-#if defined(__THREAD_SAFE)
-	{
-		/* Allocate memory for an arbitration mechanism, then
-		   initialize it. */
-		lock = __create_semaphore();
-		if (lock == NULL)
-			goto out;
-	}
-#else
-	{
-		lock = NULL;
-	}
-#endif /* __THREAD_SAFE */
+	/* Allocate memory for an arbitration mechanism, then
+		initialize it. */
+	lock = __create_semaphore();
+	if (lock == NULL)
+		goto out;
 
 	/* Figure out the buffered file access mode by looking at the open mode. */
 	file_flags = IOBF_IN_USE | IOBF_NO_NUL;

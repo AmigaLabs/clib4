@@ -58,13 +58,7 @@ struct MinList NOCOMMON __directory_list;
 
 /****************************************************************************/
 
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 static struct SignalSemaphore *dirent_lock;
-
-/****************************************************************************/
 
 void __dirent_lock(void)
 {
@@ -82,10 +76,6 @@ void __dirent_unlock(void)
 
 /****************************************************************************/
 
-#endif /* __THREAD_SAFE */
-
-/****************************************************************************/
-
 CLIB_CONSTRUCTOR(dirent_init)
 {
 	BOOL success = FALSE;
@@ -94,13 +84,9 @@ CLIB_CONSTRUCTOR(dirent_init)
 
 	NewList((struct List *)&__directory_list);
 
-#if defined(__THREAD_SAFE)
-	{
-		dirent_lock = __create_semaphore();
-		if (dirent_lock == NULL)
-			goto out;
-	}
-#endif /* __THREAD_SAFE */
+	dirent_lock = __create_semaphore();
+	if (dirent_lock == NULL)
+		goto out;
 
 	success = TRUE;
 
@@ -127,12 +113,8 @@ CLIB_DESTRUCTOR(dirent_exit)
 			closedir((DIR *)__directory_list.mlh_Head);
 	}
 
-#if defined(__THREAD_SAFE)
-	{
-		__delete_semaphore(dirent_lock);
-		dirent_lock = NULL;
-	}
-#endif /* __THREAD_SAFE */
+	__delete_semaphore(dirent_lock);
+	dirent_lock = NULL;
 
 	LEAVE();
 }

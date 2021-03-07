@@ -139,12 +139,8 @@ fclose(FILE *stream)
 	if(file->iob_CustomBuffer != NULL)
 		free(file->iob_CustomBuffer);
 
-	#if defined(__THREAD_SAFE)
-	{
-		/* Free the lock semaphore now. */
-		__delete_semaphore(file->iob_Lock);
-	}
-	#endif /* __THREAD_SAFE */
+	/* Free the lock semaphore now. */
+	__delete_semaphore(file->iob_Lock);
 
 	memset(file,0,sizeof(*file));
 

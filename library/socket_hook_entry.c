@@ -124,13 +124,9 @@ __socket_hook_entry(struct fd *fd, struct file_action_message *fam)
 
 		__fd_unlock(fd);
 
-#if defined(__THREAD_SAFE)
-		{
-			/* Free the lock semaphore now. */
-			if (NOT is_aliased)
-				__delete_semaphore(fd->fd_Lock);
-		}
-#endif /* __THREAD_SAFE */
+		/* Free the lock semaphore now. */
+		if (NOT is_aliased)
+			__delete_semaphore(fd->fd_Lock);
 
 		/* And that's the last for this file descriptor. */
 		memset(fd, 0, sizeof(*fd));

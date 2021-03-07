@@ -589,6 +589,10 @@ struct _clib2
 	* directory. In this case the unix translation will be enabled at start
 	*/
 	BOOL __unix_path_semantics; /* Enable / Disable unix path semantics */
+
+	/* used by tmpnam */
+	int  inc;	
+  	char emergency[250];
 };
 
 extern struct _clib2 *__global_clib2;

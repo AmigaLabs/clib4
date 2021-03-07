@@ -60,21 +60,6 @@ STATIC LONG
 safe_change_mode(LONG type, BPTR file_handle, LONG mode)
 {
 	LONG result = DOSFALSE;
-
-#ifndef __amigaos4__
-	{
-		struct FileHandle *fh = (struct FileHandle *)BADDR(file_handle);
-
-		assert(type == CHANGE_FH);
-
-		if (fh == NULL || fh->fh_Type == NULL)
-		{
-			SetIoErr(ERROR_OBJECT_WRONG_TYPE);
-			goto out;
-		}
-	}
-#endif /* __amigaos4__ */
-
 	PROFILE_OFF();
 	result = ChangeMode(type, file_handle, mode);
 	PROFILE_ON();
@@ -336,20 +321,12 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 		goto out;
 	}
 
-#if defined(__THREAD_SAFE)
+	fd_lock = __create_semaphore();
+	if (fd_lock == NULL)
 	{
-		fd_lock = __create_semaphore();
-		if (fd_lock == NULL)
-		{
-			__set_errno(ENOMEM);
-			goto out;
-		}
+		__set_errno(ENOMEM);
+		goto out;
 	}
-#else
-	{
-		fd_lock = NULL;
-	}
-#endif /* __THREAD_SAFE */
 
 	fd = __fd[fd_slot_number];
 

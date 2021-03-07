@@ -125,17 +125,12 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen)
 		new_fd_slot_number = __find_vacant_fd_entry();
 		assert(new_fd_slot_number >= 0);
 	}
-
-#if defined(__THREAD_SAFE)
+	lock = __create_semaphore();
+	if (lock == NULL)
 	{
-		lock = __create_semaphore();
-		if (lock == NULL)
-		{
-			__set_errno(ENOMEM);
-			goto out;
-		}
+		__set_errno(ENOMEM);
+		goto out;
 	}
-#endif /* __THREAD_SAFE */
 
 	new_fd = __fd[new_fd_slot_number];
 
@@ -161,11 +156,7 @@ out:
 	if (stdio_locked)
 		__stdio_unlock();
 
-#if defined(__THREAD_SAFE)
-	{
-		__delete_semaphore(lock);
-	}
-#endif /* __THREAD_SAFE */
+	__delete_semaphore(lock);
 
 	if (__check_abort_enabled)
 		__check_abort();

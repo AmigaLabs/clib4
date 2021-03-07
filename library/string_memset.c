@@ -46,6 +46,9 @@
 INLINE STATIC VOID
 __memset(unsigned char *to, unsigned char value, size_t len)
 {
+	if (to == NULL)
+		return;
+		
 	/* The setup below is intended to speed up changing larger
 	 * memory blocks. This can be very elaborate and should not be
 	 * done unless a payoff can be expected.

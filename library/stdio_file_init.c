@@ -278,45 +278,25 @@ FILE_CONSTRUCTOR(stdio_file_init)
 		if (buffer == NULL)
 			goto out;
 
-#if defined(__THREAD_SAFE)
+		/* Allocate memory for an arbitration mechanism, then
+			initialize it. */
+		stdio_lock = __create_semaphore();
+		fd_lock = __create_semaphore();
+
+		if (stdio_lock == NULL || fd_lock == NULL)
 		{
-			/* Allocate memory for an arbitration mechanism, then
-			   initialize it. */
-			stdio_lock = __create_semaphore();
-			fd_lock = __create_semaphore();
+			__delete_semaphore(stdio_lock);
+			__delete_semaphore(fd_lock);
 
-			if (stdio_lock == NULL || fd_lock == NULL)
-			{
-				__delete_semaphore(stdio_lock);
-				__delete_semaphore(fd_lock);
-
-				goto out;
-			}
-
-			/* We ignore the file handle and let the file I/O
-			   code in the fd hook pick up the appropriate
-			   Input/Output/ErrorOutput handle. */
-			default_file = i;
-
-			fd_flags |= FDF_NO_CLOSE | FDF_STDIO;
+			goto out;
 		}
-#else
-		{
-			stdio_lock = NULL;
-			fd_lock = NULL;
 
-			/* Check if this stream is attached to a console window. */
-			if (default_file != ZERO)
-			{
-				PROFILE_OFF();
+		/* We ignore the file handle and let the file I/O
+			code in the fd hook pick up the appropriate
+			Input/Output/ErrorOutput handle. */
+		default_file = i;
 
-				if (IsInteractive(default_file))
-					SET_FLAG(fd_flags, FDF_IS_INTERACTIVE);
-
-				PROFILE_ON();
-			}
-		}
-#endif /* __THREAD_SAFE */
+		fd_flags |= FDF_NO_CLOSE | FDF_STDIO;
 
 		/* Align the buffer start address to a cache line boundary. */
 		aligned_buffer = (char *)((ULONG)(buffer + (__cache_line_size - 1)) & ~(__cache_line_size - 1));
@@ -332,7 +312,7 @@ FILE_CONSTRUCTOR(stdio_file_init)
 						 stdio_lock);
 	}
 
-#if NOT defined(__THREAD_SAFE)
+#if 0
 	{
 		/* If the program was launched from Workbench, we continue by
 		   duplicating the default output stream for use as the
@@ -351,18 +331,8 @@ FILE_CONSTRUCTOR(stdio_file_init)
 
 			PROFILE_OFF();
 
-/* Figure out what the default error output stream is. */
-#if defined(__amigaos4__)
-			{
-				ces = ErrorOutput();
-			}
-#else
-			{
-				struct Process *this_process = (struct Process *)FindTask(NULL);
-
-				ces = this_process->pr_CES;
-			}
-#endif /* __amigaos4__ */
+			/* Figure out what the default error output stream is. */
+			ces = ErrorOutput();
 
 			PROFILE_ON();
 

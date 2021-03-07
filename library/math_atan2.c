@@ -1,5 +1,5 @@
 /*
- * $Id: math_atan2.c,v 1.9 2006-09-22 07:54:24 obarthel Exp $
+ * $Id: math_atan2.c,v 1.10 2021-02-16 07:54:24 apalmate Exp $
  *
  * :ts=4
  *
@@ -43,157 +43,6 @@
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
-
-#if defined(IEEE_FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-#if defined(__GNUC__)
-extern double __atan(double x);
-#else
-#define __atan(x) IEEEDPAtan(x)
-#endif /* __GNUC__ */
-
-/****************************************************************************/
-
-INLINE STATIC const double
-__atan2(double y, double x)
-{
-	const double pi = 3.14159265358979323846;
-	const double pi_over_2 = pi / 2.0;
-	double result;
-
-	if (x > 0.0)
-	{
-		if (y > 0.0)
-		{
-			if (x > y)
-				result = __atan(y / x);
-			else
-				result = pi_over_2 - __atan(x / y);
-		}
-		else
-		{
-			if (x > -y)
-				result = __atan(y / x);
-			else
-				result = -(pi_over_2 + __atan(x / y));
-		}
-	}
-	else
-	{
-		if (y > 0.0)
-		{
-			if ((-x) > y)
-				result = pi + __atan(y / x);
-			else
-				result = pi_over_2 - __atan(x / y);
-		}
-		else
-		{
-			if ((-x) > (-y))
-			{
-				result = -(pi - __atan(y / x));
-			}
-			else if (y < 0.0)
-			{
-				result = -(pi_over_2 + __atan(x / y));
-			}
-			else
-			{
-				result = 0;
-				__set_errno(EDOM);
-			}
-		}
-	}
-
-	return (result);
-}
-
-#endif /* IEEE_FLOATING_POINT_SUPPORT */
-
-/****************************************************************************/
-
-#if defined(M68881_FLOATING_POINT_SUPPORT)
-
-INLINE STATIC const double
-__atan(double x)
-{
-	double result;
-
-	__asm("fatan%.x %1,%0"
-		  : "=f"(result)
-		  : "f"(x));
-
-	return (result);
-}
-
-INLINE STATIC const double
-__atan2(double y, double x)
-{
-	double pi, pi_over_2;
-	double result;
-
-	__asm("fmovecr%.x %#0,%0" /* extended precision pi */
-		  : "=f"(pi)
-		  : /* no inputs */);
-
-	__asm("fscale%.b %#-1,%0" /* no loss of accuracy */
-		  : "=f"(pi_over_2)
-		  : "0"(pi));
-
-	if (x > 0.0)
-	{
-		if (y > 0.0)
-		{
-			if (x > y)
-				result = __atan(y / x);
-			else
-				result = pi_over_2 - __atan(x / y);
-		}
-		else
-		{
-			if (x > -y)
-				result = __atan(y / x);
-			else
-				result = -(pi_over_2 + __atan(x / y));
-		}
-	}
-	else
-	{
-		if (y > 0.0)
-		{
-			if ((-x) > y)
-				result = pi + __atan(y / x);
-			else
-				result = pi_over_2 - __atan(x / y);
-		}
-		else
-		{
-			if ((-x) > (-y))
-			{
-				result = -(pi - __atan(y / x));
-			}
-			else if (y < 0.0)
-			{
-				result = -(pi_over_2 + __atan(x / y));
-			}
-			else
-			{
-				result = 0;
-				__set_errno(EDOM);
-			}
-		}
-	}
-
-	return (result);
-}
-
-#endif /* M68881_FLOATING_POINT_SUPPORT */
-
-/****************************************************************************/
-
-#if defined(PPC_FLOATING_POINT_SUPPORT)
 
 static const double
 	tiny = 1.0e-300,
@@ -306,10 +155,6 @@ __atan2(double y, double x)
 		return (z - pi_lo) - pi; /* atan(-,-) */
 	}
 }
-
-#endif /* PPC_FLOATING_POINT_SUPPORT */
-
-/****************************************************************************/
 
 double
 atan2(double y, double x)

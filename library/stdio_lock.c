@@ -35,15 +35,7 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 static struct SignalSemaphore * stdio_lock;
-
-/****************************************************************************/
 
 void
 __stdio_lock(void)
@@ -54,8 +46,6 @@ __stdio_lock(void)
 		ObtainSemaphore(stdio_lock);
 }
 
-/****************************************************************************/
-
 void
 __stdio_unlock(void)
 {
@@ -65,16 +55,12 @@ __stdio_unlock(void)
 		ReleaseSemaphore(stdio_lock);
 }
 
-/****************************************************************************/
-
 void
 __stdio_lock_exit(void)
 {
 	__delete_semaphore(stdio_lock);
 	stdio_lock = NULL;
 }
-
-/****************************************************************************/
 
 int
 __stdio_lock_init(void)
@@ -91,7 +77,3 @@ __stdio_lock_init(void)
 
 	return(result);
 }
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */

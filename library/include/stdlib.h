@@ -98,6 +98,7 @@ extern void *calloc(size_t num_elements, size_t element_size);
 extern void free(void *ptr);
 extern void *realloc(void *ptr, size_t size);
 extern void *valloc(size_t size);
+extern void *aligned_alloc(size_t alignment, size_t size);
 
 #ifdef __MEM_DEBUG
 extern void *__malloc(size_t size, const char *file, int line);
@@ -123,6 +124,9 @@ extern ldiv_t ldiv(long n, long d);
 extern int rand(void);
 extern void srand(unsigned int seed);
 extern void srandom(unsigned int seed);
+extern double erand48 (unsigned short subi[3]);
+extern long jrand48 (unsigned short subi[3]);
+extern long nrand48 (unsigned short subi[3]);
 
 /****************************************************************************/
 
@@ -434,8 +438,8 @@ extern float strtof(const char *str, char **ptr);
 #  define strtodf strtof
 # endif
 
-extern void _Exit(int status);
 #endif
+extern void _Exit(int status);
 
 __END_DECLS
 

@@ -35,28 +35,16 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
-void
-__fd_lock(struct fd * fd)
+void 
+__fd_lock(struct fd *fd)
 {
-	if(fd != NULL && fd->fd_Lock != NULL)
+	if (fd != NULL && fd->fd_Lock != NULL)
 		ObtainSemaphore(fd->fd_Lock);
 }
 
-/****************************************************************************/
-
-void
-__fd_unlock(struct fd * fd)
+void 
+__fd_unlock(struct fd *fd)
 {
-	if(fd != NULL && fd->fd_Lock != NULL)
+	if (fd != NULL && fd->fd_Lock != NULL)
 		ReleaseSemaphore(fd->fd_Lock);
 }
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */

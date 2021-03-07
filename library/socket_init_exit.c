@@ -50,12 +50,6 @@ struct SocketIFace *NOCOMMON __ISocket;
 
 int NOCOMMON h_errno;
 
-/****************************************************************************/
-
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 /* Call-back hook for use with SBTC_ERROR_HOOK */
 struct _ErrorHookMsg
 {
@@ -102,16 +96,12 @@ STATIC LONG ASM
 	return (0);
 }
 
-/****************************************************************************/
-
 STATIC struct Hook error_hook =
 	{
 		{NULL, NULL},
 		(HOOKFUNC)error_hook_function,
 		(HOOKFUNC)NULL,
 		NULL};
-
-#endif /* __THREAD_SAFE */
 
 SOCKET_DESTRUCTOR(socket_exit)
 {
@@ -227,39 +217,35 @@ SOCKET_CONSTRUCTOR(socket_init)
 	   hook. If either of these features are supported can be checked
 	   by looking at the global __can_share_socket_library_base and
 	   __thread_safe_errno_h_errno variables. */
-#if defined(__THREAD_SAFE)
+	if (__SocketBase->lib_Version >= 4)
 	{
-		if (__SocketBase->lib_Version >= 4)
+		tags[0].ti_Tag = SBTM_SETVAL(SBTC_CAN_SHARE_LIBRARY_BASES);
+		tags[0].ti_Data = TRUE;
+
+		tags[1].ti_Tag = TAG_END;
+
+		PROFILE_OFF();
+
+		if (__SocketBaseTagList(tags) == 0)
+			__can_share_socket_library_base = TRUE;
+
+		PROFILE_ON();
+
+		if (__can_share_socket_library_base)
 		{
-			tags[0].ti_Tag = SBTM_SETVAL(SBTC_CAN_SHARE_LIBRARY_BASES);
-			tags[0].ti_Data = TRUE;
+			tags[0].ti_Tag = SBTM_SETVAL(SBTC_ERROR_HOOK);
+			tags[0].ti_Data = (ULONG)&error_hook;
 
 			tags[1].ti_Tag = TAG_END;
 
 			PROFILE_OFF();
 
 			if (__SocketBaseTagList(tags) == 0)
-				__can_share_socket_library_base = TRUE;
+				__thread_safe_errno_h_errno = TRUE;
 
 			PROFILE_ON();
-
-			if (__can_share_socket_library_base)
-			{
-				tags[0].ti_Tag = SBTM_SETVAL(SBTC_ERROR_HOOK);
-				tags[0].ti_Data = (ULONG)&error_hook;
-
-				tags[1].ti_Tag = TAG_END;
-
-				PROFILE_OFF();
-
-				if (__SocketBaseTagList(tags) == 0)
-					__thread_safe_errno_h_errno = TRUE;
-
-				PROFILE_ON();
-			}
 		}
 	}
-#endif /* __THREAD_SAFE */
 
 	/* Check if this program was launched as a server by the Internet
 	   superserver. */

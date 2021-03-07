@@ -38,20 +38,7 @@
 struct SignalSemaphore *
 __create_semaphore(void)
 {
-	struct SignalSemaphore * semaphore;
-
-	#if defined(__amigaos4__)
-	{
-		semaphore = AllocSysObject(ASOT_SEMAPHORE,NULL);
-	}
-	#else
-	{
-		semaphore = AllocVecTag(sizeof(*semaphore), AVT_Type, MEMF_SHARED, TAG_DONE);
-		if(semaphore != NULL)
-			InitSemaphore(semaphore);
-	}
-	#endif /* __amigaos4 */
-
+	struct SignalSemaphore * semaphore = AllocSysObject(ASOT_SEMAPHORE,NULL);
 	return(semaphore);
 }
 
@@ -62,25 +49,6 @@ __delete_semaphore(struct SignalSemaphore * semaphore)
 {
 	if(semaphore != NULL)
 	{
-		#if defined(__amigaos4__)
-		{
-			FreeSysObject(ASOT_SEMAPHORE,semaphore);
-		}
-		#else
-		{
-			assert( semaphore->ss_Owner == NULL );
-
-			#if defined(DEBUG)
-			{
-				/* Just in case somebody tries to reuse this data
-				   structure; this should produce an alert if
-				   attempted. */
-				memset(semaphore,0,sizeof(*semaphore));
-			}
-			#endif /* DEBUG */
-
-			FreeVec(semaphore);
-		}
-		#endif /* __amigaos4 */
+		FreeSysObject(ASOT_SEMAPHORE,semaphore);
 	}
 }

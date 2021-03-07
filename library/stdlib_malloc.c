@@ -360,15 +360,7 @@ malloc(size_t size)
 	return (result);
 }
 
-/****************************************************************************/
-
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 static struct SignalSemaphore *memory_semaphore;
-
-/****************************************************************************/
 
 void __memory_lock(void)
 {
@@ -380,8 +372,6 @@ void __memory_lock(void)
 	PROFILE_ON();
 }
 
-/****************************************************************************/
-
 void __memory_unlock(void)
 {
 	PROFILE_OFF();
@@ -391,12 +381,6 @@ void __memory_unlock(void)
 
 	PROFILE_ON();
 }
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */
-
-/****************************************************************************/
 
 STDLIB_DESTRUCTOR(stdlib_memory_exit)
 {
@@ -490,12 +474,8 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
 	}
 #endif /* __USE_SLAB_ALLOCATOR */
 
-#if defined(__THREAD_SAFE)
-	{
-		__delete_semaphore(memory_semaphore);
-		memory_semaphore = NULL;
-	}
-#endif /* __THREAD_SAFE */
+	__delete_semaphore(memory_semaphore);
+	memory_semaphore = NULL;
 
 	LEAVE();
 }
@@ -508,13 +488,9 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
 
 	ENTER();
 
-#if defined(__THREAD_SAFE)
-	{
-		memory_semaphore = __create_semaphore();
-		if (memory_semaphore == NULL)
-			goto out;
-	}
-#endif /* __THREAD_SAFE */
+	memory_semaphore = __create_semaphore();
+	if (memory_semaphore == NULL)
+		goto out;
 
 #if defined(__USE_MEM_TREES) && defined(__MEM_DEBUG)
 	{

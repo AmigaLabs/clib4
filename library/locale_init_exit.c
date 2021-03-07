@@ -173,15 +173,7 @@ int __locale_init(void)
 	return (result);
 }
 
-/****************************************************************************/
-
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
-static struct SignalSemaphore *locale_lock;
-
-/****************************************************************************/
+static struct SignalSemaphore * locale_lock;
 
 void __locale_lock(void)
 {
@@ -189,19 +181,11 @@ void __locale_lock(void)
 		ObtainSemaphore(locale_lock);
 }
 
-/****************************************************************************/
-
 void __locale_unlock(void)
 {
 	if (locale_lock != NULL)
 		ReleaseSemaphore(locale_lock);
 }
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */
-
-/****************************************************************************/
 
 CLIB_DESTRUCTOR(locale_exit)
 {
@@ -209,12 +193,9 @@ CLIB_DESTRUCTOR(locale_exit)
 
 	__locale_exit();
 
-#if defined(__THREAD_SAFE)
-	{
-		__delete_semaphore(locale_lock);
-		locale_lock = NULL;
-	}
-#endif /* __THREAD_SAFE */
+
+	__delete_semaphore(locale_lock);
+	locale_lock = NULL;
 
 	LEAVE();
 }
@@ -228,13 +209,9 @@ CLIB_CONSTRUCTOR(locale_init)
 
 	ENTER();
 
-#if defined(__THREAD_SAFE)
-	{
-		locale_lock = __create_semaphore();
-		if (locale_lock == NULL)
-			goto out;
-	}
-#endif /* __THREAD_SAFE */
+	locale_lock = __create_semaphore();
+	if (locale_lock == NULL)
+		goto out;
 
 	for (i = 0; i < NUM_LOCALES; i++)
 		strcpy(__locale_name_table[i], "C");

@@ -1,5 +1,5 @@
 /*
- * $Id: sched.h,v 1.7 2021-01-14 12:06:14 obarthel Exp $
+ * $Id: sched_sched_yield.h,v 1.1 2021-01-14 12:06:14 apalmate Exp $
  *
  * :ts=4
  *
@@ -37,13 +37,15 @@
  *
  *****************************************************************************
  */
+
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
 #include <sched.h>
 
-int sched_yield(void)
+int 
+sched_yield(void)
 {
        /* SetTaskPri() on the currently running task triggers a reschedule */
        struct Task *me = FindTask(NULL);

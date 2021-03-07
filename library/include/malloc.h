@@ -41,26 +41,16 @@
 #ifndef _MALLOC_H
 #define _MALLOC_H
 
+#include <features.h>
+
 #include <stddef.h>
 #include <stdio.h>
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /* Allocate SIZE bytes allocated to ALIGNMENT bytes.  */
 extern void *memalign(size_t alignment, size_t size);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif //_MALLOC_H

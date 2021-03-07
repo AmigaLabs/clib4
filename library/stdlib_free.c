@@ -341,6 +341,9 @@ __find_memory_node(void *address)
 STATIC VOID
 remove_and_free_memory_node(struct MemoryNode *mn)
 {
+	if (mn == NULL)
+		return;
+		
 	size_t allocation_size;
 
 	assert(mn != NULL);

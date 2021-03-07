@@ -41,64 +41,60 @@
 
 /****************************************************************************/
 
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 #ifdef __resolve_fd_file
 #undef __resolve_fd_file
 #endif /* __resolve_fd_file */
 
 /****************************************************************************/
 
-BPTR
-__resolve_fd_file(struct fd * fd)
+BPTR 
+__resolve_fd_file(struct fd *fd)
 {
 	BPTR file;
 
 	/* Is this one the standard I/O streams for which the associated file
 	   handle should be determined dynamically? */
-	if(FLAG_IS_SET(fd->fd_Flags,FDF_STDIO))
+	if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO))
 	{
-		switch(fd->fd_File)
+		switch (fd->fd_File)
 		{
-			case STDIN_FILENO:
+		case STDIN_FILENO:
 
-				file = Input();
-				break;
+			file = Input();
+			break;
 
-			case STDOUT_FILENO:
+		case STDOUT_FILENO:
 
-				file = Output();
-				break;
+			file = Output();
+			break;
 
-			case STDERR_FILENO:
+		case STDERR_FILENO:
 
-				#if defined(__amigaos4__)
-				{
-					file = ErrorOutput();
-				}
-				#else
-				{
-					struct Process * this_process = (struct Process *)FindTask(NULL);
+#if defined(__amigaos4__)
+		{
+			file = ErrorOutput();
+		}
+#else
+		{
+			struct Process *this_process = (struct Process *)FindTask(NULL);
 
-					file = this_process->pr_CES;
-				}
-				#endif /* __amigaos4__ */
+			file = this_process->pr_CES;
+		}
+#endif /* __amigaos4__ */
 
-				/* The following is rather controversial; if the standard error stream
+			/* The following is rather controversial; if the standard error stream
 				   is unavailable, we default to reuse the standard output stream. This
 				   is problematic if the standard output stream was redirected and should
 				   not be the same as the standard error output stream. */
-				if(file == ZERO)
-					file = Output();
+			if (file == ZERO)
+				file = Output();
 
-				break;
+			break;
 
-			default:
+		default:
 
-				file = ZERO;
-				break;
+			file = ZERO;
+			break;
 		}
 	}
 	else
@@ -107,9 +103,5 @@ __resolve_fd_file(struct fd * fd)
 		file = fd->fd_File;
 	}
 
-	return(file);
+	return (file);
 }
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */

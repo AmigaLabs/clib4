@@ -55,7 +55,7 @@ void shared_obj_exit(void);
 static void SHLibsInit(BOOL init) {
 	struct ElfIFace *IElf = __IElf;
 	Elf32_Handle hSelf = (Elf32_Handle)NULL;
-	BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+	BPTR segment_list = GetProcSegList(NULL, GPSLF_CLI | GPSLF_SEG);
 	if (segment_list != ZERO)
 	{
 		int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);

@@ -140,17 +140,9 @@ __obtain_daemon_message(VOID)
 			/* Put the socket into the three standard I/O streams. */
 			for (i = STDIN_FILENO; i <= STDERR_FILENO; i++)
 			{
-#if defined(__THREAD_SAFE)
-				{
-					lock = __create_semaphore();
-					if (lock == NULL)
-						goto out;
-				}
-#else
-				{
-					lock = NULL;
-				}
-#endif /* __THREAD_SAFE */
+				lock = __create_semaphore();
+				if (lock == NULL)
+					goto out;
 
 				fd = __fd[i];
 
@@ -170,12 +162,7 @@ __obtain_daemon_message(VOID)
 					{
 						SHOWMSG("could not duplicate daemon socket");
 
-#if defined(__THREAD_SAFE)
-						{
-							__delete_semaphore(lock);
-						}
-#endif /* __THREAD_SAFE */
-
+						__delete_semaphore(lock);
 						__show_error("Network server streams could not be initialized.");
 						goto out;
 					}
