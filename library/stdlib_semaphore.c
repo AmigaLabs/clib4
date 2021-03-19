@@ -38,7 +38,12 @@
 struct SignalSemaphore *
 __create_semaphore(void)
 {
-	struct SignalSemaphore * semaphore = AllocSysObject(ASOT_SEMAPHORE,NULL);
+	struct SignalSemaphore * semaphore;
+
+	semaphore = AllocVecTags(sizeof(*semaphore), AVT_Type, MEMF_SHARED, TAG_DONE);
+	if(semaphore != NULL)
+		InitSemaphore(semaphore);
+
 	return(semaphore);
 }
 
@@ -49,6 +54,7 @@ __delete_semaphore(struct SignalSemaphore * semaphore)
 {
 	if(semaphore != NULL)
 	{
-		FreeSysObject(ASOT_SEMAPHORE,semaphore);
+		FreeVec(semaphore);
+		//FreeSysObject(ASOT_SEMAPHORE,semaphore);
 	}
 }

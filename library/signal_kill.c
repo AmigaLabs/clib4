@@ -47,7 +47,7 @@ static APTR hook_function(struct Hook *hook, APTR userdata, struct Process *proc
 		return process;
 	}
 
-	return NULL;
+	return 0;
 }
 
 int 
@@ -79,9 +79,11 @@ kill(pid_t pid, int signal_number)
 
 			Forbid();
 
-			cli_process = (struct Process *)ProcessScan(&h, (CONST_APTR)pid, 0);
-			if (cli_process != NULL)
+			int32 process = ProcessScan(&h, (CONST_APTR)pid, 0);
+			if (process > 0)
 			{
+				cli_process = (struct Process *) process;
+				
 				SHOWMSG("found the process");
 
 				result = 0;

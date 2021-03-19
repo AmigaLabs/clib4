@@ -192,20 +192,7 @@ call_main(void)
 	}
 #endif /* NDEBUG */
 	/* After all these preparations, get this show on the road... */
-	__exit_value = main((int)__argc, (char **)__argv);
-
-	/* Free global reent structure */
-	FiniGlobal();
-
-	SHOWMSG("invoking the destructors");
-
-	/* Go through the destructor list */
-
-	_clib_exit();
-
-	//close_libraries();
-
-	return __exit_value;
+	exit(main((int)__argc, (char **)__argv));
 
 out:
 
@@ -354,14 +341,14 @@ int _main(struct ExecIFace *iexec)
 
 	IExec = iexec;
 
-	int num_ctors = 0, i;
+	int num_ctors = 0, c;
 	static int j = 0;
 
 	/* Open LibC libraries */
 	open_libraries(iexec);
 
 	/* Calling LibC constructors */
-	for (i = 1, num_ctors = 0; __CTOR_LIST__[i] != NULL; i++)
+	for (c = 1, num_ctors = 0; __CTOR_LIST__[c] != NULL; c++)
 		num_ctors++;
 
 	for (j = 0; j < num_ctors; j++)

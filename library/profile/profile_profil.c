@@ -1,5 +1,4 @@
-/*
- * $Id$
+/* $Id$ profile_profil.c,v 1.0 2021-01-21 10:08:32 apalmate Exp $
  *
  * :ts=4
  *
@@ -53,7 +52,6 @@ static struct IntData
 uint32 GetCounterStart(void);
 uint32 CounterIntFn(struct ExceptionContext *, struct ExecBase *, struct IntData *);
 
-
 uint32
 GetCounterStart(void)
 {
@@ -62,8 +60,8 @@ GetCounterStart(void)
 	uint32 count;
 
 	GetCPUInfoTags(
-			GCIT_FrontsideSpeed,	&fsb,
-			TAG_DONE);
+		GCIT_FrontsideSpeed, &fsb,
+		TAG_DONE);
 
 	/* Timebase ticks at 1/4 of FSB */
 	bit0time = 8.0 / (double)fsb;
@@ -73,30 +71,29 @@ GetCounterStart(void)
 }
 
 uint32
-CounterIntFn(struct ExceptionContext *ctx, struct ExecBase *ExecBase,
-	struct IntData *ProfileData)
+CounterIntFn(struct ExceptionContext *ctx, struct ExecBase *ExecBase, struct IntData *profileData)
 {
-	uint32 sia = (uint32)ProfileData->IPM->GetSampledAddress();
+	APTR sampledAddress = profileData->IPM->GetSampledAddress();
+	uint32 sia = (uint32)sampledAddress;
 
 	/* Silence compiler */
 	(void)ExecBase;
 	(void)ctx;
 
-	sia = ((sia - ProfileData->Offset) * ProfileData->Scale) >> 16;
+	sia = ((sia - profileData->Offset) * profileData->Scale) >> 16;
 
-	if (sia <= (ProfileData->BufferSize>>1))
+	if (sia <= (profileData->BufferSize >> 1))
 	{
 		//if (ProfileData->Buffer[sia] != 0xffff)
-			ProfileData->Buffer[sia]++;
+		profileData->Buffer[sia]++;
 	}
 
-	IPM->CounterControl(1, ProfileData->CounterStart, PMCI_Transition);
+	IPM->CounterControl(1, profileData->CounterStart, PMCI_Transition);
 
 	return 1;
 }
 
-
-int
+int 
 profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale)
 {
 	APTR Stack;
@@ -105,20 +102,21 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
 	{
 		Stack = SuperState();
 		IPM->EventControlTags(
-			PMECT_Disable, 			PMEC_MasterInterrupt,
+			PMECT_Disable, PMEC_MasterInterrupt,
 			TAG_DONE);
 
 		IPM->SetInterruptVector(1, 0);
 
 		IPM->Unmark(0);
 		IPM->Release();
-		if (Stack) UserState(Stack);
+		if (Stack)
+			UserState(Stack);
 
 		return 0;
 	}
 
 	IPM = (struct PerformanceMonitorIFace *)
-			OpenResource("performancemonitor.resource");
+		OpenResource("performancemonitor.resource");
 
 	if (!IPM || IPM->Obtain() != 1)
 	{
@@ -142,19 +140,20 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
 
 	/* Prepare Performance Monitor */
 	IPM->MonitorControlTags(
-			PMMCT_FreezeCounters,			PMMC_Unmarked,
-			PMMCT_RTCBitSelect,				PMMC_BIT0,
-			TAG_DONE);
+		PMMCT_FreezeCounters, PMMC_Unmarked,
+		PMMCT_RTCBitSelect, PMMC_BIT0,
+		TAG_DONE);
 	IPM->CounterControl(1, ProfileData.CounterStart, PMCI_Transition);
 
 	IPM->EventControlTags(
-		PMECT_Enable, 			1,
-		PMECT_Enable, 			PMEC_MasterInterrupt,
+		PMECT_Enable, 1,
+		PMECT_Enable, PMEC_MasterInterrupt,
 		TAG_DONE);
 
 	IPM->Mark(0);
 
-	if (Stack) UserState(Stack);
+	if (Stack)
+		UserState(Stack);
 
 	return 0;
 }

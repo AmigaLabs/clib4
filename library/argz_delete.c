@@ -47,7 +47,7 @@
 error_t
 argz_delete(char **argz, size_t *argz_len, char *entry)
 {
-    int len = 0;
+    size_t len = 0;
     char *moveto = entry;
 
     if (entry)
@@ -55,7 +55,7 @@ argz_delete(char **argz, size_t *argz_len, char *entry)
         len = strlen(entry) + 1;
         entry += len;
 
-        memmove(moveto, entry, *argz + *argz_len - entry);
+        memmove(moveto, entry, (size_t) (*argz + *argz_len - entry));
 
         *argz_len -= len;
 

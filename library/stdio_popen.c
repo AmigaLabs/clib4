@@ -259,8 +259,9 @@ popen(const char *command, const char *type)
 	   converted into another octal number. */
 	strcpy(pipe_file_name, "PIPE:");
 
-	task_address = (unsigned long)FindTask(NULL);
-
+	struct Task* task = FindTask(NULL);
+	task_address = (unsigned long) task;
+	
 	for (i = strlen(pipe_file_name); task_address != 0 && i < (int)sizeof(pipe_file_name) - 1; i++)
 	{
 		pipe_file_name[i] = '0' + (task_address % 8);

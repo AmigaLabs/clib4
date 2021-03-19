@@ -48,7 +48,7 @@ void
 argz_extract(char *argz, size_t argz_len, char **argv)
 {
     size_t i = 0;
-    int j = 0;
+    size_t j = 0;
     const size_t count = argz_count(argz, argz_len);
 
     for (i = argz_len - 2; i > 0; i--)

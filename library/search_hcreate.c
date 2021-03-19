@@ -74,13 +74,13 @@ SLIST_HEAD(internal_head, internal_entry);
 #define MAX_BUCKETS ((size_t)1 << MAX_BUCKETS_LG2)
 
 int 
-hcreate_r(size_t nel, struct hsearch_data *htab)
+hcreate_r(size_t nel, struct hsearch_data *_htab)
 {
     size_t idx;
     unsigned int p2;
 
     /* Make sure this this isn't called when a table already exists. */
-    if (htab->htable != NULL)
+    if (_htab->htable != NULL)
     {
         __set_errno(EINVAL);
         return 0;
@@ -103,23 +103,23 @@ hcreate_r(size_t nel, struct hsearch_data *htab)
     }
 
     /* Allocate the table. */
-    htab->htablesize = nel;
-    htab->htable = malloc(htab->htablesize * sizeof htab->htable[0]);
-    if (htab->htable == NULL)
+    _htab->htablesize = nel;
+    _htab->htable = malloc(_htab->htablesize * sizeof _htab->htable[0]);
+    if (_htab->htable == NULL)
     {
         __set_errno(ENOMEM);
         return 0;
     }
 
     /* Initialize it. */
-    for (idx = 0; idx < htab->htablesize; idx++)
-        SLIST_INIT(&(htab->htable[idx]));
+    for (idx = 0; idx < _htab->htablesize; idx++)
+        SLIST_INIT(&(_htab->htable[idx]));
 
     return 1;
 }
 
 int 
-hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *htab)
+hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *_htab)
 {
     struct internal_head *head;
     struct internal_entry *ie;
@@ -129,7 +129,7 @@ hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *htab)
     len = strlen(item.key);
     hashval = (*__default_hash)(item.key, len);
 
-    head = &(htab->htable[hashval & (htab->htablesize - 1)]);
+    head = &(_htab->htable[hashval & (_htab->htablesize - 1)]);
     ie = SLIST_FIRST(head);
     while (ie != NULL)
     {
@@ -164,16 +164,16 @@ hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *htab)
 }
 
 void 
-hdestroy_r(struct hsearch_data *htab)
+hdestroy_r(struct hsearch_data *_htab)
 {
     struct internal_entry *ie;
     size_t idx;
 
-    if (htab->htable == NULL)
+    if (_htab->htable == NULL)
         return;
 
-    free(htab->htable);
-    htab->htable = NULL;
+    free(_htab->htable);
+    _htab->htable = NULL;
 }
 
 /************* NON REENTRANT VERSIONS ************/

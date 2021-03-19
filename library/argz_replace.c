@@ -49,8 +49,8 @@
 static int
 _buf_findstr(const char *str, char **buf, size_t *buf_len)
 {
-    unsigned int i = 0;
-    int j = 0;
+    size_t i = 0;
+    size_t j = 0;
 
     for (i = 0; i < *buf_len; i++)
     {
@@ -80,9 +80,9 @@ _buf_findstr(const char *str, char **buf, size_t *buf_len)
 error_t
 argz_replace(char **argz, size_t *argz_len, const char *str, const char *with, unsigned *replace_count)
 {
-    const int str_len = strlen(str);
-    const int with_len = strlen(with);
-    const int len_diff = with_len - str_len;
+    const size_t str_len = strlen(str);
+    const size_t with_len = strlen(with);
+    const size_t len_diff = with_len - str_len;
 
     char *buf_iter = *argz;
     size_t buf_len = *argz_len;
@@ -127,7 +127,7 @@ argz_replace(char **argz, size_t *argz_len, const char *str, const char *with, u
             }
         }
         /* copy everything after last occurrence of str. */
-        memcpy(new_argz_iter, last_iter, *argz + *argz_len - last_iter);
+        memcpy(new_argz_iter, last_iter, (size_t) (*argz + *argz_len - last_iter));
 
         /* reallocate argz, and copy over the new value. */
         if (!(*argz = (char *)realloc(*argz, new_argz_len)))

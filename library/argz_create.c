@@ -49,7 +49,7 @@ argz_create(char *const argv[], char **argz, size_t *argz_len)
 {
     int argc = 0;
     int i = 0;
-    int len = 0;
+    size_t len = 0;
     char *iter;
 
     *argz_len = 0;

@@ -47,7 +47,7 @@
 error_t
 argz_insert(char **argz, size_t *argz_len, char *before, const char *entry)
 {
-    int len = 0;
+    size_t len = 0;
 
     if (before == NULL)
         return argz_add(argz, argz_len, entry);
@@ -63,7 +63,7 @@ argz_insert(char **argz, size_t *argz_len, char *before, const char *entry)
     if (!(*argz = (char *)realloc(*argz, *argz_len + len)))
         return ENOMEM;
 
-    memmove(before + len, before, *argz + *argz_len - before);
+    memmove(before + len, before, (size_t) (*argz + *argz_len - before));
     memcpy(before, entry, len);
 
     *argz_len += len;
