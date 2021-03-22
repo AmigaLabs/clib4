@@ -146,6 +146,9 @@ struct _clib2 * InitGlobal() {
 			FreeDosObject(DOS_EXAMINEDATA, exd);
 		}
 
+		/* Choose which memcpy to use */
+		GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);		
+
 		/* 
 		 * Next: Get Elf handle associated with the currently running process. 
 		 * __ElfBase is opened in stdlib_shared_objs.c that is called before the

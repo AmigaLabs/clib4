@@ -37,4 +37,4 @@
 
 /****************************************************************************/
 
-int NOCOMMON __default_pool_size = 4096;
+int NOCOMMON __default_pool_size = 16384;

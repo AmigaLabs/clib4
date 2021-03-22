@@ -60,28 +60,42 @@ static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), al
 
 /****************************************************************************/
 
-int _start(char *args, int arglen, struct ExecBase *sysBase);
-extern int _main(struct ExecIFace *iexec);
-extern struct ExecIFace * NOCOMMON IExec;
-extern BOOL open_libraries(struct ExecIFace *iexec);
+void _init(void);
+void _fini(void);
 
 /****************************************************************************/
 
-int
-_start(char *args, int arglen, struct ExecBase *sysBase)
+void 
+_init(void)
 {
 	extern void shared_obj_init(void);
-	int result = 0;
+	int num_ctors,i;
+	int j;
 
-	
-	SysBase = (struct Library *)sysBase;
-	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
-	open_libraries(IExec);
-
-	/* The shared objects need to be set up before any local constructors are invoked. */
+	/* The shared objects need to be set up before any local
+	   constructors are invoked. */
 	shared_obj_init();
-	
-	result = _main(IExec);
 
-	return result;
+	for(i = 1, num_ctors = 0 ; __CTOR_LIST__[i] != NULL ; i++)
+		num_ctors++;
+
+	for(j = 0 ; j < num_ctors ; j++)
+		__CTOR_LIST__[num_ctors - j]();
+}
+
+void 
+_fini(void) {
+	extern void shared_obj_exit(void);
+	int num_dtors,i;
+	static int j;
+
+	for(i = 1, num_dtors = 0 ; __DTOR_LIST__[i] != NULL ; i++)
+		num_dtors++;
+
+	while(j++ < num_dtors)
+		__DTOR_LIST__[j]();
+
+	/* The shared objects need to be cleaned up after all local
+	   destructors have been invoked. */
+	shared_obj_exit();
 }

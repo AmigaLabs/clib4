@@ -154,7 +154,7 @@ extern int __isnan(double x);
 extern int __isinf(double x);
 
 /****************************************************************************/
-#if defined(__GNUC__) && !defined(__cplusplus)
+#if defined(__GNUC__)
 #define fpclassify(x) \
 	(sizeof(x) == sizeof(float) ? __fpclassify_float(x) : __fpclassify_double(x))
 

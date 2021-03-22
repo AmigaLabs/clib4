@@ -39,46 +39,4 @@
 
 #include "macros.h"
 
-/****************************************************************************/
-
-/* Quick "hack" to help GCC compile itself */
-#if defined(GCC_HELP_SUPPORT)
-
-/******************************************************************************/
-
-#include "stdlib_headers.h"
-
-/******************************************************************************/
-
-STATIC unsigned int
-get_default_stack_size(void)
-{
-	unsigned int result = 0;
-	char buffer[40];
-
-	if(GetVar("GCC_STACK_SIZE",buffer,sizeof(buffer)-1,0) > 0)
-	{
-		LONG n;
-
-		if((StrToLong(buffer,&n) > 0) && (n > 0))
-			result = (unsigned int)n;
-	}
-
-	return(result);
-}
-
-/******************************************************************************/
-
-unsigned int (* __get_default_stack_size)(void) = get_default_stack_size;
-char * __stack_size_string = "$STACK: 200000";
-unsigned int __stack_size = 200000;
-
-#else
-
-/******************************************************************************/
-
 unsigned int NOCOMMON __stack_size;
-
-/******************************************************************************/
-
-#endif /* GCC_HELP_SUPPORT */

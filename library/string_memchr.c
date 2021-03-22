@@ -1,5 +1,5 @@
 /*
- * $Id: string_memchr.c,v 1.6 2006-01-08 12:04:26 obarthel Exp $
+ * $Id: string_memchr.c,v 1.7 2021-03-22 12:04:26 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,42 +31,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
-
 /* Check if one of the four bytes which make up a long word is zero. */
 #define LONG_CONTAINS_ZERO_OCTET(x) (((x) + 0xfefefeff) & ~((x) | 0x7f7f7f7f))
 
-/****************************************************************************/
+extern void *__memchr440(const void *ptr, int val, size_t len);
 
 INLINE STATIC void *
-__memchr(const unsigned char * m,unsigned char val,size_t len)
+__memchr(const unsigned char *m, unsigned char val, size_t len)
 {
-	void * result = NULL;
+	void *result = NULL;
 
-	assert( m != NULL && len > 0 );
+	assert(m != NULL && len > 0);
 
 	/* The setup below is intended to speed up searching in larger
 	 * memory blocks. This can be very elaborate and should not be
 	 * done unless a payoff can be expected.
 	 */
-	if(len > 4 * sizeof(long))
+	if (len > 4 * sizeof(long))
 	{
 		/* Try to align the memory block to an even address. */
-		if(IS_UNALIGNED(m))
+		if (IS_UNALIGNED(m))
 		{
 			len--;
 
-			if((*m) == val)
+			if ((*m) == val)
 			{
 				result = (void *)m;
 				goto out;
@@ -78,11 +74,11 @@ __memchr(const unsigned char * m,unsigned char val,size_t len)
 		/* Try to align the memory block to an address which is
 		 * a multiple of a long word.
 		 */
-		if(len >= sizeof(short) && IS_SHORT_ALIGNED(m))
+		if (len >= sizeof(short) && IS_SHORT_ALIGNED(m))
 		{
 			len--;
 
-			if((*m) == val)
+			if ((*m) == val)
 			{
 				result = (void *)m;
 				goto out;
@@ -92,7 +88,7 @@ __memchr(const unsigned char * m,unsigned char val,size_t len)
 
 			len--;
 
-			if((*m) == val)
+			if ((*m) == val)
 			{
 				result = (void *)m;
 				goto out;
@@ -105,16 +101,16 @@ __memchr(const unsigned char * m,unsigned char val,size_t len)
 		 * data can be read one long word at a time, perform the
 		 * search in this manner.
 		 */
-		if(len >= sizeof(long) && IS_LONG_ALIGNED(m))
+		if (len >= sizeof(long) && IS_LONG_ALIGNED(m))
 		{
-			const unsigned long * _m = (const unsigned long *)m;
+			const unsigned long *_m = (const unsigned long *)m;
 			unsigned long _val = val;
 			unsigned long x;
 
 			/* Build a long word which contains the byte value to
 			 * find, repeated four times.
 			 */
-			_val |= (_val <<  8);
+			_val |= (_val << 8);
 			_val |= (_val << 16);
 
 			do
@@ -129,7 +125,7 @@ __memchr(const unsigned char * m,unsigned char val,size_t len)
 				 * whether it contains any zero octets.
 				 */
 				x = (*_m) ^ _val;
-				if(LONG_CONTAINS_ZERO_OCTET(x))
+				if (LONG_CONTAINS_ZERO_OCTET(x))
 				{
 					/* We got what we wanted. Now figure out which byte
 					 * would match the value we were looking for.
@@ -140,22 +136,21 @@ __memchr(const unsigned char * m,unsigned char val,size_t len)
 
 				_m++;
 				len -= sizeof(long);
-			}
-			while(len >= sizeof(long));
+			} while (len >= sizeof(long));
 
 			m = (const unsigned char *)_m;
 		}
 	}
 
- out:
+out:
 
 	/* If there are bytes left in need of comparison, take
 	 * care of them here. This also includes 'aborted'
 	 * comparison attempts from above.
 	 */
-	while(len-- > 0)
+	while (len-- > 0)
 	{
-		if((*m) == val)
+		if ((*m) == val)
 		{
 			result = (void *)m;
 			break;
@@ -164,56 +159,40 @@ __memchr(const unsigned char * m,unsigned char val,size_t len)
 		m++;
 	}
 
-	return(result);
+	return (result);
 }
 
-/****************************************************************************/
-
 void *
-memchr(const void * ptr, int val, size_t len)
+memchr(const void *ptr, int val, size_t len)
 {
-	const unsigned char * m = ptr;
-	void * result = NULL;
+	const unsigned char *m = ptr;
+	void *result = NULL;
 
-	assert( ptr != NULL );
-	assert( (int)len >= 0 );
+	assert(ptr != NULL);
+	assert((int)len >= 0);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+	if (ptr == NULL)
 	{
-		if(ptr == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
-
-	if(len > 0)
-	{
-		#if 0
-		{
-			val &= 255;
-
-			do
-			{
-				if((*m) == val)
-				{
-					result = (void *)m;
-					break;
-				}
-
-				m++;
-			}
-			while(--len > 0);
-		}
-		#else
-		{
-			result = __memchr(m,(unsigned char)(val & 255),len);
-		}
-		#endif
+		__set_errno(EFAULT);
+		goto out;
 	}
 
- out:
+	if (len > 0)
+	{
 
-	return(result);
+		switch (__global_clib2->cpufamily)
+		{
+		case CPUFAMILY_4XX:
+			result = __memchr440(m, (unsigned char)(val & 255), len);
+			break;
+		default:
+			result = __memchr(m, (unsigned char)(val & 255), len);
+		}
+	}
+	else
+		__set_errno(EFAULT);
+
+out:
+
+	return (result);
 }

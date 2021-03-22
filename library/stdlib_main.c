@@ -75,11 +75,7 @@
 
 /****************************************************************************/
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
-
 extern int main(int arg_c, char **arg_v);
-extern int _start(char *args, int arglen, struct Library *sysBase);
 
 /****************************************************************************/
 
@@ -91,7 +87,7 @@ extern struct Library NOCOMMON *__ElfBase;
 extern struct ElfIFace NOCOMMON *__IElf;
 
 /****************************************************************************/
-BOOL open_libraries(struct ExecIFace *iexec);
+BOOL open_libraries(void);
 /****************************************************************************/
 
 STATIC VOID
@@ -145,15 +141,18 @@ call_main(void)
 	if (setjmp(__exit_jmp_buf) != 0)
 		goto out;
 
-	//open_libraries(iexec);
-
 	struct ElfIFace *IElf = __IElf;
+
+	SHOWMSG("now invoking the constructors");
+
+	/* Go through the constructor list */
+	_init();
+
+	SHOWMSG("done.");
 
 	__global_clib2 = InitGlobal();
 	if (__global_clib2 == NULL)
 		goto out;
-
-	SHOWMSG("done.");
 
 	/* If the SAS/C profiling code is set up for printing function
 	   call chains, switch it on now. */
@@ -247,7 +246,7 @@ out:
 	SHOWMSG("invoking the destructors");
 
 	/* Go through the destructor list */
-	_clib_exit();
+	_fini();
 
 	SHOWMSG("done.");
 
@@ -257,7 +256,7 @@ out:
 
 /****************************************************************************/
 
-BOOL open_libraries(struct ExecIFace *iexec)
+BOOL open_libraries(void)
 {
 	BOOL success = FALSE;
 
@@ -300,10 +299,6 @@ out:
 STATIC VOID
 detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
 {
-	struct ElfIFace *IElf = __IElf;
-
-	_clib_exit();
-
 	FiniGlobal();
 
 	close_libraries();
@@ -329,7 +324,7 @@ get_stack_size(void)
 
 /****************************************************************************/
 
-int _main(struct ExecIFace *iexec)
+int _main(void)
 {
 	struct Process *volatile child_process = NULL;
 	struct WBStartup *volatile startup_message;
@@ -339,22 +334,13 @@ int _main(struct ExecIFace *iexec)
 	int return_code = RETURN_FAIL;
 	ULONG current_stack_size;
 
-	IExec = iexec;
+	SysBase = *(struct Library **)4;
+
+	/* Get exec interface */
+	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 
 	int num_ctors = 0, c;
 	static int j = 0;
-
-	/* Open LibC libraries */
-	open_libraries(iexec);
-
-	/* Calling LibC constructors */
-	for (c = 1, num_ctors = 0; __CTOR_LIST__[c] != NULL; c++)
-		num_ctors++;
-
-	for (j = 0; j < num_ctors; j++)
-	{
-		__CTOR_LIST__[num_ctors - j]();
-	}
 
 	/* Pick up the Workbench startup message, if available. */
 	this_process = (struct Process *)FindTask(NULL);
@@ -373,6 +359,22 @@ int _main(struct ExecIFace *iexec)
 	}
 
 	__WBenchMsg = (struct WBStartup *)startup_message;
+
+
+	/* Try to open the libraries we need to proceed. */
+	if(CANNOT open_libraries())
+	{
+		const char * error_message;
+
+		/* If available, use the error message provided by the client. */
+		error_message = __minimum_os_lib_error;
+
+		if (error_message == NULL)
+			error_message = "This program requires AmigaOS 4.0 or higher.";
+
+		__show_error(error_message);
+		goto out;
+	}
 
 	if (__disable_dos_requesters)
 	{
@@ -427,58 +429,8 @@ int _main(struct ExecIFace *iexec)
 		if (-128 <= __priority && __priority <= 127)
 			SetTaskPri((struct Task *)this_process, __priority);
 
-		/* Was a minimum stack size requested and do we
-		   need more stack space than was provided for? */
-		if (__stack_size > 0 && current_stack_size < (ULONG)__stack_size)
-		{
-			struct StackSwapStruct *stk;
-			unsigned int stack_size;
-			APTR new_stack;
-
-			/* Make the stack size a multiple of 32 bytes. */
-			stack_size = 32 + ((__stack_size + 31UL) & ~31UL);
-
-			/* Allocate the stack swapping data structure
-			   and the stack space separately. */
-			stk = AllocVecTags(sizeof(*stk), AVT_Type, MEMF_SHARED, TAG_DONE);
-			if (stk == NULL)
-			{
-				FreeVec(__global_clib2);
-				goto out;
-			}
-
-			new_stack = AllocVecTags(stack_size, AVT_Type, MEMF_SHARED, TAG_DONE);
-			if (new_stack == NULL)
-			{
-				FreeVec(__global_clib2);
-				FreeVec(stk);
-				goto out;
-			}
-
-			/* Fill in the lower and upper bounds, then take care of
-			   the stack pointer itself. */
-			stk->stk_Lower = new_stack;
-			stk->stk_Upper = (ULONG)(new_stack) + stack_size;
-			stk->stk_Pointer = (APTR)(stk->stk_Upper - 32);
-
-/* If necessary, set up for stack size usage measurement. */
-#ifndef NDEBUG
-			{
-				__stack_usage_init(stk);
-			}
-#endif /* NDEBUG */
-
-			return_code = __swap_stack_and_call(stk, (APTR)call_main);
-
-			FreeVec(__global_clib2);
-			FreeVec(new_stack);
-			FreeVec(stk);
-		}
-		else
-		{
-			/* We have enough room to make the call or just don't care. */
-			return_code = call_main();
-		}
+		/* We have enough room to make the call or just don't care. */
+		return_code = call_main();
 
 		/* Restore the task priority. */
 		SetTaskPri((struct Task *)this_process, old_priority);
@@ -502,6 +454,7 @@ int _main(struct ExecIFace *iexec)
 
 		if (stack_size < cli->cli_DefaultStack * sizeof(LONG))
 			stack_size = cli->cli_DefaultStack * sizeof(LONG);
+		Printf("__stack_size = %ld - stack_size = %ld\n", __stack_size, stack_size);
 
 		GetCliProgramName(program_name, (LONG)sizeof(program_name));
 
@@ -584,22 +537,4 @@ out:
 	}
 
 	return (return_code);
-}
-
-void 
-_clib_exit(void)
-{
-	extern void shared_obj_exit(void);
-	int num_dtors, i;
-	static int j = 0;
-
-	for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
-		num_dtors++;
-
-	while (j++ < num_dtors) {
-		__DTOR_LIST__[j]();
-	}
-
-	/* The shared objects need to be cleaned up after all local destructors have been invoked. */
-	shared_obj_exit();
 }

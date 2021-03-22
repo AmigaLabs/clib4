@@ -122,6 +122,7 @@ extern ldiv_t ldiv(long n, long d);
 /****************************************************************************/
 
 extern int rand(void);
+extern int random(void);
 extern void srand(unsigned int seed);
 extern void srandom(unsigned int seed);
 extern double erand48 (unsigned short subi[3]);

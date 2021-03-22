@@ -1,5 +1,5 @@
 /*
- * $Id: string_memcpy.c,v 1.8 2006-09-22 09:02:51 obarthel Exp $
+ * $Id: string_memcpy.c,v 1.8 2021-03-22 09:02:51 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,29 +31,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
+extern void *__memcpy440(void *dst, const void *src, size_t len);
 
-INLINE STATIC VOID 
-__memcpy(unsigned char * to,unsigned char * from,size_t len)
+INLINE STATIC VOID
+__memcpy(unsigned char *to, unsigned char *from, size_t len)
 {
 	/* The setup below is intended to speed up copying larger
 	 * memory blocks. This can be very elaborate and should not be
 	 * done unless a payoff can be expected.
 	 */
-	if(len > 4 * sizeof(long))
+	if (len > 4 * sizeof(long))
 	{
 		/* Try to align both source and destination to an even address. */
-		if(IS_UNALIGNED(to) && IS_UNALIGNED(from))
+		if (IS_UNALIGNED(to) && IS_UNALIGNED(from))
 		{
 			(*to++) = (*from++);
 			len--;
@@ -62,7 +60,7 @@ __memcpy(unsigned char * to,unsigned char * from,size_t len)
 		/* Try to align both source and destination to addresses which are
 		 * multiples of four.
 		 */
-		if(len >= sizeof(short) && IS_SHORT_ALIGNED(to) && IS_SHORT_ALIGNED(from))
+		if (len >= sizeof(short) && IS_SHORT_ALIGNED(to) && IS_SHORT_ALIGNED(from))
 		{
 			(*to++) = (*from++);
 			(*to++) = (*from++);
@@ -74,13 +72,13 @@ __memcpy(unsigned char * to,unsigned char * from,size_t len)
 		 * multiples of four and there is still enough data left to be copied,
 		 * try to move it in larger chunks.
 		 */
-		if(len >= sizeof(long) && IS_LONG_ALIGNED(to) && IS_LONG_ALIGNED(from))
+		if (len >= sizeof(long) && IS_LONG_ALIGNED(to) && IS_LONG_ALIGNED(from))
 		{
-			unsigned long * _to		= (unsigned long *)to;
-			unsigned long * _from	= (unsigned long *)from;
+			unsigned long *_to = (unsigned long *)to;
+			unsigned long *_from = (unsigned long *)from;
 
 			/* An unrolled transfer loop, which shifts 32 bytes per iteration. */
-			while(len >= 8 * sizeof(long))
+			while (len >= 8 * sizeof(long))
 			{
 				/* The following should translate into load/store
 				   opcodes which encode the access offsets (0..7)
@@ -99,8 +97,8 @@ __memcpy(unsigned char * to,unsigned char * from,size_t len)
 				_to[6] = _from[6];
 				_to[7] = _from[7];
 
-				_to		+= 8;
-				_from	+= 8;
+				_to += 8;
+				_from += 8;
 
 				/*
 				(*_to++) = (*_from++);
@@ -119,72 +117,59 @@ __memcpy(unsigned char * to,unsigned char * from,size_t len)
 			/* Try to mop up any small amounts of data still in need of
 			 * copying...
 			 */
-			while(len >= sizeof(long))
+			while (len >= sizeof(long))
 			{
 				(*_to++) = (*_from++);
 
 				len -= sizeof(long);
-			}		
+			}
 
-			to		= (unsigned char *)_to;
-			from	= (unsigned char *)_from;
+			to = (unsigned char *)_to;
+			from = (unsigned char *)_from;
 		}
 	}
 
 	/* If there's anything left, copy the rest. */
-	while(len-- > 0)
+	while (len-- > 0)
 		(*to++) = (*from++);
 }
 
 /****************************************************************************/
 
-/* This is ugly: GCC 2.95.x assumes that 'unsigned long' is used in the built-in
-   memcmp/memcpy/memset functions instead of 'size_t'. This can produce warnings
-   where none are necessary. */
-#if defined(__GNUC__) && (__GNUC__ < 3)
-void *
-memcpy(void *dst, const void *src, unsigned long len)
-#else
 void *
 memcpy(void *dst, const void *src, size_t len)
-#endif /* __GNUC__ && __GNUC__ < 3 */
 {
-	void * result = dst;
+	void *result = dst;
 
-	assert( (len == 0) || (dst != NULL && src != NULL && (int)len > 0) );
+	assert((len == 0) || (dst != NULL && src != NULL && (int)len > 0));
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+	if (dst == NULL || src == NULL)
 	{
-		if(dst == NULL || src == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
+		__set_errno(EFAULT);
+		goto out;
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
 
-	if(len > 0 && dst != src)
+	if (len > 0 && dst != src)
 	{
-		char * to = dst;
-		const char * from = src;
+		char *to = dst;
+		const char *from = src;
 
 		/* The two memory regions may not overlap. */
-		assert((to)   >= (from)+len ||
-		       (from) >= (to  )+len);
+		assert((to) >= (from) + len ||
+			   (from) >= (to) + len);
 
-		#if 0
-		{
-			while(len-- > 0)
-				(*to++) = (*from++);
+		switch (__global_clib2->cpufamily) {
+			case CPUFAMILY_4XX:
+				__memcpy440((unsigned char *)to, (unsigned char *)from, len);
+				break;
+			default:
+				__memcpy((unsigned char *)to, (unsigned char *)from, len);
 		}
-		#else
-		{
-			__memcpy((unsigned char *)to,(unsigned char *)from,len);
-		}
-		#endif
 	}
+	else
+		__set_errno(EFAULT);
 
- out:
+out:
 
-	return(result);
+	return (result);
 }

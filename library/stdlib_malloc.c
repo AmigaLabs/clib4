@@ -425,10 +425,11 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
 		}
 		else
 		{
+			__memory_lock();
 			if (__memory_pool != NULL)
 			{
 				NewList((struct List *)&__memory_list);
-
+				
 				FreeSysObject(ASOT_MEMPOOL, __memory_pool);
 				__memory_pool = NULL;
 			}
@@ -446,10 +447,12 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
 				}
 #endif /* __MEM_DEBUG */
 			}
+			__memory_unlock();
 		}
 	}
 #else
 	{
+		__memory_lock();
 		if (__memory_pool != NULL)
 		{
 			NewList((struct List *)&__memory_list);
@@ -471,6 +474,7 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
 			}
 #endif /* __MEM_DEBUG */
 		}
+		__memory_unlock();
 	}
 #endif /* __USE_SLAB_ALLOCATOR */
 
@@ -525,9 +529,7 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
 		else
 		{
 			__memory_pool = AllocSysObjectTags(ASOT_MEMPOOL,
-											   ASO_NoTrack, FALSE,
-											   ASO_MemoryOvr, MEMF_PRIVATE,
-											   ASOPOOL_MFlags, MEMF_PRIVATE,
+											   ASOPOOL_MFlags, MEMF_SHARED,
 											   ASOPOOL_Threshold, (ULONG)__default_pool_size,
 											   ASOPOOL_Puddle, (ULONG)__default_pool_size,
 											   TAG_DONE);
@@ -536,9 +538,7 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
 #else
 	{
 		__memory_pool = AllocSysObjectTags(ASOT_MEMPOOL,
-										   ASO_NoTrack, FALSE,
-										   ASO_MemoryOvr, MEMF_PRIVATE,
-										   ASOPOOL_MFlags, MEMF_PRIVATE,
+										   ASOPOOL_MFlags, MEMF_SHARED,
 										   ASOPOOL_Threshold, (ULONG)__default_pool_size,
 										   ASOPOOL_Puddle, (ULONG)__default_pool_size,
 										   TAG_DONE);

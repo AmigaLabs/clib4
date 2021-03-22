@@ -593,6 +593,9 @@ struct _clib2
 	/* used by tmpnam */
 	int  inc;	
   	char emergency[250];
+
+	/* CPU Family to enable optimized functions */
+	uint32 cpufamily;	  
 };
 
 extern struct _clib2 *__global_clib2;

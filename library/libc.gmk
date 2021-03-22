@@ -10,6 +10,7 @@ LIBS += lib/libc.so \
 
 
 C_LIB := \
+	crt0.o \
 	c.lib_rev.o \
 	libc_init_global.o \
 	argz_add.o \
@@ -302,6 +303,7 @@ C_LIB := \
 	stdlib_putenv.o \
 	stdlib_qsort.o \
 	stdlib_rand.o \
+	stdlib_random.o \
 	stdlib_rand_r.o \
 	stdlib_rand48.o \
 	stdlib_realloc.o \
@@ -330,7 +332,6 @@ C_LIB := \
 	stdlib_strtoll.o \
 	stdlib_strtoul.o \
 	stdlib_strtoull.o \
-	stdlib_swapstack.o \
 	stdlib_sysbase.o \
 	stdlib_system.o \
 	stdlib_sysvbase.o \
@@ -356,6 +357,11 @@ C_LIB := \
 	string_memmove.o \
 	string_memrchr.o \
 	string_memset.o \
+	cpu/4xx/string_memchr440.o \
+	cpu/4xx/string_memcmp440.o \
+	cpu/4xx/string_memcpy440.o \
+	cpu/4xx/string_memmove440.o \
+	cpu/4xx/string_strchr440.o \
 	string_rindex.o \
 	string_stpcpy.o \
 	string_strcasestr.o \
@@ -954,8 +960,14 @@ obj/libc/%.o : CFLAGS += $(LARGEDATA)
 
 obj.shared/libc/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
+obj/libc/%.o : %.S
+	$(VERBOSE)$(COMPILE_ASM)
+
 obj/libc/%.o : %.c
 	$(VERBOSE)$(COMPILE)
+
+obj.shared/libc/%.o : %.S
+	$(VERBOSE)$(COMPILE_SHARED_ASM)
 
 obj.shared/libc/%.o : %.c
 	$(VERBOSE)$(COMPILE_SHARED)

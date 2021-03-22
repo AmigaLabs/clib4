@@ -176,7 +176,6 @@ __shlib_call_constructors(void)
    IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
   
    /* The libraries needs to be set up before any local constructors are invoked. */
-   //open_libraries(IExec);
 
    for (i = 1, num_ctors = 0; __CTOR_LIST__[i] != NULL; i++)
       num_ctors++;
