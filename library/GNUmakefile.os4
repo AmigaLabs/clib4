@@ -34,6 +34,8 @@ MAKEDIR := mkdir -p
 # will be considered
 #LOG_COMMAND := 2>&1 | tee -a compiler.log
 LOG_COMMAND :=
+LIB_ROOT = ..
+BUILD_DIR = $(LIB_ROOT)/build
 
 ##############################################################################
 
@@ -45,7 +47,7 @@ WARNINGS := \
 	-Wshadow # -Werror -Wbad-function-cast #-Wconversion 
 
 PIC		   := -fPIC 
-INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE) -Idebug -Iamiga -Iprofile
+INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE) -Idebug -Iamiga -Iprofile -Imath -Iargz -Iusergroup -Istring -Ictype -Istdio -Istdlib -Isocket -Iunistd -Itime -Iwchar -Iposix -Itermios -Isearch -Iinttypes -Ilocale -Idirent -Istat -Imount
  OPTIONS   := -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -nostdlib
 OPTIMIZE   := -DNDEBUG -O3 -fno-inline
 
@@ -76,20 +78,20 @@ include libamiga.gmk
 include libprofile.gmk
 
 all-targets: \
-	lib/crtbegin.o \
-	lib/crtend.o \
-	lib/shcrtbegin.o \
-	lib/shcrtend.o \
-	$(LIBS)
+	$(BUILD_DIR)/lib/crtbegin.o \
+	$(BUILD_DIR)/lib/crtend.o \
+	$(BUILD_DIR)/lib/shcrtbegin.o \
+	$(BUILD_DIR)/lib/shcrtend.o \
+	$(BUILD_DIR)/$(LIBS)
 
 ##############################################################################
 
 # Delete all object files and libraries
 clean:
-	-$(DELETE) obj
-	-$(DELETE) obj.shared	
-	-$(DELETE) lib
-	-$(DELETE) compiler.log
+	-$(DELETE) $(BUILD_DIR)/obj
+	-$(DELETE) $(BUILD_DIR)/obj.shared	
+	-$(DELETE) $(BUILD_DIR)/lib
+	-$(DELETE) $(BUILD_DIR)/compiler.log
 
 ##############################################################################
 
@@ -109,28 +111,28 @@ version:
 
 # General build rules for all object files and the individual libraries
 
-lib/%.o : AFLAGS += $(LARGEDATA)
-lib/%.o : %.S
+$(BUILD_DIR)/lib/%.o : AFLAGS += $(LARGEDATA)
+$(BUILD_DIR)/lib/%.o : %.S
 	$(VERBOSE)$(ASSEMBLE)
 
-lib/%.o : CFLAGS += $(LARGEDATA)
-lib/%.o : %.c
+$(BUILD_DIR)/lib/%.o : CFLAGS += $(LARGEDATA)
+$(BUILD_DIR)/lib/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 	
-lib/crtbegin.o : CFLAGS += $(LARGEDATA) -fno-aggressive-loop-optimizations
-lib/crtbegin.o : crtbegin.c
+$(BUILD_DIR)/lib/crtbegin.o : CFLAGS += -fno-aggressive-loop-optimizations
+$(BUILD_DIR)/lib/crtbegin.o : crtbegin.c
 	$(VERBOSE)$(COMPILE)
 
-lib/crtend.o : CFLAGS += $(LARGEDATA) -fno-aggressive-loop-optimizations
-lib/crtend.o : crtend.c
+$(BUILD_DIR)/lib/crtend.o : CFLAGS += -fno-aggressive-loop-optimizations
+$(BUILD_DIR)/lib/crtend.o : crtend.c
 	$(VERBOSE)$(COMPILE)
 
-lib/shcrtbegin.o : CFLAGS += $(LARGEDATA) $(PIC) -fno-aggressive-loop-optimizations
-lib/shcrtbegin.o : shcrtbegin.c
+$(BUILD_DIR)/lib/shcrtbegin.o : CFLAGS += $(PIC) -fno-aggressive-loop-optimizations
+$(BUILD_DIR)/lib/shcrtbegin.o : shcrtbegin.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-lib/shcrtend.o : CFLAGS += $(LARGEDATA) $(PIC) -fno-aggressive-loop-optimizations
-lib/shcrtend.o : shcrtend.c
+$(BUILD_DIR)/lib/shcrtend.o : CFLAGS += $(PIC) -fno-aggressive-loop-optimizations
+$(BUILD_DIR)/lib/shcrtend.o : shcrtend.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
 ##############################################################################
@@ -177,13 +179,13 @@ define MAKESHARED
 @$(MAKEDIR) $(@D)
 @$(DELETE) $@
 $(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-$(VERBOSE)$(CC) -fPIC -mcrt=clib2 -shared -o $@ lib/shcrtbegin.o lib/shcrtend.o -nostartfiles $^ $(LOG_COMMAND)
+$(VERBOSE)$(CC) -fPIC -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND)
 endef
 
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
-	$(COPY) lib/* $(INSTALL_PREFIX)/lib/
+	$(COPY) $(BUILD_DIR)/lib/* $(INSTALL_PREFIX)/lib/
 	$(COPY) include/* $(INSTALL_PREFIX)/include/
 
 release:

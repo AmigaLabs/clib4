@@ -1,10 +1,7 @@
 /*
- * $Id: shcrtbegin.c,v 1.0 2021-02-01 17:22:03 apalmate Exp $
+ * $Id: math_fabsf.c,v 1.4 2021-01-31 12:04:23 apalmate Exp $
  *
  * :ts=4
- *
- * Handles global constructors and destructors for the OS4 GCC build.
- *
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -34,38 +31,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Avoid gcc warnings.. */
-void __shlib_call_constructors(void);
-void __shlib_call_destructors(void);
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
-
-void 
-__shlib_call_constructors(void)
+INLINE STATIC float
+__fabsf(float number)
 {
-	extern void (*__CTOR_LIST__[])(void);
-	int i = 0;
+	union ieee_single x;
 
-	while (__CTOR_LIST__[i + 1])
-	{
-		i++;
-	}
+	x.value = number;
 
-	while (i > 0)
-	{
-		__CTOR_LIST__[i--]();
-	}
+	/* Knock off the sign bit. */
+	x.raw[0] &= 0x7fffffff;
+
+	return (x.value);
 }
 
-void 
-__shlib_call_destructors(void)
+float fabsf(float x)
 {
-	extern void (*__DTOR_LIST__[])(void);
-	int i = 1;
+	float result;
 
-	while (__DTOR_LIST__[i])
-	{
-		__DTOR_LIST__[i++]();
-	}
+	result = __fabsf(x);
+
+	return (result);
 }

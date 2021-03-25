@@ -575,6 +575,7 @@ struct _clib2
 	/* This is used with the dlopen(), dlclose() and dlsym() functions. */
 	Elf32_Handle __dl_elf_handle;
 	Elf32_Error __elf_error_code;
+	struct ElfIFace *IElf;
 
 	/* This is the pointer to itself */
 	struct Process *self;

@@ -1,10 +1,7 @@
 /*
- * $Id: shcrtbegin.c,v 1.0 2021-02-01 17:22:03 apalmate Exp $
+ * $Id: math_sin.c,v 1.6 2021-01-31 12:04:24 apalmate Exp $
  *
  * :ts=4
- *
- * Handles global constructors and destructors for the OS4 GCC build.
- *
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -32,40 +29,63 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * PowerPC math library based in part on work by Sun Microsystems
+ * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ *
+ * Developed at SunPro, a Sun Microsystems, Inc. business.
+ * Permission to use, copy, modify, and distribute this
+ * software is freely granted, provided that this notice
+ * is preserved.
  */
 
-/* Avoid gcc warnings.. */
-void __shlib_call_constructors(void);
-void __shlib_call_destructors(void);
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
-
-void 
-__shlib_call_constructors(void)
+INLINE STATIC double
+__sin(double x)
 {
-	extern void (*__CTOR_LIST__[])(void);
-	int i = 0;
+	double y[2], z = 0.0;
+	int n, ix;
 
-	while (__CTOR_LIST__[i + 1])
-	{
-		i++;
-	}
+	/* High word of x. */
+	GET_HIGH_WORD(ix, x);
 
-	while (i > 0)
+	/* |x| ~< pi/4 */
+	ix &= 0x7fffffff;
+	if (ix <= 0x3fe921fb)
+		return __kernel_sin(x, z, 0);
+
+	/* sin(Inf or NaN) is NaN */
+	else if (ix >= 0x7ff00000)
+		return x - x;
+
+	/* argument reduction needed */
+	else
 	{
-		__CTOR_LIST__[i--]();
+		n = __rem_pio2(x, y);
+		switch (n & 3)
+		{
+		case 0:
+			return __kernel_sin(y[0], y[1], 1);
+		case 1:
+			return __kernel_cos(y[0], y[1]);
+		case 2:
+			return -__kernel_sin(y[0], y[1], 1);
+		default:
+			return -__kernel_cos(y[0], y[1]);
+		}
 	}
 }
 
-void 
-__shlib_call_destructors(void)
+double
+sin(double x)
 {
-	extern void (*__DTOR_LIST__[])(void);
-	int i = 1;
+	double result;
 
-	while (__DTOR_LIST__[i])
-	{
-		__DTOR_LIST__[i++]();
-	}
+	result = __sin(x);
+
+	return (result);
 }

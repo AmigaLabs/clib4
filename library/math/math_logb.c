@@ -1,10 +1,7 @@
 /*
- * $Id: shcrtbegin.c,v 1.0 2021-02-01 17:22:03 apalmate Exp $
+ * $Id: math_logb.c,v 1.9 2006-01-08 12:04:23 obarthel Exp $
  *
  * :ts=4
- *
- * Handles global constructors and destructors for the OS4 GCC build.
- *
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -32,40 +29,71 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * PowerPC math library based in part on work by Sun Microsystems
+ * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ *
+ * Developed at SunPro, a Sun Microsystems, Inc. business.
+ * Permission to use, copy, modify, and distribute this
+ * software is freely granted, provided that this notice
+ * is preserved.
  */
 
-/* Avoid gcc warnings.. */
-void __shlib_call_constructors(void);
-void __shlib_call_destructors(void);
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
-
-void 
-__shlib_call_constructors(void)
+INLINE STATIC double
+__logb(double x)
 {
-	extern void (*__CTOR_LIST__[])(void);
-	int i = 0;
+	unsigned int lx, ix;
 
-	while (__CTOR_LIST__[i + 1])
-	{
-		i++;
-	}
+	EXTRACT_WORDS(ix, lx, x);
 
-	while (i > 0)
-	{
-		__CTOR_LIST__[i--]();
-	}
+	ix &= 0x7fffffff; /* high |x| */
+	if ((ix | lx) == 0)
+		return -1.0 / fabs(x);
+
+	if (ix >= 0x7ff00000)
+		return x * x;
+
+	if ((ix >>= 20) == 0) /* IEEE 754 logb */
+		return -1022.0;
+	else
+		return (double)(ix - 1023);
 }
 
-void 
-__shlib_call_destructors(void)
+double
+logb(double x)
 {
-	extern void (*__DTOR_LIST__[])(void);
-	int i = 1;
+	double result;
 
-	while (__DTOR_LIST__[i])
+	if (x == 0.0)
 	{
-		__DTOR_LIST__[i++]();
+		result = -__inf();
+		goto out;
 	}
+
+	if (isnan(x))
+	{
+		result = x;
+		goto out;
+	}
+
+	if (isinf(x))
+	{
+		if (x < 0)
+			result = (-x);
+		else
+			result = x;
+
+		goto out;
+	}
+
+	result = __logb(x);
+
+out:
+
+	return (result);
 }

@@ -1,10 +1,7 @@
 /*
- * $Id: shcrtbegin.c,v 1.0 2021-02-01 17:22:03 apalmate Exp $
+ * $Id: math_tanh.c,v 1.6 2021-01-31 12:04:24 apalmate Exp $
  *
  * :ts=4
- *
- * Handles global constructors and destructors for the OS4 GCC build.
- *
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -32,40 +29,72 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * PowerPC math library based in part on work by Sun Microsystems
+ * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ *
+ * Developed at SunPro, a Sun Microsystems, Inc. business.
+ * Permission to use, copy, modify, and distribute this
+ * software is freely granted, provided that this notice
+ * is preserved.
  */
 
-/* Avoid gcc warnings.. */
-void __shlib_call_constructors(void);
-void __shlib_call_destructors(void);
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
+static const double one = 1.0, two = 2.0, tiny = 1.0e-300;
 
-void 
-__shlib_call_constructors(void)
+INLINE STATIC double
+__tanh(double x)
 {
-	extern void (*__CTOR_LIST__[])(void);
-	int i = 0;
+	double t, z;
+	int jx, ix;
 
-	while (__CTOR_LIST__[i + 1])
+	/* High word of |x|. */
+	GET_HIGH_WORD(jx, x);
+	ix = jx & 0x7fffffff;
+
+	/* x is INF or NaN */
+	if (ix >= 0x7ff00000)
 	{
-		i++;
+		if (jx >= 0)
+			return one / x + one; /* tanh(+-inf)=+-1 */
+		else
+			return one / x - one; /* tanh(NaN) = NaN */
 	}
 
-	while (i > 0)
-	{
-		__CTOR_LIST__[i--]();
+	/* |x| < 22 */
+	if (ix < 0x40360000)
+	{							  /* |x|<22 */
+		if (ix < 0x3c800000)	  /* |x|<2**-55 */
+			return x * (one + x); /* tanh(small) = small */
+		if (ix >= 0x3ff00000)
+		{ /* |x|>=1  */
+			t = __expm1(two * fabs(x));
+			z = one - two / (t + two);
+		}
+		else
+		{
+			t = __expm1(-two * fabs(x));
+			z = -t / (t + two);
+		}
+		/* |x| > 22, return +-1 */
 	}
+	else
+	{
+		z = one - tiny; /* raised inexact flag */
+	}
+	return (jx >= 0) ? z : -z;
 }
 
-void 
-__shlib_call_destructors(void)
+double
+tanh(double x)
 {
-	extern void (*__DTOR_LIST__[])(void);
-	int i = 1;
+	double result;
 
-	while (__DTOR_LIST__[i])
-	{
-		__DTOR_LIST__[i++]();
-	}
+	result = __tanh(x);
+
+	return (result);
 }

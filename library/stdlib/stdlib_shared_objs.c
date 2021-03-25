@@ -1,10 +1,7 @@
 /*
- * $Id: shcrtbegin.c,v 1.0 2021-02-01 17:22:03 apalmate Exp $
+ * $Id: stdlib_shared_objs.c,v 1.1 2010-08-21 11:37:03 obarthel Exp $
  *
  * :ts=4
- *
- * Handles global constructors and destructors for the OS4 GCC build.
- *
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -34,38 +31,3 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Avoid gcc warnings.. */
-void __shlib_call_constructors(void);
-void __shlib_call_destructors(void);
-
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
-
-void 
-__shlib_call_constructors(void)
-{
-	extern void (*__CTOR_LIST__[])(void);
-	int i = 0;
-
-	while (__CTOR_LIST__[i + 1])
-	{
-		i++;
-	}
-
-	while (i > 0)
-	{
-		__CTOR_LIST__[i--]();
-	}
-}
-
-void 
-__shlib_call_destructors(void)
-{
-	extern void (*__DTOR_LIST__[])(void);
-	int i = 1;
-
-	while (__DTOR_LIST__[i])
-	{
-		__DTOR_LIST__[i++]();
-	}
-}

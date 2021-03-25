@@ -1,10 +1,7 @@
 /*
- * $Id: shcrtbegin.c,v 1.0 2021-02-01 17:22:03 apalmate Exp $
+ * $Id: stdlib_dlopen.c,v 1.2 2010-08-21 11:37:03 obarthel Exp $
  *
  * :ts=4
- *
- * Handles global constructors and destructors for the OS4 GCC build.
- *
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -34,38 +31,58 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Avoid gcc warnings.. */
-void __shlib_call_constructors(void);
-void __shlib_call_destructors(void);
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
+/****************************************************************************/
 
-void 
-__shlib_call_constructors(void)
+#include <dlfcn.h>
+#include <libraries/elf.h>
+#include <proto/elf.h>
+
+void *dlopen(const char *path_name, int mode)
 {
-	extern void (*__CTOR_LIST__[])(void);
-	int i = 0;
+	void *result = NULL;
 
-	while (__CTOR_LIST__[i + 1])
-	{
-		i++;
+	if (path_name == NULL || path_name[0] == '\0') {
+		__set_errno(ENOENT);
+		goto out;
 	}
-
-	while (i > 0)
+	
+#if defined(UNIX_PATH_SEMANTICS)
+	struct name_translation_info path_name_nti;
+	if (__global_clib2 != NULL && __global_clib2->__unix_path_semantics)
 	{
-		__CTOR_LIST__[i--]();
+		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+			goto out;
+
+		if (path_name_nti.is_root)
+		{
+			__set_errno(EACCES);
+			goto out;
+		}
 	}
-}
+#endif /* UNIX_PATH_SEMANTICS */
 
-void 
-__shlib_call_destructors(void)
-{
-	extern void (*__DTOR_LIST__[])(void);
-	int i = 1;
-
-	while (__DTOR_LIST__[i])
+	if (__global_clib2->__dl_elf_handle != NULL)
 	{
-		__DTOR_LIST__[i++]();
+		struct ElfIFace *IElf = __global_clib2->IElf;
+		uint32 flags = 0;
+
+		if (mode & RTLD_LOCAL)
+			flags = ELF32_RTLD_LOCAL;
+
+		if (mode & RTLD_GLOBAL)
+			flags = ELF32_RTLD_GLOBAL;
+
+		result = DLOpen(__global_clib2->__dl_elf_handle, path_name, flags);
 	}
+	else
+	{
+		__set_errno(ENOSYS);
+	}
+out:
+
+	return (result);
 }

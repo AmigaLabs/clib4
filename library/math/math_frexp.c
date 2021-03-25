@@ -1,10 +1,7 @@
 /*
- * $Id: shcrtbegin.c,v 1.0 2021-02-01 17:22:03 apalmate Exp $
+ * $Id: math_frexp.c,v 1.6 2006-01-08 12:04:23 obarthel Exp $
  *
  * :ts=4
- *
- * Handles global constructors and destructors for the OS4 GCC build.
- *
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -32,40 +29,83 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * PowerPC math library based in part on work by Sun Microsystems
+ * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ *
+ * Developed at SunPro, a Sun Microsystems, Inc. business.
+ * Permission to use, copy, modify, and distribute this
+ * software is freely granted, provided that this notice
+ * is preserved.
  */
 
-/* Avoid gcc warnings.. */
-void __shlib_call_constructors(void);
-void __shlib_call_destructors(void);
+#ifndef _STDLIB_NULL_POINTER_CHECK_H
+#include "stdlib_null_pointer_check.h"
+#endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
 
-void 
-__shlib_call_constructors(void)
+static const double
+	two54 = 1.80143985094819840000e+16; /* 0x43500000, 0x00000000 */
+
+INLINE STATIC double
+__frexp(double x, int *eptr)
 {
-	extern void (*__CTOR_LIST__[])(void);
-	int i = 0;
+	int hx, ix, lx;
 
-	while (__CTOR_LIST__[i + 1])
+	EXTRACT_WORDS(hx, lx, x);
+
+	ix = 0x7fffffff & hx;
+	*eptr = 0;
+
+	if (ix >= 0x7ff00000 || ((ix | lx) == 0))
+		return x;		 /* 0,inf,nan */
+	if (ix < 0x00100000) /* subnormal */
 	{
-		i++;
+		x *= two54;
+		GET_HIGH_WORD(hx, x);
+		ix = hx & 0x7fffffff;
+		*eptr = -54;
 	}
 
-	while (i > 0)
-	{
-		__CTOR_LIST__[i--]();
-	}
+	*eptr += (ix >> 20) - 1022;
+
+	hx = (hx & 0x800fffff) | 0x3fe00000;
+	SET_HIGH_WORD(x, hx);
+
+	return x;
 }
 
-void 
-__shlib_call_destructors(void)
+double
+frexp(double x, int *nptr)
 {
-	extern void (*__DTOR_LIST__[])(void);
-	int i = 1;
+	double result;
 
-	while (__DTOR_LIST__[i])
+	assert(nptr != NULL);
+
+	if (nptr == NULL)
 	{
-		__DTOR_LIST__[i++]();
+		__set_errno(EFAULT);
+
+		result = __get_huge_val();
+		goto out;
 	}
+
+	if (x != 0.0)
+	{
+		result = __frexp(x, nptr);
+	}
+	else
+	{
+		result = 0.0;
+
+		(*nptr) = 0;
+	}
+
+out:
+
+	return (result);
 }

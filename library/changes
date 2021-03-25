@@ -1,3 +1,8 @@
+c.lib 2.001 (2021-03 25)
+- Added shared object
+- Rework entire clib file structure using folders
+- Now the library is always compiled as thread safe
+
 c.lib 2.000 (xxx)
 
 - Rework of main clib2 library. Starting to remove 68k code and implementing new functions.

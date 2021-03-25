@@ -1,10 +1,7 @@
 /*
- * $Id: shcrtbegin.c,v 1.0 2021-02-01 17:22:03 apalmate Exp $
+ * $Id: stdlib_dlclose.c,v 1.2 2010-08-21 11:37:03 obarthel Exp $
  *
  * :ts=4
- *
- * Handles global constructors and destructors for the OS4 GCC build.
- *
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -34,38 +31,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Avoid gcc warnings.. */
-void __shlib_call_constructors(void);
-void __shlib_call_destructors(void);
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
+#include <dlfcn.h>
+#include <libraries/elf.h>
+#include <proto/elf.h>
 
-void 
-__shlib_call_constructors(void)
+int dlclose(void *handle)
 {
-	extern void (*__CTOR_LIST__[])(void);
-	int i = 0;
+	int result = -1;
 
-	while (__CTOR_LIST__[i + 1])
+	if (__global_clib2->__dl_elf_handle != NULL)
 	{
-		i++;
-	}
+		struct ElfIFace *IElf = __global_clib2->IElf;
+		Elf32_Error error;
 
-	while (i > 0)
-	{
-		__CTOR_LIST__[i--]();
+		error = DLClose(__global_clib2->__dl_elf_handle, handle);
+		if (error != ELF32_NO_ERROR)
+		{
+			__global_clib2->__elf_error_code = error;
+			goto out;
+		}
 	}
-}
-
-void 
-__shlib_call_destructors(void)
-{
-	extern void (*__DTOR_LIST__[])(void);
-	int i = 1;
-
-	while (__DTOR_LIST__[i])
-	{
-		__DTOR_LIST__[i++]();
+	else {
+		__set_errno(ENOSYS);
 	}
+	
+	result = 0;
+
+out:
+
+	return (result);
 }

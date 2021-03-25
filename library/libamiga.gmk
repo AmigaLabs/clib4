@@ -8,8 +8,8 @@
 ##############################################################################
 
 LIBS += \
-	lib/libamiga.so \
-	lib/libamiga.a
+	$(BUILD_DIR)/lib/libamiga.so \
+	$(BUILD_DIR)/lib/libamiga.a
 
 ##############################################################################
 
@@ -50,21 +50,21 @@ AMIGA_LIB = \
 
 # Dependencies to rebuild if the library version changes
 
-obj/libamiga/amiga.lib_rev.o : amiga/amiga.lib_rev.c amiga/amiga.lib_rev.h
-obj.shared/libamiga/amiga.lib_rev.o : amiga/amiga.lib_rev.c amiga/amiga.lib_rev.h
+$(BUILD_DIR)/obj/libamiga/amiga.lib_rev.o : amiga/amiga.lib_rev.c amiga/amiga.lib_rev.h
+$(BUILD_DIR)/obj.shared/libamiga/amiga.lib_rev.o : amiga/amiga.lib_rev.c amiga/amiga.lib_rev.h
 
 obj/libamiga/%.o : CFLAGS += $(LARGEDATA)
 
-obj.shared/libamiga/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(BUILD_DIR)/obj.shared/libamiga/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-obj/libamiga/%.o : %.c
+$(BUILD_DIR)/obj/libamiga/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 
-obj.shared/libamiga/%.o : %.c
+$(BUILD_DIR)/obj.shared/libamiga/%.o : %.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-lib/libamiga.a : $(addprefix obj/libamiga/,$(AMIGA_LIB))
+$(BUILD_DIR)/lib/libamiga.a : $(addprefix $(BUILD_DIR)/obj/libamiga/,$(AMIGA_LIB))
 	$(VERBOSE)$(MAKELIB)
 
-lib/libamiga.so : $(addprefix obj.shared/libamiga/,$(AMIGA_LIB))
+$(BUILD_DIR)/lib/libamiga.so : $(addprefix $(BUILD_DIR)/obj.shared/libamiga/,$(AMIGA_LIB))
 	$(VERBOSE)$(MAKESHARED)

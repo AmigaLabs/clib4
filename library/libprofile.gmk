@@ -7,13 +7,14 @@
 
 ##############################################################################
 
-LIBS += lib/libprofile.so \
-		lib/libprofile.a
+LIBS += $(BUILD_DIR)/lib/libprofile.so \
+		$(BUILD_DIR)/lib/libprofile.a
 
 ##############################################################################
 
 PROFILE_LIB = \
 	profile/profile__mcount.o \
+	profile/profile_profil.o \
 	profile/profile_gmon.o \
 	profile/profile_mcount.o
 
@@ -21,32 +22,32 @@ PROFILE_LIB = \
 
 # Dependencies to rebuild if the library version changes
 
-obj/libprofile/profile.lib_rev.o : profile/profile.lib_rev.c profile/profile.lib_rev.h
+$(BUILD_DIR)/obj/libprofile/profile.lib_rev.o : profile/profile.lib_rev.c profile/profile.lib_rev.h
 
-obj.shared/libprofile/profile.lib_rev.o : profile/profile.lib_rev.c profile/profile.lib_rev.h
+$(BUILD_DIR)/obj.shared/libprofile/profile.lib_rev.o : profile/profile.lib_rev.c profile/profile.lib_rev.h
 
-obj/libprofile/%.o : AFLAGS += $(LARGEDATA)
+$(BUILD_DIR)/obj/libprofile/%.o : AFLAGS += $(LARGEDATA)
 
-obj.shared/libprofile/%.o : AFLAGS += $(PIC) $(LARGEDATA)
+$(BUILD_DIR)/obj.shared/libprofile/%.o : AFLAGS += $(PIC) $(LARGEDATA)
 
-obj/libprofile/%.o : %.S
+$(BUILD_DIR)/obj/libprofile/%.o : %.S
 	$(VERBOSE)$(ASSEMBLE)
 
-obj.shared/libprofile/%.o : %.S
+$(BUILD_DIR)/obj.shared/libprofile/%.o : %.S
 	$(VERBOSE)$(ASSEMBLE)
 
-obj/libprofile/%.o : CFLAGS += $(LARGEDATA)
+$(BUILD_DIR)/obj/libprofile/%.o : CFLAGS += $(LARGEDATA)
 
-obj.shared/libprofile/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(BUILD_DIR)/obj.shared/libprofile/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-obj/libprofile/%.o : %.c
+$(BUILD_DIR)/obj/libprofile/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 
-obj.shared/libprofile/%.o : %.c
+$(BUILD_DIR)/obj.shared/libprofile/%.o : %.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-lib/libprofile.a : $(addprefix obj/libprofile/,$(PROFILE_LIB))
+$(BUILD_DIR)/lib/libprofile.a : $(addprefix $(BUILD_DIR)/obj/libprofile/,$(PROFILE_LIB))
 	$(VERBOSE)$(MAKELIB)
 
-lib/libprofile.so : $(addprefix obj.shared/libprofile/,$(PROFILE_LIB))
+$(BUILD_DIR)/lib/libprofile.so : $(addprefix $(BUILD_DIR)/obj.shared/libprofile/,$(PROFILE_LIB))
 	$(VERBOSE)$(MAKESHARED)

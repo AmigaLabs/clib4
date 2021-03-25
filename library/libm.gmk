@@ -7,8 +7,8 @@
 
 ##############################################################################
 
-LIBS += lib/libm.so \
-		lib/libm.a
+LIBS += $(BUILD_DIR)/lib/libm.so \
+		$(BUILD_DIR)/lib/libm.a
 
 ##############################################################################
 
@@ -18,22 +18,22 @@ MATH_LIB := m.lib_rev.o
 
 # Dependencies to rebuild if the library version changes
 
-obj/libm/m.lib_rev.o : m.lib_rev.c m.lib_rev.h
+$(BUILD_DIR)/obj/libm/m.lib_rev.o : m.lib_rev.c m.lib_rev.h
 
-obj.shared/libm/m.lib_rev.o : m.lib_rev.c m.lib_rev.h
+$(BUILD_DIR)/obj.shared/libm/m.lib_rev.o : m.lib_rev.c m.lib_rev.h
 
-obj/libm/%.o : CFLAGS += $(LARGEDATA) -DPPC_FLOATING_POINT_SUPPORT
+$(BUILD_DIR)/obj/libm/%.o : CFLAGS += $(LARGEDATA) -DPPC_FLOATING_POINT_SUPPORT
 
-obj.shared/libm/%.o : CFLAGS += $(PIC) $(LARGEDATA) -DPPC_FLOATING_POINT_SUPPORT
+$(BUILD_DIR)/obj.shared/libm/%.o : CFLAGS += $(PIC) $(LARGEDATA) -DPPC_FLOATING_POINT_SUPPORT
 
-obj/libm/%.o : %.c
+$(BUILD_DIR)/obj/libm/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 
-obj.shared/libm/%.o : %.c
+$(BUILD_DIR)/obj.shared/libm/%.o : %.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-lib/libm.a : $(addprefix obj/libm/,$(MATH_LIB))
+$(BUILD_DIR)/lib/libm.a : $(addprefix $(BUILD_DIR)/obj/libm/,$(MATH_LIB))
 	$(VERBOSE)$(MAKELIB)
 
-lib/libm.so : $(addprefix obj.shared/libm/,$(MATH_LIB))
+$(BUILD_DIR)/lib/libm.so : $(addprefix $(BUILD_DIR)/obj.shared/libm/,$(MATH_LIB))
 	$(VERBOSE)$(MAKESHARED)
