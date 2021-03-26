@@ -34,6 +34,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
+
+
 /* Avoid gcc warnings.. */
 void __shlib_call_constructors(void);
 void __shlib_call_destructors(void);
@@ -41,11 +46,16 @@ void __shlib_call_destructors(void);
 static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
 static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
 
+extern struct ExecIFace NOCOMMON *IExec;
+
 void 
 __shlib_call_constructors(void)
 {
 	extern void (*__CTOR_LIST__[])(void);
 	int i = 0;
+
+	SysBase = *(struct Library **)4;
+	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 
 	while (__CTOR_LIST__[i + 1])
 	{

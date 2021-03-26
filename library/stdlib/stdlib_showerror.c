@@ -188,18 +188,8 @@ void __show_error(const char *message)
 	{
 		BPTR output;
 
-#if defined(__amigaos4__)
-		{
-			/* Try to print the error message on the default error output stream. */
-			output = ErrorOutput();
-		}
-#else
-		{
-			struct Process *this_process = (struct Process *)FindTask(NULL);
-
-			output = this_process->pr_CES;
-		}
-#endif /* __amigaos4__ */
+		/* Try to print the error message on the default error output stream. */
+		output = ErrorOutput();
 
 		if (output == ZERO)
 			output = Output();

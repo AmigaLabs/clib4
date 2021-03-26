@@ -60,6 +60,11 @@
 
 #include <proto/elf.h>
 
+/* These are used to initialize the shared objects linked to this binary,
+   and for the dlopen(), dlclose() and dlsym() functions. */
+extern struct Library  NOCOMMON *__ElfBase;
+extern struct ElfIFace NOCOMMON *__IElf;
+
 struct _clib2 * InitGlobal() {
     /* Initialize global structure */
 	__global_clib2 = (struct _clib2 *)AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
@@ -70,6 +75,7 @@ struct _clib2 * InitGlobal() {
 	else
 	{
 		struct TimerIFace *ITimer = __ITimer;
+        struct ElfIFace *IElf = __IElf;
 
 		/* Initialize wchar stuff */
 		__global_clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
@@ -80,7 +86,7 @@ struct _clib2 * InitGlobal() {
 		}
 		/* Set main Exec and IElf interface pointers */
 		__global_clib2->IExec = IExec;
-		__global_clib2->IElf = IElf;
+		__global_clib2->IElf = __IElf;
 
 		__global_clib2->wide_status->_strtok_last = NULL;
 		__global_clib2->wide_status->_mblen_state.__count = 0;
@@ -150,7 +156,7 @@ struct _clib2 * InitGlobal() {
 		 * call_main()
 		 */
 
-		if (ElfBase != NULL)
+		if (__ElfBase != NULL)
 		{
 			BPTR segment_list = GetProcSegList(NULL,  GPSLF_RUN | GPSLF_SEG);
 			if (segment_list != ZERO)
@@ -172,6 +178,8 @@ out:
 }
 
 void FiniGlobal() {
+    struct ElfIFace *IElf = __IElf;
+   	
     /* Free global clib structure */
 	if (__global_clib2)
 	{

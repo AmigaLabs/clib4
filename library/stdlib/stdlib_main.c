@@ -77,13 +77,17 @@ extern int main(int arg_c, char **arg_v);
 
 /* This will be set to TRUE in case a stack overflow was detected. */
 BOOL NOCOMMON __stack_overflow;
-struct _clib2 *__global_clib2 = NULL;
+struct _clib2 NOCOMMON*__global_clib2;
+
+extern struct Library NOCOMMON *__ElfBase;
+extern struct ElfIFace NOCOMMON *__IElf;
 
 /****************************************************************************/
-static BOOL open_libraries();
+BOOL open_libraries(struct ExecIFace *iexec);
+void close_libraries(void);
 /****************************************************************************/
 
-static void
+void
 close_libraries(void)
 {
 	if (__IUtility != NULL)
@@ -92,10 +96,34 @@ close_libraries(void)
 		__IUtility = NULL;
 	}
 
+	if (IDOS != NULL)
+	{
+		DropInterface((struct Interface *)IDOS);
+		IDOS = NULL;
+	}
+
 	if (__UtilityBase != NULL)
 	{
 		CloseLibrary(__UtilityBase);
 		__UtilityBase = NULL;
+	}
+
+	if (DOSBase != NULL)
+	{
+		CloseLibrary(DOSBase);
+		DOSBase = NULL;
+	}
+
+	if (__IElf != NULL)
+	{
+		DropInterface((struct Interface *)__IElf);
+		__IElf = NULL;
+	}
+
+	if (__ElfBase != NULL)
+	{
+		CloseLibrary(__ElfBase);
+		__ElfBase = NULL;
 	}
 }
 
@@ -110,17 +138,11 @@ call_main(void)
 	if (setjmp(__exit_jmp_buf) != 0)
 		goto out;
 
-	SHOWMSG("now invoking the constructors");
-
-	/* Go through the constructor list */
-	_init(__CTOR_LIST__);
-
-	SHOWMSG("done.");
-
 	__global_clib2 = InitGlobal();
 	if (__global_clib2 == NULL)
 		goto out;
 
+	SHOWMSG("InitGlobal done.");
 
 	/* This can be helpful for debugging purposes: print the name of the current
 	   directory, followed by the name of the command and all the parameters
@@ -204,7 +226,7 @@ out:
 	SHOWMSG("invoking the destructors");
 
 	/* Go through the destructor list */
-	_fini(__DTOR_LIST__);
+	_clib_exit();
 
 	SHOWMSG("done.");
 
@@ -214,17 +236,38 @@ out:
 
 /****************************************************************************/
 
-static BOOL open_libraries()
+BOOL 
+open_libraries(struct ExecIFace *iexec)
 {
 	BOOL success = FALSE;
 
+	IExec = iexec;
+
 	/* Open the minimum required libraries. */
+	DOSBase = (struct Library *)OpenLibrary("dos.library", 54);
+	if (DOSBase == NULL)
+		goto out;
+
 	__UtilityBase = OpenLibrary("utility.library", 54);
 	if (__UtilityBase == NULL)
 		goto out;
 
+	/* Obtain the interfaces for these libraries. */
+	IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
+	if (IDOS == NULL)
+		goto out;
+
 	__IUtility = (struct UtilityIFace *)GetInterface(__UtilityBase, "main", 1, 0);
 	if (__IUtility == NULL)
+		goto out;
+
+	/* We need elf.library V52.2 or higher. */
+	__ElfBase = OpenLibrary("elf.library", 0);
+	if (__ElfBase == NULL || (__ElfBase->lib_Version < 52) || (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision < 2))
+		goto out;
+
+	__IElf = (struct ElfIFace *)GetInterface(__ElfBase, "main", 1, NULL);
+	if (__IElf == NULL)
 		goto out;
 
 	success = TRUE;
@@ -239,6 +282,10 @@ out:
 STATIC VOID
 detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
 {
+	struct ElfIFace *IElf = __IElf;
+
+	_clib_exit();
+
 	FiniGlobal();
 
 	close_libraries();
@@ -274,25 +321,16 @@ _main(void)
 	struct Process *this_process;
 	int return_code = RETURN_FAIL;
 	ULONG current_stack_size;
+	int num_ctors = 0, k;
+	static int j = 0;
 
-	SysBase = *(struct Library **)4;
+	/* Calling LibC constructors */
+	for (k = 1, num_ctors = 0; __CTOR_LIST__[k] != NULL; k++)
+		num_ctors++;
 
-	/* Get exec interface */
-	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
-
-	/* Try to open the libraries we need to proceed. */
-	if (CANNOT open_libraries())
+	for (j = 0; j < num_ctors; j++)
 	{
-		const char *error_message;
-
-		/* If available, use the error message provided by the client. */
-		error_message = __minimum_os_lib_error;
-
-		if (error_message == NULL)
-			error_message = "This program requires AmigaOS 4.1 or higher.";
-
-		__show_error(error_message);
-		goto out;
+		__CTOR_LIST__[num_ctors - j]();
 	}
 
 	/* Pick up the Workbench startup message, if available. */
@@ -474,4 +512,22 @@ out:
 	}
 
 	return (return_code);
+}
+
+void 
+_clib_exit(void)
+{
+	extern void shared_obj_exit(void);
+	int num_dtors, i;
+	static int j = 0;
+
+	for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
+		num_dtors++;
+
+	while (j++ < num_dtors) {
+		__DTOR_LIST__[j]();
+	}
+
+	/* The shared objects need to be cleaned up after all local destructors have been invoked. */
+	shared_obj_exit();
 }

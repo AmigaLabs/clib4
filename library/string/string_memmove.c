@@ -272,13 +272,18 @@ memmove(void *dest, const void *src, size_t len)
 		char *to = dest;
 		const char *from = src;
 
-		switch (__global_clib2->cpufamily) {
-			case CPUFAMILY_4XX:
-				result = __memmove440((unsigned char *)to, (unsigned char *)from, len);
-				break;
-			default:
-				__memmove((unsigned char *)to, (unsigned char *)from, len);
+		/* Make sure __global_clib2 has been created */
+		if (__global_clib2 != NULL) { 
+			switch (__global_clib2->cpufamily) {
+				case CPUFAMILY_4XX:
+					result = __memmove440((unsigned char *)to, (unsigned char *)from, len);
+					break;
+				default:
+					__memmove((unsigned char *)to, (unsigned char *)from, len);
+			}
 		}
+		else
+			__memmove((unsigned char *)to, (unsigned char *)from, len);
 	}
 	else
 		__set_errno(EFAULT);

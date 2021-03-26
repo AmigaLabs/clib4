@@ -625,7 +625,6 @@ C_STDLIB := \
 	stdlib/stdlib_llabs.o \
 	stdlib/stdlib_ldiv.o \
 	stdlib/stdlib_lldiv.o \
-	stdlib/stdlib_lib_main.o \
 	stdlib/stdlib_lib_startup.o \
 	stdlib/stdlib_machine_test.o \
 	stdlib/stdlib_main.o \

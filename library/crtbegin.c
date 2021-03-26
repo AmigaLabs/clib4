@@ -64,102 +64,29 @@
  */
 
 /****************************************************************************/
-void _init(void (*__CTOR_LIST__[])(void));
-void _fini(void (*__DTOR_LIST__[])(void));
+static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
+static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
 
 extern int _main(void);
 extern int _start(char *args, int arglen, struct ExecBase *sysbase);
-static BOOL open_libraries(struct ExecBase *sysbase);
-static void close_libraries(void);
+extern BOOL open_libraries();
+extern void close_libraries(void);
 
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
-#include <libraries/elf.h>
-#include <proto/elf.h>
-
-struct Library  *ElfBase;
-struct ElfIFace *IElf;
-
-/****************************************************************************/
-
-void shared_obj_init(void);
-void shared_obj_exit(void);
-
-/****************************************************************************/
-
-static void SHLibsInit(BOOL init) {
-	Elf32_Handle hSelf = (Elf32_Handle)NULL;
-	BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
-	if (segment_list != ZERO)
-	{
-		int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
-		if (ret == 1)
-		{
-			if (hSelf != NULL)
-			{
-				Printf("Below the crash\n");
-				/* Trigger the constructors, etc. in the shared objects linked to this binary. */
-				InitSHLibs(hSelf, init);
-				Printf("No crash on static linking\n");
-			}
-		}
-	}
-}
-
-void shared_obj_exit(void)
-{
-	/* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
-	SHLibsInit(FALSE);
-}
-
-void shared_obj_init()
-{
-	SHLibsInit(TRUE);
-}
-
-void _init(void (*__CTOR_LIST__[])(void))
-{
-	int num_ctors, i;
-	int j;
-
-	for (i = 1, num_ctors = 0; __CTOR_LIST__[i] != NULL; i++)
-		num_ctors++;
-
-	for (j = 0; j < num_ctors; j++)
-	{
-		__CTOR_LIST__[num_ctors - j]();
-	}
-}
-
-void _fini(void (*__DTOR_LIST__[])(void))
-{
-	int num_dtors, i;
-	static int j;
-	extern void shared_obj_exit(void);
-
-	for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
-		num_dtors++;
-
-	while (j++ < num_dtors)
-		__DTOR_LIST__[j]();
-
-	/* The shared objects need to be cleaned up after all local
-	   destructors have been invoked. */
-	shared_obj_exit();
-}
-
 int 
 _start(char *args, int arglen, struct ExecBase *sysbase)
 {
-	int result = -1;
 	extern void shared_obj_init(void);
+	int result = -1;
+
+	SysBase = (struct Library *)sysbase;
+	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 
 	/* Try to open the libraries we need to proceed. */
-	if (CANNOT open_libraries(sysbase))
+	if (CANNOT open_libraries(IExec))
 	{
 		const char *error_message;
 
@@ -173,8 +100,7 @@ _start(char *args, int arglen, struct ExecBase *sysbase)
 		goto out;
 	}
 
-	/* The shared objects need to be set up before any local
-	   constructors are invoked. */
+	/* The shared objects need to be set up before any local constructors are invoked. */
 	shared_obj_init();
 
    	result = _main();
@@ -182,73 +108,4 @@ _start(char *args, int arglen, struct ExecBase *sysbase)
 out:
 	close_libraries();
    	return result;
-}
-
-static BOOL 
-open_libraries(struct ExecBase *sysbase)
-{
-	BOOL success = FALSE;
-
-	/* Get exec interface */
-	IExec = (struct ExecIFace *)((struct ExecBase *)sysbase)->MainInterface;
-
-	/* Open the minimum required libraries. */
-	DOSBase = (struct Library *)OpenLibrary("dos.library", 54);
-	if (DOSBase == NULL)
-		goto out;
-
-	__UtilityBase = OpenLibrary("utility.library", 54);
-	if (__UtilityBase == NULL)
-		goto out;
-
-	/* Obtain the interfaces for these libraries. */
-	IDOS = (struct DOSIFace *)GetInterface(DOSBase, "main", 1, 0);
-	if (IDOS == NULL)
-		goto out;
-
-	__IUtility = (struct UtilityIFace *)GetInterface(__UtilityBase, "main", 1, 0);
-	if (__IUtility == NULL)
-		goto out;
-
-	/* We need elf.library V52.2 or higher. */
-	ElfBase = OpenLibrary("elf.library", 0);
-	if (ElfBase == NULL || (ElfBase->lib_Version < 52) || (ElfBase->lib_Version == 52 && ElfBase->lib_Revision < 2))
-		goto out;
-
-	IElf = (struct ElfIFace *)GetInterface(ElfBase, "main", 1, NULL);
-	if (IElf == NULL)
-		goto out;
-
-	success = TRUE;
-
-out:
-
-	return (success);
-}
-
-static void close_libraries(void) {
-
-	if (IDOS != NULL)
-	{
-		DropInterface((struct Interface *)IDOS);
-		IDOS = NULL;
-	}
-
-	if (DOSBase != NULL)
-	{
-		CloseLibrary(DOSBase);
-		DOSBase = NULL;
-	}
-
-	if (IElf != NULL)
-	{
-		DropInterface((struct Interface *)IElf);
-		IElf = NULL;
-	}
-
-	if (ElfBase != NULL)
-	{
-		CloseLibrary(ElfBase);
-		ElfBase = NULL;
-	}
 }
