@@ -50,17 +50,17 @@ AMIGA_LIB = \
 
 # Dependencies to rebuild if the library version changes
 
-$(BUILD_DIR)/obj/libamiga/amiga.lib_rev.o : amiga/amiga.lib_rev.c amiga/amiga.lib_rev.h
-$(BUILD_DIR)/obj.shared/libamiga/amiga.lib_rev.o : amiga/amiga.lib_rev.c amiga/amiga.lib_rev.h
+$(BUILD_DIR)/obj/libamiga/amiga.lib_rev.o : $(LIB_DIR)/amiga/amiga.lib_rev.c $(LIB_DIR)/amiga/amiga.lib_rev.h
+$(BUILD_DIR)/obj.shared/libamiga/amiga.lib_rev.o : $(LIB_DIR)/amiga/amiga.lib_rev.c $(LIB_DIR)/amiga/amiga.lib_rev.h
 
 obj/libamiga/%.o : CFLAGS += $(LARGEDATA)
 
 $(BUILD_DIR)/obj.shared/libamiga/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(BUILD_DIR)/obj/libamiga/%.o : %.c
+$(BUILD_DIR)/obj/libamiga/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/obj.shared/libamiga/%.o : %.c
+$(BUILD_DIR)/obj.shared/libamiga/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
 $(BUILD_DIR)/lib/libamiga.a : $(addprefix $(BUILD_DIR)/obj/libamiga/,$(AMIGA_LIB))

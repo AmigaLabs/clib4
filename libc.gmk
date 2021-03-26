@@ -1012,23 +1012,23 @@ C_LIB := \
 
 # Dependencies to rebuild if the library version changes
 
-$(BUILD_DIR)/obj/libc/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
-$(BUILD_DIR)/obj.shared/c.lib_rev.o : c.lib_rev.c c.lib_rev.h
+$(BUILD_DIR)/obj/libc/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
+$(BUILD_DIR)/obj.shared/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 
 $(BUILD_DIR)/obj/libc/%.o : CFLAGS += $(LARGEDATA)
 
 $(BUILD_DIR)/obj.shared/libc/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(BUILD_DIR)/obj/libc/%.o : %.S
+$(BUILD_DIR)/obj/libc/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
 
-$(BUILD_DIR)/obj/libc/%.o : %.c
+$(BUILD_DIR)/obj/libc/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/obj.shared/libc/%.o : %.S
+$(BUILD_DIR)/obj.shared/libc/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_SHARED_ASM)
 
-$(BUILD_DIR)/obj.shared/libc/%.o : %.c
+$(BUILD_DIR)/obj.shared/libc/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
 $(BUILD_DIR)/lib/libc.a : $(addprefix $(BUILD_DIR)/obj/libc/,$(C_LIB))

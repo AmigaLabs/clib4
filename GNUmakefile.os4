@@ -34,7 +34,8 @@ MAKEDIR := mkdir -p
 # will be considered
 #LOG_COMMAND := 2>&1 | tee -a compiler.log
 LOG_COMMAND :=
-LIB_ROOT = ..
+LIB_ROOT = .
+LIB_DIR = $(LIB_ROOT)/library
 BUILD_DIR = $(LIB_ROOT)/build
 
 ##############################################################################
@@ -47,14 +48,39 @@ WARNINGS := \
 	-Wshadow # -Werror -Wbad-function-cast #-Wconversion 
 
 PIC		   := -fPIC 
-INCLUDES   := -Iinclude -I. -I$(SDK_INCLUDE) -Idebug -Iamiga -Iprofile -Imath -Iargz -Iusergroup -Istring -Ictype -Istdio -Istdlib -Isocket -Iunistd -Itime -Iwchar -Iposix -Itermios -Isearch -Iinttypes -Ilocale -Idirent -Istat -Imount
+INCLUDES   := -I$(LIB_DIR)/include \
+				-Ilibrary \
+				-I$(SDK_INCLUDE) \
+				-I$(LIB_DIR)/debug \
+				-I$(LIB_DIR)/amiga \
+				-I$(LIB_DIR)/profile \
+				-I$(LIB_DIR)/math \
+				-I$(LIB_DIR)/argz \
+				-I$(LIB_DIR)/usergroup \
+				-I$(LIB_DIR)/string \
+				-I$(LIB_DIR)/ctype \
+				-I$(LIB_DIR)/stdio \
+				-I$(LIB_DIR)/stdlib \
+				-I$(LIB_DIR)/socket \
+				-I$(LIB_DIR)/unistd \
+				-I$(LIB_DIR)/time \
+				-I$(LIB_DIR)/wchar \
+				-I$(LIB_DIR)/posix \
+				-I$(LIB_DIR)/termios \
+				-I$(LIB_DIR)/search \
+				-I$(LIB_DIR)/inttypes \
+				-I$(LIB_DIR)/locale \
+				-I$(LIB_DIR)/dirent \
+				-I$(LIB_DIR)/stat \
+				-I$(LIB_DIR)/mount
+
  OPTIONS   := -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -nostdlib
 OPTIMIZE   := -DNDEBUG -O3 -fno-inline
 
 DEBUG     := -ggdb
 #MEMDEBUG  := -D__USE_MEM_TREES -D__MEM_DEBUG
 
-CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DPPC_FLOATING_POINT_SUPPORT -DUNIX_PATH_SEMANTICS
+CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DUNIX_PATH_SEMANTICS
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
 VERBOSE   := @
@@ -120,19 +146,19 @@ $(BUILD_DIR)/lib/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 	
 $(BUILD_DIR)/lib/crtbegin.o : CFLAGS += -fno-aggressive-loop-optimizations
-$(BUILD_DIR)/lib/crtbegin.o : crtbegin.c
+$(BUILD_DIR)/lib/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
 
 $(BUILD_DIR)/lib/crtend.o : CFLAGS += -fno-aggressive-loop-optimizations
-$(BUILD_DIR)/lib/crtend.o : crtend.c
+$(BUILD_DIR)/lib/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
 
 $(BUILD_DIR)/lib/shcrtbegin.o : CFLAGS += $(PIC) -fno-aggressive-loop-optimizations
-$(BUILD_DIR)/lib/shcrtbegin.o : shcrtbegin.c
+$(BUILD_DIR)/lib/shcrtbegin.o : $(LIB_DIR)/shcrtbegin.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
 $(BUILD_DIR)/lib/shcrtend.o : CFLAGS += $(PIC) -fno-aggressive-loop-optimizations
-$(BUILD_DIR)/lib/shcrtend.o : shcrtend.c
+$(BUILD_DIR)/lib/shcrtend.o : $(LIB_DIR)/shcrtend.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
 ##############################################################################
@@ -186,7 +212,7 @@ install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
 	$(COPY) $(BUILD_DIR)/lib/* $(INSTALL_PREFIX)/lib/
-	$(COPY) include/* $(INSTALL_PREFIX)/include/
+	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:
 	jlha -a clib2.lha $(INSTALL_PREFIX)
