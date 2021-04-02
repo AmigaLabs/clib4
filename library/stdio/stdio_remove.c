@@ -71,7 +71,9 @@ remove(const char *filename)
 
 	#if defined(UNIX_PATH_SEMANTICS)
 	{
-		result = unlink(filename);
+		if (__global_clib2->__unix_path_semantics) {
+			result = unlink(filename);
+		}
 	}
 	#else
 	{

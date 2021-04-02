@@ -77,28 +77,26 @@ int rename(const char *oldname, const char *newname)
 #endif /* CHECK_FOR_NULL_POINTERS */
 
 #if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics)
 	{
-		if (__global_clib2->__unix_path_semantics)
+		if (oldname[0] == '\0' || newname[0] == '\0')
 		{
-			if (oldname[0] == '\0' || newname[0] == '\0')
-			{
-				SHOWMSG("no name given");
+			SHOWMSG("no name given");
 
-				__set_errno(ENOENT);
-				goto out;
-			}
+			__set_errno(ENOENT);
+			goto out;
+		}
 
-			if (__translate_unix_to_amiga_path_name(&oldname, &old_nti) != 0)
-				goto out;
+		if (__translate_unix_to_amiga_path_name(&oldname, &old_nti) != 0)
+			goto out;
 
-			if (__translate_unix_to_amiga_path_name(&newname, &new_nti) != 0)
-				goto out;
+		if (__translate_unix_to_amiga_path_name(&newname, &new_nti) != 0)
+			goto out;
 
-			if (old_nti.is_root || new_nti.is_root)
-			{
-				__set_errno(EACCES);
-				goto out;
-			}
+		if (old_nti.is_root || new_nti.is_root)
+		{
+			__set_errno(EACCES);
+			goto out;
 		}
 	}
 #endif /* UNIX_PATH_SEMANTICS */
@@ -112,6 +110,7 @@ int rename(const char *oldname, const char *newname)
 		SHOWMSG("that didn't work");
 
 #if defined(UNIX_PATH_SEMANTICS)
+		if (__global_clib2->__unix_path_semantics)
 		{
 			LONG error;
 

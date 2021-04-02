@@ -77,7 +77,10 @@ ttyname_r(int file_descriptor,char *name,size_t buflen)
 
 	#if defined(UNIX_PATH_SEMANTICS)
 	{
-		tty_file_name = "/CONSOLE";
+		if (__global_clib2->__unix_path_semantics)
+			tty_file_name = "/CONSOLE";
+		else
+			tty_file_name = "CONSOLE:";			
 	}
 	#else
 	{

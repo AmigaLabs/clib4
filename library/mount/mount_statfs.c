@@ -80,42 +80,40 @@ int statfs(const char *path, struct statfs *buf)
 #endif /* CHECK_FOR_NULL_POINTERS */
 
 #if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics)
 	{
-		if (__global_clib2->__unix_path_semantics)
+		if (path[0] == '\0')
 		{
-			if (path[0] == '\0')
-			{
-				SHOWMSG("no name given");
+			SHOWMSG("no name given");
 
-				__set_errno(ENOENT);
-				goto out;
-			}
+			__set_errno(ENOENT);
+			goto out;
+		}
 
-			if (__translate_unix_to_amiga_path_name(&path, &path_nti) != 0)
-				goto out;
+		if (__translate_unix_to_amiga_path_name(&path, &path_nti) != 0)
+			goto out;
 
-			SHOWSTRING(path);
+		SHOWSTRING(path);
 
-			/* The pseudo root directory is a very special case indeed.
-			 * We make up some pseudo data for it.
-			 */
-			if (path_nti.is_root)
-			{
-				SHOWMSG("returning data for / directory");
+		/* The pseudo root directory is a very special case indeed.
+			* We make up some pseudo data for it.
+			*/
+		if (path_nti.is_root)
+		{
+			SHOWMSG("returning data for / directory");
 
-				memset(buf, 0, sizeof(*buf));
+			memset(buf, 0, sizeof(*buf));
 
-				buf->f_bsize = 512;
-				buf->f_blocks = 1;
-				buf->f_bfree = 1;
-				buf->f_iosize = buf->f_bsize;
-				buf->f_bavail = buf->f_bfree;
-				buf->f_flags = MNT_NOATIME | MNT_SYMPERM | MNT_LOCAL | MNT_RDONLY;
+			buf->f_bsize = 512;
+			buf->f_blocks = 1;
+			buf->f_bfree = 1;
+			buf->f_iosize = buf->f_bsize;
+			buf->f_bavail = buf->f_bfree;
+			buf->f_flags = MNT_NOATIME | MNT_SYMPERM | MNT_LOCAL | MNT_RDONLY;
 
-				result = OK;
+			result = OK;
 
-				goto out;
-			}
+			goto out;
 		}
 	}
 #endif /* UNIX_PATH_SEMANTICS */

@@ -89,43 +89,41 @@ int lstat(const char *path_name, struct stat *st)
 #endif /* CHECK_FOR_NULL_POINTERS */
 
 #if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics)
 	{
-		if (__global_clib2->__unix_path_semantics)
+		if (path_name[0] == '\0')
 		{
-			if (path_name[0] == '\0')
-			{
-				SHOWMSG("no name given");
+			SHOWMSG("no name given");
 
-				__set_errno(ENOENT);
-				goto out;
-			}
+			__set_errno(ENOENT);
+			goto out;
+		}
 
-			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
-				goto out;
+		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+			goto out;
 
-			/* The pseudo root directory is a very special case indeed.
-			   We make up some pseudo data for it. */
-			if (path_name_nti.is_root)
-			{
-				time_t mtime;
+		/* The pseudo root directory is a very special case indeed.
+			We make up some pseudo data for it. */
+		if (path_name_nti.is_root)
+		{
+			time_t mtime;
 
-				SHOWMSG("setting up the root directory info");
+			SHOWMSG("setting up the root directory info");
 
-				memset(st, 0, sizeof(*st));
+			memset(st, 0, sizeof(*st));
 
-				time(&mtime);
+			time(&mtime);
 
-				st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-				st->st_mtime = mtime;
-				st->st_atime = mtime;
-				st->st_ctime = mtime;
-				st->st_nlink = 2;
-				st->st_blksize = 512;
+			st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+			st->st_mtime = mtime;
+			st->st_atime = mtime;
+			st->st_ctime = mtime;
+			st->st_nlink = 2;
+			st->st_blksize = 512;
 
-				result = OK;
+			result = OK;
 
-				goto out;
-			}
+			goto out;
 		}
 	}
 #endif /* UNIX_PATH_SEMANTICS */

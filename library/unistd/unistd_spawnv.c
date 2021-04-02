@@ -192,10 +192,12 @@ int spawnv(int mode, const char *file, const char *const *argv)
     __set_errno(0);
 
 #if defined(UNIX_PATH_SEMANTICS)
-    if (__translate_unix_to_amiga_path_name(&file, &path_nti) != 0)
-    {
-        __set_errno(EINVAL);
-        return ret;
+	if (__global_clib2->__unix_path_semantics) {
+        if (__translate_unix_to_amiga_path_name(&file, &path_nti) != 0)
+        {
+            __set_errno(EINVAL);
+            return ret;
+        }
     }
 #endif
 

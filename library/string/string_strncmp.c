@@ -31,67 +31,84 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
+STATIC INLINE int
+__strncmp(const char *s1, const char *s2, size_t n)
+{
+	int result = 0;
 
-int
+	while (n-- > 0)
+	{
+		if ((*s1) == (*s2))
+		{
+			if ((*s1) == '\0')
+				break;
+
+			s1++;
+			s2++;
+		}
+		else
+		{
+			int c1, c2;
+
+			/* The comparison must be performed as if the
+				characters were unsigned characters. */
+			c1 = *(unsigned char *)s1;
+			c2 = *(unsigned char *)s2;
+
+			result = c1 - c2;
+			break;
+		}
+	}
+
+	return result;
+}
+
+int 
 strncmp(const char *s1, const char *s2, size_t n)
 {
 	int result = 0;
 
-	assert( s1 != NULL && s2 != NULL );
-	assert( (int)n >= 0 );
+	assert(s1 != NULL && s2 != NULL);
+	assert((int)n >= 0);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+	if (s1 == NULL || s2 == NULL)
 	{
-		if(s1 == NULL || s2 == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
+		__set_errno(EFAULT);
+		goto out;
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
 
 	/* If the number of characters is 0 or negative, then this
 	 * function is supposed to have no effect.
 	 */
-	if(s1 != s2 && (int)n > 0)
+	if (s1 != s2 && (int)n > 0)
 	{
-		while(n-- > 0)
+		/* Make sure __global_clib2 has been created */
+		if (__global_clib2 != NULL)
 		{
-			if((*s1) == (*s2))
+			switch (__global_clib2->cpufamily)
 			{
-				if((*s1) == '\0')
+				case CPUFAMILY_4XX:
+					result = __strncmp440(s1, s2, n);
 					break;
-
-				s1++;
-				s2++;
+				default:
+					result = __strncmp(s1, s2, n);
 			}
-			else
-			{
-				int c1,c2;
-				
-				/* The comparison must be performed as if the
-				   characters were unsigned characters. */
-				c1 = *(unsigned char *)s1;
-				c2 = *(unsigned char *)s2;
-				
-				result = c1 - c2;
-				break;
-			}
+		}
+		else {
+			/* Fallback to standard function */
+			result = __strncmp(s1, s2, n);
 		}
 	}
 
- out:
+out:
 
-	return(result);
+	return (result);
 }

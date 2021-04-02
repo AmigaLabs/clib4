@@ -49,18 +49,23 @@
 #include <stdint.h>
 #include <malloc.h>
 
-struct alignlist
-{
-   struct alignlist *next;
-   void *aligned;  /* The address that mmemaligned returned.  */
-   void *exact;    /* The address that malloc returned.  */
-};
 struct alignlist *_aligned_blocks = NULL;
 
-void *memalign(size_t alignment, size_t size)
+static inline BOOL isPowerOfTwo(size_t alignment) {
+    return (alignment != 0) && ((alignment & (alignment - 1)) == 0);
+}
+
+// TODO - FIX free()!!!!
+void *
+memalign(size_t alignment, size_t size)
 {
     void *result;
     unsigned long int adj;
+
+    if (!isPowerOfTwo(alignment)) {
+        __set_errno(EINVAL);
+        return NULL;
+    }
 
     size = ((size + alignment - 1) / alignment) * alignment;
 

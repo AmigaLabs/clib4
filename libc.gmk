@@ -588,6 +588,7 @@ C_STDLIB := \
 	stdlib/stdlib_assertion_failure.o \
 	stdlib/stdlib_atexit.o \
 	stdlib/stdlib_atof.o \
+	stdlib/stdlib_atoff.o \
 	stdlib/stdlib_atoi.o \
 	stdlib/stdlib_atol.o \
 	stdlib/stdlib_atoll.o \
@@ -703,6 +704,8 @@ C_STRING := \
 	string/string_memchr.o \
 	string/string_memcmp.o \
 	string/string_memcpy.o \
+	string/string_memccpy.o \
+	string/string_mempcpy.o \
 	string/string_memmove.o \
 	string/string_memrchr.o \
 	string/string_memset.o \
@@ -711,6 +714,11 @@ C_STRING := \
 	cpu/4xx/string_memcpy440.o \
 	cpu/4xx/string_memmove440.o \
 	cpu/4xx/string_strchr440.o \
+	cpu/4xx/string_strcmp440.o \
+	cpu/4xx/string_strcpy440.o \
+	cpu/4xx/string_strlen440.o \
+	cpu/4xx/string_strncmp440.o \
+	cpu/4xx/string_strrchr440.o \
 	string/string_rindex.o \
 	string/string_stpcpy.o \
 	string/string_strcasestr.o \

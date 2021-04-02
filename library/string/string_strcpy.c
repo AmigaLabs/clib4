@@ -31,42 +31,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
-
 char *
 strcpy(char *dest, const char *src)
 {
-	char * result = dest;
+	char *result = dest;
 
-	assert( dest != NULL && src != NULL );
+	assert(dest != NULL && src != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+	if (dest == NULL || src == NULL)
 	{
-		if(dest == NULL || src == NULL)
+		__set_errno(EFAULT);
+		goto out;
+	}
+
+	if (dest != src)
+	{
+		/* Make sure __global_clib2 has been created */
+		if (__global_clib2 != NULL)
 		{
-			__set_errno(EFAULT);
-			goto out;
+			switch (__global_clib2->cpufamily)
+			{
+				case CPUFAMILY_4XX:
+					result = __strcpy440(dest, src);
+					break;
+				default:
+				{
+					while (((*dest++) = (*src++)) != '\0')
+						DO_NOTHING;
+				}
+			}
+		}
+		else {
+			/* Fallback to standard function */
+			while (((*dest++) = (*src++)) != '\0')
+				DO_NOTHING;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+out:
 
-	if(dest != src)
-	{
-		while(((*dest++) = (*src++)) != '\0')
-			DO_NOTHING;
-	}
-
- out:
-
-	return(result);
+	return (result);
 }

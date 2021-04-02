@@ -87,10 +87,10 @@ int access(const char *path_name, int mode)
 	}
 
 #if defined(UNIX_PATH_SEMANTICS)
-	{
-		STRPTR actual_path_name = NULL;
+	STRPTR actual_path_name = NULL;
 
-		if (__global_clib2->__unix_path_semantics)
+	if (__global_clib2->__unix_path_semantics)
+	{
 		{
 			if (path_name[0] == '\0')
 			{
@@ -138,6 +138,7 @@ int access(const char *path_name, int mode)
 	if ((mode != F_OK) && (mode & (R_OK | W_OK | X_OK)) != 0)
 	{
 #if defined(UNIX_PATH_SEMANTICS)
+		if (__global_clib2->__unix_path_semantics)	
 		{
 			if (lock == ZERO)
 			{
@@ -225,6 +226,7 @@ int access(const char *path_name, int mode)
 out:
 	if (status != NULL) {
 		FreeDosObject(DOS_EXAMINEDATA, status);
+		status = NULL;
 	}
 
 	PROFILE_OFF();

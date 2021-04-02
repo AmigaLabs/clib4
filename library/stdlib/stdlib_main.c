@@ -138,12 +138,6 @@ call_main(void)
 	if (setjmp(__exit_jmp_buf) != 0)
 		goto out;
 
-	__global_clib2 = InitGlobal();
-	if (__global_clib2 == NULL)
-		goto out;
-
-	SHOWMSG("InitGlobal done.");
-
 	/* This can be helpful for debugging purposes: print the name of the current
 	   directory, followed by the name of the command and all the parameters
 	   passed to it. */
@@ -178,7 +172,7 @@ call_main(void)
 #endif /* NDEBUG */
 	/* After all these preparations, get this show on the road... */
 	exit(main((int)__argc, (char **)__argv));
-
+	
 out:
 
 	/* Save the current IoErr() value in case it is needed later. */
@@ -324,6 +318,12 @@ _main(void)
 	int num_ctors = 0, k;
 	static int j = 0;
 
+	__global_clib2 = InitGlobal();
+	if (__global_clib2 == NULL)
+		goto out;
+
+	SHOWMSG("InitGlobal done.");
+
 	/* Calling LibC constructors */
 	for (k = 1, num_ctors = 0; __CTOR_LIST__[k] != NULL; k++)
 		num_ctors++;
@@ -332,6 +332,10 @@ _main(void)
 	{
 		__CTOR_LIST__[num_ctors - j]();
 	}
+
+	/* Set system time for rusage */
+	struct TimerIFace *ITimer = __ITimer;
+	GetSysTime(&__global_clib2->clock);
 
 	/* Pick up the Workbench startup message, if available. */
 	this_process = (struct Process *)FindTask(NULL);
@@ -498,6 +502,12 @@ _main(void)
 
 out:
 
+	/* Free global reent structure */
+	FiniGlobal();
+
+	/* Go through the destructor list */
+	_clib_exit();
+
 	if (old_window_pointer_valid)
 		__set_process_window(old_window_pointer);
 
@@ -510,6 +520,10 @@ out:
 
 		ReplyMsg((struct Message *)startup_message);
 	}
+
+	SHOWMSG("invoking the destructors");
+
+	SHOWMSG("done.");
 
 	return (return_code);
 }

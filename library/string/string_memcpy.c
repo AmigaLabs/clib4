@@ -39,8 +39,6 @@
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-extern void *__memcpy440(void *dst, const void *src, size_t len);
-
 INLINE STATIC VOID
 __memcpy(unsigned char *to, unsigned char *from, size_t len)
 {
@@ -158,12 +156,19 @@ memcpy(void *dst, const void *src, size_t len)
 		assert((to) >= (from) + len ||
 			   (from) >= (to) + len);
 
-		switch (__global_clib2->cpufamily) {
-			case CPUFAMILY_4XX:
-				__memcpy440((unsigned char *)to, (unsigned char *)from, len);
-				break;
-			default:
-				__memcpy((unsigned char *)to, (unsigned char *)from, len);
+		/* Make sure __global_clib2 has been created */
+		if (__global_clib2 != NULL) { 
+			switch (__global_clib2->cpufamily) {
+				case CPUFAMILY_4XX:
+					__memcpy440((unsigned char *)to, (unsigned char *)from, len);
+					break;
+				default:
+					__memcpy((unsigned char *)to, (unsigned char *)from, len);
+			}
+		}
+		else {
+			/* Fallback to standard function */
+			__memcpy((unsigned char *)to, (unsigned char *)from, len);
 		}
 	}
 	else

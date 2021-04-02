@@ -165,91 +165,89 @@ popen(const char *command, const char *type)
 	}
 
 #if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics)
 	{
-		if (__global_clib2->__unix_path_semantics)
+		char just_the_command_name[MAXPATHLEN + 1];
+		BOOL quotes_needed = FALSE;
+		char *command_name;
+		size_t command_len;
+		BOOL have_quote;
+		size_t len;
+
+		/* We may need to replace the path specified for the command,
+			so let's figure out first how long the command name,
+			including everything, really is. */
+		len = strlen(command);
+		command_len = len;
+
+		have_quote = FALSE;
+		for (i = 0; i < (int)len; i++)
 		{
-			char just_the_command_name[MAXPATHLEN + 1];
-			BOOL quotes_needed = FALSE;
-			char *command_name;
-			size_t command_len;
-			BOOL have_quote;
-			size_t len;
-
-			/* We may need to replace the path specified for the command,
-			   so let's figure out first how long the command name,
-			   including everything, really is. */
-			len = strlen(command);
-			command_len = len;
-
-			have_quote = FALSE;
-			for (i = 0; i < (int)len; i++)
+			if (command[i] == '\"')
 			{
-				if (command[i] == '\"')
-				{
-					quotes_needed = TRUE;
+				quotes_needed = TRUE;
 
-					have_quote ^= TRUE;
-				}
-
-				if ((command[i] == ' ' || command[i] == '\t') && NOT have_quote)
-				{
-					command_len = i;
-					break;
-				}
+				have_quote ^= TRUE;
 			}
 
-			/* This may be too long for proper translation... */
-			if (command_len > MAXPATHLEN)
+			if ((command[i] == ' ' || command[i] == '\t') && NOT have_quote)
 			{
-				__set_errno(ENAMETOOLONG);
-
-				result = NULL;
-				goto out;
+				command_len = i;
+				break;
 			}
-
-			/* Grab the command name itself, then have it translated. */
-			command_name = just_the_command_name;
-			for (i = 0; (size_t)i < command_len; i++)
-			{
-				if (command[i] != '\"')
-					(*command_name++) = command[i];
-			}
-
-			(*command_name) = '\0';
-
-			command_name = just_the_command_name;
-
-			if (__translate_unix_to_amiga_path_name((const char **)&command_name, &command_nti) != 0)
-			{
-				result = NULL;
-				goto out;
-			}
-
-			/* Now put it all together again */
-			command_copy = malloc(1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
-			if (command_copy == NULL)
-			{
-				__set_errno(ENOMEM);
-
-				result = NULL;
-				goto out;
-			}
-
-			if (quotes_needed)
-			{
-				command_copy[0] = '\"';
-				strcpy(&command_copy[1], command_name);
-				strcat(command_copy, "\"");
-			}
-			else
-			{
-				strcpy(command_copy, command_name);
-			}
-
-			strcat(command_copy, &command[command_len]);
-
-			command = command_copy;
 		}
+
+		/* This may be too long for proper translation... */
+		if (command_len > MAXPATHLEN)
+		{
+			__set_errno(ENAMETOOLONG);
+
+			result = NULL;
+			goto out;
+		}
+
+		/* Grab the command name itself, then have it translated. */
+		command_name = just_the_command_name;
+		for (i = 0; (size_t)i < command_len; i++)
+		{
+			if (command[i] != '\"')
+				(*command_name++) = command[i];
+		}
+
+		(*command_name) = '\0';
+
+		command_name = just_the_command_name;
+
+		if (__translate_unix_to_amiga_path_name((const char **)&command_name, &command_nti) != 0)
+		{
+			result = NULL;
+			goto out;
+		}
+
+		/* Now put it all together again */
+		command_copy = malloc(1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
+		if (command_copy == NULL)
+		{
+			__set_errno(ENOMEM);
+
+			result = NULL;
+			goto out;
+		}
+
+		if (quotes_needed)
+		{
+			command_copy[0] = '\"';
+			strcpy(&command_copy[1], command_name);
+			strcat(command_copy, "\"");
+		}
+		else
+		{
+			strcpy(command_copy, command_name);
+		}
+
+		strcat(command_copy, &command[command_len]);
+
+		command = command_copy;
 	}
 #endif /* UNIX_PATH_SEMANTICS */
 

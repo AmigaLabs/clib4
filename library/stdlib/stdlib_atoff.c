@@ -1,5 +1,6 @@
+#include <stdlib.h>
 /*
- * $Id: stdlib_default_pool_size.c,v 1.4 2006-01-08 12:04:25 obarthel Exp $
+ * $Id: stdlib_atoff.c,v 1.0 2021-03-29 16:34:25 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,6 +36,8 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
-int NOCOMMON __default_pool_size = 4096;
+float 
+atoff(const char *nptr)
+{
+    return strtof(nptr, NULL);
+}

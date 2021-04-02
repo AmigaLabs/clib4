@@ -69,7 +69,7 @@ __realloc(void *ptr,size_t size,const char * file,int line)
 		result = __malloc(size,file,line);
 	}
 #ifndef UNIX_PATH_SEMANTICS
-	else if (size == 0)
+	else if (__global_clib2->__unix_path_semantics && size == 0)
 	{
 		D(("calling free(0x%08lx)",ptr));
 

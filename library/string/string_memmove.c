@@ -39,10 +39,6 @@
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-extern void *__memmove440(void *dest, const void *src, size_t len);
-
-/****************************************************************************/
-
 INLINE STATIC VOID
 __memmove(unsigned char *to, unsigned char *from, size_t len)
 {
@@ -282,8 +278,10 @@ memmove(void *dest, const void *src, size_t len)
 					__memmove((unsigned char *)to, (unsigned char *)from, len);
 			}
 		}
-		else
+		else {
+			/* Fallback to standard function */
 			__memmove((unsigned char *)to, (unsigned char *)from, len);
+		}
 	}
 	else
 		__set_errno(EFAULT);

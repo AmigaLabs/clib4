@@ -79,37 +79,35 @@ int chdir(const char *path_name)
 #endif /* CHECK_FOR_NULL_POINTERS */
 
 #if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics)
 	{
-		if (__global_clib2->__unix_path_semantics)
+		if (path_name[0] == '\0')
 		{
-			if (path_name[0] == '\0')
-			{
-				SHOWMSG("no name given");
+			SHOWMSG("no name given");
 
-				__set_errno(ENOENT);
-				goto out;
-			}
+			__set_errno(ENOENT);
+			goto out;
+		}
 
-			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
-				goto out;
+		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+			goto out;
 
-			/* The pseudo root directory is a very special case indeed. We
-			 * just accept it and don't pretend to have obtained a lock
-			 * on anything.
-			 */
-			if (path_name_nti.is_root)
-			{
-				SHOWMSG("this is the / directory");
+		/* The pseudo root directory is a very special case indeed. We
+			* just accept it and don't pretend to have obtained a lock
+			* on anything.
+			*/
+		if (path_name_nti.is_root)
+		{
+			SHOWMSG("this is the / directory");
 
-				__restore_path_name(&path_name, &path_name_nti);
+			__restore_path_name(&path_name, &path_name_nti);
 
-				/* ZZZ this must not fail */
-				__set_current_path(path_name);
+			/* ZZZ this must not fail */
+			__set_current_path(path_name);
 
-				result = OK;
+			result = OK;
 
-				goto out;
-			}
+			goto out;
 		}
 	}
 #endif /* UNIX_PATH_SEMANTICS */
@@ -169,13 +167,11 @@ int chdir(const char *path_name)
 	dir_lock = ZERO;
 
 #if defined(UNIX_PATH_SEMANTICS)
-	{
-		if (__global_clib2->__unix_path_semantics)
-			__restore_path_name(&path_name, &path_name_nti);
+	if (__global_clib2->__unix_path_semantics)
+		__restore_path_name(&path_name, &path_name_nti);
 
-		/* ZZZ this must not fail */
-		__set_current_path(path_name);
-	}
+	/* ZZZ this must not fail */
+	__set_current_path(path_name);
 #endif /* UNIX_PATH_SEMANTICS */
 
 	result = OK;

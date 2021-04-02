@@ -79,17 +79,15 @@ int mkdir(const char *path_name, mode_t mode)
 #endif /* CHECK_FOR_NULL_POINTERS */
 
 #if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics)
 	{
-		if (__global_clib2->__unix_path_semantics)
-		{
-			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
-				goto out;
+		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+			goto out;
 
-			if (path_name_nti.is_root)
-			{
-				__set_errno(EACCES);
-				goto out;
-			}
+		if (path_name_nti.is_root)
+		{
+			__set_errno(EACCES);
+			goto out;
 		}
 	}
 #endif /* UNIX_PATH_SEMANTICS */

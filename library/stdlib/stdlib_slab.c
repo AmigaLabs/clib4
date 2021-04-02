@@ -87,7 +87,7 @@ __slab_allocate(size_t allocation_size)
 		{
 			PROFILE_OFF();
 
-			ssa = AllocVecTags(total_single_allocation_size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+			ssa = AllocVecTags(total_single_allocation_size, AVT_Type, MEMF_SHARED, TAG_DONE);
 
 			PROFILE_ON();
 		}

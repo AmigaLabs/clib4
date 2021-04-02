@@ -73,25 +73,23 @@ pathconf(const char *path,int name)
 	#endif /* CHECK_FOR_NULL_POINTERS */
 
 	#if defined(UNIX_PATH_SEMANTICS)
+	if(__global_clib2->__unix_path_semantics)
 	{
-		if(__global_clib2->__unix_path_semantics)
+		if(path[0] == '\0')
 		{
-			if(path[0] == '\0')
-			{
-				SHOWMSG("Empty name");
+			SHOWMSG("Empty name");
 
-				__set_errno(ENOENT);
-				goto out;
-			}
+			__set_errno(ENOENT);
+			goto out;
+		}
 
-			if(__translate_unix_to_amiga_path_name(&path,&path_name_nti) != 0)
-				goto out;
+		if(__translate_unix_to_amiga_path_name(&path,&path_name_nti) != 0)
+			goto out;
 
-			if(path_name_nti.is_root)
-			{
-				/* Should we disallow / or use OFS as the lowest common denominator? */
-				ignore_port = TRUE;
-			}
+		if(path_name_nti.is_root)
+		{
+			/* Should we disallow / or use OFS as the lowest common denominator? */
+			ignore_port = TRUE;
 		}
 	}
 	#endif /* UNIX_PATH_SEMANTICS */

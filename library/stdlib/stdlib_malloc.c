@@ -82,8 +82,9 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 	void *result = NULL;
 
 #if defined(UNIX_PATH_SEMANTICS)
-	size_t original_size;
+	size_t original_size = size;
 
+	if (__global_clib2->__unix_path_semantics)
 	{
 		original_size = size;
 
@@ -157,7 +158,7 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 			if (__memory_pool != NULL)
 			{
 				PROFILE_OFF();
-				mn = AllocPooled(__memory_pool, allocation_size);
+				mn = AllocVecPooled(__memory_pool, allocation_size);
 				PROFILE_ON();
 			}
 			else
@@ -196,7 +197,7 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 		if (__memory_pool != NULL)
 		{
 			PROFILE_OFF();
-			mn = AllocPooled(__memory_pool, allocation_size);
+			mn = AllocVecPooled(__memory_pool, allocation_size);
 			PROFILE_ON();
 		}
 		else
@@ -293,6 +294,7 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 #endif /* __MEM_DEBUG */
 
 #if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics)
 	{
 		/* Set the zero length allocation contents to NULL. */
 		if (original_size == 0)
@@ -334,13 +336,6 @@ __malloc(size_t size, const char *file, int line)
 		(*__alloca_cleanup)(file, line);
 
 	__memory_unlock();
-
-#ifdef __MEM_DEBUG
-	{
-		/*if((rand() % 16) == 0)
-			__check_memory_allocations(file,line);*/
-	}
-#endif /* __MEM_DEBUG */
 
 	/* Allocate memory which can be put through realloc() and free(). */
 	result = __allocate_memory(size, FALSE, file, line);
@@ -429,7 +424,7 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
 			if (__memory_pool != NULL)
 			{
 				NewList((struct List *)&__memory_list);
-				
+
 				FreeSysObject(ASOT_MEMPOOL, __memory_pool);
 				__memory_pool = NULL;
 			}
@@ -529,7 +524,7 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
 		else
 		{
 			__memory_pool = AllocSysObjectTags(ASOT_MEMPOOL,
-											   ASOPOOL_MFlags, MEMF_SHARED,
+											   ASOPOOL_MFlags, MEMF_PRIVATE,
 											   ASOPOOL_Threshold, (ULONG)__default_pool_size,
 											   ASOPOOL_Puddle, (ULONG)__default_pool_size,
 											   TAG_DONE);
@@ -538,7 +533,7 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
 #else
 	{
 		__memory_pool = AllocSysObjectTags(ASOT_MEMPOOL,
-										   ASOPOOL_MFlags, MEMF_SHARED,
+										   ASOPOOL_MFlags, MEMF_PRIVATE,
 										   ASOPOOL_Threshold, (ULONG)__default_pool_size,
 										   ASOPOOL_Puddle, (ULONG)__default_pool_size,
 										   TAG_DONE);

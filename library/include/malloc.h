@@ -46,6 +46,13 @@
 #include <stddef.h>
 #include <stdio.h>
 
+struct alignlist
+{
+   struct alignlist *next;
+   void *aligned;  /* The address that mmemaligned returned.  */
+   void *exact;    /* The address that malloc returned.  */
+};
+
 __BEGIN_DECLS
 
 /* Allocate SIZE bytes allocated to ALIGNMENT bytes.  */

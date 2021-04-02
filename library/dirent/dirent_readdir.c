@@ -68,86 +68,84 @@ readdir(DIR *directory_pointer)
 	dh = (struct DirectoryHandle *)directory_pointer;
 
 #if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics && dh->dh_ScanVolumeList)
 	{
-		if (__global_clib2->__unix_path_semantics && dh->dh_ScanVolumeList)
+		SHOWMSG("we are scanning the volume list");
+
+		if (dh->dh_Position == 0)
 		{
-			SHOWMSG("we are scanning the volume list");
+			SHOWMSG("returning the .");
 
-			if (dh->dh_Position == 0)
+			dh->dh_Position++;
+
+			dh->dh_DirectoryEntry.d_ino = 0;
+			strcpy(dh->dh_DirectoryEntry.d_name, ".");
+			dh->dh_DirectoryEntry.d_reclen = 2;
+			dh->dh_DirectoryEntry.d_type = DT_DIR;
+
+			result = &dh->dh_DirectoryEntry;
+		}
+		else
+		{
+			struct ExamineData *fib = NULL;
+			D_S(struct bcpl_name, bcpl_name);
+			char *name = (char *)bcpl_name->name;
+			BPTR dir_lock;
+
+			assert((((ULONG)name) & 3) == 0);
+
+			if (dh->dh_VolumeNode == NULL && NOT IsMinListEmpty(&dh->dh_VolumeList))
+				dh->dh_VolumeNode = (struct Node *)dh->dh_VolumeList.mlh_Head;
+
+			strcpy(name, "\1:"); /* BSTR for ":" */
+
+			while (result == NULL && dh->dh_VolumeNode != NULL && dh->dh_VolumeNode->ln_Succ != NULL)
 			{
-				SHOWMSG("returning the .");
-
-				dh->dh_Position++;
-
-				dh->dh_DirectoryEntry.d_ino = 0;
-				strcpy(dh->dh_DirectoryEntry.d_name, ".");
-				dh->dh_DirectoryEntry.d_reclen = 2;
-				dh->dh_DirectoryEntry.d_type = DT_DIR;
-
-				result = &dh->dh_DirectoryEntry;
-			}
-			else
-			{
-				struct ExamineData *fib = NULL;
-				D_S(struct bcpl_name, bcpl_name);
-				char *name = (char *)bcpl_name->name;
-				BPTR dir_lock;
-
-				assert((((ULONG)name) & 3) == 0);
-
-				if (dh->dh_VolumeNode == NULL && NOT IsMinListEmpty(&dh->dh_VolumeList))
-					dh->dh_VolumeNode = (struct Node *)dh->dh_VolumeList.mlh_Head;
-
-				strcpy(name, "\1:"); /* BSTR for ":" */
-
-				while (result == NULL && dh->dh_VolumeNode != NULL && dh->dh_VolumeNode->ln_Succ != NULL)
+				if (IsFileSystem(dh->dh_VolumeNode->ln_Name))
 				{
-					if (IsFileSystem(dh->dh_VolumeNode->ln_Name))
+					struct DevProc *dvp;
+
+					dvp = GetDeviceProc(dh->dh_VolumeNode->ln_Name, NULL);
+					if (dvp != NULL)
 					{
-						struct DevProc *dvp;
-
-						dvp = GetDeviceProc(dh->dh_VolumeNode->ln_Name, NULL);
-						if (dvp != NULL)
+						dir_lock = DoPkt(dvp->dvp_Port, ACTION_LOCATE_OBJECT, ZERO, MKBADDR(name), SHARED_LOCK, 0, 0);
+						if (dir_lock != ZERO)
 						{
-							dir_lock = DoPkt(dvp->dvp_Port, ACTION_LOCATE_OBJECT, ZERO, MKBADDR(name), SHARED_LOCK, 0, 0);
-							if (dir_lock != ZERO)
+							fib = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
+							if (fib)
 							{
-								fib = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
-								if (fib)
+								assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(fib->Name));
+
+								strcpy(dh->dh_DirectoryEntry.d_name, fib->Name);
+
+								dh->dh_DirectoryEntry.d_ino = fib->ObjectID;
+								dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
+								if (EXD_IS_SOFTLINK(dh->dh_FileInfo))
+									dh->dh_DirectoryEntry.d_type = DT_LNK;
+								else if (EXD_IS_FILE(dh->dh_FileInfo))
+									dh->dh_DirectoryEntry.d_type = DT_REG;
+								else if (EXD_IS_SOCKET(dh->dh_FileInfo))
+									dh->dh_DirectoryEntry.d_type = DT_SOCK;
+								else if (EXD_IS_DIRECTORY(dh->dh_FileInfo))
 								{
-									assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(fib->Name));
-
-									strcpy(dh->dh_DirectoryEntry.d_name, fib->Name);
-
-									dh->dh_DirectoryEntry.d_ino = fib->ObjectID;
-									dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
-									if (EXD_IS_SOFTLINK(dh->dh_FileInfo))
-										dh->dh_DirectoryEntry.d_type = DT_LNK;
-									else if (EXD_IS_FILE(dh->dh_FileInfo))
-										dh->dh_DirectoryEntry.d_type = DT_REG;
-									else if (EXD_IS_SOCKET(dh->dh_FileInfo))
-										dh->dh_DirectoryEntry.d_type = DT_SOCK;
-									else if (EXD_IS_DIRECTORY(dh->dh_FileInfo))
-									{
-										dh->dh_DirectoryEntry.d_type = DT_DIR;
-									}
-									else
-									{
-										dh->dh_DirectoryEntry.d_type = DT_UNKNOWN;
-									}
-									result = &dh->dh_DirectoryEntry;
-
-									FreeDosObject(DOS_EXAMINEDATA, fib);
+									dh->dh_DirectoryEntry.d_type = DT_DIR;
 								}
-								UnLock(dir_lock);
+								else
+								{
+									dh->dh_DirectoryEntry.d_type = DT_UNKNOWN;
+								}
+								result = &dh->dh_DirectoryEntry;
+
+								FreeDosObject(DOS_EXAMINEDATA, fib);
 							}
-
-							FreeDeviceProc(dvp);
+							UnLock(dir_lock);
 						}
-					}
 
-					dh->dh_VolumeNode = dh->dh_VolumeNode->ln_Succ;
+						FreeDeviceProc(dvp);
+					}
 				}
+
+				dh->dh_VolumeNode = dh->dh_VolumeNode->ln_Succ;
 			}
 		}
 	}
@@ -156,52 +154,50 @@ readdir(DIR *directory_pointer)
 	if (NOT dh->dh_ScanVolumeList)
 	{
 #if defined(UNIX_PATH_SEMANTICS)
+		if (__global_clib2->__unix_path_semantics)
 		{
-			if (__global_clib2->__unix_path_semantics)
+			if (dh->dh_Position == 0)
 			{
-				if (dh->dh_Position == 0)
+				SHOWMSG("returning .");
+
+				dh->dh_Position++;
+
+				dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo->ObjectID;
+				strcpy(dh->dh_DirectoryEntry.d_name, ".");
+				dh->dh_DirectoryEntry.d_reclen = 2;
+				dh->dh_DirectoryEntry.d_type = DT_DIR;
+
+				result = &dh->dh_DirectoryEntry;
+			}
+			else if (dh->dh_Position == 1)
+			{
+				ino_t ino = 0;
+
+				dh->dh_Position++;
+
+				parent_directory = ParentDir(dh->dh_DirLock);
+				if (parent_directory != ZERO)
 				{
-					SHOWMSG("returning .");
-
-					dh->dh_Position++;
-
-					dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo->ObjectID;
-					strcpy(dh->dh_DirectoryEntry.d_name, ".");
-					dh->dh_DirectoryEntry.d_reclen = 2;
-					dh->dh_DirectoryEntry.d_type = DT_DIR;
-
-					result = &dh->dh_DirectoryEntry;
-				}
-				else if (dh->dh_Position == 1)
-				{
-					ino_t ino = 0;
-
-					dh->dh_Position++;
-
-					parent_directory = ParentDir(dh->dh_DirLock);
-					if (parent_directory != ZERO)
+					struct ExamineData *fib = ExamineObjectTags(EX_LockInput, parent_directory, TAG_DONE);
+					if (fib == NULL)
 					{
-						struct ExamineData *fib = ExamineObjectTags(EX_LockInput, parent_directory, TAG_DONE);
-						if (fib == NULL)
-						{
-							__set_errno(__translate_io_error_to_errno(IoErr()));
-							goto out;
-						}
-						ino = fib->ObjectID;
-
-						FreeDosObject(DOS_EXAMINEDATA, fib);
+						__set_errno(__translate_io_error_to_errno(IoErr()));
+						goto out;
 					}
+					ino = fib->ObjectID;
 
-					SHOWMSG("returning ..");
-
-					dh->dh_DirectoryEntry.d_ino = ino;
-					dh->dh_DirectoryEntry.d_reclen = 3;
-					dh->dh_DirectoryEntry.d_type = DT_DIR;
-
-					strcpy(dh->dh_DirectoryEntry.d_name, "..");
-
-					result = &dh->dh_DirectoryEntry;
+					FreeDosObject(DOS_EXAMINEDATA, fib);
 				}
+
+				SHOWMSG("returning ..");
+
+				dh->dh_DirectoryEntry.d_ino = ino;
+				dh->dh_DirectoryEntry.d_reclen = 3;
+				dh->dh_DirectoryEntry.d_type = DT_DIR;
+
+				strcpy(dh->dh_DirectoryEntry.d_name, "..");
+
+				result = &dh->dh_DirectoryEntry;
 			}
 		}
 #endif /* UNIX_PATH_SEMANTICS */

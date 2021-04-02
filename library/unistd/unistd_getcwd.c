@@ -132,6 +132,7 @@ __getcwd(char * buffer,size_t buffer_size,const char *file,int line)
 	}
 
 	#if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics)
 	{
 		if(__current_path_name[0] != '\0')
 		{
@@ -180,24 +181,22 @@ __getcwd(char * buffer,size_t buffer_size,const char *file,int line)
 		}
 
 		#if defined(UNIX_PATH_SEMANTICS)
+		if(__global_clib2->__unix_path_semantics)
 		{
-			if(__global_clib2->__unix_path_semantics)
+			const char * path_name = buffer;
+
+			if(__translate_amiga_to_unix_path_name(&path_name,&buffer_nti) != 0)
+				goto out;
+
+			if(buffer_size < strlen(path_name) + 1)
 			{
-				const char * path_name = buffer;
+				SHOWMSG("buffer is too small");
 
-				if(__translate_amiga_to_unix_path_name(&path_name,&buffer_nti) != 0)
-					goto out;
-
-				if(buffer_size < strlen(path_name) + 1)
-				{
-					SHOWMSG("buffer is too small");
-
-					__set_errno(ERANGE);
-					goto out;
-				}
-
-				strcpy(buffer,path_name);
+				__set_errno(ERANGE);
+				goto out;
 			}
+
+			strcpy(buffer,path_name);
 		}
 		#endif /* UNIX_PATH_SEMANTICS */
 	}

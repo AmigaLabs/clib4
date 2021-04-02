@@ -55,7 +55,7 @@
 /****************************************************************************/
 
 /* math_init_exit.c */
-extern int	__math_init(void);
+extern int __math_init(void);
 
 /****************************************************************************/
 
@@ -65,13 +65,13 @@ extern int __machine_test(void);
 /****************************************************************************/
 
 /* stdio_init_exit.c */
-extern int	__stdio_init(void);
+extern int __stdio_init(void);
 
 /****************************************************************************/
 
 /* stdlib_init_exit.c */
-extern int	__stdlib_init(void);
-extern void	__stdlib_exit(void);
+extern int __stdlib_init(void);
+extern void __stdlib_exit(void);
 
 /****************************************************************************/
 
@@ -81,27 +81,27 @@ extern void __timezone_exit(void);
 /****************************************************************************/
 
 /* stdlib_atexit.c */
-extern void	__exit_trap_trigger(void);
+extern void __exit_trap_trigger(void);
 
 /****************************************************************************/
 
 /* socket_init_exit.c */
-extern int	__socket_init(void);
+extern int __socket_init(void);
 
 /****************************************************************************/
 
 /* stdlib_showerror.c */
-extern void __show_error(const char * message);
+extern void __show_error(const char *message);
 
 /****************************************************************************/
 
 /* stdlib_swap_stack.c/stdlib_swap_stack.s/stdlib_swap_stack.asm */
-extern int __swap_stack_and_call(struct StackSwapStruct * stk,APTR function);
+extern int __swap_stack_and_call(struct StackSwapStruct *stk, APTR function);
 
 /****************************************************************************/
 
 /* stdlib_get_sp.c/stdlib_get_sp.s/stdlib_get_sp.asm */
-extern void * __get_sp(void);
+extern void *__get_sp(void);
 
 /****************************************************************************/
 
@@ -112,18 +112,18 @@ extern int __wildcard_expand_init(void);
 /****************************************************************************/
 
 /* stdlib_stackextension.c */
-extern int	__stk_init(void);
+extern int __stk_init(void);
 
 /****************************************************************************/
 
 /* stdlib_stack_usage.c */
-extern void __stack_usage_init(struct StackSwapStruct * stk);
+extern void __stack_usage_init(struct StackSwapStruct *stk);
 extern void __stack_usage_exit(void);
 
 /****************************************************************************/
 
 /* stdlib_exit.c */
-extern void	_exit(int return_code);
+extern void _exit(int return_code);
 
 /****************************************************************************/
 
@@ -134,13 +134,13 @@ extern int __arg_init(void);
 
 /* stdlib_malloc.c */
 extern size_t __get_allocation_size(size_t size);
-extern void * __allocate_memory(size_t size,BOOL never_free,const char * file,int line);
+extern void *__allocate_memory(size_t size, BOOL never_free, const char *file, int line);
 
 /* stdlib_free.c */
-extern struct MemoryNode * __find_memory_node(void * address);
-extern void __check_memory_allocations(const char * file,int line);
-extern void __free_memory(void * ptr,BOOL force,const char * file,int line);
-extern void __free_memory_node(struct MemoryNode * mn,const char * file,int line);
+extern struct MemoryNode *__find_memory_node(void *address);
+extern void __check_memory_allocations(const char *file, int line);
+extern void __free_memory(void *ptr, BOOL force, const char *file, int line);
+extern void __free_memory_node(struct MemoryNode *mn, const char *file, int line);
 
 /****************************************************************************/
 
@@ -151,9 +151,9 @@ extern void __check_abort(void);
 
 /* stdlib_red_black.c */
 extern void __initialize_red_black_tree(struct MemoryTree *new_tree);
-extern void __red_black_tree_insert(struct MemoryTree * tree, struct MemoryNode *x);
-extern struct MemoryNode * __red_black_tree_find(struct MemoryTree * tree,void * allocation);
-extern void __red_black_tree_remove(struct MemoryTree * tree, struct MemoryNode * z);
+extern void __red_black_tree_insert(struct MemoryTree *tree, struct MemoryNode *x);
+extern struct MemoryNode *__red_black_tree_find(struct MemoryTree *tree, void *allocation);
+extern void __red_black_tree_remove(struct MemoryTree *tree, struct MemoryNode *z);
 
 /****************************************************************************/
 
@@ -165,12 +165,12 @@ extern void _clib_exit(void);
 /****************************************************************************/
 
 /* stdlib_assertion_failure.c */
-extern void __assertion_failure(const char *file_name,int line_number,const char *expression);
+extern void __assertion_failure(const char *file_name, int line_number, const char *expression);
 
 /****************************************************************************/
 
 /* stdlib_termination_message.c */
-extern void __print_termination_message(const char * termination_message);
+extern void __print_termination_message(const char *termination_message);
 
 /****************************************************************************/
 
@@ -190,8 +190,8 @@ extern int __get_errno(void);
 /****************************************************************************/
 
 /* stdlib_semaphore.c */
-extern struct SignalSemaphore * __create_semaphore(void);
-extern void __delete_semaphore(struct SignalSemaphore * semaphore);
+extern struct SignalSemaphore *__create_semaphore(void);
+extern void __delete_semaphore(struct SignalSemaphore *semaphore);
 
 /****************************************************************************/
 

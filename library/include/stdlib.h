@@ -439,6 +439,7 @@ extern float strtof(const char *str, char **ptr);
 #  define strtodf strtof
 # endif
 
+extern float atoff (const char *nptr);
 #endif
 extern void _Exit(int status);
 

@@ -61,13 +61,12 @@
 
 /****************************************************************************/
 
-static size_t	quote_vector_size;
-static UBYTE *	quote_vector;
+static size_t quote_vector_size;
+static UBYTE *quote_vector;
 
 /****************************************************************************/
 
-int
-__wildcard_quote_parameter(unsigned int parameter)
+int __wildcard_quote_parameter(unsigned int parameter)
 {
 	size_t num_bytes;
 	int result = ERROR;
@@ -75,38 +74,38 @@ __wildcard_quote_parameter(unsigned int parameter)
 	/* Can we mark this parameter as quoted or do we need more
 	   room in the buffer? */
 	num_bytes = (parameter + 7) / 8;
-	if(num_bytes >= quote_vector_size)
+	if (num_bytes >= quote_vector_size)
 	{
 		size_t new_quote_vector_size = quote_vector_size + 8;
-		UBYTE * new_quote_vector;
+		UBYTE *new_quote_vector;
 
 		/* Allocate a larger buffer. */
-		new_quote_vector = realloc(quote_vector,new_quote_vector_size);
-		if(new_quote_vector == NULL)
+		new_quote_vector = realloc(quote_vector, new_quote_vector_size);
+		if (new_quote_vector == NULL)
 			goto out;
 
 		/* Set the bits in the new buffer portion to 0. */
-		memset(&new_quote_vector[quote_vector_size],0,new_quote_vector_size - quote_vector_size);
+		memset(&new_quote_vector[quote_vector_size], 0, new_quote_vector_size - quote_vector_size);
 
-		quote_vector_size	= new_quote_vector_size;
-		quote_vector		= new_quote_vector;
+		quote_vector_size = new_quote_vector_size;
+		quote_vector = new_quote_vector;
 	}
 
-	assert( quote_vector != NULL );
-	assert( num_bytes < quote_vector_size );
+	assert(quote_vector != NULL);
+	assert(num_bytes < quote_vector_size);
 
 	quote_vector[parameter / 8] |= 1 << (7 - (parameter % 8));
 
 	result = OK;
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
-static struct AnchorPath * anchor;
+static struct AnchorPath *anchor;
 
 /****************************************************************************/
 
@@ -114,15 +113,15 @@ CLIB_DESTRUCTOR(__wildcard_expand_exit)
 {
 	ENTER();
 
-	if(anchor != NULL)
+	if (anchor != NULL)
 	{
 		MatchEnd(anchor);
 
-		#if defined(__amigaos4__)
+#if defined(__amigaos4__)
 		{
-			FreeDosObject(DOS_ANCHORPATH,anchor);
+			FreeDosObject(DOS_ANCHORPATH, anchor);
 		}
-		#endif /* __amigaos4__ */
+#endif /* __amigaos4__ */
 
 		anchor = NULL;
 	}
@@ -134,34 +133,33 @@ CLIB_DESTRUCTOR(__wildcard_expand_exit)
 
 struct name_node
 {
-	struct MinNode	nn_min_node;
-	char *			nn_name;
-	BOOL			nn_wild;
+	struct MinNode nn_min_node;
+	char *nn_name;
+	BOOL nn_wild;
 };
 
 /****************************************************************************/
 
 STATIC int
-compare(const char **a,const char **b)
+compare(const char **a, const char **b)
 {
-	return(strcmp((*a),(*b)));
+	return (strcmp((*a), (*b)));
 }
 
 /****************************************************************************/
 
-int
-__wildcard_expand_init(void)
+int __wildcard_expand_init(void)
 {
 	APTR old_window_pointer;
-	struct AnchorPath * ap = NULL;
+	struct AnchorPath *ap = NULL;
 	struct MinList argument_list;
 	size_t argument_list_size;
 	BOOL found_pattern = FALSE;
 	BOOL match_made;
-	char * replacement_arg = NULL;
-	struct name_node * node;
+	char *replacement_arg = NULL;
+	struct name_node *node;
 	int argc;
-	char ** argv;
+	char **argv;
 	int error;
 	int i;
 
@@ -173,7 +171,7 @@ __wildcard_expand_init(void)
 	old_window_pointer = __set_process_window((APTR)-1);
 
 	/* No work to be done? */
-	if(__argc == 0 || __argv == NULL)
+	if (__argc == 0 || __argv == NULL)
 	{
 		error = OK;
 		goto out;
@@ -182,41 +180,16 @@ __wildcard_expand_init(void)
 	argc = __argc;
 	argv = __argv;
 
-	#if defined(__amigaos4__)
+	ap = AllocDosObjectTags(DOS_ANCHORPATH,
+							ADO_Strlen, 2 * MAXPATHLEN,
+							ADO_Mask, (__check_abort_enabled) ? __break_signal_mask : 0,
+							TAG_END);
+
+	if (ap == NULL)
 	{
-		ap = AllocDosObjectTags(DOS_ANCHORPATH,
-			ADO_Strlen,	2 * MAXPATHLEN,
-			ADO_Mask,	(__check_abort_enabled) ? __break_signal_mask : 0,
-		TAG_END);
-
-		if(ap == NULL)
-		{
-			error = ENOMEM;
-			goto out;
-		}
+		error = ENOMEM;
+		goto out;
 	}
-	#else
-	{
-		/* We need some extra room in this data structure as the buffer
-		   will be used to check if a string contains a pattern. */
-		ap = malloc(sizeof(*ap) + 2 * MAXPATHLEN);
-		if(ap == NULL)
-		{
-			error = ENOMEM;
-			goto out;
-		}
-
-		/* This has to be long-word aligned. */
-		assert( (((ULONG)ap) & 3) == 0 );
-
-		memset(ap,0,sizeof(*ap));
-
-		ap->ap_Strlen = MAXPATHLEN;
-
-		if(__check_abort_enabled)
-			ap->ap_BreakBits = __break_signal_mask;
-	}
-	#endif /* __amigaos4__ */
 
 	/* This may have to be cleaned up later. */
 	anchor = ap;
@@ -225,16 +198,16 @@ __wildcard_expand_init(void)
 	NewList((struct List *)&argument_list);
 	argument_list_size = 0;
 
-	for(i = 0 ; i < argc ; i++)
+	for (i = 0; i < argc; i++)
 	{
 		match_made = FALSE;
 
 		/* Check if the string is quoted. Quoted strings are never expanded. */
-		if(i > 0 && (quote_vector == NULL || (quote_vector[i / 8] & (1 << (7 - (i % 8)))) == 0))
+		if (i > 0 && (quote_vector == NULL || (quote_vector[i / 8] & (1 << (7 - (i % 8)))) == 0))
 		{
-			size_t arg_len,star_count,j;
+			size_t arg_len, star_count, j;
 			char last_c;
-			char * arg;
+			char *arg;
 
 			arg = argv[i];
 
@@ -247,24 +220,24 @@ __wildcard_expand_init(void)
 			star_count = 0;
 			last_c = '\0';
 
-			for(j = 0 ; j < arg_len ; j++)
+			for (j = 0; j < arg_len; j++)
 			{
-				if(arg[j] == '*' && last_c != '\'')
+				if (arg[j] == '*' && last_c != '\'')
 					star_count++;
 
 				last_c = arg[j];
 			}
 
 			/* Should we try to create a replacement string? */
-			if(star_count > 0)
+			if (star_count > 0)
 			{
 				size_t k;
 
-				if(replacement_arg != NULL)
+				if (replacement_arg != NULL)
 					free(replacement_arg);
 
 				replacement_arg = malloc(arg_len + star_count + 1);
-				if(replacement_arg == NULL)
+				if (replacement_arg == NULL)
 				{
 					error = ENOMEM;
 					goto out;
@@ -273,9 +246,9 @@ __wildcard_expand_init(void)
 				last_c = '\0';
 
 				/* Replace each "*" with "#?". */
-				for(j = k = 0 ; j < arg_len ; j++)
+				for (j = k = 0; j < arg_len; j++)
 				{
-					if(arg[j] == '*' && last_c != '\'')
+					if (arg[j] == '*' && last_c != '\'')
 					{
 						replacement_arg[k++] = '#';
 						replacement_arg[k++] = '?';
@@ -294,31 +267,31 @@ __wildcard_expand_init(void)
 			}
 
 			/* Does this string contain a wildcard pattern? */
-			if(ParsePatternNoCase(arg,ap->ap_Buf,2 * MAXPATHLEN) > 0)
+			if (ParsePatternNoCase(arg, ap->ap_Buf, 2 * MAXPATHLEN) > 0)
 			{
 				BOOL is_first = TRUE;
 				LONG rc;
 
-				rc = MatchFirst(arg,ap);
+				rc = MatchFirst(arg, ap);
 
-				while(TRUE)
+				while (TRUE)
 				{
 					/* Got a break signal? */
-					if(rc == ERROR_BREAK)
+					if (rc == ERROR_BREAK)
 					{
 						__set_process_window(old_window_pointer);
 
-						SetSignal(__break_signal_mask,__break_signal_mask);
+						SetSignal(__break_signal_mask, __break_signal_mask);
 						__check_abort();
 
 						old_window_pointer = __set_process_window((APTR)-1);
 
 						/* If we ever arrive here, retry the previous match. */
-						if(is_first)
+						if (is_first)
 						{
 							MatchEnd(ap);
 
-							rc = MatchFirst(arg,ap);
+							rc = MatchFirst(arg, ap);
 						}
 						else
 						{
@@ -341,7 +314,7 @@ __wildcard_expand_init(void)
 
 					/* Allocate another node for the expanded parameter. */
 					node = malloc(sizeof(*node) + strlen(ap->ap_Buf) + 1);
-					if(node == NULL)
+					if (node == NULL)
 					{
 						error = ENOMEM;
 						goto out;
@@ -351,9 +324,9 @@ __wildcard_expand_init(void)
 					node->nn_name = (char *)(node + 1);
 					node->nn_wild = TRUE;
 
-					strcpy(node->nn_name,ap->ap_Buf);
+					strcpy(node->nn_name, ap->ap_Buf);
 
-					AddTail((struct List *)&argument_list,(struct Node *)node);
+					AddTail((struct List *)&argument_list, (struct Node *)node);
 					argument_list_size++;
 
 					rc = MatchNext(ap);
@@ -368,11 +341,11 @@ __wildcard_expand_init(void)
 			}
 		}
 
-		if(NOT match_made)
+		if (NOT match_made)
 		{
 			/* Just remember this argument as is. */
 			node = malloc(sizeof(*node));
-			if(node == NULL)
+			if (node == NULL)
 			{
 				error = ENOMEM;
 				goto out;
@@ -381,7 +354,7 @@ __wildcard_expand_init(void)
 			node->nn_name = argv[i];
 			node->nn_wild = FALSE;
 
-			AddTail((struct List *)&argument_list,(struct Node *)node);
+			AddTail((struct List *)&argument_list, (struct Node *)node);
 			argument_list_size++;
 		}
 	}
@@ -389,14 +362,14 @@ __wildcard_expand_init(void)
 	/* If there were wildcard patterns among the command line parameters,
 	 * work them into the argument vector.
 	 */
-	if(found_pattern)
+	if (found_pattern)
 	{
-		size_t last_wild,position;
-		char ** table;
+		size_t last_wild, position;
+		char **table;
 
 		/* This will hold the new arguments. */
 		table = malloc(sizeof(*table) * (argument_list_size + 1));
-		if(table == NULL)
+		if (table == NULL)
 		{
 			error = ENOMEM;
 			goto out;
@@ -408,15 +381,15 @@ __wildcard_expand_init(void)
 		/* Fill in the table, sorting the wildcard matches. */
 		last_wild = 0;
 
-		for(node = (struct name_node *)argument_list.mlh_Head, position = 0 ;
-		    node->nn_min_node.mln_Succ != NULL ;
-		    node = (struct name_node *)node->nn_min_node.mln_Succ, position++)
+		for (node = (struct name_node *)argument_list.mlh_Head, position = 0;
+			 node->nn_min_node.mln_Succ != NULL;
+			 node = (struct name_node *)node->nn_min_node.mln_Succ, position++)
 		{
-			if(node->nn_wild)
+			if (node->nn_wild)
 			{
 				/* Remember where we found the last parameter that was
 				   added due to pattern matching. */
-				if(last_wild == 0)
+				if (last_wild == 0)
 					last_wild = position;
 			}
 			else
@@ -424,42 +397,42 @@ __wildcard_expand_init(void)
 				/* This is not a parameter which was added due to pattern
 				   matching. But if we added one before, we will want to
 				   sort all these parameters alphabetically. */
-				if(last_wild != 0)
+				if (last_wild != 0)
 				{
 					size_t num_elements;
 
-					assert( position > last_wild );
-					assert( last_wild < argument_list_size );
+					assert(position > last_wild);
+					assert(last_wild < argument_list_size);
 
 					/* How many parameters would have to be sorted? */
 					num_elements = position - last_wild;
-					if(num_elements > 1)
-						qsort(&table[last_wild],num_elements,sizeof(*table),(int (*)(const void *,const void *))compare);
+					if (num_elements > 1)
+						qsort(&table[last_wild], num_elements, sizeof(*table), (int (*)(const void *, const void *))compare);
 
 					last_wild = 0;
 				}
 			}
 
-			assert( position < argument_list_size );
+			assert(position < argument_list_size);
 
 			table[position] = node->nn_name;
 		}
 
 		/* If necessary, take care of the last entries in the list. */
-		if(last_wild != 0)
+		if (last_wild != 0)
 		{
 			size_t num_elements;
 
-			assert( position > last_wild );
-			assert( last_wild < argument_list_size );
+			assert(position > last_wild);
+			assert(last_wild < argument_list_size);
 
 			/* How many parameters would have to be sorted? */
 			num_elements = position - last_wild;
-			if(num_elements > 1)
-				qsort(&table[last_wild],num_elements,sizeof(*table),(int (*)(const void *,const void *))compare);
+			if (num_elements > 1)
+				qsort(&table[last_wild], num_elements, sizeof(*table), (int (*)(const void *, const void *))compare);
 		}
 
-		assert( position == argument_list_size );
+		assert(position == argument_list_size);
 
 		/* This terminates the table. */
 		table[position] = NULL;
@@ -467,34 +440,26 @@ __wildcard_expand_init(void)
 	else
 	{
 		/* Throw the contents of the list away. There is nothing worth keeping. */
-		while((node = (struct name_node *)RemHead((struct List *)&argument_list)) != NULL)
+		while ((node = (struct name_node *)RemHead((struct List *)&argument_list)) != NULL)
 			free(node);
 	}
 
 	error = OK;
 
- out:
+out:
 
 	__set_process_window(old_window_pointer);
 
-	if(ap != NULL)
+	if (ap != NULL)
 	{
 		MatchEnd(ap);
 
-		#if defined(__amigaos4__)
-		{
-			FreeDosObject(DOS_ANCHORPATH,anchor);
-		}
-		#else
-		{
-			free(ap);
-		}
-		#endif /* __amigaos4__ */
+		FreeDosObject(DOS_ANCHORPATH, anchor);
 	}
 
 	anchor = NULL;
 
-	if(error != OK)
+	if (error != OK)
 	{
 		__set_errno(error);
 
@@ -502,10 +467,10 @@ __wildcard_expand_init(void)
 		abort();
 	}
 
-	if(replacement_arg != NULL)
+	if (replacement_arg != NULL)
 		free(replacement_arg);
 
-	if(quote_vector != NULL)
+	if (quote_vector != NULL)
 	{
 		free(quote_vector);
 		quote_vector = NULL;
@@ -515,5 +480,5 @@ __wildcard_expand_init(void)
 
 	PROFILE_ON();
 
-	return(error);
+	return (error);
 }

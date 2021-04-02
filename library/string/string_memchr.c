@@ -42,8 +42,6 @@
 /* Check if one of the four bytes which make up a long word is zero. */
 #define LONG_CONTAINS_ZERO_OCTET(x) (((x) + 0xfefefeff) & ~((x) | 0x7f7f7f7f))
 
-extern void *__memchr440(const void *ptr, int val, size_t len);
-
 INLINE STATIC void *
 __memchr(const unsigned char *m, unsigned char val, size_t len)
 {
@@ -179,13 +177,19 @@ memchr(const void *ptr, int val, size_t len)
 
 	if (len > 0)
 	{
-
-		switch (__global_clib2->cpufamily)
-		{
-		case CPUFAMILY_4XX:
-			result = __memchr440(m, (unsigned char)(val & 255), len);
-			break;
-		default:
+		/* Make sure __global_clib2 has been created */
+		if (__global_clib2 != NULL) { 
+			switch (__global_clib2->cpufamily)
+			{
+			case CPUFAMILY_4XX:
+				result = __memchr440(m, (unsigned char)(val & 255), len);
+				break;
+			default:
+				result = __memchr(m, (unsigned char)(val & 255), len);
+			}
+		}
+		else {
+			/* Fallback to standard function */
 			result = __memchr(m, (unsigned char)(val & 255), len);
 		}
 	}

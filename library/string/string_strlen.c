@@ -31,42 +31,58 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
+INLINE STATIC size_t
+__strlen(const char *s) 
+{
+	const char *start = s;
+	size_t result = 0;
+
+	while ((*s) != '\0')
+		s++;
+
+	result = (size_t)(s - start);
+	return result;
+}
 
 size_t
 strlen(const char *s)
 {
-	const char * start = s;
+	const char *start = s;
 	size_t result = 0;
 
-	assert( s != NULL );
+	assert(s != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+	if (s == NULL)
 	{
-		if(s == NULL)
+		__set_errno(EFAULT);
+		goto out;
+	}
+
+	/* Make sure __global_clib2 has been created */
+	if (__global_clib2 != NULL)
+	{
+		switch (__global_clib2->cpufamily)
 		{
-			__set_errno(EFAULT);
-			goto out;
+			case CPUFAMILY_4XX:
+				result = __strlen440(s);
+				break;
+			default:
+				result = __strlen(s);
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+	else {
+		/* Fallback to standard function */
+		result = __strlen(s);
+	}
+out:
 
-	while((*s) != '\0')
-		s++;
-
-	result = (size_t)(s - start);
-
- out:
-
-	return(result);
+	return (result);
 }

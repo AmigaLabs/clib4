@@ -112,86 +112,84 @@ DIR *opendir(const char *path_name)
 	memset(dh, 0, sizeof(*dh));
 
 #if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics)
 	{
 		struct Node *node;
 
 		NewList((struct List *)&dh->dh_VolumeList);
 
-		if (__global_clib2->__unix_path_semantics)
+		if (path_name[0] == '\0')
 		{
-			if (path_name[0] == '\0')
-			{
-				SHOWMSG("no name given");
+			SHOWMSG("no name given");
 
-				__set_errno(ENOENT);
-				goto out;
+			__set_errno(ENOENT);
+			goto out;
+		}
+
+		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+			goto out;
+
+		SHOWSTRING(path_name);
+
+		if (path_name_nti.is_root)
+		{
+			struct DosList *dol;
+			UBYTE *name;
+
+			SHOWMSG("collecting volume names");
+
+			dh->dh_ScanVolumeList = TRUE;
+
+			PROFILE_OFF();
+			dol = LockDosList(LDF_VOLUMES | LDF_READ);
+			PROFILE_ON();
+
+			while ((dol = NextDosEntry(dol, LDF_VOLUMES | LDF_READ)) != NULL)
+			{
+				name = BADDR(dol->dol_Name);
+				if (name != NULL && name[0] > 0)
+				{
+					size_t len;
+
+					len = name[0];
+
+					node = malloc(sizeof(*node) + len + 2);
+					if (node == NULL)
+					{
+						UnLockDosList(LDF_VOLUMES | LDF_READ);
+
+						__set_errno(ENOMEM);
+						goto out;
+					}
+
+					node->ln_Name = (char *)(node + 1);
+
+					memmove(node->ln_Name, &name[1], len);
+					node->ln_Name[len++] = ':';
+					node->ln_Name[len] = '\0';
+
+					/* Check if the name is already on the list. Mind you,
+						this is not the most sophisticated algorithm but then
+						the number of volumes should be small. */
+					if (find_by_name((struct List *)&dh->dh_VolumeList, node->ln_Name) != NULL)
+					{
+						free(node);
+						continue;
+					}
+
+					D(("adding '%s'", node->ln_Name));
+
+					AddTail((struct List *)&dh->dh_VolumeList, node);
+				}
 			}
 
-			if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
-				goto out;
+			UnLockDosList(LDF_VOLUMES | LDF_READ);
 
-			SHOWSTRING(path_name);
-
-			if (path_name_nti.is_root)
+			/* Bail out if we cannot present anything. */
+			if (IsMinListEmpty(&dh->dh_VolumeList))
 			{
-				struct DosList *dol;
-				UBYTE *name;
-
-				SHOWMSG("collecting volume names");
-
-				dh->dh_ScanVolumeList = TRUE;
-
-				PROFILE_OFF();
-				dol = LockDosList(LDF_VOLUMES | LDF_READ);
-				PROFILE_ON();
-
-				while ((dol = NextDosEntry(dol, LDF_VOLUMES | LDF_READ)) != NULL)
-				{
-					name = BADDR(dol->dol_Name);
-					if (name != NULL && name[0] > 0)
-					{
-						size_t len;
-
-						len = name[0];
-
-						node = malloc(sizeof(*node) + len + 2);
-						if (node == NULL)
-						{
-							UnLockDosList(LDF_VOLUMES | LDF_READ);
-
-							__set_errno(ENOMEM);
-							goto out;
-						}
-
-						node->ln_Name = (char *)(node + 1);
-
-						memmove(node->ln_Name, &name[1], len);
-						node->ln_Name[len++] = ':';
-						node->ln_Name[len] = '\0';
-
-						/* Check if the name is already on the list. Mind you,
-						   this is not the most sophisticated algorithm but then
-						   the number of volumes should be small. */
-						if (find_by_name((struct List *)&dh->dh_VolumeList, node->ln_Name) != NULL)
-						{
-							free(node);
-							continue;
-						}
-
-						D(("adding '%s'", node->ln_Name));
-
-						AddTail((struct List *)&dh->dh_VolumeList, node);
-					}
-				}
-
-				UnLockDosList(LDF_VOLUMES | LDF_READ);
-
-				/* Bail out if we cannot present anything. */
-				if (IsMinListEmpty(&dh->dh_VolumeList))
-				{
-					__set_errno(ENOMEM);
-					goto out;
-				}
+				__set_errno(ENOMEM);
+				goto out;
 			}
 		}
 	}
@@ -270,6 +268,7 @@ out:
 			FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 
 #if defined(UNIX_PATH_SEMANTICS)
+		if (__global_clib2->__unix_path_semantics)
 		{
 			struct Node *node;
 

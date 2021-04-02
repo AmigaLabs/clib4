@@ -37,18 +37,18 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/****************************************************************************/
+#include <malloc.h>
 
 #undef free
 #undef __free
 
 /****************************************************************************/
+
+extern struct alignlist *_aligned_blocks;
 
 #ifdef __MEM_DEBUG
 
@@ -383,9 +383,12 @@ remove_and_free_memory_node(struct MemoryNode *mn)
 		{
 			if (__memory_pool != NULL)
 			{
-				PROFILE_OFF();
-				FreePooled(__memory_pool, mn, allocation_size);
-				PROFILE_ON();
+				if (mn != NULL) {
+					PROFILE_OFF();
+					FreeVecPooled(__memory_pool, mn);
+					mn = NULL;
+					PROFILE_ON();
+				}
 			}
 			else
 			{
@@ -417,9 +420,12 @@ remove_and_free_memory_node(struct MemoryNode *mn)
 	{
 		if (__memory_pool != NULL)
 		{
-			PROFILE_OFF();
-			FreePooled(__memory_pool, mn, allocation_size);
-			PROFILE_ON();
+			if (mn != NULL) {
+				PROFILE_OFF();
+				FreeVecPooled(__memory_pool, mn);
+				mn = NULL;
+				PROFILE_ON();
+			}
 		}
 		else
 		{
@@ -537,7 +543,26 @@ VOID __free_memory(void *ptr, BOOL force, const char *file, int line)
 	}
 #endif /* __MEM_DEBUG */
 
-	mn = __find_memory_node(ptr);
+
+	/* Check if we have something created by memalign */
+	BOOL found = FALSE;
+	if (_aligned_blocks != NULL) {
+		struct alignlist *l;
+		for (l = _aligned_blocks; l != NULL; l = l->next) {
+			/* If we found it */
+			if (l->aligned == ptr)
+			{
+				/* Free the exact address not the aligned one */
+				mn = __find_memory_node(l->exact);
+				l->aligned = NULL;
+				found = TRUE;
+				break;
+			}
+		}
+	}
+	if (!found) {
+		mn = __find_memory_node(ptr);
+	}
 
 #ifdef __MEM_DEBUG
 	{

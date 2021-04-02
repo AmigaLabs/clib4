@@ -115,8 +115,6 @@ extern void *memset(void *ptr, int val, size_t len);
 /****************************************************************************/
 
 extern int strerror_r(int error,char * buffer,size_t buffer_size);
-extern char * index(const char *s, int c);
-extern char * rindex(const char *s, int c);
 
 /****************************************************************************/
 
@@ -145,6 +143,12 @@ extern size_t strlcat(char *dst, const char *src, size_t siz);
 extern char * strtok_r(char *str, const char *separator_set,char ** state_ptr);
 
 /****************************************************************************/
+#ifndef __STRICT_ANSI__
+extern void *memccpy(void *dst0, const void *src0, int endchar0, size_t len0);
+extern void *mempcpy(void *dst0, const void *src0, size_t len0);
+extern char *index(const char *s, int c);
+extern char *rindex(const char *s, int c);
+#endif
 
 #ifdef __cplusplus
 }

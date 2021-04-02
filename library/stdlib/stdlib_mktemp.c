@@ -175,17 +175,15 @@ mktemp(char *name_template)
 /* If necessary, quickly translate the semantics of the file name
 		   we cooked up above. */
 #if defined(UNIX_PATH_SEMANTICS)
+		if (__global_clib2->__unix_path_semantics)
 		{
-			if (__global_clib2->__unix_path_semantics)
-			{
-				if (__translate_unix_to_amiga_path_name((char const **)&test_name, &name_template_nti) != 0)
-					goto out;
+			if (__translate_unix_to_amiga_path_name((char const **)&test_name, &name_template_nti) != 0)
+				goto out;
 
-				if (name_template_nti.is_root)
-				{
-					__set_errno(EACCES);
-					goto out;
-				}
+			if (name_template_nti.is_root)
+			{
+				__set_errno(EACCES);
+				goto out;
 			}
 		}
 #endif /* UNIX_PATH_SEMANTICS */

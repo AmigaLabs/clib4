@@ -39,8 +39,6 @@
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-extern int __memcmp440(const char *m1, const char *m2, size_t len);
-
 INLINE STATIC int
 __memcmp(const char *m1, const char *m2, size_t len)
 {
@@ -150,7 +148,8 @@ out:
 	return (result);
 }
 
-int memcmp(const void *ptr1, const void *ptr2, size_t len)
+int 
+memcmp(const void *ptr1, const void *ptr2, size_t len)
 {
 	int result = 0;
 
@@ -168,12 +167,19 @@ int memcmp(const void *ptr1, const void *ptr2, size_t len)
 		const char *m1 = ptr1;
 		const char *m2 = ptr2;
 
-		switch (__global_clib2->cpufamily) {
-			case CPUFAMILY_4XX:
-				result = __memcmp440(m1, m2, len);
-				break;
-			default:
-				result = __memcmp(m1, m2, len);
+		/* Make sure __global_clib2 has been created */
+		if (__global_clib2 != NULL) { 
+			switch (__global_clib2->cpufamily) {
+				case CPUFAMILY_4XX:
+					result = __memcmp440(m1, m2, len);
+					break;
+				default:
+					result = __memcmp(m1, m2, len);
+			}
+		}
+		else {
+			/* Fallback to standard function */
+			result = __memcmp(m1, m2, len);
 		}
 	}
 	else 

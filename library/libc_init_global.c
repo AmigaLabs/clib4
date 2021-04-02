@@ -74,7 +74,6 @@ struct _clib2 * InitGlobal() {
 	}
 	else
 	{
-		struct TimerIFace *ITimer = __ITimer;
         struct ElfIFace *IElf = __IElf;
 
 		/* Initialize wchar stuff */
@@ -110,9 +109,6 @@ struct _clib2 * InitGlobal() {
 		
 		/* Get the current task pointer */
 		__global_clib2->self = (struct Process *)FindTask(0);
-
-		/* Set system time for rusage */
-		GetSysTime(&__global_clib2->clock);
 
 		/* clear tempnam stuff */
 		srand(time(NULL));
@@ -209,5 +205,6 @@ void FiniGlobal() {
 		}
 
 		FreeVec(__global_clib2);
+		__global_clib2 = NULL;
 	}
 }

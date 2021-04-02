@@ -169,6 +169,7 @@ int closedir(DIR *directory_pointer)
 	Remove((struct Node *)dh);
 
 #if defined(UNIX_PATH_SEMANTICS)
+	if (__global_clib2->__unix_path_semantics)
 	{
 		struct Node *node;
 
