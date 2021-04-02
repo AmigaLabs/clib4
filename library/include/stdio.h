@@ -181,6 +181,7 @@ typedef struct __sFILE FILE;
  * Maximum file name buffer size for use with tmpfile() and tmpnam();
  * note that the maximum file name length is shorter by one character
  */
+#define P_tmpdir "T:"
 #define L_tmpnam 10
 
 /* Maximum number of unique file names tmpnam() can generate */
@@ -291,6 +292,7 @@ extern int remove(const char *filename);
 
 extern FILE *tmpfile(void);
 extern char *tmpnam(char *buf);
+extern char *tempnam(const char *dir, const char *pfx);
 
 /****************************************************************************/
 
@@ -324,17 +326,8 @@ extern char *tmpnam(char *buf);
 
 /****************************************************************************/
 
-#if defined(__THREAD_SAFE)
-
 #define getc(f) (flockfile(f), __unlockfile((f), __getc_unlocked(f)))
 #define putc(c, f) (flockfile(f), __unlockfile((f), __putc_unlocked((c), (f))))
-
-#else
-
-#define getc(f) __getc_unlocked(f)
-#define putc(c, f) __putc_unlocked((c), (f))
-
-#endif /* __THREAD_SAFE */
 
 /****************************************************************************/
 
@@ -351,27 +344,9 @@ extern char *tmpnam(char *buf);
 
 /****************************************************************************/
 
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 #define clearerr(file) ((void)(flockfile(file), (file)->_flags &= ~(__FILE_EOF | __FILE_ERROR), funlockfile(file)))
 #define feof(file) (flockfile(file), __unlockfile((file), ((file)->_flags & __FILE_EOF) != 0))
 #define ferror(file) (flockfile(file), __unlockfile((file), ((file)->_flags & __FILE_ERROR) != 0))
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
-#define clearerr(file) ((void)((file)->_flags &= ~(__FILE_EOF | __FILE_ERROR)))
-#define feof(file) (((file)->_flags & __FILE_EOF) != 0)
-#define ferror(file) (((file)->_flags & __FILE_ERROR) != 0)
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */
 
 /****************************************************************************/
 
@@ -417,6 +392,9 @@ extern int getchar_unlocked(void);
 extern int putc_unlocked(int c, FILE *stream);
 extern int putchar_unlocked(int c);
 
+extern ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+extern ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream);
+
 /****************************************************************************/
 
 #define getc_unlocked(f) __getc_unlocked(f)
@@ -438,27 +416,9 @@ extern off_t ftello(FILE *stream);
 
 /****************************************************************************/
 
-#if defined(__THREAD_SAFE)
-
-/****************************************************************************/
-
 extern void flockfile(FILE *file);
 extern void funlockfile(FILE *file);
 extern int ftrylockfile(FILE *file);
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
-#define flockfile(file) ((void)0)
-#define funlockfile(file) ((void)0)
-#define ftrylockfile(file) (0)
-
-/****************************************************************************/
-
-#endif /* __THREAD_SAFE */
 
 /****************************************************************************/
 
@@ -471,10 +431,8 @@ extern int __vasprintf(const char *file, int line, char **ret, const char *forma
 #endif /* __MEM_DEBUG */
 
 /****************************************************************************/
-
 /* The following is not part of the ISO 'C' (1994) standard, but it should
    be part of ISO/IEC 9899:1999, also known as "C99". */
-
 /****************************************************************************/
 
 extern int vfscanf(FILE *stream, const char *format, va_list arg);

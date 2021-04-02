@@ -79,6 +79,8 @@ extern struct dirent * readdir(DIR * directory_pointer);
 extern void rewinddir(DIR * directory_pointer);
 extern int closedir(DIR * directory_pointer);
 extern int alphasort(const struct dirent **a, const struct dirent **b);
+extern int dirfd(DIR *dirp);
+
 /****************************************************************************/
 
 __END_DECLS

@@ -1,0 +1,53 @@
+#
+# $Id: libprofile.gmk,v 1.1 2006-09-17 17:37:27 obarthel Exp $
+#
+# :ts=8
+#
+# -*- mode: makefile; -*-
+
+##############################################################################
+
+LIBS += $(BUILD_DIR)/lib/libprofile.so \
+		$(BUILD_DIR)/lib/libprofile.a
+
+##############################################################################
+
+PROFILE_LIB = \
+	profile/profile__mcount.o \
+	profile/profile_profil.o \
+	profile/profile_gmon.o \
+	profile/profile_mcount.o
+
+##############################################################################
+
+# Dependencies to rebuild if the library version changes
+
+$(BUILD_DIR)/obj/libprofile/profile.lib_rev.o : $(LIB_DIR)/profile/profile.lib_rev.c $(LIB_DIR)/profile/profile.lib_rev.h
+
+$(BUILD_DIR)/obj.shared/libprofile/profile.lib_rev.o : $(LIB_DIR)/profile/profile.lib_rev.c $(LIB_DIR)/profile/profile.lib_rev.h
+
+$(BUILD_DIR)/obj/libprofile/%.o : AFLAGS += $(LARGEDATA)
+
+$(BUILD_DIR)/obj.shared/libprofile/%.o : AFLAGS += $(PIC) $(LARGEDATA)
+
+$(BUILD_DIR)/obj/libprofile/%.o : $(LIB_DIR)/%.S
+	$(VERBOSE)$(ASSEMBLE)
+
+$(BUILD_DIR)/obj.shared/libprofile/%.o : $(LIB_DIR)/%.S
+	$(VERBOSE)$(ASSEMBLE)
+
+$(BUILD_DIR)/obj/libprofile/%.o : CFLAGS += $(LARGEDATA)
+
+$(BUILD_DIR)/obj.shared/libprofile/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+
+$(BUILD_DIR)/obj/libprofile/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE)
+
+$(BUILD_DIR)/obj.shared/libprofile/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SHARED)
+
+$(BUILD_DIR)/lib/libprofile.a : $(addprefix $(BUILD_DIR)/obj/libprofile/,$(PROFILE_LIB))
+	$(VERBOSE)$(MAKELIB)
+
+$(BUILD_DIR)/lib/libprofile.so : $(addprefix $(BUILD_DIR)/obj.shared/libprofile/,$(PROFILE_LIB))
+	$(VERBOSE)$(MAKESHARED)

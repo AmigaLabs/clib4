@@ -41,17 +41,9 @@
 #ifndef _NETINET_IN_H
 #define _NETINET_IN_H
 
-/****************************************************************************/
+#include <features.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #ifdef __GNUC__
  #ifdef __PPC__
@@ -78,8 +70,8 @@ typedef unsigned short	in_port_t;
  * Protocols
  */
 #define	IPPROTO_IP		0		/* dummy for IP */
-#define	IPPROTO_ICMP		1		/* control message protocol */
-#define	IPPROTO_IGMP		2		/* group mgmt protocol */
+#define	IPPROTO_ICMP	1		/* control message protocol */
+#define	IPPROTO_IGMP	2		/* group mgmt protocol */
 #define	IPPROTO_GGP		3		/* gateway^2 (deprecated) */
 #define	IPPROTO_TCP		6		/* tcp */
 #define	IPPROTO_EGP		8		/* exterior gateway protocol */
@@ -87,9 +79,9 @@ typedef unsigned short	in_port_t;
 #define	IPPROTO_UDP		17		/* user datagram protocol */
 #define	IPPROTO_IDP		22		/* xns idp */
 #define	IPPROTO_TP		29 		/* tp-4 w/ class negotiation */
-#define IPPROTO_IPV6     	41   		/* IPv6 header */
+#define IPPROTO_IPV6    41 		/* IPv6 header */
 #define	IPPROTO_EON		80		/* ISO cnlp */
-#define	IPPROTO_ENCAP		98		/* encapsulation header */
+#define	IPPROTO_ENCAP	98		/* encapsulation header */
 
 #define	IPPROTO_RAW		255		/* raw IP packet */
 #define	IPPROTO_MAX		256
@@ -263,6 +255,68 @@ struct ip_mreq
 #define	HTONL(x) (x)
 #define	HTONS(x) (x)
 
+
+/* Specific IPV6 macros */
+
+#define INET6_ADDRSTRLEN 46
+
+#define IN6_ARE_ADDR_EQUAL(a, b) \
+        (((const uint32_t *)(a))[0] == ((const uint32_t *)(b))[0] \
+         && ((const uint32_t *)(a))[1] == ((const uint32_t *)(b))[1] \
+         && ((const uint32_t *)(a))[2] == ((const uint32_t *)(b))[2] \
+         && ((const uint32_t *)(a))[3] == ((const uint32_t *)(b))[3])
+
+#define IN6_IS_ADDR_UNSPECIFIED(addr) \
+        (((const uint32_t *)(addr))[0] == 0 \
+         && ((const uint32_t *)(addr))[1] == 0 \
+         && ((const uint32_t *)(addr))[2] == 0 \
+         && ((const uint32_t *)(addr))[3] == 0)
+
+#define IN6_IS_ADDR_LOOPBACK(addr) \
+        (((const uint32_t *)(addr))[0] == 0 \
+         && ((const uint32_t *)(addr))[1] == 0 \
+         && ((const uint32_t *)(addr))[2] == 0 \
+         && ((const uint32_t *)(addr))[3] == htonl (1))
+
+#define IN6_IS_ADDR_MULTICAST(addr) (((const uint8_t *) (addr))[0] == 0xff)
+
+#define IN6_IS_ADDR_LINKLOCAL(addr) \
+        ((((const uint16_t *)(addr))[0] & htons (0xffc0)) == htons (0xfe80))
+
+#define IN6_IS_ADDR_SITELOCAL(addr) \
+        ((((const uint16_t *)(addr))[0] & htons (0xffc0)) == htons (0xfec0))
+
+#define IN6_IS_ADDR_V4MAPPED(addr) \
+        (((const uint32_t *)(addr))[0] == 0 \
+         && ((const uint32_t *)(addr))[1] == 0 \
+         && ((const uint32_t *)(addr))[2] == htonl (0xffff))
+
+#define IN6_IS_ADDR_V4COMPAT(addr) \
+        (((const uint32_t *)(addr))[0] == 0 \
+         && ((const uint32_t *)(addr))[1] == 0 \
+         && ((const uint32_t *)(addr))[2] == 0 \
+         && ntohl (((const uint32_t *)(addr))[3]) > 1)
+
+#define IN6_IS_ADDR_MC_NODELOCAL(addr) \
+        (IN6_IS_ADDR_MULTICAST(addr) \
+         && (((const uint8_t *)(addr))[1] & 0xf) == 0x1)
+
+#define IN6_IS_ADDR_MC_LINKLOCAL(addr) \
+        (IN6_IS_ADDR_MULTICAST (addr) \
+         && (((const uint8_t *)(addr))[1] & 0xf) == 0x2)
+
+#define IN6_IS_ADDR_MC_SITELOCAL(addr) \
+        (IN6_IS_ADDR_MULTICAST(addr) \
+         && (((const uint8_t *)(addr))[1] & 0xf) == 0x5)
+
+#define IN6_IS_ADDR_MC_ORGLOCAL(addr) \
+        (IN6_IS_ADDR_MULTICAST(addr) \
+         && (((const uint8_t *)(addr))[1] & 0xf) == 0x8)
+
+#define IN6_IS_ADDR_MC_GLOBAL(addr) \
+        (IN6_IS_ADDR_MULTICAST(addr) \
+         && (((const uint8_t *)(addr))[1] & 0xf) == 0xe)
+		 
 /****************************************************************************/
 
 #ifdef __GNUC__
@@ -273,12 +327,6 @@ struct ip_mreq
  #p #pragma default-al
 #endif
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _NETINET_IN_H */

@@ -61,6 +61,8 @@ __BEGIN_DECLS
 #define O_NOCTTY	(0)
 #define O_ASYNC		(1<<7)
 
+#define	O_ACCMODE	(O_RDONLY|O_WRONLY|O_RDWR)
+
 /****************************************************************************/
 
 #define F_DUPFD		0

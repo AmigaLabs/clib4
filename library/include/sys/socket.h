@@ -325,6 +325,17 @@ struct cmsghdr
 /* "Socket"-level control message types: */
 #define	SCM_RIGHTS	0x01		/* access rights (array of LONG) */
 
+/* The following constants should be used for the second parameter of `shutdown'.  */
+enum
+{
+  SHUT_RD = 0,          /* No more receptions.  */
+#define SHUT_RD         SHUT_RD
+  SHUT_WR,              /* No more transmissions.  */
+#define SHUT_WR         SHUT_WR
+  SHUT_RDWR             /* No more receptions or transmissions.  */
+#define SHUT_RDWR       SHUT_RDWR
+};
+
 /****************************************************************************/
 
 /*

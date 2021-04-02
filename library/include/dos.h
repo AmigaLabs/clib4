@@ -575,6 +575,7 @@ struct _clib2
 	/* This is used with the dlopen(), dlclose() and dlsym() functions. */
 	Elf32_Handle __dl_elf_handle;
 	Elf32_Error __elf_error_code;
+	struct ElfIFace *IElf;
 
 	/* This is the pointer to itself */
 	struct Process *self;
@@ -589,6 +590,13 @@ struct _clib2
 	* directory. In this case the unix translation will be enabled at start
 	*/
 	BOOL __unix_path_semantics; /* Enable / Disable unix path semantics */
+
+	/* used by tmpnam */
+	int  inc;	
+  	char emergency[250];
+
+	/* CPU Family to enable optimized functions */
+	uint32 cpufamily;	  
 };
 
 extern struct _clib2 *__global_clib2;

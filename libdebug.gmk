@@ -1,0 +1,67 @@
+#
+# $Id: libdebug.gmk,v 1.1 2006-09-17 17:37:27 obarthel Exp $
+#
+# :ts=8
+#
+# -*- mode: makefile; -*-
+
+##############################################################################
+
+LIBS += $(BUILD_DIR)/lib/libdebug.so \
+		$(BUILD_DIR)/lib/libdebug.a
+
+##############################################################################
+
+DEBUG_LIB = \
+	debug/debug.lib_rev.o \
+	debug/debug.o \
+	debug/debug_cmpstrexec.o \
+	debug/debug_kcmpstr.o \
+	debug/debug_kdofmt.o \
+	debug/debug_kgetc.o \
+	debug/debug_kgetch1.o \
+	debug/debug_kgetch2.o \
+	debug/debug_kgetchar1.o \
+	debug/debug_kgetchar2.o \
+	debug/debug_kgetnum1.o \
+	debug/debug_kgetnum2.o \
+	debug/debug_kmaygetch.o \
+	debug/debug_kmaygetchar.o \
+	debug/debug_kprintf1.o \
+	debug/debug_kprintf2.o \
+	debug/debug_kputc.o \
+	debug/debug_kputch1.o \
+	debug/debug_kputch2.o \
+	debug/debug_kputchar1.o \
+	debug/debug_kputchar2.o \
+	debug/debug_kputfmt.o \
+	debug/debug_kputs1.o \
+	debug/debug_kputs2.o \
+	debug/debug_kputstr1.o \
+	debug/debug_kputstr2.o \
+	debug/debug_kvprintf1.o \
+	debug/debug_kvprintf2.o \
+	debug/debug_level.o
+
+##############################################################################
+
+# Dependencies to rebuild if the library version changes
+
+$(BUILD_DIR)/obj/libdebug/debug.lib_rev.o : debug/debug.lib_rev.c $(LIB_DIR)/debug/debug.lib_rev.h
+$(BUILD_DIR)/obj.shared/libdebug/debug.lib_rev.o : debug/debug.lib_rev.c $(LIB_DIR)/debug/debug.lib_rev.h
+
+$(BUILD_DIR)/obj/libdebug/%.o : CFLAGS += $(LARGEDATA)
+
+$(BUILD_DIR)/obj.shared/libdebug/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+
+$(BUILD_DIR)/obj/libdebug/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE)
+
+$(BUILD_DIR)/obj.shared/libdebug/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SHARED)
+
+$(BUILD_DIR)/lib/libdebug.a : $(addprefix $(BUILD_DIR)/obj/libdebug/,$(DEBUG_LIB))
+	$(VERBOSE)$(MAKELIB)
+
+$(BUILD_DIR)/lib/libdebug.so : $(addprefix $(BUILD_DIR)/obj.shared/libdebug/,$(DEBUG_LIB))
+	$(VERBOSE)$(MAKESHARED)

@@ -74,7 +74,6 @@ struct _clib2 * InitGlobal() {
 	}
 	else
 	{
-		struct TimerIFace *ITimer = __ITimer;
         struct ElfIFace *IElf = __IElf;
 
 		/* Initialize wchar stuff */
@@ -84,8 +83,9 @@ struct _clib2 * InitGlobal() {
             __global_clib2 = NULL;
 			goto out;
 		}
-		/* Set main Exec interface pointer */
+		/* Set main Exec and IElf interface pointers */
 		__global_clib2->IExec = IExec;
+		__global_clib2->IElf = __IElf;
 
 		__global_clib2->wide_status->_strtok_last = NULL;
 		__global_clib2->wide_status->_mblen_state.__count = 0;
@@ -110,9 +110,11 @@ struct _clib2 * InitGlobal() {
 		/* Get the current task pointer */
 		__global_clib2->self = (struct Process *)FindTask(0);
 
-		/* Set system time for rusage */
-		GetSysTime(&__global_clib2->clock);
-
+		/* clear tempnam stuff */
+		srand(time(NULL));
+		__global_clib2->inc = 0;
+		memset(__global_clib2->emergency, 0, sizeof(__global_clib2->emergency));
+		
 		/* Check is SYSV library is available in the system */
 		__global_clib2->haveShm = FALSE;
 		__SysVBase = OpenLibrary("sysvipc.library", 53);
@@ -141,9 +143,12 @@ struct _clib2 * InitGlobal() {
 			FreeDosObject(DOS_EXAMINEDATA, exd);
 		}
 
+		/* Choose which memcpy to use */
+		GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);		
+
 		/* 
 		 * Next: Get Elf handle associated with the currently running process. 
-		 * __ElfBase is opened in stdlib_shared_objs.c that is called before the
+		 * ElfBase is opened in crtbegin.c that is called before the
 		 * call_main()
 		 */
 
@@ -170,7 +175,7 @@ out:
 
 void FiniGlobal() {
     struct ElfIFace *IElf = __IElf;
-    
+   	
     /* Free global clib structure */
 	if (__global_clib2)
 	{
@@ -200,5 +205,6 @@ void FiniGlobal() {
 		}
 
 		FreeVec(__global_clib2);
+		__global_clib2 = NULL;
 	}
 }

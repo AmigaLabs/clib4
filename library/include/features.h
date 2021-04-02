@@ -114,6 +114,8 @@
    guard.  Feature test macros that can be handled from the first
    system header included are handled here.  */
 
+/* define _CLIB2 symbol so we can use it in our native code */
+#define _CLIB2
 
 /* Undefine everything, so we get a clean slate.  */
 #undef	__USE_ISOC11

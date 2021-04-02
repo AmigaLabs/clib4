@@ -246,6 +246,8 @@ extern ssize_t write(int fildes, const void *buf, size_t nbyte);
 
 extern int pipe (int fd[2]);
 extern int pipe2 (int fd[2], int flags);
+extern ssize_t pread(int fd, void *buf, size_t nbytes, off_t offset);
+extern ssize_t pwrite(int fd, const void *buf, size_t nbytes, off_t offset);
 
 /****************************************************************************/
 

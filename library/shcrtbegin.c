@@ -38,165 +38,44 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
-
-#ifndef _TIME_HEADERS_H
-#include "time_headers.h"
-#endif /* _TIME_HEADERS_H */
-
-#ifndef _UNISTD_HEADERS_H
-#include "unistd_headers.h"
-#endif /* _UNISTD_HEADERS_H */
-
-#ifndef _SHM_HEADERS_H
-#include "shm_headers.h"
-#endif /* _SHM_HEADERS_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
-
-/* A quick workaround for the timeval/timerequest->TimeVal/TimeRequest
-   change in the recent OS4 header files. */
-
-#if defined(__NEW_TIMEVAL_DEFINITION_USED__)
-
-#define timerequest TimeRequest
-#define tr_node Request
-
-#endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
-
 
 /* Avoid gcc warnings.. */
 void __shlib_call_constructors(void);
 void __shlib_call_destructors(void);
 
-extern struct ExecIFace NOCOMMON *IExec;
-extern struct Library NOCOMMON *__ElfBase;
-extern struct ElfIFace NOCOMMON *__IElf;
-
-/* Local timer I/O. */
-extern struct MsgPort *NOCOMMON __timer_port;
-extern struct timerequest *NOCOMMON __timer_request;
-
-extern struct Library *NOCOMMON __TimerBase;
-extern struct TimerIFace *NOCOMMON __ITimer;
-
-/****************************************************************************/
-/*
-CLIB_CONSTRUCTOR(timer_init)
-{
-	BOOL success = FALSE;
-
-	ENTER();
-
-	__timer_port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
-	if (__timer_port == NULL)
-	{
-		__show_error("The timer message port could not be created.");
-		goto out;
-	}
-	
-	__timer_request = AllocSysObjectTags(ASOT_MESSAGE, ASOMSG_Size, sizeof(struct TimeRequest), ASOMSG_ReplyPort, __timer_port, TAG_DONE);
-	if (__timer_request == NULL)
-	{
-		__show_error("The timer I/O request could not be created.");
-		goto out;
-	}
-
-	if (OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)__timer_request, 0) != OK)
-	{
-		__show_error("The timer could not be opened.");
-		goto out;
-	}
-
-	__TimerBase = (struct Library *)__timer_request->tr_node.io_Device;
-	__ITimer = (struct TimerIFace *)GetInterface(__TimerBase, "main", 1, 0);
-	if (__ITimer == NULL)
-	{
-		__show_error("The timer interface could not be obtained.");
-		goto out;
-	}
-
-	success = TRUE;
-
-out:
-
-	SHOWVALUE(success);
-	LEAVE();
-
-	if (success)
-		CONSTRUCTOR_SUCCEED();
-	else
-		CONSTRUCTOR_FAIL();
-}
-
-
-CLIB_DESTRUCTOR(timer_exit)
-{
-	ENTER();
-
-	if (__ITimer != NULL)
-		DropInterface((struct Interface *)__ITimer);
-
-	__ITimer = NULL;
-
-	__TimerBase = NULL;
-
-	if (__timer_request != NULL)
-	{
-		if (__timer_request->tr_node.io_Device != NULL)
-			CloseDevice((struct IORequest *)__timer_request);
-
-		FreeSysObject(ASOT_MESSAGE, __timer_request);
-		__timer_request = NULL;
-	}
-
-	if (__timer_port != NULL)
-	{
-		FreeSysObject(ASOT_PORT, __timer_port);
-		__timer_port = NULL;
-	}
-
-	LEAVE();
-}
-*/
 static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
 static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
+
+extern struct ExecIFace NOCOMMON *IExec;
 
 void 
 __shlib_call_constructors(void)
 {
-   int num_ctors, i;
-   int j;
+	extern void (*__CTOR_LIST__[])(void);
+	int i = 0;
 
-   SysBase = *(struct Library **)4;
-   IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
-  
-   /* The libraries needs to be set up before any local constructors are invoked. */
-   //open_libraries(IExec);
+	SysBase = *(struct Library **)4;
+	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 
-   for (i = 1, num_ctors = 0; __CTOR_LIST__[i] != NULL; i++)
-      num_ctors++;
+	while (__CTOR_LIST__[i + 1])
+	{
+		i++;
+	}
 
-   for (j = 0; j < num_ctors; j++)
-      __CTOR_LIST__[num_ctors - j]();
+	while (i > 0)
+	{
+		__CTOR_LIST__[i--]();
+	}
 }
 
 void 
 __shlib_call_destructors(void)
 {
-   int num_dtors, i;
-   static int j = 0;
+	extern void (*__DTOR_LIST__[])(void);
+	int i = 1;
 
-   for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
-      num_dtors++;
-
-   while (j++ < num_dtors)
-      __DTOR_LIST__[j]();
-
-   /* The libraries needs to be cleaned up after all local destructors have been invoked. */
-   //close_libraries();
+	while (__DTOR_LIST__[i])
+	{
+		__DTOR_LIST__[i++]();
+	}
 }

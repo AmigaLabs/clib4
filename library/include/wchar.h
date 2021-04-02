@@ -108,6 +108,8 @@ extern wchar_t *wcspbrk(const wchar_t *s, const wchar_t *set);
 extern wchar_t *wcstok(wchar_t *str, const wchar_t *delim, wchar_t **ptr);
 extern wchar_t *wcsstr(const wchar_t *big, const wchar_t *little);
 
+extern int wcswidth(const wchar_t *pwcs, size_t n);
+extern int wcwidth(const wchar_t wc);
 /****************************************************************************/
 
 extern double wcstod(const wchar_t *str, wchar_t **ptr);
@@ -144,14 +146,14 @@ extern wchar_t *fgetws(wchar_t *s, int n, FILE *stream);
 
 /****************************************************************************/
 
-#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)
+//#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)
 extern int fwscanf(FILE *stream, const wchar_t *format, ...);
 extern int swscanf(wchar_t *s, const wchar_t *format, ...);
 //vfwscanf
 //vswscanf
 //vwscanf
 extern int wscanf(const wchar_t *format, ...);
-#endif
+//#endif
 /****************************************************************************/
 
 extern wint_t fputwc(wchar_t c, FILE *stream);
@@ -163,14 +165,14 @@ extern wint_t putwchar(wchar_t c);
 extern wint_t fputws(const wchar_t *s, FILE *stream);
 
 /****************************************************************************/
-#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)
+//#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)
 extern int fwprintf(FILE *stream, const wchar_t *format, ...);
 extern int swprintf(wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, ...);
 extern int vfwprintf(FILE *stream, const wchar_t *format, va_list arg);
 extern int vswprintf(wchar_t *s, size_t maxlen, const wchar_t *format, va_list arg);
 extern int vwprintf(const wchar_t *format, va_list arg);
 extern int wprintf(const wchar_t *format, ...);
-#endif
+//#endif
 
 extern size_t wcsftime(wchar_t *s, size_t maxsize, const wchar_t *format, const struct tm *timeptr);
 

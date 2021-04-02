@@ -69,6 +69,8 @@ __BEGIN_DECLS
 #define _TIME_T_ long                /* time() */
 #define _CLOCKID_T_ unsigned long
 #define _TIMER_T_ unsigned long
+#define NSEC_PER_SEC 1000000000ull
+#define TIMER_ABSTIME 0x01
 
 typedef _CLOCKID_T_ clockid_t;
 
@@ -162,6 +164,7 @@ extern int nanosleep(const struct timespec *req, struct timespec *rem);
 extern int clock_gettime(clockid_t clk_id, struct timespec *t);
 extern int clock_settime(clockid_t clk_id, const struct timespec *t);
 extern int clock_getres(clockid_t clock_id, struct timespec *res);
+extern int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *request, struct timespec *remain);
 
 /* Defined in localtime.c.  */
 extern char *tzname[2];   /* Current timezone names.  */

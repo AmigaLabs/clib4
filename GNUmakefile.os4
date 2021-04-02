@@ -1,0 +1,218 @@
+#
+# $Id: Makefile,v 2.1 2021-03-26 11:28:07 apalmate Exp $
+#
+# :ts=8
+#
+# -*- mode: makefile; -*-
+
+##############################################################################
+
+.PHONY : all all-targets clean version cvs-tag
+
+# You may have to change the following sets of macro definitions which will
+# be used throughout the build makefile. These definitions cover the paths
+# to look into for the operating system and networking header files, and
+# the names and parameters passed to the program which actually do the
+# compilation, library building and cleanup work.
+#
+# Note that for either set you still need the GNU make utility to build the
+# library!
+
+# These are for the cross compiler, with the operating system header files
+# stored in "/V/include" and the network header files in a local directory
+# called "netinclude".
+INSTALL_PREFIX = /usr/ppc-amigaos/SDK/clib2
+SDK_INCLUDE := /usr/ppc-amigaos/SDK/include
+CC := ppc-amigaos-gcc
+AR := ppc-amigaos-ar -q
+RANLIB := ppc-amigaos-ranlib
+COPY := cp -r
+DELETE := rm -rf
+MAKEDIR := mkdir -p
+# Enabling the LOG_COMMAND has the consequence that a rule will not
+# fail on an error because only the exit status from the tee command
+# will be considered
+#LOG_COMMAND := 2>&1 | tee -a compiler.log
+LOG_COMMAND :=
+LIB_ROOT = .
+LIB_DIR = $(LIB_ROOT)/library
+BUILD_DIR = $(LIB_ROOT)/build
+
+##############################################################################
+
+WARNINGS := \
+	-Wall -W -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
+	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-unused-value \
+	-Wno-deprecated-declarations -Wno-unused-label -Wno-sign-compare -Wno-cast-function-type \
+	-Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter -Wstrict-aliasing \
+	-Wshadow # -Werror -Wbad-function-cast #-Wconversion 
+
+PIC		   := -fPIC 
+INCLUDES   := -I$(LIB_DIR)/include \
+				-Ilibrary \
+				-I$(SDK_INCLUDE) \
+				-I$(LIB_DIR)/debug \
+				-I$(LIB_DIR)/amiga \
+				-I$(LIB_DIR)/profile \
+				-I$(LIB_DIR)/math \
+				-I$(LIB_DIR)/argz \
+				-I$(LIB_DIR)/usergroup \
+				-I$(LIB_DIR)/string \
+				-I$(LIB_DIR)/ctype \
+				-I$(LIB_DIR)/stdio \
+				-I$(LIB_DIR)/stdlib \
+				-I$(LIB_DIR)/socket \
+				-I$(LIB_DIR)/unistd \
+				-I$(LIB_DIR)/time \
+				-I$(LIB_DIR)/wchar \
+				-I$(LIB_DIR)/posix \
+				-I$(LIB_DIR)/termios \
+				-I$(LIB_DIR)/search \
+				-I$(LIB_DIR)/inttypes \
+				-I$(LIB_DIR)/locale \
+				-I$(LIB_DIR)/dirent \
+				-I$(LIB_DIR)/stat \
+				-I$(LIB_DIR)/mount
+
+OPTIONS    := -mcrt=clib2 -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -nostdlib
+OPTIMIZE   := -DNDEBUG -O3 -fno-inline
+
+DEBUG      := -ggdb
+#MEMDEBUG  := -D__USE_MEM_TREES -D__MEM_DEBUG
+
+CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DUNIX_PATH_SEMANTICS
+AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
+
+VERBOSE   := @
+
+##############################################################################
+
+# This is the first target: it depends on all the targets
+
+all: all-targets
+
+##############################################################################
+
+# The LIBS variable is updated by each of the included library makefiles.
+
+LIBS :=
+
+include libc.gmk
+include libm.gmk
+include libdebug.gmk
+include libamiga.gmk
+include libprofile.gmk
+
+all-targets: \
+	$(BUILD_DIR)/lib/crtbegin.o \
+	$(BUILD_DIR)/lib/crtend.o \
+	$(BUILD_DIR)/lib/shcrtbegin.o \
+	$(BUILD_DIR)/lib/shcrtend.o \
+	$(BUILD_DIR)/$(LIBS)
+
+##############################################################################
+
+# Delete all object files and libraries
+clean:
+	-$(DELETE) $(BUILD_DIR)/obj
+	-$(DELETE) $(BUILD_DIR)/obj.shared	
+	-$(DELETE) $(BUILD_DIR)/lib
+	-$(DELETE) $(BUILD_DIR)/compiler.log
+
+##############################################################################
+
+# Update the version numbers bound to the individual libraries
+version:
+	$(COPY) c.lib_rev.rev amiga.lib_rev.rev
+	$(COPY) c.lib_rev.rev debug.lib_rev.rev
+	$(COPY) c.lib_rev.rev profile.lib_rev.rev
+	$(COPY) c.lib_rev.rev m.lib_rev.rev
+	bumprev amiga.lib
+	bumprev c.lib
+	bumprev debug.lib
+	bumprev profile.lib
+	bumprev m.lib
+
+##############################################################################
+
+# General build rules for all object files and the individual libraries
+
+$(BUILD_DIR)/lib/%.o : AFLAGS += $(LARGEDATA)
+$(BUILD_DIR)/lib/%.o : %.S
+	$(VERBOSE)$(ASSEMBLE)
+
+$(BUILD_DIR)/lib/%.o : CFLAGS += $(LARGEDATA)
+$(BUILD_DIR)/lib/%.o : %.c
+	$(VERBOSE)$(COMPILE)
+	
+$(BUILD_DIR)/lib/crtbegin.o : CFLAGS += -fno-aggressive-loop-optimizations
+$(BUILD_DIR)/lib/crtbegin.o : $(LIB_DIR)/crtbegin.c
+	$(VERBOSE)$(COMPILE)
+
+$(BUILD_DIR)/lib/crtend.o : CFLAGS += -fno-aggressive-loop-optimizations
+$(BUILD_DIR)/lib/crtend.o : $(LIB_DIR)/crtend.c
+	$(VERBOSE)$(COMPILE)
+
+$(BUILD_DIR)/lib/shcrtbegin.o : CFLAGS += $(PIC) -fno-aggressive-loop-optimizations
+$(BUILD_DIR)/lib/shcrtbegin.o : $(LIB_DIR)/shcrtbegin.c
+	$(VERBOSE)$(COMPILE_SHARED)
+
+$(BUILD_DIR)/lib/shcrtend.o : CFLAGS += $(PIC) -fno-aggressive-loop-optimizations
+$(BUILD_DIR)/lib/shcrtend.o : $(LIB_DIR)/shcrtend.c
+	$(VERBOSE)$(COMPILE_SHARED)
+
+##############################################################################
+
+define COMPILE
+@$(MAKEDIR) $(@D)
+$(VERBOSE)echo "Compiling Static \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)$(CC) $(CFLAGS) -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_ASM
+@$(MAKEDIR) $(@D)
+$(VERBOSE)echo "Compiling Static ASM \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)$(CC) -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_SHARED
+@$(MAKEDIR) $(@D)
+$(VERBOSE)echo "Compiling Shared \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)$(CC) $(CFLAGS) $(PIC) -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_SHARED_ASM
+@$(MAKEDIR) $(@D)
+$(VERBOSE)echo "Compiling Shared Asm \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)$(CC) $(PIC) -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define ASSEMBLE
+@$(MAKEDIR) $(@D)
+$(VERBOSE)echo "Assembling \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)$(CC) $(AFLAGS) -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define MAKELIB
+@$(MAKEDIR) $(@D)
+@$(DELETE) $@
+$(VERBOSE)echo "Making Static \033[0;31m$@\033[0m"
+@$(AR) $@ $^ $(LOG_COMMAND)
+@$(RANLIB) $@ $(LOG_COMMAND)
+endef
+
+define MAKESHARED
+@$(MAKEDIR) $(@D)
+@$(DELETE) $@
+$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
+$(VERBOSE)$(CC) -fPIC -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND)
+endef
+
+install:
+	$(DELETE) $(INSTALL_PREFIX)/include/*
+	$(DELETE) $(INSTALL_PREFIX)/lib/*
+	$(COPY) $(BUILD_DIR)/lib/* $(INSTALL_PREFIX)/lib/
+	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
+
+release:
+	jlha -a clib2.lha $(INSTALL_PREFIX)

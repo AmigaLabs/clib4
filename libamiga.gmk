@@ -1,0 +1,70 @@
+#
+# $Id: libamiga.gmk,v 1.1 2006-09-17 17:37:27 obarthel Exp $
+#
+# :ts=8
+#
+# -*- mode: makefile; -*-
+
+##############################################################################
+
+LIBS += \
+	$(BUILD_DIR)/lib/libamiga.so \
+	$(BUILD_DIR)/lib/libamiga.a
+
+##############################################################################
+
+AMIGA_LIB = \
+	amiga/amiga.lib_rev.o \
+	amiga/amiga_acrypt.o \
+	amiga/amiga_addtof.o \
+	amiga/amiga_argarraydone.o \
+	amiga/amiga_argarrayinit.o \
+	amiga/amiga_argint.o \
+	amiga/amiga_argstring.o \
+	amiga/amiga_beginio.o \
+	amiga/amiga_coercemethod.o \
+	amiga/amiga_createextio.o \
+	amiga/amiga_createport.o \
+	amiga/amiga_createstdio.o \
+	amiga/amiga_createtask.o \
+	amiga/amiga_deleteextio.o \
+	amiga/amiga_deleteport.o \
+	amiga/amiga_deletestdio.o \
+	amiga/amiga_deletetask.o \
+	amiga/amiga_domethod.o \
+	amiga/amiga_dosupermethod.o \
+	amiga/amiga_dotimer.o \
+	amiga/amiga_fastrand.o \
+	amiga/amiga_freeievents.o \
+	amiga/amiga_hotkey.o \
+	amiga/amiga_invertstring.o \
+	amiga/amiga_newlist.o \
+	amiga/amiga_rangerand.o \
+	amiga/amiga_remtof.o \
+	amiga/amiga_rexxvars.o \
+	amiga/amiga_setsuperattrs.o \
+	amiga/amiga_timedelay.o \
+	amiga/amiga_waitbeam.o
+
+##############################################################################
+
+# Dependencies to rebuild if the library version changes
+
+$(BUILD_DIR)/obj/libamiga/amiga.lib_rev.o : $(LIB_DIR)/amiga/amiga.lib_rev.c $(LIB_DIR)/amiga/amiga.lib_rev.h
+$(BUILD_DIR)/obj.shared/libamiga/amiga.lib_rev.o : $(LIB_DIR)/amiga/amiga.lib_rev.c $(LIB_DIR)/amiga/amiga.lib_rev.h
+
+obj/libamiga/%.o : CFLAGS += $(LARGEDATA)
+
+$(BUILD_DIR)/obj.shared/libamiga/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+
+$(BUILD_DIR)/obj/libamiga/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE)
+
+$(BUILD_DIR)/obj.shared/libamiga/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SHARED)
+
+$(BUILD_DIR)/lib/libamiga.a : $(addprefix $(BUILD_DIR)/obj/libamiga/,$(AMIGA_LIB))
+	$(VERBOSE)$(MAKELIB)
+
+$(BUILD_DIR)/lib/libamiga.so : $(addprefix $(BUILD_DIR)/obj.shared/libamiga/,$(AMIGA_LIB))
+	$(VERBOSE)$(MAKESHARED)

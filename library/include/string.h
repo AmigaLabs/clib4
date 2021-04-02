@@ -74,6 +74,10 @@ extern char *strstr(const char *src, const char *sub);
 extern char *strsep(char ** src, const char *delim);
 extern char *stpcpy(char *dest, const char *src);
 
+#ifdef _GNU_SOURCE
+extern char *strcasestr(const char *haystack, const char *needle);
+#endif
+
 /****************************************************************************/
 
 extern int strcoll(const char *s1, const char *s2);
@@ -83,6 +87,7 @@ extern size_t strxfrm(char *dest, const char *src, size_t len);
 
 extern void *memmove(void *dest, const void * src, size_t len);
 extern void *memchr(const void * ptr, int val, size_t len);
+extern void *memrchr(const void *s, int c, size_t n);
 
 /* This is ugly: GCC 2.95.x assumes that 'unsigned long' is used in the built-in
    memcmp/memcpy/memset functions instead of 'size_t'. This can produce warnings
@@ -110,12 +115,11 @@ extern void *memset(void *ptr, int val, size_t len);
 /****************************************************************************/
 
 extern int strerror_r(int error,char * buffer,size_t buffer_size);
-extern char * index(const char *s, int c);
-extern char * rindex(const char *s, int c);
 
 /****************************************************************************/
 
-extern char * strdup(const char *s);
+extern char *strdup(const char *s);
+extern char *strndup(const char *str, size_t max);
 
 #ifdef __MEM_DEBUG
 extern char * __strdup(const char *s,const char *file,int line);
@@ -139,6 +143,12 @@ extern size_t strlcat(char *dst, const char *src, size_t siz);
 extern char * strtok_r(char *str, const char *separator_set,char ** state_ptr);
 
 /****************************************************************************/
+#ifndef __STRICT_ANSI__
+extern void *memccpy(void *dst0, const void *src0, int endchar0, size_t len0);
+extern void *mempcpy(void *dst0, const void *src0, size_t len0);
+extern char *index(const char *s, int c);
+extern char *rindex(const char *s, int c);
+#endif
 
 #ifdef __cplusplus
 }

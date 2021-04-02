@@ -1,0 +1,87 @@
+/*
+ * $Id: search_tdelete.c,v 1.0 2021-02-21 19:38:14 apalmate Exp $
+ *
+ * :ts=4
+ *
+ * Portable ISO 'C' (1994) runtime library for the Amiga computer
+ * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   - Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *   - Neither the name of Olaf Barthel nor the names of contributors
+ *     may be used to endorse or promote products derived from this
+ *     software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************
+ *
+ * Documentation and source code for this library, and the most recent library
+ * build are available from <https://github.com/afxgroup/clib2>.
+ *
+ *****************************************************************************
+ */
+
+#define _SEARCH_PRIVATE
+#include <search.h>
+#include <string.h>
+#include <stdlib.h>
+
+/* delete node with given key */
+void *
+tdelete(const void *vkey, void **vrootp, int (*compar)(const void *, const void *))
+{
+    node_t **rootp = (node_t **)vrootp;
+    node_t *p, *q, *r;
+    int cmp;
+
+    if (rootp == NULL || (p = *rootp) == NULL)
+        return NULL;
+
+    while ((cmp = (*compar)(vkey, (*rootp)->key)) != 0)
+    {
+        p = *rootp;
+        rootp = (cmp < 0) ? &(*rootp)->llink : /* follow llink branch */
+                    &(*rootp)->rlink;          /* follow rlink branch */
+        if (*rootp == NULL)
+            return NULL; /* key not found */
+    }
+    r = (*rootp)->rlink;               /* D1: */
+    if ((q = (*rootp)->llink) == NULL) /* Left NULL? */
+        q = r;
+    else if (r != NULL)
+    { /* Right link is NULL? */
+        if (r->llink == NULL)
+        { /* D2: Find successor */
+            r->llink = q;
+            q = r;
+        }
+        else
+        { /* D3: Find NULL link */
+            for (q = r->llink; q->llink != NULL; q = r->llink)
+                r = q;
+            r->llink = q->rlink;
+            q->llink = (*rootp)->llink;
+            q->rlink = (*rootp)->rlink;
+        }
+    }
+    free(*rootp); /* D4: Free node */
+    *rootp = q;   /* link parent to new node */
+    return p;
+}
