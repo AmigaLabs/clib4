@@ -1,5 +1,5 @@
 /*
- * $Id: types.h,v 1.9 2006-01-08 12:06:14 obarthel Exp $
+ * $Id: iconv_open.c,v 1.0 2021-03-09 12:04:25 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,61 +29,67 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
- *****************************************************************************
- *
- * Documentation and source code for this library, and the most recent library
- * build are available from <https://github.com/afxgroup/clib2>.
- *
- *****************************************************************************
  */
 
-#ifndef _SYS_TYPES_H
-#define _SYS_TYPES_H
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
-#include <features.h>
+#include <iconv.h>
+#include <sys/iconvnls.h>
+#include "conv.h"
 
-#include <time.h>
-#include <stddef.h>
-#include <stdint.h>
+iconv_t
+iconv_open(const char *to, const char *from)
+{
+    iconv_conversion_t *ic;
 
-__BEGIN_DECLS
+    if (to == NULL || from == NULL || *to == '\0' || *from == '\0')
+    {
+        __set_errno(EINVAL);
+        return (iconv_t)-1;
+    }
 
-typedef char * caddr_t;
-typedef unsigned int comp_t;
-typedef unsigned long dev_t;
-typedef unsigned int gid_t;
-typedef unsigned int ino_t;
-typedef unsigned int mode_t;
-typedef unsigned int nlink_t;
-#ifdef __USE_LARGEFILE64
-typedef int64_t _off64_t;
-typedef int64_t _fpos64_t;
-typedef _off64_t off_t;
-#else
-typedef long int off_t;
-#endif
-typedef int pid_t;
-typedef unsigned int rlim_t;
-typedef int ssize_t;
-typedef unsigned int uid_t;
+    if ((to = (const char *)_iconv_resolve_encoding_name(to)) == NULL)
+    {
+        __set_errno(EINVAL);
+        return (iconv_t)-1;
+    }
 
-#ifndef _BSDTYPES_DEFINED
-typedef unsigned char   u_char;
-typedef unsigned short  u_short;
-typedef unsigned int    u_int;
-typedef unsigned long   u_long;
-#define _BSDTYPES_DEFINED
-#endif
+    if ((from = (const char *)_iconv_resolve_encoding_name(from)) == NULL)
+    {
+        free((void *)to);
+        __set_errno(EINVAL);
+        return (iconv_t)-1;
+    }
 
-typedef unsigned long useconds_t;
-typedef long suseconds_t;
+    ic = (iconv_conversion_t *)malloc(sizeof(iconv_conversion_t));
+    if (ic == NULL)
+        return (iconv_t)-1;
 
-typedef int32_t blksize_t;
+    /* Select which conversion type to use */
+    if (strcmp(from, to) == 0)
+    {
+        /* Use null conversion */
+        ic->handlers = &_iconv_null_conversion_handlers;
+        ic->data = ic->handlers->open(to, from);
+    }
+    else
+    {
+        /* Use UCS-based conversion */
+        ic->handlers = &_iconv_ucs_conversion_handlers;
+        ic->data = ic->handlers->open(to, from);
+    }
 
-/* Iconv descriptor type */
-typedef void *_iconv_t;
+    free((void *)to);
+    free((void *)from);
 
-__END_DECLS
+    if (ic->data == NULL)
+    {
+        free((void *)ic);
+        __set_errno(EINVAL);
+        return (iconv_t)-1;
+    }
 
-#endif /* _SYS_TYPES_H */
+    return (void *)ic;
+}

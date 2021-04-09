@@ -1,7 +1,7 @@
 SRC = src
 
 all:
-	ppc-amigaos-gcc -mcrt=clib2 -O0 -g src/align.c src/byte.c src/measure.c src/half.c src/word.c src/double.c src/alloc.c src/print.c -Wall -o memaligntest
+	ppc-amigaos-gcc -mcrt=clib2 -O3 -gstabs src/align.c src/byte.c src/measure.c src/half.c src/word.c src/double.c src/alloc.c src/print.c -Wall -o memaligntest
 
 clean:
 	rm -fr memaligntest

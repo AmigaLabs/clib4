@@ -1,5 +1,5 @@
 /*
- * $Id: types.h,v 1.9 2006-01-08 12:06:14 obarthel Exp $
+ * $Id: iconv_close.c,v 1.0 2021-03-09 12:04:25 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,61 +29,32 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
- *****************************************************************************
- *
- * Documentation and source code for this library, and the most recent library
- * build are available from <https://github.com/afxgroup/clib2>.
- *
- *****************************************************************************
  */
 
-#ifndef _SYS_TYPES_H
-#define _SYS_TYPES_H
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
-#include <features.h>
+#include <iconv.h>
+#include <sys/iconvnls.h>
+#include "conv.h"
+#include "local.h"
 
-#include <time.h>
-#include <stddef.h>
-#include <stdint.h>
+int 
+iconv_close(iconv_t cd)
+{
+    int res;
+    iconv_conversion_t *ic = (iconv_conversion_t *)cd;
 
-__BEGIN_DECLS
+    if ((void *)cd == NULL || cd == (iconv_t)-1 || ic->data == NULL || (ic->handlers != &_iconv_null_conversion_handlers && ic->handlers != &_iconv_ucs_conversion_handlers))
+    {
+        __set_errno(EBADF);
+        return -1;
+    }
 
-typedef char * caddr_t;
-typedef unsigned int comp_t;
-typedef unsigned long dev_t;
-typedef unsigned int gid_t;
-typedef unsigned int ino_t;
-typedef unsigned int mode_t;
-typedef unsigned int nlink_t;
-#ifdef __USE_LARGEFILE64
-typedef int64_t _off64_t;
-typedef int64_t _fpos64_t;
-typedef _off64_t off_t;
-#else
-typedef long int off_t;
-#endif
-typedef int pid_t;
-typedef unsigned int rlim_t;
-typedef int ssize_t;
-typedef unsigned int uid_t;
+    res = (int)ic->handlers->close(ic->data);
 
-#ifndef _BSDTYPES_DEFINED
-typedef unsigned char   u_char;
-typedef unsigned short  u_short;
-typedef unsigned int    u_int;
-typedef unsigned long   u_long;
-#define _BSDTYPES_DEFINED
-#endif
+    free((void *)cd);
 
-typedef unsigned long useconds_t;
-typedef long suseconds_t;
-
-typedef int32_t blksize_t;
-
-/* Iconv descriptor type */
-typedef void *_iconv_t;
-
-__END_DECLS
-
-#endif /* _SYS_TYPES_H */
+    return res;
+}
