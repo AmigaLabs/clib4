@@ -69,13 +69,10 @@ remove(const char *filename)
 	}
 	#endif /* CHECK_FOR_NULL_POINTERS */
 
-	#if defined(UNIX_PATH_SEMANTICS)
-	{
-		if (__global_clib2->__unix_path_semantics) {
-			result = unlink(filename);
-		}
+	if (__global_clib2->__unix_path_semantics) {
+		result = unlink(filename);
 	}
-	#else
+	else
 	{
 		LONG status;
 
@@ -93,7 +90,6 @@ remove(const char *filename)
 
 		result = OK;
 	}
-	#endif /* UNIX_PATH_SEMANTICS */
 
  out:
 

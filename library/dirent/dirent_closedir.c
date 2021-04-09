@@ -168,7 +168,6 @@ int closedir(DIR *directory_pointer)
 
 	Remove((struct Node *)dh);
 
-#if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
 	{
 		struct Node *node;
@@ -176,7 +175,6 @@ int closedir(DIR *directory_pointer)
 		while ((node = RemHead((struct List *)&dh->dh_VolumeList)) != NULL)
 			free(node);
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	PROFILE_OFF();
 	if (dh->dh_Context != NULL) {

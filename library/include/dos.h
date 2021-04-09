@@ -596,13 +596,16 @@ struct _clib2
   	char emergency[250];
 
 	/* CPU Family to enable optimized functions */
-	uint32 cpufamily;	  
+	uint32 cpufamily;
+
+	/* Memalign memory list */
+	struct MinList aligned_blocks;
 };
 
 extern struct _clib2 *__global_clib2;
 
-extern struct _clib2 *InitGlobal(void);
-extern void FiniGlobal(void);
+extern void enableUnixPaths(void);
+extern void disableUnixPaths(void);
 
 __END_DECLS
 

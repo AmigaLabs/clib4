@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_access.c,v 1.9 2021-01-31 12:04:27 apalmate Exp $
+ * $Id: unistd_access.c,v 1.10 2021-03-07 12:04:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,27 +31,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int access(const char *path_name, int mode)
+int 
+access(const char *path_name, int mode)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	int result = ERROR;
 	BPTR lock = ZERO;
 	struct ExamineData *status = NULL;
@@ -66,17 +53,13 @@ int access(const char *path_name, int mode)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
+	if (path_name == NULL)
 	{
-		if (path_name == NULL)
-		{
-			SHOWMSG("invalid path name");
+		SHOWMSG("invalid path name");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
+		__set_errno(EFAULT);
+		goto out;
 	}
-#endif /* CHECK_FOR_NULL_POINTERS */
 
 	if (mode < 0 || mode > (R_OK | W_OK | X_OK | F_OK))
 	{
@@ -86,7 +69,6 @@ int access(const char *path_name, int mode)
 		goto out;
 	}
 
-#if defined(UNIX_PATH_SEMANTICS)
 	STRPTR actual_path_name = NULL;
 
 	if (__global_clib2->__unix_path_semantics)
@@ -119,7 +101,7 @@ int access(const char *path_name, int mode)
 			}
 		}
 	}
-#else
+	else
 	{
 		D(("trying to get a lock on '%s'", path_name));
 
@@ -133,12 +115,10 @@ int access(const char *path_name, int mode)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	if ((mode != F_OK) && (mode & (R_OK | W_OK | X_OK)) != 0)
 	{
-#if defined(UNIX_PATH_SEMANTICS)
-		if (__global_clib2->__unix_path_semantics)	
+		if (__global_clib2->__unix_path_semantics)
 		{
 			if (lock == ZERO)
 			{
@@ -167,7 +147,7 @@ int access(const char *path_name, int mode)
 				}
 			}
 		}
-#else
+		else
 		{
 			PROFILE_OFF();
 			status = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
@@ -181,7 +161,6 @@ int access(const char *path_name, int mode)
 				goto out;
 			}
 		}
-#endif /* UNIX_PATH_SEMANTICS */
 
 		if (FLAG_IS_SET(mode, R_OK))
 		{
@@ -224,7 +203,9 @@ int access(const char *path_name, int mode)
 	result = OK;
 
 out:
-	if (status != NULL) {
+
+	if (NULL != status)
+	{
 		FreeDosObject(DOS_EXAMINEDATA, status);
 		status = NULL;
 	}

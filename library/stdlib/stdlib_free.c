@@ -546,9 +546,10 @@ VOID __free_memory(void *ptr, BOOL force, const char *file, int line)
 
 	/* Check if we have something created by memalign */
 	BOOL found = FALSE;
-	if (_aligned_blocks != NULL) {
-		struct alignlist *l;
-		for (l = _aligned_blocks; l != NULL; l = l->next) {
+	struct alignlist *l = NULL;
+	if (__global_clib2 != NULL && !IsMinListEmpty(&__global_clib2->aligned_blocks)) {
+		for (l = (struct alignlist *) GetHead((struct List *)&__global_clib2->aligned_blocks); l; l = (struct alignlist *) GetSucc((struct Node *) l))
+        {
 			/* If we found it */
 			if (l->aligned == ptr)
 			{
