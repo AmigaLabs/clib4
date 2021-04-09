@@ -114,7 +114,6 @@ int unlink(const char *path_name)
 
 	if (status == DOSFALSE)
 	{
-#if defined(UNIX_PATH_SEMANTICS)
 		if (__global_clib2->__unix_path_semantics)
 		{
 			struct UnlinkNode *uln = NULL;
@@ -186,12 +185,11 @@ int unlink(const char *path_name)
 				goto out;
 			}
 		}
-#else
+		else
 		{
 			__set_errno(__translate_io_error_to_errno(IoErr()));
 			goto out;
 		}
-#endif /* UNIX_PATH_SEMANTICS */
 	}
 
 	result = OK;

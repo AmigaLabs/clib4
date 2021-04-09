@@ -63,6 +63,12 @@ Complex numbers has been added to libm (thanks to sodero port) and i've added a 
 A lot of other functions has been added trying to make OS4 ports easier.
 
 
+### Unix support
+
+`libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default unix support it is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.
+You can also disable it at runtime using **disableUnixPaths()**. However is not reccomanded to enable and disable it at runtime because you can have problems with internal structures.
+
+
 ### Wctype
 
 All **wctype** functions should be working correctly now. We need a valid test suite
@@ -72,6 +78,9 @@ All **wctype** functions should be working correctly now. We need a valid test s
 
 Some **wchar** functions are now implemented. There are no valid tests except little few so use at your own risk..
 
+### TODO
+
+There is a memory leak at clib2 end needs to be tracked down
 
 ## Legal status
 

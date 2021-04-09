@@ -50,9 +50,9 @@
 /****************************************************************************/
 
 __static void *
-__realloc(void *ptr,size_t size,const char * file,int line)
+__realloc(void *ptr, size_t size, const char *file, int line)
 {
-	void * result = NULL;
+	void *result = NULL;
 	BOOL locked = FALSE;
 
 	ENTER();
@@ -60,29 +60,27 @@ __realloc(void *ptr,size_t size,const char * file,int line)
 	SHOWPOINTER(ptr);
 	SHOWVALUE(size);
 
-	assert( (int)size >= 0 );
+	assert((int)size >= 0);
 
-	if(ptr == NULL)
+	if (ptr == NULL)
 	{
-		D(("calling malloc(%ld)",size));
+		D(("calling malloc(%ld)", size));
 
-		result = __malloc(size,file,line);
+		result = __malloc(size, file, line);
 	}
-#ifndef UNIX_PATH_SEMANTICS
 	else if (__global_clib2->__unix_path_semantics && size == 0)
 	{
-		D(("calling free(0x%08lx)",ptr));
+		D(("calling free(0x%08lx)", ptr));
 
-		__free(ptr,file,line);
+		__free(ptr, file, line);
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 	else
 	{
 		size_t old_size;
-		struct MemoryNode * mn;
+		struct MemoryNode *mn;
 		BOOL reallocate;
 
-		assert( ptr != NULL );
+		assert(ptr != NULL);
 
 		__memory_lock();
 		locked = TRUE;
@@ -90,28 +88,28 @@ __realloc(void *ptr,size_t size,const char * file,int line)
 		/* Try to find the allocation in the list. */
 		mn = __find_memory_node(ptr);
 
-		#ifdef __MEM_DEBUG
+#ifdef __MEM_DEBUG
 		{
 			/* If we managed to find the memory allocation,
 			   reallocate it. */
-			if(mn == NULL)
+			if (mn == NULL)
 			{
 				SHOWMSG("allocation not found");
 
-				kprintf("[%s] %s:%ld:Address for realloc(0x%08lx,%ld) not known.\n",__program_name,file,line,ptr,size);
+				kprintf("[%s] %s:%ld:Address for realloc(0x%08lx,%ld) not known.\n", __program_name, file, line, ptr, size);
 
 				/* Apparently, the address did not qualify for
 				   reallocation. */
 				goto out;
 			}
 		}
-		#else
+#else
 		{
-			assert( mn != NULL );
+			assert(mn != NULL);
 		}
-		#endif /* __MEM_DEBUG */
+#endif /* __MEM_DEBUG */
 
-		if(mn == NULL || FLAG_IS_SET(mn->mn_Size, MN_SIZE_NEVERFREE))
+		if (mn == NULL || FLAG_IS_SET(mn->mn_Size, MN_SIZE_NEVERFREE))
 		{
 			SHOWMSG("cannot free this chunk");
 			goto out;
@@ -119,15 +117,15 @@ __realloc(void *ptr,size_t size,const char * file,int line)
 
 		old_size = GET_MN_SIZE(mn);
 
-		/* Don't do anything unless the size of the allocation
+/* Don't do anything unless the size of the allocation
 		   has really changed. */
-		#if defined(__MEM_DEBUG)
+#if defined(__MEM_DEBUG)
 		{
 			reallocate = (old_size != size);
 		}
-		#else
+#else
 		{
-			if(size > old_size)
+			if (size > old_size)
 			{
 				/* Allocation size should grow. */
 				reallocate = TRUE;
@@ -143,64 +141,64 @@ __realloc(void *ptr,size_t size,const char * file,int line)
 				reallocate = (size < old_size && size <= old_size / 2);
 			}
 		}
-		#endif /* __MEM_DEBUG */
+#endif /* __MEM_DEBUG */
 
-		if(reallocate)
+		if (reallocate)
 		{
-			void * new_ptr;
+			void *new_ptr;
 
-			D(("realloc() size has changed; old=%ld, new=%ld",old_size,size));
+			D(("realloc() size has changed; old=%ld, new=%ld", old_size, size));
 
 			/* We allocate the new memory chunk before we
 			   attempt to replace the old. */
-			new_ptr = __malloc(size,file,line);
-			if(new_ptr == NULL)
+			new_ptr = __malloc(size, file, line);
+			if (new_ptr == NULL)
 			{
 				SHOWMSG("could not reallocate memory");
 				goto out;
 			}
 
 			/* Copy the contents of the old allocation to the new buffer. */
-			if(size > old_size)
+			if (size > old_size)
 				size = old_size;
 
-			memmove(new_ptr,ptr,size);
+			memmove(new_ptr, ptr, size);
 
 			/* Free the old allocation. Since we already know which memory
 			   node is associated with it, we don't call __free() here. */
-			__free_memory_node(mn,file,line);
+			__free_memory_node(mn, file, line);
 
 			result = new_ptr;
 		}
 		else
 		{
-			D(("size didn't actually change that much (%ld -> %ld); returning memory block as is.",old_size,size));
+			D(("size didn't actually change that much (%ld -> %ld); returning memory block as is.", old_size, size));
 
 			/* No change in size. */
 			result = ptr;
 		}
 	}
 
- out:
+out:
 
-	if(locked)
+	if (locked)
 		__memory_unlock();
 
-	if(result == NULL)
+	if (result == NULL)
 		SHOWMSG("ouch! realloc failed");
 
 	RETURN(result);
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
 void *
-realloc(void *ptr,size_t size)
+realloc(void *ptr, size_t size)
 {
-	void * result;
+	void *result;
 
-	result = __realloc(ptr,size,NULL,0);
+	result = __realloc(ptr, size, NULL, 0);
 
-	return(result);
+	return (result);
 }

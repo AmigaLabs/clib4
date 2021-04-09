@@ -51,18 +51,19 @@
 
 struct alignlist *_aligned_blocks = NULL;
 
-static inline BOOL isPowerOfTwo(size_t alignment) {
+static inline BOOL isPowerOfTwo(size_t alignment)
+{
     return (alignment != 0) && ((alignment & (alignment - 1)) == 0);
 }
 
-// TODO - FIX free()!!!!
 void *
 memalign(size_t alignment, size_t size)
 {
     void *result;
     unsigned long int adj;
 
-    if (!isPowerOfTwo(alignment)) {
+    if (!isPowerOfTwo(alignment))
+    {
         __set_errno(EINVAL);
         return NULL;
     }
@@ -74,28 +75,36 @@ memalign(size_t alignment, size_t size)
         return NULL;
 
     adj = (unsigned long int)((unsigned long int)((char *)result - (char *)NULL)) % alignment;
+    /* if block is not aligned, align it */
     if (adj != 0)
     {
-        struct alignlist *l;
-        for (l = _aligned_blocks; l != NULL; l = l->next) {
-            /* This slot is free.  Use it.  */
-            if (l->aligned == NULL) {
-                break;
+        struct alignlist *l = NULL;
+        /* if memalign list is not empty search for an empty slot */
+        if (!IsMinListEmpty(&__global_clib2->aligned_blocks)) {
+            for (l = (struct alignlist *) GetHead((struct List *)&__global_clib2->aligned_blocks); l; l = (struct alignlist *) GetSucc((struct Node *) l))
+            {
+                /* This slot is free.  Use it.  */
+                if (l->aligned == NULL)
+                {
+                    break;
+                }
             }
         }
+        
+        /* if we don't find any slot, create one */
         if (l == NULL)
         {
-            l = (struct alignlist *)malloc(sizeof(struct alignlist));
+            l = malloc(sizeof(struct alignlist));
             if (l == NULL)
             {
                 free(result);
                 return NULL;
             }
+            MinAddTail(&__global_clib2->aligned_blocks, l);
         }
+        /* Set alignlist node stuff */
         l->exact = result;
         result = l->aligned = (char *)result + alignment - adj;
-        l->next = _aligned_blocks;
-        _aligned_blocks = l;
     }
 
     return result;

@@ -75,18 +75,10 @@ ttyname_r(int file_descriptor,char *name,size_t buflen)
 		}
 	}
 
-	#if defined(UNIX_PATH_SEMANTICS)
-	{
-		if (__global_clib2->__unix_path_semantics)
-			tty_file_name = "/CONSOLE";
-		else
-			tty_file_name = "CONSOLE:";			
-	}
-	#else
-	{
-		tty_file_name = "CONSOLE:";
-	}
-	#endif /* UNIX_PATH_SEMANTICS */
+	if (__global_clib2->__unix_path_semantics)
+		tty_file_name = "/CONSOLE";
+	else
+		tty_file_name = "CONSOLE:";			
 
 	if(buflen < strlen(tty_file_name)+1) /* XXX Should this be _POSIX_PATH_MAX? */
 	{

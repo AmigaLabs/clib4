@@ -62,11 +62,16 @@
 
 /* These are used to initialize the shared objects linked to this binary,
    and for the dlopen(), dlclose() and dlsym() functions. */
-extern struct Library  NOCOMMON *__ElfBase;
+extern struct Library NOCOMMON *__ElfBase;
 extern struct ElfIFace NOCOMMON *__IElf;
 
-struct _clib2 * InitGlobal() {
-    /* Initialize global structure */
+struct _clib2 *InitGlobal(void);
+void FiniGlobal(void);
+
+struct _clib2 *
+InitGlobal()
+{
+	/* Initialize global structure */
 	__global_clib2 = (struct _clib2 *)AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
 	if (__global_clib2 == NULL)
 	{
@@ -74,13 +79,14 @@ struct _clib2 * InitGlobal() {
 	}
 	else
 	{
-        struct ElfIFace *IElf = __IElf;
+		struct ElfIFace *IElf = __IElf;
 
 		/* Initialize wchar stuff */
 		__global_clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
-		if (!__global_clib2->wide_status) {
-            FreeVec(__global_clib2);
-            __global_clib2 = NULL;
+		if (!__global_clib2->wide_status)
+		{
+			FreeVec(__global_clib2);
+			__global_clib2 = NULL;
 			goto out;
 		}
 		/* Set main Exec and IElf interface pointers */
@@ -106,7 +112,7 @@ struct _clib2 * InitGlobal() {
 		__global_clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
 		__global_clib2->wide_status->_l64a_buf[0] = '\0';
 		__global_clib2->wide_status->_getdate_err = 0;
-		
+
 		/* Get the current task pointer */
 		__global_clib2->self = (struct Process *)FindTask(0);
 
@@ -114,7 +120,10 @@ struct _clib2 * InitGlobal() {
 		srand(time(NULL));
 		__global_clib2->inc = 0;
 		memset(__global_clib2->emergency, 0, sizeof(__global_clib2->emergency));
-		
+
+		/* Init memalign list */
+		NewMinList(&__global_clib2->aligned_blocks);
+
 		/* Check is SYSV library is available in the system */
 		__global_clib2->haveShm = FALSE;
 		__SysVBase = OpenLibrary("sysvipc.library", 53);
@@ -137,14 +146,15 @@ struct _clib2 * InitGlobal() {
 		 */
 		__global_clib2->__unix_path_semantics = FALSE;
 		struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
-		if (exd != NULL) {
+		if (exd != NULL)
+		{
 			if (EXD_IS_FILE(exd))
 				__global_clib2->__unix_path_semantics = TRUE;
 			FreeDosObject(DOS_EXAMINEDATA, exd);
 		}
 
 		/* Choose which memcpy to use */
-		GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);		
+		GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);
 
 		/* 
 		 * Next: Get Elf handle associated with the currently running process. 
@@ -154,7 +164,7 @@ struct _clib2 * InitGlobal() {
 
 		if (__ElfBase != NULL)
 		{
-			BPTR segment_list = GetProcSegList(NULL,  GPSLF_RUN | GPSLF_SEG);
+			BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
 			if (segment_list != ZERO)
 			{
 				Elf32_Handle handle = NULL;
@@ -168,34 +178,49 @@ struct _clib2 * InitGlobal() {
 				}
 			}
 		}
-    }
+	}
 out:
-    return __global_clib2;
+	return __global_clib2;
 }
 
-void FiniGlobal() {
-    struct ElfIFace *IElf = __IElf;
-   	
-    /* Free global clib structure */
+void 
+FiniGlobal()
+{
+	struct ElfIFace *IElf = __IElf;
+
+	/* Free global clib structure */
 	if (__global_clib2)
 	{
-        if (__ISysVIPC != NULL)
-        {
-            DropInterface((struct Interface *)__ISysVIPC);
-            __ISysVIPC = NULL;
-        }
+		/* Free memalign stuff */
+		if (!IsMinListEmpty(&__global_clib2->aligned_blocks))
+		{
+			struct Node *node;
 
-        if (__SysVBase != NULL)
-        {
-            CloseLibrary(__SysVBase);
-            __SysVBase = NULL;
-        }        
+			while ((node = RemHead((struct List *)&__global_clib2->aligned_blocks)) != NULL)
+			{
+				free(node);
+				node = NULL;
+			}
+		}
+
+		if (__ISysVIPC != NULL)
+		{
+			DropInterface((struct Interface *)__ISysVIPC);
+			__ISysVIPC = NULL;
+		}
+
+		if (__SysVBase != NULL)
+		{
+			CloseLibrary(__SysVBase);
+			__SysVBase = NULL;
+		}
 
 		/* Free wchar stuff */
-		if (__global_clib2->wide_status != NULL) {
+		if (__global_clib2->wide_status != NULL)
+		{
 			FreeVec(__global_clib2->wide_status);
-            __global_clib2->wide_status = NULL;
-        }
+			__global_clib2->wide_status = NULL;
+		}
 
 		/* Free dl stuff */
 		if (__global_clib2->__dl_elf_handle != NULL)
@@ -206,5 +231,23 @@ void FiniGlobal() {
 
 		FreeVec(__global_clib2);
 		__global_clib2 = NULL;
+	}
+}
+
+void 
+enableUnixPaths(void)
+{
+	if (__global_clib2 != NULL)
+	{
+		__global_clib2->__unix_path_semantics = TRUE;
+	}
+}
+
+void 
+disableUnixPaths(void)
+{
+	if (__global_clib2 != NULL)
+	{
+		__global_clib2->__unix_path_semantics = FALSE;
 	}
 }

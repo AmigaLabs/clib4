@@ -42,11 +42,20 @@ aligned_alloc(size_t align, size_t size)
 {
     /* align must be a power of 2 */
     /* size must be a multiple of align */
-    if ((align & (align - 1)) || (size & (align - 1)))
+    if ((align & -align) != align)
     {
-        errno = EINVAL;
+        __set_errno(EINVAL);
         return NULL;
     }
+
+    if (size > SIZE_MAX - align)
+    {
+        __set_errno(ENOMEM);
+        return NULL;
+    }
+
+    if (align <= SIZE_ALIGN)
+        return malloc(size);
 
     return memalign(align, size);
 }

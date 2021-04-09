@@ -435,7 +435,6 @@ int64_t __fd_hook_entry(
 			{
 				fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
-#if defined(UNIX_PATH_SEMANTICS)
 				if (__global_clib2->__unix_path_semantics)
 				{
 					/* Check if this operation failed because the file is shorter than
@@ -456,11 +455,10 @@ int64_t __fd_hook_entry(
 					fam->fam_Error = OK;
 					FreeDosObject(DOS_EXAMINEDATA, exd);
 				}
-#else
+				else
 				{
 					goto out;
 				}
-#endif /* UNIX_PATH_SEMANTICS */
 			}
 			else {
 				new_position = GetFilePosition(file);

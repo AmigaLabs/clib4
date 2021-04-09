@@ -72,6 +72,8 @@ static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), al
 static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
 
 extern int main(int arg_c, char **arg_v);
+extern struct _clib2 *InitGlobal(void);
+extern void FiniGlobal(void);
 
 /****************************************************************************/
 

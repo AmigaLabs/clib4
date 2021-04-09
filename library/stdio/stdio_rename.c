@@ -109,7 +109,6 @@ int rename(const char *oldname, const char *newname)
 	{
 		SHOWMSG("that didn't work");
 
-#if defined(UNIX_PATH_SEMANTICS)
 		if (__global_clib2->__unix_path_semantics)
 		{
 			LONG error;
@@ -143,12 +142,11 @@ int rename(const char *oldname, const char *newname)
 				goto out;
 			}
 		}
-#else
+		else
 		{
 			__set_errno(__translate_io_error_to_errno(IoErr()));
 			goto out;
 		}
-#endif /* UNIX_PATH_SEMANTICS */
 	}
 
 	result = OK;

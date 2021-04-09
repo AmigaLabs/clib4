@@ -45,12 +45,25 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <exec/lists.h>
+#include <exec/nodes.h>
 
+#define MinAddHead(list, node)  AddHead((struct List *)(list), (struct Node *)(node))
+#define MinAddTail(list, node)  AddTail((struct List *)(list), (struct Node *)(node))
+#define MinInsert(list, node, listnode) Insert((struct List *)list, (struct Node *)node, (struct Node *)listnode)
+#define MinRemove(node) Remove((struct Node *)node)
+#define HeadOf(list) ((void *)((list)->mlh_Head))
+#define IsHead(node) (!((node)->prev->prev))
+#define IsTail(node) (!((node)->next->next))
+
+#define SIZE_ALIGN (4*sizeof(size_t))
+#define SIZE_MASK (-SIZE_ALIGN)
+ 
 struct alignlist
 {
-   struct alignlist *next;
-   void *aligned;  /* The address that mmemaligned returned.  */
-   void *exact;    /* The address that malloc returned.  */
+   struct MinNode	next;
+   void *aligned;          /* The address that mmemaligned returned.  */
+   void *exact;            /* The address that malloc returned.  */
 };
 
 __BEGIN_DECLS
