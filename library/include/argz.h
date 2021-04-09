@@ -40,22 +40,16 @@
 #ifndef _ARGZ_H
 #define _ARGZ_H
 
+#include <features.h>
 #include <sys/types.h>
 
-/****************************************************************************/
+__BEGIN_DECLS
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
 
-/****************************************************************************/
 #ifndef __error_t_defined
 #define __error_t_defined 1
     typedef int error_t;
 #endif
-
-/****************************************************************************/
 
 extern error_t argz_create(char *const argv[], char **argz, size_t *argz_len);
 extern error_t argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len);
@@ -70,12 +64,6 @@ extern error_t argz_insert(char **argz, size_t *argz_len, char *before, const ch
 extern char *argz_next(char *argz, size_t argz_len, const char *entry);
 extern error_t argz_replace(char **argz, size_t *argz_len, const char *str, const char *with, unsigned *replace_count);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif // _ARGZ_H

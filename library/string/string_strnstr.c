@@ -1,5 +1,5 @@
 /*
- * $Id: types.h,v 1.9 2006-01-08 12:06:14 obarthel Exp $
+ * $Id: string_strnstr.c,v 1.0 2021-03-09 12:04:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,61 +29,40 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
- *****************************************************************************
- *
- * Documentation and source code for this library, and the most recent library
- * build are available from <https://github.com/afxgroup/clib2>.
- *
- *****************************************************************************
  */
 
-#ifndef _SYS_TYPES_H
-#define _SYS_TYPES_H
+#ifndef _STDLIB_NULL_POINTER_CHECK_H
+#include "stdlib_null_pointer_check.h"
+#endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-#include <features.h>
+/****************************************************************************/
 
-#include <time.h>
-#include <stddef.h>
-#include <stdint.h>
+#ifndef _STRING_HEADERS_H
+#include "string_headers.h"
+#endif /* _STRING_HEADERS_H */
 
-__BEGIN_DECLS
+/****************************************************************************/
 
-typedef char * caddr_t;
-typedef unsigned int comp_t;
-typedef unsigned long dev_t;
-typedef unsigned int gid_t;
-typedef unsigned int ino_t;
-typedef unsigned int mode_t;
-typedef unsigned int nlink_t;
-#ifdef __USE_LARGEFILE64
-typedef int64_t _off64_t;
-typedef int64_t _fpos64_t;
-typedef _off64_t off_t;
-#else
-typedef long int off_t;
-#endif
-typedef int pid_t;
-typedef unsigned int rlim_t;
-typedef int ssize_t;
-typedef unsigned int uid_t;
+char *
+strnstr(const char *src, const char *sub, size_t len)
+{
+	const char *max = src + len;
 
-#ifndef _BSDTYPES_DEFINED
-typedef unsigned char   u_char;
-typedef unsigned short  u_short;
-typedef unsigned int    u_int;
-typedef unsigned long   u_long;
-#define _BSDTYPES_DEFINED
-#endif
+	if (*src == '\0')
+		return *sub == '\0' ? (char *)src : (char *)NULL;
 
-typedef unsigned long useconds_t;
-typedef long suseconds_t;
-
-typedef int32_t blksize_t;
-
-/* Iconv descriptor type */
-typedef void *_iconv_t;
-
-__END_DECLS
-
-#endif /* _SYS_TYPES_H */
+	while (src < max)
+	{
+		int i = 0;
+		while (1)
+		{
+			if (sub[i] == '\0')
+				return (char *)src;
+			if (sub[i] != src[i])
+				break;
+			i += 1;
+		}
+		src += 1;
+	}
+	return (char *)NULL;
+}
