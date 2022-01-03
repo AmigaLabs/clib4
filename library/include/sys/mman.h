@@ -34,6 +34,8 @@
 #ifndef _SYS_MMAN_H
 #define _SYS_MMAN_H
 
+#include <sys/types.h> // off_t
+
 /* Return value of `mmap' in case of an error.  */
 #define MAP_FAILED      ((void *) -1)
 

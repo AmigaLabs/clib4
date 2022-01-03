@@ -33,7 +33,11 @@
 
 #define __NOLIBBASE__
 
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
 #ifndef PROTO_SYSVIPC_H
+#define _TIMESPEC_DEFINED
 #include <proto/sysvipc.h>
 #endif /* PROTO_SYSVIPC_H */
 

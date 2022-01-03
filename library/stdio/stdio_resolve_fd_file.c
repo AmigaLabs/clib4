@@ -70,17 +70,7 @@ __resolve_fd_file(struct fd *fd)
 
 		case STDERR_FILENO:
 
-#if defined(__amigaos4__)
-		{
 			file = ErrorOutput();
-		}
-#else
-		{
-			struct Process *this_process = (struct Process *)FindTask(NULL);
-
-			file = this_process->pr_CES;
-		}
-#endif /* __amigaos4__ */
 
 			/* The following is rather controversial; if the standard error stream
 				   is unavailable, we default to reuse the standard output stream. This
