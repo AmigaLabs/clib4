@@ -140,6 +140,11 @@ call_main(void)
 	if (setjmp(__exit_jmp_buf) != 0)
 		goto out;
 
+	SHOWMSG("now invoking the constructors");
+
+	/* Go through the constructor list */
+	_init();
+
 	/* This can be helpful for debugging purposes: print the name of the current
 	   directory, followed by the name of the command and all the parameters
 	   passed to it. */
@@ -222,7 +227,7 @@ out:
 	SHOWMSG("invoking the destructors");
 
 	/* Go through the destructor list */
-	_clib_exit();
+	_fini();
 
 	SHOWMSG("done.");
 
@@ -280,7 +285,7 @@ detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
 {
 	struct ElfIFace *IElf = __IElf;
 
-	_clib_exit();
+	_fini();
 
 	FiniGlobal();
 
@@ -320,20 +325,28 @@ _main(void)
 	int num_ctors = 0, k;
 	static int j = 0;
 
+	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
+
+	/* Try to open the libraries we need to proceed. */
+	if (CANNOT open_libraries(IExec))
+	{
+		const char *error_message;
+
+		/* If available, use the error message provided by the client. */
+		error_message = __minimum_os_lib_error;
+
+		if (error_message == NULL)
+			error_message = "This program requires AmigaOS 4.1 or higher.";
+
+		__show_error(error_message);
+		goto out;
+	}
+
 	__global_clib2 = InitGlobal();
 	if (__global_clib2 == NULL)
 		goto out;
 
 	SHOWMSG("InitGlobal done.");
-
-	/* Calling LibC constructors */
-	for (k = 1, num_ctors = 0; __CTOR_LIST__[k] != NULL; k++)
-		num_ctors++;
-
-	for (j = 0; j < num_ctors; j++)
-	{
-		__CTOR_LIST__[num_ctors - j]();
-	}
 
 	/* Set system time for rusage */
 	struct TimerIFace *ITimer = __ITimer;
@@ -504,12 +517,6 @@ _main(void)
 
 out:
 
-	/* Free global reent structure */
-	FiniGlobal();
-
-	/* Go through the destructor list */
-	_clib_exit();
-
 	if (old_window_pointer_valid)
 		__set_process_window(old_window_pointer);
 
@@ -523,27 +530,5 @@ out:
 		ReplyMsg((struct Message *)startup_message);
 	}
 
-	SHOWMSG("invoking the destructors");
-
-	SHOWMSG("done.");
-
 	return (return_code);
-}
-
-void 
-_clib_exit(void)
-{
-	extern void shared_obj_exit(void);
-	int num_dtors, i;
-	static int j = 0;
-
-	for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
-		num_dtors++;
-
-	while (j++ < num_dtors) {
-		__DTOR_LIST__[j]();
-	}
-
-	/* The shared objects need to be cleaned up after all local destructors have been invoked. */
-	shared_obj_exit();
 }

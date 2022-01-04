@@ -159,8 +159,8 @@ extern void __red_black_tree_remove(struct MemoryTree *tree, struct MemoryNode *
 
 /* stdlib_main.c */
 extern int _main(void);
-extern int _start(char *args, int arglen, struct ExecBase *sysbase);
-extern void _clib_exit(void);
+extern int _start(char *args, int arglen, struct ExecBase *sysBase);
+extern void _fini(void);
 
 /****************************************************************************/
 

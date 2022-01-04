@@ -83,7 +83,7 @@ DEBUG      := -ggdb
 CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DUNIX_PATH_SEMANTICS
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
-VERBOSE   := @
+VERBOSE    := 
 
 ##############################################################################
 
@@ -104,6 +104,7 @@ include libamiga.gmk
 include libprofile.gmk
 
 all-targets: \
+	$(BUILD_DIR)/lib/crt0.o \
 	$(BUILD_DIR)/lib/crtbegin.o \
 	$(BUILD_DIR)/lib/crtend.o \
 	$(BUILD_DIR)/lib/shcrtbegin.o \
@@ -144,7 +145,11 @@ $(BUILD_DIR)/lib/%.o : %.S
 $(BUILD_DIR)/lib/%.o : CFLAGS += $(LARGEDATA)
 $(BUILD_DIR)/lib/%.o : %.c
 	$(VERBOSE)$(COMPILE)
-	
+
+$(BUILD_DIR)/lib/crt0.o : 
+$(BUILD_DIR)/lib/crt0.o : $(LIB_DIR)/crt0.S
+	$(VERBOSE)$(ASSEMBLE)
+
 $(BUILD_DIR)/lib/crtbegin.o : CFLAGS += -fno-aggressive-loop-optimizations
 $(BUILD_DIR)/lib/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
