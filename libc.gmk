@@ -658,10 +658,8 @@ C_STDLIB := \
 	stdlib/stdlib_bsearch.o \
 	stdlib/stdlib_calloc.o \
 	stdlib/stdlib_checkdetach.o \
-	stdlib/stdlib_constructor.o \
 	stdlib/stdlib_default_pool_size.o \
 	stdlib/stdlib_default_puddle_size.o \
-	stdlib/stdlib_destructor.o \
 	stdlib/stdlib_detach.o \
 	stdlib/stdlib_disablerequesters.o \
 	stdlib/stdlib_div.o \
@@ -998,6 +996,7 @@ C_WCHAR := \
 	wchar/wchar_swscanf.o \
 	wchar/wchar_ungetwc.o \
 	wchar/wchar_vfwprintf.o \
+	wchar/wchar_vfwscanf.o \
 	wchar/wchar_vswprintf.o \
 	wchar/wchar_vwprintf.o \
 	wchar/wchar_wcrtomb.o \
@@ -1020,6 +1019,7 @@ C_WCHAR := \
 	wchar/wchar_wcsspn.o \
 	wchar/wchar_wcsstr.o \
 	wchar/wchar_wcstod.o \
+	wchar/wchar_wcstof.o \
 	wchar/wchar_wcstold.o \
 	wchar/wchar_wcstok.o \
 	wchar/wchar_wcstol.o \
@@ -1107,4 +1107,7 @@ $(BUILD_DIR)/lib/libc.a : $(addprefix $(BUILD_DIR)/obj/libc/,$(C_LIB))
 	$(VERBOSE)@$(MAKELIB)
 
 $(BUILD_DIR)/lib/libc.so : $(addprefix $(BUILD_DIR)/obj.shared/libc/,$(C_LIB))
-	$(VERBOSE)@$(MAKESHARED)
+	@$(MAKEDIR) $(@D)
+	@$(DELETE) $@
+	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
+	$(VERBOSE)$(CC) -nostdlib -fPIC -mcrt=clib2 -shared -o $@ $(BUILD_DIR)/lib/shcrtbegin.o $(BUILD_DIR)/lib/shcrtend.o $^ $(LOG_COMMAND)

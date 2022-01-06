@@ -54,19 +54,18 @@
 /****************************************************************************/
 
 /* The file handle table. */
-struct iob **	NOCOMMON __iob;
-int				NOCOMMON __num_iob;
+struct iob **NOCOMMON __iob;
+int NOCOMMON __num_iob;
 
 /****************************************************************************/
 
 /* The file descriptor table. */
-struct fd **	NOCOMMON __fd;
-int				NOCOMMON __num_fd;
+struct fd **NOCOMMON __fd;
+int NOCOMMON __num_fd;
 
 /****************************************************************************/
 
-void
-__close_all_files(void)
+void __close_all_files(void)
 {
 	int i;
 
@@ -74,22 +73,22 @@ __close_all_files(void)
 
 	__stdio_lock();
 
-	if(__num_iob > 0)
+	if (__num_iob > 0)
 	{
-		for(i = 0 ; i < __num_iob ; i++)
+		for (i = 0; i < __num_iob; i++)
 		{
-			if(FLAG_IS_SET(__iob[i]->iob_Flags,IOBF_IN_USE))
+			if (FLAG_IS_SET(__iob[i]->iob_Flags, IOBF_IN_USE))
 				fclose((FILE *)__iob[i]);
 		}
 
 		__num_iob = 0;
 	}
 
-	if(__num_fd > 0)
+	if (__num_fd > 0)
 	{
-		for(i = 0 ; i < __num_fd ; i++)
+		for (i = 0; i < __num_fd; i++)
 		{
-			if(FLAG_IS_SET(__fd[i]->fd_Flags,FDF_IN_USE))
+			if (FLAG_IS_SET(__fd[i]->fd_Flags, FDF_IN_USE))
 				close(i);
 		}
 
@@ -122,23 +121,23 @@ STDIO_CONSTRUCTOR(stdio_init)
 
 	ENTER();
 
-	if(__stdio_lock_init() < 0)
+	if (__stdio_lock_init() < 0)
 		goto out;
 
-	if(__grow_iob_table(num_standard_files) < 0)
+	if (__grow_iob_table(num_standard_files) < 0)
 		goto out;
 
-	if(__grow_fd_table(num_standard_files) < 0)
+	if (__grow_fd_table(num_standard_files) < 0)
 		goto out;
 
 	success = TRUE;
 
- out:
+out:
 
 	SHOWVALUE(success);
 	LEAVE();
 
-	if(success)
+	if (success)
 		CONSTRUCTOR_SUCCEED();
 	else
 		CONSTRUCTOR_FAIL();

@@ -91,7 +91,7 @@ ilseq:
 	return -1;
 #else
 	int retval = 0;
-	mbstate_t *ps = &__global_clib2->wide_status->_mbrtowc_state;
+	mbstate_t *ps = &__global_clib2->wide_status->_mbtowc_state;
 
 	retval = _mbtowc(wc, src, n, ps);
 

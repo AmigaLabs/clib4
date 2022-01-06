@@ -35,49 +35,6 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
-#include <libraries/elf.h>
-#include <proto/elf.h>
-
-/****************************************************************************/
-
-/* These are used to initialize the shared objects linked to this binary,
-   and for the dlopen(), dlclose() and dlsym() functions. */
-struct Library  NOCOMMON *__ElfBase;
-struct ElfIFace NOCOMMON *__IElf;
-
-/****************************************************************************/
-
 void shared_obj_init(void);
 void shared_obj_exit(void);
 
-static void SHLibsInit(BOOL init) {
-	struct ElfIFace *IElf = __IElf;
-
-	Elf32_Handle hSelf = (Elf32_Handle)NULL;
-	BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
-	if (segment_list != ZERO)
-	{
-		int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
-		if (ret == 1)
-		{
-			if (hSelf != NULL)
-			{
-				/* Trigger the constructors, etc. in the shared objects linked to this binary. */
-				InitSHLibs(hSelf, init);
-			}
-		}
-	}
-}
-
-void shared_obj_exit(void)
-{
-	/* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
-	SHLibsInit(FALSE);
-}
-
-void shared_obj_init()
-{
-	SHLibsInit(TRUE);
-}

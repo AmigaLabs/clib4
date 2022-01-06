@@ -224,6 +224,7 @@ extern int setuid(uid_t uid);
 #define	_PC_DOSTYPE					300
 
 #define _POSIX_THREADS              1
+#define _POSIX_MONOTONIC_CLOCK      1
 
 /****************************************************************************/
 

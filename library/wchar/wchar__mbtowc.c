@@ -46,9 +46,8 @@ _mbtowc(wchar_t *pwc, const char *s, size_t n, mbstate_t *state)
 
     if (s != NULL && n == 0)
         return -2;
-
-    if (__lc_ctype == NULL ||
-        (strlen(__lc_ctype) <= 1))
+    //printf("__lc_ctype = %s - s=%s - n=%d\n", __lc_ctype, s, n);
+    if (NULL == __lc_ctype || (strlen(__lc_ctype) <= 1))
     { /* fall-through */
     }
     else if (!strcmp(__lc_ctype, "C-UTF-8"))

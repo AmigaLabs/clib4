@@ -1,7 +1,3 @@
-/*
- * This file was automatically generated mkdeps.pl script. Don't edit.
- */
-
 #ifndef __CESDEPS_H__
 #define __CESDEPS_H__
 

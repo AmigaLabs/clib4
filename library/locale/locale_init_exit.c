@@ -193,7 +193,6 @@ CLIB_DESTRUCTOR(locale_exit)
 
 	__locale_exit();
 
-
 	__delete_semaphore(locale_lock);
 	locale_lock = NULL;
 

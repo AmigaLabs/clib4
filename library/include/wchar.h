@@ -115,6 +115,7 @@ extern int wcwidth(const wchar_t wc);
 extern double wcstod(const wchar_t *str, wchar_t **ptr);
 extern long wcstol(const wchar_t *str, wchar_t **ptr, int base);
 extern unsigned long wcstoul(const wchar_t *str, wchar_t **ptr, int base);
+extern float wcstof (const wchar_t *nptr, wchar_t **endptr);
 
 /****************************************************************************/
 
@@ -146,14 +147,13 @@ extern wchar_t *fgetws(wchar_t *s, int n, FILE *stream);
 
 /****************************************************************************/
 
-//#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)
 extern int fwscanf(FILE *stream, const wchar_t *format, ...);
 extern int swscanf(wchar_t *s, const wchar_t *format, ...);
-//vfwscanf
-//vswscanf
-//vwscanf
-extern int wscanf(const wchar_t *format, ...);
-//#endif
+extern int vfwscanf(FILE *f, const wchar_t *format, va_list ap); // NOT IMPLEMENTED
+extern int vswscanf(const wchar_t *s, const wchar_t *format, ...);  // NOT IMPLEMENTED
+extern int vwscanf(const wchar_t *s, ...);  // NOT IMPLEMENTED
+extern int wscanf(const wchar_t *format, ...); // NOT IMPLEMENTED
+
 /****************************************************************************/
 
 extern wint_t fputwc(wchar_t c, FILE *stream);
@@ -198,11 +198,9 @@ extern size_t wcscspn(const wchar_t *s, const wchar_t *c);
 extern size_t wcsnrtombs(char *restrict dst, const wchar_t **restrict src, size_t nwc, size_t len, mbstate_t *restrict ps);
 extern wchar_t *wcsrchr(const wchar_t *ws, wchar_t wc);
 extern size_t wcsrtombs(char *restrict dst, const wchar_t **restrict src, size_t len, mbstate_t *restrict ps);
-#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)
 extern long long wcstoll(const wchar_t *str, wchar_t **ptr, int base);
 extern unsigned long long wcstoull(const wchar_t *str, wchar_t **ptr, int base);
 extern long double wcstold(const wchar_t *nptr, wchar_t **endptr);
-#endif /* __STDC_VERSION__ && __STDC_VERSION__ >= 199901L */
 #endif
 
 extern int wctomb(char *s, wchar_t wchar);

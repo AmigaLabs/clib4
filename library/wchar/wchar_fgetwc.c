@@ -37,9 +37,61 @@
 
 /****************************************************************************/
 
-wint_t
-fgetwc(FILE *stream)
+static wint_t __fgetwc_unlocked_internal(FILE *f)
 {
-	/* ZZZ unimplemented */
-	return(0);
+	wchar_t wc;
+	int c;
+	size_t l;
+
+	/* Convert character from buffer if possible */
+	if (f->position != f->size) {
+		l = mbtowc(&wc, (void *)f->buffer, f->num_read_bytes);
+		if (l+1 >= 1) {
+			f->buffer += l + !l; /* l==0 means 1 byte, null */
+			return wc;
+		}
+	}
+
+	/* Convert character byte-by-byte */
+	mbstate_t st = { 0 };
+	unsigned char b;
+	int first = 1;
+	do {
+		b = c = getc_unlocked(f);
+		if (c < 0) {
+			if (!first) {
+				f->_flags |= __SERR;
+				errno = EILSEQ;
+			}
+			return WEOF;
+		}
+		l = mbrtowc(&wc, (void *)&b, 1, &st);
+		if (l == -1) {
+			if (!first) {
+				f->_flags |= __SERR;
+				ungetc(b, f);
+			}
+			return WEOF;
+		}
+		first = 0;
+	} while (l == -2);
+
+	return wc;
+}
+
+static wint_t __fgetwc_unlocked(FILE *f)
+{
+	if ((f->_flags2 & __SWID) <= 0) 
+		fwide(f, 1);
+	wchar_t wc = __fgetwc_unlocked_internal(f);
+	return wc;
+}
+
+wint_t fgetwc(FILE *f)
+{
+	wint_t c;
+	flockfile(f);
+	c = __fgetwc_unlocked(f);
+	funlockfile(f);
+	return c;
 }

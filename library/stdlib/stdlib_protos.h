@@ -125,6 +125,10 @@ extern void __stack_usage_exit(void);
 /* stdlib_exit.c */
 extern void _exit(int return_code);
 
+/* stdlib_constructor_begin.c */
+void _init(void);
+void _fini(void);
+
 /****************************************************************************/
 
 /* stdlib_arg.c */

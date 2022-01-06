@@ -62,8 +62,10 @@
 
 /* These are used to initialize the shared objects linked to this binary,
    and for the dlopen(), dlclose() and dlsym() functions. */
-extern struct Library NOCOMMON *__ElfBase;
-extern struct ElfIFace NOCOMMON *__IElf;
+extern struct Library  *__ElfBase;
+extern struct ElfIFace *__IElf;
+
+struct _clib2 NOCOMMON*__global_clib2;
 
 struct _clib2 *InitGlobal(void);
 void FiniGlobal(void);
@@ -156,8 +158,8 @@ InitGlobal()
 		/* Choose which memcpy to use */
 		GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);
 
-		/* 
-		 * Next: Get Elf handle associated with the currently running process. 
+		/*
+		 * Next: Get Elf handle associated with the currently running process.
 		 * ElfBase is opened in crtbegin.c that is called before the
 		 * call_main()
 		 */

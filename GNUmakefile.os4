@@ -74,16 +74,16 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/stat \
 				-I$(LIB_DIR)/mount
 
-OPTIONS    := -mcrt=clib2 -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common  -DUNIX_PATH_SEMANTICS -nostdlib
+OPTIONS    := -mcrt=clib2 -mstrict-align -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common  -DUNIX_PATH_SEMANTICS -nostdlib
 OPTIMIZE   := -DNDEBUG -O3 -fno-inline
 
-DEBUG      := -ggdb
+DEBUG      := -gstabs
 #MEMDEBUG  := -D__USE_MEM_TREES -D__MEM_DEBUG
 
 CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DUNIX_PATH_SEMANTICS
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
-VERBOSE    := 
+VERBOSE    := @
 
 ##############################################################################
 
@@ -146,25 +146,29 @@ $(BUILD_DIR)/lib/%.o : CFLAGS += $(LARGEDATA)
 $(BUILD_DIR)/lib/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/lib/crt0.o : 
 $(BUILD_DIR)/lib/crt0.o : $(LIB_DIR)/crt0.S
 	$(VERBOSE)$(ASSEMBLE)
+	$(COPY) $(BUILD_DIR)/lib/crt0.o $(INSTALL_PREFIX)/lib/
 
 $(BUILD_DIR)/lib/crtbegin.o : CFLAGS += -fno-aggressive-loop-optimizations
 $(BUILD_DIR)/lib/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
+	$(COPY) $(BUILD_DIR)/lib/crtbegin.o $(INSTALL_PREFIX)/lib/
 
 $(BUILD_DIR)/lib/crtend.o : CFLAGS += -fno-aggressive-loop-optimizations
 $(BUILD_DIR)/lib/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
+	$(COPY) $(BUILD_DIR)/lib/crtend.o $(INSTALL_PREFIX)/lib/
 
 $(BUILD_DIR)/lib/shcrtbegin.o : CFLAGS += $(PIC) -fno-aggressive-loop-optimizations
 $(BUILD_DIR)/lib/shcrtbegin.o : $(LIB_DIR)/shcrtbegin.c
 	$(VERBOSE)$(COMPILE_SHARED)
+	$(COPY) $(BUILD_DIR)/lib/shcrtbegin.o $(INSTALL_PREFIX)/lib/
 
 $(BUILD_DIR)/lib/shcrtend.o : CFLAGS += $(PIC) -fno-aggressive-loop-optimizations
 $(BUILD_DIR)/lib/shcrtend.o : $(LIB_DIR)/shcrtend.c
 	$(VERBOSE)$(COMPILE_SHARED)
+	$(COPY) $(BUILD_DIR)/lib/shcrtend.o $(INSTALL_PREFIX)/lib/
 
 ##############################################################################
 
@@ -210,7 +214,7 @@ define MAKESHARED
 @$(MAKEDIR) $(@D)
 @$(DELETE) $@
 $(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-$(VERBOSE)$(CC) -fPIC -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND)
+$(VERBOSE)$(CC) -fPIC -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
 endef
 
 install:

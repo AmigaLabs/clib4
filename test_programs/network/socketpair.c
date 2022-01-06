@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 {
     int ch, d = 0, pair[2];
 
-    if (socketpair(AF_UNIX, SOCK_STREAM, AF_UNSPEC, pair) == -1) {
+    if (socketpair(AF_INET, SOCK_STREAM, AF_UNSPEC, pair) == -1) {
         printf("socketpair unix error\n");
         exit(1);
     }

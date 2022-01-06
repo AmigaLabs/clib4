@@ -26,7 +26,6 @@
  * SUCH DAMAGE.
  */
 
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
@@ -51,30 +50,36 @@ null_conversion_close(void *data)
 static size_t
 null_conversion_convert(void *data, const unsigned char **inbuf, size_t *inbytesleft, unsigned char **outbuf, size_t *outbytesleft, int flags)
 {
-    size_t result;
-    size_t len;
+    if (outbuf != NULL && inbuf != NULL) {
+        size_t result;
+        size_t len;
 
-    if (*inbytesleft < *outbytesleft)
-    {
-        result = 0;
-        len = *inbytesleft;
+        if (*inbytesleft < *outbytesleft)
+        {
+            result = 0;
+            len = *inbytesleft;
+        }
+        else
+        {
+            result = (size_t)-1;
+            len = *outbytesleft;
+            __set_errno(E2BIG);
+        }
+
+        if ((flags & 1) == 0)
+            memcpy(*outbuf, *inbuf, len);
+
+        *inbuf += len;
+        *outbuf += len;
+        *inbytesleft -= len;
+        *outbytesleft -= len;
+
+        return result;
     }
-    else
-    {
-        result = (size_t)-1;
-        len = *outbytesleft;
-        __set_errno(E2BIG);
+    else {
+        __set_errno(EINVAL);
+        return 0;
     }
-
-    if ((flags & 1) == 0)
-        memcpy(*outbuf, *inbuf, len);
-
-    *inbuf += len;
-    *outbuf += len;
-    *inbytesleft -= len;
-    *outbytesleft -= len;
-
-    return result;
 }
 
 static int

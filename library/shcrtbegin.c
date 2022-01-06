@@ -34,10 +34,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
-
+#include <stddef.h>
 
 /* Avoid gcc warnings.. */
 void __shlib_call_constructors(void);
@@ -46,36 +43,32 @@ void __shlib_call_destructors(void);
 static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
 static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
 
-extern struct ExecIFace NOCOMMON *IExec;
-
-void 
-__shlib_call_constructors(void)
+void __shlib_call_constructors(void)
 {
 	extern void (*__CTOR_LIST__[])(void);
-	int i = 0;
+	int k = 0, j = 0, num_ctors = 0;
+	for (k = 1, num_ctors = 0; __CTOR_LIST__[k] != NULL; k++)
+		num_ctors++;
 
-	SysBase = *(struct Library **)4;
-	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
+    if (num_ctors > 0) {
+        for (j = 0; j < num_ctors; j++) {
+            __CTOR_LIST__[num_ctors - j]();
+        }
+    }
 
-	while (__CTOR_LIST__[i + 1])
-	{
-		i++;
-	}
-
-	while (i > 0)
-	{
-		__CTOR_LIST__[i--]();
-	}
 }
 
-void 
-__shlib_call_destructors(void)
+void __shlib_call_destructors(void)
 {
 	extern void (*__DTOR_LIST__[])(void);
-	int i = 1;
+	int k = 0, num_dtors = 0, j = 0;
 
-	while (__DTOR_LIST__[i])
-	{
-		__DTOR_LIST__[i++]();
-	}
+	for (k = 1, num_dtors = 0; __DTOR_LIST__[k] != NULL; k++)
+		num_dtors++;
+
+    if (num_dtors > 0) {
+        while (j++ < num_dtors) {
+            __DTOR_LIST__[j]();
+        }
+    }
 }

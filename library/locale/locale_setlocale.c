@@ -167,6 +167,7 @@ setlocale(int category, const char *locale)
 			{
 				strcpy(last_lc_ctype, __lc_ctype);
 				strcpy(__lc_ctype, "C");
+				printf("__lc_ctype=%s\n", __lc_ctype);
 				strcpy(last_lc_messages, lc_messages);
 				strcpy(lc_messages, "C");
 				MB_CUR_MAX = 1;
@@ -285,6 +286,8 @@ setlocale(int category, const char *locale)
 		else
 			result = (char *)"C";
 	}
+	
+	printf("SETLOCALE RESULT = %s\n", result);
 
 	SHOWSTRING(result);
 

@@ -59,11 +59,11 @@ strxfrm(char *dest, const char *src, size_t len)
 	SHOWSTRING(src);
 	SHOWVALUE(len);
 
-	assert( src != NULL );
+	assert(src != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(src == NULL)
+		if (src == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -71,29 +71,29 @@ strxfrm(char *dest, const char *src, size_t len)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	__locale_lock();
 
-	if(__locale_table[LC_COLLATE] != NULL)
+	if (__locale_table[LC_COLLATE] != NULL)
 	{
-		assert( LocaleBase != NULL );
+		assert(LocaleBase != NULL);
 
-		result = StrConvert(__locale_table[LC_COLLATE],(STRPTR)src,dest,len,SC_COLLATE1);
+		result = StrConvert(__locale_table[LC_COLLATE], (STRPTR)src, dest, len, SC_COLLATE1);
 	}
 	else
 	{
-		if(len > 0 && dest != NULL)
+		if (len > 0 && dest != NULL)
 		{
 			char c;
 
 			result = 0;
 
-			while((c = (*src++)) != '\0')
+			while ((c = (*src++)) != '\0')
 			{
 				result++;
 
-				if(len > 0)
+				if (len > 0)
 				{
 					len--;
 
@@ -111,8 +111,8 @@ strxfrm(char *dest, const char *src, size_t len)
 
 	__locale_unlock();
 
- out:
+out:
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

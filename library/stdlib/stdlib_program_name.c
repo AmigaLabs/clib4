@@ -35,41 +35,16 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
 
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-/****************************************************************************/
-
-#if defined(__amigaos4__)
-#include <dos/obsolete.h>
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
-
-#ifdef __amigaos4__
-#define MEMORY_TYPE MEMF_PRIVATE
-#else
-#define MEMORY_TYPE MEMF_ANY
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
-
 static BOOL free_program_name;
-
-/****************************************************************************/
-
 char *NOCOMMON __program_name;
-
-/****************************************************************************/
 
 STDLIB_DESTRUCTOR(stdlib_program_name_exit)
 {
@@ -83,9 +58,7 @@ STDLIB_DESTRUCTOR(stdlib_program_name_exit)
 
 	LEAVE();
 }
-
-/****************************************************************************/
-
+/* First constructor called by _init */
 STDLIB_CONSTRUCTOR(stdlib_program_name_init)
 {
 	BOOL success = FALSE;

@@ -47,40 +47,39 @@
 
 /****************************************************************************/
 
-int
-strcoll(const char *s1, const char *s2)
+int strcoll(const char *s1, const char *s2)
 {
 	DECLARE_LOCALEBASE();
 	int result = 0;
 
-	assert( s1 != NULL && s2 != NULL );
+	assert(s1 != NULL && s2 != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(s1 == NULL || s2 == NULL)
+		if (s1 == NULL || s2 == NULL)
 		{
 			__set_errno(EFAULT);
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	__locale_lock();
 
-	if(__locale_table[LC_COLLATE] != NULL)
+	if (__locale_table[LC_COLLATE] != NULL)
 	{
-		assert( LocaleBase != NULL );
+		assert(LocaleBase != NULL);
 
-		result = StrnCmp(__locale_table[LC_COLLATE],(STRPTR)s1,(STRPTR)s2,-1,SC_COLLATE1);
+		result = StrnCmp(__locale_table[LC_COLLATE], (STRPTR)s1, (STRPTR)s2, -1, SC_COLLATE1);
 	}
 	else
 	{
-		result = strcmp(s1,s2);
+		result = strcmp(s1, s2);
 	}
 
 	__locale_unlock();
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
