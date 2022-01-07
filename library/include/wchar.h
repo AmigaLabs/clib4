@@ -91,7 +91,6 @@ extern int wctob(wint_t c);
 extern int mbsinit(const mbstate_t *ps);
 extern size_t wcrtomb(char *s, wchar_t wc, mbstate_t *ps);
 extern size_t mbsrtowcs(wchar_t *ws, const char **src, size_t wn, mbstate_t *st);
-extern size_t wcsrtombs(char *s, const wchar_t **src, size_t n, mbstate_t *ps);
 
 /****************************************************************************/
 
@@ -202,9 +201,6 @@ extern long long wcstoll(const wchar_t *str, wchar_t **ptr, int base);
 extern unsigned long long wcstoull(const wchar_t *str, wchar_t **ptr, int base);
 extern long double wcstold(const wchar_t *nptr, wchar_t **endptr);
 #endif
-
-extern int wctomb(char *s, wchar_t wchar);
-extern int _wctomb_r(char *s, wchar_t wchar, mbstate_t *state);
 
 __END_DECLS
 

@@ -1,4 +1,5 @@
 /* vfwscanf example */
+/* This crash with a DSI */
 #include <stdio.h>
 #include <stdarg.h>
 #include <wchar.h>

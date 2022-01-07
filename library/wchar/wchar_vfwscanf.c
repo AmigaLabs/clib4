@@ -111,6 +111,16 @@ static int in_set(const wchar_t *set, int c)
     return 0;
 }
 
+#if 1
+#undef getwc
+#define getwc(f) \
+	((f)->position < (f)->num_read_bytes && (f)->position < 128 ? (f)->position++ : (getwc)(f))
+
+#undef ungetwc
+#define ungetwc(c,f) \
+	((f)->num_read_bytes && (c)<128U ? --(f)->position : ungetwc((c),(f)))
+#endif
+
 int vfwscanf(FILE *f, const wchar_t *format, va_list ap)
 {
     int width;

@@ -98,7 +98,7 @@ int64_t __fd_hook_entry(
 		assert(fam->fam_Data != NULL);
 		assert(fam->fam_Size > 0);
 
-		D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, Seek(file, 0, OFFSET_CURRENT), fam->fam_Data));
+		D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
 
 		PROFILE_OFF();
 

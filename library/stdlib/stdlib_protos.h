@@ -128,6 +128,8 @@ extern void _exit(int return_code);
 /* stdlib_constructor_begin.c */
 void _init(void);
 void _fini(void);
+void shared_obj_init(void);
+void shared_obj_exit(void);
 
 /****************************************************************************/
 

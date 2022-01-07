@@ -173,46 +173,46 @@ $(BUILD_DIR)/lib/shcrtend.o : $(LIB_DIR)/shcrtend.c
 ##############################################################################
 
 define COMPILE
-@$(MAKEDIR) $(@D)
+$(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo "Compiling Static \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
 $(VERBOSE)$(CC) $(CFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_ASM
-@$(MAKEDIR) $(@D)
+$(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo "Compiling Static ASM \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
 $(VERBOSE)$(CC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED
-@$(MAKEDIR) $(@D)
+$(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo "Compiling Shared \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
 $(VERBOSE)$(CC) $(CFLAGS) $(PIC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED_ASM
-@$(MAKEDIR) $(@D)
+$(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo "Compiling Shared Asm \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
 $(VERBOSE)$(CC) $(PIC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define ASSEMBLE
-@$(MAKEDIR) $(@D)
+$(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo "Assembling \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
 $(VERBOSE)$(CC) $(AFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define MAKELIB
-@$(MAKEDIR) $(@D)
-@$(DELETE) $@
+$(VERBOSE)@$(MAKEDIR) $(@D)
+$(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo "Making Static \033[0;31m$@\033[0m"
-@$(AR) $@ $^ $(LOG_COMMAND)
-@$(RANLIB) $@ $(LOG_COMMAND)
+$(VERBOSE)@$(AR) $@ $^ $(LOG_COMMAND)
+$(VERBOSE)@$(RANLIB) $@ $(LOG_COMMAND)
 endef
 
 define MAKESHARED
-@$(MAKEDIR) $(@D)
-@$(DELETE) $@
+$(VERBOSE)@$(MAKEDIR) $(@D)
+$(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
 $(VERBOSE)$(CC) -fPIC -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
 endef

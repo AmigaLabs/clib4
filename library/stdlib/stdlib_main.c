@@ -70,8 +70,6 @@
 extern int main(int arg_c, char **arg_v);
 extern struct _clib2 *InitGlobal(void);
 extern void FiniGlobal(void);
-extern void shared_obj_init(void);
-extern void shared_obj_exit(void);
 BOOL open_libraries(void);
 void close_libraries(void);
 
@@ -273,8 +271,6 @@ detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
     FiniGlobal();
 
     _fini();
-
-	close_libraries();
 }
 
 /****************************************************************************/
@@ -333,9 +329,6 @@ _main()
     if (__global_clib2 == NULL) {
         goto out;
     }
-
-    /* The shared objects need to be set up before any local constructors are invoked. */
-    shared_obj_init();
 
     /* Pick up the Workbench startup message, if available. */
 	this_process = (struct Process *)FindTask(NULL);
@@ -510,6 +503,8 @@ out:
 
 		ReplyMsg((struct Message *)startup_message);
 	}
+
+    close_libraries();
 
 	return (return_code);
 }
