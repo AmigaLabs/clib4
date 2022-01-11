@@ -35,21 +35,13 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
-
-/****************************************************************************/
+#ifndef _TIME_HEADERS_H
+#include "time_headers.h"
+#endif /* _TIME_HEADERS_H */
 
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 /* A quick workaround for the timeval/timerequest->TimeVal/TimeRequest
    change in the recent OS4 header files. */
@@ -106,6 +98,10 @@ CLIB_CONSTRUCTOR(timer_init)
 		__show_error("The timer interface could not be obtained.");
 		goto out;
 	}
+
+    /* Set system time for rusage */
+    struct TimerIFace *ITimer = __ITimer;
+    GetSysTime(&__global_clib2->clock);
 
 	success = TRUE;
 

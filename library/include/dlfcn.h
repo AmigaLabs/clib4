@@ -41,22 +41,9 @@
 #ifndef _DLFCN_H
 #define _DLFCN_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-/****************************************************************************/
-
-/* The shared object API is available only on AmigaOS 4.0. */
-#if defined(__amigaos4__)
-
-/****************************************************************************/
 
 /* We only support a subset of the flags available on Unix systems. */
 #define RTLD_LAZY		1
@@ -65,23 +52,13 @@ extern "C" {
 #define RTLD_GLOBAL		8
 #define RTLD_DEFAULT	((void *)0)
 
-/****************************************************************************/
-
 extern int dlclose(void * __handle);
 extern const char * dlerror(void);
 extern void * dlopen(const char * __path_name,int __mode);
 extern void * dlsym(void * __handle,const char * __symbol_name);
 
-/****************************************************************************/
-
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-/****************************************************************************/
 
 #endif /* _DLFCN_H */

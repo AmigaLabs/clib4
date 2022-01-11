@@ -66,36 +66,30 @@
 static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
 static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
 
-void
-_init(void) {
-    int num_ctors, i;
-    int j;
+void _init(void) {
+    int i = 0;
 
     /* The shared objects need to be set up before any local constructors are invoked. */
     shared_obj_init();
 
-    for (i = 1, num_ctors = 0; __CTOR_LIST__[i] != NULL; i++)
-        num_ctors++;
+    while (__CTOR_LIST__[i+1])
+    {
+        i++;
+    }
 
-    if (num_ctors > 0) {
-        for (j = 0; j < num_ctors; j++) {
-            __CTOR_LIST__[num_ctors - j]();
-        }
+    while (i > 0)
+    {
+        __CTOR_LIST__[i--]();
     }
 }
 
-/****************************************************************************/
+void _fini(void) {
+    int i = 1;
 
-void
-_fini(void) {
-    int num_dtors, i;
-    static int j;
-
-    for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
-        num_dtors++;
-
-    while (j++ < num_dtors)
-        __DTOR_LIST__[j]();
+    while (__DTOR_LIST__[i])
+    {
+        __DTOR_LIST__[i++]();
+    }
 
     /* The shared objects need to be cleaned up after all local
        destructors have been invoked. */

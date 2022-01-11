@@ -41,7 +41,7 @@
 #include "local.h"
 
 size_t
-iconv(iconv_t cd, const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
+iconv(iconv_t cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 {
     iconv_conversion_t *ic = (iconv_conversion_t *)cd;
 

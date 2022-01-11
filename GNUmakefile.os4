@@ -160,14 +160,14 @@ $(BUILD_DIR)/lib/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
 	$(COPY) $(BUILD_DIR)/lib/crtend.o $(INSTALL_PREFIX)/lib/
 
-$(BUILD_DIR)/lib/shcrtbegin.o : CFLAGS += $(PIC) -fno-aggressive-loop-optimizations
+$(BUILD_DIR)/lib/shcrtbegin.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
 $(BUILD_DIR)/lib/shcrtbegin.o : $(LIB_DIR)/shcrtbegin.c
-	$(VERBOSE)$(COMPILE_SHARED)
+	$(VERBOSE)$(COMPILE)
 	$(COPY) $(BUILD_DIR)/lib/shcrtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(BUILD_DIR)/lib/shcrtend.o : CFLAGS += $(PIC) -fno-aggressive-loop-optimizations
+$(BUILD_DIR)/lib/shcrtend.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
 $(BUILD_DIR)/lib/shcrtend.o : $(LIB_DIR)/shcrtend.c
-	$(VERBOSE)$(COMPILE_SHARED)
+	$(VERBOSE)$(COMPILE)
 	$(COPY) $(BUILD_DIR)/lib/shcrtend.o $(INSTALL_PREFIX)/lib/
 
 ##############################################################################
@@ -214,7 +214,7 @@ define MAKESHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-$(VERBOSE)$(CC) -fPIC -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
+$(VERBOSE)$(CC) -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
 endef
 
 install:

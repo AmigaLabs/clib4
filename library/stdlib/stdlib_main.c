@@ -35,15 +35,11 @@
 #include <exec/execbase.h>
 #endif /* EXEC_EXECBASE_H */
 
-/****************************************************************************/
-
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-
-/****************************************************************************/
 
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
@@ -52,10 +48,6 @@
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
-
-#ifndef _TIME_HEADERS_H
-#include "time_headers.h"
-#endif /* _TIME_HEADERS_H */
 
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
@@ -68,8 +60,6 @@
 #include <proto/elf.h>
 
 extern int main(int arg_c, char **arg_v);
-extern struct _clib2 *InitGlobal(void);
-extern void FiniGlobal(void);
 BOOL open_libraries(void);
 void close_libraries(void);
 
@@ -123,12 +113,6 @@ call_main(void)
 
 	/* Go through the constructor list */
 	_init();
-
-    SHOWMSG("InitGlobal done.");
-
-    /* Set system time for rusage */
-    struct TimerIFace *ITimer = __ITimer;
-    GetSysTime(&__global_clib2->clock);
 
 	/* This can be helpful for debugging purposes: print the name of the current
 	   directory, followed by the name of the command and all the parameters
@@ -208,10 +192,7 @@ out:
 
     SHOWMSG("invoking the destructors");
 
-    /* Free global reent structure */
-	FiniGlobal();
-
-	/* Go through the destructor list */
+    /* Go through the destructor list */
 	_fini();
 
 	SHOWMSG("done.");
@@ -268,8 +249,6 @@ detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
 {
 	struct ElfIFace *IElf = __IElf;
 
-    FiniGlobal();
-
     _fini();
 }
 
@@ -322,13 +301,6 @@ _main()
 		__show_error(error_message);
 		goto out;
 	}
-
-    SHOWMSG("Call InitGlobal");
-
-    __global_clib2 = InitGlobal();
-    if (__global_clib2 == NULL) {
-        goto out;
-    }
 
     /* Pick up the Workbench startup message, if available. */
 	this_process = (struct Process *)FindTask(NULL);

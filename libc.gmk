@@ -1110,4 +1110,4 @@ $(BUILD_DIR)/lib/libc.so : $(addprefix $(BUILD_DIR)/obj.shared/libc/,$(C_LIB))
 	@$(MAKEDIR) $(@D)
 	@$(DELETE) $@
 	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-	$(VERBOSE)$(CC) -nostdlib -fPIC -mcrt=clib2 -shared -o $@ $(BUILD_DIR)/lib/shcrtbegin.o $(BUILD_DIR)/lib/shcrtend.o $^ $(LOG_COMMAND)
+	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(BUILD_DIR)/lib/shcrtbegin.o $(BUILD_DIR)/lib/shcrtend.o $^ $(LOG_COMMAND)

@@ -60,65 +60,70 @@ static ucs2_t
 find_code_size(ucs2_t code, const uint16_t *tblp);
 
 static inline ucs2_t
-find_code_speed(ucs2_t code, const uint16_t *tblp);
+find_code_speed(ucs2_t
+code,
+const uint16_t *tblp
+);
 
 static inline ucs2_t
-find_code_speed_8bit(ucs2_t code, const unsigned char *tblp);
+find_code_speed_8bit(ucs2_t
+code,
+const unsigned char *tblp
+);
 
 #ifdef _ICONV_ENABLE_EXTERNAL_CCS
+
 static const iconv_ccs_desc_t *
 load_file(const char *name, int direction);
+
 #endif
 
 /*
  * Interface data and functions implementation.
  */
 static size_t
-table_close(void *data)
-{
-  const iconv_ccs_desc_t *ccsp = (iconv_ccs_desc_t *)data;
+table_close(void *data) {
+    const iconv_ccs_desc_t *ccsp = (iconv_ccs_desc_t *) data;
 
-  if (ccsp->type == TABLE_EXTERNAL)
-    free((void *)ccsp->tbl);
+    if (ccsp->type == TABLE_EXTERNAL)
+        free((void *) ccsp->tbl);
 
-  free((void *)ccsp);
-  return 0;
+    free((void *) ccsp);
+    return 0;
 }
 
 #if defined(ICONV_FROM_UCS_CES_TABLE)
+
 static void *
 table_init_from_ucs(
-    const char *encoding)
-{
-  int i;
-  const iconv_ccs_t *biccsp = NULL;
-  iconv_ccs_desc_t *ccsp;
+        const char *encoding) {
+    int i;
+    const iconv_ccs_t *biccsp = NULL;
+    iconv_ccs_desc_t *ccsp;
 
-  for (i = 0; _iconv_ccs[i] != NULL; i++)
-    if (strcmp(_iconv_ccs[i]->name, encoding) == 0)
-    {
-      biccsp = _iconv_ccs[i];
-      break;
+    for (i = 0; _iconv_ccs[i] != NULL; i++)
+        if (strcmp(_iconv_ccs[i]->name, encoding) == 0) {
+            biccsp = _iconv_ccs[i];
+            break;
+        }
+
+    if (biccsp != NULL) {
+        if (biccsp->from_ucs == NULL || (ccsp = (iconv_ccs_desc_t *)
+                malloc(sizeof(iconv_ccs_desc_t))) == NULL)
+            return NULL;
+
+        ccsp->type = TABLE_BUILTIN;
+        ccsp->bits = biccsp->bits;
+        ccsp->optimization = biccsp->from_ucs_type;
+        ccsp->tbl = biccsp->from_ucs;
+
+        return (void *) ccsp;
     }
 
-  if (biccsp != NULL)
-  {
-    if (biccsp->from_ucs == NULL || (ccsp = (iconv_ccs_desc_t *)
-                                         malloc(sizeof(iconv_ccs_desc_t))) == NULL)
-      return NULL;
-
-    ccsp->type = TABLE_BUILTIN;
-    ccsp->bits = biccsp->bits;
-    ccsp->optimization = biccsp->from_ucs_type;
-    ccsp->tbl = biccsp->from_ucs;
-
-    return (void *)ccsp;
-  }
-
 #ifdef _ICONV_ENABLE_EXTERNAL_CCS
-  return (void *)load_file(encoding, 1);
+    return (void *) load_file(encoding, 1);
 #else
-  return NULL;
+    return NULL;
 #endif
 }
 
@@ -126,154 +131,153 @@ static size_t
 table_convert_from_ucs(void *data,
                        ucs4_t in,
                        unsigned char **outbuf,
-                       size_t *outbytesleft)
-{
-  const iconv_ccs_desc_t *ccsp = (iconv_ccs_desc_t *)data;
-  ucs2_t code;
+                       size_t *outbytesleft) {
+    const iconv_ccs_desc_t *ccsp = (iconv_ccs_desc_t *) data;
+    ucs2_t code;
 
-  if (in > 0xFFFF || in == INVALC)
-    return (size_t)ICONV_CES_INVALID_CHARACTER;
+    if (ccsp == NULL) {
+        // TODO: AmigaOS4 - This crash on newlib and clib2 when convert from euc_kr to utf_8
+        return (size_t) ICONV_CES_INVALID_CHARACTER;
+    }
 
-  if (ccsp->bits == TABLE_8BIT)
-  {
-    code = find_code_speed_8bit((ucs2_t)in,
-                                (const unsigned char *)ccsp->tbl);
+    if (in > 0xFFFF || in == INVALC)
+        return (size_t) ICONV_CES_INVALID_CHARACTER;
+
+    if (ccsp->bits == TABLE_8BIT) {
+        code = find_code_speed_8bit((ucs2_t) in,
+                                    (const unsigned char *) ccsp->tbl);
+        if (code == INVALC)
+            return (size_t) ICONV_CES_INVALID_CHARACTER;
+        **outbuf = (unsigned char) code;
+        *outbuf += 1;
+        *outbytesleft -= 1;
+        return 1;
+    } else if (ccsp->optimization == TABLE_SPEED_OPTIMIZED)
+        code = find_code_speed((ucs2_t) in, ccsp->tbl);
+    else
+        code = find_code_size((ucs2_t) in, ccsp->tbl);
+
     if (code == INVALC)
-      return (size_t)ICONV_CES_INVALID_CHARACTER;
-    **outbuf = (unsigned char)code;
-    *outbuf += 1;
-    *outbytesleft -= 1;
-    return 1;
-  }
-  else if (ccsp->optimization == TABLE_SPEED_OPTIMIZED)
-    code = find_code_speed((ucs2_t)in, ccsp->tbl);
-  else
-    code = find_code_size((ucs2_t)in, ccsp->tbl);
+        return (size_t) ICONV_CES_INVALID_CHARACTER;
 
-  if (code == INVALC)
-    return (size_t)ICONV_CES_INVALID_CHARACTER;
+    if (*outbytesleft < 2)
+        return (size_t) ICONV_CES_NOSPACE;
 
-  if (*outbytesleft < 2)
-    return (size_t)ICONV_CES_NOSPACE;
-
-  /* We can't store whole word since **outbuf may be not 2-byte aligned */
-  **outbuf = (unsigned char)((ucs2_t)code >> 8);
-  *(*outbuf + 1) = (unsigned char)code;
-  *outbuf += 2;
-  *outbytesleft -= 2;
-  return 2;
+    /* We can't store whole word since **outbuf may be not 2-byte aligned */
+    **outbuf = (unsigned char) ((ucs2_t) code >> 8);
+    *(*outbuf + 1) = (unsigned char) code;
+    *outbuf += 2;
+    *outbytesleft -= 2;
+    return 2;
 }
+
 #endif /* ICONV_FROM_UCS_CES_TABLE */
 
 #if defined(ICONV_TO_UCS_CES_TABLE)
+
 static void *
 table_init_to_ucs(
-    const char *encoding)
-{
-  int i;
-  const iconv_ccs_t *biccsp = NULL;
-  iconv_ccs_desc_t *ccsp;
+        const char *encoding) {
+    int i;
+    const iconv_ccs_t *biccsp = NULL;
+    iconv_ccs_desc_t *ccsp;
 
-  for (i = 0; _iconv_ccs[i] != NULL; i++)
-    if (strcmp(_iconv_ccs[i]->name, encoding) == 0)
-    {
-      biccsp = _iconv_ccs[i];
-      break;
+    for (i = 0; _iconv_ccs[i] != NULL; i++)
+        if (strcmp(_iconv_ccs[i]->name, encoding) == 0) {
+            biccsp = _iconv_ccs[i];
+            break;
+        }
+
+    if (biccsp != NULL) {
+        if (biccsp->to_ucs == NULL || (ccsp = (iconv_ccs_desc_t *)
+                malloc(sizeof(iconv_ccs_desc_t))) == NULL)
+            return NULL;
+
+        ccsp->type = TABLE_BUILTIN;
+        ccsp->bits = biccsp->bits;
+        ccsp->optimization = biccsp->to_ucs_type;
+        ccsp->tbl = biccsp->to_ucs;
+
+        return (void *) ccsp;
     }
 
-  if (biccsp != NULL)
-  {
-    if (biccsp->to_ucs == NULL || (ccsp = (iconv_ccs_desc_t *)
-                                       malloc(sizeof(iconv_ccs_desc_t))) == NULL)
-      return NULL;
-
-    ccsp->type = TABLE_BUILTIN;
-    ccsp->bits = biccsp->bits;
-    ccsp->optimization = biccsp->to_ucs_type;
-    ccsp->tbl = biccsp->to_ucs;
-
-    return (void *)ccsp;
-  }
-
 #ifdef _ICONV_ENABLE_EXTERNAL_CCS
-  return (void *)load_file(encoding, 0);
+    return (void *) load_file(encoding, 0);
 #else
-  return NULL;
+    return NULL;
 #endif
 }
 
 static ucs4_t
 table_convert_to_ucs(void *data,
                      const unsigned char **inbuf,
-                     size_t *inbytesleft)
-{
-  const iconv_ccs_desc_t *ccsp = (iconv_ccs_desc_t *)data;
-  ucs2_t ucs;
+                     size_t *inbytesleft) {
+    const iconv_ccs_desc_t *ccsp = (iconv_ccs_desc_t *) data;
+    ucs2_t ucs;
 
-  if (ccsp->bits == TABLE_8BIT)
-  {
-    if (*inbytesleft < 1)
-      return (ucs4_t)ICONV_CES_BAD_SEQUENCE;
+    if (ccsp->bits == TABLE_8BIT) {
+        if (*inbytesleft < 1)
+            return (ucs4_t) ICONV_CES_BAD_SEQUENCE;
 
-    ucs = (ucs2_t)ccsp->tbl[**inbuf];
+        ucs = (ucs2_t) ccsp->tbl[**inbuf];
+
+        if (ucs == INVALC)
+            return (ucs4_t) ICONV_CES_INVALID_CHARACTER;
+
+        *inbytesleft -= 1;
+        *inbuf += 1;
+        return (ucs4_t) ucs;
+    }
+
+    if (*inbytesleft < 2)
+        return (ucs4_t) ICONV_CES_BAD_SEQUENCE;
+
+    if (ccsp->optimization == TABLE_SIZE_OPTIMIZED)
+        ucs = find_code_size((ucs2_t) **inbuf << 8 | (ucs2_t) *(*inbuf + 1),
+                             ccsp->tbl);
+    else
+        ucs = find_code_speed((ucs2_t) **inbuf << 8 | (ucs2_t) *(*inbuf + 1),
+                              ccsp->tbl);
 
     if (ucs == INVALC)
-      return (ucs4_t)ICONV_CES_INVALID_CHARACTER;
+        return (ucs4_t) ICONV_CES_INVALID_CHARACTER;
 
-    *inbytesleft -= 1;
-    *inbuf += 1;
-    return (ucs4_t)ucs;
-  }
-
-  if (*inbytesleft < 2)
-    return (ucs4_t)ICONV_CES_BAD_SEQUENCE;
-
-  if (ccsp->optimization == TABLE_SIZE_OPTIMIZED)
-    ucs = find_code_size((ucs2_t) * *inbuf << 8 | (ucs2_t) * (*inbuf + 1),
-                         ccsp->tbl);
-  else
-    ucs = find_code_speed((ucs2_t) * *inbuf << 8 | (ucs2_t) * (*inbuf + 1),
-                          ccsp->tbl);
-
-  if (ucs == INVALC)
-    return (ucs4_t)ICONV_CES_INVALID_CHARACTER;
-
-  *inbuf += 2;
-  *inbytesleft -= 2;
-  return (ucs4_t)ucs;
+    *inbuf += 2;
+    *inbytesleft -= 2;
+    return (ucs4_t) ucs;
 }
+
 #endif /* ICONV_TO_UCS_CES_TABLE */
 
 static int
-table_get_mb_cur_max(void *data)
-{
-  return ((iconv_ccs_desc_t *)data)->bits / 8;
+table_get_mb_cur_max(void *data) {
+    return ((iconv_ccs_desc_t *) data)->bits / 8;
 }
 
 #if defined(ICONV_TO_UCS_CES_TABLE)
 const iconv_to_ucs_ces_handlers_t
-    _iconv_to_ucs_ces_handlers_table =
+        _iconv_to_ucs_ces_handlers_table =
         {
-            table_init_to_ucs,
-            table_close,
-            table_get_mb_cur_max,
-            NULL,
-            NULL,
-            NULL,
-            table_convert_to_ucs};
+                table_init_to_ucs,
+                table_close,
+                table_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                table_convert_to_ucs};
 #endif /* ICONV_FROM_UCS_CES_TABLE */
 
 #if defined(ICONV_FROM_UCS_CES_TABLE)
 const iconv_from_ucs_ces_handlers_t
-    _iconv_from_ucs_ces_handlers_table =
+        _iconv_from_ucs_ces_handlers_table =
         {
-            table_init_from_ucs,
-            table_close,
-            table_get_mb_cur_max,
-            NULL,
-            NULL,
-            NULL,
-            table_convert_from_ucs
+                table_init_from_ucs,
+                table_close,
+                table_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                table_convert_from_ucs
         };
 #endif /* ICONV_TO_UCS_CES_TABLE */
 
@@ -292,15 +296,17 @@ const iconv_from_ucs_ces_handlers_t
  *     Code that corresponds to 'code'.
  */
 static inline ucs2_t
-find_code_speed(ucs2_t code,
-                const uint16_t *tblp)
+find_code_speed(ucs2_t
+code,
+const uint16_t *tblp
+)
 {
-  int idx = tblp[code >> 8];
+int idx = tblp[code >> 8];
 
-  if (idx == INVBLK)
-    return (ucs2_t)INVALC;
+if (idx == INVBLK)
+return (ucs2_t)INVALC;
 
-  return (ucs2_t)tblp[(code & 0x00FF) + idx];
+return (ucs2_t)tblp[(code & 0x00FF) + idx];
 }
 
 /*
@@ -314,23 +320,26 @@ find_code_speed(ucs2_t code,
  *     Code that corresponds to 'code'.
  */
 static inline ucs2_t
-find_code_speed_8bit(ucs2_t code,
-                     const unsigned char *tblp)
+find_code_speed_8bit(ucs2_t
+code,
+const unsigned char *tblp
+)
 {
-  int idx;
-  unsigned char ccs;
+int idx;
+unsigned char ccs;
 
-  if (code == ((ucs2_t *)tblp)[0])
-    return (ucs2_t)0xFF;
+if (code == ((ucs2_t *)tblp)[0])
+return (ucs2_t)0xFF;
 
-  idx = ((ucs2_t *)tblp)[1 + (code >> 8)];
+idx = ((ucs2_t *) tblp)[1 + (code >> 8)];
 
-  if (idx == INVBLK)
-    return (ucs2_t)INVALC;
+if (idx == INVBLK)
+return (ucs2_t)INVALC;
 
-  ccs = tblp[(code & 0x00FF) + idx];
+ccs = tblp[(code & 0x00FF) + idx];
 
-  return ccs == 0xFF ? (ucs2_t)INVALC : (ucs2_t)ccs;
+return ccs == 0xFF ? (ucs2_t)INVALC : (ucs2_t)
+ccs;
 }
 
 /* Left range boundary */
@@ -354,68 +363,61 @@ find_code_speed_8bit(ucs2_t code,
  */
 static ucs2_t
 find_code_size(ucs2_t code,
-               const uint16_t *tblp)
-{
-  int first, last, cur, center;
+               const uint16_t *tblp) {
+    int first, last, cur, center;
 
-  if (tblp[RANGES_NUM_INDEX] > 0)
-  {
-    first = 0;
-    last = tblp[RANGES_NUM_INDEX] - 1;
+    if (tblp[RANGES_NUM_INDEX] > 0) {
+        first = 0;
+        last = tblp[RANGES_NUM_INDEX] - 1;
 
-    do
-    {
-      center = (last - first) / 2;
-      cur = center + first;
+        do {
+            center = (last - first) / 2;
+            cur = center + first;
 
-      if (code > RANGE_RIGHT(cur))
-        first = cur;
-      else if (code < RANGE_LEFT(cur))
-        last = cur;
-      else
-        return (ucs2_t)tblp[RANGE_INDEX(cur) + code - RANGE_LEFT(cur)];
-    } while (center > 0);
+            if (code > RANGE_RIGHT(cur))
+                first = cur;
+            else if (code < RANGE_LEFT(cur))
+                last = cur;
+            else
+                return (ucs2_t) tblp[RANGE_INDEX(cur) + code - RANGE_LEFT(cur)];
+        } while (center > 0);
 
-    if (last - first == 1)
-    {
-      if (code >= RANGE_LEFT(first) && code <= RANGE_RIGHT(first))
-        return (ucs2_t)tblp[RANGE_INDEX(first) + code - RANGE_LEFT(first)];
-      if (code >= RANGE_LEFT(last) && code <= RANGE_RIGHT(last))
-        return (ucs2_t)tblp[RANGE_INDEX(last) + code - RANGE_LEFT(last)];
+        if (last - first == 1) {
+            if (code >= RANGE_LEFT(first) && code <= RANGE_RIGHT(first))
+                return (ucs2_t) tblp[RANGE_INDEX(first) + code - RANGE_LEFT(first)];
+            if (code >= RANGE_LEFT(last) && code <= RANGE_RIGHT(last))
+                return (ucs2_t) tblp[RANGE_INDEX(last) + code - RANGE_LEFT(last)];
+        }
     }
-  }
 
-  if (tblp[UNRANGED_NUM_INDEX] > 0)
-  {
-    first = 0;
-    last = tblp[UNRANGED_NUM_INDEX] - 1;
+    if (tblp[UNRANGED_NUM_INDEX] > 0) {
+        first = 0;
+        last = tblp[UNRANGED_NUM_INDEX] - 1;
 
-    do
-    {
-      int c;
+        do {
+            int c;
 
-      center = (last - first) / 2;
-      cur = center + first;
-      c = tblp[UNRANGED_INDEX(cur)];
+            center = (last - first) / 2;
+            cur = center + first;
+            c = tblp[UNRANGED_INDEX(cur)];
 
-      if (code > c)
-        first = cur;
-      else if (code < c)
-        last = cur;
-      else
-        return (ucs2_t)tblp[UNRANGED_INDEX(cur) + 1];
-    } while (center > 0);
+            if (code > c)
+                first = cur;
+            else if (code < c)
+                last = cur;
+            else
+                return (ucs2_t) tblp[UNRANGED_INDEX(cur) + 1];
+        } while (center > 0);
 
-    if (last - first == 1)
-    {
-      if (code == tblp[UNRANGED_INDEX(first)])
-        return (ucs2_t)tblp[UNRANGED_INDEX(first) + 1];
-      if (code == tblp[UNRANGED_INDEX(last)])
-        return (ucs2_t)tblp[UNRANGED_INDEX(last) + 1];
+        if (last - first == 1) {
+            if (code == tblp[UNRANGED_INDEX(first)])
+                return (ucs2_t) tblp[UNRANGED_INDEX(first) + 1];
+            if (code == tblp[UNRANGED_INDEX(last)])
+                return (ucs2_t) tblp[UNRANGED_INDEX(last) + 1];
+        }
     }
-  }
 
-  return (ucs2_t)INVALC;
+    return (ucs2_t) INVALC;
 }
 
 #ifdef _ICONV_ENABLE_EXTERNAL_CCS
@@ -444,128 +446,121 @@ find_code_size(ucs2_t code,
  *    iconv_ccs_desc_t * pointer is success, NULL if failure.
  */
 static const iconv_ccs_desc_t *
-load_file(const char *name, int direction)
-{
-  int fd;
-  const char *buf;
-  int tbllen, hdrlen;
-  off_t off;
-  const char *fname;
-  iconv_ccs_desc_t *ccsp = NULL;
-  int nmlen = strlen(name);
+load_file(const char *name, int direction) {
+    int fd;
+    const char *buf;
+    int tbllen, hdrlen;
+    off_t off;
+    const char *fname;
+    iconv_ccs_desc_t *ccsp = NULL;
+    int nmlen = strlen(name);
 
-  /* Since CCS table name length can vary - it is aligned (by adding extra
-   * bytes to it's end) to 4-byte boundary. */
-  int alignment = nmlen & 3 ? 4 - (nmlen & 3) : 0;
+    /* Since CCS table name length can vary - it is aligned (by adding extra
+     * bytes to it's end) to 4-byte boundary. */
+    int alignment = nmlen & 3 ? 4 - (nmlen & 3) : 0;
 
-  nmlen = strlen(name);
+    nmlen = strlen(name);
 
-  hdrlen = nmlen + EXTTABLE_HEADER_LEN + alignment;
+    hdrlen = nmlen + EXTTABLE_HEADER_LEN + alignment;
 
-  if ((fname = _iconv_nls_construct_filename(name, ICONV_SUBDIR, ICONV_DATA_EXT)) == NULL)
-    return NULL;
+    if ((fname = _iconv_nls_construct_filename(name, ICONV_SUBDIR, ICONV_DATA_EXT)) == NULL)
+        return NULL;
 
-  if ((fd = open(fname, O_RDONLY, S_IRUSR)) == -1)
-    goto error1;
+    if ((fd = open(fname, O_RDONLY, S_IRUSR)) == -1)
+        goto error1;
 
-  if ((buf = (const char *)malloc(hdrlen)) == NULL)
-    goto error2;
+    if ((buf = (const char *) malloc(hdrlen)) == NULL)
+        goto error2;
 
-  if (read(fd, (void *)buf, hdrlen) != hdrlen)
-    goto error3;
+    if (read(fd, (void *) buf, hdrlen) != hdrlen)
+        goto error3;
 
-  if (_16BIT_ELT(EXTTABLE_VERSION_OFF) != TABLE_VERSION_1 || _32BIT_ELT(EXTTABLE_CCSNAME_LEN_OFF) != nmlen || strncmp(buf + EXTTABLE_CCSNAME_OFF, name, nmlen) != 0)
-    goto error3; /* Bad file */
+    if (_16BIT_ELT(EXTTABLE_VERSION_OFF) != TABLE_VERSION_1 || _32BIT_ELT(EXTTABLE_CCSNAME_LEN_OFF) != nmlen ||
+        strncmp(buf + EXTTABLE_CCSNAME_OFF, name, nmlen) != 0)
+        goto error3; /* Bad file */
 
-  if ((ccsp = (iconv_ccs_desc_t *)
-           calloc(1, sizeof(iconv_ccs_desc_t))) == NULL)
-    goto error3;
+    if ((ccsp = (iconv_ccs_desc_t *)
+            calloc(1, sizeof(iconv_ccs_desc_t))) == NULL)
+        goto error3;
 
-  ccsp->bits = _16BIT_ELT(EXTTABLE_BITS_OFF);
-  ccsp->type = TABLE_EXTERNAL;
+    ccsp->bits = _16BIT_ELT(EXTTABLE_BITS_OFF);
+    ccsp->type = TABLE_EXTERNAL;
 
-  /* Add 4-byte alignment to name length */
-  nmlen += alignment;
+    /* Add 4-byte alignment to name length */
+    nmlen += alignment;
 
-  if (ccsp->bits == TABLE_8BIT)
-  {
-    if (direction == 0) /* Load "To UCS" table */
-    {
-      off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_TO_SPEED_OFF);
-      tbllen = _32BIT_ELT(nmlen + EXTTABLE_TO_SPEED_LEN_OFF);
-    }
-    else /* Load "From UCS" table */
-    {
-      off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_FROM_SPEED_OFF);
-      tbllen = _32BIT_ELT(nmlen + EXTTABLE_FROM_SPEED_LEN_OFF);
-    }
-  }
-  else if (ccsp->bits == TABLE_16BIT)
-  {
-    if (direction == 0) /* Load "To UCS" table */
-    {
+    if (ccsp->bits == TABLE_8BIT) {
+        if (direction == 0) /* Load "To UCS" table */
+        {
+            off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_TO_SPEED_OFF);
+            tbllen = _32BIT_ELT(nmlen + EXTTABLE_TO_SPEED_LEN_OFF);
+        } else /* Load "From UCS" table */
+        {
+            off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_FROM_SPEED_OFF);
+            tbllen = _32BIT_ELT(nmlen + EXTTABLE_FROM_SPEED_LEN_OFF);
+        }
+    } else if (ccsp->bits == TABLE_16BIT) {
+        if (direction == 0) /* Load "To UCS" table */
+        {
 #ifdef TABLE_USE_SIZE_OPTIMIZATION
-      off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_TO_SIZE_OFF);
-      tbllen = _32BIT_ELT(nmlen + EXTTABLE_TO_SIZE_LEN_OFF);
+            off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_TO_SIZE_OFF);
+            tbllen = _32BIT_ELT(nmlen + EXTTABLE_TO_SIZE_LEN_OFF);
 #else
-      off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_TO_SPEED_OFF);
-      tbllen = _32BIT_ELT(nmlen + EXTTABLE_TO_SPEED_LEN_OFF);
+            off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_TO_SPEED_OFF);
+            tbllen = _32BIT_ELT(nmlen + EXTTABLE_TO_SPEED_LEN_OFF);
 #endif
-    }
-    else /* Load "From UCS" table */
-    {
+        } else /* Load "From UCS" table */
+        {
 #ifdef TABLE_USE_SIZE_OPTIMIZATION
-      off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_FROM_SIZE_OFF);
-      tbllen = _32BIT_ELT(nmlen + EXTTABLE_FROM_SIZE_LEN_OFF);
+            off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_FROM_SIZE_OFF);
+            tbllen = _32BIT_ELT(nmlen + EXTTABLE_FROM_SIZE_LEN_OFF);
 #else
-      off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_FROM_SPEED_OFF);
-      tbllen = _32BIT_ELT(nmlen + EXTTABLE_FROM_SPEED_LEN_OFF);
+            off = (off_t)_32BIT_ELT(nmlen + EXTTABLE_FROM_SPEED_OFF);
+            tbllen = _32BIT_ELT(nmlen + EXTTABLE_FROM_SPEED_LEN_OFF);
 #endif
-    }
+        }
 #ifdef TABLE_USE_SIZE_OPTIMIZATION
-    ccsp->optimization = TABLE_SIZE_OPTIMIZED;
+        ccsp->optimization = TABLE_SIZE_OPTIMIZED;
 #else
-    ccsp->optimization = TABLE_SPEED_OPTIMIZED;
+        ccsp->optimization = TABLE_SPEED_OPTIMIZED;
 #endif
-  }
-  else
-    goto error4; /* Bad file */
+    } else
+        goto error4; /* Bad file */
 
-  if (off == EXTTABLE_NO_TABLE)
-    goto error4; /* No correspondent table in file */
+    if (off == EXTTABLE_NO_TABLE)
+        goto error4; /* No correspondent table in file */
 
-  if ((ccsp->tbl = (ucs2_t *)malloc(tbllen)) == NULL)
-    goto error4;
+    if ((ccsp->tbl = (ucs2_t *) malloc(tbllen)) == NULL)
+        goto error4;
 
-  if (lseek(fd, off, SEEK_SET) == (off_t)-1 || read(fd, (void *)ccsp->tbl, tbllen) != tbllen)
-    goto error5;
+    if (lseek(fd, off, SEEK_SET) == (off_t) - 1 || read(fd, (void *) ccsp->tbl, tbllen) != tbllen)
+        goto error5;
 
-  goto normal_exit;
+    goto normal_exit;
 
-error5:
-  free((void *)ccsp->tbl);
-  ccsp->tbl = NULL;
-error4:
-  free((void *)ccsp);
-  ccsp = NULL;
-error3:
-normal_exit:
-  free((void *)buf);
-error2:
-  if (close(fd) == -1)
-  {
-    if (ccsp != NULL)
-    {
-      if (ccsp->tbl != NULL)
-        free((void *)ccsp->tbl);
-      free((void *)ccsp);
-    }
+    error5:
+    free((void *) ccsp->tbl);
+    ccsp->tbl = NULL;
+    error4:
+    free((void *) ccsp);
     ccsp = NULL;
-  }
-error1:
-  free((void *)fname);
-  return ccsp;
+    error3:
+    normal_exit:
+    free((void *) buf);
+    error2:
+    if (close(fd) == -1) {
+        if (ccsp != NULL) {
+            if (ccsp->tbl != NULL)
+                free((void *) ccsp->tbl);
+            free((void *) ccsp);
+        }
+        ccsp = NULL;
+    }
+    error1:
+    free((void *) fname);
+    return ccsp;
 }
+
 #endif
 
 #endif /* ICONV_TO_UCS_CES_TABLE || ICONV_FROM_UCS_CES_TABLE */

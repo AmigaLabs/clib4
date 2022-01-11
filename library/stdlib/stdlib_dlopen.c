@@ -49,7 +49,7 @@ void *dlopen(const char *path_name, int mode)
 		__set_errno(ENOENT);
 		goto out;
 	}
-	
+
 #if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
 	if (__global_clib2 != NULL && __global_clib2->__unix_path_semantics)

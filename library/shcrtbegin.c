@@ -34,38 +34,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stddef.h>
+#include <proto/exec.h>
 
 /* Avoid gcc warnings.. */
 void __shlib_call_constructors(void);
 void __shlib_call_destructors(void);
+void _init(void);
+void _fini(void);
 
 static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
 static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
 
+void _init(void) {}
+void _fini(void) {}
+
 void __shlib_call_constructors(void)
 {
-    extern void (*__CTOR_LIST__[])(void);
     int i = 0;
 
-    while (__CTOR_LIST__[i+1])
-    {
+    while (__CTOR_LIST__[i + 1]) {
         i++;
     }
 
-    while (i > 0)
-    {
+    while (i > 0) {
         __CTOR_LIST__[i--]();
     }
 }
 
-void __shlib_call_destructors()
+void __shlib_call_destructors(void)
 {
-    extern void (*__DTOR_LIST__[])(void);
     int i = 1;
 
-    while (__DTOR_LIST__[i])
-    {
+    while (__DTOR_LIST__[i]) {
         __DTOR_LIST__[i++]();
     }
 }
