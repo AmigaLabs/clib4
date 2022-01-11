@@ -39,12 +39,15 @@ Soft float version is no longer available.
 If you want to use the shared version remember to pack your OS4 software with all CLib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.
 Don't overwrite SOBJS: files with your Clib2 files othwerise OS4 most probably will not load or you could have problems running software!
 
+### Optimized AMCC functions
+
+Some functions like (memchr, memcmp, memcpy and some other) are optimized for SAM440 and SAM460.
+Feel free to add other CPU versions
+
 ### Shared objects
 
 Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).
-using dlopen/dlsym will not crash anymore however due a bug on `libgcc.so` you have to use the static version. Don't use the flag -static-libgcc because it isn't working too. Just remove (or move somewhere) libgcc.so so the linker will use the static one.
-If you are compiling linking with C++ it is better to remove `libstdc++.so` too and add -lgcc_eh othweriswe .so is linked against it will not work.
-
+using dlopen/dlsym will not crash anymore however there is a bug in `libstdc++.so`. So if you want to use libstdc++ it is better to remove it and link against the static version.
 
 ### Large file support
 
@@ -73,10 +76,10 @@ You can also disable it at runtime using **disableUnixPaths()**. However is not 
 
 All **wctype** functions should be working correctly now. We need a valid test suite
 
-
 ### Wchar
 
-Some **wchar** functions are now implemented. There are no valid tests except little few so use at your own risk..
+Some **wchar** functions are now implemented but some are not working correctly. 
+There are no valid tests except a little few so use at your own risk..
 
 ### TODO
 
