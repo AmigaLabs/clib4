@@ -114,10 +114,12 @@ ilseq:
 		ps = &__global_clib2->wide_status->_mbrtowc_state;
 	}
 
-	if (src == NULL)
-		retval = _mbtowc(NULL, "", 1, ps);
-	else
-		retval = _mbtowc(pwc, src, n, ps);
+	if (src == NULL) {
+        retval = _mbtowc(NULL, "", 1, ps);
+    }
+	else {
+        retval = _mbtowc(pwc, src, n, ps);
+    }
 
 	if (retval == -1)
 	{

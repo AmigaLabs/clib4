@@ -53,7 +53,7 @@ btowc(int c)
 
 	return L'\0';
 #else
-	mbstate_t mbs;
+	mbstate_t *mbs = &__global_clib2->wide_status->_mbtowc_state;
 	int retval = 0;
 	wchar_t pwc;
 	char b;
@@ -61,9 +61,9 @@ btowc(int c)
 	b = (char)c;
 
 	/* Put mbs in initial state. */
-	memset(&mbs, '\0', sizeof(mbs));
+	memset(mbs, '\0', sizeof(mbs));
 
-	retval = _mbtowc(&pwc, &b, 1, &mbs);
+	retval = _mbtowc(&pwc, &b, 1, mbs);
 
 	if (c == EOF || retval != 1)
 		return WEOF;

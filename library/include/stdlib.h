@@ -88,6 +88,7 @@ extern int mbtowc(wchar_t *pwc, const char *s, size_t n);
 extern int _mbtowc(wchar_t *pwc, const char *s, size_t n, _mbstate_t *st);
 
 extern int wctomb(char *s, wchar_t wchar);
+extern int _wctomb_r(char *s, wchar_t wchar, mbstate_t *state);
 extern size_t mbstowcs(wchar_t *ws, const char *s, size_t wn);
 extern size_t wcstombs(char *s, const wchar_t *pwcs, size_t n);
 

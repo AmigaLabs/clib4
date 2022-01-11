@@ -35,15 +35,11 @@
 #include <exec/execbase.h>
 #endif /* EXEC_EXECBASE_H */
 
-/****************************************************************************/
-
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-
-/****************************************************************************/
 
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
@@ -52,10 +48,6 @@
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
-
-#ifndef _TIME_HEADERS_H
-#include "time_headers.h"
-#endif /* _TIME_HEADERS_H */
 
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
@@ -67,27 +59,16 @@
 
 #include <proto/elf.h>
 
-/****************************************************************************/
-static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), aligned(sizeof(void (*)(void)))));
-static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
-
 extern int main(int arg_c, char **arg_v);
-extern struct _clib2 *InitGlobal(void);
-extern void FiniGlobal(void);
-
-/****************************************************************************/
+BOOL open_libraries(void);
+void close_libraries(void);
 
 /* This will be set to TRUE in case a stack overflow was detected. */
 BOOL NOCOMMON __stack_overflow;
-struct _clib2 NOCOMMON*__global_clib2;
+extern struct _clib2 NOCOMMON*__global_clib2;
 
-extern struct Library NOCOMMON *__ElfBase;
-extern struct ElfIFace NOCOMMON *__IElf;
-
-/****************************************************************************/
-BOOL open_libraries(struct ExecIFace *iexec);
-void close_libraries(void);
-/****************************************************************************/
+extern struct Library  *__ElfBase;
+extern struct ElfIFace *__IElf;
 
 void
 close_libraries(void)
@@ -115,18 +96,6 @@ close_libraries(void)
 		CloseLibrary(DOSBase);
 		DOSBase = NULL;
 	}
-
-	if (__IElf != NULL)
-	{
-		DropInterface((struct Interface *)__IElf);
-		__IElf = NULL;
-	}
-
-	if (__ElfBase != NULL)
-	{
-		CloseLibrary(__ElfBase);
-		__ElfBase = NULL;
-	}
 }
 
 static int
@@ -139,6 +108,11 @@ call_main(void)
 	/* This plants the return buffer for _exit(). */
 	if (setjmp(__exit_jmp_buf) != 0)
 		goto out;
+
+	SHOWMSG("now invoking the constructors");
+
+	/* Go through the constructor list */
+	_init();
 
 	/* This can be helpful for debugging purposes: print the name of the current
 	   directory, followed by the name of the command and all the parameters
@@ -216,13 +190,10 @@ out:
 	/* Restore the IoErr() value before we return. */
 	SetIoErr(saved_io_err);
 
-	/* Free global reent structure */
-	FiniGlobal();
+    SHOWMSG("invoking the destructors");
 
-	SHOWMSG("invoking the destructors");
-
-	/* Go through the destructor list */
-	_clib_exit();
+    /* Go through the destructor list */
+	_fini();
 
 	SHOWMSG("done.");
 
@@ -233,11 +204,9 @@ out:
 /****************************************************************************/
 
 BOOL 
-open_libraries(struct ExecIFace *iexec)
+open_libraries(void)
 {
 	BOOL success = FALSE;
-
-	IExec = iexec;
 
 	/* Open the minimum required libraries. */
 	DOSBase = (struct Library *)OpenLibrary("dos.library", 54);
@@ -280,11 +249,7 @@ detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
 {
 	struct ElfIFace *IElf = __IElf;
 
-	_clib_exit();
-
-	FiniGlobal();
-
-	close_libraries();
+    _fini();
 }
 
 /****************************************************************************/
@@ -308,7 +273,7 @@ get_stack_size(void)
 /****************************************************************************/
 
 int 
-_main(void)
+_main()
 {
 	struct Process *volatile child_process = NULL;
 	struct WBStartup *volatile startup_message;
@@ -317,29 +282,27 @@ _main(void)
 	struct Process *this_process;
 	int return_code = RETURN_FAIL;
 	ULONG current_stack_size;
-	int num_ctors = 0, k;
-	static int j = 0;
+	static int j = 0, k = 0;
 
-	__global_clib2 = InitGlobal();
-	if (__global_clib2 == NULL)
-		goto out;
+    SysBase = *(struct Library **)4;
+	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 
-	SHOWMSG("InitGlobal done.");
-
-	/* Calling LibC constructors */
-	for (k = 1, num_ctors = 0; __CTOR_LIST__[k] != NULL; k++)
-		num_ctors++;
-
-	for (j = 0; j < num_ctors; j++)
+	/* Try to open the libraries we need to proceed. */
+	if (CANNOT open_libraries())
 	{
-		__CTOR_LIST__[num_ctors - j]();
+		const char *error_message;
+
+		/* If available, use the error message provided by the client. */
+		error_message = __minimum_os_lib_error;
+
+		if (error_message == NULL)
+			error_message = "This program requires AmigaOS 4.1 or higher.";
+
+		__show_error(error_message);
+		goto out;
 	}
 
-	/* Set system time for rusage */
-	struct TimerIFace *ITimer = __ITimer;
-	GetSysTime(&__global_clib2->clock);
-
-	/* Pick up the Workbench startup message, if available. */
+    /* Pick up the Workbench startup message, if available. */
 	this_process = (struct Process *)FindTask(NULL);
 
 	if (this_process->pr_CLI == ZERO)
@@ -435,7 +398,6 @@ _main(void)
 
 		if (stack_size < cli->cli_DefaultStack * sizeof(LONG))
 			stack_size = cli->cli_DefaultStack * sizeof(LONG);
-		Printf("__stack_size = %ld - stack_size = %ld\n", __stack_size, stack_size);
 
 		GetCliProgramName(program_name, (LONG)sizeof(program_name));
 
@@ -504,17 +466,8 @@ _main(void)
 
 out:
 
-	/* Free global reent structure */
-	FiniGlobal();
-
-	/* Go through the destructor list */
-	_clib_exit();
-
 	if (old_window_pointer_valid)
 		__set_process_window(old_window_pointer);
-
-	if (child_process == NULL)
-		close_libraries();
 
 	if (startup_message != NULL)
 	{
@@ -523,27 +476,7 @@ out:
 		ReplyMsg((struct Message *)startup_message);
 	}
 
-	SHOWMSG("invoking the destructors");
-
-	SHOWMSG("done.");
+    close_libraries();
 
 	return (return_code);
-}
-
-void 
-_clib_exit(void)
-{
-	extern void shared_obj_exit(void);
-	int num_dtors, i;
-	static int j = 0;
-
-	for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
-		num_dtors++;
-
-	while (j++ < num_dtors) {
-		__DTOR_LIST__[j]();
-	}
-
-	/* The shared objects need to be cleaned up after all local destructors have been invoked. */
-	shared_obj_exit();
 }

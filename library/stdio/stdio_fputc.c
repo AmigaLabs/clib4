@@ -43,51 +43,50 @@
 
 /****************************************************************************/
 
-int
-__fputc_check(FILE *stream)
+int __fputc_check(FILE *stream)
 {
-	struct iob * file = (struct iob *)stream;
+	struct iob *file = (struct iob *)stream;
 	int result = EOF;
 
-	assert( stream != NULL );
+	assert(stream != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(stream == NULL)
+		if (stream == NULL)
 		{
 			__set_errno(EFAULT);
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	assert( __is_valid_iob(file) );
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+	assert(__is_valid_iob(file));
+	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+	assert(file->iob_BufferSize > 0);
 
-	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_IN_USE))
+	if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE))
 	{
 		SHOWMSG("this file is not even in use");
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+		SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 		__set_errno(EBADF);
 
 		goto out;
 	}
 
-	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_WRITE))
+	if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_WRITE))
 	{
 		SHOWMSG("this stream is not write enabled");
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+		SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 		__set_errno(EBADF);
 
 		goto out;
 	}
 
-	if(__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(file) < 0)
+	if (__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(file) < 0)
 	{
 		SHOWMSG("couldn't get rid of the read buffer.");
 		goto out;
@@ -95,30 +94,29 @@ __fputc_check(FILE *stream)
 
 	result = OK;
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
-int
-__fputc(int c,FILE *stream,int buffer_mode)
+int __fputc(int c, FILE *stream, int buffer_mode)
 {
-	struct iob * file = (struct iob *)stream;
+	struct iob *file = (struct iob *)stream;
 	int result = EOF;
 
-	assert( stream != NULL );
+	assert(stream != NULL);
 
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+	assert(file->iob_BufferSize > 0);
 
-	if(__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(file) < 0)
+	if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(file) < 0)
 		goto out;
 
 	file->iob_Buffer[file->iob_BufferWriteBytes++] = c;
 
-	if((buffer_mode == IOBF_BUFFER_MODE_NONE || (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) && __flush_iob_write_buffer(file) < 0)
+	if ((buffer_mode == IOBF_BUFFER_MODE_NONE || (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) && __flush_iob_write_buffer(file) < 0)
 	{
 		/* Pretend that the last character was not written. */
 		file->iob_BufferWriteBytes--;
@@ -130,36 +128,35 @@ __fputc(int c,FILE *stream,int buffer_mode)
 	   out as 255. */
 	result = (c & 255);
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
-int
-fputc(int c,FILE *stream)
+int fputc(int c, FILE *stream)
 {
-	struct iob * file = (struct iob *)stream;
+	struct iob *file = (struct iob *)stream;
 	int result = EOF;
 
-	assert( stream != NULL );
+	assert(stream != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
+	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 
 	flockfile(stream);
 
-	if(__fputc_check(stream) < 0)
+	if (__fputc_check(stream) < 0)
 		goto out;
 
-	result = __fputc(c,stream,(file->iob_Flags & IOBF_BUFFER_MODE));
+	result = __fputc(c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
 
- out:
+out:
 
 	funlockfile(stream);
 
-	return(result);
+	return (result);
 }

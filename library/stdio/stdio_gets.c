@@ -46,23 +46,23 @@
 char *
 gets(char *s)
 {
-	char * result = s;
+	char *result = s;
 	int c;
 
 	ENTER();
 
 	SHOWPOINTER(s);
 
-	assert( s != NULL && stdin != NULL );
+	assert(s != NULL && stdin != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	flockfile(stdin);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(s == NULL || stdin == NULL)
+		if (s == NULL || stdin == NULL)
 		{
 			SHOWMSG("invalid parameters");
 
@@ -72,12 +72,12 @@ gets(char *s)
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
 	/* Take care of the checks and data structure changes that
 	 * need to be handled only once for this stream.
 	 */
-	if(__fgetc_check(stdin) < 0)
+	if (__fgetc_check(stdin) < 0)
 	{
 		result = NULL;
 		goto out;
@@ -86,12 +86,12 @@ gets(char *s)
 	/* So that we can tell error and 'end of file' conditions apart. */
 	clearerr(stdin);
 
-	while(TRUE)
+	while (TRUE)
 	{
 		c = __getc(stdin);
-		if(c == EOF)
+		if (c == EOF)
 		{
-			if(ferror(stdin))
+			if (ferror(stdin))
 			{
 				/* Just to be on the safe side. */
 				(*s) = '\0';
@@ -102,13 +102,13 @@ gets(char *s)
 
 			/* Make sure that we return NULL if we really
 			   didn't read anything at all */
-			if(s == result)
+			if (s == result)
 				result = NULL;
 
 			break;
 		}
 
-		if(c == '\n')
+		if (c == '\n')
 			break;
 
 		(*s++) = c;
@@ -118,10 +118,10 @@ gets(char *s)
 
 	SHOWSTRING(result);
 
- out:
+out:
 
 	funlockfile(stdin);
 
 	RETURN(result);
-	return(result);
+	return (result);
 }

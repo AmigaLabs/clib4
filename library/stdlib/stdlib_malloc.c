@@ -481,6 +481,7 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
 
 /****************************************************************************/
 
+/* Second constructor called by _init */
 STDLIB_CONSTRUCTOR(stdlib_memory_init)
 {
 	BOOL success = FALSE;

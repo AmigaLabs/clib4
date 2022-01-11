@@ -38,6 +38,7 @@
 
 #ifndef PROTO_SYSVIPC_H
 #define _TIMESPEC_DEFINED
+#include <posix/shm_headers.h>
 #include <proto/sysvipc.h>
 #endif /* PROTO_SYSVIPC_H */
 
@@ -47,5 +48,5 @@
 
 /****************************************************************************/
 
-struct Library      NOCOMMON *__SysVBase;
-struct UtilityIFace NOCOMMON *__ISysVIPC;
+struct Library   NOCOMMON *__SysVBase;
+struct SYSVIFace NOCOMMON *__ISysVIPC;

@@ -34,7 +34,7 @@
 #include "conv.h"
 #include "ucsconv.h"
 
-static int fake_data;
+static int fake_data = 0;
 
 static int
 find_encoding_name(const char *searchee, const char **names);
@@ -61,8 +61,9 @@ ucs_based_conversion_open(const char *to, const char *from)
    */
     for (to_ucs_bices = &_iconv_to_ucs_ces[0]; to_ucs_bices->names != NULL; to_ucs_bices++)
     {
-        if (find_encoding_name(from, to_ucs_bices->names) == 0)
+        if (find_encoding_name(from, to_ucs_bices->names) == 0) {
             break;
+        }
     }
 
     /* 
@@ -71,8 +72,9 @@ ucs_based_conversion_open(const char *to, const char *from)
    */
     for (from_ucs_bices = &_iconv_from_ucs_ces[0]; from_ucs_bices->names != NULL; from_ucs_bices++)
     {
-        if (find_encoding_name(to, from_ucs_bices->names) == 0)
+        if (find_encoding_name(to, from_ucs_bices->names) == 0) {
             break;
+        }
     }
 
     if (to_ucs_bices->names == NULL || from_ucs_bices->names == NULL)
@@ -88,8 +90,9 @@ ucs_based_conversion_open(const char *to, const char *from)
         if (uc->to_ucs.data == NULL)
             goto error;
     }
-    else
-        uc->to_ucs.data = (void *)&fake_data;
+    else {
+        uc->to_ucs.data = (void *) &fake_data;
+    }
 
     /* Initialize "from UCS" CES converter */
     if (from_ucs_bices->handlers->init != NULL)
@@ -98,8 +101,9 @@ ucs_based_conversion_open(const char *to, const char *from)
         if (uc->from_ucs.data == NULL)
             goto error;
     }
-    else
-        uc->from_ucs.data = (void *)&fake_data;
+    else {
+        uc->from_ucs.data = (void *) &fake_data;
+    }
 
     return uc;
 
@@ -301,9 +305,9 @@ find_encoding_name(const char *searchee, const char **names)
 {
     const char *p;
 
-    for (p = *names; p != NULL; p = *(names++))
+    for (p = *names; p != NULL; p = *(names++)) {
         if (strcmp(p, searchee) == 0)
             return 0;
-
+    }
     return -1;
 }

@@ -43,29 +43,28 @@
 
 /****************************************************************************/
 
-int
-__fgetc(FILE *stream)
+int __fgetc(FILE *stream)
 {
-	struct iob * file = (struct iob *)stream;
+	struct iob *file = (struct iob *)stream;
 	int result = EOF;
 
-	assert( stream != NULL );
+	assert(stream != NULL);
 
-	assert( __is_valid_iob(file) );
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+	assert(__is_valid_iob(file));
+	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+	assert(file->iob_BufferSize > 0);
 
-	if(__iob_read_buffer_is_empty(file))
+	if (__iob_read_buffer_is_empty(file))
 	{
-		if(__check_abort_enabled)
+		if (__check_abort_enabled)
 			__check_abort();
 
-		if(__fill_iob_read_buffer(file) < 0)
+		if (__fill_iob_read_buffer(file) < 0)
 			goto out;
 
-		if(__iob_read_buffer_is_empty(file))
+		if (__iob_read_buffer_is_empty(file))
 		{
-			SET_FLAG(file->iob_Flags,IOBF_EOF_REACHED);
+			SET_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
 
 			goto out;
 		}
@@ -73,94 +72,92 @@ __fgetc(FILE *stream)
 
 	result = file->iob_Buffer[file->iob_BufferPosition++];
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
-int
-__fgetc_check(FILE * stream)
+int __fgetc_check(FILE *stream)
 {
-	struct iob * file = (struct iob *)stream;
+	struct iob *file = (struct iob *)stream;
 	int result = EOF;
 
-	assert( stream != NULL );
+	assert(stream != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(stream == NULL)
+		if (stream == NULL)
 		{
 			__set_errno(EFAULT);
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+	assert(file->iob_BufferSize > 0);
 
-	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_IN_USE))
+	if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE))
 	{
 		SHOWMSG("this file is not even in use");
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+		SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 		__set_errno(EBADF);
 		goto out;
 	}
 
-	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_READ))
+	if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ))
 	{
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+		SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
 		__set_errno(EBADF);
 		goto out;
 	}
 
-	if(__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(file) < 0)
+	if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(file) < 0)
 		goto out;
 
 	result = OK;
 
- out:
+out:
 
-	return(result);
+	return (result);
 }
 
 /****************************************************************************/
 
-int
-fgetc(FILE *stream)
+int fgetc(FILE *stream)
 {
 	int result = EOF;
 
-	assert( stream != NULL );
+	assert(stream != NULL);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	flockfile(stream);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
+#if defined(CHECK_FOR_NULL_POINTERS)
 	{
-		if(stream == NULL)
+		if (stream == NULL)
 		{
 			__set_errno(EFAULT);
 			goto out;
 		}
 	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+#endif /* CHECK_FOR_NULL_POINTERS */
 
-	if(__fgetc_check(stream) < 0)
+	if (__fgetc_check(stream) < 0)
 		goto out;
 
 	result = __getc(stream);
 
- out:
+out:
 
 	funlockfile(stream);
 
-	return(result);
+	return (result);
 }

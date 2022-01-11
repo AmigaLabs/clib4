@@ -100,6 +100,14 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
 
 	if (buffer == 0)
 	{
+        /*
+         * On systems with with a processor that does not support performancemonitor.resource, e.g. the AMCC PowerPC 440EP, profil() generates a DSI at process termination when buffer == 0.
+         * A pointer to PerformanceMonitorIFace is never obtained, and the call to IPM->EventControlTags() when buffer == 0 attempts to dereference a NULL pointer
+         * https://sourceforge.net/p/clib2/bugs/54/
+         */
+        if (!IPM)
+            return 0;
+
 		Stack = SuperState();
 		IPM->EventControlTags(
 			PMECT_Disable, PMEC_MasterInterrupt,
