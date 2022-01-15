@@ -46,68 +46,55 @@
  * ==========================================================================
  */
 
-#include        "ppc4xx.inc"	
+#include        "ppc4xx.inc"
 
 #define DLMZBDOT(ra,rs,rb) .long 0x7c00009d|(rs<<21)|(ra<<16)|(rb<<11)
 
 function_prolog(__strlen440)
+	xor	r12,r12,r12	        /* Clear total offset from the start      */
+	neg	r9,r3     	        /* get 2's complement of input address    */
+	rlwinm.	r5,r9,0,29,31   /* calc number of bytes to dword boundary */
+	beq-	dwbndry         /* if zero, then already on dword bndry   */
 
-	xor	r12,r12,r12	/* Clear total offset from the start */
-
-	neg	r9,r3     	/* get 2's complement of input address */
-	rlwinm.	r5,r9,0,29,31   /* calc number of bytes to dword boundary  */
-	beq-	dwbndry         /* if zero, then already on dword bndry */
-
-	mtctr	r5              /* do byte by byte until dword bndry */
+	mtctr	r5              /* do byte by byte until dword bndry      */
 bytebybyte:
-	lbzx    r4,r12,r3       /* load byte */
-	addi	r12,r12,1       /* bump offset */
-	cmpwi	r4,0            /* compare to NULL */
-	bdnzf	eq,bytebybyte   /* loop till zero count or NULL found */
-	beq-	found           /* check if NULL found */
+	lbzx    r4,r12,r3       /* load byte                              */
+	addi	r12,r12,1       /* bump offset                            */
+	cmpwi	r4,0            /* compare to NULL                        */
+	bdnzf	eq,bytebybyte   /* loop till zero count or NULL found     */
+	beq-	found           /* check if NULL found                    */
 
 dwbndry:
-	rlwinm.	r5,r9,29,30,31  /* calc # of dwords to quad word bndry   */
-	beq	qwbndry         /* if zero, then already on qword bndry */
-	addi 	r5,0,8		/* Byte count of 8 into XER for 'load     */
-				/* string' instruction later		   */		
-        mtxer   r5              /* Load count for 'load string'            */
-	lswx 	r6,r3,r12	/* Load r6-r7 from r3 src + r12 offset     */
-	DLMZBDOT(11,6,7)        /* Look for NULL in these 8 bytes  */
-        add     r12,r12,r11     /* Bump the offset from the start          */
-	bne-	found		/* If NULL found, done; else keep looking */
+	rlwinm.	r5,r9,29,30,31  /* calc # of dwords to quad word bndry    */
+	beq	qwbndry             /* if zero, then already on qword bndry   */
+	addi 	r5,0,8		    /* Byte count of 8 into XER for 'load     */
+        				    /* string' instruction later              */
+    mtxer   r5              /* Load count for 'load string'           */
+	lswx 	r6,r3,r12	    /* Load r6-r7 from r3 src + r12 offset    */
+	DLMZBDOT(11,6,7)        /* Look for NULL in these 8 bytes         */
+    add     r12,r12,r11     /* Bump the offset from the start         */
+	bne-	found		    /* If NULL found, done; else keep looking */
 
 qwbndry:
-	addi 	r5,0,16		/* Byte count of 16 into XER for 'load     */
-				/* string' instruction later		   */		
-
+	addi 	r5,0,16		    /* Byte count of 16 into XER for 'load    */
+				            /* string' instruction later		      */
 
 again:		                /* New 16 bytes, look for NULL             */
-
-        mtxer   r5              /* Load count for 'load string'            */
-
-	lswx 	r6,r3,r12	/* Load r6-r9 from r3 src + r12 offset     */
-                                /* from the start                          */
-
+    mtxer   r5              /* Load count for 'load string'            */
+	lswx 	r6,r3,r12	    /* Load r6-r9 from r3 src + r12 offset     */
+                            /* from the start                          */
 	DLMZBDOT(11,6,7)        /* Look for NULL in these first   8 bytes  */
-
-        add     r12,r12,r11     /* Bump the offset from the start          */
-
-	bne-	found		/* If no NULL in first 8 bytes, fall       */
-				/* through and test next 8 bytes, else,    */
-				/* we're done				   */		
-
-        DLMZBDOT(11,8,9)        /* Look for NULL in these next    8 bytes  */
-
-        add     r12,r12,r11     /* Bump the offset from the start          */
-
-	beq+	again   	/* If no NULL, grab next 16 bytes, else,   */
-				/* we're done.				   */	
+    add     r12,r12,r11     /* Bump the offset from the start          */
+	bne-	found		    /* If no NULL in first 8 bytes, fall       */
+				            /* through and test next 8 bytes, else,    */
+				            /* we're done				               */
+    DLMZBDOT(11,8,9)        /* Look for NULL in these next    8 bytes  */
+    add     r12,r12,r11     /* Bump the offset from the start          */
+	beq+	again   	    /* If no NULL, grab next 16 bytes, else,   */
+				            /* we're done.				               */
 
 found:
-
 	addi	r3,r12,-1       /* Return count less the NULL              */
-
 	blr
 
 function_epilog(__strlen440)

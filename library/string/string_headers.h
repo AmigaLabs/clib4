@@ -75,11 +75,7 @@
 
 /* Address is aligned to a long word boundary. For an 68030 and beyond the
    alignment does not matter. */
-#if defined(M68020)
-#define IS_LONG_ALIGNED(a) (1)
-#else
 #define IS_LONG_ALIGNED(a) ((((unsigned long)(a)) & 3) == 0)
-#endif /* M68020 */
 
 /****************************************************************************/
 

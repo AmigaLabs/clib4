@@ -1,5 +1,5 @@
 /*
- * $Id: errno.h,v 1.5 2006-01-08 12:06:14 obarthel Exp $
+ * $Id: errno.h,v 1.6 2022-01-15 12:06:14 apalmate Exp $
  *
  * :ts=4
  *
@@ -41,17 +41,11 @@
 #ifndef _ERRNO_H
 #define _ERRNO_H
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 extern int errno;
-
-/****************************************************************************/
 
 #define EPERM			1	/* Operation not permitted */
 #define ENOENT			2	/* No such file or directory */
@@ -148,33 +142,18 @@ extern int errno;
 #define EPROGUNAVAIL	74	/* RPC prog. not avail */
 #define EPROGMISMATCH	75	/* Program version wrong */
 #define EPROCUNAVAIL	76	/* Bad procedure for program */
-
 #define ENOLCK			77	/* No locks available */
 #define ENOSYS			78	/* Function not implemented */
-
 #define EFTYPE			79	/* Inappropriate file type or format */
-
 #define EAUTH			80	/* Authentication error. */
-
 #define ENEEDAUTH		81	/* Need authenticator. */
-
 #define EIDRM			82	/* Identifier removed. */
-
 #define ENOMSG			83	/* No message of the desired type. */
-
 #define EOVERFLOW		84	/* Value too large to be stored in data type. */
-
 #define EILSEQ			85	/* Encoding error detected */
-
 #define EPROTO          86  /* Protocol error */
-
 #define ENOTSUP         1134 /* Not supported */
-/****************************************************************************/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _ERRNO_H */

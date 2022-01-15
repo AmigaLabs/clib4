@@ -41,11 +41,11 @@
 #ifndef	_SYS_CLIB2_IO_H
 #define	_SYS_CLIB2_IO_H
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include <sys/types.h>
+
+__BEGIN_DECLS
 
 /****************************************************************************/
 
@@ -74,7 +74,7 @@ struct file_action_message
 	char *					fam_Data;		/* Where to read/write the data */
 	int						fam_Size;		/* How much data to write */
 
-	_off64_t				fam_Offset;		/* The seek offset */
+    int64_t				    fam_Offset;		/* The seek offset */
 	int						fam_Mode;		/* The seek mode */
 
 	int						fam_Arg;		/* Action parameters, e.g. whether or not
@@ -179,12 +179,6 @@ extern int __change_fd_action(int file_descriptor,_file_action_fd_t new_action,_
    and is thus safe to use in a thread-safe environment. */
 extern int __change_fd_user_data(int file_descriptor,void * new_user_data,void ** old_user_data_ptr);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_CLIB2_IO_H */

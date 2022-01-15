@@ -104,17 +104,13 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 
 	__stdio_lock();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL)
-		{
-			SHOWMSG("path name is invalid");
+    if (path_name == NULL)
+    {
+        SHOWMSG("path name is invalid");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	access_mode = (open_flag & 3);
 	if (access_mode < O_RDONLY && access_mode > O_RDWR)
@@ -164,7 +160,11 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 	{
 		open_mode = MODE_NEWFILE;
 	}
-	else if (Strnicmp(path_name, "NIL:", 4) != SAME && FLAG_IS_SET(open_flag, O_CREAT))
+	else if (Strnicmp(path_name, "NIL:", 4) != SAME && (
+            FLAG_IS_SET(open_flag, O_CREAT) ||
+            FLAG_IS_SET(open_flag, O_WRONLY) ||
+            FLAG_IS_SET(open_flag, O_RDWR)
+    ))
 	{
 		if (FLAG_IS_SET(open_flag, O_EXCL))
 		{

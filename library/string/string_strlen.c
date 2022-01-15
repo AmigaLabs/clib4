@@ -40,16 +40,40 @@
 #endif /* _STRING_HEADERS_H */
 
 INLINE STATIC size_t
-__strlen(const char *s) 
+__strlen(const char *str)
 {
-	const char *start = s;
-	size_t result = 0;
+    uint32 *s32, x, magic1, magic2;
+    char *s = (char *)str;
 
-	while ((*s) != '\0')
-		s++;
+    magic1 = 0xFEFEFEFF;
+    magic2 = 0x7F7F7F7F;
 
-	result = (size_t)(s - start);
-	return result;
+    s32 = (uint32 *)((uint32)s & ~3);
+
+    x = (s32 == (uint32 *)s)
+        ? *s32
+        : *s32 | (0xFFFFFFFF << (3-((uint32)s&3)+1)*8);
+
+    while (!((x + magic1) & ~(x | magic2)))
+    {
+        x = *++s32;
+    }
+
+    s = (char *)s32;
+    if (x & 0xFF000000)
+    {
+        s++;
+        if (x & 0x00FF0000)
+        {
+            s++;
+            if (x & 0x0000FF00)
+            {
+                s++;
+            }
+        }
+    }
+
+    return s-str;
 }
 
 size_t

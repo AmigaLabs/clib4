@@ -2,6 +2,7 @@
 *.a
 *.so
 *.lha
+*.bak
 /library/compiler.log
 *.map
 .vscode

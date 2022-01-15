@@ -103,12 +103,12 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 	int precision;
 	enum parameter_size_t parameter_size;
 	char conversion_type;
-	char buffer[80];
+	char buffer[80] = {0};
 	int buffer_mode;
 	char *output_buffer;
 	int output_len;
 	const char *prefix;
-	char prefix_buffer[8];
+	char prefix_buffer[8] = {0};
 	int argument_digits;
 	int argument_number;
 	int argument_index;
@@ -119,7 +119,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 
 	char *internal_buffer = NULL;
 	size_t internal_buffer_size = 0;
-	char trail_string[8];
+	char trail_string[8] = {0};
 	int trail_string_len;
 	int num_trailing_zeroes;
 
@@ -1292,53 +1292,32 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 
 			assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-			{
-				if (arg == NULL)
-				{
-					__set_errno(EFAULT);
-					goto out;
-				}
-			}
-#endif /* CHECK_FOR_NULL_POINTERS */
+            if (arg == NULL)
+            {
+                __set_errno(EFAULT);
+                goto out;
+            }
 
 			output_buffer = va_arg(arg, char *);
 
-#if defined(NDEBUG)
-			{
-				if (output_buffer == NULL)
-				{
-					output_buffer = buffer;
-					strcpy(output_buffer, "");
-				}
-			}
-#else
-			{
-				if (output_buffer == NULL)
-				{
-					output_buffer = buffer;
-					strcpy(output_buffer, "*NULL POINTER*");
-				}
-			}
-#endif /* NDEBUG */
+            if (output_buffer == NULL)
+            {
+                output_buffer = buffer;
+                strcpy(output_buffer, "(null)"); // Linux like
+            }
 
-			if (precision < 0)
-			{
-				output_len = strlen(output_buffer);
-			}
-			else
-			{
-				output_len = precision;
+            if (precision < 0) {
+                output_len = strlen(output_buffer);
+            } else {
+                output_len = precision;
 
-				for (i = 0; i < precision; i++)
-				{
-					if (output_buffer[i] == '\0')
-					{
-						output_len = i;
-						break;
-					}
-				}
-			}
+                for (i = 0; i < precision; i++) {
+                    if (output_buffer[i] == '\0') {
+                        output_len = i;
+                        break;
+                    }
+                }
+            }
 
 			D(("string = '%s', length = %ld", output_buffer, output_len));
 

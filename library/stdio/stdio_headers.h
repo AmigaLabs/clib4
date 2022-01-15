@@ -395,7 +395,7 @@ struct fd
 	/************************************************************************/
 
 	struct SignalSemaphore *	fd_Lock;			/* For thread locking */
-	_off64_t					fd_Position;		/* Cached file position (seek offset). */
+	off_t					    fd_Position;		/* Cached file position (seek offset). */
 	fd_cleanup_t				fd_Cleanup;			/* Cleanup function, if any. */
 
 	struct fd *					fd_Original;		/* NULL if this is not a dup()ed file

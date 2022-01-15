@@ -59,15 +59,16 @@ int64_t __fd_hook_entry(
 	struct ExamineData *exd = NULL;
 	BOOL fib_is_valid = FALSE;
 	struct FileHandle *fh;
-	int64_t current_position;
-	int64_t new_position;
+	int64_t current_position = 0;
+	int64_t new_position = 0;
+    int64_t file_size = 0;
 	int new_mode;
 	char *buffer = NULL;
 	int64_t result = EOF;
 	BOOL is_aliased;
 	BPTR file;
 
-	ENTER();
+    ENTER();
 
 	assert(fam != NULL && fd != NULL);
 	assert(__is_valid_fd(fd));
@@ -89,7 +90,7 @@ int64_t __fd_hook_entry(
 		goto out;
 	}
 
-	switch (fam->fam_Action)
+    switch (fam->fam_Action)
 	{
 	case file_action_read:
 
@@ -390,30 +391,27 @@ int64_t __fd_hook_entry(
 
 			current_position = position;
 		}
-
 		new_position = current_position;
 
 		switch (new_mode)
 		{
-		case OFFSET_CURRENT:
-			new_position += fam->fam_Offset;
-			break;
+            case OFFSET_CURRENT:
+                new_position += fam->fam_Offset;
+                break;
 
-		case OFFSET_BEGINNING:
-			new_position = fam->fam_Offset;
-			break;
+            case OFFSET_BEGINNING:
+                new_position = fam->fam_Offset;
+                break;
 
-		case OFFSET_END:
-			new_position = GetFileSize(file);
-			if (new_position != GETPOSITION_ERROR)
-			{
-				if (fam->fam_Offset < 0)
-					new_position += fam->fam_Offset;
+            case OFFSET_END:
+                file_size = GetFileSize(file);
+                if (file_size != GETPOSITION_ERROR)
+                {
+                    new_position = file_size + fam->fam_Offset;
+                    fib_is_valid = TRUE;
+                }
 
-				fib_is_valid = TRUE;
-			}
-
-			break;
+                break;
 		}
 		/* if new_position is < 0. Force it to 0 */
 		if (new_position < 0) {
@@ -444,6 +442,13 @@ int64_t __fd_hook_entry(
 					exd = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
 					if ((NOT fib_is_valid && exd == NULL) || (exd == NULL) || (new_position <= (int64_t)exd->FileSize))
 						goto out;
+
+                    /* Don't extend if the file is opened read-only */
+                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE))
+                    {
+                        fam->fam_Error = EPERM;
+                        goto out;
+                    }
 
 					/* Now try to make that file larger. */
 					if (__grow_file_size(fd, new_position - (int64_t)exd->FileSize) < 0)

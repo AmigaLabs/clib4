@@ -87,24 +87,7 @@ extern void kprintf(const char *format,...);
  int  _GETDEBUGLEVEL(void);
  void _SETPROGRAMNAME(char *name);
 
- #if defined(__SASC)
-  #define ENTER()		_ENTER(__FILE__,__LINE__,__FUNC__)
-  #define LEAVE()		_LEAVE(__FILE__,__LINE__,__FUNC__)
-  #define RETURN(r)		_RETURN(__FILE__,__LINE__,__FUNC__,(unsigned long)r)
-  #define SHOWVALUE(v)		_SHOWVALUE((unsigned long)v,sizeof(v),#v,__FILE__,__LINE__)
-  #define SHOWPOINTER(p)	_SHOWPOINTER(p,#p,__FILE__,__LINE__)
-  #define SHOWSTRING(s)		_SHOWSTRING(s,#s,__FILE__,__LINE__)
-  #define SHOWMSG(s)		_SHOWMSG(s,__FILE__,__LINE__)
-  #define D(s)			do { _DPRINTF_HEADER(__FILE__,__LINE__); _DPRINTF s; } while(0)
-  #define PRINTHEADER()		_DPRINTF_HEADER(__FILE__,__LINE__)
-  #define PRINTF(s)		_DLOG s
-  #define LOG(s)		do { _DPRINTF_HEADER(__FILE__,__LINE__); _DLOG("<%s()>:",__FUNC__); _DLOG s; } while(0)
-  #define SETDEBUGLEVEL(l)	_SETDEBUGLEVEL(l)
-  #define PUSHDEBUGLEVEL(l)	_PUSHDEBUGLEVEL(l)
-  #define POPDEBUGLEVEL()	_POPDEBUGLEVEL()
-  #define SETPROGRAMNAME(n)	_SETPROGRAMNAME(n)
-  #define GETDEBUGLEVEL()	_GETDEBUGLEVEL()
- #elif defined(__GNUC__)
+#if defined(__GNUC__)
   #define ENTER()		_ENTER(__FILE__,__LINE__,__FUNCTION__)
   #define LEAVE()		_LEAVE(__FILE__,__LINE__,__FUNCTION__)
   #define RETURN(r)		_RETURN(__FILE__,__LINE__,__FUNCTION__,(unsigned long)r)

@@ -45,7 +45,7 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-unused-value \
 	-Wno-deprecated-declarations -Wno-unused-label -Wno-sign-compare -Wno-cast-function-type \
 	-Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter -Wstrict-aliasing \
-	-Wshadow # -Werror -Wbad-function-cast #-Wconversion 
+	-Wshadow # -Werror -Wbad-function-cast #-Wconversion -Wformat
 
 PIC		   := -fPIC 
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -74,8 +74,8 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/stat \
 				-I$(LIB_DIR)/mount
 
-OPTIONS    := -mcrt=clib2 -mstrict-align -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -D_GNU_SOURCE -Wa,-mregnames -fno-builtin -fno-common  -DUNIX_PATH_SEMANTICS -nostdlib
-OPTIMIZE   := -DNDEBUG -O3 -fno-inline
+OPTIONS    := -mstrict-align -DUSE_64_BIT_INTS -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -fno-common  -DUNIX_PATH_SEMANTICS -nostdlib
+OPTIMIZE   := -DNDEBUG -O3
 
 DEBUG      := -gstabs
 #MEMDEBUG  := -D__USE_MEM_TREES -D__MEM_DEBUG
@@ -119,6 +119,8 @@ clean:
 	-$(DELETE) $(BUILD_DIR)/obj.shared	
 	-$(DELETE) $(BUILD_DIR)/lib
 	-$(DELETE) $(BUILD_DIR)/compiler.log
+	-$(DELETE) clib2.lha
+	-$(DELETE) clib2.bak
 
 ##############################################################################
 
@@ -224,4 +226,5 @@ install:
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:
+	$(DELETE) clib2.lha
 	jlha -a clib2.lha $(INSTALL_PREFIX)

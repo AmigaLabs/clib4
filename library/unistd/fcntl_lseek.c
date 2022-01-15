@@ -35,12 +35,6 @@
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 off_t lseek(int file_descriptor, off_t offset, int mode)
 {
 	struct file_action_message fam;
