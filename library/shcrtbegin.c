@@ -36,6 +36,7 @@
 
 #include <proto/exec.h>
 
+
 /* Avoid gcc warnings.. */
 void __shlib_call_constructors(void);
 void __shlib_call_destructors(void);

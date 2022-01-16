@@ -92,7 +92,7 @@ void shared_obj_init(void) {
     if (open_elf_library()) {
         struct ElfIFace *IElf = __IElf;
 
-        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+        BPTR segment_list = GetProcSegList(NULL, GPSLF_CLI | GPSLF_SEG);
         if (segment_list != ZERO) {
             int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &elf_handle, TAG_DONE);
             if (ret == 1) {
