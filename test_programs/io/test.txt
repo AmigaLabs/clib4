@@ -1,0 +1,5 @@
+This program reads an existing file called myfile.txt $ character by character and uses the n variable to count $ how many dollar characters ($) does the file contain.
+On success, the character read is returned (promoted to an int value).$
+The return type is int to accommodate for the special value EOF, which indicates failure:$
+If the position indicator was at the end-of-file, the function $ returns EOF and sets the eof indicator (feof) of stream.
+If some other reading error happens, the function also returns EOF, but sets $ its error indicator (ferror) instead.

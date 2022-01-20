@@ -90,17 +90,13 @@ DIR *opendir(const char *path_name)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL)
-		{
-			SHOWMSG("invalid parameter");
+    if (path_name == NULL)
+    {
+        SHOWMSG("invalid parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	dh = malloc(sizeof(*dh));
 	if (dh == NULL)

@@ -88,14 +88,7 @@ __BEGIN_DECLS
 /****************************************************************************/
 
 /* Used by fgetpos() and fsetpos() */
-
-#if defined(__GNUC__)
-typedef long long fpos_t;
-#else
-typedef long fpos_t;
-#endif /* __GNUC__ */
-
-/****************************************************************************/
+typedef int64_t fpos_t;
 
 /*
  * This is part of the internal 'FILE' structure; this is guaranteed not to

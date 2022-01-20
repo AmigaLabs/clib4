@@ -37,6 +37,7 @@
  *
  *****************************************************************************
  */
+#define __USE_GNU
 
 #ifndef _SHM_HEADERS_H
 #include "shm_headers.h"

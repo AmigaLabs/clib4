@@ -67,10 +67,10 @@ typedef long DIR;
 #define DTTOIF(dt)  (((dt) == DT_UNKNOWN ? 0 : (dt) - 1) << 12)
 
 struct dirent {
-    ino_t          d_ino;               /* Inode number */
-    off_t          d_off;               /* Not an offset; see below */
-    unsigned short d_reclen;            /* Length of this record */
-    unsigned char  d_type;              /* Type of file; not supported by all filesystem types */
+    ino_t          d_ino;
+    unsigned short d_reclen;
+    unsigned char  d_type;
+    unsigned char  d_namlen;
     char           d_name[NAME_MAX+1];  /* Null-terminated filename */
 };
 

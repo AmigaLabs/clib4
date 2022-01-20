@@ -287,8 +287,6 @@ setlocale(int category, const char *locale)
 			result = (char *)"C";
 	}
 	
-	printf("SETLOCALE RESULT = %s\n", result);
-
 	SHOWSTRING(result);
 
 out:

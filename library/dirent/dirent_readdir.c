@@ -44,6 +44,7 @@
 struct dirent *
 readdir(DIR *directory_pointer)
 {
+
 	struct dirent *result = NULL;
 	struct DirectoryHandle *dh;
 	BPTR parent_directory = ZERO;
@@ -115,11 +116,11 @@ readdir(DIR *directory_pointer)
 							if (fib)
 							{
 								assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(fib->Name));
-
 								strcpy(dh->dh_DirectoryEntry.d_name, fib->Name);
 
 								dh->dh_DirectoryEntry.d_ino = fib->ObjectID;
-								dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
+								dh->dh_DirectoryEntry.d_reclen = sizeof(struct dirent);
+								dh->dh_DirectoryEntry.d_namlen = strlcpy(dh->dh_DirectoryEntry.d_name, fib->Name, NAME_MAX + 1);
 								if (EXD_IS_SOFTLINK(dh->dh_FileInfo))
 									dh->dh_DirectoryEntry.d_type = DT_LNK;
 								else if (EXD_IS_FILE(dh->dh_FileInfo))
@@ -164,7 +165,8 @@ readdir(DIR *directory_pointer)
 
 				dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo->ObjectID;
 				strcpy(dh->dh_DirectoryEntry.d_name, ".");
-				dh->dh_DirectoryEntry.d_reclen = 2;
+				dh->dh_DirectoryEntry.d_reclen = sizeof(struct dirent);
+				dh->dh_DirectoryEntry.d_namlen = 2;
 				dh->dh_DirectoryEntry.d_type = DT_DIR;
 
 				result = &dh->dh_DirectoryEntry;
@@ -192,7 +194,8 @@ readdir(DIR *directory_pointer)
 				SHOWMSG("returning ..");
 
 				dh->dh_DirectoryEntry.d_ino = ino;
-				dh->dh_DirectoryEntry.d_reclen = 3;
+				dh->dh_DirectoryEntry.d_reclen = sizeof(struct dirent);
+                dh->dh_DirectoryEntry.d_namlen = 3;
 				dh->dh_DirectoryEntry.d_type = DT_DIR;
 
 				strcpy(dh->dh_DirectoryEntry.d_name, "..");
@@ -210,9 +213,8 @@ readdir(DIR *directory_pointer)
 				if (dh->dh_FileInfo != NULL)
 				{
 					dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo->ObjectID;
-
-					strcpy(dh->dh_DirectoryEntry.d_name, dh->dh_FileInfo->Name);
-					dh->dh_DirectoryEntry.d_reclen = strlen(dh->dh_DirectoryEntry.d_name) + 1;
+                    dh->dh_DirectoryEntry.d_namlen = strlcpy(dh->dh_DirectoryEntry.d_name, dh->dh_FileInfo->Name, NAME_MAX + 1);
+					dh->dh_DirectoryEntry.d_reclen = sizeof(struct dirent);
 					if (EXD_IS_SOFTLINK(dh->dh_FileInfo))
 						dh->dh_DirectoryEntry.d_type = DT_LNK;
 					else if (EXD_IS_FILE(dh->dh_FileInfo))

@@ -46,7 +46,8 @@
 int fgetpos(FILE *stream, fpos_t *pos)
 {
 	int result = EOF;
-	long position;
+    fpos_t position;
+
 
 	ENTER();
 
@@ -60,17 +61,13 @@ int fgetpos(FILE *stream, fpos_t *pos)
 
 	flockfile(stream);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (stream == NULL || pos == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (stream == NULL || pos == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	position = ftell(stream);
 	if (position == CHANGE_FILE_ERROR && __get_errno() != OK)

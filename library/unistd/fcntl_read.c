@@ -35,17 +35,9 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
 #ifndef _FCNTL_HEADERS_H
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 ssize_t
 read(int file_descriptor, void * buffer, size_t num_bytes)
@@ -53,6 +45,7 @@ read(int file_descriptor, void * buffer, size_t num_bytes)
 	ssize_t num_bytes_read;
 	struct fd * fd = NULL;
 	ssize_t result = EOF;
+    __set_errno(0);
 
 	ENTER();
 
@@ -63,29 +56,24 @@ read(int file_descriptor, void * buffer, size_t num_bytes)
 	assert( buffer != NULL );
 	assert( (int)num_bytes >= 0);
 
-	if(__check_abort_enabled)
+	if (__check_abort_enabled)
 		__check_abort();
 
 	__stdio_lock();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(buffer == NULL)
-		{
-			SHOWMSG("invalid buffer");
-
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (buffer == NULL)
+    {
+        SHOWMSG("invalid buffer");
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	assert( file_descriptor >= 0 && file_descriptor < __num_fd );
 	assert( __fd[file_descriptor] != NULL );
 	assert( FLAG_IS_SET(__fd[file_descriptor]->fd_Flags,FDF_IN_USE) );
 
 	fd = __get_file_descriptor(file_descriptor);
-	if(fd == NULL)
+	if (fd == NULL)
 	{
 		__set_errno(EBADF);
 		goto out;
@@ -93,7 +81,7 @@ read(int file_descriptor, void * buffer, size_t num_bytes)
 
 	__fd_lock(fd);
 
-	if(FLAG_IS_CLEAR(fd->fd_Flags,FDF_READ))
+	if (FLAG_IS_CLEAR(fd->fd_Flags,FDF_READ))
 	{
 		SHOWMSG("this descriptor is not read-enabled");
 
@@ -101,7 +89,7 @@ read(int file_descriptor, void * buffer, size_t num_bytes)
 		goto out;
 	}
 
-	if(num_bytes > 0)
+	if (num_bytes > 0)
 	{
 		struct file_action_message fam;
 
@@ -114,7 +102,7 @@ read(int file_descriptor, void * buffer, size_t num_bytes)
 		assert( fd->fd_Action != NULL );
 
 		num_bytes_read = (*fd->fd_Action)(fd,&fam);
-		if(num_bytes_read == EOF)
+		if (num_bytes_read == EOF)
 		{
 			__set_errno(fam.fam_Error);
 			goto out;
@@ -128,7 +116,6 @@ read(int file_descriptor, void * buffer, size_t num_bytes)
 	result = num_bytes_read;
 
  out:
-
 	__fd_unlock(fd);
 
 	__stdio_unlock();

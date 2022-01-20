@@ -700,7 +700,7 @@ int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_
 	BPTR file_handle = fd->fd_File;
 	struct LockedRegionNode *lrn = NULL;
 	struct FileLockNode *fln = NULL;
-	struct ExamineData *fib;
+	struct ExamineData *fib = NULL;
 	BOOL fib_is_valid = FALSE;
 	BPTR parent_dir = ZERO;
 	_off64_t seek_position;

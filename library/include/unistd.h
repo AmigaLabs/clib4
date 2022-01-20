@@ -152,6 +152,8 @@ extern int spawnvp(int mode, const char *path, const char * const *argv);
 extern int profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale);
 extern long sysconf(int name);
 
+extern void enableUnixPaths(void);
+extern void disableUnixPaths(void);
 /****************************************************************************/
 
 extern char * getcwd(char * buffer, size_t buffer_size);

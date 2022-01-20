@@ -57,11 +57,19 @@ typedef unsigned int ino_t;
 typedef unsigned int mode_t;
 typedef unsigned int nlink_t;
 #ifdef __USE_LARGEFILE64
-typedef int64_t _off64_t;
-typedef int64_t _fpos64_t;
-typedef _off64_t off_t;
+    typedef int64_t _off64_t;
+    typedef _off64_t off64_t;
+    typedef int64_t _fpos64_t;
+    #ifndef __off_t_defined
+        typedef _off64_t off_t;
+        #define __off_t_defined
+    #endif
 #else
-typedef long int off_t;
+    #if _FILE_OFFSET_BITS == 64
+        typedef int64_t off_t;
+    #else
+        typedef long int off_t;
+    #endif
 #endif
 typedef int pid_t;
 typedef unsigned int rlim_t;

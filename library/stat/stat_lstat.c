@@ -76,17 +76,13 @@ int lstat(const char *path_name, struct stat *st)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL || st == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (path_name == NULL || st == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)

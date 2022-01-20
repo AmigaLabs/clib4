@@ -59,15 +59,11 @@ ftell(FILE *stream)
 
 	flockfile(stream);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (stream == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+    if (stream == NULL)
+    {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	assert(__is_valid_iob(file));
 	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));

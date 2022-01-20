@@ -94,6 +94,7 @@ int64_t __fd_hook_entry(
 	{
 	case file_action_read:
 
+
 		SHOWMSG("file_action_read");
 
 		assert(fam->fam_Data != NULL);
@@ -104,7 +105,6 @@ int64_t __fd_hook_entry(
 		PROFILE_OFF();
 
 		result = Read(file, fam->fam_Data, fam->fam_Size);
-
 		PROFILE_ON();
 
 		if (result == -1)

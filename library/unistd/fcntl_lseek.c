@@ -42,6 +42,7 @@ off_t lseek(int file_descriptor, off_t offset, int mode)
 	struct fd *fd = NULL;
 	off_t position;
 
+
 	ENTER();
 
 	SHOWVALUE(file_descriptor);

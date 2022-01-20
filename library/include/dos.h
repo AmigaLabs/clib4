@@ -604,9 +604,6 @@ struct _clib2
 
 extern struct _clib2 *__global_clib2;
 
-extern void enableUnixPaths(void);
-extern void disableUnixPaths(void);
-
 __END_DECLS
 
 #endif /* _DOS_H */
