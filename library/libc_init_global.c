@@ -118,6 +118,9 @@ STDLIB_CONSTRUCTOR(global_init)
 		__global_clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
 		__global_clib2->wide_status->_l64a_buf[0] = '\0';
 		__global_clib2->wide_status->_getdate_err = 0;
+        /* Set locale stuff */
+        __global_clib2->_current_category = LC_ALL;
+        __global_clib2->_current_locale = "C";
 
 		/* Get the current task pointer */
 		__global_clib2->self = (struct Process *)FindTask(0);
@@ -252,20 +255,17 @@ STDLIB_DESTRUCTOR(global_exit)
     LEAVE();
 }
 
-void 
-enableUnixPaths(void)
+void enableUnixPaths(void)
 {
-	if (__global_clib2 != NULL)
-	{
-		__global_clib2->__unix_path_semantics = TRUE;
-	}
+    __global_clib2->__unix_path_semantics = TRUE;
 }
 
-void 
-disableUnixPaths(void)
+void disableUnixPaths(void)
 {
-	if (__global_clib2 != NULL)
-	{
-		__global_clib2->__unix_path_semantics = FALSE;
-	}
+    __global_clib2->__unix_path_semantics = FALSE;
+}
+
+int *__mb_cur_max(void)
+{
+    return &__global_clib2->__mb_cur_max;
 }

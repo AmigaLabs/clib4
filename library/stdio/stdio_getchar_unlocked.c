@@ -31,21 +31,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 #undef getchar_unlocked
-
-/****************************************************************************/
 
 int
 getchar_unlocked(void)
@@ -54,15 +44,11 @@ getchar_unlocked(void)
 
 	assert( stdin != NULL );
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(stdin == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if(stdin == NULL)
+    {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	result = __getc_unlocked(stdin);
 

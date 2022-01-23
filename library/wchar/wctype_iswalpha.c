@@ -46,27 +46,27 @@
 int iswalpha(wint_t c)
 {
 	int unicode = 0;
-	if (__lc_ctype[0] == 'C' && __lc_ctype[1] == '\0')
+	if (__global_clib2->_current_locale[0] == 'C' && __global_clib2->_current_locale[1] == '\0')
 	{
 		unicode = 0;
 		/* fall-through */
 	}
-	else if (!strcmp(__lc_ctype, "C-JIS"))
+	else if (!strcmp(__global_clib2->_current_locale, "C-JIS"))
 	{
 		c = __jp2uc(c, JP_JIS);
 		unicode = 1;
 	}
-	else if (!strcmp(__lc_ctype, "C-SJIS"))
+	else if (!strcmp(__global_clib2->_current_locale, "C-SJIS"))
 	{
 		c = __jp2uc(c, JP_SJIS);
 		unicode = 1;
 	}
-	else if (!strcmp(__lc_ctype, "C-EUCJP"))
+	else if (!strcmp(__global_clib2->_current_locale, "C-EUCJP"))
 	{
 		c = __jp2uc(c, JP_EUCJP);
 		unicode = 1;
 	}
-	else if (!strcmp(__lc_ctype, "C-UTF-8"))
+	else if (!strcmp(__global_clib2->_current_locale, "C-UTF-8"))
 	{
 		unicode = 1;
 	}

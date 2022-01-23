@@ -580,6 +580,11 @@ struct _clib2
 	/* This is the pointer to itself */
 	struct Process *self;
 
+    /* used by setlocale */
+    int _current_category;
+    const char *_current_locale;
+    int __mb_cur_max;
+
 	/*
 	* Unix path names are not translated to Amiga path names (and the other way round)
 	* by default. If you wish to enable this, set the following variable to TRUE. 

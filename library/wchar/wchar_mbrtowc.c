@@ -36,98 +36,23 @@
 #endif /* _WCHAR_HEADERS_H */
 
 size_t
-mbrtowc(wchar_t *restrict pwc, const char *restrict src, size_t n, mbstate_t *restrict ps)
-{
-#ifdef LIBWCHAR
-	static unsigned is = 0U;
-	unsigned int c;
-	const unsigned char *s = (const void *)src;
-	const unsigned int N = (unsigned int)n;
+mbrtowc(wchar_t *pwc, const char *src, size_t n, mbstate_t *ps) {
+    int retval = 0;
 
-	if (!ps)
-	{
-		ps = (void *)&is;
-	}
-	c = *(unsigned *)ps;
-
-	if (!s)
-	{
-		if (c)
-			goto ilseq;
-		return ((size_t)0);
-	}
-	else if (!pwc)
-	{
-		pwc = (void *)&pwc;
-	}
-	if (!n)
-	{
-		return ((size_t)-2);
-	}
-	if (!c)
-	{
-		if (*s < 0x80)
-		{
-			return !!(*pwc = *s);
-		}
-		if ((*s - __SA) > (__SB - __SA))
-		{
-			goto ilseq;
-		}
-		c = bittab[(*s++ - __SA)];
-		n--;
-	}
-	if (n)
-	{
-		if (__OOB(c, *s))
-			goto ilseq;
-	loop:
-		c = ((c << 6) | (*s++ - 0x80U));
-		n--;
-		if (!(c & (1U << 31)))
-		{
-			*(unsigned *)ps = 0U;
-			*pwc = (wchar_t)c;
-			return (size_t)(N - n);
-		}
-		if (n)
-		{
-			if ((*s - 0x80U) >= 0x40)
-			{
-				goto ilseq;
-			}
-			goto loop;
-		}
-	}
-
-	*(unsigned *)ps = c;
-	return ((size_t)-2);
-ilseq:
-	__set_errno(EILSEQ);
-	*(unsigned *)ps = 0;
-	return ((size_t)-1);
-#else
-	int retval = 0;
-
-	if (ps == NULL)
-	{
-		ps = &__global_clib2->wide_status->_mbrtowc_state;
-	}
-
-	if (src == NULL) {
-        retval = _mbtowc(NULL, "", 1, ps);
+    if (ps == NULL) {
+        ps = &__global_clib2->wide_status->_mbrtowc_state;
     }
-	else {
+
+    if (src == NULL) {
+        retval = _mbtowc(NULL, "", 1, ps);
+    } else {
         retval = _mbtowc(pwc, src, n, ps);
     }
 
-	if (retval == -1)
-	{
-		ps->__count = 0;
-		__set_errno(EILSEQ);
-		return (size_t)(-1);
-	}
-	else
-		return (size_t)retval;
-#endif
+    if (retval == -1) {
+        ps->__count = 0;
+        __set_errno(EILSEQ);
+        return (size_t)(-1);
+    } else
+        return (size_t) retval;
 }

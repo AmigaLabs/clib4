@@ -61,17 +61,13 @@ fopen(const char *filename, const char *mode)
 
 	__stdio_lock();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (filename == NULL || mode == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (filename == NULL || mode == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	slot_number = __find_vacant_iob_entry();
 	if (slot_number < 0)

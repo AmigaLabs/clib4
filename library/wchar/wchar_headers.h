@@ -181,6 +181,10 @@ extern wint_t __jp2uc(wint_t c, int type);
 #define __SB 0xf4u
 #define __ARGMAX 127
 
+/* Arbitrary encoding for representing code units instead of characters. */
+#define CODEUNIT(c) (0xdfff & (signed char)(c))
+#define IS_CODEUNIT(c) ((unsigned)(c)-0xdf80 < 0x80)
+
 #define ESC_CHAR 0x1b
 
 /* functions used to support SHIFT_JIS, EUC-JP, and JIS multibyte encodings */

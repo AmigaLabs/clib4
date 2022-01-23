@@ -35,8 +35,6 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 wint_t
 fputws(const wchar_t *ws, FILE *fp)
 {
@@ -50,8 +48,8 @@ fputws(const wchar_t *ws, FILE *fp)
 		char *ptr = (char *)&buf;
 		while ((nbytes < (BUFSIZ - (MB_LEN_MAX * 2))) && (nchars))
 		{
-			int n;
-			if ((n = wctomb(ptr, *ws)) < 0)
+			int n = wctomb(ptr, *ws);
+			if (n < 0)
 			{
 				__set_errno(EILSEQ);
 				return 0;
