@@ -78,8 +78,19 @@ All **wctype** functions should be working correctly now. We need a valid test s
 
 ### Wchar
 
-Some **wchar** functions are now implemented but some are not working correctly. 
+Almost all **wchar** functions are now implemented and tested but maybe something is not working correctly. 
 There are no valid tests except a little few so use at your own risk..
+
+### Locale
+
+Locales relies always to os4 locales but now you can set the encoding you want to use so wide functon work correctly.
+Accepted encodings are:
+
+`C-UTF-8`
+`C-EUCJP`
+`C-SJIS`
+`C-JIS`
+`ISO-8859-1`
 
 ### TODO
 
