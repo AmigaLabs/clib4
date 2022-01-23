@@ -35,63 +35,58 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 int
-__fill_iob_read_buffer(struct iob * file)
-{
-	struct file_action_message fam;
-	int num_bytes_read;
-	int result = ERROR;
+__fill_iob_read_buffer(struct iob *file) {
+    struct file_action_message fam;
+    int num_bytes_read;
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(file);
+    SHOWPOINTER(file);
 
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file != NULL && (file->iob_BufferReadBytes == 0 || file->iob_BufferPosition == file->iob_BufferReadBytes) && file->iob_BufferWriteBytes == 0 );
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_READ) );
-	assert( file->iob_BufferSize > 0 );
+    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+    assert(file != NULL && (file->iob_BufferReadBytes == 0 || file->iob_BufferPosition == file->iob_BufferReadBytes) && file->iob_BufferWriteBytes == 0);
+    assert(FLAG_IS_SET(file->iob_Flags, IOBF_READ));
+    assert(file->iob_BufferSize > 0);
 
-	/* Flush all line buffered streams before we proceed to fill this buffer. */
-	if((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_LINE)
-	{
-		if(__flush_all_files(IOBF_BUFFER_MODE_LINE) < 0)
-			goto out;
-	}
+    /* Flush all line buffered streams before we proceed to fill this buffer. */
+    if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_LINE) {
+        if (__flush_all_files(IOBF_BUFFER_MODE_LINE) < 0)
+            goto out;
+    }
 
-	SHOWMSG("calling the hook");
+    SHOWMSG("calling the hook");
 
-	SHOWPOINTER(file->iob_Buffer);
-	SHOWVALUE(file->iob_BufferSize);
+    SHOWPOINTER(file->iob_Buffer);
+    SHOWVALUE(file->iob_BufferSize);
 
-	fam.fam_Action	= file_action_read;
-	fam.fam_Data	= (char *)file->iob_Buffer;
-	fam.fam_Size	= file->iob_BufferSize;
+    fam.fam_Action = file_action_read;
+    fam.fam_Data = (char *) file->iob_Buffer;
+    fam.fam_Size = file->iob_BufferSize;
 
-	assert( file->iob_Action != NULL );
+    assert(file->iob_Action != NULL);
 
-	num_bytes_read = (*file->iob_Action)(file,&fam);
-	if(num_bytes_read == EOF)
-	{
-		D(("got error %ld",fam.fam_Error));
+    num_bytes_read = (*file->iob_Action)(file, &fam);
+    if (num_bytes_read == EOF) {
+        D(("got error %ld", fam.fam_Error));
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+        SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-		__set_errno(fam.fam_Error);
+        __set_errno(fam.fam_Error);
 
-		goto out;
-	}
+        goto out;
+    }
 
-	file->iob_BufferReadBytes	= num_bytes_read;
-	file->iob_BufferPosition	= 0;
+    file->iob_BufferReadBytes = num_bytes_read;
+    file->iob_BufferPosition = 0;
 
-	SHOWVALUE(file->iob_BufferReadBytes);
+    SHOWVALUE(file->iob_BufferReadBytes);
 
-	result = OK;
+    result = OK;
 
- out:
+    out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

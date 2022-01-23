@@ -31,47 +31,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
+
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 static wint_t __fgetwc_unlocked_internal(FILE *f)
 {
-    mbstate_t st = { 0 };
 	wchar_t wc;
 	int c;
-	size_t l;
+	size_t l = 0;
     unsigned char b;
+    int first = 1;
 
-	/* Convert character from buffer if possible */
-	if (f->position != f->num_read_bytes) {
-		l = mbtowc(&wc, (void *)f->buffer, f->num_read_bytes);
-        if (l+2 >= 2) {
-            f->position += l + !l; /* l==0 means 1 byte, null */
-            return wc;
-        }
-        if (l == -1) {
-            f->position++;
-            return WEOF;
-        }
-
-	}
-    else {
-        l = -2;
-    }
-
-    /* Convert character byte-by-byte */
-    while (l == -2) {
-        b = c = getc_unlocked(f);
+    do {
+        b = c = __getc(f);
         if (c < 0) {
-            if (!mbsinit(&st)) errno = EILSEQ;
+            if (!first) {
+                f->_flags2 |= __SERR;
+                __set_errno(EILSEQ);
+            }
             return WEOF;
         }
-        l = mbrtowc(&wc, (void *)&b, 1, &st);
-        if (l == -1) return WEOF;
-    }
+        l = mbrtowc(&wc, (void *)&b, 1, &f->_mbstate);
+        if (l == -1) {
+            if (!first) {
+                f->_flags2 |= __SERR;
+                ungetc(b, f);
+            }
+            return WEOF;
+        }
+        first = 0;
+    } while (l == -2);
 
 	return wc;
 }

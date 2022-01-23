@@ -41,11 +41,7 @@
 #ifndef _UNISTD_H
 #define _UNISTD_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
+#include <features.h>
 
 #ifndef _FCNTL_H
 #include <fcntl.h>
@@ -63,47 +59,31 @@
 #include <sys/select.h>
 #endif /* __NO_NET_API && _SYS_SELECT_H */
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /* Endianness: we assume a big endian memory layout (for 68k and PowerPC). */
 #define LITTLE_ENDIAN	1234
 #define BIG_ENDIAN		4321
 #define BYTE_ORDER		BIG_ENDIAN
 
-/****************************************************************************/
-
 #define STDIN_FILENO	0
 #define STDOUT_FILENO	1
 #define STDERR_FILENO	2
-
-/****************************************************************************/
 
 #define R_OK 0
 #define W_OK 1
 #define X_OK 2
 #define F_OK 4
 
-/****************************************************************************/
-
 #define F_ULOCK	0
 #define F_LOCK	1
 #define F_TLOCK	2
 #define F_TEST	3
 
-/****************************************************************************/
-
 extern int opterr;
 extern int optind;
 extern int optopt;
 extern char * optarg;
-
-/****************************************************************************/
 
 extern int isatty(int file_descriptor);
 extern int dup(int file_descriptor);
@@ -154,7 +134,6 @@ extern long sysconf(int name);
 
 extern void enableUnixPaths(void);
 extern void disableUnixPaths(void);
-/****************************************************************************/
 
 extern char * getcwd(char * buffer, size_t buffer_size);
 
@@ -163,8 +142,6 @@ extern char * __getcwd(char * buffer,size_t buffer_size,const char *file,int lin
 
 #define getcwd(buffer,buffer_size) __getcwd((buffer),(buffer_size),__FILE__,__LINE__)
 #endif /* __MEM_DEBUG */
-
-/****************************************************************************/
 
 /*
  * The following prototypes may clash with the bsdsocket.library or
@@ -193,8 +170,6 @@ extern pid_t setsid(void);
 extern int setuid(uid_t uid);
 
 #endif /* __NO_NET_API */
-
-/****************************************************************************/
 
 /* The following is for use with pathconf()/fpathconf() */
 #define	_PC_LINK_MAX				0
@@ -228,19 +203,15 @@ extern int setuid(uid_t uid);
 #define _POSIX_THREADS              1
 #define _POSIX_MONOTONIC_CLOCK      1
 
-/****************************************************************************/
-
 /* The following is for use with sysconf(). Only the implemented one */
 
 #define _SC_ARG_MAX                 0
 #define _SC_CLK_TCK                 2
 #define _SC_OPEN_MAX                4
 #define _SC_PAGESIZE                8
-#define _SC_NPROCESSORS_CONF        9 // Used on cygwin but useful to get number of processors 
+#define _SC_NPROCESSORS_CONF        9
 #define _SC_TZNAME_MAX             20
 #define _SC_HOST_NAME_MAX          65
-
-/****************************************************************************/
 
 extern long pathconf(const char *path,int name);
 extern long fpathconf(int file_descriptor,int name);
@@ -251,8 +222,6 @@ extern int pipe (int fd[2]);
 extern int pipe2 (int fd[2], int flags);
 extern ssize_t pread(int fd, void *buf, size_t nbytes, off_t offset);
 extern ssize_t pwrite(int fd, const void *buf, size_t nbytes, off_t offset);
-
-/****************************************************************************/
 
 #define _P_WAIT         1
 #define _P_NOWAIT       2
@@ -268,12 +237,6 @@ extern ssize_t pwrite(int fd, const void *buf, size_t nbytes, off_t offset);
 
 #define WAIT_CHILD 1
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _UNISTD_H */

@@ -73,10 +73,10 @@ wcrtomb(char *s, wchar_t wchar, mbstate_t *state)
     __set_errno(EILSEQ);
     return (size_t)-1;
 #else
-	if (strlen(__lc_ctype) <= 1)
+	if (strlen(__global_clib2->_current_locale) <= 1)
 	{ /* fall-through */
 	}
-	else if (!strcmp(__lc_ctype, "C-UTF-8"))
+	else if (!strcmp(__global_clib2->_current_locale, "C-UTF-8"))
 	{
 		if (s == NULL)
 			return 0; /* UTF-8 encoding is not state-dependent */
@@ -133,7 +133,7 @@ wcrtomb(char *s, wchar_t wchar, mbstate_t *state)
 		else
 			return -1;
 	}
-	else if (!strcmp(__lc_ctype, "C-SJIS"))
+	else if (!strcmp(__global_clib2->_current_locale, "C-SJIS"))
 	{
 		unsigned char char2 = (unsigned char)wchar;
 		unsigned char char1 = (unsigned char)(wchar >> 8);
@@ -154,7 +154,7 @@ wcrtomb(char *s, wchar_t wchar, mbstate_t *state)
 				return -1;
 		}
 	}
-	else if (!strcmp(__lc_ctype, "C-EUCJP"))
+	else if (!strcmp(__global_clib2->_current_locale, "C-EUCJP"))
 	{
 		unsigned char char2 = (unsigned char)wchar;
 		unsigned char char1 = (unsigned char)(wchar >> 8);
@@ -175,7 +175,7 @@ wcrtomb(char *s, wchar_t wchar, mbstate_t *state)
 				return -1;
 		}
 	}
-	else if (!strcmp(__lc_ctype, "C-JIS"))
+	else if (!strcmp(__global_clib2->_current_locale, "C-JIS"))
 	{
 		int cnt = 0;
 		unsigned char char2 = (unsigned char)wchar;

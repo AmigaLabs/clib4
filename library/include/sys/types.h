@@ -73,7 +73,7 @@ typedef unsigned int nlink_t;
 #endif
 typedef int pid_t;
 typedef unsigned int rlim_t;
-typedef int ssize_t;
+typedef signed int ssize_t;
 typedef unsigned int uid_t;
 
 #ifndef _BSDTYPES_DEFINED
@@ -88,6 +88,10 @@ typedef unsigned long useconds_t;
 typedef long suseconds_t;
 
 typedef int32_t blksize_t;
+
+typedef	unsigned long long u_quad_t;	/* quads */
+typedef	long long	quad_t;
+typedef	quad_t *	qaddr_t;
 
 /* Iconv descriptor type */
 typedef void *_iconv_t;

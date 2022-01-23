@@ -41,13 +41,10 @@
 #ifndef _STDDEF_H
 #define _STDDEF_H
 
-/****************************************************************************/
+#include <features.h>
+#include <limits.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #ifndef NULL
 #ifndef __cplusplus
@@ -57,26 +54,20 @@ extern "C" {
 #endif /* __cplusplus */
 #endif /* NULL */
 
-/****************************************************************************/
-
 typedef int ptrdiff_t;
+#if defined(INT_MAX) && INT_MAX == 2147483647
 typedef unsigned int size_t;
+#else
+typedef unsigned long size_t;
+#endif
 
 /* wchar_t is a built-in type in C++ */
 #ifndef __cplusplus
 typedef int wchar_t;
 #endif
 
-/****************************************************************************/
-
 #define offsetof(type, member) ((size_t)&((type *)0)->member)
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _STDDEF_H */

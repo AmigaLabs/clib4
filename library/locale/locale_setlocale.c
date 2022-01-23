@@ -32,267 +32,187 @@
  */
 
 #ifndef _LOCALE_HEADERS_H
+
 #include "locale_headers.h"
+
 #endif /* _LOCALE_HEADERS_H */
 
 /****************************************************************************/
-static const char *charset = "ISO-8859-1";
-char __lc_ctype[__LC_LAST] = "C";
-int MB_CUR_MAX = 1;
 
 char *
-setlocale(int category, const char *locale)
-{
-	DECLARE_LOCALEBASE();
+setlocale(int category, const char *locale) {
+    DECLARE_LOCALEBASE();
+    char *result = NULL;
 
-	char *result = NULL;
-	static char last_lc_ctype[__LC_LAST] = "C";
-	static char lc_messages[__LC_LAST] = "C";
-	static char last_lc_messages[__LC_LAST] = "C";
+    ENTER();
 
-	ENTER();
+    SHOWVALUE(category);
 
-	SHOWVALUE(category);
+    if (locale == NULL)
+        SHOWPOINTER(locale);
+    else
+        SHOWSTRING(locale);
 
-	if (locale == NULL)
-		SHOWPOINTER(locale);
-	else
-		SHOWSTRING(locale);
+    __locale_lock();
 
-	__locale_lock();
+    if (category < LC_ALL || category > LC_TIME) {
+        SHOWMSG("invalid category");
 
-	if (category < LC_ALL || category > LC_MESSAGES)
-	{
-		SHOWMSG("invalid category");
+        __set_errno(EINVAL);
+        goto out;
+    }
 
-		__set_errno(EINVAL);
-		goto out;
-	}
+    if (locale != NULL) {
+        struct Locale *loc = NULL;
 
-	if (locale != NULL)
-	{
-		struct Locale *loc = NULL;
+        /* We have to keep the locale name for later reference.
+         * On the Amiga this will be a path and file name so it
+         * can become rather long. But we can't store an arbitrarily
+         * long name either.
+         *
+         * ZZZ change this to dynamic allocation of the locale name.
+         */
+        if (strlen(locale) >= MAX_LOCALE_NAME_LEN) {
+            SHOWMSG("locale name is too long");
+            __global_clib2->_current_locale = "C";
 
-		/* We have to keep the locale name for later reference.
-		 * On the Amiga this will be a path and file name so it
-		 * can become rather long. But we can't store an arbitrarily
-		 * long name either.
-		 *
-		 * ZZZ change this to dynamic allocation of the locale name.
-		 */
-		if (strlen(locale) >= MAX_LOCALE_NAME_LEN)
-		{
-			SHOWMSG("locale name is too long");
+            __set_errno(ENAMETOOLONG);
+            goto out;
+        }
 
-			__set_errno(ENAMETOOLONG);
-			goto out;
-		}
+        /* Unless we are switching to the "C" locale,
+         * try to open a locale if we managed to open
+         * locale.library before.
+         */
+        if (LocaleBase != NULL) {
+            if (strcmp(locale, "C") != SAME) {
+                SHOWMSG("this is not the 'C' locale");
 
-		/* Unless we are switching to the "C" locale,
-		 * try to open a locale if we managed to open
-		 * locale.library before.
-		 */
-		if (LocaleBase != NULL)
-		{
-			if (strcmp(locale, "C") != SAME)
-			{
-				SHOWMSG("this is not the 'C' locale");
+                PROFILE_OFF();
 
-				PROFILE_OFF();
+                /* The empty string stands for the default locale. */
+                if (locale[0] == '\0')
+                    loc = OpenLocale(NULL);
+                else
+                    loc = OpenLocale((STRPTR) locale);
 
-				/* The empty string stands for the default locale. */
-				if (locale[0] != '\0')
-				{
-					loc = OpenLocale((STRPTR)locale);
+                PROFILE_ON();
 
-					PROFILE_ON();
+                /* Before bailing out set the MB_CUR_MAX to the right value
+                 * so we can use wide chars correctly
+                 * We accept only C locales with a different encodings like C-UTF8 or C.UTF8
+                 */
+                MB_CUR_MAX = 1;
+                if (locale[1] == '-' || locale[1] == '.') {
+                    switch (locale[2]) {
+                        case 'U':
+                        case 'u':
+                            MB_CUR_MAX = 6;
+                            break;
+                        case 'J':
+                        case 'j':
+                            MB_CUR_MAX = 8;
+                            break;
+                        case 'E':
+                        case 'e':
+                            MB_CUR_MAX = 2;
+                            break;
+                        case 'S':
+                        case 's':
+                            MB_CUR_MAX = 2;
+                            break;
+                        case 'I':
+                        case 'i':
+                        default:
+                            MB_CUR_MAX = 1;
+                    }
+                }
 
-					if (loc == NULL)
-					{
-						SHOWMSG("couldn't open the locale");
+                if (loc == NULL) {
+                    SHOWMSG("couldn't open the locale");
+                    __global_clib2->_current_locale = locale;
 
-						__set_errno(ENOENT);
-						goto out;
-					}
-				}
-			}
-		}
+                    __set_errno(ENOENT);
+                    goto out;
+                }
+            }
+        }
 
-		if (category == LC_ALL)
-		{
-			int i;
+        if (category == LC_ALL) {
+            int i;
 
-			SHOWMSG("closing all locales");
+            SHOWMSG("closing all locales");
 
-			/* We have to replace all locales. We
-			 * start by closing them all.
-			 */
-			__close_all_locales();
+            /* We have to replace all locales. We
+             * start by closing them all.
+             */
+            __close_all_locales();
 
-			SHOWMSG("reinitializing all locales");
+            SHOWMSG("reinitializing all locales");
 
-			/* And this puts the new locale into all table entries. */
-			for (i = 0; i < NUM_LOCALES; i++)
-			{
-				__locale_table[i] = loc;
-				strcpy(__locale_name_table[i], locale);
-			}
-		}
-		else
-		{
-			SHOWMSG("closing the locale");
+            /* And this puts the new locale into all table entries. */
+            for (i = 0; i < NUM_LOCALES; i++) {
+                __locale_table[i] = loc;
+                strcpy(__locale_name_table[i], locale);
+            }
 
-			/* Close this single locale unless it's actually just a
-			 * copy of the 'all' locale entry.
-			 */
-			if (__locale_table[category] != NULL && __locale_table[category] != __locale_table[LC_ALL])
-			{
-				assert(LocaleBase != NULL);
-				CloseLocale(__locale_table[category]);
-			}
+            if (strcmp(locale, "C")) {
+                MB_CUR_MAX = 1;
+            } else {
+                MB_CUR_MAX = 1;
+                if (locale[1] == '-' || locale[1] == '.') {
+                    switch (locale[2]) {
+                        case 'U':
+                        case 'u':
+                            MB_CUR_MAX = 6;
+                            break;
+                        case 'J':
+                        case 'j':
+                            MB_CUR_MAX = 8;
+                            break;
+                        case 'E':
+                        case 'e':
+                            MB_CUR_MAX = 2;
+                            break;
+                        case 'S':
+                        case 's':
+                            MB_CUR_MAX = 2;
+                            break;
+                        case 'I':
+                        case 'i':
+                        default:
+                            MB_CUR_MAX = 1;
+                    }
+                }
+            }
+        } else {
+            SHOWMSG("closing the locale");
 
-			SHOWMSG("reinitializing the locale");
+            /* Close this single locale unless it's actually just a
+             * copy of the 'all' locale entry.
+             */
+            if (__locale_table[category] != NULL && __locale_table[category] != __locale_table[LC_ALL]) {
+                assert(LocaleBase != NULL);
+                CloseLocale(__locale_table[category]);
+            }
 
-			__locale_table[category] = loc;
-			strcpy(__locale_name_table[category], locale);
-		}
+            SHOWMSG("reinitializing the locale");
 
-		/* Setting locale informations */
-		char *locale_name = (char *)locale;
-		if (category != LC_CTYPE && category != LC_MESSAGES)
-		{
-			if (strcmp(locale, "C") && strcmp(locale, ""))
-				return 0;
-			if (category == LC_ALL)
-			{
-				strcpy(last_lc_ctype, __lc_ctype);
-				strcpy(__lc_ctype, "C");
+            __locale_table[category] = loc;
+            strcpy(__locale_name_table[category], locale);
+        }
+    }
 
-				strcpy(last_lc_messages, lc_messages);
-				strcpy(lc_messages, "C");
-				MB_CUR_MAX = 1;
-			}
-		}
-		else
-		{
-			if (locale[0] == 'C' && locale[1] == '-')
-			{
-				switch (locale[2])
-				{
-				case 'U':
-					if (strcmp(locale, "C-UTF-8"))
-						return 0;
-					break;
-				case 'J':
-					if (strcmp(locale, "C-JIS"))
-						return 0;
-					break;
-				case 'E':
-					if (strcmp(locale, "C-EUCJP"))
-						return 0;
-					break;
-				case 'S':
-					if (strcmp(locale, "C-SJIS"))
-						return 0;
-					break;
-				case 'I':
-					if (strcmp(locale, "C-ISO-8859-1"))
-						return 0;
-					break;
-				default:
-					return 0;
-				}
-			}
-			else
-			{
-				if (strcmp(locale, "C") && strcmp(locale, ""))
-					return 0;
-				locale_name = (char *)"C"; /* C is always the default locale */
-			}
+    __global_clib2->_current_category = category;
+    __global_clib2->_current_locale = result;
 
-			if (category == LC_CTYPE)
-			{
-				strcpy(last_lc_ctype, __lc_ctype);
-				strcpy(__lc_ctype, locale_name);
+    result = __locale_name_table[category];
 
-				MB_CUR_MAX = 1;
-				if (locale[1] == '-')
-				{
-					switch (locale[2])
-					{
-					case 'U':
-						MB_CUR_MAX = 6;
-						break;
-					case 'J':
-						MB_CUR_MAX = 8;
-						break;
-					case 'E':
-						MB_CUR_MAX = 2;
-						break;
-					case 'S':
-						MB_CUR_MAX = 2;
-						break;
-					case 'I':
-					default:
-						MB_CUR_MAX = 1;
-					}
-				}
-			}
-			else
-			{
-				strcpy(last_lc_messages, lc_messages);
-				strcpy(lc_messages, locale_name);
+    SHOWSTRING(result);
 
-				charset = "ISO-8859-1";
-				if (locale[1] == '-')
-				{
-					switch (locale[2])
-					{
-					case 'U':
-						charset = "UTF-8";
-						break;
-					case 'J':
-						charset = "JIS";
-						break;
-					case 'E':
-						charset = "EUCJP";
-						break;
-					case 'S':
-						charset = "SJIS";
-						break;
-					case 'I':
-						charset = "ISO-8859-1";
-						break;
-					default:
-						return 0;
-					}
-				}
-			}
-		}
+    out:
+    __locale_unlock();
 
-		if (category == LC_CTYPE)
-			result = last_lc_ctype;
-		else if (category == LC_MESSAGES)
-			result = last_lc_messages;
-		else
-			result = (char *)"C";
-	}
-	else
-	{
-		if (category == LC_CTYPE)
-			result = __lc_ctype;
-		else if (category == LC_MESSAGES)
-			result = lc_messages;
-		else
-			result = (char *)"C";
-	}
-	
-	SHOWSTRING(result);
-
-out:
-
-	__locale_unlock();
-
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

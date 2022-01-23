@@ -205,52 +205,34 @@ typedef int64_t (*file_action_iob_t)(struct iob * iob, struct file_action_messag
    things will take a turn for the worse! */
 typedef struct iob
 {
-	ULONG				iob_Flags;				/* Properties and options
-												   associated with this file */
+    unsigned long		iob_Flags;				/* Properties and options associated with this file */
+    unsigned char *		iob_Buffer;				/* Points to the file buffer */
+    off_t				iob_BufferSize;			/* Size of the buffer in bytes */
+    off_t				iob_BufferPosition;		/* Current read position in the buffer (grows when any data is read from the buffer) */
+    off_t				iob_BufferReadBytes;	/* Number of bytes available for reading (shrinks when any data is read from the buffer) */
+    off_t				iob_BufferWriteBytes;	/* Number of bytes written to the buffer which still need to be flushed to disk (grows when any data is written to the buffer) */
 
-	UBYTE *				iob_Buffer;				/* Points to the file buffer */
-	int64_t				iob_BufferSize;			/* Size of the buffer in bytes */
-	int64_t				iob_BufferPosition;		/* Current read position
-												   in the buffer (grows when any
-												   data is read from the buffer) */
-	int64_t				iob_BufferReadBytes;	/* Number of bytes available for
-												   reading (shrinks when any data
-												   is read from the buffer) */
-	int64_t				iob_BufferWriteBytes;	/* Number of bytes written to the
-												   buffer which still need to be
-												   flushed to disk (grows when any
-												   data is written to the buffer) */
-
-	_mbstate_t 			_mbstate; 				/* for wide char stdio functions. */
-
-	int   				iob_Flags2;				/* for future use */	
-
+    _mbstate_t 			_mbstate; 				/* for wide char stdio functions. */
+	int   				iob_Flags2;				/* for future use */
 	long				pad[5];					/* Padding for function pointers */
+
 	/************************************************************************/
 	/* Public portion ends here                                             */
 	/************************************************************************/
 
 	file_action_iob_t	iob_Action;				/* The function to invoke for file operations, such as read, write and seek. */
-
 	int					iob_SlotNumber;			/* Points back to the iob table entry number. */
-
 	int					iob_Descriptor;			/* Associated file descriptor */
-
 	STRPTR				iob_String;				/* Alternative source of data; a pointer to a string */
 	int64_t				iob_StringSize;			/* Number of bytes that may be stored in the string */
 	int64_t				iob_StringPosition;		/* Current read/write position in the string */
 	int64_t				iob_StringLength;		/* Number of characters stored in the string */
-
 	char *				iob_File;				/* For access tracking with the memory allocator. */
 	int					iob_Line;
-
 	APTR				iob_CustomBuffer;		/* A custom buffer allocated by setvbuf() */
-
 	char *				iob_TempFileName;		/* If this is a temporary file, this is its name */
 	BPTR				iob_TempFileLock;		/* The directory in which this temporary file is stored */
-
 	UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
-
 	struct SignalSemaphore * iob_Lock;			/* For thread locking */
 } __iob64;
 
@@ -260,6 +242,11 @@ typedef struct iob
 #define __getc(f) \
 	((((struct iob *)(f))->iob_BufferPosition < ((struct iob *)(f))->iob_BufferReadBytes) ? \
 	  ((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferPosition++] : \
+	  __fgetc((FILE *)(f)))
+
+#define __ungetc(f) \
+	((((struct iob *)(f))->iob_BufferPosition >= 0 ? \
+	  ((struct iob *)(f))->iob_Buffer[(--(struct iob *)(f))->iob_BufferPosition] : \
 	  __fgetc((FILE *)(f)))
 
 /* Caution: this putc() variant will evaluate the 'c' parameter more than once. */

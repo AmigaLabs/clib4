@@ -54,7 +54,8 @@
 __BEGIN_DECLS
 
 /* Maximum number of bytes in a multibyte character */
-extern int MB_CUR_MAX;
+extern  int *__mb_cur_max(void);
+#define MB_CUR_MAX (*__mb_cur_max())
 
 /****************************************************************************/
 

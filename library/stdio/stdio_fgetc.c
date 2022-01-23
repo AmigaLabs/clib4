@@ -86,15 +86,11 @@ int __fgetc_check(FILE *stream)
 
 	assert(stream != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (stream == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+    if (stream == NULL)
+    {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 	assert(file->iob_BufferSize > 0);
@@ -140,15 +136,11 @@ int fgetc(FILE *stream)
 
 	flockfile(stream);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (stream == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+    if (stream == NULL)
+    {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	if (__fgetc_check(stream) < 0)
 		goto out;

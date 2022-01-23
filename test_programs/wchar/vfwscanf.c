@@ -1,8 +1,9 @@
-/* vfwscanf example */
-/* This crash with a DSI */
 #include <stdio.h>
 #include <stdarg.h>
 #include <wchar.h>
+#include <locale.h>
+
+/* Create a README file with a string, a space and a number and execute this test */
 
 void ReadWideStuff(FILE *stream, const wchar_t *format, ...)
 {
@@ -16,14 +17,16 @@ int main()
 {
     FILE *pFile;
     int val;
-    wchar_t str[100];
+    wchar_t str[100] = {0};
 
-    pFile = fopen("myfile.txt", "r");
+    /* You can also create an UTF 8 file and it will work as well */
+    setlocale(LC_ALL, "C-UTF-8");
+    pFile = fopen("README", "r");
 
     if (pFile != NULL)
     {
         ReadWideStuff(pFile, L" %ls %d ", str, &val);
-        wprintf(L"I have read %ls and %d", str, val);
+        wprintf(L"I have read %ls and %d\n", str, val);
         fclose(pFile);
     }
 

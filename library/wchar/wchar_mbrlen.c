@@ -38,15 +38,10 @@
 size_t
 mbrlen(const char *restrict s, size_t n, mbstate_t *restrict ps)
 {
-#ifdef LIBWCHAR
-    static unsigned internal;
-    return mbrtowc(0, s, n, ((ps) ? ps : (mbstate_t *)&internal));
-#else
     if (ps == NULL)
     {
         ps = &__global_clib2->wide_status->_mbrlen_state;
     }
 
     return mbrtowc(NULL, s, n, ps);
-#endif
 }

@@ -94,7 +94,6 @@ int64_t __fd_hook_entry(
 	{
 	case file_action_read:
 
-
 		SHOWMSG("file_action_read");
 
 		assert(fam->fam_Data != NULL);

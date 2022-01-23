@@ -90,42 +90,14 @@ __BEGIN_DECLS
 /* Used by fgetpos() and fsetpos() */
 typedef int64_t fpos_t;
 
-/*
- * This is part of the internal 'FILE' structure; this is guaranteed not to
- * change in future library releases. However, the private portion of this
- * data structure may change.
- */
 struct __sFILE
-{
-	unsigned long _flags;  /* See below for some of the public flag bits defined; this is by no means a complete list, though! */
-	unsigned char *buffer; /* Points to the first byte of the buffer; this could be NULL! */
-	long size;			   /* How many bytes will fit into the buffer; this could be 0! */
-	long position;		   /* Current buffer position, which is usually a number between 0 and size-1 */
-	long num_read_bytes;   /* How many bytes can be read from the buffer; this can be 0! */
-	long num_write_bytes;  /* How many bytes have been copied to the buffer which have not been written back yet; this can be 0! */
-
-	_mbstate_t _mbstate; /* for wide char stdio functions. */
-	int _flags2;		 /* for future use */
-
-	ssize_t (*_read)(void *cookie, char *buf, int n);
-	ssize_t (*_write)(void *cookie, const char *buf, int n);
-	fpos_t (*_seek)(void *cookie, fpos_t offset, int whence);
-	int (*_close)(void *cookie);
-
-	/* Private iob fields follow... 
-	 * DON'T TRY TO ACCESS iob fields from FILE pointer!
-	 */
-};
-
-#ifdef __USE_LARGEFILE64
-struct __sFILE64
 {
 	unsigned long _flags;	  /* See below for some of the public flag bits defined; this is by no means a complete list, though! */
 	unsigned char *buffer;	  /* Points to the first byte of the buffer; this could be NULL! */
-	_off64_t size;			  /* How many bytes will fit into the buffer; this could be 0! */
-	_off64_t position;		  /* Current buffer position, which is usually a number between 0 and size-1 */
-	_off64_t num_read_bytes;  /* How many bytes can be read from the buffer; this can be 0! */
-	_off64_t num_write_bytes; /* How many bytes have been copied to the buffer which have not been written back yet; this can be 0! */
+	off_t size;			      /* How many bytes will fit into the buffer; this could be 0! */
+    off_t position;		      /* Current buffer position, which is usually a number between 0 and size-1 */
+    off_t num_read_bytes;     /* How many bytes can be read from the buffer; this can be 0! */
+    off_t num_write_bytes;    /* How many bytes have been copied to the buffer which have not been written back yet; this can be 0! */
 
 	_mbstate_t _mbstate; 	  /* for wide char stdio functions. */
 	int _flags2;		 	  /* for future use */
@@ -134,19 +106,14 @@ struct __sFILE64
 	ssize_t (*_write)(void *cookie, const char *buf, int n);
 	fpos_t (*_seek)(void *cookie, fpos_t offset, int whence);
 	int (*_close)(void *cookie);
-	_fpos64_t (*_seek64)(void *cookie, _fpos64_t offset, int whence);
+    fpos_t (*_seek64)(void *cookie, fpos_t offset, int whence);
 
-	/* Private iob64 fields follow... 
+	/* Private iob fields follow...
 	 * DON'T TRY TO ACCESS iob fields from FILE pointer!
 	 */
 };
-#endif
 
-#ifdef __USE_LARGEFILE64
-typedef struct __sFILE64 FILE;
-#else
 typedef struct __sFILE FILE;
-#endif
 
 /****************************************************************************/
 
