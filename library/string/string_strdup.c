@@ -81,7 +81,7 @@ __strdup(const char *s,const char * file,int line)
 
 	total_size = strlen(s)+1;
 
-	result = __malloc(total_size,file,line);
+	result = malloc(total_size);
 	if(result == NULL)
 		goto out;
 

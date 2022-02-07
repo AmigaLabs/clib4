@@ -34,66 +34,6 @@
 #ifndef _STDLIB_MEMORY_H
 #define _STDLIB_MEMORY_H
 
-/****************************************************************************/
-
-/*
- * Uncomment this to build a library which has the memory debugging features
- * enabled.
- */
-/*#define __MEM_DEBUG*/
-
-/****************************************************************************/
-
-/*
- * Uncomment this to see reports of where and how much memory is allocated
- * or released.
- */
-/*#define __MEM_DEBUG_LOG*/
-
-/****************************************************************************/
-
-/*
- * Uncomment this to speed up memory data maintenance operations when
- * the memory debugging mode is enabled.
- */
-/*#define __USE_MEM_TREES*/
-
-/****************************************************************************/
-
-/*
- * Uncomment this to enable the slab allocator.
- */
-#define __USE_SLAB_ALLOCATOR
-
-/****************************************************************************/
-
-/*
- * Memory debugging parameters; note that the head/tail size must be
- * multiples of four, or you will break code that depends upon malloc()
- * and friends to return long word aligned data structures! Better
- * still, there are assert()s in the library which will blow your code
- * out of the water if the data returned by malloc() and realloc() is
- * not long word aligned...
- */
-
-#define MALLOC_HEAD_SIZE 512	/* How many bytes to allocate in front of
-								   each memory chunk */
-#define MALLOC_TAIL_SIZE 512	/* How many bytes to allocate behind each
-								   memory chunk */
-
-/****************************************************************************/
-
-#define MALLOC_NEW_FILL  0xA3	/* The byte value to fill newly created
-								   memory allocations with */
-#define MALLOC_FREE_FILL 0xA5	/* The byte value to fill freed memory
-								   allocations with */
-#define MALLOC_HEAD_FILL 0xA7	/* The byte value to fill the memory in
-								   front of each allocation with */
-#define MALLOC_TAIL_FILL 0xA9	/* The byte value to fill the memory behind
-								   each allocation with */
-
-/****************************************************************************/
-
 #ifndef	EXEC_MEMORY_H
 #include <exec/memory.h>
 #endif /* EXEC_MEMORY_H */
@@ -108,47 +48,13 @@
 #include "macros.h"
 #endif /* _MACROS_H */
 
-/****************************************************************************/
-
 #include <stddef.h>
-
-/****************************************************************************/
 
 /* We shuffle things around a bit for the debug code. This works by joining
    related code which shares the same name. The debug code symbols also have
    to be completely separate from the "regular" code. */
-#if defined(__MEM_DEBUG)
-
-#define __static
-
-#define __find_memory_node __find_memory_node_debug
-#define __free_memory_node __free_memory_node_debug
-
-#define __allocate_memory __allocate_memory_debug
-
-#define __memory_pool __memory_pool_debug
-#define __memory_list __memory_list_debug
-
-#define __vasprintf_hook_entry __vasprintf_hook_entry_debug
-
-extern void * __alloca(size_t size,const char * file,int line);
-extern void * __calloc(size_t num_elements,size_t element_size,const char * file,int line);
-extern void __free(void * ptr,const char * file,int line);
-extern void * __malloc(size_t size,const char * file,int line);
-extern void * __realloc(void *ptr,size_t size,const char * file,int line);
-extern char * __strdup(const char *s,const char * file,int line);
-extern char * __getcwd(char * buffer,size_t buffer_size,const char *file,int line);
-
-#else
 
 #define __static STATIC
-
-#define __free(mem,file,line) free(mem)
-#define __malloc(size,file,line) malloc(size)
-
-#endif /* __MEM_DEBUG */
-
-/****************************************************************************/
 
 /* If this flag is set in mn_Size, then this memory allocation
  * cannot be released with free() or used with realloc(). This
@@ -163,46 +69,15 @@ extern char * __getcwd(char * buffer,size_t buffer_size,const char *file,int lin
 
 struct MemoryNode
 {
-#ifdef __MEM_DEBUG
-	struct MinNode		mn_MinNode;
-
-	UBYTE				mn_AlreadyFree;
-	UBYTE				mn_Pad0[3];
-
-	void *				mn_Allocation;
-	size_t				mn_AllocationSize;
-
-	char *				mn_FreeFile;
-	int					mn_FreeLine;
-
-	char *				mn_File;
-	int					mn_Line;
-
-#ifdef __USE_MEM_TREES
-	struct MemoryNode *	mn_Left;
-	struct MemoryNode *	mn_Right;
-	struct MemoryNode *	mn_Parent;
-	UBYTE				mn_IsRed;
-	UBYTE				mn_Pad1[3];
-#endif /* __USE_MEM_TREES */
-
-#endif /* __MEM_DEBUG */
-
 	ULONG				mn_Size;
 };
 
-#ifdef __USE_MEM_TREES
-
-struct MemoryTree
-{
-	struct MemoryNode *	mt_Root;
-	struct MemoryNode	mt_RootNode;
-	struct MemoryNode	mt_NullNode;
+struct AVLMemoryNode {
+    /* Variables used to track nodes and free them */
+    struct AVLNode  amn_AvlNode;
+    void           *amn_Address;
+    ULONG           amn_Size;
 };
-
-#endif /* __USE_MEM_TREES */
-
-/****************************************************************************/
 
 /* This keeps track of individual slabs. Each slab begins with this
  * header and is followed by the memory it manages. The size of that
@@ -304,7 +179,12 @@ struct SlabData
 	BOOL			sd_InUse;
 };
 
-/****************************************************************************/
+struct MemalignEntry
+{
+    struct AVLNode   me_AvlNode;
+    void            *me_Aligned;          /* The address that mmemaligned returned.  */
+    void            *me_Exact;            /* The address that malloc returned.  */
+};
 
 extern struct SlabData NOCOMMON	__slab_data;
 extern unsigned long NOCOMMON	__slab_max_size;
@@ -320,11 +200,10 @@ extern void __slab_exit(void);
 
 /****************************************************************************/
 
-extern struct MemoryTree NOCOMMON	__memory_tree;
+#ifndef USE_AVL
 extern struct MinList NOCOMMON		__memory_list;
 extern APTR NOCOMMON				__memory_pool;
-
-/****************************************************************************/
+#endif
 
 extern unsigned long NOCOMMON __maximum_memory_allocated;
 extern unsigned long NOCOMMON __current_memory_allocated;
@@ -333,10 +212,17 @@ extern unsigned long NOCOMMON __current_num_memory_chunks_allocated;
 
 /****************************************************************************/
 
-extern int NOCOMMON __default_pool_size;
+extern int NOCOMMON __default_threshold_size;
 extern int NOCOMMON __default_puddle_size;
 
 extern void __memory_lock(void);
 extern void __memory_unlock(void);
+
+#ifdef USE_AVL
+extern int32 AVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2);
+extern int32 AVLKeyComp(struct AVLNode *avlnode1, AVLKey key2);
+#endif
+extern int32 MemalignAVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2);
+extern int32 MemalignAVLKeyComp(struct AVLNode *avlnode1, AVLKey key2);
 
 #endif /* _STDLIB_MEMORY_H */

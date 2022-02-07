@@ -53,19 +53,13 @@ __calloc(size_t num_elements,size_t element_size,const char * file,int line)
 	void * result = NULL;
 	size_t total_size;
 
-	#ifdef __MEM_DEBUG
-	{
-		/*__check_memory_allocations(file,line);*/
-	}
-	#endif /* __MEM_DEBUG */
-
 	/* This might overflow. */
 	total_size = num_elements * element_size;
 	
 	/* No arithmetic overflow? */
 	if(total_size >= num_elements)
 	{
-		result = __malloc(total_size,file,line);
+		result = malloc(total_size);
 		if(result != NULL)
 			memset(result,0,total_size);
 		else

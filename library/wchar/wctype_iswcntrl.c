@@ -72,7 +72,7 @@ iswcntrl(wint_t c)
 		unicode = 1;
 	}
 
-	if (1) //(unicode)
+	if (unicode)
 	{
 		return ((c >= 0x0000 && c <= 0x001f) ||
 				(c >= 0x007f && c <= 0x009f) ||

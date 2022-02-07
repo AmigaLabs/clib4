@@ -74,7 +74,7 @@ setlocale(int category, const char *locale) {
          */
         if (strlen(locale) >= MAX_LOCALE_NAME_LEN) {
             SHOWMSG("locale name is too long");
-            __global_clib2->_current_locale = "C";
+            result = (char *)"C";
 
             __set_errno(ENAMETOOLONG);
             goto out;
@@ -130,7 +130,7 @@ setlocale(int category, const char *locale) {
 
                 if (loc == NULL) {
                     SHOWMSG("couldn't open the locale");
-                    __global_clib2->_current_locale = locale;
+                    result = (char *)locale;
 
                     __set_errno(ENOENT);
                     goto out;
@@ -202,15 +202,14 @@ setlocale(int category, const char *locale) {
             strcpy(__locale_name_table[category], locale);
         }
     }
-
-    __global_clib2->_current_category = category;
-    __global_clib2->_current_locale = result;
-
     result = __locale_name_table[category];
 
     SHOWSTRING(result);
 
     out:
+    __global_clib2->_current_category = category;
+    __global_clib2->_current_locale = result;
+
     __locale_unlock();
 
     RETURN(result);

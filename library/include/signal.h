@@ -101,40 +101,18 @@ typedef _sig_func_ptr sighandler_t; /* glibc naming */
 extern void (*signal(int sig, void (*)(int)))(int);
 extern int raise(int sig);
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-
-/****************************************************************************/
-
 typedef int sig_atomic_t;
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 #ifndef _SYS_TYPES_H
 #include <sys/types.h>
 #endif /* _SYS_TYPES_H */
 
-/****************************************************************************/
-
 typedef void (*sig_t)(int);
-
-/****************************************************************************/
-
 typedef int sigset_t;
-
-/****************************************************************************/
 
 #define SIG_BLOCK 0
 #define SIG_UNBLOCK 1
 #define SIG_SETMASK 2
-
-/****************************************************************************/
 
 extern int sigmask(int signum);
 extern int sigblock(int signal_mask);
@@ -143,6 +121,15 @@ extern int sigprocmask(int how, const sigset_t *set, sigset_t *oset);
 extern int sigemptyset(sigset_t *set);
 extern int sigaddset(sigset_t *set, int sig);
 extern int kill(pid_t pid, int signal_number);
+
+#if _BSD_SOURCE || _XOPEN_SOURCE >= 500 || _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED || _POSIX_C_SOURCE >= 200809L
+typedef struct
+{
+    void *ss_sp;
+    int ss_flags;
+    size_t ss_size;
+} stack_t;
+#endif
 
 __END_DECLS
 

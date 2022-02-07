@@ -162,7 +162,7 @@ extern BOOL	NOCOMMON	__exit_blocked;
 
 /****************************************************************************/
 
-extern void NOCOMMON (*__alloca_cleanup)(const char * file,int line);
+extern void NOCOMMON (*__alloca_cleanup)(void);
 
 /****************************************************************************/
 

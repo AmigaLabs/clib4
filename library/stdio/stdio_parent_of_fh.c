@@ -37,26 +37,10 @@
 
 /****************************************************************************/
 
-/* This is used in place of ParentOfFH() in order to work around a bug in
- * dos.library V40 and below: a "NIL:" file handle will crash the
- * ParentOfFH() function.
- */
 BPTR
 __safe_parent_of_file_handle(BPTR file_handle)
 {
 	BPTR result = ZERO;
-
-	#ifndef __amigaos4__
-	{
-		struct FileHandle * fh = (struct FileHandle *)BADDR(file_handle);
-
-		if(fh == NULL || fh->fh_Type == NULL)
-		{
-			SetIoErr(ERROR_OBJECT_WRONG_TYPE);
-			goto out;
-		}
-	}
-	#endif /* __amigaos4__ */
 
 	PROFILE_OFF();
 	result = ParentOfFH(file_handle);

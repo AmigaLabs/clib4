@@ -41,22 +41,13 @@
 #ifndef	_STDINT_H
 #define	_STDINT_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-
-/****************************************************************************/
-
-/* C99 integer type definitions; contributed by Peter Bengtsson */
-
-/****************************************************************************/
-
 #ifndef	_LIMITS_H
 #include <limits.h>
 #endif /* _LIMITS_H */
 
-/****************************************************************************/
+#include <features.h>
+
+__BEGIN_DECLS
 
 /* Common for all supported compilers. */
 
@@ -158,16 +149,14 @@ typedef	unsigned long		 	uintmax_t;
 #define	UINTMAX_MAX				ULONG_MAX
 #endif /* __GNUC__ || (__STDC_VERSION__ && __STDC_VERSION__ >= 199901L) */
 
-#if	!defined(__cplusplus) || defined(__STDC_LIMIT_MACROS)
 /* sigatomic_t is an int. */
 #define	SIG_ATOMIC_MIN			INT_MIN
 #define	SIG_ATOMIC_MAX			INT_MAX
 
 /* Maximum value of size_t */
 #define	SIZE_MAX				UINT_MAX
-#endif	/* not C++ or LIMIT_MACROS */
 
-#if !defined(__cplusplus) || defined(__STDC_CONSTANT_MACROS)
+#if defined(__STDC_CONSTANT_MACROS)
 #define	INT8_C(x)		x
 #define	INT16_C(x)		x
 #define	INT32_C(x)		x
@@ -200,6 +189,6 @@ typedef	unsigned long		 	uintmax_t;
 #define WINT_MIN	INT_MIN
 #define WINT_MAX	INT_MAX
 
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _STDINT_H */

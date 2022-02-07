@@ -270,9 +270,7 @@ get_stack_size(void)
 	return (result);
 }
 
-/****************************************************************************/
-
-int 
+int
 _main()
 {
 	struct Process *volatile child_process = NULL;
@@ -340,9 +338,7 @@ _main()
 	   store its result in the global __stack_size variable. */
 	if (__get_default_stack_size != NULL)
 	{
-		unsigned int size;
-
-		size = (*__get_default_stack_size)();
+		unsigned int size = (*__get_default_stack_size)();
 		if (size > 0)
 			__stack_size = size;
 	}
@@ -373,8 +369,52 @@ _main()
 		if (-128 <= __priority && __priority <= 127)
 			SetTaskPri((struct Task *)this_process, __priority);
 
-		/* We have enough room to make the call or just don't care. */
-		return_code = call_main();
+        /* Was a minimum stack size requested and do we need more stack space than was provided for? */
+        if (__stack_size > 0 && current_stack_size < (ULONG)__stack_size)
+        {
+            struct StackSwapStruct * stk;
+            unsigned int stack_size;
+            APTR new_stack;
+
+            /* Make the stack size a multiple of 32 bytes. */
+            stack_size = 32 + ((__stack_size + 31UL) & ~31UL);
+            Printf("stack_size = %d\n", stack_size);
+
+            /* Allocate the stack swapping data structure and the stack space separately. */
+            stk = AllocVecTags(sizeof(*stk), AVT_Type, MEMF_PUBLIC|MEMF_ANY, TAG_DONE);
+            if (stk == NULL)
+                goto out;
+
+            new_stack = AllocVecTags(stack_size, AVT_Type, MEMF_PUBLIC|MEMF_ANY, TAG_DONE);
+            if (new_stack == NULL)
+            {
+                FreeVec(stk);
+                goto out;
+            }
+
+            /* Fill in the lower and upper bounds, then take care of the stack pointer itself. */
+            stk->stk_Lower		= new_stack;
+            stk->stk_Upper		= (ULONG)(new_stack) + stack_size;
+            stk->stk_Pointer	= (APTR)(stk->stk_Upper - 32);
+
+            /* If necessary, set up for stack size usage measurement. */
+#ifndef NDEBUG
+            {
+                __stack_usage_init(stk);
+            }
+#endif /* NDEBUG */
+
+            return_code = __swap_stack_and_call(stk,(APTR)call_main);
+            Printf("return_code = %d\n", return_code);
+
+            FreeVec(new_stack);
+            FreeVec(stk);
+        }
+        else
+        {
+            /* We have enough room to make the call or just don't care. */
+            return_code = call_main();
+        }
 
 		/* Restore the task priority. */
 		SetTaskPri((struct Task *)this_process, old_priority);

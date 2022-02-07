@@ -46,6 +46,7 @@
 #include <stddef.h>
 #include <wchar.h>
 #include <alloca.h>
+#include <sys/types.h>
 
 #ifndef _SYS_CLIB2_STDC_H
 #include <sys/clib2_stdc.h>
@@ -102,18 +103,6 @@ extern void *realloc(void *ptr, size_t size);
 extern void *valloc(size_t size);
 extern void *aligned_alloc(size_t alignment, size_t size);
 
-#ifdef __MEM_DEBUG
-extern void *__malloc(size_t size, const char *file, int line);
-extern void *__calloc(size_t num_elements, size_t element_size, const char *file, int line);
-extern void __free(void *ptr, const char *file, int line);
-extern void *__realloc(void *ptr, size_t size, const char *file, int line);
-
-#define malloc(size) __malloc((size), __FILE__, __LINE__)
-#define calloc(num_elements, element_size) __calloc((num_elements), (element_size), __FILE__, __LINE__)
-#define free(ptr) __free((ptr), __FILE__, __LINE__)
-#define realloc(ptr, size) __realloc((ptr), (size), __FILE__, __LINE__)
-#endif /* __MEM_DEBUG */
-
 /****************************************************************************/
 
 extern int abs(int x);
@@ -161,6 +150,7 @@ extern void qsort(void *base, size_t count, size_t size,
 extern double strtod(const char *str, char **ptr);
 extern long strtol(const char *str, char **ptr, int base);
 extern unsigned long strtoul(const char *str, char **ptr, int base);
+extern quad_t strtoq(const char *nptr, char **endptr, register int base);
 
 /****************************************************************************/
 
@@ -176,33 +166,6 @@ extern long atol(const char *str);
 
 extern void _exit(int status);
 extern int rand_r(unsigned int *seed);
-
-/****************************************************************************/
-
-/*
- * You can switch the built-in memory allocator, which is a thin wrapper
- * around the AmigaOS built-in memory management system, to use a slab
- * allocator. For this to work, you need to declare a global variable
- * and set it to the size of the slabs to be used. This variable must
- * be initialized at load time when the clib2 startup code runs:
- *
- * unsigned long __slab_max_size = 4096;
- */
-
-extern unsigned long __slab_max_size;
-
-/*
- * The slab allocator will periodically free all currently unused memory.
- * You can control how much memory should be released, instead of
- * releasing everything.
- *
- * This would make the slab allocator release only up to 512 KBytes of
- * unused memory at a time:
- *
- * unsigned long __slab_purge_threshold = 512 * 1024;
- */
-
-extern unsigned long __slab_purge_threshold;
 
 /****************************************************************************/
 

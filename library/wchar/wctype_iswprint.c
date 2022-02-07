@@ -72,7 +72,7 @@ iswprint(wint_t c)
 		unicode = 1;
 	}
 
-	if (1) //(unicode)
+	if (unicode)
 	{
 		unsigned const char *table;
 		unsigned char *ptr;

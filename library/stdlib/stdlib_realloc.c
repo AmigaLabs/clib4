@@ -43,14 +43,10 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/****************************************************************************/
-
 #undef realloc
 
-/****************************************************************************/
 
-__static void *
-__realloc(void *ptr, size_t size, const char *file, int line)
+void *realloc(void *ptr, size_t size)
 {
 	void *result = NULL;
 	BOOL locked = FALSE;
@@ -66,48 +62,30 @@ __realloc(void *ptr, size_t size, const char *file, int line)
 	{
 		D(("calling malloc(%ld)", size));
 
-		result = __malloc(size, file, line);
+		result = malloc(size);
 	}
 	else if (__global_clib2->__unix_path_semantics && size == 0)
 	{
 		D(("calling free(0x%08lx)", ptr));
 
-		__free(ptr, file, line);
+		free(ptr);
 	}
 	else
 	{
+        assert(ptr != NULL);
+
 		size_t old_size;
-		struct MemoryNode *mn;
 		BOOL reallocate;
 
-		assert(ptr != NULL);
+        __memory_lock();
+        locked = TRUE;
 
-		__memory_lock();
-		locked = TRUE;
+#ifndef USE_AVL
+        struct MemoryNode *mn;
+
 
 		/* Try to find the allocation in the list. */
 		mn = __find_memory_node(ptr);
-
-#ifdef __MEM_DEBUG
-		{
-			/* If we managed to find the memory allocation,
-			   reallocate it. */
-			if (mn == NULL)
-			{
-				SHOWMSG("allocation not found");
-
-				kprintf("[%s] %s:%ld:Address for realloc(0x%08lx,%ld) not known.\n", __program_name, file, line, ptr, size);
-
-				/* Apparently, the address did not qualify for
-				   reallocation. */
-				goto out;
-			}
-		}
-#else
-		{
-			assert(mn != NULL);
-		}
-#endif /* __MEM_DEBUG */
 
 		if (mn == NULL || FLAG_IS_SET(mn->mn_Size, MN_SIZE_NEVERFREE))
 		{
@@ -116,32 +94,30 @@ __realloc(void *ptr, size_t size, const char *file, int line)
 		}
 
 		old_size = GET_MN_SIZE(mn);
-
-/* Don't do anything unless the size of the allocation
-		   has really changed. */
-#if defined(__MEM_DEBUG)
-		{
-			reallocate = (old_size != size);
-		}
 #else
-		{
-			if (size > old_size)
-			{
-				/* Allocation size should grow. */
-				reallocate = TRUE;
-			}
-			else
-			{
-				/* Optimization: If the block size shrinks by less than half the
-				                 original allocation size, do not reallocate the
-				                 block and do not copy over the contents of the old
-				                 allocation. We also take into account that the
-				                 actual size of the allocation is affected by a
-				                 certain operating system imposed granularity. */
-				reallocate = (size < old_size && size <= old_size / 2);
-			}
-		}
-#endif /* __MEM_DEBUG */
+        struct AVLMemoryNode *memNode = (struct AVLMemoryNode *)AVL_FindNode(__global_clib2->__memalign_tree, ptr, AVLKeyComp);
+        if (memNode == NULL) {
+			SHOWMSG("cannot free this chunk");
+			goto out;
+        }
+        old_size = memNode->amn_Size;
+#endif
+        /* Don't do anything unless the size of the allocation has really changed. */
+        if (size > old_size)
+        {
+            /* Allocation size should grow. */
+            reallocate = TRUE;
+        }
+        else
+        {
+            /* Optimization: If the block size shrinks by less than half the
+                             original allocation size, do not reallocate the
+                             block and do not copy over the contents of the old
+                             allocation. We also take into account that the
+                             actual size of the allocation is affected by a
+                             certain operating system imposed granularity. */
+            reallocate = (size < old_size && size <= old_size / 2);
+        }
 
 		if (reallocate)
 		{
@@ -151,7 +127,7 @@ __realloc(void *ptr, size_t size, const char *file, int line)
 
 			/* We allocate the new memory chunk before we
 			   attempt to replace the old. */
-			new_ptr = __malloc(size, file, line);
+			new_ptr = malloc(size);
 			if (new_ptr == NULL)
 			{
 				SHOWMSG("could not reallocate memory");
@@ -166,8 +142,11 @@ __realloc(void *ptr, size_t size, const char *file, int line)
 
 			/* Free the old allocation. Since we already know which memory
 			   node is associated with it, we don't call __free() here. */
-			__free_memory_node(mn, file, line);
-
+#ifndef USE_AVL
+			__free_memory_node(mn);
+#else
+            __free_memory(ptr, FALSE);
+#endif
 			result = new_ptr;
 		}
 		else
@@ -188,17 +167,5 @@ out:
 		SHOWMSG("ouch! realloc failed");
 
 	RETURN(result);
-	return (result);
-}
-
-/****************************************************************************/
-
-void *
-realloc(void *ptr, size_t size)
-{
-	void *result;
-
-	result = __realloc(ptr, size, NULL, 0);
-
 	return (result);
 }

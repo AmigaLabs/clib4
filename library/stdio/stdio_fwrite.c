@@ -31,146 +31,120 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 size_t
-fwrite(const void *ptr,size_t element_size,size_t count,FILE *stream)
-{
-	struct iob * file = (struct iob *)stream;
-	size_t result = 0;
+fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
+    struct iob *file = (struct iob *) stream;
+    size_t result = 0;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(ptr);
-	SHOWVALUE(element_size);
-	SHOWVALUE(count);
-	SHOWPOINTER(stream);
+    SHOWPOINTER(ptr);
+    SHOWVALUE(element_size);
+    SHOWVALUE(count);
+    SHOWPOINTER(stream);
 
-	assert( ptr != NULL && stream != NULL );
-	assert( (int)element_size >= 0 && (int)count >= 0 );
+    assert(ptr != NULL && stream != NULL);
+    assert((int) element_size >= 0 && (int) count >= 0);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	flockfile(stream);
+    flockfile(stream);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(ptr == NULL || stream == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (ptr == NULL || stream == NULL) {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	assert( __is_valid_iob(file) );
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+    assert(__is_valid_iob(file));
+    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+    assert(file->iob_BufferSize > 0);
 
-	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_IN_USE))
-	{
-		SHOWMSG("this file is not even in use");
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
+        SHOWMSG("this file is not even in use");
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+        SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-		__set_errno(EBADF);
+        __set_errno(EBADF);
 
-		goto out;
-	}
+        goto out;
+    }
 
-	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_WRITE))
-	{
-		SHOWMSG("this stream is not write-enabled");
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_WRITE)) {
+        SHOWMSG("this stream is not write-enabled");
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+        SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-		__set_errno(EBADF);
+        __set_errno(EBADF);
 
-		goto out;
-	}
+        goto out;
+    }
 
-	if(element_size > 0 && count > 0)
-	{
-		const unsigned char * data = (unsigned char *)ptr;
-		unsigned char c;
-		int buffer_mode;
-		size_t total_bytes_written = 0;
-		size_t total_size;
+    if (element_size > 0 && count > 0) {
+        const unsigned char *data = (unsigned char *) ptr;
+        unsigned char c;
+        int buffer_mode;
+        size_t total_bytes_written = 0;
+        size_t total_size;
 
-		total_size = element_size * count;
+        total_size = element_size * count;
 
-		if(__fputc_check((FILE *)file) < 0)
-			goto out;
+        if (__fputc_check((FILE *) file) < 0)
+            goto out;
 
-		buffer_mode = (file->iob_Flags & IOBF_BUFFER_MODE);
-		if(buffer_mode == IOBF_BUFFER_MODE_NONE)
-		{
-			struct fd * fd = __fd[file->iob_Descriptor];
+        buffer_mode = (file->iob_Flags & IOBF_BUFFER_MODE);
+        if (buffer_mode == IOBF_BUFFER_MODE_NONE) {
+            struct fd *fd = __fd[file->iob_Descriptor];
 
-			__fd_lock(fd);
+            __fd_lock(fd);
 
-			if(FLAG_IS_SET(fd->fd_Flags,FDF_IS_INTERACTIVE))
-				buffer_mode = IOBF_BUFFER_MODE_LINE;
+            if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
+                buffer_mode = IOBF_BUFFER_MODE_LINE;
 
-			__fd_unlock(fd);
-		}
+            __fd_unlock(fd);
+        }
 
-		if(buffer_mode == IOBF_BUFFER_MODE_LINE)
-		{
-			while(total_size-- > 0)
-			{
-				c = (*data++);
+        if (buffer_mode == IOBF_BUFFER_MODE_LINE) {
+            while (total_size-- > 0) {
+                c = (*data++);
 
-				if(__putc_line_buffered(c,(FILE *)file) == EOF)
-					goto out;
+                if (__putc_line_buffered(c, (FILE *) file) == EOF)
+                    goto out;
 
-				total_bytes_written++;
-			}
-		}
-		else
-		{
-			while(total_size-- > 0)
-			{
-				c = (*data++);
+                total_bytes_written++;
+            }
+        } else {
+            while (total_size-- > 0) {
+                c = (*data++);
 
-				if(__putc_fully_buffered(c,(FILE *)file) == EOF)
-					goto out;
+                if (__putc_fully_buffered(c, (FILE *) file) == EOF)
+                    goto out;
 
-				total_bytes_written++;
-			}
-		}
+                total_bytes_written++;
+            }
+        }
 
-		if((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE)
-		{
-			if(__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(file) < 0)
-				goto out;
-		}
+        if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
+            if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(file) < 0)
+                goto out;
+        }
 
-		result = total_bytes_written / element_size;
-	}
-	else
-	{
-		/* Don't let this appear like an EOF or error. */
-		clearerr((FILE *)file);
-	}
+        result = total_bytes_written / element_size;
+    } else {
+        /* Don't let this appear like an EOF or error. */
+        clearerr((FILE *) file);
+    }
 
- out:
+out:
 
-	funlockfile(stream);
+    funlockfile(stream);
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

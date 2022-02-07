@@ -48,7 +48,7 @@ vsprintf(char *s,const char *format,va_list arg)
 {
 	struct iob string_iob;
 	int result = EOF;
-	char buffer[32];
+	char buffer[32] = {0};
 
 	assert( s != NULL && format != NULL );
 

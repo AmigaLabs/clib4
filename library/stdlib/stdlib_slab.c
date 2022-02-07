@@ -286,7 +286,7 @@ __slab_allocate(size_t allocation_size)
 					D(("no slab is available for reuse; allocating a new slab (%lu bytes)", sizeof(*new_sn) + __slab_data.sd_StandardSlabSize));
 
 					PROFILE_OFF();
-					new_sn = (struct SlabNode *)AllocVecTags(sizeof(*new_sn) + __slab_data.sd_StandardSlabSize, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+					new_sn = (struct SlabNode *)AllocVecTags(sizeof(*new_sn) + __slab_data.sd_StandardSlabSize, AVT_Type, MEMF_SHARED, TAG_DONE);
 					PROFILE_ON();
 
 					if (new_sn == NULL)

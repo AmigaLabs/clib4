@@ -122,12 +122,6 @@ extern int strerror_r(int error,char * buffer,size_t buffer_size);
 extern char *strdup(const char *s);
 extern char *strndup(const char *str, size_t max);
 
-#ifdef __MEM_DEBUG
-extern char * __strdup(const char *s,const char *file,int line);
-
-#define strdup(s) __strdup((s),__FILE__,__LINE__)
-#endif /* __MEM_DEBUG */
-
 /****************************************************************************/
 
 extern void bcopy(const void *from,void *to,size_t len);

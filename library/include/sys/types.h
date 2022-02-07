@@ -56,20 +56,11 @@ typedef unsigned int gid_t;
 typedef unsigned int ino_t;
 typedef unsigned int mode_t;
 typedef unsigned int nlink_t;
+typedef int64_t off_t;
 #ifdef __USE_LARGEFILE64
     typedef int64_t _off64_t;
     typedef _off64_t off64_t;
     typedef int64_t _fpos64_t;
-    #ifndef __off_t_defined
-        typedef _off64_t off_t;
-        #define __off_t_defined
-    #endif
-#else
-    #if _FILE_OFFSET_BITS == 64
-        typedef int64_t off_t;
-    #else
-        typedef long int off_t;
-    #endif
 #endif
 typedef int pid_t;
 typedef unsigned int rlim_t;
@@ -92,6 +83,10 @@ typedef int32_t blksize_t;
 typedef	unsigned long long u_quad_t;	/* quads */
 typedef	long long	quad_t;
 typedef	quad_t *	qaddr_t;
+
+#define UQUAD_MAX       ((u_quad_t)(0-1)) /* max value for a uquad_t */
+#define QUAD_MAX        ((quad_t)(UQUAD_MAX >> 1))
+#define QUAD_MIN        (-QUAD_MAX-1)   /* min value for a quad_t */
 
 /* Iconv descriptor type */
 typedef void *_iconv_t;

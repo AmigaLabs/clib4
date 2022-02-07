@@ -70,7 +70,7 @@ iswblank(wint_t c)
 		unicode = 1;
 	}
 
-	if (1) //(unicode)
+	if (unicode)
 	{
 		return (c == 0x0009 || c == 0x0020 || c == 0x1680 ||
 				(c >= 0x2000 && c <= 0x2006) ||

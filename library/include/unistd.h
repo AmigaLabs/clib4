@@ -137,12 +137,6 @@ extern void disableUnixPaths(void);
 
 extern char * getcwd(char * buffer, size_t buffer_size);
 
-#ifdef __MEM_DEBUG
-extern char * __getcwd(char * buffer,size_t buffer_size,const char *file,int line);
-
-#define getcwd(buffer,buffer_size) __getcwd((buffer),(buffer_size),__FILE__,__LINE__)
-#endif /* __MEM_DEBUG */
-
 /*
  * The following prototypes may clash with the bsdsocket.library or
  * usergroup.library API definitions.

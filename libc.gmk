@@ -713,7 +713,6 @@ C_STDLIB := \
 	stdlib/stdlib_rand_r.o \
 	stdlib/stdlib_rand48.o \
 	stdlib/stdlib_realloc.o \
-	stdlib/stdlib_red_black.o \
 	stdlib/stdlib_resetmemstats.o \
 	stdlib/stdlib_secure_getenv.o \
 	stdlib/stdlib_semaphore.o \
@@ -731,6 +730,7 @@ C_STDLIB := \
 	stdlib/stdlib_srandom.o \
 	stdlib/stdlib_stacksize.o \
 	stdlib/stdlib_stack_usage.o \
+	stdlib/stdlib_swapstack.o \
 	stdlib/stdlib_arg.o \
 	stdlib/stdlib_stdio_window_spec.o \
 	stdlib/stdlib_strtod.o \
@@ -738,6 +738,7 @@ C_STDLIB := \
 	stdlib/stdlib_strtol.o \
 	stdlib/stdlib_strtold.o \
 	stdlib/stdlib_strtoll.o \
+	stdlib/stdlib_strtoq.o \
 	stdlib/stdlib_strtoul.o \
 	stdlib/stdlib_strtoull.o \
 	stdlib/stdlib_sysbase.o \
@@ -1110,4 +1111,4 @@ $(BUILD_DIR)/lib/libc.so : $(addprefix $(BUILD_DIR)/obj.shared/libc/,$(C_LIB))
 	@$(MAKEDIR) $(@D)
 	@$(DELETE) $@
 	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(BUILD_DIR)/lib/shcrtbegin.o $^ $(BUILD_DIR)/lib/shcrtend.o $(LOG_COMMAND)
+	$(VERBOSE)$(CC) -nostdlib -Ttext=0x0000000 -mcrt=clib2 -shared -o $@ $(BUILD_DIR)/lib/shcrtbegin.o $^ $(BUILD_DIR)/lib/shcrtend.o $(LOG_COMMAND)

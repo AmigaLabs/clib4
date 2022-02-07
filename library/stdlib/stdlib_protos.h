@@ -140,28 +140,18 @@ extern int __arg_init(void);
 
 /* stdlib_malloc.c */
 extern size_t __get_allocation_size(size_t size);
-extern void *__allocate_memory(size_t size, BOOL never_free, const char *file, int line);
+extern void *__allocate_memory(size_t size, BOOL never_free);
 
 /* stdlib_free.c */
 extern struct MemoryNode *__find_memory_node(void *address);
-extern void __check_memory_allocations(const char *file, int line);
-extern void __free_memory(void *ptr, BOOL force, const char *file, int line);
-extern void __free_memory_node(struct MemoryNode *mn, const char *file, int line);
+extern void __check_memory_allocations();
+extern void __free_memory(void *ptr, BOOL force);
+extern void __free_memory_node(struct MemoryNode *mn);
 
 /****************************************************************************/
 
 /* signal_checkabort.c */
 extern void __check_abort(void);
-
-/****************************************************************************/
-
-/* stdlib_red_black.c */
-extern void __initialize_red_black_tree(struct MemoryTree *new_tree);
-extern void __red_black_tree_insert(struct MemoryTree *tree, struct MemoryNode *x);
-extern struct MemoryNode *__red_black_tree_find(struct MemoryTree *tree, void *allocation);
-extern void __red_black_tree_remove(struct MemoryTree *tree, struct MemoryNode *z);
-
-/****************************************************************************/
 
 /* stdlib_main.c */
 extern int _main(void);

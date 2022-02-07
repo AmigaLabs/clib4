@@ -53,7 +53,7 @@
 /****************************************************************************/
 
 #ifdef __amigaos4__
-#define MEMORY_TYPE MEMF_PRIVATE
+#define MEMORY_TYPE MEMF_SHARED
 #else
 #define MEMORY_TYPE MEMF_ANY
 #endif /* __amigaos4__ */

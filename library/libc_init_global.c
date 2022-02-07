@@ -131,7 +131,30 @@ STDLIB_CONSTRUCTOR(global_init)
 		memset(__global_clib2->emergency, 0, sizeof(__global_clib2->emergency));
 
 		/* Init memalign list */
-		NewMinList(&__global_clib2->aligned_blocks);
+        __global_clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                                            ASO_NoTrack,         FALSE,
+                                                            ASO_MemoryOvr,       MEMF_SHARED,
+                                                            ASOITEM_MFlags,      MEMF_SHARED,
+                                                            ASOITEM_ItemSize ,   sizeof(struct MemalignEntry),
+                                                            ASOITEM_BatchSize,   408,
+                                                            ASOITEM_GCPolicy,    ITEMGC_AFTERCOUNT,
+                                                            ASOITEM_GCParameter, 1000,
+                                                            TAG_DONE);
+
+#ifdef USE_AVL
+        __global_clib2->__memory_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                                        ASO_NoTrack,         FALSE,
+                                                        ASO_MemoryOvr,       MEMF_SHARED,
+                                                        ASOITEM_MFlags,      MEMF_SHARED,
+                                                        ASOITEM_ItemSize ,   sizeof(struct AVLMemoryNode),
+                                                        ASOITEM_BatchSize,   408,
+                                                        ASOITEM_GCPolicy,    ITEMGC_AFTERCOUNT,
+                                                        ASOITEM_GCParameter, 1000,
+                                                        TAG_DONE);
+        if (!__global_clib2->__memory_pool) {
+            goto out;
+        }
+#endif
 
 		/* Check is SYSV library is available in the system */
 		__global_clib2->haveShm = FALSE;
@@ -207,19 +230,26 @@ STDLIB_DESTRUCTOR(global_exit)
 
 	struct ElfIFace *IElf = __IElf;
 
-	/* Free global clib structure */
+    /* Free global clib structure */
 	if (__global_clib2)
 	{
-		/* Free memalign stuff */
-		if (!IsMinListEmpty(&__global_clib2->aligned_blocks))
-		{
-			struct Node *node;
+#ifdef USE_AVL
+        if (__global_clib2->__memory_pool) {
+            struct AVLMemoryNode *memNode = (struct AVLMemoryNode *)AVL_FindFirstNode(__global_clib2->__memalign_tree);
+            while (memNode)
+            {
+                struct AVLMemoryNode *next = (struct AVLMemoryNode *)AVL_FindNextNodeByAddress(&memNode->amn_AvlNode);
+                FreeVec(memNode->amn_Address);
+                memNode = next;
+            }
+            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memory_pool);
+        }
+#endif
 
-			while ((node = RemHead((struct List *)&__global_clib2->aligned_blocks)) != NULL)
-			{
-				free(node);
-				node = NULL;
-			}
+        /* Free memalign stuff */
+		if (&__global_clib2->__memalign_pool)
+		{
+            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
 		}
 
 		if (__ISysVIPC != NULL)

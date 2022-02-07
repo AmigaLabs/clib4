@@ -26,7 +26,6 @@ WARNINGS = \
 
 V = /V
 INCLUDE = -I$(V)/include -I../library/include
-#OPTIONS = -D__MEM_DEBUG
 #OPTIONS = -DDEBUG
  OPTIONS = -DNDEBUG
 #OPTIMIZE = -O3
