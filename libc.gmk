@@ -400,6 +400,7 @@ C_MOUNT := \
 	mount/mount_statfs.o
 
 C_POSIX := \
+	posix/fnmatch.o \
 	posix/glob_glob.o \
 	posix/glob_globfree.o \
 	posix/ipc_ftok.o \
@@ -467,6 +468,8 @@ C_SEARCH := \
 	search/search_twalk.o
 
 C_SOCKET := \
+    socket/freeifaddrs.o \
+    socket/getifaddrs.o \
 	socket/if_if_indextoname.o \
 	socket/if_if_nametoindex.o \
 	socket/socket_accept.o \

@@ -116,8 +116,6 @@ readdir(DIR *directory_pointer)
 							if (fib)
 							{
 								assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(fib->Name));
-								strcpy(dh->dh_DirectoryEntry.d_name, fib->Name);
-
 								dh->dh_DirectoryEntry.d_ino = fib->ObjectID;
 								dh->dh_DirectoryEntry.d_reclen = sizeof(struct dirent);
 								dh->dh_DirectoryEntry.d_namlen = strlcpy(dh->dh_DirectoryEntry.d_name, fib->Name, NAME_MAX + 1);
@@ -127,6 +125,8 @@ readdir(DIR *directory_pointer)
 									dh->dh_DirectoryEntry.d_type = DT_REG;
 								else if (EXD_IS_SOCKET(dh->dh_FileInfo))
 									dh->dh_DirectoryEntry.d_type = DT_SOCK;
+								else if (EXD_IS_PIPE(dh->dh_FileInfo))
+									dh->dh_DirectoryEntry.d_type = DT_FIFO;
 								else if (EXD_IS_DIRECTORY(dh->dh_FileInfo))
 								{
 									dh->dh_DirectoryEntry.d_type = DT_DIR;
@@ -219,6 +219,8 @@ readdir(DIR *directory_pointer)
 						dh->dh_DirectoryEntry.d_type = DT_LNK;
 					else if (EXD_IS_FILE(dh->dh_FileInfo))
 						dh->dh_DirectoryEntry.d_type = DT_REG;
+                    else if (EXD_IS_PIPE(dh->dh_FileInfo))
+                        dh->dh_DirectoryEntry.d_type = DT_FIFO;
 					else if (EXD_IS_SOCKET(dh->dh_FileInfo))
 						dh->dh_DirectoryEntry.d_type = DT_SOCK;
 					else if (EXD_IS_DIRECTORY(dh->dh_FileInfo))

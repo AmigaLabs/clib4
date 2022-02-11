@@ -122,14 +122,12 @@ extern int sigemptyset(sigset_t *set);
 extern int sigaddset(sigset_t *set, int sig);
 extern int kill(pid_t pid, int signal_number);
 
-#if _BSD_SOURCE || _XOPEN_SOURCE >= 500 || _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED || _POSIX_C_SOURCE >= 200809L
 typedef struct
 {
     void *ss_sp;
     int ss_flags;
     size_t ss_size;
 } stack_t;
-#endif
 
 __END_DECLS
 

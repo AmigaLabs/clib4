@@ -78,7 +78,7 @@ extern in_addr_t inet_netof(struct in_addr in);
 extern in_addr_t inet_network(const char *cp);
 extern char *inet_ntoa(struct in_addr in);
 
-extern const char *inet_ntop (int af, const void *restrict src, char *restrict dst, socklen_t cnt);
+extern const char *inet_ntop (int af, const void *src, char *dst, socklen_t cnt);
 extern int inet_pton (int af, const char *src, void *dst);
 
 #endif /* __NO_NET_API */

@@ -69,6 +69,7 @@ if_nametoindex(const char *ifname)
                 node = GetSucc(node);
             }
         }
+        __ISocket->ReleaseInterfaceList(netiflist);
     }
 
     return index;
