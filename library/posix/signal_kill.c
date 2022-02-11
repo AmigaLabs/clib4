@@ -37,7 +37,6 @@
 
 #include <unistd.h>
 
-
 static APTR hook_function(struct Hook *hook, APTR userdata, struct Process *process)
 {
 	uint32 pid = (uint32)userdata;
