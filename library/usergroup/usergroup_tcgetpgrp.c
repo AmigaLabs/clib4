@@ -1,5 +1,5 @@
 /*
- * $Id: usergroup_tcgetpgrp.c,v 1.0 2021-02-14 18:17:00 apalmate Exp $
+ * $Id: usergroup_tcgetpgrp.c,v 1.0 2022-02-16 18:17:00 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,17 +35,23 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
+/* On AmigaOS4 we don't have terminal foreground process group
+ * So return getpgrp value
+ */
 pid_t
-tcgetpgrp(int fildes)
-{
-	pid_t result = -1;
+tcgetpgrp(int fildes) {
+    pid_t result;
 
-	ENTER();
-    
-    __set_errno(ENOSYS);
+    ENTER();
 
-	RETURN(result);
-	return (result);
+    PROFILE_OFF();
+    result = __getpgrp();
+    PROFILE_ON();
+
+    if (__check_abort_enabled) {
+        __check_abort();
+    }
+
+    RETURN(result);
+    return (result);
 }

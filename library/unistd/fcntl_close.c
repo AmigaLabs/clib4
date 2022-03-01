@@ -37,7 +37,6 @@
 
 int
 close(int file_descriptor) {
-    printf("close\n");
     struct file_action_message fam;
     struct fd *fd;
     int result = ERROR;
@@ -73,7 +72,6 @@ close(int file_descriptor) {
     result = OK;
 
 out:
-    printf("result = %d\n", result);
 
     RETURN(result);
     return (result);

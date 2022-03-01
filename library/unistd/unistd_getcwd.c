@@ -43,10 +43,8 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-#undef getcwd
-
-__static char *
-__getcwd(char *buffer, size_t buffer_size, const char *file, int line) {
+char *
+getcwd(char *buffer, size_t buffer_size) {
 #if defined(UNIX_PATH_SEMANTICS)
     struct name_translation_info buffer_nti;
 #endif /* UNIX_PATH_SEMANTICS */
@@ -178,14 +176,5 @@ __getcwd(char *buffer, size_t buffer_size, const char *file, int line) {
     PROFILE_ON();
 
     RETURN(result);
-    return (result);
-}
-
-char *
-getcwd(char *buffer, size_t buffer_size) {
-    char *result;
-
-    result = __getcwd(buffer, buffer_size, NULL, 0);
-
     return (result);
 }

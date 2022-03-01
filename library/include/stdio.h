@@ -71,7 +71,7 @@ __BEGIN_DECLS
 /****************************************************************************/
 
 /* Default size for all standard I/O file buffers. */
-#define BUFSIZ 8192 * 10
+#define BUFSIZ 8192
 
 /* File buffering modes for use with setvbuf() */
 

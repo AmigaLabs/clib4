@@ -45,7 +45,7 @@ kprintf(const char * format,...)
 		va_list arg;
 
 		va_start(arg,format);
-		KPutFmt(format,arg);
+        KPrintF(format,arg);
 		va_end(arg);
 	}
 }

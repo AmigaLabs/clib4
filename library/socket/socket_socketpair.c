@@ -35,21 +35,7 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-static int 
-msnprintf(char *str, size_t str_m, const char *fmt, /*args*/...)
-{
-    va_list ap;
-    int str_l;
-
-    va_start(ap, fmt);
-    str_l = vsnprintf(str, str_m, fmt, ap);
-    va_end(ap);
-    if (str_m)
-        str[str_m - 1] = '\0';
-    return str_l;
-}
-
-int 
+int
 socketpair(int domain, int type, int protocol, int socks[2])
 {
     union
@@ -57,62 +43,62 @@ socketpair(int domain, int type, int protocol, int socks[2])
         struct sockaddr_in inaddr;
         struct sockaddr addr;
     } a;
+
     int listener;
     socklen_t addrlen = sizeof(a.inaddr);
     int reuse = 1;
-    char data[2][12];
-    ssize_t dlen;
     (void)domain;
     (void)type;
     (void)protocol;
 
+    ENTER();
+
     __set_errno(0);
+
+    if (socks == 0) {
+        __set_errno(EINVAL);
+        return ERROR;
+    }
+
+    socks[0] = socks[1] = -1;
 
     listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (listener == -1)
-        return -1;
+        return ERROR;
 
     memset(&a, 0, sizeof(a));
     a.inaddr.sin_family = AF_INET;
     a.inaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     a.inaddr.sin_port = 0;
 
-    socks[0] = socks[1] = -1;
+    for (;;) {
+        if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, (char *) &reuse, (int) sizeof(reuse)) == -1)
+            break;
+        if (bind(listener, &a.addr, sizeof(a.inaddr)) == -1)
+            break;
+        if (getsockname(listener, &a.addr, &addrlen) == -1)
+            break;
+        if (listen(listener, 1) == -1)
+            break;
+        socks[0] = socket(AF_INET, SOCK_STREAM, 0);
+        if (socks[0] == -1)
+            break;
+        if (connect(socks[0], &a.addr, sizeof(a.inaddr)) == -1)
+            break;
+        socks[1] = accept(listener, NULL, NULL);
+        if (socks[1] == -1)
+            break;
 
-    if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, (int)sizeof(reuse)) == -1)
-        goto error;
-    if (bind(listener, &a.addr, sizeof(a.inaddr)) == -1)
-        goto error;
-    if (getsockname(listener, &a.addr, &addrlen) == -1)
-        goto error;
-    if (listen(listener, 1) == -1)
-        goto error;
-    socks[0] = socket(AF_INET, SOCK_STREAM, 0);
-    if (socks[0] == -1)
-        goto error;
-    if (connect(socks[0], &a.addr, sizeof(a.inaddr)) == -1)
-        goto error;
-    socks[1] = accept(listener, NULL, NULL);
-    if (socks[1] == -1)
-        goto error;
-
-    /* verify that nothing else connected */
-    msnprintf(data[0], sizeof(data[0]), "%p", socks);
-    dlen = strlen(data[0]);
-    if (write(socks[0], data[0], dlen) != dlen)
-        goto error;
-    if (read(socks[1], data[1], sizeof(data[1])) != dlen)
-        goto error;
-    if (memcmp(data[0], data[1], dlen))
-        goto error;
-
-    close(listener);
-    return 0;
+        close(listener);
+        return OK;
+    }
 
 error:
     __set_errno(EFAULT);
     close(listener);
     close(socks[0]);
     close(socks[1]);
-    return -1;
+
+    RETURN(ERROR);
+    return ERROR;
 }

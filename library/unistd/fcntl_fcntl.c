@@ -35,12 +35,6 @@
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int fcntl(int file_descriptor, int cmd, ... /* int arg */)
 {
 	struct file_action_message fam;

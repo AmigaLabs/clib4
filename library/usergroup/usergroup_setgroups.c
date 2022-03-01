@@ -31,56 +31,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
+int setgroups(int ngroups, const gid_t *groups) {
+    int result = ERROR;
 
-int setgroups(int ngroups, const gid_t *groups)
-{
-	int result = ERROR;
+    ENTER();
 
-	ENTER();
+    SHOWVALUE(ngroups);
+    SHOWPOINTER(groups);
 
-	SHOWVALUE(ngroups);
-	SHOWPOINTER(groups);
+    assert(ngroups == 0 || groups != NULL);
+    assert(__UserGroupBase != NULL);
 
-	assert(ngroups == 0 || groups != NULL);
-	assert(__UserGroupBase != NULL);
+    if (ngroups != 0 && groups == NULL) {
+        SHOWMSG("invalid groups parameter");
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (ngroups != 0 && groups == NULL)
-		{
-			SHOWMSG("invalid groups parameter");
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
-
-	if (ngroups > 0)
-	{
-		PROFILE_OFF();
-		result = __setgroups(ngroups, (LONG *)groups);
-		PROFILE_ON();
-	}
-	else
-	{
-		result = OK;
-	}
+    if (ngroups > 0) {
+        PROFILE_OFF();
+        result = __setgroups(ngroups, (LONG *) groups);
+        PROFILE_ON();
+    } else {
+        result = OK;
+    }
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

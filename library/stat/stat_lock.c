@@ -111,7 +111,7 @@ __lock(
 		if(error == ERROR_OBJECT_NOT_FOUND)
 		{
 			/* If this is part of a multi-volume assignment, try the next part. */
-			if(FLAG_IS_SET(dvp->dvp_Flags,DVPF_ASSIGN))
+			if(FLAG_IS_SET(dvp->dvp_Flags,DVPF_MULTIASSIGN))
 				continue;
 
 			/* Not much we can do here... */
@@ -136,7 +136,7 @@ __lock(
 			}
 
 			/* Now ask the file system to resolve the entire path. */
-			result = ReadLink(dvp->dvp_Port,dvp->dvp_Lock,(STRPTR)name,(STRPTR)new_name,(LONG)new_name_size);
+			result = ReadSoftLink(dvp->dvp_Port,dvp->dvp_Lock,(STRPTR)name,(STRPTR)new_name,(LONG)new_name_size);
 			if(result < 0)
 			{
 				/* This will return either -1 (resolution error) or -2

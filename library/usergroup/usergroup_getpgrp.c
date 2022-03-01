@@ -35,8 +35,6 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
 pid_t
 getpgrp(void)
 {

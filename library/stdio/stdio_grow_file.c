@@ -72,7 +72,7 @@ __grow_file_size(struct fd *fd, int num_bytes)
 	assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
 
 	fh = BADDR(fd->fd_File);
-	if (fh != NULL && fh->fh_Type != NULL && DoPkt(fh->fh_Type, ACTION_DISK_INFO, MKBADDR(id), 0, 0, 0, 0))
+	if (fh != NULL && fh->fh_MsgPort != NULL && DoPkt(fh->fh_MsgPort, ACTION_HANDLER_INFO, MKBADDR(id), 0, 0, 0, 0))
 		block_size = id->id_BytesPerBlock;
 
 	PROFILE_ON();

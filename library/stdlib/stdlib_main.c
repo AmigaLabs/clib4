@@ -359,8 +359,12 @@ _main()
 		__detach = (*__check_detach)();
 	}
 
-	/* The following code will be executed if the program is to keep
-	   running in the shell or was launched from Workbench. */
+    /* Set default terminal mode to "amiga" if not set */
+    const char buffer[6] = "amiga";
+    SetVar("TERM", buffer, FALSE, GVF_LOCAL_ONLY);
+
+    /* The following code will be executed if the program is to keep
+       running in the shell or was launched from Workbench. */
 	if (DO_NOT __detach)
 	{
 		int old_priority = this_process->pr_Task.tc_Node.ln_Pri;
@@ -378,7 +382,6 @@ _main()
 
             /* Make the stack size a multiple of 32 bytes. */
             stack_size = 32 + ((__stack_size + 31UL) & ~31UL);
-            Printf("stack_size = %d\n", stack_size);
 
             /* Allocate the stack swapping data structure and the stack space separately. */
             stk = AllocVecTags(sizeof(*stk), AVT_Type, MEMF_PUBLIC|MEMF_ANY, TAG_DONE);

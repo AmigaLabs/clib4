@@ -35,23 +35,20 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
+pid_t setsid(void) {
+    long result;
 
-pid_t setsid(void)
-{
-	long result;
+    ENTER();
 
-	ENTER();
+    assert(__UserGroupBase != NULL);
 
-	assert(__UserGroupBase != NULL);
+    PROFILE_OFF();
+    result = (long) __setsid();
+    PROFILE_ON();
 
-	PROFILE_OFF();
-	result = (long)__setsid();
-	PROFILE_ON();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	if (__check_abort_enabled)
-		__check_abort();
-
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

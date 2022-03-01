@@ -101,7 +101,7 @@ __convert_info_to_statfs(struct InfoData * id,struct statfs * f)
 	f->f_ffree	= LONG_MAX;
 	f->f_flags	= MNT_NOATIME|MNT_SYMPERM|MNT_LOCAL;
 
-	if(id->id_DiskState != ID_VALIDATED)
+	if(id->id_DiskState != ID_DISKSTATE_VALIDATED)
 		SET_FLAG(f->f_flags,MNT_RDONLY);
 
 	switch (id->id_DiskType)

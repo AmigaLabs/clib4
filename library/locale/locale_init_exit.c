@@ -35,32 +35,23 @@
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-/****************************************************************************/
+#include <proto/diskfont.h>
 
 struct Library *NOCOMMON __LocaleBase;
-
-/****************************************************************************/
-
-#if defined(__amigaos4__)
 struct LocaleIFace *NOCOMMON __ILocale;
-#endif /* __amigaos4__ */
 
-/****************************************************************************/
+struct Library *NOCOMMON __DiskfontBase;
+struct DiskfontIFace *NOCOMMON __IDiskfont;
 
 struct Locale *NOCOMMON __default_locale;
 struct Locale *NOCOMMON __locale_table[NUM_LOCALES];
 
-/****************************************************************************/
-
 char NOCOMMON __locale_name_table[NUM_LOCALES][MAX_LOCALE_NAME_LEN];
 
-/****************************************************************************/
 
 void __close_all_locales(void)
 {
@@ -93,8 +84,6 @@ void __close_all_locales(void)
 	__locale_unlock();
 }
 
-/****************************************************************************/
-
 void __locale_exit(void)
 {
 	ENTER();
@@ -122,12 +111,20 @@ void __locale_exit(void)
 		__LocaleBase = NULL;
 	}
 
-	__locale_unlock();
+    if (__IDiskfont != NULL) {
+        DropInterface((struct Interface *)__IDiskfont);
+        __IDiskfont = NULL;
+    }
+
+    if (__DiskfontBase != NULL) {
+        CloseLibrary(__DiskfontBase);
+        __DiskfontBase = NULL;
+    }
+
+    __locale_unlock();
 
 	LEAVE();
 }
-
-/****************************************************************************/
 
 int __locale_init(void)
 {
@@ -150,6 +147,19 @@ int __locale_init(void)
 				CloseLibrary(__LocaleBase);
 				__LocaleBase = NULL;
 			}
+            __DiskfontBase = OpenLibrary("diskfont.library", 50);
+            if (__DiskfontBase) {
+                __IDiskfont = (struct DiskfontIFace *) GetInterface(__DiskfontBase, "main", 1, NULL);
+                if (!__IDiskfont) {
+                    DropInterface((struct Interface *)__ILocale);
+
+                    CloseLibrary(__LocaleBase);
+                    __LocaleBase = NULL;
+
+                    CloseLibrary(__DiskfontBase);
+                    __DiskfontBase = NULL;
+                }
+            }
 		}
 	}
 
@@ -199,8 +209,6 @@ CLIB_DESTRUCTOR(locale_exit)
 	LEAVE();
 }
 
-/****************************************************************************/
-
 CLIB_CONSTRUCTOR(locale_init)
 {
 	BOOL success = FALSE;
@@ -212,8 +220,9 @@ CLIB_CONSTRUCTOR(locale_init)
 	if (locale_lock == NULL)
 		goto out;
 
-	for (i = 0; i < NUM_LOCALES; i++)
-		strcpy(__locale_name_table[i], "C");
+	for (i = 0; i < NUM_LOCALES; i++) {
+        strcpy(__locale_name_table[i], "C-UTF-8");
+    }
 
 	if (__open_locale)
 		__locale_init();

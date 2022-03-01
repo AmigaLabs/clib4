@@ -31,27 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _FCNTL_HEADERS_H
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 /* This is used in place of ChangeMode() in order to work around a bug in
    dos.library V40 and below: a "NIL:" file handle will crash the
@@ -68,8 +54,6 @@ out:
 
 	return (result);
 }
-
-/****************************************************************************/
 
 int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 {

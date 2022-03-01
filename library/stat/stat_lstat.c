@@ -60,7 +60,7 @@ int lstat(const char *path_name, struct stat *st)
 #if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
 #endif /* UNIX_PATH_SEMANTICS */
-	struct FileLock *fl;
+	struct Lock *fl;
 	int result = ERROR;
 	struct ExamineData *fib = NULL;
 	BPTR file_lock = ZERO;
@@ -182,7 +182,7 @@ int lstat(const char *path_name, struct stat *st)
 
 		fl = BADDR(file_lock);
 
-		__convert_file_info_to_stat(fl->fl_Task, fib, st);
+		__convert_file_info_to_stat(fl->fl_Port, fib, st);
 	}
 
 	result = OK;

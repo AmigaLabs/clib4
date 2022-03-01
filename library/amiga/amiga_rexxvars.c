@@ -34,45 +34,26 @@
 /* We don't want to pull in <clib/alib_protos.h> */
 #define CLIB_ALIB_PROTOS_H
 
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
-
-/****************************************************************************/
 
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-/****************************************************************************/
-
 #include <rexx/rxslib.h>
 #include <rexx/errors.h>
-
-/****************************************************************************/
 
 /* This is used by the stub function prototypes. The ARexx header files
    do not define it, though. */
 struct Environment;
 
-/****************************************************************************/
-
 #define __NOLIBBASE__
 #include <proto/rexxsyslib.h>
 
-/****************************************************************************/
-
 static struct Library *RexxSysBase;
-
-/****************************************************************************/
-
-#if defined(__amigaos4__)
 static struct RexxSysIFace *IRexxSys;
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
 
 BOOL CheckRexxMsg(struct RexxMsg *message);
 LONG GetRexxVar(struct RexxMsg *message, STRPTR variable_name, STRPTR *buffer_pointer);
@@ -101,8 +82,6 @@ CLIB_CONSTRUCTOR(rexxvars_init)
 	CONSTRUCTOR_SUCCEED();
 }
 
-/****************************************************************************/
-
 CLIB_DESTRUCTOR(rexxvars_exit)
 {
 	ENTER();
@@ -120,8 +99,6 @@ CLIB_DESTRUCTOR(rexxvars_exit)
 
 	LEAVE();
 }
-
-/****************************************************************************/
 
 /* This is modeled after the original assembly language code. Except for the
    fact that we compare the library base against a local, static variable
@@ -149,11 +126,7 @@ out:
 	return (result);
 }
 
-/****************************************************************************/
-
 #include <exec/emulation.h>
-
-/****************************************************************************/
 
 STATIC VOID
 _FreeSpace(struct Environment *env, APTR mem, LONG size)

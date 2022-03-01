@@ -35,8 +35,6 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 void
 srand(unsigned seed)
 {

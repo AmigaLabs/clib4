@@ -113,6 +113,7 @@ extern pid_t getpid(void);
 extern pid_t getppid(void);
 extern pid_t getpgrp(void );
 extern pid_t tcgetpgrp(int fildes);
+extern int tcsetpgrp(int filedes, pid_t pgrp);
 extern char *realpath(const char *file_name, char *resolved_name);
 extern int fsync(int file_descriptor);
 extern int fdatasync(int file_descriptor);

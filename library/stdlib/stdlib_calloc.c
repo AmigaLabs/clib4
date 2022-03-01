@@ -35,55 +35,43 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/****************************************************************************/
-
 #undef calloc
 
-/****************************************************************************/
-
 __static void *
-__calloc(size_t num_elements,size_t element_size,const char * file,int line)
-{
-	void * result = NULL;
-	size_t total_size;
+__calloc(size_t num_elements, size_t element_size, const char *file, int line) {
+    void *result = NULL;
+    size_t total_size;
 
-	/* This might overflow. */
-	total_size = num_elements * element_size;
-	
-	/* No arithmetic overflow? */
-	if(total_size >= num_elements)
-	{
-		result = malloc(total_size);
-		if(result != NULL)
-			memset(result,0,total_size);
-		else
-			SHOWMSG("memory allocation failure");
-	}
-	/* Multiplying the number and size of elements overflows
-	 * the size_t range.
-	 */
-	else
-	{
-		D(("calloc(num_elements=%ld, element_size=%ld) overflow"));
-	}
+    /* This might overflow. */
+    total_size = num_elements * element_size;
 
-	return(result);
+    /* No arithmetic overflow? */
+    if (total_size >= num_elements) {
+        result = malloc(total_size);
+        if (result != NULL)
+            memset(result, 0, total_size);
+        else
+            SHOWMSG("memory allocation failure");
+    }
+    /* Multiplying the number and size of elements overflows
+     * the size_t range.
+     */
+    else {
+        D(("calloc(num_elements=%ld, element_size=%ld) overflow"));
+    }
+
+    return (result);
 }
 
 /****************************************************************************/
 
 void *
-calloc(size_t num_elements,size_t element_size)
-{
-	void * result;
-
-	result = __calloc(num_elements,element_size,NULL,0);
-
-	return(result);
+calloc(size_t num_elements, size_t element_size) {
+    void *result;
+    result = __calloc(num_elements, element_size, NULL, 0);
+    return (result);
 }

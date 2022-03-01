@@ -142,6 +142,8 @@ int getifaddrs(struct ifaddrs **ifap) {
     struct ifawrap ifawrap;
     size_t addrlen;
 
+    memset(&ifawrap, 0, sizeof(struct ifawrap));
+
     ifawrap.ifaddrs = NULL;
     netiflist = __ISocket->ObtainInterfaceList();
     if (netiflist != NULL) {

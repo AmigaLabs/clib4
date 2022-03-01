@@ -136,7 +136,7 @@ int chmod(const char *path_name, mode_t mode)
 	}
 
 	if (FLAG_IS_SET(mode, S_IXOTH))
-		SET_FLAG(protection, FIBF_OTR_EXECUTE);
+		SET_FLAG(protection, (1L<<FIBB_OTR_EXECUTE));
 
 	SHOWSTRING(path_name);
 	SHOWVALUE(protection);

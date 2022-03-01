@@ -45,44 +45,27 @@
 #endif /* __NOGLOBALIFACE__ */
 
 #include <proto/locale.h>
-
-/****************************************************************************/
+#include <diskfont/diskfonttag.h>
+#include <proto/diskfont.h>
 
 #ifndef _MACROS_H
 #include "macros.h"
 #endif /* _MACROS_H */
 
-/****************************************************************************/
 
 extern struct Library * NOCOMMON __LocaleBase;
-
-/****************************************************************************/
-
-#if defined(__amigaos4__)
-
-/****************************************************************************/
-
 extern struct LocaleIFace NOCOMMON * __ILocale;
 
-/****************************************************************************/
+extern struct Library *NOCOMMON __DiskfontBase;
+extern struct DiskfontIFace *NOCOMMON __IDiskfont;
 
 #define DECLARE_LOCALEBASE() \
 	struct Library *		UNUSED	LocaleBase	= __LocaleBase; \
 	struct LocaleIFace *			ILocale		= __ILocale
 
-/****************************************************************************/
+#define DECLARE_FONTBASE() \
+	struct Library *		UNUSED	DiskfontBase = __DiskfontBase; \
+	struct DiskfontIFace *			IDiskfont    = __IDiskfont
 
-#else
-
-/****************************************************************************/
-
-#define DECLARE_LOCALEBASE() \
-	struct Library * LocaleBase = __LocaleBase
-
-/****************************************************************************/
-
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
 
 #endif /* _STDLIB_LOCALEBASE_H */

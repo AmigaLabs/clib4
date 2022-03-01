@@ -113,13 +113,15 @@ extern ldiv_t ldiv(long n, long d);
 /****************************************************************************/
 
 extern int rand(void);
-extern int random(void);
+extern long random(void);
 extern void srand(unsigned int seed);
 extern void srandom(unsigned int seed);
 extern double erand48 (unsigned short subi[3]);
 extern long jrand48 (unsigned short subi[3]);
 extern long nrand48 (unsigned short subi[3]);
 
+extern char *initstate(unsigned int seed, char *state, size_t size);
+extern char *setstate(const char *state);
 /****************************************************************************/
 
 extern int system(const char *command);
@@ -158,11 +160,8 @@ extern double atof(const char *str);
 extern int atoi(const char *str);
 extern long atol(const char *str);
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
+extern char *itoa(int value, char *buffer, int base);
+extern char *lltoa(int64_t ll, char *buffer, int radix);
 
 extern void _exit(int status);
 extern int rand_r(unsigned int *seed);
@@ -372,10 +371,6 @@ extern int setenv(const char *name, const char *value, int overwrite);
 extern char *mkdtemp(char *name_template);
 extern const char *getexecname(void);
 
-#if defined(__GNUC__) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L))
-
-/****************************************************************************/
-
 extern long long strtoll(const char *str, char **ptr, int base);
 extern long double strtold(const char *str, char **ptr);
 extern unsigned long long strtoull(const char *str, char **ptr, int base);
@@ -389,12 +384,6 @@ typedef struct
 
 extern long long llabs(long long x);
 extern lldiv_t lldiv(long long n, long long d);
-
-/****************************************************************************/
-
-#endif /* __GNUC__ || (__STDC_VERSION__ && __STDC_VERSION__ >= 199901L) */
-
-/****************************************************************************/
 
 extern float strtof(const char *str, char **ptr);
 

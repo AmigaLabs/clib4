@@ -87,7 +87,7 @@ __slab_allocate(size_t allocation_size)
 		{
 			PROFILE_OFF();
 
-			ssa = AllocVecTags(total_single_allocation_size, AVT_Type, MEMF_SHARED, TAG_DONE);
+			ssa = AllocVecTags(total_single_allocation_size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
 
 			PROFILE_ON();
 		}
@@ -286,7 +286,7 @@ __slab_allocate(size_t allocation_size)
 					D(("no slab is available for reuse; allocating a new slab (%lu bytes)", sizeof(*new_sn) + __slab_data.sd_StandardSlabSize));
 
 					PROFILE_OFF();
-					new_sn = (struct SlabNode *)AllocVecTags(sizeof(*new_sn) + __slab_data.sd_StandardSlabSize, AVT_Type, MEMF_SHARED, TAG_DONE);
+					new_sn = (struct SlabNode *)AllocVecTags(sizeof(*new_sn) + __slab_data.sd_StandardSlabSize, AVT_Type, MEMF_PRIVATE, TAG_DONE);
 					PROFILE_ON();
 
 					if (new_sn == NULL)
@@ -473,9 +473,7 @@ void __slab_free(void *address, size_t allocation_size)
 		 */
 		ssa--;
 
-/* Verify that the allocation is really on the list we
-		 * will remove it from.
-		 */
+        /* Verify that the allocation is really on the list we will remove it from. */
 #if DEBUG
 		{
 			struct MinNode *mln;

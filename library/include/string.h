@@ -74,10 +74,7 @@ extern char *strstr(const char *src, const char *sub);
 extern char *strnstr(const char *src, const char *sub, size_t len);
 extern char *strsep(char ** src, const char *delim);
 extern char *stpcpy(char *dest, const char *src);
-
-#ifdef _GNU_SOURCE
 extern char *strcasestr(const char *haystack, const char *needle);
-#endif
 
 /****************************************************************************/
 

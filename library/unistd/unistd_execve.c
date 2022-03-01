@@ -481,7 +481,7 @@ find_command(const char *path, struct program_info **result_ptr)
 
 			if (dvp != NULL)
 				CurrentDir(old_dir);
-		} while (!done && error == 0 && dvp != NULL && (dvp->dvp_Flags & DVPF_ASSIGN));
+		} while (!done && error == 0 && dvp != NULL && (dvp->dvp_Flags & DVPF_MULTIASSIGN));
 
 		SetFileSysTask(file_system);
 

@@ -34,8 +34,6 @@
 #ifndef _STDLIB_UTILITYBASE_H
 #define _STDLIB_UTILITYBASE_H
 
-/****************************************************************************/
-
 #ifndef __NOLIBBASE__
 #define __NOLIBBASE__
 #endif /* __NOLIBBASE__ */
@@ -46,43 +44,16 @@
 
 #include <proto/utility.h>
 
-/****************************************************************************/
-
 #ifndef _MACROS_H
 #include "macros.h"
 #endif /* _MACROS_H */
 
-/****************************************************************************/
-
 extern struct Library * NOCOMMON __UtilityBase;
-
-/****************************************************************************/
-
-#if defined(__amigaos4__)
-
-/****************************************************************************/
-
 extern struct UtilityIFace NOCOMMON * __IUtility;
-
-/****************************************************************************/
 
 #define DECLARE_UTILITYBASE() \
 	struct Library *		UNUSED	UtilityBase	= __UtilityBase; \
 	struct UtilityIFace *			IUtility	= __IUtility
 
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
-#define DECLARE_UTILITYBASE() \
-	struct Library * UtilityBase = __UtilityBase
-
-/****************************************************************************/
-
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
 
 #endif /* _STDLIB_UTILITYBASE_H */

@@ -75,7 +75,7 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/mount
 
 #MEMALLOCATOR = -DUSE_AVL
-OPTIONS    :=  -Ttext=0x0000000 -mstrict-align $(MEMALLOCATOR) -DUSE_64_BIT_INTS -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -fno-common  -DUNIX_PATH_SEMANTICS -nostdlib
+OPTIONS    :=  -mstrict-align $(MEMALLOCATOR) -DUSE_64_BIT_INTS -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -fno-common -DUNIX_PATH_SEMANTICS -nostdlib
 OPTIMIZE   := -DNDEBUG -O3
 
 DEBUG      := -gstabs
@@ -216,7 +216,7 @@ define MAKESHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-$(VERBOSE)$(CC) -Ttext=0x0000000 -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
+$(VERBOSE)$(CC) -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
 endef
 
 install:

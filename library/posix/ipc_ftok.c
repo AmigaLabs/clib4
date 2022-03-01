@@ -51,7 +51,7 @@ key_t ftok(const char *path, int id)
     key_t key = (key_t)-1;
     BPTR lock = 0;
     uint32_t blockno = 0;
-    struct FileLock *flock;
+    struct Lock *flock;
 
     if (path)
     {

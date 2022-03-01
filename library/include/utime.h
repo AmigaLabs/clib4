@@ -41,23 +41,13 @@
 #ifndef _UTIME_H
 #define _UTIME_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
+#include <features.h>
 
 #ifndef _TIME_H
 #include <time.h>
 #endif /* _TIME_H */
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 struct utimbuf
 {
@@ -65,16 +55,8 @@ struct utimbuf
 	time_t modtime;		/* Modification time */
 };
 
-/****************************************************************************/
-
 extern int utime(const char * path_name,const struct utimbuf * times);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _UTIME_H */

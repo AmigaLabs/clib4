@@ -191,4 +191,13 @@ extern void __delete_semaphore(struct SignalSemaphore *semaphore);
 
 /****************************************************************************/
 
+/* random functions */
+extern void *savestate(void);
+extern void loadstate(uint32_t *state);
+
+extern void __srandom(unsigned seed);
+
+extern uint32_t lcg31(uint32_t x);
+extern uint64_t lcg64(uint64_t x);
+
 #endif /* _STDLIB_PROTOS_H */

@@ -31,21 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UTIME_HEADERS_H
 #include "utime_headers.h"
 #endif /* _UTIME_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 int utime(const char *path_name, const struct utimbuf *times)
 {
@@ -61,15 +49,11 @@ int utime(const char *path_name, const struct utimbuf *times)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+    if (path_name == NULL)
+    {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	/* If a modification time is provided, convert it into the local
 	   DateStamp format, as used by the SetFileDate() function. */

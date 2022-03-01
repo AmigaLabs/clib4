@@ -31,116 +31,90 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _MOUNT_HEADERS_H
 #include "mount_headers.h"
 #endif /* _MOUNT_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-fstatfs(int file_descriptor, struct statfs *buf)
-{
-	D_S(struct InfoData,id);
-	BPTR parent_dir = ZERO;
-	int result = ERROR;
-	struct fd * fd = NULL;
-	LONG success;
+fstatfs(int file_descriptor, struct statfs *buf) {
+    D_S(
+    struct InfoData,id);
+    BPTR parent_dir = ZERO;
+    int result = ERROR;
+    struct fd *fd = NULL;
+    LONG success;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(file_descriptor);
-	SHOWPOINTER(buf);
+    SHOWVALUE(file_descriptor);
+    SHOWPOINTER(buf);
 
-	assert( buf != NULL );
+    assert(buf != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	__stdio_lock();
+    __stdio_lock();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(buf == NULL)
-		{
-			SHOWMSG("invalid buffer parameter");
+    if (buf == NULL) {
+        SHOWMSG("invalid buffer parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	assert( file_descriptor >= 0 && file_descriptor < __num_fd );
-	assert( __fd[file_descriptor] != NULL );
-	assert( FLAG_IS_SET(__fd[file_descriptor]->fd_Flags,FDF_IN_USE) );
+    assert(file_descriptor >= 0 && file_descriptor < __num_fd);
+    assert(__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-	fd = __get_file_descriptor(file_descriptor);
-	if(fd == NULL)
-	{
-		__set_errno(EBADF);
-		goto out;
-	}
+    fd = __get_file_descriptor(file_descriptor);
+    if (fd == NULL) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
-	__fd_lock(fd);
+    __fd_lock(fd);
 
-	if(FLAG_IS_SET(fd->fd_Flags,FDF_IS_SOCKET))
-	{
-		__set_errno(EINVAL);
-		goto out;
-	}
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
+        __set_errno(EINVAL);
+        goto out;
+    }
 
-	if(FLAG_IS_SET(fd->fd_Flags,FDF_STDIO))
-	{
-		__set_errno(EBADF);
-		goto out;
-	}
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO)) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
-	PROFILE_OFF();
-	parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-	PROFILE_ON();
+    PROFILE_OFF();
+    parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+    PROFILE_ON();
 
-	if(parent_dir == ZERO)
-	{
-		SHOWMSG("couldn't find parent directory");
+    if (parent_dir == ZERO) {
+        SHOWMSG("couldn't find parent directory");
 
-		__set_errno(__translate_io_error_to_errno(IoErr()));
-		goto out;
-	}
+        __set_errno(__translate_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	PROFILE_OFF();
-	success = Info(parent_dir,id);
-	PROFILE_ON();
+    PROFILE_OFF();
+    success = Info(parent_dir, id);
+    PROFILE_ON();
 
-	if(NO success)
-	{
-		SHOWMSG("couldn't get info on drive");
+    if (NO success) {
+        SHOWMSG("couldn't get info on drive");
 
-		__set_errno(__translate_io_error_to_errno(IoErr()));
-		goto out;
-	}
+        __set_errno(__translate_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	__convert_info_to_statfs(id,buf);
+    __convert_info_to_statfs(id, buf);
+    result = OK;
 
-	result = OK;
+out:
+    __fd_unlock(fd);
+    __stdio_unlock();
+    UnLock(parent_dir);
 
- out:
-
-	__fd_unlock(fd);
-
-	__stdio_unlock();
-
-	UnLock(parent_dir);
-
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

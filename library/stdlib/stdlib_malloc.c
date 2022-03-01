@@ -127,6 +127,7 @@ __allocate_memory(size_t size, BOOL never_free)
 		goto out;
 	}
 
+
 #ifndef USE_AVL
 	/* We reuse the MemoryNode.mn_Size field to mark
 	 * allocations are not suitable for use with
@@ -157,7 +158,7 @@ __allocate_memory(size_t size, BOOL never_free)
             struct MinNode *mln;
 
             PROFILE_OFF();
-            mln = AllocVecTags(sizeof(*mln) + allocation_size, AVT_Type, MEMF_SHARED, TAG_DONE);
+            mln = AllocVecTags(sizeof(*mln) + allocation_size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
             PROFILE_ON();
 
             if (mln != NULL)
@@ -193,7 +194,7 @@ __allocate_memory(size_t size, BOOL never_free)
 
     result = &mn[1];
 #else
-    result = AllocVecTags(allocation_size, AVT_Type, MEMF_SHARED, TAG_END);
+    result = AllocVecTags(allocation_size, AVT_Type, MEMF_PRIVATE, TAG_END);
     if (result) {
         struct AVLMemoryNode *memNode = ItemPoolAlloc(__global_clib2->__memory_pool);
         if (!memNode) {
@@ -338,7 +339,7 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
     else
     {
         __memory_pool = AllocSysObjectTags(ASOT_MEMPOOL,
-                                           ASOPOOL_MFlags, MEMF_SHARED,
+                                           ASOPOOL_MFlags, MEMF_PRIVATE,
                                            ASOPOOL_Threshold, (ULONG)__default_threshold_size,
                                            ASOPOOL_Puddle, (ULONG)__default_puddle_size,
                                            TAG_DONE);

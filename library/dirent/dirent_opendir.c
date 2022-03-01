@@ -31,19 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _DIRENT_HEADERS_H
 #include "dirent_headers.h"
 #endif /* _DIRENT_HEADERS_H */
-
-/****************************************************************************/
-/* The following is not part of the ISO 'C' (1994) standard. */
-/****************************************************************************/
 
 #if defined(UNIX_PATH_SEMANTICS)
 

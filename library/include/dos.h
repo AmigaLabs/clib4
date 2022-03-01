@@ -553,6 +553,7 @@ struct _wchar
 	_mbstate_t _wcrtomb_state;
 	_mbstate_t _wcsrtombs_state;
 };
+
 /*
  * Initial _clib2 structure. This shoulr be replaced with a _reent structure 
  * and populated with all its fields. At momen it holds just global fields
@@ -606,6 +607,13 @@ struct _clib2
 	/* Memalign memory list */
     void           *__memalign_pool;
     struct AVLNode *__memalign_tree;
+
+    /* Used by initstate/setstate */
+    struct SignalSemaphore *__random_lock;
+    int n;
+    int i;
+    int j;
+    uint32_t *x;
 
 #ifdef USE_AVL
     /* AVL memory management */
