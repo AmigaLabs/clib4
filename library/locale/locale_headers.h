@@ -84,7 +84,7 @@
 /****************************************************************************/
 
 /* Category name handling variables.  */
-#define NUM_LOCALES			(LC_TIME - LC_ALL + 1)
+#define NUM_LOCALES			(LC_MAX + 1)
 #define MAX_LOCALE_NAME_LEN	256
 #define __LC_LAST 13
 

@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _FCNTL_HEADERS_H
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
@@ -97,7 +93,7 @@ read(int file_descriptor, void * buffer, size_t num_bytes)
 
 		fam.fam_Action	= file_action_read;
 		fam.fam_Data	= buffer;
-		fam.fam_Size	= num_bytes;
+		fam.fam_Size	= (int64_t) num_bytes;
 
 		assert( fd->fd_Action != NULL );
 
@@ -117,7 +113,6 @@ read(int file_descriptor, void * buffer, size_t num_bytes)
 
  out:
 	__fd_unlock(fd);
-
 	__stdio_unlock();
 
 	RETURN(result);

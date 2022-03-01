@@ -74,10 +74,7 @@ extern char *strstr(const char *src, const char *sub);
 extern char *strnstr(const char *src, const char *sub, size_t len);
 extern char *strsep(char ** src, const char *delim);
 extern char *stpcpy(char *dest, const char *src);
-
-#ifdef _GNU_SOURCE
 extern char *strcasestr(const char *haystack, const char *needle);
-#endif
 
 /****************************************************************************/
 
@@ -121,12 +118,6 @@ extern int strerror_r(int error,char * buffer,size_t buffer_size);
 
 extern char *strdup(const char *s);
 extern char *strndup(const char *str, size_t max);
-
-#ifdef __MEM_DEBUG
-extern char * __strdup(const char *s,const char *file,int line);
-
-#define strdup(s) __strdup((s),__FILE__,__LINE__)
-#endif /* __MEM_DEBUG */
 
 /****************************************************************************/
 

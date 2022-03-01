@@ -37,22 +37,15 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
 
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-/****************************************************************************/
-
 #undef malloc
-#undef __malloc
 
 /****************************************************************************/
 
@@ -61,37 +54,48 @@ unsigned long NOCOMMON __current_memory_allocated;
 unsigned long NOCOMMON __maximum_num_memory_chunks_allocated;
 unsigned long NOCOMMON __current_num_memory_chunks_allocated;
 
-/****************************************************************************/
-
-#if defined(__MEM_DEBUG) && defined(__USE_MEM_TREES)
-struct MemoryTree NOCOMMON __memory_tree;
-#endif /* __MEM_DEBUG && __USE_MEM_TREES */
-
-/****************************************************************************/
-
+#ifndef USE_AVL
 APTR NOCOMMON __memory_pool;
 struct MinList NOCOMMON __memory_list;
+#endif
 
-/****************************************************************************/
+#ifdef USE_AVL
+int32 AVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2)
+{
+    struct AVLMemoryNode *e1, *e2;
+
+    e1 = (struct AVLMemoryNode *)avlnode1;
+    e2 = (struct AVLMemoryNode *)avlnode2;
+
+    return (int32)((uint32)e1->amn_Address - (uint32)e2->amn_Address);
+}
+
+int32 AVLKeyComp(struct AVLNode *avlnode1, AVLKey key2)
+{
+    struct AVLMemoryNode *e1 = (struct AVLMemoryNode *)avlnode1;
+
+    return (int32)((uint32)e1->amn_Address - (uint32)key2);
+}
+#endif
 
 void *
-__allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUSED, int debug_line_number UNUSED)
+__allocate_memory(size_t size, BOOL never_free)
 {
 	struct MemoryNode *mn;
 	size_t allocation_size;
 	void *result = NULL;
 
 #if defined(UNIX_PATH_SEMANTICS)
-	size_t original_size = size;
+	size_t original_size = -1;
 
 	if (__global_clib2->__unix_path_semantics)
 	{
-		original_size = size;
-
+        original_size = size;
 		/* The libunix.a flavour accepts zero length memory allocations
 		   and quietly turns them into a pointer sized allocations. */
-		if (size == 0)
+		if (size == 0) {
 			size = sizeof(char *);
+        }
 	}
 #endif /* UNIX_PATH_SEMANTICS */
 
@@ -110,23 +114,11 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 		goto out;
 	}
 
-#ifdef __MEM_DEBUG
-	{
-		assert(MALLOC_HEAD_SIZE > 0 && (MALLOC_HEAD_SIZE % 4) == 0);
-		assert(MALLOC_TAIL_SIZE > 0 && (MALLOC_TAIL_SIZE % 4) == 0);
-		assert((sizeof(*mn) % 4) == 0);
+    /* Round up allocation to a multiple of 32 bits. */
+    if ((size & 3) != 0)
+        size += 4 - (size & 3);
 
-		allocation_size = sizeof(*mn) + MALLOC_HEAD_SIZE + size + MALLOC_TAIL_SIZE;
-	}
-#else
-	{
-		/* Round up allocation to a multiple of 32 bits. */
-		if ((size & 3) != 0)
-			size += 4 - (size & 3);
-
-		allocation_size = sizeof(*mn) + size;
-	}
-#endif /* __MEM_DEBUG */
+    allocation_size = sizeof(*mn) + size;
 
 	/* Integer overflow has occured? */
 	if (size == 0 || allocation_size < size)
@@ -135,6 +127,8 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 		goto out;
 	}
 
+
+#ifndef USE_AVL
 	/* We reuse the MemoryNode.mn_Size field to mark
 	 * allocations are not suitable for use with
 	 * free() and realloc(). This limits allocation
@@ -146,91 +140,38 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 		goto out;
 	}
 
-#if defined(__USE_SLAB_ALLOCATOR)
-	{
-		/* Are we using the slab allocator? */
-		if (__slab_data.sd_InUse)
-		{
-			mn = __slab_allocate(allocation_size);
-		}
-		else
-		{
-			if (__memory_pool != NULL)
-			{
-				PROFILE_OFF();
-				mn = AllocVecPooled(__memory_pool, allocation_size);
-				PROFILE_ON();
-			}
-			else
-			{
-#ifdef __MEM_DEBUG
-				{
-					PROFILE_OFF();
-					mn = AllocVecTags(allocation_size, AVT_Type, MEMF_SHARED, TAG_DONE);
-					PROFILE_ON();
-				}
-#else
-				{
-					struct MinNode *mln;
+    /* Are we using the slab allocator? */
+    if (__slab_data.sd_InUse)
+    {
+        mn = __slab_allocate(allocation_size);
+    }
+    else
+    {
+        if (__memory_pool != NULL)
+        {
+            PROFILE_OFF();
+            mn = AllocPooled(__memory_pool, allocation_size);
+            PROFILE_ON();
+        }
+        else
+        {
+            struct MinNode *mln;
 
-					PROFILE_OFF();
-					mln = AllocVecTags(sizeof(*mln) + allocation_size, AVT_Type, MEMF_SHARED, TAG_DONE);
-					PROFILE_ON();
+            PROFILE_OFF();
+            mln = AllocVecTags(sizeof(*mln) + allocation_size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+            PROFILE_ON();
 
-					if (mln != NULL)
-					{
-						AddTail((struct List *)&__memory_list, (struct Node *)mln);
-
-						mn = (struct MemoryNode *)&mln[1];
-					}
-					else
-					{
-						mn = NULL;
-					}
-				}
-#endif /* __MEM_DEBUG */
-			}
-		}
-	}
-#else
-	{
-		if (__memory_pool != NULL)
-		{
-			PROFILE_OFF();
-			mn = AllocVecPooled(__memory_pool, allocation_size);
-			PROFILE_ON();
-		}
-		else
-		{
-#ifdef __MEM_DEBUG
-			{
-				PROFILE_OFF();
-				mn = AllocVecTags(allocation_size, AVT_Type, MEMF_SHARED, TAG_DONE);
-				PROFILE_ON();
-			}
-#else
-			{
-				struct MinNode *mln;
-
-				PROFILE_OFF();
-				mln = AllocVecTags(sizeof(*mln) + allocation_size, AVT_Type, MEMF_SHARED, TAG_DONE);
-				PROFILE_ON();
-
-				if (mln != NULL)
-				{
-					AddTail((struct List *)&__memory_list, (struct Node *)mln);
-
-					mn = (struct MemoryNode *)&mln[1];
-				}
-				else
-				{
-					mn = NULL;
-				}
-			}
-#endif /* __MEM_DEBUG */
-		}
-	}
-#endif /* __USE_SLAB_ALLOCATOR */
+            if (mln != NULL)
+            {
+                AddTail((struct List *)&__memory_list, (struct Node *)mln);
+                mn = (struct MemoryNode *)&mln[1];
+            }
+            else
+            {
+                mn = NULL;
+            }
+        }
+    }
 
 	if (mn == NULL)
 	{
@@ -251,47 +192,33 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 	if (__maximum_num_memory_chunks_allocated < __current_num_memory_chunks_allocated)
 		__maximum_num_memory_chunks_allocated = __current_num_memory_chunks_allocated;
 
-#ifdef __MEM_DEBUG
-	{
-		char *head = (char *)(mn + 1);
-		char *body = head + MALLOC_HEAD_SIZE;
-		char *tail = body + size;
-
-		AddTail((struct List *)&__memory_list, (struct Node *)mn);
-
-		mn->mn_AlreadyFree = FALSE;
-		mn->mn_Allocation = body;
-		mn->mn_AllocationSize = allocation_size;
-		mn->mn_File = (char *)debug_file_name;
-		mn->mn_Line = debug_line_number;
-		mn->mn_FreeFile = NULL;
-		mn->mn_FreeLine = 0;
-
-		memset(head, MALLOC_HEAD_FILL, MALLOC_HEAD_SIZE);
-		memset(body, MALLOC_NEW_FILL, size);
-		memset(tail, MALLOC_TAIL_FILL, MALLOC_TAIL_SIZE);
-
-#ifdef __MEM_DEBUG_LOG
-		{
-			kprintf("[%s] + %10ld 0x%08lx [", __program_name, size, body);
-
-			kprintf("allocated at %s:%ld]\n", debug_file_name, debug_line_number);
-		}
-#endif /* __MEM_DEBUG_LOG */
-
-#ifdef __USE_MEM_TREES
-		{
-			__red_black_tree_insert(&__memory_tree, mn);
-		}
-#endif /* __USE_MEM_TREES */
-
-		result = mn->mn_Allocation;
-	}
+    result = &mn[1];
 #else
-	{
-		result = &mn[1];
-	}
-#endif /* __MEM_DEBUG */
+    result = AllocVecTags(allocation_size, AVT_Type, MEMF_PRIVATE, TAG_END);
+    if (result) {
+        struct AVLMemoryNode *memNode = ItemPoolAlloc(__global_clib2->__memory_pool);
+        if (!memNode) {
+    		SHOWMSG("not enough memory");
+            FreeVec(result);
+            result = NULL;
+            goto out;
+        }
+        else {
+            memNode->amn_Address = result;
+            memNode->amn_Size = size;
+            if (NULL != AVL_AddNode(&__global_clib2->__memalign_tree, &memNode->amn_AvlNode, AVLNodeComp))
+            {
+                FreeVec(result);
+                ItemPoolFree(__global_clib2->__memory_pool, memNode);
+                result = NULL;
+            }
+        }
+    }
+    else {
+		SHOWMSG("not enough memory");
+        goto out;
+    }
+#endif //USE_AVL
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -306,17 +233,6 @@ __allocate_memory(size_t size, BOOL never_free, const char *debug_file_name UNUS
 
 out:
 
-#ifdef __MEM_DEBUG_LOG
-{
-	if (result == NULL)
-	{
-		kprintf("[%s] + %10ld 0x%08lx [", __program_name, size, NULL);
-
-		kprintf("FAILED: allocated at %s:%ld]\n", debug_file_name, debug_line_number);
-	}
-}
-#endif /* __MEM_DEBUG_LOG */
-
 	__memory_unlock();
 
 	return (result);
@@ -324,8 +240,7 @@ out:
 
 /****************************************************************************/
 
-__static void *
-__malloc(size_t size, const char *file, int line)
+void * malloc(size_t size)
 {
 	void *result = NULL;
 
@@ -333,24 +248,12 @@ __malloc(size_t size, const char *file, int line)
 
 	/* Try to get rid of now unused memory. */
 	if (__alloca_cleanup != NULL)
-		(*__alloca_cleanup)(file, line);
+		(*__alloca_cleanup)();
 
 	__memory_unlock();
 
 	/* Allocate memory which can be put through realloc() and free(). */
-	result = __allocate_memory(size, FALSE, file, line);
-
-	return (result);
-}
-
-/****************************************************************************/
-
-void *
-malloc(size_t size)
-{
-	void *result;
-
-	result = __malloc(size, NULL, 0);
+	result = __allocate_memory(size, FALSE);
 
 	return (result);
 }
@@ -381,97 +284,30 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
 {
 	ENTER();
 
-#ifdef __MEM_DEBUG
-	{
-		kprintf("[%s] %ld bytes still allocated upon exit, maximum of %ld bytes allocated at a time.\n",
-				__program_name, __current_memory_allocated, __maximum_memory_allocated);
+#ifndef USE_AVL
+    /* Is the slab memory allocator enabled? */
+    if (__slab_data.sd_InUse)
+    {
+        __slab_exit();
+    }
+    else
+    {
+        __memory_lock();
+        if (__memory_pool != NULL)
+        {
+            NewList((struct List *)&__memory_list);
 
-		kprintf("[%s] %ld chunks of memory still allocated upon exit, maximum of %ld chunks allocated at a time.\n",
-				__program_name, __current_num_memory_chunks_allocated, __maximum_num_memory_chunks_allocated);
-
-		__check_memory_allocations(__FILE__, __LINE__);
-
-		__never_free = FALSE;
-
-		if (__memory_list.mlh_Head != NULL)
-		{
-			while (NOT IsMinListEmpty(&__memory_list))
-			{
-				((struct MemoryNode *)__memory_list.mlh_Head)->mn_AlreadyFree = FALSE;
-
-				__free_memory_node((struct MemoryNode *)__memory_list.mlh_Head, __FILE__, __LINE__);
-			}
-		}
-
-#if defined(__USE_MEM_TREES)
-		{
-			__initialize_red_black_tree(&__memory_tree);
-		}
-#endif /* __USE_MEM_TREES */
-	}
-#endif /* __MEM_DEBUG */
-
-#if defined(__USE_SLAB_ALLOCATOR)
-	{
-		/* Is the slab memory allocator enabled? */
-		if (__slab_data.sd_InUse)
-		{
-			__slab_exit();
-		}
-		else
-		{
-			__memory_lock();
-			if (__memory_pool != NULL)
-			{
-				NewList((struct List *)&__memory_list);
-
-				FreeSysObject(ASOT_MEMPOOL, __memory_pool);
-				__memory_pool = NULL;
-			}
-			else if (__memory_list.mlh_Head != NULL)
-			{
-#ifdef __MEM_DEBUG
-				{
-					while (NOT IsMinListEmpty(&__memory_list))
-						__free_memory_node((struct MemoryNode *)__memory_list.mlh_Head, __FILE__, __LINE__);
-				}
-#else
-				{
-					while (NOT IsMinListEmpty(&__memory_list))
-						__free_memory_node((struct MemoryNode *)__memory_list.mlh_Head, NULL, 0);
-				}
-#endif /* __MEM_DEBUG */
-			}
-			__memory_unlock();
-		}
-	}
-#else
-	{
-		__memory_lock();
-		if (__memory_pool != NULL)
-		{
-			NewList((struct List *)&__memory_list);
-
-			FreeSysObject(ASOT_MEMPOOL, __memory_pool);
-			__memory_pool = NULL;
-		}
-		else if (__memory_list.mlh_Head != NULL)
-		{
-#ifdef __MEM_DEBUG
-			{
-				while (NOT IsMinListEmpty(&__memory_list))
-					__free_memory_node((struct MemoryNode *)__memory_list.mlh_Head, __FILE__, __LINE__);
-			}
-#else
-			{
-				while (NOT IsMinListEmpty(&__memory_list))
-					__free_memory_node((struct MemoryNode *)__memory_list.mlh_Head, NULL, 0);
-			}
-#endif /* __MEM_DEBUG */
-		}
-		__memory_unlock();
-	}
-#endif /* __USE_SLAB_ALLOCATOR */
+            FreeSysObject(ASOT_MEMPOOL, __memory_pool);
+            __memory_pool = NULL;
+        }
+        else if (__memory_list.mlh_Head != NULL)
+        {
+            while (NOT IsMinListEmpty(&__memory_list))
+                __free_memory_node((struct MemoryNode *)__memory_list.mlh_Head);
+        }
+        __memory_unlock();
+    }
+#endif
 
 	__delete_semaphore(memory_semaphore);
 	memory_semaphore = NULL;
@@ -492,54 +328,26 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
 	if (memory_semaphore == NULL)
 		goto out;
 
-#if defined(__USE_MEM_TREES) && defined(__MEM_DEBUG)
-	{
-		__initialize_red_black_tree(&__memory_tree);
-	}
-#endif /* __USE_MEM_TREES && __MEM_DEBUG */
-
+#ifndef USE_AVL
 	NewList((struct List *)&__memory_list);
 
-#if defined(__USE_SLAB_ALLOCATOR)
-	{
-/* ZZZ this is just for the purpose of testing */
-#if DEBUG
-		{
-			TEXT slab_size_var[20];
-
-			if (GetVar("SLAB_SIZE", slab_size_var, sizeof(slab_size_var), 0) > 0)
-			{
-				LONG value;
-
-				if (StrToLong(slab_size_var, &value) > 0 && value > 0)
-					__slab_max_size = (size_t)value;
-			}
-		}
+    /* Enable the slab memory allocator? */
+    if (__slab_max_size > 0)
+    {
+        __slab_init(__slab_max_size);
+    }
+    else
+    {
+        __memory_pool = AllocSysObjectTags(ASOT_MEMPOOL,
+                                           ASOPOOL_MFlags, MEMF_PRIVATE,
+                                           ASOPOOL_Threshold, (ULONG)__default_threshold_size,
+                                           ASOPOOL_Puddle, (ULONG)__default_puddle_size,
+                                           TAG_DONE);
+        if (!__memory_pool) {
+            goto out;
+        }
+    }
 #endif
-
-		/* Enable the slab memory allocator? */
-		if (__slab_max_size > 0)
-		{
-			__slab_init(__slab_max_size);
-		}
-		else
-		{
-			__memory_pool = AllocSysObjectTags(ASOT_MEMPOOL,
-											   ASOPOOL_MFlags, MEMF_PRIVATE,
-											   ASOPOOL_Threshold, (ULONG)__default_pool_size,
-											   ASOPOOL_Puddle, (ULONG)__default_pool_size,
-											   TAG_DONE);
-		}
-	}
-#else
-	{
-		__memory_pool = AllocSysObjectTags(ASOT_MEMPOOL,
-										   ASOPOOL_MFlags, MEMF_PRIVATE,
-										   ASOPOOL_Threshold, (ULONG)__default_pool_size,
-										   ASOPOOL_Puddle, (ULONG)__default_pool_size,
-										   TAG_DONE);
-	}
-#endif /* __USE_SLAB_ALLOCATOR) */
 
 	success = TRUE;
 

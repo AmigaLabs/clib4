@@ -77,6 +77,7 @@ if_indextoname (unsigned int ifindex, char *ifname)
                 node = GetSucc(node);
             }
         }
+        __ISocket->ReleaseInterfaceList(netiflist);
     }
 
     __set_errno(ENXIO);

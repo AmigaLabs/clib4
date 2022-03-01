@@ -71,7 +71,7 @@ __BEGIN_DECLS
 /****************************************************************************/
 
 /* Default size for all standard I/O file buffers. */
-#define BUFSIZ 8192 * 4
+#define BUFSIZ 8192
 
 /* File buffering modes for use with setvbuf() */
 
@@ -383,12 +383,6 @@ extern int ftrylockfile(FILE *file);
 /****************************************************************************/
 
 extern int vasprintf(char **ret, const char *format, va_list arg);
-
-#ifdef __MEM_DEBUG
-extern int __vasprintf(const char *file, int line, char **ret, const char *format, va_list arg);
-
-#define vasprintf(ret, format, arg) __vasprintf(__FILE__, __LINE__, (ret), (format), (arg))
-#endif /* __MEM_DEBUG */
 
 /****************************************************************************/
 /* The following is not part of the ISO 'C' (1994) standard, but it should

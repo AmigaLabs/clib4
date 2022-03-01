@@ -34,28 +34,13 @@
 #ifndef _STDLIB_HEADERS_H
 #define _STDLIB_HEADERS_H
 
-/****************************************************************************/
-
 #ifndef EXEC_LIBRARIES_H
 #include <exec/libraries.h>
 #endif /* EXEC_LIBRARIES_H */
 
-/****************************************************************************/
-
-/* This enables the legacy compatible 'struct AnchorPathOld'. */
-#ifndef __amigaos4__
-#define USE_OLD_ANCHORPATH
-#endif /* USE_OLD_ANCHORPATH */
-
-/****************************************************************************/
-
-#if (INCLUDE_VERSION >= 50)
 #ifndef DOS_ANCHORPATH_H
 #include <dos/anchorpath.h>
 #endif /* DOS_ANCHORPATH_H */
-#endif /* (INCLUDE_VERSION >= 50) */
-
-/****************************************************************************/
 
 #ifndef DOS_DOSEXTENS_H
 #include <dos/dosextens.h>
@@ -69,25 +54,15 @@
 #include <dos/dosasl.h>
 #endif /* DOS_DOSASL_H */
 
-/****************************************************************************/
-
-#if defined(__amigaos4__)
 #include <dos/obsolete.h>
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
 
 #ifndef WORKBENCH_STARTUP_H
 #include <workbench/startup.h>
 #endif /* WORKBENCH_STARTUP_H */
 
-/****************************************************************************/
-
 #ifndef CLIB_ALIB_PROTOS_H
 #include <clib/alib_protos.h>
 #endif /* CLIB_ALIB_PROTOS_H */
-
-/****************************************************************************/
 
 #ifndef PROTO_EXEC_H
 #include <proto/exec.h>
@@ -96,8 +71,6 @@
 #ifndef PROTO_DOS_H
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
-
-/****************************************************************************/
 
 #include <setjmp.h>
 #include <stdlib.h>
@@ -109,8 +82,6 @@
 #include <errno.h>
 #include <ctype.h>
 #include <dos.h>
-
-/****************************************************************************/
 
 #ifndef _STDLIB_LOCALEBASE_H
 #include "stdlib_localebase.h"
@@ -124,23 +95,15 @@
 #include "stdlib_timezonebase.h"
 #endif /* _STDLIB_TIMEZONEBASE_H */
 
-/****************************************************************************/
-
 #ifndef _MATH_FP_SUPPORT_H
 #include "math_fp_support.h"
 #endif /* _MATH_FP_SUPPORT_H */
-
-/****************************************************************************/
 
 #ifndef _STDLIB_PROFILE_H
 #include "stdlib_profile.h"
 #endif /* _STDLIB_PROFILE_H */
 
-/****************************************************************************/
-
 #include <math.h>
-
-/****************************************************************************/
 
 #ifndef _MACROS_H
 #include "macros.h"
@@ -150,59 +113,30 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
-/****************************************************************************/
-
 extern unsigned int NOCOMMON __random_seed;
-
-/****************************************************************************/
 
 extern jmp_buf NOCOMMON	__exit_jmp_buf;
 extern int NOCOMMON		__exit_value;
 extern BOOL	NOCOMMON	__exit_blocked;
 
-/****************************************************************************/
-
-extern void NOCOMMON (*__alloca_cleanup)(const char * file,int line);
-
-/****************************************************************************/
-
+extern void NOCOMMON (*__alloca_cleanup)(void);
 extern unsigned int NOCOMMON (* __get_default_stack_size)(void);
-
-/****************************************************************************/
-
 extern unsigned int NOCOMMON __stack_size;
 
-/****************************************************************************/
-
 extern BOOL NOCOMMON __is_resident;
-
-/****************************************************************************/
-
 extern UBYTE NOCOMMON __shell_escape_character;
-
-/****************************************************************************/
 
 extern char ** NOCOMMON	__argv;
 extern int NOCOMMON		__argc;
 
-/****************************************************************************/
-
 extern BOOL NOCOMMON __lib_startup;
 
-/****************************************************************************/
-
 extern void NOCOMMON (*__alloca_trap)(void);
-
-/****************************************************************************/
 
 #ifndef _STDLIB_PROTOS_H
 #include "stdlib_protos.h"
 #endif /* _STDLIB_PROTOS_H */
 
-/****************************************************************************/
-
 extern void kprintf(const char * format,...);
-
-/****************************************************************************/
 
 #endif /* _STDLIB_HEADERS_H */

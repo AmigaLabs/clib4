@@ -31,129 +31,164 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errno.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <sys/ioctl.h>
+#ifndef    _UNISTD_HEADERS_H
+#include "unistd_headers.h"
+#endif /* _UNISTD_HEADERS_H */
+
 #include <poll.h>
+#include <errno.h>
 
-int poll(struct pollfd *fds, nfds_t nfds, int timeout)
-{
-        fd_set rfds, wfds, efds;
-        struct timeval tv, *ptv;
-        int max_fd;
-        int rc;
-        nfds_t i;
+#ifndef MAX
+#define MAX(a, b)    ((a) > (b) ? (a) : (b))
+#endif
 
-        if ((fds == NULL) && (nfds != 0))
-        {
-                errno = EFAULT;
-                return -1;
+static int map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWriteSet, fd_set *pExceptSet) {
+    register nfds_t i;             /* loop control */
+    register struct pollfd *pCur;  /* current array element */
+    register int max_fd = -1;      /* return value */
+
+    /*
+       Map the poll() structures into the file descriptor sets required
+       by select().
+    */
+    for (i = 0, pCur = pArray; i < n_fds; i++, pCur++) {
+        /* Skip any bad FDs in the array. */
+
+        if (pCur->fd < 0)
+            continue;
+
+        struct fd *fd = __get_file_descriptor(pCur->fd);
+        if (pCur->events & POLLIN) {
+            /* "Input Ready" notification desired. */
+            FD_SET(pCur->fd, pReadSet);
+            if (fd != NULL)
+                SET_FLAG(fd->fd_Flags, FDF_POLL);
         }
 
-        FD_ZERO(&rfds);
-        FD_ZERO(&wfds);
-        FD_ZERO(&efds);
-
-        rc = 0;
-        max_fd = 0;
-
-        /* compute fd_sets and find largest descriptor */
-        for (i = 0; i < nfds; i++)
-        {
-                if ((fds[i].fd < 0) || (fds[i].fd >= FD_SETSIZE))
-                {
-                        fds[i].revents = POLLNVAL;
-                        continue;
-                }
-
-                if (fds[i].events & (POLLIN | POLLRDNORM))
-                {
-                        FD_SET(fds[i].fd, &rfds);
-                }
-                if (fds[i].events & (POLLOUT | POLLWRNORM | POLLWRBAND))
-                {
-                        FD_SET(fds[i].fd, &wfds);
-                }
-                if (fds[i].events & (POLLPRI | POLLRDBAND))
-                {
-                        FD_SET(fds[i].fd, &efds);
-                }
-                if (fds[i].fd > max_fd &&
-                    (fds[i].events & (POLLIN | POLLOUT | POLLPRI |
-                                      POLLRDNORM | POLLRDBAND |
-                                      POLLWRNORM | POLLWRBAND)))
-                {
-                        max_fd = fds[i].fd;
-                }
+        if (pCur->events & POLLOUT) {
+            /* "Output Possible" notification desired. */
+            FD_SET(pCur->fd, pWriteSet);
+            if (fd != NULL)
+                SET_FLAG(fd->fd_Flags, FDF_POLL);
         }
 
-        if (timeout < 0)
-        {
-                ptv = NULL;
-        }
-        else
-        {
-                ptv = &tv;
-                if (timeout == 0)
-                {
-                        tv.tv_sec = 0;
-                        tv.tv_usec = 0;
-                }
-                else
-                {
-                        tv.tv_sec = timeout / 1000;
-                        tv.tv_usec = (timeout % 1000) * 1000;
-                }
+        if (pCur->events & POLLPRI) {
+            /* "Exception Occurred" notification desired. (Exceptions include out of band data.) */
+            FD_SET(pCur->fd, pExceptSet);
+            if (fd != NULL)
+                SET_FLAG(fd->fd_Flags, FDF_POLL);
         }
 
-        rc = select(max_fd + 1, &rfds, &wfds, &efds, ptv);
-        if (rc < 0)
-        {
-                return -1;
-        }
+        max_fd = MAX (max_fd, pCur->fd);
+    }
 
-        for (rc = 0, i = 0; i < nfds; i++)
-        {
-                if ((fds[i].fd < 0) || (fds[i].fd >= FD_SETSIZE))
-                {
-                        continue;
-                }
+    return max_fd;
+}
 
-                fds[i].revents = 0;
+static struct timeval *map_timeout(int poll_timeout, struct timeval *pSelTimeout) {
+    struct timeval *pResult;
 
-                if (FD_ISSET(fds[i].fd, &rfds))
-                {
-                        int err = errno;
-                        int available = 0;
-                        int ret;
+    /*
+       Map the poll() timeout value into a select() timeout.  The possible
+       values of the poll() timeout value, and their meanings, are:
 
-                        /* support for POLLHUP */
-                        ret = ioctl(fds[i].fd, FIONREAD, &available);
-                        if ((ret == -1) || (available == 0))
-                        {
-                                fds[i].revents |= POLLHUP;
-                        }
-                        else
-                        {
-                                fds[i].revents |= fds[i].events & (POLLIN | POLLRDNORM);
-                        }
+       VALUE	MEANING
 
-                        errno = err;
-                }
-                if (FD_ISSET(fds[i].fd, &wfds))
-                {
-                        fds[i].revents |= fds[i].events & (POLLOUT | POLLWRNORM | POLLWRBAND);
-                }
-                if (FD_ISSET(fds[i].fd, &efds))
-                {
-                        fds[i].revents |= fds[i].events & (POLLPRI | POLLRDBAND);
-                }
-                if (fds[i].revents & ~POLLHUP)
-                {
-                        rc++;
-                }
-        }
-        return rc;
+       -1	wait indefinitely (until signal occurs)
+        0	return immediately, don't block
+       >0	wait specified number of milliseconds
+
+       select() uses a "struct timeval", which specifies the timeout in
+       seconds and microseconds, so the milliseconds value has to be mapped
+       accordingly.
+    */
+
+    assert(pSelTimeout != (struct timeval *) NULL);
+
+    switch (poll_timeout) {
+        case -1:
+            /*
+               A NULL timeout structure tells select() to wait indefinitely.
+            */
+            pResult = (struct timeval *) NULL;
+            break;
+        case 0:
+            /*
+               "Return immediately" (test) is specified by all zeros in
+               a timeval structure.
+            */
+            pSelTimeout->tv_sec = 0;
+            pSelTimeout->tv_usec = 0;
+            pResult = pSelTimeout;
+            break;
+        default:
+            /* Wait the specified number of milliseconds. */
+            pSelTimeout->tv_sec = poll_timeout / 1000; /* get seconds */
+            poll_timeout %= 1000;                /* remove seconds */
+            pSelTimeout->tv_usec = poll_timeout * 1000; /* get microseconds */
+            pResult = pSelTimeout;
+            break;
+    }
+
+
+    return pResult;
+}
+
+static void map_select_results(struct pollfd *pArray, unsigned long n_fds, fd_set *pReadSet, fd_set *pWriteSet, fd_set *pExceptSet) {
+    register unsigned long i;      /* loop control */
+    register struct pollfd *pCur;  /* current array element */
+
+    for (i = 0, pCur = pArray; i < n_fds; i++, pCur++) {
+        /* Skip any bad FDs in the array. */
+        if (pCur->fd < 0)
+            continue;
+
+        /* Exception events take priority over input events. */
+        pCur->revents = 0;
+        if (FD_ISSET(pCur->fd, pExceptSet))
+            pCur->revents |= POLLPRI;
+
+        else if (FD_ISSET(pCur->fd, pReadSet))
+            pCur->revents |= POLLIN;
+
+        if (FD_ISSET(pCur->fd, pWriteSet))
+            pCur->revents |= POLLOUT;
+    }
+
+    return;
+}
+
+int
+poll(struct pollfd *fds, nfds_t nfds, int timeout) {
+    fd_set read_descs;                          /* input file descs */
+    fd_set write_descs;                         /* output file descs */
+    fd_set except_descs;                        /* exception descs */
+    struct timeval stime;                       /* select() timeout value */
+    int ready_descriptors;                   /* function result */
+    int max_fd;                              /* maximum fd value */
+    struct timeval *pTimeout;                   /* actually passed */
+
+    if ((fds == NULL) && (nfds != 0)) {
+        __set_errno(EFAULT);
+        return -1;
+    }
+
+    FD_ZERO(&read_descs);
+    FD_ZERO(&write_descs);
+    FD_ZERO(&except_descs);
+
+    /* Map the poll() file descriptor list in the select() data structures. */
+    max_fd = map_poll_spec(fds, nfds, &read_descs, &write_descs, &except_descs);
+
+    /* Map the poll() timeout value in the select() timeout structure. */
+    pTimeout = map_timeout(timeout, &stime);
+
+    /* Make the select() call. */
+    ready_descriptors = select(max_fd + 1, &read_descs, &write_descs, &except_descs, pTimeout);
+
+    if (ready_descriptors >= 0) {
+        map_select_results(fds, nfds, &read_descs, &write_descs, &except_descs);
+    }
+
+    return ready_descriptors;
 }

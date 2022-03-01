@@ -40,6 +40,10 @@ wmemchr(const wchar_t *ptr, wchar_t val, size_t len)
 {
 	size_t i;
 
+    if (ptr == NULL) {
+        return NULL;
+    }
+
 	for (i = 0; i < len; i++)
 	{
 		if (*ptr == val)

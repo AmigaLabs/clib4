@@ -55,11 +55,7 @@ __BEGIN_DECLS
 #endif /* NULL */
 
 typedef int ptrdiff_t;
-#if defined(INT_MAX) && INT_MAX == 2147483647
 typedef unsigned int size_t;
-#else
-typedef unsigned long size_t;
-#endif
 
 /* wchar_t is a built-in type in C++ */
 #ifndef __cplusplus

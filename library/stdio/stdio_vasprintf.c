@@ -111,7 +111,7 @@ __vasprintf(const char *file,int line,char **ret,const char *format,va_list arg)
 		SHOWMSG("ouch. that didn't work");
 
 		if(string_iob.iob_String != NULL)
-			__free(string_iob.iob_String,string_iob.iob_File,string_iob.iob_Line);
+			free(string_iob.iob_String);
 
 		goto out;
 	}

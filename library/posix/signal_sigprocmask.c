@@ -35,67 +35,57 @@
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-sigprocmask(int how, const sigset_t *set, sigset_t *oset)
-{
-	int result = ERROR;
+sigprocmask(int how, const sigset_t *set, sigset_t *oset) {
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(how);
-	SHOWPOINTER(set);
-	SHOWPOINTER(oset);
+    SHOWVALUE(how);
+    SHOWPOINTER(set);
+    SHOWPOINTER(oset);
 
-	if(how < SIG_BLOCK || how > SIG_SETMASK)
-	{
-		SHOWMSG("invalid operating mode");
+    if (how < SIG_BLOCK || how > SIG_SETMASK) {
+        SHOWMSG("invalid operating mode");
 
-		__set_errno(EINVAL);
-		goto out;
-	}
+        __set_errno(EINVAL);
+        goto out;
+    }
 
-	if(oset != NULL)
-		(*oset) = __signals_blocked;
+    if (oset != NULL)
+        (*oset) = __signals_blocked;
 
-	if(set != NULL)
-	{
-		SHOWVALUE(*set);
+    if (set != NULL) {
+        SHOWVALUE(*set);
 
-		switch(how)
-		{
-			case SIG_BLOCK:
+        switch (how) {
+            case SIG_BLOCK:
 
-				SHOWMSG("SIG_BLOCK");
+                SHOWMSG("SIG_BLOCK");
 
-				__signals_blocked |= (*set);
-				break;
+                __signals_blocked |= (*set);
+                break;
 
-			case SIG_UNBLOCK:
+            case SIG_UNBLOCK:
 
-				SHOWMSG("SIG_UNBLOCK");
+                SHOWMSG("SIG_UNBLOCK");
 
-				__signals_blocked &= ~(*set);
-				break;
+                __signals_blocked &= ~(*set);
+                break;
 
-			case SIG_SETMASK:
+            case SIG_SETMASK:
 
-				SHOWMSG("SIG_SETMASK");
+                SHOWMSG("SIG_SETMASK");
 
-				__signals_blocked = (*set);
-				break;
-		}
-	}
+                __signals_blocked = (*set);
+                break;
+        }
+    }
 
-	result = OK;
+    result = OK;
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

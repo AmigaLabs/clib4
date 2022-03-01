@@ -31,6 +31,8 @@ struct timezone
 #define DST_CAN 6  /* Canada */
 
 extern int gettimeofday(struct timeval *tp, struct timezone *tzp);
+extern int settimeofday (const struct timeval *, const struct timezone *);
+extern int utimes (const char *path, const struct timeval *tvp);
 
 #ifdef __USE_GNU
 /* Macros for converting between `struct timeval' and `struct timespec'.  */

@@ -157,7 +157,7 @@ struct _fd
 										   standard input/output/error streams. */
 #define FDF_TERMIOS			(1UL<<13)	/* File is under termios control.
 										   FDF_IS_INTERACTIVE should also be set. */
-
+#define FDF_POLL			(1UL<<14)	/* File is under poll control. */
 /****************************************************************************/
 
 /* Obtain a pointer to the _fd data structure associated with a file

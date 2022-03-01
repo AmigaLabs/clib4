@@ -36,6 +36,7 @@
 #endif /* _STDLIB_HEADERS_H */
 
 #include <malloc.h>
+#include <stdint.h>
 
 void *
 aligned_alloc(size_t align, size_t size)

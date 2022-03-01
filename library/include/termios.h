@@ -169,8 +169,8 @@ enum
 	B1152000 = 1152000
 };
 
-#define EXTA 1 /* Tell applications we have speeds > 9600 baud. */
-
+#define EXTA 1 /* Tell applications we have speeds > 19200 baud. */
+#define EXTB 2 /* Tell applications we have speeds > 38400 baud. */
 /* Action types for tcsetattr() */
 
 enum

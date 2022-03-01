@@ -400,6 +400,7 @@ C_MOUNT := \
 	mount/mount_statfs.o
 
 C_POSIX := \
+	posix/fnmatch.o \
 	posix/glob_glob.o \
 	posix/glob_globfree.o \
 	posix/ipc_ftok.o \
@@ -436,9 +437,13 @@ C_POSIX := \
 	posix/signal_kill.o \
 	posix/signal_mask.o \
 	posix/signal_raise.o \
+	posix/signal_sigaction.o \
 	posix/signal_sigaddset.o \
 	posix/signal_sigblock.o \
+    posix/signal_sigdelset.o \
 	posix/signal_sigemptyset.o \
+    posix/signal_sigfillset.o \
+    posix/signal_sigismember.o \
 	posix/signal_sigmask.o \
 	posix/signal_signal.o \
 	posix/signal_sigprocmask.o \
@@ -467,6 +472,8 @@ C_SEARCH := \
 	search/search_twalk.o
 
 C_SOCKET := \
+    socket/freeifaddrs.o \
+    socket/getifaddrs.o \
 	socket/if_if_indextoname.o \
 	socket/if_if_nametoindex.o \
 	socket/socket_accept.o \
@@ -682,9 +689,12 @@ C_STDLIB := \
 	stdlib/stdlib_get_slab_usage.o \
 	stdlib/stdlib_get_slab_allocations.o \
 	stdlib/stdlib_get_slab_stats.o \
+	stdlib/stdlib_inistate.o \
 	stdlib/stdlib_isresident.o \
+	stdlib/stdlib_itoa.o \
 	stdlib/stdlib_labs.o \
 	stdlib/stdlib_llabs.o \
+	stdlib/stdlib_lltoa.o \
 	stdlib/stdlib_ldiv.o \
 	stdlib/stdlib_lldiv.o \
 	stdlib/stdlib_lib_startup.o \
@@ -713,7 +723,6 @@ C_STDLIB := \
 	stdlib/stdlib_rand_r.o \
 	stdlib/stdlib_rand48.o \
 	stdlib/stdlib_realloc.o \
-	stdlib/stdlib_red_black.o \
 	stdlib/stdlib_resetmemstats.o \
 	stdlib/stdlib_secure_getenv.o \
 	stdlib/stdlib_semaphore.o \
@@ -721,6 +730,7 @@ C_STDLIB := \
 	stdlib/stdlib_setjmp.o \
 	stdlib/stdlib_set_errno.o \
 	stdlib/stdlib_set_process_window.o \
+	stdlib/stdlib_setstate.o \
 	stdlib/stdlib_shared_objs.o \
 	stdlib/stdlib_shell_escape.o \
 	stdlib/stdlib_showerror.o \
@@ -731,6 +741,7 @@ C_STDLIB := \
 	stdlib/stdlib_srandom.o \
 	stdlib/stdlib_stacksize.o \
 	stdlib/stdlib_stack_usage.o \
+	stdlib/stdlib_swapstack.o \
 	stdlib/stdlib_arg.o \
 	stdlib/stdlib_stdio_window_spec.o \
 	stdlib/stdlib_strtod.o \
@@ -738,6 +749,7 @@ C_STDLIB := \
 	stdlib/stdlib_strtol.o \
 	stdlib/stdlib_strtold.o \
 	stdlib/stdlib_strtoll.o \
+	stdlib/stdlib_strtoq.o \
 	stdlib/stdlib_strtoul.o \
 	stdlib/stdlib_strtoull.o \
 	stdlib/stdlib_sysbase.o \
@@ -810,6 +822,10 @@ C_STRING := \
 	string/string_strtok_r.o \
 	string/string_strxfrm.o
 
+C_TERMCAP := \
+    termcap/termcap.o \
+    termcap/tparam.o
+
 C_TERMIOS := \
 	termios/termios_cfgetispeed.o \
 	termios/termios_cfgetospeed.o \
@@ -849,6 +865,7 @@ C_TIME := \
 	time/time_nanosleep.o \
 	time/time_numbertostring.o \
 	time/time_clock_settime.o \
+    time/time_settimeofday.o \
 	time/time_strftime.o \
 	time/time_strptime.o \
 	time/time_time.o \
@@ -857,6 +874,7 @@ C_TIME := \
 	time/times_times.o \
 	time/timeb_ftime.o \
 	time/timezone_init_exit.o \
+    time/time_utimes.o \
 	time/utime_utime.o
 
 C_UNISTD := \
@@ -966,6 +984,7 @@ C_USERGROUP := \
 	usergroup/usergroup_setgid.o \
 	usergroup/usergroup_setgrent.o \
 	usergroup/usergroup_setgroups.o \
+    usergroup/usergroup_tcsetpgrp.o \
 	usergroup/usergroup_setpwent.o \
 	usergroup/usergroup_setregid.o \
 	usergroup/usergroup_setreuid.o \
@@ -1076,6 +1095,7 @@ C_LIB := \
 	$(C_STDIO) \
 	$(C_STDLIB) \
 	$(C_STRING) \
+    $(C_TERMCAP) \
 	$(C_TERMIOS) \
 	$(C_TIME) \
 	$(C_UNISTD) \

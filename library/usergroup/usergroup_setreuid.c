@@ -35,40 +35,34 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
 int
-setreuid(uid_t real, uid_t eff)
-{
-	int result;
+setreuid(uid_t real, uid_t eff) {
+    int result;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(real);
-	SHOWVALUE(eff);
+    SHOWVALUE(real);
+    SHOWVALUE(eff);
 
-	assert(__UserGroupBase != NULL);
+    assert(__UserGroupBase != NULL);
 
-	if(__root_mode)
-	{
-		if(real != (uid_t)-1)
-			__root_uid = real;
+    if (__root_mode) {
+        if (real != (uid_t) - 1)
+            __root_uid = real;
 
-		if(eff != (uid_t)-1)
-			__root_euid = eff;
+        if (eff != (uid_t) - 1)
+            __root_euid = eff;
 
-		result = OK;
-	}
-	else
-	{
-		PROFILE_OFF();
-		result = __setreuid((LONG)real,(LONG)eff);
-		PROFILE_ON();
-	}
+        result = OK;
+    } else {
+        PROFILE_OFF();
+        result = __setreuid((LONG) real, (LONG) eff);
+        PROFILE_ON();
+    }
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

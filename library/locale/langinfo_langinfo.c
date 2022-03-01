@@ -62,9 +62,10 @@ nl_langinfo(nl_item item)
 {
     ENTER();
     DECLARE_LOCALEBASE();
+    DECLARE_FONTBASE();
 
-    const char *ret;
-    char *s, *cs;
+    const char *ret = NULL;
+    char *cs;
     static char *csym = NULL;
     static char *cset = NULL;
 
@@ -72,7 +73,8 @@ nl_langinfo(nl_item item)
     {
         case CODESET:
             ret = "";
-            if ((s = setlocale(LC_CTYPE, NULL)) != NULL)
+            const char *s = __global_clib2->_current_locale;
+            if (strcmp(s, "C"))
             {
                 if ((cs = strchr(s, '.')) != NULL)
                 {
@@ -105,6 +107,15 @@ nl_langinfo(nl_item item)
                 else if (strcmp(s, "C") == 0 ||
                         strcmp(s, "POSIX") == 0 || strstr(s, "ASCII") != NULL)
                     ret = "US-ASCII";
+
+                if (ret == NULL) {
+                    uint32 default_charset = __default_locale->loc_CodeSet;
+                    ret = (char *)ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
+                }
+            }
+            else {
+                uint32 default_charset = __default_locale->loc_CodeSet;
+                ret = (char *)ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
             }
             break;
         case D_T_FMT:

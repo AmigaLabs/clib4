@@ -33,99 +33,78 @@
 
 #include <sys/resource.h>
 
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-getrlimit(int resource,struct rlimit *rlp)
-{
-	struct Task *self;
-	int ret = -1;
-	rlim_t l;
+getrlimit(int resource, struct rlimit *rlp) {
+    struct Task *self;
+    int ret = -1;
+    rlim_t l;
 
-	if(rlp == NULL)
-	{
-		__set_errno(EFAULT);
-		goto out;
-	}
+    if (rlp == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	switch(resource)
-	{
-		case RLIM_VMEM:
+    switch (resource) {
+        case RLIM_VMEM:
 
-			rlp->rlim_cur = RLIM_INFINITY;
-			rlp->rlim_max = RLIM_INFINITY;
-			break;
+            rlp->rlim_cur = RLIM_INFINITY;
+            rlp->rlim_max = RLIM_INFINITY;
+            break;
 
-		case RLIM_CORE:	/* Coredumps are not supported. */
+        case RLIM_CORE:    /* Coredumps are not supported. */
 
-			rlp->rlim_cur = 0;
-			rlp->rlim_max = 0;
-			break;
+            rlp->rlim_cur = 0;
+            rlp->rlim_max = 0;
+            break;
 
-		case RLIM_CPU:
+        case RLIM_CPU:
 
-			rlp->rlim_cur = RLIM_INFINITY;
-			rlp->rlim_max = RLIM_INFINITY;
-			break;
+            rlp->rlim_cur = RLIM_INFINITY;
+            rlp->rlim_max = RLIM_INFINITY;
+            break;
 
-		case RLIM_DATA:
+        case RLIM_DATA:
+            l = AvailMem(MEMF_TOTAL | MEMF_VIRTUAL);
+            rlp->rlim_cur = l;
+            rlp->rlim_max = l;
+            break;
 
-			#if defined(__amigaos4__)
-			{
-		 		l = AvailMem(MEMF_TOTAL|MEMF_VIRTUAL);
-		 	}
-		 	#else
-			{
-		 		l = AvailMem(MEMF_TOTAL);
-		 	}
-		 	#endif /* __amigaos4__ */
+        case RLIM_FSIZE:
 
-			rlp->rlim_cur = l;
-			rlp->rlim_max = l;
-			break;
+            rlp->rlim_cur = RLIM_INFINITY;    /* Use RLIM_INFINITY in case we have a 64-bit fs. pathconf() can be more precise. */
+            rlp->rlim_max = RLIM_INFINITY;
+            break;
 
-		case RLIM_FSIZE:
+        case RLIM_NOFILE:
 
-			rlp->rlim_cur = RLIM_INFINITY;	/* Use RLIM_INFINITY in case we have a 64-bit fs. pathconf() can be more precise. */
-			rlp->rlim_max = RLIM_INFINITY;
-			break;
+            rlp->rlim_cur = RLIM_INFINITY;
+            rlp->rlim_max = RLIM_INFINITY;
+            break;
 
-		case RLIM_NOFILE:
+        case RLIM_STACK:    /* Return current stacksize. */
 
-			rlp->rlim_cur = RLIM_INFINITY;
-			rlp->rlim_max = RLIM_INFINITY;
-			break;
+            self = FindTask(NULL);
 
-		case RLIM_STACK:	/* Return current stacksize. */
+            l = (char *) self->tc_SPUpper - (char *) self->tc_SPLower;
 
-			self = FindTask(NULL);
+            rlp->rlim_cur = l;
+            rlp->rlim_max = RLIM_INFINITY;
 
-			l = (char *)self->tc_SPUpper - (char *)self->tc_SPLower;
+            break;
 
-			rlp->rlim_cur = l;
-			rlp->rlim_max = RLIM_INFINITY;
+        default:
 
-			break;
+            __set_errno(EINVAL);
+            goto out;
+    }
 
-		default:
+    ret = 0;
 
-			__set_errno(EINVAL);
-			goto out;
-	}
+out:
 
-	ret = 0;
-
- out:
-
-	return(ret);
+    return (ret);
 }

@@ -35,53 +35,44 @@
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-close(int file_descriptor)
-{
-	struct file_action_message fam;
-	struct fd * fd;
-	int result = ERROR;
+close(int file_descriptor) {
+    struct file_action_message fam;
+    struct fd *fd;
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(file_descriptor);
+    SHOWVALUE(file_descriptor);
 
-	assert( file_descriptor >= 0 && file_descriptor < __num_fd );
-	assert( __fd[file_descriptor] != NULL );
-	assert( FLAG_IS_SET(__fd[file_descriptor]->fd_Flags,FDF_IN_USE) );
+    assert(file_descriptor >= 0 && file_descriptor < __num_fd);
+    assert(__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	/* We want to affect this very file descriptor and not the
-	   original one associated with an alias of it. */
-	fd = __get_file_descriptor_dont_resolve(file_descriptor);
-	if(fd == NULL)
-	{
-		__set_errno(EBADF);
-		goto out;
-	}
+    /* We want to affect this very file descriptor and not the
+       original one associated with an alias of it. */
+    fd = __get_file_descriptor_dont_resolve(file_descriptor);
+    if (fd == NULL) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
-	fam.fam_Action = file_action_close;
+    fam.fam_Action = file_action_close;
 
-	assert( fd->fd_Action != NULL );
+    assert(fd->fd_Action != NULL);
 
-	if((*fd->fd_Action)(fd,&fam) < 0)
-	{
-		__set_errno(fam.fam_Error);
-		goto out;
-	}
+    if ((*fd->fd_Action)(fd, &fam) < 0) {
+        __set_errno(fam.fam_Error);
+        goto out;
+    }
 
-	result = OK;
+    result = OK;
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

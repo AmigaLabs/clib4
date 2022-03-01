@@ -49,7 +49,22 @@
 #include <stdint.h>
 #include <malloc.h>
 
-struct alignlist *_aligned_blocks = NULL;
+int32 MemalignAVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2)
+{
+    struct MemalignEntry *e1, *e2;
+
+    e1 = (struct MemalignEntry *)avlnode1;
+    e2 = (struct MemalignEntry *)avlnode2;
+
+    return (int32)((uint32)e1->me_Aligned - (uint32)e2->me_Aligned);
+}
+
+int32 MemalignAVLKeyComp(struct AVLNode *avlnode1, AVLKey key2)
+{
+    struct MemalignEntry *e1 = (struct MemalignEntry *)avlnode1;
+
+    return (int32)((uint32)e1->me_Aligned - (uint32)key2);
+}
 
 static inline BOOL isPowerOfTwo(size_t alignment)
 {
@@ -78,34 +93,26 @@ memalign(size_t alignment, size_t size)
     /* if block is not aligned, align it */
     if (adj != 0)
     {
-        struct alignlist *l = NULL;
-        /* if memalign list is not empty search for an empty slot */
-        if (!IsMinListEmpty(&__global_clib2->aligned_blocks)) {
-            for (l = (struct alignlist *) GetHead((struct List *)&__global_clib2->aligned_blocks); l; l = (struct alignlist *) GetSucc((struct Node *) l))
-            {
-                /* This slot is free.  Use it.  */
-                if (l->aligned == NULL)
-                {
-                    break;
-                }
-            }
-        }
-        
-        /* if we don't find any slot, create one */
+        struct MemalignEntry *l = ItemPoolAlloc(__global_clib2->__memalign_pool);
         if (l == NULL)
         {
-            l = malloc(sizeof(struct alignlist));
-            if (l == NULL)
-            {
-                free(result);
-                return NULL;
-            }
-            MinAddTail(&__global_clib2->aligned_blocks, l);
+            free(result);
+            return NULL;
         }
-        /* Set alignlist node stuff */
-        l->exact = result;
-        result = l->aligned = (char *)result + alignment - adj;
+        if (NULL != AVL_AddNode(&__global_clib2->__memalign_tree, &l->me_AvlNode, MemalignAVLNodeComp))
+        {
+            FreeVec(result);
+            ItemPoolFree(__global_clib2->__memalign_pool, l);
+            result = NULL;
+            goto out;
+        }
+
+        /* Set MemalignEntry node stuff */
+        l->me_Exact = result;
+        l->me_Aligned = (char *)result + alignment - adj;
+        result = l->me_Aligned;
     }
 
+out:
     return result;
 }

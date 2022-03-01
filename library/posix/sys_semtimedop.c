@@ -43,6 +43,8 @@
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
 
+#include <sys/sem.h>
+
 int 
 _semtimedop(int semid, const struct sembuf *ops, int nops, struct timespec *to)
 {

@@ -31,132 +31,111 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
+int __fputc_check(FILE *stream) {
+    struct iob *file = (struct iob *) stream;
+    int result = EOF;
 
-int __fputc_check(FILE *stream)
-{
-	struct iob *file = (struct iob *)stream;
-	int result = EOF;
+    assert(stream != NULL);
 
-	assert(stream != NULL);
+    if (stream == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (stream == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+    assert(__is_valid_iob(file));
+    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+    assert(file->iob_BufferSize > 0);
 
-	assert(__is_valid_iob(file));
-	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
-	assert(file->iob_BufferSize > 0);
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
+        SHOWMSG("this file is not even in use");
 
-	if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE))
-	{
-		SHOWMSG("this file is not even in use");
+        SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-		SET_FLAG(file->iob_Flags, IOBF_ERROR);
+        __set_errno(EBADF);
 
-		__set_errno(EBADF);
+        goto out;
+    }
 
-		goto out;
-	}
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_WRITE)) {
+        SHOWMSG("this stream is not write enabled");
 
-	if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_WRITE))
-	{
-		SHOWMSG("this stream is not write enabled");
+        SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-		SET_FLAG(file->iob_Flags, IOBF_ERROR);
+        __set_errno(EBADF);
 
-		__set_errno(EBADF);
+        goto out;
+    }
 
-		goto out;
-	}
+    if (__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(file) < 0) {
+        SHOWMSG("couldn't get rid of the read buffer.");
+        goto out;
+    }
 
-	if (__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(file) < 0)
-	{
-		SHOWMSG("couldn't get rid of the read buffer.");
-		goto out;
-	}
-
-	result = OK;
+    result = OK;
 
 out:
 
-	return (result);
+    return (result);
+}
+
+int __fputc(int c, FILE *stream, int buffer_mode) {
+    struct iob *file = (struct iob *) stream;
+    int result = EOF;
+
+    assert(stream != NULL);
+
+    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+    assert(file->iob_BufferSize > 0);
+
+    if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(file) < 0)
+        goto out;
+
+    file->iob_Buffer[file->iob_BufferWriteBytes++] = c;
+
+    if ((buffer_mode == IOBF_BUFFER_MODE_NONE || (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) &&
+        __flush_iob_write_buffer(file) < 0) {
+        /* Pretend that the last character was not written. */
+        file->iob_BufferWriteBytes--;
+        goto out;
+    }
+
+    /* Clip everything but the least significant eight bits. This
+       also takes care of the sign. Thus, a -1 (== EOF) always comes
+       out as 255. */
+    result = (c & 255);
+
+out:
+
+    return (result);
 }
 
 /****************************************************************************/
 
-int __fputc(int c, FILE *stream, int buffer_mode)
-{
-	struct iob *file = (struct iob *)stream;
-	int result = EOF;
+int fputc(int c, FILE *stream) {
+    struct iob *file = (struct iob *) stream;
+    int result = EOF;
 
-	assert(stream != NULL);
+    assert(stream != NULL);
 
-	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
-	assert(file->iob_BufferSize > 0);
+    if (__check_abort_enabled)
+        __check_abort();
 
-	if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(file) < 0)
-		goto out;
+    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 
-	file->iob_Buffer[file->iob_BufferWriteBytes++] = c;
+    flockfile(stream);
 
-	if ((buffer_mode == IOBF_BUFFER_MODE_NONE || (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) && __flush_iob_write_buffer(file) < 0)
-	{
-		/* Pretend that the last character was not written. */
-		file->iob_BufferWriteBytes--;
-		goto out;
-	}
+    if (__fputc_check(stream) < 0)
+        goto out;
 
-	/* Clip everything but the least significant eight bits. This
-	   also takes care of the sign. Thus, a -1 (== EOF) always comes
-	   out as 255. */
-	result = (c & 255);
+    result = __fputc(c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
 
 out:
 
-	return (result);
-}
+    funlockfile(stream);
 
-/****************************************************************************/
-
-int fputc(int c, FILE *stream)
-{
-	struct iob *file = (struct iob *)stream;
-	int result = EOF;
-
-	assert(stream != NULL);
-
-	if (__check_abort_enabled)
-		__check_abort();
-
-	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
-
-	flockfile(stream);
-
-	if (__fputc_check(stream) < 0)
-		goto out;
-
-	result = __fputc(c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
-
-out:
-
-	funlockfile(stream);
-
-	return (result);
+    return (result);
 }

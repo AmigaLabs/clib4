@@ -55,14 +55,14 @@ setlocale(int category, const char *locale) {
 
     __locale_lock();
 
-    if (category < LC_ALL || category > LC_TIME) {
+    if (category < LC_ALL || category > LC_MAX) {
         SHOWMSG("invalid category");
 
         __set_errno(EINVAL);
         goto out;
     }
 
-    if (locale != NULL) {
+    if (locale != NULL && locale[0] != '\0') {
         struct Locale *loc = NULL;
 
         /* We have to keep the locale name for later reference.
@@ -74,7 +74,7 @@ setlocale(int category, const char *locale) {
          */
         if (strlen(locale) >= MAX_LOCALE_NAME_LEN) {
             SHOWMSG("locale name is too long");
-            __global_clib2->_current_locale = "C";
+            result = (char *)"C";
 
             __set_errno(ENAMETOOLONG);
             goto out;
@@ -130,7 +130,7 @@ setlocale(int category, const char *locale) {
 
                 if (loc == NULL) {
                     SHOWMSG("couldn't open the locale");
-                    __global_clib2->_current_locale = locale;
+                    result = (char *)locale;
 
                     __set_errno(ENOENT);
                     goto out;
@@ -153,7 +153,10 @@ setlocale(int category, const char *locale) {
             /* And this puts the new locale into all table entries. */
             for (i = 0; i < NUM_LOCALES; i++) {
                 __locale_table[i] = loc;
-                strcpy(__locale_name_table[i], locale);
+                if (locale[0] != '\0')
+                    strcpy(__locale_name_table[i], locale);
+                else
+                    strcpy(__locale_name_table[i], "C-UTF-8");
             }
 
             if (strcmp(locale, "C")) {
@@ -199,20 +202,21 @@ setlocale(int category, const char *locale) {
             SHOWMSG("reinitializing the locale");
 
             __locale_table[category] = loc;
-            strcpy(__locale_name_table[category], locale);
+            if (locale[0] != '\0') {
+                strcpy(__locale_name_table[category], locale);
+            }
         }
     }
 
+    result = __locale_name_table[category];
+    SHOWSTRING(result);
+
+out:
     __global_clib2->_current_category = category;
     __global_clib2->_current_locale = result;
 
-    result = __locale_name_table[category];
-
-    SHOWSTRING(result);
-
-    out:
     __locale_unlock();
 
     RETURN(result);
-    return (result);
+    return result;
 }

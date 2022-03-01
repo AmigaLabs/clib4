@@ -70,7 +70,7 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init)
 		const size_t program_name_size = 256;
 
 		/* Make a copy of the current command name string. */
-		__program_name = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+		__program_name = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_SHARED, TAG_DONE);
 		if (__program_name == NULL)
 			goto out;
 

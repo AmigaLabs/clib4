@@ -33,62 +33,33 @@
 
 #include <ulimit.h>
 
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 long
-ulimit(int cmd,long newlim)
-{
-	long ret = -1;
+ulimit(int cmd, long newlim) {
+    long ret = -1;
 
-	switch(cmd)
-	{
-		case UL_GETFSIZE:
-
-			/* Maximum number of 512-byte blocks in a file. Largefile aware programs should not use ulimit() anyway. */
-			ret = (0x7fffffffL >> 9) - 1L; /* Max Filesize/512 - 1 */
-			break;
-
-		case UL_GMEMLIM:	/* Which flags are appropriate for AvailMem()? */
-
-			#if defined(__amigaos4__)
-			{
-				ret = AvailMem(MEMF_TOTAL|MEMF_VIRTUAL);
-			}
-			#else
-			{
-				ret = AvailMem(MEMF_ANY|MEMF_LARGEST);	/* Too conservative? */
-			}
-			#endif
-
-			break;
-
-		case UL_GDESLIM:	/* No limit, so we just return a reasonably large value. */
-
-			ret = 1024;
-			break;
-
-		case UL_SETFSIZE:	/* Not supported */
-
-			__set_errno(EPERM);
-			goto out;
-
-		default:
-
-			__set_errno(EINVAL);
-			goto out;
-	}
-
- out:
-
-	return(ret);
+    switch (cmd) {
+        case UL_GETFSIZE:
+            /* Maximum number of 512-byte blocks in a file. Largefile aware programs should not use ulimit() anyway. */
+            ret = (0x7fffffffL >> 9) - 1L; /* Max Filesize/512 - 1 */
+            break;
+        case UL_GMEMLIM:
+            /* Which flags are appropriate for AvailMem()? */
+            ret = AvailMem(MEMF_TOTAL | MEMF_VIRTUAL);
+            break;
+        case UL_GDESLIM:    /* No limit, so we just return a reasonably large value. */
+            ret = 1024;
+            break;
+        case UL_SETFSIZE:    /* Not supported */
+            __set_errno(EPERM);
+            goto out;
+        default:
+            __set_errno(EINVAL);
+            goto out;
+    }
+out:
+    return (ret);
 }

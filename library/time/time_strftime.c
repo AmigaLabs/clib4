@@ -152,7 +152,7 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook)
 	int week_number;
 	int year_number;
 	int hour;
-	char buffer[40];
+	char buffer[40] = {0};
 	const char *str;
 	char c;
 

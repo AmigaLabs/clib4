@@ -77,13 +77,9 @@ int __flush_iob_write_buffer(struct iob *file)
 		if ((*file->iob_Action)(file, &fam) == EOF)
 		{
 			SHOWMSG("that didn't work");
-
 			result = ERROR;
-
 			SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
 			__set_errno(fam.fam_Error);
-
 			goto out;
 		}
 

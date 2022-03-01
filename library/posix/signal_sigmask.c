@@ -35,28 +35,21 @@
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-sigmask(int sig)
-{
-	int result;
+sigmask(int sig) {
+    int result;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(sig);
+    SHOWVALUE(sig);
 
-	assert( 0 <= sig && sig <= 31 );
+    assert(0 <= sig && sig <= 31);
 
-	if(SIGHUP <= sig && sig <= SIGUSR2)
-		result = (1 << sig);
-	else
-		result = 0;
+    if (SIGHUP <= sig && sig <= SIGUSR2)
+        result = (1 << sig);
+    else
+        result = 0;
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

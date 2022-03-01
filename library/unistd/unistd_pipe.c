@@ -31,44 +31,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 static int pipenum = 0;
 
-int pipe(int fd[2])
-{
+int pipe(int fd[2]) {
     ENTER();
     DECLARE_UTILITYBASE();
     char pipe_name[1024] = {0};
 
 #ifdef USE_TEMPFILES
-#if defined(__amigaos4__)
     snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", pipenum++, ((struct Process *)FindTask(NULL))->pr_ProcessID);
 #else
-    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", pipenum++, GetUniqueID());
-#endif
-#else
-#if defined(__amigaos4__)
-    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", pipenum++, ((struct Process *)FindTask(NULL))->pr_ProcessID);
-#else
-    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%08x/4096/0", pipenum++, GetUniqueID());
-#endif
+    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", pipenum++, ((struct Process *) FindTask(NULL))->pr_ProcessID);
 #endif // USE_TEMPFILES
 
     fd[1] = open(pipe_name, O_WRONLY | O_CREAT);
     fd[0] = open(pipe_name, O_RDONLY);
 
-    if (fd[0] == -1 || fd[1] == -1)
-    {
+    if (fd[0] == -1 || fd[1] == -1) {
         if (fd[0] != -1)
             close(fd[0]);
         if (fd[1] != -1)

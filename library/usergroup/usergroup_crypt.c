@@ -31,17 +31,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _USERGROUP_HEADERS_H
-#include "usergroup_headers.h"
-#endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
+#include "usergroup_headers.h"
+
+#endif /* _USERGROUP_HEADERS_H */
 
 #ifdef crypt
 #undef crypt
@@ -50,41 +44,35 @@
 /****************************************************************************/
 
 char *
-crypt(const char *key, const char *salt)
-{
-	char *result = NULL;
+crypt(const char *key, const char *salt) {
+    char *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(key);
-	SHOWSTRING(salt);
+    SHOWSTRING(key);
+    SHOWSTRING(salt);
 
-	assert(key != NULL && salt != NULL);
-	assert(__UserGroupBase != NULL);
+    assert(key != NULL && salt != NULL);
+    assert(__UserGroupBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (key == NULL || salt == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (key == NULL || salt == NULL) {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	PROFILE_OFF();
-	result = (char *)__crypt((UBYTE *)key, (UBYTE *)salt);
-	PROFILE_ON();
+    PROFILE_OFF();
+    result = (char *) __crypt((UBYTE *) key, (UBYTE *) salt);
+    PROFILE_ON();
 
-	SHOWSTRING(result);
+    SHOWSTRING(result);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

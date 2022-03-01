@@ -31,12 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
@@ -45,19 +39,13 @@
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _MATH_FP_SUPPORT_H
 #include "math_fp_support.h"
 #endif /* _MATH_FP_SUPPORT_H */
 
-/****************************************************************************/
-
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
-
-/****************************************************************************/
 
 float strtof(const char *str, char **ptr)
 {
@@ -74,19 +62,15 @@ float strtof(const char *str, char **ptr)
 
 	assert(str != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (str == NULL)
-		{
-			SHOWMSG("invalid str parameter");
+    if (str == NULL)
+    {
+        SHOWMSG("invalid str parameter");
 
-			__set_errno(EFAULT);
+        __set_errno(EFAULT);
 
-			result = __get_huge_valf();
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        result = __get_huge_valf();
+        goto out;
+    }
 
 	/* Skip all leading blanks. */
 	while ((c = (*str)) != '\0')

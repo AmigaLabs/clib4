@@ -57,8 +57,6 @@ typedef _sig_func_ptr sighandler_t; /* glibc naming */
 #define SIG_IGN ((_sig_func_ptr)1)  /* Ignore action */
 #define SIG_ERR ((_sig_func_ptr)-1) /* Error return */
 
-/****************************************************************************/
-
 /* TO IMPLEMENT INTO LIBRARY (if possible) */
 #define SIGHUP       1   /* hangup */
 #define SIGINT       2   /* interrupt */
@@ -101,48 +99,81 @@ typedef _sig_func_ptr sighandler_t; /* glibc naming */
 extern void (*signal(int sig, void (*)(int)))(int);
 extern int raise(int sig);
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-
-/****************************************************************************/
-
 typedef int sig_atomic_t;
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 #ifndef _SYS_TYPES_H
 #include <sys/types.h>
 #endif /* _SYS_TYPES_H */
 
-/****************************************************************************/
-
 typedef void (*sig_t)(int);
 
-/****************************************************************************/
-
 typedef int sigset_t;
-
-/****************************************************************************/
 
 #define SIG_BLOCK 0
 #define SIG_UNBLOCK 1
 #define SIG_SETMASK 2
 
-/****************************************************************************/
-
 extern int sigmask(int signum);
 extern int sigblock(int signal_mask);
 extern int sigsetmask(int signal_mask);
 extern int sigprocmask(int how, const sigset_t *set, sigset_t *oset);
+extern int sigismember(const sigset_t *set, int sig);
 extern int sigemptyset(sigset_t *set);
+extern int sigfillset(sigset_t *set);
+extern int sigdelset(sigset_t *set, int sig);
 extern int sigaddset(sigset_t *set, int sig);
 extern int kill(pid_t pid, int signal_number);
+
+typedef struct {
+    void *ss_sp;
+    int ss_flags;
+    size_t ss_size;
+} stack_t;
+
+/* Sigaction */
+/* Unsupported flags are not present.  */
+#define SA_RESETHAND 1
+#define SA_NODEFER 2
+#define SA_RESTART 4
+
+#define sa_handler _sa_func._sa_handler
+#define sa_sigaction _sa_func._sa_sigaction
+
+union sigval {
+    int sival_int;
+    void *sival_ptr;
+};
+
+struct siginfo_t {
+    int si_signo;
+    int si_code;
+    int si_errno;
+    pid_t si_pid;
+    uid_t si_uid;
+    void *si_addr;
+    int si_status;
+    long si_band;
+    union sigval si_value;
+};
+typedef struct siginfo_t siginfo_t;
+
+struct sigaction {
+    union {
+        void (*_sa_handler)(int);
+
+        /* Present to allow compilation, but unsupported by gnulib.  POSIX
+           says that implementations may, but not must, make sa_sigaction
+           overlap with sa_handler, but we know of no implementation where
+           they do not overlap.  */
+        void (*_sa_sigaction)(int, siginfo_t *, void *);
+    } _sa_func;
+
+    sigset_t sa_mask;
+    /* Not all POSIX flags are supported.  */
+    int sa_flags;
+};
+
+extern int sigaction(int sig, const struct sigaction *restrict act, struct sigaction *restrict oact);
 
 __END_DECLS
 

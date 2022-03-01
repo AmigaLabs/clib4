@@ -35,34 +35,29 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
 
-int setuid(uid_t id)
-{
-	int result;
+int setuid(uid_t id) {
+    int result;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(id);
+    SHOWVALUE(id);
 
-	assert(__UserGroupBase != NULL);
+    assert(__UserGroupBase != NULL);
 
-	if (__root_mode)
-	{
-		__root_uid = id;
+    if (__root_mode) {
+        __root_uid = id;
 
-		result = OK;
-	}
-	else
-	{
-		PROFILE_OFF();
-		result = __setuid((LONG)id);
-		PROFILE_ON();
-	}
+        result = OK;
+    } else {
+        PROFILE_OFF();
+        result = __setuid((LONG) id);
+        PROFILE_ON();
+    }
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

@@ -94,8 +94,6 @@ raise(int sig)
 
 	SHOWVALUE(sig);
 
-	assert(NSIG <= sig && sig <= SIGTERM);
-
 	/* This has to be a well-known and supported signal. */
 	if (sig < SIGHUP || sig > NSIG)
 	{

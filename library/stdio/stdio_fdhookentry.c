@@ -137,12 +137,12 @@ int64_t __fd_hook_entry(
 				   to check whether this was an error or a numeric
 				   overflow. */
 			position = ChangeFilePosition(file, 0, OFFSET_END);
-			if (position != 0)
+			if (position != CHANGE_FILE_ERROR)
 				fd->fd_Position = GetFilePosition(file);
 
 			PROFILE_ON();
 
-			if (position == GETPOSITION_ERROR)
+			if (fd->fd_Position == GETPOSITION_ERROR)
 			{
 				D(("seek to end of file failed; ioerr=%ld", IoErr()));
 
@@ -174,7 +174,6 @@ int64_t __fd_hook_entry(
 	case file_action_close:
 
 		SHOWMSG("file_action_close");
-
 		/* The following is almost guaranteed not to fail. */
 		result = OK;
 
@@ -203,13 +202,9 @@ int64_t __fd_hook_entry(
 
 				PROFILE_OFF();
 
-				parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-				if (parent_dir != ZERO)
-				{
-					fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
-					if (fib != NULL)
-						name_and_path_valid = TRUE;
-				}
+                fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+                if (fib != NULL)
+                    name_and_path_valid = TRUE;
 
 				if (CANNOT Close(fd->fd_File))
 				{
@@ -325,15 +320,10 @@ int64_t __fd_hook_entry(
 				if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid)
 				{
 					BPTR old_dir;
-
 					PROFILE_OFF();
-
 					old_dir = CurrentDir(parent_dir);
-
 					SetProtection(fib->Name, 0);
-
 					CurrentDir(old_dir);
-
 					PROFILE_ON();
 				}
 

@@ -37,4 +37,4 @@
 
 /****************************************************************************/
 
-void NOCOMMON (*__alloca_cleanup)(const char * file,int line);
+void NOCOMMON (*__alloca_cleanup)(void);

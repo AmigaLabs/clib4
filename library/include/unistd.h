@@ -113,6 +113,7 @@ extern pid_t getpid(void);
 extern pid_t getppid(void);
 extern pid_t getpgrp(void );
 extern pid_t tcgetpgrp(int fildes);
+extern int tcsetpgrp(int filedes, pid_t pgrp);
 extern char *realpath(const char *file_name, char *resolved_name);
 extern int fsync(int file_descriptor);
 extern int fdatasync(int file_descriptor);
@@ -136,12 +137,6 @@ extern void enableUnixPaths(void);
 extern void disableUnixPaths(void);
 
 extern char * getcwd(char * buffer, size_t buffer_size);
-
-#ifdef __MEM_DEBUG
-extern char * __getcwd(char * buffer,size_t buffer_size,const char *file,int line);
-
-#define getcwd(buffer,buffer_size) __getcwd((buffer),(buffer_size),__FILE__,__LINE__)
-#endif /* __MEM_DEBUG */
 
 /*
  * The following prototypes may clash with the bsdsocket.library or

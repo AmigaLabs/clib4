@@ -26,15 +26,9 @@ __BEGIN_DECLS
 #else
  extern void * alloca(size_t size);
 
- #ifdef __MEM_DEBUG
-  extern void * __alloca(size_t size,const char *file,int line);
-
-  #define alloca(size) __alloca((size),__FILE__,__LINE__)
- #else
   /* This is necessary because some applications key off the fact that
      alloca is a symbol defined by the preprocessor. */
   #define alloca alloca
- #endif /* __MEM_DEBUG */
 #endif /* __GNUC__ */
 
 __END_DECLS

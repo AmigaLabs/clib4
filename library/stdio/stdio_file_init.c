@@ -51,7 +51,7 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-/****************************************************************************/
+#include <dos/stdio.h>
 
 static struct MsgPort *old_console_task;
 static BOOL restore_console_task;
@@ -220,25 +220,19 @@ FILE_CONSTRUCTOR(stdio_file_init)
 
 	ENTER();
 
-	/* Figure out the proper address alignment for the memory we are
-	   going to use for disk I/O. The default is 32 bytes, which should
-	   be OK for most cases. If possible, ask the operating system for
-	   its preferred alignment size. */
-	if (SysBase->lib_Version >= 50)
-	{
-		uint32 physical_alignment = 0;
+    uint32 physical_alignment = 0;
 
-		GetCPUInfoTags(GCIT_CacheLineSize, &physical_alignment, TAG_DONE);
+    GetCPUInfoTags(GCIT_CacheLineSize, &physical_alignment, TAG_DONE);
 
-		if (__cache_line_size < physical_alignment)
-			__cache_line_size = physical_alignment;
-	}
+    if (__cache_line_size < physical_alignment) {
+        __cache_line_size = physical_alignment;
+    }
 
 	/* If we were invoked from Workbench, set up the standard I/O streams. */
-	if (__WBenchMsg != NULL)
-	{
-		if (wb_file_init() < 0)
-			goto out;
+	if (__WBenchMsg != NULL) {
+		if (wb_file_init() < 0) {
+            goto out;
+        }
 	}
 
 	/* Now initialize the standard I/O streams (input, output, error). */
@@ -303,14 +297,14 @@ FILE_CONSTRUCTOR(stdio_file_init)
 
 		__initialize_fd(__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
 
-		__initialize_iob(__iob[i], __iob_hook_entry,
+        __initialize_iob(__iob[i], __iob_hook_entry,
 						 buffer,
 						 aligned_buffer, BUFSIZ,
 						 i,
 						 i,
 						 iob_flags,
 						 stdio_lock);
-	}
+    }
 
 #if 0
 	{

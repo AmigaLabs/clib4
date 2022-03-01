@@ -34,6 +34,10 @@
 #ifndef _SYS_MMAN_H
 #define _SYS_MMAN_H
 
+#include <features.h>
+
+__BEGIN_DECLS
+
 #include <sys/types.h> // off_t
 
 /* Return value of `mmap' in case of an error.  */
@@ -54,5 +58,7 @@
 
 extern void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
 extern int munmap(void *map, size_t length);
+
+__END_DECLS
 
 #endif // _SYS_MMAN_H

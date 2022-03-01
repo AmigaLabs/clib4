@@ -245,11 +245,11 @@ map_descriptor_sets(
 	SHOWPOINTER(file_fds);
 	SHOWVALUE(num_file_fds);
 
-	/* This routine maps file descriptor sets
-	 * from one format to another. We map
-	 * socket descriptors and regular file
-	 * descriptor sets.
-	 */
+    /* This routine maps file descriptor sets
+     * from one format to another. We map
+     * socket descriptors and regular file
+     * descriptor sets.
+     */
 	if (input_fds != NULL && num_input_fds > 0)
 	{
 		int total_socket_fd;
@@ -302,15 +302,15 @@ map_descriptor_sets(
 			{
 				/* We watch files bound to console streams and disk
 				   files which may have data stored in them. */
-				if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO))
+				if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_POLL))
 				{
 					SHOWMSG("this is a file, or otherwise unsuitable");
 					continue;
 				}
 
-				if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
+				if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE) || FLAG_IS_SET(fd->fd_Flags, FDF_POLL))
 				{
-					SHOWMSG("this is an interactive stream");
+					SHOWMSG("this is an interactive / poll stream");
 				}
 				else
 				{
@@ -350,6 +350,8 @@ map_descriptor_sets(
 				{
 					SHOWMSG("can't set it, though");
 				}
+
+
 			}
 		}
 
@@ -810,6 +812,9 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 									if (WaitForChar(fd->fd_File, 1))
 										got_input = TRUE;
 								}
+                                else if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
+                                    got_input = TRUE;
+                                }
 								else
 								{
 									struct ExamineData *fib;
@@ -857,6 +862,9 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 
 								got_output = TRUE;
 							}
+                            if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
+                                got_output = TRUE;
+                            }
 						}
 					}
 
@@ -1013,6 +1021,9 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 									if (WaitForChar(fd->fd_File, 1))
 										got_input = TRUE;
 								}
+                                else if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
+                                    got_input = TRUE;
+                                }
 								else
 								{
 									struct ExamineData *fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
@@ -1041,7 +1052,6 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 							if (FLAG_IS_SET(fd->fd_Flags, FDF_WRITE))
 							{
 								assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET));
-
 								got_output = TRUE;
 							}
 						}
@@ -1050,11 +1060,13 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 					if (got_input || got_output)
 						result++;
 
-					if (file_read_fds != NULL && NOT got_input)
-						FD_CLR(i, file_read_fds);
+					if (file_read_fds != NULL && NOT got_input) {
+                        FD_CLR(i, file_read_fds);
+                    }
 
-					if (file_write_fds != NULL && NOT got_output)
-						FD_CLR(i, file_write_fds);
+					if (file_write_fds != NULL && NOT got_output) {
+                        FD_CLR(i, file_write_fds);
+                    }
 				}
 
 				/* Check for a stop signal. */

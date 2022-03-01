@@ -64,6 +64,17 @@
 
 #include <proto/elf.h>
 
+/* random table */
+static uint32_t _random_init[] = {
+        0x00000000,0x5851f42d,0xc0b18ccf,0xcbb5f646,
+        0xc7033129,0x30705b04,0x20fd5db4,0x9a8b7f78,
+        0x502959d8,0xab894868,0x6c0356a7,0x88cdb7ff,
+        0xb477d43f,0x70a3a52b,0xa8e4baf1,0xfd8341fc,
+        0x8ae16fd9,0x742d2f7a,0x0d1f0796,0x76035e09,
+        0x40f7702c,0x6fa72ca5,0xaaa84157,0x58a0df74,
+        0xc74a0364,0xae533cc4,0x04185faf,0x6de3b115,
+        0x0cab8628,0xf043bfa4,0x398150e9,0x37521657};
+
 /* These are used to initialize the shared objects linked to this binary,
    and for the dlopen(), dlclose() and dlsym() functions. */
 extern struct Library  *__ElfBase;
@@ -95,6 +106,20 @@ STDLIB_CONSTRUCTOR(global_init)
 			__global_clib2 = NULL;
 			goto out;
 		}
+
+        /* Initialize random signal and state */
+        __global_clib2->__random_lock = __create_semaphore();
+        if (!__global_clib2->__random_lock) {
+            FreeVec(__global_clib2->wide_status);
+            FreeVec(__global_clib2);
+            __global_clib2 = NULL;
+            goto out;
+        }
+        __global_clib2->n = 31;
+        __global_clib2->i = 3;
+        __global_clib2->j = 0;
+        __global_clib2->x = _random_init + 1;
+
 		/* Set main Exec and IElf interface pointers */
 		__global_clib2->IExec = IExec;
 		__global_clib2->IElf = __IElf;
@@ -120,18 +145,41 @@ STDLIB_CONSTRUCTOR(global_init)
 		__global_clib2->wide_status->_getdate_err = 0;
         /* Set locale stuff */
         __global_clib2->_current_category = LC_ALL;
-        __global_clib2->_current_locale = "C";
+        __global_clib2->_current_locale = "C-UTF-8";
 
 		/* Get the current task pointer */
 		__global_clib2->self = (struct Process *)FindTask(0);
 
-		/* clear tempnam stuff */
+        /* clear tempnam stuff */
 		srand(time(NULL));
 		__global_clib2->inc = 0;
 		memset(__global_clib2->emergency, 0, sizeof(__global_clib2->emergency));
 
 		/* Init memalign list */
-		NewMinList(&__global_clib2->aligned_blocks);
+        __global_clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                                            ASO_NoTrack,         FALSE,
+                                                            ASO_MemoryOvr,       MEMF_PRIVATE,
+                                                            ASOITEM_MFlags,      MEMF_PRIVATE,
+                                                            ASOITEM_ItemSize ,   sizeof(struct MemalignEntry),
+                                                            ASOITEM_BatchSize,   408,
+                                                            ASOITEM_GCPolicy,    ITEMGC_AFTERCOUNT,
+                                                            ASOITEM_GCParameter, 1000,
+                                                            TAG_DONE);
+
+#ifdef USE_AVL
+        __global_clib2->__memory_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                                        ASO_NoTrack,         FALSE,
+                                                        ASO_MemoryOvr,       MEMF_PRIVATE,
+                                                        ASOITEM_MFlags,      MEMF_PRIVATE,
+                                                        ASOITEM_ItemSize ,   sizeof(struct AVLMemoryNode),
+                                                        ASOITEM_BatchSize,   408,
+                                                        ASOITEM_GCPolicy,    ITEMGC_AFTERCOUNT,
+                                                        ASOITEM_GCParameter, 1000,
+                                                        TAG_DONE);
+        if (!__global_clib2->__memory_pool) {
+            goto out;
+        }
+#endif
 
 		/* Check is SYSV library is available in the system */
 		__global_clib2->haveShm = FALSE;
@@ -207,19 +255,26 @@ STDLIB_DESTRUCTOR(global_exit)
 
 	struct ElfIFace *IElf = __IElf;
 
-	/* Free global clib structure */
+    /* Free global clib structure */
 	if (__global_clib2)
 	{
-		/* Free memalign stuff */
-		if (!IsMinListEmpty(&__global_clib2->aligned_blocks))
-		{
-			struct Node *node;
+#ifdef USE_AVL
+        if (__global_clib2->__memory_pool) {
+            struct AVLMemoryNode *memNode = (struct AVLMemoryNode *)AVL_FindFirstNode(__global_clib2->__memalign_tree);
+            while (memNode)
+            {
+                struct AVLMemoryNode *next = (struct AVLMemoryNode *)AVL_FindNextNodeByAddress(&memNode->amn_AvlNode);
+                FreeVec(memNode->amn_Address);
+                memNode = next;
+            }
+            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memory_pool);
+        }
+#endif
 
-			while ((node = RemHead((struct List *)&__global_clib2->aligned_blocks)) != NULL)
-			{
-				free(node);
-				node = NULL;
-			}
+        /* Free memalign stuff */
+		if (&__global_clib2->__memalign_pool)
+		{
+            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
 		}
 
 		if (__ISysVIPC != NULL)
@@ -247,6 +302,9 @@ STDLIB_DESTRUCTOR(global_exit)
 			CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
 			__global_clib2->__dl_elf_handle = NULL;
 		}
+
+        /* Remove random semaphore */
+        __delete_semaphore(__global_clib2->__random_lock);
 
 		FreeVec(__global_clib2);
 		__global_clib2 = NULL;

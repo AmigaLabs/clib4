@@ -35,6 +35,4 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
-int NOCOMMON __default_pool_size = 4096;
+int NOCOMMON __default_threshold_size = 512;

@@ -31,87 +31,73 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef	_TERMIOS_HEADERS_H
+#ifndef    _TERMIOS_HEADERS_H
 #include "termios_headers.h"
 #endif /* _TERMIOS_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(__amigaos4__) && !defined(Flush)
+#if !defined(Flush)
 #define Flush(fh) FFlush(fh)
-#endif /* __amigaos4__ && !Flush */
-
-/****************************************************************************/
+#endif /* !Flush */
 
 int
-tcdrain(int file_descriptor) 
-{
-	int result = ERROR;
-	struct fd *fd;
+tcdrain(int file_descriptor) {
+    int result = ERROR;
+    struct fd *fd;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(file_descriptor);
+    SHOWVALUE(file_descriptor);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	__stdio_lock();
+    __stdio_lock();
 
-	fd = __get_file_descriptor(file_descriptor);
-	if(fd == NULL)
-	{
-		__set_errno(EBADF);
-		goto out;
-	}
+    fd = __get_file_descriptor(file_descriptor);
+    if (fd == NULL) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
-	__fd_lock(fd);
+    __fd_lock(fd);
 
-	if(FLAG_IS_SET(fd->fd_Flags,FDF_TERMIOS))
-	{
-		struct termios *tios;
-		BPTR file;
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
+        struct termios *tios;
+        BPTR file;
 
-		tios = fd->fd_Aux;
+        tios = fd->fd_Aux;
 
-		switch(tios->type)
-		{
-			case TIOST_CONSOLE:
+        switch (tios->type) {
+            case TIOST_CONSOLE:
 
-				file = __resolve_fd_file(fd);
-				if(file == ZERO)
-				{
-					__set_errno(EBADF);
-					goto out;
-				}
+                file = __resolve_fd_file(fd);
+                if (file == ZERO) {
+                    __set_errno(EBADF);
+                    goto out;
+                }
 
-				/* This also discards any buffered input, but it does
-				   not appear possible to drain the output buffer
-				   otherwise. (?) */
-				if(CANNOT Flush(file))
-					goto out;
+                /* This also discards any buffered input, but it does
+                   not appear possible to drain the output buffer
+                   otherwise. (?) */
+                if (CANNOT Flush(file))
+                    goto out;
 
-				break;
+                break;
+            default: /* TODO: Serial port support. */
+                __set_errno(ENXIO);
+                goto out;
+        }
 
-			default: /* TODO: Serial port support. */
+        result = OK;
+    } else {
+        result = fdatasync(file_descriptor); /* If called on a "regular" file. */
+    }
 
-				__set_errno(ENXIO);
-				goto out;
-		}
+out:
 
-		result = OK;
-	}
-	else
-	{
-		result = fdatasync(file_descriptor); /* If called on a "regular" file. */
-	}
+    __fd_unlock(fd);
+    __stdio_unlock();
 
- out:
-
-	__fd_unlock(fd);
-
-	__stdio_unlock();
-
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

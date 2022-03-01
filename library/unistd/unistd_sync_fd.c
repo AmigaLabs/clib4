@@ -35,57 +35,45 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(__amigaos4__) && !defined(Flush)
+#if !defined(Flush)
 #define Flush(fh) FFlush(fh)
-#endif /* __amigaos4__ && !Flush */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
+#endif /* !Flush */
 
 int
-__sync_fd(struct fd * fd,int mode)
-{
-	int result = ERROR;
+__sync_fd(struct fd *fd, int mode) {
+    int result = ERROR;
 
-	assert( fd != NULL );
+    assert(fd != NULL);
 
-	__fd_lock(fd);
+    __fd_lock(fd);
 
-	if(FLAG_IS_SET(fd->fd_Flags,FDF_IS_SOCKET))
-	{
-		__set_errno(EINVAL);
-		goto out;
-	}
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
+        __set_errno(EINVAL);
+        goto out;
+    }
 
-	if(FLAG_IS_SET(fd->fd_Flags,FDF_STDIO))
-	{
-		__set_errno(EBADF);
-		goto out;
-	}
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO)) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
-	/* The mode tells us what to flush. 0 means "flush just the data", and
-	   everything else means "flush everything. */
-	Flush(fd->fd_File);
+    /* The mode tells us what to flush. 0 means "flush just the data", and
+       everything else means "flush everything. */
+    Flush(fd->fd_File);
 
-	if(mode != 0)
-	{
-		struct FileHandle * fh = BADDR(fd->fd_File);
+    if (mode != 0) {
+        struct FileHandle *fh = BADDR(fd->fd_File);
 
-		/* Verify that this file is not bound to "NIL:". */
-		if(fh->fh_Type != NULL)
-			DoPkt(fh->fh_Type,ACTION_FLUSH,	0,0,0,0,0);
-	}
+        /* Verify that this file is not bound to "NIL:". */
+        if (fh->fh_MsgPort != NULL)
+            DoPkt(fh->fh_MsgPort, ACTION_FLUSH, 0, 0, 0, 0, 0);
+    }
 
-	result = OK;
+    result = OK;
 
- out:
+out:
 
-	__fd_unlock(fd);
+    __fd_unlock(fd);
 
-	return(result);
+    return (result);
 }

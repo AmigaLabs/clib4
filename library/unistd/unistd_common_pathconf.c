@@ -35,17 +35,9 @@
 #include "stdlib_null_pointer_check.h"
 #endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 #ifndef ID_CON
 #define ID_CON (0x434F4E00L) /* 'CON\0' */
@@ -112,11 +104,11 @@ __pathconf(struct MsgPort *port,int name)
 	size_t fs_index = 0;
 	long ret = -1;
 
-	if(port != NULL)
+	if (port != NULL)
 	{
 		D_S(struct InfoData,id);
 
-		if(DoPkt(port,ACTION_IS_FILESYSTEM,0,0,0,0,0) == DOSFALSE) /* Not a filesystem. */
+		if (DoPkt(port,ACTION_IS_FILESYSTEM,0,0,0,0,0) == DOSFALSE) /* Not a filesystem. */
 		{
 			SHOWMSG("Not a filesystem.");
 
@@ -124,15 +116,15 @@ __pathconf(struct MsgPort *port,int name)
 			goto out;
 		}
 
-		if(DoPkt(port,ACTION_DISK_INFO,MKBADDR(id),0,0,0,0))	/* Managed to obtain disk info. */
+		if (DoPkt(port, ACTION_HANDLER_INFO, MKBADDR(id),0,0,0,0))	/* Managed to obtain disk info. */
 		{
 			size_t i;
 
-			switch(id->id_DiskState)
+			switch (id->id_DiskState)
 			{
-				case ID_VALIDATING:	/* Consider this an error condition? */
-				case ID_WRITE_PROTECTED:
-				case ID_VALIDATED:
+				case ID_DISKSTATE_VALIDATING:	/* Consider this an error condition? */
+				case ID_DISKSTATE_WRITE_PROTECTED:
+				case ID_DISKSTATE_VALIDATED:
 
 					dos_type = id->id_DiskType;
 
@@ -164,109 +156,64 @@ __pathconf(struct MsgPort *port,int name)
 	switch(name)
 	{
 		case _PC_FILESIZEBITS:
-
 			ret = fs_info[fs_index].file_size_bits;
 			break;
-
 		case _PC_LINK_MAX:
-
 			ret = fs_info[fs_index].link_max;
 			break;
-
 		case _PC_MAX_CANON:
-
 			ret = 510;	/* I could not find any documentation regarding this. */
 			break;
-
 		case _PC_MAX_INPUT:
-
-			#if defined(__amigaos4__)
-			{
-				uint32 Bufsize;
-				struct TagItem TagList[2]=
-				{
-					{DC_FHBufferR,	(ULONG)&Bufsize},
-					{TAG_DONE,		0}
-				};
-
-				DosControl(TagList);
-				ret = Bufsize;	/* Default is 2048 bytes. */
-			}
-			#else
-			{
-				ret = 204;
-			}
-			#endif	/* __amigaos4__ */
-
+            uint32 Bufsize;
+            struct TagItem TagList[2]=
+            {
+                {DC_FHBufferR,	(ULONG)&Bufsize},
+                {TAG_DONE,		0}
+            };
+            DosControl(TagList);
+            ret = Bufsize;	/* Default is 2048 bytes. */
 			break;
-
 		case _PC_NAME_MAX:
-
 			ret = fs_info[fs_index].name_max;
 			break;
-
 		case _PC_PATH_MAX:
-
 			ret = fs_info[fs_index].path_max;
 			break;
-
 		case _PC_PIPE_BUF:
-
 			ret = 512;	/* One buffer. The PIPE: device usually has 8 of these. */
 			break;
-
 		case _PC_XATTR_ENABLED:
-
 			ret = 0;
 			break;
-
 		case _PC_XATTR_EXISTS:
-
 			ret = 0;
 			break;
-
 		case _PC_CHOWN_RESTRICTED:
-
 			ret = 0;
 			break;
-
 		case _PC_NO_TRUNC:
-
 			ret = 0;
 			break;
-
 		case _PC_VDISABLE:
-
 			ret = 0;	/* TODO: Implement this in the termios emulation. */
 			break;
-
 		case _PC_ASYNC_IO:
-
 			ret = 0;
 			break;
-
 		case _PC_PRIO_IO:
-
 			ret = 0;
 			break;
-
 		case _PC_SYNC_IO:
-
 			ret = 0;
 			break;
-
 		case _PC_SYMLINK_MAX:
-
 			ret = fs_info[fs_index].symlink_max;
 			break;
-
 		case _PC_DOSTYPE:	/* Amiga-specific extension. */
-
 			ret = dos_type;
 			break;
-
 		default:
-
 			SHOWMSG("Invalid option name");
 			__set_errno(EINVAL);
 			goto out;

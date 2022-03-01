@@ -69,7 +69,7 @@ towupper(wint_t c)
 		unicode = 1;
 	}
 
-	if (1) //(unicode)
+	if (unicode)
 	{
 		if (c < 0x100)
 		{
