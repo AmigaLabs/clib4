@@ -13,10 +13,10 @@ LIBS += $(BUILD_DIR)/lib/libprofile.so \
 ##############################################################################
 
 PROFILE_LIB = \
-	profile/profile__mcount.o \
-	profile/profile_profil.o \
-	profile/profile_gmon.o \
-	profile/profile_mcount.o
+	profile/_mcount.o \
+	profile/profil.o \
+	profile/gmon.o \
+	profile/mcount.o
 
 ##############################################################################
 
