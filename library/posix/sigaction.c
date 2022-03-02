@@ -110,7 +110,7 @@ sigaction_handler(int sig) {
    NULL, OACT is set to the prior behavior.  Return 0 on success, or
    set errno and return -1 on failure.  */
 int
-sigaction(int sig, const struct sigaction *restrict act, struct sigaction *restrict oact) {
+sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
     sigset_t mask;
     sigset_t oldmask;
     int saved_errno;

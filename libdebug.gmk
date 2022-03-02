@@ -15,33 +15,33 @@ LIBS += $(BUILD_DIR)/lib/libdebug.so \
 DEBUG_LIB = \
 	debug/debug.lib_rev.o \
 	debug/debug.o \
-	debug/debug_cmpstrexec.o \
-	debug/debug_kcmpstr.o \
-	debug/debug_kdofmt.o \
-	debug/debug_kgetc.o \
-	debug/debug_kgetch1.o \
-	debug/debug_kgetch2.o \
-	debug/debug_kgetchar1.o \
-	debug/debug_kgetchar2.o \
-	debug/debug_kgetnum1.o \
-	debug/debug_kgetnum2.o \
-	debug/debug_kmaygetch.o \
-	debug/debug_kmaygetchar.o \
-	debug/debug_kprintf1.o \
-	debug/debug_kprintf2.o \
-	debug/debug_kputc.o \
-	debug/debug_kputch1.o \
-	debug/debug_kputch2.o \
-	debug/debug_kputchar1.o \
-	debug/debug_kputchar2.o \
-	debug/debug_kputfmt.o \
-	debug/debug_kputs1.o \
-	debug/debug_kputs2.o \
-	debug/debug_kputstr1.o \
-	debug/debug_kputstr2.o \
-	debug/debug_kvprintf1.o \
-	debug/debug_kvprintf2.o \
-	debug/debug_level.o
+	debug/cmpstrexec.o \
+	debug/kcmpstr.o \
+	debug/kdofmt.o \
+	debug/kgetc.o \
+	debug/kgetch1.o \
+	debug/kgetch2.o \
+	debug/kgetchar1.o \
+	debug/kgetchar2.o \
+	debug/kgetnum1.o \
+	debug/kgetnum2.o \
+	debug/kmaygetch.o \
+	debug/kmaygetchar.o \
+	debug/kprintf1.o \
+	debug/kprintf2.o \
+	debug/kputc.o \
+	debug/kputch1.o \
+	debug/kputch2.o \
+	debug/kputchar1.o \
+	debug/kputchar2.o \
+	debug/kputfmt.o \
+	debug/kputs1.o \
+	debug/kputs2.o \
+	debug/kputstr1.o \
+	debug/kputstr2.o \
+	debug/kvprintf1.o \
+	debug/kvprintf2.o \
+	debug/level.o
 
 ##############################################################################
 

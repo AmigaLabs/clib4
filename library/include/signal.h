@@ -173,7 +173,7 @@ struct sigaction {
     int sa_flags;
 };
 
-extern int sigaction(int sig, const struct sigaction *restrict act, struct sigaction *restrict oact);
+extern int sigaction(int sig, const struct sigaction *act, struct sigaction *oact);
 
 __END_DECLS
 

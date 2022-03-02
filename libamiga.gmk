@@ -15,36 +15,36 @@ LIBS += \
 
 AMIGA_LIB = \
 	amiga/amiga.lib_rev.o \
-	amiga/amiga_acrypt.o \
-	amiga/amiga_addtof.o \
-	amiga/amiga_argarraydone.o \
-	amiga/amiga_argarrayinit.o \
-	amiga/amiga_argint.o \
-	amiga/amiga_argstring.o \
-	amiga/amiga_beginio.o \
-	amiga/amiga_coercemethod.o \
-	amiga/amiga_createextio.o \
-	amiga/amiga_createport.o \
-	amiga/amiga_createstdio.o \
-	amiga/amiga_createtask.o \
-	amiga/amiga_deleteextio.o \
-	amiga/amiga_deleteport.o \
-	amiga/amiga_deletestdio.o \
-	amiga/amiga_deletetask.o \
-	amiga/amiga_domethod.o \
-	amiga/amiga_dosupermethod.o \
-	amiga/amiga_dotimer.o \
-	amiga/amiga_fastrand.o \
-	amiga/amiga_freeievents.o \
-	amiga/amiga_hotkey.o \
-	amiga/amiga_invertstring.o \
-	amiga/amiga_newlist.o \
-	amiga/amiga_rangerand.o \
-	amiga/amiga_remtof.o \
-	amiga/amiga_rexxvars.o \
-	amiga/amiga_setsuperattrs.o \
-	amiga/amiga_timedelay.o \
-	amiga/amiga_waitbeam.o
+	amiga/acrypt.o \
+	amiga/addtof.o \
+	amiga/argarraydone.o \
+	amiga/argarrayinit.o \
+	amiga/argint.o \
+	amiga/argstring.o \
+	amiga/beginio.o \
+	amiga/coercemethod.o \
+	amiga/createextio.o \
+	amiga/createport.o \
+	amiga/createstdio.o \
+	amiga/createtask.o \
+	amiga/deleteextio.o \
+	amiga/deleteport.o \
+	amiga/deletestdio.o \
+	amiga/deletetask.o \
+	amiga/domethod.o \
+	amiga/dosupermethod.o \
+	amiga/dotimer.o \
+	amiga/fastrand.o \
+	amiga/freeievents.o \
+	amiga/hotkey.o \
+	amiga/invertstring.o \
+	amiga/newlist.o \
+	amiga/rangerand.o \
+	amiga/remtof.o \
+	amiga/rexxvars.o \
+	amiga/setsuperattrs.o \
+	amiga/timedelay.o \
+	amiga/waitbeam.o
 
 ##############################################################################
 
