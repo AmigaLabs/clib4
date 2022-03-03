@@ -54,29 +54,8 @@ unsigned long NOCOMMON __current_memory_allocated;
 unsigned long NOCOMMON __maximum_num_memory_chunks_allocated;
 unsigned long NOCOMMON __current_num_memory_chunks_allocated;
 
-#ifndef USE_AVL
 APTR NOCOMMON __memory_pool;
 struct MinList NOCOMMON __memory_list;
-#endif
-
-#ifdef USE_AVL
-int32 AVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2)
-{
-    struct AVLMemoryNode *e1, *e2;
-
-    e1 = (struct AVLMemoryNode *)avlnode1;
-    e2 = (struct AVLMemoryNode *)avlnode2;
-
-    return (int32)((uint32)e1->amn_Address - (uint32)e2->amn_Address);
-}
-
-int32 AVLKeyComp(struct AVLNode *avlnode1, AVLKey key2)
-{
-    struct AVLMemoryNode *e1 = (struct AVLMemoryNode *)avlnode1;
-
-    return (int32)((uint32)e1->amn_Address - (uint32)key2);
-}
-#endif
 
 void *
 __allocate_memory(size_t size, BOOL never_free)
@@ -127,8 +106,6 @@ __allocate_memory(size_t size, BOOL never_free)
 		goto out;
 	}
 
-
-#ifndef USE_AVL
 	/* We reuse the MemoryNode.mn_Size field to mark
 	 * allocations are not suitable for use with
 	 * free() and realloc(). This limits allocation
@@ -149,18 +126,13 @@ __allocate_memory(size_t size, BOOL never_free)
     {
         if (__memory_pool != NULL)
         {
-            PROFILE_OFF();
             mn = AllocPooled(__memory_pool, allocation_size);
-            PROFILE_ON();
         }
         else
         {
             struct MinNode *mln;
 
-            PROFILE_OFF();
             mln = AllocVecTags(sizeof(*mln) + allocation_size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-            PROFILE_ON();
-
             if (mln != NULL)
             {
                 AddTail((struct List *)&__memory_list, (struct Node *)mln);
@@ -193,32 +165,6 @@ __allocate_memory(size_t size, BOOL never_free)
 		__maximum_num_memory_chunks_allocated = __current_num_memory_chunks_allocated;
 
     result = &mn[1];
-#else
-    result = AllocVecTags(allocation_size, AVT_Type, MEMF_PRIVATE, TAG_END);
-    if (result) {
-        struct AVLMemoryNode *memNode = ItemPoolAlloc(__global_clib2->__memory_pool);
-        if (!memNode) {
-    		SHOWMSG("not enough memory");
-            FreeVec(result);
-            result = NULL;
-            goto out;
-        }
-        else {
-            memNode->amn_Address = result;
-            memNode->amn_Size = size;
-            if (NULL != AVL_AddNode(&__global_clib2->__memalign_tree, &memNode->amn_AvlNode, AVLNodeComp))
-            {
-                FreeVec(result);
-                ItemPoolFree(__global_clib2->__memory_pool, memNode);
-                result = NULL;
-            }
-        }
-    }
-    else {
-		SHOWMSG("not enough memory");
-        goto out;
-    }
-#endif //USE_AVL
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -237,8 +183,6 @@ out:
 
 	return (result);
 }
-
-/****************************************************************************/
 
 void * malloc(size_t size)
 {
@@ -262,29 +206,20 @@ static struct SignalSemaphore *memory_semaphore;
 
 void __memory_lock(void)
 {
-	PROFILE_OFF();
-
 	if (memory_semaphore != NULL)
 		ObtainSemaphore(memory_semaphore);
-
-	PROFILE_ON();
 }
 
 void __memory_unlock(void)
 {
-	PROFILE_OFF();
-
 	if (memory_semaphore != NULL)
 		ReleaseSemaphore(memory_semaphore);
-
-	PROFILE_ON();
 }
 
 STDLIB_DESTRUCTOR(stdlib_memory_exit)
 {
 	ENTER();
 
-#ifndef USE_AVL
     /* Is the slab memory allocator enabled? */
     if (__slab_data.sd_InUse)
     {
@@ -307,15 +242,12 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
         }
         __memory_unlock();
     }
-#endif
 
 	__delete_semaphore(memory_semaphore);
 	memory_semaphore = NULL;
 
 	LEAVE();
 }
-
-/****************************************************************************/
 
 /* Second constructor called by _init */
 STDLIB_CONSTRUCTOR(stdlib_memory_init)
@@ -328,7 +260,6 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
 	if (memory_semaphore == NULL)
 		goto out;
 
-#ifndef USE_AVL
 	NewList((struct List *)&__memory_list);
 
     /* Enable the slab memory allocator? */
@@ -347,7 +278,6 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init)
             goto out;
         }
     }
-#endif
 
 	success = TRUE;
 

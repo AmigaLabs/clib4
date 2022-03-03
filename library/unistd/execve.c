@@ -35,15 +35,7 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
 #include <dos/stdio.h>
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 /* This gets handed around when trying to locate a program or a script
    interpreter which knows how to do the job. */
@@ -100,8 +92,6 @@ find_resident_command(const char *command_name)
 
 	return (seg);
 }
-
-/****************************************************************************/
 
 /* Try to read the first line of a script file */
 static int

@@ -64,13 +64,9 @@
 #error Complex numbers are not supported by/for this compiler.
 #endif /* __GNUC__ && __STDC_VERSION__ */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #define complex _Complex
 #ifdef __GNUC__
@@ -193,12 +189,6 @@ long double complex creall(long double complex z);
 #define CMPLXF(x, y) __CMPLX(x, y, float)
 #define CMPLXL(x, y) __CMPLX(x, y, long double)
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _COMPLEX_H */

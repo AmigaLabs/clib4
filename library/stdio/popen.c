@@ -31,29 +31,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
-
-/****************************************************************************/
 
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int pclose(FILE *stream)
+int
+pclose(FILE *stream)
 {
 	int result = ERROR;
 
@@ -66,17 +53,13 @@ int pclose(FILE *stream)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (stream == NULL)
-		{
-			SHOWMSG("invalid stream parameter");
+    if (stream == NULL)
+    {
+        SHOWMSG("invalid stream parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	fclose(stream);
 
@@ -119,17 +102,13 @@ popen(const char *command, const char *type)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (command == NULL || type == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (command == NULL || type == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	/* The first character selects the access mode: read or write. We don't
 	   support anything else. */
@@ -280,8 +259,6 @@ popen(const char *command, const char *type)
 
 	SHOWSTRING(pipe_file_name);
 
-	PROFILE_OFF();
-
 	/* Now open the input and output streams for the program to launch. */
 	if (type[0] == 'r')
 	{
@@ -300,8 +277,6 @@ popen(const char *command, const char *type)
 			output = Open("NIL:", MODE_NEWFILE);
 	}
 
-	PROFILE_ON();
-
 	/* Check if both I/O streams could be opened. */
 	if (input == ZERO || output == ZERO)
 	{
@@ -311,8 +286,6 @@ popen(const char *command, const char *type)
 		goto out;
 	}
 
-	PROFILE_OFF();
-
 	/* Now try to launch the program. */
 	status = SystemTags((STRPTR)command,
 						SYS_Input, input,
@@ -320,8 +293,6 @@ popen(const char *command, const char *type)
 						SYS_Asynch, TRUE,
 						SYS_UserShell, TRUE,
 						TAG_END);
-
-	PROFILE_ON();
 
 	/* If launching the program returned -1 then it could not be started.
 	   We'll need to close the I/O streams we opened above. */
@@ -345,15 +316,11 @@ out:
 	if (command_copy != NULL)
 		free(command_copy);
 
-	PROFILE_OFF();
-
 	if (input != ZERO)
 		Close(input);
 
 	if (output != ZERO)
 		Close(output);
-
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

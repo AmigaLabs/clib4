@@ -31,12 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STAT_HEADERS_H
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
@@ -49,13 +43,8 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int lstat(const char *path_name, struct stat *st)
+int
+lstat(const char *path_name, struct stat *st)
 {
 #if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
@@ -126,10 +115,7 @@ int lstat(const char *path_name, struct stat *st)
 
 	D(("trying to get a lock on '%s'", path_name));
 
-	PROFILE_OFF();
 	file_lock = __lock(path_name, SHARED_LOCK, &link_length, NULL, 0);
-	PROFILE_ON();
-
 	if (file_lock == ZERO && link_length < 0)
 	{
 		SHOWMSG("that didn't work");
@@ -168,10 +154,7 @@ int lstat(const char *path_name, struct stat *st)
 	}
 	else
 	{
-		PROFILE_OFF();
 		fib = ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE);
-		PROFILE_ON();
-
 		if (fib == NULL)
 		{
 			SHOWMSG("couldn't examine it");
@@ -189,12 +172,10 @@ int lstat(const char *path_name, struct stat *st)
 
 out:
 
-	PROFILE_OFF();
 	if (fib != NULL) {
 		FreeDosObject(DOS_EXAMINEDATA, fib);
 	}
 	UnLock(file_lock);
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

@@ -31,109 +31,90 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 char *
-fgets(char *s,int n,FILE *stream)
-{
-	char * result = s;
-	int c;
+fgets(char *s, int n, FILE *stream) {
+    char *result = s;
+    int c;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(s);
-	SHOWVALUE(n);
-	SHOWPOINTER(stream);
+    SHOWPOINTER(s);
+    SHOWVALUE(n);
+    SHOWPOINTER(stream);
 
-	assert( s != NULL && stream != NULL );
+    assert(s != NULL && stream != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	flockfile(stream);
+    flockfile(stream);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(s == NULL || stream == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (s == NULL || stream == NULL) {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			result = NULL;
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        result = NULL;
+        goto out;
+    }
 
-	if(n <= 0)
-	{
-		SHOWMSG("no work to be done");
+    if (n <= 0) {
+        SHOWMSG("no work to be done");
 
-		result = NULL;
-		goto out;
-	}
+        result = NULL;
+        goto out;
+    }
 
-	/* Take care of the checks and data structure changes that
-	 * need to be handled only once for this stream.
-	 */
-	if(__fgetc_check(stream) < 0)
-	{
-		result = NULL;
-		goto out;
-	}
+    /* Take care of the checks and data structure changes that
+     * need to be handled only once for this stream.
+     */
+    if (__fgetc_check(stream) < 0) {
+        result = NULL;
+        goto out;
+    }
 
-	/* So that we can tell error and 'end of file' conditions apart. */
-	clearerr(stream);
+    /* So that we can tell error and 'end of file' conditions apart. */
+    clearerr(stream);
 
-	/* One off for the terminating '\0'. */
-	n--;
+    /* One off for the terminating '\0'. */
+    n--;
 
-	while(n-- > 0)
-	{
-		c = __getc(stream);
-		if(c == EOF)
-		{
-			if(ferror(stream))
-			{
-				/* Just to be on the safe side. */
-				(*s) = '\0';
+    while (n-- > 0) {
+        c = __getc(stream);
+        if (c == EOF) {
+            if (ferror(stream)) {
+                /* Just to be on the safe side. */
+                (*s) = '\0';
 
-				result = NULL;
-				goto out;
-			}
+                result = NULL;
+                goto out;
+            }
 
-			/* Make sure that we return NULL if we really
-			   didn't read anything at all */
-			if(s == result)
-				result = NULL;
+            /* Make sure that we return NULL if we really
+               didn't read anything at all */
+            if (s == result)
+                result = NULL;
 
-			break;
-		}
+            break;
+        }
 
-		(*s++) = c;
+        (*s++) = c;
 
-		if(c == '\n')
-			break;
-	}
+        if (c == '\n')
+            break;
+    }
 
-	(*s) = '\0';
+    (*s) = '\0';
 
-	SHOWSTRING(result);
+    SHOWSTRING(result);
 
- out:
+out:
 
-	funlockfile(stream);
+    funlockfile(stream);
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

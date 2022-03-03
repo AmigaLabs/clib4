@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
@@ -53,21 +49,15 @@ gethostbyaddr(const void *addr, socklen_t len, int type)
 	assert(addr != NULL);
 	assert(__SocketBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (addr == NULL)
-		{
-			SHOWMSG("invalid addr parameter");
+    if (addr == NULL)
+    {
+        SHOWMSG("invalid addr parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	PROFILE_OFF();
 	result = __gethostbyaddr((STRPTR)addr, len, type);
-	PROFILE_ON();
 
 out:
 

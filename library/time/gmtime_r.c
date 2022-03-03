@@ -31,41 +31,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _STDLIB_PROTOS_H
+#include "stdlib_protos.h"
+#endif /* _STDLIB_PROTOS_H */
 
 struct tm *
-gmtime_r(const time_t *t,struct tm * tm_ptr)
-{
-	struct tm * result = NULL;
+gmtime_r(const time_t *t, struct tm *tm_ptr) {
+    struct tm *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	assert( t != NULL && tm_ptr != NULL );
+    assert(t != NULL && tm_ptr != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(t == NULL || tm_ptr == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (t == NULL || tm_ptr == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	result = __convert_time((*t), 0, tm_ptr);
+    result = __convert_time((*t), 0, tm_ptr);
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

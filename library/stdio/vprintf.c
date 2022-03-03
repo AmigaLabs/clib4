@@ -31,47 +31,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 int
-vprintf(const char *format,va_list arg)
-{
-	int result = EOF;
+vprintf(const char *format, va_list arg) {
+    int result = EOF;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(format);
-	SHOWPOINTER(arg);
+    SHOWSTRING(format);
+    SHOWPOINTER(arg);
 
-	assert( format != NULL && arg != NULL );
+    assert(format != NULL && arg != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(format == NULL || arg == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (format == NULL || arg == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	result = vfprintf(stdout,format,arg);
+    result = vfprintf(stdout, format, arg);
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

@@ -41,17 +41,9 @@
 #ifndef _SYS_IOCCOM_H
 #define _SYS_IOCCOM_H
 
-/****************************************************************************/
+#include <features.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #define	IOCPARM_MASK	0x1fff		/* parameter length, at most 13 bits */
 #define	IOCPARM_LEN(x)	(((x) >> 16) & IOCPARM_MASK)
@@ -74,12 +66,6 @@ extern "C" {
 #define	_IOW(g,n,t)		_IOC(IOC_IN,	(g), (n), sizeof(t))
 #define	_IOWR(g,n,t)	_IOC(IOC_INOUT,	(g), (n), sizeof(t))
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_IOCCOM_H */

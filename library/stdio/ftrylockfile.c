@@ -31,61 +31,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
 int
-ftrylockfile(FILE *stream)
-{
-	struct iob * file = (struct iob *)stream;
-	int result = ERROR;
+ftrylockfile(FILE *stream) {
+    struct iob *file = (struct iob *) stream;
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(stream);
+    SHOWPOINTER(stream);
 
-	assert( stream != NULL );
+    assert(stream != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(stream == NULL)
-		{
-			SHOWMSG("invalid stream parameter");
+    if (stream == NULL) {
+        SHOWMSG("invalid stream parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	assert( __is_valid_iob(file) );
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
+    assert(__is_valid_iob(file));
+    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 
-	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_IN_USE))
-	{
-		SHOWMSG("this file is not even in use");
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
+        SHOWMSG("this file is not even in use");
 
-		__set_errno(EBADF);
-		goto out;
-	}
+        __set_errno(EBADF);
+        goto out;
+    }
 
-	if(file->iob_Lock != NULL && CANNOT AttemptSemaphore(file->iob_Lock))
-		goto out;
+    if (file->iob_Lock != NULL && CANNOT AttemptSemaphore(file->iob_Lock))
+    goto out;
 
-	result = OK;
+    result = OK;
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

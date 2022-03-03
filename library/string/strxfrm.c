@@ -31,12 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
@@ -44,8 +38,6 @@
 #ifndef _LOCALE_HEADERS_H
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
-
-/****************************************************************************/
 
 size_t
 strxfrm(char *dest, const char *src, size_t len)
@@ -61,17 +53,13 @@ strxfrm(char *dest, const char *src, size_t len)
 
 	assert(src != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (src == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (src == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	__locale_lock();
 

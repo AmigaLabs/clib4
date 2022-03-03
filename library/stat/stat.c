@@ -31,12 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STAT_HEADERS_H
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
@@ -48,12 +42,6 @@
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 int stat(const char *path_name, struct stat *st)
 {
@@ -75,17 +63,13 @@ int stat(const char *path_name, struct stat *st)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL || st == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (path_name == NULL || st == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -113,9 +97,7 @@ int stat(const char *path_name, struct stat *st)
 
 			memset(st, 0, sizeof(*st));
 
-			PROFILE_OFF();
 			DateStamp(&ds);
-			PROFILE_ON();
 
 			mtime = __convert_datestamp_to_time(&ds);
 
@@ -135,10 +117,7 @@ int stat(const char *path_name, struct stat *st)
 
 	D(("trying to get a lock on '%s'", path_name));
 
-	PROFILE_OFF();
 	file_lock = Lock((STRPTR)path_name, SHARED_LOCK);
-	PROFILE_ON();
-
 	if (file_lock == ZERO)
 	{
 		SHOWMSG("that didn't work");
@@ -147,10 +126,7 @@ int stat(const char *path_name, struct stat *st)
 		goto out;
 	}
 
-	PROFILE_OFF();
 	fib = ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE);
-	PROFILE_ON();
-
 	if (fib == NULL)
 	{
 		SHOWMSG("couldn't examine it");
@@ -167,13 +143,11 @@ int stat(const char *path_name, struct stat *st)
 
 out:
 
-	PROFILE_OFF();
 	if (fib != NULL) {
 		FreeDosObject(DOS_EXAMINEDATA, fib);
 	}
 
 	UnLock(file_lock);
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

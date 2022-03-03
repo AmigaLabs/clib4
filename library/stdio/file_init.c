@@ -85,8 +85,6 @@ FILE_DESTRUCTOR(workbench_exit)
 {
 	ENTER();
 
-	PROFILE_OFF();
-
 	/* Now clean up after the streams set up for Workbench startup... */
 	if (restore_console_task)
 	{
@@ -119,8 +117,6 @@ FILE_DESTRUCTOR(workbench_exit)
 		output = ZERO;
 	}
 
-	PROFILE_ON();
-
 	LEAVE();
 }
 
@@ -130,8 +126,6 @@ STATIC int
 wb_file_init(void)
 {
 	int result = ERROR;
-
-	PROFILE_OFF();
 
 	__original_current_directory = CurrentDir(__WBenchMsg->sm_ArgList[0].wa_Lock);
 	__current_directory_changed = TRUE;
@@ -200,8 +194,6 @@ wb_file_init(void)
 
 out:
 
-	PROFILE_ON();
-
 	return (result);
 }
 
@@ -238,8 +230,6 @@ FILE_CONSTRUCTOR(stdio_file_init)
 	/* Now initialize the standard I/O streams (input, output, error). */
 	for (i = STDIN_FILENO; i <= STDERR_FILENO; i++)
 	{
-		PROFILE_OFF();
-
 		switch (i)
 		{
 		case STDIN_FILENO:
@@ -264,8 +254,6 @@ FILE_CONSTRUCTOR(stdio_file_init)
 			default_file = ZERO; /* NOTE: this is really initialized later; see below... */
 			break;
 		}
-
-		PROFILE_ON();
 
 		/* Allocate a little more memory than necessary. */
 		buffer = malloc(BUFSIZ + (__cache_line_size - 1));
@@ -313,22 +301,15 @@ FILE_CONSTRUCTOR(stdio_file_init)
 		   standard error stream. */
 		if (__WBenchMsg != NULL)
 		{
-			PROFILE_OFF();
 			__fd[STDERR_FILENO]->fd_File = Output();
-			PROFILE_ON();
-
 			SET_FLAG(__fd[STDERR_FILENO]->fd_Flags, FDF_NO_CLOSE);
 		}
 		else
 		{
 			BPTR ces;
 
-			PROFILE_OFF();
-
 			/* Figure out what the default error output stream is. */
 			ces = ErrorOutput();
-
-			PROFILE_ON();
 
 			/* Is the standard error stream configured? If so, use it.
 			   Otherwise, try to duplicate the standard output stream. */
@@ -344,16 +325,12 @@ FILE_CONSTRUCTOR(stdio_file_init)
 			}
 		}
 
-		PROFILE_OFF();
-
 		/* Figure out if the standard error stream is bound to a console. */
 		if (FLAG_IS_CLEAR(__fd[STDERR_FILENO]->fd_Flags, FDF_STDIO))
 		{
 			if (IsInteractive(__fd[STDERR_FILENO]->fd_File))
 				SET_FLAG(__fd[STDERR_FILENO]->fd_Flags, FDF_IS_INTERACTIVE);
 		}
-
-		PROFILE_ON();
 	}
 #endif /* __THREAD_SAFE */
 

@@ -34,24 +34,12 @@
 #ifndef _FCNTL_HEADERS_H
 #define _FCNTL_HEADERS_H
 
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
-
-/****************************************************************************/
-
-#ifndef _STDLIB_PROFILE_H
-#include "stdlib_profile.h"
-#endif /* _STDLIB_PROFILE_H */
-
-/****************************************************************************/
 
 #endif /* _FCNTL_HEADERS_H */

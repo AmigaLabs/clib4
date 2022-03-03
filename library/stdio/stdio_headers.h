@@ -118,14 +118,6 @@
 #include "math_fp_support.h"
 #endif /* _MATH_FP_SUPPORT_H */
 
-/****************************************************************************/
-
-#ifndef _STDLIB_PROFILE_H
-#include "stdlib_profile.h"
-#endif /* _STDLIB_PROFILE_H */
-
-/****************************************************************************/
-
 #ifndef _MACROS_H
 #include "macros.h"
 #endif /* _MACROS_H */

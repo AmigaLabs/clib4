@@ -64,7 +64,6 @@ gettimeofday(struct timeval *tp, struct timezone *tzp)
 	ENTER();
 
 	/* Obtain the current system time. */
-	PROFILE_OFF();
 
 #if defined(__NEW_TIMEVAL_DEFINITION_USED__)
 	{
@@ -85,8 +84,6 @@ gettimeofday(struct timeval *tp, struct timezone *tzp)
 		microseconds = tv.tv_usec;
 	}
 #endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
-
-	PROFILE_ON();
 
 	/* Convert the number of seconds so that they match the Unix epoch, which
 	   starts (January 1st, 1970) eight years before the AmigaOS epoch. */

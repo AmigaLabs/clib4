@@ -31,21 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 /* ZZZ chdir() must be reentrant according to POSIX.1 */
 int chdir(const char *path_name)
@@ -66,17 +54,13 @@ int chdir(const char *path_name)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL)
-		{
-			SHOWMSG("invalid path name");
+    if (path_name == NULL)
+    {
+        SHOWMSG("invalid path name");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -114,20 +98,14 @@ int chdir(const char *path_name)
 
 	D(("trying to get a lock on '%s'", path_name));
 
-	PROFILE_OFF();
 	dir_lock = Lock((STRPTR)path_name, SHARED_LOCK);
-	PROFILE_ON();
-
 	if (dir_lock == ZERO)
 	{
 		__set_errno(__translate_access_io_error_to_errno(IoErr()));
 		goto out;
 	}
 
-	PROFILE_OFF();
 	status = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
-	PROFILE_ON();
-
 	if (status == NULL)
 	{
 		__set_errno(__translate_io_error_to_errno(IoErr()));
@@ -141,8 +119,6 @@ int chdir(const char *path_name)
 		__set_errno(ENOTDIR);
 		goto out;
 	}
-
-	PROFILE_OFF();
 
 	if (__current_directory_changed)
 	{
@@ -162,8 +138,6 @@ int chdir(const char *path_name)
 
 	__unlock_current_directory = TRUE;
 
-	PROFILE_ON();
-
 	dir_lock = ZERO;
 
 #if defined(UNIX_PATH_SEMANTICS)
@@ -182,9 +156,7 @@ out:
 		FreeDosObject(DOS_EXAMINEDATA, status);
 	}
 	
-	PROFILE_OFF();
 	UnLock(dir_lock);
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

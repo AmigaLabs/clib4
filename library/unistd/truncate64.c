@@ -32,10 +32,6 @@
  */
 #define _GNU_SOURCE
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
@@ -55,17 +51,13 @@ int truncate64(const char *path_name, _off64_t length)
     if (__check_abort_enabled)
         __check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
+    if (path_name == NULL)
     {
-        if (path_name == NULL)
-        {
-            SHOWMSG("invalid path name");
+        SHOWMSG("invalid path name");
 
-            __set_errno(EFAULT);
-            goto out;
-        }
+        __set_errno(EFAULT);
+        goto out;
     }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
     if (length < 0)
     {

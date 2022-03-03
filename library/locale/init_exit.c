@@ -132,8 +132,6 @@ int __locale_init(void)
 
 	ENTER();
 
-	PROFILE_OFF();
-
 	__locale_lock();
 
 	if (__LocaleBase == NULL)
@@ -176,8 +174,6 @@ int __locale_init(void)
 	}
 
 	__locale_unlock();
-
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

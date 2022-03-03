@@ -77,12 +77,8 @@ __obtain_daemon_message(VOID) {
             tags[0].ti_Data = (ULONG) & have_server_api;
             tags[1].ti_Tag = TAG_END;
 
-            PROFILE_OFF();
-
             if (__SocketBaseTagList(tags) != 0)
                 have_server_api = FALSE;
-
-            PROFILE_ON();
 
             /* If it's safe to call ProcessIsServer(), ask if the
                "struct DaemonMessage" pointer is valid. If it's not,
@@ -102,10 +98,7 @@ __obtain_daemon_message(VOID) {
 
             /* Try to grab that socket and attach is to the three
                standard I/O streams. */
-
-            PROFILE_OFF();
             daemon_socket = __ObtainSocket(dm->dm_ID, dm->dm_Family, dm->dm_Type, 0);
-            PROFILE_ON();
 
             if (daemon_socket == -1) {
                 __show_error("Network server streams could not be initialized.");
@@ -134,10 +127,7 @@ __obtain_daemon_message(VOID) {
                 if (i == STDIN_FILENO) {
                     sockfd = daemon_socket;
                 } else {
-                    PROFILE_OFF();
                     sockfd = __Dup2Socket(daemon_socket, -1);
-                    PROFILE_ON();
-
                     if (sockfd == -1) {
                         SHOWMSG("could not duplicate daemon socket");
 

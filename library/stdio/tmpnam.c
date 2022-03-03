@@ -39,86 +39,75 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 char *
-tmpnam(char *buf)
-{
-	static char local_buffer[L_tmpnam];
-	static unsigned long counter;
+tmpnam(char *buf) {
+    static char local_buffer[L_tmpnam];
+    static unsigned long counter;
 
-	APTR old_window_pointer;
-	unsigned long c;
-	char * result = NULL; /* ZZZ compiler claims that this assignment is unnecessary. */
-	BPTR lock;
-	int i;
+    APTR old_window_pointer;
+    unsigned long c;
+    char *result = NULL; /* ZZZ compiler claims that this assignment is unnecessary. */
+    BPTR lock;
+    int i;
 
-	ENTER();
+    ENTER();
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	/* If no user-supplied buffer is available, use the local one. */
-	if(buf == NULL)
-		buf = local_buffer;
+    /* If no user-supplied buffer is available, use the local one. */
+    if (buf == NULL)
+        buf = local_buffer;
 
-	while(TRUE)
-	{
-		if(__check_abort_enabled)
-			__check_abort();
+    while (TRUE) {
+        if (__check_abort_enabled)
+            __check_abort();
 
-		c = counter;
+        c = counter;
 
-		counter = (counter + 1) % TMP_MAX;
+        counter = (counter + 1) % TMP_MAX;
 
-		/* Build another temporary file name, which begins with the
-		   letters 'tmp' followed by an octal number. */
-		strcpy(buf,"tmp");
+        /* Build another temporary file name, which begins with the
+           letters 'tmp' followed by an octal number. */
+        strcpy(buf, "tmp");
 
-		/* There's room for L_tmpnam - 4 digits, which for
-		   L_tmpnam == 10 leaves room for 6 * 3 bits. */
-		for(i = 3 ; i < L_tmpnam-1 ; i++)
-		{
-			buf[i] = '0' + (c % 8);
-			c = (c / 8);
-		}
+        /* There's room for L_tmpnam - 4 digits, which for
+           L_tmpnam == 10 leaves room for 6 * 3 bits. */
+        for (i = 3; i < L_tmpnam - 1; i++) {
+            buf[i] = '0' + (c % 8);
+            c = (c / 8);
+        }
 
-		buf[i] = '\0';
+        buf[i] = '\0';
 
-		D(("checking if '%s' exists",buf));
+        D(("checking if '%s' exists", buf));
 
-		/* Turn off DOS error requesters. */
-		old_window_pointer = __set_process_window((APTR)-1);
+        /* Turn off DOS error requesters. */
+        old_window_pointer = __set_process_window((APTR) - 1);
 
-		/* Does this object exist already? */
-		PROFILE_OFF();
-		lock = Lock(buf,SHARED_LOCK);
-		PROFILE_ON();
+        /* Does this object exist already? */
+        lock = Lock(buf, SHARED_LOCK);
 
-		/* Restore DOS requesters. */
-		__set_process_window(old_window_pointer);
+        /* Restore DOS requesters. */
+        __set_process_window(old_window_pointer);
 
-		if(lock == ZERO)
-		{
-			/* If the object does not exist yet then we
-			   are finished. */
-			if(IoErr() == ERROR_OBJECT_NOT_FOUND)
-				result = buf;
-			else
-				__set_errno(__translate_io_error_to_errno(IoErr()));
+        if (lock == ZERO) {
+            /* If the object does not exist yet then we
+               are finished. */
+            if (IoErr() == ERROR_OBJECT_NOT_FOUND)
+                result = buf;
+            else
+                __set_errno(__translate_io_error_to_errno(IoErr()));
 
-			break;
-		}
+            break;
+        }
 
-		/* OK, so it exists already. Start over... */
+        /* OK, so it exists already. Start over... */
+        UnLock(lock);
+    }
 
-		PROFILE_OFF();
-		UnLock(lock);
-		PROFILE_ON();
-	}
+    SHOWSTRING(result);
 
-	SHOWSTRING(result);
-
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

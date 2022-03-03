@@ -41,49 +41,23 @@
 #ifndef _ASSERT_H
 #define _ASSERT_H
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #ifndef assert
-
-/****************************************************************************/
-
 #ifndef NDEBUG
 
-/****************************************************************************/
-
-extern void __assertion_failure(const char *file_name,int line_number,const char * expression);
-
-/****************************************************************************/
+extern void __assertion_failure(const char *file_name, int line_number, const char *expression);
 
 #define assert(expression) \
-	((void)((expression) ? 0 : (__assertion_failure(__FILE__,__LINE__,#expression),0)))
+    ((void)((expression) ? 0 : (__assertion_failure(__FILE__,__LINE__,#expression),0)))
 
 #else
-
-/****************************************************************************/
-
 #define assert(expression) ((void)0)
-
-/****************************************************************************/
-
 #endif /* NDEBUG */
-
-/****************************************************************************/
-
 #endif /* assert */
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _ASSERT_H */

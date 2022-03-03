@@ -134,7 +134,7 @@ extern int fwide(FILE *stream, int orient);
 extern wint_t fgetwc(FILE *stream);
 extern wint_t getwc(FILE *stream);
 extern wint_t getwchar(void);
-extern wint_t ungetwc(wint_t c, FILE *stream);
+extern wint_t ungetwc(wint_t wc, FILE *fp);
 
 /****************************************************************************/
 
@@ -183,7 +183,7 @@ extern size_t wcsftime(wchar_t *s, size_t maxsize, const wchar_t *format, const 
 extern size_t mbrlen(const char *restrict s, size_t n, mbstate_t *restrict ps);
 extern size_t mbrtowc(wchar_t *pwc, const char *src, size_t n, mbstate_t *ps);
 extern int mbsinit(const mbstate_t *ps);
-extern size_t mbsnrtowcs(wchar_t *restrict dst, const char **restrict src, size_t nmc, size_t len, mbstate_t *restrict ps);
+extern size_t mbsnrtowcs(wchar_t *dst, const char **restrict src, size_t nmc, size_t len, mbstate_t *restrict ps);
 extern size_t mbsrtowcs(wchar_t *restrict dst, const char **restrict src, size_t len, mbstate_t *restrict ps);
 
 extern size_t wcrtomb(char *restrict s, wchar_t wc, mbstate_t *restrict ps);

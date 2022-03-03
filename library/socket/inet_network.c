@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
@@ -49,21 +45,15 @@ inet_network(const char *cp)
 	assert(cp != NULL);
 	assert(__SocketBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (cp == NULL)
-		{
-			SHOWMSG("invalid cp parameter");
+    if (cp == NULL)
+    {
+        SHOWMSG("invalid cp parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	PROFILE_OFF();
 	result = __inet_network((char *)cp);
-	PROFILE_ON();
 
 out:
 

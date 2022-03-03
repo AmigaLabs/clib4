@@ -31,21 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STAT_HEADERS_H
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 int rmdir(const char *path_name)
 {
@@ -66,17 +54,13 @@ int rmdir(const char *path_name)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL)
-		{
-			SHOWMSG("invalid path name parameter");
+    if (path_name == NULL)
+    {
+        SHOWMSG("invalid path name parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -102,10 +86,7 @@ int rmdir(const char *path_name)
 
 	D(("trying to get a lock on '%s'", path_name));
 
-	PROFILE_OFF();
 	dir_lock = Lock((STRPTR)path_name, SHARED_LOCK);
-	PROFILE_ON();
-
 	if (dir_lock == ZERO)
 	{
 		SHOWMSG("that didn't work");
@@ -114,10 +95,7 @@ int rmdir(const char *path_name)
 		goto out;
 	}
 
-	PROFILE_OFF();
 	fib = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
-	PROFILE_ON();
-
 	if (fib == NULL)
 	{
 		SHOWMSG("couldn't examine it");
@@ -134,18 +112,13 @@ int rmdir(const char *path_name)
 		goto out;
 	}
 
-	PROFILE_OFF();
 	UnLock(dir_lock);
-	PROFILE_ON();
 
 	dir_lock = ZERO;
 
 	SHOWMSG("trying to delete it");
 
-	PROFILE_OFF();
 	status = DeleteFile((STRPTR)path_name);
-	PROFILE_ON();
-
 	if (status == DOSFALSE)
 	{
 		SHOWMSG("that didn't work");
@@ -162,9 +135,7 @@ out:
 		FreeDosObject(DOS_EXAMINEDATA, fib);
 	}
 
-	PROFILE_OFF();
 	UnLock(dir_lock);
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

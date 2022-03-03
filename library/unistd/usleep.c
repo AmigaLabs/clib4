@@ -35,25 +35,19 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
+int
+usleep(unsigned long microseconds) {
+    int retval;
+    ENTER();
 
-/* The following is not part of the ISO 'C' (1994) standard. */
+    SHOWVALUE(microseconds);
 
-/****************************************************************************/
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = microseconds;
 
-int usleep(unsigned long microseconds)
-{
-	int retval;
-	ENTER();
+    retval = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
 
-	SHOWVALUE(microseconds);
-
-	struct timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = microseconds;
-
-	retval = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
-
-	RETURN(retval);
-	return retval;
+    RETURN(retval);
+    return retval;
 }

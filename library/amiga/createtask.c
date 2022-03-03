@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/****************************************************************************/
+#include <proto/exec.h>
 
 #include <exec/libraries.h>
 #include <exec/memory.h>
@@ -39,208 +39,37 @@
 
 #include <string.h>
 
-/****************************************************************************/
-
-#include <proto/exec.h>
-#include <clib/alib_protos.h>
-
-/****************************************************************************/
-
-#ifndef _STDLIB_PROFILE_H
-#include "stdlib_profile.h"
-#endif /* _STDLIB_PROFILE_H */
-
-/****************************************************************************/
-
 #include "macros.h"
 #include "debug.h"
-
-/****************************************************************************/
-
-#ifndef __PPC__
-
-/****************************************************************************/
-
-/*
- *  Create a task with given name, priority, and stack size.
- *  It will use the default exception and trap handlers for now.
- */
-
-/****************************************************************************/
-
-/* the template for the mementries.  Unfortunately, this is hard to
- * do from C: mementries have unions, and they cannot be statically
- * initialized...
- *
- * In the interest of simplicity I recreate the mem entry structures
- * here with appropriate sizes.  We will copy this to a local
- * variable and set the stack size to what the user specified,
- * then attempt to actually allocate the memory.
- */
-
-#define ME_TASK 	0
-#define ME_STACK	1
-
-#define NUM_MEM_ENTRIES	2
-
-/****************************************************************************/
-
-struct FakeMemEntry
-{
-	ULONG fme_Reqs;
-	ULONG fme_Size;
-};
-
-/****************************************************************************/
-
-struct FakeMemList
-{
-	struct Node			fml_Node;
-	UWORD				fml_NumEntries;
-	struct FakeMemEntry	fml_ME[NUM_MEM_ENTRIES];
-};
-
-/****************************************************************************/
-
-struct Task *
-CreateTask(CONST_STRPTR name,LONG pri,CONST APTR init_pc,ULONG stack_size)
-{
-	struct Task * new_task;
-	struct FakeMemList fake_mem_list;
-	struct MemList * ml = NULL;
-	APTR result = NULL;
-
-	ENTER();
-
-	SHOWSTRING(name);
-	SHOWVALUE(pri);
-	SHOWPOINTER(init_pc);
-	SHOWVALUE(stack_size);
-
-	assert( name != NULL && (-128 <= pri && pri <= 127) && init_pc != NULL && stack_size > 0 );
-
-	if(name == NULL || pri < -128 || pri > 127 || init_pc == NULL || stack_size == 0)
-	{
-		SHOWMSG("invalid parameters");
-		goto out;
-	}
-
-	/* round the stack up to longwords... */
-	stack_size = (stack_size + 3UL) & ~3UL;
-
-	/*
-	 * This will allocate two chunks of memory: task of PUBLIC
-	 * and stack of PRIVATE
-	 */
-	memset(&fake_mem_list,0,sizeof(fake_mem_list));
-
-	fake_mem_list.fml_NumEntries			= NUM_MEM_ENTRIES;
-	fake_mem_list.fml_ME[ME_TASK].fme_Reqs	= MEMF_PUBLIC | MEMF_CLEAR;
-	fake_mem_list.fml_ME[ME_TASK].fme_Size	= sizeof(struct Task);
-	fake_mem_list.fml_ME[ME_STACK].fme_Reqs	= MEMF_ANY | MEMF_CLEAR;
-	fake_mem_list.fml_ME[ME_STACK].fme_Size	= stack_size;
-
-	ml = (struct MemList *)AllocEntry((struct MemList *)&fake_mem_list);
-
-	/* Did the allocation succeed? */
-	if(((LONG)ml) < 0)
-	{
-		SHOWMSG("memory allocation failed");
-
-		/* Note: if AllocEntry() fails, the entire allocation is
-		 *       released before the function returns with bit #31
-		 *       set and the number of the slot that failed being
-		 *       returned. Thus, the return value is not a valid
-		 *       address that would need to be freed.
-		 */
-		ml = NULL;
-		goto out;
-	}
-
-	/* set the stack accounting stuff */
-	new_task = (struct Task *)ml->ml_ME[ME_TASK].me_Addr;
-
-	new_task->tc_SPLower	= ml->ml_ME[ME_STACK].me_Addr;
-	new_task->tc_SPUpper	= (APTR)((ULONG)(new_task->tc_SPLower) + stack_size);
-	new_task->tc_SPReg		= new_task->tc_SPUpper;
-
-	/* misc task data structures */
-	new_task->tc_Node.ln_Type	= NT_TASK;
-	new_task->tc_Node.ln_Pri	= pri;
-	new_task->tc_Node.ln_Name	= (char *)name;
-
-	/* add it to the tasks memory list */
-	NewList(&new_task->tc_MemEntry);
-	AddHead(&new_task->tc_MemEntry,(struct Node *)ml);
-
-	/* add the task to the system -- use the default final PC */
-
-	PROFILE_OFF();
-	result = AddTask(new_task,init_pc,NULL);
-	PROFILE_ON();
-
-	if(result == NULL)
-	{
-		SHOWMSG("could not add task");
-		goto out;
-	}
-
-	/* Gobbled up by task. */
-	ml = NULL;
-
- out:
-
-	if(ml != NULL)
-		FreeEntry(ml);
-
-	RETURN(result);
-	return(result);
-}
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
 
 #if defined(CreateTask)
 #undef CreateTask
 #endif /* CreateTask */
 
-/****************************************************************************/
-
-struct Task * CreateTask(CONST_STRPTR name,LONG pri,CONST APTR init_pc,ULONG stack_size);
-
-/****************************************************************************/
+struct Task *CreateTask(CONST_STRPTR name, LONG pri, CONST APTR init_pc, ULONG stack_size);
 
 struct Task *
-CreateTask(CONST_STRPTR name,LONG pri,CONST APTR init_pc,ULONG stack_size)
-{
-	struct Task * result = NULL;
+CreateTask(CONST_STRPTR name, LONG pri, CONST APTR init_pc, ULONG stack_size) {
+    struct Task *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(name);
-	SHOWVALUE(pri);
-	SHOWPOINTER(init_pc);
-	SHOWVALUE(stack_size);
+    SHOWSTRING(name);
+    SHOWVALUE(pri);
+    SHOWPOINTER(init_pc);
+    SHOWVALUE(stack_size);
 
-	assert( name != NULL && (-128 <= pri && pri <= 127) && init_pc != NULL && stack_size > 0 );
+    assert(name != NULL && (-128 <= pri && pri <= 127) && init_pc != NULL && stack_size > 0);
 
-	if(name == NULL || pri < -128 || pri > 127 || init_pc == NULL || stack_size == 0)
-	{
-		SHOWMSG("invalid parameters");
-		goto out;
-	}
+    if (name == NULL || pri < -128 || pri > 127 || init_pc == NULL || stack_size == 0) {
+        SHOWMSG("invalid parameters");
+        goto out;
+    }
 
-	result = IExec->CreateTask(name,pri,init_pc,stack_size,NULL);
+    result = IExec->CreateTask(name, pri, init_pc, stack_size, NULL);
 
- out:
+    out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }
-
-/****************************************************************************/
-
-#endif /* __PPC__ */

@@ -200,10 +200,8 @@ extern void __slab_exit(void);
 
 /****************************************************************************/
 
-#ifndef USE_AVL
 extern struct MinList NOCOMMON		__memory_list;
 extern APTR NOCOMMON				__memory_pool;
-#endif
 
 extern unsigned long NOCOMMON __maximum_memory_allocated;
 extern unsigned long NOCOMMON __current_memory_allocated;
@@ -218,10 +216,6 @@ extern int NOCOMMON __default_puddle_size;
 extern void __memory_lock(void);
 extern void __memory_unlock(void);
 
-#ifdef USE_AVL
-extern int32 AVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2);
-extern int32 AVLKeyComp(struct AVLNode *avlnode1, AVLKey key2);
-#endif
 extern int32 MemalignAVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2);
 extern int32 MemalignAVLKeyComp(struct AVLNode *avlnode1, AVLKey key2);
 

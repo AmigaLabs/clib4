@@ -31,12 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
@@ -45,21 +39,11 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #undef strdup
-
-/****************************************************************************/
 
 __static char *
 __strdup(const char *s,const char * file,int line)
@@ -69,15 +53,10 @@ __strdup(const char *s,const char * file,int line)
 
 	assert( s != NULL );
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(s == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (s == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	total_size = strlen(s)+1;
 

@@ -31,47 +31,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _SIGNAL_HEADERS_H
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-sigemptyset(sigset_t * set)
-{
-	int result = ERROR;
+sigemptyset(sigset_t *set) {
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	assert( set != NULL );
+    assert(set != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(set == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (set == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	(*set) = 0;
+    (*set) = 0;
 
-	result = OK;
+    result = OK;
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

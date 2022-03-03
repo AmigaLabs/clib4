@@ -35,13 +35,8 @@
 #include "dirent_headers.h"
 #endif /* _DIRENT_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-void rewinddir(DIR *directory_pointer)
+void
+rewinddir(DIR *directory_pointer)
 {
 	ENTER();
 
@@ -49,8 +44,6 @@ void rewinddir(DIR *directory_pointer)
 
 	if (__check_abort_enabled)
 		__check_abort();
-
-	PROFILE_OFF();
 
 	if (directory_pointer != NULL)
 	{
@@ -77,8 +70,6 @@ void rewinddir(DIR *directory_pointer)
 			}
 		}
 	}
-
-	PROFILE_ON();
 
 	LEAVE();
 }

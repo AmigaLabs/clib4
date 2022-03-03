@@ -56,9 +56,7 @@ int listen(int sockfd, int backlog)
 	if (fd == NULL)
 		goto out;
 
-	PROFILE_OFF();
 	result = __listen(fd->fd_Socket, backlog);
-	PROFILE_ON();
 
 out:
 

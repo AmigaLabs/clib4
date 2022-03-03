@@ -45,25 +45,13 @@
 
 #include <sys/types.h> /* For the definition of rlim_t */
 #include <sys/time.h>
+#include <features.h>
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
-
-	/****************************************************************************/
-
-	/* The following is not part of the ISO 'C' (1994) standard. */
-
-	/****************************************************************************/
+__BEGIN_DECLS
 
 #define RLIM_INFINITY 0xffffffffUL
 #define RLIM_SAVED_MAX (RLIM_INFINITY - 1)
 #define RLIM_SAVED_CUR (RLIM_INFINITY - 2)
-
-	/****************************************************************************/
 
 #define RLIM_VMEM 1
 #define RLIM_AS RLIM_VMEM
@@ -84,8 +72,6 @@ extern "C"
 #define RLIMIT_DATA RLIM_DATA	  /* max data size */
 #define RLIMIT_STACK RLIM_STACK	  /* max stack size */
 #define RLIMIT_CORE RLIM_CORE	  /* max core file size */
-
-/****************************************************************************/
 
 struct rlimit
 {
@@ -113,25 +99,15 @@ struct rusage
 	long ru_nivcsw;			 /* involuntary context switches */
 };
 
-/****************************************************************************/
-
 #define RUSAGE_SELF     0
 #define RUSAGE_CHILDREN (-1)
 #define RUSAGE_BOTH     (-2) /* sys_wait4() uses this */
 #define RUSAGE_THREAD   1    /* only the calling thread */
 
-/****************************************************************************/
-
 extern int getrlimit(int resource, struct rlimit *rlp);
 extern int setrlimit(int resource, const struct rlimit *rlp);
 extern int getrusage(int who, struct rusage *usage);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_RESOURCE_H */

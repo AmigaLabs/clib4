@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
@@ -57,17 +53,13 @@ recvfrom(int sockfd, void *buff, size_t len, int flags, struct sockaddr *from, s
 	assert(buff != NULL && from != NULL && fromlen != NULL);
 	assert(__SocketBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (buff == NULL || from == NULL || fromlen == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (buff == NULL || from == NULL || fromlen == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	assert(sockfd >= 0 && sockfd < __num_fd);
 	assert(__fd[sockfd] != NULL);
@@ -78,9 +70,7 @@ recvfrom(int sockfd, void *buff, size_t len, int flags, struct sockaddr *from, s
 	if (fd == NULL)
 		goto out;
 
-	PROFILE_OFF();
 	result = __recvfrom(fd->fd_Socket, buff, len, flags, from, (LONG *)fromlen);
-	PROFILE_ON();
 
 out:
 

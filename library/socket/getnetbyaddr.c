@@ -44,9 +44,7 @@ getnetbyaddr(in_addr_t net, int type)
 
 	assert(__SocketBase != NULL);
 
-	PROFILE_OFF();
 	result = __getnetbyaddr((ULONG)net, type);
-	PROFILE_ON();
 
 out:
 

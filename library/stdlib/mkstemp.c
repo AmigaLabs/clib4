@@ -31,61 +31,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #include <fcntl.h>
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-mkstemp(char *name_template)
-{
-	int result = ERROR;
+mkstemp(char *name_template) {
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(name_template);
+    SHOWSTRING(name_template);
 
-	assert( name_template != NULL );
+    assert(name_template != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(name_template == NULL)
-		{
-			SHOWMSG("invalid name template");
+    if (name_template == NULL) {
+        SHOWMSG("invalid name template");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	if(mktemp(name_template) == NULL)
-	{
-		SHOWMSG("could not pick temp name");
-		goto out;
-	}
+    if (mktemp(name_template) == NULL) {
+        SHOWMSG("could not pick temp name");
+        goto out;
+    }
 
-	SHOWSTRING(name_template);
+    SHOWSTRING(name_template);
 
-	result = open(name_template,O_RDWR|O_CREAT|O_TRUNC,0600);
+    result = open(name_template, O_RDWR | O_CREAT | O_TRUNC, 0600);
 
- out:
+    out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

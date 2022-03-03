@@ -57,9 +57,7 @@ gid_t getegid(void)
 	}
 	else
 	{
-		PROFILE_OFF();
 		result = __getegid();
-		PROFILE_ON();
 	}
 
 	if (__check_abort_enabled)

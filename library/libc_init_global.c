@@ -166,21 +166,6 @@ STDLIB_CONSTRUCTOR(global_init)
                                                             ASOITEM_GCParameter, 1000,
                                                             TAG_DONE);
 
-#ifdef USE_AVL
-        __global_clib2->__memory_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
-                                                        ASO_NoTrack,         FALSE,
-                                                        ASO_MemoryOvr,       MEMF_PRIVATE,
-                                                        ASOITEM_MFlags,      MEMF_PRIVATE,
-                                                        ASOITEM_ItemSize ,   sizeof(struct AVLMemoryNode),
-                                                        ASOITEM_BatchSize,   408,
-                                                        ASOITEM_GCPolicy,    ITEMGC_AFTERCOUNT,
-                                                        ASOITEM_GCParameter, 1000,
-                                                        TAG_DONE);
-        if (!__global_clib2->__memory_pool) {
-            goto out;
-        }
-#endif
-
 		/* Check is SYSV library is available in the system */
 		__global_clib2->haveShm = FALSE;
 		__SysVBase = OpenLibrary("sysvipc.library", 53);
@@ -258,19 +243,6 @@ STDLIB_DESTRUCTOR(global_exit)
     /* Free global clib structure */
 	if (__global_clib2)
 	{
-#ifdef USE_AVL
-        if (__global_clib2->__memory_pool) {
-            struct AVLMemoryNode *memNode = (struct AVLMemoryNode *)AVL_FindFirstNode(__global_clib2->__memalign_tree);
-            while (memNode)
-            {
-                struct AVLMemoryNode *next = (struct AVLMemoryNode *)AVL_FindNextNodeByAddress(&memNode->amn_AvlNode);
-                FreeVec(memNode->amn_Address);
-                memNode = next;
-            }
-            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memory_pool);
-        }
-#endif
-
         /* Free memalign stuff */
 		if (&__global_clib2->__memalign_pool)
 		{

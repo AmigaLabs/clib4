@@ -85,10 +85,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
         goto out;
     }
 
-    PROFILE_OFF();
     parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-    PROFILE_ON();
-
     if (parent_dir == ZERO) {
         SHOWMSG("couldn't find parent directory");
 
@@ -96,10 +93,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
         goto out;
     }
 
-    PROFILE_OFF();
     success = Info(parent_dir, id);
-    PROFILE_ON();
-
     if (NO success) {
         SHOWMSG("couldn't get info on drive");
 

@@ -39,7 +39,7 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-static wint_t __fgetwc_unlocked_internal(FILE *f)
+wint_t __fgetwc_unlocked_internal(FILE *f)
 {
 	wchar_t wc;
 	int c;
@@ -70,7 +70,7 @@ static wint_t __fgetwc_unlocked_internal(FILE *f)
 	return wc;
 }
 
-static wint_t __fgetwc_unlocked(FILE *f)
+wint_t __fgetwc_unlocked(FILE *f)
 {
 	if ((f->_flags2 & __SWID) <= 0) 
 		fwide(f, 1);

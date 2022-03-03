@@ -56,8 +56,6 @@ int rename(const char *oldname, const char *newname)
 	if (__check_abort_enabled)
 		__check_abort();
 
-	PROFILE_OFF();
-
     if (oldname == NULL || newname == NULL)
     {
         SHOWMSG("invalid parameters");
@@ -142,8 +140,6 @@ int rename(const char *oldname, const char *newname)
 	result = OK;
 
 out:
-
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

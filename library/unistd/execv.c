@@ -35,18 +35,11 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-execv(const char *path,char * const argv[])
-{
-	int result;
+execv(const char *path, char *const argv[]) {
+    int result;
 
-	result = execve(path,argv,environ);
+    result = execve(path, argv, environ);
 
-	return(result);
+    return (result);
 }

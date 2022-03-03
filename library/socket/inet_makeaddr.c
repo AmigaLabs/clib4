@@ -44,9 +44,7 @@ inet_makeaddr(in_addr_t net, in_addr_t host)
 
 	assert(__SocketBase != NULL);
 
-	PROFILE_OFF();
 	result.s_addr = __Inet_MakeAddr((ULONG)net, (ULONG)host);
-	PROFILE_ON();
 
 	if (__check_abort_enabled)
 		__check_abort();

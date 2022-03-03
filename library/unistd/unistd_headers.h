@@ -46,14 +46,6 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
-#ifndef _STDLIB_PROFILE_H
-#include "stdlib_profile.h"
-#endif /* _STDLIB_PROFILE_H */
-
-/****************************************************************************/
-
 extern char NOCOMMON __current_path_name[MAXPATHLEN];
 
 /****************************************************************************/

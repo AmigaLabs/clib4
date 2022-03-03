@@ -42,14 +42,6 @@
 #include <proto/exec.h>
 #include <clib/alib_protos.h>
 
-/****************************************************************************/
-
-#ifndef _STDLIB_PROFILE_H
-#include "stdlib_profile.h"
-#endif /* _STDLIB_PROFILE_H */
-
-/****************************************************************************/
-
 #include "macros.h"
 #include "debug.h"
 
@@ -77,8 +69,6 @@ LONG DoTimer(struct timeval *tv, LONG unit, LONG command)
 	struct TimeRequest *tr = NULL;
 	struct MsgPort *mp;
 	LONG error;
-
-	PROFILE_OFF();
 
 	assert(tv != NULL);
 
@@ -129,8 +119,6 @@ out:
 
 	if (mp != NULL)
 		FreeSysObject(ASOT_PORT, mp);
-
-	PROFILE_ON();
 
 	return (error);
 }

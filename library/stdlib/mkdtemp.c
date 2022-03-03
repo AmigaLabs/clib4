@@ -31,65 +31,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #include <sys/stat.h>
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 char *
-mkdtemp(char *name_template)
-{
-	char * result = NULL;
+mkdtemp(char *name_template) {
+    char *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(name_template);
+    SHOWSTRING(name_template);
 
-	assert( name_template != NULL );
+    assert(name_template != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(name_template == NULL)
-		{
-			SHOWMSG("invalid name template");
+    if (name_template == NULL) {
+        SHOWMSG("invalid name template");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	if(mktemp(name_template) == NULL)
-	{
-		SHOWMSG("could not pick a temp name");
-		goto out;
-	}
+    if (mktemp(name_template) == NULL) {
+        SHOWMSG("could not pick a temp name");
+        goto out;
+    }
 
-	if(mkdir(name_template,0700) == -1)
-	{
-		SHOWMSG("could not create directory");
-		goto out;
-	}
+    if (mkdir(name_template, 0700) == -1) {
+        SHOWMSG("could not create directory");
+        goto out;
+    }
 
-	result = name_template;
+    result = name_template;
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

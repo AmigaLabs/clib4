@@ -22,7 +22,6 @@ AMIGA_LIB = \
 	amiga/argint.o \
 	amiga/argstring.o \
 	amiga/beginio.o \
-	amiga/coercemethod.o \
 	amiga/createextio.o \
 	amiga/createport.o \
 	amiga/createstdio.o \
@@ -31,8 +30,6 @@ AMIGA_LIB = \
 	amiga/deleteport.o \
 	amiga/deletestdio.o \
 	amiga/deletetask.o \
-	amiga/domethod.o \
-	amiga/dosupermethod.o \
 	amiga/dotimer.o \
 	amiga/fastrand.o \
 	amiga/freeievents.o \
@@ -42,7 +39,6 @@ AMIGA_LIB = \
 	amiga/rangerand.o \
 	amiga/remtof.o \
 	amiga/rexxvars.o \
-	amiga/setsuperattrs.o \
 	amiga/timedelay.o \
 	amiga/waitbeam.o
 

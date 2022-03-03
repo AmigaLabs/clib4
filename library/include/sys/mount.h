@@ -41,23 +41,13 @@
 #ifndef _SYS_MOUNT_H
 #define _SYS_MOUNT_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _SYS_TYPES_H
 #include <sys/types.h>
 #endif /* _SYS_TYPES_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 typedef struct { long val[2]; } fsid_t; /* file system id type */
  
@@ -117,12 +107,6 @@ struct statfs
 int statfs(const char *path, struct statfs *buf);
 int fstatfs(int fd, struct statfs *buf);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_MOUNT_H */

@@ -31,15 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
-
-/****************************************************************************/
 
 int 
 accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen)
@@ -62,17 +56,13 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen)
 	assert(cliaddr != NULL && addrlen != NULL);
 	assert(__SocketBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (cliaddr == NULL || addrlen == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (cliaddr == NULL || addrlen == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	assert(sockfd >= 0 && sockfd < __num_fd);
 	assert(__fd[sockfd] != NULL);
@@ -98,10 +88,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen)
 
 	/* Wait for the accept() to complete, then hook up the socket
 	   with a file descriptor. */
-	PROFILE_OFF();
 	new_socket_fd = __accept(socket_fd, cliaddr, (LONG *)addrlen);
-	PROFILE_ON();
-
 	if (new_socket_fd < 0)
 	{
 		SHOWMSG("could not accept connection");
@@ -146,11 +133,7 @@ out:
 
 	if (new_socket_fd != -1)
 	{
-		PROFILE_OFF();
-
 		__CloseSocket(new_socket_fd);
-
-		PROFILE_ON();
 	}
 
 	if (stdio_locked)

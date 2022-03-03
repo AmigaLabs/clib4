@@ -37,14 +37,9 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-#undef realloc
-
 
 void *realloc(void *ptr, size_t size)
 {
@@ -80,7 +75,6 @@ void *realloc(void *ptr, size_t size)
         __memory_lock();
         locked = TRUE;
 
-#ifndef USE_AVL
         struct MemoryNode *mn;
 
 
@@ -94,14 +88,7 @@ void *realloc(void *ptr, size_t size)
 		}
 
 		old_size = GET_MN_SIZE(mn);
-#else
-        struct AVLMemoryNode *memNode = (struct AVLMemoryNode *)AVL_FindNode(__global_clib2->__memalign_tree, ptr, AVLKeyComp);
-        if (memNode == NULL) {
-			SHOWMSG("cannot free this chunk");
-			goto out;
-        }
-        old_size = memNode->amn_Size;
-#endif
+
         /* Don't do anything unless the size of the allocation has really changed. */
         if (size > old_size)
         {
@@ -142,11 +129,7 @@ void *realloc(void *ptr, size_t size)
 
 			/* Free the old allocation. Since we already know which memory
 			   node is associated with it, we don't call __free() here. */
-#ifndef USE_AVL
 			__free_memory_node(mn);
-#else
-            __free_memory(ptr, FALSE);
-#endif
 			result = new_ptr;
 		}
 		else

@@ -35,13 +35,8 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int fchown(int file_descriptor, uid_t owner, gid_t group)
+int
+fchown(int file_descriptor, uid_t owner, gid_t group)
 {
 	struct ExamineData *fib;
 	BPTR parent_dir = ZERO;
@@ -87,11 +82,8 @@ int fchown(int file_descriptor, uid_t owner, gid_t group)
 		goto out;
 	}
 
-	PROFILE_OFF();
 	fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
 	success = (fib != NULL && (parent_dir = __safe_parent_of_file_handle(fd->fd_File)) != ZERO);
-	PROFILE_ON();
-
 	if (NO success)
 	{
 		SHOWMSG("couldn't find parent directory");
@@ -129,12 +121,7 @@ int fchown(int file_descriptor, uid_t owner, gid_t group)
 	/* Did anything change at all? */
 	if (group != fib->OwnerUID || owner != fib->OwnerUID)
 	{
-		PROFILE_OFF();
-
 		success = SetOwnerInfoTags(OI_StringNameInput, fib->Name, OI_OwnerUID, (LONG)((((ULONG)owner) << 16) | (ULONG)group), TAG_DONE);
-
-		PROFILE_ON();
-
 		if (NO success)
 		{
 			SHOWMSG("couldn't change owner/group");
@@ -150,14 +137,10 @@ out:
 
 	__fd_unlock(fd);
 
-	PROFILE_OFF();
-
 	UnLock(parent_dir);
 
 	if (current_dir_changed)
 		CurrentDir(old_current_dir);
-
-	PROFILE_ON();
 
 	__stdio_unlock();
 

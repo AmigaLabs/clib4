@@ -54,9 +54,7 @@ int setgroups(int ngroups, const gid_t *groups) {
     }
 
     if (ngroups > 0) {
-        PROFILE_OFF();
         result = __setgroups(ngroups, (LONG *) groups);
-        PROFILE_ON();
     } else {
         result = OK;
     }

@@ -31,29 +31,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
-
-/****************************************************************************/
 
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int unlink(const char *path_name)
+int
+unlink(const char *path_name)
 {
 #if defined(UNIX_PATH_SEMANTICS)
 	DECLARE_UTILITYBASE();
@@ -72,17 +59,13 @@ int unlink(const char *path_name)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL)
-		{
-			SHOWMSG("invalid path name");
+    if (path_name == NULL)
+    {
+        SHOWMSG("invalid path name");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -108,10 +91,7 @@ int unlink(const char *path_name)
 
 	D(("trying to delete '%s'", path_name));
 
-	PROFILE_OFF();
 	status = DeleteFile((STRPTR)path_name);
-	PROFILE_ON();
-
 	if (status == DOSFALSE)
 	{
 		if (__global_clib2->__unix_path_semantics)
@@ -133,17 +113,12 @@ int unlink(const char *path_name)
 			/* ZZZ we should be locking the path's parent directory
 			   and then just remember what the last part of the path
 			   pointed to. */
-			PROFILE_OFF();
 			current_dir = Lock("", SHARED_LOCK);
-			PROFILE_ON();
-
 			if (current_dir == ZERO)
 			{
 				__set_errno(__translate_io_error_to_errno(IoErr()));
 				goto out;
 			}
-
-			PROFILE_OFF();
 
 			ObtainSemaphore(&__unlink_semaphore);
 
@@ -159,8 +134,6 @@ int unlink(const char *path_name)
 					break;
 				}
 			}
-
-			PROFILE_ON();
 
 			if (NOT found)
 			{
@@ -196,9 +169,7 @@ int unlink(const char *path_name)
 
 out:
 
-	PROFILE_OFF();
 	UnLock(current_dir);
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

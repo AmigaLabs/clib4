@@ -35,13 +35,8 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int lockf(int file_descriptor, int function, off_t size)
+int
+lockf(int file_descriptor, int function, off_t size)
 {
 	struct flock l;
 	int result = -1;

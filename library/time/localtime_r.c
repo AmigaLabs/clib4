@@ -31,12 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
@@ -45,46 +39,38 @@
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
 
-/****************************************************************************/
-
 struct tm *
-localtime_r(const time_t *t,struct tm * tm_ptr)
-{
-	struct tm * result = NULL;
-	LONG gmt_offset;
+localtime_r(const time_t *t, struct tm *tm_ptr) {
+    struct tm *result = NULL;
+    LONG gmt_offset;
 
-	ENTER();
+    ENTER();
 
-	assert( t != NULL && tm_ptr != NULL );
+    assert(t != NULL && tm_ptr != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(t == NULL || tm_ptr == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (t == NULL || tm_ptr == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	__locale_lock();
+    __locale_lock();
 
-	/* The time parameter given represents UTC and
-	 * must be converted to local time before we proceed.
-	 */
-	if(__default_locale != NULL)
-		gmt_offset = 60 * __default_locale->loc_GMTOffset;
-	else
-		gmt_offset = 0;
+    /* The time parameter given represents UTC and
+     * must be converted to local time before we proceed.
+     */
+    if (__default_locale != NULL)
+        gmt_offset = 60 * __default_locale->loc_GMTOffset;
+    else
+        gmt_offset = 0;
 
-	__locale_unlock();
+    __locale_unlock();
 
-	SHOWVALUE(gmt_offset);
+    SHOWVALUE(gmt_offset);
 
-	result = __convert_time((*t), gmt_offset, tm_ptr);
+    result = __convert_time((*t), gmt_offset, tm_ptr);
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

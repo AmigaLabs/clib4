@@ -33,10 +33,6 @@
 
 /*#define DEBUG*/
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
@@ -266,26 +262,21 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
         if (c == '\0')
             break;
 
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-        {
-            D(("c = '%lc'",c));
+        D(("c = '%lc'", c));
 
-            /* Check for long long parameters. */
-            if(parameter_size == parameter_size_long && c == 'l')
-            {
-                SHOWMSG("this is a long long parameter");
+        /* Check for long long parameters. */
+        if (parameter_size == parameter_size_long && c == 'l') {
+            SHOWMSG("this is a long long parameter");
 
-                parameter_size = parameter_size_long_long;
+            parameter_size = parameter_size_long_long;
 
-                format++;
+            format++;
 
-                /* The conversion type follows. */
-                c = (*format);
-                if(c == '\0')
-                    break;
-            }
+            /* The conversion type follows. */
+            c = (*format);
+            if (c == '\0')
+                break;
         }
-#endif /* __GNUC__ */
 
         /* Check for byte parameters. */
         if (parameter_size == parameter_size_short && c == 'h') {
@@ -387,7 +378,8 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                     goto out;
                 }
 
-                c_ptr = va_arg(arg, char *);
+                c_ptr = va_arg(arg,
+                char *);
 
                 assert(c_ptr != NULL);
 
@@ -1005,13 +997,8 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                    conversion_type == 'o' ||
                    conversion_type == 'u' ||
                    conversion_type == 'x') {
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
             long long next_sum;
             long long sum = 0;
-#else
-            int next_sum;
-            int sum = 0;
-#endif /* __GNUC__ */
             BOOL is_negative = FALSE;
             int radix;
             void *next_parameter = NULL;
@@ -1021,15 +1008,10 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             if (NOT assignment_suppressed) {
                 assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                {
-                    if(arg == NULL)
-                    {
-                        __set_errno(EFAULT);
-                        goto out;
-                    }
+                if (arg == NULL) {
+                    __set_errno(EFAULT);
+                    goto out;
                 }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
                 if (parameter_size == parameter_size_short) {
                     next_parameter = va_arg(arg,
@@ -1038,50 +1020,30 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                     next_parameter = va_arg(arg,
                     char *);
                 } else {
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-                    {
-                        if(parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-                            next_parameter = va_arg(arg,long long *);
-                        else
-                            next_parameter = va_arg(arg,int *);
-                    }
-#else
-                    {
+                    if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
                         next_parameter = va_arg(arg,
-                        int *);
-                    }
-#endif /* __GNUC__ */
+                    long long *);
+                    else
+                    next_parameter = va_arg(arg,
+                    int *);
                 }
 
                 assert(next_parameter != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                {
-                    if(next_parameter == NULL)
-                    {
-                        __set_errno(EFAULT);
-                        goto out;
-                    }
+                if (next_parameter == NULL) {
+                    __set_errno(EFAULT);
+                    goto out;
                 }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
                 if (parameter_size == parameter_size_short) {
                     *((short *) next_parameter) = 0;
                 } else if (parameter_size == parameter_size_byte) {
                     *((char *) next_parameter) = 0;
                 } else {
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-                    {
-                        if(parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-                            *((long long *)next_parameter) = 0;
-                        else
-                            *((int *)next_parameter) = 0;
-                    }
-#else
-                    {
+                    if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
+                        *((long long *) next_parameter) = 0;
+                    else
                         *((int *) next_parameter) = 0;
-                    }
-#endif /* __GNUC__ */
                 }
             }
 
@@ -1203,35 +1165,8 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
                     next_sum = (radix * sum) + digit;
 
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-                    {
-                        if(parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-                        {
-                            if((unsigned long long)next_sum < (unsigned long long)sum) /* overflow? */
-                            {
-                                SHOWMSG("overflow!");
-
-                                /* Put this back. */
-                                if(ungetc(c,stream) == EOF)
-                                    goto out;
-
-                                break;
-                            }
-                        }
-                        else if ((unsigned int)next_sum < (unsigned int)sum) /* overflow? */
-                        {
-                            SHOWMSG("overflow!");
-
-                            /* Put this back. */
-                            if(ungetc(c,stream) == EOF)
-                                goto out;
-
-                            break;
-                        }
-                    }
-#else
-                    {
-                        if ((unsigned int) next_sum < (unsigned int) sum) /* overflow? */
+                    if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t) {
+                        if ((unsigned long long) next_sum < (unsigned long long) sum) /* overflow? */
                         {
                             SHOWMSG("overflow!");
 
@@ -1241,8 +1176,16 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
                             break;
                         }
+                    } else if ((unsigned int) next_sum < (unsigned int) sum) /* overflow? */
+                    {
+                        SHOWMSG("overflow!");
+
+                        /* Put this back. */
+                        if (ungetc(c, stream) == EOF)
+                            goto out;
+
+                        break;
                     }
-#endif /* __GNUC__ */
 
                     total_num_chars_read++;
                     num_chars_processed++;
@@ -1267,18 +1210,10 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                     } else if (parameter_size == parameter_size_byte) {
                         *((char *) next_parameter) = sum;
                     } else {
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-                        {
-                            if(parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-                                *((long long *)next_parameter) = sum;
-                            else
-                                *((int *)next_parameter) = sum;
-                        }
-#else
-                        {
+                        if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
+                            *((long long *) next_parameter) = sum;
+                        else
                             *((int *) next_parameter) = sum;
-                        }
-#endif /* __GNUC__ */
                     }
 
                     num_assignments++;
@@ -1292,30 +1227,20 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             if (NOT assignment_suppressed) {
                 assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                {
-                    if(arg == NULL)
-                    {
-                        __set_errno(EFAULT);
-                        goto out;
-                    }
+                if (arg == NULL) {
+                    __set_errno(EFAULT);
+                    goto out;
                 }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
                 s_ptr = va_arg(arg,
                 char *);
 
                 assert(s_ptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                {
-                    if(s_ptr == NULL)
-                    {
-                        __set_errno(EFAULT);
-                        goto out;
-                    }
+                if (s_ptr == NULL) {
+                    __set_errno(EFAULT);
+                    goto out;
                 }
-#endif /* CHECK_FOR_NULL_POINTERS */
             } else {
                 s_ptr = NULL;
             }
@@ -1361,15 +1286,10 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             if (NOT assignment_suppressed) {
                 assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                {
-                    if(arg == NULL)
-                    {
-                        __set_errno(EFAULT);
-                        goto out;
-                    }
+                if (arg == NULL) {
+                    __set_errno(EFAULT);
+                    goto out;
                 }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
                 if (parameter_size == parameter_size_short) {
                     short *short_ptr;
@@ -1379,15 +1299,10 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
                     assert(short_ptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                    {
-                        if(short_ptr == NULL)
-                        {
-                            __set_errno(EFAULT);
-                            goto out;
-                        }
+                    if (short_ptr == NULL) {
+                        __set_errno(EFAULT);
+                        goto out;
                     }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
                     (*short_ptr) = total_num_chars_read;
                 } else if (parameter_size == parameter_size_byte) {
@@ -1398,63 +1313,28 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
                     assert(byte_ptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                    {
-                        if(byte_ptr == NULL)
-                        {
-                            __set_errno(EFAULT);
-                            goto out;
-                        }
+                    if (byte_ptr == NULL) {
+                        __set_errno(EFAULT);
+                        goto out;
                     }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
                     (*byte_ptr) = total_num_chars_read;
                 } else {
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-                    {
-                        if(parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-                        {
-                            long long * int_ptr;
+                    if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t) {
+                        long long *int_ptr;
 
-                            int_ptr = va_arg(arg,long long *);
+                        int_ptr = va_arg(arg,
+                        long long *);
 
-                            assert( int_ptr != NULL );
+                        assert(int_ptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                            {
-                                if(int_ptr == NULL)
-                                {
-                                    __set_errno(EFAULT);
-                                    goto out;
-                                }
-                            }
-#endif /* CHECK_FOR_NULL_POINTERS */
-
-                            (*int_ptr) = total_num_chars_read;
+                        if (int_ptr == NULL) {
+                            __set_errno(EFAULT);
+                            goto out;
                         }
-                        else
-                        {
-                            int * int_ptr;
 
-                            int_ptr = va_arg(arg,int *);
-
-                            assert( int_ptr != NULL );
-
-#if defined(CHECK_FOR_NULL_POINTERS)
-                            {
-                                if(int_ptr == NULL)
-                                {
-                                    __set_errno(EFAULT);
-                                    goto out;
-                                }
-                            }
-#endif /* CHECK_FOR_NULL_POINTERS */
-
-                            (*int_ptr) = total_num_chars_read;
-                        }
-                    }
-#else
-                    {
+                        (*int_ptr) = total_num_chars_read;
+                    } else {
                         int *int_ptr;
 
                         int_ptr = va_arg(arg,
@@ -1462,19 +1342,13 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
                         assert(int_ptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                        {
-                            if(int_ptr == NULL)
-                            {
-                                __set_errno(EFAULT);
-                                goto out;
-                            }
+                        if (int_ptr == NULL) {
+                            __set_errno(EFAULT);
+                            goto out;
                         }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
                         (*int_ptr) = total_num_chars_read;
                     }
-#endif /* __GNUC__ */
                 }
             }
         } else if (c == '%') {
@@ -1508,30 +1382,20 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             if (NOT assignment_suppressed) {
                 assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                {
-                    if(arg == NULL)
-                    {
-                        __set_errno(EFAULT);
-                        goto out;
-                    }
+                if (arg == NULL) {
+                    __set_errno(EFAULT);
+                    goto out;
                 }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
                 s_ptr = va_arg(arg,
                 char *);
 
                 assert(s_ptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-                {
-                    if(s_ptr == NULL)
-                    {
-                        __set_errno(EFAULT);
-                        goto out;
-                    }
+                if (s_ptr == NULL) {
+                    __set_errno(EFAULT);
+                    goto out;
                 }
-#endif /* CHECK_FOR_NULL_POINTERS */
             } else {
                 s_ptr = NULL;
             }
@@ -1651,7 +1515,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
     result = num_assignments;
 
-    out:
+out:
 
     funlockfile(stream);
 

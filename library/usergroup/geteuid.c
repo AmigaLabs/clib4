@@ -57,9 +57,7 @@ uid_t geteuid(void)
 	}
 	else
 	{
-		PROFILE_OFF();
 		result = __geteuid();
-		PROFILE_ON();
 	}
 
 	if (__check_abort_enabled)

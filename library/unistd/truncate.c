@@ -31,63 +31,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
 int
-truncate(const char * path_name, off_t length)
-{
-	int result = ERROR;
-	int fd;
+truncate(const char *path_name, off_t length) {
+    int result = ERROR;
+    int fd;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(path_name);
-	SHOWVALUE(length);
+    SHOWSTRING(path_name);
+    SHOWVALUE(length);
 
-	assert( path_name != NULL );
+    assert(path_name != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(path_name == NULL)
-		{
-			SHOWMSG("invalid path name");
+    if (path_name == NULL) {
+        SHOWMSG("invalid path name");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	if(length < 0)
-	{
-		SHOWMSG("invalid length");
+    if (length < 0) {
+        SHOWMSG("invalid length");
 
-		__set_errno(EINVAL);
-		goto out;
-	}
+        __set_errno(EINVAL);
+        goto out;
+    }
 
-	fd = open(path_name,O_WRONLY);
-	if(fd < 0)
-	{
-		SHOWMSG("file didn't open");
-		goto out;
-	}
+    fd = open(path_name, O_WRONLY);
+    if (fd < 0) {
+        SHOWMSG("file didn't open");
+        goto out;
+    }
 
-	result = ftruncate(fd,length);
+    result = ftruncate(fd, length);
 
-	close(fd);
+    close(fd);
 
- out:
+    out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

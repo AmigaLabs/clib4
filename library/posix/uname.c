@@ -31,15 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #include <sys/utsname.h>
-
-/****************************************************************************/
 
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
@@ -47,8 +39,6 @@
 
 #define OSNAME "AmigaOS"
 #define ARCH "ppc"
-
-/****************************************************************************/
 
 int 
 uname(struct utsname *info)

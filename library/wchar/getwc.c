@@ -35,11 +35,8 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 wint_t
 getwc(FILE *stream)
 {
-	/* ZZZ unimplemented */
-	return(0);
+    return fgetwc(stream);
 }

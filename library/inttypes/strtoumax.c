@@ -31,17 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _INTTYPES_HEADERS_H
 #include "inttypes_headers.h"
 #endif /* _INTTYPES_HEADERS_H */
-
-/****************************************************************************/
 
 uintmax_t
 strtoumax(const char *str, char **ptr, int base)
@@ -62,17 +54,13 @@ strtoumax(const char *str, char **ptr, int base)
 
 	assert(str != NULL && base >= 0);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(str == NULL)
-		{
-			SHOWMSG("invalid str parameter");
+    if(str == NULL)
+    {
+        SHOWMSG("invalid str parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	if(base < 0)
 	{

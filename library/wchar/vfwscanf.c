@@ -300,7 +300,7 @@ int vfwscanf(FILE *f, const wchar_t *format, va_list ap)
                     if (width < 1)
                         width = 1;
                     invert = 1;
-                    set = L"";
+                    set = (const wchar_t *)L"";
                 }
                 else if (t == 's')
                 {

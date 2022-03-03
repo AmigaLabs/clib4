@@ -209,8 +209,6 @@ obtain_file_lock_semaphore(BOOL shared)
 	{
 		SHOWMSG("got a semaphore, using it...");
 
-		PROFILE_OFF();
-
 		if (shared)
 		{
 			ObtainSemaphoreShared((struct SignalSemaphore *)FileLockSemaphore);
@@ -219,8 +217,6 @@ obtain_file_lock_semaphore(BOOL shared)
 		{
 			ObtainSemaphore((struct SignalSemaphore *)FileLockSemaphore);
 		}
-
-		PROFILE_ON();
 
 		result = FileLockSemaphore;
 	}
@@ -358,9 +354,7 @@ delete_file_lock_node(struct FileLockNode *fln)
 
 	if (fln != NULL)
 	{
-		PROFILE_OFF();
 		UnLock(fln->fln_FileParentDir);
-		PROFILE_ON();
 
 		FreeVec(fln);
 	}
@@ -472,10 +466,7 @@ find_file_lock_node_by_drawer_and_name(
 		 fln->fln_MinNode.mln_Succ != NULL;
 		 fln = (struct FileLockNode *)fln->fln_MinNode.mln_Succ)
 	{
-		PROFILE_OFF();
 		status = SameLock(fln->fln_FileParentDir, dir_lock);
-		PROFILE_ON();
-
 		if (status == LOCK_SAME)
 		{
 			if (Stricmp((STRPTR)fln->fln_FileName, file_name) == SAME)
@@ -549,11 +540,9 @@ find_file_lock_node_by_file_handle(
 
 out:
 
-	PROFILE_OFF();
 	if (this_fib)
 		FreeDosObject(DOS_EXAMINEDATA, this_fib);
 	UnLock(parent_dir);
-	PROFILE_ON();
 
 	RETURN(error);
 	return (error);
@@ -785,10 +774,7 @@ int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_
 
 		SHOWMSG("SEEK_CUR");
 
-		PROFILE_OFF();
 		seek_position = GetFilePosition(file_handle);
-		PROFILE_ON();
-
 		if (seek_position == GETPOSITION_ERROR && IoErr() != OK)
 		{
 			SHOWMSG("could not obtain current seek position");
@@ -997,9 +983,7 @@ int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_
 					delete_locked_region_node(lrn);
 					lrn = NULL;
 
-					PROFILE_OFF();
 					UnLock(parent_dir);
-					PROFILE_ON();
 
 					parent_dir = ZERO;
 
@@ -1024,9 +1008,7 @@ int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_
 
 				if (num_random_ticks > 0)
 				{
-					PROFILE_OFF();
 					Delay(num_random_ticks);
-					PROFILE_ON();
 				}
 			}
 		} while (NOT locked);
@@ -1187,11 +1169,9 @@ out:
 
 	release_file_lock_semaphore(fls);
 
-	PROFILE_OFF();
 	if (fib != NULL)
 		FreeDosObject(DOS_EXAMINEDATA, fib);
 	UnLock(parent_dir);
-	PROFILE_ON();
 
 	if (result != 0 && error != OK)
 	{

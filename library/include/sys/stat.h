@@ -41,12 +41,6 @@
 #ifndef _SYS_STAT_H
 #define _SYS_STAT_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _SYS_TYPES_H
 #include <sys/types.h>
 #endif /* _SYS_TYPES_H */
@@ -59,13 +53,9 @@
 #include <time.h>
 #endif /* _TIME_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #define	S_ISUID	0004000		/* set user id on execution */
 #define	S_ISGID	0002000		/* set group id on execution */
@@ -178,23 +168,8 @@ extern int fchmod(int file_descriptor, mode_t mode);
 extern int mkdir(const char * path_name, mode_t mode);
 extern int rmdir(const char * path_name);
 
-/*
- * The following prototypes may clash with the bsdsocket.library or
- * usergroup.library API definitions.
- */
-
-#ifndef __NO_NET_API
-
 extern mode_t umask(mode_t new_mask);
 
-#endif /* __NO_NET_API */
-
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_STAT_H */

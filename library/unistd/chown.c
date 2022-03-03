@@ -31,21 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 int chown(const char *path_name, uid_t owner, gid_t group)
 {
@@ -69,17 +57,13 @@ int chown(const char *path_name, uid_t owner, gid_t group)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL)
-		{
-			SHOWMSG("invalid path name");
+    if (path_name == NULL)
+    {
+        SHOWMSG("invalid path name");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -109,23 +93,17 @@ int chown(const char *path_name, uid_t owner, gid_t group)
 	{
 		D_S(struct FileInfoBlock, fib);
 
-		PROFILE_OFF();
-
 		/* Try to find out which owner/group information
 		   is currently in use. */
 		file_lock = Lock((STRPTR)path_name, SHARED_LOCK);
 		if (file_lock == ZERO || ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE) == NULL)
 		{
-			PROFILE_ON();
-
 			__set_errno(__translate_access_io_error_to_errno(IoErr()));
 			goto out;
 		}
 
 		UnLock(file_lock);
 		file_lock = ZERO;
-
-		PROFILE_ON();
 
 		/* Replace the information that should not be changed. */
 		if (owner == (uid_t)-1)
@@ -151,10 +129,7 @@ int chown(const char *path_name, uid_t owner, gid_t group)
 	{
 		D(("changing owner of '%s'", path_name));
 
-		PROFILE_OFF();
 		int32 ret = SetOwnerInfoTags(OI_StringNameInput, (STRPTR)path_name, OI_OwnerUID, (LONG)((((ULONG)owner) << 16) | group), TAG_DONE);
-		PROFILE_ON();
-
 		if (ret == DOSFALSE)
 		{
 			__set_errno(__translate_io_error_to_errno(IoErr()));
@@ -169,14 +144,10 @@ out:
 		FreeDosObject(DOS_EXAMINEDATA, status);
 	}
 	
-	PROFILE_OFF();
-
 	FreeDeviceProc(dvp);
 
 	if (file_lock != ZERO)
 		UnLock(file_lock);
-
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

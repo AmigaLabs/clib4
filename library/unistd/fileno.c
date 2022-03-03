@@ -31,70 +31,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-fileno(FILE * file)
-{
-	struct iob * iob = (struct iob *)file;
-	int result = ERROR;
+fileno(FILE *file) {
+    struct iob *iob = (struct iob *) file;
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(file);
+    SHOWPOINTER(file);
 
-	assert( file != NULL );
+    assert(file != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	flockfile(file);
+    flockfile(file);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(file == NULL)
-		{
-			SHOWMSG("invalid file parameter");
+    if (file == NULL) {
+        SHOWMSG("invalid file parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	assert( __is_valid_iob(iob) );
-	assert( FLAG_IS_SET(iob->iob_Flags,IOBF_IN_USE) );
+    assert(__is_valid_iob(iob));
+    assert(FLAG_IS_SET(iob->iob_Flags, IOBF_IN_USE));
 
-	if(FLAG_IS_CLEAR(iob->iob_Flags,IOBF_IN_USE))
-	{
-		__set_errno(EBADF);
-		goto out;
-	}
+    if (FLAG_IS_CLEAR(iob->iob_Flags, IOBF_IN_USE)) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
-	assert( iob->iob_Descriptor >= 0 && iob->iob_Descriptor < __num_fd );
-	assert( __fd[iob->iob_Descriptor] != NULL );
-	assert( FLAG_IS_SET(__fd[iob->iob_Descriptor]->fd_Flags,FDF_IN_USE) );
+    assert(iob->iob_Descriptor >= 0 && iob->iob_Descriptor < __num_fd);
+    assert(__fd[iob->iob_Descriptor] != NULL);
+    assert(FLAG_IS_SET(__fd[iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
 
-	result = iob->iob_Descriptor;
+    result = iob->iob_Descriptor;
 
- out:
+out:
 
-	funlockfile(file);
+    funlockfile(file);
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

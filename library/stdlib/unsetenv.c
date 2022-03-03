@@ -31,89 +31,61 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
-
-/****************************************************************************/
 
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-unsetenv(const char *name)
-{
-	char * name_copy = NULL;
-	int result = -1;
-	LONG status;
-	size_t i;
+unsetenv(const char *name) {
+    char *name_copy = NULL;
+    int result = -1;
+    LONG status;
+    size_t i;
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	assert( name != NULL );
+    assert(name != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(name == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (name == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	for(i = 0 ; i < strlen(name) ; i++)
-	{
-		if(name[i] == '=')
-		{
-			name_copy = malloc(i+1);
-			if(name_copy == NULL)
-				goto out;
+    for (i = 0; i < strlen(name); i++) {
+        if (name[i] == '=') {
+            name_copy = malloc(i + 1);
+            if (name_copy == NULL)
+                goto out;
 
-			memmove(name_copy,name,i);
-			name_copy[i] = '\0';
+            memmove(name_copy, name, i);
+            name_copy[i] = '\0';
 
-			name = name_copy;
-			break;
-		}
-	}
+            name = name_copy;
+            break;
+        }
+    }
 
-	PROFILE_OFF();
-	status = DeleteVar((STRPTR)name,0);
-	PROFILE_ON();
-	
-	if(status == DOSFALSE)
-	{
-		__set_errno(__translate_access_io_error_to_errno(IoErr()));
-		goto out;
-	}
-	
-	result = 0;
+    status = DeleteVar((STRPTR) name, 0);
+    if (status == DOSFALSE) {
+        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
- out:
+    result = 0;
 
-	if(name_copy != NULL)
-		free(name_copy);
-		
-	return(result);
+out:
+
+    if (name_copy != NULL)
+        free(name_copy);
+
+    return (result);
 }

@@ -41,25 +41,9 @@
 #ifndef _SETJMP_H
 #define _SETJMP_H
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
-
-#ifndef __PPC__
-
-struct __jmp_buf
-{
-	void *	jb_ReturnAddress;
-	long	jb_D[7];
-	void *	jb_A[8];
-	long	jb_F[8 * 3];
-};
-
-#else
+__BEGIN_DECLS
 
 struct __jmp_buf
 {
@@ -70,23 +54,11 @@ struct __jmp_buf
 	double         jb_FPR[18];
 };
 
-#endif /* __PPC__ */
-
-/****************************************************************************/
-
 typedef struct __jmp_buf jmp_buf[1];
-
-/****************************************************************************/
 
 extern int setjmp(jmp_buf env);
 extern void longjmp(jmp_buf env,int status);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SETJMP_H */

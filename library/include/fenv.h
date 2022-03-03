@@ -52,13 +52,9 @@
 #include <stddef.h>
 #endif /* _STDDEF_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 typedef int fenv_t;
 
@@ -107,12 +103,6 @@ extern int fegetround(void);
 extern int fesetround(int mode);
 extern int fetestround(int rounds);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _FENV_H */

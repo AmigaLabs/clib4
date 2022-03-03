@@ -55,9 +55,9 @@
 #include <sys/ioctl.h>
 #endif /* _SYS_IOTCL_H */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include <features.h>
+
+__BEGIN_DECLS
 
 /* Type used for the number of file descriptors.  */
 typedef unsigned long nfds_t;
@@ -86,8 +86,6 @@ struct pollfd
 
 extern int poll(struct pollfd *fds, nfds_t nfds, int timeout);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+__END_DECLS
 
 #endif /* _POLL_H */

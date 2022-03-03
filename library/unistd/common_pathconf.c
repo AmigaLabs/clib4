@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
@@ -59,8 +55,6 @@
 #define ID_LONGNAME_FFS_DISK (0x444F5307L) /* 'DOS\7' */
 #endif /* ID_LONGNAME_FFS_DISK */
 
-/****************************************************************************/
-
 struct fs_info
 {
 	ULONG	dos_type;
@@ -68,8 +62,6 @@ struct fs_info
 	int		link_max,symlink_max;
 	int		file_size_bits;
 };
-
-/****************************************************************************/
 
 static const struct fs_info fs_info[] =
 {
@@ -94,8 +86,6 @@ static const struct fs_info fs_info[] =
 	{0x50465300,			30,		254,	0,	0,	31},	/* PFS\0 = Professional File System */
 	{0x46545854,			0,		0,		0,	0,	0},		/* FTXT - Textclip device */
 };
-
-/****************************************************************************/
 
 long
 __pathconf(struct MsgPort *port,int name)

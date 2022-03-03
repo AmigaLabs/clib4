@@ -88,15 +88,11 @@ setlocale(int category, const char *locale) {
             if (strcmp(locale, "C") != SAME) {
                 SHOWMSG("this is not the 'C' locale");
 
-                PROFILE_OFF();
-
                 /* The empty string stands for the default locale. */
                 if (locale[0] == '\0')
                     loc = OpenLocale(NULL);
                 else
                     loc = OpenLocale((STRPTR) locale);
-
-                PROFILE_ON();
 
                 /* Before bailing out set the MB_CUR_MAX to the right value
                  * so we can use wide chars correctly

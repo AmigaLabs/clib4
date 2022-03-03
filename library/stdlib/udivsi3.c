@@ -31,27 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__GNUC__)
-
-/****************************************************************************/
-#ifndef __PPC__
-asm("                                                                     \n\
-                                                                          \n\
-	.text                                                                  \n\
-	.even                                                                  \n\
-                                                                          \n\
-	.globl	___udivsi3                                                    \n\
-	.globl	___udivsi4                                                    \n\
-                                                                          \n\
-| D0.L = D0.L / D1.L unsigned                                             \n\
-                                                                          \n\
-___udivsi3:                                                               \n\
-                                                                          \n\
-	moveml	sp@(4:W),d0/d1                                                \n\
-	jbra	___udivsi4                                                       \n\
-                                                                          \n\
-");
-#else
 __asm("							\n\
     .text						\n\
     .align 2					\n\
@@ -61,8 +40,3 @@ __udivsi3:						\n\
      divwu r3, r3, r4			\n\
      blr						\n\
 ");
-#endif
-
-/****************************************************************************/
-
-#endif /* __GNUC__ */

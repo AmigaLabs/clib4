@@ -332,7 +332,7 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
         /* Handle literal text and %% format specifiers */
         for (a = s; *s && *s != '%'; s++)
             ;
-        litpct = (unsigned int)(wcsspn(s, L"%") / 2); /* Optimize %%%% runs */
+        litpct = (unsigned int)(wcsspn(s, (const wchar_t *)L"%") / 2); /* Optimize %%%% runs */
         z = s + litpct;
         s += 2 * litpct;
         l = (int)(z - a);

@@ -41,14 +41,9 @@
 #ifndef _NL_TYPES_H
 #define _NL_TYPES_H
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /**
  * catopen() flag to use the current locale.
@@ -71,12 +66,6 @@ extern char* catgets(nl_catd catalog, int set_number, int msg_number, const char
 extern int catclose(nl_catd catalog);
 #endif
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _NL_TYPES_H */

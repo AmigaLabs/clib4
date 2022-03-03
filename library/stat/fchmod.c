@@ -35,13 +35,8 @@
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int fchmod(int file_descriptor, mode_t mode)
+int
+fchmod(int file_descriptor, mode_t mode)
 {
 	struct ExamineData *fib = NULL;
 	ULONG protection;
@@ -125,10 +120,7 @@ int fchmod(int file_descriptor, mode_t mode)
 	if (FLAG_IS_SET(mode, S_IXOTH))
 		SET_FLAG(protection, EXDF_OTR_EXECUTE);
 
-	PROFILE_OFF();
 	parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-	PROFILE_ON();
-
 	if (parent_dir == ZERO)
 	{
 		SHOWMSG("couldn't find parent directory");
@@ -137,11 +129,8 @@ int fchmod(int file_descriptor, mode_t mode)
 		goto out;
 	}
 
-	PROFILE_OFF();
 	fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
 	success = (fib != NULL);
-	PROFILE_ON();
-
 	if (NO success)
 	{
 		SHOWMSG("could not obtain file name");
@@ -153,13 +142,11 @@ int fchmod(int file_descriptor, mode_t mode)
 	old_current_dir = CurrentDir(parent_dir);
 	current_dir_changed = TRUE;
 
-	PROFILE_OFF();
 	if (CANNOT SetProtection((STRPTR)fib->Name, protection))
 	{
 		__set_errno(__translate_io_error_to_errno(IoErr()));
 		goto out;
 	}
-	PROFILE_ON();
 
 	result = OK;
 

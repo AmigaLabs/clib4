@@ -49,9 +49,7 @@ void endpwent(void)
 
 	assert(__UserGroupBase != NULL);
 
-	PROFILE_OFF();
 	__endpwent();
-	PROFILE_ON();
 
 	if (__check_abort_enabled)
 		__check_abort();

@@ -79,8 +79,6 @@ void __show_error(const char *message) {
     struct Library *IntuitionBase = NULL;
     struct Library *DOSBase = NULL;
 
-    PROFILE_OFF();
-
     /* Don't show anything if this is the thread-safe library and
        we were invoked indirectly by shared library startup code. */
     if (__lib_startup)
@@ -151,6 +149,4 @@ out:
 
     if (DOSBase != NULL)
         CloseLibrary(DOSBase);
-
-    PROFILE_ON();
 }

@@ -31,38 +31,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 int
-atoi(const char *str)
-{
-	int result = 0;
+atoi(const char *str) {
+    int result = 0;
 
-	assert( str != NULL );
+    assert(str != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(str == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (str == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	result = (int)strtol(str, (char **)NULL, 10);
+    result = (int) strtol(str, (char **) NULL, 10);
 
- out:
+out:
 
-	return(result);
+    return (result);
 }

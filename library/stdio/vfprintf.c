@@ -30,9 +30,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
 
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
@@ -42,7 +39,7 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
+#include <sys/param.h> // max
 
 /* Data conversion flags for vfprintf() below. */
 #define FORMATF_LeftJustified 			(1 << 0)	/* Output must be left justified */
@@ -53,12 +50,6 @@
 #define FORMATF_IsNegative 				(1 << 5)	/* Number is negative */
 #define FORMATF_HexPrefix 				(1 << 6)	/* Prepend '0x' to the output */
 #define FORMATF_ZeroPrefix 				(1 << 7)	/* Prepend '0' to the output */
-
-/****************************************************************************/
-
-#define max(a, b) ((a) > (b) ? (a) : (b))
-
-/****************************************************************************/
 
 STATIC int
 get_num_leading_digits(__long_double_t v, int radix)
@@ -79,9 +70,8 @@ get_num_leading_digits(__long_double_t v, int radix)
 	return (num_digits);
 }
 
-/****************************************************************************/
-
-int vfprintf(FILE *stream, const char *format, va_list arg)
+int
+vfprintf(FILE *stream, const char *format, va_list arg)
 {
 	enum parameter_size_t
 	{
@@ -134,17 +124,13 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 
 	flockfile(stream);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (stream == NULL || format == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (stream == NULL || format == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	/* If no buffering is specified but a buffer was allocated, switch to
 	   line buffering. This is intended to help 'stderr' and others. */
@@ -270,15 +256,11 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 
 				assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-				{
-					if (arg == NULL)
-					{
-						__set_errno(EFAULT);
-						goto out;
-					}
-				}
-#endif /* CHECK_FOR_NULL_POINTERS */
+                if (arg == NULL)
+                {
+                    __set_errno(EFAULT);
+                    goto out;
+                }
 
 				minimum_field_width = va_arg(arg, int);
 				if (minimum_field_width < 0)
@@ -351,15 +333,11 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 				/* The precision is stored on the stack. */
 				assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-				{
-					if (arg == NULL)
-					{
-						__set_errno(EFAULT);
-						goto out;
-					}
-				}
-#endif /* CHECK_FOR_NULL_POINTERS */
+                if (arg == NULL)
+                {
+                    __set_errno(EFAULT);
+                    goto out;
+                }
 
 				precision = va_arg(arg, int);
 				if (precision < 0)
@@ -495,24 +473,20 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 				break;
 		}
 
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-		{
-			/* Check for long long parameters. */
-			if (parameter_size == parameter_size_long && c == 'l')
-			{
-				parameter_size = parameter_size_long_long;
+        /* Check for long long parameters. */
+        if (parameter_size == parameter_size_long && c == 'l')
+        {
+            parameter_size = parameter_size_long_long;
 
-				format++;
+            format++;
 
-				/* The conversion_type type follows. */
-				c = (*format);
+            /* The conversion_type type follows. */
+            c = (*format);
 
-				/* End of the format string? */
-				if (c == '\0')
-					break;
-			}
-		}
-#endif /* __GNUC__ */
+            /* End of the format string? */
+            if (c == '\0')
+                break;
+        }
 
 		trail_string[0] = '\0';
 		num_trailing_zeroes = 0;
@@ -616,15 +590,11 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 
 			assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-			{
-				if (arg == NULL)
-				{
-					__set_errno(EFAULT);
-					goto out;
-				}
-			}
-#endif /* CHECK_FOR_NULL_POINTERS */
+            if (arg == NULL)
+            {
+                __set_errno(EFAULT);
+                goto out;
+            }
 
 			if (parameter_size == parameter_size_short)
 			{
@@ -652,18 +622,10 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 			}
 			else
 			{
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-				{
-					if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-						ch = va_arg(arg, long long);
-					else
-						ch = va_arg(arg, int);
-				}
-#else
-				{
-					ch = va_arg(arg, int);
-				}
-#endif /* __GNUC__ */
+                if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
+                    ch = va_arg(arg, long long);
+                else
+                    ch = va_arg(arg, int);
 			}
 
 			D(("output = %lc", ch));
@@ -685,15 +647,11 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 
 			assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-			{
-				if (arg == NULL)
-				{
-					__set_errno(EFAULT);
-					goto out;
-				}
-			}
-#endif /* CHECK_FOR_NULL_POINTERS */
+            if (arg == NULL)
+            {
+                __set_errno(EFAULT);
+                goto out;
+            }
 
 			const char *buffer_stop = &buffer[sizeof(buffer) - 1];
 			char *buffer_start = buffer;
@@ -890,7 +848,7 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 					1 +									 /* sign */
 					num_leading_digits +				 /* integral part */
 					1 +									 /* decimal point */
-					max(0, max(precision, max_digits)) + /* fractional part */
+					MAX(0, MAX(precision, max_digits)) + /* fractional part */
 					1 +									 /* 'e' or 'p' */
 					1 +									 /* sign of the exponent */
 					32 +								 /* exponent */
@@ -1105,32 +1063,18 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 				 conversion_type == 'u' ||
 				 conversion_type == 'x')
 		{
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
 			unsigned long long v;
-#else
-			unsigned int v;
-#endif /* __GNUC__ */
-
 			assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-			{
-				if (arg == NULL)
-				{
-					__set_errno(EFAULT);
-					goto out;
-				}
-			}
-#endif /* CHECK_FOR_NULL_POINTERS */
+            if (arg == NULL)
+            {
+                __set_errno(EFAULT);
+                goto out;
+            }
 
 			if (conversion_type == 'd')
 			{
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
 				long long sv;
-#else
-				int sv;
-#endif /* __GNUC__ */
-
 				SHOWMSG("signed integer");
 
 				if (parameter_size == parameter_size_short)
@@ -1159,18 +1103,10 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 				}
 				else
 				{
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-					{
-						if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-							sv = va_arg(arg, long long);
-						else
-							sv = va_arg(arg, int);
-					}
-#else
-					{
-						sv = va_arg(arg, int);
-					}
-#endif /* __GNUC__ */
+                    if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
+                        sv = va_arg(arg, long long);
+                    else
+                        sv = va_arg(arg, int);
 				}
 
 				if (sv < 0)
@@ -1221,18 +1157,10 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 				}
 				else
 				{
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-					{
-						if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-							v = va_arg(arg, unsigned long long);
-						else
-							v = va_arg(arg, unsigned int);
-					}
-#else
-					{
-						v = va_arg(arg, unsigned int);
-					}
-#endif /* __GNUC__ */
+                    if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
+                        v = va_arg(arg, unsigned long long);
+                    else
+                        v = va_arg(arg, unsigned int);
 				}
 
 				CLEAR_FLAG(format_flags, FORMATF_ProduceSign);
@@ -1330,15 +1258,11 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 
 			assert(arg != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-			{
-				if (arg == NULL)
-				{
-					__set_errno(EFAULT);
-					goto out;
-				}
-			}
-#endif /* CHECK_FOR_NULL_POINTERS */
+            if (arg == NULL)
+            {
+                __set_errno(EFAULT);
+                goto out;
+            }
 
 			if (parameter_size == parameter_size_short)
 			{
@@ -1348,15 +1272,11 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 
 				assert(short_ptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-				{
-					if (short_ptr == NULL)
-					{
-						__set_errno(EFAULT);
-						goto out;
-					}
-				}
-#endif /* CHECK_FOR_NULL_POINTERS */
+                if (short_ptr == NULL)
+                {
+                    __set_errno(EFAULT);
+                    goto out;
+                }
 
 				(*short_ptr) = len;
 			}
@@ -1368,84 +1288,48 @@ int vfprintf(FILE *stream, const char *format, va_list arg)
 
 				assert(byte_ptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-				{
-					if (byte_ptr == NULL)
-					{
-						__set_errno(EFAULT);
-						goto out;
-					}
-				}
-#endif /* CHECK_FOR_NULL_POINTERS */
+                if (byte_ptr == NULL)
+                {
+                    __set_errno(EFAULT);
+                    goto out;
+                }
 
 				(*byte_ptr) = len;
 			}
 			else
 			{
-#if defined(USE_64_BIT_INTS) && defined(__GNUC__)
-				{
-					if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-					{
-						long long *int_ptr;
+                if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
+                {
+                    long long *int_ptr;
 
-						int_ptr = va_arg(arg, long long *);
+                    int_ptr = va_arg(arg, long long *);
 
-						assert(int_ptr != NULL);
+                    assert(int_ptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-						{
-							if (int_ptr == NULL)
-							{
-								__set_errno(EFAULT);
-								goto out;
-							}
-						}
-#endif /* CHECK_FOR_NULL_POINTERS */
+                    if (int_ptr == NULL)
+                    {
+                        __set_errno(EFAULT);
+                        goto out;
+                    }
 
-						(*int_ptr) = len;
-					}
-					else
-					{
-						int *int_ptr;
+                    (*int_ptr) = len;
+                }
+                else
+                {
+                    int *int_ptr;
 
-						int_ptr = va_arg(arg, int *);
+                    int_ptr = va_arg(arg, int *);
 
-						assert(int_ptr != NULL);
+                    assert(int_ptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-						{
-							if (int_ptr == NULL)
-							{
-								__set_errno(EFAULT);
-								goto out;
-							}
-						}
-#endif /* CHECK_FOR_NULL_POINTERS */
+                    if (int_ptr == NULL)
+                    {
+                        __set_errno(EFAULT);
+                        goto out;
+                    }
 
-						(*int_ptr) = len;
-					}
-				}
-#else
-				{
-					int *int_ptr;
-
-					int_ptr = va_arg(arg, int *);
-
-					assert(int_ptr != NULL);
-
-#if defined(CHECK_FOR_NULL_POINTERS)
-					{
-						if (int_ptr == NULL)
-						{
-							__set_errno(EFAULT);
-							goto out;
-						}
-					}
-#endif /* CHECK_FOR_NULL_POINTERS */
-
-					(*int_ptr) = len;
-				}
-#endif /* __GNUC__ */
+                    (*int_ptr) = len;
+                }
 			}
 
 			continue;

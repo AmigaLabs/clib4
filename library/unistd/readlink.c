@@ -31,12 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
@@ -44,12 +38,6 @@
 #ifndef _STAT_HEADERS_H
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 int readlink(const char *path_name, char *buffer, int buffer_size)
 {
@@ -72,17 +60,13 @@ int readlink(const char *path_name, char *buffer, int buffer_size)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL || buffer == NULL)
-		{
-			SHOWSTRING("invalid parameters");
+    if (path_name == NULL || buffer == NULL)
+    {
+        SHOWSTRING("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -102,10 +86,7 @@ int readlink(const char *path_name, char *buffer, int buffer_size)
 
 	D(("trying to get a lock on '%s'", path_name));
 
-	PROFILE_OFF();
 	lock = __lock((STRPTR)path_name, SHARED_LOCK, &target_length, buffer, (size_t)buffer_size);
-	PROFILE_ON();
-
 	if (lock != ZERO)
 	{
 		__set_errno(EINVAL);
@@ -137,9 +118,7 @@ int readlink(const char *path_name, char *buffer, int buffer_size)
 
 out:
 
-	PROFILE_OFF();
 	UnLock(lock);
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

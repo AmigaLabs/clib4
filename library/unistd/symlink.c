@@ -31,23 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int symlink(const char *actual_path, const char *symbolic_path)
+int
+symlink(const char *actual_path, const char *symbolic_path)
 {
 #if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info actual_path_name_nti;
@@ -66,17 +55,13 @@ int symlink(const char *actual_path, const char *symbolic_path)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (actual_path == NULL || symbolic_path == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (actual_path == NULL || symbolic_path == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -105,10 +90,7 @@ int symlink(const char *actual_path, const char *symbolic_path)
 
 	SHOWMSG("trying to make that link");
 
-	PROFILE_OFF();
 	status = MakeLink((STRPTR)symbolic_path, (APTR)actual_path, LINK_SOFT);
-	PROFILE_ON();
-
 	if (status == DOSFALSE)
 	{
 		SHOWMSG("that didn't work");

@@ -31,42 +31,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _STDLIB_PROTOS_H
+#include "stdlib_protos.h"
+#endif /* _STDLIB_PROTOS_H */
 
 char *
-strcat(char *dest, const char *src)
-{
-	char * result = dest;
+strcat(char *dest, const char *src) {
+    char *result = dest;
 
-	assert( dest != NULL && src != NULL );
+    assert(dest != NULL && src != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(dest == NULL || src == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (dest == NULL || src == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	while((*dest) != '\0')
-		dest++;
+    while ((*dest) != '\0')
+        dest++;
 
-	while(((*dest++) = (*src++)) != '\0')
-		DO_NOTHING;
+    while (((*dest++) = (*src++)) != '\0')
+        DO_NOTHING;
 
- out:
+out:
 
-	return(result);
+    return (result);
 }

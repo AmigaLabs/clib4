@@ -31,38 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(__GNUC__)
-
-/****************************************************************************/
-
-#if defined(SMALL_DATA)
-#define A4(x) "a4@(" #x ":W)"
-#elif defined(SMALL_DATA32)
-#define A4(x) "a4@(" #x ":L)"
-#else
-#define A4(x) #x
-#endif /* SMALL_DATA */
-
-/****************************************************************************/
-#ifndef __PPC__
-asm("                               \n\
-                                    \n\
-	.text                            \n\
-	.even                            \n\
-                                    \n\
-	.globl	___mulsi3               \n\
-	.globl	___UtilityBase          \n\
-                                    \n\
-| D0 = D0 * D1                      \n\
-                                    \n\
-___mulsi3:                          \n\
-                                    \n\
-	moveml	sp@(4),d0/d1            \n\
-	movel	"A4(___UtilityBase)",a0    \n\
-	jmp		a0@(-138:W)             \n\
-                                    \n\
-");
-#else
 __asm("							\n\
     .text						\n\
     .align 2					\n\
@@ -73,7 +41,3 @@ __mulsi3:						\n\
      mullw  r3, r3, r4			\n\
      blr						\n\
 ");
-#endif
-/****************************************************************************/
-
-#endif /* __GNUC__ */

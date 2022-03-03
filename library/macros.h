@@ -103,28 +103,7 @@
     ((struct MinList *)((ml)->mlh_TailPred) == (struct MinList *)(ml))
 #endif
 
-/****************************************************************************/
-
 #ifndef AMIGA_COMPILER_H
-
-#ifdef __SASC
-
-#ifndef ASM
-#define ASM __asm
-#endif /* ASM */
-
-#ifndef REG
-#define REG(r,p) register __##r p
-#endif /* REG */
-
-#ifndef INTERRUPT
-#define INTERRUPT __interrupt
-#endif /* INTERRUPT */
-
-#ifndef INLINE
-#define INLINE __inline
-#endif /* INLINE */
-#endif /* __SASC */
 
 #ifdef __GNUC__
 
@@ -147,8 +126,6 @@
 #endif /* __GNUC__ */
 
 #endif /* AMIGA_COMPILER_H */
-
-/****************************************************************************/
 
 #ifndef WEAK
 #ifdef __GNUC__

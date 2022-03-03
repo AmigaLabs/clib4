@@ -40,6 +40,11 @@
 int
 wscanf(const wchar_t *format, ...)
 {
-	/* ZZZ unimplemented */
-	return(0);
+    int ret;
+    va_list ap;
+
+    va_start (ap, format);
+    ret = vfwscanf(stdin, format, ap);
+    va_end (ap);
+    return ret;
 }

@@ -31,23 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STAT_HEADERS_H
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int fstat(int file_descriptor, struct stat *buffer)
+int
+fstat(int file_descriptor, struct stat *buffer)
 {
 	struct file_action_message fam;
 	struct ExamineData fib;
@@ -66,17 +55,13 @@ int fstat(int file_descriptor, struct stat *buffer)
 
 	__stdio_lock();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (buffer == NULL)
-		{
-			SHOWMSG("invalid buffer parameter");
+    if (buffer == NULL)
+    {
+        SHOWMSG("invalid buffer parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	assert(file_descriptor >= 0 && file_descriptor < __num_fd);
 	assert(__fd[file_descriptor] != NULL);

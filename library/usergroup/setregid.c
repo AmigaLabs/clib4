@@ -60,9 +60,7 @@ int setregid(gid_t real, gid_t eff)
 	}
 	else
 	{
-		PROFILE_OFF();
 		result = __setregid((LONG)real, (LONG)eff);
-		PROFILE_ON();
 	}
 
 	if (__check_abort_enabled)

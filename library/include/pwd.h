@@ -41,23 +41,13 @@
 #ifndef _PWD_H
 #define _PWD_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _SYS_TYPES_H
 #include <sys/types.h>
 #endif /* _SYS_TYPES_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #ifdef __GNUC__
  #ifdef __PPC__
@@ -80,24 +70,11 @@ struct passwd
 	char *	pw_shell;	/* Shell */
 };
 
-/****************************************************************************/
-
-/*
- * The following prototypes may clash with the bsdsocket.library or
- * usergroup.library API definitions.
- */
-
-#ifndef __NO_NET_API
-
 extern void endpwent(void);
 extern struct passwd *getpwent(void);
 extern struct passwd *getpwnam(const char *name);
 extern struct passwd *getpwuid(uid_t uid);
 extern void setpwent(void);
-
-#endif /* __NO_NET_API */
-
-/****************************************************************************/
 
 #ifdef __GNUC__
  #ifdef __PPC__
@@ -107,12 +84,6 @@ extern void setpwent(void);
  #pragma default-align
 #endif
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _PWD_H */

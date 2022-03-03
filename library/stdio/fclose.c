@@ -111,15 +111,11 @@ fclose(FILE *stream) {
 
         assert(file->iob_TempFileName != NULL);
 
-        PROFILE_OFF();
-
         old_current_dir = CurrentDir(file->iob_TempFileLock);
         DeleteFile(file->iob_TempFileName);
         CurrentDir(old_current_dir);
 
         UnLock(file->iob_TempFileLock);
-
-        PROFILE_ON();
 
         free(file->iob_TempFileName);
     }

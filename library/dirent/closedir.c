@@ -47,12 +47,6 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 /* Directories being scanned whose locks need to be freed when shutting down. */
 struct MinList NOCOMMON __directory_list;
 
@@ -176,14 +170,12 @@ int closedir(DIR *directory_pointer)
 			free(node);
 	}
 
-	PROFILE_OFF();
 	if (dh->dh_Context != NULL) {
 		ReleaseDirContext(dh->dh_Context);
 		dh->dh_Context = NULL;
 	}
 
 	UnLock(dh->dh_DirLock);
-	PROFILE_ON();
 
 	free(dh);
 

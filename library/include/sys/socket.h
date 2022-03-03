@@ -41,12 +41,6 @@
 #ifndef _SYS_SOCKET_H
 #define _SYS_SOCKET_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _STDDEF_H
 #include <stddef.h>
 #endif /* _STDDEF_H */
@@ -59,13 +53,9 @@
 #include <sys/time.h>
 #endif /* _SYS_TIME_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #ifdef __GNUC__
  #ifdef __PPC__
@@ -334,15 +324,6 @@ enum
 #define SHUT_RDWR       SHUT_RDWR
 };
 
-/****************************************************************************/
-
-/*
- * The following prototypes may clash with the bsdsocket.library or
- * usergroup.library API definitions.
- */
-
-#ifndef __NO_NET_API
-
 extern int accept(int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen);
 extern int bind(int socket, const struct sockaddr *address, socklen_t address_len);
 extern int connect(int socket, const struct sockaddr *address, socklen_t address_len);
@@ -361,10 +342,6 @@ extern int shutdown(int socket, int how);
 extern int socket(int domain, int type, int protocol);
 extern int socketpair (int domain, int type, int protocol, int fds[2]);
 
-#endif /* __NO_NET_API */
-
-/****************************************************************************/
-
 #ifdef __GNUC__
  #ifdef __PPC__
   #pragma pack()
@@ -373,12 +350,6 @@ extern int socketpair (int domain, int type, int protocol, int fds[2]);
  #pragma default-align
 #endif
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_SOCKET_H */

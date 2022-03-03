@@ -310,4 +310,9 @@ extern const uint32_t bittab[];
     }								\
   while (0)
 
+
+/* Functions used in wgetwc and wgetws */
+wint_t __fgetwc_unlocked_internal(FILE *f);
+wint_t __fgetwc_unlocked(FILE *f);
+
 #endif /* _WCHAR_HEADERS_H */

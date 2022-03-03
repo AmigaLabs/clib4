@@ -44,9 +44,7 @@ getprotobynumber(int proto)
 
 	assert(__SocketBase != NULL);
 
-	PROFILE_OFF();
 	result = __getprotobynumber(proto);
-	PROFILE_ON();
 
 	if (__check_abort_enabled)
 		__check_abort();

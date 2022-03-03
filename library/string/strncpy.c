@@ -31,55 +31,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _STDLIB_PROTOS_H
+#include "stdlib_protos.h"
+#endif /* _STDLIB_PROTOS_H */
 
 char *
-strncpy(char *dest, const char *src, size_t n)
-{
-	char * result = dest;
+strncpy(char *dest, const char *src, size_t n) {
+    char *result = dest;
 
-	assert( dest != NULL && src != NULL );
-	assert( (int)n >= 0 );
+    assert(dest != NULL && src != NULL);
+    assert((int) n >= 0);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(dest == NULL || src == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (dest == NULL || src == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	/* If the number of characters is 0 or negative, then this
-	 * function is supposed to have no effect.
-	 */
-	if((int)n > 0)
-	{
-		while(n-- > 0)
-		{
-			if(((*dest++) = (*src++)) == '\0')
-			{
-				/* Fill the rest with NUL bytes... */
-				while(n-- > 0)
-					(*dest++) = '\0';
+    /* If the number of characters is 0 or negative, then this
+     * function is supposed to have no effect.
+     */
+    if ((int) n > 0) {
+        while (n-- > 0) {
+            if (((*dest++) = (*src++)) == '\0') {
+                /* Fill the rest with NUL bytes... */
+                while (n-- > 0)
+                    (*dest++) = '\0';
 
-				break;
-			}
-		}
-	}
+                break;
+            }
+        }
+    }
 
- out:
+out:
 
-	return(result);
+    return (result);
 }

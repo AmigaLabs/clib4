@@ -47,12 +47,6 @@
 
 __BEGIN_DECLS
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 /* Operations that can be performed by the file action function. */
 enum file_action_t
 {

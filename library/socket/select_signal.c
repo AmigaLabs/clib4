@@ -724,9 +724,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 			{
 				struct DateStamp datestamp_timeout;
 
-				PROFILE_OFF();
 				DateStamp(&stop_when);
-				PROFILE_ON();
 
 				add_dates(&stop_when, timeval_to_datestamp(&datestamp_timeout, timeout));
 			}
@@ -747,9 +745,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 					__check_abort();
 
 				/* Delay for a tick to avoid busy-waiting. */
-				PROFILE_OFF();
 				Delay(1);
-				PROFILE_ON();
 
 				/* This tells WaitSelect() to poll the sockets for input. */
 				zero.tv_secs = 0;
@@ -762,9 +758,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 					break_mask |= __break_signal_mask;
 
 				/* Check for socket input. */
-				PROFILE_OFF();
 				result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct timeval *)&zero, &break_mask);
-				PROFILE_ON();
 
 				/* Stop if a break signal arrives. */
 				if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __break_signal_mask))
@@ -804,8 +798,6 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 								assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
 
 								/* Does this one have input? */
-								PROFILE_OFF();
-
 								if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
 								{
 									/* For an interactive stream, we simply ask. */
@@ -845,8 +837,6 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 										FreeDosObject(DOS_EXAMINEDATA, fib);
 									}
 								}
-
-								PROFILE_ON();
 							}
 						}
 
@@ -902,10 +892,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 				if (timeout != NULL)
 				{
 					struct DateStamp now;
-
-					PROFILE_OFF();
 					DateStamp(&now);
-					PROFILE_ON();
 
 					if (CompareDates(&now, &stop_when) <= 0)
 						break;
@@ -929,10 +916,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 			if (__check_abort_enabled)
 				break_mask |= __break_signal_mask;
 
-			PROFILE_OFF();
 			result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct timeval *)timeout, &break_mask);
-			PROFILE_ON();
-
 			if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __break_signal_mask))
 			{
 				SetSignal(__break_signal_mask, __break_signal_mask);
@@ -978,10 +962,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 			if (timeout != NULL)
 			{
 				struct DateStamp datestamp_timeout;
-
-				PROFILE_OFF();
 				DateStamp(&stop_when);
-				PROFILE_ON();
 
 				add_dates(&stop_when, timeval_to_datestamp(&datestamp_timeout, timeout));
 			}
@@ -995,9 +976,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 				if (__check_abort_enabled)
 					__check_abort();
 
-				PROFILE_OFF();
 				Delay(1);
-				PROFILE_ON();
 
 				result = 0;
 
@@ -1013,8 +992,6 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 							if (FLAG_IS_SET(fd->fd_Flags, FDF_READ))
 							{
 								assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
-
-								PROFILE_OFF();
 
 								if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
 								{
@@ -1042,8 +1019,6 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 										FreeDosObject(DOS_EXAMINEDATA, fib);
 									}
 								}
-
-								PROFILE_ON();
 							}
 						}
 
@@ -1087,10 +1062,7 @@ int __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fd
 				if (timeout != NULL)
 				{
 					struct DateStamp now;
-
-					PROFILE_OFF();
 					DateStamp(&now);
-					PROFILE_ON();
 
 					if (CompareDates(&now, &stop_when) <= 0)
 						break;

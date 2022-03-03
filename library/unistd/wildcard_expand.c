@@ -126,8 +126,6 @@ int __wildcard_expand_init(void) {
     int error;
     int i;
 
-    PROFILE_OFF();
-
     /* Disable dos.library requesters during pattern matching below. We
        do this so early in order to make it easier to reset the window
        pointer in the cleanup code. */
@@ -404,8 +402,6 @@ out:
     }
 
     quote_vector_size = 0;
-
-    PROFILE_ON();
 
     return (error);
 }

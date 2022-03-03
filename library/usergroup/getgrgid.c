@@ -46,9 +46,7 @@ getgrgid(gid_t gid)
 
 	assert(__UserGroupBase != NULL);
 
-	PROFILE_OFF();
 	result = __getgrgid((LONG)gid);
-	PROFILE_ON();
 
 	if (__check_abort_enabled)
 		__check_abort();

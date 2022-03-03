@@ -76,7 +76,7 @@ static const char * error_table[EILSEQ - EPERM + 1] =
 	"Too many links",
 	"Broken pipe",
 	"Numerical argument out of domain",
-	"Result too large",
+	"Numerical result out of range",
 	"Resource temporarily unavailable",
 	"Operation now in progress",
 	"Operation already in progress",

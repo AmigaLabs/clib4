@@ -31,17 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
-int initgroups(const char *name, gid_t basegroup)
+int
+initgroups(const char *name, gid_t basegroup)
 {
 	int result = ERROR;
 
@@ -53,21 +48,15 @@ int initgroups(const char *name, gid_t basegroup)
 	assert(name != NULL);
 	assert(__UserGroupBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (name == NULL)
-		{
-			SHOWMSG("invalid name");
+    if (name == NULL)
+    {
+        SHOWMSG("invalid name");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	PROFILE_OFF();
 	result = __initgroups((STRPTR)name, (LONG)basegroup);
-	PROFILE_ON();
 
 out:
 

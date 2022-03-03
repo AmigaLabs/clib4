@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
@@ -56,17 +52,13 @@ send(int sockfd, const void *buff, size_t nbytes, int flags)
 	assert(buff != NULL);
 	assert(__SocketBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (buff == NULL)
-		{
-			SHOWMSG("invalid buffer parameter");
+    if (buff == NULL)
+    {
+        SHOWMSG("invalid buffer parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	assert(sockfd >= 0 && sockfd < __num_fd);
 	assert(__fd[sockfd] != NULL);
@@ -77,9 +69,7 @@ send(int sockfd, const void *buff, size_t nbytes, int flags)
 	if (fd == NULL)
 		goto out;
 
-	PROFILE_OFF();
 	result = __send(fd->fd_Socket, (void *)buff, (LONG)nbytes, flags);
-	PROFILE_ON();
 
 out:
 

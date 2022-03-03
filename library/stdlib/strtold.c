@@ -31,12 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
@@ -44,10 +38,6 @@
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
-
-/****************************************************************************/
-
-#if defined(USE_64_BIT_INTS)
 
 STATIC const double powerof10[] = {1.e1, 1.e2, 1.e4, 1.e8, 1.e16, 1.e32};
 STATIC const double digits[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -71,17 +61,13 @@ strtold(const char *str, char **ptr)
 
     assert(str != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
+    if (str == NULL)
     {
-        if (str == NULL)
-        {
-            SHOWMSG("invalid str parameter");
+        SHOWMSG("invalid str parameter");
 
-            __set_errno(EFAULT);
-            goto out;
-        }
+        __set_errno(EFAULT);
+        goto out;
     }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
     while (isspace(*fst))
         ++fst; /* SKIP WHITE SPACE */
@@ -192,9 +178,8 @@ strtold(const char *str, char **ptr)
 
     if (ptr)
         *ptr = (char *)(value ? fst : str);
-    
+out:
+
     RETURN(result);
     return result;
 }
-
-#endif

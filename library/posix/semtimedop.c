@@ -37,12 +37,12 @@
  *
  *****************************************************************************
  */
-#define __USE_GNU
 
 #ifndef _SHM_HEADERS_H
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
 
+#define __USE_GNU
 #include <sys/sem.h>
 
 int 

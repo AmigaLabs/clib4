@@ -31,17 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
-
-/****************************************************************************/
 
 /* This is roughly equivalent to fflush(), but returns the last character
    written to the buffer, or EOF if flushing produced an error. The putc()
@@ -50,55 +42,48 @@
    was a line feed, prompting the buffer contents to be flushed. It should
    never be used in place of fflush(). */
 int
-__flush(FILE *stream)
-{
-	struct iob * iob = (struct iob *)stream;
-	int result = EOF;
-	int last_c;
+__flush(FILE *stream) {
+    struct iob *iob = (struct iob *) stream;
+    int result = EOF;
+    int last_c;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(stream);
+    SHOWPOINTER(stream);
 
-	assert( stream != NULL );
+    assert(stream != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	flockfile(stream);
+    flockfile(stream);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(stream == NULL)
-		{
-			SHOWMSG("invalid stream parameter");
+    if (stream == NULL) {
+        SHOWMSG("invalid stream parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	assert( __is_valid_iob(iob) );
-	assert( iob->iob_BufferWriteBytes > 0 );
-	assert( iob->iob_BufferSize > 0 );
+    assert(__is_valid_iob(iob));
+    assert(iob->iob_BufferWriteBytes > 0);
+    assert(iob->iob_BufferSize > 0);
 
-	last_c = iob->iob_Buffer[iob->iob_BufferWriteBytes - 1];
+    last_c = iob->iob_Buffer[iob->iob_BufferWriteBytes - 1];
 
-	if(__flush_iob_write_buffer(iob) < 0)
-	{
-		/* Remove the last character stored in the buffer, which is
-		   typically a '\n'. */
-		iob->iob_BufferWriteBytes--;
-		goto out;
-	}
+    if (__flush_iob_write_buffer(iob) < 0) {
+        /* Remove the last character stored in the buffer, which is
+           typically a '\n'. */
+        iob->iob_BufferWriteBytes--;
+        goto out;
+    }
 
-	result = last_c;
+    result = last_c;
 
- out:
+out:
 
-	funlockfile(stream);
+    funlockfile(stream);
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

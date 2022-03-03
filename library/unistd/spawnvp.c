@@ -35,13 +35,7 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int spawnvp(int mode, const char *path, const char *const *argv)
-{
+int
+spawnvp(int mode, const char *path, const char *const *argv) {
     return spawnv(mode, path, argv);
 }

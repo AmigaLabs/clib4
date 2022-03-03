@@ -31,42 +31,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _STDLIB_PROTOS_H
+#include "stdlib_protos.h"
+#endif /* _STDLIB_PROTOS_H */
 
 char *
-ctime_r(const time_t *tptr,char * buffer)
-{
-	char * result = NULL;
-	struct tm tm;
+ctime_r(const time_t *tptr, char *buffer) {
+    char *result = NULL;
+    struct tm tm;
 
-	ENTER();
+    ENTER();
 
-	assert( tptr != NULL && buffer != NULL );
+    assert(tptr != NULL && buffer != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(tptr == NULL || buffer == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (tptr == NULL || buffer == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	result = asctime_r(localtime_r(tptr,&tm),buffer);
+    result = asctime_r(localtime_r(tptr, &tm), buffer);
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

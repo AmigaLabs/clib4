@@ -44,9 +44,7 @@ getpgrp(void)
 
 	assert(__UserGroupBase != NULL);
 
-	PROFILE_OFF();
 	result = __getpgrp();
-	PROFILE_ON();
 
 	if (__check_abort_enabled)
 		__check_abort();

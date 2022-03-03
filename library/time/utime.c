@@ -94,10 +94,7 @@ int utime(const char *path_name, const struct utimbuf *times)
 	}
 #endif /* UNIX_PATH_SEMANTICS */
 
-	PROFILE_OFF();
 	status = SetFileDate((STRPTR)path_name, &ds);
-	PROFILE_ON();
-
 	if (status == DOSFALSE)
 	{
 		__set_errno(__translate_io_error_to_errno(IoErr()));
