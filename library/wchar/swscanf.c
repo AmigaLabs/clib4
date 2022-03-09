@@ -35,11 +35,30 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 int
-swscanf(wchar_t *s,const wchar_t *format, ...)
-{
-	/* ZZZ unimplemented */
-	return(0);
+swscanf(wchar_t *s, const wchar_t *format, ...) {
+    int result = EOF;
+
+    ENTER();
+
+    SHOWSTRING(format);
+
+    assert(format != NULL);
+
+    if (__check_abort_enabled)
+        __check_abort();
+
+    if (format == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
+
+    va_list ap;
+    va_start(ap, format);
+    result = vswscanf(s, format, ap);
+    va_end(ap);
+
+out:
+    RETURN(result);
+    return result;
 }

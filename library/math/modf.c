@@ -40,17 +40,11 @@
  * is preserved.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
 #if defined(M68881_FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
 
 INLINE STATIC const double
 __modf(double x, double *nptr)
@@ -149,17 +143,13 @@ modf(double x, double *nptr)
 
 	assert(nptr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (nptr == NULL)
-		{
-			__set_errno(EFAULT);
+    if (nptr == NULL)
+    {
+        __set_errno(EFAULT);
 
-			result = __get_huge_val();
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        result = __get_huge_val();
+        goto out;
+    }
 
 	result = __modf(x, nptr);
 

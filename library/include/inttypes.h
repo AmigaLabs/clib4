@@ -291,8 +291,8 @@ extern uintmax_t strtoumax(const char *str, char **ptr, int base);
 
 /****************************************************************************/
 
-extern intmax_t wcstoimax(const wchar_t *str, char **ptr, int base);
-extern uintmax_t wcstoumax(const wchar_t *str, char **ptr, int base);
+extern intmax_t wcstoimax(const wchar_t *str, wchar_t **ptr, int base);
+extern uintmax_t wcstoumax(const wchar_t *str, wchar_t **ptr, int base);
 
 __END_DECLS
 

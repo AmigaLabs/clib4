@@ -56,8 +56,6 @@ int ftruncate(int file_descriptor, off_t length)
 	if (__check_abort_enabled)
 		__check_abort();
 
-	PROFILE_OFF();
-
 	__stdio_lock();
 
 	fd = __get_file_descriptor(file_descriptor);
@@ -134,8 +132,6 @@ out:
 	__fd_unlock(fd);
 
 	__stdio_unlock();
-
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

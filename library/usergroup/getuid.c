@@ -35,8 +35,6 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
 uid_t getuid(void)
 {
 	uid_t result;
@@ -51,9 +49,7 @@ uid_t getuid(void)
 	}
 	else
 	{
-		PROFILE_OFF();
 		result = __getuid();
-		PROFILE_ON();
 	}
 
 	if (__check_abort_enabled)

@@ -79,8 +79,6 @@ CLIB_CONSTRUCTOR(usergroup_init)
 
 	ENTER();
 
-	PROFILE_OFF();
-
 	__UserGroupBase = OpenLibrary("usergroup.library", 0);
 
 	if (__UserGroupBase != NULL)
@@ -118,8 +116,6 @@ CLIB_CONSTRUCTOR(usergroup_init)
 	success = TRUE;
 
 out:
-
-	PROFILE_ON();
 
 	SHOWVALUE(success);
 	LEAVE();

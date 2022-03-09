@@ -31,17 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
-
-/****************************************************************************/
 
 char *
 gets(char *s)
@@ -60,19 +52,15 @@ gets(char *s)
 
 	flockfile(stdin);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (s == NULL || stdin == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (s == NULL || stdin == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
+        __set_errno(EFAULT);
 
-			result = NULL;
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        result = NULL;
+        goto out;
+    }
 
 	/* Take care of the checks and data structure changes that
 	 * need to be handled only once for this stream.

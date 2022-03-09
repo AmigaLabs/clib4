@@ -33,162 +33,132 @@
 
 #include "debug_headers.h"
 
-/****************************************************************************/
-
-#if defined(__amigaos4__)
-
-/****************************************************************************/
-
 /* Count the number of parameters that need to be passed on the stack. If a
    parameter table is provided, pick up the parameters and store them in
    the table. The table layout follows the format string and can include
    both 16 and 32 bit data. */
 STATIC size_t
-process_var_args(char *format_string,va_list argument_list,unsigned short * table)
-{
-	size_t num_args = 0;
-	char len;
-	char c;
 
-	while((c = (*format_string++)) != '\0')
-	{
-		if(c != '%')
-			continue;
+process_var_args(char *format_string, va_list argument_list, unsigned short *table) {
+    size_t num_args = 0;
+    char len;
+    char c;
 
-		/* Process the flags; only '-' is allowed here. */
-		if((*format_string) == '-')
-			format_string++;
+    while ((c = (*format_string++)) != '\0') {
+        if (c != '%')
+            continue;
 
-		/* Process the field width; this must be a string of digits. */
-		c = (*format_string);
-		while('0' <= c && c <= '9')
-		{
-			format_string++;
+        /* Process the flags; only '-' is allowed here. */
+        if ((*format_string) == '-')
+            format_string++;
 
-			c = (*format_string);
-		}
+        /* Process the field width; this must be a string of digits. */
+        c = (*format_string);
+        while ('0' <= c && c <= '9') {
+            format_string++;
 
-		/* Process the size limit field, if any. */
-		if((*format_string) == '.')
-		{
-			format_string++;
+            c = (*format_string);
+        }
 
-			c = (*format_string);
-			while('0' <= c && c <= '9')
-			{
-				format_string++;
+        /* Process the size limit field, if any. */
+        if ((*format_string) == '.') {
+            format_string++;
 
-				c = (*format_string);
-			}
-		}
+            c = (*format_string);
+            while ('0' <= c && c <= '9') {
+                format_string++;
 
-		/* Take care of the parameter length, if any. */
-		len = (*format_string);
-		if(len == 'l')
-			format_string++;
+                c = (*format_string);
+            }
+        }
 
-		c = (*format_string++);
-		if(c == '\0')
-			break;
+        /* Take care of the parameter length, if any. */
+        len = (*format_string);
+        if (len == 'l')
+            format_string++;
 
-		/* Check if any of the following parameters might come from the
-		   stack, and if so, convert them into the form expected by the
-		   operating system. */
-		switch(c)
-		{
-			/* 32 bit pointers (BSTR or STRPTR) */
-			case 'b':
-			case 's':
+        c = (*format_string++);
+        if (c == '\0')
+            break;
 
-				if(table != NULL)
-					(*(unsigned long *)&table[num_args]) = (unsigned long)va_arg(argument_list,char *);
+        /* Check if any of the following parameters might come from the
+           stack, and if so, convert them into the form expected by the
+           operating system. */
+        switch (c) {
+            /* 32 bit pointers (BSTR or STRPTR) */
+            case 'b':
+            case 's':
 
-				num_args += 2;
-				break;
+                if (table != NULL)
+                    (*(unsigned long *) &table[num_args]) = (unsigned long) va_arg(argument_list,
+                char *);
 
-			/* Single character */
-			case 'c':
+                num_args += 2;
+                break;
 
-				/* NOTE: va_arg() is quietly assumed not to be able to expand 'char' type
-				         parameters. They appear to default to 'int' and should show up as such
-				         on the stack (or wherever they ended up). We therefore assume that they
-				         should be picked up as type 'int' rather than as type 'char'. */
+                /* Single character */
+            case 'c':
 
-			/* Numeric constant, which is assumed to be of type int. */
-			case 'd':
-			case 'u':
-			case 'x':
+                /* NOTE: va_arg() is quietly assumed not to be able to expand 'char' type
+                         parameters. They appear to default to 'int' and should show up as such
+                         on the stack (or wherever they ended up). We therefore assume that they
+                         should be picked up as type 'int' rather than as type 'char'. */
 
-				if(table != NULL)
-				{
-					if(len == 'l')
-						(*(unsigned long *)&table[num_args]) = (unsigned long)va_arg(argument_list,int);
-					else
-						table[num_args] = (unsigned short)va_arg(argument_list,int);
-				}
+                /* Numeric constant, which is assumed to be of type int. */
+            case 'd':
+            case 'u':
+            case 'x':
 
-				if(len == 'l')
-					num_args += 2;
-				else
-					num_args++;
+                if (table != NULL) {
+                    if (len == 'l')
+                        (*(unsigned long *) &table[num_args]) = (unsigned long) va_arg(argument_list,
+                    int);
+                    else
+                    table[num_args] = (unsigned short) va_arg(argument_list,
+                    int);
+                }
 
-				break;
+                if (len == 'l')
+                    num_args += 2;
+                else
+                    num_args++;
 
-			/* Anything else is taken as is... */
-			default:
+                break;
 
-				break;
-		}
-	}
+                /* Anything else is taken as is... */
+            default:
 
-	return(num_args);
+                break;
+        }
+    }
+
+    return (num_args);
 }
-
-/****************************************************************************/
-
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
 
 STATIC VOID ASM
-raw_put_char(REG(d0,UBYTE c))
+raw_put_char(REG(d0, UBYTE c))
 {
-	kputc(c); 
+    kputc(c);
 }
 
-/****************************************************************************/
-
 VOID
-KPutFmt(const char * format_string,va_list argument_list)
-{
-	assert( format_string != NULL );
+KPutFmt(const char *format_string, va_list argument_list) {
+    assert(format_string != NULL);
 
-	if(format_string != NULL)
-	{
-		#if defined(__amigaos4__)
-		{
-			size_t num_args;
+    if (format_string != NULL) {
+        size_t num_args;
 
-			/* The following assumes that GCC extensions are available. */
+        /* The following assumes that GCC extensions are available. */
 
-			num_args = process_var_args((char *)format_string,argument_list,NULL);
-			if(num_args > 0)
-			{
-				unsigned short table[num_args];
+        num_args = process_var_args((char *) format_string, argument_list, NULL);
+        if (num_args > 0) {
+            unsigned short table[num_args];
 
-				(void)process_var_args((char *)format_string,argument_list,table);
+            (void) process_var_args((char *) format_string, argument_list, table);
 
-				KDoFmt(format_string,(APTR)table,(APTR)raw_put_char,NULL);
-			}
-			else
-			{
-				KDoFmt(format_string,NULL,(APTR)raw_put_char,NULL);
-			}
-		}
-		#else
-		{
-			KDoFmt(format_string,(APTR)argument_list,(APTR)raw_put_char,NULL);
-		}
-		#endif /* __amigaos4__ */
-	}
+            KDoFmt(format_string, (APTR) table, (APTR) raw_put_char, NULL);
+        } else {
+            KDoFmt(format_string, NULL, (APTR) raw_put_char, NULL);
+        }
+    }
 }

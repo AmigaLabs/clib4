@@ -179,7 +179,6 @@ extern wint_t __jp2uc(wint_t c, int type);
 
 #define __SA 0xc2u
 #define __SB 0xf4u
-#define __ARGMAX 127
 
 /* Arbitrary encoding for representing code units instead of characters. */
 #define CODEUNIT(c) (0xdfff & (signed char)(c))
@@ -200,43 +199,6 @@ extern int _mbtowc(wchar_t *, const char *, size_t, _mbstate_t *);
 #define _issjis2(c) (((c) >= 0x40 && (c) <= 0x7e) || ((c) >= 0x80 && (c) <= 0xfc))
 #define _iseucjp(c) ((c) >= 0xa1 && (c) <= 0xfe)
 #define _isjis(c) ((c) >= 0x21 && (c) <= 0x7e)
-
-/* Convenient bit representation for modifier flags, which all fall
- * within 31 codepoints of the space character.
- * vfprintf vfwprintf
- */
-
-#define __M_ALT_FORM(_T) (_T << ('#' - ' '))
-#define __M_ZERO_PAD(_T) (_T << ('0' - ' '))
-#define __M_LEFT_ADJ(_T) (_T << ('-' - ' '))
-#define __M_PAD_POS(_T) (_T << (' ' - ' '))
-#define __M_MARK_POS(_T) (_T << ('+' - ' '))
-#define __M_GROUPED(_T) (_T << ('\'' - ' '))
-
-#define __U_ALT_FORM __M_ALT_FORM(1U)
-#define __U_ZERO_PAD __M_ZERO_PAD(1U)
-#define __U_LEFT_ADJ __M_LEFT_ADJ(1U)
-#define __U_PAD_POS __M_PAD_POS(1U)
-#define __U_MARK_POS __M_MARK_POS(1U)
-#define __U_GROUPED __M_GROUPED(1U)
-
-#define __S_ALT_FORM __M_ALT_FORM(1)
-#define __S_ZERO_PAD __M_ZERO_PAD(1)
-#define __S_LEFT_ADJ __M_LEFT_ADJ(1)
-#define __S_PAD_POS __M_PAD_POS(1)
-#define __S_MARK_POS __M_MARK_POS(1)
-#define __S_GROUPED __M_GROUPED(1)
-
-#define __U_FLAGMASK (__U_ALT_FORM | __U_ZERO_PAD | __U_LEFT_ADJ | __U_PAD_POS | __U_MARK_POS | __U_GROUPED)
-#define __S_FLAGMASK (__S_ALT_FORM | __S_ZERO_PAD | __S_LEFT_ADJ | __S_PAD_POS | __S_MARK_POS | __S_GROUPED)
-
-#if (UINT_MAX == ULONG_MAX)
-#define __LONG_IS_INT
-#endif
-
-#if ((SIZE_MAX != ULONG_MAX) || (UINTMAX_MAX != ULLONG_MAX))
-#define __ODD_TYPES
-#endif
 
 #define __PSEP '/'
 
@@ -309,5 +271,10 @@ extern const uint32_t bittab[];
 	}							\
     }								\
   while (0)
+
+
+/* Functions used in wgetwc and wgetws */
+wint_t __fgetwc_unlocked_internal(FILE *f);
+wint_t __fgetwc_unlocked(FILE *f);
 
 #endif /* _WCHAR_HEADERS_H */

@@ -35,140 +35,123 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
+int
+execvp(const char *command, char *const argv[]) {
+    char *command_buffer = NULL;
+    size_t command_name_len, i;
+    char *path_copy = NULL;
+    int result = -1;
+    BOOL found_path_separators;
 
-/* The following is not part of the ISO 'C' (1994) standard. */
+    /* Do not allow null command */
+    if (command == NULL || (*command) == '\0') {
+        __set_errno(ENOENT);
+        goto out;
+    }
 
-/****************************************************************************/
+    command_name_len = strlen(command);
 
-int execvp(const char *command, char *const argv[])
-{
-	char *command_buffer = NULL;
-	size_t command_name_len, i;
-	char *path_copy = NULL;
-	int result = -1;
-	BOOL found_path_separators;
+    /* Check if there are any path separator characters in the
+       command name. */
+    found_path_separators = FALSE;
 
-	/* Do not allow null command */
-	if (command == NULL || (*command) == '\0')
-	{
-		__set_errno(ENOENT);
-		goto out;
-	}
+    for (i = 0; i < command_name_len; i++) {
+        if (command[i] == '/' || command[i] == ':') {
+            found_path_separators = TRUE;
+            break;
+        }
+    }
 
-	command_name_len = strlen(command);
+    /* If it's an absolute or relative path name, it's easy. */
+    if (found_path_separators) {
+        result = execve(command, argv, environ);
+    } else {
+        size_t command_buffer_size = 0;
+        const char *path_delimiter;
+        char *path;
+        const char *search_prefix;
+        size_t search_prefix_len;
+        size_t complete_path_len;
+        int error;
 
-	/* Check if there are any path separator characters in the
-	   command name. */
-	found_path_separators = FALSE;
+        /* We first look up the PATH environment variable because
+           we will be making a copy of it. This avoids trouble
+           lateron when we will be calling getenv() again. */
+        path = getenv("PATH");
+        if (path == NULL)
+            path = (char *) __default_path;
 
-	for (i = 0; i < command_name_len; i++)
-	{
-		if (command[i] == '/' || command[i] == ':')
-		{
-			found_path_separators = TRUE;
-			break;
-		}
-	}
+        path_copy = strdup(path);
+        if (path_copy == NULL) {
+            __set_errno(ENOMEM);
+            goto out;
+        }
 
-	/* If it's an absolute or relative path name, it's easy. */
-	if (found_path_separators)
-	{
-		result = execve(command, argv, environ);
-	}
-	else
-	{
-		size_t command_buffer_size = 0;
-		const char *path_delimiter;
-		char *path;
-		const char *search_prefix;
-		size_t search_prefix_len;
-		size_t complete_path_len;
-		int error;
+        path = path_copy;
 
-		/* We first look up the PATH environment variable because
-		   we will be making a copy of it. This avoids trouble
-		   lateron when we will be calling getenv() again. */
-		path = getenv("PATH");
-		if (path == NULL)
-			path = (char *)__default_path;
+        path_delimiter = getenv("PATH_SEPARATOR");
+        if (path_delimiter == NULL)
+            path_delimiter = __default_path_delimiter;
 
-		path_copy = strdup(path);
-		if (path_copy == NULL)
-		{
-			__set_errno(ENOMEM);
-			goto out;
-		}
+        while ((search_prefix = strsep(&path, path_delimiter)) != NULL) {
+            if ((*search_prefix) == '\0')
+                search_prefix = ".";
 
-		path = path_copy;
+            search_prefix_len = strlen(search_prefix);
 
-		path_delimiter = getenv("PATH_SEPARATOR");
-		if (path_delimiter == NULL)
-			path_delimiter = __default_path_delimiter;
+            complete_path_len = search_prefix_len + 1 + command_name_len;
+            if (complete_path_len + 1 > command_buffer_size) {
+                char *new_command_buffer;
 
-		while ((search_prefix = strsep(&path, path_delimiter)) != NULL)
-		{
-			if ((*search_prefix) == '\0')
-				search_prefix = ".";
+                /* Allocate a little more memory than we
+                   really need. */
+                new_command_buffer = malloc(complete_path_len + 10);
+                if (new_command_buffer == NULL) {
+                    __set_errno(ENOMEM);
+                    goto out;
+                }
 
-			search_prefix_len = strlen(search_prefix);
+                if (command_buffer != NULL)
+                    free(command_buffer);
 
-			complete_path_len = search_prefix_len + 1 + command_name_len;
-			if (complete_path_len + 1 > command_buffer_size)
-			{
-				char *new_command_buffer;
+                command_buffer = new_command_buffer;
+                command_buffer_size = complete_path_len + 10;
+            }
 
-				/* Allocate a little more memory than we
-				   really need. */
-				new_command_buffer = malloc(complete_path_len + 10);
-				if (new_command_buffer == NULL)
-				{
-					__set_errno(ENOMEM);
-					goto out;
-				}
+            /* Combine the search prefix with the command name. */
+            memcpy(command_buffer, search_prefix, search_prefix_len);
+            command_buffer[search_prefix_len] = '/';
+            memcpy(&command_buffer[search_prefix_len + 1], command, command_name_len);
+            command_buffer[complete_path_len] = '\0';
 
-				if (command_buffer != NULL)
-					free(command_buffer);
+            /* Now try to run that command. */
+            result = execve(command_buffer, argv, environ);
 
-				command_buffer = new_command_buffer;
-				command_buffer_size = complete_path_len + 10;
-			}
+            /* Did it work? And if it didn't work, did it fail because
+               the command to be run could not be executed? */
+            error = __get_errno();
 
-			/* Combine the search prefix with the command name. */
-			memcpy(command_buffer, search_prefix, search_prefix_len);
-			command_buffer[search_prefix_len] = '/';
-			memcpy(&command_buffer[search_prefix_len + 1], command, command_name_len);
-			command_buffer[complete_path_len] = '\0';
+            if (result == 0 ||
+                (error != EACCES &&
+                 error != EISDIR &&
+                 error != ENOENT &&
+                 error != ENOEXEC &&
+                 error != EPERM)) {
+                break;
+            }
 
-			/* Now try to run that command. */
-			result = execve(command_buffer, argv, environ);
-
-			/* Did it work? And if it didn't work, did it fail because
-			   the command to be run could not be executed? */
-			error = __get_errno();
-
-			if (result == 0 ||
-				(error != EACCES &&
-				 error != EISDIR &&
-				 error != ENOENT &&
-				 error != ENOEXEC &&
-				 error != EPERM))
-			{
-				break;
-			}
-
-			/* Just in case somebody wants to quit... */
-			__check_abort();
-		}
-	}
+            /* Just in case somebody wants to quit... */
+            __check_abort();
+        }
+    }
 
 out:
 
-	if (path_copy != NULL)
-		free(path_copy);
+    if (path_copy != NULL)
+        free(path_copy);
 
-	if (command_buffer != NULL)
-		free(command_buffer);
+    if (command_buffer != NULL)
+        free(command_buffer);
 
-	return (result);
+    return (result);
 }

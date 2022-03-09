@@ -43,12 +43,6 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 STATIC BOOL
 string_needs_quoting(const char *string, size_t len)
 {

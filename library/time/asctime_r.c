@@ -35,7 +35,9 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-#include <errno.h>
+#ifndef _STDLIB_PROTOS_H
+#include "stdlib_protos.h"
+#endif /* _STDLIB_PROTOS_H */
 
 STATIC VOID
 add_to_string(char *to, size_t to_size, const char *string, size_t *offset_ptr) {

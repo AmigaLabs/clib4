@@ -41,17 +41,9 @@
 #ifndef _SYS_SYSTEMINFO_H
 #define _SYS_SYSTEMINFO_H
 
-/****************************************************************************/
+#include <features.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /* Numbers are picked to be the same as for Solaris */
 
@@ -73,12 +65,6 @@ extern "C" {
 
 extern long sysinfo(int cmd,char *buf,long buflen);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_SYSTEMINFO_H */

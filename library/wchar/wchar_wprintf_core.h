@@ -3,27 +3,135 @@
 
 #include <stdio.h>
 
+#if (UINT_MAX == ULONG_MAX)
+#define __LONG_IS_INT
+#endif
+
+#if ((SIZE_MAX != ULONG_MAX) || (UINTMAX_MAX != ULLONG_MAX))
+#define __ODD_TYPES
+#endif
+
 enum {
 	_BARE, _LPRE, _LLPRE, _HPRE, _HHPRE, _BIGLPRE,
 	_ZTPRE, _JPRE,
 	_STOP,
 	_PTR, _INT, _UINT, _ULLONG,
+#ifdef __LONG_IS_INT
 	_LONG, _ULONG,
+#else
+    #define _LONG _INT
+    #define _ULONG _UINT
+#endif
 	_SHORT, _USHORT, _CHAR, _UCHAR,
-	_LLONG, _SIZET, _IMAX, _UMAX, _PDIFF, _UIPTR,
+#ifdef __ODD_TYPES
+    _LLONG, _SIZET, _IMAX, _UMAX, _PDIFF, _UIPTR,
+#else
+#define _LLONG _ULLONG
+#define _SIZET _ULONG
+#define _IMAX _LLONG
+#define _UMAX _ULLONG
+#define _PDIFF _LONG
+#define _UIPTR _ULONG
+#endif
 	_DBL, _LDBL,
 	_NOARG,
 	_MAXSTATE
 };
 
+union arg
+{
+    uintmax_t i;
+    long double f;
+    void *p;
+};
+
+static inline void pop_arg(union arg *arg, int type, va_list *ap)
+{
+    /* Give the compiler a hint for optimizing the switch. */
+    if ((unsigned)type > _MAXSTATE)
+    {
+        return;
+    }
+    switch (type)
+    {
+        case _PTR:
+            arg->p = va_arg(*ap, void *);
+            break;
+        case _INT:
+            arg->i = (uintmax_t)((int)va_arg(*ap, int));
+            break;
+        case _UINT:
+            arg->i = (uintmax_t)((unsigned int)va_arg(*ap, unsigned int));
+#ifndef __LONG_IS_INT
+            break;
+        case _LONG:
+            arg->i = (uintmax_t)((long)va_arg(*ap, long));
+            break;
+        case _ULONG:
+            arg->i = (uintmax_t)((unsigned long)va_arg(*ap, unsigned long));
+#endif
+            break;
+        case _ULLONG:
+            arg->i = (uintmax_t)((unsigned long long)va_arg(*ap, unsigned long long));
+            break;
+        case _SHORT:
+            arg->i = (uintmax_t)((short)va_arg(*ap, int));
+            break;
+        case _USHORT:
+            arg->i = (uintmax_t)((unsigned short)va_arg(*ap, int));
+            break;
+        case _CHAR:
+            arg->i = (uintmax_t)((signed char)va_arg(*ap, int));
+            break;
+        case _UCHAR:
+            arg->i = (uintmax_t)((unsigned char)va_arg(*ap, int));
+#ifdef __ODD_TYPES
+            break;
+        case _LLONG:
+            arg->i = (uintmax_t)((long long)va_arg(*ap, long long);
+            break;
+        case _SIZET:
+            arg->i = (uintmax_t)((size_t)va_arg(*ap, size_t));
+            break;
+        case _IMAX:
+            arg->i = (uintmax_t)((intmax_t)va_arg(*ap, intmax_t));
+            break;
+        case _UMAX:
+            arg->i = (uintmax_t)((uintmax_t)va_arg(*ap, uintmax_t));
+            break;
+        case _PDIFF:
+            arg->i = (uintmax_t)((ptrdiff_t)va_arg(*ap, ptrdiff_t));
+            break;
+        case _UIPTR:
+            arg->i = (uintptr_t)((void*)va_arg(*ap, void*));
+#endif
+            break;
+        case _DBL:
+            arg->f = (long double)((double)va_arg(*ap, double));
+            break;
+        case _LDBL:
+            arg->f = (long double)va_arg(*ap, long double);
+            break;
+        default:
+            break;
+    }
+}
 
 typedef struct
 {
-    FILE *file;
+    FILE    *file;
     wchar_t *buffer;
-    size_t buffer_pos;
-    size_t buffer_size;
+    size_t   buffer_pos;
+    size_t   buffer_size;
 } FOut;
+
+typedef struct
+{
+    FILE   *file;
+    char   *buffer;
+    size_t  buffer_pos;
+    size_t  buffer_size;
+} Out;
 
 #define S(x) [(x)-'A']
 
@@ -80,17 +188,39 @@ static const unsigned char states[]['z'-'A'+1] = {
 
 #define OOB(x) ((unsigned)(x)-'A' > 'z'-'A')
 
-union arg
-{
-	uintmax_t i;
-	long double f;
-	void *p;
-};
+/* Convenient bit representation for modifier flags, which all fall
+ * within 31 codepoints of the space character.
+ * vfprintf vfwprintf
+ */
 
-void out_init_file(FOut *out, FILE *f);
+#define __M_ALT_FORM(_T) (_T << ('#' - ' '))
+#define __M_ZERO_PAD(_T) (_T << ('0' - ' '))
+#define __M_LEFT_ADJ(_T) (_T << ('-' - ' '))
+#define __M_PAD_POS(_T) (_T << (' ' - ' '))
+#define __M_MARK_POS(_T) (_T << ('+' - ' '))
+#define __M_GROUPED(_T) (_T << ('\'' - ' '))
+
+#define __U_ALT_FORM __M_ALT_FORM(1U)
+#define __U_ZERO_PAD __M_ZERO_PAD(1U)
+#define __U_LEFT_ADJ __M_LEFT_ADJ(1U)
+#define __U_PAD_POS __M_PAD_POS(1U)
+#define __U_MARK_POS __M_MARK_POS(1U)
+#define __U_GROUPED __M_GROUPED(1U)
+
+#define __S_ALT_FORM __M_ALT_FORM(1)
+#define __S_ZERO_PAD __M_ZERO_PAD(1)
+#define __S_LEFT_ADJ __M_LEFT_ADJ(1)
+#define __S_PAD_POS __M_PAD_POS(1)
+#define __S_MARK_POS __M_MARK_POS(1)
+#define __S_GROUPED __M_GROUPED(1)
+
+#define __U_FLAGMASK (__U_ALT_FORM | __U_ZERO_PAD | __U_LEFT_ADJ | __U_PAD_POS | __U_MARK_POS | __U_GROUPED)
+#define __S_FLAGMASK (__S_ALT_FORM | __S_ZERO_PAD | __S_LEFT_ADJ | __S_PAD_POS | __S_MARK_POS | __S_GROUPED)
+
 int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type);
-int out_overflow(FOut *_out);
 void out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size);
+int out_overflow(FOut *_out);
+
 int __wc_indelim(wchar_t wc, const wchar_t *delim);
 size_t wstring_wstocs(char dst[], size_t dsz, const wchar_t *src, size_t ssz);
 size_t wstring_cstows(wchar_t dst[], size_t dsz, const char *src, size_t ssz);

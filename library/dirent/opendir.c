@@ -126,10 +126,7 @@ DIR *opendir(const char *path_name)
 
 			dh->dh_ScanVolumeList = TRUE;
 
-			PROFILE_OFF();
 			dol = LockDosList(LDF_VOLUMES | LDF_READ);
-			PROFILE_ON();
-
 			while ((dol = NextDosEntry(dol, LDF_VOLUMES | LDF_READ)) != NULL)
 			{
 				name = BADDR(dol->dol_Name);
@@ -186,10 +183,7 @@ DIR *opendir(const char *path_name)
 		SHOWMSG("we are supposed to scan a directory");
 		SHOWSTRING(path_name);
 
-		PROFILE_OFF();
 		dh->dh_DirLock = Lock((STRPTR)path_name, SHARED_LOCK);
-		PROFILE_ON();
-
 		if (dh->dh_DirLock == ZERO)
 		{
 			SHOWMSG("couldn't get a lock on it");
@@ -198,10 +192,7 @@ DIR *opendir(const char *path_name)
 			goto out;
 		}
 
-		PROFILE_OFF();
 		dh->dh_FileInfo = ExamineObjectTags(EX_LockInput, dh->dh_DirLock, TAG_DONE);
-		PROFILE_ON();
-
 		if (dh->dh_FileInfo == NULL)
 		{
 			SHOWMSG("couldn't examine it");
@@ -263,9 +254,7 @@ out:
 		}
 #endif /* UNIX_PATH_SEMANTICS */
 
-		PROFILE_OFF();
 		UnLock(dh->dh_DirLock);
-		PROFILE_ON();
 
 		free(dh);
 	}

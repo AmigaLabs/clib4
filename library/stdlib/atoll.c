@@ -31,21 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
-
-/****************************************************************************/
-
-#if defined(USE_64_BIT_INTS)
-
-/****************************************************************************/
 
 long long
 atoll(const char *str)
@@ -54,15 +42,11 @@ atoll(const char *str)
 
 	assert( str != NULL );
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
 		if(str == NULL)
 		{
 			__set_errno(EFAULT);
 			goto out;
 		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
 
 	result = strtoll(str, (char **)NULL, 10);
 
@@ -70,7 +54,3 @@ atoll(const char *str)
 
 	return(result);
 }
-
-/****************************************************************************/
-
-#endif /* USE_64_BIT_INTS */

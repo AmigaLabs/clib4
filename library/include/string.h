@@ -47,13 +47,9 @@
 #include <stddef.h>
 #endif /* _STDDEF_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 extern char *strerror(int error_number);
 extern char *strcat(char *dest, const char *src);
@@ -100,12 +96,6 @@ extern void *memcpy(void *dest, const void *src, size_t len);
 extern void *memset(void *ptr, int val, size_t len);
 #endif /* __GNUC__ && __GNUC__ < 3 */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _STRINGS_H
 #include <strings.h>
 #endif /* _STRINGS_H */
@@ -142,10 +132,6 @@ extern char *index(const char *s, int c);
 extern char *rindex(const char *s, int c);
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _STRING_H */

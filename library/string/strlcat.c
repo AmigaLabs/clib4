@@ -60,19 +60,13 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/****************************************************************************/
-
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _STDLIB_PROTOS_H
+#include "stdlib_protos.h"
+#endif /* _STDLIB_PROTOS_H */
 
 /*
  * Appends src to string dst of size siz (unlike strncat, siz is the
@@ -82,59 +76,48 @@
  * If retval >= siz, truncation occurred.
  */
 size_t
-strlcat(char *dst, const char *src, size_t siz)
-{
-	register char *d = dst;
-	register const char *s = src;
-	register size_t n = siz;
-	size_t result;
-	size_t dlen;
+strlcat(char *dst, const char *src, size_t siz) {
+    register char *d = dst;
+    register const char *s = src;
+    register size_t n = siz;
+    size_t result;
+    size_t dlen;
 
-	assert( src != NULL && (siz == 0 || dst != NULL) );
+    assert(src != NULL && (siz == 0 || dst != NULL));
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(src == NULL || (siz != 0 && dst == NULL))
-		{
-			__set_errno(EFAULT);
+    if (src == NULL || (siz != 0 && dst == NULL)) {
+        __set_errno(EFAULT);
 
-			result = 0;
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        result = 0;
+        goto out;
+    }
 
-	/* Find the end of dst and adjust bytes left but don't go past end */
-	while(n-- != 0 && (*d) != '\0')
-		d++;
+    /* Find the end of dst and adjust bytes left but don't go past end */
+    while (n-- != 0 && (*d) != '\0')
+        d++;
 
-	dlen = d - dst;
-	n = siz - dlen;
+    dlen = d - dst;
+    n = siz - dlen;
 
-	if (n == 0)
-	{
-		result = dlen + strlen(s);
-	}
-	else
-	{
-		while((*s) != '\0')
-		{
-			if(n != 1)
-			{
-				(*d++) = (*s);
+    if (n == 0) {
+        result = dlen + strlen(s);
+    } else {
+        while ((*s) != '\0') {
+            if (n != 1) {
+                (*d++) = (*s);
 
-				n--;
-			}
+                n--;
+            }
 
-			s++;
-		}
+            s++;
+        }
 
-		(*d) = '\0';
+        (*d) = '\0';
 
-		result = dlen + (s - src); /* count does not include NUL */
-	}
+        result = dlen + (s - src); /* count does not include NUL */
+    }
 
- out:
+out:
 
-	return(result);
+    return (result);
 }

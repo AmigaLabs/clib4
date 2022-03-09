@@ -41,23 +41,13 @@
 #ifndef _SYS_AMIGAOS_VA_H
 #define _SYS_AMIGAOS_VA_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _STDARG_H
 #include <stdarg.h>
 #endif /* _STDARG_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /* Define the AmigaOS specific varargs macros,
    if <stdarg.h> didn't already define them.   */
@@ -77,12 +67,6 @@ extern "C" {
  #endif
 #endif
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_AMIGAOS_VA_H */

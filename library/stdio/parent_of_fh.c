@@ -40,11 +40,7 @@
 BPTR
 __safe_parent_of_file_handle(BPTR file_handle)
 {
-	BPTR result = ZERO;
-
-	PROFILE_OFF();
-	result = ParentOfFH(file_handle);
-	PROFILE_ON();
+	BPTR result = ParentOfFH(file_handle);
 
  out:
 

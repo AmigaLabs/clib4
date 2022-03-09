@@ -31,54 +31,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 int
-snprintf(char *s, size_t size, const char *format, ...)
-{
-	int result = EOF;
-	va_list arg;
+snprintf(char *s, size_t size, const char *format, ...) {
+    int result = EOF;
+    va_list arg;
 
-	ENTER();
+    ENTER();
 
-	assert( format != NULL );
+    assert(format != NULL);
 
-	SHOWPOINTER(s);
-	SHOWVALUE(size);
-	SHOWSTRING(format);
+    SHOWPOINTER(s);
+    SHOWVALUE(size);
+    SHOWSTRING(format);
 
-	assert( size == 0 || s != NULL );
-	assert( (int)size >= 0);
+    assert(size == 0 || s != NULL);
+    assert((int) size >= 0);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if((size > 0 && s == NULL) || format == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if ((size > 0 && s == NULL) || format == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	va_start(arg,format);
-	result = vsnprintf(s,size,format,arg);
-	va_end(arg);
+    va_start(arg, format);
+    result = vsnprintf(s, size, format, arg);
+    va_end(arg);
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

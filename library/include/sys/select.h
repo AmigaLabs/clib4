@@ -41,12 +41,6 @@
 #ifndef _SYS_SELECT_H
 #define _SYS_SELECT_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _STRING_H
 #include <string.h>
 #endif /* _STRING_H */
@@ -55,13 +49,9 @@
 #include <sys/time.h>
 #endif /* _SYS_TIME_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /*
  * In case the select() data structures and macros are already
@@ -99,13 +89,6 @@ typedef	struct fd_set
 
 /****************************************************************************/
 
-/*
- * The following prototypes may clash with the bsdsocket.library or
- * usergroup.library API definitions.
- */
-
-#ifndef __NO_NET_API
-
 extern int select(int nfds, fd_set *readfds,fd_set *writefds, fd_set *errorfds,struct timeval *timeout);
 
 /* This is a special select() function which takes an extra Amiga signal
@@ -120,18 +103,8 @@ extern int select(int nfds, fd_set *readfds,fd_set *writefds, fd_set *errorfds,s
    In brief, wait_select() works exactly like the bsdsocket.library/WaitSelect()
    function. */
 
-#ifndef __NO_WAITSELECT
 extern int waitselect(int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *except_fds,struct timeval *timeout,unsigned long * signal_mask);
-#endif /* __NO_WAITSELECT */
 
-#endif /* __NO_NET_API */
-
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_SELECT_H */

@@ -67,13 +67,9 @@ __socket_hook_entry(struct fd *fd, struct file_action_message *fam)
 		SHOWPOINTER(fam->fam_Data);
 		SHOWVALUE(fam->fam_Size);
 
-		PROFILE_OFF();
-
 		result = __recv(fd->fd_Socket, fam->fam_Data, fam->fam_Size, 0);
 		if (result < 0)
 			fam->fam_Error = __get_errno();
-
-		PROFILE_ON();
 
 		break;
 
@@ -87,13 +83,9 @@ __socket_hook_entry(struct fd *fd, struct file_action_message *fam)
 		SHOWPOINTER(fam->fam_Data);
 		SHOWVALUE(fam->fam_Size);
 
-		PROFILE_OFF();
-
 		result = __send(fd->fd_Socket, fam->fam_Data, fam->fam_Size, 0);
 		if (result < 0)
 			fam->fam_Error = __get_errno();
-
-		PROFILE_ON();
 
 		break;
 
@@ -114,11 +106,7 @@ __socket_hook_entry(struct fd *fd, struct file_action_message *fam)
 			/* Are we permitted to close this file? */
 			if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE))
 			{
-				PROFILE_OFF();
-
 				result = __CloseSocket(fd->fd_Socket);
-
-				PROFILE_ON();
 			}
 		}
 
@@ -179,9 +167,7 @@ __socket_hook_entry(struct fd *fd, struct file_action_message *fam)
 
 		fib->Type = ST_SOCKET;
 
-		PROFILE_OFF();
 		DateStamp(&fib->Date);
-		PROFILE_ON();
 
 		result = OK;
 

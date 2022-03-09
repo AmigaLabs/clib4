@@ -3,26 +3,16 @@
 
 #include <stdbool.h> // bool
 #include <stddef.h>  // size_t
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+__BEGIN_DECLS
 
-    bool
-    memcmp_stdlib(const void *s1, const void *s2, size_t n)
-        __attribute__((hot));
+bool memcmp_stdlib(const void *s1, const void *s2, size_t n)__attribute__((hot));
 
-    bool
-    memcmp_naive(const void *s1, const void *s2, size_t n)
-        __attribute__((hot));
+bool memcmp_naive(const void *s1, const void *s2, size_t n)__attribute__((hot));
 
-    bool
-    memcmp_yamiez(const void *s1, const void *s2, size_t n)
-        __attribute__((hot));
+bool memcmp_yamiez(const void *s1, const void *s2, size_t n)__attribute__((hot));
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
+__END_DECLS
 
 #endif // #ifndef MEMCMP_H

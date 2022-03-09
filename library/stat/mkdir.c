@@ -31,21 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STAT_HEADERS_H
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 int mkdir(const char *path_name, mode_t mode)
 {
@@ -66,17 +54,13 @@ int mkdir(const char *path_name, mode_t mode)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL)
-		{
-			SHOWMSG("invalid path name parameter");
+    if (path_name == NULL)
+    {
+        SHOWMSG("invalid path name parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -94,10 +78,7 @@ int mkdir(const char *path_name, mode_t mode)
 
 	D(("trying to create '%s'", path_name));
 
-	PROFILE_OFF();
 	dir_lock = CreateDir((STRPTR)path_name);
-	PROFILE_ON();
-
 	if (dir_lock == ZERO)
 	{
 		SHOWMSG("that didn't work");
@@ -106,9 +87,7 @@ int mkdir(const char *path_name, mode_t mode)
 		goto out;
 	}
 
-	PROFILE_OFF();
 	UnLock(dir_lock);
-	PROFILE_ON();
 
 	protection = 0;
 
@@ -151,9 +130,7 @@ int mkdir(const char *path_name, mode_t mode)
 	SHOWSTRING(path_name);
 	SHOWVALUE(protection);
 
-	PROFILE_OFF();
 	SetProtection((STRPTR)path_name, (LONG)(protection ^ (FIBF_READ | FIBF_WRITE | FIBF_EXECUTE | FIBF_DELETE)));
-	PROFILE_ON();
 
 	result = OK;
 

@@ -105,10 +105,7 @@ access(const char *path_name, int mode)
 	{
 		D(("trying to get a lock on '%s'", path_name));
 
-		PROFILE_OFF();
 		lock = Lock((STRPTR)path_name, SHARED_LOCK);
-		PROFILE_ON();
-
 		if (lock == ZERO)
 		{
 			__set_errno(__translate_access_io_error_to_errno(IoErr()));
@@ -133,11 +130,7 @@ access(const char *path_name, int mode)
 			}
 			else
 			{
-
-				PROFILE_OFF();
-				status = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
-				PROFILE_ON();
-
+                status = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
 				if (status == NULL)
 				{
 					SHOWMSG("couldn't examine");
@@ -149,10 +142,7 @@ access(const char *path_name, int mode)
 		}
 		else
 		{
-			PROFILE_OFF();
 			status = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
-			PROFILE_ON();
-
 			if (status == DOSFALSE)
 			{
 				SHOWMSG("couldn't examine");
@@ -210,9 +200,7 @@ out:
 		status = NULL;
 	}
 
-	PROFILE_OFF();
 	UnLock(lock);
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

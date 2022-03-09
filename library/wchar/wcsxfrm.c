@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wcsxfrm.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_wcsxfrm.c,v 1.1 2022-03-05 19:34:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,11 +35,26 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 size_t
 wcsxfrm(wchar_t *dest, const wchar_t *src, size_t len)
 {
-	/* ZZZ unimplemented */
-	return(0);
+    ENTER();
+
+    if (*src == L'\0') {
+        if (len != 0)
+            *dest = L'\0';
+        RETURN(0);
+        return (0);
+    }
+
+    size_t l = wcslen(src);
+    if (l < len) {
+        wmemcpy(dest, src, l+1);
+    } else if (len) {
+        wmemcpy(dest, src, len-1);
+        dest[len-1] = 0;
+    }
+
+    RETURN(l);
+    return l;
 }

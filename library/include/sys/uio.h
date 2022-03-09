@@ -41,12 +41,6 @@
 #ifndef _SYS_UIO_H
 #define _SYS_UIO_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _SYS_TYPES_H
 #include <sys/types.h>
 #endif /* _SYS_TYPES_H */
@@ -55,13 +49,9 @@
 #include <stddef.h>
 #endif /* _STDDEF_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /*
  * The size of MAX_IOVEC is rather arbitrary since there is no kernel support
@@ -80,12 +70,6 @@ typedef struct iovec
 extern ssize_t readv(int file_descriptor,const struct iovec *iov,int vec_count);
 extern ssize_t writev(int file_descriptor,const struct iovec *iov,int vec_count);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_UIO_H */

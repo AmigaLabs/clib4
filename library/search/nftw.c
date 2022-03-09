@@ -31,18 +31,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 /*
  * This nftw() implementation builds heavily on existing functionality and could certainly
  * be made more efficient.
  */
-
-/****************************************************************************/
 
 #ifndef	_FTW_HEADERS_H
 #include "ftw_headers.h"

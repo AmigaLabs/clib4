@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_fwscanf.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_fwscanf.c,v 1.0 2022-03-05 18:32:07 apalmate Exp $
  *
  * :ts=4
  *
@@ -40,6 +40,29 @@
 int
 fwscanf(FILE *stream, const wchar_t *format, ...)
 {
-	/* ZZZ unimplemented */
-	return(0);
+    int ret = EOF;
+
+    ENTER();
+
+    SHOWSTRING(format);
+
+    assert(format != NULL);
+
+    if (__check_abort_enabled)
+        __check_abort();
+
+    if (format == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
+
+    va_list ap;
+    va_start(ap, format);
+
+    ret = vfwscanf(stream, format, ap);
+    va_end(ap);
+
+out:
+    RETURN(ret);
+    return ret;
 }

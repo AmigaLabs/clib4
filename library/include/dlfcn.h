@@ -41,9 +41,10 @@
 #ifndef _DLFCN_H
 #define _DLFCN_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include <features.h>
+
+__BEGIN_DECLS
+
 
 /* We only support a subset of the flags available on Unix systems. */
 #define RTLD_LAZY		1
@@ -57,8 +58,6 @@ extern const char * dlerror(void);
 extern void * dlopen(const char * __path_name,int __mode);
 extern void * dlsym(void * __handle,const char * __symbol_name);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+__END_DECLS
 
 #endif /* _DLFCN_H */

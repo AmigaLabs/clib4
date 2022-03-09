@@ -85,8 +85,6 @@ __timezone_init(void)
 
 	ENTER();
 
-	PROFILE_OFF();
-
 	__timezone_lock();
 
 	if(__TimezoneBase == NULL)
@@ -135,8 +133,6 @@ __timezone_init(void)
 	}
 
 	__timezone_unlock();
-
-	PROFILE_ON();
 
 	RETURN(result);
 	return(result);

@@ -31,54 +31,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-lchown(const char * path_name, uid_t owner, gid_t group)
-{
-	int result = ERROR;
+lchown(const char *path_name, uid_t owner, gid_t group) {
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(path_name);
-	SHOWVALUE(owner);
-	SHOWVALUE(group);
+    SHOWSTRING(path_name);
+    SHOWVALUE(owner);
+    SHOWVALUE(group);
 
-	assert( path_name != NULL );
+    assert(path_name != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(path_name == NULL)
-		{
-			SHOWMSG("invalid path name");
+    if (path_name == NULL) {
+        SHOWMSG("invalid path name");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	result = chown(path_name,owner,group);
+    result = chown(path_name, owner, group);
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

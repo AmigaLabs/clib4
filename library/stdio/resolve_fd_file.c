@@ -35,19 +35,11 @@
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifdef __resolve_fd_file
 #undef __resolve_fd_file
 #endif /* __resolve_fd_file */
 
-/****************************************************************************/
-
-BPTR 
+BPTR
 __resolve_fd_file(struct fd *fd)
 {
 	BPTR file;

@@ -41,33 +41,17 @@
 #ifndef	_ULIMIT_H
 #define	_ULIMIT_H
 
-/****************************************************************************/
+#include <features.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #define	UL_GETFSIZE	1
 #define	UL_SETFSIZE	2
 #define	UL_GMEMLIM	3
 #define	UL_GDESLIM	4
 
-/****************************************************************************/
-
 extern long ulimit(int cmd,long newlimit);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _ULIMIT_H */

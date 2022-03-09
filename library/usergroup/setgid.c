@@ -55,9 +55,7 @@ int setgid(gid_t id)
 	}
 	else
 	{
-		PROFILE_OFF();
 		result = __setgid((LONG)id);
-		PROFILE_ON();
 	}
 
 	if (__check_abort_enabled)

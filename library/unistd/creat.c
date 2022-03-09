@@ -31,51 +31,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _FCNTL_HEADERS_H
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
-creat(const char * path_name, mode_t mode)
-{
-	int result = ERROR;
+creat(const char *path_name, mode_t mode) {
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(path_name);
-	SHOWVALUE(mode);
+    SHOWSTRING(path_name);
+    SHOWVALUE(mode);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	assert( path_name != NULL );
+    assert(path_name != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(path_name == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (path_name == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	result = open(path_name,O_WRONLY|O_CREAT|O_TRUNC,mode);
+    result = open(path_name, O_WRONLY | O_CREAT | O_TRUNC, mode);
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

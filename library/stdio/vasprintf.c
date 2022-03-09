@@ -31,12 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
@@ -45,95 +39,77 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #undef vasprintf
 
-/****************************************************************************/
-
 __static int
-__vasprintf(const char *file,int line,char **ret,const char *format,va_list arg)
-{
-	struct iob string_iob;
-	int result = EOF;
-	char local_buffer[32];
+__vasprintf(const char *file, int line, char **ret, const char *format, va_list arg) {
+    struct iob string_iob;
+    int result = EOF;
+    char local_buffer[32];
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(ret);
-	SHOWSTRING(format);
+    SHOWPOINTER(ret);
+    SHOWSTRING(format);
 
-	assert( ret != NULL && format != NULL && arg != NULL );
+    assert(ret != NULL && format != NULL && arg != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(ret == NULL || format == NULL || format == arg)
-		{
-			SHOWMSG("invalid parameters");
+    if (ret == NULL || format == NULL || arg == NULL) {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	(*ret) = NULL;
+    (*ret) = NULL;
 
-	__initialize_iob(&string_iob,__vasprintf_hook_entry,
-		NULL,
-		local_buffer,sizeof(local_buffer),
-		-1,
-		-1,
-		IOBF_IN_USE | IOBF_WRITE | IOBF_BUFFER_MODE_NONE | IOBF_INTERNAL,
-		NULL);
+    __initialize_iob(&string_iob, __vasprintf_hook_entry,
+                     NULL,
+                     local_buffer, sizeof(local_buffer),
+                     -1,
+                     -1,
+                     IOBF_IN_USE | IOBF_WRITE | IOBF_BUFFER_MODE_NONE | IOBF_INTERNAL,
+                     NULL);
 
-	string_iob.iob_String		= NULL;
-	string_iob.iob_StringSize	= 0;
-	string_iob.iob_File			= (char *)file;
-	string_iob.iob_Line			= line;
+    string_iob.iob_String = NULL;
+    string_iob.iob_StringSize = 0;
+    string_iob.iob_File = (char *) file;
+    string_iob.iob_Line = line;
 
-	result = vfprintf((FILE *)&string_iob,format,arg);
-	if(result < 0)
-	{
-		SHOWMSG("ouch. that didn't work");
+    result = vfprintf((FILE * ) & string_iob, format, arg);
+    if (result < 0) {
+        SHOWMSG("ouch. that didn't work");
 
-		if(string_iob.iob_String != NULL)
-			free(string_iob.iob_String);
+        if (string_iob.iob_String != NULL)
+            free(string_iob.iob_String);
 
-		goto out;
-	}
+        goto out;
+    }
 
-	SHOWSTRING(string_iob.iob_String);
+    SHOWSTRING(string_iob.iob_String);
 
-	(*ret) = string_iob.iob_String;
+    (*ret) = string_iob.iob_String;
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }
 
 /****************************************************************************/
 
 int
-vasprintf(char **ret,const char *format,va_list arg)
-{
-	int result;
+vasprintf(char **ret, const char *format, va_list arg) {
+    int result;
 
-	result = __vasprintf(NULL,0,ret,format,arg);
+    result = __vasprintf(NULL, 0, ret, format, arg);
 
-	return(result);
+    return (result);
 }

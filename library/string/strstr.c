@@ -31,72 +31,56 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _STDLIB_PROTOS_H
+#include "stdlib_protos.h"
+#endif /* _STDLIB_PROTOS_H */
 
 char *
-strstr(const char *src, const char *sub)
-{
-	char * result = NULL;
+strstr(const char *src, const char *sub) {
+    char *result = NULL;
 
-	assert( src != NULL && sub != NULL );
+    assert(src != NULL && sub != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(src == NULL || sub == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (src == NULL || sub == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	/* If 'sub' points to a string with zero length, then
-	 * we must return 'src'.
-	 */
-	if((*sub) == '\0')
-	{
-		result = (char *)src;
-	}
-	else
-	{
-		size_t i;
-		char c;
+    /* If 'sub' points to a string with zero length, then
+     * we must return 'src'.
+     */
+    if ((*sub) == '\0') {
+        result = (char *) src;
+    } else {
+        size_t i;
+        char c;
 
-		/* Try to find 'sub' in 'src'. Watch how we avoid calling
-		 * strlen() even once...
-		 */
-		while((*src) != '\0')
-		{
-			for(i = 0 ; ; i++)
-			{
-				c = sub[i];
+        /* Try to find 'sub' in 'src'. Watch how we avoid calling
+         * strlen() even once...
+         */
+        while ((*src) != '\0') {
+            for (i = 0;; i++) {
+                c = sub[i];
 
-				/* End of substring? We got a match... */
-				if(c == '\0')
-				{
-					result = (char *)src;
-					goto out;
-				}
+                /* End of substring? We got a match... */
+                if (c == '\0') {
+                    result = (char *) src;
+                    goto out;
+                }
 
-				if(c != src[i])
-					break;
-			}
+                if (c != src[i])
+                    break;
+            }
 
-			src++;
-		}
-	}
+            src++;
+        }
+    }
 
- out:
+out:
 
-	return(result);
+    return (result);
 }

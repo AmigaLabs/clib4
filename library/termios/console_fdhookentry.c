@@ -223,10 +223,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 
 		D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, Seek(file, 0, OFFSET_CURRENT), fam->fam_Data));
 
-		PROFILE_OFF();
-
 		/* Attempt to fake everything needed in non-canonical mode. */
-
 		if (FLAG_IS_SET(tios->c_lflag, ICANON)) /* Canonical read = same as usual. Unless... */
 		{
 			if (FLAG_IS_CLEAR(tios->c_lflag, ECHO)) /* No-echo mode needs to be emulated. */
@@ -277,8 +274,6 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 		{
 			result = 0; /* Reading zero characters will always succeed. */
 		}
-
-		PROFILE_ON();
 
 		if (result == ERROR)
 		{
@@ -390,11 +385,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 
 		if (actual_out > 0)
 		{
-			PROFILE_OFF();
-
 			result = Write(file, buffer, actual_out);
-
-			PROFILE_ON();
 		}
 		else
 		{
@@ -445,16 +436,12 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 				if (fd->fd_Cleanup != NULL)
 					(*fd->fd_Cleanup)(fd);
 
-				PROFILE_OFF();
-
 				if (CANNOT Close(fd->fd_File))
 				{
 					fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
 					result = EOF;
 				}
-
-				PROFILE_ON();
 
 				fd->fd_File = ZERO;
 			}
@@ -482,8 +469,6 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 	case file_action_set_blocking:
 
 		SHOWMSG("file_action_set_blocking");
-
-		PROFILE_OFF();
 
 		if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
 		{
@@ -516,9 +501,6 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 
 			fam->fam_Error = EBADF;
 		}
-
-		PROFILE_ON();
-
 		break;
 
 	case file_action_examine:

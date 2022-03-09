@@ -55,9 +55,7 @@ setreuid(uid_t real, uid_t eff) {
 
         result = OK;
     } else {
-        PROFILE_OFF();
         result = __setreuid((LONG) real, (LONG) eff);
-        PROFILE_ON();
     }
 
     if (__check_abort_enabled)

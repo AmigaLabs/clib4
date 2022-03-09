@@ -50,9 +50,7 @@ int setuid(uid_t id) {
 
         result = OK;
     } else {
-        PROFILE_OFF();
         result = __setuid((LONG) id);
-        PROFILE_ON();
     }
 
     if (__check_abort_enabled)

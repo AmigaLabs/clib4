@@ -31,15 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
-
-/****************************************************************************/
 
 int getgroups(int ngroups, gid_t *groups)
 {
@@ -53,23 +47,17 @@ int getgroups(int ngroups, gid_t *groups)
 	assert(ngroups == 0 || groups != NULL);
 	assert(__UserGroupBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (ngroups != 0 && groups == NULL)
-		{
-			SHOWMSG("invalid groups parameter");
+    if (ngroups != 0 && groups == NULL)
+    {
+        SHOWMSG("invalid groups parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	if (ngroups > 0)
 	{
-		PROFILE_OFF();
 		result = __getgroups(ngroups, (LONG *)groups);
-		PROFILE_ON();
 	}
 	else
 	{

@@ -47,11 +47,9 @@
 #include <wchar.h>
 #endif /* _WCHAR_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+__BEGIN_DECLS
 
 /****************************************************************************/
 
@@ -90,12 +88,6 @@ extern int iswctype(wint_t c, wctype_t desc);
 extern wctrans_t wctrans(const char *property);
 extern wint_t towctrans(wint_t c, wctrans_t desc);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _WCYTPE_H */

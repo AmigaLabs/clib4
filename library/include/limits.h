@@ -58,7 +58,7 @@
  * preprocessor symbol; we support both SAS/C and GCC here.
  */
 
-#if (defined(__GNUC__) && defined(__CHAR_UNSIGNED__)) || (defined(__SASC) && defined(_UNSCHAR))
+#if (defined(__GNUC__) && defined(__CHAR_UNSIGNED__))
 
 #define CHAR_MIN 0
 #define CHAR_MAX 255
@@ -68,7 +68,7 @@
 #define CHAR_MIN -128
 #define CHAR_MAX 127
 
-#endif /* (__GNUC__ && __CHAR_UNSIGNED) || (__SASC && _UNSCHAR) */
+#endif /* (__GNUC__ && __CHAR_UNSIGNED) */
 
 /****************************************************************************/
 
@@ -88,26 +88,14 @@
 #define LONG_MAX	2147483647L
 #define ULONG_MAX	4294967295UL
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-
-/****************************************************************************/
-
 #define LLONG_MIN	(-0x7fffffffffffffffLL-1)
 #define LLONG_MAX	0x7fffffffffffffffLL
 #define ULLONG_MAX	0xffffffffffffffffULL
 
-/****************************************************************************/
 
 #define MB_LEN_MAX 1
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
+#define NL_ARGMAX 127
 
 #define SSIZE_MAX LONG_MAX
 

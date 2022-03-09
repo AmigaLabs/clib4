@@ -48,12 +48,4 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-/****************************************************************************/
-
-#ifndef _STDLIB_PROFILE_H
-#include "stdlib_profile.h"
-#endif /* _STDLIB_PROFILE_H */
-
-/****************************************************************************/
-
 #endif /* _UTIME_HEADERS_H */

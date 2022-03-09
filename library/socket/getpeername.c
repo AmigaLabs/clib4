@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
@@ -54,17 +50,13 @@ getpeername(int sockfd, struct sockaddr *name, socklen_t *namelen)
 	assert(name != NULL && namelen != NULL);
 	assert(__SocketBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (name == NULL || namelen == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (name == NULL || namelen == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	assert(sockfd >= 0 && sockfd < __num_fd);
 	assert(__fd[sockfd] != NULL);
@@ -75,9 +67,7 @@ getpeername(int sockfd, struct sockaddr *name, socklen_t *namelen)
 	if (fd == NULL)
 		goto out;
 
-	PROFILE_OFF();
 	result = __getpeername(fd->fd_Socket, name, (LONG *)namelen);
-	PROFILE_ON();
 
 out:
 

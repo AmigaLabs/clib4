@@ -41,23 +41,13 @@
 #ifndef _GRP_H
 #define _GRP_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _SYS_TYPES_H
 #include <sys/types.h>
 #endif /* _SYS_TYPES_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #ifdef __GNUC__
  #ifdef __PPC__
@@ -84,17 +74,11 @@ struct group
  * usergroup.library API definitions.
  */
 
-#ifndef __NO_NET_API
-
 extern void endgrent(void);
 extern struct group *getgrent(void);
 extern struct group *getgrgid(gid_t gid);
 extern struct group *getgrnam(const char *name);
 extern void setgrent(void);
-
-#endif /* __NO_NET_API */
-
-/****************************************************************************/
 
 #ifdef __GNUC__
  #ifdef __PPC__
@@ -104,12 +88,6 @@ extern void setgrent(void);
  #pragma default-align
 #endif
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _GRP_H */

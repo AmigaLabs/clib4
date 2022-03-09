@@ -1,9 +1,9 @@
 #ifndef _SYS_WAIT_H
 #define _SYS_WAIT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <features.h>
+
+__BEGIN_DECLS
 
 #include <sys/types.h>
 
@@ -17,8 +17,6 @@ extern "C" {
 #define WTERMSIG(w)	((w) & 0x7f)
 #define WSTOPSIG	WEXITSTATUS
 
-#ifdef __cplusplus
-};
-#endif
+__END_DECLS
 
 #endif

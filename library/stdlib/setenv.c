@@ -142,10 +142,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
     if (NOT overwrite) {
         char buffer[10];
 
-        PROFILE_OFF();
         status = GetVar((STRPTR) name, buffer, sizeof(buffer), 0);
-        PROFILE_ON();
-
         if (status != -1) {
             SHOWMSG("variable already exists; leaving...");
 
@@ -154,10 +151,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
         }
     }
 
-    PROFILE_OFF();
     found = FindVar((STRPTR) name, 0);
-    PROFILE_ON();
-
     if (found == NULL) {
         SHOWMSG("the local variable is not yet set; remembering that");
 
@@ -180,10 +174,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
     SHOWSTRING(name);
     SHOWSTRING(value);
 
-    PROFILE_OFF();
     status = SetVar((STRPTR) name, (STRPTR) value, (LONG) strlen(value), 0);
-    PROFILE_ON();
-
     if (status == DOSFALSE) {
         SHOWMSG("could not set variable");
 

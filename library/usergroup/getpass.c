@@ -31,15 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
-
-/****************************************************************************/
 
 char *
 getpass(const char *prompt)
@@ -53,21 +47,15 @@ getpass(const char *prompt)
 	assert(prompt != NULL);
 	assert(__UserGroupBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (prompt == NULL)
-		{
-			SHOWMSG("invalid prompt");
+    if (prompt == NULL)
+    {
+        SHOWMSG("invalid prompt");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	PROFILE_OFF();
 	result = __getpass((STRPTR)prompt);
-	PROFILE_ON();
 
 	SHOWSTRING(result);
 

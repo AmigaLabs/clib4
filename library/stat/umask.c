@@ -35,21 +35,11 @@
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 mode_t NOCOMMON __current_umask = S_IWGRP | S_IWOTH;
-
-/****************************************************************************/
 
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
-
-/****************************************************************************/
 
 mode_t
 umask(mode_t new_mask)
@@ -62,9 +52,7 @@ umask(mode_t new_mask)
 
 	assert(__UserGroupBase != NULL);
 
-	PROFILE_OFF();
 	result = __getumask();
-	PROFILE_ON();
 
 	__current_umask = new_mask & (S_IRWXU | S_IRWXG | S_IRWXO);
 

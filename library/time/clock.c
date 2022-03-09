@@ -70,10 +70,8 @@ clock(void)
 
 	ENTER();
 
-	PROFILE_OFF();
 	/* Get the current time. */
 	gettimeofday(&now, NULL);
-	PROFILE_ON();
 
 	usec_now = now.tv_sec * 1000000ULL + now.tv_usec;
 	usec_start = ((struct TimeVal *)(&__global_clib2->clock))->Seconds * 1000000ULL + ((struct TimeVal *)(&__global_clib2->clock))->Microseconds;

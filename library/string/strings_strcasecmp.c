@@ -31,55 +31,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STRINGS_HEADERS_H
 #include "strings_headers.h"
 #endif /* _STRINGS_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 int
-strcasecmp(const char * _s1, const char * _s2)
-{
-	const unsigned char *s1 = (const unsigned char *)_s1;
-	const unsigned char *s2 = (const unsigned char *)_s2;
-	int result = 0;
+strcasecmp(const char *_s1, const char *_s2) {
+    const unsigned char *s1 = (const unsigned char *) _s1;
+    const unsigned char *s2 = (const unsigned char *) _s2;
+    int result = 0;
 
-	assert( s1 != NULL && s2 != NULL );
+    assert(s1 != NULL && s2 != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(s1 == NULL || s2 == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (s1 == NULL || s2 == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	if(s1 != s2)
-	{
-		unsigned char c1,c2;
+    if (s1 != s2) {
+        unsigned char c1, c2;
 
-		while((c1 = toupper(*s1++)) == (c2 = toupper(*s2++)))
-		{
-			if(c1 == '\0')
-				break;
-		}
+        while ((c1 = toupper(*s1++)) == (c2 = toupper(*s2++))) {
+            if (c1 == '\0')
+                break;
+        }
 
-		result = (int)c1 - (int)c2;
-	}
+        result = (int) c1 - (int) c2;
+    }
 
- out:
+out:
 
-	return(result);
+    return (result);
 }

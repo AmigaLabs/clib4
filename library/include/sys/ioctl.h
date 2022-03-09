@@ -41,12 +41,6 @@
 #ifndef _SYS_IOTCL_H
 #define _SYS_IOTCL_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _SYS_SELECT_H
 #include <sys/select.h>
 #endif /* _SYS_SELECT_H */
@@ -55,31 +49,12 @@
 #include <sys/filio.h>
 #endif /* _SYS_FILIO_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
-
-/*
- * The following prototypes may clash with the bsdsocket.library or
- * usergroup.library API definitions.
- */
-
-#ifndef __NO_NET_API
+__BEGIN_DECLS
 
 extern int ioctl(int fildes, int request, ... /* arg */);
 
-#endif /* __NO_NET_API */
-
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _SYS_IOTCL_H */

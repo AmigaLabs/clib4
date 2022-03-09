@@ -46,9 +46,7 @@ inet_ntoa(struct in_addr in)
 
 	assert(__SocketBase != NULL);
 
-	PROFILE_OFF();
 	result = __Inet_NtoA(in.s_addr);
-	PROFILE_ON();
 
 	SHOWSTRING(result);
 

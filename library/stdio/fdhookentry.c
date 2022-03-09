@@ -101,11 +101,7 @@ int64_t __fd_hook_entry(
 
 		D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
 
-		PROFILE_OFF();
-
 		result = Read(file, fam->fam_Data, fam->fam_Size);
-		PROFILE_ON();
-
 		if (result == -1)
 		{
 			D(("read failed ioerr=%ld", IoErr()));
@@ -131,16 +127,12 @@ int64_t __fd_hook_entry(
 
 			SHOWMSG("appending data");
 
-			PROFILE_OFF();
-
 			/* Make sure that if we get a value of -1 out of Seek()
 				   to check whether this was an error or a numeric
 				   overflow. */
 			position = ChangeFilePosition(file, 0, OFFSET_END);
 			if (position != CHANGE_FILE_ERROR)
 				fd->fd_Position = GetFilePosition(file);
-
-			PROFILE_ON();
 
 			if (fd->fd_Position == GETPOSITION_ERROR)
 			{
@@ -153,12 +145,7 @@ int64_t __fd_hook_entry(
 
 		D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
 
-		PROFILE_OFF();
-
 		result = Write(file, fam->fam_Data, fam->fam_Size);
-
-		PROFILE_ON();
-
 		if (result == -1)
 		{
 			D(("write failed ioerr=%ld", IoErr()));
@@ -200,8 +187,6 @@ int64_t __fd_hook_entry(
 				if (fd->fd_Cleanup != NULL)
 					(*fd->fd_Cleanup)(fd);
 
-				PROFILE_OFF();
-
                 fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
                 if (fib != NULL)
                     name_and_path_valid = TRUE;
@@ -212,8 +197,6 @@ int64_t __fd_hook_entry(
 
 					result = EOF;
 				}
-
-				PROFILE_ON();
 
 				fd->fd_File = ZERO;
 
@@ -251,8 +234,6 @@ int64_t __fd_hook_entry(
 								BPTR node_lock;
 								BPTR path_lock = ZERO;
 
-								PROFILE_OFF();
-
 								/* Try to get a lock on the file first, then move on to
 									 * the directory it is stored in.
 									 */
@@ -278,8 +259,6 @@ int64_t __fd_hook_entry(
 
 									UnLock(path_lock);
 								}
-
-								PROFILE_ON();
 							}
 
 							/* If we found that this file was set up for deletion,
@@ -290,9 +269,6 @@ int64_t __fd_hook_entry(
 								if (NOT file_deleted)
 								{
 									BPTR old_dir;
-
-									PROFILE_OFF();
-
 									old_dir = CurrentDir(parent_dir);
 
 									if (DeleteFile(fib->Name))
@@ -302,8 +278,6 @@ int64_t __fd_hook_entry(
 									}
 
 									CurrentDir(old_dir);
-
-									PROFILE_ON();
 								}
 
 								if (file_deleted)
@@ -320,19 +294,15 @@ int64_t __fd_hook_entry(
 				if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid)
 				{
 					BPTR old_dir;
-					PROFILE_OFF();
 					old_dir = CurrentDir(parent_dir);
 					SetProtection(fib->Name, 0);
 					CurrentDir(old_dir);
-					PROFILE_ON();
 				}
 
-				PROFILE_OFF();
 				if (fib != NULL)
 					FreeDosObject(DOS_EXAMINEDATA, fib);
 
 				UnLock(parent_dir);
-				PROFILE_ON();
 			}
 		}
 
@@ -366,12 +336,7 @@ int64_t __fd_hook_entry(
 		}
 		else
 		{
-			int64_t position;
-
-			PROFILE_OFF();
-			position = GetFilePosition(file);
-			PROFILE_ON();
-
+			int64_t position = GetFilePosition(file);
 			if (position == GETPOSITION_ERROR || IoErr() != OK)
 			{
 				fam->fam_Error = EBADF;
@@ -409,11 +374,7 @@ int64_t __fd_hook_entry(
 		}
 		else if (new_position != current_position)
 		{
-			int64_t position;
-
-			PROFILE_OFF();
-			position = ChangeFilePosition(file, fam->fam_Offset, new_mode);
-			PROFILE_ON();
+			int64_t position = ChangeFilePosition(file, fam->fam_Offset, new_mode);
 
 			/* Same as above: verify that what we got out of
 				   Seek() is really an error and not a valid
@@ -471,8 +432,6 @@ int64_t __fd_hook_entry(
 
 		SHOWMSG("file_action_set_blocking");
 
-		PROFILE_OFF();
-
 		if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
 		{
 			LONG mode;
@@ -498,9 +457,6 @@ int64_t __fd_hook_entry(
 
 			fam->fam_Error = EBADF;
 		}
-
-		PROFILE_ON();
-
 		break;
 
 	case file_action_examine:

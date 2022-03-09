@@ -35,12 +35,6 @@
 #include "dirent_headers.h"
 #endif /* _DIRENT_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 struct dirent *
 readdir(DIR *directory_pointer)
 {
@@ -55,8 +49,6 @@ readdir(DIR *directory_pointer)
 
 	if (__check_abort_enabled)
 		__check_abort();
-
-	PROFILE_OFF();
 
 	if (directory_pointer == NULL)
 	{
@@ -250,8 +242,6 @@ readdir(DIR *directory_pointer)
 out:
 
 	UnLock(parent_directory);
-
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

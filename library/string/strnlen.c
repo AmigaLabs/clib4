@@ -31,45 +31,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _STDLIB_PROTOS_H
+#include "stdlib_protos.h"
+#endif /* _STDLIB_PROTOS_H */
 
 size_t
-strnlen(const char *s, size_t maxlen)
-{
-	const char * start = s;
-	size_t result = 0;
+strnlen(const char *s, size_t maxlen) {
+    const char *start = s;
+    size_t result = 0;
 
-	assert( s != NULL );
+    assert(s != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(s == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (s == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	while((maxlen != 0) && ((*s) != '\0'))
-	{
-		s++;
-		maxlen--;
-	}
+    while ((maxlen != 0) && ((*s) != '\0')) {
+        s++;
+        maxlen--;
+    }
 
-	result = (size_t)(s - start);
+    result = (size_t)(s - start);
 
- out:
+out:
 
-	return(result);
+    return (result);
 }

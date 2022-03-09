@@ -42,9 +42,7 @@ pid_t setsid(void) {
 
     assert(__UserGroupBase != NULL);
 
-    PROFILE_OFF();
     result = (long) __setsid();
-    PROFILE_ON();
 
     if (__check_abort_enabled)
         __check_abort();

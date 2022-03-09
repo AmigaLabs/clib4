@@ -69,7 +69,8 @@
 
 /****************************************************************************/
 
-#define LDBL_EPSILON	2.2204460492503131E-16L
+#define LDBL_TRUE_MIN   4.94065645841246544177e-324L
+#define LDBL_EPSILON    2.22044604925031308085e-16L
 #define LDBL_DIG		15
 #define LDBL_MANT_DIG	53
 #define LDBL_MAX		1.7976931348623157E+308L

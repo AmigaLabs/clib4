@@ -31,68 +31,48 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 int
-remove(const char *filename)
-{
-	int result = ERROR;
+remove(const char *filename) {
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(filename);
+    SHOWSTRING(filename);
 
-	assert( filename != NULL );
+    assert(filename != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(filename == NULL)
-		{
-			SHOWMSG("invalid path name");
+    if (filename == NULL) {
+        SHOWMSG("invalid path name");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	if (__global_clib2->__unix_path_semantics) {
-		result = unlink(filename);
-	}
-	else
-	{
-		LONG status;
+    if (__global_clib2->__unix_path_semantics) {
+        result = unlink(filename);
+    } else {
+        LONG status;
 
-		D(("trying to delete '%s'",filename));
+        D(("trying to delete '%s'", filename));
 
-		PROFILE_OFF();
-		status = DeleteFile((STRPTR)filename);
-		PROFILE_ON();
+        status = DeleteFile((STRPTR) filename);
+        if (status == DOSFALSE) {
+            __set_errno(__translate_access_io_error_to_errno(IoErr()));
+            goto out;
+        }
 
-		if(status == DOSFALSE)
-		{
-			__set_errno(__translate_access_io_error_to_errno(IoErr()));
-			goto out;
-		}
+        result = OK;
+    }
 
-		result = OK;
-	}
+out:
 
- out:
-
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

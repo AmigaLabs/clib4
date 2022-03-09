@@ -35,90 +35,23 @@
 #include <exec/io.h>
 #include <clib/alib_protos.h>
 
-/****************************************************************************/
-
 #include "debug.h"
 
-/****************************************************************************/
-
-#ifndef __PPC__
-
-/****************************************************************************/
-
-#if defined(__SASC)
-
-VOID __begin_io(struct IORequest * ior);
-#pragma libcall DeviceBase __begin_io 01e 901
-
-#endif /* __SASC */
-
-/****************************************************************************/
-
-#if defined(__GNUC__)
-
-#define __begin_io(ior) ({ \
-  struct IORequest * _BeginIO_ior = (ior); \
-  { \
-  register struct Library * const __BeginIO__bn __asm("a6") = (struct Library *) (DeviceBase);\
-  register struct IORequest * __BeginIO_ior __asm("a1") = (_BeginIO_ior); \
-  __asm volatile ("jsr a6@(-30:W)" \
-  : \
-  : "r"(__BeginIO__bn), "r"(__BeginIO_ior)  \
-  : "d0", "d1", "a0", "a1", "fp0", "fp1", "cc", "memory"); \
-  } \
-})
-
-#endif /* __GNUC__ */
-
-/****************************************************************************/
-
-VOID
-BeginIO(struct IORequest *ior)
-{
-	struct Device * DeviceBase;
-
-	ENTER();
-
-	assert( ior != NULL && ior->io_Device != NULL );
-
-	DeviceBase = ior->io_Device;
-	__begin_io(ior);
-
-	LEAVE();
-}
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
-
 #include <proto/exec.h>
-
-/****************************************************************************/
 
 #if defined(BeginIO)
 #undef BeginIO
 #endif /* BeginIO */
 
-/****************************************************************************/
-
 VOID BeginIO(struct IORequest *ior);
 
-/****************************************************************************/
-
 VOID
-BeginIO(struct IORequest *ior)
-{
-	ENTER();
+BeginIO(struct IORequest *ior) {
+    ENTER();
 
-	assert( ior != NULL && ior->io_Device != NULL );
+    assert(ior != NULL && ior->io_Device != NULL);
 
-	IExec->BeginIO(ior);
+    IExec->BeginIO(ior);
 
-	LEAVE();
+    LEAVE();
 }
-
-/****************************************************************************/
-
-#endif /* __PPC__ */

@@ -41,21 +41,11 @@
 #ifndef	_FTW_H
 #define	_FTW_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #include <sys/stat.h>
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /* Values passed to the user function (argument #3). */
 enum
@@ -98,12 +88,6 @@ struct FTW
 extern int ftw(const char *path,int (*func)(const char *,const struct stat *,int),int depth);
 extern int nftw(const char *path,int (*func)(const char *,const struct stat *,int,struct FTW *),int depth,int flags);
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _FTW_H */

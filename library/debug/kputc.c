@@ -31,19 +31,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
+
+#ifndef _STDLIB_CONSTRUCTOR_H
+#include "stdlib_constructor.h"
+#endif /* _STDLIB_CONSTRUCTOR_H */
+
 #include "debug_headers.h"
 
 VOID
-kputc(UBYTE c)
-{
-	#if defined(__amigaos4__)
-	{
-		/* Call RawPutChar() through the 68k LVO. */
-		EmulateTags(SysBase, ET_Offset, -516, ET_RegisterD0, c, TAG_DONE);
-	}
-	#else
-	{
-		RawPutChar(c);
-	}
-	#endif /* __amigaos4__ */
+kputc(UBYTE c) {
+    /* Call RawPutChar() through the 68k LVO. */
+    EmulateTags(SysBase, ET_Offset, -516, ET_RegisterD0, c, TAG_DONE);
 }

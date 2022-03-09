@@ -31,43 +31,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _STDLIB_PROTOS_H
+#include "stdlib_protos.h"
+#endif /* _STDLIB_PROTOS_H */
 
 char *
-ctime(const time_t *tptr)
-{
-	char * result = NULL;
+ctime(const time_t *tptr) {
+    char *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	assert( tptr != NULL );
+    assert(tptr != NULL);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(tptr == NULL)
-		{
-			SHOWMSG("invalid tptr parameter");
+    if (tptr == NULL) {
+        SHOWMSG("invalid tptr parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	result = asctime(localtime(tptr));
+    result = asctime(localtime(tptr));
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

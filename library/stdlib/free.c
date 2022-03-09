@@ -57,18 +57,6 @@ __find_memory_node(void *address)
 	return (result);
 }
 
-#ifdef USE_AVL
-STATIC VOID
-remove_avl_memory(void *address) {
-    struct AVLMemoryNode *memNode = (struct AVLMemoryNode *)AVL_FindNode(__global_clib2->__memalign_tree, address, AVLKeyComp);
-    if (memNode)
-    {
-        AVL_RemNodeByAddress(&__global_clib2->__memalign_tree, &memNode->amn_AvlNode);
-        FreeVec(address);
-        ItemPoolFree(__global_clib2->__memory_pool, address);
-    }
-}
-#else
 STATIC VOID
 remove_and_free_memory_node(struct MemoryNode *mn)
 {
@@ -93,10 +81,8 @@ remove_and_free_memory_node(struct MemoryNode *mn)
         if (__memory_pool != NULL)
         {
             if (mn != NULL) {
-                PROFILE_OFF();
                 FreeVecPooled(__memory_pool, mn);
                 mn = NULL;
-                PROFILE_ON();
             }
         }
         else
@@ -107,10 +93,8 @@ remove_and_free_memory_node(struct MemoryNode *mn)
 
             Remove((struct Node *)mln);
 
-            PROFILE_OFF();
             FreeVec(mln);
             mln = NULL;
-            PROFILE_ON();
         }
     }
 
@@ -126,14 +110,11 @@ void __free_memory_node(struct MemoryNode *mn)
 
     remove_and_free_memory_node(mn);
 }
-#endif
-
 
 VOID __free_memory(void *ptr, BOOL force)
 {
     BOOL found = FALSE;
 
-#ifndef USE_AVL
 	struct MemoryNode *mn;
 
 	assert(ptr != NULL);
@@ -160,20 +141,6 @@ VOID __free_memory(void *ptr, BOOL force)
 
     if (mn != NULL && (force || FLAG_IS_CLEAR(mn->mn_Size, MN_SIZE_NEVERFREE)))
         __free_memory_node(mn);
-#else
-    /* Check if we have something created by memalign */
-    struct MemalignEntry *e = (struct MemalignEntry *)AVL_FindNode(__global_clib2->__memalign_tree, ptr, MemalignAVLKeyComp);
-    if (e) {
-        remove_avl_memory(e->me_Exact);
-        AVL_RemNodeByAddress(&__global_clib2->__memalign_tree, &e->me_AvlNode);
-        ItemPoolFree(__global_clib2->__memalign_pool, e);
-        found = TRUE;
-    }
-
-	if (!found) {
-		remove_avl_memory(ptr);
-	}
-#endif
 }
 
 void free(void *ptr)

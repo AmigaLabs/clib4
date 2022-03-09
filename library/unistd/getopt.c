@@ -31,133 +31,98 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int		opterr = 1;
-int		optind = 1;
-int		optopt;
-char *	optarg;
-
-/****************************************************************************/
+int opterr = 1;
+int optind = 1;
+int optopt;
+char *optarg;
 
 int
-getopt(int argc, char * const argv[], const char *opts)
-{
-	static int sp = 1;
-	int result = EOF;
-	char *cp;
-	int c;
+getopt(int argc, char *const argv[], const char *opts) {
+    static int sp = 1;
+    int result = EOF;
+    char *cp;
+    int c;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(argc);
-	SHOWPOINTER(argv);
-	SHOWSTRING(opts);
+    SHOWVALUE(argc);
+    SHOWPOINTER(argv);
+    SHOWSTRING(opts);
 
-	assert( argc > 0 && argv != NULL && opts != NULL );
+    assert(argc > 0 && argv != NULL && opts != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(argv == NULL || opts == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (argv == NULL || opts == NULL) {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	SHOWVALUE(optind);
+    SHOWVALUE(optind);
 
-	if(sp == 1)
-	{
-		if(optind >= argc || argv[optind][0] != '-' || argv[optind][1] == '\0')
-		{
-			goto out;
-		}
-		else if (strcmp(argv[optind], "--") == SAME)
-		{
-			optind++;
+    if (sp == 1) {
+        if (optind >= argc || argv[optind][0] != '-' || argv[optind][1] == '\0') {
+            goto out;
+        } else if (strcmp(argv[optind], "--") == SAME) {
+            optind++;
 
-			goto out;
-		}
-	}
+            goto out;
+        }
+    }
 
-	optopt = c = argv[optind][sp];
+    optopt = c = argv[optind][sp];
 
-	if(c == ':' || (cp = strchr(opts, c)) == NULL)
-	{
-		if(opterr != 0)
-			fprintf(stderr, "%s%s%c\n", argv[0], ": illegal option -- ", c);
+    if (c == ':' || (cp = strchr(opts, c)) == NULL) {
+        if (opterr != 0)
+            fprintf(stderr, "%s%s%c\n", argv[0], ": illegal option -- ", c);
 
-		if(argv[optind][++sp] == '\0')
-		{
-			optind++;
+        if (argv[optind][++sp] == '\0') {
+            optind++;
 
-			sp = 1;
-		}
+            sp = 1;
+        }
 
-		result = '?';
-		goto out;
-	}
+        result = '?';
+        goto out;
+    }
 
-	if(*++cp == ':')
-	{
-		if(argv[optind][sp+1] != '\0')
-		{
-			optarg = &argv[optind++][sp+1];
-		}
-		else if (++optind >= argc)
-		{
-			if(opterr != 0)
-				fprintf(stderr, "%s%s%c\n", argv[0], ": option requires an argument -- ", c);
+    if (*++cp == ':') {
+        if (argv[optind][sp + 1] != '\0') {
+            optarg = &argv[optind++][sp + 1];
+        } else if (++optind >= argc) {
+            if (opterr != 0)
+                fprintf(stderr, "%s%s%c\n", argv[0], ": option requires an argument -- ", c);
 
-			sp = 1;
+            sp = 1;
 
-			result = '?';
-			goto out;
-		}
-		else
-		{
-			optarg = argv[optind++];
-		}
+            result = '?';
+            goto out;
+        } else {
+            optarg = argv[optind++];
+        }
 
-		sp = 1;
-	}
-	else
-	{
-		if(argv[optind][++sp] == '\0')
-		{
-			sp = 1;
+        sp = 1;
+    } else {
+        if (argv[optind][++sp] == '\0') {
+            sp = 1;
 
-			optind++;
-		}
+            optind++;
+        }
 
-		optarg = NULL;
-	}
+        optarg = NULL;
+    }
 
-	result = c;
+    result = c;
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

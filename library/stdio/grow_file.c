@@ -36,12 +36,6 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 /* Change file position to the end of a file, then add a certain number of 0 bytes. Note that
    this function will change the current file position! */
 int64_t 
@@ -67,15 +61,11 @@ __grow_file_size(struct fd *fd, int num_bytes)
 
 	block_size = 0;
 
-	PROFILE_OFF();
-
 	assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
 
 	fh = BADDR(fd->fd_File);
 	if (fh != NULL && fh->fh_MsgPort != NULL && DoPkt(fh->fh_MsgPort, ACTION_HANDLER_INFO, MKBADDR(id), 0, 0, 0, 0))
 		block_size = id->id_BytesPerBlock;
-
-	PROFILE_ON();
 
 	if (block_size < 512)
 		block_size = 512;
@@ -105,10 +95,7 @@ __grow_file_size(struct fd *fd, int num_bytes)
 
 	memset(aligned_buffer, 0, (size_t)buffer_size);
 
-	PROFILE_OFF();
 	seek_position = ChangeFilePosition(fd->fd_File, 0, OFFSET_END);
-	PROFILE_ON();
-
 	if (seek_position == CHANGE_FILE_ERROR)
 	{
 		SHOWMSG("could not move to the end of the file");
@@ -116,11 +103,7 @@ __grow_file_size(struct fd *fd, int num_bytes)
 	}
 
 	position = (_off64_t)seek_position;
-
-	PROFILE_OFF();
 	seek_position = GetFilePosition(fd->fd_File);
-	PROFILE_ON();
-
 	current_position = (_off64_t)seek_position;
 
 	/* Try to make the first write access align the file position
@@ -147,10 +130,7 @@ __grow_file_size(struct fd *fd, int num_bytes)
 
 		alignment_skip = 0;
 
-		PROFILE_OFF();
 		bytes_written = Write(fd->fd_File, aligned_buffer, size);
-		PROFILE_ON();
-
 		if (bytes_written != size)
 			goto out;
 

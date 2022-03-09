@@ -86,10 +86,7 @@ getcwd(char *buffer, size_t buffer_size) {
         goto out;
     }
 
-    PROFILE_OFF();
     dir_lock = Lock("", SHARED_LOCK);
-    PROFILE_ON();
-
     if (dir_lock == ZERO) {
         SHOWMSG("could not get a lock on the current directory");
 
@@ -122,10 +119,7 @@ getcwd(char *buffer, size_t buffer_size) {
     if (result == NULL) {
         LONG status;
 
-        PROFILE_OFF();
         status = NameFromLock(dir_lock, buffer, (LONG) buffer_size);
-        PROFILE_ON();
-
         if (status == DOSFALSE) {
             int errno_code;
             LONG io_error;
@@ -169,11 +163,9 @@ getcwd(char *buffer, size_t buffer_size) {
 
     result = buffer;
 
-    out:
+out:
 
-    PROFILE_OFF();
     UnLock(dir_lock);
-    PROFILE_ON();
 
     RETURN(result);
     return (result);

@@ -32,10 +32,6 @@
  */
 #define _GNU_SOURCE
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
@@ -57,17 +53,13 @@ fsetpos64(FILE *stream, _fpos64_t *pos)
 
     flockfile(stream);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
+    if (stream == NULL || pos == NULL)
     {
-        if (stream == NULL || pos == NULL)
-        {
-            SHOWMSG("invalid parameters");
+        SHOWMSG("invalid parameters");
 
-            __set_errno(EFAULT);
-            goto out;
-        }
+        __set_errno(EFAULT);
+        goto out;
     }
-#endif /* CHECK_FOR_NULL_POINTERS */
 
     if (fseeko64(stream, (long int)(*pos), SEEK_SET) == CHANGE_FILE_ERROR && __get_errno() != OK)
     {

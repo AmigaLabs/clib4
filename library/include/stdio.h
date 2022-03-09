@@ -312,12 +312,6 @@ extern char *tempnam(const char *dir, const char *pfx);
 
 #endif /* __C_MACROS__ */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #define MAXPATHLEN PATH_MAX
 
 /****************************************************************************/
@@ -374,20 +368,11 @@ extern FILE *popen(const char *command, const char *type);
 extern int fseeko(FILE *stream, off_t offset, int wherefrom);
 extern off_t ftello(FILE *stream);
 
-/****************************************************************************/
-
 extern void flockfile(FILE *file);
 extern void funlockfile(FILE *file);
 extern int ftrylockfile(FILE *file);
 
-/****************************************************************************/
-
 extern int vasprintf(char **ret, const char *format, va_list arg);
-
-/****************************************************************************/
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-/****************************************************************************/
 
 extern int vfscanf(FILE *stream, const char *format, va_list arg);
 extern int vsscanf(const char *s, const char *format, va_list arg);

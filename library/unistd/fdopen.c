@@ -31,19 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
-
-/****************************************************************************/
-/* The following is not part of the ISO 'C' (1994) standard. */
-/****************************************************************************/
 
 FILE *
 fdopen(int file_descriptor, const char *type)
@@ -63,17 +53,13 @@ fdopen(int file_descriptor, const char *type)
 
 	__stdio_lock();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (type == NULL)
-		{
-			SHOWMSG("invalid type parameter");
+    if (type == NULL)
+    {
+        SHOWMSG("invalid type parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	slot_number = __find_vacant_iob_entry();
 	if (slot_number < 0)

@@ -31,12 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
@@ -45,16 +39,12 @@
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
 
-/****************************************************************************/
-
 struct format_hook_data
 {
 	char *buffer;
 	int max_size;
 	int len;
 };
-
-/****************************************************************************/
 
 STATIC VOID
 format_hook_function(
@@ -555,8 +545,6 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook)
 	}
 }
 
-/****************************************************************************/
-
 size_t
 strftime(char *s, size_t maxsize, const char *format, const struct tm *tm)
 {
@@ -573,17 +561,13 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm)
 	assert(s != NULL && format != NULL && tm != NULL);
 	assert((int)maxsize >= 0);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (s == NULL || format == NULL || tm == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (s == NULL || format == NULL || tm == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	if (maxsize > 0)
 	{

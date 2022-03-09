@@ -31,39 +31,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
 
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
+int
+__signbit_float(float number) {
+    uint32_t w = 0;
 
-/****************************************************************************/
+    GET_FLOAT_WORD(w, number);
 
-int 
-__signbit_float(float number)
-{
-	union ieee_single x;
-	int result;
-
-	x.value = number;
-
-	result = ((x.raw[0] = 0x80000000) != 0);
-
-	return (result);
+    return (w & 0x80000000) != 0;
 }
 
-/****************************************************************************/
+int
+__signbit_double(double number) {
+    uint32_t msw = 0;
 
-int 
-__signbit_double(double number)
-{
-	union ieee_double x;
-	int result;
+    GET_HIGH_WORD(msw, number);
 
-	x.value = number;
-
-	result = ((x.raw[0] = 0x80000000) != 0);
-
-	return (result);
+    return (msw & 0x80000000) != 0;
 }

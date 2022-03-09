@@ -31,89 +31,68 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 long
-pathconf(const char *path,int name)
-{
-	struct name_translation_info path_name_nti;
-	struct DevProc * dvp = NULL;
-	BOOL ignore_port = FALSE;
-	long ret = -1;
+pathconf(const char *path, int name) {
+    struct name_translation_info path_name_nti;
+    struct DevProc *dvp = NULL;
+    BOOL ignore_port = FALSE;
+    long ret = -1;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(path);
-	SHOWVALUE(name);
+    SHOWSTRING(path);
+    SHOWVALUE(name);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(path == NULL)
-		{
-			SHOWMSG("invalid path name");
+    if (path == NULL) {
+        SHOWMSG("invalid path name");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	#if defined(UNIX_PATH_SEMANTICS)
-	if(__global_clib2->__unix_path_semantics)
-	{
-		if(path[0] == '\0')
-		{
-			SHOWMSG("Empty name");
+#if defined(UNIX_PATH_SEMANTICS)
+    if(__global_clib2->__unix_path_semantics)
+    {
+        if(path[0] == '\0')
+        {
+            SHOWMSG("Empty name");
 
-			__set_errno(ENOENT);
-			goto out;
-		}
+            __set_errno(ENOENT);
+            goto out;
+        }
 
-		if(__translate_unix_to_amiga_path_name(&path,&path_name_nti) != 0)
-			goto out;
+        if(__translate_unix_to_amiga_path_name(&path,&path_name_nti) != 0)
+            goto out;
 
-		if(path_name_nti.is_root)
-		{
-			/* Should we disallow / or use OFS as the lowest common denominator? */
-			ignore_port = TRUE;
-		}
-	}
-	#endif /* UNIX_PATH_SEMANTICS */
+        if(path_name_nti.is_root)
+        {
+            /* Should we disallow / or use OFS as the lowest common denominator? */
+            ignore_port = TRUE;
+        }
+    }
+#endif /* UNIX_PATH_SEMANTICS */
 
-	if(!ignore_port)
-	{
-		dvp = GetDeviceProc((STRPTR)path,NULL);
-		if(dvp == NULL)
-		{
-			__set_errno(__translate_access_io_error_to_errno(IoErr()));
-			goto out;
-		}
-	}
+    if (!ignore_port) {
+        dvp = GetDeviceProc((STRPTR) path, NULL);
+        if (dvp == NULL) {
+            __set_errno(__translate_access_io_error_to_errno(IoErr()));
+            goto out;
+        }
+    }
 
-	ret = __pathconf((dvp != NULL) ? dvp->dvp_Port : NULL,name);
+    ret = __pathconf((dvp != NULL) ? dvp->dvp_Port : NULL, name);
 
 out:
 
-	if(dvp != NULL)
-	{
-		FreeDeviceProc(dvp);
-		dvp = NULL;
-	}
+    if (dvp != NULL) {
+        FreeDeviceProc(dvp);
+        dvp = NULL;
+    }
 
-	RETURN(ret);
-	return(ret);
+    RETURN(ret);
+    return (ret);
 }

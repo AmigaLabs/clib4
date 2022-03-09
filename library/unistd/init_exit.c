@@ -67,8 +67,6 @@ CLIB_DESTRUCTOR(unistd_exit)
 {
 	ENTER();
 
-	PROFILE_OFF();
-
 	if(__unlink_list.mlh_Head != NULL && NOT IsMinListEmpty(&__unlink_list))
 	{
 		struct UnlinkNode * uln;
@@ -88,8 +86,6 @@ CLIB_DESTRUCTOR(unistd_exit)
 			UnLock(uln->uln_Lock);
 		}
 	}
-
-	PROFILE_ON();
 
 	LEAVE();
 }

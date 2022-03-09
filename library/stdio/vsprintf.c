@@ -31,53 +31,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 int
-vsprintf(char *s,const char *format,va_list arg)
-{
-	struct iob string_iob;
-	int result = EOF;
-	char buffer[32] = {0};
+vsprintf(char *s, const char *format, va_list arg) {
+    struct iob string_iob;
+    int result = EOF;
+    char buffer[32] = {0};
 
-	assert( s != NULL && format != NULL );
+    assert(s != NULL && format != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(s == NULL || format == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+    if (s == NULL || format == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	__initialize_iob(&string_iob,__vsprintf_hook_entry,
-		NULL,
-		buffer,sizeof(buffer),
-		-1,
-		-1,
-		IOBF_IN_USE | IOBF_WRITE | IOBF_BUFFER_MODE_NONE | IOBF_INTERNAL,
-		NULL);
+    __initialize_iob(&string_iob, __vsprintf_hook_entry,
+                     NULL,
+                     buffer, sizeof(buffer),
+                     -1,
+                     -1,
+                     IOBF_IN_USE | IOBF_WRITE | IOBF_BUFFER_MODE_NONE | IOBF_INTERNAL,
+                     NULL);
 
-	string_iob.iob_String = (STRPTR)s;
+    string_iob.iob_String = (STRPTR) s;
 
-	result = vfprintf((FILE *)&string_iob,format,arg);
+    result = vfprintf((FILE * ) & string_iob, format, arg);
 
- out:
+out:
 
-	return(result);
+    return (result);
 }

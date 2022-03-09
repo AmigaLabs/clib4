@@ -41,12 +41,6 @@
 #include <proto/timer.h>
 #endif /* PROTO_TIMER_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 /* amiga_dotimer.c is a different implementation and use a different timer.device
  * we can't use the same implementation because it pass a Unit parameter.
  * However SIGBREAKF_CTRL_C handling should be implemented in the same way

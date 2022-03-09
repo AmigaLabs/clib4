@@ -1,5 +1,5 @@
 /*
- * $Id: inttypes_wcstoumax.c,v 1.2 2006-01-08 12:04:22 obarthel Exp $
+ * $Id: inttypes_wcstoumax.c,v 1.3 2022-03-03 20:02:22 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,21 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _INTTYPES_HEADERS_H
 #include "inttypes_headers.h"
 #endif /* _INTTYPES_HEADERS_H */
 
-/****************************************************************************/
-
 uintmax_t
-wcstoumax(const wchar_t *str, char **ptr, int base)
+wcstoumax(const wchar_t *str, wchar_t **ptr, int base)
 {
-	/* ZZZ unimplemented */
-	return(0);
+    return wcstoull(str, ptr, base);
 }

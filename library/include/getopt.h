@@ -41,21 +41,10 @@
 #ifndef _GETOPT_H
 #define _GETOPT_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #include <unistd.h>
+#include <features.h>
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #define no_argument 		0
 #define required_argument	1
@@ -79,12 +68,6 @@ extern int getopt_long(int argc, const char **argv, const char *optstring,
 */
 extern int optreset;
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _GETOPT_H */

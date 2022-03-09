@@ -6,7 +6,7 @@
 #include <time.h>
 
 // Times that a loop repeats. Increate so your test takes longer
-#define MAX 128
+#define MAX_CHUNK 128
 #define BUFFER_SIZE 4096 * 1024
 #define CHAR 'x'
 

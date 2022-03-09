@@ -31,48 +31,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <proto/exec.h>
 #include <exec/libraries.h>
 #include <exec/tasks.h>
-
-/****************************************************************************/
-
-#include <proto/exec.h>
-#include <clib/alib_protos.h>
-
-/****************************************************************************/
-
-#ifndef __PPC__
-
-/****************************************************************************/
-
-VOID
-DeleteTask(struct Task *tc)
-{
-	RemTask(tc);
-}
-
-/****************************************************************************/
-
-#else
-
-/****************************************************************************/
 
 #if defined(DeleteTask)
 #undef DeleteTask
 #endif /* DeleteTask */
 
-/****************************************************************************/
-
 VOID DeleteTask(struct Task *tc);
 
-/****************************************************************************/
-
 VOID
-DeleteTask(struct Task *tc)
-{
-	IExec->DeleteTask(tc);
+DeleteTask(struct Task *tc) {
+    IExec->DeleteTask(tc);
 }
-
-/****************************************************************************/
-
-#endif /* __PPC__ */

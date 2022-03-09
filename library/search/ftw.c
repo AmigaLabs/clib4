@@ -31,25 +31,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 /*
  * This ftw() implementation builds heavily on existing functionality and could certainly
  * be made more efficient (e.g. by combining  walk & stat using ExAll()/ExNext()) but this
  * way the Unix pathname translation is free.
  */
 
-/****************************************************************************/
-
 #ifndef	_FTW_HEADERS_H
 #include "ftw_headers.h"
 #endif /* _FTW_HEADERS_H */
-
-/****************************************************************************/
 
 static int
 walk(const char *path,int (*func)(const char *,const struct stat *,int),int depth,int level)

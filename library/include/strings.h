@@ -41,23 +41,13 @@
 #ifndef _STRINGS_H
 #define _STRINGS_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 #ifndef _STDDEF_H
 #include <stddef.h>
 #endif /* _STDDEF_H */
 
-/****************************************************************************/
+#include <features.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 /* These come from 4.4BSD. */
 extern int strcasecmp(const char *s1, const char *s2);
@@ -74,12 +64,6 @@ extern int ffs(int i);
 #define stricmp(s1, s2)			strcasecmp((s1), (s2))
 #define strnicmp(s1, s2, len)	strncasecmp((s1), (s2), (len))
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _STRINGS_H */

@@ -116,9 +116,7 @@ SOCKET_DESTRUCTOR(socket_exit)
 		tags[0].ti_Data = 0;
 		tags[1].ti_Tag = TAG_END;
 
-		PROFILE_OFF();
 		__SocketBaseTagList(tags);
-		PROFILE_ON();
 	}
 
 	/*
@@ -152,8 +150,6 @@ SOCKET_CONSTRUCTOR(socket_init)
 
 	ENTER();
 
-	PROFILE_OFF();
-
 	/* bsdsocket.library V3 is sufficient for all the tasks we
 	   may have to perform. */
 	__SocketBase = OpenLibrary("bsdsocket.library", 3);
@@ -166,8 +162,6 @@ SOCKET_CONSTRUCTOR(socket_init)
 			__SocketBase = NULL;
 		}
 	}
-
-	PROFILE_ON();
 
 	if (__SocketBase == NULL)
 	{
@@ -198,10 +192,7 @@ SOCKET_CONSTRUCTOR(socket_init)
 
 	tags[4].ti_Tag = TAG_END;
 
-	PROFILE_OFF();
 	status = __SocketBaseTagList(tags);
-	PROFILE_ON();
-
 	if (status != 0)
 	{
 		SHOWMSG("couldn't initialize the library");
@@ -224,12 +215,8 @@ SOCKET_CONSTRUCTOR(socket_init)
 
 		tags[1].ti_Tag = TAG_END;
 
-		PROFILE_OFF();
-
 		if (__SocketBaseTagList(tags) == 0)
 			__can_share_socket_library_base = TRUE;
-
-		PROFILE_ON();
 
 		if (__can_share_socket_library_base)
 		{
@@ -238,12 +225,8 @@ SOCKET_CONSTRUCTOR(socket_init)
 
 			tags[1].ti_Tag = TAG_END;
 
-			PROFILE_OFF();
-
 			if (__SocketBaseTagList(tags) == 0)
 				__thread_safe_errno_h_errno = TRUE;
-
-			PROFILE_ON();
 		}
 	}
 

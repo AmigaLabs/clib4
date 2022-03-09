@@ -614,12 +614,6 @@ struct _clib2
     int i;
     int j;
     uint32_t *x;
-
-#ifdef USE_AVL
-    /* AVL memory management */
-    void           *__memory_pool;
-    struct AVLNode *__memory_tree;
-#endif
 };
 
 extern struct _clib2 *__global_clib2;

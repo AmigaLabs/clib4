@@ -31,15 +31,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
+
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 wchar_t *
-fgetws(wchar_t *s, int n, FILE *stream)
-{
-	/* ZZZ unimplemented */
-	return(NULL);
+fgetws(wchar_t *s, int n, FILE *f) {
+    register wchar_t *p = s;
+    register wchar_t *e = s + n - 1;
+    register wint_t c;
+
+    if (n <= 0) {
+        __set_errno(EINVAL);
+        return NULL;
+    }
+
+    ORIENT(f, 0);
+    flockfile(f);
+
+    while (p < e && (c = fgetwc(f)) != WEOF && (*p++ = c) != '\n');
+    *p = 0;
+
+    funlockfile(f);
+
+    return s;
 }

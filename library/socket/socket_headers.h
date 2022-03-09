@@ -62,10 +62,6 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-#ifndef _STDLIB_PROFILE_H
-#include "stdlib_profile.h"
-#endif /* _STDLIB_PROFILE_H */
-
 /* Code value. */
 #define SBTB_CODE 1
 #define SBTS_CODE 0x3FFF

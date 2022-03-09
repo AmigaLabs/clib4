@@ -31,10 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
@@ -52,21 +48,15 @@ gethostname(const char *hostname, size_t size)
 	assert(hostname != NULL);
 	assert(__SocketBase != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (hostname == NULL)
-		{
-			SHOWMSG("invalid host name parameter");
+    if (hostname == NULL)
+    {
+        SHOWMSG("invalid host name parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	PROFILE_OFF();
 	result = __gethostname((STRPTR)hostname, size);
-	PROFILE_ON();
 
 out:
 

@@ -31,23 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-int link(const char *existing_path, const char *new_path)
+int
+link(const char *existing_path, const char *new_path)
 {
 #if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info existing_path_name_nti;
@@ -67,17 +56,13 @@ int link(const char *existing_path, const char *new_path)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (existing_path == NULL || new_path == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (existing_path == NULL || new_path == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -106,10 +91,7 @@ int link(const char *existing_path, const char *new_path)
 
 	D(("trying to get a lock on '%s'", existing_path));
 
-	PROFILE_OFF();
 	existing_path_lock = Lock((STRPTR)existing_path, SHARED_LOCK);
-	PROFILE_ON();
-
 	if (existing_path_lock == ZERO)
 	{
 		SHOWMSG("that didn't work");
@@ -120,10 +102,7 @@ int link(const char *existing_path, const char *new_path)
 
 	D(("trying to make a link named '%s'", new_path));
 
-	PROFILE_OFF();
 	status = MakeLink((STRPTR)new_path, (APTR) existing_path_lock, LINK_HARD);
-	PROFILE_ON();
-
 	if (status == DOSFALSE)
 	{
 		SHOWMSG("that didn't work");
@@ -136,9 +115,7 @@ int link(const char *existing_path, const char *new_path)
 
 out:
 
-	PROFILE_OFF();
 	UnLock(existing_path_lock);
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

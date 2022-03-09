@@ -5,7 +5,7 @@ void write16(uint8_t *ptr2)
 	uint16_t *ptr = (uint16_t *)ptr2;
 	int buf = BUFFER_SIZE / 2;
 
-	for (int i = 0; i < MAX; i++)
+	for (int i = 0; i < MAX_CHUNK; i++)
 		for (int z = 0; z < buf; z++)
 		{
 			ptr[z] = i % 0xffff;

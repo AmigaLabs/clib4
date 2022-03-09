@@ -992,7 +992,6 @@ C_USERGROUP := \
 	usergroup/setuid.o
 
 C_WCHAR := \
-	wchar/wprintf_core.o \
 	wchar/bittab.o \
 	wchar/btowc.o \
 	wchar/fgetwc.o \
@@ -1017,6 +1016,7 @@ C_WCHAR := \
 	wchar/vfwprintf.o \
 	wchar/vfwscanf.o \
 	wchar/vswprintf.o \
+    wchar/vswscanf.o \
 	wchar/vwprintf.o \
 	wchar/wcrtomb.o \
 	wchar/wcscat.o \

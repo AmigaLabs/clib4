@@ -31,21 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _MOUNT_HEADERS_H
 #include "mount_headers.h"
 #endif /* _MOUNT_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 int statfs(const char *path, struct statfs *buf)
 {
@@ -67,17 +55,13 @@ int statfs(const char *path, struct statfs *buf)
 
 	assert(path != NULL && buf != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path == NULL || buf == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (path == NULL || buf == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -120,10 +104,7 @@ int statfs(const char *path, struct statfs *buf)
 
 	D(("trying to get a lock on '%s'", path));
 
-	PROFILE_OFF();
 	lock = Lock((STRPTR)path, SHARED_LOCK);
-	PROFILE_ON();
-
 	if (lock == ZERO)
 	{
 		SHOWMSG("that didn't work");
@@ -132,10 +113,7 @@ int statfs(const char *path, struct statfs *buf)
 		goto out;
 	}
 
-	PROFILE_OFF();
 	status = Info(lock, id);
-	PROFILE_ON();
-
 	if (status == DOSFALSE)
 	{
 		SHOWMSG("didn't get the info");
@@ -150,11 +128,7 @@ int statfs(const char *path, struct statfs *buf)
 
 out:
 
-	PROFILE_OFF();
-
 	UnLock(lock);
-
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

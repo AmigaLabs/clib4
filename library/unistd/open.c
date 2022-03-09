@@ -46,9 +46,7 @@ STATIC LONG
 safe_change_mode(LONG type, BPTR file_handle, LONG mode)
 {
 	LONG result = DOSFALSE;
-	PROFILE_OFF();
 	result = ChangeMode(type, file_handle, mode);
-	PROFILE_ON();
 
 out:
 
@@ -156,10 +154,7 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 
 			SHOWMSG("checking if the file to create already exists");
 
-			PROFILE_OFF();
 			lock = Lock((STRPTR)path_name, SHARED_LOCK);
-			PROFILE_ON();
-
 			if (lock != ZERO)
 			{
 				SHOWMSG("the file already exists");
@@ -194,16 +189,10 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 		{
 			SHOWMSG("checking if the file to create already exists");
 
-			PROFILE_OFF();
 			lock = Lock((STRPTR)path_name, SHARED_LOCK);
-			PROFILE_ON();
-
 			if (lock != ZERO)
 			{
-				PROFILE_OFF();
 				fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
-				PROFILE_ON();
-
 				if (fib == NULL)
 				{
 					SHOWMSG("could not examine the object");
@@ -232,12 +221,8 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 
 				open_mode = MODE_NEWFILE;
 
-				PROFILE_OFF();
-
 				UnLock(lock);
 				lock = ZERO;
-
-				PROFILE_ON();
 			}
 			else
 			{
@@ -271,10 +256,7 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 
 	SHOWSTRING(path_name);
 
-	PROFILE_OFF();
 	handle = Open((STRPTR)path_name, open_mode);
-	PROFILE_ON();
-
 	if (handle == ZERO)
 	{
 		LONG io_err = IoErr();
@@ -286,8 +268,6 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 		   it were a plain file. */
 		if (io_err == ERROR_OBJECT_WRONG_TYPE)
 		{
-			PROFILE_OFF();
-
 			lock = Lock((STRPTR)path_name, SHARED_LOCK);
 			if (lock != ZERO)
 			{
@@ -296,8 +276,6 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 					__set_errno(EISDIR);
 				}
 			}
-
-			PROFILE_ON();
 		}
 
 		goto out;
@@ -315,10 +293,7 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 	__initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
 
 	/* Figure out if this stream is attached to a console. */
-	PROFILE_OFF();
 	is_interactive = IsInteractive(handle);
-	PROFILE_ON();
-
 	if (is_interactive)
 	{
 		SET_FLAG(fd->fd_Flags, FDF_IS_INTERACTIVE);
@@ -356,18 +331,13 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 				memmove(path_name_copy, path_name, len);
 				path_name_copy[len] = '\0';
 
-				PROFILE_OFF();
 				is_file_system = IsFileSystem(path_name_copy);
-				PROFILE_ON();
-
 				free(path_name_copy);
 			}
 		}
 		else
 		{
-			PROFILE_OFF();
 			is_file_system = IsFileSystem("");
-			PROFILE_ON();
 		}
 
 		if (is_file_system)
@@ -387,9 +357,7 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 	{
 		SHOWMSG("appending; seeking to end of file");
 
-		PROFILE_OFF();
 		ChangeFilePosition(handle, 0, OFFSET_END);
-		PROFILE_ON();
 
 		SET_FLAG(fd->fd_Flags, FDF_APPEND);
 	}
@@ -425,9 +393,6 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 	assert(result != ERROR);
 
 out:
-
-	PROFILE_OFF();
-
 	if (handle != ZERO)
 		Close(handle);
 
@@ -437,8 +402,6 @@ out:
 	UnLock(lock);
 
 	__stdio_unlock();
-
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

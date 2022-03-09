@@ -31,123 +31,103 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 size_t
-fread(void *ptr,size_t element_size,size_t count,FILE *stream)
-{
-	struct iob * file = (struct iob *)stream;
-	size_t result = 0;
+fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
+    struct iob *file = (struct iob *) stream;
+    size_t result = 0;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(ptr);
-	SHOWVALUE(element_size);
-	SHOWVALUE(count);
-	SHOWPOINTER(stream);
+    SHOWPOINTER(ptr);
+    SHOWVALUE(element_size);
+    SHOWVALUE(count);
+    SHOWPOINTER(stream);
 
-	assert( ptr != NULL && stream != NULL );
-	assert( (int)element_size >= 0 && (int)count >= 0 );
+    assert(ptr != NULL && stream != NULL);
+    assert((int) element_size >= 0 && (int) count >= 0);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	flockfile(stream);
+    flockfile(stream);
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(ptr == NULL || stream == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (ptr == NULL || stream == NULL) {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	assert( __is_valid_iob(file) );
-	assert( FLAG_IS_SET(file->iob_Flags,IOBF_IN_USE) );
-	assert( file->iob_BufferSize > 0 );
+    assert(__is_valid_iob(file));
+    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
+    assert(file->iob_BufferSize > 0);
 
-	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_IN_USE))
-	{
-		SHOWMSG("this file is not even in use");
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
+        SHOWMSG("this file is not even in use");
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+        SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-		__set_errno(EBADF);
+        __set_errno(EBADF);
 
-		goto out;
-	}
+        goto out;
+    }
 
-	if(FLAG_IS_CLEAR(file->iob_Flags,IOBF_READ))
-	{
-		SHOWMSG("this file is not read-enabled");
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ)) {
+        SHOWMSG("this file is not read-enabled");
 
-		SET_FLAG(file->iob_Flags,IOBF_ERROR);
+        SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-		__set_errno(EBADF);
+        __set_errno(EBADF);
 
-		goto out;
-	}
+        goto out;
+    }
 
-	if(element_size > 0 && count > 0)
-	{
-		size_t total_bytes_read = 0;
-		size_t total_size;
-		unsigned char * data = ptr;
-		int c;
+    if (element_size > 0 && count > 0) {
+        size_t total_bytes_read = 0;
+        size_t total_size;
+        unsigned char *data = ptr;
+        int c;
 
-		if(__fgetc_check((FILE *)file) < 0)
-			goto out;
+        if (__fgetc_check((FILE *) file) < 0)
+            goto out;
 
-		total_size = element_size * count;
+        total_size = element_size * count;
 
-		SHOWVALUE(total_size);
+        SHOWVALUE(total_size);
 
-		while(total_size-- > 0)
-		{
-			c = __getc(file);
-			if(c == EOF)
-				break;
+        while (total_size-- > 0) {
+            c = __getc(file);
+            if (c == EOF)
+                break;
 
-			(*data++) = c;
+            (*data++) = c;
 
-			total_bytes_read++;
-		}
+            total_bytes_read++;
+        }
 
-		SHOWVALUE(total_bytes_read);
+        SHOWVALUE(total_bytes_read);
 
-		result = total_bytes_read / element_size;
-	}
-	else
-	{
-		SHOWVALUE(element_size);
-		SHOWVALUE(count);
+        result = total_bytes_read / element_size;
+    } else {
+        SHOWVALUE(element_size);
+        SHOWVALUE(count);
 
-		SHOWMSG("either element size or count is zero");
+        SHOWMSG("either element size or count is zero");
 
-		/* Don't let this appear like an EOF or error. */
-		clearerr((FILE *)file);
-	}
+        /* Don't let this appear like an EOF or error. */
+        clearerr((FILE *) file);
+    }
 
-	D(("total number of elements read = %ld",result));
+    D(("total number of elements read = %ld", result));
 
- out:
+out:
 
-	funlockfile(stream);
+    funlockfile(stream);
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

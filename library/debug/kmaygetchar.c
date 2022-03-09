@@ -31,25 +31,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "debug_headers.h"
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _STDLIB_CONSTRUCTOR_H
+#include "stdlib_constructor.h"
+#endif /* _STDLIB_CONSTRUCTOR_H */
+
+#include "debug_headers.h"
 
 LONG
 KMayGetChar(VOID)
 {
 	LONG result;
 
-	#if defined(__amigaos4__)
-	{
-		/* Call RawMayGetChar() through the 68k LVO. */
-		result = EmulateTags(SysBase, ET_Offset, -510, TAG_DONE);
-	}
-	#else
-	{
-		result = RawMayGetChar();
-	}
-	#endif /* __amigaos4__ */
+    /* Call RawMayGetChar() through the 68k LVO. */
+    result = EmulateTags(SysBase, ET_Offset, -510, TAG_DONE);
 
 	return(result);
 }

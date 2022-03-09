@@ -62,9 +62,7 @@ crypt(const char *key, const char *salt) {
         goto out;
     }
 
-    PROFILE_OFF();
     result = (char *) __crypt((UBYTE *) key, (UBYTE *) salt);
-    PROFILE_ON();
 
     SHOWSTRING(result);
 

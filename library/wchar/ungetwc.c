@@ -35,11 +35,26 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 wint_t
-ungetwc(wint_t c,FILE *stream)
-{
-	/* ZZZ unimplemented */
-	return(0);
+ungetwc(wint_t wc, FILE *fp) {
+    char buf[MB_LEN_MAX];
+    size_t len;
+
+    flockfile(fp);
+    ORIENT (fp, 1);
+    if (wc == WEOF)
+        wc = WEOF;
+    else if ((len = wcrtomb(buf, wc, &fp->_mbstate)) == (size_t) - 1) {
+        fp->_flags |= __SERR;
+        wc = WEOF;
+    } else {
+        while (len-- != 0) {
+            if (ungetc((unsigned char) buf[len], fp) == EOF) {
+                wc = WEOF;
+                break;
+            }
+        }
+    }
+    funlockfile(fp);
+    return wc;
 }

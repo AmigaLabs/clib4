@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_fwprintf.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_fwprintf.c,v 1.1 2022-03-04 16:32:11 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,15 +35,18 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-int 
+int
 fwprintf(FILE *f, const wchar_t *fmt, ...)
 {
 	int ret;
+
+    ENTER();
+
 	va_list ap;
 	va_start(ap, fmt);
 	ret = vfwprintf(f, fmt, ap);
 	va_end(ap);
+
+    RETURN(ret);
 	return ret;
 }

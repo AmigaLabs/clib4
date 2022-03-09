@@ -34,10 +34,6 @@
 #include <sys/systeminfo.h>
 #include <sys/utsname.h>
 
-/****************************************************************************/
-/* The following is not part of the ISO 'C' (1994) standard. */
-/****************************************************************************/
-
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */

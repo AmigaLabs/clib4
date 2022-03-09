@@ -56,17 +56,9 @@
 #include <stdbool.h>
 #endif
 
-/****************************************************************************/
+#include <features.h>
 
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__BEGIN_DECLS
 
 #ifdef __GNUC__
  #ifdef __PPC__
@@ -264,13 +256,6 @@ extern int h_errno;
 
 /****************************************************************************/
 
-/*
- * The following prototypes may clash with the bsdsocket.library or
- * usergroup.library API definitions.
- */
-
-#ifndef __NO_NET_API
-
 extern struct hostent *gethostbyaddr(const void *addr, socklen_t len, int type);
 extern struct hostent *gethostbyname(const char *name);
 extern struct netent *getnetbyaddr(in_addr_t net, int type);
@@ -286,10 +271,6 @@ extern int getaddrinfo (const char *name, const char *service, const struct addr
 extern void freeaddrinfo (struct addrinfo *ai);
 extern int getnameinfo(const struct sockaddr *sa, socklen_t salen, char *node, socklen_t nodelen, char *service, socklen_t servicelen, int flags);
 
-#endif /* __NO_NET_API */
-
-/****************************************************************************/
-
 #ifdef __GNUC__
  #ifdef __PPC__
   #pragma pack()
@@ -298,12 +279,6 @@ extern int getnameinfo(const struct sockaddr *sa, socklen_t salen, char *node, s
  #pragma default-align
 #endif
 
-/****************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-/****************************************************************************/
+__END_DECLS
 
 #endif /* _NETDB_H */

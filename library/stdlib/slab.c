@@ -85,11 +85,7 @@ __slab_allocate(size_t allocation_size)
 		/* No integer overflow? */
 		if (allocation_size < total_single_allocation_size)
 		{
-			PROFILE_OFF();
-
 			ssa = AllocVecTags(total_single_allocation_size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-
-			PROFILE_ON();
 		}
 		/* Integer overflow has occured. */
 		else
@@ -285,10 +281,7 @@ __slab_allocate(size_t allocation_size)
 				{
 					D(("no slab is available for reuse; allocating a new slab (%lu bytes)", sizeof(*new_sn) + __slab_data.sd_StandardSlabSize));
 
-					PROFILE_OFF();
 					new_sn = (struct SlabNode *)AllocVecTags(sizeof(*new_sn) + __slab_data.sd_StandardSlabSize, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-					PROFILE_ON();
-
 					if (new_sn == NULL)
 						D(("slab allocation failed"));
 
@@ -402,9 +395,7 @@ __slab_allocate(size_t allocation_size)
 							/* Unlink from list of slabs of the same size. */
 							Remove((struct Node *)sn);
 
-							PROFILE_OFF();
 							FreeVec(sn);
-							PROFILE_ON();
 
 							total_purged += sizeof(*sn) + __slab_data.sd_StandardSlabSize;
 
@@ -502,9 +493,7 @@ void __slab_free(void *address, size_t allocation_size)
 
 		Remove((struct Node *)ssa);
 
-		PROFILE_OFF();
 		FreeVec(ssa);
-		PROFILE_ON();
 
 		__slab_data.sd_NumSingleAllocations--;
 		__slab_data.sd_TotalSingleAllocationSize -= size;
@@ -797,9 +786,7 @@ void __slab_exit(void)
 				total_slab_size += sizeof(*sn) + __slab_data.sd_StandardSlabSize;
 				slab_count++;
 
-				PROFILE_OFF();
 				FreeVec(sn);
-				PROFILE_ON();
 			}
 		}
 
@@ -825,9 +812,7 @@ void __slab_exit(void)
 			total_single_allocation_size += ssa->ssa_Size;
 			single_allocation_count++;
 
-			PROFILE_OFF();
 			FreeVec(ssa);
-			PROFILE_ON();
 		}
 
 		if (single_allocation_count > 0)

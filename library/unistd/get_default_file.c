@@ -35,12 +35,6 @@
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
-
 int
 __get_default_file(int file_descriptor,long * file_ptr)
 {

@@ -2,7 +2,7 @@
 
 void write8(uint8_t *ptr)
 {
-	for (int i = 0; i < MAX; i++)
+	for (int i = 0; i < MAX_CHUNK; i++)
 		for (int z = 0; z < BUFFER_SIZE; z++)
 		{
 			ptr[z] = (i) % 0xff;
@@ -14,7 +14,7 @@ void read8(uint8_t *ptr)
 	uint8_t w = 0;
 	int i;
 
-	for (i = 0; i < MAX; i++)
+	for (i = 0; i < MAX_CHUNK; i++)
 		for (int z = 0; z < BUFFER_SIZE; z++)
 		{
 			w = ptr[z];

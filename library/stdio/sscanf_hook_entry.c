@@ -31,17 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
-
-/****************************************************************************/
 
 int64_t
 __sscanf_hook_entry(
@@ -64,9 +56,7 @@ __sscanf_hook_entry(
 
 	if (string_iob->iob_StringPosition < string_iob->iob_StringLength)
 	{
-		int64_t num_bytes_left;
-
-		num_bytes_left = string_iob->iob_StringLength - string_iob->iob_StringPosition;
+		int64_t num_bytes_left = string_iob->iob_StringLength - string_iob->iob_StringPosition;
 
 		num_bytes = fam->fam_Size;
 		if (num_bytes > num_bytes_left)

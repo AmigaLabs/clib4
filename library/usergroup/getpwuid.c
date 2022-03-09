@@ -48,9 +48,7 @@ getpwuid(uid_t uid)
 
 	SHOWVALUE(uid);
 
-	PROFILE_OFF();
 	result = __getpwuid((LONG)uid);
-	PROFILE_ON();
 
 	if (__check_abort_enabled)
 		__check_abort();

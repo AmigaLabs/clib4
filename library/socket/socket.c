@@ -72,10 +72,7 @@ socket(int domain, int type, int protocol)
 		goto out;
 	}
 
-	PROFILE_OFF();
 	socket_fd = __socket(domain, type, protocol);
-	PROFILE_ON();
-
 	if (socket_fd < 0)
 	{
 		SHOWMSG("could not create socket");

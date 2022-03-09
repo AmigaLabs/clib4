@@ -34,77 +34,14 @@
 #ifndef _DEBUG_HEADERS_H
 #define _DEBUG_HEADERS_H
 
-/****************************************************************************/
-
 #ifndef EXEC_LIBRARIES_H
 #include <exec/libraries.h>
 #endif /* EXEC_LIBRARIES_H */
-
-/****************************************************************************/
-
-#if defined(__SASC)
-
-#include <clib/exec_protos.h>
-#include <pragmas/exec_pragmas.h>
-
-LONG RawMayGetChar(VOID);
-VOID RawPutChar(UBYTE c);
-
-#pragma libcall SysBase RawMayGetChar 1fe 00
-#pragma libcall SysBase RawPutChar 204 001
-
-#endif /* __SASC */
-
-/****************************************************************************/
-
-#if defined(__amigaos4__)
 
 #ifndef EXEC_EMULATION_H
 #include <exec/emulation.h>
 #endif /* EXEC_EMULATION_H */
 
-#endif /* __amigaos4__ */
-
-/****************************************************************************/
-
-#if defined(__GNUC__)
-
-#define __NOLIBBASE__
-#include <proto/exec.h>
-
-#ifndef __PPC__
-
-#define RawMayGetChar() ({ \
-  UBYTE _RawMayGetChar__re = \
-  ({ \
-  register struct Library * const __RawMayGetChar__bn __asm("a6") = SysBase;\
-  register UBYTE __RawMayGetChar__re __asm("d0"); \
-  __asm volatile ("jsr a6@(-510:W)" \
-  : "=r"(__RawMayGetChar__re) \
-  : "r"(__RawMayGetChar__bn) \
-  : "d1", "a0", "a1", "fp0", "fp1", "cc", "memory"); \
-  __RawMayGetChar__re; \
-  }); \
-  _RawMayGetChar__re; \
-})
-
-#define RawPutChar(c) ({ \
-  ULONG _RawPutChar_c = (c); \
-  { \
-  register struct Library * const __RawPutChar__bn __asm("a6") = SysBase;\
-  register ULONG __RawPutChar_c __asm("d0") = (_RawPutChar_c); \
-  __asm volatile ("jsr a6@(-516:W)" \
-  : \
-  : "r"(__RawPutChar__bn), "r"(__RawPutChar_c) \
-  : "d0", "d1", "a0", "a1", "fp0", "fp1", "cc", "memory"); \
-  } \
-})
-
-#endif /* __PPC___ */
-
-#endif /* __GNUC__ */
-
-/****************************************************************************/
 
 #define SysBase (*(struct Library **)4)
 #define IExec ((struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface)
@@ -152,7 +89,5 @@ extern VOID kputstr(const UBYTE *s);
 extern VOID KPutS(const UBYTE *s);
 extern VOID kputs(const UBYTE *s);
 extern VOID KPutStr(const UBYTE *s);
-
-/****************************************************************************/
 
 #endif /* _DEBUG_HEADERS_H */

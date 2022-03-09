@@ -31,26 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #include <time.h>
 #include <dos.h>
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 char *
 mktemp(char *name_template)
@@ -80,17 +66,13 @@ mktemp(char *name_template)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (name_template == NULL)
-		{
-			SHOWMSG("invalid name template");
+    if (name_template == NULL)
+    {
+        SHOWMSG("invalid name template");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	this_process = (struct Process *)FindTask(NULL);
 
@@ -192,9 +174,7 @@ mktemp(char *name_template)
 		old_window_pointer = __set_process_window((APTR)-1);
 
 		/* Does this object exist already? */
-		PROFILE_OFF();
 		lock = Lock(test_name, SHARED_LOCK);
-		PROFILE_ON();
 
 		/* Restore DOS requesters. */
 		__set_process_window(old_window_pointer);
@@ -216,10 +196,7 @@ mktemp(char *name_template)
 		}
 
 		/* OK, so it exists already. Start over... */
-
-		PROFILE_OFF();
 		UnLock(lock);
-		PROFILE_ON();
 
 		/* Change one letter; if that 'overflows', start
 		   over with 'A' and move on to the next position. */

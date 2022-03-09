@@ -31,59 +31,44 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 char *
-getenv(const char * name)
-{
-	static char env_var_buffer[FILENAME_MAX];
-	char * result = NULL;
+getenv(const char *name) {
+    static char env_var_buffer[FILENAME_MAX];
+    char *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(name);
+    SHOWSTRING(name);
 
-	assert( name != NULL );
+    assert(name != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if(name == NULL)
-		{
-			SHOWMSG("invalid name parameter");
+    if (name == NULL) {
+        SHOWMSG("invalid name parameter");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-	#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	if(GetVar((STRPTR)name,env_var_buffer,sizeof(env_var_buffer),0) < 0)
-	{
-		SHOWMSG("couldn't get the variable");
+    if (GetVar((STRPTR) name, env_var_buffer, sizeof(env_var_buffer), 0) < 0) {
+        SHOWMSG("couldn't get the variable");
 
-		__set_errno(__translate_io_error_to_errno(IoErr()));
-		goto out;
-	}
+        __set_errno(__translate_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	result = env_var_buffer;
+    result = env_var_buffer;
 
-	SHOWSTRING(result);
+    SHOWSTRING(result);
 
- out:
+    out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

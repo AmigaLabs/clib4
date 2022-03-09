@@ -68,10 +68,6 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
 #include <ctype.h>
 
 /* 
@@ -91,17 +87,13 @@ int inet_aton(const char *cp, struct in_addr *addr)
 
 	assert(cp != NULL && addr != NULL);
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (cp == NULL || addr == NULL)
-		{
-			SHOWMSG("invalid parameters");
+    if (cp == NULL || addr == NULL)
+    {
+        SHOWMSG("invalid parameters");
 
-			__set_errno(EFAULT);
-			return (0);
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        return (0);
+    }
 
 	for (;;)
 	{

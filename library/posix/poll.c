@@ -37,10 +37,7 @@
 
 #include <poll.h>
 #include <errno.h>
-
-#ifndef MAX
-#define MAX(a, b)    ((a) > (b) ? (a) : (b))
-#endif
+#include <sys/param.h> // MAX
 
 static int map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWriteSet, fd_set *pExceptSet) {
     register nfds_t i;             /* loop control */

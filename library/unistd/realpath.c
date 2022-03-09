@@ -31,21 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDLIB_NULL_POINTER_CHECK_H
-#include "stdlib_null_pointer_check.h"
-#endif /* _STDLIB_NULL_POINTER_CHECK_H */
-
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
-
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard. */
-
-/****************************************************************************/
 
 char *
 realpath(const char *path_name, char *buffer)
@@ -68,17 +56,13 @@ realpath(const char *path_name, char *buffer)
 	if (__check_abort_enabled)
 		__check_abort();
 
-#if defined(CHECK_FOR_NULL_POINTERS)
-	{
-		if (path_name == NULL || buffer == NULL)
-		{
-			SHOWSTRING("invalid parameters");
+    if (path_name == NULL || buffer == NULL)
+    {
+        SHOWSTRING("invalid parameters");
 
-			__set_errno(EFAULT);
-			goto out;
-		}
-	}
-#endif /* CHECK_FOR_NULL_POINTERS */
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 #if defined(UNIX_PATH_SEMANTICS)
 	if (__global_clib2->__unix_path_semantics)
@@ -98,20 +82,14 @@ realpath(const char *path_name, char *buffer)
 
 	D(("trying to get a lock on '%s'", path_name));
 
-	PROFILE_OFF();
 	lock = Lock((STRPTR)path_name, SHARED_LOCK);
-	PROFILE_ON();
-
 	if (lock != ZERO)
 	{
 		LONG status;
 
 		SHOWMSG("trying to obtain the absolute path");
 
-		PROFILE_OFF();
 		status = NameFromLock(lock, buffer, PATH_MAX);
-		PROFILE_ON();
-
 		if (status == DOSFALSE)
 		{
 			SHOWMSG("that didn't work");
@@ -146,12 +124,8 @@ realpath(const char *path_name, char *buffer)
 
 out:
 
-	PROFILE_OFF();
-
 	FreeDeviceProc(dvp);
 	UnLock(lock);
-
-	PROFILE_ON();
 
 	RETURN(result);
 	return (result);

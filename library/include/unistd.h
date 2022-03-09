@@ -55,9 +55,7 @@
 #include <stdint.h>
 #endif /* _STDINT_H */
 
-#if !defined(__NO_NET_API) && !defined(_SYS_SELECT_H)
 #include <sys/select.h>
-#endif /* __NO_NET_API && _SYS_SELECT_H */
 
 __BEGIN_DECLS
 
@@ -138,13 +136,6 @@ extern void disableUnixPaths(void);
 
 extern char * getcwd(char * buffer, size_t buffer_size);
 
-/*
- * The following prototypes may clash with the bsdsocket.library or
- * usergroup.library API definitions.
- */
-
-#ifndef __NO_NET_API
-
 extern long gethostid(void);
 extern int gethostname(const char *name, size_t namelen);
 extern char *crypt(const char *key, const char *salt);
@@ -163,8 +154,6 @@ extern int setregid(gid_t rgid, gid_t egid);
 extern int setreuid(uid_t ruid, uid_t euid);
 extern pid_t setsid(void);
 extern int setuid(uid_t uid);
-
-#endif /* __NO_NET_API */
 
 /* The following is for use with pathconf()/fpathconf() */
 #define	_PC_LINK_MAX				0
