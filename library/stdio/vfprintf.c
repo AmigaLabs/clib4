@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_vfprintf.c,v 1.26 2008-03-10 15:28:11 obarthel Exp $
+ * $Id: stdio_vfprintf.c,v 1.27 2022-03-5 17:42:43 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,9 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
+#ifndef _WCHAR_HEADERS_H
+#include "wchar_headers.h"
+#endif /* _WCHAR_HEADERS_H */
 
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
@@ -41,1484 +41,591 @@
 
 #include <sys/param.h> // max
 
-/* Data conversion flags for vfprintf() below. */
-#define FORMATF_LeftJustified 			(1 << 0)	/* Output must be left justified */
-#define FORMATF_ProduceSign 			(1 << 1)	/* Numbers always begin with a leading  sign character */
-#define FORMATF_ProduceSpace 			(1 << 2)	/* Numbers always begin with a '-'  character or a blank space */
-#define FORMATF_AlternateConversion 	(1 << 3) 	/* Use alternative conversion format */
-#define FORMATF_CapitalLetters 			(1 << 4)	/* Output must use upper case characters */
-#define FORMATF_IsNegative 				(1 << 5)	/* Number is negative */
-#define FORMATF_HexPrefix 				(1 << 6)	/* Prepend '0x' to the output */
-#define FORMATF_ZeroPrefix 				(1 << 7)	/* Prepend '0' to the output */
+#include "wchar_wprintf_core.h"
 
-STATIC int
-get_num_leading_digits(__long_double_t v, int radix)
-{
-	int num_digits;
+static void pad(FOut *f, char c, int w, int l, int fl);
 
-	SHOWVALUE(radix);
+static void out(FOut *_out, const char *text, size_t l) {
 
-	if (v < radix)
-	{
-		num_digits = 1;
-	}
-	else
-	{
-		num_digits = 1 + floor(log(v) / log((double)radix));
-	}
+    size_t length = ((l > 0) ? (size_t)l : 0U);
 
-	return (num_digits);
+    if (!length) {
+        return;
+    }
+    if (_out->file != NULL) {
+        fwrite(text, 1, length, _out->file);
+    } else {
+        // Write into a bounded buffer.
+        size_t avail = _out->buffer_size - _out->buffer_pos;
+        if (length > avail) {
+            length = avail;
+        }
+        memcpy((char *) (_out->buffer + _out->buffer_pos), (const char *) text, (length * sizeof(char)));
+        _out->buffer_pos += length;
+    }
 }
 
-int
-vfprintf(FILE *stream, const char *format, va_list arg)
-{
-	enum parameter_size_t
-	{
-		parameter_size_byte,
-		parameter_size_long,
-		parameter_size_short,
-		parameter_size_size_t,
-		parameter_size_ptrdiff_t,
-		parameter_size_long_long,
-		parameter_size_long_double,
-		parameter_size_intmax_t,
-		parameter_size_default
-	};
+static void pad(FOut *f, char c, int w, int l, int fl) {
+    char pad[256];
+    if (fl & (__S_LEFT_ADJ | __S_ZERO_PAD) || l >= w) return;
+    l = w - l;
+    memset(pad, c, l > sizeof pad ? sizeof pad : l);
+    for (; l >= sizeof pad; l -= sizeof pad)
+        out(f, pad, sizeof pad);
+    out(f, pad, l);
+}
 
-	struct iob *iob = (struct iob *)stream;
-	int format_flags;
-	char fill_character;
-	int minimum_field_width;
-	int precision;
-	enum parameter_size_t parameter_size;
-	char conversion_type;
-	char buffer[80] = {0};
-	int buffer_mode;
-	char *output_buffer;
-	int output_len;
-	const char *prefix;
-	char prefix_buffer[8] = {0};
-	int argument_digits;
-	int argument_number;
-	int argument_index;
-	int result = EOF;
-	int len = 0;
-	int i;
-	int c;
 
-	char *internal_buffer = NULL;
-	size_t internal_buffer_size = 0;
-	char trail_string[8] = {0};
-	int trail_string_len;
-	int num_trailing_zeroes;
+static const char xdigits[16] = {
+        "0123456789ABCDEF"
+};
 
-	ENTER();
+static char *fmt_x(uintmax_t x, char *s, int lower) {
+    for (; x; x >>= 4) *--s = xdigits[(x & 15)] | lower;
+    return s;
+}
 
-	SHOWSTRING(format);
+static char *fmt_o(uintmax_t x, char *s) {
+    for (; x; x >>= 3) *--s = '0' + (x & 7);
+    return s;
+}
 
-	assert(stream != NULL && format != NULL && arg != NULL);
+static char *fmt_u(uintmax_t x, char *s) {
+    unsigned long y;
+    for (; x > ULONG_MAX; x /= 10) *--s = '0' + x % 10;
+    for (y = x; y; y /= 10) *--s = '0' + y % 10;
+    return s;
+}
 
-	if (__check_abort_enabled)
-		__check_abort();
+typedef char compiler_defines_long_double_incorrectly[9 - (int) sizeof(long double)];
 
-	flockfile(stream);
+static int fmt_fp(FOut *f, long double y, int w, int p, int fl, int t) {
+    uint32_t big[(LDBL_MANT_DIG + 28) / 29 + 1          // mantissa expansion
+                 + (LDBL_MAX_EXP + LDBL_MANT_DIG + 28 + 8) / 9]; // exponent expansion
+    uint32_t *a, *d, *r, *z;
+    int e2 = 0, e, i, j, l;
+    char buf[9 + LDBL_MANT_DIG / 4], *s;
+    const char *prefix = "-0X+0X 0X-0x+0x 0x";
+    int pl;
+    char ebuf0[3 * sizeof(int)], *ebuf = &ebuf0[3 * sizeof(int)], *estr = NULL;
 
-    if (stream == NULL || format == NULL)
-    {
-        SHOWMSG("invalid parameters");
+    pl = 1;
+    if (signbit(y)) {
+        y = -y;
+    } else if (fl & __S_MARK_POS) {
+        prefix += 3;
+    } else if (fl & __S_PAD_POS) {
+        prefix += 6;
+    } else prefix++, pl = 0;
 
-        __set_errno(EFAULT);
-        goto out;
+    if (!isfinite(y)) {
+        const char *s1 = (t & 32) ? "inf" : "INF";
+        if (y != y) s1 = (t & 32) ? "nan" : "NAN";
+        pad(f, ' ', w, 3 + pl, fl & ~__S_ZERO_PAD);
+        out(f, prefix, pl);
+        out(f, s1, 3);
+        pad(f, ' ', w, 3 + pl, fl ^ __S_LEFT_ADJ);
+        return MAX(w, 3 + pl);
     }
 
-	/* If no buffering is specified but a buffer was allocated, switch to
-	   line buffering. This is intended to help 'stderr' and others. */
-	buffer_mode = (iob->iob_Flags & IOBF_BUFFER_MODE);
-	if (buffer_mode == IOBF_BUFFER_MODE_NONE)
-		buffer_mode = IOBF_BUFFER_MODE_LINE;
-
-	assert(FLAG_IS_SET(iob->iob_Flags, IOBF_IN_USE));
-	assert(iob->iob_BufferSize > 0);
-
-	if (__fputc_check(stream) < 0)
-		goto out;
-
-	while ((c = (*format++)) != '\0')
-	{
-		/* I this isn't a % charater, copy the input to the output. */
-		if (c != '%')
-		{
-			if (__putc(c, stream, buffer_mode) == EOF)
-				goto out;
-
-			len++;
-
-			continue;
-		}
-
-		/* If a string of digits, terminated by a '$' character appears here,
-		   it indicates which argument should be accessed. We evaluate this
-		   data but for now will ignore it altogether. */
-		argument_index = argument_number = argument_digits = 0;
-
-		for (i = 0; format[i] != '\0'; i++)
-		{
-			if (format[i] == '$')
-			{
-				if (argument_digits > 0)
-				{
-					argument_index = argument_number;
-
-					format = &format[i + 1];
-				}
-
-				break;
-			}
-			else if ('0' <= format[i] && format[i] <= '9')
-			{
-				argument_number = (10 * argument_number) + (format[i] - '0');
-
-				argument_digits++;
-			}
-			else
-			{
-				break;
-			}
-		}
-
-		format_flags = 0;
-		fill_character = ' ';
-
-		/* Collect the flags: left justification, sign, space,
-		 * alternate format, fill character.
-		 */
-		while (TRUE)
-		{
-			c = (*format);
-
-			if (c == '-')
-			{
-				SHOWMSG("minus");
-
-				SET_FLAG(format_flags, FORMATF_LeftJustified);
-				format++;
-			}
-			else if (c == '+')
-			{
-				SHOWMSG("plus");
-
-				SET_FLAG(format_flags, FORMATF_ProduceSign);
-				format++;
-			}
-			else if (c == ' ')
-			{
-				SHOWMSG("space");
-
-				SET_FLAG(format_flags, FORMATF_ProduceSpace);
-				format++;
-			}
-			else if (c == '#')
-			{
-				SHOWMSG("alternate");
-
-				SET_FLAG(format_flags, FORMATF_AlternateConversion);
-				format++;
-			}
-			else if (c == '0')
-			{
-				SHOWMSG("leading zeroes");
-
-				fill_character = '0';
-				format++;
-			}
-			else
-			{
-				break;
-			}
-		}
-
-		if (c == '\0')
-			break;
-
-		/* Now for the field width. */
-		minimum_field_width = 0;
-
-		while (TRUE)
-		{
-			c = (*format);
-
-			if (c == '*')
-			{
-				SHOWMSG("use field width (stack)");
-
-				/* The field width is stored on the stack. */
-
-				assert(arg != NULL);
-
-                if (arg == NULL)
-                {
-                    __set_errno(EFAULT);
-                    goto out;
-                }
-
-				minimum_field_width = va_arg(arg, int);
-				if (minimum_field_width < 0)
-					minimum_field_width = 0;
-
-				format++;
-			}
-			else if ('0' <= c && c <= '9')
-			{
-				int next_sum;
-				int sum = 0;
-
-				SHOWMSG("use field width (string)");
-
-				/* Process the field width. */
-				while (TRUE)
-				{
-					c = (*format);
-
-					if ('0' <= c && c <= '9')
-					{
-						D(("digit = %lc", c));
-
-						next_sum = (10 * sum) + c - '0';
-						if (next_sum < sum) /* overflow? */
-						{
-							SHOWMSG("overflow");
-							break;
-						}
-
-						SHOWVALUE(sum);
-
-						sum = next_sum;
-						format++;
-					}
-					else
-					{
-						break;
-					}
-				}
-
-				minimum_field_width = sum;
-
-				SHOWVALUE(minimum_field_width);
-			}
-			else
-			{
-				break;
-			}
-		}
-
-		/* End of the format string? */
-		if (c == '\0')
-			break;
-
-		precision = -1;
-
-		/* Was a precision specified? */
-		if ((*format) == '.')
-		{
-			SHOWMSG("precision required");
-
-			format++;
-
-			c = (*format);
-			if (c == '*')
-			{
-				SHOWMSG("use stack");
-
-				/* The precision is stored on the stack. */
-				assert(arg != NULL);
-
-                if (arg == NULL)
-                {
-                    __set_errno(EFAULT);
-                    goto out;
-                }
-
-				precision = va_arg(arg, int);
-				if (precision < 0)
-					precision = 0;
-
-				format++;
-			}
-			else if ('0' <= c && c <= '9')
-			{
-				int next_sum;
-				int sum = 0;
-
-				SHOWMSG("use string");
-
-				/* Process the precision. */
-				while (TRUE)
-				{
-					c = (*format);
-
-					if ('0' <= c && c <= '9')
-					{
-						D(("digit = %lc", c));
-
-						next_sum = (10 * sum) + c - '0';
-						if (next_sum < sum) /* overflow? */
-						{
-							SHOWMSG("overflow");
-							break;
-						}
-
-						SHOWVALUE(sum);
-
-						sum = next_sum;
-						format++;
-					}
-					else
-					{
-						break;
-					}
-				}
-
-				precision = sum;
-			}
-			else
-			{
-				/* Anything else results in the precision
-				 * value to be set to 0.
-				 */
-				precision = 0;
-			}
-
-			SHOWVALUE(precision);
-		}
-
-		/* Now for the size modifier, if any. */
-		c = (*format);
-
-		/* End of the format string? */
-		if (c == '\0')
-			break;
-
-		if (c == 'l')
-		{
-			SHOWMSG("format size = long");
-
-			parameter_size = parameter_size_long;
-			format++;
-		}
-		else if (c == 'L')
-		{
-			SHOWMSG("format size = long double");
-
-			parameter_size = parameter_size_long_double;
-			format++;
-		}
-		else if (c == 'h')
-		{
-			SHOWMSG("format size = short");
-
-			parameter_size = parameter_size_short;
-			format++;
-		}
-		else if (c == 'j')
-		{
-			SHOWMSG("format size = intmax_t");
-
-			parameter_size = parameter_size_intmax_t;
-			format++;
-		}
-		else if (c == 't')
-		{
-			SHOWMSG("format size = ptrdiff_t");
-
-			parameter_size = parameter_size_ptrdiff_t;
-			format++;
-		}
-		else if (c == 'z')
-		{
-			SHOWMSG("format size = size_t");
-
-			parameter_size = parameter_size_size_t;
-			format++;
-		}
-		else
-		{
-			SHOWMSG("format size = default");
-
-			/* The default is to assume 32 bit parameters. */
-			parameter_size = parameter_size_default;
-		}
-
-		/* Finally, the conversion_type type. */
-		c = (*format);
-
-		/* End of the format string? */
-		if (c == '\0')
-			break;
-
-		/* Check for byte parameters. */
-		if (parameter_size == parameter_size_short && c == 'h')
-		{
-			SHOWMSG("format size = byte");
-
-			parameter_size = parameter_size_byte;
-
-			format++;
-
-			/* The conversion_type type follows. */
-			c = (*format);
-
-			/* End of the format string? */
-			if (c == '\0')
-				break;
-		}
-
-        /* Check for long long parameters. */
-        if (parameter_size == parameter_size_long && c == 'l')
-        {
-            parameter_size = parameter_size_long_long;
-
-            format++;
-
-            /* The conversion_type type follows. */
-            c = (*format);
-
-            /* End of the format string? */
-            if (c == '\0')
-                break;
+    y = frexpl(y, &e2) * 2;
+    if (y) e2--;
+
+    if ((t | 32) == 'a') {
+        long double round = 8.0;
+        int re;
+
+        if (t & 32) prefix += 9;
+        pl += 2;
+
+        if (p < 0 || p >= LDBL_MANT_DIG / 4 - 1) re = 0;
+        else re = LDBL_MANT_DIG / 4 - 1 - p;
+
+        if (re) {
+            round *= 1 << (LDBL_MANT_DIG % 4);
+            while (re--) round *= 16;
+            if (*prefix == '-') {
+                y = -y;
+                y -= round;
+                y += round;
+                y = -y;
+            } else {
+                y += round;
+                y -= round;
+            }
         }
 
-		trail_string[0] = '\0';
-		num_trailing_zeroes = 0;
+        estr = fmt_u(e2 < 0 ? -e2 : e2, ebuf);
+        if (estr == ebuf) *--estr = '0';
+        *--estr = (e2 < 0 ? '-' : '+');
+        *--estr = t + ('p' - 'a');
 
-		D(("conversion_type (preliminary) = %lc", c));
+        s = buf;
+        do {
+            int x = y;
+            *s++ = xdigits[x] | (t & 32);
+            y = 16 * (y - x);
+            if (s - buf == 1 && (y || p > 0 || (fl & __S_ALT_FORM))) *s++ = '.';
+        } while (y);
 
-		switch (c)
-		{
-		/* signed integer */
-		case 'i':
+        if (p > INT_MAX - 2 - (ebuf - estr) - pl)
+            return -1;
+        if (p && s - buf - 2 < p)
+            l = (p + 2) + (ebuf - estr);
+        else
+            l = (s - buf) + (ebuf - estr);
 
-			conversion_type = 'd';
+        pad(f, ' ', w, pl + l, fl);
+        out(f, prefix, pl);
+        pad(f, '0', w, pl + l, fl ^ __S_ZERO_PAD);
+        out(f, buf, s - buf);
+        pad(f, '0', l - (ebuf - estr) - (s - buf), 0, 0);
+        out(f, estr, ebuf - estr);
+        pad(f, ' ', w, pl + l, fl ^ __S_LEFT_ADJ);
+        return MAX(w, pl + l);
+    }
+    if (p < 0) p = 6;
 
-			format++;
-			break;
+    if (y) y *= 0x1p28, e2 -= 28;
 
-		/* unsigned integer (hexadecimal notation) */
-		case 'X':
+    if (e2 < 0) a = r = z = big;
+    else a = r = z = big + sizeof(big) / sizeof(*big) - LDBL_MANT_DIG - 1;
 
-			SET_FLAG(format_flags, FORMATF_CapitalLetters);
+    do {
+        if (*z)
+            *z = (uint32_t)y;
+        else
+            break;
+        y = 1000000000 * (y - *z++);
+    } while (y);
 
-			conversion_type = 'x';
+    while (e2 > 0) {
+        uint32_t carry = 0;
+        int sh = MIN(29, e2);
+        for (d = z - 1; d >= a; d--) {
+            uint64_t x = ((uint64_t) * d << sh) + carry;
+            *d = x % 1000000000;
+            carry = x / 1000000000;
+        }
+        if (carry) *--a = carry;
+        while (z > a && !z[-1]) z--;
+        e2 -= sh;
+    }
+    while (e2 < 0) {
+        uint32_t carry = 0, *b;
+        int sh = MIN(9, -e2), need = 1 + (p + LDBL_MANT_DIG / 3U + 8) / 9;
+        for (d = a; d < z; d++) {
+            uint32_t rm = (*d & (uint32_t)((1 << sh) - 1));
+            *d = ((*d >> sh) + carry);
+            carry = ((uint32_t)(1000000000 >> sh) * rm);
+        }
+        if (!*a) a++;
+        if (carry) *z++ = carry;
+        /* Avoid (slow!) computation past requested precision */
+        b = (t | 32) == 'f' ? r : a;
+        if (z - b > need) z = b + need;
+        e2 += sh;
+    }
 
-			format++;
-			break;
+    if (a < z) for (i = 10, e = 9 * (r - a); *a >= i; i *= 10, e++);
+    else e = 0;
 
-		/* floating point number (exponential notation) */
-		case 'E':
-
-			SET_FLAG(format_flags, FORMATF_CapitalLetters);
-
-			conversion_type = 'e';
-
-			format++;
-			break;
-
-		/* floating point number (hexadecimal digits; exponential notation) */
-		case 'A':
-
-			SET_FLAG(format_flags, FORMATF_CapitalLetters);
-
-			conversion_type = 'a';
-
-			format++;
-			break;
-
-		/* floating point number (plain or exponential notation) */
-		case 'G':
-
-			SET_FLAG(format_flags, FORMATF_CapitalLetters);
-
-			conversion_type = 'g';
-
-			format++;
-			break;
-
-		/* pointer (hexadecimal notation, eight digits, '0x' prefix) */
-		case 'p':
-
-			conversion_type = 'x';
-
-			SET_FLAG(format_flags, FORMATF_HexPrefix);
-
-			fill_character = '0';
-			minimum_field_width = 8;
-
-			format++;
-			break;
-
-		case 'a': /* floating point number (hexadecimal digits; exponential notation) */
-		case 'c': /* character */
-		case 'd': /* signed integer */
-		case 'f': /* floating point number */
-		case 'e': /* floating point number (exponential notation) */
-		case 'g': /* floating point number (plain or exponential notation) */
-		case 's': /* string */
-		case '%': /* % character */
-		case 'o': /* unsigned integer (octal notation) */
-		case 'x': /* unsigned integer (hexadecimal notation) */
-		case 'u': /* unsigned integer */
-		case 'n': /* number of characters written */
-		default:  /* anything else (% works as escape character) */
-
-			conversion_type = c;
-			format++;
-			break;
-		}
-
-		D(("conversion_type (final) = %lc", conversion_type));
-
-		output_buffer = &buffer[sizeof(buffer) - 1];
-		(*output_buffer) = '\0';
-
-		output_len = 0;
-
-		if (conversion_type == 'c')
-		{
-			int ch;
-
-			SHOWMSG("character");
-
-			assert(arg != NULL);
-
-            if (arg == NULL)
-            {
-                __set_errno(EFAULT);
-                goto out;
+    /* Perform rounding: j is precision after the radix (possibly neg) */
+    j = p - ((t | 32) != 'f') * e - ((t | 32) == 'g' && p);
+    if (j < 9 * (z - r - 1)) {
+        uint32_t x;
+        /* We avoid C's broken division of negative numbers */
+        d = r + 1 + ((j + 9 * LDBL_MAX_EXP) / 9 - LDBL_MAX_EXP);
+        j += 9 * LDBL_MAX_EXP;
+        j %= 9;
+        for (i = 10, j++; j < 9; i *= 10, j++);
+        x = *d % i;
+        /* Are there any significant digits past j? */
+        if (x || d + 1 != z) {
+            long double round = 2 / LDBL_EPSILON;
+            long double small;
+            if ((*d / i & 1) || (i == 1000000000 && d > a && (d[-1] & 1)))
+                round += 2;
+            if (x < i / 2) small = 0x0.8p0;
+            else if (x == i / 2 && d + 1 == z) small = 0x1.0p0;
+            else small = 0x1.8p0;
+            if (pl && *prefix == '-') round *= -1, small *= -1;
+            *d -= x;
+            /* Decide whether to round by probing round+small */
+            if (round + small != round) {
+                *d = *d + i;
+                while (*d > 999999999) {
+                    *d-- = 0;
+                    if (d < a) *--a = 0;
+                    (*d)++;
+                }
+                for (i = 10, e = 9 * (r - a); *a >= i; i *= 10, e++);
             }
+        }
+        if (z > d + 1) z = d + 1;
+    }
+    for (; z > a && !z[-1]; z--);
 
-			if (parameter_size == parameter_size_short)
-			{
-				/* Parameter is a short integer which
-				 * must be cast to a long integer before
-				 * it can be used.
-				 */
-				short short_integer;
+    if ((t | 32) == 'g') {
+        if (!p) p++;
+        if (p > e && e >= -4) {
+            t--;
+            p -= e + 1;
+        } else {
+            t -= 2;
+            p--;
+        }
+        if (!(fl & __S_ALT_FORM)) {
+            /* Count trailing zeros in last place */
+            if (z > a && z[-1]) for (i = 10, j = 0; z[-1] % i == 0; i *= 10, j++);
+            else j = 9;
+            if ((t | 32) == 'f')
+                p = MIN(p, MAX(0, 9 * (z - r - 1) - j));
+            else
+                p = MIN(p, MAX(0, 9 * (z - r - 1) + e - j));
+        }
+    }
+    if (p > INT_MAX - 1 - (p || (fl & __S_ALT_FORM)))
+        return -1;
+    l = 1 + p + (p || (fl & __S_ALT_FORM));
+    if ((t | 32) == 'f') {
+        if (e > INT_MAX - l) return -1;
+        if (e > 0) l += e;
+    } else {
+        estr = fmt_u(e < 0 ? -e : e, ebuf);
+        while (ebuf - estr < 2) *--estr = '0';
+        *--estr = (e < 0 ? '-' : '+');
+        *--estr = t;
+        if (ebuf - estr > INT_MAX - l) return -1;
+        l += ebuf - estr;
+    }
 
-				short_integer = (short)va_arg(arg, int);
+    if (l > INT_MAX - pl) return -1;
+    pad(f, ' ', w, pl + l, fl);
+    out(f, prefix, pl);
+    pad(f, '0', w, pl + l, fl ^ __S_ZERO_PAD);
 
-				ch = short_integer;
-			}
-			else if (parameter_size == parameter_size_byte)
-			{
-				/* Parameter is a byte-sized integer which
-				 * must be cast to a long integer before
-				 * it can be used.
-				 */
-				char byte_integer;
-
-				byte_integer = (char)va_arg(arg, int);
-
-				ch = byte_integer;
-			}
-			else
-			{
-                if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-                    ch = va_arg(arg, long long);
-                else
-                    ch = va_arg(arg, int);
-			}
-
-			D(("output = %lc", ch));
-
-			output_buffer--;
-			output_len++;
-
-			(*output_buffer) = ch;
-
-			CLEAR_FLAG(format_flags, FORMATF_ProduceSign);
-			CLEAR_FLAG(format_flags, FORMATF_ProduceSpace);
-		}
-		else if (conversion_type == 'a' ||
-				 conversion_type == 'e' ||
-				 conversion_type == 'f' ||
-				 conversion_type == 'g')
-		{
-			SHOWMSG("floating point format");
-
-			assert(arg != NULL);
-
-            if (arg == NULL)
-            {
-                __set_errno(EFAULT);
-                goto out;
+    if ((t | 32) == 'f') {
+        if (a > r) a = r;
+        for (d = a; d <= r; d++) {
+            char *s1 = fmt_u(*d, buf + 9);
+            if (d != a) while (s1 > buf) *--s1 = '0';
+            else if (s1 == buf + 9) *--s1 = '0';
+            out(f, s1, buf + 9 - s1);
+        }
+        if (p || (fl & __S_ALT_FORM)) out(f, ".", 1);
+        for (; d < z && p > 0; d++, p -= 9) {
+            char *s2 = fmt_u(*d, buf + 9);
+            while (s2 > buf) *--s2 = '0';
+            out(f, s2, MIN(9, p));
+        }
+        pad(f, '0', p + 9, 9, 0);
+    } else {
+        if (z <= a) z = a + 1;
+        for (d = a; d < z && p >= 0; d++) {
+            char *s3 = fmt_u(*d, buf + 9);
+            if (s3 == buf + 9) *--s3 = '0';
+            if (d != a) while (s3 > buf) *--s3 = '0';
+            else {
+                out(f, s3++, 1);
+                if (p > 0 || (fl & __S_ALT_FORM)) out(f, ".", 1);
             }
-
-			const char *buffer_stop = &buffer[sizeof(buffer) - 1];
-			char *buffer_start = buffer;
-
-			const char *digit_encoding;
-			__long_double_t v;
-			int radix;
-
-			if (conversion_type == 'a')
-			{
-				SET_FLAG(format_flags, FORMATF_HexPrefix);
-
-				radix = 16;
-			}
-			else
-			{
-				radix = 10;
-			}
-
-			if (FLAG_IS_SET(format_flags, FORMATF_CapitalLetters))
-				digit_encoding = "0123456789ABCDEF";
-			else
-				digit_encoding = "0123456789abcdef";
-
-			output_buffer = buffer_start;
-
-			D(("sizeof(long double) == %ld", sizeof(v)));
-
-			if (parameter_size == parameter_size_long_double)
-				v = va_arg(arg, __long_double_t);
-			else
-				v = va_arg(arg, double);
-
-			if (isinf(v))
-			{
-				SHOWMSG("infinity");
-
-				strcpy(output_buffer, "inf");
-				output_len = 3;
-
-				if (v < 0)
-					SET_FLAG(format_flags, FORMATF_IsNegative);
-
-				fill_character = ' ';
-			}
-			else if (isnan(v))
-			{
-				SHOWMSG("not a number");
-
-				strcpy(output_buffer, "nan");
-				output_len = 3;
-
-				if (FLAG_IS_SET(format_flags, FORMATF_ProduceSign))
-				{
-					SET_FLAG(format_flags, FORMATF_ProduceSpace);
-
-					CLEAR_FLAG(format_flags, FORMATF_ProduceSign);
-				}
-
-				fill_character = ' ';
-			}
-			else
-			{
-				BOOL strip_trailing_zeroes = FALSE;
-				__long_double_t roundoff_fudge = 0.0;
-				int num_output_characters;
-				int num_leading_digits;
-				int max_digits = -1;
-				int exponent = 0;
-				int digit;
-
-				/* This takes care of the sign. */
-				if (v < 0.0)
-				{
-					SHOWMSG("negative number");
-
-					SET_FLAG(format_flags, FORMATF_IsNegative);
-					v = (-v);
-				}
-
-				D(("sizeof(v) == %ld", sizeof(v)));
-
-#if DEBUG
-				{
-					unsigned long n[2];
-
-					memcpy(n, &v, sizeof(n));
-
-					D(("v = 0x%08lx%08lx", n[0], n[1]));
-				}
-#endif /* DEBUG */
-
-				/* Default precision is 6 digits. */
-				if (precision < 0)
-				{
-					SHOWMSG("no precision specified, using six digits");
-					precision = 6;
-				}
-
-				/* Figure out whether 'e' or 'f' format should be used. */
-				if (conversion_type == 'g' || conversion_type == 'e' || conversion_type == 'a')
-				{
-					__long_double_t local_v = v;
-					int local_exponent = 0;
-
-					/* Put one single digit in front of the decimal point. */
-					while (local_v != 0.0 && local_v < 1.0)
-					{
-						local_v *= radix;
-						local_exponent--;
-					}
-
-					while (local_v >= radix)
-					{
-						local_v /= radix;
-						local_exponent++;
-					}
-
-					if (conversion_type == 'g')
-					{
-						/* If the precision is < 1, then it defaults to 1. */
-						if (precision < 1)
-							precision = 1;
-
-						SHOWVALUE(exponent);
-						SHOWVALUE(precision);
-
-						/* If the exponent is < -4 or greater than or equal to
-							* the precision, we switch to 'e' or 'f' format,
-							* respectively.
-							*/
-						if ((local_exponent < -4) || local_exponent >= precision)
-							conversion_type = 'e';
-						else
-							conversion_type = 'f';
-
-						max_digits = precision;
-
-						strip_trailing_zeroes = TRUE;
-					}
-
-					if (conversion_type == 'e' || conversion_type == 'a')
-					{
-						v = local_v;
-						exponent = local_exponent;
-					}
-				}
-
-				D(("conversion_type is now %lc", conversion_type));
-
-				/* If necessary, perform rounding after the
-					last digit to be displayed. */
-				if (max_digits > 0)
-				{
-					int roundoff_position;
-
-					if (v >= 1.0)
-						roundoff_position = max_digits - get_num_leading_digits(v, radix);
-					else
-						roundoff_position = max_digits;
-
-					if (roundoff_position >= 0)
-						roundoff_fudge = pow((double)radix, (double)(roundoff_position + 1));
-				}
-				else
-				{
-					roundoff_fudge = pow((double)radix, (double)(precision + 1));
-				}
-
-				if (roundoff_fudge > 0.0)
-					v += 5.0 / roundoff_fudge;
-
-				/* The rounding may have caused an overflow, putting
-					two digits in front of the decimal point. This
-					needs to be corrected. */
-				if (conversion_type == 'e' || conversion_type == 'a')
-				{
-					while (v >= radix)
-					{
-						v /= radix;
-						exponent++;
-					}
-				}
-
-				SHOWMSG("integral part");
-
-				num_leading_digits = get_num_leading_digits(v, radix);
-
-				SHOWVALUE(num_leading_digits);
-
-				/* Figure out how much room the number will need in order
-					to be stored. */
-				num_output_characters =
-					1 +									 /* sign */
-					num_leading_digits +				 /* integral part */
-					1 +									 /* decimal point */
-					MAX(0, MAX(precision, max_digits)) + /* fractional part */
-					1 +									 /* 'e' or 'p' */
-					1 +									 /* sign of the exponent */
-					32 +								 /* exponent */
-					1;									 /* NUL termination */
-
-				/* Can we store that much? */
-				if ((size_t)num_output_characters > sizeof(buffer))
-				{
-					if ((size_t)num_output_characters > internal_buffer_size)
-					{
-						char *new_internal_buffer;
-
-						/* Try to (re-)allocate a larger output buffer. */
-						new_internal_buffer = realloc(internal_buffer, (size_t)num_output_characters);
-						if (new_internal_buffer == NULL)
-						{
-							__set_errno(ENOMEM);
-							goto out;
-						}
-
-						internal_buffer = new_internal_buffer;
-						internal_buffer_size = (size_t)num_output_characters;
-					}
-
-					buffer_start = internal_buffer;
-					buffer_stop = &internal_buffer[internal_buffer_size - 1];
-					output_buffer = buffer_start;
-				}
-
-				if (v >= 1.0)
-				{
-					/* 'Normalize' the number so that we have a zero in
-						front of the mantissa. We can't lose here: we
-						simply scale the value without any loss of
-						precision (we just change the floating point
-						exponent). */
-					v /= pow((double)radix, (double)num_leading_digits);
-
-					for (i = 0; (max_digits != 0) && (i < num_leading_digits) && (output_buffer < buffer_stop); i++)
-					{
-						v *= radix;
-
-						digit = floor(v);
-
-						D(("next digit = %lc (digit = %ld)", digit_encoding[digit], digit));
-
-						assert(0 <= digit && digit < radix);
-
-						(*output_buffer++) = digit_encoding[digit];
-
-						v -= digit;
-
-						if (max_digits > 0)
-							max_digits--;
-					}
-				}
-				else
-				{
-					/* NOTE: any 'significant' digits (for %g conversion)
-								will follow the decimal point. */
-					(*output_buffer++) = '0';
-				}
-
-				/* Now for the fractional part. */
-				if (precision > 0)
-				{
-					SHOWMSG("mantissa");
-
-					if ((max_digits != 0) && (output_buffer < buffer_stop))
-					{
-						(*output_buffer++) = '.';
-
-						for (i = 0; (max_digits != 0) && (i < precision) && (output_buffer < buffer_stop); i++)
-						{
-							v *= radix;
-
-							digit = floor(v);
-
-							D(("next digit = %lc", digit_encoding[digit]));
-
-							assert(0 <= digit && digit < radix);
-
-							(*output_buffer++) = digit_encoding[digit];
-
-							v -= digit;
-
-							if (max_digits > 0)
-								max_digits--;
-						}
-
-						if (i < precision && max_digits != 0 && NOT strip_trailing_zeroes)
-						{
-							num_trailing_zeroes = precision - i;
-
-							if (max_digits > 0 && max_digits < num_trailing_zeroes)
-								num_trailing_zeroes = max_digits;
-						}
-
-						/* Strip trailing digits and decimal point
-							* unless we shouldn't.
-							*/
-						if (strip_trailing_zeroes && FLAG_IS_CLEAR(format_flags, FORMATF_AlternateConversion))
-						{
-							SHOWMSG("strip trailing zeroes and comma");
-
-							while (output_buffer > buffer_start + 1 && output_buffer[-1] == '0')
-								output_buffer--;
-
-							if (output_buffer > buffer_start && output_buffer[-1] == '.')
-								output_buffer--;
-						}
-					}
-				}
-				else
-				{
-					/* Precision is zero; if the alternative conversion flag
-						* is specified, add the lonely decimal point.
-						*/
-					if (FLAG_IS_SET(format_flags, FORMATF_AlternateConversion))
-					{
-						if (output_buffer < buffer_stop)
-							(*output_buffer++) = '.';
-					}
-				}
-
-#if DEBUG
-				{
-					(*output_buffer) = '\0';
-
-					output_len = output_buffer - buffer_start;
-
-					D(("length = %ld, output_buffer = '%s'", output_len, buffer_start));
-				}
-#endif /* DEBUG */
-
-				if (conversion_type == 'e' || conversion_type == 'a')
-				{
-					char exponent_string[40];
-					size_t exponent_string_len, j;
-					int exponent_sign;
-
-					/* For the '%a' conversion the exponent is given in
-						binary notation rather than decimal. */
-					if (conversion_type == 'a')
-						radix = 2;
-
-					/* Build the exponent string in reverse order. */
-					exponent_string_len = 0;
-
-					if (exponent < 0)
-					{
-						exponent_sign = -1;
-
-						exponent = (-exponent);
-					}
-					else
-					{
-						exponent_sign = 1;
-					}
-
-					while (exponent > 0 && exponent_string_len < sizeof(exponent_string))
-					{
-						exponent_string[exponent_string_len++] = '0' + (exponent % radix);
-
-						exponent /= radix;
-					}
-
-					/* Minimum length of the exponent is two digits. */
-					while (exponent_string_len < 2)
-						exponent_string[exponent_string_len++] = '0';
-
-					if (exponent_string_len < sizeof(exponent_string) - 1)
-					{
-						if (exponent_sign < 0)
-							exponent_string[exponent_string_len++] = '-';
-						else
-							exponent_string[exponent_string_len++] = '+';
-
-						if (conversion_type == 'a')
-						{
-							if (FLAG_IS_SET(format_flags, FORMATF_CapitalLetters))
-								exponent_string[exponent_string_len++] = 'P';
-							else
-								exponent_string[exponent_string_len++] = 'p';
-						}
-						else
-						{
-							if (FLAG_IS_SET(format_flags, FORMATF_CapitalLetters))
-								exponent_string[exponent_string_len++] = 'E';
-							else
-								exponent_string[exponent_string_len++] = 'e';
-						}
-					}
-
-					/* Add the exponent string in reverse order. */
-					for (j = 0; exponent_string_len > 0; j++)
-						trail_string[j] = exponent_string[--exponent_string_len];
-
-					trail_string[j] = '\0';
-				}
-
-				(*output_buffer) = '\0';
-
-				output_len = output_buffer - buffer_start;
-				output_buffer = buffer_start;
-
-				D(("length = %ld, output_buffer = '%s'", output_len, output_buffer));
-			}
-		}
-		else if (conversion_type == 'd' ||
-				 conversion_type == 'o' ||
-				 conversion_type == 'u' ||
-				 conversion_type == 'x')
-		{
-			unsigned long long v;
-			assert(arg != NULL);
-
-            if (arg == NULL)
-            {
-                __set_errno(EFAULT);
-                goto out;
-            }
-
-			if (conversion_type == 'd')
-			{
-				long long sv;
-				SHOWMSG("signed integer");
-
-				if (parameter_size == parameter_size_short)
-				{
-					/* Parameter is a short integer which
-					 * must be cast to a long integer before
-					 * it can be used.
-					 */
-					short short_integer;
-
-					short_integer = (short)va_arg(arg, int);
-
-					sv = short_integer;
-				}
-				else if (parameter_size == parameter_size_byte)
-				{
-					/* Parameter is a byte-sized integer which
-					 * must be cast to a long integer before
-					 * it can be used.
-					 */
-					short byte_integer;
-
-					byte_integer = (char)va_arg(arg, int);
-
-					sv = byte_integer;
-				}
-				else
-				{
-                    if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-                        sv = va_arg(arg, long long);
-                    else
-                        sv = va_arg(arg, int);
-				}
-
-				if (sv < 0)
-				{
-					SHOWMSG("negative number");
-
-					SET_FLAG(format_flags, FORMATF_IsNegative);
-
-					v = (-sv);
-				}
-				else
-				{
-					v = sv;
-				}
-			}
-			else
-			{
-				if (conversion_type == 'o')
-					SHOWMSG("unsigned integer (octal notation)");
-				else if (conversion_type == 'x')
-					SHOWMSG("unsigned integer (hexadecimal notation)");
-				else
-					SHOWMSG("unsigned integer");
-
-				if (parameter_size == parameter_size_short)
-				{
-					/* Parameter is a short integer which
-					 * must be cast to a long integer before
-					 * it can be used.
-					 */
-					unsigned short short_integer;
-
-					short_integer = (unsigned short)va_arg(arg, unsigned int);
-
-					v = short_integer;
-				}
-				else if (parameter_size == parameter_size_byte)
-				{
-					/* Parameter is a byte-sized integer which
-					 * must be cast to a long integer before
-					 * it can be used.
-					 */
-					unsigned char byte_integer;
-
-					byte_integer = (unsigned char)va_arg(arg, unsigned int);
-
-					v = byte_integer;
-				}
-				else
-				{
-                    if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-                        v = va_arg(arg, unsigned long long);
-                    else
-                        v = va_arg(arg, unsigned int);
-				}
-
-				CLEAR_FLAG(format_flags, FORMATF_ProduceSign);
-				CLEAR_FLAG(format_flags, FORMATF_ProduceSpace);
-			}
-
-			/* Don't print anything if the precision is 0 and the number
-			   itself is 0. */
-			if (v != 0 || precision != 0)
-			{
-				const char *digit_encoding;
-				int radix;
-
-				/* Only add the zero (%o) or hex (%x) prefix if the value to
-				   be converted is non-zero. */
-				if (FLAG_IS_SET(format_flags, FORMATF_AlternateConversion) && v != 0)
-				{
-					if (conversion_type == 'o')
-						SET_FLAG(format_flags, FORMATF_ZeroPrefix);
-					else if (conversion_type == 'x')
-						SET_FLAG(format_flags, FORMATF_HexPrefix);
-				}
-
-				if (conversion_type == 'o')
-					radix = 8;
-				else if (conversion_type == 'x')
-					radix = 16;
-				else
-					radix = 10;
-
-				if (FLAG_IS_SET(format_flags, FORMATF_CapitalLetters))
-					digit_encoding = "0123456789ABCDEF";
-				else
-					digit_encoding = "0123456789abcdef";
-
-				do
-				{
-					output_buffer--;
-					output_len++;
-
-					(*output_buffer) = digit_encoding[v % radix];
-					v /= radix;
-				} while (v > 0 && buffer < output_buffer);
-
-				while (output_len < precision && output_buffer > buffer)
-				{
-					output_buffer--;
-					output_len++;
-
-					(*output_buffer) = '0';
-				}
-			}
-		}
-		else if (conversion_type == 's')
-		{
-			SHOWMSG("string");
-
-			assert(arg != NULL);
-
-            if (arg == NULL)
-            {
-                __set_errno(EFAULT);
-                goto out;
-            }
-
-			output_buffer = va_arg(arg, char *);
-
-            if (output_buffer == NULL)
-            {
-                output_buffer = buffer;
-                strcpy(output_buffer, "(null)"); // Linux like
-            }
-
-            if (precision < 0) {
-                output_len = strlen(output_buffer);
-            } else {
-                output_len = precision;
-
-                for (i = 0; i < precision; i++) {
-                    if (output_buffer[i] == '\0') {
-                        output_len = i;
+            out(f, s3, MIN(buf + 9 - s3, p));
+            p -= buf + 9 - s3;
+        }
+        pad(f, '0', p + 18, 18, 0);
+        out(f, estr, ebuf - estr);
+    }
+
+    pad(f, ' ', w, pl + l, fl ^ __S_LEFT_ADJ);
+
+    return MAX(w, pl + l);
+}
+
+static int getint(char **s) {
+    int i;
+    for (i = 0; isdigit(**s); (*s)++) {
+        if (i > INT_MAX / 10U || **s - '0' > INT_MAX - 10 * i) i = -1;
+        else i = 10 * i + (**s - '0');
+    }
+    return i;
+}
+
+static int printf_core(FOut *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type) {
+    char *a, *z, *s = (char *) fmt;
+    unsigned l10n = 0, fl;
+    int w, p, xp;
+    union arg arg;
+    int argpos;
+    unsigned st, ps;
+    int cnt = 0, l = 0;
+    size_t i;
+    char buf[sizeof(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
+    const char *prefix;
+    int t, pl;
+    wchar_t wc[2], *ws;
+    char mb[4];
+
+    for (;;) {
+        /* This error is only specified for snprintf, but since it's
+         * unspecified for other forms, do the same. Stop immediately
+         * on overflow; otherwise %n could produce wrong results. */
+        if (l > INT_MAX - cnt) goto overflow;
+
+        /* Update output count, end loop when fmt is exhausted */
+        cnt += l;
+        if (!*s) break;
+
+        /* Handle literal text and %% format specifiers */
+        for (a = s; *s && *s != '%'; s++);
+        for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
+        if (z - a > INT_MAX - cnt) goto overflow;
+        l = z - a;
+        if (f) out(f, a, l);
+        if (l) continue;
+
+        if (isdigit(s[1]) && s[2] == '$') {
+            l10n = 1;
+            argpos = s[1] - '0';
+            s += 3;
+        } else {
+            argpos = -1;
+            s++;
+        }
+
+        /* Read modifier flags */
+        for (fl = 0; (((unsigned)*s - ' ') < 32) && (__U_FLAGMASK & (1U << (*s - ' '))); s++)
+            fl |= (1U << (*s - ' '));
+
+        /* Read field width */
+        if (*s == '*') {
+            if (isdigit(s[1]) && s[2] == '$') {
+                l10n = 1;
+                nl_type[s[1] - '0'] = _INT;
+                w = nl_arg[s[1] - '0'].i;
+                s += 3;
+            } else if (!l10n) {
+                w = f ? va_arg(*ap, int) : 0;
+                s++;
+            } else goto inval;
+            if (w < 0) fl |= __S_LEFT_ADJ, w = -w;
+        } else {
+            //s = s - 4;
+            w = getint(&s);
+            if (w < 0)
+                goto overflow;
+        }
+
+        /* Read precision */
+        if (*s == '.' && s[1] == '*') {
+            if (isdigit(s[2]) && s[3] == '$') {
+                nl_type[s[2] - '0'] = _INT;
+                p = nl_arg[s[2] - '0'].i;
+                s += 4;
+            } else if (!l10n) {
+                p = f ? va_arg(*ap,
+                int) : 0;
+                s += 2;
+            } else goto inval;
+            xp = (p >= 0);
+        } else if (*s == '.') {
+            s++;
+            p = getint(&s);
+            xp = 1;
+        } else {
+            p = -1;
+            xp = 0;
+        }
+
+        /* Format specifier state machine */
+        st = 0;
+        do {
+            if (OOB(*s)) goto inval;
+            ps = st;
+            st = states[st]
+            S(*s++);
+        } while (st - 1 < _STOP);
+        if (!st) goto inval;
+
+        /* Check validity of argument type (nl/normal) */
+        if (st == _NOARG) {
+            if (argpos >= 0) goto inval;
+        } else {
+            if (argpos >= 0) nl_type[argpos] = st, arg = nl_arg[argpos];
+            else if (f) pop_arg(&arg, st, ap);
+            else return 0;
+        }
+
+        if (!f) continue;
+
+        z = buf + sizeof(buf);
+        prefix = "-+   0X0x";
+        pl = 0;
+        t = s[-1];
+
+        /* Transform ls,lc -> S,C */
+        if (ps && (t & 15) == 3) t &= ~32;
+
+        /* - and 0 flags are mutually exclusive */
+        if (fl & __U_LEFT_ADJ) fl &= ~__U_ZERO_PAD;
+
+        switch (t) {
+            case 'n':
+                switch (ps) {
+                    case _BARE:
+                        *(int *) arg.p = cnt;
                         break;
-                    }
+                    case _LPRE:
+                        *(long *) arg.p = cnt;
+                        break;
+                    case _LLPRE:
+                        *(long long *) arg.p = cnt;
+                        break;
+                    case _HPRE:
+                        *(unsigned short *) arg.p = cnt;
+                        break;
+                    case _HHPRE:
+                        *(unsigned char *) arg.p = cnt;
+                        break;
+                    case _ZTPRE:
+                        *(size_t *) arg.p = cnt;
+                        break;
+                    case _JPRE:
+                        *(uintmax_t *) arg.p = cnt;
+                        break;
                 }
-            }
-
-			D(("string = '%s', length = %ld", output_buffer, output_len));
-
-			CLEAR_FLAG(format_flags, FORMATF_ProduceSign);
-			CLEAR_FLAG(format_flags, FORMATF_ProduceSpace);
-		}
-		else if (conversion_type == 'n')
-		{
-			SHOWMSG("number of characters");
-
-			assert(arg != NULL);
-
-            if (arg == NULL)
-            {
-                __set_errno(EFAULT);
-                goto out;
-            }
-
-			if (parameter_size == parameter_size_short)
-			{
-				short *short_ptr;
-
-				short_ptr = va_arg(arg, short *);
-
-				assert(short_ptr != NULL);
-
-                if (short_ptr == NULL)
-                {
-                    __set_errno(EFAULT);
-                    goto out;
+                continue;
+            case 'p':
+                p = MAX(p, 2 * sizeof(void *));
+                t = 'x';
+                fl |= __U_ALT_FORM;
+                break;
+            case 'x':
+            case 'X':
+                a = fmt_x(arg.i, z, t & 32);
+                if (arg.i && (fl & __U_ALT_FORM)) prefix += (t >> 4), pl = 2;
+                if (0) {
+                    case 'o':
+                        a = fmt_o(arg.i, z);
+                    if ((fl & __U_ALT_FORM) && p < z - a + 1) p = z - a + 1;
                 }
-
-				(*short_ptr) = len;
-			}
-			else if (parameter_size == parameter_size_byte)
-			{
-				char *byte_ptr;
-
-				byte_ptr = va_arg(arg, char *);
-
-				assert(byte_ptr != NULL);
-
-                if (byte_ptr == NULL)
-                {
-                    __set_errno(EFAULT);
-                    goto out;
+                if (0) {
+                    case 'd':
+                    case 'i':
+                        pl = 1;
+                    if (arg.i > INTMAX_MAX) {
+                        arg.i = -arg.i;
+                    } else if (fl & __U_MARK_POS) {
+                        prefix++;
+                    } else if (fl & __U_PAD_POS) {
+                        prefix += 2;
+                    } else pl = 0;
+                    case 'u':
+                        a = fmt_u(arg.i, z);
                 }
-
-				(*byte_ptr) = len;
-			}
-			else
-			{
-                if (parameter_size == parameter_size_long_long || parameter_size == parameter_size_intmax_t)
-                {
-                    long long *int_ptr;
-
-                    int_ptr = va_arg(arg, long long *);
-
-                    assert(int_ptr != NULL);
-
-                    if (int_ptr == NULL)
-                    {
-                        __set_errno(EFAULT);
-                        goto out;
-                    }
-
-                    (*int_ptr) = len;
+                if (xp && p < 0) goto overflow;
+                if (xp) fl &= ~__U_ZERO_PAD;
+                if (!arg.i && !p) {
+                    a = z;
+                    break;
                 }
-                else
-                {
-                    int *int_ptr;
+                p = MAX(p, z - a + !arg.i);
+                break;
+            case 'c':
+                *(a = z - (p = 1)) = arg.i;
+                fl &= ~__U_ZERO_PAD;
+                break;
+            case 'm':
+                if (1)
+                    a = strerror(errno); else
+            case 's':
+                a = arg.p ? arg.p : (char *) "(null)";
+                z = a + strnlen(a, p < 0 ? INT_MAX : p);
+                if (p < 0 && *z) goto overflow;
+                p = z - a;
+                fl &= ~__U_ZERO_PAD;
+                break;
+            case 'C':
+                wc[0] = arg.i;
+                wc[1] = 0;
+                arg.p = wc;
+                p = -1;
+            case 'S':
+                ws = arg.p;
+                for (i = l = 0; i < p && *ws && (l = wctomb(mb, *ws++)) >= 0 && l <= p - i; i += l);
+                if (l < 0) return -1;
+                if (i > INT_MAX) goto overflow;
+                p = i;
+                pad(f, ' ', w, p, fl);
+                ws = arg.p;
+                for (i = 0; i < 0U + p && *ws && i + (l = wctomb(mb, *ws++)) <= p; i += l)
+                    out(f, mb, l);
+                pad(f, ' ', w, p, fl ^ __U_LEFT_ADJ);
+                l = w > p ? w : p;
+                continue;
+            case 'e':
+            case 'f':
+            case 'g':
+            case 'a':
+            case 'E':
+            case 'F':
+            case 'G':
+            case 'A':
+                if (xp && p < 0) goto overflow;
+                l = fmt_fp(f, arg.f, w, p, fl, t);
+                if (l < 0) goto overflow;
+                continue;
+        }
 
-                    int_ptr = va_arg(arg, int *);
+        if (p < z - a) p = z - a;
+        if (p > INT_MAX - pl) goto overflow;
+        if (w < pl + p) w = pl + p;
+        if (w > INT_MAX - cnt) goto overflow;
 
-                    assert(int_ptr != NULL);
+        pad(f, ' ', w, pl + p, fl);
+        out(f, prefix, pl);
+        pad(f, '0', w, pl + p, fl ^ __U_ZERO_PAD);
+        pad(f, '0', p, z - a, 0);
+        out(f, a, z - a);
+        pad(f, ' ', w, pl + p, fl ^ __U_LEFT_ADJ);
 
-                    if (int_ptr == NULL)
-                    {
-                        __set_errno(EFAULT);
-                        goto out;
-                    }
+        l = w;
+    }
 
-                    (*int_ptr) = len;
-                }
-			}
+    if (f) return cnt;
+    if (!l10n) return 0;
 
-			continue;
-		}
-		else
-		{
-			SHOWMSG("anything else");
+    for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++)
+        pop_arg(nl_arg + i, nl_type[i], ap);
+    for (; i <= NL_ARGMAX && !nl_type[i]; i++);
+    if (i <= NL_ARGMAX) goto inval;
+    return 1;
 
-			/* Just store the conversion_type character. */
-			if (__putc(conversion_type, stream, buffer_mode) == EOF)
-				goto out;
+inval:
+    __set_errno(EINVAL);
+    return EOF;
 
-			len++;
+overflow:
+    __set_errno(EOVERFLOW);
+    return EOF;
+}
 
-			continue;
-		}
 
-		/* Get ready to prefix a sign character, if required. */
-		if (FLAG_IS_SET(format_flags, FORMATF_IsNegative))
-			prefix = "-";
-		else if (FLAG_IS_SET(format_flags, FORMATF_ProduceSign))
-			prefix = "+";
-		else if (FLAG_IS_SET(format_flags, FORMATF_ProduceSpace))
-			prefix = " ";
-		else if (FLAG_IS_SET(format_flags, FORMATF_ZeroPrefix))
-			prefix = "0";
-		else
-			prefix = NULL;
+int
+vfprintf(FILE *f, const char *format, va_list ap) {
+    va_list ap2;
+    int ret, nl_type[NL_ARGMAX] = {0};
+    union arg nl_arg[NL_ARGMAX];
+    FOut _out[1];
+    out_init_file(_out, f);
+    va_copy(ap2, ap);
 
-		if (FLAG_IS_SET(format_flags, FORMATF_HexPrefix))
-		{
-			strcpy(prefix_buffer, (prefix != NULL ? prefix : ""));
-			strcat(prefix_buffer, FLAG_IS_SET(format_flags, FORMATF_CapitalLetters) ? "0X" : "0x");
-
-			prefix = prefix_buffer;
-		}
-
-		if (FLAG_IS_SET(format_flags, FORMATF_LeftJustified))
-		{
-			if (prefix != NULL)
-			{
-				for (i = 0; prefix[i] != '\0'; i++)
-				{
-					/* One less character to fill the output with. */
-					minimum_field_width--;
-
-					if (__putc(prefix[i], stream, buffer_mode) == EOF)
-						goto out;
-
-					len++;
-				}
-			}
-
-			for (i = 0; i < output_len; i++)
-			{
-				if (__putc(output_buffer[i], stream, buffer_mode) == EOF)
-					goto out;
-
-				len++;
-			}
-
-			for (i = 0; i < num_trailing_zeroes; i++)
-			{
-				if (__putc('0', stream, buffer_mode) == EOF)
-					goto out;
-
-				output_len++;
-				len++;
-			}
-
-			for (i = 0; trail_string[i] != '\0'; i++)
-			{
-				if (__putc(trail_string[i], stream, buffer_mode) == EOF)
-					goto out;
-
-				output_len++;
-				len++;
-			}
-
-			for (i = output_len; i < minimum_field_width; i++)
-			{
-				/* Left justified output defaults to use the blank
-				   space as the fill character. */
-				if (__putc(' ', stream, buffer_mode) == EOF)
-					goto out;
-
-				len++;
-			}
-		}
-		else
-		{
-			/* If we have to add the prefix later, make sure that
-			   we don't add too many fill characters in front of
-			   it now. */
-			if (prefix != NULL)
-			{
-				for (i = 0; prefix[i] != '\0'; i++)
-				{
-					/* One less character to fill the output with. */
-					minimum_field_width--;
-
-					if (fill_character == '0')
-					{
-						if (__putc(prefix[i], stream, buffer_mode) == EOF)
-							goto out;
-
-						len++;
-					}
-				}
-
-				/* That takes care of the sign. */
-				if (fill_character == '0')
-					prefix = NULL;
-			}
-
-			trail_string_len = strlen(trail_string);
-			minimum_field_width -= num_trailing_zeroes + trail_string_len;
-
-			for (i = output_len; i < minimum_field_width; i++)
-			{
-				if (__putc(fill_character, stream, buffer_mode) == EOF)
-					goto out;
-
-				len++;
-			}
-
-			/* If we still have a sign character to add, do it here. */
-			if (prefix != NULL)
-			{
-				for (i = 0; prefix[i] != '\0'; i++)
-				{
-					if (__putc(prefix[i], stream, buffer_mode) == EOF)
-						goto out;
-
-					len++;
-				}
-			}
-
-			for (i = 0; i < output_len; i++)
-			{
-				if (__putc(output_buffer[i], stream, buffer_mode) == EOF)
-					goto out;
-
-				len++;
-			}
-
-			for (i = 0; i < num_trailing_zeroes; i++)
-			{
-				if (__putc('0', stream, buffer_mode) == EOF)
-					goto out;
-
-				len++;
-			}
-
-			for (i = 0; i < trail_string_len; i++)
-			{
-				if (__putc(trail_string[i], stream, buffer_mode) == EOF)
-					goto out;
-
-				len++;
-			}
-		}
-	}
-
-	if (FLAG_IS_CLEAR(iob->iob_Flags, IOBF_NO_NUL))
-	{
-		if (__putc('\0', stream, buffer_mode) == EOF)
-			goto out;
-	}
-
-	result = len;
-
-out:
-
-	if (internal_buffer != NULL && internal_buffer_size > 0)
-		free(internal_buffer);
-
-	/* Note: if buffering is disabled for this stream, then we still
-	   may have buffered data around, queued to be printed right now.
-	   This is intended to improve performance as it takes more effort
-	   to write a single character to a file than to write a bunch. */
-	if (result != EOF && (iob->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE)
-	{
-		if (__iob_write_buffer_is_valid(iob) && __flush_iob_write_buffer(iob) < 0)
-			result = EOF;
-	}
-
-	funlockfile(stream);
-
-	RETURN(result);
-	return (result);
+    // Check for error in format string before writing anything to file.
+    if (printf_core(0, format, &ap2, nl_arg, nl_type) < 0) {
+        va_end(ap2);
+        return EOF;
+    }
+    ret = printf_core(_out, format, &ap2, nl_arg, nl_type);
+    va_end(ap2);
+    return ret;
 }

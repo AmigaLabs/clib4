@@ -41,8 +41,8 @@ int
 vswprintf(wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, va_list ap)
 {
     va_list ap2;
-    int ret, nl_type[__ARGMAX] = {0};
-    union arg nl_arg[__ARGMAX];
+    int ret, nl_type[NL_ARGMAX] = {0};
+    union arg nl_arg[NL_ARGMAX];
     FOut _out[1];
 
     va_copy(ap2, ap);

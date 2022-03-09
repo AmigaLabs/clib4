@@ -8,14 +8,18 @@ enum {
 	_ZTPRE, _JPRE,
 	_STOP,
 	_PTR, _INT, _UINT, _ULLONG,
+#if 0
 	_LONG, _ULONG,
+#else
+#define _LONG _INT
+#define _ULONG _UINT
+#endif
 	_SHORT, _USHORT, _CHAR, _UCHAR,
 	_LLONG, _SIZET, _IMAX, _UMAX, _PDIFF, _UIPTR,
 	_DBL, _LDBL,
 	_NOARG,
 	_MAXSTATE
 };
-
 
 typedef struct
 {
@@ -80,12 +84,43 @@ static const unsigned char states[]['z'-'A'+1] = {
 
 #define OOB(x) ((unsigned)(x)-'A' > 'z'-'A')
 
+/* Convenient bit representation for modifier flags, which all fall
+ * within 31 codepoints of the space character.
+ * vfprintf vfwprintf
+ */
+
+#define __M_ALT_FORM(_T) (_T << ('#' - ' '))
+#define __M_ZERO_PAD(_T) (_T << ('0' - ' '))
+#define __M_LEFT_ADJ(_T) (_T << ('-' - ' '))
+#define __M_PAD_POS(_T) (_T << (' ' - ' '))
+#define __M_MARK_POS(_T) (_T << ('+' - ' '))
+#define __M_GROUPED(_T) (_T << ('\'' - ' '))
+
+#define __U_ALT_FORM __M_ALT_FORM(1U)
+#define __U_ZERO_PAD __M_ZERO_PAD(1U)
+#define __U_LEFT_ADJ __M_LEFT_ADJ(1U)
+#define __U_PAD_POS __M_PAD_POS(1U)
+#define __U_MARK_POS __M_MARK_POS(1U)
+#define __U_GROUPED __M_GROUPED(1U)
+
+#define __S_ALT_FORM __M_ALT_FORM(1)
+#define __S_ZERO_PAD __M_ZERO_PAD(1)
+#define __S_LEFT_ADJ __M_LEFT_ADJ(1)
+#define __S_PAD_POS __M_PAD_POS(1)
+#define __S_MARK_POS __M_MARK_POS(1)
+#define __S_GROUPED __M_GROUPED(1)
+
+#define __U_FLAGMASK (__U_ALT_FORM | __U_ZERO_PAD | __U_LEFT_ADJ | __U_PAD_POS | __U_MARK_POS | __U_GROUPED)
+#define __S_FLAGMASK (__S_ALT_FORM | __S_ZERO_PAD | __S_LEFT_ADJ | __S_PAD_POS | __S_MARK_POS | __S_GROUPED)
+
 union arg
 {
 	uintmax_t i;
-	long double f;
+    long double f;
 	void *p;
 };
+
+void pop_arg(union arg *arg, int type, va_list *ap);
 
 void out_init_file(FOut *out, FILE *f);
 int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type);

@@ -31,6 +31,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
+
 #ifndef _STRINGS_HEADERS_H
 #include "strings_headers.h"
 #endif /* _STRINGS_HEADERS_H */

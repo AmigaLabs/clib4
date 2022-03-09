@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wprintf_core.c,v 1.0 2021-02-05 00:40:27 apalmate Exp $
+ * $Id: wchar_wprintf_core.c,v 1.1 2022-03-05 10:23:14 apalmate Exp $
  *
  * :ts=4
  *
@@ -39,14 +39,12 @@
 #include <wctype.h>
 #include "wchar_wprintf_core.h"
 
-static void pop_arg(union arg *arg, int type, va_list *ap);
-static void out(FOut *_out, const wchar_t *text, size_t length);
 static void out_putwc(wchar_t wc, FOut *_out);
 static int out_printf(FOut *_out, const char *format, ...);
 static int out_error(FOut *_out);
 static int getint(wchar_t **s);
 
-static void pop_arg(union arg *arg, int type, va_list *ap)
+void pop_arg(union arg *arg, int type, va_list *ap)
 {
     switch (type)
     {
@@ -59,12 +57,14 @@ static void pop_arg(union arg *arg, int type, va_list *ap)
     case _UINT:
         arg->i = va_arg(*ap, unsigned int);
         break;
+#if 0
     case _LONG:
         arg->i = va_arg(*ap, long);
         break;
     case _ULONG:
         arg->i = va_arg(*ap, unsigned long);
         break;
+#endif
     case _ULLONG:
         arg->i = va_arg(*ap, unsigned long long);
         break;
@@ -189,9 +189,7 @@ static void out(FOut *_out, const wchar_t *text, size_t length)
         {
             length = avail;
         }
-        memcpy((char *)(_out->buffer + _out->buffer_pos),
-               (const char *)text,
-               (length * sizeof(wchar_t)));
+        memcpy((char *)(_out->buffer + _out->buffer_pos), (const char *)text, (length * sizeof(wchar_t)));
         _out->buffer_pos += length;
     }
 }
@@ -293,7 +291,17 @@ getint(wchar_t **s)
 
 static const char sizeprefix['y' - 'a'] =
     {
-        ['a' - 'a'] = 'L', ['e' - 'a'] = 'L', ['f' - 'a'] = 'L', ['g' - 'a'] = 'L', ['d' - 'a'] = 'j', ['i' - 'a'] = 'j', ['o' - 'a'] = 'j', ['u' - 'a'] = 'j', ['x' - 'a'] = 'j', ['p' - 'a'] = 'j'};
+        ['a' - 'a'] = 'L',
+        ['e' - 'a'] = 'L',
+        ['f' - 'a'] = 'L',
+        ['g' - 'a'] = 'L',
+        ['d' - 'a'] = 'j',
+        ['i' - 'a'] = 'j',
+        ['o' - 'a'] = 'j',
+        ['u' - 'a'] = 'j',
+        ['x' - 'a'] = 'j',
+        ['p' - 'a'] = 'j'
+    };
 
 int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
 {
@@ -492,11 +500,13 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
                 p = (int)(z - a);
             if (w < p)
                 w = p;
-            if (!(fl & __U_LEFT_ADJ))
+            if (!(fl & __U_LEFT_ADJ)) {
                 out_printf(f, "%.*s", (w - p), "");
+            }
             out(f, a, (size_t)p);
-            if ((fl & __U_LEFT_ADJ))
+            if ((fl & __U_LEFT_ADJ)) {
                 out_printf(f, "%.*s", (w - p), "");
+            }
             l = w;
             continue;
         case 's':
@@ -510,8 +520,9 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
             p = l;
             if (w < p)
                 w = p;
-            if (!(fl & __U_LEFT_ADJ))
+            if (!(fl & __U_LEFT_ADJ)) {
                 out_printf(f, "%.*s", w - p, "");
+            }
             bs = arg.p;
             while (l--)
             {
@@ -519,15 +530,16 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
                 bs += i;
                 out_putwc(wc, f);
             }
-            if ((fl & __U_LEFT_ADJ))
+            if ((fl & __U_LEFT_ADJ)) {
                 out_printf(f, "%.*s", w - p, "");
+            }
             l = w;
             continue;
         default:
             break;
         }
 
-        snprintf(charfmt, sizeof charfmt, "%%%s%s%s%s%s*.*%c%c",
+        snprintf(charfmt, sizeof charfmt, "%%%s%s%s%s%s*.%c%c",
                  ((!(fl & __U_ALT_FORM)) ? "" : "#"),
                  ((!(fl & __U_MARK_POS)) ? "" : "+"),
                  ((!(fl & __U_LEFT_ADJ)) ? "" : "-"),
@@ -541,7 +553,7 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
         case 'e':
         case 'f':
         case 'g':
-            l = out_printf(f, charfmt, w, p, arg.f);
+                l = out_printf(f, charfmt, w, p, arg.f);
             break;
         case 'd':
         case 'i':
@@ -561,11 +573,11 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
     if (!l10n)
         return 0;
 
-    for (i = 1; i <= __ARGMAX && nl_type[i]; i++)
+    for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++)
         pop_arg(nl_arg + i, nl_type[i], ap);
-    for (; i <= __ARGMAX && !nl_type[i]; i++)
+    for (; i <= NL_ARGMAX && !nl_type[i]; i++)
         ;
-    if (i <= __ARGMAX)
+    if (i <= NL_ARGMAX)
         return -1;
     return 1;
 }

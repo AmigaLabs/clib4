@@ -30,20 +30,37 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-// LibWChar
 
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-
-int 
+int
 wprintf(const wchar_t *format, ...)
 {
-	int ret;
+	int result = EOF;
+
+    ENTER();
+
+    SHOWSTRING(format);
+
+    assert(format != NULL);
+
+    if (__check_abort_enabled)
+        __check_abort();
+
+    if (format == NULL)
+    {
+        __set_errno(EFAULT);
+        goto out;
+    }
+
 	va_list ap;
 	va_start(ap, format);
-	ret = vfwprintf(stdout, format, ap);
+    result = vfwprintf(stdout, format, ap);
 	va_end(ap);
-	return ret;
+
+out:
+    RETURN(result);
+	return (result);
 }

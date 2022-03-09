@@ -418,8 +418,8 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
             num_conversions++;
         } else if (conversion_type == 'f') {
-            __long_double_t sum = 0.0;
-            __long_double_t new_sum;
+            long double sum = 0.0;
+            long double new_sum;
             BOOL is_negative = FALSE;
             BOOL decimal_point_matches = FALSE;
             BOOL have_exponent = FALSE;
@@ -448,7 +448,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 } else {
                     SHOWMSG("extended format (long double)");
 
-                    next_parameter = va_arg(arg, __long_double_t * );
+                    next_parameter = va_arg(arg, long double * );
                 }
 
                 assert(next_parameter != NULL);
@@ -463,7 +463,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 } else if (parameter_size == parameter_size_long) {
                     *((double *) next_parameter) = 0;
                 } else {
-                    *((__long_double_t *) next_parameter) = 0;
+                    *((long double *) next_parameter) = 0;
                 }
             }
 
@@ -978,7 +978,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                     } else if (parameter_size == parameter_size_long) {
                         *((double *) next_parameter) = sum;
                     } else {
-                        *((__long_double_t *) next_parameter) = sum;
+                        *((long double *) next_parameter) = sum;
                     }
 
                     num_assignments++;

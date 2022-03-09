@@ -42,8 +42,8 @@ int
 vfwprintf(FILE *f, const wchar_t *format, va_list ap)
 {
 	va_list ap2;
-	int ret, nl_type[__ARGMAX] = {0};
-	union arg nl_arg[__ARGMAX];
+	int ret, nl_type[NL_ARGMAX] = {0};
+	union arg nl_arg[NL_ARGMAX];
 	FOut _out[1];
 	out_init_file(_out, f);
 	va_copy(ap2, ap);
@@ -52,7 +52,7 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap)
 	if (wprintf_core(0, format, &ap2, nl_arg, nl_type) < 0)
 	{
 		va_end(ap2);
-		return -1;
+		return EOF;
 	}
 	ret = wprintf_core(_out, format, &ap2, nl_arg, nl_type);
 	va_end(ap2);

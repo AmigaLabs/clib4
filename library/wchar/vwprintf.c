@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_vwprintf.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_vwprintf.c,v 1.1 2022-03-05 19:47:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,11 +35,7 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 int
-vwprintf(const wchar_t *format,va_list arg)
-{
-	/* ZZZ unimplemented */
-	return(0);
+vwprintf(const wchar_t *format, va_list arg) {
+    return vfwprintf(stdout, format, arg);
 }

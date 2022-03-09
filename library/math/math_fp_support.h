@@ -34,22 +34,6 @@
 #ifndef _MATH_FP_SUPPORT_H
 #define _MATH_FP_SUPPORT_H
 
-/****************************************************************************/
-
-/* This selects whether or not the 'long double' type should be used. So far,
-   only 'double' can be supported, and 'long double' defaults to 'double'. */
-/*#define USE_LONG_DOUBLE*/
-
-/****************************************************************************/
-
-#if defined(USE_LONG_DOUBLE)
- typedef long double __long_double_t;
-#else
- typedef double __long_double_t;
-#endif /* USE_LONG_DOUBLE */
-
-/****************************************************************************/
-
 /* 'Portable' raw representations of three IEEE floating point formats. */
 union ieee_long_double
 {

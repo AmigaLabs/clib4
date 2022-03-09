@@ -56,9 +56,7 @@ __sscanf_hook_entry(
 
 	if (string_iob->iob_StringPosition < string_iob->iob_StringLength)
 	{
-		int64_t num_bytes_left;
-
-		num_bytes_left = string_iob->iob_StringLength - string_iob->iob_StringPosition;
+		int64_t num_bytes_left = string_iob->iob_StringLength - string_iob->iob_StringPosition;
 
 		num_bytes = fam->fam_Size;
 		if (num_bytes > num_bytes_left)

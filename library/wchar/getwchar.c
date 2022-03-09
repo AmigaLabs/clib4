@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_getwchar.c,v 1.3 2006-01-08 12:04:27 obarthel Exp $
+ * $Id: wchar_getwchar.c,v 1.1 2022-03-05 19:36:27 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,11 +35,8 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 wint_t
 getwchar(void)
 {
-	/* ZZZ unimplemented */
-	return(0);
+    return fgetwc(stdin);
 }

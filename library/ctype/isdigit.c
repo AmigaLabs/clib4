@@ -67,6 +67,6 @@ isdigit(int c)
 	}
 
 	__locale_unlock();
-
+Printf("RESULT=%d\n", result);
 	return(result);
 }

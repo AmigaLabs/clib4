@@ -1017,6 +1017,7 @@ C_WCHAR := \
 	wchar/vfwprintf.o \
 	wchar/vfwscanf.o \
 	wchar/vswprintf.o \
+    wchar/vswscanf.o \
 	wchar/vwprintf.o \
 	wchar/wcrtomb.o \
 	wchar/wcscat.o \
