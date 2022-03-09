@@ -200,14 +200,6 @@ extern int _mbtowc(wchar_t *, const char *, size_t, _mbstate_t *);
 #define _iseucjp(c) ((c) >= 0xa1 && (c) <= 0xfe)
 #define _isjis(c) ((c) >= 0x21 && (c) <= 0x7e)
 
-#if (UINT_MAX == ULONG_MAX)
-#define __LONG_IS_INT
-#endif
-
-#if ((SIZE_MAX != ULONG_MAX) || (UINTMAX_MAX != ULLONG_MAX))
-#define __ODD_TYPES
-#endif
-
 #define __PSEP '/'
 
 #if !defined(__WCHAR_INTERNAL_LIB)

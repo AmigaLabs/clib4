@@ -43,17 +43,26 @@
 
 #include "wchar_wprintf_core.h"
 
-static void pad(FOut *f, char c, int w, int l, int fl);
+static void pad(Out *f, char c, int w, int l, int fl);
 
-static void out(FOut *_out, const char *text, size_t l) {
+static void out_init_file(Out *out, FILE *f)
+{
+    memset(out, 0, sizeof(*out));
+    out->file = f;
+}
 
-    size_t length = ((l > 0) ? (size_t)l : 0U);
+static void out(Out *_out, const char *text, size_t l) {
+
+    size_t length = ((l > 0) ? (size_t) l : 0U);
 
     if (!length) {
         return;
     }
     if (_out->file != NULL) {
-        fwrite(text, 1, length, _out->file);
+        const char *w = text;
+        while (length--) {
+            __putc_unlocked(*w++, _out->file);
+        }
     } else {
         // Write into a bounded buffer.
         size_t avail = _out->buffer_size - _out->buffer_pos;
@@ -65,14 +74,20 @@ static void out(FOut *_out, const char *text, size_t l) {
     }
 }
 
-static void pad(FOut *f, char c, int w, int l, int fl) {
-    char pad[256];
-    if (fl & (__S_LEFT_ADJ | __S_ZERO_PAD) || l >= w) return;
-    l = w - l;
-    memset(pad, c, l > sizeof pad ? sizeof pad : l);
-    for (; l >= sizeof pad; l -= sizeof pad)
-        out(f, pad, sizeof pad);
-    out(f, pad, l);
+static void pad(Out* f, char c, int w, int l, int fl)
+{
+    char _pad[256];
+    const int _psz = (int)(sizeof(_pad));
+
+    if ((fl & (__S_LEFT_ADJ | __S_ZERO_PAD)) || (l >= w))
+        return;
+    l = (w - l);
+    memset(_pad, c, (size_t)((l > _psz) ? _psz : l));
+    for (; (l >= _psz); l -= _psz)
+    {
+        out(f, _pad, _psz);
+    }
+    out(f, _pad, l);
 }
 
 
@@ -80,266 +95,397 @@ static const char xdigits[16] = {
         "0123456789ABCDEF"
 };
 
-static char *fmt_x(uintmax_t x, char *s, int lower) {
-    for (; x; x >>= 4) *--s = xdigits[(x & 15)] | lower;
+static char *fmt_x(uintmax_t x, char *s, int lower)
+{
+    for (; x; x >>= 4)
+    {
+        *--s = (char)(xdigits[(x & 15)] | lower);
+    }
     return s;
 }
 
-static char *fmt_o(uintmax_t x, char *s) {
-    for (; x; x >>= 3) *--s = '0' + (x & 7);
+static char *fmt_o(uintmax_t x, char *s)
+{
+    for (; x; x >>= 3)
+    {
+        *--s = (char)('0' + (x&7));
+    }
     return s;
 }
 
-static char *fmt_u(uintmax_t x, char *s) {
-    unsigned long y;
-    for (; x > ULONG_MAX; x /= 10) *--s = '0' + x % 10;
-    for (y = x; y; y /= 10) *--s = '0' + y % 10;
+static char *fmt_u(uintmax_t x, char *s)
+{
+    uintmax_t y;
+    for (   ; x > ULONG_MAX; x /= 10)
+    {
+        *--s = (char)('0' + x % 10);
+    }
+    for (y = x;           y; y /= 10)
+    {
+        *--s = (char)('0' + y % 10);
+    }
     return s;
 }
-
-typedef char compiler_defines_long_double_incorrectly[9 - (int) sizeof(long double)];
-
-static int fmt_fp(FOut *f, long double y, int w, int p, int fl, int t) {
-    uint32_t big[(LDBL_MANT_DIG + 28) / 29 + 1          // mantissa expansion
-                 + (LDBL_MAX_EXP + LDBL_MANT_DIG + 28 + 8) / 9]; // exponent expansion
+static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
+    uint32_t big[(LDBL_MAX_EXP+LDBL_MANT_DIG)/9+1];
     uint32_t *a, *d, *r, *z;
-    int e2 = 0, e, i, j, l;
-    char buf[9 + LDBL_MANT_DIG / 4], *s;
-    const char *prefix = "-0X+0X 0X-0x+0x 0x";
-    int pl;
-    char ebuf0[3 * sizeof(int)], *ebuf = &ebuf0[3 * sizeof(int)], *estr = NULL;
+    int e2 = 0, e, i, j, l, pl;
+    const char *prefix="-0X+0X 0X-0x+0x 0x";
+    char ebuf0[(3 * sizeof(int))],
+            *ebuf = &ebuf0[(3 *sizeof(int))],
+            buf[(9 + LDBL_MANT_DIG / 4)],
+            *estr,
+            *s;
 
     pl = 1;
-    if (signbit(y)) {
-        y = -y;
-    } else if (fl & __S_MARK_POS) {
-        prefix += 3;
-    } else if (fl & __S_PAD_POS) {
-        prefix += 6;
-    } else prefix++, pl = 0;
 
-    if (!isfinite(y)) {
-        const char *s1 = (t & 32) ? "inf" : "INF";
-        if (y != y) s1 = (t & 32) ? "nan" : "NAN";
-        pad(f, ' ', w, 3 + pl, fl & ~__S_ZERO_PAD);
+    if (signbit(y))
+    {
+        y = -y;
+    }
+    else if (fl & __S_MARK_POS)
+    {
+        prefix += 3;
+    }
+    else if (fl & __S_PAD_POS)
+    {
+        prefix += 6;
+    }
+    else
+    {
+        prefix++;
+        pl = 0;
+    }
+
+    if (!isfinite(y))
+    {
+        s = ((t & 32)   ? "inf" : "INF");
+        if (y != y)
+        {
+            s = ((t & 32) ? "nan" : "NAN");
+            pl=0;
+        }
+        pad(f, ' ', w, 3 + pl, fl &~ __S_ZERO_PAD);
         out(f, prefix, pl);
-        out(f, s1, 3);
+        out(f, s, 3);
         pad(f, ' ', w, 3 + pl, fl ^ __S_LEFT_ADJ);
         return MAX(w, 3 + pl);
     }
 
-    y = frexpl(y, &e2) * 2;
-    if (y) e2--;
+    y = (frexpl(y, &e2) * 2);
+    if (y > 0)
+        e2--;
 
-    if ((t | 32) == 'a') {
-        long double round = 8.0;
+    if ((t|32)=='a')
+    {
+        long double rnd = 8.0;
         int re;
 
-        if (t & 32) prefix += 9;
+        if (t&32)
+            prefix += 9;
         pl += 2;
 
-        if (p < 0 || p >= LDBL_MANT_DIG / 4 - 1) re = 0;
-        else re = LDBL_MANT_DIG / 4 - 1 - p;
+        if (p < 0 || p >= (LDBL_MANT_DIG/4 - 1))
+            re = 0;
+        else
+            re = (LDBL_MANT_DIG/4-1-p);
 
-        if (re) {
-            round *= 1 << (LDBL_MANT_DIG % 4);
-            while (re--) round *= 16;
-            if (*prefix == '-') {
-                y = -y;
-                y -= round;
-                y += round;
-                y = -y;
-            } else {
-                y += round;
-                y -= round;
+        if (re)
+        {
+            while (re--)
+            {
+                rnd *= 16;
+            }
+            if (*prefix=='-')
+            {
+                y=-y;
+                y-=rnd;
+                y+=rnd;
+                y=-y;
+            }
+            else
+            {
+                y+=rnd;
+                y-=rnd;
             }
         }
 
-        estr = fmt_u(e2 < 0 ? -e2 : e2, ebuf);
-        if (estr == ebuf) *--estr = '0';
-        *--estr = (e2 < 0 ? '-' : '+');
-        *--estr = t + ('p' - 'a');
+        estr = fmt_u( (uintmax_t)((e2 < 0) ? -e2 : e2), ebuf);
+        if (estr == ebuf)
+        {
+            *--estr = '0';
+        }
+        *--estr = ((e2 < 0) ? '-' : '+');
+        *--estr = (char)(t + ('p' - 'a'));
 
         s = buf;
-        do {
-            int x = y;
-            *s++ = xdigits[x] | (t & 32);
-            y = 16 * (y - x);
-            if (s - buf == 1 && (y || p > 0 || (fl & __S_ALT_FORM))) *s++ = '.';
-        } while (y);
-
-        if (p > INT_MAX - 2 - (ebuf - estr) - pl)
-            return -1;
-        if (p && s - buf - 2 < p)
-            l = (p + 2) + (ebuf - estr);
-        else
-            l = (s - buf) + (ebuf - estr);
-
-        pad(f, ' ', w, pl + l, fl);
-        out(f, prefix, pl);
-        pad(f, '0', w, pl + l, fl ^ __S_ZERO_PAD);
-        out(f, buf, s - buf);
-        pad(f, '0', l - (ebuf - estr) - (s - buf), 0, 0);
-        out(f, estr, ebuf - estr);
-        pad(f, ' ', w, pl + l, fl ^ __S_LEFT_ADJ);
-        return MAX(w, pl + l);
-    }
-    if (p < 0) p = 6;
-
-    if (y) y *= 0x1p28, e2 -= 28;
-
-    if (e2 < 0) a = r = z = big;
-    else a = r = z = big + sizeof(big) / sizeof(*big) - LDBL_MANT_DIG - 1;
-
-    do {
-        if (*z)
-            *z = (uint32_t)y;
-        else
-            break;
-        y = 1000000000 * (y - *z++);
-    } while (y);
-
-    while (e2 > 0) {
-        uint32_t carry = 0;
-        int sh = MIN(29, e2);
-        for (d = z - 1; d >= a; d--) {
-            uint64_t x = ((uint64_t) * d << sh) + carry;
-            *d = x % 1000000000;
-            carry = x / 1000000000;
+        do
+        {
+            int x = (int)y;
+            *s++ = (char)(xdigits[x] | (t & 32));
+            y = (16 * (y - x));
+            if (((s - buf) == 1) && ((y > 0) || p > 0 || (fl & __S_ALT_FORM)))
+            {
+                *s++ = '.';
+            }
         }
-        if (carry) *--a = carry;
-        while (z > a && !z[-1]) z--;
-        e2 -= sh;
+        while (y > 0);
+
+        if (p && s-buf-2 < p)
+            l = (int)((p + 2) + (ebuf - estr));
+        else
+            l = (int)((s - buf) + (ebuf - estr));
+
+        pad(f, ' ', w, (pl + l), fl);
+        out(f, prefix, pl);
+        pad(f, '0', w, (pl + l), fl ^ __S_ZERO_PAD);
+        out(f, buf, (int)(s - buf));
+        pad(f, '0', (int)(l - (ebuf - estr) - (s - buf)), 0, 0);
+        out(f, estr, (int)(ebuf - estr));
+        pad(f, ' ', w, pl+l, fl ^ __S_LEFT_ADJ);
+        return MAX(w, pl+l);
     }
-    while (e2 < 0) {
+    if (p < 0)
+    {
+        p = 6;
+    }
+    if (y > 0)
+    {
+        y *= 0x1p28;
+        e2 -= 28;
+    }
+    if (e2 < 0)
+    {
+        a = r = z = big;
+    }
+    else
+    {
+        a = r = z = (big + sizeof(big)/sizeof(*big) - LDBL_MANT_DIG - 1);
+    }
+
+    do
+    {
+        *z = (uint32_t)y;
+        y = (1000000000 * (y - *z++));
+    }
+    while (y > 0);
+
+    while (e2 > 0)
+    {
+        uint32_t carry=0;
+        int sh = MIN(29,e2);
+        for (d=z-1; d>=a; d--)
+        {
+            uint64_t x = ((uint64_t)*d<<sh)+carry;
+            *d = (uint32_t)(x % 1000000000);
+            carry = (uint32_t)(x / 1000000000);
+        }
+        if (!z[-1] && z>a)
+            z--;
+        if (carry)
+            *--a = carry;
+        e2-=sh;
+    }
+    while (e2 < 0)
+    {
         uint32_t carry = 0, *b;
-        int sh = MIN(9, -e2), need = 1 + (p + LDBL_MANT_DIG / 3U + 8) / 9;
-        for (d = a; d < z; d++) {
+        int sh = MIN(9,-e2);
+        for (d = a; d < z; d++)
+        {
             uint32_t rm = (*d & (uint32_t)((1 << sh) - 1));
             *d = ((*d >> sh) + carry);
             carry = ((uint32_t)(1000000000 >> sh) * rm);
         }
-        if (!*a) a++;
-        if (carry) *z++ = carry;
+        if (!*a)
+            a++;
+        if (carry)
+            *z++ = carry;
         /* Avoid (slow!) computation past requested precision */
-        b = (t | 32) == 'f' ? r : a;
-        if (z - b > need) z = b + need;
-        e2 += sh;
+        b = (t|32)=='f' ? r : a;
+        if (z-b > 2+p/9)
+            z = b+2+p/9;
+        e2+=sh;
     }
 
-    if (a < z) for (i = 10, e = 9 * (r - a); *a >= i; i *= 10, e++);
-    else e = 0;
+    if (a<z)
+    {
+        for (i = 10, e = (int)(9 * (r - a)); *a >= (uint32_t)i; i*= 10, e++);
+    }
+    else
+    {
+        e = 0;
+    }
 
     /* Perform rounding: j is precision after the radix (possibly neg) */
-    j = p - ((t | 32) != 'f') * e - ((t | 32) == 'g' && p);
-    if (j < 9 * (z - r - 1)) {
+    j = p - ((t|32)!='f')*e - ((t|32)=='g' && p);
+    if (j < (9 * (z - r -1)))
+    {
         uint32_t x;
         /* We avoid C's broken division of negative numbers */
-        d = r + 1 + ((j + 9 * LDBL_MAX_EXP) / 9 - LDBL_MAX_EXP);
-        j += 9 * LDBL_MAX_EXP;
+        d = r + 1 + ((j + 9 * LDBL_MAX_EXP)/9 - LDBL_MAX_EXP);
+        j += 9*LDBL_MAX_EXP;
         j %= 9;
         for (i = 10, j++; j < 9; i *= 10, j++);
-        x = *d % i;
+        x = (*d % (uint32_t)i);
         /* Are there any significant digits past j? */
-        if (x || d + 1 != z) {
-            long double round = 2 / LDBL_EPSILON;
-            long double small;
-            if ((*d / i & 1) || (i == 1000000000 && d > a && (d[-1] & 1)))
-                round += 2;
-            if (x < i / 2) small = 0x0.8p0;
-            else if (x == i / 2 && d + 1 == z) small = 0x1.0p0;
-            else small = 0x1.8p0;
-            if (pl && *prefix == '-') round *= -1, small *= -1;
+        if (x || ((d + 1) != z))
+        {
+            long double small, rnd = __WEV(0x1p,LDBL_MANT_DIG);
+            if ((*d / (uint32_t)i) & 1)
+            {
+                rnd += 2;
+            }
+            if (x < (uint32_t)(i / 2))
+            {
+                small = 0x0.8p0;
+            }
+            else if ((x == (uint32_t)(i / 2)) && ((d + 1) == z))
+            {
+                small = 0x1.0p0;
+            }
+            else
+            {
+                small = 0x1.8p0;
+            }
+            if (pl && *prefix=='-')
+            {
+                rnd*=-1;
+                small*=-1;
+            }
             *d -= x;
             /* Decide whether to round by probing round+small */
-            if (round + small != round) {
-                *d = *d + i;
-                while (*d > 999999999) {
-                    *d-- = 0;
-                    if (d < a) *--a = 0;
+            if ((rnd + small) != rnd)
+            {
+                *d = (*d + (uint32_t)i);
+                while (*d == 0xFFFF) // == 65535 // Fix? (*d > 999999999)
+                {
+                    *d--=0;
                     (*d)++;
                 }
-                for (i = 10, e = 9 * (r - a); *a >= i; i *= 10, e++);
+                if (d < a)
+                {
+                    a = d;
+                }
+                for (i = 10, e = (int)(9 * (r-a)); *a >= (uint32_t)i; i *= 10, e++);
             }
         }
-        if (z > d + 1) z = d + 1;
+        if (z > (d + 1))
+        {
+            z = (d + 1);
+        }
+        for (; !z[-1] && z>a; z--);
     }
-    for (; z > a && !z[-1]; z--);
 
-    if ((t | 32) == 'g') {
-        if (!p) p++;
-        if (p > e && e >= -4) {
+    if ((t|32)=='g')
+    {
+        if (!p)
+            p++;
+        if (p>e && e>=-4)
+        {
             t--;
-            p -= e + 1;
-        } else {
-            t -= 2;
+            p-=e+1;
+        }
+        else
+        {
+            t-=2;
             p--;
         }
-        if (!(fl & __S_ALT_FORM)) {
+        if (!(fl&__S_ALT_FORM))
+        {
             /* Count trailing zeros in last place */
-            if (z > a && z[-1]) for (i = 10, j = 0; z[-1] % i == 0; i *= 10, j++);
-            else j = 9;
-            if ((t | 32) == 'f')
-                p = MIN(p, MAX(0, 9 * (z - r - 1) - j));
-            else
-                p = MIN(p, MAX(0, 9 * (z - r - 1) + e - j));
-        }
-    }
-    if (p > INT_MAX - 1 - (p || (fl & __S_ALT_FORM)))
-        return -1;
-    l = 1 + p + (p || (fl & __S_ALT_FORM));
-    if ((t | 32) == 'f') {
-        if (e > INT_MAX - l) return -1;
-        if (e > 0) l += e;
-    } else {
-        estr = fmt_u(e < 0 ? -e : e, ebuf);
-        while (ebuf - estr < 2) *--estr = '0';
-        *--estr = (e < 0 ? '-' : '+');
-        *--estr = t;
-        if (ebuf - estr > INT_MAX - l) return -1;
-        l += ebuf - estr;
-    }
-
-    if (l > INT_MAX - pl) return -1;
-    pad(f, ' ', w, pl + l, fl);
-    out(f, prefix, pl);
-    pad(f, '0', w, pl + l, fl ^ __S_ZERO_PAD);
-
-    if ((t | 32) == 'f') {
-        if (a > r) a = r;
-        for (d = a; d <= r; d++) {
-            char *s1 = fmt_u(*d, buf + 9);
-            if (d != a) while (s1 > buf) *--s1 = '0';
-            else if (s1 == buf + 9) *--s1 = '0';
-            out(f, s1, buf + 9 - s1);
-        }
-        if (p || (fl & __S_ALT_FORM)) out(f, ".", 1);
-        for (; d < z && p > 0; d++, p -= 9) {
-            char *s2 = fmt_u(*d, buf + 9);
-            while (s2 > buf) *--s2 = '0';
-            out(f, s2, MIN(9, p));
-        }
-        pad(f, '0', p + 9, 9, 0);
-    } else {
-        if (z <= a) z = a + 1;
-        for (d = a; d < z && p >= 0; d++) {
-            char *s3 = fmt_u(*d, buf + 9);
-            if (s3 == buf + 9) *--s3 = '0';
-            if (d != a) while (s3 > buf) *--s3 = '0';
-            else {
-                out(f, s3++, 1);
-                if (p > 0 || (fl & __S_ALT_FORM)) out(f, ".", 1);
+            if (z > a && z[-1])
+            {
+                for (i = 10, j = 0; (z[-1] % (uint32_t)i) == 0; i *= 10, j++);
             }
-            out(f, s3, MIN(buf + 9 - s3, p));
-            p -= buf + 9 - s3;
+            else
+            {
+                j = 9;
+            }
+            if ((t | 32)=='f')
+            {
+                p = (int) MIN(p,MAX(0, (9 * (z - r - 1) - j)));
+            }
+            else
+            {
+                p = (int) MIN(p,MAX(0, (9 * (z - r - 1) + e - j)));
+            }
         }
-        pad(f, '0', p + 18, 18, 0);
-        out(f, estr, ebuf - estr);
+    }
+    l = 1 + p + (p || (fl&__S_ALT_FORM));
+    if ((t|32)=='f')
+    {
+        if (e>0)
+            l+=e;
+    }
+    else
+    {
+        estr= fmt_u( (uintmax_t)((e < 0) ? -e : e), ebuf);
+        while((ebuf - estr) < 2)
+        {
+            *--estr = '0';
+        }
+        *--estr = (e < 0 ? '-' : '+');
+        *--estr = (char)t;
+        l += (int)(ebuf - estr);
     }
 
-    pad(f, ' ', w, pl + l, fl ^ __S_LEFT_ADJ);
+    pad(f, ' ', w, pl+l, fl);
+    out(f, prefix, pl);
+    pad(f, '0', w, pl+l, fl ^ __S_ZERO_PAD);
 
-    return MAX(w, pl + l);
+    if ((t|32)=='f')
+    {
+        if (a>r)
+            a=r;
+        for (d=a; d<=r; d++)
+        {
+            s = fmt_u(*d, buf+9);
+            if (d!=a)
+                while (s>buf)
+                    *--s='0';
+            else if (s==buf+9)
+                *--s='0';
+            out(f, s, (int)(buf + 9 - s));
+        }
+        if (p || (fl & __S_ALT_FORM))
+            out(f, ".", 1);
+        for (; d<z && p>0; d++, p-=9)
+        {
+            s = fmt_u(*d, buf+9);
+            while (s>buf)
+                *--s='0';
+            out(f, s, MIN(9,p));
+        }
+        pad(f, '0', p+9, 9, 0);
+    }
+    else
+    {
+        if (z<=a)
+            z=a+1;
+        for (d=a; d<z && p>=0; d++)
+        {
+            s = fmt_u(*d, buf+9);
+            if (s==buf+9)
+                *--s='0';
+            if (d!=a)
+                while (s>buf)
+                    *--s='0';
+            else
+            {
+                out(f, s++, 1);
+                if (p>0||(fl & __S_ALT_FORM))
+                    out(f, ".", 1);
+            }
+            out(f, s, (int) MIN(buf+9-s, p));
+            p -= (int)(buf + 9 - s);
+        }
+        pad(f, '0', (p + 18), 18, 0);
+        out(f, estr, (int)(ebuf - estr));
+    }
+
+    pad(f, ' ', w, (pl + l), fl ^ __S_LEFT_ADJ);
+
+    return MAX(w, pl+l);
 }
 
 static int getint(char **s) {
@@ -351,38 +497,37 @@ static int getint(char **s) {
     return i;
 }
 
-static int printf_core(FOut *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type) {
-    char *a, *z, *s = (char *) fmt;
-    unsigned l10n = 0, fl;
-    int w, p, xp;
-    union arg arg;
-    int argpos;
-    unsigned st, ps;
-    int cnt = 0, l = 0;
-    size_t i;
-    char buf[sizeof(uintmax_t) * 3 + 3 + LDBL_MANT_DIG / 4];
+static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type) {
+    char buf[(sizeof(uintmax_t) * 3 + 3 + (LDBL_MANT_DIG / 4))],
+            mb[4],
+            *a, *z, *s = (char *) fmt;
     const char *prefix;
-    int t, pl;
     wchar_t wc[2], *ws;
-    char mb[4];
+
+    int i, w, p, t, pl, argpos, cnt = 0, l = 0;
+    unsigned int st, ps, fl, l10n = 0;
+    union arg arg;
 
     for (;;) {
-        /* This error is only specified for snprintf, but since it's
-         * unspecified for other forms, do the same. Stop immediately
-         * on overflow; otherwise %n could produce wrong results. */
-        if (l > INT_MAX - cnt) goto overflow;
-
         /* Update output count, end loop when fmt is exhausted */
-        cnt += l;
-        if (!*s) break;
+        if (cnt >= 0) {
+            if (l > INT_MAX - cnt) {
+                errno = EOVERFLOW;
+                cnt = -1;
+            } else
+                cnt += l;
+        }
+        if (!*s)
+            break;
 
         /* Handle literal text and %% format specifiers */
         for (a = s; *s && *s != '%'; s++);
         for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
-        if (z - a > INT_MAX - cnt) goto overflow;
-        l = z - a;
-        if (f) out(f, a, l);
-        if (l) continue;
+        l = (int) (z - a);
+        if (f)
+            out(f, a, l);
+        if (l)
+            continue;
 
         if (isdigit(s[1]) && s[2] == '$') {
             l10n = 1;
@@ -394,7 +539,7 @@ static int printf_core(FOut *f, const char *fmt, va_list *ap, union arg *nl_arg,
         }
 
         /* Read modifier flags */
-        for (fl = 0; (((unsigned)*s - ' ') < 32) && (__U_FLAGMASK & (1U << (*s - ' '))); s++)
+        for (fl = 0; (((unsigned) *s - ' ') < 32) && (__U_FLAGMASK & (1U << (*s - ' '))); s++)
             fl |= (1U << (*s - ' '));
 
         /* Read field width */
@@ -402,61 +547,67 @@ static int printf_core(FOut *f, const char *fmt, va_list *ap, union arg *nl_arg,
             if (isdigit(s[1]) && s[2] == '$') {
                 l10n = 1;
                 nl_type[s[1] - '0'] = _INT;
-                w = nl_arg[s[1] - '0'].i;
+                w = (int) nl_arg[s[1] - '0'].i;
                 s += 3;
             } else if (!l10n) {
-                w = f ? va_arg(*ap, int) : 0;
+                w = f ? va_arg(*ap,
+                int) : 0;
                 s++;
-            } else goto inval;
-            if (w < 0) fl |= __S_LEFT_ADJ, w = -w;
-        } else {
-            //s = s - 4;
-            w = getint(&s);
+            } else
+                return -1;
             if (w < 0)
-                goto overflow;
-        }
+                fl |= __S_LEFT_ADJ, w = -w;
+        } else if ((w = getint(&s)) < 0)
+            return -1;
 
         /* Read precision */
         if (*s == '.' && s[1] == '*') {
             if (isdigit(s[2]) && s[3] == '$') {
                 nl_type[s[2] - '0'] = _INT;
-                p = nl_arg[s[2] - '0'].i;
+                p = (int) nl_arg[s[2] - '0'].i;
                 s += 4;
             } else if (!l10n) {
-                p = f ? va_arg(*ap,
-                int) : 0;
+                p = ((f) ? va_arg(*ap,
+                int) : 0);
                 s += 2;
-            } else goto inval;
-            xp = (p >= 0);
+            } else
+                return -1;
         } else if (*s == '.') {
             s++;
             p = getint(&s);
-            xp = 1;
-        } else {
+        } else
             p = -1;
-            xp = 0;
-        }
 
         /* Format specifier state machine */
         st = 0;
         do {
-            if (OOB(*s)) goto inval;
+            if (__OOP(*s))
+                return -1;
             ps = st;
             st = states[st]
             S(*s++);
-        } while (st - 1 < _STOP);
-        if (!st) goto inval;
+        } while ((st - 1) < _STOP);
+        if (!st)
+            return -1;
 
         /* Check validity of argument type (nl/normal) */
         if (st == _NOARG) {
-            if (argpos >= 0) goto inval;
+            if (argpos >= 0)
+                return EOF;
+            else if (!f)
+                continue;
         } else {
-            if (argpos >= 0) nl_type[argpos] = st, arg = nl_arg[argpos];
-            else if (f) pop_arg(&arg, st, ap);
-            else return 0;
+            if (argpos >= 0) {
+                nl_type[argpos] = (int) st;
+                arg = nl_arg[argpos];
+            } else if (f) {
+                pop_arg(&arg, (int) st, ap);
+            } else
+                return 0;
         }
 
-        if (!f) continue;
+        if (!f)
+            continue;
 
         z = buf + sizeof(buf);
         prefix = "-+   0X0x";
@@ -464,50 +615,56 @@ static int printf_core(FOut *f, const char *fmt, va_list *ap, union arg *nl_arg,
         t = s[-1];
 
         /* Transform ls,lc -> S,C */
-        if (ps && (t & 15) == 3) t &= ~32;
+        if (ps && (t & 15) == 3)
+            t &= ~32;
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & __U_LEFT_ADJ) fl &= ~__U_ZERO_PAD;
+        if (fl & __U_LEFT_ADJ)
+            fl &= ~__U_ZERO_PAD;
 
         switch (t) {
             case 'n':
                 switch (ps) {
                     case _BARE:
-                        *(int *) arg.p = cnt;
+                        *(int *) arg.p = (int) cnt;
                         break;
                     case _LPRE:
-                        *(long *) arg.p = cnt;
+                        *(long *) arg.p = (long) cnt;
                         break;
                     case _LLPRE:
-                        *(long long *) arg.p = cnt;
+                        *(long long *) arg.p = (long long) cnt;
                         break;
                     case _HPRE:
-                        *(unsigned short *) arg.p = cnt;
+                        *(unsigned short *) arg.p = (unsigned short) cnt;
                         break;
                     case _HHPRE:
-                        *(unsigned char *) arg.p = cnt;
+                        *(unsigned char *) arg.p = (unsigned char) cnt;
                         break;
                     case _ZTPRE:
-                        *(size_t *) arg.p = cnt;
+                        *(size_t *) arg.p = (size_t) cnt;
                         break;
                     case _JPRE:
-                        *(uintmax_t *) arg.p = cnt;
+                        *(uintmax_t *) arg.p = (uintmax_t) cnt;
+                        break;
+                    default:
+                        *(uintmax_t *) arg.p = (uintmax_t) 0;
                         break;
                 }
                 continue;
             case 'p':
-                p = MAX(p, 2 * sizeof(void *));
+                p = MAX(p, (int) (2 * sizeof(void *)));
                 t = 'x';
                 fl |= __U_ALT_FORM;
-                break;
             case 'x':
             case 'X':
                 a = fmt_x(arg.i, z, t & 32);
-                if (arg.i && (fl & __U_ALT_FORM)) prefix += (t >> 4), pl = 2;
+                if (arg.i && (fl & __U_ALT_FORM))
+                    prefix += (t >> 4), pl = 2;
                 if (0) {
                     case 'o':
                         a = fmt_o(arg.i, z);
-                    if ((fl & __U_ALT_FORM) && p < z - a + 1) p = z - a + 1;
+                    if ((fl & __U_ALT_FORM) && arg.i)
+                        prefix += 5, pl = 1;
                 }
                 if (0) {
                     case 'd':
@@ -519,48 +676,80 @@ static int printf_core(FOut *f, const char *fmt, va_list *ap, union arg *nl_arg,
                         prefix++;
                     } else if (fl & __U_PAD_POS) {
                         prefix += 2;
-                    } else pl = 0;
+                    } else
+                        pl = 0;
                     case 'u':
                         a = fmt_u(arg.i, z);
                 }
-                if (xp && p < 0) goto overflow;
-                if (xp) fl &= ~__U_ZERO_PAD;
+                if (p >= 0)
+                    fl &= ~__U_ZERO_PAD;
                 if (!arg.i && !p) {
                     a = z;
                     break;
                 }
-                p = MAX(p, z - a + !arg.i);
+                p = (int) MAX(p, z - a + !arg.i);
                 break;
             case 'c':
-                *(a = z - (p = 1)) = arg.i;
+                *(a = z - (p = 1)) = (char) arg.i;
                 fl &= ~__U_ZERO_PAD;
                 break;
             case 'm':
                 if (1)
-                    a = strerror(errno); else
-            case 's':
-                a = arg.p ? arg.p : (char *) "(null)";
-                z = a + strnlen(a, p < 0 ? INT_MAX : p);
-                if (p < 0 && *z) goto overflow;
-                p = z - a;
+                    a = strerror(errno);
+                else
+                    case 's':
+                        a = arg.p ? arg.p : "(null)";
+#if 1
+                /* On Android, memchr() will return NULL for
+                 * out-of-bound requests, e.g. if |p == -1|. */
+                if (p >= 0) {
+                    z = memchr(a, 0, (size_t) p);
+                    if (!z)
+                        z = a + p;
+                    else
+                        p = (int) (z - a);
+                } else {
+                    p = (int) strlen(a);
+                    z = a + p;
+                }
+#else
+                if (!z)
+                z=a+p;
+            else
+                p=z-a;
+#endif
                 fl &= ~__U_ZERO_PAD;
                 break;
             case 'C':
-                wc[0] = arg.i;
-                wc[1] = 0;
+                wc[0] = (wchar_t) arg.i;
+                wc[1] = L'\0';
                 arg.p = wc;
                 p = -1;
             case 'S':
                 ws = arg.p;
-                for (i = l = 0; i < p && *ws && (l = wctomb(mb, *ws++)) >= 0 && l <= p - i; i += l);
-                if (l < 0) return -1;
-                if (i > INT_MAX) goto overflow;
+                for (i = l = 0;
+                     (
+                         ((uint32_t) i < (0U + (uint32_t) p)) &&
+                         *ws &&
+                         ((l = wctomb(mb, *ws++)) >= 0) &&
+                         ((uint32_t) l <= (0U + (uint32_t)(p - i)))
+                     );
+                     i += l);
+                if (l < 0)
+                    return -1;
                 p = i;
-                pad(f, ' ', w, p, fl);
+                pad(f, ' ', w, p, (int) fl);
                 ws = arg.p;
-                for (i = 0; i < 0U + p && *ws && i + (l = wctomb(mb, *ws++)) <= p; i += l)
+                for (i = 0;
+                     (
+                         ((uint32_t) i < (0U + (uint32_t) p)) &&
+                         *ws &&
+                         (i + ((l = wctomb(mb, *ws++))) <= p)
+                     );
+                     i += l) {
                     out(f, mb, l);
-                pad(f, ' ', w, p, fl ^ __U_LEFT_ADJ);
+                }
+                pad(f, ' ', w, p, (int) (fl ^ __U_LEFT_ADJ));
                 l = w > p ? w : p;
                 continue;
             case 'e':
@@ -571,43 +760,38 @@ static int printf_core(FOut *f, const char *fmt, va_list *ap, union arg *nl_arg,
             case 'F':
             case 'G':
             case 'A':
-                if (xp && p < 0) goto overflow;
-                l = fmt_fp(f, arg.f, w, p, fl, t);
-                if (l < 0) goto overflow;
+                l = fmt_fp(f, arg.f, w, p, (int) fl, t);
                 continue;
+            default:
+                break;
         }
 
-        if (p < z - a) p = z - a;
-        if (p > INT_MAX - pl) goto overflow;
-        if (w < pl + p) w = pl + p;
-        if (w > INT_MAX - cnt) goto overflow;
+        if (p < z - a)
+            p = (int) (z - a);
+        if (w < pl + p)
+            w = (pl + p);
 
-        pad(f, ' ', w, pl + p, fl);
+        pad(f, ' ', w, (pl + p), (int) fl);
         out(f, prefix, pl);
-        pad(f, '0', w, pl + p, fl ^ __U_ZERO_PAD);
-        pad(f, '0', p, z - a, 0);
-        out(f, a, z - a);
-        pad(f, ' ', w, pl + p, fl ^ __U_LEFT_ADJ);
+        pad(f, '0', w, (pl + p), (int) (fl ^ __U_ZERO_PAD));
+        pad(f, '0', p, (int) (z - a), 0);
+        out(f, a, (int) (z - a));
+        pad(f, ' ', w, (pl + p), (int) (fl ^ __U_LEFT_ADJ));
 
         l = w;
     }
 
-    if (f) return cnt;
-    if (!l10n) return 0;
+    if (f)
+        return cnt;
+    if (!l10n)
+        return 0;
 
     for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++)
         pop_arg(nl_arg + i, nl_type[i], ap);
     for (; i <= NL_ARGMAX && !nl_type[i]; i++);
-    if (i <= NL_ARGMAX) goto inval;
+    if (i <= NL_ARGMAX)
+        return EOF;
     return 1;
-
-inval:
-    __set_errno(EINVAL);
-    return EOF;
-
-overflow:
-    __set_errno(EOVERFLOW);
-    return EOF;
 }
 
 
@@ -616,7 +800,7 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     va_list ap2;
     int ret, nl_type[NL_ARGMAX] = {0};
     union arg nl_arg[NL_ARGMAX];
-    FOut _out[1];
+    Out _out[1];
     out_init_file(_out, f);
     va_copy(ap2, ap);
 
