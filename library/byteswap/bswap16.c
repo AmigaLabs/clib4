@@ -1,6 +1,3 @@
-
-#if defined(__PPC__) && defined(__GNUC__)
-
 asm("\
 	.text\n\
 	.align 2\n\
@@ -14,15 +11,3 @@ bswap16:\n\
 	srwi		%r3,%r3,8\n\
 	blr\n\
 ");
-
-#else
-
-#include <stdint.h>
-
-uint16_t bswap16(uint16_t u16)
-{
-return(u16>>8|u16<<8);
-}
-
-#endif
-

@@ -28,6 +28,16 @@ C_ARGZ := \
 	argz/replace.o \
 	argz/stringify.o
 
+C_BYTESWAP := \
+    byteswap/bswap16.o \
+    byteswap/bswap24.o \
+    byteswap/bswap32.o \
+    byteswap/bswap24.o \
+    byteswap/swab.o \
+    byteswap/swab24.o \
+    byteswap/swab32.o \
+    byteswap/swab64.o
+
 C_CTYPE := \
 	ctype/isalnum.o \
 	ctype/isalpha.o \
@@ -219,6 +229,9 @@ C_SOCKET := \
 	socket/bind.o \
 	socket/check_daemon.o \
 	socket/connect.o \
+    socket/dn_comp.o \
+    socket/dn_expand.o \
+    socket/dn_skipname.o \
 	socket/freeaddrinfo.o \
 	socket/gai_strerror.o \
 	socket/getaddrinfo.o \
@@ -250,6 +263,7 @@ C_SOCKET := \
 	socket/ioctl.o \
 	socket/isdaemon.o \
 	socket/listen.o \
+	socket/ns_parse.o \
 	socket/obtain_daemon.o \
 	socket/recv.o \
 	socket/recvfrom.o \
@@ -819,6 +833,7 @@ C_WCHAR := \
 
 C_LIB := \
 	$(C_BASE) \
+    $(C_BYTESWAP) \
 	$(C_ARGZ) \
 	$(C_CTYPE) \
 	$(C_DIRENT) \

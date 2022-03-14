@@ -54,6 +54,14 @@
 #include <netdb.h>
 #endif /* _NETDB_H */
 
+#ifndef _ARPA_NAMESER_H
+#include <arpa/nameser.h>
+#endif /* _ARPA_NAMESER_H */
+
+#ifndef _RESOLV_H
+#include <resolv.h>
+#endif /* _RESOLV_H */
+
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */

@@ -1,4 +1,4 @@
-/* socket_inet_ntop.c -- convert IPv4 and IPv6 addresses from binary to text form
+/* $Id: socket_inet_ntop.c,v 1.0 2021-11-16 10:41:15 apalmate Exp $
 
    Copyright (C) 2005-2006, 2008-2020 Free Software Foundation, Inc.
 
@@ -35,9 +35,6 @@
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
-
-#define NS_IN6ADDRSZ 16
-#define NS_INT16SZ 2
 
 /*
  * WARNING: Don't even consider trying to compile this on a system where

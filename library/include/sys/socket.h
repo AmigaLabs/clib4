@@ -82,6 +82,11 @@ typedef unsigned long socklen_t;
 #define	SOCK_RDM		4	/* reliably-delivered message */
 #define	SOCK_SEQPACKET	5	/* sequenced packet stream */
 
+#ifndef SOCK_CLOEXEC
+#define SOCK_CLOEXEC   02000000
+#define SOCK_NONBLOCK  04000
+#endif
+
 /*
  * Option flags per-socket.
  */
@@ -283,7 +288,7 @@ struct msghdr
 #define	MSG_CTRUNC		0x20	/* control data lost before delivery */
 #define	MSG_WAITALL		0x40	/* wait for full request or error */
 #define	MSG_DONTWAIT	0x80	/* this message should be nonblocking */
-
+#define MSG_NOSIGNAL    0x4000
 /*
  * Header for ancillary data objects in msg_control buffer.
  * Used for additional information with/about a datagram

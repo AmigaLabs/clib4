@@ -101,6 +101,7 @@ include libm.gmk
 include libdebug.gmk
 include libamiga.gmk
 include libprofile.gmk
+include libresolv.gmk
 
 all-targets: \
 	$(BUILD_DIR)/lib/crt0.o \
@@ -129,11 +130,13 @@ version:
 	$(COPY) c.lib_rev.rev debug.lib_rev.rev
 	$(COPY) c.lib_rev.rev profile.lib_rev.rev
 	$(COPY) c.lib_rev.rev m.lib_rev.rev
+	$(COPY) c.lib_rev.rev resolv.lib_rev.rev
 	bumprev amiga.lib
 	bumprev c.lib
 	bumprev debug.lib
 	bumprev profile.lib
 	bumprev m.lib
+	bumprev resolv.lib
 
 ##############################################################################
 

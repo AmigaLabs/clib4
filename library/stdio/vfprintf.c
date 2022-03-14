@@ -221,9 +221,9 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     }
 
     if (!__s_isfinite(y)) {
-        s = ((t & 32) ? "inf" : "INF");
+        s = ((t & 32) ? (char *)"inf" : (char *)"INF");
         if (y != y) {
-            s = ((t & 32) ? "nan" : "NAN");
+            s = ((t & 32) ? (char *)"nan" : (char *)"NAN");
             pl = 0;
         }
         pad(f, ' ', w, 3 + pl, fl & ~__S_ZERO_PAD);
@@ -701,7 +701,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                     a = strerror(errno);
                 else
                     case 's':
-                        a = arg.p ? arg.p : "(null)";
+                        a = arg.p ? arg.p : (char *) "(null)";
 #if 1
                 /* On Android, memchr() will return NULL for
                  * out-of-bound requests, e.g. if |p == -1|. */

@@ -1,8 +1,3 @@
-
-#if defined(__GNUC__) && defined(__PPC__)
-
-/* r3=from, r4=to, r5=len/count, r6=index, r7=load/store/temp */
-
 asm("\
 	.text\n\
 	.align 2\n\
@@ -45,26 +40,3 @@ swab:\n\
 	or			%r3,%r4,%r4\n\
 	blr\n\
 ");
-
-#else
-
-#include <sys/types.h>
-#include <stdint.h>
-
-void *swab(void *from,void *to,ssize_t len)
-{
-int i;
-uint16_t u16,*u16in=from,*u16out=to;
-
-for(i=0;i<(len>>1);i++) {
-	u16=u16in[i];
-	u16out[i]=u16>>8|u16<<8;
-}
-
-return(u16out);
-}
-
-#endif
-
-
-
