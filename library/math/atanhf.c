@@ -49,9 +49,8 @@
 static const float zero = 0.0;
 static const float one = 1.0, huge = 1e30;
 
-/****************************************************************************/
-
-float atanhf(float x)
+float
+atanhf(float x)
 {
 	float t;
 	LONG hx, ix;

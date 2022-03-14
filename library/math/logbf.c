@@ -1,5 +1,5 @@
 /*
- * $Id: math_logbf.c,v 1.3 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_logbf.c,v 1.4 2022-03-13 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -39,25 +39,28 @@
  * software is freely granted, provided that this notice
  * is preserved.
  *
- *
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
  */
 
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-float logbf(float x)
-{
-	LONG ix;
-	GET_FLOAT_WORD(ix, x);
-	ix &= 0x7fffffff; /* high |x| */
-	if (ix == 0)
-		return (float)-1.0 / fabsf(x);
-	if (ix >= 0x7f800000)
-		return x * x;
-	if ((ix >>= 23) == 0) /* IEEE 754 logb */
-		return -126.0;
-	else
-		return (float)(ix - 127);
+static const float
+        two25 = 3.355443200e+07;		/* 0x4c000000 */
+
+float
+logbf(float x) {
+    int32_t ix;
+    GET_FLOAT_WORD(ix, x);
+    ix &= 0x7fffffff;            /* high |x| */
+    if (ix == 0) return (float) -1.0 / fabsf(x);
+    if (ix >= 0x7f800000) return x * x;
+    if (ix < 0x00800000) {
+        x *= two25;         /* convert subnormal x to normal */
+        GET_FLOAT_WORD(ix, x);
+        ix &= 0x7fffffff;
+        return (float) ((ix >> 23) - 127 - 25);
+    } else
+        return (float) ((ix >> 23) - 127);
+
 }

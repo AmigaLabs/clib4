@@ -82,4 +82,8 @@
 
 /****************************************************************************/
 
+#if LDBL_MANT_DIG == DBL_MANT_DIG && LDBL_MAX_EXP == DBL_MAX_EXP
+#define  _LDBL_EQ_DBL 1
+#endif
+
 #endif /* _FLOAT_H */

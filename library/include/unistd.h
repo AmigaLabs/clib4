@@ -59,11 +59,6 @@
 
 __BEGIN_DECLS
 
-/* Endianness: we assume a big endian memory layout (for 68k and PowerPC). */
-#define LITTLE_ENDIAN	1234
-#define BIG_ENDIAN		4321
-#define BYTE_ORDER		BIG_ENDIAN
-
 #define STDIN_FILENO	0
 #define STDOUT_FILENO	1
 #define STDERR_FILENO	2

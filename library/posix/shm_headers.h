@@ -6,6 +6,7 @@
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#define __USE_GNU
 #include <sys/sem.h>
 
 #ifndef _STDLIB_SYSVBASE_H

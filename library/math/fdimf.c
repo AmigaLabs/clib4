@@ -35,15 +35,20 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-float 
-fdimf(float x, float y)
-{
-	float result;
+float
+fdimf(float x, float y) {
+    float result;
 
-	if (x > y)
-		result = x - y;
-	else
-		result = 0;
+    if (isnan(x))
+        return x;
 
-	return (result);
+    if (isnan(y))
+        return y;
+
+    if (x > y)
+        result = x - y;
+    else
+        result = 0;
+
+    return (result);
 }

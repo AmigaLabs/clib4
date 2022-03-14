@@ -1,5 +1,5 @@
 /*
- * $Id: math_tgammaf.c,v 1.3 2006-01-08 12:04:24 obarthel Exp $
+ * $Id: math_tgammaf.c,v 1.4 2022-03-12 12:04:24 apalmate Exp $
  *
  * :ts=4
  *
@@ -47,8 +47,5 @@
 float 
 tgammaf(float x)
 {
-	int gamma_sign;
-	float y = __lgammaf(x, &gamma_sign);
-
-	return gamma_sign * expf(y);
+    return (tgamma(x));
 }

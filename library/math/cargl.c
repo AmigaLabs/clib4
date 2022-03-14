@@ -35,18 +35,7 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 long double complex
-cargl(long double complex z)
-{
+cargl(long double complex z) {
     return atan2l(cimagl(z), creall(z));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

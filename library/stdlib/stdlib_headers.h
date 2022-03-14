@@ -81,6 +81,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
+#include <endian.h>
 #include <dos.h>
 
 #ifndef _STDLIB_LOCALEBASE_H

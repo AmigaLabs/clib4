@@ -41,20 +41,10 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 float complex
-cacoshf(float complex z)
-{
-    float complex zp = cacosf(z);
+cacoshf(float complex z) {
+    float complex
+    zp = cacosf(z);
     return signbit(cimagf(z)) ? CMPLXF(cimagf(zp), -crealf(zp))
                               : CMPLXF(-cimagf(zp), crealf(zp));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

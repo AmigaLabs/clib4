@@ -34,15 +34,11 @@
 #ifndef _MATH_HEADERS_H
 #define _MATH_HEADERS_H
 
-/****************************************************************************/
-
 #include <limits.h>
 #include <errno.h>
 #include <float.h>
 #include <math.h>
 #include <fenv.h>
-
-/****************************************************************************/
 
 #ifndef _MACROS_H
 #include "macros.h"
@@ -52,13 +48,13 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
-/****************************************************************************/
-
 #ifndef _MATH_FP_SUPPORT_H
 #include "math_fp_support.h"
 #endif /* _MATH_FP_SUPPORT_H */
 
-/****************************************************************************/
+#ifndef _COMPLEX_HEADERS_H
+#include "complex_headers.h"
+#endif /* _COMPLEX_HEADERS_H */
 
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
@@ -118,6 +114,45 @@ typedef union
 	} parts;
 } ieee_double_shape_type;
 
+typedef union
+{
+    long double value;
+    struct {
+        uint32_t mswhi;
+        uint32_t mswlo;
+        uint32_t lswhi;
+        uint32_t lswlo;
+    } parts32;
+    struct {
+        uint64_t msw;
+        uint64_t lsw;
+    } parts64;
+} ieee_quad_shape_type;
+
+/* A union which permits us to convert between a float and a 32 bit
+   int. */
+
+typedef union
+{
+    float value;
+    unsigned int word;
+} ieee_float_shape_type;
+
+typedef union
+{
+    long double value;
+    struct {
+#ifdef __LP64__
+        int padh:32;
+#endif
+        int exp:16;
+        int padl:16;
+        uint32_t msw;
+        uint32_t lsw;
+    } parts;
+} ieee_extended_shape_type;
+
+
 #define EXTRACT_WORDS(ix0,ix1,d)					\
 do {												\
   ieee_double_shape_type ew_u;						\
@@ -174,14 +209,111 @@ do {												\
   (d) = sl_u.value;									\
 } while (0)
 
-/* A union which permits us to convert between a float and a 32 bit
-   int. */
+/* Get three 32 bit ints from a double.  */
 
-typedef union
-{
-  float value;
-  unsigned int word;
-} ieee_float_shape_type;
+#define GET_LDOUBLE_WORDS(se,ix0,ix1,d)				\
+do {								\
+  ieee_extended_shape_type ew_u;				\
+  ew_u.value = (d);						\
+  (se) = ew_u.parts.exp;					\
+  (ix0) = ew_u.parts.msw;					\
+  (ix1) = ew_u.parts.lsw;					\
+} while (0)
+
+/* Set a double from two 32 bit ints.  */
+
+#define SET_LDOUBLE_WORDS(d,se,ix0,ix1)				\
+do {								\
+  ieee_extended_shape_type iw_u;				\
+  iw_u.parts.exp = (se);					\
+  iw_u.parts.msw = (ix0);					\
+  iw_u.parts.lsw = (ix1);					\
+  (d) = iw_u.value;						\
+} while (0)
+
+/* Get the more significant 32 bits of a long double mantissa.  */
+
+#define GET_LDOUBLE_MSW(v,d)					\
+do {								\
+  ieee_extended_shape_type sh_u;				\
+  sh_u.value = (d);						\
+  (v) = sh_u.parts.msw;						\
+} while (0)
+
+/* Set the more significant 32 bits of a long double mantissa from an int.  */
+
+#define SET_LDOUBLE_MSW(d,v)					\
+do {								\
+  ieee_extended_shape_type sh_u;				\
+  sh_u.value = (d);						\
+  sh_u.parts.msw = (v);						\
+  (d) = sh_u.value;						\
+} while (0)
+
+/* Get int from the exponent of a long double.  */
+
+#define GET_LDOUBLE_EXP(se,d)					\
+do {								\
+  ieee_extended_shape_type ge_u;				\
+  ge_u.value = (d);						\
+  (se) = ge_u.parts.exp;					\
+} while (0)
+
+/* Set exponent of a long double from an int.  */
+
+#define SET_LDOUBLE_EXP(d,se)					\
+do {								\
+  ieee_extended_shape_type se_u;				\
+  se_u.value = (d);						\
+  se_u.parts.exp = (se);					\
+  (d) = se_u.value;						\
+} while (0)
+
+/* Get two 64 bit ints from a long double.  */
+
+#define GET_LDOUBLE_WORDS64(ix0,ix1,d)				\
+do {								\
+  ieee_quad_shape_type qw_u;					\
+  qw_u.value = (d);						\
+  (ix0) = qw_u.parts64.msw;					\
+  (ix1) = qw_u.parts64.lsw;					\
+} while (0)
+
+/* Set a long double from two 64 bit ints.  */
+
+#define SET_LDOUBLE_WORDS64(d,ix0,ix1)				\
+do {								\
+  ieee_quad_shape_type qw_u;					\
+  qw_u.parts64.msw = (ix0);					\
+  qw_u.parts64.lsw = (ix1);					\
+  (d) = qw_u.value;						\
+} while (0)
+
+#define GET_LDOUBLE_MSW64(v,d)					\
+do {								\
+  ieee_quad_shape_type sh_u;					\
+  sh_u.value = (d);						\
+  (v) = sh_u.parts64.msw;					\
+} while (0)
+
+/* Set the more significant 64 bits of a long double mantissa from an int.  */
+
+#define SET_LDOUBLE_MSW64(d,v)					\
+do {								\
+  ieee_quad_shape_type sh_u;					\
+  sh_u.value = (d);						\
+  sh_u.parts64.msw = (v);					\
+  (d) = sh_u.value;						\
+} while (0)
+
+/* Get the least significant 64 bits of a long double mantissa.  */
+
+#define GET_LDOUBLE_LSW64(v,d)					\
+do {								\
+  ieee_quad_shape_type sh_u;					\
+  sh_u.value = (d);						\
+  (v) = sh_u.parts64.lsw;					\
+} while (0)
 
 /* Get a 32 bit int from a float.  */
 
@@ -201,28 +333,40 @@ do {							\
   (d) = sf_u.value;				\
 } while (0)
 
+#define	STRICT_ASSIGN(type, lval, rval)	((lval) = (rval))
+
+#define	TRUNC(d)	(_b_trunc(&(d)))
+
+static __inline void
+_b_trunc(volatile double *_dp)
+{
+    //VBS
+    //u_int32_t _lw;
+    uint32_t _lw;
+
+    GET_LOW_WORD(_lw, *_dp);
+    SET_LOW_WORD(*_dp, _lw & 0xf8000000);
+}
+
 extern double __kernel_cos(double x, double y);
 extern double __kernel_sin(double x, double y, int iy);
 extern int __rem_pio2(double x, double *y);
 extern double __kernel_tan(double x, double y, int iy);
 extern double __expm1(double x);
 extern float __kernel_cosf(float x, float y);
+extern float __kernel_cosdf(double x);
 extern float __kernel_sinf(float x, float y, int iy);
-extern LONG __rem_pio2f(float x, float *y);
+extern float __kernel_sindf(double x);
+extern int __rem_pio2f(float x, double *y);
 extern float __kernel_tanf(float x, float y, int iy);
+extern float __kernel_tandf(double x, int iy);
 extern double __lgamma(double x,int * gamma_sign_ptr);
 extern float __lgammaf(float x,int * gamma_sign_ptr);
-
-/****************************************************************************/
-
-/* math_huge_val.c */
-extern double __get_huge_val(void);
-
-/****************************************************************************/
-
-/* math_huge_valf.c */
-extern float __get_huge_valf(void);
-
-/****************************************************************************/
+extern int __kernel_rem_pio2(double *x, double *y, int e0, int nx, int prec);
+extern double __ldexp_exp(double x, int expt);
+extern float __ldexp_expf(float,int);
+extern double complex __ldexp_cexp(double complex z, int expt);
+extern float complex __ldexp_cexpf(float complex,int);
+extern int signgam;
 
 #endif /* _MATH_HEADERS_H */

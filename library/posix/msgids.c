@@ -38,11 +38,13 @@
  *****************************************************************************
  */
 
+#ifdef HAVE_SYSV
+
 #ifndef _SHM_HEADERS_H
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
 
-int 
+int
 _msgids(int *buf, size_t nids, size_t *pnids)
 {
     DECLARE_SYSVYBASE();
@@ -63,3 +65,5 @@ _msgids(int *buf, size_t nids, size_t *pnids)
 
     return ret;
 }
+
+#endif

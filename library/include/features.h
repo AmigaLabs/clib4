@@ -116,6 +116,7 @@
 
 /* define _CLIB2 symbol so we can use it in our native code */
 #define _CLIB2
+#define __BSD_VISIBLE 0
 
 /* Undefine everything, so we get a clean slate.  */
 #undef	__USE_ISOC11

@@ -31,115 +31,69 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
+int
+__fpclassify_float(float f) {
+    union IEEEf2bits u;
 
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-
-/****************************************************************************/
-
-int 
-__fpclassify_float(float number)
-{
-	union ieee_single x;
-	int result;
-
-	x.value = number;
-
-	D(("number = 0x%08lx", x.raw[0]));
-
-	if ((x.raw[0] & 0x7f800000) == 0x7f800000 && (x.raw[0] & 0x007fffff) != 0)
-	{
-		SHOWMSG("not a number");
-
-		/* Exponent = 255 and fraction != 0.0 -> not a number */
-		result = FP_NAN;
-	}
-	else if ((x.raw[0] & 0x7fffffff) == 0x7f800000)
-	{
-		SHOWMSG("infinity");
-
-		/* Exponent = 255 and fraction = 0.0 -> infinity */
-		result = FP_INFINITE;
-	}
-	else if ((x.raw[0] & 0x7fffffff) == 0)
-	{
-		SHOWMSG("zero");
-
-		/* Both exponent and fraction are zero -> zero */
-		result = FP_ZERO;
-	}
-	else if ((x.raw[0] & 0x7f800000) == 0)
-	{
-		SHOWMSG("subnormal");
-
-		/* Exponent = 0 -> subnormal (IEEE 754) */
-		result = FP_SUBNORMAL;
-	}
-	else
-	{
-		SHOWMSG("normal");
-
-		result = FP_NORMAL;
-	}
-
-	SHOWVALUE(result);
-
-	return (result);
+    u.f = f;
+    if (u.bits.exp == 255) {
+        if (u.bits.man == 0) {
+            return FP_INFINITE;
+        } else {
+            return FP_NAN;
+        }
+    } else if (u.bits.exp != 0) {
+        return FP_NORMAL;
+    } else if (u.bits.man == 0) {
+        return FP_ZERO;
+    } else {
+        return FP_SUBNORMAL;
+    }
 }
 
-/****************************************************************************/
+int
+__fpclassify_double(double d) {
+    union IEEEd2bits u;
 
-int 
-__fpclassify_double(double number)
-{
-	union ieee_double x;
-	int result;
+    u.d = d;
 
-	x.value = number;
+    if (u.bits.exp == 2047) {
+        if (u.bits.manl == 0 && u.bits.manh == 0) {
+            return FP_INFINITE;
+        } else {
+            return FP_NAN;
+        }
+    } else if (u.bits.exp != 0) {
+        return FP_NORMAL;
+    } else if (u.bits.manl == 0 && u.bits.manh == 0) {
+        return FP_ZERO;
+    } else {
+        return FP_SUBNORMAL;
+    }
+}
 
-	D(("number = 0x%08lx%08lx", x.raw[0], x.raw[1]));
 
-	if (((x.raw[0] & 0x7ff00000) == 0x7ff00000) && ((x.raw[0] & 0x000fffff) != 0 || (x.raw[1] != 0)))
-	{
-		SHOWMSG("not a number");
+int
+__fpclassify_long_double(long double e) {
+    union IEEEl2bits u;
 
-		/* Exponent = 2047 and fraction != 0.0 -> not a number */
-		result = FP_NAN;
-	}
-	else if (((x.raw[0] & 0x7fffffff) == 0x7ff00000) && (x.raw[1] == 0))
-	{
-		SHOWMSG("infinity");
-
-		/* Exponent = 2047 and fraction = 0.0 -> infinity */
-		result = FP_INFINITE;
-	}
-	else if ((((x.raw[0] & 0x7fffffff) == 0) && (x.raw[1] == 0)))
-	{
-		SHOWMSG("zero");
-
-		/* Both exponent and fraction are zero -> zero */
-		result = FP_ZERO;
-	}
-	else if ((x.raw[0] & 0x7fff0000) == 0)
-	{
-		SHOWMSG("subnormal");
-
-		/* Exponent = 0 -> subnormal (IEEE 754) */
-		result = FP_SUBNORMAL;
-	}
-	else
-	{
-		SHOWMSG("normal");
-
-		result = FP_NORMAL;
-	}
-
-	SHOWVALUE(result);
-
-	return (result);
+    u.e = e;
+    mask_nbit_l(u);
+    if (u.bits.exp == 32767) {
+        if (u.bits.manl == 0 && u.bits.manh == 0) {
+            return FP_INFINITE;
+        } else {
+            return FP_NAN;
+        }
+    } else if (u.bits.exp != 0) {
+        return FP_NORMAL;
+    } else if (u.bits.manl == 0 && u.bits.manh == 0) {
+        return FP_ZERO;
+    } else {
+        return FP_SUBNORMAL;
+    }
 }

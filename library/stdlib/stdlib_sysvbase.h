@@ -34,8 +34,6 @@
 #ifndef _STDLIB_SYSVBASE_H
 #define _STDLIB_SYSVBASE_H
 
-/****************************************************************************/
-
 #ifndef __NOLIBBASE__
 #define __NOLIBBASE__
 #endif /* __NOLIBBASE__ */
@@ -47,24 +45,15 @@
 #include <proto/sysvipc.h>
 #include <libraries/sysvipc.h>
 
-/****************************************************************************/
-
 #ifndef _MACROS_H
 #include "macros.h"
 #endif /* _MACROS_H */
 
-/****************************************************************************/
-
 extern struct Library   NOCOMMON *__SysVBase;
 extern struct SYSVIFace NOCOMMON *__ISysVIPC;
-
-/****************************************************************************/
 
 #define DECLARE_SYSVYBASE() \
 	struct Library   UNUSED	*SysVBase    = __SysVBase; \
 	struct SYSVIFace 		*ISysVIPC	 = __ISysVIPC
-
-
-/****************************************************************************/
 
 #endif /* _STDLIB_SYSVBASE_H */

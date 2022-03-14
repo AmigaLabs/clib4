@@ -124,7 +124,6 @@ main(int argc,char ** argv)
 	strftime(time_buffer,sizeof(time_buffer),"%c",&tm);
 	printf("2005-01-25 12:03:53 -> gmt = %s\n",time_buffer);
 
-	#if defined(IEEE_FLOATING_POINT_SUPPORT) || defined(M68881_FLOATING_POINT_SUPPORT)
 	{
 		const double pi = 3.14159265358979323846;
 		const double ten = 10.0;
@@ -165,7 +164,6 @@ main(int argc,char ** argv)
 		r = sscanf("13.24 1.324","%f %lf",&f1,&d1);
 		printf("r = %ld, f1 = %f, d1 = %f\n",r,f1,d1);
 	}
-	#endif
 
 	#ifndef NDEBUG
 	{
@@ -192,7 +190,6 @@ main(int argc,char ** argv)
 	r = sscanf("1234567890","%4d%3d%3d",&i,&j,&k);
 	printf("r = %ld, i = %d, j = %d, k = %d\n",r,i,j,k);
 
-	/*#if defined(IEEE_FLOATING_POINT_SUPPORT) || defined(M68881_FLOATING_POINT_SUPPORT)
 	{
 		const char *arg = "100x100";
 		float xres = 0, yres = 0;
@@ -200,7 +197,6 @@ main(int argc,char ** argv)
 		printf("%d: ", sscanf(arg, "%fx%f", &xres, &yres));
 		printf("%.02fx%.02f\n", xres, yres);
 	}
-	#endif*/
 
 	gettimeofday(&tv,0);
 	printf("time = %d.%06d\n",tv.tv_sec,tv.tv_usec);

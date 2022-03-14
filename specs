@@ -1,0 +1,250 @@
+*asm:
+%(asm_cpu) %{,assembler|,assembler-with-cpp: %{mregnames} %{mno-regnames}} %{mrelocatable} %{mrelocatable-lib} %{fpie|fPIE|fpic|fPIC:-K PIC} %{memb|msdata=eabi: -memb}%{mlittle|mlittle-endian: -mlittle;mbig|mbig-endian: -mbig;mcall-i960-old: -mlittle;: -mbig}
+
+*asm_debug:
+%{%:debug-level-gt(0):%{gstabs*:--gstabs;:%{g*:--gdwarf2}}} %{fdebug-prefix-map=*:--debug-prefix-map %*}
+
+*asm_debug_option:
+
+
+*asm_final:
+%{gsplit-dwarf: 
+       objcopy --extract-dwo 	 %{c:%{o*:%*}%{!o*:%w%b%O}}%{!c:%U%O} 	 %b.dwo 
+       objcopy --strip-dwo 	 %{c:%{o*:%*}%{!o*:%w%b%O}}%{!c:%U%O}     }
+
+*asm_options:
+%{-target-help:%:print-asm-header()} %(asm_debug_option) %{gz*:%e-gz is not supported in this configuration} %a %Y %{c:%W{o*}%{!o*:-o %w%b%O}}%{!c:-o %d%w%u%O}
+
+*invoke_as:
+%{!fwpa*:   %{fcompare-debug=*|fdump-final-insns=*:%:compare-debug-dump-opt()}   %{!S:-o %|.s |
+ as %(asm_options) %m.s %A }  }
+
+*cpp:
+%{posix: -D_POSIX_SOURCE} %(cpp_os_default)
+
+*cpp_options:
+%(cpp_unique_options) %1 %{m*} %{std*&ansi&trigraphs} %{W*&pedantic*} %{w} %{f*} %{g*:%{%:debug-level-gt(0):%{g*} %{!fno-working-directory:-fworking-directory}}} %{O*} %{undef} %{save-temps*:-fpch-preprocess}
+
+*cpp_debug_options:
+%<dumpdir %<dumpbase %<dumpbase-ext %{d*} %:dumps()
+
+*cpp_unique_options:
+%{!Q:-quiet} %{nostdinc*} %{C} %{CC} %{v} %@{I*&F*} %{P} %I %{MD:-MD %{!o:%b.d}%{o*:%.d%*}} %{MMD:-MMD %{!o:%b.d}%{o*:%.d%*}} %{M} %{MM} %{MF*} %{MG} %{MP} %{MQ*} %{MT*} %{Mmodules} %{Mno-modules} %{!E:%{!M:%{!MM:%{!MT:%{!MQ:%{MD|MMD:%{o*:-MQ %*}}}}}}} %{remap} %{%:debug-level-gt(2):-dD} %{!iplugindir*:%{fplugin*:%:find-plugindir()}} %{H} %C %{D*&U*&A*} %{i*} %Z %i %{E|M|MM:%W{o*}}
+
+*trad_capable_cpp:
+cc1 -E %{traditional|traditional-cpp:-traditional-cpp}
+
+*cc1:
+%{G*} %(cc1_cpu)%{g: %{!fno-eliminate-unused-debug-symbols: -feliminate-unused-debug-symbols}} %{g1: %{!fno-eliminate-unused-debug-symbols: -feliminate-unused-debug-symbols}} %{msdata: -msdata=default} %{mno-sdata: -msdata=none} %{!mbss-plt: %{!msecure-plt: %(cc1_secure_plt_default)}} %{profile: -p} %{faltivec:-maltivec -include altivec.h} %{fno-altivec:-mno-altivec} %<faltivec %<fno-altivec %{vec:-maltivec -include altivec.h} %{fno-vec:-mno-altivec} %<fvec %<fno-vec 
+
+*cc1_options:
+%{pg:%{fomit-frame-pointer:%e-pg and -fomit-frame-pointer are incompatible}} %{!iplugindir*:%{fplugin*:%:find-plugindir()}} %1 %{!Q:-quiet} %(cpp_debug_options) %{m*} %{aux-info*} %{g*} %{O*} %{W*&pedantic*} %{w} %{std*&ansi&trigraphs} %{v:-version} %{pg:-p} %{p} %{f*} %{undef} %{Qn:-fno-ident} %{Qy:} %{-help:--help} %{-target-help:--target-help} %{-version:--version} %{-help=*:--help=%*} %{!fsyntax-only:%{S:%W{o*}%{!o*:-o %w%b.s}}} %{fsyntax-only:-o %j} %{-param*} %{coverage:-fprofile-arcs -ftest-coverage} %{fprofile-arcs|fprofile-generate*|coverage:   %{!fprofile-update=single:     %{pthread:-fprofile-update=prefer-atomic}}}
+
+*cc1plus:
+
+
+*link_gcc_c_sequence:
+%G %{!nolibc:%L %G}
+
+*link_ssp:
+%{fstack-protector|fstack-protector-all|fstack-protector-strong|fstack-protector-explicit:-lssp_nonshared -lssp}
+
+*endfile:
+%{mcrt=clib2: %(endfile_clib2); mcrt=ixemul: %(endfile_ixemul); mcrt=libnix: %(endfile_libnix); mcrt=newlib: %(endfile_newlib); mcrt=default|!mcrt=*: %(endfile_amiga_default); : %eInvalid C runtime library}
+
+*link:
+--defsym __amigaos4__=1 %{!shared: %{!use-dynld: -Bstatic}} -q -d %{h*} %{v:-V} %{G*} %{Wl,*:%*} %{YP,*} %{R*} %{Qy:} %{!Qn:-Qy} %(link_thread) %(link_shlib) %(link_text) %{mbaserel: %{msdata|msdata=default|msdata=sysv: %e-mbaserel and -msdata options are incompatible}} %{mcrt=clib2: %(link_clib2); mcrt=ixemul: %(link_ixemul); mcrt=libnix: %(link_libnix); mcrt=newlib: %(link_newlib); mcrt=default|!mcrt=*: %(link_amiga_default); : %eInvalid C runtime library} -L%(base_sdk)local/common/lib%(lib_subdir_type) %{newlib: %e-newlib is obsolete, use -mcrt=newlib instead}
+
+*lib:
+--start-group -lc --end-group
+
+*link_gomp:
+
+
+*libgcc:
+%{static|static-libgcc: %{!use-dynld: -lgcc -lgcc_eh} %{use-dynld: -lgcc} }%{!static:%{!static-libgcc:%{!shared:%{!shared-libgcc: %{!use-dynld: -lgcc -lgcc_eh} %{use-dynld: -lgcc}}%{shared-libgcc:-lgcc}}%{shared:%{shared-libgcc:-lgcc}%{!shared-libgcc:-lgcc}}}}
+
+*startfile:
+%{mcrt=clib2: %(startfile_clib2); mcrt=ixemul: %(startfile_ixemul); mcrt=libnix: %(startfile_libnix); mcrt=newlib: %(startfile_newlib); mcrt=default|!mcrt=*: %(startfile_amiga_default); : %eInvalid C runtime library}
+
+*cross_compile:
+1
+
+*version:
+11.1.0
+
+*multilib:
+. !mcrt=newlib !mcrt=clib2;newlib mcrt=newlib !mcrt=clib2;clib2 !mcrt=newlib mcrt=clib2;
+
+*multilib_defaults:
+mcrt=newlib
+
+*multilib_extra:
+
+
+*multilib_matches:
+mcrt=newlib mcrt=newlib;mcrt=clib2 mcrt=clib2;
+
+*multilib_exclusions:
+
+
+*multilib_options:
+mcrt=newlib/mcrt=clib2
+
+*multilib_reuse:
+
+
+*linker:
+collect2
+
+*linker_plugin_file:
+
+
+*lto_wrapper:
+
+
+*lto_gcc:
+
+
+*post_link:
+
+
+*link_libgcc:
+%D
+
+*md_exec_prefix:
+
+
+*md_startfile_prefix:
+
+
+*md_startfile_prefix_1:
+
+
+*startfile_prefix_spec:
+
+
+*sysroot_spec:
+--sysroot=%R
+
+*sysroot_suffix_spec:
+
+
+*sysroot_hdrs_suffix_spec:
+
+
+*self_spec:
+
+
+*cpp_default:
+
+
+*asm_cpu:
+%{!mcpu*:   %{mpower: %{!mpower2: -mpwr}}   %{mpower2: -mpwrx}   %{mpowerpc64*: -mppc64}   %{!mpowerpc64*: %{mpowerpc*: -mppc}}   %{mno-power: %{!mpowerpc*: -mcom}}   %{!mno-power: %{!mpower*: %(asm_default)}}} %{mcpu=common: -mcom} %{mcpu=power: -mpwr} %{mcpu=power2: -mpwrx} %{mcpu=power3: -mppc64} %{mcpu=power4: -mpower4} %{mcpu=power5: -mpower4} %{mcpu=powerpc: -mppc} %{mcpu=rios: -mpwr} %{mcpu=rios1: -mpwr} %{mcpu=rios2: -mpwrx} %{mcpu=rsc: -mpwr} %{mcpu=rsc1: -mpwr} %{mcpu=rs64a: -mppc64} %{mcpu=401: -mppc} %{mcpu=403: -m403} %{mcpu=405: -m405} %{mcpu=405fp: -m405} %{mcpu=440: -m440} %{mcpu=440fp: -m440} %{mcpu=505: -mppc} %{mcpu=601: -m601} %{mcpu=602: -mppc} %{mcpu=603: -mppc} %{mcpu=603e: -mppc} %{mcpu=ec603e: -mppc} %{mcpu=604: -mppc} %{mcpu=604e: -mppc} %{mcpu=620: -mppc64} %{mcpu=630: -mppc64} %{mcpu=740: -mppc} %{mcpu=750: -mppc} %{mcpu=G3: -mppc} %{mcpu=7400: -mppc -maltivec} %{mcpu=7450: -mppc -maltivec} %{mcpu=G4: -mppc -maltivec} %{mcpu=801: -mppc} %{mcpu=821: -mppc} %{mcpu=823: -mppc} %{mcpu=860: -mppc} %{mcpu=970: -mpower4 -maltivec} %{mcpu=G5: -mpower4 -maltivec} %{mcpu=8540: -me500} %{maltivec: -maltivec}
+
+*asm_cpu_native:
+%(asm_default)
+
+*asm_default:
+-mppc%{m64:64}
+
+*cc1_cpu:
+
+
+*base_gcc:
+/usr/
+
+*base_sdk:
+/usr/ppc-amigaos/SDK/
+
+*cpp_os_default:
+%{mcrt=clib2: %(cpp_clib2); mcrt=ixemul: %(cpp_ixemul); mcrt=libnix: %(cpp_libnix); mcrt=newlib: %(cpp_newlib); mcrt=default|!mcrt=*: %{mcrt=default|!nostdinc: %(cpp_amiga_default)}; : %eInvalid C runtime library} %{!nostdinc: -idirafter %(base_sdk)include/include_h -idirafter %(base_sdk)include/netinclude -idirafter %(base_sdk)local/common/include} %{mbaserel: %{msdata|msdata=default|msdata=sysv: %e-mbaserel and -msdata options are incompatible}} %{newlib: %e-newlib is obsolete, use -mcrt=newlib instead}
+
+*lib_subdir_type:
+%{mbaserel:/baserel; msdata|msdata=default|msdata=sysv:/small-data}%{msoft-float:/soft-float}
+
+*cpp_amiga_default:
+%{mcrt=default|!mcrt=*:%<mcrt=default -mcrt=newlib} %(cpp_newlib)
+
+*link_amiga_default:
+%(link_newlib)
+
+*startfile_amiga_default:
+%(startfile_newlib)
+
+*endfile_amiga_default:
+%(endfile_newlib)
+
+*cpp_clib2:
+-idirafter %(base_sdk)clib2/include -idirafter %(base_sdk)local/clib2/include
+
+*lib_subdir_clib2:
+lib%(lib_subdir_type)
+
+*link_clib2:
+-L%(base_sdk)clib2/%(lib_subdir_clib2) -L%(base_gcc)lib/gcc/ppc-amigaos/%(version)/clib2/%(lib_subdir_clib2) -L%(base_sdk)local/clib2/%(lib_subdir_clib2)
+
+*startfile_clib2:
+%{shared: %(base_sdk)clib2/%(lib_subdir_clib2)/shcrtbegin.o} %{!shared: %(base_sdk)clib2/%(lib_subdir_clib2)/crtbegin.o} %{!shared: %(base_sdk)clib2/%(lib_subdir_clib2)/crt0.o}
+
+*endfile_clib2:
+%{shared: %(base_sdk)clib2/%(lib_subdir_clib2)/shcrtend.o} %{!shared: %(base_sdk)clib2/%(lib_subdir_clib2)/crtend.o}
+
+*cpp_ixemul:
+-idirafter %(base_sdk)ixemul/include -idirafter %(base_sdk)local/ixemul/include
+
+*lib_subdir_ixemul:
+lib%(lib_subdir_type)
+
+*link_ixemul:
+-L%(base_sdk)ixemul/%(lib_subdir_ixemul) -L%(base_gcc)lib/gcc/ppc-amigaos/%(version)/ixemul/%(lib_subdir_ixemul) -L%(base_sdk)local/ixemul/%(lib_subdir_ixemul)
+
+*startfile_ixemul:
+%(base_sdk)ixemul/%(lib_subdir_ixemul)/crtbegin.o
+
+*endfile_ixemul:
+%(base_sdk)ixemul/%(lib_subdir_ixemul)/crtend.o
+
+*cpp_libnix:
+-idirafter %(base_sdk)libnix/include -idirafter %(base_sdk)local/libnix/include
+
+*lib_subdir_libnix:
+lib%(lib_subdir_type)
+
+*link_libnix:
+-L%(base_sdk)libnix/%(lib_subdir_libnix) -L%(base_gcc)lib/gcc/ppc-amigaos/%(version)/libnix/%(lib_subdir_libnix) -L%(base_sdk)local/libnix/%(lib_subdir_libnix)
+
+*startfile_libnix:
+%(base_sdk)libnix/%(lib_subdir_libnix)/crtbegin.o
+
+*endfile_libnix:
+%(base_sdk)libnix/%(lib_subdir_libnix)/crtend.o
+
+*cpp_newlib:
+-idirafter %(base_sdk)newlib/include -idirafter %(base_sdk)local/newlib/include
+
+*lib_subdir_newlib:
+lib%(lib_subdir_type)
+
+*link_newlib:
+-L%(base_sdk)newlib/%(lib_subdir_newlib) -L%(base_gcc)lib/gcc/ppc-amigaos/%(version)/newlib/%(lib_subdir_newlib) -L%(base_sdk)local/newlib/%(lib_subdir_newlib)
+
+*startfile_newlib:
+%{shared: %(base_sdk)newlib/%(lib_subdir_newlib)/shcrtbegin.o} %{!shared: %(base_sdk)newlib/%(lib_subdir_newlib)/crtbegin.o}
+
+*endfile_newlib:
+%{shared: %(base_sdk)newlib/%(lib_subdir_newlib)/shcrtend.o} %{!shared: %(base_sdk)newlib/%(lib_subdir_newlib)/crtend.o}
+
+*link_text:
+
+
+*link_shlib:
+%{shared:-shared -dy --defsym __dynld_version__=1} %{!shared: %{static:-static}} %{use-dynld: -dy}
+
+*link_thread:
+%s%{athread=native:gthr-amigaos-native.o;athread=single:gthr-amigaos-single.o;athread=pthread:gthr-amigaos-pthread.o}
+
+*link_command:
+%{!fsyntax-only:%{!c:%{!M:%{!MM:%{!E:%{!S:    %(linker) %{!fno-use-linker-plugin:%{!fno-lto:     -plugin %(linker_plugin_file)     -plugin-opt=%(lto_wrapper)     -plugin-opt=-fresolution=%u.res         %{flinker-output=*:-plugin-opt=-linker-output-known}     %{!nostdlib:%{!nodefaultlibs:%:pass-through-libs(%(link_gcc_c_sequence))}}     }}%{flto|flto=*:%<fcompare-debug*}     %{flto} %{fno-lto} %{flto=*} %l %{static|shared|r:;pie:-pie} %{fuse-ld=*:-fuse-ld=%*}  %{gz*:%e-gz is not supported in this configuration} %X %{o*} %{e*} %{N} %{n} %{r}    %{s} %{t} %{u*} %{z} %{Z} %{!nostdlib:%{!r:%{!nostartfiles:%S}}}     %{static|no-pie|static-pie:} %@{L*} %(mfwrap) %(link_libgcc) %{fvtable-verify=none:} %{fvtable-verify=std:   %e-fvtable-verify=std is not supported in this configuration} %{fvtable-verify=preinit:   %e-fvtable-verify=preinit is not supported in this configuration} %{!nostdlib:%{!r:%{!nodefaultlibs:%{%:sanitize(address):}     %{%:sanitize(hwaddress):}     %{%:sanitize(thread):}     %{%:sanitize(leak):}}}} %o      %{fopenacc|fopenmp|%:gt(%{ftree-parallelize-loops=*:%*} 1):	%:include(libgomp.spec)%(link_gomp)}    %{fgnu-tm:%:include(libitm.spec)%(link_itm)}    %(mflib)  %{fsplit-stack: --wrap=pthread_create}    %{fprofile-arcs|fprofile-generate*|coverage:-lgcov} %{!nostdlib:%{!r:%{!nodefaultlibs:%{%:sanitize(address):%{static-libasan:-Bstatic} -lasan %{static-libasan:-Bdynamic} %{static-libasan|static:%:include(libsanitizer.spec)%(link_libasan)}    %{static:%ecannot specify -static with -fsanitize=address}}    %{%:sanitize(hwaddress):%{static-libhwasan:-Bstatic} -lhwasan %{static-libhwasan:-Bdynamic} %{static-libhwasan|static:%:include(libsanitizer.spec)%(link_libhwasan)}	%{static:%ecannot specify -static with -fsanitize=hwaddress}}    %{%:sanitize(thread):%{static-libtsan:-Bstatic} -ltsan %{static-libtsan:-Bdynamic} %{static-libtsan|static:%:include(libsanitizer.spec)%(link_libtsan)}    %{static:%ecannot specify -static with -fsanitize=thread}}    %{%:sanitize(undefined):%{static-libubsan:-Bstatic} -lubsan %{static-libubsan:-Bdynamic} %{static-libubsan|static:%:include(libsanitizer.spec)%(link_libubsan)}}    %{%:sanitize(leak):%{static-liblsan:-Bstatic} -llsan %{static-liblsan:-Bdynamic} %{static-liblsan|static:%:include(libsanitizer.spec)%(link_liblsan)}}}}}     %{!nostdlib:%{!r:%{!nodefaultlibs:%(link_ssp) %(link_gcc_c_sequence)}}}    %{!nostdlib:%{!r:%{!nostartfiles:%E}}} %{T*}  
+%(post_link) }}}}}}
+

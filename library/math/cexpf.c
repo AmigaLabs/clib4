@@ -43,19 +43,9 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 float complex
-cexpf(float complex z)
-{
+
+cexpf(float complex z) {
     float x = crealf(z), y = cimagf(z), r = expf(x);
     return CMPLXF(r * cosf(y), r * sinf(y));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

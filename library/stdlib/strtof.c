@@ -68,7 +68,7 @@ float strtof(const char *str, char **ptr)
 
         __set_errno(EFAULT);
 
-        result = __get_huge_valf();
+        result = HUGE_VALF;
         goto out;
     }
 
@@ -353,7 +353,7 @@ float strtof(const char *str, char **ptr)
 			{
 				__set_errno(error);
 
-				sum = __get_huge_valf();
+				sum = HUGE_VALF;
 			}
 		}
 	}

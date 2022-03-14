@@ -38,6 +38,8 @@
  *****************************************************************************
  */
 
+#ifdef HAVE_SYSV
+
 #ifndef _SHM_HEADERS_H
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
@@ -64,3 +66,5 @@ _semget(key_t key, int nsems, int flags)
 
     return ret;
 }
+
+#endif

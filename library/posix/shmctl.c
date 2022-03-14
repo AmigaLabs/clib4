@@ -38,6 +38,8 @@
  *****************************************************************************
  */
 
+#ifdef HAVE_SYSV
+
 #ifndef _SHM_HEADERS_H
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
@@ -62,3 +64,5 @@ _shmctl(int shmid, int cmd, struct shmid_ds *cbuf)
     }
     return ret;
 }
+
+#endif

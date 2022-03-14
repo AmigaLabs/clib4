@@ -35,18 +35,7 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 double complex
-conj(double complex z)
-{
+conj(double complex z) {
     return CMPLX(creal(z), -cimag(z));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

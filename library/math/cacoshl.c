@@ -42,26 +42,7 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
-#if LDBL_MANT_DIG == DBL_MANT_DIG && LDBL_MAX_EXP == DBL_MAX_EXP
-
-/****************************************************************************/
-
 long double complex
-cacoshl(long double complex z)
-{
+cacoshl(long double complex z) {
     return cacosh(z);
 }
-
-/****************************************************************************/
-
-#endif /* LDBL_MANT_DIG == DBL_MANT_DIG && LDBL_MAX_EXP == DBL_MAX_EXP */
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

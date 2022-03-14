@@ -43,17 +43,10 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 static float
-_redupif(float x)
-{
+_redupif(float x) {
     float t = x / (float) M_PI, dp1 = 3.14159265160560607910E0,
-          dp2 = 1.98418714791870343106E-9, dp3 = 1.14423774522196636802E-17;
+            dp2 = 1.98418714791870343106E-9, dp3 = 1.14423774522196636802E-17;
     long int i = t >= 0.0f ? t + 0.5f : t - 0.5f;
 
     t = i;
@@ -61,18 +54,12 @@ _redupif(float x)
 }
 
 float complex
-catanf(float complex z)
-{
+catanf(float complex z) {
     float x = crealf(z), y = cimagf(z), x2 = x * x, a = 1.0f - x2 - (y * y),
-          w = _redupif(0.5f * atan2f(2.0f * x, a)), t = y - 1.0f;
+            w = _redupif(0.5f * atan2f(2.0f * x, a)), t = y - 1.0f;
 
     a = x2 + t * t;
     t = y + 1.0f;
     a = (x2 + t * t) / a;
     return CMPLXF(w, 0.25f * logf(a));
 }
-
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

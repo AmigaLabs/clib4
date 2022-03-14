@@ -31,20 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
-
-/****************************************************************************/
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-
-int 
-finite(double x)
-{
-	int32 hx;
-	GET_HIGH_WORD(hx,x);
-	return  (int)((uint32)((hx&0x7fffffff)-0x7ff00000)>>31);
+int
+finite(double x) {
+    int32 hx;
+    GET_HIGH_WORD(hx, x);
+    return (int) ((uint32)((hx & 0x7fffffff) - 0x7ff00000) >> 31);
 }

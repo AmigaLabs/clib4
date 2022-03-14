@@ -43,19 +43,8 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 double complex
-cexp(double complex z)
-{
+cexp(double complex z) {
     double x = creal(z), y = cimag(z), r = exp(x);
     return CMPLX(r * cos(y), r * sin(y));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

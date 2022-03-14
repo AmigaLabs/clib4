@@ -47,7 +47,7 @@
 double
 copysign(double x, double y)
 {
-	unsigned long hx, hy;
+    uint32_t hx, hy;
 
 	GET_HIGH_WORD(hx, x);
 	GET_HIGH_WORD(hy, y);
