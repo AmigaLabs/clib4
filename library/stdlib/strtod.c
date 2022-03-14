@@ -68,7 +68,7 @@ strtod(const char *str, char **ptr) {
 
         __set_errno(EFAULT);
 
-        result = __get_huge_val();
+        result = HUGE_VAL;
         goto out;
     }
 
@@ -312,7 +312,7 @@ strtod(const char *str, char **ptr) {
             if (error != 0) {
                 __set_errno(error);
 
-                sum = __get_huge_val();
+                sum = HUGE_VAL;
             }
 
             stop = str;

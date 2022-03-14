@@ -42,18 +42,7 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 double complex
-cpow(double complex z, double complex c)
-{
+cpow(double complex z, double complex c) {
     return cexp(c * clog(z));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

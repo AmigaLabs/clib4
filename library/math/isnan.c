@@ -1,5 +1,5 @@
 /*
- * $Id: math_isnan.c,v 1.0 2021-01-16 16:47:23 apalmate Exp $
+ * $Id: math_isnan.c,v 1.1 2022-03-10 16:47:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -31,23 +31,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
-
-/****************************************************************************/
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
-/****************************************************************************/
 
 int 
-__isnan(double x)
+__isnan(double d)
 {
-    int32 hx,lx;
-	EXTRACT_WORDS(hx,lx,x);
-	hx &= 0x7fffffff;
-	hx |= (uint32)(lx|(-lx))>>31;	
-	hx = 0x7ff00000 - hx;
-	return (int)(((uint32)(hx))>>31);
+    union IEEEd2bits u;
+
+    u.d = d;
+    return (u.bits.exp == 2047 && (u.bits.manl != 0 || u.bits.manh != 0));
+}
+
+int
+__isnanf(float f)
+{
+    union IEEEf2bits u;
+
+    u.f = f;
+    return (u.bits.exp == 255 && u.bits.man != 0);
+}
+
+int
+__isnanl(long double e)
+{
+    union IEEEl2bits u;
+
+    u.e = e;
+    mask_nbit_l(u);
+    return (u.bits.exp == 32767 && (u.bits.manl != 0 || u.bits.manh != 0));
 }

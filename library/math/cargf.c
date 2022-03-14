@@ -35,18 +35,7 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 float complex
-cargf(float complex z)
-{
+cargf(float complex z) {
     return atan2f(cimagf(z), crealf(z));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

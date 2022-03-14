@@ -43,17 +43,9 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
 double complex
-ctanh(double complex z)
-{
+
+ctanh(double complex z) {
     double x = creal(z), y = cimag(z), d = cosh(2.0 * x) + cos(2.0 * y);
     return CMPLX(sinh(2.0 * x) / d, sin(2.0 * y) / d);
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

@@ -42,19 +42,8 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 float complex
-ctanf(float complex z)
-{
+ctanf(float complex z) {
     float complex zp = ctanhf(CMPLXF(-cimagf(z), crealf(z)));
     return CMPLXF(cimagf(zp), -crealf(zp));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

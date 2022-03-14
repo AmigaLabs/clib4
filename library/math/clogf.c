@@ -42,18 +42,7 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 float complex
-clogf(float complex z)
-{
+clogf(float complex z) {
     return CMPLXF(logf(cabsf(z)), cargf(z));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

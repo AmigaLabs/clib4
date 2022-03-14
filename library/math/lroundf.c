@@ -1,5 +1,5 @@
 /*
- * $Id: math_lroundf.c,v 1.4 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_lroundf.c,v 1.5 2022-03-13 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -44,34 +44,26 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-long int
+/*
+ * If type has more precision than dtype, the endpoints dtype_(min|max) are
+ * of the form xxx.5; they are "out of range" because lround() rounds away
+ * from 0.  On the other hand, if type has less precision than dtype, then
+ * all values that are out of range are integral, so we might as well assume
+ * that everything is in range.  At compile time, INRANGE(x) should reduce to
+ * two floating-point comparisons in the former case, or TRUE otherwise.
+ */
+static const float dtype_min = LONG_MIN - 0.5;
+static const float dtype_max = LONG_MAX + 0.5;
+#define INRANGE(x) (dtype_max - LONG_MAX != 0.5 || ((x) > dtype_min && (x) < dtype_max))
+
+long
 lroundf(float x)
 {
-  LONG exponent_less_127;
-  ULONG w;
-  long int result;
-  LONG sign;
-
-  GET_FLOAT_WORD(w, x);
-  exponent_less_127 = ((w & 0x7f800000) >> 23) - 127;
-  sign = (w & 0x80000000) != 0 ? -1 : 1;
-  w &= 0x7fffff;
-  w |= 0x800000;
-
-  if (exponent_less_127 < (LONG)(8 * sizeof(long int)) - 1)
-  {
-    if (exponent_less_127 < 0)
-      return exponent_less_127 < -1 ? 0 : sign;
-    else if (exponent_less_127 >= 23)
-      result = (long int)w << (exponent_less_127 - 23);
-    else
-    {
-      w += 0x400000 >> exponent_less_127;
-      result = w >> (23 - exponent_less_127);
+    if (INRANGE(x)) {
+        x = round(x);
+        return ((long) x);
+    } else {
+        feraiseexcept(FE_INVALID);
+        return (LONG_MAX);
     }
-  }
-  else
-    return (long int)x;
-
-  return sign * result;
 }

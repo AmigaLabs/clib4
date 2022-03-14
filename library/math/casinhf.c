@@ -42,19 +42,9 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 float complex
-casinhf(float complex z)
-{
+
+casinhf(float complex z) {
     float complex zp = casinf(CMPLXF(-cimagf(z), crealf(z)));
     return CMPLXF(cimagf(zp), -crealf(zp));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

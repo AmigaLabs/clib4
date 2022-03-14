@@ -42,19 +42,7 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 double complex
-cproj(double complex z)
-{
-   return (isinf(creal(z)) || isinf(cimag(z))) ?
-          CMPLX(INFINITY, copysign(0.0, creal(z))) : z;
+cproj(double complex z) {
+    return (isinf(creal(z)) || isinf(cimag(z))) ? CMPLX(INFINITY, copysign(0.0, creal(z))) : z;
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

@@ -63,6 +63,7 @@
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
 #include <proto/elf.h>
+#include <fenv.h>
 
 /* random table */
 static uint32_t _random_init[] = {
@@ -154,6 +155,9 @@ STDLIB_CONSTRUCTOR(global_init)
 		srand(time(NULL));
 		__global_clib2->inc = 0;
 		memset(__global_clib2->emergency, 0, sizeof(__global_clib2->emergency));
+
+        /* Clear fenv flags */
+        feclearexcept(FE_ALL_EXCEPT);
 
 		/* Init memalign list */
         __global_clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,

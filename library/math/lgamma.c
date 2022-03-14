@@ -183,8 +183,11 @@ __lgamma(double x, int *gamma_sign_ptr)
 	ix = hx & 0x7fffffff;
 	if (ix >= 0x7ff00000)
 		return x * x;
-	if ((ix | lx) == 0)
-		return one / zero;
+	if ((ix | lx) == 0) {
+        feraiseexcept(FE_DIVBYZERO);
+        __set_errno(ERANGE);
+        return one / zero;
+    }
 	if (ix < 0x3b900000)
 	{ /* |x|<2**-70, return -log(|x|) */
 		if (hx < 0)
@@ -197,11 +200,17 @@ __lgamma(double x, int *gamma_sign_ptr)
 	}
 	if (hx < 0)
 	{
-		if (ix >= 0x43300000) /* |x|>=2**52, must be -integer */
-			return one / zero;
+		if (ix >= 0x43300000) { /* |x|>=2**52, must be -integer */
+            feraiseexcept(FE_DIVBYZERO);
+            __set_errno(ERANGE);
+            return one / zero;
+        }
 		t = sin_pi(x);
-		if (t == zero)
-			return one / zero; /* -integer */
+		if (t == zero) {
+            feraiseexcept(FE_DIVBYZERO);
+            __set_errno(ERANGE);
+            return one / zero; /* -integer */
+        }
 		nadj = log(pi / fabs(t * x));
 		if (t < zero)
 			(*gamma_sign_ptr) = -1;
@@ -324,9 +333,8 @@ double
 lgamma(double x)
 {
 	double result;
-	int gamma_sign;
 
-	result = __lgamma(x, &gamma_sign);
+	result = __lgamma(x, &signgam);
 
 	return (result);
 }

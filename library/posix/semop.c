@@ -38,6 +38,8 @@
  *****************************************************************************
  */
 
+#ifdef HAVE_SYSV
+
 #ifndef _SHM_HEADERS_H
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
@@ -63,3 +65,5 @@ _semop(int semid, const struct sembuf *ops, int nops)
 
     return ret;
 }
+
+#endif

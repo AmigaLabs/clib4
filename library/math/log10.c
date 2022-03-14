@@ -51,55 +51,36 @@ static const double
 	log10_2lo = 3.69423907715893078616e-13, /* 0x3D59FEF3, 0x11F12B36 */
 	zero = 0.0;
 
-INLINE STATIC double
-__log10(double x)
-{
-	double y, z;
-	int i, k, hx;
-	unsigned int lx;
-
-	EXTRACT_WORDS(hx, lx, x);
-
-	k = 0;
-	if (hx < 0x00100000) /* x < 2**-1022  */
-	{
-		if (((hx & 0x7fffffff) | lx) == 0)
-			return -two54 / zero; /* log(+-0)=-inf */
-		if (hx < 0)
-			return (x - x) / zero; /* log(-#) = NaN */
-		k -= 54;
-		x *= two54; /* subnormal number, scale up x */
-		GET_HIGH_WORD(hx, x);
-	}
-
-	if (hx >= 0x7ff00000)
-		return x + x;
-
-	k += (hx >> 20) - 1023;
-	i = ((unsigned int)k & 0x80000000) >> 31;
-	hx = (hx & 0x000fffff) | ((0x3ff - i) << 20);
-	y = (double)(k + i);
-	SET_HIGH_WORD(x, hx);
-	z = y * log10_2lo + ivln10 * log(x);
-
-	return z + y * log10_2hi;
-}
-
 double
 log10(double x)
 {
-	double result;
+    double y, z;
+    int i, k, hx;
+    unsigned int lx;
 
-	if (x > 0)
-	{
-		result = __log10(x);
-	}
-	else
-	{
-		__set_errno(ERANGE);
+    EXTRACT_WORDS(hx, lx, x);
 
-		result = -__inf();
-	}
+    k = 0;
+    if (hx < 0x00100000) /* x < 2**-1022  */
+    {
+        if (((hx & 0x7fffffff) | lx) == 0)
+            return -two54 / zero; /* log(+-0)=-inf */
+        if (hx < 0)
+            return (x - x) / zero; /* log(-#) = NaN */
+        k -= 54;
+        x *= two54; /* subnormal number, scale up x */
+        GET_HIGH_WORD(hx, x);
+    }
 
-	return (result);
+    if (hx >= 0x7ff00000)
+        return x + x;
+
+    k += (hx >> 20) - 1023;
+    i = ((unsigned int)k & 0x80000000) >> 31;
+    hx = (hx & 0x000fffff) | ((0x3ff - i) << 20);
+    y = (double)(k + i);
+    SET_HIGH_WORD(x, hx);
+    z = y * log10_2lo + ivln10 * log(x);
+
+    return z + y * log10_2hi;
 }

@@ -48,8 +48,8 @@ static const double
 	one = 1.0,
 	ln2 = 6.93147180559945286227e-01; /* 0x3FE62E42, 0xFEFA39EF */
 
-double
-acosh(double x)
+INLINE STATIC double
+__acosh(double x)
 {
 	double t;
 	LONG hx;
@@ -82,4 +82,22 @@ acosh(double x)
 		t = x - one;
 		return log1p(t + sqrt(2.0 * t + t * t));
 	}
+}
+
+double
+acosh(double x) {
+    double result;
+
+    if (x < 1.0)
+    {
+        result = NAN;
+        __set_errno(EDOM);
+        feraiseexcept(FE_INVALID);
+    }
+    else
+    {
+        result = __acosh(x);
+    }
+
+    return (result);
 }

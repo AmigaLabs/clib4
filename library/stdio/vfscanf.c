@@ -957,7 +957,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                         if (new_sum >= sum)
                                             sum = new_sum;
                                         else
-                                            sum = __get_huge_val();
+                                            sum = HUGE_VAL;
                                     }
                                 }
                             }

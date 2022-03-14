@@ -1,5 +1,5 @@
 /*
- * $Id: math_lround.c,v 1.4 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_lround.c,v 1.5 2022-03-13 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -44,53 +44,25 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-long int
-lround(double x)
-{
-  LONG sign, exponent_less_1023;
-  /* Most significant word, least significant word. */
-  ULONG msw, lsw;
-  long int result;
+/*
+ * If type has more precision than dtype, the endpoints dtype_(min|max) are
+ * of the form xxx.5; they are "out of range" because lround() rounds away
+ * from 0.  On the other hand, if type has less precision than dtype, then
+ * all values that are out of range are integral, so we might as well assume
+ * that everything is in range.  At compile time, INRANGE(x) should reduce to
+ * two floating-point comparisons in the former case, or TRUE otherwise.
+ */
+static const double dtype_min = LONG_MIN - 0.5;
+static const double dtype_max = LONG_MAX + 0.5;
+#define INRANGE(x) (dtype_max - LONG_MAX != 0.5 || ((x) > dtype_min && (x) < dtype_max))
 
-  EXTRACT_WORDS(msw, lsw, x);
-
-  /* Extract sign. */
-  sign = ((msw & 0x80000000) ? -1 : 1);
-  /* Extract exponent field. */
-  exponent_less_1023 = ((msw & 0x7ff00000) >> 20) - 1023;
-  msw &= 0x000fffff;
-  msw |= 0x00100000;
-
-  if (exponent_less_1023 < 20)
-  {
-    if (exponent_less_1023 < 0)
-    {
-      if (exponent_less_1023 < -1)
-        return 0;
-      else
-        return sign;
+long
+lround(double x) {
+    if (INRANGE(x)) {
+        x = round(x);
+        return ((long) x);
+    } else {
+        feraiseexcept(FE_INVALID);
+        return (LONG_MAX);
     }
-    else
-    {
-      msw += 0x80000 >> exponent_less_1023;
-      result = msw >> (20 - exponent_less_1023);
-    }
-  }
-  else if (exponent_less_1023 < (LONG)(8 * sizeof(long int)) - 1)
-  {
-    if (exponent_less_1023 >= 52)
-      result = ((long int)msw << (exponent_less_1023 - 20)) | (lsw << (exponent_less_1023 - 52));
-    else
-    {
-      unsigned int tmp = lsw + (0x80000000 >> (exponent_less_1023 - 20));
-      if (tmp < lsw)
-        ++msw;
-      result = ((long int)msw << (exponent_less_1023 - 20)) | (tmp >> (52 - exponent_less_1023));
-    }
-  }
-  else
-    /* Result is too large to be represented by a long int. */
-    return (long int)x;
-
-  return sign * result;
 }

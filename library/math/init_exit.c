@@ -41,71 +41,46 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-/****************************************************************************/
-
-#ifndef EXEC_EXECBASE_H
-#include <exec/execbase.h>
-#endif /* EXEC_EXECBASE_H */
-
-/****************************************************************************/
-
-#ifndef PROTO_EXEC_H
-#include <proto/exec.h>
-#endif /* PROTO_EXEC_H */
-
-/****************************************************************************/
-
-#include <string.h>
-
-/****************************************************************************/
-
 float NOCOMMON __infinity;
 float NOCOMMON __nan;
-
-/****************************************************************************/
-
 float NOCOMMON __huge_val_float;
+long double NOCOMMON __huge_val_long_double;
 double NOCOMMON __huge_val;
-
-/****************************************************************************/
 
 MATH_CONSTRUCTOR(math_init)
 {
-	union ieee_double *double_x;
-	union ieee_single *single_x;
+    union ieee_double *double_x;
+    union ieee_single *single_x;
+    union ieee_long_double *x;
+
 	BOOL success = FALSE;
 
 	ENTER();
 
-	/* Now fill in HUGE_VAL and HUGE_VALF, respectively. TODO:
-	   also take care of HUGE_VALL. */
+    /* Now fill in HUGE_VAL and HUGE_VALF, respectively. TODO:
+       also take care of HUGE_VALL. */
 
-	/* Exponent = +126, Mantissa = 8,388,607 */
-	single_x = (union ieee_single *)&__huge_val_float;
-	single_x->raw[0] = 0x7f7fffff;
+    /* Exponent = +126, Mantissa = 8,388,607 */
+    single_x = (union ieee_single *)&__huge_val_float;
+    single_x->raw[0] = 0x7f7fffff;
 
-	/* Exponent = +1022, Mantissa = 4,503,599,627,370,495 */
-	double_x = (union ieee_double *)&__huge_val;
-	double_x->raw[0] = 0x7fefffff;
-	double_x->raw[1] = 0xffffffff;
+    /* Exponent = +1022, Mantissa = 4,503,599,627,370,495 */
+    double_x = (union ieee_double *)&__huge_val;
+    double_x->raw[0] = 0x7fefffff;
+    double_x->raw[1] = 0xffffffff;
 
-#if defined(USE_LONG_DOUBLE)
-	{
-		union ieee_long_double *x = (union ieee_long_double *)&__huge_val_long_double;
+    x = (union ieee_long_double *)&__huge_val_long_double;
+    /* Exponent = +32766, Mantissa = 18,446,744,073,709,551,615 */
+    x->raw[0] = 0x7ffe0000;
+    x->raw[1] = 0xffffffff;
+    x->raw[2] = 0xffffffff;
 
-		/* Exponent = +32766, Mantissa = 18,446,744,073,709,551,615 */
-		x->raw[0] = 0x7ffe0000;
-		x->raw[1] = 0xffffffff;
-		x->raw[2] = 0xffffffff;
-	}
-#endif /* USE_LONG_DOUBLE */
+    /* Finally, fill in the constants behind INFINITY and NAN. */
+    single_x = (union ieee_single *)&__infinity;
+    single_x->raw[0] = 0x7f800000;
 
-	/* Finally, fill in the constants behind INFINITY and NAN. */
-	single_x = (union ieee_single *)&__infinity;
-	single_x->raw[0] = 0x7f800000;
-
-	single_x = (union ieee_single *)&__nan;
-	single_x->raw[0] = 0x7fc00001;
+    single_x = (union ieee_single *)&__nan;
+    single_x->raw[0] = 0x7fc00001;
 
 	success = TRUE;
 

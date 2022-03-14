@@ -1,5 +1,5 @@
 /*
- * $Id: math_isinf.c,v 1.0 2021-01-16 16:37:23 apalmate Exp $
+ * $Id: math_isinf.c,v 1.1 2022-03-10 16:37:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,24 +35,31 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
+int
+__isinf(double d) {
+    union IEEEd2bits u;
 
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
+    u.d = d;
+    return (u.bits.exp == 2047 && u.bits.manl == 0 && u.bits.manh == 0);
+}
 
-/****************************************************************************/
-int 
-__isinf(double x)
-{
-    int32 hx,lx;
-	EXTRACT_WORDS(hx,lx,x);
-	hx &= 0x7fffffff;
-	hx |= (int32)(lx|(-lx))>>31;	
-	hx = 0x7ff00000 - hx;
-	return 1 - (int)((uint32)(hx|(-hx))>>31);
+int
+__isinff(float f) {
+    union IEEEf2bits u;
+
+    u.f = f;
+    return (u.bits.exp == 255 && u.bits.man == 0);
+}
+
+int
+__isinfl(long double e) {
+    union IEEEl2bits u;
+
+    u.e = e;
+    mask_nbit_l(u);
+    return (u.bits.exp == 32767 && u.bits.manl == 0 && u.bits.manh == 0);
 }

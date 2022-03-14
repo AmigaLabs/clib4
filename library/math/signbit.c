@@ -36,19 +36,25 @@
 #endif /* _MATH_HEADERS_H */
 
 int
-__signbit_float(float number) {
-    uint32_t w = 0;
+__signbit_float(float f) {
+    union IEEEf2bits u;
 
-    GET_FLOAT_WORD(w, number);
-
-    return (w & 0x80000000) != 0;
+    u.f = f;
+    return (u.bits.sign);
 }
 
 int
-__signbit_double(double number) {
-    uint32_t msw = 0;
+__signbit_double(double d) {
+    union IEEEd2bits u;
 
-    GET_HIGH_WORD(msw, number);
+    u.d = d;
+    return (u.bits.sign);
+}
 
-    return (msw & 0x80000000) != 0;
+int
+__signbit_long_double(long double e) {
+    union IEEEl2bits u;
+
+    u.e = e;
+    return (u.bits.sign);
 }

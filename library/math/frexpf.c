@@ -1,5 +1,5 @@
 /*
- * $Id: math_frexpf.c,v 1.3 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_frexpf.c,v 1.4 2022-03-13 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -39,8 +39,6 @@
  * software is freely granted, provided that this notice
  * is preserved.
  *
- *
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
  */
 
 #ifndef _MATH_HEADERS_H
@@ -49,23 +47,20 @@
 
 static const float two25 = 3.3554432000e+07; /* 0x4c000000 */
 
-float frexpf(float x, int *eptr)
-{
-	LONG hx, ix;
-	GET_FLOAT_WORD(hx, x);
-	ix = 0x7fffffff & hx;
-	*eptr = 0;
-	if (ix >= 0x7f800000 || (ix == 0))
-		return x; /* 0,inf,nan */
-	if (ix < 0x00800000)
-	{ /* subnormal */
-		x *= two25;
-		GET_FLOAT_WORD(hx, x);
-		ix = hx & 0x7fffffff;
-		*eptr = -25;
-	}
-	*eptr += (ix >> 23) - 126;
-	hx = (hx & 0x807fffffU) | 0x3f000000;
-	SET_FLOAT_WORD(x, hx);
-	return x;
+float frexpf(float x, int *eptr) {
+    int32_t hx, ix;
+    GET_FLOAT_WORD(hx, x);
+    ix = 0x7fffffff & hx;
+    *eptr = 0;
+    if (ix >= 0x7f800000 || (ix == 0)) return x;    /* 0,inf,nan */
+    if (ix < 0x00800000) {        /* subnormal */
+        x *= two25;
+        GET_FLOAT_WORD(hx, x);
+        ix = hx & 0x7fffffff;
+        *eptr = -25;
+    }
+    *eptr += (ix >> 23) - 126;
+    hx = (hx & 0x807fffff) | 0x3f000000;
+    SET_FLOAT_WORD(x, hx);
+    return x;
 }

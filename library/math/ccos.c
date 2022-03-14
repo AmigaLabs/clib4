@@ -42,18 +42,7 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
-double
-complex ccos(double complex z)
-{
+double complex
+ccos(double complex z) {
     return ccosh(CMPLX(-cimag(z), creal(z)));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

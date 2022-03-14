@@ -40,6 +40,8 @@
  *****************************************************************************
  */
 
+#ifdef HAVE_SYSV
+
 #ifndef _SHM_HEADERS_H
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
@@ -65,3 +67,5 @@ _msgsnd(int msgid, const void *msg_ptr, size_t msg_sz, int msgflg)
 
     return ret;
 }
+
+#endif

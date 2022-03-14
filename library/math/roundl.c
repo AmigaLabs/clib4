@@ -44,26 +44,8 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(FLOATING_POINT_SUPPORT)
-
-/****************************************************************************/
-
-#if LDBL_MANT_DIG == DBL_MANT_DIG && LDBL_MAX_EXP == DBL_MAX_EXP
-
-/****************************************************************************/
-
 long double
 roundl(long double x)
 {
     return round(x);
 }
-
-/****************************************************************************/
-
-#endif /* LDBL_MANT_DIG == DBL_MANT_DIG && LDBL_MAX_EXP == DBL_MAX_EXP */
-
-/****************************************************************************/
-
-#endif /* FLOATING_POINT_SUPPORT */

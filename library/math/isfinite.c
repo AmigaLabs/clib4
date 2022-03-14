@@ -1,5 +1,5 @@
 /*
- * $Id: math_isfinite.c,v 1.2 2006-01-08 12:04:23 obarthel Exp $
+ * $Id: math_isfinite.c,v 1.3 2022-03-10 12:04:23 apalmate Exp $
  *
  * :ts=4
  *
@@ -35,45 +35,26 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
+int
+__isfinite_float(float f) {
+    union IEEEf2bits u;
 
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-
-/****************************************************************************/
-
-int __isfinite_float(float number)
-{
-	union ieee_single x;
-	int result;
-
-	x.value = number;
-
-	if ((x.raw[0] & 0x7f800000) == 0x7f800000 && (x.raw[0] & 0x007fffff) != 0)
-		result = 0; /* Exponent = 255 and fraction != 0.0 -> not a number */
-	else if ((x.raw[0] & 0x7fffffff) == 0x7f800000)
-		result = 0; /* Exponent = 255 and fraction = 0.0 -> infinity */
-	else
-		result = 1;
-
-	return (result);
+    u.f = f;
+    return (u.bits.exp != 255);
 }
 
-/****************************************************************************/
+int
+__isfinite_double(double d) {
+    union IEEEd2bits u;
 
-int __isfinite_double(double number)
-{
-	union ieee_double x;
-	int result;
+    u.d = d;
+    return (u.bits.exp != 2047);
+}
 
-	x.value = number;
+int
+__isfinite_long_double(long double d) {
+    union IEEEd2bits u;
 
-	if (((x.raw[0] & 0x7ff00000) == 0x7ff00000) && ((x.raw[0] & 0x000fffff) != 0 || (x.raw[1] != 0)))
-		result = 0; /* Exponent = 2047 and fraction != 0.0 -> not a number */
-	else if (((x.raw[0] & 0x7fffffff) == 0x7ff00000) && (x.raw[1] == 0))
-		result = 0; /* Exponent = 2047 and fraction = 0.0 -> infinity */
-	else
-		result = 1;
-
-	return (result);
+    u.d = d;
+    return (u.bits.exp != 2047);
 }

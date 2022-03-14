@@ -35,18 +35,7 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
-
 double complex
-carg(double complex z)
-{
+carg(double complex z) {
     return atan2(cimag(z), creal(z));
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

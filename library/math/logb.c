@@ -44,56 +44,21 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-INLINE STATIC double
-__logb(double x)
-{
-	unsigned int lx, ix;
-
-	EXTRACT_WORDS(ix, lx, x);
-
-	ix &= 0x7fffffff; /* high |x| */
-	if ((ix | lx) == 0)
-		return -1.0 / fabs(x);
-
-	if (ix >= 0x7ff00000)
-		return x * x;
-
-	if ((ix >>= 20) == 0) /* IEEE 754 logb */
-		return -1022.0;
-	else
-		return (double)(ix - 1023);
-}
+static const double
+        two54 = 1.80143985094819840000e+16;    /* 43500000 00000000 */
 
 double
-logb(double x)
-{
-	double result;
-
-	if (x == 0.0)
-	{
-		result = -__inf();
-		goto out;
-	}
-
-	if (isnan(x))
-	{
-		result = x;
-		goto out;
-	}
-
-	if (isinf(x))
-	{
-		if (x < 0)
-			result = (-x);
-		else
-			result = x;
-
-		goto out;
-	}
-
-	result = __logb(x);
-
-out:
-
-	return (result);
+logb(double x) {
+    int32_t lx, ix;
+    EXTRACT_WORDS(ix, lx, x);
+    ix &= 0x7fffffff;            /* high |x| */
+    if ((ix | lx) == 0) return -1.0 / fabs(x);
+    if (ix >= 0x7ff00000) return x * x;
+    if (ix < 0x00100000) {
+        x *= two54;         /* convert subnormal x to normal */
+        GET_HIGH_WORD(ix, x);
+        ix &= 0x7fffffff;
+        return (double) ((ix >> 20) - 1023 - 54);
+    } else
+        return (double) ((ix >> 20) - 1023);
 }

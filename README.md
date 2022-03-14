@@ -26,14 +26,13 @@ The added code is most of the time tested. I've also added some test programs to
 Clib2 now has also a working shared version called `libc.so`. And of course also all other libs. Don't use newlib .so files when linking because **it will not work**
 If you want to use `dlopen`/`dlsym` with shared objects:
 
-**YOU HAVE** to compile your Clib2 version! 
+**YOU HAVE** to compile your Clib2 version of library you want to use! 
 
-**DON'T TRY TO USE** newlib shared objects because it will crash everything!
+**DON'T TRY TO USE** newlib shared objects because it will crash badly!
 
 **DON'T USE** static libraries otherwise you could have undefined symbols!
 
-The plain `libc.a` now contains also `libnet.a`, `libunix.a`. `libm.a` is just a stub because GCC is searching it. But ll code now is in `libc.a`. 
-Socket support and floating point support is always enabled
+The plain `libc.a` now contains also `libnet.a`, `libunix.a`. Socket support and floating point support are always enabled
 Soft float version is no longer available.
 
 If you want to use the shared version remember to pack your OS4 software with all CLib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.
@@ -52,7 +51,6 @@ using dlopen/dlsym will not crash anymore however there is a bug in `libstdc++.s
 ### Large file support
 
 Large files are now supported and tested (i've ported p7zip and tested it with a 8GB file without any problem). To use it you have to add `#define _LARGEFILE64_SOURCE` at top of your file before `<stdio.h>` 
-
 
 ### SYSV functions
 
@@ -91,6 +89,13 @@ Accepted encodings are:
 `C-SJIS`
 `C-JIS`
 `ISO-8859-1`
+
+### Math library
+
+Math library has been replaced with openlibm (https://github.com/JuliaMath/openlibm). 
+
+This version is faster and more compatible and contains also fenv support that wasn't implemented in clib2
+
 
 ### TODO
 

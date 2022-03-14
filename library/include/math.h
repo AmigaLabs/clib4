@@ -52,10 +52,6 @@ __BEGIN_DECLS
 /* Natural log of 2 */
 #define _M_LN2        0.693147180559945309417
 
-extern double __huge_val;
-
-/****************************************************************************/
-
 extern double acos(double x);
 extern double asin(double x);
 extern double atan(double x);
@@ -63,6 +59,9 @@ extern double atan2(double y, double x);
 extern double ceil(double x);
 extern double cos(double x);
 extern double cosh(double x);
+extern void sincos(double x, double *s, double *c);
+extern void sincosf(float x, float *s, float *c);
+extern void sincosl(double x, double *s, double *c);
 extern double exp(double x);
 extern double fabs(double x);
 extern double floor(double x);
@@ -79,38 +78,38 @@ extern double sqrt(double x);
 extern double tan(double x);
 extern double tanh(double x);
 
-#define M_E 2.7182818284590452354
-#define M_LOG2E 1.4426950408889634074
-#define M_LOG10E 0.43429448190325182765
-#define M_LN2 0.69314718055994530942
-#define M_LN10 2.30258509299404568402
-#define M_PI 3.14159265358979323846
-#define M_PI_2 1.57079632679489661923
-#define M_PI_4 0.78539816339744830962
-#define M_1_PI 0.31830988618379067154
-#define M_2_PI 0.63661977236758134308
-#define M_2_SQRTPI 1.12837916709551257390
-#define M_SQRT2 1.41421356237309504880
-#define M_SQRT1_2 0.70710678118654752440
+extern double j0(double x);
+extern double y0(double x);
+extern float j0f(float x);
+extern float y0f(float x);
+extern double j1(double x);
+extern double y1(double x);
+extern float j1f(float x);
+extern float y1f(float x);
+extern double jn(int n, double x);
+extern double yn(int n, double x);
+extern float jnf(int n, float x);
+extern float ynf(int n, float x);
 
-/****************************************************************************/
+#define	M_E		    2.7182818284590452354	/* e */
+#define	M_LOG2E		1.4426950408889634074	/* log 2e */
+#define	M_LOG10E	0.43429448190325182765	/* log 10e */
+#define	M_LN2		0.69314718055994530942	/* log e2 */
+#define	M_LN10		2.30258509299404568402	/* log e10 */
+#define	M_PI		3.14159265358979323846	/* pi */
+#define	M_PI_2		1.57079632679489661923	/* pi/2 */
+#define	M_PI_4		0.78539816339744830962	/* pi/4 */
+#define	M_1_PI		0.31830988618379067154	/* 1/pi */
+#define	M_2_PI		0.63661977236758134308	/* 2/pi */
+#define	M_2_SQRTPI	1.12837916709551257390	/* 2/sqrt(pi) */
+#define	M_SQRT2		1.41421356237309504880	/* sqrt(2) */
+#define	M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
 
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
+#define	MAXFLOAT	((float)3.40282346638528860e+38)
 
-/****************************************************************************/
+#define	FP_ILOGB0	(-INT_MAX)
+#define	FP_ILOGBNAN	INT_MAX
 
-/* Note that the comparison operations performed on the floating point
-   data types ought to include float, double and long double. However,
-   because the current (2005-06-12) compiler technology available on the
-   Amiga does not support the long double type yet, this library is
-   restricted to operations on float and double. */
-
-/****************************************************************************/
-
-extern float __huge_val_float;
-
-/****************************************************************************/
 /* HUGE_VALF is a 'float' Infinity.  */
 #define HUGE_VALF (1.0f / 0.0f)
 /* HUGE_VAL is a 'double' Infinity.  */
@@ -118,84 +117,81 @@ extern float __huge_val_float;
 /* HUGE_VALL is a 'long double' Infinity.  */
 #define HUGE_VALL (1.0L / 0.0L)
 
-/****************************************************************************/
-
+extern double __huge_val;
+extern float __huge_val_float;
+extern long double __huge_val_long_double;
 extern float __infinity;
 extern float __nan;
-
-/****************************************************************************/
 
 #define INFINITY ((const float)__infinity)
 #define NAN ((const float)__nan)
 
-/****************************************************************************/
-
-#define FP_INFINITE 0  /* -/+ infinity */
-#define FP_NAN 1	   /* not a number */
-#define FP_NORMAL 2	   /* normalized floating point number */
-#define FP_SUBNORMAL 3 /* very small floating point number; special case of IEEE 754 */
-#define FP_ZERO 4	   /* exponent/fraction are zero */
-
-/****************************************************************************/
+#define FP_INFINITE     0x01   /* -/+ infinity */
+#define FP_NAN          0x02   /* not a number */
+#define FP_NORMAL       0x04   /* normalized floating point number */
+#define FP_SUBNORMAL    0x08   /* very small floating point number; special case of IEEE 754 */
+#define FP_ZERO         0x10   /* exponent/fraction are zero */
 
 extern int __fpclassify_float(float x);
 extern int __fpclassify_double(double x);
+extern int __fpclassify_long_double(long double x);
+
 extern int __isfinite_float(float x);
 extern int __isfinite_double(double x);
+extern int __isfinite_long_double(long double x);
+
 extern int __signbit_float(float x);
 extern int __signbit_double(double x);
-extern int __isnan(double x);
-extern int __isinf(double x);
+extern int __signbit_long_double(long double x);
 
-/****************************************************************************/
-#if defined(__GNUC__)
-#define fpclassify(x) \
-	(sizeof(x) == sizeof(float) ? __fpclassify_float(x) : __fpclassify_double(x))
+extern int __isnan(double x);
+extern int __isnanf(float x);
+extern int __isnanl(long double x);
+
+extern int __isinf(double x);
+extern int __isinff(float x);
+extern int __isinfl(long double x);
+
+extern int __isnormalf(float x);
+extern int __isnormal(double x);
+extern int __isnormall(long double x);
+
+#define	fpclassify(x) \
+    ((sizeof (x) == sizeof (float)) ? __fpclassify_float(x) \
+    : (sizeof (x) == sizeof (double)) ? __fpclassify_double(x) \
+    : __fpclassify_long_double(x))
 
 #define isfinite(x) \
-	(sizeof(x) == sizeof(float) ? __isfinite_float(x) : __isfinite_double(x))
+	(sizeof(x) == sizeof(float) ? __isfinite_float(x) \
+    : (sizeof (x) == sizeof (double)) ? __isfinite_double(x) \
+    : __isfinite_long_double(x))
 
-#define isnormal(x) \
-	((sizeof(x) == sizeof(float) ? __fpclassify_float(x) : __fpclassify_double(x)) == FP_NORMAL)
+#define	isnormal(x)					\
+    ((sizeof (x) == sizeof (float)) ? __isnormalf(x)	\
+    : (sizeof (x) == sizeof (double)) ? __isnormal(x)	\
+    : __isnormall(x))
 
-#define signbit(x) \
-	(sizeof(x) == sizeof(float) ? __signbit_float(x) : __signbit_double(x))
+#define	signbit(x)					\
+    ((sizeof (x) == sizeof (float)) ? __signbit_float(x)	\
+    : (sizeof (x) == sizeof (double)) ? __signbit_double(x)	\
+    : __signbit_long_double(x))
 
-#define isinf(x) \
-	((sizeof(x) == sizeof(float) ? __fpclassify_float(x) : __fpclassify_double(x)) == FP_INFINITE)
+#define	isinf(x)					\
+    ((sizeof (x) == sizeof (float)) ? __isinff(x)	\
+    : (sizeof (x) == sizeof (double)) ? __isinf(x)	\
+    : __isinfl(x))
 
 #define isnan(x) \
-	((sizeof(x) == sizeof(float) ? __fpclassify_float(x) : __fpclassify_double(x)) == FP_NAN)
+	((sizeof(x) == sizeof(float)) ? __isnanf(x) \
+    : (sizeof (x) == sizeof (double)) ? __isnan(x) \
+    :  __isnanl(x))
 
-#endif //defined(__GNUC__)
-
-/****************************************************************************/
-
-extern int __isunordered_float(float x, float y);
-extern int __isunordered_float_double(float x, double y);
-extern int __isunordered_double(double x, double y);
-
-/****************************************************************************/
-
-#define isunordered(x, y) \
-	(sizeof(x) == sizeof(float) ? (sizeof(y) == sizeof(float) ? __isunordered_float((x), y) : __isunordered_float_double((x), (y))) : (sizeof(y) == sizeof(float) ? __isunordered_float_double((y), (x)) : __isunordered_double((x), (y))))
-
-#define isgreater(x, y) \
-	(isunordered(x, y) ? 0 : (x) > (y))
-
-#define isgreaterequal(x, y) \
-	(isunordered(x, y) ? 0 : (x) >= (y))
-
-#define isless(x, y) \
-	(isunordered(x, y) ? 0 : (x) < (y))
-
-#define islessequal(x, y) \
-	(isunordered(x, y) ? 0 : (x) <= (y))
-
-#define islessgreater(x, y) \
-	(isunordered(x, y) ? 0 : (x) < (y) || (x) > (y)) /* ZZZ don't evaluate twice! */
-
-/****************************************************************************/
+#define	isgreater(x, y)		    (!isunordered((x), (y)) && (x) > (y))
+#define	isgreaterequal(x, y)	(!isunordered((x), (y)) && (x) >= (y))
+#define	isless(x, y)		    (!isunordered((x), (y)) && (x) < (y))
+#define	islessequal(x, y)	    (!isunordered((x), (y)) && (x) <= (y))
+#define	islessgreater(x, y)	    (!isunordered((x), (y)) && ((x) > (y) || (y) > (x)))
+#define	isunordered(x, y)	    (isnan(x) || isnan(y))
 
 extern float acosf(float x);
 extern float asinf(float x);
@@ -238,11 +234,11 @@ extern float hypotf(float x, float y);
 extern float lgammaf(float x);
 extern float log1pf(float x);
 extern float logbf(float x);
-extern long int llrintf(float x);
-extern long int lrintf(float x);
-extern long int lroundf(float x);
-extern long long int llround(double x);
-extern long long int llroundf (float x);
+extern long long llrintf(float x);
+extern long lrintf(float x);
+extern long lroundf(float x);
+extern long long llround(double x);
+extern long long llroundf (float x);
 extern float nanf(const char *tagp);
 extern float nearbyintf(float x);
 extern float nextafterf(float x, float y);
@@ -281,7 +277,7 @@ extern double hypot(double x, double y);
 extern double lgamma(double x);
 extern double log1p(double x);
 extern double logb(double x);
-extern long long int llrint(double x);
+extern long long llrint(double x);
 extern long int lrint(double x);
 extern long int lround(double x);
 extern double nan(const char *tagp);

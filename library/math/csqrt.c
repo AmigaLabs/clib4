@@ -44,66 +44,68 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/****************************************************************************/
-
-#if defined(COMPLEX_SUPPORT)
-
-/****************************************************************************/
+/* We risk spurious overflow for components >= DBL_MAX / (1 + sqrt(2)). */
+#define    THRESH    0x1.a827999fcef32p+1022
 
 double complex
-csqrt(double complex z)
-{
-    double x = creal(z), y = cimag(z), r, t, scale;
 
-    if(y == 0.0)
-    {
-        if(x == 0.0)
-        {
-            return CMPLX(0.0, 0.0);
-        }
+csqrt(double complex z) {
+    double complex
+    result;
+    double a, b;
+    double t;
+    int scale;
 
-        r = sqrt(fabs(x));
-        return x < 0.0 ? CMPLX(0.0, r) : CMPLX(r, 0.0);
+    a = creal(z);
+    b = cimag(z);
+
+    /* Handle special cases. */
+    if (z == 0)
+        return (CMPLX(0, b));
+    if (isinf(b))
+        return (CMPLX(INFINITY, b));
+    if (isnan(a)) {
+        t = (b - b) / (b - b);    /* raise invalid if b is not a NaN */
+        return (CMPLX(a, t));    /* return NaN + NaN i */
+    }
+    if (isinf(a)) {
+        /*
+         * csqrt(inf + NaN i)  = inf +  NaN i
+         * csqrt(inf + y i)    = inf +  0 i
+         * csqrt(-inf + NaN i) = NaN +- inf i
+         * csqrt(-inf + y i)   = 0   +  inf i
+         */
+        if (signbit(a))
+            return (CMPLX(fabs(b - b), copysign(a, b)));
+        else
+            return (CMPLX(a, copysign(b - b, b)));
+    }
+    /*
+     * The remaining special case (b is NaN) is handled just fine by
+     * the normal code path below.
+     */
+
+    /* Scale to avoid overflow. */
+    if (fabs(a) >= THRESH || fabs(b) >= THRESH) {
+        a *= 0.25;
+        b *= 0.25;
+        scale = 1;
+    } else {
+        scale = 0;
     }
 
-    if(x == 0.0)
-    {
-        r = sqrt(0.5 * fabs(y));
-        return y > 0 ? CMPLX(r, r) : CMPLX(r, -r);
+    /* Algorithm 312, CACM vol 10, Oct 1967. */
+    if (a >= 0) {
+        t = sqrt((a + hypot(a, b)) * 0.5);
+        result = CMPLX(t, b / (2 * t));
+    } else {
+        t = sqrt((-a + hypot(a, b)) * 0.5);
+        result = CMPLX(fabs(b) / (2 * t), copysign(t, b));
     }
 
-    /* Rescale to avoid internal overflow or underflow. */
-    if((fabs(x) > 4.0) || (fabs(y) > 4.0))
-    {
-        x *= 0.25;
-        y *= 0.25;
-        scale = 2.0;
-    }
+    /* Rescale. */
+    if (scale)
+        return (result * 2);
     else
-    {
-        x *= 1.8014398509481984e16;  /* 2^54 */
-        y *= 1.8014398509481984e16;
-        scale = 7.450580596923828125e-9; /* 2^-27 */
-    }
-
-    r = cabs(CMPLX(x, y));
-
-    if(x > 0)
-    {
-        t = sqrt(0.5 * r + 0.5 * x);
-        r = scale * fabs((0.5 * y) / t );
-        t *= scale;
-    }
-    else
-    {
-        r = sqrt(0.5 * r - 0.5 * x);
-        t = scale * fabs((0.5 * y) / r);
-        r *= scale;
-    }
-
-    return y < 0 ? CMPLX(t, -r) : CMPLX(t, r);
+        return (result);
 }
-
-/****************************************************************************/
-
-#endif /* COMPLEX_SUPPORT */

@@ -116,6 +116,86 @@ static char *fmt_u(uintmax_t x, char *s) {
     return s;
 }
 
+static const double two54 = 1.80143985094819840000e+16; /* 0x43500000, 0x00000000 */
+
+
+static int
+__s_signbit_float(float f) {
+    union IEEEf2bits u;
+
+    u.f = f;
+    return (u.bits.sign);
+}
+
+static int
+__s_signbit_double(double d) {
+    union IEEEd2bits u;
+
+    u.d = d;
+    return (u.bits.sign);
+}
+
+static int
+__s_isfinite_float(float f) {
+    union IEEEf2bits u;
+
+    u.f = f;
+    return (u.bits.exp != 255);
+}
+
+static int
+__s_isfinite_double(double d) {
+    union IEEEd2bits u;
+
+    u.d = d;
+    return (u.bits.exp != 2047);
+}
+
+static int
+__s_isfinite_long_double(long double d) {
+    union IEEEd2bits u;
+
+    u.d = d;
+    return (u.bits.exp != 2047);
+}
+
+static int
+__s_signbit_long_double(long double e) {
+    union IEEEl2bits u;
+
+    u.e = e;
+    return (u.bits.sign);
+}
+
+#define __s_isfinite(x) \
+	(sizeof(x) == sizeof(float) ? __s_isfinite_float(x) \
+    : (sizeof (x) == sizeof (double)) ? __s_isfinite_double(x) \
+    : __s_isfinite_long_double(x))
+
+#define	__s_signbit(x)					\
+    ((sizeof (x) == sizeof (float)) ? __s_signbit_float(x)	\
+    : (sizeof (x) == sizeof (double)) ? __s_signbit_double(x)	\
+    : __s_signbit_long_double(x))
+
+static double
+__frexp(double x, int *eptr) {
+    int32_t hx, ix, lx;
+    EXTRACT_WORDS(hx, lx, x);
+    ix = 0x7fffffff & hx;
+    *eptr = 0;
+    if (ix >= 0x7ff00000 || ((ix | lx) == 0)) return x;    /* 0,inf,nan */
+    if (ix < 0x00100000) {        /* subnormal */
+        x *= two54;
+        GET_HIGH_WORD(hx, x);
+        ix = hx & 0x7fffffff;
+        *eptr = -54;
+    }
+    *eptr += (ix >> 20) - 1022;
+    hx = (hx & 0x800fffff) | 0x3fe00000;
+    SET_HIGH_WORD(x, hx);
+    return x;
+}
+
 static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     uint32_t big[(LDBL_MAX_EXP + LDBL_MANT_DIG) / 9 + 1];
     uint32_t *a, *d, *r, *z;
@@ -129,7 +209,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
 
     pl = 1;
 
-    if (signbit(y)) {
+    if (__s_signbit(y)) {
         y = -y;
     } else if (fl & __S_MARK_POS) {
         prefix += 3;
@@ -140,7 +220,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         pl = 0;
     }
 
-    if (!isfinite(y)) {
+    if (!__s_isfinite(y)) {
         s = ((t & 32) ? "inf" : "INF");
         if (y != y) {
             s = ((t & 32) ? "nan" : "NAN");
@@ -153,7 +233,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         return MAX(w, 3 + pl);
     }
 
-    y = (frexpl(y, &e2) * 2);
+    y = (__frexp(y, &e2) * 2);
     if (y > 0)
         e2--;
 
