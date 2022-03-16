@@ -190,6 +190,12 @@ STDLIB_CONSTRUCTOR(global_init)
 			}
 		}
 
+        /* Clear itimer start time */
+        __global_clib2->tmr_start_time.tv_sec = 0;
+        __global_clib2->tmr_start_time.tv_usec = 0;
+        /* Init itimer semaphore */
+        InitSemaphore(&__global_clib2->__tmr_access_sem);
+
 		/* Check if .unix file exists in the current dir. If the file exists enable
 		 * unix path semantics
 		 */
@@ -246,11 +252,9 @@ out:
 
         /* Remove timer tasks */
         if (__global_clib2->tmr_real_task != NULL) {
-            Printf("Stopping old task\n");
-            Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_C);
+            Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_E);
+            WaitForChildExit(__global_clib2->tmr_real_task->pr_ProcessID);
             __global_clib2->tmr_real_task = NULL;
-            WaitForChildExit(0);
-            Printf("Done\n");
         }
 
         /* Free library */
@@ -282,15 +286,6 @@ STDLIB_DESTRUCTOR(global_exit)
 		{
             FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
 		}
-
-        /* Remove tasks */
-        if (__global_clib2->tmr_real_task != NULL) {
-            Printf("Stopping old task\n");
-            Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_C);
-            __global_clib2->tmr_real_task = NULL;
-            WaitForChildExit(0);
-            Printf("Done\n");
-        }
 
 		if (__ISysVIPC != NULL)
 		{

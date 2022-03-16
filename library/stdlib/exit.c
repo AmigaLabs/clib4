@@ -49,7 +49,18 @@ void _exit(int return_code)
 	{
 		__exit_value = return_code;
 
-		longjmp(__exit_jmp_buf, 1);
+        /*  If we have a previous timer running task stop it now */
+        if (__global_clib2->tmr_real_task != NULL) {
+            int pid = __global_clib2->tmr_real_task->pr_ProcessID;
+            printf("2Kill previous task with pid %d\n", pid);
+            Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_E);
+            printf("2Wait for child2 %d\n", pid);
+            WaitForChildExit(pid);
+            printf("2Killed\n");
+            __global_clib2->tmr_real_task = NULL;
+        }
+
+        longjmp(__exit_jmp_buf, 1);
 	}
 }
 

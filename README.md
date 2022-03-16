@@ -96,6 +96,9 @@ Math library has been replaced with openlibm (https://github.com/JuliaMath/openl
 
 This version is faster and more compatible and contains also fenv support that wasn't implemented in clib2
 
+### libresolv
+
+Added resolv library to use dns functions
 
 ### TODO
 

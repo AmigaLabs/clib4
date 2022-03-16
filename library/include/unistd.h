@@ -92,6 +92,7 @@ extern int ftruncate64(int file_descriptor, _off64_t length);
 extern int truncate64(const char *path_name, _off64_t length);
 #endif
 
+extern unsigned int alarm(unsigned seconds);
 extern int link(const char * existing_path,const char * new_path);
 extern int unlink(const char * path_name);
 extern int symlink(const char * actual_path, const char * symbolic_path);

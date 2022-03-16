@@ -634,6 +634,7 @@ C_TIME := \
 	time/utime.o
 
 C_UNISTD := \
+	unistd/alarm.o \
 	unistd/close.o \
 	unistd/creat.o \
 	unistd/fcntl.o \

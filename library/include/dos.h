@@ -617,7 +617,9 @@ struct _clib2
 
     /* Used by setitimer/getitimer */
     struct itimerval *tmr_time;
+    struct timeval tmr_start_time;
     struct Process *tmr_real_task;
+    struct SignalSemaphore __tmr_access_sem;
 };
 
 extern struct _clib2 *__global_clib2;

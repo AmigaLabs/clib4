@@ -72,36 +72,65 @@ int itimer_real_task() {
     {
         goto out;
     }
-    SetSignal(0, SIGBREAKF_CTRL_C | (1UL << tmr_real_mp->mp_SigBit));
+    SetSignal(0, SIGBREAKF_CTRL_E | SIGBREAKF_CTRL_D | (1UL << tmr_real_mp->mp_SigBit));
 
     tmr_real_tr->Request.io_Command = TR_ADDREQUEST;
+    ObtainSemaphore(&__global_clib2->__tmr_access_sem);
     tmr_real_tr->Time.Seconds = __global_clib2->tmr_time->it_value.tv_sec;
     tmr_real_tr->Time.Microseconds = __global_clib2->tmr_time->it_value.tv_usec;
+    ReleaseSemaphore(&__global_clib2->__tmr_access_sem);
 
+    printf("seconds = %d\n", tmr_real_tr->Time.Seconds);
+    printf("useconds = %d\n", tmr_real_tr->Time.Microseconds);
     /* Loop until timer expires and restart or we interrupt it */
     while (TRUE) {
         SendIO((struct IORequest *) tmr_real_tr);
-        wait_mask = SIGBREAKF_CTRL_C | 1L << tmr_real_mp->mp_SigBit;
-        if (Wait(wait_mask) & (SIGBREAKF_CTRL_C)) {
+        wait_mask = SIGBREAKF_CTRL_E | SIGBREAKF_CTRL_D | 1L << tmr_real_mp->mp_SigBit;
+        uint32 signals = Wait(wait_mask);
+        if (signals & SIGBREAKF_CTRL_E) {
+            Printf("SIGBREAKF_CTRL_E\n");
             if (CheckIO((struct IORequest *) tmr_real_tr))  /* If request is complete... */
                 WaitIO((struct IORequest *) tmr_real_tr);   /* clean up and remove reply */
             AbortIO((struct IORequest *) tmr_real_tr);
             /* Exit from while */
             break;
         }
-        WaitIO((struct IORequest *) tmr_real_tr);
+        else if (signals & SIGBREAKF_CTRL_D) {
+            Printf("SIGBREAKF_CTRL_D\n");
+            /* This is used to reset the timer with new value without raising the signal */
+            if (CheckIO((struct IORequest *) tmr_real_tr))  /* If request is complete... */
+                WaitIO((struct IORequest *) tmr_real_tr);   /* clean up and remove reply */
+            AbortIO((struct IORequest *) tmr_real_tr);
 
-        /* Raise SIGALARM signal so the handlers can execute the associated code */
-        raise(SIGALRM);
+            ObtainSemaphore(&__global_clib2->__tmr_access_sem);
+            tmr_real_tr->Time.Seconds = __global_clib2->tmr_time->it_value.tv_sec;
+            tmr_real_tr->Time.Microseconds = __global_clib2->tmr_time->it_value.tv_usec;
+            ReleaseSemaphore(&__global_clib2->__tmr_access_sem);
 
-        /* Reset the timer adding seconds to timerequest */
-        tmr_real_tr->Time.Seconds += __global_clib2->tmr_time->it_value.tv_sec;
-        tmr_real_tr->Time.Microseconds += __global_clib2->tmr_time->it_value.tv_usec;
+            Printf("SEconds = %ld\n", __global_clib2->tmr_time->it_value.tv_sec);
+            Printf("USeconds = %ld\n", __global_clib2->tmr_time->it_value.tv_usec);
 
-        /* Fill the current value with new time */
-        __global_clib2->tmr_time->it_value.tv_sec = __global_clib2->tmr_time->it_interval.tv_sec;
-        __global_clib2->tmr_time->it_value.tv_usec = __global_clib2->tmr_time->it_interval.tv_usec;
+            Printf("Done\n");
+        }
+        else {
+            Printf("mp_SigBit\n");
+            WaitIO((struct IORequest *) tmr_real_tr);
+
+            /* Raise SIGALARM signal so the handlers can execute the associated code */
+            raise(SIGALRM);
+
+            /* Set the start time of new request used to calculate values in getitimer */
+            gettimeofday(&__global_clib2->tmr_start_time, NULL);
+
+            /* Reset the timer adding seconds to timerequest */
+            tmr_real_tr->Time.Seconds += __global_clib2->tmr_time->it_value.tv_sec;
+            tmr_real_tr->Time.Microseconds += __global_clib2->tmr_time->it_value.tv_usec;
+        }
+
+        Printf("useconds = %ld\n", tmr_real_tr->Time.Microseconds);
+        Printf("seconds = %ld\n", tmr_real_tr->Time.Seconds);
     }
+    Printf("success\n");
     Success = TRUE;
 
 out:
@@ -116,7 +145,8 @@ out:
         FreeSysObject(ASOT_IOREQUEST, tmr_real_tr);
         tmr_real_tr = NULL;
     }
-    Printf("Exit");
+    Printf("all stuff closed\n");
+
     if (Success)
         return RETURN_OK;
     else

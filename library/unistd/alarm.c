@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_pause.c,v 1.0 2022-03-15 08:39:45 apalmate Exp $
+ * $Id: unistd_alarm.c.c,v 1.0 2022-03-16 09:34:24 apalmate Exp $
  *
  * :ts=4
  *
@@ -29,16 +29,33 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * PowerPC math library based in part on work by Sun Microsystems
+ * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+ *
+ * Developed at SunPro, a Sun Microsystems, Inc. business.
+ * Permission to use, copy, modify, and distribute this
+ * software is freely granted, provided that this notice
+ * is preserved.
  */
 
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-int pause(void) {
+#ifndef _TIME_HEADERS_H
+#include "time_headers.h"
+#endif /* _TIME_HEADERS_H */
 
-    Wait(SIGBREAKF_CTRL_C);
-    raise(SIGINT);
-
-    return 0;
+unsigned int
+alarm(unsigned seconds)
+{
+    /* Call setitimer */
+    struct itimerval it = {
+            .it_value.tv_sec = seconds,
+            .it_value.tv_usec = 0,
+    }, old = { 0 };
+    setitimer(ITIMER_REAL, &it, &old);
+    return old.it_value.tv_sec + !!old.it_value.tv_usec;
 }

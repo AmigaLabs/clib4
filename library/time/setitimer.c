@@ -71,33 +71,51 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
                 old_value->it_value.tv_usec = __global_clib2->tmr_time->it_value.tv_usec;
                 old_value->it_interval.tv_sec = __global_clib2->tmr_time->it_interval.tv_sec;
                 old_value->it_interval.tv_usec = __global_clib2->tmr_time->it_interval.tv_usec;
+                Printf("1)old_value->it_value.tv_sec=%d\n",old_value->it_value.tv_sec);
             }
+            ObtainSemaphore(&__global_clib2->__tmr_access_sem);
             __global_clib2->tmr_time = (struct itimerval *) new_value;
+            ReleaseSemaphore(&__global_clib2->__tmr_access_sem);
+            if (old_value != NULL && __global_clib2->tmr_time != NULL)
+                Printf("2)old_value->it_value.tv_sec=%d\n",old_value->it_value.tv_sec);
             /*  If we have a previous running task stop it */
-            if (__global_clib2->tmr_real_task != NULL || (new_value->it_value.tv_sec == 0 && new_value->it_value.tv_usec == 0)) {
-                Printf("Stopping old task\n");
-                Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_C);
+            if (__global_clib2->tmr_real_task != NULL && (new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0)) {
+                printf("new_value->it_value.tv_sec=%d\n",__global_clib2->tmr_time->it_value.tv_sec);
+                printf("new_value->it_value.tv_usec=%d\n",__global_clib2->tmr_time->it_value.tv_usec);
+                int pid = __global_clib2->tmr_real_task->pr_ProcessID;
+                printf("Reset previous task with pid %d\n", pid);
+                Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_D);
+                printf("Done\n");
             }
-            /* Create timer tasks */
-            if ((new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0)) {
-                Forbid();
-                __global_clib2->tmr_real_task = CreateNewProcTags(
-                        NP_Name,                 "CLIB2_ITIMER_REAL_TASK",
-                        NP_Entry,                itimer_real_task,
-                        NP_Child,                TRUE,
-                        NP_UserData,             (int)&which,
-                        NP_NotifyOnDeathSigTask, FindTask(NULL),
-                        TAG_END);
-                if (!__global_clib2->tmr_real_task) {
-                    Permit();
-                    __set_errno(EFAULT);
-                    return -1;
+            else if (__global_clib2->tmr_real_task == NULL) {
+                /* Create timer tasks */
+                if ((new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0)) {
+                    Printf("Create task()\n");
+                    __global_clib2->tmr_real_task = CreateNewProcTags(
+                            NP_Name, "CLIB2_ITIMER_REAL_TASK",
+                            NP_Entry, itimer_real_task,
+                            NP_Child, TRUE,
+                            NP_UserData, (int) &which,
+                            NP_Output, DupFileHandle(Output()),
+                            NP_CloseOutput, TRUE,
+                            TAG_END);
+                    if (!__global_clib2->tmr_real_task) {
+                        Printf("Error creating task\n");
+                        __set_errno(EFAULT);
+                        return -1;
+                    }
+                    Printf("Created()\n");
                 }
-                Permit();
             }
             else {
-                Printf("Previous timer stopped\n");
+                int pid = __global_clib2->tmr_real_task->pr_ProcessID;
+                printf("Killing child2 %d\n", pid);
+                Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_E);
+                printf("3Wait for child2 %d\n", pid);
+                //WaitForChildExit(pid);
+                Printf("3Previous timer stopped\n");
             }
+
             break;
         case ITIMER_VIRTUAL:
             __set_errno(ENOSYS);

@@ -186,7 +186,7 @@ out:
 	   or through a failed assert() call, processing will resume with
 	   the next following destructor. */
 	(void)setjmp(__exit_jmp_buf);
-
+Printf("__exit_jmp_buf\n");
 	/* Restore the IoErr() value before we return. */
 	SetIoErr(saved_io_err);
 
@@ -517,6 +517,8 @@ out:
 		Forbid();
 
 		ReplyMsg((struct Message *)startup_message);
+
+        Permit();
 	}
 
     close_libraries();
