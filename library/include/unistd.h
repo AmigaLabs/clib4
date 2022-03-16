@@ -101,6 +101,7 @@ extern int fchdir(int file_descriptor);
 extern int lockf(int file_descriptor, int function, off_t size);
 extern unsigned int sleep(unsigned int seconds);
 extern int usleep(useconds_t microseconds);
+extern int pause(void);
 extern int getopt(int argc, char * const argv[], const char *opts);
 extern pid_t getpid(void);
 extern pid_t getppid(void);

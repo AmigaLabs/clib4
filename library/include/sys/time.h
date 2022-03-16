@@ -22,6 +22,11 @@ struct timezone
     int tz_dsttime;     /* type of dst correction to apply */
 };
 
+struct itimerval {
+    struct timeval it_interval;
+    struct timeval it_value;
+};
+
 #define DST_NONE 0 /* not on dst */
 #define DST_USA 1  /* USA style dst */
 #define DST_AUST 2 /* Australian style dst */
@@ -30,9 +35,16 @@ struct timezone
 #define DST_EET 5  /* Eastern European dst */
 #define DST_CAN 6  /* Canada */
 
+#define ITIMER_REAL    0
+#define ITIMER_VIRTUAL 1
+#define ITIMER_PROF    2
+
 extern int gettimeofday(struct timeval *tp, struct timezone *tzp);
 extern int settimeofday (const struct timeval *, const struct timezone *);
 extern int utimes (const char *path, const struct timeval *tvp);
+
+extern int getitimer(int which, struct itimerval *curr_value);
+extern int setitimer(int which, const struct itimerval *new_value, struct itimerval *old_value);
 
 #ifdef __USE_GNU
 /* Macros for converting between `struct timeval' and `struct timespec'.  */

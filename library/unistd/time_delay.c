@@ -35,8 +35,6 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef PROTO_TIMER_H
 #include <proto/timer.h>
 #endif /* PROTO_TIMER_H */

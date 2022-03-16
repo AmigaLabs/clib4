@@ -610,14 +610,17 @@ C_TIME := \
 	time/days_per_date.o \
 	time/difftime.o \
 	time/gettimeofday.o \
+	time/getitimer.o \
 	time/gmtime.o \
 	time/gmtime_r.o \
+    time/itimer_tasks.o \
 	time/localtime.o \
 	time/localtime_r.o \
 	time/mktime.o \
 	time/nanosleep.o \
 	time/numbertostring.o \
 	time/clock_settime.o \
+	time/setitimer.o \
     time/settimeofday.o \
 	time/strftime.o \
 	time/strptime.o \
@@ -681,6 +684,7 @@ C_UNISTD := \
 	unistd/link.o \
 	unistd/lockf.o \
 	unistd/pathconf.o \
+    unistd/pause.o \
 	unistd/pipe.o \
 	unistd/pipe2.o \
 	unistd/pread.o \

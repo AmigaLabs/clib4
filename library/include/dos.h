@@ -556,7 +556,7 @@ struct _wchar
 
 /*
  * Initial _clib2 structure. This shoulr be replaced with a _reent structure 
- * and populated with all its fields. At momen it holds just global fields
+ * and populated with all its fields. At moment it holds just global fields
  */
 
 struct _clib2
@@ -614,6 +614,10 @@ struct _clib2
     int i;
     int j;
     uint32_t *x;
+
+    /* Used by setitimer/getitimer */
+    struct itimerval *tmr_time;
+    struct Process *tmr_real_task;
 };
 
 extern struct _clib2 *__global_clib2;

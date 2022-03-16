@@ -99,4 +99,6 @@ extern long __pathconf(struct MsgPort *port,int name);
 
 /****************************************************************************/
 
+extern int itimer_real_task(void);
+
 #endif /* _UNISTD_HEADERS_H */

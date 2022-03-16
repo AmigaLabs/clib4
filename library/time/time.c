@@ -39,8 +39,6 @@
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
 
-/****************************************************************************/
-
 time_t
 time(time_t *tptr) {
     struct DateStamp ds;

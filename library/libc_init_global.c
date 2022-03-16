@@ -169,6 +169,9 @@ STDLIB_CONSTRUCTOR(global_init)
                                                             ASOITEM_GCPolicy,    ITEMGC_AFTERCOUNT,
                                                             ASOITEM_GCParameter, 1000,
                                                             TAG_DONE);
+        if (!__global_clib2->__memalign_pool) {
+            goto out;
+        }
 
 		/* Check is SYSV library is available in the system */
 		__global_clib2->haveShm = FALSE;
@@ -187,7 +190,7 @@ STDLIB_CONSTRUCTOR(global_init)
 			}
 		}
 
-		/* Check if .unix file exists in the current dir. If the file exists enable 
+		/* Check if .unix file exists in the current dir. If the file exists enable
 		 * unix path semantics
 		 */
 		__global_clib2->__unix_path_semantics = FALSE;
@@ -229,6 +232,33 @@ STDLIB_CONSTRUCTOR(global_init)
 
 out:
 
+    if (!success) {
+        /* Clean wide status memory */
+        if (__global_clib2->wide_status) {
+            FreeVec(__global_clib2->wide_status);
+            __global_clib2->wide_status = NULL;
+        }
+        /* Free memalign pool object */
+        if (__global_clib2->__memalign_pool) {
+            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
+            __global_clib2->__memalign_pool = NULL;
+        }
+
+        /* Remove timer tasks */
+        if (__global_clib2->tmr_real_task != NULL) {
+            Printf("Stopping old task\n");
+            Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_C);
+            __global_clib2->tmr_real_task = NULL;
+            WaitForChildExit(0);
+            Printf("Done\n");
+        }
+
+        /* Free library */
+        if (__global_clib2) {
+            FreeVec(__global_clib2);
+            __global_clib2 = NULL;
+        }
+    }
     SHOWVALUE(success);
     LEAVE();
 
@@ -252,6 +282,15 @@ STDLIB_DESTRUCTOR(global_exit)
 		{
             FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
 		}
+
+        /* Remove tasks */
+        if (__global_clib2->tmr_real_task != NULL) {
+            Printf("Stopping old task\n");
+            Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_C);
+            __global_clib2->tmr_real_task = NULL;
+            WaitForChildExit(0);
+            Printf("Done\n");
+        }
 
 		if (__ISysVIPC != NULL)
 		{

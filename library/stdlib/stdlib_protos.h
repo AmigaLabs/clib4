@@ -59,11 +59,6 @@ extern int __math_init(void);
 
 /****************************************************************************/
 
-/* stdlib_machine_test.c */
-extern int __machine_test(void);
-
-/****************************************************************************/
-
 /* stdio_init_exit.c */
 extern int __stdio_init(void);
 
