@@ -35,7 +35,9 @@
  */
 
 #ifndef EXEC_TYPES_H
+
 #include <exec/types.h>
+
 #endif /* EXEC_TYPES_H */
 
 #include <proto/exec.h>
@@ -44,11 +46,15 @@
 #include <libraries/elf.h>
 
 #ifndef _STDLIB_HEADERS_H
+
 #include "stdlib_headers.h"
+
 #endif /* _STDLIB_HEADERS_H */
 
 #ifndef _MACROS_H
+
 #include "macros.h"
+
 #endif /* _MACROS_H */
 
 /*
@@ -67,29 +73,28 @@ static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors"), al
 static void (*__DTOR_LIST__[1])(void) __attribute__((used, section(".dtors"), aligned(sizeof(void (*)(void)))));
 
 void _init(void) {
-    int i = 0;
+    int num_ctors, i;
+    int j;
 
     /* The shared objects need to be set up before any local constructors are invoked. */
     shared_obj_init();
 
-    while (__CTOR_LIST__[i+1])
-    {
-        i++;
-    }
+    for (i = 1, num_ctors = 0; __CTOR_LIST__[i] != NULL; i++)
+        num_ctors++;
 
-    while (i > 0)
-    {
-        __CTOR_LIST__[i--]();
-    }
+    for (j = 0; j < num_ctors; j++)
+        __CTOR_LIST__[num_ctors - j]();
 }
 
 void _fini(void) {
-    int i = 1;
+    int num_dtors, i;
+    static int j;
 
-    while (__DTOR_LIST__[i])
-    {
-        __DTOR_LIST__[i++]();
-    }
+    for (i = 1, num_dtors = 0; __DTOR_LIST__[i] != NULL; i++)
+        num_dtors++;
+
+    while (j++ < num_dtors)
+        __DTOR_LIST__[j]();
 
     /* The shared objects need to be cleaned up after all local
        destructors have been invoked. */

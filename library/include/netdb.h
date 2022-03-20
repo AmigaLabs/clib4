@@ -1,42 +1,6 @@
 /*
- * $Id: netdb.h,v 1.4 2006-01-08 12:06:14 obarthel Exp $
- *
- * :ts=4
- *
- * Portable ISO 'C' (1994) runtime library for the Amiga computer
- * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Neither the name of Olaf Barthel nor the names of contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- *
- *****************************************************************************
- *
- * Documentation and source code for this library, and the most recent library
- * build are available from <https://github.com/afxgroup/clib2>.
- *
- *****************************************************************************
- */
+ * $Id: netdb.h,v 1.4 2006-01-08 12:06:14 clib2devs Exp $
+*/
 
 #ifndef _NETDB_H
 #define _NETDB_H
@@ -202,40 +166,6 @@ struct protoent
 #  define EAI_IDN_ENCODE        -105    /* IDN encoding failed.  */
 # endif
 #endif
-
-/****************************************************************************/
-
-/* gai_strerror defines */
-static struct {
-    int code;
-    const char *str;
-}
-errors[] = {
-        {EAI_NOERROR,           "No error"},
-        {EAI_ADDRFAMILY,        "Address family for nodename not supported"},
-        {EAI_AGAIN,             "Temporary failure in name resolution"},
-        {EAI_BADFLAGS,          "Invalid value for ai_flags"},
-        {EAI_FAIL,              "Non-recoverable failure in name resolution"},
-        {EAI_FAMILY,            "ai_family not supported"},
-        {EAI_MEMORY,            "Memory allocation failure"},
-        {EAI_NODATA,            "No address associated with nodename"},
-        {EAI_NONAME,            "Nodename nor servname provided, or not known"},
-        {EAI_SERVICE,           "Servname not supported for ai_socktype"},
-        {EAI_SOCKTYPE,          "ai_socktype not supported"},
-        {EAI_SYSTEM,            "System error returned in errno"},
-	{EAI_OVERFLOW, 		"Argument buffer too small" },
-#ifdef EAI_INPROGRESS
-    	{EAI_INPROGRESS, 	"Processing request in progress" },
-    	{EAI_CANCELED, 		"Request canceled" },
-    	{EAI_NOTCANCELED, 	"Request not canceled" },
-    	{EAI_ALLDONE, 		"All requests done" },
-    	{EAI_INTR, 		"Interrupted by a signal" },
-    	{EAI_IDN_ENCODE, 	"Parameter string not correctly encoded" },
-#endif
-        {0,                     NULL},
-};
-
-/****************************************************************************/
 
 /* Structure to contain information about address of a service provider.  */
 struct addrinfo

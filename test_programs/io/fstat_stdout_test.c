@@ -1,5 +1,5 @@
 /*
- * $Id: fstat_stdout_test.c,v 1.1 2005-05-08 16:27:25 obarthel Exp $
+ * $Id: fstat_stdout_test.c,v 1.1 2005-05-08 16:27:25 clib2devs Exp $
  *
  * :ts=4
  */

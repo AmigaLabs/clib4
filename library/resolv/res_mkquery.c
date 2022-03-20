@@ -1,4 +1,4 @@
-/* $Id: socket_res_mkquery.c,v 1.0 2022-03-14 10:44:15 apalmate Exp $
+/* $Id: socket_res_mkquery.c,v 1.0 2022-03-14 10:44:15 clib2devs Exp $
 
    Copyright (C) 2005-2006, 2008-2020 Free Software Foundation, Inc.
 
@@ -44,6 +44,10 @@ int
 res_mkquery(int op, const char *dname, int class, int type,
             const unsigned char *data, int datalen,
             const unsigned char *newrr, unsigned char *buf, int buflen) {
+    (void) (data);
+    (void) (datalen);
+    (void) (newrr);
+
     int id, i, j;
     unsigned char q[280];
     struct timespec ts;

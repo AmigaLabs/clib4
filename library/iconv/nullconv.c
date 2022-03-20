@@ -1,5 +1,5 @@
 /*
- * $Id: iconv_nullconv.c,v 1.0 2021-03-09 12:04:25 apalmate Exp $
+ * $Id: iconv_nullconv.c,v 1.0 2021-03-09 12:04:25 clib2devs Exp $
  *
  * Copyright (c) 2003-2004, Artem B. Bityuckiy
  * Copyright (c) 1999,2000, Konstantin Chuguev. All rights reserved.
@@ -38,18 +38,25 @@ static int null_conversion_dummy_data;
 static void *
 null_conversion_open(const char *to, const char *from)
 {
+    (void) (to);
+    (void) (from);
+
     return (void *)&null_conversion_dummy_data;
 }
 
 static size_t
 null_conversion_close(void *data)
 {
+    (void) (data);
+
     return 0;
 }
 
 static size_t
 null_conversion_convert(void *data, const unsigned char **inbuf, size_t *inbytesleft, unsigned char **outbuf, size_t *outbytesleft, int flags)
 {
+    (void) (data);
+
     if (outbuf != NULL && inbuf != NULL) {
         size_t result;
         size_t len;
@@ -85,24 +92,38 @@ null_conversion_convert(void *data, const unsigned char **inbuf, size_t *inbytes
 static int
 null_conversion_get_mb_cur_max(void *data, int direction)
 {
+    (void) (data);
+    (void) (direction);
+
     return ICONV_MB_LEN_MAX;
 }
 
 static void
 null_conversion_get_state(void *data, mbstate_t *state, int direction)
 {
+    (void) (data);
+    (void) (state);
+    (void) (direction);
+
     return;
 }
 
 static int
 null_conversion_set_state(void *data, mbstate_t *state, int direction)
 {
+    (void) (data);
+    (void) (state);
+    (void) (direction);
+
     return 0;
 }
 
 static int
 null_conversion_is_stateful(void *data, int direction)
 {
+    (void) (data);
+    (void) (direction);
+
     return 0;
 }
 

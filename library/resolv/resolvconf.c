@@ -11,8 +11,7 @@ int
 __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz)
 {
     char line[256];
-    unsigned char _buf[256];
-    FILE *f, _f;
+    FILE *f;
     int nns = 0;
 
     conf->ndots = 1;

@@ -1,34 +1,7 @@
 /*
- * $Id: time_getitimer.c,v 1.0 2022-03-14 18:06:24 apalmate Exp $
+ * $Id: time_getitimer.c,v 1.0 2022-03-14 18:06:24 clib2devs Exp $
  *
- * :ts=4
- *
- * Portable ISO 'C' (1994) runtime library for the Amiga computer
- * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Neither the name of Olaf Barthel nor the names of contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+
  *
  */
 
@@ -39,6 +12,29 @@
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
+
+static int
+timeval_subtract(struct timeval *result, struct timeval *x,struct timeval  *y)
+{
+    /* Perform the carry for the later subtraction by updating y. */
+    if (x->tv_usec < y->tv_usec) {
+        int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
+        y->tv_usec -= 1000000 * nsec;
+        y->tv_sec += nsec;
+    }
+    if (x->tv_usec - y->tv_usec > 1000000) {
+        int nsec = (y->tv_usec - x->tv_usec) / 1000000;
+        y->tv_usec += 1000000 * nsec;
+        y->tv_sec -= nsec;
+    }
+
+    /* Compute the time remaining to wait.
+       tv_usec is certainly positive. */
+    result->tv_sec = x->tv_sec - y->tv_sec;
+    result->tv_usec = x->tv_usec - y->tv_usec;
+    /* Return 1 if result is negative. */
+    return x->tv_sec < y->tv_sec;
+}
 
 int
 getitimer(int which, struct itimerval *curr_value) {
@@ -55,6 +51,16 @@ getitimer(int which, struct itimerval *curr_value) {
 
     switch (which) {
         case ITIMER_REAL:
+            {
+                struct timeval tv, result;
+                /* Get current time of day */
+                gettimeofday(&tv, NULL);
+                timeval_subtract(&result, &tv, &__global_clib2->tmr_start_time);
+                curr_value->it_value.tv_sec = result.tv_sec;
+                curr_value->it_value.tv_usec = result.tv_usec;
+                curr_value->it_interval.tv_sec = __global_clib2->tmr_time.it_interval.tv_sec;
+                curr_value->it_interval.tv_usec = __global_clib2->tmr_time.it_interval.tv_usec;
+            }
             break;
         case ITIMER_VIRTUAL:
             __set_errno(ENOSYS);

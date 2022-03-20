@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_slab.c,v 1.1 2021-01-31 06:43:56 apalmate Exp $
+ * $Id: stdlib_slab.c,v 1.1 2021-01-31 06:43:56 clib2devs Exp $
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>

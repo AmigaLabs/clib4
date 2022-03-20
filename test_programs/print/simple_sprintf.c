@@ -1,5 +1,5 @@
 /*
- * $Id: simple_sprintf.c,v 1.2 2005-05-18 07:22:52 obarthel Exp $
+ * $Id: simple_sprintf.c,v 1.2 2005-05-18 07:22:52 clib2devs Exp $
  *
  * :ts=4
  */

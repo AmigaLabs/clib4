@@ -13,9 +13,14 @@
 /* function prototype */
 void DoStuff(void);
 
+enum {
+    SECS_TO_SLEEP = 10, NSEC_TO_SLEEP = 125
+};
+
 int main(int argc, char *argv[]) {
 
     struct itimerval it_val;  /* for setting itimer */
+    struct timespec remaining, request = {SECS_TO_SLEEP, NSEC_TO_SLEEP};
 
     /* Upon SIGALRM, call DoStuff().
      * Set interval timer.  We want frequency in ms,
@@ -31,17 +36,17 @@ int main(int argc, char *argv[]) {
         perror("error calling setitimer()");
         exit(1);
     }
-
-    while (1)
-        pause();
-
+    /* nanosleep will be interrupted by SIGALRM */
+    nanosleep(&request, &remaining);
 }
 
 /*
  * DoStuff
  */
 void DoStuff(void) {
-
-    printf("Timer went off.\n");
-
+    struct itimerval old_value;
+    getitimer(ITIMER_REAL, &old_value);
+    printf("Timer went off. getitimer now is %d sec, %d msec.\n",
+           (int) old_value.it_value.tv_sec,
+           (int) old_value.it_value.tv_usec);
 }

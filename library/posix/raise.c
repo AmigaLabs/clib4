@@ -1,41 +1,10 @@
 /*
- * $Id: signal_raise.c,v 1.10 2006-01-08 12:04:24 obarthel Exp $
- *
- * :ts=4
- *
- * Portable ISO 'C' (1994) runtime library for the Amiga computer
- * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Neither the name of Olaf Barthel nor the names of contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+ * $Id: signal_raise.c,v 1.10 2006-01-08 12:04:24 clib2devs Exp $
+*/
 
 #ifndef _SIGNAL_HEADERS_H
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
-
-/****************************************************************************/
 
 /* This table holds pointers to all signal handlers configured at a time. */
 signal_handler_t NOCOMMON __signal_handler_table[NSIG] =
@@ -74,16 +43,12 @@ signal_handler_t NOCOMMON __signal_handler_table[NSIG] =
 		SIG_DFL /* SIGUSR2 */
 	};
 
-/****************************************************************************/
-
 /* This holds a mask of all signals whose delivery is currently blocked.
    The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
    modify or query it. */
 int NOCOMMON __signals_blocked;
 
-/****************************************************************************/
-
-int 
+int
 raise(int sig)
 {
 	static int local_signals_blocked;
@@ -137,11 +102,19 @@ raise(int sig)
 
 					SHOWMSG("bye, bye...");
 				}
+                /* If we have a SIGALRM without associated handler don't call abort but exit directly */
+                if (sig != SIGALRM) {
+                    /* Drop straight into abort(), which might call signal()
+                       again but is otherwise guaranteed to eventually
+                       land us in _exit(). */
+                    abort();
+                }
+                else {
+                    __print_termination_message("Alarm Clock");
 
-				/* Drop straight into abort(), which might call signal()
-				   again but is otherwise guaranteed to eventually
-				   land us in _exit(). */
-				abort();
+                    /* Block SIGALRM signal from raise again */
+                    sigblock(SIGALRM);
+                }
 			}
 			else
 			{
@@ -151,6 +124,9 @@ raise(int sig)
 
 				SHOWMSG("done.");
 			}
+
+            /* Since we got a signal we interrrupt every sleep function like nanosleep */
+            Signal((struct Task *)__global_clib2->self, SIGBREAKF_CTRL_E);
 
 			/* Unblock signal delivery again. */
 			CLEAR_FLAG(local_signals_blocked, (1 << sig));

@@ -1,5 +1,5 @@
 /*
- * $Id: utf-16.c,v 1.0 2021-03-09 12:04:25 apalmate Exp $
+ * $Id: utf-16.c,v 1.0 2021-03-09 12:04:25 clib2devs Exp $
  *
  * Copyright (c) 2003-2004, Artem B. Bityuckiy
  * Copyright (c) 1999,2000, Konstantin Chuguev. All rights reserved.
@@ -58,230 +58,214 @@
 #define UTF_16LE "utf_16le"
 
 static size_t
-utf_16_close(void *data)
-{
-  free(data);
-  return 0;
+utf_16_close(void *data) {
+    free(data);
+    return 0;
 }
 
 #if defined(ICONV_FROM_UCS_CES_UTF_16)
 static void *
-utf_16_init_from_ucs(const char *encoding)
-{
-  int *data;
+utf_16_init_from_ucs(const char *encoding) {
+    int *data;
 
-  if ((data = (int *)malloc(sizeof(int))) == NULL)
-    return (void *)NULL;
+    if ((data = (int *) malloc(sizeof(int))) == NULL)
+        return (void *) NULL;
 
-  if (strcmp(encoding, UTF_16LE) == 0)
-    *data = UTF16_LITTLE_ENDIAN;
-  else if (strcmp(encoding, UTF_16BE) == 0)
-    *data = UTF16_BIG_ENDIAN;
-  else
-    *data = UTF16_SYSTEM_ENDIAN;
+    if (strcmp(encoding, UTF_16LE) == 0)
+        *data = UTF16_LITTLE_ENDIAN;
+    else if (strcmp(encoding, UTF_16BE) == 0)
+        *data = UTF16_BIG_ENDIAN;
+    else
+        *data = UTF16_SYSTEM_ENDIAN;
 
-  return (void *)data;
+    return (void *) data;
 }
 
 static size_t
-utf_16_convert_from_ucs(void *data, register ucs4_t in, unsigned char **outbuf, size_t *outbytesleft)
-{
-  register ucs2_t *cp;
-  register size_t bytes;
-  register int *state;
+utf_16_convert_from_ucs(void *data, register ucs4_t in, unsigned char **outbuf, size_t *outbytesleft) {
+    register ucs2_t *cp;
+    register size_t bytes;
+    register int *state;
 
-  if (in > 0x0010FFFF || (in >= 0x0000D800 && in <= 0x0000DFFF) || in == 0x0000FFFF || in == 0x0000FFFE)
-    return (size_t)ICONV_CES_INVALID_CHARACTER;
+    if (in > 0x0010FFFF || (in >= 0x0000D800 && in <= 0x0000DFFF) || in == 0x0000FFFF || in == 0x0000FFFE)
+        return (size_t) ICONV_CES_INVALID_CHARACTER;
 
-  state = (int *)data;
-  bytes = (*state == UTF16_SYSTEM_ENDIAN) ? sizeof(ucs2_t) * 2
-                                          : sizeof(ucs2_t);
+    state = (int *) data;
+    bytes = (*state == UTF16_SYSTEM_ENDIAN) ? sizeof(ucs2_t) * 2
+                                            : sizeof(ucs2_t);
 
-  if (in > 0x0000FFFF)
-    bytes += sizeof(ucs2_t);
+    if (in > 0x0000FFFF)
+        bytes += sizeof(ucs2_t);
 
-  if (*outbytesleft < bytes)
-    return (size_t)ICONV_CES_NOSPACE;
+    if (*outbytesleft < bytes)
+        return (size_t) ICONV_CES_NOSPACE;
 
-  cp = (ucs2_t *)*outbuf;
+    cp = (ucs2_t *) *outbuf;
 
-  if (*state == UTF16_SYSTEM_ENDIAN)
-  {
-    *cp++ = UTF16_BOM;
-    *state |= UTF16_BOM_WRITTEN;
-  }
-
-  if (in < 0x00010000)
-  {
-    switch (*state)
-    {
-    case UTF16_LITTLE_ENDIAN:
-      *cp = ICONV_HTOLES((ucs2_t)in);
-      break;
-    case UTF16_BIG_ENDIAN:
-      *cp = ICONV_HTOBES((ucs2_t)in);
-      break;
-    case (UTF16_SYSTEM_ENDIAN | UTF16_BOM_WRITTEN):
-      *cp = (ucs2_t)in;
-      break;
+    if (*state == UTF16_SYSTEM_ENDIAN) {
+        *cp++ = UTF16_BOM;
+        *state |= UTF16_BOM_WRITTEN;
     }
-  }
-  else
-  {
-    ucs2_t w1, w2;
 
-    /* Process surrogate pair */
-    in -= 0x00010000;
-    w1 = ((ucs2_t)((in >> 10)) & 0x03FF) | 0xD800;
-    w2 = (ucs2_t)(in & 0x000003FF) | 0xDC00;
+    if (in < 0x00010000) {
+        switch (*state) {
+            case UTF16_LITTLE_ENDIAN:
+                *cp = ICONV_HTOLES((ucs2_t) in);
+                break;
+            case UTF16_BIG_ENDIAN:
+                *cp = ICONV_HTOBES((ucs2_t) in);
+                break;
+            case (UTF16_SYSTEM_ENDIAN | UTF16_BOM_WRITTEN):
+                *cp = (ucs2_t) in;
+                break;
+        }
+    } else {
+        ucs2_t w1, w2;
 
-    switch (*state)
-    {
-    case UTF16_LITTLE_ENDIAN:
-      *cp++ = ICONV_HTOLES(w1);
-      *cp = ICONV_HTOLES(w2);
-      break;
-    case UTF16_BIG_ENDIAN:
-      *cp++ = ICONV_HTOBES(w1);
-      *cp = ICONV_HTOBES(w2);
-      break;
-    case (UTF16_SYSTEM_ENDIAN | UTF16_BOM_WRITTEN):
-      *cp++ = w1;
-      *cp = w2;
-      break;
+        /* Process surrogate pair */
+        in -= 0x00010000;
+        w1 = ((ucs2_t) ((in >> 10)) & 0x03FF) | 0xD800;
+        w2 = (ucs2_t) (in & 0x000003FF) | 0xDC00;
+
+        switch (*state) {
+            case UTF16_LITTLE_ENDIAN:
+                *cp++ = ICONV_HTOLES(w1);
+                *cp = ICONV_HTOLES(w2);
+                break;
+            case UTF16_BIG_ENDIAN:
+                *cp++ = ICONV_HTOBES(w1);
+                *cp = ICONV_HTOBES(w2);
+                break;
+            case (UTF16_SYSTEM_ENDIAN | UTF16_BOM_WRITTEN):
+                *cp++ = w1;
+                *cp = w2;
+                break;
+        }
     }
-  }
 
-  *outbuf += bytes;
-  *outbytesleft -= bytes;
+    *outbuf += bytes;
+    *outbytesleft -= bytes;
 
-  return bytes;
+    return bytes;
 }
 #endif /* ICONV_FROM_UCS_CES_UTF_16 */
 
 #if defined(ICONV_TO_UCS_CES_UTF_16)
 static void *
-utf_16_init_to_ucs(const char *encoding)
-{
-  int *data;
+utf_16_init_to_ucs(const char *encoding) {
+    int *data;
 
-  if ((data = (int *)malloc(sizeof(int))) == NULL)
-    return (void *)NULL;
+    if ((data = (int *) malloc(sizeof(int))) == NULL)
+        return (void *) NULL;
 
-  if (strcmp(encoding, UTF_16BE) == 0)
-    *data = UTF16_BIG_ENDIAN;
-  else if (strcmp(encoding, UTF_16LE) == 0)
-    *data = UTF16_LITTLE_ENDIAN;
-  else
-    *data = UTF16_UNDEFINED;
+    if (strcmp(encoding, UTF_16BE) == 0)
+        *data = UTF16_BIG_ENDIAN;
+    else if (strcmp(encoding, UTF_16LE) == 0)
+        *data = UTF16_LITTLE_ENDIAN;
+    else
+        *data = UTF16_UNDEFINED;
 
-  return (void *)data;
+    return (void *) data;
 }
 
 static ucs4_t
-utf_16_convert_to_ucs(void *data, const unsigned char **inbuf, size_t *inbytesleft)
-{
-  register ucs2_t w1;
-  register ucs2_t w2;
-  register ucs2_t *cp;
-  int *state;
-  ucs4_t res;
-  int bytes = sizeof(ucs2_t);
+utf_16_convert_to_ucs(void *data, const unsigned char **inbuf, size_t *inbytesleft) {
+    register ucs2_t w1;
+    register ucs2_t w2;
+    register ucs2_t *cp;
+    int *state;
+    ucs4_t res;
+    int bytes = sizeof(ucs2_t);
 
-  if (*inbytesleft < bytes)
-    return (ucs4_t)ICONV_CES_BAD_SEQUENCE;
+    if (*inbytesleft < bytes)
+        return (ucs4_t) ICONV_CES_BAD_SEQUENCE;
 
-  state = (int *)data;
-  cp = ((ucs2_t *)*inbuf);
+    state = (int *) data;
+    cp = ((ucs2_t *) *inbuf);
 
-  if (*state == UTF16_UNDEFINED)
-  {
-    if (*cp == ICONV_HTOLES(UTF16_BOM))
-      *state = UTF16_LITTLE_ENDIAN;
-    else
-      *state = UTF16_BIG_ENDIAN;
+    if (*state == UTF16_UNDEFINED) {
+        if (*cp == ICONV_HTOLES(UTF16_BOM))
+            *state = UTF16_LITTLE_ENDIAN;
+        else
+            *state = UTF16_BIG_ENDIAN;
 
-    if (*cp == ICONV_HTOBES(UTF16_BOM) || *cp == ICONV_HTOLES(UTF16_BOM))
-    {
-      if (*inbytesleft < (bytes += sizeof(ucs2_t)))
-        return (ucs4_t)ICONV_CES_BAD_SEQUENCE;
-      cp += 1;
+        if (*cp == ICONV_HTOBES(UTF16_BOM) || *cp == ICONV_HTOLES(UTF16_BOM)) {
+            if (*inbytesleft < (bytes += sizeof(ucs2_t)))
+                return (ucs4_t) ICONV_CES_BAD_SEQUENCE;
+            cp += 1;
+        }
     }
-  }
-
-  if (*state == UTF16_LITTLE_ENDIAN)
-    w1 = ICONV_LETOHS(*cp);
-  else
-    w1 = ICONV_BETOHS(*cp);
-
-  if (w1 < 0xD800 || w1 > 0xDFFF)
-  {
-    if (w1 == 0xFFFF || w1 == 0xFFFE)
-      return (ucs4_t)ICONV_CES_INVALID_CHARACTER;
-    res = (ucs4_t)w1;
-  }
-  else
-  {
-    /* Process surrogate pair */
-    if (*inbytesleft < (bytes += 2))
-      return (ucs4_t)ICONV_CES_BAD_SEQUENCE;
-
-    if (w1 > 0xDBFF)
-      /* Broken surrogate character */
-      return (ucs4_t)ICONV_CES_INVALID_CHARACTER;
-
-    cp += 1;
 
     if (*state == UTF16_LITTLE_ENDIAN)
-      w2 = ICONV_LETOHS(*cp);
+        w1 = ICONV_LETOHS(*cp);
     else
-      w2 = ICONV_BETOHS(*cp);
+        w1 = ICONV_BETOHS(*cp);
 
-    if (w2 < 0xDC00 || w2 > 0xDFFF)
-      /* Broken surrogate character */
-      return (ucs4_t)ICONV_CES_INVALID_CHARACTER;
+    if (w1 < 0xD800 || w1 > 0xDFFF) {
+        if (w1 == 0xFFFF || w1 == 0xFFFE)
+            return (ucs4_t) ICONV_CES_INVALID_CHARACTER;
+        res = (ucs4_t) w1;
+    } else {
+        /* Process surrogate pair */
+        if (*inbytesleft < (bytes += 2))
+            return (ucs4_t) ICONV_CES_BAD_SEQUENCE;
 
-    res = (ucs4_t)(w2 & 0x03FF) | ((ucs4_t)(w1 & 0x03FF) << 10);
-    res += 0x00010000;
-  }
+        if (w1 > 0xDBFF)
+            /* Broken surrogate character */
+            return (ucs4_t) ICONV_CES_INVALID_CHARACTER;
 
-  *inbuf += bytes;
-  *inbytesleft -= bytes;
+        cp += 1;
 
-  return res;
+        if (*state == UTF16_LITTLE_ENDIAN)
+            w2 = ICONV_LETOHS(*cp);
+        else
+            w2 = ICONV_BETOHS(*cp);
+
+        if (w2 < 0xDC00 || w2 > 0xDFFF)
+            /* Broken surrogate character */
+            return (ucs4_t) ICONV_CES_INVALID_CHARACTER;
+
+        res = (ucs4_t) (w2 & 0x03FF) | ((ucs4_t) (w1 & 0x03FF) << 10);
+        res += 0x00010000;
+    }
+
+    *inbuf += bytes;
+    *inbytesleft -= bytes;
+
+    return res;
 }
 #endif /* ICONV_TO_UCS_CES_UTF_16 */
 
 static int
-utf_16_get_mb_cur_max(void *data)
-{
-  return 6;
+utf_16_get_mb_cur_max(void *data) {
+    (void) (data);
+    return 6;
 }
 
 #if defined(ICONV_TO_UCS_CES_UTF_16)
 const iconv_to_ucs_ces_handlers_t _iconv_to_ucs_ces_handlers_utf_16 =
-    {
-        utf_16_init_to_ucs,
-        utf_16_close,
-        utf_16_get_mb_cur_max,
-        NULL,
-        NULL,
-        NULL,
-        utf_16_convert_to_ucs
-    };
+        {
+                utf_16_init_to_ucs,
+                utf_16_close,
+                utf_16_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                utf_16_convert_to_ucs
+        };
 #endif
 
 #if defined(ICONV_FROM_UCS_CES_UTF_16)
 const iconv_from_ucs_ces_handlers_t _iconv_from_ucs_ces_handlers_utf_16 =
-    {
-        utf_16_init_from_ucs,
-        utf_16_close,
-        utf_16_get_mb_cur_max,
-        NULL,
-        NULL,
-        NULL,
-        utf_16_convert_from_ucs
-    };
+        {
+                utf_16_init_from_ucs,
+                utf_16_close,
+                utf_16_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                utf_16_convert_from_ucs
+        };
 #endif
 
 #endif /* ICONV_TO_UCS_CES_UTF_16 || ICONV_FROM_UCS_CES_UTF_16 */

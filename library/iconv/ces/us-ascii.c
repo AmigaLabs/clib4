@@ -1,5 +1,5 @@
 /*
- * $Id: us-ascii.c,v 1.0 2021-03-09 12:04:25 apalmate Exp $
+ * $Id: us-ascii.c,v 1.0 2021-03-09 12:04:25 clib2devs Exp $
  *
  * Copyright (c) 2003-2004, Artem B. Bityuckiy
  *
@@ -43,71 +43,71 @@
 
 #if defined(ICONV_FROM_UCS_CES_US_ASCII)
 static size_t
-us_ascii_convert_from_ucs(void *data, ucs4_t in, unsigned char **outbuf, size_t *outbytesleft)
-{
-  if (in > 0x7F)
-    return (size_t)ICONV_CES_INVALID_CHARACTER;
+us_ascii_convert_from_ucs(void *data, ucs4_t in, unsigned char **outbuf, size_t *outbytesleft) {
+    (void) (data);
+    if (in > 0x7F)
+        return (size_t) ICONV_CES_INVALID_CHARACTER;
 
-  *((char *)(*outbuf)) = (char)in;
+    *((char *) (*outbuf)) = (char) in;
 
-  *outbuf += 1;
-  *outbytesleft -= 1;
+    *outbuf += 1;
+    *outbytesleft -= 1;
 
-  return 1;
+    return 1;
 }
 #endif /* ICONV_FROM_UCS_CES_US_ASCII */
 
 #if defined(ICONV_TO_UCS_CES_US_ASCII)
 static ucs4_t
-us_ascii_convert_to_ucs(void *data, const unsigned char **inbuf, size_t *inbytesleft)
-{
-  ucs4_t res;
+us_ascii_convert_to_ucs(void *data, const unsigned char **inbuf, size_t *inbytesleft) {
+    ucs4_t res;
+    (void) (data);
 
-  if (*inbytesleft < 1)
-    return (ucs4_t)ICONV_CES_BAD_SEQUENCE;
+    if (*inbytesleft < 1)
+        return (ucs4_t) ICONV_CES_BAD_SEQUENCE;
 
-  res = (ucs4_t) * *inbuf;
+    res = (ucs4_t) **inbuf;
 
-  if (res > 0x7F)
-    return (ucs4_t)ICONV_CES_INVALID_CHARACTER;
+    if (res > 0x7F)
+        return (ucs4_t) ICONV_CES_INVALID_CHARACTER;
 
-  *inbytesleft -= 1;
-  *inbuf += 1;
+    *inbytesleft -= 1;
+    *inbuf += 1;
 
-  return res;
+    return res;
 }
-#endif /* ICONV_TO_UCS_CES_US_ASCII */
 
+#endif /* ICONV_TO_UCS_CES_US_ASCII */
 static int
-us_ascii_get_mb_cur_max(void *data)
-{
-  return 2;
+us_ascii_get_mb_cur_max(void *data) {
+    (void) (data);
+    return 2;
 }
 
 #if defined(ICONV_TO_UCS_CES_US_ASCII)
 const iconv_to_ucs_ces_handlers_t _iconv_to_ucs_ces_handlers_us_ascii =
-    {
-        NULL,
-        NULL,
-        us_ascii_get_mb_cur_max,
-        NULL,
-        NULL,
-        NULL,
-        us_ascii_convert_to_ucs
-    };
+        {
+                NULL,
+                NULL,
+                us_ascii_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                us_ascii_convert_to_ucs
+        };
 #endif
 
 #if defined(ICONV_FROM_UCS_CES_US_ASCII)
 const iconv_from_ucs_ces_handlers_t _iconv_from_ucs_ces_handlers_us_ascii =
-    {
-        NULL,
-        NULL,
-        us_ascii_get_mb_cur_max,
-        NULL,
-        NULL,
-        NULL,
-        us_ascii_convert_from_ucs
-    };
+        {
+                NULL,
+                NULL,
+                us_ascii_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                us_ascii_convert_from_ucs
+        };
 #endif
 
 #endif /* ICONV_TO_UCS_CES_US_ASCII || ICONV_FROM_UCS_CES_US_ASCII */

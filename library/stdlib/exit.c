@@ -1,86 +1,73 @@
 /*
- * $Id: stdlib_exit.c,v 1.6 2006-01-08 12:04:25 obarthel Exp $
- *
- * :ts=4
- *
- * Portable ISO 'C' (1994) runtime library for the Amiga computer
- * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Neither the name of Olaf Barthel nor the names of contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+ * $Id: stdlib_exit.c,v 1.6 2006-01-08 12:04:25 clib2devs Exp $
+*/
 
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
 
-jmp_buf NOCOMMON __exit_jmp_buf;
-int NOCOMMON __exit_value = RETURN_FAIL;
-BOOL NOCOMMON __exit_blocked;
+int NOCOMMON
+__exit_value = RETURN_FAIL;
+jmp_buf NOCOMMON
+__exit_jmp_buf;
 
-/****************************************************************************/
+static APTR hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
+    uint32 pid = (uint32) userdata;
+    (void) (hook);
 
-void _exit(int return_code)
-{
-	if (NOT __exit_blocked)
-	{
-		__exit_value = return_code;
+    if (process->pr_ProcessID == pid) {
+        return process;
+    }
 
-        /*  If we have a previous timer running task stop it now */
-        if (__global_clib2->tmr_real_task != NULL) {
-            int pid = __global_clib2->tmr_real_task->pr_ProcessID;
-            printf("2Kill previous task with pid %d\n", pid);
-            Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_E);
-            printf("2Wait for child2 %d\n", pid);
-            WaitForChildExit(pid);
-            printf("2Killed\n");
-            __global_clib2->tmr_real_task = NULL;
-        }
-
-        longjmp(__exit_jmp_buf, 1);
-	}
+    return 0;
 }
 
-/****************************************************************************/
+void
+_exit(int return_code) {
+    __exit_value = return_code;
+
+    /*  If we have a previous timer running task stop it before raise SIGINT  */
+    if (__global_clib2->tmr_real_task) {
+        struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
+        int32 pid, process;
+
+        Forbid();
+        /* Block SIGALRM signal from raise */
+        sigblock(SIGALRM);
+        /* Get itimer process ID */
+        pid = __global_clib2->tmr_real_task->pr_ProcessID;
+        /* Scan for process */
+        process = ProcessScan(&h, (CONST_APTR) pid, 0);
+        while (process > 0) {
+            /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
+            Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+            process = ProcessScan(&h, (CONST_APTR) pid, 0);
+            usleep(10);
+        }
+        WaitForChildExit(pid);
+        __global_clib2->tmr_real_task = NULL;
+        Permit();
+    }
+
+    /* Dump all currently unwritten data, especially to the console. */
+    __flush_all_files(-1);
+
+    longjmp(__exit_jmp_buf, 1);
+}
 
 /* The C99 version of _exit(). */
-void _Exit(int return_code)
-{
-	if (NOT __exit_blocked)
-		_exit(return_code);
+void
+_Exit(int return_code) {
+    _exit(return_code);
 }
 
-/****************************************************************************/
+void
+exit(int return_code) {
+    __exit_trap_trigger();
 
-void exit(int return_code)
-{
-	if (NOT __exit_blocked)
-	{
-		__exit_trap_trigger();
-
-		_exit(return_code);
-	}
+    _exit(return_code);
 }

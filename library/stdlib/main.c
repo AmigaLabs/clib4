@@ -1,35 +1,6 @@
 /*
- * $Id: stdlib_main.c,v 1.35 2021-01-31 14:09:00 apalmate Exp $
- *
- * :ts=4
- *
- * Portable ISO 'C' (1994) runtime library for the Amiga computer
- * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Neither the name of Olaf Barthel nor the names of contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+ * $Id: stdlib_main.c,v 1.35 2021-01-31 14:09:00 clib2devs Exp $
+*/
 
 #ifndef EXEC_EXECBASE_H
 #include <exec/execbase.h>
@@ -105,18 +76,20 @@ call_main(void)
 
 	ENTER();
 
-	/* This plants the return buffer for _exit(). */
-	if (setjmp(__exit_jmp_buf) != 0)
-		goto out;
+    /* This plants the return buffer for _exit(). */
+    if (setjmp(__exit_jmp_buf) != 0) {
+        goto out;
+    }
 
-	SHOWMSG("now invoking the constructors");
+    reent_init();
 
+    SHOWMSG("now invoking the constructors");
 	/* Go through the constructor list */
 	_init();
 
-	/* This can be helpful for debugging purposes: print the name of the current
-	   directory, followed by the name of the command and all the parameters
-	   passed to it. */
+    /* This can be helpful for debugging purposes: print the name of the current
+       directory, followed by the name of the command and all the parameters
+       passed to it. */
 #ifndef NDEBUG
 	{
 		UBYTE value_str[10];
@@ -182,23 +155,28 @@ out:
 	}
 #endif /* NDEBUG */
 
-	/* If one of the destructors drops into exit(), either directly
-	   or through a failed assert() call, processing will resume with
-	   the next following destructor. */
-	(void)setjmp(__exit_jmp_buf);
-Printf("__exit_jmp_buf\n");
-	/* Restore the IoErr() value before we return. */
-	SetIoErr(saved_io_err);
+    /* Dump all currently unwritten data, especially to the console. */
+    __flush_all_files(-1);
 
     SHOWMSG("invoking the destructors");
+
+    /* If one of the destructors drops into exit(), either directly
+       or through a failed assert() call, processing will resume with
+       the next following destructor. */
+	(void)setjmp(__exit_jmp_buf);
+
+    reent_exit();
 
     /* Go through the destructor list */
 	_fini();
 
 	SHOWMSG("done.");
 
-	RETURN(__exit_value);
-	return (__exit_value);
+    /* Restore the IoErr() value before we return. */
+    SetIoErr(saved_io_err);
+
+    RETURN(__exit_value);
+	return(__exit_value);
 }
 
 /****************************************************************************/
@@ -247,7 +225,9 @@ out:
 STATIC VOID
 detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
 {
-	struct ElfIFace *IElf = __IElf;
+    (void) (return_code);
+    (void) (exit_data);
+    (void) (sysBase);
 
     _fini();
 }
@@ -280,12 +260,29 @@ _main()
 	struct Process *this_process;
 	int return_code = RETURN_FAIL;
 	ULONG current_stack_size;
-	static int j = 0, k = 0;
 
     SysBase = *(struct Library **)4;
 	IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 
-	/* Try to open the libraries we need to proceed. */
+    /* Pick up the Workbench startup message, if available. */
+    this_process = (struct Process *)FindTask(NULL);
+
+    if (this_process->pr_CLI == ZERO)
+    {
+        struct MsgPort *mp = &this_process->pr_MsgPort;
+
+        WaitPort(mp);
+
+        startup_message = (struct WBStartup *)GetMsg(mp);
+    }
+    else
+    {
+        startup_message = NULL;
+    }
+
+    __WBenchMsg = (struct WBStartup *)startup_message;
+
+    /* Try to open the libraries we need to proceed. */
 	if (CANNOT open_libraries())
 	{
 		const char *error_message;
@@ -299,24 +296,6 @@ _main()
 		__show_error(error_message);
 		goto out;
 	}
-
-    /* Pick up the Workbench startup message, if available. */
-	this_process = (struct Process *)FindTask(NULL);
-
-	if (this_process->pr_CLI == ZERO)
-	{
-		struct MsgPort *mp = &this_process->pr_MsgPort;
-
-		WaitPort(mp);
-
-		startup_message = (struct WBStartup *)GetMsg(mp);
-	}
-	else
-	{
-		startup_message = NULL;
-	}
-
-	__WBenchMsg = (struct WBStartup *)startup_message;
 
 	if (__disable_dos_requesters)
 	{
@@ -408,7 +387,6 @@ _main()
 #endif /* NDEBUG */
 
             return_code = __swap_stack_and_call(stk,(APTR)call_main);
-            Printf("return_code = %d\n", return_code);
 
             FreeVec(new_stack);
             FreeVec(stk);
@@ -512,16 +490,16 @@ out:
 	if (old_window_pointer_valid)
 		__set_process_window(old_window_pointer);
 
-	if (startup_message != NULL)
+    if (child_process == NULL)
+        close_libraries();
+
+    if (startup_message != NULL)
 	{
 		Forbid();
 
 		ReplyMsg((struct Message *)startup_message);
 
-        Permit();
 	}
-
-    close_libraries();
 
 	return (return_code);
 }

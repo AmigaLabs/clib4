@@ -1,108 +1,121 @@
 /*
- * $Id: stdlib_setjmp.c,v 1.6 2010-10-20 13:50:17 obarthel Exp $
- *
- * :ts=4
- *
- * Portable ISO 'C' (1994) runtime library for the Amiga computer
- * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Neither the name of Olaf Barthel nor the names of contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+ * $Id: stdlib_setjmp.c,v 1.6 2010-10-20 13:50:17 clib2devs Exp $
+*/
 
-__asm("						\n\
-							\n\
-	.text					\n\
-	.align	2				\n\
-							\n\
-	.globl	setjmp			\n\
-							\n\
-setjmp:						\n\
-							\n\
-	mflr	r10				\n\
-	mfcr	r11				\n\
-	mr		r12, r1			\n\
-	stmw	r10, 0(r3)		\n\
-	stfd	f14, 88(r3)		\n\
-	stfd	f15, 96(r3)		\n\
-	stfd	f16, 104(r3)	\n\
-	stfd	f17, 112(r3)	\n\
-	stfd	f18, 120(r3)	\n\
-	stfd	f19, 128(r3)	\n\
-	stfd	f20, 136(r3)	\n\
-	stfd	f21, 144(r3)	\n\
-	stfd	f22, 152(r3)	\n\
-	stfd	f23, 160(r3)	\n\
-	stfd	f24, 168(r3)	\n\
-	stfd	f25, 176(r3)	\n\
-	stfd	f26, 184(r3)	\n\
-	stfd	f27, 192(r3)	\n\
-	stfd	f28, 200(r3)	\n\
-	stfd	f29, 208(r3)	\n\
-	stfd	f30, 216(r3)	\n\
-	stfd	f31, 224(r3)	\n\
-	li		r3, 0			\n\
-	blr						\n\
-							\n\
+__asm("					\n\
+						\n\
+	.text				\n\
+	.align	2			\n\
+						\n\
+	.globl	setjmp		\n\
+						\n\
+setjmp:					\n\
+                        \n\
+	addi	3,3,7		\n\
+	rlwinm	3,3,0,0,28	\n\
+	stw	1,0(3)			\n\
+	stwu	2,4(3)		\n\
+	stwu	13,4(3)		\n\
+	stwu	14,4(3)		\n\
+	stwu	15,4(3)		\n\
+	stwu	16,4(3)		\n\
+	stwu	17,4(3)		\n\
+	stwu	18,4(3)		\n\
+	stwu	19,4(3)		\n\
+	stwu	20,4(3)		\n\
+	stwu	21,4(3)		\n\
+	stwu	22,4(3)		\n\
+	stwu	23,4(3)		\n\
+	stwu	24,4(3)		\n\
+	stwu	25,4(3)		\n\
+	stwu	26,4(3)		\n\
+	stwu	27,4(3)		\n\
+	stwu	28,4(3)		\n\
+	stwu	29,4(3)		\n\
+	stwu	30,4(3)		\n\
+	stwu	31,4(3)		\n\
+	mflr	4           \n\
+	stwu	4,4(3)		\n\
+	mfcr	4           \n\
+	stwu	4,4(3)		\n\
+	stfdu	14,8(3)		\n\
+	stfdu	15,8(3)		\n\
+	stfdu	16,8(3)		\n\
+	stfdu	17,8(3)		\n\
+	stfdu	18,8(3)		\n\
+	stfdu	19,8(3)		\n\
+	stfdu	20,8(3)		\n\
+	stfdu	21,8(3)		\n\
+	stfdu	22,8(3)		\n\
+	stfdu	23,8(3)		\n\
+	stfdu	24,8(3)		\n\
+	stfdu	25,8(3)		\n\
+	stfdu	26,8(3)		\n\
+	stfdu	27,8(3)		\n\
+	stfdu	28,8(3)		\n\
+	stfdu	29,8(3)		\n\
+	stfdu	30,8(3)		\n\
+	stfdu	31,8(3)		\n\
+	li	3,0				\n\
+	blr					\n\
+                        \n\
 ");
 
-__asm("						\n\
-	.text					\n\
-	.align	2				\n\
-							\n\
-	.globl	longjmp			\n\
-							\n\
-longjmp:					\n\
-							\n\
-	lmw		r10,0(r3)		\n\
-	mtlr	r10				\n\
-	mtcr	r11				\n\
-	mr		r1,r12			\n\
-	lfd		f14, 88(r3)		\n\
-	lfd		f15, 96(r3)		\n\
-	lfd		f16, 104(r3)	\n\
-	lfd		f17, 112(r3)	\n\
-	lfd		f18, 120(r3)	\n\
-	lfd		f19, 128(r3)	\n\
-	lfd		f20, 136(r3)	\n\
-	lfd		f21, 144(r3)	\n\
-	lfd		f22, 152(r3)	\n\
-	lfd		f23, 160(r3)	\n\
-	lfd		f24, 168(r3)	\n\
-	lfd		f25, 176(r3)	\n\
-	lfd		f26, 184(r3)	\n\
-	lfd		f27, 192(r3)	\n\
-	lfd		f28, 200(r3)	\n\
-	lfd		f29, 208(r3)	\n\
-	lfd		f30, 216(r3)	\n\
-	lfd		f31, 224(r3)	\n\
-	cmpwi	r4, 0			\n\
-	bne		1f				\n\
-	li		r3,1			\n\
-	blr						\n\
-1:							\n\
-	mr		r3, r4			\n\
-	blr						\n\
-							\n\
+__asm("					\n\
+	.text				\n\
+	.align	2			\n\
+						\n\
+	.globl	longjmp		\n\
+						\n\
+longjmp:				\n\
+						\n\
+	addi	3,3,7		\n\
+	rlwinm	3,3,0,0,28  \n\
+	lwz	1,0(3)		    \n\
+	lwzu	2,4(3)	    \n\
+	lwzu	13,4(3)	    \n\
+	lwzu	14,4(3)	    \n\
+	lwzu	15,4(3)	    \n\
+	lwzu	16,4(3)	    \n\
+	lwzu	17,4(3)	    \n\
+	lwzu	18,4(3)	    \n\
+	lwzu	19,4(3)	    \n\
+	lwzu	20,4(3)	    \n\
+	lwzu	21,4(3)	    \n\
+	lwzu	22,4(3)	    \n\
+	lwzu	23,4(3)	    \n\
+	lwzu	24,4(3)	    \n\
+	lwzu	25,4(3)	    \n\
+	lwzu	26,4(3)	    \n\
+	lwzu	27,4(3)	    \n\
+	lwzu	28,4(3)	    \n\
+	lwzu	29,4(3)	    \n\
+	lwzu	30,4(3)	    \n\
+	lwzu	31,4(3)	    \n\
+	lwzu	5,4(3)	    \n\
+	mtlr	5           \n\
+	lwzu	5,4(3)	    \n\
+	mtcrf	255,5       \n\
+	lfdu	14,8(3)     \n\
+	lfdu	15,8(3)     \n\
+	lfdu	16,8(3)     \n\
+	lfdu	17,8(3)     \n\
+	lfdu	18,8(3)     \n\
+	lfdu	19,8(3)     \n\
+	lfdu	20,8(3)     \n\
+	lfdu	21,8(3)     \n\
+	lfdu	22,8(3)     \n\
+	lfdu	23,8(3)     \n\
+	lfdu	24,8(3)     \n\
+	lfdu	25,8(3)     \n\
+	lfdu	26,8(3)     \n\
+	lfdu	27,8(3)     \n\
+	lfdu	28,8(3)     \n\
+	lfdu	29,8(3)     \n\
+	lfdu	30,8(3)     \n\
+	lfdu	31,8(3)     \n\
+	mr.	3,4             \n\
+	bclr+	4,2         \n\
+	li	3,1             \n\
+	blr					\n\
 ");

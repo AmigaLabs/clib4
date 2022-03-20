@@ -1,5 +1,5 @@
 /*
- * $Id: sys_syslog.h,v 1.0 2021-02-22 17:20:08 apalmate Exp $
+ * $Id: sys_syslog.h,v 1.0 2021-02-22 17:20:08 clib2devs Exp $
  *
  * :ts=4
  *

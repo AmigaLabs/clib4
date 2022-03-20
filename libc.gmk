@@ -1,5 +1,5 @@
 #
-# $Id: libc.gmk,v 1.9 2010-10-20 13:50:17 obarthel Exp $
+# $Id: libc.gmk,v 1.9 2010-10-20 13:50:17 clib2devs Exp $
 # :ts=8
 # -*- mode: makefile; -*-
 
@@ -32,7 +32,7 @@ C_BYTESWAP := \
     byteswap/bswap16.o \
     byteswap/bswap24.o \
     byteswap/bswap32.o \
-    byteswap/bswap24.o \
+    byteswap/bswap64.o \
     byteswap/swab.o \
     byteswap/swab24.o \
     byteswap/swab32.o \
@@ -451,11 +451,11 @@ C_STDLIB := \
 	stdlib/ldiv.o \
 	stdlib/lldiv.o \
 	stdlib/lib_startup.o \
-	stdlib/machine_test.o \
 	stdlib/main.o \
 	stdlib/main_stub.o \
 	stdlib/malloc.o \
-	stdlib/math.o \
+	stdlib/math_double.o \
+	stdlib/math_float.o \
 	stdlib/mblen.o \
 	stdlib/mbstowcs.o \
 	stdlib/mbtowc.o \
@@ -710,6 +710,7 @@ C_UNISTD := \
 	unistd/truncate64.o \
 	unistd/ttyname.o \
 	unistd/ttyname_r.o \
+    unistd/ualarm.o \
 	unistd/unlink.o \
 	unistd/unlink_retries.o \
 	unistd/usleep.o \

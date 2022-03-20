@@ -1,4 +1,4 @@
-/* $Id: socket_dn_comp.c,v 1.0 2022-03-14 10:44:15 apalmate Exp $
+/* $Id: socket_dn_comp.c,v 1.0 2022-03-14 10:44:15 clib2devs Exp $
 
    Copyright (C) 2005-2006, 2008-2020 Free Software Foundation, Inc.
 
@@ -102,7 +102,7 @@ dn_comp(unsigned char *src, unsigned char *dst, int space, unsigned char **dnptr
         *dst = 0;
         return 1;
     }
-    end = src + l;
+    end = (const char *) src + l;
     n = getlens(lens,  (char *)src, l);
     if (!n) return -1;
 
