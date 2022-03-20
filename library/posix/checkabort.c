@@ -24,26 +24,27 @@ static APTR hook_function(struct Hook *hook, APTR userdata, struct Process *proc
 void
 __check_abort(void) {
     if (__check_abort_enabled && FLAG_IS_SET(SetSignal(0, __break_signal_mask), __break_signal_mask)) {
-        struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
-        int32 pid, process;
+        if (__global_clib2->tmr_real_task != NULL) {
+            struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
+            int32 pid, process;
 
-        Forbid();
-        /* Block SIGALRM signal from raise */
-        sigblock(SIGALRM);
-        /* Get itimer process ID */
-        pid = __global_clib2->tmr_real_task->pr_ProcessID;
-        /* Scan for process */
-        process = ProcessScan(&h, (CONST_APTR) pid, 0);
-        /* If we find the process send a signal to kill it */
-        while (process > 0) {
-            /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
-            Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+            Forbid();
+            /* Block SIGALRM signal from raise */
+            sigblock(SIGALRM);
+            /* Get itimer process ID */
+            pid = __global_clib2->tmr_real_task->pr_ProcessID;
+            /* Scan for process */
             process = ProcessScan(&h, (CONST_APTR) pid, 0);
+            /* If we find the process send a signal to kill it */
+            while (process > 0) {
+                /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
+                Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+                process = ProcessScan(&h, (CONST_APTR) pid, 0);
+            }
+            WaitForChildExit(pid);
+            __global_clib2->tmr_real_task = NULL;
+            Permit();
         }
-        WaitForChildExit(pid);
-        __global_clib2->tmr_real_task = NULL;
-        Permit();
-
         raise(SIGINT);
     }
 }

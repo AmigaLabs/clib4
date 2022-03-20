@@ -13,6 +13,7 @@ C_RESOLV := \
     resolv/res_querydomain.o \
     resolv/res_search.o \
     resolv/res_send.o \
+    resolv/res_state.o \
     resolv/resolvconf.o
 
 

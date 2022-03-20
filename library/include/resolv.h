@@ -63,7 +63,7 @@ typedef struct __res_state {
 #define __RES 19960801
 
 #ifndef _PATH_RESCONF
-#define _PATH_RESCONF        "ENVARC:resolv.conf"
+#define _PATH_RESCONF        "Devs:Internet/name_resolution"
 #endif
 
 struct res_sym {

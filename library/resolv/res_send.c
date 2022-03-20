@@ -33,27 +33,29 @@
  */
 
 #ifndef _SOCKET_HEADERS_H
+
 #include "socket/socket_headers.h"
+
 #endif /* _SOCKET_HEADERS_H */
 
 #ifndef _TIME_HEADERS_H
+
 #include "time_headers.h"
+
 #endif /* _TIME_HEADERS_H */
 
 #include <pthread.h>
 #include <poll.h>
 #include "lookup.h"
 
-static void cleanup(void *p)
-{
-    close((int)p);
+static void cleanup(void *p) {
+    close((int) p);
 }
 
-static unsigned long mtime()
-{
+static unsigned long mtime() {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    return (unsigned long)ts.tv_sec * 1000
+    return (unsigned long) ts.tv_sec * 1000
            + ts.tv_nsec / 1000000;
 }
 
@@ -64,16 +66,13 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
 
     int fd;
     int timeout, attempts, retry_interval, servfail_retry = 0;
-    union {
-        struct sockaddr_in sin;
-        struct sockaddr_in6 sin6;
-    } sa = {0}, ns[MAXNS] = {{{0}}};
-    socklen_t sl = sizeof sa.sin;
+    struct sockaddr_in sa = {0}, ns[MAXNS] = {{0}};
+    socklen_t sl = sizeof sa;
     int nns = 0;
     int family = AF_INET;
     int rlen;
     int next;
-    int i, j;
+    int i, j = 0;
     int cs;
     struct pollfd pfd;
     unsigned long t0, t1, t2;
@@ -86,9 +85,9 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
     for (nns = 0; nns < conf->nns; nns++) {
         const struct address *iplit = &conf->ns[nns];
         if (iplit->family == AF_INET) {
-            memcpy(&ns[nns].sin.sin_addr, iplit->addr, 4);
-            ns[nns].sin.sin_port = htons(53);
-            ns[nns].sin.sin_family = AF_INET;
+            memcpy(&ns[nns].sin_addr, iplit->addr, 4);
+            ns[nns].sin_port = htons(53);
+            ns[nns].sin_family = AF_INET;
         } else {
             __set_errno(EAFNOSUPPORT);
             return -1;
@@ -96,14 +95,8 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
     }
 
     /* Get local address and open/bind a socket */
-    sa.sin.sin_family = family;
-    fd = socket(family, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
-
-    /* Handle case where system lacks IPv6 support */
-    if (fd < 0 && family == AF_INET6 && errno == EAFNOSUPPORT) {
-        fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
-        family = AF_INET;
-    }
+    sa.sin_family = family;
+    fd = socket(family, SOCK_DGRAM, 0);
     if (fd < 0 || bind(fd, (void *) &sa, sl) < 0) {
         if (fd >= 0) close(fd);
         pthread_setcancelstate(cs, 0);
@@ -129,12 +122,13 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
     for (; t2 - t0 < timeout; t2 = mtime()) {
         if (t2 - t1 >= retry_interval) {
             /* Query all configured namservers in parallel */
-            for (i = 0; i < nqueries; i++)
-                if (!alens[i])
-                    for (j = 0; j < nns; j++)
-                        sendto(fd, queries[i],
-                               qlens[i], MSG_NOSIGNAL,
-                               (void *) &ns[j], sl);
+            for (i = 0; i < nqueries; i++) {
+                if (!alens[i]) {
+                    for (j = 0; j < nns; j++) {
+                        sendto(fd, queries[i], qlens[i], MSG_NOSIGNAL, (void *) &ns[j], sl);
+                    }
+                }
+            }
             t1 = t2;
             servfail_retry = 2 * nqueries;
         }
@@ -142,15 +136,9 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
         /* Wait for a response, or until time to retry */
         if (poll(&pfd, 1, t1 + retry_interval - t2) <= 0) continue;
 
-        while ((rlen = recvfrom(fd, answers[next], asize, 0,
-                                (void *) &sa, (socklen_t[1]) {sl})) >= 0) {
-
+        while ((rlen = recvfrom(fd, answers[next], asize, 0, (void *) &sa, (socklen_t[1]) {sl})) >= 0) {
             /* Ignore non-identifiable packets */
             if (rlen < 4) continue;
-
-            /* Ignore replies from addresses we didn't send to */
-            for (j = 0; j < nns && memcmp(ns + j, &sa, sl); j++);
-            if (j == nns) continue;
 
             /* Find which query this answer goes with, if any */
             for (i = next; i < nqueries && (
@@ -168,9 +156,7 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
                     break;
                 case 2:
                     if (servfail_retry && servfail_retry--)
-                        sendto(fd, queries[i],
-                               qlens[i], MSG_NOSIGNAL,
-                               (void *) &ns[j], sl);
+                        sendto(fd, queries[i], qlens[i], MSG_NOSIGNAL, (void *) &ns[j], sl);
                 default:
                     continue;
             }
@@ -186,15 +172,16 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
             if (next == nqueries) goto out;
         }
     }
-    out:
+
+out:
     pthread_cleanup_pop(1);
 
     return 0;
 }
 
 static int
-__res_msend(int nqueries, const unsigned char *const *queries, const int *qlens, unsigned char *const *answers, int *alens, int asize)
-{
+__res_msend(int nqueries, const unsigned char *const *queries, const int *qlens, unsigned char *const *answers,
+            int *alens, int asize) {
     struct resolvconf conf;
     if (__get_resolv_conf(&conf, 0, 0) < 0)
         return -1;
@@ -202,8 +189,7 @@ __res_msend(int nqueries, const unsigned char *const *queries, const int *qlens,
 }
 
 int
-res_send(const unsigned char *msg, int msglen, unsigned char *answer, int anslen)
-{
+res_send(const unsigned char *msg, int msglen, unsigned char *answer, int anslen) {
     int r = __res_msend(1, &msg, &msglen, &answer, &anslen, anslen);
-    return r<0 || !anslen ? -1 : anslen;
+    return r < 0 || !anslen ? -1 : anslen;
 }

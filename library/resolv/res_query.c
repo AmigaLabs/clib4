@@ -42,8 +42,10 @@ int res_query(const char *name, int class, int type, unsigned char *dest, int le
 {
     unsigned char q[280];
     int ql = res_mkquery(0, name, class, type, 0, 0, 0, q, sizeof q);
+    printf("ql=%d\n", ql);
     if (ql < 0) return ql;
     int r = res_send(q, ql, dest, len);
+    printf("r = %d\n");
     if (r<12) {
         h_errno = TRY_AGAIN;
         return -1;
