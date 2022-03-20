@@ -1,5 +1,5 @@
 /*
- * $Id: ucs-4.c,v 1.0 2021-03-09 12:04:25 apalmate Exp $
+ * $Id: ucs-4.c,v 1.0 2021-03-09 12:04:25 clib2devs Exp $
  *
  * Copyright (c) 2003-2004, Artem B. Bityuckiy
  * Copyright (c) 1999,2000, Konstantin Chuguev. All rights reserved.
@@ -52,106 +52,102 @@
 #define UCS_4LE "ucs_4le"
 
 static void *
-ucs_4_init(const char *encoding)
-{
-  int *data;
+ucs_4_init(const char *encoding) {
+    int *data;
 
-  if ((data = (int *)malloc(sizeof(int))) == NULL)
-    return (void *)NULL;
+    if ((data = (int *) malloc(sizeof(int))) == NULL)
+        return (void *) NULL;
 
-  if (strcmp(encoding, UCS_4LE) == 0)
-    *data = UCS_4_LITTLE_ENDIAN;
-  else
-    *data = UCS_4_BIG_ENDIAN;
+    if (strcmp(encoding, UCS_4LE) == 0)
+        *data = UCS_4_LITTLE_ENDIAN;
+    else
+        *data = UCS_4_BIG_ENDIAN;
 
-  return (void *)data;
+    return (void *) data;
 }
 
 static size_t
-ucs_4_close(void *data)
-{
-  free(data);
-  return 0;
+ucs_4_close(void *data) {
+    free(data);
+    return 0;
 }
 
 #if defined(ICONV_FROM_UCS_CES_UCS_4)
 static size_t
-ucs_4_convert_from_ucs(void *data, ucs4_t in, unsigned char **outbuf, size_t *outbytesleft)
-{
-  if ((in >= 0x0000D800 && in <= 0x0000DFFF) /* Surrogate character */
-      || in > 0x7FFFFFFF || in == 0x0000FFFF || in == 0x0000FFFE)
-    return (size_t)ICONV_CES_INVALID_CHARACTER;
+ucs_4_convert_from_ucs(void *data, ucs4_t in, unsigned char **outbuf, size_t *outbytesleft) {
+    if ((in >= 0x0000D800 && in <= 0x0000DFFF) /* Surrogate character */
+        || in > 0x7FFFFFFF || in == 0x0000FFFF || in == 0x0000FFFE)
+        return (size_t) ICONV_CES_INVALID_CHARACTER;
 
-  if (*outbytesleft < sizeof(ucs4_t))
-    return (size_t)ICONV_CES_NOSPACE;
+    if (*outbytesleft < sizeof(ucs4_t))
+        return (size_t) ICONV_CES_NOSPACE;
 
-  if (*((int *)data) == UCS_4_BIG_ENDIAN)
-    *((ucs4_t *)(*outbuf)) = ICONV_HTOBEL(in);
-  else
-    *((ucs4_t *)(*outbuf)) = ICONV_HTOLEL(in);
+    if (*((int *) data) == UCS_4_BIG_ENDIAN)
+        *((ucs4_t *) (*outbuf)) = ICONV_HTOBEL(in);
+    else
+        *((ucs4_t *) (*outbuf)) = ICONV_HTOLEL(in);
 
-  *outbuf += sizeof(ucs4_t);
-  *outbytesleft -= sizeof(ucs4_t);
+    *outbuf += sizeof(ucs4_t);
+    *outbytesleft -= sizeof(ucs4_t);
 
-  return sizeof(ucs4_t);
+    return sizeof(ucs4_t);
 }
 #endif /* ICONV_FROM_UCS_CES_UCS_4 */
 
 #if defined(ICONV_TO_UCS_CES_UCS_4)
 static ucs4_t
-ucs_4_convert_to_ucs(void *data, const unsigned char **inbuf, size_t *inbytesleft)
-{
-  ucs4_t res;
+ucs_4_convert_to_ucs(void *data, const unsigned char **inbuf, size_t *inbytesleft) {
+    ucs4_t res;
 
-  if (*inbytesleft < sizeof(ucs4_t))
-    return (ucs4_t)ICONV_CES_BAD_SEQUENCE;
+    if (*inbytesleft < sizeof(ucs4_t))
+        return (ucs4_t) ICONV_CES_BAD_SEQUENCE;
 
-  if (*((int *)data) == UCS_4_BIG_ENDIAN)
-    res = ICONV_BETOHL(*((ucs4_t *)(*inbuf)));
-  else
-    res = ICONV_LETOHL(*((ucs4_t *)(*inbuf)));
+    if (*((int *) data) == UCS_4_BIG_ENDIAN)
+        res = ICONV_BETOHL(*((ucs4_t *) (*inbuf)));
+    else
+        res = ICONV_LETOHL(*((ucs4_t *) (*inbuf)));
 
-  if ((res >= 0x0000D800 && res <= 0x0000DFFF) /* Surrogate character */
-      || res > 0x7FFFFFFF || res == 0x0000FFFF || res == 0x0000FFFE)
-    return (ucs4_t)ICONV_CES_INVALID_CHARACTER;
+    if ((res >= 0x0000D800 && res <= 0x0000DFFF) /* Surrogate character */
+        || res > 0x7FFFFFFF || res == 0x0000FFFF || res == 0x0000FFFE)
+        return (ucs4_t) ICONV_CES_INVALID_CHARACTER;
 
-  *inbytesleft -= sizeof(ucs4_t);
-  *inbuf += sizeof(ucs4_t);
+    *inbytesleft -= sizeof(ucs4_t);
+    *inbuf += sizeof(ucs4_t);
 
-  return res;
+    return res;
 }
 #endif /* ICONV_TO_UCS_CES_UCS_4 */
 
 static int
-ucs_4_get_mb_cur_max(void *data)
-{
-  return 4;
+ucs_4_get_mb_cur_max(void *data) {
+    (void) (data);
+    return 4;
 }
 
 #if defined(ICONV_TO_UCS_CES_UCS_4)
 const iconv_to_ucs_ces_handlers_t _iconv_to_ucs_ces_handlers_ucs_4 =
-    {
-        ucs_4_init,
-        ucs_4_close,
-        ucs_4_get_mb_cur_max,
-        NULL,
-        NULL,
-        NULL,
-        ucs_4_convert_to_ucs
-    };
+        {
+                ucs_4_init,
+                ucs_4_close,
+                ucs_4_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                ucs_4_convert_to_ucs
+        };
 #endif
 
 #if defined(ICONV_FROM_UCS_CES_UCS_4)
 const iconv_from_ucs_ces_handlers_t _iconv_from_ucs_ces_handlers_ucs_4 =
-    {
-        ucs_4_init,
-        ucs_4_close,
-        ucs_4_get_mb_cur_max,
-        NULL,
-        NULL,
-        NULL,
-        ucs_4_convert_from_ucs
-    };
+        {
+                ucs_4_init,
+                ucs_4_close,
+                ucs_4_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                ucs_4_convert_from_ucs
+        };
 #endif
 
 #endif /* ICONV_TO_UCS_CES_UCS_4 || ICONV_FROM_UCS_CES_UCS_4 */

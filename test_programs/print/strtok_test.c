@@ -1,5 +1,5 @@
 /*
- * $Id: strtok_test.c,v 1.1 2004-10-25 19:50:33 obarthel Exp $
+ * $Id: strtok_test.c,v 1.1 2004-10-25 19:50:33 clib2devs Exp $
  *
  * :ts=4
  */

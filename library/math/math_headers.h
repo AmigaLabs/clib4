@@ -1,35 +1,6 @@
 /*
- * $Id: math_headers.h,v 1.15 2006-11-13 09:51:53 obarthel Exp $
- *
- * :ts=4
- *
- * Portable ISO 'C' (1994) runtime library for the Amiga computer
- * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Neither the name of Olaf Barthel nor the names of contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+ * $Id: math_headers.h,v 1.15 2006-11-13 09:51:53 clib2devs Exp $
+*/
 
 #ifndef _MATH_HEADERS_H
 #define _MATH_HEADERS_H
@@ -337,6 +308,8 @@ do {							\
 
 #define	TRUNC(d)	(_b_trunc(&(d)))
 
+#define	nan_mix(x, y)	(((x) + 0.0L) + ((y) + 0))
+
 static __inline void
 _b_trunc(volatile double *_dp)
 {
@@ -368,5 +341,57 @@ extern float __ldexp_expf(float,int);
 extern double complex __ldexp_cexp(double complex z, int expt);
 extern float complex __ldexp_cexpf(float complex,int);
 extern int signgam;
+
+/* Function used in C library */
+#define __s_isfinite(x) \
+    (sizeof(x) == sizeof(float) ? __s_isfinite_float(x) \
+    : (sizeof (x) == sizeof (double)) ? __s_isfinite_double(x) \
+    : __s_isfinite_long_double(x))
+
+#define __s_signbit(x)                    \
+    ((sizeof (x) == sizeof (float)) ? __s_signbit_float(x)    \
+    : (sizeof (x) == sizeof (double)) ? __s_signbit_double(x)    \
+    : __s_signbit_long_double(x))
+
+#define	__stdlib__isinf(x)					\
+    ((sizeof (x) == sizeof (float)) ? __stdlib_isinff(x)	\
+    : (sizeof (x) == sizeof (double)) ? __stdlib_isinf(x)	\
+    : __stdlib_isinfl(x))
+
+#define __stdlib__isnan(x) \
+	((sizeof(x) == sizeof(float)) ? __stdlib_isnanf(x) \
+    : (sizeof (x) == sizeof (double)) ? __stdlib_isnan(x) \
+    :  __stdlib_isnanl(x))
+
+extern double __stdlib_pow(double x, double y);
+extern double __stdlib_floor(double x);
+extern double __stdlib_log(double x);
+extern double __stdlib_fabs(double x);
+extern double __stdlib_frexp(double x, int *eptr);
+extern double __stdlib_nan(const char *s);
+extern double __stdlib_sqrt(double x);
+extern double __stdlib_inf(void);
+extern int __stdlib_isnan(double d);
+extern int __stdlib_isnanl(long double e);
+extern int __stdlib_isinf(double d);
+extern int __stdlib_isinfl(long double e);
+extern int __s_signbit_long_double(long double e);
+extern int __s_isfinite_long_double(long double d);
+extern int __s_isfinite_double(double d);
+extern int __s_signbit_double(double d);
+extern double __stdlib_scalbn(double x, int n);
+extern double __stdlib_copysign(double x, double y);
+
+extern float __stdlib_fabsf(float x);
+extern float __stdlib_powf(float x, float y);
+extern float __stdlib_nanf(const char *s);
+extern float __stdlib_sqrtf(float x);
+extern float __stdlib_copysignf(float x, float y);
+extern float __stdlib_inff(void);
+extern int __stdlib_isnanf(float f);
+extern int __stdlib_isinff(float f);
+extern int __s_signbit_float(float f);
+extern int __s_isfinite_float(float f);
+extern float __stdlib_scalbnf(float x, int n);
 
 #endif /* _MATH_HEADERS_H */

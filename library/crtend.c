@@ -1,5 +1,5 @@
 /*
- * $Id: crtend.c,v 1.2 2005-03-09 21:07:25 obarthel Exp $
+ * $Id: crtend.c,v 1.2 2005-03-09 21:07:25 clib2devs Exp $
  *
  * :ts=4
  *

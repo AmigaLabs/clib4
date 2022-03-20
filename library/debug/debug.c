@@ -1,5 +1,5 @@
 /*
- * $Id: debug.c,v 1.6 2006-09-25 14:51:15 obarthel Exp $
+ * $Id: debug.c,v 1.6 2006-09-25 14:51:15 clib2devs Exp $
  *
  * :ts=8
  *

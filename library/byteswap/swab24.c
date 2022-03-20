@@ -1,8 +1,3 @@
-
-#if defined(__GNUC__) && defined(__PPC__)
-
-/* r3=from, r4=to, r5=len/remaining, r6/r7=index & r7=temp, r8/r9/r10=read/write temp */
-
 asm("\
 	.text\n\
 	.align 2\n\
@@ -58,34 +53,3 @@ swab24:\n\
 	or			%r3,%r4,%r4\n\
 	blr\n\
 ");
-
-#else
-
-#include <sys/types.h>
-#include <stdint.h>
-
-/*
- * Ugh, this is really very, very ineffiecient.
- * (But simple, understandable and safe)
- */
-
-void *swab24(void *from,void *to,ssize_t len)
-{
-uint8_t *src=from,B0,B1,B2,*dst=to;
-int i;
-
-for(i=0;i<len;i+=3) {
-	B0=src[i];
-	B1=src[i+1];
-	B2=src[i+2];
-	dst[i]=B2;
-	dst[i+1]=B1;
-	dst[i+2]=B0;
-}
-
-return(to);
-}
-
-#endif
-
-

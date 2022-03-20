@@ -1,5 +1,5 @@
 /*
- * $Id: ucs-2.c,v 1.0 2021-03-09 12:04:25 apalmate Exp $
+ * $Id: ucs-2.c,v 1.0 2021-03-09 12:04:25 clib2devs Exp $
  *
  * Copyright (c) 2003-2004, Artem B. Bityuckiy
  * Copyright (c) 1999,2000, Konstantin Chuguev. All rights reserved.
@@ -51,106 +51,102 @@
 #define UCS_2LE "ucs_2le"
 
 static void *
-ucs_2_init(const char *encoding)
-{
-  int *data;
+ucs_2_init(const char *encoding) {
+    int *data;
 
-  if ((data = (int *)malloc(sizeof(int))) == NULL)
-    return (void *)NULL;
+    if ((data = (int *) malloc(sizeof(int))) == NULL)
+        return (void *) NULL;
 
-  if (strcmp(encoding, UCS_2LE) == 0)
-    *data = UCS_2_LITTLE_ENDIAN;
-  else
-    *data = UCS_2_BIG_ENDIAN;
+    if (strcmp(encoding, UCS_2LE) == 0)
+        *data = UCS_2_LITTLE_ENDIAN;
+    else
+        *data = UCS_2_BIG_ENDIAN;
 
-  return (void *)data;
+    return (void *) data;
 }
 
 static size_t
-ucs_2_close(void *data)
-{
-  free(data);
-  return 0;
+ucs_2_close(void *data) {
+    free(data);
+    return 0;
 }
 
 #if defined(ICONV_FROM_UCS_CES_UCS_2)
 static size_t
-ucs_2_convert_from_ucs(void *data, ucs4_t in, unsigned char **outbuf, size_t *outbytesleft)
-{
-  if ((in >= 0x0000D800 && in <= 0x0000DFFF) /* Surrogate character */
-      || in >= 0x0000FFFE)
-    return (size_t)ICONV_CES_INVALID_CHARACTER;
+ucs_2_convert_from_ucs(void *data, ucs4_t in, unsigned char **outbuf, size_t *outbytesleft) {
+    if ((in >= 0x0000D800 && in <= 0x0000DFFF) /* Surrogate character */
+        || in >= 0x0000FFFE)
+        return (size_t) ICONV_CES_INVALID_CHARACTER;
 
-  if (*outbytesleft < sizeof(ucs2_t))
-    return (size_t)ICONV_CES_NOSPACE;
+    if (*outbytesleft < sizeof(ucs2_t))
+        return (size_t) ICONV_CES_NOSPACE;
 
-  if (*((int *)data) == UCS_2_BIG_ENDIAN)
-    *((ucs2_t *)(*outbuf)) = ICONV_HTOBES((ucs2_t)in);
-  else
-    *((ucs2_t *)(*outbuf)) = ICONV_HTOLES((ucs2_t)in);
+    if (*((int *) data) == UCS_2_BIG_ENDIAN)
+        *((ucs2_t *) (*outbuf)) = ICONV_HTOBES((ucs2_t) in);
+    else
+        *((ucs2_t *) (*outbuf)) = ICONV_HTOLES((ucs2_t) in);
 
-  *outbuf += sizeof(ucs2_t);
-  *outbytesleft -= sizeof(ucs2_t);
+    *outbuf += sizeof(ucs2_t);
+    *outbytesleft -= sizeof(ucs2_t);
 
-  return sizeof(ucs2_t);
+    return sizeof(ucs2_t);
 }
 #endif /* ICONV_FROM_UCS_CES_UCS_2 */
 
 #if defined(ICONV_TO_UCS_CES_UCS_2)
 static ucs4_t
-ucs_2_convert_to_ucs(void *data, const unsigned char **inbuf, size_t *inbytesleft)
-{
-  ucs4_t res;
+ucs_2_convert_to_ucs(void *data, const unsigned char **inbuf, size_t *inbytesleft) {
+    ucs4_t res;
 
-  if (*inbytesleft < sizeof(ucs2_t))
-    return (ucs4_t)ICONV_CES_BAD_SEQUENCE;
+    if (*inbytesleft < sizeof(ucs2_t))
+        return (ucs4_t) ICONV_CES_BAD_SEQUENCE;
 
-  if (*((int *)data) == UCS_2_BIG_ENDIAN)
-    res = (ucs4_t)ICONV_BETOHS(*((ucs2_t *)(*inbuf)));
-  else
-    res = (ucs4_t)ICONV_LETOHS(*((ucs2_t *)(*inbuf)));
+    if (*((int *) data) == UCS_2_BIG_ENDIAN)
+        res = (ucs4_t) ICONV_BETOHS(*((ucs2_t *) (*inbuf)));
+    else
+        res = (ucs4_t) ICONV_LETOHS(*((ucs2_t *) (*inbuf)));
 
-  if ((res >= 0x0000D800 && res <= 0x0000DFFF) /* Surrogate character */
-      || res >= 0x0000FFFE)
-    return (ucs4_t)ICONV_CES_INVALID_CHARACTER;
+    if ((res >= 0x0000D800 && res <= 0x0000DFFF) /* Surrogate character */
+        || res >= 0x0000FFFE)
+        return (ucs4_t) ICONV_CES_INVALID_CHARACTER;
 
-  *inbytesleft -= sizeof(ucs2_t);
-  *inbuf += sizeof(ucs2_t);
+    *inbytesleft -= sizeof(ucs2_t);
+    *inbuf += sizeof(ucs2_t);
 
-  return res;
+    return res;
 }
 #endif /* ICONV_TO_UCS_CES_UCS_2 */
 
 static int
-ucs_2_get_mb_cur_max(void *data)
-{
-  return 2;
+ucs_2_get_mb_cur_max(void *data) {
+    (void) (data);
+    return 2;
 }
 
 #if defined(ICONV_TO_UCS_CES_UCS_2)
 const iconv_to_ucs_ces_handlers_t _iconv_to_ucs_ces_handlers_ucs_2 =
-    {
-        ucs_2_init,
-        ucs_2_close,
-        ucs_2_get_mb_cur_max,
-        NULL,
-        NULL,
-        NULL,
-        ucs_2_convert_to_ucs
-    };
+        {
+                ucs_2_init,
+                ucs_2_close,
+                ucs_2_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                ucs_2_convert_to_ucs
+        };
 #endif
 
 #if defined(ICONV_FROM_UCS_CES_UCS_2)
 const iconv_from_ucs_ces_handlers_t _iconv_from_ucs_ces_handlers_ucs_2 =
-    {
-        ucs_2_init,
-        ucs_2_close,
-        ucs_2_get_mb_cur_max,
-        NULL,
-        NULL,
-        NULL,
-        ucs_2_convert_from_ucs
-    };
+        {
+                ucs_2_init,
+                ucs_2_close,
+                ucs_2_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                ucs_2_convert_from_ucs
+        };
 #endif
 
 #endif /* ICONV_TO_UCS_CES_UCS_2 || ICONV_FROM_UCS_CES_UCS_2 */

@@ -1,5 +1,5 @@
 /*
- * $Id: execvp_test.c,v 1.2 2006-08-07 08:39:56 obarthel Exp $
+ * $Id: execvp_test.c,v 1.2 2006-08-07 08:39:56 clib2devs Exp $
  *
  * :ts=4
  */

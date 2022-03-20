@@ -1,5 +1,5 @@
 /*
- * $Id: semaphore_private.h,v 1.0 2021-01-18 17:02:26 apalmate Exp $
+ * $Id: semaphore_private.h,v 1.0 2021-01-18 17:02:26 clib2devs Exp $
  *
  * :ts=4
 

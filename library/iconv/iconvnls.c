@@ -1,5 +1,5 @@
 /*
- * $Id: iconv_iconvnls.c,v 1.0 2021-03-09 12:04:25 apalmate Exp $
+ * $Id: iconv_iconvnls.c,v 1.0 2021-03-09 12:04:25 clib2devs Exp $
  *
  * Copyright (c) 2003-2004, Artem B. Bityuckiy
  *

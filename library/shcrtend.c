@@ -1,5 +1,5 @@
 /*
- * $Id: shcrtend.c,v 1.0 2021-01-02 19:35:03 apalmate Exp $
+ * $Id: shcrtend.c,v 1.0 2021-01-02 19:35:03 clib2devs Exp $
  *
  * :ts=4
  *

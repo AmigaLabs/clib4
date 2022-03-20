@@ -1,5 +1,5 @@
 /*
- * $Id: semaphore_sem_post.c,v 1.0 2021-01-18 17:08:03 apalmate Exp $
+ * $Id: semaphore_sem_post.c,v 1.0 2021-01-18 17:08:03 clib2devs Exp $
  *
  * :ts=4
  *

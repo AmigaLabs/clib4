@@ -1,5 +1,5 @@
 /*
- * $Id: base_dir_nametest.c,v 1.1 2006-09-25 18:20:09 obarthel Exp $
+ * $Id: base_dir_nametest.c,v 1.1 2006-09-25 18:20:09 clib2devs Exp $
  *
  * :ts=4
  */

@@ -1,5 +1,5 @@
 /*
- * $Id: ucs-4-internal.c,v 1.0 2021-03-09 12:04:25 apalmate Exp $
+ * $Id: ucs-4-internal.c,v 1.0 2021-03-09 12:04:25 clib2devs Exp $
  *
  * Copyright (c) 2003-2004, Artem B. Bityuckiy
  * Copyright (c) 1999,2000, Konstantin Chuguev. All rights reserved.
@@ -45,73 +45,75 @@
 
 #if defined(ICONV_FROM_UCS_CES_UCS_4_INTERNAL)
 static size_t
-ucs_4_internal_convert_from_ucs(void *data, register ucs4_t in, unsigned char **outbuf, size_t *outbytesleft)
-{
-  if (in > 0x7FFFFFFF)
-    return (size_t)ICONV_CES_INVALID_CHARACTER;
+ucs_4_internal_convert_from_ucs(void *data, register ucs4_t in, unsigned char **outbuf, size_t *outbytesleft) {
+    (void) (data);
+    if (in > 0x7FFFFFFF)
+        return (size_t) ICONV_CES_INVALID_CHARACTER;
 
-  if (*outbytesleft < sizeof(ucs4_t))
-    return (size_t)ICONV_CES_NOSPACE;
+    if (*outbytesleft < sizeof(ucs4_t))
+        return (size_t) ICONV_CES_NOSPACE;
 
-  *((ucs4_t *)(*outbuf)) = in;
-  *outbytesleft -= sizeof(ucs4_t);
-  *outbuf += sizeof(ucs4_t);
+    *((ucs4_t *) (*outbuf)) = in;
+    *outbytesleft -= sizeof(ucs4_t);
+    *outbuf += sizeof(ucs4_t);
 
-  return sizeof(ucs4_t);
+    return sizeof(ucs4_t);
 }
+
 #endif /* ICONV_FROM_UCS_CES_UCS_4_INTERNAL */
 
 #if defined(ICONV_TO_UCS_CES_UCS_4_INTERNAL)
 static ucs4_t
-ucs_4_internal_convert_to_ucs(void *data, const unsigned char **inbuf, size_t *inbytesleft)
-{
-  register ucs4_t res;
+ucs_4_internal_convert_to_ucs(void *data, const unsigned char **inbuf, size_t *inbytesleft) {
+    register ucs4_t res;
+    (void) (data);
 
-  if (*inbytesleft < sizeof(ucs4_t))
-    return (ucs4_t)ICONV_CES_BAD_SEQUENCE;
+    if (*inbytesleft < sizeof(ucs4_t))
+        return (ucs4_t) ICONV_CES_BAD_SEQUENCE;
 
-  res = *((ucs4_t *)(*inbuf));
+    res = *((ucs4_t *) (*inbuf));
 
-  if (res > 0x7FFFFFFF)
-    return (ucs4_t)ICONV_CES_INVALID_CHARACTER;
+    if (res > 0x7FFFFFFF)
+        return (ucs4_t) ICONV_CES_INVALID_CHARACTER;
 
-  *inbytesleft -= sizeof(ucs4_t);
-  *inbuf += sizeof(ucs4_t);
+    *inbytesleft -= sizeof(ucs4_t);
+    *inbuf += sizeof(ucs4_t);
 
-  return res;
+    return res;
 }
+
 #endif /* ICONV_TO_UCS_CES_UCS_4_INTERNAL */
 
 static int
-ucs_4_internal_get_mb_cur_max(void *data)
-{
-  return 2;
+ucs_4_internal_get_mb_cur_max(void *data) {
+    (void) (data);
+    return 2;
 }
 
 #if defined(ICONV_TO_UCS_CES_UCS_4_INTERNAL)
 const iconv_to_ucs_ces_handlers_t _iconv_to_ucs_ces_handlers_ucs_4_internal =
-    {
-        NULL,
-        NULL,
-        ucs_4_internal_get_mb_cur_max,
-        NULL,
-        NULL,
-        NULL,
-        ucs_4_internal_convert_to_ucs
-    };
+        {
+                NULL,
+                NULL,
+                ucs_4_internal_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                ucs_4_internal_convert_to_ucs
+        };
 #endif
 
 #if defined(ICONV_FROM_UCS_CES_UCS_4_INTERNAL)
 const iconv_from_ucs_ces_handlers_t _iconv_from_ucs_ces_handlers_ucs_4_internal =
-    {
-        NULL,
-        NULL,
-        ucs_4_internal_get_mb_cur_max,
-        NULL,
-        NULL,
-        NULL,
-        ucs_4_internal_convert_from_ucs
-    };
+        {
+                NULL,
+                NULL,
+                ucs_4_internal_get_mb_cur_max,
+                NULL,
+                NULL,
+                NULL,
+                ucs_4_internal_convert_from_ucs
+        };
 #endif
 
 #endif /* ICONV_TO_UCS_CES_UCS_4_INTERNAL || ICONV_FROM_UCS_CES_UCS_4_INTERNAL */

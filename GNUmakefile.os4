@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 2.1 2021-03-26 11:28:07 apalmate Exp $
+# $Id: Makefile,v 2.1 2021-03-26 11:28:07 clib2devs Exp $
 #
 # :ts=8
 #
@@ -41,11 +41,10 @@ BUILD_DIR = $(LIB_ROOT)/build
 ##############################################################################
 
 WARNINGS := \
-	-Wall -W -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
+	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-unused-value \
-	-Wno-deprecated-declarations -Wno-unused-label -Wno-sign-compare -Wno-cast-function-type \
-	-Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter -Wstrict-aliasing \
-	-Wshadow # -Werror -Wbad-function-cast #-Wconversion -Wformat
+	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type \
+	-Wstrict-aliasing -Wshadow # -Werror -Wbad-function-cast #-Wconversion -Wformat
 
 PIC		   := -fPIC 
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -74,7 +73,7 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/stat \
 				-I$(LIB_DIR)/mount
 
-OPTIONS    :=  -mstrict-align -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -DUNIX_PATH_SEMANTICS -nostdlib
+OPTIONS    :=  -mstrict-align -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -DUNIX_PATH_SEMANTICS -nostdlib
 OPTIMIZE   := -DNDEBUG -O3
 
 DEBUG      := -gstabs
@@ -101,6 +100,7 @@ include libm.gmk
 include libdebug.gmk
 include libamiga.gmk
 include libprofile.gmk
+include libresolv.gmk
 
 all-targets: \
 	$(BUILD_DIR)/lib/crt0.o \
@@ -129,11 +129,13 @@ version:
 	$(COPY) c.lib_rev.rev debug.lib_rev.rev
 	$(COPY) c.lib_rev.rev profile.lib_rev.rev
 	$(COPY) c.lib_rev.rev m.lib_rev.rev
+	$(COPY) c.lib_rev.rev resolv.lib_rev.rev
 	bumprev amiga.lib
 	bumprev c.lib
 	bumprev debug.lib
 	bumprev profile.lib
 	bumprev m.lib
+	bumprev resolv.lib
 
 ##############################################################################
 
@@ -175,31 +177,31 @@ $(BUILD_DIR)/lib/shcrtend.o : $(LIB_DIR)/shcrtend.c
 
 define COMPILE
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo "Compiling Static \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)echo "Compiling Static \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(CFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_ASM
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo "Compiling Static ASM \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)echo "Compiling Static ASM \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo "Compiling Shared \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)echo "Compiling Shared \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(CFLAGS) $(PIC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED_ASM
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo "Compiling Shared Asm \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)echo "Compiling Shared Asm \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(PIC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define ASSEMBLE
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo "Assembling \033[0;31m$<\033[0m \t\t \033[0;33m[$(@D)]\033[0m"
+$(VERBOSE)echo "Assembling \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(AFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 

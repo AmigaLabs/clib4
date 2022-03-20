@@ -1,5 +1,5 @@
 /*
- * $Id: fgets_test.c,v 1.1.1.1 2004-07-26 16:36:07 obarthel Exp $
+ * $Id: fgets_test.c,v 1.1.1.1 2004-07-26 16:36:07 clib2devs Exp $
  *
  * :ts=4
  */

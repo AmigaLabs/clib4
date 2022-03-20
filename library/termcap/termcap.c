@@ -25,9 +25,6 @@ Boston, MA 02111-1307, USA.  */
 #include <fcntl.h>
 #include <term.h>
 
-/* Make the library identifiable with the RCS ident command.  */
-static const char *version_string = "\n$Version: GNU termcap 1.3.1 $\n";
-
 /* BUFSIZE is the initial size allocated for the buffer
    for reading the termcap file.
    It is not a limit.
@@ -380,7 +377,8 @@ tgetent(char *bp, const char *name) {
         if (malloc_size) {
             int offset1 = bp1 - bp, offset2 = tc_search_point - bp;
             malloc_size = offset1 + buf.size;
-            bp = termcap_name = (char *) xrealloc(bp, malloc_size);
+            bp = (char *) xrealloc(bp, malloc_size);
+            termcap_name = (char *) xrealloc(bp, malloc_size);
             bp1 = (char *) termcap_name + offset1;
             tc_search_point = (char *)termcap_name + offset2;
         }

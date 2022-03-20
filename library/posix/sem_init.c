@@ -1,5 +1,5 @@
 /*
- * $Id: semaphore_sem_init.c,v 1.0 2021-01-18 17:08:03 apalmate Exp $
+ * $Id: semaphore_sem_init.c,v 1.0 2021-01-18 17:08:03 clib2devs Exp $
  *
  * :ts=4
  *
@@ -31,21 +31,20 @@
 
 #include "semaphore_private.h"
 
-int sem_init(sem_t *sem, int pshared, unsigned int value)
-{
-	isem_t *isem;
+int sem_init(sem_t *sem, int pshared, unsigned int value) {
+    isem_t *isem;
+    (void) (pshared);
 
-	isem = malloc(sizeof(isem_t));
-	if (isem == NULL)
-	{
-		__set_errno(ENOMEM);
-		return -1;
-	}
+    isem = malloc(sizeof(isem_t));
+    if (isem == NULL) {
+        __set_errno(ENOMEM);
+        return -1;
+    }
 
-	InitSemaphore(&isem->accesslock);
-	NewList(&isem->waitlist);
-	isem->value = value;
+    InitSemaphore(&isem->accesslock);
+    NewList(&isem->waitlist);
+    isem->value = value;
 
-	*sem = isem;
-	return 0;
+    *sem = isem;
+    return 0;
 }

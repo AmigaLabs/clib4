@@ -1,6 +1,4 @@
 
-#if defined(__GNUC__) && defined(__PPC__)
-
 /* r3=from, r4=to, r5=len/temp, r6/r7=index, r8/r9=load/store temp, r10=cache hint */
 
 /* This version is unrolled and uses cache-hinting. It appears to gain about 10%
@@ -65,37 +63,3 @@ swab64:\n\
 	or			%r3,%r4,%r4\n\
 	blr\n\
 ");
-
-#else
-
-#include <sys/types.h>
-#include <stdint.h>
-
-void *swab64(void *from,void *to,ssize_t len)
-{
-int i;
-struct {
-	uint32_t	u32[2];
-} *u64in=from,*u64out=to;
-uint32_t tmp1,tmp2;
-
-for(i=0;i<(len>>3);i++) {
-	tmp1=u64in[i].u32[0];
-	tmp2=u64in[i].u32[1];
-	u64out[i].u32[0]=((tmp2&0xff)<<24)|
-		((tmp2&0xff00)<<8)|
-		((tmp2&0xff0000)>>8)|
-		((tmp2&0xff000000)>>24);
-	u64out[i].u32[1]=((tmp1&0xff)<<24)|
-		((tmp1&0xff00)<<8)|
-		((tmp1&0xff0000)>>8)|
-		((tmp1&0xff000000)>>24);
-}
-
-return(to);
-}
-
-#endif
-
-/* vi:set ts=3: */
-

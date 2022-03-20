@@ -1,42 +1,6 @@
 /*
- * $Id: libc_init_global.c,v 1.0 2021-02-04 17:01:06 apalmate Exp $
- *
- * :ts=4
- *
- * Portable ISO 'C' (1994) runtime library for the Amiga computer
- * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Neither the name of Olaf Barthel nor the names of contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- *
- *****************************************************************************
- *
- * Documentation and source code for this library, and the most recent library
- * build are available from <https://github.com/afxgroup/clib2>.
- *
- *****************************************************************************
- */
+ * $Id: libc_init_global.c,v 1.0 2021-02-04 17:01:06 clib2devs Exp $
+*/
 
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
@@ -83,13 +47,14 @@ extern struct ElfIFace *__IElf;
 
 struct _clib2 NOCOMMON*__global_clib2;
 
-STDLIB_CONSTRUCTOR(global_init)
+void
+reent_init()
 {
     BOOL success = FALSE;
 
     ENTER();
 
-/* Initialize global structure */
+    /* Initialize global structure */
 	__global_clib2 = (struct _clib2 *)AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
 	if (__global_clib2 == NULL)
 	{
@@ -151,14 +116,6 @@ STDLIB_CONSTRUCTOR(global_init)
 		/* Get the current task pointer */
 		__global_clib2->self = (struct Process *)FindTask(0);
 
-        /* clear tempnam stuff */
-		srand(time(NULL));
-		__global_clib2->inc = 0;
-		memset(__global_clib2->emergency, 0, sizeof(__global_clib2->emergency));
-
-        /* Clear fenv flags */
-        feclearexcept(FE_ALL_EXCEPT);
-
 		/* Init memalign list */
         __global_clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
                                                             ASO_NoTrack,         FALSE,
@@ -169,6 +126,9 @@ STDLIB_CONSTRUCTOR(global_init)
                                                             ASOITEM_GCPolicy,    ITEMGC_AFTERCOUNT,
                                                             ASOITEM_GCParameter, 1000,
                                                             TAG_DONE);
+        if (!__global_clib2->__memalign_pool) {
+            goto out;
+        }
 
 		/* Check is SYSV library is available in the system */
 		__global_clib2->haveShm = FALSE;
@@ -187,7 +147,12 @@ STDLIB_CONSTRUCTOR(global_init)
 			}
 		}
 
-		/* Check if .unix file exists in the current dir. If the file exists enable 
+        /* Clear itimer start time */
+        __global_clib2->tmr_start_time.tv_sec = 0;
+        __global_clib2->tmr_start_time.tv_usec = 0;
+        __global_clib2->tmr_real_task = NULL;
+
+		/* Check if .unix file exists in the current dir. If the file exists enable
 		 * unix path semantics
 		 */
 		__global_clib2->__unix_path_semantics = FALSE;
@@ -229,6 +194,31 @@ STDLIB_CONSTRUCTOR(global_init)
 
 out:
 
+    if (!success) {
+        /* Clean wide status memory */
+        if (__global_clib2->wide_status) {
+            FreeVec(__global_clib2->wide_status);
+            __global_clib2->wide_status = NULL;
+        }
+        /* Free memalign pool object */
+        if (__global_clib2->__memalign_pool) {
+            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
+            __global_clib2->__memalign_pool = NULL;
+        }
+
+        /* Remove timer tasks */
+        if (__global_clib2->tmr_real_task != NULL) {
+            Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+            WaitForChildExit(__global_clib2->tmr_real_task->pr_ProcessID);
+            __global_clib2->tmr_real_task = NULL;
+        }
+
+        /* Free library */
+        if (__global_clib2) {
+            FreeVec(__global_clib2);
+            __global_clib2 = NULL;
+        }
+    }
     SHOWVALUE(success);
     LEAVE();
 
@@ -238,7 +228,8 @@ out:
         CONSTRUCTOR_FAIL();
 }
 
-STDLIB_DESTRUCTOR(global_exit)
+void
+reent_exit()
 {
     ENTER();
 
@@ -252,6 +243,16 @@ STDLIB_DESTRUCTOR(global_exit)
 		{
             FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
 		}
+
+        /*  If we have a previous timer running task stop it now */
+        /*
+        if (__global_clib2->tmr_real_task != NULL) {
+            int pid = __global_clib2->tmr_real_task->pr_ProcessID;
+            Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+            WaitForChildExit(pid);
+            __global_clib2->tmr_real_task = NULL;
+        }
+        */
 
 		if (__ISysVIPC != NULL)
 		{

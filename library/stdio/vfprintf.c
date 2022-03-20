@@ -1,35 +1,6 @@
 /*
- * $Id: stdio_vfprintf.c,v 1.27 2022-03-5 17:42:43 apalmate Exp $
- *
- * :ts=4
- *
- * Portable ISO 'C' (1994) runtime library for the Amiga computer
- * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Neither the name of Olaf Barthel nor the names of contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+ * $Id: stdio_vfprintf.c,v 1.27 2022-03-5 17:42:43 clib2devs Exp $
+*/
 
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
@@ -116,86 +87,6 @@ static char *fmt_u(uintmax_t x, char *s) {
     return s;
 }
 
-static const double two54 = 1.80143985094819840000e+16; /* 0x43500000, 0x00000000 */
-
-
-static int
-__s_signbit_float(float f) {
-    union IEEEf2bits u;
-
-    u.f = f;
-    return (u.bits.sign);
-}
-
-static int
-__s_signbit_double(double d) {
-    union IEEEd2bits u;
-
-    u.d = d;
-    return (u.bits.sign);
-}
-
-static int
-__s_isfinite_float(float f) {
-    union IEEEf2bits u;
-
-    u.f = f;
-    return (u.bits.exp != 255);
-}
-
-static int
-__s_isfinite_double(double d) {
-    union IEEEd2bits u;
-
-    u.d = d;
-    return (u.bits.exp != 2047);
-}
-
-static int
-__s_isfinite_long_double(long double d) {
-    union IEEEd2bits u;
-
-    u.d = d;
-    return (u.bits.exp != 2047);
-}
-
-static int
-__s_signbit_long_double(long double e) {
-    union IEEEl2bits u;
-
-    u.e = e;
-    return (u.bits.sign);
-}
-
-#define __s_isfinite(x) \
-	(sizeof(x) == sizeof(float) ? __s_isfinite_float(x) \
-    : (sizeof (x) == sizeof (double)) ? __s_isfinite_double(x) \
-    : __s_isfinite_long_double(x))
-
-#define	__s_signbit(x)					\
-    ((sizeof (x) == sizeof (float)) ? __s_signbit_float(x)	\
-    : (sizeof (x) == sizeof (double)) ? __s_signbit_double(x)	\
-    : __s_signbit_long_double(x))
-
-static double
-__frexp(double x, int *eptr) {
-    int32_t hx, ix, lx;
-    EXTRACT_WORDS(hx, lx, x);
-    ix = 0x7fffffff & hx;
-    *eptr = 0;
-    if (ix >= 0x7ff00000 || ((ix | lx) == 0)) return x;    /* 0,inf,nan */
-    if (ix < 0x00100000) {        /* subnormal */
-        x *= two54;
-        GET_HIGH_WORD(hx, x);
-        ix = hx & 0x7fffffff;
-        *eptr = -54;
-    }
-    *eptr += (ix >> 20) - 1022;
-    hx = (hx & 0x800fffff) | 0x3fe00000;
-    SET_HIGH_WORD(x, hx);
-    return x;
-}
-
 static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     uint32_t big[(LDBL_MAX_EXP + LDBL_MANT_DIG) / 9 + 1];
     uint32_t *a, *d, *r, *z;
@@ -221,9 +112,9 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     }
 
     if (!__s_isfinite(y)) {
-        s = ((t & 32) ? "inf" : "INF");
+        s = ((t & 32) ? (char *)"inf" : (char *)"INF");
         if (y != y) {
-            s = ((t & 32) ? "nan" : "NAN");
+            s = ((t & 32) ? (char *)"nan" : (char *)"NAN");
             pl = 0;
         }
         pad(f, ' ', w, 3 + pl, fl & ~__S_ZERO_PAD);
@@ -233,7 +124,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         return MAX(w, 3 + pl);
     }
 
-    y = (__frexp(y, &e2) * 2);
+    y = (__stdlib_frexp(y, &e2) * 2);
     if (y > 0)
         e2--;
 
@@ -701,7 +592,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                     a = strerror(errno);
                 else
                     case 's':
-                        a = arg.p ? arg.p : "(null)";
+                        a = arg.p ? arg.p : (char *) "(null)";
 #if 1
                 /* On Android, memchr() will return NULL for
                  * out-of-bound requests, e.g. if |p == -1|. */

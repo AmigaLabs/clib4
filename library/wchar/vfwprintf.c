@@ -1,36 +1,6 @@
 /*
- * $Id: wchar_vfwprintf.c,v 1.4 2021-02-05 00:41:13 apalmate Exp $
- *
- * :ts=4
- *
- * Portable ISO 'C' (1994) runtime library for the Amiga computer
- * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Neither the name of Olaf Barthel nor the names of contributors
- *     may be used to endorse or promote products derived from this
- *     software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
-// LibWChar
+ * $Id: wchar_vfwprintf.c,v 1.4 2021-02-05 00:41:13 clib2devs Exp $
+*/
 
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
@@ -45,46 +15,41 @@ static int out_printf(FOut *_out, const char *format, ...);
 static int out_error(FOut *_out);
 static int getint(wchar_t **s);
 
-size_t wstring_wstocs(char dst[], size_t dsz, const wchar_t *src, size_t ssz)
-{
-    if (!src)
-    {
+size_t
+wstring_wstocs(char dst[], size_t dsz, const wchar_t *src, size_t ssz) {
+    if (!src) {
         __set_errno(EINVAL);
         return 0U;
     }
 
     ssz = ((!ssz) ? wcslen(src) : ssz);
     dsz = (((ssz * sizeof(wchar_t)) >= dsz) ? (dsz - 1) : dsz);
-    if ((dsz = wcstombs(dst, src, dsz)) == 0)
-    {
+    if ((dsz = wcstombs(dst, src, dsz)) == 0) {
         return 0U;
     }
     dst[dsz] = '\0';
     return dsz;
 }
 
-size_t wstring_cstows(wchar_t dst[], size_t dsz, const char *src, size_t ssz)
-{
-    if (!src)
-    {
+size_t
+wstring_cstows(wchar_t dst[], size_t dsz, const char *src, size_t ssz) {
+    if (!src) {
         __set_errno(EINVAL);
         return 0U;
     }
 
     ssz = ((!ssz) ? strlen(src) : ssz);
     dsz = ((ssz >= dsz) ? (dsz - 1) : dsz);
-    if ((dsz = mbstowcs(dst, src, dsz)) == 0)
-    {
+    if ((dsz = mbstowcs(dst, src, dsz)) == 0) {
         return 0U;
     }
     dst[dsz] = L'\0';
     return dsz;
 }
 
-int __wc_indelim(wchar_t wc, const wchar_t *delim)
-{
-    while (*delim)
-    {
+int
+__wc_indelim(wchar_t wc, const wchar_t *delim) {
+    while (*delim) {
         if (wc == *delim)
             return 1;
         delim++;
@@ -92,72 +57,60 @@ int __wc_indelim(wchar_t wc, const wchar_t *delim)
     return 0;
 }
 
-static void out_init_file(FOut *out, FILE *f)
-{
+static void
+out_init_file(FOut *out, FILE *f) {
     memset(out, 0, sizeof(*out));
     out->file = f;
 }
 
-void out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size)
-{
+void
+out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size) {
     memset(out, 0, sizeof(*out));
     out->buffer = buffer;
     out->buffer_pos = 0;
     out->buffer_size = buffer_size;
 }
 
-static void out(FOut *_out, const wchar_t *text, size_t length)
-{
-    if (!length)
-    {
+static void
+out(FOut *_out, const wchar_t *text, size_t length) {
+    if (!length) {
         return;
     }
-    if (_out->file != NULL)
-    {
+    if (_out->file != NULL) {
         wchar_t const *w = text;
-        while (length--)
-        {
+        while (length--) {
             fputwc(*w++, _out->file);
         }
-    }
-    else
-    {
+    } else {
         // Write into a bounded buffer.
         size_t avail = _out->buffer_size - _out->buffer_pos;
-        if (length > avail)
-        {
+        if (length > avail) {
             length = avail;
         }
-        memcpy((char *)(_out->buffer + _out->buffer_pos), (const char *)text, (length * sizeof(wchar_t)));
+        memcpy((char *) (_out->buffer + _out->buffer_pos), (const char *) text, (length * sizeof(wchar_t)));
         _out->buffer_pos += length;
     }
 }
 
-static void out_putwc(wchar_t wc, FOut *_out)
-{
-    if (_out->file)
-    {
+static void
+out_putwc(wchar_t wc, FOut *_out) {
+    if (_out->file) {
         fputwc(wc, _out->file);
-    }
-    else if (_out->buffer_pos < _out->buffer_size)
-    {
+    } else if (_out->buffer_pos < _out->buffer_size) {
         _out->buffer[_out->buffer_pos++] = wc;
     }
 }
 
-static int out_printf(FOut *_out, const char *format, ...)
-{
+static int
+out_printf(FOut *_out, const char *format, ...) {
     va_list args;
     va_start(args, format);
 
-    if (_out->file)
-    {
+    if (_out->file) {
         int ret = vfprintf(_out->file, format, args);
         va_end(args);
         return ret;
-    }
-    else
-    {
+    } else {
         // TODO(digit): Make this faster.
         // First, generate formatted byte output.
         size_t mb_len,
@@ -166,28 +119,26 @@ static int out_printf(FOut *_out, const char *format, ...)
         wchar_t *wide_buffer;
 
         if (
-                (!(mb_len = (size_t)vsnprintf(NULL, 0, format, args))) ||
-                ((mb_buffer = malloc((mb_len + 1))) == NULL))
-        {
+                (!(mb_len = (size_t) vsnprintf(NULL, 0, format, args))) ||
+                ((mb_buffer = malloc((mb_len + 1))) == NULL)) {
             va_end(args);
             return 0;
         }
 
-        (void)vsnprintf(mb_buffer, (mb_len + 1), format, args);
+        (void) vsnprintf(mb_buffer, (mb_len + 1), format, args);
 
         // Then convert to wchar_t buffer.
         wide_len = mbstowcs(NULL, mb_buffer, mb_len);
 
         if (
-                (wide_len == 0) || (wide_len == (size_t)-1) ||
-                ((wide_buffer = malloc((wide_len + 1) * sizeof(wchar_t))) == NULL))
-        {
+                (wide_len == 0) || (wide_len == (size_t) - 1) ||
+                ((wide_buffer = malloc((wide_len + 1) * sizeof(wchar_t))) == NULL)) {
             va_end(args);
             free(mb_buffer);
             return 0;
         }
 
-        (void)mbstowcs(wide_buffer, mb_buffer, mb_len);
+        (void) mbstowcs(wide_buffer, mb_buffer, mb_len);
 
         // Add to buffer.
         out(_out, wide_buffer, wide_len);
@@ -196,32 +147,29 @@ static int out_printf(FOut *_out, const char *format, ...)
         free(mb_buffer);
         va_end(args);
 
-        return (int)wide_len;
+        return (int) wide_len;
     }
     va_end(args);
 }
 
-static int out_error(FOut *_out)
-{
-    if (_out->file != NULL)
-    {
+static int
+out_error(FOut *_out) {
+    if (_out->file != NULL) {
         return ferror(_out->file);
     }
     return 0;
 }
 
-int out_overflow(FOut *_out)
-{
-    if (_out->file != NULL)
-    {
+int
+out_overflow(FOut *_out) {
+    if (_out->file != NULL) {
         return feof(_out->file);
     }
     return (_out->buffer_pos >= _out->buffer_size);
 }
 
 static int
-getint(wchar_t **s)
-{
+getint(wchar_t **s) {
     int i;
     for (i = 0; iswdigit(**s); (*s)++)
         i = 10 * i + (**s - '0');
@@ -242,9 +190,9 @@ static const char sizeprefix['y' - 'a'] =
                 ['p' - 'a'] = 'j'
         };
 
-int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
-{
-    wchar_t *s = (wchar_t *)fmt;
+int
+wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type) {
+    wchar_t *s = (wchar_t *) fmt;
     unsigned int l10n = 0;
     int w, p;
     union arg arg;
@@ -257,130 +205,104 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
     char charfmt[16];
     wchar_t wc;
 
-    for (;;)
-    {
+    for (;;) {
         wchar_t *a, *z;
         unsigned int litpct, fl;
         /* Update output count, end loop when fmt is exhausted */
-        if (cnt >= 0)
-        {
-            if (l > INT_MAX - cnt)
-            {
+        if (cnt >= 0) {
+            if (l > INT_MAX - cnt) {
                 if (!out_error(f))
                     __set_errno(EOVERFLOW);
                 cnt = -1;
-            }
-            else
+            } else
                 cnt += l;
         }
         if (!*s)
             break;
 
         /* Handle literal text and %% format specifiers */
-        for (a = s; *s && *s != '%'; s++)
-            ;
-        litpct = (unsigned int)(wcsspn(s, (const wchar_t *)L"%") / 2); /* Optimize %%%% runs */
+        for (a = s; *s && *s != '%'; s++);
+        litpct = (unsigned int) (wcsspn(s, (const wchar_t *) L"%") / 2); /* Optimize %%%% runs */
         z = s + litpct;
         s += 2 * litpct;
-        l = (int)(z - a);
+        l = (int) (z - a);
         if (f)
-            out(f, a, (size_t)l);
+            out(f, a, (size_t) l);
         if (l)
             continue;
 
-        if (iswdigit(s[1]) && (s[2] == '$'))
-        {
+        if (iswdigit(s[1]) && (s[2] == '$')) {
             l10n = 1;
             argpos = (s[1] - '0');
             s += 3;
-        }
-        else
-        {
+        } else {
             argpos = -1;
             s++;
         }
 
         /* Read modifier flags */
-        for (fl = 0; ((((unsigned)*s - ' ') < 32) && (__U_FLAGMASK & (1U << (*s - ' ')))); s++)
+        for (fl = 0; ((((unsigned) *s - ' ') < 32) && (__U_FLAGMASK & (1U << (*s - ' ')))); s++)
             fl |= (1U << (*s - ' '));
 
         /* Read field width */
-        if (*s == '*')
-        {
-            if (iswdigit(s[1]) && s[2] == '$')
-            {
+        if (*s == '*') {
+            if (iswdigit(s[1]) && s[2] == '$') {
                 l10n = 1;
                 nl_type[s[1] - '0'] = _INT;
-                w = (int)nl_arg[s[1] - '0'].i;
+                w = (int) nl_arg[s[1] - '0'].i;
                 s += 3;
-            }
-            else if (!l10n)
-            {
-                w = f ? va_arg(*ap, int) : 0;
+            } else if (!l10n) {
+                w = f ? va_arg(*ap,
+                int) : 0;
                 s++;
-            }
-            else
+            } else
                 return -1;
             if (w < 0)
                 fl |= __U_LEFT_ADJ, w = -w;
-        }
-        else if ((w = getint(&s)) < 0)
+        } else if ((w = getint(&s)) < 0)
             return -1;
 
         /* Read precision */
-        if (*s == '.' && s[1] == '*')
-        {
-            if (isdigit(s[2]) && s[3] == '$')
-            {
+        if (*s == '.' && s[1] == '*') {
+            if (isdigit(s[2]) && s[3] == '$') {
                 nl_type[s[2] - '0'] = _INT;
-                p = (int)nl_arg[s[2] - '0'].i;
+                p = (int) nl_arg[s[2] - '0'].i;
                 s += 4;
-            }
-            else if (!l10n)
-            {
-                p = f ? va_arg(*ap, int) : 0;
+            } else if (!l10n) {
+                p = f ? va_arg(*ap,
+                int) : 0;
                 s += 2;
-            }
-            else
+            } else
                 return -1;
-        }
-        else if (*s == '.')
-        {
+        } else if (*s == '.') {
             s++;
             p = getint(&s);
-        }
-        else
+        } else
             p = -1;
 
         /* Format specifier state machine */
         st = 0;
-        do
-        {
+        do {
             if (__OOP(*s))
                 return -1;
             ps = st;
-            st = states[st] S(*s++);
+            st = states[st]S(*s++);
         } while ((st - 1) < _STOP);
         if (!st)
             return -1;
 
         /* Check validity of argument type (nl/normal) */
-        if (st == _NOARG)
-        {
+        if (st == _NOARG) {
             if (argpos >= 0)
                 return -1;
             else if (!f)
                 continue;
-        }
-        else
-        {
-            if (argpos >= 0)
-            {
-                nl_type[argpos] = (int)st;
+        } else {
+            if (argpos >= 0) {
+                nl_type[argpos] = (int) st;
                 arg = nl_arg[argpos];
-            }
-            else if (f)
-                pop_arg(&arg, (int)st, ap);
+            } else if (f)
+                pop_arg(&arg, (int) st, ap);
             else
                 return 0;
         }
@@ -391,58 +313,56 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
         if (ps && (t & 15) == 3)
             t &= ~32;
 
-        switch (t)
-        {
+        switch (t) {
             case 'n':
-                switch (ps)
-                {
+                switch (ps) {
                     case _BARE:
-                        *(int *)arg.p = (int)cnt;
+                        *(int *) arg.p = (int) cnt;
                         break;
                     case _LPRE:
-                        *(long *)arg.p = (long)cnt;
+                        *(long *) arg.p = (long) cnt;
                         break;
                     case _LLPRE:
-                        *(long long *)arg.p = (long long)cnt;
+                        *(long long *) arg.p = (long long) cnt;
                         break;
                     case _HPRE:
-                        *(unsigned short *)arg.p = (unsigned short)cnt;
+                        *(unsigned short *) arg.p = (unsigned short) cnt;
                         break;
                     case _HHPRE:
-                        *(unsigned char *)arg.p = (unsigned char)cnt;
+                        *(unsigned char *) arg.p = (unsigned char) cnt;
                         break;
                     case _ZTPRE:
-                        *(size_t *)arg.p = (size_t)cnt;
+                        *(size_t *) arg.p = (size_t) cnt;
                         break;
                     case _JPRE:
-                        *(uintmax_t *)arg.p = (uintmax_t)cnt;
+                        *(uintmax_t *) arg.p = (uintmax_t) cnt;
                         break;
                     default:
-                        *(uintmax_t *)arg.p = (uintmax_t)0;
+                        *(uintmax_t *) arg.p = (uintmax_t) 0;
                         break;
                 }
                 continue;
             case 'c':
-                out_putwc(btowc((int)arg.i), f);
+                out_putwc(btowc((int) arg.i), f);
                 l = 1;
                 continue;
             case 'C':
-                out_putwc((wchar_t)arg.i, f);
+                out_putwc((wchar_t) arg.i, f);
                 l = 1;
                 continue;
             case 'S':
                 a = arg.p;
-                z = wmemchr(a, 0, (size_t)p);
+                z = wmemchr(a, 0, (size_t) p);
                 if (!z)
                     z = a + p;
                 else
-                    p = (int)(z - a);
+                    p = (int) (z - a);
                 if (w < p)
                     w = p;
                 if (!(fl & __U_LEFT_ADJ)) {
                     out_printf(f, "%.*s", (w - p), "");
                 }
-                out(f, a, (size_t)p);
+                out(f, a, (size_t) p);
                 if ((fl & __U_LEFT_ADJ)) {
                     out_printf(f, "%.*s", (w - p), "");
                 }
@@ -452,8 +372,7 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
                 bs = arg.p;
                 if (p < 0)
                     p = INT_MAX;
-                for (i = l = 0; ((l < p) && ((i = mbtowc(&wc, bs, MB_LEN_MAX)) > 0)); bs += i, l++)
-                    ;
+                for (i = l = 0; ((l < p) && ((i = mbtowc(&wc, bs, MB_LEN_MAX)) > 0)); bs += i, l++);
                 if (i < 0)
                     return -1;
                 p = l;
@@ -463,8 +382,7 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
                     out_printf(f, "%.*s", w - p, "");
                 }
                 bs = arg.p;
-                while (l--)
-                {
+                while (l--) {
                     i = mbtowc(&wc, bs, MB_LEN_MAX);
                     bs += i;
                     out_putwc(wc, f);
@@ -486,8 +404,7 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
                  ((!(fl & __U_ZERO_PAD)) ? "" : "0"),
                  sizeprefix[(t | 32) - 'a'], t);
 
-        switch (t | 32)
-        {
+        switch (t | 32) {
             case 'a':
             case 'e':
             case 'f':
@@ -514,30 +431,27 @@ int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, in
 
     for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++)
         pop_arg(nl_arg + i, nl_type[i], ap);
-    for (; i <= NL_ARGMAX && !nl_type[i]; i++)
-        ;
+    for (; i <= NL_ARGMAX && !nl_type[i]; i++);
     if (i <= NL_ARGMAX)
         return -1;
     return 1;
 }
 
-int 
-vfwprintf(FILE *f, const wchar_t *format, va_list ap)
-{
-	va_list ap2;
-	int ret, nl_type[NL_ARGMAX] = {0};
-	union arg nl_arg[NL_ARGMAX];
-	FOut _out[1];
-	out_init_file(_out, f);
-	va_copy(ap2, ap);
+int
+vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
+    va_list ap2;
+    int ret, nl_type[NL_ARGMAX] = {0};
+    union arg nl_arg[NL_ARGMAX];
+    FOut _out[1];
+    out_init_file(_out, f);
+    va_copy(ap2, ap);
 
-	// Check for error in format string before writing anything to file.
-	if (wprintf_core(0, format, &ap2, nl_arg, nl_type) < 0)
-	{
-		va_end(ap2);
-		return EOF;
-	}
-	ret = wprintf_core(_out, format, &ap2, nl_arg, nl_type);
-	va_end(ap2);
-	return ret;
+    // Check for error in format string before writing anything to file.
+    if (wprintf_core(0, format, &ap2, nl_arg, nl_type) < 0) {
+        va_end(ap2);
+        return EOF;
+    }
+    ret = wprintf_core(_out, format, &ap2, nl_arg, nl_type);
+    va_end(ap2);
+    return ret;
 }

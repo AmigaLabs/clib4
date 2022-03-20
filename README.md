@@ -56,25 +56,19 @@ Large files are now supported and tested (i've ported p7zip and tested it with a
 
 This library version conatin shm* and msg* functions. It needs SYSV IPC library. You can find an outdated version on OS4 Depot. If you don't install it those functions will not work and will return to you an **ENOSYS** error.
 
-
 ### Complex numbers
 
-Complex numbers has been added to libm (thanks to sodero port) and i've added a test to see if the complex numbers are working correctly.
-
+Complex numbers has been added to libm (thanks to sodero port) and i've added a test to see if the complex numbers are working correctly.  
 A lot of other functions has been added trying to make OS4 ports easier.
 
-
-### Unix support
+### Unix path support
 
 `libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default unix support it is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.
 You can also disable it at runtime using **disableUnixPaths()**. However is not reccomanded to enable and disable it at runtime because you can have problems with internal structures.
 
-
-### Wctype
+### wchar / wctype
 
 All **wctype** functions should be working correctly now. We need a valid test suite
-
-### Wchar
 
 Almost all **wchar** functions are now implemented and tested but maybe something is not working correctly. 
 There are no valid tests except a little few so use at your own risk..
@@ -92,14 +86,16 @@ Accepted encodings are:
 
 ### Math library
 
-Math library has been replaced with openlibm (https://github.com/JuliaMath/openlibm). 
-
+Math library has been replaced with openlibm (https://github.com/JuliaMath/openlibm).   
 This version is faster and more compatible and contains also fenv support that wasn't implemented in clib2
 
+### libresolv
+
+Added resolv library to use dns functions
 
 ### TODO
 
-There is a memory leak at clib2 end needs to be tracked down
+There is a memory leak at clib2 end needs to be tracked down  
 
 ## Legal status
 
