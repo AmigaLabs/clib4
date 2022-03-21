@@ -40,6 +40,9 @@ C_MATH := \
 	math/cexp.o \
 	math/cexpf.o \
 	math/cexpl.o \
+	math/cimag.o \
+	math/cimagf.o \
+	math/cimagl.o \
 	math/clog.o \
 	math/clogf.o \
 	math/clogl.o \
@@ -58,6 +61,9 @@ C_MATH := \
 	math/cproj.o \
 	math/cprojf.o \
 	math/cprojl.o \
+	math/creal.o \
+	math/crealf.o \
+	math/creall.o \
 	math/csqrt.o \
 	math/csqrtf.o \
 	math/csqrtl.o \

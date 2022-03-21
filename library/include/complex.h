@@ -124,30 +124,12 @@ extern long double complex cprojl(long double complex z);
 
 /****************************************************************************/
 
-double complex cimag(double complex z);
-float complex cimagf(float complex z);
-long double complex cimagl(long double complex z);
-
-
-double complex creal(double complex z);
-float complex crealf(float complex z);
-long double complex creall(long double complex z);
-
-/****************************************************************************/
-
-#define __CIMAG(x, t) \
-	((union { _Complex t __z; t __xy[2]; }){(_Complex t)(x)}.__xy[1])
-
-#define creal(x) ((double)(x))
-#define crealf(x) ((float)(x))
-#define creall(x) ((long double)(x))
-
-#define cimag(x) __CIMAG(x, double)
-#define cimagf(x) __CIMAG(x, float)
-#define cimagl(x) __CIMAG(x, long double)
-
-#define __CMPLX(x, y, t) \
-	((union { _Complex t __z; t __xy[2]; }){.__xy = {(x),(y)}}.__z)
+extern double cimag(double complex z);
+extern float cimagf(float complex z);
+extern long double cimagl(long double complex z);
+extern double creal(double complex z);
+extern float crealf(float complex z);
+extern long double creall(long double complex z);
 
 #define CMPLX(x, y) __CMPLX(x, y, double)
 #define CMPLXF(x, y) __CMPLX(x, y, float)
