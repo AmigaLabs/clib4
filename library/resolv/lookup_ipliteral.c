@@ -8,7 +8,8 @@
 #include <string.h>
 #include "lookup.h"
 
-int __lookup_ipliteral(struct address buf[static 1], const char *name, int family) {
+int
+__lookup_ipliteral(struct address buf[static 1], const char *name, int family) {
     (void) (family);
     struct in_addr a4;
     if (inet_aton(name, &a4) > 0) {
