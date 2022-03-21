@@ -8,22 +8,21 @@
 
 This is a fork of <a href="https://github.com/adtools/clib2">official clib2</a> present in adtools.
 The point of this library is to make it Amiga OS4 only to maintain it easily and add all missing clib2 features that are hard to add also on classic amigas.
-Classic amigas has also ixemul that is the most complete, posix compliant, library we have. Is useless share code that most probably no one will use.
-I'm trying (yeah.. trying) to make it posix compliant and fix also all C++ problems we have with newer compilers.
-All warnings produced by GCC 10 are now gone. 
+Classic amigas has also ixemul that is the most complete, posix compliant, library we have. It is useless share code that most probably no one will use.
+Te goal is to try to make it posix compliant and fix also all C++ problems we have with newer compilers.
+All warnings (except really few one) produced by GCC 10 and above are now gone.  
 All **deprecated** OS4 functions are replaced by modern one (except for StackSwap i don't find the replacement)
 
 For the original readme follow this <a href="https://github.com/adtools/clib2">link</a>
 
-
 ## Limitations and caveats
 
-The added code is most of the time tested. I've also added some test programs to test the added featrues. Of course it can contain errors and bugs. If you find an issue please report it
-
+The new functions and code most of the time is tested. Also some tests has been added to be sure that added featrues and functions are working correctly. Usually all new functions has been tested against linux. If you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
 
 ### Libraries
 
-Clib2 now has also a working shared version called `libc.so`. And of course also all other libs. Don't use newlib .so files when linking because **it will not work**
+Clib2 now has also a working shared version called `libc.so`. And of course also all other libs. Don't use newlib .so files when linking because **it will not work**  
+
 If you want to use `dlopen`/`dlsym` with shared objects:
 
 **YOU HAVE** to compile your Clib2 version of library you want to use! 
@@ -35,8 +34,8 @@ If you want to use `dlopen`/`dlsym` with shared objects:
 The plain `libc.a` now contains also `libnet.a`, `libunix.a`. Socket support and floating point support are always enabled
 Soft float version is no longer available.
 
-If you want to use the shared version remember to pack your OS4 software with all CLib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.
-Don't overwrite SOBJS: files with your Clib2 files othwerise OS4 most probably will not load or you could have problems running software!
+If you want to use the shared version remember to pack your OS4 software with all clib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
+**DON'T overwrite SOBJS: files with your Clib2 files** othwerise OS4 most probably will not load or you could have problems running software!
 
 ### Optimized AMCC functions
 
@@ -46,36 +45,31 @@ Feel free to add other CPU versions
 ### Shared objects
 
 Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).
-using dlopen/dlsym will not crash anymore however there is a bug in `libstdc++.so`. So if you want to use libstdc++ it is better to remove it and link against the static version.
+using dlopen/dlsym will not crash anymore however there is a bug in `libstdc++.so` that is causing a crash on program start.  
+So if you want to use libstdc++ it is better to remove it and link against the static version.
 
 ### Large file support
 
-Large files are now supported and tested (i've ported p7zip and tested it with a 8GB file without any problem). To use it you have to add `#define _LARGEFILE64_SOURCE` at top of your file before `<stdio.h>` 
-
+Large files are now supported and tested (A working version of p7zip has been teste with a 8GB file without any problem). 
 ### SYSV functions
 
-This library version conatin shm* and msg* functions. It needs SYSV IPC library. You can find an outdated version on OS4 Depot. If you don't install it those functions will not work and will return to you an **ENOSYS** error.
-
-### Complex numbers
-
-Complex numbers has been added to libm (thanks to sodero port) and i've added a test to see if the complex numbers are working correctly.  
-A lot of other functions has been added trying to make OS4 ports easier.
+clib2 now contains **shm*** and **msg*** functions. It needs <a href="http://www.os4depot.net/share/development/library/misc/sysvipc.lha">SYSV IPC</a> library. If you don't install it those functions will not work and will return to you an **ENOSYS** error.
 
 ### Unix path support
 
 `libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default unix support it is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.
-You can also disable it at runtime using **disableUnixPaths()**. However is not reccomanded to enable and disable it at runtime because you can have problems with internal structures.
+You can also disable it at runtime using **disableUnixPaths()**. However is not reccomanded to enable and disable it at runtime because you could have problems with internal structures.
 
 ### wchar / wctype
 
 All **wctype** functions should be working correctly now. We need a valid test suite
 
-Almost all **wchar** functions are now implemented and tested but maybe something is not working correctly. 
-There are no valid tests except a little few so use at your own risk..
+All **wchar** functions are now implemented and tested but maybe something is not working correctly. 
+There are no valid tests except a little few so if you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>
 
 ### Locale
 
-Locales relies always to os4 locales but now you can set the encoding you want to use so wide functon work correctly.
+Locales relies always to OS4 locales but now you can set the encoding so wide functons will work correctly.
 Accepted encodings are:
 
 `C-UTF-8`
@@ -88,6 +82,11 @@ Accepted encodings are:
 
 Math library has been replaced with openlibm (https://github.com/JuliaMath/openlibm).   
 This version is faster and more compatible and contains also fenv support that wasn't implemented in clib2
+
+### Complex numbers
+
+Complex numbers has been added to libm and tests has been added to test that everything is working correctly.  
+A lot of other functions has been added trying to make OS4 ports easier.
 
 ### libresolv
 
