@@ -74,6 +74,8 @@
 
 /****************************************************************************/
 
+#define CHARCLASS_NAME_MAX 14
+
 /*
  * POSIX, POSIX... These are minimum maximum values. I.e. the maximum must be
  * at least this large. I am not sure all of these make much sense on the Amiga

@@ -207,6 +207,13 @@ C_POSIX := \
 	posix/writev.o \
 	posix/uname.o
 
+C_REGEX := \
+	regex/regcomp.o \
+	regex/regerror.o \
+	regex/regexec.o \
+    regex/regfree.o \
+    regex/regmem.o
+
 C_SEARCH := \
 	search/ftw.o \
 	search/nftw.o \
@@ -848,6 +855,7 @@ C_LIB := \
 	$(C_LOCALE) \
 	$(C_MOUNT) \
 	$(C_POSIX) \
+    $(C_REGEX) \
 	$(C_SEARCH) \
 	$(C_SOCKET) \
 	$(C_STAT) \
