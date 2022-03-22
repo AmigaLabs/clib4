@@ -6,17 +6,14 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 char *
-ctermid(char *buf)
-{
-	static char cname[] = "CONSOLE:";
+ctermid(char *buf) {
+    static char cname[] = "CONSOLE:";
 
-	if(buf != NULL)
-		strcpy(buf,cname);
-	else
-		buf = cname;
+    if (buf != NULL)
+        strcpy(buf, cname);
+    else
+        buf = cname;
 
-	return(buf);
+    return (buf);
 }

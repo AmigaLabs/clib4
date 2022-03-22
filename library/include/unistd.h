@@ -100,6 +100,8 @@ extern char * getcwd(char * buffer, size_t buffer_size);
 
 extern long gethostid(void);
 extern int gethostname(const char *name, size_t namelen);
+extern char *getlogin(void);
+extern int getlogin_r(char *buf, size_t bufsize);
 extern char *crypt(const char *key, const char *salt);
 extern gid_t getegid(void);
 extern uid_t geteuid(void);

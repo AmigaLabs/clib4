@@ -682,6 +682,8 @@ C_UNISTD := \
 	unistd/ftruncate.o \
 	unistd/ftruncate64.o \
 	unistd/getcwd.o \
+	unistd/getlogin.o \
+	unistd/getlogin_r.o \
 	unistd/getopt.o \
 	unistd/getopt_long.o \
 	unistd/getpid.o \
