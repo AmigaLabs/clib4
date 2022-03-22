@@ -8,8 +8,8 @@
 
 This is a fork of <a href="https://github.com/adtools/clib2">official clib2</a> present in adtools.
 The point of this library is to make it Amiga OS4 only to maintain it easily and add all missing clib2 features that are hard to add also on classic amigas.
-Classic amigas has also ixemul that is the most complete, posix compliant, library we have. It is useless share code that most probably no one will use.
-Te goal is to try to make it posix compliant and fix also all C++ problems we have with newer compilers.
+Classic amigas has also ixemul that is the most complete, <a href="POSIX.md">POSIX</a> compliant, library we have. It is useless share code that most probably no one will use.
+Te goal is to try to make it <a href="POSIX.md">POSIX</a> compliant and fix also all C++ problems we have with newer compilers.
 All warnings (except really few one) produced by GCC 10 and above are now gone.  
 All **deprecated** OS4 functions are replaced by modern one (except for StackSwap i don't find the replacement)
 

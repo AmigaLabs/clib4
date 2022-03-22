@@ -21,8 +21,8 @@
 # These are for the cross compiler, with the operating system header files
 # stored in "/V/include" and the network header files in a local directory
 # called "netinclude".
-INSTALL_PREFIX = /usr/ppc-amigaos/SDK/clib2
-SDK_INCLUDE := /usr/ppc-amigaos/SDK/include
+INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib2
+SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
 CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
 RANLIB := ppc-amigaos-ranlib
