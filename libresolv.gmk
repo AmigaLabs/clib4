@@ -31,9 +31,9 @@ RESOLV_LIB := \
 
 # Dependencies to rebuild if the library version changes
 
-$(OUT_STATIC)/libresolv/resolv.lib_rev.o : $(LIB_DIR)/resolv.lib_rev.c $(LIB_DIR)/resolv.lib_rev.h
+$(OUT_STATIC)/resolv.lib_rev.o : $(LIB_DIR)/resolv.lib_rev.c $(LIB_DIR)/resolv.lib_rev.h
 
-$(OUT_SHARED)/libm/resolv.lib_rev.o : $(LIB_DIR)/resolv.lib_rev.c $(LIB_DIR)/resolv.lib_rev.h
+$(OUT_SHARED)/resolv.lib_rev.o : $(LIB_DIR)/resolv.lib_rev.c $(LIB_DIR)/resolv.lib_rev.h
 
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 

@@ -5,10 +5,11 @@
 #
 # -*- mode: makefile; -*-
 
-##############################################################################
+OUT_STATIC := $(BUILD_DIR)/obj/libdebug
+OUT_SHARED := $(BUILD_DIR)/obj.shared/libdebug
 
-LIBS += $(BUILD_DIR)/lib/libdebug.so \
-		$(BUILD_DIR)/lib/libdebug.a
+LIBS += $(OUTPUT_LIB)/libdebug.so \
+		$(OUTPUT_LIB)/libdebug.a
 
 ##############################################################################
 
@@ -47,21 +48,21 @@ DEBUG_LIB = \
 
 # Dependencies to rebuild if the library version changes
 
-$(BUILD_DIR)/obj/libdebug/debug.lib_rev.o : debug/debug.lib_rev.c $(LIB_DIR)/debug/debug.lib_rev.h
-$(BUILD_DIR)/obj.shared/libdebug/debug.lib_rev.o : debug/debug.lib_rev.c $(LIB_DIR)/debug/debug.lib_rev.h
+$(OUT_STATIC)/debug.lib_rev.o : debug/debug.lib_rev.c $(LIB_DIR)/debug/debug.lib_rev.h
+$(OUT_SHARED)/debug.lib_rev.o : debug/debug.lib_rev.c $(LIB_DIR)/debug/debug.lib_rev.h
 
-$(BUILD_DIR)/obj/libdebug/%.o : CFLAGS += $(LARGEDATA)
+$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 
-$(BUILD_DIR)/obj.shared/libdebug/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(BUILD_DIR)/obj/libdebug/%.o : $(LIB_DIR)/%.c
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/obj.shared/libdebug/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(BUILD_DIR)/lib/libdebug.a : $(addprefix $(BUILD_DIR)/obj/libdebug/,$(DEBUG_LIB))
+$(OUTPUT_LIB)/libdebug.a : $(addprefix $(OUT_STATIC)/,$(DEBUG_LIB))
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libdebug.so : $(addprefix $(BUILD_DIR)/obj.shared/libdebug/,$(DEBUG_LIB))
+$(OUTPUT_LIB)/libdebug.so : $(addprefix $(OUT_SHARED)/,$(DEBUG_LIB))
 	$(VERBOSE)$(MAKESHARED)

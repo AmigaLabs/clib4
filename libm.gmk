@@ -5,6 +5,12 @@
 #
 # -*- mode: makefile; -*-
 
+OUT_STATIC := $(BUILD_DIR)/obj/libm
+OUT_SHARED := $(BUILD_DIR)/obj.shared/libm
+
+LIBS += $(OUTPUT_LIB)/libm.so \
+		$(OUTPUT_LIB)/libm.a
+
 C_MATH := \
 	math/carg.o \
 	math/cargf.o \
@@ -274,10 +280,7 @@ C_MATH := \
 	math/truncf.o \
 	math/truncl.o
 
-##############################################################################
 
-LIBS += $(BUILD_DIR)/lib/libm.so \
-		$(BUILD_DIR)/lib/libm.a
 
 ##############################################################################
 
@@ -289,22 +292,22 @@ MATH_LIB := \
 
 # Dependencies to rebuild if the library version changes
 
-$(BUILD_DIR)/obj/libm/m.lib_rev.o : $(LIB_DIR)/m.lib_rev.c $(LIB_DIR)/m.lib_rev.h
+$(OUT_STATIC)/m.lib_rev.o : $(LIB_DIR)/m.lib_rev.c $(LIB_DIR)/m.lib_rev.h
 
-$(BUILD_DIR)/obj.shared/libm/m.lib_rev.o : $(LIB_DIR)/m.lib_rev.c $(LIB_DIR)/m.lib_rev.h
+$(OUT_SHARED)/m.lib_rev.o : $(LIB_DIR)/m.lib_rev.c $(LIB_DIR)/m.lib_rev.h
 
-$(BUILD_DIR)/obj/libm/%.o : CFLAGS += $(LARGEDATA)
+$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 
-$(BUILD_DIR)/obj.shared/libm/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(BUILD_DIR)/obj/libm/%.o : $(LIB_DIR)/%.c
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/obj.shared/libm/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(BUILD_DIR)/lib/libm.a : $(addprefix $(BUILD_DIR)/obj/libm/,$(MATH_LIB))
+$(BUILD_DIR)/lib/libm.a : $(addprefix $(OUT_STATIC)/,$(MATH_LIB))
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libm.so : $(addprefix $(BUILD_DIR)/obj.shared/libm/,$(MATH_LIB))
+$(BUILD_DIR)/lib/libm.so : $(addprefix $(OUT_SHARED)/,$(MATH_LIB))
 	$(VERBOSE)$(MAKESHARED)
