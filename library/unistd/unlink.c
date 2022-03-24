@@ -39,7 +39,7 @@ unlink(const char *path_name)
     }
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{
@@ -65,7 +65,7 @@ unlink(const char *path_name)
 	status = DeleteFile((STRPTR)path_name);
 	if (status == DOSFALSE)
 	{
-		if (__global_clib2->__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
 			struct UnlinkNode *uln = NULL;
 			struct UnlinkNode *node;

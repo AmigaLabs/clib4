@@ -34,7 +34,7 @@ int chmod(const char *path_name, mode_t mode)
     }
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{

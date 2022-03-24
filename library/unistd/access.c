@@ -42,7 +42,7 @@ access(const char *path_name, int mode)
 
 	STRPTR actual_path_name = NULL;
 
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		{
 			if (path_name[0] == '\0')
@@ -86,7 +86,7 @@ access(const char *path_name, int mode)
 
 	if ((mode != F_OK) && (mode & (R_OK | W_OK | X_OK)) != 0)
 	{
-		if (__global_clib2->__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
 			if (lock == ZERO)
 			{

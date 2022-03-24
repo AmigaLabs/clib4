@@ -34,7 +34,7 @@ int mkdir(const char *path_name, mode_t mode)
     }
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 			goto out;

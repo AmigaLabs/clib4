@@ -34,7 +34,7 @@ int chdir(const char *path_name)
     }
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{
@@ -112,7 +112,7 @@ int chdir(const char *path_name)
 	dir_lock = ZERO;
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 		__restore_path_name(&path_name, &path_name_nti);
 
 	/* ZZZ this must not fail */

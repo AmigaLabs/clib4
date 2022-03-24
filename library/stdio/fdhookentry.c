@@ -169,10 +169,11 @@ int64_t __fd_hook_entry(
 					result = EOF;
 				}
 
-				fd->fd_File = ZERO;
+                if (fd->fd_File)
+				    fd->fd_File = ZERO;
 
 #if defined(UNIX_PATH_SEMANTICS)
-				if (__global_clib2->__unix_path_semantics)
+				if (__unix_path_semantics)
 				{
 					DECLARE_UTILITYBASE();
 
@@ -354,7 +355,7 @@ int64_t __fd_hook_entry(
 			{
 				fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
-				if (__global_clib2->__unix_path_semantics)
+				if (__unix_path_semantics)
 				{
 					/* Check if this operation failed because the file is shorter than
 						   the new file position. First, we need to find out if the file

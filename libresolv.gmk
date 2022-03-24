@@ -5,6 +5,12 @@
 #
 # -*- mode: makefile; -*-
 
+OUT_STATIC := $(BUILD_DIR)/obj/libresolv
+OUT_SHARED := $(BUILD_DIR)/obj.shared/libresolv
+
+LIBS += $(OUTPUT_LIB)/libresolv.so \
+		$(OUTPUT_LIB)/libresolv.a
+
 C_RESOLV := \
     resolv/lookup_ipliteral.o \
     resolv/res_init.o \
@@ -17,14 +23,7 @@ C_RESOLV := \
     resolv/resolvconf.o
 
 
-##############################################################################
-
-LIBS += $(BUILD_DIR)/lib/libresolv.so \
-		$(BUILD_DIR)/lib/libresolv.a
-
-##############################################################################
-
-MATH_LIB := \
+RESOLV_LIB := \
 	$(C_RESOLV) \
 	resolv.lib_rev.o
 
@@ -32,22 +31,22 @@ MATH_LIB := \
 
 # Dependencies to rebuild if the library version changes
 
-$(BUILD_DIR)/obj/libresolv/resolv.lib_rev.o : $(LIB_DIR)/resolv.lib_rev.c $(LIB_DIR)/resolv.lib_rev.h
+$(OUT_STATIC)/libresolv/resolv.lib_rev.o : $(LIB_DIR)/resolv.lib_rev.c $(LIB_DIR)/resolv.lib_rev.h
 
-$(BUILD_DIR)/obj.shared/libm/resolv.lib_rev.o : $(LIB_DIR)/resolv.lib_rev.c $(LIB_DIR)/resolv.lib_rev.h
+$(OUT_SHARED)/libm/resolv.lib_rev.o : $(LIB_DIR)/resolv.lib_rev.c $(LIB_DIR)/resolv.lib_rev.h
 
-$(BUILD_DIR)/obj/libresolv/%.o : CFLAGS += $(LARGEDATA)
+$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 
-$(BUILD_DIR)/obj.shared/libresolv/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(BUILD_DIR)/obj/libresolv/%.o : $(LIB_DIR)/%.c
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/obj.shared/libresolv/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(BUILD_DIR)/lib/libresolv.a : $(addprefix $(BUILD_DIR)/obj/libresolv/,$(MATH_LIB))
+$(OUTPUT_LIB)/libresolv.a : $(addprefix $(OUT_STATIC)/, $(RESOLV_LIB))
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libresolv.so : $(addprefix $(BUILD_DIR)/obj.shared/libresolv/,$(MATH_LIB))
+$(OUTPUT_LIB)/libresolv.so : $(addprefix $(OUT_SHARED)/, $(RESOLV_LIB))
 	$(VERBOSE)$(MAKESHARED)

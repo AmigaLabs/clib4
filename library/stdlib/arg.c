@@ -103,7 +103,7 @@ ARG_CONSTRUCTOR(arg_init)
 		   should be enabled. Note that the callback function, if
 		   declared, takes precedence over the global variable. */
 #if defined(UNIX_PATH_SEMANTICS)
-		if (__global_clib2->__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
 			expand_wildcard_args = __expand_wildcard_args;
 
@@ -220,7 +220,7 @@ ARG_CONSTRUCTOR(arg_init)
 				char *arg;
 
 #if defined(UNIX_PATH_SEMANTICS)
-				if (__global_clib2->__unix_path_semantics)
+				if (__unix_path_semantics)
 				{
 					/* If necessary, indicate that this parameter was quoted. */
 					if (expand_wildcard_args && __wildcard_quote_parameter(__argc) < 0)
@@ -305,7 +305,7 @@ ARG_CONSTRUCTOR(arg_init)
 		__argv[__argc] = NULL;
 
 #if defined(UNIX_PATH_SEMANTICS)
-		if (__global_clib2->__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
 			/* If necessary, expand wildcard patterns found in the command
 			   line string into file and directory names. */

@@ -133,7 +133,7 @@ int closedir(DIR *directory_pointer)
 
 	Remove((struct Node *)dh);
 
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		struct Node *node;
 

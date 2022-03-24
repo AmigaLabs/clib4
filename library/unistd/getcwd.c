@@ -66,7 +66,7 @@ getcwd(char *buffer, size_t buffer_size) {
     }
 
 #if defined(UNIX_PATH_SEMANTICS)
-    if (__global_clib2->__unix_path_semantics)
+    if (__unix_path_semantics)
     {
         if (__current_path_name[0] != '\0')
         {
@@ -110,7 +110,7 @@ getcwd(char *buffer, size_t buffer_size) {
         }
 
 #if defined(UNIX_PATH_SEMANTICS)
-        if(__global_clib2->__unix_path_semantics)
+        if(__unix_path_semantics)
         {
             const char * path_name = buffer;
 

@@ -37,7 +37,7 @@ int chown(const char *path_name, uid_t owner, gid_t group)
     }
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{

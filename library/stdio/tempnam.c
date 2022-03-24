@@ -25,7 +25,7 @@ worker(char *result, const char *part1, const char *part2, char *part3, int *par
 
         int t;
 
-        if (!__global_clib2->__unix_path_semantics)
+        if (!__unix_path_semantics)
         {
             if (!strcmp(part1, P_tmpdir))
             {

@@ -115,7 +115,7 @@ popen(const char *command, const char *type)
 	}
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		char just_the_command_name[MAXPATHLEN + 1];
 		BOOL quotes_needed = FALSE;

@@ -35,7 +35,7 @@ symlink(const char *actual_path, const char *symbolic_path)
     }
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (actual_path[0] == '\0' || symbolic_path[0] == '\0')
 		{
