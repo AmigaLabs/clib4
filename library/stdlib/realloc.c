@@ -30,7 +30,7 @@ void *realloc(void *ptr, size_t size)
 
 		result = malloc(size);
 	}
-	else if (__global_clib2 != NULL && __global_clib2->__unix_path_semantics && size == 0)
+	else if (__global_clib2 != NULL && __unix_path_semantics && size == 0)
 	{
 		D(("calling free(0x%08lx)", ptr));
 

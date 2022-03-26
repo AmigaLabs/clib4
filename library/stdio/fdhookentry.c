@@ -158,9 +158,18 @@ int64_t __fd_hook_entry(
 				if (fd->fd_Cleanup != NULL)
 					(*fd->fd_Cleanup)(fd);
 
+                parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+                if (parent_dir == ZERO) {
+                    SHOWMSG("couldn't find parent directory");
+
+                    __set_errno(__translate_io_error_to_errno(IoErr()));
+                    goto out;
+                }
+
                 fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
-                if (fib != NULL)
+                if (fib != NULL) {
                     name_and_path_valid = TRUE;
+                }
 
 				if (CANNOT Close(fd->fd_File))
 				{
@@ -169,10 +178,11 @@ int64_t __fd_hook_entry(
 					result = EOF;
 				}
 
-				fd->fd_File = ZERO;
+                if (fd->fd_File)
+				    fd->fd_File = ZERO;
 
 #if defined(UNIX_PATH_SEMANTICS)
-				if (__global_clib2->__unix_path_semantics)
+				if (__unix_path_semantics)
 				{
 					DECLARE_UTILITYBASE();
 
@@ -354,7 +364,7 @@ int64_t __fd_hook_entry(
 			{
 				fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
-				if (__global_clib2->__unix_path_semantics)
+				if (__unix_path_semantics)
 				{
 					/* Check if this operation failed because the file is shorter than
 						   the new file position. First, we need to find out if the file

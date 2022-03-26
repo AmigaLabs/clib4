@@ -5,12 +5,11 @@
 #
 # -*- mode: makefile; -*-
 
-##############################################################################
+OUT_STATIC := $(BUILD_DIR)/obj/libamiga
+OUT_SHARED := $(BUILD_DIR)/obj.shared/libamiga
 
-LIBS += $(BUILD_DIR)/lib/libprofile.so \
-		$(BUILD_DIR)/lib/libprofile.a
-
-##############################################################################
+LIBS += $(OUTPUT_LIB)/libprofile.so \
+		$(OUTPUT_LIB)/libprofile.a
 
 PROFILE_LIB = \
 	profile/_mcount.o \
@@ -18,36 +17,34 @@ PROFILE_LIB = \
 	profile/gmon.o \
 	profile/mcount.o
 
-##############################################################################
+SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(PROFILE_LIB))
+SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(PROFILE_LIB))
 
 # Dependencies to rebuild if the library version changes
 
-$(BUILD_DIR)/obj/libprofile/profile.lib_rev.o : $(LIB_DIR)/profile/profile.lib_rev.c $(LIB_DIR)/profile/profile.lib_rev.h
+$(OUT_STATIC)/profile.lib_rev.o : $(LIB_DIR)/profile/profile.lib_rev.c $(LIB_DIR)/profile/profile.lib_rev.h
+$(OUT_SHARED)/profile.lib_rev.o : $(LIB_DIR)/profile/profile.lib_rev.c $(LIB_DIR)/profile/profile.lib_rev.h
 
-$(BUILD_DIR)/obj.shared/libprofile/profile.lib_rev.o : $(LIB_DIR)/profile/profile.lib_rev.c $(LIB_DIR)/profile/profile.lib_rev.h
+$(OUT_STATIC)/%.o : AFLAGS += $(LARGEDATA)
+$(OUT_SHARED)/%.o : AFLAGS += $(PIC) $(LARGEDATA)
 
-$(BUILD_DIR)/obj/libprofile/%.o : AFLAGS += $(LARGEDATA)
-
-$(BUILD_DIR)/obj.shared/libprofile/%.o : AFLAGS += $(PIC) $(LARGEDATA)
-
-$(BUILD_DIR)/obj/libprofile/%.o : $(LIB_DIR)/%.S
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(ASSEMBLE)
 
-$(BUILD_DIR)/obj.shared/libprofile/%.o : $(LIB_DIR)/%.S
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(ASSEMBLE)
 
-$(BUILD_DIR)/obj/libprofile/%.o : CFLAGS += $(LARGEDATA)
+$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(BUILD_DIR)/obj.shared/libprofile/%.o : CFLAGS += $(PIC) $(LARGEDATA)
-
-$(BUILD_DIR)/obj/libprofile/%.o : $(LIB_DIR)/%.c
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/obj.shared/libprofile/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(BUILD_DIR)/lib/libprofile.a : $(addprefix $(BUILD_DIR)/obj/libprofile/,$(PROFILE_LIB))
+$(BUILD_DIR)/lib/libprofile.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libprofile.so : $(addprefix $(BUILD_DIR)/obj.shared/libprofile/,$(PROFILE_LIB))
+$(BUILD_DIR)/lib/libprofile.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

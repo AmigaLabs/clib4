@@ -3,11 +3,11 @@
 # :ts=8
 # -*- mode: makefile; -*-
 
-##############################################################################
+OUT_STATIC := $(BUILD_DIR)/obj/libc
+OUT_SHARED := $(BUILD_DIR)/obj.shared/libc
 
-LIBS += $(BUILD_DIR)/lib/libc.so \
-		$(BUILD_DIR)/lib/libc.a
-
+LIBS += $(OUTPUT_LIB)/libc.so \
+		$(OUTPUT_LIB)/libc.a
 
 C_BASE := \
 	c.lib_rev.o \
@@ -682,6 +682,8 @@ C_UNISTD := \
 	unistd/ftruncate.o \
 	unistd/ftruncate64.o \
 	unistd/getcwd.o \
+	unistd/getlogin.o \
+	unistd/getlogin_r.o \
 	unistd/getopt.o \
 	unistd/getopt_long.o \
 	unistd/getpid.o \
@@ -718,6 +720,7 @@ C_UNISTD := \
 	unistd/ttyname.o \
 	unistd/ttyname_r.o \
     unistd/ualarm.o \
+    unistd/unix_path_semantics.o \
 	unistd/unlink.o \
 	unistd/unlink_retries.o \
 	unistd/usleep.o \
@@ -869,32 +872,35 @@ C_LIB := \
 	$(C_USERGROUP) \
 	$(C_WCHAR)
 
+SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(C_LIB))
+SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
+
 # Dependencies to rebuild if the library version changes
 
-$(BUILD_DIR)/obj/libc/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
+$(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 $(BUILD_DIR)/obj.shared/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 
-$(BUILD_DIR)/obj/libc/%.o : CFLAGS += $(LARGEDATA)
+$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 
-$(BUILD_DIR)/obj.shared/libc/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(BUILD_DIR)/obj/libc/%.o : $(LIB_DIR)/%.S
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
 
-$(BUILD_DIR)/obj/libc/%.o : $(LIB_DIR)/%.c
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/obj.shared/libc/%.o : $(LIB_DIR)/%.S
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_SHARED_ASM)
 
-$(BUILD_DIR)/obj.shared/libc/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(BUILD_DIR)/lib/libc.a : $(addprefix $(BUILD_DIR)/obj/libc/,$(C_LIB))
+$(OUTPUT_LIB)/libc.a : $(SOURCES_STATIC)
 	$(VERBOSE)@$(MAKELIB)
 
-$(BUILD_DIR)/lib/libc.so : $(addprefix $(BUILD_DIR)/obj.shared/libc/,$(C_LIB))
+$(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
 	@$(MAKEDIR) $(@D)
 	@$(DELETE) $@
 	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(BUILD_DIR)/lib/shcrtbegin.o $^ $(BUILD_DIR)/lib/shcrtend.o $(LOG_COMMAND)
+	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND)

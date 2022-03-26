@@ -35,7 +35,7 @@ int statfs(const char *path, struct statfs *buf)
     }
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path[0] == '\0')
 		{

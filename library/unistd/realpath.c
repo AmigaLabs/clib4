@@ -36,7 +36,7 @@ realpath(const char *path_name, char *buffer)
     }
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{
@@ -78,7 +78,7 @@ realpath(const char *path_name, char *buffer)
 	}
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (__translate_amiga_to_unix_path_name((char const **)&buffer, &buffer_nti) != 0)
 			goto out;

@@ -36,7 +36,7 @@ link(const char *existing_path, const char *new_path)
     }
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (existing_path[0] == '\0' || new_path[0] == '\0')
 		{

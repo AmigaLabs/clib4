@@ -69,7 +69,7 @@ DIR *opendir(const char *path_name)
 	memset(dh, 0, sizeof(*dh));
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		struct Node *node;
 
@@ -216,7 +216,7 @@ out:
 			FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 
 #if defined(UNIX_PATH_SEMANTICS)
-		if (__global_clib2->__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
 			struct Node *node;
 

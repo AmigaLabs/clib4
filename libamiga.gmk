@@ -5,11 +5,12 @@
 #
 # -*- mode: makefile; -*-
 
-##############################################################################
+OUT_STATIC := $(BUILD_DIR)/obj/libamiga
+OUT_SHARED := $(BUILD_DIR)/obj.shared/libamiga
 
 LIBS += \
-	$(BUILD_DIR)/lib/libamiga.so \
-	$(BUILD_DIR)/lib/libamiga.a
+	$(OUTPUT_LIB)/libamiga.so \
+	$(OUTPUT_LIB)/libamiga.a
 
 ##############################################################################
 
@@ -42,25 +43,26 @@ AMIGA_LIB = \
 	amiga/timedelay.o \
 	amiga/waitbeam.o
 
-##############################################################################
+SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(AMIGA_LIB))
+SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(AMIGA_LIB))
 
 # Dependencies to rebuild if the library version changes
 
-$(BUILD_DIR)/obj/libamiga/amiga.lib_rev.o : $(LIB_DIR)/amiga/amiga.lib_rev.c $(LIB_DIR)/amiga/amiga.lib_rev.h
-$(BUILD_DIR)/obj.shared/libamiga/amiga.lib_rev.o : $(LIB_DIR)/amiga/amiga.lib_rev.c $(LIB_DIR)/amiga/amiga.lib_rev.h
+$(OUT_STATIC)/amiga.lib_rev.o : $(LIB_DIR)/amiga/amiga.lib_rev.c $(LIB_DIR)/amiga/amiga.lib_rev.h
+$(OUT_SHARED)/amiga.lib_rev.o : $(LIB_DIR)/amiga/amiga.lib_rev.c $(LIB_DIR)/amiga/amiga.lib_rev.h
 
-obj/libamiga/%.o : CFLAGS += $(LARGEDATA)
+$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 
-$(BUILD_DIR)/obj.shared/libamiga/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(BUILD_DIR)/obj/libamiga/%.o : $(LIB_DIR)/%.c
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/obj.shared/libamiga/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(BUILD_DIR)/lib/libamiga.a : $(addprefix $(BUILD_DIR)/obj/libamiga/,$(AMIGA_LIB))
+$(OUTPUT_LIB)/libamiga.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libamiga.so : $(addprefix $(BUILD_DIR)/obj.shared/libamiga/,$(AMIGA_LIB))
+$(OUTPUT_LIB)/libamiga.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

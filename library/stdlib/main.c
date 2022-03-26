@@ -44,6 +44,11 @@ extern struct ElfIFace *__IElf;
 void
 close_libraries(void)
 {
+    if (__IElf != NULL) {
+        DropInterface((struct Interface *)__IElf);
+        __IElf = NULL;
+    }
+
 	if (__IUtility != NULL)
 	{
 		DropInterface((struct Interface *)__IUtility);
@@ -55,6 +60,12 @@ close_libraries(void)
 		DropInterface((struct Interface *)IDOS);
 		IDOS = NULL;
 	}
+
+    if (__ElfBase != NULL)
+    {
+        CloseLibrary(__ElfBase);
+        __ElfBase = NULL;
+    }
 
 	if (__UtilityBase != NULL)
 	{
@@ -165,12 +176,14 @@ out:
        the next following destructor. */
 	(void)setjmp(__exit_jmp_buf);
 
-    reent_exit();
-
     /* Go through the destructor list */
 	_fini();
 
-	SHOWMSG("done.");
+    disableUnixPaths();
+
+    reent_exit();
+
+    SHOWMSG("done.");
 
     /* Restore the IoErr() value before we return. */
     SetIoErr(saved_io_err);
@@ -339,8 +352,8 @@ _main()
 	}
 
     /* Set default terminal mode to "amiga" if not set */
-    const char buffer[6] = "amiga";
-    SetVar("TERM", buffer, FALSE, GVF_LOCAL_ONLY);
+    const char buffer[6] = "amiga\0";
+    SetVar("TERM", buffer, -1, 0);
 
     /* The following code will be executed if the program is to keep
        running in the shell or was launched from Workbench. */

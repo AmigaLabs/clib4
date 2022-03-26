@@ -23,28 +23,33 @@
 # called "netinclude".
 INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib2
 SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
-CC := ppc-amigaos-gcc
-AR := ppc-amigaos-ar -q
-RANLIB := ppc-amigaos-ranlib
-COPY := cp -r
-DELETE := rm -rf
-MAKEDIR := mkdir -p
+CC = ppc-amigaos-gcc
+AR = ppc-amigaos-ar -q
+RANLIB = ppc-amigaos-ranlib
+COPY = cp -r
+DELETE = rm -rf
+MAKEDIR = mkdir -p
 # Enabling the LOG_COMMAND has the consequence that a rule will not
 # fail on an error because only the exit status from the tee command
 # will be considered
 #LOG_COMMAND := 2>&1 | tee -a compiler.log
 LOG_COMMAND :=
-LIB_ROOT = .
+LIB_ROOT ?= $(shell pwd)
 LIB_DIR = $(LIB_ROOT)/library
 BUILD_DIR = $(LIB_ROOT)/build
+OUTPUT_LIB = $(BUILD_DIR)/lib
+
+$(info INSTALL_PREFIX = $(INSTALL_PREFIX))
+$(info SDK_INCLUDE = $(SDK_INCLUDE))
+$(info BUILD_DIR = $(BUILD_DIR))
 
 ##############################################################################
 
 WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
-	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-unused-value \
-	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type \
-	-Wstrict-aliasing -Wshadow -Wno-implicit-fallthrough # -Werror -Wbad-function-cast -Wconversion -Wformat
+	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-unused-value -Wno-comment \
+	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable \
+	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough # -Werror -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC 
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -103,12 +108,12 @@ include libprofile.gmk
 include libresolv.gmk
 
 all-targets: \
-	$(BUILD_DIR)/lib/crt0.o \
-	$(BUILD_DIR)/lib/crtbegin.o \
-	$(BUILD_DIR)/lib/crtend.o \
-	$(BUILD_DIR)/lib/shcrtbegin.o \
-	$(BUILD_DIR)/lib/shcrtend.o \
-	$(BUILD_DIR)/$(LIBS)
+	$(OUTPUT_LIB)/crt0.o \
+	$(OUTPUT_LIB)/crtbegin.o \
+	$(OUTPUT_LIB)/crtend.o \
+	$(OUTPUT_LIB)/shcrtbegin.o \
+	$(OUTPUT_LIB)/shcrtend.o \
+	$(LIBS)
 
 ##############################################################################
 
@@ -116,7 +121,7 @@ all-targets: \
 clean:
 	-$(DELETE) $(BUILD_DIR)/obj
 	-$(DELETE) $(BUILD_DIR)/obj.shared	
-	-$(DELETE) $(BUILD_DIR)/lib
+	-$(DELETE) $(OUTPUT_LIB)
 	-$(DELETE) $(BUILD_DIR)/compiler.log
 	-$(DELETE) clib2.lha
 	-$(DELETE) clib2.bak
@@ -141,74 +146,74 @@ version:
 
 # General build rules for all object files and the individual libraries
 
-$(BUILD_DIR)/lib/%.o : AFLAGS += $(LARGEDATA)
-$(BUILD_DIR)/lib/%.o : %.S
+$(OUTPUT_LIB)/%.o : AFLAGS += $(LARGEDATA)
+$(OUTPUT_LIB)/%.o : %.S
 	$(VERBOSE)$(ASSEMBLE)
 
-$(BUILD_DIR)/lib/%.o : CFLAGS += $(LARGEDATA)
-$(BUILD_DIR)/lib/%.o : %.c
+$(OUTPUT_LIB)/%.o : CFLAGS += $(LARGEDATA)
+$(OUTPUT_LIB)/%.o : %.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/lib/crt0.o : $(LIB_DIR)/crt0.S
+$(OUTPUT_LIB)/crt0.o : $(LIB_DIR)/crt0.S
 	$(VERBOSE)$(ASSEMBLE)
-	$(COPY) $(BUILD_DIR)/lib/crt0.o $(INSTALL_PREFIX)/lib/
+	$(COPY) $(OUTPUT_LIB)/crt0.o $(INSTALL_PREFIX)/lib/
 
-$(BUILD_DIR)/lib/crtbegin.o : CFLAGS += -fno-aggressive-loop-optimizations
-$(BUILD_DIR)/lib/crtbegin.o : $(LIB_DIR)/crtbegin.c
+$(OUTPUT_LIB)/crtbegin.o : CFLAGS += -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
-	$(COPY) $(BUILD_DIR)/lib/crtbegin.o $(INSTALL_PREFIX)/lib/
+	$(COPY) $(OUTPUT_LIB)/crtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(BUILD_DIR)/lib/crtend.o : CFLAGS += -fno-aggressive-loop-optimizations
-$(BUILD_DIR)/lib/crtend.o : $(LIB_DIR)/crtend.c
+$(OUTPUT_LIB)/crtend.o : CFLAGS += -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
-	$(COPY) $(BUILD_DIR)/lib/crtend.o $(INSTALL_PREFIX)/lib/
+	$(COPY) $(OUTPUT_LIB)/crtend.o $(INSTALL_PREFIX)/lib/
 
-$(BUILD_DIR)/lib/shcrtbegin.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
-$(BUILD_DIR)/lib/shcrtbegin.o : $(LIB_DIR)/shcrtbegin.c
+$(OUTPUT_LIB)/shcrtbegin.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/shcrtbegin.o : $(LIB_DIR)/shcrtbegin.c
 	$(VERBOSE)$(COMPILE)
-	$(COPY) $(BUILD_DIR)/lib/shcrtbegin.o $(INSTALL_PREFIX)/lib/
+	$(COPY) $(OUTPUT_LIB)/shcrtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(BUILD_DIR)/lib/shcrtend.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
-$(BUILD_DIR)/lib/shcrtend.o : $(LIB_DIR)/shcrtend.c
+$(OUTPUT_LIB)/shcrtend.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/shcrtend.o : $(LIB_DIR)/shcrtend.c
 	$(VERBOSE)$(COMPILE)
-	$(COPY) $(BUILD_DIR)/lib/shcrtend.o $(INSTALL_PREFIX)/lib/
+	$(COPY) $(OUTPUT_LIB)/shcrtend.o $(INSTALL_PREFIX)/lib/
 
 ##############################################################################
 
 define COMPILE
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo "Compiling Static \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)echo -e "\rCompiling Static \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(CFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_ASM
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo "Compiling Static ASM \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)echo -e "\rCompiling Static ASM \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo "Compiling Shared \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)echo -e "\rCompiling Shared \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(CFLAGS) $(PIC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED_ASM
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo "Compiling Shared Asm \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)echo -e "\rCompiling Shared Asm \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(PIC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define ASSEMBLE
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo "Assembling \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)echo -e "\rAssembling \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(AFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define MAKELIB
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)@$(DELETE) $@
-$(VERBOSE)echo "Making Static \033[0;31m$@\033[0m"
+$(VERBOSE)echo -e "\rMaking Static \033[0;31m$@\033[0m"
 $(VERBOSE)@$(AR) $@ $^ $(LOG_COMMAND)
 $(VERBOSE)@$(RANLIB) $@ $(LOG_COMMAND)
 endef
@@ -216,14 +221,14 @@ endef
 define MAKESHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)@$(DELETE) $@
-$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
+$(VERBOSE)echo -e "\rMaking Shared \033[0;31m$@\033[0m"
 $(VERBOSE)$(CC) -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
 endef
 
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
-	$(COPY) $(BUILD_DIR)/lib/* $(INSTALL_PREFIX)/lib/
+	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:

@@ -4,28 +4,23 @@
 
 #include "stdlib_headers.h"
 
-/****************************************************************************/
-
 struct SignalSemaphore *
-__create_semaphore(void)
-{
-	struct SignalSemaphore * semaphore;
+__create_semaphore(void) {
+    struct SignalSemaphore *semaphore;
 
-	semaphore = AllocVecTags(sizeof(*semaphore), AVT_Type, MEMF_SHARED, TAG_DONE);
-	if(semaphore != NULL)
-		InitSemaphore(semaphore);
+    semaphore = AllocVecTags(sizeof(*semaphore), AVT_Type, MEMF_SHARED, TAG_DONE);
+    if (semaphore != NULL)
+        InitSemaphore(semaphore);
 
-	return(semaphore);
+    return (semaphore);
 }
 
 /****************************************************************************/
 
 void
-__delete_semaphore(struct SignalSemaphore * semaphore)
-{
-	if(semaphore != NULL)
-	{
-		FreeVec(semaphore);
-		//FreeSysObject(ASOT_SEMAPHORE,semaphore);
-	}
+__delete_semaphore(struct SignalSemaphore *semaphore) {
+    if (semaphore != NULL) {
+        FreeVec(semaphore);
+        //FreeSysObject(ASOT_SEMAPHORE,semaphore);
+    }
 }

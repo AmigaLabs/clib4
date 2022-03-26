@@ -38,7 +38,7 @@ __allocate_memory(size_t size, BOOL never_free)
 #if defined(UNIX_PATH_SEMANTICS)
 	size_t original_size = -1;
 
-	if (__global_clib2 != NULL && __global_clib2->__unix_path_semantics)
+	if (__global_clib2 != NULL && __unix_path_semantics)
 	{
         original_size = size;
 		/* The libunix.a flavour accepts zero length memory allocations
@@ -138,7 +138,7 @@ __allocate_memory(size_t size, BOOL never_free)
     result = &mn[1];
 
 #if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		/* Set the zero length allocation contents to NULL. */
 		if (original_size == 0)
