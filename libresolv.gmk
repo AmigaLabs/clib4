@@ -27,16 +27,15 @@ RESOLV_LIB := \
 	$(C_RESOLV) \
 	resolv.lib_rev.o
 
-##############################################################################
+SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(RESOLV_LIB))
+SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(RESOLV_LIB))
 
 # Dependencies to rebuild if the library version changes
 
 $(OUT_STATIC)/resolv.lib_rev.o : $(LIB_DIR)/resolv.lib_rev.c $(LIB_DIR)/resolv.lib_rev.h
-
 $(OUT_SHARED)/resolv.lib_rev.o : $(LIB_DIR)/resolv.lib_rev.c $(LIB_DIR)/resolv.lib_rev.h
 
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
@@ -45,8 +44,8 @@ $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(OUTPUT_LIB)/libresolv.a : $(addprefix $(OUT_STATIC)/, $(RESOLV_LIB))
+$(OUTPUT_LIB)/libresolv.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(OUTPUT_LIB)/libresolv.so : $(addprefix $(OUT_SHARED)/, $(RESOLV_LIB))
+$(OUTPUT_LIB)/libresolv.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

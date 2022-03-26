@@ -11,24 +11,21 @@ OUT_SHARED := $(BUILD_DIR)/obj.shared/libamiga
 LIBS += $(OUTPUT_LIB)/libprofile.so \
 		$(OUTPUT_LIB)/libprofile.a
 
-##############################################################################
-
 PROFILE_LIB = \
 	profile/_mcount.o \
 	profile/profil.o \
 	profile/gmon.o \
 	profile/mcount.o
 
-##############################################################################
+SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(PROFILE_LIB))
+SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(PROFILE_LIB))
 
 # Dependencies to rebuild if the library version changes
 
 $(OUT_STATIC)/profile.lib_rev.o : $(LIB_DIR)/profile/profile.lib_rev.c $(LIB_DIR)/profile/profile.lib_rev.h
-
 $(OUT_SHARED)/profile.lib_rev.o : $(LIB_DIR)/profile/profile.lib_rev.c $(LIB_DIR)/profile/profile.lib_rev.h
 
 $(OUT_STATIC)/%.o : AFLAGS += $(LARGEDATA)
-
 $(OUT_SHARED)/%.o : AFLAGS += $(PIC) $(LARGEDATA)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
@@ -38,7 +35,6 @@ $(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(ASSEMBLE)
 
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
@@ -47,8 +43,8 @@ $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(BUILD_DIR)/lib/libprofile.a : $(addprefix $(OUT_STATIC)/,$(PROFILE_LIB))
+$(BUILD_DIR)/lib/libprofile.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libprofile.so : $(addprefix $(OUT_SHARED)/,$(PROFILE_LIB))
+$(BUILD_DIR)/lib/libprofile.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

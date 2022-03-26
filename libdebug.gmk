@@ -44,7 +44,8 @@ DEBUG_LIB = \
 	debug/kvprintf2.o \
 	debug/level.o
 
-##############################################################################
+SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(DEBUG_LIB))
+SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(DEBUG_LIB))
 
 # Dependencies to rebuild if the library version changes
 
@@ -61,8 +62,8 @@ $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(OUTPUT_LIB)/libdebug.a : $(addprefix $(OUT_STATIC)/,$(DEBUG_LIB))
+$(OUTPUT_LIB)/libdebug.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(OUTPUT_LIB)/libdebug.so : $(addprefix $(OUT_SHARED)/,$(DEBUG_LIB))
+$(OUTPUT_LIB)/libdebug.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

@@ -43,7 +43,8 @@ AMIGA_LIB = \
 	amiga/timedelay.o \
 	amiga/waitbeam.o
 
-##############################################################################
+SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(AMIGA_LIB))
+SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(AMIGA_LIB))
 
 # Dependencies to rebuild if the library version changes
 
@@ -60,8 +61,8 @@ $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(OUTPUT_LIB)/libamiga.a : $(addprefix $(OUT_STATIC)/libamiga/,$(AMIGA_LIB))
+$(OUTPUT_LIB)/libamiga.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(OUTPUT_LIB)/libamiga.so : $(addprefix $(OUT_SHARED)/libamiga/,$(AMIGA_LIB))
+$(OUTPUT_LIB)/libamiga.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

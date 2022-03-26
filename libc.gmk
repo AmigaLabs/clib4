@@ -872,6 +872,9 @@ C_LIB := \
 	$(C_USERGROUP) \
 	$(C_WCHAR)
 
+SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(C_LIB))
+SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
+
 # Dependencies to rebuild if the library version changes
 
 $(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
@@ -879,7 +882,7 @@ $(BUILD_DIR)/obj.shared/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_re
 
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 
-$(BUILD_DIR)/obj.shared/libc/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
@@ -887,16 +890,16 @@ $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
-$(BUILD_DIR)/obj.shared/libc/%.o : $(LIB_DIR)/%.S
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_SHARED_ASM)
 
-$(BUILD_DIR)/obj.shared/libc/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(OUTPUT_LIB)/libc.a : $(addprefix $(OUT_STATIC)/,$(C_LIB))
+$(OUTPUT_LIB)/libc.a : $(SOURCES_STATIC)
 	$(VERBOSE)@$(MAKELIB)
 
-$(OUTPUT_LIB)/libc.so : $(addprefix $(BUILD_DIR)/obj.shared/libc/,$(C_LIB))
+$(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
 	@$(MAKEDIR) $(@D)
 	@$(DELETE) $@
 	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
