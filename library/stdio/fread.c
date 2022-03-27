@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fread.c,v 1.7 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stdio_fread.c,v 1.8 2022-03-27 12:04:24 clib2devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -57,6 +57,9 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         goto out;
     }
 
+    /* So that we can tell error and 'end of file' conditions apart. */
+    clearerr(stream);
+
     if (element_size > 0 && count > 0) {
         size_t total_bytes_read = 0;
         size_t total_size;
@@ -70,16 +73,80 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
         SHOWVALUE(total_size);
 
-        while (total_size-- > 0) {
-            c = __getc(file);
-            if (c == EOF)
-                break;
+        if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
+            ssize_t num_bytes_read;
 
-            (*data++) = c;
+            /* We bypass the buffer entirely. */
+            num_bytes_read = read(file->iob_Descriptor, data, total_size);
+            if (num_bytes_read == -1) {
+                SET_FLAG(file->iob_Flags, IOBF_ERROR);
+                goto out;
+            }
 
-            total_bytes_read++;
+            if (num_bytes_read == 0)
+                SET_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
+
+            total_bytes_read = num_bytes_read;
+        } else {
+            while (total_size > 0) {
+                /* If there is more data to be read and the read buffer is empty
+                   anyway, we'll bypass the buffer entirely. */
+                if (file->iob_BufferReadBytes == 0 && total_size >= (size_t) file->iob_BufferSize) {
+                    ssize_t num_bytes_read;
+
+                    /* We bypass the buffer entirely. */
+                    num_bytes_read = read(file->iob_Descriptor, data, total_size);
+                    if (num_bytes_read == -1) {
+                        SET_FLAG(file->iob_Flags, IOBF_ERROR);
+                        goto out;
+                    }
+
+                    if (num_bytes_read == 0)
+                        SET_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
+
+                    total_bytes_read += num_bytes_read;
+                    break;
+                }
+
+                /* If there is data in the read buffer, try to copy it directly
+                   into the output buffer. */
+                if (file->iob_BufferPosition < file->iob_BufferReadBytes) {
+                    const unsigned char *buffer = &file->iob_Buffer[file->iob_BufferPosition];
+                    size_t num_bytes_in_buffer;
+
+                    /* Copy as much data as will fit. */
+                    num_bytes_in_buffer = file->iob_BufferReadBytes - file->iob_BufferPosition;
+                    if (total_size < num_bytes_in_buffer)
+                        num_bytes_in_buffer = total_size;
+
+                    memmove(data, buffer, num_bytes_in_buffer);
+                    data += num_bytes_in_buffer;
+
+                    file->iob_BufferPosition += num_bytes_in_buffer;
+
+                    total_bytes_read += num_bytes_in_buffer;
+
+                    /* Stop if the string buffer has been filled. */
+                    total_size -= num_bytes_in_buffer;
+                    if (total_size == 0)
+                        break;
+
+                    /* If the read buffer is now empty and there is still enough data
+                       to be read, try to optimize the read operation. */
+                    if (file->iob_BufferReadBytes == 0 && total_size >= (size_t) file->iob_BufferSize)
+                        continue;
+                }
+
+                c = __getc(file);
+                if (c == EOF)
+                    break;
+
+                (*data++) = c;
+
+                total_size--;
+                total_bytes_read++;
+            }
         }
-
         SHOWVALUE(total_bytes_read);
 
         result = total_bytes_read / element_size;
@@ -89,8 +156,6 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
         SHOWMSG("either element size or count is zero");
 
-        /* Don't let this appear like an EOF or error. */
-        clearerr((FILE *) file);
     }
 
     D(("total number of elements read = %ld", result));
