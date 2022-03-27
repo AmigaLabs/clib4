@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_puts.c,v 1.8 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdio_puts.c,v 1.9 2022-03-27 12:04:25 clib2devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -8,7 +8,8 @@
 
 int
 puts(const char *s) {
-    struct iob *file = (struct iob *) stdout;
+    FILE *stream = stdout;
+    struct iob *file = (struct iob *) stream;
     int result = EOF;
     int buffer_mode;
     int c;
@@ -22,7 +23,7 @@ puts(const char *s) {
     if (__check_abort_enabled)
         __check_abort();
 
-    flockfile(stdout);
+    flockfile(stream);
 
     if (s == NULL) {
         __set_errno(EFAULT);
@@ -33,19 +34,31 @@ puts(const char *s) {
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
+    /* If buffering is disabled for an interactive stream
+   switch to line buffering to improve the readability of
+   the output: instead of pumping out the entire buffer
+   break it up into individual lines. */
     buffer_mode = (file->iob_Flags & IOBF_BUFFER_MODE);
-    if (buffer_mode == IOBF_BUFFER_MODE_NONE)
-        buffer_mode = IOBF_BUFFER_MODE_LINE;
+    if (buffer_mode == IOBF_BUFFER_MODE_NONE) {
+        struct fd *fd = __fd[file->iob_Descriptor];
 
-    if (__fputc_check(stdout) < 0)
+        __fd_lock(fd);
+
+        if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
+            buffer_mode = IOBF_BUFFER_MODE_LINE;
+
+        __fd_unlock(fd);
+    }
+
+    if (__fputc_check(stream) < 0)
         goto out;
 
     while ((c = (*s++)) != '\0') {
-        if (__putc(c, stdout, buffer_mode) == EOF)
+        if (__putc(c, stream, buffer_mode) == EOF)
             goto out;
     }
 
-    if (__putc('\n', stdout, buffer_mode) == EOF)
+    if (__putc('\n', stream, buffer_mode) == EOF)
         goto out;
 
     result = OK;
@@ -63,7 +76,7 @@ out:
         }
     }
 
-    funlockfile(stdout);
+    funlockfile(stream);
 
     RETURN(result);
     return (result);

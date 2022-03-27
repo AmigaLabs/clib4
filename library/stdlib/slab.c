@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_slab.c,v 1.1 2021-01-31 06:43:56 clib2devs Exp $
+ * $Id: stdlib_slab.c,v 1.2 2022-03-27 06:43:56 clib2devs Exp $
  *
  * Portable ISO 'C' (1994) runtime library for the Amiga computer
  * Copyright (c) 2002-2015 by Olaf Barthel <obarthel (at) gmx.net>
@@ -35,689 +35,656 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
+struct SlabData NOCOMMON
+__slab_data;
+
 /****************************************************************************/
 
-struct SlabData NOCOMMON __slab_data;
-
-/****************************************************************************/
-
-struct SlabChunk
-{
-	struct SlabNode *sc_Parent;
+struct SlabChunk {
+    struct SlabNode *sc_Parent;
 };
 
 /****************************************************************************/
 
 void *
-__slab_allocate(size_t allocation_size)
-{
-	struct SlabChunk *chunk;
-	void *allocation = NULL;
-	size_t allocation_size_with_chunk_header;
+__slab_allocate(size_t allocation_size) {
+    struct SlabChunk *chunk;
+    void *allocation = NULL;
+    size_t allocation_size_with_chunk_header;
 
-	D(("allocating %lu bytes of memory", allocation_size));
+    D(("allocating %lu bytes of memory", allocation_size));
 
-	assert(__slab_data.sd_StandardSlabSize > 0);
+    assert(__slab_data.sd_StandardSlabSize > 0);
 
-	/* Check for integer overflow. */
-	allocation_size_with_chunk_header = sizeof(*chunk) + allocation_size;
-	if (allocation_size_with_chunk_header < allocation_size)
-		return (NULL);
+    /* Check for integer overflow. */
+    allocation_size_with_chunk_header = sizeof(*chunk) + allocation_size;
+    if (allocation_size_with_chunk_header < allocation_size)
+        return (NULL);
 
-	/* Number of bytes to allocate exceeds the slab size?
-	 * If so, allocate this memory chunk separately and
-	 * keep track of it.
-	 */
-	if (allocation_size_with_chunk_header > __slab_data.sd_StandardSlabSize)
-	{
-		struct SlabSingleAllocation *ssa;
-		ULONG total_single_allocation_size = sizeof(*ssa) + allocation_size;
+    /* Number of bytes to allocate exceeds the slab size?
+     * If so, allocate this memory chunk separately and
+     * keep track of it.
+     */
+    if (allocation_size_with_chunk_header > __slab_data.sd_StandardSlabSize) {
+        struct SlabSingleAllocation *ssa;
+        ULONG total_single_allocation_size = sizeof(*ssa) + allocation_size;
 
-		D(("allocation size is > %ld; this will be stored separately", __slab_data.sd_StandardSlabSize));
-		D(("allocating %ld (MinNode+Size) + %ld = %ld bytes", sizeof(*ssa), allocation_size, total_single_allocation_size));
+        D(("allocation size is > %ld; this will be stored separately", __slab_data.sd_StandardSlabSize));
+        D(("allocating %ld (MinNode+Size) + %ld = %ld bytes", sizeof(*ssa), allocation_size, total_single_allocation_size));
 
-		/* No integer overflow? */
-		if (allocation_size < total_single_allocation_size)
-		{
-			ssa = AllocVecTags(total_single_allocation_size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-		}
-		/* Integer overflow has occured. */
-		else
-		{
-			ssa = NULL;
-		}
+        /* No integer overflow? */
+        if (allocation_size < total_single_allocation_size) {
+            ssa = AllocVecTags(total_single_allocation_size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        }
+            /* Integer overflow has occured. */
+        else {
+            ssa = NULL;
+        }
 
-		if (ssa != NULL)
-		{
-			ssa->ssa_Size = total_single_allocation_size;
+        if (ssa != NULL) {
+            ssa->ssa_Size = total_single_allocation_size;
 
-			allocation = &ssa[1];
+            allocation = &ssa[1];
 
-			D(("single allocation = 0x%08lx", allocation));
+            D(("single allocation = 0x%08lx", allocation));
 
-			AddTail((struct List *)&__slab_data.sd_SingleAllocations, (struct Node *)ssa);
+            AddTail((struct List *) &__slab_data.sd_SingleAllocations, (struct Node *) ssa);
 
-			__slab_data.sd_NumSingleAllocations++;
-			__slab_data.sd_TotalSingleAllocationSize += total_single_allocation_size;
+            __slab_data.sd_NumSingleAllocations++;
+            __slab_data.sd_TotalSingleAllocationSize += total_single_allocation_size;
 
-			D(("single allocation succeeded at 0x%08lx (number of single allocations = %lu)", allocation, __slab_data.sd_NumSingleAllocations));
-		}
-		else
-		{
-			D(("single allocation failed"));
-		}
-	}
-	/* Otherwise allocate a chunk from a slab. */
-	else
-	{
-		struct MinList *slab_list = NULL;
-		BOOL slab_reused = FALSE;
-		ULONG entry_size;
-		ULONG chunk_size;
-		int slab_index;
+            D(("single allocation succeeded at 0x%08lx (number of single allocations = %lu)", allocation, __slab_data.sd_NumSingleAllocations));
+        } else {
+            D(("single allocation failed"));
+        }
+    }
+        /* Otherwise allocate a chunk from a slab. */
+    else {
+        struct MinList *slab_list = NULL;
+        BOOL slab_reused = FALSE;
+        ULONG entry_size;
+        ULONG chunk_size;
+        int slab_index;
 
-		D(("allocation size is <= %ld; this will be allocated from a slab", __slab_data.sd_StandardSlabSize));
+        D(("allocation size is <= %ld; this will be allocated from a slab", __slab_data.sd_StandardSlabSize));
 
-		/* Add room for a pointer back to the slab which
-		 * the chunk belongs to.
-		 */
-		entry_size = sizeof(*chunk) + allocation_size;
+        /* Add room for a pointer back to the slab which
+         * the chunk belongs to.
+         */
+        entry_size = sizeof(*chunk) + allocation_size;
 
-		/* Chunks must be at least as small as a MinNode, because
-		 * that's what we use for keeping track of the chunks which
-		 * are available for allocation within each slab.
-		 */
-		if (entry_size < sizeof(struct MinNode))
-			entry_size = sizeof(struct MinNode);
+        /* Chunks must be at least as small as a MinNode, because
+         * that's what we use for keeping track of the chunks which
+         * are available for allocation within each slab.
+         */
+        if (entry_size < sizeof(struct MinNode))
+            entry_size = sizeof(struct MinNode);
 
-		D(("final entry size prior to picking slab size = %ld bytes", entry_size));
+        D(("final entry size prior to picking slab size = %ld bytes", entry_size));
 
-		/* Find a slab which keeps track of chunks that are no
-		 * larger than the amount of memory which needs to be
-		 * allocated. We end up picking the smallest chunk
-		 * size that still works.
-		 */
-		for (slab_index = 2, chunk_size = (1UL << slab_index);
-			 slab_index < (int)NUM_ENTRIES(__slab_data.sd_Slabs);
-			 slab_index++, chunk_size += chunk_size)
-		{
-			if (entry_size <= chunk_size)
-			{
-				D(("using slab #%ld (%lu bytes per chunk)", slab_index, chunk_size));
+        /* Find a slab which keeps track of chunks that are no
+         * larger than the amount of memory which needs to be
+         * allocated. We end up picking the smallest chunk
+         * size that still works.
+         */
+        for (slab_index = 2, chunk_size = (1UL << slab_index);
+             slab_index < (int) NUM_ENTRIES(__slab_data.sd_Slabs);
+             slab_index++, chunk_size += chunk_size) {
+            if (entry_size <= chunk_size) {
+                D(("using slab #%ld (%lu bytes per chunk)", slab_index, chunk_size));
 
-				assert((chunk_size % sizeof(LONG)) == 0);
+                assert((chunk_size % sizeof(LONG)) == 0);
 
-				slab_list = &__slab_data.sd_Slabs[slab_index];
-				break;
-			}
-		}
+                slab_list = &__slab_data.sd_Slabs[slab_index];
+                break;
+            }
+        }
 
-		if (slab_list != NULL)
-		{
-			struct SlabNode *sn;
+        if (slab_list != NULL) {
+            struct SlabNode *sn;
 
-			SHOWVALUE(chunk_size);
+            SHOWVALUE(chunk_size);
 
-			/* The slab list is organized in such a way that the first
-			 * entry always has a free chunk ready for allocation. If
-			 * there is no such free chunk, it means that no other
-			 * slab nodes in this list have any free chunks.
-			 */
-			sn = (struct SlabNode *)slab_list->mlh_Head;
+            /* The slab list is organized in such a way that the first
+             * entry always has a free chunk ready for allocation. If
+             * there is no such free chunk, it means that no other
+             * slab nodes in this list have any free chunks.
+             */
+            sn = (struct SlabNode *) slab_list->mlh_Head;
 
-			/* Make sure that the slab list is not empty. */
-			if (sn->sn_MinNode.mln_Succ != NULL)
-			{
-				D(("slab = 0x%08lx, chunk size = %ld", sn, sn->sn_ChunkSize));
+            /* Make sure that the slab list is not empty. */
+            if (sn->sn_MinNode.mln_Succ != NULL) {
+                D(("slab = 0x%08lx, chunk size = %ld", sn, sn->sn_ChunkSize));
 
-				assert(sn->sn_ChunkSize == chunk_size);
+                assert(sn->sn_ChunkSize == chunk_size);
 
-				chunk = (struct SlabChunk *)RemHead((struct List *)&sn->sn_FreeList);
-				if (chunk != NULL)
-				{
-					/* Keep track of this chunk's parent slab. */
-					chunk->sc_Parent = sn;
+                chunk = (struct SlabChunk *) RemHead((struct List *) &sn->sn_FreeList);
+                if (chunk != NULL) {
+                    /* Keep track of this chunk's parent slab. */
+                    chunk->sc_Parent = sn;
 
-					allocation = &chunk[1];
+                    allocation = &chunk[1];
 
-					D(("allocation succeeded at 0x%08lx in slab 0x%08lx (slab use count = %lu)", allocation, sn, sn->sn_UseCount));
+                    D(("allocation succeeded at 0x%08lx in slab 0x%08lx (slab use count = %lu)", allocation, sn, sn->sn_UseCount));
 
-					/* Was this slab empty before we began using it again? */
-					if (sn->sn_UseCount == 0)
-					{
-						D(("slab is no longer empty"));
+                    /* Was this slab empty before we began using it again? */
+                    if (sn->sn_UseCount == 0) {
+                        D(("slab is no longer empty"));
 
-						/* Pull it out of the list of slabs available for reuse. */
-						Remove((struct Node *)&sn->sn_EmptyLink);
+                        /* Pull it out of the list of slabs available for reuse. */
+                        Remove((struct Node *) &sn->sn_EmptyLink);
 
-						sn->sn_EmptyDecay = 0;
-						sn->sn_NumReused++;
-					}
+                        sn->sn_EmptyDecay = 0;
+                        sn->sn_NumReused++;
+                    }
 
-					sn->sn_UseCount++;
+                    sn->sn_UseCount++;
 
-					/* Is this slab now fully utilized? Move it to the
-					 * end of the queue so that it will not be checked
-					 * before other slabs of the same size have been
-					 * tested. Those at the front of the queue should
-					 * still have room left.
-					 */
-					if (sn->sn_UseCount == sn->sn_Count && sn != (struct SlabNode *)slab_list->mlh_TailPred)
-					{
-						D(("slab is full"));
+                    /* Is this slab now fully utilized? Move it to the
+                     * end of the queue so that it will not be checked
+                     * before other slabs of the same size have been
+                     * tested. Those at the front of the queue should
+                     * still have room left.
+                     */
+                    if (sn->sn_UseCount == sn->sn_Count && sn != (struct SlabNode *) slab_list->mlh_TailPred) {
+                        D(("slab is full"));
 
-						Remove((struct Node *)sn);
-						AddTail((struct List *)slab_list, (struct Node *)sn);
-					}
-				}
-			}
+                        Remove((struct Node *) sn);
+                        AddTail((struct List *) slab_list, (struct Node *) sn);
+                    }
+                }
+            }
 
-			/* There is no slab with a free chunk? Then we might have to
-			 * allocate a new one.
-			 */
-			if (allocation == NULL)
-			{
-				struct MinNode *free_node;
-				struct MinNode *free_node_next;
-				struct SlabNode *new_sn = NULL;
-				BOOL purge = FALSE;
+            /* There is no slab with a free chunk? Then we might have to
+             * allocate a new one.
+             */
+            if (allocation == NULL) {
+                struct MinNode *free_node;
+                struct MinNode *free_node_next;
+                struct SlabNode *new_sn = NULL;
+                BOOL purge = FALSE;
 
-				D(("no slab is available which still has free room"));
+                D(("no slab is available which still has free room"));
 
-				/* Try to recycle an empty (unused) slab, if possible. */
-				for (free_node = (struct MinNode *)__slab_data.sd_EmptySlabs.mlh_Head;
-					 free_node->mln_Succ != NULL;
-					 free_node = free_node_next)
-				{
-					free_node_next = (struct MinNode *)free_node->mln_Succ;
+                /* Try to recycle an empty (unused) slab, if possible. */
+                for (free_node = (struct MinNode *) __slab_data.sd_EmptySlabs.mlh_Head;
+                     free_node->mln_Succ != NULL;
+                     free_node = free_node_next) {
+                    free_node_next = (struct MinNode *) free_node->mln_Succ;
 
-					/* free_node points to SlabNode.sn_EmptyLink, which
-					 * directly follows the SlabNode.sn_MinNode.
-					 */
-					sn = (struct SlabNode *)&free_node[-1];
+                    /* free_node points to SlabNode.sn_EmptyLink, which
+                     * directly follows the SlabNode.sn_MinNode.
+                     */
+                    sn = (struct SlabNode *) &free_node[-1];
 
-					/* Is this empty slab ready to be reused? */
-					if (sn->sn_EmptyDecay == 0)
-					{
-						/* Unlink from list of empty slabs. */
-						Remove((struct Node *)free_node);
+                    /* Is this empty slab ready to be reused? */
+                    if (sn->sn_EmptyDecay == 0) {
+                        /* Unlink from list of empty slabs. */
+                        Remove((struct Node *) free_node);
 
-						/* If the chunk size of the reused slab matches
-						 * exactly what we need then we won't have to
-						 * completely reinitialize it again.
+                        /* If the chunk size of the reused slab matches
+                         * exactly what we need then we won't have to
+                         * completely reinitialize it again.
+                         */
+                        if (sn->sn_ChunkSize == chunk_size) {
+                            slab_reused = TRUE;
+                        } else {
+                            /* Unlink from list of slabs which keep chunks
+                             * of the same size. It will be added there
+                             * again, at a different position.
+                             */
+                            Remove((struct Node *) sn);
+                        }
+
+                        D(("reusing a slab"));
+
+                        sn->sn_NumReused++;
+
+                        new_sn = sn;
+                        break;
+                    }
+                }
+
+                /* We couldn't reuse an empty slab? Then we'll have to allocate
+                 * memory for another one.
+                 *
+                 * Note that we allocate an extra MEM_BLOCKSIZE bytes so that we
+                 * may chop up the slab into chunks which all start on an address
+                 * which is a multiple of MEM_BLOCKSIZE bytes. This is useful for
+                 * aligning allocations to a 64 bit boundary on the PowerPC when
+                 * using floating point numbers embedded in data structures.
+                 */
+                if (new_sn == NULL) {
+                    D(("no slab is available for reuse; allocating a new slab (%lu bytes)", sizeof(*new_sn) +
+                                                                                            __slab_data.sd_StandardSlabSize));
+
+                    new_sn = (struct SlabNode *) AllocVecTags(
+                            sizeof(*new_sn) + __slab_data.sd_StandardSlabSize + MEM_BLOCKSIZE, AVT_Type, MEMF_PRIVATE,
+                            TAG_DONE);
+                    if (new_sn == NULL)
+                        D(("slab allocation failed"));
+
+                    /* If this allocation went well, try to free all currently unused
+                     * slabs which are ready for purging. This is done so that we don't
+                     * keep allocating new memory all the time without cutting back on
+                     * unused slabs.
+                     */
+                    purge = TRUE;
+                }
+
+                if (new_sn != NULL) {
+                    D(("setting up slab 0x%08lx", new_sn));
+
+                    assert(chunk_size <= __slab_data.sd_StandardSlabSize);
+
+                    /* Do we have to completely initialize this slab from scratch? */
+                    if (NOT slab_reused) {
+                        struct SlabChunk *free_chunk;
+                        ULONG num_free_chunks = 0;
+                        ULONG aligned_first_byte;
+                        BYTE *first_byte;
+                        BYTE *last_byte;
+
+                        memset(new_sn, 0, sizeof(*new_sn));
+
+                        NewList((struct List *) &new_sn->sn_FreeList);
+
+                        /* This slab has room for new allocations, so make sure that
+                         * it goes to the front of the slab list. It will be used
+                         * by the next allocation request of this size.
+                         */
+                        AddHead((struct List *) slab_list, (struct Node *) new_sn);
+
+                        /* Split up the slab memory into individual chunks of the same
+						 * size and keep track of them in the free list. The memory
+						 * managed by this slab follows the SlabNode header with some
+						 * padding added to make the first allocatable slab start on
+						 * a 64 bit boundary.
 						 */
-						if (sn->sn_ChunkSize == chunk_size)
-						{
-							slab_reused = TRUE;
-						}
-						else
-						{
-							/* Unlink from list of slabs which keep chunks
-							 * of the same size. It will be added there
-							 * again, at a different position.
-							 */
-							Remove((struct Node *)sn);
-						}
+                        aligned_first_byte = ((ULONG) & new_sn[1] + MEM_BLOCKMASK) & ~MEM_BLOCKMASK;
 
-						D(("reusing a slab"));
+                        first_byte = (BYTE *) aligned_first_byte;
+                        last_byte = &first_byte[__slab_data.sd_StandardSlabSize - chunk_size];
 
-						sn->sn_NumReused++;
+                        for (free_chunk = (struct SlabChunk *) first_byte;
+                             free_chunk <= (struct SlabChunk *) last_byte;
+                             free_chunk = (struct SlabChunk *) (((BYTE *) free_chunk) + chunk_size)) {
+                            AddTail((struct List *) &new_sn->sn_FreeList, (struct Node *) free_chunk);
+                            num_free_chunks++;
+                        }
 
-						new_sn = sn;
-						break;
-					}
-				}
+                        new_sn->sn_Count = num_free_chunks;
+                        new_sn->sn_ChunkSize = chunk_size;
 
-				/* We couldn't reuse an empty slab? Then we'll have to allocate
-				 * memory for another one.
-				 */
-				if (new_sn == NULL)
-				{
-					D(("no slab is available for reuse; allocating a new slab (%lu bytes)", sizeof(*new_sn) + __slab_data.sd_StandardSlabSize));
+                        D(("new slab contains %lu chunks, %lu bytes each", num_free_chunks, chunk_size));
+                    }
+                        /* This slab was reused and need not be reinitialized from scratch. */
+                    else {
+                        assert(new_sn->sn_FreeList.mlh_Head != NULL);
+                        assert(new_sn->sn_ChunkSize == chunk_size);
+                        assert(new_sn->sn_Count == 0);
+                    }
 
-					new_sn = (struct SlabNode *)AllocVecTags(sizeof(*new_sn) + __slab_data.sd_StandardSlabSize, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-					if (new_sn == NULL)
-						D(("slab allocation failed"));
+                    /* Grab the first free chunk (there has to be one). */
+                    chunk = (struct SlabChunk *) RemHead((struct List *) &new_sn->sn_FreeList);
 
-					/* If this allocation went well, try to free all currently unused
-					 * slabs which are ready for purging. This is done so that we don't
-					 * keep allocating new memory all the time without cutting back on
-					 * unused slabs.
-					 */
-					purge = TRUE;
-				}
+                    /* Keep track of this chunk's parent slab. */
+                    chunk->sc_Parent = new_sn;
 
-				if (new_sn != NULL)
-				{
-					D(("setting up slab 0x%08lx", new_sn));
+                    assert(chunk != NULL);
+                    assert(chunk->sc_Parent == new_sn);
 
-					assert(chunk_size <= __slab_data.sd_StandardSlabSize);
+                    allocation = &chunk[1];
 
-					/* Do we have to completely initialize this slab from scratch? */
-					if (NOT slab_reused)
-					{
-						struct SlabChunk *free_chunk;
-						ULONG num_free_chunks = 0;
-						BYTE *first_byte;
-						BYTE *last_byte;
+                    /* This slab is now in use. */
+                    new_sn->sn_UseCount = 1;
 
-						memset(new_sn, 0, sizeof(*new_sn));
+                    D(("allocation succeeded at 0x%08lx in slab 0x%08lx (slab use count = %lu)", allocation, new_sn, new_sn->sn_UseCount));
+                }
 
-						NewList((struct List *)&new_sn->sn_FreeList);
+                /* Mark unused slabs for purging, and purge those which
+                 * are ready to be purged.
+                 */
+                if (purge) {
+                    size_t total_purged = 0;
 
-						/* This slab has room for new allocations, so make sure that
-						 * it goes to the front of the slab list. It will be used
-						 * by the next allocation request of this size.
-						 */
-						AddHead((struct List *)slab_list, (struct Node *)new_sn);
+                    D(("purging empty slabs"));
 
-						/* Split up the slab memory into individual chunks
-						 * of the same size and keep track of them
-						 * in the free list. The memory managed by
-						 * this slab immediately follows the
-						 * SlabNode header.
-						 */
-						first_byte = (BYTE *)&new_sn[1];
-						last_byte = &first_byte[__slab_data.sd_StandardSlabSize - chunk_size];
+                    for (free_node = (struct MinNode *) __slab_data.sd_EmptySlabs.mlh_Head;
+                         free_node->mln_Succ != NULL;
+                         free_node = free_node_next) {
+                        free_node_next = (struct MinNode *) free_node->mln_Succ;
 
-						for (free_chunk = (struct SlabChunk *)first_byte;
-							 free_chunk <= (struct SlabChunk *)last_byte;
-							 free_chunk = (struct SlabChunk *)(((BYTE *)free_chunk) + chunk_size))
-						{
-							AddTail((struct List *)&new_sn->sn_FreeList, (struct Node *)free_chunk);
-							num_free_chunks++;
-						}
+                        /* free_node points to SlabNode.sn_EmptyLink, which
+                         * directly follows the SlabNode.sn_MinNode.
+                         */
+                        sn = (struct SlabNode *) &free_node[-1];
 
-						new_sn->sn_Count = num_free_chunks;
-						new_sn->sn_ChunkSize = chunk_size;
+                        /* Is this empty slab ready to be purged? */
+                        if (sn->sn_EmptyDecay == 0) {
+                            D(("freeing empty slab"));
 
-						D(("new slab contains %lu chunks, %lu bytes each", num_free_chunks, chunk_size));
-					}
-					/* This slab was reused and need not be reinitialized from scratch. */
-					else
-					{
-						assert(new_sn->sn_FreeList.mlh_Head != NULL);
-						assert(new_sn->sn_ChunkSize == chunk_size);
-						assert(new_sn->sn_Count == 0);
-					}
+                            /* Unlink from list of empty slabs. */
+                            Remove((struct Node *) free_node);
 
-					/* Grab the first free chunk (there has to be one). */
-					chunk = (struct SlabChunk *)RemHead((struct List *)&new_sn->sn_FreeList);
+                            /* Unlink from list of slabs of the same size. */
+                            Remove((struct Node *) sn);
 
-					/* Keep track of this chunk's parent slab. */
-					chunk->sc_Parent = new_sn;
+                            FreeVec(sn);
 
-					assert(chunk != NULL);
-					assert(chunk->sc_Parent == new_sn);
+                            total_purged += sizeof(*sn) + __slab_data.sd_StandardSlabSize;
 
-					allocation = &chunk[1];
+                            /* Stop releasing memory if we reach the threshold. If no
+                             * threshold has been set, we will free as much memory
+                             * as possible.
+                             */
+                            if (__slab_purge_threshold > 0 && total_purged >= __slab_purge_threshold)
+                                break;
+                        }
+                            /* Give it another chance. */
+                        else {
+                            sn->sn_EmptyDecay--;
 
-					/* This slab is now in use. */
-					new_sn->sn_UseCount = 1;
+                            /* Is this slab ready for reuse now? */
+                            if (sn->sn_EmptyDecay == 0) {
+                                /* Move it to the front of the list, so that
+                                 * it will be collected as soon as possible.
+                                 */
+                                if (free_node != (struct MinNode *) __slab_data.sd_EmptySlabs.mlh_Head) {
+                                    Remove((struct Node *) free_node);
+                                    AddHead((struct List *) &__slab_data.sd_EmptySlabs, (struct Node *) free_node);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            D(("no matching slab found"));
+        }
+    }
 
-					D(("allocation succeeded at 0x%08lx in slab 0x%08lx (slab use count = %lu)", allocation, new_sn, new_sn->sn_UseCount));
-				}
-
-				/* Mark unused slabs for purging, and purge those which
-				 * are ready to be purged.
-				 */
-				if (purge)
-				{
-					size_t total_purged = 0;
-
-					D(("purging empty slabs"));
-
-					for (free_node = (struct MinNode *)__slab_data.sd_EmptySlabs.mlh_Head;
-						 free_node->mln_Succ != NULL;
-						 free_node = free_node_next)
-					{
-						free_node_next = (struct MinNode *)free_node->mln_Succ;
-
-						/* free_node points to SlabNode.sn_EmptyLink, which
-						 * directly follows the SlabNode.sn_MinNode.
-						 */
-						sn = (struct SlabNode *)&free_node[-1];
-
-						/* Is this empty slab ready to be purged? */
-						if (sn->sn_EmptyDecay == 0)
-						{
-							D(("freeing empty slab"));
-
-							/* Unlink from list of empty slabs. */
-							Remove((struct Node *)free_node);
-
-							/* Unlink from list of slabs of the same size. */
-							Remove((struct Node *)sn);
-
-							FreeVec(sn);
-
-							total_purged += sizeof(*sn) + __slab_data.sd_StandardSlabSize;
-
-							/* Stop releasing memory if we reach the threshold. If no
-							 * threshold has been set, we will free as much memory
-							 * as possible.
-							 */
-							if (__slab_purge_threshold > 0 && total_purged >= __slab_purge_threshold)
-								break;
-						}
-						/* Give it another chance. */
-						else
-						{
-							sn->sn_EmptyDecay--;
-
-							/* Is this slab ready for reuse now? */
-							if (sn->sn_EmptyDecay == 0)
-							{
-								/* Move it to the front of the list, so that
-								 * it will be collected as soon as possible.
-								 */
-								if (free_node != (struct MinNode *)__slab_data.sd_EmptySlabs.mlh_Head)
-								{
-									Remove((struct Node *)free_node);
-									AddHead((struct List *)&__slab_data.sd_EmptySlabs, (struct Node *)free_node);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			D(("no matching slab found"));
-		}
-	}
-
-	return (allocation);
+    return (allocation);
 }
 
 /****************************************************************************/
 
-void __slab_free(void *address, size_t allocation_size)
-{
-	struct SlabChunk *chunk;
+void __slab_free(void *address, size_t allocation_size) {
+    struct SlabChunk *chunk;
 
-	D(("freeing allocation at 0x%08lx, %lu bytes", address, allocation_size));
+    D(("freeing allocation at 0x%08lx, %lu bytes", address, allocation_size));
 
-	assert(__slab_data.sd_StandardSlabSize > 0);
+    assert(__slab_data.sd_StandardSlabSize > 0);
 
-	/* Number of bytes allocated exceeds the slab size?
-	 * Then the chunk was allocated separately.
-	 */
-	if (sizeof(*chunk) + allocation_size > __slab_data.sd_StandardSlabSize)
-	{
-		struct SlabSingleAllocation *ssa = address;
-		ULONG size;
+    /* Number of bytes allocated exceeds the slab size?
+     * Then the chunk was allocated separately.
+     */
+    if (sizeof(*chunk) + allocation_size > __slab_data.sd_StandardSlabSize) {
+        struct SlabSingleAllocation *ssa = address;
+        ULONG size;
 
-		D(("allocation size is > %ld; this was stored separately", __slab_data.sd_StandardSlabSize));
+        D(("allocation size is > %ld; this was stored separately", __slab_data.sd_StandardSlabSize));
 
-		assert(__slab_data.sd_NumSingleAllocations > 0);
+        assert(__slab_data.sd_NumSingleAllocations > 0);
 
-		/* Management information (MinNode linkage, size in bytes) precedes
-		 * the address returned by malloc(), etc.
-		 */
-		ssa--;
+        /* Management information (MinNode linkage, size in bytes) precedes
+         * the address returned by malloc(), etc.
+         */
+        ssa--;
 
         /* Verify that the allocation is really on the list we will remove it from. */
 #if DEBUG
-		{
-			struct MinNode *mln;
-			BOOL found_allocation_in_list = FALSE;
+        {
+            struct MinNode *mln;
+            BOOL found_allocation_in_list = FALSE;
 
-			for (mln = __slab_data.sd_SingleAllocations.mlh_Head;
-				 mln->mln_Succ != NULL;
-				 mln = mln->mln_Succ)
-			{
-				if (mln == (struct MinNode *)ssa)
-				{
-					found_allocation_in_list = TRUE;
-					break;
-				}
-			}
+            for (mln = __slab_data.sd_SingleAllocations.mlh_Head;
+                 mln->mln_Succ != NULL;
+                 mln = mln->mln_Succ)
+            {
+                if (mln == (struct MinNode *)ssa)
+                {
+                    found_allocation_in_list = TRUE;
+                    break;
+                }
+            }
 
-			assert(found_allocation_in_list);
-		}
+            assert(found_allocation_in_list);
+        }
 #endif /* DEBUG */
 
-		size = ssa->ssa_Size;
+        size = ssa->ssa_Size;
 
-		assert(size > 0);
-		assert(sizeof(*ssa) + allocation_size == size);
-		assert(size <= __slab_data.sd_TotalSingleAllocationSize);
+        assert(size > 0);
+        assert(sizeof(*ssa) + allocation_size == size);
+        assert(size <= __slab_data.sd_TotalSingleAllocationSize);
 
-		Remove((struct Node *)ssa);
+        Remove((struct Node *) ssa);
 
-		FreeVec(ssa);
+        FreeVec(ssa);
 
-		__slab_data.sd_NumSingleAllocations--;
-		__slab_data.sd_TotalSingleAllocationSize -= size;
+        __slab_data.sd_NumSingleAllocations--;
+        __slab_data.sd_TotalSingleAllocationSize -= size;
 
-		D(("number of single allocations = %ld", __slab_data.sd_NumSingleAllocations));
-	}
-	/* Otherwise the allocation should have come from a slab. */
-	else
-	{
-		struct MinList *slab_list = NULL;
-		size_t entry_size;
-		ULONG chunk_size;
-		int slab_index;
+        D(("number of single allocations = %ld", __slab_data.sd_NumSingleAllocations));
+    }
+        /* Otherwise the allocation should have come from a slab. */
+    else {
+        struct MinList *slab_list = NULL;
+        size_t entry_size;
+        ULONG chunk_size;
+        int slab_index;
 
-		D(("allocation size is <= %ld; this was allocated from a slab", __slab_data.sd_StandardSlabSize));
+        D(("allocation size is <= %ld; this was allocated from a slab", __slab_data.sd_StandardSlabSize));
 
-		/* Add room for a pointer back to the slab which
-		 * the chunk belongs to.
-		 */
-		entry_size = sizeof(*chunk) + allocation_size;
+        /* Add room for a pointer back to the slab which
+         * the chunk belongs to.
+         */
+        entry_size = sizeof(*chunk) + allocation_size;
 
-		/* Chunks must be at least as small as a MinNode, because
-		 * that's what we use for keeping track of the chunks which
-		 * are available for allocation within each slab.
-		 */
-		if (entry_size < sizeof(struct MinNode))
-			entry_size = sizeof(struct MinNode);
+        /* Chunks must be at least as small as a MinNode, because
+         * that's what we use for keeping track of the chunks which
+         * are available for allocation within each slab.
+         */
+        if (entry_size < sizeof(struct MinNode))
+            entry_size = sizeof(struct MinNode);
 
-		/* Find a slab which keeps track of chunks that are no
-		 * larger than the amount of memory which needs to be
-		 * released. We end up picking the smallest chunk
-		 * size that still works.
-		 */
-		for (slab_index = 2, chunk_size = (1UL << slab_index);
-			 slab_index < (int)NUM_ENTRIES(__slab_data.sd_Slabs);
-			 slab_index++, chunk_size += chunk_size)
-		{
-			if (entry_size <= chunk_size)
-			{
-				D(("using slab #%ld (%ld bytes per chunk)", slab_index, chunk_size));
+        /* Find a slab which keeps track of chunks that are no
+         * larger than the amount of memory which needs to be
+         * released. We end up picking the smallest chunk
+         * size that still works.
+         *
+         * Note that we start with a minimum size of 8 bytes because that
+         * is the exact minimum size of a memory allocation as performed
+         * by AllocMem() and the Allocate() function which it is built
+         * upon.
+         */
+        for (slab_index = 3, chunk_size = (1UL << slab_index);
+             slab_index < (int) NUM_ENTRIES(__slab_data.sd_Slabs);
+             slab_index++, chunk_size += chunk_size) {
+            if (entry_size <= chunk_size) {
+                D(("using slab #%ld (%ld bytes per chunk)", slab_index, chunk_size));
 
-				assert((chunk_size % sizeof(LONG)) == 0);
+                assert((chunk_size % sizeof(LONG)) == 0);
 
-				slab_list = &__slab_data.sd_Slabs[slab_index];
-				break;
-			}
-		}
+                slab_list = &__slab_data.sd_Slabs[slab_index];
+                break;
+            }
+        }
 
-		/* Pick the slab which contains the memory chunk. */
-		if (slab_list != NULL)
-		{
-			struct SlabNode *sn;
+        /* Pick the slab which contains the memory chunk. */
+        if (slab_list != NULL) {
+            struct SlabNode *sn;
 
-			assert(chunk_size <= __slab_data.sd_StandardSlabSize);
+            assert(chunk_size <= __slab_data.sd_StandardSlabSize);
 
-			/* The pointer back to the slab which this chunk belongs
-			 * to precedes the address which __slab_allocate()
-			 * returned.
-			 */
-			chunk = address;
-			chunk--;
+            /* The pointer back to the slab which this chunk belongs
+             * to precedes the address which __slab_allocate()
+             * returned.
+             */
+            chunk = address;
+            chunk--;
 
-			sn = chunk->sc_Parent;
+            sn = chunk->sc_Parent;
 
 #if DEBUG
-			{
-				struct SlabNode *other_sn;
-				BOOL slab_found = FALSE;
-				BOOL chunk_found = FALSE;
+            {
+                struct SlabNode *other_sn;
+                BOOL slab_found = FALSE;
+                BOOL chunk_found = FALSE;
 
-				for (other_sn = (struct SlabNode *)slab_list->mlh_Head;
-					 other_sn->sn_MinNode.mln_Succ != NULL;
-					 other_sn = (struct SlabNode *)other_sn->sn_MinNode.mln_Succ)
-				{
-					if (other_sn == sn)
-					{
-						slab_found = TRUE;
-						break;
-					}
-				}
+                for (other_sn = (struct SlabNode *)slab_list->mlh_Head;
+                     other_sn->sn_MinNode.mln_Succ != NULL;
+                     other_sn = (struct SlabNode *)other_sn->sn_MinNode.mln_Succ)
+                {
+                    if (other_sn == sn)
+                    {
+                        slab_found = TRUE;
+                        break;
+                    }
+                }
 
-				assert(slab_found);
+                assert(slab_found);
 
-				if (slab_found)
-				{
-					struct MinNode *free_chunk;
-					BYTE *first_byte;
-					BYTE *last_byte;
+                if (slab_found)
+                {
+                    struct MinNode *free_chunk;
+                    BYTE *first_byte;
+                    BYTE *last_byte;
 
-					first_byte = (BYTE *)&sn[1];
-					last_byte = &first_byte[__slab_data.sd_StandardSlabSize - chunk_size];
+                    first_byte = (BYTE *)&sn[1];
+                    last_byte = &first_byte[__slab_data.sd_StandardSlabSize - chunk_size];
 
-					for (free_chunk = (struct MinNode *)first_byte;
-						 free_chunk <= (struct MinNode *)last_byte;
-						 free_chunk = (struct MinNode *)(((BYTE *)free_chunk) + chunk_size))
-					{
-						if (free_chunk == (struct MinNode *)chunk)
-						{
-							chunk_found = TRUE;
-							break;
-						}
-					}
-				}
+                    for (free_chunk = (struct MinNode *)first_byte;
+                         free_chunk <= (struct MinNode *)last_byte;
+                         free_chunk = (struct MinNode *)(((BYTE *)free_chunk) + chunk_size))
+                    {
+                        if (free_chunk == (struct MinNode *)chunk)
+                        {
+                            chunk_found = TRUE;
+                            break;
+                        }
+                    }
+                }
 
-				assert(chunk_found);
-			}
+                assert(chunk_found);
+            }
 #endif /* DEBUG */
 
-			SHOWVALUE(sn->sn_ChunkSize);
+            SHOWVALUE(sn->sn_ChunkSize);
 
-			assert(sn->sn_ChunkSize != 0);
+            assert(sn->sn_ChunkSize != 0);
 
-			assert(sn->sn_ChunkSize == chunk_size);
+            assert(sn->sn_ChunkSize == chunk_size);
 
-			D(("allocation is part of slab 0x%08lx (slab use count = %ld)", sn, sn->sn_UseCount));
+            D(("allocation is part of slab 0x%08lx (slab use count = %ld)", sn, sn->sn_UseCount));
 
 #if DEBUG
-			{
-				struct MinNode *mln;
-				BOOL chunk_already_free = FALSE;
+            {
+                struct MinNode *mln;
+                BOOL chunk_already_free = FALSE;
 
-				for (mln = sn->sn_FreeList.mlh_Head;
-					 mln->mln_Succ != NULL;
-					 mln = mln->mln_Succ)
-				{
-					if (mln == (struct MinNode *)chunk)
-					{
-						chunk_already_free = TRUE;
-						break;
-					}
-				}
+                for (mln = sn->sn_FreeList.mlh_Head;
+                     mln->mln_Succ != NULL;
+                     mln = mln->mln_Succ)
+                {
+                    if (mln == (struct MinNode *)chunk)
+                    {
+                        chunk_already_free = TRUE;
+                        break;
+                    }
+                }
 
-				assert(NOT chunk_already_free);
-			}
+                assert(NOT chunk_already_free);
+            }
 #endif /* DEBUG */
 
-			AddHead((struct List *)&sn->sn_FreeList, (struct Node *)chunk);
+            AddHead((struct List *) &sn->sn_FreeList, (struct Node *) chunk);
 
-			assert(sn->sn_UseCount > 0);
+            assert(sn->sn_UseCount > 0);
 
-			sn->sn_UseCount--;
+            sn->sn_UseCount--;
 
-			/* If this slab is empty, mark it as unused and
-			 * allow it to be purged.
-			 */
-			if (sn->sn_UseCount == 0)
-			{
-				D(("slab is now empty"));
+            /* If this slab is empty, mark it as unused and
+             * allow it to be purged.
+             */
+            if (sn->sn_UseCount == 0) {
+                D(("slab is now empty"));
 
-				AddTail((struct List *)&__slab_data.sd_EmptySlabs, (struct Node *)&sn->sn_EmptyLink);
-				sn->sn_EmptyDecay = 1;
-			}
+                AddTail((struct List *) &__slab_data.sd_EmptySlabs, (struct Node *) &sn->sn_EmptyLink);
+                sn->sn_EmptyDecay = 1;
+            }
 
-			/* This slab now has room. Move it to front of the list
-			 * so that searching for a free chunk will pick it
-			 * first.
-			 */
-			if (sn != (struct SlabNode *)slab_list->mlh_Head)
-			{
-				D(("moving slab to the head of the list"));
+            /* This slab now has room. Move it to front of the list
+             * so that searching for a free chunk will pick it
+             * first.
+             */
+            if (sn != (struct SlabNode *) slab_list->mlh_Head) {
+                D(("moving slab to the head of the list"));
 
-				Remove((struct Node *)sn);
-				AddHead((struct List *)slab_list, (struct Node *)sn);
-			}
-		}
-		else
-		{
-			D(("no matching slab found"));
-		}
-	}
+                Remove((struct Node *) sn);
+                AddHead((struct List *) slab_list, (struct Node *) sn);
+            }
+        } else {
+            D(("no matching slab found"));
+        }
+    }
 }
 
 /****************************************************************************/
 
-void __slab_init(size_t slab_size)
-{
-	const size_t max_slab_size = (1UL << (NUM_ENTRIES(__slab_data.sd_Slabs)));
-	size_t size;
+void __slab_init(size_t slab_size) {
+    const size_t max_slab_size = (1UL << (NUM_ENTRIES(__slab_data.sd_Slabs)));
+    size_t size;
 
-	SETDEBUGLEVEL(2);
+    SETDEBUGLEVEL(2);
 
-	D(("slab_size = %ld", slab_size));
+    D(("slab_size = %ld", slab_size));
 
-	/* Do not allow for a slab size that is larger than
-	 * what we support.
-	 */
-	if (slab_size > max_slab_size)
-		slab_size = max_slab_size;
+    /* Do not allow for a slab size that is larger than
+     * what we support.
+     */
+    if (slab_size > max_slab_size)
+        slab_size = max_slab_size;
 
-	/* If the maximum allocation size to be made from the slab
-	 * is not already a power of 2, round it up. We do not
-	 * support allocations larger than 2^17, and the maximum
-	 * allocation size should be much smaller.
-	 *
-	 * Note that the maximum allocation size also defines the
-	 * amount of memory which each slab manages.
-	 */
-	size = sizeof(struct MinNode);
-	while (size < slab_size && (size & 0x80000000) == 0)
-		size += size;
+    /* If the maximum allocation size to be made from the slab
+     * is not already a power of 2, round it up. We do not
+     * support allocations larger than 2^17, and the maximum
+     * allocation size should be much smaller.
+     *
+     * Note that the maximum allocation size also defines the
+     * amount of memory which each slab manages.
+     */
+    size = sizeof(struct MinNode);
+    while (size < slab_size && (size & 0x80000000) == 0)
+        size += size;
 
-	D(("size = %lu", size));
+    D(("size = %lu", size));
 
-	/* If the slab size looks sound, enable the slab memory allocator. */
-	if ((size & 0x80000000) == 0)
-	{
-		int i;
+    /* If the slab size looks sound, enable the slab memory allocator. */
+    if ((size & 0x80000000) == 0) {
+        int i;
 
-		D(("activating slab allocator"));
+        D(("activating slab allocator"));
 
-		memset(&__slab_data, 0, sizeof(__slab_data));
+        memset(&__slab_data, 0, sizeof(__slab_data));
 
-		assert(size <= slab_size);
+        assert(size <= slab_size);
 
-		/* Start with an empty list of slabs for each chunk size. */
-		for (i = 0; i < (int)NUM_ENTRIES(__slab_data.sd_Slabs); i++)
-			NewList((struct List *)&__slab_data.sd_Slabs[i]);
+        /* Start with an empty list of slabs for each chunk size. */
+        for (i = 0; i < (int) NUM_ENTRIES(__slab_data.sd_Slabs); i++)
+            NewList((struct List *) &__slab_data.sd_Slabs[i]);
 
-		NewList((struct List *)&__slab_data.sd_SingleAllocations);
-		NewList((struct List *)&__slab_data.sd_EmptySlabs);
+        NewList((struct List *) &__slab_data.sd_SingleAllocations);
+        NewList((struct List *) &__slab_data.sd_EmptySlabs);
 
-		__slab_data.sd_StandardSlabSize = size;
-		__slab_data.sd_InUse = TRUE;
-	}
+        __slab_data.sd_StandardSlabSize = size;
+        __slab_data.sd_InUse = TRUE;
+    }
 }
 
 /****************************************************************************/
@@ -726,100 +693,101 @@ void __slab_init(size_t slab_size)
 
 static int print_json(void *ignore, const char *buffer, size_t len)
 {
-	extern void kputs(const char *str);
+    extern void kputs(const char *str);
 
-	kputs(buffer);
+    kputs(buffer);
 
-	return (0);
+    return (0);
 }
 
 #endif /* DEBUG */
 
 /****************************************************************************/
 
-void __slab_exit(void)
-{
-	ENTER();
+void __slab_exit(void) {
+    ENTER();
 
-	if (__slab_data.sd_InUse)
-	{
-		struct SlabSingleAllocation *ssa;
-		struct SlabNode *sn;
-		struct SlabNode *sn_next;
-		struct MinNode *mn;
-		struct MinNode *mn_next;
-		size_t slab_count = 0, total_slab_size = 0;
-		size_t single_allocation_count = 0, total_single_allocation_size = 0;
-		int i, j;
+    if (__slab_data.sd_InUse) {
+        struct SlabSingleAllocation *ssa;
+        struct SlabNode *sn;
+        struct SlabNode *sn_next;
+        struct MinNode *mn;
+        struct MinNode *mn_next;
+        size_t slab_count = 0, total_slab_size = 0;
+        size_t single_allocation_count = 0, total_single_allocation_size = 0;
+        int i, j;
 
 #if DEBUG
-		{
-			kprintf("---BEGIN JSON DATA ---\n");
+        {
+            kprintf("---BEGIN JSON DATA ---\n");
 
-			__get_slab_stats(NULL, print_json);
+            __get_slab_stats(NULL, print_json);
 
-			kprintf("---END JSON DATA ---\n\n");
-		}
+            kprintf("---END JSON DATA ---\n\n");
+        }
 #endif /* DEBUG */
 
-		D(("freeing slabs"));
+        D(("freeing slabs"));
 
-		/* Free the memory allocated for each slab. */
-		for (i = 0; i < (int)NUM_ENTRIES(__slab_data.sd_Slabs); i++)
-		{
-			if (__slab_data.sd_Slabs[i].mlh_Head->mln_Succ != NULL)
-				D(("freeing slab slot #%ld (%lu bytes per chunk)", i, (1UL << i)));
+        /* Free the memory allocated for each slab. */
+        for (i = 0; i < (int) NUM_ENTRIES(__slab_data.sd_Slabs); i++) {
+            if (__slab_data.sd_Slabs[i].mlh_Head->mln_Succ != NULL)
+                D(("freeing slab slot #%ld (%lu bytes per chunk)", i, (1UL << i)));
 
-			for (sn = (struct SlabNode *)__slab_data.sd_Slabs[i].mlh_Head, j = 0;
-				 sn->sn_MinNode.mln_Succ != NULL;
-				 sn = sn_next)
-			{
-				sn_next = (struct SlabNode *)sn->sn_MinNode.mln_Succ;
+            for (sn = (struct SlabNode *) __slab_data.sd_Slabs[i].mlh_Head, j = 0;
+                 sn->sn_MinNode.mln_Succ != NULL;
+                 sn = sn_next) {
+                sn_next = (struct SlabNode *) sn->sn_MinNode.mln_Succ;
 
-				D((" slab #%ld.%ld at 0x%08lx", i, ++j, sn));
-				D(("  fragmentation = %ld%%", 100 * (__slab_data.sd_StandardSlabSize - sn->sn_Count * sn->sn_ChunkSize) / __slab_data.sd_StandardSlabSize));
-				D(("  total space used = %ld (%ld%%)", sn->sn_UseCount * sn->sn_ChunkSize, 100 * sn->sn_UseCount / sn->sn_Count));
-				D(("  number of chunks total = %ld", sn->sn_Count));
-				D(("  number of chunks used = %ld%s", sn->sn_UseCount, sn->sn_UseCount == 0 ? " (empty)" : (sn->sn_UseCount == sn->sn_Count) ? " (full)" : ""));
-				D(("  how often reused = %ld", sn->sn_NumReused));
+                D((" slab #%ld.%ld at 0x%08lx", i, ++j, sn));
+                D(("  fragmentation = %ld%%", 100 *
+                                              (__slab_data.sd_StandardSlabSize - sn->sn_Count * sn->sn_ChunkSize) /
+                                              __slab_data.sd_StandardSlabSize));
+                D(("  total space used = %ld (%ld%%)", sn->sn_UseCount * sn->sn_ChunkSize, 100 * sn->sn_UseCount /
+                                                                                           sn->sn_Count));
+                D(("  number of chunks total = %ld", sn->sn_Count));
+                D(("  number of chunks used = %ld%s", sn->sn_UseCount, sn->sn_UseCount == 0 ? " (empty)"
+                                                                                            : (sn->sn_UseCount ==
+                                                                                               sn->sn_Count) ? " (full)"
+                                                                                                             : ""));
+                D(("  how often reused = %ld", sn->sn_NumReused));
 
-				total_slab_size += sizeof(*sn) + __slab_data.sd_StandardSlabSize;
-				slab_count++;
+                total_slab_size += sizeof(*sn) + __slab_data.sd_StandardSlabSize;
+                slab_count++;
 
-				FreeVec(sn);
-			}
-		}
+                FreeVec(sn);
+            }
+        }
 
-		if (slab_count > 0)
-			D(("number of slabs = %ld, total slab size = %ld bytes", slab_count, total_slab_size));
+        if (slab_count > 0)
+            D(("number of slabs = %ld, total slab size = %ld bytes", slab_count, total_slab_size));
 
-		if (__slab_data.sd_SingleAllocations.mlh_Head->mln_Succ != NULL)
-			D(("freeing single allocations"));
+        if (__slab_data.sd_SingleAllocations.mlh_Head->mln_Succ != NULL)
+            D(("freeing single allocations"));
 
-		/* Free the memory allocated for each allocation which did not
-		 * go into a slab.
-		 */
-		for (mn = __slab_data.sd_SingleAllocations.mlh_Head, j = 0;
-			 mn->mln_Succ != NULL;
-			 mn = mn_next)
-		{
-			mn_next = mn->mln_Succ;
+        /* Free the memory allocated for each allocation which did not
+         * go into a slab.
+         */
+        for (mn = __slab_data.sd_SingleAllocations.mlh_Head, j = 0;
+             mn->mln_Succ != NULL;
+             mn = mn_next) {
+            mn_next = mn->mln_Succ;
 
-			ssa = (struct SlabSingleAllocation *)mn;
+            ssa = (struct SlabSingleAllocation *) mn;
 
-			D((" allocation #%ld at 0x%08lx, %lu bytes", ++j, ssa, ssa->ssa_Size));
+            D((" allocation #%ld at 0x%08lx, %lu bytes", ++j, ssa, ssa->ssa_Size));
 
-			total_single_allocation_size += ssa->ssa_Size;
-			single_allocation_count++;
+            total_single_allocation_size += ssa->ssa_Size;
+            single_allocation_count++;
 
-			FreeVec(ssa);
-		}
+            FreeVec(ssa);
+        }
 
-		if (single_allocation_count > 0)
-			D(("number of single allocations = %ld, total single allocation size = %ld", single_allocation_count, total_single_allocation_size));
+        if (single_allocation_count > 0)
+            D(("number of single allocations = %ld, total single allocation size = %ld", single_allocation_count, total_single_allocation_size));
 
-		__slab_data.sd_InUse = FALSE;
-	}
+        __slab_data.sd_InUse = FALSE;
+    }
 
-	LEAVE();
+    LEAVE();
 }
