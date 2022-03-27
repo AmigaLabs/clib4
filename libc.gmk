@@ -199,6 +199,7 @@ C_POSIX := \
 	posix/sigsetmask.o \
 	posix/semctl.o \
 	posix/semget.o \
+    posix/semids.o \
 	posix/semop.o \
 	posix/semtimedop.o \
 	posix/sysinfo.o \

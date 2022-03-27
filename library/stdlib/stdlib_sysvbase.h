@@ -13,8 +13,8 @@
 #define __NOGLOBALIFACE__
 #endif /* __NOGLOBALIFACE__ */
 
-#include <proto/sysvipc.h>
-#include <libraries/sysvipc.h>
+#include "proto/sysvipc.h"
+#include "libraries/sysvipc.h"
 
 #ifndef _MACROS_H
 #include "macros.h"

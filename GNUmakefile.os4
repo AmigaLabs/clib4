@@ -54,6 +54,7 @@ WARNINGS := \
 PIC		   := -fPIC 
 INCLUDES   := -I$(LIB_DIR)/include \
 				-Ilibrary \
+                -I$(LIB_DIR)/external/include \
 				-I$(SDK_INCLUDE) \
 				-I$(LIB_DIR)/debug \
 				-I$(LIB_DIR)/amiga \
@@ -92,7 +93,7 @@ VERBOSE    := @
 
 # This is the first target: it depends on all the targets
 
-all: all-targets
+all: prepare all-targets
 
 ##############################################################################
 
@@ -106,6 +107,10 @@ include libdebug.gmk
 include libamiga.gmk
 include libprofile.gmk
 include libresolv.gmk
+
+prepare:
+	-$(MAKEDIR) $(INSTALL_PREFIX)/lib
+	-$(MAKEDIR) $(INSTALL_PREFIX)/include
 
 all-targets: \
 	$(OUTPUT_LIB)/crt0.o \
