@@ -25,7 +25,6 @@ pathconf(const char *path, int name) {
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
     if(__unix_path_semantics)
     {
         if(path[0] == '\0')
@@ -45,7 +44,6 @@ pathconf(const char *path, int name) {
             ignore_port = TRUE;
         }
     }
-#endif /* UNIX_PATH_SEMANTICS */
 
     if (!ignore_port) {
         dvp = GetDeviceProc((STRPTR) path, NULL);

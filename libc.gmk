@@ -150,6 +150,7 @@ C_MOUNT := \
 
 C_POSIX := \
 	posix/fnmatch.o \
+	posix/fstatvfs.o \
 	posix/glob.o \
 	posix/globfree.o \
 	posix/ipc_ftok.o \
@@ -202,6 +203,7 @@ C_POSIX := \
     posix/semids.o \
 	posix/semop.o \
 	posix/semtimedop.o \
+	posix/statvfs.o \
 	posix/sysinfo.o \
 	posix/ulimit.o \
 	posix/readv.o \
@@ -721,7 +723,7 @@ C_UNISTD := \
 	unistd/ttyname.o \
 	unistd/ttyname_r.o \
     unistd/ualarm.o \
-    unistd/unix_path_semantics.o \
+    unistd/path_semantics.o \
 	unistd/unlink.o \
 	unistd/unlink_retries.o \
 	unistd/usleep.o \

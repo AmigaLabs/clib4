@@ -5,8 +5,8 @@
 #
 # -*- mode: makefile; -*-
 
-OUT_STATIC := $(BUILD_DIR)/obj/libamiga
-OUT_SHARED := $(BUILD_DIR)/obj.shared/libamiga
+OUT_STATIC := $(BUILD_DIR)/obj/libprofile
+OUT_SHARED := $(BUILD_DIR)/obj.shared/libprofile
 
 LIBS += $(OUTPUT_LIB)/libprofile.so \
 		$(OUTPUT_LIB)/libprofile.a

@@ -48,7 +48,6 @@ int system(const char *command)
 				{SYS_UserShell, TRUE},
 				{TAG_END, 0}};
 
-#if defined(UNIX_PATH_SEMANTICS)
 		struct name_translation_info command_nti;
 
 		if (__unix_path_semantics)
@@ -138,7 +137,6 @@ int system(const char *command)
 
 			command = command_copy;
 		}
-#endif /* UNIX_PATH_SEMANTICS */
 
 		SHOWSTRING(command);
 

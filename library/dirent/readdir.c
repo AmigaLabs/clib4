@@ -31,7 +31,6 @@ readdir(DIR *directory_pointer)
 
 	dh = (struct DirectoryHandle *)directory_pointer;
 
-#if defined(UNIX_PATH_SEMANTICS)
 	if (__unix_path_semantics && dh->dh_ScanVolumeList)
 	{
 		SHOWMSG("we are scanning the volume list");
@@ -99,11 +98,9 @@ readdir(DIR *directory_pointer)
 			}
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	if (NOT dh->dh_ScanVolumeList)
 	{
-#if defined(UNIX_PATH_SEMANTICS)
 		if (__unix_path_semantics)
 		{
 			if (dh->dh_Position == 0)
@@ -152,7 +149,6 @@ readdir(DIR *directory_pointer)
 				result = &dh->dh_DirectoryEntry;
 			}
 		}
-#endif /* UNIX_PATH_SEMANTICS */
 
 		if (result == NULL)
 		{

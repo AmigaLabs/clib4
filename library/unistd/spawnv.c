@@ -143,10 +143,7 @@ int spawnv(int mode, const char *file, const char *const *argv)
     char *arg_string = NULL;
     size_t arg_string_len = 0;
     size_t parameter_string_len = 0;
-
-#if defined(UNIX_PATH_SEMANTICS)
     struct name_translation_info path_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 
     if (mode != P_WAIT)
     {
@@ -156,7 +153,6 @@ int spawnv(int mode, const char *file, const char *const *argv)
 
     __set_errno(0);
 
-#if defined(UNIX_PATH_SEMANTICS)
 	if (__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&file, &path_nti) != 0)
         {
@@ -164,7 +160,6 @@ int spawnv(int mode, const char *file, const char *const *argv)
             return ret;
         }
     }
-#endif
 
     parameter_string_len = get_arg_string_length((char *const *)argv);
     if (parameter_string_len > _POSIX_ARG_MAX)

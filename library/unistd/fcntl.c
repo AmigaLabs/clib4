@@ -49,7 +49,6 @@ int fcntl(int file_descriptor, int cmd, ... /* int arg */)
 
 	switch (cmd)
 	{
-#if defined(UNIX_PATH_SEMANTICS)
 	case F_GETLK:
 	case F_SETLK:
 	case F_SETLKW:
@@ -99,7 +98,6 @@ int fcntl(int file_descriptor, int cmd, ... /* int arg */)
 		result = OK;
 
 		break;
-#endif /* UNIX_PATH_SEMANTICS */
 
 	case F_GETFL:
 
