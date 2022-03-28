@@ -16,9 +16,7 @@
 
 int stat(const char *path_name, struct stat *st)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	struct ExamineData *fib = NULL;
 	struct Lock *fl;
 	int result = ERROR;
@@ -42,7 +40,6 @@ int stat(const char *path_name, struct stat *st)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
 	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
@@ -84,7 +81,6 @@ int stat(const char *path_name, struct stat *st)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	D(("trying to get a lock on '%s'", path_name));
 

@@ -12,9 +12,7 @@
 char *
 mktemp(char *name_template)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info name_template_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	char *test_name;
 	struct Process *this_process;
 	APTR old_window_pointer;
@@ -125,9 +123,8 @@ mktemp(char *name_template)
 
 		test_name = name_template;
 
-/* If necessary, quickly translate the semantics of the file name
+        /* If necessary, quickly translate the semantics of the file name
 		   we cooked up above. */
-#if defined(UNIX_PATH_SEMANTICS)
 		if (__unix_path_semantics)
 		{
 			if (__translate_unix_to_amiga_path_name((char const **)&test_name, &name_template_nti) != 0)
@@ -139,7 +136,6 @@ mktemp(char *name_template)
 				goto out;
 			}
 		}
-#endif /* UNIX_PATH_SEMANTICS */
 
 		/* Turn off DOS error requesters. */
 		old_window_pointer = __set_process_window((APTR)-1);

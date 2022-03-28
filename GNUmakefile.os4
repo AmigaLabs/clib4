@@ -21,14 +21,26 @@
 # These are for the cross compiler, with the operating system header files
 # stored in "/V/include" and the network header files in a local directory
 # called "netinclude".
+UNAME := $(shell uname)
+
 INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib2
 SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
-CC = ppc-amigaos-gcc
-AR = ppc-amigaos-ar -q
-RANLIB = ppc-amigaos-ranlib
-COPY = cp -r
-DELETE = rm -rf
-MAKEDIR = mkdir -p
+
+CC := ppc-amigaos-gcc
+AR := ppc-amigaos-ar -q
+RANLIB := ppc-amigaos-ranlib
+
+# if we are on AmigaOS use native commands
+ifeq ($(UNAME), AmigaOS)
+    COPY := copy
+    DELETE := delete all quiet force
+    MAKEDIR := makedir all force
+else
+    COPY := cp -r
+    DELETE := rm -rf
+    MAKEDIR := mkdir -p
+endif
+
 # Enabling the LOG_COMMAND has the consequence that a rule will not
 # fail on an error because only the exit status from the tee command
 # will be considered
@@ -38,10 +50,6 @@ LIB_ROOT ?= $(shell pwd)
 LIB_DIR = $(LIB_ROOT)/library
 BUILD_DIR = $(LIB_ROOT)/build
 OUTPUT_LIB = $(BUILD_DIR)/lib
-
-$(info INSTALL_PREFIX = $(INSTALL_PREFIX))
-$(info SDK_INCLUDE = $(SDK_INCLUDE))
-$(info BUILD_DIR = $(BUILD_DIR))
 
 ##############################################################################
 
@@ -79,7 +87,7 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/stat \
 				-I$(LIB_DIR)/mount
 
-OPTIONS    :=  -mstrict-align -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -DUNIX_PATH_SEMANTICS -nostdlib
+OPTIONS    :=  -mstrict-align -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib
 OPTIMIZE   := -DNDEBUG -O3
 
 DEBUG      := -gstabs

@@ -50,9 +50,7 @@ out:
 FILE *
 popen(const char *command, const char *type)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info command_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	char *command_copy = NULL;
 	BPTR input = ZERO;
 	BPTR output = ZERO;
@@ -114,7 +112,6 @@ popen(const char *command, const char *type)
 		goto out;
 	}
 
-#if defined(UNIX_PATH_SEMANTICS)
 	if (__unix_path_semantics)
 	{
 		char just_the_command_name[MAXPATHLEN + 1];
@@ -199,7 +196,6 @@ popen(const char *command, const char *type)
 
 		command = command_copy;
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	/* Build a (hopefully) unique name for the pipe stream to open. We
 	   construct it from the current process address, converted into

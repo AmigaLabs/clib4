@@ -1,5 +1,5 @@
 /*
- * $Id: signal_sigsetmask.c,v 1.4 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: posix_sigsetmask.c,v 1.4 2006-01-08 12:04:24 clib2devs Exp $
 */
 
 #ifndef _SIGNAL_HEADERS_H

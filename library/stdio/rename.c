@@ -10,10 +10,8 @@
 
 int rename(const char *oldname, const char *newname)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info old_nti;
 	struct name_translation_info new_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	int result = ERROR;
 	LONG status;
 
@@ -35,7 +33,6 @@ int rename(const char *oldname, const char *newname)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
 	if (__unix_path_semantics)
 	{
 		if (oldname[0] == '\0' || newname[0] == '\0')
@@ -58,7 +55,6 @@ int rename(const char *oldname, const char *newname)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	D(("renaming '%s' to '%s'", oldname, newname));
 

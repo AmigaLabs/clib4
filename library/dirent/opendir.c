@@ -6,10 +6,6 @@
 #include "dirent_headers.h"
 #endif /* _DIRENT_HEADERS_H */
 
-#if defined(UNIX_PATH_SEMANTICS)
-
-/****************************************************************************/
-
 STATIC struct Node *
 find_by_name(struct List *list, const char *name)
 {
@@ -28,17 +24,9 @@ find_by_name(struct List *list, const char *name)
 	return (result);
 }
 
-/****************************************************************************/
-
-#endif /* UNIX_PATH_SEMANTICS */
-
-/****************************************************************************/
-
 DIR *opendir(const char *path_name)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	struct DirectoryHandle *dh = NULL;
 	DIR *result = NULL;
 
@@ -68,7 +56,6 @@ DIR *opendir(const char *path_name)
 
 	memset(dh, 0, sizeof(*dh));
 
-#if defined(UNIX_PATH_SEMANTICS)
 	if (__unix_path_semantics)
 	{
 		struct Node *node;
@@ -147,7 +134,6 @@ DIR *opendir(const char *path_name)
 			}
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	if (NOT dh->dh_ScanVolumeList)
 	{
@@ -215,7 +201,6 @@ out:
 		if (dh->dh_FileInfo != NULL)
 			FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 
-#if defined(UNIX_PATH_SEMANTICS)
 		if (__unix_path_semantics)
 		{
 			struct Node *node;
@@ -223,7 +208,6 @@ out:
 			while ((node = RemHead((struct List *)&dh->dh_VolumeList)) != NULL)
 				free(node);
 		}
-#endif /* UNIX_PATH_SEMANTICS */
 
 		UnLock(dh->dh_DirLock);
 

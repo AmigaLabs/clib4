@@ -10,34 +10,32 @@
 
 int
 __change_fd_action(
-	int					file_descriptor,
-	_file_action_fd_t	new_action,
-	_file_action_fd_t *	old_action_ptr)
-{
-	int result = -1;
-	struct fd * fd;
+        int file_descriptor,
+        _file_action_fd_t new_action,
+        _file_action_fd_t *old_action_ptr) {
+    int result = -1;
+    struct fd *fd;
 
-	if(old_action_ptr != NULL)
-		(*old_action_ptr) = NULL;
+    if (old_action_ptr != NULL)
+        (*old_action_ptr) = NULL;
 
-	__stdio_lock();
+    __stdio_lock();
 
-	fd = __get_file_descriptor(file_descriptor);
-	if(fd != NULL)
-	{
-		__fd_lock(fd);
+    fd = __get_file_descriptor(file_descriptor);
+    if (fd != NULL) {
+        __fd_lock(fd);
 
-		if(old_action_ptr != NULL)
-			(*old_action_ptr) = (_file_action_fd_t)fd->fd_Action;
+        if (old_action_ptr != NULL)
+            (*old_action_ptr) = (_file_action_fd_t) fd->fd_Action;
 
-		fd->fd_Action = (file_action_fd_t)new_action;
+        fd->fd_Action = (file_action_fd_t) new_action;
 
-		__fd_unlock(fd);
+        __fd_unlock(fd);
 
-		result = 0;
-	}
+        result = 0;
+    }
 
-	__stdio_unlock();
+    __stdio_unlock();
 
-	return(result);
+    return (result);
 }

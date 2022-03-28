@@ -9,10 +9,8 @@
 char *
 realpath(const char *path_name, char *buffer)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
 	struct name_translation_info buffer_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	struct DevProc *dvp = NULL;
 	BPTR lock = ZERO;
 	char *result = NULL;
@@ -35,7 +33,6 @@ realpath(const char *path_name, char *buffer)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
 	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
@@ -49,7 +46,6 @@ realpath(const char *path_name, char *buffer)
 		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 			goto out;
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	D(("trying to get a lock on '%s'", path_name));
 
@@ -77,7 +73,6 @@ realpath(const char *path_name, char *buffer)
 		goto out;
 	}
 
-#if defined(UNIX_PATH_SEMANTICS)
 	if (__unix_path_semantics)
 	{
 		if (__translate_amiga_to_unix_path_name((char const **)&buffer, &buffer_nti) != 0)
@@ -87,7 +82,6 @@ realpath(const char *path_name, char *buffer)
 
 		strcpy(buffer, buffer_nti.substitute);
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	result = buffer;
 

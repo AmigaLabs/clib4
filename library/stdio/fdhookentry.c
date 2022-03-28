@@ -181,7 +181,6 @@ int64_t __fd_hook_entry(
                 if (fd->fd_File)
 				    fd->fd_File = ZERO;
 
-#if defined(UNIX_PATH_SEMANTICS)
 				if (__unix_path_semantics)
 				{
 					DECLARE_UTILITYBASE();
@@ -270,7 +269,6 @@ int64_t __fd_hook_entry(
 						}
 					}
 				}
-#endif /* UNIX_PATH_SEMANTICS */
 
 				if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid)
 				{
