@@ -31,7 +31,7 @@ If you want to use `dlopen`/`dlsym` with shared objects:
 
 **DON'T USE** static libraries otherwise you could have undefined symbols!
 
-The plain `libc.a` now contains also `libnet.a`. Socket support and floating point support are always enabled
+The plain `libc.a` now contains also `libnet.a`, `libunix.a`. Socket support and floating point support are always enabled
 Soft float version is no longer available.
 
 If you want to use the shared version remember to pack your OS4 software with all clib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
@@ -57,10 +57,8 @@ clib2 now contains **shm*** and **msg*** functions. It needs <a href="http://www
 
 ### Unix path support
 
-`libunix` exists and you can link your exe with it to enable unix support but now you can enable/disable it at any time.   
-By default unix support it is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.
-You can also disable it at runtime using **disableUnixPaths()**.   
-However is not reccomanded to enable and disable it at runtime because you could have problems with internal structures.
+`libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default unix support it is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.
+You can also disable it at runtime using **disableUnixPaths()**. However is not reccomanded to enable and disable it at runtime because you could have problems with internal structures.
 
 ### wchar / wctype
 
