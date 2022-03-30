@@ -465,25 +465,19 @@ void __slab_free(void *address, size_t allocation_size)
 		ssa--;
 
         /* Verify that the allocation is really on the list we will remove it from. */
-#if DEBUG
-		{
-			struct MinNode *mln;
-			BOOL found_allocation_in_list = FALSE;
+        struct MinNode *mln;
+        BOOL found_allocation_in_list = FALSE;
 
-			for (mln = __slab_data.sd_SingleAllocations.mlh_Head;
-				 mln->mln_Succ != NULL;
-				 mln = mln->mln_Succ)
-			{
-				if (mln == (struct MinNode *)ssa)
-				{
-					found_allocation_in_list = TRUE;
-					break;
-				}
-			}
-
-			assert(found_allocation_in_list);
-		}
-#endif /* DEBUG */
+        for (mln = __slab_data.sd_SingleAllocations.mlh_Head;
+             mln->mln_Succ != NULL;
+             mln = mln->mln_Succ)
+        {
+            if (mln == (struct MinNode *)ssa)
+            {
+                found_allocation_in_list = TRUE;
+                break;
+            }
+        }
 
 		size = ssa->ssa_Size;
 
@@ -491,7 +485,8 @@ void __slab_free(void *address, size_t allocation_size)
 		assert(sizeof(*ssa) + allocation_size == size);
 		assert(size <= __slab_data.sd_TotalSingleAllocationSize);
 
-		Remove((struct Node *)ssa);
+        if (found_allocation_in_list)
+		    Remove((struct Node *)ssa);
 
 		FreeVec(ssa);
 
