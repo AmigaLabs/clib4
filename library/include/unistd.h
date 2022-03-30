@@ -54,6 +54,7 @@ extern int ftruncate(int file_descriptor, off_t length);
 #ifdef __USE_LARGEFILE64
 extern int ftruncate64(int file_descriptor, _off64_t length);
 extern int truncate64(const char *path_name, _off64_t length);
+extern off64_t lseek64(int fd, off64_t offset, int whence);
 #endif
 
 extern unsigned int alarm(unsigned seconds);
