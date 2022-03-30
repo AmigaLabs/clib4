@@ -294,7 +294,7 @@ void disableUnixPaths(void)
 
 void enableAltivec(void)
 {
-    inr32 hasAltivec;
+    int32 hasAltivec;
     /* Check if altivec is present otherwise we can't enable it */
     GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec);
     if (hasAltivec)

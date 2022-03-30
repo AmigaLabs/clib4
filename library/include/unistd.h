@@ -100,7 +100,7 @@ extern void disableAltivec(void);
 
 extern char * getcwd(char * buffer, size_t buffer_size);
 
-extern long gethostid(void);
+extern long gethostid();
 extern int gethostname(const char *name, size_t namelen);
 extern char *getlogin(void);
 extern int getlogin_r(char *buf, size_t bufsize);
