@@ -43,7 +43,7 @@ int bufsize = 128;
 #endif
 
 #ifndef TERMCAP_FILE
-#define TERMCAP_FILE "ENV:termcap"
+#define TERMCAP_FILE "ENV:termcap.os4"
 #endif
 
 /* Finding the termcap entry in the termcap data base.  */
@@ -62,9 +62,6 @@ static char *gobble_line(int fd, register struct termcap_buffer *bufp, char *app
 static int compare_contin(register char *str1, register char *str2);
 static char *tgetst1(char *ptr, char **area);
 static int name_match(char *line, char *name);
-
-// TODO - test for unix path filenames or not
-#define valid_filename_p(fn) (*(fn) == '/')
 
 static void
 memory_out() {
@@ -95,6 +92,7 @@ xrealloc(char *ptr, size_t size) {
 /* The pointer to the data made by tgetent is left here
    for tgetnum, tgetflag and tgetstr to find.  */
 static char *term_entry;
+
 static char *tgetst1();
 
 /* Search entry BP for capability CAP.
@@ -107,7 +105,7 @@ find_capability(const char *bp, const char *name) {
         if (bp[0] == ':'
             && bp[1] == name[0]
             && bp[2] == name[1])
-            return (char *)&bp[4];
+            return (char *) &bp[4];
     return NULL;
 }
 
@@ -197,8 +195,7 @@ tgetst1(char *ptr, char **area) {
                     c += c1 - '0';
                     p++;
                 }
-            }
-            else if (c >= 0100 && c < 0200) {
+            } else if (c >= 0100 && c < 0200) {
                 c1 = esctab[(c & ~040) - 0100];
                 if (c1 != ' ')
                     c = c1;
@@ -299,26 +296,16 @@ tgetent(char *bp, const char *name) {
     register int c;
     char *tcenv = NULL;        /* TERMCAP value, if it contains :tc=.  */
     char *indirect = NULL;    /* Terminal type in :tc= in TERMCAP value.  */
-    int filep;
 
     /* For compatibility with programs like `less' that want to
        put data in the termcap buffer themselves as a fallback.  */
     if (bp)
         term_entry = bp;
-
     termcap_name = getenv("TERMCAP");
     if (termcap_name && *termcap_name == '\0')
         termcap_name = NULL;
 
-    filep = termcap_name && valid_filename_p (termcap_name);
-
-    /* If termcap_name is non-null and starts with / (in the un*x case, that is),
-       it is a file name to use instead of /etc/termcap.
-       If it is non-null and does not start with /,
-       it is the entry itself, but only if
-       the name the caller requested matches the TERM variable.  */
-
-    if (termcap_name && !filep && !strcmp(name, getenv("TERM"))) {
+    if (termcap_name && !strcmp(name, getenv("TERM"))) {
         indirect = tgetst1(find_capability(termcap_name, "tc"), (char **) 0);
         if (!indirect) {
             if (!bp)
@@ -332,7 +319,7 @@ tgetent(char *bp, const char *name) {
         }
     }
 
-    if (!termcap_name || !filep)
+    if (!termcap_name)
         termcap_name = TERMCAP_FILE;
 
     /* Here we know we must search a file and termcap_name has its name.  */
@@ -340,11 +327,10 @@ tgetent(char *bp, const char *name) {
     if (fd < 0) {
         return -1;
     }
-
     buf.size = BUFSIZE;
     /* Add 1 to size to ensure room for terminating null.  */
     buf.beg = (char *) xmalloc(buf.size + 1);
-    term = indirect ? indirect : (char *)name;
+    term = indirect ? indirect : (char *) name;
 
     if (!bp) {
         malloc_size = indirect ? strlen(tcenv) + 1 : buf.size;
@@ -380,7 +366,7 @@ tgetent(char *bp, const char *name) {
             bp = (char *) xrealloc(bp, malloc_size);
             termcap_name = (char *) xrealloc(bp, malloc_size);
             bp1 = (char *) termcap_name + offset1;
-            tc_search_point = (char *)termcap_name + offset2;
+            tc_search_point = (char *) termcap_name + offset2;
         }
 
         /* Copy the line of the entry from buf into bp.  */
