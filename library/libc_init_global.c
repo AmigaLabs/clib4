@@ -292,6 +292,23 @@ void disableUnixPaths(void)
     __unix_path_semantics = FALSE;
 }
 
+void enableAltivec(void)
+{
+    inr32 hasAltivec;
+    /* Check if altivec is present otherwise we can't enable it */
+    GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec);
+    if (hasAltivec)
+        __global_clib2->hasAltivec = 1;
+    else
+        __global_clib2->hasAltivec = 0;
+}
+
+void disableAltivec(void)
+{
+    __global_clib2->hasAltivec = 0;
+}
+
+
 int *__mb_cur_max(void)
 {
     return &__global_clib2->__mb_cur_max;

@@ -95,6 +95,8 @@ extern long sysconf(int name);
 
 extern void enableUnixPaths(void);
 extern void disableUnixPaths(void);
+extern void enableAltivec(void);
+extern void disableAltivec(void);
 
 extern char * getcwd(char * buffer, size_t buffer_size);
 
