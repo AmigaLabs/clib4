@@ -10,7 +10,7 @@
 #ifndef PROTO_SYSVIPC_H
 #define _TIMESPEC_DEFINED
 #include <posix/shm_headers.h>
-#include <proto/sysvipc.h>
+#include "proto/sysvipc.h"
 #endif /* PROTO_SYSVIPC_H */
 
 /****************************************************************************/

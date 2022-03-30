@@ -8,9 +8,7 @@
 
 int chmod(const char *path_name, mode_t mode)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	ULONG protection;
 	LONG status;
 	int result = ERROR;
@@ -33,8 +31,7 @@ int chmod(const char *path_name, mode_t mode)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{
@@ -53,7 +50,6 @@ int chmod(const char *path_name, mode_t mode)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	protection = 0;
 

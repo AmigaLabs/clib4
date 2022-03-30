@@ -23,12 +23,6 @@
 #include <strings.h>
 #include <limits.h>
 
-/****************************************************************************/
-
-#if defined(UNIX_PATH_SEMANTICS)
-
-/****************************************************************************/
-
 /* System-wide global data structure all programs which use advisory file record
  * locking with this runtime library will use.
  */
@@ -1155,7 +1149,3 @@ out:
 	RETURN(result);
 	return (result);
 }
-
-/****************************************************************************/
-
-#endif /* UNIX_PATH_SEMANTICS */

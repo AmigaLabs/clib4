@@ -82,31 +82,17 @@ extern void __check_abort(void);
  */
 extern ULONG __break_signal_mask;
 
-/****************************************************************************/
 
 /*
- * Call this function to set up the environment information for your
- * program to access its data. This is typically used in Task or Process
- * functions, as launched from the main program.
- *
- * Note: this function is unavailable for residentable programs and may
- *       not be available for PowerPC programs.
+ * If set, Unix path names are translated to Amiga path
+ * names (and the other way round). If you wish to disable this, set the
+ * following variable to FALSE. Only the path name translation is affected
+ * by setting this variable to FALSE. You will always get Unix-like behaviour
+ * from certain functions regardless of whether the path names are translated
+ * or not.
  */
-extern void geta4(void);
 
-/****************************************************************************/
-
-/*
- * Read and modify the current value of register A4; helpful for
- * programs which are residentable, yet need to be able to pass the
- * context information around A4 points to.
- *
- * Note: this function may not be available for PowerPC programs.
- */
-extern unsigned long __get_a4(void);
-extern void __set_a4(unsigned long value);
-
-/****************************************************************************/
+extern BOOL __unix_path_semantics;
 
 /*
  * Obtain the low level 'file' handle or socket ID bound to a file
@@ -550,17 +536,6 @@ struct _clib2
     int _current_category;
     const char *_current_locale;
     int __mb_cur_max;
-
-	/*
-	* Unix path names are not translated to Amiga path names (and the other way round)
-	* by default. If you wish to enable this, set the following variable to TRUE. 
-	* Only the path name translation is affected by setting this variable to TRUE.
-	* You will always get Unix-like behaviour from certain functions regardless of
-	* whether the path names are translated or not.
-	* It is possible to enable this variable creating a file called .unix in the program
-	* directory. In this case the unix translation will be enabled at start
-	*/
-	BOOL __unix_path_semantics; /* Enable / Disable unix path semantics */
 
 	/* used by tmpnam */
 	int  inc;

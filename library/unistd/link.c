@@ -9,10 +9,8 @@
 int
 link(const char *existing_path, const char *new_path)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info existing_path_name_nti;
 	struct name_translation_info new_path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	BPTR existing_path_lock = ZERO;
 	int result = ERROR;
 	LONG status;
@@ -35,8 +33,7 @@ link(const char *existing_path, const char *new_path)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (existing_path[0] == '\0' || new_path[0] == '\0')
 		{
@@ -58,7 +55,6 @@ link(const char *existing_path, const char *new_path)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	D(("trying to get a lock on '%s'", existing_path));
 

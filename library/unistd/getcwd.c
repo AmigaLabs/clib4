@@ -16,9 +16,7 @@
 
 char *
 getcwd(char *buffer, size_t buffer_size) {
-#if defined(UNIX_PATH_SEMANTICS)
     struct name_translation_info buffer_nti;
-#endif /* UNIX_PATH_SEMANTICS */
     char *result = NULL;
     BPTR dir_lock = ZERO;
 
@@ -65,8 +63,7 @@ getcwd(char *buffer, size_t buffer_size) {
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
-    if (__global_clib2->__unix_path_semantics)
+    if (__unix_path_semantics)
     {
         if (__current_path_name[0] != '\0')
         {
@@ -85,7 +82,6 @@ getcwd(char *buffer, size_t buffer_size) {
             result = buffer;
         }
     }
-#endif /* UNIX_PATH_SEMANTICS */
 
     if (result == NULL) {
         LONG status;
@@ -109,8 +105,7 @@ getcwd(char *buffer, size_t buffer_size) {
             goto out;
         }
 
-#if defined(UNIX_PATH_SEMANTICS)
-        if(__global_clib2->__unix_path_semantics)
+        if(__unix_path_semantics)
         {
             const char * path_name = buffer;
 
@@ -127,7 +122,6 @@ getcwd(char *buffer, size_t buffer_size) {
 
             strcpy(buffer,path_name);
         }
-#endif /* UNIX_PATH_SEMANTICS */
     }
 
     SHOWSTRING(buffer);

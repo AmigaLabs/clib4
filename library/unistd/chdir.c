@@ -7,11 +7,10 @@
 #endif /* _UNISTD_HEADERS_H */
 
 /* ZZZ chdir() must be reentrant according to POSIX.1 */
-int chdir(const char *path_name)
+int
+chdir(const char *path_name)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	BPTR dir_lock = ZERO;
 	struct ExamineData *status = NULL;
 	int result = ERROR;
@@ -33,8 +32,7 @@ int chdir(const char *path_name)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{
@@ -65,7 +63,6 @@ int chdir(const char *path_name)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	D(("trying to get a lock on '%s'", path_name));
 
@@ -111,13 +108,11 @@ int chdir(const char *path_name)
 
 	dir_lock = ZERO;
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 		__restore_path_name(&path_name, &path_name_nti);
 
 	/* ZZZ this must not fail */
 	__set_current_path(path_name);
-#endif /* UNIX_PATH_SEMANTICS */
 
 	result = OK;
 

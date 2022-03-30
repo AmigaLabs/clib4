@@ -9,10 +9,8 @@
 int
 symlink(const char *actual_path, const char *symbolic_path)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info actual_path_name_nti;
 	struct name_translation_info symbolic_path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	int result = ERROR;
 	LONG status;
 
@@ -34,8 +32,7 @@ symlink(const char *actual_path, const char *symbolic_path)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (actual_path[0] == '\0' || symbolic_path[0] == '\0')
 		{
@@ -57,7 +54,6 @@ symlink(const char *actual_path, const char *symbolic_path)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	SHOWMSG("trying to make that link");
 

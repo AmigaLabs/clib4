@@ -155,12 +155,12 @@ reent_init()
 		/* Check if .unix file exists in the current dir. If the file exists enable
 		 * unix path semantics
 		 */
-		__global_clib2->__unix_path_semantics = FALSE;
+		__unix_path_semantics = FALSE;
 		struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
 		if (exd != NULL)
 		{
 			if (EXD_IS_FILE(exd))
-				__global_clib2->__unix_path_semantics = TRUE;
+				__unix_path_semantics = TRUE;
 			FreeDosObject(DOS_EXAMINEDATA, exd);
 		}
 
@@ -244,16 +244,6 @@ reent_exit()
             FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
 		}
 
-        /*  If we have a previous timer running task stop it now */
-        /*
-        if (__global_clib2->tmr_real_task != NULL) {
-            int pid = __global_clib2->tmr_real_task->pr_ProcessID;
-            Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
-            WaitForChildExit(pid);
-            __global_clib2->tmr_real_task = NULL;
-        }
-        */
-
 		if (__ISysVIPC != NULL)
 		{
 			DropInterface((struct Interface *)__ISysVIPC);
@@ -272,16 +262,15 @@ reent_exit()
 			FreeVec(__global_clib2->wide_status);
 			__global_clib2->wide_status = NULL;
 		}
+        /* Remove random semaphore */
+        __delete_semaphore(__global_clib2->__random_lock);
 
 		/* Free dl stuff */
-		if (__global_clib2->__dl_elf_handle != NULL)
+		if (__IElf != NULL && __global_clib2->__dl_elf_handle != NULL)
 		{
 			CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
 			__global_clib2->__dl_elf_handle = NULL;
 		}
-
-        /* Remove random semaphore */
-        __delete_semaphore(__global_clib2->__random_lock);
 
 		FreeVec(__global_clib2);
 		__global_clib2 = NULL;
@@ -292,12 +281,12 @@ reent_exit()
 
 void enableUnixPaths(void)
 {
-    __global_clib2->__unix_path_semantics = TRUE;
+    __unix_path_semantics = TRUE;
 }
 
 void disableUnixPaths(void)
 {
-    __global_clib2->__unix_path_semantics = FALSE;
+    __unix_path_semantics = FALSE;
 }
 
 int *__mb_cur_max(void)

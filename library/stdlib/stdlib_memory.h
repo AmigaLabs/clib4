@@ -40,6 +40,7 @@
 
 struct MemoryNode
 {
+    ULONG				mn_Alignment;
 	ULONG				mn_Size;
 };
 
@@ -98,6 +99,7 @@ struct SlabNode
 struct SlabSingleAllocation
 {
 	struct MinNode	ssa_MinNode;
+    ULONG			ssa_Alignment;
 	ULONG			ssa_Size;
 };
 

@@ -8,9 +8,7 @@
 
 int chown(const char *path_name, uid_t owner, gid_t group)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	struct DevProc *dvp = NULL;
 	BPTR file_lock = ZERO;
 	BOOL owner_changed = TRUE;
@@ -36,8 +34,7 @@ int chown(const char *path_name, uid_t owner, gid_t group)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{
@@ -56,7 +53,6 @@ int chown(const char *path_name, uid_t owner, gid_t group)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	/* A value of -1 for either the owner or the group ID means
 	   that what's currently being used should not be changed. */

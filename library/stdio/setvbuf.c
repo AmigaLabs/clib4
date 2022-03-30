@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_setvbuf.c,v 1.11 2008-09-04 12:07:58 clib2devs Exp $
+ * $Id: stdio_setvbuf.c,v 1.12 2022-03-27 12:07:58 clib2devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -66,18 +66,24 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
         goto out;
     }
 
-    /* A buffer size of 0 bytes defaults to unbuffered operation. */
-    if (size == 0)
-        bufmode = IOBF_BUFFER_MODE_NONE;
+    /* A buffer size of 0 bytes will cause the default buffer size to be used. */
+    if (size == 0) {
+        size = BUFSIZ;
+        buf = NULL;
+    }
 
     /* If a certain buffer size is requested but no buffer was provided,
        allocate some memory for it. */
-    if (size > 0 && buf == NULL) {
-        /* Allocate a little more memory than necessary. */
-        new_buffer = malloc(size + (__cache_line_size - 1));
-        if (new_buffer == NULL) {
-            __set_errno(ENOBUFS);
-            goto out;
+    if (bufmode != IOBF_BUFFER_MODE_NONE) {
+        /* If a certain buffer size is requested but no buffer was provided,
+		   allocate some memory for it. */
+        if (size > 0 && buf == NULL) {
+            /* Allocate a little more memory than necessary. */
+            new_buffer = malloc(size + (__cache_line_size - 1));
+            if (new_buffer == NULL) {
+                __set_errno(ENOBUFS);
+                goto out;
+            }
         }
     }
 
@@ -129,7 +135,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
 
     result = OK;
 
-    out:
+out:
 
     funlockfile(stream);
 

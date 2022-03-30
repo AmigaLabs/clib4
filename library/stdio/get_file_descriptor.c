@@ -8,74 +8,67 @@
 
 /****************************************************************************/
 
-enum resolution_mode_t
-{
-	resolution_mode_exact,	/* Return the descriptor exactly as it is. */
-	resolution_mode_alias	/* Resolve the descriptor's alias, if necessary. */
+enum resolution_mode_t {
+    resolution_mode_exact,    /* Return the descriptor exactly as it is. */
+    resolution_mode_alias    /* Resolve the descriptor's alias, if necessary. */
 };
 
 /****************************************************************************/
 
 STATIC struct fd *
-get_file_descriptor(int file_descriptor,enum resolution_mode_t resolution_mode)
-{
-	struct fd * result = NULL;
-	struct fd * fd;
+get_file_descriptor(int file_descriptor, enum resolution_mode_t resolution_mode) {
+    struct fd *result = NULL;
+    struct fd *fd;
 
-	__stdio_lock();
+    __stdio_lock();
 
-	if(file_descriptor < 0 || file_descriptor >= __num_fd)
-	{
-		SHOWMSG("invalid file descriptor");
-		goto out;
-	}
+    if (file_descriptor < 0 || file_descriptor >= __num_fd) {
+        SHOWMSG("invalid file descriptor");
+        goto out;
+    }
 
-	fd = __fd[file_descriptor];
-	if(fd == NULL)
-	{
-		SHOWMSG("invalid file descriptor");
-		goto out;
-	}
+    fd = __fd[file_descriptor];
+    if (fd == NULL) {
+        SHOWMSG("invalid file descriptor");
+        goto out;
+    }
 
-	if(FLAG_IS_CLEAR(fd->fd_Flags,FDF_IN_USE))
-	{
-		SHOWMSG("this descriptor is not even in use");
-		goto out;
-	}
+    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE)) {
+        SHOWMSG("this descriptor is not even in use");
+        goto out;
+    }
 
-	/* Move up to the original file, if this is an alias. */
-	if(resolution_mode == resolution_mode_alias && fd->fd_Original != NULL)
-		fd = fd->fd_Original;
+    /* Move up to the original file, if this is an alias. */
+    if (resolution_mode == resolution_mode_alias && fd->fd_Original != NULL)
+        fd = fd->fd_Original;
 
-	result = fd;
+    result = fd;
 
- out:
+    out:
 
-	__stdio_unlock();
+    __stdio_unlock();
 
-	return(result);
+    return (result);
 }
 
 /****************************************************************************/
 
 struct fd *
-__get_file_descriptor(int file_descriptor)
-{
-	struct fd * result;
+__get_file_descriptor(int file_descriptor) {
+    struct fd *result;
 
-	result = get_file_descriptor(file_descriptor,resolution_mode_alias);
+    result = get_file_descriptor(file_descriptor, resolution_mode_alias);
 
-	return(result);
+    return (result);
 }
 
 /****************************************************************************/
 
 struct fd *
-__get_file_descriptor_dont_resolve(int file_descriptor)
-{
-	struct fd * result;
+__get_file_descriptor_dont_resolve(int file_descriptor) {
+    struct fd *result;
 
-	result = get_file_descriptor(file_descriptor,resolution_mode_exact);
+    result = get_file_descriptor(file_descriptor, resolution_mode_exact);
 
-	return(result);
+    return (result);
 }

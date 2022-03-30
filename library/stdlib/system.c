@@ -48,10 +48,9 @@ int system(const char *command)
 				{SYS_UserShell, TRUE},
 				{TAG_END, 0}};
 
-#if defined(UNIX_PATH_SEMANTICS)
 		struct name_translation_info command_nti;
 
-		if (__global_clib2->__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
 			char just_the_command_name[MAXPATHLEN + 1];
 			BOOL need_quotes = FALSE;
@@ -138,7 +137,6 @@ int system(const char *command)
 
 			command = command_copy;
 		}
-#endif /* UNIX_PATH_SEMANTICS */
 
 		SHOWSTRING(command);
 

@@ -8,9 +8,7 @@
 
 int statfs(const char *path, struct statfs *buf)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	D_S(struct InfoData, id);
 	LONG status;
 	BPTR lock = ZERO;
@@ -34,8 +32,7 @@ int statfs(const char *path, struct statfs *buf)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path[0] == '\0')
 		{
@@ -71,7 +68,6 @@ int statfs(const char *path, struct statfs *buf)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	D(("trying to get a lock on '%s'", path));
 

@@ -26,6 +26,10 @@ static int map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, 
             continue;
 
         struct fd *fd = __get_file_descriptor(pCur->fd);
+        if (fd == NULL) {
+            continue;
+        }
+
         if (pCur->events & POLLIN) {
             /* "Input Ready" notification desired. */
             FD_SET(pCur->fd, pReadSet);

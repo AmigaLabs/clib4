@@ -26,7 +26,7 @@ remove(const char *filename) {
         goto out;
     }
 
-    if (__global_clib2->__unix_path_semantics) {
+    if (__unix_path_semantics) {
         result = unlink(filename);
     } else {
         LONG status;

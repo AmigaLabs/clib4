@@ -12,10 +12,8 @@
 
 int readlink(const char *path_name, char *buffer, int buffer_size)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
 	struct name_translation_info buffer_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	BPTR lock = ZERO;
 	int result = ERROR;
 	int target_length = -1;
@@ -39,8 +37,7 @@ int readlink(const char *path_name, char *buffer, int buffer_size)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{
@@ -53,7 +50,6 @@ int readlink(const char *path_name, char *buffer, int buffer_size)
 		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 			goto out;
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	D(("trying to get a lock on '%s'", path_name));
 
@@ -69,19 +65,15 @@ int readlink(const char *path_name, char *buffer, int buffer_size)
 		goto out;
 	}
 
-#if defined(UNIX_PATH_SEMANTICS)
-	{
-		if (__global_clib2->__unix_path_semantics)
-		{
-			if (__translate_amiga_to_unix_path_name((char const **)&buffer, &buffer_nti) != 0)
-				goto out;
+    if (__unix_path_semantics)
+    {
+        if (__translate_amiga_to_unix_path_name((char const **)&buffer, &buffer_nti) != 0)
+            goto out;
 
-			__restore_path_name((char const **)&buffer, &buffer_nti);
+        __restore_path_name((char const **)&buffer, &buffer_nti);
 
-			strcpy(buffer, buffer_nti.substitute);
-		}
-	}
-#endif /* UNIX_PATH_SEMANTICS */
+        strcpy(buffer, buffer_nti.substitute);
+    }
 
 	result = strlen(buffer);
 

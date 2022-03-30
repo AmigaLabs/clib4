@@ -99,11 +99,10 @@ ARG_CONSTRUCTOR(arg_init)
 		unsigned char *command_line;
 		unsigned char *str;
 
-/* Check if wildcard expansion of command line parameters
+        /* Check if wildcard expansion of command line parameters
 		   should be enabled. Note that the callback function, if
 		   declared, takes precedence over the global variable. */
-#if defined(UNIX_PATH_SEMANTICS)
-		if (__global_clib2->__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
 			expand_wildcard_args = __expand_wildcard_args;
 
@@ -113,7 +112,6 @@ ARG_CONSTRUCTOR(arg_init)
 			if (__expand_wildcard_args_check != NULL)
 				expand_wildcard_args = (*__expand_wildcard_args_check)();
 		}
-#endif /* UNIX_PATH_SEMANTICS */
 
 		/* Get the shell parameter string and find out
 		   how long it is, stripping a trailing line
@@ -219,14 +217,12 @@ ARG_CONSTRUCTOR(arg_init)
 			{
 				char *arg;
 
-#if defined(UNIX_PATH_SEMANTICS)
-				if (__global_clib2->__unix_path_semantics)
+				if (__unix_path_semantics)
 				{
 					/* If necessary, indicate that this parameter was quoted. */
 					if (expand_wildcard_args && __wildcard_quote_parameter(__argc) < 0)
 						goto out;
 				}
-#endif /* UNIX_PATH_SEMANTICS */
 
 				str++;
 
@@ -304,15 +300,13 @@ ARG_CONSTRUCTOR(arg_init)
 
 		__argv[__argc] = NULL;
 
-#if defined(UNIX_PATH_SEMANTICS)
-		if (__global_clib2->__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
 			/* If necessary, expand wildcard patterns found in the command
 			   line string into file and directory names. */
 			if (expand_wildcard_args && __wildcard_expand_init() < 0)
 				goto out;
 		}
-#endif /* UNIX_PATH_SEMANTICS */
 	}
 	else
 	{

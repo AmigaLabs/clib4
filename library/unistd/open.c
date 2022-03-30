@@ -22,12 +22,11 @@ safe_change_mode(LONG type, BPTR file_handle, LONG mode)
 	return (result);
 }
 
-int open(const char *path_name, int open_flag, ... /* mode_t mode */)
+int
+open(const char *path_name, int open_flag, ... /* mode_t mode */)
 {
 	DECLARE_UTILITYBASE();
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	struct ExamineData *fib = NULL;
 	struct SignalSemaphore *fd_lock;
 	LONG is_file_system = FALSE;
@@ -85,8 +84,7 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 		assert(fd_slot_number >= 0);
 	}
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{
@@ -105,7 +103,6 @@ int open(const char *path_name, int open_flag, ... /* mode_t mode */)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	if (Strnicmp(path_name, "PIPE:", 5) == SAME && FLAG_IS_SET(open_flag, O_CREAT))
 	{

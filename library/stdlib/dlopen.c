@@ -21,9 +21,8 @@ void *dlopen(const char *path_name, int mode)
 		goto out;
 	}
 
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-	if (__global_clib2 != NULL && __global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
 			goto out;
@@ -34,7 +33,6 @@ void *dlopen(const char *path_name, int mode)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	if (__global_clib2->__dl_elf_handle != NULL)
 	{

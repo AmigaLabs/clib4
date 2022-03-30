@@ -306,7 +306,7 @@ find_encoding_name(const char *searchee, const char **names)
     const char *p;
 
     for (p = *names; p != NULL; p = *(names++)) {
-        if (strcmp(p, searchee) == 0)
+        if (strcasecmp(p, searchee) == 0)
             return 0;
     }
     return -1;

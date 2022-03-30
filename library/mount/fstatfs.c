@@ -8,8 +8,7 @@
 
 int
 fstatfs(int file_descriptor, struct statfs *buf) {
-    D_S(
-    struct InfoData,id);
+    D_S(struct InfoData,id);
     BPTR parent_dir = ZERO;
     int result = ERROR;
     struct fd *fd = NULL;

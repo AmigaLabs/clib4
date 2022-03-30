@@ -8,9 +8,7 @@
 
 int utime(const char *path_name, const struct utimbuf *times)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	struct name_translation_info path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	struct DateStamp ds;
 	int result = ERROR;
 	LONG status;
@@ -43,8 +41,7 @@ int utime(const char *path_name, const struct utimbuf *times)
 		DateStamp(&ds);
 	}
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{
@@ -63,7 +60,6 @@ int utime(const char *path_name, const struct utimbuf *times)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	status = SetFileDate((STRPTR)path_name, &ds);
 	if (status == DOSFALSE)

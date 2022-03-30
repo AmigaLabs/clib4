@@ -13,10 +13,8 @@
 int
 unlink(const char *path_name)
 {
-#if defined(UNIX_PATH_SEMANTICS)
 	DECLARE_UTILITYBASE();
 	struct name_translation_info path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
 	BPTR current_dir = ZERO;
 	int result = ERROR;
 	LONG status;
@@ -38,8 +36,7 @@ unlink(const char *path_name)
         goto out;
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		if (path_name[0] == '\0')
 		{
@@ -58,14 +55,13 @@ unlink(const char *path_name)
 			goto out;
 		}
 	}
-#endif /* UNIX_PATH_SEMANTICS */
 
 	D(("trying to delete '%s'", path_name));
 
 	status = DeleteFile((STRPTR)path_name);
 	if (status == DOSFALSE)
 	{
-		if (__global_clib2->__unix_path_semantics)
+		if (__unix_path_semantics)
 		{
 			struct UnlinkNode *uln = NULL;
 			struct UnlinkNode *node;

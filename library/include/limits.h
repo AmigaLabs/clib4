@@ -66,6 +66,7 @@
 /****************************************************************************/
 
 #define PATH_MAX 1024
+#define STATVFS_MAX_NAME 30
 
 /****************************************************************************/
 
@@ -106,16 +107,16 @@
 #define _POSIX_RTSIG_MAX			8
 #define _POSIX_SEM_NSEMS_MAX		256
 #define _POSIX_SEM_VALUE_MAX		32767
-#define _POSIX_SIGQUEUE_MAX		32
+#define _POSIX_SIGQUEUE_MAX		    32
 #define _POSIX_SSIZE_MAX			32767
 #define _POSIX_STREAM_MAX			8
 #define _POSIX_THREAD_DESTRUCTOR_ITERATIONS	4
-#define _POSIX_THREAD_KEYS_MAX	128
+#define _POSIX_THREAD_KEYS_MAX	    128
 #define _POSIX_THREADS_MAX			64
 #define _POSIX_TIMER_MAX			32
-#define _POSIX_TTY_NAME_MAX		9
+#define _POSIX_TTY_NAME_MAX		    9
 #define _POSIX_TZNAME_MAX			3
-#define _POSIX2_BC_BASE_MAX		99
+#define _POSIX2_BC_BASE_MAX		    99
 #define _POSIX2_BC_DIM_MAX			2048
 #define _POSIX2_BC_SCALE_MAX		99
 #define _POSIX2_BC_STRING_MAX		1000

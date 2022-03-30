@@ -6,13 +6,9 @@
 #include "dirent_headers.h"
 #endif /* _DIRENT_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
 
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
@@ -20,8 +16,6 @@
 
 /* Directories being scanned whose locks need to be freed when shutting down. */
 struct MinList NOCOMMON __directory_list;
-
-/****************************************************************************/
 
 static struct SignalSemaphore *dirent_lock;
 
@@ -31,15 +25,11 @@ void __dirent_lock(void)
 		ObtainSemaphore(dirent_lock);
 }
 
-/****************************************************************************/
-
 void __dirent_unlock(void)
 {
 	if (dirent_lock != NULL)
 		ReleaseSemaphore(dirent_lock);
 }
-
-/****************************************************************************/
 
 CLIB_CONSTRUCTOR(dirent_init)
 {
@@ -66,8 +56,6 @@ out:
 		CONSTRUCTOR_FAIL();
 }
 
-/****************************************************************************/
-
 CLIB_DESTRUCTOR(dirent_exit)
 {
 	ENTER();
@@ -84,9 +72,8 @@ CLIB_DESTRUCTOR(dirent_exit)
 	LEAVE();
 }
 
-/****************************************************************************/
-
-int closedir(DIR *directory_pointer)
+int
+closedir(DIR *directory_pointer)
 {
 	struct DirectoryHandle *dh;
 	int result = ERROR;
@@ -133,7 +120,7 @@ int closedir(DIR *directory_pointer)
 
 	Remove((struct Node *)dh);
 
-	if (__global_clib2->__unix_path_semantics)
+	if (__unix_path_semantics)
 	{
 		struct Node *node;
 

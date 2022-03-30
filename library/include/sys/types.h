@@ -20,11 +20,17 @@ typedef unsigned int gid_t;
 typedef unsigned int ino_t;
 typedef unsigned int mode_t;
 typedef unsigned int nlink_t;
-typedef int64_t off_t;
+typedef int64_t	off_t;
+typedef uint64_t fsblkcnt_t;
+typedef uint64_t fsfilcnt_t;
 #ifdef __USE_LARGEFILE64
     typedef int64_t _off64_t;
     typedef _off64_t off64_t;
     typedef int64_t _fpos64_t;
+    typedef uint64_t ino64_t;
+    typedef int64_t	blkcnt64_t;
+    typedef uint64_t fsblkcnt64_t;
+    typedef uint64_t fsfilcnt64_t;
 #endif
 typedef int pid_t;
 typedef unsigned int rlim_t;

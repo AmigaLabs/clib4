@@ -7,7 +7,6 @@
 #include <iostream>
 #include <unordered_set>
 
-
 // generate a random integer sequence of lenth N
 void generateRandomSequence(const size_t N, std::vector<int> &sequence) {
 
@@ -19,7 +18,6 @@ void generateRandomSequence(const size_t N, std::vector<int> &sequence) {
     for (auto &elem: sequence)
         elem = draw();
 }
-
 
 // find the unique elements in 'sequence' via appending them to a new vector
 // and checking before each append inf the element is already in th vector
@@ -37,7 +35,6 @@ void uniqueFind(const std::vector<int> &sequence) {
 
 }
 
-
 // find the unique elements in 'sequence' via inserting them into a set and
 // then copying the set into a vector
 void uniqueSet(const std::vector<int> &sequence) {
@@ -49,7 +46,6 @@ void uniqueSet(const std::vector<int> &sequence) {
     std::vector<int> uniques(uniquesTmp.begin(), uniquesTmp.end());
 
 }
-
 
 // find the unique elements in 'sequence' via insering them into a unordered set
 // and then copying them into a vector

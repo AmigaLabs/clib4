@@ -13,9 +13,7 @@
 #include <sys/time.h>
 
 int utimes(const char *name, const struct timeval *tvp) {
-#if defined(UNIX_PATH_SEMANTICS)
     struct name_translation_info path_name_nti;
-#endif /* UNIX_PATH_SEMANTICS */
     struct DateStamp ds;
 
     ENTER();
@@ -56,8 +54,7 @@ int utimes(const char *name, const struct timeval *tvp) {
         }
     }
 
-#if defined(UNIX_PATH_SEMANTICS)
-    if (__global_clib2->__unix_path_semantics) {
+    if (__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&name, &path_name_nti) != 0) {
             return -1;
         }
@@ -67,7 +64,6 @@ int utimes(const char *name, const struct timeval *tvp) {
             return -1;
         }
     }
-#endif
 
     if (!SetDate((STRPTR) name, &ds)) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
