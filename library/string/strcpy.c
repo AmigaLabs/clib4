@@ -1,5 +1,5 @@
 /*
- * $Id: string_strcpy.c,v 1.4 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: string_strcpy.c,v 1.5 2022-03-29 12:04:27 clib2devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -35,8 +35,14 @@ strcpy(char *dest, const char *src)
 					break;
 				default:
 				{
-					while (((*dest++) = (*src++)) != '\0')
-						DO_NOTHING;
+                    if (__global_clib2->hasAltivec) {
+                        vec_strcpy(dest, src);
+                    }
+                    else {
+                        /* Fallback to standard function */
+                        while (((*dest++) = (*src++)) != '\0')
+                            DO_NOTHING;
+                    }
 				}
 			}
 		}

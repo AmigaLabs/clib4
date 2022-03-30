@@ -545,6 +545,10 @@ C_STRING := \
 	string/memmove.o \
 	string/memrchr.o \
 	string/memset.o \
+	cpu/altivec/vec_memcmp.o \
+	cpu/altivec/vec_memcpy.o \
+	cpu/altivec/vec_memset.o \
+	cpu/altivec/vec_strcpy.o \
 	cpu/4xx/memchr440.o \
 	cpu/4xx/memcmp440.o \
 	cpu/4xx/memcpy440.o \
@@ -884,18 +888,20 @@ $(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 $(BUILD_DIR)/obj.shared/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.sx
+	$(VERBOSE)$(COMPILE_REG)
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
 
-$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
-	$(VERBOSE)$(COMPILE)
-
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.sx
+	$(VERBOSE)$(COMPILE_REG)
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_SHARED_ASM)
 
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE)
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 

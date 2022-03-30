@@ -124,8 +124,7 @@ memcpy(void *dst, const void *src, size_t len)
 		const char *from = src;
 
 		/* The two memory regions may not overlap. */
-		assert((to) >= (from) + len ||
-			   (from) >= (to) + len);
+		assert((to) >= (from) + len || (from) >= (to) + len);
 
 		/* Make sure __global_clib2 has been created */
 		if (__global_clib2 != NULL) { 
@@ -134,7 +133,14 @@ memcpy(void *dst, const void *src, size_t len)
 					__memcpy440((unsigned char *)to, (unsigned char *)from, len);
 					break;
 				default:
-					__memcpy((unsigned char *)to, (unsigned char *)from, len);
+                    /* Check if we have altivec enabled */
+                    if (__global_clib2->hasAltivec) {
+                        _vec_memcpy((unsigned char *)to, (unsigned char *)from, len);
+                    }
+                    else {
+                        /* Fallback to standard function */
+                        __memcpy((unsigned char *)to, (unsigned char *)from, len);
+                    }
 			}
 		}
 		else {

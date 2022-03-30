@@ -164,14 +164,17 @@ reent_init()
 			FreeDosObject(DOS_EXAMINEDATA, exd);
 		}
 
-		/* Choose which memcpy to use */
+		/* Get cpu family used to choose functions at runtime */
 		GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);
 
-		/*
-		 * Next: Get Elf handle associated with the currently running process.
-		 * ElfBase is opened in crtbegin.c that is called before the
-		 * call_main()
-		 */
+        /* Check if altivec is present */
+        GetCPUInfoTags(GCIT_VectorUnit, &__global_clib2->hasAltivec);
+
+        /*
+         * Next: Get Elf handle associated with the currently running process.
+         * ElfBase is opened in crtbegin.c that is called before the
+         * call_main()
+         */
 
 		if (__ElfBase != NULL)
 		{

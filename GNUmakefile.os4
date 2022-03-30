@@ -88,7 +88,7 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/mount
 
 OPTIONS    :=  -mstrict-align -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib
-OPTIMIZE   := -DNDEBUG -O3
+OPTIMIZE   := -DNDEBUG -O2
 
 DEBUG      := -gstabs
 
@@ -221,6 +221,12 @@ define ASSEMBLE
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rAssembling \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(AFLAGS) -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_REG
+$(VERBOSE)@$(MAKEDIR) $(@D)
+$(VERBOSE)echo -e "\rAssembling altivec \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(CC) -maltivec -mabi=altivec -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define MAKELIB
