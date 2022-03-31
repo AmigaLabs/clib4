@@ -165,6 +165,7 @@ C_POSIX := \
 	posix/msgrcv.o \
 	posix/msgsnd.o \
 	posix/msgsnap.o \
+	posix/msync.o \
 	posix/poll.o \
 	posix/getrlimit.o \
 	posix/setrlimit.o \
@@ -545,6 +546,10 @@ C_STRING := \
 	string/memmove.o \
 	string/memrchr.o \
 	string/memset.o \
+	cpu/altivec/vec_memcmp.o \
+	cpu/altivec/vec_memcpy.o \
+	cpu/altivec/vec_memset.o \
+	cpu/altivec/vec_strcpy.o \
 	cpu/4xx/memchr440.o \
 	cpu/4xx/memcmp440.o \
 	cpu/4xx/memcpy440.o \
@@ -556,6 +561,7 @@ C_STRING := \
 	cpu/4xx/strncmp440.o \
 	cpu/4xx/strrchr440.o \
 	string/rindex.o \
+	string/stccpy.o \
 	string/stpcpy.o \
 	string/strcasestr.o \
 	string/strcat.o \
@@ -696,6 +702,7 @@ C_UNISTD := \
 	unistd/lchown.o \
 	unistd/link.o \
 	unistd/lockf.o \
+	unistd/lseek64.o \
 	unistd/pathconf.o \
     unistd/pause.o \
 	unistd/pipe.o \
@@ -884,18 +891,20 @@ $(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 $(BUILD_DIR)/obj.shared/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.sx
+	$(VERBOSE)$(COMPILE_REG)
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
 
-$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
-	$(VERBOSE)$(COMPILE)
-
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.sx
+	$(VERBOSE)$(COMPILE_REG)
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_SHARED_ASM)
 
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE)
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 

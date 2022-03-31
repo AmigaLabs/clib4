@@ -243,15 +243,22 @@ memmove(void *dest, const void *src, size_t len)
 		if (__global_clib2 != NULL) { 
 			switch (__global_clib2->cpufamily) {
 				case CPUFAMILY_4XX:
-					result = __memmove440((unsigned char *)to, (unsigned char *)from, len);
+					__memmove440((unsigned char *)to, (unsigned char *)from, len);
 					break;
 				default:
-					__memmove((unsigned char *)to, (unsigned char *)from, len);
+                    /* Check if we have altivec enabled */
+                    if (__global_clib2->hasAltivec) {
+                        vec_memmove((unsigned char *)to, (unsigned char *)from, len);
+                    }
+                    else {
+                        /* Fallback to standard function */
+                        __memmove((unsigned char *) to, (unsigned char *) from, len);
+                    }
 			}
 		}
 		else {
 			/* Fallback to standard function */
-			__memmove((unsigned char *)to, (unsigned char *)from, len);
+            __memmove((unsigned char *)to, (unsigned char *)from, len);
 		}
 	}
 	else

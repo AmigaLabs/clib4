@@ -542,6 +542,7 @@ struct _clib2
 
 	/* CPU Family to enable optimized functions */
 	uint32 cpufamily;
+    uint32 hasAltivec;
 
 	/* Memalign memory list */
     void           *__memalign_pool;

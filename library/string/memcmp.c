@@ -141,11 +141,19 @@ memcmp(const void *ptr1, const void *ptr2, size_t len)
 		/* Make sure __global_clib2 has been created */
 		if (__global_clib2 != NULL) { 
 			switch (__global_clib2->cpufamily) {
+                /* If we have a SAM4xx use specific version of function */
 				case CPUFAMILY_4XX:
 					result = __memcmp440(m1, m2, len);
 					break;
 				default:
-					result = __memcmp(m1, m2, len);
+                    /* Check if we have altivec enabled */
+                    if (__global_clib2->hasAltivec) {
+                        result = vec_memcmp(m1, m2, len);
+                    }
+					else {
+                        /* Fallback to standard function */
+                        result = __memcmp(m1, m2, len);
+                    }
 			}
 		}
 		else {

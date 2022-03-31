@@ -54,6 +54,7 @@ extern int ftruncate(int file_descriptor, off_t length);
 #ifdef __USE_LARGEFILE64
 extern int ftruncate64(int file_descriptor, _off64_t length);
 extern int truncate64(const char *path_name, _off64_t length);
+extern off64_t lseek64(int fd, off64_t offset, int whence);
 #endif
 
 extern unsigned int alarm(unsigned seconds);
@@ -95,10 +96,12 @@ extern long sysconf(int name);
 
 extern void enableUnixPaths(void);
 extern void disableUnixPaths(void);
+extern void enableAltivec(void);
+extern void disableAltivec(void);
 
 extern char * getcwd(char * buffer, size_t buffer_size);
 
-extern long gethostid(void);
+extern long gethostid();
 extern int gethostname(const char *name, size_t namelen);
 extern char *getlogin(void);
 extern int getlogin_r(char *buf, size_t bufsize);

@@ -164,14 +164,21 @@ reent_init()
 			FreeDosObject(DOS_EXAMINEDATA, exd);
 		}
 
-		/* Choose which memcpy to use */
+		/* Get cpu family used to choose functions at runtime */
 		GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);
 
-		/*
-		 * Next: Get Elf handle associated with the currently running process.
-		 * ElfBase is opened in crtbegin.c that is called before the
-		 * call_main()
-		 */
+        /* Check if altivec is present */
+#ifdef ENABLE_ALTIVEC_AT_START
+        GetCPUInfoTags(GCIT_VectorUnit, &__global_clib2->hasAltivec);
+#else
+        __global_clib2->hasAltivec = 0;
+#endif
+
+        /*
+         * Next: Get Elf handle associated with the currently running process.
+         * ElfBase is opened in crtbegin.c that is called before the
+         * call_main()
+         */
 
 		if (__ElfBase != NULL)
 		{
@@ -288,6 +295,23 @@ void disableUnixPaths(void)
 {
     __unix_path_semantics = FALSE;
 }
+
+void enableAltivec(void)
+{
+    int32 hasAltivec;
+    /* Check if altivec is present otherwise we can't enable it */
+    GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec);
+    if (hasAltivec)
+        __global_clib2->hasAltivec = 1;
+    else
+        __global_clib2->hasAltivec = 0;
+}
+
+void disableAltivec(void)
+{
+    __global_clib2->hasAltivec = 0;
+}
+
 
 int *__mb_cur_max(void)
 {

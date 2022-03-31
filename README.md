@@ -42,6 +42,12 @@ If you want to use the shared version remember to pack your OS4 software with al
 Some functions like (memchr, memcmp, memcpy and some other) are optimized for SAM440 and SAM460.
 Feel free to add other CPU versions
 
+### Altivec
+
+`libmotovec` has been added to clib2 and enable some altivec functions. Altivec optimizations are not enabled at program start except if you recompile clib2 with *ENABLE_ALTIVEC_AT_START*.  
+However two new methods (**enableAltivec** and **disableAltivec**) are present and you can use them to enable or disable optimizations at runtime.  
+Keep in mind that clib2 is not compiled with altivec optimizations for all files.
+
 ### Shared objects
 
 Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).
