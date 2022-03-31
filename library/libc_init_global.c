@@ -168,7 +168,11 @@ reent_init()
 		GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);
 
         /* Check if altivec is present */
+#ifdef ENABLE_ALTIVEC_AT_START
         GetCPUInfoTags(GCIT_VectorUnit, &__global_clib2->hasAltivec);
+#else
+        __global_clib2->hasAltivec = 0;
+#endif
 
         /*
          * Next: Get Elf handle associated with the currently running process.

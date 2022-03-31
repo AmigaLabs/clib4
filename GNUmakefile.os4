@@ -226,7 +226,7 @@ endef
 define COMPILE_REG
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rAssembling altivec \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(CC) -maltivec -mabi=altivec -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) -maltivec -mabi=altivec -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define MAKELIB

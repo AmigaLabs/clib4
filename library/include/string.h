@@ -36,12 +36,11 @@ extern char *strsep(char ** src, const char *delim);
 extern char *stpcpy(char *dest, const char *src);
 extern char *strcasestr(const char *haystack, const char *needle);
 
-/****************************************************************************/
+// Used for AROS compatibility
+extern size_t stccpy (char * dest, const char * src, size_t n);
 
 extern int strcoll(const char *s1, const char *s2);
 extern size_t strxfrm(char *dest, const char *src, size_t len);
-
-/****************************************************************************/
 
 extern void *memmove(void *dest, const void * src, size_t len);
 extern void *memchr(const void * ptr, int val, size_t len);

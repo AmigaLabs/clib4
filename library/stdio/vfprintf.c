@@ -2,6 +2,10 @@
  * $Id: stdio_vfprintf.c,v 1.27 2022-03-5 17:42:43 clib2devs Exp $
 */
 
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
+
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
@@ -704,6 +708,18 @@ vfprintf(FILE *f, const char *format, va_list ap) {
         return EOF;
     }
     ret = printf_core(_out, format, &ap2, nl_arg, nl_type);
+
+    /* Put a \0 at the end */
+    struct iob * iob = (struct iob *)f;
+    if (FLAG_IS_CLEAR(iob->iob_Flags, IOBF_NO_NUL))
+    {
+        int buffer_mode = (iob->iob_Flags & IOBF_BUFFER_MODE);
+        if (buffer_mode == IOBF_BUFFER_MODE_NONE)
+            buffer_mode = IOBF_BUFFER_MODE_LINE;
+        if (__putc('\0', f, buffer_mode) == EOF)
+            ret = EOF;
+    }
+
     va_end(ap2);
     return ret;
 }
