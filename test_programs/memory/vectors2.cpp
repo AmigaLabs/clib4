@@ -4,7 +4,7 @@
 
 using namespace std;
 
-static size_t MM = 90000000;
+static size_t MM = 9000000;
 
 void add(const vector<double> &a, const vector<double> &b, vector<double> &c) {
     size_t n = a.size();

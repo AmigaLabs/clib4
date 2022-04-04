@@ -2,7 +2,7 @@
  * $Id: termios_tcsendbreak.c,v 1.3 2006-01-08 12:04:27 clib2devs Exp $
 */
 
-#ifndef	_TERMIOS_HEADERS_H
+#ifndef    _TERMIOS_HEADERS_H
 #include "termios_headers.h"
 #endif /* _TERMIOS_HEADERS_H */
 
@@ -20,68 +20,55 @@
  */
 
 int
-tcsendbreak(int file_descriptor,int duration)
-{
-	int result = ERROR;
-	struct fd *fd;
-	struct termios *tios;
+tcsendbreak(int file_descriptor, int duration) {
+    int result = ERROR;
+    struct fd *fd;
+    struct termios *tios;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(file_descriptor);
-	SHOWVALUE(duration);
+    SHOWVALUE(file_descriptor);
+    SHOWVALUE(duration);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	__stdio_lock();
+    __stdio_lock();
 
-	fd = __get_file_descriptor(file_descriptor);
-	if(fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags,FDF_TERMIOS))
-	{
-		__set_errno(EBADF);
-		goto out;
-	}
+    fd = __get_file_descriptor(file_descriptor);
+    if (fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_TERMIOS)) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
-	__fd_lock(fd);
+    __fd_lock(fd);
 
-	assert( fd->fd_Aux != NULL );
+    assert(fd->fd_Aux != NULL);
 
-	tios = fd->fd_Aux;
+    tios = fd->fd_Aux;
 
-	switch(tios->type)
-	{
-		case TIOST_CONSOLE:
+    switch (tios->type) {
+        case TIOST_CONSOLE:
+            result = OK;
+            break;
+        case TIOST_SERIAL:
+            if (duration == 0) {
+                /* TODO */
+                result = OK;
+            } else {
+                result = tcdrain(file_descriptor);
+            }
+            break;
+        default:
+            SHOWMSG("Invalid tios type in tcsendbreak.");
+    }
 
-			result = OK;
-			break;
+    __fd_unlock(fd);
 
-		case TIOST_SERIAL:
+out:
 
-			if(duration == 0)
-			{
-				/* TODO */
-				result = OK;
-			}
-			else
-			{
-				result = tcdrain(file_descriptor);
-			}
+    __stdio_unlock();
 
-			break;
-
-		default:
-
-			SHOWMSG("Invalid tios type in tcsendbreak.");
-			goto out;
-	}
-
- out:
-
-	__fd_unlock(fd);
-
-	__stdio_unlock();
-
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

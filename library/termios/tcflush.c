@@ -36,14 +36,14 @@ tcflush(int file_descriptor, int queue) {
         goto out;
     }
 
-    __fd_lock(fd);
-
     if (queue < TCIFLUSH || queue > TCIOFLUSH) {
         SHOWMSG("Invalid queue specified to tcflush().");
 
         __set_errno(EINVAL);
         goto out;
     }
+
+    __fd_lock(fd);
 
     if (queue == TCIFLUSH || queue == TCIOFLUSH) {
         LONG num_bytes_read;
@@ -55,6 +55,7 @@ tcflush(int file_descriptor, int queue) {
 
         file = __resolve_fd_file(fd);
         if (file == ZERO) {
+            __fd_unlock(fd);
             __set_errno(EBADF);
             goto out;
         }
@@ -79,7 +80,6 @@ tcflush(int file_descriptor, int queue) {
         /* Restore the Raw/Cooked mode. */
         if (FLAG_IS_SET(tios->c_lflag, ICANON)) {
             SetMode(file, DOSFALSE); /* Set Cooked = Canonical mode. */
-
             CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
         }
 
@@ -94,9 +94,9 @@ tcflush(int file_descriptor, int queue) {
         result = OK;
     }
 
-    out:
-
     __fd_unlock(fd);
+
+out:
 
     __stdio_unlock();
 

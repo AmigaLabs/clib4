@@ -43,6 +43,7 @@ tcdrain(int file_descriptor) {
 
                 file = __resolve_fd_file(fd);
                 if (file == ZERO) {
+                    __fd_unlock(fd);
                     __set_errno(EBADF);
                     goto out;
                 }
@@ -55,6 +56,7 @@ tcdrain(int file_descriptor) {
 
                 break;
             default: /* TODO: Serial port support. */
+                __fd_unlock(fd);
                 __set_errno(ENXIO);
                 goto out;
         }
@@ -64,9 +66,10 @@ tcdrain(int file_descriptor) {
         result = fdatasync(file_descriptor); /* If called on a "regular" file. */
     }
 
+    __fd_unlock(fd);
+
 out:
 
-    __fd_unlock(fd);
     __stdio_unlock();
 
     RETURN(result);

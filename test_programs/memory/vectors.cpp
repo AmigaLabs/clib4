@@ -75,7 +75,7 @@ void unique(const std::vector<int> &sequence) {
 int main() {
 
     int n = 10;
-    int N = 10000000;
+    int N = 10000;
 
     std::vector <size_t> timesFind;
     std::vector <size_t> timesSet;

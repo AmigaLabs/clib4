@@ -426,8 +426,6 @@ C_STDLIB := \
 	stdlib/bsearch.o \
 	stdlib/calloc.o \
 	stdlib/checkdetach.o \
-	stdlib/default_pool_size.o \
-	stdlib/default_puddle_size.o \
 	stdlib/detach.o \
 	stdlib/disablerequesters.o \
 	stdlib/div.o \

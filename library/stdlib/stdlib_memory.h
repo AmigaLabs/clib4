@@ -50,11 +50,6 @@ extern unsigned long NOCOMMON __current_memory_allocated;
 extern unsigned long NOCOMMON __maximum_num_memory_chunks_allocated;
 extern unsigned long NOCOMMON __current_num_memory_chunks_allocated;
 
-/****************************************************************************/
-
-extern int NOCOMMON __default_threshold_size;
-extern int NOCOMMON __default_puddle_size;
-
 extern void __memory_lock(void);
 extern void __memory_unlock(void);
 

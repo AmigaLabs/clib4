@@ -25,10 +25,8 @@ Clib2 now has also a working shared version called `libc.so`. And of course also
 
 If you want to use `dlopen`/`dlsym` with shared objects:
 
-**YOU HAVE** to compile your Clib2 version of library you want to use! 
-
-**DON'T TRY TO USE** newlib shared objects because it will crash badly!
-
+**YOU HAVE** to compile your Clib2 version of library you want to use!  
+**DON'T TRY TO USE** newlib shared objects because it will crash badly!  
 **DON'T USE** static libraries otherwise you could have undefined symbols!
 
 The plain `libc.a` now contains also `libnet.a`, `libunix.a`. Socket support and floating point support are always enabled
@@ -36,6 +34,10 @@ Soft float version is no longer available.
 
 If you want to use the shared version remember to pack your OS4 software with all clib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
 **DON'T overwrite SOBJS: files with your Clib2 files** othwerise OS4 most probably will not load or you could have problems running software!
+
+### New memory allocator
+
+Clib2 now use `Wheel Of Fortune` allocator that is faster than previous one an it seems more robust and with a cleaner and portable code
 
 ### Optimized AMCC functions
 
