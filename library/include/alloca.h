@@ -7,29 +7,11 @@
 
 __BEGIN_DECLS
 
-/*
- * You can request to use the alloca() variant that actually does allocate
- * memory from the system rather than the current stack frame, which will
- * ease stack requirements but may not release allocate memory immediately.
- * In order to do so, add #define __USE_CLIB2_ALLOCA to your program, or
- * -D__USE_CLIB2_ALLOCA to your build makefile. For GCC you will also have
- * to compile your program with the -fno-builtin switch to override the
- * built-in alloca() function.
- */
-
 #if defined(alloca)
 #undef alloca
 #endif /* alloca */
 
-#if defined(__GNUC__) && !defined(__USE_CLIB2_ALLOCA)
- #define alloca(size) __builtin_alloca(size)
-#else
- extern void * alloca(size_t size);
-
-  /* This is necessary because some applications key off the fact that
-     alloca is a symbol defined by the preprocessor. */
-  #define alloca alloca
-#endif /* __GNUC__ */
+#define alloca(size) __builtin_alloca(size)
 
 __END_DECLS
 

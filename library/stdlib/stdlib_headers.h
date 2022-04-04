@@ -84,7 +84,6 @@
 extern jmp_buf NOCOMMON __exit_jmp_buf;
 extern int NOCOMMON		__exit_value;
 
-extern void NOCOMMON (*__alloca_cleanup)(void);
 extern unsigned int NOCOMMON (* __get_default_stack_size)(void);
 extern unsigned int NOCOMMON __stack_size;
 
@@ -95,8 +94,6 @@ extern char ** NOCOMMON	__argv;
 extern int NOCOMMON		__argc;
 
 extern BOOL NOCOMMON __lib_startup;
-
-extern void NOCOMMON (*__alloca_trap)(void);
 
 #ifndef _STDLIB_PROTOS_H
 #include "stdlib_protos.h"

@@ -51,7 +51,9 @@ int main(int argc, char *argv[])
     start = times(&start_buffer);
     if (getrusage(RUSAGE_SELF, &usage_start) != 0)
         cerr << " getrusage returned error!" << endl;
-    //clock_gettime (CLOCK_REALTIME, &start_time);
+#ifndef NEWLIB
+    clock_gettime (CLOCK_REALTIME, &start_time);
+#endif
     gettimeofday(&myTV1, NULL);
 
     cout << "Just started counting!" << std::endl;

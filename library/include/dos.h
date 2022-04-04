@@ -170,30 +170,6 @@ extern void __get_mem_stats(size_t *current_memory, size_t *max_memory,
  */
 extern void __reset_max_mem_stats(void);
 
-/****************************************************************************/
-
-/*
- * If you use the clib2-supplied alloca() function, which will allocate
- * memory from the system pool rather than extending the current stack
- * frame, then your program will use a lot less stack space. It might
- * use a lot more system memory, though. While the system memory usage
- * solves the problem of a program crashing due to ever increasing
- * stack usage, which is hard to gauge, there is problem in that many
- * programs which call alloca() never test if the value returned is
- * not NULL. They just assume that alloca() will always succeed. If
- * you use the clib2-supplied alloca() function then the result may in
- * fact be NULL. In which case the program making the call might just
- * crash because of a missing NULL test.
- *
- * You can avoid trouble by filling in a pointer to a function which
- * will be called when the clib2-supplied alloca() function finds that it
- * must return NULL. That function is expected to print an error message
- * and to call abort().
- */
-extern void (*__alloca_trap)(void);
-
-/****************************************************************************/
-
 /*
  * The following section lists variables and function pointers which are used
  * by the startup code right after the program is launched. These variables are

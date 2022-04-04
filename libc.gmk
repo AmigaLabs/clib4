@@ -416,9 +416,6 @@ C_STDLIB := \
 	stdlib/abort.o \
 	stdlib/abs.o \
 	stdlib/aligned_alloc.o \
-	stdlib/alloca.o \
-	stdlib/alloca_cleanup.o \
-	stdlib/alloca_trap.o \
 	stdlib/assertion_failure.o \
 	stdlib/atexit.o \
 	stdlib/atof.o \
@@ -442,17 +439,12 @@ C_STDLIB := \
 	stdlib/dosbase.o \
 	stdlib/exit.o \
 	stdlib/free.o \
-	stdlib/decay_unused_slabs.o \
 	stdlib/getexecname.o \
-	stdlib/free_unused_slabs.o \
 	stdlib/getdefstacksize.o \
 	stdlib/getenv.o \
 	stdlib/getmemstats.o \
 	stdlib/getsp.o \
 	stdlib/get_errno.o \
-	stdlib/get_slab_usage.o \
-	stdlib/get_slab_allocations.o \
-	stdlib/get_slab_stats.o \
 	stdlib/inistate.o \
 	stdlib/isresident.o \
 	stdlib/itoa.o \
@@ -498,9 +490,6 @@ C_STDLIB := \
 	stdlib/shared_objs.o \
 	stdlib/shell_escape.o \
 	stdlib/showerror.o \
-	stdlib/slab.o \
-	stdlib/slab_max_size.o \
-	stdlib/slab_purge_threshold.o \
 	stdlib/srand.o \
 	stdlib/srandom.o \
 	stdlib/stacksize.o \
@@ -528,7 +517,8 @@ C_STDLIB := \
 	stdlib/unsetenv.o \
 	stdlib/valloc.o \
 	stdlib/expand_wildcard.o \
-	stdlib/expand_wildcard_check.o
+	stdlib/expand_wildcard_check.o \
+	stdlib/wof_allocator.o
 
 C_STRING := \
 	string/strings_ffs.o \

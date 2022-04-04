@@ -102,13 +102,9 @@ extern int __arg_init(void);
 
 /* stdlib_malloc.c */
 extern size_t __get_allocation_size(size_t size);
-extern void *__allocate_memory(size_t size, BOOL never_free);
 
 /* stdlib_free.c */
-extern struct MemoryNode *__find_memory_node(void *address);
 extern void __check_memory_allocations();
-extern void __free_memory(void *ptr, BOOL force);
-extern void __free_memory_node(struct MemoryNode *mn);
 
 /****************************************************************************/
 
