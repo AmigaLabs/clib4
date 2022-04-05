@@ -2,66 +2,63 @@
  * $Id: termios_cfsetospeed.c,v 1.2 2006-01-08 12:04:27 clib2devs Exp $
 */
 
-#ifndef	_TERMIOS_HEADERS_H
+#ifndef    _TERMIOS_HEADERS_H
 #include "termios_headers.h"
 #endif /* _TERMIOS_HEADERS_H */
 
 /****************************************************************************/
 
 int
-cfsetospeed(struct termios *tios,speed_t ospeed)
-{
-	int result = ERROR;
+cfsetospeed(struct termios *tios, speed_t ospeed) {
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(tios);
-	SHOWVALUE(ospeed);
+    SHOWPOINTER(tios);
+    SHOWVALUE(ospeed);
 
-	if(tios == NULL)
-	{
-		__set_errno(EFAULT);
-		goto out;
-	}
+    if (tios == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	switch(ospeed)	
-	{
-		case B0:
-		case B50:
-		case B75:
-		case B110:
-		case B134:
-		case B150:
-		case B200:
-		case B300:
-		case B600:
-		case B1200:
-		case B1800:
-		case B2400:
-		case B4800:
-		case B9600:
-		case B19200:
-		case B31250:
-		case B38400:
-		case B57600:
-		case B115200:
-		case B230400:
-		case B460800:
-		case B576000:
-		case B1152000:
+    switch (ospeed) {
+        case B0:
+        case B50:
+        case B75:
+        case B110:
+        case B134:
+        case B150:
+        case B200:
+        case B300:
+        case B600:
+        case B1200:
+        case B1800:
+        case B2400:
+        case B4800:
+        case B9600:
+        case B19200:
+        case B31250:
+        case B38400:
+        case B57600:
+        case B115200:
+        case B230400:
+        case B460800:
+        case B576000:
+        case B1152000:
 
-			tios->c_ospeed = ospeed;
-			break;
+            tios->c_ospeed = ospeed;
+            break;
 
-		default:
+        default:
 
-			__set_errno(EINVAL);
-			goto out;
-	}
+            __set_errno(EINVAL);
+            goto out;
+    }
 
-	result = OK;
+    result = OK;
 
- out:
+out:
 
-	return(result);
+    return (result);
 }

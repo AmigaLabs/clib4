@@ -103,7 +103,7 @@ int __open_iob(const char *filename, const char *mode, int file_descriptor, int 
 	SHOWMSG("allocating file buffer");
 
 	/* Allocate a little more memory than necessary. */
-	buffer = malloc(BUFSIZ + (__cache_line_size - 1));
+	buffer = calloc(1, BUFSIZ + (__cache_line_size - 1));
 	if (buffer == NULL)
 	{
 		SHOWMSG("that didn't work");

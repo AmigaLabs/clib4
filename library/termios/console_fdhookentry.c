@@ -179,6 +179,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 	switch (fam->fam_Action)
 	{
 	case file_action_read:
+        Printf("file_action_read\n");
 
 		SHOWMSG("file_action_read");
 
@@ -197,6 +198,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 		/* Attempt to fake everything needed in non-canonical mode. */
 		if (FLAG_IS_SET(tios->c_lflag, ICANON)) /* Canonical read = same as usual. Unless... */
 		{
+            Printf("FLAG_IS_SET(tios->c_lflag, ICANON)\n");
 			if (FLAG_IS_CLEAR(tios->c_lflag, ECHO)) /* No-echo mode needs to be emulated. */
 				result = LineEditor(file, fam->fam_Data, fam->fam_Size, tios);
 			else
@@ -204,6 +206,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 		}
 		else if (fam->fam_Size > 0)
 		{
+            Printf("fam->fam_Size > 0\n");
 			/* Non-canonical reads have timeouts and a minimum number of characters to read. */
 			int i = 0;
 
@@ -243,6 +246,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 		}
 		else
 		{
+            Printf("result = 0\n");
 			result = 0; /* Reading zero characters will always succeed. */
 		}
 
@@ -256,7 +260,8 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam)
 
 		if (result > 0)
 		{
-			if (tios->c_iflag != 0) /* Input processing enabled. */
+            Printf("result > 0\n");
+            if (tios->c_iflag != 0) /* Input processing enabled. */
 			{
 				int i, n;
 				int num_bytes = result;

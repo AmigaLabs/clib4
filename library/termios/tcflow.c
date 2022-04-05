@@ -6,8 +6,6 @@
 #include "termios_headers.h"
 #endif /* _TERMIOS_HEADERS_H */
 
-/****************************************************************************/
-
 int
 tcflow(int file_descriptor, int UNUSED action) {
     int result = ERROR;
@@ -31,9 +29,9 @@ tcflow(int file_descriptor, int UNUSED action) {
     /* XXX TODO */
     result = OK;
 
-    out:
-
     __fd_unlock(fd);
+
+out:
 
     __stdio_unlock();
 

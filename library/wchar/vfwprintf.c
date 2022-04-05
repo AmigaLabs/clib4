@@ -2,6 +2,10 @@
  * $Id: wchar_vfwprintf.c,v 1.4 2021-02-05 00:41:13 clib2devs Exp $
 */
 
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
+
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
@@ -424,6 +428,9 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
         }
     }
 
+    /* Put a \0 at the end */
+    out_putwc('\0', f);
+
     if (f)
         return cnt;
     if (!l10n)
@@ -452,6 +459,7 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
         return EOF;
     }
     ret = wprintf_core(_out, format, &ap2, nl_arg, nl_type);
+
     va_end(ap2);
     return ret;
 }

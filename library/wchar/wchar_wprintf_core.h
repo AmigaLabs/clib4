@@ -3,36 +3,14 @@
 
 #include <stdio.h>
 
-#if (UINT_MAX == ULONG_MAX)
-#define __LONG_IS_INT
-#endif
-
-#if ((SIZE_MAX != ULONG_MAX) || (UINTMAX_MAX != ULLONG_MAX))
-#define __ODD_TYPES
-#endif
-
 enum {
 	_BARE, _LPRE, _LLPRE, _HPRE, _HHPRE, _BIGLPRE,
 	_ZTPRE, _JPRE,
 	_STOP,
 	_PTR, _INT, _UINT, _ULLONG,
-#ifdef __LONG_IS_INT
 	_LONG, _ULONG,
-#else
-    #define _LONG _INT
-    #define _ULONG _UINT
-#endif
 	_SHORT, _USHORT, _CHAR, _UCHAR,
-#ifdef __ODD_TYPES
     _LLONG, _SIZET, _IMAX, _UMAX, _PDIFF, _UIPTR,
-#else
-#define _LLONG _ULLONG
-#define _SIZET _ULONG
-#define _IMAX _LLONG
-#define _UMAX _ULLONG
-#define _PDIFF _LONG
-#define _UIPTR _ULONG
-#endif
 	_DBL, _LDBL,
 	_NOARG,
 	_MAXSTATE
@@ -62,14 +40,12 @@ static inline void pop_arg(union arg *arg, int type, va_list *ap)
             break;
         case _UINT:
             arg->i = (uintmax_t)((unsigned int)va_arg(*ap, unsigned int));
-#ifndef __LONG_IS_INT
             break;
         case _LONG:
-            arg->i = (uintmax_t)((long)va_arg(*ap, long));
+            arg->i = (uintmax_t)((long long)va_arg(*ap, long));
             break;
         case _ULONG:
             arg->i = (uintmax_t)((unsigned long)va_arg(*ap, unsigned long));
-#endif
             break;
         case _ULLONG:
             arg->i = (uintmax_t)((unsigned long long)va_arg(*ap, unsigned long long));
@@ -85,10 +61,9 @@ static inline void pop_arg(union arg *arg, int type, va_list *ap)
             break;
         case _UCHAR:
             arg->i = (uintmax_t)((unsigned char)va_arg(*ap, int));
-#ifdef __ODD_TYPES
             break;
         case _LLONG:
-            arg->i = (uintmax_t)((long long)va_arg(*ap, long long);
+            arg->i = (uintmax_t)((long long)va_arg(*ap, long long));
             break;
         case _SIZET:
             arg->i = (uintmax_t)((size_t)va_arg(*ap, size_t));
@@ -104,7 +79,6 @@ static inline void pop_arg(union arg *arg, int type, va_list *ap)
             break;
         case _UIPTR:
             arg->i = (uintptr_t)((void*)va_arg(*ap, void*));
-#endif
             break;
         case _DBL:
             arg->f = (long double)((double)va_arg(*ap, double));

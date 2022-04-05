@@ -352,8 +352,10 @@ _main()
 	}
 
     /* Set default terminal mode to "amiga" if not set */
-    const char buffer[6] = "amiga\0";
-    SetVar("TERM", buffer, -1, 0);
+    if (FindVar("TERM", LV_VAR) == NULL) {
+        const char buffer[6] = "amiga\0";
+        SetVar("TERM", buffer, -1, 0);
+    }
 
     /* The following code will be executed if the program is to keep
        running in the shell or was launched from Workbench. */
