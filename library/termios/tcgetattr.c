@@ -80,10 +80,12 @@ __get_termios(struct fd *fd) {
         goto out;
     }
 
-    if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS))
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
         tios = fd->fd_Aux;
-    else
+    }
+    else {
         tios = get_console_termios(fd);
+    }
 
 out:
 

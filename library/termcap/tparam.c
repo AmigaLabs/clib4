@@ -74,7 +74,7 @@ tparam(const char *string, char *outstring, int len, int arg0, int arg1, int arg
 char *BC;
 char *UP;
 
-static char tgoto_buf[50];
+static char tgoto_buf[50] = {0};
 
 char *
 tgoto(const char *string, int hpos, int vpos) {

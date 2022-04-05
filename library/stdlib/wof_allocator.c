@@ -554,10 +554,9 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
     block = WOF_CHUNK_TO_BLOCK(chunk);
 
     if (block == NULL || old_size <= 0) {
-        Printf("block NULL or old_size <=0 (%ld)\n", old_size);
         return NULL;
     }
-    Printf("block = %p %s%ld\n", block, "", old_size);
+
     newptr = (wof_block_hdr_t *) AllocVecTags(size
                                              + WOF_BLOCK_HEADER_SIZE
                                              + WOF_CHUNK_HEADER_SIZE,
@@ -568,9 +567,8 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
     if (newptr == NULL) {
         return NULL;
     }
-    Printf("newblock = %p %s%ld\n", newptr, "", size + WOF_BLOCK_HEADER_SIZE + WOF_CHUNK_HEADER_SIZE);
-    memcpy(newptr, block, old_size);
 
+    memcpy(newptr, block, old_size);
     FreeVec(block);
     block = NULL;
 
