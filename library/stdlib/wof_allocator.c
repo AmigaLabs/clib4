@@ -482,7 +482,7 @@ wof_new_block(wof_allocator_t *allocator) {
 
     /* allocate the new block and add it to the block list */
     //block = (wof_block_hdr_t *) malloc(WOF_BLOCK_SIZE);
-    block = (wof_block_hdr_t *) AllocVecTags(WOF_BLOCK_SIZE, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+    block = (wof_block_hdr_t *) AllocVecTags(WOF_BLOCK_SIZE, AVT_Type, MEMF_SHARED, TAG_DONE);
     if (block == NULL) {
         return;
     }
@@ -510,7 +510,7 @@ wof_alloc_jumbo(wof_allocator_t *allocator, const size_t size) {
     block = (wof_block_hdr_t *) AllocVecTags(size
                                              + WOF_BLOCK_HEADER_SIZE
                                              + WOF_CHUNK_HEADER_SIZE,
-                                             AVT_Type, MEMF_PRIVATE,
+                                             AVT_Type, MEMF_SHARED,
                                              TAG_DONE);
     if (block == NULL) {
         return NULL;
@@ -552,23 +552,26 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
 
     old_size = WOF_CHUNK_DATA_LEN(chunk);
     block = WOF_CHUNK_TO_BLOCK(chunk);
-
-    if (block == NULL || old_size <= 0) {
+    printf("size = %ld\n", size);
+    /* If we have an invalid block return NULL */
+    if (block == NULL || old_size <= 0 || size <= 0 || (size < old_size)) {
         return NULL;
     }
 
+    /* Allocate new block of memory */
     newptr = (wof_block_hdr_t *) AllocVecTags(size
                                              + WOF_BLOCK_HEADER_SIZE
                                              + WOF_CHUNK_HEADER_SIZE,
-                                             AVT_Type, MEMF_PRIVATE,
+                                             AVT_Type, MEMF_SHARED,
                                              AVT_ClearWithValue, 0,
                                              TAG_DONE);
 
     if (newptr == NULL) {
         return NULL;
     }
-
+    /* Copy old block to new one */
     memcpy(newptr, block, old_size);
+    /* Free old block */
     FreeVec(block);
     block = NULL;
 

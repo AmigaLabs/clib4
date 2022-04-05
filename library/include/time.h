@@ -19,7 +19,7 @@ __BEGIN_DECLS
  * Divide the number returned by clock() by CLOCKS_PER_SEC to obtain
  * the elapsed time in seconds
  */
-#define CLOCKS_PER_SEC 1000000
+#define CLOCKS_PER_SEC ((clock_t)50)
 #define CLK_TCK CLOCKS_PER_SEC
 
 /****************************************************************************/
