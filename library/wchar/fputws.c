@@ -2,6 +2,10 @@
  * $Id: wchar_fputws.c,v 1.3 2006-01-08 12:04:27 clib2devs Exp $
 */
 
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
+
 #ifndef _WCHAR_HEADERS_H
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */

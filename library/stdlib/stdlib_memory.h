@@ -36,11 +36,18 @@ struct AVLMemoryNode {
     ULONG           amn_Size;
 };
 
+/* At moment to align memory we use AllocVectTags that already align the memory
+ * The MemalignEntry structure is used when we call memalign and we have two different
+ * ways to free memory. In our case if free is called via memalign
+ * we have to use FreeVec otherwise we have to use wof_free
+ */
 struct MemalignEntry
 {
     struct AVLNode   me_AvlNode;
-    void            *me_Aligned;          /* The address that mmemaligned returned.  */
-    void            *me_Exact;            /* The address that malloc returned.  */
+    void            *me_Exact;            /* The address returned by AllocVecTags  */
+    void            *me_Aligned;          /* The address that returned with memalign.
+                                           * With AllocVecTags is always aligned and equals to me_Exact.
+                                           * If you use different allocators this may change */
 };
 
 extern wof_allocator_t NOCOMMON *__wof_allocator;

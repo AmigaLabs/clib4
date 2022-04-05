@@ -135,8 +135,7 @@ wof_cycle_recycler(wof_allocator_t *allocator) {
 
 /* Adds a chunk from the recycler. */
 static void
-wof_add_to_recycler(wof_allocator_t *allocator,
-                    wof_chunk_hdr_t *chunk) {
+wof_add_to_recycler(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk) {
     wof_free_hdr_t *free_chunk;
 
     if (WOF_CHUNK_DATA_LEN(chunk) < WOF_FREE_HEADER_SIZE) {
@@ -165,8 +164,7 @@ wof_add_to_recycler(wof_allocator_t *allocator,
 
 /* Removes a chunk from the recycler. */
 static void
-wof_remove_from_recycler(wof_allocator_t *allocator,
-                         wof_chunk_hdr_t *chunk) {
+wof_remove_from_recycler(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk) {
     wof_free_hdr_t *free_chunk;
 
     free_chunk = WOF_GET_FREE(chunk);
@@ -188,8 +186,7 @@ wof_remove_from_recycler(wof_allocator_t *allocator,
 
 /* Pushes a chunk onto the master stack. */
 static void
-wof_push_master(wof_allocator_t *allocator,
-                wof_chunk_hdr_t *chunk) {
+wof_push_master(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk) {
     wof_free_hdr_t *free_chunk;
 
     free_chunk = WOF_GET_FREE(chunk);
@@ -225,8 +222,7 @@ wof_pop_master(wof_allocator_t *allocator) {
  * the recycler, depending on where the merged chunks were originally.
  */
 static void
-wof_merge_free(wof_allocator_t *allocator,
-               wof_chunk_hdr_t *chunk) {
+wof_merge_free(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk) {
     wof_chunk_hdr_t *tmp;
     wof_chunk_hdr_t *left_free = NULL;
     wof_chunk_hdr_t *right_free = NULL;
@@ -299,9 +295,7 @@ wof_merge_free(wof_allocator_t *allocator,
  * The second chunk gets whatever data is left over. It is marked unused and
  * replaces the input chunk in whichever list it originally inhabited. */
 static void
-wof_split_free_chunk(wof_allocator_t *allocator,
-                     wof_chunk_hdr_t *chunk,
-                     const size_t size) {
+wof_split_free_chunk(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk,  const size_t size) {
     wof_chunk_hdr_t *extra;
     wof_free_hdr_t *old_blk, *new_blk;
     size_t aligned_size, available;
@@ -388,9 +382,7 @@ wof_split_free_chunk(wof_allocator_t *allocator,
  * whatever's left over. The second is marked as unused and is added to the
  * recycler. */
 static void
-wof_split_used_chunk(wof_allocator_t *allocator,
-                     wof_chunk_hdr_t *chunk,
-                     const size_t size) {
+wof_split_used_chunk(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size_t size) {
     wof_chunk_hdr_t *extra;
     size_t aligned_size, available;
     BOOL last;
@@ -439,8 +431,7 @@ wof_split_used_chunk(wof_allocator_t *allocator,
 /* Add a block to the allocator's embedded doubly-linked list of OS-level blocks
  * that it owns. */
 static void
-wof_add_to_block_list(wof_allocator_t *allocator,
-                      wof_block_hdr_t *block) {
+wof_add_to_block_list(wof_allocator_t *allocator,  wof_block_hdr_t *block) {
     block->prev = NULL;
     block->next = allocator->block_list;
     if (block->next) {
@@ -452,8 +443,7 @@ wof_add_to_block_list(wof_allocator_t *allocator,
 /* Remove a block from the allocator's embedded doubly-linked list of OS-level
  * blocks that it owns. */
 static void
-wof_remove_from_block_list(wof_allocator_t *allocator,
-                           wof_block_hdr_t *block) {
+wof_remove_from_block_list(wof_allocator_t *allocator, wof_block_hdr_t *block) {
     if (block->prev) {
         block->prev->next = block->next;
     } else {
@@ -543,8 +533,7 @@ wof_alloc_jumbo(wof_allocator_t *allocator, const size_t size) {
 
 /* Frees special 'jumbo' blocks of sizes that won't fit normally. */
 static void
-wof_free_jumbo(wof_allocator_t *allocator,
-               wof_chunk_hdr_t *chunk) {
+wof_free_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk) {
     wof_block_hdr_t *block;
 
     block = WOF_CHUNK_TO_BLOCK(chunk);
@@ -556,32 +545,46 @@ wof_free_jumbo(wof_allocator_t *allocator,
 
 /* Reallocs special 'jumbo' blocks of sizes that won't fit normally. */
 static void *
-wof_realloc_jumbo(wof_allocator_t *allocator,
-                  wof_chunk_hdr_t *chunk,
-                  const size_t size) {
+wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size_t size) {
     wof_block_hdr_t *block;
+    wof_block_hdr_t *newptr;
+    size_t old_size;
 
+    old_size = WOF_CHUNK_DATA_LEN(chunk);
     block = WOF_CHUNK_TO_BLOCK(chunk);
 
-    block = (wof_block_hdr_t *) realloc(block, size
-                                               + WOF_BLOCK_HEADER_SIZE
-                                               + WOF_CHUNK_HEADER_SIZE);
-
-    if (block == NULL) {
+    if (block == NULL || old_size <= 0) {
+        Printf("block NULL or old_size <=0 (%ld)\n", old_size);
         return NULL;
     }
+    Printf("block = %p %s%ld\n", block, "", old_size);
+    newptr = (wof_block_hdr_t *) AllocVecTags(size
+                                             + WOF_BLOCK_HEADER_SIZE
+                                             + WOF_CHUNK_HEADER_SIZE,
+                                             AVT_Type, MEMF_PRIVATE,
+                                             AVT_ClearWithValue, 0,
+                                             TAG_DONE);
 
-    if (block->next) {
-        block->next->prev = block;
+    if (newptr == NULL) {
+        return NULL;
+    }
+    Printf("newblock = %p %s%ld\n", newptr, "", size + WOF_BLOCK_HEADER_SIZE + WOF_CHUNK_HEADER_SIZE);
+    memcpy(newptr, block, old_size);
+
+    FreeVec(block);
+    block = NULL;
+
+    if (newptr->next) {
+        newptr->next->prev = newptr;
     }
 
-    if (block->prev) {
-        block->prev->next = block;
+    if (newptr->prev) {
+        newptr->prev->next = newptr;
     } else {
-        allocator->block_list = block;
+        allocator->block_list = newptr;
     }
 
-    return WOF_CHUNK_TO_DATA(WOF_BLOCK_TO_CHUNK(block));
+    return WOF_CHUNK_TO_DATA(WOF_BLOCK_TO_CHUNK(newptr));
 }
 
 /* API */

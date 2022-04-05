@@ -125,6 +125,8 @@ struct iob;
 /* The file action function for buffered files. */
 typedef int64_t (*file_action_iob_t)(struct iob * iob, struct file_action_message * fam);
 
+#define UNGET 8
+
 /****************************************************************************/
 
 /* The three file buffering modes supported. */

@@ -103,6 +103,7 @@ Added resolv library to use dns functions
 ### TODO
 
 There is a memory leak at clib2 end needs to be tracked down  
+Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster and more better when there are multiple cores 
 
 ## Legal status
 

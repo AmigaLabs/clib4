@@ -227,7 +227,7 @@ FILE_CONSTRUCTOR(stdio_file_init)
 		}
 
 		/* Allocate a little more memory than necessary. */
-		buffer = malloc(BUFSIZ + (__cache_line_size - 1));
+		buffer = calloc(1, BUFSIZ + (__cache_line_size - 1));
 		if (buffer == NULL)
 			goto out;
 

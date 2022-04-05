@@ -39,7 +39,6 @@ void *
 memalign(size_t alignment, size_t size)
 {
     void *result;
-    unsigned long int adj;
 
     if (!isPowerOfTwo(alignment))
     {
@@ -53,33 +52,30 @@ memalign(size_t alignment, size_t size)
     }
     size = ((size + alignment - 1) / alignment) * alignment;
 
-    result = malloc(size);
+    result = AllocVecTags(size, AVT_Type, MEMF_SHARED, TAG_END);
     if (result == NULL)
         return NULL;
 
-    adj = (unsigned long int)((unsigned long int)((char *)result - (char *)NULL)) % alignment;
-    /* if block is not aligned, align it */
-    if (adj != 0)
+    struct MemalignEntry *l = ItemPoolAlloc(__global_clib2->__memalign_pool);
+    if (l == NULL)
     {
-        struct MemalignEntry *l = ItemPoolAlloc(__global_clib2->__memalign_pool);
-        if (l == NULL)
-        {
-            free(result);
-            return NULL;
-        }
-        if (NULL != AVL_AddNode(&__global_clib2->__memalign_tree, &l->me_AvlNode, MemalignAVLNodeComp))
-        {
-            FreeVec(result);
-            ItemPoolFree(__global_clib2->__memalign_pool, l);
-            result = NULL;
-            goto out;
-        }
-
-        /* Set MemalignEntry node stuff */
-        l->me_Exact = result;
-        l->me_Aligned = (char *)result + alignment - adj;
-        result = l->me_Aligned;
+        FreeVec(result);
+        result = NULL;
+        return NULL;
     }
+    if (NULL != AVL_AddNode(&__global_clib2->__memalign_tree, &l->me_AvlNode, MemalignAVLNodeComp))
+    {
+        FreeVec(result);
+        ItemPoolFree(__global_clib2->__memalign_pool, l);
+        result = NULL;
+        goto out;
+    }
+
+    /* Set MemalignEntry node stuff */
+    l->me_Exact = result;
+    l->me_Aligned = (char *)result; // Change to (char *)result + alignment - adj; if you want to use different memalign allocator
+
+    result = l->me_Aligned;
 
 out:
     return result;
