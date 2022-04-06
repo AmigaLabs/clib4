@@ -87,12 +87,13 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/stat \
 				-I$(LIB_DIR)/mount
 
-OPTIONS    :=  -mstrict-align -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__USE_INLINE__ -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib
+OPTIONS    :=  -mstrict-align -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib
 OPTIMIZE   := -DNDEBUG -O2
 
 DEBUG      := -gstabs
 
-CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -DUNIX_PATH_SEMANTICS
+CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
+CFLAGS_N   := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES)
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
 VERBOSE    := @
@@ -199,6 +200,12 @@ $(VERBOSE)echo -e "\rCompiling Static \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\
 $(VERBOSE)$(CC) $(CFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 
+define COMPILE_INLINE
+$(VERBOSE)@$(MAKEDIR) $(@D)
+$(VERBOSE)echo -e "\rCompiling Static \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)$(CC) $(CFLAGS_N) -Wno-missing-prototypes -Wno-missing-declarations -D__timespec_defined -o $@ -c $< $(LOG_COMMAND)
+endef
+
 define COMPILE_ASM
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rCompiling Static ASM \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
@@ -248,6 +255,7 @@ install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
 	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
+	$(COPY) libauto.a $(INSTALL_PREFIX)/lib/
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:
