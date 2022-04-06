@@ -34,6 +34,6 @@ vswprintf(wchar_t *s, size_t l, const wchar_t *fmt, va_list ap)
     va_end(ap2);
 
     if (out_overflow(_out))
-        return -1;
+        return EOF;
     return ret;
 }

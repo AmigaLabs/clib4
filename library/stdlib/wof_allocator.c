@@ -597,7 +597,7 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
             result = WOF_CHUNK_TO_DATA(WOF_BLOCK_TO_CHUNK(newptr));
         }
         else {
-
+            result = chunk;
         }
     }
     else {

@@ -607,14 +607,18 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                     else
                         p = (int) (z - a);
                 } else {
-                    p = (int) strlen(a);
+                    if (a) {
+                        p = (int) strlen(a);
+                    }
+                    else
+                        p = 0;
                     z = a + p;
                 }
 #else
                 if (!z)
-                z=a+p;
-            else
-                p=z-a;
+                    z = a + p;
+                else
+                    p = z - a;
 #endif
                 fl &= ~__U_ZERO_PAD;
                 break;
@@ -708,17 +712,6 @@ vfprintf(FILE *f, const char *format, va_list ap) {
         return EOF;
     }
     ret = printf_core(_out, format, &ap2, nl_arg, nl_type);
-
-    /* Put a \0 at the end */
-    struct iob * iob = (struct iob *)f;
-    if (FLAG_IS_CLEAR(iob->iob_Flags, IOBF_NO_NUL))
-    {
-        int buffer_mode = (iob->iob_Flags & IOBF_BUFFER_MODE);
-        if (buffer_mode == IOBF_BUFFER_MODE_NONE)
-            buffer_mode = IOBF_BUFFER_MODE_LINE;
-        if (__putc('\0', f, buffer_mode) == EOF)
-            ret = EOF;
-    }
 
     va_end(ap2);
     return ret;
