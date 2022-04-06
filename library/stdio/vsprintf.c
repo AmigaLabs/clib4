@@ -38,6 +38,7 @@ vsprintf(char *s, const char *format, va_list arg) {
     if (__putc('\0', (FILE * ) &string_iob, IOBF_BUFFER_MODE_NONE) == EOF) {
         result = EOF;
     }
+    __flush((FILE * ) &string_iob);
 
 out:
 
