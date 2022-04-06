@@ -546,46 +546,90 @@ wof_free_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk) {
 /* Reallocs special 'jumbo' blocks of sizes that won't fit normally. */
 static void *
 wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size_t size) {
+    void *result;
     wof_block_hdr_t *block;
     wof_block_hdr_t *newptr;
     size_t old_size;
 
     old_size = WOF_CHUNK_DATA_LEN(chunk);
     block = WOF_CHUNK_TO_BLOCK(chunk);
-    printf("size = %ld\n", size);
+
     /* If we have an invalid block return NULL */
-    if (block == NULL || old_size <= 0 || size <= 0 || (size < old_size)) {
+    if (block == NULL || old_size <= 0 || size <= 0) {
         return NULL;
     }
 
-    /* Allocate new block of memory */
-    newptr = (wof_block_hdr_t *) AllocVecTags(size
-                                             + WOF_BLOCK_HEADER_SIZE
-                                             + WOF_CHUNK_HEADER_SIZE,
-                                             AVT_Type, MEMF_SHARED,
-                                             AVT_ClearWithValue, 0,
-                                             TAG_DONE);
-
-    if (newptr == NULL) {
-        return NULL;
-    }
-    /* Copy old block to new one */
-    memcpy(newptr, block, old_size);
-    /* Free old block */
-    FreeVec(block);
-    block = NULL;
-
-    if (newptr->next) {
-        newptr->next->prev = newptr;
+    /* If we have the same size return the old chuck */
+    if (size == old_size) {
+        return chunk;
     }
 
-    if (newptr->prev) {
-        newptr->prev->next = newptr;
-    } else {
-        allocator->block_list = newptr;
-    }
+    if (old_size > size) {
+        if (old_size/2 >= size) {
+            /* at least half of the memory can be freed: allocate new, copy and free old. */
+            /* Allocate new block of memory */
+            newptr = (wof_block_hdr_t *) AllocVecTags(size
+                                                      + WOF_BLOCK_HEADER_SIZE
+                                                      + WOF_CHUNK_HEADER_SIZE,
+                                                      AVT_Type, MEMF_SHARED,
+                                                      AVT_ClearWithValue, 0,
+                                                      TAG_DONE);
 
-    return WOF_CHUNK_TO_DATA(WOF_BLOCK_TO_CHUNK(newptr));
+            if (newptr == NULL) {
+                return NULL;
+            }
+            /* Copy old block to new one */
+            memcpy(newptr, block, size);
+
+            /* Free old block */
+            FreeVec(block);
+            block = NULL;
+
+            if (newptr->next) {
+                newptr->next->prev = newptr;
+            }
+
+            if (newptr->prev) {
+                newptr->prev->next = newptr;
+            } else {
+                allocator->block_list = newptr;
+            }
+            result = WOF_CHUNK_TO_DATA(WOF_BLOCK_TO_CHUNK(newptr));
+        }
+        else {
+
+        }
+    }
+    else {
+        /* Allocate new block of memory */
+        newptr = (wof_block_hdr_t *) AllocVecTags(size
+                                                  + WOF_BLOCK_HEADER_SIZE
+                                                  + WOF_CHUNK_HEADER_SIZE,
+                                                  AVT_Type, MEMF_SHARED,
+                                                  AVT_ClearWithValue, 0,
+                                                  TAG_DONE);
+
+        if (newptr == NULL) {
+            return NULL;
+        }
+        /* Copy old block to new one */
+        memcpy(newptr, block, old_size);
+        /* Free old block */
+        FreeVec(block);
+        block = NULL;
+
+        if (newptr->next) {
+            newptr->next->prev = newptr;
+        }
+
+        if (newptr->prev) {
+            newptr->prev->next = newptr;
+        } else {
+            allocator->block_list = newptr;
+        }
+        result = WOF_CHUNK_TO_DATA(WOF_BLOCK_TO_CHUNK(newptr));
+    }
+    return result;
 }
 
 /* API */
