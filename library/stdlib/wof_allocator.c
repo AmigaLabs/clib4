@@ -581,6 +581,7 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
             /* Copy old block to new one */
             memcpy(newptr, block, size);
 
+
             /* Free old block */
             FreeVec(block);
             block = NULL;

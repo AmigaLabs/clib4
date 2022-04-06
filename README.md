@@ -65,15 +65,14 @@ clib2 now contains **shm*** and **msg*** functions. It needs <a href="http://www
 
 ### Unix path support
 
-`libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default unix support it is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.
+`libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default unix support it is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.  
 You can also disable it at runtime using **disableUnixPaths()**. However is not reccomanded to enable and disable it at runtime because you could have problems with internal structures.
 
 ### wchar / wctype
 
-All **wctype** functions should be working correctly now. We need a valid test suite
-
+All **wctype** functions should be working correctly now. We need a valid test suite.  
 All **wchar** functions are now implemented and tested but maybe something is not working correctly. 
-There are no valid tests except a little few so if you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>
+There are no valid tests except a little few so if you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
 
 ### Locale
 
@@ -89,21 +88,25 @@ Accepted encodings are:
 ### Math library
 
 Math library has been replaced with openlibm (https://github.com/JuliaMath/openlibm).   
-This version is faster and more compatible and contains also fenv support that wasn't implemented in clib2
+This version is faster and more compatible and contains also fenv support that wasn't implemented in clib2.
 
 ### Complex numbers
 
 Complex numbers has been added to libm and tests has been added to test that everything is working correctly.  
 A lot of other functions has been added trying to make OS4 ports easier.
 
+### libauto
+
+Clib2 now contain also libauto with almost all OS4 components. We'll try to keep them updated.
+
 ### libresolv
 
-Added resolv library to use dns functions
+Added resolv library to use dns functions.
 
 ### TODO
 
 There is a memory leak at clib2 end needs to be tracked down  
-Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster and more better when there are multiple cores 
+Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster and more better when there are multiple cores. 
 
 ## Legal status
 
