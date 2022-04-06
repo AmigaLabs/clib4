@@ -32,7 +32,12 @@ vsprintf(char *s, const char *format, va_list arg) {
 
     string_iob.iob_String = (STRPTR) s;
 
-    result = vfprintf((FILE * ) & string_iob, format, arg);
+    result = vfprintf((FILE * ) &string_iob, format, arg);
+
+    /* Put a \0 at the end */
+    if (__putc('\0', (FILE * ) &string_iob, IOBF_BUFFER_MODE_NONE) == EOF) {
+        result = EOF;
+    }
 
 out:
 
