@@ -94,7 +94,7 @@ memset(void *ptr, int val, size_t len)
 		goto out;
 	}
 
-    if (__global_clib2 != NULL) {
+    if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions == TRUE) {
         /* Check if we have altivec enabled */
         if (__global_clib2->hasAltivec) {
             _vec_memset(m, (unsigned char)(val & 255), len);
@@ -102,11 +102,13 @@ memset(void *ptr, int val, size_t len)
         else {
             /* Fallback to standard function */
             __memset(m, (unsigned char)(val & 255), len);
+            // SetMem(ptr, val, len);
         }
     }
     else {
         /* Fallback to standard function */
         __memset(m, (unsigned char)(val & 255), len);
+        // SetMem(ptr, val, len);
     }
 
 out:

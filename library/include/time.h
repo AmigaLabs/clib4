@@ -11,6 +11,8 @@
 #include <stddef.h>
 #endif /* _STDDEF_H */
 
+#include <inttypes.h>
+
 __BEGIN_DECLS
 
 /****************************************************************************/
@@ -61,13 +63,7 @@ extern char *ctime(const time_t *t);
 extern struct tm *gmtime(const time_t *t);
 extern struct tm *localtime(const time_t *t);
 extern time_t mktime(struct tm *tm);
-
-/****************************************************************************/
-
 extern double difftime(time_t t1, time_t t0);
-
-/****************************************************************************/
-
 extern size_t strftime(char *s, size_t maxsize, const char *format, const struct tm *tm);
 extern char *strptime(const char *buf, const char *fmt, struct tm *timeptr);
 
@@ -129,6 +125,8 @@ extern int clock_gettime(clockid_t clk_id, struct timespec *t);
 extern int clock_settime(clockid_t clk_id, const struct timespec *t);
 extern int clock_getres(clockid_t clock_id, struct timespec *res);
 extern int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *request, struct timespec *remain);
+
+extern uint64_t rdtsc(void);
 
 /* Defined in localtime.c.  */
 extern char *tzname[2];   /* Current timezone names.  */

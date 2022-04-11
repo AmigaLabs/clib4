@@ -517,6 +517,7 @@ struct _clib2
 	int  inc;
 
 	/* CPU Family to enable optimized functions */
+    uint32 optimizedCPUFunctions;
 	uint32 cpufamily;
     uint32 hasAltivec;
 

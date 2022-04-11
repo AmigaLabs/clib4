@@ -624,6 +624,7 @@ C_TIME := \
 	time/nanosleep.o \
 	time/numbertostring.o \
 	time/clock_settime.o \
+	time/rdtsc.o \
 	time/setitimer.o \
     time/settimeofday.o \
 	time/strftime.o \
