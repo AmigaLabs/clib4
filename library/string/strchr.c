@@ -29,26 +29,40 @@ strchr(const char *s, int c)
 		goto out;
 	}
 
-	switch (__global_clib2->cpufamily) {
-		case CPUFAMILY_4XX:
-			result = __strchr440(s, c);
-			break;
-		default:
-			while (TRUE)
-			{
-				us_c = (*us);
-				if (us_c == find_this)
-				{
-					result = (char *)us;
-					break;
-				}
+    if  (__global_clib2->optimizedCPUFunctions) {
+        switch (__global_clib2->cpufamily) {
+            case CPUFAMILY_4XX:
+                result = __strchr440(s, c);
+                break;
+            default:
+                while (TRUE) {
+                    us_c = (*us);
+                    if (us_c == find_this) {
+                        result = (char *) us;
+                        break;
+                    }
 
-				if (us_c == '\0')
-					break;
+                    if (us_c == '\0')
+                        break;
 
-				us++;
-			}
-	}
+                    us++;
+                }
+        }
+    }
+    else {
+        while (TRUE) {
+            us_c = (*us);
+            if (us_c == find_this) {
+                result = (char *) us;
+                break;
+            }
+
+            if (us_c == '\0')
+                break;
+
+            us++;
+        }
+    }
 
 out:
 

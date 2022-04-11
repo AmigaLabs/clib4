@@ -62,7 +62,7 @@ strncmp(const char *s1, const char *s2, size_t n)
 	if (s1 != s2 && (int)n > 0)
 	{
 		/* Make sure __global_clib2 has been created */
-		if (__global_clib2 != NULL)
+		if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions)
 		{
 			switch (__global_clib2->cpufamily)
 			{

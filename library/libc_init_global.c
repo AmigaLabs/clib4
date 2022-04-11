@@ -73,6 +73,12 @@ reent_init()
 			goto out;
 		}
 
+#ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
+        __global_clib2->optimizedCPUFunctions = FALSE;
+#else
+        __global_clib2->optimizedCPUFunctions = TRUE;
+#endif
+
         /* Initialize random signal and state */
         __global_clib2->__random_lock = __create_semaphore();
         if (!__global_clib2->__random_lock) {
@@ -312,8 +318,16 @@ void disableAltivec(void)
     __global_clib2->hasAltivec = 0;
 }
 
+void enableOptimizedFunctions(void) {
+    __global_clib2->optimizedCPUFunctions = 1;
+};
+
+void disableOptimizedFunctions(void) {
+    __global_clib2->optimizedCPUFunctions = 0;
+};
 
 int *__mb_cur_max(void)
 {
     return &__global_clib2->__mb_cur_max;
 }
+

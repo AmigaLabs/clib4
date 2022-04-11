@@ -24,14 +24,14 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
     if (__check_abort_enabled)
         __check_abort();
 
-    flockfile(stream);
-
     if (ptr == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
+
+    flockfile(stream);
 
     assert(__is_valid_iob(file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));

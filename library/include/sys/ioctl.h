@@ -15,6 +15,10 @@
 
 #include <features.h>
 
+#define TIOCGWINSZ  0x5413 /* Get terminal size */
+/* Not supported by Console Device yet */
+#define TIOCSWINSZ  0x5414 /* Set terminal size */
+
 __BEGIN_DECLS
 
 extern int ioctl(int fildes, int request, ... /* arg */);

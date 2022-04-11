@@ -10,19 +10,21 @@ void
 bzero(void *m, size_t len) {
     assert((len == 0) || (m != NULL && (int) len > 0));
 
-    if (__global_clib2 != NULL) {
+    DECLARE_UTILITYBASE();
+
+    if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
         /* Check if we have altivec enabled */
         if (__global_clib2->hasAltivec) {
             vec_bzero(m, len);
         }
         else {
             /* Fallback to standard function */
-            memset(m, 0, len);
+            ClearMem(m, len);
         }
     }
     else {
         /* Fallback to standard function */
-        memset(m, 0, len);
+        ClearMem(m, len);
     }
 
 }

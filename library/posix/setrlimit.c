@@ -21,21 +21,21 @@ setrlimit(int resource, const struct rlimit *rlp)
 
 	switch (resource)
 	{
-	case RLIM_VMEM:
-	case RLIM_CORE:
-	case RLIM_CPU:
-	case RLIM_DATA:
-	case RLIM_FSIZE:
-	case RLIM_NOFILE:
-	case RLIM_STACK: /* TODO: See if it might be possible to set the stacksize here. */
+        case RLIM_VMEM:
+        case RLIM_CORE:
+        case RLIM_CPU:
+        case RLIM_DATA:
+        case RLIM_FSIZE:
+        case RLIM_NOFILE:
+        case RLIM_STACK: /* TODO: See if it might be possible to set the stacksize here. */
 
-		__set_errno(EPERM);
-		goto out;
+            __set_errno(EPERM);
+            goto out;
 
-	default:
+        default:
 
-		__set_errno(EINVAL);
-		goto out;
+            __set_errno(EINVAL);
+            goto out;
 	}
 
 	ret = 0;

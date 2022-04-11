@@ -29,6 +29,7 @@ Boston, MA 02111-1307, USA.  */
 #include <stddef.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 void bench_string();
 
@@ -64,13 +65,24 @@ bench_string() {
     }
     clock_t end = clock();
     double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
-    printf("%lf\n", time_spent);
-
+    printf("%lf secs\n", time_spent);
 }
 
 /* Main, run the benchmarks.  */
 int
 main() {
+#ifndef NEWLIB
+    disableOptimizedFunctions();
+#endif
+    printf("Without optimized functions: ");
     bench_string();
+
+#ifndef NEWLIB
+    enableOptimizedFunctions();
+
+    printf("With optimized functions: ");
+    bench_string();
+#endif
+
     return 0;
 }

@@ -4,7 +4,6 @@ CFLAGS = -mcrt=clib2 -std=c11 -Wall -Wextra -Werror -pedantic -O3
 LDFLAGS =
 LIBS = -lm
 
-
 compile: memcmp
 
 all: plot.png
