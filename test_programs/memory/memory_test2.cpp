@@ -57,14 +57,14 @@ void free_buffers(void *buf1, void *buf2) {
 
 }
 
-void single_thread_memcpy() {
+void single_thread_memmove() {
 
     void *dst, *src;
     init_buffers(dst, src);
 
     {
-        timed_scope _("Single thread memcpy ");
-        memcpy(dst, src, size);
+        timed_scope _("Single thread memmove ");
+        memmove(dst, src, size);
     }
 
     auto res = memcmp(dst, src, size);
@@ -90,7 +90,7 @@ void multithread_copy_helper(Functor function, const std::string &name) {
     workers.reserve(workers_number);
 
     {
-        timed_scope _("Multithread " + name + " thread memcpy");
+        timed_scope _("Multithread " + name + " thread memmove");
 
         for (auto i = 0; i < workers_number; ++i) {
             workers.emplace_back(
@@ -121,7 +121,6 @@ void multithread_copy_helper(Functor function, const std::string &name) {
 
 int main() {
     std::cout << "Memcpy test -- copying " << mb << "MB without optimized functions" << std::endl;
-
-    single_thread_memcpy();
-    multithread_copy_helper(memcpy, "memcpy");
+    single_thread_memmove();
+    multithread_copy_helper(memmove, "memmove");
 }

@@ -58,8 +58,6 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
         goto out;
     }
 
-    clearerr((FILE *) file);
-
     if (element_size > 0 && count > 0) {
         const unsigned char *s = (unsigned char *) ptr;
         unsigned char c;
@@ -68,9 +66,6 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
         size_t total_size;
 
         total_size = element_size * count;
-
-        if (__fputc_check((FILE *) file) < 0)
-            goto out;
 
         /* If this is an unbuffered interactive stream, we will switch
            to line buffered mode in order to improve readability of
@@ -172,8 +167,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                     break;
                 }
 
-                /* Is there still room in the write buffer to store
-                   more of the data? */
+                /* Is there still room in the write buffer to store more of the data? */
                 if (file->iob_BufferWriteBytes < file->iob_BufferSize) {
                     unsigned char *buffer = &file->iob_Buffer[file->iob_BufferWriteBytes];
                     size_t num_buffer_bytes;
@@ -201,8 +195,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                     if (total_size == 0)
                         break;
 
-                    /* If there is again room in the output buffer,
-                       try this optimization again. */
+                    /* If there is again room in the output buffer, try this optimization again. */
                     if (file->iob_BufferWriteBytes < file->iob_BufferSize)
                         continue;
                 }
