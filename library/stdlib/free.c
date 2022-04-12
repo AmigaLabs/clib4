@@ -19,15 +19,12 @@
 void
 free(void *ptr)
 {
-    printf("free pointer at = %x\n", ptr);
-
     BOOL found = FALSE;
     struct MemalignEntry *e = NULL;
     /* Check if we have something created by memalign */
     if (__global_clib2 != NULL) {
         e = (struct MemalignEntry *) AVL_FindNode(__global_clib2->__memalign_tree, ptr, MemalignAVLKeyComp);
         if (e) {
-            printf("found memalign pointer\n");
             found = TRUE;
         }
     }
@@ -43,10 +40,8 @@ free(void *ptr)
         ItemPoolFree(__global_clib2->__memalign_pool, e);
         e = NULL;
     }
-    else {
-        printf("memalign pointer not found\n");
+    else
         wof_free(__wof_allocator, ptr);
-    }
 
     __memory_unlock();
 }
