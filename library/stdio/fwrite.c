@@ -137,7 +137,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                     total_bytes_written++;
                 }
             break;
-            case IOBF_BUFFER_MODE_NONE:
+            case IOBF_BUFFER_MODE_NONE: {
                 ssize_t num_bytes_written;
 
                 /* We bypass the buffer entirely. */
@@ -148,6 +148,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                 }
 
                 total_bytes_written = (size_t) num_bytes_written;
+            }
             break;
             default:
                 assert(file->iob_BufferSize > 0);
