@@ -45,9 +45,6 @@ struct MemalignEntry
 {
     struct AVLNode   me_AvlNode;
     void            *me_Exact;            /* The address returned by AllocVecTags  */
-    void            *me_Aligned;          /* The address that returned with memalign.
-                                           * With AllocVecTags is always aligned and equals to me_Exact.
-                                           * If you use different allocators this may change */
 };
 
 extern wof_allocator_t NOCOMMON *__wof_allocator;

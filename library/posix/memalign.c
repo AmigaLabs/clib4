@@ -20,14 +20,14 @@ int32 MemalignAVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2)
     e1 = (struct MemalignEntry *)avlnode1;
     e2 = (struct MemalignEntry *)avlnode2;
 
-    return (int32)((uint32)e1->me_Aligned - (uint32)e2->me_Aligned);
+    return (int32)((uint32)e1->me_Exact - (uint32)e2->me_Exact);
 }
 
 int32 MemalignAVLKeyComp(struct AVLNode *avlnode1, AVLKey key2)
 {
     struct MemalignEntry *e1 = (struct MemalignEntry *)avlnode1;
 
-    return (int32)((uint32)e1->me_Aligned - (uint32)key2);
+    return (int32)((uint32)e1->me_Exact - (uint32)key2);
 }
 
 static inline BOOL isPowerOfTwo(size_t alignment)
@@ -39,7 +39,6 @@ void *
 memalign(size_t alignment, size_t size)
 {
     void *result;
-
     if (!isPowerOfTwo(alignment))
     {
         __set_errno(EINVAL);
@@ -50,9 +49,9 @@ memalign(size_t alignment, size_t size)
         __set_errno(ENOSYS);
         return NULL;
     }
-    size = ((size + alignment - 1) / alignment) * alignment;
+    //size = ((size + alignment - 1) / alignment) * alignment;
 
-    result = AllocVecTags(size, AVT_Type, MEMF_SHARED, TAG_END);
+    result = AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_Alignment, alignment, TAG_END);
     if (result == NULL)
         return NULL;
 
@@ -63,6 +62,9 @@ memalign(size_t alignment, size_t size)
         result = NULL;
         return NULL;
     }
+    /* Set MemalignEntry node stuff */
+    l->me_Exact = result;
+
     if (NULL != AVL_AddNode(&__global_clib2->__memalign_tree, &l->me_AvlNode, MemalignAVLNodeComp))
     {
         FreeVec(result);
@@ -70,12 +72,6 @@ memalign(size_t alignment, size_t size)
         result = NULL;
         goto out;
     }
-
-    /* Set MemalignEntry node stuff */
-    l->me_Exact = result;
-    l->me_Aligned = (char *)result; // Change to (char *)result + alignment - adj; if you want to use different memalign allocator
-
-    result = l->me_Aligned;
 
 out:
     return result;

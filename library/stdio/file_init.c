@@ -256,9 +256,11 @@ FILE_CONSTRUCTOR(stdio_file_init)
 
 		__initialize_fd(__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
 
-        __initialize_iob(__iob[i], __iob_hook_entry,
+        __initialize_iob(__iob[i],
+                         __iob_hook_entry,
 						 buffer,
-						 aligned_buffer, BUFSIZ,
+						 aligned_buffer,
+                         (int64_t) BUFSIZ,
 						 i,
 						 i,
 						 iob_flags,

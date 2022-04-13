@@ -135,6 +135,8 @@ reent_init()
         if (!__global_clib2->__memalign_pool) {
             goto out;
         }
+        /* Set memalign tree to NULL */
+        __global_clib2->__memalign_tree = NULL;
 
 		/* Check is SYSV library is available in the system */
 		__global_clib2->haveShm = FALSE;

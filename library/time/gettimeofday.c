@@ -6,8 +6,6 @@
 #include <proto/timer.h>
 #endif /* PROTO_TIMER_H */
 
-#include <sys/time.h>
-
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */

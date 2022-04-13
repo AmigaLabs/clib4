@@ -5,15 +5,24 @@
 
 __BEGIN_DECLS
 
-#if !defined(__TIMEVAL_ALREADY_DEFINED)
-struct timeval
-{
-	unsigned long tv_secs;
-	unsigned long tv_micro;
-};
 
-/* Make sure that the 'struct timeval' is not redefined, should <devices/timer.h> get included again. */
-#define __TIMEVAL_ALREADY_DEFINED
+#if defined(__TIMEVAL_ALREADY_DEFINED)
+    #ifdef __USE_OLD_TIMEVAL__
+        #define tv_sec  tv_secs
+        #define tv_usec tv_micro
+    #endif /* __USE_OLD_TIMEVAL__ */
+#else
+    struct timeval
+    {
+        unsigned long tv_sec;
+        unsigned long tv_usec;
+    };
+    /* Make sure that the 'struct timeval' is not redefined, should <devices/timer.h> get included again. */
+    #define __TIMEVAL_ALREADY_DEFINED
+    #ifdef __USE_OLD_TIMEVAL__
+        #define tv_secs  tv_sec
+        #define tv_micro tv_usec
+    #endif /* __USE_OLD_TIMEVAL__ */
 #endif /* !__TIMEVAL_ALREADY_DEFINED */
 
 struct timezone
