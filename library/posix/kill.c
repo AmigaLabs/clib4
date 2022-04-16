@@ -59,7 +59,7 @@ kill(pid_t pid, int signal_number)
 
 				result = 0;
 
-				if (signal_number == SIGTERM || signal_number == SIGINT)
+				if (signal_number == SIGTERM || signal_number == SIGINT || signal_number == SIGQUIT)
 				{
 					Signal((struct Task *)cli_process, SIGBREAKF_CTRL_C);
 				}

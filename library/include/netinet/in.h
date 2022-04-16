@@ -1,11 +1,9 @@
-/*
- * $Id: in.h,v 1.4 2006-01-08 12:06:14 clib2devs Exp $
-*/
-
 #ifndef _NETINET_IN_H
 #define _NETINET_IN_H
 
 #include <features.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 __BEGIN_DECLS
 
@@ -44,33 +42,91 @@ typedef unsigned short	in_port_t;
 #define	IPPROTO_IDP		22		/* xns idp */
 #define	IPPROTO_TP		29 		/* tp-4 w/ class negotiation */
 #define IPPROTO_IPV6    41 		/* IPv6 header */
+#define IPPROTO_RSVP    46      /* Reservation Protocol.  */
+#define IPPROTO_GRE     47      /* General Routing Encapsulation.  */
+#define IPPROTO_ESP     50      /* encapsulating security payload.  */
+#define IPPROTO_AH      51      /* authentication header.  */
 #define	IPPROTO_EON		80		/* ISO cnlp */
+#define IPPROTO_MTP     92      /* Multicast Transport Protocol.  */
+#define IPPROTO_BEETPH  94      /* IP option pseudo header for BEET.  */
 #define	IPPROTO_ENCAP	98		/* encapsulation header */
-
+#define IPPROTO_PIM     103     /* Protocol Independent Multicast.  */
+#define IPPROTO_COMP    108     /* Compression Header Protocol.  */
+#define IPPROTO_SCTP    132     /* Stream Control Transmission Protocol.  */
+#define IPPROTO_UDPLITE 136     /* UDP-Lite protocol.  */
+#define IPPROTO_MPLS    137     /* MPLS in IP.  */
 #define	IPPROTO_RAW		255		/* raw IP packet */
 #define	IPPROTO_MAX		256
 
+#define IPPROTO_HOPOPTS     0   /* IPv6 Hop-by-Hop options.  */
+#define IPPROTO_ROUTING     43  /* IPv6 routing header.  */
+#define IPPROTO_FRAGMENT    44  /* IPv6 fragmentation header.  */
+#define IPPROTO_ICMPV6      58  /* ICMPv6.  */
+#define IPPROTO_NONE        59  /* IPv6 no next header.  */
+#define IPPROTO_DSTOPTS     60  /* IPv6 destination options.  */
+#define IPPROTO_MH          135 /* IPv6 mobility header.  */
 
-/*
- * Local port number conventions:
- * Ports < IPPORT_RESERVED are reserved for
- * privileged processes (e.g. root).
- * Ports > IPPORT_USERRESERVED are reserved
- * for servers, not necessarily privileged.
- */
-#define	IPPORT_RESERVED		1024
-#define	IPPORT_USERRESERVED	5000
+/* Standard well-known ports.  */
+enum
+{
+    IPPORT_ECHO = 7,            /* Echo service.  */
+    IPPORT_DISCARD = 9,         /* Discard transmissions service.  */
+    IPPORT_SYSTAT = 11,         /* System status service.  */
+    IPPORT_DAYTIME = 13,        /* Time of day service.  */
+    IPPORT_NETSTAT = 15,        /* Network status service.  */
+    IPPORT_FTP = 21,            /* File Transfer Protocol.  */
+    IPPORT_TELNET = 23,         /* Telnet protocol.  */
+    IPPORT_SMTP = 25,           /* Simple Mail Transfer Protocol.  */
+    IPPORT_TIMESERVER = 37,     /* Timeserver service.  */
+    IPPORT_NAMESERVER = 42,     /* Domain Name Service.  */
+    IPPORT_WHOIS = 43,          /* Internet Whois service.  */
+    IPPORT_MTP = 57,
+
+    IPPORT_TFTP = 69,           /* Trivial File Transfer Protocol.  */
+    IPPORT_RJE = 77,
+    IPPORT_FINGER = 79,         /* Finger service.  */
+    IPPORT_TTYLINK = 87,
+    IPPORT_SUPDUP = 95,         /* SUPDUP protocol.  */
+
+
+    IPPORT_EXECSERVER = 512,    /* execd service.  */
+    IPPORT_LOGINSERVER = 513,   /* rlogind service.  */
+    IPPORT_CMDSERVER = 514,
+    IPPORT_EFSSERVER = 520,
+
+    /* UDP ports.  */
+    IPPORT_BIFFUDP = 512,
+    IPPORT_WHOSERVER = 513,
+    IPPORT_ROUTESERVER = 520,
+
+    /* Ports less than this value are reserved for privileged processes.  */
+    IPPORT_RESERVED = 1024,
+
+    /* Ports greater this value are reserved for (non-privileged) servers.  */
+    IPPORT_USERRESERVED = 5000
+};
 
 /*
  * Internet address (a structure for historical reasons)
  */
 struct in_addr
 {
-	unsigned long s_addr;
+    in_addr_t s_addr;
 };
 
-struct in6_addr {
-        unsigned char s6_addr[16];   /* IPv6 address */
+struct in6_addr
+{
+    union
+    {
+        uint8_t __u6_addr8[16];
+        uint16_t __u6_addr16[8];
+        uint32_t __u6_addr32[4];
+    } __in6_u;
+#define s6_addr                 __in6_u.__u6_addr8
+#ifdef __USE_MISC
+    # define s6_addr16              __in6_u.__u6_addr16
+# define s6_addr32              __in6_u.__u6_addr32
+#endif
 };
 
 /*
@@ -108,15 +164,24 @@ struct in6_addr {
 #define	INADDR_BROADCAST		0xffffffffUL	/* must be masked */
 #define	INADDR_NONE				0xffffffff		/* -1 return */
 
-#define	INADDR_UNSPEC_GROUP		0xe0000000UL	/* 224.0.0.0 */
-#define	INADDR_ALLHOSTS_GROUP	0xe0000001UL	/* 224.0.0.1 */
-#define	INADDR_MAX_LOCAL_GROUP	0xe00000ffUL	/* 224.0.0.255 */
+/* Defines for Multicast INADDR.  */
+#define INADDR_UNSPEC_GROUP     ((in_addr_t) 0xe0000000) /* 224.0.0.0 */
+#define INADDR_ALLHOSTS_GROUP   ((in_addr_t) 0xe0000001) /* 224.0.0.1 */
+#define INADDR_ALLRTRS_GROUP    ((in_addr_t) 0xe0000002) /* 224.0.0.2 */
+#define INADDR_ALLSNOOPERS_GROUP ((in_addr_t) 0xe000006a) /* 224.0.0.106 */
+#define INADDR_MAX_LOCAL_GROUP  ((in_addr_t) 0xe00000ff) /* 224.0.0.255 */
 
 #define INADDR_LOOPBACK 		0x7f000001UL	/* 127.0.0.1 */
 
 #define	IN_LOOPBACKNET			127				/* official! */
 
-#define INET_ADDRSTRLEN 		16
+
+extern const struct in6_addr in6addr_any;        /* :: */
+extern const struct in6_addr in6addr_loopback;   /* ::1 */
+#define IN6ADDR_ANY_INIT { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } } }
+#define IN6ADDR_LOOPBACK_INIT { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 } } }
+
+#define INET_ADDRSTRLEN 	16
 
 /*
  * Socket address, internet style.
@@ -169,6 +234,21 @@ struct ip_opts
 #define	IP_ADD_MEMBERSHIP	12   /* ip_mreq; add an IP group membership */
 #define	IP_DROP_MEMBERSHIP	13   /* ip_mreq; drop an IP group membership */
 
+#define IP_ROUTER_ALERT    5        /* bool */
+#define IP_PKTINFO         8        /* bool */
+#define IP_PKTOPTIONS      9
+#define IP_PMTUDISC        10        /* obsolete name? */
+#define IP_MTU_DISCOVER    10        /* int; see below */
+#define IP_RECVERR         11        /* bool */
+#define IP_RECVTTL         12        /* bool */
+#define IP_RECVTOS         13        /* bool */
+
+/* IP_MTU_DISCOVER arguments.  */
+#define IP_PMTUDISC_DONT   0        /* Never send DF frames.  */
+#define IP_PMTUDISC_WANT   1        /* Use per route hints.  */
+#define IP_PMTUDISC_DO     2        /* Always DF.  */
+#define IP_PMTUDISC_PROBE  3        /* Ignore dst pmtu.  */
+
 /*
  * Defaults and limits for options
  */
@@ -176,6 +256,7 @@ struct ip_opts
 #define	IP_DEFAULT_MULTICAST_LOOP	1	/* normally hear sends if a member  */
 #define	IP_MAX_MEMBERSHIPS			20	/* per socket; must fit in one mbuf */
 
+#ifdef __USE_MISC
 /*
  * Argument structure for IP_ADD_MEMBERSHIP and IP_DROP_MEMBERSHIP.
  */
@@ -184,6 +265,95 @@ struct ip_mreq
 	struct in_addr imr_multiaddr;	/* IP multicast address of group */
 	struct in_addr imr_interface;	/* local IP address of interface */
 };
+
+struct ip_mreq_source
+{
+    /* IP multicast address of group.  */
+    struct in_addr imr_multiaddr;
+
+    /* IP address of interface.  */
+    struct in_addr imr_interface;
+
+    /* IP address of source.  */
+    struct in_addr imr_sourceaddr;
+};
+
+struct ipv6_mreq
+{
+    /* IPv6 multicast address of group */
+    struct in6_addr ipv6mr_multiaddr;
+
+    /* local interface */
+    unsigned int ipv6mr_interface;
+};
+
+/* Multicast group request.  */
+struct group_req
+{
+    /* Interface index.  */
+    uint32_t gr_interface;
+
+    /* Group address.  */
+    struct sockaddr_storage gr_group;
+};
+
+struct group_source_req
+{
+    /* Interface index.  */
+    uint32_t gsr_interface;
+
+    /* Group address.  */
+    struct sockaddr_storage gsr_group;
+
+    /* Source address.  */
+    struct sockaddr_storage gsr_source;
+};
+
+/* Full-state filter operations.  */
+struct ip_msfilter
+{
+    /* IP multicast address of group.  */
+    struct in_addr imsf_multiaddr;
+
+    /* Local IP address of interface.  */
+    struct in_addr imsf_interface;
+
+    /* Filter mode.  */
+    uint32_t imsf_fmode;
+
+    /* Number of source addresses.  */
+    uint32_t imsf_numsrc;
+    /* Source addresses.  */
+    struct in_addr imsf_slist[1];
+};
+
+#define IP_MSFILTER_SIZE(numsrc) (sizeof (struct ip_msfilter) \
+                                  - sizeof (struct in_addr)                   \
+                                  + (numsrc) * sizeof (struct in_addr))
+
+struct group_filter
+{
+    /* Interface index.  */
+    uint32_t gf_interface;
+
+    /* Group address.  */
+    struct sockaddr_storage gf_group;
+
+    /* Filter mode.  */
+    uint32_t gf_fmode;
+
+    /* Number of source addresses.  */
+    uint32_t gf_numsrc;
+    /* Source addresses.  */
+    struct sockaddr_storage gf_slist[1];
+};
+
+#define GROUP_FILTER_SIZE(numsrc) (sizeof (struct group_filter)         \
+                                   - sizeof (struct sockaddr_storage)   \
+                                   + ((numsrc)                          \
+                                   * sizeof (struct sockaddr_storage)))
+
+#endif
 
 /*
  * Definitions for inet sysctl operations.
@@ -218,7 +388,6 @@ struct ip_mreq
 #define	NTOHS(x) (x)
 #define	HTONL(x) (x)
 #define	HTONS(x) (x)
-
 
 /* Specific IPV6 macros */
 
@@ -280,8 +449,55 @@ struct ip_mreq
 #define IN6_IS_ADDR_MC_GLOBAL(addr) \
         (IN6_IS_ADDR_MULTICAST(addr) \
          && (((const uint8_t *)(addr))[1] & 0xf) == 0xe)
-		 
-/****************************************************************************/
+
+#define IP_PORTRANGE		19 /* int; range to choose for unspec port */
+#define IPV6_PORTRANGE		14 /* int; range to choose for unspec port */
+
+/*
+ * Argument for IPV6_PORTRANGE:
+ * - which range to search when port is unspecified at bind() or connect()
+ */
+#define	IPV6_PORTRANGE_DEFAULT	0	/* default range */
+#define	IPV6_PORTRANGE_HIGH	1	/* "high" - request firewall bypass */
+#define	IPV6_PORTRANGE_LOW	2	/* "low" - vouchsafe security */
+
+/*
+ * Argument for IP_PORTRANGE:
+ * - which range to search when port is unspecified at bind() or connect()
+ */
+#define	IP_PORTRANGE_DEFAULT	0	/* default range */
+#define	IP_PORTRANGE_HIGH	1	/* "high" - request firewall bypass */
+#define	IP_PORTRANGE_LOW	2	/* "low" - vouchsafe security */
+
+#define IPV6_UNICAST_HOPS	4  /* int; IP6 hops */
+#define IPV6_MULTICAST_IF	9  /* __uint8_t; set/get IP6 multicast i/f  */
+#define IPV6_MULTICAST_HOPS	10 /* __uint8_t; set/get IP6 multicast hops */
+#define IPV6_MULTICAST_LOOP	11 /* __uint8_t; set/get IP6 mcast loopback */
+#define IPV6_JOIN_GROUP		12 /* ip6_mreq; join a group membership */
+#define IPV6_LEAVE_GROUP	13 /* ip6_mreq; leave a group membership */
+
+#ifdef __USE_MISC
+/* Bind socket to a privileged IP port.  */
+extern int bindresvport(int sd, struct sockaddr_in *sa);
+
+/* The IPv6 version of this function.  */
+extern int bindresvport6(int sd, struct sockaddr_in6 *sa);
+#endif
+
+/* IPv6 packet information.  */
+struct in6_pktinfo
+{
+    struct in6_addr ipi6_addr;  /* src/dst IPv6 address */
+    unsigned int ipi6_ifindex;  /* send/recv interface index */
+};
+
+/* IPv6 MTU information.  */
+struct ip6_mtuinfo
+{
+    struct sockaddr_in6 ip6m_addr; /* dst address including zone ID */
+    uint32_t ip6m_mtu;             /* path MTU in host byte order */
+};
+
 
 #ifdef __GNUC__
  #ifdef __PPC__
