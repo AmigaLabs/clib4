@@ -116,6 +116,7 @@ extern int errno;
 #define EOVERFLOW		84	/* Value too large to be stored in data type. */
 #define EILSEQ			85	/* Encoding error detected */
 #define EPROTO          86  /* Protocol error */
+#define ECANCELED       87  /* Operation canceled */
 #define ENOTSUP         1134 /* Not supported */
 
 __END_DECLS

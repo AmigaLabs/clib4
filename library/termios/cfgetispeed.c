@@ -9,7 +9,7 @@
 /****************************************************************************/
 
 speed_t
-cfgetispeed(struct termios *tios)
+cfgetispeed(const struct termios *tios)
 {
 	speed_t result = ERROR;
 

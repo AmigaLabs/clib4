@@ -9,7 +9,7 @@
 #endif /* _SHM_HEADERS_H */
 
 int 
-_semids(int *buf, uint32_t nids, uint32_t *idcnt)
+_semids(int32_t *buf, uint32_t nids, uint32_t *idcnt)
 {
     DECLARE_SYSVYBASE();
         

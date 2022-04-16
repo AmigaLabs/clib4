@@ -170,6 +170,12 @@ enum
 	TCION
 };
 
+#ifdef __USE_MISC
+# define CIBAUD   002003600000      /* input baud rate (not used) */
+# define CMSPAR   010000000000      /* mark or space (stick) parity */
+# define CRTSCTS  020000000000      /* flow control */
+#endif
+
 /* Prototypes. */
 
 extern int tcgetattr(int file_descriptor, struct termios *tios_p);
@@ -179,8 +185,8 @@ extern int tcdrain(int file_descriptor);
 extern int tcflush(int file_descriptor, int what);
 extern int tcflow(int file_descriptor, int action);
 extern int cfmakeraw(struct termios *tios_p);
-extern speed_t cfgetispeed(struct termios *tios_p);
-extern speed_t cfgetospeed(struct termios *tios_p);
+extern speed_t cfgetispeed(const struct termios *tios_p);
+extern speed_t cfgetospeed(const struct termios *tios_p);
 extern int cfsetispeed(struct termios *tios_p, speed_t input_speed);
 extern int cfsetospeed(struct termios *tios_p, speed_t output_speed);
 

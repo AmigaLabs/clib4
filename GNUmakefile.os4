@@ -254,6 +254,7 @@ endef
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
+	$(COPY) LICENSE* $(INSTALL_PREFIX)/
 	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
 	$(COPY) libauto.a $(INSTALL_PREFIX)/lib/
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/

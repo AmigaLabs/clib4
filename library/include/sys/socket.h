@@ -36,6 +36,7 @@ __BEGIN_DECLS
  */
 
 typedef unsigned long socklen_t;
+typedef unsigned short sa_family_t;
 
 /*
  * Types
