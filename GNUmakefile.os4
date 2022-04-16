@@ -260,5 +260,11 @@ install:
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:
-	$(DELETE) clib2.lha
-	jlha -a clib2.lha $(INSTALL_PREFIX)
+	-$(DELETE) clib2.lha
+	-$(MAKEDIR) SDK/clib2/include
+	-$(MAKEDIR) SDK/clib2/lib
+	-$(COPY) LICENSE* SDK/clib2/
+	-$(COPY) $(OUTPUT_LIB)/* SDK/clib2/lib/
+	-$(COPY) $(LIB_ROOT)/library/include/* SDK/clib2/include/
+	jlha -a clib2.lha SDK
+	-$(DELETE) SDK
