@@ -7,7 +7,7 @@
 #endif /* _WCHAR_HEADERS_H */
 
 int
-swscanf(wchar_t *s, const wchar_t *format, ...) {
+swscanf(const wchar_t *s, const wchar_t *format, ...) {
     int result = EOF;
 
     ENTER();

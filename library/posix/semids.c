@@ -8,12 +8,12 @@
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
 
-int 
-_semids(int32_t *buf, uint32_t nids, uint32_t *idcnt)
+long int
+_semids(long int *buf, uint32_t nids, long unsigned int *idcnt)
 {
     DECLARE_SYSVYBASE();
         
-    int ret = -1;
+    int32 ret = -1;
     if (__global_clib2->haveShm)
     {
         ret = semids(buf, nids, idcnt);

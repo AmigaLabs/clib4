@@ -107,7 +107,7 @@ extern wchar_t *fgetws(wchar_t *s, int n, FILE *stream);
 /****************************************************************************/
 
 extern int fwscanf(FILE *stream, const wchar_t *format, ...);
-extern int swscanf(wchar_t *s, const wchar_t *format, ...);
+extern int swscanf(const wchar_t *s, const wchar_t *format, ...);
 extern int vfwscanf(FILE *f, const wchar_t *format, va_list ap);
 extern int vswscanf(const wchar_t *s, const wchar_t *format, va_list ap);
 extern int vwscanf(const wchar_t *s, ...);  // NOT IMPLEMENTED

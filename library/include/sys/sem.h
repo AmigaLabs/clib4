@@ -28,7 +28,7 @@ extern int _semctl(int semid, int semnum, int cmd, union semun aun);
 extern int _semget(key_t key, int nsems, int flags);
 /* Operate on semaphore.  */
 extern int _semop(int semid, const struct sembuf *ops, int nops);
-extern int _semids(int *buf, uint32_t nids, uint32_t *idcnt);
+extern long int _semids(long int *buf, uint32_t nids, long unsigned int *idcnt);
 #ifdef __USE_GNU
 /* Operate on semaphore with timeout.  */
 extern int _semtimedop(int semid, const struct sembuf *ops, int nops, struct timespec *to);

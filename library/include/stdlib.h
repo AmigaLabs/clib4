@@ -66,6 +66,7 @@ extern void free(void *ptr);
 extern void *realloc(void *ptr, size_t size);
 extern void *valloc(size_t size);
 extern void *aligned_alloc(size_t alignment, size_t size);
+extern int posix_memalign(void **memptr, size_t alignment, size_t size);
 
 /****************************************************************************/
 
