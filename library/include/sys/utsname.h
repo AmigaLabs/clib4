@@ -1,5 +1,5 @@
 /*
- * $Id: utsname.h,v 1.4 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: utsname.h,v 1.5 2022-02-04 12:06:14 clib2devs Exp $
 */
 
 #ifndef	_SYS_UTSNAME_H
@@ -9,7 +9,7 @@
 
 __BEGIN_DECLS
 
-#define	SYS_NMLN 32
+#define	SYS_NMLN 65
 
 struct utsname
 {
@@ -18,6 +18,11 @@ struct utsname
 	char release[SYS_NMLN];		/* Release e.g. "51.1" (The Version of version.library) */
 	char version[SYS_NMLN];		/* Version e.h. "4.0" (OS Version) */
 	char machine[SYS_NMLN];		/* Machine e.g. "m68k" or "ppc" */
+#ifdef _GNU_SOURCE
+    char domainname[SYS_NMLN];
+#else
+    char __domainname[SYS_NMLN];
+#endif
 };
 
 extern int uname(struct utsname *);

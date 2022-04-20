@@ -22,9 +22,6 @@
 #include <arpa/nameser.h>
 #include <arpa/inet.h>
 
-#if 0
-#include <err.h>
-#endif
 #include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
@@ -43,15 +40,10 @@ static char *print_dname(const char *, char *, size_t);
 
 static void
 usage(void) {
-#ifdef __amigaos4__
     extern const char *__program_name;
 
     fprintf(stderr, "usage: %s [-deq] [-t type] [host...]\n", __program_name);
-#else
-    extern const char *__progname;
 
-    fprintf(stderr, "usage: %s [-deq] [-t type] [host...]\n", __progname);
-#endif
     exit(1);
 }
 

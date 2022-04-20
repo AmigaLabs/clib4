@@ -683,6 +683,7 @@ C_UNISTD := \
 	unistd/ftruncate.o \
 	unistd/ftruncate64.o \
 	unistd/getcwd.o \
+	unistd/getdomainname.o \
 	unistd/getlogin.o \
 	unistd/getlogin_r.o \
 	unistd/getopt.o \
@@ -705,6 +706,7 @@ C_UNISTD := \
 	unistd/realpath.o \
 	unistd/restorepathname.o \
 	unistd/setcurrentpath.o \
+	unistd/setdomainname.o \
 	unistd/sleep.o \
 	unistd/spawnv.o \
 	unistd/spawnvp.o \

@@ -1,7 +1,8 @@
 /*
- * $Id: utsname_uname.c,v 1.8 2010-08-20 15:33:36 clib2devs Exp $
+ * $Id: utsname_uname.c,v 1.6 2022-04-20 15:33:36 clib2devs Exp $
 */
 
+#define _GNU_SOURCE
 #include <sys/utsname.h>
 
 #ifndef _SOCKET_HEADERS_H
@@ -18,6 +19,7 @@ uname(struct utsname *info)
 	int Version, Revision;
 	const char *version_string;
 	int result = ERROR;
+    char domainname[MAXHOSTNAMELEN];
 
 	ENTER();
 
@@ -94,14 +96,18 @@ uname(struct utsname *info)
 		version_string = "unknown";
 
 	strlcpy(info->version, version_string, sizeof(info->version));
-
 	strlcpy(info->machine, ARCH, sizeof(info->machine));
+
+    /* Get Domain Name (if set) */
+    getdomainname(domainname, (int) sizeof(domainname));
+    strlcpy(info->domainname, domainname, sizeof(info->domainname));
 
 	SHOWSTRING(info->sysname);
 	SHOWSTRING(info->nodename);
 	SHOWSTRING(info->release);
 	SHOWSTRING(info->version);
 	SHOWSTRING(info->machine);
+    SHOWSTRING(info->domainname);
 
 	result = OK;
 
