@@ -8,6 +8,12 @@
 
 int
 sigdelset(sigset_t *set, int sig) {
+
+    ENTER();
+
+    SHOWPOINTER(set);
+    SHOWVALUE(sig);
+
     if (sig >= NSIG || sig <= 0) {
         __set_errno(errno);
         return -1;

@@ -18,6 +18,9 @@ statvfs(const char *path, struct statvfs *buf)
 
     ENTER();
 
+    SHOWSTRING(path);
+    SHOWPOINTER(buf);
+
     if (__unix_path_semantics)
     {
         if (__translate_unix_to_amiga_path_name(&path, &path_name_nti) != 0)

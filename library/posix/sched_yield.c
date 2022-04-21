@@ -8,11 +8,12 @@
 
 #include <sched.h>
 
-int 
-sched_yield(void)
-{
-       /* SetTaskPri() on the currently running task triggers a reschedule */
-       struct Task *me = FindTask(NULL);
-       SetTaskPri(me, me->tc_Node.ln_Pri);
-       return 0;
+int
+sched_yield(void) {
+    ENTER();
+
+    /* SetTaskPri() on the currently running task triggers a reschedule */
+    struct Task *me = FindTask(NULL);
+    SetTaskPri(me, me->tc_Node.ln_Pri);
+    return 0;
 }

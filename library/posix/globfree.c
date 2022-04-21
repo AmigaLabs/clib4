@@ -18,10 +18,15 @@
 
 #include <glob.h>
 
-void globfree(glob_t *pglob)
+void
+globfree(glob_t *pglob)
 {
     int i;
     char **pp;
+
+    ENTER();
+
+    SHOWPOINTER(pglob);
 
     if (pglob->gl_pathv != NULL)
     {
@@ -33,4 +38,6 @@ void globfree(glob_t *pglob)
         pglob->gl_pathv = NULL;
         pglob->gl_pathc = 0;
     }
+
+    LEAVE();
 }

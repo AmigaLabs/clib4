@@ -10,7 +10,8 @@
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
 
-static APTR hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
+static APTR
+hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
     uint32 pid = (uint32) userdata;
     (void) (hook);
 
@@ -23,6 +24,8 @@ static APTR hook_function(struct Hook *hook, APTR userdata, struct Process *proc
 
 void
 __check_abort(void) {
+    ENTER();
+
     if (__check_abort_enabled && FLAG_IS_SET(SetSignal(0, __break_signal_mask), __break_signal_mask)) {
         if (__global_clib2->tmr_real_task != NULL) {
             struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
@@ -47,4 +50,6 @@ __check_abort(void) {
         }
         raise(SIGINT);
     }
+
+    LEAVE();
 }

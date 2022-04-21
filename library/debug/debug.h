@@ -57,24 +57,24 @@
     #include <dos.h>
     #endif /* _DOS_H */
 
-    extern void kprintf(const char *format,...);
+    void kprintf(const char *format,...);
 
-    extern void _SHOWVALUE(unsigned long value,int size,const char *name,const char *file,int line);
-    extern void _SHOWPOINTER(const void *p,const char *name,const char *file,int line);
-    extern void _SHOWSTRING(const char *string,const char *name,const char *file,int line);
-    extern void _SHOWWSTRING(const wchar_t *string,const char *name,const char *file,int line);
-    extern void _SHOWMSG(const char *msg,const char *file,int line);
-    extern void _ENTER(const char *file,int line,const char *function);
-    extern void _LEAVE(const char *file,int line,const char *function);
-    extern void _RETURN(const char *file,int line,const char *function,unsigned long result);
-    extern void _DPRINTF_HEADER(const char *file,int line);
-    extern void _DPRINTF(const char *format,...);
-    extern void _DLOG(const char *format,...);
-    extern int  _SETDEBUGLEVEL(int level);
-    extern void _PUSHDEBUGLEVEL(int level);
-    extern void _POPDEBUGLEVEL(void);
-    extern int  _GETDEBUGLEVEL(void);
-    extern void _SETPROGRAMNAME(char *name);
+    void _SHOWVALUE(unsigned long value,int size,const char *name,const char *file,int line);
+    void _SHOWPOINTER(const void *p,const char *name,const char *file,int line);
+    void _SHOWSTRING(const char *string,const char *name,const char *file,int line);
+    void _SHOWWSTRING(const wchar_t *string,const char *name,const char *file,int line);
+    void _SHOWMSG(const char *msg,const char *file,int line);
+    void _ENTER(const char *file,int line,const char *function);
+    void _LEAVE(const char *file,int line,const char *function);
+    void _RETURN(const char *file,int line,const char *function,unsigned long result);
+    void _DPRINTF_HEADER(const char *file,int line);
+    void _DPRINTF(const char *format,...);
+    void _DLOG(const char *format,...);
+    int  _SETDEBUGLEVEL(int level);
+    void _PUSHDEBUGLEVEL(int level);
+    void _POPDEBUGLEVEL(void);
+    int  _GETDEBUGLEVEL(void);
+    void _SETPROGRAMNAME(char *name);
 
     #define ENTER()		        _ENTER(__FILE__, __LINE__, __FUNCTION__)
     #define LEAVE()		        _LEAVE(__FILE__, __LINE__, __FUNCTION__)

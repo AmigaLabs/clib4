@@ -10,6 +10,9 @@ int
 sigismember(const sigset_t *set, int sig) {
     ENTER();
 
+    SHOWPOINTER(set);
+    SHOWVALUE(sig);
+
     if (sig < 0 || sig > NSIG - 1) {
         SHOWMSG("invalid signal");
 

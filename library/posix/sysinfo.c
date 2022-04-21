@@ -17,7 +17,11 @@ sysinfo(int cmd, char *buf, long buflen)
 
 	ENTER();
 
-	if (buf == NULL)
+    SHOWVALUE(cmd);
+    SHOWSTRING(buf);
+    SHOWVALUE(buflen);
+
+    if (buf == NULL)
 	{
 		__set_errno(EFAULT);
 		goto out;

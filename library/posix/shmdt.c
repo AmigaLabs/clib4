@@ -13,6 +13,10 @@ _shmdt(const void *shmaddr)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWPOINTER(shmaddr);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {

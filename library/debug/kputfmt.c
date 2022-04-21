@@ -9,7 +9,6 @@
    the table. The table layout follows the format string and can include
    both 16 and 32 bit data. */
 STATIC size_t
-
 process_var_args(char *format_string, va_list argument_list, unsigned short *table) {
     size_t num_args = 0;
     char len;

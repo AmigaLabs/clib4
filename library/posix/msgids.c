@@ -13,6 +13,12 @@ _msgids(int *buf, size_t nids, size_t *pnids)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWPOINTER(buf);
+    SHOWVALUE(nids);
+    SHOWPOINTER(pnids);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {

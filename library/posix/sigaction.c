@@ -44,6 +44,11 @@ sigaction_handler(int sig) {
     sigset_t mask;
     sigset_t oldmask;
     int saved_errno = errno;
+
+    ENTER();
+
+    SHOWVALUE(sig);
+
     if (sig < 0 || NSIG <= sig || !action_array[sig].sa_handler) {
         /* Unexpected situation; be careful to avoid recursive abort.  */
         if (sig == SIGABRT)
@@ -85,6 +90,13 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
     sigset_t mask;
     sigset_t oldmask;
     int saved_errno;
+
+    ENTER();
+
+    SHOWVALUE(sig);
+    SHOWPOINTER(act);
+    SHOWPOINTER(oact);
+
     if (sig < 0 || NSIG <= sig || sig == SIGKILL || sig == SIGSTOP
         || (act && act->sa_handler == SIG_ERR)) {
         __set_errno(EINVAL);
@@ -132,7 +144,8 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
     }
     sigprocmask(SIG_SETMASK, &oldmask, NULL);
     return 0;
-    failure:
+
+failure:
     saved_errno = errno;
     sigprocmask(SIG_SETMASK, &oldmask, NULL);
     __set_errno(saved_errno);

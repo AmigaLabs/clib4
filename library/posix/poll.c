@@ -15,6 +15,14 @@ static int map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, 
     register struct pollfd *pCur;  /* current array element */
     register int max_fd = -1;      /* return value */
 
+    ENTER();
+
+    SHOWPOINTER(pArray);
+    SHOWVALUE(n_fds);
+    SHOWPOINTER(pReadSet);
+    SHOWPOINTER(pWriteSet);
+    SHOWPOINTER(pExceptSet);
+
     /*
        Map the poll() structures into the file descriptor sets required
        by select().

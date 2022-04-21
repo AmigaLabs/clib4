@@ -13,6 +13,12 @@ _shmctl(int shmid, int cmd, struct shmid_ds *cbuf)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(shmid);
+    SHOWVALUE(cmd);
+    SHOWPOINTER(cbuf);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {

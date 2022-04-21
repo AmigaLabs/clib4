@@ -13,6 +13,14 @@ _msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(msqid);
+    SHOWPOINTER(msgp);
+    SHOWVALUE(msgsz);
+    SHOWVALUE(msgtyp);
+    SHOWVALUE(msgflg);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {

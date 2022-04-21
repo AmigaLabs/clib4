@@ -12,7 +12,13 @@ int
 _semctl(int semid, int semnum, int cmd, union semun aun)
 {
     DECLARE_SYSVYBASE();
-        
+
+    ENTER();
+
+    SHOWVALUE(semid);
+    SHOWVALUE(semnum);
+    SHOWVALUE(cmd);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {
@@ -27,6 +33,7 @@ _semctl(int semid, int semnum, int cmd, union semun aun)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

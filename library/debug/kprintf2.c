@@ -4,8 +4,6 @@
 
 #include "debug_headers.h"
 
-/****************************************************************************/
-
 VOID
 KPrintF(const char * format,...)
 {

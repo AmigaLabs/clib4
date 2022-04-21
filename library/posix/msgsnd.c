@@ -15,6 +15,13 @@ _msgsnd(int msgid, const void *msg_ptr, size_t msg_sz, int msgflg)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(msgid);
+    SHOWPOINTER(msg_ptr);
+    SHOWVALUE(msg_sz);
+    SHOWVALUE(msgflg);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {

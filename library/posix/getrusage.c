@@ -24,6 +24,11 @@ getrusage(int who, struct rusage *rusage)
         return -1;
     }
 
+    ENTER();
+
+    SHOWVALUE(who);
+    SHOWPOINTER(rusage);
+
     long clock[2];
     int status = 0;
     struct TimerIFace *ITimer = __ITimer;

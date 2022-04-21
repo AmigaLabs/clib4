@@ -4,8 +4,6 @@
 
 #include "debug_headers.h"
 
-/****************************************************************************/
-
 VOID
 KVPrintF(const char * format,va_list arg)
 {

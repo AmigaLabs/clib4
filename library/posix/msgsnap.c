@@ -13,6 +13,13 @@ _msgsnap(int msqid, void *buf, size_t bufsz, long msgtyp)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(msqid);
+    SHOWPOINTER(buf);
+    SHOWVALUE(bufsz);
+    SHOWVALUE(msgtyp);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {

@@ -749,11 +749,18 @@ compare(const void *p, const void *q)
 
 /****************************************************************************/
 
-int glob(const char *pattern, int flags, int (*errfunc)(const char *epath, int eerrno), glob_t *pglob)
+int
+glob(const char *pattern, int flags, int (*errfunc)(const char *epath, int eerrno), glob_t *pglob)
 {
     const u_char *patnext;
     int c;
     char *bufnext, *bufend, patbuf[MAXPATHLEN + 1] = {0};
+
+    ENTER();
+
+    SHOWSTRING(pattern);
+    SHOWVALUE(flags);
+    SHOWPOINTER(pglob);
 
     patnext = (const u_char *)pattern;
     if (!(flags & GLOB_APPEND))
