@@ -59,7 +59,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen)
 
 	/* Wait for the accept() to complete, then hook up the socket
 	   with a file descriptor. */
-	new_socket_fd = __accept(socket_fd, cliaddr, (LONG *)addrlen);
+	new_socket_fd = __accept(socket_fd, cliaddr, addrlen);
 	if (new_socket_fd < 0)
 	{
 		SHOWMSG("could not accept connection");

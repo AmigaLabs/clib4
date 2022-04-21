@@ -6,15 +6,14 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-/* Implementation based on musl */
-
-int wmemcmp(const wchar_t *ptr1, const wchar_t *ptr2, size_t len)
+int
+wmemcmp(const wchar_t *ptr1, const wchar_t *ptr2, size_t len)
 {
 	size_t i;
 
-	for (i = 0; i < len; i++)
+    ENTER();
+
+    for (i = 0; i < len; i++)
 	{
 		if (*ptr1 != *ptr2)
 		{

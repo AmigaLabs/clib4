@@ -11,7 +11,9 @@ wcslen(const wchar_t *s)
 {
 	const wchar_t *p;
 
-	p = s;
+    ENTER();
+
+    p = s;
 	while (*p)
 		p++;
 

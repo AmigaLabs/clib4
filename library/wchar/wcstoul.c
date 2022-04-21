@@ -17,9 +17,11 @@ wcstoul(const wchar_t *nptr, wchar_t **endptr, int base)
 	register unsigned long cutoff;
 	register int neg = 0, any, cutlim;
 
-	/*
-	 * See strtol for comments as to the logic used.
-	 */
+    ENTER();
+
+    /*
+     * See strtol for comments as to the logic used.
+     */
 	do
 	{
 		c = *s++;

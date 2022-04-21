@@ -39,7 +39,7 @@ int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optl
 	if (fd == NULL)
 		goto out;
 
-	result = __getsockopt(fd->fd_Socket, level, optname, optval, (LONG *)optlen);
+	result = __getsockopt(fd->fd_Socket, level, optname, optval, optlen);
 
 out:
 

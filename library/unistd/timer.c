@@ -42,6 +42,7 @@ CLIB_CONSTRUCTOR(timer_init)
 
 	ENTER();
 
+
 	__timer_port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
 	if (__timer_port == NULL)
 	{

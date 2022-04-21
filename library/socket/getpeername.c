@@ -38,7 +38,7 @@ getpeername(int sockfd, struct sockaddr *name, socklen_t *namelen)
 	if (fd == NULL)
 		goto out;
 
-	result = __getpeername(fd->fd_Socket, name, (LONG *)namelen);
+	result = __getpeername(fd->fd_Socket, name, namelen);
 
 out:
 

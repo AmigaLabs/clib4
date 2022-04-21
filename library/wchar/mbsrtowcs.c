@@ -15,6 +15,8 @@ mbsrtowcs(wchar_t *restrict ws, const char **restrict src, size_t wn, mbstate_t 
 	size_t wn0 = wn;
 	unsigned c = 0;
 
+    ENTER();
+
 	if (st && (c = *(unsigned *)st))
 	{
 		if (ws)

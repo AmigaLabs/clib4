@@ -17,7 +17,9 @@ wcstoull(const wchar_t *nptr, wchar_t **endptr, int base)
 	register unsigned long long cutoff;
 	register int neg = 0, any, cutlim;
 
-	if (base < 0 || base == 1 || base > 36)
+    ENTER();
+
+    if (base < 0 || base == 1 || base > 36)
 	{
 		__set_errno(EINVAL);
 		return (0ULL);

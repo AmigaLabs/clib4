@@ -14,6 +14,8 @@ fputwc(wchar_t wc, FILE *fp)
     char buf[MB_LEN_MAX] = {0};
     size_t i, len;
 
+    ENTER();
+
     if (MB_CUR_MAX == 1 && wc > 0 && wc <= UCHAR_MAX)
     {
         /*

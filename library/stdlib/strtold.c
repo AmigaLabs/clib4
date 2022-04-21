@@ -28,7 +28,6 @@ strtold(const char *str, char **ptr)
     ENTER();
 
     SHOWSTRING(str);
-    SHOWVALUE(base);
 
     assert(str != NULL);
 

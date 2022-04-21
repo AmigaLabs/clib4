@@ -11,5 +11,7 @@
 int
 mbsinit(const mbstate_t *ps)
 {
+    ENTER();
+
 	return !ps || !*(unsigned *)ps;
 }

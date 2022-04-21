@@ -9,5 +9,7 @@
 wint_t
 getwc(FILE *stream)
 {
+    ENTER();
+
     return fgetwc(stream);
 }

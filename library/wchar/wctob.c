@@ -6,15 +6,15 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 int wctob(wint_t c)
 {
 	mbstate_t mbs;
 	int retval = 0;
 	char pwc;
 
-	/* Put mbs in initial state. */
+    ENTER();
+
+    /* Put mbs in initial state. */
 	memset(&mbs, '\0', sizeof(mbs));
 
 	retval = _wctomb_r(&pwc, c, &mbs);

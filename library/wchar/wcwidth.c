@@ -11,6 +11,8 @@
 int 
 wcwidth(const wchar_t wc)
 {
+    ENTER();
+
     if (iswprint(wc))
         return 1;
     if (iswcntrl(wc) || wc == L'\0')

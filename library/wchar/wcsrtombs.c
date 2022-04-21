@@ -9,5 +9,7 @@
 size_t
 wcsrtombs(char *s, const wchar_t **ws, size_t n, mbstate_t *st)
 {
-	return wcsnrtombs(s, ws, (size_t) -1, n, st);
+    ENTER();
+
+    return wcsnrtombs(s, ws, (size_t) -1, n, st);
 }

@@ -7,8 +7,10 @@
 #endif /* _WCHAR_HEADERS_H */
 
 int
-wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n)
-{
-	for (; n && *s1==*s2 && *s1 && *s2; n--, s1++, s2++);
-	return n ? *s1 - *s2 : 0;
+wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n) {
+    ENTER();
+
+    for (; n && *s1 == *s2 && *s1 && *s2; n--, s1++, s2++);
+
+    return n ? *s1 - *s2 : 0;
 }

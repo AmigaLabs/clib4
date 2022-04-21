@@ -41,7 +41,7 @@ recvfrom(int sockfd, void *buff, size_t len, int flags, struct sockaddr *from, s
 	if (fd == NULL)
 		goto out;
 
-	result = __recvfrom(fd->fd_Socket, buff, len, flags, from, (LONG *)fromlen);
+	result = __recvfrom(fd->fd_Socket, buff, len, flags, from, fromlen);
 
 out:
 

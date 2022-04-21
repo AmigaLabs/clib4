@@ -11,5 +11,7 @@
 int
 iswupper(wint_t c)
 {
+    ENTER();
+
 	return (towlower (c) != c);
 }

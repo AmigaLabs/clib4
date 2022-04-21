@@ -9,5 +9,7 @@
 wint_t
 getwchar(void)
 {
+    ENTER();
+
     return fgetwc(stdin);
 }

@@ -15,6 +15,8 @@ wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps
     size_t n;
     int i;
 
+    ENTER();
+
     if (ps == NULL)
     {
         ps = &__global_clib2->wide_status->_wcsrtombs_state;

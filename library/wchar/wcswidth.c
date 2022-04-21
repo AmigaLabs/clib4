@@ -10,6 +10,9 @@ int
 wcswidth(const wchar_t *pwcs, size_t n)
 {
     int w, len = 0;
+
+    ENTER();
+
     if (!pwcs || n == 0)
         return 0;
     do

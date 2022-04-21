@@ -19,11 +19,13 @@ wcstoll(const wchar_t *nptr, wchar_t **endptr, int base)
 	register unsigned long long cutoff;
 	register int neg = 0, any, cutlim;
 
-	/*
-	 * Skip white space and pick up leading +/- sign if any.
-	 * If base is 0, allow 0x for hex and 0 for octal, else
-	 * assume decimal; if base is already 16, allow 0x.
-	 */
+    ENTER();
+
+    /*
+     * Skip white space and pick up leading +/- sign if any.
+     * If base is 0, allow 0x for hex and 0 for octal, else
+     * assume decimal; if base is already 16, allow 0x.
+     */
 	do
 	{
 		c = *s++;

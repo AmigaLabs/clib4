@@ -12,7 +12,7 @@ swscanf(const wchar_t *s, const wchar_t *format, ...) {
 
     ENTER();
 
-    SHOWSTRING(format);
+    SHOWWSTRING(format);
 
     assert(format != NULL);
 

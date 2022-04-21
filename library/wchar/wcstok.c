@@ -15,7 +15,9 @@ wcstok(wchar_t *s, const wchar_t *delim, wchar_t **lasts)
 	register int c, sc;
 	wchar_t *tok;
 
-	if (s == NULL && (s = *lasts) == NULL)
+    ENTER();
+
+    if (s == NULL && (s = *lasts) == NULL)
 		return (NULL);
 
 	/*

@@ -13,9 +13,10 @@
 #include <exec/emulation.h>
 #endif /* EXEC_EMULATION_H */
 
-
+#ifndef __amigaos4__
 #define SysBase (*(struct Library **)4)
 #define IExec ((struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface)
+#endif
 
 /****************************************************************************/
 

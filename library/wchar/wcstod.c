@@ -20,7 +20,9 @@ wcstod(const wchar_t *nptr, wchar_t **endptr)
 	const wchar_t *wcp;
 	size_t len;
 
-	while (iswspace(*nptr))
+    ENTER();
+
+    while (iswspace(*nptr))
 		nptr++;
 
 	/*

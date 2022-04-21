@@ -88,9 +88,9 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/mount
 
 OPTIONS    := -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib
-OPTIMIZE   := -DNDEBUG -O3 -mmultiple -mupdate -mstrict-align
+OPTIMIZE   := -O3 -mmultiple -mupdate -mstrict-align
 
-DEBUG      := -gstabs
+DEBUG      := -gstabs -DDEBUG
 
 CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
 CFLAGS_N   := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES)

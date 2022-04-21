@@ -11,5 +11,7 @@
 wint_t
 putwchar(wchar_t c)
 {
+    ENTER();
+
 	return fputwc(c, stdout);
 }

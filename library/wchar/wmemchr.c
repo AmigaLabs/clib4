@@ -11,6 +11,8 @@ wmemchr(const wchar_t *ptr, wchar_t val, size_t len)
 {
 	size_t i;
 
+    ENTER();
+
     if (ptr == NULL) {
         return NULL;
     }

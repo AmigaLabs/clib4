@@ -11,6 +11,8 @@ fwide(FILE *fp, int mode)
 {
 	int ret;
 
+    ENTER();
+
 	flockfile(fp);
 	if (mode != 0)
 	{

@@ -9,5 +9,7 @@
 int
 iswalnum(wint_t c)
 {
+    ENTER();
+
 	return iswdigit(c) || iswalpha(c);
 }

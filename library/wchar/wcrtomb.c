@@ -11,7 +11,9 @@
 size_t
 wcrtomb(char *s, wchar_t wchar, mbstate_t *state)
 {
-	if (strlen(__global_clib2->_current_locale) <= 1)
+    ENTER();
+
+    if (strlen(__global_clib2->_current_locale) <= 1)
 	{ /* fall-through */
 	}
 	else if (!strcmp(__global_clib2->_current_locale, "C-UTF-8"))

@@ -41,6 +41,8 @@ int _mbtowc(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
     wchar_t dummy;
     unsigned char *t = (unsigned char *) s;
 
+    ENTER();
+
     if (pwc == NULL)
         pwc = &dummy;
 

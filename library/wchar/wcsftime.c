@@ -14,7 +14,9 @@ wcsftime(wchar_t *w, size_t sz, const wchar_t *fmt, const struct tm *v)
 	size_t bsz = ((sz + 1) * sizeof(wchar_t));
 	const struct tm *ptm = (const struct tm *)v;
 
-	if ((!w) || (!fmt) || (!sz) || (!v))
+    ENTER();
+
+    if ((!w) || (!fmt) || (!sz) || (!v))
 	{
 		__set_errno(EINVAL);
 		return 0U;

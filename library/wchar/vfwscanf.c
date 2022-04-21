@@ -21,8 +21,11 @@
 #define SIZE_L 2
 #define SIZE_ll 3
 
-static void store_int(void *dest, int size, unsigned long long i)
+static void
+store_int(void *dest, int size, unsigned long long i)
 {
+    ENTER();
+
     if (!dest)
         return;
     switch (size)
@@ -45,11 +48,15 @@ static void store_int(void *dest, int size, unsigned long long i)
     }
 }
 
-static void *arg_n(va_list ap, unsigned int n)
+static void *
+arg_n(va_list ap, unsigned int n)
 {
     void *p;
     unsigned int i;
     va_list ap2;
+
+    ENTER();
+
     va_copy(ap2, ap);
     for (i = n; i > 1; i--)
         va_arg(ap2, void *);
@@ -58,10 +65,14 @@ static void *arg_n(va_list ap, unsigned int n)
     return p;
 }
 
-static int in_set(const wchar_t *set, int c)
+static int
+in_set(const wchar_t *set, int c)
 {
     int j;
     const wchar_t *p = set;
+
+    ENTER();
+
     if (*p == '-')
     {
         if (c == '-')
@@ -86,7 +97,8 @@ static int in_set(const wchar_t *set, int c)
     return 0;
 }
 
-int vfwscanf(FILE *f, const wchar_t *format, va_list ap)
+int
+vfwscanf(FILE *f, const wchar_t *format, va_list ap)
 {
     int width = 0;
     int size = 0;

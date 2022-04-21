@@ -17,6 +17,8 @@ fputws(const wchar_t *ws, FILE *fp)
 	int nwritten = 0;
 	int nchars = (int)wcslen(ws);
 
+    ENTER();
+
 	while (nchars > 0)
 	{
 		int nbytes = 0;

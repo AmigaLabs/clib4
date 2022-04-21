@@ -15,6 +15,8 @@ wcsstr(const wchar_t *big, const wchar_t *little)
     unsigned int i;
     wchar_t *p = (wchar_t *)big;
 
+    ENTER();
+
     if (!p)
         return NULL;
 
@@ -39,6 +41,8 @@ wcsstr(const wchar_t *big, const wchar_t *little)
     const wchar_t *p;
     const wchar_t *q;
     const wchar_t *r;
+
+    ENTER();
 
     if (!*little)
     {

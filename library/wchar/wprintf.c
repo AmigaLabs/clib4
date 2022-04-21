@@ -13,7 +13,7 @@ wprintf(const wchar_t *format, ...)
 
     ENTER();
 
-    SHOWSTRING(format);
+    SHOWWSTRING(format);
 
     assert(format != NULL);
 

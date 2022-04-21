@@ -48,14 +48,14 @@
 
 /****************************************************************************/
 
-extern void KPrintF(const char * format,...);
-extern void KPutFmt(const char * format,va_list arg);
+extern void KPrintF(const char *format, ...);
+extern void KPutFmt(const char *format, va_list arg);
 
 /****************************************************************************/
 
-#define DEBUGLEVEL_OnlyAsserts	0
-#define DEBUGLEVEL_Reports	1
-#define DEBUGLEVEL_CallTracing	2
+#define DEBUGLEVEL_OnlyAsserts    0
+#define DEBUGLEVEL_Reports    1
+#define DEBUGLEVEL_CallTracing    2
 
 /****************************************************************************/
 
@@ -68,275 +68,201 @@ static int indent_level = 0;
 static char program_name[40];
 static int program_name_len = 0;
 
-/****************************************************************************/
-
 void
-_SETPROGRAMNAME(char *name)
-{
-	if(name != NULL && name[0] != '\0')
-	{
-		int i;
+_SETPROGRAMNAME(char *name) {
+    if (name != NULL && name[0] != '\0') {
+        int i;
 
-		for(i = 0 ; name[i] != '\0' && i < (int)sizeof(program_name)-1 ; i++)
-			program_name[i] = name[i];
+        for (i = 0; name[i] != '\0' && i < (int) sizeof(program_name) - 1; i++)
+            program_name[i] = name[i];
 
-		program_name[i] = '\0';
+        program_name[i] = '\0';
 
-		program_name_len = i;
-	}
-	else
-	{
-		program_name_len = 0;
-	}
+        program_name_len = i;
+    } else {
+        program_name_len = 0;
+    }
 }
-
-/****************************************************************************/
 
 int
-_SETDEBUGLEVEL(int level)
-{
-	int old_level = __debug_level;
+_SETDEBUGLEVEL(int level) {
+    int old_level = __debug_level;
 
-	__debug_level = level;
+    __debug_level = level;
 
-	return(old_level);
+    return (old_level);
 }
-
-/****************************************************************************/
 
 int
-_GETDEBUGLEVEL(void)
-{
-	return(__debug_level);
+_GETDEBUGLEVEL(void) {
+    return (__debug_level);
 }
-
-/****************************************************************************/
 
 static int previous_debug_level = -1;
 
 void
-_PUSHDEBUGLEVEL(int level)
-{
-	previous_debug_level = _SETDEBUGLEVEL(level);
+_PUSHDEBUGLEVEL(int level) {
+    previous_debug_level = _SETDEBUGLEVEL(level);
 }
 
 void
-_POPDEBUGLEVEL(void)
-{
-	if(previous_debug_level != -1)
-	{
-		_SETDEBUGLEVEL(previous_debug_level);
+_POPDEBUGLEVEL(void) {
+    if (previous_debug_level != -1) {
+        _SETDEBUGLEVEL(previous_debug_level);
 
-		previous_debug_level = -1;
-	}
+        previous_debug_level = -1;
+    }
 }
-
-/****************************************************************************/
 
 STATIC VOID
-_INDENT(void)
-{
-	if(program_name_len > 0)
-		KPrintF("(%s) ",program_name);
+_INDENT(void) {
+    if (program_name_len > 0)
+        KPrintF("(%s) ", program_name);
 
-	if(__debug_level >= DEBUGLEVEL_CallTracing)
-	{
-		int i;
+    if (__debug_level >= DEBUGLEVEL_CallTracing) {
+        int i;
 
-		for(i = 0 ; i < indent_level ; i++)
-			KPrintF("   ");
-	}
-}
-
-/****************************************************************************/
-
-void
-_SHOWVALUE(
-	unsigned long value,
-	int size,
-	const char *name,
-	const char *file,
-	int line)
-{
-	if(__debug_level >= DEBUGLEVEL_Reports)
-	{
-		const char *fmt;
-
-		switch(size)
-		{
-			case 1:
-
-				fmt = "%s:%ld:%s = %ld, 0x%02lx";
-				break;
-
-			case 2:
-
-				fmt = "%s:%ld:%s = %ld, 0x%04lx";
-				break;
-
-			default:
-
-				fmt = "%s:%ld:%s = %ld, 0x%08lx";
-				break;
-		}
-
-		_INDENT();
-
-		KPrintF(fmt,file,line,name,value,value);
-
-		if(size == 1 && value < 256)
-		{
-			if(value < ' ' || (value >= 127 && value < 160))
-				KPrintF(", '\\x%02lx'",value);
-			else
-				KPrintF(", '%lc'",value);
-		}
-
-		KPrintF("\n");
-	}
-}
-
-/****************************************************************************/
-
-void
-_SHOWPOINTER(
-	const void *pointer,
-	const char *name,
-	const char *file,
-	int line)
-{
-	if(__debug_level >= DEBUGLEVEL_Reports)
-	{
-		const char *fmt;
-
-		_INDENT();
-
-		if(pointer != NULL)
-			fmt = "%s:%ld:%s = 0x%08lx\n";
-		else
-			fmt = "%s:%ld:%s = NULL\n";
-
-		KPrintF(fmt,file,line,name,pointer);
-	}
-}
-
-/****************************************************************************/
-
-void
-_SHOWSTRING(
-	const char *string,
-	const char *name,
-	const char *file,
-	int line)
-{
-	if(__debug_level >= DEBUGLEVEL_Reports)
-	{
-		_INDENT();
-		KPrintF("%s:%ld:%s = 0x%08lx \"%s\"\n",file,line,name,string,string);
-	}
-}
-
-/****************************************************************************/
-
-void
-_SHOWMSG(
-	const char *string,
-	const char *file,
-	int line)
-{
-	if(__debug_level >= DEBUGLEVEL_Reports)
-	{
-		_INDENT();
-		KPrintF("%s:%ld:%s\n",file,line,string);
-	}
-}
-
-/****************************************************************************/
-
-void
-_DPRINTF_HEADER(
-	const char *file,
-	int line)
-{
-	if(__debug_level >= DEBUGLEVEL_Reports)
-	{
-		_INDENT();
-		KPrintF("%s:%ld:",file,line);
-	}
+        for (i = 0; i < indent_level; i++)
+            KPrintF("   ");
+    }
 }
 
 void
-_DPRINTF(const char *fmt,...)
+_SHOWVALUE(unsigned long value, int size, const char *name, const char *file, int line)
 {
-	if(__debug_level >= DEBUGLEVEL_Reports)
-	{
-		va_list args;
+    if (__debug_level >= DEBUGLEVEL_Reports) {
+        const char *fmt;
 
-		va_start(args,fmt);
-		KPutFmt(fmt,args);
-		va_end(args);
+        switch (size) {
+            case 1:
 
-		KPrintF("\n");
-	}
+                fmt = "%s:%ld:%s = %ld, 0x%02lx";
+                break;
+
+            case 2:
+
+                fmt = "%s:%ld:%s = %ld, 0x%04lx";
+                break;
+
+            default:
+
+                fmt = "%s:%ld:%s = %ld, 0x%08lx";
+                break;
+        }
+
+        _INDENT();
+
+        KPrintF(fmt, file, line, name, value, value);
+
+        if (size == 1 && value < 256) {
+            if (value < ' ' || (value >= 127 && value < 160))
+                KPrintF(", '\\x%02lx'", value);
+            else
+                KPrintF(", '%lc'", value);
+        }
+
+        KPrintF("\n");
+    }
 }
 
 void
-_DLOG(const char *fmt,...)
-{
-	if(__debug_level >= DEBUGLEVEL_Reports)
-	{
-		va_list args;
+_SHOWPOINTER(const void *pointer, const char *name, const char *file, int line) {
+    if (__debug_level >= DEBUGLEVEL_Reports) {
+        const char *fmt;
 
-		va_start(args,fmt);
-		KPutFmt(fmt,args);
-		va_end(args);
-	}
-}
+        _INDENT();
 
-/****************************************************************************/
+        if (pointer != NULL)
+            fmt = "%s:%ld:%s = 0x%08lx\n";
+        else
+            fmt = "%s:%ld:%s = NULL\n";
 
-void
-_ENTER(
-	const char *file,
-	int line,
-	const char *function)
-{
-	if(__debug_level >= DEBUGLEVEL_CallTracing)
-	{
-		_INDENT();
-		KPrintF("%s:%ld:Entering %s\n",file,line,function);
-	}
-
-	indent_level++;
+        KPrintF(fmt, file, line, name, pointer);
+    }
 }
 
 void
-_LEAVE(
-	const char *file,
-	int line,
-	const char *function)
-{
-	indent_level--;
-
-	if(__debug_level >= DEBUGLEVEL_CallTracing)
-	{
-		_INDENT();
-		KPrintF("%s:%ld: Leaving %s\n",file,line,function);
-	}
+_SHOWSTRING(const char *string, const char *name, const char *file, int line) {
+    if (__debug_level >= DEBUGLEVEL_Reports) {
+        _INDENT();
+        KPrintF("%s:%ld:%s = 0x%08lx \"%s\"\n", file, line, name, string, string);
+    }
 }
 
 void
-_RETURN(
-	const char *file,
-	int line,
-	const char *function,
-	unsigned long result)
-{
-	indent_level--;
+_SHOWWSTRING(const wchar_t *string, const char *name, const char *file, int line) {
+    if (__debug_level >= DEBUGLEVEL_Reports) {
+        _INDENT();
+        KPrintF("%s:%ld:%s = 0x%08lx \"%s\"\n", file, line, name, string, string);
+    }
+}
 
-	if(__debug_level >= DEBUGLEVEL_CallTracing)
-	{
-		_INDENT();
-		KPrintF("%s:%ld: Leaving %s (result 0x%08lx, %ld)\n",file,line,function,result,result);
-	}
+void
+_SHOWMSG(const char *string, const char *file, int line) {
+    if (__debug_level >= DEBUGLEVEL_Reports) {
+        _INDENT();
+        KPrintF("%s:%ld:%s\n", file, line, string);
+    }
+}
+
+void
+_DPRINTF_HEADER(const char *file, int line) {
+    if (__debug_level >= DEBUGLEVEL_Reports) {
+        _INDENT();
+        KPrintF("%s:%ld:", file, line);
+    }
+}
+
+void
+_DPRINTF(const char *fmt, ...) {
+    if (__debug_level >= DEBUGLEVEL_Reports) {
+        va_list args;
+
+        va_start(args, fmt);
+        KPutFmt(fmt, args);
+        va_end(args);
+
+        KPrintF("\n");
+    }
+}
+
+void
+_DLOG(const char *fmt, ...) {
+    if (__debug_level >= DEBUGLEVEL_Reports) {
+        va_list args;
+
+        va_start(args, fmt);
+        KPutFmt(fmt, args);
+        va_end(args);
+    }
+}
+
+void
+_ENTER(const char *file, int line, const char *function) {
+    if (__debug_level >= DEBUGLEVEL_CallTracing) {
+        _INDENT();
+        KPrintF("%s:%ld:Entering %s\n", file, line, function);
+    }
+
+    indent_level++;
+}
+
+void
+_LEAVE(const char *file, int line, const char *function) {
+    indent_level--;
+
+    if (__debug_level >= DEBUGLEVEL_CallTracing) {
+        _INDENT();
+        KPrintF("%s:%ld: Leaving %s\n", file, line, function);
+    }
+}
+
+void
+_RETURN(const char *file, int line, const char *function, unsigned long result) {
+    indent_level--;
+
+    if (__debug_level >= DEBUGLEVEL_CallTracing) {
+        _INDENT();
+        KPrintF("%s:%ld: Leaving %s (result 0x%08lx, %ld)\n", file, line, function, result, result);
+    }
 }

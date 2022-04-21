@@ -11,6 +11,7 @@
 size_t
 wcstombs(char *s, const wchar_t *ws, size_t n)
 {
+    ENTER();
 
     return wcsrtombs(s, &(const wchar_t *)
     {

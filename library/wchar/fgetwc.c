@@ -10,8 +10,11 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-wint_t __fgetwc_unlocked_internal(FILE *f)
+wint_t
+__fgetwc_unlocked_internal(FILE *f)
 {
+    ENTER();
+
 	wchar_t wc;
 	int c;
 	size_t l = 0;

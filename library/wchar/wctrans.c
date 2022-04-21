@@ -13,7 +13,9 @@
 wctrans_t
 wctrans(const char *property)
 {
-	if (!strcmp(property, "tolower"))
+    ENTER();
+
+    if (!strcmp(property, "tolower"))
 		return WCT_TOLOWER;
 	else if (!strcmp(property, "toupper"))
 		return WCT_TOUPPER;

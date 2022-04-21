@@ -9,5 +9,7 @@
 wchar_t *
 wmemcpy(wchar_t *dest, const wchar_t *src, size_t len)
 {
-	return (wchar_t *)memcpy(dest, src, len * sizeof(wchar_t));
+    ENTER();
+
+    return (wchar_t *)memcpy(dest, src, len * sizeof(wchar_t));
 }

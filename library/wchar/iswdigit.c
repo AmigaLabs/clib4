@@ -8,10 +8,10 @@
 
 #include <ctype.h>
 
-/****************************************************************************/
-
-int 
+int
 iswdigit(wint_t c)
 {
+    ENTER();
+
 	return (unsigned)c - '0' < 10;
 }

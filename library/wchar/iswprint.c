@@ -18,6 +18,9 @@ int
 iswprint(wint_t c)
 {
 	int unicode = 0;
+
+    ENTER();
+
 	if (__global_clib2->_current_locale[0] == 'C' && __global_clib2->_current_locale[1] == '\0')
 	{
 		unicode = 0;

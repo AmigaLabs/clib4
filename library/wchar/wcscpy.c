@@ -9,7 +9,9 @@
 wchar_t *
 wcscpy(wchar_t *dest, const wchar_t *src)
 {
-	wchar_t *a = dest;
+    ENTER();
+
+    wchar_t *a = dest;
 	while ((*dest++ = *src++));
 	return a;
 }

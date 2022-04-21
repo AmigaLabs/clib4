@@ -6,8 +6,6 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 int
 fwscanf(FILE *stream, const wchar_t *format, ...)
 {
@@ -15,7 +13,7 @@ fwscanf(FILE *stream, const wchar_t *format, ...)
 
     ENTER();
 
-    SHOWSTRING(format);
+    SHOWWSTRING(format);
 
     assert(format != NULL);
 

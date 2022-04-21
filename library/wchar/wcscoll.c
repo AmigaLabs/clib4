@@ -9,5 +9,7 @@
 int
 wcscoll(const wchar_t *ws1, const wchar_t *ws2)
 {
-	return wcscmp (ws1, ws2);
+    ENTER();
+
+    return wcscmp (ws1, ws2);
 }

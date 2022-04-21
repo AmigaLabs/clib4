@@ -11,6 +11,9 @@ wchar_t *
 wcsrchr(const wchar_t *wcs, const wchar_t wc)
 {
     const wchar_t *p;
+
+    ENTER();
+
     p = wcs;
     while (*p)
         p++;
