@@ -193,7 +193,13 @@ void
 _SHOWWSTRING(const wchar_t *string, const char *name, const char *file, int line) {
     if (__debug_level >= DEBUGLEVEL_Reports) {
         _INDENT();
-        KPrintF("%s:%ld:%s = 0x%08lx \"%s\"\n", file, line, name, string, string);
+        char buf[BUFSIZ] = {0};
+        char *ptr = (char *)&buf;
+        int n = wctomb(ptr, *string);
+        if (n > 0)
+            KPrintF("%s:%ld:%s = 0x%08lx \"%s\" (converted from wchar_t *)\n", file, line, name, string, ptr);
+        else
+            KPrintF("%s:%ld:%s = 0x%08lx\n", file, line, name, string);
     }
 }
 

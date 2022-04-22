@@ -13,7 +13,11 @@ llabs(long long x)
 {
 	long long result;
 
-	result = (x < 0) ? (-x) : x;
+    ENTER();
+    SHOWVALUE(x);
 
+    result = (x < 0) ? (-x) : x;
+
+    RETURN(result);
 	return(result);
 }

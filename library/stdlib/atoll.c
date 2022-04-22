@@ -11,7 +11,10 @@ atoll(const char *str)
 {
 	long long result = 0;
 
-	assert( str != NULL );
+    ENTER();
+    SHOWSTRING(str);
+
+    assert( str != NULL );
 
 		if(str == NULL)
 		{
@@ -22,6 +25,6 @@ atoll(const char *str)
 	result = strtoll(str, (char **)NULL, 10);
 
  out:
-
+    RETURN(result);
 	return(result);
 }

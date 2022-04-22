@@ -15,7 +15,8 @@ __exit_value = RETURN_FAIL;
 jmp_buf NOCOMMON
 __exit_jmp_buf;
 
-static APTR hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
+static APTR
+hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
     uint32 pid = (uint32) userdata;
     (void) (hook);
 
@@ -29,6 +30,9 @@ static APTR hook_function(struct Hook *hook, APTR userdata, struct Process *proc
 void
 _exit(int return_code) {
     __exit_value = return_code;
+
+    ENTER();
+    SHOWVALUE(return_code);
 
     /*  If we have a previous timer running task stop it before raise SIGINT  */
     if (__global_clib2->tmr_real_task) {
@@ -55,6 +59,8 @@ _exit(int return_code) {
 
     /* Dump all currently unwritten data, especially to the console. */
     __flush_all_files(-1);
+
+    LEAVE();
 
     longjmp(__exit_jmp_buf, 1);
 }

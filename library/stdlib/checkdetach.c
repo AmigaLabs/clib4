@@ -6,6 +6,4 @@
 #include <exec/types.h>
 #endif /* EXEC_TYPES_H */
 
-/****************************************************************************/
-
 BOOL (* __check_detach)(void);

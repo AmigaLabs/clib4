@@ -14,11 +14,11 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 void
 abort(void)
 {
+    ENTER();
+
 	/* Try to call the signal handler that might be in charge of
 	   handling cleanup operations, etc. */
 	raise(SIGABRT);
@@ -29,6 +29,8 @@ abort(void)
 	__check_abort_enabled = FALSE;
 
 	__print_termination_message(NULL);
+
+    LEAVE();
 
 	/* Note that we drop into the exit() function which
 	   does not trigger the exit trap. */

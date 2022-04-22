@@ -19,6 +19,9 @@
 void
 free(void *ptr)
 {
+    ENTER();
+    SHOWPOINTER(ptr);
+
     BOOL found = FALSE;
     struct MemalignEntry *e = NULL;
     /* Check if we have something created by memalign */
@@ -44,4 +47,6 @@ free(void *ptr)
         wof_free(__wof_allocator, ptr);
 
     __memory_unlock();
+
+    LEAVE();
 }

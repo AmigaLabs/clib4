@@ -11,6 +11,9 @@ atof(const char *str)
 {
 	double result = 0.0;
 
+    ENTER();
+    SHOWSTRING(str);
+
 	assert(str != NULL);
 
 	if (str == NULL)
@@ -22,6 +25,6 @@ atof(const char *str)
 	result = strtod(str, NULL);
 
 out:
-
+    RETURN(result);
 	return (result);
 }

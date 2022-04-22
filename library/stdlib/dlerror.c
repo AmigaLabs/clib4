@@ -9,11 +9,13 @@
 #include <dlfcn.h>
 #include <libraries/elf.h>
 
-const char * dlerror(void)
-{
-	const char * result;
+const char *
+dlerror(void) {
+	const char *result;
 
-	switch(__global_clib2->__elf_error_code)
+    ENTER();
+
+    switch(__global_clib2->__elf_error_code)
 	{
 		case ELF32_NO_ERROR:
 
@@ -80,5 +82,6 @@ const char * dlerror(void)
 	if (__global_clib2 != NULL)
 		__global_clib2->__elf_error_code = ELF32_NO_ERROR;
 
+    RETURN(result);
 	return(result);
 }

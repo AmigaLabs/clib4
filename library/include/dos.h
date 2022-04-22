@@ -140,20 +140,6 @@ extern BOOL __never_free;
 /****************************************************************************/
 
 /*
- * Before memory is allocated, a quick check can be performed in order
- * to avoid draining so much system memory that both the operating system
- * and application software becomes unstable. This test checks for the
- * largest available block of memory, which has to be larger than a
- * threshold value for the memory allocation to proceed. That size
- * can be configured here. It defaults to 0, which means that no test
- * is performed. If this feature is enabled, a minimum threshold value
- * of 250000 bytes is recommended.
- */
-extern ULONG __free_memory_threshold;
-
-/****************************************************************************/
-
-/*
  * You can monitor how much memory, and in how many chunks, is allocated
  * over the lifetime of your program. Call the following function with
  * non-NULL parameters to obtain the current state of memory allocations.

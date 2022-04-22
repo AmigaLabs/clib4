@@ -24,7 +24,10 @@ rand_r(unsigned int * seed)
 {
 	int X;
 
-	X = (int)((*seed) & 0x7fffffff);
+    ENTER();
+    SHOWPOINTER(seed);
+
+    X = (int)((*seed) & 0x7fffffff);
 	if(X == 0)
 		X = 1; /* NOTE: for Knuth's algorithm the seed must not be zero. */
 
@@ -34,5 +37,6 @@ rand_r(unsigned int * seed)
 
 	(*seed) = (unsigned int)X;
 
+    RETURN(X);
 	return(X);
 }

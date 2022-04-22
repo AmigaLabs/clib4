@@ -11,6 +11,9 @@ void __srandom(unsigned seed) {
     int k;
     uint64_t s = seed;
 
+    ENTER();
+    SHOWVALUE(seed);
+
     if (__global_clib2->n == 0) {
         __global_clib2->x[0] = s;
         return;
@@ -23,6 +26,8 @@ void __srandom(unsigned seed) {
     }
     /* make sure x contains at least one odd number */
     __global_clib2->x[0] |= 1;
+
+    LEAVE();
 }
 
 void

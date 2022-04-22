@@ -6,10 +6,13 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 void
 __set_errno(int new_errno)
 {
+    ENTER();
+    SHOWVALUE(new_errno);
+
 	errno = new_errno;
+
+    LEAVE();
 }

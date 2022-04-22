@@ -3,9 +3,7 @@
 */
 
 #ifndef _STDLIB_HEADERS_H
-
 #include "stdlib_headers.h"
-
 #endif /* _STDLIB_HEADERS_H */
 
 #include <math.h>
@@ -18,6 +16,11 @@ lltoa(int64_t value, char *string, int radix) {
     unsigned long long v;
     int sign;
     char *sp;
+
+    ENTER();
+    SHOWVALUE(value);
+    SHOWPOINTER(string);
+    SHOWVALUE(radix);
 
     if (radix > 36 || radix <= 1) {
         errno = EDOM;
@@ -42,8 +45,10 @@ lltoa(int64_t value, char *string, int radix) {
     }
 
     if (string == NULL)
-        if (!(string = (char *) malloc(tmp - tp + sign + 1)))
+        if (!(string = (char *) malloc(tmp - tp + sign + 1))) {
+            RETURN(NULL);
             return NULL;
+        }
     sp = string;
 
     if (sign)
@@ -52,5 +57,6 @@ lltoa(int64_t value, char *string, int radix) {
         *sp++ = *--tp;
     *sp = '\0';
 
+    RETURN(string);
     return string;
 }

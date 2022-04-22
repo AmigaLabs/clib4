@@ -11,7 +11,10 @@ rand(void)
 {
 	int result;
 
+    ENTER();
+
 	result = rand_r(&__global_clib2->__random_seed);
 
+    RETURN(result);
 	return(result);
 }

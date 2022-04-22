@@ -6,8 +6,6 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 void
 __get_mem_stats(size_t * current_memory,size_t * max_memory,size_t * current_chunks,size_t * max_chunks)
 {

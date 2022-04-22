@@ -6,6 +6,4 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 BOOL __expand_wildcard_args = TRUE;

@@ -8,9 +8,18 @@
 
 #include <unistd.h>
 
-char *secure_getenv(const char *name) {
- 	if (geteuid () != getuid () || getegid () != getgid ())
-		return NULL;
- 	return getenv(name);
+char *
+secure_getenv(const char *name) {
+    ENTER();
+    SHOWSTRING(name);
+
+    if (geteuid() != getuid() || getegid() != getgid()) {
+        RETURN(NULL);
+        return NULL;
+    }
+    char *env = getenv(name);
+
+    RETURN(env);
+    return env;
 }
 

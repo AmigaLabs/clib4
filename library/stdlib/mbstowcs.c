@@ -6,10 +6,16 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 size_t
 mbstowcs(wchar_t *ws, const char *s, size_t wn)
 {
-	return mbsrtowcs(ws, (void*)&s, wn, 0);
+    ENTER();
+    SHOWPOINTER(ws);
+    SHOWSTRING(s);
+    SHOWVALUE(wn);
+
+    size_t result = mbsrtowcs(ws, (void*)&s, wn, 0);
+
+    RETURN(result);
+    return result;
 }

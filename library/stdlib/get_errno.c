@@ -6,10 +6,11 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 int
 __get_errno(void)
 {
+    ENTER();
+
+    RETURN(errno);
 	return(errno);
 }

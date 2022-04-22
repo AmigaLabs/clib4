@@ -18,7 +18,8 @@
 
 /****************************************************************************/
 
-int system(const char *command)
+int
+system(const char *command)
 {
 	char *command_copy = NULL;
 	int result;

@@ -10,11 +10,16 @@
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
-void *dlsym(void *handle, const char *symbol_name)
+void *
+dlsym(void *handle, const char *symbol_name)
 {
 	void *result = NULL;
 
-	if (__global_clib2->__dl_elf_handle != NULL)
+    ENTER();
+    SHOWPOINTER(handle);
+    SHOWSTRING(symbol_name);
+
+    if (__global_clib2->__dl_elf_handle != NULL)
 	{
 		struct ElfIFace *IElf = __global_clib2->IElf;
 		APTR symbol_data = NULL;
@@ -33,6 +38,6 @@ void *dlsym(void *handle, const char *symbol_name)
 	}
 	
 out:
-
+    RETURN(result);
 	return (result);
 }

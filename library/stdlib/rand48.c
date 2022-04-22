@@ -31,18 +31,33 @@ iterate48(unsigned short subi[3])
 double 
 erand48(unsigned short subi[3])
 {
+    ENTER();
+
     uint64_t r = iterate48(subi);
-    return ((double)r) / 281474976710655.;
+    double result = ((double)r) / 281474976710655.;
+
+    RETURN(result);
+    return result;
 }
 
 long 
 jrand48(unsigned short subi[3])
 {
-    return ((int64_t)iterate48(subi)) >> 16;
+    ENTER();
+
+    long result = ((int64_t)iterate48(subi)) >> 16;
+
+    RETURN(result);
+    return result;
 }
 
 long 
 nrand48(unsigned short subi[3])
 {
-    return iterate48(subi) >> 17;
+    ENTER();
+
+    long result = iterate48(subi) >> 17;
+
+    RETURN(result);
+    return result;
 }

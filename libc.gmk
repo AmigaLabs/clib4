@@ -510,7 +510,6 @@ C_STDLIB := \
 	stdlib/system.o \
 	stdlib/sysvbase.o \
 	stdlib/termination_message.o \
-	stdlib/threshold.o \
 	stdlib/utilitybase.o \
 	stdlib/udivsi3.o \
 	stdlib/udivsi4.o \

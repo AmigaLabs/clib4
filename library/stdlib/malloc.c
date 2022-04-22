@@ -31,12 +31,19 @@ malloc(size_t size)
 {
 	void *result = NULL;
 
-	__memory_lock();
+    ENTER();
+    SHOWVALUE(size);
+
+    __memory_lock();
 
     result = wof_alloc(__wof_allocator, size);
 
     __memory_unlock();
-	return (result);
+
+    SHOWPOINTER(result);
+    LEAVE();
+
+    return (result);
 }
 
 void __memory_lock(void)

@@ -6,17 +6,19 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 div_t
-div(int n,int d)
-{
-	div_t result;
+div(int n, int d) {
+    div_t result;
 
-	assert( d != 0 );
+    ENTER();
+    SHOWVALUE(n);
+    SHOWVALUE(d);
 
-	result.quot	= n / d;
-	result.rem	= n % d;
+    assert(d != 0);
 
-	return(result);
+    result.quot = n / d;
+    result.rem = n % d;
+
+    LEAVE();
+    return (result);
 }

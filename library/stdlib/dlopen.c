@@ -6,17 +6,20 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 #include <dlfcn.h>
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
-void *dlopen(const char *path_name, int mode)
+void *
+dlopen(const char *path_name, int mode)
 {
 	void *result = NULL;
 
-	if (path_name == NULL || path_name[0] == '\0') {
+    ENTER();
+    SHOWSTRING(path_name);
+    SHOWVALUE(mode);
+
+    if (path_name == NULL || path_name[0] == '\0') {
 		__set_errno(ENOENT);
 		goto out;
 	}
@@ -53,5 +56,6 @@ void *dlopen(const char *path_name, int mode)
 	}
 out:
 
+    RETURN(result);
 	return (result);
 }

@@ -1,4 +1,3 @@
-#include <stdlib.h>
 /*
  * $Id: stdlib_atoff.c,v 1.0 2021-03-29 16:34:25 clib2devs Exp $
 */
@@ -10,5 +9,7 @@
 float 
 atoff(const char *nptr)
 {
+    ENTER();
+    LEAVE();
     return strtof(nptr, NULL);
 }
