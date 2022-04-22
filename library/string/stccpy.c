@@ -6,8 +6,14 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-size_t stccpy(char *dest, const char *src, size_t n) {
+size_t
+stccpy(char *dest, const char *src, size_t n) {
     char *ptr = dest;
+
+    ENTER();
+    SHOWSTRING(dest);
+    SHOWSTRING(src);
+    SHOWVALUE(n);
 
     while (n > 1 && *src) {
         *ptr = *src;
@@ -18,5 +24,6 @@ size_t stccpy(char *dest, const char *src, size_t n) {
 
     *ptr++ = '\0';
 
+    LEAVE();
     return (ptr - dest);
 }

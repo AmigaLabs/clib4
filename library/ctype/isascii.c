@@ -9,5 +9,11 @@
 int 
 isascii(int c)
 {
-	return c >= 0 && c < 128;
+    ENTER();
+    SHOWVALUE(c);
+
+    int result = c >= 0 && c < 128;
+
+    RETURN(result);
+    return result;
 }

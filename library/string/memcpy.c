@@ -14,6 +14,11 @@ void *
 memcpy(void *dst, const void *src, size_t len) {
     void *result = dst;
 
+    ENTER();
+    SHOWPOINTER(dst);
+    SHOWPOINTER(src);
+    SHOWVALUE(len);
+
     assert((len == 0) || (dst != NULL && src != NULL && (int) len > 0));
 
     if (dst == NULL || src == NULL) {
@@ -33,7 +38,8 @@ memcpy(void *dst, const void *src, size_t len) {
     } else
         __set_errno(EFAULT);
 
-    out:
+out:
 
+    RETURN(result);
     return (result);
 }

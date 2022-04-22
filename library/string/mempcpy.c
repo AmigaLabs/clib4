@@ -44,6 +44,11 @@ mempcpy(void *dst0, const void *src0, size_t len0)
     const long *aligned_src;
     int len = len0;
 
+    ENTER();
+    SHOWPOINTER(dst0);
+    SHOWPOINTER(src0);
+    SHOWVALUE(len0);
+
     /* If the size is small, or either SRC or DST is unaligned,
      then punt into the byte copy loop.  This should be rare.  */
     if (!TOO_SMALL(len) && !UNALIGNED(src, dst))
@@ -76,5 +81,7 @@ mempcpy(void *dst0, const void *src0, size_t len0)
     while (len--)
         *dst++ = *src++;
 
+    SHOWPOINTER(dst);
+    LEAVE();
     return dst;
 }

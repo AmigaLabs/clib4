@@ -6,17 +6,19 @@
 #include "inttypes_headers.h"
 #endif /* _INTTYPES_HEADERS_H */
 
-/****************************************************************************/
-
 imaxdiv_t
-imaxdiv(intmax_t n,intmax_t d)
-{
-	imaxdiv_t result;
+imaxdiv(intmax_t n, intmax_t d) {
+    imaxdiv_t result;
 
-	assert( d != 0 );
+    ENTER();
+    SHOWVALUE(n);
+    SHOWVALUE(d);
 
-	result.quot	= n / d;
-	result.rem	= n % d;
+    assert(d != 0);
 
-	return(result);
+    result.quot = n / d;
+    result.rem = n % d;
+
+    LEAVE();
+    return (result);
 }

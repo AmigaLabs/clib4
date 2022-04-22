@@ -6,34 +6,32 @@
 #include "ctype_headers.h"
 #endif /* _CTYPE_HEADERS_H */
 
-/****************************************************************************/
-
 int
-tolower(int c)
-{
-	DECLARE_LOCALEBASE();
-	int result;
+tolower(int c) {
+    DECLARE_LOCALEBASE();
+    int result;
 
-	__locale_lock();
+    ENTER();
+    SHOWVALUE(c);
 
-	if(__locale_table[LC_CTYPE] != NULL)
-	{
-		assert( LocaleBase != NULL );
+    __locale_lock();
 
-		/* The parameter must be either EOF or in the range of an
-		   'unsigned char'. If it's not, then the behaviour is
-		   undefined. */
-		if(c != EOF && ((0 <= c && c <= UCHAR_MAX) || ((c + 256) <= UCHAR_MAX)))
-			result = ConvToLower(__locale_table[LC_CTYPE],(ULONG)(c & 255));
-		else
-			result = c;
-	}
-	else
-	{
-		result = ('A' <= c && c <= 'Z') ? (c + ('a' - 'A')) : c;
-	}
+    if (__locale_table[LC_CTYPE] != NULL) {
+        assert(LocaleBase != NULL);
 
-	__locale_unlock();
+        /* The parameter must be either EOF or in the range of an
+           'unsigned char'. If it's not, then the behaviour is
+           undefined. */
+        if (c != EOF && ((0 <= c && c <= UCHAR_MAX) || ((c + 256) <= UCHAR_MAX)))
+            result = ConvToLower(__locale_table[LC_CTYPE], (ULONG)(c & 255));
+        else
+            result = c;
+    } else {
+        result = ('A' <= c && c <= 'Z') ? (c + ('a' - 'A')) : c;
+    }
 
-	return(result);
+    __locale_unlock();
+
+    RETURN(result);
+    return (result);
 }

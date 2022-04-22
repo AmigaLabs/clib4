@@ -6,17 +6,18 @@
 #include "inttypes_headers.h"
 #endif /* _INTTYPES_HEADERS_H */
 
-/****************************************************************************/
-
 intmax_t
-imaxabs(intmax_t x)
-{
-	intmax_t result;
+imaxabs(intmax_t x) {
+    intmax_t result;
 
-	if(x < 0)
-		result = (-x);
-	else
-		result = x;
+    ENTER();
+    SHOWVALUE(x);
 
-	return(result);
+    if (x < 0)
+        result = (-x);
+    else
+        result = x;
+
+    RETURN(result);
+    return (result);
 }

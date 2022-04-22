@@ -8,8 +8,14 @@
 #include "ctype_headers.h"
 #endif /* _CTYPE_HEADERS_H */
 
-int 
-toascii(int c)
-{
-    return (c)&0177;
+int
+toascii(int c) {
+
+    ENTER();
+    SHOWVALUE(c);
+
+    int result = (c) & 0177;
+
+    RETURN(result);
+    return result;
 }

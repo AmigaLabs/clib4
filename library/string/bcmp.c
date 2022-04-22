@@ -7,14 +7,13 @@
 #endif /* _STRING_HEADERS_H */
 
 int
-bcmp(const void *a,const void *b,size_t len)
-{
-	int result;
+bcmp(const void *a, const void *b, size_t len) {
+    int result;
 
-	assert( a != NULL && b != NULL );
-	assert( (int)len >= 0 );
+    assert(a != NULL && b != NULL);
+    assert((int) len >= 0);
 
-	result = memcmp(a,b,len);
+    result = memcmp(a, b, len);
 
-	return(result);
+    return (result);
 }
