@@ -11,10 +11,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-int __flush_iob_write_buffer(struct iob *file)
-{
+int
+__flush_iob_write_buffer(struct iob *file) {
 	int result = OK;
 
 	ENTER();

@@ -19,11 +19,10 @@
 
 static const char *rangematch(const char *pattern, char test, int flags);
 
-int fnmatch(const char *pattern, const char *string, int flags) {
+int
+fnmatch(const char *pattern, const char *string, int flags) {
     const char *stringstart;
     char c, test;
-
-    ENTER();
 
     SHOWSTRING(pattern);
     SHOWSTRING(string);

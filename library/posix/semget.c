@@ -34,6 +34,7 @@ _semget(key_t key, int nsems, int flags)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

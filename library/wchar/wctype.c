@@ -11,59 +11,62 @@
 #endif /* _WCTYPE_HEADERS_H */
 
 wctype_t
-wctype(const char *property)
-{
+wctype(const char *property) {
     ENTER();
 
-    switch (*property)
-	{
+    wctype_t result = 0;
+
+    switch (*property) {
         case 'a':
             if (!strcmp(property, "alnum"))
-                return WC_ALNUM;
+                result = WC_ALNUM;
             else if (!strcmp(property, "alpha"))
-                return WC_ALPHA;
+                result = WC_ALPHA;
             break;
         case 'b':
             if (!strcmp(property, "blank"))
-                return WC_BLANK;
+                result = WC_BLANK;
             break;
         case 'c':
             if (!strcmp(property, "cntrl"))
-                return WC_CNTRL;
+                result = WC_CNTRL;
             break;
         case 'd':
             if (!strcmp(property, "digit"))
-                return WC_DIGIT;
+                result = WC_DIGIT;
             break;
         case 'g':
             if (!strcmp(property, "graph"))
-                return WC_GRAPH;
+                result = WC_GRAPH;
             break;
         case 'l':
             if (!strcmp(property, "lower"))
-                return WC_LOWER;
+                result = WC_LOWER;
             break;
         case 'p':
             if (!strcmp(property, "print"))
-                return WC_PRINT;
+                result = WC_PRINT;
             else if (!strcmp(property, "punct"))
-                return WC_PUNCT;
+                result = WC_PUNCT;
             break;
         case 's':
             if (!strcmp(property, "space"))
-                return WC_SPACE;
+                result = WC_SPACE;
             break;
         case 'u':
             if (!strcmp(property, "upper"))
-                return WC_UPPER;
+                result = WC_UPPER;
             break;
         case 'x':
             if (!strcmp(property, "xdigit"))
-                return WC_XDIGIT;
+                result = WC_XDIGIT;
             break;
-	}
+        default:
+            result = 0;
+            __set_errno(EINVAL);
+            break;
+    }
 
-	/* otherwise invalid */
-	__set_errno(EINVAL);
-	return 0;
+    RETURN(result);
+    return result;
 }

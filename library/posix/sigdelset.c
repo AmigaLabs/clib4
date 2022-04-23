@@ -16,8 +16,11 @@ sigdelset(sigset_t *set, int sig) {
 
     if (sig >= NSIG || sig <= 0) {
         __set_errno(errno);
+        RETURN(-1);
         return -1;
     }
     *set &= ~(1 << (sig - 1));
+
+    RETURN(0);
     return 0;
 }

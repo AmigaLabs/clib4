@@ -9,27 +9,26 @@
 #include "wchar_wprintf_core.h"
 
 wchar_t *
-wcspbrk(const wchar_t *s, const wchar_t *set)
-{
-	const wchar_t *p;
-	const wchar_t *q;
+wcspbrk(const wchar_t *s, const wchar_t *set) {
+    const wchar_t *p;
+    const wchar_t *q;
 
     ENTER();
 
     p = s;
-	while (*p)
-	{
-		q = set;
-		while (*q)
-		{
-			if (*p == *q)
-			{
-				/* LINTED interface specification */
-				return (wchar_t *)p;
-			}
-			q++;
-		}
-		p++;
-	}
-	return NULL;
+    while (*p) {
+        q = set;
+        while (*q) {
+            if (*p == *q) {
+                /* LINTED interface specification */
+                LEAVE();
+                return (wchar_t *) p;
+            }
+            q++;
+        }
+        p++;
+    }
+
+    LEAVE();
+    return NULL;
 }

@@ -11,50 +11,45 @@
 #endif /* __resolve_fd_file */
 
 BPTR
-__resolve_fd_file(struct fd *fd)
-{
-	BPTR file;
+__resolve_fd_file(struct fd *fd) {
+    BPTR file;
 
-	/* Is this one the standard I/O streams for which the associated file
-	   handle should be determined dynamically? */
-	if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO))
-	{
-		switch (fd->fd_File)
-		{
-		case STDIN_FILENO:
+    /* Is this one the standard I/O streams for which the associated file
+       handle should be determined dynamically? */
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO)) {
+        switch (fd->fd_File) {
+            case STDIN_FILENO:
 
-			file = Input();
-			break;
+                file = Input();
+                break;
 
-		case STDOUT_FILENO:
+            case STDOUT_FILENO:
 
-			file = Output();
-			break;
+                file = Output();
+                break;
 
-		case STDERR_FILENO:
+            case STDERR_FILENO:
 
-			file = ErrorOutput();
+                file = ErrorOutput();
 
-			/* The following is rather controversial; if the standard error stream
-				   is unavailable, we default to reuse the standard output stream. This
-				   is problematic if the standard output stream was redirected and should
-				   not be the same as the standard error output stream. */
-			if (file == ZERO)
-				file = Output();
+                /* The following is rather controversial; if the standard error stream
+                       is unavailable, we default to reuse the standard output stream. This
+                       is problematic if the standard output stream was redirected and should
+                       not be the same as the standard error output stream. */
+                if (file == ZERO)
+                    file = Output();
 
-			break;
+                break;
 
-		default:
+            default:
 
-			file = ZERO;
-			break;
-		}
-	}
-	else
-	{
-		/* Just return what's there. */
-		file = fd->fd_File;
-	}
+                file = ZERO;
+                break;
+        }
+    } else {
+        /* Just return what's there. */
+        file = fd->fd_File;
+    }
 
-	return (file);
+    return (file);
 }

@@ -10,7 +10,11 @@
 
 
 FILE *
-tmpfile64(void)
-{
-    return tmpfile();
+tmpfile64(void) {
+    ENTER();
+
+    FILE *file = tmpfile();
+
+    LEAVE();
+    return file;
 }

@@ -10,6 +10,4 @@
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
 
-/****************************************************************************/
-
 ULONG __break_signal_mask = SIGBREAKF_CTRL_C;

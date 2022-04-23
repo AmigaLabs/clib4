@@ -34,6 +34,7 @@ _msgsnap(int msqid, void *buf, size_t bufsz, long msgtyp)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

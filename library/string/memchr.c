@@ -137,11 +137,6 @@ memchr(const void *ptr, int val, size_t len)
 	const unsigned char *m = ptr;
 	void *result = NULL;
 
-    ENTER();
-    SHOWPOINTER(ptr);
-    SHOWVALUE(val);
-    SHOWVALUE(len);
-
 	assert(ptr != NULL);
 	assert((int)len >= 0);
 
@@ -174,7 +169,5 @@ memchr(const void *ptr, int val, size_t len)
 
 out:
 
-    SHOWPOINTER(result);
-    LEAVE();
 	return (result);
 }

@@ -6,18 +6,16 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 #undef putchar
 
-/****************************************************************************/
-
 int
-putchar(int c)
-{
-	int result;
+putchar(int c) {
+    int result;
 
-	result = fputc(c,stdout);
+    ENTER();
 
-	return(result);
+    result = fputc(c, stdout);
+
+    LEAVE();
+    return (result);
 }

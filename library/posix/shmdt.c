@@ -30,6 +30,8 @@ _shmdt(const void *shmaddr)
     {
         __set_errno(ENOSYS);
     }
+
+    RETURN(ret);
     return ret;
 }
 

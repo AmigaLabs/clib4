@@ -33,6 +33,7 @@ _shmids(int *buf, size_t nids, size_t *idcnt)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

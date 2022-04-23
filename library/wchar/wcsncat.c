@@ -15,5 +15,7 @@ wcsncat(wchar_t *dest, const wchar_t *src, size_t n)
 	dest += wcslen(dest);
 	while (n && *src) n--, *dest++ = *src++;
 	*dest++ = 0;
+
+    LEAVE();
 	return a;
 }

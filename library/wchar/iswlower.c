@@ -9,9 +9,6 @@
 #include <ctype.h>
 
 int
-iswlower(wint_t c)
-{
-    ENTER();
-
-	return (towupper(c) != c);
+iswlower(wint_t c) {
+    return (towupper(c) != c);
 }

@@ -6,12 +6,12 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 int
-mbsinit(const mbstate_t *ps)
-{
+mbsinit(const mbstate_t *ps) {
     ENTER();
 
-	return !ps || !*(unsigned *)ps;
+    int result = !ps || !*(unsigned *) ps;
+
+    RETURN(result);
+    return result;
 }

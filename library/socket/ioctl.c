@@ -13,18 +13,17 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 
-int 
-ioctl(int sockfd, int request, ... /* char *arg */)
-{
-	va_list arg;
-	char *param;
-	struct fd *fd = NULL;
-	int result = ERROR;
+int
+ioctl(int sockfd, int request, ... /* char *arg */) {
+    va_list arg;
+    char *param;
+    struct fd *fd = NULL;
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(sockfd);
-	SHOWVALUE(request);
+    SHOWVALUE(sockfd);
+    SHOWVALUE(request);
 
     if (request != TIOCGWINSZ && request != TIOCSWINSZ) {
         assert(__SocketBase != NULL);
@@ -41,7 +40,8 @@ ioctl(int sockfd, int request, ... /* char *arg */)
         __fd_lock(fd);
 
         va_start(arg, request);
-        param = va_arg(arg, char *);
+        param = va_arg(arg,
+        char *);
         va_end(arg);
 
         SHOWPOINTER(param);
@@ -65,12 +65,12 @@ ioctl(int sockfd, int request, ... /* char *arg */)
         }
 
         __fd_unlock(fd);
-    }
-    else if (request == TIOCGWINSZ) {
+    } else if (request == TIOCGWINSZ) {
         struct winsize *size;
         // Get them from console device
         va_start(arg, request);
-        size = va_arg(arg, struct winsize *);
+        size = va_arg(arg,
+        struct winsize *);
         va_end(arg);
 
         if (size == NULL) {
@@ -80,14 +80,14 @@ ioctl(int sockfd, int request, ... /* char *arg */)
         /* Set fixed rows and cols at moment */
         size->ws_row = 80;
         size->ws_col = 23;
-    }
-    else if (request == TIOCGWINSZ) {
+    } else if (request == TIOCGWINSZ) {
         // TIOCSWINSZ
 
         struct winsize *size;
         // Get them from console device
         va_start(arg, request);
-        size = va_arg(arg, struct winsize *);
+        size = va_arg(arg,
+        struct winsize *);
         va_end(arg);
 
         if (size == NULL) {
@@ -100,9 +100,9 @@ ioctl(int sockfd, int request, ... /* char *arg */)
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

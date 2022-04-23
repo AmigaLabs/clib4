@@ -6,8 +6,12 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-ssize_t 
-getline(char **lineptr, size_t *n,FILE *stream)
-{
-    return getdelim(lineptr, n, '\n', stream);
+ssize_t
+getline(char **lineptr, size_t *n, FILE *stream) {
+    ENTER();
+
+    ssize_t result = getdelim(lineptr, n, '\n', stream);
+
+    LEAVE();
+    return(result);
 }

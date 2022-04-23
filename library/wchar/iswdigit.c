@@ -9,9 +9,11 @@
 #include <ctype.h>
 
 int
-iswdigit(wint_t c)
-{
+iswdigit(wint_t c) {
     ENTER();
 
-	return (unsigned)c - '0' < 10;
+    int result = (unsigned) c - '0' < 10;
+
+    RETURN(result);
+    return result;
 }

@@ -14,11 +14,6 @@ void *
 memcpy(void *dst, const void *src, size_t len) {
     void *result = dst;
 
-    ENTER();
-    SHOWPOINTER(dst);
-    SHOWPOINTER(src);
-    SHOWVALUE(len);
-
     assert((len == 0) || (dst != NULL && src != NULL && (int) len > 0));
 
     if (dst == NULL || src == NULL) {
@@ -35,11 +30,11 @@ memcpy(void *dst, const void *src, size_t len) {
 
         /* memcpy will use Exec CopyMem that is ALWAYS optimized for any platform */
         CopyMem((unsigned char *) src, (unsigned char *) dst, len);
-    } else
+    } else {
         __set_errno(EFAULT);
+    }
 
 out:
 
-    RETURN(result);
     return (result);
 }

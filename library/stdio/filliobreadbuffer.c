@@ -56,7 +56,7 @@ __fill_iob_read_buffer(struct iob *file) {
 
     result = OK;
 
-    out:
+out:
 
     RETURN(result);
     return (result);

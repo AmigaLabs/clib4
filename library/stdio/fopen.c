@@ -7,8 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 FILE *
-fopen(const char *filename, const char *mode)
-{
+fopen(const char *filename, const char *mode) {
 	FILE *result = NULL;
 	int slot_number;
 

@@ -7,9 +7,6 @@
 #endif /* _WCHAR_HEADERS_H */
 
 wint_t
-getwc(FILE *stream)
-{
-    ENTER();
-
+getwc(FILE *stream) {
     return fgetwc(stream);
 }

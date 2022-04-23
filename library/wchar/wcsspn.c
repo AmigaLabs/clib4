@@ -9,28 +9,28 @@
 #include "wchar_wprintf_core.h"
 
 size_t
-wcsspn(const wchar_t *s, const wchar_t *set)
-{
-	const wchar_t *p;
-	const wchar_t *q;
+wcsspn(const wchar_t *s, const wchar_t *set) {
+    const wchar_t *p;
+    const wchar_t *q;
 
     ENTER();
 
     p = s;
-	while (*p)
-	{
-		q = set;
-		while (*q)
-		{
-			if (*p == *q)
-				break;
-			q++;
-		}
-		if (!*q)
-			goto done;
-		p++;
-	}
+    while (*p) {
+        q = set;
+        while (*q) {
+            if (*p == *q)
+                break;
+            q++;
+        }
+        if (!*q)
+            goto done;
+        p++;
+    }
 
 done:
-	return (p - s);
+
+    size_t result = p - s;
+    RETURN(result);
+    return result;
 }

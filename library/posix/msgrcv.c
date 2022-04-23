@@ -35,6 +35,7 @@ _msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

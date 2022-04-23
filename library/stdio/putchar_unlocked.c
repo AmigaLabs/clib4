@@ -12,6 +12,9 @@ int
 putchar_unlocked(int c) {
     int result = EOF;
 
+    ENTER();
+    SHOWVALUE(c);
+
     assert(stdout != NULL);
 
     if (stdout == NULL) {
@@ -23,5 +26,6 @@ putchar_unlocked(int c) {
 
 out:
 
+    RETURN(result);
     return (result);
 }

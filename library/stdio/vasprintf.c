@@ -74,8 +74,6 @@ out:
     return (result);
 }
 
-/****************************************************************************/
-
 int
 vasprintf(char **ret, const char *format, va_list arg) {
     int result;

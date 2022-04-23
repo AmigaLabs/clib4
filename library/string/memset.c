@@ -15,11 +15,6 @@ memset(void *ptr, int val, size_t len) {
 	void *result = ptr;
 	unsigned char *m = ptr;
 
-    ENTER();
-    SHOWPOINTER(ptr);
-    SHOWVALUE(val);
-    SHOWVALUE(len);
-
     DECLARE_UTILITYBASE();
 
 	assert((len == 0) || (ptr != NULL && (int)len > 0));
@@ -47,7 +42,5 @@ memset(void *ptr, int val, size_t len) {
 
 out:
 
-    SHOWPOINTER(result);
-    LEAVE();
 	return (result);
 }

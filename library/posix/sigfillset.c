@@ -13,5 +13,7 @@ sigfillset(sigset_t *set) {
     SHOWPOINTER(set);
 
     *set = ~((sigset_t) 0);
+
+    RETURN(0);
     return 0;
 }

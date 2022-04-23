@@ -33,6 +33,7 @@ _semids(long int *buf, uint32_t nids, long unsigned int *idcnt)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

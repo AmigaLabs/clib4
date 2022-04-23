@@ -14,7 +14,5 @@ int msync(void *addr, size_t len, int flags) {
     (void)(len);
     (void)(flags);
 
-    ENTER();
-
     return 0;
 }

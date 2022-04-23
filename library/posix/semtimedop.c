@@ -29,6 +29,7 @@ _semtimedop(int semid, const struct sembuf *ops, int nops, struct timespec *to) 
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

@@ -7,9 +7,6 @@
 #endif /* _WCTYPE_HEADERS_H */
 
 int
-iswalnum(wint_t c)
-{
-    ENTER();
-
-	return iswdigit(c) || iswalpha(c);
+iswalnum(wint_t c) {
+    return iswdigit(c) || iswalpha(c);
 }

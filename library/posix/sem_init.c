@@ -18,6 +18,7 @@ sem_init(sem_t *sem, int pshared, unsigned int value) {
     isem = malloc(sizeof(isem_t));
     if (isem == NULL) {
         __set_errno(ENOMEM);
+        RETURN(-1);
         return -1;
     }
 
@@ -26,5 +27,7 @@ sem_init(sem_t *sem, int pshared, unsigned int value) {
     isem->value = value;
 
     *sem = isem;
+
+    RETURN(0);
     return 0;
 }

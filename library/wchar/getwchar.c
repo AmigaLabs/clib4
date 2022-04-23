@@ -7,9 +7,6 @@
 #endif /* _WCHAR_HEADERS_H */
 
 wint_t
-getwchar(void)
-{
-    ENTER();
-
+getwchar(void) {
     return fgetwc(stdin);
 }

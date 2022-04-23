@@ -8,8 +8,7 @@
 
 /* Find the last occurrence of WC in WCS.  */
 wchar_t *
-wcsrchr(const wchar_t *wcs, const wchar_t wc)
-{
+wcsrchr(const wchar_t *wcs, const wchar_t wc) {
     const wchar_t *p;
 
     ENTER();
@@ -17,14 +16,16 @@ wcsrchr(const wchar_t *wcs, const wchar_t wc)
     p = wcs;
     while (*p)
         p++;
-    while (wcs <= p)
-    {
-        if (*p == wc)
-        {
+
+    while (wcs <= p) {
+        if (*p == wc) {
             /* LINTED interface specification */
-            return (wchar_t *)p;
+            LEAVE();
+            return (wchar_t *) p;
         }
         p--;
     }
+
+    LEAVE();
     return NULL;
 }

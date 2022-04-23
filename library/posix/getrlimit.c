@@ -82,5 +82,6 @@ getrlimit(int resource, struct rlimit *rlp) {
 
 out:
 
+    RETURN(ret);
     return (ret);
 }

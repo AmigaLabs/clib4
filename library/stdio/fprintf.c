@@ -6,7 +6,6 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-
 int
 fprintf(FILE *stream, const char *format, ...) {
     int result = EOF;

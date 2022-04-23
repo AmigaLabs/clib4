@@ -6,12 +6,12 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 int
-__unlockfile(FILE *stream,int c)
-{
-	funlockfile(stream);
+__unlockfile(FILE *stream, int c) {
+    ENTER();
 
-	return(c);
+    funlockfile(stream);
+
+    RETURN(c);
+    return (c);
 }

@@ -17,10 +17,7 @@
 #undef free
 
 void
-free(void *ptr)
-{
-    ENTER();
-    SHOWPOINTER(ptr);
+free(void *ptr) {
 
     BOOL found = FALSE;
     struct MemalignEntry *e = NULL;
@@ -32,7 +29,7 @@ free(void *ptr)
         }
     }
 
-	__memory_lock();
+    __memory_lock();
 
     if (found) {
         /* Free memory */
@@ -42,11 +39,9 @@ free(void *ptr)
         AVL_RemNodeByAddress(&__global_clib2->__memalign_tree, &e->me_AvlNode);
         ItemPoolFree(__global_clib2->__memalign_pool, e);
         e = NULL;
-    }
-    else
+    } else {
         wof_free(__wof_allocator, ptr);
+    }
 
     __memory_unlock();
-
-    LEAVE();
 }

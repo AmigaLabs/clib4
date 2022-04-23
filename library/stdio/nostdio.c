@@ -6,6 +6,4 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 BOOL NOCOMMON __no_standard_io;

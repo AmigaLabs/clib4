@@ -7,9 +7,8 @@
 #endif /* _WCHAR_HEADERS_H */
 
 int
-wprintf(const wchar_t *format, ...)
-{
-	int result = EOF;
+wprintf(const wchar_t *format, ...) {
+    int result = EOF;
 
     ENTER();
 
@@ -20,18 +19,17 @@ wprintf(const wchar_t *format, ...)
     if (__check_abort_enabled)
         __check_abort();
 
-    if (format == NULL)
-    {
+    if (format == NULL) {
         __set_errno(EFAULT);
         goto out;
     }
 
-	va_list ap;
-	va_start(ap, format);
+    va_list ap;
+    va_start(ap, format);
     result = vfwprintf(stdout, format, ap);
-	va_end(ap);
+    va_end(ap);
 
 out:
     RETURN(result);
-	return (result);
+    return (result);
 }

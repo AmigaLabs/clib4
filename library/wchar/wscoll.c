@@ -6,12 +6,7 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
-int 
-wscoll(const wchar_t *s1, const wchar_t *s2)
-{
-    ENTER();
-
+int
+wscoll(const wchar_t *s1, const wchar_t *s2) {
     return wcscmp(s1, s2);
 }

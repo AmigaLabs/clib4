@@ -11,6 +11,9 @@ perror(const char *s) {
     char *error_message;
     int error = __get_errno();
 
+    ENTER();
+    SHOWSTRING(s);
+
     if (s != NULL)
         fprintf(stderr, "%s: ", s);
 
@@ -22,4 +25,6 @@ perror(const char *s) {
         fprintf(stderr, "error %d", error);
 
     fprintf(stderr, "\n");
+
+    LEAVE();
 }

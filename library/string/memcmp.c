@@ -123,11 +123,6 @@ int
 memcmp(const void *ptr1, const void *ptr2, size_t len) {
 	int result = 0;
 
-    ENTER();
-    SHOWPOINTER(ptr1);
-    SHOWPOINTER(ptr2);
-    SHOWVALUE(len);
-
 	assert(ptr1 != NULL && ptr2 != NULL);
 	assert((int)len >= 0);
 
@@ -170,6 +165,5 @@ memcmp(const void *ptr1, const void *ptr2, size_t len) {
 
 out:
 
-    RETURN(result);
 	return (result);
 }

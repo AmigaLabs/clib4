@@ -11,9 +11,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-int __drop_iob_read_buffer(struct iob *file)
+int
+__drop_iob_read_buffer(struct iob *file)
 {
 	int result = OK;
 

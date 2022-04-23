@@ -10,106 +10,85 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
 
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-/****************************************************************************/
-
 /* The file handle table. */
 struct iob **NOCOMMON __iob;
 int NOCOMMON __num_iob;
-
-/****************************************************************************/
 
 /* The file descriptor table. */
 struct fd **NOCOMMON __fd;
 int NOCOMMON __num_fd;
 
-/****************************************************************************/
+void
+__close_all_files(void) {
+    int i;
 
-void __close_all_files(void)
-{
-	int i;
+    ENTER();
 
-	ENTER();
+    __stdio_lock();
 
-	__stdio_lock();
+    if (__num_iob > 0) {
+        for (i = 0; i < __num_iob; i++) {
+            if (FLAG_IS_SET(__iob[i]->iob_Flags, IOBF_IN_USE))
+                fclose((FILE *) __iob[i]);
+        }
 
-	if (__num_iob > 0)
-	{
-		for (i = 0; i < __num_iob; i++)
-		{
-			if (FLAG_IS_SET(__iob[i]->iob_Flags, IOBF_IN_USE))
-				fclose((FILE *)__iob[i]);
-		}
+        __num_iob = 0;
+    }
 
-		__num_iob = 0;
-	}
+    if (__num_fd > 0) {
+        for (i = 0; i < __num_fd; i++) {
+            if (FLAG_IS_SET(__fd[i]->fd_Flags, FDF_IN_USE))
+                close(i);
+        }
 
-	if (__num_fd > 0)
-	{
-		for (i = 0; i < __num_fd; i++)
-		{
-			if (FLAG_IS_SET(__fd[i]->fd_Flags, FDF_IN_USE))
-				close(i);
-		}
+        __num_fd = 0;
+    }
 
-		__num_fd = 0;
-	}
+    __stdio_unlock();
 
-	__stdio_unlock();
-
-	LEAVE();
+    LEAVE();
 }
 
-/****************************************************************************/
+STDIO_DESTRUCTOR(stdio_exit) {
+    ENTER();
 
-STDIO_DESTRUCTOR(stdio_exit)
-{
-	ENTER();
+    __close_all_files();
 
-	__close_all_files();
-
-	LEAVE();
+    LEAVE();
 }
 
-/****************************************************************************/
+STDIO_CONSTRUCTOR(stdio_init) {
+    const int num_standard_files = (STDERR_FILENO - STDIN_FILENO + 1);
+    BOOL success = FALSE;
 
-STDIO_CONSTRUCTOR(stdio_init)
-{
-	const int num_standard_files = (STDERR_FILENO - STDIN_FILENO + 1);
+    ENTER();
 
-	BOOL success = FALSE;
+    if (__stdio_lock_init() < 0)
+        goto out;
 
-	ENTER();
+    if (__grow_iob_table(num_standard_files) < 0)
+        goto out;
 
-	if (__stdio_lock_init() < 0)
-		goto out;
+    if (__grow_fd_table(num_standard_files) < 0)
+        goto out;
 
-	if (__grow_iob_table(num_standard_files) < 0)
-		goto out;
-
-	if (__grow_fd_table(num_standard_files) < 0)
-		goto out;
-
-	success = TRUE;
+    success = TRUE;
 
 out:
 
-	SHOWVALUE(success);
-	LEAVE();
+    SHOWVALUE(success);
+    LEAVE();
 
-	if (success)
-		CONSTRUCTOR_SUCCEED();
-	else
-		CONSTRUCTOR_FAIL();
+    if (success)
+        CONSTRUCTOR_SUCCEED();
+    else
+        CONSTRUCTOR_FAIL();
 }

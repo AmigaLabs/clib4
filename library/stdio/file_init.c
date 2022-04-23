@@ -10,13 +10,9 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
 
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
@@ -27,30 +23,19 @@
 static struct MsgPort *old_console_task;
 static BOOL restore_console_task;
 
-/****************************************************************************/
-
 static BOOL restore_streams;
-
-/****************************************************************************/
 
 static BPTR old_output;
 static BPTR old_input;
 
-/****************************************************************************/
-
 static BPTR output;
 static BPTR input;
 
-/****************************************************************************/
-
 struct WBStartup *NOCOMMON __WBenchMsg;
-
-/****************************************************************************/
 
 /* CPU cache line size; used to align I/O buffers for best performance. */
 ULONG __cache_line_size = 32;
 
-/****************************************************************************/
 
 FILE_DESTRUCTOR(workbench_exit)
 {
@@ -90,8 +75,6 @@ FILE_DESTRUCTOR(workbench_exit)
 
 	LEAVE();
 }
-
-/****************************************************************************/
 
 STATIC int
 wb_file_init(void)
@@ -167,8 +150,6 @@ out:
 
 	return (result);
 }
-
-/****************************************************************************/
 
 FILE_CONSTRUCTOR(stdio_file_init)
 {

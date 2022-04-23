@@ -33,6 +33,7 @@ _msgctl(int qid, int cmd, struct msqid_ds *buf)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

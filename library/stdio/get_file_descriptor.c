@@ -6,14 +6,10 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 enum resolution_mode_t {
     resolution_mode_exact,    /* Return the descriptor exactly as it is. */
     resolution_mode_alias    /* Resolve the descriptor's alias, if necessary. */
 };
-
-/****************************************************************************/
 
 STATIC struct fd *
 get_file_descriptor(int file_descriptor, enum resolution_mode_t resolution_mode) {
@@ -44,7 +40,7 @@ get_file_descriptor(int file_descriptor, enum resolution_mode_t resolution_mode)
 
     result = fd;
 
-    out:
+out:
 
     __stdio_unlock();
 

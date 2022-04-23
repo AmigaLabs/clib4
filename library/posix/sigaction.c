@@ -53,6 +53,7 @@ sigaction_handler(int sig) {
         /* Unexpected situation; be careful to avoid recursive abort.  */
         if (sig == SIGABRT)
             signal(SIGABRT, SIG_DFL);
+        LEAVE();
         abort();
     }
     /* Reinstall the signal handler when required; otherwise update the
@@ -79,6 +80,8 @@ sigaction_handler(int sig) {
     saved_errno = errno;
     sigprocmask(SIG_SETMASK, &oldmask, NULL);
     __set_errno(saved_errno);
+
+    LEAVE();
 }
 
 /* Change and/or query the action that will be taken on delivery of
@@ -100,6 +103,7 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
     if (sig < 0 || NSIG <= sig || sig == SIGKILL || sig == SIGSTOP
         || (act && act->sa_handler == SIG_ERR)) {
         __set_errno(EINVAL);
+        RETURN(-1);
         return -1;
     }
 
@@ -111,10 +115,14 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
        modifying any data structure that could be read from a signal
        handler; this works since we know that the gnulib sigprocmask
        replacement does not try to use sigaction() from its handler.  */
-    if (!act && !oact)
+    if (!act && !oact) {
+        RETURN(0);
         return 0;
+    }
+
     sigfillset(&mask);
     sigprocmask(SIG_BLOCK, &mask, &oldmask);
+
     if (oact) {
         if (action_array[sig].sa_handler)
             *oact = action_array[sig];
@@ -129,6 +137,7 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
             sigemptyset(&oact->sa_mask);
         }
     }
+
     if (act) {
         /* Safe to install the handler before updating action_array,
            since all signals are currently blocked.  */
@@ -142,12 +151,17 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
             action_array[sig] = *act;
         }
     }
+
     sigprocmask(SIG_SETMASK, &oldmask, NULL);
+
+    RETURN(0);
     return 0;
 
 failure:
     saved_errno = errno;
     sigprocmask(SIG_SETMASK, &oldmask, NULL);
     __set_errno(saved_errno);
+
+    RETURN(-1);
     return -1;
 }

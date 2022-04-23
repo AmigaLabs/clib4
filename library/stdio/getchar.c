@@ -6,18 +6,17 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 #undef getchar
 
-/****************************************************************************/
-
 int
-getchar(void)
-{
-	int result;
+getchar(void) {
+    int result;
 
-	result = fgetc(stdin);
+    ENTER();
 
-	return(result);
+    result = fgetc(stdin);
+
+    LEAVE();
+
+    return (result);
 }

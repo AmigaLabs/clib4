@@ -36,6 +36,7 @@ _msgsnd(int msgid, const void *msg_ptr, size_t msg_sz, int msgflg)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

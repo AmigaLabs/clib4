@@ -7,10 +7,7 @@
 #endif /* _WCHAR_HEADERS_H */
 
 wchar_t *
-wcscat(wchar_t *dest, const wchar_t *src)
-{
-    ENTER();
-
+wcscat(wchar_t *dest, const wchar_t *src) {
     wcscpy(dest + wcslen(dest), src);
-	return dest;
+    return dest;
 }

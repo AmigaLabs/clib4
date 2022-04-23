@@ -908,4 +908,4 @@ $(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
 	@$(MAKEDIR) $(@D)
 	@$(DELETE) $@
 	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND)
+	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -ldebug

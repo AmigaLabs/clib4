@@ -7,24 +7,19 @@
 #endif /* _WCHAR_HEADERS_H */
 
 wchar_t *
-wmemchr(const wchar_t *ptr, wchar_t val, size_t len)
-{
-	size_t i;
-
-    ENTER();
+wmemchr(const wchar_t *ptr, wchar_t val, size_t len) {
+    size_t i;
 
     if (ptr == NULL) {
         return NULL;
     }
 
-	for (i = 0; i < len; i++)
-	{
-		if (*ptr == val)
-		{
-			/* LINTED const castaway */
-			return (wchar_t *)ptr;
-		}
-		ptr++;
-	}
-	return NULL;
+    for (i = 0; i < len; i++) {
+        if (*ptr == val) {
+            /* LINTED const castaway */
+            return (wchar_t *) ptr;
+        }
+        ptr++;
+    }
+    return NULL;
 }

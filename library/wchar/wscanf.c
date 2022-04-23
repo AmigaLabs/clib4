@@ -6,18 +6,17 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 int
-wscanf(const wchar_t *format, ...)
-{
+wscanf(const wchar_t *format, ...) {
     int ret;
     va_list ap;
 
     ENTER();
 
-    va_start (ap, format);
+    va_start(ap, format);
     ret = vfwscanf(stdin, format, ap);
-    va_end (ap);
+    va_end(ap);
+
+    RETURN(ret);
     return ret;
 }

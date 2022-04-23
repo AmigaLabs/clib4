@@ -33,6 +33,7 @@ _shmget(key_t key, size_t size, int flags)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

@@ -20,5 +20,6 @@ munmap(void *map, size_t length) {
     if (map != NULL)
         free(map);
 
+    RETURN(0);
     return 0;
 }

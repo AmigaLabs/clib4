@@ -11,17 +11,20 @@
 #endif /* _WCTYPE_HEADERS_H */
 
 wctrans_t
-wctrans(const char *property)
-{
+wctrans(const char *property) {
     ENTER();
 
-    if (!strcmp(property, "tolower"))
-		return WCT_TOLOWER;
-	else if (!strcmp(property, "toupper"))
-		return WCT_TOUPPER;
-	else
-	{
-		__set_errno(EINVAL);
-		return 0;
-	}
+    if (!strcmp(property, "tolower")) {
+        RETURN(WCT_TOLOWER);
+        return WCT_TOLOWER;
+    }
+    else if (!strcmp(property, "toupper")) {
+        RETURN(WCT_TOUPPER);
+        return WCT_TOUPPER;
+    }
+    else {
+        __set_errno(EINVAL);
+        RETURN(0);
+        return 0;
+    }
 }

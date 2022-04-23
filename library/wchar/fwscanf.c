@@ -7,8 +7,7 @@
 #endif /* _WCHAR_HEADERS_H */
 
 int
-fwscanf(FILE *stream, const wchar_t *format, ...)
-{
+fwscanf(FILE *stream, const wchar_t *format, ...) {
     int ret = EOF;
 
     ENTER();

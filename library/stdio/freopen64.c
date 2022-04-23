@@ -10,11 +10,16 @@
 
 FILE *
 freopen64(const char *filename, const char *mode, FILE *stream) {
+
+    ENTER();
+
     FILE *fp = freopen(filename, mode, stream);
     
     if (fp != NULL) {
         fp->_flags |= __SL64;
     }
-    
+
+    LEAVE();
+
     return fp;
 }

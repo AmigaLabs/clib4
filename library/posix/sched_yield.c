@@ -15,5 +15,7 @@ sched_yield(void) {
     /* SetTaskPri() on the currently running task triggers a reschedule */
     struct Task *me = FindTask(NULL);
     SetTaskPri(me, me->tc_Node.ln_Pri);
+
+    RETURN(0);
     return 0;
 }

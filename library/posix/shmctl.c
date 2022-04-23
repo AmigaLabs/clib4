@@ -32,6 +32,8 @@ _shmctl(int shmid, int cmd, struct shmid_ds *cbuf)
     {
         __set_errno(ENOSYS);
     }
+
+    RETURN(ret);
     return ret;
 }
 

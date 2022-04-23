@@ -42,13 +42,7 @@ void *
 calloc(size_t num_elements, size_t element_size) {
     void *result;
 
-    ENTER();
-    SHOWVALUE(num_elements);
-    SHOWVALUE(element_size);
-
     result = __calloc(num_elements, element_size);
 
-    SHOWPOINTER(result);
-    LEAVE();
     return (result);
 }

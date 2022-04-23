@@ -6,20 +6,25 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-int 
-wcswidth(const wchar_t *pwcs, size_t n)
-{
+int
+wcswidth(const wchar_t *pwcs, size_t n) {
     int w, len = 0;
 
     ENTER();
 
-    if (!pwcs || n == 0)
+    if (!pwcs || n == 0) {
+        RETURN(0);
         return 0;
-    do
-    {
-        if ((w = wcwidth(*pwcs)) < 0)
+    }
+
+    do {
+        if ((w = wcwidth(*pwcs)) < 0) {
+            RETURN(-1);
             return -1;
+        }
         len += w;
     } while (*pwcs++ && --n > 0);
+
+    RETURN(len);
     return len;
 }

@@ -14,11 +14,6 @@ void *
 memmove(void *dest, const void *src, size_t len) {
 	void *result = dest;
 
-    ENTER();
-    SHOWPOINTER(dest);
-    SHOWPOINTER(src);
-    SHOWVALUE(len);
-
 	assert((len == 0) || (dest != NULL && src != NULL && (int)len > 0));
 
 	if (dest == NULL || src == NULL)
@@ -43,7 +38,5 @@ memmove(void *dest, const void *src, size_t len) {
 
 out:
 
-    SHOWPOINTER(result);
-    LEAVE();
 	return (result);
 }

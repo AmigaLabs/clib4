@@ -11,6 +11,9 @@ int __fgetc(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
 
+    ENTER();
+    SHOWPOINTER(stream);
+
     assert(stream != NULL);
 
     assert(__is_valid_iob(file));
@@ -34,6 +37,8 @@ int __fgetc(FILE *stream) {
     result = file->iob_Buffer[file->iob_BufferPosition++];
 
 out:
+
+    LEAVE();
 
     return (result);
 }
@@ -78,8 +83,12 @@ out:
     return (result);
 }
 
-int fgetc(FILE *stream) {
+int
+fgetc(FILE *stream) {
     int result = EOF;
+
+    ENTER();
+    SHOWPOINTER(stream);
 
     assert(stream != NULL);
 
@@ -102,5 +111,6 @@ out:
 
     funlockfile(stream);
 
+    LEAVE();
     return (result);
 }

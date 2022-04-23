@@ -10,13 +10,9 @@
 #include <wctype.h>
 #endif /* _WCTYPE_HEADERS_H */
 
-int 
-iswctype(wint_t c, wctype_t desc)
-{
-    ENTER();
-
-	switch (desc)
-	{
+int
+iswctype(wint_t c, wctype_t desc) {
+    switch (desc) {
         case WC_ALNUM:
             return iswalnum(c);
         case WC_ALPHA:
@@ -43,8 +39,8 @@ iswctype(wint_t c, wctype_t desc)
             return iswxdigit(c);
         default:
             return 0; /* eliminate warning */
-	}
+    }
 
-	/* otherwise unknown */
-	return 0;
+    /* otherwise unknown */
+    return 0;
 }

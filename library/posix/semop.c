@@ -33,6 +33,7 @@ _semop(int semid, const struct sembuf *ops, int nops)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

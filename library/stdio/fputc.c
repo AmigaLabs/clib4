@@ -6,7 +6,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-int __fputc_check(FILE *stream) {
+int
+__fputc_check(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
 
@@ -53,9 +54,15 @@ out:
     return (result);
 }
 
-int __fputc(int c, FILE *stream, int buffer_mode) {
+int
+__fputc(int c, FILE *stream, int buffer_mode) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
+
+    ENTER();
+    SHOWVALUE(c);
+    SHOWPOINTER(stream);
+    SHOWVALUE(buffer_mode);
 
     assert(stream != NULL);
 
@@ -81,14 +88,18 @@ int __fputc(int c, FILE *stream, int buffer_mode) {
 
 out:
 
+    RETURN(result);
     return (result);
 }
 
-/****************************************************************************/
-
-int fputc(int c, FILE *stream) {
+int
+fputc(int c, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
+
+    ENTER();
+    SHOWVALUE(c);
+    SHOWPOINTER(stream);
 
     assert(stream != NULL);
 
@@ -108,5 +119,6 @@ out:
 
     funlockfile(stream);
 
+    RETURN(result);
     return (result);
 }

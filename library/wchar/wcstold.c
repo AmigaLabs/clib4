@@ -11,10 +11,7 @@
 #endif /* _WCTYPE_HEADERS_H */
 
 long double
-wcstold(const wchar_t *nptr, wchar_t **endptr)
-{
-    ENTER();
-
+wcstold(const wchar_t *nptr, wchar_t **endptr) {
     /* On platforms where long double is as wide as double.  */
     return wcstod(nptr, endptr);
 }

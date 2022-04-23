@@ -7,8 +7,7 @@
 #endif /* _WCHAR_HEADERS_H */
 
 size_t
-wcsxfrm(wchar_t *dest, const wchar_t *src, size_t len)
-{
+wcsxfrm(wchar_t *dest, const wchar_t *src, size_t len) {
     ENTER();
 
     if (*src == L'\0') {
@@ -20,10 +19,10 @@ wcsxfrm(wchar_t *dest, const wchar_t *src, size_t len)
 
     size_t l = wcslen(src);
     if (l < len) {
-        wmemcpy(dest, src, l+1);
+        wmemcpy(dest, src, l + 1);
     } else if (len) {
-        wmemcpy(dest, src, len-1);
-        dest[len-1] = 0;
+        wmemcpy(dest, src, len - 1);
+        dest[len - 1] = 0;
     }
 
     RETURN(l);

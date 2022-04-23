@@ -16,5 +16,6 @@ int sem_destroy(sem_t *sem) {
         *sem = NULL;
     }
 
+    RETURN(0);
     return 0;
 }

@@ -47,5 +47,6 @@ setrlimit(int resource, const struct rlimit *rlp)
 
 out:
 
+    RETURN(ret);
 	return (ret);
 }

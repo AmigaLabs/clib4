@@ -12,7 +12,6 @@ sscanf(const char *s, const char *format, ...) {
     va_list arg;
 
     ENTER();
-
     SHOWSTRING(s);
     SHOWSTRING(format);
 

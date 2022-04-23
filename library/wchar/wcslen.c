@@ -7,15 +7,17 @@
 #endif /* _WCHAR_HEADERS_H */
 
 size_t
-wcslen(const wchar_t *s)
-{
-	const wchar_t *p;
+wcslen(const wchar_t *s) {
+    const wchar_t *p;
 
     ENTER();
 
     p = s;
-	while (*p)
-		p++;
+    while (*p)
+        p++;
 
-	return p - s;
+    size_t result = p - s;
+
+    RETURN(result);
+    return result;
 }

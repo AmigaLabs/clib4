@@ -10,10 +10,14 @@ char *
 ctermid(char *buf) {
     static char cname[] = "CONSOLE:";
 
+    ENTER();
+    SHOWSTRING(buf);
+
     if (buf != NULL)
         strcpy(buf, cname);
     else
         buf = cname;
 
+    RETURN(buf);
     return (buf);
 }

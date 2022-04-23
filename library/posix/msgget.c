@@ -32,6 +32,7 @@ _msgget(key_t key, int flags)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

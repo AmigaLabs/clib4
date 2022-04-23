@@ -9,9 +9,6 @@
 #include <ctype.h>
 
 int
-iswgraph(wint_t c)
-{
-    ENTER();
-
-	return (iswprint (c) && !iswspace (c));
+iswgraph(wint_t c) {
+    return (iswprint(c) && !iswspace(c));
 }

@@ -6,6 +6,4 @@
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
 
-/****************************************************************************/
-
 BOOL __check_abort_enabled = TRUE;

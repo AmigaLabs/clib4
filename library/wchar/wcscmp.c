@@ -13,16 +13,20 @@ wcscmp(const wchar_t *s1, const wchar_t *s2) {
     ENTER();
 
     if ((!s1) || (!s2)) {
+        RETURN(-1);
         return -1;
     }
 
     do {
         c1 = *s1++;
         c2 = *s2++;
-        if (c2 == L'\0')
+        if (c2 == L'\0') {
+            RETURN(c1 - c2);
             return c1 - c2;
+        }
 
     } while (c1 == c2);
 
+    RETURN(c1 < c2 ? -1 : 1);
     return c1 < c2 ? -1 : 1;
 }

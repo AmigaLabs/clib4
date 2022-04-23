@@ -30,7 +30,7 @@ CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
 RANLIB := ppc-amigaos-ranlib
 
-# if we are on AmigaOS use native commands
+# On AmigaOS use native commands
 ifeq ($(UNAME), AmigaOS)
     COPY := copy
     DELETE := delete all quiet force

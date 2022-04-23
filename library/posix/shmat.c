@@ -27,11 +27,13 @@ _shmat(int shmid, const void *prefadds, int flags)
         {
             __set_errno(GetIPCErr());
         }
+        RETURN(ret);
         return ret;
     }
     else
     {
         __set_errno(ENOSYS);
+        RETURN(NULL);
         return NULL;
     }
 }

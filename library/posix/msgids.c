@@ -33,6 +33,7 @@ _msgids(int *buf, size_t nids, size_t *pnids)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 
