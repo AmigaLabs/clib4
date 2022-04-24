@@ -17,9 +17,6 @@ fileno(FILE *file) {
 
     assert(file != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     flockfile(file);
 
     if (file == NULL) {

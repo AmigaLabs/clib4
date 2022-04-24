@@ -19,6 +19,9 @@ if_nametoindex(const char *ifname) {
     struct List *netiflist = NULL;
     struct Node *node = NULL;
 
+    ENTER();
+    SHOWSTRING(ifname);
+
     netiflist = __ISocket->ObtainInterfaceList();
     if (netiflist != NULL) {
         node = GetHead(netiflist);
@@ -41,5 +44,6 @@ out:
     if (__check_abort_enabled)
         __check_abort();
 
+    RETURN(index);
     return index;
 }

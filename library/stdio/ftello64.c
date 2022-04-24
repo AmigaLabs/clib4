@@ -9,22 +9,17 @@
 #endif /* _STDIO_HEADERS_H */
 
 _off64_t
-ftello64(FILE *stream)
-{
-    struct iob *file = (struct iob *)stream;
+ftello64(FILE *stream) {
+    struct iob *file = (struct iob *) stream;
     struct file_action_message fam;
     int64_t result = ERROR;
     int64_t position;
 
     assert(stream != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     flockfile(stream);
 
-    if (stream == NULL)
-    {
+    if (stream == NULL) {
         __set_errno(EFAULT);
         goto out;
     }
@@ -33,8 +28,7 @@ ftello64(FILE *stream)
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
-    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE))
-    {
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
 
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
@@ -58,8 +52,7 @@ ftello64(FILE *stream)
     assert(file->iob_Action != NULL);
 
     position = (*file->iob_Action)(file, &fam);
-    if (fam.fam_Error != OK)
-    {
+    if (fam.fam_Error != OK) {
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
         __set_errno(fam.fam_Error);
@@ -67,15 +60,12 @@ ftello64(FILE *stream)
         goto out;
     }
 
-    if (__iob_read_buffer_is_valid(file))
-    {
+    if (__iob_read_buffer_is_valid(file)) {
         /* Subtract the number of bytes still in the buffer which have
 		 * not been read before.
 		 */
         position -= __iob_num_unread_bytes(file);
-    }
-    else if (__iob_write_buffer_is_valid(file))
-    {
+    } else if (__iob_write_buffer_is_valid(file)) {
         /* Add the number of bytes still stored in the buffer which have
 		 * not been written to disk yet.
 		 */

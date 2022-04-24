@@ -20,9 +20,6 @@ fgets(char *s, int n, FILE *stream) {
 
     assert(s != NULL && stream != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     flockfile(stream);
 
     if (s == NULL || stream == NULL) {

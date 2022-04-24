@@ -19,6 +19,9 @@ if_indextoname(unsigned int ifindex, char *ifname) {
     unsigned int index = 1;
     char *result = NULL;
 
+    ENTER();
+    SHOWVALUE(ifindex);
+
     if (ifname == NULL || strlen(ifname) > IF_NAMESIZE) {
         __set_errno(ENXIO);
         goto out;
@@ -51,5 +54,6 @@ out:
     if (__check_abort_enabled)
         __check_abort();
 
+    RETURN(result);
     return result;
 }

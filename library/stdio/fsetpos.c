@@ -6,43 +6,37 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-int 
-fsetpos(FILE *stream, fpos_t *pos)
-{
-	int result = EOF;
+int
+fsetpos(FILE *stream, fpos_t *pos) {
+    int result = EOF;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(stream);
-	SHOWPOINTER(pos);
+    SHOWPOINTER(stream);
+    SHOWPOINTER(pos);
 
-	assert(stream != NULL && pos != NULL);
+    assert(stream != NULL && pos != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    flockfile(stream);
 
-	flockfile(stream);
-
-    if (stream == NULL || pos == NULL)
-    {
+    if (stream == NULL || pos == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	if (fseek(stream, (long int)(*pos), SEEK_SET) == CHANGE_FILE_ERROR && __get_errno() != OK)
-	{
-		SHOWMSG("fseek failed");
-		goto out;
-	}
+    if (fseek(stream, (long int) (*pos), SEEK_SET) == CHANGE_FILE_ERROR && __get_errno() != OK) {
+        SHOWMSG("fseek failed");
+        goto out;
+    }
 
-	result = OK;
+    result = OK;
 
 out:
 
-	funlockfile(stream);
+    funlockfile(stream);
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

@@ -3,9 +3,7 @@
 */
 
 #ifndef _STDIO_HEADERS_H
-
 #include "stdio_headers.h"
-
 #endif /* _STDIO_HEADERS_H */
 
 size_t
@@ -22,9 +20,6 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     assert(ptr != NULL && stream != NULL);
     assert((int) element_size >= 0 && (int) count >= 0);
-
-    if (__check_abort_enabled)
-        __check_abort();
 
     flockfile(stream);
 

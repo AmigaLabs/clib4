@@ -17,9 +17,6 @@ ungetc(int c, FILE *stream) {
 
     assert(stream != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     flockfile(stream);
 
     if (stream == NULL) {

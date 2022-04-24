@@ -8,9 +8,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-int 
-fgetpos64(FILE *stream, _fpos64_t *pos)
-{
+int
+fgetpos64(FILE *stream, _fpos64_t *pos) {
     int result = EOF;
     _fpos64_t position;
 
@@ -21,13 +20,9 @@ fgetpos64(FILE *stream, _fpos64_t *pos)
 
     assert(stream != NULL && pos != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     flockfile(stream);
 
-    if (stream == NULL || pos == NULL)
-    {
+    if (stream == NULL || pos == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
@@ -35,14 +30,13 @@ fgetpos64(FILE *stream, _fpos64_t *pos)
     }
 
     position = ftello64(stream);
-    if (position == CHANGE_FILE_ERROR && __get_errno() != OK)
-    {
+    if (position == CHANGE_FILE_ERROR && __get_errno() != OK) {
         SHOWMSG("ftello64() didn't work.");
 
         goto out;
     }
 
-    (*pos) = (_fpos64_t)position;
+    (*pos) = (_fpos64_t) position;
 
     result = OK;
 

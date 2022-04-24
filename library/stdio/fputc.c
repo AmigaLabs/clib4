@@ -102,10 +102,6 @@ fputc(int c, FILE *stream) {
     SHOWPOINTER(stream);
 
     assert(stream != NULL);
-
-    if (__check_abort_enabled)
-        __check_abort();
-
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 
     flockfile(stream);

@@ -22,6 +22,9 @@ inet_aton(const char *cp, struct in_addr *addr) {
     char c;
     LONG parts[4];
     LONG *pp = parts;
+    int result = 1;
+
+    ENTER();
 
     assert(cp != NULL && addr != NULL);
 
@@ -29,7 +32,8 @@ inet_aton(const char *cp, struct in_addr *addr) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
-        return (0);
+        result = 0;
+        goto out;
     }
 
     for (;;) {
@@ -67,8 +71,10 @@ inet_aton(const char *cp, struct in_addr *addr) {
              *	a.b.c	(with c treated as 16-bits)
              *	a.b	(with b treated as 24 bits)
              */
-            if (pp >= parts + 3 || val > 0xff)
-                return (0);
+            if (pp >= parts + 3 || val > 0xff) {
+                result = 0;
+                goto out;
+            }
             *pp++ = val, cp++;
         } else
             break;
@@ -76,44 +82,50 @@ inet_aton(const char *cp, struct in_addr *addr) {
     /*
      * Check for trailing characters.
      */
-    if (*cp && (!isascii(*cp) || !isspace(*cp)))
-        return (0);
+    if (*cp && (!isascii(*cp) || !isspace(*cp))) {
+        result = 0;
+        goto out;
+    }
     /*
      * Concoct the address according to
      * the number of parts specified.
      */
     n = pp - parts + 1;
     switch (n) {
-
         case 1: /* a -- 32 bits */
             break;
-
         case 2: /* a.b -- 8.24 bits */
-            if (val > 0xffffff)
-                return (0);
+            if (val > 0xffffff) {
+                result = 0;
+                goto out;
+            }
             val |= parts[0] << 24;
             break;
-
         case 3: /* a.b.c -- 8.8.16 bits */
-            if (val > 0xffff)
-                return (0);
+            if (val > 0xffff) {
+                result = 0;
+                goto out;
+            }
             val |= (parts[0] << 24) | (parts[1] << 16);
             break;
-
         case 4: /* a.b.c.d -- 8.8.8.8 bits */
-            if (val > 0xff)
-                return (0);
+            if (val > 0xff) {
+                result = 0;
+                goto out;
+            }
             val |= (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8);
             break;
-
         default:
-            return (0);
+            result = 0;
+            goto out;
     }
     if (addr)
         addr->s_addr = val;
 
+out:
     if (__check_abort_enabled)
         __check_abort();
 
-    return (1);
+    RETURN(result);
+    return result;
 }

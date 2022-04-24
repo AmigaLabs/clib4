@@ -9,8 +9,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-fsetpos64(FILE *stream, _fpos64_t *pos)
-{
+fsetpos64(FILE *stream, _fpos64_t *pos) {
     int result = EOF;
 
     ENTER();
@@ -20,21 +19,16 @@ fsetpos64(FILE *stream, _fpos64_t *pos)
 
     assert(stream != NULL && pos != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     flockfile(stream);
 
-    if (stream == NULL || pos == NULL)
-    {
+    if (stream == NULL || pos == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-    if (fseeko64(stream, (long int)(*pos), SEEK_SET) == CHANGE_FILE_ERROR && __get_errno() != OK)
-    {
+    if (fseeko64(stream, (long int) (*pos), SEEK_SET) == CHANGE_FILE_ERROR && __get_errno() != OK) {
         SHOWMSG("fseek failed");
         goto out;
     }

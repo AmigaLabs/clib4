@@ -25,9 +25,6 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
 
     assert(stream != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     flockfile(stream);
 
     if (stream == NULL) {

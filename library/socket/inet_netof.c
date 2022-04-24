@@ -7,19 +7,18 @@
 #endif /* _SOCKET_HEADERS_H */
 
 in_addr_t
-inet_netof(struct in_addr in)
-{
-	in_addr_t result;
+inet_netof(struct in_addr in) {
+    in_addr_t result;
 
-	ENTER();
+    ENTER();
 
-	assert(__SocketBase != NULL);
+    assert(__SocketBase != NULL);
 
-	result = __Inet_NetOf(in.s_addr);
+    result = __Inet_NetOf(in.s_addr);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

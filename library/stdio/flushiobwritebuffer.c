@@ -23,9 +23,6 @@ __flush_iob_write_buffer(struct iob *file) {
 	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 	assert(file->iob_BufferSize > 0);
 
-	if (__check_abort_enabled)
-		__check_abort();
-
 	if (FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE) && file->iob_BufferWriteBytes > 0)
 	{
 		struct file_action_message fam;

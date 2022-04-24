@@ -13,18 +13,24 @@ static int inet_pton6(const char *src, unsigned char *dst);
 
 int
 inet_pton(int af, const char *src, void *dst) {
+    int result = -1;
+    ENTER();
+
     switch (af) {
         case AF_INET:
-            return (inet_pton4(src, dst));
-
+            result = inet_pton4(src, dst);
         case AF_INET6:
-            return (inet_pton6(src, dst));
-
+            result = inet_pton6(src, dst);
         default:
             __set_errno(EAFNOSUPPORT);
-            return (-1);
+            result = -1;
     }
-    /* NOTREACHED */
+
+    if (__check_abort_enabled)
+        __check_abort();
+
+    RETURN(result);
+    return result;
 }
 
 static int

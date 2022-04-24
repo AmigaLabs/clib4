@@ -45,9 +45,6 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
     assert(stream != NULL && format != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     flockfile(stream);
 
     if (stream == NULL || format == NULL) {

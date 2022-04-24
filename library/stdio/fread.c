@@ -21,9 +21,6 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
     assert(ptr != NULL && stream != NULL);
     assert((int) element_size >= 0 && (int) count >= 0);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if (ptr == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
 
