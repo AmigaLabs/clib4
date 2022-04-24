@@ -15,42 +15,41 @@
 
 
 char *
-if_indextoname (unsigned int ifindex, char *ifname)
-{
+if_indextoname(unsigned int ifindex, char *ifname) {
     unsigned int index = 1;
+    char *result = NULL;
 
     if (ifname == NULL || strlen(ifname) > IF_NAMESIZE) {
         __set_errno(ENXIO);
-        return NULL;
+        goto out;
     }
 
     struct List *netiflist = NULL;
     struct Node *node = NULL;
 
     netiflist = __ISocket->ObtainInterfaceList();
-    if (netiflist != NULL)
-    {
+    if (netiflist != NULL) {
         node = GetHead(netiflist);
-        if (node != NULL)
-        {
-            while (node != NULL)
-            {
-                if (node->ln_Name != NULL)
-                {
-                    if (index == ifindex)
-                    {
-                        // Found our interface
-                        strncpy(ifname, node->ln_Name, IF_NAMESIZE);
-                        return ifname;
-                    }
+        while (node != NULL) {
+            if (node->ln_Name != NULL) {
+                if (index == ifindex) {
+                    // Found our interface
+                    strncpy(ifname, node->ln_Name, IF_NAMESIZE);
+                    result = ifname;
+                    goto out;
                 }
-                index++;
-                node = GetSucc(node);
             }
+            index++;
+            node = GetSucc(node);
         }
         __ISocket->ReleaseInterfaceList(netiflist);
     }
 
     __set_errno(ENXIO);
-    return NULL;
+
+out:
+    if (__check_abort_enabled)
+        __check_abort();
+
+    return result;
 }

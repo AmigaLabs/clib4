@@ -104,8 +104,8 @@ ifaddrs_add(struct ifawrap *ifawrap, char *name, unsigned int flags,
     return 0;
 }
 
-int getifaddrs(struct ifaddrs **ifap) {
-
+int
+getifaddrs(struct ifaddrs **ifap) {
     unsigned int success = 0;
 
     struct List *netiflist = NULL;
@@ -178,6 +178,9 @@ int getifaddrs(struct ifaddrs **ifap) {
 
     if (success == 0 && ifawrap.ifaddrs != NULL)
         *ifap = ifawrap.ifaddrs;
+
+    if (__check_abort_enabled)
+        __check_abort();
 
     return success;
 }

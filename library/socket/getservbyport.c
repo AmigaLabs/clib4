@@ -7,30 +7,28 @@
 #endif /* _SOCKET_HEADERS_H */
 
 struct servent *
-getservbyport(int port, const char *proto)
-{
-	struct servent *result = NULL;
+getservbyport(int port, const char *proto) {
+    struct servent *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	assert(proto != NULL);
-	assert(__SocketBase != NULL);
+    assert(proto != NULL);
+    assert(__SocketBase != NULL);
 
-    if (proto == NULL)
-    {
+    if (proto == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __getservbyport(port, (char *)proto);
+    result = __getservbyport(port, (char *) proto);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

@@ -7,19 +7,18 @@
 #endif /* _SOCKET_HEADERS_H */
 
 struct protoent *
-getprotobynumber(int proto)
-{
-	struct protoent *result;
+getprotobynumber(int proto) {
+    struct protoent *result;
 
-	ENTER();
+    ENTER();
 
-	assert(__SocketBase != NULL);
+    assert(__SocketBase != NULL);
 
-	result = __getprotobynumber(proto);
+    result = __getprotobynumber(proto);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

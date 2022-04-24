@@ -7,30 +7,28 @@
 #endif /* _SOCKET_HEADERS_H */
 
 struct servent *
-getservbyname(const char *name, const char *proto)
-{
-	struct servent *result = NULL;
+getservbyname(const char *name, const char *proto) {
+    struct servent *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	assert(name != NULL && proto != NULL);
-	assert(__SocketBase != NULL);
+    assert(name != NULL && proto != NULL);
+    assert(__SocketBase != NULL);
 
-    if (name == NULL || proto == NULL)
-    {
+    if (name == NULL || proto == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __getservbyname((char *)name, (char *)proto);
+    result = __getservbyname((char *) name, (char *) proto);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

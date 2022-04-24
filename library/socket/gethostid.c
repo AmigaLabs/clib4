@@ -6,19 +6,18 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-long gethostid(void)
-{
-	long result;
+long gethostid(void) {
+    long result;
 
-	ENTER();
+    ENTER();
 
-	assert(__SocketBase != NULL);
+    assert(__SocketBase != NULL);
 
-	result = __gethostid();
+    result = __gethostid();
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

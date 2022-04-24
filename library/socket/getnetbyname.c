@@ -7,32 +7,30 @@
 #endif /* _SOCKET_HEADERS_H */
 
 struct netent *
-getnetbyname(const char *name)
-{
-	struct netent *result = NULL;
+getnetbyname(const char *name) {
+    struct netent *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(name);
+    SHOWSTRING(name);
 
-	assert(name != NULL);
-	assert(__SocketBase != NULL);
+    assert(name != NULL);
+    assert(__SocketBase != NULL);
 
-    if (name == NULL)
-    {
+    if (name == NULL) {
         SHOWMSG("invalid name parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __getnetbyname((STRPTR)name);
+    result = __getnetbyname((STRPTR) name);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

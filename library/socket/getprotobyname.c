@@ -7,30 +7,28 @@
 #endif /* _SOCKET_HEADERS_H */
 
 struct protoent *
-getprotobyname(const char *name)
-{
-	struct protoent *result = NULL;
+getprotobyname(const char *name) {
+    struct protoent *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	assert(name != NULL);
-	assert(__SocketBase != NULL);
+    assert(name != NULL);
+    assert(__SocketBase != NULL);
 
-    if (name == NULL)
-    {
+    if (name == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __getprotobyname((char *)name);
+    result = __getprotobyname((char *) name);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }
