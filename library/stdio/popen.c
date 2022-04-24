@@ -77,19 +77,13 @@ popen(const char *command, const char *type) {
        support anything else. */
     switch (type[0]) {
         case 'r':
-
             SHOWMSG("read mode");
             break;
-
         case 'w':
-
             SHOWMSG("write mode");
             break;
-
         default:
-
             D(("unsupported access mode '%lc'", type[0]));
-
             __set_errno(EINVAL);
             goto out;
     }

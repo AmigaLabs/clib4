@@ -3,9 +3,7 @@
 */
 
 #ifndef _LOCALE_HEADERS_H
-
 #include "locale_headers.h"
-
 #endif /* _LOCALE_HEADERS_H */
 
 /****************************************************************************/

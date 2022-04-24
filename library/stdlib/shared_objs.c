@@ -42,7 +42,7 @@ static BOOL open_elf_library(void) {
 
     success = TRUE;
 
-    out:
+out:
 
     return (success);
 }

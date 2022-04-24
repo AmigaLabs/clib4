@@ -15,135 +15,125 @@
 #endif /* _TIME_HEADERS_H */
 
 int
-lstat(const char *path_name, struct stat *st)
-{
-	struct name_translation_info path_name_nti;
-	struct Lock *fl;
-	int result = ERROR;
-	struct ExamineData *fib = NULL;
-	BPTR file_lock = ZERO;
-	int link_length = -1;
+lstat(const char *path_name, struct stat *st) {
+    struct name_translation_info path_name_nti;
+    struct Lock *fl;
+    int result = ERROR;
+    struct ExamineData *fib = NULL;
+    BPTR file_lock = ZERO;
+    int link_length = -1;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(path_name);
-	SHOWPOINTER(st);
+    SHOWSTRING(path_name);
+    SHOWPOINTER(st);
 
-	assert(path_name != NULL && st != NULL);
+    assert(path_name != NULL && st != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-    if (path_name == NULL || st == NULL)
-    {
+    if (path_name == NULL || st == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	if (__unix_path_semantics)
-	{
-		if (path_name[0] == '\0')
-		{
-			SHOWMSG("no name given");
+    if (__unix_path_semantics) {
+        if (path_name[0] == '\0') {
+            SHOWMSG("no name given");
 
-			__set_errno(ENOENT);
-			goto out;
-		}
+            __set_errno(ENOENT);
+            goto out;
+        }
 
-		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
-			goto out;
+        if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+            goto out;
 
-		/* The pseudo root directory is a very special case indeed.
-			We make up some pseudo data for it. */
-		if (path_name_nti.is_root)
-		{
-			time_t mtime;
+        /* The pseudo root directory is a very special case indeed.
+            We make up some pseudo data for it. */
+        if (path_name_nti.is_root) {
+            time_t mtime;
 
-			SHOWMSG("setting up the root directory info");
+            SHOWMSG("setting up the root directory info");
 
-			memset(st, 0, sizeof(*st));
+            memset(st, 0, sizeof(*st));
 
-			time(&mtime);
+            time(&mtime);
 
-			st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-			st->st_mtime = mtime;
-			st->st_atime = mtime;
-			st->st_ctime = mtime;
-			st->st_nlink = 2;
-			st->st_blksize = 512;
+            st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+            st->st_mtime = mtime;
+            st->st_atime = mtime;
+            st->st_ctime = mtime;
+            st->st_nlink = 2;
+            st->st_blksize = 512;
 
-			result = OK;
+            result = OK;
 
-			goto out;
-		}
-	}
+            goto out;
+        }
+    }
 
-	D(("trying to get a lock on '%s'", path_name));
+    D(("trying to get a lock on '%s'", path_name));
 
-	file_lock = __lock(path_name, SHARED_LOCK, &link_length, NULL, 0);
-	if (file_lock == ZERO && link_length < 0)
-	{
-		SHOWMSG("that didn't work");
+    file_lock = __lock(path_name, SHARED_LOCK, &link_length, NULL, 0);
+    if (file_lock == ZERO && link_length < 0) {
+        SHOWMSG("that didn't work");
 
-		__set_errno(__translate_access_io_error_to_errno(IoErr()));
-		goto out;
-	}
+        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	if (link_length > 0)
-	{
-		time_t mtime;
-		struct DevProc *dvp = GetDeviceProcFlags((STRPTR)path_name, 0, LDF_ALL);
-		struct MsgPort *port = NULL;
-		if (dvp) {
-			if (!(dvp->dvp_Flags & DVPF_UNLOCK)) {
-				SetIoErr(dvp->dvp_Lock);
-				port = dvp->dvp_Port;
-			}
-			FreeDeviceProc(dvp);
-		}
-		/* Build a dummy stat for the link. */
+    if (link_length > 0) {
+        time_t mtime;
+        struct DevProc *dvp = GetDeviceProcFlags((STRPTR) path_name, 0, LDF_ALL);
+        struct MsgPort *port = NULL;
+        if (dvp) {
+            if (!(dvp->dvp_Flags & DVPF_UNLOCK)) {
+                SetIoErr(dvp->dvp_Lock);
+                port = dvp->dvp_Port;
+            }
+            FreeDeviceProc(dvp);
+        }
+        /* Build a dummy stat for the link. */
 
-		SHOWMSG("Creating stat info for link.");
+        SHOWMSG("Creating stat info for link.");
 
-		memset(st, 0, sizeof(*st));
+        memset(st, 0, sizeof(*st));
 
-		time(&mtime);
+        time(&mtime);
 
-		st->st_mode = S_IFLNK | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-		st->st_dev = (dev_t)port;
-		st->st_size = link_length;
-		st->st_mtime = mtime;
-		st->st_atime = mtime;
-		st->st_ctime = mtime;
-		st->st_nlink = 1;
-	}
-	else
-	{
-		fib = ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE);
-		if (fib == NULL)
-		{
-			SHOWMSG("couldn't examine it");
+        st->st_mode = S_IFLNK | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+        st->st_dev = (dev_t) port;
+        st->st_size = link_length;
+        st->st_mtime = mtime;
+        st->st_atime = mtime;
+        st->st_ctime = mtime;
+        st->st_nlink = 1;
+    } else {
+        fib = ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE);
+        if (fib == NULL) {
+            SHOWMSG("couldn't examine it");
 
-			__set_errno(__translate_io_error_to_errno(IoErr()));
-			goto out;
-		}
+            __set_errno(__translate_io_error_to_errno(IoErr()));
+            goto out;
+        }
 
-		fl = BADDR(file_lock);
+        fl = BADDR(file_lock);
 
-		__convert_file_info_to_stat(fl->fl_Port, fib, st);
-	}
+        __convert_file_info_to_stat(fl->fl_Port, fib, st);
+    }
 
-	result = OK;
+    result = OK;
 
 out:
 
-	if (fib != NULL) {
-		FreeDosObject(DOS_EXAMINEDATA, fib);
-	}
-	UnLock(file_lock);
+    if (fib != NULL) {
+        FreeDosObject(DOS_EXAMINEDATA, fib);
+    }
+    UnLock(file_lock);
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

@@ -7,47 +7,45 @@
 #endif /* _SOCKET_HEADERS_H */
 
 ssize_t
-recvfrom(int sockfd, void *buff, size_t len, int flags, struct sockaddr *from, socklen_t *fromlen)
-{
-	struct fd *fd;
-	int result = ERROR;
+recvfrom(int sockfd, void *buff, size_t len, int flags, struct sockaddr *from, socklen_t *fromlen) {
+    struct fd *fd;
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(sockfd);
-	SHOWPOINTER(buff);
-	SHOWVALUE(len);
-	SHOWVALUE(flags);
-	SHOWPOINTER(from);
-	SHOWPOINTER(fromlen);
+    SHOWVALUE(sockfd);
+    SHOWPOINTER(buff);
+    SHOWVALUE(len);
+    SHOWVALUE(flags);
+    SHOWPOINTER(from);
+    SHOWPOINTER(fromlen);
 
-	assert(buff != NULL && from != NULL && fromlen != NULL);
-	assert(__SocketBase != NULL);
+    assert(buff != NULL && from != NULL && fromlen != NULL);
+    assert(__SocketBase != NULL);
 
-    if (buff == NULL || from == NULL || fromlen == NULL)
-    {
+    if (buff == NULL || from == NULL || fromlen == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	assert(sockfd >= 0 && sockfd < __num_fd);
-	assert(__fd[sockfd] != NULL);
-	assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
-	assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __num_fd);
+    assert(__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
-	fd = __get_file_descriptor_socket(sockfd);
-	if (fd == NULL)
-		goto out;
+    fd = __get_file_descriptor_socket(sockfd);
+    if (fd == NULL)
+        goto out;
 
-	result = __recvfrom(fd->fd_Socket, buff, len, flags, from, fromlen);
+    result = __recvfrom(fd->fd_Socket, buff, len, flags, from, fromlen);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

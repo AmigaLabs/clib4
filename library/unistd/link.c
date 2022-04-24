@@ -7,83 +7,76 @@
 #endif /* _UNISTD_HEADERS_H */
 
 int
-link(const char *existing_path, const char *new_path)
-{
-	struct name_translation_info existing_path_name_nti;
-	struct name_translation_info new_path_name_nti;
-	BPTR existing_path_lock = ZERO;
-	int result = ERROR;
-	LONG status;
+link(const char *existing_path, const char *new_path) {
+    struct name_translation_info existing_path_name_nti;
+    struct name_translation_info new_path_name_nti;
+    BPTR existing_path_lock = ZERO;
+    int result = ERROR;
+    LONG status;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(existing_path);
-	SHOWSTRING(new_path);
+    SHOWSTRING(existing_path);
+    SHOWSTRING(new_path);
 
-	assert(existing_path != NULL && new_path != NULL);
+    assert(existing_path != NULL && new_path != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-    if (existing_path == NULL || new_path == NULL)
-    {
+    if (existing_path == NULL || new_path == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	if (__unix_path_semantics)
-	{
-		if (existing_path[0] == '\0' || new_path[0] == '\0')
-		{
-			SHOWMSG("no name given");
+    if (__unix_path_semantics) {
+        if (existing_path[0] == '\0' || new_path[0] == '\0') {
+            SHOWMSG("no name given");
 
-			__set_errno(ENOENT);
-			goto out;
-		}
+            __set_errno(ENOENT);
+            goto out;
+        }
 
-		if (__translate_unix_to_amiga_path_name(&existing_path, &existing_path_name_nti) != 0)
-			goto out;
+        if (__translate_unix_to_amiga_path_name(&existing_path, &existing_path_name_nti) != 0)
+            goto out;
 
-		if (__translate_unix_to_amiga_path_name(&new_path, &new_path_name_nti) != 0)
-			goto out;
+        if (__translate_unix_to_amiga_path_name(&new_path, &new_path_name_nti) != 0)
+            goto out;
 
-		if (existing_path_name_nti.is_root || new_path_name_nti.is_root)
-		{
-			__set_errno(EACCES);
-			goto out;
-		}
-	}
+        if (existing_path_name_nti.is_root || new_path_name_nti.is_root) {
+            __set_errno(EACCES);
+            goto out;
+        }
+    }
 
-	D(("trying to get a lock on '%s'", existing_path));
+    D(("trying to get a lock on '%s'", existing_path));
 
-	existing_path_lock = Lock((STRPTR)existing_path, SHARED_LOCK);
-	if (existing_path_lock == ZERO)
-	{
-		SHOWMSG("that didn't work");
+    existing_path_lock = Lock((STRPTR) existing_path, SHARED_LOCK);
+    if (existing_path_lock == ZERO) {
+        SHOWMSG("that didn't work");
 
-		__set_errno(__translate_access_io_error_to_errno(IoErr()));
-		goto out;
-	}
+        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	D(("trying to make a link named '%s'", new_path));
+    D(("trying to make a link named '%s'", new_path));
 
-	status = MakeLink((STRPTR)new_path, (APTR) existing_path_lock, LINK_HARD);
-	if (status == DOSFALSE)
-	{
-		SHOWMSG("that didn't work");
+    status = MakeLink((STRPTR) new_path, (APTR) existing_path_lock, LINK_HARD);
+    if (status == DOSFALSE) {
+        SHOWMSG("that didn't work");
 
-		__set_errno(__translate_io_error_to_errno(IoErr()));
-		goto out;
-	}
+        __set_errno(__translate_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	result = OK;
+    result = OK;
 
 out:
 
-	UnLock(existing_path_lock);
+    UnLock(existing_path_lock);
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

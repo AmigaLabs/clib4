@@ -19,8 +19,10 @@ inet_pton(int af, const char *src, void *dst) {
     switch (af) {
         case AF_INET:
             result = inet_pton4(src, dst);
+            break;
         case AF_INET6:
             result = inet_pton6(src, dst);
+            break;
         default:
             __set_errno(EAFNOSUPPORT);
             result = -1;

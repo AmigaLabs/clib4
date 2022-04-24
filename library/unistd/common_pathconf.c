@@ -172,7 +172,7 @@ __pathconf(struct MsgPort *port, int name) {
             goto out;
     }
 
-    out:
+out:
 
     return (ret);
 }

@@ -21,9 +21,6 @@ static int getint(wchar_t **s);
 
 size_t
 wstring_wstocs(char dst[], size_t dsz, const wchar_t *src, size_t ssz) {
-
-    ENTER();
-
     if (!src) {
         __set_errno(EINVAL);
         return 0U;
@@ -40,9 +37,6 @@ wstring_wstocs(char dst[], size_t dsz, const wchar_t *src, size_t ssz) {
 
 size_t
 wstring_cstows(wchar_t dst[], size_t dsz, const char *src, size_t ssz) {
-
-    ENTER();
-
     if (!src) {
         __set_errno(EINVAL);
         return 0U;
@@ -59,9 +53,6 @@ wstring_cstows(wchar_t dst[], size_t dsz, const char *src, size_t ssz) {
 
 int
 __wc_indelim(wchar_t wc, const wchar_t *delim) {
-
-    ENTER();
-
     while (*delim) {
         if (wc == *delim)
             return 1;
@@ -72,18 +63,12 @@ __wc_indelim(wchar_t wc, const wchar_t *delim) {
 
 static void
 out_init_file(FOut *out, FILE *f) {
-
-    ENTER();
-
     memset(out, 0, sizeof(*out));
     out->file = f;
 }
 
 void
 out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size) {
-
-    ENTER();
-
     memset(out, 0, sizeof(*out));
     out->buffer = buffer;
     out->buffer_pos = 0;
@@ -92,9 +77,6 @@ out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size) {
 
 static void
 out(FOut *_out, const wchar_t *text, size_t length) {
-
-    ENTER();
-
     if (!length) {
         return;
     }
@@ -116,9 +98,6 @@ out(FOut *_out, const wchar_t *text, size_t length) {
 
 static void
 out_putwc(wchar_t wc, FOut *_out) {
-
-    ENTER();
-
     if (_out->file) {
         fputwc(wc, _out->file);
     } else if (_out->buffer_pos < _out->buffer_size) {
@@ -136,6 +115,7 @@ out_printf(FOut *_out, const char *format, ...) {
     if (_out->file) {
         int ret = vfprintf(_out->file, format, args);
         va_end(args);
+        RETURN(ret);
         return ret;
     } else {
         // TODO(digit): Make this faster.
@@ -148,6 +128,7 @@ out_printf(FOut *_out, const char *format, ...) {
                 (!(mb_len = (size_t) vsnprintf(NULL, 0, format, args))) ||
                 ((mb_buffer = malloc((mb_len + 1))) == NULL)) {
             va_end(args);
+            RETURN(0);
             return 0;
         }
 
@@ -161,6 +142,7 @@ out_printf(FOut *_out, const char *format, ...) {
                 ((wide_buffer = malloc((wide_len + 1) * sizeof(wchar_t))) == NULL)) {
             va_end(args);
             free(mb_buffer);
+            RETURN(0);
             return 0;
         }
 
@@ -172,7 +154,7 @@ out_printf(FOut *_out, const char *format, ...) {
         free(wide_buffer);
         free(mb_buffer);
         va_end(args);
-
+        RETURN((int) wide_len);
         return (int) wide_len;
     }
     va_end(args);
@@ -180,9 +162,6 @@ out_printf(FOut *_out, const char *format, ...) {
 
 static int
 out_error(FOut *_out) {
-
-    ENTER();
-
     if (_out->file != NULL) {
         return ferror(_out->file);
     }
@@ -191,9 +170,6 @@ out_error(FOut *_out) {
 
 int
 out_overflow(FOut *_out) {
-
-    ENTER();
-
     if (_out->file != NULL) {
         return feof(_out->file);
     }
@@ -203,8 +179,6 @@ out_overflow(FOut *_out) {
 static int
 getint(wchar_t **s) {
     int i;
-
-    ENTER();
 
     for (i = 0; iswdigit(**s); (*s)++)
         i = 10 * i + (**s - '0');
@@ -239,8 +213,6 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
     char *bs;
     char charfmt[16];
     wchar_t wc;
-
-    ENTER();
 
     for (;;) {
         wchar_t *a, *z;
@@ -488,16 +460,19 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
 
     ENTER();
 
-    if(__check_abort_enabled)
+    if (__check_abort_enabled)
         __check_abort();
 
     // Check for error in format string before writing anything to file.
     if (wprintf_core(0, format, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
+        RETURN(EOF);
         return EOF;
     }
     ret = wprintf_core(_out, format, &ap2, nl_arg, nl_type);
 
     va_end(ap2);
+
+    RETURN(ret);
     return ret;
 }

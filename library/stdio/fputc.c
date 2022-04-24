@@ -74,8 +74,7 @@ __fputc(int c, FILE *stream, int buffer_mode) {
 
     file->iob_Buffer[file->iob_BufferWriteBytes++] = c;
 
-    if ((buffer_mode == IOBF_BUFFER_MODE_NONE || (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) &&
-        __flush_iob_write_buffer(file) < 0) {
+    if ((buffer_mode == IOBF_BUFFER_MODE_NONE || (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) && __flush_iob_write_buffer(file) < 0) {
         /* Pretend that the last character was not written. */
         file->iob_BufferWriteBytes--;
         goto out;
@@ -108,6 +107,14 @@ fputc(int c, FILE *stream) {
 
     if (__fputc_check(stream) < 0)
         goto out;
+
+    /* TODO - We have to investigate while stdout reach this point with IOBF_BUFFER_MODE_NONE when it is
+     * initialized with IOBF_BUFFER_MODE_LINE
+     */
+
+    /* Using no buffer with fputc is really slow. It no buffer is set, change filt to Line Mode buffering */
+    if (FLAG_IS_SET(file->iob_Flags, IOBF_BUFFER_MODE_NONE))
+        SET_FLAG(file->iob_Flags, IOBF_BUFFER_MODE_LINE);
 
     result = __fputc(c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
 

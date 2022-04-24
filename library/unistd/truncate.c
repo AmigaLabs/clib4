@@ -45,7 +45,7 @@ truncate(const char *path_name, off_t length) {
 
     close(fd);
 
-    out:
+out:
 
     RETURN(result);
     return (result);

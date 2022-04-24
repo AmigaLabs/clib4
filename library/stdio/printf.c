@@ -7,32 +7,27 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-printf(const char *format, ...)
-{
-	int result = EOF;
-	va_list arg;
+printf(const char *format, ...) {
+    int result = EOF;
+    va_list arg;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(format);
+    SHOWSTRING(format);
 
-	assert(format != NULL);
+    assert(format != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
-
-    if (format == NULL)
-    {
+    if (format == NULL) {
         __set_errno(EFAULT);
         goto out;
     }
 
-	va_start(arg, format);
-	result = vfprintf(stdout, format, arg);
-	va_end(arg);
+    va_start(arg, format);
+    result = vfprintf(stdout, format, arg);
+    va_end(arg);
 
 out:
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

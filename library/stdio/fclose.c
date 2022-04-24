@@ -10,8 +10,6 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/****************************************************************************/
-
 int
 fclose(FILE *stream) {
     struct iob *file = (struct iob *) stream;

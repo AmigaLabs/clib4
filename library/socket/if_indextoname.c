@@ -4,7 +4,6 @@
 
 #include <net/if.h>
 
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */

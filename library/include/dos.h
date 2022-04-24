@@ -137,18 +137,6 @@ extern BOOL __is_daemon;
  */
 extern BOOL __never_free;
 
-/****************************************************************************/
-
-/*
- * You can monitor how much memory, and in how many chunks, is allocated
- * over the lifetime of your program. Call the following function with
- * non-NULL parameters to obtain the current state of memory allocations.
- * Parameters called with NULL instead of pointer to the counters to
- * be filled in will be ignored.
- */
-extern void __get_mem_stats(size_t *current_memory, size_t *max_memory,
-							size_t *current_chunks, size_t *max_chunks);
-
 /*
  * The following function will reset the counters for "maximum amount
  * of memory used" and "maximum number of chunks used" to the figures

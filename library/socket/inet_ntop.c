@@ -17,8 +17,10 @@ inet_ntop(int af, const void *restrict src, char *restrict dst, socklen_t cnt) {
     switch (af) {
         case AF_INET:
             result = inet_ntop4(src, dst, cnt);
+            break;
         case AF_INET6:
             result = inet_ntop6(src, dst, cnt);
+            break;
         default:
             __set_errno(EAFNOSUPPORT);
             result = NULL;
@@ -30,7 +32,6 @@ inet_ntop(int af, const void *restrict src, char *restrict dst, socklen_t cnt) {
     RETURN(result);
     return result;
 }
-
 
 static const char *
 inet_ntop4(const unsigned char *src, char *dst, socklen_t size) {

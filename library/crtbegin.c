@@ -35,9 +35,7 @@
  */
 
 #ifndef EXEC_TYPES_H
-
 #include <exec/types.h>
-
 #endif /* EXEC_TYPES_H */
 
 #include <proto/exec.h>
@@ -46,15 +44,11 @@
 #include <libraries/elf.h>
 
 #ifndef _STDLIB_HEADERS_H
-
 #include "stdlib_headers.h"
-
 #endif /* _STDLIB_HEADERS_H */
 
 #ifndef _MACROS_H
-
 #include "macros.h"
-
 #endif /* _MACROS_H */
 
 /*

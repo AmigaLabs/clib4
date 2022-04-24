@@ -8,8 +8,6 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
 /*
  * The following patterns must translate properly:
  *
@@ -41,8 +39,6 @@
  *		.
  *		..
  */
-
-/****************************************************************************/
 
 int
 __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translation_info *nti) {
@@ -507,7 +503,7 @@ __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translati
 
     result = OK;
 
-    out:
+out:
 
     /*POPDEBUGLEVEL();*/
 

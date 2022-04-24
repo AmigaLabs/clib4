@@ -10,7 +10,8 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-int __open_iob(const char *filename, const char *mode, int file_descriptor, int slot_number) {
+int
+__open_iob(const char *filename, const char *mode, int file_descriptor, int slot_number) {
     struct SignalSemaphore *lock;
     ULONG file_flags;
     int result = ERROR;

@@ -14,108 +14,101 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-int stat(const char *path_name, struct stat *st)
-{
-	struct name_translation_info path_name_nti;
-	struct ExamineData *fib = NULL;
-	struct Lock *fl;
-	int result = ERROR;
-	BPTR file_lock = ZERO;
+int stat(const char *path_name, struct stat *st) {
+    struct name_translation_info path_name_nti;
+    struct ExamineData *fib = NULL;
+    struct Lock *fl;
+    int result = ERROR;
+    BPTR file_lock = ZERO;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(path_name);
-	SHOWPOINTER(st);
+    SHOWSTRING(path_name);
+    SHOWPOINTER(st);
 
-	assert(path_name != NULL && st != NULL);
+    assert(path_name != NULL && st != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-    if (path_name == NULL || st == NULL)
-    {
+    if (path_name == NULL || st == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	if (__unix_path_semantics)
-	{
-		if (path_name[0] == '\0')
-		{
-			SHOWMSG("no name given");
+    if (__unix_path_semantics) {
+        if (path_name[0] == '\0') {
+            SHOWMSG("no name given");
 
-			__set_errno(ENOENT);
-			goto out;
-		}
+            __set_errno(ENOENT);
+            goto out;
+        }
 
-		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
-			goto out;
+        if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+            goto out;
 
-		/* The pseudo root directory is a very special case indeed.
-			* We make up some pseudo data for it.
-			*/
-		if (path_name_nti.is_root)
-		{
-			struct DateStamp ds;
-			time_t mtime;
+        /* The pseudo root directory is a very special case indeed.
+            * We make up some pseudo data for it.
+            */
+        if (path_name_nti.is_root) {
+            struct DateStamp ds;
+            time_t mtime;
 
-			SHOWMSG("seting up the root directory info");
+            SHOWMSG("seting up the root directory info");
 
-			memset(st, 0, sizeof(*st));
+            memset(st, 0, sizeof(*st));
 
-			DateStamp(&ds);
+            DateStamp(&ds);
 
-			mtime = __convert_datestamp_to_time(&ds);
+            mtime = __convert_datestamp_to_time(&ds);
 
-			st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-			st->st_mtime = mtime;
-			st->st_atime = mtime;
-			st->st_ctime = mtime;
-			st->st_nlink = 2;
-			st->st_blksize = 512;
+            st->st_mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+            st->st_mtime = mtime;
+            st->st_atime = mtime;
+            st->st_ctime = mtime;
+            st->st_nlink = 2;
+            st->st_blksize = 512;
 
-			result = OK;
+            result = OK;
 
-			goto out;
-		}
-	}
+            goto out;
+        }
+    }
 
-	D(("trying to get a lock on '%s'", path_name));
+    D(("trying to get a lock on '%s'", path_name));
 
-	file_lock = Lock((STRPTR)path_name, SHARED_LOCK);
-	if (file_lock == ZERO)
-	{
-		SHOWMSG("that didn't work");
+    file_lock = Lock((STRPTR) path_name, SHARED_LOCK);
+    if (file_lock == ZERO) {
+        SHOWMSG("that didn't work");
 
-		__set_errno(__translate_access_io_error_to_errno(IoErr()));
-		goto out;
-	}
+        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	fib = ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE);
-	if (fib == NULL)
-	{
-		SHOWMSG("couldn't examine it");
+    fib = ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE);
+    if (fib == NULL) {
+        SHOWMSG("couldn't examine it");
 
-		__set_errno(__translate_io_error_to_errno(IoErr()));
-		goto out;
-	}
+        __set_errno(__translate_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	fl = BADDR(file_lock);
+    fl = BADDR(file_lock);
 
-	__convert_file_info_to_stat(fl->fl_Port, fib, st);
+    __convert_file_info_to_stat(fl->fl_Port, fib, st);
 
-	result = OK;
+    result = OK;
 
 out:
 
-	if (fib != NULL) {
-		FreeDosObject(DOS_EXAMINEDATA, fib);
-	}
+    if (fib != NULL) {
+        FreeDosObject(DOS_EXAMINEDATA, fib);
+    }
 
-	UnLock(file_lock);
+    UnLock(file_lock);
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

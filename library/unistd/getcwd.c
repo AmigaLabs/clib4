@@ -63,21 +63,18 @@ getcwd(char *buffer, size_t buffer_size) {
         goto out;
     }
 
-    if (__unix_path_semantics)
-    {
-        if (__current_path_name[0] != '\0')
-        {
-            if (buffer_size < strlen(__current_path_name) + 1)
-            {
+    if (__unix_path_semantics) {
+        if (__current_path_name[0] != '\0') {
+            if (buffer_size < strlen(__current_path_name) + 1) {
                 SHOWMSG("buffer is too small");
 
                 __set_errno(ERANGE);
                 goto out;
             }
 
-            strcpy(buffer,__current_path_name);
+            strcpy(buffer, __current_path_name);
 
-            D(("returning absolute path name '%s'",buffer));
+            D(("returning absolute path name '%s'", buffer));
 
             result = buffer;
         }
@@ -105,22 +102,20 @@ getcwd(char *buffer, size_t buffer_size) {
             goto out;
         }
 
-        if(__unix_path_semantics)
-        {
-            const char * path_name = buffer;
+        if (__unix_path_semantics) {
+            const char *path_name = buffer;
 
-            if(__translate_amiga_to_unix_path_name(&path_name,&buffer_nti) != 0)
+            if (__translate_amiga_to_unix_path_name(&path_name, &buffer_nti) != 0)
                 goto out;
 
-            if(buffer_size < strlen(path_name) + 1)
-            {
+            if (buffer_size < strlen(path_name) + 1) {
                 SHOWMSG("buffer is too small");
 
                 __set_errno(ERANGE);
                 goto out;
             }
 
-            strcpy(buffer,path_name);
+            strcpy(buffer, path_name);
         }
     }
 

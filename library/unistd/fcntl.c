@@ -3,12 +3,11 @@
 */
 
 #ifndef _FCNTL_HEADERS_H
-
 #include "fcntl_headers.h"
-
 #endif /* _FCNTL_HEADERS_H */
 
-int fcntl(int file_descriptor, int cmd, ... /* int arg */) {
+int
+fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     struct file_action_message fam;
     struct flock *l;
     int vacant_slot;
@@ -234,7 +233,7 @@ int fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             break;
     }
 
-    out:
+out:
 
     __fd_unlock(fd);
 

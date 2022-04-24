@@ -6,32 +6,28 @@
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
 
-/****************************************************************************/
+void (*signal(int sig, void (*handler)(int)))(int) {
+    int table_entry = sig - SIGHUP;
+    void (*result)(int) = SIG_ERR;
 
-void (*signal(int sig, void (* handler)(int)))(int)
-{
-	int table_entry = sig - SIGHUP;
-	void (*result)(int) = SIG_ERR;
+    ENTER();
 
-	ENTER();
+    SHOWVALUE(sig);
+    SHOWPOINTER(handler);
 
-	SHOWVALUE(sig);
-	SHOWPOINTER(handler);
+    if (sig < SIGHUP || sig > NSIG || handler == SIG_ERR) {
+        SHOWMSG("unsupported signal");
 
-	if(sig < SIGHUP || sig > NSIG || handler == SIG_ERR)
-	{
-		SHOWMSG("unsupported signal");
+        __set_errno(EINVAL);
+        goto out;
+    }
 
-		__set_errno(EINVAL);
-		goto out;
-	}
+    result = (void (*)(int)) __signal_handler_table[table_entry];
 
-	result = (void (*)(int))__signal_handler_table[table_entry];
+    __signal_handler_table[table_entry] = (signal_handler_t) handler;
 
-	__signal_handler_table[table_entry] = (signal_handler_t)handler;
+out:
 
- out:
-
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

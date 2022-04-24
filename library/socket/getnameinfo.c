@@ -7,8 +7,7 @@
 #endif /* _SOCKET_HEADERS_H */
 
 int
-getnameinfo(const struct sockaddr *sa, socklen_t salen, char *node, socklen_t nodelen, char *service,
-            socklen_t servicelen, int flags) {
+getnameinfo(const struct sockaddr *sa, socklen_t salen, char *node, socklen_t nodelen, char *service, socklen_t servicelen, int flags) {
     int result = 0;
 
     /* FIXME: Support other flags. */

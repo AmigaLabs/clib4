@@ -3,9 +3,7 @@
 */
 
 #ifndef _USERGROUP_HEADERS_H
-
 #include "usergroup_headers.h"
-
 #endif /* _USERGROUP_HEADERS_H */
 
 #ifdef crypt

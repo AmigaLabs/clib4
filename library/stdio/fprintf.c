@@ -18,9 +18,6 @@ fprintf(FILE *stream, const char *format, ...) {
 
     assert(stream != NULL && format != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if (stream == NULL || format == NULL) {
         __set_errno(EFAULT);
         goto out;

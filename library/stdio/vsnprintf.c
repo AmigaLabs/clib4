@@ -21,9 +21,6 @@ vsnprintf(char *buffer, size_t size, const char *format, va_list arg) {
 
     assert(format != NULL && arg != NULL && (int) size >= 0);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if (format == NULL || (buffer == NULL && size > 0)) {
         SHOWMSG("invalid parameters");
 

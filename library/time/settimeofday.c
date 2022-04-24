@@ -14,19 +14,19 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-extern struct MsgPort     NOCOMMON *__timer_port;
+extern struct MsgPort NOCOMMON *__timer_port;
 extern struct TimeRequest NOCOMMON *__timer_request;
 extern BOOL NOCOMMON __timer_busy;
 
-int settimeofday (const struct timeval *t, const struct timezone *tz) {
+int
+settimeofday(const struct timeval *t, const struct timezone *tz) {
 
     ENTER();
 
     int result = -1;
     int32 __gmtoffset = 0;
 
-    if (__timer_busy)
-    {
+    if (__timer_busy) {
         __set_errno(EPERM);
         RETURN(result);
         return result;
@@ -43,7 +43,7 @@ int settimeofday (const struct timeval *t, const struct timezone *tz) {
     __timer_request->Time.Seconds = t->tv_secs - ((2922 * 24 * 60 + __gmtoffset) * 60);
     __timer_request->Time.Microseconds = t->tv_micro;
 
-    DoIO((struct IORequest *)__timer_request);
+    DoIO((struct IORequest *) __timer_request);
     GetMsg(__timer_port);
 
     result = 0;

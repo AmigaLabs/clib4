@@ -6,37 +6,33 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
 int
-__set_current_path(const char * path_name)
-{
-	int result = ERROR;
+__set_current_path(const char *path_name) {
+    int result = ERROR;
 
-	SHOWSTRING(path_name);
+    SHOWSTRING(path_name);
 
-	ENTER();
+    ENTER();
 
-	assert( path_name != NULL );
+    assert(path_name != NULL);
 
-	if(strlen(path_name)+1 > sizeof(__current_path_name))
-	{
-		SHOWMSG("path is too long");
+    if (strlen(path_name) + 1 > sizeof(__current_path_name)) {
+        SHOWMSG("path is too long");
 
-		__set_errno(ENAMETOOLONG);
-		goto out;
-	}
+        __set_errno(ENAMETOOLONG);
+        goto out;
+    }
 
-	/* Only store the path if it's absolute. */
-	if(path_name[0] == '/')
-		strcpy(__current_path_name,path_name);
-	else
-		strcpy(__current_path_name,"");
+    /* Only store the path if it's absolute. */
+    if (path_name[0] == '/')
+        strcpy(__current_path_name, path_name);
+    else
+        strcpy(__current_path_name, "");
 
-	result = OK;
+    result = OK;
 
- out:
+out:
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

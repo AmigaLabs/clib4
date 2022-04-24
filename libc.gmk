@@ -444,7 +444,6 @@ C_STDLIB := \
 	stdlib/getexecname.o \
 	stdlib/getdefstacksize.o \
 	stdlib/getenv.o \
-	stdlib/getmemstats.o \
 	stdlib/getsp.o \
 	stdlib/get_errno.o \
 	stdlib/inistate.o \

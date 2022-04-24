@@ -1,19 +1,5 @@
 /*
  * $Id: math_lgammaf.c,v 1.5 2022-03-12 12:04:23 clib2devs Exp $
- *
-
- *
- *
- * PowerPC math library based in part on work by Sun Microsystems
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- *
- *
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
  */
 
 #ifndef _MATH_HEADERS_H
@@ -90,7 +76,6 @@ static const float
 
 static const float zero = 0.0000000000e+00;
 
-
 static float
 sin_pif(float x) {
     float y, z;
@@ -146,7 +131,8 @@ sin_pif(float x) {
     return -y;
 }
 
-float __lgammaf(float x, int *signgamp) {
+float
+__lgammaf(float x, int *signgamp) {
     float t, y, z, nadj = 0.0, p, p1, p2, p3, q, r, w;
     int32_t hx;
     int i, ix;
@@ -262,7 +248,8 @@ float __lgammaf(float x, int *signgamp) {
     return r;
 }
 
-float lgammaf(float x) {
+float
+lgammaf(float x) {
     float result;
 
     result = __lgammaf(x, &signgam);

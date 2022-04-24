@@ -6,71 +6,62 @@
 #include "utime_headers.h"
 #endif /* _UTIME_HEADERS_H */
 
-int utime(const char *path_name, const struct utimbuf *times)
-{
-	struct name_translation_info path_name_nti;
-	struct DateStamp ds;
-	int result = ERROR;
-	LONG status;
+int utime(const char *path_name, const struct utimbuf *times) {
+    struct name_translation_info path_name_nti;
+    struct DateStamp ds;
+    int result = ERROR;
+    LONG status;
 
-	assert(path_name != NULL);
+    assert(path_name != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-    if (path_name == NULL)
-    {
+    if (path_name == NULL) {
         __set_errno(EFAULT);
         goto out;
     }
 
-	/* If a modification time is provided, convert it into the local
-	   DateStamp format, as used by the SetFileDate() function. */
-	if (times != NULL)
-	{
-		if (CANNOT __convert_time_to_datestamp(times->modtime, &ds))
-		{
-			__set_errno(EINVAL);
-			goto out;
-		}
-	}
-	else
-	{
-		/* No special modification time provided; use the current
-		   time instead. */
-		DateStamp(&ds);
-	}
+    /* If a modification time is provided, convert it into the local
+       DateStamp format, as used by the SetFileDate() function. */
+    if (times != NULL) {
+        if (CANNOT __convert_time_to_datestamp(times->modtime, &ds))
+        {
+            __set_errno(EINVAL);
+            goto out;
+        }
+    } else {
+        /* No special modification time provided; use the current
+           time instead. */
+        DateStamp(&ds);
+    }
 
-	if (__unix_path_semantics)
-	{
-		if (path_name[0] == '\0')
-		{
-			SHOWMSG("no name given");
+    if (__unix_path_semantics) {
+        if (path_name[0] == '\0') {
+            SHOWMSG("no name given");
 
-			__set_errno(ENOENT);
-			goto out;
-		}
+            __set_errno(ENOENT);
+            goto out;
+        }
 
-		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
-			goto out;
+        if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+            goto out;
 
-		if (path_name_nti.is_root)
-		{
-			__set_errno(EACCES);
-			goto out;
-		}
-	}
+        if (path_name_nti.is_root) {
+            __set_errno(EACCES);
+            goto out;
+        }
+    }
 
-	status = SetFileDate((STRPTR)path_name, &ds);
-	if (status == DOSFALSE)
-	{
-		__set_errno(__translate_io_error_to_errno(IoErr()));
-		goto out;
-	}
+    status = SetFileDate((STRPTR) path_name, &ds);
+    if (status == DOSFALSE) {
+        __set_errno(__translate_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	result = OK;
+    result = OK;
 
 out:
 
-	return (result);
+    return (result);
 }

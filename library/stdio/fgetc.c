@@ -6,7 +6,6 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-
 int __fgetc(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;

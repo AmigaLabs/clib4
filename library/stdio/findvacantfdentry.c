@@ -9,49 +9,42 @@
 #ifndef NDEBUG
 
 BOOL
-__is_valid_fd(struct fd * fd)
-{
-	BOOL result = FALSE;
+__is_valid_fd(struct fd *fd) {
+    BOOL result = FALSE;
 
-	__stdio_lock();
+    __stdio_lock();
 
-	if(__fd != NULL && __num_fd > 0)
-	{
-		int i;
+    if (__fd != NULL && __num_fd > 0) {
+        int i;
 
-		for(i = 0 ; i < __num_fd ; i++)
-		{
-			if(__fd[i] == fd)
-			{
-				result = TRUE;
-				break;
-			}
-		}
-	}
+        for (i = 0; i < __num_fd; i++) {
+            if (__fd[i] == fd) {
+                result = TRUE;
+                break;
+            }
+        }
+    }
 
-	__stdio_unlock();
+    __stdio_unlock();
 
-	return(result);
+    return (result);
 }
 
 #endif /* NDEBUG */
 
 int
-__find_vacant_fd_entry(void)
-{
-	int result = ERROR;
-	int i;
+__find_vacant_fd_entry(void) {
+    int result = ERROR;
+    int i;
 
-	assert( __fd != NULL || __num_fd == 0 );
+    assert(__fd != NULL || __num_fd == 0);
 
-	for(i = 0 ; i < __num_fd ; i++)
-	{
-		if(FLAG_IS_CLEAR(__fd[i]->fd_Flags,FDF_IN_USE))
-		{
-			result = i;
-			break;
-		}
-	}
+    for (i = 0; i < __num_fd; i++) {
+        if (FLAG_IS_CLEAR(__fd[i]->fd_Flags, FDF_IN_USE)) {
+            result = i;
+            break;
+        }
+    }
 
-	return(result);
+    return (result);
 }

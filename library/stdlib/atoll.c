@@ -7,24 +7,22 @@
 #endif /* _STDLIB_HEADERS_H */
 
 long long
-atoll(const char *str)
-{
-	long long result = 0;
+atoll(const char *str) {
+    long long result = 0;
 
     ENTER();
     SHOWSTRING(str);
 
-    assert( str != NULL );
+    assert(str != NULL);
 
-		if(str == NULL)
-		{
-			__set_errno(EFAULT);
-			goto out;
-		}
+    if (str == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	result = strtoll(str, (char **)NULL, 10);
+    result = strtoll(str, (char **) NULL, 10);
 
- out:
+out:
     RETURN(result);
-	return(result);
+    return (result);
 }

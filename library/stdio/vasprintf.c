@@ -29,9 +29,6 @@ __vasprintf(const char *file, int line, char **ret, const char *format, va_list 
 
     assert(ret != NULL && format != NULL && arg != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if (ret == NULL || format == NULL || arg == NULL) {
         SHOWMSG("invalid parameters");
 

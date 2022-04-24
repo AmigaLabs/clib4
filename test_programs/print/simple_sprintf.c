@@ -46,7 +46,7 @@ _start(void) {
 
     Write(Output(), string, (LONG) strlen(string));
 
-    out:
+out:
 
     if (IDOS != NULL)
         DropInterface((struct Interface *) IDOS);

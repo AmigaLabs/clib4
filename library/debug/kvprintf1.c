@@ -5,10 +5,9 @@
 #include "debug_headers.h"
 
 VOID
-kvprintf(const char * format,va_list arg)
-{
-	assert( format != NULL );
+kvprintf(const char *format, va_list arg) {
+    assert(format != NULL);
 
-	if(format != NULL)
-		KPutFmt(format,arg);
+    if (format != NULL)
+        KPutFmt(format, arg);
 }

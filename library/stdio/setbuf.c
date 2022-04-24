@@ -6,7 +6,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-void setbuf(FILE *stream, char *buf) {
+void
+setbuf(FILE *stream, char *buf) {
     ENTER();
 
     SHOWPOINTER(stream);
@@ -25,7 +26,7 @@ void setbuf(FILE *stream, char *buf) {
     }
 
     if (buf == NULL)
-        setvbuf(stream, NULL, IOBF_BUFFER_MODE_NONE, 0);
+        setvbuf(stream, NULL, IOBF_BUFFER_MODE_LINE, 0);
     else
         setvbuf(stream, buf, IOBF_BUFFER_MODE_FULL, BUFSIZ);
 

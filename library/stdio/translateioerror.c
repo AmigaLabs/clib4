@@ -3,9 +3,7 @@
 */
 
 #ifndef _STDIO_HEADERS_H
-
 #include "stdio_headers.h"
-
 #endif /* _STDIO_HEADERS_H */
 
 /****************************************************************************/
