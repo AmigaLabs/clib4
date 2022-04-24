@@ -63,6 +63,8 @@ C_DIRENT := \
 	dirent/dirfd.o \
 	dirent/opendir.o \
 	dirent/readdir.o \
+	dirent/readdir_r.o \
+	dirent/readdir64_r.o \
 	dirent/rewinddir.o
 
 C_ICONV := \

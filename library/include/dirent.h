@@ -45,7 +45,8 @@ extern int closedir(DIR * directory_pointer);
 extern int alphasort(const struct dirent **a, const struct dirent **b);
 extern int dirfd(DIR *dirp);
 
-/****************************************************************************/
+extern int readdir_r(DIR *dir, struct dirent *buf, struct dirent **result);
+extern int readdir64_r(DIR *dir, struct dirent *buf, struct dirent **result);
 
 __END_DECLS
 
