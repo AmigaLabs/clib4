@@ -80,21 +80,16 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
         /* Set fixed rows and cols at moment */
         size->ws_row = 80;
         size->ws_col = 23;
-    } else if (request == TIOCGWINSZ) {
-        // TIOCSWINSZ
-
+    } else if (request == TIOCSWINSZ) {
         struct winsize *size;
-        // Get them from console device
         va_start(arg, request);
-        size = va_arg(arg,
-        struct winsize *);
+        size = va_arg(arg, struct winsize *);
         va_end(arg);
 
         if (size == NULL) {
             __set_errno(EFAULT);
             goto out;
         }
-
         /* Do nothing at moment */
     }
 

@@ -129,7 +129,8 @@ out:
     return (result);
 }
 
-void __convert_stat64_to_stat(const struct stat64 *st64, struct stat *st) {
+void
+__convert_stat64_to_stat(const struct stat64 *st64, struct stat *st) {
     ENTER();
 
     assert(st64 != NULL && st != NULL);

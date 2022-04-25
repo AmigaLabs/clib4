@@ -33,6 +33,7 @@ inet_ntop(int af, const void *restrict src, char *restrict dst, socklen_t cnt) {
     return result;
 }
 
+
 static const char *
 inet_ntop4(const unsigned char *src, char *dst, socklen_t size) {
     char tmp[sizeof "255.255.255.255"];
@@ -129,8 +130,7 @@ inet_ntop6(const unsigned char *src, char *dst, socklen_t size) {
         }
     }
     /* Was it a trailing run of 0x00's? */
-    if (best.base != -1 && (best.base + best.len) ==
-                           (NS_IN6ADDRSZ / NS_INT16SZ))
+    if (best.base != -1 && (best.base + best.len) == (NS_IN6ADDRSZ / NS_INT16SZ))
         *tp++ = ':';
     *tp++ = '\0';
 

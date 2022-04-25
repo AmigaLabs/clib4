@@ -12,7 +12,8 @@
 
 #include <sys/time.h>
 
-int utimes(const char *name, const struct timeval *tvp) {
+int
+utimes(const char *name, const struct timeval *tvp) {
     struct name_translation_info path_name_nti;
     struct DateStamp ds;
 

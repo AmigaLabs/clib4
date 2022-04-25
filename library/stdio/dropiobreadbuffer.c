@@ -39,7 +39,7 @@ __drop_iob_read_buffer(struct iob *file) {
 
             if (num_unread_bytes > 0) {
                 struct file_action_message fam;
-                LONG position;
+                int64_t position;
 
                 SHOWMSG("calling the action function");
 

@@ -6,7 +6,8 @@
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
 
-int chmod(const char *path_name, mode_t mode) {
+int
+chmod(const char *path_name, mode_t mode) {
     struct name_translation_info path_name_nti;
     ULONG protection;
     LONG status;
@@ -84,8 +85,7 @@ int chmod(const char *path_name, mode_t mode) {
     SHOWSTRING(path_name);
     SHOWVALUE(protection);
 
-    status = SetProtection((STRPTR) path_name,
-                           (LONG)(protection ^ (FIBF_READ | FIBF_WRITE | FIBF_EXECUTE | FIBF_DELETE)));
+    status = SetProtection((STRPTR) path_name, (LONG)(protection ^ (FIBF_READ | FIBF_WRITE | FIBF_EXECUTE | FIBF_DELETE)));
 
     if (status == DOSFALSE) {
         __set_errno(__translate_io_error_to_errno(IoErr()));

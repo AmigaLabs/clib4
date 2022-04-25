@@ -420,6 +420,7 @@ C_STDLIB := \
 	stdlib/abort.o \
 	stdlib/abs.o \
 	stdlib/aligned_alloc.o \
+	stdlib/arith64.o \
 	stdlib/assertion_failure.o \
 	stdlib/atexit.o \
 	stdlib/atof.o \

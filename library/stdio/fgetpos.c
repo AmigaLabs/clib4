@@ -11,7 +11,6 @@ fgetpos(FILE *stream, fpos_t *pos) {
     int result = EOF;
     fpos_t position;
 
-
     ENTER();
 
     SHOWPOINTER(stream);

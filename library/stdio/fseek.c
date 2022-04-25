@@ -7,8 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-fseek(FILE *stream, long int offset, int wherefrom)
-{
+fseek(FILE *stream, long int offset, int wherefrom) {
 	struct iob *file = (struct iob *)stream;
 	int result = GETPOSITION_ERROR;
 

@@ -5,7 +5,6 @@
 
 __BEGIN_DECLS
 
-
 #if defined(__TIMEVAL_ALREADY_DEFINED)
     #ifdef __USE_OLD_TIMEVAL__
         #define tv_sec  tv_secs

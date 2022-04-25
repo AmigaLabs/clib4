@@ -9,10 +9,6 @@
 #include <wchar.h>
 #endif /* _WCHAR_H */
 
-#ifndef _DEBUG_H
-#include "debug.h"
-#endif /* _DEBUG_H */
-
 #include <features.h>
 
 __BEGIN_DECLS

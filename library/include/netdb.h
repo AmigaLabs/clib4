@@ -180,11 +180,7 @@ struct addrinfo
   struct addrinfo *ai_next;     /* Pointer to next in list.  */
 };
 
-/****************************************************************************/
-
 extern int h_errno;
-
-/****************************************************************************/
 
 extern struct hostent *gethostbyaddr(const void *addr, socklen_t len, int type);
 extern struct hostent *gethostbyname(const char *name);

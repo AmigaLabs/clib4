@@ -6,10 +6,7 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-/****************************************************************************/
-
 void
-__set_h_errno(int new_h_errno)
-{
-	h_errno = new_h_errno;
+__set_h_errno(int new_h_errno) {
+    h_errno = new_h_errno;
 }

@@ -7,9 +7,11 @@
 #endif /* _WCHAR_HEADERS_H */
 
 int
-vwprintf(const wchar_t *format, va_list arg)
-{
+vwprintf(const wchar_t *format, va_list arg) {
     ENTER();
 
-    return vfwprintf(stdout, format, arg);
+    int result = vfwprintf(stdout, format, arg);
+
+    RETURN(result);
+    return result;
 }

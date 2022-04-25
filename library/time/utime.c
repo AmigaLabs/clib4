@@ -6,7 +6,8 @@
 #include "utime_headers.h"
 #endif /* _UTIME_HEADERS_H */
 
-int utime(const char *path_name, const struct utimbuf *times) {
+int
+utime(const char *path_name, const struct utimbuf *times) {
     struct name_translation_info path_name_nti;
     struct DateStamp ds;
     int result = ERROR;

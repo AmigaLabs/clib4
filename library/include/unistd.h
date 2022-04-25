@@ -103,7 +103,10 @@ extern void disableOptimizedFunctions(void);
 
 extern char * getcwd(char * buffer, size_t buffer_size);
 
-extern long gethostid(void);
+#undef gethostid
+#undef gethostname
+
+extern long gethostid();
 extern int gethostname(const char *name, size_t len);
 extern int getdomainname(char *name, size_t len);
 extern int setdomainname(const char *name, size_t len);

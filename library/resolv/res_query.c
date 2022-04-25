@@ -46,15 +46,15 @@ res_query(const char *name, int class, int type, unsigned char *dest, int len)
     if (ql < 0) return ql;
     int r = res_send(q, ql, dest, len);
     if (r<12) {
-        h_errno = TRY_AGAIN;
+        __set_h_errno(TRY_AGAIN);
         return -1;
     }
     if ((dest[3] & 15) == 3) {
-        h_errno = HOST_NOT_FOUND;
+        __set_h_errno(HOST_NOT_FOUND);
         return -1;
     }
     if ((dest[3] & 15) == 0 && !dest[6] && !dest[7]) {
-        h_errno = NO_DATA;
+        __set_h_errno(NO_DATA);
         return -1;
     }
     return r;

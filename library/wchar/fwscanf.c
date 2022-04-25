@@ -16,9 +16,6 @@ fwscanf(FILE *stream, const wchar_t *format, ...) {
 
     assert(format != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if (format == NULL) {
         __set_errno(EFAULT);
         goto out;
