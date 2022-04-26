@@ -47,12 +47,13 @@ _exit(int return_code) {
         /* Scan for process */
         process = ProcessScan(&h, (CONST_APTR) pid, 0);
         while (process > 0) {
+            printf("process = %d pid = %d\n", process, pid);
             /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
             Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
             process = ProcessScan(&h, (CONST_APTR) pid, 0);
             usleep(10);
         }
-        WaitForChildExit(pid);
+        //WaitForChildExit(pid);
         __global_clib2->tmr_real_task = NULL;
         Permit();
     }

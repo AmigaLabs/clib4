@@ -9,77 +9,63 @@
 #include <unistd.h>
 
 static APTR
-hook_function(struct Hook *hook, APTR userdata, struct Process *process)
-{
-	uint32 pid = (uint32)userdata;
+hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
+    uint32 pid = (uint32) userdata;
     (void) (hook);
 
-	if (process->pr_ProcessID == pid)
-	{
-		return process;
-	}
+    if (process->pr_ProcessID == pid) {
+        return process;
+    }
 
-	return 0;
+    return 0;
 }
 
-int 
-kill(pid_t pid, int signal_number)
-{
-	struct Process *cli_process;
-	int result = ERROR;
+int
+kill(pid_t pid, int signal_number) {
+    struct Process *cli_process;
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(pid);
-	SHOWVALUE(signal_number);
+    SHOWVALUE(pid);
+    SHOWVALUE(signal_number);
 
-	if (signal_number < 0 || signal_number >= NSIG)
-	{
-		__set_errno(EINVAL);
-		return result;
-	}
+    if (signal_number < 0 || signal_number >= NSIG) {
+        __set_errno(EINVAL);
+        return result;
+    }
 
-	if (pid > 0)
-	{
-		if (pid == getpid())
-		{
-			result = raise(signal_number);
-		}
-		else
-		{
-			struct Hook h = {{NULL, NULL}, (HOOKFUNC)hook_function, NULL, NULL};
+    if (pid > 0) {
+        if (pid == getpid()) {
+            result = raise(signal_number);
+        } else {
+            struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
 
-			Forbid();
+            Forbid();
 
-			int32 process = ProcessScan(&h, (CONST_APTR)pid, 0);
-			if (process > 0)
-			{
-				cli_process = (struct Process *) process;
-				
-				SHOWMSG("found the process");
+            int32 process = ProcessScan(&h, (CONST_APTR) pid, 0);
+            if (process > 0) {
+                cli_process = (struct Process *) process;
 
-				result = 0;
+                SHOWMSG("found the process");
 
-				if (signal_number == SIGTERM || signal_number == SIGINT || signal_number == SIGQUIT)
-				{
-					Signal((struct Task *)cli_process, SIGBREAKF_CTRL_C);
-				}
-				else
-				{
-					SHOWMSG("but won't shut it down");
-				}
-			}
-			else
-			{
-				SHOWMSG("didn't find the process");
+                result = 0;
 
-				__set_errno(ESRCH);
-			}
+                if (signal_number == SIGTERM || signal_number == SIGINT || signal_number == SIGQUIT) {
+                    Signal((struct Task *) cli_process, SIGBREAKF_CTRL_C);
+                } else {
+                    SHOWMSG("but won't shut it down");
+                }
+            } else {
+                SHOWMSG("didn't find the process");
 
-			Permit();
-		}
-	}
+                __set_errno(ESRCH);
+            }
 
-	RETURN(result);
-	return (result);
+            Permit();
+        }
+    }
+
+    RETURN(result);
+    return (result);
 }

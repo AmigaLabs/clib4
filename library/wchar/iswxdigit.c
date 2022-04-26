@@ -10,6 +10,8 @@
 #include <wctype.h>
 #endif /* _WCTYPE_HEADERS_H */
 
+#include <ctype.h>
+
 int
 iswxdigit(wint_t c) {
     ENTER();
