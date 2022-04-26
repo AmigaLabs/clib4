@@ -10,10 +10,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-int NOCOMMON
-__exit_value = RETURN_FAIL;
-jmp_buf NOCOMMON
-__exit_jmp_buf;
+int NOCOMMON __exit_value = RETURN_FAIL;
+jmp_buf NOCOMMON __exit_jmp_buf;
 
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
@@ -39,23 +37,23 @@ _exit(int return_code) {
         struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
         int32 pid, process;
 
-        Forbid();
         /* Block SIGALRM signal from raise */
         sigblock(SIGALRM);
         /* Get itimer process ID */
         pid = __global_clib2->tmr_real_task->pr_ProcessID;
+
+        Forbid();
         /* Scan for process */
         process = ProcessScan(&h, (CONST_APTR) pid, 0);
         while (process > 0) {
-            printf("process = %d pid = %d\n", process, pid);
             /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
             Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
             process = ProcessScan(&h, (CONST_APTR) pid, 0);
-            usleep(10);
+            usleep(100);
         }
-        //WaitForChildExit(pid);
-        __global_clib2->tmr_real_task = NULL;
         Permit();
+        WaitForChildExit(pid);
+        __global_clib2->tmr_real_task = NULL;
     }
 
     /* Dump all currently unwritten data, especially to the console. */

@@ -1,6 +1,8 @@
 *.o
 *.a
 !libauto.a
+!libpthread.a
+!libpthread.so
 *.so
 *.lha
 *.bak

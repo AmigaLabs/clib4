@@ -101,12 +101,16 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 
 ### libresolv
 
-Added resolv library to use dns functions.
+Added resolv library to use dns functions. It needs libpthread.a
 
 ### libdebug
 
 To use `libdebug` you have to explicitly link `-lc` and then `-ldebug` otherwise you will have undefined references to debug library functions in libc because the C library is added
 by the linker at the end of the link command (use gcc -v to see the verbose output) 
+
+### Known problems
+
+Don't call `exit()` function in an `alarm()` handler otherwise your program will be stuck at exit.
 
 ### TODO
 
