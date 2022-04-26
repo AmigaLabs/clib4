@@ -13,6 +13,12 @@ _semget(key_t key, int nsems, int flags)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(key);
+    SHOWVALUE(nsems);
+    SHOWVALUE(flags);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {
@@ -28,6 +34,7 @@ _semget(key_t key, int nsems, int flags)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

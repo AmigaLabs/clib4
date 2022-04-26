@@ -7,31 +7,27 @@
 #endif /* _STDIO_HEADERS_H */
 
 int64_t
-__vsprintf_hook_entry(
-	struct iob *string_iob,
-	struct file_action_message *fam)
-{
-	int64_t result = ERROR;
+__vsprintf_hook_entry(struct iob *string_iob, struct file_action_message *fam) {
+    int64_t result = ERROR;
 
-	assert(fam != NULL && string_iob != NULL);
+    assert(fam != NULL && string_iob != NULL);
 
-	if (fam->fam_Action != file_action_write)
-	{
-		fam->fam_Error = EBADF;
-		goto out;
-	}
+    if (fam->fam_Action != file_action_write) {
+        fam->fam_Error = EBADF;
+        goto out;
+    }
 
-	assert(fam->fam_Size >= 0);
+    assert(fam->fam_Size >= 0);
 
-	assert(fam->fam_Data != NULL);
-	assert(string_iob->iob_StringPosition >= 0);
+    assert(fam->fam_Data != NULL);
+    assert(string_iob->iob_StringPosition >= 0);
 
-	memmove(&string_iob->iob_String[string_iob->iob_StringPosition], fam->fam_Data, (size_t)fam->fam_Size);
-	string_iob->iob_StringPosition += fam->fam_Size;
+    memmove(&string_iob->iob_String[string_iob->iob_StringPosition], fam->fam_Data, (size_t) fam->fam_Size);
+    string_iob->iob_StringPosition += fam->fam_Size;
 
-	result = fam->fam_Size;
+    result = fam->fam_Size;
 
 out:
 
-	return (result);
+    return (result);
 }

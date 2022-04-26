@@ -6,14 +6,15 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 struct _fd *
-__get_fd(int file_descriptor)
-{
-	struct _fd * result;
+__get_fd(int file_descriptor) {
+    struct _fd *result;
 
-	result = (struct _fd *)__get_file_descriptor(file_descriptor);
+    ENTER();
+    SHOWVALUE(file_descriptor);
 
-	return(result);
+    result = (struct _fd *) __get_file_descriptor(file_descriptor);
+
+    LEAVE();
+    return (result);
 }

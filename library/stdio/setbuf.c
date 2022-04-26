@@ -6,32 +6,31 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-void setbuf(FILE *stream, char *buf)
-{
-	ENTER();
+void
+setbuf(FILE *stream, char *buf) {
+    ENTER();
 
-	SHOWPOINTER(stream);
-	SHOWPOINTER(buf);
+    SHOWPOINTER(stream);
+    SHOWPOINTER(buf);
 
-	assert(stream != NULL);
+    assert(stream != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-    if (stream == NULL)
-    {
+    if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	if (buf == NULL)
-		setvbuf(stream, NULL, IOBF_BUFFER_MODE_NONE, 0);
-	else
-		setvbuf(stream, buf, IOBF_BUFFER_MODE_FULL, BUFSIZ);
+    if (buf == NULL)
+        setvbuf(stream, NULL, IOBF_BUFFER_MODE_LINE, 0);
+    else
+        setvbuf(stream, buf, IOBF_BUFFER_MODE_FULL, BUFSIZ);
 
 out:
 
-	LEAVE();
+    LEAVE();
 }

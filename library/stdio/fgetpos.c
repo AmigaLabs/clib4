@@ -7,48 +7,41 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-fgetpos(FILE *stream, fpos_t *pos)
-{
-	int result = EOF;
+fgetpos(FILE *stream, fpos_t *pos) {
+    int result = EOF;
     fpos_t position;
 
+    ENTER();
 
-	ENTER();
+    SHOWPOINTER(stream);
+    SHOWPOINTER(pos);
 
-	SHOWPOINTER(stream);
-	SHOWPOINTER(pos);
+    assert(stream != NULL && pos != NULL);
 
-	assert(stream != NULL && pos != NULL);
+    flockfile(stream);
 
-	if (__check_abort_enabled)
-		__check_abort();
-
-	flockfile(stream);
-
-    if (stream == NULL || pos == NULL)
-    {
+    if (stream == NULL || pos == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	position = ftell(stream);
-	if (position == CHANGE_FILE_ERROR && __get_errno() != OK)
-	{
-		SHOWMSG("ftell() didn't work.");
+    position = ftell(stream);
+    if (position == CHANGE_FILE_ERROR && __get_errno() != OK) {
+        SHOWMSG("ftell() didn't work.");
 
-		goto out;
-	}
+        goto out;
+    }
 
-	(*pos) = (fpos_t)position;
+    (*pos) = (fpos_t) position;
 
-	result = OK;
+    result = OK;
 
 out:
 
-	funlockfile(stream);
+    funlockfile(stream);
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

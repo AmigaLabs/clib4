@@ -696,7 +696,6 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
     return 1;
 }
 
-
 int
 vfprintf(FILE *f, const char *format, va_list ap) {
     va_list ap2;
@@ -706,6 +705,13 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     out_init_file(_out, f);
     va_copy(ap2, ap);
 
+    ENTER();
+    SHOWPOINTER(f);
+    SHOWSTRING(format);
+
+    if (__check_abort_enabled)
+        __check_abort();
+
     // Check for error in format string before writing anything to file.
     if (printf_core(0, format, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
@@ -714,5 +720,7 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     ret = printf_core(_out, format, &ap2, nl_arg, nl_type);
 
     va_end(ap2);
+
+    RETURN(ret);
     return ret;
 }

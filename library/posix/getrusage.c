@@ -17,49 +17,53 @@
 #include <sys/resource.h>
 
 int
-getrusage(int who, struct rusage *rusage)
-{
+getrusage(int who, struct rusage *rusage) {
     if (rusage == NULL) {
         __set_errno(EINVAL);
         return -1;
     }
 
+    ENTER();
+
+    SHOWVALUE(who);
+    SHOWPOINTER(rusage);
+
     long clock[2];
     int status = 0;
     struct TimerIFace *ITimer = __ITimer;
 
-    if (__global_clib2 == NULL)  {
+    if (__global_clib2 == NULL) {
         __set_errno(EINVAL);
+        RETURN(-1);
         return -1;
     }
 
-    switch (who)
-    {
-    case RUSAGE_SELF:
-    {
-        GetSysTime((struct TimeVal *)clock);
-        clock[0] -= __global_clib2->clock.Seconds;
-        clock[1] -= __global_clib2->clock.Microseconds;
-        if (clock[1] < 0) {
-            clock[1] += 1000000;
-            clock[0]--;
-        }
+    switch (who) {
+        case RUSAGE_SELF: {
+                GetSysTime((struct TimeVal *) clock);
+                clock[0] -= __global_clib2->clock.Seconds;
+                clock[1] -= __global_clib2->clock.Microseconds;
+                if (clock[1] < 0) {
+                    clock[1] += 1000000;
+                    clock[0]--;
+                }
 
-        memcpy(rusage, &__global_clib2->ru, sizeof(struct rusage));
-        rusage->ru_utime.tv_sec = clock[0];
-        rusage->ru_utime.tv_usec = clock[1];
-    }
-    break;
+                memcpy(rusage, &__global_clib2->ru, sizeof(struct rusage));
+                rusage->ru_utime.tv_sec = clock[0];
+                rusage->ru_utime.tv_usec = clock[1];
+            }
+            break;
 
-    case RUSAGE_CHILDREN:
-        memcpy(rusage, &__global_clib2->ru, sizeof(struct rusage));
-        break;
+        case RUSAGE_CHILDREN:
+            memcpy(rusage, &__global_clib2->ru, sizeof(struct rusage));
+            break;
 
-    default:
-        __set_errno(EINVAL);
-        status = -1;
-        break;
+        default:
+            __set_errno(EINVAL);
+            status = -1;
+            break;
     }
 
+    RETURN(status);
     return status;
 }

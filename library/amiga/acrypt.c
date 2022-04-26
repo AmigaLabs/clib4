@@ -26,9 +26,9 @@ ACrypt(UBYTE *buffer, const UBYTE *password, const UBYTE *user) {
 
     assert(buffer != NULL && password != NULL && user != NULL);
 
-    SHOWPOINTER(buffer);
-    SHOWSTRING(password);
-    SHOWSTRING(user);
+    SHOWPOINTER((char *)buffer);
+    SHOWSTRING((char *)password);
+    SHOWSTRING((char *)user);
 
     if (buffer == NULL || password == NULL || user == NULL) {
         SHOWMSG("invalid parameters");
@@ -58,7 +58,7 @@ ACrypt(UBYTE *buffer, const UBYTE *password, const UBYTE *user) {
 
     buffer[OSIZE - 1] = '\0';
 
-    SHOWSTRING(buffer);
+    SHOWSTRING((char *)buffer);
 
     result = buffer;
 

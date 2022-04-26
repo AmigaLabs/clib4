@@ -12,6 +12,8 @@ sigemptyset(sigset_t *set) {
 
     ENTER();
 
+    SHOWPOINTER(set);
+
     assert(set != NULL);
 
     if (set == NULL) {

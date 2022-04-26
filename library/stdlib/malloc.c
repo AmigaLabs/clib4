@@ -27,38 +27,35 @@ wof_allocator_t NOCOMMON *__wof_allocator;
 static struct SignalSemaphore *memory_semaphore;
 
 void *
-malloc(size_t size)
-{
-	void *result = NULL;
+malloc(size_t size) {
+    void *result = NULL;
 
-	__memory_lock();
+    __memory_lock();
 
     result = wof_alloc(__wof_allocator, size);
 
     __memory_unlock();
-	return (result);
+
+    return (result);
 }
 
-void __memory_lock(void)
-{
-	if (memory_semaphore != NULL)
-		ObtainSemaphore(memory_semaphore);
+void __memory_lock(void) {
+    if (memory_semaphore != NULL)
+        ObtainSemaphore(memory_semaphore);
 }
 
-void __memory_unlock(void)
-{
-	if (memory_semaphore != NULL)
-		ReleaseSemaphore(memory_semaphore);
+void __memory_unlock(void) {
+    if (memory_semaphore != NULL)
+        ReleaseSemaphore(memory_semaphore);
 }
 
-STDLIB_DESTRUCTOR(stdlib_memory_exit)
-{
-	ENTER();
+STDLIB_DESTRUCTOR(stdlib_memory_exit) {
+    ENTER();
 
     __memory_lock();
 
     if (__wof_allocator != NULL)
-        wof_allocator_destroy(__wof_allocator);
+    wof_allocator_destroy(__wof_allocator);
 
     __memory_unlock();
 
@@ -67,34 +64,33 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit)
         memory_semaphore = NULL;
     }
 
-	LEAVE();
+    LEAVE();
 }
 
 /* Second constructor called by _init */
-STDLIB_CONSTRUCTOR(stdlib_memory_init)
-{
-	BOOL success = FALSE;
+STDLIB_CONSTRUCTOR(stdlib_memory_init) {
+    BOOL success = FALSE;
 
-	ENTER();
+    ENTER();
 
-	memory_semaphore = __create_semaphore();
-	if (memory_semaphore == NULL)
-		goto out;
+    memory_semaphore = __create_semaphore();
+    if (memory_semaphore == NULL)
+    goto out;
 
     __wof_allocator = wof_allocator_new();
     if (__wof_allocator == NULL) {
         goto out;
     }
 
-	success = TRUE;
+    success = TRUE;
 
 out:
 
-	SHOWVALUE(success);
-	LEAVE();
+    SHOWVALUE(success);
+    LEAVE();
 
-	if (success)
-		CONSTRUCTOR_SUCCEED();
-	else
-		CONSTRUCTOR_FAIL();
+    if (success)
+        CONSTRUCTOR_SUCCEED();
+    else
+        CONSTRUCTOR_FAIL();
 }

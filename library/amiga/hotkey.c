@@ -33,7 +33,7 @@ HotKey(CONST_STRPTR descr, struct MsgPort *port, LONG ID) {
 
     result = filter;
 
-    out:
+out:
 
     if (result == NULL && filter != NULL)
         DeleteCxObjAll(filter);

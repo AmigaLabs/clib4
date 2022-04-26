@@ -11,11 +11,13 @@
    In this implementation, "off_t" has the same range as the
    "long int" type, so this matters little. */
 int
-fseeko(FILE *stream, off_t offset, int wherefrom)
-{
+fseeko(FILE *stream, off_t offset, int wherefrom) {
 	int result;
+
+    ENTER();
 
 	result = fseek(stream,(long int)offset,wherefrom);
 
+    RETURN(result);
 	return(result);
 }

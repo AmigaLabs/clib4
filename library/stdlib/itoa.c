@@ -14,6 +14,11 @@ char *
 itoa(int num, char *buffer, int base) {
     int curr = 0;
 
+    ENTER();
+    SHOWVALUE(num);
+    SHOWPOINTER(buffer);
+    SHOWVALUE(base);
+
     if (num == 0) {
         // Base case
         buffer[curr++] = '0';
@@ -53,5 +58,7 @@ itoa(int num, char *buffer, int base) {
         num -= base_val * num_val;
     }
     buffer[curr] = '\0';
+
+    RETURN(buffer);
     return buffer;
 }

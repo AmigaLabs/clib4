@@ -7,30 +7,28 @@
 #endif /* _SOCKET_HEADERS_H */
 
 in_addr_t
-inet_network(const char *cp)
-{
-	in_addr_t result = ~0UL;
+inet_network(const char *cp) {
+    in_addr_t result = ~0UL;
 
-	ENTER();
+    ENTER();
 
-	assert(cp != NULL);
-	assert(__SocketBase != NULL);
+    assert(cp != NULL);
+    assert(__SocketBase != NULL);
 
-    if (cp == NULL)
-    {
+    if (cp == NULL) {
         SHOWMSG("invalid cp parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __inet_network((char *)cp);
+    result = __inet_network((char *) cp);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

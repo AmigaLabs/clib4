@@ -20,9 +20,6 @@ puts(const char *s) {
 
     assert(s != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     flockfile(stream);
 
     if (s == NULL) {

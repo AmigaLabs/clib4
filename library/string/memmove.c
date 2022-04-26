@@ -11,8 +11,7 @@
 #endif /* _STRING_HEADERS_H */
 
 void *
-memmove(void *dest, const void *src, size_t len)
-{
+memmove(void *dest, const void *src, size_t len) {
 	void *result = dest;
 
 	assert((len == 0) || (dest != NULL && src != NULL && (int)len > 0));

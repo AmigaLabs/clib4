@@ -13,13 +13,20 @@
 
 #include "fnmatch.h"
 
+#include "debug_headers.h"
+
 #define EOS '\0'
 
 static const char *rangematch(const char *pattern, char test, int flags);
 
-int fnmatch(const char *pattern, const char *string, int flags) {
+int
+fnmatch(const char *pattern, const char *string, int flags) {
     const char *stringstart;
     char c, test;
+
+    SHOWSTRING(pattern);
+    SHOWSTRING(string);
+    SHOWVALUE(flags);
 
     for (stringstart = string;;)
         switch (c = *pattern++) {

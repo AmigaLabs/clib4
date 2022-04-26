@@ -7,46 +7,42 @@
 #endif /* _STDIO_HEADERS_H */
 
 int64_t
-__sscanf_hook_entry(
-	struct iob *string_iob,
-	struct file_action_message *fam)
-{
-	int64_t result = EOF;
-	int64_t num_bytes;
+__sscanf_hook_entry(struct iob *string_iob, struct file_action_message *fam) {
+    int64_t result = EOF;
+    int64_t num_bytes;
 
-	assert(fam != NULL && string_iob != NULL);
+    ENTER();
 
-	if (fam->fam_Action != file_action_read)
-	{
-		fam->fam_Error = EBADF;
-		goto out;
-	}
+    assert(fam != NULL && string_iob != NULL);
 
-	assert(string_iob->iob_StringPosition >= 0);
-	assert(string_iob->iob_StringLength >= 0);
+    if (fam->fam_Action != file_action_read) {
+        fam->fam_Error = EBADF;
+        goto out;
+    }
 
-	if (string_iob->iob_StringPosition < string_iob->iob_StringLength)
-	{
-		int64_t num_bytes_left = string_iob->iob_StringLength - string_iob->iob_StringPosition;
+    assert(string_iob->iob_StringPosition >= 0);
+    assert(string_iob->iob_StringLength >= 0);
 
-		num_bytes = fam->fam_Size;
-		if (num_bytes > num_bytes_left)
-			num_bytes = num_bytes_left;
+    if (string_iob->iob_StringPosition < string_iob->iob_StringLength) {
+        int64_t num_bytes_left = string_iob->iob_StringLength - string_iob->iob_StringPosition;
 
-		assert(fam->fam_Data != NULL);
-		assert(num_bytes >= 0);
+        num_bytes = fam->fam_Size;
+        if (num_bytes > num_bytes_left)
+            num_bytes = num_bytes_left;
 
-		memmove(fam->fam_Data, &string_iob->iob_String[string_iob->iob_StringPosition], (size_t)num_bytes);
-		string_iob->iob_StringPosition += num_bytes;
-	}
-	else
-	{
-		num_bytes = 0;
-	}
+        assert(fam->fam_Data != NULL);
+        assert(num_bytes >= 0);
 
-	result = num_bytes;
+        memmove(fam->fam_Data, &string_iob->iob_String[string_iob->iob_StringPosition], (size_t) num_bytes);
+        string_iob->iob_StringPosition += num_bytes;
+    } else {
+        num_bytes = 0;
+    }
+
+    result = num_bytes;
 
 out:
 
-	return (result);
+    RETURN(result);
+    return (result);
 }

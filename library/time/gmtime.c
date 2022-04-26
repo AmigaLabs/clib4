@@ -7,15 +7,14 @@
 #endif /* _TIME_HEADERS_H */
 
 struct tm *
-gmtime(const time_t *t)
-{
-	static struct tm tm;
-	struct tm * result;
+gmtime(const time_t *t) {
+    static struct tm tm;
+    struct tm *result;
 
-	ENTER();
+    ENTER();
 
-	result = gmtime_r(t,&tm);
+    result = gmtime_r(t, &tm);
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

@@ -8,11 +8,11 @@
 #include "debug.h"
 
 int
-alphasort (const struct dirent **a, const struct dirent **b) {
-	ENTER();
+alphasort(const struct dirent **a, const struct dirent **b) {
+    ENTER();
 
-	int result = strcoll ((*a)->d_name, (*b)->d_name);
-	
-	RETURN(result);
-	return(result);
+    int result = strcoll((*a)->d_name, (*b)->d_name);
+
+    RETURN(result);
+    return (result);
 }

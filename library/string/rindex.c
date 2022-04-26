@@ -10,8 +10,12 @@ char *
 rindex(const char *s, int c)
 {
 	char * result;
+    ENTER();
+    SHOWSTRING(s);
+    SHOWVALUE(c);
 
 	result = strrchr(s,c);
 
+    RETURN(result);
 	return(result);
 }

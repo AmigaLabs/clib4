@@ -11,10 +11,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
-int __flush_iob_write_buffer(struct iob *file)
-{
+int
+__flush_iob_write_buffer(struct iob *file) {
 	int result = OK;
 
 	ENTER();
@@ -24,9 +22,6 @@ int __flush_iob_write_buffer(struct iob *file)
 	assert(file != NULL);
 	assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 	assert(file->iob_BufferSize > 0);
-
-	if (__check_abort_enabled)
-		__check_abort();
 
 	if (FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE) && file->iob_BufferWriteBytes > 0)
 	{

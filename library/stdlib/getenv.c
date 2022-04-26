@@ -38,7 +38,7 @@ getenv(const char *name) {
 
     SHOWSTRING(result);
 
-    out:
+out:
 
     RETURN(result);
     return (result);

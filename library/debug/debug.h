@@ -57,11 +57,12 @@
     #include <dos.h>
     #endif /* _DOS_H */
 
-    extern void kprintf(const char *format,...);
+    void kprintf(const char *format,...);
 
     void _SHOWVALUE(unsigned long value,int size,const char *name,const char *file,int line);
     void _SHOWPOINTER(const void *p,const char *name,const char *file,int line);
     void _SHOWSTRING(const char *string,const char *name,const char *file,int line);
+    void _SHOWWSTRING(const wchar_t *string,const char *name,const char *file,int line);
     void _SHOWMSG(const char *msg,const char *file,int line);
     void _ENTER(const char *file,int line,const char *function);
     void _LEAVE(const char *file,int line,const char *function);
@@ -75,22 +76,23 @@
     int  _GETDEBUGLEVEL(void);
     void _SETPROGRAMNAME(char *name);
 
-    #define ENTER()		_ENTER(__FILE__,__LINE__,__FUNCTION__)
-    #define LEAVE()		_LEAVE(__FILE__,__LINE__,__FUNCTION__)
-    #define RETURN(r)		_RETURN(__FILE__,__LINE__,__FUNCTION__,(unsigned long)r)
+    #define ENTER()		        _ENTER(__FILE__, __LINE__, __FUNCTION__)
+    #define LEAVE()		        _LEAVE(__FILE__, __LINE__, __FUNCTION__)
+    #define RETURN(r)		    _RETURN(__FILE__,__LINE__,__FUNCTION__,(unsigned long)r)
     #define SHOWVALUE(v)		_SHOWVALUE((unsigned long)v,sizeof(v),#v,__FILE__,__LINE__)
-    #define SHOWPOINTER(p)	_SHOWPOINTER(p,#p,__FILE__,__LINE__)
+    #define SHOWPOINTER(p)	    _SHOWPOINTER(p,#p,__FILE__,__LINE__)
     #define SHOWSTRING(s)		_SHOWSTRING(s,#s,__FILE__,__LINE__)
-    #define SHOWMSG(s)		_SHOWMSG(s,__FILE__,__LINE__)
-    #define D(s)			do { _DPRINTF_HEADER(__FILE__,__LINE__); _DPRINTF s; } while(0)
+    #define SHOWWSTRING(s)		_SHOWWSTRING(s,#s,__FILE__,__LINE__)
+    #define SHOWMSG(s)		    _SHOWMSG(s,__FILE__,__LINE__)
+    #define D(s)			    do { _DPRINTF_HEADER(__FILE__,__LINE__); _DPRINTF s; } while(0)
     #define PRINTHEADER()		_DPRINTF_HEADER(__FILE__,__LINE__)
-    #define PRINTF(s)		_DLOG s
-    #define LOG(s)		do { _DPRINTF_HEADER(__FILE__,__LINE__); _DLOG("<%s()>:",__FUNCTION__); _DLOG s; } while(0)
+    #define PRINTF(s)		    _DLOG s
+    #define LOG(s)		        do { _DPRINTF_HEADER(__FILE__,__LINE__); _DLOG("<%s()>:",__FUNCTION__); _DLOG s; } while(0)
     #define SETDEBUGLEVEL(l)	_SETDEBUGLEVEL(l)
     #define PUSHDEBUGLEVEL(l)	_PUSHDEBUGLEVEL(l)
-    #define POPDEBUGLEVEL()	_POPDEBUGLEVEL()
+    #define POPDEBUGLEVEL()	    _POPDEBUGLEVEL()
     #define SETPROGRAMNAME(n)	_SETPROGRAMNAME(n)
-    #define GETDEBUGLEVEL()	_GETDEBUGLEVEL()
+    #define GETDEBUGLEVEL()	    _GETDEBUGLEVEL()
 
     #undef DEBUG
     #define DEBUG 1
@@ -123,22 +125,23 @@
     #endif /* NDEBUG */
 
 
-    #define ENTER()		((void)0)
-    #define LEAVE()		((void)0)
-    #define RETURN(r)		((void)0)
+    #define ENTER()		        ((void)0)
+    #define LEAVE()		        ((void)0)
+    #define RETURN(r)		    ((void)0)
     #define SHOWVALUE(v)		((void)0)
     #define SHOWPOINTER(p)		((void)0)
     #define SHOWSTRING(s)		((void)0)
-    #define SHOWMSG(s)		((void)0)
-    #define D(s)			((void)0)
+    #define SHOWWSTRING(s)		((void)0)
+    #define SHOWMSG(s)		    ((void)0)
+    #define D(s)			    ((void)0)
     #define PRINTHEADER()		((void)0)
-    #define PRINTF(s)		((void)0)
-    #define LOG(s)			((void)0)
+    #define PRINTF(s)		    ((void)0)
+    #define LOG(s)			    ((void)0)
     #define SETDEBUGLEVEL(l)	((void)0)
     #define PUSHDEBUGLEVEL(l)	((void)0)
-    #define POPDEBUGLEVEL()	((void)0)
+    #define POPDEBUGLEVEL()	    ((void)0)
     #define SETPROGRAMNAME(n)	((void)0)
-    #define GETDEBUGLEVEL()	(0)
+    #define GETDEBUGLEVEL()	    (0)
 
     #define DEBUG 0
 

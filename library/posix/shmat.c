@@ -13,6 +13,12 @@ _shmat(int shmid, const void *prefadds, int flags)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(shmid);
+    SHOWPOINTER(prefadds);
+    SHOWVALUE(flags);
+
     if (__global_clib2->haveShm)
     {
         void *ret;
@@ -21,11 +27,13 @@ _shmat(int shmid, const void *prefadds, int flags)
         {
             __set_errno(GetIPCErr());
         }
+        RETURN(ret);
         return ret;
     }
     else
     {
         __set_errno(ENOSYS);
+        RETURN(NULL);
         return NULL;
     }
 }

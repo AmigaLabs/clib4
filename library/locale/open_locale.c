@@ -6,6 +6,4 @@
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
 
-/****************************************************************************/
-
 BOOL __open_locale = TRUE;

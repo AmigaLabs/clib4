@@ -6,8 +6,6 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 void
 __initialize_fd(
 	struct fd *					fd,

@@ -4,8 +4,6 @@
 
 #include "debug_headers.h"
 
-/****************************************************************************/
-
 LONG
 KCmpStr(const char * source1,const char * source2)
 {

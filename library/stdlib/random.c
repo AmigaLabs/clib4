@@ -31,6 +31,8 @@ long
 random(void) {
     long k;
 
+    ENTER();
+
     ObtainSemaphore(__global_clib2->__random_lock);
 
     if (__global_clib2->n == 0) {
@@ -47,5 +49,6 @@ random(void) {
 end:
     ReleaseSemaphore(__global_clib2->__random_lock);
 
+    RETURN(k);
     return k;
 }

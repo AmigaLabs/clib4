@@ -10,6 +10,11 @@
 char *initstate(unsigned seed, char *state, size_t size) {
     void *old;
 
+    ENTER();
+    SHOWVALUE(seed);
+    SHOWPOINTER(state);
+    SHOWVALUE(size);
+
     if (size < 8)
         return 0;
 
@@ -32,5 +37,6 @@ char *initstate(unsigned seed, char *state, size_t size) {
 
     ReleaseSemaphore(__global_clib2->__random_lock);
 
+    RETURN(old);
     return old;
 }

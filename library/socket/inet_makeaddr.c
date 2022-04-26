@@ -7,19 +7,18 @@
 #endif /* _SOCKET_HEADERS_H */
 
 struct in_addr
-inet_makeaddr(in_addr_t net, in_addr_t host)
-{
-	struct in_addr result;
+inet_makeaddr(in_addr_t net, in_addr_t host) {
+    struct in_addr result;
 
-	ENTER();
+    ENTER();
 
-	assert(__SocketBase != NULL);
+    assert(__SocketBase != NULL);
 
-	result.s_addr = __Inet_MakeAddr((ULONG)net, (ULONG)host);
+    result.s_addr = __Inet_MakeAddr((ULONG) net, (ULONG) host);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result.s_addr);
-	return (result);
+    RETURN(result.s_addr);
+    return (result);
 }

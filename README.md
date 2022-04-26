@@ -103,36 +103,35 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 
 Added resolv library to use dns functions.
 
+### libdebug
+
+To use `libdebug` you have to explicitly link `-lc` and then `-ldebug` otherwise you will have undefined references to debug library functions in libc because the C library is added
+by the linker at the end of the link command (use gcc -v to see the verbose output) 
+
 ### TODO
 
-There is a memory leak at clib2 end needs to be tracked down  
-Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster and more better when there are multiple cores. 
+- There is a memory leak at clib2 end needs to be tracked down  
+- Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster and more better when there are multiple cores.
+- Create a shared library
 
 ## Legal status
 
 Because this library is in part based upon free software it would be uncourteous not to make it free software itself. The BSD license would probably be appropriate here.
 
-The PowerPC math library is based in part on work by Sun Microsystems:
-
-<pre>
-========================================================================
-Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
-
-Developed at SunPro, a Sun Microsystems, Inc. business.
+>The PowerPC math library is based in part on work by Sun Microsystems:
+>
+>Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+>
+>Developed at SunPro, a Sun Microsystems, Inc. business.
 Permission to use, copy, modify, and distribute this
 software is freely granted, provided that this notice
 is preserved.
-========================================================================
-</pre>
 
-Most of (actual) wchar functions are based in part from newlib code.
-
-<pre>
-========================================================================
-Copyright (c) 1990 The Regents of the University of California.
+>Most of (actual) wchar functions are based in part from newlib code.
+>Copyright (c) 1990 The Regents of the University of California.
 All rights reserved.
-
-Redistribution and use in source and binary forms are permitted
+>
+>Redistribution and use in source and binary forms are permitted
 provided that the above copyright notice and this paragraph are
 duplicated in all such forms and that any documentation,
 and other materials related to such distribution and use 
@@ -143,25 +142,20 @@ from this software without specific prior written permission.
 THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-========================================================================
-</pre>
 
-iconv code license
-
-<pre>
-========================================================================
-Copyright (c) 2003-2004, Artem B. Bityuckiy
-
-Redistribution and use in source and binary forms, with or without
+>iconv code license
+>Copyright (c) 2003-2004, Artem B. Bityuckiy
+>
+>Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
-1. Redistributions of source code must retain the above copyright
+>1. Redistributions of source code must retain the above copyright
    notice, this list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright
+>2. Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+>
+>THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
@@ -172,5 +166,3 @@ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
-========================================================================
-</pre>

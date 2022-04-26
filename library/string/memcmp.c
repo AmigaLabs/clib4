@@ -120,8 +120,7 @@ out:
 }
 
 int 
-memcmp(const void *ptr1, const void *ptr2, size_t len)
-{
+memcmp(const void *ptr1, const void *ptr2, size_t len) {
 	int result = 0;
 
 	assert(ptr1 != NULL && ptr2 != NULL);

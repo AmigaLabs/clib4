@@ -14,45 +14,33 @@
    another one.  Return nonzero if successful, otherwise zero.  */
 
 static int
-worker(char *result, const char *part1, const char *part2, char *part3, int *part4)
-{
+worker(char *result, const char *part1, const char *part2, char *part3, int *part4) {
     /*  Generate the filename and make sure that there isn't one called it already.  */
 
-    while (1)
-    {
+    while (1) {
         if (__check_abort_enabled)
             __check_abort();
 
         int t;
 
-        if (!__unix_path_semantics)
-        {
-            if (!strcmp(part1, P_tmpdir))
-            {
+        if (!__unix_path_semantics) {
+            if (!strcmp(part1, P_tmpdir)) {
                 sprintf(result, "T:%s%s.%x", part2, part3, *part4);
-            }
-            else
-            {
+            } else {
                 size_t len = strlen(part1);
 
-                if (len == 0 || part1[len - 1] == ':' || part1[len - 1] == '/')
-                {
+                if (len == 0 || part1[len - 1] == ':' || part1[len - 1] == '/') {
                     sprintf(result, "%s%s%s.%x", part1, part2, part3, *part4);
-                }
-                else
-                {
+                } else {
                     sprintf(result, "%s/%s%s.%x", part1, part2, part3, *part4);
                 }
             }
-        }
-        else
+        } else
             sprintf(result, "%s/%s%s.%x", part1, part2, part3, *part4);
         (*part4)++;
         t = open(result, O_RDONLY, 0);
-        if (t == -1)
-        {
-            if (errno == ENOSYS)
-            {
+        if (t == -1) {
+            if (errno == ENOSYS) {
                 result[0] = '\0';
                 return 0;
             }
@@ -64,10 +52,9 @@ worker(char *result, const char *part1, const char *part2, char *part3, int *par
 }
 
 char *
-tempnam(const char *dir, const char *pfx)
-{
+tempnam(const char *dir, const char *pfx) {
     ENTER();
-    
+
     if (__check_abort_enabled)
         __check_abort();
 
@@ -82,12 +69,11 @@ tempnam(const char *dir, const char *pfx)
     length = strlen(dir) + strlen(prefix) + (4 * sizeof(int)) + 2 + 1;
 
     filename = malloc(length);
-    if (filename)
-    {
+    if (filename) {
         int r = rand();
         char string[7] = {0};
 
-        snprintf (string, 7, "%lX", r);        
+        snprintf(string, 7, "%lX", r);
         if (!worker(filename, dir, prefix, string, &__global_clib2->inc))
             return NULL;
     }

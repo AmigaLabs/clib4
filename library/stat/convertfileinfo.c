@@ -14,8 +14,6 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-/****************************************************************************/
-
 void __convert_file_info_to_stat(
 	const struct MsgPort *file_system,
 	const struct ExamineData *fib,
@@ -34,7 +32,6 @@ void __convert_file_info_to_stat(
 	SHOWSTRING(fib->Name);
 	SHOWVALUE(fib->Protection);
 	SHOWVALUE(fib->FileSize);
-	SHOWVALUE(fib->fib_NumBlocks);
 	SHOWVALUE(fib->Date.ds_Days);
 	SHOWVALUE(fib->Date.ds_Minute);
 	SHOWVALUE(fib->Date.ds_Tick);

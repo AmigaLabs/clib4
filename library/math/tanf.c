@@ -1,19 +1,5 @@
 /*
  * $Id: math_tanf.c,v 1.3 2006-01-08 12:04:24 clib2devs Exp $
- *
-
- *
- *
- * PowerPC math library based in part on work by Sun Microsystems
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- *
- *
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
  */
 
 #ifndef _MATH_HEADERS_H
@@ -21,21 +7,20 @@
 #endif /* _MATH_HEADERS_H */
 
 static const double
-        T[] =  {
-        0x15554d3418c99f.0p-54,	/* 0.333331395030791399758 */
-        0x1112fd38999f72.0p-55,	/* 0.133392002712976742718 */
-        0x1b54c91d865afe.0p-57,	/* 0.0533812378445670393523 */
-        0x191df3908c33ce.0p-58,	/* 0.0245283181166547278873 */
-        0x185dadfcecf44e.0p-61,	/* 0.00297435743359967304927 */
-        0x1362b9bf971bcd.0p-59,	/* 0.00946564784943673166728 */
+        T[] = {
+        0x15554d3418c99f.0p-54,    /* 0.333331395030791399758 */
+        0x1112fd38999f72.0p-55,    /* 0.133392002712976742718 */
+        0x1b54c91d865afe.0p-57,    /* 0.0533812378445670393523 */
+        0x191df3908c33ce.0p-58,    /* 0.0245283181166547278873 */
+        0x185dadfcecf44e.0p-61,    /* 0.00297435743359967304927 */
+        0x1362b9bf971bcd.0p-59,    /* 0.00946564784943673166728 */
 };
 
 float
-__kernel_tandf(double x, int iy)
-{
-    double z,r,w,s,t,u;
+__kernel_tandf(double x, int iy) {
+    double z, r, w, s, t, u;
 
-    z	=  x*x;
+    z = x * x;
     /*
      * Split up the polynomial into small independent terms to give
      * opportunities for parallel evaluation.  The chosen splitting is
@@ -50,18 +35,19 @@ __kernel_tandf(double x, int iy)
      * and would give results as accurate as Horner's method if the
      * small terms were added from highest degree down.
      */
-    r = T[4]+z*T[5];
-    t = T[2]+z*T[3];
-    w = z*z;
-    s = z*x;
-    u = T[0]+z*T[1];
-    r = (x+s*u)+(s*w)*(t+w*r);
-    if(iy==1) return r;
-    else return -1.0/r;
+    r = T[4] + z * T[5];
+    t = T[2] + z * T[3];
+    w = z * z;
+    s = z * x;
+    u = T[0] + z * T[1];
+    r = (x + s * u) + (s * w) * (t + w * r);
+    if (iy == 1)
+        return r;
+    else return -1.0 / r;
 }
 
 static const double
-        t1pio2 = 1 * M_PI_2,			/* 0x3FF921FB, 0x54442D18 */
+        t1pio2 = 1 * M_PI_2,            /* 0x3FF921FB, 0x54442D18 */
         t2pio2 = 2 * M_PI_2,            /* 0x400921FB, 0x54442D18 */
         t3pio2 = 3 * M_PI_2,            /* 0x4012D97C, 0x7F3321D2 */
         t4pio2 = 4 * M_PI_2;            /* 0x401921FB, 0x54442D18 */

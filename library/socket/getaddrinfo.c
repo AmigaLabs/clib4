@@ -7,7 +7,6 @@
 #endif /* _SOCKET_HEADERS_H */
 
 static inline bool
-
 validate_family(int family) {
     if (family == PF_INET)
         return TRUE;
@@ -19,12 +18,14 @@ validate_family(int family) {
 }
 
 /* Translate name of a service location and/or a service name to set of socket addresses. */
-int getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *hints, struct addrinfo **res) {
+int
+getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *hints, struct addrinfo **res) {
     struct addrinfo *tmp;
     int port = 0;
     struct hostent *he;
     void *storage;
     size_t size;
+
     struct v6_pair {
         struct addrinfo addrinfo;
         struct sockaddr_in6 sockaddr_in6;

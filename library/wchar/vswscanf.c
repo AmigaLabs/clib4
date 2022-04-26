@@ -19,8 +19,8 @@ vswscanf(const wchar_t *s, const wchar_t *format, va_list arg) {
 
     ENTER();
 
-    SHOWSTRING(s);
-    SHOWSTRING(format);
+    SHOWWSTRING(s);
+    SHOWWSTRING(format);
 
     assert(s != NULL && format != NULL);
 

@@ -6,14 +6,16 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 long
 labs(long x)
 {
 	long result;
 
-	result = (x < 0) ? (-x) : x;
+    ENTER();
+    SHOWVALUE(x);
 
+    result = (x < 0) ? (-x) : x;
+
+    RETURN(result);
 	return(result);
 }

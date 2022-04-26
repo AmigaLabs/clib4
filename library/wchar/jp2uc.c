@@ -19,6 +19,8 @@ __jp2uc(wint_t c, int type)
     unsigned char byte1, byte2;
     wint_t ret;
 
+    ENTER();
+
     /* we actually use tables of EUCJP to Unicode.  For JIS, we simply
      note that EUCJP is essentially JIS with the top bits on in each
      byte and translate to EUCJP.  For SJIS, we do a translation to EUCJP before

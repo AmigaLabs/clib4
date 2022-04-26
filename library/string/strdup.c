@@ -36,7 +36,7 @@ __strdup(const char *s) {
 
     memmove(result, s, total_size);
 
-    out:
+out:
 
     return (result);
 }

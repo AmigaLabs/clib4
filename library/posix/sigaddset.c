@@ -13,6 +13,9 @@ sigaddset(sigset_t *set, int sig) {
 
     ENTER();
 
+    SHOWPOINTER(set);
+    SHOWVALUE(sig);
+
     assert(set != NULL);
 
     if (set == NULL) {

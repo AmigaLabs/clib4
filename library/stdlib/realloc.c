@@ -18,11 +18,6 @@ realloc(void *ptr, size_t size)
 	void *result = NULL;
 	BOOL locked = FALSE;
 
-	ENTER();
-
-	SHOWPOINTER(ptr);
-	SHOWVALUE(size);
-
 	assert((int)size >= 0);
 
 	if (ptr == NULL)
@@ -54,6 +49,5 @@ out:
 	if (result == NULL)
 		SHOWMSG("ouch! realloc failed");
 
-	RETURN(result);
 	return (result);
 }

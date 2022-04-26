@@ -6,21 +6,17 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 void
-rewind(FILE *stream)
-{
-	assert( stream != NULL );
+rewind(FILE *stream) {
+    ENTER();
+    assert(stream != NULL);
 
-	if(__check_abort_enabled)
-		__check_abort();
+    flockfile(stream);
 
-	flockfile(stream);
+    clearerr(stream);
 
-	clearerr(stream);
+    fseek(stream, 0, SEEK_SET);
 
-	fseek(stream,0,SEEK_SET);
-
-	funlockfile(stream);
+    funlockfile(stream);
+    LEAVE();
 }

@@ -4,8 +4,6 @@
 
 /*#define DEBUG*/
 
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
@@ -14,19 +12,13 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
-
-/****************************************************************************/
 
 #include <setjmp.h>
 #include <stdlib.h>
@@ -34,12 +26,8 @@
 #include <stdio.h>
 #include <ctype.h>
 
-/****************************************************************************/
-
 char **NOCOMMON __argv;
 int NOCOMMON __argc;
-
-/****************************************************************************/
 
 STATIC BOOL
 is_space(unsigned char c)
@@ -57,8 +45,6 @@ is_space(unsigned char c)
 	return (result);
 }
 
-/****************************************************************************/
-
 STATIC BOOL
 is_escape_character(unsigned char c)
 {
@@ -69,8 +55,6 @@ is_escape_character(unsigned char c)
 	return (result);
 }
 
-/****************************************************************************/
-
 STATIC BOOL
 is_final_quote_character(const unsigned char *str)
 {
@@ -80,8 +64,6 @@ is_final_quote_character(const unsigned char *str)
 
 	return (result);
 }
-
-/****************************************************************************/
 
 ARG_CONSTRUCTOR(arg_init)
 {

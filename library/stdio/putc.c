@@ -12,6 +12,8 @@ int
 putc(int c, FILE *stream) {
     int result = EOF;
 
+    ENTER();
+
     assert(stream != NULL);
 
     if (stream == NULL) {
@@ -23,5 +25,6 @@ putc(int c, FILE *stream) {
 
 out:
 
+    LEAVE();
     return (result);
 }

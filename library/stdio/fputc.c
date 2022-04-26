@@ -6,7 +6,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-int __fputc_check(FILE *stream) {
+int
+__fputc_check(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
 
@@ -53,9 +54,15 @@ out:
     return (result);
 }
 
-int __fputc(int c, FILE *stream, int buffer_mode) {
+int
+__fputc(int c, FILE *stream, int buffer_mode) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
+
+    ENTER();
+    SHOWVALUE(c);
+    SHOWPOINTER(stream);
+    SHOWVALUE(buffer_mode);
 
     assert(stream != NULL);
 
@@ -67,8 +74,7 @@ int __fputc(int c, FILE *stream, int buffer_mode) {
 
     file->iob_Buffer[file->iob_BufferWriteBytes++] = c;
 
-    if ((buffer_mode == IOBF_BUFFER_MODE_NONE || (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) &&
-        __flush_iob_write_buffer(file) < 0) {
+    if ((buffer_mode == IOBF_BUFFER_MODE_NONE || (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) && __flush_iob_write_buffer(file) < 0) {
         /* Pretend that the last character was not written. */
         file->iob_BufferWriteBytes--;
         goto out;
@@ -81,20 +87,20 @@ int __fputc(int c, FILE *stream, int buffer_mode) {
 
 out:
 
+    RETURN(result);
     return (result);
 }
 
-/****************************************************************************/
-
-int fputc(int c, FILE *stream) {
+int
+fputc(int c, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
 
+    ENTER();
+    SHOWVALUE(c);
+    SHOWPOINTER(stream);
+
     assert(stream != NULL);
-
-    if (__check_abort_enabled)
-        __check_abort();
-
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 
     flockfile(stream);
@@ -102,11 +108,20 @@ int fputc(int c, FILE *stream) {
     if (__fputc_check(stream) < 0)
         goto out;
 
+    /* TODO - We have to investigate while stdout reach this point with IOBF_BUFFER_MODE_NONE when it is
+     * initialized with IOBF_BUFFER_MODE_LINE
+     */
+
+    /* Using no buffer with fputc is really slow. It no buffer is set, change filt to Line Mode buffering */
+    if (FLAG_IS_SET(file->iob_Flags, IOBF_BUFFER_MODE_NONE))
+        SET_FLAG(file->iob_Flags, IOBF_BUFFER_MODE_LINE);
+
     result = __fputc(c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
 
 out:
 
     funlockfile(stream);
 
+    RETURN(result);
     return (result);
 }

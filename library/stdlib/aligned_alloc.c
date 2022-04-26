@@ -12,6 +12,8 @@
 void *
 aligned_alloc(size_t align, size_t size)
 {
+    ENTER();
+
     /* align must be a power of 2 */
     /* size must be a multiple of align */
     if ((align & -align) != align)
@@ -23,11 +25,15 @@ aligned_alloc(size_t align, size_t size)
     if (size > SIZE_MAX - align)
     {
         __set_errno(ENOMEM);
+        RETURN(NULL);
         return NULL;
     }
 
-    if (align <= SIZE_ALIGN)
+    if (align <= SIZE_ALIGN) {
+        LEAVE();
         return malloc(size);
+    }
 
+    LEAVE();
     return memalign(align, size);
 }

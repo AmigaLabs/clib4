@@ -9,22 +9,26 @@
 #include "wchar_wprintf_core.h"
 
 wint_t
-btowc(int c)
-{
-	mbstate_t *mbs = &__global_clib2->wide_status->_mbtowc_state;
-	int retval = 0;
-	wchar_t pwc;
-	char b;
+btowc(int c) {
+    ENTER();
 
-	b = (char)c;
+    mbstate_t *mbs = &__global_clib2->wide_status->_mbtowc_state;
+    int retval = 0;
+    wchar_t pwc;
+    char b;
 
-	/* Put mbs in initial state. */
-	memset(mbs, '\0', sizeof(mbs));
+    b = (char) c;
 
-	retval = _mbtowc(&pwc, &b, 1, mbs);
+    /* Put mbs in initial state. */
+    memset(mbs, '\0', sizeof(mbs));
 
-	if (c == EOF || retval != 1)
-		return WEOF;
-	else
-		return (wint_t)pwc;
+    retval = _mbtowc(&pwc, &b, 1, mbs);
+
+    if (c == EOF || retval != 1) {
+        RETURN(WEOF);
+        return WEOF;
+    } else {
+        RETURN((wint_t) pwc);
+        return (wint_t) pwc;
+    }
 }

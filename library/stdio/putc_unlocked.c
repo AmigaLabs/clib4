@@ -12,6 +12,10 @@ int
 putc_unlocked(int c, FILE *stream) {
     int result = EOF;
 
+    ENTER();
+    SHOWVALUE(c);
+    SHOWPOINTER(stream);
+
     assert(stream != NULL);
 
     if (stream == NULL) {
@@ -23,5 +27,6 @@ putc_unlocked(int c, FILE *stream) {
 
 out:
 
+    RETURN(result);
     return (result);
 }

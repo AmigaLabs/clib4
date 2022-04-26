@@ -12,7 +12,13 @@ long int
 _semids(long int *buf, uint32_t nids, long unsigned int *idcnt)
 {
     DECLARE_SYSVYBASE();
-        
+
+    ENTER();
+
+    SHOWPOINTER(buf);
+    SHOWVALUE(nids);
+    SHOWPOINTER(idcnt);
+
     int32 ret = -1;
     if (__global_clib2->haveShm)
     {
@@ -27,6 +33,7 @@ _semids(long int *buf, uint32_t nids, long unsigned int *idcnt)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

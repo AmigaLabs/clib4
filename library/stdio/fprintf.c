@@ -6,7 +6,6 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-
 int
 fprintf(FILE *stream, const char *format, ...) {
     int result = EOF;
@@ -18,9 +17,6 @@ fprintf(FILE *stream, const char *format, ...) {
     SHOWSTRING(format);
 
     assert(stream != NULL && format != NULL);
-
-    if (__check_abort_enabled)
-        __check_abort();
 
     if (stream == NULL || format == NULL) {
         __set_errno(EFAULT);

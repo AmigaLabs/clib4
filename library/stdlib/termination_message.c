@@ -14,22 +14,16 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 void
-__print_termination_message(const char * termination_message)
-{
-	static BOOL termination_message_printed = FALSE;
+__print_termination_message(const char *termination_message) {
+    static BOOL termination_message_printed = FALSE;
 
-	if(NOT termination_message_printed)
-	{
-		termination_message_printed = TRUE;
+    if (NOT termination_message_printed) {
+        termination_message_printed = TRUE;
 
-		if(NOT __no_standard_io && __num_iob > STDERR_FILENO)
-		{
-			fputs((termination_message != NULL) ? termination_message : "Abnormal program termination",stderr);
-
-			fputc('\n',stderr);
-		}
-	}
+        if (NOT __no_standard_io && __num_iob > STDERR_FILENO) {
+            fputs((termination_message != NULL) ? termination_message : "Abnormal program termination", stderr);
+            fputc('\n', stderr);
+        }
+    }
 }

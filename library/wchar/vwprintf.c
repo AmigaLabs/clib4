@@ -8,5 +8,10 @@
 
 int
 vwprintf(const wchar_t *format, va_list arg) {
-    return vfwprintf(stdout, format, arg);
+    ENTER();
+
+    int result = vfwprintf(stdout, format, arg);
+
+    RETURN(result);
+    return result;
 }

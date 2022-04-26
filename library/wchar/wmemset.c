@@ -7,16 +7,15 @@
 #endif /* _WCHAR_HEADERS_H */
 
 wchar_t *
-wmemset(wchar_t *ptr, int val, size_t len)
-{
-	size_t i;
-	wchar_t *p;
+wmemset(wchar_t *ptr, int val, size_t len) {
+    size_t i;
+    wchar_t *p;
 
-	p = (wchar_t *)ptr;
-	for (i = 0; i < len; i++)
-	{
-		*p = val;
-		p++;
-	}
-	return ptr;
+    p = (wchar_t *) ptr;
+    for (i = 0; i < len; i++) {
+        *p = val;
+        p++;
+    }
+
+    return ptr;
 }

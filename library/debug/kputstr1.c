@@ -4,18 +4,14 @@
 
 #include "debug_headers.h"
 
-/****************************************************************************/
-
 void
-kputstr(const UBYTE * s)
-{
-	assert( s != NULL );
+kputstr(const UBYTE *s) {
+    assert(s != NULL);
 
-	if(s != NULL)
-	{
-		UBYTE c;
+    if (s != NULL) {
+        UBYTE c;
 
-		while((c = (*s++)) != '\0')
-			kputc(c);
-	}
+        while ((c = (*s++)) != '\0')
+            kputc(c);
+    }
 }

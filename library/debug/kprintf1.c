@@ -4,19 +4,15 @@
 
 #include "debug_headers.h"
 
-/****************************************************************************/
-
 VOID
-kprintf(const char * format,...)
-{
-	assert( format != NULL );
+kprintf(const char *format, ...) {
+    assert(format != NULL);
 
-	if(format != NULL)
-	{
-		va_list arg;
+    if (format != NULL) {
+        va_list arg;
 
-		va_start(arg,format);
-        KPrintF(format,arg);
-		va_end(arg);
-	}
+        va_start(arg, format);
+        KPrintF(format, arg);
+        va_end(arg);
+    }
 }

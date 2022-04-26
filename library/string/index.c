@@ -7,11 +7,15 @@
 #endif /* _STRING_HEADERS_H */
 
 char *
-index(const char *s, int c)
-{
-	char * result;
+index(const char *s, int c) {
+    char *result;
 
-	result = strchr(s,c);
+    ENTER();
+    SHOWSTRING(s);
+    SHOWVALUE(c);
 
-	return(result);
+    result = strchr(s, c);
+
+    RETURN(result);
+    return (result);
 }

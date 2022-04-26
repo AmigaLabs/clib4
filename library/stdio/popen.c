@@ -11,284 +11,253 @@
 #endif /* _STDLIB_MEMORY_H */
 
 int
-pclose(FILE *stream)
-{
-	int result = ERROR;
+pclose(FILE *stream) {
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(stream);
+    SHOWPOINTER(stream);
 
-	assert(stream != NULL);
+    assert(stream != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-    if (stream == NULL)
-    {
+    if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	fclose(stream);
+    fclose(stream);
 
-	/* ZZZ we actually could catch the program's termination code
-	 * by passing an exit function address to SystemTags() below.
-	 */
-	result = OK;
+    /* ZZZ we actually could catch the program's termination code
+     * by passing an exit function address to SystemTags() below.
+     */
+    result = OK;
 
 out:
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }
 
-/****************************************************************************/
-
 FILE *
-popen(const char *command, const char *type)
-{
-	struct name_translation_info command_nti;
-	char *command_copy = NULL;
-	BPTR input = ZERO;
-	BPTR output = ZERO;
-	char pipe_file_name[40];
-	FILE *result = NULL;
-	LONG status;
-	unsigned long task_address;
-	time_t now;
-	int i;
+popen(const char *command, const char *type) {
+    struct name_translation_info command_nti;
+    char *command_copy = NULL;
+    BPTR input = ZERO;
+    BPTR output = ZERO;
+    char pipe_file_name[40];
+    FILE *result = NULL;
+    LONG status;
+    unsigned long task_address;
+    time_t now;
+    int i;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(command);
-	SHOWSTRING(type);
+    SHOWSTRING(command);
+    SHOWSTRING(type);
 
-	assert(command != NULL && type != NULL);
+    assert(command != NULL && type != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-    if (command == NULL || type == NULL)
-    {
+    if (command == NULL || type == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	/* The first character selects the access mode: read or write. We don't
-	   support anything else. */
-	switch (type[0])
-	{
-	case 'r':
+    /* The first character selects the access mode: read or write. We don't
+       support anything else. */
+    switch (type[0]) {
+        case 'r':
+            SHOWMSG("read mode");
+            break;
+        case 'w':
+            SHOWMSG("write mode");
+            break;
+        default:
+            D(("unsupported access mode '%lc'", type[0]));
+            __set_errno(EINVAL);
+            goto out;
+    }
 
-		SHOWMSG("read mode");
-		break;
+    /* The current PIPE: device only supports unidirectional connections. Worse: even if
+       a PIPE: device with bidirectional connection support were available, we would
+       be unable to detect this property. */
+    if ((type[1] == '+') || (type[1] != '\0' && type[2] == '+')) {
+        D(("unsupported access mode '%s'", type));
 
-	case 'w':
+        __set_errno(EINVAL);
+        goto out;
+    }
 
-		SHOWMSG("write mode");
-		break;
+    if (__unix_path_semantics) {
+        char just_the_command_name[MAXPATHLEN + 1];
+        BOOL quotes_needed = FALSE;
+        char *command_name;
+        size_t command_len;
+        BOOL have_quote;
+        size_t len;
 
-	default:
+        /* We may need to replace the path specified for the command,
+            so let's figure out first how long the command name,
+            including everything, really is. */
+        len = strlen(command);
+        command_len = len;
 
-		D(("unsupported access mode '%lc'", type[0]));
+        have_quote = FALSE;
+        for (i = 0; i < (int) len; i++) {
+            if (command[i] == '\"') {
+                quotes_needed = TRUE;
 
-		__set_errno(EINVAL);
-		goto out;
-	}
+                have_quote ^= TRUE;
+            }
 
-	/* The current PIPE: device only supports unidirectional connections. Worse: even if
-	   a PIPE: device with bidirectional connection support were available, we would
-	   be unable to detect this property. */
-	if ((type[1] == '+') || (type[1] != '\0' && type[2] == '+'))
-	{
-		D(("unsupported access mode '%s'", type));
+            if ((command[i] == ' ' || command[i] == '\t') && NOT have_quote)
+            {
+                command_len = i;
+                break;
+            }
+        }
 
-		__set_errno(EINVAL);
-		goto out;
-	}
+        /* This may be too long for proper translation... */
+        if (command_len > MAXPATHLEN) {
+            __set_errno(ENAMETOOLONG);
 
-	if (__unix_path_semantics)
-	{
-		char just_the_command_name[MAXPATHLEN + 1];
-		BOOL quotes_needed = FALSE;
-		char *command_name;
-		size_t command_len;
-		BOOL have_quote;
-		size_t len;
+            result = NULL;
+            goto out;
+        }
 
-		/* We may need to replace the path specified for the command,
-			so let's figure out first how long the command name,
-			including everything, really is. */
-		len = strlen(command);
-		command_len = len;
+        /* Grab the command name itself, then have it translated. */
+        command_name = just_the_command_name;
+        for (i = 0; (size_t) i < command_len; i++) {
+            if (command[i] != '\"')
+                (*command_name++) = command[i];
+        }
 
-		have_quote = FALSE;
-		for (i = 0; i < (int)len; i++)
-		{
-			if (command[i] == '\"')
-			{
-				quotes_needed = TRUE;
+        (*command_name) = '\0';
 
-				have_quote ^= TRUE;
-			}
+        command_name = just_the_command_name;
 
-			if ((command[i] == ' ' || command[i] == '\t') && NOT have_quote)
-			{
-				command_len = i;
-				break;
-			}
-		}
+        if (__translate_unix_to_amiga_path_name((const char **) &command_name, &command_nti) != 0) {
+            result = NULL;
+            goto out;
+        }
 
-		/* This may be too long for proper translation... */
-		if (command_len > MAXPATHLEN)
-		{
-			__set_errno(ENAMETOOLONG);
+        /* Now put it all together again */
+        command_copy = malloc(1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
+        if (command_copy == NULL) {
+            __set_errno(ENOMEM);
 
-			result = NULL;
-			goto out;
-		}
+            result = NULL;
+            goto out;
+        }
 
-		/* Grab the command name itself, then have it translated. */
-		command_name = just_the_command_name;
-		for (i = 0; (size_t)i < command_len; i++)
-		{
-			if (command[i] != '\"')
-				(*command_name++) = command[i];
-		}
+        if (quotes_needed) {
+            command_copy[0] = '\"';
+            strcpy(&command_copy[1], command_name);
+            strcat(command_copy, "\"");
+        } else {
+            strcpy(command_copy, command_name);
+        }
 
-		(*command_name) = '\0';
+        strcat(command_copy, &command[command_len]);
 
-		command_name = just_the_command_name;
+        command = command_copy;
+    }
 
-		if (__translate_unix_to_amiga_path_name((const char **)&command_name, &command_nti) != 0)
-		{
-			result = NULL;
-			goto out;
-		}
+    /* Build a (hopefully) unique name for the pipe stream to open. We
+       construct it from the current process address, converted into
+       an octal number, followed by the current time (in seconds),
+       converted into another octal number. */
+    strcpy(pipe_file_name, "PIPE:");
 
-		/* Now put it all together again */
-		command_copy = malloc(1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
-		if (command_copy == NULL)
-		{
-			__set_errno(ENOMEM);
+    struct Task *task = FindTask(NULL);
+    task_address = (unsigned long) task;
 
-			result = NULL;
-			goto out;
-		}
+    for (i = strlen(pipe_file_name); task_address != 0 && i < (int) sizeof(pipe_file_name) - 1; i++) {
+        pipe_file_name[i] = '0' + (task_address % 8);
+        task_address = task_address / 8;
+    }
 
-		if (quotes_needed)
-		{
-			command_copy[0] = '\"';
-			strcpy(&command_copy[1], command_name);
-			strcat(command_copy, "\"");
-		}
-		else
-		{
-			strcpy(command_copy, command_name);
-		}
+    pipe_file_name[i++] = '.';
 
-		strcat(command_copy, &command[command_len]);
+    time(&now);
 
-		command = command_copy;
-	}
+    for (; now != 0 && i < (int) sizeof(pipe_file_name) - 1; i++) {
+        pipe_file_name[i] = '0' + (now % 8);
+        now = now / 8;
+    }
 
-	/* Build a (hopefully) unique name for the pipe stream to open. We
-	   construct it from the current process address, converted into
-	   an octal number, followed by the current time (in seconds),
-	   converted into another octal number. */
-	strcpy(pipe_file_name, "PIPE:");
+    pipe_file_name[i] = '\0';
 
-	struct Task* task = FindTask(NULL);
-	task_address = (unsigned long) task;
-	
-	for (i = strlen(pipe_file_name); task_address != 0 && i < (int)sizeof(pipe_file_name) - 1; i++)
-	{
-		pipe_file_name[i] = '0' + (task_address % 8);
-		task_address = task_address / 8;
-	}
+    SHOWSTRING(pipe_file_name);
 
-	pipe_file_name[i++] = '.';
+    /* Now open the input and output streams for the program to launch. */
+    if (type[0] == 'r') {
+        /* Read mode: we want to read the output of the program; the program
+           should read from "NIL:". */
+        input = Open("NIL:", MODE_NEWFILE);
+        if (input != ZERO)
+            output = Open(pipe_file_name, MODE_NEWFILE);
+    } else {
+        /* Write mode: we want to send data to the program; the program
+           should write to "NIL:". */
+        input = Open(pipe_file_name, MODE_NEWFILE);
+        if (input != ZERO)
+            output = Open("NIL:", MODE_NEWFILE);
+    }
 
-	time(&now);
+    /* Check if both I/O streams could be opened. */
+    if (input == ZERO || output == ZERO) {
+        SHOWMSG("couldn't open the streams");
 
-	for (; now != 0 && i < (int)sizeof(pipe_file_name) - 1; i++)
-	{
-		pipe_file_name[i] = '0' + (now % 8);
-		now = now / 8;
-	}
+        __set_errno(__translate_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	pipe_file_name[i] = '\0';
+    /* Now try to launch the program. */
+    status = SystemTags((STRPTR) command,
+                        SYS_Input, input,
+                        SYS_Output, output,
+                        SYS_Asynch, TRUE,
+                        SYS_UserShell, TRUE,
+                        TAG_END);
 
-	SHOWSTRING(pipe_file_name);
+    /* If launching the program returned -1 then it could not be started.
+       We'll need to close the I/O streams we opened above. */
+    if (status == -1) {
+        SHOWMSG("SystemTagList() failed");
 
-	/* Now open the input and output streams for the program to launch. */
-	if (type[0] == 'r')
-	{
-		/* Read mode: we want to read the output of the program; the program
-		   should read from "NIL:". */
-		input = Open("NIL:", MODE_NEWFILE);
-		if (input != ZERO)
-			output = Open(pipe_file_name, MODE_NEWFILE);
-	}
-	else
-	{
-		/* Write mode: we want to send data to the program; the program
-		   should write to "NIL:". */
-		input = Open(pipe_file_name, MODE_NEWFILE);
-		if (input != ZERO)
-			output = Open("NIL:", MODE_NEWFILE);
-	}
+        __set_errno(__translate_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	/* Check if both I/O streams could be opened. */
-	if (input == ZERO || output == ZERO)
-	{
-		SHOWMSG("couldn't open the streams");
+    /* OK, the program is running. Once it terminates, it will automatically
+       shut down the streams we opened for it. */
+    input = output = ZERO;
 
-		__set_errno(__translate_io_error_to_errno(IoErr()));
-		goto out;
-	}
-
-	/* Now try to launch the program. */
-	status = SystemTags((STRPTR)command,
-						SYS_Input, input,
-						SYS_Output, output,
-						SYS_Asynch, TRUE,
-						SYS_UserShell, TRUE,
-						TAG_END);
-
-	/* If launching the program returned -1 then it could not be started.
-	   We'll need to close the I/O streams we opened above. */
-	if (status == -1)
-	{
-		SHOWMSG("SystemTagList() failed");
-
-		__set_errno(__translate_io_error_to_errno(IoErr()));
-		goto out;
-	}
-
-	/* OK, the program is running. Once it terminates, it will automatically
-	   shut down the streams we opened for it. */
-	input = output = ZERO;
-
-	/* Now try to open the pipe we will use to exchange data with the program. */
-	result = fopen(pipe_file_name, type);
+    /* Now try to open the pipe we will use to exchange data with the program. */
+    result = fopen(pipe_file_name, type);
 
 out:
 
-	if (command_copy != NULL)
-		free(command_copy);
+    if (command_copy != NULL)
+        free(command_copy);
 
-	if (input != ZERO)
-		Close(input);
+    if (input != ZERO)
+        Close(input);
 
-	if (output != ZERO)
-		Close(output);
+    if (output != ZERO)
+        Close(output);
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

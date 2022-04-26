@@ -3,20 +3,12 @@
 */
 
 #ifndef _STDIO_HEADERS_H
-
 #include "stdio_headers.h"
-
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
-
 #include "stdlib_memory.h"
-
 #endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
 
 int
 fclose(FILE *stream) {

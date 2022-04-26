@@ -30,10 +30,11 @@ memcpy(void *dst, const void *src, size_t len) {
 
         /* memcpy will use Exec CopyMem that is ALWAYS optimized for any platform */
         CopyMem((unsigned char *) src, (unsigned char *) dst, len);
-    } else
+    } else {
         __set_errno(EFAULT);
+    }
 
-    out:
+out:
 
     return (result);
 }

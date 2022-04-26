@@ -4,8 +4,6 @@
  * :ts=4
  */
 
-/****************************************************************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +23,9 @@ int main(int cnt, char *arg[])
 			"  -r\tPrint the OS release.\n"
 			"  -s\tPrint the OS name.\n"
 			"  -v\tPrint the OS version.\n\n"
+#ifdef _GNU_SOURCE
+            "  -d\tPrint the OS domain name.\n\n"
+#endif
 			"  -h or --help displays this message.\n\n");
 	}
 	else
@@ -55,6 +56,12 @@ int main(int cnt, char *arg[])
 			{
 				printf("%s\n", uinfo.version);
 			}
+#ifdef _GNU_SOURCE
+            else if (!strcmp(arg[1], "-d"))
+            {
+                printf("%s\n", uinfo.domainname);
+            }
+#endif
 			else
 			{
 				printf("Unknown option \"%s\"!\nTry -h or --help.\n", arg[1]);

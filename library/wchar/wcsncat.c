@@ -9,9 +9,13 @@
 wchar_t *
 wcsncat(wchar_t *dest, const wchar_t *src, size_t n)
 {
-	wchar_t *a = dest;
+    ENTER();
+
+    wchar_t *a = dest;
 	dest += wcslen(dest);
 	while (n && *src) n--, *dest++ = *src++;
 	*dest++ = 0;
+
+    LEAVE();
 	return a;
 }

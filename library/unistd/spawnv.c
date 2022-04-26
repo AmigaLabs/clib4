@@ -15,17 +15,14 @@
 #endif /* _STDIO_HEADERS_H */
 
 STATIC BOOL
-string_needs_quoting(const char *string, size_t len)
-{
+string_needs_quoting(const char *string, size_t len) {
     BOOL result = FALSE;
     size_t i;
     char c;
 
-    for (i = 0; i < len; i++)
-    {
+    for (i = 0; i < len; i++) {
         c = (*string++);
-        if (c == ' ' || ((unsigned char)c) == 0xA0 || c == '\t' || c == '\n' || c == '\"')
-        {
+        if (c == ' ' || ((unsigned char) c) == 0xA0 || c == '\t' || c == '\n' || c == '\"') {
             result = TRUE;
             break;
         }
@@ -35,52 +32,40 @@ string_needs_quoting(const char *string, size_t len)
 }
 
 STATIC void
-build_arg_string(char *const argv[], char *arg_string)
-{
+build_arg_string(char *const argv[], char *arg_string) {
     BOOL first_char = TRUE;
     size_t i, j, len;
     char *s;
 
     /* The first argv[] element is skipped; it does not contain part of
 	   the command line but holds the name of the program to be run. */
-    for (i = 1; argv[i] != NULL; i++)
-    {
-        s = (char *)argv[i];
+    for (i = 1; argv[i] != NULL; i++) {
+        s = (char *) argv[i];
 
         len = strlen(s);
-        if (len > 0)
-        {
+        if (len > 0) {
             if (first_char)
                 first_char = FALSE;
             else
                 (*arg_string++) = ' ';
 
-            if ((*s) != '\"' && string_needs_quoting(s, len))
-            {
+            if ((*s) != '\"' && string_needs_quoting(s, len)) {
                 (*arg_string++) = '\"';
 
-                for (j = 0; j < len; j++)
-                {
-                    if (s[j] == '\"' || s[j] == '*')
-                    {
+                for (j = 0; j < len; j++) {
+                    if (s[j] == '\"' || s[j] == '*') {
                         (*arg_string++) = '*';
                         (*arg_string++) = s[j];
-                    }
-                    else if (s[j] == '\n')
-                    {
+                    } else if (s[j] == '\n') {
                         (*arg_string++) = '*';
                         (*arg_string++) = 'N';
-                    }
-                    else
-                    {
+                    } else {
                         (*arg_string++) = s[j];
                     }
                 }
 
                 (*arg_string++) = '\"';
-            }
-            else
-            {
+            } else {
                 memcpy(arg_string, s, len);
                 arg_string += len;
             }
@@ -89,14 +74,12 @@ build_arg_string(char *const argv[], char *arg_string)
 }
 
 STATIC size_t
-count_extra_escape_chars(const char *string, size_t len)
-{
+count_extra_escape_chars(const char *string, size_t len) {
     size_t count = 0;
     size_t i;
     char c;
 
-    for (i = 0; i < len; i++)
-    {
+    for (i = 0; i < len; i++) {
         c = (*string++);
         if (c == '\"' || c == '*' || c == '\n')
             count++;
@@ -106,23 +89,19 @@ count_extra_escape_chars(const char *string, size_t len)
 }
 
 STATIC size_t
-get_arg_string_length(char *const argv[])
-{
+get_arg_string_length(char *const argv[]) {
     size_t result = 0;
     size_t i, len;
     char *s;
 
     /* The first argv[] element is skipped; it does not contain part of
 	   the command line but holds the name of the program to be run. */
-    for (i = 1; argv[i] != NULL; i++)
-    {
-        s = (char *)argv[i];
+    for (i = 1; argv[i] != NULL; i++) {
+        s = (char *) argv[i];
 
         len = strlen(s);
-        if (len > 0)
-        {
-            if ((*s) != '\"')
-            {
+        if (len > 0) {
+            if ((*s) != '\"') {
                 if (string_needs_quoting(s, len))
                     len += 1 + count_extra_escape_chars(s, len) + 1;
             }
@@ -137,47 +116,42 @@ get_arg_string_length(char *const argv[])
     return (result);
 }
 
-int spawnv(int mode, const char *file, const char *const *argv)
-{
+int
+spawnv(int mode, const char *file, const char *const *argv) {
     int ret = -1;
     char *arg_string = NULL;
     size_t arg_string_len = 0;
     size_t parameter_string_len = 0;
     struct name_translation_info path_nti;
 
-    if (mode != P_WAIT)
-    {
+    if (mode != P_WAIT) {
         __set_errno(ENOSYS);
         return ret;
     }
 
     __set_errno(0);
 
-	if (__unix_path_semantics) {
-        if (__translate_unix_to_amiga_path_name(&file, &path_nti) != 0)
-        {
+    if (__unix_path_semantics) {
+        if (__translate_unix_to_amiga_path_name(&file, &path_nti) != 0) {
             __set_errno(EINVAL);
             return ret;
         }
     }
 
-    parameter_string_len = get_arg_string_length((char *const *)argv);
-    if (parameter_string_len > _POSIX_ARG_MAX)
-    {
+    parameter_string_len = get_arg_string_length((char *const *) argv);
+    if (parameter_string_len > _POSIX_ARG_MAX) {
         __set_errno(E2BIG);
         return ret;
     }
 
     arg_string = malloc(parameter_string_len + 1 + 1);
-    if (arg_string == NULL)
-    {
+    if (arg_string == NULL) {
         __set_errno(ENOMEM);
         return ret;
     }
 
-    if (parameter_string_len > 0)
-    {
-        build_arg_string((char *const *)argv, &arg_string[arg_string_len]);
+    if (parameter_string_len > 0) {
+        build_arg_string((char *const *) argv, &arg_string[arg_string_len]);
         arg_string_len += parameter_string_len;
     }
 
@@ -199,12 +173,9 @@ int spawnv(int mode, const char *file, const char *const *argv)
                      SYS_UserShell, TRUE,
                      TAG_DONE);
 
-    if (ret != 0)
-    {
+    if (ret != 0) {
         errno = __translate_io_error_to_errno(IoErr());
-    }
-    else
-    {
+    } else {
         /* From DOS 51.77 if an ASYNC command was started ok (returncode 0) the PID is in IoErr() */
         ret = IoErr();
     }

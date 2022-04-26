@@ -13,6 +13,12 @@ _shmids(int *buf, size_t nids, size_t *idcnt)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWPOINTER(buf);
+    SHOWVALUE(nids);
+    SHOWPOINTER(idcnt);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {
@@ -27,6 +33,7 @@ _shmids(int *buf, size_t nids, size_t *idcnt)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

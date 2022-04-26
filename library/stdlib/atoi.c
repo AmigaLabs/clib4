@@ -10,6 +10,9 @@ int
 atoi(const char *str) {
     int result = 0;
 
+    ENTER();
+    SHOWSTRING(str);
+
     assert(str != NULL);
 
     if (str == NULL) {
@@ -20,6 +23,6 @@ atoi(const char *str) {
     result = (int) strtol(str, (char **) NULL, 10);
 
 out:
-
+    RETURN(result);
     return (result);
 }

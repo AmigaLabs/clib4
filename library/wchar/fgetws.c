@@ -16,6 +16,8 @@ fgetws(wchar_t *s, int n, FILE *f) {
     register wchar_t *e = s + n - 1;
     register wint_t c;
 
+    ENTER();
+
     if (n <= 0) {
         __set_errno(EINVAL);
         return NULL;

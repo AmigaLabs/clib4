@@ -63,6 +63,8 @@ C_DIRENT := \
 	dirent/dirfd.o \
 	dirent/opendir.o \
 	dirent/readdir.o \
+	dirent/readdir_r.o \
+	dirent/readdir64_r.o \
 	dirent/rewinddir.o
 
 C_ICONV := \
@@ -418,6 +420,7 @@ C_STDLIB := \
 	stdlib/abort.o \
 	stdlib/abs.o \
 	stdlib/aligned_alloc.o \
+	stdlib/arith64.o \
 	stdlib/assertion_failure.o \
 	stdlib/atexit.o \
 	stdlib/atof.o \
@@ -442,7 +445,6 @@ C_STDLIB := \
 	stdlib/getexecname.o \
 	stdlib/getdefstacksize.o \
 	stdlib/getenv.o \
-	stdlib/getmemstats.o \
 	stdlib/getsp.o \
 	stdlib/get_errno.o \
 	stdlib/inistate.o \
@@ -510,7 +512,6 @@ C_STDLIB := \
 	stdlib/system.o \
 	stdlib/sysvbase.o \
 	stdlib/termination_message.o \
-	stdlib/threshold.o \
 	stdlib/utilitybase.o \
 	stdlib/udivsi3.o \
 	stdlib/udivsi4.o \
@@ -683,6 +684,7 @@ C_UNISTD := \
 	unistd/ftruncate.o \
 	unistd/ftruncate64.o \
 	unistd/getcwd.o \
+	unistd/getdomainname.o \
 	unistd/getlogin.o \
 	unistd/getlogin_r.o \
 	unistd/getopt.o \
@@ -705,6 +707,7 @@ C_UNISTD := \
 	unistd/realpath.o \
 	unistd/restorepathname.o \
 	unistd/setcurrentpath.o \
+	unistd/setdomainname.o \
 	unistd/sleep.o \
 	unistd/spawnv.o \
 	unistd/spawnvp.o \
@@ -907,4 +910,4 @@ $(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
 	@$(MAKEDIR) $(@D)
 	@$(DELETE) $@
 	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND)
+	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -ldebug

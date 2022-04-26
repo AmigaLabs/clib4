@@ -12,6 +12,13 @@ int
 _semtimedop(int semid, const struct sembuf *ops, int nops, struct timespec *to) {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(semid);
+    SHOWPOINTER(ops);
+    SHOWVALUE(nops);
+    SHOWPOINTER(to);
+
     int ret = -1;
     if (__global_clib2->haveShm) {
         ret = semtimedop(semid, ops, nops, to);
@@ -22,6 +29,7 @@ _semtimedop(int semid, const struct sembuf *ops, int nops, struct timespec *to) 
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

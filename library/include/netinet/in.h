@@ -106,6 +106,9 @@ enum
     IPPORT_USERRESERVED = 5000
 };
 
+#define MAX_IPv4_STR_LEN	16
+#define MAX_IPv6_STR_LEN	64
+
 /*
  * Internet address (a structure for historical reasons)
  */

@@ -7,213 +7,193 @@
 #endif /* _DIRENT_HEADERS_H */
 
 STATIC struct Node *
-find_by_name(struct List *list, const char *name)
-{
-	struct Node *result = NULL;
-	struct Node *node;
+find_by_name(struct List *list, const char *name) {
+    struct Node *result = NULL;
+    struct Node *node;
 
-	for (node = list->lh_Head; node->ln_Succ != NULL; node = node->ln_Succ)
-	{
-		if (strcasecmp(node->ln_Name, name) == 0)
-		{
-			result = node;
-			break;
-		}
-	}
+    for (node = list->lh_Head; node->ln_Succ != NULL; node = node->ln_Succ) {
+        if (strcasecmp(node->ln_Name, name) == 0) {
+            result = node;
+            break;
+        }
+    }
 
-	return (result);
+    return (result);
 }
 
-DIR *opendir(const char *path_name)
-{
-	struct name_translation_info path_name_nti;
-	struct DirectoryHandle *dh = NULL;
-	DIR *result = NULL;
+DIR *opendir(const char *path_name) {
+    struct name_translation_info path_name_nti;
+    struct DirectoryHandle *dh = NULL;
+    DIR *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(path_name);
+    SHOWSTRING(path_name);
 
-	assert(path_name != NULL);
+    assert(path_name != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-    if (path_name == NULL)
-    {
+    if (path_name == NULL) {
         SHOWMSG("invalid parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	dh = malloc(sizeof(*dh));
-	if (dh == NULL)
-	{
-		SHOWMSG("memory allocation failed");
-		goto out;
-	}
+    dh = malloc(sizeof(*dh));
+    if (dh == NULL) {
+        SHOWMSG("memory allocation failed");
+        goto out;
+    }
 
-	memset(dh, 0, sizeof(*dh));
+    memset(dh, 0, sizeof(*dh));
 
-	if (__unix_path_semantics)
-	{
-		struct Node *node;
+    if (__unix_path_semantics) {
+        struct Node *node;
 
-		NewList((struct List *)&dh->dh_VolumeList);
+        NewList((struct List *) &dh->dh_VolumeList);
 
-		if (path_name[0] == '\0')
-		{
-			SHOWMSG("no name given");
+        if (path_name[0] == '\0') {
+            SHOWMSG("no name given");
 
-			__set_errno(ENOENT);
-			goto out;
-		}
+            __set_errno(ENOENT);
+            goto out;
+        }
 
-		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
-			goto out;
+        if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+            goto out;
 
-		SHOWSTRING(path_name);
+        SHOWSTRING(path_name);
 
-		if (path_name_nti.is_root)
-		{
-			struct DosList *dol;
-			UBYTE *name;
+        if (path_name_nti.is_root) {
+            struct DosList *dol;
+            UBYTE *name;
 
-			SHOWMSG("collecting volume names");
+            SHOWMSG("collecting volume names");
 
-			dh->dh_ScanVolumeList = TRUE;
+            dh->dh_ScanVolumeList = TRUE;
 
-			dol = LockDosList(LDF_VOLUMES | LDF_READ);
-			while ((dol = NextDosEntry(dol, LDF_VOLUMES | LDF_READ)) != NULL)
-			{
-				name = BADDR(dol->dol_Name);
-				if (name != NULL && name[0] > 0)
-				{
-					size_t len;
+            dol = LockDosList(LDF_VOLUMES | LDF_READ);
+            while ((dol = NextDosEntry(dol, LDF_VOLUMES | LDF_READ)) != NULL) {
+                name = BADDR(dol->dol_Name);
+                if (name != NULL && name[0] > 0) {
+                    size_t len;
 
-					len = name[0];
+                    len = name[0];
 
-					node = malloc(sizeof(*node) + len + 2);
-					if (node == NULL)
-					{
-						UnLockDosList(LDF_VOLUMES | LDF_READ);
+                    node = malloc(sizeof(*node) + len + 2);
+                    if (node == NULL) {
+                        UnLockDosList(LDF_VOLUMES | LDF_READ);
 
-						__set_errno(ENOMEM);
-						goto out;
-					}
+                        __set_errno(ENOMEM);
+                        goto out;
+                    }
 
-					node->ln_Name = (char *)(node + 1);
+                    node->ln_Name = (char *) (node + 1);
 
-					memmove(node->ln_Name, &name[1], len);
-					node->ln_Name[len++] = ':';
-					node->ln_Name[len] = '\0';
+                    memmove(node->ln_Name, &name[1], len);
+                    node->ln_Name[len++] = ':';
+                    node->ln_Name[len] = '\0';
 
-					/* Check if the name is already on the list. Mind you,
-						this is not the most sophisticated algorithm but then
-						the number of volumes should be small. */
-					if (find_by_name((struct List *)&dh->dh_VolumeList, node->ln_Name) != NULL)
-					{
-						free(node);
-						continue;
-					}
+                    /* Check if the name is already on the list. Mind you,
+                        this is not the most sophisticated algorithm but then
+                        the number of volumes should be small. */
+                    if (find_by_name((struct List *) &dh->dh_VolumeList, node->ln_Name) != NULL) {
+                        free(node);
+                        continue;
+                    }
 
-					D(("adding '%s'", node->ln_Name));
+                    D(("adding '%s'", node->ln_Name));
 
-					AddTail((struct List *)&dh->dh_VolumeList, node);
-				}
-			}
+                    AddTail((struct List *) &dh->dh_VolumeList, node);
+                }
+            }
 
-			UnLockDosList(LDF_VOLUMES | LDF_READ);
+            UnLockDosList(LDF_VOLUMES | LDF_READ);
 
-			/* Bail out if we cannot present anything. */
-			if (IsMinListEmpty(&dh->dh_VolumeList))
-			{
-				__set_errno(ENOMEM);
-				goto out;
-			}
-		}
-	}
+            /* Bail out if we cannot present anything. */
+            if (IsMinListEmpty(&dh->dh_VolumeList)) {
+                __set_errno(ENOMEM);
+                goto out;
+            }
+        }
+    }
 
-	if (NOT dh->dh_ScanVolumeList)
-	{
-		SHOWMSG("we are supposed to scan a directory");
-		SHOWSTRING(path_name);
+    if (NOT dh->dh_ScanVolumeList)
+    {
+        SHOWMSG("we are supposed to scan a directory");
+        SHOWSTRING(path_name);
 
-		dh->dh_DirLock = Lock((STRPTR)path_name, SHARED_LOCK);
-		if (dh->dh_DirLock == ZERO)
-		{
-			SHOWMSG("couldn't get a lock on it");
+        dh->dh_DirLock = Lock((STRPTR) path_name, SHARED_LOCK);
+        if (dh->dh_DirLock == ZERO) {
+            SHOWMSG("couldn't get a lock on it");
 
-			__set_errno(__translate_access_io_error_to_errno(IoErr()));
-			goto out;
-		}
+            __set_errno(__translate_access_io_error_to_errno(IoErr()));
+            goto out;
+        }
 
-		dh->dh_FileInfo = ExamineObjectTags(EX_LockInput, dh->dh_DirLock, TAG_DONE);
-		if (dh->dh_FileInfo == NULL)
-		{
-			SHOWMSG("couldn't examine it");
+        dh->dh_FileInfo = ExamineObjectTags(EX_LockInput, dh->dh_DirLock, TAG_DONE);
+        if (dh->dh_FileInfo == NULL) {
+            SHOWMSG("couldn't examine it");
 
-			__set_errno(__translate_io_error_to_errno(IoErr()));
-			goto out;
-		}
+            __set_errno(__translate_io_error_to_errno(IoErr()));
+            goto out;
+        }
 
-		if (!EXD_IS_DIRECTORY(dh->dh_FileInfo))
-		{
-			SHOWMSG("this isn't a directory");
+        if (!EXD_IS_DIRECTORY(dh->dh_FileInfo)) {
+            SHOWMSG("this isn't a directory");
 
-			__set_errno(ENOTDIR);
-			goto out;
-		}
+            __set_errno(ENOTDIR);
+            goto out;
+        }
 
-		dh->dh_Context = ObtainDirContextTags(EX_FileLockInput, dh->dh_DirLock,
-											  EX_DoCurrentDir, TRUE,
-											  EX_DataFields, EXF_ALL,
-											  TAG_END);
-		if (dh->dh_Context == NULL)
-		{
-			SHOWMSG("couldn't examine it");
+        dh->dh_Context = ObtainDirContextTags(EX_FileLockInput, dh->dh_DirLock,
+                                              EX_DoCurrentDir, TRUE,
+                                              EX_DataFields, EXF_ALL,
+                                              TAG_END);
+        if (dh->dh_Context == NULL) {
+            SHOWMSG("couldn't examine it");
 
-			__set_errno(__translate_io_error_to_errno(IoErr()));
-			goto out;
-		}
-		FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
-	}
+            __set_errno(__translate_io_error_to_errno(IoErr()));
+            goto out;
+        }
+        FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
+    }
 
-	SHOWMSG("OK, done");
+    SHOWMSG("OK, done");
 
-	assert(__directory_list.mlh_Head != NULL);
+    assert(__directory_list.mlh_Head != NULL);
 
-	__dirent_lock();
+    __dirent_lock();
 
-	AddTail((struct List *)&__directory_list, (struct Node *)dh);
+    AddTail((struct List *) &__directory_list, (struct Node *) dh);
 
-	__dirent_unlock();
+    __dirent_unlock();
 
-	result = (DIR *)dh;
-	dh = NULL;
+    result = (DIR *) dh;
+    dh = NULL;
 
 out:
 
-	if (dh != NULL)
-	{
-		SHOWMSG("ouch. cleaning up");
-		if (dh->dh_FileInfo != NULL)
-			FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
+    if (dh != NULL) {
+        SHOWMSG("ouch. cleaning up");
+        if (dh->dh_FileInfo != NULL)
+            FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 
-		if (__unix_path_semantics)
-		{
-			struct Node *node;
+        if (__unix_path_semantics) {
+            struct Node *node;
 
-			while ((node = RemHead((struct List *)&dh->dh_VolumeList)) != NULL)
-				free(node);
-		}
+            while ((node = RemHead((struct List *) &dh->dh_VolumeList)) != NULL)
+                free(node);
+        }
 
-		UnLock(dh->dh_DirLock);
+        UnLock(dh->dh_DirLock);
 
-		free(dh);
-	}
+        free(dh);
+    }
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

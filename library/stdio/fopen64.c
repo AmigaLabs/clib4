@@ -7,12 +7,15 @@
 #endif /* _STDIO_HEADERS_H */
 
 FILE *
-fopen64(const char *filename, const char *mode)
-{
+fopen64(const char *filename, const char *mode) {
+    ENTER();
+
     FILE *fp = fopen(filename, mode);
     if (fp != NULL) {
         fp->_flags |= __SL64;
     }
+
+    LEAVE();
 
     return fp;
 }

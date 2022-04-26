@@ -17,6 +17,11 @@ key_t ftok(const char *path, int id)
     uint32_t blockno = 0;
     struct Lock *flock;
 
+    ENTER();
+
+    SHOWSTRING(path);
+    SHOWVALUE(id);
+
     if (path)
     {
 
@@ -39,5 +44,6 @@ key_t ftok(const char *path, int id)
         __set_errno(EFAULT);
     }
 
+    RETURN(key);
     return (key);
 }

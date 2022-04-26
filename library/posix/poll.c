@@ -10,10 +10,19 @@
 #include <errno.h>
 #include <sys/param.h> // MAX
 
-static int map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWriteSet, fd_set *pExceptSet) {
+static int
+map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWriteSet, fd_set *pExceptSet) {
     register nfds_t i;             /* loop control */
     register struct pollfd *pCur;  /* current array element */
     register int max_fd = -1;      /* return value */
+
+    ENTER();
+
+    SHOWPOINTER(pArray);
+    SHOWVALUE(n_fds);
+    SHOWPOINTER(pReadSet);
+    SHOWPOINTER(pWriteSet);
+    SHOWPOINTER(pExceptSet);
 
     /*
        Map the poll() structures into the file descriptor sets required
@@ -54,10 +63,12 @@ static int map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, 
         max_fd = MAX (max_fd, pCur->fd);
     }
 
+    RETURN(max_fd);
     return max_fd;
 }
 
-static struct timeval *map_timeout(int poll_timeout, struct timeval *pSelTimeout) {
+static struct timeval *
+map_timeout(int poll_timeout, struct timeval *pSelTimeout) {
     struct timeval *pResult;
 
     /*
@@ -106,7 +117,8 @@ static struct timeval *map_timeout(int poll_timeout, struct timeval *pSelTimeout
     return pResult;
 }
 
-static void map_select_results(struct pollfd *pArray, unsigned long n_fds, fd_set *pReadSet, fd_set *pWriteSet, fd_set *pExceptSet) {
+static void
+map_select_results(struct pollfd *pArray, unsigned long n_fds, fd_set *pReadSet, fd_set *pWriteSet, fd_set *pExceptSet) {
     register unsigned long i;      /* loop control */
     register struct pollfd *pCur;  /* current array element */
 

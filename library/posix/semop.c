@@ -13,6 +13,12 @@ _semop(int semid, const struct sembuf *ops, int nops)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(semid);
+    SHOWPOINTER(ops);
+    SHOWVALUE(nops);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {
@@ -27,6 +33,7 @@ _semop(int semid, const struct sembuf *ops, int nops)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

@@ -6,62 +6,55 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-/****************************************************************************/
-
 char *
 __number_to_string(
-	unsigned int	number,
-	char *			string,
-	size_t			max_len,
-	size_t			min_len)
-{
-	char * s = string;
-	size_t len,i;
-	char c;
+        unsigned int number,
+        char *string,
+        size_t max_len,
+        size_t min_len) {
+    char *s = string;
+    size_t len, i;
+    char c;
 
-	assert( string != NULL && max_len >= min_len );
+    assert(string != NULL && max_len >= min_len);
 
-	/* One off for the terminating NUL. */
-	if(max_len > 0)
-		max_len--;
+    /* One off for the terminating NUL. */
+    if (max_len > 0)
+        max_len--;
 
-	len = 0;
+    len = 0;
 
-	/* Convert the number digit by digit, building the
-	 * string in reverse order.
-	 */
-	do
-	{
-		if(max_len == 0)
-			break;
+    /* Convert the number digit by digit, building the
+     * string in reverse order.
+     */
+    do {
+        if (max_len == 0)
+            break;
 
-		max_len--;
+        max_len--;
 
-		(*s++) = '0' + (number % 10);
-		number /= 10;
+        (*s++) = '0' + (number % 10);
+        number /= 10;
 
-		len++;
-	}
-	while(number > 0);
+        len++;
+    } while (number > 0);
 
-	/* Pad the string to the requested length, if necessary. */
-	while(max_len > 0 && len < min_len)
-	{
-		max_len--;
+    /* Pad the string to the requested length, if necessary. */
+    while (max_len > 0 && len < min_len) {
+        max_len--;
 
-		(*s++) = '0';
-		len++;
-	}
+        (*s++) = '0';
+        len++;
+    }
 
-	(*s) = '\0';
+    (*s) = '\0';
 
-	/* Reverse the string in place. */
-	for(i = 0 ; i < len / 2 ; i++)
-	{
-		c				= string[len-1-i];
-		string[len-1-i]	= string[i];
-		string[i]		= c;
-	}
+    /* Reverse the string in place. */
+    for (i = 0; i < len / 2; i++) {
+        c = string[len - 1 - i];
+        string[len - 1 - i] = string[i];
+        string[i] = c;
+    }
 
-	return(string);
+    return (string);
 }

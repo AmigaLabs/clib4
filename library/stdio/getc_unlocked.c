@@ -9,21 +9,23 @@
 #undef getc_unlocked
 
 int
-getc_unlocked(FILE *stream)
-{
-	int result = EOF;
+getc_unlocked(FILE *stream) {
+    int result = EOF;
 
-	assert( stream != NULL );
+    ENTER();
 
-    if(stream == NULL)
-    {
+    assert(stream != NULL);
+
+    if (stream == NULL) {
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __getc_unlocked(stream);
+    result = __getc_unlocked(stream);
 
- out:
+out:
 
-	return(result);
+    LEAVE();
+
+    return (result);
 }

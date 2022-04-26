@@ -11,8 +11,6 @@ OUT_SHARED := $(BUILD_DIR)/obj.shared/libdebug
 LIBS += $(OUTPUT_LIB)/libdebug.so \
 		$(OUTPUT_LIB)/libdebug.a
 
-##############################################################################
-
 DEBUG_LIB = \
 	debug/debug.lib_rev.o \
 	debug/debug.o \
@@ -49,11 +47,10 @@ SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(DEBUG_LIB))
 
 # Dependencies to rebuild if the library version changes
 
-$(OUT_STATIC)/debug.lib_rev.o : debug/debug.lib_rev.c $(LIB_DIR)/debug/debug.lib_rev.h
-$(OUT_SHARED)/debug.lib_rev.o : debug/debug.lib_rev.c $(LIB_DIR)/debug/debug.lib_rev.h
+$(OUT_STATIC)/debug.lib_rev.o : $(LIB_DIR)/debug.lib_rev.c $(LIB_DIR)/debug.lib_rev.h
+$(OUT_SHARED)/debug.lib_rev.o : $(LIB_DIR)/debug.lib_rev.c $(LIB_DIR)/debug.lib_rev.h
 
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c

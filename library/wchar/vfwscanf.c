@@ -21,63 +21,61 @@
 #define SIZE_L 2
 #define SIZE_ll 3
 
-static void store_int(void *dest, int size, unsigned long long i)
-{
+static void
+store_int(void *dest, int size, unsigned long long i) {
     if (!dest)
         return;
-    switch (size)
-    {
+    switch (size) {
         case SIZE_hh:
-            *(char *)dest = i;
+            *(char *) dest = i;
             break;
         case SIZE_h:
-            *(short *)dest = i;
+            *(short *) dest = i;
             break;
         case SIZE_def:
-            *(int *)dest = i;
+            *(int *) dest = i;
             break;
         case SIZE_l:
-            *(long *)dest = i;
+            *(long *) dest = i;
             break;
         case SIZE_ll:
-            *(long long *)dest = i;
+            *(long long *) dest = i;
             break;
     }
 }
 
-static void *arg_n(va_list ap, unsigned int n)
-{
+static void *
+arg_n(va_list ap, unsigned int n) {
     void *p;
     unsigned int i;
     va_list ap2;
+
     va_copy(ap2, ap);
     for (i = n; i > 1; i--)
         va_arg(ap2, void *);
+
     p = va_arg(ap2, void *);
     va_end(ap2);
     return p;
 }
 
-static int in_set(const wchar_t *set, int c)
-{
+static int
+in_set(const wchar_t *set, int c) {
     int j;
     const wchar_t *p = set;
-    if (*p == '-')
-    {
+
+    if (*p == '-') {
         if (c == '-')
             return 1;
         p++;
-    }
-    else if (*p == ']')
-    {
+    } else if (*p == ']') {
         if (c == ']')
             return 1;
         p++;
     }
-    for (; *p && *p != ']'; p++)
-    {
+    for (; *p && *p != ']'; p++) {
         if (*p == '-' && p[1] && p[1] != ']')
-            for (j = p++ [-1]; j < *p; j++)
+            for (j = p++[-1]; j < *p; j++)
                 if (c == j)
                     return 1;
         if (c == *p)
@@ -86,8 +84,8 @@ static int in_set(const wchar_t *set, int c)
     return 0;
 }
 
-int vfwscanf(FILE *f, const wchar_t *format, va_list ap)
-{
+int
+vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
     int width = 0;
     int size = 0;
     int alloc = 0;
@@ -106,18 +104,13 @@ int vfwscanf(FILE *f, const wchar_t *format, va_list ap)
 
     ENTER();
 
-    if(__check_abort_enabled)
-        __check_abort();
-
     flockfile(f);
 
     fwide(f, 1);
 
-    for (p = format; *p; p++)
-    {
+    for (p = format; *p; p++) {
         alloc = 0;
-        if (iswspace(*p))
-        {
+        if (iswspace(*p)) {
             while (iswspace(p[1]))
                 p++;
             while (iswspace((c = __getc(f))))
@@ -125,21 +118,16 @@ int vfwscanf(FILE *f, const wchar_t *format, va_list ap)
             ungetc(c, f);
             continue;
         }
-        if (*p != '%' || p[1] == '%')
-        {
-            if (*p == '%')
-            {
+        if (*p != '%' || p[1] == '%') {
+            if (*p == '%') {
                 p++;
                 while (iswspace((c = __getc(f))))
                     pos++;
-            }
-            else
-            {
+            } else {
                 c = __getc(f);
             }
 
-            if (c != *p)
-            {
+            if (c != *p) {
                 ungetc(c, f);
                 if (c < 0) {
                     goto input_fail;
@@ -151,41 +139,32 @@ int vfwscanf(FILE *f, const wchar_t *format, va_list ap)
         }
 
         p++;
-        if (*p == '*')
-        {
+        if (*p == '*') {
             dest = 0;
             p++;
-        }
-        else if (iswdigit(*p) && p[1] == '$')
-        {
+        } else if (iswdigit(*p) && p[1] == '$') {
             dest = arg_n(ap, *p - '0');
             p += 2;
-        }
-        else
-        {
-            dest = va_arg(ap, void *);
+        } else {
+            dest = va_arg(ap,
+            void *);
         }
 
-        for (width = 0; iswdigit(*p); p++)
-        {
+        for (width = 0; iswdigit(*p); p++) {
             width = 10 * width + *p - '0';
         }
 
-        if (*p == 'm')
-        {
+        if (*p == 'm') {
             wcs = 0;
             s = 0;
             alloc = !!dest;
             p++;
-        }
-        else
-        {
+        } else {
             alloc = 0;
         }
 
         size = SIZE_def;
-        switch (*p++)
-        {
+        switch (*p++) {
             case 'h':
                 if (*p == 'h')
                     p++, size = SIZE_hh;
@@ -238,14 +217,12 @@ int vfwscanf(FILE *f, const wchar_t *format, va_list ap)
         t = *p;
 
         /* Transform S,C -> ls,lc */
-        if ((t & 0x2f) == 3)
-        {
+        if ((t & 0x2f) == 3) {
             size = SIZE_l;
             t |= 32;
         }
 
-        if (t != 'n')
-        {
+        if (t != 'n') {
             if (t != '[' && (t | 32) != 'c')
                 while (iswspace((c = __getc(f))))
                     pos++;
@@ -395,8 +372,7 @@ int vfwscanf(FILE *f, const wchar_t *format, va_list ap)
                 cnt = 0;
                 if (fscanf(f, tmp, dest ? dest : &cnt, &cnt) == -1) {
                     goto input_fail;
-                }
-                else if (!cnt) {
+                } else if (!cnt) {
                     goto match_fail;
                 }
                 pos += cnt;
@@ -408,20 +384,21 @@ int vfwscanf(FILE *f, const wchar_t *format, va_list ap)
         if (dest)
             matches++;
     }
-    if (0)
-    {
+    if (0) {
         fmt_fail:
         alloc_fail:
         input_fail:
         if (!matches)
             matches--;
         match_fail:
-        if (alloc)
-        {
+        if (alloc) {
             free(s);
             free(wcs);
         }
     }
+
     funlockfile(f);
+
+    RETURN(matches);
     return matches;
 }

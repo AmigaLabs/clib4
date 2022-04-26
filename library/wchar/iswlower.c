@@ -8,10 +8,7 @@
 
 #include <ctype.h>
 
-/****************************************************************************/
-
-int 
-iswlower(wint_t c)
-{
-	return (towupper(c) != c);
+int
+iswlower(wint_t c) {
+    return (towupper(c) != c);
 }

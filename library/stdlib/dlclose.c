@@ -10,9 +10,13 @@
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
-int dlclose(void *handle)
+int
+dlclose(void *handle)
 {
 	int result = -1;
+
+    ENTER();
+    SHOWPOINTER(handle);
 
 	if (__global_clib2->__dl_elf_handle != NULL)
 	{
@@ -33,6 +37,6 @@ int dlclose(void *handle)
 	result = 0;
 
 out:
-
+    RETURN(result);
 	return (result);
 }

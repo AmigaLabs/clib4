@@ -13,6 +13,11 @@ ulimit(int cmd, long newlim) {
     long ret = -1;
     (void) (newlim);
 
+    ENTER();
+
+    SHOWVALUE(cmd);
+    SHOWVALUE(newlim);
+
     switch (cmd) {
         case UL_GETFSIZE:
             /* Maximum number of 512-byte blocks in a file. Largefile aware programs should not use ulimit() anyway. */

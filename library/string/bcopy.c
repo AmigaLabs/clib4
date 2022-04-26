@@ -8,6 +8,11 @@
 
 void
 bcopy(const void *src, void *dest, size_t len) {
+    ENTER();
+    SHOWPOINTER(src);
+    SHOWPOINTER(dest);
+    SHOWVALUE(len);
+
     assert((len == 0) || (src != NULL && dest != NULL && (int) len > 0));
 
     if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
@@ -24,4 +29,6 @@ bcopy(const void *src, void *dest, size_t len) {
         /* Fallback to standard function */
         memmove(dest, src, len);
     }
+
+    LEAVE();
 }

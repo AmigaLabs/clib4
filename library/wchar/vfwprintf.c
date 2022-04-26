@@ -110,15 +110,17 @@ out_printf(FOut *_out, const char *format, ...) {
     va_list args;
     va_start(args, format);
 
+    ENTER();
+
     if (_out->file) {
         int ret = vfprintf(_out->file, format, args);
         va_end(args);
+        RETURN(ret);
         return ret;
     } else {
         // TODO(digit): Make this faster.
         // First, generate formatted byte output.
-        size_t mb_len,
-                wide_len;
+        size_t mb_len, wide_len;
         char *mb_buffer;
         wchar_t *wide_buffer;
 
@@ -126,6 +128,7 @@ out_printf(FOut *_out, const char *format, ...) {
                 (!(mb_len = (size_t) vsnprintf(NULL, 0, format, args))) ||
                 ((mb_buffer = malloc((mb_len + 1))) == NULL)) {
             va_end(args);
+            RETURN(0);
             return 0;
         }
 
@@ -139,6 +142,7 @@ out_printf(FOut *_out, const char *format, ...) {
                 ((wide_buffer = malloc((wide_len + 1) * sizeof(wchar_t))) == NULL)) {
             va_end(args);
             free(mb_buffer);
+            RETURN(0);
             return 0;
         }
 
@@ -150,7 +154,7 @@ out_printf(FOut *_out, const char *format, ...) {
         free(wide_buffer);
         free(mb_buffer);
         va_end(args);
-
+        RETURN((int) wide_len);
         return (int) wide_len;
     }
     va_end(args);
@@ -175,6 +179,7 @@ out_overflow(FOut *_out) {
 static int
 getint(wchar_t **s) {
     int i;
+
     for (i = 0; iswdigit(**s); (*s)++)
         i = 10 * i + (**s - '0');
     return i;
@@ -453,13 +458,23 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
     out_init_file(_out, f);
     va_copy(ap2, ap);
 
+    ENTER();
+
+    if (__check_abort_enabled)
+        __check_abort();
+
     // Check for error in format string before writing anything to file.
     if (wprintf_core(0, format, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
+        RETURN(EOF);
         return EOF;
     }
     ret = wprintf_core(_out, format, &ap2, nl_arg, nl_type);
 
     va_end(ap2);
+
+    fflush(f);
+
+    RETURN(ret);
     return ret;
 }

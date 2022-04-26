@@ -9,7 +9,6 @@
 #include <ctype.h>
 
 int
-iswupper(wint_t c)
-{
-	return (towlower (c) != c);
+iswupper(wint_t c) {
+    return (towlower(c) != c);
 }

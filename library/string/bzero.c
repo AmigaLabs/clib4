@@ -10,6 +10,10 @@ void
 bzero(void *m, size_t len) {
     assert((len == 0) || (m != NULL && (int) len > 0));
 
+    ENTER();
+    SHOWPOINTER(m);
+    SHOWVALUE(len);
+
     DECLARE_UTILITYBASE();
 
     if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
@@ -27,4 +31,5 @@ bzero(void *m, size_t len) {
         ClearMem(m, len);
     }
 
+    LEAVE();
 }

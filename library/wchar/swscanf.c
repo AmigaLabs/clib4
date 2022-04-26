@@ -12,12 +12,9 @@ swscanf(const wchar_t *s, const wchar_t *format, ...) {
 
     ENTER();
 
-    SHOWSTRING(format);
+    SHOWWSTRING(format);
 
     assert(format != NULL);
-
-    if (__check_abort_enabled)
-        __check_abort();
 
     if (format == NULL) {
         __set_errno(EFAULT);

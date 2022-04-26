@@ -6,7 +6,6 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-
 int
 fscanf(FILE *stream, const char *format, ...) {
     int result = EOF;

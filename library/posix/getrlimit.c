@@ -14,6 +14,11 @@ getrlimit(int resource, struct rlimit *rlp) {
     int ret = -1;
     rlim_t l;
 
+    ENTER();
+
+    SHOWVALUE(resource);
+    SHOWPOINTER(rlp);
+
     if (rlp == NULL) {
         __set_errno(EFAULT);
         goto out;
@@ -77,5 +82,6 @@ getrlimit(int resource, struct rlimit *rlp) {
 
 out:
 
+    RETURN(ret);
     return (ret);
 }

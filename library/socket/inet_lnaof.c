@@ -7,19 +7,18 @@
 #endif /* _SOCKET_HEADERS_H */
 
 unsigned long
-inet_lnaof(struct in_addr in)
-{
-	unsigned long result;
+inet_lnaof(struct in_addr in) {
+    unsigned long result;
 
-	ENTER();
+    ENTER();
 
-	assert(__SocketBase != NULL);
+    assert(__SocketBase != NULL);
 
-	result = __Inet_LnaOf(in.s_addr);
+    result = __Inet_LnaOf(in.s_addr);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

@@ -13,6 +13,11 @@ _msgget(key_t key, int flags)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(key);
+    SHOWVALUE(flags);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {
@@ -27,6 +32,7 @@ _msgget(key_t key, int flags)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

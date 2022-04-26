@@ -13,6 +13,9 @@ swprintf(wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, ...)
 {
     int ret;
     va_list ap;
+
+    ENTER();
+
     va_start(ap, fmt);
     ret = vswprintf(s, l, fmt, ap);
     va_end(ap);

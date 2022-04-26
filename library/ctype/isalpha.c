@@ -6,39 +6,36 @@
 #include "ctype_headers.h"
 #endif /* _CTYPE_HEADERS_H */
 
-/****************************************************************************/
-
 #undef isalpha
 
-/****************************************************************************/
 
 int
-isalpha(int c)
-{
-	DECLARE_LOCALEBASE();
-	int result;
+isalpha(int c) {
+    DECLARE_LOCALEBASE();
+    int result;
 
-	__locale_lock();
+    ENTER();
+    SHOWVALUE(c);
 
-	if(__locale_table[LC_CTYPE] != NULL)
-	{
-		assert( LocaleBase != NULL );
+    __locale_lock();
 
-		/* The parameter must be either EOF or in the range of an
-		   'unsigned char'. If it's not, then the behaviour is
-		   undefined. */
-		if(c != EOF && ((0 <= c && c <= UCHAR_MAX) || ((c + 256) <= UCHAR_MAX)))
-			result = IsAlpha(__locale_table[LC_CTYPE],(ULONG)(c & 255));
-		else
-			result = FALSE;
-	}
-	else
-	{
-		result = (('a' <= c && c <= 'z') ||
-		          ('A' <= c && c <= 'Z'));
-	}
+    if (__locale_table[LC_CTYPE] != NULL) {
+        assert(LocaleBase != NULL);
 
-	__locale_unlock();
+        /* The parameter must be either EOF or in the range of an
+           'unsigned char'. If it's not, then the behaviour is
+           undefined. */
+        if (c != EOF && ((0 <= c && c <= UCHAR_MAX) || ((c + 256) <= UCHAR_MAX)))
+            result = IsAlpha(__locale_table[LC_CTYPE], (ULONG)(c & 255));
+        else
+            result = FALSE;
+    } else {
+        result = (('a' <= c && c <= 'z') ||
+                  ('A' <= c && c <= 'Z'));
+    }
 
-	return(result);
+    __locale_unlock();
+
+    RETURN(result);
+    return (result);
 }

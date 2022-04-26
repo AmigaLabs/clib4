@@ -7,10 +7,8 @@
 #endif /* _WCHAR_HEADERS_H */
 
 size_t
-mbrlen(const char *restrict s, size_t n, mbstate_t *restrict ps)
-{
-    if (ps == NULL)
-    {
+mbrlen(const char *restrict s, size_t n, mbstate_t *restrict ps) {
+    if (ps == NULL) {
         ps = &__global_clib2->wide_status->_mbrlen_state;
     }
 

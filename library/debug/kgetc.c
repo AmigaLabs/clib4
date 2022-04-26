@@ -4,16 +4,13 @@
 
 #include "debug_headers.h"
 
-/****************************************************************************/
-
 LONG
-kgetc(VOID)
-{
-	LONG result;
+kgetc(VOID) {
+    LONG result;
 
-	do
-		result = KMayGetChar();
-	while(result < 0);
+    do
+        result = KMayGetChar();
+    while (result < 0);
 
-	return(result);
+    return (result);
 }

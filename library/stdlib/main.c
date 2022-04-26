@@ -108,17 +108,17 @@ call_main(void)
 
 		/* Careful: only echo this information if a global environment
 		            variable is set to enable this feature! */
-		if (GetVar("_echo", value_str, sizeof(value_str), GVF_GLOBAL_ONLY) > 0 && StrToLong(value_str, &value) > 0 && value != 0)
+		if (GetVar("_echo", (STRPTR) value_str, sizeof(value_str), GVF_GLOBAL_ONLY) > 0 && StrToLong((CONST_STRPTR) value_str, &value) > 0 && value != 0)
 		{
 			struct Process *this_process = (struct Process *)FindTask(NULL);
-			UBYTE *arg_str = GetArgStr();
+            STRPTR arg_str = GetArgStr();
 			size_t arg_str_len = strlen((const char *)arg_str);
 			UBYTE *arg_str_copy;
 			UBYTE current_dir_name[256] = {0};
 			arg_str_copy = AllocVecTags(arg_str_len + 1, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-			if (arg_str_copy != NULL && NameFromLock(this_process->pr_CurrentDir, current_dir_name, sizeof(current_dir_name)))
+			if (arg_str_copy != NULL && NameFromLock(this_process->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name)))
 			{
-				strcpy(arg_str_copy, arg_str);
+				strcpy((char *) arg_str_copy, (char *) arg_str);
 
 				while (arg_str_len > 0 && arg_str_copy[arg_str_len - 1] <= ' ')
 					arg_str_copy[--arg_str_len] = '\0';

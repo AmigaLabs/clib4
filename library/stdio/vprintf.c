@@ -17,9 +17,6 @@ vprintf(const char *format, va_list arg) {
 
     assert(format != NULL && arg != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if (format == NULL || arg == NULL) {
         __set_errno(EFAULT);
         goto out;

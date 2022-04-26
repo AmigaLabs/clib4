@@ -14,13 +14,18 @@
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-quad_t strtoq(const char *nptr, char **endptr, register int base)
+quad_t
+strtoq(const char *nptr, char **endptr, register int base)
 {
     register const char *s;
     register u_quad_t acc;
     register int c;
     register u_quad_t qbase, cutoff;
     register int neg, any, cutlim;
+
+    ENTER();
+    SHOWSTRING(nptr);
+    SHOWVALUE(base);
 
     /*
      * Skip white space and pick up leading +/- sign if any.
@@ -94,5 +99,7 @@ quad_t strtoq(const char *nptr, char **endptr, register int base)
         acc = -acc;
     if (endptr != 0)
         *endptr = (char *) (any ? s - 1 : nptr);
+
+    RETURN(acc);
     return (acc);
 }

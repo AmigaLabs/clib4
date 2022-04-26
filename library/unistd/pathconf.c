@@ -25,21 +25,18 @@ pathconf(const char *path, int name) {
         goto out;
     }
 
-    if(__unix_path_semantics)
-    {
-        if(path[0] == '\0')
-        {
+    if (__unix_path_semantics) {
+        if (path[0] == '\0') {
             SHOWMSG("Empty name");
 
             __set_errno(ENOENT);
             goto out;
         }
 
-        if(__translate_unix_to_amiga_path_name(&path,&path_name_nti) != 0)
+        if (__translate_unix_to_amiga_path_name(&path, &path_name_nti) != 0)
             goto out;
 
-        if(path_name_nti.is_root)
-        {
+        if (path_name_nti.is_root) {
             /* Should we disallow / or use OFS as the lowest common denominator? */
             ignore_port = TRUE;
         }

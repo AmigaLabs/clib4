@@ -16,9 +16,6 @@ vscanf(const char *format, va_list arg) {
 
     assert(format != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if (format == NULL) {
         SHOWMSG("invalid format parameter");
 

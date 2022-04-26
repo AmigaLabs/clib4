@@ -10,6 +10,9 @@
 char *setstate(const char *state) {
     char *old;
 
+    ENTER();
+    SHOWSTRING(state);
+
     ObtainSemaphore(__global_clib2->__random_lock);
 
     old = savestate();
@@ -17,5 +20,6 @@ char *setstate(const char *state) {
 
     ReleaseSemaphore(__global_clib2->__random_lock);
 
+    RETURN(old);
     return old;
 }

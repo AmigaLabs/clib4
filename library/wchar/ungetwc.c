@@ -11,6 +11,8 @@ ungetwc(wint_t wc, FILE *fp) {
     char buf[MB_LEN_MAX];
     size_t len;
 
+    ENTER();
+
     flockfile(fp);
     ORIENT (fp, 1);
     if (wc == WEOF)
@@ -27,5 +29,6 @@ ungetwc(wint_t wc, FILE *fp) {
         }
     }
     funlockfile(fp);
+
     return wc;
 }

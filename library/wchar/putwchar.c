@@ -6,10 +6,7 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 wint_t
-putwchar(wchar_t c)
-{
-	return fputwc(c, stdout);
+putwchar(wchar_t c) {
+    return fputwc(c, stdout);
 }

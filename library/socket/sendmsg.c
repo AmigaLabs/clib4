@@ -6,45 +6,43 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-int 
-sendmsg(int sockfd, const struct msghdr *msg, int flags)
-{
-	struct fd *fd;
-	int result = ERROR;
+int
+sendmsg(int sockfd, const struct msghdr *msg, int flags) {
+    struct fd *fd;
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(sockfd);
-	SHOWPOINTER(msg);
-	SHOWVALUE(flags);
+    SHOWVALUE(sockfd);
+    SHOWPOINTER(msg);
+    SHOWVALUE(flags);
 
-	assert(msg != NULL);
-	assert(__SocketBase != NULL);
+    assert(msg != NULL);
+    assert(__SocketBase != NULL);
 
-    if (msg == NULL)
-    {
+    if (msg == NULL) {
         SHOWMSG("invalid msg parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	assert(sockfd >= 0 && sockfd < __num_fd);
-	assert(__fd[sockfd] != NULL);
-	assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
-	assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __num_fd);
+    assert(__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
-	fd = __get_file_descriptor_socket(sockfd);
-	if (fd == NULL)
-		goto out;
+    fd = __get_file_descriptor_socket(sockfd);
+    if (fd == NULL)
+        goto out;
 
-	result = __sendmsg(fd->fd_Socket, (struct msghdr *)msg, flags);
+    result = __sendmsg(fd->fd_Socket, (struct msghdr *) msg, flags);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

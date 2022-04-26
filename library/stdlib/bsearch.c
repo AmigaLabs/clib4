@@ -52,7 +52,7 @@ bsearch(const void *key, const void *base, size_t count, size_t size, int (*comp
         }
     }
 
-    out:
+out:
 
     RETURN(result);
     return (result);

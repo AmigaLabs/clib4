@@ -12,36 +12,38 @@
 
 #include <net/if.h>
 
-unsigned int 
-if_nametoindex(const char *ifname)
-{
-    unsigned int index = 0;
+unsigned int
+if_nametoindex(const char *ifname) {
+    unsigned int index = 1;
 
     struct List *netiflist = NULL;
     struct Node *node = NULL;
 
+    ENTER();
+    SHOWSTRING(ifname);
+
     netiflist = __ISocket->ObtainInterfaceList();
-    if (netiflist != NULL)
-    {
+    if (netiflist != NULL) {
         node = GetHead(netiflist);
-        if (node != NULL)
-        {
-            while (node != NULL)
-            {
-                if (node->ln_Name != NULL)
-                {
-                    if (strcasecmp(node->ln_Name, ifname) == SAME)
-                    {
-                        // Found our interface
-                        return index;
-                    }
+        while (node != NULL) {
+            if (node->ln_Name != NULL) {
+                if (strcasecmp(node->ln_Name, ifname) == SAME) {
+                    // Found our interface
+                    goto out;
                 }
-                index++;
-                node = GetSucc(node);
             }
+            index++;
+            node = GetSucc(node);
         }
         __ISocket->ReleaseInterfaceList(netiflist);
     }
+    /* We did not found the interface. Set index to ZERO */
+    index = 0;
 
+out:
+    if (__check_abort_enabled)
+        __check_abort();
+
+    RETURN(index);
     return index;
 }

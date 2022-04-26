@@ -12,6 +12,8 @@ int
 getc(FILE *stream) {
     int result = EOF;
 
+    ENTER();
+
     assert(stream != NULL);
 
     if (stream == NULL) {
@@ -22,6 +24,8 @@ getc(FILE *stream) {
     result = fgetc(stream);
 
 out:
+
+    LEAVE();
 
     return (result);
 }

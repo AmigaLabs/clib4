@@ -18,9 +18,6 @@ clearerr(FILE *stream) {
 
     assert(stream != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if (stream == NULL) {
         __set_errno(EFAULT);
         goto out;

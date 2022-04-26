@@ -12,8 +12,14 @@ int
 munmap(void *map, size_t length) {
     (void) (length);
 
+    ENTER();
+
+    SHOWPOINTER(map);
+    SHOWVALUE(length);
+
     if (map != NULL)
         free(map);
 
+    RETURN(0);
     return 0;
 }

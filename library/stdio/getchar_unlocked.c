@@ -9,21 +9,22 @@
 #undef getchar_unlocked
 
 int
-getchar_unlocked(void)
-{
-	int result = EOF;
+getchar_unlocked(void) {
+    int result = EOF;
 
-	assert( stdin != NULL );
+    ENTER();
 
-    if(stdin == NULL)
-    {
+    assert(stdin != NULL);
+
+    if (stdin == NULL) {
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __getc_unlocked(stdin);
+    result = __getc_unlocked(stdin);
 
- out:
+out:
 
-	return(result);
+    RETURN(result);
+    return (result);
 }

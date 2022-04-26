@@ -13,6 +13,8 @@
 wint_t
 towctrans(wint_t c, wctrans_t desc)
 {
+    ENTER();
+
 	if (desc == WCT_TOLOWER)
 		return towlower(c);
 	else if (desc == WCT_TOUPPER)

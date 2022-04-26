@@ -6,21 +6,15 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/****************************************************************************/
-
 int
-fwscanf(FILE *stream, const wchar_t *format, ...)
-{
+fwscanf(FILE *stream, const wchar_t *format, ...) {
     int ret = EOF;
 
     ENTER();
 
-    SHOWSTRING(format);
+    SHOWWSTRING(format);
 
     assert(format != NULL);
-
-    if (__check_abort_enabled)
-        __check_abort();
 
     if (format == NULL) {
         __set_errno(EFAULT);

@@ -13,6 +13,12 @@ _shmget(key_t key, size_t size, int flags)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(key);
+    SHOWVALUE(size);
+    SHOWVALUE(flags);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {
@@ -27,6 +33,7 @@ _shmget(key_t key, size_t size, int flags)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

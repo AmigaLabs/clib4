@@ -18,6 +18,9 @@ fstatvfs(int fd, struct statvfs *buf)
 
     ENTER();
 
+    SHOWVALUE(fd);
+    SHOWPOINTER(buf);
+
     struct fd *fildes = __get_file_descriptor(fd);
     if (fildes == NULL) {
         __set_errno(EBADF);

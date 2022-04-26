@@ -34,7 +34,7 @@ mkstemp(char *name_template) {
 
     result = open(name_template, O_RDWR | O_CREAT | O_TRUNC, 0600);
 
-    out:
+out:
 
     RETURN(result);
     return (result);

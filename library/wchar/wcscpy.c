@@ -7,9 +7,12 @@
 #endif /* _WCHAR_HEADERS_H */
 
 wchar_t *
-wcscpy(wchar_t *dest, const wchar_t *src)
-{
-	wchar_t *a = dest;
-	while ((*dest++ = *src++));
-	return a;
+wcscpy(wchar_t *dest, const wchar_t *src) {
+    ENTER();
+
+    wchar_t *a = dest;
+    while ((*dest++ = *src++));
+
+    LEAVE();
+    return a;
 }

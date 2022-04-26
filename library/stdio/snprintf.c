@@ -22,9 +22,6 @@ snprintf(char *s, size_t size, const char *format, ...) {
     assert(size == 0 || s != NULL);
     assert((int) size >= 0);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if ((size > 0 && s == NULL) || format == NULL) {
         __set_errno(EFAULT);
         goto out;

@@ -9,11 +9,14 @@
 #undef isblank
 
 int
-isblank(int c)
-{
-	int result;
+isblank(int c) {
+    int result;
 
-	result = (c == '\t' || c == ' ');
+    ENTER();
+    SHOWVALUE(c);
 
-	return(result);
+    result = (c == '\t' || c == ' ');
+
+    RETURN(result);
+    return (result);
 }

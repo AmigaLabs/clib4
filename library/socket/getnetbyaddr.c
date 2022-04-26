@@ -7,19 +7,18 @@
 #endif /* _SOCKET_HEADERS_H */
 
 struct netent *
-getnetbyaddr(in_addr_t net, int type)
-{
-	struct netent *result = NULL;
+getnetbyaddr(in_addr_t net, int type) {
+    struct netent *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	assert(__SocketBase != NULL);
+    assert(__SocketBase != NULL);
 
-	result = __getnetbyaddr((ULONG)net, type);
+    result = __getnetbyaddr((ULONG) net, type);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

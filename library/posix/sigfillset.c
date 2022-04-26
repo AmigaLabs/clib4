@@ -7,8 +7,13 @@
 #endif /* _SIGNAL_HEADERS_H */
 
 int
-sigfillset(sigset_t * set)
-{
+sigfillset(sigset_t *set) {
+    ENTER();
+
+    SHOWPOINTER(set);
+
     *set = ~((sigset_t) 0);
+
+    RETURN(0);
     return 0;
 }

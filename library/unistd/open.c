@@ -16,359 +16,314 @@
 STATIC LONG
 safe_change_mode(LONG type, BPTR file_handle, LONG mode)
 {
-	LONG result = DOSFALSE;
-	result = ChangeMode(type, file_handle, mode);
+    LONG result = DOSFALSE;
+    result = ChangeMode(type, file_handle, mode);
 
-	return (result);
+    return (result);
 }
 
 int
-open(const char *path_name, int open_flag, ... /* mode_t mode */)
-{
-	DECLARE_UTILITYBASE();
-	struct name_translation_info path_name_nti;
-	struct ExamineData *fib = NULL;
-	struct SignalSemaphore *fd_lock;
-	LONG is_file_system = FALSE;
-	LONG open_mode;
-	BPTR lock = ZERO;
-	BPTR handle = ZERO;
-	BOOL create_new_file = FALSE;
-	LONG is_interactive;
-	int fd_slot_number;
-	struct fd *fd;
-	int access_mode;
-	int result = ERROR;
-	int i;
+open(const char *path_name, int open_flag, ... /* mode_t mode */) {
+    DECLARE_UTILITYBASE();
+    struct name_translation_info path_name_nti;
+    struct ExamineData *fib = NULL;
+    struct SignalSemaphore *fd_lock;
+    LONG is_file_system = FALSE;
+    LONG open_mode;
+    BPTR lock = ZERO;
+    BPTR handle = ZERO;
+    BOOL create_new_file = FALSE;
+    LONG is_interactive;
+    int fd_slot_number;
+    struct fd *fd;
+    int access_mode;
+    int result = ERROR;
+    int i;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(path_name);
-	SHOWVALUE(open_flag);
+    SHOWSTRING(path_name);
+    SHOWVALUE(open_flag);
 
-	assert(path_name != NULL);
-	assert(UtilityBase != NULL);
+    assert(path_name != NULL);
+    assert(UtilityBase != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	__stdio_lock();
+    __stdio_lock();
 
-    if (path_name == NULL)
-    {
+    if (path_name == NULL) {
         SHOWMSG("path name is invalid");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	access_mode = (open_flag & 3);
-	if (access_mode < O_RDONLY && access_mode > O_RDWR)
-	{
-		SHOWMSG("access mode is invalid");
+    access_mode = (open_flag & 3);
+    if (access_mode < O_RDONLY && access_mode > O_RDWR) {
+        SHOWMSG("access mode is invalid");
 
-		__set_errno(EINVAL);
-		goto out;
-	}
+        __set_errno(EINVAL);
+        goto out;
+    }
 
-	fd_slot_number = __find_vacant_fd_entry();
-	if (fd_slot_number < 0)
-	{
-		if (__grow_fd_table(0) < 0)
-		{
-			SHOWMSG("couldn't find a vacant file descriptor, and couldn't allocate one either");
-			goto out;
-		}
+    fd_slot_number = __find_vacant_fd_entry();
+    if (fd_slot_number < 0) {
+        if (__grow_fd_table(0) < 0) {
+            SHOWMSG("couldn't find a vacant file descriptor, and couldn't allocate one either");
+            goto out;
+        }
 
-		fd_slot_number = __find_vacant_fd_entry();
-		assert(fd_slot_number >= 0);
-	}
+        fd_slot_number = __find_vacant_fd_entry();
+        assert(fd_slot_number >= 0);
+    }
 
-	if (__unix_path_semantics)
-	{
-		if (path_name[0] == '\0')
-		{
-			SHOWMSG("no name given");
+    if (__unix_path_semantics) {
+        if (path_name[0] == '\0') {
+            SHOWMSG("no name given");
 
-			__set_errno(ENOENT);
-			goto out;
-		}
+            __set_errno(ENOENT);
+            goto out;
+        }
 
-		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
-			goto out;
+        if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+            goto out;
 
-		if (path_name_nti.is_root)
-		{
-			__set_errno(EACCES);
-			goto out;
-		}
-	}
+        if (path_name_nti.is_root) {
+            __set_errno(EACCES);
+            goto out;
+        }
+    }
 
-	if (Strnicmp(path_name, "PIPE:", 5) == SAME && FLAG_IS_SET(open_flag, O_CREAT))
-	{
-		open_mode = MODE_NEWFILE;
-	}
-	else if (Strnicmp(path_name, "NIL:", 4) != SAME && (
+    if (Strnicmp(path_name, "PIPE:", 5) == SAME && FLAG_IS_SET(open_flag, O_CREAT)) {
+        open_mode = MODE_NEWFILE;
+    } else if (Strnicmp(path_name, "NIL:", 4) != SAME && (
             FLAG_IS_SET(open_flag, O_CREAT) ||
             FLAG_IS_SET(open_flag, O_WRONLY) ||
             FLAG_IS_SET(open_flag, O_RDWR)
-    ))
-	{
-		if (FLAG_IS_SET(open_flag, O_EXCL))
-		{
-			LONG error;
+    )) {
+        if (FLAG_IS_SET(open_flag, O_EXCL)) {
+            LONG error;
 
-			SHOWMSG("checking if the file to create already exists");
+            SHOWMSG("checking if the file to create already exists");
 
-			lock = Lock((STRPTR)path_name, SHARED_LOCK);
-			if (lock != ZERO)
-			{
-				SHOWMSG("the file already exists");
+            lock = Lock((STRPTR) path_name, SHARED_LOCK);
+            if (lock != ZERO) {
+                SHOWMSG("the file already exists");
 
-				__set_errno(EEXIST);
-				goto out;
-			}
+                __set_errno(EEXIST);
+                goto out;
+            }
 
-			error = IoErr();
+            error = IoErr();
 
-			if (error == ERROR_OBJECT_WRONG_TYPE)
-			{
-				SHOWMSG("there's something not a directory on the path");
+            if (error == ERROR_OBJECT_WRONG_TYPE) {
+                SHOWMSG("there's something not a directory on the path");
 
-				__set_errno(ENOTDIR);
-				goto out;
-			}
-			else if (error != ERROR_OBJECT_NOT_FOUND && error != ERROR_ACTION_NOT_KNOWN)
-			{
-				SHOWMSG("error accessing the object");
+                __set_errno(ENOTDIR);
+                goto out;
+            } else if (error != ERROR_OBJECT_NOT_FOUND && error != ERROR_ACTION_NOT_KNOWN) {
+                SHOWMSG("error accessing the object");
 
-				__set_errno(__translate_io_error_to_errno(IoErr()));
-				goto out;
-			}
+                __set_errno(__translate_io_error_to_errno(IoErr()));
+                goto out;
+            }
 
-			SHOWMSG("the object does not already exist");
-		}
+            SHOWMSG("the object does not already exist");
+        }
 
-		open_mode = MODE_READWRITE;
+        open_mode = MODE_READWRITE;
 
-		if (FLAG_IS_SET(open_flag, O_TRUNC))
-		{
-			SHOWMSG("checking if the file to create already exists");
+        if (FLAG_IS_SET(open_flag, O_TRUNC)) {
+            SHOWMSG("checking if the file to create already exists");
 
-			lock = Lock((STRPTR)path_name, SHARED_LOCK);
-			if (lock != ZERO)
-			{
-				fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
-				if (fib == NULL)
-				{
-					SHOWMSG("could not examine the object");
+            lock = Lock((STRPTR) path_name, SHARED_LOCK);
+            if (lock != ZERO) {
+                fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
+                if (fib == NULL) {
+                    SHOWMSG("could not examine the object");
 
-					__set_errno(__translate_io_error_to_errno(IoErr()));
-					goto out;
-				}
+                    __set_errno(__translate_io_error_to_errno(IoErr()));
+                    goto out;
+                }
 
-				/* We can open only files, but never directories. */
-				if (EXD_IS_DIRECTORY(fib))
-				{
-					SHOWMSG("can't open a directory");
+                /* We can open only files, but never directories. */
+                if (EXD_IS_DIRECTORY(fib)) {
+                    SHOWMSG("can't open a directory");
 
-					__set_errno(EISDIR);
-					goto out;
-				}
+                    __set_errno(EISDIR);
+                    goto out;
+                }
 
-				if (FLAG_IS_SET(fib->Protection, EXDF_NO_WRITE) ||
-					FLAG_IS_SET(fib->Protection, EXDF_NO_DELETE))
-				{
-					SHOWMSG("this object is not write enabled");
+                if (FLAG_IS_SET(fib->Protection, EXDF_NO_WRITE) ||
+                    FLAG_IS_SET(fib->Protection, EXDF_NO_DELETE)) {
+                    SHOWMSG("this object is not write enabled");
 
-					__set_errno(EACCES);
-					goto out;
-				}
+                    __set_errno(EACCES);
+                    goto out;
+                }
 
-				open_mode = MODE_NEWFILE;
+                open_mode = MODE_NEWFILE;
 
-				UnLock(lock);
-				lock = ZERO;
-			}
-			else
-			{
-				LONG error;
+                UnLock(lock);
+                lock = ZERO;
+            } else {
+                LONG error;
 
-				error = IoErr();
+                error = IoErr();
 
-				if (error == ERROR_OBJECT_WRONG_TYPE)
-				{
-					SHOWMSG("there's something not a directory on the path");
+                if (error == ERROR_OBJECT_WRONG_TYPE) {
+                    SHOWMSG("there's something not a directory on the path");
 
-					__set_errno(ENOTDIR);
-					goto out;
-				}
-				else if (error != ERROR_OBJECT_NOT_FOUND && error != ERROR_ACTION_NOT_KNOWN)
-				{
-					SHOWMSG("error accessing the object");
+                    __set_errno(ENOTDIR);
+                    goto out;
+                } else if (error != ERROR_OBJECT_NOT_FOUND && error != ERROR_ACTION_NOT_KNOWN) {
+                    SHOWMSG("error accessing the object");
 
-					__set_errno(__translate_io_error_to_errno(IoErr()));
-					goto out;
-				}
-			}
-		}
+                    __set_errno(__translate_io_error_to_errno(IoErr()));
+                    goto out;
+                }
+            }
+        }
 
-		create_new_file = TRUE;
-	}
-	else
-	{
-		open_mode = MODE_OLDFILE;
-	}
+        create_new_file = TRUE;
+    } else {
+        open_mode = MODE_OLDFILE;
+    }
 
-	SHOWSTRING(path_name);
+    SHOWSTRING(path_name);
 
-	handle = Open((STRPTR)path_name, open_mode);
-	if (handle == ZERO)
-	{
-		LONG io_err = IoErr();
+    handle = Open((STRPTR) path_name, open_mode);
+    if (handle == ZERO) {
+        LONG io_err = IoErr();
 
-		D(("the file '%s' didn't open in mode %ld", path_name, open_mode));
-		__set_errno(__translate_access_io_error_to_errno(io_err));
+        D(("the file '%s' didn't open in mode %ld", path_name, open_mode));
+        __set_errno(__translate_access_io_error_to_errno(io_err));
 
-		/* Check if ended up trying to open a directory as if
-		   it were a plain file. */
-		if (io_err == ERROR_OBJECT_WRONG_TYPE)
-		{
-			lock = Lock((STRPTR)path_name, SHARED_LOCK);
-			if (lock != ZERO)
-			{
-				fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
-				if (fib != NULL && !EXD_IS_DIRECTORY(fib)) {
-					__set_errno(EISDIR);
-				}
-			}
-		}
+        /* Check if ended up trying to open a directory as if
+           it were a plain file. */
+        if (io_err == ERROR_OBJECT_WRONG_TYPE) {
+            lock = Lock((STRPTR) path_name, SHARED_LOCK);
+            if (lock != ZERO) {
+                fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
+                if (fib != NULL && !EXD_IS_DIRECTORY(fib)) {
+                    __set_errno(EISDIR);
+                }
+            }
+        }
 
-		goto out;
-	}
+        goto out;
+    }
 
-	fd_lock = __create_semaphore();
-	if (fd_lock == NULL)
-	{
-		__set_errno(ENOMEM);
-		goto out;
-	}
+    fd_lock = __create_semaphore();
+    if (fd_lock == NULL) {
+        __set_errno(ENOMEM);
+        goto out;
+    }
 
-	fd = __fd[fd_slot_number];
+    fd = __fd[fd_slot_number];
 
-	__initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
+    __initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
 
-	/* Figure out if this stream is attached to a console. */
-	is_interactive = IsInteractive(handle);
-	if (is_interactive)
-	{
-		SET_FLAG(fd->fd_Flags, FDF_IS_INTERACTIVE);
+    /* Figure out if this stream is attached to a console. */
+    is_interactive = IsInteractive(handle);
+    if (is_interactive) {
+        SET_FLAG(fd->fd_Flags, FDF_IS_INTERACTIVE);
 
-		if (FLAG_IS_SET(open_flag, O_NONBLOCK))
-		{
-			SHOWMSG("enabling non-blocking mode");
+        if (FLAG_IS_SET(open_flag, O_NONBLOCK)) {
+            SHOWMSG("enabling non-blocking mode");
 
-			if (SetMode(handle, DOSTRUE)) /* single character mode */
-				SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
-		}
-	}
-	else
-	{
-		size_t len;
+            if (SetMode(handle, DOSTRUE)) /* single character mode */
+                SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+        }
+    } else {
+        size_t len;
 
-		len = 0;
+        len = 0;
 
-		for (i = 0; path_name[i] != '\0'; i++)
-		{
-			if (path_name[i] == ':')
-			{
-				len = i + 1;
-				break;
-			}
-		}
+        for (i = 0; path_name[i] != '\0'; i++) {
+            if (path_name[i] == ':') {
+                len = i + 1;
+                break;
+            }
+        }
 
-		if (len > 0)
-		{
-			char *path_name_copy;
+        if (len > 0) {
+            char *path_name_copy;
 
-			path_name_copy = malloc(len + 1);
-			if (path_name_copy != NULL)
-			{
-				memmove(path_name_copy, path_name, len);
-				path_name_copy[len] = '\0';
+            path_name_copy = malloc(len + 1);
+            if (path_name_copy != NULL) {
+                memmove(path_name_copy, path_name, len);
+                path_name_copy[len] = '\0';
 
-				is_file_system = IsFileSystem(path_name_copy);
-				free(path_name_copy);
-			}
-		}
-		else
-		{
-			is_file_system = IsFileSystem("");
-		}
+                is_file_system = IsFileSystem(path_name_copy);
+                free(path_name_copy);
+            }
+        } else {
+            is_file_system = IsFileSystem("");
+        }
 
-		if (is_file_system)
-		{
-			/* We opened the file in exclusive access mode. Switch it back
-			   into shared access mode so that its contents can be read
-			   while it's still open. */
-			if (open_mode == MODE_NEWFILE)
-				safe_change_mode(CHANGE_FH, handle, SHARED_LOCK);
+        if (is_file_system) {
+            /* We opened the file in exclusive access mode. Switch it back
+               into shared access mode so that its contents can be read
+               while it's still open. */
+            if (open_mode == MODE_NEWFILE)
+                safe_change_mode(CHANGE_FH, handle, SHARED_LOCK);
 
-			/* We should be able to seek in this file. */
-			SET_FLAG(fd->fd_Flags, FDF_CACHE_POSITION);
-		}
-	}
+            /* We should be able to seek in this file. */
+            SET_FLAG(fd->fd_Flags, FDF_CACHE_POSITION);
+        }
+    }
 
-	if (FLAG_IS_SET(open_flag, O_APPEND))
-	{
-		SHOWMSG("appending; seeking to end of file");
+    if (FLAG_IS_SET(open_flag, O_APPEND)) {
+        SHOWMSG("appending; seeking to end of file");
 
-		ChangeFilePosition(handle, 0, OFFSET_END);
+        ChangeFilePosition(handle, 0, OFFSET_END);
 
-		SET_FLAG(fd->fd_Flags, FDF_APPEND);
-	}
+        SET_FLAG(fd->fd_Flags, FDF_APPEND);
+    }
 
-	switch (access_mode)
-	{
-	case O_RDONLY:
+    switch (access_mode) {
+        case O_RDONLY:
 
-		SET_FLAG(fd->fd_Flags, FDF_READ);
-		break;
+            SET_FLAG(fd->fd_Flags, FDF_READ);
+            break;
 
-	case O_WRONLY:
+        case O_WRONLY:
 
-		SET_FLAG(fd->fd_Flags, FDF_WRITE);
-		break;
+            SET_FLAG(fd->fd_Flags, FDF_WRITE);
+            break;
 
-	case O_RDWR:
+        case O_RDWR:
 
-		SET_FLAG(fd->fd_Flags, FDF_READ);
-		SET_FLAG(fd->fd_Flags, FDF_WRITE);
-		break;
-	}
+            SET_FLAG(fd->fd_Flags, FDF_READ);
+            SET_FLAG(fd->fd_Flags, FDF_WRITE);
+            break;
+    }
 
-	if (create_new_file && is_file_system)
-		SET_FLAG(fd->fd_Flags, FDF_CREATED);
+    if (create_new_file && is_file_system)
+        SET_FLAG(fd->fd_Flags, FDF_CREATED);
 
-	SET_FLAG(fd->fd_Flags, FDF_IN_USE);
+    SET_FLAG(fd->fd_Flags, FDF_IN_USE);
 
-	result = fd_slot_number;
+    result = fd_slot_number;
 
-	handle = ZERO;
+    handle = ZERO;
 
-	assert(result != ERROR);
+    assert(result != ERROR);
 
 out:
-	if (handle != ZERO)
-		Close(handle);
+    if (handle != ZERO)
+        Close(handle);
 
-	if (fib != NULL) {
-		FreeDosObject(DOS_EXAMINEDATA, fib);
-	}
-	UnLock(lock);
+    if (fib != NULL) {
+        FreeDosObject(DOS_EXAMINEDATA, fib);
+    }
+    UnLock(lock);
 
-	__stdio_unlock();
+    __stdio_unlock();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

@@ -38,11 +38,11 @@ __calloc(size_t num_elements, size_t element_size) {
     return (result);
 }
 
-/****************************************************************************/
-
 void *
 calloc(size_t num_elements, size_t element_size) {
     void *result;
+
     result = __calloc(num_elements, element_size);
+
     return (result);
 }

@@ -7,32 +7,30 @@
 #endif /* _SOCKET_HEADERS_H */
 
 unsigned long
-inet_addr(const char *addr)
-{
-	unsigned long result = 0xFFFFFFFFUL;
+inet_addr(const char *addr) {
+    unsigned long result = 0xFFFFFFFFUL;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(addr);
+    SHOWSTRING(addr);
 
-	assert(addr != NULL);
-	assert(__SocketBase != NULL);
+    assert(addr != NULL);
+    assert(__SocketBase != NULL);
 
-    if (addr == NULL)
-    {
+    if (addr == NULL) {
         SHOWMSG("invalid parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __inet_addr((char *)addr);
+    result = __inet_addr((char *) addr);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

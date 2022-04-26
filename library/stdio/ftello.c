@@ -11,11 +11,14 @@
    In this implementation, "off_t" has the same range as the
    "long int" type, so this matters little. */
 off_t
-ftello(FILE *stream)
-{
+ftello(FILE *stream) {
 	off_t result;
 
+    ENTER();
+
 	result = (off_t)ftell(stream);
+
+    LEAVE();
 
 	return(result);
 }

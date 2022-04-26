@@ -7,32 +7,30 @@
 #endif /* _FCNTL_HEADERS_H */
 
 int
-__get_default_file(int file_descriptor,long * file_ptr)
-{
-	int result = ERROR;
-	struct fd * fd;
+__get_default_file(int file_descriptor, long *file_ptr) {
+    int result = ERROR;
+    struct fd *fd;
 
-	assert( file_descriptor >= 0 && file_descriptor < __num_fd );
-	assert( __fd[file_descriptor] != NULL );
-	assert( FLAG_IS_SET(__fd[file_descriptor]->fd_Flags,FDF_IN_USE) );
-	assert( file_ptr != NULL );
+    assert(file_descriptor >= 0 && file_descriptor < __num_fd);
+    assert(__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_ptr != NULL);
 
-	fd = __get_file_descriptor(file_descriptor);
-	if(fd == NULL)
-	{
-		__set_errno(EBADF);
-		goto out;
-	}
+    fd = __get_file_descriptor(file_descriptor);
+    if (fd == NULL) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
-	__fd_lock(fd);
+    __fd_lock(fd);
 
-	(*file_ptr) = (long)__resolve_fd_file(fd);
+    (*file_ptr) = (long) __resolve_fd_file(fd);
 
-	result = 0;
+    result = 0;
 
- out:
+out:
 
-	__fd_unlock(fd);
+    __fd_unlock(fd);
 
-	return(result);
+    return (result);
 }

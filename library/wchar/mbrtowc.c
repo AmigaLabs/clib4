@@ -10,6 +10,8 @@ size_t
 mbrtowc(wchar_t *pwc, const char *src, size_t n, mbstate_t *ps) {
     int retval = 0;
 
+    ENTER();
+
     if (ps == NULL) {
         ps = &__global_clib2->wide_status->_mbrtowc_state;
     }
@@ -23,7 +25,10 @@ mbrtowc(wchar_t *pwc, const char *src, size_t n, mbstate_t *ps) {
     if (retval == -1) {
         ps->__count = 0;
         __set_errno(EILSEQ);
+        RETURN(-1);
         return (size_t)(-1);
-    } else
+    } else {
+        RETURN(retval);
         return (size_t) retval;
+    }
 }

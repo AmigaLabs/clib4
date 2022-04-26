@@ -6,23 +6,25 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-/****************************************************************************/
-
 void
-perror(const char * s)
-{
-	char * error_message;
-	int error = __get_errno();
+perror(const char *s) {
+    char *error_message;
+    int error = __get_errno();
 
-	if(s != NULL)
-		fprintf(stderr,"%s: ",s);
+    ENTER();
+    SHOWSTRING(s);
 
-	error_message = strerror(error);
+    if (s != NULL)
+        fprintf(stderr, "%s: ", s);
 
-	if(error_message != NULL)
-		fprintf(stderr,"%s",error_message);
-	else
-		fprintf(stderr,"error %d",error);
+    error_message = strerror(error);
 
-	fprintf(stderr,"\n");
+    if (error_message != NULL)
+        fprintf(stderr, "%s", error_message);
+    else
+        fprintf(stderr, "error %d", error);
+
+    fprintf(stderr, "\n");
+
+    LEAVE();
 }

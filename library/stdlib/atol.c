@@ -10,6 +10,9 @@ long
 atol(const char *str) {
     long result = 0;
 
+    ENTER();
+    SHOWSTRING(str);
+
     assert(str != NULL);
 
     if (str == NULL) {
@@ -20,6 +23,6 @@ atol(const char *str) {
     result = strtol(str, (char **) NULL, 10);
 
 out:
-
+    RETURN(result);
     return (result);
 }

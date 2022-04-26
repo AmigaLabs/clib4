@@ -6,13 +6,8 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-/* Implementation based on musl */
-
-/****************************************************************************/
-
 wchar_t *
-wcscat(wchar_t *dest, const wchar_t *src)
-{
-	wcscpy(dest + wcslen(dest), src);
-	return dest;
+wcscat(wchar_t *dest, const wchar_t *src) {
+    wcscpy(dest + wcslen(dest), src);
+    return dest;
 }

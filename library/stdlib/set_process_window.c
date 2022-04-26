@@ -6,14 +6,17 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 APTR
-__set_process_window(APTR new_window_pointer)
-{
-	APTR result;
+__set_process_window(APTR new_window_pointer) {
+    APTR result;
 
-	result = SetProcWindow(new_window_pointer);
+    ENTER();
+    SHOWPOINTER(new_window_pointer);
 
-	return(result);
+    result = SetProcWindow(new_window_pointer);
+
+    SHOWPOINTER(result);
+    LEAVE();
+
+    return (result);
 }

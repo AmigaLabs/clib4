@@ -137,7 +137,7 @@ strtol(const char *str, char **ptr, int base) {
 
     stop = str;
 
-    out:
+out:
 
     /* If desired, remember where we stopped reading the
        number from the buffer. */

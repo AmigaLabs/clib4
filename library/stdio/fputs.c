@@ -20,9 +20,6 @@ fputs(const char *s, FILE *stream) {
 
     assert(s != NULL && stream != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if (s == NULL || stream == NULL) {
         __set_errno(EFAULT);
         goto out;

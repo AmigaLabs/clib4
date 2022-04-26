@@ -74,14 +74,6 @@ struct timespec
   long tv_nsec;
 };
 
-#ifndef tv_sec
-#define tv_sec tv_secs
-#endif /* tv_sec */
-
-#ifndef tv_usec
-#define tv_usec tv_micro
-#endif /* tv_usec */
-
 /* BSD time macros used by RTEMS code */
 /* Convenience macros for operations on timevals.
    NOTE: `timercmp' does not work for >= or <=.  */

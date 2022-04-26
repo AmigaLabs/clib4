@@ -15,14 +15,17 @@
 #endif /* _MATH_HEADERS_H */
 
 float
-wcstof(const wchar_t *nptr, wchar_t **endptr)
-{
-	double val = wcstod(nptr, endptr);
-	if (__stdlib__isnan(val))
-		return __stdlib_nanf("");
-	float retval = (float)val;
-	if (__stdlib__isinf(retval) && !__stdlib__isinf(val))
-		__set_errno(ERANGE);
+wcstof(const wchar_t *nptr, wchar_t **endptr) {
+    double val = wcstod(nptr, endptr);
+    if (__stdlib__isnan(val))
+        return __stdlib_nanf("");
 
-	return retval;
+    ENTER();
+
+    float retval = (float) val;
+    if (__stdlib__isinf(retval) && !__stdlib__isinf(val))
+        __set_errno(ERANGE);
+
+    RETURN(retval);
+    return retval;
 }

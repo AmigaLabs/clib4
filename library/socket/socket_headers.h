@@ -130,5 +130,7 @@ extern int __select(int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *excep
 #define __SocketBaseTagList(tags) __ISocket->SocketBaseTagList(tags) 
 #define __SocketBaseTags(tag1...) __ISocket->SocketBaseTags(## tag1) 
 #define __ProcessIsServer(pr) __ISocket->ProcessIsServer(pr) 
+#define __getdomainname(buffer, size) __ISocket->GetDefaultDomainName(buffer, size)
+#define __setdomainname(buffer) __ISocket->SetDefaultDomainName(buffer)
 
 #endif /* _SOCKET_HEADERS_H */

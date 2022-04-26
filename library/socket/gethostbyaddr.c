@@ -7,34 +7,32 @@
 #endif /* _SOCKET_HEADERS_H */
 
 struct hostent *
-gethostbyaddr(const void *addr, socklen_t len, int type)
-{
-	struct hostent *result = NULL;
+gethostbyaddr(const void *addr, socklen_t len, int type) {
+    struct hostent *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(addr);
-	SHOWVALUE(len);
-	SHOWVALUE(type);
+    SHOWPOINTER(addr);
+    SHOWVALUE(len);
+    SHOWVALUE(type);
 
-	assert(addr != NULL);
-	assert(__SocketBase != NULL);
+    assert(addr != NULL);
+    assert(__SocketBase != NULL);
 
-    if (addr == NULL)
-    {
+    if (addr == NULL) {
         SHOWMSG("invalid addr parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __gethostbyaddr((STRPTR)addr, len, type);
+    result = __gethostbyaddr((STRPTR) addr, len, type);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

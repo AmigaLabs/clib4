@@ -6,10 +6,13 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 int
 mblen(const char *s, size_t n)
 {
-	return mbtowc(0, s, n);	
+    ENTER();
+
+    int result = mbtowc(0, s, n);
+
+    RETURN(result);
+    return result;
 }

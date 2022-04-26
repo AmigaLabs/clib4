@@ -10,11 +10,13 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-wint_t __fgetwc_unlocked_internal(FILE *f)
-{
-	wchar_t wc;
-	int c;
-	size_t l = 0;
+wint_t
+__fgetwc_unlocked_internal(FILE *f) {
+    ENTER();
+
+    wchar_t wc;
+    int c;
+    size_t l = 0;
     unsigned char b;
     int first = 1;
 
@@ -25,35 +27,42 @@ wint_t __fgetwc_unlocked_internal(FILE *f)
                 f->_flags2 |= __SERR;
                 __set_errno(EILSEQ);
             }
+            RETURN(WEOF);
             return WEOF;
         }
-        l = mbrtowc(&wc, (void *)&b, 1, &f->_mbstate);
+        l = mbrtowc(&wc, (void *) &b, 1, &f->_mbstate);
         if (l == -1) {
             if (!first) {
                 f->_flags2 |= __SERR;
                 ungetc(b, f);
             }
+            RETURN(WEOF);
             return WEOF;
         }
         first = 0;
     } while (l == -2);
 
-	return wc;
+    RETURN(wc);
+    return wc;
 }
 
-wint_t __fgetwc_unlocked(FILE *f)
-{
-	if ((f->_flags2 & __SWID) <= 0) 
-		fwide(f, 1);
-	wchar_t wc = __fgetwc_unlocked_internal(f);
-	return wc;
+wint_t
+__fgetwc_unlocked(FILE *f) {
+    if ((f->_flags2 & __SWID) <= 0)
+        fwide(f, 1);
+
+    wchar_t wc = __fgetwc_unlocked_internal(f);
+
+    return wc;
 }
 
-wint_t fgetwc(FILE *f)
-{
-	wint_t c;
-	flockfile(f);
-	c = __fgetwc_unlocked(f);
-	funlockfile(f);
-	return c;
+wint_t
+fgetwc(FILE *f) {
+    wint_t c;
+
+    flockfile(f);
+    c = __fgetwc_unlocked(f);
+    funlockfile(f);
+
+    return c;
 }

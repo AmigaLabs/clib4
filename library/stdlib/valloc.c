@@ -16,9 +16,15 @@
 
 void *valloc(size_t size)
 {
+    ENTER();
+    SHOWVALUE(size);
+
     long pagesize = sysconf(_SC_PAGESIZE);
 
     if (pagesize < 0)
         pagesize = 4096;
+
+    LEAVE();
+
     return (void *)memalign(pagesize, size);
 }

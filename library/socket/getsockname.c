@@ -38,9 +38,9 @@ getsockname(int sockfd, struct sockaddr *name, socklen_t *namelen) {
         goto out;
     }
 
-    result = __getsockname(fd->fd_Socket, name, (LONG *) namelen);
+    result = __getsockname(fd->fd_Socket, name, namelen);
 
-    out:
+out:
 
     if (__check_abort_enabled)
         __check_abort();

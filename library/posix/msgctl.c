@@ -13,6 +13,12 @@ _msgctl(int qid, int cmd, struct msqid_ds *buf)
 {
     DECLARE_SYSVYBASE();
 
+    ENTER();
+
+    SHOWVALUE(qid);
+    SHOWVALUE(cmd);
+    SHOWPOINTER(buf);
+
     int ret = -1;
     if (__global_clib2->haveShm)
     {
@@ -27,6 +33,7 @@ _msgctl(int qid, int cmd, struct msqid_ds *buf)
         __set_errno(ENOSYS);
     }
 
+    RETURN(ret);
     return ret;
 }
 

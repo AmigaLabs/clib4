@@ -21,9 +21,6 @@ vsnprintf(char *buffer, size_t size, const char *format, va_list arg) {
 
     assert(format != NULL && arg != NULL && (int) size >= 0);
 
-    if (__check_abort_enabled)
-        __check_abort();
-
     if (format == NULL || (buffer == NULL && size > 0)) {
         SHOWMSG("invalid parameters");
 
@@ -47,7 +44,7 @@ vsnprintf(char *buffer, size_t size, const char *format, va_list arg) {
 
     /* We will return the number of characters that would have been
        stored if there had been enough room. */
-    result = vfprintf((FILE * ) & string_iob, format, arg);
+    result = vfprintf((FILE * ) &string_iob, format, arg);
 
     /* Figure out how many characters were stored. Fewer than
        the output buffer size allows for may have been written
@@ -64,7 +61,9 @@ vsnprintf(char *buffer, size_t size, const char *format, va_list arg) {
         SHOWMSG("output buffer is empty");
     }
 
-    out:
+    fflush((FILE * ) &string_iob);
+
+out:
 
     RETURN(result);
     return (result);

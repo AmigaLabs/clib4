@@ -16,28 +16,24 @@ BPTR NOCOMMON __original_current_directory;
 BOOL NOCOMMON __current_directory_changed;
 BOOL NOCOMMON __unlock_current_directory;
 
-/****************************************************************************/
-
 CLIB_DESTRUCTOR(__chdir_exit)
 {
-	ENTER();
+    ENTER();
 
-	if(__current_directory_changed)
-	{
-		BPTR old_dir;
+    if (__current_directory_changed) {
+        BPTR old_dir;
 
-		old_dir = CurrentDir(__original_current_directory);
-		__original_current_directory = ZERO;
+        old_dir = CurrentDir(__original_current_directory);
+        __original_current_directory = ZERO;
 
-		if(__unlock_current_directory)
-		{
-			UnLock(old_dir);
+        if (__unlock_current_directory) {
+            UnLock(old_dir);
 
-			__unlock_current_directory = FALSE;
-		}
+            __unlock_current_directory = FALSE;
+        }
 
-		__current_directory_changed = FALSE;
-	}
+        __current_directory_changed = FALSE;
+    }
 
-	LEAVE();
+    LEAVE();
 }

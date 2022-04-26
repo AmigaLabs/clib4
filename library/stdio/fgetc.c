@@ -6,10 +6,13 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-
-int __fgetc(FILE *stream) {
+int
+__fgetc(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
+
+    ENTER();
+    SHOWPOINTER(stream);
 
     assert(stream != NULL);
 
@@ -35,10 +38,12 @@ int __fgetc(FILE *stream) {
 
 out:
 
+    LEAVE();
     return (result);
 }
 
-int __fgetc_check(FILE *stream) {
+int
+__fgetc_check(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
 
@@ -78,13 +83,14 @@ out:
     return (result);
 }
 
-int fgetc(FILE *stream) {
+int
+fgetc(FILE *stream) {
     int result = EOF;
 
-    assert(stream != NULL);
+    ENTER();
+    SHOWPOINTER(stream);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    assert(stream != NULL);
 
     if (stream == NULL) {
         __set_errno(EFAULT);
@@ -102,5 +108,6 @@ out:
 
     funlockfile(stream);
 
+    LEAVE();
     return (result);
 }

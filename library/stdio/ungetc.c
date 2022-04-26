@@ -11,10 +11,11 @@ ungetc(int c, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
 
-    assert(stream != NULL);
+    ENTER();
+    SHOWVALUE(c);
+    SHOWPOINTER(stream);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    assert(stream != NULL);
 
     flockfile(stream);
 
@@ -89,9 +90,10 @@ ungetc(int c, FILE *stream) {
     /* Clamp the result to an unsigned 8 bit value. */
     result = (c & 255);
 
-    out:
+out:
 
     funlockfile(stream);
 
+    RETURN(result);
     return (result);
 }

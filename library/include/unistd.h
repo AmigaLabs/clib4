@@ -101,11 +101,15 @@ extern void disableAltivec(void);
 extern void enableOptimizedFunctions(void);
 extern void disableOptimizedFunctions(void);
 
-
 extern char * getcwd(char * buffer, size_t buffer_size);
 
-extern long gethostid(void);
-extern int gethostname(const char *name, size_t namelen);
+#undef gethostid
+#undef gethostname
+
+extern long gethostid();
+extern int gethostname(const char *name, size_t len);
+extern int getdomainname(char *name, size_t len);
+extern int setdomainname(const char *name, size_t len);
 extern char *getlogin(void);
 extern int getlogin_r(char *buf, size_t bufsize);
 extern char *crypt(const char *key, const char *salt);

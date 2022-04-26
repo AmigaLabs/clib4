@@ -6,20 +6,23 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-int 
-fwide(FILE *fp, int mode)
-{
-	int ret;
+int
+fwide(FILE *fp, int mode) {
+    int ret;
 
-	flockfile(fp);
-	if (mode != 0)
-	{
-		ORIENT(fp, mode);
-	}
-	if (!(fp->_flags & __SORD))
-		ret = 0;
-	else
-		ret = (fp->_flags2 & __SWID) ? 1 : -1;
-	funlockfile(fp);
-	return ret;
+    ENTER();
+
+    flockfile(fp);
+    if (mode != 0) {
+        ORIENT(fp, mode);
+    }
+    if (!(fp->_flags & __SORD))
+        ret = 0;
+    else
+        ret = (fp->_flags2 & __SWID) ? 1 : -1;
+
+    funlockfile(fp);
+
+    RETURN(ret);
+    return ret;
 }

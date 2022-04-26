@@ -8,12 +8,16 @@
 
 #include <wctype.h>
 
-int 
-wcwidth(const wchar_t wc)
-{
+int
+wcwidth(const wchar_t wc) {
+    int result = -1;
+    ENTER();
+
     if (iswprint(wc))
-        return 1;
-    if (iswcntrl(wc) || wc == L'\0')
-        return 0;
-    return -1;
+        result = 1;
+    else if (iswcntrl(wc) || wc == L'\0')
+        result = 0;
+
+    RETURN(result);
+    return result;
 }

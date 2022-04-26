@@ -14,6 +14,15 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
     (void) (prot);
     (void) (flags);
 
+    ENTER();
+
+    SHOWPOINTER(addr);
+    SHOWVALUE(len);
+    SHOWVALUE(prot);
+    SHOWVALUE(flags);
+    SHOWVALUE(fd);
+    SHOWVALUE(offset);
+
     if (fd > 0)
     {
         if (addr != NULL)
@@ -27,9 +36,11 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
             if (!addr)
             {
                 __set_errno(ENOMEM);
+                RETURN(NULL);
                 return NULL;
             }
 
+            RETURN(addr);
             return addr;
         }
         else
@@ -44,19 +55,23 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
             if (!data)
             {
                 __set_errno(ENOMEM);
+                RETURN(NULL);
                 return NULL;
             }
-
+            RETURN(data);
             return data;
         }
     }
     else
     {
-        if ((addr = calloc(1, len)))
+        if ((addr = calloc(1, len))) {
+            RETURN(addr);
             return addr;
+        }
         else
         {
             __set_errno(ENOMEM);
+            RETURN(NULL);
             return NULL;
         }
     }
