@@ -1,8 +1,6 @@
 /*
- * $Id: time_gettime.c,v 1.1 2020-01-31 16:55:42 clib2devs Exp $
+ * $Id: time_clock_gettime.c,v 1.1 2020-01-31 16:55:42 clib2devs Exp $
 */
-
-#define __USE_OLD_TIMEVAL__
 
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
@@ -43,7 +41,7 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
     int8 dstime = -1;
 
     //Set default value for tv
-    tv.tv_secs = tv.tv_micro = 0;
+    tv.tv_sec = tv.tv_usec = 0;
 
     GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
     if (result == 0)
@@ -79,14 +77,14 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
             if (clk_id == CLOCK_MONOTONIC)
             {
                 t->tv_sec = tv.tv_sec;
-                t->tv_nsec = tv.tv_micro * 1000;
+                t->tv_nsec = tv.tv_usec * 1000;
             }
             else
             {
                 /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
                 tv.tv_sec += (2922 * 24 * 60 + gmtoffset) * 60;
                 t->tv_sec = tv.tv_sec;
-                t->tv_nsec = tv.tv_micro * 1000;
+                t->tv_nsec = tv.tv_usec * 1000;
             }
         }
     }

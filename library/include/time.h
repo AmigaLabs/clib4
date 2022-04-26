@@ -70,7 +70,7 @@ extern char *strptime(const char *buf, const char *fmt, struct tm *timeptr);
 /* Timespec declaration */
 struct timespec
 {
-  time_t tv_secs;
+  time_t tv_sec;
   long tv_nsec;
 };
 

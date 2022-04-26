@@ -143,9 +143,9 @@ static struct DateStamp *
 timeval_to_datestamp(struct DateStamp *ds, const struct timeval *tv) {
     assert(ds != NULL && tv != NULL);
 
-    ds->ds_Days = (tv->tv_secs / (24 * 60 * 60));
-    ds->ds_Minute = (tv->tv_secs % (24 * 60 * 60)) / 60;
-    ds->ds_Tick = (tv->tv_secs % 60) * TICKS_PER_SECOND + (TICKS_PER_SECOND * tv->tv_micro) / 1000000;
+    ds->ds_Days = (tv->tv_sec / (24 * 60 * 60));
+    ds->ds_Minute = (tv->tv_sec % (24 * 60 * 60)) / 60;
+    ds->ds_Tick = (tv->tv_sec % 60) * TICKS_PER_SECOND + (TICKS_PER_SECOND * tv->tv_usec) / 1000000;
 
     fix_datestamp(ds);
 
@@ -434,8 +434,8 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
     SHOWPOINTER(timeout);
 
     if (timeout != NULL) {
-        SHOWVALUE(timeout->tv_secs);
-        SHOWVALUE(timeout->tv_micro);
+        SHOWVALUE(timeout->tv_sec);
+        SHOWVALUE(timeout->tv_usec);
     }
 
     assert(__SocketBase != NULL);
@@ -530,7 +530,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         SHOWMSG("we have to deal with sockets");
 
         /* Wait for file input, too? */
-        if ((total_file_fd > 0) && (timeout == NULL || timeout->tv_secs > 0 || timeout->tv_micro > 0)) {
+        if ((total_file_fd > 0) && (timeout == NULL || timeout->tv_sec > 0 || timeout->tv_usec > 0)) {
             struct DateStamp stop_when;
             struct timeval zero;
             ULONG break_mask;
@@ -626,8 +626,8 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 Delay(1);
 
                 /* This tells WaitSelect() to poll the sockets for input. */
-                zero.tv_secs = 0;
-                zero.tv_micro = 0;
+                zero.tv_sec = 0;
+                zero.tv_usec = 0;
 
                 /* Signals to stop on; we want to stop when a break signal arrives. */
                 break_mask = signal_mask;
@@ -786,7 +786,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         }
     } else {
         /* Wait for file input? */
-        if (timeout == NULL || timeout->tv_secs > 0 || timeout->tv_micro > 0) {
+        if (timeout == NULL || timeout->tv_sec > 0 || timeout->tv_usec > 0) {
             struct DateStamp stop_when;
             BOOL got_input;
             BOOL got_output;

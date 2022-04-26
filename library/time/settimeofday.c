@@ -40,8 +40,8 @@ settimeofday(const struct timeval *t, const struct timezone *tz) {
         __gmtoffset = tz->tz_minuteswest;
     }
     /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
-    __timer_request->Time.Seconds = t->tv_secs - ((2922 * 24 * 60 + __gmtoffset) * 60);
-    __timer_request->Time.Microseconds = t->tv_micro;
+    __timer_request->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
+    __timer_request->Time.Microseconds = t->tv_usec;
 
     DoIO((struct IORequest *) __timer_request);
     GetMsg(__timer_port);
