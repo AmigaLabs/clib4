@@ -13,6 +13,43 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 
+static BOOL readSize(uint32 *rows, uint32 *columns) {
+    BPTR fh = Open("CONSOLE:", MODE_OLDFILE);
+    BOOL success = FALSE;
+    if (fh) {
+        uint32 width, height;
+        char r[2] = {0};
+        char buffer[25 + 1] = {0};
+
+        SetMode(fh, 1); // RAW mode
+        if (Write(fh, "\x9b q", 3) == 3) {
+            LONG actual = 0;
+            LONG ret = Read(fh, r, 1);
+            while (r[0] != 'r' && ret != 0) {
+                buffer[actual] = r[0];
+                actual += ret;
+                ret = Read(fh, r, 1);
+            }
+            if (actual >= 0) {
+                buffer[actual] = '\0';
+                if (sscanf(buffer, "\x9b"
+                                   "1;1;%d;%d r", &height, &width) == 2) {
+                    success = TRUE;
+                }
+            }
+        }
+        SetMode(fh, 0); // Normal mode
+        Close(fh);
+
+        if (success) {
+            *rows = width;
+            *columns = height;
+        }
+    }
+
+    return success;
+}
+
 int
 ioctl(int sockfd, int request, ... /* char *arg */) {
     va_list arg;
@@ -77,20 +114,28 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
             __set_errno(EFAULT);
             goto out;
         }
-        /* Set fixed rows and cols at moment */
-        size->ws_row = 80;
-        size->ws_col = 23;
+
+        uint32 cols, rows;
+        BOOL success = readSize(&rows, &cols);
+        if (!success) {
+            size->ws_row = 80;
+            size->ws_col = 23;
+        } else {
+            size->ws_row = (short) rows;
+            size->ws_col = (short) cols;
+        }
     } else if (request == TIOCSWINSZ) {
         struct winsize *size;
         va_start(arg, request);
-        size = va_arg(arg, struct winsize *);
+        size = va_arg(arg,
+        struct winsize *);
         va_end(arg);
 
         if (size == NULL) {
             __set_errno(EFAULT);
             goto out;
         }
-        /* Do nothing at moment */
+        /* Do nothing at moment. Console device doesn't support it */
     }
 
 out:

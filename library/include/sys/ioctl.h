@@ -15,6 +15,13 @@
 
 #include <features.h>
 
+struct winsize {
+    unsigned short  ws_row;         /* rows, in characters */
+    unsigned short  ws_col;         /* columns, in characters */
+    unsigned short  ws_xpixel;      /* horizontal size, pixels - not used */
+    unsigned short  ws_ypixel;      /* vertical size, pixels - not used */
+};
+
 #define TIOCGWINSZ  0x5413 /* Get terminal size */
 /* Not supported by Console Device yet */
 #define TIOCSWINSZ  0x5414 /* Set terminal size */

@@ -102,47 +102,6 @@ static __inline__ __CONST_FUNC uint64_t __swap64(uint64_t u64) {
 	return(result);
 }
 
-#elif defined(__mc68020__)
-
-static __inline__  __CONST_FUNC uint16_t __swap16(uint16_t u16) {
-	__asm__("\
-		rol.w	#8,%[u16]\n\
-	":[u16]"+d"(u16)::"cc");
-	return(u16);
-}
-
-static __inline__ __CONST_FUNC uint32_t __swap24(uint32_t u32) {
-	__asm__("\
-		rol.w	#8,%[u32]\n\
-		swap	%[u32]\n\
-		rol.w	#8,%[u32]\n\
-		ror.l	#8,%[u32]\n\
-	":[u32]"+d"(u32)::"cc");
-	return(u32);
-}
-
-static __inline__ __CONST_FUNC uint32_t __swap32(uint32_t u32) {
-	__asm__("\
-		rol.w	#8,%[u32]\n\
-		swap	%[u32]\n\
-		rol.w	#8,%[u32]\n\
-	":[u32]"+d"(u32)::"cc");
-	return(u32);
-}
-
-static __inline__ __CONST_FUNC uint64_t __swap64(uint64_t u64) {
-	__asm__("\
-		rol.w	#8,%[u64]\n\
-		rol.w	#8,%L[u64]\n\
-		swap	%[u64]\n\
-		swap	%L[u64]\n\
-		rol.w	#8,%[u64]\n\
-		rol.w	#8,%L[u64]\n\
-		exg	%[u64],L%[u64]\n\
-	":[u64]"+d"(u64)::"cc");
-	return(u64);
-}
-
 #else
 /* Unknown or undefined architecture. Perhaps compiling with "-strict -ansi", but should not use this header then anyway. */
 #undef	bswap16
