@@ -7,7 +7,7 @@
 #include <exec/types.h>
 #endif
 #ifndef LIBRARIES_SYSVIPC_H
-#include <libraries/sysvipc.h>
+#include "libraries/sysvipc.h"
 #endif
 
 /****************************************************************************/
@@ -23,9 +23,9 @@
 /****************************************************************************/
 
 #ifdef __amigaos4__
- #include <interfaces/sysvipc.h>
+ #include "interfaces/sysvipc.h"
  #ifdef __USE_INLINE__
-  #include <inline4/sysvipc.h>
+  #include "inline4/sysvipc.h"
  #endif /* __USE_INLINE__ */
  #ifndef CLIB_SYSVIPC_PROTOS_H
   #define CLIB_SYSVIPC_PROTOS_H 1
@@ -35,20 +35,20 @@
  #endif /* __NOGLOBALIFACE__ */
 #else /* __amigaos4__ */
  #ifndef CLIB_SYSVIPC_PROTOS_H
-  #include <clib/sysvipc_protos.h>
+  #include "clib/sysvipc_protos.h"
  #endif /* CLIB_SYSVIPC_PROTOS_H */
  #if defined(__GNUC__)
   #ifndef __PPC__
-   #include <inline/sysvipc.h>
+   #include "inline/sysvipc.h"
   #else
-   #include <ppcinline/sysvipc.h>
+   #include "ppcinline/sysvipc.h"
   #endif /* __PPC__ */
  #elif defined(__VBCC__)
   #ifndef __PPC__
-   #include <inline/sysvipc_protos.h>
+   #include "inline/sysvipc_protos.h"
   #endif /* __PPC__ */
  #else
-  #include <pragmas/sysvipc_pragmas.h>
+  #include "pragmas/sysvipc_pragmas.h"
  #endif /* __GNUC__ */
 #endif /* __amigaos4__ */
 
