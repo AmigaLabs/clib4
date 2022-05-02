@@ -22,7 +22,7 @@ btowc(int c) {
     /* Put mbs in initial state. */
     memset(mbs, '\0', sizeof(mbs));
 
-    retval = _mbtowc(&pwc, &b, 1, mbs);
+    retval = _mbtowc_r(&pwc, &b, 1, mbs);
 
     if (c == EOF || retval != 1) {
         RETURN(WEOF);

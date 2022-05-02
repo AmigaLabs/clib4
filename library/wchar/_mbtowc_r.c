@@ -37,7 +37,7 @@ static JIS_ACTION JIS_action_table[JIS_S_NUM][JIS_C_NUM] = {
         /* J_ESC_BR */ {ERROR, ERROR, ERROR, ERROR, MAKE_A, MAKE_A, ERROR, ERROR, ERROR},
 };
 
-int _mbtowc(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
+int _mbtowc_r(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
     wchar_t dummy;
     unsigned char *t = (unsigned char *) s;
 

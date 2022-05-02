@@ -135,8 +135,6 @@ int _issjis2(int c);
 int _iseucjp(int c);
 int _isjis(int c);
 
-extern int _mbtowc(wchar_t *, const char *, size_t, _mbstate_t *);
-
 #define _issjis1(c) (((c) >= 0x81 && (c) <= 0x9f) || ((c) >= 0xe0 && (c) <= 0xef))
 #define _issjis2(c) (((c) >= 0x40 && (c) <= 0x7e) || ((c) >= 0x80 && (c) <= 0xfc))
 #define _iseucjp(c) ((c) >= 0xa1 && (c) <= 0xfe)

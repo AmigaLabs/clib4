@@ -420,7 +420,6 @@ C_STDLIB := \
 	stdlib/abort.o \
 	stdlib/abs.o \
 	stdlib/aligned_alloc.o \
-	stdlib/arith64.o \
 	stdlib/assertion_failure.o \
 	stdlib/atexit.o \
 	stdlib/atof.o \
@@ -779,7 +778,8 @@ C_WCHAR := \
 	wchar/getwchar.o \
 	wchar/mbrlen.o \
 	wchar/mbrtowc.o \
-	wchar/_mbtowc.o \
+	wchar/_mbstowcs_r.o \
+	wchar/_mbtowc_r.o \
 	wchar/mbsinit.o \
 	wchar/mbsrtowcs.o \
 	wchar/putwc.o \
@@ -817,6 +817,7 @@ C_WCHAR := \
 	wchar/wcstok.o \
 	wchar/wcstol.o \
 	wchar/wcstoll.o \
+	wchar/_wcstombs_r.o \
 	wchar/wcstombs.o \
 	wchar/wcstoul.o \
 	wchar/wcstoull.o \

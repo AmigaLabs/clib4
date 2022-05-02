@@ -13,7 +13,7 @@ mbtowc(wchar_t *wc, const char *src, size_t n) {
     int retval = 0;
     mbstate_t *ps = &__global_clib2->wide_status->_mbtowc_state;
 
-    retval = _mbtowc(wc, src, n, ps);
+    retval = _mbtowc_r(wc, src, n, ps);
 
     if (retval < 0) {
         ps->__count = 0;
