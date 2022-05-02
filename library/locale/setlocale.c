@@ -6,8 +6,6 @@
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
 
-/****************************************************************************/
-
 char *
 setlocale(int category, const char *locale) {
     DECLARE_LOCALEBASE();
@@ -43,7 +41,7 @@ setlocale(int category, const char *locale) {
          */
         if (strlen(locale) >= MAX_LOCALE_NAME_LEN) {
             SHOWMSG("locale name is too long");
-            result = (char *)"C";
+            result = (char *)"C-UTF-8";
 
             __set_errno(ENAMETOOLONG);
             goto out;
@@ -54,7 +52,7 @@ setlocale(int category, const char *locale) {
          * locale.library before.
          */
         if (LocaleBase != NULL) {
-            if (strcmp(locale, "C") != SAME) {
+            if (strcmp(locale, "C") != SAME && strcmp(locale, "C-UTF-8") != SAME) {
                 SHOWMSG("this is not the 'C' locale");
 
                 /* The empty string stands for the default locale. */
@@ -92,6 +90,33 @@ setlocale(int category, const char *locale) {
                             MB_CUR_MAX = 1;
                     }
                 }
+                /*
+                else if (strchr(locale, '.') != NULL) {
+                    int index = strchr(locale, '.') - locale + 1;
+                    switch (locale[index]) {
+                        case 'U':
+                        case 'u':
+                            MB_CUR_MAX = 6;
+                            break;
+                        case 'J':
+                        case 'j':
+                            MB_CUR_MAX = 8;
+                            break;
+                        case 'E':
+                        case 'e':
+                            MB_CUR_MAX = 2;
+                            break;
+                        case 'S':
+                        case 's':
+                            MB_CUR_MAX = 2;
+                            break;
+                        case 'I':
+                        case 'i':
+                        default:
+                            MB_CUR_MAX = 1;
+                    }
+                }
+                */
 
                 if (loc == NULL) {
                     SHOWMSG("couldn't open the locale");
@@ -124,7 +149,7 @@ setlocale(int category, const char *locale) {
                     strcpy(__locale_name_table[i], "C-UTF-8");
             }
 
-            if (strcmp(locale, "C")) {
+            if (strcmp(locale, "C") == SAME || strcmp(locale, "C-UTF-8") == SAME) {
                 MB_CUR_MAX = 1;
             } else {
                 MB_CUR_MAX = 1;
@@ -151,6 +176,41 @@ setlocale(int category, const char *locale) {
                         default:
                             MB_CUR_MAX = 1;
                     }
+                }
+                /*
+                else if (strchr(locale, '.') != NULL) {
+                    int index = strchr(locale, '.') - locale + 1;
+                    switch (locale[index]) {
+                        case 'U':
+                        case 'u':
+                            MB_CUR_MAX = 6;
+                            break;
+                        case 'J':
+                        case 'j':
+                            MB_CUR_MAX = 8;
+                            break;
+                        case 'E':
+                        case 'e':
+                            MB_CUR_MAX = 2;
+                            break;
+                        case 'S':
+                        case 's':
+                            MB_CUR_MAX = 2;
+                            break;
+                        case 'I':
+                        case 'i':
+                        default:
+                            MB_CUR_MAX = 1;
+                    }
+                }
+                */
+
+                else {
+                    SHOWMSG("couldn't open the locale");
+                    result = (char *)locale;
+
+                    __set_errno(ENOENT);
+                    goto out;
                 }
             }
         } else {
