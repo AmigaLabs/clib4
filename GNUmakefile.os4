@@ -259,9 +259,9 @@ install:
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
 	$(COPY) LICENSE* $(INSTALL_PREFIX)/
 	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
-	$(COPY) libauto.a $(INSTALL_PREFIX)/lib/
-	$(COPY) libpthread.a $(INSTALL_PREFIX)/lib/
-	$(COPY) libpthread.so $(INSTALL_PREFIX)/lib/
+	$(COPY) libs/libauto.a $(INSTALL_PREFIX)/lib/
+	$(COPY) libs/libpthread.a $(INSTALL_PREFIX)/lib/
+	$(COPY) libs/libpthread.so $(INSTALL_PREFIX)/lib/
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:

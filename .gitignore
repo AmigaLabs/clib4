@@ -1,9 +1,9 @@
 *.o
 *.a
 *.so
-!libauto.a
-!libpthread.a
-!libpthread.so
+!libs/libauto.a
+!libs/libpthread.a
+!libs/libpthread.so
 *.lha
 *.bak
 /library/compiler.log
