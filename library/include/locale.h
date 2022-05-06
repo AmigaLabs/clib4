@@ -9,16 +9,22 @@
 
 __BEGIN_DECLS
 
-#define LC_ALL		0	/* all behaviour */
-#define LC_COLLATE	1	/* behaviour of strcoll() and strxfrm() */
-#define LC_CTYPE	2	/* character handling */
-#define LC_MONETARY	3	/* monetary information returned by localeconv() */
-#define LC_NUMERIC	4	/* decimal point and non-monetary information returned by localeconv() */
-#define LC_TIME		5	/* behaviour of strftime() */
-#define LC_MESSAGES 6
+#define LC_ALL		        0	/* all behaviour */
+#define LC_COLLATE	        1	/* behaviour of strcoll() and strxfrm() */
+#define LC_CTYPE	        2	/* character handling */
+#define LC_MONETARY	        3	/* monetary information returned by localeconv() */
+#define LC_NUMERIC	        4	/* decimal point and non-monetary information returned by localeconv() */
+#define LC_TIME		        5	/* behaviour of strftime() */
+#define LC_MESSAGES         6
+#define LC_PAPER		    7
+#define LC_NAME		        8
+#define LC_ADDRESS		    9
+#define LC_TELEPHONE		10
+#define LC_MEASUREMENT	    11
+#define LC_IDENTIFICATION	12
 
 #define LC_MIN          LC_ALL
-#define LC_MAX          LC_MESSAGES
+#define LC_MAX          LC_IDENTIFICATION
 
 typedef void *locale_t;
 

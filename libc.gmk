@@ -57,6 +57,40 @@ C_CTYPE := \
 	ctype/tolower.o \
 	ctype/toupper.o
 
+ifdef DEBUG
+    $(info Adding debug objects)
+    C_DEBUG := \
+        debug/debug.lib_rev.o \
+        debug/debug.o \
+        debug/cmpstrexec.o \
+        debug/kcmpstr.o \
+        debug/kdofmt.o \
+        debug/kgetc.o \
+        debug/kgetch1.o \
+        debug/kgetch2.o \
+        debug/kgetchar1.o \
+        debug/kgetchar2.o \
+        debug/kgetnum1.o \
+        debug/kgetnum2.o \
+        debug/kmaygetch.o \
+        debug/kmaygetchar.o \
+        debug/kprintf1.o \
+        debug/kprintf2.o \
+        debug/kputc.o \
+        debug/kputch1.o \
+        debug/kputch2.o \
+        debug/kputchar1.o \
+        debug/kputchar2.o \
+        debug/kputfmt.o \
+        debug/kputs1.o \
+        debug/kputs2.o \
+        debug/kputstr1.o \
+        debug/kputstr2.o \
+        debug/kvprintf1.o \
+        debug/kvprintf2.o \
+        debug/level.o
+endif
+
 C_DIRENT := \
 	dirent/alphasort.o \
 	dirent/closedir.o \
@@ -859,6 +893,7 @@ C_LIB := \
 	$(C_ARGZ) \
 	$(C_CTYPE) \
 	$(C_DIRENT) \
+	$(C_DEBUG) \
 	$(C_ICONV) \
 	$(C_INTTYPES) \
 	$(C_LOCALE) \
@@ -911,4 +946,4 @@ $(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
 	@$(MAKEDIR) $(@D)
 	@$(DELETE) $@
 	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -ldebug
+	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND)

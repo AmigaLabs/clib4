@@ -88,12 +88,16 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/mount
 
 OPTIONS    := -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib
-OPTIMIZE   := -O2 -mmultiple -mupdate -mstrict-align -DNDEBUG
+OPTIMIZE   := -O2 -mmultiple -mupdate -mstrict-align
 
-DEBUG      := -gstabs #-DDEBUG
+ifndef DEBUG
+    OPTIMIZE      := $(OPTIMIZE) -DNDEBUG
+else
+    OPTIMIZE      := $(OPTIMIZE) -gstabs -DDEBUG
+endif
 
-CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
-CFLAGS_N   := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(MEMDEBUG) $(OPTIONS) $(INCLUDES)
+CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
+CFLAGS_N   := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
 AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
 
 VERBOSE    := @
@@ -112,7 +116,6 @@ LIBS :=
 
 include libc.gmk
 include libm.gmk
-include libdebug.gmk
 include libamiga.gmk
 include libprofile.gmk
 include libresolv.gmk

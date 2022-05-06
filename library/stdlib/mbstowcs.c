@@ -15,18 +15,22 @@ mbstowcs(wchar_t *pwcs, const char *s, size_t n) {
     size_t max = n;
     char *t = (char *) s;
     int bytes;
-
+    printf("n1 = %d - %s\n", n, s);
     while (n > 0) {
         bytes = _mbtowc_r(ptr, t, MB_CUR_MAX, &state);
         if (bytes < 0) {
             state.__count = 0;
+            printf("return -1\n");
             return -1;
-        } else if (bytes == 0)
+        } else if (bytes == 0) {
+            printf("n2 = %d\n", ptr - pwcs);
             return ptr - pwcs;
+        }
         t += bytes;
         ++ptr;
         --n;
     }
 
+    printf("n3 = %d\n", max);
     return max;
 }

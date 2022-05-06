@@ -76,6 +76,21 @@
 	__asm__(".stabs \"_/**/sym\",1,0,0,0")
 #endif /* __STDC__ */
 #endif /* __ELF__ */
+
+#ifdef __has_builtin
+# define __clib2_has_builtin(name) __has_builtin (name)
+#else
+# define __clib2_has_builtin(name) 0
+#endif
+
+#if (__GNUC__ >= 3) || __clib2_has_builtin (__builtin_expect)
+# define __clib2_unlikely(cond)	__builtin_expect ((cond), 0)
+# define __clib2_likely(cond)	__builtin_expect ((cond), 1)
+#else
+# define __clib2_unlikely(cond)	(cond)
+# define __clib2_likely(cond)	(cond)
+#endif
+
 #endif /* __GNUC__ */
 
 #endif /* _SYS_CDEFS_H */
