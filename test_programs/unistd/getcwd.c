@@ -4,9 +4,9 @@
 #include <stdio.h>
 
 int main() {
-    char cwd[256] = {0};
+    char cwd[BUFSIZ] = {0};
 
-    if (chdir("/proc/self/exe") != 0)
+    if (chdir("T:") != 0)
         perror("chdir() error()");
     else {
         if (getcwd(cwd, sizeof(cwd)) == NULL)

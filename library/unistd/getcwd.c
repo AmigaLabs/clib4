@@ -48,13 +48,6 @@ getcwd(char *buffer, size_t buffer_size) {
         }
     }
 
-    if (buffer_size > PATH_MAX) {
-        SHOWMSG("buffer size too large");
-
-        __set_errno(ENAMETOOLONG);
-        goto out;
-    }
-
     dir_lock = Lock("", SHARED_LOCK);
     if (dir_lock == ZERO) {
         SHOWMSG("could not get a lock on the current directory");

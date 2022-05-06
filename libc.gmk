@@ -717,6 +717,7 @@ C_UNISTD := \
 	unistd/ftruncate.o \
 	unistd/ftruncate64.o \
 	unistd/getcwd.o \
+	unistd/get_current_dir_name.o \
 	unistd/getdomainname.o \
 	unistd/getlogin.o \
 	unistd/getlogin_r.o \
@@ -724,6 +725,7 @@ C_UNISTD := \
 	unistd/getopt_long.o \
 	unistd/getpid.o \
 	unistd/getppid.o \
+	unistd/getwd.o \
 	unistd/init_exit.o \
 	unistd/isatty.o \
 	unistd/lchown.o \
