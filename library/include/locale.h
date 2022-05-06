@@ -26,6 +26,9 @@ __BEGIN_DECLS
 #define LC_MIN          LC_ALL
 #define LC_MAX          LC_IDENTIFICATION
 
+/* This has to be changed whenever a new locale is defined.  */
+#define __LC_LAST	13
+
 typedef void *locale_t;
 
 struct lconv
