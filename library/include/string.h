@@ -34,7 +34,6 @@ extern char *strstr(const char *src, const char *sub);
 extern char *strnstr(const char *src, const char *sub, size_t len);
 extern char *strsep(char ** src, const char *delim);
 extern char *stpcpy(char *dest, const char *src);
-extern char *strcasestr(const char *haystack, const char *needle);
 
 // Used for AROS compatibility
 extern size_t stccpy (char * dest, const char * src, size_t n);
@@ -44,7 +43,6 @@ extern size_t strxfrm(char *dest, const char *src, size_t len);
 
 extern void *memmove(void *dest, const void * src, size_t len);
 extern void *memchr(const void * ptr, int val, size_t len);
-extern void *memrchr(const void *s, int c, size_t n);
 extern int memcmp(const void *ptr1, const void *ptr2, size_t len);
 extern void *memcpy(void *dest, const void *src, size_t len);
 extern void *memset(void *ptr, int val, size_t len);
@@ -80,9 +78,18 @@ extern char * strtok_r(char *str, const char *separator_set,char ** state_ptr);
 /****************************************************************************/
 #ifndef __STRICT_ANSI__
 extern void *memccpy(void *dst0, const void *src0, int endchar0, size_t len0);
-extern void *mempcpy(void *dst0, const void *src0, size_t len0);
 extern char *index(const char *s, int c);
 extern char *rindex(const char *s, int c);
+#endif
+
+#ifdef _GNU_SOURCE
+#define	strdupa(x)	strcpy(alloca(strlen(x)+1),x)
+extern int strverscmp(const char *s1, const char *s2);
+extern char *strchrnul(const char *s, int c_in);
+extern char *strcasestr(const char *haystack, const char *needle);
+extern void *memmem(const void *h0, size_t k, const void *n0, size_t l);
+extern void *memrchr(const void *s, int c, size_t n);
+extern void *mempcpy(void *dst0, const void *src0, size_t len0);
 #endif
 
 __END_DECLS

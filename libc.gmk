@@ -568,6 +568,7 @@ C_STRING := \
 	string/memcpy.o \
 	string/memccpy.o \
 	string/mempcpy.o \
+	string/memmem.o \
 	string/memmove.o \
 	string/memrchr.o \
 	string/memset.o \
@@ -591,6 +592,7 @@ C_STRING := \
 	string/strcasestr.o \
 	string/strcat.o \
 	string/strchr.o \
+	string/strchrnul.o \
 	string/strcmp.o \
 	string/strcoll.o \
 	string/strcpy.o \
@@ -614,6 +616,7 @@ C_STRING := \
 	string/strstr.o \
 	string/strtok.o \
 	string/strtok_r.o \
+	string/strverscmp.o \
 	string/strxfrm.o
 
 C_TERMCAP := \
