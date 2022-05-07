@@ -28,6 +28,7 @@ SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
 
 CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
+LD := ppc-amigaos-ld
 RANLIB := ppc-amigaos-ranlib
 
 # On AmigaOS use native commands
@@ -251,7 +252,7 @@ define MAKESHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo -e "\rMaking Shared \033[0;31m$@\033[0m"
-$(VERBOSE)$(CC) -mcrt=clib2 -shared -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
+$(VERBOSE)$(LD) -shared -o $@ build/lib/shcrtbegin.o $^ build/lib/shcrtend.o $(LOG_COMMAND) -Lbuild/lib -lc
 endef
 
 install:
