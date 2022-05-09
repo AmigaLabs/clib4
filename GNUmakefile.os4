@@ -156,13 +156,11 @@ clean:
 # Update the version numbers bound to the individual libraries
 version:
 	$(COPY) c.lib_rev.rev amiga.lib_rev.rev
-	$(COPY) c.lib_rev.rev debug.lib_rev.rev
 	$(COPY) c.lib_rev.rev profile.lib_rev.rev
 	$(COPY) c.lib_rev.rev m.lib_rev.rev
 	$(COPY) c.lib_rev.rev resolv.lib_rev.rev
 	bumprev amiga.lib
 	bumprev c.lib
-	bumprev debug.lib
 	bumprev profile.lib
 	bumprev m.lib
 	bumprev resolv.lib
