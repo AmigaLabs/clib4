@@ -6,8 +6,12 @@
 OUT_STATIC := $(BUILD_DIR)/obj/libc
 OUT_SHARED := $(BUILD_DIR)/obj.shared/libc
 
-LIBS += $(OUTPUT_LIB)/libc.so \
-		$(OUTPUT_LIB)/libc.a
+ifeq ($(SHARED),yes)
+    MAIN_LIB += $(OUTPUT_LIB)/libc.so
+endif
+ifeq ($(STATIC),yes)
+    MAIN_LIB += $(OUTPUT_LIB)/libc.a
+endif
 
 C_BASE := \
 	c.lib_rev.o \
@@ -952,3 +956,4 @@ $(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
 	@$(DELETE) $@
 	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
 	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND)
+	$(COPY) $(OUTPUT_LIB)/libc.so $(INSTALL_PREFIX)/lib/

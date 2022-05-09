@@ -8,11 +8,12 @@
 OUT_STATIC := $(BUILD_DIR)/obj/libamiga
 OUT_SHARED := $(BUILD_DIR)/obj.shared/libamiga
 
-LIBS += \
-	$(OUTPUT_LIB)/libamiga.so \
-	$(OUTPUT_LIB)/libamiga.a
-
-##############################################################################
+ifeq ($(SHARED),yes)
+    LIBS += $(OUTPUT_LIB)/libamiga.so
+endif
+ifeq ($(STATIC),yes)
+    LIBS += $(OUTPUT_LIB)/libamiga.a
+endif
 
 AMIGA_LIB = \
 	amiga/amiga.lib_rev.o \
@@ -64,5 +65,5 @@ $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 $(OUTPUT_LIB)/libamiga.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(OUTPUT_LIB)/libamiga.so : $(SOURCES_SHARED)
+$(OUTPUT_LIB)/libamiga.so : $(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

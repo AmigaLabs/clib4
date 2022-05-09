@@ -8,8 +8,12 @@
 OUT_STATIC := $(BUILD_DIR)/obj/libprofile
 OUT_SHARED := $(BUILD_DIR)/obj.shared/libprofile
 
-LIBS += $(OUTPUT_LIB)/libprofile.so \
-		$(OUTPUT_LIB)/libprofile.a
+ifeq ($(SHARED),yes)
+    LIBS += $(OUTPUT_LIB)/libprofile.so
+endif
+ifeq ($(STATIC),yes)
+    LIBS += $(OUTPUT_LIB)/libprofile.a
+endif
 
 PROFILE_LIB = \
 	profile/_mcount.o \
@@ -46,5 +50,5 @@ $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 $(BUILD_DIR)/lib/libprofile.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libprofile.so : $(SOURCES_SHARED)
+$(BUILD_DIR)/lib/libprofile.so : $(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)
