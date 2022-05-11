@@ -18,9 +18,9 @@ sem_post(sem_t *sem) {
         return -1;
     }
 
-    ObtainSemaphore(&isem->accesslock);
+    ObtainSemaphore(isem->accesslock);
     if (isem->value == SEM_VALUE_MAX) {
-        ReleaseSemaphore(&isem->accesslock);
+        ReleaseSemaphore(isem->accesslock);
         __set_errno(EOVERFLOW);
         RETURN(-1);
         return -1;
@@ -35,7 +35,7 @@ sem_post(sem_t *sem) {
             Signal((struct Task *) node->ln_Name, SIGF_SINGLE);
         }
     }
-    ReleaseSemaphore(&isem->accesslock);
+    ReleaseSemaphore(isem->accesslock);
 
     RETURN(0);
     return 0;

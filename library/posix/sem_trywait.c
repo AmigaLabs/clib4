@@ -4,7 +4,8 @@
 
 #include "semaphore_private.h"
 
-int sem_trywait(sem_t *sem) {
+int
+sem_trywait(sem_t *sem) {
     int ret = -1;
     isem_t *isem = (isem_t *) *sem;
 
@@ -17,17 +18,17 @@ int sem_trywait(sem_t *sem) {
         goto out;
     }
 
-    if (AttemptSemaphore(&isem->accesslock) == FALSE) {
+    if (AttemptSemaphore(isem->accesslock) == FALSE) {
         __set_errno(EAGAIN);
         goto out;
     }
     if (isem->value == 0) {
-        ReleaseSemaphore(&isem->accesslock);
+        ReleaseSemaphore(isem->accesslock);
         __set_errno(EAGAIN);
         goto out;
     }
     isem->value--;
-    ReleaseSemaphore(&isem->accesslock);
+    ReleaseSemaphore(isem->accesslock);
 
     ret = 0;
 
