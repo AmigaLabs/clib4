@@ -51,7 +51,7 @@ sem_timedwait(sem_t *sem, const struct timespec *abs_timeout) {
         goto out;
     }
 
-    ObtainSemaphore(isem->accesslock);
+    ObtainSemaphore(&isem->accesslock);
     if (isem->value == 0) {
         struct Task *thistask = FindTask(NULL);
         struct TimeRequest *tr;
@@ -62,7 +62,7 @@ sem_timedwait(sem_t *sem, const struct timespec *abs_timeout) {
 
         tr = __open_timer();
         if (tr == NULL) {
-            ReleaseSemaphore(isem->accesslock);
+            ReleaseSemaphore(&isem->accesslock);
             __set_errno(ENOMEM);
             goto out;
         }
@@ -71,7 +71,7 @@ sem_timedwait(sem_t *sem, const struct timespec *abs_timeout) {
         timediff = ((int64) abs_timeout->tv_sec * 1000000000LL + abs_timeout->tv_nsec) -
                    ((int64) tv.tv_sec * 1000000000LL + tv.tv_usec * 1000);
         if (timediff <= 0) {
-            ReleaseSemaphore(isem->accesslock);
+            ReleaseSemaphore(&isem->accesslock);
             __close_timer(tr);
             __set_errno(ETIMEDOUT);
             goto out;
@@ -90,14 +90,14 @@ sem_timedwait(sem_t *sem, const struct timespec *abs_timeout) {
         SendIO((struct IORequest *) tr);
 
         do {
-            ReleaseSemaphore(isem->accesslock);
+            ReleaseSemaphore(&isem->accesslock);
             signals = Wait(SIGBREAKF_CTRL_C | SIGF_SINGLE);
-            ObtainSemaphore(isem->accesslock);
+            ObtainSemaphore(&isem->accesslock);
         } while (isem->value == 0 && (signals & SIGBREAKF_CTRL_C) == 0);
 
         if (isem->value == 0) {
             Remove(&waitnode);
-            ReleaseSemaphore(isem->accesslock);
+            ReleaseSemaphore(&isem->accesslock);
 
             if (CheckIO((struct IORequest *) tr)) {
                 __set_errno(ETIMEDOUT);
@@ -114,7 +114,7 @@ sem_timedwait(sem_t *sem, const struct timespec *abs_timeout) {
         __close_timer(tr);
     }
     isem->value--;
-    ReleaseSemaphore(isem->accesslock);
+    ReleaseSemaphore(&isem->accesslock);
 
     ret = 0;
 out:

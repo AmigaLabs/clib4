@@ -49,7 +49,7 @@
 #define SEM_VALUE_MAX INT_MAX
 
 typedef struct {
-    struct SignalSemaphore *accesslock;
+    struct SignalSemaphore accesslock;
     struct List waitlist;
     unsigned int value;
 } isem_t;

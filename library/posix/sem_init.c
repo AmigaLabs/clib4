@@ -22,14 +22,7 @@ sem_init(sem_t *sem, int pshared, unsigned int value) {
         return -1;
     }
 
-    isem->accesslock = AllocVecTags(sizeof(isem->accesslock), AVT_Type, MEMF_SHARED, TAG_DONE);
-    if (isem->accesslock == NULL) {
-        __set_errno(ENOMEM);
-        RETURN(-1);
-        return -1;
-    }
-
-    InitSemaphore(isem->accesslock);
+    InitSemaphore(&isem->accesslock);
     NewList(&isem->waitlist);
     isem->value = value;
 
