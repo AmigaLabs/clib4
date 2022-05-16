@@ -11,6 +11,11 @@ int sem_destroy(sem_t *sem) {
 
     SHOWPOINTER(sem);
 
+    if (isem->accesslock != NULL) {
+        FreeVec(isem->accesslock);
+        isem->accesslock = NULL;
+    }
+
     if (isem != NULL) {
         FreeVec(isem);
         *sem = NULL;

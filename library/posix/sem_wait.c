@@ -18,7 +18,7 @@ sem_wait(sem_t *sem) {
         return -1;
     }
 
-    ObtainSemaphore(&isem->accesslock);
+    ObtainSemaphore(isem->accesslock);
     if (isem->value == 0) {
         struct Task *thistask = FindTask(NULL);
         struct Node waitnode;
@@ -31,21 +31,21 @@ sem_wait(sem_t *sem) {
 
         do {
             SetSignal(0, SIGF_SINGLE);
-            ReleaseSemaphore(&isem->accesslock);
+            ReleaseSemaphore(isem->accesslock);
             signals = Wait(SIGBREAKF_CTRL_C | SIGF_SINGLE);
-            ObtainSemaphore(&isem->accesslock);
+            ObtainSemaphore(isem->accesslock);
         } while (isem->value == 0 && (signals & SIGBREAKF_CTRL_C) == 0);
 
         if (isem->value == 0) {
             Remove(&waitnode);
-            ReleaseSemaphore(&isem->accesslock);
+            ReleaseSemaphore(isem->accesslock);
             __set_errno(EINTR);
             RETURN(-1);
             return -1;
         }
     }
     isem->value--;
-    ReleaseSemaphore(&isem->accesslock);
+    ReleaseSemaphore(isem->accesslock);
 
     RETURN(0);
     return 0;
