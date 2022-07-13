@@ -52,7 +52,7 @@ typedef _sig_func_ptr sighandler_t; /* glibc naming */
 #define SIGXFSZ      25    /* exceeded file size limit */
 #define SIGVTALRM    26  /* virtual time alarm */
 #define SIGPROF      27    /* profiling time alarm */
-#define SIGWINCH     28   /* window changed */
+#define SIGWINCH     28   /* window size changed */
 #define SIGLOST      29    /* resource lost (eg, record-lock lost) */
 #define SIGUSR1      30    /* user defined signal 1 */
 #define SIGUSR2      31    /* user defined signal 2 */

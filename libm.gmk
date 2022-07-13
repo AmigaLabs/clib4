@@ -8,8 +8,12 @@
 OUT_STATIC := $(BUILD_DIR)/obj/libm
 OUT_SHARED := $(BUILD_DIR)/obj.shared/libm
 
-LIBS += $(OUTPUT_LIB)/libm.so \
-		$(OUTPUT_LIB)/libm.a
+ifeq ($(SHARED),yes)
+    LIBS += $(OUTPUT_LIB)/libm.so
+endif
+ifeq ($(STATIC),yes)
+    LIBS += $(OUTPUT_LIB)/libm.a
+endif
 
 C_MATH := \
 	math/carg.o \
@@ -305,5 +309,5 @@ $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 $(BUILD_DIR)/lib/libm.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libm.so : $(SOURCES_SHARED)
+$(BUILD_DIR)/lib/libm.so : $(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

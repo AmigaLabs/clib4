@@ -12,6 +12,7 @@ size_t
 wcsspn(const wchar_t *s, const wchar_t *set) {
     const wchar_t *p;
     const wchar_t *q;
+    size_t result;
 
     ENTER();
 
@@ -30,7 +31,7 @@ wcsspn(const wchar_t *s, const wchar_t *set) {
 
 done:
 
-    size_t result = p - s;
+    result = p - s;
     RETURN(result);
     return result;
 }

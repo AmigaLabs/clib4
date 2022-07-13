@@ -118,6 +118,7 @@ reent_init()
         /* Set locale stuff */
         __global_clib2->_current_category = LC_ALL;
         __global_clib2->_current_locale = "C-UTF-8";
+        __global_clib2->__mb_cur_max = 1;
 
 		/* Get the current task pointer */
 		__global_clib2->self = (struct Process *)FindTask(0);

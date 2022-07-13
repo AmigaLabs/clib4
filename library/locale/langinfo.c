@@ -37,9 +37,9 @@ nl_langinfo(nl_item item)
         case CODESET:
             ret = "";
             const char *s = __global_clib2->_current_locale;
-            if (strcmp(s, "C"))
+            if (strstr(s, "C-"))
             {
-                if ((cs = strchr(s, '.')) != NULL)
+                if ((cs = strchr(s, '-')) != NULL)
                 {
                     ret = cs + 1;
                     if (strncmp(ret, "ISO_", 4) == 0)
@@ -64,6 +64,8 @@ nl_langinfo(nl_item item)
                         else if (strncmp(s, "zh_CN", 5) == 0)
                             ret = "eucCN";
                     }
+                    else if (strcmp(ret, "UTF-8") == 0)
+                        ret = "UTF-8";
                     else if (strcmp(ret, "ASCII") == 0)
                         ret = "US-ASCII";
                 }

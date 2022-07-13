@@ -55,7 +55,7 @@ gets(char *s) {
                the line feed character, fit into the string buffer. */
             lf = (unsigned char *) memchr(buffer, '\n', num_bytes_in_buffer);
             if (lf != NULL) {
-                size_t num_characters_in_line = lf + 1 - buffer;
+                size_t num_characters_in_line = ++lf - buffer;
 
                 /* Copy the remainder of the read buffer into the
                    string buffer, including the terminating line
@@ -63,9 +63,9 @@ gets(char *s) {
                 memmove(s, buffer, num_characters_in_line);
 
                 file->iob_BufferPosition += num_characters_in_line;
-
+                s[num_characters_in_line] = 0;
                 /* And that concludes the line read operation. */
-                break;
+                goto out;
             }
 
             memmove(s, buffer, num_bytes_in_buffer);

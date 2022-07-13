@@ -5,20 +5,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     struct stat sb;
     char *buf;
     ssize_t nbytes, bufsiz;
 
-    if (argc != 2)
-    {
+    if (argc != 2) {
         fprintf(stderr, "Usage: %s <pathname>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    if (lstat(argv[1], &sb) == -1)
-    {
+    if (lstat(argv[1], &sb) == -1) {
         perror("lstat");
         exit(EXIT_FAILURE);
     }
@@ -36,20 +33,18 @@ int main(int argc, char *argv[])
         bufsiz = PATH_MAX;
 
     buf = malloc(bufsiz);
-    if (buf == NULL)
-    {
+    if (buf == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
 
     nbytes = readlink(argv[1], buf, bufsiz);
-    if (nbytes == -1)
-    {
+    if (nbytes == -1) {
         perror("readlink");
         exit(EXIT_FAILURE);
     }
 
-    printf("'%s' points to '%.*s'\n", argv[1], (int)nbytes, buf);
+    printf("'%s' points to '%.*s'\n", argv[1], (int) nbytes, buf);
 
     /* If the return value was equal to the buffer size, then the
               the link target was larger than expected (perhaps because the

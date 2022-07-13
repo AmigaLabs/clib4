@@ -8,8 +8,12 @@
 OUT_STATIC := $(BUILD_DIR)/obj/libresolv
 OUT_SHARED := $(BUILD_DIR)/obj.shared/libresolv
 
-LIBS += $(OUTPUT_LIB)/libresolv.so \
-		$(OUTPUT_LIB)/libresolv.a
+ifeq ($(SHARED),yes)
+    LIBS += $(OUTPUT_LIB)/libresolv.so
+endif
+ifeq ($(STATIC),yes)
+    LIBS += $(OUTPUT_LIB)/libresolv.a
+endif
 
 C_RESOLV := \
     resolv/lookup_ipliteral.o \
@@ -21,7 +25,6 @@ C_RESOLV := \
     resolv/res_send.o \
     resolv/res_state.o \
     resolv/resolvconf.o
-
 
 RESOLV_LIB := \
 	$(C_RESOLV) \
@@ -47,5 +50,5 @@ $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 $(OUTPUT_LIB)/libresolv.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(OUTPUT_LIB)/libresolv.so : $(SOURCES_SHARED)
+$(OUTPUT_LIB)/libresolv.so : $(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

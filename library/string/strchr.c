@@ -10,7 +10,6 @@
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/****************************************************************************/
 extern char *__strchr440(const char *s, int c);
 
 char *

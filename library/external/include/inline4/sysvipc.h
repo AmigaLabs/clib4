@@ -20,7 +20,7 @@
 #endif
 
 #ifndef LIBRARIES_SYSVIPC_H
-#include <libraries/sysvipc.h>
+#include "libraries/sysvipc.h"
 #endif
 
 #undef shmat

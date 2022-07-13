@@ -17,9 +17,9 @@ mbrtowc(wchar_t *pwc, const char *src, size_t n, mbstate_t *ps) {
     }
 
     if (src == NULL) {
-        retval = _mbtowc(NULL, "", 1, ps);
+        retval = _mbtowc_r(NULL, "", 1, ps);
     } else {
-        retval = _mbtowc(pwc, src, n, ps);
+        retval = _mbtowc_r(pwc, src, n, ps);
     }
 
     if (retval == -1) {

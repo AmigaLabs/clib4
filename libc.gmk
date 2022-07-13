@@ -6,8 +6,12 @@
 OUT_STATIC := $(BUILD_DIR)/obj/libc
 OUT_SHARED := $(BUILD_DIR)/obj.shared/libc
 
-LIBS += $(OUTPUT_LIB)/libc.so \
-		$(OUTPUT_LIB)/libc.a
+ifeq ($(SHARED),yes)
+    MAIN_LIB += $(OUTPUT_LIB)/libc.so
+endif
+ifeq ($(STATIC),yes)
+    MAIN_LIB += $(OUTPUT_LIB)/libc.a
+endif
 
 C_BASE := \
 	c.lib_rev.o \
@@ -56,6 +60,40 @@ C_CTYPE := \
 	ctype/toascii.o \
 	ctype/tolower.o \
 	ctype/toupper.o
+
+ifdef DEBUG
+    $(info Adding debug objects)
+    C_DEBUG := \
+        debug/debug.lib_rev.o \
+        debug/debug.o \
+        debug/cmpstrexec.o \
+        debug/kcmpstr.o \
+        debug/kdofmt.o \
+        debug/kgetc.o \
+        debug/kgetch1.o \
+        debug/kgetch2.o \
+        debug/kgetchar1.o \
+        debug/kgetchar2.o \
+        debug/kgetnum1.o \
+        debug/kgetnum2.o \
+        debug/kmaygetch.o \
+        debug/kmaygetchar.o \
+        debug/kprintf1.o \
+        debug/kprintf2.o \
+        debug/kputc.o \
+        debug/kputch1.o \
+        debug/kputch2.o \
+        debug/kputchar1.o \
+        debug/kputchar2.o \
+        debug/kputfmt.o \
+        debug/kputs1.o \
+        debug/kputs2.o \
+        debug/kputstr1.o \
+        debug/kputstr2.o \
+        debug/kvprintf1.o \
+        debug/kvprintf2.o \
+        debug/level.o
+endif
 
 C_DIRENT := \
 	dirent/alphasort.o \
@@ -420,7 +458,6 @@ C_STDLIB := \
 	stdlib/abort.o \
 	stdlib/abs.o \
 	stdlib/aligned_alloc.o \
-	stdlib/arith64.o \
 	stdlib/assertion_failure.o \
 	stdlib/atexit.o \
 	stdlib/atof.o \
@@ -535,6 +572,7 @@ C_STRING := \
 	string/memcpy.o \
 	string/memccpy.o \
 	string/mempcpy.o \
+	string/memmem.o \
 	string/memmove.o \
 	string/memrchr.o \
 	string/memset.o \
@@ -558,6 +596,7 @@ C_STRING := \
 	string/strcasestr.o \
 	string/strcat.o \
 	string/strchr.o \
+	string/strchrnul.o \
 	string/strcmp.o \
 	string/strcoll.o \
 	string/strcpy.o \
@@ -581,6 +620,7 @@ C_STRING := \
 	string/strstr.o \
 	string/strtok.o \
 	string/strtok_r.o \
+	string/strverscmp.o \
 	string/strxfrm.o
 
 C_TERMCAP := \
@@ -684,6 +724,7 @@ C_UNISTD := \
 	unistd/ftruncate.o \
 	unistd/ftruncate64.o \
 	unistd/getcwd.o \
+	unistd/get_current_dir_name.o \
 	unistd/getdomainname.o \
 	unistd/getlogin.o \
 	unistd/getlogin_r.o \
@@ -691,6 +732,7 @@ C_UNISTD := \
 	unistd/getopt_long.o \
 	unistd/getpid.o \
 	unistd/getppid.o \
+	unistd/getwd.o \
 	unistd/init_exit.o \
 	unistd/isatty.o \
 	unistd/lchown.o \
@@ -779,7 +821,8 @@ C_WCHAR := \
 	wchar/getwchar.o \
 	wchar/mbrlen.o \
 	wchar/mbrtowc.o \
-	wchar/_mbtowc.o \
+	wchar/_mbstowcs_r.o \
+	wchar/_mbtowc_r.o \
 	wchar/mbsinit.o \
 	wchar/mbsrtowcs.o \
 	wchar/putwc.o \
@@ -817,6 +860,7 @@ C_WCHAR := \
 	wchar/wcstok.o \
 	wchar/wcstol.o \
 	wchar/wcstoll.o \
+	wchar/_wcstombs_r.o \
 	wchar/wcstombs.o \
 	wchar/wcstoul.o \
 	wchar/wcstoull.o \
@@ -858,6 +902,7 @@ C_LIB := \
 	$(C_ARGZ) \
 	$(C_CTYPE) \
 	$(C_DIRENT) \
+	$(C_DEBUG) \
 	$(C_ICONV) \
 	$(C_INTTYPES) \
 	$(C_LOCALE) \
@@ -910,4 +955,5 @@ $(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
 	@$(MAKEDIR) $(@D)
 	@$(DELETE) $@
 	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -ldebug
+	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND)
+	$(COPY) $(OUTPUT_LIB)/libc.so $(INSTALL_PREFIX)/lib/

@@ -2,6 +2,8 @@
  * $Id: string_memrchr.c,v 1.0 2021-02-23 10:32:26 clib2devs Exp $
 */
 
+#define _GNU_SOURCE
+
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */

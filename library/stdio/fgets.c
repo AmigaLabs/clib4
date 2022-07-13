@@ -7,41 +7,37 @@
 #endif /* _STDIO_HEADERS_H */
 
 char *
-fgets(char *s, int n, FILE *stream) {
+fgets(char *buf, int n, FILE *stream) {
     struct iob *file = (struct iob *) stream;
-    char *result = s;
+    char *s = buf;
     int c;
 
     ENTER();
-
-    SHOWPOINTER(s);
+    SHOWPOINTER(buf);
     SHOWVALUE(n);
     SHOWPOINTER(stream);
 
-    assert(s != NULL && stream != NULL);
+    assert(buf != NULL && stream != NULL);
 
-    flockfile(stream);
-
-    if (s == NULL || stream == NULL) {
+    if (buf == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
-        result = NULL;
-        goto out;
+        return NULL;
     }
 
-    if (n <= 0) {
+    if (n < 2) {
         SHOWMSG("no work to be done");
-
-        result = NULL;
-        goto out;
+        return NULL;
     }
+
+    flockfile(stream);
 
     /* Take care of the checks and data structure changes that
      * need to be handled only once for this stream.
      */
     if (__fgetc_check(stream) < 0) {
-        result = NULL;
+        buf = NULL;
         goto out;
     }
 
@@ -61,8 +57,8 @@ fgets(char *s, int n, FILE *stream) {
             const unsigned char *lf;
 
             /* Copy only as much data as will fit into the string buffer. */
-            num_bytes_in_buffer = file->iob_BufferReadBytes - file->iob_BufferPosition;
-            if (num_bytes_in_buffer > (size_t) n)
+            num_bytes_in_buffer = (size_t) file->iob_BufferReadBytes - (size_t) file->iob_BufferPosition;
+            if (num_bytes_in_buffer > (off_t) n)
                 num_bytes_in_buffer = n;
 
             /* Try to find a line feed character which could conclude
@@ -70,20 +66,20 @@ fgets(char *s, int n, FILE *stream) {
                the line feed character, fit into the string buffer. */
             lf = (unsigned char *) memchr(buffer, '\n', num_bytes_in_buffer);
             if (lf != NULL) {
-                size_t num_characters_in_line = lf + 1 - buffer;
+                size_t num_characters_in_line = ++lf - buffer;
 
                 /* Copy the remainder of the read buffer into the
                    string buffer, including the terminating line
                    feed character. */
-                memmove(s, buffer, num_characters_in_line);
+                memcpy(s, buffer, num_characters_in_line);
 
                 file->iob_BufferPosition += num_characters_in_line;
-
+                s[num_characters_in_line] = 0;
                 /* And that concludes the line read operation. */
-                break;
+                goto out;
             }
 
-            memmove(s, buffer, num_bytes_in_buffer);
+            memcpy(s, buffer, num_bytes_in_buffer);
             s += num_bytes_in_buffer;
 
             file->iob_BufferPosition += num_bytes_in_buffer;
@@ -102,20 +98,19 @@ fgets(char *s, int n, FILE *stream) {
                 /* Just to be on the safe side. */
                 (*s) = '\0';
 
-                result = NULL;
+                buf = NULL;
                 goto out;
             }
 
             /* Make sure that we return NULL if we really
                didn't read anything at all */
-            if (s == result)
-                result = NULL;
+            if (buf == s)
+                buf = NULL;
 
             break;
         }
 
         (*s++) = c;
-
         if (c == '\n')
             break;
 
@@ -123,13 +118,11 @@ fgets(char *s, int n, FILE *stream) {
     }
 
     (*s) = '\0';
-
-    SHOWSTRING(result);
+    SHOWSTRING(buf);
 
 out:
-
     funlockfile(stream);
 
-    RETURN(result);
-    return (result);
+    RETURN(buf);
+    return (buf);
 }

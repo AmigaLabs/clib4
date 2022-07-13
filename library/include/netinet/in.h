@@ -478,7 +478,8 @@ struct group_filter
 #define IPV6_MULTICAST_LOOP	11 /* __uint8_t; set/get IP6 mcast loopback */
 #define IPV6_JOIN_GROUP		12 /* ip6_mreq; join a group membership */
 #define IPV6_LEAVE_GROUP	13 /* ip6_mreq; leave a group membership */
-
+#define IPV6_V6ONLY         26 /* If this flag is set to true (nonzero), then the socket is
+                                  restricted to sending and receiving IPv6 packets only */
 #ifdef __USE_MISC
 /* Bind socket to a privileged IP port.  */
 extern int bindresvport(int sd, struct sockaddr_in *sa);

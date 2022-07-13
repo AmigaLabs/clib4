@@ -14,8 +14,6 @@ wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps
     size_t n;
     int i;
 
-    ENTER();
-
     if (ps == NULL) {
         ps = &__global_clib2->wide_status->_wcsrtombs_state;
     }
@@ -30,13 +28,14 @@ wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps
     while (n < len && nwc-- > 0) {
         int count = ps->__count;
         wint_t wch = ps->__value.__wch;
+
         int bytes = wcrtomb(buff, *pwcs, ps);
         if (bytes == -1) {
             __set_errno(EILSEQ);
             ps->__count = 0;
-            RETURN(-1);
             return (size_t) -1;
         }
+
         if (n + bytes <= len) {
             n += bytes;
             if (dst) {
@@ -48,7 +47,6 @@ wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps
                 if (dst)
                     *src = NULL;
                 ps->__count = 0;
-                RETURN(n - 1);
                 return n - 1;
             }
         } else {
@@ -59,6 +57,5 @@ wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps
         }
     }
 
-    RETURN(n);
     return n;
 }

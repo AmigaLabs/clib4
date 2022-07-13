@@ -101,7 +101,11 @@ extern void disableAltivec(void);
 extern void enableOptimizedFunctions(void);
 extern void disableOptimizedFunctions(void);
 
-extern char * getcwd(char * buffer, size_t buffer_size);
+extern char *getcwd(char * buffer, size_t buffer_size);
+extern char *getwd(char *buf);
+#ifdef _GNU_SOURCE
+extern char *get_current_dir_name(void);
+#endif
 
 #undef gethostid
 #undef gethostname

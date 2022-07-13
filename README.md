@@ -101,18 +101,23 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 
 ### libresolv
 
-Added resolv library to use dns functions.
+Added resolv library to use dns functions. It needs libpthread.a
 
-### libdebug
+### debug
 
-To use `libdebug` you have to explicitly link `-lc` and then `-ldebug` otherwise you will have undefined references to debug library functions in libc because the C library is added
-by the linker at the end of the link command (use gcc -v to see the verbose output) 
+To use `debug` functions you have to explicitly pass `DEBUG=true` to GNUMakefile.os4 and 
+debug functions will be enabled 
+
+### Known problems
+
+Don't call `exit()` function in an `alarm()` handler otherwise your program will be stuck at exit.
 
 ### TODO
 
 - There is a memory leak at clib2 end needs to be tracked down  
 - Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster and more better when there are multiple cores.
 - Create a shared library
+- Add a test suite
 
 ## Legal status
 
