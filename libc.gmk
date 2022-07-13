@@ -356,6 +356,7 @@ C_STDIO := \
 	stdio/ctermid.o \
 	stdio/dropiobreadbuffer.o \
 	stdio/duplicate_fd.o \
+	stdio/err.o \
 	stdio/fclose.o \
 	stdio/fdhookentry.o \
 	stdio/feof.o \
