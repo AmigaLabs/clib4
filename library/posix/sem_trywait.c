@@ -4,7 +4,8 @@
 
 #include "semaphore_private.h"
 
-int sem_trywait(sem_t *sem) {
+int
+sem_trywait(sem_t *sem) {
     int ret = -1;
     isem_t *isem = (isem_t *) *sem;
 

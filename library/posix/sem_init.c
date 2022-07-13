@@ -15,7 +15,7 @@ sem_init(sem_t *sem, int pshared, unsigned int value) {
     SHOWVALUE(pshared);
     SHOWVALUE(value);
 
-    isem = malloc(sizeof(isem_t));
+    isem = AllocVecTags(sizeof(isem_t), AVT_Type, MEMF_SHARED, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (isem == NULL) {
         __set_errno(ENOMEM);
         RETURN(-1);

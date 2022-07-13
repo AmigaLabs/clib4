@@ -12,7 +12,7 @@ int sem_destroy(sem_t *sem) {
     SHOWPOINTER(sem);
 
     if (isem != NULL) {
-        free(isem);
+        FreeVec(isem);
         *sem = NULL;
     }
 
