@@ -57,7 +57,7 @@ OUTPUT_LIB = $(BUILD_DIR)/lib
 WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-unused-value -Wno-comment \
-	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable \
+	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough # -Werror -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC 
@@ -119,10 +119,11 @@ all: prepare all-targets all-libs
 LIBS :=
 MAIN_LIB:=
 
+include libamiga.gmk
 include libc.gmk
 include libm.gmk
-include libamiga.gmk
 include libprofile.gmk
+include libpthread.gmk
 include libresolv.gmk
 
 prepare:
@@ -266,8 +267,6 @@ install:
 	$(COPY) LICENSE* $(INSTALL_PREFIX)/
 	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
 	$(COPY) libs/libauto.a $(INSTALL_PREFIX)/lib/
-	$(COPY) libs/libpthread.a $(INSTALL_PREFIX)/lib/
-	$(COPY) libs/libpthread.so $(INSTALL_PREFIX)/lib/
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:

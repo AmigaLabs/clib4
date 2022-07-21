@@ -1,7 +1,6 @@
 /*
-  $Id: sched.h,v 1.01 2022-07-18 12:09:49 clib2devs Exp $
-
   Copyright (C) 2014 Szilard Biro
+  Copyright (C) 2018 Harry Sintonen
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,34 +19,38 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef SCHED_H
-#define SCHED_H
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
 
-#include <time.h>
-#include <features.h>
+#ifndef _UNISTD_HEADERS_H
+#include "unistd_headers.h"
+#endif /* _UNISTD_HEADERS_H */
 
-struct sched_param
-{
-    int sched_priority;
-};
+#include "sched.h"
 
-#define SCHED_NORMAL	0
-#define SCHED_OTHER		0
-#define SCHED_FIFO		1
-#define SCHED_RR		2
-#define SCHED_BATCH		3
+#define PRIO_MAX 2
+#define PRIO_MIN -2
 
-__BEGIN_DECLS
+int sched_get_priority_max(int policy) {
+    (void) (policy);
+    return PRIO_MAX;
+}
 
-extern int sched_get_priority_max(int);
-extern int sched_get_priority_min(int);
-//extern int sched_getparam(pid_t, struct sched_param *);
-//extern int sched_getscheduler(pid_t);
-//extern int sched_rr_get_interval(pid_t, struct timespec *);
-//extern int sched_setparam(pid_t, const struct sched_param *);
-//extern int sched_setscheduler(pid_t, int, const struct sched_param *);
-extern int sched_yield(void);
+int sched_get_priority_min(int policy) {
+    (void) (policy);
+    return PRIO_MIN;
+}
 
-__END_DECLS
+int sched_yield(void) {
+    BYTE oldpri;
+    struct Task *task;
 
-#endif
+    task = FindTask(NULL);
+    // changing the priority will trigger a reschedule
+    // TODO - User IExec->Reschedule()
+    oldpri = SetTaskPri(task, -10);
+    SetTaskPri(task, oldpri);
+
+    return 0;
+}

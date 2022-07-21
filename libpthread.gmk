@@ -1,0 +1,48 @@
+#
+# $Id: libpthread.gmk,v 1.0 2022-07-18 10:09:48 clib2devs Exp $
+#
+# :ts=8
+#
+# -*- mode: makefile; -*-
+
+OUT_STATIC := $(BUILD_DIR)/obj/libpthread
+OUT_SHARED := $(BUILD_DIR)/obj.shared/libpthread
+
+ifeq ($(SHARED),yes)
+    LIBS += $(OUTPUT_LIB)/libpthread.so
+endif
+ifeq ($(STATIC),yes)
+    LIBS += $(OUTPUT_LIB)/libpthread.a
+endif
+
+C_PTHREAD := \
+    pthread/pthread.o \
+    pthread/sched.o \
+    pthread/semaphore.o
+
+PTHREAD_LIB := \
+	$(C_PTHREAD) \
+	pthread.lib_rev.o
+
+SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(PTHREAD_LIB))
+SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(PTHREAD_LIB))
+
+# Dependencies to rebuild if the library version changes
+
+$(OUT_STATIC)/pthread.lib_rev.o : $(LIB_DIR)/pthread.lib_rev.c $(LIB_DIR)/pthread.lib_rev.h
+$(OUT_SHARED)/pthread.lib_rev.o : $(LIB_DIR)/pthread.lib_rev.c $(LIB_DIR)/pthread.lib_rev.h
+
+$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE)
+
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SHARED)
+
+$(OUTPUT_LIB)/libpthread.a : $(SOURCES_STATIC)
+	$(VERBOSE)$(MAKELIB)
+
+$(OUTPUT_LIB)/libpthread.so : $(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
+	$(VERBOSE)$(MAKESHARED)

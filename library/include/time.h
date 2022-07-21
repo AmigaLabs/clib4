@@ -77,6 +77,7 @@ struct timespec
 /* BSD time macros used by RTEMS code */
 /* Convenience macros for operations on timevals.
    NOTE: `timercmp' does not work for >= or <=.  */
+#ifdef __USE_OLD_TIMEVAL__
 #define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
 #define timerclear(tvp) ((tvp)->tv_sec = (tvp)->tv_usec = 0)
 #define timercmp(a, b, CMP) \
@@ -103,6 +104,34 @@ struct timespec
       (result)->tv_usec += 1000000;                  \
     }                                                \
   } while (0)
+#else
+#define timerisset(tvp) ((tvp)->Seconds || (tvp)->Microseconds)
+#define timerclear(tvp) ((tvp)->Seconds = (tvp)->Microseconds = 0)
+#define timercmp(a, b, CMP) \
+  (((a)->Seconds == (b)->Seconds) ? ((a)->Microseconds CMP(b)->Microseconds) : ((a)->Seconds CMP(b)->Seconds))
+#define timeradd(a, b, result)                       \
+  do                                                 \
+  {                                                  \
+    (result)->Seconds = (a)->Seconds + (b)->Seconds;    \
+    (result)->Microseconds = (a)->Microseconds + (b)->Microseconds; \
+    if ((result)->Microseconds >= 1000000)                \
+    {                                                \
+      ++(result)->Seconds;                            \
+      (result)->Microseconds -= 1000000;                  \
+    }                                                \
+  } while (0)
+#define timersub(a, b, result)                       \
+  do                                                 \
+  {                                                  \
+    (result)->Seconds = (a)->Seconds - (b)->Seconds;    \
+    (result)->Microseconds = (a)->Microseconds - (b)->Microseconds; \
+    if ((result)->Microseconds < 0)                       \
+    {                                                \
+      --(result)->Seconds;                            \
+      (result)->Microseconds += 1000000;                  \
+    }                                                \
+  } while (0)
+#endif
 
 /****************************************************************************/
 
