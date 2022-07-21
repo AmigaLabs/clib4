@@ -34,22 +34,7 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-#undef NEWLIST
-#define NEWLIST(_l)                                     \
-do                                                      \
-{                                                       \
-    struct List *__aros_list_tmp = (struct List *)(_l), \
-                *l = __aros_list_tmp;                   \
-                                                        \
-    l->lh_TailPred = (struct Node *)l;                \
-    l->lh_Tail     = 0;                                 \
-    l->lh_Head     = (struct Node *)&l->lh_Tail;      \
-} while (0)
-
-#define TIMESPEC_TO_TIMEVAL(tv, ts) {    \
-    (tv)->Seconds = (ts)->tv_sec;        \
-    (tv)->Microseconds = (ts)->tv_nsec / 1000; }
-
+#include "common.h"
 #include "pthread.h"
 
 #define GetNodeName(node) ((struct Node *)node)->ln_Name
@@ -112,6 +97,7 @@ typedef struct {
     int canceltype;
     int canceled;
     int detached;
+    char name[NAMELEN];
 } ThreadInfo;
 
 static ThreadInfo threads[PTHREAD_THREADS_MAX];
@@ -140,7 +126,7 @@ static ThreadInfo *GetThreadInfo(pthread_t thread) {
     if (thread < PTHREAD_THREADS_MAX)
         return &threads[thread];
 
-    return 0;
+    return NULL;
 }
 
 static pthread_t GetThreadId(struct Task *task) {
@@ -170,7 +156,7 @@ static BOOL OpenTimerDevice(struct IORequest *io, struct MsgPort *mp, struct Tas
         SetSignal(SIGF_TIMER_FALLBACK, 0);
     }
     mp->mp_SigBit = signal;
-    NEWLIST(&mp->mp_MsgList);
+    NewList(&mp->mp_MsgList);
 
     // prepare IORequest
     io->io_Message.mn_Node.ln_Type = NT_MESSAGE;
@@ -202,8 +188,8 @@ static void CloseTimerDevice(struct IORequest *io) {
 //
 // Thread specific data functions
 //
-
-int pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
+int
+pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
     TLSKey *tls;
     int i;
 
@@ -550,7 +536,7 @@ int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr) {
         return EINVAL;
 
     InitSemaphore(&cond->semaphore);
-    NEWLIST((struct List *) &cond->waiters);
+    NewMinList(&cond->waiters);
 
     return 0;
 }
@@ -676,7 +662,8 @@ int pthread_cond_timedwait_relative_np(pthread_cond_t *cond, pthread_mutex_t *mu
     return _pthread_cond_timedwait(cond, mutex, reltime, TRUE);
 }
 
-int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
+int
+pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex) {
     return _pthread_cond_timedwait(cond, mutex, NULL, FALSE);
 }
 
@@ -701,7 +688,8 @@ static int _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
     return 0;
 }
 
-int pthread_cond_signal(pthread_cond_t *cond) {
+int
+pthread_cond_signal(pthread_cond_t *cond) {
     return _pthread_cond_broadcast(cond, TRUE);
 }
 
@@ -1133,6 +1121,8 @@ static void StarterFunc() {
     ThreadInfo *inf;
     int i, j;
     int foundkey = TRUE;
+    struct StackSwapStruct stack;
+    BOOL stackSwapped = FALSE;
 
     SHOWSTRING("StarterFunc");
     inf = (ThreadInfo *) FindTask(NULL)->tc_UserData;
@@ -1144,20 +1134,22 @@ static void StarterFunc() {
     if (!setjmp(inf->jmp)) {
         // custom stack requires special handling
         if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
-            struct StackSwapStruct stack;
             stack.stk_Lower = inf->attr.stackaddr;
-            stack.stk_Upper = (ULONG)((char *) stack.stk_Lower + inf->attr.stacksize);
+            stack.stk_Upper = (ULONG)((APTR) stack.stk_Lower) + inf->attr.stacksize;
             stack.stk_Pointer = (APTR) stack.stk_Upper;
 
             StackSwap(&stack);
+            stackSwapped = TRUE;
         }
         inf->ret = inf->start(inf->arg);
     }
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
+    SHOWMSG("***************** Exit from setjmp");
     ObtainSemaphoreShared(&tls_sem);
     for (j = 0; foundkey && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
+        SHOWMSG("***************** iteration..");
         foundkey = FALSE;
         for (i = 0; i < PTHREAD_KEYS_MAX; i++) {
             if (tlskeys[i].used && tlskeys[i].destructor && inf->tlsvalues[i]) {
@@ -1170,17 +1162,28 @@ static void StarterFunc() {
     }
     ReleaseSemaphore(&tls_sem);
 
-    if (!inf->detached) {
-        // tell the parent thread that we are done
-        Forbid();
-        inf->finished = TRUE;
-        Signal(inf->parent, SIGF_PARENT);
-    } else {
-        // no one is waiting for us, do the clean up
-        ObtainSemaphore(&thread_sem);
-        memset(inf, 0, sizeof(ThreadInfo));
-        ReleaseSemaphore(&thread_sem);
+    if (stackSwapped)
+        StackSwap(&stack);
+
+    //if (!inf->finished)
+    {
+        SHOWMSG("***************** Starting termination of");
+        SHOWSTRING(inf->name);
+        if (!inf->detached) {
+            SHOWMSG("***************** !inf->detached");
+            // tell the parent thread that we are done
+            Forbid();
+            inf->finished = TRUE;
+            Signal(inf->parent, SIGF_PARENT);
+        } else {
+            SHOWMSG("***************** inf->detached");
+            // no one is waiting for us, do the clean up
+            ObtainSemaphore(&thread_sem);
+            memset(inf, 0, sizeof(ThreadInfo));
+            ReleaseSemaphore(&thread_sem);
+        }
     }
+    SHOWMSG("***************** Exit");
 }
 
 int
@@ -1206,6 +1209,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     // prepare the ThreadInfo structure
     inf = GetThreadInfo(threadnew);
     memset(inf, 0, sizeof(ThreadInfo));
+
     inf->start = start;
     inf->arg = arg;
     inf->parent = thisTask;
@@ -1218,11 +1222,22 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->canceltype = PTHREAD_CANCEL_DEFERRED;
     inf->detached = inf->attr.detachstate == PTHREAD_CREATE_DETACHED;
 
+    /* Ceck minimum stack size */
+    int minStack = PTHREAD_STACK_MIN;
+    int currentStack = (uint32) thisTask->tc_SPUpper - (uint32) thisTask->tc_SPLower;
+    if (currentStack > minStack)
+        currentStack = minStack;
+
+    if (inf->attr.stacksize < minStack)
+        inf->attr.stacksize = minStack;
+
+
     // let's trick CreateNewProc into allocating a larger buffer for the name
-    snprintf(name, sizeof(name), "pthread thread #%d", threadnew);
+    snprintf(name, sizeof(name), "pthread id #%d", threadnew);
     oldlen = strlen(name);
     memset(name + oldlen, ' ', sizeof(name) - oldlen - 1);
     name[sizeof(name) - 1] = '\0';
+    strncpy(inf->name, name, NAMELEN);
 
     BPTR fileIn  = Open("CONSOLE:", MODE_OLDFILE);
     BPTR fileOut = Open("CONSOLE:", MODE_OLDFILE);
@@ -1230,13 +1245,12 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     // start the child thread
     inf->task = (struct Task *) CreateNewProcTags(
             NP_Entry,                StarterFunc,
-            (inf->attr.stackaddr == NULL && inf->attr.stacksize > 0) ? NP_StackSize : TAG_IGNORE, inf->attr.stacksize,
+            inf->attr.stacksize ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
             NP_Input,			     fileIn,
             NP_CloseInput,		     TRUE,
             NP_Output,			     fileOut,
             NP_CloseOutput,		     TRUE,
             NP_UserData,             inf,
-            NP_NotifyOnDeathSigTask, thisTask,
             NP_Name,                 name,
             NP_Child,			     TRUE,
             NP_Cli,				     TRUE,
@@ -1245,9 +1259,9 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     ReleaseSemaphore(&thread_sem);
 
     if (0 == inf->task) {
+        inf->parent = NULL;
         Close(fileIn);
         Close(fileOut);
-        inf->parent = NULL;
         return EAGAIN;
     }
 
@@ -1274,8 +1288,11 @@ int pthread_detach(pthread_t thread) {
 
 int pthread_join(pthread_t thread, void **value_ptr) {
     ThreadInfo *inf;
-
+    struct Task *task;
+    SHOWMSG("***************** pthread_join");
     inf = GetThreadInfo(thread);
+    SHOWPOINTER(inf);
+    SHOWSTRING(inf->name);
 
     if (inf == NULL || inf->parent == NULL)
         return ESRCH;
@@ -1283,10 +1300,16 @@ int pthread_join(pthread_t thread, void **value_ptr) {
     if (inf->detached)
         return EINVAL;
 
-    pthread_testcancel();
+    task = FindTask(NULL);
+    if (inf->task == task) {
+        return EDEADLK;
+    }
 
+    pthread_testcancel();
+    SHOWVALUE(inf->finished);
     while (!inf->finished)
         Wait(SIGF_PARENT);
+    SHOWMSG("***************** wait done");
 
     if (value_ptr)
         *value_ptr = inf->ret;
@@ -1294,6 +1317,7 @@ int pthread_join(pthread_t thread, void **value_ptr) {
     ObtainSemaphore(&thread_sem);
     memset(inf, 0, sizeof(ThreadInfo));
     ReleaseSemaphore(&thread_sem);
+    SHOWMSG("***************** pthread_join exit");
 
     return 0;
 }
@@ -1399,28 +1423,23 @@ pthread_exit(void *value_ptr) {
     ThreadInfo *inf;
     CleanupHandler *handler;
 
-    SHOWMSG("pthread_exit");
+    SHOWMSG("***************** pthread_exit");
+    SHOWVALUE(value_ptr);
 
     thread = pthread_self();
     inf = GetThreadInfo(thread);
-    inf->ret = value_ptr;
+    if (inf != NULL) {
+        inf->ret = value_ptr;
 
-    SHOWPOINTER(&inf->cleanup);
-
-    // execute the clean-up handlers
-    if (!IsMinListEmpty(&inf->cleanup)) {
-        pthread_cleanup_pop(1);
-        /*
-        while ((handler = (CleanupHandler *) RemHead((struct List *) &inf->cleanup))) {
-            SHOWPOINTER(handler);
-            SHOWPOINTER(handler->routine);
-            if (handler->routine)
-                handler->routine(handler->arg);
-        }
+        ThreadInfo *mainThread = &threads[0];
+        /* If the function is called from main thread don't execute
+         * cleanup handlers.
          */
+        if (inf != mainThread) {
+            SHOWMSG("***************** CALLING LONGJMP");
+            longjmp(inf->jmp, 1);
+        }
     }
-
-    longjmp(inf->jmp, 1);
 }
 
 static void OnceCleanup(void *arg) {
@@ -1588,7 +1607,7 @@ pthread_cleanup_push(void (*routine)(void *), void *arg) {
     ThreadInfo *inf;
     CleanupHandler *handler;
 
-    SHOWMSG("pthread_cleanup_push");
+    SHOWMSG("***************** pthread_cleanup_push");
 
     if (routine == NULL)
         return;
@@ -1614,12 +1633,11 @@ pthread_cleanup_pop(int execute) {
     ThreadInfo *inf;
     CleanupHandler *handler;
 
-    SHOWMSG("pthread_cleanup_pop");
+    SHOWMSG("***************** pthread_cleanup_pop");
 
     thread = pthread_self();
     inf = GetThreadInfo(thread);
-    handler = (CleanupHandler *) RemTail((struct List *) &inf->cleanup);
-    SHOWPOINTER(handler);
+    handler = (CleanupHandler *)RemTail((struct List *)&inf->cleanup);
 
     if (handler && handler->routine && execute)
         handler->routine(handler->arg);
@@ -1632,9 +1650,7 @@ pthread_cleanup_pop(int execute) {
 //
 
 int pthread_kill(pthread_t thread, int sig) {
-    (void) (thread);
-    (void) (sig);
-
+    Signal((struct Task *)thread, 1 << sig);
     return EINVAL;
 }
 
@@ -1647,6 +1663,14 @@ int __pthread_init_func(void) {
     InitSemaphore(&thread_sem);
     InitSemaphore(&tls_sem);
 
+    // reserve ID 0 for the main thread
+    ThreadInfo *inf = &threads[0];
+    inf->task = FindTask(NULL);
+    NewMinList(&inf->cleanup);
+
+    SHOWMSG("***************** main thread cleanup list");
+    SHOWPOINTER(&inf->cleanup);
+
     return TRUE;
 }
 
@@ -1655,7 +1679,7 @@ void __pthread_exit_func(void) {
     ThreadInfo *inf;
 
     // if we don't do this we can easily end up with unloaded code being executed
-    for (i = 1; i < PTHREAD_THREADS_MAX; i++) {
+    for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
         inf = &threads[i];
         if (inf->detached) {
             // TODO longer delay between retries?

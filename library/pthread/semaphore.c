@@ -27,11 +27,8 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#include "common.h"
 #include "semaphore.h"
-
-#ifndef EOVERFLOW
-#define EOVERFLOW EINVAL
-#endif
 
 static struct List semaphores;
 static struct SignalSemaphore sema_sem;
@@ -39,7 +36,7 @@ static pthread_once_t once_control = PTHREAD_ONCE_INIT;
 
 static void _Init_Semaphore(void) {
     InitSemaphore(&sema_sem);
-    NEWLIST(semaphores);
+    NEWLIST(&semaphores);
 }
 
 sem_t *

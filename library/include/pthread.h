@@ -50,7 +50,7 @@
 //
 
 #define PTHREAD_KEYS_MAX                      64
-#define PTHREAD_STACK_MIN                     40960
+#define PTHREAD_STACK_MIN                     65536
 #define PTHREAD_THREADS_MAX                   2019
 #define PTHREAD_DESTRUCTOR_ITERATIONS         4
 
@@ -266,6 +266,8 @@ int pthread_setcancelstate(int state, int *oldstate);
 int pthread_setcanceltype(int type, int *oldtype);
 void pthread_testcancel(void);
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
+
+#define pthread_sigmask(blocktype, mask_ptr, unused1) sigprocmask(blocktype, mask_ptr, unused1);
 
 //
 // Scheduling functions

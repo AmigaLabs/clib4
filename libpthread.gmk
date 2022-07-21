@@ -32,8 +32,8 @@ SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(PTHREAD_LIB))
 $(OUT_STATIC)/pthread.lib_rev.o : $(LIB_DIR)/pthread.lib_rev.c $(LIB_DIR)/pthread.lib_rev.h
 $(OUT_SHARED)/pthread.lib_rev.o : $(LIB_DIR)/pthread.lib_rev.c $(LIB_DIR)/pthread.lib_rev.h
 
-$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(OUT_STATIC)/%.o : CFLAGS += -Wno-type-limits -Wno-strict-aliasing -Wno-clobbered -fomit-frame-pointer $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += -Wno-type-limits -Wno-strict-aliasing -Wno-clobbered -fomit-frame-pointer $(PIC) $(LARGEDATA)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
