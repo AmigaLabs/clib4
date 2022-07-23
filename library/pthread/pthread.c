@@ -86,7 +86,7 @@ typedef struct {
     void *(*start)(void *);
     void *arg;
     struct Task *parent;
-    int finished;
+    int status;
     struct Task *task;
     void *ret;
     jmp_buf jmp;
@@ -1119,39 +1119,45 @@ int pthread_attr_setschedparam(pthread_attr_t *attr, const struct sched_param *p
 
 static void StarterFunc() {
     ThreadInfo *inf;
-    int i, j;
     int foundkey = TRUE;
     struct StackSwapStruct stack;
-    BOOL stackSwapped = FALSE;
+    volatile BOOL stackSwapped = FALSE;
 
     SHOWSTRING("StarterFunc");
-    inf = (ThreadInfo *) FindTask(NULL)->tc_UserData;
+    struct Process *startedTask = (struct Process *) FindTask(NULL);
+    inf = (ThreadInfo *) startedTask->pr_EntryData;
 
     // we have to set the priority here to avoid race conditions
     SetTaskPri(FindTask(NULL), inf->attr.param.sched_priority);
 
+    // custom stack requires special handling
+    if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
+        stack.stk_Lower = inf->attr.stackaddr;
+        stack.stk_Upper = (ULONG)((APTR) stack.stk_Lower) + inf->attr.stacksize;
+        stack.stk_Pointer = (APTR) stack.stk_Upper;
+
+        StackSwap(&stack);
+        stackSwapped = TRUE;
+    }
+
     // set a jump point for pthread_exit
     if (!setjmp(inf->jmp)) {
-        // custom stack requires special handling
-        if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
-            stack.stk_Lower = inf->attr.stackaddr;
-            stack.stk_Upper = (ULONG)((APTR) stack.stk_Lower) + inf->attr.stacksize;
-            stack.stk_Pointer = (APTR) stack.stk_Upper;
-
-            StackSwap(&stack);
-            stackSwapped = TRUE;
-        }
+        Printf("Mark thread %s as RUNNING\n\n\n", inf->name);
+        inf->status = THREAD_STATE_RUNNING;
         inf->ret = inf->start(inf->arg);
+        Printf("\n\n\nExit from start on thread %s\n", inf->name);
+    }
+    else {
+        Printf("SETJMP on %s failed\n", inf->name);
     }
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
-    SHOWMSG("***************** Exit from setjmp");
+    Printf("Exit from setjmp on thread %s\n", inf->name);
     ObtainSemaphoreShared(&tls_sem);
-    for (j = 0; foundkey && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
-        SHOWMSG("***************** iteration..");
+    for (int j = 0; foundkey && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
         foundkey = FALSE;
-        for (i = 0; i < PTHREAD_KEYS_MAX; i++) {
+        for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
             if (tlskeys[i].used && tlskeys[i].destructor && inf->tlsvalues[i]) {
                 void *oldvalue = inf->tlsvalues[i];
                 inf->tlsvalues[i] = NULL;
@@ -1165,25 +1171,28 @@ static void StarterFunc() {
     if (stackSwapped)
         StackSwap(&stack);
 
-    //if (!inf->finished)
-    {
-        SHOWMSG("***************** Starting termination of");
-        SHOWSTRING(inf->name);
+    if (inf->status == THREAD_STATE_RUNNING) {
+        ObtainSemaphore(&thread_sem);
+
+        Printf("Starting termination of %s - Signal parent %p\n", inf->name, inf->parent);
+        Printf("Mark thread %s as TERMINATED\n", inf->name);
+        inf->status = THREAD_STATE_TERMINATED;
         if (!inf->detached) {
-            SHOWMSG("***************** !inf->detached");
             // tell the parent thread that we are done
             Forbid();
-            inf->finished = TRUE;
             Signal(inf->parent, SIGF_PARENT);
         } else {
-            SHOWMSG("***************** inf->detached");
             // no one is waiting for us, do the clean up
-            ObtainSemaphore(&thread_sem);
             memset(inf, 0, sizeof(ThreadInfo));
-            ReleaseSemaphore(&thread_sem);
+            Printf("Mark thread %s as IDLE\n", inf->name);
+            inf->status = THREAD_STATE_IDLE;
         }
+
+        ReleaseSemaphore(&thread_sem);
     }
-    SHOWMSG("***************** Exit");
+    else
+        Printf("Thread was not running\n");
+    Printf("Exit StarterFunc\n");
 }
 
 int
@@ -1210,6 +1219,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf = GetThreadInfo(threadnew);
     memset(inf, 0, sizeof(ThreadInfo));
 
+    inf->status = THREAD_STATE_IDLE;
     inf->start = start;
     inf->arg = arg;
     inf->parent = thisTask;
@@ -1231,7 +1241,6 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     if (inf->attr.stacksize < minStack)
         inf->attr.stacksize = minStack;
 
-
     // let's trick CreateNewProc into allocating a larger buffer for the name
     snprintf(name, sizeof(name), "pthread id #%d", threadnew);
     oldlen = strlen(name);
@@ -1250,9 +1259,8 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
             NP_CloseInput,		     TRUE,
             NP_Output,			     fileOut,
             NP_CloseOutput,		     TRUE,
-            NP_UserData,             inf,
+            NP_EntryData,            inf,
             NP_Name,                 name,
-            NP_Child,			     TRUE,
             NP_Cli,				     TRUE,
             TAG_DONE);
 
@@ -1264,6 +1272,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
         Close(fileOut);
         return EAGAIN;
     }
+    Printf("\nCreation of thread %s\n", inf->name);
 
     *thread = threadnew;
 
@@ -1293,6 +1302,7 @@ int pthread_join(pthread_t thread, void **value_ptr) {
     inf = GetThreadInfo(thread);
     SHOWPOINTER(inf);
     SHOWSTRING(inf->name);
+    Printf("\npthread_join\n");
 
     if (inf == NULL || inf->parent == NULL)
         return ESRCH;
@@ -1306,18 +1316,22 @@ int pthread_join(pthread_t thread, void **value_ptr) {
     }
 
     pthread_testcancel();
-    SHOWVALUE(inf->finished);
-    while (!inf->finished)
+    SHOWVALUE(inf->status);
+    while (inf->status != THREAD_STATE_TERMINATED) {
+        Printf("wait on thread %s\n", inf->name);
         Wait(SIGF_PARENT);
-    SHOWMSG("***************** wait done");
+    }
+    Printf("wait done\n");
 
     if (value_ptr)
         *value_ptr = inf->ret;
 
     ObtainSemaphore(&thread_sem);
+    Printf("Mark thread %s as IDLE\n", inf->name);
     memset(inf, 0, sizeof(ThreadInfo));
+    inf->status = THREAD_STATE_IDLE;
     ReleaseSemaphore(&thread_sem);
-    SHOWMSG("***************** pthread_join exit");
+    Printf("pthread_join exit\n\n");
 
     return 0;
 }
@@ -1424,6 +1438,7 @@ pthread_exit(void *value_ptr) {
     CleanupHandler *handler;
 
     SHOWMSG("***************** pthread_exit");
+    Printf("pthread_exit called\n");
     SHOWVALUE(value_ptr);
 
     thread = pthread_self();
@@ -1436,10 +1451,12 @@ pthread_exit(void *value_ptr) {
          * cleanup handlers.
          */
         if (inf != mainThread) {
+            Printf("CALLING LONGJMP\n");
             SHOWMSG("***************** CALLING LONGJMP");
             longjmp(inf->jmp, 1);
         }
     }
+    Printf("pthread_exit exit\n");
 }
 
 static void OnceCleanup(void *arg) {
@@ -1659,6 +1676,8 @@ int pthread_kill(pthread_t thread, int sig) {
 //
 
 int __pthread_init_func(void) {
+    pthread_t i;
+
     memset(&threads, 0, sizeof(threads));
     InitSemaphore(&thread_sem);
     InitSemaphore(&tls_sem);
@@ -1666,10 +1685,15 @@ int __pthread_init_func(void) {
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
     inf->task = FindTask(NULL);
+    inf->status = THREAD_STATE_RUNNING;
+    Printf("MAIN TASK %p\n", inf->task);
     NewMinList(&inf->cleanup);
 
-    SHOWMSG("***************** main thread cleanup list");
-    SHOWPOINTER(&inf->cleanup);
+    /* Mark all threads as IDLE */
+    for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
+        inf = &threads[i];
+        inf->status = THREAD_STATE_IDLE;
+    }
 
     return TRUE;
 }
@@ -1686,7 +1710,8 @@ void __pthread_exit_func(void) {
             while (inf->task)
                 Delay(1);
         } else {
-            pthread_join(i, NULL);
+            if (inf->status == THREAD_STATE_RUNNING)
+                pthread_join(i, NULL);
         }
     }
 }
