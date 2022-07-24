@@ -1,4 +1,6 @@
 /*
+  $Id: sched_yield.c,v 1.00 2022-07-18 12:09:49 clib2devs Exp $
+
   Copyright (C) 2014 Szilard Biro
   Copyright (C) 2018 Harry Sintonen
 
@@ -32,17 +34,8 @@
 #define PRIO_MAX 2
 #define PRIO_MIN -2
 
-int sched_get_priority_max(int policy) {
-    (void) (policy);
-    return PRIO_MAX;
-}
-
-int sched_get_priority_min(int policy) {
-    (void) (policy);
-    return PRIO_MIN;
-}
-
-int sched_yield(void) {
+int
+sched_yield(void) {
     BYTE oldpri;
     struct Task *task;
 
