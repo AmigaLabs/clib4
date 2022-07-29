@@ -5,8 +5,6 @@
 #ifndef _STRING_H
 #define _STRING_H
 
-/****************************************************************************/
-
 #ifndef _STDDEF_H
 #include <stddef.h>
 #endif /* _STDDEF_H */
@@ -64,6 +62,7 @@ extern char *strndup(const char *str, size_t max);
 
 extern void bcopy(const void *from,void *to,size_t len);
 extern void bzero(void *m,size_t len);
+extern void explicit_bzero(void *m, size_t len);
 extern int bcmp(const void *a,const void *b,size_t len);
 
 /****************************************************************************/

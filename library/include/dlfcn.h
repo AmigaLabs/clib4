@@ -9,7 +9,6 @@
 
 __BEGIN_DECLS
 
-
 /* We only support a subset of the flags available on Unix systems. */
 #define RTLD_LAZY		1
 #define RTLD_NOW		2

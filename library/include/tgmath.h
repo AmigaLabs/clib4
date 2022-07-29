@@ -10,6 +10,8 @@ sizeof(double) == sizeof(long double)
 (but the return type is set correctly with gcc)
 */
 
+#include <features.h>
+
 #include <math.h>
 #include <complex.h>
 

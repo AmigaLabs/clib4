@@ -7,6 +7,13 @@
 #endif /* _STRING_HEADERS_H */
 
 void
+explicit_bzero (void *m, size_t len) {
+    memset (m, '\0', len);
+    /* Compiler barrier.  */
+    asm volatile ("" ::: "memory");
+}
+
+void
 bzero(void *m, size_t len) {
     assert((len == 0) || (m != NULL && (int) len > 0));
 

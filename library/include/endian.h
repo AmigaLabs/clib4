@@ -1,6 +1,8 @@
 #ifndef __ENDIAN_H__
 #define __ENDIAN_H__
 
+#include <features.h>
+
 /* Swap bytes in 16 bit value.  */
 #ifdef __GNUC__
 # define __bswap_16(x) \

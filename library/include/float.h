@@ -5,7 +5,7 @@
 #ifndef _FLOAT_H
 #define _FLOAT_H
 
-/****************************************************************************/
+#include <features.h>
 
 #define FLT_EPSILON		1.19209290E-07F
 #define FLT_DIG			6

@@ -34,7 +34,7 @@
 #ifndef _SYS_SYSLOG_H_
 #define _SYS_SYSLOG_H_
 
-#define _PATH_LOG "/T/log"
+#define _PATH_LOG "T:log"
 
 #define LIOCSFD _IOW('l', 127, int) /* set sendsyslog() fd */
 

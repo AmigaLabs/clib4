@@ -8,6 +8,8 @@
 #ifndef _STDATOMIC_H
 #define _STDATOMIC_H
 
+#include <features.h>
+
 #ifndef _UCHAR_H
 #include <uchar.h>
 #endif /* _UCHAR_H */

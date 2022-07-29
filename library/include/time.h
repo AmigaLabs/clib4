@@ -15,16 +15,12 @@
 
 __BEGIN_DECLS
 
-/****************************************************************************/
-
 /*
  * Divide the number returned by clock() by CLOCKS_PER_SEC to obtain
  * the elapsed time in seconds
  */
 #define CLOCKS_PER_SEC ((clock_t)50)
 #define CLK_TCK CLOCKS_PER_SEC
-
-/****************************************************************************/
 
 #define CLOCK_REALTIME (clockid_t)0
 #define CLOCK_MONOTONIC (clockid_t)1

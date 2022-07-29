@@ -31,6 +31,8 @@
 #ifndef __SYS_ICONVNLS_H__
 #define __SYS_ICONVNLS_H__
 
+#include <features.h>
+
 #include <wchar.h>
 #include <iconv.h>
 
@@ -42,6 +44,8 @@
 #define ICONV_NLS_FROM 0
 #define ICONV_NLS_TO 1
 
+__BEGIN_DECLS
+
 extern void _iconv_nls_get_state(iconv_t cd, mbstate_t *ps, int direction);
 extern int _iconv_nls_set_state(iconv_t cd, mbstate_t *ps, int direction);
 extern int _iconv_nls_is_stateful(iconv_t cd, int direction);
@@ -50,5 +54,7 @@ extern size_t _iconv_nls_conv(iconv_t cd, const char **inbuf, size_t *inbyteslef
 extern const char *_iconv_nls_construct_filename(const char *file, const char *dir, const char *ext);
 extern int _iconv_nls_open(const char *encoding, iconv_t *towc, iconv_t *fromwc, int flag);
 extern char *_iconv_resolve_encoding_name(const char *ca);
+
+__END_DECLS
 
 #endif /* __SYS_ICONVNLS_H__ */

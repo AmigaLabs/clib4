@@ -5,7 +5,6 @@
 #ifndef _NETDB_H
 #define _NETDB_H
 
-/****************************************************************************/
 #include <features.h>
 
 #ifndef _SYS_SOCKET_H

@@ -5,6 +5,8 @@
 #ifndef _STDALIGN_H
 #define _STDALIGN_H
 
+#include <features.h>
+
 #ifndef __cplusplus
 
 #if __STDC_VERSION__ < 201112L

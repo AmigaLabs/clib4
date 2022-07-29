@@ -5,18 +5,9 @@
 #ifndef _STDBOOL_H
 #define _STDBOOL_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-
-/****************************************************************************/
-
 #if defined(__cplusplus) && defined(__GNUC__)
 #warning C99 header used in C++.
 #endif /* __GNUC__ */
-
-/****************************************************************************/
 
 #if !defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L)
 #warning C99 header file used by non-C99 compliant compiler.

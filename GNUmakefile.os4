@@ -123,6 +123,7 @@ include libc.gmk
 include libm.gmk
 include libamiga.gmk
 include libprofile.gmk
+include libcrypt.gmk
 include libresolv.gmk
 
 prepare:

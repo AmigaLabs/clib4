@@ -3,6 +3,7 @@
 
 #include <sys/ipc.h>
 #include <sys/cdefs.h>
+#include <features.h>
 
 __BEGIN_DECLS
 
