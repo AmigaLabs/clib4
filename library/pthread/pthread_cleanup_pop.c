@@ -43,14 +43,14 @@ pthread_cleanup_pop(int execute) {
     ThreadInfo *inf;
     CleanupHandler *handler;
 
-    SHOWMSG("***************** pthread_cleanup_pop");
-
     thread = pthread_self();
     inf = GetThreadInfo(thread);
-    handler = (CleanupHandler *)RemTail((struct List *)&inf->cleanup);
+    handler = (CleanupHandler *) RemTail((struct List *) &inf->cleanup);
 
-    if (handler && handler->routine && execute)
+    if (handler && handler->routine && execute) {
         handler->routine(handler->arg);
 
-    free(handler);
+        FreeVec(handler);
+        handler = NULL;
+    }
 }

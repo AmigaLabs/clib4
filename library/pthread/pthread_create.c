@@ -37,19 +37,14 @@
 #include "common.h"
 #include "pthread.h"
 
-static void
+static uint32
 StarterFunc() {
-    ThreadInfo *inf;
     int foundkey = TRUE;
     struct StackSwapStruct stack;
     volatile BOOL stackSwapped = FALSE;
 
-    SHOWSTRING("StarterFunc");
     struct Process *startedTask = (struct Process *) FindTask(NULL);
-    inf = (ThreadInfo *) startedTask->pr_EntryData;
-
-    // we have to set the priority here to avoid race conditions
-    SetTaskPri(FindTask(NULL), inf->attr.param.sched_priority);
+    ThreadInfo *inf = (ThreadInfo *)startedTask->pr_EntryData;
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
@@ -63,18 +58,20 @@ StarterFunc() {
 
     // set a jump point for pthread_exit
     if (!setjmp(inf->jmp)) {
-        Printf("Mark thread %s as RUNNING\n\n\n", inf->name);
+        Printf("[%s] Mark thread as RUNNING\n\n", inf->name);
         inf->status = THREAD_STATE_RUNNING;
         inf->ret = inf->start(inf->arg);
-        Printf("\n\n\nExit from start on thread %s\n", inf->name);
+        Printf("\n[%s] Exit from start function in setjmp\n", inf->name);
     }
-    else {
-        Printf("SETJMP on %s failed\n", inf->name);
-    }
+    else
+        Printf("[%s] Exit from longjmp\n", inf->name);
+
+    Printf("[%s] Calling pthread_cleanup_pop\n", inf->name);
+    pthread_cleanup_pop(1);
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
-    Printf("Exit from setjmp on thread %s\n", inf->name);
+    Printf("[%s] Destroy all non-NULL TLS key values\n", inf->name);
     ObtainSemaphoreShared(&tls_sem);
     for (int j = 0; foundkey && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
         foundkey = FALSE;
@@ -92,28 +89,29 @@ StarterFunc() {
     if (stackSwapped)
         StackSwap(&stack);
 
+    Printf("[%s] Finishing stuff\n", inf->name);
     if (inf->status == THREAD_STATE_RUNNING) {
-        ObtainSemaphore(&thread_sem);
-
-        Printf("Starting termination of %s - Signal parent %p\n", inf->name, inf->parent);
-        Printf("Mark thread %s as TERMINATED\n", inf->name);
-        inf->status = THREAD_STATE_TERMINATED;
         if (!inf->detached) {
+            Printf("[%s] Signal parent %p\n", inf->name, inf->parent);
             // tell the parent thread that we are done
-            //Forbid();
+            Forbid();
             Signal(inf->parent, SIGF_PARENT);
         } else {
             // no one is waiting for us, do the clean up
-            memset(inf, 0, sizeof(ThreadInfo));
-            Printf("Mark thread %s as IDLE\n", inf->name);
-            inf->status = THREAD_STATE_IDLE;
+            Printf("[%s] ObtainSemaphore on StarterFunc\n", inf->name);
+            ObtainSemaphore(&thread_sem);
+            Printf("[%s] Got Semaphore on StarterFunc\n", inf->name);
+            _pthread_clear_threadinfo(inf);
+            Printf("[%s] Mark thread as IDLE\n", inf->name);
+            ReleaseSemaphore(&thread_sem);
+            Printf("[%s] ReleaseSemaphore on StarterFunc\n", inf->name);
         }
-
-        ReleaseSemaphore(&thread_sem);
     }
     else
-        Printf("Thread was not running\n");
-    Printf("Exit StarterFunc\n");
+        Printf("[%s] Thread was not running\n", inf->name);
+    Printf("[%s] Exit StarterFunc\n", inf->name);
+
+    return RETURN_OK;
 }
 
 int
@@ -127,7 +125,9 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     if (thread == NULL || start == NULL)
         return EINVAL;
 
+    Printf("Obtaining new thread semaphore\n");
     ObtainSemaphore(&thread_sem);
+    Printf("Obtainined\n");
 
     // grab an empty thread slot
     threadnew = GetThreadId(NULL);
@@ -138,9 +138,8 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
 
     // prepare the ThreadInfo structure
     inf = GetThreadInfo(threadnew);
-    memset(inf, 0, sizeof(ThreadInfo));
+    _pthread_clear_threadinfo(inf);
 
-    inf->status = THREAD_STATE_IDLE;
     inf->start = start;
     inf->arg = arg;
     inf->parent = thisTask;
@@ -175,27 +174,32 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     // start the child thread
     inf->task = (struct Task *) CreateNewProcTags(
             NP_Entry,                StarterFunc,
+            NP_EntryData,            inf,
             inf->attr.stacksize ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
             NP_Input,			     fileIn,
             NP_CloseInput,		     TRUE,
             NP_Output,			     fileOut,
             NP_CloseOutput,		     TRUE,
-            NP_EntryData,            inf,
             NP_Name,                 name,
+            NP_Child,                TRUE,
             NP_Cli,				     TRUE,
             TAG_DONE);
-
-    ReleaseSemaphore(&thread_sem);
 
     if (0 == inf->task) {
         inf->parent = NULL;
         Close(fileIn);
         Close(fileOut);
+        ReleaseSemaphore(&thread_sem);
         return EAGAIN;
     }
-    Printf("\nCreation of thread %s\n", inf->name);
 
-    *thread = threadnew;
+    Printf("[%s] ReleaseSemaphore on pthread_create\n", inf->name);
+    ReleaseSemaphore(&thread_sem);
 
-    return 0;
+    if (thread != NULL) {
+        *thread = threadnew;
+    }
+
+    Printf("\n[%s] pthread_create done\n", inf->name);
+    return OK;
 }

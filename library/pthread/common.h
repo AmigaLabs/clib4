@@ -30,7 +30,6 @@ enum threadState
     THREAD_STATE_DESTRUCT   = 6,
 };
 
-
 #define GetNodeName(node) ((struct Node *)node)->ln_Name
 
 #define ForeachNode(l,n) \
@@ -102,6 +101,7 @@ BOOL OpenTimerDevice(struct IORequest *io, struct MsgPort *mp, struct Task *task
 void CloseTimerDevice(struct IORequest *io);
 
 // Private functions
+void _pthread_clear_threadinfo(ThreadInfo *inf);
 int _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOOL staticinit);
 int _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *abstime, int shared);
 int _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime, BOOL relative);

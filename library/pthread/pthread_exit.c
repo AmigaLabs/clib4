@@ -43,13 +43,10 @@ pthread_exit(void *value_ptr) {
     ThreadInfo *inf;
     CleanupHandler *handler;
 
-    SHOWMSG("***************** pthread_exit");
-    Printf("pthread_exit called\n");
-    SHOWVALUE(value_ptr);
-
     thread = pthread_self();
     inf = GetThreadInfo(thread);
     if (inf != NULL) {
+        Printf("[%s] pthread_exit called\n", inf->name);
         inf->ret = value_ptr;
 
         ThreadInfo *mainThread = &threads[0];
@@ -57,10 +54,9 @@ pthread_exit(void *value_ptr) {
          * cleanup handlers.
          */
         if (inf != mainThread) {
-            Printf("CALLING LONGJMP\n");
-            SHOWMSG("***************** CALLING LONGJMP");
+            Printf("[%s] Calling longjmp\n", inf->name);
             longjmp(inf->jmp, 1);
         }
     }
-    Printf("pthread_exit exit\n");
+    Printf("[%s] pthread_exit exit\n", inf->name);
 }

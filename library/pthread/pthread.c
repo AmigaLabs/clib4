@@ -117,13 +117,11 @@ _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *
     return 0;
 }
 
-
-
-//
-// Condition variable functions
-//
-
-
+void
+_pthread_clear_threadinfo(ThreadInfo *inf) {
+    memset(inf, 0, sizeof(ThreadInfo));
+    inf->status = THREAD_STATE_IDLE;
+}
 
 int
 _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime, BOOL relative) {

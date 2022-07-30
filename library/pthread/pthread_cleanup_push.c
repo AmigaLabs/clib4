@@ -43,13 +43,10 @@ pthread_cleanup_push(void (*routine)(void *), void *arg) {
     ThreadInfo *inf;
     CleanupHandler *handler;
 
-    SHOWMSG("***************** pthread_cleanup_push");
-
     if (routine == NULL)
         return;
 
-    handler = malloc(sizeof(CleanupHandler));
-    memset(handler, 0, sizeof(CleanupHandler));
+    handler = AllocVecTags(sizeof(CleanupHandler), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     SHOWPOINTER(handler);
 
     if (handler == NULL)

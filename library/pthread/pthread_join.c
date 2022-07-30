@@ -41,11 +41,8 @@ int
 pthread_join(pthread_t thread, void **value_ptr) {
     ThreadInfo *inf;
     struct Task *task;
-    SHOWMSG("***************** pthread_join");
+
     inf = GetThreadInfo(thread);
-    SHOWPOINTER(inf);
-    SHOWSTRING(inf->name);
-    Printf("\npthread_join\n");
 
     if (inf == NULL || inf->parent == NULL)
         return ESRCH;
@@ -58,23 +55,26 @@ pthread_join(pthread_t thread, void **value_ptr) {
         return EDEADLK;
     }
 
-    pthread_testcancel();
-    SHOWVALUE(inf->status);
-    while (inf->status != THREAD_STATE_TERMINATED) {
-        Printf("wait on thread %s\n", inf->name);
+    Printf("\n[%s] pthread_join: Thread status %d\n", inf->name, inf->status);
+
+    if (inf->status == THREAD_STATE_RUNNING) {
+        inf->status = THREAD_STATE_JOINING;
+        Printf("[%s] Wait on thread\n", inf->name);
         Wait(SIGF_PARENT);
     }
-    Printf("wait done\n");
+    else {
+        Printf("[%s] Thread was not running. Status: \n", inf->name, inf->status);
+    }
+    Printf("[%s] Wait done\n", inf->name);
 
     if (value_ptr)
         *value_ptr = inf->ret;
 
     ObtainSemaphore(&thread_sem);
-    Printf("Mark thread %s as IDLE\n", inf->name);
-    memset(inf, 0, sizeof(ThreadInfo));
-    inf->status = THREAD_STATE_IDLE;
+    Printf("[%s] Mark thread as IDLE\n", inf->name);
+    _pthread_clear_threadinfo(inf);
     ReleaseSemaphore(&thread_sem);
-    Printf("pthread_join exit\n\n");
+    Printf("[] pthread_join exit\n");
 
     return 0;
 }
