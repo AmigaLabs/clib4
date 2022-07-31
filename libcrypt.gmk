@@ -17,8 +17,12 @@ endif
 
 C_CRYPT := \
     crypt/crypt.o \
-    crypt/crypt-entry.o \
-    crypt/crypt_util.o
+    crypt/crypt_blowfish.o \
+    crypt/crypt_des.o \
+    crypt/crypt_md5.o \
+    crypt/crypt_r.o \
+    crypt/crypt_sha256.o \
+    crypt/crypt_sha512.o
 
 CRYPT_LIB := \
 	$(C_CRYPT) \
@@ -32,8 +36,8 @@ SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(CRYPT_LIB))
 $(OUT_STATIC)/crypt.lib_rev.o : $(LIB_DIR)/crypt.lib_rev.c $(LIB_DIR)/crypt.lib_rev.h
 $(OUT_SHARED)/crypt.lib_rev.o : $(LIB_DIR)/crypt.lib_rev.c $(LIB_DIR)/crypt.lib_rev.h
 
-$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(OUT_STATIC)/%.o : CFLAGS += -Wno-missing-braces $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += -Wno-missing-braces $(PIC) $(LARGEDATA)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)

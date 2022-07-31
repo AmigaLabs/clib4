@@ -32,6 +32,7 @@ extern char *strstr(const char *src, const char *sub);
 extern char *strnstr(const char *src, const char *sub, size_t len);
 extern char *strsep(char ** src, const char *delim);
 extern char *stpcpy(char *dest, const char *src);
+extern char *stpncpy(char *dest, const char *src, size_t len);
 
 // Used for AROS compatibility
 extern size_t stccpy (char * dest, const char * src, size_t n);

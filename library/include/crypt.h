@@ -37,18 +37,9 @@ extern char *crypt(const char *__phrase, const char *__salt);
 
 /* This structure provides scratch and output buffers for 'crypt_r'.
    Its contents should not be accessed directly.  */
-struct crypt_data
-{
-    char keysched[16 * 8];
-    char sb0[32768];
-    char sb1[32768];
-    char sb2[32768];
-    char sb3[32768];
-    /* end-of-aligment-critical-data */
-    char crypt_3_buf[14];
-    char current_salt[2];
-    long int current_saltbits;
-    int  direction, initialized;
+struct crypt_data {
+    int initialized;
+    char __buf[256];
 };
 
 /* Thread-safe version of 'crypt'.
