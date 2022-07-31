@@ -5,8 +5,6 @@
 #ifndef	_SYS_TIMEB_H
 #define	_SYS_TIMEB_H
 
-/****************************************************************************/
-
 #ifndef _TIME_H
 #include <time.h>	/* For the definition of time_t */
 #endif /* _TIME_H */

@@ -32,6 +32,8 @@ If you want to use `dlopen`/`dlsym` with shared objects:
 The plain `libc.a` now contains also `libnet.a`, `libunix.a`. Socket support and floating point support are always enabled
 Soft float version is no longer available.
 
+Clib2 define `__THREAD_SAFE` if you need it to check if the library supports it
+
 If you want to use the shared version remember to pack your OS4 software with all clib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
 **DON'T overwrite SOBJS: files with your Clib2 files** othwerise OS4 most probably will not load or you could have problems running software!
 
@@ -102,6 +104,41 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 ### libresolv
 
 Added resolv library to use dns functions. It needs libpthread.a
+
+### libcrypt
+
+Added crypt library that implements crypt and crypt_r 
+
+* ##### About salt
+The characters that can be specified are [a-zA-Z0-9. /]. Lowercase alphabets, uppercase alphabets, numbers,'.' And'/'.
+
+By adjusting the format of the salt passed to the crypt function, you can ** specify the hash algorithm **. Make salt like $ (id) $ (salt string) $. id is a number to specify the hash algorithm. (The hash algorithm will be described later) (By the way, the $ mark at the end of the salt string can be omitted.)
+
+* ##### Salt id and hash algorithm
+
+Correspondence table between id and hash algorithm
+
+
+| ID  | Hash algorithm |  
+|-----|----------------|
+| 1   |      MD5
+| 2a  | Blowfish |
+| 5   | SHA-256  |
+| 6   | SHA-512  |
+
+If not specified, it will be DES. DES is very vulnerable and is not recommended because it uses only 2 characters for Salt and only recognizes passwords for up to 8 characters.
+
+| Hash algorithm | Number of characters in the hashed string |  
+|----------------|-------------------------------------------|
+| MD5            | 22 Characters                             
+| SHA-256        | 43 Characters                             |
+| SHA-512        | 86 Characters                             |
+
+Number of characters in salt DES: Fixed to 2 characters (only the first 2 characters of the salt string are seen, the characters after that are ignored) MD5: Up to 8 characters (see only the first 8 characters of the salt string, the characters after that are ignored)
+
+About the security of the hash algorithm DES<MD5<SHA-256<SHA-512 And, the larger the id number, the higher the safety.
+
+User `-lcrypt` option when linking.
 
 ### debug
 

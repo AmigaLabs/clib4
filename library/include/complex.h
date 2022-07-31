@@ -5,24 +5,14 @@
 #ifndef _COMPLEX_H
 #define _COMPLEX_H
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-
-/****************************************************************************/
 
 #ifndef	__GNUC__
 #error Unsupported compiler.
 #endif /* __GNUC__ */
 
-/****************************************************************************/
-
 #if defined(__cplusplus)
 #warning C99 header file used in C++.
 #endif /* __cplusplus */
-
-/****************************************************************************/
 
 #if !defined(__STDC_VERSION__) || (__GNUC__ < 3 && __STDC_VERSION__ < 199901L)
 #error Complex numbers are not supported by/for this compiler.

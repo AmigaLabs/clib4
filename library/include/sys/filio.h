@@ -5,8 +5,6 @@
 #ifndef _SYS_FILIO_H
 #define _SYS_FILIO_H
 
-/****************************************************************************/
-
 #ifndef	_SYS_IOCCOM_H
 #include <sys/ioccom.h>
 #endif /* _SYS_IOCCOM_H */

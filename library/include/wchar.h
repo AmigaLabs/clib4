@@ -21,8 +21,6 @@ __BEGIN_DECLS
 
 #define WEOF (-1)
 
-/****************************************************************************/
-
 typedef long int wint_t;
 
 /* Conversion state information.  */

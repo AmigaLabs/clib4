@@ -1,6 +1,8 @@
 #ifndef __ENDIAN_H__
 #define __ENDIAN_H__
 
+#include <features.h>
+
 /* Swap bytes in 16 bit value.  */
 #ifdef __GNUC__
 # define __bswap_16(x) \
@@ -71,8 +73,21 @@ __bswap_32 (unsigned int __bsx)
 #define __ORDER_BIG_ENDIAN__     BIG_ENDIAN
 #endif
 
+#ifndef __BIG_ENDIAN
+#define __BIG_ENDIAN             BIG_ENDIAN
+#endif
+
+#ifndef __LITTLE_ENDIAN
+#define __LITTLE_ENDIAN          BIG_ENDIAN
+#endif
+
+
 #ifndef __BYTE_ORDER__
 #define __BYTE_ORDER__           BYTE_ORDER
+#endif
+
+#ifndef __BYTE_ORDER__
+#define __BYTE_ORDER             BYTE_ORDER
 #endif
 
 #ifndef __FLOAT_WORD_ORDER__

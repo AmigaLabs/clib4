@@ -1,6 +1,7 @@
 #ifndef _SYS_MSG_H
 #define _SYS_MSG_H
 
+#include <features.h>
 #include <sys/cdefs.h>
 #include <sys/shm.h>
 

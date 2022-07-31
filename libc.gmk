@@ -64,7 +64,6 @@ C_CTYPE := \
 ifdef DEBUG
     $(info Adding debug objects)
     C_DEBUG := \
-        debug/debug.lib_rev.o \
         debug/debug.o \
         debug/cmpstrexec.o \
         debug/kcmpstr.o \
@@ -594,6 +593,7 @@ C_STRING := \
 	string/rindex.o \
 	string/stccpy.o \
 	string/stpcpy.o \
+	string/stpncpy.o \
 	string/strcasestr.o \
 	string/strcat.o \
 	string/strchr.o \

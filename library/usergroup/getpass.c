@@ -7,34 +7,32 @@
 #endif /* _USERGROUP_HEADERS_H */
 
 char *
-getpass(const char *prompt)
-{
-	char *result = NULL;
+getpass(const char *prompt) {
+    char *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(prompt);
+    SHOWSTRING(prompt);
 
-	assert(prompt != NULL);
-	assert(__UserGroupBase != NULL);
+    assert(prompt != NULL);
+    assert(__UserGroupBase != NULL);
 
-    if (prompt == NULL)
-    {
+    if (prompt == NULL) {
         SHOWMSG("invalid prompt");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __getpass((STRPTR)prompt);
+    result = __getpass((STRPTR) prompt);
 
-	SHOWSTRING(result);
+    SHOWSTRING(result);
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

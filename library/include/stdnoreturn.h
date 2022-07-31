@@ -5,6 +5,8 @@
 #ifndef _STDNORETURN_H
 #define _STDNORETURN_H
 
+#include <features.h>
+
 #ifndef __cplusplus
 
 #if __STDC_VERSION__ >= 200112L

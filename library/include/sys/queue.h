@@ -37,6 +37,8 @@
 #ifndef _SYS_QUEUE_H_
 #define _SYS_QUEUE_H_
 
+#include <features.h>
+
 /*
  * This file defines four types of data structures: singly-linked lists,
  * singly-linked tail queues, lists and tail queues.

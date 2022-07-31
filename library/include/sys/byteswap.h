@@ -2,6 +2,7 @@
 #ifndef	__BYTESWAP_H
 #define	__BYTESWAP_H
 
+#include <features.h>
 #include <sys/types.h>
 #include <stdint.h>
 
