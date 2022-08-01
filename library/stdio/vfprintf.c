@@ -21,6 +21,8 @@ static void pad(Out *f, char c, int w, int l, int fl);
 
 static void out_init_file(Out *out, FILE *f) {
     memset(out, 0, sizeof(*out));
+    out->buffer_size = f->size;
+    out->buffer_pos = f->position;
     out->file = f;
 }
 
@@ -33,6 +35,7 @@ static void out(Out *_out, const char *text, size_t l) {
     }
     if (_out->file != NULL) {
         const char *w = text;
+        _out->buffer_pos += length;
         while (length--) {
             __putc_unlocked(*w++, _out->file);
         }
@@ -396,8 +399,8 @@ static int getint(char **s) {
 }
 
 static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type) {
-    char buf[(sizeof(uintmax_t) * 3 + 3 + (LDBL_MANT_DIG / 4))],
-            mb[4],
+    char buf[(sizeof(uintmax_t) * 3 + 3 + (LDBL_MANT_DIG / 4))] = {0},
+            mb[4] = {0},
             *a, *z, *s = (char *) fmt;
     const char *prefix;
     wchar_t wc[2], *ws;
@@ -410,7 +413,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
         /* Update output count, end loop when fmt is exhausted */
         if (cnt >= 0) {
             if (l > INT_MAX - cnt) {
-                errno = EOVERFLOW;
+                __set_errno(EOVERFLOW);
                 cnt = -1;
             } else
                 cnt += l;
@@ -448,15 +451,14 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 w = (int) nl_arg[s[1] - '0'].i;
                 s += 3;
             } else if (!l10n) {
-                w = f ? va_arg(*ap,
-                int) : 0;
+                w = f ? va_arg(*ap, int) : 0;
                 s++;
             } else
-                return -1;
+                return EOF;
             if (w < 0)
                 fl |= __S_LEFT_ADJ, w = -w;
         } else if ((w = getint(&s)) < 0)
-            return -1;
+            return EOF;
 
         /* Read precision */
         if (*s == '.' && s[1] == '*') {
@@ -469,7 +471,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 int) : 0);
                 s += 2;
             } else
-                return -1;
+                return EOF;
         } else if (*s == '.') {
             s++;
             p = getint(&s);
@@ -480,13 +482,13 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
         st = 0;
         do {
             if (__OOP(*s))
-                return -1;
+                return EOF;
             ps = st;
             st = states[st]
             S(*s++);
         } while ((st - 1) < _STOP);
         if (!st)
-            return -1;
+            return EOF;
 
         /* Check validity of argument type (nl/normal) */
         if (st == _NOARG) {
@@ -593,33 +595,15 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 break;
             case 'm':
                 if (1)
-                    a = strerror(errno);
-                else
-                    case 's':
-                        a = arg.p ? arg.p : (char *) "(null)";
-#if 1
-                /* On Android, memchr() will return NULL for
-                 * out-of-bound requests, e.g. if |p == -1|. */
-                if (p >= 0) {
-                    z = memchr(a, 0, (size_t) p);
-                    if (!z)
-                        z = a + p;
-                    else
-                        p = (int) (z - a);
-                } else {
-                    if (a) {
-                        p = (int) strlen(a);
-                    }
-                    else
-                        p = 0;
-                    z = a + p;
+                    a = strerror(errno); else
+            case 's':
+                a = arg.p ? arg.p : (char *) "(null)";
+                z = a + strnlen(a, p<0 ? INT_MAX : p);
+                if (p<0 && *z) {
+                    __set_errno(EOVERFLOW);
+                    return EOF;
                 }
-#else
-                if (!z)
-                    z = a + p;
-                else
-                    p = z - a;
-#endif
+                p = z-a;
                 fl &= ~__U_ZERO_PAD;
                 break;
             case 'C':
@@ -638,7 +622,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                      );
                      i += l);
                 if (l < 0)
-                    return -1;
+                    return EOF;
                 p = i;
                 pad(f, ' ', w, p, (int) fl);
                 ws = arg.p;
