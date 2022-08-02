@@ -6,18 +6,29 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-#include <syslog.h>
 
 void
 closelog(void) {
-
     ENTER();
 
+    struct SignalSemaphore *lock = NULL;
+
     if (syslog_fd != NULL) {
+        lock = __create_semaphore();
+        if (lock == NULL) {
+            __set_errno(ENOMEM);
+            goto out;
+        }
+
         fclose(syslog_fd);
         syslog_fd = NULL;
-        Printf("Close log\n");
+
+        __delete_semaphore(lock);
     }
+
+out:
+    if (__check_abort_enabled)
+        __check_abort();
 
     LEAVE();
 }

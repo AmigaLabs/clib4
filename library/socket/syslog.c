@@ -6,8 +6,6 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-#include <syslog.h>
-
 void
 syslog(int priority, const char *message, ...) {
     va_list ap;

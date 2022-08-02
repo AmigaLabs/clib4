@@ -9,7 +9,6 @@ debug(char *message, ...) {
     openlog("TEST", LOG_PID | LOG_CONS, LOG_DAEMON);
 
     va_start(ap, message);
-    printf(message, ap);
     vsyslog(LOG_DEBUG, message, ap);
     va_end(ap);
 
@@ -17,7 +16,7 @@ debug(char *message, ...) {
 }
 
 int main() {
-    syslog(LOG_DEBUG | LOG_NOTICE, "Test message. %d + %d = %d", 1, 2, 3);
+    syslog(LOG_DEBUG, "Test message. %d + %d = %d", 1, 2, 3);
     debug("Test message. %d + %d = %d", 1, 2, 3);
     return 0;
 }

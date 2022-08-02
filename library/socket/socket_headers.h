@@ -41,6 +41,10 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
+#ifndef _SYSLOG_H
+#include <syslog.h>
+#endif
+
 /* Code value. */
 #define SBTB_CODE 1
 #define SBTS_CODE 0x3FFF
@@ -82,6 +86,7 @@ extern int __select(int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *excep
 /* Syslog stuff */
 extern int syslog_openlog_flags;
 extern int syslog_mask;
+extern int syslog_facility;
 extern char syslog_ident[35];
 extern FILE *syslog_fd;
 
