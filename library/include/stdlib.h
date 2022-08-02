@@ -71,8 +71,6 @@ extern long labs(long x);
 extern div_t div(int n, int d);
 extern ldiv_t ldiv(long n, long d);
 
-/****************************************************************************/
-
 extern int rand(void);
 extern long random(void);
 extern void srand(unsigned int seed);
@@ -83,39 +81,20 @@ extern long nrand48 (unsigned short subi[3]);
 
 extern char *initstate(unsigned int seed, char *state, size_t size);
 extern char *setstate(const char *state);
-/****************************************************************************/
 
 extern int system(const char *command);
-
-/****************************************************************************/
-
 extern void exit(int status);
 extern void abort(void);
 
-/****************************************************************************/
-
 extern int atexit(void (*)(void));
-
-/****************************************************************************/
-
 extern char *getenv(const char *name);
-extern char *secure_getenv(const char *name);
-
-/****************************************************************************/
-
-extern void *bsearch(const void *key, const void *base, size_t count, size_t size,
-					 int (*compare)(const void *key, const void *value));
-extern void qsort(void *base, size_t count, size_t size,
-				  int (*compare)(const void *element1, const void *element2));
-
-/****************************************************************************/
+extern void *bsearch(const void *key, const void *base, size_t count, size_t size, int (*compare)(const void *key, const void *value));
+extern void qsort(void *base, size_t count, size_t size, int (*compare)(const void *element1, const void *element2));
 
 extern double strtod(const char *str, char **ptr);
 extern long strtol(const char *str, char **ptr, int base);
 extern unsigned long strtoul(const char *str, char **ptr, int base);
 extern quad_t strtoq(const char *nptr, char **endptr, register int base);
-
-/****************************************************************************/
 
 extern double atof(const char *str);
 extern int atoi(const char *str);
@@ -161,6 +140,13 @@ extern float strtof(const char *str, char **ptr);
 extern float atoff (const char *nptr);
 #endif
 extern void _Exit(int status);
+
+#ifdef _GNU_SOURCE
+extern char *ecvt(double x, int n, int *dp, int *sign);
+extern char *fcvt(double x, int n, int *dp, int *sign);
+extern char *gcvt(double x, int n, char *b);
+extern char *secure_getenv(const char *name);
+#endif
 
 __END_DECLS
 

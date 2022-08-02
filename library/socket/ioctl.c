@@ -77,8 +77,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
         __fd_lock(fd);
 
         va_start(arg, request);
-        param = va_arg(arg,
-        char *);
+        param = va_arg(arg, char *);
         va_end(arg);
 
         SHOWPOINTER(param);
@@ -106,8 +105,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
         struct winsize *size;
         // Get them from console device
         va_start(arg, request);
-        size = va_arg(arg,
-        struct winsize *);
+        size = va_arg(arg, struct winsize *);
         va_end(arg);
 
         if (size == NULL) {
@@ -127,8 +125,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
     } else if (request == TIOCSWINSZ) {
         struct winsize *size;
         va_start(arg, request);
-        size = va_arg(arg,
-        struct winsize *);
+        size = va_arg(arg, struct winsize *);
         va_end(arg);
 
         if (size == NULL) {

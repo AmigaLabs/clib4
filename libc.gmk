@@ -276,6 +276,7 @@ C_SOCKET := \
 	socket/bindresvport.o \
 	socket/bindresvport6.o \
 	socket/check_daemon.o \
+	socket/closelog.o \
 	socket/connect.o \
     socket/dn_comp.o \
     socket/dn_expand.o \
@@ -300,6 +301,8 @@ C_SOCKET := \
 	socket/getsockname.o \
 	socket/getsockopt.o \
 	socket/get_descriptor.o \
+	socket/hook_entry.o \
+	socket/hstrerror.o \
 	socket/if_indextoname.o \
 	socket/if_nametoindex.o \
 	socket/inet_addr.o \
@@ -317,11 +320,13 @@ C_SOCKET := \
 	socket/listen.o \
 	socket/ns_parse.o \
 	socket/obtain_daemon.o \
+	socket/openlog.o \
 	socket/recv.o \
 	socket/recvfrom.o \
 	socket/recvmsg.o \
 	socket/select_signal.o \
 	socket/select.o \
+	socket/setlogmask.o \
 	socket/socketpair.o \
 	socket/wait_select.o \
 	socket/send.o \
@@ -330,8 +335,8 @@ C_SOCKET := \
 	socket/setsockopt.o \
 	socket/shutdown.o \
 	socket/socket.o \
-	socket/hook_entry.o \
-	socket/hstrerror.o \
+	socket/syslog.o \
+	socket/vsyslog.o \
 	socket/get_h_errno.o \
 	socket/set_h_errno.o
 
@@ -477,8 +482,11 @@ C_STDLIB := \
 	stdlib/dlopen.o \
 	stdlib/dlsym.o \
 	stdlib/dosbase.o \
+	stdlib/ecvt.o \
 	stdlib/exit.o \
+	stdlib/fcvt.o \
 	stdlib/free.o \
+	stdlib/gcvt.o \
 	stdlib/getexecname.o \
 	stdlib/getdefstacksize.o \
 	stdlib/getenv.o \
