@@ -121,7 +121,7 @@ extern gid_t getegid(void);
 extern uid_t geteuid(void);
 extern gid_t getgid(void);
 extern int getgroups(int gidsetsize, gid_t grouplist[]);
-extern char * getpass(const char *prompt);
+extern char *getpass(const char *prompt);
 extern uid_t getuid(void);
 extern int initgroups(const char *name, gid_t basegid);
 extern int setegid(gid_t gid);

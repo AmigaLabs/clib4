@@ -68,8 +68,8 @@ struct statfs
 
 /****************************************************************************/
 
-int statfs(const char *path, struct statfs *buf);
-int fstatfs(int fd, struct statfs *buf);
+extern int statfs(const char *path, struct statfs *buf);
+extern int fstatfs(int fd, struct statfs *buf);
 
 __END_DECLS
 

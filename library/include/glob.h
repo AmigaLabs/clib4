@@ -53,8 +53,8 @@ typedef struct {
 
 __BEGIN_DECLS
 
-int glob(const char *pattern, int flags, int (*errfunc) (const char *epath, int eerrno), glob_t *pglob);
-void globfree(glob_t *pglob);
+extern int glob(const char *pattern, int flags, int (*errfunc) (const char *epath, int eerrno), glob_t *pglob);
+extern void globfree(glob_t *pglob);
 
 __END_DECLS
 

@@ -64,6 +64,8 @@ __wc_indelim(wchar_t wc, const wchar_t *delim) {
 static void
 out_init_file(FOut *out, FILE *f) {
     memset(out, 0, sizeof(*out));
+    out->buffer_size = f->size;
+    out->buffer_pos = f->position;
     out->file = f;
 }
 
@@ -211,7 +213,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
     int i;
     int t;
     char *bs;
-    char charfmt[16];
+    char charfmt[16] = {0};
     wchar_t wc;
 
     for (;;) {

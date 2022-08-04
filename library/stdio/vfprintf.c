@@ -705,6 +705,8 @@ vfprintf(FILE *f, const char *format, va_list ap) {
 
     va_end(ap2);
 
+    fflush(f);
+
     RETURN(ret);
     return ret;
 }

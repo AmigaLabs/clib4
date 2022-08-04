@@ -9,8 +9,8 @@
 
 __BEGIN_DECLS
 
-char *basename(const char *path);
-char *dirname(const char *path);
+extern char *basename(const char *path);
+extern char *dirname(const char *path);
 
 __END_DECLS
 

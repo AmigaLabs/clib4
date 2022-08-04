@@ -108,8 +108,8 @@ extern int fwscanf(FILE *stream, const wchar_t *format, ...);
 extern int swscanf(const wchar_t *s, const wchar_t *format, ...);
 extern int vfwscanf(FILE *f, const wchar_t *format, va_list ap);
 extern int vswscanf(const wchar_t *s, const wchar_t *format, va_list ap);
-extern int vwscanf(const wchar_t *s, ...);  // NOT IMPLEMENTED
-extern int wscanf(const wchar_t *format, ...); // NOT IMPLEMENTED
+extern int vwscanf(const wchar_t *s, va_list ap);
+extern int wscanf(const wchar_t *format, ...);
 
 /****************************************************************************/
 
