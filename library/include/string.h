@@ -74,6 +74,7 @@ extern size_t strlcat(char *dst, const char *src, size_t siz);
 /****************************************************************************/
 
 extern char *strtok_r(char *str, const char *separator_set,char ** state_ptr);
+extern char *strsignal(int);
 
 /****************************************************************************/
 #ifndef __STRICT_ANSI__

@@ -12,11 +12,11 @@ vwscanf(const wchar_t *fmt, va_list ap) {
 
     ENTER();
 
-    SHOWSTRING(format);
+    SHOWSTRING(fmt);
 
-    assert(format != NULL);
+    assert(fmt != NULL);
 
-    if (format == NULL) {
+    if (fmt == NULL) {
         SHOWMSG("invalid format parameter");
 
         __set_errno(EFAULT);

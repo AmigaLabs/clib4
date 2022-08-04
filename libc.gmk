@@ -625,6 +625,7 @@ C_STRING := \
 	string/strpbrk.o \
 	string/strrchr.o \
 	string/strsep.o \
+	string/strsignal.o \
 	string/strspn.o \
 	string/strstr.o \
 	string/strtok.o \
@@ -843,20 +844,28 @@ C_WCHAR := \
 	wchar/vfwscanf.o \
 	wchar/vswprintf.o \
     wchar/vswscanf.o \
+    wchar/wcpcpy.o \
+    wchar/wcpncpy.o \
 	wchar/vwprintf.o \
 	wchar/vwscanf.o \
 	wchar/wcrtomb.o \
+	wchar/wcscasecmp.o \
+	wchar/wcscasecmp_l.o \
 	wchar/wcscat.o \
 	wchar/wcschr.o \
 	wchar/wcscmp.o \
 	wchar/wcscoll.o \
 	wchar/wcscpy.o \
 	wchar/wcscspn.o \
+	wchar/wcsdup.o \
 	wchar/wcsftime.o \
 	wchar/wcslen.o \
+	wchar/wcsncasecmp.o \
+	wchar/wcsncasecmp_l.o \
 	wchar/wcsncat.o \
 	wchar/wcsncmp.o \
 	wchar/wcsncpy.o \
+	wchar/wcsnlen.o \
 	wchar/wscoll.o \
 	wchar/wcspbrk.o \
 	wchar/wcsrchr.o \
@@ -876,6 +885,7 @@ C_WCHAR := \
 	wchar/wcstoull.o \
 	wchar/wcswidth.o \
 	wchar/wcsxfrm.o \
+	wchar/wcsxfrm_l.o \
 	wchar/wctob.o \
 	wchar/wctomb.o \
 	wchar/wcwidth.o \
