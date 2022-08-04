@@ -3,7 +3,7 @@
 #include <stdlib.h>     /* wcstombs, wchar_t(C) */
 
 int main() {
-    const wchar_t str[] = L"wcstombs example";
+    const wchar_t *str = L"wcstombs example";
     char buffer[32];
     int ret;
 

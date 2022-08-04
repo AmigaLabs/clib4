@@ -820,6 +820,8 @@ C_USERGROUP := \
 C_WCHAR := \
 	wchar/bittab.o \
 	wchar/btowc.o \
+	wchar/c16rtomb.o \
+	wchar/c32rtomb.o \
 	wchar/fgetwc.o \
 	wchar/fgetws.o \
 	wchar/fputwc.o \
@@ -830,6 +832,8 @@ C_WCHAR := \
 	wchar/getwc.o \
 	wchar/getwchar.o \
 	wchar/mbrlen.o \
+	wchar/mbrtoc16.o \
+	wchar/mbrtoc32.o \
 	wchar/mbrtowc.o \
 	wchar/_mbstowcs_r.o \
 	wchar/_mbtowc_r.o \

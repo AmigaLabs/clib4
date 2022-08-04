@@ -1,3 +1,4 @@
+#define __USE_INLINE__
 #include <stdio.h>
 #include <stdlib.h>
 #include <proto/dos.h>

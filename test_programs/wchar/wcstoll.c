@@ -2,7 +2,7 @@
 #include <wchar.h>
 
 int main() {
-    wchar_t wsNumbers[] = L"1856892505 17b00a12b -01100011010110000010001101100 0x6fffff";
+    wchar_t *wsNumbers = L"1856892505 17b00a12b -01100011010110000010001101100 0x6fffff";
     wchar_t *pEnd;
     long long int lli1, lli2, lli3, lli4;
     lli1 = wcstoll(wsNumbers, &pEnd, 10);
