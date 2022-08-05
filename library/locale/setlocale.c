@@ -54,7 +54,6 @@ setlocale(int category, const char *locale) {
         if (LocaleBase != NULL) {
             if (strcmp(locale, "C") != SAME && strcmp(locale, "C-UTF-8") != SAME) {
                 SHOWMSG("this is not the 'C' locale");
-
                 /* The empty string stands for the default locale. */
                 if (locale[0] == '\0')
                     loc = OpenLocale(NULL);
@@ -120,7 +119,7 @@ setlocale(int category, const char *locale) {
 
                 if (loc == NULL) {
                     SHOWMSG("couldn't open the locale");
-                    result = (char *)locale;
+                    result = NULL;
 
                     __set_errno(ENOENT);
                     goto out;

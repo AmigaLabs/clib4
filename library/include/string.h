@@ -83,6 +83,20 @@ extern char *index(const char *s, int c);
 extern char *rindex(const char *s, int c);
 #endif
 
+/* These function names are used on Windows and perhaps other systems.  */
+#ifndef strcmpi
+#define strcmpi strcasecmp
+#endif
+#ifndef stricmp
+#define stricmp strcasecmp
+#endif
+#ifndef strncmpi
+#define strncmpi strncasecmp
+#endif
+#ifndef strnicmp
+#define strnicmp strncasecmp
+#endif
+
 #ifdef _GNU_SOURCE
 #define	strdupa(x)	strcpy(alloca(strlen(x)+1),x)
 extern int strverscmp(const char *s1, const char *s2);
