@@ -1,26 +1,30 @@
 /*
  * $Id: stdlib_random.c,v 1.0 2021-03-22 20:10:26 clib2devs Exp $
 */
+#define _XOPEN_SOURCE
 
 #ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
+#include "../stdlib/stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-
-uint32_t lcg31(uint32_t x) {
+uint32_t
+lcg31(uint32_t x) {
     return (1103515245 * x + 12345) & 0x7fffffff;
 }
 
-uint64_t lcg64(uint64_t x) {
+uint64_t
+lcg64(uint64_t x) {
     return 6364136223846793005ull * x + 1;
 }
 
-void *savestate() {
+void *
+savestate() {
     __global_clib2->x[-1] = (__global_clib2->n << 16) | (__global_clib2->i << 8) | __global_clib2->j;
     return __global_clib2->x - 1;
 }
 
-void loadstate(uint32_t *state) {
+void
+loadstate(uint32_t *state) {
     __global_clib2->x = state + 1;
     __global_clib2->n = __global_clib2->x[-1] >> 16;
     __global_clib2->i = (__global_clib2->x[-1] >> 8) & 0xff;

@@ -72,15 +72,31 @@ extern div_t div(int n, int d);
 extern ldiv_t ldiv(long n, long d);
 
 extern int rand(void);
-extern long random(void);
 extern void srand(unsigned int seed);
-extern void srandom(unsigned int seed);
-extern double erand48 (unsigned short subi[3]);
-extern long jrand48 (unsigned short subi[3]);
-extern long nrand48 (unsigned short subi[3]);
 
+#if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
+ || defined(_BSD_SOURCE)
+extern long random(void);
+extern void srandom(unsigned int seed);
 extern char *initstate(unsigned int seed, char *state, size_t size);
 extern char *setstate(const char *state);
+extern int putenv(const char *string);
+extern char *l64a (long x0);
+extern long a64l (const char *s);
+extern void setkey(const char *key);
+
+double drand48 (void);
+double erand48 (unsigned short subi[3]);
+long int lrand48 (void);
+long int nrand48 (unsigned short subi[3]);
+long mrand48 (void);
+long jrand48 (unsigned short subi[3]);
+void srand48 (long);
+unsigned short *seed48 (unsigned short subi[3]);
+void lcong48 (unsigned short subi[7]);
+
+#endif
+
 
 extern int system(const char *command);
 extern void exit(int status);
@@ -108,7 +124,6 @@ extern int rand_r(unsigned int *seed);
 
 extern char *mktemp(char *name_template);
 extern int mkstemp(char *name_template);
-extern int putenv(const char *string);
 extern int unsetenv(const char *name);
 extern int setenv(const char *name, const char *value, int overwrite);
 

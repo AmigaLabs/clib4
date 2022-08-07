@@ -353,6 +353,24 @@ C_STAT := \
 	stat/umask.o
 
 C_STDIO := \
+    prng/__rand48_step.o \
+    prng/__seed48.o \
+    prng/drand48.o \
+    prng/erand48.o \
+    prng/inistate.o \
+    prng/jrand48.o \
+    prng/lcong48.o \
+    prng/lrand48.o \
+    prng/mrand48.o \
+    prng/nrand48.o \
+    prng/rand.o \
+    prng/rand_r.o \
+    prng/random.o \
+    prng/seed48.o \
+    prng/setstate.o \
+    prng/srand.o \
+    prng/srand48.o \
+    prng/srandom.o \
 	stdio/asprintf.o \
 	stdio/change_fd_action.o \
 	stdio/change_fd_user_data.o \
@@ -460,6 +478,7 @@ C_STDIO := \
 	stdio/vsprintf_hook_entry.o
 
 C_STDLIB := \
+	stdlib/a64l.o \
 	stdlib/abort.o \
 	stdlib/abs.o \
 	stdlib/aligned_alloc.o \
@@ -492,9 +511,9 @@ C_STDLIB := \
 	stdlib/getenv.o \
 	stdlib/getsp.o \
 	stdlib/get_errno.o \
-	stdlib/inistate.o \
 	stdlib/isresident.o \
 	stdlib/itoa.o \
+	stdlib/l64a.o \
 	stdlib/labs.o \
 	stdlib/llabs.o \
 	stdlib/lltoa.o \
@@ -522,10 +541,6 @@ C_STDLIB := \
 	stdlib/program_name.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
-	stdlib/rand.o \
-	stdlib/random.o \
-	stdlib/rand_r.o \
-	stdlib/rand48.o \
 	stdlib/realloc.o \
 	stdlib/resetmemstats.o \
 	stdlib/secure_getenv.o \
@@ -534,12 +549,9 @@ C_STDLIB := \
 	stdlib/setjmp.o \
 	stdlib/set_errno.o \
 	stdlib/set_process_window.o \
-	stdlib/setstate.o \
 	stdlib/shared_objs.o \
 	stdlib/shell_escape.o \
 	stdlib/showerror.o \
-	stdlib/srand.o \
-	stdlib/srandom.o \
 	stdlib/stacksize.o \
 	stdlib/stack_usage.o \
 	stdlib/swapstack.o \

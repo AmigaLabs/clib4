@@ -1,13 +1,14 @@
 /*
  * $Id: stdlib_srandom.c,v 1.0 2021-01-24 20:10:26 clib2devs Exp $
 */
+#define _XOPEN_SOURCE
 
 #ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
+#include "../stdlib/stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-
-void __srandom(unsigned seed) {
+void
+__srandom(unsigned seed) {
     int k;
     uint64_t s = seed;
 
