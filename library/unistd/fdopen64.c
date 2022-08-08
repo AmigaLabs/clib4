@@ -2,8 +2,6 @@
  * $Id: unistd_fdopen64.c,v 1.0 2021-02-05 13:28:00 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */

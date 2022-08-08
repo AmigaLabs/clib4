@@ -2,8 +2,6 @@
  * $Id: stdlib_gcvt.c,v 1.0 2022-08-22 12:04:25 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */

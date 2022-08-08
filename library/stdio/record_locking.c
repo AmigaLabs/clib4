@@ -2,8 +2,6 @@
  * $Id: stdio_record_locking.c,v 1.20 2021-01-31 14:39:23 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */

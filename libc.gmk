@@ -108,64 +108,7 @@ C_ICONV := \
 	iconv/iconv.o \
 	iconv/iconv_close.o \
 	iconv/iconv_open.o \
-	iconv/aliasesbi.o \
-	iconv/aliasesi.o \
-	iconv/iconvnls.o \
-	iconv/nullconv.o \
-	iconv/ucsconv.o \
-	iconv/ccs/big5.o \
-	iconv/ccs/ccsbi.o \
-	iconv/ces/cesbi.o \
-	iconv/ccs/cp775.o \
-	iconv/ccs/cns11643_plane1.o \
-	iconv/ccs/cns11643_plane2.o \
-	iconv/ccs/cns11643_plane14.o \
-	iconv/ccs/cp850.o \
-	iconv/ccs/cp852.o \
-	iconv/ccs/cp855.o \
-	iconv/ccs/cp866.o \
-	iconv/ccs/iso_8859_1.o \
-	iconv/ccs/iso_8859_2.o \
-	iconv/ccs/iso_8859_3.o \
-	iconv/ccs/iso_8859_4.o \
-	iconv/ccs/iso_8859_5.o \
-	iconv/ccs/iso_8859_6.o \
-	iconv/ccs/iso_8859_7.o \
-	iconv/ccs/iso_8859_8.o \
-	iconv/ccs/iso_8859_9.o \
-	iconv/ccs/iso_8859_10.o \
-	iconv/ccs/iso_8859_11.o \
-	iconv/ccs/iso_8859_13.o \
-	iconv/ccs/iso_8859_14.o \
-	iconv/ccs/iso_8859_15.o \
-	iconv/ccs/iso_ir_111.o \
-	iconv/ccs/jis_x0201_1976.o \
-	iconv/ccs/jis_x0208_1990.o \
-	iconv/ccs/jis_x0212_1990.o \
-	iconv/ccs/koi8_r.o \
-	iconv/ccs/koi8_ru.o \
-	iconv/ccs/koi8_u.o \
-	iconv/ccs/koi8_uni.o \
-	iconv/ccs/ksx1001.o \
-	iconv/ccs/win_1250.o \
-	iconv/ccs/win_1251.o \
-	iconv/ccs/win_1252.o \
-	iconv/ccs/win_1253.o \
-	iconv/ccs/win_1254.o \
-	iconv/ccs/win_1255.o \
-	iconv/ccs/win_1256.o \
-	iconv/ccs/win_1257.o \
-	iconv/ccs/win_1258.o \
-	iconv/ces/euc.o \
-	iconv/ces/table.o \
-	iconv/ces/table-pcs.o \
-	iconv/ces/ucs-2.o \
-	iconv/ces/ucs-2-internal.o \
-	iconv/ces/ucs-4.o \
-	iconv/ces/ucs-4-internal.o \
-	iconv/ces/us-ascii.o \
-	iconv/ces/utf-16.o \
-	iconv/ces/utf-8.o
+	iconv/iconv_priv.o
 
 C_INTTYPES := \
 	inttypes/imaxabs.o \

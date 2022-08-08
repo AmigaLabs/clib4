@@ -2,7 +2,6 @@
  * $Id: string_strverscmp.c,v 1.0 2022-05-06 11:54:27 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
 #include <stdint.h>
 #include <string.h>
 #include <ctype.h>

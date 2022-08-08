@@ -2,8 +2,6 @@
  * $Id: stdio_fsetpos64.c,v 1.0 2021-02-05 18:05:55 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */

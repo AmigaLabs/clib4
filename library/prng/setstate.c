@@ -1,8 +1,6 @@
 /*
  * $Id: stdlib_setstate.c,v 1.0 2022-02-23 12:23:12 clib2devs Exp $
 */
-#define _XOPEN_SOURCE
-
 #ifndef _STDLIB_HEADERS_H
 #include "../stdlib/stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */

@@ -2,8 +2,6 @@
  * $Id: unistd_usleep.c,v 1.4 2021-02-02 18:49:27 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */

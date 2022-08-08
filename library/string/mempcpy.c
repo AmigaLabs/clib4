@@ -2,8 +2,6 @@
  * $Id: string_mempcpy.c,v 1.0 2021-03-29 16:54:36 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */

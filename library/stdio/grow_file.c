@@ -2,8 +2,6 @@
  * $Id: stdio_grow_file.c,v 1.9 2021-01-31 17:35:41 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */

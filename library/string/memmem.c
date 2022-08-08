@@ -2,8 +2,6 @@
  * $Id: string_memmem.c,v 1.0 2022-05-06 11:02:51 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
