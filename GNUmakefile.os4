@@ -124,7 +124,6 @@ include libm.gmk
 include libamiga.gmk
 include libprofile.gmk
 include libcrypt.gmk
-include libresolv.gmk
 
 prepare:
 	-$(MAKEDIR) $(INSTALL_PREFIX)/lib
@@ -159,12 +158,10 @@ version:
 	$(COPY) c.lib_rev.rev amiga.lib_rev.rev
 	$(COPY) c.lib_rev.rev profile.lib_rev.rev
 	$(COPY) c.lib_rev.rev m.lib_rev.rev
-	$(COPY) c.lib_rev.rev resolv.lib_rev.rev
 	bumprev amiga.lib
 	bumprev c.lib
 	bumprev profile.lib
 	bumprev m.lib
-	bumprev resolv.lib
 
 ##############################################################################
 

@@ -1,11 +1,15 @@
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <net/if.h>
-#include <arpa/inet.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
+#ifndef _SOCKET_HEADERS_H
+#include "../socket/socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
+
+#ifndef _STRING_HEADERS_H
+#include "string_headers.h"
+#endif /* _STRING_HEADERS_H */
+
+#ifndef _TIME_HEADERS_H
+#include "time_headers.h"
+#endif /* _TIME_HEADERS_H */
+
 #include "lookup.h"
 
 int

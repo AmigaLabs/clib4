@@ -98,6 +98,10 @@ struct linger
  */
 #define	SOL_SOCKET	0xffff	/* options for socket level */
 
+#define SOL_IP          0
+#define SOL_IPV6        41
+#define SOL_ICMPV6      58
+
 /*
  * Address families.
  */

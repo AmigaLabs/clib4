@@ -104,7 +104,8 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 
 ### libresolv
 
-Added resolv library to use dns functions. It needs libpthread.a
+Added resolv library to use dns functions. A lot of socket functions that was using bsdsocket.library now use this library.
+And thanks to this library more functions have been added to socket library 
 
 ### libcrypt
 

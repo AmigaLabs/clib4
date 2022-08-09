@@ -1,4 +1,4 @@
-/* $Id: socket_res_query.c,v 1.0 2022-03-14 10:44:15 clib2devs Exp $
+/* $Id: resolv_dns_parse.c,v 1.0 2022-08-09 10:44:15 clib2devs Exp $
 
    Copyright (C) 2005-2006, 2008-2020 Free Software Foundation, Inc.
 
@@ -32,29 +32,43 @@
  * SOFTWARE.
  */
 
-#define _DEFAULT_SOURCE
-
 #ifndef _SOCKET_HEADERS_H
-#include "socket/socket_headers.h"
+#include "../socket/socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
+#ifndef _STRING_HEADERS_H
+#include "string_headers.h"
+#endif /* _STRING_HEADERS_H */
+
+#include "lookup.h"
+
 int
-res_query(const char *name, int class, int type, unsigned char *dest, int len) {
-    unsigned char q[280];
-    int ql = res_mkquery(0, name, class, type, 0, 0, 0, q, sizeof q);
-    if (ql < 0) return ql;
-    int r = res_send(q, ql, dest, len);
-    if (r < 12) {
-        __set_h_errno(TRY_AGAIN);
-        return -1;
+__dns_parse(const unsigned char *r, int rlen, int (*callback)(void *, int, const void *, int, const void *), void *ctx) {
+    int qdcount, ancount;
+    const unsigned char *p;
+    int len;
+
+    if (rlen < 12) return -1;
+    if ((r[3] & 15)) return 0;
+    p = r + 12;
+    qdcount = r[4] * 256 + r[5];
+    ancount = r[6] * 256 + r[7];
+    if (qdcount + ancount > 64) return -1;
+    while (qdcount--) {
+        while (p - r < rlen && *p - 1U < 127) p++;
+        if (*p > 193 || (*p == 193 && p[1] > 254) || p > r + rlen - 6)
+            return -1;
+        p += 5 + !!*p;
     }
-    if ((dest[3] & 15) == 3) {
-        __set_h_errno(HOST_NOT_FOUND);
-        return -1;
+    while (ancount--) {
+        while (p - r < rlen && *p - 1U < 127) p++;
+        if (*p > 193 || (*p == 193 && p[1] > 254) || p > r + rlen - 6)
+            return -1;
+        p += 1 + !!*p;
+        len = p[8] * 256 + p[9];
+        if (p + len > r + rlen) return -1;
+        if (callback(ctx, p[1], p + 10, len, r) < 0) return -1;
+        p += 10 + len;
     }
-    if ((dest[3] & 15) == 0 && !dest[6] && !dest[7]) {
-        __set_h_errno(NO_DATA);
-        return -1;
-    }
-    return r;
+    return 0;
 }
