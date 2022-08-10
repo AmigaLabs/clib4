@@ -83,7 +83,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
         SHOWPOINTER(param);
 
         result = __IoctlSocket(fd->fd_Socket, request, param);
-
+        Printf("result = %ld\n", result);
         if (result == 0) {
             const int *option = (const int *) param;
 

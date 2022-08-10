@@ -117,10 +117,13 @@ dns_parse_callback(void *c, int rr, const void *data, int len, const void *packe
 
 }
 
-int getnameinfo(const struct sockaddr *restrict sa, socklen_t sl,
+int
+getnameinfo(const struct sockaddr *restrict sa, socklen_t sl,
                 char *restrict node, socklen_t nodelen,
                 char *restrict serv, socklen_t servlen,
                 int flags) {
+
+    __check_abort();
 
     char ptr[PTR_MAX];
     char buf[256], num[3 * sizeof(int) + 1];

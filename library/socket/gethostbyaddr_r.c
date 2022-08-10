@@ -6,9 +6,13 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-int gethostbyaddr_r(const void *a, socklen_t l, int af,
+int
+gethostbyaddr_r(const void *a, socklen_t l, int af,
                     struct hostent *h, char *buf, size_t buflen,
                     struct hostent **res, int *err) {
+
+    __check_abort();
+
     union {
         struct sockaddr_in sin;
         struct sockaddr_in6 sin6;
@@ -19,8 +23,10 @@ int gethostbyaddr_r(const void *a, socklen_t l, int af,
     *res = 0;
 
     /* Load address argument into sockaddr structure */
-    if (af == AF_INET6 && l == 16) memcpy(&sa.sin6.sin6_addr, a, 16);
-    else if (af == AF_INET && l == 4) memcpy(&sa.sin.sin_addr, a, 4);
+    if (af == AF_INET6 && l == 16)
+        memcpy(&sa.sin6.sin6_addr, a, 16);
+    else if (af == AF_INET && l == 4)
+        memcpy(&sa.sin.sin_addr, a, 4);
     else {
         *err = NO_RECOVERY;
         return EINVAL;
@@ -29,7 +35,8 @@ int gethostbyaddr_r(const void *a, socklen_t l, int af,
     /* Align buffer and check for space for pointers and ip address */
     i = (uintptr_t) buf & sizeof(char *) - 1;
     if (!i) i = sizeof(char *);
-    if (buflen <= 5 * sizeof(char *) - i + l) return ERANGE;
+    if (buflen <= 5 * sizeof(char *) - i + l)
+        return ERANGE;
     buf += sizeof(char *) - i;
     buflen -= 5 * sizeof(char *) - i + l;
 
@@ -65,5 +72,6 @@ int gethostbyaddr_r(const void *a, socklen_t l, int af,
     h->h_length = l;
     h->h_name = h->h_aliases[0];
     *res = h;
+
     return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: socket_inet_network.c,v 1.5 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: socket_inet_network.c,v 1.6 2022-08-10 12:04:24 clib2devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -8,26 +8,5 @@
 
 in_addr_t
 inet_network(const char *cp) {
-    in_addr_t result = ~0UL;
-
-    ENTER();
-
-    assert(cp != NULL);
-    assert(__SocketBase != NULL);
-
-    if (cp == NULL) {
-        SHOWMSG("invalid cp parameter");
-
-        __set_errno(EFAULT);
-        goto out;
-    }
-
-    result = __inet_network((char *) cp);
-
-out:
-
-    __check_abort();
-
-    RETURN(result);
-    return (result);
+    return ntohl(inet_addr(cp));
 }

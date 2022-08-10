@@ -1,5 +1,5 @@
 /*
- * $Id: socket_inet_ntoa.c,v 1.3 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: socket_inet_ntoa.c,v 1.4 2022-08-10 12:04:24 clib2devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -14,9 +14,10 @@ inet_ntoa(struct in_addr in) {
 
     SHOWVALUE(in.s_addr);
 
-    assert(__SocketBase != NULL);
-
-    result = __Inet_NtoA(in.s_addr);
+    static char buf[16] = {0};
+    unsigned char *a = (void *)&in;
+    snprintf(buf, sizeof buf, "%d.%d.%d.%d", a[0], a[1], a[2], a[3]);
+    result = buf;
 
     SHOWSTRING(result);
 

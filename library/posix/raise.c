@@ -81,7 +81,7 @@ raise(int sig) {
             if (handler == SIG_DFL) {
                 SHOWMSG("this is the default handler");
 
-                if (sig == SIGINT) {
+                if (sig == SIGINT || sig == SIGTERM) {
                     char break_string[80];
 
                     /* Turn off ^C checking for good. */
@@ -94,7 +94,7 @@ raise(int sig) {
 
                     SHOWMSG("bye, bye...");
                 }
-                    /* If we have a SIGALRM without associated handler don't call abort but exit directly */
+                /* If we have a SIGALRM without associated handler don't call abort but exit directly */
                 else if (sig != SIGALRM) {
                     /* Drop straight into abort(), which might call signal()
                        again but is otherwise guaranteed to eventually
@@ -109,16 +109,31 @@ raise(int sig) {
                     /* Since we got a signal we interrrupt every sleep function like nanosleep */
                     Signal((struct Task *) __global_clib2->self, SIGBREAKF_CTRL_E);
                 }
-            } else {
+            }
+            else if (handler == SIG_ERR) {
+                __set_errno(EINVAL);
+                result = ERROR;
+                goto out;
+            }
+            else {
                 SHOWMSG("calling the handler");
 
                 (*handler)(sig);
+
+                if (sig == SIGINT)
+                    SetSignal(0, SIGBREAKF_CTRL_C);
 
                 SHOWMSG("done.");
             }
 
             /* Unblock signal delivery again. */
             CLEAR_FLAG(local_signals_blocked, (1 << sig));
+        }
+        else {
+            if (sig == SIGINT) {
+                // Reset the signal bit cleared by __check_abort()
+                SetSignal(SIGBREAKF_CTRL_C, SIGBREAKF_CTRL_C);
+            }
         }
     } else {
         SHOWMSG("that signal is blocked");
