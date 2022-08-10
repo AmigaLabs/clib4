@@ -20,8 +20,7 @@ pclose(FILE *stream) {
 
     assert(stream != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
@@ -63,8 +62,7 @@ popen(const char *command, const char *type) {
 
     assert(command != NULL && type != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (command == NULL || type == NULL) {
         SHOWMSG("invalid parameters");

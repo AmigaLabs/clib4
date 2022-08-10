@@ -75,8 +75,7 @@ int
 vasprintf(char **ret, const char *format, va_list arg) {
     int result;
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     result = __vasprintf(NULL, 0, ret, format, arg);
 

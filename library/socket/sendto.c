@@ -43,8 +43,7 @@ sendto(int sockfd, const void *buff, size_t len, int flags, const struct sockadd
 
 out:
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

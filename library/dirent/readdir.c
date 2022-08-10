@@ -17,8 +17,7 @@ readdir(DIR *directory_pointer) {
 
     SHOWPOINTER(directory_pointer);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (directory_pointer == NULL) {
         SHOWMSG("ouch. invalid parameter");

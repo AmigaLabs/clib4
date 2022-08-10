@@ -55,8 +55,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
 
     assert(original_name != NULL || original_value != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (original_name == NULL && original_value == NULL) {
         SHOWMSG("invalid parameters");

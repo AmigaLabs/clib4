@@ -693,8 +693,7 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     SHOWPOINTER(f);
     SHOWSTRING(format);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     // Check for error in format string before writing anything to file.
     if (printf_core(0, format, &ap2, nl_arg, nl_type) < 0) {

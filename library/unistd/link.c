@@ -21,8 +21,7 @@ link(const char *existing_path, const char *new_path) {
 
     assert(existing_path != NULL && new_path != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (existing_path == NULL || new_path == NULL) {
         SHOWMSG("invalid parameters");

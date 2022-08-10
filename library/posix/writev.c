@@ -71,8 +71,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
         }
     } else {
         for (i = 0; i < vec_count; i++) {
-            if (__check_abort_enabled)
-                __check_abort();
+            __check_abort();
 
             if (iov[i].iov_len > 0) {
                 msg.fam_Action = file_action_write;

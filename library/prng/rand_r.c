@@ -22,8 +22,7 @@ rand_r(unsigned int *seed) {
     ENTER();
     SHOWPOINTER(seed);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     x = temper(*seed = *seed * 1103515245 + 12345) / 2;
 

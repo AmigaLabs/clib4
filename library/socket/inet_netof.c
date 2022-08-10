@@ -16,8 +16,7 @@ inet_netof(struct in_addr in) {
 
     result = __Inet_NetOf(in.s_addr);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

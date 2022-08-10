@@ -29,8 +29,7 @@ gethostname(const char *hostname, size_t size) {
 
 out:
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

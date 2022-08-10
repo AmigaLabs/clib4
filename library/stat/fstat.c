@@ -20,8 +20,7 @@ fstat(int file_descriptor, struct stat *buffer) {
 
     assert(buffer != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 

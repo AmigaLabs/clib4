@@ -24,8 +24,7 @@ vswscanf(const wchar_t *s, const wchar_t *format, va_list arg) {
 
     assert(s != NULL && format != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (format == NULL || s == NULL) {
         SHOWMSG("invalid parameters");

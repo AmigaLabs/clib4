@@ -29,8 +29,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
     __set_errno(0);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     /* F_DUPFD will need to modify the file descriptor table, which is why
        the stdio lock needs to be obtained here, before the individual

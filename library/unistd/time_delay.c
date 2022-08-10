@@ -24,8 +24,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     ULONG wait_mask;
     int result = 0;
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (__timer_request == NULL)
         return EINVAL;
@@ -78,8 +77,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     FreeSysObject(ASOT_MESSAGE, tr);
     FreeSysObject(ASOT_PORT, mp);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return result;

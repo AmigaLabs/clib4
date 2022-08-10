@@ -15,8 +15,7 @@ putenv(const char *string) {
 
     assert(string != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (string == NULL) {
         SHOWMSG("invalid string");

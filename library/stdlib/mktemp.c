@@ -31,8 +31,7 @@ mktemp(char *name_template) {
 
     assert(name_template != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (name_template == NULL) {
         SHOWMSG("invalid name template");

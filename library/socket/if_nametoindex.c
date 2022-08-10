@@ -41,8 +41,7 @@ if_nametoindex(const char *ifname) {
     index = 0;
 
 out:
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(index);
     return index;

@@ -22,8 +22,7 @@ fclose(FILE *stream) {
 
     assert(stream != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");

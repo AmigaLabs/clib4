@@ -64,8 +64,7 @@ out:
     __stdio_unlock();
     __delete_semaphore(lock);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

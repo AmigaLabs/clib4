@@ -14,8 +14,7 @@ getwd(char *buf) {
 
     assert(buf != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     char tmpbuf[PATH_MAX];
 

@@ -48,8 +48,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     assert(path_name != NULL);
     assert(UtilityBase != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 

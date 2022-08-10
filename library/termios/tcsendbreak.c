@@ -30,8 +30,7 @@ tcsendbreak(int file_descriptor, int duration) {
     SHOWVALUE(file_descriptor);
     SHOWVALUE(duration);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 

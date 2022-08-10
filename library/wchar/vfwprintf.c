@@ -502,8 +502,7 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
 
     ENTER();
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     // Check for error in format string before writing anything to file.
     if (wprintf_core(0, format, &ap2, nl_arg, nl_type) < 0) {

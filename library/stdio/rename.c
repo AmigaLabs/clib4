@@ -19,8 +19,7 @@ int rename(const char *oldname, const char *newname) {
 
     assert(oldname != NULL && newname != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (oldname == NULL || newname == NULL) {
         SHOWMSG("invalid parameters");

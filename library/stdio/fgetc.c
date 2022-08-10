@@ -21,8 +21,7 @@ __fgetc(FILE *stream) {
     assert(file->iob_BufferSize > 0);
 
     if (__iob_read_buffer_is_empty(file)) {
-        if (__check_abort_enabled)
-            __check_abort();
+        __check_abort();
 
         if (__fill_iob_read_buffer(file) < 0)
             goto out;

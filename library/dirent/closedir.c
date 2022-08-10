@@ -78,8 +78,7 @@ closedir(DIR *directory_pointer) {
 
     SHOWPOINTER(directory_pointer);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __dirent_lock();
 

@@ -18,8 +18,7 @@ lchown(const char *path_name, uid_t owner, gid_t group) {
 
     assert(path_name != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (path_name == NULL) {
         SHOWMSG("invalid path name");

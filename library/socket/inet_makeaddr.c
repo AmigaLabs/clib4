@@ -16,8 +16,7 @@ inet_makeaddr(in_addr_t net, in_addr_t host) {
 
     result.s_addr = __Inet_MakeAddr((ULONG) net, (ULONG) host);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result.s_addr);
     return (result);

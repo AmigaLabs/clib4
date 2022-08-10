@@ -26,8 +26,7 @@ getopt(int argc, char *const argv[], const char *opts) {
 
     assert(argc > 0 && argv != NULL && opts != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (argv == NULL || opts == NULL) {
         SHOWMSG("invalid parameters");

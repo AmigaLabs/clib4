@@ -25,8 +25,7 @@ tcflush(int file_descriptor, int queue) {
 
     SHOWVALUE(file_descriptor);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 

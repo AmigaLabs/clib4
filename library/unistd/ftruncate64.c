@@ -23,8 +23,7 @@ ftruncate64(int file_descriptor, _off64_t length)
     assert(__fd[file_descriptor] != NULL);
     assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 

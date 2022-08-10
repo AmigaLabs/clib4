@@ -21,8 +21,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
 
     assert(buf != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 

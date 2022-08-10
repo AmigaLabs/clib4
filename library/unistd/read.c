@@ -22,8 +22,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
     assert(buffer != NULL);
     assert((int) num_bytes >= 0);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 

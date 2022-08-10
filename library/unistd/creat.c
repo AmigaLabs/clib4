@@ -15,8 +15,7 @@ creat(const char *path_name, mode_t mode) {
     SHOWSTRING(path_name);
     SHOWVALUE(mode);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     assert(path_name != NULL);
 
