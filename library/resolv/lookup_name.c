@@ -19,7 +19,8 @@
 static int
 is_valid_hostname(const char *host) {
     const unsigned char *s;
-    if (strnlen(host, 255) - 1 >= 254 || mbstowcs(0, host, 0) == -1) return 0;
+    if (strnlen(host, 255) - 1 >= 254 || mbstowcs(0, host, 0) == -1)
+        return 0;
     for (s = (void *) host; *s >= 0x80 || *s == '.' || *s == '-' || isalnum(*s); s++);
     return !*s;
 }
@@ -27,7 +28,8 @@ is_valid_hostname(const char *host) {
 static int
 name_from_null(struct address buf[static 2], const char *name, int family, int flags) {
     int cnt = 0;
-    if (name) return 0;
+    if (name)
+        return 0;
     if (flags & AI_PASSIVE) {
         if (family != AF_INET6)
             buf[cnt++] = (struct address) {.family = AF_INET};
@@ -39,6 +41,7 @@ name_from_null(struct address buf[static 2], const char *name, int family, int f
         if (family != AF_INET)
             buf[cnt++] = (struct address) {.family = AF_INET6, .addr = {[15] = 1}};
     }
+
     return cnt;
 }
 
@@ -50,6 +53,7 @@ name_from_numeric(struct address buf[static 1], const char *name, int family) {
 static int
 name_from_hosts(struct address buf[static MAXADDRS], char canon[static 256], const char *name, int family) {
     char line[512];
+
     size_t l = strlen(name);
     int cnt = 0, badfam = 0, have_canon = 0;
     unsigned char _buf[1032];
@@ -316,8 +320,9 @@ __lookup_name(struct address buf[static MAXADDRS], char canon[static 256], const
 
     /* Try each backend until there's at least one result. */
     cnt = name_from_null(buf, name, family, flags);
-    if (!cnt) cnt = name_from_numeric(buf, name, family);
-    if (!cnt && !(flags & AI_NUMERICHOST)) {
+    if (!cnt)
+        cnt = name_from_numeric(buf, name, family);
+    if (cnt != 1 && !(flags & AI_NUMERICHOST)) {
         cnt = name_from_hosts(buf, canon, name, family);
         if (!cnt) cnt = name_from_dns_search(buf, canon, name, family);
     }
@@ -347,9 +352,12 @@ __lookup_name(struct address buf[static MAXADDRS], char canon[static 256], const
 
     /* No further processing is needed if there are fewer than 2
      * results or if there are only IPv4 results. */
-    if (cnt < 2 || family == AF_INET) return cnt;
-    for (i = 0; i < cnt; i++) if (buf[i].family != AF_INET) break;
-    if (i == cnt) return cnt;
+    if (cnt < 2 || family == AF_INET)
+        return cnt;
+    for (i = 0; i < cnt; i++)
+        if (buf[i].family != AF_INET) break;
+    if (i == cnt)
+        return cnt;
 
     //int cs;
     //pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
@@ -380,11 +388,9 @@ __lookup_name(struct address buf[static MAXADDRS], char canon[static 256], const
             sa = &sa6;
             salen = sizeof sa6;
         } else {
-            memcpy(sa6.sin6_addr.s6_addr,
-                   "\0\0\0\0\0\0\0\0\0\0\xff\xff", 12);
+            memcpy(sa6.sin6_addr.s6_addr, "\0\0\0\0\0\0\0\0\0\0\xff\xff", 12);
             memcpy(da6.sin6_addr.s6_addr + 12, buf[i].addr, 4);
-            memcpy(da6.sin6_addr.s6_addr,
-                   "\0\0\0\0\0\0\0\0\0\0\xff\xff", 12);
+            memcpy(da6.sin6_addr.s6_addr, "\0\0\0\0\0\0\0\0\0\0\xff\xff", 12);
             memcpy(da6.sin6_addr.s6_addr + 12, buf[i].addr, 4);
             memcpy(&da4.sin_addr, buf[i].addr, 4);
             da = &da4;
@@ -397,7 +403,7 @@ __lookup_name(struct address buf[static MAXADDRS], char canon[static 256], const
         int dlabel = dpolicy->label;
         int dprec = dpolicy->prec;
         int prefixlen = 0;
-        int fd = socket(family, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
+        int fd = socket(family, SOCK_DGRAM, IPPROTO_UDP);
         if (fd >= 0) {
             if (!connect(fd, da, dalen)) {
                 key |= DAS_USABLE;
@@ -410,8 +416,7 @@ __lookup_name(struct address buf[static MAXADDRS], char canon[static 256], const
                         key |= DAS_MATCHINGSCOPE;
                     if (dlabel == labelof(&sa6.sin6_addr))
                         key |= DAS_MATCHINGLABEL;
-                    prefixlen = prefixmatch(&sa6.sin6_addr,
-                                            &da6.sin6_addr);
+                    prefixlen = prefixmatch(&sa6.sin6_addr, &da6.sin6_addr);
                 }
             }
             close(fd);

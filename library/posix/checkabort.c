@@ -41,7 +41,8 @@ __check_abort(void) {
             process = ProcessScan(&h, (CONST_APTR) pid, 0);
             /* If we find the process send a signal to kill it */
             while (process > 0) {
-                /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
+                /* Send a SIGBREAKF_CTRL_F signal until the timer task return to Wait state
+                 * and can get the signal */
                 Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
                 process = ProcessScan(&h, (CONST_APTR) pid, 0);
                 usleep(100);

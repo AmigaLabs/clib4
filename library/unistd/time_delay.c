@@ -59,8 +59,16 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
         if (CheckIO((struct IORequest *) tr))  /* If request is complete... */
             WaitIO((struct IORequest *) tr);   /* clean up and remove reply */
         AbortIO((struct IORequest *) tr);
-        /* Return EINTR since the request has been interrupted */
-        result = EINTR;
+        if (signals & SIGBREAKF_CTRL_E) {
+            /* Return EINTR since the request has been interrupted by alarm */
+            result = EINTR;
+        }
+        else {
+            /* Reset SIGBREAKF_CTRL_C to set state since __check_abort can
+             * break the execution
+             */
+            SetSignal(SIGBREAKF_CTRL_C, SIGBREAKF_CTRL_C);
+        }
     }
     WaitIO((struct IORequest *) tr);
 
@@ -69,6 +77,9 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 
     FreeSysObject(ASOT_MESSAGE, tr);
     FreeSysObject(ASOT_PORT, mp);
+
+    if (__check_abort_enabled)
+        __check_abort();
 
     RETURN(result);
     return result;
