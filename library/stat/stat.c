@@ -14,7 +14,8 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-int stat(const char *path_name, struct stat *st) {
+int
+stat(const char *path_name, struct stat *st) {
     struct name_translation_info path_name_nti;
     struct ExamineData *fib = NULL;
     struct Lock *fl;
@@ -47,6 +48,8 @@ int stat(const char *path_name, struct stat *st) {
 
         if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
             goto out;
+
+        st->st_name = (char *) path_name;
 
         /* The pseudo root directory is a very special case indeed.
             * We make up some pseudo data for it.
@@ -97,6 +100,7 @@ int stat(const char *path_name, struct stat *st) {
     fl = BADDR(file_lock);
 
     __convert_file_info_to_stat(fl->fl_Port, fib, st);
+    st->st_name = (char *) path_name;
 
     result = OK;
 

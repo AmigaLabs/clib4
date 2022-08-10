@@ -44,8 +44,7 @@ readdir(DIR *directory_pointer) {
             result = &dh->dh_DirectoryEntry;
         } else {
             struct ExamineData *fib = NULL;
-            D_S(
-            struct bcpl_name, bcpl_name);
+            D_S(struct bcpl_name, bcpl_name);
             char *name = (char *) bcpl_name->name;
             BPTR dir_lock;
 

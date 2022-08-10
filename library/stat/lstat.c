@@ -50,6 +50,8 @@ lstat(const char *path_name, struct stat *st) {
         if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
             goto out;
 
+        st->st_name = (char *) path_name;
+
         /* The pseudo root directory is a very special case indeed.
             We make up some pseudo data for it. */
         if (path_name_nti.is_root) {
@@ -110,6 +112,7 @@ lstat(const char *path_name, struct stat *st) {
         st->st_atime = mtime;
         st->st_ctime = mtime;
         st->st_nlink = 1;
+        st->st_name = (char *) path_name;
     } else {
         fib = ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE);
         if (fib == NULL) {
@@ -122,6 +125,7 @@ lstat(const char *path_name, struct stat *st) {
         fl = BADDR(file_lock);
 
         __convert_file_info_to_stat(fl->fl_Port, fib, st);
+        st->st_name = (char *) path_name;
     }
 
     result = OK;

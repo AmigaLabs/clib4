@@ -24,6 +24,7 @@ __BEGIN_DECLS
 #define O_SYNC		(0)
 #define O_NOCTTY	(0)
 #define O_ASYNC		(1<<7)
+#define O_PATH      (1<<8)
 
 #define	O_ACCMODE	(O_RDONLY|O_WRONLY|O_RDWR)
 
@@ -60,11 +61,13 @@ struct flock
 #define F_UNLCK		2	/* unlock */
 #define F_WRLCK		3	/* exclusive or write lock */
 
-#define FD_CLOEXEC      1       /* posix */
+#define FD_CLOEXEC  1   /* posix */
+#define AT_FDCWD    (-100) /* openat */
 
 /****************************************************************************/
 
 extern int open(const char *path_name, int open_flag, ... /* mode_t mode */ );
+extern int openat(int fd, const char *filename, int flags, ...);
 extern int creat(const char * path_name, mode_t mode);
 extern int close(int file_descriptor);
 extern off_t lseek(int file_descriptor, off_t offset, int mode);

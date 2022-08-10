@@ -21,7 +21,8 @@ find_by_name(struct List *list, const char *name) {
     return (result);
 }
 
-DIR *opendir(const char *path_name) {
+DIR *
+opendir(const char *path_name) {
     struct name_translation_info path_name_nti;
     struct DirectoryHandle *dh = NULL;
     DIR *result = NULL;

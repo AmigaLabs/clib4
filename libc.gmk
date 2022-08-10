@@ -98,6 +98,7 @@ C_DIRENT := \
 	dirent/alphasort.o \
 	dirent/closedir.o \
 	dirent/dirfd.o \
+	dirent/fdopendir.o \
 	dirent/opendir.o \
 	dirent/readdir.o \
 	dirent/readdir_r.o \
@@ -676,6 +677,7 @@ C_UNISTD := \
 	unistd/lock.o \
 	unistd/lseek.o \
 	unistd/open.o \
+	unistd/openat.o \
 	unistd/read.o \
 	unistd/write.o \
 	unistd/access.o \

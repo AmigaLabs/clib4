@@ -147,6 +147,10 @@ Use `-lcrypt` option when linking.
 To use `debug` functions you have to explicitly pass `DEBUG=true` to GNUMakefile.os4 and 
 debug functions will be enabled 
 
+### Misc
+
+`stat` struct contains st_name as an extension that contains the file/dir name.
+
 ### Known problems
 
 Don't call `exit()` function in an `alarm()` handler otherwise your program will be stuck at exit.

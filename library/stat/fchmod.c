@@ -152,6 +152,6 @@ __convert_stat64_to_stat(const struct stat64 *st64, struct stat *st) {
     st->st_spare1 = st->st_atime;
     st->st_spare2 = st->st_mtime;
     st->st_spare3 = st->st_ctime;
-
+    st->st_name = st64->st_name;
     LEAVE();
 }

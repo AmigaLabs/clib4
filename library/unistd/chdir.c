@@ -8,122 +8,111 @@
 
 /* ZZZ chdir() must be reentrant according to POSIX.1 */
 int
-chdir(const char *path_name)
-{
-	struct name_translation_info path_name_nti;
-	BPTR dir_lock = ZERO;
-	struct ExamineData *status = NULL;
-	int result = ERROR;
+chdir(const char *path_name) {
+    struct name_translation_info path_name_nti;
+    BPTR dir_lock = ZERO;
+    struct ExamineData *status = NULL;
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(path_name);
+    SHOWSTRING(path_name);
 
-	assert(path_name != NULL);
+    assert(path_name != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    if (__check_abort_enabled)
+        __check_abort();
 
-    if (path_name == NULL)
-    {
+    if (path_name == NULL) {
         SHOWMSG("invalid path name");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	if (__unix_path_semantics)
-	{
-		if (path_name[0] == '\0')
-		{
-			SHOWMSG("no name given");
+    if (__unix_path_semantics) {
+        if (path_name[0] == '\0') {
+            SHOWMSG("no name given");
 
-			__set_errno(ENOENT);
-			goto out;
-		}
+            __set_errno(ENOENT);
+            goto out;
+        }
 
-		if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
-			goto out;
+        if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
+            goto out;
 
-		/* The pseudo root directory is a very special case indeed. We
-			* just accept it and don't pretend to have obtained a lock
-			* on anything.
-			*/
-		if (path_name_nti.is_root)
-		{
-			SHOWMSG("this is the / directory");
+        /* The pseudo root directory is a very special case indeed. We
+            * just accept it and don't pretend to have obtained a lock
+            * on anything.
+            */
+        if (path_name_nti.is_root) {
+            SHOWMSG("this is the / directory");
 
-			__restore_path_name(&path_name, &path_name_nti);
+            __restore_path_name(&path_name, &path_name_nti);
 
-			/* ZZZ this must not fail */
-			__set_current_path(path_name);
+            /* ZZZ this must not fail */
+            __set_current_path(path_name);
 
-			result = OK;
+            result = OK;
 
-			goto out;
-		}
-	}
+            goto out;
+        }
+    }
 
-	D(("trying to get a lock on '%s'", path_name));
+    D(("trying to get a lock on '%s'", path_name));
 
-	dir_lock = Lock((STRPTR)path_name, SHARED_LOCK);
-	if (dir_lock == ZERO)
-	{
-		__set_errno(__translate_access_io_error_to_errno(IoErr()));
-		goto out;
-	}
+    dir_lock = Lock((STRPTR) path_name, SHARED_LOCK);
+    if (dir_lock == ZERO) {
+        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	status = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
-	if (status == NULL)
-	{
-		__set_errno(__translate_io_error_to_errno(IoErr()));
-		goto out;
-	}
+    status = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
+    if (status == NULL) {
+        __set_errno(__translate_io_error_to_errno(IoErr()));
+        goto out;
+    }
 
-	if (!EXD_IS_DIRECTORY(status))
-	{
-		SHOWMSG("this is not a directory");
+    if (!EXD_IS_DIRECTORY(status)) {
+        SHOWMSG("this is not a directory");
 
-		__set_errno(ENOTDIR);
-		goto out;
-	}
+        __set_errno(ENOTDIR);
+        goto out;
+    }
 
-	if (__current_directory_changed)
-	{
-		BPTR old_dir;
+    if (__current_directory_changed) {
+        BPTR old_dir;
 
-		old_dir = CurrentDir(dir_lock);
+        old_dir = CurrentDir(dir_lock);
 
-		if (__unlock_current_directory)
-			UnLock(old_dir);
-	}
-	else
-	{
-		__original_current_directory = CurrentDir(dir_lock);
+        if (__unlock_current_directory)
+            UnLock(old_dir);
+    } else {
+        __original_current_directory = CurrentDir(dir_lock);
 
-		__current_directory_changed = TRUE;
-	}
+        __current_directory_changed = TRUE;
+    }
 
-	__unlock_current_directory = TRUE;
+    __unlock_current_directory = TRUE;
 
-	dir_lock = ZERO;
+    dir_lock = ZERO;
 
-	if (__unix_path_semantics)
-		__restore_path_name(&path_name, &path_name_nti);
+    if (__unix_path_semantics)
+        __restore_path_name(&path_name, &path_name_nti);
 
-	/* ZZZ this must not fail */
-	__set_current_path(path_name);
+    /* ZZZ this must not fail */
+    __set_current_path(path_name);
 
-	result = OK;
+    result = OK;
 
-out:
+    out:
 
-	if (status != NULL) {
-		FreeDosObject(DOS_EXAMINEDATA, status);
-	}
-	
-	UnLock(dir_lock);
+    if (status != NULL) {
+        FreeDosObject(DOS_EXAMINEDATA, status);
+    }
 
-	RETURN(result);
-	return (result);
+    UnLock(dir_lock);
+
+    RETURN(result);
+    return (result);
 }

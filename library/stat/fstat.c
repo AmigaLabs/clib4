@@ -57,6 +57,10 @@ fstat(int file_descriptor, struct stat *buffer) {
     }
 
     __convert_file_info_to_stat(fam.fam_FileSystem, fam.fam_FileInfo, buffer);
+    /* Set the st_name extension also for fstat */
+    buffer->st_name = fib.Name;
+
+    Printf("buffer->st_name = %s\n", buffer->st_name);
 
     result = OK;
 
