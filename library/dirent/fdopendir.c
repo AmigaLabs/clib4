@@ -12,21 +12,22 @@ fdopendir(int fd) {
     struct stat st;
 
     if (fstat(fd, &st) < 0) {
-        return 0;
+        return NULL;
     }
     if (fcntl(fd, F_GETFL) & O_PATH) {
-        errno = EBADF;
-        return 0;
+        __set_errno(EBADF);
+        return NULL;
     }
     if (!S_ISDIR(st.st_mode)) {
-        errno = ENOTDIR;
-        return 0;
-    }
-    if (!(dir = calloc(1, sizeof *dir))) {
-        return 0;
+        __set_errno(ENOTDIR);
+        return NULL;
     }
 
-    fcntl(fd, F_SETFD, FD_CLOEXEC);
+    dir = opendir(st.st_name);
+    if (!dir) {
+        __set_errno(ENOENT);
+        return NULL;
+    }
 
     return dir;
 }

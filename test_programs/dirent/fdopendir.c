@@ -13,7 +13,7 @@ main(int argc, char *argv[]) {
     struct dirent *dp;
     int dfd, ffd;
 
-    // This code doesn't work on clib2 becaue open cannot open directories (yet)
+    // This code doesn't work on clib2 because open() cannot open directories (yet)
     if ((d = fdopendir((dfd = open("T:", O_RDONLY)))) == NULL) {
         fprintf(stderr, "Cannot open ./tmp directory\n");
         exit(1);
@@ -29,8 +29,7 @@ main(int argc, char *argv[]) {
         }
         if (fstat(ffd, &statbuf) == 0 && statbuf.st_size > (1024 * 1024)) {
             /* found it ... */
-            printf("%s: %jdK\n", dp->d_name,
-                   (intmax_t)(statbuf.st_size / 1024));
+            printf("%s: %jdK\n", dp->d_name, (intmax_t)(statbuf.st_size / 1024));
         }
         close(ffd);
     }

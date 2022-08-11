@@ -60,8 +60,6 @@ fstat(int file_descriptor, struct stat *buffer) {
     /* Set the st_name extension also for fstat */
     buffer->st_name = fib.Name;
 
-    Printf("buffer->st_name = %s\n", buffer->st_name);
-
     result = OK;
 
 out:
