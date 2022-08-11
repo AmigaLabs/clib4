@@ -23,7 +23,7 @@ int main() {
             printf("  links:   %d\n", info.st_nlink);
             printf("    uid:   %d\n", (int) info.st_uid);
             printf("    gid:   %d\n", (int) info.st_gid);
-            printf("   name:   %s\n", (int) info.st_name); //clib2 extension
+            printf("   name:   %s\n", info.st_name); //clib2 extension
         }
         close(file_descriptor);
         unlink(fn);

@@ -10,18 +10,6 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-/* This is used in place of ChangeMode() in order to work around a bug in
-   dos.library V40 and below: a "NIL:" file handle will crash the
-   caller of the ChangeMode() function. */
-STATIC LONG
-safe_change_mode(LONG type, BPTR file_handle, LONG mode)
-{
-    LONG result = DOSFALSE;
-    result = ChangeMode(type, file_handle, mode);
-
-    return (result);
-}
-
 int
 open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     DECLARE_UTILITYBASE();
@@ -30,7 +18,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     struct SignalSemaphore *fd_lock;
     LONG is_file_system = FALSE;
     LONG open_mode;
-    BPTR lock = ZERO;
+    BPTR lock = ZERO, dir_lock = ZERO;
     BPTR handle = ZERO;
     BOOL create_new_file = FALSE;
     LONG is_interactive;
@@ -39,6 +27,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     int access_mode;
     int result = ERROR;
     int i;
+    BOOL is_directory = FALSE;
 
     ENTER();
 
@@ -187,7 +176,26 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
         }
 
         create_new_file = TRUE;
-    } else {
+    }
+    else {
+        dir_lock = Lock((STRPTR) path_name, SHARED_LOCK);
+        if (dir_lock != ZERO) {
+            fib = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
+            if (fib == NULL) {
+                SHOWMSG("could not examine the object");
+
+                __set_errno(__translate_io_error_to_errno(IoErr()));
+                goto out;
+            }
+
+            if (EXD_IS_DIRECTORY(fib)) {
+                is_directory = TRUE;
+
+                goto directory;
+            }
+            UnLock(dir_lock);
+            dir_lock = ZERO;
+        }
         open_mode = MODE_OLDFILE;
     }
 
@@ -200,8 +208,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
         D(("the file '%s' didn't open in mode %ld", path_name, open_mode));
         __set_errno(__translate_access_io_error_to_errno(io_err));
 
-        /* Check if ended up trying to open a directory as if
-           it were a plain file. */
+        /* Check if ended up trying to open a directory as if it were a plain file. */
         if (io_err == ERROR_OBJECT_WRONG_TYPE) {
             lock = Lock((STRPTR) path_name, SHARED_LOCK);
             if (lock != ZERO) {
@@ -215,6 +222,8 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
         goto out;
     }
 
+directory:
+
     fd_lock = __create_semaphore();
     if (fd_lock == NULL) {
         __set_errno(ENOMEM);
@@ -223,91 +232,98 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
 
     fd = __fd[fd_slot_number];
 
-    __initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
+    if (!is_directory)
+        __initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
+    else
+        __initialize_fd(fd, __fd_hook_entry, dir_lock, 0, fd_lock);
 
-    /* Figure out if this stream is attached to a console. */
-    is_interactive = IsInteractive(handle);
-    if (is_interactive) {
-        SET_FLAG(fd->fd_Flags, FDF_IS_INTERACTIVE);
+    if (is_directory) {
+        SET_FLAG(fd->fd_Flags, FDF_IS_DIRECTORY);
+    }
+    else { /* Don't execute file stuff if the path is a directory */
+        /* Figure out if this stream is attached to a console. */
+        is_interactive = IsInteractive(handle);
+        if (is_interactive) {
+            SET_FLAG(fd->fd_Flags, FDF_IS_INTERACTIVE);
 
-        if (FLAG_IS_SET(open_flag, O_NONBLOCK)) {
-            SHOWMSG("enabling non-blocking mode");
+            if (FLAG_IS_SET(open_flag, O_NONBLOCK)) {
+                SHOWMSG("enabling non-blocking mode");
 
-            if (SetMode(handle, DOSTRUE)) /* single character mode */
-                SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
-        }
-    } else {
-        size_t len;
-
-        len = 0;
-
-        for (i = 0; path_name[i] != '\0'; i++) {
-            if (path_name[i] == ':') {
-                len = i + 1;
-                break;
-            }
-        }
-
-        if (len > 0) {
-            char *path_name_copy;
-
-            path_name_copy = malloc(len + 1);
-            if (path_name_copy != NULL) {
-                memmove(path_name_copy, path_name, len);
-                path_name_copy[len] = '\0';
-
-                is_file_system = IsFileSystem(path_name_copy);
-                free(path_name_copy);
+                if (SetMode(handle, DOSTRUE)) /* single character mode */
+                    SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
             }
         } else {
-            is_file_system = IsFileSystem("");
+            size_t len;
+
+            len = 0;
+
+            for (i = 0; path_name[i] != '\0'; i++) {
+                if (path_name[i] == ':') {
+                    len = i + 1;
+                    break;
+                }
+            }
+
+            if (len > 0) {
+                char *path_name_copy;
+
+                path_name_copy = malloc(len + 1);
+                if (path_name_copy != NULL) {
+                    memmove(path_name_copy, path_name, len);
+                    path_name_copy[len] = '\0';
+
+                    is_file_system = IsFileSystem(path_name_copy);
+                    free(path_name_copy);
+                }
+            } else {
+                is_file_system = IsFileSystem("");
+            }
+
+            if (is_file_system) {
+                /* We opened the file in exclusive access mode. Switch it back
+                   into shared access mode so that its contents can be read
+                   while it's still open. */
+                if (open_mode == MODE_NEWFILE)
+                    ChangeMode(CHANGE_FH, handle, SHARED_LOCK);
+
+                /* We should be able to seek in this file. */
+                SET_FLAG(fd->fd_Flags, FDF_CACHE_POSITION);
+            }
         }
 
-        if (is_file_system) {
-            /* We opened the file in exclusive access mode. Switch it back
-               into shared access mode so that its contents can be read
-               while it's still open. */
-            if (open_mode == MODE_NEWFILE)
-                safe_change_mode(CHANGE_FH, handle, SHARED_LOCK);
+        if (FLAG_IS_SET(open_flag, O_APPEND)) {
+            SHOWMSG("appending; seeking to end of file");
 
-            /* We should be able to seek in this file. */
-            SET_FLAG(fd->fd_Flags, FDF_CACHE_POSITION);
+            ChangeFilePosition(handle, 0, OFFSET_END);
+
+            SET_FLAG(fd->fd_Flags, FDF_APPEND);
         }
+
+        switch (access_mode) {
+            case O_RDONLY:
+
+                SET_FLAG(fd->fd_Flags, FDF_READ);
+                break;
+
+            case O_WRONLY:
+
+                SET_FLAG(fd->fd_Flags, FDF_WRITE);
+                break;
+
+            case O_RDWR:
+
+                SET_FLAG(fd->fd_Flags, FDF_READ);
+                SET_FLAG(fd->fd_Flags, FDF_WRITE);
+                break;
+        }
+
+        if (create_new_file && is_file_system)
+            SET_FLAG(fd->fd_Flags, FDF_CREATED);
     }
-
-    if (FLAG_IS_SET(open_flag, O_APPEND)) {
-        SHOWMSG("appending; seeking to end of file");
-
-        ChangeFilePosition(handle, 0, OFFSET_END);
-
-        SET_FLAG(fd->fd_Flags, FDF_APPEND);
-    }
-
-    switch (access_mode) {
-        case O_RDONLY:
-
-            SET_FLAG(fd->fd_Flags, FDF_READ);
-            break;
-
-        case O_WRONLY:
-
-            SET_FLAG(fd->fd_Flags, FDF_WRITE);
-            break;
-
-        case O_RDWR:
-
-            SET_FLAG(fd->fd_Flags, FDF_READ);
-            SET_FLAG(fd->fd_Flags, FDF_WRITE);
-            break;
-    }
-
-    if (create_new_file && is_file_system)
-        SET_FLAG(fd->fd_Flags, FDF_CREATED);
 
     SET_FLAG(fd->fd_Flags, FDF_IN_USE);
 
     result = fd_slot_number;
-
     handle = ZERO;
 
     assert(result != ERROR);

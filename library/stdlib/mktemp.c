@@ -107,8 +107,7 @@ mktemp(char *name_template) {
 
     /* Now check if the name we picked is unique. If not, make another name. */
     while (TRUE) {
-        if (__check_abort_enabled)
-            __check_abort();
+        __check_abort();
 
         D(("checking '%s'", name_template));
 

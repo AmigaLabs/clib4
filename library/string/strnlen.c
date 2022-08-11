@@ -1,5 +1,5 @@
 /*
- * $Id: string_strnlen.c,v 1.4 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: string_strnlen.c,v 1.5 2022-08-11 12:04:27 clib2devs Exp $
 */
 
 #ifndef _STRING_HEADERS_H
@@ -22,12 +22,9 @@ strnlen(const char *s, size_t maxlen) {
         goto out;
     }
 
-    while ((maxlen != 0) && ((*s) != '\0')) {
-        s++;
-        maxlen--;
-    }
+    const char *p = memchr(s, 0, maxlen);
 
-    result = (size_t)(s - start);
+    result = p ? p-s : maxlen;
 
 out:
 

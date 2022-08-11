@@ -21,8 +21,7 @@ access(const char *path_name, int mode)
 
 	assert(path_name != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    __check_abort();
 
 	if (path_name == NULL)
 	{

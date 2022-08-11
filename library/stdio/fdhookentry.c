@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fdhookentry.c,v 1.36 2021-01-31 17:12:23 clib2devs Exp $
+ * $Id: stdio_fdhookentry.c,v 1.37 2022-08-11 17:12:23 clib2devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -18,42 +18,40 @@
 #include <limits.h>
 
 int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
-	struct ExamineData *exd = NULL;
-	BOOL fib_is_valid = FALSE;
-	struct FileHandle *fh;
-	int64_t current_position = 0;
-	int64_t new_position = 0;
+    struct ExamineData *exd = NULL;
+    BOOL fib_is_valid = FALSE;
+    struct FileHandle *fh;
+    int64_t current_position = 0;
+    int64_t new_position = 0;
     int64_t file_size = 0;
-	int new_mode;
-	char *buffer = NULL;
-	int64_t result = EOF;
-	BOOL is_aliased;
-	BPTR file;
+    int new_mode;
+    char *buffer = NULL;
+    int64_t result = EOF;
+    BOOL is_aliased;
+    BPTR file;
 
     ENTER();
 
-	assert(fam != NULL && fd != NULL);
-	assert(__is_valid_fd(fd));
+    assert(fam != NULL && fd != NULL);
+    assert(__is_valid_fd(fd));
 
-	/* Careful: file_action_close has to monkey with the file descriptor
-	            table and therefore needs to obtain the stdio lock before
-	            it locks this particular descriptor entry. */
-	if (fam->fam_Action == file_action_close)
-		__stdio_lock();
+    /* Careful: file_action_close has to monkey with the file descriptor
+                table and therefore needs to obtain the stdio lock before
+                it locks this particular descriptor entry. */
+    if (fam->fam_Action == file_action_close)
+        __stdio_lock();
 
-	__fd_lock(fd);
+    __fd_lock(fd);
 
-	file = __resolve_fd_file(fd);
-	if (file == ZERO)
-	{
-		SHOWMSG("file is closed");
+    file = __resolve_fd_file(fd);
+    if (file == ZERO) {
+        SHOWMSG("file is closed");
 
-		fam->fam_Error = EBADF;
-		goto out;
-	}
+        fam->fam_Error = EBADF;
+        goto out;
+    }
 
-    switch (fam->fam_Action)
-	{
+    switch (fam->fam_Action) {
         case file_action_read:
 
             SHOWMSG("file_action_read");
@@ -61,18 +59,20 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             assert(fam->fam_Data != NULL);
             assert(fam->fam_Size > 0);
 
-            D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
+            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+                D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
 
-            result = Read(file, fam->fam_Data, fam->fam_Size);
-            if (result == -1)
-            {
-                D(("read failed ioerr=%ld", IoErr()));
+                result = Read(file, fam->fam_Data, fam->fam_Size);
+                if (result == -1) {
+                    D(("read failed ioerr=%ld", IoErr()));
 
-                fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                goto out;
-            }
+                    fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                    goto out;
+                }
 
-            fd->fd_Position += (int64_t)result;
+                fd->fd_Position += (int64_t) result;
+            } else
+                fam->fam_Error = EBADF;
 
             break;
 
@@ -83,40 +83,41 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             assert(fam->fam_Data != NULL);
             assert(fam->fam_Size > 0);
 
-            if (FLAG_IS_SET(fd->fd_Flags, FDF_APPEND))
-            {
-                int64_t position;
+            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_APPEND)) {
+                    int64_t position;
 
-                SHOWMSG("appending data");
+                    SHOWMSG("appending data");
 
-                /* Make sure that if we get a value of -1 out of Seek()
-                       to check whether this was an error or a numeric
-                       overflow. */
-                position = ChangeFilePosition(file, 0, OFFSET_END);
-                if (position != CHANGE_FILE_ERROR)
-                    fd->fd_Position = GetFilePosition(file);
+                    /* Make sure that if we get a value of -1 out of Seek()
+                           to check whether this was an error or a numeric
+                           overflow. */
+                    position = ChangeFilePosition(file, 0, OFFSET_END);
+                    if (position != CHANGE_FILE_ERROR)
+                        fd->fd_Position = GetFilePosition(file);
 
-                if (fd->fd_Position == GETPOSITION_ERROR)
-                {
-                    D(("seek to end of file failed; ioerr=%ld", IoErr()));
+                    if (fd->fd_Position == GETPOSITION_ERROR) {
+                        D(("seek to end of file failed; ioerr=%ld", IoErr()));
+
+                        fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                        goto out;
+                    }
+                }
+
+                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(
+                        file), fam->fam_Data));
+
+                result = Write(file, fam->fam_Data, fam->fam_Size);
+                if (result == -1) {
+                    D(("write failed ioerr=%ld", IoErr()));
 
                     fam->fam_Error = __translate_io_error_to_errno(IoErr());
                     goto out;
                 }
-            }
 
-            D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
-
-            result = Write(file, fam->fam_Data, fam->fam_Size);
-            if (result == -1)
-            {
-                D(("write failed ioerr=%ld", IoErr()));
-
-                fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                goto out;
-            }
-
-            fd->fd_Position += (int64_t)result;
+                fd->fd_Position += (int64_t) result;
+            } else
+                fam->fam_Error = EBADF;
 
             break;
 
@@ -126,154 +127,144 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             /* The following is almost guaranteed not to fail. */
             result = OK;
 
-            /* If this is an alias, just remove it. */
-            is_aliased = __fd_is_aliased(fd);
-            if (is_aliased)
-            {
-                __remove_fd_alias(fd);
-            }
-            else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO))
-            {
-                /* Should we reset this file into line buffered mode? */
-                if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
-                    SetMode(fd->fd_File, DOSFALSE);
+            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+                /* If this is an alias, just remove it. */
+                is_aliased = __fd_is_aliased(fd);
+                if (is_aliased) {
+                    __remove_fd_alias(fd);
+                } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
+                    /* Should we reset this file into line buffered mode? */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
+                        SetMode(fd->fd_File, DOSFALSE);
 
-                /* Are we allowed to close this file? */
-                if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE))
-                {
-                    BOOL name_and_path_valid = FALSE;
-                    struct ExamineData *fib = NULL;
-                    BPTR parent_dir;
+                    /* Are we allowed to close this file? */
+                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
+                        BOOL name_and_path_valid = FALSE;
+                        struct ExamineData *fib = NULL;
+                        BPTR parent_dir;
 
-                    /* Call a cleanup function, such as the one which releases locked records. */
-                    if (fd->fd_Cleanup != NULL)
-                        (*fd->fd_Cleanup)(fd);
+                        /* Call a cleanup function, such as the one which releases locked records. */
+                        if (fd->fd_Cleanup != NULL)
+                            (*fd->fd_Cleanup)(fd);
 
-                    parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-                    if (parent_dir == ZERO) {
-                        SHOWMSG("couldn't find parent directory");
+                        parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+                        if (parent_dir == ZERO) {
+                            SHOWMSG("couldn't find parent directory");
 
-                        __set_errno(__translate_io_error_to_errno(IoErr()));
-                        goto out;
-                    }
+                            __set_errno(__translate_io_error_to_errno(IoErr()));
+                            goto out;
+                        }
 
-                    fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
-                    if (fib != NULL) {
-                        name_and_path_valid = TRUE;
-                    }
+                        fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+                        if (fib != NULL) {
+                            name_and_path_valid = TRUE;
+                        }
 
-                    if (CANNOT Close(fd->fd_File))
-                    {
-                        fam->fam_Error = __translate_io_error_to_errno(IoErr());
-
-                        result = EOF;
-                    }
-
-                    if (fd->fd_File)
-                        fd->fd_File = ZERO;
-
-                    if (__unix_path_semantics)
-                    {
-                        DECLARE_UTILITYBASE();
-
-                        assert(UtilityBase != NULL);
-
-                        /* Now that we have closed this file, know where it is and what its
-                             * name would be, check if we tried to unlink it earlier. If we did,
-                             * we'll try to finish the job here and now.
-                             */
-                        if (name_and_path_valid)
+                        if (CANNOT Close(fd->fd_File))
                         {
-                            struct UnlinkNode *node;
-                            struct UnlinkNode *uln_next;
-                            struct UnlinkNode *uln;
-                            BOOL file_deleted = FALSE;
+                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
-                            assert(__unlink_list.mlh_Head != NULL);
+                            result = EOF;
+                        }
 
-                            /* Check all files to be unlinked when this program exits. */
-                            for (uln = (struct UnlinkNode *)__unlink_list.mlh_Head;
-                                 (uln_next = (struct UnlinkNode *)uln->uln_MinNode.mln_Succ) != NULL;
-                                 uln = uln_next)
-                            {
-                                node = NULL;
+                        if (fd->fd_File)
+                            fd->fd_File = ZERO;
 
-                                /* If the file name matches, check if the path matches, too. */
-                                if (Stricmp(FilePart(uln->uln_Name), fib->Name) == SAME)
-                                {
-                                    BPTR old_dir;
-                                    BPTR node_lock;
-                                    BPTR path_lock = ZERO;
+                        if (__unix_path_semantics) {
+                            DECLARE_UTILITYBASE();
 
-                                    /* Try to get a lock on the file first, then move on to
-                                         * the directory it is stored in.
-                                         */
-                                    old_dir = CurrentDir(uln->uln_Lock);
+                            assert(UtilityBase != NULL);
 
-                                    node_lock = Lock(uln->uln_Name, SHARED_LOCK);
-                                    if (node_lock != ZERO)
-                                    {
-                                        path_lock = ParentDir(node_lock);
+                            /* Now that we have closed this file, know where it is and what its
+                                 * name would be, check if we tried to unlink it earlier. If we did,
+                                 * we'll try to finish the job here and now.
+                                 */
+                            if (name_and_path_valid) {
+                                struct UnlinkNode *node;
+                                struct UnlinkNode *uln_next;
+                                struct UnlinkNode *uln;
+                                BOOL file_deleted = FALSE;
 
-                                        UnLock(node_lock);
-                                    }
+                                assert(__unlink_list.mlh_Head != NULL);
 
-                                    CurrentDir(old_dir);
+                                /* Check all files to be unlinked when this program exits. */
+                                for (uln = (struct UnlinkNode *) __unlink_list.mlh_Head;
+                                     (uln_next = (struct UnlinkNode *) uln->uln_MinNode.mln_Succ) != NULL;
+                                     uln = uln_next) {
+                                    node = NULL;
 
-                                    /* If we found the file's parent directory, check if it matches
-                                         * the parent directory of the file we just closed.
-                                         */
-                                    if (path_lock != ZERO)
-                                    {
-                                        if (SameLock(path_lock, parent_dir) == LOCK_SAME)
-                                            node = uln;
-
-                                        UnLock(path_lock);
-                                    }
-                                }
-
-                                /* If we found that this file was set up for deletion,
-                                     * delete it here and now.
-                                     */
-                                if (node != NULL)
-                                {
-                                    if (NOT file_deleted)
-                                    {
+                                    /* If the file name matches, check if the path matches, too. */
+                                    if (Stricmp(FilePart(uln->uln_Name), fib->Name) == SAME) {
                                         BPTR old_dir;
-                                        old_dir = CurrentDir(parent_dir);
+                                        BPTR node_lock;
+                                        BPTR path_lock = ZERO;
 
-                                        if (DeleteFile(fib->Name))
-                                        {
-                                            file_deleted = TRUE;
-                                            name_and_path_valid = FALSE;
+                                        /* Try to get a lock on the file first, then move on to
+                                             * the directory it is stored in.
+                                             */
+                                        old_dir = CurrentDir(uln->uln_Lock);
+
+                                        node_lock = Lock(uln->uln_Name, SHARED_LOCK);
+                                        if (node_lock != ZERO) {
+                                            path_lock = ParentDir(node_lock);
+
+                                            UnLock(node_lock);
                                         }
 
                                         CurrentDir(old_dir);
+
+                                        /* If we found the file's parent directory, check if it matches
+                                             * the parent directory of the file we just closed.
+                                             */
+                                        if (path_lock != ZERO) {
+                                            if (SameLock(path_lock, parent_dir) == LOCK_SAME)
+                                                node = uln;
+
+                                            UnLock(path_lock);
+                                        }
                                     }
 
-                                    if (file_deleted)
-                                    {
-                                        Remove((struct Node *)node);
-                                        free(node);
+                                    /* If we found that this file was set up for deletion,
+                                         * delete it here and now.
+                                         */
+                                    if (node != NULL) {
+                                        if (NOT file_deleted) {
+                                            BPTR old_dir;
+                                            old_dir = CurrentDir(parent_dir);
+
+                                            if (DeleteFile(fib->Name)) {
+                                                file_deleted = TRUE;
+                                                name_and_path_valid = FALSE;
+                                            }
+
+                                            CurrentDir(old_dir);
+                                        }
+
+                                        if (file_deleted) {
+                                            Remove((struct Node *) node);
+                                            free(node);
+                                        }
                                     }
                                 }
                             }
                         }
+
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid) {
+                            BPTR old_dir;
+                            old_dir = CurrentDir(parent_dir);
+                            SetProtection(fib->Name, 0);
+                            CurrentDir(old_dir);
+                        }
+
+                        if (fib != NULL)
+                            FreeDosObject(DOS_EXAMINEDATA, fib);
+
+                        UnLock(parent_dir);
                     }
-
-                    if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid)
-                    {
-                        BPTR old_dir;
-                        old_dir = CurrentDir(parent_dir);
-                        SetProtection(fib->Name, 0);
-                        CurrentDir(old_dir);
-                    }
-
-                    if (fib != NULL)
-                        FreeDosObject(DOS_EXAMINEDATA, fib);
-
-                    UnLock(parent_dir);
                 }
+            }
+            else {
+                is_aliased = FALSE;
             }
 
             __fd_unlock(fd);
@@ -281,6 +272,11 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             /* Free the lock semaphore now. */
             if (NOT is_aliased)
                 __delete_semaphore(fd->fd_Lock);
+
+            if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+                if (fd->fd_DefaultFile != ZERO)
+                    UnLock(fd->fd_DefaultFile);
+            }
 
             /* And that's the last for this file descriptor. */
             memset(fd, 0, sizeof(*fd));
@@ -290,143 +286,133 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
 
         case file_action_seek:
             SHOWMSG("file_action_seek");
-            /* Reset error to OK */
-            fam->fam_Error = OK;
+            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+                /* Reset error to OK */
+                fam->fam_Error = OK;
 
-            if (fam->fam_Mode == SEEK_CUR)
-                new_mode = OFFSET_CURRENT;
-            else if (fam->fam_Mode == SEEK_SET)
-                new_mode = OFFSET_BEGINNING;
-            else
-                new_mode = OFFSET_END;
+                if (fam->fam_Mode == SEEK_CUR)
+                    new_mode = OFFSET_CURRENT;
+                else if (fam->fam_Mode == SEEK_SET)
+                    new_mode = OFFSET_BEGINNING;
+                else
+                    new_mode = OFFSET_END;
 
-            if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION))
-            {
-                current_position = fd->fd_Position;
-            }
-            else
-            {
-                int64_t position = GetFilePosition(file);
-                if (position == GETPOSITION_ERROR || IoErr() != OK)
-                {
-                    fam->fam_Error = EBADF;
-                    goto out;
-                }
-
-                current_position = position;
-            }
-            new_position = current_position;
-
-            switch (new_mode)
-            {
-                case OFFSET_CURRENT:
-                    new_position += fam->fam_Offset;
-                    break;
-
-                case OFFSET_BEGINNING:
-                    new_position = fam->fam_Offset;
-                    break;
-
-                case OFFSET_END:
-                    file_size = GetFileSize(file);
-                    if (file_size != GETPOSITION_ERROR)
-                    {
-                        new_position = file_size + fam->fam_Offset;
-                        fib_is_valid = TRUE;
-                    }
-
-                    break;
-            }
-            /* if new_position is < 0. Force it to 0 */
-            if (new_position < 0) {
-                ChangeFilePosition(file, 0, OFFSET_BEGINNING);
-                fd->fd_Position = new_position = 0;
-            }
-            else if (new_position != current_position)
-            {
-                int64_t position = ChangeFilePosition(file, fam->fam_Offset, new_mode);
-
-                /* Same as above: verify that what we got out of
-                       Seek() is really an error and not a valid
-                       file position. */
-                if (position == CHANGE_FILE_ERROR)
-                {
-                    fam->fam_Error = __translate_io_error_to_errno(IoErr());
-
-                    if (__unix_path_semantics)
-                    {
-                        /* Check if this operation failed because the file is shorter than
-                               the new file position. First, we need to find out if the file
-                               is really shorter than required. If not, then it must have
-                               been a different error. */
-                        exd = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
-                        if ((NOT fib_is_valid && exd == NULL) || (exd == NULL) || (new_position <= (int64_t)exd->FileSize))
-                            goto out;
-
-                        /* Don't extend if the file is opened read-only */
-                        if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE))
-                        {
-                            fam->fam_Error = EPERM;
-                            goto out;
-                        }
-
-                        /* Now try to make that file larger. */
-                        if (__grow_file_size(fd, new_position - (int64_t)exd->FileSize) < 0)
-                        {
-                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                            FreeDosObject(DOS_EXAMINEDATA, exd);
-                            goto out;
-                        }
-                        fam->fam_Error = OK;
-                        FreeDosObject(DOS_EXAMINEDATA, exd);
-                    }
-                    else
-                    {
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION)) {
+                    current_position = fd->fd_Position;
+                } else {
+                    int64_t position = GetFilePosition(file);
+                    if (position == GETPOSITION_ERROR || IoErr() != OK) {
+                        fam->fam_Error = EBADF;
                         goto out;
                     }
+
+                    current_position = position;
                 }
-                else {
-                    new_position = GetFilePosition(file);
-                    if (new_position == GETPOSITION_ERROR) {
+                new_position = current_position;
+
+                switch (new_mode) {
+                    case OFFSET_CURRENT:
+                        new_position += fam->fam_Offset;
+                        break;
+
+                    case OFFSET_BEGINNING:
+                        new_position = fam->fam_Offset;
+                        break;
+
+                    case OFFSET_END:
+                        file_size = GetFileSize(file);
+                        if (file_size != GETPOSITION_ERROR) {
+                            new_position = file_size + fam->fam_Offset;
+                            fib_is_valid = TRUE;
+                        }
+
+                        break;
+                }
+                /* if new_position is < 0. Force it to 0 */
+                if (new_position < 0) {
+                    ChangeFilePosition(file, 0, OFFSET_BEGINNING);
+                    fd->fd_Position = new_position = 0;
+                } else if (new_position != current_position) {
+                    int64_t position = ChangeFilePosition(file, fam->fam_Offset, new_mode);
+
+                    /* Same as above: verify that what we got out of
+                           Seek() is really an error and not a valid
+                           file position. */
+                    if (position == CHANGE_FILE_ERROR) {
                         fam->fam_Error = __translate_io_error_to_errno(IoErr());
+
+                        if (__unix_path_semantics) {
+                            /* Check if this operation failed because the file is shorter than
+                                   the new file position. First, we need to find out if the file
+                                   is really shorter than required. If not, then it must have
+                                   been a different error. */
+                            exd = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
+                            if ((NOT fib_is_valid && exd == NULL) || (exd == NULL) ||
+                                                                     (new_position <= (int64_t) exd->FileSize))
+                            goto out;
+
+                            /* Don't extend if the file is opened read-only */
+                            if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE)) {
+                                fam->fam_Error = EPERM;
+                                goto out;
+                            }
+
+                            /* Now try to make that file larger. */
+                            if (__grow_file_size(fd, new_position - (int64_t) exd->FileSize) < 0) {
+                                fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                                FreeDosObject(DOS_EXAMINEDATA, exd);
+                                goto out;
+                            }
+                            fam->fam_Error = OK;
+                            FreeDosObject(DOS_EXAMINEDATA, exd);
+                        } else {
+                            goto out;
+                        }
+                    } else {
+                        new_position = GetFilePosition(file);
+                        if (new_position == GETPOSITION_ERROR) {
+                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                        }
                     }
+
+                    fd->fd_Position = new_position;
                 }
 
-                fd->fd_Position = new_position;
-            }
+                result = new_position;
+            } else
+                fam->fam_Error = EBADF;
 
-            result = new_position;
             break;
 
         case file_action_set_blocking:
 
             SHOWMSG("file_action_set_blocking");
 
-            if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
-            {
-                LONG mode;
+            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+                    LONG mode;
 
-                SHOWMSG("changing the mode");
+                    SHOWMSG("changing the mode");
 
-                if (fam->fam_Arg != 0)
-                    mode = DOSFALSE; /* buffered mode */
-                else
-                    mode = DOSTRUE; /* single character mode */
+                    if (fam->fam_Arg != 0)
+                        mode = DOSFALSE; /* buffered mode */
+                    else
+                        mode = DOSTRUE; /* single character mode */
 
-                if (CANNOT SetMode(file, mode))
-                {
-                    fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                    goto out;
+                    if (CANNOT SetMode(file, mode)) {
+                        fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                        goto out;
+                    }
+
+                    result = OK;
+                } else {
+                    SHOWMSG("can't do anything here");
+
+                    fam->fam_Error = EBADF;
                 }
-
-                result = OK;
-            }
-            else
-            {
-                SHOWMSG("can't do anything here");
-
+            } else
                 fam->fam_Error = EBADF;
-            }
+
             break;
 
         case file_action_examine:
@@ -436,8 +422,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             fh = BADDR(file);
 
             /* Special treatment for "NIL:", for which we make some stuff up. */
-            if (fh->fh_Type == NULL)
-            {
+            if (fh->fh_Type == NULL) {
                 /* Make up some stuff for this stream. */
                 memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
 
@@ -445,10 +430,9 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
 
                 // TODO - Check this on OS4 with NIL:
                 fam->fam_FileInfo->Type = ST_NIL;
-            }
-            else
-            {
-                fam->fam_FileInfo = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
+            } else {
+                BPTR lock_type = FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) ? EX_LockInput : EX_FileHandleInput;
+                fam->fam_FileInfo = ExamineObjectTags(lock_type, file, TAG_DONE);
                 if (fam->fam_FileInfo == NULL) {
                     LONG error;
 
@@ -456,8 +440,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                         respond to the request or is something more sinister
                         at work? */
                     error = IoErr();
-                    if (error != ERROR_ACTION_NOT_KNOWN)
-                    {
+                    if (error != ERROR_ACTION_NOT_KNOWN) {
                         SHOWMSG("couldn't examine the file");
 
                         fam->fam_Error = __translate_io_error_to_errno(error);
@@ -466,8 +449,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
 
                     /* OK, let's have another look at this file. Could it be a
                         console stream? */
-                    if (NOT IsInteractive(file))
-                    {
+                    if (NOT IsInteractive(file)) {
                         SHOWMSG("whatever it is, we don't know");
 
                         fam->fam_Error = ENOSYS;
@@ -475,7 +457,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     }
 
                     /* Create an empty examineData struct */
-                    struct ExamineData *examineData = malloc(sizeof (struct ExamineData));
+                    struct ExamineData *examineData = malloc(sizeof(struct ExamineData));
                     fam->fam_FileInfo = examineData;
                     /* Make up some stuff for this stream. */
                     memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
@@ -486,32 +468,28 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     fam->fam_FileInfo->Type = ST_CONSOLE;
                 }
             }
-
             fam->fam_FileSystem = fh->fh_Type;
-
             result = OK;
-
             break;
 
         default:
-
             SHOWVALUE(fam->fam_Action);
 
             fam->fam_Error = EBADF;
             break;
-	}
+    }
 
-out:
-	__fd_unlock(fd);
+    out:
+    __fd_unlock(fd);
 
-	if (fam->fam_Action == file_action_close)
-		__stdio_unlock();
+    if (fam->fam_Action == file_action_close)
+        __stdio_unlock();
 
-	if (buffer != NULL)
-		free(buffer);
+    if (buffer != NULL)
+        free(buffer);
 
-	SHOWVALUE(result);
+    SHOWVALUE(result);
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

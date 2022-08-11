@@ -669,17 +669,17 @@ C_TIME := \
 	time/utime.o
 
 C_UNISTD := \
+	fcntl/close.o \
+	fcntl/creat.o \
+	fcntl/fcntl.o \
+	fcntl/open.o \
+	fcntl/openat.o \
+	fcntl/read.o \
+	fcntl/write.o \
 	unistd/alarm.o \
-	unistd/close.o \
-	unistd/creat.o \
-	unistd/fcntl.o \
 	unistd/get_default_file.o \
 	unistd/lock.o \
 	unistd/lseek.o \
-	unistd/open.o \
-	unistd/openat.o \
-	unistd/read.o \
-	unistd/write.o \
 	unistd/access.o \
 	unistd/common_pathconf.o \
 	unistd/chdir.o \

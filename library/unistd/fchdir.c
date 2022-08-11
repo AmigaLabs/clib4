@@ -14,8 +14,7 @@ fchdir(int file_descriptor)
 
 	ENTER();
 
-	if (__check_abort_enabled)
-		__check_abort();
+    __check_abort();
 
     __set_errno(ENOSYS);
 

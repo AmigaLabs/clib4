@@ -23,8 +23,7 @@ uid_t getuid(void)
 		result = __getuid();
 	}
 
-	if (__check_abort_enabled)
-		__check_abort();
+    __check_abort();
 
 	RETURN(result);
 	return (result);

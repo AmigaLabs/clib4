@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl.h,v 1.9 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: fcntl.h,v 1.9 2022-08-11 12:06:14 clib2devs Exp $
 */
 
 #ifndef _FCNTL_H
@@ -38,14 +38,11 @@ __BEGIN_DECLS
 #define F_GETOWN	5
 #define F_SETOWN	6
 
-/****************************************************************************/
-
 /*
  * Advisory file segment locking data type -
  * information passed to system by user
  */
-struct flock
-{
+struct flock {
 	short	l_type;		/* lock type: read/write, etc. */
 	short	l_whence;	/* type of l_start */
 	off_t	l_start;	/* starting offset */
@@ -64,13 +61,10 @@ struct flock
 #define FD_CLOEXEC  1   /* posix */
 #define AT_FDCWD    (-100) /* openat */
 
-/****************************************************************************/
-
 extern int open(const char *path_name, int open_flag, ... /* mode_t mode */ );
 extern int openat(int fd, const char *filename, int flags, ...);
 extern int creat(const char * path_name, mode_t mode);
 extern int close(int file_descriptor);
-extern off_t lseek(int file_descriptor, off_t offset, int mode);
 extern ssize_t read(int file_descriptor, void * buffer, size_t num_bytes);
 extern ssize_t write(int file_descriptor, const void * buffer, size_t num_bytes);
 extern int fcntl(int file_descriptor, int cmd, ... /* int arg */ );

@@ -3,7 +3,7 @@
 */
 
 #ifndef _FCNTL_HEADERS_H
-#include "fcntl_headers.h"
+#include "../fcntl/fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
 
 int

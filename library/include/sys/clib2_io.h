@@ -116,6 +116,8 @@ struct _fd
 #define FDF_TERMIOS			(1UL<<13)	/* File is under termios control.
 										   FDF_IS_INTERACTIVE should also be set. */
 #define FDF_POLL			(1UL<<14)	/* File is under poll control. */
+#define FDF_IS_DIRECTORY	(1UL<<15)	/* This is not a disk file but a directory */
+
 /****************************************************************************/
 
 /* Obtain a pointer to the _fd data structure associated with a file

@@ -37,8 +37,7 @@ int getgroups(int ngroups, gid_t *groups)
 
 out:
 
-	if (__check_abort_enabled)
-		__check_abort();
+    __check_abort();
 
 	RETURN(result);
 	return (result);

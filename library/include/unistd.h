@@ -45,6 +45,7 @@ extern char * optarg;
 extern int isatty(int file_descriptor);
 extern int dup(int file_descriptor);
 extern int dup2(int file_descriptor1, int file_descriptor2);
+extern off_t lseek(int file_descriptor, off_t offset, int mode);
 extern int access(const char * path_name, int mode);
 extern int chown(const char * path_name, uid_t owner, gid_t group);
 extern int fchown(int file_descriptor, uid_t owner, gid_t group);

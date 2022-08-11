@@ -200,8 +200,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             do {
                 __stdio_unlock();
 
-                if (__check_abort_enabled)
-                    __check_abort();
+                __check_abort();
 
                 __stdio_lock();
 
