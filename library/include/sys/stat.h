@@ -97,8 +97,7 @@ struct  stat64
 	_off64_t      st_size;
 	long long     st_blocks;
 	long          st_blksize;
-	char         *st_name;
-	long          st_spare_12[3]; //long          st_spare_12[4];
+	long          st_spare_12[4];
 };
 #endif
 
@@ -120,8 +119,7 @@ struct stat
 	long	st_spare3;
 	long	st_blksize;
 	long	st_blocks;
-	char   *st_name;
-    long	st_spare4;
+    long	st_spare4[2];
 };
 
 /****************************************************************************/

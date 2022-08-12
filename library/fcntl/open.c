@@ -193,6 +193,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
 
                 goto directory;
             }
+
             UnLock(dir_lock);
             dir_lock = ZERO;
         }
@@ -201,25 +202,27 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
 
     SHOWSTRING(path_name);
 
-    handle = Open((STRPTR) path_name, open_mode);
-    if (handle == ZERO) {
-        LONG io_err = IoErr();
+    if (!FLAG_IS_SET(open_flag, O_PATH)) {
+        handle = Open((STRPTR) path_name, open_mode);
+        if (handle == ZERO) {
+            LONG io_err = IoErr();
 
-        D(("the file '%s' didn't open in mode %ld", path_name, open_mode));
-        __set_errno(__translate_access_io_error_to_errno(io_err));
+            D(("the file '%s' didn't open in mode %ld", path_name, open_mode));
+            __set_errno(__translate_access_io_error_to_errno(io_err));
 
-        /* Check if ended up trying to open a directory as if it were a plain file. */
-        if (io_err == ERROR_OBJECT_WRONG_TYPE) {
-            lock = Lock((STRPTR) path_name, SHARED_LOCK);
-            if (lock != ZERO) {
-                fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
-                if (fib != NULL && !EXD_IS_DIRECTORY(fib)) {
-                    __set_errno(EISDIR);
+            /* Check if ended up trying to open a directory as if it were a plain file. */
+            if (io_err == ERROR_OBJECT_WRONG_TYPE) {
+                lock = Lock((STRPTR) path_name, SHARED_LOCK);
+                if (lock != ZERO) {
+                    fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
+                    if (fib != NULL && !EXD_IS_DIRECTORY(fib)) {
+                        __set_errno(EISDIR);
+                    }
                 }
             }
-        }
 
-        goto out;
+            goto out;
+        }
     }
 
 directory:
@@ -232,15 +235,23 @@ directory:
 
     fd = __fd[fd_slot_number];
 
-    if (!is_directory)
-        __initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
-    else
+    if (is_directory || FLAG_IS_SET(open_flag, O_PATH))
         __initialize_fd(fd, __fd_hook_entry, dir_lock, 0, fd_lock);
+    else
+        __initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
+
+    fd->fd_Aux = (char *) path_name;
+
+    /* If O_PATH is set only stat* functions can be used */
+    if (FLAG_IS_SET(open_flag, O_PATH))
+        SET_FLAG(fd->fd_Flags, FDF_PATH_ONLY);
 
     if (is_directory) {
+        /* Set FD flag as Directory */
         SET_FLAG(fd->fd_Flags, FDF_IS_DIRECTORY);
     }
-    else { /* Don't execute file stuff if the path is a directory */
+    /* Don't execute file stuff if the path is a directory */
+    else {
         /* Figure out if this stream is attached to a console. */
         is_interactive = IsInteractive(handle);
         if (is_interactive) {

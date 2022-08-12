@@ -6,12 +6,12 @@
 #include <time.h>
 
 int main() {
-    char fn[] = "temp.file";
+    char fn[] = "T:";
     struct stat info;
     int file_descriptor;
 
-    if ((file_descriptor = creat(fn, S_IWUSR)) < 0)
-        perror("creat() error");
+    if ((file_descriptor = open(fn, O_RDONLY)) < 0)
+        perror("open() error");
     else {
         if (fstat(file_descriptor, &info) != 0)
             perror("fstat() error");
@@ -23,7 +23,6 @@ int main() {
             printf("  links:   %d\n", info.st_nlink);
             printf("    uid:   %d\n", (int) info.st_uid);
             printf("    gid:   %d\n", (int) info.st_gid);
-            printf("   name:   %s\n", info.st_name); //clib2 extension
         }
         close(file_descriptor);
         unlink(fn);

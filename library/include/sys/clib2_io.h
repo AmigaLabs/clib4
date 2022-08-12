@@ -117,6 +117,7 @@ struct _fd
 										   FDF_IS_INTERACTIVE should also be set. */
 #define FDF_POLL			(1UL<<14)	/* File is under poll control. */
 #define FDF_IS_DIRECTORY	(1UL<<15)	/* This is not a disk file but a directory */
+#define FDF_PATH_ONLY   	(1UL<<16)	/* Allowed operation on file are only statistics one */
 
 /****************************************************************************/
 

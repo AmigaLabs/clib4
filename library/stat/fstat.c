@@ -36,6 +36,7 @@ fstat(int file_descriptor, struct stat *buffer) {
     assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     fd = __get_file_descriptor(file_descriptor);
+    Printf("fstat fd = %ld\n", fd);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -52,13 +53,13 @@ fstat(int file_descriptor, struct stat *buffer) {
     assert(fd->fd_Action != NULL);
 
     if ((*fd->fd_Action)(fd, &fam) < 0) {
+        Printf("fstat error = %ld\n", fam.fam_Error);
         __set_errno(fam.fam_Error);
         goto out;
     }
+    Printf("fstat ok\n");
 
     __convert_file_info_to_stat(fam.fam_FileSystem, fam.fam_FileInfo, buffer);
-    /* Set the st_name extension also for fstat */
-    buffer->st_name = fam.fam_FileInfo->Name;
 
     result = OK;
 

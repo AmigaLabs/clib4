@@ -149,7 +149,7 @@ debug functions will be enabled
 
 ### Misc
 
-`stat` struct contains st_name as an extension that contains the file/dir name.
+NONE
 
 ### Known problems
 

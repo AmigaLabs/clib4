@@ -59,7 +59,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             assert(fam->fam_Data != NULL);
             assert(fam->fam_Size > 0);
 
-            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
                 D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
 
                 result = Read(file, fam->fam_Data, fam->fam_Size);
@@ -83,7 +83,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             assert(fam->fam_Data != NULL);
             assert(fam->fam_Size > 0);
 
-            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
                 if (FLAG_IS_SET(fd->fd_Flags, FDF_APPEND)) {
                     int64_t position;
 
@@ -127,7 +127,8 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             /* The following is almost guaranteed not to fail. */
             result = OK;
 
-            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
+                Printf("Closing file\n");
                 /* If this is an alias, just remove it. */
                 is_aliased = __fd_is_aliased(fd);
                 if (is_aliased) {
@@ -264,7 +265,13 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                 }
             }
             else {
+                Printf("Closing dir\n");
                 is_aliased = FALSE;
+
+                if (fd->fd_DefaultFile != ZERO) {
+                    UnLock(fd->fd_DefaultFile);
+                    fd->fd_DefaultFile = ZERO;
+                }
             }
 
             __fd_unlock(fd);
@@ -272,11 +279,6 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             /* Free the lock semaphore now. */
             if (NOT is_aliased)
                 __delete_semaphore(fd->fd_Lock);
-
-            if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
-                if (fd->fd_DefaultFile != ZERO)
-                    UnLock(fd->fd_DefaultFile);
-            }
 
             /* And that's the last for this file descriptor. */
             memset(fd, 0, sizeof(*fd));
@@ -286,7 +288,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
 
         case file_action_seek:
             SHOWMSG("file_action_seek");
-            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
                 /* Reset error to OK */
                 fam->fam_Error = OK;
 
@@ -388,7 +390,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
 
             SHOWMSG("file_action_set_blocking");
 
-            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY)) {
+            if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
                 if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
                     LONG mode;
 
@@ -431,7 +433,9 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                 // TODO - Check this on OS4 with NIL:
                 fam->fam_FileInfo->Type = ST_NIL;
             } else {
-                BPTR lock_type = FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) ? EX_LockInput : EX_FileHandleInput;
+                BPTR lock_type = FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) || FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)
+                        ? EX_LockInput
+                        : EX_FileHandleInput;
                 fam->fam_FileInfo = ExamineObjectTags(lock_type, file, TAG_DONE);
                 if (fam->fam_FileInfo == NULL) {
                     LONG error;
@@ -447,8 +451,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                         goto out;
                     }
 
-                    /* OK, let's have another look at this file. Could it be a
-                        console stream? */
+                    /* OK, let's have another look at this file. Could it be a console stream? */
                     if (NOT IsInteractive(file)) {
                         SHOWMSG("whatever it is, we don't know");
 
@@ -459,6 +462,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     /* Create an empty examineData struct */
                     struct ExamineData *examineData = malloc(sizeof(struct ExamineData));
                     fam->fam_FileInfo = examineData;
+
                     /* Make up some stuff for this stream. */
                     memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
 

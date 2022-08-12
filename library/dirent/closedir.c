@@ -125,6 +125,11 @@ closedir(DIR *directory_pointer) {
 
     UnLock(dh->dh_DirLock);
 
+    /* If we have an associated fd file close it */
+    if (dh->dh_Fd > 0) {
+        close(dh->dh_Fd);
+    }
+
     free(dh);
 
     result = OK;

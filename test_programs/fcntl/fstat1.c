@@ -24,7 +24,6 @@ main(int argc, char *argv[]) {
            (uintmax_t) major(sb.st_dev),
            (uintmax_t) minor(sb.st_dev));
 
-    printf("File name:                %s\n", sb.st_name); //clib2 extension
     printf("File type:                ");
 
     switch (sb.st_mode & S_IFMT) {

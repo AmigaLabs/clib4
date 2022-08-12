@@ -105,7 +105,6 @@ void __convert_file_info_to_stat(
 	st->st_gid = fib->OwnerGID;
 	st->st_blksize = 512;
 	st->st_blocks = (st->st_size + st->st_blksize - 1) / st->st_blksize;
-    st->st_name = fib->Name;
 
 	SHOWVALUE(st->st_nlink);
 	SHOWVALUE(st->st_size);
