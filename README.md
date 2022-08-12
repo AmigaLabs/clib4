@@ -149,7 +149,8 @@ debug functions will be enabled
 
 ### Misc
 
-NONE
+Clib2 now supports opening directories with open() and opendir() functions. There are also new other functions that are used with fd int files.
+Check `fcntl.h` for details 
 
 ### Known problems
 

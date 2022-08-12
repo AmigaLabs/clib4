@@ -6,7 +6,8 @@
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
 
-int rmdir(const char *path_name) {
+int
+rmdir(const char *path_name) {
     struct name_translation_info path_name_nti;
     BPTR dir_lock = ZERO;
     int result = ERROR;

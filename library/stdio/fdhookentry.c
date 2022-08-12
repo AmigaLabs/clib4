@@ -128,7 +128,6 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             result = OK;
 
             if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
-                Printf("Closing file\n");
                 /* If this is an alias, just remove it. */
                 is_aliased = __fd_is_aliased(fd);
                 if (is_aliased) {
@@ -265,7 +264,6 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                 }
             }
             else {
-                Printf("Closing dir\n");
                 is_aliased = FALSE;
 
                 if (fd->fd_DefaultFile != ZERO) {
@@ -483,7 +481,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             break;
     }
 
-    out:
+out:
     __fd_unlock(fd);
 
     if (fam->fam_Action == file_action_close)

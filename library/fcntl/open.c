@@ -56,6 +56,29 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
         goto out;
     }
 
+    if (FLAG_IS_SET(open_flag, O_DIRECTORY)) {
+        lock = Lock((STRPTR) path_name, SHARED_LOCK);
+        if (lock != ZERO) {
+            fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
+            if (fib == NULL) {
+                SHOWMSG("could not examine the object");
+
+                __set_errno(__translate_io_error_to_errno(IoErr()));
+                goto out;
+            }
+
+            /* We can open only files, but never directories. */
+            if (!EXD_IS_DIRECTORY(fib)) {
+                SHOWMSG("we need a directory");
+
+                __set_errno(ENOTDIR);
+                goto out;
+            }
+
+            FreeDosObject(DOS_EXAMINEDATA, fib);
+        }
+    }
+
     fd_slot_number = __find_vacant_fd_entry();
     if (fd_slot_number < 0) {
         if (__grow_fd_table(0) < 0) {

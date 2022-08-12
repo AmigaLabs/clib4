@@ -36,7 +36,6 @@ fstat(int file_descriptor, struct stat *buffer) {
     assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     fd = __get_file_descriptor(file_descriptor);
-    Printf("fstat fd = %ld\n", fd);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -53,13 +52,20 @@ fstat(int file_descriptor, struct stat *buffer) {
     assert(fd->fd_Action != NULL);
 
     if ((*fd->fd_Action)(fd, &fam) < 0) {
-        Printf("fstat error = %ld\n", fam.fam_Error);
         __set_errno(fam.fam_Error);
         goto out;
     }
-    Printf("fstat ok\n");
 
     __convert_file_info_to_stat(fam.fam_FileSystem, fam.fam_FileInfo, buffer);
+
+    if (fam.fam_FileInfo->Type != ST_CONSOLE) {
+        /* Close ExamineObjectTag object created when fd->fd_Action is executed  */
+        FreeDosObject(DOS_EXAMINEDATA, fam.fam_FileInfo);
+    }
+    else {
+        /* If ExamineObjectTag was failed we have to free the dummy ExamineData structure created */
+        free(fam.fam_FileInfo);
+    }
 
     result = OK;
 

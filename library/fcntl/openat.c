@@ -60,32 +60,32 @@ openat(int fd, const char *filename, int flags, ...) {
             goto out;
         }
 
+        /* Get the file descriptor */
         struct fd *fd1 = __get_file_descriptor(fd);
         if (fd1 == NULL) {
             __set_errno(EBADF);
             goto out;
         }
 
+        /* Create file name */
+        char filename_complete[MAXPATHLEN + 1];
+
         __fd_lock(fd1);
 
-        /* Get curent dir */
-        char *current_dir = get_current_dir_name();
-        // Change dir to fd one
-        if (chdir(fd1->fd_Aux) == OK) {
-            // Do something with open in fd directory
-            result = open(filename, flags, mode);
-
-            /* Restore old dir */
-            chdir(current_dir);
-        }
-        else {
-            __fd_unlock(fd1);
-
-            __set_errno(ENOTDIR);
-            goto out;
-        }
+        char *fn = (char *) fd1->fd_Aux;
+        /* Create the filename to open based on directory and filename
+         * Check if we are accessing a directory that ends with :
+         * If so don't add a / in the file name
+        */
+        if (fn[strlen(fn) - 1] == ':')
+            snprintf(filename_complete, MAXPATHLEN, "%s%s", fn, filename);
+        else
+            snprintf(filename_complete, MAXPATHLEN, "%s/%s", fn, filename);
 
         __fd_unlock(fd1);
+
+        // Do something with open in fd directory
+        result = open(filename_complete, flags, mode);
     }
 out:
 

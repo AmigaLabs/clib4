@@ -102,6 +102,9 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             if (FLAG_IS_SET(fd->fd_Flags, FDF_ASYNC_IO))
                 SET_FLAG(result, O_ASYNC);
 
+            if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY))
+                SET_FLAG(result, O_PATH);
+
             result = OK;
 
             break;
