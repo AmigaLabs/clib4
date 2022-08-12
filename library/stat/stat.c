@@ -14,7 +14,8 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-int stat(const char *path_name, struct stat *st) {
+int
+stat(const char *path_name, struct stat *st) {
     struct name_translation_info path_name_nti;
     struct ExamineData *fib = NULL;
     struct Lock *fl;
@@ -28,8 +29,7 @@ int stat(const char *path_name, struct stat *st) {
 
     assert(path_name != NULL && st != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (path_name == NULL || st == NULL) {
         SHOWMSG("invalid parameters");

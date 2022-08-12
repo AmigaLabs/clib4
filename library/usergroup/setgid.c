@@ -29,8 +29,7 @@ int setgid(gid_t id)
 		result = __setgid((LONG)id);
 	}
 
-	if (__check_abort_enabled)
-		__check_abort();
+    __check_abort();
 
 	RETURN(result);
 	return (result);

@@ -6,7 +6,8 @@
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
 
-int rmdir(const char *path_name) {
+int
+rmdir(const char *path_name) {
     struct name_translation_info path_name_nti;
     BPTR dir_lock = ZERO;
     int result = ERROR;
@@ -19,8 +20,7 @@ int rmdir(const char *path_name) {
 
     assert(path_name != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (path_name == NULL) {
         SHOWMSG("invalid path name parameter");

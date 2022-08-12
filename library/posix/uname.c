@@ -2,7 +2,6 @@
  * $Id: utsname_uname.c,v 1.6 2022-04-20 15:33:36 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
 #include <sys/utsname.h>
 
 #ifndef _SOCKET_HEADERS_H

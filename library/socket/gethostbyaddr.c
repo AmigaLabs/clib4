@@ -1,5 +1,5 @@
 /*
- * $Id: socket_gethostbyaddr.c,v 1.6 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: socket_gethostbyaddr.c,v 1.7 2022-08-10 12:04:24 clib2devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -8,8 +8,6 @@
 
 struct hostent *
 gethostbyaddr(const void *addr, socklen_t len, int type) {
-    struct hostent *result = NULL;
-
     ENTER();
 
     SHOWPOINTER(addr);
@@ -17,7 +15,8 @@ gethostbyaddr(const void *addr, socklen_t len, int type) {
     SHOWVALUE(type);
 
     assert(addr != NULL);
-    assert(__SocketBase != NULL);
+
+    int err = 1;
 
     if (addr == NULL) {
         SHOWMSG("invalid addr parameter");
@@ -26,13 +25,23 @@ gethostbyaddr(const void *addr, socklen_t len, int type) {
         goto out;
     }
 
-    result = __gethostbyaddr((STRPTR) addr, len, type);
+    static struct hostent *h;
+    size_t size = 63;
+    struct hostent *res;
+    do {
+        free(h);
+        h = malloc(size += size + 1);
+        if (!h) {
+            h_errno = NO_RECOVERY;
+            return 0;
+        }
+        err = gethostbyaddr_r(addr, len, type, h, (void *) (h + 1), size - sizeof *h, &res, &h_errno);
+    } while (err == ERANGE);
 
 out:
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
-    RETURN(result);
-    return (result);
+    RETURN(err ? 0 : h);
+    return err ? 0 : h;
 }

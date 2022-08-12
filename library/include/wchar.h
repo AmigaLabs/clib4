@@ -108,8 +108,8 @@ extern int fwscanf(FILE *stream, const wchar_t *format, ...);
 extern int swscanf(const wchar_t *s, const wchar_t *format, ...);
 extern int vfwscanf(FILE *f, const wchar_t *format, va_list ap);
 extern int vswscanf(const wchar_t *s, const wchar_t *format, va_list ap);
-extern int vwscanf(const wchar_t *s, ...);  // NOT IMPLEMENTED
-extern int wscanf(const wchar_t *format, ...); // NOT IMPLEMENTED
+extern int vwscanf(const wchar_t *s, va_list ap);
+extern int wscanf(const wchar_t *format, ...);
 
 /****************************************************************************/
 
@@ -133,31 +133,37 @@ extern int wprintf(const wchar_t *format, ...);
 
 extern size_t wcsftime(wchar_t *s, size_t maxsize, const wchar_t *format, const struct tm *timeptr);
 
-/****************************************************************************/
-
-/* The following is not part of the ISO 'C' (1994) standard, but it should
-   be part of ISO/IEC 9899:1999, also known as "C99". */
-
-/****************************************************************************/
 
 #if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)) || defined(__cplusplus)
-
 extern size_t mbrlen(const char *restrict s, size_t n, mbstate_t *restrict ps);
 extern size_t mbrtowc(wchar_t *pwc, const char *src, size_t n, mbstate_t *ps);
 extern int mbsinit(const mbstate_t *ps);
-extern size_t mbsnrtowcs(wchar_t *dst, const char **restrict src, size_t nmc, size_t len, mbstate_t *restrict ps);
 extern size_t mbsrtowcs(wchar_t *restrict dst, const char **restrict src, size_t len, mbstate_t *restrict ps);
 
 extern size_t wcrtomb(char *restrict s, wchar_t wc, mbstate_t *restrict ps);
 extern int wcscoll(const wchar_t *ws1, const wchar_t *ws2);
-extern int wcscoll_l(const wchar_t *ws1, const wchar_t *ws2, locale_t loc);
 extern size_t wcscspn(const wchar_t *s, const wchar_t *c);
-extern size_t wcsnrtombs(char *restrict dst, const wchar_t **restrict src, size_t nwc, size_t len, mbstate_t *restrict ps);
 extern wchar_t *wcsrchr(const wchar_t *ws, wchar_t wc);
 extern size_t wcsrtombs(char *restrict dst, const wchar_t **restrict src, size_t len, mbstate_t *restrict ps);
 extern long long wcstoll(const wchar_t *str, wchar_t **ptr, int base);
 extern unsigned long long wcstoull(const wchar_t *str, wchar_t **ptr, int base);
 extern long double wcstold(const wchar_t *nptr, wchar_t **endptr);
+#endif
+
+#if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
+ || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE)  || defined(_BSD_SOURCE)
+extern size_t mbsnrtowcs(wchar_t *dst, const char **restrict src, size_t nmc, size_t len, mbstate_t *restrict ps);
+extern size_t wcsnrtombs(char *restrict dst, const wchar_t **restrict src, size_t nwc, size_t len, mbstate_t *restrict ps);
+extern wchar_t *wcsdup(const wchar_t *src);
+extern size_t wcsnlen (const wchar_t *src, size_t n);
+extern wchar_t *wcpcpy (wchar_t *dst, const wchar_t *src);
+extern wchar_t *wcpncpy (wchar_t *dst, const wchar_t *src, size_t len);
+extern int wcscasecmp(const wchar_t *l, const wchar_t *r);
+extern int wcscasecmp_l(const wchar_t *l, const wchar_t *r, locale_t loc);
+extern int wcsncasecmp(const wchar_t *l, const wchar_t *r, size_t n);
+extern int wcsncasecmp_l(const wchar_t *l, const wchar_t *r, size_t n, locale_t loc);
+extern int wcscoll_l(const wchar_t *ws1, const wchar_t *ws2, locale_t loc);
+extern size_t wcsxfrm_l(wchar_t *dest, const wchar_t *src, size_t len, locale_t loc);
 #endif
 
 __END_DECLS

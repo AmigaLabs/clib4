@@ -23,15 +23,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
     SHOWPOINTER(cliaddr);
     SHOWPOINTER(addrlen);
 
-    assert(cliaddr != NULL && addrlen != NULL);
     assert(__SocketBase != NULL);
-
-    if (cliaddr == NULL || addrlen == NULL) {
-        SHOWMSG("invalid parameters");
-
-        __set_errno(EFAULT);
-        goto out;
-    }
 
     assert(sockfd >= 0 && sockfd < __num_fd);
     assert(__fd[sockfd] != NULL);
@@ -106,8 +98,7 @@ out:
 
     __delete_semaphore(lock);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

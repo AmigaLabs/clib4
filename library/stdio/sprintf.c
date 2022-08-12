@@ -18,8 +18,7 @@ sprintf(char *s, const char *format, ...) {
 
     assert(s != NULL && format != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (s == NULL || format == NULL) {
         __set_errno(EFAULT);

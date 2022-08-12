@@ -41,8 +41,7 @@ int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optl
 
 out:
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

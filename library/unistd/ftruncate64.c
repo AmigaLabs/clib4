@@ -2,8 +2,6 @@
  * $Id: unistd_ftruncate64.c,v 1.0 2021-02-05 18:12:04 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
@@ -25,8 +23,7 @@ ftruncate64(int file_descriptor, _off64_t length)
     assert(__fd[file_descriptor] != NULL);
     assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 

@@ -20,8 +20,7 @@ int seteuid(uid_t u)
 
 	result = setreuid((ULONG)-1, (ULONG)u);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    __check_abort();
 
 	RETURN(result);
 	return (result);

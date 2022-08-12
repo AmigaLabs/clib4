@@ -30,8 +30,7 @@ int listen(int sockfd, int backlog) {
 
 out:
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

@@ -28,14 +28,17 @@ socketpair(int domain, int type, int protocol, int socks[2])
 
     if (socks == 0) {
         __set_errno(EINVAL);
+        RETURN(ERROR);
         return ERROR;
     }
 
     socks[0] = socks[1] = -1;
 
     listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (listener == -1)
+    if (listener == -1) {
+        RETURN(ERROR);
         return ERROR;
+    }
 
     memset(&a, 0, sizeof(a));
     a.inaddr.sin_family = AF_INET;
@@ -61,6 +64,7 @@ socketpair(int domain, int type, int protocol, int socks[2])
             break;
 
         close(listener);
+        RETURN(OK);
         return OK;
     }
 

@@ -2,8 +2,6 @@
  * $Id: stdio_record_locking.c,v 1.20 2021-01-31 14:39:23 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
@@ -833,8 +831,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
 
                     (*error_ptr) = EINTR;
 
-                    if (__check_abort_enabled)
-                        __check_abort();
+                    __check_abort();
 
                     goto out;
                 }

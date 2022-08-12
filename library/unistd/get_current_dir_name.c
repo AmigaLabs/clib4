@@ -1,7 +1,6 @@
 /*
  * $Id: unistd_get_current_dir_name.c,v 1.0 2022-05-06 09:35:04 clib2devs Exp $
 */
-#define _GNU_SOURCE
 
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"

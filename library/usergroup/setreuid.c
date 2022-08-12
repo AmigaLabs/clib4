@@ -29,8 +29,7 @@ setreuid(uid_t real, uid_t eff) {
         result = __setreuid((LONG) real, (LONG) eff);
     }
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

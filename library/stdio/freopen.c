@@ -20,8 +20,7 @@ freopen(const char *filename, const char *mode, FILE *stream) {
 
     assert(filename != NULL && mode != NULL && stream != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (filename == NULL || mode == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");

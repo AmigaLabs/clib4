@@ -1,5 +1,5 @@
 /*
- * $Id: socket_inet_netof.c,v 1.4 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: socket_inet_netof.c,v 1.5 2022-08-10 12:04:24 clib2devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -12,12 +12,12 @@ inet_netof(struct in_addr in) {
 
     ENTER();
 
-    assert(__SocketBase != NULL);
+    uint32_t h = in.s_addr;
+    if (h>>24 < 128) return h >> 24;
+    if (h>>24 < 192) return h >> 16;
+    result = h >> 8;
 
-    result = __Inet_NetOf(in.s_addr);
-
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

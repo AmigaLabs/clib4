@@ -16,7 +16,6 @@
 
 static void out_putwc(wchar_t wc, FOut *_out);
 static int out_printf(FOut *_out, const char *format, ...);
-static int out_error(FOut *_out);
 static int getint(wchar_t **s);
 
 size_t
@@ -64,6 +63,8 @@ __wc_indelim(wchar_t wc, const wchar_t *delim) {
 static void
 out_init_file(FOut *out, FILE *f) {
     memset(out, 0, sizeof(*out));
+    out->buffer_size = f->size;
+    out->buffer_pos = f->position;
     out->file = f;
 }
 
@@ -77,7 +78,7 @@ out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size) {
 
 static void
 out(FOut *_out, const wchar_t *text, size_t length) {
-    if (!length) {
+    if (!length || _out == NULL) {
         return;
     }
     if (_out->file != NULL) {
@@ -98,15 +99,20 @@ out(FOut *_out, const wchar_t *text, size_t length) {
 
 static void
 out_putwc(wchar_t wc, FOut *_out) {
-    if (_out->file) {
-        fputwc(wc, _out->file);
-    } else if (_out->buffer_pos < _out->buffer_size) {
-        _out->buffer[_out->buffer_pos++] = wc;
+    if (_out != NULL) {
+        if (_out->file) {
+            fputwc(wc, _out->file);
+        } else if (_out->buffer_pos < _out->buffer_size) {
+            _out->buffer[_out->buffer_pos++] = wc;
+        }
     }
 }
 
 static int
 out_printf(FOut *_out, const char *format, ...) {
+    if (_out == NULL)
+        return 0;
+
     va_list args;
     va_start(args, format);
 
@@ -160,20 +166,15 @@ out_printf(FOut *_out, const char *format, ...) {
     va_end(args);
 }
 
-static int
-out_error(FOut *_out) {
-    if (_out->file != NULL) {
-        return ferror(_out->file);
-    }
-    return 0;
-}
-
 int
 out_overflow(FOut *_out) {
-    if (_out->file != NULL) {
-        return feof(_out->file);
+    if (_out) {
+        if (_out->file != NULL) {
+            return feof(_out->file);
+        }
+        return (_out->buffer_pos >= _out->buffer_size);
     }
-    return (_out->buffer_pos >= _out->buffer_size);
+    return -1;
 }
 
 static int
@@ -203,7 +204,7 @@ int
 wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type) {
     wchar_t *s = (wchar_t *) fmt;
     unsigned int l10n = 0;
-    int w, p;
+    int w, p, xp;
     union arg arg;
     int argpos;
     unsigned st, ps;
@@ -211,29 +212,31 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
     int i;
     int t;
     char *bs;
-    char charfmt[16];
+    char charfmt[16] = {0};
     wchar_t wc;
+    wchar_t *a, *z;
+    unsigned int fl;
 
     for (;;) {
-        wchar_t *a, *z;
-        unsigned int litpct, fl;
-        /* Update output count, end loop when fmt is exhausted */
-        if (cnt >= 0) {
-            if (l > INT_MAX - cnt) {
-                if (!out_error(f))
-                    __set_errno(EOVERFLOW);
-                cnt = -1;
-            } else
-                cnt += l;
+        /* This error is only specified for snprintf, but since it's
+         * unspecified for other forms, do the same. Stop immediately
+         * on overflow; otherwise %n could produce wrong results. */
+        if (l > INT_MAX - cnt) {
+            __set_errno(EOVERFLOW);
+            return -1;
         }
-        if (!*s)
-            break;
+
+        /* Update output count, end loop when fmt is exhausted */
+        cnt += l;
+        if (!*s) break;
 
         /* Handle literal text and %% format specifiers */
         for (a = s; *s && *s != '%'; s++);
-        litpct = (unsigned int) (wcsspn(s, (const wchar_t *) L"%") / 2); /* Optimize %%%% runs */
-        z = s + litpct;
-        s += 2 * litpct;
+        for (z=s; s[0]=='%' && s[1]=='%'; z++, s+=2);
+        if (z-a > INT_MAX-cnt) {
+            __set_errno(EOVERFLOW);
+            return -1;
+        }
         l = (int) (z - a);
         if (f)
             out(f, a, (size_t) l);
@@ -261,15 +264,18 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 w = (int) nl_arg[s[1] - '0'].i;
                 s += 3;
             } else if (!l10n) {
-                w = f ? va_arg(*ap,
-                int) : 0;
+                w = f ? va_arg(*ap, int) : 0;
                 s++;
-            } else
+            } else {
+                __set_errno(EINVAL);
                 return -1;
+            }
             if (w < 0)
                 fl |= __U_LEFT_ADJ, w = -w;
-        } else if ((w = getint(&s)) < 0)
+        } else if ((w = getint(&s)) < 0) {
+            __set_errno(EOVERFLOW);
             return -1;
+        }
 
         /* Read precision */
         if (*s == '.' && s[1] == '*') {
@@ -278,34 +284,43 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 p = (int) nl_arg[s[2] - '0'].i;
                 s += 4;
             } else if (!l10n) {
-                p = f ? va_arg(*ap,
-                int) : 0;
+                p = f ? va_arg(*ap, int) : 0;
                 s += 2;
-            } else
+            } else {
+                __set_errno(EINVAL);
                 return -1;
+            }
+            xp = (p>=0);
         } else if (*s == '.') {
             s++;
             p = getint(&s);
-        } else
+            xp = 1;
+        } else {
             p = -1;
+            xp = 0;
+        }
 
         /* Format specifier state machine */
         st = 0;
         do {
-            if (__OOP(*s))
+            if (__OOP(*s)){
+                __set_errno(EINVAL);
                 return -1;
+            }
             ps = st;
             st = states[st]S(*s++);
         } while ((st - 1) < _STOP);
-        if (!st)
+        if (!st) {
+            __set_errno(EINVAL);
             return -1;
+        }
 
         /* Check validity of argument type (nl/normal) */
         if (st == _NOARG) {
-            if (argpos >= 0)
+            if (argpos >= 0) {
+                __set_errno(EINVAL);
                 return -1;
-            else if (!f)
-                continue;
+            }
         } else {
             if (argpos >= 0) {
                 nl_type[argpos] = (int) st;
@@ -352,8 +367,15 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 }
                 continue;
             case 'c':
+                if (w < 1) w=1;
+                if (w > 1 && !(fl & __U_LEFT_ADJ)) {
+                    out_printf(f, "%*s", (w - 1), "");
+                }
                 out_putwc(btowc((int) arg.i), f);
-                l = 1;
+                if (w > 1 && !(fl & __U_LEFT_ADJ)) {
+                    out_printf(f, "%*s", (w - 1), "");
+                }
+                l = w;
                 continue;
             case 'C':
                 out_putwc((wchar_t) arg.i, f);
@@ -361,34 +383,43 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 continue;
             case 'S':
                 a = arg.p;
-                z = wmemchr(a, 0, (size_t) p);
-                if (!z)
-                    z = a + p;
-                else
-                    p = (int) (z - a);
+                z = a + wcsnlen(a, p<0 ? INT_MAX : p);
+                if (p<0 && *z)  {
+                    __set_errno(EOVERFLOW);
+                    return -1;
+                }
+                p = (int) (z - a);
                 if (w < p)
                     w = p;
                 if (!(fl & __U_LEFT_ADJ)) {
-                    out_printf(f, "%.*s", (w - p), "");
+                    out_printf(f, "%*s", (w - p), "");
                 }
                 out(f, a, (size_t) p);
                 if ((fl & __U_LEFT_ADJ)) {
-                    out_printf(f, "%.*s", (w - p), "");
+                    out_printf(f, "%*s", (w - p), "");
                 }
                 l = w;
                 continue;
+            case 'm':
+                arg.p = strerror(errno);
             case 's':
+                if (!arg.p)
+                    arg.p = (char *) "(null)";
                 bs = arg.p;
                 if (p < 0)
                     p = INT_MAX;
                 for (i = l = 0; ((l < p) && ((i = mbtowc(&wc, bs, MB_LEN_MAX)) > 0)); bs += i, l++);
                 if (i < 0)
                     return -1;
+                if (p<0 && *bs)  {
+                    __set_errno(EOVERFLOW);
+                    return -1;
+                }
                 p = l;
                 if (w < p)
                     w = p;
                 if (!(fl & __U_LEFT_ADJ)) {
-                    out_printf(f, "%.*s", w - p, "");
+                    out_printf(f, "%*s", w - p, "");
                 }
                 bs = arg.p;
                 while (l--) {
@@ -397,7 +428,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                     out_putwc(wc, f);
                 }
                 if ((fl & __U_LEFT_ADJ)) {
-                    out_printf(f, "%.*s", w - p, "");
+                    out_printf(f, "%*s", w - p, "");
                 }
                 l = w;
                 continue;
@@ -405,19 +436,23 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 break;
         }
 
-        snprintf(charfmt, sizeof charfmt, "%%%s%s%s%s%s*.%c%c",
-                 ((!(fl & __U_ALT_FORM)) ? "" : "#"),
-                 ((!(fl & __U_MARK_POS)) ? "" : "+"),
-                 ((!(fl & __U_LEFT_ADJ)) ? "" : "-"),
-                 ((!(fl & __U_PAD_POS)) ? "" : " "),
-                 ((!(fl & __U_ZERO_PAD)) ? "" : "0"),
-                 sizeprefix[(t | 32) - 'a'], t);
+        if (xp && p<0) {
+            __set_errno(EOVERFLOW);
+            return -1;
+        }
 
         switch (t | 32) {
             case 'a':
             case 'e':
             case 'f':
             case 'g':
+                snprintf(charfmt, sizeof charfmt, "%%%s%s%s%s%s*.*%c",
+                         "#"+!(fl & __U_ALT_FORM),
+                         "+"+!(fl & __U_MARK_POS),
+                         "-"+!(fl & __U_LEFT_ADJ),
+                         " "+!(fl & __U_PAD_POS),
+                         "0"+!(fl & __U_ZERO_PAD),
+                         t);
                 l = out_printf(f, charfmt, w, p, arg.f);
                 break;
             case 'd':
@@ -426,6 +461,13 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
             case 'u':
             case 'x':
             case 'p':
+                snprintf(charfmt, sizeof charfmt, "%%%s%s%s%s%s*.*%c%c",
+                         "#"+!(fl & __U_ALT_FORM),
+                         "+"+!(fl & __U_MARK_POS),
+                         "-"+!(fl & __U_LEFT_ADJ),
+                         " "+!(fl & __U_PAD_POS),
+                         "0"+!(fl & __U_ZERO_PAD),
+                         sizeprefix[(t|32)-'a'], t);
                 l = out_printf(f, charfmt, w, p, arg.i);
                 break;
             default:
@@ -460,8 +502,7 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
 
     ENTER();
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     // Check for error in format string before writing anything to file.
     if (wprintf_core(0, format, &ap2, nl_arg, nl_type) < 0) {

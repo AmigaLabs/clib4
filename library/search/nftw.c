@@ -34,8 +34,7 @@ walk(const char *path, int (*func)(const char *, const struct stat *, int, struc
     SHOWVALUE(level);
     SHOWVALUE(flags);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (level > depth)
         goto out;

@@ -10,7 +10,7 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-static const char *error_table[EILSEQ - EPERM + 1] =
+static const char *error_table[ENOTSUP - EPERM + 1] =
         {
                 "Operation not permitted",
                 "No such file or directory",
@@ -96,7 +96,11 @@ static const char *error_table[EILSEQ - EPERM + 1] =
                 "Identifier removed",
                 "No message of the desired type.",
                 "Value too large to be stored in data type.",
-                "Encoding error detected"
+                "Encoding error detected",
+                "Protocol error",
+                "Operation canceled",
+                "Bad message",
+                "Not supported"
         };
 
 int
@@ -105,7 +109,7 @@ strerror_r(int number, char *buffer, size_t buffer_size) {
     const char *str;
     size_t len;
 
-    if (number < EPERM || number > EILSEQ) {
+    if (number < EPERM || number > ENOTSUP) {
         __set_errno(EINVAL);
         goto out;
     }

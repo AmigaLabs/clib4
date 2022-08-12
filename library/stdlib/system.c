@@ -26,8 +26,7 @@ system(const char *command) {
     else
         SHOWSTRING(command);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     /* A NULL pointer for the name of the command to execute is
      * really a query to find out whether a shell is available.

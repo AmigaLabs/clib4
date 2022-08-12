@@ -16,8 +16,7 @@ remove(const char *filename) {
 
     assert(filename != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (filename == NULL) {
         SHOWMSG("invalid path name");

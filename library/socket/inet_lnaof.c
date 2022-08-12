@@ -1,23 +1,23 @@
 /*
- * $Id: socket_inet_lnaof.c,v 1.3 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: socket_inet_lnaof.c,v 1.4 2022-08-10 12:04:24 clib2devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-unsigned long
+in_addr_t
 inet_lnaof(struct in_addr in) {
-    unsigned long result;
+    in_addr_t result;
 
     ENTER();
 
-    assert(__SocketBase != NULL);
+    uint32_t h = in.s_addr;
+    if (h>>24 < 128) return h & 0xffffff;
+    if (h>>24 < 192) return h & 0xffff;
+    result = h & 0xff;
 
-    result = __Inet_LnaOf(in.s_addr);
-
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

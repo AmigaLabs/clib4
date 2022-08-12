@@ -19,8 +19,7 @@ tmpfile(void) {
 
     ENTER();
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     temp_file_name = malloc(L_tmpnam);
     if (temp_file_name == NULL) {

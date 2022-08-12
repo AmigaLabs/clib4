@@ -192,15 +192,15 @@ extern const struct in6_addr in6addr_loopback;   /* ::1 */
 struct sockaddr_in
 {
 	unsigned char	sin_len;
-	unsigned char	sin_family;
-	unsigned short	sin_port;
+    sa_family_t 	sin_family;
+    in_port_t   	sin_port;
 	struct in_addr	sin_addr;
 	unsigned char	sin_zero[8];
 };
 
 struct sockaddr_in6 {
-	unsigned char   sin6_family;   /* AF_INET6 */
-	unsigned short  sin6_port;     /* port number */
+    sa_family_t     sin6_family;   /* AF_INET6 */
+    in_port_t       sin6_port;     /* port number */
 	unsigned long   sin6_flowinfo; /* IPv6 flow information */
 	struct in6_addr sin6_addr;     /* IPv6 address */
 	unsigned long   sin6_scope_id; /* Scope ID (new in 2.4) */

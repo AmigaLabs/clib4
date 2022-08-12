@@ -17,8 +17,7 @@ dup2(int file_descriptor1, int file_descriptor2)
 	SHOWVALUE(file_descriptor1);
 	SHOWVALUE(file_descriptor2);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    __check_abort();
 
 	__stdio_lock();
 

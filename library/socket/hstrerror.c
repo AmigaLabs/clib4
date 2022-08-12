@@ -68,9 +68,11 @@ hstrerror(int error_number) {
             case 3: /* NO_RECOVERY */
                 result = "Unknown server error";
                 break;
-            default:
             case 4: /* NO_ADDRESS */
                 result = "No address associated with name";
+                break;
+            default:
+                result = "Unknown error";
                 break;
         }
     }

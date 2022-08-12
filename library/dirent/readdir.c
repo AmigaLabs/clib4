@@ -17,8 +17,7 @@ readdir(DIR *directory_pointer) {
 
     SHOWPOINTER(directory_pointer);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (directory_pointer == NULL) {
         SHOWMSG("ouch. invalid parameter");
@@ -45,8 +44,7 @@ readdir(DIR *directory_pointer) {
             result = &dh->dh_DirectoryEntry;
         } else {
             struct ExamineData *fib = NULL;
-            D_S(
-            struct bcpl_name, bcpl_name);
+            D_S(struct bcpl_name, bcpl_name);
             char *name = (char *) bcpl_name->name;
             BPTR dir_lock;
 

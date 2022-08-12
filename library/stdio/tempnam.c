@@ -18,8 +18,7 @@ worker(char *result, const char *part1, const char *part2, char *part3, int *par
     /*  Generate the filename and make sure that there isn't one called it already.  */
 
     while (1) {
-        if (__check_abort_enabled)
-            __check_abort();
+        __check_abort();
 
         int t;
 
@@ -55,8 +54,7 @@ char *
 tempnam(const char *dir, const char *pfx) {
     ENTER();
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     char *filename;
     int length;

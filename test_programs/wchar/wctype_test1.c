@@ -4,7 +4,7 @@
 int main()
 {
     int i = 0;
-    wchar_t str[] = L"Test String.\n";
+    wchar_t *str = L"Test String.\n";
     wchar_t c;
     wctype_t check = wctype("lower");
     wctrans_t trans = wctrans("toupper");

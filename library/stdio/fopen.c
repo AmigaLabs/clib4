@@ -18,8 +18,7 @@ fopen(const char *filename, const char *mode) {
 
 	assert(filename != NULL && mode != NULL);
 
-	if (__check_abort_enabled)
-		__check_abort();
+    __check_abort();
 
 	__stdio_lock();
 

@@ -119,7 +119,7 @@ struct stat
 	long	st_spare3;
 	long	st_blksize;
 	long	st_blocks;
-	long	st_spare4[2];
+    long	st_spare4[2];
 };
 
 /****************************************************************************/

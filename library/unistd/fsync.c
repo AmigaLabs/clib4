@@ -18,8 +18,7 @@ fsync(int file_descriptor) {
 
     SHOWVALUE(file_descriptor);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     assert(file_descriptor >= 0 && file_descriptor < __num_fd);
     assert(__fd[file_descriptor] != NULL);

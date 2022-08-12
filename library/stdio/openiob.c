@@ -27,8 +27,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
     SHOWSTRING(mode);
     SHOWVALUE(slot_number);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 

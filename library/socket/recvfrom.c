@@ -43,8 +43,7 @@ recvfrom(int sockfd, void *buff, size_t len, int flags, struct sockaddr *from, s
 
 out:
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

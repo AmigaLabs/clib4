@@ -71,51 +71,46 @@ extern long labs(long x);
 extern div_t div(int n, int d);
 extern ldiv_t ldiv(long n, long d);
 
-/****************************************************************************/
-
 extern int rand(void);
-extern long random(void);
 extern void srand(unsigned int seed);
-extern void srandom(unsigned int seed);
-extern double erand48 (unsigned short subi[3]);
-extern long jrand48 (unsigned short subi[3]);
-extern long nrand48 (unsigned short subi[3]);
 
+#if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) \
+ || defined(_BSD_SOURCE)
+extern long random(void);
+extern void srandom(unsigned int seed);
 extern char *initstate(unsigned int seed, char *state, size_t size);
 extern char *setstate(const char *state);
-/****************************************************************************/
+extern int putenv(const char *string);
+extern char *l64a (long x0);
+extern long a64l (const char *s);
+extern void setkey(const char *key);
+
+double drand48 (void);
+double erand48 (unsigned short subi[3]);
+long int lrand48 (void);
+long int nrand48 (unsigned short subi[3]);
+long mrand48 (void);
+long jrand48 (unsigned short subi[3]);
+void srand48 (long);
+unsigned short *seed48 (unsigned short subi[3]);
+void lcong48 (unsigned short subi[7]);
+
+#endif
+
 
 extern int system(const char *command);
-
-/****************************************************************************/
-
 extern void exit(int status);
 extern void abort(void);
 
-/****************************************************************************/
-
 extern int atexit(void (*)(void));
-
-/****************************************************************************/
-
 extern char *getenv(const char *name);
-extern char *secure_getenv(const char *name);
-
-/****************************************************************************/
-
-extern void *bsearch(const void *key, const void *base, size_t count, size_t size,
-					 int (*compare)(const void *key, const void *value));
-extern void qsort(void *base, size_t count, size_t size,
-				  int (*compare)(const void *element1, const void *element2));
-
-/****************************************************************************/
+extern void *bsearch(const void *key, const void *base, size_t count, size_t size, int (*compare)(const void *key, const void *value));
+extern void qsort(void *base, size_t count, size_t size, int (*compare)(const void *element1, const void *element2));
 
 extern double strtod(const char *str, char **ptr);
 extern long strtol(const char *str, char **ptr, int base);
 extern unsigned long strtoul(const char *str, char **ptr, int base);
 extern quad_t strtoq(const char *nptr, char **endptr, register int base);
-
-/****************************************************************************/
 
 extern double atof(const char *str);
 extern int atoi(const char *str);
@@ -129,7 +124,6 @@ extern int rand_r(unsigned int *seed);
 
 extern char *mktemp(char *name_template);
 extern int mkstemp(char *name_template);
-extern int putenv(const char *string);
 extern int unsetenv(const char *name);
 extern int setenv(const char *name, const char *value, int overwrite);
 
@@ -161,6 +155,13 @@ extern float strtof(const char *str, char **ptr);
 extern float atoff (const char *nptr);
 #endif
 extern void _Exit(int status);
+
+#ifdef _GNU_SOURCE
+extern char *ecvt(double x, int n, int *dp, int *sign);
+extern char *fcvt(double x, int n, int *dp, int *sign);
+extern char *gcvt(double x, int n, char *b);
+extern char *secure_getenv(const char *name);
+#endif
 
 __END_DECLS
 

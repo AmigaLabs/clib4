@@ -20,8 +20,7 @@ fstat(int file_descriptor, struct stat *buffer) {
 
     assert(buffer != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 
@@ -58,6 +57,15 @@ fstat(int file_descriptor, struct stat *buffer) {
     }
 
     __convert_file_info_to_stat(fam.fam_FileSystem, fam.fam_FileInfo, buffer);
+
+    if (fam.fam_FileInfo->Type != ST_CONSOLE) {
+        /* Close ExamineObjectTag object created when fd->fd_Action is executed  */
+        FreeDosObject(DOS_EXAMINEDATA, fam.fam_FileInfo);
+    }
+    else {
+        /* If ExamineObjectTag was failed we have to free the dummy ExamineData structure created */
+        free(fam.fam_FileInfo);
+    }
 
     result = OK;
 

@@ -2,8 +2,6 @@
  * $Id: stdio_grow_file.c,v 1.9 2021-01-31 17:35:41 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
@@ -87,8 +85,7 @@ __grow_file_size(struct fd *fd, int num_bytes)
 
 	while (num_bytes > 0)
 	{
-		if (__check_abort_enabled)
-			__check_abort();
+        __check_abort();
 
 		size = buffer_size;
 		if (size > num_bytes)

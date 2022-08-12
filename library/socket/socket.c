@@ -39,6 +39,12 @@ socket(int domain, int type, int protocol) {
         goto out;
     }
 
+    /* Roadshow is based upon the 4.4BSD-Lite2 TCP/IP stack which uses raw sockets for ICMP operations.
+     * - Olaf Barthel
+     */
+    if (type == SOCK_DGRAM && protocol == IPPROTO_ICMP)
+        type = SOCK_RAW;
+
     socket_fd = __socket(domain, type, protocol);
     if (socket_fd < 0) {
         SHOWMSG("could not create socket");
@@ -58,8 +64,7 @@ out:
     __stdio_unlock();
     __delete_semaphore(lock);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

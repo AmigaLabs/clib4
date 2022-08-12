@@ -1,6 +1,6 @@
 # clib2 – A C runtime library for AmigaOS4
 
-[![Build Status](https://travis-ci.org/afxgroup/clib2.svg?branch=master)](https://travis-ci.org/afxgroup/clib2)
+[![Build Status](https://travis-ci.com/afxgroup/clib2.svg?branch=master)](https://travis-ci.org/afxgroup/clib2)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 
@@ -13,11 +13,11 @@ Te goal is to try to make it <a href="POSIX.md">POSIX</a> compliant and fix also
 All warnings (except really few one) produced by GCC 10 and above are now gone.  
 All **deprecated** OS4 functions are replaced by modern one (except for StackSwap i don't find the replacement)
 
-For the original readme follow this <a href="https://github.com/adtools/clib2">link</a>
+For the original README follow this <a href="https://github.com/adtools/clib2">link</a>
 
 ## Limitations and caveats
 
-The new functions and code most of the time is tested. Also some tests has been added to be sure that added featrues and functions are working correctly. Usually all new functions has been tested against linux. If you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
+The new functions and code most of the time is tested. Also some tests has been added to be sure that added features and functions are working correctly. Usually all new functions has been tested against linux. If you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
 
 ### Libraries
 
@@ -25,17 +25,17 @@ Clib2 now has also a working shared version called `libc.so`. And of course also
 
 If you want to use `dlopen`/`dlsym` with shared objects:
 
-**YOU HAVE** to compile your Clib2 version of library you want to use!  
+**YOU MUST** compile your Clib2 version of library you want to use!  
 **DON'T TRY TO USE** newlib shared objects because it will crash badly!  
 **DON'T USE** static libraries otherwise you could have undefined symbols!
 
 The plain `libc.a` now contains also `libnet.a`, `libunix.a`. Socket support and floating point support are always enabled
 Soft float version is no longer available.
 
-Clib2 define `__THREAD_SAFE` if you need it to check if the library supports it
+Clib2 define `__THREAD_SAFE` used to check if the library is thread safe
 
-If you want to use the shared version remember to pack your OS4 software with all clib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
-**DON'T overwrite SOBJS: files with your Clib2 files** othwerise OS4 most probably will not load or you could have problems running software!
+If you want to use the shared version of library remember to pack your OS4 software with all clib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
+**DON'T overwrite SOBJS: files with your Clib2 files** othwerise OS4 most probably will not load them and you could have problems running existent software!
 
 ### New memory allocator
 
@@ -44,7 +44,7 @@ Clib2 now use `Wheel Of Fortune` allocator that is faster than previous one an i
 ### Optimized AMCC functions
 
 Some functions like (memchr, memcmp, memcpy and some other) are optimized for SAM440 and SAM460.
-Feel free to add other CPU versions
+Feel free to add other CPU versions.
 
 ### Altivec
 
@@ -60,10 +60,11 @@ So if you want to use libstdc++ it is better to remove it and link against the s
 
 ### Large file support
 
-Large files are now supported and tested (A working version of p7zip has been teste with a 8GB file without any problem). 
+Large files are now supported and tested (A working version of p7zip has been tested with a 8GB file without any problem). 
+
 ### SYSV functions
 
-clib2 now contains **shm*** and **msg*** functions. It needs <a href="http://www.os4depot.net/share/development/library/misc/sysvipc.lha">SYSV IPC</a> library. If you don't install it those functions will not work and will return to you an **ENOSYS** error.
+Clib2 now contains **shm*** and **msg*** functions. It needs <a href="http://www.os4depot.net/share/development/library/misc/sysvipc.lha">SYSV IPC</a> library. If you don't install it those functions will not work and will return to you an **ENOSYS** error.
 
 ### Unix path support
 
@@ -103,7 +104,8 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 
 ### libresolv
 
-Added resolv library to use dns functions. It needs libpthread.a
+Added resolv library to use dns functions. A lot of socket functions that was using bsdsocket.library now use this library.
+And thanks to this library more functions have been added to socket library 
 
 ### libcrypt
 
@@ -138,12 +140,17 @@ Number of characters in salt DES: Fixed to 2 characters (only the first 2 charac
 
 About the security of the hash algorithm DES<MD5<SHA-256<SHA-512 And, the larger the id number, the higher the safety.
 
-User `-lcrypt` option when linking.
+Use `-lcrypt` option when linking.
 
-### debug
+### Debug
 
 To use `debug` functions you have to explicitly pass `DEBUG=true` to GNUMakefile.os4 and 
 debug functions will be enabled 
+
+### Misc
+
+Clib2 now supports opening directories with open() and opendir() functions. There are also new other functions that are used with fd int files.
+Check `fcntl.h` for details 
 
 ### Known problems
 

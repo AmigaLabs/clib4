@@ -23,12 +23,9 @@ int main()
         wchar_t wret;
         errno = 0;
         wret = btowc(i);
-        // _fwprintf(stdout, L"0x%X, ", wret );
-        // _fwprintf(stdout, L"\tTest btowc:%d [err: %d] -> [%d]/[%lc] == [%lc] [0x%X]\n",
-        //    __LINE__, errno, i, uhalf[i], wret, wret
-        // );
-        printf("%d) errno != EILSEQ = %d\n", i, errno != EILSEQ);
-        printf("%d) wret == uhalf[i] = %d\n", i, wret == uhalf[i]);
+        fwprintf(stdout, L"0x%X, ", wret );
+        fwprintf(stdout, L"\tTest btowc: [err: %d] -> [%d]/[%lc] == [%lc] [0x%X]\n", errno, i, uhalf[i], wret, wret
+        );
     }
 
     return 0;

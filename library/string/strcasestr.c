@@ -2,8 +2,6 @@
  * $Id: string_strcasestr.c,v 1.0 2021-02-23 10:01:27 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #include <string.h>
 #include <ctype.h>
 

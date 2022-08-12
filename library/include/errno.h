@@ -117,7 +117,8 @@ extern int errno;
 #define EILSEQ			85	/* Encoding error detected */
 #define EPROTO          86  /* Protocol error */
 #define ECANCELED       87  /* Operation canceled */
-#define ENOTSUP         1134 /* Not supported */
+#define EBADMSG         88  /* Bad message */
+#define ENOTSUP         89  /* Not supported */
 
 __END_DECLS
 

@@ -98,6 +98,7 @@ C_DIRENT := \
 	dirent/alphasort.o \
 	dirent/closedir.o \
 	dirent/dirfd.o \
+	dirent/fdopendir.o \
 	dirent/opendir.o \
 	dirent/readdir.o \
 	dirent/readdir_r.o \
@@ -108,64 +109,7 @@ C_ICONV := \
 	iconv/iconv.o \
 	iconv/iconv_close.o \
 	iconv/iconv_open.o \
-	iconv/aliasesbi.o \
-	iconv/aliasesi.o \
-	iconv/iconvnls.o \
-	iconv/nullconv.o \
-	iconv/ucsconv.o \
-	iconv/ccs/big5.o \
-	iconv/ccs/ccsbi.o \
-	iconv/ces/cesbi.o \
-	iconv/ccs/cp775.o \
-	iconv/ccs/cns11643_plane1.o \
-	iconv/ccs/cns11643_plane2.o \
-	iconv/ccs/cns11643_plane14.o \
-	iconv/ccs/cp850.o \
-	iconv/ccs/cp852.o \
-	iconv/ccs/cp855.o \
-	iconv/ccs/cp866.o \
-	iconv/ccs/iso_8859_1.o \
-	iconv/ccs/iso_8859_2.o \
-	iconv/ccs/iso_8859_3.o \
-	iconv/ccs/iso_8859_4.o \
-	iconv/ccs/iso_8859_5.o \
-	iconv/ccs/iso_8859_6.o \
-	iconv/ccs/iso_8859_7.o \
-	iconv/ccs/iso_8859_8.o \
-	iconv/ccs/iso_8859_9.o \
-	iconv/ccs/iso_8859_10.o \
-	iconv/ccs/iso_8859_11.o \
-	iconv/ccs/iso_8859_13.o \
-	iconv/ccs/iso_8859_14.o \
-	iconv/ccs/iso_8859_15.o \
-	iconv/ccs/iso_ir_111.o \
-	iconv/ccs/jis_x0201_1976.o \
-	iconv/ccs/jis_x0208_1990.o \
-	iconv/ccs/jis_x0212_1990.o \
-	iconv/ccs/koi8_r.o \
-	iconv/ccs/koi8_ru.o \
-	iconv/ccs/koi8_u.o \
-	iconv/ccs/koi8_uni.o \
-	iconv/ccs/ksx1001.o \
-	iconv/ccs/win_1250.o \
-	iconv/ccs/win_1251.o \
-	iconv/ccs/win_1252.o \
-	iconv/ccs/win_1253.o \
-	iconv/ccs/win_1254.o \
-	iconv/ccs/win_1255.o \
-	iconv/ccs/win_1256.o \
-	iconv/ccs/win_1257.o \
-	iconv/ccs/win_1258.o \
-	iconv/ces/euc.o \
-	iconv/ces/table.o \
-	iconv/ces/table-pcs.o \
-	iconv/ces/ucs-2.o \
-	iconv/ces/ucs-2-internal.o \
-	iconv/ces/ucs-4.o \
-	iconv/ces/ucs-4-internal.o \
-	iconv/ces/us-ascii.o \
-	iconv/ces/utf-16.o \
-	iconv/ces/utf-8.o
+	iconv/iconv_priv.o
 
 C_INTTYPES := \
 	inttypes/imaxabs.o \
@@ -271,11 +215,25 @@ C_SEARCH := \
 	search/twalk.o
 
 C_SOCKET := \
+    resolv/dns_parse.o \
+    resolv/lookup_ipliteral.o \
+    resolv/lookup_name.o \
+    resolv/lookup_serv.o \
+    resolv/res_msend_rc.o \
+    resolv/resolvconf.o \
+    resolv/res_init.o \
+    resolv/res_mkquery.o \
+    resolv/res_query.o \
+    resolv/res_querydomain.o \
+    resolv/res_search.o \
+    resolv/res_send.o \
+    resolv/res_state.o \
 	socket/accept.o \
 	socket/bind.o \
 	socket/bindresvport.o \
 	socket/bindresvport6.o \
 	socket/check_daemon.o \
+	socket/closelog.o \
 	socket/connect.o \
     socket/dn_comp.o \
     socket/dn_expand.o \
@@ -285,7 +243,11 @@ C_SOCKET := \
 	socket/gai_strerror.o \
 	socket/getaddrinfo.o \
 	socket/gethostbyaddr.o \
+	socket/gethostbyaddr_r.o \
 	socket/gethostbyname.o \
+	socket/gethostbyname2.o \
+	socket/gethostbyname2_r.o \
+	socket/gethostbyname_r.o \
 	socket/gethostid.o \
 	socket/gethostname.o \
     socket/getifaddrs.o \
@@ -296,10 +258,15 @@ C_SOCKET := \
 	socket/getprotobyname.o \
 	socket/getprotobynumber.o \
 	socket/getservbyname.o \
+	socket/getservbyname_r.o \
 	socket/getservbyport.o \
+	socket/getservbyport_r.o \
 	socket/getsockname.o \
 	socket/getsockopt.o \
 	socket/get_descriptor.o \
+	socket/herror.o \
+	socket/hook_entry.o \
+	socket/hstrerror.o \
 	socket/if_indextoname.o \
 	socket/if_nametoindex.o \
 	socket/inet_addr.o \
@@ -317,11 +284,13 @@ C_SOCKET := \
 	socket/listen.o \
 	socket/ns_parse.o \
 	socket/obtain_daemon.o \
+	socket/openlog.o \
 	socket/recv.o \
 	socket/recvfrom.o \
 	socket/recvmsg.o \
 	socket/select_signal.o \
 	socket/select.o \
+	socket/setlogmask.o \
 	socket/socketpair.o \
 	socket/wait_select.o \
 	socket/send.o \
@@ -330,8 +299,8 @@ C_SOCKET := \
 	socket/setsockopt.o \
 	socket/shutdown.o \
 	socket/socket.o \
-	socket/hook_entry.o \
-	socket/hstrerror.o \
+	socket/syslog.o \
+	socket/vsyslog.o \
 	socket/get_h_errno.o \
 	socket/set_h_errno.o
 
@@ -348,6 +317,24 @@ C_STAT := \
 	stat/umask.o
 
 C_STDIO := \
+    prng/__rand48_step.o \
+    prng/__seed48.o \
+    prng/drand48.o \
+    prng/erand48.o \
+    prng/inistate.o \
+    prng/jrand48.o \
+    prng/lcong48.o \
+    prng/lrand48.o \
+    prng/mrand48.o \
+    prng/nrand48.o \
+    prng/rand.o \
+    prng/rand_r.o \
+    prng/random.o \
+    prng/seed48.o \
+    prng/setstate.o \
+    prng/srand.o \
+    prng/srand48.o \
+    prng/srandom.o \
 	stdio/asprintf.o \
 	stdio/change_fd_action.o \
 	stdio/change_fd_user_data.o \
@@ -455,6 +442,7 @@ C_STDIO := \
 	stdio/vsprintf_hook_entry.o
 
 C_STDLIB := \
+	stdlib/a64l.o \
 	stdlib/abort.o \
 	stdlib/abs.o \
 	stdlib/aligned_alloc.o \
@@ -477,16 +465,19 @@ C_STDLIB := \
 	stdlib/dlopen.o \
 	stdlib/dlsym.o \
 	stdlib/dosbase.o \
+	stdlib/ecvt.o \
 	stdlib/exit.o \
+	stdlib/fcvt.o \
 	stdlib/free.o \
+	stdlib/gcvt.o \
 	stdlib/getexecname.o \
 	stdlib/getdefstacksize.o \
 	stdlib/getenv.o \
 	stdlib/getsp.o \
 	stdlib/get_errno.o \
-	stdlib/inistate.o \
 	stdlib/isresident.o \
 	stdlib/itoa.o \
+	stdlib/l64a.o \
 	stdlib/labs.o \
 	stdlib/llabs.o \
 	stdlib/lltoa.o \
@@ -514,10 +505,6 @@ C_STDLIB := \
 	stdlib/program_name.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
-	stdlib/rand.o \
-	stdlib/random.o \
-	stdlib/rand_r.o \
-	stdlib/rand48.o \
 	stdlib/realloc.o \
 	stdlib/resetmemstats.o \
 	stdlib/secure_getenv.o \
@@ -526,12 +513,9 @@ C_STDLIB := \
 	stdlib/setjmp.o \
 	stdlib/set_errno.o \
 	stdlib/set_process_window.o \
-	stdlib/setstate.o \
 	stdlib/shared_objs.o \
 	stdlib/shell_escape.o \
 	stdlib/showerror.o \
-	stdlib/srand.o \
-	stdlib/srandom.o \
 	stdlib/stacksize.o \
 	stdlib/stack_usage.o \
 	stdlib/swapstack.o \
@@ -617,6 +601,7 @@ C_STRING := \
 	string/strpbrk.o \
 	string/strrchr.o \
 	string/strsep.o \
+	string/strsignal.o \
 	string/strspn.o \
 	string/strstr.o \
 	string/strtok.o \
@@ -684,16 +669,17 @@ C_TIME := \
 	time/utime.o
 
 C_UNISTD := \
+	fcntl/close.o \
+	fcntl/creat.o \
+	fcntl/fcntl.o \
+	fcntl/open.o \
+	fcntl/openat.o \
+	fcntl/read.o \
+	fcntl/write.o \
 	unistd/alarm.o \
-	unistd/close.o \
-	unistd/creat.o \
-	unistd/fcntl.o \
 	unistd/get_default_file.o \
 	unistd/lock.o \
 	unistd/lseek.o \
-	unistd/open.o \
-	unistd/read.o \
-	unistd/write.o \
 	unistd/access.o \
 	unistd/common_pathconf.o \
 	unistd/chdir.o \
@@ -811,6 +797,8 @@ C_USERGROUP := \
 C_WCHAR := \
 	wchar/bittab.o \
 	wchar/btowc.o \
+	wchar/c16rtomb.o \
+	wchar/c32rtomb.o \
 	wchar/fgetwc.o \
 	wchar/fgetws.o \
 	wchar/fputwc.o \
@@ -821,6 +809,8 @@ C_WCHAR := \
 	wchar/getwc.o \
 	wchar/getwchar.o \
 	wchar/mbrlen.o \
+	wchar/mbrtoc16.o \
+	wchar/mbrtoc32.o \
 	wchar/mbrtowc.o \
 	wchar/_mbstowcs_r.o \
 	wchar/_mbtowc_r.o \
@@ -835,19 +825,28 @@ C_WCHAR := \
 	wchar/vfwscanf.o \
 	wchar/vswprintf.o \
     wchar/vswscanf.o \
+    wchar/wcpcpy.o \
+    wchar/wcpncpy.o \
 	wchar/vwprintf.o \
+	wchar/vwscanf.o \
 	wchar/wcrtomb.o \
+	wchar/wcscasecmp.o \
+	wchar/wcscasecmp_l.o \
 	wchar/wcscat.o \
 	wchar/wcschr.o \
 	wchar/wcscmp.o \
 	wchar/wcscoll.o \
 	wchar/wcscpy.o \
 	wchar/wcscspn.o \
+	wchar/wcsdup.o \
 	wchar/wcsftime.o \
 	wchar/wcslen.o \
+	wchar/wcsncasecmp.o \
+	wchar/wcsncasecmp_l.o \
 	wchar/wcsncat.o \
 	wchar/wcsncmp.o \
 	wchar/wcsncpy.o \
+	wchar/wcsnlen.o \
 	wchar/wscoll.o \
 	wchar/wcspbrk.o \
 	wchar/wcsrchr.o \
@@ -867,6 +866,7 @@ C_WCHAR := \
 	wchar/wcstoull.o \
 	wchar/wcswidth.o \
 	wchar/wcsxfrm.o \
+	wchar/wcsxfrm_l.o \
 	wchar/wctob.o \
 	wchar/wctomb.o \
 	wchar/wcwidth.o \

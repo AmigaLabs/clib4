@@ -73,13 +73,28 @@ extern size_t strlcat(char *dst, const char *src, size_t siz);
 
 /****************************************************************************/
 
-extern char * strtok_r(char *str, const char *separator_set,char ** state_ptr);
+extern char *strtok_r(char *str, const char *separator_set,char ** state_ptr);
+extern char *strsignal(int);
 
 /****************************************************************************/
 #ifndef __STRICT_ANSI__
 extern void *memccpy(void *dst0, const void *src0, int endchar0, size_t len0);
 extern char *index(const char *s, int c);
 extern char *rindex(const char *s, int c);
+#endif
+
+/* These function names are used on Windows and perhaps other systems.  */
+#ifndef strcmpi
+#define strcmpi strcasecmp
+#endif
+#ifndef stricmp
+#define stricmp strcasecmp
+#endif
+#ifndef strncmpi
+#define strncmpi strncasecmp
+#endif
+#ifndef strnicmp
+#define strnicmp strncasecmp
 #endif
 
 #ifdef _GNU_SOURCE

@@ -34,8 +34,7 @@ int setregid(gid_t real, gid_t eff)
 		result = __setregid((LONG)real, (LONG)eff);
 	}
 
-	if (__check_abort_enabled)
-		__check_abort();
+    __check_abort();
 
 	RETURN(result);
 	return (result);

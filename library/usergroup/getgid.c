@@ -31,8 +31,7 @@ gid_t getgid(void)
 		result = __getgid();
 	}
 
-	if (__check_abort_enabled)
-		__check_abort();
+    __check_abort();
 
 	RETURN(result);
 	return (result);

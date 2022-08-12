@@ -42,8 +42,7 @@ setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t opt
 
 out:
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return (result);

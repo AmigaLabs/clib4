@@ -26,8 +26,7 @@ inet_ntop(int af, const void *restrict src, char *restrict dst, socklen_t cnt) {
             result = NULL;
     }
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return result;

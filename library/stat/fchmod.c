@@ -26,8 +26,7 @@ fchmod(int file_descriptor, mode_t mode) {
     assert(__fd[file_descriptor] != NULL);
     assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     __stdio_lock();
 
@@ -153,6 +152,5 @@ __convert_stat64_to_stat(const struct stat64 *st64, struct stat *st) {
     st->st_spare1 = st->st_atime;
     st->st_spare2 = st->st_mtime;
     st->st_spare3 = st->st_ctime;
-
     LEAVE();
 }

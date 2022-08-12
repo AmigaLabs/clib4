@@ -26,8 +26,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
 
     assert(path_name != NULL && buffer != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (path_name == NULL || buffer == NULL) {
         SHOWSTRING("invalid parameters");

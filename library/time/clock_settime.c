@@ -2,18 +2,12 @@
  * $Id: time_settime.c,v 1.0 2020-01-13 17:20:12 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _TIME_HEADERS_H
-
 #include "time_headers.h"
-
 #endif /* _TIME_HEADERS_H */
 
 #ifndef _STDIO_HEADERS_H
-
 #include "stdio_headers.h"
-
 #endif /* _STDIO_HEADERS_H */
 
 #ifndef _UNISTD_HEADERS_H

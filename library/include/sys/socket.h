@@ -36,7 +36,7 @@ __BEGIN_DECLS
  */
 
 typedef unsigned long socklen_t;
-typedef unsigned short sa_family_t;
+typedef unsigned char sa_family_t;
 
 /*
  * Types
@@ -97,6 +97,10 @@ struct linger
  * Level number for (get/set)sockopt() to apply to socket itself.
  */
 #define	SOL_SOCKET	0xffff	/* options for socket level */
+
+#define SOL_IP          0
+#define SOL_IPV6        41
+#define SOL_ICMPV6      58
 
 /*
  * Address families.

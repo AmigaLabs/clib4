@@ -447,8 +447,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         signal_mask = 0;
     }
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     /* Figure out the number of file and socket descriptors in use. */
     get_num_descriptors_used(num_fds, &num_socket_used, &num_file_used);
@@ -619,8 +618,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
             while (TRUE) {
                 /* Check for break signal. */
-                if (__check_abort_enabled)
-                    __check_abort();
+                __check_abort();
 
                 /* Delay for a tick to avoid busy-waiting. */
                 Delay(1);
@@ -821,8 +819,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             }
 
             while (TRUE) {
-                if (__check_abort_enabled)
-                    __check_abort();
+                __check_abort();
 
                 Delay(1);
 
@@ -928,8 +925,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         __stdio_unlock();
     }
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
 out:
 

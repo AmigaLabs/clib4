@@ -3,18 +3,13 @@
 #include <iconv.h>
 #include <stdio.h>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     // create transcoder from iso-8859-1 to utf8
     iconv_t foo = iconv_open("UTF-8", "ISO-8859-1");
-    if ((int)foo == -1)
-    {
-        if (errno == EINVAL)
-        {
+    if ((int) foo == -1) {
+        if (errno == EINVAL) {
             fprintf(stderr, "Conversion is not supported");
-        }
-        else
-        {
+        } else {
             fprintf(stderr, "Initialization failure:\n");
         }
     }
@@ -38,14 +33,11 @@ int main(int argc, char *argv[])
     int ret = iconv(foo, &iso, &ibl, &converted, &obl);
 
     // if iconv fails it returns -1
-    if (ret == (iconv_t)-1)
-    {
+    if (ret == (iconv_t) - 1) {
         perror("iconv");
         iconv_close(foo);
         return 1;
-    }
-    else
-    {
+    } else {
         // other wise the number of converted bytes
         printf("%i bytes converted\n", ret);
         printf("result: '%s'\n", converted_start);

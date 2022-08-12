@@ -7,25 +7,18 @@
 ##############################################################################
 
 CC = ppc-amigaos-gcc
+CXX = ppc-amigaos-g++
 DELETE = rm -rf
 MKDIR = mkdir -p
-BUILDDIR = build
+BUILDDIR = ./build
 SOURCEDIR = .
-##############################################################################
 
-.c.o:
-	@echo "Compiling $<"
-	@$(CC) -c $(CFLAGS) $<
 
 ##############################################################################
 
-WARNINGS = \
-	-Wall -W -Wshadow -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
-	-Wundef -Wbad-function-cast -Wmissing-declarations -Wconversion \
-	-Wno-unused-parameter -Wno-missing-prototypes
+WARNINGS = -w
 
-V = /V
-INCLUDE = -I$(V)/include -I../library/include
+INCLUDE = -I../library/include
 #OPTIONS = -DDEBUG
  OPTIONS = -DNDEBUG
 #OPTIMIZE = -O3
@@ -40,42 +33,35 @@ INCLUDE = -I$(V)/include -I../library/include
 #       should be sufficient.
 
 CFLAGS = -mcrt=clib2 -fno-builtin $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(OPTIONS) $(INCLUDE)
-LFLAGS = -Wl,-d
+LFLAGS =
 
-SOURCES = $(shell find $(SOURCEDIR) -name '*.cpp' -or -name '*.c')
-OBJECTS = $(patsubst %.c, %, $(notdir $(wildcard *.c)))
-
-##############################################################################
-
-LIBS = -ldebug -lm
+C_SOURCES = $(shell find $(SOURCEDIR) -maxdepth 2 -name '*.c' -type f -printf '%P\n')
+CXX_SOURCES = $(shell find $(SOURCEDIR) -maxdepth 2 -name '*.cpp' -type f -printf '%P\n')
+C_OBJECTS = $(patsubst %.c, %, $(C_SOURCES))
+CXX_OBJECTS = $(patsubst %.cpp, %, $(CXX_SOURCES))
 
 ##############################################################################
 
-all: builddir $(OBJECTS)
-	
-builddir: ${BUILDDIR}
+LIBS = -lm -lpthread -lcrypt -lresolv
+
+##############################################################################
+
+all: builddir $(C_OBJECTS) $(CXX_OBJECTS)
+
+builddir:
+	$(MKDIR) $(BUILDDIR)
 
 clean:
 	$(DELETE) $(BUILDDIR)
 
 ##############################################################################
 
-${BUILDDIR}:
-	$(MKDIR) $(BUILDDIR)
-
 %: %.c
-	@echo "Linking $(BUILDDIR)/$@"
-	@$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS) -Wl,--cref,-M,-Map=$(BUILDDIR)/$@.map
+	@echo "Compiling $(BUILDDIR)/$@"
+	@mkdir -p $(dir $(BUILDDIR)/$@)
+	@$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS)
 
-simple_sprintf : simple_sprintf
-	@echo "Linking $(BUILDDIR)/$@"
-	@$(CC) $(CFLAGS) -nostdlib -o $(BUILDDIR)/$@ simple_sprintf.c -lc -lgcc $(LFLAGS) -Wl,--cref,-M,-Map=$(BUILDDIR)/$@.map
-
-semaphore_test : semaphore_test
-	@echo "Linking $(BUILDDIR)/$@"
-	@$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ semaphore_test.c -lpthread $(LFLAGS) -Wl,--cref,-M,-Map=$(BUILDDIR)/$@.map
-
-pthread_join: pthread_join
-	@echo "Linking $(BUILDDIR)/$@"
-	@$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ pthread_join.c -lpthread $(LFLAGS) -Wl,--cref,-M,-Map=$(BUILDDIR)/$@.map
-
+%: %.cpp
+	@echo "Compiling $(BUILDDIR)/$@"
+	@mkdir -p $(dir $(BUILDDIR)/$@)
+	$(CXX) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS) -athread=native

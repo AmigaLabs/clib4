@@ -35,6 +35,7 @@ struct DirectoryHandle
 	struct Node *			dh_VolumeNode;
 	struct MinList			dh_VolumeList;
 	BOOL					dh_ScanVolumeList;
+    int                     dh_Fd;              // For fdopendir()
 };
 
 extern struct MinList NOCOMMON __directory_list;

@@ -1,5 +1,5 @@
 /*
- * $Id: dirent_dirfd.c,v 1.0 2021-02-21 19:30:22 clib2devs Exp $
+ * $Id: dirent_dirfd.c,v 1.1 2022-08-12 19:30:22 clib2devs Exp $
 */
 
 #ifndef _DIRENT_HEADERS_H
@@ -8,9 +8,11 @@
 
 int 
 dirfd(DIR *dirp) {
-    (void)(dirp);
 
-    __set_errno(ENOTSUP);
+    if (dirp == NULL) {
+        __set_errno(EBADF);
+        return -1;
+    }
 
-    return -1;
+    return ((struct DirectoryHandle *) dirp)->dh_Fd;
 }

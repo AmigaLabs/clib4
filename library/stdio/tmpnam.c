@@ -23,16 +23,14 @@ tmpnam(char *buf) {
 
     ENTER();
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     /* If no user-supplied buffer is available, use the local one. */
     if (buf == NULL)
         buf = local_buffer;
 
     while (TRUE) {
-        if (__check_abort_enabled)
-            __check_abort();
+        __check_abort();
 
         c = counter;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: socket_inet_makeaddr.c,v 1.4 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: socket_inet_makeaddr.c,v 1.5 2022-08-10 12:04:24 clib2devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -12,12 +12,12 @@ inet_makeaddr(in_addr_t net, in_addr_t host) {
 
     ENTER();
 
-    assert(__SocketBase != NULL);
+    if (net < 256) host |= net<<24;
+    else if (net < 65536) host |= net<<16;
+    else host |= net<<8;
+    result.s_addr = host;
 
-    result.s_addr = __Inet_MakeAddr((ULONG) net, (ULONG) host);
-
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result.s_addr);
     return (result);

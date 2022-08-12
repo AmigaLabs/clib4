@@ -18,8 +18,7 @@ truncate(const char *path_name, off_t length) {
 
     assert(path_name != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (path_name == NULL) {
         SHOWMSG("invalid path name");

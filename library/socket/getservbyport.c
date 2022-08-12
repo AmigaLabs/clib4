@@ -1,5 +1,5 @@
 /*
- * $Id: socket_getservbyport.c,v 1.4 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: socket_getservbyport.c,v 1.5 2022-08-09 12:04:24 clib2devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -8,27 +8,10 @@
 
 struct servent *
 getservbyport(int port, const char *proto) {
-    struct servent *result = NULL;
-
-    ENTER();
-
-    assert(proto != NULL);
-    assert(__SocketBase != NULL);
-
-    if (proto == NULL) {
-        SHOWMSG("invalid parameters");
-
-        __set_errno(EFAULT);
-        goto out;
-    }
-
-    result = __getservbyport(port, (char *) proto);
-
-out:
-
-    if (__check_abort_enabled)
-        __check_abort();
-
-    RETURN(result);
-    return (result);
+    static struct servent se;
+    static long buf[32 / sizeof(long)];
+    struct servent *res;
+    if (getservbyport_r(port, proto, &se, (void *) buf, sizeof buf, &res))
+        return 0;
+    return &se;
 }

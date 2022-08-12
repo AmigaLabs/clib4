@@ -6,10 +6,10 @@
 
 __BEGIN_DECLS
 
-void warn(const char *, ...);
-void vwarn(const char *, va_list);
-void warnx(const char *, ...);
-void vwarnx(const char *, va_list);
+extern void warn(const char *, ...);
+extern void vwarn(const char *, va_list);
+extern void warnx(const char *, ...);
+extern void vwarnx(const char *, va_list);
 
 extern void err(int, const char *, ...);
 extern void verr(int, const char *, va_list);

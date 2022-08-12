@@ -63,7 +63,15 @@ typedef struct __res_state {
 #define __RES 19960801
 
 #ifndef _PATH_RESCONF
-#define _PATH_RESCONF        "Devs:Internet/name_resolution"
+#define _PATH_RESCONF   "Devs:Internet/name_resolution"
+#endif
+
+#ifndef _PATH_HOSTS
+#define _PATH_HOSTS     "Devs:Internet/hosts"
+#endif
+
+#ifndef _PATH_SERVICES
+#define _PATH_SERVICES  "Devs:Internet/services"
 #endif
 
 struct res_sym {

@@ -15,8 +15,7 @@ utime(const char *path_name, const struct utimbuf *times) {
 
     assert(path_name != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (path_name == NULL) {
         __set_errno(EFAULT);

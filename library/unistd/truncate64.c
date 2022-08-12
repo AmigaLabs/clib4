@@ -2,8 +2,6 @@
  * $Id: unistd_truncate.c,v 1.0 2021-02-05 18:16:39 clib2devs Exp $
 */
 
-#define _GNU_SOURCE
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
@@ -21,8 +19,7 @@ truncate64(const char *path_name, _off64_t length)
 
     assert(path_name != NULL);
 
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     if (path_name == NULL)
     {

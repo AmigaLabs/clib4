@@ -123,8 +123,7 @@ inet_aton(const char *cp, struct in_addr *addr) {
         addr->s_addr = val;
 
 out:
-    if (__check_abort_enabled)
-        __check_abort();
+    __check_abort();
 
     RETURN(result);
     return result;

@@ -34,7 +34,7 @@
 #ifndef _SYS_SYSLOG_H_
 #define _SYS_SYSLOG_H_
 
-#define _PATH_LOG "T:log"
+#define _PATH_LOG "T:"
 
 #define LIOCSFD _IOW('l', 127, int) /* set sendsyslog() fd */
 
@@ -180,10 +180,10 @@ CODE facilitynames[] = {
 __BEGIN_DECLS
 
 extern void closelog(void);
-extern void openlog(const char *, int, int);
-extern int setlogmask(int);
-extern void syslog(int, const char *, ...) __attribute__((__format__(__syslog__, 2, 3)));
-extern void vsyslog(int, const char *, va_list);
+extern void openlog(const char *ident, int opt, int facility);
+extern int setlogmask(int maskpri);
+extern void syslog(int priority, const char *message, ...);
+extern void vsyslog(int priority, const char *message, va_list args);
 
 __END_DECLS
 
