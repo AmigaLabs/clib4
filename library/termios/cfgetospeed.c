@@ -23,6 +23,8 @@ cfgetospeed(const struct termios *tios) {
 
 out:
 
+    __check_abort();
+
     RETURN(result);
     return (result);
 }

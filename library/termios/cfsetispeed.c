@@ -58,6 +58,8 @@ cfsetispeed(struct termios *tios, speed_t ispeed) {
 
 out:
 
+    __check_abort();
+
     RETURN(result);
     return (result);
 }

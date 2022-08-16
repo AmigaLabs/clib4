@@ -259,7 +259,7 @@ directory:
     fd = __fd[fd_slot_number];
 
     if (is_directory || FLAG_IS_SET(open_flag, O_PATH))
-        __initialize_fd(fd, __fd_hook_entry, dir_lock, 0, fd_lock);
+        __initialize_fd(fd, __fd_hook_entry, dir_lock, 0, fd_lock); // TODO - Create a new dir hook
     else
         __initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
 

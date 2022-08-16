@@ -60,5 +60,8 @@ cfsetospeed(struct termios *tios, speed_t ospeed) {
 
 out:
 
+    __check_abort();
+
+    RETURN(result);
     return (result);
 }

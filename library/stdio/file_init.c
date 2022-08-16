@@ -31,45 +31,46 @@ static BPTR old_input;
 static BPTR output;
 static BPTR input;
 
-struct WBStartup *NOCOMMON __WBenchMsg;
+struct WBStartup *NOCOMMON
+__WBenchMsg;
 
 /* CPU cache line size; used to align I/O buffers for best performance. */
 ULONG __cache_line_size = 32;
 
 FILE_DESTRUCTOR(workbench_exit)
-{
-    ENTER();
+        {
+                ENTER();
 
-    /* Now clean up after the streams set up for Workbench startup... */
-    if (restore_console_task) {
-        SetConsoleTask((struct MsgPort *) old_console_task);
-        old_console_task = NULL;
+        /* Now clean up after the streams set up for Workbench startup... */
+        if (restore_console_task) {
+            SetConsoleTask((struct MsgPort *) old_console_task);
+            old_console_task = NULL;
 
-        restore_console_task = FALSE;
-    }
+            restore_console_task = FALSE;
+        }
 
-    if (restore_streams) {
-        SelectInput(old_input);
-        old_input = ZERO;
+        if (restore_streams) {
+            SelectInput(old_input);
+            old_input = ZERO;
 
-        SelectOutput(old_output);
-        old_output = ZERO;
+            SelectOutput(old_output);
+            old_output = ZERO;
 
-        restore_streams = FALSE;
-    }
+            restore_streams = FALSE;
+        }
 
-    if (input != ZERO) {
-        Close(input);
-        input = ZERO;
-    }
+        if (input != ZERO) {
+            Close(input);
+            input = ZERO;
+        }
 
-    if (output != ZERO) {
-        Close(output);
-        output = ZERO;
-    }
+        if (output != ZERO) {
+            Close(output);
+            output = ZERO;
+        }
 
-    LEAVE();
-}
+        LEAVE();
+        }
 
 static int
 wb_file_init(void) {
@@ -168,13 +169,12 @@ FILE_CONSTRUCTOR(stdio_file_init)
     }
 
     /* Now initialize the standard I/O streams (input, output, error). */
-    for (i = STDIN_FILENO; i <= STDERR_FILENO; i++)
-    {
+    for (i = STDIN_FILENO; i <= STDERR_FILENO; i++) {
         switch (i) {
             case STDIN_FILENO:
 
                 iob_flags = IOBF_IN_USE | IOBF_READ | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-                fd_flags = FDF_IN_USE | FDF_READ | FDF_NO_CLOSE;
+                fd_flags = FDF_IN_USE | FDF_READ | FDF_NO_CLOSE | FDF_IS_INTERACTIVE;
                 default_file = Input();
                 break;
 
@@ -228,41 +228,6 @@ FILE_CONSTRUCTOR(stdio_file_init)
                          iob_flags,
                          stdio_lock);
     }
-
-#if 0
-    {
-        /* If the program was launched from Workbench, we continue by
-           duplicating the default output stream for use as the
-           standard error stream. */
-        if (__WBenchMsg != NULL) {
-            __fd[STDERR_FILENO]->fd_File = Output();
-            SET_FLAG(__fd[STDERR_FILENO]->fd_Flags, FDF_NO_CLOSE);
-        }
-        else {
-            BPTR ces;
-
-            /* Figure out what the default error output stream is. */
-            ces = ErrorOutput();
-
-            /* Is the standard error stream configured? If so, use it.
-               Otherwise, try to duplicate the standard output stream. */
-            if (ces != ZERO) {
-                __fd[STDERR_FILENO]->fd_File = ces;
-
-                SET_FLAG(__fd[STDERR_FILENO]->fd_Flags, FDF_NO_CLOSE);
-            }
-            else {
-                __fd[STDERR_FILENO]->fd_File = Open("CONSOLE:", MODE_NEWFILE);
-            }
-        }
-
-        /* Figure out if the standard error stream is bound to a console. */
-        if (FLAG_IS_CLEAR(__fd[STDERR_FILENO]->fd_Flags, FDF_STDIO)) {
-            if (IsInteractive(__fd[STDERR_FILENO]->fd_File))
-                SET_FLAG(__fd[STDERR_FILENO]->fd_Flags, FDF_IS_INTERACTIVE);
-        }
-    }
-#endif /* __THREAD_SAFE */
 
     success = TRUE;
 

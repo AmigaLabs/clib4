@@ -68,6 +68,8 @@ out:
 
     __stdio_unlock();
 
+    __check_abort();
+
     RETURN(result);
     return (result);
 }

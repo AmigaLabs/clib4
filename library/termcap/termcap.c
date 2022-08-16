@@ -19,10 +19,10 @@ Boston, MA 02111-1307, USA.  */
 
 /* Emacs config.h may rename various library functions such as malloc.  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
+#ifndef  _TERMIOS_HEADERS_H
+#include "termios_headers.h"
+#endif
+
 #include <term.h>
 
 /* BUFSIZE is the initial size allocated for the buffer
@@ -230,6 +230,8 @@ tputs(const char *str, int nlines, register int (*outfun)()) {
     register int padcount = 0;
     register int speed;
 
+    __check_abort();
+
     if (ospeed == 0)
         speed = tputs_baud_rate;
     else if (ospeed >= sizeof(speeds))
@@ -296,6 +298,8 @@ tgetent(char *bp, const char *name) {
     register int c;
     char *tcenv = NULL;        /* TERMCAP value, if it contains :tc=.  */
     char *indirect = NULL;    /* Terminal type in :tc= in TERMCAP value.  */
+
+    __check_abort();
 
     /* For compatibility with programs like `less' that want to
        put data in the termcap buffer themselves as a fallback.  */

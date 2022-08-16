@@ -51,57 +51,57 @@ struct termios
 
 /* c_iflag */
 
-#define IGNBRK 0x00001	/* Ignore VINTR */
-#define BRKINT 0x00002	/* Unimpl. */
-#define IGNPAR 0x00004	/* Unimpl. */
+#define IGNBRK  0x00001	/* Ignore VINTR */
+#define BRKINT  0x00002	/* Unimpl. */
+#define IGNPAR  0x00004	/* Unimpl. */
 #define IMAXBEL 0x00008 /* Unimpl. */
-#define INPCK 0x00010	/* Unimpl. */
-#define ISTRIP 0x00020	/* 7-bit data (strip high bit) */
-#define INLCR 0x00040	/* Map NL->CR */
-#define IGNCR 0x00080	/* Map CR->nothing   */
-#define ICRNL 0x00100	/* Map CR->NL */
-#define IXON 0x00400	/* Unimpl. Enable XON/XOFF for output. */
-#define IXOFF 0x01000	/* Unimpl. Enable XON/XOFF for input. */
-#define IUCLC 0x04000	/* Unimpl. */
-#define IXANY 0x08000	/* Unimpl. */
-#define PARMRK 0x10000	/* Unimpl. */
-#define IUTF8 0x20000	/* Unimpl. */
+#define INPCK   0x00010	/* Unimpl. */
+#define ISTRIP  0x00020	/* 7-bit data (strip high bit) */
+#define INLCR   0x00040	/* Map NL->CR */
+#define IGNCR   0x00080	/* Map CR->nothing   */
+#define ICRNL   0x00100	/* Map CR->NL */
+#define IXON    0x00400	/* Unimpl. Enable XON/XOFF for output. */
+#define IXOFF   0x01000	/* Unimpl. Enable XON/XOFF for input. */
+#define IUCLC   0x04000	/* Unimpl. */
+#define IXANY   0x08000	/* Unimpl. */
+#define PARMRK  0x10000	/* Unimpl. */
+#define IUTF8   0x20000	/* Unimpl. */
 
 /* c_oflag */
 
-#define OPOST (1 << 0L)	 /* Enable output processing. */
-#define ONLCR (1 << 1L)	 /* Map NL->CR+NL */
-#define OCRNL (1 << 2L)	 /* Map CR->NL */
-#define ONOCR (1 << 3L)	 /* Map CR->nothing, but only in column 0. */
-#define ONLRET (1 << 4L) /* Map CR->nothing */
+#define OPOST   (1 << 0L)	 /* Enable output processing. */
+#define ONLCR   (1 << 1L)	 /* Map NL->CR+NL */
+#define OCRNL   (1 << 2L)	 /* Map CR->NL */
+#define ONOCR   (1 << 3L)	 /* Map CR->nothing, but only in column 0. */
+#define ONLRET  (1 << 4L) /* Map CR->nothing */
 
 /* c_cflag */
 
-#define CSIZE (0x07)	 /* Bit-width mask. */
-#define CS5 (0x01)		 /* 5-bits */
-#define CS6 (0x02)		 /* 6-bits */
-#define CS7 (0x03)		 /* 7-bits */
-#define CS8 (0x04)		 /* 8-bits */
-#define CSTOPB (1 << 3L) /* Use 2 stop bits. */
-#define CREAD (1 << 4L)	 /* Enable reading/receiving. */
-#define PARENB (1 << 5L) /* Enable parity generation/checking. */
-#define PARODD (1 << 6L) /* Parity is odd. */
-#define HUPCL (1 << 7L)	 /* Hangup on close (when the device is closed). */
-#define CLOCAL (1 << 8L) /* Ignore modem control lines (i.e. a null-modem) */
+#define CSIZE   (0x07)	    /* Bit-width mask. */
+#define CS5     (0x01)	    /* 5-bits */
+#define CS6     (0x02)	    /* 6-bits */
+#define CS7     (0x03)	    /* 7-bits */
+#define CS8     (0x04)	    /* 8-bits */
+#define CSTOPB  (1 << 3L)   /* Use 2 stop bits. */
+#define CREAD   (1 << 4L)	/* Enable reading/receiving. */
+#define PARENB  (1 << 5L)   /* Enable parity generation/checking. */
+#define PARODD  (1 << 6L)   /* Parity is odd. */
+#define HUPCL   (1 << 7L)	/* Hangup on close (when the device is closed). */
+#define CLOCAL  (1 << 8L)   /* Ignore modem control lines (i.e. a null-modem) */
 
 /* c_lflag */
 
-#define ISIG 0x0001
-#define ICANON 0x0002
-#define ECHO 0x0004
-#define ECHOE 0x0008
-#define ECHOK 0x0010
-#define ECHONL 0x0020
-#define NOFLSH 0x0040
-#define TOSTOP 0x0080
-#define IEXTEN 0x0100
-#define FLUSHO 0x0200
-#define ECHOKE 0x0400
+#define ISIG    0x0001
+#define ICANON  0x0002
+#define ECHO    0x0004
+#define ECHOE   0x0008
+#define ECHOK   0x0010
+#define ECHONL  0x0020
+#define NOFLSH  0x0040
+#define TOSTOP  0x0080
+#define IEXTEN  0x0100
+#define FLUSHO  0x0200
+#define ECHOKE  0x0400
 #define ECHOCTL 0x0800
 
 /* Speeds  */

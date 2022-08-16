@@ -29,6 +29,18 @@
 #include <proto/elf.h>
 #include <fenv.h>
 
+static APTR
+hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
+    uint32 pid = (uint32) userdata;
+    (void) (hook);
+
+    if (process->pr_ProcessID == pid) {
+        return process;
+    }
+
+    return 0;
+}
+
 /* random table */
 static uint32_t _random_init[] = {
         0x00000000, 0x5851f42d, 0xc0b18ccf, 0xcbb5f646,
@@ -45,9 +57,7 @@ static uint32_t _random_init[] = {
 extern struct Library *__ElfBase;
 extern struct ElfIFace *__IElf;
 
-struct _clib2 NOCOMMON
-*
-__global_clib2;
+struct _clib2 NOCOMMON* __global_clib2;
 
 void
 reent_init() {
@@ -213,8 +223,27 @@ out:
 
         /* Remove timer tasks */
         if (__global_clib2->tmr_real_task != NULL) {
-            Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
-            WaitForChildExit(__global_clib2->tmr_real_task->pr_ProcessID);
+            struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
+            int32 pid, process;
+
+            /* Block SIGALRM signal from raise */
+            sigblock(SIGALRM);
+            /* Get itimer process ID */
+            pid = __global_clib2->tmr_real_task->pr_ProcessID;
+
+            Forbid();
+            /* Scan for process */
+            process = ProcessScan(&h, (CONST_APTR) pid, 0);
+            /* If we find the process send a signal to kill it */
+            while (process > 0) {
+                /* Send a SIGBREAKF_CTRL_F signal until the timer task return to Wait state
+                 * and can get the signal */
+                Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+                process = ProcessScan(&h, (CONST_APTR) pid, 0);
+                usleep(100);
+            }
+            Permit();
+            WaitForChildExit(pid);
             __global_clib2->tmr_real_task = NULL;
         }
 
