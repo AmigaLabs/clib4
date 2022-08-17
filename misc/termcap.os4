@@ -1,0 +1,58 @@
+# From: Kent Polk <kent@swrinde.nde.swri.edu>, 30 May 90
+# Added a few more entries, converted caret-type control sequence (^x) entries
+# to '\0xx' entries since a couple of people mentioned losing '^x' sequences.
+#
+# :as:, :ae:			Support for alternate character sets.
+# :ve=\E[\040p:vi=\E[\060\040p:	cursor visible/invisible.
+# :xn:  vt100 kludginess at column 80/NEWLINE ignore after 80 cols(Concept)
+#     This one appears to fix a problem I always had with a line ending
+#     at 'width+1' (I think) followed by a blank line in vi. The blank
+#     line tended to disappear and reappear depending on how the screen
+#     was refreshed. Note that this is probably needed only if you use
+#     something like a Dnet Fterm with the window sized to some peculiar
+#     dimension larger than 80 columns.
+# :k0=\E9~:	map F10 to k0 - could have F0-9 -> k0-9, but ... F10 was 'k;'
+
+# From: Hans Verkuil <hans@wyst.hobby.nl>, 4 Dec 1995
+# (amiga: added empty <acsc> to suppress a warning --esr)
+# Additions by Steven Solie <ssolie@ieee.org>, 24 July 2006
+# Added colors by Andrea Palmate' <andrea.palmate@gmail.com>, 17 August 2022
+amiga-clib2|Amiga ANSI ncurses:\
+	:am:bs:bw:ms:xn:mi:cc:\
+	:Co#16:NC#3:co#80:li#24:pa#64:\
+	:AB=\2334%dm:AF=\2333%dm:AL=\233%dL:DC=\233%dP:\
+	:DL=\233%dM:dl=\233M:op=\23339;49m:\
+	:DC=\233%dP:DO=\233%dB:IC=\233%d@:LE=\233%dD:RI=\233%dC:\
+	:SF=\233%dS:SR=\233%dT:UP=\233%dA:ac=:ae=^O:as=^N:bl=^G:\
+	:bt=\233Z:cd=\233J:ce=\233K:cl=\233H\233J:\
+	:cm=\233%i%d;%dH:cr=^M:dc=\233P:do=\233B:ec=\233%dP:ei=:\
+	:ho=\233H:ic=\233@:im=:is=\23320l:k0=\2339~:k1=\2330~:\
+	:k2=\2331~:k3=\2332~:k4=\2333~:k5=\2334~:k6=\2335~:\
+	:k7=\2336~:k8=\2337~:k9=\2338~:kD=\177:kb=^H:kd=\233B:\
+	:kl=\233D:kr=\233C:ku=\233A:le=\233D:mb=\2337;2m:\
+	:md=\2331m:me=\2330m:mh=\2332m:mk=\2338m:mr=\2337m:\
+	:nd=\233C:nw=\233B\r:r1=\Ec:se=\2330m:sf=\233S:so=\2337m:\
+	:sr=\233T:ta=^I:te=\233?7h:ti=\233?7l:ue=\2330m:up=\233A:\
+	:us=\2334m:vb=^G:ve=\233 p:vi=\2330 p:\
+    :kI=\23340~:kP=\23341~:kN=\23342~:kh=\23344~:@7=\23345~:\
+    :F1=\23320~:F2=\23321~:
+
+amiga-clib2-mono|Amiga ANSI ncurses:\
+	:am:bs:bw:ms:xn:mi:cc:\
+	:co#80:li#24:\
+	:AB=\2334%dm:AF=\2333%dm:AL=\233%dL:DC=\233%dP:\
+	:DL=\233%dM:dl=\233M:op=\23339;49m:\
+	:DC=\233%dP:DO=\233%dB:IC=\233%d@:LE=\233%dD:RI=\233%dC:\
+	:SF=\233%dS:SR=\233%dT:UP=\233%dA:ac=:ae=^O:as=^N:bl=^G:\
+	:bt=\233Z:cd=\233J:ce=\233K:cl=\233H\233J:\
+	:cm=\233%i%d;%dH:cr=^M:dc=\233P:do=\233B:ec=\233%dP:ei=:\
+	:ho=\233H:ic=\233@:im=:is=\23320l:k0=\2339~:k1=\2330~:\
+	:k2=\2331~:k3=\2332~:k4=\2333~:k5=\2334~:k6=\2335~:\
+	:k7=\2336~:k8=\2337~:k9=\2338~:kD=\177:kb=^H:kd=\233B~:\
+	:kl=\233D:kr=\233C:ku=\233A~:le=\233D:mb=\2337;2m:\
+	:md=\2331m:me=\2330m:mh=\2332m:mk=\2338m:mr=\2337m:\
+	:nd=\233C:nw=\233B\r:r1=\Ec:se=\2330m:sf=\233S:so=\2337m:\
+	:sr=\233T:ta=^I:te=\233?7h:ti=\233?7l:ue=\2330m:up=\233A:\
+	:us=\2334m:vb=^G:ve=\233 p:vi=\2330 p:\
+    :kI=\23340~:kP=\23341~:kN=\23342~:kh=\23344~:@7=\23345~:\
+    :F1=\23320~:F2=\23321~:

@@ -39,12 +39,13 @@ struct dirent {
 };
 
 extern DIR *opendir(const char * path_name);
-extern struct dirent * readdir(DIR * directory_pointer);
+extern struct dirent *readdir(DIR * directory_pointer);
 extern void rewinddir(DIR * directory_pointer);
-extern int  closedir(DIR * directory_pointer);
+extern int closedir(DIR * directory_pointer);
 extern DIR *fdopendir(int);
-extern int  alphasort(const struct dirent **a, const struct dirent **b);
-extern int  dirfd(DIR *dirp);
+extern int alphasort(const struct dirent **a, const struct dirent **b);
+extern int dirfd(DIR *dirp);
+extern int scandir(const char *, struct dirent ***, int (*)(const struct dirent *), int (*)(const struct dirent **, const struct dirent **));
 
 extern int readdir_r(DIR *dir, struct dirent *buf, struct dirent **result);
 extern int readdir64_r(DIR *dir, struct dirent *buf, struct dirent **result);

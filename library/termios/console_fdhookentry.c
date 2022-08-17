@@ -33,12 +33,14 @@ LineEditor(BPTR file, char *buf, const int buflen, struct termios *tios) {
     unsigned char z;
     int do_edit = 1;
     int shift_mode = 0;
+    int esc_mode = 0;
 
     SetMode(file, DOSTRUE); /* Set raw mode. */
 
     while (do_edit && len < buflen) {
         /* 5 seconds. */
-        if (WaitForChar(file, 5000000) != DOSFALSE) {
+        if (WaitForChar(file, 5000000) != DOSFALSE)
+        {
             if (Read(file, &z, 1) == ERROR) {
                 len = -1;
                 break;
@@ -54,6 +56,10 @@ LineEditor(BPTR file, char *buf, const int buflen, struct termios *tios) {
                     do_edit = 0;
 
                     buf[len++] = '\n';
+                    continue;
+
+                case 27: /* ESC */
+                    esc_mode = 1;
                     continue;
 
                 case 155: /* CSI */
@@ -80,8 +86,10 @@ LineEditor(BPTR file, char *buf, const int buflen, struct termios *tios) {
                     continue;
             }
 
-            if (shift_mode) {
+
+            if (shift_mode || esc_mode) {
                 shift_mode = 0;
+                esc_mode = 0;
 
                 switch (z) {
                     case 'C': /* Right arrowkey */
@@ -97,6 +105,21 @@ LineEditor(BPTR file, char *buf, const int buflen, struct termios *tios) {
                             pos--;
 
                         continue;
+
+                    case 'A': /* Up arrowkey */
+
+                        if (pos < len)
+                            pos++;
+
+                        continue;
+
+                    case 'B': /* Down arrowkey */
+
+                        if (pos > 0)
+                            pos--;
+
+                        continue;
+
                 }
             }
 
@@ -175,6 +198,15 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
                     result = LineEditor(file, fam->fam_Data, fam->fam_Size, tios);
                 }
                 else {
+                    /* Well.. this seems an hack to make ncurses works correctly
+                     * I don't know if there are other problems setting STDIO always
+                     * in RAW Mode but I suppose that we are ok since we are using
+                     * a termios hook
+                     */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO)) {
+                        /* Set raw mode. */
+                        SetMode(file, DOSTRUE);
+                    }
                     result = Read(file, fam->fam_Data, fam->fam_Size);
                 }
             } else if (fam->fam_Size > 0) {

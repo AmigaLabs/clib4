@@ -43,8 +43,7 @@ get_console_termios(struct fd *fd) {
     if (FLAG_IS_SET(fd->fd_Flags, FDF_READ))
         SET_FLAG(tios->c_cflag, CREAD);
 
-    /* Set up the initial termios state in RAW mode */
-    cfmakeraw(tios);
+    tios->c_lflag = ISIG|ICANON|ECHO;
 
     memcpy(tios->c_cc, def_console_cc, NCCS);
 
@@ -131,17 +130,18 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
 
     __fd_unlock(fd);
 
+    /* If someone ask for tcgetattr on STDOUT or STDERR make sure that we set also
+     * STDIN. This hack fix ncurses library for example */
+    if (file_descriptor == STDOUT_FILENO || file_descriptor == STDERR_FILENO) {
+        tcgetattr(STDIN_FILENO, user_tios);
+    }
+
 out:
 
     __stdio_unlock();
 
     __check_abort();
 
-    /* If someone ask for tcgetattr on STDOUT or STDERR make sure that we set also
-     * STDIN. This hack fix ncurses library for example */
-    if (file_descriptor == STDOUT_FILENO || file_descriptor == STDERR_FILENO) {
-        tcgetattr(STDIN_FILENO, user_tios);
-    }
 
     return (result);
 }
