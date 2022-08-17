@@ -440,9 +440,9 @@
 # define __USE_EXTERN_INLINES	1
 #endif
 
-#define weak __attribute__((__weak__))
-#define hidden __attribute__((__visibility__("hidden")))
-#define weak_alias(old, new) \
+#define WEAK __attribute__((__weak__))
+#define HIDDEN __attribute__((__visibility__("hidden")))
+#define WEAK_ALIAS(old, new) \
 	extern __typeof(old) new __attribute__((__weak__, __alias__(#old)))
 
 

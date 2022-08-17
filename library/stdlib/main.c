@@ -352,9 +352,11 @@ _main()
 	}
 
     /* Set default terminal mode to "amiga" if not set */
-    if (FindVar("TERM", LV_VAR) == NULL) {
-        const char buffer[6] = "amiga\0";
-        SetVar("TERM", buffer, -1, 0);
+    char term_buffer[32] = {0};
+    LONG term_len = GetVar("TERM",(STRPTR) term_buffer, 32, 0);
+    if (term_len <= 0) {
+        strncpy(term_buffer, "amiga-clib2", 5);
+        SetVar("TERM", term_buffer, 5, 0);
     }
 
     /* The following code will be executed if the program is to keep

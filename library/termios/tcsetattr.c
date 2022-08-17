@@ -2,9 +2,9 @@
  * $Id: termios_tcsetattr.c,v 1.5 2006-11-16 14:39:23 clib2devs Exp $
 */
 
-#ifndef    _TERMIOS_HEADERS_H
+#ifndef _TERMIOS_HEADERS_H
 #include "termios_headers.h"
-#endif /* _TERMIOS_HEADERS_H */
+#endif
 
 static int
 set_console_termios(struct fd *fd, struct termios *new_tios) {
@@ -34,8 +34,7 @@ set_console_termios(struct fd *fd, struct termios *new_tios) {
     }
 
     /* Most of the processing (except raw/cooked mode switch) is handled in the hook. */
-    memcpy(old_tios, new_tios, offsetof(
-    struct termios,type));
+    memcpy(old_tios, new_tios, offsetof(struct termios,type));
 
     result = OK;
 
@@ -68,11 +67,9 @@ tcsetattr(int file_descriptor, int how, struct termios *tios) {
 
     __fd_lock(fd);
 
-    /* To use STDOUT we need to enable FDF_IS_INTERACTIVE, ICANON and ECHO */
+    /* To use STDOUT we need to enable FDF_IS_INTERACTIVE */
     if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
         SET_FLAG(__fd[file_descriptor]->fd_Flags, FDF_IS_INTERACTIVE);
-        SET_FLAG(__fd[file_descriptor]->fd_Flags, ICANON);
-        SET_FLAG(__fd[file_descriptor]->fd_Flags, ECHO);
     }
 
     /* The following is in case the termios structure was manually constructed. (it should have been zero:ed in that case)  */

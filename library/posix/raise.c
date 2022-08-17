@@ -6,6 +6,22 @@
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
 
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
+
+static APTR
+hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
+    uint32 pid = (uint32) userdata;
+    (void) (hook);
+
+    if (process->pr_ProcessID == pid) {
+        return process;
+    }
+
+    return 0;
+}
+
 /* This table holds pointers to all signal handlers configured at a time. */
 signal_handler_t NOCOMMON __signal_handler_table[NSIG] = {
     SIG_DFL, /* SIGHUP */
@@ -82,6 +98,32 @@ raise(int sig) {
                 SHOWMSG("this is the default handler");
 
                 if (sig == SIGINT || sig == SIGTERM) {
+                    /* Check ig we have timer terminal running. If so let's kill it */
+                    if (__global_clib2->tmr_real_task != NULL) {
+                        struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
+                        int32 pid, process;
+
+                        /* Block SIGALRM signal from raise */
+                        sigblock(SIGALRM);
+                        /* Get itimer process ID */
+                        pid = __global_clib2->tmr_real_task->pr_ProcessID;
+
+                        Forbid();
+                        /* Scan for process */
+                        process = ProcessScan(&h, (CONST_APTR) pid, 0);
+                        /* If we find the process send a signal to kill it */
+                        while (process > 0) {
+                            /* Send a SIGBREAKF_CTRL_F signal until the timer task return to Wait state
+                             * and can get the signal */
+                            Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+                            process = ProcessScan(&h, (CONST_APTR) pid, 0);
+                            usleep(100);
+                        }
+                        Permit();
+                        WaitForChildExit(pid);
+                        __global_clib2->tmr_real_task = NULL;
+                    }
+
                     char break_string[80];
 
                     /* Turn off ^C checking for good. */
@@ -95,12 +137,7 @@ raise(int sig) {
                     SHOWMSG("bye, bye...");
                 }
                 /* If we have a SIGALRM without associated handler don't call abort but exit directly */
-                else if (sig != SIGALRM) {
-                    /* Drop straight into abort(), which might call signal()
-                       again but is otherwise guaranteed to eventually
-                       land us in _exit(). */
-                    abort();
-                } else if (sig == SIGALRM) {
+                if (sig == SIGALRM) {
                     __print_termination_message("Alarm Clock");
 
                     /* Block SIGALRM signal from raise again */
@@ -108,6 +145,12 @@ raise(int sig) {
 
                     /* Since we got a signal we interrrupt every sleep function like nanosleep */
                     Signal((struct Task *) __global_clib2->self, SIGBREAKF_CTRL_E);
+                }
+                else {
+                    /* Drop straight into abort(), which might call signal()
+                       again but is otherwise guaranteed to eventually
+                       land us in _exit(). */
+                    abort();
                 }
             }
             else if (handler == SIG_ERR) {
