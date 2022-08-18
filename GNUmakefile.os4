@@ -128,6 +128,7 @@ include libcrypt.gmk
 prepare:
 	-$(MAKEDIR) $(INSTALL_PREFIX)/lib
 	-$(MAKEDIR) $(INSTALL_PREFIX)/include
+	-$(MAKEDIR) $(INSTALL_PREFIX)/misc
 
 all-targets: \
 	$(OUTPUT_LIB)/crt0.o \
@@ -261,7 +262,9 @@ endef
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
+	$(DELETE) $(INSTALL_PREFIX)/misc/*
 	$(COPY) LICENSE* $(INSTALL_PREFIX)/
+	$(COPY) misc/* $(INSTALL_PREFIX)/misc/
 	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
 	$(COPY) libs/libauto.a $(INSTALL_PREFIX)/lib/
 	$(COPY) libs/libpthread.a $(INSTALL_PREFIX)/lib/
@@ -273,6 +276,7 @@ release:
 	-$(MAKEDIR) SDK/clib2/include
 	-$(MAKEDIR) SDK/clib2/lib
 	-$(COPY) LICENSE* SDK/clib2/
+	-$(COPY) misc SDK/clib2/
 	-$(COPY) $(OUTPUT_LIB)/* SDK/clib2/lib/
 	-$(COPY) $(LIB_ROOT)/library/include/* SDK/clib2/include/
 	jlha -a clib2.lha SDK

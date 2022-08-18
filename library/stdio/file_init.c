@@ -31,46 +31,45 @@ static BPTR old_input;
 static BPTR output;
 static BPTR input;
 
-struct WBStartup *NOCOMMON
-__WBenchMsg;
+struct WBStartup *NOCOMMON __WBenchMsg;
 
 /* CPU cache line size; used to align I/O buffers for best performance. */
 ULONG __cache_line_size = 32;
 
 FILE_DESTRUCTOR(workbench_exit)
-        {
-                ENTER();
+{
+    ENTER();
 
-        /* Now clean up after the streams set up for Workbench startup... */
-        if (restore_console_task) {
-            SetConsoleTask((struct MsgPort *) old_console_task);
-            old_console_task = NULL;
+    /* Now clean up after the streams set up for Workbench startup... */
+    if (restore_console_task) {
+        SetConsoleTask((struct MsgPort *) old_console_task);
+        old_console_task = NULL;
 
-            restore_console_task = FALSE;
-        }
+        restore_console_task = FALSE;
+    }
 
-        if (restore_streams) {
-            SelectInput(old_input);
-            old_input = ZERO;
+    if (restore_streams) {
+        SelectInput(old_input);
+        old_input = ZERO;
 
-            SelectOutput(old_output);
-            old_output = ZERO;
+        SelectOutput(old_output);
+        old_output = ZERO;
 
-            restore_streams = FALSE;
-        }
+        restore_streams = FALSE;
+    }
 
-        if (input != ZERO) {
-            Close(input);
-            input = ZERO;
-        }
+    if (input != ZERO) {
+        Close(input);
+        input = ZERO;
+    }
 
-        if (output != ZERO) {
-            Close(output);
-            output = ZERO;
-        }
+    if (output != ZERO) {
+        Close(output);
+        output = ZERO;
+    }
 
-        LEAVE();
-        }
+    LEAVE();
+}
 
 static int
 wb_file_init(void) {
