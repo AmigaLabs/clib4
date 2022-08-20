@@ -1,5 +1,5 @@
 /*
- * $Id: socket_select_signal.c,v 1.6 2021-01-31 14:39:23 clib2devs Exp $
+ * $Id: socket_select_signal.c,v 1.7 2022-08-20 14:39:23 clib2devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -43,8 +43,7 @@ zero_fd_set(fd_set *set, int num_fds) {
 
         SHOWVALUE(num_bytes);
 
-        memset(set,
-               0, num_bytes);
+        memset(set, 0, num_bytes);
     }
 
     LEAVE();
@@ -63,12 +62,16 @@ allocate_fd_set(int num_fds, fd_set *duplicate_this_set) {
 
     SHOWVALUE(num_fds);
 
+    if (num_fds <= 0) {
+        __set_errno(EINVAL);
+        goto out;
+    }
+
     num_bytes = sizeof(unsigned long) * ((num_fds + 31) / 32);
 
     SHOWVALUE(num_bytes);
 
-    set = (fd_set *)
-            malloc(num_bytes);
+    set = (fd_set *) malloc(num_bytes);
     if (set != NULL) {
         if (duplicate_this_set != NULL)
             copy_fd_set(set, duplicate_this_set, num_fds);
@@ -78,6 +81,7 @@ allocate_fd_set(int num_fds, fd_set *duplicate_this_set) {
         result = set;
     }
 
+out:
     RETURN(result);
     return (result);
 }
@@ -123,8 +127,7 @@ fix_datestamp(struct DateStamp *ds) {
 
     assert(ds != NULL);
 
-    while (ds->ds_Minute >= minutes_per_day ||
-           ds->ds_Tick >= ticks_per_minute) {
+    while (ds->ds_Minute >= minutes_per_day || ds->ds_Tick >= ticks_per_minute) {
         if (ds->ds_Minute >= minutes_per_day) {
             ds->ds_Days++;
 

@@ -89,8 +89,8 @@ extern int execv(const char *path,char * const argv[]);
 extern int execve(const char *path,char *const argv[],char *const envp[]);
 extern int execvp(const char *command,char * const argv[]);
 
-extern int spawnv(int mode, const char *file, const char * const *argv);
-extern int spawnvp(int mode, const char *path, const char * const *argv);
+extern int spawnv(int mode, const char *file, const char **argv);
+extern int spawnvp(int mode, const char *path, const char **argv);
 
 extern int profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale);
 extern long sysconf(int name);

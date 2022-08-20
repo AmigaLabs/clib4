@@ -59,11 +59,15 @@ FILE_DESTRUCTOR(workbench_exit)
     }
 
     if (input != ZERO) {
+        SetMode(input, DOSFALSE);
+
         Close(input);
         input = ZERO;
     }
 
     if (output != ZERO) {
+        SetMode(output, DOSFALSE);
+
         Close(output);
         output = ZERO;
     }

@@ -17,7 +17,7 @@ static BOOL readSize(uint32 *rows, uint32 *columns) {
     BPTR fh = Open("CONSOLE:", MODE_OLDFILE);
     BOOL success = FALSE;
     if (fh) {
-        uint32 width, height;
+        uint32 width = 0, height = 0;
         char r[2] = {0};
         char buffer[25 + 1] = {0};
 
@@ -33,7 +33,7 @@ static BOOL readSize(uint32 *rows, uint32 *columns) {
             if (actual >= 0) {
                 buffer[actual] = '\0';
                 if (sscanf(buffer, "\x9b"
-                                   "1;1;%d;%d r", &height, &width) == 2) {
+                                   "1;1;%ld;%ld r", &height, &width) == 2) {
                     success = TRUE;
                 }
             }
@@ -42,9 +42,30 @@ static BOOL readSize(uint32 *rows, uint32 *columns) {
         Close(fh);
 
         if (success) {
-            *rows = width;
-            *columns = height;
+            *rows = height;
+            *columns = width;
         }
+    }
+
+    return success;
+}
+
+static BOOL writeSize(uint32 rows, uint32 columns) {
+    BPTR fh = Open("CONSOLE:", MODE_OLDFILE);
+    BOOL success = FALSE;
+
+    if (fh) {
+        char buffer[51] = {0};
+
+        SetMode(fh, 1); // RAW mode
+        snprintf(buffer, 50, "\x9b%dt\x9b%du", rows, columns);
+        int bufferLen = strlen(buffer);
+        int bytesWritten = Write(fh, buffer, bufferLen);
+        if (bytesWritten == bufferLen) {
+            success = TRUE;
+        }
+        SetMode(fh, 0); // Normal mode
+        Close(fh);
     }
 
     return success;
@@ -61,6 +82,8 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
 
     SHOWVALUE(sockfd);
     SHOWVALUE(request);
+
+    __set_errno(0);
 
     if (request != TIOCGWINSZ && request != TIOCSWINSZ) {
         assert(__SocketBase != NULL);
@@ -131,7 +154,11 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
             __set_errno(EFAULT);
             goto out;
         }
-        /* Do nothing at moment. Console device doesn't support it */
+
+        /* Write size will clear and refresh only the window.
+         * Console device don't support resizing via CSI
+         */
+        writeSize(size->ws_row, size->ws_col);
     }
 
 out:
