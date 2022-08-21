@@ -13,6 +13,8 @@
 #include <sys/filio.h>
 #endif /* _SYS_FILIO_H */
 
+#include <sys/sockio.h>
+
 #include <features.h>
 
 struct winsize {

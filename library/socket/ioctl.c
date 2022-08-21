@@ -13,24 +13,26 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 
+#define BUFFER_SIZE 30
+
 static BOOL readSize(uint32 *rows, uint32 *columns) {
     BPTR fh = Open("CONSOLE:", MODE_OLDFILE);
     BOOL success = FALSE;
     if (fh) {
         uint32 width = 0, height = 0;
-        char r[2] = {0};
-        char buffer[25 + 1] = {0};
+        char r;
+        char buffer[BUFFER_SIZE + 1] = {0};
 
         SetMode(fh, 1); // RAW mode
         if (Write(fh, "\x9b q", 3) == 3) {
             LONG actual = 0;
-            LONG ret = Read(fh, r, 1);
-            while (r[0] != 'r' && ret != 0) {
-                buffer[actual] = r[0];
+            LONG ret = Read(fh, &r, 1);
+            while (r != 'r' && ret != 0 && actual < BUFFER_SIZE) {
+                buffer[actual] = r;
                 actual += ret;
-                ret = Read(fh, r, 1);
+                ret = Read(fh, &r, 1);
             }
-            if (actual >= 0) {
+            if (actual >= 0 && actual < BUFFER_SIZE) {
                 buffer[actual] = '\0';
                 if (sscanf(buffer, "\x9b"
                                    "1;1;%ld;%ld r", &height, &width) == 2) {
@@ -158,7 +160,9 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
         /* Write size will clear and refresh only the window.
          * Console device don't support resizing via CSI
          */
+#if 0
         writeSize(size->ws_row, size->ws_col);
+#endif
     }
 
 out:

@@ -86,7 +86,7 @@ obtain_file_lock_semaphore(BOOL shared) {
 
         /* We allocate the new semaphore first, so that we don't spend
            any time in Forbid() allocating memory. */
-        semaphore_name_copy = AllocVecTags(strlen(__file_lock_semaphore_name) + 1, AVT_Type, MEMF_ANY, TAG_DONE);
+        semaphore_name_copy = AllocVecTags(strlen(__file_lock_semaphore_name) + 1, AVT_Type, MEMF_SHARED, TAG_DONE);
         if (semaphore_name_copy != NULL) {
             strcpy(semaphore_name_copy, __file_lock_semaphore_name);
 
@@ -240,7 +240,7 @@ create_locked_region_node(struct LockedRegionNode **result_ptr) {
 
     assert(result_ptr != NULL);
 
-    lrn = AllocVecTags(sizeof(*lrn), AVT_Type, MEMF_ANY, AVT_ClearWithValue, 0, TAG_DONE);
+    lrn = AllocVecTags(sizeof(*lrn), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (lrn == NULL) {
         SHOWMSG("not enough memory for locked region node");
 
@@ -296,15 +296,13 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
         goto out;
     }
 
-    fln = AllocVecTags(sizeof(*fln) + strlen(fib->Name), AVT_Type, MEMF_ANY, TAG_DONE);
+    fln = AllocVecTags(sizeof(*fln) + strlen(fib->Name), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (fln == NULL) {
         SHOWMSG("not enough memory for lock node");
 
         error = ERROR_NO_FREE_STORE;
         goto out;
     }
-
-    memset(fln, 0, sizeof(*fln));
 
     fln->fln_FileParentDir = __safe_parent_of_file_handle(fd->fd_File);
     if (fln->fln_FileParentDir == ZERO) {
@@ -795,6 +793,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
 
                     locked = TRUE;
                 } else {
+                    (*error_ptr) = EWOULDBLOCK;
                     SHOWMSG("and the locks collide");
                 }
             } else {

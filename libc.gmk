@@ -98,6 +98,7 @@ C_DIRENT := \
 	dirent/alphasort.o \
 	dirent/closedir.o \
 	dirent/dirfd.o \
+	fcntl/flock.o \
 	dirent/fdopendir.o \
 	dirent/opendir.o \
 	dirent/scandir.o \

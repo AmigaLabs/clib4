@@ -63,11 +63,15 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             }
 
             va_start(arg, cmd);
-            l = va_arg(arg,
-            struct flock *);
+            l = va_arg(arg, struct flock *);
             va_end(arg);
 
             assert(l != NULL);
+
+            if (l == NULL) {
+                __set_errno(EBADF);
+                goto out;
+            }
 
             if (l->l_type < F_RDLCK || l->l_type > F_WRLCK) {
                 SHOWMSG("invalid flock type");
@@ -183,8 +187,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             SHOWMSG("cmd=F_DUPFD");
 
             va_start(arg, cmd);
-            fdbase = va_arg(arg,
-            int);
+            fdbase = va_arg(arg, int);
             va_end(arg);
 
             if (fdbase < 0) {

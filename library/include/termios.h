@@ -69,11 +69,11 @@ struct termios
 
 /* c_oflag */
 
-#define OPOST   (1 << 0L)	 /* Enable output processing. */
-#define ONLCR   (1 << 1L)	 /* Map NL->CR+NL */
-#define OCRNL   (1 << 2L)	 /* Map CR->NL */
-#define ONOCR   (1 << 3L)	 /* Map CR->nothing, but only in column 0. */
-#define ONLRET  (1 << 4L) /* Map CR->nothing */
+#define OPOST   (1 << 0L)	/* Enable output processing. */
+#define ONLCR   (1 << 1L)	/* Map NL->CR+NL */
+#define OCRNL   (1 << 2L)	/* Map CR->NL */
+#define ONOCR   (1 << 3L)	/* Map CR->nothing, but only in column 0. */
+#define ONLRET  (1 << 4L)   /* Map CR->nothing */
 
 /* c_cflag */
 
@@ -184,5 +184,5 @@ extern int cfsetispeed(struct termios *tios_p, speed_t input_speed);
 extern int cfsetospeed(struct termios *tios_p, speed_t output_speed);
 
 __END_DECLS
-/****************************************************************************/
+
 #endif /* _TERMIOS_H */

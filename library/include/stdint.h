@@ -120,27 +120,25 @@ typedef	unsigned long		 	uintmax_t;
 /* Maximum value of size_t */
 #define	SIZE_MAX				UINT_MAX
 
-#if defined(__STDC_CONSTANT_MACROS)
-#define	INT8_C(x)		x
-#define	INT16_C(x)		x
-#define	INT32_C(x)		x
+#define INT8_C(c)  c
+#define INT16_C(c) c
+#define INT32_C(c) c
 
-#define	UINT8_C(x)		x ## U
-#define	UINT16_C(x)		x ## U
-#define	UINT32_C(x)		x ## U
+#define UINT8_C(c)  c
+#define UINT16_C(c) c
+#define UINT32_C(c) c ## U
 
-#if defined(__GNUC__) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L))
-#define	INTMAX_C(x)		x ## LL
-#define	UINTMAX_C(x)	x ## ULL
+#if UINTPTR_MAX == UINT64_MAX
+#define INT64_C(c) c ## L
+#define UINT64_C(c) c ## UL
+#define INTMAX_C(c)  c ## L
+#define UINTMAX_C(c) c ## UL
 #else
-#define	INTMAX_C(x)		x ## L
-#define	UINTMAX_C(x)	x ## UL
-#endif /* __GNUC__ || (__STDC_VERSION__ && __STDC_VERSION__ >= 199901L) */
-
-#endif	/* not C++ or CONSTANT_MACROS */
-
-#define INT64_C(x)	x##LL
-#define UINT64_C(x)	x##ULL
+#define INT64_C(c) c ## LL
+#define UINT64_C(c) c ## ULL
+#define INTMAX_C(c)  c ## LL
+#define UINTMAX_C(c) c ## ULL
+#endif
 
 /****************************************************************************/
 
@@ -152,6 +150,8 @@ typedef	unsigned long		 	uintmax_t;
 
 #define WINT_MIN	INT_MIN
 #define WINT_MAX	INT_MAX
+
+
 
 __END_DECLS
 

@@ -8,6 +8,7 @@
 
 /* Length of interface name.  */
 #define IF_NAMESIZE 16
+#define IFNAMSIZ IF_NAMESIZE
 
 /* Standard interface flags. */
 enum
