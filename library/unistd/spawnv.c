@@ -91,7 +91,7 @@ count_extra_escape_chars(const char *string, size_t len) {
 STATIC size_t
 get_arg_string_length(char *const argv[]) {
     size_t result = 0;
-    size_t i, len;
+    size_t i, len = 0;
     char *s;
 
     /* The first argv[] element is skipped; it does not contain part of
@@ -159,7 +159,7 @@ spawnv(int mode, const char *file, const char **argv) {
     arg_string[arg_string_len] = '\0';
 
     int pathlen = strlen(file) + strlen(arg_string) + 1;
-    char *finalpath = calloc(1, pathlen);
+    char finalpath[PATH_MAX] = {0};
     snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
 
     struct Process *me = (struct Process *) FindTask(NULL);

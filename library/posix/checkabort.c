@@ -12,11 +12,7 @@
 
 void
 __check_abort(void) {
-    ENTER();
-
     if (__check_abort_enabled && FLAG_IS_SET(SetSignal(0, __break_signal_mask), __break_signal_mask)) {
         raise(SIGINT);
     }
-
-    LEAVE();
 }

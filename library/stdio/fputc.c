@@ -59,11 +59,6 @@ __fputc(int c, FILE *stream, int buffer_mode) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
 
-    ENTER();
-    SHOWVALUE(c);
-    SHOWPOINTER(stream);
-    SHOWVALUE(buffer_mode);
-
     assert(stream != NULL);
 
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -87,7 +82,6 @@ __fputc(int c, FILE *stream, int buffer_mode) {
 
 out:
 
-    RETURN(result);
     return (result);
 }
 

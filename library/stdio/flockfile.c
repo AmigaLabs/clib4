@@ -10,10 +10,6 @@ void
 flockfile(FILE *stream) {
     struct iob *file = (struct iob *) stream;
 
-    ENTER();
-
-    SHOWPOINTER(stream);
-
     assert(stream != NULL);
 
     __check_abort();
@@ -40,5 +36,4 @@ flockfile(FILE *stream) {
 
 out:
 
-    LEAVE();
 }

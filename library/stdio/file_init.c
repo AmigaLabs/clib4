@@ -184,7 +184,7 @@ FILE_CONSTRUCTOR(stdio_file_init)
             case STDOUT_FILENO:
 
                 iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE;
+                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE;
                 default_file = Output();
                 break;
 
