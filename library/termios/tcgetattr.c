@@ -19,7 +19,12 @@ static const cc_t def_console_cc[NCCS] =
         17,     /* VSTART	= DC1 */
         19,     /* VSTOP	= DC3 */
         26,     /* VSUSP	= SUB */
-        23      /* VWERASE	= ETB */
+        23,     /* VWERASE	= ETB */
+        0,      /* VSWTC    = ?   */
+        0,      /* VREPRINT = ?   */
+        0,      /* VDISCARD = ?   */
+        0,      /* VLNEXT   = ?   */
+        0       /* VEOL2    = ?   */
 };
 
 static struct termios *

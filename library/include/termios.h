@@ -17,22 +17,28 @@ typedef unsigned int tcflag_t;
 typedef unsigned char cc_t;
 typedef unsigned int speed_t;
 
-#define NCCS 16 /* Number of Control Characters = Length of the c_cc array.  */
+#define NCCS 17 /* Number of Control Characters = Length of the c_cc array.  */
 
+/* All the control characters in c_cc[] in a struct termios (below) */
 enum
-{			 /* All the control characters in c_cc[] in a struct termios (below) */
-  VINTR = 0, /* ^C (break)      		*/
-  VQUIT,	 /* ^\ (quit)       		*/
-  VERASE,	 /* ^H (eraase)     		*/
-  VKILL,	 /* ^X (erase-line) 		*/
-  VEOF,		 /* ^D (end-of-file)		*/
-  VMIN,		 /* Minimum number of characters to read. Interacts with VTIME.  */
-  VEOL,		 /* NUL 					*/
-  VTIME,	 /* Timeout in 1/10:ths of a second. Interacts with VMIN. */
-  VSTART,	 /* ^Q (continue) 		*/
-  VSTOP,	 /* ^S (stop) 			*/
-  VSUSP,	 /* ^Z (suspend) 		*/
-  VWERASE,	 /* ^W (word-erase)	 	*/
+{
+    VINTR = 0,  /* ^C (break)      		*/
+    VQUIT,	    /* ^\ (quit)       		*/
+    VERASE,	    /* ^H (eraase)     		*/
+    VKILL,	    /* ^X (erase-line) 		*/
+    VEOF,		/* ^D (end-of-file)		*/
+    VMIN,		/* Minimum number of characters to read. Interacts with VTIME.  */
+    VEOL,		/* NUL 					*/
+    VTIME,	    /* Timeout in 1/10:ths of a second. Interacts with VMIN. */
+    VSTART,	    /* ^Q (continue) 		*/
+    VSTOP,	    /* ^S (stop) 			*/
+    VSUSP,	    /* ^Z (suspend) 		*/
+    VWERASE,	/* ^W (word-erase)	 	*/
+    VSWTC,
+    VREPRINT,
+    VDISCARD,
+    VLNEXT,
+    VEOL2,
 };
 
 struct termios

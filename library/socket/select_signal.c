@@ -518,12 +518,10 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
      */
     __stdio_lock();
 
-    map_descriptor_sets(read_fds, num_fds, socket_read_fds, num_socket_used, &total_socket_fd, file_read_fds,
-                        num_file_used, &total_file_fd);
-    map_descriptor_sets(write_fds, num_fds, socket_write_fds, num_socket_used, &total_socket_fd, file_write_fds,
-                        num_file_used, &total_file_fd);
-    map_descriptor_sets(except_fds, num_fds, socket_except_fds, num_socket_used, &total_socket_fd, NULL, 0,
-                        &total_file_fd);
+    map_descriptor_sets(read_fds, num_fds, socket_read_fds, num_socket_used, &total_socket_fd, file_read_fds, num_file_used, &total_file_fd);
+    map_descriptor_sets(write_fds, num_fds, socket_write_fds, num_socket_used, &total_socket_fd, file_write_fds, num_file_used, &total_file_fd);
+    map_descriptor_sets(except_fds, num_fds, socket_except_fds, num_socket_used, &total_socket_fd, NULL, 0, &total_file_fd);
+
 
     __stdio_unlock();
 
@@ -672,13 +670,15 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                                 assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) &&
                                        FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
 
+                                /* Is this a poll socket? */
+                                if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
+                                    got_input = TRUE;
+                                }
                                 /* Does this one have input? */
-                                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+                                else if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
                                     /* For an interactive stream, we simply ask. */
                                     if (WaitForChar(fd->fd_File, 1))
                                         got_input = TRUE;
-                                } else if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
-                                    got_input = TRUE;
                                 } else {
                                     struct ExamineData *fib;
 
@@ -775,8 +775,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             if (__check_abort_enabled)
                 break_mask |= __break_signal_mask;
 
-            result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds,
-                                  (struct TimeVal *) timeout, &break_mask);
+            result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal *) timeout, &break_mask);
             if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __break_signal_mask)) {
                 SetSignal(__break_signal_mask, __break_signal_mask);
                 __check_abort();
@@ -786,130 +785,122 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 (*signal_mask_ptr) = signal_mask & break_mask;
         }
     } else {
-        /* Wait for file input? */
-        if (timeout == NULL || timeout->tv_sec > 0 || timeout->tv_usec > 0) {
-            struct DateStamp stop_when;
-            BOOL got_input;
-            BOOL got_output;
 
-            SHOWMSG("we have to deal with files");
+        struct DateStamp stop_when;
+        BOOL got_input;
+        BOOL got_output;
 
-            if (num_file_used > 0) {
-                if (read_fds != NULL) {
-                    SHOWMSG("allocating backup file read fd_set");
+        SHOWMSG("we have to deal with files");
 
-                    backup_file_read_fds = allocate_fd_set(num_file_used, file_read_fds);
-                    if (backup_file_read_fds == NULL)
-                        goto out;
-                }
+        if (num_file_used > 0) {
+            if (read_fds != NULL) {
+                SHOWMSG("allocating backup file read fd_set");
 
-                if (write_fds != NULL) {
-                    SHOWMSG("allocating backup file write fd_set");
-
-                    backup_file_write_fds = allocate_fd_set(num_file_used, file_write_fds);
-                    if (backup_file_write_fds == NULL)
-                        goto out;
-                }
+                backup_file_read_fds = allocate_fd_set(num_file_used, file_read_fds);
+                if (backup_file_read_fds == NULL)
+                    goto out;
             }
 
-            if (timeout != NULL) {
-                struct DateStamp datestamp_timeout;
-                DateStamp(&stop_when);
+            if (write_fds != NULL) {
+                SHOWMSG("allocating backup file write fd_set");
 
-                add_dates(&stop_when, timeval_to_datestamp(&datestamp_timeout, timeout));
-            } else {
-                memset(&stop_when, 0, sizeof(stop_when));
+                backup_file_write_fds = allocate_fd_set(num_file_used, file_write_fds);
+                if (backup_file_write_fds == NULL)
+                    goto out;
             }
+        }
 
-            while (TRUE) {
-                __check_abort();
+        if (timeout != NULL) {
+            struct DateStamp datestamp_timeout;
+            DateStamp(&stop_when);
 
-                Delay(1);
+            add_dates(&stop_when, timeval_to_datestamp(&datestamp_timeout, timeout));
+        } else {
+            memset(&stop_when, 0, sizeof(stop_when));
+        }
 
-                result = 0;
+        while (TRUE) {
+            __check_abort();
 
-                for (i = 0; i < total_file_fd; i++) {
-                    got_input = got_output = FALSE;
+            Delay(1);
 
-                    fd = get_file_descriptor(i);
-                    if (fd != NULL) {
-                        if (file_read_fds != NULL && FD_ISSET(i, file_read_fds)) {
-                            if (FLAG_IS_SET(fd->fd_Flags, FDF_READ)) {
-                                assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) &&
-                                       FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
+            result = 0;
+            for (i = 0; i < total_file_fd; i++) {
+                got_input = got_output = FALSE;
 
-                                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
-                                    if (WaitForChar(fd->fd_File, 1))
-                                        got_input = TRUE;
-                                } else if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
+                fd = get_file_descriptor(i);
+                if (fd != NULL) {
+                    if (file_read_fds != NULL && FD_ISSET(i, file_read_fds)) {
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_READ)) {
+                            assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
+
+                            /* Check first if this is a poll FD */
+                            if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
+                                got_input = TRUE;
+                            }
+                            else if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+                                if (WaitForChar(fd->fd_File, 1))
                                     got_input = TRUE;
-                                } else {
-                                    struct ExamineData *fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File,
-                                                                                TAG_DONE);
-                                    if (fib != NULL) {
-                                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION)) {
-                                            if ((ULONG) fib->FileSize > fd->fd_Position)
-                                                got_input = TRUE;
-                                        } else {
-                                            if (fib->FileSize != 0)
-                                                got_input = TRUE;
-                                        }
-                                        FreeDosObject(DOS_EXAMINEDATA, fib);
+                            } else {
+                                struct ExamineData *fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+                                if (fib != NULL) {
+                                    if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION)) {
+                                        if ((ULONG) fib->FileSize > fd->fd_Position)
+                                            got_input = TRUE;
+                                    } else {
+                                        if (fib->FileSize != 0)
+                                            got_input = TRUE;
                                     }
+                                    FreeDosObject(DOS_EXAMINEDATA, fib);
                                 }
                             }
                         }
+                    }
 
-                        if (file_write_fds != NULL && FD_ISSET(i, file_write_fds)) {
-                            if (FLAG_IS_SET(fd->fd_Flags, FDF_WRITE)) {
-                                assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET));
-                                got_output = TRUE;
-                            }
+                    if (file_write_fds != NULL && FD_ISSET(i, file_write_fds)) {
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_WRITE)) {
+                            assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET));
+                            got_output = TRUE;
                         }
                     }
-
-                    if (got_input || got_output)
-                        result++;
-
-                    if (file_read_fds != NULL && NOT got_input) {
-                        FD_CLR(i, file_read_fds);
-                    }
-
-                    if (file_write_fds != NULL && NOT got_output) {
-                        FD_CLR(i, file_write_fds);
-                    }
                 }
 
-                /* Check for a stop signal. */
-                if (signal_mask != 0 && (SetSignal(0, 0) & signal_mask) != 0) {
-                    /* Remember which signal bits were set, and clear the
-                       signal mask. Note that if the signal mask includes the
-                       standard break signal bit, then we must not clear the
-                       break signal. The ^C checking depends upon it to
-                       remain set. */
-                    (*signal_mask_ptr) = signal_mask & SetSignal(0, signal_mask & ~__break_signal_mask);
-                    break;
+                if (got_input || got_output)
+                    result++;
+
+                if (file_read_fds != NULL && NOT got_input) {
+                    FD_CLR(i, file_read_fds);
                 }
 
-                if (result > 0)
-                    break;
-
-                if (timeout != NULL) {
-                    struct DateStamp now;
-                    DateStamp(&now);
-
-                    if (CompareDates(&now, &stop_when) <= 0)
-                        break;
+                if (file_write_fds != NULL && NOT got_output) {
+                    FD_CLR(i, file_write_fds);
                 }
-
-                copy_fd_set(file_read_fds, backup_file_read_fds, num_file_used);
-                copy_fd_set(file_write_fds, backup_file_write_fds, num_file_used);
             }
-        } else {
-            SHOWMSG("no files and no timeout to worry about");
 
-            if (signal_mask != 0)
+            /* Check for a stop signal. */
+            if (signal_mask != 0 && (SetSignal(0, 0) & signal_mask) != 0) {
+                /* Remember which signal bits were set, and clear the
+                   signal mask. Note that if the signal mask includes the
+                   standard break signal bit, then we must not clear the
+                   break signal. The ^C checking depends upon it to
+                   remain set. */
                 (*signal_mask_ptr) = signal_mask & SetSignal(0, signal_mask & ~__break_signal_mask);
+                break;
+            }
+
+            if (result > 0)
+                break;
+
+            if (timeout != NULL && (timeout->tv_sec > 0 || timeout->tv_usec > 0)) {
+                struct DateStamp now;
+                DateStamp(&now);
+
+                if (CompareDates(&now, &stop_when) <= 0)
+                    break;
+            }
+
+            copy_fd_set(file_read_fds, backup_file_read_fds, num_file_used);
+            copy_fd_set(file_write_fds, backup_file_write_fds, num_file_used);
         }
     }
 

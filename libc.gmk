@@ -450,6 +450,7 @@ C_STDLIB := \
 	stdlib/abs.o \
 	stdlib/aligned_alloc.o \
 	stdlib/assertion_failure.o \
+	stdlib/arc4random.o \
 	stdlib/atexit.o \
 	stdlib/atof.o \
 	stdlib/atoff.o \
@@ -508,6 +509,7 @@ C_STDLIB := \
 	stdlib/program_name.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
+	stdlib/qsort_r.o \
 	stdlib/realloc.o \
 	stdlib/resetmemstats.o \
 	stdlib/secure_getenv.o \
@@ -736,6 +738,7 @@ C_UNISTD := \
 	unistd/pread.o \
 	unistd/pwrite.o \
 	unistd/readlink.o \
+	unistd/reallocarray.o \
 	unistd/realpath.o \
 	unistd/restorepathname.o \
 	unistd/setcurrentpath.o \
