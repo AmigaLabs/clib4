@@ -26,6 +26,7 @@ __BEGIN_DECLS
 #define O_ASYNC		(1<<7)
 #define O_PATH      (1<<8)
 #define O_DIRECTORY (1<<9)
+#define O_CLOEXEC   (0)
 
 #define	O_ACCMODE	(O_RDONLY|O_WRONLY|O_RDWR)
 
