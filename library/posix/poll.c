@@ -6,8 +6,11 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#ifndef _SOCKET_HEADERS_H
+#include "socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
+
 #include <poll.h>
-#include <errno.h>
 #include <sys/param.h> // MAX
 
 static int
@@ -54,9 +57,12 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
             FD_SET(pCur->fd, pExceptSet);
         }
 
-        SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ);
+        if (pCur->fd != STDIN_FILENO)
+            SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ | FDF_WRITE);
+        else
+            SET_FLAG(fd->fd_Flags, FDF_READ | FDF_WRITE);
 
-        max_fd = MAX (max_fd, pCur->fd);
+        max_fd = MAX(max_fd, pCur->fd);
     }
 
     RETURN(max_fd);
@@ -124,14 +130,17 @@ map_select_results(struct pollfd *pArray, unsigned long n_fds, fd_set *pReadSet,
 
         /* Exception events take priority over input events. */
         pCur->revents = 0;
-        if (FD_ISSET(pCur->fd, pExceptSet))
+        if (FD_ISSET(pCur->fd, pExceptSet)) {
             pCur->revents |= POLLPRI;
+        }
 
-        else if (FD_ISSET(pCur->fd, pReadSet))
+        else if (FD_ISSET(pCur->fd, pReadSet)) {
             pCur->revents |= POLLIN;
+        }
 
-        if (FD_ISSET(pCur->fd, pWriteSet))
+        if (FD_ISSET(pCur->fd, pWriteSet)) {
             pCur->revents |= POLLOUT;
+        }
     }
 
     return;

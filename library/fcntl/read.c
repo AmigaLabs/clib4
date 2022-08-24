@@ -47,7 +47,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_READ)) {
         SHOWMSG("this descriptor is not read-enabled");
 
-        __set_errno(EBADF);
+        __set_errno(EINVAL);
         goto out;
     }
 

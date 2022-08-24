@@ -118,6 +118,8 @@ struct _fd
 #define FDF_POLL			(1UL<<14)	/* File is under poll control. */
 #define FDF_IS_DIRECTORY	(1UL<<15)	/* This is not a disk file but a directory */
 #define FDF_PATH_ONLY   	(1UL<<16)	/* Allowed operation on file are only statistics one */
+#define FDF_STDIN_AS_SOCKET	(1UL<<17)	/* STDIN is used in a socket stream */
+#define FDF_STDIN_READ_MARK	(1UL<<18)	/* STDIN was marked as first read */
 
 /****************************************************************************/
 

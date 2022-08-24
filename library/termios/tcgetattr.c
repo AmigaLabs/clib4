@@ -2,7 +2,7 @@
  * $Id: termios_tcgetattr.c,v 1.4 2022-08-15 12:04:27 clib2devs Exp $
 */
 
-#ifndef    _TERMIOS_HEADERS_H
+#ifndef _TERMIOS_HEADERS_H
 #include "termios_headers.h"
 #endif /* _TERMIOS_HEADERS_H */
 
@@ -144,9 +144,7 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
 out:
 
     __stdio_unlock();
-
     __check_abort();
-
 
     return (result);
 }

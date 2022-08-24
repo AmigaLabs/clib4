@@ -223,10 +223,8 @@ map_descriptor_sets(
                 int socket_fd = fd->fd_Socket;
 
                 D(("corresponds to socket #%ld", socket_fd));
-
                 if (socket_fds != NULL && socket_fd < num_socket_fds) {
                     SHOWMSG("setting it");
-
                     FD_SET(socket_fd, socket_fds);
 
                     if (total_socket_fd < socket_fd + 1)
@@ -235,11 +233,18 @@ map_descriptor_sets(
                     SHOWMSG("can't set it, though");
                 }
             } else {
-                /* We watch files bound to console streams and disk
-                   files which may have data stored in them. */
-                if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_POLL)) {
+                /* We watch files bound to console streams and disk files which may have data stored in them. */
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
                     SHOWMSG("this is a file, or otherwise unsuitable");
                     continue;
+                }
+
+                /* If we are dealing with STDIN mark it as Socket. This flag is used in
+                 * read() calls to handle carriage return
+                 */
+                if (fd->fd_File == STDIN_FILENO) {
+                    SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+                    SET_FLAG(fd->fd_Flags, FDF_STDIN_AS_SOCKET);
                 }
 
                 if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE) || FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
@@ -276,8 +281,6 @@ map_descriptor_sets(
                 } else {
                     SHOWMSG("can't set it, though");
                 }
-
-
             }
         }
 
@@ -327,8 +330,9 @@ remap_descriptor_sets(
             SHOWMSG("taking care of the sockets");
 
             for (socket_fd = 0; socket_fd < num_socket_fds; socket_fd++) {
-                if (NOT FD_ISSET(socket_fd, socket_fds))
+                if (NOT FD_ISSET(socket_fd, socket_fds)) {
                     continue;
+                }
 
                 for (output_fd = 0; output_fd < num_output_fds; output_fd++) {
                     fd = get_file_descriptor(output_fd);
@@ -401,8 +405,7 @@ get_num_descriptors_used(int num_fds, int *num_socket_used_ptr, int *num_file_us
 }
 
 int
-__select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, struct timeval *timeout,
-             ULONG *signal_mask_ptr) {
+__select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, struct timeval *timeout, ULONG *signal_mask_ptr) {
     fd_set *backup_socket_read_fds = NULL;
     fd_set *backup_socket_write_fds = NULL;
     fd_set *backup_socket_except_fds = NULL;
@@ -512,16 +515,14 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
     SHOWMSG("mapping the fd_sets");
 
-    /* Translate from the tables the caller provided to us
-     * to the local copies, which take the files and sockets
-     * into account.
+    /* Translate from the tables the caller provided to us to the local copies,
+     * which take the files and sockets into account.
      */
     __stdio_lock();
 
-    map_descriptor_sets(read_fds, num_fds, socket_read_fds, num_socket_used, &total_socket_fd, file_read_fds, num_file_used, &total_file_fd);
-    map_descriptor_sets(write_fds, num_fds, socket_write_fds, num_socket_used, &total_socket_fd, file_write_fds, num_file_used, &total_file_fd);
-    map_descriptor_sets(except_fds, num_fds, socket_except_fds, num_socket_used, &total_socket_fd, NULL, 0, &total_file_fd);
-
+    map_descriptor_sets(read_fds,   num_fds, socket_read_fds,   num_socket_used, &total_socket_fd, file_read_fds,  num_file_used, &total_file_fd);
+    map_descriptor_sets(write_fds,  num_fds, socket_write_fds,  num_socket_used, &total_socket_fd, file_write_fds, num_file_used, &total_file_fd);
+    map_descriptor_sets(except_fds, num_fds, socket_except_fds, num_socket_used, &total_socket_fd, NULL,           0,             &total_file_fd);
 
     __stdio_unlock();
 
@@ -635,8 +636,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                     break_mask |= __break_signal_mask;
 
                 /* Check for socket input. */
-                result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds,
-                                      (struct TimeVal *) &zero, &break_mask);
+                result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal *) &zero, &break_mask);
 
                 /* Stop if a break signal arrives. */
                 if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __break_signal_mask)) {
@@ -667,18 +667,24 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                     if (fd != NULL) {
                         if (file_read_fds != NULL && FD_ISSET(i, file_read_fds)) {
                             if (FLAG_IS_SET(fd->fd_Flags, FDF_READ)) {
-                                assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) &&
-                                       FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
-
                                 /* Is this a poll socket? */
                                 if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
                                     got_input = TRUE;
                                 }
                                 /* Does this one have input? */
                                 else if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
-                                    /* For an interactive stream, we simply ask. */
-                                    if (WaitForChar(fd->fd_File, 1))
-                                        got_input = TRUE;
+                                    if (i == STDIN_FILENO) {
+                                        /* For STDIN stream, ask input. */
+                                        if (WaitForChar(Input(), 1)) {
+                                            got_input = TRUE;
+                                        }
+                                    }
+                                    else {
+                                        /* For an interactive stream, we simply ask. */
+                                        if (WaitForChar(fd->fd_File, 1)) {
+                                            got_input = TRUE;
+                                        }
+                                    }
                                 } else {
                                     struct ExamineData *fib;
 
@@ -723,17 +729,17 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                     }
 
                     if (got_input || got_output) {
-                        /* Mark one more descriptor as
-                         * having input/output.
-                         */
+                        /* Mark one more descriptor as having input/output. */
                         result++;
                     }
 
-                    if (file_read_fds != NULL && NOT got_input)
-                    FD_CLR(i, file_read_fds);
+                    if (file_read_fds != NULL && NOT got_input) {
+                        FD_CLR(i, file_read_fds);
+                    }
 
-                    if (file_write_fds != NULL && NOT got_output)
-                    FD_CLR(i, file_write_fds);
+                    if (file_write_fds != NULL && NOT got_output) {
+                        FD_CLR(i, file_write_fds);
+                    }
                 }
 
                 /* Did we receive a stop signal? */
@@ -747,10 +753,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (result > 0)
                     break;
 
-                /* If a timeout was set, check if we are already
-                 * beyond the point of time when we should have
-                 * stopped polling.
-                 */
+                /* If a timeout was set, check if we are already beyond the point of time when we should have stopped polling. */
                 if (timeout != NULL) {
                     struct DateStamp now;
                     DateStamp(&now);
@@ -785,13 +788,11 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 (*signal_mask_ptr) = signal_mask & break_mask;
         }
     } else {
-
         struct DateStamp stop_when;
         BOOL got_input;
         BOOL got_output;
 
         SHOWMSG("we have to deal with files");
-
         if (num_file_used > 0) {
             if (read_fds != NULL) {
                 SHOWMSG("allocating backup file read fd_set");
@@ -839,8 +840,18 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                                 got_input = TRUE;
                             }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
-                                if (WaitForChar(fd->fd_File, 1))
-                                    got_input = TRUE;
+                                if (i == STDIN_FILENO) {
+                                    /* For STDIN stream, ask input. */
+                                    if (WaitForChar(Input(), 1)) {
+                                        got_input = TRUE;
+                                    }
+                                }
+                                else {
+                                    /* For an interactive stream, we simply ask. */
+                                    if (WaitForChar(fd->fd_File, 1)) {
+                                        got_input = TRUE;
+                                    }
+                                }
                             } else {
                                 struct ExamineData *fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
                                 if (fib != NULL) {

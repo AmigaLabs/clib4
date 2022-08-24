@@ -8,14 +8,12 @@
 #include <string.h>    /* Strings         C89   */
 
 /**********************************************************************************************************************************/
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
     fd_set readFds, exceptFds;
     struct timeval theTimeOut;
 
-    while (1)
-    {
+    while (1) {
         /* First we must empty(zero out) the file descriptor sets. */
         FD_ZERO(&readFds);
         FD_ZERO(&exceptFds);
@@ -31,8 +29,7 @@ int main(int argc, char *argv[])
 
         /* Finally, we can call the select function!  Note that the third argument is NULL.  This tells select we don't care if the
        descriptor is ready to receive data (it is standard in after all). */
-        if (select(1, &readFds, NULL, &exceptFds, &theTimeOut) < 0)
-        {
+        if (select(1, &readFds, NULL, &exceptFds, &theTimeOut) < 0) {
             perror("ERROR: Select");
             exit(1);
         } /* end if */

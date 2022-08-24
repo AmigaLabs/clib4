@@ -88,43 +88,71 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
     __set_errno(0);
 
     if (request != TIOCGWINSZ && request != TIOCSWINSZ) {
-        assert(__SocketBase != NULL);
+        if (FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET)) {
+            assert(__SocketBase != NULL);
 
-        assert(sockfd >= 0 && sockfd < __num_fd);
-        assert(__fd[sockfd] != NULL);
-        assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
-        assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+            assert(sockfd >= 0 && sockfd < __num_fd);
+            assert(__fd[sockfd] != NULL);
+            assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
+            //assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
-        fd = __get_file_descriptor_socket(sockfd);
-        if (fd == NULL)
-            goto out;
+            fd = __get_file_descriptor_socket(sockfd);
+            if (fd == NULL)
+                goto out;
 
-        __fd_lock(fd);
+            __fd_lock(fd);
 
-        va_start(arg, request);
-        param = va_arg(arg, char *);
-        va_end(arg);
+            va_start(arg, request);
+            param = va_arg(arg, char *);
+            va_end(arg);
 
-        SHOWPOINTER(param);
+            SHOWPOINTER(param);
 
-        result = __IoctlSocket(fd->fd_Socket, request, param);
-        if (result == 0) {
-            const int *option = (const int *) param;
+            result = __IoctlSocket(fd->fd_Socket, request, param);
+            if (result == 0) {
+                const int *option = (const int *) param;
 
-            if (request == (int) FIONBIO) {
+                if (request == (int) FIONBIO) {
+                    if ((*option) != 0)
+                        SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+                    else
+                        CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+                } else if (request == (int) FIOASYNC) {
+                    if ((*option) != 0)
+                        SET_FLAG(fd->fd_Flags, FDF_ASYNC_IO);
+                    else
+                        CLEAR_FLAG(fd->fd_Flags, FDF_ASYNC_IO);
+                }
+            }
+
+            __fd_unlock(fd);
+        }
+        else {
+            if (request != FIONBIO) {
+                fd = __get_file_descriptor(sockfd);
+                if (fd == NULL)
+                    goto out;
+
+                __fd_lock(fd);
+
+                va_start(arg, request);
+                param = va_arg(arg,
+                char *);
+                va_end(arg);
+
+                SHOWPOINTER(param);
+
+                const int *option = (const int *) param;
                 if ((*option) != 0)
                     SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
                 else
                     CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
-            } else if (request == (int) FIOASYNC) {
-                if ((*option) != 0)
-                    SET_FLAG(fd->fd_Flags, FDF_ASYNC_IO);
-                else
-                    CLEAR_FLAG(fd->fd_Flags, FDF_ASYNC_IO);
+
+                __fd_unlock(fd);
+
+                result = OK;
             }
         }
-
-        __fd_unlock(fd);
     } else if (request == TIOCGWINSZ) {
         struct winsize *size;
         // Get them from console device
