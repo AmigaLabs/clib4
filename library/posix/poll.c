@@ -57,10 +57,7 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
             FD_SET(pCur->fd, pExceptSet);
         }
 
-        if (pCur->fd != STDIN_FILENO)
-            SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ | FDF_WRITE);
-        else
-            SET_FLAG(fd->fd_Flags, FDF_READ | FDF_WRITE);
+        SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ | FDF_WRITE);
 
         max_fd = MAX(max_fd, pCur->fd);
     }

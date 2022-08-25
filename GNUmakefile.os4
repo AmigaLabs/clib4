@@ -269,11 +269,11 @@ install:
 
 release:
 	-$(DELETE) clib2.lha
-	-$(MAKEDIR) SDK/clib2/include
-	-$(MAKEDIR) SDK/clib2/lib
-	-$(COPY) LICENSE* SDK/clib2/
-	-$(COPY) misc SDK/clib2/
-	-$(COPY) $(OUTPUT_LIB)/* SDK/clib2/lib/
-	-$(COPY) $(LIB_ROOT)/library/include/* SDK/clib2/include/
-	jlha -a clib2.lha SDK
-	-$(DELETE) SDK
+	-$(MAKEDIR) clib2/include
+	-$(MAKEDIR) clib2/lib
+	-$(COPY) LICENSE* clib2/
+	-$(COPY) misc clib2/
+	-$(COPY) $(OUTPUT_LIB)/* clib2/lib/
+	-$(COPY) $(LIB_ROOT)/library/include/* clib2/include/
+	jlha -aqo7i clib2.lha clib2
+	-$(DELETE) clib2

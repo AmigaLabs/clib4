@@ -239,7 +239,7 @@ map_descriptor_sets(
                     continue;
                 }
 
-                /* If we are dealing with STDIN mark it as Socket. This flag is used in
+                /* If we are dealing with STDIN, mark it as Socket. This flag is used in
                  * read() calls to handle carriage return
                  */
                 if (fd->fd_File == STDIN_FILENO) {
