@@ -440,10 +440,6 @@
 # define __USE_EXTERN_INLINES	1
 #endif
 
-#ifndef HIDDEN
-#define HIDDEN __attribute__((__visibility__("hidden")))
-#endif
-
 #ifndef WEAK
 #define WEAK __attribute__((__weak__))
 #endif

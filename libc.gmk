@@ -425,6 +425,7 @@ C_STDIO := \
 	stdio/sprintf.o \
 	stdio/sscanf.o \
 	stdio/sscanf_hook_entry.o \
+	stdio/stdio_ext.o \
 	stdio/tempnam.o \
 	stdio/tmpfile.o \
 	stdio/tmpfile64.o \
