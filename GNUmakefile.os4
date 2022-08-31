@@ -23,8 +23,12 @@
 # called "netinclude".
 UNAME := $(shell uname)
 
-INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib2
-SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
+#INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib2
+#INSTALL_PREFIX := /home/rjd/Amiga/projects/clib2/built
+INSTALL_PREFIX := /home/rjd/Amiga/built_adtools_gcc11_SDK5334/ppc-amigaos/SDK/clib2
+
+#SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
+SDK_INCLUDE := /home/rjd/Amiga/built_adtools_gcc11_SDK5334/ppc-amigaos/SDK/include/
 
 CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
