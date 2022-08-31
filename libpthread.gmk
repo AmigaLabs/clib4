@@ -64,6 +64,7 @@ C_PTHREAD := \
     pthread/pthread_mutexattr_destroy.o \
     pthread/pthread_mutexattr_gettype.o \
     pthread/pthread_mutexattr_init.o \
+    pthread/pthread_mutexattr_settype.o \
     pthread/pthread_once.o \
     pthread/pthread_rwlock_destroy.o \
     pthread/pthread_rwlock_init.o \
