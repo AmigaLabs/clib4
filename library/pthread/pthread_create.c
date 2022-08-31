@@ -90,7 +90,7 @@ StarterFunc() {
         StackSwap(&stack);
 
     Printf("[%s] Finishing stuff\n", inf->name);
-    if (inf->status == THREAD_STATE_RUNNING) {
+    if (inf->status == THREAD_STATE_RUNNING || inf->status == THREAD_STATE_JOINING) {
         if (!inf->detached) {
             Printf("[%s] Signal parent %p\n", inf->name, inf->parent);
             // tell the parent thread that we are done
@@ -108,7 +108,7 @@ StarterFunc() {
         }
     }
     else
-        Printf("[%s] Thread was not running\n", inf->name);
+        Printf("[%s] Thread was not running or joining\n", inf->name);
     Printf("[%s] Exit StarterFunc\n", inf->name);
 
     return RETURN_OK;
