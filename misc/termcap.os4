@@ -18,7 +18,7 @@
 # Additions by Steven Solie <ssolie@ieee.org>, 24 July 2006
 # Added colors by Andrea Palmate' <andrea.palmate@gmail.com>, 17 August 2022
 amiga-clib2|Amiga ANSI ncurses:\
-	:am:bs:bw:ms:xn:mi:cc:\
+	:am:bs:bw:ms:xn:cc:\
 	:Co#16:NC#3:co#80:li#24:pa#64:\
 	:AB=\2334%dm:AF=\2333%dm:AL=\233%dL:DC=\233%dP:\
 	:DL=\233%dM:dl=\233M:op=\23339;49m:\
@@ -38,7 +38,7 @@ amiga-clib2|Amiga ANSI ncurses:\
     :F1=\23320~:F2=\23321~:
 
 amiga-clib2-mono|Amiga ANSI ncurses:\
-	:am:bs:bw:ms:xn:mi:cc:\
+	:am:bs:bw:ms:xn:cc:\
 	:co#80:li#24:\
 	:AB=\2334%dm:AF=\2333%dm:AL=\233%dL:DC=\233%dP:\
 	:DL=\233%dM:dl=\233M:op=\23339;49m:\

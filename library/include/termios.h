@@ -17,7 +17,7 @@ typedef unsigned int tcflag_t;
 typedef unsigned char cc_t;
 typedef unsigned int speed_t;
 
-#define NCCS 17 /* Number of Control Characters = Length of the c_cc array.  */
+#define NCCS 16 /* Number of Control Characters = Length of the c_cc array.  */
 
 /* All the control characters in c_cc[] in a struct termios (below) */
 enum
@@ -34,11 +34,6 @@ enum
     VSTOP,	    /* ^S (stop) 			*/
     VSUSP,	    /* ^Z (suspend) 		*/
     VWERASE,	/* ^W (word-erase)	 	*/
-    VSWTC,
-    VREPRINT,
-    VDISCARD,
-    VLNEXT,
-    VEOL2,
 };
 
 struct termios
@@ -109,6 +104,7 @@ struct termios
 #define FLUSHO  0x0200
 #define ECHOKE  0x0400
 #define ECHOCTL 0x0800
+#define NCURSES 0x1600
 
 /* Speeds  */
 

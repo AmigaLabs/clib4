@@ -10,6 +10,10 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
+#ifndef _TERMIOS_HEADERS_H
+#include "termios_headers.h"
+#endif /* _TERMIOS_HEADERS_H */
+
 STATIC void
 copy_fd_set(fd_set *to, fd_set *from, int num_fds) {
     ENTER();
@@ -833,22 +837,38 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (fd != NULL) {
                     if (file_read_fds != NULL && FD_ISSET(i, file_read_fds)) {
                         if (FLAG_IS_SET(fd->fd_Flags, FDF_READ)) {
+                            BPTR readFile = i == STDIN_FILENO ? Input() : fd->fd_File;
+
                             assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
 
-                            /* Check first if this is a poll FD */
+                            /* Check first if this is a POLL/TERMIOS FD
+                             * In this case don't wait for char
+                            */
                             if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
                                 got_input = TRUE;
+                            }
+                            else if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
+                                struct termios *tios = fd->fd_Aux;
+                                SetMode(readFile, DOSTRUE);
+                                if (FLAG_IS_SET(tios->c_cflag, NCURSES)) {
+                                    got_input = TRUE;
+                                }
+                                else {
+                                    if (WaitForChar(readFile, 1)) {
+                                        got_input = TRUE;
+                                    }
+                                }
                             }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
                                 if (i == STDIN_FILENO) {
                                     /* For STDIN stream, ask input. */
-                                    if (WaitForChar(Input(), 1)) {
+                                    if (WaitForChar(readFile, 1)) {
                                         got_input = TRUE;
                                     }
                                 }
                                 else {
                                     /* For an interactive stream, we simply ask. */
-                                    if (WaitForChar(fd->fd_File, 1)) {
+                                    if (WaitForChar(readFile, 1)) {
                                         got_input = TRUE;
                                     }
                                 }
