@@ -239,27 +239,26 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
                 }
             }
             else {
+                result = 0;
                 /* Well.. this seems an hack to make ncurses works correctly
                  * I don't know if there are other problems setting STDIO always
                  * in RAW Mode but I suppose that we are ok since we are using
                  * a termios hook
                  */
-                if (FLAG_IS_CLEAR(tios->c_lflag, ICANON)) {
+                if (FLAG_IS_CLEAR(tios->c_cflag, ICANON) && FLAG_IS_SET(tios->c_cflag, NCURSES)) {
                     /* Set raw mode. */
                     SetMode(file, DOSTRUE);
-                }
-                if (tios->c_cc[VMIN] > 0) {
-                    if (WaitForChar(file, 100000 * tios->c_cc[VTIME])) {
-                        result = Read(file, fam->fam_Data, fam->fam_Size);
+                    if (tios->c_cc[VMIN] > 0 && tios->c_cc[VTIME] > 0) {
+                        if (WaitForChar(file, 100000 * tios->c_cc[VTIME])) {
+                            result = Read(file, fam->fam_Data, fam->fam_Size);
+                        }
+                    } else {
+                        if (WaitForChar(file, 1))
+                            result = Read(file, fam->fam_Data, fam->fam_Size);
                     }
                 }
                 else {
-                    if (WaitForChar(file, 1)) {
-                        result = Read(file, fam->fam_Data, fam->fam_Size);
-                    }
-                    else {
-                        result = 0;
-                    }
+                    result = Read(file, fam->fam_Data, fam->fam_Size);
                 }
             }
 

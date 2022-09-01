@@ -850,7 +850,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
                                 struct termios *tios = fd->fd_Aux;
                                 SetMode(readFile, DOSTRUE);
-                                if (FLAG_IS_SET(tios->c_cflag, NCURSES)) {
+                                if (FLAG_IS_CLEAR(tios->c_cflag, ICANON) && FLAG_IS_SET(tios->c_cflag, NCURSES)) {
                                     got_input = TRUE;
                                 }
                                 else {
