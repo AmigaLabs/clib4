@@ -155,14 +155,6 @@ C_POSIX := \
 	posix/getrlimit.o \
 	posix/setrlimit.o \
 	posix/getrusage.o \
-	posix/sched_yield.o \
-	posix/sem_destroy.o \
-	posix/sem_getvalue.o \
-	posix/sem_init.o \
-	posix/sem_post.o \
-	posix/sem_timedwait.o \
-	posix/sem_trywait.o \
-	posix/sem_wait.o \
 	posix/shmat.o \
 	posix/shmctl.o \
 	posix/shmdt.o \

@@ -12,7 +12,7 @@ srand(unsigned seed)
     ENTER();
     SHOWVALUE(seed);
 
-    __global_clib2->__random_seed = seed;
+    __global_clib2->__random_seed = seed - 1;
 
     LEAVE();
 }

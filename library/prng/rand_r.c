@@ -6,26 +6,24 @@
 #include "../stdlib/stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-static unsigned int
-temper(unsigned int x) {
-    x ^= x >> 11;
-    x ^= x << 7 & 0x9D2C5680;
-    x ^= x << 15 & 0xEFC60000;
-    x ^= x >> 18;
+static
+unsigned temper(unsigned x) {
+    x ^= x>>11;
+    x ^= x<<7 & 0x9D2C5680;
+    x ^= x<<15 & 0xEFC60000;
+    x ^= x>>18;
     return x;
 }
 
 int
 rand_r(unsigned int *seed) {
-    int x;
-
     ENTER();
     SHOWPOINTER(seed);
 
     __check_abort();
 
-    x = temper(*seed = *seed * 1103515245 + 12345) / 2;
+    int result = temper(*seed = *seed * 1103515245 + 12345)/2;
 
-    RETURN(x);
-    return x;
+    RETURN(result);
+    return result;
 }

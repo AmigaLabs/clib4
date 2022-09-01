@@ -10,7 +10,6 @@
 
 wint_t
 btowc(int c) {
-    ENTER();
 
     mbstate_t *mbs = &__global_clib2->wide_status->_mbtowc_state;
     int retval = 0;
@@ -25,10 +24,8 @@ btowc(int c) {
     retval = _mbtowc_r(&pwc, &b, 1, mbs);
 
     if (c == EOF || retval != 1) {
-        RETURN(WEOF);
         return WEOF;
     } else {
-        RETURN((wint_t) pwc);
         return (wint_t) pwc;
     }
 }

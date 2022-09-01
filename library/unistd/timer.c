@@ -73,8 +73,11 @@ CLIB_CONSTRUCTOR(timer_init)
     /* Set system time for rusage */
     struct TimerIFace *ITimer = __ITimer;
     GetSysTime(&__global_clib2->clock);
+    /* Generate random seed */
+    __global_clib2->__random_seed = time(NULL);
 
-	success = TRUE;
+
+success = TRUE;
 
 out:
 

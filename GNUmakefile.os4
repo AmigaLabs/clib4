@@ -57,7 +57,7 @@ OUTPUT_LIB = $(BUILD_DIR)/lib
 WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-missing-braces -Wno-unused-value -Wno-comment \
-	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable -Wno-parentheses \
+	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough # -Werror -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC 
@@ -95,7 +95,7 @@ OPTIONS  := -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE 
 OPTIMIZE := -O2 -mmultiple -mupdate -mstrict-align
 
 ifndef DEBUG
-    OPTIMIZE := $(OPTIMIZE) -DNDEBUG
+    OPTIMIZE := $(OPTIMIZE) -gstabs -DNDEBUG
 else
     OPTIMIZE := $(OPTIMIZE) -gstabs -DDEBUG
 endif
@@ -123,6 +123,7 @@ include libc.gmk
 include libm.gmk
 include libamiga.gmk
 include libprofile.gmk
+include libpthread.gmk
 include libcrypt.gmk
 
 prepare:
@@ -263,8 +264,6 @@ install:
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
 	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
 	$(COPY) libs/libauto.a $(INSTALL_PREFIX)/lib/
-	$(COPY) libs/libpthread.a $(INSTALL_PREFIX)/lib/
-	$(COPY) libs/libpthread.so $(INSTALL_PREFIX)/lib/
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:

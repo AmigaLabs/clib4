@@ -11,10 +11,14 @@ set_console_termios(struct fd *fd, struct termios *new_tios) {
     struct termios *old_tios;
     int result = ERROR;
     BPTR file;
+    BOOL use_ncurses = FALSE;
+
+    if (FLAG_IS_SET(new_tios->c_cflag, NCURSES))
+        use_ncurses = TRUE;
 
     /* TODO: Check for some "impossible" combinations here? */
 
-    old_tios = __get_termios(fd);
+    old_tios = __get_termios(fd, use_ncurses);
     if (old_tios == NULL)
         goto out;
 
