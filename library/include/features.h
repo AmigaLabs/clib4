@@ -440,10 +440,13 @@
 # define __USE_EXTERN_INLINES	1
 #endif
 
+#ifndef WEAK
 #define WEAK __attribute__((__weak__))
-#define HIDDEN __attribute__((__visibility__("hidden")))
+#endif
+
+#ifndef WEAK_ALIAS
 #define WEAK_ALIAS(old, new) \
 	extern __typeof(old) new __attribute__((__weak__, __alias__(#old)))
-
+#endif
 
 #endif	/* features.h  */

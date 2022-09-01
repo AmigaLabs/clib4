@@ -66,7 +66,7 @@
 #include <errno.h>
 #include <ctype.h>
 
-/****************************************************************************/
+#include <stdio_ext.h>
 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -177,7 +177,7 @@ typedef struct iob
     off_t				iob_BufferReadBytes;	/* Number of bytes available for reading (shrinks when any data is read from the buffer) */
     off_t				iob_BufferWriteBytes;	/* Number of bytes written to the buffer which still need to be flushed to disk (grows when any data is written to the buffer) */
 
-    _mbstate_t 			_mbstate; 				/* for wide char stdio functions. */
+    _mbstate_t 			iob_mbState;			/* for wide char stdio functions. */
 	int   				iob_Flags2;				/* for future use */
 	long				pad[5];					/* Padding for function pointers */
 

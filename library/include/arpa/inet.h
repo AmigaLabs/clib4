@@ -17,25 +17,15 @@
 
 __BEGIN_DECLS
 
-#ifndef inet_aton
 extern in_addr_t inet_addr(const char *cp);
-#endif
-#ifndef inet_aton
 extern int inet_aton(const char *cp, struct in_addr *pin);
-#endif
 extern in_addr_t inet_lnaof(struct in_addr in);
 extern struct in_addr inet_makeaddr(in_addr_t net, in_addr_t lna);
 extern in_addr_t inet_netof(struct in_addr in);
-#ifndef inet_aton
 extern in_addr_t inet_network(const char *cp);
-#endif
 extern char *inet_ntoa(struct in_addr in);
-#ifndef inet_aton
 extern const char *inet_ntop (int af, const void *src, char *dst, socklen_t cnt);
-#endif
-#ifndef inet_aton
 extern int inet_pton (int af, const char *src, void *dst);
-#endif
 
 __END_DECLS
 

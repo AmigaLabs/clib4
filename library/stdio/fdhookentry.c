@@ -14,6 +14,10 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
+#ifndef _SOCKET_HEADERS_H
+#include "socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
+
 #include <strings.h>
 #include <limits.h>
 
@@ -62,17 +66,34 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
                 D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
 
-                result = Read(file, fam->fam_Data, fam->fam_Size);
-                if (result == -1) {
-                    D(("read failed ioerr=%ld", IoErr()));
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIN_READ_MARK)) {
+                    CLEAR_FLAG(fd->fd_Flags, FDF_STDIN_READ_MARK);
+                    fam->fam_Error = EAGAIN;
+                    result = EOF;
+                    goto out;
+                }
+
+                result = (int64_t) Read(file, fam->fam_Data, fam->fam_Size);
+                if (result == EOF) {
+                    D(("read failed ioerr=%ld\n", IoErr()));
 
                     fam->fam_Error = __translate_io_error_to_errno(IoErr());
                     goto out;
                 }
 
-                fd->fd_Position += (int64_t) result;
-            } else
+                fd->fd_Position += result;
+                /* If we are reading char by char from STDIN used like a SOCKET and
+                 * we get a CR we need to mark it as EOF for the next read call
+                 */
+
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIN_AS_SOCKET) && result > 0) {
+                    if (fam->fam_Data[result - 1] == 13 || fam->fam_Data[result - 1] == 10) {
+                        SET_FLAG(fd->fd_Flags, FDF_STDIN_READ_MARK);
+                    }
+                }
+            } else {
                 fam->fam_Error = EBADF;
+            }
 
             break;
 
@@ -261,9 +282,13 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
 
                         UnLock(parent_dir);
                     }
+                } else {
+                    // Clear FDF_STDIN_AS_SOCKET just in case it was used as socket */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIN_AS_SOCKET)) {
+                        CLEAR_FLAG(fd->fd_Flags, FDF_STDIN_AS_SOCKET);
+                    }
                 }
-            }
-            else {
+            } else {
                 is_aliased = FALSE;
 
                 if (fd->fd_DefaultFile != ZERO) {
@@ -432,8 +457,8 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                 fam->fam_FileInfo->Type = ST_NIL;
             } else {
                 BPTR lock_type = FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) || FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)
-                        ? EX_LockInput
-                        : EX_FileHandleInput;
+                                 ? EX_LockInput
+                                 : EX_FileHandleInput;
                 fam->fam_FileInfo = ExamineObjectTags(lock_type, file, TAG_DONE);
                 if (fam->fam_FileInfo == NULL) {
                     LONG error;
@@ -491,6 +516,8 @@ out:
         free(buffer);
 
     SHOWVALUE(result);
+
+    __check_abort();
 
     RETURN(result);
     return (result);

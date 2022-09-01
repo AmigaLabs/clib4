@@ -19,20 +19,21 @@ typedef unsigned int speed_t;
 
 #define NCCS 16 /* Number of Control Characters = Length of the c_cc array.  */
 
+/* All the control characters in c_cc[] in a struct termios (below) */
 enum
-{			 /* All the control characters in c_cc[] in a struct termios (below) */
-  VINTR = 0, /* ^C (break)      		*/
-  VQUIT,	 /* ^\ (quit)       		*/
-  VERASE,	 /* ^H (eraase)     		*/
-  VKILL,	 /* ^X (erase-line) 		*/
-  VEOF,		 /* ^D (end-of-file)		*/
-  VMIN,		 /* Minimum number of characters to read. Interacts with VTIME.  */
-  VEOL,		 /* NUL 					*/
-  VTIME,	 /* Timeout in 1/10:ths of a second. Interacts with VMIN. */
-  VSTART,	 /* ^Q (continue) 		*/
-  VSTOP,	 /* ^S (stop) 			*/
-  VSUSP,	 /* ^Z (suspend) 		*/
-  VWERASE,	 /* ^W (word-erase)	 	*/
+{
+    VINTR = 0,  /* ^C (break)      		*/
+    VQUIT,	    /* ^\ (quit)       		*/
+    VERASE,	    /* ^H (eraase)     		*/
+    VKILL,	    /* ^X (erase-line) 		*/
+    VEOF,		/* ^D (end-of-file)		*/
+    VMIN,		/* Minimum number of characters to read. Interacts with VTIME.  */
+    VEOL,		/* NUL 					*/
+    VTIME,	    /* Timeout in 1/10:ths of a second. Interacts with VMIN. */
+    VSTART,	    /* ^Q (continue) 		*/
+    VSTOP,	    /* ^S (stop) 			*/
+    VSUSP,	    /* ^Z (suspend) 		*/
+    VWERASE,	/* ^W (word-erase)	 	*/
 };
 
 struct termios
@@ -69,11 +70,11 @@ struct termios
 
 /* c_oflag */
 
-#define OPOST   (1 << 0L)	 /* Enable output processing. */
-#define ONLCR   (1 << 1L)	 /* Map NL->CR+NL */
-#define OCRNL   (1 << 2L)	 /* Map CR->NL */
-#define ONOCR   (1 << 3L)	 /* Map CR->nothing, but only in column 0. */
-#define ONLRET  (1 << 4L) /* Map CR->nothing */
+#define OPOST   (1 << 0L)	/* Enable output processing. */
+#define ONLCR   (1 << 1L)	/* Map NL->CR+NL */
+#define OCRNL   (1 << 2L)	/* Map CR->NL */
+#define ONOCR   (1 << 3L)	/* Map CR->nothing, but only in column 0. */
+#define ONLRET  (1 << 4L)   /* Map CR->nothing */
 
 /* c_cflag */
 
@@ -103,6 +104,7 @@ struct termios
 #define FLUSHO  0x0200
 #define ECHOKE  0x0400
 #define ECHOCTL 0x0800
+#define NCURSES 0x1600
 
 /* Speeds  */
 
@@ -184,5 +186,5 @@ extern int cfsetispeed(struct termios *tios_p, speed_t input_speed);
 extern int cfsetospeed(struct termios *tios_p, speed_t output_speed);
 
 __END_DECLS
-/****************************************************************************/
+
 #endif /* _TERMIOS_H */

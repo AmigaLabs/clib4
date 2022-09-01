@@ -94,7 +94,7 @@ int main() {
                         if (c < 0) {
                             continue;
                         }
-                        printf("accept c=%d\n", c);
+
                         //Add a new connection socket c to the array fds of pollfd structure type
                         fds_add(fds, c);//join
                     } else {

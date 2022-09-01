@@ -190,58 +190,76 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
 
             D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, Seek(file, 0, OFFSET_CURRENT), fam->fam_Data));
 
-            /* Attempt to fake everything needed in non-canonical mode. */
-            if (FLAG_IS_SET(tios->c_lflag, ICANON)) {
-                /* Canonical read = same as usual. Unless... */
-                if (FLAG_IS_CLEAR(tios->c_lflag, ECHO)) {
-                    /* No-echo mode needs to be emulated. */
-                    result = LineEditor(file, fam->fam_Data, fam->fam_Size, tios);
-                }
-                else {
-                    /* Well.. this seems an hack to make ncurses works correctly
-                     * I don't know if there are other problems setting STDIO always
-                     * in RAW Mode but I suppose that we are ok since we are using
-                     * a termios hook
-                     */
-                    if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO)) {
-                        /* Set raw mode. */
-                        SetMode(file, DOSTRUE);
+            if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
+                /* Attempt to fake everything needed in non-canonical mode. */
+                if (FLAG_IS_SET(tios->c_lflag, ICANON)) {
+                    /* Canonical read = same as usual. Unless... */
+                    if (FLAG_IS_CLEAR(tios->c_lflag, ECHO)) {
+                        /* No-echo mode needs to be emulated. */
+                        result = LineEditor(file, fam->fam_Data, fam->fam_Size, tios);
+                    } else {
+                        result = Read(file, fam->fam_Data, fam->fam_Size);
                     }
-                    result = Read(file, fam->fam_Data, fam->fam_Size);
-                }
-            } else if (fam->fam_Size > 0) {
-                /* Non-canonical reads have timeouts and a minimum number of characters to read. */
-                int i = 0;
-                result = 0;
+                } else if (fam->fam_Size > 0) {
+                    /* Non-canonical reads have timeouts and a minimum number of characters to read. */
+                    int i = 0;
+                    result = 0;
 
-                if (tios->c_cc[VMIN] > 0) {
-                    /* Reading the first character is not affected by the timeout unless VMIN==0. */
-                    i = Read(file, fam->fam_Data, 1);
-                    if (i == ERROR) {
-                        fam->fam_Error = EIO;
-                        goto out;
-                    }
-
-                    result = i;
-
-                    while ((result < tios->c_cc[VMIN]) && (result < fam->fam_Size)) {
-                        if (tios->c_cc[VTIME] > 0) {
-                            if (WaitForChar(file, 100000 * tios->c_cc[VTIME]) == DOSFALSE)
-                                break; /* No more characters available within alloted time. */
+                    if (tios->c_cc[VMIN] > 0) {
+                        /* Reading the first character is not affected by the timeout unless VMIN==0. */
+                        i = Read(file, fam->fam_Data, 1);
+                        if (i == ERROR) {
+                            fam->fam_Error = EIO;
+                            goto out;
                         }
 
-                        i = Read(file, &fam->fam_Data[result], 1);
-                        if (i <= 0)
-                            break; /* Break out of this while loop only. */
+                        result = i;
 
-                        result += i;
+                        while ((result < tios->c_cc[VMIN]) && (result < fam->fam_Size)) {
+                            if (tios->c_cc[VTIME] > 0) {
+                                if (WaitForChar(file, 100000 * tios->c_cc[VTIME]) == DOSFALSE) {
+                                    break; /* No more characters available within alloted time. */
+                                }
+                            }
+
+                            i = Read(file, &fam->fam_Data[result], 1);
+                            if (i <= 0) {
+                                break; /* Break out of this while loop only. */
+                            }
+
+                            result += i;
+                        }
+                    } else {
+                        if (WaitForChar(file, 100000 * tios->c_cc[VTIME])) {
+                            result = Read(file, fam->fam_Data, fam->fam_Size);
+                        }
                     }
                 } else {
-                    if (WaitForChar(file, 100000 * tios->c_cc[VTIME]))
-                        result = Read(file, fam->fam_Data, fam->fam_Size);
+                    result = 0; /* Reading zero characters will always succeed. */
                 }
-            } else {
-                result = 0; /* Reading zero characters will always succeed. */
+            }
+            else {
+                result = 0;
+                /* Well.. this seems an hack to make ncurses works correctly
+                 * I don't know if there are other problems setting STDIO always
+                 * in RAW Mode but I suppose that we are ok since we are using
+                 * a termios hook
+                 */
+                if (FLAG_IS_CLEAR(tios->c_cflag, ICANON) && FLAG_IS_SET(tios->c_cflag, NCURSES)) {
+                    /* Set raw mode. */
+                    SetMode(file, DOSTRUE);
+                    if (tios->c_cc[VMIN] > 0 && tios->c_cc[VTIME] > 0) {
+                        if (WaitForChar(file, 100000 * tios->c_cc[VTIME])) {
+                            result = Read(file, fam->fam_Data, fam->fam_Size);
+                        }
+                    } else {
+                        if (WaitForChar(file, 1))
+                            result = Read(file, fam->fam_Data, fam->fam_Size);
+                    }
+                }
+                else {
+                    result = Read(file, fam->fam_Data, fam->fam_Size);
+                }
             }
 
             if (result == ERROR) {

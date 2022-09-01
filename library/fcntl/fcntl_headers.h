@@ -13,4 +13,6 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
+#include <sys/file.h>
+
 #endif /* _FCNTL_HEADERS_H */

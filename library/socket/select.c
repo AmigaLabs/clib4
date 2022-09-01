@@ -12,5 +12,5 @@ select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, str
 
     result = __select(num_fds, read_fds, write_fds, except_fds, timeout, NULL);
 
-    return (result);
+    return result;
 }

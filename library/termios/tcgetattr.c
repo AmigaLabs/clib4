@@ -2,7 +2,7 @@
  * $Id: termios_tcgetattr.c,v 1.4 2022-08-15 12:04:27 clib2devs Exp $
 */
 
-#ifndef    _TERMIOS_HEADERS_H
+#ifndef _TERMIOS_HEADERS_H
 #include "termios_headers.h"
 #endif /* _TERMIOS_HEADERS_H */
 
@@ -19,11 +19,11 @@ static const cc_t def_console_cc[NCCS] =
         17,     /* VSTART	= DC1 */
         19,     /* VSTOP	= DC3 */
         26,     /* VSUSP	= SUB */
-        23      /* VWERASE	= ETB */
+        23     /* VWERASE	= ETB */
 };
 
 static struct termios *
-get_console_termios(struct fd *fd) {
+get_console_termios(struct fd *fd, BOOL use_ncurses) {
     struct termios *tios;
 
     /* Create a new, fresh termios. TODO: Actually query some values,
@@ -44,6 +44,8 @@ get_console_termios(struct fd *fd) {
         SET_FLAG(tios->c_cflag, CREAD);
 
     tios->c_lflag = ISIG|ICANON|ECHO;
+    if (use_ncurses)
+        SET_FLAG(tios->c_cflag, NCURSES);
 
     memcpy(tios->c_cc, def_console_cc, NCCS);
 
@@ -65,7 +67,7 @@ out:
 }
 
 struct termios *
-__get_termios(struct fd *fd) {
+__get_termios(struct fd *fd, BOOL use_ncurses) {
     struct termios *tios = NULL;
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
@@ -83,7 +85,7 @@ __get_termios(struct fd *fd) {
         tios = fd->fd_Aux;
     }
     else {
-        tios = get_console_termios(fd);
+        tios = get_console_termios(fd, use_ncurses);
     }
 
 out:
@@ -94,6 +96,7 @@ out:
 int
 tcgetattr(int file_descriptor, struct termios *user_tios) {
     int result = ERROR;
+    BOOL use_ncurses = FALSE;
     struct fd *fd = NULL;
     struct termios *tios;
 
@@ -112,12 +115,15 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
 
     __fd_lock(fd);
 
+    if (FLAG_IS_SET(user_tios->c_cflag, NCURSES))
+        use_ncurses = TRUE;
+
     if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
         assert(fd->fd_Aux != NULL);
 
         memcpy(user_tios, fd->fd_Aux, sizeof(struct termios));
     } else {
-        tios = __get_termios(fd);
+        tios = __get_termios(fd, use_ncurses);
         if (tios == NULL) {
             __fd_unlock(fd);
             goto out;
@@ -139,9 +145,7 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
 out:
 
     __stdio_unlock();
-
     __check_abort();
-
 
     return (result);
 }

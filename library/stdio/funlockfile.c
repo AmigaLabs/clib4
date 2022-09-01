@@ -10,10 +10,6 @@ void
 funlockfile(FILE *stream) {
     struct iob *file = (struct iob *) stream;
 
-    ENTER();
-
-    SHOWPOINTER(stream);
-
     assert(stream != NULL);
 
     if (stream == NULL) {
@@ -38,5 +34,4 @@ funlockfile(FILE *stream) {
 
 out:
 
-    LEAVE();
 }

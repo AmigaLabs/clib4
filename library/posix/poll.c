@@ -1,13 +1,16 @@
 /*
- * $Id: poll.c,v 1.0 2021-01-12 11:50:0 clib2devs Exp $
+ * $Id: poll.c,v 1.0 2022-08-22 11:50:0 clib2devs Exp $
 */
 
-#ifndef    _UNISTD_HEADERS_H
+#ifndef  _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#ifndef _SOCKET_HEADERS_H
+#include "socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
+
 #include <poll.h>
-#include <errno.h>
 #include <sys/param.h> // MAX
 
 static int
@@ -42,25 +45,21 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
         if (pCur->events & POLLIN) {
             /* "Input Ready" notification desired. */
             FD_SET(pCur->fd, pReadSet);
-            if (fd != NULL)
-                SET_FLAG(fd->fd_Flags, FDF_POLL);
         }
 
         if (pCur->events & POLLOUT) {
             /* "Output Possible" notification desired. */
             FD_SET(pCur->fd, pWriteSet);
-            if (fd != NULL)
-                SET_FLAG(fd->fd_Flags, FDF_POLL);
         }
 
         if (pCur->events & POLLPRI) {
             /* "Exception Occurred" notification desired. (Exceptions include out of band data.) */
             FD_SET(pCur->fd, pExceptSet);
-            if (fd != NULL)
-                SET_FLAG(fd->fd_Flags, FDF_POLL);
         }
 
-        max_fd = MAX (max_fd, pCur->fd);
+        SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ | FDF_WRITE);
+
+        max_fd = MAX(max_fd, pCur->fd);
     }
 
     RETURN(max_fd);
@@ -106,13 +105,12 @@ map_timeout(int poll_timeout, struct timeval *pSelTimeout) {
             break;
         default:
             /* Wait the specified number of milliseconds. */
-            pSelTimeout->tv_sec = poll_timeout / 1000; /* get seconds */
-            poll_timeout %= 1000;                /* remove seconds */
+            pSelTimeout->tv_sec = poll_timeout / 1000;  /* get seconds */
+            poll_timeout %= 1000;                       /* remove seconds */
             pSelTimeout->tv_usec = poll_timeout * 1000; /* get microseconds */
             pResult = pSelTimeout;
             break;
     }
-
 
     return pResult;
 }
@@ -129,14 +127,17 @@ map_select_results(struct pollfd *pArray, unsigned long n_fds, fd_set *pReadSet,
 
         /* Exception events take priority over input events. */
         pCur->revents = 0;
-        if (FD_ISSET(pCur->fd, pExceptSet))
+        if (FD_ISSET(pCur->fd, pExceptSet)) {
             pCur->revents |= POLLPRI;
+        }
 
-        else if (FD_ISSET(pCur->fd, pReadSet))
+        else if (FD_ISSET(pCur->fd, pReadSet)) {
             pCur->revents |= POLLIN;
+        }
 
-        if (FD_ISSET(pCur->fd, pWriteSet))
+        if (FD_ISSET(pCur->fd, pWriteSet)) {
             pCur->revents |= POLLOUT;
+        }
     }
 
     return;
@@ -148,8 +149,8 @@ poll(struct pollfd *fds, nfds_t nfds, int timeout) {
     fd_set write_descs;                         /* output file descs */
     fd_set except_descs;                        /* exception descs */
     struct timeval stime;                       /* select() timeout value */
-    int ready_descriptors;                   /* function result */
-    int max_fd;                              /* maximum fd value */
+    int ready_descriptors;                      /* function result */
+    int max_fd;                                 /* maximum fd value */
     struct timeval *pTimeout;                   /* actually passed */
 
     if ((fds == NULL) && (nfds != 0)) {
@@ -160,6 +161,8 @@ poll(struct pollfd *fds, nfds_t nfds, int timeout) {
     FD_ZERO(&read_descs);
     FD_ZERO(&write_descs);
     FD_ZERO(&except_descs);
+
+    memset(&stime, 0, sizeof(stime));
 
     /* Map the poll() file descriptor list in the select() data structures. */
     max_fd = map_poll_spec(fds, nfds, &read_descs, &write_descs, &except_descs);

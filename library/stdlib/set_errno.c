@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_set_errno.c,v 1.2 2006-01-08 12:04:26 clib2devs Exp $
+ * $Id: stdlib_set_errno.c,v 1.3 2022-08-20 12:04:26 clib2devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -7,12 +7,6 @@
 #endif /* _STDLIB_HEADERS_H */
 
 void
-__set_errno(int new_errno)
-{
-    ENTER();
-    SHOWVALUE(new_errno);
-
+__set_errno(int new_errno) {
 	errno = new_errno;
-
-    LEAVE();
 }

@@ -18,7 +18,7 @@
 # Additions by Steven Solie <ssolie@ieee.org>, 24 July 2006
 # Added colors by Andrea Palmate' <andrea.palmate@gmail.com>, 17 August 2022
 amiga-clib2|Amiga ANSI ncurses:\
-	:am:bs:bw:ms:xn:mi:cc:\
+	:am:bs:bw:ms:xn:cc:\
 	:Co#16:NC#3:co#80:li#24:pa#64:\
 	:AB=\2334%dm:AF=\2333%dm:AL=\233%dL:DC=\233%dP:\
 	:DL=\233%dM:dl=\233M:op=\23339;49m:\
@@ -29,7 +29,7 @@ amiga-clib2|Amiga ANSI ncurses:\
 	:ho=\233H:ic=\233@:im=:is=\23320l:k0=\2339~:k1=\2330~:\
 	:k2=\2331~:k3=\2332~:k4=\2333~:k5=\2334~:k6=\2335~:\
 	:k7=\2336~:k8=\2337~:k9=\2338~:kD=\177:kb=^H:kd=\233B:\
-	:kl=\233D:kr=\233C:ku=\233A:le=\233D:mb=\2337;2m:\
+	:kl=\233D:kr=\233C:ku=\233A:le=\233D:mb=\2335m:\
 	:md=\2331m:me=\2330m:mh=\2332m:mk=\2338m:mr=\2337m:\
 	:nd=\233C:nw=\233B\r:r1=\Ec:se=\2330m:sf=\233S:so=\2337m:\
 	:sr=\233T:ta=^I:te=\233?7h:ti=\233?7l:ue=\2330m:up=\233A:\
@@ -38,7 +38,7 @@ amiga-clib2|Amiga ANSI ncurses:\
     :F1=\23320~:F2=\23321~:
 
 amiga-clib2-mono|Amiga ANSI ncurses:\
-	:am:bs:bw:ms:xn:mi:cc:\
+	:am:bs:bw:ms:xn:cc:\
 	:co#80:li#24:\
 	:AB=\2334%dm:AF=\2333%dm:AL=\233%dL:DC=\233%dP:\
 	:DL=\233%dM:dl=\233M:op=\23339;49m:\
@@ -49,7 +49,7 @@ amiga-clib2-mono|Amiga ANSI ncurses:\
 	:ho=\233H:ic=\233@:im=:is=\23320l:k0=\2339~:k1=\2330~:\
 	:k2=\2331~:k3=\2332~:k4=\2333~:k5=\2334~:k6=\2335~:\
 	:k7=\2336~:k8=\2337~:k9=\2338~:kD=\177:kb=^H:kd=\233B~:\
-	:kl=\233D:kr=\233C:ku=\233A~:le=\233D:mb=\2337;2m:\
+	:kl=\233D:kr=\233C:ku=\233A~:le=\233D:mb=\2335m:\
 	:md=\2331m:me=\2330m:mh=\2332m:mk=\2338m:mr=\2337m:\
 	:nd=\233C:nw=\233B\r:r1=\Ec:se=\2330m:sf=\233S:so=\2337m:\
 	:sr=\233T:ta=^I:te=\233?7h:ti=\233?7l:ue=\2330m:up=\233A:\

@@ -63,11 +63,15 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             }
 
             va_start(arg, cmd);
-            l = va_arg(arg,
-            struct flock *);
+            l = va_arg(arg, struct flock *);
             va_end(arg);
 
             assert(l != NULL);
+
+            if (l == NULL) {
+                __set_errno(EBADF);
+                goto out;
+            }
 
             if (l->l_type < F_RDLCK || l->l_type > F_WRLCK) {
                 SHOWMSG("invalid flock type");
@@ -126,6 +130,12 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
             SHOWMSG("cmd=F_SETFL");
 
+            /* If someone ask us o set STDIN_FILENO as O_NONBLOCK don't set it but don't return an error */
+            if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_File == ZERO && file_descriptor == STDIN_FILENO) {
+                result = OK;
+                goto out;
+            }
+
             /* If this is a file, make sure that we don't hit a zero file handle. */
             if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_File == ZERO) {
                 __set_errno(EBADF);
@@ -183,8 +193,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             SHOWMSG("cmd=F_DUPFD");
 
             va_start(arg, cmd);
-            fdbase = va_arg(arg,
-            int);
+            fdbase = va_arg(arg, int);
             va_end(arg);
 
             if (fdbase < 0) {
@@ -192,8 +201,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
                 goto out;
             }
 
-            /* Make sure that we have the required number of file
-                   descriptors available. */
+            /* Make sure that we have the required number of file descriptors available. */
             if (__grow_fd_table(fdbase + 1) < 0)
                 goto out;
 

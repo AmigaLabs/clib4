@@ -91,7 +91,7 @@ count_extra_escape_chars(const char *string, size_t len) {
 STATIC size_t
 get_arg_string_length(char *const argv[]) {
     size_t result = 0;
-    size_t i, len;
+    size_t i, len = 0;
     char *s;
 
     /* The first argv[] element is skipped; it does not contain part of
@@ -117,14 +117,14 @@ get_arg_string_length(char *const argv[]) {
 }
 
 int
-spawnv(int mode, const char *file, const char *const *argv) {
+spawnv(int mode, const char *file, const char **argv) {
     int ret = -1;
     char *arg_string = NULL;
     size_t arg_string_len = 0;
     size_t parameter_string_len = 0;
     struct name_translation_info path_nti;
 
-    if (mode != P_WAIT) {
+    if (mode != P_WAIT && mode != P_NOWAIT) {
         __set_errno(ENOSYS);
         return ret;
     }
@@ -144,7 +144,7 @@ spawnv(int mode, const char *file, const char *const *argv) {
         return ret;
     }
 
-    arg_string = malloc(parameter_string_len + 1 + 1);
+    arg_string = malloc(parameter_string_len + 1);
     if (arg_string == NULL) {
         __set_errno(ENOMEM);
         return ret;
@@ -155,29 +155,27 @@ spawnv(int mode, const char *file, const char *const *argv) {
         arg_string_len += parameter_string_len;
     }
 
-    /* Add the terminating new line character and a NUL, to be nice... */
-    arg_string[arg_string_len++] = '\n';
+    /* Add a NUL, to be nice... */
     arg_string[arg_string_len] = '\0';
 
     int pathlen = strlen(file) + strlen(arg_string) + 1;
-    char *finalpath = calloc(1, pathlen);
-    strncpy(finalpath, file, strlen(file));
-    strncat(finalpath, arg_string, strlen(arg_string));
-    finalpath[pathlen] = '\0';
+    char finalpath[PATH_MAX] = {0};
+    snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
+
+    struct Process *me = (struct Process *) FindTask(NULL);
+    BPTR in  = mode == P_WAIT ? me->pr_COS : 0;
 
     ret = SystemTags(finalpath,
-                     SYS_Input, 0,
+                     SYS_Input, in,
                      SYS_Output, 0,
                      SYS_UserShell, TRUE,
-                     SYS_Asynch, TRUE,
-                     SYS_UserShell, TRUE,
+                     SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
                      TAG_DONE);
 
     if (ret != 0) {
+        /* SystemTags failed. Clean up file handles */
+        if (in != 0) Close(in);
         errno = __translate_io_error_to_errno(IoErr());
-    } else {
-        /* From DOS 51.77 if an ASYNC command was started ok (returncode 0) the PID is in IoErr() */
-        ret = IoErr();
     }
 
     return ret;

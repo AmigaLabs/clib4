@@ -135,6 +135,11 @@ raise(int sig) {
                     __print_termination_message(break_string);
 
                     SHOWMSG("bye, bye...");
+
+                    /* Drop straight into abort(), which might call signal()
+                       again but is otherwise guaranteed to eventually
+                       land us in _exit(). */
+                    abort();
                 }
                 /* If we have a SIGALRM without associated handler don't call abort but exit directly */
                 if (sig == SIGALRM) {
@@ -145,12 +150,6 @@ raise(int sig) {
 
                     /* Since we got a signal we interrrupt every sleep function like nanosleep */
                     Signal((struct Task *) __global_clib2->self, SIGBREAKF_CTRL_E);
-                }
-                else {
-                    /* Drop straight into abort(), which might call signal()
-                       again but is otherwise guaranteed to eventually
-                       land us in _exit(). */
-                    abort();
                 }
             }
             else if (handler == SIG_ERR) {

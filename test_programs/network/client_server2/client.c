@@ -24,6 +24,7 @@ int main() {
         char buff[128] = {0};
         printf("Please Input:");
         fgets(buff, 128, stdin);
+        printf("buffer = %s\n", buff);
         if (strncmp(buff, "end", 3) == 0) {
             break;
         }

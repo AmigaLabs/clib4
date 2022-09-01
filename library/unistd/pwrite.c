@@ -2,8 +2,6 @@
  * $Id: unistd_pwrite.c,v 1.0 2021-02-21 23:09:27 clib2devs Exp $
 */
 
-/****************************************************************************/
-
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */

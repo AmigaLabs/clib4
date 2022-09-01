@@ -98,6 +98,7 @@ C_DIRENT := \
 	dirent/alphasort.o \
 	dirent/closedir.o \
 	dirent/dirfd.o \
+	fcntl/flock.o \
 	dirent/fdopendir.o \
 	dirent/opendir.o \
 	dirent/scandir.o \
@@ -154,14 +155,6 @@ C_POSIX := \
 	posix/getrlimit.o \
 	posix/setrlimit.o \
 	posix/getrusage.o \
-	posix/sched_yield.o \
-	posix/sem_destroy.o \
-	posix/sem_getvalue.o \
-	posix/sem_init.o \
-	posix/sem_post.o \
-	posix/sem_timedwait.o \
-	posix/sem_trywait.o \
-	posix/sem_wait.o \
 	posix/shmat.o \
 	posix/shmctl.o \
 	posix/shmdt.o \
@@ -270,6 +263,7 @@ C_SOCKET := \
 	socket/hstrerror.o \
 	socket/if_indextoname.o \
 	socket/if_nametoindex.o \
+	socket/in6addr_any.o \
 	socket/inet_addr.o \
 	socket/inet_aton.o \
 	socket/inet_lnaof.o \
@@ -423,6 +417,7 @@ C_STDIO := \
 	stdio/sprintf.o \
 	stdio/sscanf.o \
 	stdio/sscanf_hook_entry.o \
+	stdio/stdio_ext.o \
 	stdio/tempnam.o \
 	stdio/tmpfile.o \
 	stdio/tmpfile64.o \
@@ -448,6 +443,7 @@ C_STDLIB := \
 	stdlib/abs.o \
 	stdlib/aligned_alloc.o \
 	stdlib/assertion_failure.o \
+	stdlib/arc4random.o \
 	stdlib/atexit.o \
 	stdlib/atof.o \
 	stdlib/atoff.o \
@@ -506,6 +502,7 @@ C_STDLIB := \
 	stdlib/program_name.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
+	stdlib/qsort_r.o \
 	stdlib/realloc.o \
 	stdlib/resetmemstats.o \
 	stdlib/secure_getenv.o \
@@ -734,6 +731,7 @@ C_UNISTD := \
 	unistd/pread.o \
 	unistd/pwrite.o \
 	unistd/readlink.o \
+	unistd/reallocarray.o \
 	unistd/realpath.o \
 	unistd/restorepathname.o \
 	unistd/setcurrentpath.o \

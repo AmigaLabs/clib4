@@ -244,7 +244,8 @@ int read_from_stdin(char *read_buffer, size_t max_len) {
 
     do {
         read_count = read(STDIN_FILENO, read_buffer, max_len);
-        printf("read %d\n", read_count);
+        if (!strcmp(read_buffer, "q"))
+            exit(0);
         if (read_count < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
             perror("read()");
             return -1;

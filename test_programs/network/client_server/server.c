@@ -168,8 +168,9 @@ int close_client_connection(peer_t *client) {
 /* Reads from stdin and create new message. This message enqueues to send queueu. */
 int handle_read_from_stdin() {
     char read_buffer[DATA_MAXSIZE]; // buffer for stdin
-    if (read_from_stdin(read_buffer, DATA_MAXSIZE) != 0)
+    if (read_from_stdin(read_buffer, DATA_MAXSIZE) != 0) {
         return -1;
+    }
 
     // Create new message and enqueue it.
     message_t new_message;

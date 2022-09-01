@@ -13,27 +13,29 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 
+#define BUFFER_SIZE 30
+
 static BOOL readSize(uint32 *rows, uint32 *columns) {
     BPTR fh = Open("CONSOLE:", MODE_OLDFILE);
     BOOL success = FALSE;
     if (fh) {
-        uint32 width, height;
-        char r[2] = {0};
-        char buffer[25 + 1] = {0};
+        uint32 width = 0, height = 0;
+        char r;
+        char buffer[BUFFER_SIZE + 1] = {0};
 
         SetMode(fh, 1); // RAW mode
         if (Write(fh, "\x9b q", 3) == 3) {
             LONG actual = 0;
-            LONG ret = Read(fh, r, 1);
-            while (r[0] != 'r' && ret != 0) {
-                buffer[actual] = r[0];
+            LONG ret = Read(fh, &r, 1);
+            while (r != 'r' && ret != 0 && actual < BUFFER_SIZE) {
+                buffer[actual] = r;
                 actual += ret;
-                ret = Read(fh, r, 1);
+                ret = Read(fh, &r, 1);
             }
-            if (actual >= 0) {
+            if (actual >= 0 && actual < BUFFER_SIZE) {
                 buffer[actual] = '\0';
                 if (sscanf(buffer, "\x9b"
-                                   "1;1;%d;%d r", &height, &width) == 2) {
+                                   "1;1;%ld;%ld r", &height, &width) == 2) {
                     success = TRUE;
                 }
             }
@@ -42,9 +44,30 @@ static BOOL readSize(uint32 *rows, uint32 *columns) {
         Close(fh);
 
         if (success) {
-            *rows = width;
-            *columns = height;
+            *rows = height;
+            *columns = width;
         }
+    }
+
+    return success;
+}
+
+static BOOL writeSize(uint32 rows, uint32 columns) {
+    BPTR fh = Open("CONSOLE:", MODE_OLDFILE);
+    BOOL success = FALSE;
+
+    if (fh) {
+        char buffer[51] = {0};
+
+        SetMode(fh, 1); // RAW mode
+        snprintf(buffer, 50, "\x9b%dt\x9b%du", rows, columns);
+        int bufferLen = strlen(buffer);
+        int bytesWritten = Write(fh, buffer, bufferLen);
+        if (bytesWritten == bufferLen) {
+            success = TRUE;
+        }
+        SetMode(fh, 0); // Normal mode
+        Close(fh);
     }
 
     return success;
@@ -62,44 +85,74 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
     SHOWVALUE(sockfd);
     SHOWVALUE(request);
 
+    __set_errno(0);
+
     if (request != TIOCGWINSZ && request != TIOCSWINSZ) {
-        assert(__SocketBase != NULL);
+        if (FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET)) {
+            assert(__SocketBase != NULL);
 
-        assert(sockfd >= 0 && sockfd < __num_fd);
-        assert(__fd[sockfd] != NULL);
-        assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
-        assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+            assert(sockfd >= 0 && sockfd < __num_fd);
+            assert(__fd[sockfd] != NULL);
+            assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
+            //assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
-        fd = __get_file_descriptor_socket(sockfd);
-        if (fd == NULL)
-            goto out;
+            fd = __get_file_descriptor_socket(sockfd);
+            if (fd == NULL)
+                goto out;
 
-        __fd_lock(fd);
+            __fd_lock(fd);
 
-        va_start(arg, request);
-        param = va_arg(arg, char *);
-        va_end(arg);
+            va_start(arg, request);
+            param = va_arg(arg, char *);
+            va_end(arg);
 
-        SHOWPOINTER(param);
+            SHOWPOINTER(param);
 
-        result = __IoctlSocket(fd->fd_Socket, request, param);
-        if (result == 0) {
-            const int *option = (const int *) param;
+            result = __IoctlSocket(fd->fd_Socket, request, param);
+            if (result == 0) {
+                const int *option = (const int *) param;
 
-            if (request == (int) FIONBIO) {
+                if (request == (int) FIONBIO) {
+                    if ((*option) != 0)
+                        SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+                    else
+                        CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+                } else if (request == (int) FIOASYNC) {
+                    if ((*option) != 0)
+                        SET_FLAG(fd->fd_Flags, FDF_ASYNC_IO);
+                    else
+                        CLEAR_FLAG(fd->fd_Flags, FDF_ASYNC_IO);
+                }
+            }
+
+            __fd_unlock(fd);
+        }
+        else {
+            if (request != FIONBIO) {
+                fd = __get_file_descriptor(sockfd);
+                if (fd == NULL)
+                    goto out;
+
+                __fd_lock(fd);
+
+                va_start(arg, request);
+                param = va_arg(arg,
+                char *);
+                va_end(arg);
+
+                SHOWPOINTER(param);
+
+                const int *option = (const int *) param;
                 if ((*option) != 0)
                     SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
                 else
                     CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
-            } else if (request == (int) FIOASYNC) {
-                if ((*option) != 0)
-                    SET_FLAG(fd->fd_Flags, FDF_ASYNC_IO);
-                else
-                    CLEAR_FLAG(fd->fd_Flags, FDF_ASYNC_IO);
+
+                __fd_unlock(fd);
+
+                result = OK;
             }
         }
-
-        __fd_unlock(fd);
     } else if (request == TIOCGWINSZ) {
         struct winsize *size;
         // Get them from console device
@@ -131,7 +184,13 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
             __set_errno(EFAULT);
             goto out;
         }
-        /* Do nothing at moment. Console device doesn't support it */
+
+        /* Write size will clear and refresh only the window.
+         * Console device don't support resizing via CSI
+         */
+#if 0
+        writeSize(size->ws_row, size->ws_col);
+#endif
     }
 
 out:

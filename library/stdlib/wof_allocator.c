@@ -481,7 +481,6 @@ wof_new_block(wof_allocator_t *allocator) {
     wof_block_hdr_t *block;
 
     /* allocate the new block and add it to the block list */
-    //block = (wof_block_hdr_t *) malloc(WOF_BLOCK_SIZE);
     block = (wof_block_hdr_t *) AllocVecTags(WOF_BLOCK_SIZE, AVT_Type, MEMF_SHARED, TAG_DONE);
     if (block == NULL) {
         return;
@@ -502,11 +501,6 @@ wof_alloc_jumbo(wof_allocator_t *allocator, const size_t size) {
     wof_chunk_hdr_t *chunk;
 
     /* allocate a new block of exactly the right size */
-    /*
-    block = (wof_block_hdr_t *) malloc(size
-                                       + WOF_BLOCK_HEADER_SIZE
-                                       + WOF_CHUNK_HEADER_SIZE);
-    */
     block = (wof_block_hdr_t *) AllocVecTags(size
                                              + WOF_BLOCK_HEADER_SIZE
                                              + WOF_CHUNK_HEADER_SIZE,
@@ -540,7 +534,10 @@ wof_free_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk) {
 
     wof_remove_from_block_list(allocator, block);
 
-    FreeVec(block);
+    if (block) {
+        FreeVec(block);
+        block = NULL;
+    }
 }
 
 /* Reallocs special 'jumbo' blocks of sizes that won't fit normally. */
@@ -583,8 +580,10 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
 
 
             /* Free old block */
-            FreeVec(block);
-            block = NULL;
+            if (block != NULL) {
+                FreeVec(block);
+                block = NULL;
+            }
 
             if (newptr->next) {
                 newptr->next->prev = newptr;
@@ -615,9 +614,12 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
         }
         /* Copy old block to new one */
         memcpy(newptr, block, old_size);
+
         /* Free old block */
-        FreeVec(block);
-        block = NULL;
+        if (block != NULL) {
+            FreeVec(block);
+            block = NULL;
+        }
 
         if (newptr->next) {
             newptr->next->prev = newptr;
@@ -887,6 +889,7 @@ wof_allocator_destroy(wof_allocator_t *allocator) {
 
     /* then just free the struct */
     FreeVec(allocator);
+    allocator = NULL;
 }
 
 wof_allocator_t *

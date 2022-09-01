@@ -7,6 +7,8 @@
 #include <exec/types.h>
 #include <utility/tagitem.h>
 
+#include <time.h>
+
 /* Error codes returned. */
 
 #define	SV_EOK		(0)
@@ -27,13 +29,6 @@
 #define	SV_ENOMSG	(83)
 
 /* Common IPC defines. */
-
-#ifndef	_TIMESPEC_DEFINED
-struct timespec {
-	int32	tv_sec;
-	int32	tv_nsec;
-};
-#endif
 
 #define	IPC_CREAT	001000
 #define	IPC_EXCL		002000

@@ -11,9 +11,6 @@ tolower(int c) {
     DECLARE_LOCALEBASE();
     int result;
 
-    ENTER();
-    SHOWVALUE(c);
-
     __locale_lock();
 
     if (__locale_table[LC_CTYPE] != NULL) {
@@ -32,6 +29,5 @@ tolower(int c) {
 
     __locale_unlock();
 
-    RETURN(result);
     return (result);
 }

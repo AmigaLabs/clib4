@@ -507,7 +507,7 @@ struct _clib2
     uint32_t *x;
 
     /* Used by rand_r */
-    unsigned int __random_seed;
+    uint64_t __random_seed;
 
     /* Used by setitimer/getitimer */
     struct itimerval tmr_time;

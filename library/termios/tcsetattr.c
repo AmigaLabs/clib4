@@ -11,10 +11,14 @@ set_console_termios(struct fd *fd, struct termios *new_tios) {
     struct termios *old_tios;
     int result = ERROR;
     BPTR file;
+    BOOL use_ncurses = FALSE;
+
+    if (FLAG_IS_SET(new_tios->c_cflag, NCURSES))
+        use_ncurses = TRUE;
 
     /* TODO: Check for some "impossible" combinations here? */
 
-    old_tios = __get_termios(fd);
+    old_tios = __get_termios(fd, use_ncurses);
     if (old_tios == NULL)
         goto out;
 
@@ -66,11 +70,6 @@ tcsetattr(int file_descriptor, int how, struct termios *tios) {
     }
 
     __fd_lock(fd);
-
-    /* To use STDOUT we need to enable FDF_IS_INTERACTIVE */
-    if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
-        SET_FLAG(__fd[file_descriptor]->fd_Flags, FDF_IS_INTERACTIVE);
-    }
 
     /* The following is in case the termios structure was manually constructed. (it should have been zero:ed in that case)  */
     if (tios->type == TIOST_INVALID) {

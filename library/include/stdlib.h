@@ -97,7 +97,6 @@ void lcong48 (unsigned short subi[7]);
 
 #endif
 
-
 extern int system(const char *command);
 extern void exit(int status);
 extern void abort(void);
@@ -156,12 +155,20 @@ extern float atoff (const char *nptr);
 #endif
 extern void _Exit(int status);
 
-#ifdef _GNU_SOURCE
+#if defined(_GNU_SOURCE) || defined(_BSD_SOURCE) || defined(_DEFAULT_SOURCE)
 extern char *ecvt(double x, int n, int *dp, int *sign);
 extern char *fcvt(double x, int n, int *dp, int *sign);
 extern char *gcvt(double x, int n, char *b);
 extern char *secure_getenv(const char *name);
+extern void *reallocarray(void *ptr, size_t m, size_t n);
+extern void qsort_r (void *, size_t, size_t, int (*)(const void *, const void *, void *), void *);
 #endif
+
+extern uint32_t arc4random(void);
+extern void arc4random_buf(void *buf, size_t nbytes);
+extern uint32_t arc4random_uniform(uint32_t upper_bound);
+extern void arc4random_stir(void);
+extern void arc4random_addrandom(unsigned char *dat, int datlen);
 
 __END_DECLS
 

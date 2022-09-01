@@ -144,7 +144,6 @@ int main(int argc, char **argv) {
     int flag = fcntl(STDIN_FILENO, F_GETFL, 0);
     flag |= O_NONBLOCK;
     int result = fcntl(STDIN_FILENO, F_SETFL, flag);
-    printf("FCNTL result = %d\n", result);
 
     fd_set read_fds;
     fd_set write_fds;
@@ -158,6 +157,7 @@ int main(int argc, char **argv) {
     while (1) {
         // Select() updates fd_set's, so we need to build fd_set's before each select()call.
         build_fd_sets(&server, &read_fds, &write_fds, &except_fds);
+
         int activity = select(maxfd + 1, &read_fds, &write_fds, &except_fds, NULL);
 
         switch (activity) {

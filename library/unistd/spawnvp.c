@@ -7,6 +7,6 @@
 #endif /* _UNISTD_HEADERS_H */
 
 int
-spawnvp(int mode, const char *path, const char *const *argv) {
+spawnvp(int mode, const char *path, const char **argv) {
     return spawnv(mode, path, argv);
 }

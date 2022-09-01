@@ -16,10 +16,6 @@ close(int file_descriptor) {
 
     SHOWVALUE(file_descriptor);
 
-    assert(file_descriptor >= 0 && file_descriptor < __num_fd);
-    assert(__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
-
     __check_abort();
 
     /* We want to affect this very file descriptor and not the

@@ -31,46 +31,49 @@ static BPTR old_input;
 static BPTR output;
 static BPTR input;
 
-struct WBStartup *NOCOMMON
-__WBenchMsg;
+struct WBStartup *NOCOMMON __WBenchMsg;
 
 /* CPU cache line size; used to align I/O buffers for best performance. */
 ULONG __cache_line_size = 32;
 
 FILE_DESTRUCTOR(workbench_exit)
-        {
-                ENTER();
+{
+    ENTER();
 
-        /* Now clean up after the streams set up for Workbench startup... */
-        if (restore_console_task) {
-            SetConsoleTask((struct MsgPort *) old_console_task);
-            old_console_task = NULL;
+    /* Now clean up after the streams set up for Workbench startup... */
+    if (restore_console_task) {
+        SetConsoleTask((struct MsgPort *) old_console_task);
+        old_console_task = NULL;
 
-            restore_console_task = FALSE;
-        }
+        restore_console_task = FALSE;
+    }
 
-        if (restore_streams) {
-            SelectInput(old_input);
-            old_input = ZERO;
+    if (restore_streams) {
+        SelectInput(old_input);
+        old_input = ZERO;
 
-            SelectOutput(old_output);
-            old_output = ZERO;
+        SelectOutput(old_output);
+        old_output = ZERO;
 
-            restore_streams = FALSE;
-        }
+        restore_streams = FALSE;
+    }
 
-        if (input != ZERO) {
-            Close(input);
-            input = ZERO;
-        }
+    if (input != ZERO) {
+        SetMode(input, DOSFALSE);
 
-        if (output != ZERO) {
-            Close(output);
-            output = ZERO;
-        }
+        Close(input);
+        input = ZERO;
+    }
 
-        LEAVE();
-        }
+    if (output != ZERO) {
+        SetMode(output, DOSFALSE);
+
+        Close(output);
+        output = ZERO;
+    }
+
+    LEAVE();
+}
 
 static int
 wb_file_init(void) {
@@ -181,7 +184,7 @@ FILE_CONSTRUCTOR(stdio_file_init)
             case STDOUT_FILENO:
 
                 iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE;
+                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE;
                 default_file = Output();
                 break;
 

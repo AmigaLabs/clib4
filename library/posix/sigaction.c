@@ -100,8 +100,7 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
     SHOWPOINTER(act);
     SHOWPOINTER(oact);
 
-    if (sig < 0 || NSIG <= sig || sig == SIGKILL || sig == SIGSTOP
-        || (act && act->sa_handler == SIG_ERR)) {
+    if (sig < 0 || NSIG <= sig || sig == SIGKILL || sig == SIGSTOP || (act && act->sa_handler == SIG_ERR)) {
         __set_errno(EINVAL);
         RETURN(-1);
         return -1;
