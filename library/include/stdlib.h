@@ -80,7 +80,6 @@ extern long random(void);
 extern void srandom(unsigned int seed);
 extern char *initstate(unsigned int seed, char *state, size_t size);
 extern char *setstate(const char *state);
-extern int putenv(const char *string);
 extern char *l64a (long x0);
 extern long a64l (const char *s);
 extern void setkey(const char *key);
@@ -125,6 +124,7 @@ extern char *mktemp(char *name_template);
 extern int mkstemp(char *name_template);
 extern int unsetenv(const char *name);
 extern int setenv(const char *name, const char *value, int overwrite);
+extern int putenv(const char *string);
 
 extern char *mkdtemp(char *name_template);
 extern const char *getexecname(void);

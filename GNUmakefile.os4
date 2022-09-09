@@ -95,7 +95,7 @@ OPTIONS  := -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE 
 OPTIMIZE := -O2 -mmultiple -mupdate -mstrict-align
 
 ifndef DEBUG
-    OPTIMIZE := $(OPTIMIZE) -DNDEBUG
+    OPTIMIZE := $(OPTIMIZE) -gstabs -DNDEBUG
 else
     OPTIMIZE := $(OPTIMIZE) -gstabs -DDEBUG
 endif
