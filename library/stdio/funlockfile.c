@@ -33,5 +33,5 @@ funlockfile(FILE *stream) {
         ReleaseSemaphore(file->iob_Lock);
 
 out:
-
+    return;
 }

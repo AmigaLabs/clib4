@@ -35,5 +35,5 @@ flockfile(FILE *stream) {
         ObtainSemaphore(file->iob_Lock);
 
 out:
-
+    return;
 }
