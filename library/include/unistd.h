@@ -174,6 +174,7 @@ extern int setuid(uid_t uid);
 #define _SC_PAGESIZE                8
 #define _SC_NPROCESSORS_CONF        9
 #define _SC_TZNAME_MAX             20
+#define _SC_THREAD_KEYS_MAX        21
 #define _SC_HOST_NAME_MAX          65
 
 extern long pathconf(const char *path,int name);

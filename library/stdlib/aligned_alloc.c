@@ -10,20 +10,17 @@
 #include <stdint.h>
 
 void *
-aligned_alloc(size_t align, size_t size)
-{
+aligned_alloc(size_t align, size_t size) {
     ENTER();
 
     /* align must be a power of 2 */
     /* size must be a multiple of align */
-    if ((align & -align) != align)
-    {
+    if ((align & -align) != align) {
         __set_errno(EINVAL);
         return NULL;
     }
 
-    if (size > SIZE_MAX - align)
-    {
+    if (size > SIZE_MAX - align) {
         __set_errno(ENOMEM);
         RETURN(NULL);
         return NULL;
@@ -35,5 +32,6 @@ aligned_alloc(size_t align, size_t size)
     }
 
     LEAVE();
+
     return memalign(align, size);
 }
