@@ -57,8 +57,8 @@ function_prolog(__strchr440)
 	cmpwi	r4,0
 	beq-	char_is_null	/* Search char is NULL, so do strlen op    */
 
-	xor	r5,r5,r5	/* Clear total offset from start           */
-	neg	r9,r3     	/* get 2's complement of input address     */
+	xor	r5,r5,r5	        /* Clear total offset from start           */
+	neg	r9,r3     	        /* get 2's complement of input address     */
 	rlwinm.	r7,r9,0,29,31   /* calc number of bytes to dword boundary  */
 	beq-	dwbndry         /* if zero, then already on dword bndry    */
 
@@ -74,30 +74,30 @@ bytebybyte:
 
 dwbndry:
 	addi 	r6,0,8		/* Byte count of 8 in XER for 'load        */
-	mtxer 	r6		/* string' instruction later               */
+	mtxer 	r6		    /* string' instruction later               */
         
 	rlwimi	r4,r4,8,16,23	/* Set up 'c' in all bytes of word.        */
-        rlwimi.	r4,r4,16,0,15   /* Remember 'c' in LSB of int              */
+    rlwimi.	r4,r4,16,0,15   /* Remember 'c' in LSB of int              */
 
 	b	again
 
 comp:			        /* No NULL in eight bytes, look for 'c'    */
 
-	xor	r6,r6,r4	/* XOR r4 & r6 to look for match           */
-	xor	r7,r7,r4	/* XOR r4 & r7 to look for match           */
+	xor	r6,r6,r4	    /* XOR r4 & r6 to look for match           */
+	xor	r7,r7,r4	    /* XOR r4 & r7 to look for match           */
         
-	DLMZBDOT(0,6,7)         /* Check for hole created by match         */
+	DLMZBDOT(0,6,7)     /* Check for hole created by match         */
         
-	add	r5,r5,r0	/* Update total offset with 1-8            */
+	add	r5,r5,r0	    /* Update total offset with 1-8            */
         
-	bne-	found	        /* If no hole, fall through and get next 8 */
-                                /* bytes, otherwise, go to logic to handle */
-                                /* 8 bytes w/ match                        */
+	bne-	found	    /* If no hole, fall through and get next 8 */
+                        /* bytes, otherwise, go to logic to handle */
+                        /* 8 bytes w/ match                        */
 
 again:			        /* New 8 bytes, look for NULL first        */
 
 	lswx 	r6,r3,r5	/* Load r6/r7 from r3 src + r5 offset      */
-                                /* from the start                          */
+                        /* from the start                          */
 	DLMZBDOT(12,6,7)	/* Look for NULL in these current 8 bytes  */
 	beq+	comp		/* If no NULL, search 8 bytes for 'c'      */
 
@@ -107,15 +107,13 @@ again:			        /* New 8 bytes, look for NULL first        */
     */
 
 	xor     r6,r6,r4	/* XOR r4 & r6 to look for match           */
-        xor     r7,r7,r4	/* XOR r4 & r7 to look for match           */
+    xor     r7,r7,r4	/* XOR r4 & r7 to look for match           */
         
-        DLMZBDOT(0,6,7)		/* Check for hole created by match         */
+    DLMZBDOT(0,6,7)		/* Check for hole created by match         */
         
-        cmplw   r0,r12		/* Was there a match before the NULL?      */
-        
-        bge     ret_null	/* If not, return NULL                     */
-        			
-        add     r5,r5,r0	/* Else, update the offset from the start  */
+    cmplw   r0,r12		/* Was there a match before the NULL?      */
+    bge     ret_null	/* If not, return NULL                     */
+    add     r5,r5,r0	/* Else, update the offset from the start  */
         
    /* 
     * Here we know the string is not ending, but we found a match in 
@@ -126,19 +124,19 @@ again:			        /* New 8 bytes, look for NULL first        */
 found:
 
 	addi    r5,r5,-1
-	add	r3,r3,r5	/* Return string start addr + offset to 'c'*/
+	add	r3,r3,r5	        /* Return string start addr + offset to 'c'*/
 	blr
         
 ret_null:
 
-	xor	r3,r3,r3	/* Return NULL since no match found        */	
+	xor	r3,r3,r3	        /* Return NULL since no match found        */
 	blr
 
-char_is_null:			/* Since search char is NULL, we basically */
-				/* do a strlen operation                   */
+char_is_null:			    /* Since search char is NULL, we basically */
+				            /* do a strlen operation                   */
 
-	xor	r12,r12,r12	/* Clear total offset from the start       */
-	neg	r9,r3     	/* get 2's complement of input address     */
+	xor	r12,r12,r12	        /* Clear total offset from the start       */
+	neg	r9,r3     	        /* get 2's complement of input address     */
 	rlwinm.	r7,r9,0,29,31   /* calc number of bytes to dword boundary  */
 	beq-	s_dwbndry       /* if zero, then already on dword bndry    */
 
@@ -152,45 +150,44 @@ s_bytebybyte:
 
 s_dwbndry:
 	rlwinm.	r7,r9,29,30,31  /* calc # of dwords to quad word bndry     */
-	beq	s_qwbndry       /* if zero, then already on qword bndry    */
-	addi 	r7,0,8		/* Byte count of 8 into XER for 'load      */
-				/* string' instruction later		   */	
-        mtxer   r7              /* Load count for 'load string'            */
-	lswx 	r6,r3,r12	/* Load r6-r7 from r3 src + r12 offset     */
+	beq	s_qwbndry           /* if zero, then already on qword bndry    */
+	addi 	r7,0,8		    /* Byte count of 8 into XER for 'load      */
+				            /* string' instruction later		   */
+    mtxer   r7              /* Load count for 'load string'            */
+	lswx 	r6,r3,r12	    /* Load r6-r7 from r3 src + r12 offset     */
 	DLMZBDOT(11,6,7)        /* Look for NULL in these 8 bytes          */
-        add     r12,r12,r11     /* Bump the offset from the start          */
-	bne-	s_found		/* If NULL found, done; else keep looking  */
+    add     r12,r12,r11     /* Bump the offset from the start          */
+	bne-	s_found		    /* If NULL found, done; else keep looking  */
 
 s_qwbndry:
 	
-       	addi 	r5,0,16		/* Byte count of 16 into XER for 'load     */
-				/* string' instruction later		   */
+    addi 	r5,0,16		    /* Byte count of 16 into XER for 'load     */
+				            /* string' instruction later		   */
      
 s_again:	                /* New 16 bytes, look for NULL             */
 
-        mtxer   r5              /* Load count for 'load string'            */
-	lswx 	r6,r3,r12	/* Load r6-r9 from r3 src + r12 offset     */
-                                /* from the start                          */
+    mtxer   r5              /* Load count for 'load string'            */
+	lswx 	r6,r3,r12	    /* Load r6-r9 from r3 src + r12 offset     */
+                            /* from the start                          */
 	DLMZBDOT(11,6,7)        /* Look for NULL in these first   8 bytes  */
         
-        add     r12,r12,r11     /* Bump the offset from the start          */
+    add     r12,r12,r11     /* Bump the offset from the start          */
 
-	bne-	s_found		/* If no NULL in first 8 bytes, fall       */
-				/* through and test next 8 bytes, else,    */
-				/* we're done				   */
+	bne-	s_found		    /* If no NULL in first 8 bytes, fall       */
+				            /* through and test next 8 bytes, else,    */
+				            /* we're done				               */
 
-        DLMZBDOT(11,8,9)        /* Look for NULL in these next    8 bytes  */
+    DLMZBDOT(11,8,9)        /* Look for NULL in these next    8 bytes  */
 
-        add     r12,r12,r11     /* Bump the offset from the start          */
+    add     r12,r12,r11     /* Bump the offset from the start          */
 
-	beq+	s_again   	/* If no NULL, grab next 16 bytes, else,   */
-				/* we're done.				   */	
+	beq+	s_again   	    /* If no NULL, grab next 16 bytes, else,   */
+				            /* we're done.				               */
 s_found:
 
 	addi	r12,r12,-1      /* Compensate for NULL                     */
+ 	add	r3,r12,r3           /* Add returned length to string pointer   */
 
- 	add	r3,r12,r3       /* Add returned length to string pointer   */
-	
 	blr
 	
 function_epilog(__strchr440)

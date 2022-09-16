@@ -61,10 +61,10 @@ function_prolog(__memchr440)
     beq-    ret_null        /* Branch to return NULL if so             */
 
 
-	addi 	r12,0,8		/* Byte count of 8 into XER for 'load      */
-	mtxer 	r12		/* string' instruction later               */
+	addi 	r12,0,8		    /* Byte count of 8 into XER for 'load      */
+	mtxer 	r12		        /* string' instruction later               */
 
-	xor	r12,r12,r12	/* Clear offset from the start             */
+	xor	r12,r12,r12	        /* Clear offset from the start             */
 
 	rlwimi	r4,r4,8,16,23	/* Set up 'c' in all bytes of word.        */
     rlwimi.	r4,r4,16,0,15   /* Remember 'c' in LSB of int              */
@@ -76,8 +76,8 @@ function_prolog(__memchr440)
 
     addic.  r9,r8,-8        /* If byte count = 8, we are DW aligned    */
     beq     again           /* So branch straight to fast loop         */
-                /* Otherwise, handle initial bytes one at  */
-            /* a time.				   */
+                            /* Otherwise, handle initial bytes one at  */
+                            /* a time.				                   */
     andi.   r9,r4,255       /* Get search char only in low byte        */
     addi    r10,r3,-1       /* Preset base pointer for auto incr       */
 
@@ -92,17 +92,17 @@ next_byte:
     addic.  r8,r8,-1        /* Decrement the DW byte count             */
     bne+    next_byte       /* Loop again if still not DW aligned      */
 
-again:  			/* DW aligned, look for 'c' in new 8 bytes */
+again:  			        /* DW aligned, look for 'c' in new 8 bytes */
 
-	lswx 	r6,r3,r12	/* Load r6/r7 from r3 src + r12 offset     */
-                        /* from the start                          */
+	lswx 	r6,r3,r12	    /* Load r6/r7 from r3 src + r12 offset     */
+                            /* from the start                          */
 
-	xor	r6,r6,r4	/* XOR r4 & r6 to look for match           */
-	xor	r7,r7,r4	/* XOR r4 & r7 to look for match           */
+	xor	r6,r6,r4	        /* XOR r4 & r6 to look for match           */
+	xor	r7,r7,r4	        /* XOR r4 & r7 to look for match           */
 
 	DLMZBDOT(0,6,7)         /* Check for hole created by match         */
 
-    add	r12,r12,r0	/* Update total offset with 1-8            */
+    add	r12,r12,r0	        /* Update total offset with 1-8            */
     beq+    no_match        /* Branch if no match found in 8 bytes     */
 
 	/* Match was found, but first must see if we've exceeded max count */									
@@ -113,7 +113,7 @@ again:  			/* DW aligned, look for 'c' in new 8 bytes */
 found:
 
 	addi    r12,r12,-1
-	add	r3,r3,r12	/* Return string start addr + offset to 'c'*/
+	add	r3,r3,r12	        /* Return string start addr + offset to 'c'*/
 	blr
 	
 no_match:
@@ -123,7 +123,7 @@ no_match:
 
 ret_null:
 
-	xor	r3,r3,r3	/* Return NULL since no match found        */	
+	xor	r3,r3,r3	        /* Return NULL since no match found        */
 	blr
 
 function_epilog(__memchr440)
