@@ -562,7 +562,6 @@ C_STRING := \
 	cpu/altivec/vec_memcpy.o \
 	cpu/altivec/vec_memset.o \
 	cpu/altivec/vec_strcpy.o \
-	cpu/4xx/l2cache.o \
 	cpu/4xx/memchr440.o \
 	cpu/4xx/memcmp440.o \
 	cpu/4xx/memcpy440.o \
@@ -930,10 +929,6 @@ SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
 
 $(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 $(BUILD_DIR)/obj.shared/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
-
-# Specific Sam460ex files
-$(OUT_STATIC)/cpu/4xx/l2cache.o : CFLAGS += $(LARGEDATA) -mcpu=440fp -mregnames
-$(OUT_SHARED)/cpu/4xx/l2cache.o : CFLAGS += $(PIC) $(LARGEDATA) -mcpu=440fp -mregnames
 
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)

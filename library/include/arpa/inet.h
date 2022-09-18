@@ -1,5 +1,5 @@
 /*
- * $Id: inet.h,v 1.4 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: inet.h,v 1.5 2022-09-15 12:06:14 clib2devs Exp $
 */
 
 #ifndef	_ARPA_INET_H
@@ -16,6 +16,18 @@
 #include <features.h>
 
 __BEGIN_DECLS
+
+#ifdef __NO_NET_API
+/* This undefs are needed if you try to compile something
+ * is using bsdsocket SDK since the functions are already
+ * defined using ISocket->func
+ */
+#undef inet_addr
+#undef inet_aton
+#undef inet_network
+#undef inet_ntop
+#undef inet_pton
+#endif
 
 extern in_addr_t inet_addr(const char *cp);
 extern int inet_aton(const char *cp, struct in_addr *pin);

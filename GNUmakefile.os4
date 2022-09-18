@@ -93,7 +93,7 @@ STATIC   := $(if $(STATIC),$(STATIC),yes)
 
 LARGEDATA := -msdata=data
 OPTIONS  := $(LARGEDATA) -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU
-OPTIMIZE := -O2 -mmultiple -mupdate -mstrict-align
+OPTIMIZE := -O3 -mmultiple -mupdate -mstrict-align
 
 ifndef DEBUG
     OPTIMIZE := $(OPTIMIZE) -gstabs -DNDEBUG
