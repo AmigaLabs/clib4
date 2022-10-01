@@ -10,13 +10,13 @@ CC:=gcc
 CXX:=g++
 endif
 
-CFLAGS=-mcrt=clib2
+CFLAGS:=-mcrt=clib2
 CXXFLAGS:=-mcrt=clib2
 
 LD_C:=$(CC)
-LD_CXX=$(CXX)
-LDFLAGS=-mcrt=clib2 -athread=native
-LDLIBS=-lpthread
+LD_CXX:=$(CXX)
+LDFLAGS:=-mcrt=clib2 -athread=native
+LDLIBS:=-lpthread
 
 pthread_join: pthread_join.o
 	$(LD_C) $(LDFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS)
