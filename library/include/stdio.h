@@ -186,12 +186,14 @@ extern int puts(const char *s);
 
 /****************************************************************************/
 
+extern int dprintf(int fd, const char *format, ...);
 extern int fprintf(FILE *stream, const char *format, ...);
 extern int printf(const char *format, ...);
 extern int sprintf(char *s, const char *format, ...);
 
 /****************************************************************************/
 
+extern int vdprintf(int fd, const char *format, va_list arg);
 extern int vfprintf(FILE *stream, const char *format, va_list arg);
 extern int vprintf(const char *format, va_list arg);
 extern int vsprintf(char *s, const char *format, va_list arg);

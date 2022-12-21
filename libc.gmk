@@ -335,6 +335,7 @@ C_STDIO := \
 	stdio/change_fd_user_data.o \
 	stdio/clearerr.o \
 	stdio/ctermid.o \
+	stdio/dprintf.o \
 	stdio/dropiobreadbuffer.o \
 	stdio/duplicate_fd.o \
 	stdio/err.o \
@@ -427,6 +428,7 @@ C_STDIO := \
 	stdio/unlockfile.o \
 	stdio/vasprintf.o \
 	stdio/vasprintf_hook_entry.o \
+	stdio/vdprintf.o \
 	stdio/vfprintf.o \
 	stdio/vfscanf.o \
 	stdio/vsscanf.o \

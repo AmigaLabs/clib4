@@ -23,7 +23,7 @@ __strrchr(const char *s, int c)
 	 * stopping on the first location that holds the desired
 	 * value we just remember where we found it. When the
 	 * end of the string finally arrives we will thus be
-	 * able to return a pointer to the last occurence of
+	 * able to return a pointer to the last occurrence of
 	 * the character.
 	 */
 	while (TRUE)

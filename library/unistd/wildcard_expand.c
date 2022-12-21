@@ -219,7 +219,7 @@ int __wildcard_expand_init(void) {
                         /* End of the line. */
                         break;
                     } else if (rc != OK) {
-                        /* Some error occured. */
+                        /* Some error occurred. */
                         error = EIO;
                         break;
                     }
