@@ -545,6 +545,8 @@ C_STDLIB := \
 
 C_STRING := \
 	string/strings_ffs.o \
+	string/strings_ffsl.o \
+	string/strings_ffsll.o \
 	string/strings_strcasecmp.o \
 	string/strings_strncasecmp.o \
 	string/bcmp.o \
@@ -717,6 +719,7 @@ C_UNISTD := \
 	unistd/getlogin_r.o \
 	unistd/getopt.o \
 	unistd/getopt_long.o \
+	unistd/getpagesize.o \
 	unistd/getpid.o \
 	unistd/getppid.o \
 	unistd/getwd.o \

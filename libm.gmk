@@ -123,6 +123,9 @@ C_MATH := \
 	math/erff.o \
 	math/erfl.o \
 	math/exp.o \
+	math/exp10.o \
+	math/exp10f.o \
+	math/exp10l.o \
 	math/exp2.o \
 	math/exp2f.o \
 	math/exp2l.o \
@@ -236,6 +239,9 @@ C_MATH := \
 	math/nexttowardf.o \
 	math/nexttowardl.o \
 	math/pow.o \
+	math/pow10.o \
+	math/pow10f.o \
+	math/pow10l.o \
 	math/powf.o \
 	math/powl.o \
 	math/remainder.o \

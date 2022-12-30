@@ -5,6 +5,7 @@
 *.lha
 *.bak
 /library/compiler.log
+compiler.log
 *.map
 .vscode
 build/
