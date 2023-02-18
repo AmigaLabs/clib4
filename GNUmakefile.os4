@@ -58,7 +58,7 @@ WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-missing-braces -Wno-unused-value -Wno-comment \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
-	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough # -Werror -Wbad-function-cast -Wconversion -Wformat
+	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough -Wno-prio-ctor-dtor # -Werror -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC 
 INCLUDES   := -I$(LIB_DIR)/include \

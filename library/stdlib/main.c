@@ -226,8 +226,8 @@ open_libraries(void) {
     return (success);
 }
 
-STATIC VOID detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
-{
+static void
+detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase) {
     (void) (return_code);
     (void) (exit_data);
     (void) (sysBase);
@@ -235,7 +235,7 @@ STATIC VOID detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBa
     _fini();
 }
 
-STATIC ULONG get_stack_size(void) {
+static ULONG get_stack_size(void) {
     struct Task *tc = FindTask(NULL);
     ULONG upper, lower;
     ULONG result;

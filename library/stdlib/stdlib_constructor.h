@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_constructor.h,v 1.3 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdlib_constructor.h,v 1.4 2023-02-11 12:04:25 clib2devs Exp $
 */
 
 #ifndef _STDLIB_CONSTRUCTOR_H
@@ -15,15 +15,15 @@
 
 /****************************************************************************/
 
-#define CONSTRUCTOR(name,pri) \
-	STATIC VOID __attribute__((used)) name##_ctor(VOID); \
-	STATIC VOID (*__##name##_ctor)(VOID) __attribute__((used,section(".ctors._" #pri))) = name##_ctor; \
-	STATIC VOID name##_ctor(VOID)
+#define CONSTRUCTOR(name, pri) \
+    static void __attribute__((used, constructor(pri))) name##_ctor(VOID); \
+    static void (*__##name##_ctor)(void) = name##_ctor; \
+    static void name##_ctor(void)
 
-#define DESTRUCTOR(name,pri) \
-	STATIC VOID __attribute__((used)) name##_dtor(VOID); \
-	STATIC VOID (*__##name##_dtor)(VOID) __attribute__((used,section(".dtors._" #pri))) = name##_dtor; \
-	STATIC VOID name##_dtor(VOID)
+#define DESTRUCTOR(name, pri) \
+    static void __attribute__((used, destructor(pri))) name##_dtor(VOID); \
+    static void (*__##name##_dtor)(void) = name##_dtor; \
+    static void name##_dtor(void)
 
 #define CONSTRUCTOR_SUCCEED() \
 	return
@@ -41,32 +41,32 @@
    constructors and the user-supplied destructors before the library
    destructors. */
 
-#define STDLIB_CONSTRUCTOR(name)	CONSTRUCTOR(name,	9)
-#define STDLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	9)
+#define STDLIB_CONSTRUCTOR(name)	CONSTRUCTOR(name,	11)
+#define STDLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	11)
 
-#define STK_CONSTRUCTOR(name)		CONSTRUCTOR(name,	8)
-#define STK_DESTRUCTOR(name)		DESTRUCTOR(name,	8)
+#define STK_CONSTRUCTOR(name)		CONSTRUCTOR(name,	12)
+#define STK_DESTRUCTOR(name)		DESTRUCTOR(name,	12)
 
-#define STDIO_CONSTRUCTOR(name)		CONSTRUCTOR(name,	7)
-#define STDIO_DESTRUCTOR(name)		DESTRUCTOR(name,	7)
+#define STDIO_CONSTRUCTOR(name)		CONSTRUCTOR(name,	13)
+#define STDIO_DESTRUCTOR(name)		DESTRUCTOR(name,	13)
 
-#define FILE_CONSTRUCTOR(name)		CONSTRUCTOR(name,	6)
-#define FILE_DESTRUCTOR(name)		DESTRUCTOR(name,	6)
+#define FILE_CONSTRUCTOR(name)		CONSTRUCTOR(name,	14)
+#define FILE_DESTRUCTOR(name)		DESTRUCTOR(name,	14)
 
-#define MATH_CONSTRUCTOR(name)		CONSTRUCTOR(name,	5)
-#define MATH_DESTRUCTOR(name)		DESTRUCTOR(name,	5)
+#define MATH_CONSTRUCTOR(name)		CONSTRUCTOR(name,	15)
+#define MATH_DESTRUCTOR(name)		DESTRUCTOR(name,	15)
 
-#define SOCKET_CONSTRUCTOR(name)	CONSTRUCTOR(name,	4)
-#define SOCKET_DESTRUCTOR(name)		DESTRUCTOR(name,	4)
+#define SOCKET_CONSTRUCTOR(name)	CONSTRUCTOR(name,	16)
+#define SOCKET_DESTRUCTOR(name)		DESTRUCTOR(name,	16)
 
-#define ARG_CONSTRUCTOR(name)		CONSTRUCTOR(name,	3)
-#define ARG_DESTRUCTOR(name)		DESTRUCTOR(name,	3)
+#define ARG_CONSTRUCTOR(name)		CONSTRUCTOR(name,	17)
+#define ARG_DESTRUCTOR(name)		DESTRUCTOR(name,	17)
 
-#define CLIB_CONSTRUCTOR(name)		CONSTRUCTOR(name,	2)
-#define CLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	2)
+#define CLIB_CONSTRUCTOR(name)		CONSTRUCTOR(name,	18)
+#define CLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	18)
 
-#define PROFILE_CONSTRUCTOR(name)	CONSTRUCTOR(name,	1)
-#define PROFILE_DESTRUCTOR(name)	DESTRUCTOR(name,	1)
+#define PROFILE_CONSTRUCTOR(name)	CONSTRUCTOR(name,	19)
+#define PROFILE_DESTRUCTOR(name)	DESTRUCTOR(name,	19)
 
 /****************************************************************************/
 
