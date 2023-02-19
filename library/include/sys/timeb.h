@@ -1,13 +1,11 @@
 /*
- * $Id: timeb.h,v 1.3 2006-07-28 14:02:32 clib2devs Exp $
+ * $Id: timeb.h,v 1.4 2006-07-28 14:02:32 clib2devs Exp $
 */
 
 #ifndef	_SYS_TIMEB_H
 #define	_SYS_TIMEB_H
 
-#ifndef _TIME_H
 #include <time.h>	/* For the definition of time_t */
-#endif /* _TIME_H */
 
 #include <features.h>
 
