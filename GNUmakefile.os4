@@ -152,6 +152,7 @@ clean:
 	-$(DELETE) $(BUILD_DIR)/compiler.log
 	-$(DELETE) clib2.lha
 	-$(DELETE) clib2.bak
+	-cd test_programs; make clean
 
 ##############################################################################
 
@@ -259,6 +260,9 @@ $(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo -e "\rMaking Shared \033[0;31m$@\033[0m"
 $(VERBOSE)$(CC) -mcrt=clib2 -shared -use-dynld -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
 endef
+
+compile-tests:
+	cd $(LIB_ROOT)/test_programs; CC="$(CC)" CXX="$(CXX)" COPY="$(COPY)" DELETE="$(DELETE)" MAKEDIR="$(MAKEDIR)" && make
 
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*
