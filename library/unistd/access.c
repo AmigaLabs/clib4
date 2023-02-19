@@ -104,7 +104,7 @@ access(const char *path_name, int mode) {
         }
 
         if (FLAG_IS_SET(mode, R_OK)) {
-            if (FLAG_IS_SET(status->Protection, EXDB_NO_READ)) {
+            if (FLAG_IS_SET(status->Protection, EXDF_NO_READ)) {
                 SHOWMSG("not readable");
 
                 __set_errno(EACCES);

@@ -18,8 +18,8 @@ int clock_getres(clockid_t clock_id, struct timespec *res) {
         case CLOCK_MONOTONIC:
         case CLOCK_REALTIME: {
             /* This implementation assumes that the realtime clock has a
-                    resolution higher than 1 second.  This is the case for any
-                    reasonable implementation.  */
+               resolution higher than 1 second.  This is the case for any
+               reasonable implementation.  */
             res->tv_sec = 0;
             res->tv_nsec = 1000000000 / 1000;
 

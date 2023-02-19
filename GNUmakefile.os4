@@ -58,7 +58,7 @@ WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-missing-braces -Wno-unused-value -Wno-comment \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
-	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough # -Werror -Wbad-function-cast -Wconversion -Wformat
+	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough -Wno-prio-ctor-dtor # -Werror -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC 
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -91,11 +91,12 @@ INCLUDES   := -I$(LIB_DIR)/include \
 SHARED   := $(if $(SHARED),$(SHARED),yes)
 STATIC   := $(if $(STATIC),$(STATIC),yes)
 
-OPTIONS  := -msdata=data -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU
-OPTIMIZE := -O2 -mmultiple -mupdate -mstrict-align
+LARGEDATA := -msdata=data
+OPTIONS  := $(LARGEDATA) -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU
+OPTIMIZE := -O3 -mmultiple -mupdate -mstrict-align
 
 ifndef DEBUG
-    OPTIMIZE := $(OPTIMIZE) -DNDEBUG
+    OPTIMIZE := $(OPTIMIZE) -gstabs -DNDEBUG
 else
     OPTIMIZE := $(OPTIMIZE) -gstabs -DDEBUG
 endif
@@ -151,6 +152,7 @@ clean:
 	-$(DELETE) $(BUILD_DIR)/compiler.log
 	-$(DELETE) clib2.lha
 	-$(DELETE) clib2.bak
+	-cd test_programs; make clean
 
 ##############################################################################
 
@@ -258,6 +260,9 @@ $(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo -e "\rMaking Shared \033[0;31m$@\033[0m"
 $(VERBOSE)$(CC) -mcrt=clib2 -shared -use-dynld -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
 endef
+
+compile-tests:
+	cd $(LIB_ROOT)/test_programs; CC="$(CC)" CXX="$(CXX)" COPY="$(COPY)" DELETE="$(DELETE)" MAKEDIR="$(MAKEDIR)" && make
 
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*

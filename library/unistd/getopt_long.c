@@ -1,5 +1,5 @@
 /*
- * $Id: getopt_getopt_long.c,v 1.4 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: getopt_getopt_long.c,v 1.5 2022-09-11 12:04:22 clib2devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -14,32 +14,24 @@ extern int optopt;
 extern char *optarg;
 int optreset = 0;
 
-#define GETOPTF_LONG_ONLY        (1L << 0)    /* Operate in getopt_long_only more */
-#define GETOPTF_GNUEXT            (1L << 1)    /* Allow -W extension */
-#define GETOPTF_POSIX            (1L << 2)    /* Will disallow permutation */
-#define GETOPTF_ONE_ARG            (1L << 3)    /* Non-option argv will be handled as -\1 */
+#define GETOPTF_LONG_ONLY  (1L << 0)    /* Operate in getopt_long_only more */
+#define GETOPTF_GNUEXT     (1L << 1)    /* Allow -W extension */
+#define GETOPTF_POSIX      (1L << 2)    /* Will disallow permutation */
+#define GETOPTF_ONE_ARG    (1L << 3)    /* Non-option argv will be handled as -\1 */
 
-static int getopt_long_internal(int argc, const char **argv, const char *optstring,
-                                const struct option *longopts, int *longindex, int flags);
+static int getopt_long_internal(int argc, char* const* argv, const char *optstring, const struct option *longopts, int *longindex, int flags);
 
 
-int getopt_long(int argc, const char **argv, const char *optstring,
-                const struct option *longopts, int *longindex) {
+int getopt_long(int argc, char* const* argv, const char *optstring, const struct option *longopts, int *longindex) {
     return getopt_long_internal(argc, argv, optstring, longopts, longindex, 0);
 }
 
-#if 0
-int getopt_long_only(int argc, const char **argv, const char *optstring,
-        const struct option *longopts, int *longindex)
-{
-    return getopt_long_internal(argc, argv, optstring, longopts, longindex,
-        GETOPTF_LONG_ONLY);
+int getopt_long_only(int argc, char* const* argv, const char *optstring, const struct option *longopts, int *longindex) {
+    return getopt_long_internal(argc, argv, optstring, longopts, longindex, GETOPTF_LONG_ONLY);
 }
-#endif
 
 
-static int parse_long_option(int argc, char **argv, const struct option *longopts,
-                             int *longindex, int flags) {
+static int parse_long_option(int argc, char **argv, const struct option *longopts, int *longindex, int flags) {
     char *current = argv[optind] + 2;    /* Skip the '--' */
     char *argument;
     int keylen = 0;
@@ -150,8 +142,7 @@ static int parse_long_option(int argc, char **argv, const struct option *longopt
  * stop parsing input on the first non-option argument
  */
 
-static int getopt_long_internal(int argc, const char **argv, const char *optstring,
-                                const struct option *longopts, int *longindex, int flags) {
+static int getopt_long_internal(int argc, char* const* argv, const char *optstring, const struct option *longopts, int *longindex, int flags) {
     static char *nextchar = 0;
     int result = EOF;
     int c;

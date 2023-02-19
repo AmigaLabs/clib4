@@ -78,7 +78,7 @@ __bswap_32 (unsigned int __bsx)
 #endif
 
 #ifndef __LITTLE_ENDIAN
-#define __LITTLE_ENDIAN          BIG_ENDIAN
+#define __LITTLE_ENDIAN          LITTLE_ENDIAN
 #endif
 
 

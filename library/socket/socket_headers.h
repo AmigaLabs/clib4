@@ -118,7 +118,7 @@ extern FILE *syslog_fd;
 #define __SetErrnoPtr(errno_ptr, size) __ISocket->SetErrnoPtr(errno_ptr , size) 
 //#define __Inet_NtoA(ip) __ISocket->Inet_NtoA(ip)
 //#define __Inet_AtoN(cp, ip) __ISocket->inet_aton(cp, ip)
-#define __inet_addr(cp) __ISocket->inet_addr(cp) 
+//#define __inet_addr(cp) __ISocket->inet_addr(cp)
 //#define __Inet_LnaOf(in) __ISocket->Inet_LnaOf(in)
 //#define __Inet_NetOf(in) __ISocket->Inet_NetOf(in)
 //#define __Inet_MakeAddr(net, host) __ISocket->Inet_MakeAddr(net , host)

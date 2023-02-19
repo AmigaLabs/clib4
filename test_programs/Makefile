@@ -1,15 +1,25 @@
 #
-# $Id: Makefile,v 1.14 2021-01-25 11:29:46 clib2devs Exp $
+# $Id: makefile,v 1.14 2021-01-25 11:29:46 clib2devs Exp $
 #
 # :ts=8
 #
 
 ##############################################################################
 
-CC = ppc-amigaos-gcc
-CXX = ppc-amigaos-g++
-DELETE = rm -rf
-MKDIR = mkdir -p
+CC := ppc-amigaos-gcc
+CXX := ppc-amigaos-g++
+
+# On AmigaOS use native commands
+ifeq ($(UNAME), AmigaOS)
+    COPY := copy
+    DELETE := delete all quiet force
+    MAKEDIR := makedir all force
+else
+    COPY := cp -r
+    DELETE := rm -rf
+    MAKEDIR := mkdir -p
+endif
+
 BUILDDIR = ./build
 SOURCEDIR = .
 
@@ -42,14 +52,14 @@ CXX_OBJECTS = $(patsubst %.cpp, %, $(CXX_SOURCES))
 
 ##############################################################################
 
-LIBS = -lm -lpthread -lcrypt -lresolv
+LIBS = -lm -lpthread -lcrypt
 
 ##############################################################################
 
 all: builddir $(C_OBJECTS) $(CXX_OBJECTS)
 
 builddir:
-	$(MKDIR) $(BUILDDIR)
+	$(MAKEDIR) $(BUILDDIR)
 
 clean:
 	$(DELETE) $(BUILDDIR)

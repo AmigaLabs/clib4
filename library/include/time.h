@@ -22,8 +22,13 @@ __BEGIN_DECLS
 #define CLOCKS_PER_SEC ((clock_t)50)
 #define CLK_TCK CLOCKS_PER_SEC
 
-#define CLOCK_REALTIME (clockid_t)0
-#define CLOCK_MONOTONIC (clockid_t)1
+/* Identifier for system-wide realtime clock.  */
+#define CLOCK_REALTIME      (clockid_t) 0
+/* Monotonic system-wide clock.  */
+#define CLOCK_MONOTONIC     (clockid_t) 1
+/* Monotonic system-wide clock, not adjusted for frequency scaling.  */
+#define CLOCK_MONOTONIC_RAW (clockid_t) 4
+
 #define CLOCK_PROCESS_CPUTIME_ID (clockid_t)2 /* Not used in clock_ functions yet */
 #define CLOCK_THREAD_CPUTIME_ID (clockid_t)3  /* Not used in clock_ functions yet */
 

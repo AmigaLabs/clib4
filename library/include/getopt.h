@@ -1,5 +1,5 @@
 /*
- * $Id: getopt.h,v 1.5 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: getopt.h,v 1.6 2022-09-11 12:06:14 clib2devs Exp $
  *
  * :ts=4
  *
@@ -46,25 +46,19 @@
 
 __BEGIN_DECLS
 
-#define no_argument 		0
-#define required_argument	1
-#define optional_argument	2
+#define no_argument        0
+#define required_argument  1
+#define optional_argument  2
 
-struct option 
-{
-	const char *	name;
-	int 			has_arg;
-	int *			flag;
-	int 			val;
+struct option {
+    const char *name;
+    int has_arg;
+    int *flag;
+    int val;
 };
 
-/****************************************************************************/
-
-extern int getopt_long(int argc, const char **argv, const char *optstring, const struct option *longopts, int *longindex);
-
-/*extern int getopt_long_only(int argc, const char **argv, const char *optstring,
-		const struct option *longopts, int *longindex);
-*/
+extern int getopt_long(int argc, char* const *argv, const char *optstring, const struct option *longopts, int *longindex);
+extern int getopt_long_only(int argc, char* const *argv, const char *optstring, const struct option *longopts, int *longindex);
 extern int optreset;
 
 __END_DECLS

@@ -27,10 +27,10 @@ __BEGIN_DECLS
 #define STDOUT_FILENO	1
 #define STDERR_FILENO	2
 
-#define R_OK 0
-#define W_OK 1
-#define X_OK 2
-#define F_OK 4
+#define F_OK 0
+#define X_OK 1
+#define W_OK 2
+#define R_OK 4
 
 #define F_ULOCK	0
 #define F_LOCK	1
@@ -52,6 +52,7 @@ extern int fchown(int file_descriptor, uid_t owner, gid_t group);
 extern int lchown(const char * path_name, uid_t owner, gid_t group);
 extern int truncate(const char * path_name, off_t length);
 extern int ftruncate(int file_descriptor, off_t length);
+extern int getpagesize(void);
 #ifdef __USE_LARGEFILE64
 extern int ftruncate64(int file_descriptor, _off64_t length);
 extern int truncate64(const char *path_name, _off64_t length);
@@ -174,6 +175,7 @@ extern int setuid(uid_t uid);
 #define _SC_PAGESIZE                8
 #define _SC_NPROCESSORS_CONF        9
 #define _SC_TZNAME_MAX             20
+#define _SC_THREAD_KEYS_MAX        21
 #define _SC_HOST_NAME_MAX          65
 
 extern long pathconf(const char *path,int name);

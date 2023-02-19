@@ -1,5 +1,5 @@
 /*
- * $Id: socket_inet_addr.c,v 1.4 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: socket_inet_addr.c,v 1.5 2022-09-16 12:04:24 clib2devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -15,7 +15,6 @@ inet_addr(const char *addr) {
     SHOWSTRING(addr);
 
     assert(addr != NULL);
-    assert(__SocketBase != NULL);
 
     if (addr == NULL) {
         SHOWMSG("invalid parameter");
@@ -24,7 +23,12 @@ inet_addr(const char *addr) {
         goto out;
     }
 
-    result = __inet_addr((char *) addr);
+    struct in_addr a;
+    if (!inet_aton(addr, &a)) {
+        __set_errno(EFAULT);
+        goto out;
+    }
+    result = a.s_addr;
 
 out:
 

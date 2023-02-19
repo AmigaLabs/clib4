@@ -29,7 +29,7 @@ If you want to use `dlopen`/`dlsym` with shared objects:
 **DON'T TRY TO USE** newlib shared objects because it will crash badly!  
 **DON'T USE** static libraries otherwise you could have undefined symbols!
 
-The plain `libc.a` now contains also `libnet.a`, `libunix.a`. Socket support and floating point support are always enabled
+The plain `libc.a` now contains also `libnet.a`, `libunix.a`. Socket support and floating point support are always enabled.  
 Soft float version is no longer available.
 
 Clib2 define `__THREAD_SAFE` used to check if the library is thread safe
@@ -162,6 +162,7 @@ Don't call `exit()` function in an `alarm()` handler otherwise your program will
 - Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster and more better when there are multiple cores.
 - Create a shared library
 - Add a test suite
+- Try to use some functions/headers from https://github.com/attractivechaos/klib to improve speed
 
 ## Legal status
 

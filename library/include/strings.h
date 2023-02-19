@@ -16,8 +16,12 @@ __BEGIN_DECLS
 /* These come from 4.4BSD. */
 extern int strcasecmp(const char *s1, const char *s2);
 extern int strncasecmp(const char *s1, const char *s2, size_t len);
-extern int ffs(int i);
 
+#if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE)  || defined(_BSD_SOURCE)
+extern int ffs(int i);
+extern int ffsl(long i);
+extern int ffsll(long long i);
+#endif
 
 __END_DECLS
 

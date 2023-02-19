@@ -272,6 +272,26 @@ reent_exit() {
     if (__global_clib2) {
         /* Free memalign stuff */
         if (&__global_clib2->__memalign_pool) {
+            /* Check if we have something created with posix_memalign and not freed yet.
+             * But this is a good point also to free something allocated with memalign or
+             * aligned_alloc and all other functions are using memalign_tree to allocate memory
+             * This seems to cure also the memory leaks found sometimes (but not 100& sure..)
+             */
+            struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__global_clib2->__memalign_tree);
+            while (e) {
+                struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
+
+                /* Free memory */
+                if (e->me_Exact) {
+                    FreeVec(e->me_Exact);
+                }
+                /* Remove the node */
+                AVL_RemNodeByAddress(&__global_clib2->__memalign_tree, &e->me_AvlNode);
+                ItemPoolFree(__global_clib2->__memalign_pool, e);
+
+                e = next;
+            }
+
             FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
         }
 
