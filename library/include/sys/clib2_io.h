@@ -43,6 +43,7 @@ struct file_action_message
 	struct MsgPort *		fam_FileSystem;	/* File system pointer to be filled in */
 
 	int						fam_Error;		/* Error code, if any... */
+    int                     fam_DOSMode;    /* Canonical or Raw mode  */
 };
 
 /****************************************************************************/

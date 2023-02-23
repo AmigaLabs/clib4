@@ -244,12 +244,15 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
                  * I don't know if there are other problems setting STDIO always
                  * in RAW Mode but I suppose that we are ok since we are using
                  * a termios hook
-                 * TODO - Add a SetFileMode wrapper for setmode and set a flag so we don't
-                 * have to call SetMode with TRUE if it is already in this state
                  */
-                if (FLAG_IS_CLEAR(tios->c_cflag, ICANON) && FLAG_IS_SET(tios->c_cflag, NCURSES)) {
+                SHOWVALUE(FLAG_IS_CLEAR(tios->c_lflag, ICANON));
+                SHOWVALUE(FLAG_IS_SET(tios->c_lflag, NCURSES));
+                if (FLAG_IS_CLEAR(tios->c_lflag, ICANON) && FLAG_IS_SET(tios->c_lflag, NCURSES)) {
                     /* Set raw mode. */
-                    SetMode(file, DOSTRUE);
+                    if (fam->fam_DOSMode == DOSFALSE) {
+                        SetMode(file, DOSTRUE);
+                        fam->fam_DOSMode = DOSTRUE;
+                    }
                     if (tios->c_cc[VMIN] > 0 && tios->c_cc[VTIME] > 0) {
                         if (WaitForChar(file, 100000 * tios->c_cc[VTIME])) {
                             result = Read(file, fam->fam_Data, fam->fam_Size);
@@ -413,8 +416,13 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
                 __remove_fd_alias(fd);
             } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                 /* Should we reset this file into line buffered mode? */
-                if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
-                    SetMode(fd->fd_File, DOSFALSE);
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+                    /* Set canonical mode. */
+                    if (fam->fam_DOSMode == DOSTRUE) {
+                        SetMode(fd->fd_File, DOSFALSE);
+                        fam->fam_DOSMode = DOSFALSE;
+                    }
+                }
 
                 /* Are we allowed to close this file? */
                 if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {

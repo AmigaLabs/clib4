@@ -13,8 +13,10 @@ set_console_termios(struct fd *fd, struct termios *new_tios) {
     BPTR file;
     BOOL use_ncurses = FALSE;
 
-    if (FLAG_IS_SET(new_tios->c_cflag, NCURSES))
+    if (FLAG_IS_SET(new_tios->c_lflag, NCURSES)) {
+        CLEAR_FLAG(new_tios->c_lflag, ICANON);
         use_ncurses = TRUE;
+    }
 
     /* TODO: Check for some "impossible" combinations here? */
 

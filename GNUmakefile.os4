@@ -258,7 +258,7 @@ define MAKESHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo -e "\rMaking Shared \033[0;31m$@\033[0m"
-$(VERBOSE)$(CC) -mcrt=clib2 -shared -use-dynld -o $@ $^ $(LOG_COMMAND) -Lbuild/lib -lc
+$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND)
 endef
 
 compile-tests:

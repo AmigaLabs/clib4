@@ -44,8 +44,10 @@ get_console_termios(struct fd *fd, BOOL use_ncurses) {
         SET_FLAG(tios->c_cflag, CREAD);
 
     tios->c_lflag = ISIG|ICANON|ECHO;
-    if (use_ncurses)
-        SET_FLAG(tios->c_cflag, NCURSES);
+    if (use_ncurses) {
+        CLEAR_FLAG(tios->c_lflag, ICANON);
+        SET_FLAG(tios->c_lflag, NCURSES);
+    }
 
     memcpy(tios->c_cc, def_console_cc, NCCS);
 
@@ -99,6 +101,7 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
     BOOL use_ncurses = FALSE;
     struct fd *fd = NULL;
     struct termios *tios;
+    BPTR file;
 
     __stdio_lock();
 
@@ -113,10 +116,17 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
         goto out;
     }
 
+    file = __resolve_fd_file(fd);
+    if (file == ZERO)
+        goto out;
+
     __fd_lock(fd);
 
-    if (FLAG_IS_SET(user_tios->c_cflag, NCURSES))
+    if (FLAG_IS_SET(user_tios->c_lflag, NCURSES)) {
+        SetMode(file, DOSTRUE);
+        CLEAR_FLAG(user_tios->c_lflag, ICANON);
         use_ncurses = TRUE;
+    }
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
         assert(fd->fd_Aux != NULL);
