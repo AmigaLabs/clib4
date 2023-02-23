@@ -1,5 +1,5 @@
 /*
- * $Id: string_memchr.c,v 1.7 2021-03-22 12:04:26 clib2devs Exp $
+ * $Id: string_memchr.c,v 1.8 2023-02-22 12:04:26 clib2devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -10,164 +10,144 @@
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-/* Check if one of the four bytes which make up a long word is zero. */
-#define LONG_CONTAINS_ZERO_OCTET(x) (((x) + 0xfefefeff) & ~((x) | 0x7f7f7f7f))
+inline static void *
+__memchr(void const *s, int c_in, size_t n) {
+    /* On 32-bit hardware, choosing longword to be a 32-bit unsigned
+       long instead of a 64-bit uintmax_t tends to give better
+       performance.  On 64-bit hardware, unsigned long is generally 64
+       bits already.  Change this typedef to experiment with
+       performance.  */
+    typedef unsigned long int longword;
 
-INLINE STATIC void *
-__memchr(const unsigned char *m, unsigned char val, size_t len)
-{
-	void *result = NULL;
+    const unsigned char *char_ptr;
+    const longword *longword_ptr;
+    longword repeated_one;
+    longword repeated_c;
+    unsigned char c;
 
-	assert(m != NULL && len > 0);
+    c = (unsigned char) c_in;
 
-	/* The setup below is intended to speed up searching in larger
-	 * memory blocks. This can be very elaborate and should not be
-	 * done unless a payoff can be expected.
-	 */
-	if (len > 4 * sizeof(long))
-	{
-		/* Try to align the memory block to an even address. */
-		if (IS_UNALIGNED(m))
-		{
-			len--;
+    /* Handle the first few bytes by reading one byte at a time.
+       Do this until CHAR_PTR is aligned on a longword boundary.  */
+    for (char_ptr = (const unsigned char *) s;
+         n > 0 && (size_t) char_ptr % sizeof(longword) != 0;
+         --n, ++char_ptr)
+        if (*char_ptr == c)
+            return (void *) char_ptr;
 
-			if ((*m) == val)
-			{
-				result = (void *)m;
-				goto out;
-			}
+    longword_ptr = (const longword *) char_ptr;
 
-			m++;
-		}
+    /* All these elucidatory comments refer to 4-byte longwords,
+       but the theory applies equally well to any size longwords.  */
 
-		/* Try to align the memory block to an address which is
-		 * a multiple of a long word.
-		 */
-		if (len >= sizeof(short) && IS_SHORT_ALIGNED(m))
-		{
-			len--;
+    /* Compute auxiliary longword values:
+       repeated_one is a value which has a 1 in every byte.
+       repeated_c has c in every byte.  */
+    repeated_one = 0x01010101;
+    repeated_c = c | (c << 8);
+    repeated_c |= repeated_c << 16;
+    if (0xffffffffU < (longword) -1) {
+        repeated_one |= repeated_one << 31 << 1;
+        repeated_c |= repeated_c << 31 << 1;
+        if (8 < sizeof(longword)) {
+            size_t i;
 
-			if ((*m) == val)
-			{
-				result = (void *)m;
-				goto out;
-			}
+            for (i = 64; i < sizeof(longword) * 8; i *= 2) {
+                repeated_one |= repeated_one << i;
+                repeated_c |= repeated_c << i;
+            }
+        }
+    }
 
-			m++;
+    /* Instead of the traditional loop which tests each byte, we will test a
+       longword at a time.  The tricky part is testing if *any of the four*
+       bytes in the longword in question are equal to c.  We first use an xor
+       with repeated_c.  This reduces the task to testing whether *any of the
+       four* bytes in longword1 is zero.
 
-			len--;
+       We compute tmp =
+         ((longword1 - repeated_one) & ~longword1) & (repeated_one << 7).
+       That is, we perform the following operations:
+         1. Subtract repeated_one.
+         2. & ~longword1.
+         3. & a mask consisting of 0x80 in every byte.
+       Consider what happens in each byte:
+         - If a byte of longword1 is zero, step 1 and 2 transform it into 0xff,
+       and step 3 transforms it into 0x80.  A carry can also be propagated
+       to more significant bytes.
+         - If a byte of longword1 is nonzero, let its lowest 1 bit be at
+       position k (0 <= k <= 7); so the lowest k bits are 0.  After step 1,
+       the byte ends in a single bit of value 0 and k bits of value 1.
+       After step 2, the result is just k bits of value 1: 2^k - 1.  After
+       step 3, the result is 0.  And no carry is produced.
+       So, if longword1 has only non-zero bytes, tmp is zero.
+       Whereas if longword1 has a zero byte, call j the position of the least
+       significant zero byte.  Then the result has a zero at positions 0, ...,
+       j-1 and a 0x80 at position j.  We cannot predict the result at the more
+       significant bytes (positions j+1..3), but it does not matter since we
+       already have a non-zero bit at position 8*j+7.
 
-			if ((*m) == val)
-			{
-				result = (void *)m;
-				goto out;
-			}
+       So, the test whether any byte in longword1 is zero is equivalent to
+       testing whether tmp is nonzero.  */
 
-			m++;
-		}
+    while (n >= sizeof(longword)) {
+        longword longword1 = *longword_ptr ^ repeated_c;
 
-		/* If the memory block is aligned to an address from which
-		 * data can be read one long word at a time, perform the
-		 * search in this manner.
-		 */
-		if (len >= sizeof(long) && IS_LONG_ALIGNED(m))
-		{
-			const unsigned long *_m = (const unsigned long *)m;
-			unsigned long _val = val;
-			unsigned long x;
+        if ((((longword1 - repeated_one) & ~longword1)
+             & (repeated_one << 7)) != 0)
+            break;
+        longword_ptr++;
+        n -= sizeof(longword);
+    }
 
-			/* Build a long word which contains the byte value to
-			 * find, repeated four times.
-			 */
-			_val |= (_val << 8);
-			_val |= (_val << 16);
+    char_ptr = (const unsigned char *) longword_ptr;
 
-			do
-			{
-				/* Technically, what we want to achieve is to look
-				 * at a single long word and be able to tell whether
-				 * it contains the value we are looking for in one
-				 * of the octets which it consists of. This is
-				 * achieved by an XOR operation which sets those
-				 * octets to zero which match the search value. The
-				 * result of this operation is then tested to see
-				 * whether it contains any zero octets.
-				 */
-				x = (*_m) ^ _val;
-				if (LONG_CONTAINS_ZERO_OCTET(x))
-				{
-					/* We got what we wanted. Now figure out which byte
-					 * would match the value we were looking for.
-					 */
-					m = (const unsigned char *)_m;
-					goto out;
-				}
+    /* At this point, we know that either n < sizeof (longword), or one of the
+       sizeof (longword) bytes starting at char_ptr is == c.  On little-endian
+       machines, we could determine the first such byte without any further
+       memory accesses, just by looking at the tmp result from the last loop
+       iteration.  But this does not work on big-endian machines.  Choose code
+       that works in both cases.  */
 
-				_m++;
-				len -= sizeof(long);
-			} while (len >= sizeof(long));
+    for (; n > 0; --n, ++char_ptr) {
+        if (*char_ptr == c)
+            return (void *) char_ptr;
+    }
 
-			m = (const unsigned char *)_m;
-		}
-	}
-
-out:
-
-	/* If there are bytes left in need of comparison, take
-	 * care of them here. This also includes 'aborted'
-	 * comparison attempts from above.
-	 */
-	while (len-- > 0)
-	{
-		if ((*m) == val)
-		{
-			result = (void *)m;
-			break;
-		}
-
-		m++;
-	}
-
-	return (result);
+    return NULL;
 }
 
 void *
-memchr(const void *ptr, int val, size_t len)
-{
-	const unsigned char *m = ptr;
-	void *result = NULL;
+memchr(const void *ptr, int val, size_t len) {
+    const unsigned char *m = ptr;
+    void *result = NULL;
 
-	assert(ptr != NULL);
-	assert((int)len >= 0);
+    assert(ptr != NULL);
+    assert((int) len >= 0);
 
-	if (ptr == NULL)
-	{
-		__set_errno(EFAULT);
-		goto out;
-	}
+    if (ptr == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	if (len > 0)
-	{
-		/* Make sure __global_clib2 has been created */
-		if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
-			switch (__global_clib2->cpufamily)
-			{
+    if (len > 0) {
+        /* Make sure __global_clib2 has been created */
+        if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
+            switch (__global_clib2->cpufamily) {
                 case CPUFAMILY_4XX:
-                    result = __memchr440(m, (unsigned char)(val & 255), len);
+                    result = __memchr440(m, (unsigned char) (val & 255), len);
                     break;
                 default:
-                    result = __memchr(m, (unsigned char)(val & 255), len);
-			}
-		}
-		else {
-			/* Fallback to standard function */
-			result = __memchr(m, (unsigned char)(val & 255), len);
-		}
-	}
-	else
-		__set_errno(EFAULT);
+                    result = __memchr(m, (unsigned char) (val & 255), len);
+            }
+        } else {
+            /* Fallback to standard function */
+            result = __memchr(m, (unsigned char) (val & 255), len);
+        }
+    } else
+        __set_errno(EFAULT);
 
-out:
+    out:
 
-	return (result);
+    return (result);
 }

@@ -148,7 +148,7 @@ extern int clock_settime(clockid_t clk_id, const struct timespec *t);
 extern int clock_getres(clockid_t clock_id, struct timespec *res);
 extern int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *request, struct timespec *remain);
 
-extern uint64_t rdtsc(void);
+extern unsigned long long rdtsc(void);
 
 /* Defined in localtime.c.  */
 extern char *tzname[2];   /* Current timezone names.  */

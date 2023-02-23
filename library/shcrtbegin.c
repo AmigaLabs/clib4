@@ -3,6 +3,7 @@
  */
 
 #include <proto/exec.h>
+#include "debug.h"
 
 void __shlib_call_constructors(void);
 void __shlib_call_destructors(void);
@@ -32,7 +33,7 @@ void __shlib_call_constructors(void) {
     while (__CTOR_LIST__[i + 1]) {
         i++;
     }
-
+    SHOWVALUE(i);
     while (i > 0) {
         __CTOR_LIST__[i--]();
     }
