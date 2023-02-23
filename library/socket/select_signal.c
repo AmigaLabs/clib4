@@ -722,8 +722,6 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                              * if the write will block.
                              */
                             if (FLAG_IS_SET(fd->fd_Flags, FDF_WRITE)) {
-                                assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET));
-
                                 got_output = TRUE;
                             }
                             if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
@@ -838,9 +836,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                     if (file_read_fds != NULL && FD_ISSET(i, file_read_fds)) {
                         if (FLAG_IS_SET(fd->fd_Flags, FDF_READ)) {
                             BPTR readFile = i == STDIN_FILENO ? Input() : fd->fd_File;
-
-                            assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
-
+                            SHOWVALUE(FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS));
                             /* Check first if this is a POLL/TERMIOS FD
                              * In this case don't wait for char
                             */
@@ -849,8 +845,10 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                             }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
                                 struct termios *tios = fd->fd_Aux;
-                                SetMode(readFile, DOSTRUE);
-                                if (FLAG_IS_CLEAR(tios->c_cflag, ICANON) && FLAG_IS_SET(tios->c_cflag, NCURSES)) {
+                                SHOWVALUE(FLAG_IS_SET(tios->c_lflag, NCURSES));
+                                SHOWVALUE(FLAG_IS_CLEAR(tios->c_lflag, ICANON));
+
+                                if (FLAG_IS_CLEAR(tios->c_lflag, ICANON) && FLAG_IS_SET(tios->c_lflag, NCURSES)) {
                                     got_input = TRUE;
                                 }
                                 else {

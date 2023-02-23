@@ -155,8 +155,13 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     __remove_fd_alias(fd);
                 } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                     /* Should we reset this file into line buffered mode? */
-                    if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
-                        SetMode(fd->fd_File, DOSFALSE);
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+                        /* Set canonical mode. */
+                        if (fam->fam_DOSMode == DOSTRUE) {
+                            SetMode(fd->fd_File, DOSFALSE);
+                            fam->fam_DOSMode = DOSFALSE;
+                        }
+                    }
 
                     /* Are we allowed to close this file? */
                     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
