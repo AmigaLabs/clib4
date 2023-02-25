@@ -30,10 +30,38 @@
 
 #include <proto/elf.h>
 
+/*
+ * Dummy constructor and destructor array. The linker script will put these at the
+ * very beginning of section ".ctors" and ".dtors". crtend.o contains a similar entry
+ * with a NULL pointer entry and is put at the end of the sections. This way, the init
+ * code can find the global constructor/destructor pointers.
+ *
+ * WARNING:
+ * This hack does not work correctly with GCC 5 and higher. The optimizer
+ * will see a one element array and act appropriately. The current workaround
+ * is to use -fno-aggressive-loop-optimizations when compiling this file.
+ *
+ * NOTE:  In order to be able to support SVR4 shared libraries, we arrange
+ * to have one set of symbols { __CTOR_LIST__, __DTOR_LIST__, __CTOR_END__,
+ * __DTOR_END__ } per root executable and also one set of these symbols
+ * per shared library.  So in any given whole process image, we may have
+ * multiple definitions of each of these symbols.  In order to prevent
+ * these definitions from conflicting with one another, and in order to
+ * ensure that the proper lists are used for the initialization/finalization
+ * of each individual shared library (respectively), we give these symbols
+ * only internal (i.e. `static') linkage, and we also make it a point to
+ * refer to only the __CTOR_END__ symbol in sh/crtend.o and the __DTOR_LIST__
+ * symbol in sh/crtbegin.o, where they are defined.  */
+
+static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
+static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
+
 extern int main(int arg_c, char **arg_v);
 
 BOOL open_libraries(void);
 void close_libraries(void);
+void _init(void);
+void _fini(void);
 
 /* This will be set to TRUE in case a stack overflow was detected. */
 BOOL NOCOMMON __stack_overflow;
@@ -43,6 +71,28 @@ extern struct Library *__ElfBase;
 extern struct ElfIFace *__IElf;
 
 #define MIN_OS_VERSION 52
+
+void _init(void) {
+    int i = 0;
+
+    while (__CTOR_LIST__[i + 1]) {
+        i++;
+    }
+    SHOWVALUE(i);
+    while (i > 0) {
+        SHOWMSG("Calling ctor");
+        SHOWVALUE(i);
+        __CTOR_LIST__[i--]();
+    }
+}
+
+void _fini(void) {
+    int i = 1;
+
+    while (__DTOR_LIST__[i]) {
+        __DTOR_LIST__[i++]();
+    }
+}
 
 void
 close_libraries(void) {
@@ -93,6 +143,8 @@ call_main(void) {
     SHOWMSG("now invoking the constructors");
     /* Go through the constructor list */
     _init();
+
+    SHOWMSG("Constructors executed correctly. Calling main()");
 
     /* This can be helpful for debugging purposes: print the name of the current
        directory, followed by the name of the command and all the parameters
@@ -252,7 +304,7 @@ static ULONG get_stack_size(void) {
 }
 
 int
-_main() {
+_main(char *args, int arglen, struct ExecBase *sysBase) {
     struct Process *volatile child_process = NULL;
     struct WBStartup *volatile startup_message;
     volatile APTR old_window_pointer = NULL;
@@ -260,8 +312,10 @@ _main() {
     struct Process *this_process;
     int return_code = RETURN_FAIL;
     ULONG current_stack_size;
+    (void) (args);
+    (void) (arglen);
 
-    SysBase = *(struct Library **) 4;
+    SysBase = (struct Library *) sysBase;
     IExec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
 
     /* Pick up the Workbench startup message, if available. */

@@ -81,6 +81,8 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
+#define MIN_OS_VERSION 52
+
 extern jmp_buf NOCOMMON __exit_jmp_buf;
 extern int NOCOMMON		__exit_value;
 

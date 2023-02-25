@@ -28,8 +28,7 @@ void __dirent_unlock(void) {
         ReleaseSemaphore(dirent_lock);
 }
 
-CLIB_CONSTRUCTOR(dirent_init)
-{
+CLIB_CONSTRUCTOR(dirent_init) {
     BOOL success = FALSE;
 
     ENTER();
@@ -38,7 +37,7 @@ CLIB_CONSTRUCTOR(dirent_init)
 
     dirent_lock = __create_semaphore();
     if (dirent_lock == NULL)
-    goto out;
+        goto out;
 
     success = TRUE;
 
@@ -53,8 +52,7 @@ out:
         CONSTRUCTOR_FAIL();
 }
 
-CLIB_DESTRUCTOR(dirent_exit)
-{
+CLIB_DESTRUCTOR(dirent_exit) {
     ENTER();
 
     if (__directory_list.mlh_Head != NULL)

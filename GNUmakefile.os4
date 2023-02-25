@@ -182,22 +182,22 @@ $(OUTPUT_LIB)/crt0.o : $(LIB_DIR)/crt0.S
 	$(VERBOSE)$(ASSEMBLE)
 	-$(COPY) $(OUTPUT_LIB)/crt0.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtbegin.o : CFLAGS += -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtbegin.o :
 $(OUTPUT_LIB)/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtend.o : CFLAGS += -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtend.o :
 $(OUTPUT_LIB)/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtend.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/shcrtbegin.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/shcrtbegin.o :
 $(OUTPUT_LIB)/shcrtbegin.o : $(LIB_DIR)/shcrtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/shcrtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/shcrtend.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/shcrtend.o :
 $(OUTPUT_LIB)/shcrtend.o : $(LIB_DIR)/shcrtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/shcrtend.o $(INSTALL_PREFIX)/lib/
@@ -258,7 +258,7 @@ define MAKESHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo -e "\rMaking Shared \033[0;31m$@\033[0m"
-$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND)
+$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -Wl,-soname,$(@F)
 endef
 
 compile-tests:

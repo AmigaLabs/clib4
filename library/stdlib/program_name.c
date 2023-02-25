@@ -17,8 +17,7 @@
 static BOOL free_program_name;
 char *NOCOMMON __program_name;
 
-STDLIB_DESTRUCTOR(stdlib_program_name_exit)
-{
+STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 	ENTER();
 
 	if (free_program_name && __program_name != NULL)
@@ -30,14 +29,12 @@ STDLIB_DESTRUCTOR(stdlib_program_name_exit)
 	LEAVE();
 }
 /* First constructor called by _init */
-STDLIB_CONSTRUCTOR(stdlib_program_name_init)
-{
+STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
 	BOOL success = FALSE;
 
 	ENTER();
 
-	if (__WBenchMsg == NULL)
-	{
+	if (__WBenchMsg == NULL) {
 		const size_t program_name_size = 256;
 
 		/* Make a copy of the current command name string. */
@@ -50,8 +47,7 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init)
 		if (CANNOT GetCliProgramName(__program_name, program_name_size))
 			goto out;
 	}
-	else
-	{
+	else {
 		__program_name = (char *)__WBenchMsg->sm_ArgList[0].wa_Name;
 	}
 

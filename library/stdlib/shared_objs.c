@@ -15,6 +15,9 @@ struct Library *__ElfBase;
 struct ElfIFace *__IElf;
 static Elf32_Handle elf_handle;
 
+static struct Library *__DOSBase;
+static struct DOSIFace *__IDOS;
+
 static VOID close_elf_library(void) {
     if (__IElf != NULL) {
         DropInterface((struct Interface *) __IElf);
@@ -25,10 +28,30 @@ static VOID close_elf_library(void) {
         CloseLibrary(__ElfBase);
         __ElfBase = NULL;
     }
+
+    if (__IDOS != NULL) {
+        DropInterface((struct Interface *) __IDOS);
+        __IDOS = NULL;
+    }
+
+    if (__DOSBase != NULL) {
+        CloseLibrary(__DOSBase);
+        __DOSBase = NULL;
+    }
 }
 
 static BOOL open_elf_library(void) {
     BOOL success = FALSE;
+
+    /* Open the minimum required libraries. */
+    __DOSBase = (struct Library *) OpenLibrary("dos.library", MIN_OS_VERSION);
+    if (__DOSBase == NULL)
+        goto out;
+
+    /* Obtain the interfaces for these libraries. */
+    __IDOS = (struct DOSIFace *) GetInterface(DOSBase, "main", 1, 0);
+    if (__IDOS == NULL)
+        goto out;
 
     /* We need elf.library V52.2 or higher. */
     __ElfBase = OpenLibrary("elf.library", 0);
@@ -49,6 +72,7 @@ out:
 
 void shared_obj_exit(void) {
     struct ElfIFace *IElf = __IElf;
+    struct DOSIFace *IDOS = __IDOS;
 
     /* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
     if (elf_handle != NULL) {
@@ -62,6 +86,7 @@ void shared_obj_exit(void) {
 void shared_obj_init(void) {
     if (open_elf_library()) {
         struct ElfIFace *IElf = __IElf;
+        struct DOSIFace *IDOS = __IDOS;
 
         BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
         if (segment_list != ZERO) {
