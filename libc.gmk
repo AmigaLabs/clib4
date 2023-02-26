@@ -935,9 +935,6 @@ SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
 $(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 $(BUILD_DIR)/obj.shared/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 
-$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
-
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.sx
 	$(VERBOSE)$(COMPILE_REG)
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S

@@ -23,24 +23,19 @@ struct Locale *NOCOMMON __locale_table[NUM_LOCALES];
 
 char NOCOMMON __locale_name_table[NUM_LOCALES][MAX_LOCALE_NAME_LEN];
 
-
-void __close_all_locales(void)
-{
+void __close_all_locales(void) {
 	__locale_lock();
 
-	if (__LocaleBase != NULL)
-	{
+	if (__LocaleBase != NULL) {
 		DECLARE_LOCALEBASE();
 
 		int i;
 
-		for (i = 0; i < NUM_LOCALES; i++)
-		{
+		for (i = 0; i < NUM_LOCALES; i++) {
 			if (i == LC_ALL)
 				continue;
 
-			if (__locale_table[i] != NULL)
-			{
+			if (__locale_table[i] != NULL) {
 				if (__locale_table[i] != __locale_table[LC_ALL])
 					CloseLocale(__locale_table[i]);
 
@@ -55,25 +50,21 @@ void __close_all_locales(void)
 	__locale_unlock();
 }
 
-void __locale_exit(void)
-{
+void __locale_exit(void) {
 	ENTER();
 
 	__locale_lock();
 
-	if (__LocaleBase != NULL)
-	{
+	if (__LocaleBase != NULL) {
 		DECLARE_LOCALEBASE();
 
 		__close_all_locales();
 
-		if (__default_locale != NULL)
-		{
+		if (__default_locale != NULL) {
 			CloseLocale(__default_locale);
 			__default_locale = NULL;
 		}
-		if (__ILocale != NULL)
-		{
+		if (__ILocale != NULL) {
 			DropInterface((struct Interface *)__ILocale);
 			__ILocale = NULL;
 		}

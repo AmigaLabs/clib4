@@ -20,15 +20,20 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
+
 #include "invtrig.h"
 
 static const long double
         one =  1.00000000000000000000e+00,
         huge = 1.000e+300;
 
-INLINE STATIC long double
+inline static long double
 __asinl(long double x) {
     union IEEEl2bits u;
+    memset(&u, 0, sizeof(u));
     long double t = 0.0, w, p, q, c, r, s;
     int16_t expsign, expt;
     u.e = x;

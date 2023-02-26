@@ -97,6 +97,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
 
     /* Get rid of any buffer specially allocated for this stream. */
     if (file->iob_CustomBuffer != NULL) {
+        SHOWMSG("Delete allocated buffer");
         FreeVec(file->iob_CustomBuffer);
         file->iob_CustomBuffer = NULL;
     }

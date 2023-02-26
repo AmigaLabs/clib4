@@ -66,8 +66,7 @@ reent_init() {
     ENTER();
 
     /* Initialize global structure */
-    __global_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0,
-                                                    TAG_END);
+    __global_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
     if (__global_clib2 == NULL) {
         goto out;
     } else {

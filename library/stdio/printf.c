@@ -22,9 +22,13 @@ printf(const char *format, ...) {
         goto out;
     }
 
+    __stdio_lock();
+
     va_start(arg, format);
     result = vfprintf(stdout, format, arg);
     va_end(arg);
+
+    __stdio_unlock();
 
 out:
 

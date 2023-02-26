@@ -228,6 +228,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
                          i,
                          iob_flags,
                          stdio_lock);
+
     }
 
     success = TRUE;

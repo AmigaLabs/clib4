@@ -1,5 +1,5 @@
 /*
- * $Id: profile_gmn.c,v 1.0 2021-01-18 12:04:26 clib2devs Exp $
+ * $Id: profile_gmon.c,v 1.0 2021-01-18 12:04:26 clib2devs Exp $
 */
 
 #include <exec/exec.h>

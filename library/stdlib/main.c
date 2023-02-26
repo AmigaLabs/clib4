@@ -28,104 +28,20 @@
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
 
+#ifndef _TIME_HEADERS_H
+#include "time_headers.h"
+#endif /* _TIME_HEADERS_H */
+
 #include <proto/elf.h>
-
-/*
- * Dummy constructor and destructor array. The linker script will put these at the
- * very beginning of section ".ctors" and ".dtors". crtend.o contains a similar entry
- * with a NULL pointer entry and is put at the end of the sections. This way, the init
- * code can find the global constructor/destructor pointers.
- *
- * WARNING:
- * This hack does not work correctly with GCC 5 and higher. The optimizer
- * will see a one element array and act appropriately. The current workaround
- * is to use -fno-aggressive-loop-optimizations when compiling this file.
- *
- * NOTE:  In order to be able to support SVR4 shared libraries, we arrange
- * to have one set of symbols { __CTOR_LIST__, __DTOR_LIST__, __CTOR_END__,
- * __DTOR_END__ } per root executable and also one set of these symbols
- * per shared library.  So in any given whole process image, we may have
- * multiple definitions of each of these symbols.  In order to prevent
- * these definitions from conflicting with one another, and in order to
- * ensure that the proper lists are used for the initialization/finalization
- * of each individual shared library (respectively), we give these symbols
- * only internal (i.e. `static') linkage, and we also make it a point to
- * refer to only the __CTOR_END__ symbol in sh/crtend.o and the __DTOR_LIST__
- * symbol in sh/crtbegin.o, where they are defined.  */
-
-static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
-static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
 extern int main(int arg_c, char **arg_v);
 
-BOOL open_libraries(void);
-void close_libraries(void);
-void _init(void);
-void _fini(void);
+extern void _init(void);
+extern void _fini(void);
 
 /* This will be set to TRUE in case a stack overflow was detected. */
 BOOL NOCOMMON __stack_overflow;
 extern struct _clib2 NOCOMMON *__global_clib2;
-
-extern struct Library *__ElfBase;
-extern struct ElfIFace *__IElf;
-
-#define MIN_OS_VERSION 52
-
-void _init(void) {
-    int i = 0;
-
-    while (__CTOR_LIST__[i + 1]) {
-        i++;
-    }
-    SHOWVALUE(i);
-    while (i > 0) {
-        SHOWMSG("Calling ctor");
-        SHOWVALUE(i);
-        __CTOR_LIST__[i--]();
-    }
-}
-
-void _fini(void) {
-    int i = 1;
-
-    while (__DTOR_LIST__[i]) {
-        __DTOR_LIST__[i++]();
-    }
-}
-
-void
-close_libraries(void) {
-    if (__IElf != NULL) {
-        DropInterface((struct Interface *) __IElf);
-        __IElf = NULL;
-    }
-
-    if (__IUtility != NULL) {
-        DropInterface((struct Interface *) __IUtility);
-        __IUtility = NULL;
-    }
-
-    if (IDOS != NULL) {
-        DropInterface((struct Interface *) IDOS);
-        IDOS = NULL;
-    }
-
-    if (__ElfBase != NULL) {
-        CloseLibrary(__ElfBase);
-        __ElfBase = NULL;
-    }
-
-    if (__UtilityBase != NULL) {
-        CloseLibrary(__UtilityBase);
-        __UtilityBase = NULL;
-    }
-
-    if (DOSBase != NULL) {
-        CloseLibrary(DOSBase);
-        DOSBase = NULL;
-    }
-}
 
 static int
 call_main(void) {
@@ -143,8 +59,20 @@ call_main(void) {
     SHOWMSG("now invoking the constructors");
     /* Go through the constructor list */
     _init();
-
     SHOWMSG("Constructors executed correctly. Calling main()");
+
+    /* Set system time for rusage.
+     * This can be executed only here.
+     * Not in reent_init not in TIMER constructor because
+     * __ITimer or __global_clib2 cannot be yet available
+     */
+    struct TimerIFace *ITimer = __ITimer;
+    if (__ITimer != NULL) {
+        SHOWMSG("Calling GetSysTime");
+        GetSysTime(&__global_clib2->clock);
+        /* Generate random seed */
+        __global_clib2->__random_seed = time(NULL);
+    }
 
     /* This can be helpful for debugging purposes: print the name of the current
        directory, followed by the name of the command and all the parameters
@@ -216,17 +144,16 @@ out:
     /* Dump all currently unwritten data, especially to the console. */
     __flush_all_files(-1);
 
-    SHOWMSG("invoking the destructors");
-
     /* If one of the destructors drops into exit(), either directly
        or through a failed assert() call, processing will resume with
        the next following destructor. */
     (void) setjmp(__exit_jmp_buf);
 
-    /* Go through the destructor list */
-    _fini();
-
     disableUnixPaths();
+
+    /* Go through the destructor list */
+    SHOWMSG("invoking the destructors");
+    _fini();
 
     reent_exit();
 
@@ -237,45 +164,6 @@ out:
 
     RETURN(__exit_value);
     return (__exit_value);
-}
-
-BOOL
-open_libraries(void) {
-    BOOL success = FALSE;
-
-    /* Open the minimum required libraries. */
-    DOSBase = (struct Library *) OpenLibrary("dos.library", MIN_OS_VERSION);
-    if (DOSBase == NULL)
-        goto out;
-
-    __UtilityBase = OpenLibrary("utility.library", MIN_OS_VERSION);
-    if (__UtilityBase == NULL)
-        goto out;
-
-    /* Obtain the interfaces for these libraries. */
-    IDOS = (struct DOSIFace *) GetInterface(DOSBase, "main", 1, 0);
-    if (IDOS == NULL)
-        goto out;
-
-    __IUtility = (struct UtilityIFace *) GetInterface(__UtilityBase, "main", 1, 0);
-    if (__IUtility == NULL)
-        goto out;
-
-    /* We need elf.library V52.2 or higher. */
-    __ElfBase = OpenLibrary("elf.library", 0);
-    if (__ElfBase == NULL || (__ElfBase->lib_Version < MIN_OS_VERSION) ||
-        (__ElfBase->lib_Version == MIN_OS_VERSION && __ElfBase->lib_Revision < 2))
-        goto out;
-
-    __IElf = (struct ElfIFace *) GetInterface(__ElfBase, "main", 1, NULL);
-    if (__IElf == NULL)
-        goto out;
-
-    success = TRUE;
-
-    out:
-
-    return (success);
 }
 
 static void
@@ -332,20 +220,6 @@ _main(char *args, int arglen, struct ExecBase *sysBase) {
     }
 
     __WBenchMsg = (struct WBStartup *) startup_message;
-
-    /* Try to open the libraries we need to proceed. */
-    if (CANNOT open_libraries()) {
-        const char *error_message;
-
-        /* If available, use the error message provided by the client. */
-        error_message = __minimum_os_lib_error;
-
-        if (error_message == NULL)
-            error_message = "This program requires AmigaOS 4.0 (52.2) or higher.";
-
-        __show_error(error_message);
-        goto out;
-    }
 
     if (__disable_dos_requesters) {
         /* Don't display any requesters. */
@@ -536,9 +410,6 @@ out:
 
     if (old_window_pointer_valid)
         __set_process_window(old_window_pointer);
-
-    if (child_process == NULL)
-        close_libraries();
 
     if (startup_message != NULL) {
         Forbid();

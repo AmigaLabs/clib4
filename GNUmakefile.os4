@@ -58,9 +58,9 @@ WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-missing-braces -Wno-unused-value -Wno-comment \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
-	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough -Wno-prio-ctor-dtor # -Werror -Wbad-function-cast -Wconversion -Wformat
+	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough -Wno-discarded-qualifiers -Wno-unused-function -Werror # -Wbad-function-cast -Wconversion -Wformat
 
-PIC		   := -fPIC 
+PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
 				-Ilibrary \
                 -I$(LIB_DIR)/external/include \
@@ -96,14 +96,14 @@ OPTIONS  := $(LARGEDATA) -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE 
 OPTIMIZE := -O3 -mmultiple -mupdate -mstrict-align
 
 ifndef DEBUG
-    OPTIMIZE := $(OPTIMIZE) -DNDEBUG
+    OPTIMIZE += -gstabs -DNDEBUG
 else
-    OPTIMIZE := $(OPTIMIZE) -gstabs -DDEBUG
+    OPTIMIZE += -gstabs -DDEBUG
 endif
 
-CFLAGS     := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
-CFLAGS_N   := $(COMPILER_VERSION) $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
-AFLAGS     := $(COMPILER_VERSION) -Wa,-mregnames
+CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
+CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
+AFLAGS     := -Wa,-mregnames
 
 VERBOSE    := @
 
@@ -192,12 +192,12 @@ $(OUTPUT_LIB)/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtend.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/shcrtbegin.o :
+$(OUTPUT_LIB)/shcrtbegin.o : CFLAGS += $(PIC)
 $(OUTPUT_LIB)/shcrtbegin.o : $(LIB_DIR)/shcrtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/shcrtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/shcrtend.o :
+$(OUTPUT_LIB)/shcrtend.o : CFLAGS += $(PIC)
 $(OUTPUT_LIB)/shcrtend.o : $(LIB_DIR)/shcrtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/shcrtend.o $(INSTALL_PREFIX)/lib/
