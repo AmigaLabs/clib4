@@ -191,18 +191,23 @@ reent_init() {
          * call_main()
          */
 
+        SHOWMSG("Try to get elf handle for dl* operations");
         if (__ElfBase != NULL) {
-            BPTR segment_list = GetProcSegList(NULL, GPSLF_CLI | GPSLF_SEG);
+            SHOWMSG("Calling GetProcSegList");
+            BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
             if (segment_list != ZERO) {
                 Elf32_Handle handle = NULL;
 
+                SHOWMSG("Calling GetSegListInfoTags");
                 if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
                     if (handle != NULL) {
-                        __global_clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, TAG_DONE);
+                        SHOWMSG("Calling OpenElfTags");
+                        __global_clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
                     }
                 }
             }
         }
+        SHOWPOINTER(__global_clib2->__dl_elf_handle);
     }
     success = TRUE;
 
@@ -274,7 +279,7 @@ reent_exit() {
             /* Check if we have something created with posix_memalign and not freed yet.
              * But this is a good point also to free something allocated with memalign or
              * aligned_alloc and all other functions are using memalign_tree to allocate memory
-             * This seems to cure also the memory leaks found sometimes (but not 100& sure..)
+             * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
              */
             struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__global_clib2->__memalign_tree);
             while (e) {
@@ -314,10 +319,13 @@ reent_exit() {
 
         /* Free dl stuff */
         if (__IElf != NULL && __global_clib2->__dl_elf_handle != NULL) {
+            SHOWMSG("Closing elf handle");
             CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
             __global_clib2->__dl_elf_handle = NULL;
         }
-
+        else {
+            SHOWMSG("Cannot close elf handle: __IElf == NULL || __global_clib2->__dl_elf_handle == NULL");
+        }
         FreeVec(__global_clib2);
         __global_clib2 = NULL;
     }

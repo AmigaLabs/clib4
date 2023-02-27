@@ -45,10 +45,8 @@
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
-static BOOL open_elf_library(void);
-static VOID close_elf_library(void);
-void _init(void);
-void _fini(void);
+BOOL open_libraries(void);
+void close_libraries(void);
 
 /* These are used to initialize the shared objects linked to this binary,
    and for the dlopen(), dlclose() and dlsym() functions. */
@@ -78,7 +76,7 @@ void _fini(void) {
     }
 }
 
-static void close_elf_library(void) {
+void close_libraries(void) {
     if (__IUtility != NULL) {
         DropInterface((struct Interface *) __IUtility);
         __IUtility = NULL;
@@ -110,7 +108,7 @@ static void close_elf_library(void) {
     }
 }
 
-static BOOL open_elf_library(void) {
+BOOL open_libraries(void) {
     /* Open the minimum required libraries. */
     BOOL success = FALSE;
 
@@ -167,14 +165,14 @@ void shared_obj_exit(void) {
         elf_handle = NULL;
     };
 
-    close_elf_library();
+    close_libraries();
     LEAVE();
 }
 
 void shared_obj_init(void) {
     ENTER();
 
-    if (open_elf_library()) {
+    if (open_libraries()) {
         struct ElfIFace *IElf = __IElf;
 
         BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
@@ -213,13 +211,16 @@ void shared_obj_init(void) {
 }
 
 int _start(char *args, int arglen, struct ExecBase *sysBase) {
-    SysBase = (struct Library *) sysBase;
+    SysBase = *(struct Library **) 4;
     IExec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
+    (void) (args);
+    (void) (arglen);
+    (void) (sysBase);
 
     /* The shared objects need to be set up before any local constructors are invoked. */
     shared_obj_init();
 
-    int r = _main(args, arglen, sysBase);
+    int r = _main();
 
     /* The shared objects need to be cleaned up after all local destructors have been invoked. */
     shared_obj_exit();

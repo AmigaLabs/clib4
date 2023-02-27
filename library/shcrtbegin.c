@@ -34,6 +34,7 @@ void __shlib_call_constructors(void) {
     }
     SHOWVALUE(i);
     while (i > 0) {
+        D(("Calling constructor %ld", i));
         __CTOR_LIST__[i--]();
     }
     LEAVE();
@@ -45,6 +46,7 @@ void __shlib_call_destructors(void) {
 
     ENTER();
     while (__DTOR_LIST__[i]) {
+        D(("Calling destructor %ld", i));
         __DTOR_LIST__[i++]();
     }
     LEAVE();

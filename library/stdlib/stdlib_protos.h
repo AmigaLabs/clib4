@@ -110,7 +110,7 @@ extern void __check_memory_allocations();
 extern void __check_abort(void);
 
 /* stdlib_main.c */
-extern int _main(char *args, int arglen, struct ExecBase *sysBase);
+extern int _main();
 extern int _start(char *args, int arglen, struct ExecBase *sysBase);
 
 /****************************************************************************/

@@ -36,8 +36,8 @@
 
 extern int main(int arg_c, char **arg_v);
 
-extern void _init(void);
-extern void _fini(void);
+extern BOOL open_libraries(void);
+extern void close_libraries(void);
 
 /* This will be set to TRUE in case a stack overflow was detected. */
 BOOL NOCOMMON __stack_overflow;
@@ -108,6 +108,7 @@ call_main(void) {
 #endif /* NDEBUG */
     /* After all these preparations, get this show on the road... */
     exit(main((int) __argc, (char **) __argv));
+    SHOWMSG("Done. Exit from main()");
 
 out:
 
@@ -141,20 +142,24 @@ out:
     }
 #endif /* NDEBUG */
 
-    /* Dump all currently unwritten data, especially to the console. */
-    __flush_all_files(-1);
-
     /* If one of the destructors drops into exit(), either directly
        or through a failed assert() call, processing will resume with
        the next following destructor. */
     (void) setjmp(__exit_jmp_buf);
+    SHOWMSG("Called setjmp(__exit_jmp_buf)");
 
+    SHOWMSG("Flush all files");
+    /* Dump all currently unwritten data, especially to the console. */
+    __flush_all_files(-1);
+
+    SHOWMSG("Set unix paths to off");
     disableUnixPaths();
 
     /* Go through the destructor list */
     SHOWMSG("invoking the destructors");
     _fini();
 
+    SHOWMSG("Calling reent_exit");
     reent_exit();
 
     SHOWMSG("done.");
@@ -192,7 +197,7 @@ static ULONG get_stack_size(void) {
 }
 
 int
-_main(char *args, int arglen, struct ExecBase *sysBase) {
+_main() {
     struct Process *volatile child_process = NULL;
     struct WBStartup *volatile startup_message;
     volatile APTR old_window_pointer = NULL;
@@ -200,10 +205,8 @@ _main(char *args, int arglen, struct ExecBase *sysBase) {
     struct Process *this_process;
     int return_code = RETURN_FAIL;
     ULONG current_stack_size;
-    (void) (args);
-    (void) (arglen);
 
-    SysBase = (struct Library *) sysBase;
+    SysBase = *(struct Library **) 4;
     IExec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
 
     /* Pick up the Workbench startup message, if available. */
@@ -220,6 +223,20 @@ _main(char *args, int arglen, struct ExecBase *sysBase) {
     }
 
     __WBenchMsg = (struct WBStartup *) startup_message;
+
+    /* Try to open the libraries we need to proceed. */
+    if (IDOS == NULL && CANNOT open_libraries()) {
+        const char *error_message;
+
+        /* If available, use the error message provided by the client. */
+        error_message = __minimum_os_lib_error;
+
+        if (error_message == NULL)
+            error_message = "This program requires AmigaOS 4.0 (52.2) or higher.";
+
+        __show_error(error_message);
+        goto out;
+    }
 
     if (__disable_dos_requesters) {
         /* Don't display any requesters. */

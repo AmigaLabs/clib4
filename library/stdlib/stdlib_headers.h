@@ -97,6 +97,9 @@ extern int NOCOMMON		__argc;
 
 extern BOOL NOCOMMON __lib_startup;
 
+extern void _init(void);
+extern void _fini(void);
+
 #ifndef _STDLIB_PROTOS_H
 #include "stdlib_protos.h"
 #endif /* _STDLIB_PROTOS_H */
