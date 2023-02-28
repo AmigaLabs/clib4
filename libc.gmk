@@ -515,6 +515,8 @@ C_STDLIB := \
 	stdlib/set_process_window.o \
 	stdlib/shared_objs.o \
 	stdlib/shell_escape.o \
+	stdlib/siglongjmp.o \
+	stdlib/sigsetjmp.o \
 	stdlib/showerror.o \
 	stdlib/stacksize.o \
 	stdlib/stack_usage.o \
