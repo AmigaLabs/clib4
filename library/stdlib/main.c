@@ -106,8 +106,9 @@ call_main(void) {
         }
     }
 #endif /* NDEBUG */
+
     /* After all these preparations, get this show on the road... */
-    exit(main((int) __argc, (char **) __argv));
+    exit(main(__argc, __argv));
     SHOWMSG("Done. Exit from main()");
 
 out:
@@ -142,15 +143,15 @@ out:
     }
 #endif /* NDEBUG */
 
+    SHOWMSG("Flush all files");
+    /* Dump all currently unwritten data, especially to the console. */
+    __flush_all_files(-1);
+
     /* If one of the destructors drops into exit(), either directly
        or through a failed assert() call, processing will resume with
        the next following destructor. */
     (void) setjmp(__exit_jmp_buf);
     SHOWMSG("Called setjmp(__exit_jmp_buf)");
-
-    SHOWMSG("Flush all files");
-    /* Dump all currently unwritten data, especially to the console. */
-    __flush_all_files(-1);
 
     SHOWMSG("Set unix paths to off");
     disableUnixPaths();
@@ -290,8 +291,7 @@ _main() {
             SetTaskPri((struct Task *) this_process, __priority);
 
         /* Was a minimum stack size requested and do we need more stack space than was provided for? */
-        if (__stack_size > 0 && current_stack_size < (ULONG)__stack_size)
-        {
+        if (__stack_size > 0 && current_stack_size < (ULONG)__stack_size) {
             struct StackSwapStruct *stk;
             unsigned int stack_size;
             APTR new_stack;
@@ -327,8 +327,7 @@ _main() {
             FreeVec(new_stack);
             FreeVec(stk);
         }
-        else
-        {
+        else {
             /* We have enough room to make the call or just don't care. */
             return_code = call_main();
         }

@@ -10,9 +10,7 @@ int
 printf(const char *format, ...) {
     int result = EOF;
     va_list arg;
-
     ENTER();
-
     SHOWSTRING(format);
 
     assert(format != NULL);
@@ -23,7 +21,6 @@ printf(const char *format, ...) {
     }
 
     __stdio_lock();
-
     va_start(arg, format);
     result = vfprintf(stdout, format, arg);
     va_end(arg);

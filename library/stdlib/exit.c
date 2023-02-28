@@ -73,6 +73,5 @@ _Exit(int return_code) {
 void
 exit(int return_code) {
     __exit_trap_trigger();
-
     _exit(return_code);
 }
