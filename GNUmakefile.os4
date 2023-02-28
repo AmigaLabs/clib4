@@ -58,7 +58,7 @@ WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-missing-braces -Wno-unused-value -Wno-comment \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
-	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough -Wno-discarded-qualifiers -Wno-unused-function -Werror # -Wbad-function-cast -Wconversion -Wformat
+	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Werror # -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -182,22 +182,22 @@ $(OUTPUT_LIB)/crt0.o : $(LIB_DIR)/crt0.S
 	$(VERBOSE)$(ASSEMBLE)
 	-$(COPY) $(OUTPUT_LIB)/crt0.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtbegin.o :
+$(OUTPUT_LIB)/crtbegin.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtend.o :
+$(OUTPUT_LIB)/crtend.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtend.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/shcrtbegin.o : CFLAGS += $(PIC)
+$(OUTPUT_LIB)/shcrtbegin.o : CFLAGS += $(PIC) -O0 -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/shcrtbegin.o : $(LIB_DIR)/shcrtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/shcrtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/shcrtend.o : CFLAGS += $(PIC)
+$(OUTPUT_LIB)/shcrtend.o : CFLAGS += $(PIC) -O0 -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/shcrtend.o : $(LIB_DIR)/shcrtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/shcrtend.o $(INSTALL_PREFIX)/lib/

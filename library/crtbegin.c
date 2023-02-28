@@ -72,6 +72,8 @@ void _fini(void) {
     int i = 1;
 
     while (__DTOR_LIST__[i]) {
+        SHOWMSG("Calling dtor");
+        SHOWVALUE(i);
         __DTOR_LIST__[i++]();
     }
 }
@@ -210,12 +212,9 @@ void shared_obj_init(void) {
     LEAVE();
 }
 
-int _start(char *args, int arglen, struct ExecBase *sysBase) {
+int _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase) {
     SysBase = *(struct Library **) 4;
     IExec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
-    (void) (args);
-    (void) (arglen);
-    (void) (sysBase);
 
     /* The shared objects need to be set up before any local constructors are invoked. */
     shared_obj_init();
