@@ -208,6 +208,12 @@ C_SEARCH := \
 	search/tsearch.o \
 	search/twalk.o
 
+C_SETJMP := \
+    setjmp/longjmp.o \
+    setjmp/setjmp.o \
+    setjmp/sigjmp.o \
+    setjmp/siglongjmp.o\
+
 C_SOCKET := \
     resolv/dns_parse.o \
     resolv/lookup_ipliteral.o \
@@ -483,7 +489,6 @@ C_STDLIB := \
 	stdlib/llabs.o \
 	stdlib/lldiv.o \
 	stdlib/lltoa.o \
-	stdlib/longjmp.o \
 	stdlib/main.o \
 	stdlib/main_stub.o \
 	stdlib/malloc.o \
@@ -511,13 +516,10 @@ C_STDLIB := \
 	stdlib/secure_getenv.o \
 	stdlib/semaphore.o \
 	stdlib/setenv.o \
-	stdlib/setjmp.o \
 	stdlib/set_errno.o \
 	stdlib/set_process_window.o \
 	stdlib/shared_objs.o \
 	stdlib/shell_escape.o \
-	stdlib/siglongjmp.o \
-	stdlib/sigsetjmp.o \
 	stdlib/showerror.o \
 	stdlib/stacksize.o \
 	stdlib/stack_usage.o \
@@ -918,6 +920,7 @@ C_LIB := \
 	$(C_POSIX) \
     $(C_REGEX) \
 	$(C_SEARCH) \
+    $(C_SETJMP) \
 	$(C_SOCKET) \
 	$(C_STAT) \
 	$(C_STDIO) \

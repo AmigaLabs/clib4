@@ -31,11 +31,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 #define UNUSED __attribute__((unused))
 #endif
 
-#ifdef __amigaos4__
-#define _setjmp setjmp
-#define _longjmp longjmp
-#endif
-
 int nerrors;
 int verbose;
 
