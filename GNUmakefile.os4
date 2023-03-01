@@ -225,13 +225,13 @@ endef
 define COMPILE_SHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rCompiling Shared \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) $(CFLAGS) $(PIC) -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) $(CFLAGS) $(PIC) -DSHARED -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED_ASM
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rCompiling Shared Asm \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) $(PIC) -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) $(PIC) -DSHARED -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define ASSEMBLE

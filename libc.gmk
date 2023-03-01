@@ -478,11 +478,12 @@ C_STDLIB := \
 	stdlib/itoa.o \
 	stdlib/l64a.o \
 	stdlib/labs.o \
-	stdlib/llabs.o \
-	stdlib/lltoa.o \
 	stdlib/ldiv.o \
-	stdlib/lldiv.o \
 	stdlib/lib_startup.o \
+	stdlib/llabs.o \
+	stdlib/lldiv.o \
+	stdlib/lltoa.o \
+	stdlib/longjmp.o \
 	stdlib/main.o \
 	stdlib/main_stub.o \
 	stdlib/malloc.o \

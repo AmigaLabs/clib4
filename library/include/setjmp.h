@@ -11,31 +11,31 @@
 
 __BEGIN_DECLS
 
-struct __jmp_buf {
-    void *jb_ReturnAddress;
-    unsigned long jb_CondCode;
-    void *jb_StackPointer;
-    unsigned long jb_GPR[19];
-    double jb_FPR[18];
-};
+typedef unsigned long long __jmp_buf[56];
 
-typedef struct __jmp_buf jmp_buf[1];
+typedef struct __jmp_buf_tag {
+    __jmp_buf __jb;
+    unsigned long __fl;
+    unsigned long __ss[128/sizeof(long)];
+} jmp_buf[1];
 
-struct __jmp_buf_tag {
-    /* NOTE: The machine-dependent definitions of `__sigsetjmp'
-       assume that a `jmp_buf' begins with a `__jmp_buf' and that
-       `__mask_was_saved' follows it.  Do not move these members
-       or add others before it. */
-    jmp_buf __jmpbuf;       /* Calling environment.  */
-    int __mask_was_saved;     /* Saved the signal mask?  */
-    sigset_t __saved_mask;    /* Saved signal mask.  */
-};
+typedef __jmp_buf_tag sigjmp_buf;
 
-typedef struct __jmp_buf_tag sigjmp_buf[1];
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
+#define __setjmp_attr __attribute__((__returns_twice__))
+#else
+#define __setjmp_attr
+#endif
 
 extern int setjmp(jmp_buf env);
 extern void longjmp(jmp_buf env, int status);
 extern void siglongjmp(sigjmp_buf buf, int ret);
+extern int sigsetjmp (sigjmp_buf buf, int ret) __setjmp_attr;
+
+extern int _setjmp (jmp_buf buf) __setjmp_attr;
+extern void _longjmp (jmp_buf buf, int ret);
+
+#undef __setjmp_attr
 
 __END_DECLS
 
