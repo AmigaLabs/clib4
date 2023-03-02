@@ -27,19 +27,15 @@ struct __jmp_buf_tag {
 typedef struct __jmp_buf_tag jmp_buf[1];
 
 /* Store the calling environment in ENV, also saving the signal mask. Return 0.  */
-extern int setjmp(jmp_buf __env) ;
+extern int setjmp(jmp_buf __env);
 
 /* Store the calling environment in ENV, also saving the
    signal mask if SAVEMASK is nonzero.  Return 0.
    This is the internal name for `sigsetjmp'.  */
-extern int __sigsetjmp(struct __jmp_buf_tag __env[1], int __savemask) ;
+extern int __sigsetjmp(struct __jmp_buf_tag __env[1], int __savemask);
 
 /* Store the calling environment in ENV, not saving the signal mask. Return 0.  */
-extern int _setjmp(struct __jmp_buf_tag __env[1]) ;
-
-/* Do not save the signal mask.  This is equivalent to the `_setjmp'
-   BSD function.  */
-#define setjmp(env)	_setjmp (env)
+extern int _setjmp(struct __jmp_buf_tag __env[1]);
 
 /* Jump to the environment saved in ENV, making the `setjmp' call there return VAL, or 1 if VAL is 0.  */
 extern void longjmp(jmp_buf __env, int __val) __attribute__ ((__noreturn__));
@@ -50,7 +46,6 @@ extern void longjmp(jmp_buf __env, int __val) __attribute__ ((__noreturn__));
    `longjmp' restores the mask; `_longjmp' is just an alias.  */
 extern void _longjmp(struct __jmp_buf_tag __env[1], int __val) __attribute__ ((__noreturn__));
 #endif
-
 
 #ifdef	__USE_POSIX
 /* Use the same type for `jmp_buf' and `sigjmp_buf'.

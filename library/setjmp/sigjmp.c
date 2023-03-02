@@ -15,9 +15,9 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <stddef.h>
-#include <setjmp.h>
-#include <signal.h>
+#ifndef _SIGNAL_HEADERS_H
+#include "signal_headers.h"
+#endif /* _SIGNAL_HEADERS_H */
 
 /* This function is called by the `sigsetjmp' macro
    before doing a `__setjmp' on ENV[0].__jmpbuf.
@@ -25,9 +25,13 @@
 
 int
 __sigjmp_save(sigjmp_buf env, int savemask) {
+    ENTER();
+    SHOWVALUE(savemask);
     env[0].__mask_was_saved = (savemask
                                && sigprocmask(SIG_BLOCK, (sigset_t *) NULL,
                                                 (sigset_t * ) & env[0].__saved_mask) == 0);
 
+    SHOWVALUE(env[0].__mask_was_saved);
+    RETURN(0);
     return 0;
 }

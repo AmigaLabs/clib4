@@ -22,4 +22,4 @@
 #undef JB_SIZE
 #define __sigsetjmp_symbol __sigsetjmp
 #define __sigjmp_save_symbol __sigjmp_save
-#include "setjmp-common.S"
+#include "sigsetjmp-common.S"

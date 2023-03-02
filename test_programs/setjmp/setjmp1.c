@@ -55,23 +55,19 @@ test_setjmp(void) {
     for (i = 0; i < 10; ++i) {
         if ((ret = setjmp(jbuf))) {
             if (verbose)
-                printf("%s: secondary setjmp () return, ret=%d\n",
-                       __FUNCTION__, ret);
+                printf("%s: secondary setjmp () return, ret=%d\n", __FUNCTION__, ret);
             if (ret != i + 1) {
-                fprintf(stderr, "%s: setjmp() returned %d, expected %d\n",
-                        __FUNCTION__, ret, i + 1);
+                fprintf(stderr, "%s: setjmp() returned %d, expected %d\n", __FUNCTION__, ret, i + 1);
                 ++nerrors;
             }
             continue;
         }
         if (verbose)
-            printf("%s.%d: done with setjmp(); calling children\n",
-                   __FUNCTION__, i + 1);
+            printf("%s.%d: done with setjmp(); calling children\n", __FUNCTION__, i + 1);
 
         raise_longjmp(jbuf, 0, i + 1);
 
-        fprintf(stderr, "%s: raise_longjmp() returned unexpectedly\n",
-                __FUNCTION__);
+        fprintf(stderr, "%s: raise_longjmp() returned unexpectedly\n", __FUNCTION__);
         ++nerrors;
     }
 }
@@ -94,23 +90,19 @@ test_sigsetjmp(void) {
     for (i = 0; i < 10; ++i) {
         if ((ret = sigsetjmp(jbuf, 1))) {
             if (verbose)
-                printf("%s: secondary sigsetjmp () return, ret=%d\n",
-                       __FUNCTION__, ret);
+                printf("%s: secondary sigsetjmp () return, ret=%d\n", __FUNCTION__, ret);
             if (ret != i + 1) {
-                fprintf(stderr, "%s: sigsetjmp() returned %d, expected %d\n",
-                        __FUNCTION__, ret, i + 1);
+                fprintf(stderr, "%s: sigsetjmp() returned %d, expected %d\n", __FUNCTION__, ret, i + 1);
                 ++nerrors;
             }
             continue;
         }
         if (verbose)
-            printf("%s.%d: done with sigsetjmp(); calling children\n",
-                   __FUNCTION__, i + 1);
+            printf("%s.%d: done with sigsetjmp(); calling children\n", __FUNCTION__, i + 1);
 
         raise_siglongjmp(jbuf, 0, i + 1);
 
-        fprintf(stderr, "%s: raise_siglongjmp() returned unexpectedly\n",
-                __FUNCTION__);
+        fprintf(stderr, "%s: raise_siglongjmp() returned unexpectedly\n", __FUNCTION__);
         ++nerrors;
     }
 }
@@ -130,7 +122,7 @@ sighandler(int signal) {
 
 int
 main(int argc, char **argv UNUSED) {
-    volatile sigset_t sigset1, sigset2, sigset3;
+    sigset_t sigset1, sigset2, sigset3;
     volatile struct sigaction act;
 
     if (argc > 1)
@@ -139,6 +131,7 @@ main(int argc, char **argv UNUSED) {
     memset(&sigset1, 0, sizeof(sigset1));
     memset(&sigset2, 0, sizeof(sigset2));
     memset(&sigset3, 0, sizeof(sigset3));
+    memset(&sigset4, 0, sizeof(sigset4));
 
     sigemptyset((sigset_t * ) & sigset1);
     sigaddset((sigset_t * ) & sigset1, SIGUSR1);
@@ -154,15 +147,15 @@ main(int argc, char **argv UNUSED) {
 
     /* _setjmp() MUST NOT change signal mask: */
     sigprocmask(SIG_SETMASK, (sigset_t * ) & sigset1, NULL);
-    if (_setjmp(jbuf)) {
+    int ret = _setjmp(jbuf);
+    if (ret) {
         sigemptyset((sigset_t * ) & sigset3);
         sigprocmask(SIG_BLOCK, NULL, (sigset_t * ) & sigset3);
-        if (memcmp((sigset_t * ) & sigset3, (sigset_t * ) & sigset2,
-                   sizeof(sigset_t)) != 0) {
-            fprintf(stderr, "FAILURE: _longjmp() manipulated signal mask!\n");
+        if (memcmp((sigset_t * ) & sigset3, (sigset_t * ) & sigset2, sizeof(sigset_t)) != 0) {
+            fprintf(stderr, "1) FAILURE: _longjmp() manipulated signal mask!\n");
             ++nerrors;
         } else if (verbose)
-            printf("OK: _longjmp() seems not to change signal mask\n");
+            printf("1) OK: _longjmp() seems not to change signal mask\n");
     } else {
         sigprocmask(SIG_SETMASK, (sigset_t * ) & sigset2, NULL);
         _longjmp(jbuf, 1);
@@ -170,16 +163,16 @@ main(int argc, char **argv UNUSED) {
 
     /* sigsetjmp(jbuf, 1) MUST preserve signal mask: */
     sigprocmask(SIG_SETMASK, (sigset_t * ) & sigset1, NULL);
-    if (sigsetjmp(sigjbuf, 1)) {
+    ret = sigsetjmp(sigjbuf, 1);
+    if (ret) {
         sigemptyset((sigset_t * ) & sigset3);
         sigprocmask(SIG_BLOCK, NULL, (sigset_t * ) & sigset3);
-        if (memcmp((sigset_t * ) & sigset3, (sigset_t * ) & sigset1,
-                   sizeof(sigset_t)) != 0) {
+        if (memcmp((sigset_t * ) & sigset3, (sigset_t * ) & sigset1, sizeof(sigset_t)) != 0) {
             fprintf(stderr,
-                    "FAILURE: siglongjmp() didn't restore signal mask!\n");
+                    "2) FAILURE: siglongjmp() didn't restore signal mask!\n");
             ++nerrors;
         } else if (verbose)
-            printf("OK: siglongjmp() restores signal mask when asked to\n");
+            printf("2) OK: siglongjmp() restores signal mask when asked to\n");
     } else {
         sigprocmask(SIG_SETMASK, (sigset_t * ) & sigset2, NULL);
         siglongjmp(sigjbuf, 1);
@@ -187,16 +180,15 @@ main(int argc, char **argv UNUSED) {
 
     /* sigsetjmp(jbuf, 0) MUST NOT preserve signal mask: */
     sigprocmask(SIG_SETMASK, (sigset_t * ) & sigset1, NULL);
-    if (sigsetjmp(sigjbuf, 0)) {
+    ret = sigsetjmp(sigjbuf, 0);
+    if (ret) {
         sigemptyset((sigset_t * ) & sigset3);
         sigprocmask(SIG_BLOCK, NULL, (sigset_t * ) & sigset3);
-        if (memcmp((sigset_t * ) & sigset3, (sigset_t * ) & sigset2,
-                   sizeof(sigset_t)) != 0) {
-            fprintf(stderr,
-                    "FAILURE: siglongjmp() changed signal mask!\n");
+        if (memcmp((sigset_t * ) & sigset3, (sigset_t * ) & sigset2, sizeof(sigset_t)) != 0) {
+            fprintf(stderr, "3) FAILURE: siglongjmp() changed signal mask!\n");
             ++nerrors;
         } else if (verbose)
-            printf("OK: siglongjmp() leaves signal mask alone when asked to\n");
+            printf("3) OK: siglongjmp() leaves signal mask alone when asked to\n");
     } else {
         sigprocmask(SIG_SETMASK, (sigset_t * ) & sigset2, NULL);
         siglongjmp(sigjbuf, 1);
@@ -204,39 +196,37 @@ main(int argc, char **argv UNUSED) {
 
     /* sigsetjmp(jbuf, 1) MUST preserve signal mask: */
     sigprocmask(SIG_SETMASK, (sigset_t * ) & sigset1, NULL);
-    if (sigsetjmp(sigjbuf, 1)) {
+    ret = sigsetjmp(sigjbuf, 1);
+    if (ret) {
         sigemptyset((sigset_t * ) & sigset3);
         sigprocmask(SIG_BLOCK, NULL, (sigset_t * ) & sigset3);
-        if (memcmp((sigset_t * ) & sigset3, (sigset_t * ) & sigset1,
-                   sizeof(sigset_t)) != 0) {
-            fprintf(stderr,
-                    "FAILURE: siglongjmp() didn't restore signal mask!\n");
+        if (memcmp((sigset_t * ) & sigset3, (sigset_t * ) & sigset1, sizeof(sigset_t)) != 0) {
+            fprintf(stderr, "4) FAILURE: siglongjmp() didn't restore signal mask!\n");
             ++nerrors;
         } else if (verbose)
-            printf("OK: siglongjmp() restores signal mask when asked to\n");
+            printf("4) OK: siglongjmp() restores signal mask when asked to\n");
     } else {
         sigprocmask(SIG_SETMASK, (sigset_t * ) & sigset2, NULL);
         kill(getpid(), SIGTERM);
-        fprintf(stderr, "FAILURE: unexpected return from kill()\n");
+        fprintf(stderr, "4) FAILURE: unexpected return from kill()\n");
         ++nerrors;
     }
 
     /* sigsetjmp(jbuf, 0) MUST NOT preserve signal mask: */
     sigprocmask(SIG_SETMASK, (sigset_t * ) & sigset1, NULL);
-    if (sigsetjmp(sigjbuf, 0)) {
+    ret = sigsetjmp(sigjbuf, 0);
+    if (ret) {
         sigemptyset((sigset_t * ) & sigset3);
         sigprocmask(SIG_BLOCK, NULL, (sigset_t * ) & sigset3);
-        if (memcmp((sigset_t * ) & sigset3, (sigset_t * ) & sigset4,
-                   sizeof(sigset_t)) != 0) {
-            fprintf(stderr,
-                    "FAILURE: siglongjmp() changed signal mask!\n");
+        if (memcmp((sigset_t * ) & sigset3, (sigset_t * ) & sigset4, sizeof(sigset_t)) != 0) {
+            fprintf(stderr, "5) FAILURE: siglongjmp() changed signal mask!\n");
             ++nerrors;
         } else if (verbose)
-            printf("OK: siglongjmp() leaves signal mask alone when asked to\n");
+            printf("5) OK: siglongjmp() leaves signal mask alone when asked to\n");
     } else {
         sigprocmask(SIG_SETMASK, (sigset_t * ) & sigset2, NULL);
         kill(getpid(), SIGTERM);
-        fprintf(stderr, "FAILURE: unexpected return from kill()\n");
+        fprintf(stderr, "5) FAILURE: unexpected return from kill()\n");
         ++nerrors;
     }
 

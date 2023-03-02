@@ -68,7 +68,6 @@ raise(int sig) {
     static int local_signals_blocked;
 
     int result = ERROR;
-
     ENTER();
     SHOWVALUE(sig);
 
@@ -81,7 +80,7 @@ raise(int sig) {
     }
 
     /* Can we deliver the signal? */
-    if (FLAG_IS_CLEAR(__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(local_signals_blocked, (1 << sig))) {
+    if ((FLAG_IS_CLEAR(__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
         signal_handler_t handler;
 
         /* Which handler is installed for this signal? */
@@ -90,14 +89,16 @@ raise(int sig) {
         /* Should we ignore this signal? */
         if (handler != SIG_IGN) {
             /* Block delivery of this signal to prevent recursion. */
-            SET_FLAG(local_signals_blocked, (1 << sig));
+            SHOWMSG("Blocking signal if it isn't a kill signal");
+            if (sig != SIGINT && sig != SIGTERM && sig != SIGKILL)
+                SET_FLAG(local_signals_blocked, (1 << sig));
 
             /* The default behaviour is to drop into abort(), or do
                something very much like it. */
             if (handler == SIG_DFL) {
                 SHOWMSG("this is the default handler");
 
-                if (sig == SIGINT || sig == SIGTERM) {
+                if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                     /* Check ig we have timer terminal running. If so let's kill it */
                     if (__global_clib2->tmr_real_task != NULL) {
                         struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
@@ -159,20 +160,20 @@ raise(int sig) {
             }
             else {
                 SHOWMSG("calling the handler");
-
                 (*handler)(sig);
 
-                if (sig == SIGINT)
+                if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL)
                     SetSignal(0, SIGBREAKF_CTRL_C);
 
                 SHOWMSG("done.");
             }
 
             /* Unblock signal delivery again. */
+            SHOWMSG("Unblocking signal");
             CLEAR_FLAG(local_signals_blocked, (1 << sig));
         }
         else {
-            if (sig == SIGINT) {
+            if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                 // Reset the signal bit cleared by __check_abort()
                 SetSignal(SIGBREAKF_CTRL_C, SIGBREAKF_CTRL_C);
             }

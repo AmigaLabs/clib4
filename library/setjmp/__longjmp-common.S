@@ -17,10 +17,18 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include "../cpu/4xx/ppc4xx.inc"
+#include "stap-probe.h"
 
 #define _ASM
 #ifdef __NO_VMX__
-# include "novmxsetjmp.h"
+/* The following definitions are needed by ASM implementations of the old (novmx) __longjmp/__setjmp functions.  */
+# define JB_GPR1   0  /* Also known as the stack pointer */
+# define JB_GPR2   1
+# define JB_LR     2  /* The address we will return to */
+# define JB_GPRS   3  /* GPRs 14 through 31 are saved, 18 in total.  */
+# define JB_CR     21 /* Condition code registers.  */
+# define JB_FPRS   22 /* FPRs 14 through 31 are saved, 18*2 words total.  */
+# define JB_SIZE   (58 * 4)
 #else
 # define JB_GPR1   0  /* Also known as the stack pointer */
 # define JB_GPR2   1
@@ -45,7 +53,7 @@ function_prolog (__longjmp_symbol)
 	lwz r20,((JB_GPRS+20-14)*4)(r3)
 	/* longjmp/longjmp_target probe expects longjmp first argument (4@3),
 	   second argument (-4@4), and target address (4@0), respectively.  */
-	//LIBC_PROBE (longjmp, 3, 4@3, -4@4, 4@0)
+	LIBC_PROBE (longjmp, 3, 4@3, -4@4, 4@0)
 	mtlr r0
 	lwz r21,((JB_GPRS+21-14)*4)(r3)
 	lwz r22,((JB_GPRS+22-14)*4)(r3)
@@ -60,7 +68,7 @@ function_prolog (__longjmp_symbol)
 	lwz r29,((JB_GPRS+29-14)*4)(r3)
 	lwz r30,((JB_GPRS+30-14)*4)(r3)
 	lwz r31,((JB_GPRS+31-14)*4)(r3)
-	//LIBC_PROBE (longjmp_target, 3, 4@3, -4@4, 4@0)
+	LIBC_PROBE (longjmp_target, 3, 4@3, -4@4, 4@0)
 	mr r3,r4
 	blr
 function_epilog (__longjmp_symbol)

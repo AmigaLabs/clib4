@@ -353,47 +353,39 @@ _main() {
         if (stack_size < cli->cli_DefaultStack * sizeof(LONG))
             stack_size = cli->cli_DefaultStack * sizeof(LONG);
 
-        GetCliProgramName(program_name, (LONG)
-        sizeof(program_name));
+        GetCliProgramName(program_name, (LONG) sizeof(program_name));
 
         i = 0;
 
         tags[i].ti_Tag = NP_Entry;
-        tags[i++].ti_Data = (ULONG)
-        call_main;
+        tags[i++].ti_Data = (ULONG) call_main;
         tags[i].ti_Tag = NP_StackSize;
         tags[i++].ti_Data = stack_size;
         tags[i].ti_Tag = NP_Name;
-        tags[i++].ti_Data = (ULONG)(__process_name != NULL ? __process_name : (char *) FilePart(program_name));
+        tags[i++].ti_Data = (ULONG) (__process_name != NULL ? __process_name : (char *) FilePart(program_name));
         tags[i].ti_Tag = NP_CommandName;
-        tags[i++].ti_Data = (ULONG)
-        FilePart(program_name);
+        tags[i++].ti_Data = (ULONG) FilePart(program_name);
         tags[i].ti_Tag = NP_Cli;
         tags[i++].ti_Data = TRUE;
         tags[i].ti_Tag = NP_Child;
         tags[i++].ti_Data = TRUE;
         tags[i].ti_Tag = NP_Arguments;
-        tags[i++].ti_Data = (ULONG)
-        GetArgStr();
+        tags[i++].ti_Data = (ULONG) GetArgStr();
         tags[i].ti_Tag = NP_FinalCode;
-        tags[i++].ti_Data = (ULONG)
-        detach_cleanup;
+        tags[i++].ti_Data = (ULONG) detach_cleanup;
         tags[i].ti_Tag = NP_FinalData;
-        tags[i++].ti_Data = (ULONG)
-        cli->cli_Module;
+        tags[i++].ti_Data = (ULONG) cli->cli_Module;
 
         /* Use a predefined task priority, if requested. */
         if (-128 <= __priority && __priority <= 127) {
             tags[i].ti_Tag = NP_Priority;
-            tags[i++].ti_Data = (ULONG)
-            __priority;
+            tags[i++].ti_Data = (ULONG) __priority;
         }
 
         /* dos.library V50 will free the segment list upon exit. */
         if (((struct Library *) DOSBase)->lib_Version >= 50) {
             tags[i].ti_Tag = NP_Seglist;
-            tags[i++].ti_Data = (ULONG)
-            cli->cli_Module;;
+            tags[i++].ti_Data = (ULONG) cli->cli_Module;;
             tags[i].ti_Tag = NP_FreeSeglist;
             tags[i++].ti_Data = TRUE;
         }

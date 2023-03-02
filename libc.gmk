@@ -209,10 +209,12 @@ C_SEARCH := \
 	search/twalk.o
 
 C_SETJMP := \
+    setjmp/_longjmp.o \
     setjmp/longjmp.o \
     setjmp/setjmp.o \
     setjmp/sigjmp.o \
-    setjmp/siglongjmp.o\
+    setjmp/siglongjmp.o \
+    setjmp/sigsetjmp.o
 
 C_SOCKET := \
     resolv/dns_parse.o \
