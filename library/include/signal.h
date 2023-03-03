@@ -6,6 +6,7 @@
 #define _SIGNAL_H
 
 #include <features.h>
+#include <pthread.h>
 
 __BEGIN_DECLS
 
@@ -77,6 +78,8 @@ typedef int sigset_t;
 #define SIG_UNBLOCK 1
 #define SIG_SETMASK 2
 
+#define SI_ASYNCIO (-4)
+
 extern int sigmask(int signum);
 extern int sigblock(int signal_mask);
 extern int sigsetmask(int signal_mask);
@@ -138,6 +141,45 @@ struct sigaction {
 };
 
 extern int sigaction(int sig, const struct sigaction *act, struct sigaction *oact);
+
+/* Type for data associated with a signal.  */
+union __sigval
+{
+    int __sival_int;
+    void *__sival_ptr;
+};
+
+typedef union __sigval __sigval_t;
+typedef __sigval_t sigval_t;
+
+
+struct sigevent {
+    union __sigval sigev_value;
+    int sigev_signo;
+    int sigev_notify;
+    union {
+        char __pad[64 - 2*sizeof(int) - sizeof(union __sigval)];
+        pid_t sigev_notify_thread_id;
+        struct {
+            void (*sigev_notify_function)(union __sigval);
+            pthread_attr_t *sigev_notify_attributes;
+        } __sev_thread;
+    } __sev_fields;
+};
+
+#define sigev_notify_thread_id __sev_fields.sigev_notify_thread_id
+#define sigev_notify_function __sev_fields.__sev_thread.sigev_notify_function
+#define sigev_notify_attributes __sev_fields.__sev_thread.sigev_notify_attributes
+
+#define SIGEV_SIGNAL 0
+#define SIGEV_NONE 1
+#define SIGEV_THREAD 2
+#define SIGEV_THREAD_ID 4
+
+#if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+#define MINSIGSTKSZ 4096
+#define SIGSTKSZ 10240
+#endif
 
 __END_DECLS
 

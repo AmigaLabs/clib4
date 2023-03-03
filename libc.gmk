@@ -18,6 +18,13 @@ C_BASE := \
 	libc_init_global.o \
 	errno_data.o
 
+C_AIO := \
+	aio/aio_cancel.o \
+    aio/aio_error.o \
+    aio/aio_fsync.o \
+    aio/aio_misc.o \
+    aio/aio_notify.o \
+
 C_ARGZ := \
 	argz/add.o \
 	argz/add_sep.o \
@@ -741,7 +748,9 @@ C_UNISTD := \
 	unistd/pipe.o \
 	unistd/pipe2.o \
 	unistd/pread.o \
+	unistd/pread64.o \
 	unistd/pwrite.o \
+	unistd/pwrite64.o \
 	unistd/readlink.o \
 	unistd/reallocarray.o \
 	unistd/realpath.o \
@@ -910,8 +919,9 @@ C_WCHAR := \
 
 C_LIB := \
 	$(C_BASE) \
-    $(C_BYTESWAP) \
+    $(C_AIO) \
 	$(C_ARGZ) \
+    $(C_BYTESWAP) \
 	$(C_CTYPE) \
 	$(C_DIRENT) \
 	$(C_DEBUG) \

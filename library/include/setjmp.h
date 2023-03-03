@@ -6,7 +6,6 @@
 #define _SETJMP_H
 
 #include <features.h>
-
 #include <signal.h>
 
 __BEGIN_DECLS
