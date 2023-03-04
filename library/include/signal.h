@@ -102,6 +102,7 @@ typedef struct {
 #define SA_RESETHAND 1
 #define SA_NODEFER 2
 #define SA_RESTART 4
+#define SA_SIGINFO 8
 
 #define sa_handler _sa_func._sa_handler
 #define sa_sigaction _sa_func._sa_sigaction

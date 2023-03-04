@@ -72,9 +72,6 @@ __BEGIN_DECLS
 #define	MIN(a,b)	(((a)<(b))?(a):(b))
 #define	MAX(a,b)	(((a)>(b))?(a):(b))
 
-#define likely(x)       __builtin_expect(((x) != 0),1)
-#define unlikely(x)     __builtin_expect((x),0)
-
 __END_DECLS
 
 #endif /* _SYS_MOUNT_H */

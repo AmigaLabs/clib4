@@ -1,5 +1,5 @@
 /*
- * $Id: time_clock_gettime.c,v 1.1 2020-01-31 16:55:42 clib2devs Exp $
+ * $Id: time_clock_gettime64.c,v 1.0 2023-03-03 16:55:42 clib2devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -14,7 +14,7 @@ extern struct TimerIFace *NOCOMMON __ITimer;
 extern BOOL NOCOMMON __timer_busy;
 
 int
-clock_gettime(clockid_t clk_id, struct timespec *t) {
+clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
     ENTER();
 
     /* Check the supported flags.  */
@@ -67,15 +67,19 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
         }
 
         if (result == 0) {
+            /* Use a 32 bit timespec to calculate the result */
+            struct timespec tr;
             if (clk_id == CLOCK_MONOTONIC) {
-                t->tv_sec = tv.tv_sec;
-                t->tv_nsec = tv.tv_usec * 1000;
+                tr.tv_sec = tv.tv_sec;
+                tr.tv_nsec = tv.tv_usec * 1000;
             } else {
                 /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
                 tv.tv_sec += (2922 * 24 * 60 + gmtoffset) * 60;
-                t->tv_sec = tv.tv_sec;
-                t->tv_nsec = tv.tv_usec * 1000;
+                tr.tv_sec = tv.tv_sec;
+                tr.tv_nsec = tv.tv_usec * 1000;
             }
+            /* And then convert it to a 64bit timespec */
+            *t = valid_timespec_to_timespec64(tr);
         }
     }
 

@@ -2,6 +2,7 @@
 #define _COMMON_H
 
 #include "pthread.h"
+#include <sys/time.h>
 
 #undef NEWLIST
 #define NEWLIST(_l)                                     \
@@ -15,9 +16,12 @@ do                                                      \
     l->lh_Head     = (struct Node *)&l->lh_Tail;      \
 } while (0)
 
-#define TIMESPEC_TO_TIMEVAL(tv, ts) {    \
+#define TIMESPEC_TO_OLD_TIMEVAL(tv, ts) {    \
     (tv)->Seconds = (ts)->tv_sec;        \
     (tv)->Microseconds = (ts)->tv_nsec / 1000; }
+#define OLD_TIMEVAL_TO_TIMESPEC(tv, ts) {    \
+    (ts)->tv_sec = (tv)->Seconds;        \
+    (ts)->tv_nsec = (tv)->Microseconds * 1000; }
 
 enum threadState
 {

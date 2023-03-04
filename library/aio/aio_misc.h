@@ -21,6 +21,13 @@
 #include <aio.h>
 #include <pthread.h>
 
+typedef struct AioThread {
+    struct MinNode node;
+    struct Task *thread;
+    struct aiocb *aiocbp;
+    int fileDes;
+} AioThread;
+
 /* Extend the operation enum.  */
 enum {
     LIO_DSYNC = LIO_NOP + 1,
@@ -107,5 +114,7 @@ extern int __aio_notify_only(struct sigevent *sigev) __attribute__ ((visibility 
 
 /* Send the signal.  */
 extern int __aio_sigqueue(int sig, const union sigval val, pid_t caller_pid) __attribute__ ((visibility ("hidden")));
+
+extern int __aio_suspend_time64 (const struct aiocb *const list[], int nent, const struct timespec64 *timeout);
 
 #endif /* aio_misc.h */

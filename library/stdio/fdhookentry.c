@@ -406,8 +406,6 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     }
 
                     fd->fd_Position = new_position;
-
-                    printf("fd->fd_Position = %lld\n", fd->fd_Position);
                 }
 
                 result = new_position;

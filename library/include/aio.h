@@ -1,6 +1,10 @@
 #ifndef _AIO_H
 #define _AIO_H
 
+#ifndef __USE_FILE_OFFSET64
+#define _LARGEFILE64_SOURCE
+#endif
+
 #include <features.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -24,10 +28,10 @@ struct aiocb {
     ssize_t __return_value;
 
 #ifndef __USE_FILE_OFFSET64
-    __off_t aio_offset;		/* File offset.  */
-    char __pad[sizeof (off64_t) - sizeof (__off_t)];
+    off_t aio_offset;		/* File offset.  */
+    char __pad[sizeof (int64_t) - sizeof (off_t)];
 #else
-    off64_t aio_offset;		/* File offset.  */
+    int64_t aio_offset;		/* File offset.  */
 #endif
     char __libc_reserved[32];
 };
@@ -104,40 +108,38 @@ enum {
 
 /* Allow user to specify optimization.  */
 #ifdef __USE_GNU
-extern void aio_init (const struct aioinit *__init);
+extern void aio_init (const struct aioinit *init);
 #endif
 
 /* Enqueue read request for given number of bytes and the given priority.  */
-extern int aio_read(struct aiocb *__aiocbp);
+extern int aio_read(struct aiocb *aiocbp);
 /* Enqueue write request for given number of bytes and the given priority.  */
-extern int aio_write(struct aiocb *__aiocbp);
+extern int aio_write(struct aiocb *aiocbp);
 
 /* Initiate list of I/O requests.  */
-extern int lio_listio(int __mode, struct aiocb *const __list[restrict], int __nent, struct sigevent * __sig);
+extern int lio_listio(int mode, struct aiocb *const list[restrict], int nent, struct sigevent * sig);
 
 /* Retrieve error status associated with AIOCBP.  */
-extern int aio_error(const struct aiocb *__aiocbp);
+extern int aio_error(const struct aiocb *aiocbp);
 /* Return status associated with AIOCBP.  */
-extern ssize_t aio_return(struct aiocb *__aiocbp);
+extern ssize_t aio_return(struct aiocb *aiocbp);
 
-/* Try to cancel asynchronous I/O requests outstanding against file
-   descriptor FILDES.  */
-extern int aio_cancel(int __fildes, struct aiocb *__aiocbp);
+/* Try to cancel asynchronous I/O requests outstanding against file descriptor FILDES.  */
+extern int aio_cancel(int fildes, struct aiocb *aiocbp);
 
 /* Suspend calling thread until at least one of the asynchronous I/O
    operations referenced by LIST has completed.
-
-   This function is a cancellation point and therefore not marked with
-  .  */
-extern int aio_suspend(const struct aiocb *const __list[], int __nent, const struct timespec * __timeout);
+   This function is a cancellation point and therefore not marked with.
+*/
+extern int aio_suspend(const struct aiocb *const list[], int nent, const struct timespec *timeout);
 
 /* Force all operations associated with file desriptor described by
    `aio_fildes' member of AIOCBP.  */
-extern int aio_fsync(int __operation, struct aiocb *__aiocbp);
+extern int aio_fsync(int operation, struct aiocb *aiocbp);
 
 #if defined(_LARGEFILE64_SOURCE) || defined(_GNU_SOURCE)
-# define aio_read64 aio_read
-# define aio_write64 aio_write
+extern int aio_read64 (struct aiocb64 *aiocbp);
+extern int aio_write64 (struct aiocb64 *aiocbp);
 # define aio_error64 aio_error
 # define aio_return64 aio_return
 # define aio_cancel64 aio_cancel

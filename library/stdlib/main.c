@@ -33,6 +33,7 @@
 #endif /* _TIME_HEADERS_H */
 
 #include <proto/elf.h>
+#include "aio/aio_misc.h"
 
 extern int main(int arg_c, char **arg_v);
 
@@ -73,6 +74,9 @@ call_main(void) {
         /* Generate random seed */
         __global_clib2->__random_seed = time(NULL);
     }
+
+    /* Initialize aio list */
+    __global_clib2->aio_threads = CList_init(sizeof(struct AioThread));
 
     /* This can be helpful for debugging purposes: print the name of the current
        directory, followed by the name of the command and all the parameters
@@ -155,6 +159,14 @@ out:
 
     SHOWMSG("Set unix paths to off");
     disableUnixPaths();
+
+    /* Free aio list */
+    if (__global_clib2->aio_threads != NULL) {
+        SHOWMSG("Free aio list");
+        ObtainSemaphore(__global_clib2->__aio_lock);
+        __global_clib2->aio_threads->free(__global_clib2->aio_threads);
+        ReleaseSemaphore(__global_clib2->__aio_lock);
+    }
 
     /* Go through the destructor list */
     SHOWMSG("invoking the destructors");

@@ -8,21 +8,38 @@
 #include <aio.h>
 #include <pthread.h>
 #include <sys/param.h>
+#include <unistd.h>
 #include "aio_misc.h"
+#include "pthread/common.h"
 
 #ifndef aio_create_helper_thread
 # define aio_create_helper_thread __aio_create_helper_thread
 
-extern inline int
-__aio_create_helper_thread(pthread_t *threadp, void *(*tf)(void *), void *arg) {
+inline int
+__aio_create_helper_thread(pthread_t *threadp, void *(*tf)(void *), void *arg, struct aiocb *aiocbp) {
     pthread_attr_t attr;
 
     /* Make sure the thread is created detached.  */
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
+    SHOWMSG("Obtaining aio lock");
+    ObtainSemaphore(__global_clib2->__aio_lock);
     int ret = pthread_create(threadp, &attr, tf, arg);
+    if (ret == 0) {
+        AioThread aioThread;
+        SHOWMSG("pthread created correctly");
+        ThreadInfo *inf = GetThreadInfo(*threadp);
+        aioThread.thread = inf->task;
+        aioThread.aiocbp = aiocbp;
+        aioThread.fileDes = aiocbp->aio_fildes;
+        D(("Adding AIO stream with filedes %ld", aiocbp->aio_fildes));
 
+        SHOWMSG("Adding pthread to list");
+        __global_clib2->aio_threads->add(__global_clib2->aio_threads, &aioThread);
+    }
+    SHOWMSG("Releasing aio lock");
+    ReleaseSemaphore(__global_clib2->__aio_lock);
     pthread_attr_destroy(&attr);
     return ret;
 }
@@ -363,7 +380,7 @@ __aio_enqueue_request(aiocb_union *aiocbp, int operation) {
             running = newp->running = allocated;
 
             /* Now try to start a thread.  */
-            result = aio_create_helper_thread(&thid, handle_fildes_io, newp);
+            result = aio_create_helper_thread(&thid, handle_fildes_io, newp, &aiocbp->aiocb);
             if (result == 0)
                 /* We managed to enqueue the request.  All errors which can
                    happen now can be recognized by calls to `aio_return' and
@@ -439,70 +456,43 @@ handle_fildes_io(void *arg) {
             fildes = aiocbp->aiocb.aio_fildes;
 
             /* Change the priority to the requested value (if necessary).  */
-            if (aiocbp->aiocb.__abs_prio != param.sched_priority
-                || aiocbp->aiocb.__policy != policy) {
+            if (aiocbp->aiocb.__abs_prio != param.sched_priority || aiocbp->aiocb.__policy != policy) {
                 param.sched_priority = aiocbp->aiocb.__abs_prio;
                 policy = aiocbp->aiocb.__policy;
                 pthread_setschedparam(self, policy, &param);
             }
 
-            /* Process request pointed to by RUNP.  We must not be disturbed
-               by signals.  */
+            /* Process request pointed to by RUNP.  We must not be disturbed by signals.  */
             if ((aiocbp->aiocb.aio_lio_opcode & 127) == LIO_READ) {
                 if (sizeof(off_t) != sizeof(off64_t)
                     && aiocbp->aiocb.aio_lio_opcode & 128)
-                    aiocbp->aiocb.__return_value =
-                            TEMP_FAILURE_RETRY(pread64(fildes, (void *)
-                                                                 aiocbp->aiocb64.aio_buf,
-                                                         aiocbp->aiocb64.aio_nbytes,
-                                                         aiocbp->aiocb64.aio_offset));
+                    aiocbp->aiocb.__return_value = pread64(fildes, (void *)aiocbp->aiocb64.aio_buf, aiocbp->aiocb64.aio_nbytes, aiocbp->aiocb64.aio_offset);
                 else
-                    aiocbp->aiocb.__return_value =
-                            TEMP_FAILURE_RETRY(pread(fildes,
-                                                       (void *)
-                                                               aiocbp->aiocb.aio_buf,
-                                                       aiocbp->aiocb.aio_nbytes,
-                                                       aiocbp->aiocb.aio_offset));
+                    aiocbp->aiocb.__return_value = pread(fildes, (void *) aiocbp->aiocb.aio_buf, aiocbp->aiocb.aio_nbytes, aiocbp->aiocb.aio_offset);
 
-                if (aiocbp->aiocb.__return_value == -1 && errno == ESPIPE)
+                if (aiocbp->aiocb.__return_value == -1 && errno == ESPIPE) {
                     /* The Linux kernel is different from others.  It returns
                        ESPIPE if using pread on a socket.  Other platforms
-                       simply ignore the offset parameter and behave like
-                       read.  */
-                    aiocbp->aiocb.__return_value =
-                            TEMP_FAILURE_RETRY(read(fildes,
-                                                    (void *) aiocbp->aiocb64.aio_buf,
-                                                    aiocbp->aiocb64.aio_nbytes));
+                       simply ignore the offset parameter and behave like read.  */
+                    aiocbp->aiocb.__return_value = read(fildes, (void *) aiocbp->aiocb64.aio_buf, aiocbp->aiocb64.aio_nbytes);
+                }
             } else if ((aiocbp->aiocb.aio_lio_opcode & 127) == LIO_WRITE) {
-                if (sizeof(off_t) != sizeof(off64_t)
-                    && aiocbp->aiocb.aio_lio_opcode & 128)
-                    aiocbp->aiocb.__return_value =
-                            TEMP_FAILURE_RETRY(pwrite64(fildes, (const void *)
-                                                                  aiocbp->aiocb64.aio_buf,
-                                                          aiocbp->aiocb64.aio_nbytes,
-                                                          aiocbp->aiocb64.aio_offset));
+                if (sizeof(off_t) != sizeof(off64_t) && aiocbp->aiocb.aio_lio_opcode & 128)
+                    aiocbp->aiocb.__return_value = pwrite64(fildes, (const void *) aiocbp->aiocb64.aio_buf, aiocbp->aiocb64.aio_nbytes, aiocbp->aiocb64.aio_offset);
                 else
-                    aiocbp->aiocb.__return_value =
-                            TEMP_FAILURE_RETRY(pwrite(fildes, (const void *)
-                                                                aiocbp->aiocb.aio_buf,
-                                                        aiocbp->aiocb.aio_nbytes,
-                                                        aiocbp->aiocb.aio_offset));
+                    aiocbp->aiocb.__return_value = pwrite(fildes, (const void *) aiocbp->aiocb.aio_buf, aiocbp->aiocb.aio_nbytes, aiocbp->aiocb.aio_offset);
 
-                if (aiocbp->aiocb.__return_value == -1 && errno == ESPIPE)
+                if (aiocbp->aiocb.__return_value == -1 && errno == ESPIPE) {
                     /* The Linux kernel is different from others.  It returns
                        ESPIPE if using pwrite on a socket.  Other platforms
                        simply ignore the offset parameter and behave like
                        write.  */
-                    aiocbp->aiocb.__return_value =
-                            TEMP_FAILURE_RETRY(write(fildes,
-                                                     (void *) aiocbp->aiocb64.aio_buf,
-                                                     aiocbp->aiocb64.aio_nbytes));
+                    aiocbp->aiocb.__return_value = write(fildes, (void *) aiocbp->aiocb64.aio_buf, aiocbp->aiocb64.aio_nbytes);
+                }
             } else if (aiocbp->aiocb.aio_lio_opcode == LIO_DSYNC)
-                aiocbp->aiocb.__return_value =
-                        TEMP_FAILURE_RETRY(fdatasync(fildes));
+                aiocbp->aiocb.__return_value = fdatasync(fildes);
             else if (aiocbp->aiocb.aio_lio_opcode == LIO_SYNC)
-                aiocbp->aiocb.__return_value =
-                        TEMP_FAILURE_RETRY(fsync(fildes));
+                aiocbp->aiocb.__return_value = fsync(fildes);
             else {
                 /* This is an invalid opcode.  */
                 aiocbp->aiocb.__return_value = -1;
@@ -537,8 +527,7 @@ handle_fildes_io(void *arg) {
 
         runp = runlist;
 
-        /* If the runlist is empty, then we sleep for a while, waiting for
-       something to arrive in it. */
+        /* If the runlist is empty, then we sleep for a while, waiting for something to arrive in it. */
         if (runp == NULL && optim.aio_idle_time >= 0) {
             struct timespec now;
             struct timespec wakeup_time;
@@ -581,14 +570,12 @@ handle_fildes_io(void *arg) {
 
                     /* Make sure the thread is created detached.  */
                     pthread_attr_init(&attr);
-                    pthread_attr_setdetachstate(&attr,
-                                                PTHREAD_CREATE_DETACHED);
+                    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
                     /* Now try to start a thread. If we fail, no big deal,
                        because we know that there is at least one thread (us)
                        that is working on AIO operations. */
-                    if (pthread_create(&thid, &attr, handle_fildes_io, NULL)
-                        == 0)
+                    if (pthread_create(&thid, &attr, handle_fildes_io, NULL) == 0)
                         ++nthreads;
                 }
             }

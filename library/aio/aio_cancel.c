@@ -105,21 +105,3 @@ aio_cancel(int fildes, struct aiocb *aiocbp) {
 
     return result;
 }
-
-#if 0
-#if PTHREAD_IN_LIBC
-# ifndef __aio_cancel
-versioned_symbol (libc, __aio_cancel, aio_cancel, GLIBC_2_34);
-versioned_symbol (libc, __aio_cancel, aio_cancel64, GLIBC_2_34);
-#  if OTHER_SHLIB_COMPAT (librt, GLIBC_2_1, GLIBC_2_34)
-compat_symbol (librt, __aio_cancel, aio_cancel, GLIBC_2_1);
-compat_symbol (librt, __aio_cancel, aio_cancel64, GLIBC_2_1);
-#  endif
-# endif /* __aio_cancel */
-#else /* !PTHREAD_IN_LIBC */
-strong_alias (__aio_cancel, aio_cancel
-)
-weak_alias (__aio_cancel, aio_cancel64
-)
-#endif
-#endif
