@@ -74,11 +74,17 @@ raise(int sig) {
     ENTER();
     SHOWVALUE(sig);
 
-    /* This has to be a well-known and supported signal. */
-    if (sig < SIGHUP || sig > NSIG) {
+    /* This has to be a well-known and supported signal. 0 is a valid signal*/
+    if (sig < 0 || sig > NSIG) {
         SHOWMSG("unknown signal number");
 
         __set_errno(EINVAL);
+        goto out;
+    }
+
+    /* If sig is 0 just set result to OK and go out */
+    if (sig == 0) {
+        result = OK;
         goto out;
     }
 

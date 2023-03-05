@@ -6,8 +6,7 @@
 
 #define BUFFER_SIZE 1024
 
-off_t filesize(FILE *fp)
-{
+off_t filesize(FILE *fp) {
     long int save_pos;
     long size_of_file;
 
@@ -25,8 +24,7 @@ off_t filesize(FILE *fp)
     return (size_of_file);
 }
 
-_off64_t filesize64(FILE *fp)
-{
+_off64_t filesize64(FILE *fp) {
     _off64_t save_pos;
     _off64_t size_of_file;
 
@@ -44,27 +42,23 @@ _off64_t filesize64(FILE *fp)
     return (size_of_file);
 }
 
-int main(int argc, char **argv)
-{
-    if (argc != 2)
-    {
+int main(int argc, char **argv) {
+    if (argc != 2) {
         printf("Usage: fopen LARGEFILE\n");
         return -1;
     }
 
     FILE *fd = fopen(argv[1], "wb");
-    if (fd != NULL)
-    {
-        char buffer[] = {'x', 'y', 'z'};
+    if (fd != NULL) {
+        char buffer[] = {'x', 'y', 'z', '\0'};
         fwrite(buffer, sizeof(char), sizeof(buffer), fd);
         size_t result = fread(buffer, sizeof(char), sizeof(buffer), fd);
         printf("buffer = %s\n", buffer);
         fclose(fd);
     }
 
-    fd = fopen("test.txt", "r");
-    if (fd != NULL)
-    {
+    fd = fopen(argv[1], "r");
+    if (fd != NULL) {
         off_t size1 = filesize(fd);
         _off64_t size2 = filesize64(fd);
         printf("Size1 = %ld\n", size1);

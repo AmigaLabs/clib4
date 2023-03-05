@@ -195,12 +195,15 @@ extern ssize_t pwrite64(int fd, const void *buf, size_t nbytes, off64_t offset);
 #ifdef __USE_GNU
 /* Evaluate EXPRESSION, and repeat as long as it returns -1 with `errno' set to EINTR.  */
 
-# define TEMP_FAILURE_RETRY(expression) \
-  (__extension__							      \
-    ({ long int __result;						      \
-       do __result = (long int) (expression);				      \
-       while (__result == -1L && errno == EINTR);			      \
-       __result; }))
+# define TEMP_FAILURE_RETRY(exp) \
+  ({                                                    \
+    long int __result = 0;                              \
+    do {                                                \
+      __result = (long int)(exp);                       \
+      printf("result = %d\n", __result);                \
+    } while ((__result == -1) && (errno == EINTR));     \
+    __result;                                           \
+  })
 #endif
 
 #define _P_WAIT         1

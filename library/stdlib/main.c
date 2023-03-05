@@ -78,6 +78,12 @@ call_main(void) {
     /* Initialize aio list */
     __global_clib2->aio_threads = CList_init(sizeof(struct AioThread));
 
+    /* Set __current_path_name to a valid value */
+    UBYTE current_dir_name[256] = {0};
+    struct Process *this_process = (struct Process *) FindTask(NULL);
+    if (NameFromLock(this_process->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
+        __set_current_path((const char *) current_dir_name);
+    }
     /* This can be helpful for debugging purposes: print the name of the current
        directory, followed by the name of the command and all the parameters
        passed to it. */
@@ -86,27 +92,22 @@ call_main(void) {
         UBYTE value_str[10];
         LONG value;
 
-        /* Careful: only echo this information if a global environment
-                    variable is set to enable this feature! */
+        /* Careful: only echo this information if a global environment variable is set to enable this feature! */
         if (GetVar("_echo", (STRPTR) value_str, sizeof(value_str), GVF_GLOBAL_ONLY) > 0 &&
             StrToLong((CONST_STRPTR) value_str, &value) > 0 && value != 0) {
-            struct Process *this_process = (struct Process *) FindTask(NULL);
             STRPTR arg_str = GetArgStr();
             size_t arg_str_len = strlen((const char *) arg_str);
             UBYTE *arg_str_copy;
-            UBYTE current_dir_name[256] = {0};
             arg_str_copy = AllocVecTags(arg_str_len + 1, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-            if (arg_str_copy != NULL &&
-                NameFromLock(this_process->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
+            if (arg_str_copy != NULL) {
                 strcpy((char *) arg_str_copy, (char *) arg_str);
 
                 while (arg_str_len > 0 && arg_str_copy[arg_str_len - 1] <= ' ')
                     arg_str_copy[--arg_str_len] = '\0';
 
-                kprintf("[%s] %s %s\n", current_dir_name, __program_name, arg_str_copy);
+                D(("[%s] %s %s\n", current_dir_name, __program_name, arg_str_copy));
+                FreeVec(arg_str_copy);
             }
-
-            FreeVec(arg_str_copy);
         }
     }
 #endif /* NDEBUG */

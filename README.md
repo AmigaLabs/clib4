@@ -103,6 +103,13 @@ A lot of other functions has been added trying to make OS4 ports easier.
 
 Clib2 now contain also libauto with almost all OS4 components. We'll try to keep them updated.
 
+### libpthread
+
+Clib2 now contain a native pthread implementation. However pthread functions are in libc and libpthread is just a stub.
+That's because pthread functions are used (and will be used more in the future) internally and they are needed by libc.  
+libpthread.a is however present as stub to avoid old program stop compiling claiming this library
+
+
 ### libresolv
 
 Added resolv library to use dns functions. A lot of socket functions that was using bsdsocket.library now use this library.

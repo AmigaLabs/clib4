@@ -28,13 +28,10 @@ struct clparam {
 static void
 cleanup(void *arg) {
     const struct clparam *param = (const struct clparam *) arg;
-    Printf("c1\n");
 
     /* Now remove the entry in the waiting list for all requests which didn't terminate.  */
     int cnt = param->nent;
-    Printf("c2\n");
     while (cnt-- > 0) {
-        Printf("c3\n");
         if (param->list[cnt] != NULL && param->list[cnt]->__error_code == EINPROGRESS) {
             struct waitlist **listp;
 
@@ -50,21 +47,22 @@ cleanup(void *arg) {
                 *listp = (*listp)->next;
         }
     }
-    Printf("c4\n");
 
     /* Release the conditional variable.  */
     pthread_cond_destroy(param->cond);
-    Printf("c5\n");
 
     /* Release the mutex.  */
     pthread_mutex_unlock(&__aio_requests_mutex);
-    Printf("c6\n");
 }
 
 int
 __aio_suspend_time64(const struct aiocb *const list[], int nent, const struct timespec64 *timeout) {
+    ENTER();
+    SHOWVALUE(nent);
+
     if (nent < 0) {
         __set_errno(EINVAL);
+        RETURN(-1);
         return -1;
     }
 
@@ -80,9 +78,12 @@ __aio_suspend_time64(const struct aiocb *const list[], int nent, const struct ti
     pthread_mutex_lock(&__aio_requests_mutex);
 
     /* There is not yet a finished request.  Signal the request that we are working for it.  */
-    for (cnt = 0; cnt < nent; ++cnt)
+    for (cnt = 0; cnt < nent; ++cnt) {
         if (list[cnt] != NULL) {
+            SHOWMSG("Find an element to suspend");
+            SHOWVALUE(list[cnt]->__error_code);
             if (list[cnt]->__error_code == EINPROGRESS) {
+                SHOWMSG("In it EINPROGRESS");
                 requestlist[cnt] = __aio_find_req((aiocb_union *) list[cnt]);
 
                 if (requestlist[cnt] != NULL) {
@@ -100,6 +101,7 @@ __aio_suspend_time64(const struct aiocb *const list[], int nent, const struct ti
                 /* We will never suspend.  */
                 break;
         }
+    }
 
     struct timespec64 ts;
     if (timeout != NULL) {
@@ -111,7 +113,9 @@ __aio_suspend_time64(const struct aiocb *const list[], int nent, const struct ti
             ts.tv_sec++;
         }
     }
-
+    SHOWVALUE(cnt);
+    SHOWVALUE(nent);
+    SHOWVALUE(any);
     /* Only if none of the entries is NULL or finished to be wait.  */
     if (cnt == nent && any) {
         struct clparam clparam = {
@@ -122,6 +126,7 @@ __aio_suspend_time64(const struct aiocb *const list[], int nent, const struct ti
             .nent = nent
         };
 
+        SHOWMSG("Call pthread_cleanup_push");
         pthread_cleanup_push(cleanup, &clparam);
 
         struct timespec ts32 = valid_timespec64_to_timespec(ts);
@@ -168,6 +173,7 @@ __aio_suspend_time64(const struct aiocb *const list[], int nent, const struct ti
     /* Release the mutex.  */
     pthread_mutex_unlock(&__aio_requests_mutex);
 
+    RETURN(result);
     return result;
 }
 

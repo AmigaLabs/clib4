@@ -83,8 +83,7 @@ __aio_notify(struct requestlist *req) {
     struct aiocb *aiocbp = &req->aiocbp->aiocb;
 
     if (__aio_notify_only(&aiocbp->aio_sigevent) != 0) {
-        /* XXX What shall we do if already an error is set by
-       read/write/fsync?  */
+        /* XXX What shall we do if already an error is set by read/write/fsync?  */
         aiocbp->__error_code = errno;
         aiocbp->__return_value = -1;
     }

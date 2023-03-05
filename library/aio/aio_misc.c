@@ -411,9 +411,14 @@ __aio_enqueue_request(aiocb_union *aiocbp, int operation) {
             pthread_cond_signal(&__aio_new_request_notification);
     }
 
-    if (result == 0)
+    SHOWVALUE(aiocbp->aiocb.__error_code);
+    SHOWVALUE(result);
+    if (result == 0) {
+        SHOWMSG("Running");
         newp->running = running;
+    }
     else {
+        SHOWMSG("Error");
         /* Something went wrong.  */
         __aio_free_request(newp);
         aiocbp->aiocb.__error_code = result;
@@ -464,35 +469,50 @@ handle_fildes_io(void *arg) {
 
             /* Process request pointed to by RUNP.  We must not be disturbed by signals.  */
             if ((aiocbp->aiocb.aio_lio_opcode & 127) == LIO_READ) {
-                if (sizeof(off_t) != sizeof(off64_t)
-                    && aiocbp->aiocb.aio_lio_opcode & 128)
-                    aiocbp->aiocb.__return_value = pread64(fildes, (void *)aiocbp->aiocb64.aio_buf, aiocbp->aiocb64.aio_nbytes, aiocbp->aiocb64.aio_offset);
+                if (sizeof(off_t) != sizeof(off64_t) && aiocbp->aiocb.aio_lio_opcode & 128)
+                    aiocbp->aiocb.__return_value = TEMP_FAILURE_RETRY(pread64(fildes,
+                                                                              (void *)aiocbp->aiocb64.aio_buf,
+                                                                              aiocbp->aiocb64.aio_nbytes,
+                                                                              aiocbp->aiocb64.aio_offset));
                 else
-                    aiocbp->aiocb.__return_value = pread(fildes, (void *) aiocbp->aiocb.aio_buf, aiocbp->aiocb.aio_nbytes, aiocbp->aiocb.aio_offset);
+                    aiocbp->aiocb.__return_value = TEMP_FAILURE_RETRY(pread(fildes,
+                                                                            (void *) aiocbp->aiocb.aio_buf,
+                                                                            aiocbp->aiocb.aio_nbytes,
+                                                                            aiocbp->aiocb.aio_offset));
 
                 if (aiocbp->aiocb.__return_value == -1 && errno == ESPIPE) {
                     /* The Linux kernel is different from others.  It returns
                        ESPIPE if using pread on a socket.  Other platforms
                        simply ignore the offset parameter and behave like read.  */
-                    aiocbp->aiocb.__return_value = read(fildes, (void *) aiocbp->aiocb64.aio_buf, aiocbp->aiocb64.aio_nbytes);
+                    aiocbp->aiocb.__return_value = TEMP_FAILURE_RETRY(read(fildes,
+                                                                           (void *) aiocbp->aiocb64.aio_buf,
+                                                                           aiocbp->aiocb64.aio_nbytes));
                 }
             } else if ((aiocbp->aiocb.aio_lio_opcode & 127) == LIO_WRITE) {
-                if (sizeof(off_t) != sizeof(off64_t) && aiocbp->aiocb.aio_lio_opcode & 128)
-                    aiocbp->aiocb.__return_value = pwrite64(fildes, (const void *) aiocbp->aiocb64.aio_buf, aiocbp->aiocb64.aio_nbytes, aiocbp->aiocb64.aio_offset);
-                else
-                    aiocbp->aiocb.__return_value = pwrite(fildes, (const void *) aiocbp->aiocb.aio_buf, aiocbp->aiocb.aio_nbytes, aiocbp->aiocb.aio_offset);
+                if (sizeof(off_t) != sizeof(off64_t) && aiocbp->aiocb.aio_lio_opcode & 128) {
+                    aiocbp->aiocb.__return_value = TEMP_FAILURE_RETRY(pwrite64(fildes,
+                                                                               (const void *) aiocbp->aiocb64.aio_buf,
+                                                                               aiocbp->aiocb64.aio_nbytes,
+                                                                               aiocbp->aiocb64.aio_offset));
+                }
+                else {
+                    aiocbp->aiocb.__return_value = TEMP_FAILURE_RETRY(pwrite(fildes,
+                                                                             (const void *) aiocbp->aiocb.aio_buf,
+                                                                             aiocbp->aiocb.aio_nbytes,
+                                                                             aiocbp->aiocb.aio_offset));
+                }
 
                 if (aiocbp->aiocb.__return_value == -1 && errno == ESPIPE) {
-                    /* The Linux kernel is different from others.  It returns
-                       ESPIPE if using pwrite on a socket.  Other platforms
-                       simply ignore the offset parameter and behave like
-                       write.  */
-                    aiocbp->aiocb.__return_value = write(fildes, (void *) aiocbp->aiocb64.aio_buf, aiocbp->aiocb64.aio_nbytes);
+                    /* The Linux kernel is different from others.  It returns ESPIPE if using pwrite on a socket.  Other platforms
+                       simply ignore the offset parameter and behave like write.  */
+                    aiocbp->aiocb.__return_value = TEMP_FAILURE_RETRY(write(fildes,
+                                                                            (void *) aiocbp->aiocb64.aio_buf,
+                                                                            aiocbp->aiocb64.aio_nbytes));
                 }
             } else if (aiocbp->aiocb.aio_lio_opcode == LIO_DSYNC)
-                aiocbp->aiocb.__return_value = fdatasync(fildes);
+                aiocbp->aiocb.__return_value = TEMP_FAILURE_RETRY(fdatasync(fildes));
             else if (aiocbp->aiocb.aio_lio_opcode == LIO_SYNC)
-                aiocbp->aiocb.__return_value = fsync(fildes);
+                aiocbp->aiocb.__return_value = TEMP_FAILURE_RETRY(fsync(fildes));
             else {
                 /* This is an invalid opcode.  */
                 aiocbp->aiocb.__return_value = -1;
@@ -502,13 +522,13 @@ handle_fildes_io(void *arg) {
             /* Get the mutex.  */
             pthread_mutex_lock(&__aio_requests_mutex);
 
-            if (aiocbp->aiocb.__return_value == -1)
+            if (aiocbp->aiocb.__return_value == -1) {
                 aiocbp->aiocb.__error_code = errno;
+            }
             else
                 aiocbp->aiocb.__error_code = 0;
 
-            /* Send the signal to notify about finished processing of the
-               request.  */
+            /* Send the signal to notify about finished processing of the request.  */
             __aio_notify(runp);
 
             /* For debugging purposes we reset the running flag of the

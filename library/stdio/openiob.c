@@ -153,7 +153,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
 out:
 
     if (buffer != NULL)
-        free(buffer);
+        FreeVec(buffer);
 
     __stdio_unlock();
 

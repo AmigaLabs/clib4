@@ -2,7 +2,6 @@
  * $Id: misc_clist.h,v 1.0 2023-03-03 07:15:37 clib2devs Exp $
 */
 
-
 #ifndef CLIST_H
 #define CLIST_H
 
@@ -33,22 +32,22 @@ typedef struct CList {
 } CList;
 
 CList  *CList_init(size_t objSize); /* Set list object size in bytes */
-void   *cListAdd(CList *l, void *o);
-int     cListAllocSize(CList *l);
-void   *cListAt(CList *l, int n);
-void    cListClear(CList *l);
-int     cListCount(CList *l);
-void   *cListFirstMatch(CList *l, const void *o, size_t shift, size_t size, int string);
-void    cListFree(CList *l);
-int     cListIndex(CList *l);
-void   *cListInsert(CList *l, void *o, int n);
-size_t  cListItemSize(CList *l);
-void   *cListLastMatch(struct CList *l, const void *o, size_t shift, size_t size, int string);
-void    cListPrint(CList *l, size_t shift, int n, const char *type);
-int     cListRealloc(CList *l, int n);
-void    cListRemove(CList *l, int n);
-void   *cListReplace(CList *l, void *o, int n);
-int     cListSwap(CList *l, int a, int b);
+void   *cListAdd(CList *l, void *o) __attribute__ ((visibility ("hidden")));
+int     cListAllocSize(CList *l) __attribute__ ((visibility ("hidden")));
+void   *cListAt(CList *l, int n) __attribute__ ((visibility ("hidden")));
+void    cListClear(CList *l) __attribute__ ((visibility ("hidden")));
+int     cListCount(CList *l) __attribute__ ((visibility ("hidden")));
+void   *cListFirstMatch(CList *l, const void *o, size_t shift, size_t size, int string) __attribute__ ((visibility ("hidden")));
+void    cListFree(CList *l) __attribute__ ((visibility ("hidden")));
+int     cListIndex(CList *l) __attribute__ ((visibility ("hidden")));
+void   *cListInsert(CList *l, void *o, int n) __attribute__ ((visibility ("hidden")));
+size_t  cListItemSize(CList *l) __attribute__ ((visibility ("hidden")));
+void   *cListLastMatch(struct CList *l, const void *o, size_t shift, size_t size, int string) __attribute__ ((visibility ("hidden")));
+void    cListPrint(CList *l, size_t shift, int n, const char *type) __attribute__ ((visibility ("hidden")));
+int     cListRealloc(CList *l, int n) __attribute__ ((visibility ("hidden")));
+void    cListRemove(CList *l, int n) __attribute__ ((visibility ("hidden")));
+void   *cListReplace(CList *l, void *o, int n) __attribute__ ((visibility ("hidden")));
+int     cListSwap(CList *l, int a, int b) __attribute__ ((visibility ("hidden")));
 
 __END_DECLS
 

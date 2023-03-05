@@ -22,6 +22,7 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
+#define __USE_OLD_TIMEVAL__
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */

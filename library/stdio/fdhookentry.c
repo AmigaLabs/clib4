@@ -125,8 +125,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     }
                 }
 
-                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(
-                        file), fam->fam_Data));
+                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
 
                 result = Write(file, fam->fam_Data, fam->fam_Size);
                 if (result == -1) {

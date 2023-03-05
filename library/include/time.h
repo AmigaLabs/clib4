@@ -85,7 +85,7 @@ struct timespec64 {
 /* BSD time macros used by RTEMS code */
 /* Convenience macros for operations on timevals.
    NOTE: `timercmp' does not work for >= or <=.  */
-#ifdef __USE_OLD_TIMEVAL__
+#ifndef __USE_OLD_TIMEVAL__
 #define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
 #define timerclear(tvp) ((tvp)->tv_sec = (tvp)->tv_usec = 0)
 #define timercmp(a, b, CMP) \
