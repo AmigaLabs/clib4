@@ -36,7 +36,8 @@ struct WBStartup *NOCOMMON __WBenchMsg;
 /* CPU cache line size; used to align I/O buffers for best performance. */
 ULONG __cache_line_size = 32;
 
-FILE_DESTRUCTOR(workbench_exit) {
+FILE_DESTRUCTOR(workbench_exit)
+{
     ENTER();
 
     /* Now clean up after the streams set up for Workbench startup... */
@@ -142,7 +143,8 @@ out:
     return (result);
 }
 
-FILE_CONSTRUCTOR(stdio_file_init) {
+FILE_CONSTRUCTOR(stdio_file_init)
+{
     struct SignalSemaphore *stdio_lock;
     struct SignalSemaphore *fd_lock;
     BPTR default_file;
@@ -157,7 +159,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
     uint32 physical_alignment = 0;
 
     GetCPUInfoTags(GCIT_CacheLineSize, &physical_alignment, TAG_DONE);
-    SHOWVALUE(physical_alignment);
+
     if (__cache_line_size < physical_alignment) {
         __cache_line_size = physical_alignment;
     }
@@ -196,7 +198,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         }
 
         /* Allocate a little more memory than necessary. */
-        buffer = AllocVecTags(BUFSIZ + (__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        buffer = calloc(1, BUFSIZ + (__cache_line_size - 1));
         if (buffer == NULL)
             goto out;
 
@@ -228,7 +230,6 @@ FILE_CONSTRUCTOR(stdio_file_init) {
                          i,
                          iob_flags,
                          stdio_lock);
-
     }
 
     success = TRUE;

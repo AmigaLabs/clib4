@@ -66,7 +66,7 @@ lseek(int file_descriptor, off_t offset, int mode) {
 
     result = position;
 
-out:
+    out:
 
     __fd_unlock(fd);
 

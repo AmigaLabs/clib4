@@ -125,7 +125,8 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     }
                 }
 
-                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
+                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(
+                        file), fam->fam_Data));
 
                 result = Write(file, fam->fam_Data, fam->fam_Size);
                 if (result == -1) {
@@ -154,13 +155,8 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     __remove_fd_alias(fd);
                 } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                     /* Should we reset this file into line buffered mode? */
-                    if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
-                        /* Set canonical mode. */
-                        if (fam->fam_DOSMode == DOSTRUE) {
-                            SetMode(fd->fd_File, DOSFALSE);
-                            fam->fam_DOSMode = DOSFALSE;
-                        }
-                    }
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
+                        SetMode(fd->fd_File, DOSFALSE);
 
                     /* Are we allowed to close this file? */
                     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
@@ -405,6 +401,8 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     }
 
                     fd->fd_Position = new_position;
+
+                    printf("fd->fd_Position = %lld\n", fd->fd_Position);
                 }
 
                 result = new_position;

@@ -19,6 +19,8 @@ realpath(const char *path_name, char *buffer) {
     SHOWSTRING(path_name);
     SHOWPOINTER(buffer);
 
+    assert(path_name != NULL && buffer != NULL);
+
     __check_abort();
 
     if (path_name == NULL || buffer == NULL) {

@@ -94,7 +94,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = AllocVecTags(BUFSIZ + (__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue);
+    buffer = calloc(1, BUFSIZ + (__cache_line_size - 1));
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
@@ -153,7 +153,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
 out:
 
     if (buffer != NULL)
-        FreeVec(buffer);
+        free(buffer);
 
     __stdio_unlock();
 

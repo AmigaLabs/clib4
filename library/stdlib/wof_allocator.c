@@ -895,13 +895,10 @@ wof_allocator_destroy(wof_allocator_t *allocator) {
 wof_allocator_t *
 wof_allocator_new(void) {
     wof_allocator_t *allocator;
-    ENTER();
 
     //allocator = (wof_allocator_t *) malloc(sizeof(wof_allocator_t));
-    allocator = (wof_allocator_t *) AllocVecTags(sizeof(wof_allocator_t), MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    allocator = (wof_allocator_t *) AllocVecTags(sizeof(wof_allocator_t), MEMF_SHARED, TAG_DONE);
     if (allocator == NULL) {
-        SHOWMSG("Unable to create wof_allocator");
-        RETURN(NULL);
         return NULL;
     }
 
@@ -909,8 +906,6 @@ wof_allocator_new(void) {
     allocator->master_head = NULL;
     allocator->recycler_head = NULL;
 
-    SHOWPOINTER(allocator);
-    LEAVE();
     return allocator;
 }
 

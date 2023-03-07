@@ -42,6 +42,6 @@ out:
 
     __check_abort();
 
-    RETURN(err ? 0 : 1);
+    RETURN(err ? 0 : h);
     return err ? 0 : h;
 }

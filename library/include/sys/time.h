@@ -2,12 +2,8 @@
 #define _SYS_TIME_H
 
 #include <features.h>
-#include <inttypes.h>
 
 __BEGIN_DECLS
-
-typedef int64_t time64_t;
-typedef int64_t suseconds64_t;
 
 #if defined(__TIMEVAL_ALREADY_DEFINED)
 #ifdef __USE_OLD_TIMEVAL__
@@ -26,11 +22,6 @@ struct timeval {
 #define tv_micro tv_usec
 #endif /* __USE_OLD_TIMEVAL__ */
 #endif /* !__TIMEVAL_ALREADY_DEFINED */
-
-struct timeval64 {
-    time64_t tv_sec;            /* Seconds */
-    suseconds64_t tv_usec;    /* Microseconds */
-};
 
 struct timezone {
     int tz_minuteswest; /* of Greenwich */

@@ -37,11 +37,8 @@ kill(pid_t pid, int signal_number) {
 
     if (pid > 0) {
         if (pid == getpid()) {
-            SHOWMSG("This is a kill for our process");
             result = raise(signal_number);
-            SHOWVALUE(result);
         } else {
-            SHOWMSG("This is a kill for a different process. Search it");
             struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
 
             Forbid();

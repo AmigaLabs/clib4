@@ -164,6 +164,7 @@ extern int setuid(uid_t uid);
 /* Amiga Specific */
 #define	_PC_DOSTYPE					300
 
+#define _POSIX_THREADS              1
 #define _POSIX_MONOTONIC_CLOCK      1
 
 /* The following is for use with sysconf(). Only the implemented one */
@@ -186,24 +187,6 @@ extern int pipe (int fd[2]);
 extern int pipe2 (int fd[2], int flags);
 extern ssize_t pread(int fd, void *buf, size_t nbytes, off_t offset);
 extern ssize_t pwrite(int fd, const void *buf, size_t nbytes, off_t offset);
-
-#ifdef __USE_LARGEFILE64
-extern ssize_t pread64(int fd, void *buf, size_t nbytes, off64_t offset);
-extern ssize_t pwrite64(int fd, const void *buf, size_t nbytes, off64_t offset);
-#endif
-
-#ifdef __USE_GNU
-/* Evaluate EXPRESSION, and repeat as long as it returns -1 with `errno' set to EINTR.  */
-
-# define TEMP_FAILURE_RETRY(exp) \
-  ({                                                    \
-    long int __result = 0;                              \
-    do {                                                \
-      __result = (long int)(exp);                       \
-    } while ((__result == -1) && (errno == EINTR));     \
-    __result;                                           \
-  })
-#endif
 
 #define _P_WAIT         1
 #define _P_NOWAIT       2

@@ -15,16 +15,98 @@ ifeq ($(STATIC),yes)
     LIBS += $(OUTPUT_LIB)/libpthread.a
 endif
 
+C_PTHREAD := \
+    pthread/common.o \
+    pthread/pthread.o \
+    pthread/pthread_attr_destroy.o \
+    pthread/pthread_attr_getdetachstate.o \
+    pthread/pthread_attr_getschedparam.o \
+    pthread/pthread_attr_getstack.o \
+    pthread/pthread_attr_getstacksize.o \
+    pthread/pthread_attr_init.o \
+    pthread/pthread_attr_setdetachstate.o \
+    pthread/pthread_attr_setschedparam.o \
+    pthread/pthread_attr_setstack.o \
+    pthread/pthread_attr_setstacksize.o \
+    pthread/pthread_barrier_destroy.o \
+    pthread/pthread_barrier_init.o \
+    pthread/pthread_barrier_wait.o \
+    pthread/pthread_cancel.o \
+    pthread/pthread_cleanup_pop.o \
+    pthread/pthread_cleanup_push.o \
+    pthread/pthread_cond_broadcast.o \
+    pthread/pthread_cond_destroy.o \
+    pthread/pthread_cond_init.o \
+    pthread/pthread_cond_signal.o \
+    pthread/pthread_cond_timedwait.o \
+    pthread/pthread_cond_timedwait_relative_np.o \
+    pthread/pthread_cond_wait.o \
+    pthread/pthread_condattr_destroy.o \
+    pthread/pthread_condattr_init.o \
+    pthread/pthread_create.o \
+    pthread/pthread_detach.o \
+    pthread/pthread_equal.o \
+    pthread/pthread_exit.o \
+    pthread/pthread_getattr_np.o \
+    pthread/pthread_getname_np.o \
+    pthread/pthread_getschedparam.o \
+    pthread/pthread_getspecific.o \
+    pthread/pthread_join.o \
+    pthread/pthread_key_create.o \
+    pthread/pthread_key_delete.o \
+    pthread/pthread_kill.o \
+    pthread/pthread_mutex_destroy.o \
+    pthread/pthread_mutex_init.o \
+    pthread/pthread_mutex_lock.o \
+    pthread/pthread_mutex_timedlock.o \
+    pthread/pthread_mutex_trylock.o \
+    pthread/pthread_mutex_unlock.o \
+    pthread/pthread_mutexattr_destroy.o \
+    pthread/pthread_mutexattr_gettype.o \
+    pthread/pthread_mutexattr_init.o \
+    pthread/pthread_mutexattr_settype.o \
+    pthread/pthread_once.o \
+    pthread/pthread_rwlock_destroy.o \
+    pthread/pthread_rwlock_init.o \
+    pthread/pthread_rwlock_rdlock.o \
+    pthread/pthread_rwlock_timedrdlock.o \
+    pthread/pthread_rwlock_timedwrlock.o \
+    pthread/pthread_rwlock_tryrdlock.o \
+    pthread/pthread_rwlock_trywrlock.o \
+    pthread/pthread_rwlock_unlock.o \
+    pthread/pthread_rwlock_wrlock.o \
+    pthread/pthread_rwlockattr_destroy.o \
+    pthread/pthread_rwlockattr_init.o \
+    pthread/pthread_self.o \
+    pthread/pthread_setcancelstate.o \
+    pthread/pthread_setcanceltype.o \
+    pthread/pthread_setname_np.o \
+    pthread/pthread_setschedparam.o \
+    pthread/pthread_setschedprio.o \
+    pthread/pthread_setspecific.o \
+    pthread/pthread_spin_destroy.o \
+    pthread/pthread_spin_init.o \
+    pthread/pthread_spin_lock.o \
+    pthread/pthread_spin_trylock.o \
+    pthread/pthread_spin_unlock.o \
+    pthread/pthread_testcancel.o \
+    pthread/sched_get_priority_max.o \
+    pthread/sched_get_priority_min.o \
+    pthread/sched_yield.o \
+    pthread/semaphore.o
+
 PTHREAD_LIB := \
-	pthread/pthread.lib_rev.o
+	$(C_PTHREAD) \
+	pthread.lib_rev.o
 
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(PTHREAD_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(PTHREAD_LIB))
 
+
 # Dependencies to rebuild if the library version changes
 
-$(OUT_STATIC)/pthread.lib_rev.o : $(LIB_DIR)/pthread/pthread.lib_rev.c $(LIB_DIR)/pthread/pthread.lib_rev.h
-$(OUT_SHARED)/pthread.lib_rev.o : $(LIB_DIR)/pthread/pthread.lib_rev.c $(LIB_DIR)/pthread/pthread.lib_rev.h
+$(OUT_STATIC)/pthread.lib_rev.o : $(LIB_DIR)/pthread.lib_rev.c $(LIB_DIR)/pthread.lib_rev.h
+$(OUT_SHARED)/pthread.lib_rev.o : $(LIB_DIR)/pthread.lib_rev.c $(LIB_DIR)/pthread.lib_rev.h
 
 $(OUT_STATIC)/%.o : CFLAGS = $(INCLUDES) -D__USE_INLINE__ -O3 -fno-builtin -Wno-type-limits -Wno-strict-aliasing -Wno-deprecated-declarations $(LARGEDATA)
 $(OUT_SHARED)/%.o : CFLAGS = $(INCLUDES) -D__USE_INLINE__ -O3 -fno-builtin -Wno-type-limits -Wno-strict-aliasing -Wno-deprecated-declarations $(PIC) $(LARGEDATA)

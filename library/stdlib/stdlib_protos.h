@@ -88,6 +88,8 @@ void reent_init(void);
 void reent_exit(void);
 
 /* stdlib_constructor_begin.c */
+void _init(void);
+void _fini(void);
 void shared_obj_init(void);
 void shared_obj_exit(void);
 
@@ -110,8 +112,9 @@ extern void __check_memory_allocations();
 extern void __check_abort(void);
 
 /* stdlib_main.c */
-extern int _main();
-extern int _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
+extern int _main(void);
+extern int _start(char *args, int arglen, struct ExecBase *sysBase);
+extern void _fini(void);
 
 /****************************************************************************/
 

@@ -67,10 +67,6 @@ write(int file_descriptor, const void *buffer, size_t num_bytes) {
             __set_errno(fam.fam_Error);
             goto out;
         }
-
-        if (num_bytes_written != num_bytes) {
-            __set_errno(__translate_io_error_to_errno(IoErr()));
-        }
     } else {
         num_bytes_written = 0;
     }

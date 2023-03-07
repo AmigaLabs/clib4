@@ -22,7 +22,6 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-#define __USE_OLD_TIMEVAL__
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
@@ -84,7 +83,7 @@ _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *
 
     timerio.Request.io_Command = TR_ADDREQUEST;
     timerio.Request.io_Flags = 0;
-    TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, abstime);
+    TIMESPEC_TO_TIMEVAL(&timerio.Time, abstime);
     //if (!relative)
     {
         struct TimeVal starttime;
@@ -152,7 +151,7 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         // prepare the device command and send it
         timerio.Request.io_Command = TR_ADDREQUEST;
         timerio.Request.io_Flags = 0;
-        TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, abstime);
+        TIMESPEC_TO_TIMEVAL(&timerio.Time, abstime);
         if (!relative) {
             struct TimeVal starttime;
             // absolute time has to be converted to relative

@@ -11,11 +11,13 @@
 int
 wcwidth(const wchar_t wc) {
     int result = -1;
+    ENTER();
 
     if (iswprint(wc))
         result = 1;
     else if (iswcntrl(wc) || wc == L'\0')
         result = 0;
 
+    RETURN(result);
     return result;
 }

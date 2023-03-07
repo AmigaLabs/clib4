@@ -245,14 +245,9 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
                  * in RAW Mode but I suppose that we are ok since we are using
                  * a termios hook
                  */
-                SHOWVALUE(FLAG_IS_CLEAR(tios->c_lflag, ICANON));
-                SHOWVALUE(FLAG_IS_SET(tios->c_lflag, NCURSES));
-                if (FLAG_IS_CLEAR(tios->c_lflag, ICANON) && FLAG_IS_SET(tios->c_lflag, NCURSES)) {
+                if (FLAG_IS_CLEAR(tios->c_cflag, ICANON) && FLAG_IS_SET(tios->c_cflag, NCURSES)) {
                     /* Set raw mode. */
-                    if (fam->fam_DOSMode == DOSFALSE) {
-                        SetMode(file, DOSTRUE);
-                        fam->fam_DOSMode = DOSTRUE;
-                    }
+                    SetMode(file, DOSTRUE);
                     if (tios->c_cc[VMIN] > 0 && tios->c_cc[VTIME] > 0) {
                         if (WaitForChar(file, 100000 * tios->c_cc[VTIME])) {
                             result = Read(file, fam->fam_Data, fam->fam_Size);
@@ -416,13 +411,8 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
                 __remove_fd_alias(fd);
             } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                 /* Should we reset this file into line buffered mode? */
-                if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
-                    /* Set canonical mode. */
-                    if (fam->fam_DOSMode == DOSTRUE) {
-                        SetMode(fd->fd_File, DOSFALSE);
-                        fam->fam_DOSMode = DOSFALSE;
-                    }
-                }
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE))
+                    SetMode(fd->fd_File, DOSFALSE);
 
                 /* Are we allowed to close this file? */
                 if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {

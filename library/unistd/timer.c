@@ -34,42 +34,50 @@ BOOL NOCOMMON __timer_busy;
 struct Library *NOCOMMON __TimerBase;
 struct TimerIFace *NOCOMMON __ITimer;
 
-CLIB_CONSTRUCTOR(timer_init) {
+/****************************************************************************/
+
+CLIB_CONSTRUCTOR(timer_init)
+{
 	BOOL success = FALSE;
 
 	ENTER();
 
 	__timer_port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
-	if (__timer_port == NULL) {
+	if (__timer_port == NULL)
+	{
 		__show_error("The timer message port could not be created.");
 		goto out;
 	}
-	SHOWMSG("__timer_port allocated");
-
+	
 	__timer_request = AllocSysObjectTags(ASOT_MESSAGE, ASOMSG_Size, sizeof(struct TimeRequest), ASOMSG_ReplyPort, __timer_port, TAG_DONE);
-	if (__timer_request == NULL) {
+	if (__timer_request == NULL)
+	{
 		__show_error("The timer I/O request could not be created.");
 		goto out;
 	}
-    SHOWMSG("__timer_request allocated");
 
-	if (OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)__timer_request, 0) != OK) {
+	if (OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)__timer_request, 0) != OK)
+	{
 		__show_error("The timer could not be opened.");
 		goto out;
 	}
-    SHOWMSG("OpenDevice opened");
 
 	__TimerBase = (struct Library *)__timer_request->tr_node.io_Device;
-    SHOWPOINTER(__TimerBase);
 	__ITimer = (struct TimerIFace *)GetInterface(__TimerBase, "main", 1, 0);
-    SHOWPOINTER(__ITimer);
-	if (__ITimer == NULL) {
-        SHOWMSG("__ITimer is NULL");
+	if (__ITimer == NULL)
+	{
 		__show_error("The timer interface could not be obtained.");
 		goto out;
 	}
 
-    success = TRUE;
+    /* Set system time for rusage */
+    struct TimerIFace *ITimer = __ITimer;
+    GetSysTime(&__global_clib2->clock);
+    /* Generate random seed */
+    __global_clib2->__random_seed = time(NULL);
+
+
+success = TRUE;
 
 out:
 

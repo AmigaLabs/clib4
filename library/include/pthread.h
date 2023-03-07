@@ -103,7 +103,6 @@ struct pthread_attr {
     struct sched_param param;
     int inheritsched;
     int contentionscope;
-    size_t guardsize;
 };
 
 typedef struct pthread_attr pthread_attr_t;
@@ -252,8 +251,6 @@ int pthread_attr_setinheritsched(pthread_attr_t *attr, int inheritsched);
 int pthread_attr_getscope(const pthread_attr_t *attr, int *contentionscope);
 int pthread_attr_setscope(pthread_attr_t *attr, int contentionscope);
 
-int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize);
-int pthread_attr_getguardsize(const pthread_attr_t *restrict attr, size_t *restrict guardsize);
 //
 // Thread functions
 //

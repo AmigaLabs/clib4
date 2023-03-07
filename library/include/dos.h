@@ -19,8 +19,6 @@
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
-#include "misc/clist.h"
-
 __BEGIN_DECLS
 
 /*
@@ -462,7 +460,8 @@ struct _wchar
  * and populated with all its fields. At moment it holds just global fields
  */
 
-struct _clib2 {
+struct _clib2
+{
 	struct ExecIFace *IExec; 	/* Main IExec interface */
 
 	struct TimeVal clock; 		/* Populated when clib starts with current time */
@@ -489,7 +488,7 @@ struct _clib2 {
     int __mb_cur_max;
 
 	/* used by tmpnam */
-	int inc;
+	int  inc;
 
 	/* CPU Family to enable optimized functions */
     uint32 optimizedCPUFunctions;
@@ -514,10 +513,6 @@ struct _clib2 {
     struct itimerval tmr_time;
     struct timeval tmr_start_time;
     struct Process *tmr_real_task;
-
-    /* Used by aio functions */
-    struct SignalSemaphore *__aio_lock;
-    CList *aio_threads;
 };
 
 extern struct _clib2 *__global_clib2;

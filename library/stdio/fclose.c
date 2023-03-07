@@ -22,8 +22,6 @@ fclose(FILE *stream) {
 
     assert(stream != NULL);
 
-    DECLARE_UTILITYBASE();
-
     __check_abort();
 
     if (stream == NULL) {
@@ -85,16 +83,12 @@ fclose(FILE *stream) {
     }
 
     /* Get rid of any custom file buffer allocated. */
-    if (file->iob_CustomBuffer != NULL) {
-        SHOWMSG("Delete allocated buffer");
-        FreeVec(file->iob_CustomBuffer);
-    }
+    if (file->iob_CustomBuffer != NULL)
+        free(file->iob_CustomBuffer);
 
     /* Free the lock semaphore now. */
-    SHOWMSG("Delete iob_Lock");
     __delete_semaphore(file->iob_Lock);
 
-    SHOWMSG("Clear file structure");
     memset(file, 0, sizeof(*file));
 
 out:

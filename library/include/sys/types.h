@@ -25,7 +25,7 @@ typedef uint64_t fsblkcnt_t;
 typedef uint64_t fsfilcnt_t;
 #ifdef __USE_LARGEFILE64
     typedef int64_t _off64_t;
-    typedef int64_t off64_t;
+    typedef _off64_t off64_t;
     typedef int64_t _fpos64_t;
     typedef uint64_t ino64_t;
     typedef int64_t	blkcnt64_t;

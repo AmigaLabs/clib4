@@ -50,6 +50,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
         __set_errno(EINVAL);
         goto out;
     }
+    printf("read\n");
 
     if (num_bytes > 0) {
         struct file_action_message fam;

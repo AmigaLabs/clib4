@@ -81,8 +81,6 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
-#define MIN_OS_VERSION 52
-
 extern jmp_buf NOCOMMON __exit_jmp_buf;
 extern int NOCOMMON		__exit_value;
 
@@ -96,9 +94,6 @@ extern char ** NOCOMMON	__argv;
 extern int NOCOMMON		__argc;
 
 extern BOOL NOCOMMON __lib_startup;
-
-extern void _init(void);
-extern void _fini(void);
 
 #ifndef _STDLIB_PROTOS_H
 #include "stdlib_protos.h"

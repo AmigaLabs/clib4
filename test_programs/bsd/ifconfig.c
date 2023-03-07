@@ -354,7 +354,10 @@ struct afswtch {
 
 struct afswtch *afp;    /*the address family being set or asked about*/
 
-int main(int argc, char *argv[]) {
+int main(argc, argv)
+        int argc;
+        char *argv[];
+{
     int af = AF_INET;
     register struct afswtch *rafp;
 

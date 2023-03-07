@@ -1,5 +1,5 @@
 /*
- * $Id: posix_basename.c,v 1.8 2006-10-02 07:15:37 clib2devs Exp $
+ * $Id: libgen_basename.c,v 1.8 2006-10-02 07:15:37 clib2devs Exp $
 */
 
 #include <string.h>

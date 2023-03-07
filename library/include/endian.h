@@ -86,7 +86,7 @@ __bswap_32 (unsigned int __bsx)
 #define __BYTE_ORDER__           BYTE_ORDER
 #endif
 
-#ifndef __BYTE_ORDER
+#ifndef __BYTE_ORDER__
 #define __BYTE_ORDER             BYTE_ORDER
 #endif
 

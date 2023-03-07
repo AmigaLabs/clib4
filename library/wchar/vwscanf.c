@@ -12,6 +12,8 @@ vwscanf(const wchar_t *fmt, va_list ap) {
 
     ENTER();
 
+    SHOWSTRING(fmt);
+
     assert(fmt != NULL);
 
     if (fmt == NULL) {
