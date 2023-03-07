@@ -19,75 +19,71 @@
 #endif /* _UNISTD_HEADERS_H */
 
 int
-gettimeofday(struct timeval *tp, struct timezone *tzp)
-{
-	struct TimerIFace *ITimer = __ITimer;
-	struct Library *TimerBase = __TimerBase;
+gettimeofday(struct timeval *tp, struct timezone *tzp) {
+    struct TimerIFace *ITimer = __ITimer;
 
-	ULONG seconds, microseconds;
+    ULONG seconds, microseconds;
 
-	ENTER();
+    ENTER();
 
-	/* Obtain the current system time. */
+    /* Obtain the current system time. */
 
 #if defined(__NEW_TIMEVAL_DEFINITION_USED__)
-	{
-		struct TimeVal tv;
+    {
+        struct TimeVal tv;
 
-		GetSysTime(&tv);
+        GetSysTime(&tv);
 
-		seconds = tv.Seconds;
-		microseconds = tv.Microseconds;
-	}
+        seconds = tv.Seconds;
+        microseconds = tv.Microseconds;
+    }
 #else
-	{
-		struct timeval tv;
+    {
+        struct timeval tv;
 
-		GetSysTime(&tv);
+        GetSysTime(&tv);
 
-		seconds = tv.tv_sec;
-		microseconds = tv.tv_usec;
-	}
+        seconds = tv.tv_sec;
+        microseconds = tv.tv_usec;
+    }
 #endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
 
-	/* Convert the number of seconds so that they match the Unix epoch, which
-	   starts (January 1st, 1970) eight years before the AmigaOS epoch. */
-	seconds += UNIX_TIME_OFFSET;
+    /* Convert the number of seconds so that they match the Unix epoch, which
+       starts (January 1st, 1970) eight years before the AmigaOS epoch. */
+    seconds += UNIX_TIME_OFFSET;
 
-	__locale_lock();
+    __locale_lock();
 
-	/* If possible, adjust for the local time zone. We do this because the
-	   AmigaOS system time is returned in local time and we want to return
-	   it in UTC. */
-	if (__default_locale != NULL)
-		seconds += 60 * __default_locale->loc_GMTOffset;
+    /* If possible, adjust for the local time zone. We do this because the
+       AmigaOS system time is returned in local time and we want to return
+       it in UTC. */
+    if (__default_locale != NULL)
+        seconds += 60 * __default_locale->loc_GMTOffset;
 
-	if (tp != NULL)
-	{
-		tp->tv_sec = (long)seconds;
-		tp->tv_usec = (long)microseconds;
+    if (tp != NULL) {
+        tp->tv_sec = (long) seconds;
+        tp->tv_usec = (long) microseconds;
 
-		SHOWVALUE(tp->tv_sec);
-		SHOWVALUE(tp->tv_usec);
-	}
+        SHOWVALUE(tp->tv_sec);
+        SHOWVALUE(tp->tv_usec);
+    }
 
-	if (tzp != NULL)
-	{
-		if (__default_locale != NULL)
-			tzp->tz_minuteswest = __default_locale->loc_GMTOffset;
-		else
-			tzp->tz_minuteswest = 0;
+    if (tzp != NULL) {
+        if (__default_locale != NULL)
+            tzp->tz_minuteswest = __default_locale->loc_GMTOffset;
+        else
+            tzp->tz_minuteswest = 0;
 
-		/* The -1 means "we do not know if the time given is in
-		   daylight savings time". */
-		tzp->tz_dsttime = -1;
+        /* The -1 means "we do not know if the time given is in
+           daylight savings time". */
+        tzp->tz_dsttime = -1;
 
-		SHOWVALUE(tzp->tz_minuteswest);
-		SHOWVALUE(tzp->tz_dsttime);
-	}
+        SHOWVALUE(tzp->tz_minuteswest);
+        SHOWVALUE(tzp->tz_dsttime);
+    }
 
-	__locale_unlock();
+    __locale_unlock();
 
-	RETURN(0);
-	return (0);
+    RETURN(0);
+    return (0);
 }
