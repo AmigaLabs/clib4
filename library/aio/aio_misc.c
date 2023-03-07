@@ -467,6 +467,7 @@ handle_fildes_io(void *arg) {
                 pthread_setschedparam(self, policy, &param);
             }
 
+
             /* Process request pointed to by RUNP.  We must not be disturbed by signals.  */
             if ((aiocbp->aiocb.aio_lio_opcode & 127) == LIO_READ) {
                 if (sizeof(off_t) != sizeof(off64_t) && aiocbp->aiocb.aio_lio_opcode & 128)

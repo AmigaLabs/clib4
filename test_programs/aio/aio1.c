@@ -102,7 +102,7 @@ main(int argc, char *argv[]) {
         ioList[j].aiocbp->aio_offset = 0;
         ioList[j].aiocbp->aio_sigevent.sigev_notify = SIGEV_SIGNAL;
         ioList[j].aiocbp->aio_sigevent.sigev_signo = IO_SIGNAL;
-        ioList[j].aiocbp->aio_sigevent.sigev_value.__sival_ptr = &ioList[j];
+        ioList[j].aiocbp->aio_sigevent.sigev_value.sival_ptr = &ioList[j];
 
         s = aio_read(ioList[j].aiocbp);
         if (s == -1)

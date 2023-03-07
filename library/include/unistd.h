@@ -200,7 +200,6 @@ extern ssize_t pwrite64(int fd, const void *buf, size_t nbytes, off64_t offset);
     long int __result = 0;                              \
     do {                                                \
       __result = (long int)(exp);                       \
-      printf("result = %d\n", __result);                \
     } while ((__result == -1) && (errno == EINTR));     \
     __result;                                           \
   })

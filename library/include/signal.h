@@ -143,26 +143,18 @@ struct sigaction {
 
 extern int sigaction(int sig, const struct sigaction *act, struct sigaction *oact);
 
-/* Type for data associated with a signal.  */
-union __sigval
-{
-    int __sival_int;
-    void *__sival_ptr;
-};
-
-typedef union __sigval __sigval_t;
-typedef __sigval_t sigval_t;
+typedef union sigval sigval_t;
 
 
 struct sigevent {
-    union __sigval sigev_value;
+    union sigval sigev_value;
     int sigev_signo;
     int sigev_notify;
     union {
-        char __pad[64 - 2*sizeof(int) - sizeof(union __sigval)];
+        char __pad[64 - 2*sizeof(int) - sizeof(union sigval)];
         pid_t sigev_notify_thread_id;
         struct {
-            void (*sigev_notify_function)(union __sigval);
+            void (*sigev_notify_function)(union sigval);
             pthread_attr_t *sigev_notify_attributes;
         } __sev_thread;
     } __sev_fields;
