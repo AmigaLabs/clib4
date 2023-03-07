@@ -13,20 +13,18 @@
 extern struct TimerIFace *NOCOMMON __ITimer;
 extern BOOL NOCOMMON __timer_busy;
 
-int clock_gettime(clockid_t clk_id, struct timespec *t)
-{
+int
+clock_gettime(clockid_t clk_id, struct timespec *t) {
     ENTER();
-    
+
     /* Check the supported flags.  */
-    if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME)) != 0)
-    {
+    if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME)) != 0) {
         __set_errno(EINVAL);
         RETURN(-1);
         return -1;
     }
 
-    if (__timer_busy)
-    {
+    if (__timer_busy) {
         __set_errno(EAGAIN);
         RETURN(-1);
         return -1;
@@ -44,11 +42,9 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
     tv.tv_sec = tv.tv_usec = 0;
 
     GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
-    if (result == 0)
-    {
+    if (result == 0) {
         __timer_busy = TRUE;
-        if (clk_id == CLOCK_MONOTONIC)
-        {
+        if (clk_id == CLOCK_MONOTONIC) {
             /*
             CLOCK_MONOTONIC
                 A nonsettable system-wide clock that represents monotonic
@@ -57,10 +53,8 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
                 number of seconds that the system has been running since
                 it was booted.
             */
-            GetUpTime((struct TimeVal *)&tv);
-        }
-        else
-        {
+            GetUpTime((struct TimeVal *) &tv);
+        } else {
             /*
             A settable system-wide clock that measures real (i.e.,
                 wall-clock) time.  Setting this clock requires appropriate
@@ -69,18 +63,14 @@ int clock_gettime(clockid_t clk_id, struct timespec *t)
                 manually changes the clock), and by the incremental
                 adjustments performed by adjtime(3) and NTP.
             */
-            GetSysTime((struct TimeVal *)&tv);
+            GetSysTime((struct TimeVal *) &tv);
         }
 
-        if (result == 0)
-        {
-            if (clk_id == CLOCK_MONOTONIC)
-            {
+        if (result == 0) {
+            if (clk_id == CLOCK_MONOTONIC) {
                 t->tv_sec = tv.tv_sec;
                 t->tv_nsec = tv.tv_usec * 1000;
-            }
-            else
-            {
+            } else {
                 /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
                 tv.tv_sec += (2922 * 24 * 60 + gmtoffset) * 60;
                 t->tv_sec = tv.tv_sec;

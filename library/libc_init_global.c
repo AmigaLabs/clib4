@@ -29,6 +29,8 @@
 #include <proto/elf.h>
 #include <fenv.h>
 
+#include "aio/aio_misc.h"
+
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
     uint32 pid = (uint32) userdata;
@@ -50,7 +52,8 @@ static uint32_t _random_init[] = {
         0x8ae16fd9, 0x742d2f7a, 0x0d1f0796, 0x76035e09,
         0x40f7702c, 0x6fa72ca5, 0xaaa84157, 0x58a0df74,
         0xc74a0364, 0xae533cc4, 0x04185faf, 0x6de3b115,
-        0x0cab8628, 0xf043bfa4, 0x398150e9, 0x37521657};
+        0x0cab8628, 0xf043bfa4, 0x398150e9, 0x37521657
+};
 
 /* These are used to initialize the shared objects linked to this binary,
    and for the dlopen(), dlclose() and dlsym() functions. */
@@ -66,12 +69,14 @@ reent_init() {
     ENTER();
 
     /* Initialize global structure */
-    __global_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0,
-                                                    TAG_END);
+    __global_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
     if (__global_clib2 == NULL) {
         goto out;
     } else {
         struct ElfIFace *IElf = __IElf;
+
+        /* Get the current task pointer */
+        __global_clib2->self = (struct Process *) FindTask(NULL);
 
         /* Initialize wchar stuff */
         __global_clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
@@ -128,9 +133,6 @@ reent_init() {
         __global_clib2->_current_locale = "C-UTF-8";
         __global_clib2->__mb_cur_max = 1;
 
-        /* Get the current task pointer */
-        __global_clib2->self = (struct Process *) FindTask(0);
-
         /* Init memalign list */
         __global_clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
                                                              ASO_NoTrack, FALSE,
@@ -165,6 +167,9 @@ reent_init() {
         __global_clib2->tmr_start_time.tv_usec = 0;
         __global_clib2->tmr_real_task = NULL;
 
+        /* Initialize aio pthread list */
+        __global_clib2->__aio_lock = __create_semaphore();
+
         /* Check if .unix file exists in the current dir. If the file exists enable
          * unix path semantics
          */
@@ -192,18 +197,23 @@ reent_init() {
          * call_main()
          */
 
+        SHOWMSG("Try to get elf handle for dl* operations");
         if (__ElfBase != NULL) {
-            BPTR segment_list = GetProcSegList(NULL, GPSLF_CLI | GPSLF_SEG);
+            SHOWMSG("Calling GetProcSegList");
+            BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
             if (segment_list != ZERO) {
                 Elf32_Handle handle = NULL;
 
+                SHOWMSG("Calling GetSegListInfoTags");
                 if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
                     if (handle != NULL) {
-                        __global_clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, TAG_DONE);
+                        SHOWMSG("Calling OpenElfTags");
+                        __global_clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
                     }
                 }
             }
         }
+        SHOWPOINTER(__global_clib2->__dl_elf_handle);
     }
     success = TRUE;
 
@@ -219,32 +229,6 @@ out:
         if (__global_clib2->__memalign_pool) {
             FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
             __global_clib2->__memalign_pool = NULL;
-        }
-
-        /* Remove timer tasks */
-        if (__global_clib2->tmr_real_task != NULL) {
-            struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
-            int32 pid, process;
-
-            /* Block SIGALRM signal from raise */
-            sigblock(SIGALRM);
-            /* Get itimer process ID */
-            pid = __global_clib2->tmr_real_task->pr_ProcessID;
-
-            Forbid();
-            /* Scan for process */
-            process = ProcessScan(&h, (CONST_APTR) pid, 0);
-            /* If we find the process send a signal to kill it */
-            while (process > 0) {
-                /* Send a SIGBREAKF_CTRL_F signal until the timer task return to Wait state
-                 * and can get the signal */
-                Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
-                process = ProcessScan(&h, (CONST_APTR) pid, 0);
-                usleep(100);
-            }
-            Permit();
-            WaitForChildExit(pid);
-            __global_clib2->tmr_real_task = NULL;
         }
 
         /* Free library */
@@ -275,7 +259,7 @@ reent_exit() {
             /* Check if we have something created with posix_memalign and not freed yet.
              * But this is a good point also to free something allocated with memalign or
              * aligned_alloc and all other functions are using memalign_tree to allocate memory
-             * This seems to cure also the memory leaks found sometimes (but not 100& sure..)
+             * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
              */
             struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__global_clib2->__memalign_tree);
             while (e) {
@@ -295,6 +279,17 @@ reent_exit() {
             FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
         }
 
+        /* Free wchar stuff */
+        if (__global_clib2->wide_status != NULL) {
+            FreeVec(__global_clib2->wide_status);
+            __global_clib2->wide_status = NULL;
+        }
+        /* Remove random semaphore */
+        __delete_semaphore(__global_clib2->__random_lock);
+
+        /* Remove aio semaphore. */
+        __delete_semaphore(__global_clib2->__aio_lock);
+
         if (__ISysVIPC != NULL) {
             DropInterface((struct Interface *) __ISysVIPC);
             __ISysVIPC = NULL;
@@ -305,20 +300,15 @@ reent_exit() {
             __SysVBase = NULL;
         }
 
-        /* Free wchar stuff */
-        if (__global_clib2->wide_status != NULL) {
-            FreeVec(__global_clib2->wide_status);
-            __global_clib2->wide_status = NULL;
-        }
-        /* Remove random semaphore */
-        __delete_semaphore(__global_clib2->__random_lock);
-
         /* Free dl stuff */
         if (__IElf != NULL && __global_clib2->__dl_elf_handle != NULL) {
+            SHOWMSG("Closing elf handle");
             CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
             __global_clib2->__dl_elf_handle = NULL;
         }
-
+        else {
+            SHOWMSG("Cannot close elf handle: __IElf == NULL || __global_clib2->__dl_elf_handle == NULL");
+        }
         FreeVec(__global_clib2);
         __global_clib2 = NULL;
     }

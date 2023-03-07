@@ -1,3 +1,7 @@
+/* https://www.thegeekstuff.com/2012/08/gprof-tutorial/
+ * compile with:
+ * ppc-amigaos -mcrt=clib2 -pg test_gprof.c -o test_gprof -lprofile
+*/
 #include <stdio.h>
 
 void new_func1(void) {

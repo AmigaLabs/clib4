@@ -3,6 +3,7 @@
  */
 
 #include <proto/exec.h>
+#include "debug.h"
 
 void __shlib_call_constructors(void);
 void __shlib_call_destructors(void);
@@ -20,29 +21,33 @@ void __shlib_call_destructors(void);
  * symbol in sh/crtbegin.o, where they are defined.
  */
 
-typedef void (*func_ptr) (void);
-
-static func_ptr __CTOR_LIST__[1] __attribute__((used, section(".ctors"), aligned(sizeof(func_ptr)))) = { (func_ptr) (-1) };;
-static func_ptr __DTOR_LIST__[1] __attribute__((used, section(".dtors"), aligned(sizeof(func_ptr)))) = { (func_ptr) (-1) };;
+static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
+static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
 void __shlib_call_constructors(void) {
     extern void (*__CTOR_LIST__[])(void);
     int i = 0;
 
+    ENTER();
     while (__CTOR_LIST__[i + 1]) {
         i++;
     }
-
+    SHOWVALUE(i);
     while (i > 0) {
+        D(("Calling constructor %ld", i));
         __CTOR_LIST__[i--]();
     }
+    LEAVE();
 }
 
 void __shlib_call_destructors(void) {
     extern void (*__DTOR_LIST__[])(void);
     int i = 1;
 
+    ENTER();
     while (__DTOR_LIST__[i]) {
+        D(("Calling destructor %ld", i));
         __DTOR_LIST__[i++]();
     }
+    LEAVE();
 }

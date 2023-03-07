@@ -27,12 +27,11 @@ static void out_init_file(Out *out, FILE *f) {
 }
 
 static void out(Out *_out, const char *text, size_t l) {
-
     size_t length = ((l > 0) ? (size_t) l : 0U);
-
     if (!length) {
         return;
     }
+
     if (_out->file != NULL) {
         const char *w = text;
         _out->buffer_pos += length;
@@ -685,15 +684,16 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     va_list ap2;
     int ret, nl_type[NL_ARGMAX] = {0};
     union arg nl_arg[NL_ARGMAX];
-    Out _out[1];
-    out_init_file(_out, f);
-    va_copy(ap2, ap);
 
     ENTER();
     SHOWPOINTER(f);
     SHOWSTRING(format);
 
     __check_abort();
+
+    Out _out[1];
+    out_init_file(_out, f);
+    va_copy(ap2, ap);
 
     // Check for error in format string before writing anything to file.
     if (printf_core(0, format, &ap2, nl_arg, nl_type) < 0) {

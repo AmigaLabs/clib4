@@ -24,9 +24,11 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     SHOWVALUE(file_descriptor);
     SHOWVALUE(cmd);
 
-    assert(file_descriptor >= 0 && file_descriptor < __num_fd);
-    assert(__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    if (__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__fd[file_descriptor]->fd_Flags, FDF_IN_USE) || file_descriptor < 0 || file_descriptor > __num_fd) {
+        __set_errno(EINVAL);
+        goto out;
+    }
+
     __set_errno(0);
 
     __check_abort();

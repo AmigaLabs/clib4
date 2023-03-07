@@ -41,32 +41,32 @@
    constructors and the user-supplied destructors before the library
    destructors. */
 
-#define STDLIB_CONSTRUCTOR(name)	CONSTRUCTOR(name,	11)
-#define STDLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	11)
+#define STDLIB_CONSTRUCTOR(name)	CONSTRUCTOR(name,	101)
+#define STDLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	101)
 
-#define STK_CONSTRUCTOR(name)		CONSTRUCTOR(name,	12)
-#define STK_DESTRUCTOR(name)		DESTRUCTOR(name,	12)
+#define STK_CONSTRUCTOR(name)		CONSTRUCTOR(name,	102)
+#define STK_DESTRUCTOR(name)		DESTRUCTOR(name,	102)
 
-#define STDIO_CONSTRUCTOR(name)		CONSTRUCTOR(name,	13)
-#define STDIO_DESTRUCTOR(name)		DESTRUCTOR(name,	13)
+#define STDIO_CONSTRUCTOR(name)		CONSTRUCTOR(name,	103)
+#define STDIO_DESTRUCTOR(name)		DESTRUCTOR(name,	103)
 
-#define FILE_CONSTRUCTOR(name)		CONSTRUCTOR(name,	14)
-#define FILE_DESTRUCTOR(name)		DESTRUCTOR(name,	14)
+#define FILE_CONSTRUCTOR(name)		CONSTRUCTOR(name,	104)
+#define FILE_DESTRUCTOR(name)		DESTRUCTOR(name,	104)
 
-#define MATH_CONSTRUCTOR(name)		CONSTRUCTOR(name,	15)
-#define MATH_DESTRUCTOR(name)		DESTRUCTOR(name,	15)
+#define MATH_CONSTRUCTOR(name)		CONSTRUCTOR(name,	105)
+#define MATH_DESTRUCTOR(name)		DESTRUCTOR(name,	105)
 
-#define SOCKET_CONSTRUCTOR(name)	CONSTRUCTOR(name,	16)
-#define SOCKET_DESTRUCTOR(name)		DESTRUCTOR(name,	16)
+#define SOCKET_CONSTRUCTOR(name)	CONSTRUCTOR(name,	106)
+#define SOCKET_DESTRUCTOR(name)		DESTRUCTOR(name,	106)
 
-#define ARG_CONSTRUCTOR(name)		CONSTRUCTOR(name,	17)
-#define ARG_DESTRUCTOR(name)		DESTRUCTOR(name,	17)
+#define ARG_CONSTRUCTOR(name)		CONSTRUCTOR(name,	107)
+#define ARG_DESTRUCTOR(name)		DESTRUCTOR(name,	107)
 
-#define CLIB_CONSTRUCTOR(name)		CONSTRUCTOR(name,	18)
-#define CLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	18)
+#define CLIB_CONSTRUCTOR(name)		CONSTRUCTOR(name,	108)
+#define CLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	108)
 
-#define PROFILE_CONSTRUCTOR(name)	CONSTRUCTOR(name,	19)
-#define PROFILE_DESTRUCTOR(name)	DESTRUCTOR(name,	19)
+#define PROFILE_CONSTRUCTOR(name)	CONSTRUCTOR(name,	109)
+#define PROFILE_DESTRUCTOR(name)	DESTRUCTOR(name,	109)
 
 /****************************************************************************/
 

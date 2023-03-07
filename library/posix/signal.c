@@ -15,12 +15,15 @@ void (*signal(int sig, void (*handler)(int)))(int) {
     SHOWVALUE(sig);
     SHOWPOINTER(handler);
 
-    if (sig < SIGHUP || sig > NSIG || handler == SIG_ERR) {
+    if (sig < 0 || sig > NSIG || handler == SIG_ERR) {
         SHOWMSG("unsupported signal");
 
         __set_errno(EINVAL);
         goto out;
     }
+
+    if (table_entry < 0)
+        table_entry = 0;
 
     result = (void (*)(int)) __signal_handler_table[table_entry];
 

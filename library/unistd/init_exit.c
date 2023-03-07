@@ -11,13 +11,10 @@
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
 /* Names of files and directories to delete when shutting down. */
-struct MinList NOCOMMON
-__unlink_list;
-struct SignalSemaphore NOCOMMON
-__unlink_semaphore;
+struct MinList NOCOMMON __unlink_list;
+struct SignalSemaphore NOCOMMON __unlink_semaphore;
 
-CLIB_CONSTRUCTOR(unistd_init)
-{
+CLIB_CONSTRUCTOR(unistd_init) {
     ENTER();
 
     NewList((struct List *)&__unlink_list);
@@ -28,8 +25,7 @@ CLIB_CONSTRUCTOR(unistd_init)
     CONSTRUCTOR_SUCCEED();
 }
 
-CLIB_DESTRUCTOR(unistd_exit)
-{
+CLIB_DESTRUCTOR(unistd_exit) {
     ENTER();
 
     if (__unlink_list.mlh_Head != NULL && NOT IsMinListEmpty(&__unlink_list)) {

@@ -10,6 +10,9 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#include "aio/aio_misc.h"
+#include "pthread/common.h"
+
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
     uint32 pid = (uint32) userdata;
@@ -68,20 +71,25 @@ raise(int sig) {
     static int local_signals_blocked;
 
     int result = ERROR;
-
     ENTER();
     SHOWVALUE(sig);
 
-    /* This has to be a well-known and supported signal. */
-    if (sig < SIGHUP || sig > NSIG) {
+    /* This has to be a well-known and supported signal. 0 is a valid signal*/
+    if (sig < 0 || sig > NSIG) {
         SHOWMSG("unknown signal number");
 
         __set_errno(EINVAL);
         goto out;
     }
 
+    /* If sig is 0 just set result to OK and go out */
+    if (sig == 0) {
+        result = OK;
+        goto out;
+    }
+
     /* Can we deliver the signal? */
-    if (FLAG_IS_CLEAR(__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(local_signals_blocked, (1 << sig))) {
+    if ((FLAG_IS_CLEAR(__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
         signal_handler_t handler;
 
         /* Which handler is installed for this signal? */
@@ -90,14 +98,16 @@ raise(int sig) {
         /* Should we ignore this signal? */
         if (handler != SIG_IGN) {
             /* Block delivery of this signal to prevent recursion. */
-            SET_FLAG(local_signals_blocked, (1 << sig));
+            SHOWMSG("Blocking signal if it isn't a kill signal");
+            if (sig != SIGINT && sig != SIGTERM && sig != SIGKILL)
+                SET_FLAG(local_signals_blocked, (1 << sig));
 
             /* The default behaviour is to drop into abort(), or do
                something very much like it. */
             if (handler == SIG_DFL) {
                 SHOWMSG("this is the default handler");
 
-                if (sig == SIGINT || sig == SIGTERM) {
+                if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                     /* Check ig we have timer terminal running. If so let's kill it */
                     if (__global_clib2->tmr_real_task != NULL) {
                         struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
@@ -123,6 +133,23 @@ raise(int sig) {
                         WaitForChildExit(pid);
                         __global_clib2->tmr_real_task = NULL;
                     }
+
+                    /* Check if we have some aio threads */
+                    SHOWMSG("Check if we have some aio pthreads created");
+                    AioThread *aioThread;
+                    SHOWMSG("Obtain aio semaphore");
+                    ObtainSemaphore(__global_clib2->__aio_lock);
+                    int streams = __global_clib2->aio_threads->count(__global_clib2->aio_threads);
+                    D(("AIO list has %ld items", streams));
+                    if (streams > 0) {
+                        for (int i = 0; i < streams; i++) {
+                            aioThread = __global_clib2->aio_threads->at(__global_clib2->aio_threads, i);
+                            D(("Cancel AIO stream with filedes %ld", aioThread->fileDes));
+                            aio_cancel(aioThread->fileDes, aioThread->aiocbp);
+                            Signal(aioThread->thread, SIGBREAKF_CTRL_C);
+                        }
+                    }
+                    ReleaseSemaphore(__global_clib2->__aio_lock);
 
                     char break_string[80];
 
@@ -159,20 +186,20 @@ raise(int sig) {
             }
             else {
                 SHOWMSG("calling the handler");
-
                 (*handler)(sig);
 
-                if (sig == SIGINT)
+                if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL)
                     SetSignal(0, SIGBREAKF_CTRL_C);
 
                 SHOWMSG("done.");
             }
 
             /* Unblock signal delivery again. */
+            SHOWMSG("Unblocking signal");
             CLEAR_FLAG(local_signals_blocked, (1 << sig));
         }
         else {
-            if (sig == SIGINT) {
+            if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                 // Reset the signal bit cleared by __check_abort()
                 SetSignal(SIGBREAKF_CTRL_C, SIGBREAKF_CTRL_C);
             }

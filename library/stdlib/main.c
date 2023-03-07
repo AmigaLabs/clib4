@@ -28,54 +28,21 @@
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
 
+#ifndef _TIME_HEADERS_H
+#include "time_headers.h"
+#endif /* _TIME_HEADERS_H */
+
 #include <proto/elf.h>
+#include "aio/aio_misc.h"
 
 extern int main(int arg_c, char **arg_v);
 
-BOOL open_libraries(void);
-void close_libraries(void);
+extern BOOL open_libraries(void);
+extern void close_libraries(void);
 
 /* This will be set to TRUE in case a stack overflow was detected. */
 BOOL NOCOMMON __stack_overflow;
 extern struct _clib2 NOCOMMON *__global_clib2;
-
-extern struct Library *__ElfBase;
-extern struct ElfIFace *__IElf;
-
-#define MIN_OS_VERSION 52
-
-void
-close_libraries(void) {
-    if (__IElf != NULL) {
-        DropInterface((struct Interface *) __IElf);
-        __IElf = NULL;
-    }
-
-    if (__IUtility != NULL) {
-        DropInterface((struct Interface *) __IUtility);
-        __IUtility = NULL;
-    }
-
-    if (IDOS != NULL) {
-        DropInterface((struct Interface *) IDOS);
-        IDOS = NULL;
-    }
-
-    if (__ElfBase != NULL) {
-        CloseLibrary(__ElfBase);
-        __ElfBase = NULL;
-    }
-
-    if (__UtilityBase != NULL) {
-        CloseLibrary(__UtilityBase);
-        __UtilityBase = NULL;
-    }
-
-    if (DOSBase != NULL) {
-        CloseLibrary(DOSBase);
-        DOSBase = NULL;
-    }
-}
 
 static int
 call_main(void) {
@@ -93,7 +60,30 @@ call_main(void) {
     SHOWMSG("now invoking the constructors");
     /* Go through the constructor list */
     _init();
+    SHOWMSG("Constructors executed correctly. Calling main()");
 
+    /* Set system time for rusage.
+     * This can be executed only here.
+     * Not in reent_init not in TIMER constructor because
+     * __ITimer or __global_clib2 cannot be yet available
+     */
+    struct TimerIFace *ITimer = __ITimer;
+    if (__ITimer != NULL) {
+        SHOWMSG("Calling GetSysTime");
+        GetSysTime(&__global_clib2->clock);
+        /* Generate random seed */
+        __global_clib2->__random_seed = time(NULL);
+    }
+
+    /* Initialize aio list */
+    __global_clib2->aio_threads = CList_init(sizeof(struct AioThread));
+
+    /* Set __current_path_name to a valid value */
+    UBYTE current_dir_name[256] = {0};
+    struct Process *this_process = (struct Process *) FindTask(NULL);
+    if (NameFromLock(this_process->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
+        __set_current_path((const char *) current_dir_name);
+    }
     /* This can be helpful for debugging purposes: print the name of the current
        directory, followed by the name of the command and all the parameters
        passed to it. */
@@ -102,32 +92,29 @@ call_main(void) {
         UBYTE value_str[10];
         LONG value;
 
-        /* Careful: only echo this information if a global environment
-                    variable is set to enable this feature! */
+        /* Careful: only echo this information if a global environment variable is set to enable this feature! */
         if (GetVar("_echo", (STRPTR) value_str, sizeof(value_str), GVF_GLOBAL_ONLY) > 0 &&
             StrToLong((CONST_STRPTR) value_str, &value) > 0 && value != 0) {
-            struct Process *this_process = (struct Process *) FindTask(NULL);
             STRPTR arg_str = GetArgStr();
             size_t arg_str_len = strlen((const char *) arg_str);
             UBYTE *arg_str_copy;
-            UBYTE current_dir_name[256] = {0};
             arg_str_copy = AllocVecTags(arg_str_len + 1, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-            if (arg_str_copy != NULL &&
-                NameFromLock(this_process->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
+            if (arg_str_copy != NULL) {
                 strcpy((char *) arg_str_copy, (char *) arg_str);
 
                 while (arg_str_len > 0 && arg_str_copy[arg_str_len - 1] <= ' ')
                     arg_str_copy[--arg_str_len] = '\0';
 
-                kprintf("[%s] %s %s\n", current_dir_name, __program_name, arg_str_copy);
+                D(("[%s] %s %s\n", current_dir_name, __program_name, arg_str_copy));
+                FreeVec(arg_str_copy);
             }
-
-            FreeVec(arg_str_copy);
         }
     }
 #endif /* NDEBUG */
+
     /* After all these preparations, get this show on the road... */
-    exit(main((int) __argc, (char **) __argv));
+    exit(main(__argc, __argv));
+    SHOWMSG("Done. Exit from main()");
 
 out:
 
@@ -161,21 +148,32 @@ out:
     }
 #endif /* NDEBUG */
 
+    SHOWMSG("Flush all files");
     /* Dump all currently unwritten data, especially to the console. */
     __flush_all_files(-1);
-
-    SHOWMSG("invoking the destructors");
 
     /* If one of the destructors drops into exit(), either directly
        or through a failed assert() call, processing will resume with
        the next following destructor. */
     (void) setjmp(__exit_jmp_buf);
+    SHOWMSG("Called setjmp(__exit_jmp_buf)");
 
-    /* Go through the destructor list */
-    _fini();
-
+    SHOWMSG("Set unix paths to off");
     disableUnixPaths();
 
+    /* Free aio list */
+    if (__global_clib2->aio_threads != NULL) {
+        SHOWMSG("Free aio list");
+        ObtainSemaphore(__global_clib2->__aio_lock);
+        __global_clib2->aio_threads->free(__global_clib2->aio_threads);
+        ReleaseSemaphore(__global_clib2->__aio_lock);
+    }
+
+    /* Go through the destructor list */
+    SHOWMSG("invoking the destructors");
+    _fini();
+
+    SHOWMSG("Calling reent_exit");
     reent_exit();
 
     SHOWMSG("done.");
@@ -185,45 +183,6 @@ out:
 
     RETURN(__exit_value);
     return (__exit_value);
-}
-
-BOOL
-open_libraries(void) {
-    BOOL success = FALSE;
-
-    /* Open the minimum required libraries. */
-    DOSBase = (struct Library *) OpenLibrary("dos.library", MIN_OS_VERSION);
-    if (DOSBase == NULL)
-        goto out;
-
-    __UtilityBase = OpenLibrary("utility.library", MIN_OS_VERSION);
-    if (__UtilityBase == NULL)
-        goto out;
-
-    /* Obtain the interfaces for these libraries. */
-    IDOS = (struct DOSIFace *) GetInterface(DOSBase, "main", 1, 0);
-    if (IDOS == NULL)
-        goto out;
-
-    __IUtility = (struct UtilityIFace *) GetInterface(__UtilityBase, "main", 1, 0);
-    if (__IUtility == NULL)
-        goto out;
-
-    /* We need elf.library V52.2 or higher. */
-    __ElfBase = OpenLibrary("elf.library", 0);
-    if (__ElfBase == NULL || (__ElfBase->lib_Version < MIN_OS_VERSION) ||
-        (__ElfBase->lib_Version == MIN_OS_VERSION && __ElfBase->lib_Revision < 2))
-        goto out;
-
-    __IElf = (struct ElfIFace *) GetInterface(__ElfBase, "main", 1, NULL);
-    if (__IElf == NULL)
-        goto out;
-
-    success = TRUE;
-
-    out:
-
-    return (success);
 }
 
 static void
@@ -280,7 +239,7 @@ _main() {
     __WBenchMsg = (struct WBStartup *) startup_message;
 
     /* Try to open the libraries we need to proceed. */
-    if (CANNOT open_libraries()) {
+    if (IDOS == NULL && CANNOT open_libraries()) {
         const char *error_message;
 
         /* If available, use the error message provided by the client. */
@@ -345,8 +304,7 @@ _main() {
             SetTaskPri((struct Task *) this_process, __priority);
 
         /* Was a minimum stack size requested and do we need more stack space than was provided for? */
-        if (__stack_size > 0 && current_stack_size < (ULONG)__stack_size)
-        {
+        if (__stack_size > 0 && current_stack_size < (ULONG)__stack_size) {
             struct StackSwapStruct *stk;
             unsigned int stack_size;
             APTR new_stack;
@@ -382,8 +340,7 @@ _main() {
             FreeVec(new_stack);
             FreeVec(stk);
         }
-        else
-        {
+        else {
             /* We have enough room to make the call or just don't care. */
             return_code = call_main();
         }
@@ -409,47 +366,39 @@ _main() {
         if (stack_size < cli->cli_DefaultStack * sizeof(LONG))
             stack_size = cli->cli_DefaultStack * sizeof(LONG);
 
-        GetCliProgramName(program_name, (LONG)
-        sizeof(program_name));
+        GetCliProgramName(program_name, (LONG) sizeof(program_name));
 
         i = 0;
 
         tags[i].ti_Tag = NP_Entry;
-        tags[i++].ti_Data = (ULONG)
-        call_main;
+        tags[i++].ti_Data = (ULONG) call_main;
         tags[i].ti_Tag = NP_StackSize;
         tags[i++].ti_Data = stack_size;
         tags[i].ti_Tag = NP_Name;
-        tags[i++].ti_Data = (ULONG)(__process_name != NULL ? __process_name : (char *) FilePart(program_name));
+        tags[i++].ti_Data = (ULONG) (__process_name != NULL ? __process_name : (char *) FilePart(program_name));
         tags[i].ti_Tag = NP_CommandName;
-        tags[i++].ti_Data = (ULONG)
-        FilePart(program_name);
+        tags[i++].ti_Data = (ULONG) FilePart(program_name);
         tags[i].ti_Tag = NP_Cli;
         tags[i++].ti_Data = TRUE;
         tags[i].ti_Tag = NP_Child;
         tags[i++].ti_Data = TRUE;
         tags[i].ti_Tag = NP_Arguments;
-        tags[i++].ti_Data = (ULONG)
-        GetArgStr();
+        tags[i++].ti_Data = (ULONG) GetArgStr();
         tags[i].ti_Tag = NP_FinalCode;
-        tags[i++].ti_Data = (ULONG)
-        detach_cleanup;
+        tags[i++].ti_Data = (ULONG) detach_cleanup;
         tags[i].ti_Tag = NP_FinalData;
-        tags[i++].ti_Data = (ULONG)
-        cli->cli_Module;
+        tags[i++].ti_Data = (ULONG) cli->cli_Module;
 
         /* Use a predefined task priority, if requested. */
         if (-128 <= __priority && __priority <= 127) {
             tags[i].ti_Tag = NP_Priority;
-            tags[i++].ti_Data = (ULONG)
-            __priority;
+            tags[i++].ti_Data = (ULONG) __priority;
         }
 
         /* dos.library V50 will free the segment list upon exit. */
         if (((struct Library *) DOSBase)->lib_Version >= 50) {
             tags[i].ti_Tag = NP_Seglist;
-            tags[i++].ti_Data = (ULONG)
-            cli->cli_Module;;
+            tags[i++].ti_Data = (ULONG) cli->cli_Module;;
             tags[i].ti_Tag = NP_FreeSeglist;
             tags[i++].ti_Data = TRUE;
         }
@@ -482,9 +431,6 @@ out:
 
     if (old_window_pointer_valid)
         __set_process_window(old_window_pointer);
-
-    if (child_process == NULL)
-        close_libraries();
 
     if (startup_message != NULL) {
         Forbid();

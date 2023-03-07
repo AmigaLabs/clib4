@@ -56,7 +56,8 @@ Keep in mind that clib2 is not compiled with altivec optimizations for all files
 
 Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).
 using dlopen/dlsym will not crash anymore however there is a bug in `libstdc++.so` that is causing a crash on program start.  
-So if you want to use libstdc++ it is better to remove it and link against the static version.
+So if you want to use libstdc++ it is better to remove it and link against the static version.  
+However they needs the beta elf.library not yet released to public
 
 ### Large file support
 
@@ -101,6 +102,13 @@ A lot of other functions has been added trying to make OS4 ports easier.
 ### libauto
 
 Clib2 now contain also libauto with almost all OS4 components. We'll try to keep them updated.
+
+### libpthread
+
+Clib2 now contain a native pthread implementation. However pthread functions are in libc and libpthread is just a stub.
+That's because pthread functions are used (and will be used more in the future) internally and they are needed by libc.  
+libpthread.a is however present as stub to avoid old program stop compiling claiming this library
+
 
 ### libresolv
 
@@ -154,7 +162,8 @@ Check `fcntl.h` for details
 
 ### Known problems
 
-Don't call `exit()` function in an `alarm()` handler otherwise your program will be stuck at exit.
+Don't call `exit()` function in an `alarm()` handler otherwise your program will be stuck at exit.  
+All *crt* files needs to be compiled with -fno-aggressive-loop-optimizations! Otherwise you will have problems during constructors/destructors executions
 
 ### TODO
 

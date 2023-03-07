@@ -12,6 +12,9 @@
 #endif /* _STDDEF_H */
 
 #include <inttypes.h>
+#include <stdbool.h>
+#include <sys/time.h>
+#include <endian.h>
 
 __BEGIN_DECLS
 
@@ -44,17 +47,16 @@ typedef _CLOCKID_T_ clockid_t;
 typedef unsigned long clock_t;
 typedef long long time_t;
 
-struct tm
-{
-  int tm_sec;   /* Number of seconds past the minute (0..59) */
-  int tm_min;   /* Number of minutes past the hour (0..59) */
-  int tm_hour;  /* Number of hours past the day (0..23) */
-  int tm_mday;  /* Day of the month (1..31) */
-  int tm_mon;   /* Month number (0..11) */
-  int tm_year;  /* Year number minus 1900 */
-  int tm_wday;  /* Day of the week (0..6; 0 is Sunday) */
-  int tm_yday;  /* Day of the year (0..365) */
-  int tm_isdst; /* Is this date using daylight savings time? */
+struct tm {
+    int tm_sec;   /* Number of seconds past the minute (0..59) */
+    int tm_min;   /* Number of minutes past the hour (0..59) */
+    int tm_hour;  /* Number of hours past the day (0..23) */
+    int tm_mday;  /* Day of the month (1..31) */
+    int tm_mon;   /* Month number (0..11) */
+    int tm_year;  /* Year number minus 1900 */
+    int tm_wday;  /* Day of the week (0..6; 0 is Sunday) */
+    int tm_yday;  /* Day of the year (0..365) */
+    int tm_isdst; /* Is this date using daylight savings time? */
 };
 
 extern clock_t clock(void);
@@ -69,16 +71,21 @@ extern size_t strftime(char *s, size_t maxsize, const char *format, const struct
 extern char *strptime(const char *buf, const char *fmt, struct tm *timeptr);
 
 /* Timespec declaration */
-struct timespec
-{
-  time_t tv_sec;
-  long tv_nsec;
+struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+};
+
+struct timespec64 {
+    time64_t tv_sec;  /* Seconds */
+    int32_t : 32;     /* Padding */
+    int32_t tv_nsec;  /* Nanoseconds */
 };
 
 /* BSD time macros used by RTEMS code */
 /* Convenience macros for operations on timevals.
    NOTE: `timercmp' does not work for >= or <=.  */
-#ifdef __USE_OLD_TIMEVAL__
+#ifndef __USE_OLD_TIMEVAL__
 #define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
 #define timerclear(tvp) ((tvp)->tv_sec = (tvp)->tv_usec = 0)
 #define timercmp(a, b, CMP) \
@@ -142,18 +149,114 @@ extern struct tm *gmtime_r(const time_t *t, struct tm *tm_ptr);
 extern struct tm *localtime_r(const time_t *t, struct tm *tm_ptr);
 extern void tzset(void);
 extern int nanosleep(const struct timespec *req, struct timespec *rem);
-
 extern int clock_gettime(clockid_t clk_id, struct timespec *t);
 extern int clock_settime(clockid_t clk_id, const struct timespec *t);
 extern int clock_getres(clockid_t clock_id, struct timespec *res);
 extern int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *request, struct timespec *remain);
+extern unsigned long long rdtsc(void);
 
-extern uint64_t rdtsc(void);
+extern int clock_gettime64 (clockid_t clock_id, struct timespec64 *tp);
 
 /* Defined in localtime.c.  */
 extern char *tzname[2];   /* Current timezone names.  */
 extern int daylight;      /* If daylight-saving time is ever in use.  */
 extern long int timezone; /* Seconds west of UTC.  */
+
+/* Check whether T fits in time_t.  */
+static inline bool
+in_time_t_range (time64_t t) {
+    time_t s = t;
+    return s == t;
+}
+
+/* Convert a known valid struct timeval into a struct timespec64.  */
+static inline struct timespec64
+valid_timeval_to_timespec64 (const struct timeval tv) {
+    struct timespec64 ts64;
+
+    ts64.tv_sec = tv.tv_sec;
+    ts64.tv_nsec = tv.tv_usec * 1000;
+
+    return ts64;
+}
+
+/* Convert a known valid struct timeval into a struct timeval64.  */
+static inline struct timeval64
+valid_timeval_to_timeval64(const struct timeval tv) {
+    struct timeval64 tv64;
+
+    tv64.tv_sec = tv.tv_sec;
+    tv64.tv_usec = tv.tv_usec;
+
+    return tv64;
+}
+
+
+/* Convert a valid and within range of struct timeval, struct timeval64 into a struct timeval.  */
+static inline struct timeval
+valid_timeval64_to_timeval (const struct timeval64 tv64) {
+    struct timeval tv;
+
+    tv.tv_sec = (long) tv64.tv_sec;
+    tv.tv_usec = (long) tv64.tv_usec;
+
+    return tv;
+}
+
+/* Convert a struct timeval64 into a struct timespec64.  */
+static inline struct timespec64
+timeval64_to_timespec64 (const struct timeval64 tv64) {
+    struct timespec64 ts64;
+
+    ts64.tv_sec = tv64.tv_sec;
+    ts64.tv_nsec = tv64.tv_usec * 1000;
+
+    return ts64;
+}
+
+/* Convert a known valid struct timespec into a struct timespec64.  */
+static inline struct timespec64
+valid_timespec_to_timespec64 (const struct timespec ts) {
+    struct timespec64 ts64;
+
+    ts64.tv_sec = ts.tv_sec;
+    ts64.tv_nsec = ts.tv_nsec;
+
+    return ts64;
+}
+
+/* Convert a valid and within range of struct timespec, struct timespec64 into a struct timespec.  */
+static inline struct timespec
+valid_timespec64_to_timespec (const struct timespec64 ts64) {
+    struct timespec ts;
+
+    ts.tv_sec = (time_t) ts64.tv_sec;
+    ts.tv_nsec = ts64.tv_nsec;
+
+    return ts;
+}
+
+/* Convert a valid and within range of struct timeval struct timespec64 into a struct timeval.  */
+static inline struct timeval
+valid_timespec64_to_timeval (const struct timespec64 ts64) {
+    struct timeval tv;
+
+    tv.tv_sec = (time_t) ts64.tv_sec;
+    tv.tv_usec = ts64.tv_nsec / 1000;
+
+    return tv;
+}
+
+/* Convert a struct timespec64 into a struct timeval64.  */
+static inline struct timeval64
+timespec64_to_timeval64 (const struct timespec64 ts64) {
+    struct timeval64 tv64;
+
+    tv64.tv_sec = ts64.tv_sec;
+    tv64.tv_usec = ts64.tv_nsec / 1000;
+
+    return tv64;
+}
 
 __END_DECLS
 

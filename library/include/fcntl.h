@@ -21,11 +21,12 @@ __BEGIN_DECLS
 #define O_TRUNC		(1<<5)
 #define O_NONBLOCK	(1<<6)
 #define O_NDELAY	O_NONBLOCK
-#define O_SYNC		(0)
 #define O_NOCTTY	(0)
 #define O_ASYNC		(1<<7)
 #define O_PATH      (1<<8)
 #define O_DIRECTORY (1<<9)
+#define O_DSYNC     (1<<10)
+#define O_SYNC		(1<<11)
 #define O_CLOEXEC   (0)
 
 #define	O_ACCMODE	(O_RDONLY|O_WRONLY|O_RDWR)

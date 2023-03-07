@@ -48,6 +48,10 @@ StarterFunc() {
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
+        // Check if we have a guardsize
+        if (inf->attr.guardsize > 0)
+            inf->attr.stacksize += inf->attr.guardsize;
+
         stack.stk_Lower = inf->attr.stackaddr;
         stack.stk_Upper = (ULONG)((APTR) stack.stk_Lower) + inf->attr.stacksize;
         stack.stk_Pointer = (APTR) stack.stk_Upper;
@@ -143,6 +147,10 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
 
     if (inf->attr.stacksize < minStack)
         inf->attr.stacksize = minStack;
+
+    // Check if we have a guardsize
+    if (inf->attr.guardsize > 0)
+        inf->attr.stacksize += inf->attr.guardsize;
 
     // let's trick CreateNewProc into allocating a larger buffer for the name
     snprintf(name, sizeof(name), "pthread id #%d", threadnew);
