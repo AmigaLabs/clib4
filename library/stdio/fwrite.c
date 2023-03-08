@@ -25,21 +25,16 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     if (ptr == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
-
         __set_errno(EFAULT);
         goto out;
     }
-
-    assert(__is_valid_iob(file));
-    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
 
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
+        SET_FLAG(file->iob_Flags2, __SERR);
         __set_errno(EBADF);
-
         goto out;
     }
 
@@ -47,9 +42,8 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
         SHOWMSG("this stream is not write-enabled");
 
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
+        SET_FLAG(file->iob_Flags2, __SERR);
         __set_errno(EBADF);
-
         goto out;
     }
 
@@ -79,10 +73,8 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
         switch (buffer_mode) {
             case IOBF_BUFFER_MODE_LINE:
                 SHOWMSG("IOBF_BUFFER_MODE_LINE");
-                assert(file->iob_BufferSize > 0);
                 while (total_size > 0) {
-                    /* Is there still room in the write buffer to store
-                       more of the data? */
+                    /* Is there still room in the write buffer to store more of the data? */
                     if (file->iob_BufferWriteBytes < file->iob_BufferSize) {
                         unsigned char *buffer = &file->iob_Buffer[file->iob_BufferWriteBytes];
                         size_t num_buffer_bytes;
@@ -147,18 +139,19 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                 total_bytes_written = (size_t) num_bytes_written;
             }
             break;
-            default:
+            default: {
                 SHOWMSG("IOBF_BUFFER_MODE_FULL");
-                assert(file->iob_BufferSize > 0);
                 while (total_size > 0) {
+                    SHOWVALUE(file->iob_BufferWriteBytes);
+                    SHOWVALUE(file->iob_BufferSize - file->iob_BufferWriteBytes);
+                    SHOWVALUE(total_size);
                     /* If there is more data to be written than the write buffer will hold
                        and the write buffer is empty anyway, then we'll bypass the write
                        buffer entirely. */
                     if (file->iob_BufferWriteBytes == 0 && total_size >= (size_t) file->iob_BufferSize) {
-                        ssize_t num_bytes_written;
-
+                        SHOWMSG("bypass the buffer entirely");
                         /* We bypass the buffer entirely. */
-                        num_bytes_written = write(file->iob_Descriptor, s, total_size);
+                        ssize_t num_bytes_written = write(file->iob_Descriptor, s, total_size);
                         if (num_bytes_written == -1) {
                             SET_FLAG(file->iob_Flags, IOBF_ERROR);
                             goto out;
@@ -167,14 +160,14 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                         total_bytes_written += num_bytes_written;
                         break;
                     }
-
+                    SHOWMSG("New values");
+                    SHOWVALUE(file->iob_BufferWriteBytes);
+                    SHOWVALUE(file->iob_BufferSize - file->iob_BufferWriteBytes);
                     /* Is there still room in the write buffer to store more of the data? */
                     if (file->iob_BufferWriteBytes < file->iob_BufferSize) {
                         unsigned char *buffer = &file->iob_Buffer[file->iob_BufferWriteBytes];
-                        size_t num_buffer_bytes;
-
                         /* Store only as many bytes as will fit into the write buffer. */
-                        num_buffer_bytes = file->iob_BufferSize - file->iob_BufferWriteBytes;
+                        size_t num_buffer_bytes = file->iob_BufferSize - file->iob_BufferWriteBytes;
                         if (total_size < num_buffer_bytes)
                             num_buffer_bytes = total_size;
 
@@ -203,12 +196,13 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                     }
 
                     c = (*s++);
-
+                    SHOWMSG("__putc_fully_buffered");
                     if (__putc_fully_buffered(c, (FILE *) file) == EOF)
                         goto out;
 
                     total_bytes_written++;
                 }
+            }
         }
 
         if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {

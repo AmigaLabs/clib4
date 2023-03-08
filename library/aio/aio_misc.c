@@ -13,9 +13,11 @@
 #include "pthread/common.h"
 
 #ifndef aio_create_helper_thread
+int __aio_create_helper_thread(pthread_t *threadp, void *(*tf)(void *), void *arg, struct aiocb *aiocbp);
+
 # define aio_create_helper_thread __aio_create_helper_thread
 
-inline int
+int
 __aio_create_helper_thread(pthread_t *threadp, void *(*tf)(void *), void *arg, struct aiocb *aiocbp) {
     pthread_attr_t attr;
 

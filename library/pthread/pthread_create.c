@@ -39,7 +39,7 @@
 
 static uint32
 StarterFunc() {
-    int foundkey = TRUE;
+    volatile int foundkey = TRUE;
     struct StackSwapStruct stack;
     volatile BOOL stackSwapped = FALSE;
 

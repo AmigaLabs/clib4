@@ -106,18 +106,22 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
 
             if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
                 if (FLAG_IS_SET(fd->fd_Flags, FDF_APPEND)) {
-                    int64_t position;
-
                     SHOWMSG("appending data");
 
-                    /* Make sure that if we get a value of -1 out of Seek()
-                           to check whether this was an error or a numeric
-                           overflow. */
-                    position = ChangeFilePosition(file, 0, OFFSET_END);
-                    if (position != CHANGE_FILE_ERROR)
-                        fd->fd_Position = GetFilePosition(file);
+                    /* Make sure that if we get a value of -1 out of Seek() to check whether this was an error or a numeric overflow. */
+                    int64_t position = ChangeFilePosition(file, 0, OFFSET_END);
+                    if (position != CHANGE_FILE_ERROR) {
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION)) {
+                            fd->fd_Position = GetFilePosition(file);
+                            if (fd->fd_Position == GETPOSITION_ERROR) {
+                                D(("seek to end of file failed; ioerr=%ld", IoErr()));
 
-                    if (fd->fd_Position == GETPOSITION_ERROR) {
+                                fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                                goto out;
+                            }
+                        }
+                    }
+                    else {
                         D(("seek to end of file failed; ioerr=%ld", IoErr()));
 
                         fam->fam_Error = __translate_io_error_to_errno(IoErr());

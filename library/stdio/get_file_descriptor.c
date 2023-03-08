@@ -11,7 +11,7 @@ enum resolution_mode_t {
     resolution_mode_alias    /* Resolve the descriptor's alias, if necessary. */
 };
 
-STATIC struct fd *
+static struct fd *
 get_file_descriptor(int file_descriptor, enum resolution_mode_t resolution_mode) {
     struct fd *result = NULL;
     struct fd *fd;
