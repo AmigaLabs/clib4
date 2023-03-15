@@ -121,8 +121,7 @@ opendir(const char *path_name) {
         }
     }
 
-    if (NOT dh->dh_ScanVolumeList)
-    {
+    if (NOT dh->dh_ScanVolumeList) {
         SHOWMSG("we are supposed to scan a directory");
         SHOWSTRING(path_name);
 
