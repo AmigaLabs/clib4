@@ -6,6 +6,10 @@
 #include "dirent_headers.h"
 #endif /* _DIRENT_HEADERS_H */
 
+#ifndef _STRING_HEADERS_H
+#include "string_headers.h"
+#endif /* _STRING_HEADERS_H */
+
 struct dirent *
 readdir(DIR *directory_pointer) {
 
@@ -88,8 +92,7 @@ readdir(DIR *directory_pointer) {
         }
     }
 
-    if (NOT dh->dh_ScanVolumeList)
-    {
+    if (NOT dh->dh_ScanVolumeList) {
         if (__unix_path_semantics) {
             if (dh->dh_Position == 0) {
                 SHOWMSG("returning .");

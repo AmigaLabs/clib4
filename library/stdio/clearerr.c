@@ -29,6 +29,7 @@ clearerr(FILE *stream) {
 
     CLEAR_FLAG(file->iob_Flags, IOBF_ERROR);
     CLEAR_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
+    CLEAR_FLAG(file->iob_Flags2, __SERR);
 
     funlockfile(stream);
 
