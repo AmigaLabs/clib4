@@ -17,7 +17,9 @@ For the original README follow this <a href="https://github.com/adtools/clib2">l
 
 ## Limitations and caveats
 
-The new functions and code most of the time is tested. Also some tests has been added to be sure that added features and functions are working correctly. Usually all new functions has been tested against linux. If you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
+The new functions and code, most of the time are tested and some tests has been added to be sure that added features and functions are working correctly. 
+Usually all new functions has been tested against linux.  
+If you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
 
 ### Libraries
 
@@ -34,12 +36,12 @@ Soft float version is no longer available.
 
 Clib2 define `__THREAD_SAFE` used to check if the library is thread safe
 
-If you want to use the shared version of library remember to pack your OS4 software with all clib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
-**DON'T overwrite SOBJS: files with your Clib2 files** othwerise OS4 most probably will not load them and you could have problems running existent software!
+If you want to use the shared version of library remember to pack your OS4 software with all clib2 shared objects otherwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
+**DON'T overwrite SOBJS: files with your Clib2 files** otherwise OS4 most probably will not load them, and you could have problems running existent software!
 
 ### New memory allocator
 
-Clib2 now use `Wheel Of Fortune` allocator that is faster than previous one an it seems more robust and with a cleaner and portable code
+Clib2 now use `Wheel Of Fortune` allocator that is faster than previous one, and it seems more robust and with a cleaner and portable code
 
 ### Optimized AMCC functions
 
@@ -57,7 +59,7 @@ Keep in mind that clib2 is not compiled with altivec optimizations for all files
 Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).
 using dlopen/dlsym will not crash anymore however there is a bug in `libstdc++.so` that is causing a crash on program start.  
 So if you want to use libstdc++ it is better to remove it and link against the static version.  
-However they needs the beta elf.library not yet released to public
+However shared objects needs the beta elf.library not yet released to public
 
 ### Large file support
 
@@ -69,8 +71,8 @@ Clib2 now contains **shm*** and **msg*** functions. It needs <a href="http://www
 
 ### Unix path support
 
-`libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default unix support it is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.  
-You can also disable it at runtime using **disableUnixPaths()**. However is not reccomanded to enable and disable it at runtime because you could have problems with internal structures.
+`libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default, unix support is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.  
+You can also disable it at runtime using **disableUnixPaths()**. However is not recommended to enable and disable it at runtime because you could have problems with internal structures.
 
 ### wchar / wctype
 
@@ -80,7 +82,7 @@ There are no valid tests except a little few so if you find any issue please <a 
 
 ### Locale
 
-Locales relies always to OS4 locales but now you can set the encoding so wide functons will work correctly.
+Locales relies always to OS4 locales but now you can set the encoding so wide functions will work correctly.
 Accepted encodings are:
 
 `C-UTF-8`
@@ -105,9 +107,9 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 
 ### libpthread
 
-Clib2 now contain a native pthread implementation. However pthread functions are in libc and libpthread is just a stub.
+Clib2 now contain a native pthread implementation. However, pthread functions are in libc and libpthread is just a stub.
 That's because pthread functions are used (and will be used more in the future) internally and they are needed by libc.  
-libpthread.a is however present as stub to avoid old program stop compiling claiming this library
+libpthread.a is still present as stub to avoid old program stop compiling claiming this library
 
 
 ### libresolv
