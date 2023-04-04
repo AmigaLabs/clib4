@@ -54,6 +54,10 @@ Feel free to add other CPU versions.
 However two new methods (**enableAltivec** and **disableAltivec**) are present and you can use them to enable or disable optimizations at runtime.  
 Keep in mind that clib2 is not compiled with altivec optimizations for all files.
 
+### SPE
+`libcfsl_e500` (thanks to wayback machine..) has been added to clib2 providing some optimized functions. To compile *e500* functions pass SPE=true at makefile.  
+However to compile these functions you need a compiler that supports SPE ABI. The latest gcc version that supports SPE is gcc8.
+
 ### Shared objects
 
 Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).

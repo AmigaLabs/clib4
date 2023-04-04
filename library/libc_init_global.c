@@ -57,8 +57,8 @@ static uint32_t _random_init[] = {
 
 /* These are used to initialize the shared objects linked to this binary,
    and for the dlopen(), dlclose() and dlsym() functions. */
-extern struct Library *__ElfBase;
-extern struct ElfIFace *__IElf;
+static struct Library *__ElfBase;
+static struct ElfIFace *__IElf;
 
 struct _clib2 NOCOMMON* __global_clib2;
 
@@ -67,6 +67,19 @@ reent_init() {
     BOOL success = FALSE;
 
     ENTER();
+
+    /* We need elf.library V52.2 or higher. */
+    __ElfBase = OpenLibrary("elf.library", 0);
+    if (__ElfBase == NULL || (__ElfBase->lib_Version < 52) || (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision < 2)) {
+        SHOWMSG("Cannot get __ElfBase >=52.2!");
+        goto out;
+    }
+
+    __IElf = (struct ElfIFace *) GetInterface(__ElfBase, "main", 1, NULL);
+    if (__IElf == NULL) {
+        SHOWMSG("Cannot get __IElf!");
+        goto out;
+    }
 
     /* Initialize global structure */
     __global_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
@@ -236,7 +249,18 @@ out:
             FreeVec(__global_clib2);
             __global_clib2 = NULL;
         }
+
+        if (__IElf != NULL) {
+            DropInterface((struct Interface *) __IElf);
+            __IElf = NULL;
+        }
+
+        if (__ElfBase != NULL) {
+            CloseLibrary(__ElfBase);
+            __ElfBase = NULL;
+        }
     }
+
     SHOWVALUE(success);
     LEAVE();
 
@@ -305,6 +329,14 @@ reent_exit() {
             SHOWMSG("Closing elf handle");
             CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
             __global_clib2->__dl_elf_handle = NULL;
+
+            DropInterface((struct Interface *) __IElf);
+            __IElf = NULL;
+
+            if (__ElfBase != NULL) {
+                CloseLibrary(__ElfBase);
+                __ElfBase = NULL;
+            }
         }
         else {
             SHOWMSG("Cannot close elf handle: __IElf == NULL || __global_clib2->__dl_elf_handle == NULL");

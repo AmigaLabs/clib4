@@ -699,7 +699,6 @@ wof_free(wof_allocator_t *allocator, void *ptr) {
     }
 
     chunk = WOF_DATA_TO_CHUNK(ptr);
-
     if (chunk->jumbo) {
         wof_free_jumbo(allocator, chunk);
         return;
@@ -711,7 +710,6 @@ wof_free(wof_allocator_t *allocator, void *ptr) {
     /* merge it with any other free chunks adjacent to it, so that contiguous
      * free space doesn't get fragmented */
     wof_merge_free(allocator, chunk);
-
     /* Now cycle the recycler */
     wof_cycle_recycler(allocator);
 }

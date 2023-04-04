@@ -70,6 +70,7 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/amiga \
 				-I$(LIB_DIR)/profile \
 				-I$(LIB_DIR)/math \
+				-I$(LIB_DIR)/misc \
 				-I$(LIB_DIR)/argz \
 				-I$(LIB_DIR)/usergroup \
 				-I$(LIB_DIR)/string \
@@ -105,6 +106,10 @@ endif
 CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
 CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
 AFLAGS     := -Wa,-mregnames
+
+ifdef SPE
+    CFLAGS := $(CFLAGS) -DSPE
+endif
 
 VERBOSE    := @
 
@@ -245,6 +250,18 @@ define COMPILE_REG
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rAssembling altivec \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) -maltivec -mabi=altivec -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_SPE
+$(VERBOSE)@$(MAKEDIR) $(@D)
+$(VERBOSE)echo -e "\rCompiling SPE \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)$(CC) -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_SHARED_SPE
+$(VERBOSE)@$(MAKEDIR) $(@D)
+$(VERBOSE)echo -e "\rCompiling Shared SPE \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)$(CC) -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe $(PIC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define MAKELIB

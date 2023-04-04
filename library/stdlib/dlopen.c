@@ -33,9 +33,12 @@ dlopen(const char *path_name, int mode) {
             goto out;
         }
     }
+    SHOWPOINTER(__global_clib2);
+    SHOWPOINTER(__global_clib2->__dl_elf_handle);
 
     if (__global_clib2->__dl_elf_handle != NULL) {
         struct ElfIFace *IElf = __global_clib2->IElf;
+        SHOWPOINTER(IElf);
         uint32 flags = 0;
 
         if (mode & RTLD_LOCAL)

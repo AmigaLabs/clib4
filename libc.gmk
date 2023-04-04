@@ -717,6 +717,15 @@ C_STRING := \
 	string/strverscmp.o \
 	string/strxfrm.o
 
+ifdef SPE
+    $(info Adding SPE objects)
+    C_STRING := $(C_STRING) \
+		cpu/spe/memcmpE500.o \
+		cpu/spe/strcmpE500.o \
+		cpu/spe/strcpyE500.o \
+		cpu/spe/strlenE500.o
+endif
+
 C_TERMCAP := \
     termcap/termcap.o \
     termcap/tparam.o
@@ -1047,6 +1056,11 @@ SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
 
 $(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 $(BUILD_DIR)/obj.shared/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
+
+$(OUT_STATIC)/cpu/spe/%.o : $(LIB_DIR)/cpu/spe/%.S
+	$(VERBOSE)$(COMPILE_SPE)
+$(OUT_SHARED)/cpu/spe/%.o : $(LIB_DIR)/cpu/spe/%.S
+	$(VERBOSE)$(COMPILE_SHARED_SPE)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.sx
 	$(VERBOSE)$(COMPILE_REG)

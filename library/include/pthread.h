@@ -30,6 +30,13 @@
 #include <sched.h>
 #include <features.h>
 
+#ifdef __cplusplus
+#ifdef __USE_AMIGAOS_NAMESPACE__
+namespace AmigaOS {
+#endif
+extern "C" {
+#endif
+
 //
 // POSIX options
 //
@@ -229,8 +236,6 @@ typedef int pthread_spinlock_t;
 // POSIX thread routines
 //
 
-__BEGIN_DECLS
-
 //
 // Thread attribute functions
 //
@@ -253,7 +258,7 @@ int pthread_attr_getscope(const pthread_attr_t *attr, int *contentionscope);
 int pthread_attr_setscope(pthread_attr_t *attr, int contentionscope);
 
 int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize);
-int pthread_attr_getguardsize(const pthread_attr_t *restrict attr, size_t *restrict guardsize);
+int pthread_attr_getguardsize(const pthread_attr_t *attr, size_t *guardsize);
 //
 // Thread functions
 //
@@ -270,7 +275,7 @@ int pthread_setcanceltype(int type, int *oldtype);
 void pthread_testcancel(void);
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
 
-#define pthread_sigmask(blocktype, mask_ptr, unused1) sigprocmask(blocktype, mask_ptr, unused1);
+#define pthread_sigmask(blocktype, mask_ptr, unused1) sigprocmask(blocktype, mask_ptr, unused1)
 
 //
 // Scheduling functions
@@ -448,6 +453,11 @@ int pthread_kill(pthread_t thread, int sig);
 #define sendto(...) (pthread_testcancel(), sendto(__VA_ARGS__))
 #endif
 
-__END_DECLS
+#ifdef __cplusplus
+}
+#ifdef __USE_AMIGAOS_NAMESPACE__
+}
+#endif
+#endif
 
 #endif

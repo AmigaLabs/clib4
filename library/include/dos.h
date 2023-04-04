@@ -19,7 +19,7 @@
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
-#include "misc/clist.h"
+#include "clist.h"
 
 __BEGIN_DECLS
 

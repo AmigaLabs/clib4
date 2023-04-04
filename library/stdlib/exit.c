@@ -12,7 +12,7 @@
 
 #include "aio/aio_misc.h"
 #include "pthread/common.h"
-#include "misc/clist.h"
+#include "clist.h"
 
 int NOCOMMON __exit_value = RETURN_FAIL;
 jmp_buf NOCOMMON __exit_jmp_buf;
