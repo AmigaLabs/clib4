@@ -57,7 +57,17 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
             FD_SET(pCur->fd, pExceptSet);
         }
 
-        SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ | FDF_WRITE);
+        if (fd->fd_File >= STDIN_FILENO && fd->fd_File <= STDERR_FILENO) {
+            if (fd->fd_File == STDIN_FILENO) {
+                BPTR file = __resolve_fd_file(fd);
+                SetMode(file, DOSTRUE);
+
+                SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ | FDF_NON_BLOCKING);
+            }
+            else {
+                SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_WRITE);
+            }
+        }
 
         max_fd = MAX(max_fd, pCur->fd);
     }

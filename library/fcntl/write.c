@@ -1,10 +1,14 @@
 /*
- * $Id: fcntl_write.c,v 1.10 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: fcntl_write.c,v 1.11 2023-04-06 12:04:22 clib2devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
+
+#ifndef _SOCKET_HEADERS_H
+#include "socket/socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
 
 ssize_t
 write(int file_descriptor, const void *buffer, size_t num_bytes) {
@@ -52,23 +56,28 @@ write(int file_descriptor, const void *buffer, size_t num_bytes) {
     }
 
     if (num_bytes > 0) {
-        struct file_action_message fam;
+        /* Check that we are not using a socket */
+        if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
+            struct file_action_message fam;
 
-        SHOWMSG("calling the hook");
+            SHOWMSG("calling the hook");
 
-        fam.fam_Action = file_action_write;
-        fam.fam_Data = (void *) buffer;
-        fam.fam_Size = num_bytes;
+            fam.fam_Action = file_action_write;
+            fam.fam_Data = (void *) buffer;
+            fam.fam_Size = num_bytes;
 
-        assert(fd->fd_Action != NULL);
+            assert(fd->fd_Action != NULL);
 
-        num_bytes_written = (*fd->fd_Action)(fd, &fam);
-        if (num_bytes_written == EOF) {
-            __set_errno(fam.fam_Error);
-            goto out;
-        }
-        else if (num_bytes_written != num_bytes) {
-            __set_errno(__translate_io_error_to_errno(IoErr()));
+            num_bytes_written = (*fd->fd_Action)(fd, &fam);
+            if (num_bytes_written == EOF) {
+                __set_errno(fam.fam_Error);
+                goto out;
+            } else if (num_bytes_written != num_bytes) {
+                __set_errno(__translate_io_error_to_errno(IoErr()));
+            }
+        } else {
+            /* Otherwise forward the call to send() */
+            num_bytes_written = send(file_descriptor, buffer, num_bytes, 0);
         }
     } else {
         num_bytes_written = 0;
@@ -79,7 +88,6 @@ write(int file_descriptor, const void *buffer, size_t num_bytes) {
 out:
 
     __fd_unlock(fd);
-
     __stdio_unlock();
 
     RETURN(result);

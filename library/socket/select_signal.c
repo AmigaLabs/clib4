@@ -626,6 +626,15 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 /* Check for break signal. */
                 __check_abort();
 
+                if (signal_mask_ptr) {
+                    ULONG signals = CheckSignal(*signal_mask_ptr);
+                    if (signals) {
+                        *signal_mask_ptr &= signals;
+                        result = 0;
+                        break;
+                    }
+                }
+
                 /* Delay for a tick to avoid busy-waiting. */
                 Delay(1);
 
@@ -646,6 +655,11 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __break_signal_mask)) {
                     SetSignal(__break_signal_mask, __break_signal_mask);
                     __check_abort();
+                }
+
+                if (0 == result && signal_mask_ptr) {
+                    *signal_mask_ptr = break_mask & ~__break_signal_mask;
+                    break;
                 }
 
                 /* Stop if the return value from WaitSelect() is negative (timeout, abort or serious error). */
