@@ -404,7 +404,8 @@ C_SOCKET := \
 	socket/syslog.o \
 	socket/vsyslog.o \
 	socket/get_h_errno.o \
-	socket/set_h_errno.o
+	socket/set_h_errno.o \
+	unix/unix_socket.o
 
 C_STAT := \
 	stat/chmod.o \

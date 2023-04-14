@@ -55,6 +55,10 @@ socket(int domain, int type, int protocol) {
 
     __initialize_fd(fd, __socket_hook_entry, (BPTR) socket_fd, FDF_IN_USE | FDF_IS_SOCKET | FDF_READ | FDF_WRITE, lock);
 
+    fd->fd_Type = type;
+    fd->fd_Family = domain;
+    fd->fd_Protocol = protocol;
+
     lock = NULL;
 
     result = fd_slot_number;
