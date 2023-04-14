@@ -31,10 +31,8 @@ MemalignAVLKeyComp(struct AVLNode *avlnode1, AVLKey key2) {
 }
 
 static inline BOOL
-isPowerOfTwo(size_t
-alignment)
-{
-return (alignment != 0) && ((alignment & (alignment - 1)) == 0);
+isPowerOfTwo(size_t alignment) {
+    return (alignment != 0) && ((alignment & (alignment - 1)) == 0);
 }
 
 void *

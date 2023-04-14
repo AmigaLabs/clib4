@@ -38,6 +38,11 @@ main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Name: %s; UID: %ld\n", pwd.pw_gecos, (long) pwd.pw_uid);
+    printf("The user name is: %s\n", pd.pw_name);
+    printf("The user id   is: %u\n", pd.pw_uid);
+    printf("The group id  is: %u\n", pd.pw_gid);
+    printf("The initial directory is:    %s\n", pd.pw_dir);
+    printf("The initial user program is: %s\n", pd.pw_shell);
+
     exit(EXIT_SUCCESS);
 }

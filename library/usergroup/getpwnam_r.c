@@ -14,12 +14,17 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-#define FIX(x) (pw->pw_##x = pw->pw_##x - line + buffer)
+#include <malloc.h>
+
 #define MAX_VAL_LEN 64
-#define MAX_KEY_LEN 64
+
+/* getpwnam_r is using memalign to allocate pwd fields
+ * Once the main exe will exit, memalign handler will free
+ * all allocated fields. So no memory leak will happen
+ */
 
 static const char* get_value(const char* line, const char* key, char* value, size_t value_size) {
-    char pattern[128];
+    char pattern[128] = {0};
     sprintf(pattern, "%s=", key);
     char* match = strstr(line, pattern);
     if (match != NULL) {
@@ -69,7 +74,7 @@ static int __getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, s
         char shell[MAX_VAL_LEN + 1] = "";
 
         get_value(s, "NAME", name, sizeof(name));
-        pw->pw_name = (char*) valloc(MAX_VAL_LEN + 1);
+        pw->pw_name = (char*) memalign(4096, MAX_VAL_LEN + 1);
         if (name[0] == '\0') {
             strcpy(pw->pw_name, "anonymous");
             pw->pw_name[9] = '\0';
@@ -80,7 +85,7 @@ static int __getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, s
         }
 
         get_value(s, "PASSWORD", password, sizeof(password));
-        pw->pw_passwd = (char*) valloc(MAX_VAL_LEN + 1);
+        pw->pw_passwd = (char*) memalign(4096, MAX_VAL_LEN + 1);
         if (password[0] == '\0') {
             strcpy(pw->pw_passwd, "*");
             pw->pw_passwd[1] = '\0';
@@ -97,7 +102,7 @@ static int __getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, s
         pw->pw_gid = gid[0] == '\0' ? 0 : atoi(gid);
 
         get_value(s, "GECOS", gecos, sizeof(gecos));
-        pw->pw_gecos = (char*) valloc(MAX_VAL_LEN + 1);
+        pw->pw_gecos = (char*) memalign(4096, MAX_VAL_LEN + 1);
         if (gecos[0] == '\0') {
             strcpy(pw->pw_gecos, pw->pw_name);
             pw->pw_gecos[strlen(pw->pw_name)] = '\0';
@@ -108,7 +113,7 @@ static int __getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, s
         }
 
         get_value(s, "DIR", dir, sizeof(dir));
-        pw->pw_dir = (char*) valloc(MAX_VAL_LEN + 1);
+        pw->pw_dir = (char*) memalign(4096, MAX_VAL_LEN + 1);
         if (dir[0] == '\0') {
             strcpy(pw->pw_dir, "/sys");
             pw->pw_dir[4] = '\0';
@@ -119,7 +124,7 @@ static int __getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, s
         }
 
         get_value(s, "SHELL", shell, sizeof(shell));
-        pw->pw_shell = (char*) valloc(MAX_VAL_LEN + 1);
+        pw->pw_shell = (char*) memalign(4096, MAX_VAL_LEN + 1);
         if (shell[0] == '\0') {
             strcpy(pw->pw_shell, "CLI");
             pw->pw_shell[3] = '\0';
@@ -129,22 +134,10 @@ static int __getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, s
             pw->pw_shell[strlen(shell)] = '\0';
         }
 
-        // Debug
-        printf("Linea: %s\n", s);
-        printf("NAME: '%s'\n", pw->pw_name);
-        printf("PASSWORD: %s\n", pw->pw_passwd);
-        printf("UID: %d\n", pw->pw_uid);
-        printf("GID: %d\n", pw->pw_gid);
-        printf("GECOS: %s\n", pw->pw_gecos);
-        printf("DIR: %s\n", pw->pw_dir);
-        printf("SHELL: %s\n", pw->pw_shell);
-        printf("\n");
-
         break;
     }
 
     *res = pw;
-    printf("ret = %d\n", ret);
     if (ret)
         __set_errno(ret);
     return ret;
@@ -159,17 +152,15 @@ static int __getpw_a(const char *name, struct passwd *pw, char **buf, size_t *si
     }
 
     while (!(ret = __getpwent_a(file, pw, buf, size, res)) && *res) {
-        printf("name %s = not found. Found instead : %s\n", name, (*res)->pw_name);
         if (name && !strcmp(name, (*res)->pw_name)) {
-            printf("Found %s\n", name);
             break;
         }
     }
 
     fclose(file);
     if (!*res) {
-        __set_errno(ENOENT);
-        ret = ENOENT;
+        __set_errno(ESRCH);
+        ret = ESRCH;
         goto out;
     }
 
@@ -193,11 +184,6 @@ getpwnam_r(const char *name, struct passwd *pw, char *buffer, size_t bufsize, st
     }
     if (*result) {
         memcpy(buffer, line, len);
-        FIX(name);
-        FIX(passwd);
-        FIX(gecos);
-        FIX(dir);
-        FIX(shell);
     }
     free(line);
 
