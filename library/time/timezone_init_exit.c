@@ -17,6 +17,8 @@ char *tzname[2];     /* Current timezone names.  */
 int daylight;        /* If daylight-saving time is ever in use.  */
 long int timezone;   /* Seconds west of UTC.  */
 
+static int dyntz;    /* Set to TRUE if created with malloc */
+
 void
 __timezone_exit(void) {
     ENTER();
@@ -25,6 +27,11 @@ __timezone_exit(void) {
 
     if (__TimezoneBase != NULL) {
         DECLARE_TIMEZONEBASE();
+
+        if (dyntz == TRUE) {
+            free(tzname[0]);
+            free(tzname[1]);
+        }
 
         if (__ITimezone != NULL) {
             DropInterface((struct Interface *) __ITimezone);
@@ -66,8 +73,9 @@ __timezone_init(void) {
         // Set global timezone variable
         uint32 gmtoffset = 0;
         int8 dstime = -1;
-        tzname[0] = calloc(1, MAX_TZSIZE);
-        tzname[1] = calloc(1, MAX_TZSIZE);
+        tzname[0] = calloc(1, MAX_TZSIZE + 1);
+        tzname[1] = calloc(1, MAX_TZSIZE + 1);
+        dyntz = TRUE;
 
         GetTimezoneAttrs(NULL,
                          TZA_Timezone, tzname[0],
@@ -86,6 +94,7 @@ __timezone_init(void) {
         daylight = 0;
         tzname[0] = (char *) "GMT";
         tzname[1] = (char *) "AMT";
+        dyntz = FALSE;
     }
 
     __timezone_unlock();
@@ -108,8 +117,7 @@ __timezone_unlock(void) {
         ReleaseSemaphore(timezone_lock);
 }
 
-CLIB_DESTRUCTOR(timezone_exit)
-{
+CLIB_DESTRUCTOR(timezone_exit) {
     ENTER();
 
     __timezone_exit();
@@ -120,8 +128,7 @@ CLIB_DESTRUCTOR(timezone_exit)
     LEAVE();
 }
 
-CLIB_CONSTRUCTOR(timezone_init)
-{
+CLIB_CONSTRUCTOR(timezone_init) {
     BOOL success = FALSE;
 
     ENTER();

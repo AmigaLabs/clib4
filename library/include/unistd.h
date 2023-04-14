@@ -134,6 +134,7 @@ extern int setregid(gid_t rgid, gid_t egid);
 extern int setreuid(uid_t ruid, uid_t euid);
 extern pid_t setsid(void);
 extern int setuid(uid_t uid);
+extern int *setlogin(const char *name);
 
 /* The following is for use with pathconf()/fpathconf() */
 #define	_PC_LINK_MAX				0
@@ -173,9 +174,11 @@ extern int setuid(uid_t uid);
 #define _SC_OPEN_MAX                4
 #define _SC_PAGESIZE                8
 #define _SC_NPROCESSORS_CONF        9
+#define _SC_NPROCESSORS_ONLN       10
 #define _SC_TZNAME_MAX             20
 #define _SC_THREAD_KEYS_MAX        21
 #define _SC_HOST_NAME_MAX          65
+#define _SC_GETPW_R_SIZE_MAX	   70
 
 extern long pathconf(const char *path,int name);
 extern long fpathconf(int file_descriptor,int name);

@@ -7,31 +7,29 @@
 #endif /* _USERGROUP_HEADERS_H */
 
 struct passwd *
-getpwnam(const char *name)
-{
-	struct passwd *result = NULL;
+getpwnam(const char *name) {
+    struct passwd *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(name);
+    SHOWSTRING(name);
 
-	assert(name != NULL);
-	assert(__UserGroupBase != NULL);
+    assert(name != NULL);
+    assert(__UserGroupBase != NULL);
 
-    if (name == NULL)
-    {
+    if (name == NULL) {
         SHOWMSG("invalid name");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __getpwnam((STRPTR)name);
+    result = __getpwnam((STRPTR) name);
 
 out:
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

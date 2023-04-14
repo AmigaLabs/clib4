@@ -898,7 +898,9 @@ C_USERGROUP := \
 	usergroup/getpgrp.o \
 	usergroup/getpwent.o \
 	usergroup/getpwnam.o \
+	usergroup/getpwnam_r.o \
 	usergroup/getpwuid.o \
+	usergroup/getpwuid_r.o \
 	usergroup/getuid.o \
 	usergroup/tcgetpgrp.o \
 	usergroup/initgroups.o \
