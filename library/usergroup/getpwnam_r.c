@@ -18,42 +18,26 @@
 #define MAX_VAL_LEN 64
 #define MAX_KEY_LEN 64
 
-static unsigned int atou(char **s) {
-    if (*s == NULL)
-        return 0;
-
-    unsigned int x;
-    for (x = 0; **s - '0' < 10U; ++*s) x = 10 * x + (**s - '0');
-    return x;
-}
-
-static int find_any_key_value(const char *str, char *key, char *value) {
-    char junk[256] = {0};
-    const char *search = str;
-    while (*search != '\0') {
-        int offset;
-        if (sscanf(search, " %31[a-zA-Z_0-9]=%63s%n", key, value, &offset) == 2)
-            return(search + offset - str);
-        int rc;
-        if ((rc = sscanf(search, "%255s%n", junk, &offset)) != 1)
-            return EOF;
-        search += offset;
+static const char* get_value(const char* line, const char* key, char* value, size_t value_size) {
+    char pattern[128];
+    sprintf(pattern, "%s=", key);
+    char* match = strstr(line, pattern);
+    if (match != NULL) {
+        match += strlen(key) + 1;
+        // Ignore space before value
+        while (*match == ' ') {
+            match++;
+        }
+        // Copy value til first space or NULL
+        int i = 0;
+        while (*match != '\0' && *match != ' ' && i < value_size - 1) {
+            value[i++] = *match++;
+        }
+        value[i] = '\0';
+    } else {
+        // If key is not present return NULL
+        value[0] = '\0';
     }
-
-    return EOF;
-}
-
-static char *find_key_value(const char *str, const char *key, char *value) {
-    char found[MAX_KEY_LEN + 1] = {0};
-    int offset = -1;
-    const char *search = str;
-    while ((offset = find_any_key_value(search, found, value)) > 0) {
-        if (strcmp(found, key) == 0)
-            return (search + offset - str);
-        search += offset;
-    }
-    if (offset == EOF)
-        return NULL;
     return value;
 }
 
@@ -73,37 +57,81 @@ static int __getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, s
         line[0][l-1] = 0;
 
         s = line[0];
-        printf("S=%s\n", s);
         if (s[0] == '#')
             continue;
 
-        char *value = malloc(MAX_VAL_LEN + 1);
+        char name[MAX_VAL_LEN + 1] = "";
+        char password[MAX_VAL_LEN + 1] = "";
+        char uid[MAX_VAL_LEN + 1] = "";
+        char gid[MAX_VAL_LEN + 1] = "";
+        char gecos[MAX_VAL_LEN + 1] = "";
+        char dir[MAX_VAL_LEN + 1] = "";
+        char shell[MAX_VAL_LEN + 1] = "";
 
-        pw->pw_name = ((value = find_key_value(s, "NAME", value)) == NULL ? "anonymous" : value);
-        memset(value, 0, MAX_VAL_LEN + 1);
+        get_value(s, "NAME", name, sizeof(name));
+        pw->pw_name = (char*) valloc(MAX_VAL_LEN + 1);
+        if (name[0] == '\0') {
+            strcpy(pw->pw_name, "anonymous");
+            pw->pw_name[9] = '\0';
+        }
+        else {
+            strncpy(pw->pw_name, name, MAX_VAL_LEN);
+            pw->pw_name[strlen(name)] = '\0';
+        }
 
-        pw->pw_passwd = ((value = find_key_value(s, "PASSWORD", value)) == NULL ? "*" : value);
-        memset(value, 0, MAX_VAL_LEN + 1);
+        get_value(s, "PASSWORD", password, sizeof(password));
+        pw->pw_passwd = (char*) valloc(MAX_VAL_LEN + 1);
+        if (password[0] == '\0') {
+            strcpy(pw->pw_passwd, "*");
+            pw->pw_passwd[1] = '\0';
+        }
+        else {
+            strncpy(pw->pw_passwd, password, MAX_VAL_LEN);
+            pw->pw_passwd[strlen(password)] = '\0';
+        }
 
-        pw->pw_uid = ((value = find_key_value(s, "UID", value)) == NULL ? 0 : atou(&value));
-        memset(value, 0, MAX_VAL_LEN + 1);
+        get_value(s, "UID", uid, sizeof(uid));
+        pw->pw_uid = uid[0] == '\0' ? 0 : atoi(uid);
 
-        pw->pw_gid = ((value = find_key_value(s, "GID", value)) == NULL ? 0 : atou(&value));
-        memset(value, 0, MAX_VAL_LEN + 1);
+        get_value(s, "GID", gid, sizeof(gid));
+        pw->pw_gid = gid[0] == '\0' ? 0 : atoi(gid);
 
-        pw->pw_gecos = ((value = find_key_value(s, "GECOS", value)) == NULL ? pw->pw_name : value);
-        memset(value, 0, MAX_VAL_LEN + 1);
+        get_value(s, "GECOS", gecos, sizeof(gecos));
+        pw->pw_gecos = (char*) valloc(MAX_VAL_LEN + 1);
+        if (gecos[0] == '\0') {
+            strcpy(pw->pw_gecos, pw->pw_name);
+            pw->pw_gecos[strlen(pw->pw_name)] = '\0';
+        }
+        else {
+            strncpy(pw->pw_gecos, gecos, MAX_VAL_LEN);
+            pw->pw_gecos[strlen(gecos)] = '\0';
+        }
 
-        pw->pw_dir = ((value = find_key_value(s, "DIR", value)) == NULL ? "/sys" : value);
-        memset(value, 0, MAX_VAL_LEN + 1);
+        get_value(s, "DIR", dir, sizeof(dir));
+        pw->pw_dir = (char*) valloc(MAX_VAL_LEN + 1);
+        if (dir[0] == '\0') {
+            strcpy(pw->pw_dir, "/sys");
+            pw->pw_dir[4] = '\0';
+        }
+        else {
+            strncpy(pw->pw_dir, dir, MAX_VAL_LEN);
+            pw->pw_dir[strlen(dir)] = '\0';
+        }
 
-        pw->pw_shell = ((value = find_key_value(s, "SHELL", value)) == NULL ? "CLI" : value);
-
-        free(value);
+        get_value(s, "SHELL", shell, sizeof(shell));
+        pw->pw_shell = (char*) valloc(MAX_VAL_LEN + 1);
+        if (shell[0] == '\0') {
+            strcpy(pw->pw_shell, "CLI");
+            pw->pw_shell[3] = '\0';
+        }
+        else {
+            strncpy(pw->pw_shell, shell, MAX_VAL_LEN);
+            pw->pw_shell[strlen(shell)] = '\0';
+        }
 
         // Debug
         printf("Linea: %s\n", s);
-        printf("NAME: %s\n", pw->pw_name);
+        printf("NAME: '%s'\n", pw->pw_name);
         printf("PASSWORD: %s\n", pw->pw_passwd);
         printf("UID: %d\n", pw->pw_uid);
         printf("GID: %d\n", pw->pw_gid);
@@ -111,9 +139,12 @@ static int __getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, s
         printf("DIR: %s\n", pw->pw_dir);
         printf("SHELL: %s\n", pw->pw_shell);
         printf("\n");
+
+        break;
     }
 
     *res = pw;
+    printf("ret = %d\n", ret);
     if (ret)
         __set_errno(ret);
     return ret;
@@ -121,13 +152,14 @@ static int __getpwent_a(FILE *f, struct passwd *pw, char **line, size_t *size, s
 
 static int __getpw_a(const char *name, struct passwd *pw, char **buf, size_t *size, struct passwd **res) {
     int ret = 0;
-    FILE *file = fopen("Devs:Internet/users", "r");
+    FILE *file = fopen(_PATH_USERS, "r");
     if (file == NULL) {
         ret = errno;
         goto out;
     }
 
     while (!(ret = __getpwent_a(file, pw, buf, size, res)) && *res) {
+        printf("name %s = not found. Found instead : %s\n", name, (*res)->pw_name);
         if (name && !strcmp(name, (*res)->pw_name)) {
             printf("Found %s\n", name);
             break;
@@ -135,9 +167,15 @@ static int __getpw_a(const char *name, struct passwd *pw, char **buf, size_t *si
     }
 
     fclose(file);
+    if (!*res) {
+        __set_errno(ENOENT);
+        ret = ENOENT;
+        goto out;
+    }
+
+    *res = pw;
 
 out:
-    *res = pw;
     if (ret)
         __set_errno(ret);
     return ret;

@@ -41,7 +41,9 @@ extern int NOCOMMON __root_gid;
 extern int NOCOMMON __root_euid;
 extern int NOCOMMON __root_egid;
 
-/****************************************************************************/
+#ifndef _PATH_SERVICES
+#define _PATH_USERS  "Devs:Internet/users"
+#endif
 
 #include <interfaces/usergroup.h>
 
