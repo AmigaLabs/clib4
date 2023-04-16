@@ -520,9 +520,6 @@ struct _clib2 {
     struct SignalSemaphore *__aio_lock;
     CList *aio_threads;
 
-    /* Unix sockets map */
-    struct hashmap *uxSocketsMap;
-
 };
 
 extern struct _clib2 *__global_clib2;
