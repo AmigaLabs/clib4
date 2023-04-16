@@ -144,6 +144,7 @@ C_LOCALE := \
 
 C_MISC := \
 	misc/clist.o \
+	misc/map.o
 
 C_MOUNT := \
 	mount/convertinfo.o \
@@ -371,6 +372,7 @@ C_SOCKET := \
 	socket/if_indextoname.o \
 	socket/if_nametoindex.o \
 	socket/in6addr_any.o \
+	socket/in6addr_loopback.o \
 	socket/inet_addr.o \
 	socket/inet_aton.o \
 	socket/inet_lnaof.o \

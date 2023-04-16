@@ -182,6 +182,8 @@ reent_init() {
 
         /* Initialize aio pthread list */
         __global_clib2->__aio_lock = __create_semaphore();
+        if (__global_clib2->__aio_lock == NULL)
+            goto out;
 
         /* Check if .unix file exists in the current dir. If the file exists enable
          * unix path semantics
@@ -233,6 +235,11 @@ reent_init() {
 out:
 
     if (!success) {
+        /* Check for semaphores */
+        if (__global_clib2->__aio_lock != NULL) {
+            __delete_semaphore(__global_clib2->__aio_lock);
+        }
+
         /* Clean wide status memory */
         if (__global_clib2->wide_status) {
             FreeVec(__global_clib2->wide_status);

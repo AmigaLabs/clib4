@@ -45,6 +45,13 @@ socket(int domain, int type, int protocol) {
     if (type == SOCK_DGRAM && protocol == IPPROTO_ICMP)
         type = SOCK_RAW;
 
+    /* For now force AF_LOCAL to be AF_INET
+     * Unix sockets will not work but some examples or pieces of code that use
+     * socketpair for examples are working correctly
+     */
+    if (domain == AF_LOCAL)
+        domain = AF_INET;
+
     socket_fd = __socket(domain, type, protocol);
     if (socket_fd < 0) {
         SHOWMSG("could not create socket");

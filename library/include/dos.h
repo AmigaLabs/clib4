@@ -518,6 +518,7 @@ struct _clib2 {
     /* Used by aio functions */
     struct SignalSemaphore *__aio_lock;
     CList *aio_threads;
+
 };
 
 extern struct _clib2 *__global_clib2;

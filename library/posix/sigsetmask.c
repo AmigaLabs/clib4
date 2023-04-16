@@ -7,8 +7,7 @@
 #endif /* _SIGNAL_HEADERS_H */
 
 int
-sigsetmask(int signal_mask)
-{
+sigsetmask(int signal_mask)  {
 	int result;
 
 	ENTER();

@@ -120,6 +120,10 @@ struct iob;
 /* And something for NIL: */
 #define ST_NIL (20060920)
 
+/* File is an unix socket. */
+#define ST_USOCKET (140420236)
+
+
 /****************************************************************************/
 
 /* The file action function for buffered files. */
@@ -181,7 +185,7 @@ typedef struct iob
 	int   				iob_Flags2;				/* for future use */
 	long				pad[5];					/* Padding for function pointers */
 
-	/************************************************************************/
+    /************************************************************************/
 	/* Public portion ends here                                             */
 	/************************************************************************/
 

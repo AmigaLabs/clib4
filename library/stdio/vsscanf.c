@@ -39,7 +39,7 @@ vsscanf(const char *s, const char *format, va_list arg) {
     string_iob.iob_String = (STRPTR) s;
     string_iob.iob_StringLength = strlen(s);
 
-    result = vfscanf((FILE * ) & string_iob, format, arg);
+    result = vfscanf((FILE * ) &string_iob, format, arg);
 
 out:
 

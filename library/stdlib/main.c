@@ -32,6 +32,10 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
+#ifndef _SOCKET_HEADERS_H
+#include "socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
+
 #include <proto/elf.h>
 #include "aio/aio_misc.h"
 

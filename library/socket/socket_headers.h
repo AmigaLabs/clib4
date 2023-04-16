@@ -45,6 +45,10 @@
 #include <syslog.h>
 #endif
 
+#ifndef _UN_H
+#include <sys/un.h>
+#endif
+
 /* Code value. */
 #define SBTB_CODE 1
 #define SBTS_CODE 0x3FFF

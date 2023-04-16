@@ -38,6 +38,7 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
 
     result = __bind(fd->fd_Socket, (struct sockaddr *) name, namelen);
 
+
 out:
 
     __check_abort();
