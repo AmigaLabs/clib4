@@ -49,11 +49,6 @@
 #include <sys/un.h>
 #endif
 
-#include "unix/unix_socket.h"
-
-/* Socket marker */
-#define SOCKET_COOKIE "!<socket >"
-
 /* Code value. */
 #define SBTB_CODE 1
 #define SBTS_CODE 0x3FFF

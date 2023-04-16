@@ -106,8 +106,8 @@ struct linger
  * Address families.
  */
 #define	AF_UNSPEC		0			/* unspecified */
-#define	AF_LOCAL		1			/* local to host (pipes, portals) */
-#define	AF_UNIX			AF_INET	    /* backward compatibility */
+#define	AF_LOCAL		1 	        /* local to host (pipes, portals) */
+#define	AF_UNIX			AF_LOCAL    /* backward compatibility */
 #define	AF_INET			2			/* internetwork: UDP, TCP, etc. */
 #define AF_INET6		10			/* IP version 6	 */
 #define	AF_IMPLINK		3			/* arpanet imp addresses */

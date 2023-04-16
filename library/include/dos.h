@@ -20,6 +20,7 @@
 #include <proto/elf.h>
 
 #include "clist.h"
+#include "map.h"
 
 __BEGIN_DECLS
 
@@ -518,6 +519,10 @@ struct _clib2 {
     /* Used by aio functions */
     struct SignalSemaphore *__aio_lock;
     CList *aio_threads;
+
+    /* Unix sockets map */
+    struct hashmap *uxSocketsMap;
+
 };
 
 extern struct _clib2 *__global_clib2;
