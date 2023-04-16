@@ -20,7 +20,6 @@
 #include <proto/elf.h>
 
 #include "clist.h"
-#include "map.h"
 
 __BEGIN_DECLS
 

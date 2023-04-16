@@ -38,7 +38,6 @@
 
 #include <proto/elf.h>
 #include "aio/aio_misc.h"
-#include "map.h"
 
 extern int main(int arg_c, char **arg_v);
 
@@ -82,10 +81,6 @@ call_main(void) {
 
     /* Initialize aio list */
     __global_clib2->aio_threads = CList_init(sizeof(struct AioThread));
-
-    /* Initialize unix sockets map */
-    /* Don't know if Roadshow supports more than 256 sockets */
-    __global_clib2->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 256, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
 
     /* Set __current_path_name to a valid value */
     UBYTE current_dir_name[256] = {0};
@@ -177,9 +172,6 @@ out:
         __global_clib2->aio_threads->free(__global_clib2->aio_threads);
         ReleaseSemaphore(__global_clib2->__aio_lock);
     }
-
-    /* Free unix sockets map */
-    hashmap_free(__global_clib2->uxSocketsMap);
 
     /* Go through the destructor list */
     SHOWMSG("invoking the destructors");

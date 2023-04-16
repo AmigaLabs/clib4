@@ -74,11 +74,6 @@ struct _fd
 		BPTR			fdu_File;		/* A dos.library file handle */
 		LONG			fdu_Socket;		/* A socket identifier */
 	} fdu_Default;
-
-    int                *fd_Secret;      /* unix socket secret */
-    int                 fd_Type;        /* socket type */
-    int                 fd_Family;      /* socket family */
-    int                 fd_Protocol;    /* socket protocol */
 };
 
 /****************************************************************************/
