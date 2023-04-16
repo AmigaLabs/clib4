@@ -82,13 +82,14 @@ extern int fsync(int file_descriptor);
 extern int fdatasync(int file_descriptor);
 extern char *ttyname(int);
 extern int ttyname_r(int file_descriptor,char *name,size_t buflen);
-extern int ttyname_t(int,char *,size_t);
 extern int execl(const char *path,const char *arg0,...);
 extern int execle(const char *path,const char *arg0,...);
 extern int execlp(const char *path,const char *arg0,...);
 extern int execv(const char *path,char * const argv[]);
 extern int execve(const char *path,char *const argv[],char *const envp[]);
 extern int execvp(const char *command,char * const argv[]);
+
+extern void encrypt(char *block, int edflag);
 
 extern int spawnv(int mode, const char *file, const char **argv);
 extern int spawnvp(int mode, const char *path, const char **argv);
@@ -134,7 +135,7 @@ extern int setregid(gid_t rgid, gid_t egid);
 extern int setreuid(uid_t ruid, uid_t euid);
 extern pid_t setsid(void);
 extern int setuid(uid_t uid);
-extern int *setlogin(const char *name);
+extern int setlogin(const char *name);
 
 /* The following is for use with pathconf()/fpathconf() */
 #define	_PC_LINK_MAX				0

@@ -46,14 +46,14 @@
 
 __BEGIN_DECLS
 
-extern void _iconv_nls_get_state(iconv_t cd, mbstate_t *ps, int direction);
-extern int _iconv_nls_set_state(iconv_t cd, mbstate_t *ps, int direction);
-extern int _iconv_nls_is_stateful(iconv_t cd, int direction);
-extern int _iconv_nls_get_mb_cur_max(iconv_t cd, int direction);
-extern size_t _iconv_nls_conv(iconv_t cd, const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
-extern const char *_iconv_nls_construct_filename(const char *file, const char *dir, const char *ext);
-extern int _iconv_nls_open(const char *encoding, iconv_t *towc, iconv_t *fromwc, int flag);
-extern char *_iconv_resolve_encoding_name(const char *ca);
+// extern void _iconv_nls_get_state(iconv_t cd, mbstate_t *ps, int direction);
+// extern int _iconv_nls_set_state(iconv_t cd, mbstate_t *ps, int direction);
+// extern int _iconv_nls_is_stateful(iconv_t cd, int direction);
+// extern int _iconv_nls_get_mb_cur_max(iconv_t cd, int direction);
+// extern size_t _iconv_nls_conv(iconv_t cd, const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);
+// extern const char *_iconv_nls_construct_filename(const char *file, const char *dir, const char *ext);
+// extern int _iconv_nls_open(const char *encoding, iconv_t *towc, iconv_t *fromwc, int flag);
+// extern char *_iconv_resolve_encoding_name(const char *ca);
 
 __END_DECLS
 

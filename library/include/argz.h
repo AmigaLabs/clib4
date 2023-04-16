@@ -5,14 +5,10 @@
 #define _ARGZ_H
 
 #include <features.h>
+#include <errno.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS
-
-#ifndef __error_t_defined
-#define __error_t_defined 1
-    typedef int error_t;
-#endif
 
 extern error_t argz_create(char *const argv[], char **argz, size_t *argz_len);
 extern error_t argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len);
