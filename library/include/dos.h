@@ -462,6 +462,8 @@ struct _wchar
  * and populated with all its fields. At moment it holds just global fields
  */
 
+extern struct _clib2 *__getclib2(void);
+
 struct _clib2 {
 	struct ExecIFace *IExec; 	/* Main IExec interface */
 
@@ -519,9 +521,13 @@ struct _clib2 {
     struct SignalSemaphore *__aio_lock;
     CList *aio_threads;
 
+    /* Used for shared version library */
+    int _errno;
 };
 
 extern struct _clib2 *__global_clib2;
+
+# define _GCLIB2 (__getclib2())
 
 __END_DECLS
 

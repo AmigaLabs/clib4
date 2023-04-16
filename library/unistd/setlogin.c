@@ -10,7 +10,8 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-int *setlogin(const char *name) {
+int
+setlogin(const char *name) {
     ENTER();
 
     assert(__UserGroupBase != NULL);

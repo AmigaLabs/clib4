@@ -16,9 +16,11 @@ endif
 C_BASE := \
 	c.lib_rev.o \
 	libc_init_global.o \
+	getclib2.o \
 	errno_data.o
 
 C_AIO := \
+	aio/aio_init.o \
 	aio/aio_cancel.o \
     aio/aio_error.o \
     aio/aio_fsync.o \
@@ -31,6 +33,7 @@ C_AIO := \
     aio/aio_suspend.o \
     aio/aio_write.o \
     aio/aio_write64.o \
+    aio/lio_listio.o
 
 C_ARGZ := \
 	argz/add.o \
@@ -120,6 +123,15 @@ C_DIRENT := \
 	dirent/readdir_r.o \
 	dirent/readdir64_r.o \
 	dirent/rewinddir.o
+
+C_ENVZ := \
+	envz/buf_findstr.o \
+	envz/envz_add.o \
+	envz/envz_entry.o \
+	envz/envz_get.o \
+	envz/envz_merge.o \
+	envz/envz_remove.o \
+	envz/envz_strip.o
 
 C_ICONV := \
 	iconv/iconv.o \
@@ -212,21 +224,32 @@ C_PTHREAD := \
     pthread/pthread_attr_destroy.o \
     pthread/pthread_attr_getdetachstate.o \
     pthread/pthread_attr_getguardsize.o \
+    pthread/pthread_attr_getinheritsched.o \
+    pthread/pthread_attr_getscope.o \
     pthread/pthread_attr_getschedparam.o \
+    pthread/pthread_attr_getschedpolicy.o \
     pthread/pthread_attr_getstack.o \
     pthread/pthread_attr_getstacksize.o \
     pthread/pthread_attr_init.o \
     pthread/pthread_attr_setdetachstate.o \
     pthread/pthread_attr_setguardsize.o \
+    pthread/pthread_attr_setinheritsched.o \
+    pthread/pthread_attr_setscope.o \
     pthread/pthread_attr_setschedparam.o \
+    pthread/pthread_attr_setschedpolicy.o \
     pthread/pthread_attr_setstack.o \
     pthread/pthread_attr_setstacksize.o \
+    pthread/pthread_barrierattr_init.o \
+    pthread/pthread_barrierattr_destroy.o \
+    pthread/pthread_barrierattr_getpshared.o \
+    pthread/pthread_barrierattr_setpshared.o \
     pthread/pthread_barrier_destroy.o \
     pthread/pthread_barrier_init.o \
     pthread/pthread_barrier_wait.o \
     pthread/pthread_cancel.o \
     pthread/pthread_cleanup_pop.o \
     pthread/pthread_cleanup_push.o \
+    pthread/pthread_concur.o \
     pthread/pthread_cond_broadcast.o \
     pthread/pthread_cond_destroy.o \
     pthread/pthread_cond_init.o \
@@ -236,11 +259,14 @@ C_PTHREAD := \
     pthread/pthread_cond_wait.o \
     pthread/pthread_condattr_destroy.o \
     pthread/pthread_condattr_init.o \
+    pthread/pthread_condattr_getpshared.o \
+    pthread/pthread_condattr_setpshared.o \
     pthread/pthread_create.o \
     pthread/pthread_detach.o \
     pthread/pthread_equal.o \
     pthread/pthread_exit.o \
     pthread/pthread_getattr_np.o \
+    pthread/pthread_getconcurrency.o \
     pthread/pthread_getname_np.o \
     pthread/pthread_getschedparam.o \
     pthread/pthread_getspecific.o \
@@ -255,10 +281,14 @@ C_PTHREAD := \
     pthread/pthread_mutex_trylock.o \
     pthread/pthread_mutex_unlock.o \
     pthread/pthread_mutexattr_destroy.o \
+    pthread/pthread_mutexattr_getpshared.o \
     pthread/pthread_mutexattr_gettype.o \
     pthread/pthread_mutexattr_init.o \
+    pthread/pthread_mutexattr_setpshared.o \
     pthread/pthread_mutexattr_settype.o \
     pthread/pthread_once.o \
+    pthread/pthread_rwlockattr_getpshared.o \
+    pthread/pthread_rwlockattr_setpshared.o \
     pthread/pthread_rwlock_destroy.o \
     pthread/pthread_rwlock_init.o \
     pthread/pthread_rwlock_rdlock.o \
@@ -271,6 +301,7 @@ C_PTHREAD := \
     pthread/pthread_rwlockattr_destroy.o \
     pthread/pthread_rwlockattr_init.o \
     pthread/pthread_self.o \
+    pthread/pthread_setconcurrency.o \
     pthread/pthread_setcancelstate.o \
     pthread/pthread_setcanceltype.o \
     pthread/pthread_setname_np.o \
@@ -810,6 +841,7 @@ C_UNISTD := \
 	unistd/def_path_delimiter.o \
 	unistd/dup.o \
 	unistd/dup2.o \
+	crypt/encrypt.o \
 	unistd/environ.o \
 	unistd/execl.o \
 	unistd/execle.o \
@@ -861,6 +893,7 @@ C_UNISTD := \
 	unistd/restorepathname.o \
 	unistd/setcurrentpath.o \
 	unistd/setdomainname.o \
+	unistd/setlogin.o \
 	unistd/sleep.o \
 	unistd/spawnv.o \
 	unistd/spawnvp.o \
@@ -941,6 +974,7 @@ C_WCHAR := \
 	wchar/_mbstowcs_r.o \
 	wchar/_mbtowc_r.o \
 	wchar/mbsinit.o \
+	wchar/mbsnrtowcs.o \
 	wchar/mbsrtowcs.o \
 	wchar/putwc.o \
 	wchar/putwchar.o \
@@ -962,6 +996,7 @@ C_WCHAR := \
 	wchar/wcschr.o \
 	wchar/wcscmp.o \
 	wchar/wcscoll.o \
+	wchar/wcscoll_l.o \
 	wchar/wcscpy.o \
 	wchar/wcscspn.o \
 	wchar/wcsdup.o \
@@ -1031,6 +1066,7 @@ C_LIB := \
 	$(C_CTYPE) \
 	$(C_DIRENT) \
 	$(C_DEBUG) \
+	$(C_ENVZ) \
 	$(C_ICONV) \
 	$(C_INTTYPES) \
 	$(C_LOCALE) \

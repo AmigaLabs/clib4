@@ -120,6 +120,11 @@ extern int errno;
 #define EBADMSG         88  /* Bad message */
 #define ENOTSUP         89  /* Not supported */
 
+#ifndef __error_t_defined
+#define __error_t_defined 1
+typedef int error_t;
+#endif
+
 __END_DECLS
 
 #endif /* _ERRNO_H */
