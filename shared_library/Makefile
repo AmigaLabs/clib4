@@ -16,19 +16,24 @@ OPTIMIZE 	:= -O
 DEBUG 		:= -gstabs
 CRTBEGIN 	?= /usr/ppc-amigaos/SDK/clib2/lib/crtbegin.o
 CRTEND 		?= /usr/ppc-amigaos/SDK/clib2/lib/crtend.o
-
+VERBOSE		:= @
 ###############################################################################
 
 CFLAGS = $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(CPU) $(OPTIONS) -I../library/include -I. -Iinclude -I../library
 
+STUBS = $(wildcard stubs/*.c)
+STATIC_STUBS = $(wildcard stubs/static/*.c)
+
 ###############################################################################
 
 OBJS = \
-	clib2.o
+	clib2.o \
+	$(STUBS:.c=.o) \
+	$(STATIC_STUBS:.c=.o)
 
 ###############################################################################
 
-LIBS = $(CRTBEGIN) -lc -lm -lprofile -lcrypt -lgcc $(CRTEND)
+LIBS = $(CRTBEGIN) -lm -lprofile -lcrypt -lgcc $(CRTEND)
 
 ###############################################################################
 
@@ -37,9 +42,9 @@ all: clib2.library
 ###############################################################################
 
 clib2.library: $(OBJS)
-	$(CC) -o $@.debug $(OBJS) $(CFLAGS) -Wl,--cref,-M,-Map=$@.map \
+	$(VERBOSE)$(CC) -o $@.debug $(OBJS) $(CFLAGS) -Wl,--cref,-M,-Map=$@.map \
 		-nostartfiles -nostdlib $(LIBS)
 	ppc-amigaos-strip -R.comment -o $@ $@.debug
 
 clean:
-	-rm -f *.o *.debug *.map clib2.library
+	-rm -f *.o *.debug *.map clib2.library stubs/*.o

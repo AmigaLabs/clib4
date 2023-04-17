@@ -219,7 +219,7 @@ const struct Resident RomTag = {
         RTF_NATIVE | RTF_AUTOINIT | RTF_COLDSTART,
         VERSION,
         NT_LIBRARY,
-        1,
+        100, /* PRI, usually not needed unless you're resident */
         "clib2.library",
         VSTRING,
         (APTR) libCreateTags
