@@ -96,6 +96,26 @@ struct Clib2IFace *IClib2;
 struct Library *UtilityBase;
 struct UtilityIFace *PrivateIUtility;
 
+uint32 LIB_Release(struct Interface *Self);
+int LIB_Reserved(void);
+uint32 LIB_Obtain(struct Interface *Self);
+struct Library *LIB_Init(struct Library *Clib2Base, BPTR librarySegment, struct ExecIFace * const iexec);
+int clib2_start(uint32 clib2_version, char *start_argstr, int start_arglen, struct DosLibrary **start_DOSBase, struct DOSIFace **start_IDOS, int (* start_main)(int, char **, char **), char *start_stdiowin, int start_flags, void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void));
+
+const struct Resident RomTag;
+int32
+_start(char *args, int arglen, struct ExecBase *sysbase __attribute__((unused))) {
+    struct ExecIFace *iexec = (struct ExecIFace *)sysbase->MainInterface;
+    struct Library *old = iexec->OpenLibrary("clib2.library", 0);
+
+    if (old) {
+        iexec->Remove(&old->lib_Node);
+        iexec->InitResident(&RomTag, 0);
+        iexec->Wait(0);
+    }
+    return -1;
+}
+
 static struct Library *LIB_Open(struct Interface *Self, uint32 version __attribute__((unused))) {
     struct Library *Clib2Base = Self->Data.LibBase;
     if (!IClib2) {
@@ -117,7 +137,7 @@ static BPTR LIB_Expunge(struct Interface *Self) {
         return 0;
     }
 
-    if (clib2seglist) { // as kickstart module seglist is 0 -> no expunge
+    if (clib2seglist) {
         IExec->Remove((struct Node *) Clib2Base);
         IExec->DeleteLibrary(Clib2Base);
     }
@@ -226,6 +246,6 @@ const struct Resident RomTag = {
 };
 
 int
-clib2_start(uint32 clib2_version, char *start_argstr, int start_arglen, struct DosLibrary **start_DOSBase, struct DOSIFace **start_IDOS, int (* start_main)(int, char **, char **), char *start_stdiowin, int start_flags, int GCC, void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)) {
+clib2_start(uint32 clib2_version, char *start_argstr, int start_arglen, struct DosLibrary **start_DOSBase, struct DOSIFace **start_IDOS, int (* start_main)(int, char **, char **), char *start_stdiowin, int start_flags, void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)) {
 
 }

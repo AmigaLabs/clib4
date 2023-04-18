@@ -28,13 +28,6 @@
 
 __BEGIN_DECLS
 
-/* One-way hash PHRASE, returning a string suitable for storage in the
-   user database.  SALT selects the one-way function to use, and
-   ensures that no two users' hashes are the same, even if they use
-   the same passphrase.  The return value points to static storage
-   which will be overwritten by the next call to crypt.  */
-extern char *crypt(const char *__phrase, const char *__salt);
-
 /* This structure provides scratch and output buffers for 'crypt_r'.
    Its contents should not be accessed directly.  */
 struct crypt_data {
