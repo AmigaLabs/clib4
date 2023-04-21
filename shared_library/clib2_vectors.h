@@ -10,7 +10,7 @@ static void *main_vectors[] =
     (void *) (NULL),
     (void *) (NULL),
     /* internal */
-    (void *) (LIB_Reserved), //(clib2_start),
+    (void *) (library_start),
     (void *) (__getclib2),
     (void *) (__restore_path_name),
     (void *) (__translate_amiga_to_unix_path_name),

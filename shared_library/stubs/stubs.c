@@ -1,5 +1,24 @@
 #include <sys/interface.h>
 
+asm(".section	\".text\"             \n\
+	.align 2                          \n\
+	.globl __Clib2Call                \n\
+	.type	__Clib2Call, @function      \n\
+__Clib2Call:                            \n\
+	lis %r11, IClib2@ha               \n\
+	lwz %r0, IClib2@l(%r11)           \n\
+	lwzx %r11,%r12,%r0                \n\
+	mtctr %r11                        \n\
+	bctr                              \n\
+	.size	__Clib2Call, .-__Clib2Call");
+
+Clib2Call(__getclib2, 84);
+Clib2Call(__translate_amiga_to_unix_path_name, 88);
+Clib2Call(__translate_unix_to_amiga_path_name, 92);
+Clib2Call(__restore_path_name, 96);
+
+/* Script created stubs */
+
 Clib2Call(aio_init, 120);
 Clib2Call(aio_read, 124);
 Clib2Call(aio_write, 128);

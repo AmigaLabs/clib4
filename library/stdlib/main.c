@@ -40,16 +40,124 @@
 #include "aio/aio_misc.h"
 
 extern int main(int arg_c, char **arg_v);
-
 extern BOOL open_libraries(void);
 extern void close_libraries(void);
+void _start_ctors(void (*__CTOR_LIST__[])(void));
+void _end_ctors(void (*__DTOR_LIST__[])(void));
 
 /* This will be set to TRUE in case a stack overflow was detected. */
 BOOL NOCOMMON __stack_overflow;
 extern struct _clib2 NOCOMMON *__global_clib2;
 
+struct Library *__ElfBase;
+struct ElfIFace *__IElf;
+
+void close_libraries(void) {
+    if (__IUtility != NULL) {
+        DropInterface((struct Interface *) __IUtility);
+        __IUtility = NULL;
+    }
+
+    if (__UtilityBase != NULL) {
+        CloseLibrary(__UtilityBase);
+        __UtilityBase = NULL;
+    }
+
+    if (__IElf != NULL) {
+        DropInterface((struct Interface *) __IElf);
+        __IElf = NULL;
+    }
+
+    if (__ElfBase != NULL) {
+        CloseLibrary(__ElfBase);
+        __ElfBase = NULL;
+    }
+
+    if (IDOS != NULL) {
+        DropInterface((struct Interface *) IDOS);
+        IDOS = NULL;
+    }
+
+    if (DOSBase != NULL) {
+        CloseLibrary(DOSBase);
+        DOSBase = NULL;
+    }
+}
+
+BOOL open_libraries(void) {
+    /* Open the minimum required libraries. */
+    BOOL success = FALSE;
+
+    /* Open the minimum required libraries. */
+    DOSBase = (struct Library *) OpenLibrary("dos.library", MIN_OS_VERSION);
+    if (DOSBase == NULL) {
+        SHOWMSG("Cannot get DOSBase!");
+        goto out;
+    }
+
+    /* Obtain the interfaces for these libraries. */
+    IDOS = (struct DOSIFace *) GetInterface(DOSBase, "main", 1, NULL);
+    if (IDOS == NULL) {
+        SHOWMSG("Cannot get IDOS!");
+        goto out;
+    }
+
+    /* We need elf.library V52.2 or higher. */
+    __ElfBase = OpenLibrary("elf.library", 0);
+    if (__ElfBase == NULL || (__ElfBase->lib_Version < 52) ||
+        (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision < 2)) {
+        SHOWMSG("Cannot get __ElfBase >=52.2!");
+        goto out;
+    }
+
+    __IElf = (struct ElfIFace *) GetInterface(__ElfBase, "main", 1, NULL);
+    if (__IElf == NULL) {
+        SHOWMSG("Cannot get __IElf!");
+        goto out;
+    }
+
+    __UtilityBase = OpenLibrary("utility.library", MIN_OS_VERSION);
+    if (__UtilityBase == NULL)
+        goto out;
+
+    __IUtility = (struct UtilityIFace *) GetInterface(__UtilityBase, "main", 1, 0);
+    if (__IUtility == NULL)
+        goto out;
+
+    success = TRUE;
+
+    out:
+
+    return (success);
+}
+
+void _start_ctors(void (*__CTOR_LIST__[])(void)) {
+    int i = 0;
+
+    while (__CTOR_LIST__[i + 1]) {
+        i++;
+    }
+    SHOWVALUE(i);
+    while (i > 0) {
+        SHOWMSG("Calling ctor");
+        SHOWVALUE(i);
+        __CTOR_LIST__[i--]();
+    }
+}
+
+void _end_ctors(void (*__DTOR_LIST__[])(void)) {
+    int i = 1;
+
+    while (__DTOR_LIST__[i]) {
+        SHOWMSG("Calling dtor");
+        SHOWVALUE(i);
+        __DTOR_LIST__[i++]();
+    }
+}
+
 static int
-call_main(void) {
+call_main(char *argstr, int arglen, int (*start_main)(int, char **, char **), void (*__CTOR_LIST__[])(void),
+          void (*__DTOR_LIST__[])(void)) {
     volatile LONG saved_io_err;
 
     ENTER();
@@ -63,8 +171,8 @@ call_main(void) {
 
     SHOWMSG("now invoking the constructors");
     /* Go through the constructor list */
-    _init();
-    SHOWMSG("Constructors executed correctly. Calling main()");
+    _start_ctors(__CTOR_LIST__);
+    SHOWMSG("Constructors executed correctly. Calling start_main()");
 
     /* Set system time for rusage.
      * This can be executed only here.
@@ -117,8 +225,8 @@ call_main(void) {
 #endif /* NDEBUG */
 
     /* After all these preparations, get this show on the road... */
-    exit(main(__argc, __argv));
-    SHOWMSG("Done. Exit from main()");
+    exit(start_main(__argc, __argv, NULL));
+    SHOWMSG("Done. Exit from start_main()");
 
 out:
 
@@ -175,7 +283,7 @@ out:
 
     /* Go through the destructor list */
     SHOWMSG("invoking the destructors");
-    _fini();
+    _end_ctors(__DTOR_LIST__);
 
     SHOWMSG("Calling reent_exit");
     reent_exit();
@@ -195,7 +303,6 @@ detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase)
     (void) (exit_data);
     (void) (sysBase);
 
-    _fini();
 }
 
 static ULONG get_stack_size(void) {
@@ -205,9 +312,9 @@ static ULONG get_stack_size(void) {
 
     /* How much stack size was provided? */
     upper = (ULONG)
-    tc->tc_SPUpper;
+            tc->tc_SPUpper;
     lower = (ULONG)
-    tc->tc_SPLower;
+            tc->tc_SPLower;
 
     result = upper - lower;
 
@@ -215,7 +322,8 @@ static ULONG get_stack_size(void) {
 }
 
 int
-_main() {
+_main(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_IDOS, int (*start_main)(int, char **, char **), void (*__CTOR_LIST__[])(void),
+      void (*__DTOR_LIST__[])(void)) {
     struct Process *volatile child_process = NULL;
     struct WBStartup *volatile startup_message;
     volatile APTR old_window_pointer = NULL;
@@ -224,9 +332,7 @@ _main() {
     int return_code = RETURN_FAIL;
     ULONG current_stack_size;
 
-    SysBase = *(struct Library **) 4;
-    IExec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
-
+    SHOWMSG("1");
     /* Pick up the Workbench startup message, if available. */
     this_process = (struct Process *) FindTask(NULL);
 
@@ -298,6 +404,45 @@ _main() {
         SetVar("TERM", term_buffer, 5, 0);
     }
 
+    DECLARE_UTILITYBASE();
+    char shellName[128] = {0};
+    if (this_process->pr_CLI) {
+        SNPrintf(shellName, 128, "CON:64/48/800/200/%.200b/AUTO/CLOSE/WAIT",
+                 ((struct CommandLineInterface *) BADDR(this_process->pr_CLI))->cli_CommandName);
+    } else {
+        SNPrintf(shellName, 128, "CON:64/48/800/200/%.200s/AUTO/CLOSE/WAIT", this_process->pr_Task.tc_Node.ln_Name ?: "<NULL>");
+    }
+    BPTR console = Open((char *) shellName, MODE_OLDFILE);
+    if (!console) {
+        console = Open("NIL:", MODE_OLDFILE);
+    }
+
+    if (!console)
+        goto out;
+
+    if (_DOSBase) {
+        *_DOSBase = DOSBase;
+    }
+    if (_IDOS) {
+        *_IDOS = IDOS;
+    }
+
+    BOOL fhExchanged = FALSE;
+    BPTR oldDirFH = 0, newDirFH = 0, oldInputFH, oldOutputFH, oldErrorFH;
+    void *oldConsolePort;
+
+    APTR oldClib2TaskData = this_process->pr_CLibData;
+    oldInputFH = SelectInput(console);
+    oldOutputFH = SelectOutput(console);
+    oldErrorFH = SelectErrorOutput(console);
+    oldConsolePort = SetConsolePort(((struct FileHandle *)BADDR(console))->fh_MsgPort);
+    if (__WBenchMsg->sm_ArgList) {
+        newDirFH = DupLock(__WBenchMsg->sm_ArgList->wa_Lock);
+        oldDirFH = SetCurrentDir(newDirFH);
+    }
+
+    fhExchanged = TRUE;
+
     /* The following code will be executed if the program is to keep
        running in the shell or was launched from Workbench. */
     if (DO_NOT __detach) {
@@ -308,7 +453,7 @@ _main() {
             SetTaskPri((struct Task *) this_process, __priority);
 
         /* Was a minimum stack size requested and do we need more stack space than was provided for? */
-        if (__stack_size > 0 && current_stack_size < (ULONG)__stack_size) {
+        if (__stack_size > 0 && current_stack_size < (ULONG) __stack_size) {
             struct StackSwapStruct *stk;
             unsigned int stack_size;
             APTR new_stack;
@@ -339,14 +484,14 @@ _main() {
             }
 #endif /* NDEBUG */
 
-            return_code = __swap_stack_and_call(stk, (APTR) call_main);
+            return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __CTOR_LIST__,
+                                                                      __DTOR_LIST__));
 
             FreeVec(new_stack);
             FreeVec(stk);
-        }
-        else {
+        } else {
             /* We have enough room to make the call or just don't care. */
-            return_code = call_main();
+            return_code = call_main(argstr, arglen, start_main, __CTOR_LIST__, __DTOR_LIST__);
         }
 
         /* Restore the task priority. */
@@ -379,7 +524,7 @@ _main() {
         tags[i].ti_Tag = NP_StackSize;
         tags[i++].ti_Data = stack_size;
         tags[i].ti_Tag = NP_Name;
-        tags[i++].ti_Data = (ULONG) (__process_name != NULL ? __process_name : (char *) FilePart(program_name));
+        tags[i++].ti_Data = (ULONG)(__process_name != NULL ? __process_name : (char *) FilePart(program_name));
         tags[i].ti_Tag = NP_CommandName;
         tags[i++].ti_Data = (ULONG) FilePart(program_name);
         tags[i].ti_Tag = NP_Cli;
@@ -432,6 +577,23 @@ _main() {
     }
 
 out:
+
+    if (fhExchanged) {
+        this_process->pr_CLibData = oldClib2TaskData;
+
+        SetConsolePort(oldConsolePort);
+        SelectErrorOutput(oldErrorFH);
+        SelectOutput(oldOutputFH);
+        SelectInput(oldInputFH);
+        if (__WBenchMsg->sm_ArgList) {
+            SetCurrentDir(oldDirFH);
+            UnLock(newDirFH);
+        }
+    }
+
+    if (console) {
+        Close(console);
+    }
 
     if (old_window_pointer_valid)
         __set_process_window(old_window_pointer);

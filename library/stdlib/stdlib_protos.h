@@ -110,7 +110,15 @@ extern void __check_memory_allocations();
 extern void __check_abort(void);
 
 /* stdlib_main.c */
-extern int _main();
+//extern int _main();
+extern int _main(char *argstr,
+                 int arglen,
+                 struct Library **_DOSBase,
+                 struct DOSIFace **_IDOS,
+                 int (* start_main)(int, char **, char **),
+                 void (*__CTOR_LIST__[])(void),
+                 void (*__DTOR_LIST__[])(void));
+
 extern int _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
 
 /****************************************************************************/

@@ -1,6 +1,9 @@
 /*
 * $Id: crtbegin.c,v 1.3 2022-03-09 21:07:25 clib2devs Exp $
   */
+#undef __USE_INLINE__
+#define __NOLIBBASE__
+#define __NOGLOBALIFACE__
 
 #ifndef EXEC_TYPES_H
 #include <exec/types.h>
@@ -8,16 +11,13 @@
 
 #include <proto/exec.h>
 #include <proto/dos.h>
-#include <proto/elf.h>
-#include <libraries/elf.h>
+#include <proto/utility.h>
 
-#ifndef _STDLIB_HEADERS_H
-#include "stdlib_headers.h"
-#endif /* _STDLIB_HEADERS_H */
+#include "../shared_library/include/sys/interface.h"
 
-#ifndef _MACROS_H
-#include "macros.h"
-#endif /* _MACROS_H */
+#ifndef _DEBUG_H
+#include "debug/debug.h"
+#endif /* _DEBUG_H */
 
 /*
  * Dummy constructor and destructor array. The linker script will put these at the
@@ -45,184 +45,103 @@
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
-BOOL open_libraries(void);
-void close_libraries(void);
+const struct Library *SysBase = NULL;
+const struct ExecIFace *IExec = NULL;
 
-/* These are used to initialize the shared objects linked to this binary,
-   and for the dlopen(), dlclose() and dlsym() functions. */
-struct Library *__ElfBase;
-struct ElfIFace *__IElf;
-static Elf32_Handle elf_handle;
+const struct Library *DOSBase = NULL;
+const struct DOSIFace *IDOS = NULL;
 
-void _init(void) {
-    int i = 0;
+const struct Library *UtilityBase;
+const struct UtilityIFace *IUtility;
 
-    while (__CTOR_LIST__[i + 1]) {
-        i++;
+struct Library *ElfBase;
+struct ElfIFace *IElf;
+
+const struct Clib2IFace *IClib2 = NULL;
+
+int clib2_start(char *args, int32 arglen, struct Library *sysbase);
+
+register void *r13 __asm("r13");
+extern void *_SDA_BASE_ __attribute__((force_no_baserel));
+
+extern int main(int, char **);
+int _start(char *args, int32 arglen, struct Library *sysbase);
+
+static struct Interface *OpenLibraryInterface(struct ExecIFace *iexec, const char *name, int version) {
+    struct Library *library;
+    struct Interface *interface;
+
+    library = iexec->OpenLibrary(name, version);
+    if (library == NULL)
+        return NULL;
+
+    interface = iexec->GetInterface(library, "main", 1, NULL);
+    if (interface == NULL) {
+        iexec->CloseLibrary(library);
+        return NULL;
     }
-    SHOWVALUE(i);
-    while (i > 0) {
-        SHOWMSG("Calling ctor");
-        SHOWVALUE(i);
-        __CTOR_LIST__[i--]();
+
+    return interface;
+}
+
+static void CloseLibraryInterface(struct ExecIFace *iexec, struct Interface *interface) {
+    if (interface != NULL) {
+        struct Library *library = interface->Data.LibBase;
+
+        iexec->DropInterface(interface);
+        iexec->CloseLibrary(library);
     }
 }
 
-void _fini(void) {
-    int i = 1;
+int
+clib2_start(char *args, int32 arglen, struct Library *sysbase) {
+    struct ExecIFace *iexec;
+    struct Clib2IFace *iclib2;
 
-    while (__DTOR_LIST__[i]) {
-        SHOWMSG("Calling dtor");
-        SHOWVALUE(i);
-        __DTOR_LIST__[i++]();
-    }
-}
+    void *old_r13 = r13;
+    r13 = &_SDA_BASE_;
+    SysBase = sysbase;
+    int rc = -1;
 
-void close_libraries(void) {
-    if (__IUtility != NULL) {
-        DropInterface((struct Interface *) __IUtility);
-        __IUtility = NULL;
-    }
+    iexec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
+    iexec->Obtain();
 
-    if (__UtilityBase != NULL) {
-        CloseLibrary(__UtilityBase);
-        __UtilityBase = NULL;
-    }
+    IExec = iexec;
+    IUtility = (struct UtilityIFace *) OpenLibraryInterface(iexec, "utility.library", 50);
+    if (IUtility != NULL) {
+        UtilityBase = IUtility->Data.LibBase;
+        iclib2 = (struct Clib2IFace *) OpenLibraryInterface(iexec, "clib2.library", 0);
+        if (iclib2 != NULL) {
+            struct Library *clib2base = ((struct Interface *) iclib2)->Data.LibBase;
+            IClib2 = iclib2;
 
-    if (__IElf != NULL) {
-        DropInterface((struct Interface *) __IElf);
-        __IElf = NULL;
-    }
+            rc = iclib2->library_start(args, arglen, (void **)&DOSBase, (void **)&IDOS, main, __CTOR_LIST__, __DTOR_LIST__);
 
-    if (__ElfBase != NULL) {
-        CloseLibrary(__ElfBase);
-        __ElfBase = NULL;
-    }
-
-    if (IDOS != NULL) {
-        DropInterface((struct Interface *) IDOS);
-        IDOS = NULL;
-    }
-
-    if (DOSBase != NULL) {
-        CloseLibrary(DOSBase);
-        DOSBase = NULL;
-    }
-}
-
-BOOL open_libraries(void) {
-    /* Open the minimum required libraries. */
-    BOOL success = FALSE;
-
-    /* Open the minimum required libraries. */
-    DOSBase = (struct Library *) OpenLibrary("dos.library", MIN_OS_VERSION);
-    if (DOSBase == NULL) {
-        SHOWMSG("Cannot get DOSBase!");
-        goto out;
-    }
-
-    /* Obtain the interfaces for these libraries. */
-    IDOS = (struct DOSIFace *) GetInterface(DOSBase, "main", 1, NULL);
-    if (IDOS == NULL) {
-        SHOWMSG("Cannot get IDOS!");
-        goto out;
-    }
-
-    /* We need elf.library V52.2 or higher. */
-    __ElfBase = OpenLibrary("elf.library", 0);
-    if (__ElfBase == NULL || (__ElfBase->lib_Version < 52) || (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision < 2)) {
-        SHOWMSG("Cannot get __ElfBase >=52.2!");
-        goto out;
-    }
-
-    __IElf = (struct ElfIFace *) GetInterface(__ElfBase, "main", 1, NULL);
-    if (__IElf == NULL) {
-        SHOWMSG("Cannot get __IElf!");
-        goto out;
-    }
-
-    __UtilityBase = OpenLibrary("utility.library", MIN_OS_VERSION);
-    if (__UtilityBase == NULL)
-        goto out;
-
-    __IUtility = (struct UtilityIFace *) GetInterface(__UtilityBase, "main", 1, 0);
-    if (__IUtility == NULL)
-        goto out;
-
-    success = TRUE;
-
-out:
-
-    return (success);
-}
-
-void shared_obj_exit(void) {
-    struct ElfIFace *IElf = __IElf;
-    ENTER();
-
-    /* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
-    if (elf_handle != NULL) {
-        SHOWMSG("Invoking shared object destructors");
-        InitSHLibs(elf_handle, FALSE);
-        elf_handle = NULL;
-    };
-
-    close_libraries();
-    LEAVE();
-}
-
-void shared_obj_init(void) {
-    ENTER();
-
-    if (open_libraries()) {
-        struct ElfIFace *IElf = __IElf;
-
-        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
-        if (segment_list != ZERO) {
-            int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &elf_handle, TAG_DONE);
-            if (ret == 1) {
-                if (elf_handle != NULL) {
-                    /* Trigger the constructors, etc. in the shared objects linked to this binary. */
-                    InitSHLibs(elf_handle, TRUE);
-                }
-                else {
-                    SHOWMSG("elf_handle == NULL!");
-                }
-            }
-            else {
-                SHOWMSG("GetSegListInfoTags fail!");
-            }
+            CloseLibraryInterface(iexec, (struct Interface *) iclib2);
+        } else {
+            iexec->Alert(AT_Recovery | AG_OpenLib);
         }
-        else {
-            SHOWMSG("GetProcSegList return ZERO!");
-        }
+        CloseLibraryInterface(iexec, (struct Interface *) IUtility);
     }
-    else {
-        SHOWMSG("Cannot open libraries!");
-        const char *error_message;
+    iexec->Release();
 
-        /* If available, use the error message provided by the client. */
-        error_message = __minimum_os_lib_error;
+    r13 = old_r13;
 
-        if (error_message == NULL)
-            error_message = "This program requires AmigaOS 4.0 (52.2) or higher.";
-
-        __show_error(error_message);
-    }
-    LEAVE();
+    return rc;
 }
 
-int _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase) {
+int
+_start(STRPTR argstring, int32 arglen, struct Library *sysbase) {
     SysBase = *(struct Library **) 4;
     IExec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
 
     /* The shared objects need to be set up before any local constructors are invoked. */
-    shared_obj_init();
+    //shared_obj_init();
 
-    int r = _main();
+    int rc = clib2_start(argstring, arglen, sysbase);
 
     /* The shared objects need to be cleaned up after all local destructors have been invoked. */
-    shared_obj_exit();
+    //shared_obj_exit();
 
-    return r;
+    return rc;
 }

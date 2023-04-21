@@ -13,7 +13,7 @@ CC 			:= ppc-amigaos-gcc
 CPU 		:=
 OPTIONS 	:= -mcrt=clib2 -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU
 OPTIMIZE 	:= -O
-DEBUG 		:= -gstabs
+DEBUG 		:= -gstabs -DDEBUG
 CRTBEGIN 	?= /usr/ppc-amigaos/SDK/clib2/lib/crtbegin.o
 CRTEND 		?= /usr/ppc-amigaos/SDK/clib2/lib/crtend.o
 VERBOSE		:= @
@@ -22,15 +22,9 @@ VERBOSE		:= @
 
 CFLAGS = $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(CPU) $(OPTIONS) -I../library/include -I. -Iinclude -I../library
 
-LIBC_SRCS = $(wildcard stubs/*.c)
-STATIC_LIBC_SRCS = $(wildcard stubs/static/*.c)
-
-LIBC_OBJS = $(patsubst %.c, build/%.o, $(LIBC_SRCS))
-STATIC_LIBC_OBJS = $(patsubst %.c, build/%.o, $(STATIC_LIBC_SRCS))
-
-LIBC_OBJS_PIC = $(LIBC_SRCS:.c=.o)
-LIBC_OBJS_PIC := $(patsubst %.c, build/pic/%.o, $(LIBC_SRCS))
-LIBC_OBJS_PIC += $(patsubst %.c, build/pic/%.o, $(STATIC_LIBC_SRCS))
+LIBC_SRCS = stubs/stubs.c
+LIBC_OBJS = $(patsubst stubs/%.c, build/%.o, $(LIBC_SRCS))
+LIBC_OBJS_PIC := $(patsubst stubs/%.c, build/pic/%.o, $(LIBC_SRCS))
 
 ###############################################################################
 
@@ -39,26 +33,31 @@ OBJS = \
 
 ###############################################################################
 
-LIBS = -lc -lm -lprofile -lcrypt -lgcc
+LIBS = -lgcc
 
 ###############################################################################
 
-all: clib2.library libc.a libc.so
+all: clib2.library.debug clib2.library libc.a libc.so
 
-clib2.library: $(OBJS)
-	$(info $(LIBC_OBJS))
-	$(VERBOSE)$(CC) -o $@ $(OBJS) $(CFLAGS) -Wl,--cref,-M,-Map=$@.map -nostartfiles -nostdlib $(LIBS)
+clib2.library.debug: $(OBJS)
+	$(VERBOSE)$(CC) -o $@ $(OBJS) $(CFLAGS) ../build/lib/libc.a ../build/lib/libm.a ../build/lib/libprofile.a ../build/lib/libcrypt.a -Wl,--cref,-M,-Map=$@.map -nostartfiles -nostdlib $(LIBS)
 
-libc.a: build/$(LIBC_OBJS) build/$(STATIC_LIBC_OBJS)
-	rm -f $@
-	ppc-amigaos-ar cru $@ $^
+clib2.library: clib2.library.debug
+	cp $< $@
+	ppc-amigaos-strip -R.comment -R.sdata2 --strip-unneeded-rel-relocs $@
+	$(VERBOSE)$(CC) -o $@ $(OBJS) $(CFLAGS) ../build/lib/libc.a ../build/lib/libm.a ../build/lib/libprofile.a ../build/lib/libcrypt.a -Wl,--cref,-M,-Map=$@.map -nostartfiles -nostdlib $(LIBS)
 
 $(LIBC_OBJS_PIC): $(LIBC_SRCS)
-	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+	$(VERBOSE)$(CC) $(CFLAGS) -fPIC -c $< -o $@
+
+$(LIBC_OBJS): $(LIBC_SRCS)
+	$(VERBOSE)$(CC) $(CFLAGS) -c $< -o $@
 
 libc.so: $(LIBC_OBJS_PIC)
-	rm -f $@
-	$(CC) -shared -Wl,-soname,libc.so -o $@ $(LIBC_OBJS_PIC) -nostdlib -Wl,-Map=$@.map
+	$(VERBOSE)$(CC) -shared -Wl,-soname,libc.so -o $@ $(LIBC_OBJS_PIC) -nostdlib -Wl,-Map=$@.map
+
+libc.a: $(LIBC_OBJS)
+	$(VERBOSE)ppc-amigaos-ar cru $@ $^
 
 clean:
-	-rm -f *.o *.a *.debug *.map clib2.library build/stubs/*.o build/stubs/static/*.o build/pic/stubs/*.o build/pic/stubs/static/*.o
+	$(VERBOSE)rm -f *.o *.a *.so *.debug *.map clib2.library clib2.library.debug build/*.o build/pic/*.o

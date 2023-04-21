@@ -1,6 +1,8 @@
 #ifndef _SYS_INTERFACE_H_
 #define _SYS_INTERFACE_H_
 
+#include <proto/dos.h>
+
 #include <arpa/inet.h>
 #include <aio.h>
 #include <argz.h>
@@ -52,7 +54,6 @@
 #include <wctype.h>
 #include <wctype.h>
 #include <sys/byteswap.h>
-#include <sys/errno.h>
 #include <sys/file.h>
 #include <sys/iconvnls.h>
 #include <sys/ipc.h>
@@ -91,7 +92,7 @@ struct Clib2IFace {
     struct Clib2IFace *APICALL (*Clone)(struct Clib2IFace *Self);   //76
 
     /* internal */
-    int  (* clib2_start)(int *);                                    //80
+    int  (* library_start)(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_IDOS, int (* start_main)(int, char **, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //80
     void (* __getclib2)(void);                                      //84
     void (* __translate_amiga_to_unix_path_name)(void);             //88
     void (* __translate_unix_to_amiga_path_name)(void);             //92

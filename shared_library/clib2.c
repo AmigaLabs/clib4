@@ -82,9 +82,11 @@
 #include "dos.h"
 #include "c.lib_rev.h"
 
+#include "clib2.h"
+
 struct ExecBase *SysBase;
 struct ExecIFace *IExec;
-struct DosLibrary *DOSBase;
+struct Library *DOSBase;
 struct DOSIFace *IDOS;
 struct ElfIFace *IElf;
 struct TimeRequest *TimeReq;
@@ -96,24 +98,54 @@ struct Clib2IFace *IClib2;
 struct Library *UtilityBase;
 struct UtilityIFace *PrivateIUtility;
 
-uint32 LIB_Release(struct Interface *Self);
-int LIB_Reserved(void);
-uint32 LIB_Obtain(struct Interface *Self);
-struct Library *LIB_Init(struct Library *Clib2Base, BPTR librarySegment, struct ExecIFace * const iexec);
-int clib2_start(uint32 clib2_version, char *start_argstr, int start_arglen, struct DosLibrary **start_DOSBase, struct DOSIFace **start_IDOS, int (* start_main)(int, char **, char **), char *start_stdiowin, int start_flags, void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void));
-
 const struct Resident RomTag;
-int32
-_start(char *args, int arglen, struct ExecBase *sysbase __attribute__((unused))) {
-    struct ExecIFace *iexec = (struct ExecIFace *)sysbase->MainInterface;
-    struct Library *old = iexec->OpenLibrary("clib2.library", 0);
 
-    if (old) {
-        iexec->Remove(&old->lib_Node);
-        iexec->InitResident(&RomTag, 0);
-        iexec->Wait(0);
-    }
+int32
+_start(char *args, int arglen, struct ExecBase *sysbase) {
+    (void) (args);
+    (void) (arglen);
+    (void) (sysbase);
+
     return -1;
+}
+
+static struct TimeRequest *open_timer(uint32 unit) {
+    struct MsgPort *mp;
+    struct TimeRequest *tr;
+
+    mp = IExec->AllocSysObjectTags(ASOT_PORT,
+                                   ASOPORT_AllocSig, FALSE,
+                                   ASOPORT_Signal, SIGB_SINGLE,
+                                   TAG_END);
+
+    tr = IExec->AllocSysObjectTags(ASOT_IOREQUEST,
+                                   ASOIOR_ReplyPort, mp,
+                                   ASOIOR_Size, sizeof(struct TimeRequest),
+                                   TAG_END);
+
+    if (tr == NULL) {
+        IExec->FreeSysObject(ASOT_PORT, mp);
+        return NULL;
+    }
+
+    if (IExec->OpenDevice(TIMERNAME, unit, (struct IORequest *) tr, 0) != 0) {
+        IExec->FreeSysObject(ASOT_IOREQUEST, tr);
+        IExec->FreeSysObject(ASOT_PORT, mp);
+        return NULL;
+    }
+
+    return tr;
+}
+
+static void close_timer(struct TimeRequest *tr) {
+    if (tr != NULL) {
+        struct MsgPort *mp = tr->Request.io_Message.mn_ReplyPort;
+
+        IExec->CloseDevice((struct IORequest *) tr);
+
+        IExec->FreeSysObject(ASOT_IOREQUEST, tr);
+        IExec->FreeSysObject(ASOT_PORT, mp);
+    }
 }
 
 static struct Library *LIB_Open(struct Interface *Self, uint32 version __attribute__((unused))) {
@@ -121,6 +153,74 @@ static struct Library *LIB_Open(struct Interface *Self, uint32 version __attribu
     if (!IClib2) {
         IClib2 = (struct Clib2IFace *) IExec->GetInterface(Clib2Base, "main", 1, NULL);
         IExec->DropInterface((struct Interface *) IClib2);
+    }
+    if (!IDOS) {
+        DOSBase = IExec->OpenLibrary("dos.library", 50);
+        if (DOSBase) {
+            IDOS = (struct DOSIFace *) IExec->GetInterface((struct Library *) DOSBase, "main", 1, NULL);
+            if (!IDOS) {
+                IExec->CloseLibrary((struct Library *) DOSBase);
+                DOSBase = NULL;
+            } else {
+                TimeReq = open_timer(UNIT_MICROHZ);
+                if (!TimeReq) {
+                    IExec->DropInterface((struct Interface *) IDOS);
+                    IDOS = NULL;
+                    IExec->CloseLibrary((struct Library *) DOSBase);
+                    DOSBase = NULL;
+                } else {
+                    struct Device *TimerBase = TimeReq->Request.io_Device;
+
+                    ITimer = (struct TimerIFace *) IExec->GetInterface((struct Library *) TimerBase, "main", 1, NULL);
+                    if (!ITimer) {
+                        close_timer(TimeReq);
+                        TimeReq = NULL;
+                        IExec->DropInterface((struct Interface *) IDOS);
+                        IDOS = NULL;
+                        IExec->CloseLibrary((struct Library *) DOSBase);
+                        DOSBase = NULL;
+                    } else {
+                        //fallback_reent->__ITimer = ITimer;
+                        //ITimer->GetSysTime((struct TimeVal *) fallback_reent->__initclock);
+                    }
+                }
+            }
+        }
+    }
+
+    if (!IElf) {
+        struct Library *ElfBase = IExec->OpenLibrary("elf.library", 52);
+        if (ElfBase) {
+            if (ElfBase->lib_Version == 52 && ElfBase->lib_Revision == 1) // shlib stuff doesn't work with pre-52.2
+            {
+                IExec->CloseLibrary(ElfBase);
+                ElfBase = NULL;
+            }
+
+            if (ElfBase) {
+                IElf = (struct ElfIFace *) IExec->GetInterface(ElfBase, "main", 1, NULL);
+                if (!IElf) {
+                    IExec->CloseLibrary(ElfBase);
+                    ElfBase = NULL;
+                }
+            }
+        }
+    }
+
+    if (!ITimezone) {
+        struct Library *libbase;
+
+        IExec->Forbid();
+        libbase = (struct Library *) IExec->FindName(&SysBase->LibList, "timezone.library");
+        IExec->Permit();
+
+        if (libbase) {
+            libbase = IExec->OpenLibrary("timezone.library", 50);
+        }
+
+        if (libbase) {
+            ITimezone = (struct TimezoneIFace *) IExec->GetInterface(libbase, "main", 1, NULL);
+        }
     }
 
     Clib2Base->lib_OpenCnt++;
@@ -216,12 +316,26 @@ static uint32 libInterfaces[] = {
         0
 };
 
-struct Library *LIB_Init(struct Library *Clib2Base, BPTR librarySegment, struct ExecIFace * const iexec) {
+struct Library *LIB_Init(struct Library *Clib2Base, BPTR librarySegment, struct ExecIFace *const iexec) {
     APTR pool = NULL;
 
     SysBase = (struct ExecBase *) iexec->Data.LibBase;
     IExec = iexec;
     clib2seglist = librarySegment;
+
+    Clib2Base->lib_Revision = REVISION;
+
+    /* Set all Interface pointers to NULL */
+    IDOS = NULL;
+    IElf = NULL;
+    ITimer = NULL;
+    TimeReq = NULL;
+    DOSBase = NULL;
+    ITimezone = NULL;
+    ILocale = NULL;
+    IClib2 = NULL;
+
+    return Clib2Base;
 }
 
 /* CreateLibrary tag list */
@@ -246,6 +360,15 @@ const struct Resident RomTag = {
 };
 
 int
-clib2_start(uint32 clib2_version, char *start_argstr, int start_arglen, struct DosLibrary **start_DOSBase, struct DOSIFace **start_IDOS, int (* start_main)(int, char **, char **), char *start_stdiowin, int start_flags, void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)) {
+library_start(char *argstr,
+              int arglen,
+              struct Library **_DOSBase,
+              struct DOSIFace **_IDOS,
+              int (*start_main)(int, char **, char **),
+              void (*__CTOR_LIST__[])(void),
+              void (*__DTOR_LIST__[])(void)) {
 
+    int result = _main(argstr, arglen, _DOSBase, _IDOS, start_main, __CTOR_LIST__, __DTOR_LIST__);
+
+    return result;
 }

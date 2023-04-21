@@ -603,7 +603,6 @@ C_STDLIB := \
 	stdlib/dlerror.o \
 	stdlib/dlopen.o \
 	stdlib/dlsym.o \
-	stdlib/dosbase.o \
 	stdlib/ecvt.o \
 	stdlib/exit.o \
 	stdlib/fcvt.o \
@@ -624,7 +623,6 @@ C_STDLIB := \
 	stdlib/lldiv.o \
 	stdlib/lltoa.o \
 	stdlib/main.o \
-	stdlib/main_stub.o \
 	stdlib/malloc.o \
 	stdlib/math_double.o \
 	stdlib/math_float.o \
