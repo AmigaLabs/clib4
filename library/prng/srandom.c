@@ -13,18 +13,18 @@ __srandom(unsigned seed) {
     ENTER();
     SHOWVALUE(seed);
 
-    if (__global_clib2->n == 0) {
-        __global_clib2->x[0] = s;
+    if (__getclib2()->n == 0) {
+        __getclib2()->x[0] = s;
         return;
     }
-    __global_clib2->i = __global_clib2->n == 31 || __global_clib2->n == 7 ? 3 : 1;
-    __global_clib2->j = 0;
-    for (k = 0; k < __global_clib2->n; k++) {
+    __getclib2()->i = __getclib2()->n == 31 || __getclib2()->n == 7 ? 3 : 1;
+    __getclib2()->j = 0;
+    for (k = 0; k < __getclib2()->n; k++) {
         s = lcg64(s);
-        __global_clib2->x[k] = s>>32;
+        __getclib2()->x[k] = s>>32;
     }
     /* make sure x contains at least one odd number */
-    __global_clib2->x[0] |= 1;
+    __getclib2()->x[0] |= 1;
 
     LEAVE();
 }
@@ -32,9 +32,9 @@ __srandom(unsigned seed) {
 void
 srandom(unsigned int seed)
 {
-    ObtainSemaphore(__global_clib2->__random_lock);
+    ObtainSemaphore(__getclib2()->__random_lock);
 
     __srandom(seed);
 
-    ReleaseSemaphore(__global_clib2->__random_lock);
+    ReleaseSemaphore(__getclib2()->__random_lock);
 }

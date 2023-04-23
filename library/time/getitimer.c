@@ -55,11 +55,11 @@ getitimer(int which, struct itimerval *curr_value) {
                 struct timeval tv, result;
                 /* Get current time of day */
                 gettimeofday(&tv, NULL);
-                timeval_subtract(&result, &tv, &__global_clib2->tmr_start_time);
+                timeval_subtract(&result, &tv, &__getclib2()->tmr_start_time);
                 curr_value->it_value.tv_sec = result.tv_sec;
                 curr_value->it_value.tv_usec = result.tv_usec;
-                curr_value->it_interval.tv_sec = __global_clib2->tmr_time.it_interval.tv_sec;
-                curr_value->it_interval.tv_usec = __global_clib2->tmr_time.it_interval.tv_usec;
+                curr_value->it_interval.tv_sec = __getclib2()->tmr_time.it_interval.tv_sec;
+                curr_value->it_interval.tv_usec = __getclib2()->tmr_time.it_interval.tv_usec;
             }
             break;
         case ITIMER_VIRTUAL:

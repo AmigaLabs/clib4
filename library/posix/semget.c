@@ -20,7 +20,7 @@ _semget(key_t key, int nsems, int flags)
     SHOWVALUE(flags);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = semget(key, nsems, flags);
         if (ret < 0)

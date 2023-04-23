@@ -24,11 +24,9 @@ typedef int nl_item;
 
 /****************************************************************************/
 
-#if 0
 extern nl_catd catopen(const char* name, int flag);
 extern char* catgets(nl_catd catalog, int set_number, int msg_number, const char* msg);
 extern int catclose(nl_catd catalog);
-#endif
 
 __END_DECLS
 

@@ -1,9 +1,6 @@
 #
 # $Id: libpthread.gmk,v 1.0 2022-07-18 10:09:48 clib2devs Exp $
 #
-# :ts=8
-#
-# -*- mode: makefile; -*-
 
 OUT_STATIC := $(BUILD_DIR)/obj/libpthread
 OUT_SHARED := $(BUILD_DIR)/obj.shared/libpthread
@@ -26,13 +23,13 @@ SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(PTHREAD_LIB))
 $(OUT_STATIC)/pthread.lib_rev.o : $(LIB_DIR)/pthread/pthread.lib_rev.c $(LIB_DIR)/pthread/pthread.lib_rev.h
 $(OUT_SHARED)/pthread.lib_rev.o : $(LIB_DIR)/pthread/pthread.lib_rev.c $(LIB_DIR)/pthread/pthread.lib_rev.h
 
-$(OUT_STATIC)/%.o : CFLAGS = $(INCLUDES) -D__USE_INLINE__ -O3 -fno-builtin -Wno-type-limits -Wno-strict-aliasing -Wno-deprecated-declarations $(LARGEDATA)
-$(OUT_SHARED)/%.o : CFLAGS = $(INCLUDES) -D__USE_INLINE__ -O3 -fno-builtin -Wno-type-limits -Wno-strict-aliasing -Wno-deprecated-declarations $(PIC) $(LARGEDATA)
+$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+$(OUT_STATIC)/%.o : $(LIB_DIR)/pthread/pthread.lib_rev.c
 	$(VERBOSE)$(COMPILE)
 
-$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/%.o : $(LIB_DIR)/pthread/pthread.lib_rev.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
 $(OUTPUT_LIB)/libpthread.a : $(SOURCES_STATIC)

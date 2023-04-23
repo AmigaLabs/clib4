@@ -60,7 +60,7 @@ static uint32_t _random_init[] = {
 static struct Library *__ElfBase;
 static struct ElfIFace *__IElf;
 
-struct _clib2 NOCOMMON* __global_clib2;
+extern struct _clib2 *__global_clib2;
 
 void
 reent_init() {

@@ -269,7 +269,7 @@ extern int ilogb(double x);
 extern float exp2f(float x);
 extern double exp2(double x);
 extern long double exp2l(long double x);
-#if !defined(__cplusplus)
+#if !defined(__cplusplus) && !defined(shared_comp)
 #define log2(x) (log (x) / _M_LN2)
 #else
 extern double log2(double x);

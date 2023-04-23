@@ -20,8 +20,7 @@ char *NOCOMMON __program_name;
 STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 	ENTER();
 
-	if (free_program_name && __program_name != NULL)
-	{
+	if (free_program_name && __program_name != NULL) {
 		FreeVec(__program_name);
 		__program_name = NULL;
 	}

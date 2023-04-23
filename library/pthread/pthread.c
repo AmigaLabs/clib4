@@ -35,6 +35,10 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#ifndef _STDLIB_CONSTRUCTOR_H
+#include "stdlib_constructor.h"
+#endif /* _STDLIB_CONSTRUCTOR_H */
+
 #include "common.h"
 #include "pthread.h"
 
@@ -281,7 +285,7 @@ void __pthread_exit_func(void) {
     }
 }
 
-void __attribute__((constructor, used)) __pthread_init() {
+CLIB_CONSTRUCTOR(__pthread_init) {
     ENTER();
 
     __pthread_init_func();
@@ -291,7 +295,7 @@ void __attribute__((constructor, used)) __pthread_init() {
     //return !__pthread_init_func();
 }
 
-void __attribute__((destructor, used)) __pthread_exit() {
+CLIB_DESTRUCTOR(__pthread_exit) {
     ENTER();
 
     __pthread_exit_func();

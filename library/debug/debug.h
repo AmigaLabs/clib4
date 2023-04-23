@@ -97,6 +97,7 @@
     #undef DEBUG
     #define DEBUG 1
 
+    #undef assert
     #define assert(expression)                     \
     ((void)                                \
      ((expression) ? 0 :                   \

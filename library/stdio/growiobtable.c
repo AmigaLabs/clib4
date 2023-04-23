@@ -31,9 +31,11 @@ int __grow_iob_table(int max_iob) {
             __set_errno(ENOMEM);
             goto out;
         }
-
+        SHOWVALUE(new_num_iob);
         for (i = __num_iob; i < new_num_iob; i++) {
+            SHOWVALUE(i);
             new_iob[i] = malloc(sizeof(*new_iob[i]));
+            SHOWMSG("malloc");
             if (new_iob[i] == NULL) {
                 int j;
 
@@ -47,7 +49,7 @@ int __grow_iob_table(int max_iob) {
                 __set_errno(ENOMEM);
                 goto out;
             }
-
+            SHOWMSG("memset");
             memset(new_iob[i], 0, sizeof(*new_iob[i]));
         }
 

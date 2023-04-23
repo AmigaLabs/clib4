@@ -47,10 +47,10 @@ int _mbtowc_r(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
     if (s != NULL && n == 0)
         return -2;
 
-    if (__global_clib2->_current_locale == NULL || (strlen(__global_clib2->_current_locale) <= 1)) {
+    if (__getclib2()->_current_locale == NULL || (strlen(__getclib2()->_current_locale) <= 1)) {
         /* fall-through */
     }
-    else if (!strcmp(__global_clib2->_current_locale, "C-UTF-8")) {
+    else if (!strcmp(__getclib2()->_current_locale, "C-UTF-8")) {
         int ch;
         int i = 0;
 
@@ -275,7 +275,7 @@ int _mbtowc_r(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
             return i;
         } else
             return -1;
-    } else if (!strcmp(__global_clib2->_current_locale, "C-SJIS")) {
+    } else if (!strcmp(__getclib2()->_current_locale, "C-SJIS")) {
         int ch;
         int i = 0;
         if (s == NULL)
@@ -298,7 +298,7 @@ int _mbtowc_r(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
             } else
                 return -1;
         }
-    } else if (!strcmp(__global_clib2->_current_locale, "C-EUCJP")) {
+    } else if (!strcmp(__getclib2()->_current_locale, "C-EUCJP")) {
         int ch;
         int i = 0;
         if (s == NULL)
@@ -321,7 +321,7 @@ int _mbtowc_r(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
             } else
                 return -1;
         }
-    } else if (!strcmp(__global_clib2->_current_locale, "C-JIS")) {
+    } else if (!strcmp(__getclib2()->_current_locale, "C-JIS")) {
         JIS_STATE curr_state;
         JIS_ACTION action;
         JIS_CHAR_TYPE ch;

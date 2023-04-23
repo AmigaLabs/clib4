@@ -5,23 +5,21 @@
 #ifndef _STDLIB_PROTOS_H
 #define _STDLIB_PROTOS_H
 
-/****************************************************************************/
-
 #ifndef EXEC_TASKS_H
 #include <exec/tasks.h>
 #endif /* EXEC_TASKS_H */
-
-/****************************************************************************/
 
 #ifndef _STDDEF_H
 #include <stddef.h>
 #endif /* _STDDEF_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
+
+#ifndef PROTO_DOS_H
+#include <proto/dos.h>
+#endif /* PROTO_DOS_H */
 
 /* stdio_init_exit.c */
 extern int __stdio_init(void);
@@ -87,10 +85,6 @@ extern void _exit(int return_code);
 void reent_init(void);
 void reent_exit(void);
 
-/* stdlib_constructor_begin.c */
-void shared_obj_init(void);
-void shared_obj_exit(void);
-
 /****************************************************************************/
 
 /* stdlib_arg.c */
@@ -115,9 +109,9 @@ extern int _main(char *argstr,
                  int arglen,
                  struct Library **_DOSBase,
                  struct DOSIFace **_IDOS,
-                 int (* start_main)(int, char **, char **),
-                 void (*__CTOR_LIST__[])(void),
-                 void (*__DTOR_LIST__[])(void));
+                 int (* start_main)(int, char **),
+                 void (*__EXT_CTOR_LIST__[])(void),
+                 void (*__EXT_DTOR_LIST__[])(void));
 
 extern int _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
 

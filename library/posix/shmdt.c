@@ -18,7 +18,7 @@ _shmdt(const void *shmaddr)
     SHOWPOINTER(shmaddr);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = shmdt(shmaddr);
         if (ret < 0)

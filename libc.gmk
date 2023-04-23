@@ -14,7 +14,6 @@ ifeq ($(STATIC),yes)
 endif
 
 C_BASE := \
-	c.lib_rev.o \
 	libc_init_global.o \
 	getclib2.o \
 	errno_data.o
@@ -162,6 +161,11 @@ C_MOUNT := \
 	mount/convertinfo.o \
 	mount/fstatfs.o \
 	mount/statfs.o
+
+C_NL_TYPES := \
+	nltypes/catclose.o \
+	nltypes/catgets.o \
+	nltypes/catopen.o
 
 C_POSIX := \
 	posix/fnmatch.o \
@@ -666,7 +670,6 @@ C_STDLIB := \
 	stdlib/strtoq.o \
 	stdlib/strtoul.o \
 	stdlib/strtoull.o \
-	stdlib/sysbase.o \
 	stdlib/system.o \
 	stdlib/sysvbase.o \
 	stdlib/termination_message.o \
@@ -916,7 +919,6 @@ C_UNISTD := \
 	unistd/wildcard_expand.o
 
 C_USERGROUP := \
-	usergroup/crypt.o \
 	usergroup/data.o \
 	usergroup/endgrent.o \
 	usergroup/endpwent.o \
@@ -1056,7 +1058,7 @@ C_WCHAR := \
 	wchar/wctrans.o \
 	wchar/wctype.o
 
-C_LIB := \
+C_LIBRARY := \
 	$(C_BASE) \
     $(C_AIO) \
 	$(C_ARGZ) \
@@ -1070,6 +1072,7 @@ C_LIB := \
 	$(C_LOCALE) \
 	$(C_MISC) \
 	$(C_MOUNT) \
+	$(C_NL_TYPES) \
 	$(C_POSIX) \
 	$(C_PTHREAD) \
     $(C_REGEX) \
@@ -1087,8 +1090,15 @@ C_LIB := \
 	$(C_USERGROUP) \
 	$(C_WCHAR)
 
+C_LIB := \
+	c.lib_rev.o \
+	shared_library/stubs.o
+
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(C_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
+
+OBJ_C_LIB += $(addprefix $(OUT_SHARED_LIB)/, $(C_LIBRARY))
+OBJ_C_SRC += $(patsubst %.o, $(LIB_DIR)/%.c, $(C_LIBRARY))
 
 # Dependencies to rebuild if the library version changes
 
@@ -1119,8 +1129,4 @@ $(OUTPUT_LIB)/libc.a : $(SOURCES_STATIC)
 	$(VERBOSE)@$(MAKELIB)
 
 $(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
-	@$(MAKEDIR) $(@D)
-	@$(DELETE) $@
-	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -Wl,-soname,$(@F)
-	$(COPY) $(OUTPUT_LIB)/libc.so $(INSTALL_PREFIX)/lib/
+	$(VERBOSE)$(MAKESHARED)

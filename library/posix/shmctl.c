@@ -20,7 +20,7 @@ _shmctl(int shmid, int cmd, struct shmid_ds *cbuf)
     SHOWPOINTER(cbuf);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = shmctl(shmid, cmd, cbuf);
         if (ret < 0)

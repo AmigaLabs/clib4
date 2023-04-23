@@ -19,7 +19,7 @@ _msgget(key_t key, int flags)
     SHOWVALUE(flags);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = msgget(key, flags);
         if (ret < 0)

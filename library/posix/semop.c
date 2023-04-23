@@ -20,7 +20,7 @@ _semop(int semid, const struct sembuf *ops, int nops)
     SHOWVALUE(nops);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = semop(semid, ops, nops);
         if (ret < 0)

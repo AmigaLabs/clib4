@@ -20,7 +20,7 @@ _semctl(int semid, int semnum, int cmd, union semun aun)
     SHOWVALUE(cmd);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = semctl(semid, semnum, cmd, aun);
         if (ret < 0)

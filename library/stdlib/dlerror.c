@@ -15,7 +15,7 @@ dlerror(void) {
 
     ENTER();
 
-    switch(__global_clib2->__elf_error_code)
+    switch(__getclib2()->__elf_error_code)
 	{
 		case ELF32_NO_ERROR:
 
@@ -79,8 +79,8 @@ dlerror(void) {
 	}
 
 	/* Calling dlerror() will clear the error code. */
-	if (__global_clib2 != NULL)
-		__global_clib2->__elf_error_code = ELF32_NO_ERROR;
+	if (__getclib2() != NULL)
+        __getclib2()->__elf_error_code = ELF32_NO_ERROR;
 
     RETURN(result);
 	return(result);

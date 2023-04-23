@@ -22,7 +22,7 @@ _msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg)
     SHOWVALUE(msgflg);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = msgrcv(msqid, msgp, msgsz, msgtyp, msgflg);
         if (ret < 0)

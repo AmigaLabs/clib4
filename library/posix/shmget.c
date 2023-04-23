@@ -20,7 +20,7 @@ _shmget(key_t key, size_t size, int flags)
     SHOWVALUE(flags);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = shmget(key, size, flags);
         if (ret < 0)

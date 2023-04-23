@@ -20,7 +20,7 @@ _shmids(int *buf, size_t nids, size_t *idcnt)
     SHOWPOINTER(idcnt);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = shmids((APTR)buf, nids, (uint32 *)idcnt);
         if (ret < 0)

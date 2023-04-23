@@ -23,7 +23,7 @@ _msgsnd(int msgid, const void *msg_ptr, size_t msg_sz, int msgflg)
     SHOWVALUE(msgflg);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = msgsnd(msgid, msg_ptr, msg_sz, msgflg);
         if (ret < 0)

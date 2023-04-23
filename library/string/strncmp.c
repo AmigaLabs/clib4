@@ -61,10 +61,9 @@ strncmp(const char *s1, const char *s2, size_t n)
 	 */
 	if (s1 != s2 && (int)n > 0)
 	{
-		/* Make sure __global_clib2 has been created */
-		if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions)
+		if (__getclib2() != NULL && __getclib2()->optimizedCPUFunctions)
 		{
-			switch (__global_clib2->cpufamily)
+			switch (__getclib2()->cpufamily)
 			{
 				case CPUFAMILY_4XX:
 					result = __strncmp440(s1, s2, n);

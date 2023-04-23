@@ -19,7 +19,7 @@ _shmat(int shmid, const void *prefadds, int flags)
     SHOWPOINTER(prefadds);
     SHOWVALUE(flags);
 
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         void *ret;
         ret = shmat(shmid, prefadds, flags);

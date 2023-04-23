@@ -20,7 +20,7 @@ _msgctl(int qid, int cmd, struct msqid_ds *buf)
     SHOWPOINTER(buf);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = msgctl(qid, cmd, buf);
         if (ret < 0)

@@ -42,17 +42,22 @@
 extern int main(int arg_c, char **arg_v);
 extern BOOL open_libraries(void);
 extern void close_libraries(void);
-void _start_ctors(void (*__CTOR_LIST__[])(void));
-void _end_ctors(void (*__DTOR_LIST__[])(void));
+
+static void _start_ctors(void (*__CTOR_LIST__[])(void));
+static void _start_dtors(void (*__DTOR_LIST__[])(void));
+static void shared_obj_init(void);
+static void shared_obj_exit(void);
 
 /* This will be set to TRUE in case a stack overflow was detected. */
 BOOL NOCOMMON __stack_overflow;
-extern struct _clib2 NOCOMMON *__global_clib2;
+extern struct _clib2 *__global_clib2;
 
 struct Library *__ElfBase;
 struct ElfIFace *__IElf;
+static Elf32_Handle elf_handle;
 
-void close_libraries(void) {
+void
+close_libraries(void) {
     if (__IUtility != NULL) {
         DropInterface((struct Interface *) __IUtility);
         __IUtility = NULL;
@@ -87,7 +92,7 @@ void close_libraries(void) {
 BOOL open_libraries(void) {
     /* Open the minimum required libraries. */
     BOOL success = FALSE;
-
+    SHOWMSG("Open DOS stuff");
     /* Open the minimum required libraries. */
     DOSBase = (struct Library *) OpenLibrary("dos.library", MIN_OS_VERSION);
     if (DOSBase == NULL) {
@@ -102,6 +107,7 @@ BOOL open_libraries(void) {
         goto out;
     }
 
+    SHOWMSG("Open Elf stuff");
     /* We need elf.library V52.2 or higher. */
     __ElfBase = OpenLibrary("elf.library", 0);
     if (__ElfBase == NULL || (__ElfBase->lib_Version < 52) ||
@@ -116,22 +122,76 @@ BOOL open_libraries(void) {
         goto out;
     }
 
-    __UtilityBase = OpenLibrary("utility.library", MIN_OS_VERSION);
-    if (__UtilityBase == NULL)
-        goto out;
-
-    __IUtility = (struct UtilityIFace *) GetInterface(__UtilityBase, "main", 1, 0);
-    if (__IUtility == NULL)
-        goto out;
+    SHOWPOINTER(__UtilityBase);
+    SHOWPOINTER(__IUtility);
 
     success = TRUE;
 
-    out:
+out:
 
     return (success);
 }
 
-void _start_ctors(void (*__CTOR_LIST__[])(void)) {
+static void
+shared_obj_exit(void) {
+    struct ElfIFace *IElf = __IElf;
+    ENTER();
+
+    /* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
+    if (elf_handle != NULL) {
+        SHOWMSG("Invoking shared object destructors");
+        InitSHLibs(elf_handle, FALSE);
+        elf_handle = NULL;
+    };
+
+    close_libraries();
+    LEAVE();
+}
+
+static void
+shared_obj_init(void) {
+    ENTER();
+
+    if (open_libraries()) {
+        struct ElfIFace *IElf = __IElf;
+
+        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+        if (segment_list != ZERO) {
+            int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &elf_handle, TAG_DONE);
+            if (ret == 1) {
+                if (elf_handle != NULL) {
+                    /* Trigger the constructors, etc. in the shared objects linked to this binary. */
+                    InitSHLibs(elf_handle, TRUE);
+                }
+                else {
+                    SHOWMSG("elf_handle == NULL!");
+                }
+            }
+            else {
+                SHOWMSG("GetSegListInfoTags fail!");
+            }
+        }
+        else {
+            SHOWMSG("GetProcSegList return ZERO!");
+        }
+    }
+    else {
+        SHOWMSG("Cannot open libraries!");
+        const char *error_message;
+
+        /* If available, use the error message provided by the client. */
+        error_message = __minimum_os_lib_error;
+
+        if (error_message == NULL)
+            error_message = "This program requires AmigaOS 4.0 (52.2) or higher.";
+
+        __show_error(error_message);
+    }
+    LEAVE();
+}
+
+static void
+_start_ctors(void (*__CTOR_LIST__[])(void)) {
     int i = 0;
 
     while (__CTOR_LIST__[i + 1]) {
@@ -145,7 +205,8 @@ void _start_ctors(void (*__CTOR_LIST__[])(void)) {
     }
 }
 
-void _end_ctors(void (*__DTOR_LIST__[])(void)) {
+static void
+_end_ctors(void (*__DTOR_LIST__[])(void)) {
     int i = 1;
 
     while (__DTOR_LIST__[i]) {
@@ -156,8 +217,12 @@ void _end_ctors(void (*__DTOR_LIST__[])(void)) {
 }
 
 static int
-call_main(char *argstr, int arglen, int (*start_main)(int, char **, char **), void (*__CTOR_LIST__[])(void),
-          void (*__DTOR_LIST__[])(void)) {
+call_main(
+        char *argstr,
+        int arglen,
+        int (*start_main)(int, char **),
+        void (*__EXT_CTOR_LIST__[])(void),
+        void (*__EXT_DTOR_LIST__[])(void)) {
     volatile LONG saved_io_err;
 
     ENTER();
@@ -167,11 +232,12 @@ call_main(char *argstr, int arglen, int (*start_main)(int, char **, char **), vo
         goto out;
     }
 
-    reent_init();
+    SHOWMSG("Initialize shared objects");
+    shared_obj_init();
 
-    SHOWMSG("now invoking the constructors");
+    SHOWMSG("Now invoking constructors");
     /* Go through the constructor list */
-    _start_ctors(__CTOR_LIST__);
+    _start_ctors(__EXT_CTOR_LIST__);
     SHOWMSG("Constructors executed correctly. Calling start_main()");
 
     /* Set system time for rusage.
@@ -182,13 +248,13 @@ call_main(char *argstr, int arglen, int (*start_main)(int, char **, char **), vo
     struct TimerIFace *ITimer = __ITimer;
     if (__ITimer != NULL) {
         SHOWMSG("Calling GetSysTime");
-        GetSysTime(&__global_clib2->clock);
+        GetSysTime(&__getclib2()->clock);
         /* Generate random seed */
-        __global_clib2->__random_seed = time(NULL);
+        __getclib2()->__random_seed = time(NULL);
     }
 
     /* Initialize aio list */
-    __global_clib2->aio_threads = CList_init(sizeof(struct AioThread));
+    __getclib2()->aio_threads = CList_init(sizeof(struct AioThread));
 
     /* Set __current_path_name to a valid value */
     UBYTE current_dir_name[256] = {0};
@@ -225,7 +291,7 @@ call_main(char *argstr, int arglen, int (*start_main)(int, char **, char **), vo
 #endif /* NDEBUG */
 
     /* After all these preparations, get this show on the road... */
-    exit(start_main(__argc, __argv, NULL));
+    exit(start_main(__argc, __argv));
     SHOWMSG("Done. Exit from start_main()");
 
 out:
@@ -274,16 +340,19 @@ out:
     disableUnixPaths();
 
     /* Free aio list */
-    if (__global_clib2->aio_threads != NULL) {
+    if (__getclib2()->aio_threads != NULL) {
         SHOWMSG("Free aio list");
-        ObtainSemaphore(__global_clib2->__aio_lock);
-        __global_clib2->aio_threads->free(__global_clib2->aio_threads);
-        ReleaseSemaphore(__global_clib2->__aio_lock);
+        ObtainSemaphore(__getclib2()->__aio_lock);
+        __getclib2()->aio_threads->free(__global_clib2->aio_threads);
+        ReleaseSemaphore(__getclib2()->__aio_lock);
     }
 
     /* Go through the destructor list */
-    SHOWMSG("invoking the destructors");
-    _end_ctors(__DTOR_LIST__);
+    SHOWMSG("invoking external and internal destructors in reverse order");
+    _end_ctors(__EXT_DTOR_LIST__);
+
+    SHOWMSG("Close shared objects");
+    shared_obj_exit();
 
     SHOWMSG("Calling reent_exit");
     reent_exit();
@@ -322,8 +391,14 @@ static ULONG get_stack_size(void) {
 }
 
 int
-_main(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_IDOS, int (*start_main)(int, char **, char **), void (*__CTOR_LIST__[])(void),
-      void (*__DTOR_LIST__[])(void)) {
+_main(
+        char *argstr,
+        int arglen,
+        struct Library **_DOSBase,
+        struct DOSIFace **_IDOS,
+        int (*start_main)(int, char **),
+        void (*__EXT_CTOR_LIST__[])(void),
+        void (*__EXT_DTOR_LIST__[])(void)) {
     struct Process *volatile child_process = NULL;
     struct WBStartup *volatile startup_message;
     volatile APTR old_window_pointer = NULL;
@@ -332,7 +407,6 @@ _main(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_ID
     int return_code = RETURN_FAIL;
     ULONG current_stack_size;
 
-    SHOWMSG("1");
     /* Pick up the Workbench startup message, if available. */
     this_process = (struct Process *) FindTask(NULL);
 
@@ -349,7 +423,7 @@ _main(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_ID
     __WBenchMsg = (struct WBStartup *) startup_message;
 
     /* Try to open the libraries we need to proceed. */
-    if (IDOS == NULL && CANNOT open_libraries()) {
+    if (CANNOT open_libraries()) {
         const char *error_message;
 
         /* If available, use the error message provided by the client. */
@@ -396,15 +470,21 @@ _main(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_ID
         __detach = (*__check_detach)();
     }
 
+    DECLARE_UTILITYBASE();
     /* Set default terminal mode to "amiga" if not set */
     char term_buffer[32] = {0};
     LONG term_len = GetVar("TERM", (STRPTR) term_buffer, 32, 0);
     if (term_len <= 0) {
-        strncpy(term_buffer, "amiga-clib2", 5);
+        Strlcpy(term_buffer, "amiga-clib2", 5);
         SetVar("TERM", term_buffer, 5, 0);
     }
 
-    DECLARE_UTILITYBASE();
+    if (_DOSBase)
+        *_DOSBase = DOSBase;
+    if (_IDOS)
+        *_IDOS = IDOS;
+
+    /*
     char shellName[128] = {0};
     if (this_process->pr_CLI) {
         SNPrintf(shellName, 128, "CON:64/48/800/200/%.200b/AUTO/CLOSE/WAIT",
@@ -426,7 +506,6 @@ _main(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_ID
     if (_IDOS) {
         *_IDOS = IDOS;
     }
-
     BOOL fhExchanged = FALSE;
     BPTR oldDirFH = 0, newDirFH = 0, oldInputFH, oldOutputFH, oldErrorFH;
     void *oldConsolePort;
@@ -442,6 +521,7 @@ _main(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_ID
     }
 
     fhExchanged = TRUE;
+    */
 
     /* The following code will be executed if the program is to keep
        running in the shell or was launched from Workbench. */
@@ -484,14 +564,13 @@ _main(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_ID
             }
 #endif /* NDEBUG */
 
-            return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __CTOR_LIST__,
-                                                                      __DTOR_LIST__));
+            return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__));
 
             FreeVec(new_stack);
             FreeVec(stk);
         } else {
             /* We have enough room to make the call or just don't care. */
-            return_code = call_main(argstr, arglen, start_main, __CTOR_LIST__, __DTOR_LIST__);
+            return_code = call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
         }
 
         /* Restore the task priority. */
@@ -577,7 +656,7 @@ _main(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_ID
     }
 
 out:
-
+    /*
     if (fhExchanged) {
         this_process->pr_CLibData = oldClib2TaskData;
 
@@ -594,7 +673,7 @@ out:
     if (console) {
         Close(console);
     }
-
+    */
     if (old_window_pointer_valid)
         __set_process_window(old_window_pointer);
 
@@ -604,6 +683,8 @@ out:
         ReplyMsg((struct Message *) startup_message);
 
     }
+
+    close_libraries();
 
     return (return_code);
 }

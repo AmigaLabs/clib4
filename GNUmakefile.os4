@@ -59,7 +59,7 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-missing-braces -Wno-unused-value -Wno-comment \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-prio-ctor-dtor # -Wbad-function-cast -Wconversion -Wformat
+    -Wno-type-limits -Wno-prio-ctor-dtor # -Werror -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -117,7 +117,7 @@ VERBOSE    := @
 
 # This is the first target: it depends on all the targets
 
-all: prepare all-targets all-libs
+all: prepare all-targets all-libs clib2.library.debug clib2.library
 
 ##############################################################################
 
@@ -125,6 +125,9 @@ all: prepare all-targets all-libs
 
 LIBS :=
 MAIN_LIB:=
+OBJ_C_LIB =
+OBJ_C_SRC =
+OUT_SHARED_LIB := $(BUILD_DIR)/shared
 
 include libc.gmk
 include libm.gmk
@@ -132,8 +135,10 @@ include libamiga.gmk
 include libprofile.gmk
 include libpthread.gmk
 include libcrypt.gmk
+include shared.gmk
 
 prepare:
+	-$(MAKEDIR) $(BUILD_DIR)/shared
 	-$(MAKEDIR) $(INSTALL_PREFIX)/lib
 	-$(MAKEDIR) $(INSTALL_PREFIX)/include
 
@@ -143,8 +148,9 @@ all-targets: \
 	$(OUTPUT_LIB)/crtend.o \
 	$(OUTPUT_LIB)/shcrtbegin.o \
 	$(OUTPUT_LIB)/shcrtend.o \
+    $(OUT_SHARED_LIB)/shared_library/clib2.o \
 	$(MAIN_LIB)
-$(info $(MAIN_LIB))
+#$(info $(OBJ_C_SRC))
 
 all-libs: $(LIBS)
 
@@ -152,8 +158,9 @@ all-libs: $(LIBS)
 
 # Delete all object files and libraries
 clean:
-	-$(DELETE) $(BUILD_DIR)/obj
-	-$(DELETE) $(BUILD_DIR)/obj.shared	
+	-$(DELETE) $(BUILD_DIR)/objcp
+	-$(DELETE) $(BUILD_DIR)/obj.shared
+	-$(DELETE) $(BUILD_DIR)/shared
 	-$(DELETE) $(OUTPUT_LIB)
 	-$(DELETE) $(BUILD_DIR)/compiler.log
 	-$(DELETE) clib2.lha
@@ -164,13 +171,26 @@ clean:
 
 # Update the version numbers bound to the individual libraries
 version:
-	$(COPY) c.lib_rev.rev amiga.lib_rev.rev
-	$(COPY) c.lib_rev.rev profile.lib_rev.rev
-	$(COPY) c.lib_rev.rev m.lib_rev.rev
+	$(COPY) c.lib_rev.rev amiga/amiga.lib_rev.rev
+	$(COPY) c.lib_rev.rev profile/profile.lib_rev.rev
+	$(COPY) c.lib_rev.rev math/m.lib_rev.rev
+	$(COPY) c.lib_rev.rev math/crypt.lib_rev.rev
+	$(COPY) c.lib_rev.rev math/pthread.lib_rev.rev
 	bumprev amiga.lib
 	bumprev c.lib
 	bumprev profile.lib
 	bumprev m.lib
+	bumprev crypt.lib
+	bumprev pthread.lib
+
+# Shared clib2.library rules
+
+clib2.library.debug: $(OBJ_C_LIB)
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(OBJ_C_LIB)  -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib -lgcc
+
+clib2.library: clib2.library.debug
+	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
+	ppc-amigaos-strip -R.comment -R.sdata2 --strip-unneeded-rel-relocs $(BUILD_DIR)/$@
 
 ##############################################################################
 

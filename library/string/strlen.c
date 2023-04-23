@@ -53,9 +53,8 @@ strlen(const char *s) {
         goto out;
     }
 
-    /* Make sure __global_clib2 has been created */
-    if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
-        switch (__global_clib2->cpufamily) {
+    if (__getclib2() != NULL && __getclib2()->optimizedCPUFunctions) {
+        switch (__getclib2()->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strlen440(s);
                 break;

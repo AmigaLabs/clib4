@@ -15,12 +15,14 @@ memset(void *ptr, int val, size_t len) {
 	void *result = ptr;
 	unsigned char *m = ptr;
 
+    ENTER();
     DECLARE_UTILITYBASE();
+    SHOWPOINTER(__UtilityBase);
+    SHOWPOINTER(__IUtility);
 
 	assert((len == 0) || (ptr != NULL && (int)len > 0));
 
-	if (ptr == NULL)
-	{
+	if (ptr == NULL) {
 		__set_errno(EFAULT);
 		goto out;
 	}
@@ -28,6 +30,6 @@ memset(void *ptr, int val, size_t len) {
     result = SetMem(ptr, val, len);
 
 out:
-
+    RETURN(result);
 	return (result);
 }

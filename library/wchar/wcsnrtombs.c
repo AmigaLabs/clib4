@@ -15,7 +15,7 @@ wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps
     int i;
 
     if (ps == NULL) {
-        ps = &__global_clib2->wide_status->_wcsrtombs_state;
+        ps = &__getclib2()->wide_status->_wcsrtombs_state;
     }
 
     /* If no dst pointer, treat len as maximum possible value. */

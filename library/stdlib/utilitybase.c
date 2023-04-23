@@ -14,5 +14,5 @@
 
 /****************************************************************************/
 
-struct Library      NOCOMMON *__UtilityBase;
-struct UtilityIFace NOCOMMON *__IUtility;
+//struct Library      *__UtilityBase;
+//struct UtilityIFace *__IUtility;

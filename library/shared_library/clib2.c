@@ -1,5 +1,7 @@
 #define __NOLIBBASE__
 #define __NOGLOBALIFACE__
+#define shared_comp
+#undef __USE_INLINE__
 
 #include <proto/exec.h>
 #include <proto/dos.h>
@@ -59,7 +61,7 @@
 #include <wctype.h>
 #include <wctype.h>
 #include <sys/byteswap.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/file.h>
 #include <sys/iconvnls.h>
 #include <sys/ipc.h>
@@ -83,22 +85,40 @@
 #include "c.lib_rev.h"
 
 #include "clib2.h"
+#include "debug.h"
 
 struct ExecBase *SysBase;
 struct ExecIFace *IExec;
+
 struct Library *DOSBase;
 struct DOSIFace *IDOS;
+
 struct ElfIFace *IElf;
 struct TimeRequest *TimeReq;
+
 struct TimerIFace *ITimer;
 struct TimezoneIFace *ITimezone;
-BPTR clib2seglist;
+
 struct LocaleIFace *ILocale;
 struct Clib2IFace *IClib2;
-struct Library *UtilityBase;
-struct UtilityIFace *PrivateIUtility;
+
+struct Library* __UtilityBase;
+struct UtilityIFace* __IUtility;
+
+BPTR clib2seglist;
 
 const struct Resident RomTag;
+
+/* These CTORS/DTORS are clib2's one and they are different than that one received
+ * from crtbegin. They are needed because we need to call clib2 constructors as well
+ */
+static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
+static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
+
+extern void reent_init(void);
+extern void reent_exit(void);
+
+struct _clib2 *__global_clib2;
 
 int32
 _start(char *args, int arglen, struct ExecBase *sysbase) {
@@ -107,6 +127,30 @@ _start(char *args, int arglen, struct ExecBase *sysbase) {
     (void) (sysbase);
 
     return -1;
+}
+
+static void
+_start_ctors(void (*__CTOR_LIST__[])(void)) {
+    int i = 0;
+
+    while (__CTOR_LIST__[i + 1]) {
+        i++;
+    }
+    SHOWVALUE(i);
+    while (i > 0) {
+        D(("Calling ctor %ld", i));
+        __CTOR_LIST__[i--]();
+    }
+}
+
+static void
+_start_dtors(void (*__DTOR_LIST__[])(void)) {
+    int i = 1;
+
+    while (__DTOR_LIST__[i]) {
+        D(("Calling dtor %ld", i));
+        __DTOR_LIST__[i++]();
+    }
 }
 
 static struct TimeRequest *open_timer(uint32 unit) {
@@ -161,29 +205,6 @@ static struct Library *LIB_Open(struct Interface *Self, uint32 version __attribu
             if (!IDOS) {
                 IExec->CloseLibrary((struct Library *) DOSBase);
                 DOSBase = NULL;
-            } else {
-                TimeReq = open_timer(UNIT_MICROHZ);
-                if (!TimeReq) {
-                    IExec->DropInterface((struct Interface *) IDOS);
-                    IDOS = NULL;
-                    IExec->CloseLibrary((struct Library *) DOSBase);
-                    DOSBase = NULL;
-                } else {
-                    struct Device *TimerBase = TimeReq->Request.io_Device;
-
-                    ITimer = (struct TimerIFace *) IExec->GetInterface((struct Library *) TimerBase, "main", 1, NULL);
-                    if (!ITimer) {
-                        close_timer(TimeReq);
-                        TimeReq = NULL;
-                        IExec->DropInterface((struct Interface *) IDOS);
-                        IDOS = NULL;
-                        IExec->CloseLibrary((struct Library *) DOSBase);
-                        DOSBase = NULL;
-                    } else {
-                        //fallback_reent->__ITimer = ITimer;
-                        //ITimer->GetSysTime((struct TimeVal *) fallback_reent->__initclock);
-                    }
-                }
             }
         }
     }
@@ -207,21 +228,17 @@ static struct Library *LIB_Open(struct Interface *Self, uint32 version __attribu
         }
     }
 
-    if (!ITimezone) {
-        struct Library *libbase;
-
-        IExec->Forbid();
-        libbase = (struct Library *) IExec->FindName(&SysBase->LibList, "timezone.library");
-        IExec->Permit();
-
-        if (libbase) {
-            libbase = IExec->OpenLibrary("timezone.library", 50);
-        }
-
-        if (libbase) {
-            ITimezone = (struct TimezoneIFace *) IExec->GetInterface(libbase, "main", 1, NULL);
-        }
+    __UtilityBase = IExec->OpenLibrary("utility.library", 52);
+    __IUtility = (struct UtilityIFace *) IExec->GetInterface(__UtilityBase, "main", 1, NULL);
+    if (__IUtility == NULL) {
+        IExec->CloseLibrary(__UtilityBase);
+        __IUtility = NULL;
     }
+
+    reent_init();
+
+    D(("Calling clib2 ctors"));
+    _start_ctors(__CTOR_LIST__);
 
     Clib2Base->lib_OpenCnt++;
     Clib2Base->lib_Flags &= ~LIBF_DELEXP;
@@ -231,6 +248,10 @@ static struct Library *LIB_Open(struct Interface *Self, uint32 version __attribu
 
 static BPTR LIB_Expunge(struct Interface *Self) {
     struct Library *Clib2Base = Self->Data.LibBase;
+
+    reent_exit();
+
+    _start_dtors(__DTOR_LIST__);
 
     if (Clib2Base->lib_OpenCnt) {
         Clib2Base->lib_Flags |= LIBF_DELEXP;
@@ -283,8 +304,6 @@ static struct TagItem libmanagerTags[] = {
         {TAG_DONE,        0}
 };
 
-/****************************************************************************/
-
 uint32 LIB_Obtain(struct Interface *Self) {
     return ++Self->Data.RefCount;
 }
@@ -294,7 +313,7 @@ uint32 LIB_Release(struct Interface *Self) {
 }
 
 int LIB_Reserved(void) {
-//    __global_clib2->_errno = ENOSYS;
+    __global_clib2->_errno = ENOSYS;
     return -1;
 }
 
@@ -364,11 +383,11 @@ library_start(char *argstr,
               int arglen,
               struct Library **_DOSBase,
               struct DOSIFace **_IDOS,
-              int (*start_main)(int, char **, char **),
-              void (*__CTOR_LIST__[])(void),
-              void (*__DTOR_LIST__[])(void)) {
+              int (*start_main)(int, char **),
+              void (*__EXT_CTOR_LIST__[])(void),
+              void (*__EXT_DTOR_LIST__[])(void)) {
 
-    int result = _main(argstr, arglen, _DOSBase, _IDOS, start_main, __CTOR_LIST__, __DTOR_LIST__);
+    int result = _main(argstr, arglen, _DOSBase, _IDOS, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
 
     return result;
 }

@@ -30,25 +30,25 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
         case ITIMER_REAL:
             if (old_value != NULL) {
                 /* Store the current time value in old_value */
-                old_value->it_value.tv_sec = __global_clib2->tmr_time.it_value.tv_sec;
-                old_value->it_value.tv_usec = __global_clib2->tmr_time.it_value.tv_usec;
-                old_value->it_interval.tv_sec = __global_clib2->tmr_time.it_interval.tv_sec;
-                old_value->it_interval.tv_usec = __global_clib2->tmr_time.it_interval.tv_usec;
+                old_value->it_value.tv_sec = __getclib2()->tmr_time.it_value.tv_sec;
+                old_value->it_value.tv_usec = __getclib2()->tmr_time.it_value.tv_usec;
+                old_value->it_interval.tv_sec = __getclib2()->tmr_time.it_interval.tv_sec;
+                old_value->it_interval.tv_usec = __getclib2()->tmr_time.it_interval.tv_usec;
             }
 
-            __global_clib2->tmr_time.it_value.tv_sec = new_value->it_value.tv_sec;
-            __global_clib2->tmr_time.it_value.tv_usec = new_value->it_value.tv_usec;
-            __global_clib2->tmr_time.it_interval.tv_sec = new_value->it_interval.tv_sec;
-            __global_clib2->tmr_time.it_interval.tv_usec = new_value->it_interval.tv_usec;
+            __getclib2()->tmr_time.it_value.tv_sec = new_value->it_value.tv_sec;
+            __getclib2()->tmr_time.it_value.tv_usec = new_value->it_value.tv_usec;
+            __getclib2()->tmr_time.it_interval.tv_sec = new_value->it_interval.tv_sec;
+            __getclib2()->tmr_time.it_interval.tv_usec = new_value->it_interval.tv_usec;
 
             /*  If we have a previous running task stop it */
-            if (__global_clib2->tmr_real_task != NULL && (new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0)) {
-                Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_D);
+            if (__getclib2()->tmr_real_task != NULL && (new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0)) {
+                Signal((struct Task *)__getclib2()->tmr_real_task, SIGBREAKF_CTRL_D);
             }
-            else if (__global_clib2->tmr_real_task == NULL) {
+            else if (__getclib2()->tmr_real_task == NULL) {
                 /* Create timer tasks */
                 if ((new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0)) {
-                    __global_clib2->tmr_real_task = CreateNewProcTags(
+                    __getclib2()->tmr_real_task = CreateNewProcTags(
                             NP_Name, "CLIB2_ITIMER_REAL_TASK",
                             NP_Entry, itimer_real_task,
                             NP_Child, TRUE,
@@ -56,15 +56,15 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
                             NP_Output, DupFileHandle(Output()),
                             NP_CloseOutput, TRUE,
                             TAG_END);
-                    if (!__global_clib2->tmr_real_task) {
+                    if (!__getclib2()->tmr_real_task) {
                         __set_errno(EFAULT);
                         return -1;
                     }
                 }
             }
             else {
-                int pid = __global_clib2->tmr_real_task->pr_ProcessID;
-                Signal((struct Task *)__global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+                int pid = __getclib2()->tmr_real_task->pr_ProcessID;
+                Signal((struct Task *)__getclib2()->tmr_real_task, SIGBREAKF_CTRL_F);
                 WaitForChildExit(pid);
             }
 

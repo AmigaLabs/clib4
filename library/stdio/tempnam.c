@@ -72,7 +72,7 @@ tempnam(const char *dir, const char *pfx) {
         char string[7] = {0};
 
         snprintf(string, 7, "%lX", r);
-        if (!worker(filename, dir, prefix, string, &__global_clib2->inc))
+        if (!worker(filename, dir, prefix, string, &__getclib2()->inc))
             return NULL;
     }
 

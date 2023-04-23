@@ -20,7 +20,7 @@ _msgids(int *buf, size_t nids, size_t *pnids)
     SHOWPOINTER(pnids);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = msgids((int32 *)buf, nids, (uint32 *)pnids);
         if (ret < 0)

@@ -28,8 +28,8 @@ strchr(const char *s, int c)
 		goto out;
 	}
 
-    if  (__global_clib2->optimizedCPUFunctions) {
-        switch (__global_clib2->cpufamily) {
+    if  (__getclib2()->optimizedCPUFunctions) {
+        switch (__getclib2()->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strchr440(s, c);
                 break;

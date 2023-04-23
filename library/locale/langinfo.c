@@ -36,7 +36,7 @@ nl_langinfo(nl_item item)
     {
         case CODESET:
             ret = "";
-            const char *s = __global_clib2->_current_locale;
+            const char *s = __getclib2()->_current_locale;
             if (strstr(s, "C-"))
             {
                 if ((cs = strchr(s, '-')) != NULL)

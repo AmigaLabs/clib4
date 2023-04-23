@@ -21,7 +21,7 @@ _msgsnap(int msqid, void *buf, size_t bufsz, long msgtyp)
     SHOWVALUE(msgtyp);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = msgsnap(msqid, buf, bufsz, msgtyp);
         if (ret < 0)

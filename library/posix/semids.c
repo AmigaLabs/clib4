@@ -20,7 +20,7 @@ _semids(long int *buf, uint32_t nids, long unsigned int *idcnt)
     SHOWPOINTER(idcnt);
 
     int32 ret = -1;
-    if (__global_clib2->haveShm)
+    if (__getclib2()->haveShm)
     {
         ret = semids(buf, nids, idcnt);
         if (ret < 0)

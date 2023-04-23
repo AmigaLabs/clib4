@@ -40,12 +40,11 @@ LIBS = -lgcc
 all: clib2.library.debug clib2.library libc.a libc.so
 
 clib2.library.debug: $(OBJS)
-	$(VERBOSE)$(CC) -o $@ $(OBJS) $(CFLAGS) ../build/lib/libc.a ../build/lib/libm.a ../build/lib/libprofile.a ../build/lib/libcrypt.a -Wl,--cref,-M,-Map=$@.map -nostartfiles -nostdlib $(LIBS)
+	$(VERBOSE)$(CC) -o $@ $(OBJS) $(CFLAGS) $(C_LIB) $(C_MATH) $(PROFILE_LIB) $(CRYPT_LIB) -Wl,--cref,-M,-Map=$@.map -nostartfiles -nostdlib $(LIBS)
 
 clib2.library: clib2.library.debug
 	cp $< $@
 	ppc-amigaos-strip -R.comment -R.sdata2 --strip-unneeded-rel-relocs $@
-	$(VERBOSE)$(CC) -o $@ $(OBJS) $(CFLAGS) ../build/lib/libc.a ../build/lib/libm.a ../build/lib/libprofile.a ../build/lib/libcrypt.a -Wl,--cref,-M,-Map=$@.map -nostartfiles -nostdlib $(LIBS)
 
 $(LIBC_OBJS_PIC): $(LIBC_SRCS)
 	$(VERBOSE)$(CC) $(CFLAGS) -fPIC -c $< -o $@

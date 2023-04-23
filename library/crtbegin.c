@@ -13,7 +13,7 @@
 #include <proto/dos.h>
 #include <proto/utility.h>
 
-#include "../shared_library/include/sys/interface.h"
+#include "shared_library/interface.h"
 
 #ifndef _DEBUG_H
 #include "debug/debug.h"
@@ -115,7 +115,7 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
             struct Library *clib2base = ((struct Interface *) iclib2)->Data.LibBase;
             IClib2 = iclib2;
 
-            rc = iclib2->library_start(args, arglen, (void **)&DOSBase, (void **)&IDOS, main, __CTOR_LIST__, __DTOR_LIST__);
+            rc = iclib2->library_start(args, arglen, (struct Library **)&DOSBase, (struct DOSIFace **)&IDOS, main, __CTOR_LIST__, __DTOR_LIST__);
 
             CloseLibraryInterface(iexec, (struct Interface *) iclib2);
         } else {
@@ -135,13 +135,7 @@ _start(STRPTR argstring, int32 arglen, struct Library *sysbase) {
     SysBase = *(struct Library **) 4;
     IExec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
 
-    /* The shared objects need to be set up before any local constructors are invoked. */
-    //shared_obj_init();
-
     int rc = clib2_start(argstring, arglen, sysbase);
-
-    /* The shared objects need to be cleaned up after all local destructors have been invoked. */
-    //shared_obj_exit();
 
     return rc;
 }

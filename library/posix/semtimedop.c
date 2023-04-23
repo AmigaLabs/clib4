@@ -20,7 +20,7 @@ _semtimedop(int semid, const struct sembuf *ops, int nops, struct timespec *to) 
     SHOWPOINTER(to);
 
     int ret = -1;
-    if (__global_clib2->haveShm) {
+    if (__getclib2()->haveShm) {
         ret = semtimedop(semid, ops, nops, to);
         if (ret < 0) {
             __set_errno(GetIPCErr());

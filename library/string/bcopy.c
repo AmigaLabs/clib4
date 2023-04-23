@@ -15,9 +15,9 @@ bcopy(const void *src, void *dest, size_t len) {
 
     assert((len == 0) || (src != NULL && dest != NULL && (int) len > 0));
 
-    if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
+    if (__getclib2() != NULL && __getclib2()->optimizedCPUFunctions) {
         /* Check if we have altivec enabled */
-        if (__global_clib2->hasAltivec) {
+        if (__getclib2()->hasAltivec) {
             vec_bcopy(src, dest, len);
         }
         else {

@@ -236,8 +236,8 @@ setlocale(int category, const char *locale) {
     SHOWSTRING(result);
 
 out:
-    __global_clib2->_current_category = category;
-    __global_clib2->_current_locale = result;
+    __getclib2()->_current_category = category;
+    __getclib2()->_current_locale = result;
 
     __locale_unlock();
 

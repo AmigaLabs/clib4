@@ -109,14 +109,14 @@ raise(int sig) {
 
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                     /* Check ig we have timer terminal running. If so let's kill it */
-                    if (__global_clib2->tmr_real_task != NULL) {
+                    if (__getclib2()->tmr_real_task != NULL) {
                         struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
                         int32 pid, process;
 
                         /* Block SIGALRM signal from raise */
                         sigblock(SIGALRM);
                         /* Get itimer process ID */
-                        pid = __global_clib2->tmr_real_task->pr_ProcessID;
+                        pid = __getclib2()->tmr_real_task->pr_ProcessID;
 
                         Forbid();
                         /* Scan for process */
@@ -125,31 +125,31 @@ raise(int sig) {
                         while (process > 0) {
                             /* Send a SIGBREAKF_CTRL_F signal until the timer task return to Wait state
                              * and can get the signal */
-                            Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+                            Signal((struct Task *) __getclib2()->tmr_real_task, SIGBREAKF_CTRL_F);
                             process = ProcessScan(&h, (CONST_APTR) pid, 0);
                             usleep(100);
                         }
                         Permit();
                         WaitForChildExit(pid);
-                        __global_clib2->tmr_real_task = NULL;
+                        __getclib2()->tmr_real_task = NULL;
                     }
 
                     /* Check if we have some aio threads */
                     SHOWMSG("Check if we have some aio pthreads created");
                     AioThread *aioThread;
                     SHOWMSG("Obtain aio semaphore");
-                    ObtainSemaphore(__global_clib2->__aio_lock);
-                    int streams = __global_clib2->aio_threads->count(__global_clib2->aio_threads);
+                    ObtainSemaphore(__getclib2()->__aio_lock);
+                    int streams = __getclib2()->aio_threads->count(__getclib2()->aio_threads);
                     D(("AIO list has %ld items", streams));
                     if (streams > 0) {
                         for (int i = 0; i < streams; i++) {
-                            aioThread = __global_clib2->aio_threads->at(__global_clib2->aio_threads, i);
+                            aioThread = __getclib2()->aio_threads->at(__getclib2()->aio_threads, i);
                             D(("Cancel AIO stream with filedes %ld", aioThread->fileDes));
                             aio_cancel(aioThread->fileDes, aioThread->aiocbp);
                             Signal(aioThread->thread, SIGBREAKF_CTRL_C);
                         }
                     }
-                    ReleaseSemaphore(__global_clib2->__aio_lock);
+                    ReleaseSemaphore(__getclib2()->__aio_lock);
 
                     char break_string[80];
 
@@ -176,7 +176,7 @@ raise(int sig) {
                     sigblock(SIGALRM);
 
                     /* Since we got a signal we interrrupt every sleep function like nanosleep */
-                    Signal((struct Task *) __global_clib2->self, SIGBREAKF_CTRL_E);
+                    Signal((struct Task *) __getclib2()->self, SIGBREAKF_CTRL_E);
                 }
             }
             else if (handler == SIG_ERR) {
