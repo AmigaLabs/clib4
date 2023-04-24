@@ -144,7 +144,6 @@ shared_obj_exit(void) {
         elf_handle = NULL;
     };
 
-    close_libraries();
     LEAVE();
 }
 
@@ -290,6 +289,7 @@ call_main(
     }
 #endif /* NDEBUG */
 
+    D(("Call start_main with %ld parameters", __argc));
     /* After all these preparations, get this show on the road... */
     exit(start_main(__argc, __argv));
     SHOWMSG("Done. Exit from start_main()");
@@ -336,10 +336,7 @@ out:
     (void) setjmp(__exit_jmp_buf);
     SHOWMSG("Called setjmp(__exit_jmp_buf)");
 
-    SHOWMSG("Set unix paths to off");
-    disableUnixPaths();
-
-    /* Free aio list */
+    /* Free aio list -- TODO - Move to aio destructor */
     if (__getclib2()->aio_threads != NULL) {
         SHOWMSG("Free aio list");
         ObtainSemaphore(__getclib2()->__aio_lock);
@@ -353,9 +350,6 @@ out:
 
     SHOWMSG("Close shared objects");
     shared_obj_exit();
-
-    SHOWMSG("Calling reent_exit");
-    reent_exit();
 
     SHOWMSG("done.");
 
@@ -479,49 +473,11 @@ _main(
         SetVar("TERM", term_buffer, 5, 0);
     }
 
+    /* Set interface pointers from opened one */
     if (_DOSBase)
         *_DOSBase = DOSBase;
     if (_IDOS)
         *_IDOS = IDOS;
-
-    /*
-    char shellName[128] = {0};
-    if (this_process->pr_CLI) {
-        SNPrintf(shellName, 128, "CON:64/48/800/200/%.200b/AUTO/CLOSE/WAIT",
-                 ((struct CommandLineInterface *) BADDR(this_process->pr_CLI))->cli_CommandName);
-    } else {
-        SNPrintf(shellName, 128, "CON:64/48/800/200/%.200s/AUTO/CLOSE/WAIT", this_process->pr_Task.tc_Node.ln_Name ?: "<NULL>");
-    }
-    BPTR console = Open((char *) shellName, MODE_OLDFILE);
-    if (!console) {
-        console = Open("NIL:", MODE_OLDFILE);
-    }
-
-    if (!console)
-        goto out;
-
-    if (_DOSBase) {
-        *_DOSBase = DOSBase;
-    }
-    if (_IDOS) {
-        *_IDOS = IDOS;
-    }
-    BOOL fhExchanged = FALSE;
-    BPTR oldDirFH = 0, newDirFH = 0, oldInputFH, oldOutputFH, oldErrorFH;
-    void *oldConsolePort;
-
-    APTR oldClib2TaskData = this_process->pr_CLibData;
-    oldInputFH = SelectInput(console);
-    oldOutputFH = SelectOutput(console);
-    oldErrorFH = SelectErrorOutput(console);
-    oldConsolePort = SetConsolePort(((struct FileHandle *)BADDR(console))->fh_MsgPort);
-    if (__WBenchMsg->sm_ArgList) {
-        newDirFH = DupLock(__WBenchMsg->sm_ArgList->wa_Lock);
-        oldDirFH = SetCurrentDir(newDirFH);
-    }
-
-    fhExchanged = TRUE;
-    */
 
     /* The following code will be executed if the program is to keep
        running in the shell or was launched from Workbench. */
@@ -564,11 +520,13 @@ _main(
             }
 #endif /* NDEBUG */
 
+            SHOWMSG("Swap Stack and Call Main");
             return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__));
 
             FreeVec(new_stack);
             FreeVec(stk);
         } else {
+            SHOWMSG("Call Main");
             /* We have enough room to make the call or just don't care. */
             return_code = call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
         }
@@ -656,24 +614,7 @@ _main(
     }
 
 out:
-    /*
-    if (fhExchanged) {
-        this_process->pr_CLibData = oldClib2TaskData;
 
-        SetConsolePort(oldConsolePort);
-        SelectErrorOutput(oldErrorFH);
-        SelectOutput(oldOutputFH);
-        SelectInput(oldInputFH);
-        if (__WBenchMsg->sm_ArgList) {
-            SetCurrentDir(oldDirFH);
-            UnLock(newDirFH);
-        }
-    }
-
-    if (console) {
-        Close(console);
-    }
-    */
     if (old_window_pointer_valid)
         __set_process_window(old_window_pointer);
 

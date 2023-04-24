@@ -59,12 +59,8 @@ struct ElfIFace *IElf;
 
 const struct Clib2IFace *IClib2 = NULL;
 
-int clib2_start(char *args, int32 arglen, struct Library *sysbase);
-
-register void *r13 __asm("r13");
-extern void *_SDA_BASE_ __attribute__((force_no_baserel));
-
 extern int main(int, char **);
+int clib2_start(char *args, int32 arglen, struct Library *sysbase);
 int _start(char *args, int32 arglen, struct Library *sysbase);
 
 static struct Interface *OpenLibraryInterface(struct ExecIFace *iexec, const char *name, int version) {
@@ -98,8 +94,6 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
     struct ExecIFace *iexec;
     struct Clib2IFace *iclib2;
 
-    void *old_r13 = r13;
-    r13 = &_SDA_BASE_;
     SysBase = sysbase;
     int rc = -1;
 
@@ -124,8 +118,6 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
         CloseLibraryInterface(iexec, (struct Interface *) IUtility);
     }
     iexec->Release();
-
-    r13 = old_r13;
 
     return rc;
 }
