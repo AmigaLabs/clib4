@@ -94,18 +94,12 @@ struct Library *DOSBase;
 struct DOSIFace *IDOS;
 
 struct ElfIFace *IElf;
-struct TimeRequest *TimeReq;
+struct Library *ElfBase;
 
-struct TimerIFace *ITimer;
-struct TimezoneIFace *ITimezone;
-
-struct LocaleIFace *ILocale;
 struct Clib2IFace *IClib2;
 
 struct Library* __UtilityBase;
 struct UtilityIFace* __IUtility;
-
-BPTR clib2seglist;
 
 const struct Resident RomTag;
 
@@ -119,6 +113,7 @@ extern void reent_init(void);
 extern void reent_exit(void);
 
 struct _clib2 *__global_clib2;
+static BPTR clib2SegList;
 
 int32
 _start(char *args, int arglen, struct ExecBase *sysbase) {
@@ -136,7 +131,8 @@ _start_ctors(void (*__CTOR_LIST__[])(void)) {
     while (__CTOR_LIST__[i + 1]) {
         i++;
     }
-    SHOWVALUE(i);
+
+    D(("We have %ld constructors in library", i));
     while (i > 0) {
         D(("Calling ctor %ld", i));
         __CTOR_LIST__[i--]();
@@ -153,116 +149,135 @@ _start_dtors(void (*__DTOR_LIST__[])(void)) {
     }
 }
 
-static struct TimeRequest *open_timer(uint32 unit) {
-    struct MsgPort *mp;
-    struct TimeRequest *tr;
-
-    mp = IExec->AllocSysObjectTags(ASOT_PORT,
-                                   ASOPORT_AllocSig, FALSE,
-                                   ASOPORT_Signal, SIGB_SINGLE,
-                                   TAG_END);
-
-    tr = IExec->AllocSysObjectTags(ASOT_IOREQUEST,
-                                   ASOIOR_ReplyPort, mp,
-                                   ASOIOR_Size, sizeof(struct TimeRequest),
-                                   TAG_END);
-
-    if (tr == NULL) {
-        IExec->FreeSysObject(ASOT_PORT, mp);
-        return NULL;
+static void closeLibraries() {
+    if (__UtilityBase != NULL) {
+        IExec->CloseLibrary(__UtilityBase);
+        __UtilityBase = NULL;
     }
 
-    if (IExec->OpenDevice(TIMERNAME, unit, (struct IORequest *) tr, 0) != 0) {
-        IExec->FreeSysObject(ASOT_IOREQUEST, tr);
-        IExec->FreeSysObject(ASOT_PORT, mp);
-        return NULL;
+    if (__IUtility != NULL) {
+        IExec->DropInterface((struct Interface *) __IUtility);
+        __IUtility = NULL;
     }
 
-    return tr;
-}
+    if (ElfBase != NULL) {
+        IExec->CloseLibrary(ElfBase);
+        ElfBase = NULL;
+    }
 
-static void close_timer(struct TimeRequest *tr) {
-    if (tr != NULL) {
-        struct MsgPort *mp = tr->Request.io_Message.mn_ReplyPort;
+    if (IElf != NULL) {
+        IExec->DropInterface((struct Interface *) IElf);
+        IElf = NULL;
+    }
 
-        IExec->CloseDevice((struct IORequest *) tr);
+    if (DOSBase != NULL) {
+        IExec->CloseLibrary(DOSBase);
+        DOSBase = NULL;
+    }
 
-        IExec->FreeSysObject(ASOT_IOREQUEST, tr);
-        IExec->FreeSysObject(ASOT_PORT, mp);
+    if (IDOS != NULL) {
+        IExec->DropInterface((struct Interface *) IDOS);
+        IDOS = NULL;
     }
 }
 
 static struct Library *LIB_Open(struct Interface *Self, uint32 version __attribute__((unused))) {
     struct Library *Clib2Base = Self->Data.LibBase;
+
     if (!IClib2) {
         IClib2 = (struct Clib2IFace *) IExec->GetInterface(Clib2Base, "main", 1, NULL);
         IExec->DropInterface((struct Interface *) IClib2);
     }
+
     if (!IDOS) {
         DOSBase = IExec->OpenLibrary("dos.library", 50);
         if (DOSBase) {
             IDOS = (struct DOSIFace *) IExec->GetInterface((struct Library *) DOSBase, "main", 1, NULL);
             if (!IDOS) {
-                IExec->CloseLibrary((struct Library *) DOSBase);
-                DOSBase = NULL;
+                goto out;
             }
         }
+        else
+            goto out;
     }
 
     if (!IElf) {
         struct Library *ElfBase = IExec->OpenLibrary("elf.library", 52);
         if (ElfBase) {
-            if (ElfBase->lib_Version == 52 && ElfBase->lib_Revision == 1) // shlib stuff doesn't work with pre-52.2
-            {
-                IExec->CloseLibrary(ElfBase);
-                ElfBase = NULL;
-            }
+            if (ElfBase->lib_Version == 52 && ElfBase->lib_Revision == 1) // .so stuff doesn't work with pre-52.2
+                goto out;
 
-            if (ElfBase) {
-                IElf = (struct ElfIFace *) IExec->GetInterface(ElfBase, "main", 1, NULL);
-                if (!IElf) {
-                    IExec->CloseLibrary(ElfBase);
-                    ElfBase = NULL;
-                }
+            IElf = (struct ElfIFace *) IExec->GetInterface(ElfBase, "main", 1, NULL);
+            if (!IElf) {
+                goto out;
             }
         }
+        else
+            goto out;
     }
+    else
+        goto out;
 
     __UtilityBase = IExec->OpenLibrary("utility.library", 52);
-    __IUtility = (struct UtilityIFace *) IExec->GetInterface(__UtilityBase, "main", 1, NULL);
-    if (__IUtility == NULL) {
-        IExec->CloseLibrary(__UtilityBase);
-        __IUtility = NULL;
+    if (__UtilityBase != NULL) {
+        __IUtility = (struct UtilityIFace *) IExec->GetInterface(__UtilityBase, "main", 1, NULL);
+        if (__IUtility == NULL) {
+            IExec->CloseLibrary(__UtilityBase);
+            __IUtility = NULL;
+        }
+
+        /* If all libraries are opened correctlty we can initialize clib2 reent structure */
+        D(("Initialize clib2 reent structure"));
+        reent_init();
+
+        /* After reent structure we can call clib2 constructors */
+        D(("Calling clib2 ctors"));
+        _start_ctors(__CTOR_LIST__);
+        D(("Done. All constructors called"));
     }
+    else
+        goto out;
 
-    reent_init();
-
-    D(("Calling clib2 ctors"));
-    _start_ctors(__CTOR_LIST__);
 
     Clib2Base->lib_OpenCnt++;
     Clib2Base->lib_Flags &= ~LIBF_DELEXP;
 
     return Clib2Base;
+
+out:
+
+    /* if we jump in out we need to close all libraries and return NULL */
+    closeLibraries();
+
+    return NULL;
 }
 
 static BPTR LIB_Expunge(struct Interface *Self) {
     struct Library *Clib2Base = Self->Data.LibBase;
-
-    reent_exit();
-
-    _start_dtors(__DTOR_LIST__);
 
     if (Clib2Base->lib_OpenCnt) {
         Clib2Base->lib_Flags |= LIBF_DELEXP;
         return 0;
     }
 
-    if (clib2seglist) {
-        IExec->Remove((struct Node *) Clib2Base);
-        IExec->DeleteLibrary(Clib2Base);
-    }
-    return clib2seglist;
+    D(("Calling reent_exit"));
+    reent_exit();
+    D(("Done"));
+
+    D(("Calling clib2 dtors"));
+    _start_dtors(__DTOR_LIST__);
+    D(("Done. All destructors called"));
+
+    D(("Close all libraries "));
+    closeLibraries();
+
+    D(("Remove Clib2Base"));
+    IExec->Remove((struct Node *) Clib2Base);
+    D(("DeleteLibrary Clib2Base"));
+    IExec->DeleteLibrary(Clib2Base);
+    D(("Done. Exit and return clib2SegList %p", clib2SegList));
+
+    return clib2SegList;
 }
 
 static BPTR LIB_Close(struct Interface *Self) {
@@ -340,18 +355,17 @@ struct Library *LIB_Init(struct Library *Clib2Base, BPTR librarySegment, struct 
 
     SysBase = (struct ExecBase *) iexec->Data.LibBase;
     IExec = iexec;
-    clib2seglist = librarySegment;
+    clib2SegList = librarySegment;
 
     Clib2Base->lib_Revision = REVISION;
 
     /* Set all Interface pointers to NULL */
     IDOS = NULL;
     IElf = NULL;
-    ITimer = NULL;
-    TimeReq = NULL;
+
     DOSBase = NULL;
-    ITimezone = NULL;
-    ILocale = NULL;
+    ElfBase = NULL;
+
     IClib2 = NULL;
 
     return Clib2Base;

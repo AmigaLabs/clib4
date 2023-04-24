@@ -1,8 +1,3 @@
-extern long long int __divdi3(long long int, long long int);
-extern long long int __moddi3(long long int, long long int);
-extern unsigned long long int __udivdi3(unsigned long long int, unsigned long long int);
-extern unsigned long long int __umoddi3(unsigned long long int, unsigned long long int);
-
 static void *main_vectors[] = {
         (void *) (LIB_Obtain),
         (void *) (LIB_Release),

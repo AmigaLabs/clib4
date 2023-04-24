@@ -20,7 +20,12 @@ memset(void *ptr, int val, size_t len) {
     SHOWPOINTER(__UtilityBase);
     SHOWPOINTER(__IUtility);
 
-	assert((len == 0) || (ptr != NULL && (int)len > 0));
+    assert((len == 0) || (ptr != NULL && (int)len > 0));
+
+    if (__IUtility == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
 	if (ptr == NULL) {
 		__set_errno(EFAULT);

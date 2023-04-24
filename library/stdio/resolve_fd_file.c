@@ -14,6 +14,12 @@ BPTR
 __resolve_fd_file(struct fd *fd) {
     BPTR file;
 
+    if (fd == NULL)
+        return ZERO;
+
+    if (IDOS == NULL)
+        return ZERO;
+
     /* Is this one the standard I/O streams for which the associated file
        handle should be determined dynamically? */
     if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO)) {

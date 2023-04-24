@@ -12,6 +12,7 @@ uint32 LIB_Obtain(struct Interface *Self);
 struct Library *LIB_Init(struct Library *Clib2Base, BPTR librarySegment, struct ExecIFace *const iexec);
 static void _start_ctors(void (*__CTOR_LIST__[])(void));
 static void _start_dtors(void (*__DTOR_LIST__[])(void));
+static void closeLibraries();
 
 int library_start(char *argstr,
                   int arglen,
