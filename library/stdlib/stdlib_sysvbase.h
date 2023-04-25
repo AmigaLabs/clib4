@@ -20,8 +20,8 @@
 #include "macros.h"
 #endif /* _MACROS_H */
 
-extern struct Library   NOCOMMON *__SysVBase;
-extern struct SYSVIFace NOCOMMON *__ISysVIPC;
+extern struct Library   *__SysVBase;
+extern struct SYSVIFace *__ISysVIPC;
 
 #define DECLARE_SYSVYBASE() \
 	struct Library   UNUSED	*SysVBase    = __SysVBase; \

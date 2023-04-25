@@ -6,4 +6,4 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-const char * NOCOMMON __file_lock_semaphore_name = "Advisory File Locking";
+const char *__file_lock_semaphore_name = "Advisory File Locking";

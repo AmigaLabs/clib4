@@ -6,7 +6,7 @@
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
 
-mode_t NOCOMMON __current_umask = S_IWGRP | S_IWOTH;
+mode_t __current_umask = S_IWGRP | S_IWOTH;
 
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"

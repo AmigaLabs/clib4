@@ -47,12 +47,12 @@ struct MemalignEntry
     void            *me_Exact;            /* The address returned by AllocVecTags  */
 };
 
-extern wof_allocator_t NOCOMMON *__wof_allocator;
+extern wof_allocator_t *__wof_allocator;
 
-extern unsigned long NOCOMMON __maximum_memory_allocated;
-extern unsigned long NOCOMMON __current_memory_allocated;
-extern unsigned long NOCOMMON __maximum_num_memory_chunks_allocated;
-extern unsigned long NOCOMMON __current_num_memory_chunks_allocated;
+extern unsigned long __maximum_memory_allocated;
+extern unsigned long __current_memory_allocated;
+extern unsigned long __maximum_num_memory_chunks_allocated;
+extern unsigned long __current_num_memory_chunks_allocated;
 
 extern void __memory_lock(void);
 extern void __memory_unlock(void);

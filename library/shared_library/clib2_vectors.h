@@ -1,6 +1,6 @@
 static void *main_vectors[] = {
-        (void *) (LIB_Obtain),
-        (void *) (LIB_Release),
+        (void *) (_manager_Obtain),
+        (void *) (_manager_Release),
         (void *) (NULL),
         (void *) (NULL),
         /* internal */

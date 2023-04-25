@@ -146,22 +146,6 @@ reent_init() {
         __global_clib2->_current_locale = "C-UTF-8";
         __global_clib2->__mb_cur_max = 1;
 
-        /* Init memalign list */
-        __global_clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
-                                                             ASO_NoTrack, FALSE,
-                                                             ASO_MemoryOvr, MEMF_PRIVATE,
-                                                             ASOITEM_MFlags, MEMF_PRIVATE,
-                                                             ASOITEM_ItemSize, sizeof(struct MemalignEntry),
-                                                             ASOITEM_BatchSize, 408,
-                                                             ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
-                                                             ASOITEM_GCParameter, 1000,
-                                                             TAG_DONE);
-        if (!__global_clib2->__memalign_pool) {
-            goto out;
-        }
-        /* Set memalign tree to NULL */
-        __global_clib2->__memalign_tree = NULL;
-
         /* Check is SYSV library is available in the system */
         __global_clib2->haveShm = FALSE;
         __SysVBase = OpenLibrary("sysvipc.library", 53);
@@ -180,23 +164,7 @@ reent_init() {
         __global_clib2->tmr_start_time.tv_usec = 0;
         __global_clib2->tmr_real_task = NULL;
 
-        /* Initialize aio pthread list */
-        __global_clib2->__aio_lock = __create_semaphore();
-        if (__global_clib2->__aio_lock == NULL)
-            goto out;
-
-        /* Check if .unix file exists in the current dir. If the file exists enable
-         * unix path semantics
-         */
-        __unix_path_semantics = FALSE;
-        struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
-        if (exd != NULL) {
-            if (EXD_IS_FILE(exd))
-                __unix_path_semantics = TRUE;
-            FreeDosObject(DOS_EXAMINEDATA, exd);
-        }
-
-        /* Get cpu family used to choose functions at runtime */
+         /* Get cpu family used to choose functions at runtime */
         GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);
 
         /* Check if altivec is present */
@@ -205,50 +173,16 @@ reent_init() {
 #else
         __global_clib2->hasAltivec = 0;
 #endif
-
-        /*
-         * Next: Get Elf handle associated with the currently running process.
-         * ElfBase is opened in crtbegin.c that is called before the
-         * call_main()
-         */
-
-        SHOWMSG("Try to get elf handle for dl* operations");
-        if (__ElfBase != NULL) {
-            SHOWMSG("Calling GetProcSegList");
-            BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
-            if (segment_list != ZERO) {
-                Elf32_Handle handle = NULL;
-
-                SHOWMSG("Calling GetSegListInfoTags");
-                if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
-                    if (handle != NULL) {
-                        SHOWMSG("Calling OpenElfTags");
-                        __global_clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
-                    }
-                }
-            }
-        }
-        SHOWPOINTER(__global_clib2->__dl_elf_handle);
     }
     success = TRUE;
 
 out:
 
     if (!success) {
-        /* Check for semaphores */
-        if (__global_clib2->__aio_lock != NULL) {
-            __delete_semaphore(__global_clib2->__aio_lock);
-        }
-
         /* Clean wide status memory */
         if (__global_clib2->wide_status) {
             FreeVec(__global_clib2->wide_status);
             __global_clib2->wide_status = NULL;
-        }
-        /* Free memalign pool object */
-        if (__global_clib2->__memalign_pool) {
-            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
-            __global_clib2->__memalign_pool = NULL;
         }
 
         /* Free library */
@@ -267,14 +201,6 @@ out:
             __ElfBase = NULL;
         }
     }
-
-    SHOWVALUE(success);
-    LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
 }
 
 void
@@ -285,31 +211,6 @@ reent_exit() {
 
     /* Free global clib structure */
     if (__global_clib2) {
-        /* Free memalign stuff */
-        if (&__global_clib2->__memalign_pool) {
-            /* Check if we have something created with posix_memalign and not freed yet.
-             * But this is a good point also to free something allocated with memalign or
-             * aligned_alloc and all other functions are using memalign_tree to allocate memory
-             * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
-             */
-            struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__global_clib2->__memalign_tree);
-            while (e) {
-                struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
-
-                /* Free memory */
-                if (e->me_Exact) {
-                    FreeVec(e->me_Exact);
-                }
-                /* Remove the node */
-                AVL_RemNodeByAddress(&__global_clib2->__memalign_tree, &e->me_AvlNode);
-                ItemPoolFree(__global_clib2->__memalign_pool, e);
-
-                e = next;
-            }
-
-            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
-        }
-
         /* Free wchar stuff */
         if (__global_clib2->wide_status != NULL) {
             FreeVec(__global_clib2->wide_status);
@@ -317,9 +218,6 @@ reent_exit() {
         }
         /* Remove random semaphore */
         __delete_semaphore(__global_clib2->__random_lock);
-
-        /* Remove aio semaphore. */
-        __delete_semaphore(__global_clib2->__aio_lock);
 
         if (__ISysVIPC != NULL) {
             DropInterface((struct Interface *) __ISysVIPC);
@@ -331,23 +229,6 @@ reent_exit() {
             __SysVBase = NULL;
         }
 
-        /* Free dl stuff */
-        if (__IElf != NULL && __global_clib2->__dl_elf_handle != NULL) {
-            SHOWMSG("Closing elf handle");
-            CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
-            __global_clib2->__dl_elf_handle = NULL;
-
-            DropInterface((struct Interface *) __IElf);
-            __IElf = NULL;
-
-            if (__ElfBase != NULL) {
-                CloseLibrary(__ElfBase);
-                __ElfBase = NULL;
-            }
-        }
-        else {
-            SHOWMSG("Cannot close elf handle: __IElf == NULL || __global_clib2->__dl_elf_handle == NULL");
-        }
         FreeVec(__global_clib2);
         __global_clib2 = NULL;
     }

@@ -10,8 +10,8 @@
 #include "timezone_headers.h"
 #endif /* _TIMEZONE_HEADERS_H */
 
-extern struct TimerIFace *NOCOMMON __ITimer;
-extern BOOL NOCOMMON __timer_busy;
+extern struct TimerIFace *__ITimer;
+extern BOOL __timer_busy;
 
 int
 clock_gettime64(clockid_t clk_id, struct timespec64 *t) {

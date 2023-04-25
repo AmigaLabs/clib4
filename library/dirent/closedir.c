@@ -15,7 +15,7 @@
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
 /* Directories being scanned whose locks need to be freed when shutting down. */
-struct MinList NOCOMMON __directory_list;
+struct MinList __directory_list;
 static struct SignalSemaphore *dirent_lock;
 
 void __dirent_lock(void) {

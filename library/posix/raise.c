@@ -26,7 +26,7 @@ hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
 }
 
 /* This table holds pointers to all signal handlers configured at a time. */
-signal_handler_t NOCOMMON __signal_handler_table[NSIG] = {
+signal_handler_t __signal_handler_table[NSIG] = {
     SIG_DFL, /* SIGHUP */
     SIG_DFL, /* SIGINT */
     SIG_DFL, /* SIGQUIT */
@@ -64,7 +64,7 @@ signal_handler_t NOCOMMON __signal_handler_table[NSIG] = {
 /* This holds a mask of all signals whose delivery is currently blocked.
    The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
    modify or query it. */
-int NOCOMMON __signals_blocked;
+int __signals_blocked;
 
 int
 raise(int sig) {
@@ -138,18 +138,18 @@ raise(int sig) {
                     SHOWMSG("Check if we have some aio pthreads created");
                     AioThread *aioThread;
                     SHOWMSG("Obtain aio semaphore");
-                    ObtainSemaphore(__getclib2()->__aio_lock);
-                    int streams = __getclib2()->aio_threads->count(__getclib2()->aio_threads);
+                    ObtainSemaphore(__aio_lock);
+                    int streams = aio_threads->count(aio_threads);
                     D(("AIO list has %ld items", streams));
                     if (streams > 0) {
                         for (int i = 0; i < streams; i++) {
-                            aioThread = __getclib2()->aio_threads->at(__getclib2()->aio_threads, i);
+                            aioThread = aio_threads->at(aio_threads, i);
                             D(("Cancel AIO stream with filedes %ld", aioThread->fileDes));
                             aio_cancel(aioThread->fileDes, aioThread->aiocbp);
                             Signal(aioThread->thread, SIGBREAKF_CTRL_C);
                         }
                     }
-                    ReleaseSemaphore(__getclib2()->__aio_lock);
+                    ReleaseSemaphore(__aio_lock);
 
                     char break_string[80];
 

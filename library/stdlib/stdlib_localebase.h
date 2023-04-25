@@ -24,11 +24,11 @@
 #endif /* _MACROS_H */
 
 
-extern struct Library * NOCOMMON __LocaleBase;
-extern struct LocaleIFace NOCOMMON * __ILocale;
+extern struct Library *__LocaleBase;
+extern struct LocaleIFace *__ILocale;
 
-extern struct Library *NOCOMMON __DiskfontBase;
-extern struct DiskfontIFace *NOCOMMON __IDiskfont;
+extern struct Library *__DiskfontBase;
+extern struct DiskfontIFace *__IDiskfont;
 
 #define DECLARE_LOCALEBASE() \
 	struct Library *		UNUSED	LocaleBase	= __LocaleBase; \

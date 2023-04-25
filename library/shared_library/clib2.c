@@ -98,17 +98,18 @@ struct Library *ElfBase;
 
 struct Clib2IFace *IClib2;
 
-struct Library* __UtilityBase;
-struct UtilityIFace* __IUtility;
+struct Library *__UtilityBase;
+struct UtilityIFace *__IUtility;
 
 const struct Resident RomTag;
+
+#define MIN_OS_VERSION 52
 
 /* These CTORS/DTORS are clib2's one and they are different than that one received
  * from crtbegin. They are needed because we need to call clib2 constructors as well
  */
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
-
 extern void reent_init(void);
 extern void reent_exit(void);
 
@@ -183,6 +184,12 @@ static void closeLibraries() {
 
 static struct Library *LIB_Open(struct Interface *Self, uint32 version __attribute__((unused))) {
     struct Library *Clib2Base = Self->Data.LibBase;
+    D(("LIBOpen"));
+
+    if (version > VERSION) {
+        D(("Wrong version library required"));
+        return NULL;
+    }
 
     if (!IClib2) {
         IClib2 = (struct Clib2IFace *) IExec->GetInterface(Clib2Base, "main", 1, NULL);
@@ -190,62 +197,71 @@ static struct Library *LIB_Open(struct Interface *Self, uint32 version __attribu
     }
 
     if (!IDOS) {
-        DOSBase = IExec->OpenLibrary("dos.library", 50);
+        D(("Open DOS Library"));
+        DOSBase = IExec->OpenLibrary("dos.library", MIN_OS_VERSION);
         if (DOSBase) {
             IDOS = (struct DOSIFace *) IExec->GetInterface((struct Library *) DOSBase, "main", 1, NULL);
             if (!IDOS) {
                 goto out;
             }
-        }
-        else
+        } else
             goto out;
     }
 
     if (!IElf) {
-        struct Library *ElfBase = IExec->OpenLibrary("elf.library", 52);
+        D(("Open Elf Library"));
+        struct Library *ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
         if (ElfBase) {
-            if (ElfBase->lib_Version == 52 && ElfBase->lib_Revision == 1) // .so stuff doesn't work with pre-52.2
+            if (ElfBase->lib_Version == 52 && ElfBase->lib_Revision == 1) { // .so stuff doesn't work with pre-52.2
+                D(("Elf.library is 52.1. We can't use this version."));
                 goto out;
+            }
 
             IElf = (struct ElfIFace *) IExec->GetInterface(ElfBase, "main", 1, NULL);
             if (!IElf) {
+                D(("Cannot get IElf interface"));
                 goto out;
             }
-        }
-        else
+        } else {
+            D(("Cannot open Elf library"));
             goto out;
-    }
-    else
-        goto out;
-
-    __UtilityBase = IExec->OpenLibrary("utility.library", 52);
-    if (__UtilityBase != NULL) {
-        __IUtility = (struct UtilityIFace *) IExec->GetInterface(__UtilityBase, "main", 1, NULL);
-        if (__IUtility == NULL) {
-            IExec->CloseLibrary(__UtilityBase);
-            __IUtility = NULL;
         }
-
-        /* If all libraries are opened correctlty we can initialize clib2 reent structure */
-        D(("Initialize clib2 reent structure"));
-        reent_init();
-
-        /* After reent structure we can call clib2 constructors */
-        D(("Calling clib2 ctors"));
-        _start_ctors(__CTOR_LIST__);
-        D(("Done. All constructors called"));
     }
-    else
-        goto out;
 
+    if (!__UtilityBase) {
+        D(("Open Utility Library"));
+        __UtilityBase = IExec->OpenLibrary("utility.library", MIN_OS_VERSION);
+        if (__UtilityBase) {
+            __IUtility = (struct UtilityIFace *) IExec->GetInterface(__UtilityBase, "main", 1, NULL);
+            if (__IUtility == NULL) {
+                D(("Cannot get IUtility interface"));
+                goto out;
+            }
+
+            /* If all libraries are opened correctlty we can initialize clib2 reent structure */
+            D(("Initialize clib2 reent structure"));
+            reent_init();
+
+            /* After reent structure we can call clib2 constructors */
+            D(("Calling clib2 ctors"));
+            _start_ctors(__CTOR_LIST__);
+            D(("Done. All constructors called"));
+        }
+        else {
+            D(("Cannot open utility.library"));
+            goto out;
+        }
+    }
 
     Clib2Base->lib_OpenCnt++;
     Clib2Base->lib_Flags &= ~LIBF_DELEXP;
 
+    D(("Exit LIBOpen: Open Count: %ld", Clib2Base->lib_OpenCnt));
     return Clib2Base;
 
 out:
 
+    D(("Jumped into error"));
     /* if we jump in out we need to close all libraries and return NULL */
     closeLibraries();
 
@@ -254,6 +270,7 @@ out:
 
 static BPTR LIB_Expunge(struct Interface *Self) {
     struct Library *Clib2Base = Self->Data.LibBase;
+    D(("LIBExpunge"));
 
     if (Clib2Base->lib_OpenCnt) {
         Clib2Base->lib_Flags |= LIBF_DELEXP;
@@ -273,9 +290,6 @@ static BPTR LIB_Expunge(struct Interface *Self) {
 
     D(("Remove Clib2Base"));
     IExec->Remove((struct Node *) Clib2Base);
-    D(("DeleteLibrary Clib2Base"));
-    IExec->DeleteLibrary(Clib2Base);
-    D(("Done. Exit and return clib2SegList %p", clib2SegList));
 
     return clib2SegList;
 }
@@ -284,6 +298,7 @@ static BPTR LIB_Close(struct Interface *Self) {
     struct Library *Clib2Base = Self->Data.LibBase;
 
     Clib2Base->lib_OpenCnt--;
+    D(("LIBClose: Count=%ld", Clib2Base->lib_OpenCnt));
     if ((Clib2Base->lib_OpenCnt == 0) && (Clib2Base->lib_Flags & LIBF_DELEXP)) {
         return LIB_Expunge(Self);
     }
@@ -291,18 +306,24 @@ static BPTR LIB_Close(struct Interface *Self) {
     return 0;
 }
 
-static uint32 _generic_Obtain(struct Interface *Self) {
-    return ++Self->Data.RefCount;
+static uint32 _manager_Obtain(struct Interface *Self) {
+    if (Self)
+        return ++Self->Data.RefCount;
+    else
+        return 0;
 }
 
 
-static uint32 _generic_Release(struct Interface *Self) {
-    return --Self->Data.RefCount;
+static uint32 _manager_Release(struct Interface *Self) {
+    if (Self)
+        return --Self->Data.RefCount;
+    else
+        return 0;
 }
 
 static void *lib_manager_vectors[] = {
-        (void *) _generic_Obtain,
-        (void *) _generic_Release,
+        (void *) _manager_Obtain,
+        (void *) _manager_Release,
         (void *) 0,
         (void *) 0,
         (void *) LIB_Open,
@@ -318,14 +339,6 @@ static struct TagItem libmanagerTags[] = {
         {MIT_Version,     1},
         {TAG_DONE,        0}
 };
-
-uint32 LIB_Obtain(struct Interface *Self) {
-    return ++Self->Data.RefCount;
-}
-
-uint32 LIB_Release(struct Interface *Self) {
-    return --Self->Data.RefCount;
-}
 
 int LIB_Reserved(void) {
     __global_clib2->_errno = ENOSYS;
@@ -368,12 +381,15 @@ struct Library *LIB_Init(struct Library *Clib2Base, BPTR librarySegment, struct 
 
     IClib2 = NULL;
 
+    __UtilityBase = NULL;
+    __IUtility = NULL;
+
     return Clib2Base;
 }
 
 /* CreateLibrary tag list */
 static struct TagItem libCreateTags[] = {
-        {CLT_DataSize,   (uint32)(sizeof(struct Library))},
+        {CLT_DataSize,   (uint32) (sizeof(struct Library))},
         {CLT_Interfaces, (uint32) libInterfaces},
         {CLT_InitFunc,   (uint32) LIB_Init},
         {TAG_DONE,       0}

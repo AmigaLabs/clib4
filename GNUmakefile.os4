@@ -186,7 +186,7 @@ version:
 # Shared clib2.library rules
 
 clib2.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(OBJ_C_LIB)  -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib -lgcc
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(OBJ_C_LIB) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib -lgcc
 
 clib2.library: clib2.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@

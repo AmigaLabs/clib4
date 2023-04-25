@@ -12,11 +12,11 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-float NOCOMMON __infinity;
-float NOCOMMON __nan;
-float NOCOMMON __huge_val_float;
-long double NOCOMMON __huge_val_long_double;
-double NOCOMMON __huge_val;
+float __infinity;
+float __nan;
+float __huge_val_float;
+long double __huge_val_long_double;
+double __huge_val;
 
 MATH_CONSTRUCTOR(math_init)
 {

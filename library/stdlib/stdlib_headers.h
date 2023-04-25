@@ -83,6 +83,14 @@
 
 #define MIN_OS_VERSION 52
 
+/* Memalign memory list */
+extern void           *__memalign_pool;
+extern struct AVLNode *__memalign_tree;
+
+/* Used by aio functions */
+extern struct SignalSemaphore *__aio_lock;
+extern CList *aio_threads;
+
 extern jmp_buf NOCOMMON __exit_jmp_buf;
 extern int NOCOMMON		__exit_value;
 

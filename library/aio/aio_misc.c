@@ -26,7 +26,7 @@ __aio_create_helper_thread(pthread_t *threadp, void *(*tf)(void *), void *arg, s
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
     SHOWMSG("Obtaining aio lock");
-    ObtainSemaphore(__getclib2()->__aio_lock);
+    ObtainSemaphore(__aio_lock);
     int ret = pthread_create(threadp, &attr, tf, arg);
     if (ret == 0) {
         AioThread aioThread;
@@ -38,10 +38,10 @@ __aio_create_helper_thread(pthread_t *threadp, void *(*tf)(void *), void *arg, s
         D(("Adding AIO stream with filedes %ld", aiocbp->aio_fildes));
 
         SHOWMSG("Adding pthread to list");
-        __getclib2()->aio_threads->add(__getclib2()->aio_threads, &aioThread);
+        aio_threads->add(aio_threads, &aioThread);
     }
     SHOWMSG("Releasing aio lock");
-    ReleaseSemaphore(__getclib2()->__aio_lock);
+    ReleaseSemaphore(__aio_lock);
     pthread_attr_destroy(&attr);
     return ret;
 }

@@ -49,25 +49,23 @@ static void shared_obj_init(void);
 static void shared_obj_exit(void);
 
 /* This will be set to TRUE in case a stack overflow was detected. */
-BOOL NOCOMMON __stack_overflow;
+BOOL __stack_overflow;
 extern struct _clib2 *__global_clib2;
 
 struct Library *__ElfBase;
 struct ElfIFace *__IElf;
 static Elf32_Handle elf_handle;
 
+/* Memalign memory list */
+void           *__memalign_pool;
+struct AVLNode *__memalign_tree;
+
+/* Used by aio functions */
+struct SignalSemaphore *__aio_lock;
+CList *aio_threads;
+
 void
 close_libraries(void) {
-    if (__IUtility != NULL) {
-        DropInterface((struct Interface *) __IUtility);
-        __IUtility = NULL;
-    }
-
-    if (__UtilityBase != NULL) {
-        CloseLibrary(__UtilityBase);
-        __UtilityBase = NULL;
-    }
-
     if (__IElf != NULL) {
         DropInterface((struct Interface *) __IElf);
         __IElf = NULL;
@@ -77,35 +75,11 @@ close_libraries(void) {
         CloseLibrary(__ElfBase);
         __ElfBase = NULL;
     }
-
-    if (IDOS != NULL) {
-        DropInterface((struct Interface *) IDOS);
-        IDOS = NULL;
-    }
-
-    if (DOSBase != NULL) {
-        CloseLibrary(DOSBase);
-        DOSBase = NULL;
-    }
 }
 
 BOOL open_libraries(void) {
     /* Open the minimum required libraries. */
     BOOL success = FALSE;
-    SHOWMSG("Open DOS stuff");
-    /* Open the minimum required libraries. */
-    DOSBase = (struct Library *) OpenLibrary("dos.library", MIN_OS_VERSION);
-    if (DOSBase == NULL) {
-        SHOWMSG("Cannot get DOSBase!");
-        goto out;
-    }
-
-    /* Obtain the interfaces for these libraries. */
-    IDOS = (struct DOSIFace *) GetInterface(DOSBase, "main", 1, NULL);
-    if (IDOS == NULL) {
-        SHOWMSG("Cannot get IDOS!");
-        goto out;
-    }
 
     SHOWMSG("Open Elf stuff");
     /* We need elf.library V52.2 or higher. */
@@ -252,8 +226,65 @@ call_main(
         __getclib2()->__random_seed = time(NULL);
     }
 
-    /* Initialize aio list */
-    __getclib2()->aio_threads = CList_init(sizeof(struct AioThread));
+    /*
+     * Next: Get Elf handle associated with the currently running process.
+     * ElfBase is opened in crtbegin.c that is called before the
+     * call_main()
+     */
+
+    SHOWMSG("Try to get elf handle for dl* operations");
+    if (__ElfBase != NULL) {
+        SHOWMSG("Calling GetProcSegList");
+        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+        if (segment_list != ZERO) {
+            Elf32_Handle handle = NULL;
+
+            SHOWMSG("Calling GetSegListInfoTags");
+            if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
+                if (handle != NULL) {
+                    SHOWMSG("Calling OpenElfTags");
+                    __global_clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
+                }
+            }
+        }
+    }
+
+    SHOWPOINTER(__global_clib2->__dl_elf_handle);
+
+    /* Init memalign list */
+    __memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                         ASO_NoTrack, FALSE,
+                                         ASO_MemoryOvr, MEMF_PRIVATE,
+                                         ASOITEM_MFlags, MEMF_PRIVATE,
+                                         ASOITEM_ItemSize, sizeof(struct MemalignEntry),
+                                         ASOITEM_BatchSize, 408,
+                                         ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
+                                         ASOITEM_GCParameter, 1000,
+                                         TAG_DONE);
+    if (!__memalign_pool) {
+        goto out;
+    }
+    /* Set memalign tree to NULL */
+    __memalign_tree = NULL;
+
+    /* Initialize aio pthread list */
+    __aio_lock = __create_semaphore();
+    if (__aio_lock == NULL)
+        goto out;
+
+    /* Initialize aio list - TODO - Move this on a constructor */
+    aio_threads = CList_init(sizeof(struct AioThread));
+
+    /* Check if .unix file exists in the current dir. If the file exists enable
+     * unix path semantics
+     */
+    __unix_path_semantics = FALSE;
+    struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
+    if (exd != NULL) {
+        if (EXD_IS_FILE(exd))
+            __unix_path_semantics = TRUE;
+        FreeDosObject(DOS_EXAMINEDATA, exd);
+    }
 
     /* Set __current_path_name to a valid value */
     UBYTE current_dir_name[256] = {0};
@@ -336,16 +367,54 @@ out:
     (void) setjmp(__exit_jmp_buf);
     SHOWMSG("Called setjmp(__exit_jmp_buf)");
 
-    /* Free aio list -- TODO - Move to aio destructor */
-    if (__getclib2()->aio_threads != NULL) {
-        SHOWMSG("Free aio list");
-        ObtainSemaphore(__getclib2()->__aio_lock);
-        __getclib2()->aio_threads->free(__global_clib2->aio_threads);
-        ReleaseSemaphore(__getclib2()->__aio_lock);
+    /* Free dl stuff */
+    if (__IElf != NULL && __global_clib2->__dl_elf_handle != NULL) {
+        SHOWMSG("Closing elf handle");
+        CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
+        __global_clib2->__dl_elf_handle = NULL;
+    }
+    else {
+        SHOWMSG("Cannot close elf handle: __IElf == NULL || __global_clib2->__dl_elf_handle == NULL");
     }
 
+    /* Free memalign stuff */
+    if (__memalign_pool) {
+        /* Check if we have something created with posix_memalign and not freed yet.
+         * But this is a good point also to free something allocated with memalign or
+         * aligned_alloc and all other functions are using memalign_tree to allocate memory
+         * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
+         */
+        struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__memalign_tree);
+        while (e) {
+            struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
+
+            /* Free memory */
+            if (e->me_Exact) {
+                FreeVec(e->me_Exact);
+            }
+            /* Remove the node */
+            AVL_RemNodeByAddress(&__memalign_tree, &e->me_AvlNode);
+            ItemPoolFree(__memalign_pool, e);
+
+            e = next;
+        }
+
+        FreeSysObject(ASOT_ITEMPOOL, __memalign_pool);
+    }
+
+    /* Free aio list -- TODO - Move to aio destructor */
+    if (aio_threads != NULL) {
+        SHOWMSG("Free aio list");
+        ObtainSemaphore(__aio_lock);
+        aio_threads->free(aio_threads);
+        ReleaseSemaphore(__aio_lock);
+    }
+
+    /* Remove aio semaphore. */
+    __delete_semaphore(__aio_lock);
+
     /* Go through the destructor list */
-    SHOWMSG("invoking external and internal destructors in reverse order");
+    SHOWMSG("invoking external destructors in reverse order");
     _end_ctors(__EXT_DTOR_LIST__);
 
     SHOWMSG("Close shared objects");
@@ -374,11 +443,8 @@ static ULONG get_stack_size(void) {
     ULONG result;
 
     /* How much stack size was provided? */
-    upper = (ULONG)
-            tc->tc_SPUpper;
-    lower = (ULONG)
-            tc->tc_SPLower;
-
+    upper = (ULONG) tc->tc_SPUpper;
+    lower = (ULONG) tc->tc_SPLower;
     result = upper - lower;
 
     return (result);

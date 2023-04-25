@@ -75,10 +75,10 @@
 #define SBTC_HAVE_SERVER_API			63	/* Whether or not the server API is supported. */
 #define SBTC_ERROR_HOOK					68	/* Error hook pointer */
 
-extern struct Library * NOCOMMON __SocketBase;
-extern struct SocketIFace * NOCOMMON __ISocket;
+extern struct Library *__SocketBase;
+extern struct SocketIFace *__ISocket;
 
-extern int NOCOMMON h_errno;
+extern int h_errno;
 
 extern struct fd * __get_file_descriptor_socket(int socket_descriptor);
 extern int64_t __socket_hook_entry(struct fd * fd,struct file_action_message * fam);

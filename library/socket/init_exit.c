@@ -15,10 +15,10 @@
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
 
-struct Library *NOCOMMON __SocketBase;
-struct SocketIFace *NOCOMMON __ISocket;
+struct Library *__SocketBase;
+struct SocketIFace *__ISocket;
 
-int NOCOMMON h_errno;
+int h_errno;
 
 /* Call-back hook for use with SBTC_ERROR_HOOK */
 struct _ErrorHookMsg {
@@ -33,8 +33,8 @@ struct _ErrorHookMsg {
 
 /****************************************************************************/
 
-BOOL NOCOMMON __can_share_socket_library_base;
-BOOL NOCOMMON __thread_safe_errno_h_errno;
+BOOL __can_share_socket_library_base;
+BOOL __thread_safe_errno_h_errno;
 
 /****************************************************************************/
 

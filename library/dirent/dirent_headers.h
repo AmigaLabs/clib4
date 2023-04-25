@@ -38,7 +38,7 @@ struct DirectoryHandle
     int                     dh_Fd;              // For fdopendir()
 };
 
-extern struct MinList NOCOMMON __directory_list;
+extern struct MinList __directory_list;
 
 extern void __dirent_lock(void);
 extern void __dirent_unlock(void);

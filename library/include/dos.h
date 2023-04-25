@@ -498,10 +498,6 @@ struct _clib2 {
 	uint32 cpufamily;
     uint32 hasAltivec;
 
-	/* Memalign memory list */
-    void           *__memalign_pool;
-    struct AVLNode *__memalign_tree;
-
     /* Used by initstate/setstate */
     struct SignalSemaphore *__random_lock;
     int n;
@@ -516,10 +512,6 @@ struct _clib2 {
     struct itimerval tmr_time;
     struct timeval tmr_start_time;
     struct Process *tmr_real_task;
-
-    /* Used by aio functions */
-    struct SignalSemaphore *__aio_lock;
-    CList *aio_threads;
 
     /* Used for shared version library */
     int _errno;

@@ -23,8 +23,8 @@
 #include "macros.h"
 #endif /* _MACROS_H */
 
-extern struct Library * NOCOMMON __TimezoneBase;
-extern struct TimezoneIFace NOCOMMON * __ITimezone;
+extern struct Library *__TimezoneBase;
+extern struct TimezoneIFace *__ITimezone;
 
 #define DECLARE_TIMEZONEBASE() \
 	struct Library *		UNUSED	TimezoneBase	= __TimezoneBase; \

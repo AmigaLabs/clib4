@@ -31,7 +31,7 @@ static BPTR old_input;
 static BPTR output;
 static BPTR input;
 
-struct WBStartup *NOCOMMON __WBenchMsg;
+struct WBStartup *__WBenchMsg;
 
 /* CPU cache line size; used to align I/O buffers for best performance. */
 ULONG __cache_line_size = 32;

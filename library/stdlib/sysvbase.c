@@ -19,5 +19,5 @@
 
 /****************************************************************************/
 
-struct Library   NOCOMMON *__SysVBase;
-struct SYSVIFace NOCOMMON *__ISysVIPC;
+struct Library   *__SysVBase;
+struct SYSVIFace *__ISysVIPC;

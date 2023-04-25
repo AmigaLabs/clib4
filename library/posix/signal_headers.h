@@ -49,11 +49,11 @@ typedef void (*signal_handler_t)(int sig);
 
 /****************************************************************************/
 
-extern signal_handler_t	NOCOMMON __signal_handler_table[NSIG];
+extern signal_handler_t	__signal_handler_table[NSIG];
 
 /****************************************************************************/
 
-extern int NOCOMMON __signals_blocked;
+extern int __signals_blocked;
 
 /****************************************************************************/
 

@@ -15,7 +15,7 @@
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
 static BOOL free_program_name;
-char *NOCOMMON __program_name;
+char *__program_name;
 
 STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 	ENTER();

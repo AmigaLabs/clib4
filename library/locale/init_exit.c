@@ -12,16 +12,16 @@
 
 #include <proto/diskfont.h>
 
-struct Library *NOCOMMON __LocaleBase;
-struct LocaleIFace *NOCOMMON __ILocale;
+struct Library *__LocaleBase;
+struct LocaleIFace *__ILocale;
 
-struct Library *NOCOMMON __DiskfontBase;
-struct DiskfontIFace *NOCOMMON __IDiskfont;
+struct Library *__DiskfontBase;
+struct DiskfontIFace *__IDiskfont;
 
-struct Locale *NOCOMMON __default_locale;
-struct Locale *NOCOMMON __locale_table[NUM_LOCALES];
+struct Locale *__default_locale;
+struct Locale *__locale_table[NUM_LOCALES];
 
-char NOCOMMON __locale_name_table[NUM_LOCALES][MAX_LOCALE_NAME_LEN];
+char __locale_name_table[NUM_LOCALES][MAX_LOCALE_NAME_LEN];
 
 void __close_all_locales(void) {
 	__locale_lock();
@@ -98,7 +98,7 @@ int __locale_init(void)
 
 	if (__LocaleBase == NULL)
 	{
-		__LocaleBase = OpenLibrary("locale.library", 38);
+		__LocaleBase = OpenLibrary("locale.library", 52);
 		if (__LocaleBase != NULL)
 		{
 			__ILocale = (struct LocaleIFace *)GetInterface(__LocaleBase, "main", 1, 0);
@@ -107,7 +107,7 @@ int __locale_init(void)
 				CloseLibrary(__LocaleBase);
 				__LocaleBase = NULL;
 			}
-            __DiskfontBase = OpenLibrary("diskfont.library", 50);
+            __DiskfontBase = OpenLibrary("diskfont.library", 52);
             if (__DiskfontBase) {
                 __IDiskfont = (struct DiskfontIFace *) GetInterface(__DiskfontBase, "main", 1, NULL);
                 if (!__IDiskfont) {
