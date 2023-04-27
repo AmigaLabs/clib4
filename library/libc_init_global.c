@@ -29,8 +29,6 @@
 #include <proto/elf.h>
 #include <fenv.h>
 
-#include "aio/aio_misc.h"
-
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
     uint32 pid = (uint32) userdata;

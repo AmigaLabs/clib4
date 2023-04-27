@@ -2,7 +2,7 @@
 # $Id: shared.gmk,v 1.0 2023-04-22 10:09:48 clib2devs Exp $
 #
 
-$(OUT_SHARED_LIB)/shared_library/clib2.o : CFLAGS = $(INCLUDES) $(OPTIONS) -gstabs -DDEBUG -O0 -fno-aggressive-loop-optimizations
+$(OUT_SHARED_LIB)/shared_library/clib2.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -O0 -fno-aggressive-loop-optimizations
 $(OUT_SHARED_LIB)/shared_library/clib2.o : $(LIB_DIR)/shared_library/clib2.c $(LIB_DIR)/shared_library/clib2.h
 	$(VERBOSE)$(COMPILE)
 

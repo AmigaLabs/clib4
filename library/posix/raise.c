@@ -10,7 +10,6 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-#include "aio/aio_misc.h"
 #include "pthread/common.h"
 
 static APTR
@@ -133,23 +132,6 @@ raise(int sig) {
                         WaitForChildExit(pid);
                         __getclib2()->tmr_real_task = NULL;
                     }
-
-                    /* Check if we have some aio threads */
-                    SHOWMSG("Check if we have some aio pthreads created");
-                    AioThread *aioThread;
-                    SHOWMSG("Obtain aio semaphore");
-                    ObtainSemaphore(__aio_lock);
-                    int streams = aio_threads->count(aio_threads);
-                    D(("AIO list has %ld items", streams));
-                    if (streams > 0) {
-                        for (int i = 0; i < streams; i++) {
-                            aioThread = aio_threads->at(aio_threads, i);
-                            D(("Cancel AIO stream with filedes %ld", aioThread->fileDes));
-                            aio_cancel(aioThread->fileDes, aioThread->aiocbp);
-                            Signal(aioThread->thread, SIGBREAKF_CTRL_C);
-                        }
-                    }
-                    ReleaseSemaphore(__aio_lock);
 
                     char break_string[80];
 

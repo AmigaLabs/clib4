@@ -11,7 +11,6 @@
 #include <proto/timezone.h>
 
 #include <arpa/inet.h>
-#include <aio.h>
 #include <argz.h>
 #include <assert.h>
 #include <complex.h>

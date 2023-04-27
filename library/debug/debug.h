@@ -48,7 +48,6 @@
 #define POP()		POPDEBUGLEVEL()
 
 #if defined(DEBUG)
-
     #ifndef _STDLIB_H
     #include <stdlib.h>
     #endif /* _STDLIB_H */
@@ -117,7 +116,6 @@
     )
 
 #else
-
 
     #ifdef NDEBUG
         #define assert(expression) ((void)0)

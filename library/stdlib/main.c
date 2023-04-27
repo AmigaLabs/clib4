@@ -37,7 +37,6 @@
 #endif /* _SOCKET_HEADERS_H */
 
 #include <proto/elf.h>
-#include "aio/aio_misc.h"
 
 extern int main(int arg_c, char **arg_v);
 extern BOOL open_libraries(void);
@@ -59,10 +58,6 @@ static Elf32_Handle elf_handle;
 /* Memalign memory list */
 void           *__memalign_pool;
 struct AVLNode *__memalign_tree;
-
-/* Used by aio functions */
-struct SignalSemaphore *__aio_lock;
-CList *aio_threads;
 
 void
 close_libraries(void) {
@@ -267,14 +262,6 @@ call_main(
     /* Set memalign tree to NULL */
     __memalign_tree = NULL;
 
-    /* Initialize aio pthread list */
-    __aio_lock = __create_semaphore();
-    if (__aio_lock == NULL)
-        goto out;
-
-    /* Initialize aio list - TODO - Move this on a constructor */
-    aio_threads = CList_init(sizeof(struct AioThread));
-
     /* Check if .unix file exists in the current dir. If the file exists enable
      * unix path semantics
      */
@@ -401,17 +388,6 @@ out:
 
         FreeSysObject(ASOT_ITEMPOOL, __memalign_pool);
     }
-
-    /* Free aio list -- TODO - Move to aio destructor */
-    if (aio_threads != NULL) {
-        SHOWMSG("Free aio list");
-        ObtainSemaphore(__aio_lock);
-        aio_threads->free(aio_threads);
-        ReleaseSemaphore(__aio_lock);
-    }
-
-    /* Remove aio semaphore. */
-    __delete_semaphore(__aio_lock);
 
     /* Go through the destructor list */
     SHOWMSG("invoking external destructors in reverse order");

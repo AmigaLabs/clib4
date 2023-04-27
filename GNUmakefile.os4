@@ -135,6 +135,7 @@ include libamiga.gmk
 include libprofile.gmk
 include libpthread.gmk
 include libcrypt.gmk
+include librt.gmk
 include shared.gmk
 
 prepare:
