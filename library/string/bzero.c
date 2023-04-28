@@ -23,7 +23,7 @@ bzero(void *m, size_t len) {
 
     DECLARE_UTILITYBASE();
 
-    if (__getclib2() != NULL && __getclib2()->optimizedCPUFunctions) {
+    if (__optimizedCPUFunctions) {
         /* Check if we have altivec enabled */
         if (__getclib2()->hasAltivec) {
             vec_bzero(m, len);

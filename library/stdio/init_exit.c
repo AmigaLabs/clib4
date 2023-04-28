@@ -19,12 +19,12 @@
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
 /* The file handle table. */
-struct iob **NOCOMMON __iob;
-int NOCOMMON __num_iob;
+struct iob **__iob;
+int __num_iob;
 
 /* The file descriptor table. */
-struct fd **NOCOMMON __fd;
-int NOCOMMON __num_fd;
+struct fd **__fd;
+int __num_fd;
 
 void
 __close_all_files(void) {

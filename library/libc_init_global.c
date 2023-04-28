@@ -26,6 +26,10 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
+#ifndef _STRING_HEADERS_H
+#include "string_headers.h"
+#endif /* _STRING_HEADERS_H */
+
 #include <proto/elf.h>
 #include <fenv.h>
 
@@ -98,9 +102,9 @@ reent_init() {
         }
 
 #ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
-        __global_clib2->optimizedCPUFunctions = FALSE;
+        __optimizedCPUFunctions = FALSE;
 #else
-        __global_clib2->optimizedCPUFunctions = TRUE;
+        __optimizedCPUFunctions = TRUE;
 #endif
 
         /* Initialize random signal and state */
@@ -257,11 +261,11 @@ void disableAltivec(void) {
 }
 
 void enableOptimizedFunctions(void) {
-    __global_clib2->optimizedCPUFunctions = 1;
+    __optimizedCPUFunctions = TRUE;
 };
 
 void disableOptimizedFunctions(void) {
-    __global_clib2->optimizedCPUFunctions = 0;
+    __optimizedCPUFunctions = FALSE;
 };
 
 int *__mb_cur_max(void) {

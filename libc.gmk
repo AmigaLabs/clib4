@@ -138,7 +138,6 @@ C_LOCALE := \
 	locale/setlocale.o
 
 C_MISC := \
-	misc/clist.o \
 	misc/map.o
 
 C_MOUNT := \
@@ -585,10 +584,6 @@ C_STRING := \
 	string/memmove.o \
 	string/memrchr.o \
 	string/memset.o \
-	cpu/altivec/vec_memcmp.o \
-	cpu/altivec/vec_memcpy.o \
-	cpu/altivec/vec_memset.o \
-	cpu/altivec/vec_strcpy.o \
 	cpu/4xx/memchr440.o \
 	cpu/4xx/memcmp440.o \
 	cpu/4xx/memcpy440.o \
@@ -599,6 +594,11 @@ C_STRING := \
 	cpu/4xx/strlen440.o \
 	cpu/4xx/strncmp440.o \
 	cpu/4xx/strrchr440.o \
+	cpu/altivec/vec_memcmp.o \
+	cpu/altivec/vec_memcpy.o \
+	cpu/altivec/vec_memset.o \
+	cpu/altivec/vec_strcpy.o \
+	cpu/generic/bcopy.o \
 	string/rindex.o \
 	string/stccpy.o \
 	string/stpcpy.o \
@@ -984,22 +984,15 @@ OBJ_C_SRC += $(patsubst %.o, $(LIB_DIR)/%.c, $(C_LIBRARY))
 # Dependencies to rebuild if the library version changes
 
 $(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
-$(BUILD_DIR)/obj.shared/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
+$(OUT_SHARED)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 
 $(OUT_STATIC)/cpu/spe/%.o : $(LIB_DIR)/cpu/spe/%.S
 	$(VERBOSE)$(COMPILE_SPE)
-$(OUT_SHARED)/cpu/spe/%.o : $(LIB_DIR)/cpu/spe/%.S
-	$(VERBOSE)$(COMPILE_SHARED_SPE)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.sx
-	$(VERBOSE)$(COMPILE_REG)
+	$(VERBOSE)$(COMPILE_ALTIVEC_REG)
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
-
-$(OUT_SHARED)/%.o : $(LIB_DIR)/%.sx
-	$(VERBOSE)$(COMPILE_REG)
-$(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
-	$(VERBOSE)$(COMPILE_SHARED_ASM)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)

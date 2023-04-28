@@ -51,6 +51,8 @@ static void shared_obj_exit(void);
 BOOL __stack_overflow;
 extern struct _clib2 *__global_clib2;
 
+uint32 __optimizedCPUFunctions;
+
 struct Library *__ElfBase;
 struct ElfIFace *__IElf;
 static Elf32_Handle elf_handle;

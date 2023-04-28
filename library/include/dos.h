@@ -19,7 +19,7 @@
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
-#include "clist.h"
+#include "../rt/clist.h"
 
 __BEGIN_DECLS
 
@@ -494,7 +494,6 @@ struct _clib2 {
 	int inc;
 
 	/* CPU Family to enable optimized functions */
-    uint32 optimizedCPUFunctions;
 	uint32 cpufamily;
     uint32 hasAltivec;
 

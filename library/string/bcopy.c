@@ -15,14 +15,17 @@ bcopy(const void *src, void *dest, size_t len) {
 
     assert((len == 0) || (src != NULL && dest != NULL && (int) len > 0));
 
-    if (__getclib2() != NULL && __getclib2()->optimizedCPUFunctions) {
+    if (__optimizedCPUFunctions) {
         /* Check if we have altivec enabled */
         if (__getclib2()->hasAltivec) {
             vec_bcopy(src, dest, len);
         }
         else {
-            /* Fallback to standard function */
-            memmove(dest, src, len);
+            switch (__getclib2()->cpufamily) {
+                default:
+                    /* Fallback to standard function */
+                    memmove(dest, src, len);
+            }
         }
     }
     else {

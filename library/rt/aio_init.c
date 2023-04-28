@@ -22,8 +22,10 @@ CLIB_CONSTRUCTOR(aio_init) {
     ENTER();
 
     /* Initialize aio pthread list */
-    __aio_lock = __create_semaphore();
-    if (__aio_lock == NULL)
+    __aio_lock = AllocVecTags(sizeof(*__aio_lock), AVT_Type, MEMF_SHARED, TAG_DONE);
+    if (__aio_lock != NULL)
+        InitSemaphore(__aio_lock);
+    else
         goto out;
 
     /* Initialize aio list */
@@ -63,7 +65,7 @@ CLIB_DESTRUCTOR(aio_exit) {
     }
 
     /* Remove aio semaphore. */
-    __delete_semaphore(__aio_lock);
+    FreeVec(__aio_lock);
 
     LEAVE();
 }

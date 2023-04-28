@@ -5,6 +5,10 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef _STDLIB_PROTOS_H
+#include "stdlib_protos.h"
+#endif /* _STDLIB_PROTOS_H */
+
 #include <aio.h>
 #include <pthread.h>
 #include <sys/param.h>
@@ -283,7 +287,7 @@ __aio_enqueue_request(aiocb_union *aiocbp, int operation) {
 #endif
             ) {
         /* Invalid priority value.  */
-        __set_errno(EINVAL);
+        errno = EINVAL;
         aiocbp->aiocb.__error_code = EINVAL;
         aiocbp->aiocb.__return_value = -1;
         return NULL;
@@ -310,7 +314,7 @@ __aio_enqueue_request(aiocb_union *aiocbp, int operation) {
     newp = get_elem();
     if (newp == NULL) {
         pthread_mutex_unlock(&__aio_requests_mutex);
-        __set_errno(EAGAIN);
+        errno = EAGAIN;
         return NULL;
     }
     newp->aiocbp = aiocbp;
@@ -424,7 +428,7 @@ __aio_enqueue_request(aiocb_union *aiocbp, int operation) {
         /* Something went wrong.  */
         __aio_free_request(newp);
         aiocbp->aiocb.__error_code = result;
-        __set_errno(result);
+        errno = result;
         newp = NULL;
     }
 
@@ -519,7 +523,7 @@ handle_fildes_io(void *arg) {
             else {
                 /* This is an invalid opcode.  */
                 aiocbp->aiocb.__return_value = -1;
-                __set_errno(EINVAL);
+                errno = EINVAL;
             }
 
             /* Get the mutex.  */

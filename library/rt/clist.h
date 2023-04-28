@@ -5,7 +5,7 @@
 #ifndef CLIST_H
 #define CLIST_H
 
-#include <features.h>
+#include "../include/features.h"
 
 __BEGIN_DECLS
 

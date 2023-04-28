@@ -8,5 +8,6 @@
 
 void
 __set_errno(int new_errno) {
-	errno = new_errno;
+    if (&errno != NULL)
+	    errno = new_errno;
 }

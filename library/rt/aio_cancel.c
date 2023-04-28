@@ -16,7 +16,7 @@ aio_cancel(int fildes, struct aiocb *aiocbp) {
 
     /* If fildes is invalid, error. */
     if (fcntl(fildes, F_GETFL) < 0) {
-        __set_errno(EBADF);
+        errno = EBADF;
         return -1;
     }
 
@@ -29,7 +29,7 @@ aio_cancel(int fildes, struct aiocb *aiocbp) {
        to look for the request block.  */
         if (aiocbp->aio_fildes != fildes) {
             pthread_mutex_unlock(&__aio_requests_mutex);
-            __set_errno(EINVAL);
+            errno = EINVAL;
             return -1;
         } else if (aiocbp->__error_code == EINPROGRESS) {
             struct requestlist *last = NULL;
@@ -39,7 +39,7 @@ aio_cancel(int fildes, struct aiocb *aiocbp) {
             if (req == NULL) {
                 not_found:
                 pthread_mutex_unlock(&__aio_requests_mutex);
-                __set_errno(EINVAL);
+                errno = EINVAL;
                 return -1;
             }
 

@@ -1,6 +1,7 @@
 #include <proto/exec.h>
 #include <dos/dosextens.h>
 #include <dos.h>
+#include <proto/dos.h>
 
 extern struct _clib2 *__global_clib2;
 

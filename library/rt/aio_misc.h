@@ -19,6 +19,7 @@
 #define _AIO_MISC_H    1
 
 #include <aio.h>
+#include <errno.h>
 #include <pthread.h>
 
 typedef struct AioThread {

@@ -61,7 +61,7 @@ strncmp(const char *s1, const char *s2, size_t n)
 	 */
 	if (s1 != s2 && (int)n > 0)
 	{
-		if (__getclib2() != NULL && __getclib2()->optimizedCPUFunctions)
+		if (__optimizedCPUFunctions)
 		{
 			switch (__getclib2()->cpufamily)
 			{

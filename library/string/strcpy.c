@@ -22,7 +22,7 @@ strcpy(char *dest, const char *src) {
     }
 
     if (dest != src) {
-        if (__getclib2() != NULL && __getclib2()->optimizedCPUFunctions) {
+        if (__optimizedCPUFunctions) {
             switch (__getclib2()->cpufamily) {
                 case CPUFAMILY_4XX:
                     result = __strcpy440(dest, src);

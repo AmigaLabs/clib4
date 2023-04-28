@@ -126,7 +126,7 @@ memcmp(const void *ptr1, const void *ptr2, size_t len) {
         const char *m1 = ptr1;
         const char *m2 = ptr2;
 
-        if (__getclib2() != NULL && __getclib2()->optimizedCPUFunctions) {
+        if (__optimizedCPUFunctions) {
             switch (__getclib2()->cpufamily) {
                 /* If we have a SAM4xx use specific version of function */
                 case CPUFAMILY_4XX:

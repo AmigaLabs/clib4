@@ -48,7 +48,7 @@ strcmp(const char *s1, const char *s2) {
         goto out;
     }
 
-    if (__getclib2() != NULL && __getclib2()->optimizedCPUFunctions) {
+    if (__optimizedCPUFunctions) {
         switch (__getclib2()->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strcmp440(s1, s2);

@@ -159,11 +159,12 @@ all-libs: $(LIBS)
 
 # Delete all object files and libraries
 clean:
-	-$(DELETE) $(BUILD_DIR)/objcp
+	-$(DELETE) $(BUILD_DIR)/obj
 	-$(DELETE) $(BUILD_DIR)/obj.shared
 	-$(DELETE) $(BUILD_DIR)/shared
 	-$(DELETE) $(OUTPUT_LIB)
 	-$(DELETE) $(BUILD_DIR)/compiler.log
+	-$(DELETE) $(BUILD_DIR)/clib2.library*
 	-$(DELETE) clib2.lha
 	-$(DELETE) clib2.bak
 	-cd test_programs; make clean
@@ -246,7 +247,7 @@ endef
 define COMPILE_ASM
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rCompiling Static ASM \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)$(CC)  -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED
@@ -268,6 +269,12 @@ $(VERBOSE)$(CC) $(AFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_REG
+$(VERBOSE)@$(MAKEDIR) $(@D)
+$(VERBOSE)echo -e "\rAssembling with regnames \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)$(CC) -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_ALTIVEC_REG
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rAssembling altivec \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) -maltivec -mabi=altivec -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)

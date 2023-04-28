@@ -311,14 +311,14 @@ extern struct WBStartup * NOCOMMON __WBenchMsg;
 /****************************************************************************/
 
 /* The file handle table. */
-extern struct iob ** NOCOMMON	__iob;
-extern int NOCOMMON				__num_iob;
+extern struct iob ** 	__iob;
+extern int 				__num_iob;
 
 /****************************************************************************/
 
 /* The file descriptor table. */
-extern struct fd ** NOCOMMON	__fd;
-extern int NOCOMMON				__num_fd;
+extern struct fd ** 	__fd;
+extern int 				__num_fd;
 
 /****************************************************************************/
 

@@ -26,6 +26,7 @@ RT_LIB := \
     rt/aio_suspend.o \
     rt/aio_write.o \
     rt/aio_write64.o \
+	rt/clist.o \
     rt/lio_listio.o \
 	rt/rt.lib_rev.o
 
