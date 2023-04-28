@@ -150,6 +150,7 @@ all-targets: \
 	$(OUTPUT_LIB)/shcrtbegin.o \
 	$(OUTPUT_LIB)/shcrtend.o \
     $(OUT_SHARED_LIB)/shared_library/clib2.o \
+    $(OUT_SHARED_LIB)/shared_library/math.o \
 	$(MAIN_LIB)
 #$(info $(OBJ_C_SRC))
 
@@ -188,7 +189,7 @@ version:
 # Shared clib2.library rules
 
 clib2.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(OBJ_C_LIB) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib -lgcc
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
 
 clib2.library: clib2.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
