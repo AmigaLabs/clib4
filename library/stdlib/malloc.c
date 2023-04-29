@@ -16,11 +16,6 @@
 
 #undef malloc
 
-unsigned long NOCOMMON __maximum_memory_allocated;
-unsigned long NOCOMMON __current_memory_allocated;
-unsigned long NOCOMMON __maximum_num_memory_chunks_allocated;
-unsigned long NOCOMMON __current_num_memory_chunks_allocated;
-
 /* Wof Allocator */
 wof_allocator_t NOCOMMON *__wof_allocator;
 

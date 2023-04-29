@@ -7,12 +7,11 @@
 #endif /* _STDLIB_HEADERS_H */
 
 void
-srand(unsigned seed)
-{
+srand(unsigned seed)  {
     ENTER();
     SHOWVALUE(seed);
 
-    __getclib2()->__random_seed = seed - 1;
+    __CLIB2->__random_seed = seed - 1;
 
     LEAVE();
 }

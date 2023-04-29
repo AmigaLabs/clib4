@@ -3,7 +3,8 @@
 #include <dos.h>
 #include <proto/dos.h>
 
-extern struct _clib2 *__global_clib2;
+extern struct _clib2 *__clib2;
+extern struct _global_clib2 *__global_clib2;
 
 struct _clib2 *
 __getclib2(void) {
@@ -15,8 +16,13 @@ __getclib2(void) {
     }
 
     if (!r) {
-        r = __global_clib2;
+        r = __clib2;
     }
 
     return r;
+}
+
+struct _global_clib2 *
+__getGlobalClib2(void) {
+    return __global_clib2;
 }

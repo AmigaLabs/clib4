@@ -35,7 +35,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -60,7 +60,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (__translate_amiga_to_unix_path_name((char const **) &buffer, &buffer_nti) != 0)
             goto out;
 

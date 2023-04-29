@@ -30,8 +30,7 @@ char **NOCOMMON __argv;
 int NOCOMMON __argc;
 
 STATIC BOOL
-is_space(unsigned char c)
-{
+is_space(unsigned char c) {
 	BOOL result;
 
 	result = (BOOL)(c == '\t' ||				 /* horizontal tab */
@@ -46,8 +45,7 @@ is_space(unsigned char c)
 }
 
 STATIC BOOL
-is_escape_character(unsigned char c)
-{
+is_escape_character(unsigned char c) {
 	BOOL result;
 
 	result = (BOOL)(c == '*' || c == __shell_escape_character);
@@ -56,8 +54,7 @@ is_escape_character(unsigned char c)
 }
 
 STATIC BOOL
-is_final_quote_character(const unsigned char *str)
-{
+is_final_quote_character(const unsigned char *str) {
 	BOOL result;
 
 	result = (BOOL)(str[0] == '\"' && (str[1] == '\0' || is_space(str[1])));
@@ -65,15 +62,13 @@ is_final_quote_character(const unsigned char *str)
 	return (result);
 }
 
-ARG_CONSTRUCTOR(arg_init)
-{
+ARG_CONSTRUCTOR(arg_init) {
 	BOOL success = FALSE;
 
 	ENTER();
 
 	/* Shell startup? */
-	if (__WBenchMsg == NULL)
-	{
+	if (__WBenchMsg == NULL) {
 		BOOL expand_wildcard_args = FALSE;
 		size_t number_of_arguments;
 		const unsigned char *arg_str;
@@ -84,8 +79,7 @@ ARG_CONSTRUCTOR(arg_init)
         /* Check if wildcard expansion of command line parameters
 		   should be enabled. Note that the callback function, if
 		   declared, takes precedence over the global variable. */
-		if (__unix_path_semantics)
-		{
+		if (__CLIB2->__unix_path_semantics) {
 			expand_wildcard_args = __expand_wildcard_args;
 
 			if (FindVar("DISABLE_COMMANDLINE_WILDCARD_EXPANSION", LV_VAR) != NULL)
@@ -199,8 +193,7 @@ ARG_CONSTRUCTOR(arg_init)
 			{
 				char *arg;
 
-				if (__unix_path_semantics)
-				{
+				if (__CLIB2->__unix_path_semantics) {
 					/* If necessary, indicate that this parameter was quoted. */
 					if (expand_wildcard_args && __wildcard_quote_parameter(__argc) < 0)
 						goto out;
@@ -282,8 +275,7 @@ ARG_CONSTRUCTOR(arg_init)
 
 		__argv[__argc] = NULL;
 
-		if (__unix_path_semantics)
-		{
+		if (__CLIB2->__unix_path_semantics) {
 			/* If necessary, expand wildcard patterns found in the command
 			   line string into file and directory names. */
 			if (expand_wildcard_args && __wildcard_expand_init() < 0)

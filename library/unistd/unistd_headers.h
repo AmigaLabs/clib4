@@ -72,6 +72,4 @@ extern long __pathconf(struct MsgPort *port,int name);
 
 extern int itimer_real_task(void);
 
-extern BOOL NOCOMMON __unix_path_semantics;
-
 #endif /* _UNISTD_HEADERS_H */

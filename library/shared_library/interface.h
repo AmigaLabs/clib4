@@ -96,7 +96,7 @@ struct Clib2IFace {
     void (* __translate_amiga_to_unix_path_name)(void);             //88
     void (* __translate_unix_to_amiga_path_name)(void);             //92
     void (* __restore_path_name)(void);                             //96
-    void (* internal1)(void);                                       //100
+    void (* __getGlobalClib2)(void);                                //100
     void (* internal2)(void);                                       //104
     void (* internal3)(void);                                       //108
     void (* internal4)(void);                                       //112

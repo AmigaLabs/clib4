@@ -18,24 +18,24 @@ initstate(unsigned seed, char *state, size_t size) {
     if (size < 8)
         return 0;
 
-    ObtainSemaphore(__getclib2()->__random_lock);
+    ObtainSemaphore(__CLIB2->__random_lock);
 
     old = savestate();
     if (size < 32)
-        __getclib2()->n = 0;
+        __CLIB2->n = 0;
     else if (size < 64)
-        __getclib2()->n = 7;
+        __CLIB2->n = 7;
     else if (size < 128)
-        __getclib2()->n = 15;
+        __CLIB2->n = 15;
     else if (size < 256)
-        __getclib2()->n = 31;
+        __CLIB2->n = 31;
     else
-        __getclib2()->n = 63;
-    __getclib2()->x = (uint32_t*)state + 1;
+        __CLIB2->n = 63;
+    __CLIB2->x = (uint32_t*)state + 1;
     __srandom(seed);
     savestate();
 
-    ReleaseSemaphore(__getclib2()->__random_lock);
+    ReleaseSemaphore(__CLIB2->__random_lock);
 
     RETURN(old);
     return old;

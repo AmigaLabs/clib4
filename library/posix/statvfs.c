@@ -21,8 +21,7 @@ statvfs(const char *path, struct statvfs *buf)
     SHOWSTRING(path);
     SHOWPOINTER(buf);
 
-    if (__unix_path_semantics)
-    {
+    if (__CLIB2->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&path, &path_name_nti) != 0)
             goto out;
 
@@ -32,7 +31,6 @@ statvfs(const char *path, struct statvfs *buf)
             goto out;
         }
     }
-
 
     struct InfoData *info = AllocDosObject(DOS_INFODATA, 0);
     if (info != NULL) {

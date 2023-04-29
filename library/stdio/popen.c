@@ -96,7 +96,7 @@ popen(const char *command, const char *type) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         char just_the_command_name[MAXPATHLEN + 1];
         BOOL quotes_needed = FALSE;
         char *command_name;

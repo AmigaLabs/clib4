@@ -29,7 +29,7 @@ symlink(const char *actual_path, const char *symbolic_path) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (actual_path[0] == '\0' || symbolic_path[0] == '\0') {
             SHOWMSG("no name given");
 

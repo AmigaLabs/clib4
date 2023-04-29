@@ -90,7 +90,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
         assert(fd_slot_number >= 0);
     }
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 

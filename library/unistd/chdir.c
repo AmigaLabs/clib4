@@ -29,7 +29,7 @@ chdir(const char *path_name) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -96,7 +96,7 @@ chdir(const char *path_name) {
 
     dir_lock = ZERO;
 
-    if (__unix_path_semantics)
+    if (__CLIB2->__unix_path_semantics)
         __restore_path_name(&path_name, &path_name_nti);
 
     /* ZZZ this must not fail */

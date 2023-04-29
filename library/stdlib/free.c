@@ -22,7 +22,7 @@ free(void *ptr) {
     BOOL found = FALSE;
     struct MemalignEntry *e = NULL;
     /* Check if we have something created by memalign */
-    if (__getclib2() != NULL) {
+    if (__CLIB2 != NULL) {
         e = (struct MemalignEntry *) AVL_FindNode(__memalign_tree, ptr, MemalignAVLKeyComp);
         if (e) {
             found = TRUE;

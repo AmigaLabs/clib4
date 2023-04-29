@@ -131,8 +131,8 @@ memchr(const void *ptr, int val, size_t len) {
     }
 
     if (len > 0) {
-        if (__optimizedCPUFunctions) {
-            switch (__getclib2()->cpufamily) {
+        if (__CLIB2->__optimizedCPUFunctions) {
+            switch (__GCLIB2->cpufamily) {
                 case CPUFAMILY_4XX:
                     result = __memchr440(m, (unsigned char) (val & 255), len);
                     break;

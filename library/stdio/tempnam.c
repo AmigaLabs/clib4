@@ -22,7 +22,7 @@ worker(char *result, const char *part1, const char *part2, char *part3, int *par
 
         int t;
 
-        if (!__unix_path_semantics) {
+        if (!__CLIB2->__unix_path_semantics) {
             if (!strcmp(part1, P_tmpdir)) {
                 sprintf(result, "T:%s%s.%x", part2, part3, *part4);
             } else {
@@ -72,7 +72,7 @@ tempnam(const char *dir, const char *pfx) {
         char string[7] = {0};
 
         snprintf(string, 7, "%lX", r);
-        if (!worker(filename, dir, prefix, string, &__getclib2()->inc))
+        if (!worker(filename, dir, prefix, string, &__CLIB2->inc))
             return NULL;
     }
 

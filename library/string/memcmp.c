@@ -126,8 +126,8 @@ memcmp(const void *ptr1, const void *ptr2, size_t len) {
         const char *m1 = ptr1;
         const char *m2 = ptr2;
 
-        if (__optimizedCPUFunctions) {
-            switch (__getclib2()->cpufamily) {
+        if (__CLIB2->__optimizedCPUFunctions) {
+            switch (__GCLIB2->cpufamily) {
                 /* If we have a SAM4xx use specific version of function */
                 case CPUFAMILY_4XX:
                     result = __memcmp440(m1, m2, len);
@@ -139,7 +139,7 @@ memcmp(const void *ptr1, const void *ptr2, size_t len) {
 #endif
                 default:
                     /* Check if we have altivec enabled */
-                    if (__getclib2()->hasAltivec) {
+                    if (__GCLIB2->hasAltivec) {
                         result = vec_memcmp(m1, m2, len);
                     } else {
                         /* Fallback to standard function */

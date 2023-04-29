@@ -12,12 +12,12 @@ setstate(const char *state) {
     ENTER();
     SHOWSTRING(state);
 
-    ObtainSemaphore(__getclib2()->__random_lock);
+    ObtainSemaphore(__CLIB2->__random_lock);
 
     old = savestate();
     loadstate((uint32_t*)state);
 
-    ReleaseSemaphore(__getclib2()->__random_lock);
+    ReleaseSemaphore(__CLIB2->__random_lock);
 
     RETURN(old);
     return old;

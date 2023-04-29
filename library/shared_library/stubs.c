@@ -5,18 +5,20 @@ asm(".section	\".text\"             \n\
 	.globl __Clib2Call                \n\
 	.type  __Clib2Call, @function     \n\
 __Clib2Call:                          \n\
-	lis   %r11, IClib2@ha             \n\
-	lwz   %r0, IClib2@l(%r11)         \n\
-	lwzx  %r11, %r12, %r0             \n\
-	mtctr %r11                        \n\
-	bctr                              \n\
+	 lis   %r11, IClib2@ha            \n\
+	 lwz   %r0, IClib2@l(%r11)        \n\
+	 lwzx  %r11, %r12, %r0            \n\
+	 mtctr %r11                       \n\
+	 bctr                             \n\
 	.size	__Clib2Call, .-__Clib2Call");
 
 Clib2Call(__getclib2, 84);
 Clib2Call(__translate_amiga_to_unix_path_name, 88);
 Clib2Call(__translate_unix_to_amiga_path_name, 92);
 Clib2Call(__restore_path_name, 96);
+Clib2Call(__getGlobalClib2, 100);
 
+/* Functions defined stubs starts here */
 Clib2Call(argz_create, 116);
 Clib2Call(argz_create_sep, 120);
 Clib2Call(argz_count, 124);

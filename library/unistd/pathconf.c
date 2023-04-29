@@ -25,7 +25,7 @@ pathconf(const char *path, int name) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (path[0] == '\0') {
             SHOWMSG("Empty name");
 

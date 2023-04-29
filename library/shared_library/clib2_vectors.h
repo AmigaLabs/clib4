@@ -9,7 +9,7 @@ static void *main_vectors[] = {
         (void *) (__restore_path_name),
         (void *) (__translate_amiga_to_unix_path_name),
         (void *) (__translate_unix_to_amiga_path_name),
-        (void *) (LIB_Reserved),
+        (void *) (__getGlobalClib2),
         (void *) (LIB_Reserved),
         (void *) (LIB_Reserved),
         (void *) (LIB_Reserved),

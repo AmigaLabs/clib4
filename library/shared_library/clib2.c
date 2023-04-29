@@ -112,8 +112,8 @@ static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 extern void reent_init(void);
 extern void reent_exit(void);
 
-struct _clib2 *__global_clib2;
 static BPTR clib2SegList;
+struct _global_clib2 *__global_clib2 = NULL;
 
 int32
 _start(char *args, int arglen, struct ExecBase *sysbase) {
@@ -236,21 +236,33 @@ static struct Library *LIB_Open(struct Interface *Self, uint32 version __attribu
                 D(("Cannot get IUtility interface"));
                 goto out;
             }
-
-            /* If all libraries are opened correctlty we can initialize clib2 reent structure */
-            D(("Initialize clib2 reent structure"));
-            reent_init();
-
-            /* After reent structure we can call clib2 constructors */
-            D(("Calling clib2 ctors"));
-            _start_ctors(__CTOR_LIST__);
-            D(("Done. All constructors called"));
         }
         else {
             D(("Cannot open utility.library"));
             goto out;
         }
     }
+    /* If all libraries are opened correctly we can initialize clib2 reent structure */
+    D(("Initialize clib2 reent structure"));
+    reent_init();
+
+    /* After reent structure we can call clib2 constructors */
+    D(("Calling clib2 ctors"));
+    _start_ctors(__CTOR_LIST__);
+    D(("Done. All constructors called"));
+
+    /* Get cpu family used to choose functions at runtime */
+    D(("Setting cpu family"));
+    IExec->GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);
+
+    /* Check if altivec is present */
+#ifdef ENABLE_ALTIVEC_AT_START
+    D(("Check if altivec is present"));
+    IExec->GetCPUInfoTags(GCIT_VectorUnit, &__global_clib2->hasAltivec);
+#else
+    D(("Set altivec to zero"));
+    __global_clib2->hasAltivec = 0;
+#endif
 
     Clib2Base->lib_OpenCnt++;
     Clib2Base->lib_Flags &= ~LIBF_DELEXP;
@@ -276,13 +288,8 @@ static BPTR LIB_Expunge(struct Interface *Self) {
         return 0;
     }
 
-    D(("Calling reent_exit"));
-    reent_exit();
-    D(("Done"));
-
-    D(("Calling clib2 dtors"));
-    _start_dtors(__DTOR_LIST__);
-    D(("Done. All destructors called"));
+    D(("Cleaning global clib2 structure"));
+    IExec->FreeVec(__global_clib2);
 
     D(("Close all libraries "));
     closeLibraries();
@@ -295,6 +302,14 @@ static BPTR LIB_Expunge(struct Interface *Self) {
 
 static BPTR LIB_Close(struct Interface *Self) {
     struct Library *Clib2Base = Self->Data.LibBase;
+
+    D(("Calling clib2 dtors"));
+    _start_dtors(__DTOR_LIST__);
+    D(("Done. All destructors called"));
+
+    D(("Calling reent_exit"));
+    reent_exit();
+    D(("Done"));
 
     Clib2Base->lib_OpenCnt--;
     D(("LIBClose: Count=%ld", Clib2Base->lib_OpenCnt));
@@ -340,11 +355,9 @@ static struct TagItem libmanagerTags[] = {
 };
 
 int LIB_Reserved(void) {
-    __global_clib2->_errno = ENOSYS;
+    __GCLIB2->_errno = ENOSYS;
     return -1;
 }
-
-extern struct _clib2 *__getclib2(void);
 
 #include "clib2_vectors.h"
 
@@ -382,6 +395,17 @@ struct Library *LIB_Init(struct Library *Clib2Base, BPTR librarySegment, struct 
 
     __UtilityBase = NULL;
     __IUtility = NULL;
+
+    D(("Creating global clib2 structure"));
+    __global_clib2 = (struct _global_clib2 *) IExec->AllocVecTags(sizeof(struct _global_clib2),
+                                                                  AVT_Type, MEMF_SHARED,
+                                                                  AVT_ClearWithValue, 0,
+                                                                  TAG_END);
+    if (!__global_clib2)
+        return NULL;
+
+    D(("Setting global errno"));
+    __global_clib2->_errno = 0;
 
     return Clib2Base;
 }

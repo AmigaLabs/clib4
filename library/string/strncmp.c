@@ -59,12 +59,9 @@ strncmp(const char *s1, const char *s2, size_t n)
 	/* If the number of characters is 0 or negative, then this
 	 * function is supposed to have no effect.
 	 */
-	if (s1 != s2 && (int)n > 0)
-	{
-		if (__optimizedCPUFunctions)
-		{
-			switch (__getclib2()->cpufamily)
-			{
+	if (s1 != s2 && (int)n > 0) {
+		if (__CLIB2->__optimizedCPUFunctions) {
+			switch (__GCLIB2->cpufamily) {
 				case CPUFAMILY_4XX:
 					result = __strncmp440(s1, s2, n);
 					break;

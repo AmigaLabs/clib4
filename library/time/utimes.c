@@ -54,7 +54,7 @@ utimes(const char *name, const struct timeval *tvp) {
         }
     }
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&name, &path_name_nti) != 0) {
             return -1;
         }

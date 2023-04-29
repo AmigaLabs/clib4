@@ -13,28 +13,27 @@ __srandom(unsigned seed) {
     ENTER();
     SHOWVALUE(seed);
 
-    if (__getclib2()->n == 0) {
-        __getclib2()->x[0] = s;
+    if (__CLIB2->n == 0) {
+        __CLIB2->x[0] = s;
         return;
     }
-    __getclib2()->i = __getclib2()->n == 31 || __getclib2()->n == 7 ? 3 : 1;
-    __getclib2()->j = 0;
-    for (k = 0; k < __getclib2()->n; k++) {
+    __CLIB2->i = __CLIB2->n == 31 || __CLIB2->n == 7 ? 3 : 1;
+    __CLIB2->j = 0;
+    for (k = 0; k < __CLIB2->n; k++) {
         s = lcg64(s);
-        __getclib2()->x[k] = s>>32;
+        __CLIB2->x[k] = s>>32;
     }
     /* make sure x contains at least one odd number */
-    __getclib2()->x[0] |= 1;
+    __CLIB2->x[0] |= 1;
 
     LEAVE();
 }
 
 void
-srandom(unsigned int seed)
-{
-    ObtainSemaphore(__getclib2()->__random_lock);
+srandom(unsigned int seed)  {
+    ObtainSemaphore(__CLIB2->__random_lock);
 
     __srandom(seed);
 
-    ReleaseSemaphore(__getclib2()->__random_lock);
+    ReleaseSemaphore(__CLIB2->__random_lock);
 }

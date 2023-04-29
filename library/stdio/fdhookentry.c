@@ -199,7 +199,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                         if (fd->fd_File)
                             fd->fd_File = ZERO;
 
-                        if (__unix_path_semantics) {
+                        if (__CLIB2->__unix_path_semantics) {
                             DECLARE_UTILITYBASE();
 
                             assert(UtilityBase != NULL);
@@ -374,7 +374,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     if (position == CHANGE_FILE_ERROR) {
                         fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
-                        if (__unix_path_semantics) {
+                        if (__CLIB2->__unix_path_semantics) {
                             /* Check if this operation failed because the file is shorter than
                                    the new file position. First, we need to find out if the file
                                    is really shorter than required. If not, then it must have

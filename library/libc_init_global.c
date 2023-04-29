@@ -62,7 +62,7 @@ static uint32_t _random_init[] = {
 static struct Library *__ElfBase;
 static struct ElfIFace *__IElf;
 
-extern struct _clib2 *__global_clib2;
+extern struct _clib2 *__clib2;
 
 void
 reent_init() {
@@ -84,77 +84,77 @@ reent_init() {
     }
 
     /* Initialize global structure */
-    __global_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-    if (__global_clib2 == NULL) {
+    __clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+    if (__clib2 == NULL) {
         goto out;
     } else {
         struct ElfIFace *IElf = __IElf;
 
         /* Get the current task pointer */
-        __global_clib2->self = (struct Process *) FindTask(NULL);
+        __clib2->self = (struct Process *) FindTask(NULL);
 
         /* Initialize wchar stuff */
-        __global_clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
-        if (!__global_clib2->wide_status) {
-            FreeVec(__global_clib2);
-            __global_clib2 = NULL;
+        __clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
+        if (!__clib2->wide_status) {
+            FreeVec(__clib2);
+            __clib2 = NULL;
             goto out;
         }
 
 #ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
-        __optimizedCPUFunctions = FALSE;
+        __CLIB2->__optimizedCPUFunctions = FALSE;
 #else
-        __optimizedCPUFunctions = TRUE;
+        __CLIB2->__optimizedCPUFunctions = TRUE;
 #endif
 
         /* Initialize random signal and state */
-        __global_clib2->__random_lock = __create_semaphore();
-        if (!__global_clib2->__random_lock) {
-            FreeVec(__global_clib2->wide_status);
-            FreeVec(__global_clib2);
-            __global_clib2 = NULL;
+        __clib2->__random_lock = __create_semaphore();
+        if (!__clib2->__random_lock) {
+            FreeVec(__clib2->wide_status);
+            FreeVec(__clib2);
+            __clib2 = NULL;
             goto out;
         }
-        __global_clib2->n = 31;
-        __global_clib2->i = 3;
-        __global_clib2->j = 0;
-        __global_clib2->x = _random_init + 1;
+        __clib2->n = 31;
+        __clib2->i = 3;
+        __clib2->j = 0;
+        __clib2->x = _random_init + 1;
 
         /* Set main Exec and IElf interface pointers */
-        __global_clib2->IExec = IExec;
-        __global_clib2->IElf = __IElf;
+        __clib2->IExec = IExec;
+        __clib2->IElf = __IElf;
 
-        __global_clib2->wide_status->_strtok_last = NULL;
-        __global_clib2->wide_status->_mblen_state.__count = 0;
-        __global_clib2->wide_status->_mblen_state.__value.__wch = 0;
-        __global_clib2->wide_status->_wctomb_state.__count = 0;
-        __global_clib2->wide_status->_wctomb_state.__value.__wch = 0;
-        __global_clib2->wide_status->_mbtowc_state.__count = 0;
-        __global_clib2->wide_status->_mbtowc_state.__value.__wch = 0;
-        __global_clib2->wide_status->_mbrlen_state.__count = 0;
-        __global_clib2->wide_status->_mbrlen_state.__value.__wch = 0;
-        __global_clib2->wide_status->_mbrtowc_state.__count = 0;
-        __global_clib2->wide_status->_mbrtowc_state.__value.__wch = 0;
-        __global_clib2->wide_status->_mbsrtowcs_state.__count = 0;
-        __global_clib2->wide_status->_mbsrtowcs_state.__value.__wch = 0;
-        __global_clib2->wide_status->_wcrtomb_state.__count = 0;
-        __global_clib2->wide_status->_wcrtomb_state.__value.__wch = 0;
-        __global_clib2->wide_status->_wcsrtombs_state.__count = 0;
-        __global_clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
-        __global_clib2->wide_status->_l64a_buf[0] = '\0';
-        __global_clib2->wide_status->_getdate_err = 0;
+        __clib2->wide_status->_strtok_last = NULL;
+        __clib2->wide_status->_mblen_state.__count = 0;
+        __clib2->wide_status->_mblen_state.__value.__wch = 0;
+        __clib2->wide_status->_wctomb_state.__count = 0;
+        __clib2->wide_status->_wctomb_state.__value.__wch = 0;
+        __clib2->wide_status->_mbtowc_state.__count = 0;
+        __clib2->wide_status->_mbtowc_state.__value.__wch = 0;
+        __clib2->wide_status->_mbrlen_state.__count = 0;
+        __clib2->wide_status->_mbrlen_state.__value.__wch = 0;
+        __clib2->wide_status->_mbrtowc_state.__count = 0;
+        __clib2->wide_status->_mbrtowc_state.__value.__wch = 0;
+        __clib2->wide_status->_mbsrtowcs_state.__count = 0;
+        __clib2->wide_status->_mbsrtowcs_state.__value.__wch = 0;
+        __clib2->wide_status->_wcrtomb_state.__count = 0;
+        __clib2->wide_status->_wcrtomb_state.__value.__wch = 0;
+        __clib2->wide_status->_wcsrtombs_state.__count = 0;
+        __clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
+        __clib2->wide_status->_l64a_buf[0] = '\0';
+        __clib2->wide_status->_getdate_err = 0;
         /* Set locale stuff */
-        __global_clib2->_current_category = LC_ALL;
-        __global_clib2->_current_locale = "C-UTF-8";
-        __global_clib2->__mb_cur_max = 1;
+        __clib2->_current_category = LC_ALL;
+        __clib2->_current_locale = "C-UTF-8";
+        __clib2->__mb_cur_max = 1;
 
         /* Check is SYSV library is available in the system */
-        __global_clib2->haveShm = FALSE;
+        __clib2->haveShm = FALSE;
         __SysVBase = OpenLibrary("sysvipc.library", 53);
         if (__SysVBase != NULL) {
             __ISysVIPC = (struct SYSVIFace *) GetInterface(__SysVBase, "main", 1, NULL);
             if (__ISysVIPC != NULL) {
-                __global_clib2->haveShm = TRUE;
+                __clib2->haveShm = TRUE;
             } else {
                 CloseLibrary(__SysVBase);
                 __SysVBase = NULL;
@@ -162,19 +162,9 @@ reent_init() {
         }
 
         /* Clear itimer start time */
-        __global_clib2->tmr_start_time.tv_sec = 0;
-        __global_clib2->tmr_start_time.tv_usec = 0;
-        __global_clib2->tmr_real_task = NULL;
-
-         /* Get cpu family used to choose functions at runtime */
-        GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);
-
-        /* Check if altivec is present */
-#ifdef ENABLE_ALTIVEC_AT_START
-        GetCPUInfoTags(GCIT_VectorUnit, &__global_clib2->hasAltivec);
-#else
-        __global_clib2->hasAltivec = 0;
-#endif
+        __clib2->tmr_start_time.tv_sec = 0;
+        __clib2->tmr_start_time.tv_usec = 0;
+        __clib2->tmr_real_task = NULL;
     }
     success = TRUE;
 
@@ -182,15 +172,15 @@ out:
 
     if (!success) {
         /* Clean wide status memory */
-        if (__global_clib2->wide_status) {
-            FreeVec(__global_clib2->wide_status);
-            __global_clib2->wide_status = NULL;
+        if (__clib2->wide_status) {
+            FreeVec(__clib2->wide_status);
+            __clib2->wide_status = NULL;
         }
 
         /* Free library */
-        if (__global_clib2) {
-            FreeVec(__global_clib2);
-            __global_clib2 = NULL;
+        if (__clib2) {
+            FreeVec(__clib2);
+            __clib2 = NULL;
         }
 
         if (__IElf != NULL) {
@@ -212,14 +202,14 @@ reent_exit() {
     struct ElfIFace *IElf = __IElf;
 
     /* Free global clib structure */
-    if (__global_clib2) {
+    if (__clib2) {
         /* Free wchar stuff */
-        if (__global_clib2->wide_status != NULL) {
-            FreeVec(__global_clib2->wide_status);
-            __global_clib2->wide_status = NULL;
+        if (__clib2->wide_status != NULL) {
+            FreeVec(__clib2->wide_status);
+            __clib2->wide_status = NULL;
         }
         /* Remove random semaphore */
-        __delete_semaphore(__global_clib2->__random_lock);
+        __delete_semaphore(__clib2->__random_lock);
 
         if (__ISysVIPC != NULL) {
             DropInterface((struct Interface *) __ISysVIPC);
@@ -231,19 +221,19 @@ reent_exit() {
             __SysVBase = NULL;
         }
 
-        FreeVec(__global_clib2);
-        __global_clib2 = NULL;
+        FreeVec(__clib2);
+        __clib2 = NULL;
     }
 
     LEAVE();
 }
 
 void enableUnixPaths(void) {
-    __unix_path_semantics = TRUE;
+    __CLIB2->__unix_path_semantics = TRUE;
 }
 
 void disableUnixPaths(void) {
-    __unix_path_semantics = FALSE;
+    __CLIB2->__unix_path_semantics = FALSE;
 }
 
 void enableAltivec(void) {
@@ -251,24 +241,24 @@ void enableAltivec(void) {
     /* Check if altivec is present otherwise we can't enable it */
     GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec);
     if (hasAltivec)
-        __global_clib2->hasAltivec = 1;
+        __GCLIB2->hasAltivec = 1;
     else
-        __global_clib2->hasAltivec = 0;
+        __GCLIB2->hasAltivec = 0;
 }
 
 void disableAltivec(void) {
-    __global_clib2->hasAltivec = 0;
+    __GCLIB2->hasAltivec = 0;
 }
 
 void enableOptimizedFunctions(void) {
-    __optimizedCPUFunctions = TRUE;
+    __CLIB2->__optimizedCPUFunctions = TRUE;
 };
 
 void disableOptimizedFunctions(void) {
-    __optimizedCPUFunctions = FALSE;
+    __CLIB2->__optimizedCPUFunctions = FALSE;
 };
 
 int *__mb_cur_max(void) {
-    return &__global_clib2->__mb_cur_max;
+    return &__clib2->__mb_cur_max;
 }
 

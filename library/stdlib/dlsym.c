@@ -19,16 +19,14 @@ dlsym(void *handle, const char *symbol_name)
     SHOWPOINTER(handle);
     SHOWSTRING(symbol_name);
 
-    if (__getclib2()->__dl_elf_handle != NULL)
-	{
-		struct ElfIFace *IElf = __getclib2()->IElf;
+    if (__CLIB2->__dl_elf_handle != NULL)  {
+		struct ElfIFace *IElf = __CLIB2->IElf;
 		APTR symbol_data = NULL;
 		Elf32_Error error;
 
-		error = DLSym(__getclib2()->__dl_elf_handle, handle, symbol_name, &symbol_data);
-		if (error != ELF32_NO_ERROR)
-		{
-            __getclib2()->__elf_error_code = error;
+		error = DLSym(__CLIB2->__dl_elf_handle, handle, symbol_name, &symbol_data);
+		if (error != ELF32_NO_ERROR) {
+            __CLIB2->__elf_error_code = error;
 			goto out;
 		}
 		result = symbol_data;

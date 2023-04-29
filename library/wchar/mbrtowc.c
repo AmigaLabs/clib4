@@ -13,7 +13,7 @@ mbrtowc(wchar_t *pwc, const char *src, size_t n, mbstate_t *ps) {
     ENTER();
 
     if (ps == NULL) {
-        ps = &__getclib2()->wide_status->_mbrtowc_state;
+        ps = &__CLIB2->wide_status->_mbrtowc_state;
     }
 
     if (src == NULL) {

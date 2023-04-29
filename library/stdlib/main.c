@@ -49,9 +49,7 @@ static void shared_obj_exit(void);
 
 /* This will be set to TRUE in case a stack overflow was detected. */
 BOOL __stack_overflow;
-extern struct _clib2 *__global_clib2;
-
-uint32 __optimizedCPUFunctions;
+struct _clib2 *__clib2;
 
 struct Library *__ElfBase;
 struct ElfIFace *__IElf;
@@ -213,14 +211,14 @@ call_main(
     /* Set system time for rusage.
      * This can be executed only here.
      * Not in reent_init not in TIMER constructor because
-     * __ITimer or __global_clib2 cannot be yet available
+     * __ITimer or __clib2 cannot be yet available
      */
     struct TimerIFace *ITimer = __ITimer;
     if (__ITimer != NULL) {
         SHOWMSG("Calling GetSysTime");
-        GetSysTime(&__getclib2()->clock);
+        GetSysTime(&__CLIB2->clock);
         /* Generate random seed */
-        __getclib2()->__random_seed = time(NULL);
+        __CLIB2->__random_seed = time(NULL);
     }
 
     /*
@@ -240,13 +238,13 @@ call_main(
             if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
                 if (handle != NULL) {
                     SHOWMSG("Calling OpenElfTags");
-                    __global_clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
+                    __CLIB2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
                 }
             }
         }
     }
 
-    SHOWPOINTER(__global_clib2->__dl_elf_handle);
+    SHOWPOINTER(__CLIB2->__dl_elf_handle);
 
     /* Init memalign list */
     __memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
@@ -267,11 +265,11 @@ call_main(
     /* Check if .unix file exists in the current dir. If the file exists enable
      * unix path semantics
      */
-    __unix_path_semantics = FALSE;
+    __CLIB2->__unix_path_semantics = FALSE;
     struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
     if (exd != NULL) {
         if (EXD_IS_FILE(exd))
-            __unix_path_semantics = TRUE;
+            __CLIB2->__unix_path_semantics = TRUE;
         FreeDosObject(DOS_EXAMINEDATA, exd);
     }
 
@@ -357,13 +355,13 @@ out:
     SHOWMSG("Called setjmp(__exit_jmp_buf)");
 
     /* Free dl stuff */
-    if (__IElf != NULL && __global_clib2->__dl_elf_handle != NULL) {
+    if (__IElf != NULL && __CLIB2->__dl_elf_handle != NULL) {
         SHOWMSG("Closing elf handle");
-        CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
-        __global_clib2->__dl_elf_handle = NULL;
+        CloseElfTags(__CLIB2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
+        __CLIB2->__dl_elf_handle = NULL;
     }
     else {
-        SHOWMSG("Cannot close elf handle: __IElf == NULL || __global_clib2->__dl_elf_handle == NULL");
+        SHOWMSG("Cannot close elf handle: __IElf == NULL || __CLIB2->__dl_elf_handle == NULL");
     }
 
     /* Free memalign stuff */

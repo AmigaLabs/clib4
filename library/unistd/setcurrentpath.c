@@ -24,7 +24,7 @@ __set_current_path(const char *path_name) {
     }
 
     /* Only store the path if it's absolute. */
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (path_name[0] == '/')
             strcpy(__current_path_name, path_name);
         else

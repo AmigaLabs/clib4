@@ -49,16 +49,13 @@ strrchr(const char *s, int c)
 
 	assert(s != NULL);
 
-	if (us == NULL)
-	{
+	if (us == NULL) {
 		__set_errno(EFAULT);
 		goto out;
 	}
 
-	if (__optimizedCPUFunctions)
-	{
-		switch (__getclib2()->cpufamily)
-		{
+	if (__CLIB2->__optimizedCPUFunctions) {
+		switch (__GCLIB2->cpufamily) {
 			case CPUFAMILY_4XX:
 				result = __strrchr440(s, c);
 				break;

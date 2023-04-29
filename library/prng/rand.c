@@ -8,7 +8,7 @@
 
 int
 rand(void) {
-    __getclib2()->__random_seed = 6364136223846793005ULL * __getclib2()->__random_seed + 1;
+    __CLIB2->__random_seed = 6364136223846793005ULL * __CLIB2->__random_seed + 1;
 
-    return (__getclib2()->__random_seed >> 33);
+    return (__CLIB2->__random_seed >> 33);
 }

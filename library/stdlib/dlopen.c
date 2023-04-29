@@ -24,7 +24,7 @@ dlopen(const char *path_name, int mode) {
     }
 
     struct name_translation_info path_name_nti;
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
             goto out;
 
@@ -33,11 +33,10 @@ dlopen(const char *path_name, int mode) {
             goto out;
         }
     }
-    SHOWPOINTER(__getclib2());
-    SHOWPOINTER(__getclib2()->__dl_elf_handle);
+    SHOWPOINTER(__CLIB2->__dl_elf_handle);
 
-    if (__getclib2()->__dl_elf_handle != NULL) {
-        struct ElfIFace *IElf = __getclib2()->IElf;
+    if (__CLIB2->__dl_elf_handle != NULL) {
+        struct ElfIFace *IElf = __CLIB2->IElf;
         SHOWPOINTER(IElf);
         uint32 flags = 0;
 
@@ -47,7 +46,7 @@ dlopen(const char *path_name, int mode) {
         if (mode & RTLD_GLOBAL)
             flags = ELF32_RTLD_GLOBAL;
 
-        result = DLOpen(__getclib2()->__dl_elf_handle, path_name, flags);
+        result = DLOpen(__CLIB2->__dl_elf_handle, path_name, flags);
     } else {
         __set_errno(ENOSYS);
     }

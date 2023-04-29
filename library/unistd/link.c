@@ -30,7 +30,7 @@ link(const char *existing_path, const char *new_path) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (existing_path[0] == '\0' || new_path[0] == '\0') {
             SHOWMSG("no name given");
 

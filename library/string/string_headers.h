@@ -35,8 +35,6 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
-extern uint32 __optimizedCPUFunctions;
-
 /* Address is neither aligned to a word or long word boundary. */
 #define IS_UNALIGNED(a) ((((unsigned long)(a)) & 1) != 0)
 

@@ -9,7 +9,7 @@
 size_t
 mbrlen(const char *restrict s, size_t n, mbstate_t *restrict ps) {
     if (ps == NULL) {
-        ps = &__getclib2()->wide_status->_mbrlen_state;
+        ps = &__CLIB2->wide_status->_mbrlen_state;
     }
 
     return mbrtowc(NULL, s, n, ps);

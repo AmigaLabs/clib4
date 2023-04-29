@@ -48,8 +48,8 @@ strcmp(const char *s1, const char *s2) {
         goto out;
     }
 
-    if (__optimizedCPUFunctions) {
-        switch (__getclib2()->cpufamily) {
+    if (__CLIB2->__optimizedCPUFunctions) {
+        switch (__GCLIB2->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strcmp440(s1, s2);
                 break;

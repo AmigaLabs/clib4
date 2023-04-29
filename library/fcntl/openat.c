@@ -28,7 +28,7 @@ openat(int fd, const char *filename, int flags, ...) {
     }
 
     /* Check for relative path */
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (filename[0] == '/')
             absolute = TRUE;
 

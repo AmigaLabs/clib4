@@ -84,18 +84,6 @@ extern void __check_abort(void);
  */
 extern ULONG __break_signal_mask;
 
-
-/*
- * If set, Unix path names are translated to Amiga path
- * names (and the other way round). If you wish to disable this, set the
- * following variable to FALSE. Only the path name translation is affected
- * by setting this variable to FALSE. You will always get Unix-like behaviour
- * from certain functions regardless of whether the path names are translated
- * or not.
- */
-
-extern BOOL __unix_path_semantics;
-
 /*
  * Obtain the low level 'file' handle or socket ID bound to a file
  * descriptor. This function returns 0 for success and non-zero
@@ -129,23 +117,6 @@ extern BOOL __check_daemon_startup;
  */
 extern BOOL __is_daemon;
 
-/****************************************************************************/
-
-/*
- * If the library is built with memory debugging features enabled,
- * the following variable controls whether memory allocated, to be
- * released, will actually get released. If set to TRUE all memory
- * allocations will persist until the program exits.
- */
-extern BOOL __never_free;
-
-/*
- * The following function will reset the counters for "maximum amount
- * of memory used" and "maximum number of chunks used" to the figures
- * for the current memory usage.
- */
-extern void __reset_max_mem_stats(void);
-
 /*
  * The following section lists variables and function pointers which are used
  * by the startup code right after the program is launched. These variables are
@@ -155,13 +126,9 @@ extern void __reset_max_mem_stats(void);
  */
 
 /*
- * The minimum required operating system version number is 37, which
- * corresponds to Workbench/Kickstart 2.04. You may request a higher
- * version number by defining the following variable; if you do so,
- * please provide a fitting error message, too. Note that you cannot
- * request a minimum version number lower than 37.
+ * The minimum required operating system version number is 52, which
+ * corresponds to Workbench/Kickstart 4.1.
  */
-extern int __minimum_os_lib_version;
 extern char *__minimum_os_lib_error;
 
 /*
@@ -441,8 +408,7 @@ extern BOOL __unlink_retries;
 /*
  * wide char status structure
  */
-struct _wchar
-{
+struct _wchar {
 	/* miscellaneous reentrant data */
 	char *_strtok_last;
 	_mbstate_t _mblen_state;
@@ -458,11 +424,22 @@ struct _wchar
 };
 
 /*
- * Initial _clib2 structure. This shoulr be replaced with a _reent structure 
+ * Initial _clib2 structure. This should be replaced with a _reent structure
  * and populated with all its fields. At moment it holds just global fields
  */
 
 extern struct _clib2 *__getclib2(void);
+extern struct _global_clib2 *__getGlobalClib2(void);
+
+struct _global_clib2 {
+
+    /* CPU Family to enable optimized functions */
+    uint32 cpufamily;
+    uint32 hasAltivec;
+
+    /* Global shared version library _errno */
+    int _errno;
+};
 
 struct _clib2 {
 	struct ExecIFace *IExec; 	/* Main IExec interface */
@@ -470,7 +447,20 @@ struct _clib2 {
 	struct TimeVal clock; 		/* Populated when clib starts with current time */
 	struct rusage ru;			/* rusage struct used in rlimit function */
 	struct _wchar *wide_status;	/* wide char functions status */
-	
+
+    /*
+     * If set, Unix path names are translated to Amiga path
+     * names (and the other way round). If you wish to disable this, set the
+     * following variable to FALSE. Only the path name translation is affected
+     * by setting this variable to FALSE. You will always get Unix-like behaviour
+     * from certain functions regardless of whether the path names are translated
+     * or not.
+     */
+
+    BOOL __unix_path_semantics;
+
+    BOOL __optimizedCPUFunctions;
+
 	/* 
 	 * Check if SYSV library is available in the system. Otherwise the functions
 	 * will return ENOSYS
@@ -493,10 +483,6 @@ struct _clib2 {
 	/* used by tmpnam */
 	int inc;
 
-	/* CPU Family to enable optimized functions */
-	uint32 cpufamily;
-    uint32 hasAltivec;
-
     /* Used by initstate/setstate */
     struct SignalSemaphore *__random_lock;
     int n;
@@ -516,9 +502,11 @@ struct _clib2 {
     int _errno;
 };
 
-extern struct _clib2 *__global_clib2;
+extern struct _clib2 *__clib2;
+extern struct _global_clib2 *__global_clib2;
 
-# define _GCLIB2 (__getclib2())
+#define __CLIB2 (__getclib2())
+#define __GCLIB2 (__getGlobalClib2())
 
 __END_DECLS
 

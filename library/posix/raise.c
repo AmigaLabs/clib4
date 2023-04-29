@@ -108,14 +108,14 @@ raise(int sig) {
 
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                     /* Check ig we have timer terminal running. If so let's kill it */
-                    if (__getclib2()->tmr_real_task != NULL) {
+                    if (__CLIB2->tmr_real_task != NULL) {
                         struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
                         int32 pid, process;
 
                         /* Block SIGALRM signal from raise */
                         sigblock(SIGALRM);
                         /* Get itimer process ID */
-                        pid = __getclib2()->tmr_real_task->pr_ProcessID;
+                        pid = __CLIB2->tmr_real_task->pr_ProcessID;
 
                         Forbid();
                         /* Scan for process */
@@ -124,13 +124,13 @@ raise(int sig) {
                         while (process > 0) {
                             /* Send a SIGBREAKF_CTRL_F signal until the timer task return to Wait state
                              * and can get the signal */
-                            Signal((struct Task *) __getclib2()->tmr_real_task, SIGBREAKF_CTRL_F);
+                            Signal((struct Task *) __CLIB2->tmr_real_task, SIGBREAKF_CTRL_F);
                             process = ProcessScan(&h, (CONST_APTR) pid, 0);
                             usleep(100);
                         }
                         Permit();
                         WaitForChildExit(pid);
-                        __getclib2()->tmr_real_task = NULL;
+                        __CLIB2->tmr_real_task = NULL;
                     }
 
                     char break_string[80];
@@ -158,7 +158,7 @@ raise(int sig) {
                     sigblock(SIGALRM);
 
                     /* Since we got a signal we interrrupt every sleep function like nanosleep */
-                    Signal((struct Task *) __getclib2()->self, SIGBREAKF_CTRL_E);
+                    Signal((struct Task *) __CLIB2->self, SIGBREAKF_CTRL_E);
                 }
             }
             else if (handler == SIG_ERR) {

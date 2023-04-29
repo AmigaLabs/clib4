@@ -41,7 +41,7 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
         }
     }
 
-    if (__unix_path_semantics)
+    if (__CLIB2->__unix_path_semantics)
         tty_file_name = "/CONSOLE";
     else
         tty_file_name = "CONSOLE:";

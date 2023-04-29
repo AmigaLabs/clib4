@@ -42,7 +42,7 @@ system(const char *command) {
 
         struct name_translation_info command_nti;
 
-        if (__unix_path_semantics) {
+        if (__CLIB2->__unix_path_semantics) {
             char just_the_command_name[MAXPATHLEN + 1];
             BOOL need_quotes = FALSE;
             char *command_name;

@@ -35,7 +35,7 @@ _exit(int return_code) {
     SHOWVALUE(return_code);
 
     struct Task *task = FindTask(NULL);
-    if (&__getclib2()->self->pr_Task != task) {
+    if (&__CLIB2->self->pr_Task != task) {
         SHOWMSG("NOT IN MAIN TASK");
         /* We are NOT in main task. Don't call exit here because
          * we'll have pending processes. Try to send a CTRL_C
@@ -47,27 +47,27 @@ _exit(int return_code) {
     else {
         SHOWMSG("IN MAIN TASK");
         /*  If we have a previous timer running task stop it before raise SIGINT  */
-        if (__getclib2()->tmr_real_task) {
+        if (__CLIB2->tmr_real_task) {
             struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
             int32 pid, process;
 
             /* Block SIGALRM signal from raise */
             sigblock(SIGALRM);
             /* Get itimer process ID */
-            pid = __getclib2()->tmr_real_task->pr_ProcessID;
+            pid = __CLIB2->tmr_real_task->pr_ProcessID;
 
             Forbid();
             /* Scan for process */
             process = ProcessScan(&h, (CONST_APTR) pid, 0);
             while (process > 0) {
                 /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
-                Signal((struct Task *) __getclib2()->tmr_real_task, SIGBREAKF_CTRL_F);
+                Signal((struct Task *) __CLIB2->tmr_real_task, SIGBREAKF_CTRL_F);
                 process = ProcessScan(&h, (CONST_APTR) pid, 0);
                 usleep(100);
             }
             Permit();
             WaitForChildExit(pid);
-            __getclib2()->tmr_real_task = NULL;
+            __CLIB2->tmr_real_task = NULL;
         }
 
         /* Dump all currently unwritten data, especially to the console. */

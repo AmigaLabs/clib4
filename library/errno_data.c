@@ -10,5 +10,5 @@
 
 int *
 __errno () {
-    return &__global_clib2->_errno;
+    return &__CLIB2->_errno;
 }

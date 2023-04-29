@@ -11,7 +11,7 @@
 wint_t
 btowc(int c) {
 
-    mbstate_t *mbs = &__getclib2()->wide_status->_mbtowc_state;
+    mbstate_t *mbs = &__CLIB2->wide_status->_mbtowc_state;
     int retval = 0;
     wchar_t pwc;
     char b;

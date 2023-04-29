@@ -33,7 +33,7 @@ unlink(const char *path_name) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -54,7 +54,7 @@ unlink(const char *path_name) {
 
     status = DeleteFile((STRPTR) path_name);
     if (status == DOSFALSE) {
-        if (__unix_path_semantics) {
+        if (__CLIB2->__unix_path_semantics) {
             struct UnlinkNode *uln = NULL;
             struct UnlinkNode *node;
             BOOL found = FALSE;

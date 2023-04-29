@@ -32,7 +32,7 @@ getrusage(int who, struct rusage *rusage) {
     int status = 0;
     struct TimerIFace *ITimer = __ITimer;
 
-    if (__getclib2() == NULL) {
+    if (__CLIB2 == NULL) {
         __set_errno(EINVAL);
         RETURN(-1);
         return -1;
@@ -41,21 +41,21 @@ getrusage(int who, struct rusage *rusage) {
     switch (who) {
         case RUSAGE_SELF: {
                 GetSysTime((struct TimeVal *) clock);
-                clock[0] -= __getclib2()->clock.Seconds;
-                clock[1] -= __getclib2()->clock.Microseconds;
+                clock[0] -= __CLIB2->clock.Seconds;
+                clock[1] -= __CLIB2->clock.Microseconds;
                 if (clock[1] < 0) {
                     clock[1] += 1000000;
                     clock[0]--;
                 }
 
-                memcpy(rusage, &__getclib2()->ru, sizeof(struct rusage));
+                memcpy(rusage, &__CLIB2->ru, sizeof(struct rusage));
                 rusage->ru_utime.tv_sec = clock[0];
                 rusage->ru_utime.tv_usec = clock[1];
             }
             break;
 
         case RUSAGE_CHILDREN:
-            memcpy(rusage, &__getclib2()->ru, sizeof(struct rusage));
+            memcpy(rusage, &__CLIB2->ru, sizeof(struct rusage));
             break;
 
         default:

@@ -65,8 +65,8 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
         case CLOCK_MONOTONIC: {
             struct timeval tv;
             TIMESPEC_TO_TIMEVAL(&tv, t);
-            __getclib2()->clock.Seconds = tv.tv_sec;
-            __getclib2()->clock.Microseconds = tv.tv_usec;
+            __CLIB2->clock.Seconds = tv.tv_sec;
+            __CLIB2->clock.Microseconds = tv.tv_usec;
         }
             break;
 

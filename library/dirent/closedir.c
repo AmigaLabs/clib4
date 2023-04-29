@@ -109,7 +109,7 @@ closedir(DIR *directory_pointer) {
 
     Remove((struct Node *) dh);
 
-    if (__unix_path_semantics) {
+    if (__CLIB2->__unix_path_semantics) {
         struct Node *node;
 
         while ((node = RemHead((struct List *) &dh->dh_VolumeList)) != NULL)

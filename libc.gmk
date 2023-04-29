@@ -520,7 +520,6 @@ C_STDLIB := \
 	stdlib/mktemp.o \
 	stdlib/modsi3.o \
 	stdlib/mulsi3.o \
-	stdlib/never_free.o \
 	stdlib/osliberror.o \
 	stdlib/posix_memalign.o \
 	stdlib/priority.o \
@@ -530,7 +529,6 @@ C_STDLIB := \
 	stdlib/qsort.o \
 	stdlib/qsort_r.o \
 	stdlib/realloc.o \
-	stdlib/resetmemstats.o \
 	stdlib/secure_getenv.o \
 	stdlib/semaphore.o \
 	stdlib/setenv.o \
