@@ -7,7 +7,7 @@ extern struct _clib2 *__clib2;
 extern struct _global_clib2 *__global_clib2;
 
 struct _clib2 *
-__getclib2(void) {
+__getClib2(void) {
     struct _clib2 *r = NULL;
     struct Task *t = FindTask(NULL);
 

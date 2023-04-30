@@ -14,9 +14,9 @@ sigsetmask(int signal_mask)  {
 
 	SHOWVALUE(signal_mask);
 
-	result = __signals_blocked;
+	result = __CLIB2->__signals_blocked;
 
-	__signals_blocked = signal_mask;
+    __CLIB2->__signals_blocked = signal_mask;
 
 	RETURN(result);
 	return(result);

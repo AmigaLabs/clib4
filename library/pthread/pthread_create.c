@@ -159,6 +159,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     name[sizeof(name) - 1] = '\0';
     strncpy(inf->name, name, NAMELEN);
 
+    struct DOSIFace *IDOS = _IDOS;
     BPTR fileIn  = Open("CONSOLE:", MODE_OLDFILE);
     BPTR fileOut = Open("CONSOLE:", MODE_OLDFILE);
 

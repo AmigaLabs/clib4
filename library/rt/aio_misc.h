@@ -22,6 +22,12 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include "clist.h"
+
+/* Used by aio functions */
+extern struct SignalSemaphore *__aio_lock;
+extern CList *aio_threads;
+
 typedef struct AioThread {
     struct MinNode node;
     struct Task *thread;

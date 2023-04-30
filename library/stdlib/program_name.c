@@ -15,14 +15,13 @@
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
 static BOOL free_program_name;
-char *__program_name;
 
 STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 	ENTER();
 
-	if (free_program_name && __program_name != NULL) {
-		FreeVec(__program_name);
-		__program_name = NULL;
+	if (free_program_name && __CLIB2->__progname != NULL) {
+		FreeVec(__CLIB2->__progname);
+        __CLIB2->__progname = NULL;
 	}
 
 	LEAVE();
@@ -37,17 +36,17 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
 		const size_t program_name_size = 256;
 
 		/* Make a copy of the current command name string. */
-		__program_name = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_SHARED, TAG_DONE);
-		if (__program_name == NULL)
+        __CLIB2->__progname = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_SHARED, TAG_DONE);
+		if (__CLIB2->__progname == NULL)
 			goto out;
 
 		free_program_name = TRUE;
 
-		if (CANNOT GetCliProgramName(__program_name, program_name_size))
+		if (CANNOT GetCliProgramName(__CLIB2->__progname, program_name_size))
 			goto out;
 	}
 	else {
-		__program_name = (char *)__WBenchMsg->sm_ArgList[0].wa_Name;
+        __CLIB2->__progname = (char *)__WBenchMsg->sm_ArgList[0].wa_Name;
 	}
 
 	success = TRUE;
@@ -61,4 +60,9 @@ out:
 		CONSTRUCTOR_SUCCEED();
 	else
 		CONSTRUCTOR_FAIL();
+}
+
+
+const char *__getprogname(void) {
+    return __CLIB2->__progname;
 }

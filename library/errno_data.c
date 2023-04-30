@@ -12,3 +12,8 @@ int *
 __errno () {
     return &__CLIB2->_errno;
 }
+
+int *
+__h_errno () {
+    return &__CLIB2->_h_errno;
+}

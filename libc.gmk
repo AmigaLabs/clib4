@@ -746,8 +746,6 @@ C_UNISTD := \
 	unistd/getdomainname.o \
 	unistd/getlogin.o \
 	unistd/getlogin_r.o \
-	unistd/getopt.o \
-	unistd/getopt_long.o \
 	unistd/getpagesize.o \
 	unistd/getpid.o \
 	unistd/getppid.o \
@@ -968,7 +966,10 @@ C_LIBRARY := \
 
 C_LIB := \
 	c.lib_rev.o \
-	shared_library/stubs.o
+	shared_library/stubs.o \
+	ctype/table.o \
+	unistd/getopt.o \
+	unistd/getopt_long.o
 
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(C_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))

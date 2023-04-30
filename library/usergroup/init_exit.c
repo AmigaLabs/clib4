@@ -76,7 +76,7 @@ CLIB_CONSTRUCTOR(usergroup_init)
 
 	tags[1].ti_Tag = TAG_END;
 
-	if (__ug_SetupContextTagList(__program_name, tags) != 0)
+	if (__ug_SetupContextTagList(__CLIB2->__progname, tags) != 0)
 	{
 		SHOWMSG("could not initialize usergroup.library");
 

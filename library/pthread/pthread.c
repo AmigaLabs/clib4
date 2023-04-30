@@ -52,6 +52,9 @@ struct SignalSemaphore thread_sem;
 TLSKey tlskeys[PTHREAD_KEYS_MAX];
 struct SignalSemaphore tls_sem;
 
+struct Library *_DOSBase = NULL;
+struct DOSIFace *_IDOS = NULL;
+
 //
 // Private common functions
 //
@@ -286,19 +289,36 @@ void __pthread_exit_func(void) {
 }
 
 CLIB_CONSTRUCTOR(__pthread_init) {
-    ENTER();
+    int result = OK;
+    _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
+    if (_DOSBase) {
+        _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);
+        if (!_IDOS) {
+            CloseLibrary(_DOSBase);
+            _DOSBase = NULL;
+            result = ERROR;
+        }
+    }
+    else {
+        result = ERROR;
+    }
 
-    __pthread_init_func();
-
-    LEAVE();
-
-    //return !__pthread_init_func();
+    if (result == OK) {
+        __pthread_init_func();
+    }
 }
 
 CLIB_DESTRUCTOR(__pthread_exit) {
-    ENTER();
+
+    if (_DOSBase != NULL) {
+        CloseLibrary(_DOSBase);
+        _DOSBase = NULL;
+    }
+
+    if (_IDOS != NULL) {
+        DropInterface((struct Interface *) _IDOS);
+        _IDOS = NULL;
+    }
 
     __pthread_exit_func();
-
-    LEAVE();
 }

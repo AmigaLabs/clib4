@@ -92,7 +92,7 @@ struct Clib2IFace {
 
     /* internal */
     int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //80
-    void (* __getclib2)(void);                                      //84
+    void (* __getClib2)(void);                                      //84
     void (* __translate_amiga_to_unix_path_name)(void);             //88
     void (* __translate_unix_to_amiga_path_name)(void);             //92
     void (* __restore_path_name)(void);                             //96
@@ -246,328 +246,326 @@ struct Clib2IFace {
 
     /* errno.h */
     int * (* __errno) (void);                                                                                                                        /* 612 */
+    int * (* __h_errno) (void);                                                                                                                      /* 616 */
 
     /* fcntl.h */
-    int (* open) (const char *path_name, int open_flag, ... /* mode_t mode */ );                                                                     /* 616 */
-    int (* openat) (int fd, const char *filename, int flags, ...);                                                                                   /* 620 */
-    int (* creat) (const char * path_name, mode_t mode);                                                                                             /* 624 */
-    int (* close) (int file_descriptor);                                                                                                             /* 628 */
-    ssize_t (* read) (int file_descriptor, void * buffer, size_t num_bytes);                                                                         /* 632 */
-    ssize_t (* write) (int file_descriptor, const void * buffer, size_t num_bytes);                                                                  /* 636 */
-    int (* fcntl) (int file_descriptor, int cmd, ... /* int arg */ );                                                                                /* 640 */
+    int (* open) (const char *path_name, int open_flag, ... /* mode_t mode */ );                                                                     /* 620 */
+    int (* openat) (int fd, const char *filename, int flags, ...);                                                                                   /* 624 */
+    int (* creat) (const char * path_name, mode_t mode);                                                                                             /* 628 */
+    int (* close) (int file_descriptor);                                                                                                             /* 632 */
+    ssize_t (* read) (int file_descriptor, void * buffer, size_t num_bytes);                                                                         /* 636 */
+    ssize_t (* write) (int file_descriptor, const void * buffer, size_t num_bytes);                                                                  /* 640 */
+    int (* fcntl) (int file_descriptor, int cmd, ... /* int arg */ );                                                                                /* 644 */
 
     /* fnmatch.h */
-    int (* fnmatch) (const char *pattern, const char *string, int flags);                                                                            /* 644 */
+    int (* fnmatch) (const char *pattern, const char *string, int flags);                                                                            /* 648 */
 
     /* ftw.h */
-    int (* ftw) (const char *path,int (*func)(const char *,const struct stat *,int),int depth);                                                      /* 648 */
-    int (* nftw) (const char *path,int (*func)(const char *,const struct stat *,int,struct FTW *),int depth,int flags);                              /* 652 */
-
-    /* getopt.h */
-    int (* getopt_long) (int argc, char* const *argv, const char *optstring, const struct option *longopts, int *longindex);                         /* 656 */
-    int (* getopt_long_only) (int argc, char* const *argv, const char *optstring, const struct option *longopts, int *longindex);                    /* 660 */
+    int (* ftw) (const char *path,int (*func)(const char *,const struct stat *,int),int depth);                                                      /* 652 */
+    int (* nftw) (const char *path,int (*func)(const char *,const struct stat *,int,struct FTW *),int depth,int flags);                              /* 656 */
 
     /* glob.h */
-    int (* glob) (const char *pattern, int flags, int (*errfunc) (const char *epath, int eerrno), glob_t *pglob);                                    /* 664 */
-    void (* globfree) (glob_t *pglob);                                                                                                               /* 668 */
+    int (* glob) (const char *pattern, int flags, int (*errfunc) (const char *epath, int eerrno), glob_t *pglob);                                    /* 660 */
+    void (* globfree) (glob_t *pglob);                                                                                                               /* 664 */
 
     /* grp.h */
-    void (* endgrent) (void);                                                                                                                        /* 672 */
-    struct group * (* getgrent) (void);                                                                                                              /* 676 */
-    struct group * (* getgrgid) (gid_t gid);                                                                                                         /* 680 */
-    struct group * (* getgrnam) (const char *name);                                                                                                  /* 684 */
-    void (* setgrent) (void);                                                                                                                        /* 688 */
+    void (* endgrent) (void);                                                                                                                        /* 668 */
+    struct group * (* getgrent) (void);                                                                                                              /* 672 */
+    struct group * (* getgrgid) (gid_t gid);                                                                                                         /* 676 */
+    struct group * (* getgrnam) (const char *name);                                                                                                  /* 680 */
+    void (* setgrent) (void);                                                                                                                        /* 684 */
 
     /* iconv.h */
-    iconv_t (* iconv_open) (const char *to, const char *from);                                                                                       /* 692 */
-    size_t (* iconv) (iconv_t cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);                                           /* 696 */
-    int (* iconv_close) (iconv_t cd);                                                                                                                /* 700 */
+    iconv_t (* iconv_open) (const char *to, const char *from);                                                                                       /* 688 */
+    size_t (* iconv) (iconv_t cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft);                                           /* 692 */
+    int (* iconv_close) (iconv_t cd);                                                                                                                /* 696 */
 
     /* ifaddrs.h */
-    int (* getifaddrs) (struct ifaddrs **ifap);                                                                                                      /* 704 */
-    void (* freeifaddrs) (struct ifaddrs *ifa);                                                                                                      /* 708 */
+    int (* getifaddrs) (struct ifaddrs **ifap);                                                                                                      /* 700 */
+    void (* freeifaddrs) (struct ifaddrs *ifa);                                                                                                      /* 704 */
 
     /* inttypes.h */
-    intmax_t (* imaxabs) (intmax_t x);                                                                                                               /* 712 */
-    imaxdiv_t (* imaxdiv) (intmax_t n,intmax_t d);                                                                                                   /* 716 */
-    intmax_t (* strtoimax) (const char *str, char **ptr, int base);                                                                                  /* 720 */
-    uintmax_t (* strtoumax) (const char *str, char **ptr, int base);                                                                                 /* 724 */
-    intmax_t (* wcstoimax) (const wchar_t *str, wchar_t **ptr, int base);                                                                            /* 728 */
-    uintmax_t (* wcstoumax) (const wchar_t *str, wchar_t **ptr, int base);                                                                           /* 732 */
+    intmax_t (* imaxabs) (intmax_t x);                                                                                                               /* 708 */
+    imaxdiv_t (* imaxdiv) (intmax_t n,intmax_t d);                                                                                                   /* 712 */
+    intmax_t (* strtoimax) (const char *str, char **ptr, int base);                                                                                  /* 716 */
+    uintmax_t (* strtoumax) (const char *str, char **ptr, int base);                                                                                 /* 720 */
+    intmax_t (* wcstoimax) (const wchar_t *str, wchar_t **ptr, int base);                                                                            /* 724 */
+    uintmax_t (* wcstoumax) (const wchar_t *str, wchar_t **ptr, int base);                                                                           /* 728 */
 
     /* langinfo.h */
-    char * (* nl_langinfo) (nl_item item);                                                                                                           /* 736 */
+    char * (* nl_langinfo) (nl_item item);                                                                                                           /* 732 */
 
     /* libgen.h */
-    char * (* basename) (const char *path);                                                                                                          /* 740 */
-    char * (* dirname) (const char *path);                                                                                                           /* 744 */
+    char * (* basename) (const char *path);                                                                                                          /* 736 */
+    char * (* dirname) (const char *path);                                                                                                           /* 740 */
 
     /* locale.h */
-    char * (* setlocale) (int category, const char *locale);                                                                                         /* 748 */
-    struct lconv * (* localeconv) (void);                                                                                                            /* 752 */
+    char * (* setlocale) (int category, const char *locale);                                                                                         /* 744 */
+    struct lconv * (* localeconv) (void);                                                                                                            /* 748 */
 
     /* malloc.h */
-    void * (* memalign) (size_t alignment, size_t size);                                                                                             /* 756 */
+    void * (* memalign) (size_t alignment, size_t size);                                                                                             /* 752 */
 
     /* math.h */
-    double (* acos) (double x);                                                                                                                      /* 760 */
-    double (* asin) (double x);                                                                                                                      /* 764 */
-    double (* atan) (double x);                                                                                                                      /* 768 */
-    double (* atan2) (double y, double x);                                                                                                           /* 772 */
-    double (* ceil) (double x);                                                                                                                      /* 776 */
-    double (* cos) (double x);                                                                                                                       /* 780 */
-    double (* cosh) (double x);                                                                                                                      /* 784 */
-    void (* sincos) (double x, double *s, double *c);                                                                                                /* 788 */
-    void (* sincosf) (float x, float *s, float *c);                                                                                                  /* 792 */
-    void (* sincosl) (double x, double *s, double *c);                                                                                               /* 796 */
-    double (* exp10) (double x);                                                                                                                     /* 800 */
-    float (* exp10f) (float x);                                                                                                                      /* 804 */
-    long double (* exp10l) (long double x);                                                                                                          /* 808 */
-    double (* exp) (double x);                                                                                                                       /* 812 */
-    double (* fabs) (double x);                                                                                                                      /* 816 */
-    double (* floor) (double x);                                                                                                                     /* 820 */
-    double (* fmod) (double x, double y);                                                                                                            /* 824 */
-    double (* frexp) (double x, int *nptr);                                                                                                          /* 828 */
-    double (* ldexp) (double x, int n);                                                                                                              /* 832 */
-    double (* log) (double x);                                                                                                                       /* 836 */
-    double (* log10) (double x);                                                                                                                     /* 840 */
-    double (* modf) (double x, double *nptr);                                                                                                        /* 844 */
-    double (* pow) (double x, double y);                                                                                                             /* 848 */
-    double (* pow10) (double x);                                                                                                                     /* 852 */
-    float (* pow10f) (float x);                                                                                                                      /* 856 */
-    long double (* pow10l) (long double x);                                                                                                          /* 860 */
-    double (* sin) (double x);                                                                                                                       /* 864 */
-    double (* sinh) (double x);                                                                                                                      /* 868 */
-    double (* sqrt) (double x);                                                                                                                      /* 872 */
-    double (* tan) (double x);                                                                                                                       /* 876 */
-    double (* tanh) (double x);                                                                                                                      /* 880 */
-    double (* j0) (double x);                                                                                                                        /* 884 */
-    double (* y0) (double x);                                                                                                                        /* 888 */
-    float (* j0f) (float x);                                                                                                                         /* 892 */
-    float (* y0f) (float x);                                                                                                                         /* 896 */
-    double (* j1) (double x);                                                                                                                        /* 900 */
-    double (* y1) (double x);                                                                                                                        /* 904 */
-    float (* j1f) (float x);                                                                                                                         /* 908 */
-    float (* y1f) (float x);                                                                                                                         /* 912 */
-    double (* jn) (int n, double x);                                                                                                                 /* 916 */
-    double (* yn) (int n, double x);                                                                                                                 /* 920 */
-    float (* jnf) (int n, float x);                                                                                                                  /* 924 */
-    float (* ynf) (int n, float x);                                                                                                                  /* 928 */
-    int (* __fpclassify_float) (float x);                                                                                                            /* 932 */
-    int (* __fpclassify_double) (double x);                                                                                                          /* 936 */
-    int (* __fpclassify_long_double) (long double x);                                                                                                /* 940 */
-    int (* __isfinite_float) (float x);                                                                                                              /* 944 */
-    int (* __isfinite_double) (double x);                                                                                                            /* 948 */
-    int (* __isfinite_long_double) (long double x);                                                                                                  /* 952 */
-    int (* __signbit_float) (float x);                                                                                                               /* 956 */
-    int (* __signbit_double) (double x);                                                                                                             /* 960 */
-    int (* __signbit_long_double) (long double x);                                                                                                   /* 964 */
-    int (* __isnan) (double x);                                                                                                                      /* 968 */
-    int (* __isnanf) (float x);                                                                                                                      /* 972 */
-    int (* __isnanl) (long double x);                                                                                                                /* 976 */
-    int (* __isinf) (double x);                                                                                                                      /* 980 */
-    int (* __isinff) (float x);                                                                                                                      /* 984 */
-    int (* __isinfl) (long double x);                                                                                                                /* 988 */
-    int (* __isnormalf) (float x);                                                                                                                   /* 992 */
-    int (* __isnormal) (double x);                                                                                                                   /* 996 */
-    int (* __isnormall) (long double x);                                                                                                             /* 1000 */
-    float (* acosf) (float x);                                                                                                                       /* 1004 */
-    float (* asinf) (float x);                                                                                                                       /* 1008 */
-    float (* atanf) (float x);                                                                                                                       /* 1012 */
-    float (* atan2f) (float y, float x);                                                                                                             /* 1016 */
-    float (* ceilf) (float x);                                                                                                                       /* 1020 */
-    float (* cosf) (float x);                                                                                                                        /* 1024 */
-    float (* coshf) (float x);                                                                                                                       /* 1028 */
-    float (* expf) (float x);                                                                                                                        /* 1032 */
-    float (* fabsf) (float x);                                                                                                                       /* 1036 */
-    float (* floorf) (float x);                                                                                                                      /* 1040 */
-    float (* fmodf) (float x, float y);                                                                                                              /* 1044 */
-    float (* frexpf) (float x, int *eptr);                                                                                                           /* 1048 */
-    float (* ldexpf) (float x, int exp);                                                                                                             /* 1052 */
-    float (* logf) (float x);                                                                                                                        /* 1056 */
-    float (* log10f) (float x);                                                                                                                      /* 1060 */
-    float (* modff) (float x, float *iptr);                                                                                                          /* 1064 */
-    float (* powf) (float x, float y);                                                                                                               /* 1068 */
-    float (* sinf) (float x);                                                                                                                        /* 1072 */
-    float (* sinhf) (float x);                                                                                                                       /* 1076 */
-    float (* sqrtf) (float x);                                                                                                                       /* 1080 */
-    float (* tanf) (float x);                                                                                                                        /* 1084 */
-    float (* tanhf) (float x);                                                                                                                       /* 1088 */
-    float (* acoshf) (float x);                                                                                                                      /* 1092 */
-    float (* asinhf) (float x);                                                                                                                      /* 1096 */
-    float (* atanhf) (float x);                                                                                                                      /* 1100 */
-    float (* cbrtf) (float x);                                                                                                                       /* 1104 */
-    float (* copysignf) (float x, float y);                                                                                                          /* 1108 */
-    float (* erfcf) (float x);                                                                                                                       /* 1112 */
-    float (* erff) (float x);                                                                                                                        /* 1116 */
-    float (* expm1f) (float x);                                                                                                                      /* 1120 */
-    float (* fdimf) (float x, float y);                                                                                                              /* 1124 */
-    float (* fmaf) (float x, float y, float z);                                                                                                      /* 1128 */
-    float (* fmaxf) (float x, float y);                                                                                                              /* 1132 */
-    float (* fminf) (float x, float y);                                                                                                              /* 1136 */
-    float (* hypotf) (float x, float y);                                                                                                             /* 1140 */
-    float (* lgammaf) (float x);                                                                                                                     /* 1144 */
-    float (* log1pf) (float x);                                                                                                                      /* 1148 */
-    float (* logbf) (float x);                                                                                                                       /* 1152 */
-    long long (* llrintf) (float x);                                                                                                                 /* 1156 */
-    long (* lrintf) (float x);                                                                                                                       /* 1160 */
-    long (* lroundf) (float x);                                                                                                                      /* 1164 */
-    long long (* llround) (double x);                                                                                                                /* 1168 */
-    long long (* llroundf) (float x);                                                                                                                /* 1172 */
-    float (* nanf) (const char *tagp);                                                                                                               /* 1176 */
-    float (* nearbyintf) (float x);                                                                                                                  /* 1180 */
-    float (* nextafterf) (float x, float y);                                                                                                         /* 1184 */
-    float (* nexttowardf) (float x, long double y);                                                                                                  /* 1188 */
-    float (* remainderf) (float x, float p);                                                                                                         /* 1192 */
-    float (* remquof) (float x, float y, int *quo);                                                                                                  /* 1196 */
-    float (* rintf) (float x);                                                                                                                       /* 1200 */
-    float (* roundf) (float x);                                                                                                                      /* 1204 */
-    float (* scalblnf) (float x, long n);                                                                                                            /* 1208 */
-    float (* scalbnf) (float x, int n);                                                                                                              /* 1212 */
-    float (* tgammaf) (float x);                                                                                                                     /* 1216 */
-    float (* truncf) (float x);                                                                                                                      /* 1220 */
-    int (* ilogbf) (float x);                                                                                                                        /* 1224 */
-    int (* finite) (double x);                                                                                                                       /* 1228 */
-    double (* acosh) (double x);                                                                                                                     /* 1232 */
-    double (* asinh) (double x);                                                                                                                     /* 1236 */
-    double (* atanh) (double x);                                                                                                                     /* 1240 */
-    double (* cbrt) (double x);                                                                                                                      /* 1244 */
-    double (* copysign) (double x, double y);                                                                                                        /* 1248 */
-    double (* erf) (double x);                                                                                                                       /* 1252 */
-    double (* erfc) (double x);                                                                                                                      /* 1256 */
-    double (* expm1) (double x);                                                                                                                     /* 1260 */
-    double (* fdim) (double x, double y);                                                                                                            /* 1264 */
-    double (* fma) (double x, double y, double z);                                                                                                   /* 1268 */
-    double (* fmax) (double x, double y);                                                                                                            /* 1272 */
-    double (* fmin) (double x, double y);                                                                                                            /* 1276 */
-    double (* hypot) (double x, double y);                                                                                                           /* 1280 */
-    double (* lgamma) (double x);                                                                                                                    /* 1284 */
-    double (* log1p) (double x);                                                                                                                     /* 1288 */
-    double (* logb) (double x);                                                                                                                      /* 1292 */
-    long long (* llrint) (double x);                                                                                                                 /* 1296 */
-    long int (* lrint) (double x);                                                                                                                   /* 1300 */
-    long int (* lround) (double x);                                                                                                                  /* 1304 */
-    double (* nan) (const char *tagp);                                                                                                               /* 1308 */
-    double (* nearbyint) (double x);                                                                                                                 /* 1312 */
-    double (* nexttoward) (double x, long double y);                                                                                                 /* 1316 */
-    double (* nextafter) (double x, double y);                                                                                                       /* 1320 */
-    double (* remainder) (double x, double p);                                                                                                       /* 1324 */
-    double (* remquo) (double x, double y, int *quo);                                                                                                /* 1328 */
-    double (* rint) (double x);                                                                                                                      /* 1332 */
-    double (* round) (double x);                                                                                                                     /* 1336 */
-    double (* scalbln) (double x, long n);                                                                                                           /* 1340 */
-    double (* scalbn) (double x, int n);                                                                                                             /* 1344 */
-    double (* tgamma) (double x);                                                                                                                    /* 1348 */
-    double (* trunc) (double x);                                                                                                                     /* 1352 */
-    int (* ilogb) (double x);                                                                                                                        /* 1356 */
-    float (* exp2f) (float x);                                                                                                                       /* 1360 */
-    double (* exp2) (double x);                                                                                                                      /* 1364 */
-    long double (* exp2l) (long double x);                                                                                                           /* 1368 */
-    double (* log2) (double x);                                                                                                                      /* 1372 */
-    float (* log2f) (float x);                                                                                                                       /* 1376 */
-    long double (* log2l) (long double x);                                                                                                           /* 1380 */
-    long double (* acosl) (long double x);                                                                                                           /* 1384 */
-    long double (* asinl) (long double x);                                                                                                           /* 1388 */
-    long double (* atanl) (long double x);                                                                                                           /* 1392 */
-    long double (* atan2l) (long double y, long double x);                                                                                           /* 1396 */
-    long double (* ceill) (long double x);                                                                                                           /* 1400 */
-    long double (* cosl) (long double x);                                                                                                            /* 1404 */
-    long double (* coshl) (long double x);                                                                                                           /* 1408 */
-    long double (* expl) (long double x);                                                                                                            /* 1412 */
-    long double (* fabsl) (long double x);                                                                                                           /* 1416 */
-    long double (* floorl) (long double x);                                                                                                          /* 1420 */
-    long double (* fmodl) (long double x, long double y);                                                                                            /* 1424 */
-    long double (* frexpl) (long double x, int *nptr);                                                                                               /* 1428 */
-    long double (* ldexpl) (long double x, int n);                                                                                                   /* 1432 */
-    long double (* logl) (long double x);                                                                                                            /* 1436 */
-    long double (* log10l) (long double x);                                                                                                          /* 1440 */
-    long double (* modfl) (long double x, long double *iptr);                                                                                        /* 1444 */
-    long double (* powl) (long double x, long double y);                                                                                             /* 1448 */
-    long double (* sinl) (long double x);                                                                                                            /* 1452 */
-    long double (* sinhl) (long double x);                                                                                                           /* 1456 */
-    long double (* sqrtl) (long double x);                                                                                                           /* 1460 */
-    long double (* tanl) (long double x);                                                                                                            /* 1464 */
-    long double (* tanhl) (long double x);                                                                                                           /* 1468 */
-    long double (* acoshl) (long double x);                                                                                                          /* 1472 */
-    long double (* asinhl) (long double x);                                                                                                          /* 1476 */
-    long double (* atanhl) (long double x);                                                                                                          /* 1480 */
-    long double (* cbrtl) (long double x);                                                                                                           /* 1484 */
-    long double (* copysignl) (long double x, long double y);                                                                                        /* 1488 */
-    long double (* erfcl) (long double x);                                                                                                           /* 1492 */
-    long double (* erfl) (long double x);                                                                                                            /* 1496 */
-    long double (* expm1l) (long double x);                                                                                                          /* 1500 */
-    long double (* fdiml) (long double x, long double y);                                                                                            /* 1504 */
-    long double (* fmal) (long double x, long double y, long double z);                                                                              /* 1508 */
-    long double (* fmaxl) (long double x, long double y);                                                                                            /* 1512 */
-    long double (* fminl) (long double x, long double y);                                                                                            /* 1516 */
-    long double (* hypotl) (long double x, long double y);                                                                                           /* 1520 */
-    long double (* lgammal) (long double x);                                                                                                         /* 1524 */
-    long double (* log1pl) (long double x);                                                                                                          /* 1528 */
-    long double (* logbl) (long double x);                                                                                                           /* 1532 */
-    long long int (* llrintl) (long double x);                                                                                                       /* 1536 */
-    long int (* lrintl) (long double x);                                                                                                             /* 1540 */
-    long long int (* llroundl) (long double x);                                                                                                      /* 1544 */
-    long int (* lroundl) (long double x);                                                                                                            /* 1548 */
-    long double (* nanl) (const char *tagp);                                                                                                         /* 1552 */
-    long double (* nearbyintl) (long double x);                                                                                                      /* 1556 */
-    long double (* nextafterl) (long double x, long double y);                                                                                       /* 1560 */
-    long double (* nexttowardl) (long double x, long double y);                                                                                      /* 1564 */
-    long double (* remainderl) (long double x, long double p);                                                                                       /* 1568 */
-    long double (* remquol) (long double x, long double y, int *quo);                                                                                /* 1572 */
-    long double (* rintl) (long double x);                                                                                                           /* 1576 */
-    long double (* roundl) (long double x);                                                                                                          /* 1580 */
-    long double (* scalblnl) (long double x, long int n);                                                                                            /* 1584 */
-    long double (* scalbnl) (long double x, int n);                                                                                                  /* 1588 */
-    long double (* tgammal) (long double x);                                                                                                         /* 1592 */
-    long double (* truncl) (long double x);                                                                                                          /* 1596 */
-    int (* ilogbl) (long double x);                                                                                                                  /* 1600 */
+    double (* acos) (double x);                                                                                                                      /* 756 */
+    double (* asin) (double x);                                                                                                                      /* 760 */
+    double (* atan) (double x);                                                                                                                      /* 764 */
+    double (* atan2) (double y, double x);                                                                                                           /* 768 */
+    double (* ceil) (double x);                                                                                                                      /* 772 */
+    double (* cos) (double x);                                                                                                                       /* 776 */
+    double (* cosh) (double x);                                                                                                                      /* 780 */
+    void (* sincos) (double x, double *s, double *c);                                                                                                /* 784 */
+    void (* sincosf) (float x, float *s, float *c);                                                                                                  /* 788 */
+    void (* sincosl) (double x, double *s, double *c);                                                                                               /* 792 */
+    double (* exp10) (double x);                                                                                                                     /* 796 */
+    float (* exp10f) (float x);                                                                                                                      /* 800 */
+    long double (* exp10l) (long double x);                                                                                                          /* 804 */
+    double (* exp) (double x);                                                                                                                       /* 808 */
+    double (* fabs) (double x);                                                                                                                      /* 812 */
+    double (* floor) (double x);                                                                                                                     /* 816 */
+    double (* fmod) (double x, double y);                                                                                                            /* 820 */
+    double (* frexp) (double x, int *nptr);                                                                                                          /* 824 */
+    double (* ldexp) (double x, int n);                                                                                                              /* 828 */
+    double (* log) (double x);                                                                                                                       /* 832 */
+    double (* log10) (double x);                                                                                                                     /* 836 */
+    double (* modf) (double x, double *nptr);                                                                                                        /* 840 */
+    double (* pow) (double x, double y);                                                                                                             /* 844 */
+    double (* pow10) (double x);                                                                                                                     /* 848 */
+    float (* pow10f) (float x);                                                                                                                      /* 852 */
+    long double (* pow10l) (long double x);                                                                                                          /* 856 */
+    double (* sin) (double x);                                                                                                                       /* 860 */
+    double (* sinh) (double x);                                                                                                                      /* 864 */
+    double (* sqrt) (double x);                                                                                                                      /* 868 */
+    double (* tan) (double x);                                                                                                                       /* 872 */
+    double (* tanh) (double x);                                                                                                                      /* 876 */
+    double (* j0) (double x);                                                                                                                        /* 880 */
+    double (* y0) (double x);                                                                                                                        /* 884 */
+    float (* j0f) (float x);                                                                                                                         /* 888 */
+    float (* y0f) (float x);                                                                                                                         /* 892 */
+    double (* j1) (double x);                                                                                                                        /* 896 */
+    double (* y1) (double x);                                                                                                                        /* 900 */
+    float (* j1f) (float x);                                                                                                                         /* 904 */
+    float (* y1f) (float x);                                                                                                                         /* 908 */
+    double (* jn) (int n, double x);                                                                                                                 /* 912 */
+    double (* yn) (int n, double x);                                                                                                                 /* 916 */
+    float (* jnf) (int n, float x);                                                                                                                  /* 920 */
+    float (* ynf) (int n, float x);                                                                                                                  /* 924 */
+    int (* __fpclassify_float) (float x);                                                                                                            /* 928 */
+    int (* __fpclassify_double) (double x);                                                                                                          /* 932 */
+    int (* __fpclassify_long_double) (long double x);                                                                                                /* 936 */
+    int (* __isfinite_float) (float x);                                                                                                              /* 940 */
+    int (* __isfinite_double) (double x);                                                                                                            /* 944 */
+    int (* __isfinite_long_double) (long double x);                                                                                                  /* 948 */
+    int (* __signbit_float) (float x);                                                                                                               /* 952 */
+    int (* __signbit_double) (double x);                                                                                                             /* 956 */
+    int (* __signbit_long_double) (long double x);                                                                                                   /* 960 */
+    int (* __isnan) (double x);                                                                                                                      /* 964 */
+    int (* __isnanf) (float x);                                                                                                                      /* 968 */
+    int (* __isnanl) (long double x);                                                                                                                /* 972 */
+    int (* __isinf) (double x);                                                                                                                      /* 976 */
+    int (* __isinff) (float x);                                                                                                                      /* 980 */
+    int (* __isinfl) (long double x);                                                                                                                /* 984 */
+    int (* __isnormalf) (float x);                                                                                                                   /* 988 */
+    int (* __isnormal) (double x);                                                                                                                   /* 992 */
+    int (* __isnormall) (long double x);                                                                                                             /* 996 */
+    float (* acosf) (float x);                                                                                                                       /* 1000 */
+    float (* asinf) (float x);                                                                                                                       /* 1004 */
+    float (* atanf) (float x);                                                                                                                       /* 1008 */
+    float (* atan2f) (float y, float x);                                                                                                             /* 1012 */
+    float (* ceilf) (float x);                                                                                                                       /* 1016 */
+    float (* cosf) (float x);                                                                                                                        /* 1020 */
+    float (* coshf) (float x);                                                                                                                       /* 1024 */
+    float (* expf) (float x);                                                                                                                        /* 1028 */
+    float (* fabsf) (float x);                                                                                                                       /* 1032 */
+    float (* floorf) (float x);                                                                                                                      /* 1036 */
+    float (* fmodf) (float x, float y);                                                                                                              /* 1040 */
+    float (* frexpf) (float x, int *eptr);                                                                                                           /* 1044 */
+    float (* ldexpf) (float x, int exp);                                                                                                             /* 1048 */
+    float (* logf) (float x);                                                                                                                        /* 1052 */
+    float (* log10f) (float x);                                                                                                                      /* 1056 */
+    float (* modff) (float x, float *iptr);                                                                                                          /* 1060 */
+    float (* powf) (float x, float y);                                                                                                               /* 1064 */
+    float (* sinf) (float x);                                                                                                                        /* 1068 */
+    float (* sinhf) (float x);                                                                                                                       /* 1072 */
+    float (* sqrtf) (float x);                                                                                                                       /* 1076 */
+    float (* tanf) (float x);                                                                                                                        /* 1080 */
+    float (* tanhf) (float x);                                                                                                                       /* 1084 */
+    float (* acoshf) (float x);                                                                                                                      /* 1088 */
+    float (* asinhf) (float x);                                                                                                                      /* 1092 */
+    float (* atanhf) (float x);                                                                                                                      /* 1096 */
+    float (* cbrtf) (float x);                                                                                                                       /* 1100 */
+    float (* copysignf) (float x, float y);                                                                                                          /* 1104 */
+    float (* erfcf) (float x);                                                                                                                       /* 1108 */
+    float (* erff) (float x);                                                                                                                        /* 1112 */
+    float (* expm1f) (float x);                                                                                                                      /* 1116 */
+    float (* fdimf) (float x, float y);                                                                                                              /* 1120 */
+    float (* fmaf) (float x, float y, float z);                                                                                                      /* 1124 */
+    float (* fmaxf) (float x, float y);                                                                                                              /* 1128 */
+    float (* fminf) (float x, float y);                                                                                                              /* 1132 */
+    float (* hypotf) (float x, float y);                                                                                                             /* 1136 */
+    float (* lgammaf) (float x);                                                                                                                     /* 1140 */
+    float (* log1pf) (float x);                                                                                                                      /* 1144 */
+    float (* logbf) (float x);                                                                                                                       /* 1148 */
+    long long (* llrintf) (float x);                                                                                                                 /* 1152 */
+    long (* lrintf) (float x);                                                                                                                       /* 1156 */
+    long (* lroundf) (float x);                                                                                                                      /* 1160 */
+    long long (* llround) (double x);                                                                                                                /* 1164 */
+    long long (* llroundf) (float x);                                                                                                                /* 1168 */
+    float (* nanf) (const char *tagp);                                                                                                               /* 1172 */
+    float (* nearbyintf) (float x);                                                                                                                  /* 1176 */
+    float (* nextafterf) (float x, float y);                                                                                                         /* 1180 */
+    float (* nexttowardf) (float x, long double y);                                                                                                  /* 1184 */
+    float (* remainderf) (float x, float p);                                                                                                         /* 1188 */
+    float (* remquof) (float x, float y, int *quo);                                                                                                  /* 1192 */
+    float (* rintf) (float x);                                                                                                                       /* 1196 */
+    float (* roundf) (float x);                                                                                                                      /* 1200 */
+    float (* scalblnf) (float x, long n);                                                                                                            /* 1204 */
+    float (* scalbnf) (float x, int n);                                                                                                              /* 1208 */
+    float (* tgammaf) (float x);                                                                                                                     /* 1212 */
+    float (* truncf) (float x);                                                                                                                      /* 1216 */
+    int (* ilogbf) (float x);                                                                                                                        /* 1220 */
+    int (* finite) (double x);                                                                                                                       /* 1224 */
+    double (* acosh) (double x);                                                                                                                     /* 1228 */
+    double (* asinh) (double x);                                                                                                                     /* 1232 */
+    double (* atanh) (double x);                                                                                                                     /* 1236 */
+    double (* cbrt) (double x);                                                                                                                      /* 1240 */
+    double (* copysign) (double x, double y);                                                                                                        /* 1244 */
+    double (* erf) (double x);                                                                                                                       /* 1248 */
+    double (* erfc) (double x);                                                                                                                      /* 1252 */
+    double (* expm1) (double x);                                                                                                                     /* 1256 */
+    double (* fdim) (double x, double y);                                                                                                            /* 1260 */
+    double (* fma) (double x, double y, double z);                                                                                                   /* 1264 */
+    double (* fmax) (double x, double y);                                                                                                            /* 1268 */
+    double (* fmin) (double x, double y);                                                                                                            /* 1272 */
+    double (* hypot) (double x, double y);                                                                                                           /* 1276 */
+    double (* lgamma) (double x);                                                                                                                    /* 1280 */
+    double (* log1p) (double x);                                                                                                                     /* 1284 */
+    double (* logb) (double x);                                                                                                                      /* 1288 */
+    long long (* llrint) (double x);                                                                                                                 /* 1292 */
+    long int (* lrint) (double x);                                                                                                                   /* 1296 */
+    long int (* lround) (double x);                                                                                                                  /* 1300 */
+    double (* nan) (const char *tagp);                                                                                                               /* 1304 */
+    double (* nearbyint) (double x);                                                                                                                 /* 1308 */
+    double (* nexttoward) (double x, long double y);                                                                                                 /* 1312 */
+    double (* nextafter) (double x, double y);                                                                                                       /* 1316 */
+    double (* remainder) (double x, double p);                                                                                                       /* 1320 */
+    double (* remquo) (double x, double y, int *quo);                                                                                                /* 1324 */
+    double (* rint) (double x);                                                                                                                      /* 1328 */
+    double (* round) (double x);                                                                                                                     /* 1332 */
+    double (* scalbln) (double x, long n);                                                                                                           /* 1336 */
+    double (* scalbn) (double x, int n);                                                                                                             /* 1340 */
+    double (* tgamma) (double x);                                                                                                                    /* 1344 */
+    double (* trunc) (double x);                                                                                                                     /* 1348 */
+    int (* ilogb) (double x);                                                                                                                        /* 1352 */
+    float (* exp2f) (float x);                                                                                                                       /* 1356 */
+    double (* exp2) (double x);                                                                                                                      /* 1360 */
+    long double (* exp2l) (long double x);                                                                                                           /* 1364 */
+    double (* log2) (double x);                                                                                                                      /* 1368 */
+    float (* log2f) (float x);                                                                                                                       /* 1372 */
+    long double (* log2l) (long double x);                                                                                                           /* 1376 */
+    long double (* acosl) (long double x);                                                                                                           /* 1380 */
+    long double (* asinl) (long double x);                                                                                                           /* 1384 */
+    long double (* atanl) (long double x);                                                                                                           /* 1388 */
+    long double (* atan2l) (long double y, long double x);                                                                                           /* 1392 */
+    long double (* ceill) (long double x);                                                                                                           /* 1396 */
+    long double (* cosl) (long double x);                                                                                                            /* 1400 */
+    long double (* coshl) (long double x);                                                                                                           /* 1404 */
+    long double (* expl) (long double x);                                                                                                            /* 1408 */
+    long double (* fabsl) (long double x);                                                                                                           /* 1412 */
+    long double (* floorl) (long double x);                                                                                                          /* 1416 */
+    long double (* fmodl) (long double x, long double y);                                                                                            /* 1420 */
+    long double (* frexpl) (long double x, int *nptr);                                                                                               /* 1424 */
+    long double (* ldexpl) (long double x, int n);                                                                                                   /* 1428 */
+    long double (* logl) (long double x);                                                                                                            /* 1432 */
+    long double (* log10l) (long double x);                                                                                                          /* 1436 */
+    long double (* modfl) (long double x, long double *iptr);                                                                                        /* 1440 */
+    long double (* powl) (long double x, long double y);                                                                                             /* 1444 */
+    long double (* sinl) (long double x);                                                                                                            /* 1448 */
+    long double (* sinhl) (long double x);                                                                                                           /* 1452 */
+    long double (* sqrtl) (long double x);                                                                                                           /* 1456 */
+    long double (* tanl) (long double x);                                                                                                            /* 1460 */
+    long double (* tanhl) (long double x);                                                                                                           /* 1464 */
+    long double (* acoshl) (long double x);                                                                                                          /* 1468 */
+    long double (* asinhl) (long double x);                                                                                                          /* 1472 */
+    long double (* atanhl) (long double x);                                                                                                          /* 1476 */
+    long double (* cbrtl) (long double x);                                                                                                           /* 1480 */
+    long double (* copysignl) (long double x, long double y);                                                                                        /* 1484 */
+    long double (* erfcl) (long double x);                                                                                                           /* 1488 */
+    long double (* erfl) (long double x);                                                                                                            /* 1492 */
+    long double (* expm1l) (long double x);                                                                                                          /* 1496 */
+    long double (* fdiml) (long double x, long double y);                                                                                            /* 1500 */
+    long double (* fmal) (long double x, long double y, long double z);                                                                              /* 1504 */
+    long double (* fmaxl) (long double x, long double y);                                                                                            /* 1508 */
+    long double (* fminl) (long double x, long double y);                                                                                            /* 1512 */
+    long double (* hypotl) (long double x, long double y);                                                                                           /* 1516 */
+    long double (* lgammal) (long double x);                                                                                                         /* 1520 */
+    long double (* log1pl) (long double x);                                                                                                          /* 1524 */
+    long double (* logbl) (long double x);                                                                                                           /* 1528 */
+    long long int (* llrintl) (long double x);                                                                                                       /* 1532 */
+    long int (* lrintl) (long double x);                                                                                                             /* 1536 */
+    long long int (* llroundl) (long double x);                                                                                                      /* 1540 */
+    long int (* lroundl) (long double x);                                                                                                            /* 1544 */
+    long double (* nanl) (const char *tagp);                                                                                                         /* 1548 */
+    long double (* nearbyintl) (long double x);                                                                                                      /* 1552 */
+    long double (* nextafterl) (long double x, long double y);                                                                                       /* 1556 */
+    long double (* nexttowardl) (long double x, long double y);                                                                                      /* 1560 */
+    long double (* remainderl) (long double x, long double p);                                                                                       /* 1564 */
+    long double (* remquol) (long double x, long double y, int *quo);                                                                                /* 1568 */
+    long double (* rintl) (long double x);                                                                                                           /* 1572 */
+    long double (* roundl) (long double x);                                                                                                          /* 1576 */
+    long double (* scalblnl) (long double x, long int n);                                                                                            /* 1580 */
+    long double (* scalbnl) (long double x, int n);                                                                                                  /* 1584 */
+    long double (* tgammal) (long double x);                                                                                                         /* 1588 */
+    long double (* truncl) (long double x);                                                                                                          /* 1592 */
+    int (* ilogbl) (long double x);                                                                                                                  /* 1596 */
 
     /* netdb.h */
-    struct hostent * (* gethostbyaddr) (const void *addr, socklen_t len, int type);                                                                  /* 1604 */
-    struct hostent * (* gethostbyname) (const char *name);                                                                                           /* 1608 */
-    struct netent * (* getnetbyaddr) (in_addr_t net, int type);                                                                                      /* 1612 */
-    struct netent * (* getnetbyname) (const char *name);                                                                                             /* 1616 */
-    struct protoent * (* getprotobyname) (const char *name);                                                                                         /* 1620 */
-    struct protoent * (* getprotobynumber) (int proto);                                                                                              /* 1624 */
-    struct servent * (* getservbyname) (const char *name, const char *proto);                                                                        /* 1628 */
-    struct servent * (* getservbyport) (int port, const char *proto);                                                                                /* 1632 */
-    void (* herror) (const char *);                                                                                                                  /* 1636 */
-    const char * (* hstrerror) (int);                                                                                                                /* 1640 */
-    int (* gethostbyname_r) (const char *, struct hostent *, char *, size_t, struct hostent **, int *);                                              /* 1644 */
-    int (* gethostbyname2_r) (const char *, int, struct hostent *, char *, size_t, struct hostent **, int *);                                        /* 1648 */
-    struct hostent * (* gethostbyname2) (const char *, int);                                                                                         /* 1652 */
-    int (* gethostbyaddr_r) (const void *, socklen_t, int, struct hostent *, char *, size_t, struct hostent **, int *);                              /* 1656 */
-    int (* getservbyport_r) (int, const char *, struct servent *, char *, size_t, struct servent **);                                                /* 1660 */
-    int (* getservbyname_r) (const char *, const char *, struct servent *, char *, size_t, struct servent **);                                       /* 1664 */
-    const char * (* gai_strerror) (int ecode);                                                                                                       /* 1668 */
-    int (* getaddrinfo) (const char *name, const char *service, const struct addrinfo *req, struct addrinfo **pai);                                  /* 1672 */
-    void (* freeaddrinfo) (struct addrinfo *ai);                                                                                                     /* 1676 */
-    int (* getnameinfo) (const struct sockaddr *sa, socklen_t salen, char *node, socklen_t nodelen, char *service, socklen_t servicelen, int flags); /* 1680 */
+    struct hostent * (* gethostbyaddr) (const void *addr, socklen_t len, int type);                                                                  /* 1600 */
+    struct hostent * (* gethostbyname) (const char *name);                                                                                           /* 1604 */
+    struct netent * (* getnetbyaddr) (in_addr_t net, int type);                                                                                      /* 1608 */
+    struct netent * (* getnetbyname) (const char *name);                                                                                             /* 1612 */
+    struct protoent * (* getprotobyname) (const char *name);                                                                                         /* 1616 */
+    struct protoent * (* getprotobynumber) (int proto);                                                                                              /* 1620 */
+    struct servent * (* getservbyname) (const char *name, const char *proto);                                                                        /* 1624 */
+    struct servent * (* getservbyport) (int port, const char *proto);                                                                                /* 1628 */
+    void (* herror) (const char *);                                                                                                                  /* 1632 */
+    const char * (* hstrerror) (int);                                                                                                                /* 1636 */
+    int (* gethostbyname_r) (const char *, struct hostent *, char *, size_t, struct hostent **, int *);                                              /* 1640 */
+    int (* gethostbyname2_r) (const char *, int, struct hostent *, char *, size_t, struct hostent **, int *);                                        /* 1644 */
+    struct hostent * (* gethostbyname2) (const char *, int);                                                                                         /* 1648 */
+    int (* gethostbyaddr_r) (const void *, socklen_t, int, struct hostent *, char *, size_t, struct hostent **, int *);                              /* 1652 */
+    int (* getservbyport_r) (int, const char *, struct servent *, char *, size_t, struct servent **);                                                /* 1656 */
+    int (* getservbyname_r) (const char *, const char *, struct servent *, char *, size_t, struct servent **);                                       /* 1660 */
+    const char * (* gai_strerror) (int ecode);                                                                                                       /* 1664 */
+    int (* getaddrinfo) (const char *name, const char *service, const struct addrinfo *req, struct addrinfo **pai);                                  /* 1668 */
+    void (* freeaddrinfo) (struct addrinfo *ai);                                                                                                     /* 1672 */
+    int (* getnameinfo) (const struct sockaddr *sa, socklen_t salen, char *node, socklen_t nodelen, char *service, socklen_t servicelen, int flags); /* 1676 */
 
     /* nl_types.h */
-    nl_catd (* catopen) (const char* name, int flag);                                                                                                /* 1684 */
-    char* (* catgets) (nl_catd catalog, int set_number, int msg_number, const char* msg);                                                            /* 1688 */
-    int (* catclose) (nl_catd catalog);                                                                                                              /* 1692 */
+    nl_catd (* catopen) (const char* name, int flag);                                                                                                /* 1680 */
+    char* (* catgets) (nl_catd catalog, int set_number, int msg_number, const char* msg);                                                            /* 1684 */
+    int (* catclose) (nl_catd catalog);                                                                                                              /* 1688 */
 
     /* poll.h */
-    int (* poll) (struct pollfd *fds, nfds_t nfds, int timeout);                                                                                     /* 1696 */
+    int (* poll) (struct pollfd *fds, nfds_t nfds, int timeout);                                                                                     /* 1692 */
 
     /* pwd.h */
-    void (* endpwent) (void);                                                                                                                        /* 1700 */
-    struct passwd * (* getpwent) (void);                                                                                                             /* 1704 */
-    struct passwd * (* getpwnam) (const char *name);                                                                                                 /* 1708 */
-    int (* getpwnam_r) (const char *name, struct passwd *pw, char *buffer, size_t bufsize, struct passwd **result);                                  /* 1712 */
-    struct passwd * (* getpwuid) (uid_t uid);                                                                                                        /* 1716 */
-    int (* getpwuid_r) (uid_t uid, struct passwd *pwd, char *buffer, size_t bufsize, struct passwd **result);                                        /* 1720 */
-    void (* setpwent) (void);                                                                                                                        /* 1724 */
+    void (* endpwent) (void);                                                                                                                        /* 1696 */
+    struct passwd * (* getpwent) (void);                                                                                                             /* 1700 */
+    struct passwd * (* getpwnam) (const char *name);                                                                                                 /* 1704 */
+    int (* getpwnam_r) (const char *name, struct passwd *pw, char *buffer, size_t bufsize, struct passwd **result);                                  /* 1708 */
+    struct passwd * (* getpwuid) (uid_t uid);                                                                                                        /* 1712 */
+    int (* getpwuid_r) (uid_t uid, struct passwd *pwd, char *buffer, size_t bufsize, struct passwd **result);                                        /* 1716 */
+    void (* setpwent) (void);                                                                                                                        /* 1720 */
 
     /* regex.h */
-    int (* regcomp) (regex_t * preg, const char * regex, int cflags);                                                                                /* 1728 */
-    int (* regexec) (const regex_t *, const char *, size_t, regmatch_t *, int);                                                                      /* 1732 */
-    void (* regfree) (regex_t *preg);                                                                                                                /* 1736 */
-    size_t (* regerror) (int e, const regex_t * preg, char * buf, size_t size);                                                                      /* 1740 */
+    int (* regcomp) (regex_t * preg, const char * regex, int cflags);                                                                                /* 1724 */
+    int (* regexec) (const regex_t *, const char *, size_t, regmatch_t *, int);                                                                      /* 1728 */
+    void (* regfree) (regex_t *preg);                                                                                                                /* 1732 */
+    size_t (* regerror) (int e, const regex_t * preg, char * buf, size_t size);                                                                      /* 1736 */
 
     /* resolv.h */
+    struct __res_state (*__res_state) (void);                                                                                                        /* 1740 */
     int (* res_init) (void);                                                                                                                         /* 1744 */
     int (* res_query) (const char *dname, int class, int type, unsigned char *answer, int anslen);                                                   /* 1748 */
     int (* res_querydomain) (const char *name, const char *domain,int class, int type, unsigned char *answer,int anslen);                            /* 1752 */
@@ -706,221 +704,221 @@ struct Clib2IFace {
 
     /* stdlib.h */
     int * (* __mb_cur_max) (void);                                                                                                                  /* 2244 */
-    int (* mblen) (const char *s, size_t n);                                                                                                         /* 2248 */
-    int (* mbtowc) (wchar_t *pwc, const char *s, size_t n);                                                                                          /* 2252 */
-    int (* _mbtowc_r) (wchar_t *pwc, const char *s, size_t n, _mbstate_t *st);                                                                       /* 2256 */
-    size_t (* _mbstowcs_r) (wchar_t *pwcs, const char *s, size_t n, mbstate_t *state);                                                               /* 2260 */
-    int (* wctomb) (char *s, wchar_t wchar);                                                                                                         /* 2264 */
-    int (* _wctomb_r) (char *s, wchar_t wchar, mbstate_t *state);                                                                                    /* 2268 */
-    size_t (* mbstowcs) (wchar_t *ws, const char *s, size_t wn);                                                                                     /* 2272 */
-    size_t (* wcstombs) (char *s, const wchar_t *pwcs, size_t n);                                                                                    /* 2276 */
-    size_t (* _wcstombs_r) (char *s, const wchar_t *pwcs, size_t n, mbstate_t *state);                                                               /* 2280 */
-    void * (* malloc) (size_t size);                                                                                                                 /* 2284 */
-    void * (* calloc) (size_t num_elements, size_t element_size);                                                                                    /* 2288 */
-    void (* free) (void *ptr);                                                                                                                       /* 2292 */
-    void * (* realloc) (void *ptr, size_t size);                                                                                                     /* 2296 */
-    void * (* valloc) (size_t size);                                                                                                                 /* 2300 */
-    void * (* aligned_alloc) (size_t alignment, size_t size);                                                                                        /* 2304 */
-    int (* posix_memalign) (void **memptr, size_t alignment, size_t size);                                                                           /* 2308 */
-    int (* abs) (int x);                                                                                                                             /* 2312 */
-    long (* labs) (long x);                                                                                                                          /* 2316 */
-    div_t (* div) (int n, int d);                                                                                                                    /* 2320 */
-    ldiv_t (* ldiv) (long n, long d);                                                                                                                /* 2324 */
-    int (* rand) (void);                                                                                                                             /* 2328 */
-    void (* srand) (unsigned int seed);                                                                                                              /* 2332 */
-    long (* random) (void);                                                                                                                          /* 2336 */
-    void (* srandom) (unsigned int seed);                                                                                                            /* 2340 */
-    char * (* initstate) (unsigned int seed, char *state, size_t size);                                                                              /* 2344 */
-    char * (* setstate) (const char *state);                                                                                                         /* 2348 */
-    char * (* l64a) (long x0);                                                                                                                       /* 2352 */
-    long (* a64l) (const char *s);                                                                                                                   /* 2356 */
-    void (* setkey) (const char *key);                                                                                                               /* 2360 */
-    int (* system) (const char *command);                                                                                                            /* 2364 */
-    void (* exit) (int status);                                                                                                                      /* 2368 */
-    void (* abort) (void);                                                                                                                           /* 2372 */
-    int (* atexit) (void (*)(void));                                                                                                                 /* 2376 */
-    char * (* getenv) (const char *name);                                                                                                            /* 2380 */
-    void * (* bsearch) (const void *key, const void *base, size_t count, size_t size, int (*compare)(const void *key, const void *value));           /* 2384 */
-    void (* qsort) (void *base, size_t count, size_t size, int (*compare)(const void *element1, const void *element2));                              /* 2388 */
-    double (* strtod) (const char *str, char **ptr);                                                                                                 /* 2392 */
-    long (* strtol) (const char *str, char **ptr, int base);                                                                                         /* 2396 */
-    unsigned long (* strtoul) (const char *str, char **ptr, int base);                                                                               /* 2400 */
-    quad_t (* strtoq) (const char *nptr, char **endptr, register int base);                                                                          /* 2404 */
-    double (* atof) (const char *str);                                                                                                               /* 2408 */
-    int (* atoi) (const char *str);                                                                                                                  /* 2412 */
-    long (* atol) (const char *str);                                                                                                                 /* 2416 */
-    char * (* itoa) (int value, char *buffer, int base);                                                                                             /* 2420 */
-    char * (* lltoa) (int64_t ll, char *buffer, int radix);                                                                                          /* 2424 */
-    void (* _exit) (int status);                                                                                                                     /* 2428 */
-    int (* rand_r) (unsigned int *seed);                                                                                                             /* 2432 */
-    char * (* mktemp) (char *name_template);                                                                                                         /* 2436 */
-    int (* mkstemp) (char *name_template);                                                                                                           /* 2440 */
-    int (* unsetenv) (const char *name);                                                                                                             /* 2444 */
-    int (* setenv) (const char *name, const char *value, int overwrite);                                                                             /* 2448 */
-    int (* putenv) (const char *string);                                                                                                             /* 2452 */
-    char * (* mkdtemp) (char *name_template);                                                                                                        /* 2456 */
-    const char * (* getexecname) (void);                                                                                                             /* 2460 */
-    long long (* strtoll) (const char *str, char **ptr, int base);                                                                                   /* 2464 */
-    long double (* strtold) (const char *str, char **ptr);                                                                                           /* 2468 */
-    unsigned long long (* strtoull) (const char *str, char **ptr, int base);                                                                         /* 2472 */
-    long long (* atoll) (const char *str);                                                                                                           /* 2476 */
-    long long (* llabs) (long long x);                                                                                                               /* 2480 */
-    lldiv_t (* lldiv) (long long n, long long d);                                                                                                    /* 2484 */
-    float (* strtof) (const char *str, char **ptr);                                                                                                  /* 2488 */
-    float (* atoff) (const char *nptr);                                                                                                              /* 2492 */
-    void (* _Exit) (int status);                                                                                                                     /* 2496 */
-    char * (* ecvt) (double x, int n, int *dp, int *sign);                                                                                           /* 2500 */
-    char * (* fcvt) (double x, int n, int *dp, int *sign);                                                                                           /* 2504 */
-    char * (* gcvt) (double x, int n, char *b);                                                                                                      /* 2508 */
-    char * (* secure_getenv) (const char *name);                                                                                                     /* 2512 */
-    void * (* reallocarray) (void *ptr, size_t m, size_t n);                                                                                         /* 2516 */
-    void (* qsort_r) (void *, size_t, size_t, int (*)(const void *, const void *, void *), void *);                                                  /* 2520 */
-    uint32_t (* arc4random) (void);                                                                                                                  /* 2524 */
-    void (* arc4random_buf) (void *buf, size_t nbytes);                                                                                              /* 2528 */
-    uint32_t (* arc4random_uniform) (uint32_t upper_bound);                                                                                          /* 2532 */
-    void (* arc4random_stir) (void);                                                                                                                 /* 2536 */
-    void (* arc4random_addrandom) (unsigned char *dat, int datlen);                                                                                  /* 2540 */
+    const char * (* __getprogname) (void);                                                                                                           /* 2248 */
+    int (* mblen) (const char *s, size_t n);                                                                                                         /* 2252 */
+    int (* mbtowc) (wchar_t *pwc, const char *s, size_t n);                                                                                          /* 2256 */
+    int (* _mbtowc_r) (wchar_t *pwc, const char *s, size_t n, _mbstate_t *st);                                                                       /* 2260 */
+    size_t (* _mbstowcs_r) (wchar_t *pwcs, const char *s, size_t n, mbstate_t *state);                                                               /* 2264 */
+    int (* wctomb) (char *s, wchar_t wchar);                                                                                                         /* 2268 */
+    int (* _wctomb_r) (char *s, wchar_t wchar, mbstate_t *state);                                                                                    /* 2272 */
+    size_t (* mbstowcs) (wchar_t *ws, const char *s, size_t wn);                                                                                     /* 2276 */
+    size_t (* wcstombs) (char *s, const wchar_t *pwcs, size_t n);                                                                                    /* 2280 */
+    size_t (* _wcstombs_r) (char *s, const wchar_t *pwcs, size_t n, mbstate_t *state);                                                               /* 2284 */
+    void * (* malloc) (size_t size);                                                                                                                 /* 2288 */
+    void * (* calloc) (size_t num_elements, size_t element_size);                                                                                    /* 2292 */
+    void (* free) (void *ptr);                                                                                                                       /* 2296 */
+    void * (* realloc) (void *ptr, size_t size);                                                                                                     /* 2300 */
+    void * (* valloc) (size_t size);                                                                                                                 /* 2304 */
+    void * (* aligned_alloc) (size_t alignment, size_t size);                                                                                        /* 2308 */
+    int (* posix_memalign) (void **memptr, size_t alignment, size_t size);                                                                           /* 2312 */
+    int (* abs) (int x);                                                                                                                             /* 2316 */
+    long (* labs) (long x);                                                                                                                          /* 2320 */
+    div_t (* div) (int n, int d);                                                                                                                    /* 2324 */
+    ldiv_t (* ldiv) (long n, long d);                                                                                                                /* 2328 */
+    int (* rand) (void);                                                                                                                             /* 2332 */
+    void (* srand) (unsigned int seed);                                                                                                              /* 2336 */
+    long (* random) (void);                                                                                                                          /* 2340 */
+    void (* srandom) (unsigned int seed);                                                                                                            /* 2344 */
+    char * (* initstate) (unsigned int seed, char *state, size_t size);                                                                              /* 2348 */
+    char * (* setstate) (const char *state);                                                                                                         /* 2352 */
+    char * (* l64a) (long x0);                                                                                                                       /* 2356 */
+    long (* a64l) (const char *s);                                                                                                                   /* 2360 */
+    void (* setkey) (const char *key);                                                                                                               /* 2364 */
+    int (* system) (const char *command);                                                                                                            /* 2368 */
+    void (* exit) (int status);                                                                                                                      /* 2372 */
+    void (* abort) (void);                                                                                                                           /* 2376 */
+    int (* atexit) (void (*)(void));                                                                                                                 /* 2380 */
+    char * (* getenv) (const char *name);                                                                                                            /* 2384 */
+    void * (* bsearch) (const void *key, const void *base, size_t count, size_t size, int (*compare)(const void *key, const void *value));           /* 2388 */
+    void (* qsort) (void *base, size_t count, size_t size, int (*compare)(const void *element1, const void *element2));                              /* 2392 */
+    double (* strtod) (const char *str, char **ptr);                                                                                                 /* 2396 */
+    long (* strtol) (const char *str, char **ptr, int base);                                                                                         /* 2400 */
+    unsigned long (* strtoul) (const char *str, char **ptr, int base);                                                                               /* 2404 */
+    quad_t (* strtoq) (const char *nptr, char **endptr, register int base);                                                                          /* 2408 */
+    double (* atof) (const char *str);                                                                                                               /* 2412 */
+    int (* atoi) (const char *str);                                                                                                                  /* 2416 */
+    long (* atol) (const char *str);                                                                                                                 /* 2420 */
+    char * (* itoa) (int value, char *buffer, int base);                                                                                             /* 2424 */
+    char * (* lltoa) (int64_t ll, char *buffer, int radix);                                                                                          /* 2428 */
+    void (* _exit) (int status);                                                                                                                     /* 2432 */
+    int (* rand_r) (unsigned int *seed);                                                                                                             /* 2436 */
+    char * (* mktemp) (char *name_template);                                                                                                         /* 2440 */
+    int (* mkstemp) (char *name_template);                                                                                                           /* 2444 */
+    int (* unsetenv) (const char *name);                                                                                                             /* 2448 */
+    int (* setenv) (const char *name, const char *value, int overwrite);                                                                             /* 2452 */
+    int (* putenv) (const char *string);                                                                                                             /* 2456 */
+    char * (* mkdtemp) (char *name_template);                                                                                                        /* 2460 */
+    const char * (* getexecname) (void);                                                                                                             /* 2464 */
+    long long (* strtoll) (const char *str, char **ptr, int base);                                                                                   /* 2468 */
+    long double (* strtold) (const char *str, char **ptr);                                                                                           /* 2472 */
+    unsigned long long (* strtoull) (const char *str, char **ptr, int base);                                                                         /* 2476 */
+    long long (* atoll) (const char *str);                                                                                                           /* 2480 */
+    long long (* llabs) (long long x);                                                                                                               /* 2484 */
+    lldiv_t (* lldiv) (long long n, long long d);                                                                                                    /* 2488 */
+    float (* strtof) (const char *str, char **ptr);                                                                                                  /* 2492 */
+    float (* atoff) (const char *nptr);                                                                                                              /* 2496 */
+    void (* _Exit) (int status);                                                                                                                     /* 2500 */
+    char * (* ecvt) (double x, int n, int *dp, int *sign);                                                                                           /* 2504 */
+    char * (* fcvt) (double x, int n, int *dp, int *sign);                                                                                           /* 2508 */
+    char * (* gcvt) (double x, int n, char *b);                                                                                                      /* 2512 */
+    char * (* secure_getenv) (const char *name);                                                                                                     /* 2516 */
+    void * (* reallocarray) (void *ptr, size_t m, size_t n);                                                                                         /* 2520 */
+    void (* qsort_r) (void *, size_t, size_t, int (*)(const void *, const void *, void *), void *);                                                  /* 2524 */
+    uint32_t (* arc4random) (void);                                                                                                                  /* 2528 */
+    void (* arc4random_buf) (void *buf, size_t nbytes);                                                                                              /* 2532 */
+    uint32_t (* arc4random_uniform) (uint32_t upper_bound);                                                                                          /* 2536 */
+    void (* arc4random_stir) (void);                                                                                                                 /* 2540 */
+    void (* arc4random_addrandom) (unsigned char *dat, int datlen);                                                                                  /* 2544 */
 
     /* string.h */
-    char * (* strerror) (int error_number);                                                                                                          /* 2544 */
-    char * (* strcat) (char *dest, const char *src);                                                                                                 /* 2548 */
-    char * (* strncat) (char *dest, const char *src, size_t n);                                                                                      /* 2552 */
-    int (* strcmp) (const char *s1, const char * s2);                                                                                                /* 2556 */
-    int (* strncmp) (const char *s1, const char *s2, size_t n);                                                                                      /* 2560 */
-    char * (* strcpy) (char *dest, const char *src);                                                                                                 /* 2564 */
-    char * (* strncpy) (char *dest, const char *src, size_t n);                                                                                      /* 2568 */
-    size_t (* strnlen) (const char *s, size_t maxlen);                                                                                               /* 2572 */
-    size_t (* strlen) (const char *s);                                                                                                               /* 2576 */
-    char * (* strchr) (const char *s, int c);                                                                                                        /* 2580 */
-    char * (* strrchr) (const char *s, int c);                                                                                                       /* 2584 */
-    size_t (* strspn) (const char *s, const char *set);                                                                                              /* 2588 */
-    size_t (* strcspn) (const char *s, const char *set);                                                                                             /* 2592 */
-    char * (* strpbrk) (const char *s, const char *set);                                                                                             /* 2596 */
-    char * (* strtok) (char *str, const char *set);                                                                                                  /* 2600 */
-    char * (* strstr) (const char *src, const char *sub);                                                                                            /* 2604 */
-    char * (* strnstr) (const char *src, const char *sub, size_t len);                                                                               /* 2608 */
-    char * (* strsep) (char ** src, const char *delim);                                                                                              /* 2612 */
-    char * (* stpcpy) (char *dest, const char *src);                                                                                                 /* 2616 */
-    char * (* stpncpy) (char *dest, const char *src, size_t len);                                                                                    /* 2620 */
-    size_t (* stccpy) (char * dest, const char * src, size_t n);                                                                                     /* 2624 */
-    int (* strcoll) (const char *s1, const char *s2);                                                                                                /* 2628 */
-    size_t (* strxfrm) (char *dest, const char *src, size_t len);                                                                                    /* 2632 */
-    void * (* memmove) (void *dest, const void * src, size_t len);                                                                                   /* 2636 */
-    void * (* memchr) (const void * ptr, int val, size_t len);                                                                                       /* 2640 */
-    int (* memcmp) (const void *ptr1, const void *ptr2, size_t len);                                                                                 /* 2644 */
-    void * (* memcpy) (void *dest, const void *src, size_t len);                                                                                     /* 2648 */
-    void * (* memset) (void *ptr, int val, size_t len);                                                                                              /* 2652 */
-    int (* strerror_r) (int error,char * buffer,size_t buffer_size);                                                                                 /* 2656 */
-    char * (* strdup) (const char *s);                                                                                                               /* 2660 */
-    char * (* strndup) (const char *str, size_t max);                                                                                                /* 2664 */
-    void (* bcopy) (const void *from,void *to,size_t len);                                                                                           /* 2668 */
-    void (* bzero) (void *m,size_t len);                                                                                                             /* 2672 */
-    void (* explicit_bzero) (void *m, size_t len);                                                                                                   /* 2676 */
-    int (* bcmp) (const void *a,const void *b,size_t len);                                                                                           /* 2680 */
-    size_t (* strlcpy) (char *dst, const char *src, size_t siz);                                                                                     /* 2684 */
-    size_t (* strlcat) (char *dst, const char *src, size_t siz);                                                                                     /* 2688 */
-    char * (* strtok_r) (char *str, const char *separator_set,char ** state_ptr);                                                                    /* 2692 */
-    char * (* strsignal) (int);                                                                                                                      /* 2696 */
-    void * (* memccpy) (void *dst0, const void *src0, int endchar0, size_t len0);                                                                    /* 2700 */
-    char * (* index) (const char *s, int c);                                                                                                         /* 2704 */
-    char * (* rindex) (const char *s, int c);                                                                                                        /* 2708 */
-    int (* strverscmp) (const char *s1, const char *s2);                                                                                             /* 2712 */
-    char * (* strchrnul) (const char *s, int c_in);                                                                                                  /* 2716 */
-    char * (* strcasestr) (const char *haystack, const char *needle);                                                                                /* 2720 */
-    void * (* memmem) (const void *h0, size_t k, const void *n0, size_t l);                                                                          /* 2724 */
-    void * (* memrchr) (const void *s, int c, size_t n);                                                                                             /* 2728 */
-    void * (* mempcpy) (void *dst0, const void *src0, size_t len0);                                                                                  /* 2732 */
+    char * (* strerror) (int error_number);                                                                                                          /* 2548 */
+    char * (* strcat) (char *dest, const char *src);                                                                                                 /* 2552 */
+    char * (* strncat) (char *dest, const char *src, size_t n);                                                                                      /* 2556 */
+    int (* strcmp) (const char *s1, const char * s2);                                                                                                /* 2560 */
+    int (* strncmp) (const char *s1, const char *s2, size_t n);                                                                                      /* 2564 */
+    char * (* strcpy) (char *dest, const char *src);                                                                                                 /* 2568 */
+    char * (* strncpy) (char *dest, const char *src, size_t n);                                                                                      /* 2572 */
+    size_t (* strnlen) (const char *s, size_t maxlen);                                                                                               /* 2576 */
+    size_t (* strlen) (const char *s);                                                                                                               /* 2580 */
+    char * (* strchr) (const char *s, int c);                                                                                                        /* 2584 */
+    char * (* strrchr) (const char *s, int c);                                                                                                       /* 2588 */
+    size_t (* strspn) (const char *s, const char *set);                                                                                              /* 2592 */
+    size_t (* strcspn) (const char *s, const char *set);                                                                                             /* 2596 */
+    char * (* strpbrk) (const char *s, const char *set);                                                                                             /* 2600 */
+    char * (* strtok) (char *str, const char *set);                                                                                                  /* 2604 */
+    char * (* strstr) (const char *src, const char *sub);                                                                                            /* 2608 */
+    char * (* strnstr) (const char *src, const char *sub, size_t len);                                                                               /* 2612 */
+    char * (* strsep) (char ** src, const char *delim);                                                                                              /* 2616 */
+    char * (* stpcpy) (char *dest, const char *src);                                                                                                 /* 2620 */
+    char * (* stpncpy) (char *dest, const char *src, size_t len);                                                                                    /* 2624 */
+    size_t (* stccpy) (char * dest, const char * src, size_t n);                                                                                     /* 2628 */
+    int (* strcoll) (const char *s1, const char *s2);                                                                                                /* 2632 */
+    size_t (* strxfrm) (char *dest, const char *src, size_t len);                                                                                    /* 2636 */
+    void * (* memmove) (void *dest, const void * src, size_t len);                                                                                   /* 2640 */
+    void * (* memchr) (const void * ptr, int val, size_t len);                                                                                       /* 2644 */
+    int (* memcmp) (const void *ptr1, const void *ptr2, size_t len);                                                                                 /* 2648 */
+    void * (* memcpy) (void *dest, const void *src, size_t len);                                                                                     /* 2652 */
+    void * (* memset) (void *ptr, int val, size_t len);                                                                                              /* 2656 */
+    int (* strerror_r) (int error,char * buffer,size_t buffer_size);                                                                                 /* 2660 */
+    char * (* strdup) (const char *s);                                                                                                               /* 2664 */
+    char * (* strndup) (const char *str, size_t max);                                                                                                /* 2668 */
+    void (* bcopy) (const void *from,void *to,size_t len);                                                                                           /* 2672 */
+    void (* bzero) (void *m,size_t len);                                                                                                             /* 2676 */
+    void (* explicit_bzero) (void *m, size_t len);                                                                                                   /* 2680 */
+    int (* bcmp) (const void *a,const void *b,size_t len);                                                                                           /* 2684 */
+    size_t (* strlcpy) (char *dst, const char *src, size_t siz);                                                                                     /* 2688 */
+    size_t (* strlcat) (char *dst, const char *src, size_t siz);                                                                                     /* 2692 */
+    char * (* strtok_r) (char *str, const char *separator_set,char ** state_ptr);                                                                    /* 2696 */
+    char * (* strsignal) (int);                                                                                                                      /* 2700 */
+    void * (* memccpy) (void *dst0, const void *src0, int endchar0, size_t len0);                                                                    /* 2704 */
+    char * (* index) (const char *s, int c);                                                                                                         /* 2708 */
+    char * (* rindex) (const char *s, int c);                                                                                                        /* 2712 */
+    int (* strverscmp) (const char *s1, const char *s2);                                                                                             /* 2716 */
+    char * (* strchrnul) (const char *s, int c_in);                                                                                                  /* 2720 */
+    char * (* strcasestr) (const char *haystack, const char *needle);                                                                                /* 2724 */
+    void * (* memmem) (const void *h0, size_t k, const void *n0, size_t l);                                                                          /* 2728 */
+    void * (* memrchr) (const void *s, int c, size_t n);                                                                                             /* 2732 */
+    void * (* mempcpy) (void *dst0, const void *src0, size_t len0);                                                                                  /* 2736 */
 
     /* strings.h */
-    int (* strcasecmp) (const char *s1, const char *s2);                                                                                             /* 2736 */
-    int (* strncasecmp) (const char *s1, const char *s2, size_t len);                                                                                /* 2740 */
-    int (* ffs) (int i);                                                                                                                             /* 2744 */
-    int (* ffsl) (long i);                                                                                                                           /* 2748 */
-    int (* ffsll) (long long i);                                                                                                                     /* 2752 */
+    int (* strcasecmp) (const char *s1, const char *s2);                                                                                             /* 2740 */
+    int (* strncasecmp) (const char *s1, const char *s2, size_t len);                                                                                /* 2744 */
+    int (* ffs) (int i);                                                                                                                             /* 2748 */
+    int (* ffsl) (long i);                                                                                                                           /* 2752 */
+    int (* ffsll) (long long i);                                                                                                                     /* 2756 */
 
     /* termcap.h */
-    int (* tgetent) (char *buffer, const char *termtype);                                                                                            /* 2756 */
-    int (* tgetnum) (const char *name);                                                                                                              /* 2760 */
-    int (* tgetflag) (const char *name);                                                                                                             /* 2764 */
-    char * (* tgetstr) (const char *name, char **area);                                                                                              /* 2768 */
-    void (* tputs) (const char *str, int nlines, int (*outfun) (int));                                                                               /* 2772 */
-    char * (* tparam) (const char *string, char *outstring, int leb, int arg0, int arg1, int arg2, int arg3);                                        /* 2776 */
-    char * (* tgoto) (const char *cstring, int hpos, int vpos);                                                                                      /* 2780 */
+    int (* tgetent) (char *buffer, const char *termtype);                                                                                            /* 2760 */
+    int (* tgetnum) (const char *name);                                                                                                              /* 2764 */
+    int (* tgetflag) (const char *name);                                                                                                             /* 2768 */
+    char * (* tgetstr) (const char *name, char **area);                                                                                              /* 2772 */
+    void (* tputs) (const char *str, int nlines, int (*outfun) (int));                                                                               /* 2776 */
+    char * (* tparam) (const char *string, char *outstring, int leb, int arg0, int arg1, int arg2, int arg3);                                        /* 2780 */
+    char * (* tgoto) (const char *cstring, int hpos, int vpos);                                                                                      /* 2784 */
 
     /* termios.h */
-    int (* tcgetattr) (int file_descriptor, struct termios *tios_p);                                                                                 /* 2784 */
-    int (* tcsetattr) (int file_descriptor, int action, struct termios *tios_p);                                                                     /* 2788 */
-    int (* tcsendbreak) (int file_descriptor, int duration);                                                                                         /* 2792 */
-    int (* tcdrain) (int file_descriptor);                                                                                                           /* 2796 */
-    int (* tcflush) (int file_descriptor, int what);                                                                                                 /* 2800 */
-    int (* tcflow) (int file_descriptor, int action);                                                                                                /* 2804 */
-    int (* cfmakeraw) (struct termios *tios_p);                                                                                                      /* 2808 */
-    speed_t (* cfgetispeed) (const struct termios *tios_p);                                                                                          /* 2812 */
-    speed_t (* cfgetospeed) (const struct termios *tios_p);                                                                                          /* 2816 */
-    int (* cfsetispeed) (struct termios *tios_p, speed_t input_speed);                                                                               /* 2820 */
-    int (* cfsetospeed) (struct termios *tios_p, speed_t output_speed);                                                                              /* 2824 */
+    int (* tcgetattr) (int file_descriptor, struct termios *tios_p);                                                                                 /* 2788 */
+    int (* tcsetattr) (int file_descriptor, int action, struct termios *tios_p);                                                                     /* 2792 */
+    int (* tcsendbreak) (int file_descriptor, int duration);                                                                                         /* 2796 */
+    int (* tcdrain) (int file_descriptor);                                                                                                           /* 2800 */
+    int (* tcflush) (int file_descriptor, int what);                                                                                                 /* 2804 */
+    int (* tcflow) (int file_descriptor, int action);                                                                                                /* 2808 */
+    int (* cfmakeraw) (struct termios *tios_p);                                                                                                      /* 2812 */
+    speed_t (* cfgetispeed) (const struct termios *tios_p);                                                                                          /* 2816 */
+    speed_t (* cfgetospeed) (const struct termios *tios_p);                                                                                          /* 2820 */
+    int (* cfsetispeed) (struct termios *tios_p, speed_t input_speed);                                                                               /* 2824 */
+    int (* cfsetospeed) (struct termios *tios_p, speed_t output_speed);                                                                              /* 2828 */
 
     /* time.h */
-    clock_t (* clock) (void);                                                                                                                        /* 2828 */
-    time_t (* time) (time_t *t);                                                                                                                     /* 2832 */
-    char * (* asctime) (const struct tm *tm);                                                                                                        /* 2836 */
-    char * (* ctime) (const time_t *t);                                                                                                              /* 2840 */
-    struct tm * (* gmtime) (const time_t *t);                                                                                                        /* 2844 */
-    struct tm * (* localtime) (const time_t *t);                                                                                                     /* 2848 */
-    time_t (* mktime) (struct tm *tm);                                                                                                               /* 2852 */
-    double (* difftime) (time_t t1, time_t t0);                                                                                                      /* 2856 */
-    size_t (* strftime) (char *s, size_t maxsize, const char *format, const struct tm *tm);                                                          /* 2860 */
-    char * (* strptime) (const char *buf, const char *fmt, struct tm *timeptr);                                                                      /* 2864 */
-    char * (* asctime_r) (const struct tm *tm, char *buffer);                                                                                        /* 2868 */
-    char * (* ctime_r) (const time_t *tptr, char *buffer);                                                                                           /* 2872 */
-    struct tm * (* gmtime_r) (const time_t *t, struct tm *tm_ptr);                                                                                   /* 2876 */
-    struct tm * (* localtime_r) (const time_t *t, struct tm *tm_ptr);                                                                                /* 2880 */
-    void (* tzset) (void);                                                                                                                           /* 2884 */
-    int (* nanosleep) (const struct timespec *req, struct timespec *rem);                                                                            /* 2888 */
-    int (* clock_gettime) (clockid_t clk_id, struct timespec *t);                                                                                    /* 2892 */
-    int (* clock_settime) (clockid_t clk_id, const struct timespec *t);                                                                              /* 2896 */
-    int (* clock_getres) (clockid_t clock_id, struct timespec *res);                                                                                 /* 2900 */
-    int (* clock_nanosleep) (clockid_t clock_id, int flags, const struct timespec *request, struct timespec *remain);                                /* 2904 */
-    unsigned long long (* rdtsc) (void);                                                                                                             /* 2908 */
-    int (* clock_gettime64) (clockid_t clock_id, struct timespec64 *tp);                                                                             /* 2912 */
+    clock_t (* clock) (void);                                                                                                                        /* 2832 */
+    time_t (* time) (time_t *t);                                                                                                                     /* 2836 */
+    char * (* asctime) (const struct tm *tm);                                                                                                        /* 2840 */
+    char * (* ctime) (const time_t *t);                                                                                                              /* 2844 */
+    struct tm * (* gmtime) (const time_t *t);                                                                                                        /* 2848 */
+    struct tm * (* localtime) (const time_t *t);                                                                                                     /* 2852 */
+    time_t (* mktime) (struct tm *tm);                                                                                                               /* 2856 */
+    double (* difftime) (time_t t1, time_t t0);                                                                                                      /* 2860 */
+    size_t (* strftime) (char *s, size_t maxsize, const char *format, const struct tm *tm);                                                          /* 2864 */
+    char * (* strptime) (const char *buf, const char *fmt, struct tm *timeptr);                                                                      /* 2868 */
+    char * (* asctime_r) (const struct tm *tm, char *buffer);                                                                                        /* 2872 */
+    char * (* ctime_r) (const time_t *tptr, char *buffer);                                                                                           /* 2876 */
+    struct tm * (* gmtime_r) (const time_t *t, struct tm *tm_ptr);                                                                                   /* 2880 */
+    struct tm * (* localtime_r) (const time_t *t, struct tm *tm_ptr);                                                                                /* 2884 */
+    void (* tzset) (void);                                                                                                                           /* 2888 */
+    int (* nanosleep) (const struct timespec *req, struct timespec *rem);                                                                            /* 2892 */
+    int (* clock_gettime) (clockid_t clk_id, struct timespec *t);                                                                                    /* 2896 */
+    int (* clock_settime) (clockid_t clk_id, const struct timespec *t);                                                                              /* 2900 */
+    int (* clock_getres) (clockid_t clock_id, struct timespec *res);                                                                                 /* 2904 */
+    int (* clock_nanosleep) (clockid_t clock_id, int flags, const struct timespec *request, struct timespec *remain);                                /* 2908 */
+    unsigned long long (* rdtsc) (void);                                                                                                             /* 2912 */
+    int (* clock_gettime64) (clockid_t clock_id, struct timespec64 *tp);                                                                             /* 2916 */
 
     /* uchar.h */
-    size_t (* c16rtomb) (char *__restrict, char16_t, mbstate_t *__restrict);                                                                         /* 2916 */
-    size_t (* mbrtoc16) (char16_t *__restrict, const char *__restrict, size_t, mbstate_t *__restrict);                                               /* 2920 */
-    size_t (* c32rtomb) (char *__restrict, char32_t, mbstate_t *__restrict);                                                                         /* 2924 */
-    size_t (* mbrtoc32) (char32_t *__restrict, const char *__restrict, size_t, mbstate_t *__restrict);                                               /* 2928 */
+    size_t (* c16rtomb) (char *__restrict, char16_t, mbstate_t *__restrict);                                                                         /* 2920 */
+    size_t (* mbrtoc16) (char16_t *__restrict, const char *__restrict, size_t, mbstate_t *__restrict);                                               /* 2924 */
+    size_t (* c32rtomb) (char *__restrict, char32_t, mbstate_t *__restrict);                                                                         /* 2928 */
+    size_t (* mbrtoc32) (char32_t *__restrict, const char *__restrict, size_t, mbstate_t *__restrict);                                               /* 2932 */
 
     /* ulimit.h */
-    long (* ulimit) (int cmd,long newlimit);                                                                                                         /* 2932 */
+    long (* ulimit) (int cmd,long newlimit);                                                                                                         /* 2936 */
 
     /* unistd.h */
-    int (* isatty) (int file_descriptor);                                                                                                            /* 2936 */
-    int (* dup) (int file_descriptor);                                                                                                               /* 2940 */
-    int (* dup2) (int file_descriptor1, int file_descriptor2);                                                                                       /* 2944 */
-    off_t (* lseek) (int file_descriptor, off_t offset, int mode);                                                                                   /* 2948 */
-    int (* access) (const char * path_name, int mode);                                                                                               /* 2952 */
-    int (* chown) (const char * path_name, uid_t owner, gid_t group);                                                                                /* 2956 */
-    int (* fchown) (int file_descriptor, uid_t owner, gid_t group);                                                                                  /* 2960 */
-    int (* lchown) (const char * path_name, uid_t owner, gid_t group);                                                                               /* 2964 */
-    int (* truncate) (const char * path_name, off_t length);                                                                                         /* 2968 */
-    int (* ftruncate) (int file_descriptor, off_t length);                                                                                           /* 2972 */
-    int (* getpagesize) (void);                                                                                                                      /* 2976 */
-    int (* ftruncate64) (int file_descriptor, _off64_t length);                                                                                      /* 2980 */
-    int (* truncate64) (const char *path_name, _off64_t length);                                                                                     /* 2984 */
-    off64_t (* lseek64) (int fd, off64_t offset, int whence);                                                                                        /* 2988 */
-    unsigned int (* alarm) (unsigned seconds);                                                                                                       /* 2992 */
-    useconds_t (* ualarm) (useconds_t usecs, useconds_t interval);                                                                                   /* 2996 */
-    int (* link) (const char * existing_path,const char * new_path);                                                                                 /* 3000 */
-    int (* unlink) (const char * path_name);                                                                                                         /* 3004 */
-    int (* symlink) (const char * actual_path, const char * symbolic_path);                                                                          /* 3008 */
-    int (* readlink) (const char * path_name, char * buffer, int buffer_size);                                                                       /* 3012 */
-    int (* chdir) (const char * path_name);                                                                                                          /* 3016 */
-    int (* fchdir) (int file_descriptor);                                                                                                            /* 3020 */
-    int (* lockf) (int file_descriptor, int function, off_t size);                                                                                   /* 3024 */
-    unsigned int (* sleep) (unsigned int seconds);                                                                                                   /* 3028 */
-    int (* usleep) (useconds_t microseconds);                                                                                                        /* 3032 */
-    int (* pause) (void);                                                                                                                            /* 3036 */
-    int (* getopt) (int argc, char * const argv[], const char *opts);                                                                                /* 3040 */
+    int (* isatty) (int file_descriptor);                                                                                                            /* 2940 */
+    int (* dup) (int file_descriptor);                                                                                                               /* 2944 */
+    int (* dup2) (int file_descriptor1, int file_descriptor2);                                                                                       /* 2948 */
+    off_t (* lseek) (int file_descriptor, off_t offset, int mode);                                                                                   /* 2952 */
+    int (* access) (const char * path_name, int mode);                                                                                               /* 2956 */
+    int (* chown) (const char * path_name, uid_t owner, gid_t group);                                                                                /* 2960 */
+    int (* fchown) (int file_descriptor, uid_t owner, gid_t group);                                                                                  /* 2964 */
+    int (* lchown) (const char * path_name, uid_t owner, gid_t group);                                                                               /* 2968 */
+    int (* truncate) (const char * path_name, off_t length);                                                                                         /* 2972 */
+    int (* ftruncate) (int file_descriptor, off_t length);                                                                                           /* 2976 */
+    int (* getpagesize) (void);                                                                                                                      /* 2980 */
+    int (* ftruncate64) (int file_descriptor, _off64_t length);                                                                                      /* 2984 */
+    int (* truncate64) (const char *path_name, _off64_t length);                                                                                     /* 2988 */
+    off64_t (* lseek64) (int fd, off64_t offset, int whence);                                                                                        /* 2992 */
+    unsigned int (* alarm) (unsigned seconds);                                                                                                       /* 2996 */
+    useconds_t (* ualarm) (useconds_t usecs, useconds_t interval);                                                                                   /* 3000 */
+    int (* link) (const char * existing_path,const char * new_path);                                                                                 /* 3004 */
+    int (* unlink) (const char * path_name);                                                                                                         /* 3008 */
+    int (* symlink) (const char * actual_path, const char * symbolic_path);                                                                          /* 3012 */
+    int (* readlink) (const char * path_name, char * buffer, int buffer_size);                                                                       /* 3016 */
+    int (* chdir) (const char * path_name);                                                                                                          /* 3020 */
+    int (* fchdir) (int file_descriptor);                                                                                                            /* 3024 */
+    int (* lockf) (int file_descriptor, int function, off_t size);                                                                                   /* 3028 */
+    unsigned int (* sleep) (unsigned int seconds);                                                                                                   /* 3032 */
+    int (* usleep) (useconds_t microseconds);                                                                                                        /* 3036 */
+    int (* pause) (void);                                                                                                                            /* 3040 */
     pid_t (* getpid) (void);                                                                                                                         /* 3044 */
     pid_t (* getppid) (void);                                                                                                                        /* 3048 */
     pid_t (* getpgrp) (void );                                                                                                                       /* 3052 */

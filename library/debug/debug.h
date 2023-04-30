@@ -104,7 +104,7 @@
        _SETDEBUGLEVEL(2),                  \
        kprintf("[%s] "                     \
         "%s:%ld: failed assertion '%s'\n", \
-        __program_name,                    \
+        __CLIB2->__progname,               \
         __FILE__,                          \
         __LINE__,                          \
         #expression),                      \

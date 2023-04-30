@@ -19,8 +19,6 @@
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
-#include "../rt/clist.h"
-
 __BEGIN_DECLS
 
 /*
@@ -54,11 +52,6 @@ __BEGIN_DECLS
  */
 extern struct WBStartup *__WBenchMsg;
 #define WBenchMsg __WBenchMsg
-
-/****************************************************************************/
-
-/* This is filled in with a pointer to the name of the program being run. */
-extern char *__program_name;
 
 /*
  * You can replace this function with your own and perform your own
@@ -412,7 +405,7 @@ struct _wchar {
  * Initial _clib2 structure. This contains all fields used by current progream
  */
 
-extern struct _clib2 *__getclib2(void);
+extern struct _clib2 *__getClib2(void);
 extern struct _global_clib2 *__getGlobalClib2(void);
 
 struct _global_clib2 {
@@ -485,6 +478,7 @@ struct _clib2 {
 
     /* Used for shared version library */
     int _errno;
+    int _h_errno;
 
     /*
      * Defaults for path delimiter (":") and the shell search path
@@ -504,12 +498,20 @@ struct _clib2 {
     /* The file descriptor table. */
     struct fd **__fd;
     int __num_fd;
+
+    /* This is filled in with a pointer to the name of the program being run. */
+    char *__progname;
+
+    /* This holds a mask of all signals whose delivery is currently blocked.
+       The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
+       modify or query it. */
+    int __signals_blocked;
 };
 
 extern struct _clib2 *__clib2;
 extern struct _global_clib2 *__global_clib2;
 
-#define __CLIB2 (__getclib2())
+#define __CLIB2 (__getClib2())
 #define __GCLIB2 (__getGlobalClib2())
 
 __END_DECLS

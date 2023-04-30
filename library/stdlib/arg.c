@@ -167,7 +167,7 @@ ARG_CONSTRUCTOR(arg_init) {
             goto out;
 
         /* The first parameter is the program name. */
-        __argv[0] = __program_name;
+        __argv[0] = __CLIB2->__progname;
 
         str = command_line;
 

@@ -90,14 +90,14 @@ int itimer_real_task() {
             tmr_real_tr->Time.Microseconds += __CLIB2->tmr_time.it_interval.tv_usec;
 
             /* If SIGALRM is blocked kill the timer */
-            if (FLAG_IS_SET(__signals_blocked, (1 << SIGALRM))) {
+            if (FLAG_IS_SET(__CLIB2->__signals_blocked, (1 << SIGALRM))) {
                 break;
             }
 
             raise(SIGALRM);
 
             /* Check again if SIGALRM is blocked and then kill the timer */
-            if (FLAG_IS_SET(__signals_blocked, (1 << SIGALRM))) {
+            if (FLAG_IS_SET(__CLIB2->__signals_blocked, (1 << SIGALRM))) {
                 break;
             }
         }

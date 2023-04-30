@@ -1,6 +1,8 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#include <proto/dos.h>
+
 #include "pthread.h"
 #include <sys/time.h>
 
@@ -91,6 +93,9 @@ typedef struct {
     int detached;
     char name[NAMELEN];
 } ThreadInfo;
+
+extern struct Library *_DOSBase;
+extern struct DOSIFace *_IDOS;
 
 extern struct SignalSemaphore thread_sem;
 extern ThreadInfo threads[PTHREAD_THREADS_MAX];

@@ -139,7 +139,7 @@ SOCKET_CONSTRUCTOR(socket_init) {
         tags[1].ti_Data = 0;
 
     tags[2].ti_Tag = SBTM_SETVAL(SBTC_LOGTAGPTR);
-    tags[2].ti_Data = (ULONG)__program_name;
+    tags[2].ti_Data = (ULONG)__CLIB2->__progname;
 
     /* Wire the library's h_errno variable to our local h_errno. */
     tags[3].ti_Tag = SBTM_SETVAL(SBTC_HERRNOLONGPTR);

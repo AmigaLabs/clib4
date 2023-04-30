@@ -41,8 +41,7 @@ __stack_usage_exit(void) {
             total++;
         }
 
-        kprintf("[%s] total amount of stack space used = %ld bytes\n",
-                __program_name, stack_size - total);
+        kprintf("[%s] total amount of stack space used = %ld bytes\n", __CLIB2->__progname, stack_size - total);
 
         stack_swap_struct.stk_Lower = NULL;
         stack_swap_struct.stk_Upper = 0;

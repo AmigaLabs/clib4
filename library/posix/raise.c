@@ -60,11 +60,6 @@ signal_handler_t __signal_handler_table[NSIG] = {
     SIG_DFL /* SIGUSR2 */
 };
 
-/* This holds a mask of all signals whose delivery is currently blocked.
-   The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
-   modify or query it. */
-int __signals_blocked;
-
 int
 raise(int sig) {
     static int local_signals_blocked;
@@ -88,7 +83,7 @@ raise(int sig) {
     }
 
     /* Can we deliver the signal? */
-    if ((FLAG_IS_CLEAR(__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
+    if ((FLAG_IS_CLEAR(__CLIB2->__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
         signal_handler_t handler;
 
         /* Which handler is installed for this signal? */

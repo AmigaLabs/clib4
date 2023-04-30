@@ -22,6 +22,9 @@ __BEGIN_DECLS
 extern  int *__mb_cur_max(void);
 #define MB_CUR_MAX (*__mb_cur_max())
 
+#define __program_name (*__getprogname())
+extern const char *__getprogname(void);
+
 /****************************************************************************/
 
 /* The maximum value that can be returned by the rand() function */

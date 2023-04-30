@@ -8,7 +8,7 @@
 
 size_t
 wcrtomb(char *s, wchar_t wchar, mbstate_t *state) {
-    if (strlen(__getclib2()->_current_locale) <= 1) { /* fall-through */
+    if (strlen(__CLIB2->_current_locale) <= 1) { /* fall-through */
     } else if (!strcmp(__CLIB2->_current_locale, "C-UTF-8")) {
         if (s == NULL) {
             return 0; /* UTF-8 encoding is not state-dependent */

@@ -300,7 +300,7 @@ call_main(
                 while (arg_str_len > 0 && arg_str_copy[arg_str_len - 1] <= ' ')
                     arg_str_copy[--arg_str_len] = '\0';
 
-                D(("[%s] %s %s\n", current_dir_name, __program_name, arg_str_copy));
+                D(("[%s] %s %s\n", current_dir_name, __CLIB2->__progname, arg_str_copy));
                 FreeVec(arg_str_copy);
             }
         }

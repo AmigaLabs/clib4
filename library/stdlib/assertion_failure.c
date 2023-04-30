@@ -50,7 +50,7 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
                 memset(&es, 0, sizeof(es));
 
                 es.es_StructSize = sizeof(es);
-                es.es_Title = (STRPTR) __program_name;
+                es.es_Title = (STRPTR) __CLIB2->__progname;
                 es.es_TextFormat = (STRPTR) "Assertion of condition\n\"%s\"\nfailed in file \"%s\", line %ld.";
                 es.es_GadgetFormat = (STRPTR) "Sorry";
 
@@ -61,8 +61,8 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
             }
         } else {
             if (__CLIB2->__num_iob > STDERR_FILENO) {
-                if (__program_name != NULL)
-                    fprintf(stderr, "[%s] ", __program_name);
+                if (__CLIB2->__progname != NULL)
+                    fprintf(stderr, "[%s] ", __CLIB2->__progname);
 
                 fprintf(stderr,
                         "%s:%d: failed assertion \"%s\".\n",
@@ -97,8 +97,8 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
                         output = Output();
 
                     if (output != ZERO) {
-                        if (__program_name != NULL)
-                            FPrintf(output, "[%s] ", __program_name);
+                        if (__CLIB2->__progname != NULL)
+                            FPrintf(output, "[%s] ", __CLIB2->__progname);
 
                         FPrintf(output,
                                 "%s:%ld: failed assertion \"%s\".\n",
