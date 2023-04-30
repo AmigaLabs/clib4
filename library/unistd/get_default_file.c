@@ -11,9 +11,9 @@ __get_default_file(int file_descriptor, long *file_ptr) {
     int result = ERROR;
     struct fd *fd;
 
-    assert(file_descriptor >= 0 && file_descriptor < __num_fd);
-    assert(__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __CLIB2->__num_fd);
+    assert(__CLIB2->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__CLIB2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
     assert(file_ptr != NULL);
 
     fd = __get_file_descriptor(file_descriptor);

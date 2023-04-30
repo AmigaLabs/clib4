@@ -67,7 +67,7 @@ tcflush(int file_descriptor, int queue) {
         }
 
         while (WaitForChar(file, 1) != DOSFALSE) {
-            if (__check_abort_enabled && FLAG_IS_SET(SetSignal(0, 0), __break_signal_mask))
+            if (__CLIB2->__check_abort_enabled && FLAG_IS_SET(SetSignal(0, 0), __break_signal_mask))
                 break;
 
             /* Read away available data. (upto 8k) */

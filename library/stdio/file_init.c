@@ -164,13 +164,16 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
     /* If we were invoked from Workbench, set up the standard I/O streams. */
     if (__WBenchMsg != NULL) {
+        SHOWMSG("set up the standard I/O streams");
         if (wb_file_init() < 0) {
             goto out;
         }
     }
 
+    SHOWMSG("Now initialize the standard I/O streams (input, output, error)");
     /* Now initialize the standard I/O streams (input, output, error). */
     for (i = STDIN_FILENO; i <= STDERR_FILENO; i++) {
+        D(("File %ld", i));
         switch (i) {
             case STDIN_FILENO:
 
@@ -218,8 +221,8 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
         /* Align the buffer start address to a cache line boundary. */
         aligned_buffer = (char *) ((ULONG)(buffer + (__cache_line_size - 1)) & ~(__cache_line_size - 1));
-        __initialize_fd(__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
-        __initialize_iob(__iob[i],
+        __initialize_fd(__CLIB2->__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
+        __initialize_iob(__CLIB2->__iob[i],
                          __iob_hook_entry,
                          buffer,
                          aligned_buffer,

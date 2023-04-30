@@ -7,7 +7,6 @@
 #endif /* _UNISTD_HEADERS_H */
 
 int
-dup(int file_descriptor)
-{
-	return(dup2(file_descriptor,-1));
+dup(int file_descriptor) {
+    return (dup2(file_descriptor, -1));
 }

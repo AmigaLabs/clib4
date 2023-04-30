@@ -60,7 +60,7 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
                 CloseLibrary(IntuitionBase);
             }
         } else {
-            if (__num_iob > STDERR_FILENO) {
+            if (__CLIB2->__num_iob > STDERR_FILENO) {
                 if (__program_name != NULL)
                     fprintf(stderr, "[%s] ", __program_name);
 

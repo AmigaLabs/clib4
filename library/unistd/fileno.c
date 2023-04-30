@@ -34,9 +34,9 @@ fileno(FILE *file) {
         goto out;
     }
 
-    assert(iob->iob_Descriptor >= 0 && iob->iob_Descriptor < __num_fd);
-    assert(__fd[iob->iob_Descriptor] != NULL);
-    assert(FLAG_IS_SET(__fd[iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
+    assert(iob->iob_Descriptor >= 0 && iob->iob_Descriptor < __CLIB2->__num_fd);
+    assert(__CLIB2->__fd[iob->iob_Descriptor] != NULL);
+    assert(FLAG_IS_SET(__CLIB2->__fd[iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
 
     result = iob->iob_Descriptor;
 

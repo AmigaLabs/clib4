@@ -91,7 +91,7 @@ struct Clib2IFace {
     struct Clib2IFace *APICALL (*Clone)(struct Clib2IFace *Self);   //76
 
     /* internal */
-    int  (* library_start)(char *argstr, int arglen, struct Library **_DOSBase, struct DOSIFace **_IDOS, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //80
+    int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //80
     void (* __getclib2)(void);                                      //84
     void (* __translate_amiga_to_unix_path_name)(void);             //88
     void (* __translate_unix_to_amiga_path_name)(void);             //92

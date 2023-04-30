@@ -24,7 +24,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     SHOWVALUE(file_descriptor);
     SHOWVALUE(cmd);
 
-    if (__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__fd[file_descriptor]->fd_Flags, FDF_IN_USE) || file_descriptor < 0 || file_descriptor > __num_fd) {
+    if (__CLIB2->__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__CLIB2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE) || file_descriptor < 0 || file_descriptor > __CLIB2->__num_fd) {
         __set_errno(EINVAL);
         goto out;
     }
@@ -217,8 +217,8 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
                 __stdio_lock();
 
-                for (i = fdbase; i < __num_fd; i++) {
-                    if (FLAG_IS_CLEAR(__fd[i]->fd_Flags, FDF_IN_USE)) {
+                for (i = fdbase; i < __CLIB2->__num_fd; i++) {
+                    if (FLAG_IS_CLEAR(__CLIB2->__fd[i]->fd_Flags, FDF_IN_USE)) {
                         vacant_slot = i;
                         break;
                     }
@@ -230,7 +230,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             } while (vacant_slot < 0);
 
             /* Got a file descriptor, duplicate it */
-            __duplicate_fd(__fd[vacant_slot], fd);
+            __duplicate_fd(__CLIB2->__fd[vacant_slot], fd);
 
             result = vacant_slot;
 

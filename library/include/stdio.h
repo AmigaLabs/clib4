@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #include <wchar.h>
 
+#include <dos.h>
+
 __BEGIN_DECLS
 
 /* 'End of file' indicator returned by, for example, fgetc() */
@@ -113,15 +115,10 @@ typedef struct __sFILE FILE;
 
 /****************************************************************************/
 
-/* Anchor for the buffered standard I/O streams */
-extern struct iob **__iob;
-
-/****************************************************************************/
-
 /* The three standard I/O streams */
-#define stdin ((FILE *)__iob[0])
-#define stdout ((FILE *)__iob[1])
-#define stderr ((FILE *)__iob[2])
+#define stdin ((FILE *)  __CLIB2->__iob[0])
+#define stdout ((FILE *) __CLIB2->__iob[1])
+#define stderr ((FILE *) __CLIB2->__iob[2])
 
 /****************************************************************************/
 

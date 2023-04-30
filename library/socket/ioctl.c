@@ -88,13 +88,12 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
     __set_errno(0);
 
     if (request != TIOCGWINSZ && request != TIOCSWINSZ) {
-        if (FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET)) {
+        if (FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET)) {
             assert(__SocketBase != NULL);
 
-            assert(sockfd >= 0 && sockfd < __num_fd);
-            assert(__fd[sockfd] != NULL);
-            assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
-            //assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+            assert(sockfd >= 0 && sockfd < __CLIB2->__num_fd);
+            assert(__CLIB2->__fd[sockfd] != NULL);
+            assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
 
             fd = __get_file_descriptor_socket(sockfd);
             if (fd == NULL)

@@ -31,12 +31,12 @@ fflush(FILE *stream) {
         __stdio_lock();
 
         /* Flush all streams which still have unwritten data in the buffer. */
-        for (i = 0; i < __num_iob; i++) {
-            if (__iob[i] != NULL &&
-                FLAG_IS_SET(__iob[i]->iob_Flags, IOBF_IN_USE) &&
-                FLAG_IS_SET(__iob[i]->iob_Flags, IOBF_WRITE) &&
-                __iob_write_buffer_is_valid(__iob[i])) {
-                if (__flush_iob_write_buffer(__iob[i]) < 0) {
+        for (i = 0; i < __CLIB2->__num_iob; i++) {
+            if (__CLIB2->__iob[i] != NULL &&
+                FLAG_IS_SET(__CLIB2->__iob[i]->iob_Flags, IOBF_IN_USE) &&
+                FLAG_IS_SET(__CLIB2->__iob[i]->iob_Flags, IOBF_WRITE) &&
+                __iob_write_buffer_is_valid(__CLIB2->__iob[i])) {
+                if (__flush_iob_write_buffer(__CLIB2->__iob[i]) < 0) {
                     failed_iob = i;
                     break;
                 }

@@ -29,8 +29,10 @@ __timezone_exit(void) {
         DECLARE_TIMEZONEBASE();
 
         if (dyntz == TRUE) {
-            free(tzname[0]);
-            free(tzname[1]);
+            if (tzname[0]) FreeVec(tzname[0]);
+            if (tzname[1]) FreeVec(tzname[1]);
+            tzname[0] = NULL;
+            tzname[1] = NULL;
         }
 
         if (__ITimezone != NULL) {
@@ -73,8 +75,8 @@ __timezone_init(void) {
         // Set global timezone variable
         uint32 gmtoffset = 0;
         int8 dstime = -1;
-        tzname[0] = calloc(1, MAX_TZSIZE + 1);
-        tzname[1] = calloc(1, MAX_TZSIZE + 1);
+        tzname[0] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        tzname[1] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
         dyntz = TRUE;
 
         GetTimezoneAttrs(NULL,

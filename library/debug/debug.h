@@ -101,7 +101,6 @@
     ((void)                                \
      ((expression) ? 0 :                   \
       (                                    \
-       *(char *)0 = 0, /* Enforcer hit */  \
        _SETDEBUGLEVEL(2),                  \
        kprintf("[%s] "                     \
         "%s:%ld: failed assertion '%s'\n", \

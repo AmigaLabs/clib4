@@ -25,10 +25,10 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
 
     assert(__SocketBase != NULL);
 
-    assert(sockfd >= 0 && sockfd < __num_fd);
-    assert(__fd[sockfd] != NULL);
-    assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
-    assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __CLIB2->__num_fd);
+    assert(__CLIB2->__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
     /* We need to know which parameter to submit to the accept()
        call first. */
@@ -76,7 +76,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
         goto out;
     }
 
-    new_fd = __fd[new_fd_slot_number];
+    new_fd = __CLIB2->__fd[new_fd_slot_number];
 
     __initialize_fd(new_fd, __socket_hook_entry, (BPTR) new_socket_fd,
                     FDF_IN_USE | FDF_IS_SOCKET | FDF_READ | FDF_WRITE, lock);

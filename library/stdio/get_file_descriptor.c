@@ -18,12 +18,12 @@ get_file_descriptor(int file_descriptor, enum resolution_mode_t resolution_mode)
 
     __stdio_lock();
 
-    if (file_descriptor < 0 || file_descriptor >= __num_fd) {
+    if (file_descriptor < 0 || file_descriptor >= __CLIB2->__num_fd) {
         SHOWMSG("invalid file descriptor");
         goto out;
     }
 
-    fd = __fd[file_descriptor];
+    fd = __CLIB2->__fd[file_descriptor];
     if (fd == NULL) {
         SHOWMSG("invalid file descriptor");
         goto out;

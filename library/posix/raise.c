@@ -136,7 +136,7 @@ raise(int sig) {
                     char break_string[80];
 
                     /* Turn off ^C checking for good. */
-                    __check_abort_enabled = FALSE;
+                    __CLIB2->__check_abort_enabled = FALSE;
 
                     Fault(ERROR_BREAK, NULL, break_string, (LONG)
                     sizeof(break_string));

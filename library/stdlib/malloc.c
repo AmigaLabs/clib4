@@ -17,9 +17,8 @@
 #undef malloc
 
 /* Wof Allocator */
-wof_allocator_t NOCOMMON *__wof_allocator;
-
-static struct SignalSemaphore *memory_semaphore;
+wof_allocator_t *__wof_allocator = NULL;
+static struct SignalSemaphore *memory_semaphore = NULL;
 
 void *
 malloc(size_t size) {
@@ -49,8 +48,10 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
 
     __memory_lock();
 
-    if (__wof_allocator != NULL)
-    wof_allocator_destroy(__wof_allocator);
+    if (__wof_allocator != NULL) {
+        wof_allocator_destroy(__wof_allocator);
+        __wof_allocator = NULL;
+    }
 
     __memory_unlock();
 
@@ -70,7 +71,7 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
 
     memory_semaphore = __create_semaphore();
     if (memory_semaphore == NULL)
-    goto out;
+        goto out;
 
     __wof_allocator = wof_allocator_new();
     if (__wof_allocator == NULL) {

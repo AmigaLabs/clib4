@@ -41,32 +41,32 @@
    constructors and the user-supplied destructors before the library
    destructors. */
 
-#define STDLIB_CONSTRUCTOR(name)	CONSTRUCTOR(name,	1)
-#define STDLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	1)
+#define STDLIB_CONSTRUCTOR(name)	CONSTRUCTOR(name,	101)
+#define STDLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	101)
 
-#define STK_CONSTRUCTOR(name)		CONSTRUCTOR(name,	2)
-#define STK_DESTRUCTOR(name)		DESTRUCTOR(name,	2)
+#define STK_CONSTRUCTOR(name)		CONSTRUCTOR(name,	102)
+#define STK_DESTRUCTOR(name)		DESTRUCTOR(name,	102)
 
-#define STDIO_CONSTRUCTOR(name)		CONSTRUCTOR(name,	3)
-#define STDIO_DESTRUCTOR(name)		DESTRUCTOR(name,	3)
+#define STDIO_CONSTRUCTOR(name)		CONSTRUCTOR(name,	103)
+#define STDIO_DESTRUCTOR(name)		DESTRUCTOR(name,	103)
 
-#define FILE_CONSTRUCTOR(name)		CONSTRUCTOR(name,	4)
-#define FILE_DESTRUCTOR(name)		DESTRUCTOR(name,	4)
+#define FILE_CONSTRUCTOR(name)		CONSTRUCTOR(name,	104)
+#define FILE_DESTRUCTOR(name)		DESTRUCTOR(name,	104)
 
-#define MATH_CONSTRUCTOR(name)		CONSTRUCTOR(name,	5)
-#define MATH_DESTRUCTOR(name)		DESTRUCTOR(name,	5)
+#define MATH_CONSTRUCTOR(name)		CONSTRUCTOR(name,	105)
+#define MATH_DESTRUCTOR(name)		DESTRUCTOR(name,	105)
 
-#define SOCKET_CONSTRUCTOR(name)	CONSTRUCTOR(name,	6)
-#define SOCKET_DESTRUCTOR(name)		DESTRUCTOR(name,	6)
+#define SOCKET_CONSTRUCTOR(name)	CONSTRUCTOR(name,	106)
+#define SOCKET_DESTRUCTOR(name)		DESTRUCTOR(name,	106)
 
-#define ARG_CONSTRUCTOR(name)		CONSTRUCTOR(name,	7)
-#define ARG_DESTRUCTOR(name)		DESTRUCTOR(name,	7)
+#define ARG_CONSTRUCTOR(name)		CONSTRUCTOR(name,	107)
+#define ARG_DESTRUCTOR(name)		DESTRUCTOR(name,	107)
 
-#define CLIB_CONSTRUCTOR(name)		CONSTRUCTOR(name,	8)
-#define CLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	8)
+#define CLIB_CONSTRUCTOR(name)		CONSTRUCTOR(name,	108)
+#define CLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	108)
 
-#define PROFILE_CONSTRUCTOR(name)	CONSTRUCTOR(name,	9)
-#define PROFILE_DESTRUCTOR(name)	DESTRUCTOR(name,	9)
+#define PROFILE_CONSTRUCTOR(name)	CONSTRUCTOR(name,	109)
+#define PROFILE_DESTRUCTOR(name)	DESTRUCTOR(name,	109)
 
 /****************************************************************************/
 

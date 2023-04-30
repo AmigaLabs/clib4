@@ -37,7 +37,7 @@ puts(const char *s) {
    break it up into individual lines. */
     buffer_mode = (file->iob_Flags & IOBF_BUFFER_MODE);
     if (buffer_mode == IOBF_BUFFER_MODE_NONE) {
-        struct fd *fd = __fd[file->iob_Descriptor];
+        struct fd *fd = __CLIB2->__fd[file->iob_Descriptor];
 
         __fd_lock(fd);
 

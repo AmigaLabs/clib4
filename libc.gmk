@@ -178,7 +178,6 @@ C_POSIX := \
 	posix/shmget.o \
 	posix/shmids.o \
 	posix/checkabort.o \
-	posix/data.o \
 	posix/kill.o \
 	posix/mask.o \
 	posix/raise.o \
@@ -719,8 +718,6 @@ C_UNISTD := \
 	unistd/chdir_exit.o \
 	unistd/chown.o \
 	unistd/currentpathname.o \
-	unistd/def_path.o \
-	unistd/def_path_delimiter.o \
 	unistd/dup.o \
 	unistd/dup2.o \
 	crypt/encrypt.o \

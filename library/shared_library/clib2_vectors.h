@@ -1,6 +1,6 @@
 static void *main_vectors[] = {
-        (void *) (_manager_Obtain),
-        (void *) (_manager_Release),
+        (void *) (libObtain),
+        (void *) (libRelease),
         (void *) (NULL),
         (void *) (NULL),
         /* internal */
@@ -10,10 +10,10 @@ static void *main_vectors[] = {
         (void *) (__translate_amiga_to_unix_path_name),
         (void *) (__translate_unix_to_amiga_path_name),
         (void *) (__getGlobalClib2),
-        (void *) (LIB_Reserved),
-        (void *) (LIB_Reserved),
-        (void *) (LIB_Reserved),
-        (void *) (LIB_Reserved),
+        (void *) (libReserved),
+        (void *) (libReserved),
+        (void *) (libReserved),
+        (void *) (libReserved),
 
         /* argz.h */
         (void *) (argz_create),                           /* 116 */

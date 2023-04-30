@@ -20,9 +20,9 @@ fsync(int file_descriptor) {
 
     __check_abort();
 
-    assert(file_descriptor >= 0 && file_descriptor < __num_fd);
-    assert(__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __CLIB2->__num_fd);
+    assert(__CLIB2->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__CLIB2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __stdio_lock();
 

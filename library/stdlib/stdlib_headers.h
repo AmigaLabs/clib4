@@ -100,8 +100,8 @@ extern unsigned int NOCOMMON __stack_size;
 extern BOOL NOCOMMON __is_resident;
 extern UBYTE NOCOMMON __shell_escape_character;
 
-extern char ** NOCOMMON	__argv;
-extern int NOCOMMON		__argc;
+extern char **__argv;
+extern int __argc;
 
 extern BOOL NOCOMMON __lib_startup;
 

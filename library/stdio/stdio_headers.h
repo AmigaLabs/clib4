@@ -310,18 +310,6 @@ extern struct WBStartup * NOCOMMON __WBenchMsg;
 
 /****************************************************************************/
 
-/* The file handle table. */
-extern struct iob ** 	__iob;
-extern int 				__num_iob;
-
-/****************************************************************************/
-
-/* The file descriptor table. */
-extern struct fd ** 	__fd;
-extern int 				__num_fd;
-
-/****************************************************************************/
-
 extern const char * NOCOMMON __file_lock_semaphore_name;
 
 /****************************************************************************/

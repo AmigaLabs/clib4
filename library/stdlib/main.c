@@ -318,7 +318,7 @@ out:
     saved_io_err = IoErr();
 
     /* From this point on, don't worry about ^C checking any more. */
-    __check_abort_enabled = FALSE;
+    __CLIB2->__check_abort_enabled = FALSE;
 
     /* If we end up here with the __stack_overflow variable
        set then the stack overflow handler dropped into
@@ -430,8 +430,6 @@ int
 _main(
         char *argstr,
         int arglen,
-        struct Library **_DOSBase,
-        struct DOSIFace **_IDOS,
         int (*start_main)(int, char **),
         void (*__EXT_CTOR_LIST__[])(void),
         void (*__EXT_DTOR_LIST__[])(void)) {
@@ -514,12 +512,6 @@ _main(
         Strlcpy(term_buffer, "amiga-clib2", 5);
         SetVar("TERM", term_buffer, 5, 0);
     }
-
-    /* Set interface pointers from opened one */
-    if (_DOSBase)
-        *_DOSBase = DOSBase;
-    if (_IDOS)
-        *_IDOS = IDOS;
 
     /* The following code will be executed if the program is to keep
        running in the shell or was launched from Workbench. */

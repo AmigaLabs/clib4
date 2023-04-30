@@ -93,6 +93,9 @@ reent_init() {
         /* Get the current task pointer */
         __clib2->self = (struct Process *) FindTask(NULL);
 
+        /* Enable check abort */
+        __clib2->__check_abort_enabled = TRUE;
+
         /* Initialize wchar stuff */
         __clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
         if (!__clib2->wide_status) {
@@ -165,6 +168,9 @@ reent_init() {
         __clib2->tmr_start_time.tv_sec = 0;
         __clib2->tmr_start_time.tv_usec = 0;
         __clib2->tmr_real_task = NULL;
+
+        __clib2->__default_path_delimiter = ":";
+        __clib2->__default_path = "/gcc/bin:/SDK/C:/SDK/Local/C:/C:.";
     }
     success = TRUE;
 

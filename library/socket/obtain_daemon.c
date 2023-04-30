@@ -30,8 +30,7 @@ BOOL
 __obtain_daemon_message(VOID) {
     BOOL success = FALSE;
 
-    if (Cli() != NULL && NOT __detach && __check_daemon_startup)
-    {
+    if (Cli() != NULL && NOT __detach && __check_daemon_startup) {
         struct _DaemonMessage *dm;
 
         /* The socket the superserver may have launched this program with is attached to the exit data entry of the process. */
@@ -91,7 +90,7 @@ __obtain_daemon_message(VOID) {
                 if (lock == NULL)
                     goto out;
 
-                fd = __fd[i];
+                fd = __CLIB2->__fd[i];
 
                 assert(fd != NULL && FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE));
 

@@ -5,19 +5,25 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
-uint32 LIB_Release(struct Interface *Self);
-int LIB_Reserved(void);
-uint32 LIB_Obtain(struct Interface *Self);
+struct Clib2Base {
+    struct Library libNode;
+    uint16 pad;
+    BPTR SegList;
+};
 
-struct Library *LIB_Init(struct Library *Clib2Base, BPTR librarySegment, struct ExecIFace *const iexec);
+int libReserved(void);
+uint32 libRelease(struct LibraryManagerInterface *Self);
+uint32 libObtain(struct LibraryManagerInterface *Self);
+struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version);
+struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIFace *const iexec);
+BPTR libExpunge(struct LibraryManagerInterface *Self);
+
 static void _start_ctors(void (*__CTOR_LIST__[])(void));
 static void _start_dtors(void (*__DTOR_LIST__[])(void));
 static void closeLibraries();
 
 int library_start(char *argstr,
                   int arglen,
-                  struct Library **_DOSBase,
-                  struct DOSIFace **_IDOS,
                   int (*start_main)(int, char **),
                   void (*__EXT_CTOR_LIST__[])(void),
                   void (*__EXT_DTOR_LIST__[])(void));
@@ -28,8 +34,6 @@ int32 _start(char *args,
 
 extern int _main(char *argstr,
                  int arglen,
-                 struct Library **_DOSBase,
-                 struct DOSIFace **_IDOS,
                  int (*start_main)(int, char **),
                  void (*__EXT_CTOR_LIST__[])(void),
                  void (*__EXT_DTOR_LIST__[])(void));

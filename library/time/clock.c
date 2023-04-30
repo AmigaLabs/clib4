@@ -36,6 +36,8 @@ clock(void) {
 
     ENTER();
 
+    __check_abort();
+
     /* Get the current time. */
     DateStamp(&now);
 

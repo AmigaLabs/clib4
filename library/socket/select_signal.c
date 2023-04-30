@@ -103,12 +103,12 @@ get_file_descriptor(int file_descriptor) {
 
     __stdio_lock();
 
-    if (file_descriptor < 0 || file_descriptor >= __num_fd)
+    if (file_descriptor < 0 || file_descriptor >= __CLIB2->__num_fd)
         goto out;
 
-    assert(__fd != NULL);
+    assert(__CLIB2->__fd != NULL);
 
-    fd = __fd[file_descriptor];
+    fd = __CLIB2->__fd[file_descriptor];
 
     assert(fd != NULL);
 
@@ -342,7 +342,7 @@ remap_descriptor_sets(
                     fd = get_file_descriptor(output_fd);
                     if (fd != NULL && FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_Socket == socket_fd) {
                         assert(output_fd < num_output_fds);
-                        assert(FLAG_IS_SET(__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
+                        assert(FLAG_IS_SET(__CLIB2->__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
 
                         D(("setting file %ld for socket #%ld", output_fd, socket_fd));
 
@@ -362,7 +362,7 @@ remap_descriptor_sets(
                     int output_fd = file_fd;
 
                     assert(output_fd < num_output_fds);
-                    assert(FLAG_IS_CLEAR(__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
+                    assert(FLAG_IS_CLEAR(__CLIB2->__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
 
                     D(("setting file %ld", file_fd));
 
@@ -645,7 +645,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 /* Signals to stop on; we want to stop when a break signal arrives. */
                 break_mask = signal_mask;
 
-                if (__check_abort_enabled)
+                if (__CLIB2->__check_abort_enabled)
                     break_mask |= __break_signal_mask;
 
                 /* Check for socket input. */
@@ -791,7 +791,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
             break_mask = signal_mask;
 
-            if (__check_abort_enabled)
+            if (__CLIB2->__check_abort_enabled)
                 break_mask |= __break_signal_mask;
 
             result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal *) timeout, &break_mask);

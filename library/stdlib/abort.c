@@ -26,7 +26,7 @@ abort(void)
 	/* If the signal handler returns it means that we still have
 	   to terminate the program. */
 
-	__check_abort_enabled = FALSE;
+    __CLIB2->__check_abort_enabled = FALSE;
 
 	__print_termination_message(NULL);
 

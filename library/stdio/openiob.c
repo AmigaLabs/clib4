@@ -31,17 +31,17 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
 
     __stdio_lock();
 
-    assert(mode != NULL && 0 <= slot_number && slot_number < __num_iob);
+    assert(mode != NULL && 0 <= slot_number && slot_number < __CLIB2->__num_iob);
 
-    file = __iob[slot_number];
+    file = __CLIB2->__iob[slot_number];
 
     assert(FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE));
 
     /* Figure out if the file descriptor provided is any use. */
     if (file_descriptor >= 0) {
-        assert(file_descriptor < __num_fd);
-        assert(__fd[file_descriptor] != NULL);
-        assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+        assert(file_descriptor < __CLIB2->__num_fd);
+        assert(__CLIB2->__fd[file_descriptor] != NULL);
+        assert(FLAG_IS_SET(__CLIB2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
         fd = __get_file_descriptor(file_descriptor);
         if (fd == NULL) {

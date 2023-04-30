@@ -60,11 +60,6 @@ extern struct WBStartup *__WBenchMsg;
 /* This is filled in with a pointer to the name of the program being run. */
 extern char *__program_name;
 
-/****************************************************************************/
-
-/* Set this to FALSE to disable all Ctrl+C checking in the program. */
-extern BOOL __check_abort_enabled;
-
 /*
  * You can replace this function with your own and perform your own
  * Ctrl+C checking.
@@ -238,7 +233,7 @@ extern void __locale_exit(void);
 /* A data structures used by the path translation routines below. */
 struct name_translation_info
 {
-	char substitute[MAXPATHLEN];
+	char substitute[PATH_MAX];
 	char *original_name;
 	int is_root;
 };
@@ -347,16 +342,6 @@ extern BOOL (*__expand_wildcard_args_check)(void);
 /****************************************************************************/
 
 /*
- * Defaults for path delimiter (":") and the shell search path
- * ("/gcc/bin:/SDK/C:/SDK/Local/C:/C:.") as used by the execvp()
- * function.
- */
-extern const char *__default_path_delimiter;
-extern const char *__default_path;
-
-/****************************************************************************/
-
-/*
  * 'environ' is the default environment variable table as used by the execl(),
  * execv() and execvp() functions. This needs to be initialized before you
  * can use it. The table has the following form:
@@ -424,8 +409,7 @@ struct _wchar {
 };
 
 /*
- * Initial _clib2 structure. This should be replaced with a _reent structure
- * and populated with all its fields. At moment it holds just global fields
+ * Initial _clib2 structure. This contains all fields used by current progream
  */
 
 extern struct _clib2 *__getclib2(void);
@@ -443,6 +427,7 @@ struct _global_clib2 {
 
 struct _clib2 {
 	struct ExecIFace *IExec; 	/* Main IExec interface */
+    struct ElfIFace *IElf;
 
 	struct TimeVal clock; 		/* Populated when clib starts with current time */
 	struct rusage ru;			/* rusage struct used in rlimit function */
@@ -459,6 +444,7 @@ struct _clib2 {
 
     BOOL __unix_path_semantics;
 
+    /* Set this flag to true to enable optimized CPU functions */
     BOOL __optimizedCPUFunctions;
 
 	/* 
@@ -470,7 +456,6 @@ struct _clib2 {
 	/* This is used with the dlopen(), dlclose() and dlsym() functions. */
 	Elf32_Handle __dl_elf_handle;
 	Elf32_Error __elf_error_code;
-	struct ElfIFace *IElf;
 
 	/* This is the pointer to itself */
 	struct Process *self;
@@ -500,6 +485,25 @@ struct _clib2 {
 
     /* Used for shared version library */
     int _errno;
+
+    /*
+     * Defaults for path delimiter (":") and the shell search path
+     * ("/gcc/bin:/SDK/C:/SDK/Local/C:/C:.") as used by the execvp()
+     * function.
+     */
+    const char *__default_path_delimiter;
+    const char *__default_path;
+
+    /* Set this to FALSE to disable all Ctrl+C checking in the program. */
+    BOOL __check_abort_enabled;
+
+    /* The file handle table. */
+    struct iob **__iob;
+    int __num_iob;
+
+    /* The file descriptor table. */
+    struct fd **__fd;
+    int __num_fd;
 };
 
 extern struct _clib2 *__clib2;
