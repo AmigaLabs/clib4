@@ -38,11 +38,11 @@ main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    printf("The user name is: %s\n", pd.pw_name);
-    printf("The user id   is: %u\n", pd.pw_uid);
-    printf("The group id  is: %u\n", pd.pw_gid);
-    printf("The initial directory is:    %s\n", pd.pw_dir);
-    printf("The initial user program is: %s\n", pd.pw_shell);
+    printf("The user name is: %s\n", pwd.pw_name);
+    printf("The user id   is: %u\n", pwd.pw_uid);
+    printf("The group id  is: %u\n", pwd.pw_gid);
+    printf("The initial directory is:    %s\n", pwd.pw_dir);
+    printf("The initial user program is: %s\n", pwd.pw_shell);
 
     exit(EXIT_SUCCESS);
 }

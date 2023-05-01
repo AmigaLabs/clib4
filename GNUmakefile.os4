@@ -98,11 +98,13 @@ OPTIONS  := $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ 
 OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
 
 STABS :=
+DLIBS :=
 
 ifndef DEBUG
     OPTIMIZE += $(STABS) -DNDEBUG
 else
     OPTIMIZE += -gstabs -DDEBUG
+    DLIBS += $(BUILD_DIR)/lib/libdebug.a
 endif
 
 CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
@@ -134,6 +136,7 @@ OUT_SHARED_LIB := $(BUILD_DIR)/shared
 include libc.gmk
 include libm.gmk
 include libamiga.gmk
+include libdebug.gmk
 include libprofile.gmk
 include libpthread.gmk
 include libcrypt.gmk
@@ -191,7 +194,7 @@ version:
 # Shared clib2.library rules
 
 clib2.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
 
 clib2.library: clib2.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
@@ -311,7 +314,7 @@ $(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $
 endef
 
 compile-tests:
-	cd $(LIB_ROOT)/test_programs; CC="$(CC)" CXX="$(CXX)" COPY="$(COPY)" DELETE="$(DELETE)" MAKEDIR="$(MAKEDIR)" && make
+	+make -C $(LIB_ROOT)/test_programs; CC="$(CC)" CXX="$(CXX)" COPY="$(COPY)" DELETE="$(DELETE)" MAKEDIR="$(MAKEDIR)"
 
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*

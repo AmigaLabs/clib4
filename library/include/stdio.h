@@ -125,14 +125,14 @@ typedef struct __sFILE FILE;
 extern void perror(const char *s);
 
 #ifdef __USE_LARGEFILE64
-FILE *fdopen64(int, const char *);
-FILE *fopen64(const char *filename, const char *mode);
-FILE *freopen64(const char *filename, const char *type, FILE *stream);
-_off64_t ftello64(FILE *stream);
-_off64_t fseeko64(FILE *stream, _off64_t, int);
-int fgetpos64(FILE *stream, _fpos64_t *pos);
-int fsetpos64(FILE *stream, _fpos64_t *pos);
-FILE *tmpfile64(void);
+extern FILE *fdopen64(int, const char *);
+extern FILE *fopen64(const char *filename, const char *mode);
+extern FILE *freopen64(const char *filename, const char *type, FILE *stream);
+extern _off64_t ftello64(FILE *stream);
+extern _off64_t fseeko64(FILE *stream, _off64_t, int);
+extern int fgetpos64(FILE *stream, _fpos64_t *pos);
+extern int fsetpos64(FILE *stream, _fpos64_t *pos);
+extern FILE *tmpfile64(void);
 #endif
 
 /****************************************************************************/

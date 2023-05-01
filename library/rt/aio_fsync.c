@@ -12,13 +12,13 @@
 int
 aio_fsync(int op, struct aiocb *aiocbp) {
     if (op != O_DSYNC && __builtin_expect(op != O_SYNC, 0)) {
-        __set_errno(EINVAL);
+        errno = EINVAL;
         return -1;
     }
 
     /* Verify that this is an open file descriptor.  */
     if (fcntl(aiocbp->aio_fildes, F_GETFL) == -1) {
-        __set_errno(EBADF);
+        errno = EBADF;
         return -1;
     }
 

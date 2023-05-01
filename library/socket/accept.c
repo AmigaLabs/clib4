@@ -72,7 +72,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
     }
     lock = __create_semaphore();
     if (lock == NULL) {
-        __set_errno(ENOMEM);
+        errno = ENOMEM;
         goto out;
     }
 

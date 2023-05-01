@@ -48,6 +48,7 @@
 #include <sys/time.h>
 #include <sys/param.h>
 
+#define OFFSET 0
 /*-----------------------------------------------------------------------
  * INSTRUCTIONS:
  *

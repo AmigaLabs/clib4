@@ -13,6 +13,6 @@
 int
 __attribute__ ((visibility ("hidden")))
 __aio_sigqueue(int sig, const union sigval val, pid_t caller_pid) {
-    __set_errno(ENOSYS);
+    errno = ENOSYS;
     return -1;
 }

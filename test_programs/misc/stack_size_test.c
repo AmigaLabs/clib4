@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int __stack_size = 60000;
+unsigned int __stack_size = 60000;
 
 int
 main(void)

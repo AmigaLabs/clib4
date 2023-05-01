@@ -61,7 +61,7 @@ __aio_suspend_time64(const struct aiocb *const list[], int nent, const struct ti
     SHOWVALUE(nent);
 
     if (nent < 0) {
-        __set_errno(EINVAL);
+        errno = EINVAL;
         RETURN(-1);
         return -1;
     }
@@ -163,9 +163,9 @@ __aio_suspend_time64(const struct aiocb *const list[], int nent, const struct ti
        the timeout error report of `pthread_cond_timedwait' to the
        form expected from `aio_suspend'.  */
         if (result == ETIMEDOUT)
-            __set_errno(EAGAIN);
+            errno = EAGAIN;
         else
-            __set_errno(result);
+            errno = result;
 
         result = -1;
     }

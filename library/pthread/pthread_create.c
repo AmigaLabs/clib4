@@ -39,7 +39,7 @@
 
 static uint32
 StarterFunc() {
-    volatile int foundkey = TRUE;
+    volatile int keyFound = TRUE;
     struct StackSwapStruct stack;
     volatile BOOL stackSwapped = FALSE;
 
@@ -71,14 +71,14 @@ StarterFunc() {
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
     ObtainSemaphoreShared(&tls_sem);
-    for (int j = 0; foundkey && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
-        foundkey = FALSE;
+    for (int j = 0; keyFound && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
+        keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
             if (tlskeys[i].used && tlskeys[i].destructor && inf->tlsvalues[i]) {
                 void *oldvalue = inf->tlsvalues[i];
                 inf->tlsvalues[i] = NULL;
                 tlskeys[i].destructor(oldvalue);
-                foundkey = TRUE;
+                keyFound = TRUE;
             }
         }
     }
