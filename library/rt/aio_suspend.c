@@ -70,7 +70,7 @@ __aio_suspend_time64(const struct aiocb *const list[], int nent, const struct ti
     struct requestlist *requestlist[nent];
     pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
     int cnt;
-    bool any = false;
+    BOOL any = FALSE;
     int result = 0;
     unsigned int cntr = 1;
 
@@ -93,7 +93,7 @@ __aio_suspend_time64(const struct aiocb *const list[], int nent, const struct ti
                     waitlist[cnt].counterp = &cntr;
                     waitlist[cnt].sigevp = NULL;
                     requestlist[cnt]->waiting = &waitlist[cnt];
-                    any = true;
+                    any = TRUE;
                 } else
                     /* We will never suspend.  */
                     break;
