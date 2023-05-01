@@ -80,6 +80,7 @@ PTHREAD_LIB := \
     pthread/pthread_mutexattr_init.o \
     pthread/pthread_mutexattr_setpshared.o \
     pthread/pthread_mutexattr_settype.o \
+    pthread/pthread_num_processors_np.o \
     pthread/pthread_once.o \
     pthread/pthread_rwlockattr_getpshared.o \
     pthread/pthread_rwlockattr_setpshared.o \

@@ -276,6 +276,7 @@ extern int pthread_setcancelstate(int state, int *oldstate);
 extern int pthread_setcanceltype(int type, int *oldtype);
 extern void pthread_testcancel(void);
 extern int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
+extern int pthread_num_processors_np (void);
 
 #define pthread_sigmask(blocktype, mask_ptr, unused1) sigprocmask(blocktype, mask_ptr, unused1)
 
