@@ -200,47 +200,6 @@ struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
         //IExec->DropInterface((struct Interface *) IClib2);
     }
 
-    D(("Open DOS Library"));
-    DOSBase = IExec->OpenLibrary("dos.library", MIN_OS_VERSION);
-    if (DOSBase) {
-        IDOS = (struct DOSIFace *) IExec->GetInterface((struct Library *) DOSBase, "main", 1, NULL);
-        if (!IDOS) {
-            goto out;
-        }
-    } else
-        goto out;
-
-    D(("Open Elf Library"));
-    struct Library *ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
-    if (ElfBase) {
-        if (ElfBase->lib_Version == 52 && ElfBase->lib_Revision == 1) { // .so stuff doesn't work with pre-52.2
-            D(("Elf.library is 52.1. We can't use this version."));
-            goto out;
-        }
-
-        IElf = (struct ElfIFace *) IExec->GetInterface(ElfBase, "main", 1, NULL);
-        if (!IElf) {
-            D(("Cannot get IElf interface"));
-            goto out;
-        }
-    } else {
-        D(("Cannot open Elf library"));
-        goto out;
-    }
-
-    D(("Open Utility Library"));
-    __UtilityBase = IExec->OpenLibrary("utility.library", MIN_OS_VERSION);
-    if (__UtilityBase) {
-        __IUtility = (struct UtilityIFace *) IExec->GetInterface(__UtilityBase, "main", 1, NULL);
-        if (__IUtility == NULL) {
-            D(("Cannot get IUtility interface"));
-            goto out;
-        }
-    } else {
-        D(("Cannot open utility.library"));
-        goto out;
-    }
-
     /* If all libraries are opened correctly we can initialize clib2 reent structure */
     D(("Initialize clib2 reent structure"));
     reent_init();
@@ -268,13 +227,6 @@ struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
 
     D(("Exit LIBOpen: Open Count: %ld", libBase->libNode.lib_OpenCnt));
     return libBase;
-
-out:
-    D(("Jumped into error"));
-    /* if we jump in out we need to close all libraries and return NULL */
-    closeLibraries();
-
-    return NULL;
 }
 
 BPTR libExpunge(struct LibraryManagerInterface *Self) {
@@ -287,6 +239,9 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
         libBase->libNode.lib_Flags |= LIBF_DELEXP;
         return result;
     }
+
+    D(("Close all libraries "));
+    closeLibraries();
 
     D(("Cleaning global clib2 structure"));
     IExec->FreeVec(__global_clib2);
@@ -315,9 +270,6 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
 
     D(("Calling reent_exit"));
     reent_exit();
-
-    D(("Close all libraries "));
-    closeLibraries();
 
     D(("Done %ld", libBase->libNode.lib_OpenCnt));
     if (libBase->libNode.lib_OpenCnt) {
@@ -403,6 +355,47 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
     SysBase = (struct ExecBase *) iexec->Data.LibBase;
     IExec = iexec;
 
+    D(("Open DOS Library"));
+    DOSBase = IExec->OpenLibrary("dos.library", MIN_OS_VERSION);
+    if (DOSBase) {
+        IDOS = (struct DOSIFace *) IExec->GetInterface((struct Library *) DOSBase, "main", 1, NULL);
+        if (!IDOS) {
+            goto out;
+        }
+    } else
+        goto out;
+
+    D(("Open Elf Library"));
+    struct Library *ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
+    if (ElfBase) {
+        if (ElfBase->lib_Version == 52 && ElfBase->lib_Revision == 1) { // .so stuff doesn't work with pre-52.2
+            D(("Elf.library is 52.1. We can't use this version."));
+            goto out;
+        }
+
+        IElf = (struct ElfIFace *) IExec->GetInterface(ElfBase, "main", 1, NULL);
+        if (!IElf) {
+            D(("Cannot get IElf interface"));
+            goto out;
+        }
+    } else {
+        D(("Cannot open Elf library"));
+        goto out;
+    }
+
+    D(("Open Utility Library"));
+    __UtilityBase = IExec->OpenLibrary("utility.library", MIN_OS_VERSION);
+    if (__UtilityBase) {
+        __IUtility = (struct UtilityIFace *) IExec->GetInterface(__UtilityBase, "main", 1, NULL);
+        if (__IUtility == NULL) {
+            D(("Cannot get IUtility interface"));
+            goto out;
+        }
+    } else {
+        D(("Cannot open utility.library"));
+        goto out;
+    }
+
     D(("Creating global clib2 structure"));
     __global_clib2 = (struct _global_clib2 *) IExec->AllocVecTags(sizeof(struct _global_clib2),
                                                                   AVT_Type, MEMF_SHARED,
@@ -415,6 +408,13 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
     __global_clib2->_errno = 0;
 
     return libBase;
+
+out:
+    D(("Jumped into error"));
+    /* if we jump in out we need to close all libraries and return NULL */
+    closeLibraries();
+
+    return NULL;
 }
 
 /* CreateLibrary tag list */
