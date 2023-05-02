@@ -13,10 +13,11 @@ __Clib2Call:                          \n\
 	.size	__Clib2Call, .-__Clib2Call");
 
 Clib2Call(__getClib2, 84);
-Clib2Call(__translate_amiga_to_unix_path_name, 88);
-Clib2Call(__translate_unix_to_amiga_path_name, 92);
-Clib2Call(__restore_path_name, 96);
-Clib2Call(__getGlobalClib2, 100);
+Clib2Call(__getGlobalClib2, 88);
+Clib2Call(__translate_amiga_to_unix_path_name, 92);
+Clib2Call(__translate_unix_to_amiga_path_name, 96);
+//Clib2Call(__restore_path_name, 100);
+Clib2Call(__print_termination_message, 104);
 
 /* Functions defined stubs starts here */
 Clib2Call(argz_create, 116);

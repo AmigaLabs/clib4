@@ -238,6 +238,7 @@ extern void __restore_path_name(char const **name_ptr, struct name_translation_i
 extern int __translate_amiga_to_unix_path_name(char const **name_ptr, struct name_translation_info *nti);
 extern int __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translation_info *nti);
 extern int __translate_io_error_to_errno(LONG io_error);
+extern void __print_termination_message(const char *termination_message);
 
 /****************************************************************************/
 
@@ -506,6 +507,8 @@ struct _clib2 {
        The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
        modify or query it. */
     int __signals_blocked;
+
+    struct SignalSemaphore *stdio_lock;
 };
 
 extern struct _clib2 *__clib2;

@@ -110,9 +110,11 @@ const struct Resident RomTag;
  * from crtbegin. They are needed because we need to call clib2 constructors as well
  */
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
+
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
 extern void reent_init(void);
+
 extern void reent_exit(void);
 
 

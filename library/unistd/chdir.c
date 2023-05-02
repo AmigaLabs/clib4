@@ -104,7 +104,7 @@ chdir(const char *path_name) {
 
     result = OK;
 
-    out:
+out:
 
     if (status != NULL) {
         FreeDosObject(DOS_EXAMINEDATA, status);

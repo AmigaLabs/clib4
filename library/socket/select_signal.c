@@ -649,7 +649,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                     break_mask |= __break_signal_mask;
 
                 /* Check for socket input. */
-                result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal *) &zero, &break_mask);
+                result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct timeval *) &zero, &break_mask);
 
                 /* Stop if a break signal arrives. */
                 if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __break_signal_mask)) {
@@ -794,7 +794,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             if (__CLIB2->__check_abort_enabled)
                 break_mask |= __break_signal_mask;
 
-            result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct TimeVal *) timeout, &break_mask);
+            result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct timeval *) timeout, &break_mask);
             if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __break_signal_mask)) {
                 SetSignal(__break_signal_mask, __break_signal_mask);
                 __check_abort();

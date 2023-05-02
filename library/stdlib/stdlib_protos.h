@@ -119,11 +119,6 @@ extern void __assertion_failure(const char *file_name, int line_number, const ch
 
 /****************************************************************************/
 
-/* stdlib_termination_message.c */
-extern void __print_termination_message(const char *termination_message);
-
-/****************************************************************************/
-
 /* stdlib_set_process_window.c */
 extern APTR __set_process_window(APTR new_window_pointer);
 

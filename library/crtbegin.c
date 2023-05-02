@@ -101,21 +101,30 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
     iexec->Obtain();
 
     IExec = iexec;
-    IUtility = (struct UtilityIFace *) OpenLibraryInterface(iexec, "utility.library", 50);
-    if (IUtility != NULL) {
-        UtilityBase = IUtility->Data.LibBase;
-        iclib2 = (struct Clib2IFace *) OpenLibraryInterface(iexec, "clib2.library", 0);
-        if (iclib2 != NULL) {
-            struct Library *clib2base = ((struct Interface *) iclib2)->Data.LibBase;
-            IClib2 = iclib2;
+    IDOS = (struct DOSIFace *) OpenLibraryInterface(iexec, "dos.library", 52);
+    if (IDOS) {
+        IUtility = (struct UtilityIFace *) OpenLibraryInterface(iexec, "utility.library", 52);
+        if (IUtility != NULL) {
 
-            rc = iclib2->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__);
+            UtilityBase = IUtility->Data.LibBase;
+            iclib2 = (struct Clib2IFace *) OpenLibraryInterface(iexec, "clib2.library", 1);
+            if (iclib2 != NULL) {
+                struct Library *clib2base = ((struct Interface *) iclib2)->Data.LibBase;
+                IClib2 = iclib2;
 
-            CloseLibraryInterface(iexec, (struct Interface *) iclib2);
-        } else {
-            iexec->Alert(AT_Recovery | AG_OpenLib);
+                rc = iclib2->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__);
+
+                CloseLibraryInterface(iexec, (struct Interface *) iclib2);
+                CloseLibraryInterface(iexec, (struct Interface *) IUtility);
+                CloseLibraryInterface(iexec, (struct Interface *) IDOS);
+            } else {
+                iexec->Alert(AT_Recovery | AG_OpenLib);
+            }
+            CloseLibraryInterface(iexec, (struct Interface *) IUtility);
         }
-        CloseLibraryInterface(iexec, (struct Interface *) IUtility);
+    }
+    else {
+        iexec->Alert(AT_Recovery | AG_OpenLib | AO_DOSLib);
     }
     iexec->Release();
 
