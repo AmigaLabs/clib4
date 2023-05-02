@@ -33,7 +33,7 @@ realloc(void *ptr, size_t size)
 	}
 	else
 	{
-        result = wof_realloc(__wof_allocator, ptr, size);
+        result = wof_realloc(__CLIB2->__wof_allocator, ptr, size);
         if (result == NULL) {
             SHOWMSG("could not reallocate memory");
             goto out;

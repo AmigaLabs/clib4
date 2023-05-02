@@ -509,6 +509,9 @@ struct _clib2 {
     int __signals_blocked;
 
     struct SignalSemaphore *stdio_lock;
+
+    /* Wof Allocator main pointer */
+    struct wof_allocator_t *__wof_allocator;
 };
 
 extern struct _clib2 *__clib2;

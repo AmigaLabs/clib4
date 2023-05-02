@@ -47,8 +47,6 @@ struct MemalignEntry
     void            *me_Exact;            /* The address returned by AllocVecTags  */
 };
 
-extern wof_allocator_t *__wof_allocator;
-
 extern void __memory_lock(void);
 extern void __memory_unlock(void);
 
