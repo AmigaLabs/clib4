@@ -506,6 +506,9 @@ struct _clib2 {
        The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
        modify or query it. */
     int __signals_blocked;
+
+    /* Wof Allocator main pointer */
+    struct wof_allocator_t *__wof_allocator;
 };
 
 extern struct _clib2 *__clib2;

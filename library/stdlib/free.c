@@ -40,7 +40,7 @@ free(void *ptr) {
         ItemPoolFree(__memalign_pool, e);
         e = NULL;
     } else {
-        wof_free(__wof_allocator, ptr);
+        wof_free(__CLIB2->__wof_allocator, ptr);
     }
 
     __memory_unlock();
