@@ -26,7 +26,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 
     __check_abort();
 
-    if (__timer_request == NULL)
+    if (__CLIB2->__timer_request == NULL)
         return EINVAL;
 
     SHOWMSG("Clearing Signals");
@@ -43,7 +43,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     }
 
     tr = AllocSysObjectTags(ASOT_IOREQUEST,
-                            ASOIOR_Duplicate, __timer_request,
+                            ASOIOR_Duplicate, __CLIB2->__timer_request,
                             ASOIOR_ReplyPort, mp,
                             ASOIOR_Size, sizeof(struct TimeRequest),
                             TAG_END);

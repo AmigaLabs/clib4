@@ -16,9 +16,6 @@
 
 #undef malloc
 
-/* Wof Allocator */
-static struct SignalSemaphore *memory_semaphore = NULL;
-
 void *
 malloc(size_t size) {
     void *result = NULL;
@@ -33,13 +30,13 @@ malloc(size_t size) {
 }
 
 void __memory_lock(void) {
-    if (memory_semaphore != NULL)
-        ObtainSemaphore(memory_semaphore);
+    if (__CLIB2->memory_semaphore != NULL)
+        ObtainSemaphore(__CLIB2->memory_semaphore);
 }
 
 void __memory_unlock(void) {
-    if (memory_semaphore != NULL)
-        ReleaseSemaphore(memory_semaphore);
+    if (__CLIB2->memory_semaphore != NULL)
+        ReleaseSemaphore(__CLIB2->memory_semaphore);
 }
 
 STDLIB_DESTRUCTOR(stdlib_memory_exit) {
@@ -54,9 +51,9 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
 
     __memory_unlock();
 
-    if (memory_semaphore != NULL) {
-        __delete_semaphore(memory_semaphore);
-        memory_semaphore = NULL;
+    if (__CLIB2->memory_semaphore != NULL) {
+        __delete_semaphore(__CLIB2->memory_semaphore);
+        __CLIB2->memory_semaphore = NULL;
     }
 
     LEAVE();
@@ -68,8 +65,8 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
 
     ENTER();
 
-    memory_semaphore = __create_semaphore();
-    if (memory_semaphore == NULL)
+    __CLIB2->memory_semaphore = __create_semaphore();
+    if (__CLIB2->memory_semaphore == NULL)
         goto out;
 
     __CLIB2->__wof_allocator = wof_allocator_new();

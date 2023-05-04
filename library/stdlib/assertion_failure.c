@@ -31,7 +31,7 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
 
     /* Don't drop into a recursion. */
     if (been_here_before++ == 0) {
-        if (__no_standard_io || __WBenchMsg != NULL) {
+        if (__CLIB2->__no_standard_io || __CLIB2->__WBenchMsg != NULL) {
             struct IntuitionIFace *IIntuition = NULL;
             struct Library *IntuitionBase;
 

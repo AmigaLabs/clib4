@@ -385,8 +385,6 @@ C_STDIO := \
 	stdio/file_init.o \
 	stdio/iobhookentry.o \
 	stdio/lock.o \
-	stdio/locksemaphorename.o \
-	stdio/nostdio.o \
 	stdio/openiob.o \
 	stdio/parent_of_fh.o \
 	stdio/perror.o \
@@ -447,7 +445,6 @@ C_STDLIB := \
 	stdlib/bsearch.o \
 	stdlib/calloc.o \
 	stdlib/checkdetach.o \
-	stdlib/detach.o \
 	stdlib/disablerequesters.o \
 	stdlib/div.o \
 	stdlib/divsi3.o \
@@ -465,12 +462,10 @@ C_STDLIB := \
 	stdlib/getenv.o \
 	stdlib/getsp.o \
 	stdlib/get_errno.o \
-	stdlib/isresident.o \
 	stdlib/itoa.o \
 	stdlib/l64a.o \
 	stdlib/labs.o \
 	stdlib/ldiv.o \
-	stdlib/lib_startup.o \
 	stdlib/llabs.o \
 	stdlib/lldiv.o \
 	stdlib/lltoa.o \
@@ -501,9 +496,7 @@ C_STDLIB := \
 	stdlib/set_errno.o \
 	stdlib/set_process_window.o \
 	stdlib/shared_objs.o \
-	stdlib/shell_escape.o \
 	stdlib/showerror.o \
-	stdlib/stacksize.o \
 	stdlib/stack_usage.o \
 	stdlib/swapstack.o \
 	stdlib/arg.o \
@@ -517,9 +510,7 @@ C_STDLIB := \
 	stdlib/strtoul.o \
 	stdlib/strtoull.o \
 	stdlib/system.o \
-	stdlib/sysvbase.o \
 	stdlib/termination_message.o \
-	stdlib/utilitybase.o \
 	stdlib/udivsi3.o \
 	stdlib/udivsi4.o \
 	stdlib/umodsi3.o \
@@ -684,7 +675,6 @@ C_UNISTD := \
 	unistd/chdir.o \
 	unistd/chdir_exit.o \
 	unistd/chown.o \
-	unistd/currentpathname.o \
 	unistd/dup.o \
 	unistd/dup2.o \
 	crypt/encrypt.o \

@@ -21,7 +21,7 @@ __print_termination_message(const char *termination_message) {
     if (NOT termination_message_printed) {
         termination_message_printed = TRUE;
 
-        if (NOT __no_standard_io && __CLIB2->__num_iob > STDERR_FILENO) {
+        if (NOT __CLIB2->__no_standard_io && __CLIB2->__num_iob > STDERR_FILENO) {
             fputs((termination_message != NULL) ? termination_message : "Abnormal program termination", stderr);
             fputc('\n', stderr);
         }

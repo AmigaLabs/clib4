@@ -12,9 +12,6 @@
 
 #include "pthread/common.h"
 
-int NOCOMMON __exit_value = RETURN_FAIL;
-jmp_buf NOCOMMON __exit_jmp_buf;
-
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
     uint32 pid = (uint32) userdata;
@@ -29,7 +26,7 @@ hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
 
 void
 _exit(int return_code) {
-    __exit_value = return_code;
+    __CLIB2->__exit_value = return_code;
 
     ENTER();
     SHOWVALUE(return_code);
@@ -75,7 +72,7 @@ _exit(int return_code) {
 
         LEAVE();
 
-        longjmp(__exit_jmp_buf, 1);
+        longjmp(__CLIB2->__exit_jmp_buf, 1);
     }
 }
 

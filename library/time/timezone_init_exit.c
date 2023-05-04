@@ -10,38 +10,29 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-struct Library *NOCOMMON __TimezoneBase;
-struct TimezoneIFace *NOCOMMON __ITimezone;
-
-char *tzname[2];     /* Current timezone names.  */
-int daylight;        /* If daylight-saving time is ever in use.  */
-long int timezone;   /* Seconds west of UTC.  */
-
-static int dyntz;    /* Set to TRUE if created with malloc */
-
 void
 __timezone_exit(void) {
     ENTER();
 
     __timezone_lock();
 
-    if (__TimezoneBase != NULL) {
+    if (__CLIB2->__TimezoneBase != NULL) {
         DECLARE_TIMEZONEBASE();
 
-        if (dyntz == TRUE) {
-            if (tzname[0]) FreeVec(tzname[0]);
-            if (tzname[1]) FreeVec(tzname[1]);
-            tzname[0] = NULL;
-            tzname[1] = NULL;
+        if (__CLIB2->dyntz == TRUE) {
+            if (__CLIB2->tzname[0]) FreeVec(__CLIB2->tzname[0]);
+            if (__CLIB2->tzname[1]) FreeVec(__CLIB2->tzname[1]);
+            __CLIB2->tzname[0] = NULL;
+            __CLIB2->tzname[1] = NULL;
         }
 
-        if (__ITimezone != NULL) {
-            DropInterface((struct Interface *) __ITimezone);
-            __ITimezone = NULL;
+        if (__CLIB2->__ITimezone != NULL) {
+            DropInterface((struct Interface *) __CLIB2->__ITimezone);
+            __CLIB2->__ITimezone = NULL;
         }
 
-        CloseLibrary(__TimezoneBase);
-        __TimezoneBase = NULL;
+        CloseLibrary(__CLIB2->__TimezoneBase);
+        __CLIB2->__TimezoneBase = NULL;
     }
 
     __timezone_unlock();
@@ -57,46 +48,46 @@ __timezone_init(void) {
 
     __timezone_lock();
 
-    if (__TimezoneBase == NULL) {
-        __TimezoneBase = OpenLibrary("timezone.library", 52);
+    if (__CLIB2->__TimezoneBase == NULL) {
+        __CLIB2->__TimezoneBase = OpenLibrary("timezone.library", 52);
 
-        if (__TimezoneBase != NULL) {
-            __ITimezone = (struct TimezoneIFace *) GetInterface(__TimezoneBase, "main", 1, 0);
-            if (__ITimezone == NULL) {
-                CloseLibrary(__TimezoneBase);
-                __TimezoneBase = NULL;
+        if (__CLIB2->__TimezoneBase != NULL) {
+            __CLIB2->__ITimezone = (struct TimezoneIFace *) GetInterface(__CLIB2->__TimezoneBase, "main", 1, 0);
+            if (__CLIB2->__ITimezone == NULL) {
+                CloseLibrary(__CLIB2->__TimezoneBase);
+                __CLIB2->__TimezoneBase = NULL;
             }
         }
     }
 
-    if (__TimezoneBase != NULL) {
+    if (__CLIB2->__TimezoneBase != NULL) {
         DECLARE_TIMEZONEBASE();
 
         // Set global timezone variable
         uint32 gmtoffset = 0;
         int8 dstime = -1;
-        tzname[0] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-        tzname[1] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-        dyntz = TRUE;
+        __CLIB2->tzname[0] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        __CLIB2->tzname[1] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        __CLIB2->dyntz = TRUE;
 
         GetTimezoneAttrs(NULL,
-                         TZA_Timezone, tzname[0],
-                         TZA_TimezoneSTD, tzname[1],
+                         TZA_Timezone, __CLIB2->tzname[0],
+                         TZA_TimezoneSTD, __CLIB2->tzname[1],
                          TZA_UTCOffset, &gmtoffset,
                          TZA_TimeFlag, &dstime,
                          TAG_DONE);
 
-        timezone = 60 * gmtoffset;
-        daylight = dstime & TFLG_ISDST;
+        __CLIB2->timezone = 60 * gmtoffset;
+        __CLIB2->daylight = dstime & TFLG_ISDST;
 
         result = OK;
     } else {
         /* default values */
-        timezone = 0;
-        daylight = 0;
-        tzname[0] = (char *) "GMT";
-        tzname[1] = (char *) "AMT";
-        dyntz = FALSE;
+        __CLIB2->timezone = 0;
+        __CLIB2->daylight = 0;
+        __CLIB2->tzname[0] = (char *) "GMT";
+        __CLIB2->tzname[1] = (char *) "AMT";
+        __CLIB2->dyntz = FALSE;
     }
 
     __timezone_unlock();

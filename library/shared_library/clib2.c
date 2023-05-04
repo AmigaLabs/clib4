@@ -110,11 +110,9 @@ const struct Resident RomTag;
  * from crtbegin. They are needed because we need to call clib2 constructors as well
  */
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
-
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
-extern void reent_init(void);
-
+extern void reent_init(struct ElfIFace *__IElf);
 extern void reent_exit(void);
 
 
@@ -204,7 +202,7 @@ struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
 
     /* If all libraries are opened correctly we can initialize clib2 reent structure */
     D(("Initialize clib2 reent structure"));
-    reent_init();
+    reent_init(IElf);
 
     /* After reent structure we can call clib2 constructors */
     D(("Calling clib2 ctors"));

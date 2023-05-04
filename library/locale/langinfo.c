@@ -74,23 +74,23 @@ nl_langinfo(nl_item item)
                     ret = "US-ASCII";
 
                 if (ret == NULL) {
-                    uint32 default_charset = __default_locale->loc_CodeSet;
+                    uint32 default_charset = __CLIB2->__default_locale->loc_CodeSet;
                     ret = (char *)ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
                 }
             }
             else {
-                uint32 default_charset = __default_locale->loc_CodeSet;
+                uint32 default_charset = __CLIB2->__default_locale->loc_CodeSet;
                 ret = (char *)ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
             }
             break;
         case D_T_FMT:
-            ret = (char *) __default_locale->loc_DateTimeFormat;
+            ret = (char *) __CLIB2->__default_locale->loc_DateTimeFormat;
             break;
         case D_FMT:
-            ret = (char *) __default_locale->loc_DateFormat;
+            ret = (char *) __CLIB2->__default_locale->loc_DateFormat;
             break;
         case T_FMT:
-            ret = (char *) __default_locale->loc_TimeFormat;
+            ret = (char *) __CLIB2->__default_locale->loc_TimeFormat;
             break;            
         case AM_STR:
             ret = (char *) "AM"; // hardcoded
@@ -99,10 +99,10 @@ nl_langinfo(nl_item item)
             ret = (char *) "PM"; // hardcoded;
             break;
         case RADIXCHAR:
-		    ret = (char*) __default_locale->loc_DecimalPoint;
+		    ret = (char*) __CLIB2->__default_locale->loc_DecimalPoint;
 		    break;
 	    case THOUSEP:
-		    ret = (char*) __default_locale->loc_GroupSeparator;
+		    ret = (char*) __CLIB2->__default_locale->loc_GroupSeparator;
 		    break;            
         default:
             ret = "";

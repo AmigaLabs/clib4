@@ -23,7 +23,6 @@
 #include <sys/time.h>
 
 static const char *__attribute__((used)) stack = "$STACK: 6553500\0";
-unsigned int __stack_size = 1000000;
 
 #define STRLEN 1000
 

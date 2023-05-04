@@ -706,10 +706,10 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                             * locale configured decimal point and the plain old
                             * dot.
                             */
-                        if (__locale_table[LC_NUMERIC] != NULL) {
+                        if (__CLIB2->__locale_table[LC_NUMERIC] != NULL) {
                             const unsigned char *point;
 
-                            point = (const unsigned char *) __locale_table[LC_NUMERIC]->loc_DecimalPoint;
+                            point = (const unsigned char *) __CLIB2->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
 
                             if (c == (*point) || c == '.') {
                                 SHOWMSG("found a decimal point");

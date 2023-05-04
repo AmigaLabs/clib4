@@ -29,8 +29,8 @@ localtime_r(const time_t *t, struct tm *tm_ptr) {
     /* The time parameter given represents UTC and
      * must be converted to local time before we proceed.
      */
-    if (__default_locale != NULL)
-        gmt_offset = 60 * __default_locale->loc_GMTOffset;
+    if (__CLIB2->__default_locale != NULL)
+        gmt_offset = 60 * __CLIB2->__default_locale->loc_GMTOffset;
     else
         gmt_offset = 0;
 

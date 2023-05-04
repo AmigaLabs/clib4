@@ -12,21 +12,10 @@
 
 #include <proto/diskfont.h>
 
-struct Library *__LocaleBase;
-struct LocaleIFace *__ILocale;
-
-struct Library *__DiskfontBase;
-struct DiskfontIFace *__IDiskfont;
-
-struct Locale *__default_locale;
-struct Locale *__locale_table[NUM_LOCALES];
-
-char __locale_name_table[NUM_LOCALES][MAX_LOCALE_NAME_LEN];
-
 void __close_all_locales(void) {
 	__locale_lock();
 
-	if (__LocaleBase != NULL) {
+	if (__CLIB2->__LocaleBase != NULL) {
 		DECLARE_LOCALEBASE();
 
 		int i;
@@ -35,16 +24,16 @@ void __close_all_locales(void) {
 			if (i == LC_ALL)
 				continue;
 
-			if (__locale_table[i] != NULL) {
-				if (__locale_table[i] != __locale_table[LC_ALL])
-					CloseLocale(__locale_table[i]);
+			if (__CLIB2->__locale_table[i] != NULL) {
+				if (__CLIB2->__locale_table[i] != __CLIB2->__locale_table[LC_ALL])
+					CloseLocale(__CLIB2->__locale_table[i]);
 
-				__locale_table[i] = NULL;
+                __CLIB2->__locale_table[i] = NULL;
 			}
 		}
 
-		CloseLocale(__locale_table[LC_ALL]);
-		__locale_table[LC_ALL] = NULL;
+		CloseLocale(__CLIB2->__locale_table[LC_ALL]);
+        __CLIB2->__locale_table[LC_ALL] = NULL;
 	}
 
 	__locale_unlock();
@@ -55,32 +44,32 @@ void __locale_exit(void) {
 
 	__locale_lock();
 
-	if (__LocaleBase != NULL) {
+	if (__CLIB2->__LocaleBase != NULL) {
 		DECLARE_LOCALEBASE();
 
 		__close_all_locales();
 
-		if (__default_locale != NULL) {
-			CloseLocale(__default_locale);
-			__default_locale = NULL;
+		if (__CLIB2->__default_locale != NULL) {
+			CloseLocale(__CLIB2->__default_locale);
+            __CLIB2->__default_locale = NULL;
 		}
-		if (__ILocale != NULL) {
-			DropInterface((struct Interface *)__ILocale);
-			__ILocale = NULL;
+		if (__CLIB2->__ILocale != NULL) {
+			DropInterface((struct Interface *) __CLIB2->__ILocale);
+            __CLIB2->__ILocale = NULL;
 		}
 
-		CloseLibrary(__LocaleBase);
-		__LocaleBase = NULL;
+		CloseLibrary(__CLIB2->__LocaleBase);
+        __CLIB2->__LocaleBase = NULL;
 	}
 
-    if (__IDiskfont != NULL) {
-        DropInterface((struct Interface *)__IDiskfont);
-        __IDiskfont = NULL;
+    if (__CLIB2->__IDiskfont != NULL) {
+        DropInterface((struct Interface *) __CLIB2->__IDiskfont);
+        __CLIB2->__IDiskfont = NULL;
     }
 
-    if (__DiskfontBase != NULL) {
-        CloseLibrary(__DiskfontBase);
-        __DiskfontBase = NULL;
+    if (__CLIB2->__DiskfontBase != NULL) {
+        CloseLibrary(__CLIB2->__DiskfontBase);
+        __CLIB2->__DiskfontBase = NULL;
     }
 
     __locale_unlock();
@@ -96,42 +85,37 @@ int __locale_init(void)
 
 	__locale_lock();
 
-	if (__LocaleBase == NULL)
-	{
-		__LocaleBase = OpenLibrary("locale.library", 52);
-		if (__LocaleBase != NULL)
-		{
-			__ILocale = (struct LocaleIFace *)GetInterface(__LocaleBase, "main", 1, 0);
-			if (__ILocale == NULL)
-			{
-				CloseLibrary(__LocaleBase);
-				__LocaleBase = NULL;
+	if (__CLIB2->__LocaleBase == NULL) {
+        __CLIB2->__LocaleBase = OpenLibrary("locale.library", 52);
+		if (__CLIB2->__LocaleBase != NULL) {
+            __CLIB2->__ILocale = (struct LocaleIFace *)GetInterface(__CLIB2->__LocaleBase, "main", 1, 0);
+			if (__CLIB2->__ILocale == NULL) {
+				CloseLibrary(__CLIB2->__LocaleBase);
+                __CLIB2->__LocaleBase = NULL;
 			}
-            __DiskfontBase = OpenLibrary("diskfont.library", 52);
-            if (__DiskfontBase) {
-                __IDiskfont = (struct DiskfontIFace *) GetInterface(__DiskfontBase, "main", 1, NULL);
-                if (!__IDiskfont) {
-                    DropInterface((struct Interface *)__ILocale);
+            __CLIB2->__DiskfontBase = OpenLibrary("diskfont.library", 52);
+            if (__CLIB2->__DiskfontBase) {
+                __CLIB2->__IDiskfont = (struct DiskfontIFace *) GetInterface(__CLIB2->__DiskfontBase, "main", 1, NULL);
+                if (!__CLIB2->__IDiskfont) {
+                    DropInterface((struct Interface *) __CLIB2->__ILocale);
 
-                    CloseLibrary(__LocaleBase);
-                    __LocaleBase = NULL;
+                    CloseLibrary(__CLIB2->__LocaleBase);
+                    __CLIB2->__LocaleBase = NULL;
 
-                    CloseLibrary(__DiskfontBase);
-                    __DiskfontBase = NULL;
+                    CloseLibrary(__CLIB2->__DiskfontBase);
+                    __CLIB2->__DiskfontBase = NULL;
                 }
             }
 		}
 	}
 
-	if (__LocaleBase != NULL && __default_locale == NULL)
-	{
+	if (__CLIB2->__LocaleBase != NULL && __CLIB2->__default_locale == NULL) {
 		DECLARE_LOCALEBASE();
 
-		__default_locale = OpenLocale(NULL);
+        __CLIB2->__default_locale = OpenLocale(NULL);
 	}
 
-	if (__default_locale != NULL)
-	{
+	if (__CLIB2->__default_locale != NULL) {
 		result = OK;
 	}
 
@@ -179,7 +163,7 @@ CLIB_CONSTRUCTOR(locale_init)
 		goto out;
 
 	for (i = 0; i < NUM_LOCALES; i++) {
-        strcpy(__locale_name_table[i], "C-UTF-8");
+        strcpy(__CLIB2->__locale_name_table[i], "C-UTF-8");
     }
 
 	if (__open_locale)

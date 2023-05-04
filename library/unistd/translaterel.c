@@ -18,17 +18,17 @@ __translate_relative_path_name(char const **name_ptr, char *replacement_buffer, 
      * are not modified, though.
      */
     name = (char *) (*name_ptr);
-    if (__current_path_name[0] != '\0' && name[0] != '/') {
+    if (__CLIB2->__current_path_name[0] != '\0' && name[0] != '/') {
         size_t total_len;
         BOOL add_slash;
 
         /* Get the current directory name and get
          * ready to attach the file name at the end.
          */
-        total_len = strlen(__current_path_name);
+        total_len = strlen(__CLIB2->__current_path_name);
 
-        if (__current_path_name[total_len - 1] != '/' &&
-            __current_path_name[total_len - 1] != ':' &&
+        if (__CLIB2->__current_path_name[total_len - 1] != '/' &&
+            __CLIB2->__current_path_name[total_len - 1] != ':' &&
             name[0] != '\0') {
             add_slash = TRUE;
 
@@ -46,7 +46,7 @@ __translate_relative_path_name(char const **name_ptr, char *replacement_buffer, 
         }
 
         /* Put the file name together. */
-        strcpy(replacement_buffer, __current_path_name);
+        strcpy(replacement_buffer, __CLIB2->__current_path_name);
 
         if (add_slash)
             strcat(replacement_buffer, "/");

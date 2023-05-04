@@ -78,11 +78,11 @@ unlink(const char *path_name) {
                 goto out;
             }
 
-            ObtainSemaphore(&__unlink_semaphore);
+            ObtainSemaphore(&__CLIB2->__unlink_semaphore);
 
-            assert(__unlink_list.mlh_Head != NULL);
+            assert(__CLIB2->__unlink_list.mlh_Head != NULL);
 
-            for (node = (struct UnlinkNode *) __unlink_list.mlh_Head;
+            for (node = (struct UnlinkNode *) __CLIB2->__unlink_list.mlh_Head;
                  node->uln_MinNode.mln_Succ != NULL;
                  node = (struct UnlinkNode *) node->uln_MinNode.mln_Succ) {
                 if (Stricmp(node->uln_Name, path_name) == SAME && SameLock(node->uln_Lock, current_dir) == LOCK_SAME) {
@@ -98,13 +98,13 @@ unlink(const char *path_name) {
                     uln->uln_Name = (char *) (uln + 1);
 
                     strcpy(uln->uln_Name, path_name);
-                    AddTail((struct List *) &__unlink_list, (struct Node *) uln);
+                    AddTail((struct List *) &__CLIB2->__unlink_list, (struct Node *) uln);
 
                     current_dir = ZERO;
                 }
             }
 
-            ReleaseSemaphore(&__unlink_semaphore);
+            ReleaseSemaphore(&__CLIB2->__unlink_semaphore);
 
             if (NOT found && uln == NULL)
             {

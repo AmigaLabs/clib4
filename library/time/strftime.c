@@ -430,8 +430,8 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
 
                 __locale_lock();
 
-                if (__default_locale != NULL) {
-                    gmt_offset = __default_locale->loc_GMTOffset;
+                if (__CLIB2->__default_locale != NULL) {
+                    gmt_offset = __CLIB2->__default_locale->loc_GMTOffset;
                     if (gmt_offset < 0)
                         gmt_offset = (-gmt_offset);
                     else if (gmt_offset > 0)
@@ -458,11 +458,11 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
 
                 __locale_lock();
 
-                if (__default_locale != NULL) {
+                if (__CLIB2->__default_locale != NULL) {
                     int hours_west_of_gmt;
                     char sign = '?';
 
-                    hours_west_of_gmt = __default_locale->loc_GMTOffset / 60;
+                    hours_west_of_gmt = __CLIB2->__default_locale->loc_GMTOffset / 60;
                     if (hours_west_of_gmt < 0) {
                         sign = '+';
 
@@ -528,7 +528,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
         __locale_lock();
 
         /* Try to use the locale.library date/time conversion function. */
-        if (__locale_table[LC_TIME] != NULL) {
+        if (__CLIB2->__locale_table[LC_TIME] != NULL) {
             struct DateStamp ds;
             struct tm tm_copy;
             time_t time_value;
@@ -551,7 +551,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
 
             assert(LocaleBase != NULL);
 
-            FormatDate(__locale_table[LC_TIME], (STRPTR) format, &ds, &hook);
+            FormatDate(__CLIB2->__locale_table[LC_TIME], (STRPTR) format, &ds, &hook);
         } else {
             struct tm copy_tm;
 

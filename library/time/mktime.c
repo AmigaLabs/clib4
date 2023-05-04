@@ -89,8 +89,8 @@ mktime(struct tm *tm) {
 
     /* The data in 'struct tm *tm' was given in local time. We need
        to convert the result into UTC. */
-    if (__default_locale != NULL)
-        seconds += 60 * __default_locale->loc_GMTOffset;
+    if (__CLIB2->__default_locale != NULL)
+        seconds += 60 * __CLIB2->__default_locale->loc_GMTOffset;
 
     __locale_unlock();
 

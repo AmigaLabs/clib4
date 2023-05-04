@@ -19,8 +19,8 @@ localeconv(void)
 
 	__locale_lock();
 
-	numeric_locale = __locale_table[LC_NUMERIC];
-	monetary_locale = __locale_table[LC_MONETARY];
+	numeric_locale = __CLIB2->__locale_table[LC_NUMERIC];
+	monetary_locale = __CLIB2->__locale_table[LC_MONETARY];
 
 	/* This makes up the current locale settings from the various
 	   components in use. */

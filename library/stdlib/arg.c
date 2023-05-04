@@ -26,9 +26,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-char **__argv;
-int __argc;
-
 static BOOL
 is_space(unsigned char c) {
     BOOL result;
@@ -48,7 +45,7 @@ static BOOL
 is_escape_character(unsigned char c) {
     BOOL result;
 
-    result = (BOOL)(c == '*' || c == __shell_escape_character);
+    result = (BOOL)(c == '*' || c == __CLIB2->__shell_escape_character);
 
     return (result);
 }
@@ -68,7 +65,7 @@ ARG_CONSTRUCTOR(arg_init) {
     ENTER();
 
     /* Shell startup? */
-    if (__WBenchMsg == NULL) {
+    if (__CLIB2->__WBenchMsg == NULL) {
         BOOL expand_wildcard_args = FALSE;
         size_t number_of_arguments;
         const unsigned char *arg_str;
@@ -162,16 +159,16 @@ ARG_CONSTRUCTOR(arg_init) {
         /* Put all this together into an argument vector.
            We allocate one extra slot to put a NULL pointer
            into. */
-        __argv = (char **) AllocVecTags((number_of_arguments + 1) * sizeof(*__argv), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-        if (__argv == NULL)
+        __CLIB2->__argv = (char **) AllocVecTags((number_of_arguments + 1) * sizeof(*__CLIB2->__argv), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        if (__CLIB2->__argv == NULL)
             goto out;
 
         /* The first parameter is the program name. */
-        __argv[0] = __CLIB2->__progname;
+        __CLIB2->__argv[0] = __CLIB2->__progname;
 
         str = command_line;
 
-        __argc = 1;
+        __CLIB2->__argc = 1;
 
         while (TRUE) {
             /* Skip leading blank space. */
@@ -187,13 +184,13 @@ ARG_CONSTRUCTOR(arg_init) {
 
                 if (__CLIB2->__unix_path_semantics) {
                     /* If necessary, indicate that this parameter was quoted. */
-                    if (expand_wildcard_args && __wildcard_quote_parameter(__argc) < 0)
+                    if (expand_wildcard_args && __wildcard_quote_parameter(__CLIB2->__argc) < 0)
                         goto out;
                 }
 
                 str++;
 
-                __argv[__argc++] = (char *) str;
+                __CLIB2->__argv[__CLIB2->__argc++] = (char *) str;
 
                 arg = (char *) str;
 
@@ -244,7 +241,7 @@ ARG_CONSTRUCTOR(arg_init) {
                    actually overwrites the final quote character. */
                 (*arg) = '\0';
             } else {
-                __argv[__argc++] = (char *) str;
+                __CLIB2->__argv[__CLIB2->__argc++] = (char *) str;
 
                 while ((*str) != '\0' && NOT is_space(*str))
                 str++;
@@ -256,10 +253,10 @@ ARG_CONSTRUCTOR(arg_init) {
             }
         }
 
-        assert(__argc == (int) number_of_arguments);
+        assert(__CLIB2->__argc == (int) number_of_arguments);
         assert(str <= &command_line[arg_len]);
 
-        __argv[__argc] = NULL;
+        __CLIB2->__argv[__CLIB2->__argc] = NULL;
 
         if (__CLIB2->__unix_path_semantics) {
             /* If necessary, expand wildcard patterns found in the command
@@ -271,7 +268,7 @@ ARG_CONSTRUCTOR(arg_init) {
         /* Return a pointer to the startup message in place of the
            the argument vector. The argument counter (what will come
            out as 'argc' for the main() function) will remain 0. */
-        __argv = (char **) __WBenchMsg;
+        __CLIB2->__argv = (char **) __CLIB2->__WBenchMsg;
     }
 
     success = TRUE;
@@ -290,9 +287,9 @@ out:
 ARG_DESTRUCTOR(arg_exit) {
     ENTER();
 
-    if (__argv) {
-        FreeVec(__argv);
-        __argv = NULL;
+    if (__CLIB2->__argv) {
+        FreeVec(__CLIB2->__argv);
+        __CLIB2->__argv = NULL;
     }
 
     LEAVE();

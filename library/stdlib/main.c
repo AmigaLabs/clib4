@@ -39,78 +39,24 @@
 #include <proto/elf.h>
 
 extern int main(int arg_c, char **arg_v);
-extern BOOL open_libraries(void);
-extern void close_libraries(void);
 
 static void _start_ctors(void (*__CTOR_LIST__[])(void));
 static void _start_dtors(void (*__DTOR_LIST__[])(void));
 static void shared_obj_init(void);
 static void shared_obj_exit(void);
 
-/* This will be set to TRUE in case a stack overflow was detected. */
-BOOL __stack_overflow;
 struct _clib2 *__clib2;
-
-struct Library *__ElfBase;
-struct ElfIFace *__IElf;
-static Elf32_Handle elf_handle;
-
-/* Memalign memory list */
-void           *__memalign_pool;
-struct AVLNode *__memalign_tree;
-
-void
-close_libraries(void) {
-    if (__IElf != NULL) {
-        DropInterface((struct Interface *) __IElf);
-        __IElf = NULL;
-    }
-
-    if (__ElfBase != NULL) {
-        CloseLibrary(__ElfBase);
-        __ElfBase = NULL;
-    }
-}
-
-BOOL open_libraries(void) {
-    /* Open the minimum required libraries. */
-    BOOL success = FALSE;
-
-    SHOWMSG("Open Elf stuff");
-    /* We need elf.library V52.2 or higher. */
-    __ElfBase = OpenLibrary("elf.library", 0);
-    if (__ElfBase == NULL || (__ElfBase->lib_Version < 52) ||
-        (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision < 2)) {
-        SHOWMSG("Cannot get __ElfBase >=52.2!");
-        goto out;
-    }
-
-    __IElf = (struct ElfIFace *) GetInterface(__ElfBase, "main", 1, NULL);
-    if (__IElf == NULL) {
-        SHOWMSG("Cannot get __IElf!");
-        goto out;
-    }
-
-    SHOWPOINTER(__UtilityBase);
-    SHOWPOINTER(__IUtility);
-
-    success = TRUE;
-
-out:
-
-    return (success);
-}
 
 static void
 shared_obj_exit(void) {
-    struct ElfIFace *IElf = __IElf;
+    struct ElfIFace *IElf = __CLIB2->IElf;
     ENTER();
 
     /* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
-    if (elf_handle != NULL) {
+    if (__CLIB2->__dl_elf_handle != NULL) {
         SHOWMSG("Invoking shared object destructors");
-        InitSHLibs(elf_handle, FALSE);
-        elf_handle = NULL;
+        InitSHLibs(__CLIB2->__dl_elf_handle, FALSE);
+        __CLIB2->__dl_elf_handle = NULL;
     };
 
     LEAVE();
@@ -120,41 +66,28 @@ static void
 shared_obj_init(void) {
     ENTER();
 
-    if (open_libraries()) {
-        struct ElfIFace *IElf = __IElf;
+    struct ElfIFace *IElf = __CLIB2->IElf;
 
-        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
-        if (segment_list != ZERO) {
-            int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &elf_handle, TAG_DONE);
-            if (ret == 1) {
-                if (elf_handle != NULL) {
-                    /* Trigger the constructors, etc. in the shared objects linked to this binary. */
-                    InitSHLibs(elf_handle, TRUE);
-                }
-                else {
-                    SHOWMSG("elf_handle == NULL!");
-                }
+    BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+    if (segment_list != ZERO) {
+        int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &__CLIB2->__dl_elf_handle, TAG_DONE);
+        if (ret == 1) {
+            if (__CLIB2->__dl_elf_handle != NULL) {
+                /* Trigger the constructors, etc. in the shared objects linked to this binary. */
+                InitSHLibs(__CLIB2->__dl_elf_handle, TRUE);
             }
             else {
-                SHOWMSG("GetSegListInfoTags fail!");
+                SHOWMSG("__CLIB2->__dl_elf_handle == NULL!");
             }
         }
         else {
-            SHOWMSG("GetProcSegList return ZERO!");
+            SHOWMSG("GetSegListInfoTags fail!");
         }
     }
     else {
-        SHOWMSG("Cannot open libraries!");
-        const char *error_message;
-
-        /* If available, use the error message provided by the client. */
-        error_message = __minimum_os_lib_error;
-
-        if (error_message == NULL)
-            error_message = "This program requires AmigaOS 4.0 (52.2) or higher.";
-
-        __show_error(error_message);
+        SHOWMSG("GetProcSegList return ZERO!");
     }
+
     LEAVE();
 }
 
@@ -196,7 +129,7 @@ call_main(
     ENTER();
 
     /* This plants the return buffer for _exit(). */
-    if (setjmp(__exit_jmp_buf) != 0) {
+    if (setjmp(__CLIB2->__exit_jmp_buf) != 0) {
         goto out;
     }
 
@@ -213,64 +146,12 @@ call_main(
      * Not in reent_init not in TIMER constructor because
      * __ITimer or __clib2 cannot be yet available
      */
-    struct TimerIFace *ITimer = __ITimer;
-    if (__ITimer != NULL) {
+    struct TimerIFace *ITimer = __CLIB2->__ITimer;
+    if (__CLIB2->__ITimer != NULL) {
         SHOWMSG("Calling GetSysTime");
         GetSysTime(&__CLIB2->clock);
         /* Generate random seed */
         __CLIB2->__random_seed = time(NULL);
-    }
-
-    /*
-     * Next: Get Elf handle associated with the currently running process.
-     * ElfBase is opened in crtbegin.c that is called before the
-     * call_main()
-     */
-
-    SHOWMSG("Try to get elf handle for dl* operations");
-    if (__ElfBase != NULL) {
-        SHOWMSG("Calling GetProcSegList");
-        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
-        if (segment_list != ZERO) {
-            Elf32_Handle handle = NULL;
-
-            SHOWMSG("Calling GetSegListInfoTags");
-            if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
-                if (handle != NULL) {
-                    SHOWMSG("Calling OpenElfTags");
-                    __CLIB2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
-                }
-            }
-        }
-    }
-
-    SHOWPOINTER(__CLIB2->__dl_elf_handle);
-
-    /* Init memalign list */
-    __memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
-                                         ASO_NoTrack, FALSE,
-                                         ASO_MemoryOvr, MEMF_PRIVATE,
-                                         ASOITEM_MFlags, MEMF_PRIVATE,
-                                         ASOITEM_ItemSize, sizeof(struct MemalignEntry),
-                                         ASOITEM_BatchSize, 408,
-                                         ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
-                                         ASOITEM_GCParameter, 1000,
-                                         TAG_DONE);
-    if (!__memalign_pool) {
-        goto out;
-    }
-    /* Set memalign tree to NULL */
-    __memalign_tree = NULL;
-
-    /* Check if .unix file exists in the current dir. If the file exists enable
-     * unix path semantics
-     */
-    __CLIB2->__unix_path_semantics = FALSE;
-    struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
-    if (exd != NULL) {
-        if (EXD_IS_FILE(exd))
-            __CLIB2->__unix_path_semantics = TRUE;
-        FreeDosObject(DOS_EXAMINEDATA, exd);
     }
 
     /* Set __current_path_name to a valid value */
@@ -307,9 +188,9 @@ call_main(
     }
 #endif /* NDEBUG */
 
-    D(("Call start_main with %ld parameters", __argc));
+    D(("Call start_main with %ld parameters", __CLIB2->__argc));
     /* After all these preparations, get this show on the road... */
-    exit(start_main(__argc, __argv));
+    exit(start_main(__CLIB2->__argc, __CLIB2->__argv));
     SHOWMSG("Done. Exit from start_main()");
 
 out:
@@ -325,7 +206,7 @@ out:
        longjmp() and exit() did not get called. This
        means that we will have to show the error message
        and invoke exit() all on our own. */
-    if (__stack_overflow) {
+    if (__CLIB2->__stack_overflow) {
         SHOWMSG("we have a stack overflow");
 
         /* Dump all currently unwritten data, especially to the console. */
@@ -333,7 +214,7 @@ out:
 
         __show_error("Stack overflow detected");
 
-        if (setjmp(__exit_jmp_buf) == 0)
+        if (setjmp(__CLIB2->__exit_jmp_buf) == 0)
             exit(RETURN_FAIL);
     }
 
@@ -351,43 +232,8 @@ out:
     /* If one of the destructors drops into exit(), either directly
        or through a failed assert() call, processing will resume with
        the next following destructor. */
-    (void) setjmp(__exit_jmp_buf);
-    SHOWMSG("Called setjmp(__exit_jmp_buf)");
-
-    /* Free dl stuff */
-    if (__IElf != NULL && __CLIB2->__dl_elf_handle != NULL) {
-        SHOWMSG("Closing elf handle");
-        CloseElfTags(__CLIB2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
-        __CLIB2->__dl_elf_handle = NULL;
-    }
-    else {
-        SHOWMSG("Cannot close elf handle: __IElf == NULL || __CLIB2->__dl_elf_handle == NULL");
-    }
-
-    /* Free memalign stuff */
-    if (__memalign_pool) {
-        /* Check if we have something created with posix_memalign and not freed yet.
-         * But this is a good point also to free something allocated with memalign or
-         * aligned_alloc and all other functions are using memalign_tree to allocate memory
-         * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
-         */
-        struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__memalign_tree);
-        while (e) {
-            struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
-
-            /* Free memory */
-            if (e->me_Exact) {
-                FreeVec(e->me_Exact);
-            }
-            /* Remove the node */
-            AVL_RemNodeByAddress(&__memalign_tree, &e->me_AvlNode);
-            ItemPoolFree(__memalign_pool, e);
-
-            e = next;
-        }
-
-        FreeSysObject(ASOT_ITEMPOOL, __memalign_pool);
-    }
+    (void) setjmp(__CLIB2->__exit_jmp_buf);
+    SHOWMSG("Called setjmp(__CLIB2->__exit_jmp_buf)");
 
     /* Go through the destructor list */
     SHOWMSG("invoking external destructors in reverse order");
@@ -401,8 +247,8 @@ out:
     /* Restore the IoErr() value before we return. */
     SetIoErr(saved_io_err);
 
-    RETURN(__exit_value);
-    return (__exit_value);
+    RETURN(__CLIB2->__exit_value);
+    return __CLIB2->__exit_value;
 }
 
 static void
@@ -454,21 +300,7 @@ _main(
         startup_message = NULL;
     }
 
-    __WBenchMsg = (struct WBStartup *) startup_message;
-
-    /* Try to open the libraries we need to proceed. */
-    if (CANNOT open_libraries()) {
-        const char *error_message;
-
-        /* If available, use the error message provided by the client. */
-        error_message = __minimum_os_lib_error;
-
-        if (error_message == NULL)
-            error_message = "This program requires AmigaOS 4.0 (52.2) or higher.";
-
-        __show_error(error_message);
-        goto out;
-    }
+    __CLIB2->__WBenchMsg = (struct WBStartup *) startup_message;
 
     if (__disable_dos_requesters) {
         /* Don't display any requesters. */
@@ -488,7 +320,7 @@ _main(
     if (__get_default_stack_size != NULL) {
         unsigned int size = (*__get_default_stack_size)();
         if (size > 0)
-            __stack_size = size;
+            __CLIB2->__stack_size = size;
     }
 
     /* How much stack space was provided? */
@@ -497,11 +329,11 @@ _main(
     /* If this is a resident program, don't allow for the detach
        code to run. Same goes for launching the program from
        Workbench. */
-    if (__is_resident || startup_message != NULL) {
-        __detach = FALSE;
+    if (__CLIB2->__is_resident || startup_message != NULL) {
+        __CLIB2->__detach = FALSE;
     } else if (__check_detach != NULL) {
         /* Check if we may need to detach from the shell. */
-        __detach = (*__check_detach)();
+        __CLIB2->__detach = (*__check_detach)();
     }
 
     DECLARE_UTILITYBASE();
@@ -515,7 +347,7 @@ _main(
 
     /* The following code will be executed if the program is to keep
        running in the shell or was launched from Workbench. */
-    if (DO_NOT __detach) {
+    if (DO_NOT __CLIB2->__detach) {
         int old_priority = this_process->pr_Task.tc_Node.ln_Pri;
 
         /* Change the task priority, if requested. */
@@ -523,13 +355,13 @@ _main(
             SetTaskPri((struct Task *) this_process, __priority);
 
         /* Was a minimum stack size requested and do we need more stack space than was provided for? */
-        if (__stack_size > 0 && current_stack_size < (ULONG) __stack_size) {
+        if (__CLIB2->__stack_size > 0 && current_stack_size < (ULONG) __CLIB2->__stack_size) {
             struct StackSwapStruct *stk;
             unsigned int stack_size;
             APTR new_stack;
 
             /* Make the stack size a multiple of 32 bytes. */
-            stack_size = 32 + ((__stack_size + 31UL) & ~31UL);
+            stack_size = 32 + ((__CLIB2->__stack_size + 31UL) & ~31UL);
 
             /* Allocate the stack swapping data structure and the stack space separately. */
             stk = AllocVecTags(sizeof(*stk), AVT_Type, MEMF_PUBLIC | MEMF_ANY, TAG_DONE);
@@ -578,7 +410,7 @@ _main(
            currently executing in. This works only if the program is
            not reentrant and has not been launched from Workbench. */
 
-        stack_size = __stack_size;
+        stack_size = __CLIB2->__stack_size;
 
         if (stack_size < current_stack_size)
             stack_size = current_stack_size;
@@ -638,7 +470,7 @@ _main(
         }
 
         /* The standard I/O streams are no longer attached to a console. */
-        __no_standard_io = TRUE;
+        __CLIB2->__no_standard_io = TRUE;
 
         cli->cli_Module = ZERO;
 
@@ -658,8 +490,6 @@ out:
         ReplyMsg((struct Message *) startup_message);
 
     }
-
-    close_libraries();
 
     return (return_code);
 }

@@ -159,11 +159,10 @@ strtof(const char *str, char **ptr)
 
 		__locale_lock();
 
-		if (__locale_table[LC_NUMERIC] != NULL)
-		{
+		if (__CLIB2->__locale_table[LC_NUMERIC] != NULL) {
 			const char *point;
 
-			point = (const char *)__locale_table[LC_NUMERIC]->loc_DecimalPoint;
+			point = (const char *) __CLIB2->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
 			if ((*point) == (*str))
 			{
 				decimal_point_matches = 1;

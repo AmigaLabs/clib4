@@ -30,7 +30,7 @@ getrusage(int who, struct rusage *rusage) {
 
     long clock[2];
     int status = 0;
-    struct TimerIFace *ITimer = __ITimer;
+    struct TimerIFace *ITimer = __CLIB2->__ITimer;
 
     if (__CLIB2 == NULL) {
         __set_errno(EINVAL);

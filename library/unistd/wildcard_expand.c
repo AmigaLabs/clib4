@@ -104,13 +104,13 @@ int __wildcard_expand_init(void) {
     old_window_pointer = __set_process_window((APTR) - 1);
 
     /* No work to be done? */
-    if (__argc == 0 || __argv == NULL) {
+    if (__CLIB2->__argc == 0 || __CLIB2->__argv == NULL) {
         error = OK;
         goto out;
     }
 
-    argc = __argc;
-    argv = __argv;
+    argc = __CLIB2->__argc;
+    argv = __CLIB2->__argv;
 
     ap = AllocDosObjectTags(DOS_ANCHORPATH,
                             ADO_Strlen, 2 * MAXPATHLEN,
@@ -282,8 +282,8 @@ int __wildcard_expand_init(void) {
             goto out;
         }
 
-        __argc = argument_list_size;
-        __argv = table;
+        __CLIB2->__argc = argument_list_size;
+        __CLIB2->__argv = table;
 
         /* Fill in the table, sorting the wildcard matches. */
         last_wild = 0;
@@ -361,7 +361,7 @@ out:
     if (error != OK) {
         __set_errno(error);
 
-        perror(__argv[0]);
+        perror(__CLIB2->__argv[0]);
         abort();
     }
 

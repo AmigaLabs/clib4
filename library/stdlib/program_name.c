@@ -32,7 +32,7 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
 
 	ENTER();
 
-	if (__WBenchMsg == NULL) {
+	if (__CLIB2->__WBenchMsg == NULL) {
 		const size_t program_name_size = 256;
 
 		/* Make a copy of the current command name string. */
@@ -46,7 +46,7 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
 			goto out;
 	}
 	else {
-        __CLIB2->__progname = (char *)__WBenchMsg->sm_ArgList[0].wa_Name;
+        __CLIB2->__progname = (char *) __CLIB2->__WBenchMsg->sm_ArgList[0].wa_Name;
 	}
 
 	success = TRUE;

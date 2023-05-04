@@ -53,7 +53,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <endian.h>
-#include <dos.h>
+#include "../include/dos.h"
 
 #ifndef _STDLIB_LOCALEBASE_H
 #include "stdlib_localebase.h"
@@ -83,23 +83,7 @@
 
 #define MIN_OS_VERSION 52
 
-/* Memalign memory list */
-extern void           *__memalign_pool;
-extern struct AVLNode *__memalign_tree;
-
-extern jmp_buf NOCOMMON __exit_jmp_buf;
-extern int NOCOMMON		__exit_value;
-
 extern unsigned int NOCOMMON (* __get_default_stack_size)(void);
-extern unsigned int NOCOMMON __stack_size;
-
-extern BOOL NOCOMMON __is_resident;
-extern UBYTE NOCOMMON __shell_escape_character;
-
-extern char **__argv;
-extern int __argc;
-
-extern BOOL NOCOMMON __lib_startup;
 
 extern void _init(void);
 extern void _fini(void);

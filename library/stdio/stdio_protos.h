@@ -5,31 +5,21 @@
 #ifndef _STDIO_PROTOS_H
 #define _STDIO_PROTOS_H
 
-/****************************************************************************/
-
 #ifndef UTILITY_HOOKS_H
 #include <utility/hooks.h>
 #endif /* UTILITY_HOOKS_H */
-
-/****************************************************************************/
 
 #ifndef _STDIO_H
 #include <stdio.h>
 #endif /* _STDIO_H */
 
-/****************************************************************************/
-
 #ifndef _MATH_FP_SUPPORT_H
 #include "math_fp_support.h"
 #endif /* _MATH_FP_SUPPORT_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
 
 #ifndef _STDIO_HEADERS_H
 

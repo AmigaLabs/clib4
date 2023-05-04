@@ -19,7 +19,13 @@
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
+/* Category name handling variables.  */
+#define NUM_LOCALES			(LC_MAX + 1)
+#define MAX_LOCALE_NAME_LEN	256
+
 __BEGIN_DECLS
+
+typedef struct _wof_allocator_t wof_allocator_t;
 
 /*
  * The Workbench startup message passed to this program; this may be NULL
@@ -50,7 +56,6 @@ __BEGIN_DECLS
  * global variable initialized by the startup code, whose name you might
  * not even know exactly.
  */
-extern struct WBStartup *__WBenchMsg;
 #define WBenchMsg __WBenchMsg
 
 /*
@@ -139,16 +144,6 @@ extern char *__stdio_window_specification;
 extern BOOL __disable_dos_requesters;
 
 /*
- * If set to TRUE, your program will disconnect itself from the shell it was
- * launched from and keep running in the background. This service is unavailable
- * for residentable programs. Note that you should not use this feature for
- * programs which are supposed to be launched by the internet superserver.
- * Also, note that when a program is run in the background, its input and
- * output streams will be connected to NIL:.
- */
-extern BOOL __detach;
-
-/*
  * If this function pointer is not NULL, it must point to a function which
  * figures out whether the program should detach itself from the shell it
  * was launched from. The function return value replaces the value of the
@@ -173,16 +168,8 @@ extern char *__process_name;
  */
 extern int __priority;
 
-/*
- * This variable can be set up to contain the minimum stack size the program
- * should be launched with. If the startup code finds that there is not enough
- * stack space available to start with, it will attempt to allocate more and
- * then proceed to run your program.
- *
- * If this variable is set to 0 (the default) then no stack size test will
- * be performed upon startup.
- */
-extern unsigned int __stack_size;
+
+
 
 /*
  * If this function pointer is not NULL, it must point to a function which
@@ -406,8 +393,8 @@ struct _wchar {
  * Initial _clib2 structure. This contains all fields used by current progream
  */
 
-extern struct _clib2 *__getClib2(void);
-extern struct _global_clib2 *__getGlobalClib2(void);
+extern struct _clib2 *__getClib2(void) __attribute__((const));
+extern struct _global_clib2 *__getGlobalClib2(void) __attribute__((const));
 
 struct _global_clib2 {
 
@@ -421,11 +408,36 @@ struct _global_clib2 {
 
 struct _clib2 {
 	struct ExecIFace *IExec; 	/* Main IExec interface */
+
     struct ElfIFace *IElf;
+
+    struct Library *__LocaleBase;
+    struct LocaleIFace *__ILocale;
+
+    struct Library *__DiskfontBase;
+    struct DiskfontIFace *__IDiskfont;
+
+    struct Library *__TimezoneBase;
+    struct TimezoneIFace *__ITimezone;
 
 	struct TimeVal clock; 		/* Populated when clib starts with current time */
 	struct rusage ru;			/* rusage struct used in rlimit function */
 	struct _wchar *wide_status;	/* wide char functions status */
+
+    /*
+     * If set to TRUE, your program will disconnect itself from the shell it was
+     * launched from and keep running in the background. This service is unavailable
+     * for residentable programs. Note that you should not use this feature for
+     * programs which are supposed to be launched by the internet superserver.
+     * Also, note that when a program is run in the background, its input and
+     * output streams will be connected to NIL:.
+     */
+    BOOL __detach;
+
+    char *tzname[2];     /* Current timezone names.  */
+    int daylight;        /* If daylight-saving time is ever in use.  */
+    long int timezone;   /* Seconds west of UTC.  */
+    int dyntz;           /* Set to TRUE if created with malloc */
 
     /*
      * If set, Unix path names are translated to Amiga path
@@ -445,6 +457,8 @@ struct _clib2 {
 	 * Check if SYSV library is available in the system. Otherwise the functions
 	 * will return ENOSYS
 	 */
+    struct Library   *__SysVBase;
+    struct SYSVIFace *__ISysVIPC;
 	BOOL haveShm;
 
 	/* This is used with the dlopen(), dlclose() and dlsym() functions. */
@@ -453,6 +467,11 @@ struct _clib2 {
 
 	/* This is the pointer to itself */
 	struct Process *self;
+
+    struct Locale *__default_locale;
+    struct Locale *__locale_table[NUM_LOCALES];
+    char __locale_name_table[NUM_LOCALES][MAX_LOCALE_NAME_LEN];
+    char __lc_ctype[__LC_LAST];
 
     /* used by setlocale */
     int _current_category;
@@ -503,6 +522,8 @@ struct _clib2 {
     /* This is filled in with a pointer to the name of the program being run. */
     char *__progname;
 
+    char __current_path_name[PATH_MAX];
+
     /* This holds a mask of all signals whose delivery is currently blocked.
        The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
        modify or query it. */
@@ -511,7 +532,73 @@ struct _clib2 {
     struct SignalSemaphore *stdio_lock;
 
     /* Wof Allocator main pointer */
-    struct wof_allocator_t *__wof_allocator;
+    wof_allocator_t *__wof_allocator;
+    /* Wof Allocator memory semaphore */
+    struct SignalSemaphore *memory_semaphore;
+
+    /* Names of files and directories to delete when shutting down. */
+    struct MinList __unlink_list;
+    struct SignalSemaphore __unlink_semaphore;
+
+    /* Local timer I/O. */
+    struct MsgPort     *__timer_port;
+    BOOL			    __timer_busy;
+    struct TimeRequest *__timer_request;
+    struct Library     *__TimerBase;
+    struct TimerIFace  *__ITimer;
+
+    /* If the program's current directory was changed, here is where we find out about it. */
+    BPTR __original_current_directory;
+    BOOL __current_directory_changed;
+    BOOL __unlock_current_directory;
+
+    /* Memalign memory list */
+    void           *__memalign_pool;
+    struct AVLNode *__memalign_tree;
+
+    /* Used by setjmp/longjmp in main */
+    jmp_buf __exit_jmp_buf;
+    int 	__exit_value;
+
+    /*
+     * This variable can be set up to contain the minimum stack size the program
+     * should be launched with. If the startup code finds that there is not enough
+     * stack space available to start with, it will attempt to allocate more and
+     * then proceed to run your program.
+     *
+     * If this variable is set to 0 (the default) then no stack size test will
+     * be performed upon startup.
+     */
+    unsigned int __stack_size;
+
+    BOOL  __is_resident;
+    UBYTE __shell_escape_character;
+
+    char **__argv;
+    int __argc;
+
+    const char *__file_lock_semaphore_name;
+
+    struct WBStartup *__WBenchMsg;
+    BOOL __no_standard_io;
+
+    /* CPU cache line size; used to align I/O buffers for best performance. */
+    ULONG __cache_line_size;
+
+    /* File init fields */
+    struct MsgPort *old_console_task;
+    BOOL restore_console_task;
+
+    BOOL restore_streams;
+
+    BPTR old_output;
+    BPTR old_input;
+
+    BPTR output;
+    BPTR input;
+
+    /* This will be set to TRUE in case a stack overflow was detected. */
+    BOOL __stack_overflow;
 };
 
 extern struct _clib2 *__clib2;

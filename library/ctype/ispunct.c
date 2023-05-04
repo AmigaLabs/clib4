@@ -18,14 +18,14 @@ ispunct(int c) {
 
     __locale_lock();
 
-    if (__locale_table[LC_CTYPE] != NULL) {
+    if (__CLIB2->__locale_table[LC_CTYPE] != NULL) {
         assert(LocaleBase != NULL);
 
         /* The parameter must be either EOF or in the range of an
            'unsigned char'. If it's not, then the behaviour is
            undefined. */
         if (c != EOF && ((0 <= c && c <= UCHAR_MAX) || ((c + 256) <= UCHAR_MAX)))
-            result = IsPunct(__locale_table[LC_CTYPE], (ULONG)(c & 255));
+            result = IsPunct(__CLIB2->__locale_table[LC_CTYPE], (ULONG)(c & 255));
         else
             result = FALSE;
     } else {

@@ -79,20 +79,20 @@ chdir(const char *path_name) {
         goto out;
     }
 
-    if (__current_directory_changed) {
+    if (__CLIB2->__current_directory_changed) {
         BPTR old_dir;
 
         old_dir = CurrentDir(dir_lock);
 
-        if (__unlock_current_directory)
+        if (__CLIB2->__unlock_current_directory)
             UnLock(old_dir);
     } else {
-        __original_current_directory = CurrentDir(dir_lock);
+        __CLIB2->__original_current_directory = CurrentDir(dir_lock);
 
-        __current_directory_changed = TRUE;
+        __CLIB2->__current_directory_changed = TRUE;
     }
 
-    __unlock_current_directory = TRUE;
+    __CLIB2->__unlock_current_directory = TRUE;
 
     dir_lock = ZERO;
 

@@ -30,7 +30,7 @@ BOOL
 __obtain_daemon_message(VOID) {
     BOOL success = FALSE;
 
-    if (Cli() != NULL && NOT __detach && __check_daemon_startup) {
+    if (Cli() != NULL && NOT __CLIB2->__detach && __check_daemon_startup) {
         struct _DaemonMessage *dm;
 
         /* The socket the superserver may have launched this program with is attached to the exit data entry of the process. */
@@ -82,7 +82,7 @@ __obtain_daemon_message(VOID) {
                 close(i);
 
             /* The standard I/O streams are no longer attached to a console. */
-            __no_standard_io = TRUE;
+            __CLIB2->__no_standard_io = TRUE;
 
             /* Put the socket into the three standard I/O streams. */
             for (i = STDIN_FILENO; i <= STDERR_FILENO; i++) {

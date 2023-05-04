@@ -141,11 +141,11 @@ setlocale(int category, const char *locale) {
 
             /* And this puts the new locale into all table entries. */
             for (i = 0; i < NUM_LOCALES; i++) {
-                __locale_table[i] = loc;
+                __CLIB2->__locale_table[i] = loc;
                 if (locale[0] != '\0')
-                    strcpy(__locale_name_table[i], locale);
+                    strcpy(__CLIB2->__locale_name_table[i], locale);
                 else
-                    strcpy(__locale_name_table[i], "C-UTF-8");
+                    strcpy(__CLIB2->__locale_name_table[i], "C-UTF-8");
             }
 
             if (strcmp(locale, "C") == SAME || strcmp(locale, "C-UTF-8") == SAME) {
@@ -218,21 +218,21 @@ setlocale(int category, const char *locale) {
             /* Close this single locale unless it's actually just a
              * copy of the 'all' locale entry.
              */
-            if (__locale_table[category] != NULL && __locale_table[category] != __locale_table[LC_ALL]) {
+            if (__CLIB2->__locale_table[category] != NULL && __CLIB2->__locale_table[category] != __CLIB2->__locale_table[LC_ALL]) {
                 assert(LocaleBase != NULL);
-                CloseLocale(__locale_table[category]);
+                CloseLocale(__CLIB2->__locale_table[category]);
             }
 
             SHOWMSG("reinitializing the locale");
 
-            __locale_table[category] = loc;
+            __CLIB2->__locale_table[category] = loc;
             if (locale[0] != '\0') {
-                strcpy(__locale_name_table[category], locale);
+                strcpy(__CLIB2->__locale_name_table[category], locale);
             }
         }
     }
 
-    result = __locale_name_table[category];
+    result = __CLIB2->__locale_name_table[category];
     SHOWSTRING(result);
 
 out:

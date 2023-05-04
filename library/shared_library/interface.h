@@ -92,8 +92,8 @@ struct Clib2IFace {
 
     /* internal */
     int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //80
-    void (* __getClib2)(void);                                      //84
-    void (* __getGlobalClib2)(void);                                //88
+    struct _clib2 * (* __getClib2)(void);                           //84
+    struct _global_clib2 * (* __getGlobalClib2)(void);              //88
     void (* __translate_amiga_to_unix_path_name)(void);             //92
     void (* __translate_unix_to_amiga_path_name)(void);             //96
     void (* internal1)(void);                                       //100

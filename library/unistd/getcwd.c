@@ -56,15 +56,15 @@ getcwd(char *buffer, size_t buffer_size) {
     }
 
     if (__CLIB2->__unix_path_semantics) {
-        if (__current_path_name[0] != '\0') {
-            if (buffer_size < strlen(__current_path_name) + 1) {
+        if (__CLIB2->__current_path_name[0] != '\0') {
+            if (buffer_size < strlen(__CLIB2->__current_path_name) + 1) {
                 SHOWMSG("buffer is too small");
 
                 __set_errno(ERANGE);
                 goto out;
             }
 
-            strcpy(buffer, __current_path_name);
+            strcpy(buffer, __CLIB2->__current_path_name);
 
             D(("returning absolute path name '%s'", buffer));
 

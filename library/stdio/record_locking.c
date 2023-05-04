@@ -80,15 +80,15 @@ obtain_file_lock_semaphore(BOOL shared) {
 
     ENTER();
 
-    if (FileLockSemaphore == NULL && __file_lock_semaphore_name != NULL && __file_lock_semaphore_name[0] != '\0') {
+    if (FileLockSemaphore == NULL && __CLIB2->__file_lock_semaphore_name != NULL && __CLIB2->__file_lock_semaphore_name[0] != '\0') {
         struct FileLockSemaphore *fls = NULL;
         char *semaphore_name_copy = NULL;
 
         /* We allocate the new semaphore first, so that we don't spend
            any time in Forbid() allocating memory. */
-        semaphore_name_copy = AllocVecTags(strlen(__file_lock_semaphore_name) + 1, AVT_Type, MEMF_SHARED, TAG_DONE);
+        semaphore_name_copy = AllocVecTags(strlen(__CLIB2->__file_lock_semaphore_name) + 1, AVT_Type, MEMF_SHARED, TAG_DONE);
         if (semaphore_name_copy != NULL) {
-            strcpy(semaphore_name_copy, __file_lock_semaphore_name);
+            strcpy(semaphore_name_copy, __CLIB2->__file_lock_semaphore_name);
 
             fls = AllocSysObjectTags(ASOT_SEMAPHORE,
                                      ASOSEM_Size, sizeof(*fls),
@@ -102,7 +102,7 @@ obtain_file_lock_semaphore(BOOL shared) {
 
         Forbid();
 
-        FileLockSemaphore = (struct FileLockSemaphore *) FindSemaphore((STRPTR) __file_lock_semaphore_name);
+        FileLockSemaphore = (struct FileLockSemaphore *) FindSemaphore((STRPTR) __CLIB2->__file_lock_semaphore_name);
         if (FileLockSemaphore == NULL) {
             SHOWMSG("didn't find it; we're going to add our own");
 

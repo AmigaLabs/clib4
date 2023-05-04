@@ -214,10 +214,10 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                                 struct UnlinkNode *uln;
                                 BOOL file_deleted = FALSE;
 
-                                assert(__unlink_list.mlh_Head != NULL);
+                                assert(__CLIB2->__unlink_list.mlh_Head != NULL);
 
                                 /* Check all files to be unlinked when this program exits. */
-                                for (uln = (struct UnlinkNode *) __unlink_list.mlh_Head;
+                                for (uln = (struct UnlinkNode *) __CLIB2->__unlink_list.mlh_Head;
                                      (uln_next = (struct UnlinkNode *) uln->uln_MinNode.mln_Succ) != NULL;
                                      uln = uln_next) {
                                     node = NULL;

@@ -94,7 +94,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = AllocVecTags(BUFSIZ + (__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue);
+    buffer = AllocVecTags(BUFSIZ + (__CLIB2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue);
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
@@ -103,7 +103,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
     }
 
     /* Align the buffer start address to a cache line boundary. */
-    aligned_buffer = (char *) ((ULONG)(buffer + (__cache_line_size - 1)) & ~(__cache_line_size - 1));
+    aligned_buffer = (char *) ((ULONG)(buffer + (__CLIB2->__cache_line_size - 1)) & ~(__CLIB2->__cache_line_size - 1));
 
     if (file_descriptor < 0) {
         assert(filename != NULL);
