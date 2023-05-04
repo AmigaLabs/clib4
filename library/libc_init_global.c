@@ -229,28 +229,38 @@ out:
 }
 
 void
-reent_exit() {
+reent_exit(struct ElfIFace *__IElf) {
     ENTER();
 
     /* Free global clib structure */
     if (__clib2) {
-        struct ElfIFace *IElf = __clib2->IElf;
+        struct ElfIFace *IElf = __IElf;
 
         /* Free wchar stuff */
         if (__clib2->wide_status != NULL) {
+            SHOWMSG("Free wide_status");
             FreeVec(__clib2->wide_status);
             __clib2->wide_status = NULL;
         }
         /* Remove random semaphore */
+        SHOWMSG("Delete random lock semaphore");
         __delete_semaphore(__clib2->__random_lock);
 
         if (__clib2->__ISysVIPC != NULL) {
+            SHOWMSG("Drop SYSV interface");
             DropInterface((struct Interface *) __clib2->__ISysVIPC);
             __clib2->__ISysVIPC = NULL;
         }
 
+        if (__clib2->__SysVBase != NULL) {
+            SHOWMSG("Close SYSV Library");
+            CloseLibrary(__clib2->__SysVBase);
+            __clib2->__SysVBase = NULL;
+        }
+
         /* Free memalign stuff */
         if (__clib2->__memalign_pool) {
+            SHOWMSG("Clean memalign memory");
             /* Check if we have something created with posix_memalign and not freed yet.
              * But this is a good point also to free something allocated with memalign or
              * aligned_alloc and all other functions are using memalign_tree to allocate memory
@@ -281,12 +291,7 @@ reent_exit() {
             __clib2->__dl_elf_handle = NULL;
         }
         else {
-            D(("Cannot close elf handle: IElf == %p || __clib2->__dl_elf_handle == %p", IElf == NULL ? "null" : IElf, __clib2->__dl_elf_handle));
-        }
-
-        if (__clib2->__SysVBase != NULL) {
-            CloseLibrary(__clib2->__SysVBase);
-            __clib2->__SysVBase = NULL;
+            D(("Cannot close elf handle: __clib2->__dl_elf_handle == %p - IElf == %p", __clib2->__dl_elf_handle, IElf));
         }
 
         FreeVec(__clib2);

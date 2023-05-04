@@ -113,10 +113,10 @@ static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
 extern void reent_init(struct ElfIFace *__IElf);
-extern void reent_exit(void);
+extern void reent_exit(struct ElfIFace *__IElf);
 
 
-struct _global_clib2 *__global_clib2 = NULL;
+struct _global_clib2 *__global_clib2 __attribute__((__section__(".sdata")));
 
 int32
 _start(char *args, int arglen, struct ExecBase *sysbase) {
@@ -269,7 +269,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
     D(("Done. All destructors called"));
 
     D(("Calling reent_exit"));
-    reent_exit();
+    reent_exit(IElf);
 
     D(("Done %ld", libBase->libNode.lib_OpenCnt));
     if (libBase->libNode.lib_OpenCnt) {

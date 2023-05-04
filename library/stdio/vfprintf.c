@@ -21,6 +21,7 @@ static void pad(Out *f, char c, int w, int l, int fl);
 
 static void out_init_file(Out *out, FILE *f) {
     memset(out, 0, sizeof(*out));
+    D(("f->size = %ld - f->position = %ld", f->size, f->position));
     out->buffer_size = f->size;
     out->buffer_pos = f->position;
     out->file = f;
@@ -691,19 +692,24 @@ vfprintf(FILE *f, const char *format, va_list ap) {
 
     __check_abort();
 
+    SHOWMSG("Formatting File pointer");
     Out _out[1];
     out_init_file(_out, f);
     va_copy(ap2, ap);
 
     // Check for error in format string before writing anything to file.
+    SHOWMSG("Check for string format errors");
     if (printf_core(0, format, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
         return EOF;
     }
+
+    SHOWMSG("Write result to the file");
     ret = printf_core(_out, format, &ap2, nl_arg, nl_type);
 
     va_end(ap2);
 
+    SHOWMSG("Flush the file");
     fflush(f);
 
     RETURN(ret);

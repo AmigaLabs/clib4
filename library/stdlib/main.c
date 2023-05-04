@@ -56,7 +56,6 @@ shared_obj_exit(void) {
     if (__CLIB2->__dl_elf_handle != NULL) {
         SHOWMSG("Invoking shared object destructors");
         InitSHLibs(__CLIB2->__dl_elf_handle, FALSE);
-        __CLIB2->__dl_elf_handle = NULL;
     };
 
     LEAVE();

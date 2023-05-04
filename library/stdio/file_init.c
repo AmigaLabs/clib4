@@ -177,7 +177,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
                 iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_NONE;
                 fd_flags = FDF_IN_USE | FDF_WRITE;
-                default_file = ZERO; /* NOTE: this is really initialized later; see below... */
+                default_file = ZERO;
                 break;
         }
 
@@ -214,7 +214,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
                          i,
                          iob_flags,
                          stdio_lock);
-
+        SHOWPOINTER(__CLIB2->__iob[i]);
     }
 
     success = TRUE;

@@ -26,6 +26,7 @@ BOOL __is_valid_iob(struct iob *iob) {
         __stdio_lock();
         D(("__num_iob = %ld", __CLIB2->__num_iob));
         D(("iob->iob_SlotNumber = %ld", iob->iob_SlotNumber));
+        SHOWPOINTER(__CLIB2->__iob[iob->iob_SlotNumber]);
 
         if (__CLIB2->__num_iob > 0 && 0 <= iob->iob_SlotNumber && iob->iob_SlotNumber < __CLIB2->__num_iob && __CLIB2->__iob[iob->iob_SlotNumber] == iob)
             result = TRUE;

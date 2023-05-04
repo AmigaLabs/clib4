@@ -83,7 +83,7 @@ extern void __stack_usage_exit(void);
 extern void _exit(int return_code);
 
 extern void reent_init(struct ElfIFace *__IElf);
-extern void reent_exit(void);
+extern void reent_exit(struct ElfIFace *__IElf);
 
 /****************************************************************************/
 

@@ -17,9 +17,6 @@ __resolve_fd_file(struct fd *fd) {
     if (fd == NULL)
         return ZERO;
 
-    if (IDOS == NULL)
-        return ZERO;
-
     /* Is this one the standard I/O streams for which the associated file
        handle should be determined dynamically? */
     if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO)) {
@@ -36,14 +33,10 @@ __resolve_fd_file(struct fd *fd) {
 
             case STDERR_FILENO:
 
-                file = ErrorOutput();
-
-                /* The following is rather controversial; if the standard error stream
-                       is unavailable, we default to reuse the standard output stream. This
-                       is problematic if the standard output stream was redirected and should
-                       not be the same as the standard error output stream. */
-                if (file == ZERO)
-                    file = Output();
+                if (ErrorOutput())
+                    file = ErrorOutput();
+                else
+                    file = Open("CONSOLE:", MODE_NEWFILE);
 
                 break;
 
