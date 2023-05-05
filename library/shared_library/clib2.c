@@ -194,10 +194,9 @@ struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
         return NULL;
     }
 
-    //if (!IClib2)
-    {
+    if (!IClib2) {
         IClib2 = (struct Clib2IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
-        //IExec->DropInterface((struct Interface *) IClib2);
+        IExec->DropInterface((struct Interface *) IClib2);
     }
 
     /* If all libraries are opened correctly we can initialize clib2 reent structure */

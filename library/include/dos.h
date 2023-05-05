@@ -162,16 +162,6 @@ extern BOOL (*__check_detach)(void);
 extern char *__process_name;
 
 /*
- * This variable controls the task priority of the program, when running.
- * It must be in the range -128..127 to be useful. By default, the task
- * priority will not be changed.
- */
-extern int __priority;
-
-
-
-
-/*
  * If this function pointer is not NULL, it must point to a function which
  * figures out how much stack space is required to run the program. The
  * function return value replaces the value of the __stack_size variable
@@ -398,12 +388,17 @@ extern struct _global_clib2 *__getGlobalClib2(void) __attribute__((const));
 
 struct _global_clib2 {
 
+    /* Global shared version library _errno */
+    int _errno;
+
+    FILE *_stdin;
+    FILE *_stdout;
+    FILE *_stderr;
+
     /* CPU Family to enable optimized functions */
     uint32 cpufamily;
     uint32 hasAltivec;
 
-    /* Global shared version library _errno */
-    int _errno;
 };
 
 struct _clib2 {
@@ -423,6 +418,13 @@ struct _clib2 {
 	struct TimeVal clock; 		/* Populated when clib starts with current time */
 	struct rusage ru;			/* rusage struct used in rlimit function */
 	struct _wchar *wide_status;	/* wide char functions status */
+
+    /*
+     * This variable controls the task priority of the program, when running.
+     * It must be in the range -128..127 to be useful. By default, the task
+     * priority will not be changed.
+     */
+    int __priority;
 
     /*
      * If set to TRUE, your program will disconnect itself from the shell it was

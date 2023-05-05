@@ -116,9 +116,9 @@ typedef struct __sFILE FILE;
 /****************************************************************************/
 
 /* The three standard I/O streams */
-#define stdin ((FILE *)  __CLIB2->__iob[0])
-#define stdout ((FILE *) __CLIB2->__iob[1])
-#define stderr ((FILE *) __CLIB2->__iob[2])
+#define stdin (__GCLIB2->_stdin)
+#define stdout (__GCLIB2->_stdout)
+#define stderr (__GCLIB2->_stderr)
 
 /****************************************************************************/
 

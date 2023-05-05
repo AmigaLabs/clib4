@@ -79,12 +79,17 @@ reent_init(struct ElfIFace *__IElf) {
 
         /* Get the current task pointer */
         __clib2->self = (struct Process *) FindTask(NULL);
+        __clib2->self->pr_CLibData = __clib2;
+
+        SHOWPOINTER(__clib2);
 
         /* Enable check abort */
         __clib2->__check_abort_enabled = TRUE;
 
         __clib2->__shell_escape_character = '*';
         __clib2->__cache_line_size = 32;
+        /* We use an invalid priority value to indicate "do not change the program's task priority". */
+        __clib2->__priority = 256;
 
         SHOWMSG("Allocating wide_status");
         /* Initialize wchar stuff */

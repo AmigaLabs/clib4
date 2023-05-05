@@ -295,6 +295,7 @@ _main(
         WaitPort(mp);
 
         startup_message = (struct WBStartup *) GetMsg(mp);
+
     } else {
         startup_message = NULL;
     }
@@ -350,8 +351,8 @@ _main(
         int old_priority = this_process->pr_Task.tc_Node.ln_Pri;
 
         /* Change the task priority, if requested. */
-        if (-128 <= __priority && __priority <= 127)
-            SetTaskPri((struct Task *) this_process, __priority);
+        if (-128 <= __CLIB2->__priority && __CLIB2->__priority <= 127)
+            SetTaskPri((struct Task *) this_process, __CLIB2->__priority);
 
         /* Was a minimum stack size requested and do we need more stack space than was provided for? */
         if (__CLIB2->__stack_size > 0 && current_stack_size < (ULONG) __CLIB2->__stack_size) {
@@ -441,9 +442,9 @@ _main(
         tags[i++].ti_Data = (ULONG) cli->cli_Module;
 
         /* Use a predefined task priority, if requested. */
-        if (-128 <= __priority && __priority <= 127) {
+        if (-128 <= __CLIB2->__priority && __CLIB2->__priority <= 127) {
             tags[i].ti_Tag = NP_Priority;
-            tags[i++].ti_Data = (ULONG) __priority;
+            tags[i++].ti_Data = (ULONG) __CLIB2->__priority;
         }
 
         /* dos.library V50 will free the segment list upon exit. */

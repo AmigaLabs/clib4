@@ -483,7 +483,6 @@ C_STDLIB := \
 	stdlib/mulsi3.o \
 	stdlib/osliberror.o \
 	stdlib/posix_memalign.o \
-	stdlib/priority.o \
 	stdlib/process_name.o \
 	stdlib/program_name.o \
 	stdlib/putenv.o \
