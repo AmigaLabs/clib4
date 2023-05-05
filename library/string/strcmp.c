@@ -49,7 +49,7 @@ strcmp(const char *s1, const char *s2) {
     }
 
     if (__CLIB2->__optimizedCPUFunctions) {
-        switch (__GCLIB2->cpufamily) {
+        switch (__CLIB2->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strcmp440(s1, s2);
                 break;

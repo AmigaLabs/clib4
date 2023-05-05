@@ -182,10 +182,6 @@ SOCKET_CONSTRUCTOR(socket_init) {
         }
     }
 
-    /* Check if this program was launched as a server by the Internet superserver. */
-    if (CANNOT __obtain_daemon_message())
-        goto out;
-
     success = TRUE;
 
 out:

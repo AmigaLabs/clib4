@@ -35,6 +35,8 @@ int32 _start(char *args,
 extern int _main(char *argstr,
                  int arglen,
                  int (*start_main)(int, char **),
+                 void (*__CTOR_LIST__[])(void),
+                 void (*__DTOR_LIST__[])(void),
                  void (*__EXT_CTOR_LIST__[])(void),
                  void (*__EXT_DTOR_LIST__[])(void));
 

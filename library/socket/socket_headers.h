@@ -84,7 +84,6 @@ extern struct fd * __get_file_descriptor_socket(int socket_descriptor);
 extern int64_t __socket_hook_entry(struct fd * fd,struct file_action_message * fam);
 extern int __get_h_errno(void);
 extern void __set_h_errno(int new_h_errno);
-extern BOOL __obtain_daemon_message(VOID);
 extern int __select(int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *except_fds,struct timeval *timeout,ULONG * signal_mask_ptr);
 
 /* Syslog stuff */

@@ -25,7 +25,7 @@ bzero(void *m, size_t len) {
 
     if (__CLIB2->__optimizedCPUFunctions) {
         /* Check if we have altivec enabled */
-        if (__GCLIB2->hasAltivec) {
+        if (__CLIB2->hasAltivec) {
             vec_bzero(m, len);
         }
         else {

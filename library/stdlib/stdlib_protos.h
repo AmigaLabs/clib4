@@ -82,8 +82,8 @@ extern void __stack_usage_exit(void);
 /* stdlib_exit.c */
 extern void _exit(int return_code);
 
-extern void reent_init(struct ElfIFace *__IElf);
-extern void reent_exit(struct ElfIFace *__IElf);
+extern void reent_init(struct _clib2 *__clib2);
+extern void reent_exit(struct _clib2 *__clib2);
 
 /****************************************************************************/
 
@@ -107,6 +107,8 @@ extern void __check_abort(void);
 extern int _main(char *argstr,
                  int arglen,
                  int (* start_main)(int, char **),
+                 void (*__CTOR_LIST__[])(void),
+                 void (*__DTOR_LIST__[])(void),
                  void (*__EXT_CTOR_LIST__[])(void),
                  void (*__EXT_DTOR_LIST__[])(void));
 

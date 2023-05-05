@@ -33,6 +33,9 @@
 #include <proto/elf.h>
 #include <fenv.h>
 
+extern struct ElfIFace *__IElf;
+extern struct Library *__ElfBase;
+
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
     uint32 pid = (uint32) userdata;
@@ -57,163 +60,172 @@ static uint32_t _random_init[] = {
         0x0cab8628, 0xf043bfa4, 0x398150e9, 0x37521657
 };
 
-/* These are used to initialize the shared objects linked to this binary,
-   and for the dlopen(), dlclose() and dlsym() functions. */
-extern struct _clib2 *__clib2;
-
 void
-reent_init(struct ElfIFace *__IElf) {
+reent_init(struct _clib2 *__clib2) {
     BOOL success = FALSE;
 
     ENTER();
 
-    /* Initialize global structure */
-    __clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-    if (__clib2 == NULL) {
-        goto out;
-    } else {
-        struct ElfIFace *IElf = __IElf;
-        /* Set main Exec and IElf interface pointers */
-        __clib2->IExec = IExec;
-        __clib2->IElf = __IElf;
+    struct ElfIFace *IElf = __IElf;
+    /* Set main Exec and IElf interface pointers */
+    __clib2->IExec = IExec;
+    __clib2->IElf = __IElf;
 
-        /* Get the current task pointer */
-        __clib2->self = (struct Process *) FindTask(NULL);
+    /* Get the current task pointer */
+    __clib2->self = (struct Process *) FindTask(NULL);
+    if (NT_PROCESS == ((struct Task *) __clib2->self)->tc_Node.ln_Type) {
         __clib2->self->pr_CLibData = __clib2;
+    }
 
-        SHOWPOINTER(__clib2);
+    SHOWPOINTER(__clib2);
 
-        /* Enable check abort */
-        __clib2->__check_abort_enabled = TRUE;
+    /* Enable check abort */
+    __clib2->__check_abort_enabled = TRUE;
 
-        __clib2->__shell_escape_character = '*';
-        __clib2->__cache_line_size = 32;
-        /* We use an invalid priority value to indicate "do not change the program's task priority". */
-        __clib2->__priority = 256;
+    /* Get cpu family used to choose functions at runtime */
+    D(("Setting cpu family"));
+    GetCPUInfoTags(GCIT_Family, &__clib2->cpufamily);
 
-        SHOWMSG("Allocating wide_status");
-        /* Initialize wchar stuff */
-        __clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
-        if (!__clib2->wide_status) {
-            goto out;
-        }
-
-#ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
-        __clib2->__optimizedCPUFunctions = FALSE;
+    /* Check if altivec is present */
+#ifdef ENABLE_ALTIVEC_AT_START
+    D(("Check if altivec is present"));
+    GetCPUInfoTags(GCIT_VectorUnit, &__clib2->hasAltivec);
 #else
-        __clib2->__optimizedCPUFunctions = TRUE;
+    D(("Set altivec to zero"));
+    __clib2->hasAltivec = 0;
 #endif
 
-        /* Init memalign list */
-        SHOWMSG("Allocating __memalign_pool");
-        __clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
-                                                      ASO_NoTrack, FALSE,
-                                                      ASO_MemoryOvr, MEMF_PRIVATE,
-                                                      ASOITEM_MFlags, MEMF_PRIVATE,
-                                                      ASOITEM_ItemSize, sizeof(struct MemalignEntry),
-                                                      ASOITEM_BatchSize, 408,
-                                                      ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
-                                                      ASOITEM_GCParameter, 1000,
-                                                      TAG_DONE);
-        if (!__clib2->__memalign_pool) {
-            goto out;
-        }
-        /* Set memalign tree to NULL */
-        __clib2->__memalign_tree = NULL;
+    D(("Setting global errno"));
+    __clib2->_errno = 0;
 
-        /* Initialize random signal and state */
-        __clib2->__random_lock = __create_semaphore();
-        if (!__clib2->__random_lock) {
-            goto out;
-        }
-        __clib2->n = 31;
-        __clib2->i = 3;
-        __clib2->j = 0;
-        __clib2->x = _random_init + 1;
+    __clib2->__shell_escape_character = '*';
+    __clib2->__cache_line_size = 32;
+    /* We use an invalid priority value to indicate "do not change the program's task priority". */
+    __clib2->__priority = 256;
 
-        /*
-         * Next: Get Elf handle associated with the currently running process.
-         * ElfBase is opened in crtbegin.c that is called before the
-         * call_main()
-         */
+    SHOWMSG("Allocating wide_status");
+    /* Initialize wchar stuff */
+    __clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
+    if (!__clib2->wide_status) {
+        goto out;
+    }
 
-        SHOWMSG("Try to get elf handle for dl* operations");
-        if (__clib2->IElf != NULL) {
-            SHOWMSG("Calling GetProcSegList");
-            BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
-            if (segment_list != ZERO) {
-                Elf32_Handle handle = NULL;
+#ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
+    __clib2->__optimizedCPUFunctions = FALSE;
+#else
+    __clib2->__optimizedCPUFunctions = TRUE;
+#endif
 
-                SHOWMSG("Calling GetSegListInfoTags");
-                if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
-                    if (handle != NULL) {
-                        SHOWMSG("Calling OpenElfTags");
-                        __clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
-                        SHOWPOINTER(__clib2->__dl_elf_handle);
-                    }
+    /* Init memalign list */
+    SHOWMSG("Allocating __memalign_pool");
+    __clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                                  ASO_NoTrack, FALSE,
+                                                  ASO_MemoryOvr, MEMF_PRIVATE,
+                                                  ASOITEM_MFlags, MEMF_PRIVATE,
+                                                  ASOITEM_ItemSize, sizeof(struct MemalignEntry),
+                                                  ASOITEM_BatchSize, 408,
+                                                  ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
+                                                  ASOITEM_GCParameter, 1000,
+                                                  TAG_DONE);
+    if (!__clib2->__memalign_pool) {
+        goto out;
+    }
+    /* Set memalign tree to NULL */
+    __clib2->__memalign_tree = NULL;
+
+    /* Initialize random signal and state */
+    __clib2->__random_lock = __create_semaphore();
+    if (!__clib2->__random_lock) {
+        goto out;
+    }
+    __clib2->n = 31;
+    __clib2->i = 3;
+    __clib2->j = 0;
+    __clib2->x = _random_init + 1;
+
+    /*
+     * Next: Get Elf handle associated with the currently running process.
+     * ElfBase is opened in crtbegin.c that is called before the
+     * call_main()
+     */
+
+    SHOWMSG("Try to get elf handle for dl* operations");
+    if (__clib2->IElf != NULL) {
+        SHOWMSG("Calling GetProcSegList");
+        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+        if (segment_list != ZERO) {
+            Elf32_Handle handle = NULL;
+
+            SHOWMSG("Calling GetSegListInfoTags");
+            if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
+                if (handle != NULL) {
+                    SHOWMSG("Calling OpenElfTags");
+                    __clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
+                    SHOWPOINTER(__clib2->__dl_elf_handle);
                 }
             }
         }
+    }
 
-        __clib2->wide_status->_strtok_last = NULL;
-        __clib2->wide_status->_mblen_state.__count = 0;
-        __clib2->wide_status->_mblen_state.__value.__wch = 0;
-        __clib2->wide_status->_wctomb_state.__count = 0;
-        __clib2->wide_status->_wctomb_state.__value.__wch = 0;
-        __clib2->wide_status->_mbtowc_state.__count = 0;
-        __clib2->wide_status->_mbtowc_state.__value.__wch = 0;
-        __clib2->wide_status->_mbrlen_state.__count = 0;
-        __clib2->wide_status->_mbrlen_state.__value.__wch = 0;
-        __clib2->wide_status->_mbrtowc_state.__count = 0;
-        __clib2->wide_status->_mbrtowc_state.__value.__wch = 0;
-        __clib2->wide_status->_mbsrtowcs_state.__count = 0;
-        __clib2->wide_status->_mbsrtowcs_state.__value.__wch = 0;
-        __clib2->wide_status->_wcrtomb_state.__count = 0;
-        __clib2->wide_status->_wcrtomb_state.__value.__wch = 0;
-        __clib2->wide_status->_wcsrtombs_state.__count = 0;
-        __clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
-        __clib2->wide_status->_l64a_buf[0] = '\0';
-        __clib2->wide_status->_getdate_err = 0;
-        /* Set locale stuff */
-        __clib2->_current_category = LC_ALL;
-        __clib2->_current_locale = "C-UTF-8";
-        __clib2->__mb_cur_max = 1;
+    __clib2->wide_status->_strtok_last = NULL;
+    __clib2->wide_status->_mblen_state.__count = 0;
+    __clib2->wide_status->_mblen_state.__value.__wch = 0;
+    __clib2->wide_status->_wctomb_state.__count = 0;
+    __clib2->wide_status->_wctomb_state.__value.__wch = 0;
+    __clib2->wide_status->_mbtowc_state.__count = 0;
+    __clib2->wide_status->_mbtowc_state.__value.__wch = 0;
+    __clib2->wide_status->_mbrlen_state.__count = 0;
+    __clib2->wide_status->_mbrlen_state.__value.__wch = 0;
+    __clib2->wide_status->_mbrtowc_state.__count = 0;
+    __clib2->wide_status->_mbrtowc_state.__value.__wch = 0;
+    __clib2->wide_status->_mbsrtowcs_state.__count = 0;
+    __clib2->wide_status->_mbsrtowcs_state.__value.__wch = 0;
+    __clib2->wide_status->_wcrtomb_state.__count = 0;
+    __clib2->wide_status->_wcrtomb_state.__value.__wch = 0;
+    __clib2->wide_status->_wcsrtombs_state.__count = 0;
+    __clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
+    __clib2->wide_status->_l64a_buf[0] = '\0';
+    __clib2->wide_status->_getdate_err = 0;
+    /* Set locale stuff */
+    __clib2->_current_category = LC_ALL;
+    __clib2->_current_locale = "C-UTF-8";
+    __clib2->__mb_cur_max = 1;
 
-        /* Check is SYSV library is available in the system */
-        __clib2->haveShm = FALSE;
-        SHOWMSG("try to open SYSVIPC Library");
-        __clib2->__SysVBase = OpenLibrary("sysvipc.library", 53);
-        if (__clib2->__SysVBase != NULL) {
-            __clib2->__ISysVIPC = (struct SYSVIFace *) GetInterface(__clib2->__SysVBase, "main", 1, NULL);
-            if (__clib2->__ISysVIPC != NULL) {
-                __clib2->haveShm = TRUE;
-            } else {
-                CloseLibrary(__clib2->__SysVBase);
-                __clib2->__SysVBase = NULL;
-            }
-        }
-
-        /* Clear itimer start time */
-        __clib2->tmr_start_time.tv_sec = 0;
-        __clib2->tmr_start_time.tv_usec = 0;
-        __clib2->tmr_real_task = NULL;
-
-        __clib2->__default_path_delimiter = ":";
-        __clib2->__default_path = "/gcc/bin:/SDK/C:/SDK/Local/C:/C:.";
-
-        /* Check if .unix file exists in the current dir. If the file exists enable unix path semantics */
-        SHOWMSG("Check for .unix file");
-        __clib2->__unix_path_semantics = FALSE;
-        struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
-        if (exd != NULL) {
-            if (EXD_IS_FILE(exd)) {
-                SHOWMSG("Enable unix paths");
-                __clib2->__unix_path_semantics = TRUE;
-            }
-            FreeDosObject(DOS_EXAMINEDATA, exd);
-            exd = NULL;
+    /* Check is SYSV library is available in the system */
+    __clib2->haveShm = FALSE;
+    SHOWMSG("try to open SYSVIPC Library");
+    __clib2->__SysVBase = OpenLibrary("sysvipc.library", 53);
+    if (__clib2->__SysVBase != NULL) {
+        __clib2->__ISysVIPC = (struct SYSVIFace *) GetInterface(__clib2->__SysVBase, "main", 1, NULL);
+        if (__clib2->__ISysVIPC != NULL) {
+            __clib2->haveShm = TRUE;
+        } else {
+            CloseLibrary(__clib2->__SysVBase);
+            __clib2->__SysVBase = NULL;
         }
     }
+
+    /* Clear itimer start time */
+    __clib2->tmr_start_time.tv_sec = 0;
+    __clib2->tmr_start_time.tv_usec = 0;
+    __clib2->tmr_real_task = NULL;
+
+    __clib2->__default_path_delimiter = ":";
+    __clib2->__default_path = "/C:.:/APPDIR:/PROGDIR:/ram:/SDK/C:/SDK/Local/C:";
+
+    /* Check if .unix file exists in the current dir. If the file exists enable unix path semantics */
+    SHOWMSG("Check for .unix file");
+    __clib2->__unix_path_semantics = FALSE;
+    struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
+    if (exd != NULL) {
+        if (EXD_IS_FILE(exd)) {
+            SHOWMSG("Enable unix paths");
+            __clib2->__unix_path_semantics = TRUE;
+        }
+        FreeDosObject(DOS_EXAMINEDATA, exd);
+        exd = NULL;
+    }
+
     success = TRUE;
 
 out:
@@ -234,7 +246,7 @@ out:
 }
 
 void
-reent_exit(struct ElfIFace *__IElf) {
+reent_exit(struct _clib2 *__clib2) {
     ENTER();
 
     /* Free global clib structure */
@@ -319,13 +331,13 @@ void enableAltivec(void) {
     /* Check if altivec is present otherwise we can't enable it */
     GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec);
     if (hasAltivec)
-        __GCLIB2->hasAltivec = 1;
+        __CLIB2->hasAltivec = 1;
     else
-        __GCLIB2->hasAltivec = 0;
+        __CLIB2->hasAltivec = 0;
 }
 
 void disableAltivec(void) {
-    __GCLIB2->hasAltivec = 0;
+    __CLIB2->hasAltivec = 0;
 }
 
 void enableOptimizedFunctions(void) {
@@ -337,6 +349,6 @@ void disableOptimizedFunctions(void) {
 };
 
 int *__mb_cur_max(void) {
-    return &__clib2->__mb_cur_max;
+    return &__CLIB2->__mb_cur_max;
 }
 

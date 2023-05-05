@@ -54,7 +54,7 @@ strlen(const char *s) {
     }
 
     if (__CLIB2->__optimizedCPUFunctions) {
-        switch (__GCLIB2->cpufamily) {
+        switch (__CLIB2->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strlen440(s);
                 break;

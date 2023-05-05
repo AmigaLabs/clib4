@@ -4,8 +4,7 @@
 #include <proto/dos.h>
 #include <debug.h>
 
-extern struct _clib2 *__clib2;
-extern struct _global_clib2 *__global_clib2;
+extern struct _clib2 *__fallback_clib2;
 
 struct _clib2 *
 __getClib2(void) {
@@ -20,21 +19,10 @@ __getClib2(void) {
     SHOWPOINTER(r);
 
     if (!r) {
-        r = __clib2;
+        r = __fallback_clib2;
+        SHOWPOINTER(r);
     }
-
-    SHOWPOINTER(r);
 
     RETURN(r);
     return r;
-}
-
-struct _global_clib2 *
-__getGlobalClib2(void) {
-    ENTER();
-
-    SHOWPOINTER(__global_clib2);
-
-    RETURN(__global_clib2);
-    return __global_clib2;
 }

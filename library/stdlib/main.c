@@ -38,14 +38,12 @@
 
 #include <proto/elf.h>
 
+struct _clib2 *__fallback_clib2;
+
 extern int main(int arg_c, char **arg_v);
 
-static void _start_ctors(void (*__CTOR_LIST__[])(void));
-static void _start_dtors(void (*__DTOR_LIST__[])(void));
 static void shared_obj_init(void);
 static void shared_obj_exit(void);
-
-struct _clib2 *__clib2;
 
 static void
 shared_obj_exit(void) {
@@ -121,14 +119,17 @@ call_main(
         char *argstr,
         int arglen,
         int (*start_main)(int, char **),
+        void (*__CTOR_LIST__[])(void),
+        void (*__DTOR_LIST__[])(void),
         void (*__EXT_CTOR_LIST__[])(void),
-        void (*__EXT_DTOR_LIST__[])(void)) {
+        void (*__EXT_DTOR_LIST__[])(void),
+        struct _clib2 *__clib2) {
     volatile LONG saved_io_err;
 
     ENTER();
 
     /* This plants the return buffer for _exit(). */
-    if (setjmp(__CLIB2->__exit_jmp_buf) != 0) {
+    if (setjmp(__clib2->__exit_jmp_buf) != 0) {
         goto out;
     }
 
@@ -145,12 +146,12 @@ call_main(
      * Not in reent_init not in TIMER constructor because
      * __ITimer or __clib2 cannot be yet available
      */
-    struct TimerIFace *ITimer = __CLIB2->__ITimer;
-    if (__CLIB2->__ITimer != NULL) {
+    struct TimerIFace *ITimer = __clib2->__ITimer;
+    if (__clib2->__ITimer != NULL) {
         SHOWMSG("Calling GetSysTime");
-        GetSysTime(&__CLIB2->clock);
+        GetSysTime(&__clib2->clock);
         /* Generate random seed */
-        __CLIB2->__random_seed = time(NULL);
+        __clib2->__random_seed = time(NULL);
     }
 
     /* Set __current_path_name to a valid value */
@@ -180,16 +181,16 @@ call_main(
                 while (arg_str_len > 0 && arg_str_copy[arg_str_len - 1] <= ' ')
                     arg_str_copy[--arg_str_len] = '\0';
 
-                D(("[%s] %s %s\n", current_dir_name, __CLIB2->__progname, arg_str_copy));
+                D(("[%s] %s %s\n", current_dir_name, __clib2->__progname, arg_str_copy));
                 FreeVec(arg_str_copy);
             }
         }
     }
 #endif /* NDEBUG */
 
-    D(("Call start_main with %ld parameters", __CLIB2->__argc));
+    D(("Call start_main with %ld parameters", __clib2->__argc));
     /* After all these preparations, get this show on the road... */
-    exit(start_main(__CLIB2->__argc, __CLIB2->__argv));
+    exit(start_main(__clib2->__argc, __clib2->__argv));
     SHOWMSG("Done. Exit from start_main()");
 
 out:
@@ -198,14 +199,14 @@ out:
     saved_io_err = IoErr();
 
     /* From this point on, don't worry about ^C checking any more. */
-    __CLIB2->__check_abort_enabled = FALSE;
+    __clib2->__check_abort_enabled = FALSE;
 
     /* If we end up here with the __stack_overflow variable
        set then the stack overflow handler dropped into
        longjmp() and exit() did not get called. This
        means that we will have to show the error message
        and invoke exit() all on our own. */
-    if (__CLIB2->__stack_overflow) {
+    if (__clib2->__stack_overflow) {
         SHOWMSG("we have a stack overflow");
 
         /* Dump all currently unwritten data, especially to the console. */
@@ -213,7 +214,7 @@ out:
 
         __show_error("Stack overflow detected");
 
-        if (setjmp(__CLIB2->__exit_jmp_buf) == 0)
+        if (setjmp(__clib2->__exit_jmp_buf) == 0)
             exit(RETURN_FAIL);
     }
 
@@ -231,8 +232,8 @@ out:
     /* If one of the destructors drops into exit(), either directly
        or through a failed assert() call, processing will resume with
        the next following destructor. */
-    (void) setjmp(__CLIB2->__exit_jmp_buf);
-    SHOWMSG("Called setjmp(__CLIB2->__exit_jmp_buf)");
+    (void) setjmp(__clib2->__exit_jmp_buf);
+    SHOWMSG("Called setjmp(__clib2->__exit_jmp_buf)");
 
     /* Go through the destructor list */
     SHOWMSG("invoking external destructors in reverse order");
@@ -241,13 +242,23 @@ out:
     SHOWMSG("Close shared objects");
     shared_obj_exit();
 
+    SHOWMSG("Calling clib2 dtors");
+    _end_ctors(__DTOR_LIST__);
+    SHOWMSG("Done. All destructors called");
+
+    SHOWMSG("Calling reent_exit on _clib2");
+    reent_exit(__clib2);
+
+    SHOWMSG("Calling reent_exit on __fallback_clib2");
+    reent_exit(__fallback_clib2);
+
     SHOWMSG("done.");
 
     /* Restore the IoErr() value before we return. */
     SetIoErr(saved_io_err);
 
-    RETURN(__CLIB2->__exit_value);
-    return __CLIB2->__exit_value;
+    RETURN(__clib2->__exit_value);
+    return __clib2->__exit_value;
 }
 
 static void
@@ -276,6 +287,8 @@ _main(
         char *argstr,
         int arglen,
         int (*start_main)(int, char **),
+        void (*__CTOR_LIST__[])(void),
+        void (*__DTOR_LIST__[])(void),
         void (*__EXT_CTOR_LIST__[])(void),
         void (*__EXT_DTOR_LIST__[])(void)) {
     struct Process *volatile child_process = NULL;
@@ -285,6 +298,7 @@ _main(
     struct Process *this_process;
     int return_code = RETURN_FAIL;
     ULONG current_stack_size;
+    struct _clib2 *__clib2;
 
     /* Pick up the Workbench startup message, if available. */
     this_process = (struct Process *) FindTask(NULL);
@@ -300,7 +314,24 @@ _main(
         startup_message = NULL;
     }
 
-    __CLIB2->__WBenchMsg = (struct WBStartup *) startup_message;
+    /* If all libraries are opened correctly we can initialize clib2 reent structure */
+    D(("Initialize clib2 reent structure"));
+    /* Initialize global structure */
+    __clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+    if (__clib2 == NULL)
+        goto out;
+
+    reent_init(__clib2);
+
+    D(("Initialize __fallback_clib2 structure"));
+    /* Initialize global structure */
+    __fallback_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+    if (__fallback_clib2 == NULL)
+        goto out;
+
+    reent_init(__fallback_clib2);
+
+    __clib2->__WBenchMsg = (struct WBStartup *) startup_message;
 
     if (__disable_dos_requesters) {
         /* Don't display any requesters. */
@@ -314,27 +345,22 @@ _main(
 
     old_window_pointer_valid = TRUE;
 
+    /* After reent structure we can call clib2 constructors */
+    D(("Calling clib2 ctors"));
+    _start_ctors(__CTOR_LIST__);
+    D(("Done. All constructors called"));
+
     /* If a callback was provided which can fill us in on which
        minimum stack size should be used, invoke it now and
        store its result in the global __stack_size variable. */
     if (__get_default_stack_size != NULL) {
         unsigned int size = (*__get_default_stack_size)();
         if (size > 0)
-            __CLIB2->__stack_size = size;
+            __clib2->__stack_size = size;
     }
 
     /* How much stack space was provided? */
     current_stack_size = get_stack_size();
-
-    /* If this is a resident program, don't allow for the detach
-       code to run. Same goes for launching the program from
-       Workbench. */
-    if (__CLIB2->__is_resident || startup_message != NULL) {
-        __CLIB2->__detach = FALSE;
-    } else if (__check_detach != NULL) {
-        /* Check if we may need to detach from the shell. */
-        __CLIB2->__detach = (*__check_detach)();
-    }
 
     DECLARE_UTILITYBASE();
     /* Set default terminal mode to "amiga" if not set */
@@ -347,137 +373,57 @@ _main(
 
     /* The following code will be executed if the program is to keep
        running in the shell or was launched from Workbench. */
-    if (DO_NOT __CLIB2->__detach) {
-        int old_priority = this_process->pr_Task.tc_Node.ln_Pri;
+    int old_priority = this_process->pr_Task.tc_Node.ln_Pri;
 
-        /* Change the task priority, if requested. */
-        if (-128 <= __CLIB2->__priority && __CLIB2->__priority <= 127)
-            SetTaskPri((struct Task *) this_process, __CLIB2->__priority);
+    /* Change the task priority, if requested. */
+    if (-128 <= __clib2->__priority && __clib2->__priority <= 127)
+        SetTaskPri((struct Task *) this_process, __clib2->__priority);
 
-        /* Was a minimum stack size requested and do we need more stack space than was provided for? */
-        if (__CLIB2->__stack_size > 0 && current_stack_size < (ULONG) __CLIB2->__stack_size) {
-            struct StackSwapStruct *stk;
-            unsigned int stack_size;
-            APTR new_stack;
-
-            /* Make the stack size a multiple of 32 bytes. */
-            stack_size = 32 + ((__CLIB2->__stack_size + 31UL) & ~31UL);
-
-            /* Allocate the stack swapping data structure and the stack space separately. */
-            stk = AllocVecTags(sizeof(*stk), AVT_Type, MEMF_PUBLIC | MEMF_ANY, TAG_DONE);
-            if (stk == NULL)
-                goto out;
-
-            new_stack = AllocVecTags(stack_size, AVT_Type, MEMF_PUBLIC | MEMF_ANY, TAG_DONE);
-            if (new_stack == NULL) {
-                FreeVec(stk);
-                goto out;
-            }
-
-            /* Fill in the lower and upper bounds, then take care of the stack pointer itself. */
-            stk->stk_Lower = new_stack;
-            stk->stk_Upper = (ULONG)(new_stack) + stack_size;
-            stk->stk_Pointer = (APTR)(stk->stk_Upper - 32);
-
-            /* If necessary, set up for stack size usage measurement. */
-#ifndef NDEBUG
-            {
-                __stack_usage_init(stk);
-            }
-#endif /* NDEBUG */
-
-            SHOWMSG("Swap Stack and Call Main");
-            return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__));
-
-            FreeVec(new_stack);
-            FreeVec(stk);
-        } else {
-            SHOWMSG("Call Main");
-            /* We have enough room to make the call or just don't care. */
-            return_code = call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
-        }
-
-        /* Restore the task priority. */
-        SetTaskPri((struct Task *) this_process, old_priority);
-    } else {
-        struct CommandLineInterface *cli = Cli();
-        struct TagItem tags[12];
-        TEXT program_name[256] = {0};
+    /* Was a minimum stack size requested and do we need more stack space than was provided for? */
+    if (__clib2->__stack_size > 0 && current_stack_size < (ULONG) __clib2->__stack_size) {
+        struct StackSwapStruct *stk;
         unsigned int stack_size;
-        int i;
+        APTR new_stack;
 
-        /* Now for the interesting part: detach from the shell we're
-           currently executing in. This works only if the program is
-           not reentrant and has not been launched from Workbench. */
+        /* Make the stack size a multiple of 32 bytes. */
+        stack_size = 32 + ((__clib2->__stack_size + 31UL) & ~31UL);
 
-        stack_size = __CLIB2->__stack_size;
+        /* Allocate the stack swapping data structure and the stack space separately. */
+        stk = AllocVecTags(sizeof(*stk), AVT_Type, MEMF_PUBLIC | MEMF_ANY, TAG_DONE);
+        if (stk == NULL)
+            goto out;
 
-        if (stack_size < current_stack_size)
-            stack_size = current_stack_size;
-
-        if (stack_size < cli->cli_DefaultStack * sizeof(LONG))
-            stack_size = cli->cli_DefaultStack * sizeof(LONG);
-
-        GetCliProgramName(program_name, (LONG) sizeof(program_name));
-
-        i = 0;
-
-        tags[i].ti_Tag = NP_Entry;
-        tags[i++].ti_Data = (ULONG) call_main;
-        tags[i].ti_Tag = NP_StackSize;
-        tags[i++].ti_Data = stack_size;
-        tags[i].ti_Tag = NP_Name;
-        tags[i++].ti_Data = (ULONG)(__process_name != NULL ? __process_name : (char *) FilePart(program_name));
-        tags[i].ti_Tag = NP_CommandName;
-        tags[i++].ti_Data = (ULONG) FilePart(program_name);
-        tags[i].ti_Tag = NP_Cli;
-        tags[i++].ti_Data = TRUE;
-        tags[i].ti_Tag = NP_Child;
-        tags[i++].ti_Data = TRUE;
-        tags[i].ti_Tag = NP_Arguments;
-        tags[i++].ti_Data = (ULONG) GetArgStr();
-        tags[i].ti_Tag = NP_FinalCode;
-        tags[i++].ti_Data = (ULONG) detach_cleanup;
-        tags[i].ti_Tag = NP_FinalData;
-        tags[i++].ti_Data = (ULONG) cli->cli_Module;
-
-        /* Use a predefined task priority, if requested. */
-        if (-128 <= __CLIB2->__priority && __CLIB2->__priority <= 127) {
-            tags[i].ti_Tag = NP_Priority;
-            tags[i++].ti_Data = (ULONG) __CLIB2->__priority;
-        }
-
-        /* dos.library V50 will free the segment list upon exit. */
-        if (((struct Library *) DOSBase)->lib_Version >= 50) {
-            tags[i].ti_Tag = NP_Seglist;
-            tags[i++].ti_Data = (ULONG) cli->cli_Module;;
-            tags[i].ti_Tag = NP_FreeSeglist;
-            tags[i++].ti_Data = TRUE;
-        }
-
-        tags[i].ti_Tag = TAG_END;
-
-        Forbid();
-
-        child_process = CreateNewProc(tags);
-        if (child_process == NULL) {
-            Permit();
-
-            PrintFault(IoErr(), program_name);
-
-            return_code = RETURN_FAIL;
+        new_stack = AllocVecTags(stack_size, AVT_Type, MEMF_PUBLIC | MEMF_ANY, TAG_DONE);
+        if (new_stack == NULL) {
+            FreeVec(stk);
             goto out;
         }
 
-        /* The standard I/O streams are no longer attached to a console. */
-        __CLIB2->__no_standard_io = TRUE;
+        /* Fill in the lower and upper bounds, then take care of the stack pointer itself. */
+        stk->stk_Lower = new_stack;
+        stk->stk_Upper = (ULONG)(new_stack) + stack_size;
+        stk->stk_Pointer = (APTR)(stk->stk_Upper - 32);
 
-        cli->cli_Module = ZERO;
+        /* If necessary, set up for stack size usage measurement. */
+#ifndef NDEBUG
+        {
+            __stack_usage_init(stk);
+        }
+#endif /* NDEBUG */
 
-        return_code = RETURN_OK;
+        SHOWMSG("Swap Stack and Call Main");
+        return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __CTOR_LIST__, __DTOR_LIST__, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib2));
 
-        Permit();
+        FreeVec(new_stack);
+        FreeVec(stk);
+    } else {
+        SHOWMSG("Call Main");
+        /* We have enough room to make the call or just don't care. */
+        return_code = call_main(argstr, arglen, start_main, __CTOR_LIST__, __DTOR_LIST__, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib2);
     }
+
+    /* Restore the task priority. */
+    SetTaskPri((struct Task *) this_process, old_priority);
 
 out:
 

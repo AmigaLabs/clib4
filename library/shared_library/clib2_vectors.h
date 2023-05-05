@@ -6,7 +6,7 @@ static void *main_vectors[] = {
         /* internal */
         (void *) (library_start),
         (void *) (__getClib2),
-        (void *) (__getGlobalClib2),
+        (void *) (libReserved),
         (void *) (__translate_amiga_to_unix_path_name),
         (void *) (__translate_unix_to_amiga_path_name),
         (void *) (libReserved),

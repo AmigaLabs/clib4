@@ -270,7 +270,6 @@ C_SOCKET := \
 	socket/isdaemon.o \
 	socket/listen.o \
 	socket/ns_parse.o \
-	socket/obtain_daemon.o \
 	socket/openlog.o \
 	socket/recv.o \
 	socket/recvfrom.o \
@@ -444,7 +443,6 @@ C_STDLIB := \
 	stdlib/atoll.o \
 	stdlib/bsearch.o \
 	stdlib/calloc.o \
-	stdlib/checkdetach.o \
 	stdlib/disablerequesters.o \
 	stdlib/div.o \
 	stdlib/divsi3.o \

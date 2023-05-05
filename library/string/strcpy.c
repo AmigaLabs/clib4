@@ -23,7 +23,7 @@ strcpy(char *dest, const char *src) {
 
     if (dest != src) {
         if (__CLIB2->__optimizedCPUFunctions) {
-            switch (__GCLIB2->cpufamily) {
+            switch (__CLIB2->cpufamily) {
                 case CPUFAMILY_4XX:
                     result = __strcpy440(dest, src);
                     break;
@@ -33,7 +33,7 @@ strcpy(char *dest, const char *src) {
                     break;
 #endif
                 default: {
-                    if (__GCLIB2->hasAltivec) {
+                    if (__CLIB2->hasAltivec) {
                         vec_strcpy(dest, src);
                     } else {
                         /* Fallback to standard function */

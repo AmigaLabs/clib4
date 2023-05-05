@@ -144,17 +144,6 @@ extern char *__stdio_window_specification;
 extern BOOL __disable_dos_requesters;
 
 /*
- * If this function pointer is not NULL, it must point to a function which
- * figures out whether the program should detach itself from the shell it
- * was launched from. The function return value replaces the value of the
- * __detach variable.
- *
- * At the time this function is invoked, dos.library and utility.library
- * have already been opened for you.
- */
-extern BOOL (*__check_detach)(void);
-
-/*
  * If this pointer is not NULL, it refers the name that will be given to
  * the process which is created when the program detaches. The default
  * is to reuse the program name instead.
@@ -383,23 +372,7 @@ struct _wchar {
  * Initial _clib2 structure. This contains all fields used by current progream
  */
 
-extern struct _clib2 *__getClib2(void) __attribute__((const));
-extern struct _global_clib2 *__getGlobalClib2(void) __attribute__((const));
-
-struct _global_clib2 {
-
-    /* Global shared version library _errno */
-    int _errno;
-
-    FILE *_stdin;
-    FILE *_stdout;
-    FILE *_stderr;
-
-    /* CPU Family to enable optimized functions */
-    uint32 cpufamily;
-    uint32 hasAltivec;
-
-};
+extern struct _clib2 *__getClib2(void);
 
 struct _clib2 {
 	struct ExecIFace *IExec; 	/* Main IExec interface */
@@ -415,6 +388,10 @@ struct _clib2 {
     struct Library *__TimezoneBase;
     struct TimezoneIFace *__ITimezone;
 
+    /* CPU Family to enable optimized functions */
+    uint32 cpufamily;
+    uint32 hasAltivec;
+
 	struct TimeVal clock; 		/* Populated when clib starts with current time */
 	struct rusage ru;			/* rusage struct used in rlimit function */
 	struct _wchar *wide_status;	/* wide char functions status */
@@ -425,16 +402,6 @@ struct _clib2 {
      * priority will not be changed.
      */
     int __priority;
-
-    /*
-     * If set to TRUE, your program will disconnect itself from the shell it was
-     * launched from and keep running in the background. This service is unavailable
-     * for residentable programs. Note that you should not use this feature for
-     * programs which are supposed to be launched by the internet superserver.
-     * Also, note that when a program is run in the background, its input and
-     * output streams will be connected to NIL:.
-     */
-    BOOL __detach;
 
     char *tzname[2];     /* Current timezone names.  */
     int daylight;        /* If daylight-saving time is ever in use.  */
@@ -573,7 +540,6 @@ struct _clib2 {
      */
     unsigned int __stack_size;
 
-    BOOL  __is_resident;
     UBYTE __shell_escape_character;
 
     char **__argv;
@@ -604,10 +570,8 @@ struct _clib2 {
 };
 
 extern struct _clib2 *__clib2;
-extern struct _global_clib2 *__global_clib2;
 
 #define __CLIB2 (__getClib2())
-#define __GCLIB2 (__getGlobalClib2())
 
 __END_DECLS
 

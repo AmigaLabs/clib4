@@ -29,7 +29,7 @@ _exit(int return_code) {
     __CLIB2->__exit_value = return_code;
 
     ENTER();
-    SHOWVALUE(return_code);
+    SHOWVALUE(__CLIB2->__exit_value);
 
     struct Task *task = FindTask(NULL);
     if (&__CLIB2->self->pr_Task != task) {
