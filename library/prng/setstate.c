@@ -8,16 +8,17 @@
 char *
 setstate(const char *state) {
     char *old;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
     SHOWSTRING(state);
 
-    ObtainSemaphore(__CLIB2->__random_lock);
+    ObtainSemaphore(__clib2->__random_lock);
 
     old = savestate();
     loadstate((uint32_t*)state);
 
-    ReleaseSemaphore(__CLIB2->__random_lock);
+    ReleaseSemaphore(__clib2->__random_lock);
 
     RETURN(old);
     return old;

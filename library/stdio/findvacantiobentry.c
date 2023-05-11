@@ -12,6 +12,7 @@ BOOL __is_valid_iob(struct iob *iob) {
     BOOL result = FALSE;
     ENTER();
     SHOWPOINTER(iob);
+    struct _clib2 *__clib2 = __CLIB2;
 
     if (iob == NULL) {
         SHOWMSG("iob is NULL");
@@ -23,14 +24,16 @@ BOOL __is_valid_iob(struct iob *iob) {
         /* This is used by vsprintf(), etc. */
         result = TRUE;
     } else {
+        SHOWMSG("Locking stdio");
         __stdio_lock();
-        D(("__num_iob = %ld", __CLIB2->__num_iob));
+        D(("__num_iob = %ld", __clib2->__num_iob));
         D(("iob->iob_SlotNumber = %ld", iob->iob_SlotNumber));
-        SHOWPOINTER(__CLIB2->__iob[iob->iob_SlotNumber]);
+        SHOWPOINTER(__clib2->__iob[iob->iob_SlotNumber]);
 
-        if (__CLIB2->__num_iob > 0 && 0 <= iob->iob_SlotNumber && iob->iob_SlotNumber < __CLIB2->__num_iob && __CLIB2->__iob[iob->iob_SlotNumber] == iob)
+        if (__clib2->__num_iob > 0 && 0 <= iob->iob_SlotNumber && iob->iob_SlotNumber < __clib2->__num_iob && __clib2->__iob[iob->iob_SlotNumber] == iob)
             result = TRUE;
 
+        SHOWMSG("Unlock stdio");
         __stdio_unlock();
     }
 
@@ -43,11 +46,12 @@ BOOL __is_valid_iob(struct iob *iob) {
 int __find_vacant_iob_entry(void) {
     int result = ERROR;
     int i;
+    struct _clib2 *__clib2 = __CLIB2;
 
-    assert(__CLIB2->__iob != NULL || __CLIB2->__num_iob == 0);
+    assert(__clib2->__iob != NULL || __clib2->__num_iob == 0);
 
-    for (i = 0; i < __CLIB2->__num_iob; i++) {
-        if (FLAG_IS_CLEAR(__CLIB2->__iob[i]->iob_Flags, IOBF_IN_USE)) {
+    for (i = 0; i < __clib2->__num_iob; i++) {
+        if (FLAG_IS_CLEAR(__clib2->__iob[i]->iob_Flags, IOBF_IN_USE)) {
             result = i;
             break;
         }

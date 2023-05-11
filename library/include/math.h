@@ -13,6 +13,8 @@ __BEGIN_DECLS
 #include <stdlib.h>
 #endif /* _STDLIB_H */
 
+#include <dos.h>
+
 /* Natural log of 2 */
 #define _M_LN2        0.693147180559945309417
 
@@ -87,14 +89,8 @@ extern float ynf(int n, float x);
 /* HUGE_VALL is a 'long double' Infinity.  */
 #define HUGE_VALL (1.0L / 0.0L)
 
-extern double __huge_val;
-extern float __huge_val_float;
-extern long double __huge_val_long_double;
-extern float __infinity;
-extern float __nan;
-
-#define INFINITY ((const float)__infinity)
-#define NAN ((const float)__nan)
+#define INFINITY ((const float)__CLIB2->__infinity)
+#define NAN ((const float)__CLIB2->__nan)
 
 #define FP_INFINITE     0x01   /* -/+ infinity */
 #define FP_NAN          0x02   /* not a number */
@@ -125,6 +121,10 @@ extern int __isinfl(long double x);
 extern int __isnormalf(float x);
 extern int __isnormal(double x);
 extern int __isnormall(long double x);
+
+/* The gamma functions use a global variable, signgam.  */
+#define signgam (*__signgam())
+extern int *__signgam (void);
 
 #define	fpclassify(x) \
     ((sizeof (x) == sizeof (float)) ? __fpclassify_float(x) \

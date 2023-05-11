@@ -33,6 +33,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
     int64_t result = EOF;
     BOOL is_aliased;
     BPTR file;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -199,7 +200,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                         if (fd->fd_File)
                             fd->fd_File = ZERO;
 
-                        if (__CLIB2->__unix_path_semantics) {
+                        if (__clib2->__unix_path_semantics) {
                             DECLARE_UTILITYBASE();
 
                             assert(UtilityBase != NULL);
@@ -217,7 +218,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                                 assert(__CLIB2->__unlink_list.mlh_Head != NULL);
 
                                 /* Check all files to be unlinked when this program exits. */
-                                for (uln = (struct UnlinkNode *) __CLIB2->__unlink_list.mlh_Head;
+                                for (uln = (struct UnlinkNode *) __clib2->__unlink_list.mlh_Head;
                                      (uln_next = (struct UnlinkNode *) uln->uln_MinNode.mln_Succ) != NULL;
                                      uln = uln_next) {
                                     node = NULL;
@@ -374,7 +375,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     if (position == CHANGE_FILE_ERROR) {
                         fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
-                        if (__CLIB2->__unix_path_semantics) {
+                        if (__clib2->__unix_path_semantics) {
                             /* Check if this operation failed because the file is shorter than
                                    the new file position. First, we need to find out if the file
                                    is really shorter than required. If not, then it must have

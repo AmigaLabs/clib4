@@ -9,14 +9,15 @@
 int
 sigsetmask(int signal_mask)  {
 	int result;
+    struct _clib2 *__clib2 = __CLIB2;
 
 	ENTER();
 
 	SHOWVALUE(signal_mask);
 
-	result = __CLIB2->__signals_blocked;
+	result = __clib2->__signals_blocked;
 
-    __CLIB2->__signals_blocked = signal_mask;
+    __clib2->__signals_blocked = signal_mask;
 
 	RETURN(result);
 	return(result);

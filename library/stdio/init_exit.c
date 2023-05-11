@@ -21,27 +21,28 @@
 void
 __close_all_files(void) {
     int i;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     __stdio_lock();
 
-    if (__CLIB2->__num_iob > 0) {
-        for (i = 0; i < __CLIB2->__num_iob; i++) {
-            if (FLAG_IS_SET(__CLIB2->__iob[i]->iob_Flags, IOBF_IN_USE))
-                fclose((FILE *) __CLIB2->__iob[i]);
+    if (__clib2->__num_iob > 0) {
+        for (i = 0; i < __clib2->__num_iob; i++) {
+            if (FLAG_IS_SET(__clib2->__iob[i]->iob_Flags, IOBF_IN_USE))
+                fclose((FILE *) __clib2->__iob[i]);
         }
 
-        __CLIB2->__num_iob = 0;
+        __clib2->__num_iob = 0;
     }
 
-    if (__CLIB2->__num_fd > 0) {
-        for (i = 0; i < __CLIB2->__num_fd; i++) {
-            if (FLAG_IS_SET(__CLIB2->__fd[i]->fd_Flags, FDF_IN_USE))
+    if (__clib2->__num_fd > 0) {
+        for (i = 0; i < __clib2->__num_fd; i++) {
+            if (FLAG_IS_SET(__clib2->__fd[i]->fd_Flags, FDF_IN_USE))
                 close(i);
         }
 
-        __CLIB2->__num_fd = 0;
+        __clib2->__num_fd = 0;
     }
 
     __stdio_unlock();

@@ -65,35 +65,30 @@ reent_init(struct _clib2 *__clib2) {
     BOOL success = FALSE;
 
     ENTER();
+    DECLARE_UTILITYBASE();
 
     struct ElfIFace *IElf = __IElf;
     /* Set main Exec and IElf interface pointers */
     __clib2->IExec = IExec;
     __clib2->IElf = __IElf;
 
-    /* Get the current task pointer */
-    __clib2->self = (struct Process *) FindTask(NULL);
-    if (NT_PROCESS == ((struct Task *) __clib2->self)->tc_Node.ln_Type) {
-        __clib2->self->pr_CLibData = __clib2;
-    }
-
-    SHOWPOINTER(__clib2);
-
     /* Enable check abort */
     __clib2->__check_abort_enabled = TRUE;
 
     /* Get cpu family used to choose functions at runtime */
     D(("Setting cpu family"));
-    GetCPUInfoTags(GCIT_Family, &__clib2->cpufamily);
+    GetCPUInfoTags(GCIT_Family, &__clib2->cpufamily, TAG_DONE);
 
     /* Check if altivec is present */
 #ifdef ENABLE_ALTIVEC_AT_START
     D(("Check if altivec is present"));
-    GetCPUInfoTags(GCIT_VectorUnit, &__clib2->hasAltivec);
+    GetCPUInfoTags(GCIT_VectorUnit, &__clib2->hasAltivec, TAG_DONE);
 #else
     D(("Set altivec to zero"));
     __clib2->hasAltivec = 0;
 #endif
+
+    __clib2->__break_signal_mask = SIGBREAKF_CTRL_C;
 
     D(("Setting global errno"));
     __clib2->_errno = 0;
@@ -143,6 +138,9 @@ reent_init(struct _clib2 *__clib2) {
     __clib2->j = 0;
     __clib2->x = _random_init + 1;
 
+    __clib2->_gamma_signgam = 0;
+    __clib2->__infinity = 0;
+    __clib2->__nan = 0;
     /*
      * Next: Get Elf handle associated with the currently running process.
      * ElfBase is opened in crtbegin.c that is called before the
@@ -205,10 +203,15 @@ reent_init(struct _clib2 *__clib2) {
         }
     }
 
+    __clib2->__disable_dos_requesters = FALSE;
+    __clib2->__expand_wildcard_args = TRUE;
+    __clib2->__unlink_retries = TRUE;
+
     /* Clear itimer start time */
     __clib2->tmr_start_time.tv_sec = 0;
     __clib2->tmr_start_time.tv_usec = 0;
     __clib2->tmr_real_task = NULL;
+    ClearMem(&__clib2->tmr_time, sizeof(struct itimerval));
 
     __clib2->__default_path_delimiter = ":";
     __clib2->__default_path = "/C:.:/APPDIR:/PROGDIR:/ram:/SDK/C:/SDK/Local/C:";
@@ -224,6 +227,12 @@ reent_init(struct _clib2 *__clib2) {
         }
         FreeDosObject(DOS_EXAMINEDATA, exd);
         exd = NULL;
+    }
+
+    /* This table holds pointers to all signal handlers configured at a time. */
+    SHOWMSG("Set signal table to SIG_DFL");
+    for (int i = 0; i < NSIG; i++) {
+        __clib2->__signal_handler_table[i] = SIG_DFL;
     }
 
     success = TRUE;
@@ -329,7 +338,7 @@ void disableUnixPaths(void) {
 void enableAltivec(void) {
     int32 hasAltivec;
     /* Check if altivec is present otherwise we can't enable it */
-    GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec);
+    GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec, TAG_DONE);
     if (hasAltivec)
         __CLIB2->hasAltivec = 1;
     else

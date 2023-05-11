@@ -33,11 +33,6 @@ struct _ErrorHookMsg {
 
 /****************************************************************************/
 
-BOOL __can_share_socket_library_base;
-BOOL __thread_safe_errno_h_errno;
-
-/****************************************************************************/
-
 /* This hook function is called whenever either the errno or h_errno
    variable is to be changed by the bsdsocket.library code. It is invoked
    on the context of the caller, which means that the Process which called
@@ -107,6 +102,7 @@ SOCKET_CONSTRUCTOR(socket_init) {
     struct TagItem tags[5];
     BOOL success = FALSE;
     LONG status;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -134,12 +130,12 @@ SOCKET_CONSTRUCTOR(socket_init) {
     tags[1].ti_Tag = SBTM_SETVAL(SBTC_BREAKMASK);
 
     if (__CLIB2->__check_abort_enabled)
-        tags[1].ti_Data = __break_signal_mask;
+        tags[1].ti_Data = __clib2->__break_signal_mask;
     else
         tags[1].ti_Data = 0;
 
     tags[2].ti_Tag = SBTM_SETVAL(SBTC_LOGTAGPTR);
-    tags[2].ti_Data = (ULONG)__CLIB2->__progname;
+    tags[2].ti_Data = (ULONG)__clib2->__progname;
 
     /* Wire the library's h_errno variable to our local h_errno. */
     tags[3].ti_Tag = SBTM_SETVAL(SBTC_HERRNOLONGPTR);
@@ -169,16 +165,16 @@ SOCKET_CONSTRUCTOR(socket_init) {
         tags[1].ti_Tag = TAG_END;
 
         if (__SocketBaseTagList(tags) == 0)
-            __can_share_socket_library_base = TRUE;
+            __clib2->__can_share_socket_library_base = TRUE;
 
-        if (__can_share_socket_library_base) {
+        if (__clib2->__can_share_socket_library_base) {
             tags[0].ti_Tag = SBTM_SETVAL(SBTC_ERROR_HOOK);
             tags[0].ti_Data = (ULONG) &error_hook;
 
             tags[1].ti_Tag = TAG_END;
 
             if (__SocketBaseTagList(tags) == 0)
-                __thread_safe_errno_h_errno = TRUE;
+                __clib2->__thread_safe_errno_h_errno = TRUE;
         }
     }
 

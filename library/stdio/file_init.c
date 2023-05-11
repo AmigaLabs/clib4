@@ -22,36 +22,37 @@
 
 FILE_DESTRUCTOR(workbench_exit) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
     /* Now clean up after the streams set up for Workbench startup... */
-    if (__CLIB2->restore_console_task) {
-        SetConsoleTask((struct MsgPort *) __CLIB2->old_console_task);
-        __CLIB2->old_console_task = NULL;
-        __CLIB2->restore_console_task = FALSE;
+    if (__clib2->restore_console_task) {
+        SetConsoleTask((struct MsgPort *) __clib2->old_console_task);
+        __clib2->old_console_task = NULL;
+        __clib2->restore_console_task = FALSE;
     }
 
-    if (__CLIB2->restore_streams) {
-        SelectInput(__CLIB2->old_input);
-        __CLIB2->old_input = ZERO;
+    if (__clib2->restore_streams) {
+        SelectInput(__clib2->old_input);
+        __clib2->old_input = ZERO;
 
-        SelectOutput(__CLIB2->old_output);
-        __CLIB2->old_output = ZERO;
+        SelectOutput(__clib2->old_output);
+        __clib2->old_output = ZERO;
 
-        __CLIB2->restore_streams = FALSE;
+        __clib2->restore_streams = FALSE;
     }
 
-    if (__CLIB2->input != ZERO) {
-        SetMode(__CLIB2->input, DOSFALSE);
+    if (__clib2->input != ZERO) {
+        SetMode(__clib2->input, DOSFALSE);
 
-        Close(__CLIB2->input);
-        __CLIB2->input = ZERO;
+        Close(__clib2->input);
+        __clib2->input = ZERO;
     }
 
-    if (__CLIB2->output != ZERO) {
-        SetMode(__CLIB2->output, DOSFALSE);
+    if (__clib2->output != ZERO) {
+        SetMode(__clib2->output, DOSFALSE);
 
-        Close(__CLIB2->output);
-        __CLIB2->output = ZERO;
+        Close(__clib2->output);
+        __clib2->output = ZERO;
     }
 
     LEAVE();
@@ -60,14 +61,15 @@ FILE_DESTRUCTOR(workbench_exit) {
 static int
 wb_file_init(void) {
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
-    __CLIB2->__original_current_directory = CurrentDir(__CLIB2->__WBenchMsg->sm_ArgList[0].wa_Lock);
-    __CLIB2->__current_directory_changed = TRUE;
+    __clib2->__original_current_directory = CurrentDir(__clib2->__WBenchMsg->sm_ArgList[0].wa_Lock);
+    __clib2->__current_directory_changed = TRUE;
 
-    if (__stdio_window_specification != NULL) {
-        __CLIB2->input = Open(__stdio_window_specification, MODE_NEWFILE);
-    } else if (__CLIB2->__WBenchMsg->sm_ToolWindow != NULL) {
-        __CLIB2->input = Open(__CLIB2->__WBenchMsg->sm_ToolWindow, MODE_NEWFILE);
+    if (__clib2->__stdio_window_specification != NULL) {
+        __clib2->input = Open(__clib2->__stdio_window_specification, MODE_NEWFILE);
+    } else if (__clib2->__WBenchMsg->sm_ToolWindow != NULL) {
+        __clib2->input = Open(__clib2->__WBenchMsg->sm_ToolWindow, MODE_NEWFILE);
     } else {
         static const char console_prefix[] = "CON:20/20/600/150/";
         static const char console_suffix[] = " Output/AUTO/CLOSE/WAIT";
@@ -75,7 +77,7 @@ wb_file_init(void) {
         STRPTR tool_name;
         size_t len;
 
-        tool_name = (STRPTR) FilePart(__CLIB2->__WBenchMsg->sm_ArgList[0].wa_Name);
+        tool_name = (STRPTR) FilePart(__clib2->__WBenchMsg->sm_ArgList[0].wa_Name);
 
         len = strlen(console_prefix) + strlen(tool_name) + strlen(console_suffix);
 
@@ -87,36 +89,36 @@ wb_file_init(void) {
         strcat(window_specifier, tool_name);
         strcat(window_specifier, console_suffix);
 
-        __CLIB2->input = Open(window_specifier, MODE_NEWFILE);
+        __clib2->input = Open(window_specifier, MODE_NEWFILE);
 
         free(window_specifier);
     }
 
-    if (__CLIB2->input == ZERO)
-        __CLIB2->input = Open("NIL:", MODE_NEWFILE);
+    if (__clib2->input == ZERO)
+        __clib2->input = Open("NIL:", MODE_NEWFILE);
 
-    if (__CLIB2->input != ZERO) {
-        struct FileHandle *fh = BADDR(__CLIB2->input);
+    if (__clib2->input != ZERO) {
+        struct FileHandle *fh = BADDR(__clib2->input);
 
-        __CLIB2->old_console_task = SetConsoleTask(fh->fh_Type);
+        __clib2->old_console_task = SetConsoleTask(fh->fh_Type);
 
-        __CLIB2->output = Open("CONSOLE:", MODE_NEWFILE);
-        if (__CLIB2->output != ZERO)
-            __CLIB2->restore_console_task = TRUE;
+        __clib2->output = Open("CONSOLE:", MODE_NEWFILE);
+        if (__clib2->output != ZERO)
+            __clib2->restore_console_task = TRUE;
         else
-            SetConsoleTask((struct MsgPort *) __CLIB2->old_console_task);
+            SetConsoleTask((struct MsgPort *) __clib2->old_console_task);
     }
 
-    if (__CLIB2->output == ZERO)
-        __CLIB2->output = Open("NIL:", MODE_NEWFILE);
+    if (__clib2->output == ZERO)
+        __clib2->output = Open("NIL:", MODE_NEWFILE);
 
-    if (__CLIB2->input == ZERO || __CLIB2->output == ZERO)
+    if (__clib2->input == ZERO || __clib2->output == ZERO)
         goto out;
 
-    __CLIB2->old_input = SelectInput(__CLIB2->input);
-    __CLIB2->old_output = SelectOutput(__CLIB2->output);
+    __clib2->old_input = SelectInput(__clib2->input);
+    __clib2->old_output = SelectOutput(__clib2->output);
 
-    __CLIB2->restore_streams = TRUE;
+    __clib2->restore_streams = TRUE;
 
     result = OK;
 
@@ -134,6 +136,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
     char *buffer;
     char *aligned_buffer;
     int i;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -141,12 +144,12 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
     GetCPUInfoTags(GCIT_CacheLineSize, &physical_alignment, TAG_DONE);
     SHOWVALUE(physical_alignment);
-    if (__CLIB2->__cache_line_size < physical_alignment) {
-        __CLIB2->__cache_line_size = physical_alignment;
+    if (__clib2->__cache_line_size < physical_alignment) {
+        __clib2->__cache_line_size = physical_alignment;
     }
 
     /* If we were invoked from Workbench, set up the standard I/O streams. */
-    if (__CLIB2->__WBenchMsg != NULL) {
+    if (__clib2->__WBenchMsg != NULL) {
         SHOWMSG("set up the standard I/O streams");
         if (wb_file_init() < 0) {
             goto out;
@@ -182,7 +185,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         }
 
         /* Allocate a little more memory than necessary. */
-        buffer = AllocVecTags(BUFSIZ + (__CLIB2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        buffer = AllocVecTags(BUFSIZ + (__clib2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
         if (buffer == NULL)
             goto out;
 
@@ -203,9 +206,9 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         fd_flags |= FDF_NO_CLOSE | FDF_STDIO;
 
         /* Align the buffer start address to a cache line boundary. */
-        aligned_buffer = (char *) ((ULONG)(buffer + (__CLIB2->__cache_line_size - 1)) & ~(__CLIB2->__cache_line_size - 1));
-        __initialize_fd(__CLIB2->__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
-        __initialize_iob(__CLIB2->__iob[i],
+        aligned_buffer = (char *) ((ULONG)(buffer + (__clib2->__cache_line_size - 1)) & ~(__clib2->__cache_line_size - 1));
+        __initialize_fd(__clib2->__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
+        __initialize_iob(__clib2->__iob[i],
                          __iob_hook_entry,
                          buffer,
                          aligned_buffer,
@@ -214,7 +217,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
                          i,
                          iob_flags,
                          stdio_lock);
-        SHOWPOINTER(__CLIB2->__iob[i]);
+        SHOWPOINTER(__clib2->__iob[i]);
     }
 
     success = TRUE;

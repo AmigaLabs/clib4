@@ -12,7 +12,9 @@
 
 void
 __check_abort(void) {
-    if (__CLIB2->__check_abort_enabled && FLAG_IS_SET(SetSignal(0, __break_signal_mask), __break_signal_mask)) {
+    struct _clib2 *__clib2 = __CLIB2;
+
+    if (__clib2->__check_abort_enabled && FLAG_IS_SET(SetSignal(0, __clib2->__break_signal_mask), __clib2->__break_signal_mask)) {
         raise(SIGINT);
     }
 }

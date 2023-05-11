@@ -114,7 +114,7 @@ int __wildcard_expand_init(void) {
 
     ap = AllocDosObjectTags(DOS_ANCHORPATH,
                             ADO_Strlen, 2 * MAXPATHLEN,
-                            ADO_Mask, (__CLIB2->__check_abort_enabled) ? __break_signal_mask : 0,
+                            ADO_Mask, (__CLIB2->__check_abort_enabled) ? __CLIB2->__break_signal_mask : 0,
                             TAG_END);
 
     if (ap == NULL) {
@@ -200,7 +200,7 @@ int __wildcard_expand_init(void) {
                     if (rc == ERROR_BREAK) {
                         __set_process_window(old_window_pointer);
 
-                        SetSignal(__break_signal_mask, __break_signal_mask);
+                        SetSignal(__CLIB2->__break_signal_mask, __CLIB2->__break_signal_mask);
                         __check_abort();
 
                         old_window_pointer = __set_process_window((APTR) - 1);

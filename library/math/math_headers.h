@@ -340,7 +340,7 @@ extern double __ldexp_exp(double x, int expt);
 extern float __ldexp_expf(float,int);
 extern double complex __ldexp_cexp(double complex z, int expt);
 extern float complex __ldexp_cexpf(float complex,int);
-extern int signgam;
+
 
 /* Function used in C library */
 #define __s_isfinite(x) \

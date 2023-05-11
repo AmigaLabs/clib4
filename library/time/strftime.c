@@ -101,6 +101,7 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
     char buffer[40] = {0};
     const char *str;
     char c;
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert(format != NULL && tm != NULL && hook != NULL);
 
@@ -430,8 +431,8 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
 
                 __locale_lock();
 
-                if (__CLIB2->__default_locale != NULL) {
-                    gmt_offset = __CLIB2->__default_locale->loc_GMTOffset;
+                if (__clib2->__default_locale != NULL) {
+                    gmt_offset = __clib2->__default_locale->loc_GMTOffset;
                     if (gmt_offset < 0)
                         gmt_offset = (-gmt_offset);
                     else if (gmt_offset > 0)
@@ -458,11 +459,11 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
 
                 __locale_lock();
 
-                if (__CLIB2->__default_locale != NULL) {
+                if (__clib2->__default_locale != NULL) {
                     int hours_west_of_gmt;
                     char sign = '?';
 
-                    hours_west_of_gmt = __CLIB2->__default_locale->loc_GMTOffset / 60;
+                    hours_west_of_gmt = __clib2->__default_locale->loc_GMTOffset / 60;
                     if (hours_west_of_gmt < 0) {
                         sign = '+';
 
@@ -495,6 +496,7 @@ size_t
 strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
     DECLARE_LOCALEBASE();
     size_t result = 0;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -528,7 +530,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
         __locale_lock();
 
         /* Try to use the locale.library date/time conversion function. */
-        if (__CLIB2->__locale_table[LC_TIME] != NULL) {
+        if (__clib2->__locale_table[LC_TIME] != NULL) {
             struct DateStamp ds;
             struct tm tm_copy;
             time_t time_value;
@@ -551,7 +553,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
 
             assert(LocaleBase != NULL);
 
-            FormatDate(__CLIB2->__locale_table[LC_TIME], (STRPTR) format, &ds, &hook);
+            FormatDate(__clib2->__locale_table[LC_TIME], (STRPTR) format, &ds, &hook);
         } else {
             struct tm copy_tm;
 

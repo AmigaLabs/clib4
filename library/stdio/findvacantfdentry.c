@@ -11,14 +11,15 @@
 BOOL
 __is_valid_fd(struct fd *fd) {
     BOOL result = FALSE;
+    struct _clib2 *__clib2 = __CLIB2;
 
     __stdio_lock();
 
-    if (__CLIB2->__fd != NULL && __CLIB2->__num_fd > 0) {
+    if (__clib2->__fd != NULL && __clib2->__num_fd > 0) {
         int i;
 
-        for (i = 0; i < __CLIB2->__num_fd; i++) {
-            if (__CLIB2->__fd[i] == fd) {
+        for (i = 0; i < __clib2->__num_fd; i++) {
+            if (__clib2->__fd[i] == fd) {
                 result = TRUE;
                 break;
             }

@@ -92,6 +92,7 @@ typedef struct {
     int canceled;
     int detached;
     char name[NAMELEN];
+    struct _clib2 *__clib2;
 } ThreadInfo;
 
 extern struct Library *_DOSBase;

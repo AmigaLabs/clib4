@@ -20,6 +20,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
     STRPTR buffer = NULL;
     STRPTR aligned_buffer;
     struct iob *file;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -31,17 +32,17 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
 
     __stdio_lock();
 
-    assert(mode != NULL && 0 <= slot_number && slot_number < __CLIB2->__num_iob);
+    assert(mode != NULL && 0 <= slot_number && slot_number < __clib2->__num_iob);
 
-    file = __CLIB2->__iob[slot_number];
+    file = __clib2->__iob[slot_number];
 
     assert(FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE));
 
     /* Figure out if the file descriptor provided is any use. */
     if (file_descriptor >= 0) {
-        assert(file_descriptor < __CLIB2->__num_fd);
-        assert(__CLIB2->__fd[file_descriptor] != NULL);
-        assert(FLAG_IS_SET(__CLIB2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+        assert(file_descriptor < __clib2->__num_fd);
+        assert(__clib2->__fd[file_descriptor] != NULL);
+        assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
         fd = __get_file_descriptor(file_descriptor);
         if (fd == NULL) {
@@ -94,7 +95,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = AllocVecTags(BUFSIZ + (__CLIB2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue);
+    buffer = AllocVecTags(BUFSIZ + (__clib2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue);
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
@@ -103,7 +104,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
     }
 
     /* Align the buffer start address to a cache line boundary. */
-    aligned_buffer = (char *) ((ULONG)(buffer + (__CLIB2->__cache_line_size - 1)) & ~(__CLIB2->__cache_line_size - 1));
+    aligned_buffer = (char *) ((ULONG)(buffer + (__clib2->__cache_line_size - 1)) & ~(__clib2->__cache_line_size - 1));
 
     if (file_descriptor < 0) {
         assert(filename != NULL);

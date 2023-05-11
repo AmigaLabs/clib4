@@ -23,10 +23,12 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     struct TimeRequest *tr;
     ULONG wait_mask;
     int result = 0;
+    int32 error;
+    struct _clib2 *__clib2 = __CLIB2;
 
     __check_abort();
 
-    if (__CLIB2->__timer_request == NULL)
+    if (__clib2->__timer_request == NULL)
         return EINVAL;
 
     SHOWMSG("Clearing Signals");
@@ -43,13 +45,21 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     }
 
     tr = AllocSysObjectTags(ASOT_IOREQUEST,
-                            ASOIOR_Duplicate, __CLIB2->__timer_request,
-                            ASOIOR_ReplyPort, mp,
                             ASOIOR_Size, sizeof(struct TimeRequest),
+                            ASOIOR_ReplyPort, mp,
                             TAG_END);
+
     if (!tr) {
         SHOWMSG("Cannot allocate Timer Request");
-        FreeSysObject(ASOT_IOREQUEST, mp);
+        FreeSysObject(ASOT_PORT, mp);
+        return ENOMEM;
+    }
+
+    error = OpenDevice(TIMERNAME, UNIT_MICROHZ, (struct IORequest *) tr, 0L);
+    if (error != 0) {
+        SHOWMSG("Cannot Open Timer Device");
+        FreeSysObject(ASOT_IOREQUEST, tr);
+        FreeSysObject(ASOT_PORT, mp);
         return ENOMEM;
     }
 
@@ -71,8 +81,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
             SHOWMSG("Received SIGBREAKF_CTRL_E");
             /* Return EINTR since the request has been interrupted by alarm */
             result = EINTR;
-        }
-        else {
+        } else {
             SHOWMSG("Received SIGBREAKF_CTRL_C. Reset it to set state");
             /* Reset SIGBREAKF_CTRL_C to set state since __check_abort can
              * break the execution
@@ -87,6 +96,8 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     tv->tv_sec = tr->Time.Seconds;
     tv->tv_usec = tr->Time.Microseconds;
 
+    SHOWMSG("Close Timer Device");
+    CloseDevice((struct IORequest *) tr);
     SHOWMSG("Freeing Request Object");
     FreeSysObject(ASOT_IOREQUEST, tr);
     SHOWMSG("Freeing Message Port");

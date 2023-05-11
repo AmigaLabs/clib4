@@ -18,6 +18,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     int flags;
     int fdbase;
     int i;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -217,8 +218,8 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
                 __stdio_lock();
 
-                for (i = fdbase; i < __CLIB2->__num_fd; i++) {
-                    if (FLAG_IS_CLEAR(__CLIB2->__fd[i]->fd_Flags, FDF_IN_USE)) {
+                for (i = fdbase; i < __clib2->__num_fd; i++) {
+                    if (FLAG_IS_CLEAR(__clib2->__fd[i]->fd_Flags, FDF_IN_USE)) {
                         vacant_slot = i;
                         break;
                     }
@@ -230,7 +231,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             } while (vacant_slot < 0);
 
             /* Got a file descriptor, duplicate it */
-            __duplicate_fd(__CLIB2->__fd[vacant_slot], fd);
+            __duplicate_fd(__clib2->__fd[vacant_slot], fd);
 
             result = vacant_slot;
 

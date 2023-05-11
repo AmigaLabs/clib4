@@ -42,39 +42,39 @@ struct _clib2 *__fallback_clib2;
 
 extern int main(int arg_c, char **arg_v);
 
-static void shared_obj_init(void);
-static void shared_obj_exit(void);
+static void shared_obj_init(struct _clib2 *__clib2);
+static void shared_obj_exit(struct _clib2 *__clib2);
 
 static void
-shared_obj_exit(void) {
-    struct ElfIFace *IElf = __CLIB2->IElf;
+shared_obj_exit(struct _clib2 *__clib2) {
+    struct ElfIFace *IElf = __clib2->IElf;
     ENTER();
 
     /* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
-    if (__CLIB2->__dl_elf_handle != NULL) {
+    if (__clib2->__dl_elf_handle != NULL) {
         SHOWMSG("Invoking shared object destructors");
-        InitSHLibs(__CLIB2->__dl_elf_handle, FALSE);
+        InitSHLibs(__clib2->__dl_elf_handle, FALSE);
     };
 
     LEAVE();
 }
 
 static void
-shared_obj_init(void) {
+shared_obj_init(struct _clib2 *__clib2) {
     ENTER();
 
-    struct ElfIFace *IElf = __CLIB2->IElf;
+    struct ElfIFace *IElf = __clib2->IElf;
 
     BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
     if (segment_list != ZERO) {
-        int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &__CLIB2->__dl_elf_handle, TAG_DONE);
+        int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &__clib2->__dl_elf_handle, TAG_DONE);
         if (ret == 1) {
-            if (__CLIB2->__dl_elf_handle != NULL) {
+            if (__clib2->__dl_elf_handle != NULL) {
                 /* Trigger the constructors, etc. in the shared objects linked to this binary. */
-                InitSHLibs(__CLIB2->__dl_elf_handle, TRUE);
+                InitSHLibs(__clib2->__dl_elf_handle, TRUE);
             }
             else {
-                SHOWMSG("__CLIB2->__dl_elf_handle == NULL!");
+                SHOWMSG("__clib2->__dl_elf_handle == NULL!");
             }
         }
         else {
@@ -119,8 +119,6 @@ call_main(
         char *argstr,
         int arglen,
         int (*start_main)(int, char **),
-        void (*__CTOR_LIST__[])(void),
-        void (*__DTOR_LIST__[])(void),
         void (*__EXT_CTOR_LIST__[])(void),
         void (*__EXT_DTOR_LIST__[])(void),
         struct _clib2 *__clib2) {
@@ -130,11 +128,12 @@ call_main(
 
     /* This plants the return buffer for _exit(). */
     if (setjmp(__clib2->__exit_jmp_buf) != 0) {
+        D(("Back from longjmp"));
         goto out;
     }
 
     SHOWMSG("Initialize shared objects");
-    shared_obj_init();
+    shared_obj_init(__clib2);
 
     SHOWMSG("Now invoking constructors");
     /* Go through the constructor list */
@@ -194,6 +193,7 @@ call_main(
     SHOWMSG("Done. Exit from start_main()");
 
 out:
+    D(("Uh.."));
 
     /* Save the current IoErr() value in case it is needed later. */
     saved_io_err = IoErr();
@@ -240,17 +240,7 @@ out:
     _end_ctors(__EXT_DTOR_LIST__);
 
     SHOWMSG("Close shared objects");
-    shared_obj_exit();
-
-    SHOWMSG("Calling clib2 dtors");
-    _end_ctors(__DTOR_LIST__);
-    SHOWMSG("Done. All destructors called");
-
-    SHOWMSG("Calling reent_exit on _clib2");
-    reent_exit(__clib2);
-
-    SHOWMSG("Calling reent_exit on __fallback_clib2");
-    reent_exit(__fallback_clib2);
+    shared_obj_exit(__clib2);
 
     SHOWMSG("done.");
 
@@ -299,6 +289,7 @@ _main(
     int return_code = RETURN_FAIL;
     ULONG current_stack_size;
     struct _clib2 *__clib2;
+    APTR oldClibData = NULL;
 
     /* Pick up the Workbench startup message, if available. */
     this_process = (struct Process *) FindTask(NULL);
@@ -317,23 +308,39 @@ _main(
     /* If all libraries are opened correctly we can initialize clib2 reent structure */
     D(("Initialize clib2 reent structure"));
     /* Initialize global structure */
-    __clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+    __clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2),
+            AVT_Type, MEMF_SHARED,
+            AVT_ClearWithValue, 0,
+            TAG_END);
     if (__clib2 == NULL)
         goto out;
+
+    /* Get the current task pointer */
+    __clib2->self = (struct Process *) FindTask(NULL);
+
+    oldClibData = this_process->pr_CLibData;
+    this_process->pr_CLibData = __clib2;
+    SHOWPOINTER(__clib2);
 
     reent_init(__clib2);
 
     D(("Initialize __fallback_clib2 structure"));
     /* Initialize global structure */
-    __fallback_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+    __fallback_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2),
+            AVT_Type, MEMF_SHARED,
+            AVT_ClearWithValue, 0,
+            TAG_END);
     if (__fallback_clib2 == NULL)
         goto out;
+
+    /* Get the current task pointer */
+    __fallback_clib2->self = (struct Process *) FindTask(NULL);
 
     reent_init(__fallback_clib2);
 
     __clib2->__WBenchMsg = (struct WBStartup *) startup_message;
 
-    if (__disable_dos_requesters) {
+    if (__clib2->__disable_dos_requesters) {
         /* Don't display any requesters. */
         old_window_pointer = __set_process_window((APTR) - 1);
     } else {
@@ -412,20 +419,32 @@ _main(
 #endif /* NDEBUG */
 
         SHOWMSG("Swap Stack and Call Main");
-        return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __CTOR_LIST__, __DTOR_LIST__, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib2));
+        return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib2));
 
         FreeVec(new_stack);
         FreeVec(stk);
     } else {
         SHOWMSG("Call Main");
         /* We have enough room to make the call or just don't care. */
-        return_code = call_main(argstr, arglen, start_main, __CTOR_LIST__, __DTOR_LIST__, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib2);
+        return_code = call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib2);
     }
 
     /* Restore the task priority. */
     SetTaskPri((struct Task *) this_process, old_priority);
 
 out:
+
+    SHOWMSG("Calling clib2 dtors");
+    _end_ctors(__DTOR_LIST__);
+    SHOWMSG("Done. All destructors called");
+
+    SHOWMSG("Calling reent_exit on _clib2");
+    reent_exit(__clib2);
+
+    SHOWMSG("Calling reent_exit on __fallback_clib2");
+    reent_exit(__fallback_clib2);
+
+    this_process->pr_CLibData = oldClibData;
 
     if (old_window_pointer_valid)
         __set_process_window(old_window_pointer);

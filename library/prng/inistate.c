@@ -8,6 +8,7 @@
 
 char *
 initstate(unsigned seed, char *state, size_t size) {
+    struct _clib2 *__clib2 = __CLIB2;
     void *old;
 
     ENTER();
@@ -18,24 +19,24 @@ initstate(unsigned seed, char *state, size_t size) {
     if (size < 8)
         return 0;
 
-    ObtainSemaphore(__CLIB2->__random_lock);
+    ObtainSemaphore(__clib2->__random_lock);
 
     old = savestate();
     if (size < 32)
-        __CLIB2->n = 0;
+        __clib2->n = 0;
     else if (size < 64)
-        __CLIB2->n = 7;
+        __clib2->n = 7;
     else if (size < 128)
-        __CLIB2->n = 15;
+        __clib2->n = 15;
     else if (size < 256)
-        __CLIB2->n = 31;
+        __clib2->n = 31;
     else
-        __CLIB2->n = 63;
-    __CLIB2->x = (uint32_t*)state + 1;
+        __clib2->n = 63;
+    __clib2->x = (uint32_t*)state + 1;
     __srandom(seed);
     savestate();
 
-    ReleaseSemaphore(__CLIB2->__random_lock);
+    ReleaseSemaphore(__clib2->__random_lock);
 
     RETURN(old);
     return old;

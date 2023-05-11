@@ -14,13 +14,14 @@ int __grow_iob_table(int max_iob) {
     const int granularity = 10;
     int new_num_iob;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     if (max_iob == 0)
-        new_num_iob = __CLIB2->__num_iob + granularity;
+        new_num_iob = __clib2->__num_iob + granularity;
     else
         new_num_iob = max_iob;
 
-    if (new_num_iob > __CLIB2->__num_iob) {
+    if (new_num_iob > __clib2->__num_iob) {
         struct iob **new_iob;
         int i;
 
@@ -32,7 +33,7 @@ int __grow_iob_table(int max_iob) {
             goto out;
         }
         SHOWVALUE(new_num_iob);
-        for (i = __CLIB2->__num_iob; i < new_num_iob; i++) {
+        for (i = __clib2->__num_iob; i < new_num_iob; i++) {
             SHOWVALUE(i);
             new_iob[i] = malloc(sizeof(*new_iob[i]));
             SHOWMSG("malloc");
@@ -41,7 +42,7 @@ int __grow_iob_table(int max_iob) {
 
                 SHOWMSG("not enough memory for file table entry");
 
-                for (j = __CLIB2->__num_iob; j < i; j++)
+                for (j = __clib2->__num_iob; j < i; j++)
                     free(new_iob[j]);
 
                 free(new_iob);
@@ -53,15 +54,15 @@ int __grow_iob_table(int max_iob) {
             memset(new_iob[i], 0, sizeof(*new_iob[i]));
         }
 
-        if (__CLIB2->__iob != NULL) {
-            for (i = 0; i < __CLIB2->__num_iob; i++)
-                new_iob[i] = __CLIB2->__iob[i];
+        if (__clib2->__iob != NULL) {
+            for (i = 0; i < __clib2->__num_iob; i++)
+                new_iob[i] = __clib2->__iob[i];
 
-            free(__CLIB2->__iob);
+            free(__clib2->__iob);
         }
 
-        __CLIB2->__iob = new_iob;
-        __CLIB2->__num_iob = new_num_iob;
+        __clib2->__iob = new_iob;
+        __clib2->__num_iob = new_num_iob;
     }
 
     result = OK;

@@ -9,31 +9,34 @@ void
 __srandom(unsigned seed) {
     int k;
     uint64_t s = seed;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
     SHOWVALUE(seed);
 
-    if (__CLIB2->n == 0) {
-        __CLIB2->x[0] = s;
+    if (__clib2->n == 0) {
+        __clib2->x[0] = s;
         return;
     }
-    __CLIB2->i = __CLIB2->n == 31 || __CLIB2->n == 7 ? 3 : 1;
-    __CLIB2->j = 0;
-    for (k = 0; k < __CLIB2->n; k++) {
+    __clib2->i = __clib2->n == 31 || __clib2->n == 7 ? 3 : 1;
+    __clib2->j = 0;
+    for (k = 0; k < __clib2->n; k++) {
         s = lcg64(s);
-        __CLIB2->x[k] = s>>32;
+        __clib2->x[k] = s>>32;
     }
     /* make sure x contains at least one odd number */
-    __CLIB2->x[0] |= 1;
+    __clib2->x[0] |= 1;
 
     LEAVE();
 }
 
 void
 srandom(unsigned int seed)  {
-    ObtainSemaphore(__CLIB2->__random_lock);
+    struct _clib2 *__clib2 = __CLIB2;
+
+    ObtainSemaphore(__clib2->__random_lock);
 
     __srandom(seed);
 
-    ReleaseSemaphore(__CLIB2->__random_lock);
+    ReleaseSemaphore(__clib2->__random_lock);
 }

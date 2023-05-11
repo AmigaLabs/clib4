@@ -15,6 +15,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
     struct iob *file = (struct iob *) stream;
     char *new_buffer = NULL;
     int result = EOF;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -76,7 +77,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
 		   allocate some memory for it. */
         if (size > 0 && buf == NULL) {
             /* Allocate a little more memory than necessary. */
-            new_buffer = malloc(size + (__CLIB2->__cache_line_size - 1));
+            new_buffer = malloc(size + (__clib2->__cache_line_size - 1));
             if (new_buffer == NULL) {
                 __set_errno(ENOBUFS);
                 goto out;
@@ -115,7 +116,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
             file->iob_CustomBuffer = new_buffer;
 
             /* Align the buffer start address to a cache line boundary. */
-            new_buffer = (char *) ((ULONG)(new_buffer + (__CLIB2->__cache_line_size - 1)) & ~(__CLIB2->__cache_line_size - 1));
+            new_buffer = (char *) ((ULONG)(new_buffer + (__clib2->__cache_line_size - 1)) & ~(__clib2->__cache_line_size - 1));
         }
     }
 

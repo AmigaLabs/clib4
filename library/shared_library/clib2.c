@@ -86,6 +86,8 @@
 #include "clib2.h"
 #include "debug.h"
 
+#include "interface.h"
+
 struct ExecBase *SysBase = 0;
 struct ExecIFace *IExec = 0;
 
@@ -105,6 +107,13 @@ const struct Resident RomTag;
 #define MIN_OS_VERSION 52
 #define LIBPRI 100
 #define LIBNAME "clib2.library"
+
+static uint32 vectorUnit;
+
+#ifndef __SPE__
+void longjmp_altivec(jmp_buf, int);
+int setjmp_altivec(jmp_buf);
+#endif
 
 /* These CTORS/DTORS are clib2's one and they are different than that one received
  * from crtbegin. They are needed because we need to call clib2 constructors as well
@@ -166,6 +175,11 @@ struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
     if (!IClib2) {
         IClib2 = (struct Clib2IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
         IExec->DropInterface((struct Interface *) IClib2);
+    }
+
+    if (0 == libBase->libNode.lib_OpenCnt && VECTORTYPE_ALTIVEC == vectorUnit && IClib2->setjmp == setjmp) {
+        IClib2->setjmp = setjmp_altivec;
+        IClib2->longjmp = longjmp_altivec;
     }
 
     ++libBase->libNode.lib_OpenCnt;
@@ -293,6 +307,8 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
 
     SysBase = (struct ExecBase *) iexec->Data.LibBase;
     IExec = iexec;
+
+    iexec->GetCPUInfoTags(GCIT_VectorUnit, &vectorUnit, TAG_DONE);
 
     D(("Open DOS Library"));
     DOSBase = IExec->OpenLibrary("dos.library", MIN_OS_VERSION);

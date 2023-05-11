@@ -166,8 +166,7 @@ CLIB_CONSTRUCTOR(locale_init)
         strcpy(__CLIB2->__locale_name_table[i], "C-UTF-8");
     }
 
-	if (__open_locale)
-		__locale_init();
+    __locale_init();
 
 	success = TRUE;
 

@@ -18,13 +18,14 @@ __iob_hook_entry(struct iob *file_iob, struct file_action_message *fam) {
         case file_action_write:
         case file_action_seek:
         case file_action_close:
+            struct _clib2 *__clib2 = __CLIB2;
             SHOWVALUE(file_iob->iob_Descriptor);
 
-            assert(file_iob->iob_Descriptor >= 0 && file_iob->iob_Descriptor < __CLIB2->__num_fd);
-            assert(__CLIB2->__fd[file_iob->iob_Descriptor] != NULL);
-            assert(FLAG_IS_SET(__CLIB2->__fd[file_iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
+            assert(file_iob->iob_Descriptor >= 0 && file_iob->iob_Descriptor < __clib2->__num_fd);
+            assert(__clib2->__fd[file_iob->iob_Descriptor] != NULL);
+            assert(FLAG_IS_SET(__clib2->__fd[file_iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
 
-            if (__CLIB2->__fd[file_iob->iob_Descriptor] == NULL) {
+            if (__clib2->__fd[file_iob->iob_Descriptor] == NULL) {
                 fam->fam_Error = EBADF;
                 result = EOF;
                 break;

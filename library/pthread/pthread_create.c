@@ -45,6 +45,7 @@ StarterFunc() {
 
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *)startedTask->pr_EntryData;
+    struct _clib2 *__clib2 = inf->__clib2;
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
@@ -109,6 +110,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     size_t oldlen;
     pthread_t threadnew;
     struct Task *thisTask = FindTask(NULL);
+    struct _clib2 *__clib2 = __CLIB2;
 
     if (thread == NULL || start == NULL)
         return EINVAL;
@@ -125,6 +127,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
 
     // prepare the ThreadInfo structure
     inf = GetThreadInfo(threadnew);
+    inf->__clib2 = __clib2;
     _pthread_clear_threadinfo(inf);
 
     inf->start = start;

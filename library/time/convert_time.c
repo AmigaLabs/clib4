@@ -13,6 +13,7 @@
 BOOL
 __convert_time_to_datestamp(time_t time_value, struct DateStamp *ds) {
     BOOL success;
+    struct _clib2 *__clib2 = __CLIB2;
 
     /* Adjust the time to the AmigaOS epoch. */
     time_value -= UNIX_TIME_OFFSET;
@@ -20,8 +21,8 @@ __convert_time_to_datestamp(time_t time_value, struct DateStamp *ds) {
     __locale_lock();
 
     /* If possible, adjust the time to match the local time zone settings. */
-    if (__CLIB2->__default_locale != NULL)
-        time_value -= 60 * __CLIB2->__default_locale->loc_GMTOffset;
+    if (__clib2->__default_locale != NULL)
+        time_value -= 60 * __clib2->__default_locale->loc_GMTOffset;
 
     __locale_unlock();
 

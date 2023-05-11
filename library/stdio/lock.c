@@ -8,24 +8,29 @@
 
 void
 __stdio_lock(void) {
-    assert(__CLIB2->stdio_lock != NULL);
+    struct _clib2 *__clib2 = __CLIB2;
 
-    if (__CLIB2->stdio_lock != NULL)
-        ObtainSemaphore(__CLIB2->stdio_lock);
+    assert(__clib2->stdio_lock != NULL);
+
+    if (__clib2->stdio_lock != NULL)
+        ObtainSemaphore(__clib2->stdio_lock);
 }
 
 void
 __stdio_unlock(void) {
-    assert(__CLIB2->stdio_lock != NULL);
+    struct _clib2 *__clib2 = __CLIB2;
 
-    if (__CLIB2->stdio_lock != NULL)
-        ReleaseSemaphore(__CLIB2->stdio_lock);
+    assert(__clib2->stdio_lock != NULL);
+
+    if (__clib2->stdio_lock != NULL)
+        ReleaseSemaphore(__clib2->stdio_lock);
 }
 
 void
 __stdio_lock_exit(void) {
-    __delete_semaphore(__CLIB2->stdio_lock);
-    __CLIB2->stdio_lock = NULL;
+    struct _clib2 *__clib2 = __CLIB2;
+    __delete_semaphore(__clib2->stdio_lock);
+    __clib2->stdio_lock = NULL;
 }
 
 int

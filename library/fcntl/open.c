@@ -28,6 +28,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     int result = ERROR;
     int i;
     BOOL is_directory = FALSE;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -90,7 +91,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
         assert(fd_slot_number >= 0);
     }
 
-    if (__CLIB2->__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -256,7 +257,7 @@ directory:
         goto out;
     }
 
-    fd = __CLIB2->__fd[fd_slot_number];
+    fd = __clib2->__fd[fd_slot_number];
 
     if (is_directory || FLAG_IS_SET(open_flag, O_PATH))
         __initialize_fd(fd, __fd_hook_entry, dir_lock, 0, fd_lock); // TODO - Create a new dir hook
