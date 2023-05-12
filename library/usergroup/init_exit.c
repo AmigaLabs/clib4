@@ -15,55 +15,41 @@
 /* Pointer to errno, length == sizeof(long) */
 #define UGT_ERRNOLPTR 0x80000004
 
-/****************************************************************************/
-
-struct Library *NOCOMMON __UserGroupBase;
-struct UserGroupIFace *NOCOMMON __IUserGroup;
-
-/****************************************************************************/
-
-CLIB_DESTRUCTOR(usergroup_exit)
-{
+CLIB_DESTRUCTOR(usergroup_exit) {
 	ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
-	if (__IUserGroup != NULL)
-	{
-		DropInterface((struct Interface *)__IUserGroup);
-		__IUserGroup = NULL;
+	if (__clib2->__IUserGroup != NULL) {
+		DropInterface((struct Interface *)__clib2->__IUserGroup);
+        __clib2->__IUserGroup = NULL;
 	}
 
-	if (__UserGroupBase != NULL)
-	{
-		CloseLibrary(__UserGroupBase);
-		__UserGroupBase = NULL;
+	if (__clib2->__UserGroupBase != NULL) {
+		CloseLibrary(__clib2->__UserGroupBase);
+        __clib2->__UserGroupBase = NULL;
 	}
 
 	LEAVE();
 }
 
-/****************************************************************************/
-
-CLIB_CONSTRUCTOR(usergroup_init)
-{
+CLIB_CONSTRUCTOR(usergroup_init) {
 	struct TagItem tags[2];
 	BOOL success = FALSE;
+    struct _clib2 *__clib2 = __CLIB2;
 
 	ENTER();
 
-	__UserGroupBase = OpenLibrary("usergroup.library", 0);
+    __clib2->__UserGroupBase = OpenLibrary("usergroup.library", 0);
 
-	if (__UserGroupBase != NULL)
-	{
-		__IUserGroup = (struct UserGroupIFace *)GetInterface(__UserGroupBase, "main", 1, 0);
-		if (__IUserGroup == NULL)
-		{
-			CloseLibrary(__UserGroupBase);
-			__UserGroupBase = NULL;
+	if (__clib2->__UserGroupBase != NULL) {
+        __clib2->__IUserGroup = (struct UserGroupIFace *)GetInterface(__clib2->__UserGroupBase, "main", 1, 0);
+		if (__clib2->__IUserGroup == NULL) {
+			CloseLibrary(__clib2->__UserGroupBase);
+            __clib2->__UserGroupBase = NULL;
 		}
 	}
 
-	if (__UserGroupBase == NULL)
-	{
+	if (__clib2->__UserGroupBase == NULL) {
 		SHOWMSG("usergroup.library did not open");
 
 		__show_error("\"usergroup.library\" could not be opened.");
@@ -76,7 +62,7 @@ CLIB_CONSTRUCTOR(usergroup_init)
 
 	tags[1].ti_Tag = TAG_END;
 
-	if (__ug_SetupContextTagList(__CLIB2->__progname, tags) != 0)
+	if (__ug_SetupContextTagList(__clib2->__progname, tags) != 0)
 	{
 		SHOWMSG("could not initialize usergroup.library");
 

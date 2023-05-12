@@ -16,6 +16,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
     LONG socket_fd;
     LONG new_socket_fd = -1;
     BOOL stdio_locked = FALSE;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -23,12 +24,12 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
     SHOWPOINTER(cliaddr);
     SHOWPOINTER(addrlen);
 
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
-    assert(sockfd >= 0 && sockfd < __CLIB2->__num_fd);
-    assert(__CLIB2->__fd[sockfd] != NULL);
-    assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
-    assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __clib2->__num_fd);
+    assert(__clib2->__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
     /* We need to know which parameter to submit to the accept()
        call first. */
@@ -76,7 +77,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
         goto out;
     }
 
-    new_fd = __CLIB2->__fd[new_fd_slot_number];
+    new_fd = __clib2->__fd[new_fd_slot_number];
 
     __initialize_fd(new_fd, __socket_hook_entry, (BPTR) new_socket_fd,
                     FDF_IN_USE | FDF_IS_SOCKET | FDF_READ | FDF_WRITE, lock);

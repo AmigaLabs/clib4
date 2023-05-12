@@ -14,8 +14,6 @@ int
 setlogin(const char *name) {
     ENTER();
 
-    assert(__UserGroupBase != NULL);
-
     int result = __setlogin(name);
 
     __check_abort();

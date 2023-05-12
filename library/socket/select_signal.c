@@ -448,7 +448,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         SHOWVALUE(timeout->tv_usec);
     }
 
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (signal_mask_ptr != NULL) {
         signal_mask = (*signal_mask_ptr);

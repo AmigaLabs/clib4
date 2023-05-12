@@ -18,7 +18,7 @@ getsockname(int sockfd, struct sockaddr *name, socklen_t *namelen) {
     SHOWPOINTER(namelen);
 
     assert(name != NULL && namelen != NULL);
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (name == NULL || namelen == NULL) {
         SHOWMSG("invalid parameters");

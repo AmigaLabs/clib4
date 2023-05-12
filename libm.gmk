@@ -173,10 +173,6 @@ C_MATH := \
 	math/inff.o \
 	math/init_exit.o \
 	math/invtrig.o \
-	math/isinf.o \
-	math/isfinite.o \
-	math/isnan.o \
-	math/isnormal.o \
     math/j0.o \
     math/j0f.o \
     math/j1.o \

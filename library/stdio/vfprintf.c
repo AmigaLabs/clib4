@@ -107,7 +107,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
 
     pl = 1;
 
-    if (__s_signbit(y)) {
+    if (signbit(y)) {
         y = -y;
     } else if (fl & __S_MARK_POS) {
         prefix += 3;
@@ -118,7 +118,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         pl = 0;
     }
 
-    if (!__s_isfinite(y)) {
+    if (!isfinite(y)) {
         s = ((t & 32) ? (char *)"inf" : (char *)"INF");
         if (y != y) {
             s = ((t & 32) ? (char *)"nan" : (char *)"NAN");
@@ -131,7 +131,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         return MAX(w, 3 + pl);
     }
 
-    y = (__stdlib_frexp(y, &e2) * 2);
+    y = (frexp(y, &e2) * 2);
     if (y > 0)
         e2--;
 

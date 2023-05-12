@@ -15,7 +15,6 @@ getpwnam(const char *name) {
     SHOWSTRING(name);
 
     assert(name != NULL);
-    assert(__UserGroupBase != NULL);
 
     if (name == NULL) {
         SHOWMSG("invalid name");

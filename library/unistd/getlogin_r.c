@@ -18,8 +18,6 @@ getlogin_r(char *name, size_t size) {
 
     ENTER();
 
-    assert(__UserGroupBase != NULL);
-
     STRPTR login = __getlogin();
     if (login == NULL) {
         len = GetVar("USER", name, size, 0);

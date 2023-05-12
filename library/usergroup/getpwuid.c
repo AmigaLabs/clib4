@@ -6,23 +6,18 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
 struct passwd *
-getpwuid(uid_t uid)
-{
-	struct passwd *result;
+getpwuid(uid_t uid) {
+    struct passwd *result;
 
-	ENTER();
+    ENTER();
 
-	assert(__UserGroupBase != NULL);
+    SHOWVALUE(uid);
 
-	SHOWVALUE(uid);
-
-	result = __getpwuid((LONG)uid);
+    result = __getpwuid((LONG) uid);
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

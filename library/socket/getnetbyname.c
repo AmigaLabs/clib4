@@ -15,7 +15,7 @@ getnetbyname(const char *name) {
     SHOWSTRING(name);
 
     assert(name != NULL);
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (name == NULL) {
         SHOWMSG("invalid name parameter");

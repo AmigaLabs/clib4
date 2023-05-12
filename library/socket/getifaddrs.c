@@ -13,6 +13,8 @@
 #include <ifaddrs.h>
 #include <net/if.h>
 
+#include <proto/bsdsocket.h>
+
 #define ROUNDUP(x, size)    ((((x) + (size) - 1) / (size)) * (size))
 #define IFCONF_STARTENT 10
 #define IFCONF_MAXENT 1000
@@ -112,11 +114,12 @@ getifaddrs(struct ifaddrs **ifap) {
     struct Node *node = NULL;
     struct ifawrap ifawrap;
     size_t addrlen;
+    DECLARE_SOCKETBASE();
 
     memset(&ifawrap, 0, sizeof(struct ifawrap));
 
     ifawrap.ifaddrs = NULL;
-    netiflist = __ISocket->ObtainInterfaceList();
+    netiflist = ObtainInterfaceList();
     if (netiflist != NULL) {
         node = GetHead(netiflist);
         if (node != NULL) {
@@ -129,25 +132,25 @@ getifaddrs(struct ifaddrs **ifap) {
                     struct sockaddr_in netmask, primaryDns, secondaryDns;
                     unsigned int flags = 0;
                     // FOUND ONE
-                    long querySuccess = __ISocket->QueryInterfaceTags(node->ln_Name,
-                                                                         IFQ_HardwareAddress, &hwAddress,
-                                                                         IFQ_HardwareMTU, &mtu,
-                                                                         IFQ_DeviceUnit, &index,
-                                                                         IFQ_PacketsReceived, &packetsReceived,
-                                                                         IFQ_PacketsSent, &packetsSent,
-                                                                         IFQ_BadData, &badData,
-                                                                         IFQ_Overruns, &overruns,
-                                                                         IFQ_Address, &localAddress,
-                                                                         IFQ_DestinationAddress, &destinationAddress,
-                                                                         IFQ_BroadcastAddress, &broadcastAddress,
-                                                                         IFQ_NetMask, &netmask,
-                                                                         IFQ_Metric, &metric,
-                                                                         IFQ_State, &state,
-                                                                         IFQ_GetDebugMode, &debug,
-                                                                         IFQ_AddressBindType, &bindType,
-                                                                         IFQ_PrimaryDNSAddress, &primaryDns,
-                                                                         IFQ_SecondaryDNSAddress, &secondaryDns,
-                                                                         TAG_DONE);
+                    long querySuccess = QueryInterfaceTags(node->ln_Name,
+                                                         IFQ_HardwareAddress, &hwAddress,
+                                                         IFQ_HardwareMTU, &mtu,
+                                                         IFQ_DeviceUnit, &index,
+                                                         IFQ_PacketsReceived, &packetsReceived,
+                                                         IFQ_PacketsSent, &packetsSent,
+                                                         IFQ_BadData, &badData,
+                                                         IFQ_Overruns, &overruns,
+                                                         IFQ_Address, &localAddress,
+                                                         IFQ_DestinationAddress, &destinationAddress,
+                                                         IFQ_BroadcastAddress, &broadcastAddress,
+                                                         IFQ_NetMask, &netmask,
+                                                         IFQ_Metric, &metric,
+                                                         IFQ_State, &state,
+                                                         IFQ_GetDebugMode, &debug,
+                                                         IFQ_AddressBindType, &bindType,
+                                                         IFQ_PrimaryDNSAddress, &primaryDns,
+                                                         IFQ_SecondaryDNSAddress, &secondaryDns,
+                                                         TAG_DONE);
                     if (querySuccess) {
                         addrlen = sizeof(struct sockaddr);
                         /* TODO - Move this to ioctl with SIOCGIFFLAGS request */
@@ -173,7 +176,7 @@ getifaddrs(struct ifaddrs **ifap) {
                 node = GetSucc(node);
             }
         }
-        __ISocket->ReleaseInterfaceList(netiflist);
+        ReleaseInterfaceList(netiflist);
     }
 
     if (success == 0 && ifawrap.ifaddrs != NULL)

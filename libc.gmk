@@ -460,8 +460,6 @@ C_STDLIB := \
 	stdlib/lltoa.o \
 	stdlib/main.o \
 	stdlib/malloc.o \
-	stdlib/math_double.o \
-	stdlib/math_float.o \
 	stdlib/mblen.o \
 	stdlib/mbstowcs.o \
 	stdlib/mbtowc.o \
@@ -728,13 +726,11 @@ C_UNISTD := \
 	unistd/ttyname.o \
 	unistd/ttyname_r.o \
     unistd/ualarm.o \
-    unistd/path_semantics.o \
 	unistd/unlink.o \
 	unistd/usleep.o \
 	unistd/wildcard_expand.o
 
 C_USERGROUP := \
-	usergroup/data.o \
 	usergroup/endgrent.o \
 	usergroup/endpwent.o \
 	usergroup/getegid.o \
@@ -755,7 +751,6 @@ C_USERGROUP := \
 	usergroup/tcgetpgrp.o \
 	usergroup/initgroups.o \
 	usergroup/init_exit.o \
-	usergroup/rootmode.o \
 	usergroup/setegid.o \
 	usergroup/seteuid.o \
 	usergroup/setgid.o \

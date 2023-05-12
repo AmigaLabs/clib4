@@ -10,6 +10,7 @@ int
 setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen) {
     struct fd *fd;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -20,7 +21,7 @@ setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t opt
     SHOWVALUE(optlen);
 
     assert(optval != NULL);
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (optval == NULL) {
         SHOWMSG("invalid optval parameter");
@@ -29,10 +30,10 @@ setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t opt
         goto out;
     }
 
-    assert(sockfd >= 0 && sockfd < __CLIB2->__num_fd);
-    assert(__CLIB2->__fd[sockfd] != NULL);
-    assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
-    assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __clib2->__num_fd);
+    assert(__clib2->__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
     fd = __get_file_descriptor_socket(sockfd);
     if (fd == NULL)

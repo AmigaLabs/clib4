@@ -16,7 +16,7 @@ gethostname(const char *hostname, size_t size) {
     SHOWVALUE(size);
 
     assert(hostname != NULL);
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (hostname == NULL) {
         SHOWMSG("invalid host name parameter");

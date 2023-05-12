@@ -582,13 +582,13 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 if (infinity_match >= 3) {
                     SHOWMSG("infinity");
 
-                    sum = __stdlib_inf();
+                    sum = INFINITY;
 
                     total_num_chars_read = num_chars_processed = infinity_match;
                 } else if (nan_match >= 3) {
                     SHOWMSG("not a number");
 
-                    sum = __stdlib_nan(NULL);
+                    sum = nan(NULL);
 
                     total_num_chars_read = num_chars_processed = nan_match;
                 }
@@ -916,12 +916,12 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                         double divisor;
 
                                         /* A negative exponent means division. */
-                                        divisor = __stdlib_pow((double) radix, (double) exponent);
+                                        divisor = pow((double) radix, (double) exponent);
                                         if (divisor != 0.0)
                                             sum = sum / divisor;
                                     } else {
                                         /* A positive exponent means multiplication. */
-                                        new_sum = sum * __stdlib_pow((double) radix, (double) exponent);
+                                        new_sum = sum * pow((double) radix, (double) exponent);
                                         if (new_sum >= sum)
                                             sum = new_sum;
                                         else

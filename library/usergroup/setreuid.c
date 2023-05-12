@@ -9,20 +9,19 @@
 int
 setreuid(uid_t real, uid_t eff) {
     int result;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     SHOWVALUE(real);
     SHOWVALUE(eff);
 
-    assert(__UserGroupBase != NULL);
-
-    if (__root_mode) {
+    if (__clib2->__root_mode) {
         if (real != (uid_t) - 1)
-            __root_uid = real;
+            __clib2->__root_uid = real;
 
         if (eff != (uid_t) - 1)
-            __root_euid = eff;
+            __clib2->__root_euid = eff;
 
         result = OK;
     } else {

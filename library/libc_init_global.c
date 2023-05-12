@@ -235,6 +235,13 @@ reent_init(struct _clib2 *__clib2) {
         __clib2->__signal_handler_table[i] = SIG_DFL;
     }
 
+    /* Default root groups and id */
+    __clib2->__root_mode = FALSE;
+    __clib2->__root_uid = 0;
+    __clib2->__root_gid = 0;
+    __clib2->__root_euid = 0;
+    __clib2->__root_egid = 0;
+
     success = TRUE;
 
 out:

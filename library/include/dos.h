@@ -190,6 +190,12 @@ struct _clib2 {
     struct Library *__TimezoneBase;
     struct TimezoneIFace *__ITimezone;
 
+    struct Library *__SocketBase;
+    struct SocketIFace *__ISocket;
+
+    struct Library *__UserGroupBase;
+    struct UserGroupIFace *__IUserGroup;
+
     /* CPU Family to enable optimized functions */
     uint32 cpufamily;
     uint32 hasAltivec;
@@ -266,6 +272,7 @@ struct _clib2 {
     struct Locale *__locale_table[NUM_LOCALES];
     char __locale_name_table[NUM_LOCALES][MAX_LOCALE_NAME_LEN];
     char __lc_ctype[__LC_LAST];
+    struct SignalSemaphore *locale_lock;
 
     /* used by setlocale */
     int _current_category;
@@ -482,6 +489,12 @@ struct _clib2 {
     float __infinity;
     float __nan;
     int _gamma_signgam;
+
+    BOOL __root_mode;
+    int __root_uid;
+    int __root_gid;
+    int __root_euid;
+    int __root_egid;
 };
 
 extern struct _clib2 *__clib2;

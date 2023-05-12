@@ -17,8 +17,9 @@ connect(int sockfd, const struct sockaddr *name, socklen_t namelen) {
     SHOWPOINTER(name);
     SHOWVALUE(namelen);
 
+    DECLARE_SOCKETBASE();
+
     assert(name != NULL);
-    assert(__SocketBase != NULL);
 
     if (name == NULL) {
         SHOWMSG("invalid name parameter");

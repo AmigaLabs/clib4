@@ -18,7 +18,7 @@ sendmsg(int sockfd, const struct msghdr *msg, int flags) {
     SHOWVALUE(flags);
 
     assert(msg != NULL);
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (msg == NULL) {
         SHOWMSG("invalid msg parameter");

@@ -6,44 +6,43 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-int 
-recvmsg(int sockfd, struct msghdr *msg, int flags)
-{
-	struct fd *fd;
-	int result = ERROR;
+int
+recvmsg(int sockfd, struct msghdr *msg, int flags) {
+    struct fd *fd;
+    int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(sockfd);
-	SHOWPOINTER(msg);
-	SHOWVALUE(flags);
+    SHOWVALUE(sockfd);
+    SHOWPOINTER(msg);
+    SHOWVALUE(flags);
 
-	assert(msg != NULL);
-	assert(__SocketBase != NULL);
+    assert(msg != NULL);
+    DECLARE_SOCKETBASE();
 
-    if (msg == NULL)
-    {
+    if (msg == NULL) {
         SHOWMSG("invalid msg parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	assert(sockfd >= 0 && sockfd < __CLIB2->__num_fd);
-	assert(__CLIB2->__fd[sockfd] != NULL);
-	assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
-	assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __clib2->__num_fd);
+    assert(__clib2->__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
-	fd = __get_file_descriptor_socket(sockfd);
-	if (fd == NULL)
-		goto out;
+    fd = __get_file_descriptor_socket(sockfd);
+    if (fd == NULL)
+        goto out;
 
-	result = __recvmsg(fd->fd_Socket, msg, flags);
+    result = __recvmsg(fd->fd_Socket, msg, flags);
 
 out:
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }
