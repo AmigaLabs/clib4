@@ -101,9 +101,9 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
     iexec->Obtain();
 
     IExec = iexec;
-    IDOS = (struct DOSIFace *) OpenLibraryInterface(iexec, "dos.library", 52);
+    IDOS = (struct DOSIFace *) OpenLibraryInterface(iexec, "dos.library", MIN_OS_VERSION);
     if (IDOS) {
-        IUtility = (struct UtilityIFace *) OpenLibraryInterface(iexec, "utility.library", 52);
+        IUtility = (struct UtilityIFace *) OpenLibraryInterface(iexec, "utility.library", MIN_OS_VERSION);
         if (IUtility != NULL) {
 
             UtilityBase = IUtility->Data.LibBase;

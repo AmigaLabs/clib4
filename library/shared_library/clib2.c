@@ -104,7 +104,6 @@ struct UtilityIFace *__IUtility = 0;
 
 const struct Resident RomTag;
 
-#define MIN_OS_VERSION 52
 #define LIBPRI 100
 #define LIBNAME "clib2.library"
 

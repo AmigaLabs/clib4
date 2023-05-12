@@ -41,6 +41,7 @@
 
 #include "common.h"
 #include "pthread.h"
+#include "../shared_library/interface.h"
 
 int __pthread_init_func(void);
 void __pthread_exit_func(void);

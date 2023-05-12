@@ -106,7 +106,8 @@ ARG_CONSTRUCTOR(arg_init) {
         if (command_line == NULL)
             goto out;
 
-        memmove(command_line, arg_str, arg_len);
+        if (arg_len > 0)
+            memmove(command_line, arg_str, arg_len);
         command_line[arg_len] = '\0';
 
         /* If we have a valid command line string and a command

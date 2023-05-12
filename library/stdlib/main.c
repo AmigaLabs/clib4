@@ -193,8 +193,6 @@ call_main(
     SHOWMSG("Done. Exit from start_main()");
 
 out:
-    D(("Uh.."));
-
     /* Save the current IoErr() value in case it is needed later. */
     saved_io_err = IoErr();
 
@@ -249,14 +247,6 @@ out:
 
     RETURN(__clib2->__exit_value);
     return __clib2->__exit_value;
-}
-
-static void
-detach_cleanup(int32_t return_code, int32_t exit_data, struct ExecBase *sysBase) {
-    (void) (return_code);
-    (void) (exit_data);
-    (void) (sysBase);
-
 }
 
 static ULONG get_stack_size(void) {
@@ -453,7 +443,6 @@ out:
         Forbid();
 
         ReplyMsg((struct Message *) startup_message);
-
     }
 
     return (return_code);

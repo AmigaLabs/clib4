@@ -80,6 +80,8 @@ struct NameTranslationInfo;
 #define ___VALIST va_list
 #endif
 
+#define MIN_OS_VERSION 52
+
 #include <stdarg.h>
 
 struct Clib2IFace {

@@ -81,8 +81,6 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
-#define MIN_OS_VERSION 52
-
 extern unsigned int NOCOMMON (* __get_default_stack_size)(void);
 
 extern void _init(void);

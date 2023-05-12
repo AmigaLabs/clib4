@@ -11,7 +11,6 @@
 #endif /* _STDIO_HEADERS_H */
 
 #include "pthread/common.h"
-//extern jmp_buf __exit_jmp_buf;
 
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
