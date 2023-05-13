@@ -10,11 +10,10 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-int __grow_iob_table(int max_iob) {
+int __grow_iob_table(struct _clib2 *__clib2, int max_iob) {
     const int granularity = 10;
     int new_num_iob;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
 
     if (max_iob == 0)
         new_num_iob = __clib2->__num_iob + granularity;

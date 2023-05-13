@@ -12,20 +12,21 @@
 
 CLIB_DESTRUCTOR(__chdir_exit) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
-    if (__CLIB2->__current_directory_changed) {
+    if (__clib2->__current_directory_changed) {
         BPTR old_dir;
 
-        old_dir = CurrentDir(__CLIB2->__original_current_directory);
-        __CLIB2->__original_current_directory = ZERO;
+        old_dir = CurrentDir(__clib2->__original_current_directory);
+        __clib2->__original_current_directory = ZERO;
 
-        if (__CLIB2->__unlock_current_directory) {
+        if (__clib2->__unlock_current_directory) {
             UnLock(old_dir);
 
-            __CLIB2->__unlock_current_directory = FALSE;
+            __clib2->__unlock_current_directory = FALSE;
         }
 
-        __CLIB2->__current_directory_changed = FALSE;
+        __clib2->__current_directory_changed = FALSE;
     }
 
     LEAVE();

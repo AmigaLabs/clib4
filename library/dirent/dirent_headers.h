@@ -38,9 +38,7 @@ struct DirectoryHandle
     int                     dh_Fd;              // For fdopendir()
 };
 
-extern struct MinList __directory_list;
-
-extern void __dirent_lock(void);
-extern void __dirent_unlock(void);
+extern void __dirent_lock(struct _clib2 *__clib2);
+extern void __dirent_unlock(struct _clib2 *__clib2);
 
 #endif /* _DIRENT_HEADERS_H */

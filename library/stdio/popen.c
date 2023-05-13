@@ -54,6 +54,7 @@ popen(const char *command, const char *type) {
     unsigned long task_address;
     time_t now;
     int i;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -96,7 +97,7 @@ popen(const char *command, const char *type) {
         goto out;
     }
 
-    if (__CLIB2->__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         char just_the_command_name[MAXPATHLEN + 1];
         BOOL quotes_needed = FALSE;
         char *command_name;

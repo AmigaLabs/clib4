@@ -429,7 +429,7 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
                 /* ISO 8601 offset of time zone from UTC (C99). */
             case 'z':
 
-                __locale_lock();
+                __locale_lock(__clib2);
 
                 if (__clib2->__default_locale != NULL) {
                     gmt_offset = __clib2->__default_locale->loc_GMTOffset;
@@ -441,7 +441,7 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
                     gmt_offset = 0;
                 }
 
-                __locale_unlock();
+                __locale_unlock(__clib2);
 
                 /* The GMT offset is given in minutes. We need to print
                        it as a decimal number. */
@@ -457,7 +457,7 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
 
                 store_string_via_hook("GMT", 3, hook);
 
-                __locale_lock();
+                __locale_lock(__clib2);
 
                 if (__clib2->__default_locale != NULL) {
                     int hours_west_of_gmt;
@@ -479,7 +479,7 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
                     }
                 }
 
-                __locale_unlock();
+                __locale_unlock(__clib2);
 
                 break;
 
@@ -527,7 +527,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
         hook.h_Entry = (HOOKFUNC) format_hook_function;
         hook.h_Data = &data;
 
-        __locale_lock();
+        __locale_lock(__clib2);
 
         /* Try to use the locale.library date/time conversion function. */
         if (__clib2->__locale_table[LC_TIME] != NULL) {
@@ -571,7 +571,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
             format_date(format, tm, &hook);
         }
 
-        __locale_unlock();
+        __locale_unlock(__clib2);
 
         (*data.buffer) = '\0';
 

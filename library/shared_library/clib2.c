@@ -97,6 +97,9 @@ struct DOSIFace *IDOS = 0;
 struct ElfIFace *__IElf = 0;
 struct Library *__ElfBase = 0;
 
+struct TimeRequest *TimeReq = 0;
+struct TimerIFace *ITimer = 0;
+
 struct Clib2IFace *IClib2 = 0;
 
 struct Library *__UtilityBase = 0;
@@ -114,6 +117,9 @@ void longjmp_altivec(jmp_buf, int);
 int setjmp_altivec(jmp_buf);
 #endif
 
+static struct TimeRequest *openTimer(uint32 unit);
+static void closeTimer(struct TimeRequest *tr);
+
 /* These CTORS/DTORS are clib2's one and they are different than that one received
  * from crtbegin. They are needed because we need to call clib2 constructors as well
  */
@@ -130,6 +136,11 @@ _start(char *args, int arglen, struct ExecBase *sysbase) {
 }
 
 static void closeLibraries() {
+    if (TimeReq != NULL) {
+        closeTimer(TimeReq);
+        TimeReq = NULL;
+    }
+
     if (__UtilityBase != NULL) {
         IExec->CloseLibrary(__UtilityBase);
         __UtilityBase = NULL;
@@ -275,9 +286,6 @@ int libReserved(void) {
     return -1;
 }
 
-#undef __getClib2
-extern struct _clib2 * __getClib2(void);
-
 #include "clib2_vectors.h"
 
 static struct TagItem mainTags[] = {
@@ -318,6 +326,17 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
         }
     } else
         goto out;
+
+    TimeReq = openTimer(UNIT_MICROHZ);
+    if (!TimeReq) {
+        goto out;
+    }
+
+    struct Device *TimerBase = TimeReq->Request.io_Device;
+    ITimer = (struct TimerIFace *)IExec->GetInterface((struct Library *)TimerBase, "main", 1, NULL);
+    if (!ITimer) {
+        goto out;
+    }
 
     D(("Open Elf Library"));
     struct Library *__ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
@@ -391,4 +410,44 @@ library_start(char *argstr,
     int result = _main(argstr, arglen, start_main, __CTOR_LIST__, __DTOR_LIST__, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
 
     return result;
+}
+
+/************** STATIC FUNCTIONS ***********************/
+static struct TimeRequest *openTimer(uint32 unit) {
+    struct MsgPort *mp;
+    struct TimeRequest *tr;
+
+    mp = IExec->AllocSysObjectTags(ASOT_PORT,
+                                   ASOPORT_AllocSig, FALSE,
+                                   ASOPORT_Signal, SIGB_SINGLE,
+                                   TAG_END);
+
+    tr = IExec->AllocSysObjectTags(ASOT_IOREQUEST,
+                                   ASOIOR_ReplyPort, mp,
+                                   ASOIOR_Size, sizeof(struct TimeRequest),
+                                   TAG_END);
+
+    if (tr == NULL) {
+        IExec->FreeSysObject(ASOT_PORT, mp);
+        return NULL;
+    }
+
+    if (IExec->OpenDevice(TIMERNAME, unit, (struct IORequest *) tr, 0) != 0) {
+        IExec->FreeSysObject(ASOT_IOREQUEST, tr);
+        IExec->FreeSysObject(ASOT_PORT, mp);
+        return NULL;
+    }
+
+    return tr;
+}
+
+static void closeTimer(struct TimeRequest *tr) {
+    if (tr != NULL) {
+        struct MsgPort *mp = tr->Request.io_Message.mn_ReplyPort;
+
+        IExec->CloseDevice((struct IORequest *) tr);
+
+        IExec->FreeSysObject(ASOT_IOREQUEST, tr);
+        IExec->FreeSysObject(ASOT_PORT, mp);
+    }
 }

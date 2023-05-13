@@ -10,6 +10,7 @@ int
 ungetc(int c, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
     SHOWVALUE(c);
@@ -26,7 +27,7 @@ ungetc(int c, FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(file));
+    assert(__is_valid_iob(__clib2, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -63,7 +64,7 @@ ungetc(int c, FILE *stream) {
     }
 
     /* Get rid of the write buffer, if it's still around. */
-    if (__iob_write_buffer_is_valid(file) > 0 && __flush_iob_write_buffer(file) < 0) {
+    if (__iob_write_buffer_is_valid(file) > 0 && __flush_iob_write_buffer(__clib2, file) < 0) {
         SHOWMSG("could not flush write buffer");
         goto out;
     }

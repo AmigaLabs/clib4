@@ -13,6 +13,7 @@ realpath(const char *path_name, char *buffer) {
     struct DevProc *dvp = NULL;
     BPTR lock = ZERO;
     char *result = NULL;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -28,7 +29,7 @@ realpath(const char *path_name, char *buffer) {
         goto out;
     }
 
-    if (__CLIB2->__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -62,7 +63,7 @@ realpath(const char *path_name, char *buffer) {
         goto out;
     }
 
-    if (__CLIB2->__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (__translate_amiga_to_unix_path_name((char const **) &buffer, &buffer_nti) != 0)
             goto out;
 

@@ -40,7 +40,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     if (path_name == NULL) {
         SHOWMSG("path name is invalid");
@@ -80,14 +80,14 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
         }
     }
 
-    fd_slot_number = __find_vacant_fd_entry();
+    fd_slot_number = __find_vacant_fd_entry(__clib2);
     if (fd_slot_number < 0) {
-        if (__grow_fd_table(0) < 0) {
+        if (__grow_fd_table(__clib2, 0) < 0) {
             SHOWMSG("couldn't find a vacant file descriptor, and couldn't allocate one either");
             goto out;
         }
 
-        fd_slot_number = __find_vacant_fd_entry();
+        fd_slot_number = __find_vacant_fd_entry(__clib2);
         assert(fd_slot_number >= 0);
     }
 
@@ -372,7 +372,7 @@ out:
     }
     UnLock(lock);
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

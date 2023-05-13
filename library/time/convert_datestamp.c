@@ -17,7 +17,7 @@ __convert_datestamp_to_time(const struct DateStamp *ds) {
 
     ENTER();
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
     /* If possible, adjust for the local time zone. We do this because the
        AmigaOS system time is returned in local time and we want to return
@@ -26,7 +26,7 @@ __convert_datestamp_to_time(const struct DateStamp *ds) {
     if (__clib2->__default_locale != NULL)
         result += 60 * __clib2->__default_locale->loc_GMTOffset;
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     RETURN(result);
     return (result);

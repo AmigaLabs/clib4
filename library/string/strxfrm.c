@@ -14,6 +14,7 @@ size_t
 strxfrm(char *dest, const char *src, size_t len) {
     DECLARE_LOCALEBASE();
     size_t result = 0;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -30,12 +31,12 @@ strxfrm(char *dest, const char *src, size_t len) {
         goto out;
     }
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
-    if (__CLIB2->__locale_table[LC_COLLATE] != NULL) {
+    if (__clib2->__locale_table[LC_COLLATE] != NULL) {
         assert(LocaleBase != NULL);
 
-        result = StrConvert(__CLIB2->__locale_table[LC_COLLATE], (STRPTR) src, dest, len, SC_COLLATE1);
+        result = StrConvert(__clib2->__locale_table[LC_COLLATE], (STRPTR) src, dest, len, SC_COLLATE1);
     } else {
         if (len > 0 && dest != NULL) {
             char c;
@@ -58,7 +59,7 @@ strxfrm(char *dest, const char *src, size_t len) {
         }
     }
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
 out:
 

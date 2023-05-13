@@ -45,6 +45,7 @@ __strlen(const char *str) {
 size_t
 strlen(const char *s) {
     size_t result = 0;
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert(s != NULL);
 
@@ -53,8 +54,8 @@ strlen(const char *s) {
         goto out;
     }
 
-    if (__CLIB2->__optimizedCPUFunctions) {
-        switch (__CLIB2->cpufamily) {
+    if (__clib2->__optimizedCPUFunctions) {
+        switch (__clib2->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strlen440(s);
                 break;

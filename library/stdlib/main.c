@@ -271,7 +271,6 @@ _main(
         void (*__DTOR_LIST__[])(void),
         void (*__EXT_CTOR_LIST__[])(void),
         void (*__EXT_DTOR_LIST__[])(void)) {
-    struct Process *volatile child_process = NULL;
     struct WBStartup *volatile startup_message;
     volatile APTR old_window_pointer = NULL;
     volatile BOOL old_window_pointer_valid = FALSE;
@@ -286,9 +285,7 @@ _main(
 
     if (this_process->pr_CLI == ZERO) {
         struct MsgPort *mp = &this_process->pr_MsgPort;
-
         WaitPort(mp);
-
         startup_message = (struct WBStartup *) GetMsg(mp);
 
     } else {
@@ -445,5 +442,5 @@ out:
         ReplyMsg((struct Message *) startup_message);
     }
 
-    return (return_code);
+    return return_code;
 }

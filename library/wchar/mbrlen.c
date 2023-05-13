@@ -8,8 +8,10 @@
 
 size_t
 mbrlen(const char *restrict s, size_t n, mbstate_t *restrict ps) {
+    struct _clib2 *__clib2 = __CLIB2;
+
     if (ps == NULL) {
-        ps = &__CLIB2->wide_status->_mbrlen_state;
+        ps = &__clib2->wide_status->_mbrlen_state;
     }
 
     return mbrtowc(NULL, s, n, ps);

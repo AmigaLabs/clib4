@@ -11,7 +11,9 @@
 int
 mbtowc(wchar_t *wc, const char *src, size_t n) {
     int retval = 0;
-    mbstate_t *ps = &__CLIB2->wide_status->_mbtowc_state;
+    struct _clib2 *__clib2 = __CLIB2;
+
+    mbstate_t *ps = &__clib2->wide_status->_mbtowc_state;
 
     retval = _mbtowc_r(wc, src, n, ps);
 

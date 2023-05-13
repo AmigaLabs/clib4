@@ -10,6 +10,7 @@ char *
 setlocale(int category, const char *locale) {
     DECLARE_LOCALEBASE();
     char *result = NULL;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -20,7 +21,7 @@ setlocale(int category, const char *locale) {
     else
         SHOWSTRING(locale);
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
     if (category < LC_ALL || category > LC_MAX) {
         SHOWMSG("invalid category");
@@ -135,17 +136,17 @@ setlocale(int category, const char *locale) {
             /* We have to replace all locales. We
              * start by closing them all.
              */
-            __close_all_locales();
+            __close_all_locales(__clib2);
 
             SHOWMSG("reinitializing all locales");
 
             /* And this puts the new locale into all table entries. */
             for (i = 0; i < NUM_LOCALES; i++) {
-                __CLIB2->__locale_table[i] = loc;
+                __clib2->__locale_table[i] = loc;
                 if (locale[0] != '\0')
-                    strcpy(__CLIB2->__locale_name_table[i], locale);
+                    strcpy(__clib2->__locale_name_table[i], locale);
                 else
-                    strcpy(__CLIB2->__locale_name_table[i], "C-UTF-8");
+                    strcpy(__clib2->__locale_name_table[i], "C-UTF-8");
             }
 
             if (strcmp(locale, "C") == SAME || strcmp(locale, "C-UTF-8") == SAME) {
@@ -218,28 +219,28 @@ setlocale(int category, const char *locale) {
             /* Close this single locale unless it's actually just a
              * copy of the 'all' locale entry.
              */
-            if (__CLIB2->__locale_table[category] != NULL && __CLIB2->__locale_table[category] != __CLIB2->__locale_table[LC_ALL]) {
+            if (__clib2->__locale_table[category] != NULL && __clib2->__locale_table[category] != __clib2->__locale_table[LC_ALL]) {
                 assert(LocaleBase != NULL);
-                CloseLocale(__CLIB2->__locale_table[category]);
+                CloseLocale(__clib2->__locale_table[category]);
             }
 
             SHOWMSG("reinitializing the locale");
 
-            __CLIB2->__locale_table[category] = loc;
+            __clib2->__locale_table[category] = loc;
             if (locale[0] != '\0') {
-                strcpy(__CLIB2->__locale_name_table[category], locale);
+                strcpy(__clib2->__locale_name_table[category], locale);
             }
         }
     }
 
-    result = __CLIB2->__locale_name_table[category];
+    result = __clib2->__locale_name_table[category];
     SHOWSTRING(result);
 
 out:
-    __CLIB2->_current_category = category;
-    __CLIB2->_current_locale = result;
+    __clib2->_current_category = category;
+    __clib2->_current_locale = result;
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     RETURN(result);
     return result;

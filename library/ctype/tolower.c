@@ -12,7 +12,7 @@ tolower(int c) {
     int result;
     struct _clib2 *__clib2 = __CLIB2;
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
     if (__clib2->__locale_table[LC_CTYPE] != NULL) {
         assert(LocaleBase != NULL);
@@ -28,7 +28,7 @@ tolower(int c) {
         result = ('A' <= c && c <= 'Z') ? (c + ('a' - 'A')) : c;
     }
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     return (result);
 }

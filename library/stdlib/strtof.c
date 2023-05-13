@@ -25,6 +25,7 @@ strtof(const char *str, char **ptr) {
     float result;
     int is_negative;
     char c;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -140,12 +141,12 @@ strtof(const char *str, char **ptr) {
            dot. */
         decimal_point_matches = 0;
 
-        __locale_lock();
+        __locale_lock(__clib2);
 
-        if (__CLIB2->__locale_table[LC_NUMERIC] != NULL) {
+        if (__clib2->__locale_table[LC_NUMERIC] != NULL) {
             const char *point;
 
-            point = (const char *) __CLIB2->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
+            point = (const char *) __clib2->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
             if ((*point) == (*str)) {
                 decimal_point_matches = 1;
 
@@ -154,7 +155,7 @@ strtof(const char *str, char **ptr) {
             }
         }
 
-        __locale_unlock();
+        __locale_unlock(__clib2);
 
         if (NOT decimal_point_matches) {
             if ((*str) == '.') {

@@ -49,6 +49,7 @@ void __show_error(const char *message) {
 
     struct Library *IntuitionBase = NULL;
     struct Library *DOSBase = NULL;
+    struct _clib2 *__clib2 = __CLIB2;
 
     DOSBase = OpenLibrary("dos.library", 0);
     IntuitionBase = OpenLibrary("intuition.library", 0);
@@ -65,13 +66,13 @@ void __show_error(const char *message) {
         goto out;
 
     /* If we can't hope to print the error message, show a requester instead. */
-    if (__CLIB2->__no_standard_io || __CLIB2->__WBenchMsg != NULL) {
+    if (__clib2->__no_standard_io || __clib2->__WBenchMsg != NULL) {
         UBYTE program_name[256] = {0};
         struct EasyStruct es;
         STRPTR title_string;
 
-        if (__CLIB2->__WBenchMsg != NULL) {
-            title_string = (STRPTR) FilePart(__CLIB2->__WBenchMsg->sm_ArgList[0].wa_Name);
+        if (__clib2->__WBenchMsg != NULL) {
+            title_string = (STRPTR) FilePart(__clib2->__WBenchMsg->sm_ArgList[0].wa_Name);
         } else {
             if (GetCliProgramName((STRPTR) program_name, sizeof(program_name)))
                 title_string = (STRPTR) FilePart((STRPTR) program_name);

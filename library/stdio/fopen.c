@@ -10,6 +10,7 @@ FILE *
 fopen(const char *filename, const char *mode) {
     FILE *result = NULL;
     int slot_number;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -20,7 +21,7 @@ fopen(const char *filename, const char *mode) {
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     if (filename == NULL || mode == NULL) {
         SHOWMSG("invalid parameters");
@@ -29,27 +30,27 @@ fopen(const char *filename, const char *mode) {
         goto out;
     }
 
-    slot_number = __find_vacant_iob_entry();
+    slot_number = __find_vacant_iob_entry(__clib2);
     if (slot_number < 0) {
-        if (__grow_iob_table(0) < 0) {
+        if (__grow_iob_table(__clib2, 0) < 0) {
             SHOWMSG("couldn't find a free file table, and no memory for a new one");
             goto out;
         }
 
-        slot_number = __find_vacant_iob_entry();
+        slot_number = __find_vacant_iob_entry(__clib2);
         assert(slot_number >= 0);
     }
 
-    if (__open_iob(filename, mode, -1, slot_number) < 0) {
+    if (__open_iob(__clib2, filename, mode, -1, slot_number) < 0) {
         SHOWMSG("couldn't open the file");
         goto out;
     }
 
-    result = (FILE *) __CLIB2->__iob[slot_number];
+    result = (FILE *) __clib2->__iob[slot_number];
 
 out:
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

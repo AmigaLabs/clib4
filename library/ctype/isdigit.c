@@ -17,7 +17,7 @@ isdigit(int c) {
     ENTER();
     SHOWVALUE(c);
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
     if (__clib2->__locale_table[LC_CTYPE] != NULL) {
         assert(LocaleBase != NULL);
@@ -33,7 +33,7 @@ isdigit(int c) {
         result = ('0' <= c && c <= '9');
     }
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     RETURN(result);
     return (result);

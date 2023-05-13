@@ -86,7 +86,7 @@ SOCKET_DESTRUCTOR(socket_exit) {
      *          does not happen, the stdio cleanup function will
      *          crash (with bells on).
      */
-    __close_all_files();
+    __close_all_files(__clib2);
     if (__clib2->__ISocket != NULL) {
         DropInterface((struct Interface *) __clib2->__ISocket);
         __clib2->__ISocket = NULL;

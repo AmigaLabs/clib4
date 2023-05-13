@@ -16,19 +16,20 @@ fchmod(int file_descriptor, mode_t mode) {
     int result = ERROR;
     struct fd *fd = NULL;
     LONG success;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     SHOWVALUE(file_descriptor);
     SHOWVALUE(mode);
 
-    assert(file_descriptor >= 0 && file_descriptor < __CLIB2->__num_fd);
-    assert(__CLIB2->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__CLIB2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
+    assert(__clib2->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -114,7 +115,7 @@ fchmod(int file_descriptor, mode_t mode) {
 out:
 
     __fd_unlock(fd);
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     if (current_dir_changed)
         CurrentDir(old_current_dir);

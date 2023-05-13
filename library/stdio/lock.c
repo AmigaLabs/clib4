@@ -7,9 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 void
-__stdio_lock(void) {
-    struct _clib2 *__clib2 = __CLIB2;
-
+__stdio_lock(struct _clib2 *__clib2) {
     assert(__clib2->stdio_lock != NULL);
 
     if (__clib2->stdio_lock != NULL)
@@ -17,9 +15,7 @@ __stdio_lock(void) {
 }
 
 void
-__stdio_unlock(void) {
-    struct _clib2 *__clib2 = __CLIB2;
-
+__stdio_unlock(struct _clib2 *__clib2) {
     assert(__clib2->stdio_lock != NULL);
 
     if (__clib2->stdio_lock != NULL)
@@ -27,18 +23,17 @@ __stdio_unlock(void) {
 }
 
 void
-__stdio_lock_exit(void) {
-    struct _clib2 *__clib2 = __CLIB2;
+__stdio_lock_exit(struct _clib2 *__clib2) {
     __delete_semaphore(__clib2->stdio_lock);
     __clib2->stdio_lock = NULL;
 }
 
 int
-__stdio_lock_init(void) {
+__stdio_lock_init(struct _clib2 *__clib2) {
     int result = ERROR;
 
-    __CLIB2->stdio_lock = __create_semaphore();
-    if (__CLIB2->stdio_lock == NULL)
+    __clib2->stdio_lock = __create_semaphore();
+    if (__clib2->stdio_lock == NULL)
         goto out;
 
     result = OK;

@@ -13,6 +13,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
     int result = ERROR;
     struct fd *fd = NULL;
     LONG success;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -23,7 +24,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     if (buf == NULL) {
         SHOWMSG("invalid buffer parameter");
@@ -32,9 +33,9 @@ fstatfs(int file_descriptor, struct statfs *buf) {
         goto out;
     }
 
-    assert(file_descriptor >= 0 && file_descriptor < __CLIB2->__num_fd);
-    assert(__CLIB2->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__CLIB2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
+    assert(__clib2->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -75,7 +76,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
 
 out:
     __fd_unlock(fd);
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
     UnLock(parent_dir);
 
     RETURN(result);

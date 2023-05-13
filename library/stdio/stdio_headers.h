@@ -125,7 +125,7 @@ struct iob;
 /****************************************************************************/
 
 /* The file action function for buffered files. */
-typedef int64_t (*file_action_iob_t)(struct iob * iob, struct file_action_message * fam);
+typedef int64_t (*file_action_iob_t)(struct _clib2 *__clib2, struct iob * iob, struct file_action_message * fam);
 
 #define UNGET 8
 
@@ -241,7 +241,7 @@ typedef struct iob {
 /****************************************************************************/
 
 /* The file action function for unbuffered files. */
-typedef int64_t (*file_action_fd_t)(struct fd * fd,struct file_action_message * fam);
+typedef int64_t (*file_action_fd_t)(struct _clib2 *__clib2, struct fd * fd,struct file_action_message * fam);
 
 /****************************************************************************/
 
@@ -342,10 +342,10 @@ struct bcpl_name {
 
 /****************************************************************************/
 
-extern void	__stdio_lock(void);
-extern void	__stdio_unlock(void);
-extern void	__stdio_lock_exit(void);
-extern int	__stdio_lock_init(void);
+extern void	__stdio_lock(struct _clib2 *__clib2);
+extern void	__stdio_unlock(struct _clib2 *__clib2);
+extern void	__stdio_lock_exit(struct _clib2 *__clib2);
+extern int	__stdio_lock_init(struct _clib2 *__clib2);
 
 extern void __fd_lock(struct fd *fd);
 extern void __fd_unlock(struct fd *fd);

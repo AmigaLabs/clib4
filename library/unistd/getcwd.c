@@ -19,6 +19,7 @@ getcwd(char *buffer, size_t buffer_size) {
     struct name_translation_info buffer_nti;
     char *result = NULL;
     BPTR dir_lock = ZERO;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -55,16 +56,16 @@ getcwd(char *buffer, size_t buffer_size) {
         goto out;
     }
 
-    if (__CLIB2->__unix_path_semantics) {
-        if (__CLIB2->__current_path_name[0] != '\0') {
-            if (buffer_size < strlen(__CLIB2->__current_path_name) + 1) {
+    if (__clib2->__unix_path_semantics) {
+        if (__clib2->__current_path_name[0] != '\0') {
+            if (buffer_size < strlen(__clib2->__current_path_name) + 1) {
                 SHOWMSG("buffer is too small");
 
                 __set_errno(ERANGE);
                 goto out;
             }
 
-            strcpy(buffer, __CLIB2->__current_path_name);
+            strcpy(buffer, __clib2->__current_path_name);
 
             D(("returning absolute path name '%s'", buffer));
 
@@ -94,7 +95,7 @@ getcwd(char *buffer, size_t buffer_size) {
             goto out;
         }
 
-        if (__CLIB2->__unix_path_semantics) {
+        if (__clib2->__unix_path_semantics) {
             const char *path_name = buffer;
 
             if (__translate_amiga_to_unix_path_name(&path_name, &buffer_nti) != 0)

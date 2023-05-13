@@ -11,11 +11,10 @@
 #endif /* _STDLIB_MEMORY_H */
 
 int
-__grow_fd_table(int max_fd) {
+__grow_fd_table(struct _clib2 *__clib2, int max_fd) {
     const int granularity = 10;
     int new_num_fd;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
 
     if (max_fd == 0)
         new_num_fd = __clib2->__num_fd + granularity;

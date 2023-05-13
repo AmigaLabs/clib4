@@ -38,8 +38,8 @@
 
 #include <time.h>
 
-extern void __locale_lock(void);
-extern void __locale_unlock(void);
-extern void __close_all_locales(void);
+extern void __locale_lock(struct _clib2 *__clib2);
+extern void __locale_unlock(struct _clib2 *__clib2);
+extern void __close_all_locales(struct _clib2 *__clib2);
 
 #endif /* _LOCALE_HEADERS_H */

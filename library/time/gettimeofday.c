@@ -53,7 +53,7 @@ gettimeofday(struct timeval *tp, struct timezone *tzp) {
        starts (January 1st, 1970) eight years before the AmigaOS epoch. */
     seconds += UNIX_TIME_OFFSET;
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
     /* If possible, adjust for the local time zone. We do this because the
        AmigaOS system time is returned in local time and we want to return
@@ -83,7 +83,7 @@ gettimeofday(struct timeval *tp, struct timezone *tzp) {
         SHOWVALUE(tzp->tz_dsttime);
     }
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     RETURN(0);
     return (0);

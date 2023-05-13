@@ -24,6 +24,7 @@ mktemp(char *name_template) {
     ULONG pseudo_random_number;
     BPTR lock;
     size_t i;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -115,7 +116,7 @@ mktemp(char *name_template) {
 
         /* If necessary, quickly translate the semantics of the file name
 		   we cooked up above. */
-        if (__CLIB2->__unix_path_semantics) {
+        if (__clib2->__unix_path_semantics) {
             if (__translate_unix_to_amiga_path_name((char const **) &test_name, &name_template_nti) != 0)
                 goto out;
 

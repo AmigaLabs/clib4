@@ -11,7 +11,7 @@
 #endif /* _STDLIB_MEMORY_H */
 
 int
-__open_iob(const char *filename, const char *mode, int file_descriptor, int slot_number) {
+__open_iob(struct _clib2 *__clib2, const char *filename, const char *mode, int file_descriptor, int slot_number) {
     struct SignalSemaphore *lock;
     ULONG file_flags;
     int result = ERROR;
@@ -20,7 +20,6 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
     STRPTR buffer = NULL;
     STRPTR aligned_buffer;
     struct iob *file;
-    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -30,7 +29,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     assert(mode != NULL && 0 <= slot_number && slot_number < __clib2->__num_iob);
 
@@ -156,7 +155,7 @@ out:
     if (buffer != NULL)
         FreeVec(buffer);
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

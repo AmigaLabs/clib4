@@ -12,10 +12,10 @@
 
 struct dirent *
 readdir(DIR *directory_pointer) {
-
     struct dirent *result = NULL;
     struct DirectoryHandle *dh;
     BPTR parent_directory = ZERO;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -32,7 +32,7 @@ readdir(DIR *directory_pointer) {
 
     dh = (struct DirectoryHandle *) directory_pointer;
 
-    if (__CLIB2->__unix_path_semantics && dh->dh_ScanVolumeList) {
+    if (__clib2->__unix_path_semantics && dh->dh_ScanVolumeList) {
         SHOWMSG("we are scanning the volume list");
 
         if (dh->dh_Position == 0) {
@@ -93,7 +93,7 @@ readdir(DIR *directory_pointer) {
     }
 
     if (NOT dh->dh_ScanVolumeList) {
-        if (__CLIB2->__unix_path_semantics) {
+        if (__clib2->__unix_path_semantics) {
             if (dh->dh_Position == 0) {
                 SHOWMSG("returning .");
 

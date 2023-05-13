@@ -12,6 +12,7 @@ lseek(int file_descriptor, off_t offset, int mode) {
     off_t result = CHANGE_FILE_ERROR;
     struct fd *fd = NULL;
     off_t position;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -19,13 +20,13 @@ lseek(int file_descriptor, off_t offset, int mode) {
     SHOWVALUE(offset);
     SHOWVALUE(mode);
 
-    assert(file_descriptor >= 0 && file_descriptor < __CLIB2->__num_fd);
-    assert(__CLIB2->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__CLIB2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
+    assert(__clib2->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -53,7 +54,7 @@ lseek(int file_descriptor, off_t offset, int mode) {
        to be sure, we therefore also check the secondary error
        to verify that what could be a file position is really
        an error indication. */
-    position = (*fd->fd_Action)(fd, &fam);
+    position = (*fd->fd_Action)(__clib2, fd, &fam);
     if (position == CHANGE_FILE_ERROR && fam.fam_Error != OK) {
         __set_errno(fam.fam_Error);
         goto out;
@@ -70,7 +71,7 @@ out:
 
     __fd_unlock(fd);
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

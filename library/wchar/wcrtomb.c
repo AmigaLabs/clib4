@@ -8,8 +8,10 @@
 
 size_t
 wcrtomb(char *s, wchar_t wchar, mbstate_t *state) {
-    if (strlen(__CLIB2->_current_locale) <= 1) { /* fall-through */
-    } else if (!strcmp(__CLIB2->_current_locale, "C-UTF-8")) {
+    struct _clib2 *__clib2 = __CLIB2;
+
+    if (strlen(__clib2->_current_locale) <= 1) { /* fall-through */
+    } else if (!strcmp(__clib2->_current_locale, "C-UTF-8")) {
         if (s == NULL) {
             return 0; /* UTF-8 encoding is not state-dependent */
         }
@@ -54,7 +56,7 @@ wcrtomb(char *s, wchar_t wchar, mbstate_t *state) {
             return 6;
         } else
             return -1;
-    } else if (!strcmp(__CLIB2->_current_locale, "C-SJIS")) {
+    } else if (!strcmp(__clib2->_current_locale, "C-SJIS")) {
         unsigned char char2 = (unsigned char) wchar;
         unsigned char char1 = (unsigned char) (wchar >> 8);
 
@@ -72,7 +74,7 @@ wcrtomb(char *s, wchar_t wchar, mbstate_t *state) {
                 return -1;
             }
         }
-    } else if (!strcmp(__CLIB2->_current_locale, "C-EUCJP")) {
+    } else if (!strcmp(__clib2->_current_locale, "C-EUCJP")) {
         unsigned char char2 = (unsigned char) wchar;
         unsigned char char1 = (unsigned char) (wchar >> 8);
 
@@ -90,7 +92,7 @@ wcrtomb(char *s, wchar_t wchar, mbstate_t *state) {
                 return -1;
             }
         }
-    } else if (!strcmp(__CLIB2->_current_locale, "C-JIS")) {
+    } else if (!strcmp(__clib2->_current_locale, "C-JIS")) {
         int cnt = 0;
         unsigned char char2 = (unsigned char) wchar;
         unsigned char char1 = (unsigned char) (wchar >> 8);

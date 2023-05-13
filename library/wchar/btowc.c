@@ -10,8 +10,9 @@
 
 wint_t
 btowc(int c) {
+    struct _clib2 *__clib2 = __CLIB2;
 
-    mbstate_t *mbs = &__CLIB2->wide_status->_mbtowc_state;
+    mbstate_t *mbs = &__clib2->wide_status->_mbtowc_state;
     int retval = 0;
     wchar_t pwc;
     char b;

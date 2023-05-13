@@ -8,11 +8,10 @@
 
 #ifndef NDEBUG
 
-BOOL __is_valid_iob(struct iob *iob) {
+BOOL __is_valid_iob(struct _clib2 *__clib2, struct iob *iob) {
     BOOL result = FALSE;
     ENTER();
     SHOWPOINTER(iob);
-    struct _clib2 *__clib2 = __CLIB2;
 
     if (iob == NULL) {
         SHOWMSG("iob is NULL");
@@ -25,7 +24,7 @@ BOOL __is_valid_iob(struct iob *iob) {
         result = TRUE;
     } else {
         SHOWMSG("Locking stdio");
-        __stdio_lock();
+        __stdio_lock(__clib2);
         D(("__num_iob = %ld", __clib2->__num_iob));
         D(("iob->iob_SlotNumber = %ld", iob->iob_SlotNumber));
         SHOWPOINTER(__clib2->__iob[iob->iob_SlotNumber]);
@@ -34,7 +33,7 @@ BOOL __is_valid_iob(struct iob *iob) {
             result = TRUE;
 
         SHOWMSG("Unlock stdio");
-        __stdio_unlock();
+        __stdio_unlock(__clib2);
     }
 
     RETURN(result);
@@ -43,10 +42,9 @@ BOOL __is_valid_iob(struct iob *iob) {
 
 #endif /* NDEBUG */
 
-int __find_vacant_iob_entry(void) {
+int __find_vacant_iob_entry(struct _clib2 *__clib2) {
     int result = ERROR;
     int i;
-    struct _clib2 *__clib2 = __CLIB2;
 
     assert(__clib2->__iob != NULL || __clib2->__num_iob == 0);
 

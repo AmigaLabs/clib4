@@ -10,8 +10,9 @@ void
 srand(unsigned seed)  {
     ENTER();
     SHOWVALUE(seed);
+    struct _clib2 *__clib2 = __CLIB2;
 
-    __CLIB2->__random_seed = seed - 1;
+    __clib2->__random_seed = seed - 1;
 
     LEAVE();
 }

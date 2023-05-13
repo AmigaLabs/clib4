@@ -12,9 +12,10 @@
 
 CLIB_CONSTRUCTOR(unistd_init) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
-    NewList((struct List *)&__CLIB2->__unlink_list);
-    InitSemaphore(&__CLIB2->__unlink_semaphore);
+    NewList((struct List *)&__clib2->__unlink_list);
+    InitSemaphore(&__clib2->__unlink_semaphore);
 
     LEAVE();
 
@@ -23,15 +24,16 @@ CLIB_CONSTRUCTOR(unistd_init) {
 
 CLIB_DESTRUCTOR(unistd_exit) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
-    if (__CLIB2->__unlink_list.mlh_Head != NULL && NOT IsMinListEmpty(&__CLIB2->__unlink_list)) {
+    if (__clib2->__unlink_list.mlh_Head != NULL && NOT IsMinListEmpty(&__clib2->__unlink_list)) {
         struct UnlinkNode *uln;
         BPTR old_dir;
 
         /* Close all the files that still might be open. */
-        __close_all_files();
+        __close_all_files(__clib2);
 
-        while ((uln = (struct UnlinkNode *) RemHead((struct List *) &__CLIB2->__unlink_list))) {
+        while ((uln = (struct UnlinkNode *) RemHead((struct List *) &__clib2->__unlink_list))) {
             D(("deleting '%s'", uln->uln_Name));
 
             old_dir = CurrentDir(uln->uln_Lock);

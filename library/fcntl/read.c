@@ -16,6 +16,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
     struct fd *fd = NULL;
     ssize_t result = EOF;
     __set_errno(0);
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -28,7 +29,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     if (buffer == NULL) {
         SHOWMSG("invalid buffer");
@@ -36,9 +37,9 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
         goto out;
     }
 
-    assert(file_descriptor >= 0 && file_descriptor < __CLIB2->__num_fd);
-    assert(__CLIB2->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__CLIB2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
+    assert(__clib2->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -68,7 +69,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
 
             assert(fd->fd_Action != NULL);
 
-            num_bytes_read = (*fd->fd_Action)(fd, &fam);
+            num_bytes_read = (*fd->fd_Action)(__clib2, fd, &fam);
             if (num_bytes_read == EOF) {
                 __set_errno(fam.fam_Error);
                 goto out;
@@ -85,7 +86,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
 
 out:
     __fd_unlock(fd);
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

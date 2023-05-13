@@ -15,24 +15,24 @@
 #endif /* _STDIO_HEADERS_H */
 
 void
-abort(void)
-{
+abort(void) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
-	/* Try to call the signal handler that might be in charge of
-	   handling cleanup operations, etc. */
-	raise(SIGABRT);
+    /* Try to call the signal handler that might be in charge of
+       handling cleanup operations, etc. */
+    raise(SIGABRT);
 
-	/* If the signal handler returns it means that we still have
-	   to terminate the program. */
+    /* If the signal handler returns it means that we still have
+       to terminate the program. */
 
-    __CLIB2->__check_abort_enabled = FALSE;
+    __clib2->__check_abort_enabled = FALSE;
 
-	__print_termination_message(NULL);
+    __print_termination_message(NULL);
 
     LEAVE();
 
-	/* Note that we drop into the exit() function which
-	   does not trigger the exit trap. */
-	_exit(EXIT_FAILURE);
+    /* Note that we drop into the exit() function which
+       does not trigger the exit trap. */
+    _exit(EXIT_FAILURE);
 }

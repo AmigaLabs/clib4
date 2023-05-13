@@ -40,6 +40,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
     int num_assignments = 0;
     int conversion_type;
     int c;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -700,16 +701,16 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                     if (c != EOF) {
                         D(("c = '%lc'", c));
 
-                        __locale_lock();
+                        __locale_lock(__clib2);
 
                         /* Did we find the decimal point? We accept both the
                             * locale configured decimal point and the plain old
                             * dot.
                             */
-                        if (__CLIB2->__locale_table[LC_NUMERIC] != NULL) {
+                        if (__clib2->__locale_table[LC_NUMERIC] != NULL) {
                             const unsigned char *point;
 
-                            point = (const unsigned char *) __CLIB2->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
+                            point = (const unsigned char *) __clib2->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
 
                             if (c == (*point) || c == '.') {
                                 SHOWMSG("found a decimal point");
@@ -728,7 +729,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                             }
                         }
 
-                        __locale_unlock();
+                        __locale_unlock(__clib2);
 
                         if (decimal_point_matches) {
                             total_num_chars_read++;

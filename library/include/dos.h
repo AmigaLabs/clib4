@@ -90,20 +90,6 @@ extern unsigned int (*__get_default_stack_size)(void);
 
 /****************************************************************************/
 
-/*
- * Two functions control how this library uses the locale.library API to
- * perform string collation, character and time conversion, etc.
- *
- * __locale_init() opens locale.library and attempts to open the default
- * locale. If it succeeds, it will return 0 and -1 otherwise.
- *
- * __locale_exit() releases the default locale and closes locale.library.
- */
-extern int __locale_init(void);
-extern void __locale_exit(void);
-
-/****************************************************************************/
-
 /* A data structures used by the path translation routines below. */
 struct name_translation_info
 {
@@ -282,6 +268,10 @@ struct _clib2 {
 	/* used by tmpnam */
 	int inc;
 
+    /* Directories being scanned whose locks need to be freed when shutting down. */
+    struct MinList __directory_list;
+    struct SignalSemaphore *dirent_lock;
+
     /* Used by initstate/setstate */
     struct SignalSemaphore *__random_lock;
     int n;
@@ -322,8 +312,12 @@ struct _clib2 {
 
     /* This is filled in with a pointer to the name of the program being run. */
     char *__progname;
+    BOOL free_program_name;
 
     char __current_path_name[PATH_MAX];
+
+    /* Don't remove aligned otherwise you could have bad things on exit */
+    struct AnchorPath *anchor __attribute__ ((aligned));
 
     /* This holds a mask of all signals whose delivery is currently blocked.
        The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
@@ -497,9 +491,23 @@ struct _clib2 {
     int __root_egid;
 };
 
-extern struct _clib2 *__clib2;
+#ifndef __getClib2
+struct _clib2 *__getClib2(void) __attribute__((const));
+#endif
+#define __CLIB2 __getClib2()
 
-#define __CLIB2 (__getClib2())
+/*
+ * Two functions control how this library uses the locale.library API to
+ * perform string collation, character and time conversion, etc.
+ *
+ * __locale_init() opens locale.library and attempts to open the default
+ * locale. If it succeeds, it will return 0 and -1 otherwise.
+ *
+ * __locale_exit() releases the default locale and closes locale.library.
+ */
+extern int __locale_init(struct _clib2 *__clib2);
+extern void __locale_exit(struct _clib2 *__clib2);
+
 
 __END_DECLS
 

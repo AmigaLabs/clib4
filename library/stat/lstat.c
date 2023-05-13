@@ -22,6 +22,7 @@ lstat(const char *path_name, struct stat *st) {
     struct ExamineData *fib = NULL;
     BPTR file_lock = ZERO;
     int link_length = -1;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -39,7 +40,7 @@ lstat(const char *path_name, struct stat *st) {
         goto out;
     }
 
-    if (__CLIB2->__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 

@@ -59,9 +59,8 @@ FILE_DESTRUCTOR(workbench_exit) {
 }
 
 static int
-wb_file_init(void) {
+wb_file_init(struct _clib2 *__clib2) {
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
 
     __clib2->__original_current_directory = CurrentDir(__clib2->__WBenchMsg->sm_ArgList[0].wa_Lock);
     __clib2->__current_directory_changed = TRUE;
@@ -151,7 +150,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
     /* If we were invoked from Workbench, set up the standard I/O streams. */
     if (__clib2->__WBenchMsg != NULL) {
         SHOWMSG("set up the standard I/O streams");
-        if (wb_file_init() < 0) {
+        if (wb_file_init(__clib2) < 0) {
             goto out;
         }
     }
@@ -159,7 +158,6 @@ FILE_CONSTRUCTOR(stdio_file_init) {
     SHOWMSG("Now initialize the standard I/O streams (input, output, error)");
     /* Now initialize the standard I/O streams (input, output, error). */
     for (i = STDIN_FILENO; i <= STDERR_FILENO; i++) {
-        D(("File %ld", i));
         switch (i) {
             case STDIN_FILENO:
 
@@ -207,6 +205,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
         /* Align the buffer start address to a cache line boundary. */
         aligned_buffer = (char *) ((ULONG)(buffer + (__clib2->__cache_line_size - 1)) & ~(__clib2->__cache_line_size - 1));
+        D(("File %ld", i));
         __initialize_fd(__clib2->__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
         __initialize_iob(__clib2->__iob[i],
                          __iob_hook_entry,

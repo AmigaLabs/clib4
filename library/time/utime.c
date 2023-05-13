@@ -12,6 +12,7 @@ utime(const char *path_name, const struct utimbuf *times) {
     struct DateStamp ds;
     int result = ERROR;
     LONG status;
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert(path_name != NULL);
 
@@ -36,7 +37,7 @@ utime(const char *path_name, const struct utimbuf *times) {
         DateStamp(&ds);
     }
 
-    if (__CLIB2->__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 

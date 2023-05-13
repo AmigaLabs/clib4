@@ -51,7 +51,7 @@ execvp(const char *command, char *const argv[]) {
            lateron when we will be calling getenv() again. */
         path = getenv("PATH");
         if (path == NULL)
-            path = (char *) __CLIB2->__default_path;
+            path = (char *) __clib2->__default_path;
 
         path_copy = strdup(path);
         if (path_copy == NULL) {
@@ -63,7 +63,7 @@ execvp(const char *command, char *const argv[]) {
 
         path_delimiter = getenv("PATH_SEPARATOR");
         if (path_delimiter == NULL)
-            path_delimiter = __CLIB2->__default_path_delimiter;
+            path_delimiter = __clib2->__default_path_delimiter;
 
         while ((search_prefix = strsep(&path, path_delimiter)) != NULL) {
             if ((*search_prefix) == '\0')

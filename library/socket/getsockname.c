@@ -10,6 +10,7 @@ int
 getsockname(int sockfd, struct sockaddr *name, socklen_t *namelen) {
     struct fd *fd;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -27,10 +28,10 @@ getsockname(int sockfd, struct sockaddr *name, socklen_t *namelen) {
         goto out;
     }
 
-    assert(sockfd >= 0 && sockfd < __CLIB2->__num_fd);
-    assert(__CLIB2->__fd[sockfd] != NULL);
-    assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
-    assert(FLAG_IS_SET(__CLIB2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __clib2->__num_fd);
+    assert(__clib2->__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
     fd = __get_file_descriptor_socket(sockfd);
     if (fd == NULL) {

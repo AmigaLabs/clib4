@@ -568,6 +568,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
     _off64_t start = 0;
     _off64_t len = 0;
     _off64_t stop;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -816,7 +817,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
                 const int rand_max = RAND_MAX / 65536;
                 int num_random_ticks;
 
-                if (__CLIB2->__check_abort_enabled && (SetSignal(0, 0) & __CLIB2->__break_signal_mask) != 0) {
+                if (__clib2->__check_abort_enabled && (SetSignal(0, 0) & __clib2->__break_signal_mask) != 0) {
                     SHOWMSG("lock polling loop stopped");
 
                     delete_file_lock_node(fln);

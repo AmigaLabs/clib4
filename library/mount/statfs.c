@@ -12,6 +12,7 @@ int statfs(const char *path, struct statfs *buf) {
     LONG status;
     BPTR lock = ZERO;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -29,7 +30,7 @@ int statfs(const char *path, struct statfs *buf) {
         goto out;
     }
 
-    if (__CLIB2->__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path[0] == '\0') {
             SHOWMSG("no name given");
 

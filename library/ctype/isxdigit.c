@@ -17,7 +17,7 @@ isxdigit(int c) {
     ENTER();
     SHOWVALUE(c);
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
     if (__clib2->__locale_table[LC_CTYPE] != NULL) {
         assert(LocaleBase != NULL);
@@ -35,7 +35,7 @@ isxdigit(int c) {
                   ('A' <= c && c <= 'F'));
     }
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     RETURN(result);
     return (result);

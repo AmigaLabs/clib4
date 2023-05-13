@@ -33,7 +33,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
 
     /* We need to know which parameter to submit to the accept()
        call first. */
-    __stdio_lock();
+    __stdio_lock(__clib2);
     stdio_locked = TRUE;
 
     fd = __get_file_descriptor_socket(sockfd);
@@ -45,7 +45,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
 
     /* Now let go of the stdio lock, so that the only locking performed
        will be done inside the accept() call. */
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
     stdio_locked = FALSE;
 
     /* Wait for the accept() to complete, then hook up the socket
@@ -58,17 +58,17 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
 
     /* OK, back to work: we'll need to manipulate the file
        descriptor tables. */
-    __stdio_lock();
+    __stdio_lock(__clib2);
     stdio_locked = TRUE;
 
-    new_fd_slot_number = __find_vacant_fd_entry();
+    new_fd_slot_number = __find_vacant_fd_entry(__clib2);
     if (new_fd_slot_number < 0) {
-        if (__grow_fd_table(0) < 0) {
+        if (__grow_fd_table(__clib2, 0) < 0) {
             SHOWMSG("couldn't find a vacant fd slot and no memory to create one");
             goto out;
         }
 
-        new_fd_slot_number = __find_vacant_fd_entry();
+        new_fd_slot_number = __find_vacant_fd_entry(__clib2);
         assert(new_fd_slot_number >= 0);
     }
     lock = __create_semaphore();
@@ -95,7 +95,7 @@ out:
     }
 
     if (stdio_locked)
-        __stdio_unlock();
+        __stdio_unlock(__clib2);
 
     __delete_semaphore(lock);
 

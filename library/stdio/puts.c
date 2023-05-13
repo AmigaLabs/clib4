@@ -13,6 +13,7 @@ puts(const char *s) {
     int result = EOF;
     int buffer_mode;
     int c;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -27,7 +28,7 @@ puts(const char *s) {
         goto out;
     }
 
-    assert(__is_valid_iob(file));
+    assert(__is_valid_iob(__clib2, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -37,7 +38,7 @@ puts(const char *s) {
    break it up into individual lines. */
     buffer_mode = (file->iob_Flags & IOBF_BUFFER_MODE);
     if (buffer_mode == IOBF_BUFFER_MODE_NONE) {
-        struct fd *fd = __CLIB2->__fd[file->iob_Descriptor];
+        struct fd *fd = __clib2->__fd[file->iob_Descriptor];
 
         __fd_lock(fd);
 
@@ -67,7 +68,7 @@ out:
        This is intended to improve performance as it takes more effort
        to write a single character to a file than to write a bunch. */
     if (result == 0 && (file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
-        if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(file) < 0) {
+        if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib2, file) < 0) {
             SHOWMSG("couldn't flush the write buffer");
             result = EOF;
         }

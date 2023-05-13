@@ -12,7 +12,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-__flush_iob_write_buffer(struct iob *file) {
+__flush_iob_write_buffer(struct _clib2 *__clib2, struct iob *file) {
     int result = OK;
 
     ENTER();
@@ -39,7 +39,7 @@ __flush_iob_write_buffer(struct iob *file) {
 
         assert(file->iob_Action != NULL);
 
-        if ((*file->iob_Action)(file, &fam) == EOF) {
+        if ((*file->iob_Action)(__clib2, file, &fam) == EOF) {
             SHOWMSG("that didn't work");
             result = ERROR;
             SET_FLAG(file->iob_Flags, IOBF_ERROR);

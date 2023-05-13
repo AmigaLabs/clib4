@@ -12,6 +12,7 @@ chmod(const char *path_name, mode_t mode) {
     ULONG protection;
     LONG status;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -29,7 +30,7 @@ chmod(const char *path_name, mode_t mode) {
         goto out;
     }
 
-    if (__CLIB2->__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 

@@ -13,23 +13,22 @@
 extern char *__strchr440(const char *s, int c);
 
 char *
-strchr(const char *s, int c)
-{
-	const unsigned char *us = (const unsigned char *)s;
-	char *result = NULL;
-	unsigned char us_c;
-	unsigned char find_this = (c & 0xff);
+strchr(const char *s, int c) {
+    const unsigned char *us = (const unsigned char *) s;
+    char *result = NULL;
+    unsigned char us_c;
+    unsigned char find_this = (c & 0xff);
+    struct _clib2 *__clib2 = __CLIB2;
 
-	assert(s != NULL);
+    assert(s != NULL);
 
-	if (us == NULL)
-	{
-		__set_errno(EFAULT);
-		goto out;
-	}
+    if (us == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-    if  (__CLIB2->__optimizedCPUFunctions) {
-        switch (__CLIB2->cpufamily) {
+    if (__clib2->__optimizedCPUFunctions) {
+        switch (__clib2->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strchr440(s, c);
                 break;
@@ -47,8 +46,7 @@ strchr(const char *s, int c)
                     us++;
                 }
         }
-    }
-    else {
+    } else {
         while (TRUE) {
             us_c = (*us);
             if (us_c == find_this) {
@@ -65,5 +63,5 @@ strchr(const char *s, int c)
 
 out:
 
-	return (result);
+    return (result);
 }

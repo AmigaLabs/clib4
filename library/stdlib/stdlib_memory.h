@@ -47,8 +47,8 @@ struct MemalignEntry
     void            *me_Exact;            /* The address returned by AllocVecTags  */
 };
 
-extern void __memory_lock(void);
-extern void __memory_unlock(void);
+extern void __memory_lock(struct _clib2 *__clib2);
+extern void __memory_unlock(struct _clib2 *__clib2);
 
 extern int32 MemalignAVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2);
 extern int32 MemalignAVLKeyComp(struct AVLNode *avlnode1, AVLKey key2);

@@ -33,7 +33,7 @@ struct fd;
 /****************************************************************************/
 
 /* stdio_init_exit.c */
-void __close_all_files(void);
+void __close_all_files(struct _clib2 *__clib2);
 
 /****************************************************************************/
 
@@ -50,12 +50,12 @@ extern struct fd *__get_file_descriptor_dont_resolve(int file_descriptor);
 /****************************************************************************/
 
 /* stdio_iobhookentry.c */
-extern int64_t __iob_hook_entry(struct iob *iob, struct file_action_message *fam);
+extern int64_t __iob_hook_entry(struct _clib2 *__clib2, struct iob *iob, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_fdhookentry.c */
-extern int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam);
+extern int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_action_message *fam);
 
 /****************************************************************************/
 
@@ -65,8 +65,8 @@ extern void __initialize_fd(struct fd *fd, file_action_fd_t action_function, BPT
 /****************************************************************************/
 
 /* stdio_findvacantfdentry.c */
-extern BOOL __is_valid_fd(struct fd *fd);
-extern int __find_vacant_fd_entry(void);
+extern BOOL __is_valid_fd(struct _clib2 *__clib2, struct fd *fd);
+extern int __find_vacant_fd_entry(struct _clib2 *__clib2);
 
 /****************************************************************************/
 
@@ -76,38 +76,29 @@ extern void __initialize_iob(struct iob *iob, file_action_iob_t action_function,
 /****************************************************************************/
 
 /* stdio_findvacantiobentry.c */
-extern BOOL __is_valid_iob(struct iob *iob);
-extern int __find_vacant_iob_entry(void);
+extern BOOL __is_valid_iob(struct _clib2 *__clib2, struct iob *iob);
+extern int __find_vacant_iob_entry(struct _clib2 *__clib2);
 
 /****************************************************************************/
 
-/* stdio_growfdtable.c */
-extern int __grow_fd_table(int max_fd);
-
-/****************************************************************************/
-
-/* stdio_growiobtable.c */
-extern int __grow_iob_table(int max_fd);
-
-/****************************************************************************/
-
-/* stdio_openiob.c */
-extern int __open_iob(const char *filename, const char *mode, int file_descriptor, int slot_number);
+extern int __grow_fd_table(struct _clib2 *__clib2, int max_fd);
+extern int __grow_iob_table(struct _clib2 *__clib2, int max_fd);
+extern int __open_iob(struct _clib2 *__clib2, const char *filename, const char *mode, int file_descriptor, int slot_number);
 
 /****************************************************************************/
 
 /* stdio_filliobreadbuffer.c */
-extern int __fill_iob_read_buffer(struct iob *file);
+extern int __fill_iob_read_buffer(struct _clib2 *__clib2, struct iob *file);
 
 /****************************************************************************/
 
 /* stdio_dropiobreadbuffer.c */
-extern int __drop_iob_read_buffer(struct iob *file);
+extern int __drop_iob_read_buffer(struct _clib2 *__clib2, struct iob *file);
 
 /****************************************************************************/
 
 /* stdio_flushiobwritebuffer.c */
-extern int __flush_iob_write_buffer(struct iob *file);
+extern int __flush_iob_write_buffer(struct _clib2 *__clib2, struct iob *file);
 
 /****************************************************************************/
 
@@ -124,22 +115,22 @@ extern int __fputc(int c, FILE *stream, int buffer_mode);
 /****************************************************************************/
 
 /* stdio_sscanf_hook_entry.c */
-extern int64_t __sscanf_hook_entry(struct iob *string, struct file_action_message *fam);
+extern int64_t __sscanf_hook_entry(struct _clib2 *__clib2, struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_vasprintf_hook_entry.c */
-extern int64_t __vasprintf_hook_entry(struct iob *string, struct file_action_message *fam);
+extern int64_t __vasprintf_hook_entry(struct _clib2 *__clib2, struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_vsprintf_hook_entry.c */
-extern int64_t __vsprintf_hook_entry(struct iob *string, struct file_action_message *fam);
+extern int64_t __vsprintf_hook_entry(struct _clib2 *__clib2, struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 
 /* stdio_vsnprintf_hook_entry.c */
-extern int64_t __vsnprintf_hook_entry(struct iob *string, struct file_action_message *fam);
+extern int64_t __vsnprintf_hook_entry(struct _clib2 *__clib2, struct iob *string, struct file_action_message *fam);
 
 /****************************************************************************/
 

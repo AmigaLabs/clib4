@@ -59,6 +59,9 @@ struct ElfIFace *IElf;
 
 const struct Clib2IFace *IClib2 = NULL;
 
+register void *r13 __asm("r13");
+extern void *_SDA_BASE_ __attribute__((force_no_baserel));
+
 extern int main(int, char **);
 int clib2_start(char *args, int32 arglen, struct Library *sysbase);
 int _start(char *args, int32 arglen, struct Library *sysbase);
@@ -93,9 +96,11 @@ int
 clib2_start(char *args, int32 arglen, struct Library *sysbase) {
     struct ExecIFace *iexec;
     struct Clib2IFace *iclib2;
-
-    SysBase = sysbase;
     int rc = -1;
+    void *old_r13 = r13;
+
+    r13 = &_SDA_BASE_;
+    SysBase = sysbase;
 
     iexec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
     iexec->Obtain();
@@ -105,7 +110,6 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
     if (IDOS) {
         IUtility = (struct UtilityIFace *) OpenLibraryInterface(iexec, "utility.library", MIN_OS_VERSION);
         if (IUtility != NULL) {
-
             UtilityBase = IUtility->Data.LibBase;
             iclib2 = (struct Clib2IFace *) OpenLibraryInterface(iexec, "clib2.library", 1);
             if (iclib2 != NULL) {
@@ -127,6 +131,8 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
         iexec->Alert(AT_Recovery | AG_OpenLib | AO_DOSLib);
     }
     iexec->Release();
+
+    r13 = old_r13;
 
     return rc;
 }

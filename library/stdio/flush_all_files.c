@@ -15,7 +15,7 @@ __flush_all_files(int buffer_mode) {
     ENTER();
     SHOWVALUE(buffer_mode);
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     for (i = 0; i < __clib2->__num_iob; i++) {
         if (__clib2->__iob[i] != NULL &&
@@ -23,7 +23,7 @@ __flush_all_files(int buffer_mode) {
             FLAG_IS_SET(__clib2->__iob[i]->iob_Flags, IOBF_WRITE) &&
             (buffer_mode < 0 || (__clib2->__iob[i]->iob_Flags & IOBF_BUFFER_MODE) == (ULONG) buffer_mode) &&
             __iob_write_buffer_is_valid(__clib2->__iob[i])) {
-            if (__flush_iob_write_buffer(__clib2->__iob[i]) < 0) {
+            if (__flush_iob_write_buffer(__clib2, __clib2->__iob[i]) < 0) {
                 result = ERROR;
                 goto out;
             }
@@ -34,7 +34,7 @@ __flush_all_files(int buffer_mode) {
 
 out:
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

@@ -11,30 +11,29 @@
 #include <proto/elf.h>
 
 int
-dlclose(void *handle)
-{
-	int result = -1;
+dlclose(void *handle) {
+    int result = -1;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
     SHOWPOINTER(handle);
 
-	if (__CLIB2->__dl_elf_handle != NULL)  {
-		struct ElfIFace *IElf = __CLIB2->IElf;
-		Elf32_Error error;
+    if (__clib2->__dl_elf_handle != NULL) {
+        struct ElfIFace *IElf = __clib2->IElf;
+        Elf32_Error error;
 
-		error = DLClose(__CLIB2->__dl_elf_handle, handle);
-		if (error != ELF32_NO_ERROR)  {
-            __CLIB2->__elf_error_code = error;
-			goto out;
-		}
-	}
-	else {
-		__set_errno(ENOSYS);
-	}
-	
-	result = 0;
+        error = DLClose(__clib2->__dl_elf_handle, handle);
+        if (error != ELF32_NO_ERROR) {
+            __clib2->__elf_error_code = error;
+            goto out;
+        }
+    } else {
+        __set_errno(ENOSYS);
+    }
+
+    result = 0;
 
 out:
     RETURN(result);
-	return (result);
+    return (result);
 }

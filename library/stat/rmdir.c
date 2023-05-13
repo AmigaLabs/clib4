@@ -13,6 +13,7 @@ rmdir(const char *path_name) {
     int result = ERROR;
     struct ExamineData *fib = NULL;
     LONG status;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -29,7 +30,7 @@ rmdir(const char *path_name) {
         goto out;
     }
 
-    if (__CLIB2->__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 

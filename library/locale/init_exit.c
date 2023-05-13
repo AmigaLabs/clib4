@@ -12,9 +12,8 @@
 
 #include <proto/diskfont.h>
 
-void __close_all_locales(void) {
-	__locale_lock();
-    struct _clib2 *__clib2 = __CLIB2;
+void __close_all_locales(struct _clib2 *__clib2) {
+	__locale_lock(__clib2);
 
 	if (__clib2->__LocaleBase != NULL) {
 		DECLARE_LOCALEBASE();
@@ -37,19 +36,18 @@ void __close_all_locales(void) {
         __clib2->__locale_table[LC_ALL] = NULL;
 	}
 
-	__locale_unlock();
+	__locale_unlock(__clib2);
 }
 
-void __locale_exit(void) {
+void __locale_exit(struct _clib2 *__clib2) {
 	ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
 
-	__locale_lock();
+	__locale_lock(__clib2);
 
 	if (__clib2->__LocaleBase != NULL) {
 		DECLARE_LOCALEBASE();
 
-		__close_all_locales();
+		__close_all_locales(__clib2);
 
 		if (__clib2->__default_locale != NULL) {
 			CloseLocale(__clib2->__default_locale);
@@ -74,18 +72,17 @@ void __locale_exit(void) {
         __clib2->__DiskfontBase = NULL;
     }
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
 	LEAVE();
 }
 
-int __locale_init(void) {
+int __locale_init(struct _clib2 *__clib2) {
 	int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
 
 	ENTER();
 
-	__locale_lock();
+	__locale_lock(__clib2);
 
 	if (__clib2->__LocaleBase == NULL) {
         __clib2->__LocaleBase = OpenLibrary("locale.library", 52);
@@ -121,22 +118,18 @@ int __locale_init(void) {
 		result = OK;
 	}
 
-	__locale_unlock();
+	__locale_unlock(__clib2);
 
 	RETURN(result);
 	return (result);
 }
 
-void __locale_lock(void) {
-    struct _clib2 *__clib2 = __CLIB2;
-
+void __locale_lock(struct _clib2 *__clib2) {
 	if (__clib2->locale_lock != NULL)
 		ObtainSemaphore(__clib2->locale_lock);
 }
 
-void __locale_unlock(void) {
-    struct _clib2 *__clib2 = __CLIB2;
-
+void __locale_unlock(struct _clib2 *__clib2) {
 	if (__clib2->locale_lock != NULL)
 		ReleaseSemaphore(__clib2->locale_lock);
 }
@@ -145,7 +138,7 @@ CLIB_DESTRUCTOR(locale_exit) {
 	ENTER();
     struct _clib2 *__clib2 = __CLIB2;
 
-	__locale_exit();
+	__locale_exit(__clib2);
 
 	__delete_semaphore(__clib2->locale_lock);
     __clib2->locale_lock = NULL;
@@ -168,7 +161,7 @@ CLIB_CONSTRUCTOR(locale_init) {
         strcpy(__clib2->__locale_name_table[i], "C-UTF-8");
     }
 
-    __locale_init();
+    __locale_init(__clib2);
 
 	success = TRUE;
 

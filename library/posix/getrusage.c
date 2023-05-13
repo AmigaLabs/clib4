@@ -19,19 +19,20 @@
 int
 getrusage(int who, struct rusage *rusage) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
+
     if (rusage == NULL) {
         __set_errno(EINVAL);
         RETURN(-1);
         return -1;
     }
-    struct _clib2 *__clib2 = __CLIB2;
 
     SHOWVALUE(who);
     SHOWPOINTER(rusage);
 
     long clock[2];
     int status = 0;
-    struct TimerIFace *ITimer = __CLIB2->__ITimer;
+    struct TimerIFace *ITimer = __clib2->__ITimer;
 
     if (__clib2 == NULL) {
         __set_errno(EINVAL);
