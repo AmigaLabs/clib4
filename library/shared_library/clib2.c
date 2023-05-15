@@ -110,11 +110,6 @@ const struct Resident RomTag;
 
 static uint32 vectorUnit;
 
-#ifndef __SPE__
-void longjmp_altivec(jmp_buf, int);
-int setjmp_altivec(jmp_buf);
-#endif
-
 static struct TimeRequest *openTimer(uint32 unit);
 static void closeTimer(struct TimeRequest *tr);
 
@@ -259,13 +254,14 @@ static void *lib_manager_vectors[] = {
         (void *) libClose,
         (void *) libExpunge,
         (void *) 0,
-        (void *) -1,
+        (void *) (APTR) -1,
 };
 
 static struct TagItem libmanagerTags[] = {
         {MIT_Name,        (uint32) "__library"},
         {MIT_VectorTable, (uint32) lib_manager_vectors},
         {MIT_Version,     1},
+        {MIT_DataSize,    0},
         {TAG_DONE,        0}
 };
 
@@ -273,23 +269,6 @@ int libReserved(void) {
     __CLIB2->_errno = ENOSYS;
     return -1;
 }
-
-extern struct _clib2 *__getClib2(void);
-#include "clib2_vectors.h"
-
-static struct TagItem mainTags[] = {
-        {MIT_Name,        (uint32) "main"},
-        {MIT_VectorTable, (uint32) main_vectors},
-        {MIT_Version,     1},
-        {TAG_DONE,        0}
-};
-
-/* MLT_INTERFACES array */
-static uint32 libInterfaces[] = {
-        (uint32) libmanagerTags,
-        (uint32) mainTags,
-        0
-};
 
 struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
     libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
@@ -368,19 +347,37 @@ out:
     return NULL;
 }
 
+extern struct _clib2 *__getClib2(void);
+#include "clib2_vectors.h"
+
+static struct TagItem mainTags[] = {
+        {MIT_Name,        (uint32) "main"},
+        {MIT_VectorTable, (uint32) main_vectors},
+        {MIT_Version,     1},
+        {MIT_DataSize,    0},
+        {TAG_DONE,        0}
+};
+
+/* MLT_INTERFACES array */
+static uint32 libInterfaces[] = {
+        (uint32) libmanagerTags,
+        (uint32) mainTags,
+        0
+};
+
 /* CreateLibrary tag list */
 static struct TagItem libCreateTags[] = {
-        {CLT_DataSize,   (uint32)(sizeof(struct Library))},
+        {CLT_DataSize,   (uint32) (sizeof(struct Clib2Base))},
         {CLT_Interfaces, (uint32) libInterfaces},
         {CLT_InitFunc,   (uint32) libInit},
         {TAG_DONE,       0}
 };
 
-const struct Resident RomTag = {
+const struct Resident __attribute__((used)) RomTag = {
         RTC_MATCHWORD,
         (struct Resident *) &RomTag,
         (struct Resident *) &RomTag + 1,
-        RTF_NATIVE | RTF_AUTOINIT | RTF_COLDSTART,
+        RTF_NATIVE | RTF_AUTOINIT,
         VERSION,
         NT_LIBRARY,
         LIBPRI, /* PRI, usually not needed unless you're resident */
