@@ -247,17 +247,7 @@ reent_init(struct _clib2 *__clib2) {
 out:
 
     if (!success) {
-        /* Clean wide status memory */
-        if (__clib2->wide_status) {
-            FreeVec(__clib2->wide_status);
-            __clib2->wide_status = NULL;
-        }
-
-        /* Free library */
-        if (__clib2) {
-            FreeVec(__clib2);
-            __clib2 = NULL;
-        }
+       reent_exit(__clib2);
     }
 }
 

@@ -100,8 +100,6 @@ struct Library *__ElfBase = 0;
 struct TimeRequest *TimeReq = 0;
 struct TimerIFace *ITimer = 0;
 
-struct Clib2IFace *IClib2 = 0;
-
 struct Library *__UtilityBase = 0;
 struct UtilityIFace *__IUtility = 0;
 
@@ -180,16 +178,6 @@ struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
     if (version > VERSION) {
         D(("Wrong version library required"));
         return NULL;
-    }
-
-    if (!IClib2) {
-        IClib2 = (struct Clib2IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
-        IExec->DropInterface((struct Interface *) IClib2);
-    }
-
-    if (0 == libBase->libNode.lib_OpenCnt && VECTORTYPE_ALTIVEC == vectorUnit && IClib2->setjmp == setjmp) {
-        IClib2->setjmp = setjmp_altivec;
-        IClib2->longjmp = longjmp_altivec;
     }
 
     ++libBase->libNode.lib_OpenCnt;
@@ -286,6 +274,7 @@ int libReserved(void) {
     return -1;
 }
 
+extern struct _clib2 *__getClib2(void);
 #include "clib2_vectors.h"
 
 static struct TagItem mainTags[] = {

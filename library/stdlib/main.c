@@ -282,6 +282,7 @@ _main(
 
     /* Pick up the Workbench startup message, if available. */
     this_process = (struct Process *) FindTask(NULL);
+    SHOWPOINTER(this_process);
 
     if (this_process->pr_CLI == ZERO) {
         struct MsgPort *mp = &this_process->pr_MsgPort;
@@ -361,8 +362,8 @@ _main(
     char term_buffer[32] = {0};
     LONG term_len = GetVar("TERM", (STRPTR) term_buffer, 32, 0);
     if (term_len <= 0) {
-        Strlcpy(term_buffer, "amiga-clib2", 5);
-        SetVar("TERM", term_buffer, 5, 0);
+        Strlcpy(term_buffer, "amiga-clib2", 11);
+        SetVar("TERM", term_buffer, 11, 0);
     }
 
     /* The following code will be executed if the program is to keep

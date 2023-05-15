@@ -85,24 +85,22 @@ struct NameTranslationInfo;
 #include <stdarg.h>
 
 struct Clib2IFace {
-    int data[15]; //struct InterfaceData Data;                              //0-60
-
-    unsigned long APICALL (*Obtain)(struct Clib2IFace *Self);               //64
-    unsigned long APICALL (*Release)(struct Clib2IFace *Self);              //68
-    void APICALL (*Expunge)(struct Clib2IFace *Self);                       //72
-    struct Clib2IFace *APICALL (*Clone)(struct Clib2IFace *Self);           //76
-
+    struct InterfaceData Data;                                              //-4/56
+    unsigned long APICALL (*Obtain)(struct Clib2IFace *Self);               //60
+    unsigned long APICALL (*Release)(struct Clib2IFace *Self);              //64
+    void APICALL (*Expunge)(struct Clib2IFace *Self);                       //68
+    struct Clib2IFace *APICALL (*Clone)(struct Clib2IFace *Self);           //72
     /* internal */
-    int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //80
-    struct _clib2 * (* __getClib2)(void);                                   //84
-    void (* internal1)(void);                                               //88
-    void (* __translate_amiga_to_unix_path_name)(void);                     //92
-    void (* __translate_unix_to_amiga_path_name)(void);                     //96
-    void (* internal2)(void);                                               //100
-    void (* __print_termination_message)(const char *termination_message);  //104
-    void (* internal3)(void);                                               //108
-    void (* internal4)(void);                                               //112
-    void (* internal5)(void);                                               //116
+    int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //76
+    struct _clib2 * (* __getClib2)(void);                                   //80
+    void (* internal1)(void);                                               //84
+    void (* __translate_amiga_to_unix_path_name)(void);                     //88
+    void (* __translate_unix_to_amiga_path_name)(void);                     //92
+    void (* internal2)(void);                                               //96
+    void (* __print_termination_message)(const char *termination_message);  //100
+    void (* internal3)(void);                                               //104
+    void (* internal4)(void);                                               //108
+    void (* internal5)(void);                                               //112
 
     /* argz.h */
     error_t (* argz_create) (char *const argv[], char **argz, size_t *argz_len);                                                                     /* 116 */

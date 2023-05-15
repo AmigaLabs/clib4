@@ -12,6 +12,7 @@ __getClib2(void) {
 
     struct _clib2 *r = NULL;
     struct Task *t = FindTask(NULL);
+    SHOWPOINTER(t);
 
     if (NT_PROCESS == t->tc_Node.ln_Type) {
         r = (struct _clib2 *) ((struct Process *) t)->pr_CLibData;

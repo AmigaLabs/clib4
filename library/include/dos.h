@@ -160,8 +160,6 @@ struct _wchar {
  * Initial _clib2 structure. This contains all fields used by current progream
  */
 
-extern struct _clib2 *__getClib2(void);
-
 struct _clib2 {
 	struct ExecIFace *IExec; 	/* Main IExec interface */
 
@@ -492,7 +490,7 @@ struct _clib2 {
 };
 
 #ifndef __getClib2
-struct _clib2 *__getClib2(void) __attribute__((const));
+extern struct _clib2 *__getClib2(void);
 #endif
 #define __CLIB2 __getClib2()
 
