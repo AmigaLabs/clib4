@@ -86,6 +86,12 @@ extern unsigned int NOCOMMON (* __get_default_stack_size)(void);
 extern void _init(void);
 extern void _fini(void);
 
+extern int _main(char *argstr,
+                 int arglen,
+                 int (*start_main)(int, char **),
+                 void (*__EXT_CTOR_LIST__[])(void),
+                 void (*__EXT_DTOR_LIST__[])(void));
+
 #ifndef _STDLIB_PROTOS_H
 #include "stdlib_protos.h"
 #endif /* _STDLIB_PROTOS_H */

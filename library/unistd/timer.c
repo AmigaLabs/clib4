@@ -30,14 +30,23 @@ CLIB_CONSTRUCTOR(timer_init) {
     BOOL success = FALSE;
     struct _clib2 *__clib2 = __CLIB2;
 
-    __clib2->__timer_port = AllocSysObjectTags(ASOT_PORT, ASOPORT_AllocSig, FALSE, ASOPORT_Signal, SIGB_SINGLE, TAG_DONE);
-    if (__clib2->__timer_port == NULL) {
+    __clib2->__timer_port = AllocSysObjectTags(ASOT_PORT,
+                                               ASOPORT_Action, PA_SIGNAL,
+                                               ASOPORT_Target, FindTask(NULL),
+                                               ASOPORT_AllocSig, FALSE,
+                                               ASOPORT_Signal, SIGB_SINGLE,
+                                               TAG_DONE);
+
+        if (__clib2->__timer_port == NULL) {
         __show_error("The timer message port could not be created.");
         goto out;
     }
     SHOWMSG("__clib2->__timer_port allocated");
 
-    __clib2->__timer_request = AllocSysObjectTags(ASOT_MESSAGE, ASOMSG_Size, sizeof(struct TimeRequest), ASOMSG_ReplyPort, __clib2->__timer_port, TAG_DONE);
+    __clib2->__timer_request = AllocSysObjectTags(ASOT_IOREQUEST,
+                                                  ASOMSG_Size, sizeof(struct TimeRequest),
+                                                  ASOMSG_ReplyPort, __clib2->__timer_port,
+                                                  TAG_DONE);
     if (__clib2->__timer_request == NULL) {
         __show_error("The timer I/O request could not be created.");
         goto out;
@@ -48,11 +57,11 @@ CLIB_CONSTRUCTOR(timer_init) {
         __show_error("The timer could not be opened.");
         goto out;
     }
-    SHOWMSG("OpenDevice opened");
+    SHOWMSG("OpenDevice success");
 
-    __clib2->__TimerBase = (struct Library *)__clib2->__timer_request->tr_node.io_Device;
+    __clib2->__TimerBase = (struct Library *) __clib2->__timer_request->tr_node.io_Device;
     SHOWPOINTER(__clib2->__TimerBase);
-    __clib2->__ITimer = (struct TimerIFace *)GetInterface(__clib2->__TimerBase, "main", 1, 0);
+    __clib2->__ITimer = (struct TimerIFace *) GetInterface(__clib2->__TimerBase, "main", 1, 0);
     SHOWPOINTER(__clib2->__ITimer);
     if (__clib2->__ITimer == NULL) {
         SHOWMSG("__clib2->__ITimer is NULL");
@@ -87,7 +96,7 @@ CLIB_DESTRUCTOR(timer_exit) {
         if (__clib2->__timer_request->tr_node.io_Device != NULL)
             CloseDevice((struct IORequest *) __clib2->__timer_request);
 
-        FreeSysObject(ASOT_MESSAGE, __clib2->__timer_request);
+        FreeSysObject(ASOT_IOREQUEST, __clib2->__timer_request);
         __clib2->__timer_request = NULL;
     }
 

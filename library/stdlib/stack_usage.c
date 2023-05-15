@@ -6,26 +6,28 @@
 
 #include "stdlib_headers.h"
 
-static struct StackSwapStruct stack_swap_struct;
-
 #define STACK_FILL_COOKIE 0xA1
 
 void
 __stack_usage_init(struct StackSwapStruct *stk) {
+    struct _clib2 *__clib2 = __CLIB2;
+
     if (stk != NULL) {
         size_t stack_size = ((ULONG) stk->stk_Upper - (ULONG) stk->stk_Lower);
 
         memset(stk->stk_Lower, STACK_FILL_COOKIE, stack_size);
 
-        stack_swap_struct = (*stk);
+        __clib2->stack_swap_struct = (*stk);
     }
 }
 
 void
 __stack_usage_exit(void) {
-    if (stack_swap_struct.stk_Lower != NULL && stack_swap_struct.stk_Upper != 0) {
-        const UBYTE *m = (const UBYTE *) stack_swap_struct.stk_Lower;
-        size_t stack_size = ((ULONG) stack_swap_struct.stk_Upper - (ULONG) stack_swap_struct.stk_Lower);
+    struct _clib2 *__clib2 = __CLIB2;
+
+    if (__clib2->stack_swap_struct.stk_Lower != NULL && __clib2->stack_swap_struct.stk_Upper != 0) {
+        const UBYTE *m = (const UBYTE *) __clib2->stack_swap_struct.stk_Lower;
+        size_t stack_size = ((ULONG) __clib2->stack_swap_struct.stk_Upper - (ULONG) __clib2->stack_swap_struct.stk_Lower);
         size_t total, i;
 
         total = 0;
@@ -41,10 +43,10 @@ __stack_usage_exit(void) {
             total++;
         }
 
-        kprintf("[%s] total amount of stack space used = %ld bytes\n", __CLIB2->__progname, stack_size - total);
+        kprintf("[%s] total amount of stack space used = %ld bytes\n", __clib2->__progname, stack_size - total);
 
-        stack_swap_struct.stk_Lower = NULL;
-        stack_swap_struct.stk_Upper = 0;
+        __clib2->stack_swap_struct.stk_Lower = NULL;
+        __clib2->stack_swap_struct.stk_Upper = 0;
     }
 }
 

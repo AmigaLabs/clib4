@@ -1,6 +1,6 @@
-static void *main_vectors[] = {
-        (void *) (libObtain),
-        (void *) (libRelease),
+static void *clib2Vectors[] = {
+        (void *) (clib2Obtain),
+        (void *) (clib2Release),
         (void *) (NULL),
         (void *) (NULL),
         /* internal */

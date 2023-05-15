@@ -39,8 +39,7 @@ DEBUG_LIB := \
 	debug/kputstr1.o \
 	debug/kputstr2.o \
 	debug/kvprintf1.o \
-	debug/kvprintf2.o \
-	debug/level.o
+	debug/kvprintf2.o
 
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(DEBUG_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(DEBUG_LIB))

@@ -4,8 +4,6 @@
 #include <proto/dos.h>
 #include <debug.h>
 
-extern struct _clib2 *__fallback_clib2;
-
 struct _clib2 *
 __getClib2(void) {
     ENTER();
@@ -19,10 +17,6 @@ __getClib2(void) {
         SHOWPOINTER(r);
     }
 
-    if (!r) {
-        r = __fallback_clib2;
-        SHOWPOINTER(r);
-    }
     RETURN(r);
     return r;
 }

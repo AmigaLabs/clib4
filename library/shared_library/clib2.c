@@ -108,16 +108,8 @@ const struct Resident RomTag;
 #define LIBPRI 100
 #define LIBNAME "clib2.library"
 
-static uint32 vectorUnit;
-
 static struct TimeRequest *openTimer(uint32 unit);
 static void closeTimer(struct TimeRequest *tr);
-
-/* These CTORS/DTORS are clib2's one and they are different than that one received
- * from crtbegin. They are needed because we need to call clib2 constructors as well
- */
-static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
-static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
 int32
 _start(char *args, int arglen, struct ExecBase *sysbase) {
@@ -230,40 +222,22 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
     }
 }
 
-uint32 libObtain(struct LibraryManagerInterface *Self) {
-    if (Self)
-        return ++Self->Data.RefCount;
-    else
-        return 0;
+uint32 clib2Obtain(struct Clib2IFace *Self) {
+    return ++Self->Data.RefCount;
 }
 
 
-uint32 libRelease(struct LibraryManagerInterface *Self) {
-    if (Self)
-        return --Self->Data.RefCount;
-    else
-        return 0;
+uint32 clib2Release(struct Clib2IFace *Self) {
+    return --Self->Data.RefCount;
 }
 
-static void *lib_manager_vectors[] = {
-        (void *) libObtain,
-        (void *) libRelease,
-        (void *) 0,
-        (void *) 0,
-        (void *) libOpen,
-        (void *) libClose,
-        (void *) libExpunge,
-        (void *) 0,
-        (void *) (APTR) -1,
-};
+uint32 libObtain(struct LibraryManagerInterface* Self) {
+	//return ++Self->Data.RefCount;
+}
 
-static struct TagItem libmanagerTags[] = {
-        {MIT_Name,        (uint32) "__library"},
-        {MIT_VectorTable, (uint32) lib_manager_vectors},
-        {MIT_Version,     1},
-        {MIT_DataSize,    0},
-        {TAG_DONE,        0}
-};
+uint32 libRelease(struct LibraryManagerInterface* Self) {
+	//return --Self->Data.RefCount;
+}
 
 int libReserved(void) {
     __CLIB2->_errno = ENOSYS;
@@ -282,8 +256,6 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
 
     SysBase = (struct ExecBase *) iexec->Data.LibBase;
     IExec = iexec;
-
-    iexec->GetCPUInfoTags(GCIT_VectorUnit, &vectorUnit, TAG_DONE);
 
     D(("Open DOS Library"));
     DOSBase = IExec->OpenLibrary("dos.library", MIN_OS_VERSION);
@@ -347,12 +319,32 @@ out:
     return NULL;
 }
 
+static void *libMmanagerVectors[] = {
+        (void *) libObtain,
+        (void *) libRelease,
+        (void *) 0,
+        (void *) 0,
+        (void *) libOpen,
+        (void *) libClose,
+        (void *) libExpunge,
+        (void *) 0,
+        (void *) (APTR) -1,
+};
+
+static struct TagItem libManagerTags[] = {
+        {MIT_Name,        (uint32) "__library"},
+        {MIT_VectorTable, (uint32) libMmanagerVectors},
+        {MIT_Version,     1},
+        {MIT_DataSize,    0},
+        {TAG_DONE,        0}
+};
+
 extern struct _clib2 *__getClib2(void);
 #include "clib2_vectors.h"
 
 static struct TagItem mainTags[] = {
         {MIT_Name,        (uint32) "main"},
-        {MIT_VectorTable, (uint32) main_vectors},
+        {MIT_VectorTable, (uint32) clib2Vectors},
         {MIT_Version,     1},
         {MIT_DataSize,    0},
         {TAG_DONE,        0}
@@ -360,7 +352,7 @@ static struct TagItem mainTags[] = {
 
 /* MLT_INTERFACES array */
 static uint32 libInterfaces[] = {
-        (uint32) libmanagerTags,
+        (uint32) libManagerTags,
         (uint32) mainTags,
         0
 };
@@ -393,7 +385,7 @@ library_start(char *argstr,
               void (*__EXT_CTOR_LIST__[])(void),
               void (*__EXT_DTOR_LIST__[])(void)) {
 
-    int result = _main(argstr, arglen, start_main, __CTOR_LIST__, __DTOR_LIST__, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
+    int result = _main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
 
     return result;
 }

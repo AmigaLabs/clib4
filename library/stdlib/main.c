@@ -38,43 +38,32 @@
 
 #include <proto/elf.h>
 
-struct _clib2 *__fallback_clib2;
+/* These CTORS/DTORS are clib2's one and they are different than that one received
+ * from crtbegin. They are needed because we need to call clib2 constructors as well
+ */
+static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
+static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
 extern int main(int arg_c, char **arg_v);
-
-static void shared_obj_init(struct _clib2 *__clib2);
-static void shared_obj_exit(struct _clib2 *__clib2);
+static void shared_obj_init(struct _clib2 *__clib2, BOOL init);
 
 static void
-shared_obj_exit(struct _clib2 *__clib2) {
-    struct ElfIFace *IElf = __clib2->IElf;
-    ENTER();
-
-    /* If we got what we wanted, trigger the destructors, etc. in the shared objects linked to this binary. */
-    if (__clib2->__dl_elf_handle != NULL) {
-        SHOWMSG("Invoking shared object destructors");
-        InitSHLibs(__clib2->__dl_elf_handle, FALSE);
-    };
-
-    LEAVE();
-}
-
-static void
-shared_obj_init(struct _clib2 *__clib2) {
+shared_obj_init(struct _clib2 *__clib2, BOOL init) {
     ENTER();
 
     struct ElfIFace *IElf = __clib2->IElf;
 
     BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+    Elf32_Handle hSelf = (Elf32_Handle) NULL;
     if (segment_list != ZERO) {
-        int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &__clib2->__dl_elf_handle, TAG_DONE);
+        int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
         if (ret == 1) {
-            if (__clib2->__dl_elf_handle != NULL) {
+            if (hSelf != NULL) {
                 /* Trigger the constructors, etc. in the shared objects linked to this binary. */
-                InitSHLibs(__clib2->__dl_elf_handle, TRUE);
+                InitSHLibs(hSelf, init);
             }
             else {
-                SHOWMSG("__clib2->__dl_elf_handle == NULL!");
+                SHOWMSG("hSelf == NULL!");
             }
         }
         else {
@@ -97,8 +86,7 @@ _start_ctors(void (*__CTOR_LIST__[])(void)) {
     }
     SHOWVALUE(i);
     while (i > 0) {
-        SHOWMSG("Calling ctor");
-        SHOWVALUE(i);
+        D(("Calling ctor %ld", i));
         __CTOR_LIST__[i--]();
     }
 }
@@ -108,8 +96,7 @@ _end_ctors(void (*__DTOR_LIST__[])(void)) {
     int i = 1;
 
     while (__DTOR_LIST__[i]) {
-        SHOWMSG("Calling dtor");
-        SHOWVALUE(i);
+        D(("Calling dtor %ld", i));
         __DTOR_LIST__[i++]();
     }
 }
@@ -133,25 +120,12 @@ call_main(
     }
 
     SHOWMSG("Initialize shared objects");
-    shared_obj_init(__clib2);
+    shared_obj_init(__clib2, TRUE);
 
     SHOWMSG("Now invoking constructors");
     /* Go through the constructor list */
     _start_ctors(__EXT_CTOR_LIST__);
     SHOWMSG("Constructors executed correctly. Calling start_main()");
-
-    /* Set system time for rusage.
-     * This can be executed only here.
-     * Not in reent_init not in TIMER constructor because
-     * __ITimer or __clib2 cannot be yet available
-     */
-    struct TimerIFace *ITimer = __clib2->__ITimer;
-    if (__clib2->__ITimer != NULL) {
-        SHOWMSG("Calling GetSysTime");
-        GetSysTime(&__clib2->clock);
-        /* Generate random seed */
-        __clib2->__random_seed = time(NULL);
-    }
 
     /* Set __current_path_name to a valid value */
     UBYTE current_dir_name[256] = {0};
@@ -238,7 +212,7 @@ out:
     _end_ctors(__EXT_DTOR_LIST__);
 
     SHOWMSG("Close shared objects");
-    shared_obj_exit(__clib2);
+    shared_obj_init(__clib2, FALSE);
 
     SHOWMSG("done.");
 
@@ -267,8 +241,6 @@ _main(
         char *argstr,
         int arglen,
         int (*start_main)(int, char **),
-        void (*__CTOR_LIST__[])(void),
-        void (*__DTOR_LIST__[])(void),
         void (*__EXT_CTOR_LIST__[])(void),
         void (*__EXT_DTOR_LIST__[])(void)) {
     struct WBStartup *volatile startup_message;
@@ -312,20 +284,6 @@ _main(
 
     reent_init(__clib2);
 
-    D(("Initialize __fallback_clib2 structure"));
-    /* Initialize global structure */
-    __fallback_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2),
-            AVT_Type, MEMF_SHARED,
-            AVT_ClearWithValue, 0,
-            TAG_END);
-    if (__fallback_clib2 == NULL)
-        goto out;
-
-    /* Get the current task pointer */
-    __fallback_clib2->self = (struct Process *) FindTask(NULL);
-
-    reent_init(__fallback_clib2);
-
     __clib2->__WBenchMsg = (struct WBStartup *) startup_message;
 
     if (__clib2->__disable_dos_requesters) {
@@ -345,6 +303,19 @@ _main(
     _start_ctors(__CTOR_LIST__);
     D(("Done. All constructors called"));
 
+    /* Set system time for rusage.
+     * This can be executed only here.
+     * Not in reent_init not in TIMER constructor because
+     * __ITimer or __clib2 cannot be yet available
+     */
+    struct TimerIFace *ITimer = __clib2->__ITimer;
+    if (__clib2->__ITimer != NULL) {
+        SHOWMSG("Calling GetSysTime");
+        GetSysTime(&__clib2->clock);
+        /* Generate random seed */
+        __clib2->__random_seed = time(NULL);
+    }
+
     /* If a callback was provided which can fill us in on which
        minimum stack size should be used, invoke it now and
        store its result in the global __stack_size variable. */
@@ -358,7 +329,7 @@ _main(
     current_stack_size = get_stack_size();
 
     DECLARE_UTILITYBASE();
-    /* Set default terminal mode to "amiga" if not set */
+    /* Set default terminal mode to "amiga-clib2" if not set */
     char term_buffer[32] = {0};
     LONG term_len = GetVar("TERM", (STRPTR) term_buffer, 32, 0);
     if (term_len <= 0) {
@@ -428,9 +399,6 @@ out:
 
     SHOWMSG("Calling reent_exit on _clib2");
     reent_exit(__clib2);
-
-    SHOWMSG("Calling reent_exit on __fallback_clib2");
-    reent_exit(__fallback_clib2);
 
     this_process->pr_CLibData = oldClibData;
 

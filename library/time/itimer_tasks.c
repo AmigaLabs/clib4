@@ -30,7 +30,7 @@ int itimer_real_task() {
     BOOL Success = FALSE;
 
     struct Process *thisTask = (struct Process *) FindTask(NULL);
-    struct itimer *_itimer = (struct itimer *)thisTask->pr_Task.tc_UserData;
+    struct itimer *_itimer = (struct itimer *) thisTask->pr_Task.tc_UserData;
 
     struct _clib2 *__clib2 = _itimer->__clib2;
     timertype = _itimer->which;
@@ -51,11 +51,14 @@ int itimer_real_task() {
     if (!tmr_real_mp) {
         goto out;
     }
-    tmr_real_tr = AllocSysObjectTags(ASOT_IOREQUEST, ASOIOR_ReplyPort, tmr_real_mp, ASOIOR_Size, sizeof(struct TimeRequest), TAG_END);
+    tmr_real_tr = AllocSysObjectTags(ASOT_IOREQUEST,
+                                     ASOIOR_ReplyPort, tmr_real_mp,
+                                     ASOIOR_Size, sizeof(struct TimeRequest),
+                                     TAG_END);
     if (!tmr_real_tr) {
         goto out;
     }
-    if (OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *)tmr_real_tr, 0) != OK) {
+    if (OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *) tmr_real_tr, 0) != OK) {
         goto out;
     }
 
@@ -92,8 +95,7 @@ int itimer_real_task() {
 
             tmr_real_tr->Time.Seconds = __clib2->tmr_time.it_value.tv_sec;
             tmr_real_tr->Time.Microseconds = __clib2->tmr_time.it_value.tv_usec;
-        }
-        else {
+        } else {
             if (CheckIO((struct IORequest *) tmr_real_tr))
                 WaitIO((struct IORequest *) tmr_real_tr);
 
@@ -124,7 +126,7 @@ out:
     }
     if (tmr_real_tr) {
         if (tmr_real_tr->Request.io_Device != NULL)
-            CloseDevice((struct IORequest *)tmr_real_tr);
+            CloseDevice((struct IORequest *) tmr_real_tr);
         FreeSysObject(ASOT_IOREQUEST, tmr_real_tr);
         tmr_real_tr = NULL;
     }
