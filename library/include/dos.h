@@ -488,11 +488,9 @@ struct _clib2 {
     int __root_euid;
     int __root_egid;
 
-#ifdef DEBUG
     int indent_level;
     int __debug_level;
     int previous_debug_level;
-#endif
 
 #ifndef NDEBUG
     struct StackSwapStruct stack_swap_struct;

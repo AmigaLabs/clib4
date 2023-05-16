@@ -242,11 +242,10 @@ reent_init(struct _clib2 *__clib2) {
     __clib2->__root_euid = 0;
     __clib2->__root_egid = 0;
 
-#ifdef DEBUG
+    /* Default debug levels */
     __clib2->indent_level = 0;
     __clib2->previous_debug_level = -1;
     __clib2->__debug_level = 2;
-#endif
 
     success = TRUE;
 

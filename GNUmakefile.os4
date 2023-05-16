@@ -216,12 +216,12 @@ $(OUTPUT_LIB)/crt0.o : $(LIB_DIR)/crt0.S
 	$(VERBOSE)$(ASSEMBLE)
 	-$(COPY) $(OUTPUT_LIB)/crt0.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtbegin.o : CFLAGS = -mcrt=clib2 $(OPTIONS) -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtbegin.o : CFLAGS = -mcrt=clib2 $(OPTIONS) $(INCLUDES) -O0 -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtend.o : CFLAGS = -mcrt=clib2 -O0 $(OPTIONS) -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtend.o : CFLAGS = -mcrt=clib2 -O0 $(OPTIONS) $(INCLUDES) -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtend.o $(INSTALL_PREFIX)/lib/

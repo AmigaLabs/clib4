@@ -1,8 +1,5 @@
 /*
  * $Id: time_getitimer.c,v 1.0 2022-03-14 18:06:24 clib2devs Exp $
- *
-
- *
  */
 
 #ifndef _STDLIB_HEADERS_H
@@ -14,8 +11,7 @@
 #endif /* _TIME_HEADERS_H */
 
 static int
-timeval_subtract(struct timeval *result, struct timeval *x,struct timeval  *y)
-{
+timeval_subtract(struct timeval *result, struct timeval *x, struct timeval *y) {
     /* Perform the carry for the later subtraction by updating y. */
     if (x->tv_usec < y->tv_usec) {
         int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
@@ -51,17 +47,16 @@ getitimer(int which, struct itimerval *curr_value) {
     }
 
     switch (which) {
-        case ITIMER_REAL:
-            {
-                struct timeval tv, result;
-                /* Get current time of day */
-                gettimeofday(&tv, NULL);
-                timeval_subtract(&result, &tv, &__clib2->tmr_start_time);
-                curr_value->it_value.tv_sec = result.tv_sec;
-                curr_value->it_value.tv_usec = result.tv_usec;
-                curr_value->it_interval.tv_sec = __clib2->tmr_time.it_interval.tv_sec;
-                curr_value->it_interval.tv_usec = __clib2->tmr_time.it_interval.tv_usec;
-            }
+        case ITIMER_REAL: {
+            struct timeval tv, result;
+            /* Get current time of day */
+            gettimeofday(&tv, NULL);
+            timeval_subtract(&result, &tv, &__clib2->tmr_start_time);
+            curr_value->it_value.tv_sec = result.tv_sec;
+            curr_value->it_value.tv_usec = result.tv_usec;
+            curr_value->it_interval.tv_sec = __clib2->tmr_time.it_interval.tv_sec;
+            curr_value->it_interval.tv_usec = __clib2->tmr_time.it_interval.tv_usec;
+        }
             break;
         case ITIMER_VIRTUAL:
             __set_errno(ENOSYS);
