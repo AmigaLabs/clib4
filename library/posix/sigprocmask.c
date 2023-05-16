@@ -9,6 +9,7 @@
 int
 sigprocmask(int how, const sigset_t *set, sigset_t *oset) {
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -24,7 +25,7 @@ sigprocmask(int how, const sigset_t *set, sigset_t *oset) {
     }
 
     if (oset != NULL)
-        (*oset) = __signals_blocked;
+        (*oset) = __clib2->__signals_blocked;
 
     if (set != NULL) {
         SHOWVALUE(*set);
@@ -34,21 +35,21 @@ sigprocmask(int how, const sigset_t *set, sigset_t *oset) {
 
                 SHOWMSG("SIG_BLOCK");
 
-                __signals_blocked |= (*set);
+                __clib2->__signals_blocked |= (*set);
                 break;
 
             case SIG_UNBLOCK:
 
                 SHOWMSG("SIG_UNBLOCK");
 
-                __signals_blocked &= ~(*set);
+                __clib2->__signals_blocked &= ~(*set);
                 break;
 
             case SIG_SETMASK:
 
                 SHOWMSG("SIG_SETMASK");
 
-                __signals_blocked = (*set);
+                __clib2->__signals_blocked = (*set);
                 break;
         }
     }

@@ -11,67 +11,58 @@
 #endif /* _LOCALE_HEADERS_H */
 
 size_t
-strxfrm(char *dest, const char *src, size_t len)
-{
-	DECLARE_LOCALEBASE();
-	size_t result = 0;
+strxfrm(char *dest, const char *src, size_t len) {
+    DECLARE_LOCALEBASE();
+    size_t result = 0;
+    struct _clib2 *__clib2 = __CLIB2;
 
-	ENTER();
+    ENTER();
 
-	SHOWPOINTER(dest);
-	SHOWSTRING(src);
-	SHOWVALUE(len);
+    SHOWPOINTER(dest);
+    SHOWSTRING(src);
+    SHOWVALUE(len);
 
-	assert(src != NULL);
+    assert(src != NULL);
 
-    if (src == NULL)
-    {
+    if (src == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	__locale_lock();
+    __locale_lock(__clib2);
 
-	if (__locale_table[LC_COLLATE] != NULL)
-	{
-		assert(LocaleBase != NULL);
+    if (__clib2->__locale_table[LC_COLLATE] != NULL) {
+        assert(LocaleBase != NULL);
 
-		result = StrConvert(__locale_table[LC_COLLATE], (STRPTR)src, dest, len, SC_COLLATE1);
-	}
-	else
-	{
-		if (len > 0 && dest != NULL)
-		{
-			char c;
+        result = StrConvert(__clib2->__locale_table[LC_COLLATE], (STRPTR) src, dest, len, SC_COLLATE1);
+    } else {
+        if (len > 0 && dest != NULL) {
+            char c;
 
-			result = 0;
+            result = 0;
 
-			while ((c = (*src++)) != '\0')
-			{
-				result++;
+            while ((c = (*src++)) != '\0') {
+                result++;
 
-				if (len > 0)
-				{
-					len--;
+                if (len > 0) {
+                    len--;
 
-					(*dest++) = c;
-				}
-			}
+                    (*dest++) = c;
+                }
+            }
 
-			(*dest) = '\0';
-		}
-		else
-		{
-			result = strlen(src);
-		}
-	}
+            (*dest) = '\0';
+        } else {
+            result = strlen(src);
+        }
+    }
 
-	__locale_unlock();
+    __locale_unlock(__clib2);
 
 out:
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

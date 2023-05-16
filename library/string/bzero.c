@@ -20,12 +20,13 @@ bzero(void *m, size_t len) {
     ENTER();
     SHOWPOINTER(m);
     SHOWVALUE(len);
+    struct _clib2 *__clib2 = __CLIB2;
 
     DECLARE_UTILITYBASE();
 
-    if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
+    if (__clib2->__optimizedCPUFunctions) {
         /* Check if we have altivec enabled */
-        if (__global_clib2->hasAltivec) {
+        if (__clib2->hasAltivec) {
             vec_bzero(m, len);
         }
         else {

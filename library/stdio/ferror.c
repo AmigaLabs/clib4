@@ -12,6 +12,7 @@ int
 ferror(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -29,7 +30,7 @@ ferror(FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(file));
+    assert(__is_valid_iob(__clib2, file));
 
     flockfile(stream);
 

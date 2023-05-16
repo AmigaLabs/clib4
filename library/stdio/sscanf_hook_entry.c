@@ -7,7 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int64_t
-__sscanf_hook_entry(struct iob *string_iob, struct file_action_message *fam) {
+__sscanf_hook_entry(struct _clib2 *__clib2, struct iob *string_iob, struct file_action_message *fam) {
     int64_t result = EOF;
     int64_t num_bytes;
 

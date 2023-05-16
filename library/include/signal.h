@@ -67,7 +67,7 @@ typedef _sig_func_ptr sighandler_t; /* glibc naming */
 
 /****************************************************************************/
 
-extern void (*signal(int sig, void (*)(int)))(int);
+extern _sig_func_ptr signal (int, _sig_func_ptr);;
 extern int raise(int sig);
 
 typedef int sig_atomic_t;

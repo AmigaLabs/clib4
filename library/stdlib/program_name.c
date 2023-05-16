@@ -14,16 +14,13 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-static BOOL free_program_name;
-char *NOCOMMON __program_name;
-
 STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 	ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
-	if (free_program_name && __program_name != NULL)
-	{
-		FreeVec(__program_name);
-		__program_name = NULL;
+    if (__clib2->free_program_name && __clib2->__progname != NULL) {
+		FreeVec(__clib2->__progname);
+        __clib2->__progname = NULL;
 	}
 
 	LEAVE();
@@ -31,24 +28,25 @@ STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 /* First constructor called by _init */
 STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
 	BOOL success = FALSE;
+    struct _clib2 *__clib2 = __CLIB2;
 
-	ENTER();
+    ENTER();
 
-	if (__WBenchMsg == NULL) {
+	if (__clib2->__WBenchMsg == NULL) {
 		const size_t program_name_size = 256;
 
 		/* Make a copy of the current command name string. */
-		__program_name = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_SHARED, TAG_DONE);
-		if (__program_name == NULL)
+        __clib2->__progname = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_SHARED, TAG_DONE);
+		if (__clib2->__progname == NULL)
 			goto out;
 
-		free_program_name = TRUE;
+        __clib2->free_program_name = TRUE;
 
-		if (CANNOT GetCliProgramName(__program_name, program_name_size))
+		if (CANNOT GetCliProgramName(__clib2->__progname, program_name_size))
 			goto out;
 	}
 	else {
-		__program_name = (char *)__WBenchMsg->sm_ArgList[0].wa_Name;
+        __clib2->__progname = (char *) __clib2->__WBenchMsg->sm_ArgList[0].wa_Name;
 	}
 
 	success = TRUE;
@@ -62,4 +60,9 @@ out:
 		CONSTRUCTOR_SUCCEED();
 	else
 		CONSTRUCTOR_FAIL();
+}
+
+
+const char *__getprogname(void) {
+    return __CLIB2->__progname;
 }

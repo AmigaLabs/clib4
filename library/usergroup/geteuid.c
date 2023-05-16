@@ -12,27 +12,20 @@
 #undef geteuid
 #endif /* geteuid */
 
-/****************************************************************************/
+uid_t geteuid(void) {
+    uid_t result;
+    struct _clib2 *__clib2 = __CLIB2;
 
-uid_t geteuid(void)
-{
-	uid_t result;
+    ENTER();
 
-	ENTER();
-
-	assert(__UserGroupBase != NULL);
-
-	if (__root_mode)
-	{
-		result = __root_euid;
-	}
-	else
-	{
-		result = __geteuid();
-	}
+    if (__clib2->__root_mode) {
+        result = __clib2->__root_euid;
+    } else {
+        result = __geteuid();
+    }
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

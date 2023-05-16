@@ -7,18 +7,18 @@
 #endif /* _SIGNAL_HEADERS_H */
 
 int
-sigblock(int signal_mask)
-{
-	int result;
+sigblock(int signal_mask) {
+    int result;
+    struct _clib2 *__clib2 = __CLIB2;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(signal_mask);
+    SHOWVALUE(signal_mask);
 
-	result = __signals_blocked;
+    result = __clib2->__signals_blocked;
 
-	__signals_blocked |= signal_mask;
+    __clib2->__signals_blocked |= signal_mask;
 
-	RETURN(result);
-	return(result);
+    RETURN(result);
+    return (result);
 }

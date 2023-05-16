@@ -40,8 +40,6 @@ static char *print_dname(const char *, char *, size_t);
 
 static void
 usage(void) {
-    extern const char *__program_name;
-
     fprintf(stderr, "usage: %s [-deq] [-t type] [host...]\n", __program_name);
 
     exit(1);

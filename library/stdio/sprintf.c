@@ -13,10 +13,11 @@ sprintf(char *s, const char *format, ...) {
 
     ENTER();
 
-    SHOWPOINTER(s);
-    SHOWSTRING(format);
-
     assert(s != NULL && format != NULL);
+
+    SHOWPOINTER(s);
+    SHOWMSG(s);
+    SHOWSTRING(format);
 
     __check_abort();
 

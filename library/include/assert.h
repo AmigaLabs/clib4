@@ -18,6 +18,7 @@ extern void __assertion_failure(const char *file_name, int line_number, const ch
     ((void)((expression) ? 0 : (__assertion_failure(__FILE__,__LINE__,#expression),0)))
 
 #else
+inline void __assertion_failure(const char *file_name, int line_number, const char *expression) {};
 #define assert(expression) ((void)0)
 #endif /* NDEBUG */
 #endif /* assert */

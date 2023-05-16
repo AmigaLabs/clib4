@@ -15,6 +15,7 @@ fclose(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     struct file_action_message fam;
     int result = OK;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -35,7 +36,7 @@ fclose(FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(file));
+    assert(__is_valid_iob(__clib2, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -49,7 +50,7 @@ fclose(FILE *stream) {
     }
 
     /* Push back any buffered data to the stream. */
-    if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(file) < 0)
+    if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib2, file) < 0)
         result = EOF;
 
     /* Make sure that the stream is closed. */
@@ -59,7 +60,7 @@ fclose(FILE *stream) {
 
     assert(file->iob_Action != NULL);
 
-    if ((*file->iob_Action)(file, &fam) < 0 && result != EOF) {
+    if ((*file->iob_Action)(__clib2, file, &fam) < 0 && result != EOF) {
         result = EOF;
 
         __set_errno(fam.fam_Error);

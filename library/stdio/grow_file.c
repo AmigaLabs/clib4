@@ -23,6 +23,7 @@ __grow_file_size(struct fd *fd, int num_bytes)
 	_off64_t current_position;
 	int alignment_skip;
 	int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
 	assert(fd != NULL);
 
@@ -50,9 +51,8 @@ __grow_file_size(struct fd *fd, int num_bytes)
 	/* Allocate a little more memory than required to allow for
 	 * the buffer to be aligned to a cache line boundary.
 	 */
-	buffer = malloc((size_t)buffer_size + (__cache_line_size - 1));
-	if (buffer == NULL)
-	{
+	buffer = malloc((size_t)buffer_size + (__clib2->__cache_line_size - 1));
+	if (buffer == NULL) {
 		SHOWMSG("not enough memory for write buffer");
 
 		SetIoErr(ERROR_NO_FREE_STORE);
@@ -60,7 +60,7 @@ __grow_file_size(struct fd *fd, int num_bytes)
 	}
 
 	/* Align the buffer to a cache line boundary. */
-	aligned_buffer = (unsigned char *)(((ULONG)(buffer + (__cache_line_size - 1))) & ~(__cache_line_size - 1));
+	aligned_buffer = (unsigned char *)(((ULONG)(buffer + (__clib2->__cache_line_size - 1))) & ~(__clib2->__cache_line_size - 1));
 
 	memset(aligned_buffer, 0, (size_t)buffer_size);
 

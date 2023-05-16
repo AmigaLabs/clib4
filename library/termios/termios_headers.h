@@ -19,8 +19,8 @@
 
 /****************************************************************************/
 
-extern int64_t __termios_console_hook(struct fd *,struct file_action_message *);
-extern int64_t __termios_serial_hook(struct fd *,struct file_action_message *);
+extern int64_t __termios_console_hook(struct _clib2 *__clib2, struct fd *,struct file_action_message *);
+extern int64_t __termios_serial_hook(struct _clib2 *__clib2, struct fd *,struct file_action_message *);
 extern struct termios *__get_termios(struct fd *, BOOL);
 extern int openserial(const char *device_name,int unit,int mode);
 

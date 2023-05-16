@@ -6,23 +6,16 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
 #ifdef endpwent
 #undef endpwent
 #endif /* endpwent */
 
-/****************************************************************************/
+void endpwent(void) {
+    ENTER();
 
-void endpwent(void)
-{
-	ENTER();
-
-	assert(__UserGroupBase != NULL);
-
-	__endpwent();
+    __endpwent();
 
     __check_abort();
 
-	LEAVE();
+    LEAVE();
 }

@@ -9,7 +9,10 @@
 
 __BEGIN_DECLS
 
-extern int errno;
+#define errno (*__errno())
+extern int *__errno(void);
+#define h_errno (*__h_errno())
+extern int *__h_errno (void);
 
 #define EPERM			1	/* Operation not permitted */
 #define ENOENT			2	/* No such file or directory */

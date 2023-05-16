@@ -173,10 +173,6 @@ C_MATH := \
 	math/inff.o \
 	math/init_exit.o \
 	math/invtrig.o \
-	math/isinf.o \
-	math/isfinite.o \
-	math/isnan.o \
-	math/isnormal.o \
     math/j0.o \
     math/j0f.o \
     math/j1.o \
@@ -294,28 +290,29 @@ C_MATH := \
 	math/truncl.o
 
 MATH_LIB := \
-	$(C_MATH) \
-	m.lib_rev.o
+	math/m.lib_rev.o
 
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(MATH_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(MATH_LIB))
 
+OBJ_C_LIB  += $(addprefix $(OUT_SHARED_LIB)/, $(C_MATH))
+
 # Dependencies to rebuild if the library version changes
 
-$(OUT_STATIC)/m.lib_rev.o : $(LIB_DIR)/m.lib_rev.c $(LIB_DIR)/m.lib_rev.h
-$(OUT_SHARED)/m.lib_rev.o : $(LIB_DIR)/m.lib_rev.c $(LIB_DIR)/m.lib_rev.h
+$(OUT_STATIC)/math/m.lib_rev.o : $(LIB_DIR)/math/m.lib_rev.c $(LIB_DIR)/math/m.lib_rev.h
+$(OUT_SHARED)/math/m.lib_rev.o : $(LIB_DIR)/math/m.lib_rev.c $(LIB_DIR)/math/m.lib_rev.h
 
-$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(OUT_STATIC)/math/m.lib_rev.o : CFLAGS += $(LARGEDATA)
+$(OUT_SHARED)/math/m.lib_rev.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+$(OUT_STATIC)/math/m.lib_rev.o : $(LIB_DIR)/math/m.lib_rev.c
 	$(VERBOSE)$(COMPILE)
 
-$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/math/m.lib_rev.o : $(LIB_DIR)/math/m.lib_rev.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
 $(BUILD_DIR)/lib/libm.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libm.so : $(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
+$(BUILD_DIR)/lib/libm.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

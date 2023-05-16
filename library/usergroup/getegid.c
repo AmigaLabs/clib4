@@ -12,27 +12,20 @@
 #undef getegid
 #endif /* getegid */
 
-/****************************************************************************/
+gid_t getegid(void) {
+    gid_t result;
+    struct _clib2 *__clib2 = __CLIB2;
 
-gid_t getegid(void)
-{
-	gid_t result;
+    ENTER();
 
-	ENTER();
-
-	assert(__UserGroupBase != NULL);
-
-	if (__root_mode)
-	{
-		result = __root_egid;
-	}
-	else
-	{
-		result = __getegid();
-	}
+    if (__clib2->__root_mode) {
+        result = __clib2->__root_egid;
+    } else {
+        result = __getegid();
+    }
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

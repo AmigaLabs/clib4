@@ -10,29 +10,23 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-/* If the program's current directory was changed, here is where
-   we find out about it. */
-BPTR NOCOMMON __original_current_directory;
-BOOL NOCOMMON __current_directory_changed;
-BOOL NOCOMMON __unlock_current_directory;
-
-CLIB_DESTRUCTOR(__chdir_exit)
-{
+CLIB_DESTRUCTOR(__chdir_exit) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
-    if (__current_directory_changed) {
+    if (__clib2->__current_directory_changed) {
         BPTR old_dir;
 
-        old_dir = CurrentDir(__original_current_directory);
-        __original_current_directory = ZERO;
+        old_dir = CurrentDir(__clib2->__original_current_directory);
+        __clib2->__original_current_directory = ZERO;
 
-        if (__unlock_current_directory) {
+        if (__clib2->__unlock_current_directory) {
             UnLock(old_dir);
 
-            __unlock_current_directory = FALSE;
+            __clib2->__unlock_current_directory = FALSE;
         }
 
-        __current_directory_changed = FALSE;
+        __clib2->__current_directory_changed = FALSE;
     }
 
     LEAVE();

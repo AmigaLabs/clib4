@@ -9,6 +9,7 @@
 int
 __set_current_path(const char *path_name) {
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     SHOWSTRING(path_name);
 
@@ -16,7 +17,7 @@ __set_current_path(const char *path_name) {
 
     assert(path_name != NULL);
 
-    if (strlen(path_name) + 1 > sizeof(__current_path_name)) {
+    if (strlen(path_name) + 1 > sizeof(__clib2->__current_path_name)) {
         SHOWMSG("path is too long");
 
         __set_errno(ENAMETOOLONG);
@@ -24,16 +25,16 @@ __set_current_path(const char *path_name) {
     }
 
     /* Only store the path if it's absolute. */
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '/')
-            strcpy(__current_path_name, path_name);
+            strcpy(__clib2->__current_path_name, path_name);
         else
-            strcpy(__current_path_name, "");
+            strcpy(__clib2->__current_path_name, "");
     } else {
         if (strchr(path_name, ':'))
-            strcpy(__current_path_name, path_name);
+            strcpy(__clib2->__current_path_name, path_name);
         else
-            strcpy(__current_path_name, "");
+            strcpy(__clib2->__current_path_name, "");
 
     }
 

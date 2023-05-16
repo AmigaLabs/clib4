@@ -6,39 +6,33 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-int getgroups(int ngroups, gid_t *groups)
-{
-	int result = ERROR;
+int getgroups(int ngroups, gid_t *groups) {
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWVALUE(ngroups);
-	SHOWPOINTER(groups);
+    SHOWVALUE(ngroups);
+    SHOWPOINTER(groups);
 
-	assert(ngroups == 0 || groups != NULL);
-	assert(__UserGroupBase != NULL);
+    assert(ngroups == 0 || groups != NULL);
 
-    if (ngroups != 0 && groups == NULL)
-    {
+    if (ngroups != 0 && groups == NULL) {
         SHOWMSG("invalid groups parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	if (ngroups > 0)
-	{
-		result = __getgroups(ngroups, (LONG *)groups);
-	}
-	else
-	{
-		result = OK;
-	}
+    if (ngroups > 0) {
+        result = __getgroups(ngroups, (LONG *) groups);
+    } else {
+        result = OK;
+    }
 
 out:
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

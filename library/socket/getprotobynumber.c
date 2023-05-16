@@ -12,7 +12,7 @@ getprotobynumber(int proto) {
 
     ENTER();
 
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     result = __getprotobynumber(proto);
 

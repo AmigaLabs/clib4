@@ -7,7 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-__fill_iob_read_buffer(struct iob *file) {
+__fill_iob_read_buffer(struct _clib2 *__clib2, struct iob *file) {
     struct file_action_message fam;
     int num_bytes_read;
     int result = ERROR;
@@ -38,7 +38,7 @@ __fill_iob_read_buffer(struct iob *file) {
 
     assert(file->iob_Action != NULL);
 
-    num_bytes_read = (*file->iob_Action)(file, &fam);
+    num_bytes_read = (*file->iob_Action)(__clib2, file, &fam);
     if (num_bytes_read == EOF) {
         D(("got error %ld", fam.fam_Error));
 

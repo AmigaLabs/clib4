@@ -58,16 +58,14 @@ out:
     return (result);
 }
 
-/* Don't remove aligned otherwise you could have bad things on exit */
-static struct AnchorPath *anchor __attribute__ ((aligned));
-
 CLIB_DESTRUCTOR(__wildcard_expand_exit) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
-    if (anchor != NULL) {
-        MatchEnd(anchor);
-        FreeDosObject(DOS_ANCHORPATH, anchor);
-        anchor = NULL;
+    if (__clib2->anchor != NULL) {
+        MatchEnd(__clib2->anchor);
+        FreeDosObject(DOS_ANCHORPATH, __clib2->anchor);
+        __clib2->anchor = NULL;
     }
 
     LEAVE();
@@ -79,7 +77,7 @@ struct name_node {
     BOOL nn_wild;
 };
 
-STATIC int
+static int
 compare(const char **a, const char **b) {
     return (strcmp((*a), (*b)));
 }
@@ -97,6 +95,7 @@ int __wildcard_expand_init(void) {
     char **argv;
     int error;
     int i;
+    struct _clib2 *__clib2 = __CLIB2;
 
     /* Disable dos.library requesters during pattern matching below. We
        do this so early in order to make it easier to reset the window
@@ -104,17 +103,17 @@ int __wildcard_expand_init(void) {
     old_window_pointer = __set_process_window((APTR) - 1);
 
     /* No work to be done? */
-    if (__argc == 0 || __argv == NULL) {
+    if (__clib2->__argc == 0 || __clib2->__argv == NULL) {
         error = OK;
         goto out;
     }
 
-    argc = __argc;
-    argv = __argv;
+    argc = __clib2->__argc;
+    argv = __clib2->__argv;
 
     ap = AllocDosObjectTags(DOS_ANCHORPATH,
                             ADO_Strlen, 2 * MAXPATHLEN,
-                            ADO_Mask, (__check_abort_enabled) ? __break_signal_mask : 0,
+                            ADO_Mask, (__clib2->__check_abort_enabled) ? __clib2->__break_signal_mask : 0,
                             TAG_END);
 
     if (ap == NULL) {
@@ -123,7 +122,7 @@ int __wildcard_expand_init(void) {
     }
 
     /* This may have to be cleaned up later. */
-    anchor = ap;
+    __clib2->anchor = ap;
 
     /* The argument list will go in here. */
     NewList((struct List *) &argument_list);
@@ -200,7 +199,7 @@ int __wildcard_expand_init(void) {
                     if (rc == ERROR_BREAK) {
                         __set_process_window(old_window_pointer);
 
-                        SetSignal(__break_signal_mask, __break_signal_mask);
+                        SetSignal(__clib2->__break_signal_mask, __clib2->__break_signal_mask);
                         __check_abort();
 
                         old_window_pointer = __set_process_window((APTR) - 1);
@@ -282,8 +281,8 @@ int __wildcard_expand_init(void) {
             goto out;
         }
 
-        __argc = argument_list_size;
-        __argv = table;
+        __clib2->__argc = argument_list_size;
+        __clib2->__argv = table;
 
         /* Fill in the table, sorting the wildcard matches. */
         last_wild = 0;
@@ -353,15 +352,15 @@ out:
     if (ap != NULL) {
         MatchEnd(ap);
 
-        FreeDosObject(DOS_ANCHORPATH, anchor);
+        FreeDosObject(DOS_ANCHORPATH, __clib2->anchor);
     }
 
-    anchor = NULL;
+    __clib2->anchor = NULL;
 
     if (error != OK) {
         __set_errno(error);
 
-        perror(__argv[0]);
+        perror(__clib2->__argv[0]);
         abort();
     }
 

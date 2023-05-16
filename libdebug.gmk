@@ -1,0 +1,74 @@
+#
+# $Id: libdebug.gmk,v 1.0 2022-07-09 10:09:48 clib2devs Exp $
+#
+
+OUT_STATIC := $(BUILD_DIR)/obj/libdebug
+OUT_SHARED := $(BUILD_DIR)/obj.shared/libdebug
+
+ifeq ($(SHARED),yes)
+    LIBS += $(OUTPUT_LIB)/libdebug.so
+endif
+ifeq ($(STATIC),yes)
+    LIBS += $(OUTPUT_LIB)/libdebug.a
+endif
+
+DEBUG_LIB := \
+	debug/cmpstrexec.o \
+	debug/debug.o \
+	debug/kcmpstr.o \
+	debug/kdofmt.o \
+	debug/kgetc.o \
+	debug/kgetch1.o \
+	debug/kgetch2.o \
+	debug/kgetchar1.o \
+	debug/kgetchar2.o \
+	debug/kgetnum1.o \
+	debug/kgetnum2.o \
+	debug/kmaygetch.o \
+	debug/kmaygetchar.o \
+	debug/kprintf1.o \
+	debug/kprintf2.o \
+	debug/kputc.o \
+	debug/kputch1.o \
+	debug/kputch2.o \
+	debug/kputchar1.o \
+	debug/kputchar2.o \
+	debug/kputfmt.o \
+	debug/kputs1.o \
+	debug/kputs2.o \
+	debug/kputstr1.o \
+	debug/kputstr2.o \
+	debug/kvprintf1.o \
+	debug/kvprintf2.o
+
+SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(DEBUG_LIB))
+SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(DEBUG_LIB))
+
+# Dependencies to rebuild if the library version changes
+
+$(OUT_STATIC)/debug/debug.lib_rev.o : $(LIB_DIR)/debug/debug.lib_rev.c $(LIB_DIR)/debug/debug.lib_rev.h
+$(OUT_SHARED)/debug/debug.lib_rev.o : $(LIB_DIR)/debug/debug.lib_rev.c $(LIB_DIR)/debug/debug.lib_rev.h
+
+$(OUT_STATIC)/%.o : CFLAGS += -Wno-missing-braces $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += -Wno-missing-braces $(PIC) $(LARGEDATA)
+
+$(OUT_STATIC)/debug/debug.lib_rev.o : $(LIB_DIR)/debug/debug.lib_rev.c
+	$(VERBOSE)$(COMPILE)
+
+$(OUT_SHARED)/debug/debug.lib_rev.o : $(LIB_DIR)/debug/debug.lib_rev.c
+	$(VERBOSE)$(COMPILE_SHARED)
+
+$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
+$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE)
+
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SHARED)
+
+$(BUILD_DIR)/lib/libdebug.a : $(SOURCES_STATIC)
+	$(VERBOSE)$(MAKELIB)
+
+$(BUILD_DIR)/lib/libdebug.so :$(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
+	$(VERBOSE)$(MAKESHARED)

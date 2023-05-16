@@ -6,21 +6,16 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
 struct group *
-getgrgid(gid_t gid)
-{
-	struct group *result;
+getgrgid(gid_t gid) {
+    struct group *result;
 
-	ENTER();
+    ENTER();
 
-	assert(__UserGroupBase != NULL);
-
-	result = __getgrgid((LONG)gid);
+    result = __getgrgid((LONG) gid);
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

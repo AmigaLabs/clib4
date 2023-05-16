@@ -9,10 +9,9 @@
 /****************************************************************************/
 
 void
-__restore_path_name(char const ** name_ptr,struct name_translation_info * nti)
-{
-	assert( name_ptr != NULL && (*name_ptr) != NULL && nti != NULL );
+__restore_path_name(char const **name_ptr, struct name_translation_info *nti) {
+    assert(name_ptr != NULL && (*name_ptr) != NULL && nti != NULL);
 
-	/* Reset the name pointer to its previous position. */
-	(*name_ptr) = nti->original_name;
+    /* Reset the name pointer to its previous position. */
+    (*name_ptr) = nti->original_name;
 }

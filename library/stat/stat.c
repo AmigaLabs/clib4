@@ -21,6 +21,7 @@ stat(const char *path_name, struct stat *st) {
     struct Lock *fl;
     int result = ERROR;
     BPTR file_lock = ZERO;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -38,7 +39,7 @@ stat(const char *path_name, struct stat *st) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 

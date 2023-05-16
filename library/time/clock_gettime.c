@@ -10,12 +10,10 @@
 #include "timezone_headers.h"
 #endif /* _TIMEZONE_HEADERS_H */
 
-extern struct TimerIFace *NOCOMMON __ITimer;
-extern BOOL NOCOMMON __timer_busy;
-
 int
 clock_gettime(clockid_t clk_id, struct timespec *t) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
     /* Check the supported flags.  */
     if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME)) != 0) {
@@ -24,14 +22,14 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
         return -1;
     }
 
-    if (__timer_busy) {
+    if (__clib2->__timer_busy) {
         __set_errno(EAGAIN);
         RETURN(-1);
         return -1;
     }
 
     DECLARE_TIMEZONEBASE();
-    struct TimerIFace *ITimer = __ITimer;
+    struct TimerIFace *ITimer = __clib2->__ITimer;
 
     struct timeval tv;
     int result = 0;
@@ -43,7 +41,7 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
 
     GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
     if (result == 0) {
-        __timer_busy = TRUE;
+        __clib2->__timer_busy = TRUE;
         if (clk_id == CLOCK_MONOTONIC) {
             /*
             CLOCK_MONOTONIC
@@ -79,7 +77,7 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
         }
     }
 
-    __timer_busy = FALSE;
+    __clib2->__timer_busy = FALSE;
     RETURN(result);
     return result;
 }

@@ -40,6 +40,7 @@ __strcmp(const char *s1, const char *s2) {
 int
 strcmp(const char *s1, const char *s2) {
     int result = 0;
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert(s1 != NULL && s2 != NULL);
 
@@ -48,9 +49,8 @@ strcmp(const char *s1, const char *s2) {
         goto out;
     }
 
-    /* Make sure __global_clib2 has been created */
-    if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
-        switch (__global_clib2->cpufamily) {
+    if (__clib2->__optimizedCPUFunctions) {
+        switch (__clib2->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strcmp440(s1, s2);
                 break;

@@ -35,8 +35,6 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
-/****************************************************************************/
-
 /* Address is neither aligned to a word or long word boundary. */
 #define IS_UNALIGNED(a) ((((unsigned long)(a)) & 1) != 0)
 
@@ -75,5 +73,8 @@ extern void    vec_bcopy(const void *src, void *dest, size_t len);
 extern void   *_vec_memset(void *ptr, int val, size_t len);
 extern void    vec_bzero(void *m, size_t len);
 extern char   *vec_strcpy(char *dest, const char *src);
+
+/* Generic PPC functions */
+extern void    bcopy_g3(const void *src, void *dest, size_t len);
 
 #endif /* _STRING_HEADERS_H */

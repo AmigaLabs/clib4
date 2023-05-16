@@ -18,30 +18,31 @@
 
 void
 free(void *ptr) {
+    struct _clib2 *__clib2 = __CLIB2;
 
     BOOL found = FALSE;
     struct MemalignEntry *e = NULL;
     /* Check if we have something created by memalign */
-    if (__global_clib2 != NULL) {
-        e = (struct MemalignEntry *) AVL_FindNode(__global_clib2->__memalign_tree, ptr, MemalignAVLKeyComp);
+    if (__clib2 != NULL) {
+        e = (struct MemalignEntry *) AVL_FindNode(__clib2->__memalign_tree, ptr, MemalignAVLKeyComp);
         if (e) {
             found = TRUE;
         }
     }
 
-    __memory_lock();
+    __memory_lock(__clib2);
 
     if (found) {
         /* Free memory */
         FreeVec(e->me_Exact);
         e->me_Exact = NULL;
         /* Remove the node */
-        AVL_RemNodeByAddress(&__global_clib2->__memalign_tree, &e->me_AvlNode);
-        ItemPoolFree(__global_clib2->__memalign_pool, e);
+        AVL_RemNodeByAddress(&__clib2->__memalign_tree, &e->me_AvlNode);
+        ItemPoolFree(__clib2->__memalign_pool, e);
         e = NULL;
     } else {
-        wof_free(__wof_allocator, ptr);
+        wof_free(__clib2->__wof_allocator, ptr);
     }
 
-    __memory_unlock();
+    __memory_unlock(__clib2);
 }

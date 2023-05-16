@@ -13,6 +13,7 @@ chdir(const char *path_name) {
     BPTR dir_lock = ZERO;
     struct ExamineData *status = NULL;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -29,7 +30,7 @@ chdir(const char *path_name) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -79,24 +80,24 @@ chdir(const char *path_name) {
         goto out;
     }
 
-    if (__current_directory_changed) {
+    if (__clib2->__current_directory_changed) {
         BPTR old_dir;
 
         old_dir = CurrentDir(dir_lock);
 
-        if (__unlock_current_directory)
+        if (__clib2->__unlock_current_directory)
             UnLock(old_dir);
     } else {
-        __original_current_directory = CurrentDir(dir_lock);
+        __clib2->__original_current_directory = CurrentDir(dir_lock);
 
-        __current_directory_changed = TRUE;
+        __clib2->__current_directory_changed = TRUE;
     }
 
-    __unlock_current_directory = TRUE;
+    __clib2->__unlock_current_directory = TRUE;
 
     dir_lock = ZERO;
 
-    if (__unix_path_semantics)
+    if (__clib2->__unix_path_semantics)
         __restore_path_name(&path_name, &path_name_nti);
 
     /* ZZZ this must not fail */
@@ -104,7 +105,7 @@ chdir(const char *path_name) {
 
     result = OK;
 
-    out:
+out:
 
     if (status != NULL) {
         FreeDosObject(DOS_EXAMINEDATA, status);

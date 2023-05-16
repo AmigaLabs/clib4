@@ -8,7 +8,9 @@
 
 int
 rand(void) {
-    __global_clib2->__random_seed = 6364136223846793005ULL * __global_clib2->__random_seed + 1;
+    struct _clib2 *__clib2 = __CLIB2;
 
-    return (__global_clib2->__random_seed >> 33);
+    __clib2->__random_seed = 6364136223846793005ULL * __clib2->__random_seed + 1;
+
+    return (__clib2->__random_seed >> 33);
 }

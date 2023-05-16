@@ -19,7 +19,7 @@ asprintf(char **ret, const char *format, ...) {
     assert(ret != NULL && format != NULL);
 
     if (ret == NULL || format == NULL) {
-        __set_errno(EFAULT);
+        errno = EFAULT;
         goto out;
     }
 

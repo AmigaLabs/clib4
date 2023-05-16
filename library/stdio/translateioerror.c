@@ -12,7 +12,7 @@ int
 __translate_io_error_to_errno(LONG io_err) {
     static const struct {
         LONG io_err;
-        LONG errno;
+        LONG _errno;
     } map_table[] =
         {
             {ERROR_NO_FREE_STORE,          ENOMEM},
@@ -63,7 +63,7 @@ __translate_io_error_to_errno(LONG io_err) {
 
     for (i = 0; i < NUM_ENTRIES(map_table); i++) {
         if (map_table[i].io_err == io_err) {
-            result = map_table[i].errno;
+            result = map_table[i]._errno;
             break;
         }
     }

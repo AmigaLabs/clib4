@@ -67,6 +67,7 @@ get_first_script_line(const char *path, char **line_ptr) {
     size_t script_line_size = 0;
     size_t script_line_length = 0;
     LONG c;
+    struct _clib2 *__clib2 = __CLIB2;
 
     (*line_ptr) = NULL;
 
@@ -87,7 +88,7 @@ get_first_script_line(const char *path, char **line_ptr) {
             char *new_script_line;
 
             /* Give the user a chance to bail out. */
-            if (__check_abort_enabled && (SetSignal(0, 0) & __break_signal_mask) != 0) {
+            if (__clib2->__check_abort_enabled && (SetSignal(0, 0) & __clib2->__break_signal_mask) != 0) {
                 __set_errno(EAGAIN);
                 goto out;
             }
@@ -192,6 +193,7 @@ find_command(const char *path, struct program_info **result_ptr) {
     const char *p;
     int error;
     char c;
+    struct _clib2 *__clib2 = __CLIB2;
 
     (*result_ptr) = NULL;
 
@@ -255,7 +257,7 @@ find_command(const char *path, struct program_info **result_ptr) {
 
         do {
             /* Give the user a chance to bail out. */
-            if (__check_abort_enabled && (SetSignal(0, 0) & __break_signal_mask) != 0) {
+            if (__clib2->__check_abort_enabled && (SetSignal(0, 0) & __clib2->__break_signal_mask) != 0) {
                 error = EAGAIN;
                 break;
             }

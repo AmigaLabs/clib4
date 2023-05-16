@@ -12,7 +12,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-__drop_iob_read_buffer(struct iob *file) {
+__drop_iob_read_buffer(struct _clib2 *__clib2, struct iob *file) {
     int result = OK;
 
     ENTER();
@@ -48,7 +48,7 @@ __drop_iob_read_buffer(struct iob *file) {
 
                 assert(file->iob_Action != NULL);
 
-                position = (*file->iob_Action)(file, &fam);
+                position = (*file->iob_Action)(__clib2, file, &fam);
                 if (fam.fam_Error != OK) {
                     SHOWMSG("that didn't work");
 

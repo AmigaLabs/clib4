@@ -20,6 +20,7 @@ int
 tcflush(int file_descriptor, int queue) {
     int result = ERROR;
     struct fd *fd;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -27,7 +28,7 @@ tcflush(int file_descriptor, int queue) {
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_TERMIOS)) {
@@ -67,7 +68,7 @@ tcflush(int file_descriptor, int queue) {
         }
 
         while (WaitForChar(file, 1) != DOSFALSE) {
-            if (__check_abort_enabled && FLAG_IS_SET(SetSignal(0, 0), __break_signal_mask))
+            if (__clib2->__check_abort_enabled && FLAG_IS_SET(SetSignal(0, 0), __clib2->__break_signal_mask))
                 break;
 
             /* Read away available data. (upto 8k) */
@@ -97,7 +98,7 @@ tcflush(int file_descriptor, int queue) {
 
 out:
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     __check_abort();
 

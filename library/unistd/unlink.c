@@ -17,6 +17,7 @@ unlink(const char *path_name) {
     BPTR current_dir = ZERO;
     int result = ERROR;
     LONG status;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -33,7 +34,7 @@ unlink(const char *path_name) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -54,15 +55,14 @@ unlink(const char *path_name) {
 
     status = DeleteFile((STRPTR) path_name);
     if (status == DOSFALSE) {
-        if (__unix_path_semantics) {
+        if (__clib2->__unix_path_semantics) {
             struct UnlinkNode *uln = NULL;
             struct UnlinkNode *node;
             BOOL found = FALSE;
 
             assert(UtilityBase != NULL);
 
-            if (NOT __unlink_retries || IoErr() != ERROR_OBJECT_IN_USE)
-            {
+            if (NOT __clib2->__unlink_retries || IoErr() != ERROR_OBJECT_IN_USE) {
                 __set_errno(__translate_access_io_error_to_errno(IoErr()));
                 goto out;
             }
@@ -78,11 +78,11 @@ unlink(const char *path_name) {
                 goto out;
             }
 
-            ObtainSemaphore(&__unlink_semaphore);
+            ObtainSemaphore(&__clib2->__unlink_semaphore);
 
-            assert(__unlink_list.mlh_Head != NULL);
+            assert(__clib2->__unlink_list.mlh_Head != NULL);
 
-            for (node = (struct UnlinkNode *) __unlink_list.mlh_Head;
+            for (node = (struct UnlinkNode *) __clib2->__unlink_list.mlh_Head;
                  node->uln_MinNode.mln_Succ != NULL;
                  node = (struct UnlinkNode *) node->uln_MinNode.mln_Succ) {
                 if (Stricmp(node->uln_Name, path_name) == SAME && SameLock(node->uln_Lock, current_dir) == LOCK_SAME) {
@@ -98,13 +98,13 @@ unlink(const char *path_name) {
                     uln->uln_Name = (char *) (uln + 1);
 
                     strcpy(uln->uln_Name, path_name);
-                    AddTail((struct List *) &__unlink_list, (struct Node *) uln);
+                    AddTail((struct List *) &__clib2->__unlink_list, (struct Node *) uln);
 
                     current_dir = ZERO;
                 }
             }
 
-            ReleaseSemaphore(&__unlink_semaphore);
+            ReleaseSemaphore(&__clib2->__unlink_semaphore);
 
             if (NOT found && uln == NULL)
             {

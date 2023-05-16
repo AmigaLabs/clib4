@@ -12,6 +12,7 @@ printf(const char *format, ...) {
     va_list arg;
     ENTER();
     SHOWSTRING(format);
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert(format != NULL);
 
@@ -20,12 +21,12 @@ printf(const char *format, ...) {
         goto out;
     }
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
     va_start(arg, format);
     result = vfprintf(stdout, format, arg);
     va_end(arg);
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
 out:
 

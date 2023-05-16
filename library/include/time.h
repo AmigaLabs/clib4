@@ -12,7 +12,6 @@
 #endif /* _STDDEF_H */
 
 #include <inttypes.h>
-#include <stdbool.h>
 #include <sys/time.h>
 #include <endian.h>
 
@@ -165,13 +164,8 @@ extern unsigned long long rdtsc(void);
 
 extern int clock_gettime64 (clockid_t clock_id, struct timespec64 *tp);
 
-/* Defined in localtime.c.  */
-extern char *tzname[2];   /* Current timezone names.  */
-extern int daylight;      /* If daylight-saving time is ever in use.  */
-extern long int timezone; /* Seconds west of UTC.  */
-
 /* Check whether T fits in time_t.  */
-static inline bool
+static inline int
 in_time_t_range (time64_t t) {
     time_t s = t;
     return s == t;

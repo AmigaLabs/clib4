@@ -11,28 +11,25 @@
 #endif /* _POSIX_HEADERS_H */
 
 int
-statvfs(const char *path, struct statvfs *buf)
-{
+statvfs(const char *path, struct statvfs *buf) {
     struct name_translation_info path_name_nti;
     int result = -1;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     SHOWSTRING(path);
     SHOWPOINTER(buf);
 
-    if (__unix_path_semantics)
-    {
+    if (__clib2->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&path, &path_name_nti) != 0)
             goto out;
 
-        if (path_name_nti.is_root)
-        {
+        if (path_name_nti.is_root) {
             __set_errno(EINVAL);
             goto out;
         }
     }
-
 
     struct InfoData *info = AllocDosObject(DOS_INFODATA, 0);
     if (info != NULL) {
@@ -62,11 +59,10 @@ statvfs(const char *path, struct statvfs *buf)
             __translate_io_error_to_errno(IoErr());
         }
         FreeDosObject(DOS_INFODATA, info);
-    }
-    else
+    } else
         __set_errno(ENOMEM);
 
 out:
     RETURN(result);
-    return(result);
+    return (result);
 }

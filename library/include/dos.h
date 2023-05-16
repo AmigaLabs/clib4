@@ -19,9 +19,14 @@
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
-#include "clist.h"
+/* Category name handling variables.  */
+#define NUM_LOCALES			    (LC_MAX + 1)
+#define MAX_LOCALE_NAME_LEN	    256
 
 __BEGIN_DECLS
+
+typedef struct _wof_allocator_t wof_allocator_t;
+typedef void (*signal_handler_t)(int sig);
 
 /*
  * The Workbench startup message passed to this program; this may be NULL
@@ -52,18 +57,7 @@ __BEGIN_DECLS
  * global variable initialized by the startup code, whose name you might
  * not even know exactly.
  */
-extern struct WBStartup *__WBenchMsg;
 #define WBenchMsg __WBenchMsg
-
-/****************************************************************************/
-
-/* This is filled in with a pointer to the name of the program being run. */
-extern char *__program_name;
-
-/****************************************************************************/
-
-/* Set this to FALSE to disable all Ctrl+C checking in the program. */
-extern BOOL __check_abort_enabled;
 
 /*
  * You can replace this function with your own and perform your own
@@ -74,29 +68,6 @@ extern void __check_abort(void);
 /****************************************************************************/
 
 /*
- * You can override the default break signal mask which is used by
- * __check_abort() and other functions. This must be done at link
- * time because the break signal checking is set up very early on
- * while the program startup code is preparing your code to be run.
- * In particular, this affects the socket I/O functionality which
- * configures the break signal only once. The default value of the
- * __break_signal_mask variable is SIGBREAKF_CTRL_C.
- */
-extern ULONG __break_signal_mask;
-
-
-/*
- * If set, Unix path names are translated to Amiga path
- * names (and the other way round). If you wish to disable this, set the
- * following variable to FALSE. Only the path name translation is affected
- * by setting this variable to FALSE. You will always get Unix-like behaviour
- * from certain functions regardless of whether the path names are translated
- * or not.
- */
-
-extern BOOL __unix_path_semantics;
-
-/*
  * Obtain the low level 'file' handle or socket ID bound to a file
  * descriptor. This function returns 0 for success and non-zero
  * otherwise (if, for example, the file descriptor value you
@@ -105,129 +76,6 @@ extern BOOL __unix_path_semantics;
  * want to be filled in into the second parameter to this function.
  */
 extern int __get_default_file(int file_descriptor, long *file_ptr);
-
-/****************************************************************************/
-
-/*
- * If your program is intended to be launched by the Internet superserver
- * (inetd) to run as a daemon, receiving and sending data through a network
- * connection set up for it, declare the following variable in your program
- * and set it to TRUE. This will make the program's network startup code
- * link the stdin/stdout/stderr streams with the daemon socket passed to it.
- * Whether or not your program is running as a daemon can be tested by
- * checking the global __is_daemon variable described below.
- */
-extern BOOL __check_daemon_startup;
-
-/****************************************************************************/
-
-/*
- * This will be set to TRUE if the current program was launched from
- * the internet superserver ('inetd') or an equivalent facility. Note
- * that you need to have set __check_daemon_startup to TRUE before
- * you can rely upon __is_daemon to be initialized correctly.
- */
-extern BOOL __is_daemon;
-
-/****************************************************************************/
-
-/*
- * If the library is built with memory debugging features enabled,
- * the following variable controls whether memory allocated, to be
- * released, will actually get released. If set to TRUE all memory
- * allocations will persist until the program exits.
- */
-extern BOOL __never_free;
-
-/*
- * The following function will reset the counters for "maximum amount
- * of memory used" and "maximum number of chunks used" to the figures
- * for the current memory usage.
- */
-extern void __reset_max_mem_stats(void);
-
-/*
- * The following section lists variables and function pointers which are used
- * by the startup code right after the program is launched. These variables are
- * looked up before your program's main() function is invoked. Therefore, you
- * would have to declare these variables in your program's data section and have
- * them initialized to certain well-defined values to get the desired effect.
- */
-
-/*
- * The minimum required operating system version number is 37, which
- * corresponds to Workbench/Kickstart 2.04. You may request a higher
- * version number by defining the following variable; if you do so,
- * please provide a fitting error message, too. Note that you cannot
- * request a minimum version number lower than 37.
- */
-extern int __minimum_os_lib_version;
-extern char *__minimum_os_lib_error;
-
-/*
- * If your program is launched from Workbench it will not necessarily
- * have a window to send console output to and from which console
- * input can be read. The startup code attempts to set up such a console
- * window for you, but it uses defaults for the window specification.
- * These defaults can be overridden by your program if you define a
- * variable to point to the specification string. Note that if you
- * request a specific window specification, this will also override
- * any tool window definition stored in the program's icon.
- */
-extern char *__stdio_window_specification;
-
-/*
- * If set to TRUE, your program's process->pr_WindowPtr will be set to -1
- * when it starts. The process->pr_WindowPtr will be automatically restored
- * to the initial value before it exits.
- */
-extern BOOL __disable_dos_requesters;
-
-/*
- * If set to TRUE, your program will disconnect itself from the shell it was
- * launched from and keep running in the background. This service is unavailable
- * for residentable programs. Note that you should not use this feature for
- * programs which are supposed to be launched by the internet superserver.
- * Also, note that when a program is run in the background, its input and
- * output streams will be connected to NIL:.
- */
-extern BOOL __detach;
-
-/*
- * If this function pointer is not NULL, it must point to a function which
- * figures out whether the program should detach itself from the shell it
- * was launched from. The function return value replaces the value of the
- * __detach variable.
- *
- * At the time this function is invoked, dos.library and utility.library
- * have already been opened for you.
- */
-extern BOOL (*__check_detach)(void);
-
-/*
- * If this pointer is not NULL, it refers the name that will be given to
- * the process which is created when the program detaches. The default
- * is to reuse the program name instead.
- */
-extern char *__process_name;
-
-/*
- * This variable controls the task priority of the program, when running.
- * It must be in the range -128..127 to be useful. By default, the task
- * priority will not be changed.
- */
-extern int __priority;
-
-/*
- * This variable can be set up to contain the minimum stack size the program
- * should be launched with. If the startup code finds that there is not enough
- * stack space available to start with, it will attempt to allocate more and
- * then proceed to run your program.
- *
- * If this variable is set to 0 (the default) then no stack size test will
- * be performed upon startup.
- */
-extern unsigned int __stack_size;
 
 /*
  * If this function pointer is not NULL, it must point to a function which
@@ -242,36 +90,10 @@ extern unsigned int (*__get_default_stack_size)(void);
 
 /****************************************************************************/
 
-/*
- * This library falls back onto locale.library to perform string collation
- * in strcoll(), character conversion in toupper() and various other
- * functions. This may not be your intention. To restrict the library to use
- * only the "C" language locale, declare the following variable in your
- * code and set it to FALSE, so that it overrides the default settings.
- * The variable value is checked during program startup and, if set to
- * TRUE, has the effect of opening locale.library and obtaining the
- * default locale.
- */
-extern BOOL __open_locale;
-
-/*
- * Two functions control how this library uses the locale.library API to
- * perform string collation, character and time conversion, etc.
- *
- * __locale_init() opens locale.library and attempts to open the default
- * locale. If it succeeds, it will return 0 and -1 otherwise.
- *
- * __locale_exit() releases the default locale and closes locale.library.
- */
-extern int __locale_init(void);
-extern void __locale_exit(void);
-
-/****************************************************************************/
-
 /* A data structures used by the path translation routines below. */
 struct name_translation_info
 {
-	char substitute[MAXPATHLEN];
+	char substitute[PATH_MAX];
 	char *original_name;
 	int is_root;
 };
@@ -283,88 +105,9 @@ extern void __restore_path_name(char const **name_ptr, struct name_translation_i
 extern int __translate_amiga_to_unix_path_name(char const **name_ptr, struct name_translation_info *nti);
 extern int __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translation_info *nti);
 extern int __translate_io_error_to_errno(LONG io_error);
+extern void __print_termination_message(const char *termination_message);
 
 /****************************************************************************/
-
-/*
- * Routines for use with shared libraries: invoke __lib_init() in your own
- * shared library initialization function and __lib_exit() in your shared
- * library cleanup function.
- *
- * __lib_init() will initialize the global SysBase/DOSBase variables
- * (and the IExec/IDOS variables for OS4) and invoke the constructor
- * functions required by your library code. It returns FALSE upon
- * failure and TRUE otherwise. Make this the very first function you
- * call in your shared library initialization function. The __lib_init()
- * function expects to be called with a pointer to the exec.library
- * base, which is normally passed to your shared library as part of the
- * library startup code initialization performed by the operating
- * system.
- *
- * __lib_exit() will undo all the initializations performed by the
- * __lib_init() function, but leave the global SysBase variable
- * (and the IExec variable for OS4) intact. Make this the very last
- * function you call in your shared library cleanup function.
- *
- * Note that neither __lib_init() nor __lib_exit() are reentrant. You must
- * make sure that while you are calling them no other library user can
- * call them by accident.
- *
- * Both functions are only available as part of the thread-safe clib2
- * linker library.
- */
-extern VOID __lib_exit(VOID);
-extern BOOL __lib_init(struct Library *_SysBase);
-extern BOOL __shlib_init(struct Library *_SysBase);
-
-/****************************************************************************/
-
-/*
- * The following variables are part of libnet.a, which provides for
- * a BSD-Unix-like socket networking API. Traditionally, only one process
- * at a time may use the underlying bsdsocket.library base, but with a
- * multithreaded application you may want all of them to share the same
- * library base. As of this writing there is one single TCP/IP stack which
- * supports this feature (Roadshow) and it must be enabled early on. If
- * this worked out well you can test through the following variable which
- * will be set to TRUE:
- */
-extern BOOL __can_share_socket_library_base;
-
-/*
- * The next global variable is also part of the thread-safe libnet.a and
- * indicates that the TCP/IP stack will call the functions __set_errno()
- * and __set_h_errno() when it modifies the global errno and h_errno
- * variables, respectively. If you want to save the error codes for each
- * of the Processes in your multithreaded application then you should
- * override these functions with your. The following variable will be
- * set to TRUE if the __set_errno() and __set_h_errno() functions will
- * be used to change the corresponding variables:
- */
-extern BOOL __thread_safe_errno_h_errno;
-
-/****************************************************************************/
-
-/*
- * If you link against libunix.a then the default command line processing
- * function will attempt to expand every single wildcard parameter on the
- * command line into a series of file and directories names matching the
- * wildcards. The idea is to provide functionality which on Unix the
- * shell is responsible for. On AmigaDOS the shell commands need to perform
- * the expansion. However, if you are mixing AmigaDOS commands which expand
- * wildcard patterns with a shell that already does the job, you may run into
- * big trouble. To disable the expansion, declare the global variable named
- * "__expand_wildcard_args" in your code and have it set to FALSE. Because
- * the program startup code checks this variable early on, its value must
- * be available at that time, i.e. you cannot just set it differently in
- * your code lateron because by that time the startup code will have already
- * checked it.
- *
- * Note that the startup code will disable wildcard expansion if the local
- * shell environment variable "DISABLE_COMMANDLINE_WILDCARD_EXPANSION"
- * is set.
- */
-extern BOOL __expand_wildcard_args;
 
 /*
  * Similar to the boolean flag value __expand_wildcard_args described above,
@@ -378,39 +121,6 @@ extern BOOL __expand_wildcard_args;
 extern BOOL (*__expand_wildcard_args_check)(void);
 
 /****************************************************************************/
-
-/*
- * Defaults for path delimiter (":") and the shell search path
- * ("/gcc/bin:/SDK/C:/SDK/Local/C:/C:.") as used by the execvp()
- * function.
- */
-extern const char *__default_path_delimiter;
-extern const char *__default_path;
-
-/****************************************************************************/
-
-/*
- * 'environ' is the default environment variable table as used by the execl(),
- * execv() and execvp() functions. This needs to be initialized before you
- * can use it. The table has the following form:
- *
- *    char ** environ =
- *    { 
- *       "variable1=value",
- *       "variable2=value",
- *       NULL
- *    };
- *
- * Note that if you initialize the 'environ' table you will also have to
- * provide for a function which prepares its contents in execve() for use
- * by the command to be executed. That function is called
- * __execve_environ_init(). Should program execution fail, you need to
- * clean up after what __execve_environ_init() set up. To do this, call
- * __execve_environ_exit(). There are stubs in clib2 for these functions
- * which essentially do nothing at all. You will have to implement these
- * yourself if you want to use them.
- */
-extern char **environ;
 
 extern int __execve_environ_init(char *const envp[]);
 extern void __execve_environ_exit(char *const envp[]);
@@ -428,21 +138,10 @@ extern void __execve_environ_exit(char *const envp[]);
 
 extern void __execve_exit(int return_code);
 
-/****************************************************************************/
-
-/*
- * The unlink() and remove() functions in libunix.a may return success even
- * though deletion failed because the file/directory/link in question is still
- * reported as being "in use". This is the default behaviour. If you want the
- * deletion to fail instead, set '__unlink_retries' to FALSE.
- */
-extern BOOL __unlink_retries;
-
 /*
  * wide char status structure
  */
-struct _wchar
-{
+struct _wchar {
 	/* miscellaneous reentrant data */
 	char *_strtok_last;
 	_mbstate_t _mblen_state;
@@ -458,32 +157,106 @@ struct _wchar
 };
 
 /*
- * Initial _clib2 structure. This shoulr be replaced with a _reent structure 
- * and populated with all its fields. At moment it holds just global fields
+ * Initial _clib2 structure. This contains all fields used by current progream
  */
-
-extern struct _clib2 *__getclib2(void);
 
 struct _clib2 {
 	struct ExecIFace *IExec; 	/* Main IExec interface */
 
-	struct TimeVal clock; 		/* Populated when clib starts with current time */
+    struct ElfIFace *IElf;
+
+    struct Library *__LocaleBase;
+    struct LocaleIFace *__ILocale;
+
+    struct Library *__DiskfontBase;
+    struct DiskfontIFace *__IDiskfont;
+
+    struct Library *__TimezoneBase;
+    struct TimezoneIFace *__ITimezone;
+
+    struct Library *__SocketBase;
+    struct SocketIFace *__ISocket;
+
+    struct Library *__UserGroupBase;
+    struct UserGroupIFace *__IUserGroup;
+
+    /* CPU Family to enable optimized functions */
+    uint32 cpufamily;
+    uint32 hasAltivec;
+
+    /* Used by setjmp/longjmp in main */
+    jmp_buf __exit_jmp_buf;
+    int 	__exit_value;
+
+    /*
+     * If set to TRUE, your program's process->pr_WindowPtr will be set to -1
+     * when it starts. The process->pr_WindowPtr will be automatically restored
+     * to the initial value before it exits.
+     */
+    BOOL __disable_dos_requesters;
+
+    struct TimeVal clock; 		/* Populated when clib starts with current time */
 	struct rusage ru;			/* rusage struct used in rlimit function */
 	struct _wchar *wide_status;	/* wide char functions status */
-	
+
+    /*
+     * This variable controls the task priority of the program, when running.
+     * It must be in the range -128..127 to be useful. By default, the task
+     * priority will not be changed.
+     */
+    int __priority;
+
+    char *tzname[2];     /* Current timezone names.  */
+    int daylight;        /* If daylight-saving time is ever in use.  */
+    long int timezone;   /* Seconds west of UTC.  */
+    int dyntz;           /* Set to TRUE if created with malloc */
+    struct SignalSemaphore *timezone_lock;
+
+    /*
+     * You can override the default break signal mask which is used by
+     * __check_abort() and other functions. This must be done at link
+     * time because the break signal checking is set up very early on
+     * while the program startup code is preparing your code to be run.
+     * In particular, this affects the socket I/O functionality which
+     * configures the break signal only once. The default value of the
+     * __break_signal_mask variable is SIGBREAKF_CTRL_C.
+     */
+    ULONG __break_signal_mask;
+
+    /*
+     * If set, Unix path names are translated to Amiga path
+     * names (and the other way round). If you wish to disable this, set the
+     * following variable to FALSE. Only the path name translation is affected
+     * by setting this variable to FALSE. You will always get Unix-like behaviour
+     * from certain functions regardless of whether the path names are translated
+     * or not.
+     */
+
+    BOOL __unix_path_semantics;
+
+    /* Set this flag to true to enable optimized CPU functions */
+    BOOL __optimizedCPUFunctions;
+
 	/* 
 	 * Check if SYSV library is available in the system. Otherwise the functions
 	 * will return ENOSYS
 	 */
+    struct Library   *__SysVBase;
+    struct SYSVIFace *__ISysVIPC;
 	BOOL haveShm;
 
 	/* This is used with the dlopen(), dlclose() and dlsym() functions. */
 	Elf32_Handle __dl_elf_handle;
 	Elf32_Error __elf_error_code;
-	struct ElfIFace *IElf;
 
 	/* This is the pointer to itself */
 	struct Process *self;
+
+    struct Locale *__default_locale;
+    struct Locale *__locale_table[NUM_LOCALES];
+    char __locale_name_table[NUM_LOCALES][MAX_LOCALE_NAME_LEN];
+    char __lc_ctype[__LC_LAST];
+    struct SignalSemaphore *locale_lock;
 
     /* used by setlocale */
     int _current_category;
@@ -493,14 +266,9 @@ struct _clib2 {
 	/* used by tmpnam */
 	int inc;
 
-	/* CPU Family to enable optimized functions */
-    uint32 optimizedCPUFunctions;
-	uint32 cpufamily;
-    uint32 hasAltivec;
-
-	/* Memalign memory list */
-    void           *__memalign_pool;
-    struct AVLNode *__memalign_tree;
+    /* Directories being scanned whose locks need to be freed when shutting down. */
+    struct MinList __directory_list;
+    struct SignalSemaphore *dirent_lock;
 
     /* Used by initstate/setstate */
     struct SignalSemaphore *__random_lock;
@@ -517,17 +285,235 @@ struct _clib2 {
     struct timeval tmr_start_time;
     struct Process *tmr_real_task;
 
-    /* Used by aio functions */
-    struct SignalSemaphore *__aio_lock;
-    CList *aio_threads;
-
     /* Used for shared version library */
     int _errno;
+    int _h_errno;
+
+    /*
+     * Defaults for path delimiter (":") and the shell search path
+     * ("/gcc/bin:/SDK/C:/SDK/Local/C:/C:.") as used by the execvp()
+     * function.
+     */
+    const char *__default_path_delimiter;
+    const char *__default_path;
+
+    /* Set this to FALSE to disable all Ctrl+C checking in the program. */
+    BOOL __check_abort_enabled;
+
+    /* The file handle table. */
+    struct iob **__iob;
+    int __num_iob;
+
+    /* The file descriptor table. */
+    struct fd **__fd;
+    int __num_fd;
+
+    /* This is filled in with a pointer to the name of the program being run. */
+    char *__progname;
+    BOOL free_program_name;
+
+    char __current_path_name[PATH_MAX];
+
+    /* Don't remove aligned otherwise you could have bad things on exit */
+    struct AnchorPath *anchor __attribute__ ((aligned));
+
+    /* This holds a mask of all signals whose delivery is currently blocked.
+       The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
+       modify or query it. */
+    int __signals_blocked;
+
+    struct SignalSemaphore *stdio_lock;
+
+    /* Wof Allocator main pointer */
+    wof_allocator_t *__wof_allocator;
+    /* Wof Allocator memory semaphore */
+    struct SignalSemaphore *memory_semaphore;
+
+    /* Names of files and directories to delete when shutting down. */
+    struct MinList __unlink_list;
+    struct SignalSemaphore __unlink_semaphore;
+
+    /* Local timer I/O. */
+    struct MsgPort     *__timer_port;
+    BOOL			    __timer_busy;
+    struct TimeRequest *__timer_request;
+    struct Library     *__TimerBase;
+    struct TimerIFace  *__ITimer;
+
+    /* If the program's current directory was changed, here is where we find out about it. */
+    BPTR __original_current_directory;
+    BOOL __current_directory_changed;
+    BOOL __unlock_current_directory;
+
+    /* Memalign memory list */
+    void           *__memalign_pool;
+    struct AVLNode *__memalign_tree;
+
+    /*
+     * This variable can be set up to contain the minimum stack size the program
+     * should be launched with. If the startup code finds that there is not enough
+     * stack space available to start with, it will attempt to allocate more and
+     * then proceed to run your program.
+     *
+     * If this variable is set to 0 (the default) then no stack size test will
+     * be performed upon startup.
+     */
+    unsigned int __stack_size;
+
+    UBYTE __shell_escape_character;
+
+    char **__argv;
+    int __argc;
+
+    const char *__file_lock_semaphore_name;
+
+    struct WBStartup *__WBenchMsg;
+    BOOL __no_standard_io;
+
+    /*
+     * If your program is launched from Workbench it will not necessarily
+     * have a window to send console output to and from which console
+     * input can be read. The startup code attempts to set up such a console
+     * window for you, but it uses defaults for the window specification.
+     * These defaults can be overridden by your program if you define a
+     * variable to point to the specification string. Note that if you
+     * request a specific window specification, this will also override
+     * any tool window definition stored in the program's icon.
+     */
+    char *__stdio_window_specification;
+
+    /* CPU cache line size; used to align I/O buffers for best performance. */
+    ULONG __cache_line_size;
+
+    /* File init fields */
+    struct MsgPort *old_console_task;
+    BOOL restore_console_task;
+
+    BOOL restore_streams;
+
+    BPTR old_output;
+    BPTR old_input;
+
+    BPTR output;
+    BPTR input;
+
+    /* This will be set to TRUE in case a stack overflow was detected. */
+    BOOL __stack_overflow;
+
+    /*
+     * The following variables are part of libnet.a, which provides for
+     * a BSD-Unix-like socket networking API. Traditionally, only one process
+     * at a time may use the underlying bsdsocket.library base, but with a
+     * multithreaded application you may want all of them to share the same
+     * library base. As of this writing there is one single TCP/IP stack which
+     * supports this feature (Roadshow) and it must be enabled early on. If
+     * this worked out well you can test through the following variable which
+     * will be set to TRUE:
+     */
+    BOOL __can_share_socket_library_base;
+
+    /*
+     * The next global variable is also part of the thread-safe libnet.a and
+     * indicates that the TCP/IP stack will call the functions __set_errno()
+     * and __set_h_errno() when it modifies the global errno and h_errno
+     * variables, respectively. If you want to save the error codes for each
+     * of the Processes in your multithreaded application then you should
+     * override these functions with your. The following variable will be
+     * set to TRUE if the __set_errno() and __set_h_errno() functions will
+     * be used to change the corresponding variables:
+     */
+    BOOL __thread_safe_errno_h_errno;
+
+    /*
+     * The unlink() and remove() functions in libunix.a may return success even
+     * though deletion failed because the file/directory/link in question is still
+     * reported as being "in use". This is the default behaviour. If you want the
+     * deletion to fail instead, set '__unlink_retries' to FALSE.
+     */
+    BOOL __unlink_retries;
+
+    /*
+     * 'environ' is the default environment variable table as used by the execl(),
+     * execv() and execvp() functions. This needs to be initialized before you
+     * can use it. The table has the following form:
+     *
+     *    char ** environ =
+     *    {
+     *       "variable1=value",
+     *       "variable2=value",
+     *       NULL
+     *    };
+     *
+     * Note that if you initialize the 'environ' table you will also have to
+     * provide for a function which prepares its contents in execve() for use
+     * by the command to be executed. That function is called
+     * __execve_environ_init(). Should program execution fail, you need to
+     * clean up after what __execve_environ_init() set up. To do this, call
+     * __execve_environ_exit(). There are stubs in clib2 for these functions
+     * which essentially do nothing at all. You will have to implement these
+     * yourself if you want to use them.
+     */
+    char **environ;
+
+    /*
+     * If you link against libunix.a then the default command line processing
+     * function will attempt to expand every single wildcard parameter on the
+     * command line into a series of file and directories names matching the
+     * wildcards. The idea is to provide functionality which on Unix the
+     * shell is responsible for. On AmigaDOS the shell commands need to perform
+     * the expansion. However, if you are mixing AmigaDOS commands which expand
+     * wildcard patterns with a shell that already does the job, you may run into
+     * big trouble. To disable the expansion, declare the global variable named
+     * "__expand_wildcard_args" in your code and have it set to FALSE. Because
+     * the program startup code checks this variable early on, its value must
+     * be available at that time, i.e. you cannot just set it differently in
+     * your code lateron because by that time the startup code will have already
+     * checked it.
+     *
+     * Note that the startup code will disable wildcard expansion if the local
+     * shell environment variable "DISABLE_COMMANDLINE_WILDCARD_EXPANSION"
+     * is set.
+     */
+    BOOL __expand_wildcard_args;
+
+    signal_handler_t __signal_handler_table[NSIG];
+
+    float __infinity;
+    float __nan;
+    int _gamma_signgam;
+
+    BOOL __root_mode;
+    int __root_uid;
+    int __root_gid;
+    int __root_euid;
+    int __root_egid;
+
+    int indent_level;
+    int __debug_level;
+    int previous_debug_level;
+
+#ifndef NDEBUG
+    struct StackSwapStruct stack_swap_struct;
+#endif
 };
 
-extern struct _clib2 *__global_clib2;
+#ifndef __getClib2
+extern struct _clib2 *__getClib2(void);
+#endif
+#define __CLIB2 __getClib2()
 
-# define _GCLIB2 (__getclib2())
+/*
+ * Two functions control how this library uses the locale.library API to
+ * perform string collation, character and time conversion, etc.
+ *
+ * __locale_init() opens locale.library and attempts to open the default
+ * locale. If it succeeds, it will return 0 and -1 otherwise.
+ *
+ * __locale_exit() releases the default locale and closes locale.library.
+ */
+extern int __locale_init(struct _clib2 *__clib2);
+extern void __locale_exit(struct _clib2 *__clib2);
+
 
 __END_DECLS
 

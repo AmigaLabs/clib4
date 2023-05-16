@@ -91,6 +91,11 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
+struct itimer {
+    struct _clib2 *__clib2;
+    int which;
+};
+
 /****************************************************************************/
 
 /* This is the difference (in seconds) between the Unix epoch (which began

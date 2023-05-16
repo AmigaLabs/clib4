@@ -16,7 +16,7 @@ setdomainname(const char *name, size_t len) {
     SHOWVALUE(len);
 
     assert(name != NULL);
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (name == NULL) {
         SHOWMSG("invalid name");

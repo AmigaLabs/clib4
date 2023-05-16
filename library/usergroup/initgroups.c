@@ -7,32 +7,29 @@
 #endif /* _USERGROUP_HEADERS_H */
 
 int
-initgroups(const char *name, gid_t basegroup)
-{
-	int result = ERROR;
+initgroups(const char *name, gid_t basegroup) {
+    int result = ERROR;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(name);
-	SHOWVALUE(basegroup);
+    SHOWSTRING(name);
+    SHOWVALUE(basegroup);
 
-	assert(name != NULL);
-	assert(__UserGroupBase != NULL);
+    assert(name != NULL);
 
-    if (name == NULL)
-    {
+    if (name == NULL) {
         SHOWMSG("invalid name");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __initgroups((STRPTR)name, (LONG)basegroup);
+    result = __initgroups((STRPTR) name, (LONG) basegroup);
 
 out:
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

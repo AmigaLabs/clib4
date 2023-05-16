@@ -10,12 +10,7 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-#include "aio/aio_misc.h"
 #include "pthread/common.h"
-#include "clist.h"
-
-int NOCOMMON __exit_value = RETURN_FAIL;
-jmp_buf NOCOMMON __exit_jmp_buf;
 
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
@@ -31,13 +26,14 @@ hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
 
 void
 _exit(int return_code) {
-    __exit_value = return_code;
+    struct _clib2 *__clib2 = __CLIB2;
+    __clib2->__exit_value = return_code;
 
     ENTER();
-    SHOWVALUE(return_code);
+    SHOWVALUE(__clib2->__exit_value);
 
     struct Task *task = FindTask(NULL);
-    if (&__global_clib2->self->pr_Task != task) {
+    if (&__clib2->self->pr_Task != task) {
         SHOWMSG("NOT IN MAIN TASK");
         /* We are NOT in main task. Don't call exit here because
          * we'll have pending processes. Try to send a CTRL_C
@@ -49,52 +45,36 @@ _exit(int return_code) {
     else {
         SHOWMSG("IN MAIN TASK");
         /*  If we have a previous timer running task stop it before raise SIGINT  */
-        if (__global_clib2->tmr_real_task) {
+        if (__clib2->tmr_real_task) {
             struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
             int32 pid, process;
 
             /* Block SIGALRM signal from raise */
             sigblock(SIGALRM);
             /* Get itimer process ID */
-            pid = __global_clib2->tmr_real_task->pr_ProcessID;
+            pid = __clib2->tmr_real_task->pr_ProcessID;
 
             Forbid();
             /* Scan for process */
             process = ProcessScan(&h, (CONST_APTR) pid, 0);
             while (process > 0) {
                 /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
-                Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+                Signal((struct Task *) __clib2->tmr_real_task, SIGBREAKF_CTRL_F);
                 process = ProcessScan(&h, (CONST_APTR) pid, 0);
                 usleep(100);
             }
             Permit();
             WaitForChildExit(pid);
-            __global_clib2->tmr_real_task = NULL;
+            __clib2->tmr_real_task = NULL;
         }
-
-        /* Check if we have some aio threads */
-        SHOWMSG("Check if we have some aio pthreads created");
-        AioThread *aioThread;
-        SHOWMSG("Obtain aio semaphore");
-        ObtainSemaphore(__global_clib2->__aio_lock);
-        int streams = __global_clib2->aio_threads->count(__global_clib2->aio_threads);
-        D(("AIO list has %ld items", streams));
-        if (streams > 0) {
-            for (int i = 0; i < streams; i++) {
-                aioThread = __global_clib2->aio_threads->at(__global_clib2->aio_threads, i);
-                D(("Cancel AIO stream with filedes %ld", aioThread->fileDes));
-                aio_cancel(aioThread->fileDes, aioThread->aiocbp);
-                Signal(aioThread->thread, SIGBREAKF_CTRL_C);
-            }
-        }
-        ReleaseSemaphore(__global_clib2->__aio_lock);
 
         /* Dump all currently unwritten data, especially to the console. */
         __flush_all_files(-1);
 
         LEAVE();
 
-        longjmp(__exit_jmp_buf, 1);
+        longjmp(__clib2->__exit_jmp_buf, 1);
+        __builtin_unreachable();
     }
 }
 

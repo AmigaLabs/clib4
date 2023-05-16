@@ -11,17 +11,17 @@
 #endif /* _STDLIB_MEMORY_H */
 
 int
-__grow_fd_table(int max_fd) {
+__grow_fd_table(struct _clib2 *__clib2, int max_fd) {
     const int granularity = 10;
     int new_num_fd;
     int result = ERROR;
 
     if (max_fd == 0)
-        new_num_fd = __num_fd + granularity;
+        new_num_fd = __clib2->__num_fd + granularity;
     else
         new_num_fd = max_fd;
 
-    if (new_num_fd > __num_fd) {
+    if (new_num_fd > __clib2->__num_fd) {
         struct fd **new_fd;
         int i;
 
@@ -33,14 +33,14 @@ __grow_fd_table(int max_fd) {
             goto out;
         }
 
-        for (i = __num_fd; i < new_num_fd; i++) {
+        for (i = __clib2->__num_fd; i < new_num_fd; i++) {
             new_fd[i] = malloc(sizeof(*new_fd[i]));
             if (new_fd[i] == NULL) {
                 int j;
 
                 SHOWMSG("not enough memory for new file descriptor table entry");
 
-                for (j = __num_fd; j < i; j++)
+                for (j = __clib2->__num_fd; j < i; j++)
                     free(new_fd[j]);
 
                 free(new_fd);
@@ -52,15 +52,15 @@ __grow_fd_table(int max_fd) {
             memset(new_fd[i], 0, sizeof(*new_fd[i]));
         }
 
-        if (__fd != NULL) {
-            for (i = 0; i < __num_fd; i++)
-                new_fd[i] = __fd[i];
+        if (__clib2->__fd != NULL) {
+            for (i = 0; i < __clib2->__num_fd; i++)
+                new_fd[i] = __clib2->__fd[i];
 
-            free(__fd);
+            free(__clib2->__fd);
         }
 
-        __fd = new_fd;
-        __num_fd = new_num_fd;
+        __clib2->__fd = new_fd;
+        __clib2->__num_fd = new_num_fd;
     }
 
     result = OK;

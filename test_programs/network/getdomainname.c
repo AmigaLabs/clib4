@@ -5,8 +5,6 @@
 
 static void
 usage(void) {
-    extern const char *__program_name;
-
     fprintf(stderr, "usage: %s domain_name\n", __program_name);
 
     exit(1);

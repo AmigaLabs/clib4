@@ -1,3 +1,6 @@
+
+
+
 # clib2 – A C runtime library for AmigaOS4
 
 [![Build Status](https://travis-ci.com/afxgroup/clib2.svg?branch=master)](https://travis-ci.org/afxgroup/clib2)
@@ -17,9 +20,14 @@ For the original README follow this <a href="https://github.com/adtools/clib2">l
 
 ## Limitations and caveats
 
-The new functions and code, most of the time are tested and some tests has been added to be sure that added features and functions are working correctly. 
+The new functions and code, most of the time are tested and some tests has been added to be sure that added features and functions are working correctly.
 Usually all new functions has been tested against linux.  
 If you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
+
+## Shared library
+
+`clib2` now is an AmigaOS4 shared library. This means that you have to install `clib2.library` in LIBS: folder.  
+Thanks to shared library now the exe files will be smaller since libc.a/so are just stubs to main library files.
 
 ### Libraries
 
@@ -81,7 +89,7 @@ You can also disable it at runtime using **disableUnixPaths()**. However is not 
 ### wchar / wctype
 
 All **wctype** functions should be working correctly now. We need a valid test suite.  
-All **wchar** functions are now implemented and tested but maybe something is not working correctly. 
+All **wchar** functions aree now implemented and tested but maybe something is not working correctly. 
 There are no valid tests except a little few so if you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
 
 ### Locale
@@ -111,10 +119,12 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 
 ### libpthread
 
-Clib2 now contain a native pthread implementation. However, pthread functions are in libc and libpthread is just a stub.
-That's because pthread functions are used (and will be used more in the future) internally and they are needed by libc.  
-libpthread.a is still present as stub to avoid old program stop compiling claiming this library
+Clib2 now contain a native pthread implementation with some functions are not present in the pthread.libraries.  
+However mutex* function should be changed to use OS4 Mutexex instead of Semaphores
 
+### librt
+
+aio* functions are present and they are in librt (like in linux). Pthreads are needed to use all aio* functions
 
 ### libresolv
 
@@ -135,18 +145,18 @@ By adjusting the format of the salt passed to the crypt function, you can ** spe
 Correspondence table between id and hash algorithm
 
 
-| ID  | Hash algorithm |  
-|-----|----------------|
-| 1   |      MD5
-| 2a  | Blowfish |
-| 5   | SHA-256  |
-| 6   | SHA-512  |
+| ID | Hash algorithm |  
+|----|----------------|
+| 1  | MD5            |
+| 2a | Blowfish       |
+| 5  | SHA-256        |
+| 6  | SHA-512        |
 
 If not specified, it will be DES. DES is very vulnerable and is not recommended because it uses only 2 characters for Salt and only recognizes passwords for up to 8 characters.
 
 | Hash algorithm | Number of characters in the hashed string |  
 |----------------|-------------------------------------------|
-| MD5            | 22 Characters                             
+| MD5            | 22 Characters                             |
 | SHA-256        | 43 Characters                             |
 | SHA-512        | 86 Characters                             |
 

@@ -13,6 +13,7 @@
 char *
 strcpy(char *dest, const char *src) {
     char *result = dest;
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert(dest != NULL && src != NULL);
 
@@ -22,9 +23,8 @@ strcpy(char *dest, const char *src) {
     }
 
     if (dest != src) {
-        /* Make sure __global_clib2 has been created */
-        if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
-            switch (__global_clib2->cpufamily) {
+        if (__clib2->__optimizedCPUFunctions) {
+            switch (__clib2->cpufamily) {
                 case CPUFAMILY_4XX:
                     result = __strcpy440(dest, src);
                     break;
@@ -34,7 +34,7 @@ strcpy(char *dest, const char *src) {
                     break;
 #endif
                 default: {
-                    if (__global_clib2->hasAltivec) {
+                    if (__clib2->hasAltivec) {
                         vec_strcpy(dest, src);
                     } else {
                         /* Fallback to standard function */

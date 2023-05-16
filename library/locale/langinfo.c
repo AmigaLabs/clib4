@@ -22,76 +22,65 @@
 #include <langinfo.h>
 
 char *
-nl_langinfo(nl_item item)
-{
+nl_langinfo(nl_item item) {
     ENTER();
     DECLARE_LOCALEBASE();
     DECLARE_FONTBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     const char *ret = NULL;
     char *cs;
     static char *cset = NULL;
 
-    switch (item)
-    {
+    switch (item) {
         case CODESET:
             ret = "";
-            const char *s = __global_clib2->_current_locale;
-            if (strstr(s, "C-"))
-            {
-                if ((cs = strchr(s, '-')) != NULL)
-                {
+            const char *s = __clib2->_current_locale;
+            if (strstr(s, "C-")) {
+                if ((cs = strchr(s, '-')) != NULL) {
                     ret = cs + 1;
-                    if (strncmp(ret, "ISO_", 4) == 0)
-                    {
+                    if (strncmp(ret, "ISO_", 4) == 0) {
                         int slen = strlen(ret);
 
-                        if ((cset = realloc(cset, slen)) != NULL)
-                        {
+                        if ((cset = realloc(cset, slen)) != NULL) {
                             strcpy(cset, "ISO");
                             strcat(cset, ret + 4);
                             ret = cset;
-                        }
-                        else
+                        } else
                             ret = "";
-                    }
-                    else if (strcmp(ret, "EUC") == 0)
-                    {
+                    } else if (strcmp(ret, "EUC") == 0) {
                         if (strncmp(s, "ja_JP", 5) == 0)
                             ret = "eucJP";
                         else if (strncmp(s, "ko_KR", 5) == 0)
                             ret = "eucKR";
                         else if (strncmp(s, "zh_CN", 5) == 0)
                             ret = "eucCN";
-                    }
-                    else if (strcmp(ret, "UTF-8") == 0)
+                    } else if (strcmp(ret, "UTF-8") == 0)
                         ret = "UTF-8";
                     else if (strcmp(ret, "ASCII") == 0)
                         ret = "US-ASCII";
-                }
-                else if (strcmp(s, "C") == 0 ||
-                        strcmp(s, "POSIX") == 0 || strstr(s, "ASCII") != NULL)
+                } else if (strcmp(s, "C") == 0 ||
+                           strcmp(s, "POSIX") == 0 || strstr(s, "ASCII") != NULL)
                     ret = "US-ASCII";
 
                 if (ret == NULL) {
-                    uint32 default_charset = __default_locale->loc_CodeSet;
-                    ret = (char *)ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
+                    uint32 default_charset = __clib2->__default_locale->loc_CodeSet;
+                    ret = (char *) ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
                 }
-            }
-            else {
-                uint32 default_charset = __default_locale->loc_CodeSet;
-                ret = (char *)ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
+            } else {
+                uint32 default_charset = __clib2->__default_locale->loc_CodeSet;
+                ret = (char *) ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
             }
             break;
         case D_T_FMT:
-            ret = (char *) __default_locale->loc_DateTimeFormat;
+            ret = (char *) __clib2->__default_locale->loc_DateTimeFormat;
             break;
         case D_FMT:
-            ret = (char *) __default_locale->loc_DateFormat;
+            ret = (char *) __clib2->__default_locale->loc_DateFormat;
             break;
         case T_FMT:
-            ret = (char *) __default_locale->loc_TimeFormat;
-            break;            
+            ret = (char *) __clib2->__default_locale->loc_TimeFormat;
+            break;
         case AM_STR:
             ret = (char *) "AM"; // hardcoded
             break;
@@ -99,15 +88,15 @@ nl_langinfo(nl_item item)
             ret = (char *) "PM"; // hardcoded;
             break;
         case RADIXCHAR:
-		    ret = (char*) __default_locale->loc_DecimalPoint;
-		    break;
-	    case THOUSEP:
-		    ret = (char*) __default_locale->loc_GroupSeparator;
-		    break;            
+            ret = (char *) __clib2->__default_locale->loc_DecimalPoint;
+            break;
+        case THOUSEP:
+            ret = (char *) __clib2->__default_locale->loc_GroupSeparator;
+            break;
         default:
             ret = "";
     }
-    
+
     RETURN(ret);
     return (char *) ret;
 }

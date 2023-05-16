@@ -10,6 +10,7 @@ size_t
 fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     size_t result = 0;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -30,7 +31,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     flockfile(stream);
 
-    assert(__is_valid_iob(file));
+    assert(__is_valid_iob(__clib2, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 

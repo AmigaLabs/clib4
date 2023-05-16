@@ -155,30 +155,35 @@ arc4_check_stir(void) {
 
 void
 arc4random_stir(void) {
-    ObtainSemaphore(__global_clib2->__random_lock);
+    struct _clib2 *__clib2 = __CLIB2;
+
+    ObtainSemaphore(__clib2->__random_lock);
     arc4_stir();
-    ReleaseSemaphore(__global_clib2->__random_lock);
+    ReleaseSemaphore(__clib2->__random_lock);
 }
 
 void
 arc4random_addrandom(u_char *dat, int datlen) {
-    ObtainSemaphore(__global_clib2->__random_lock);
+    struct _clib2 *__clib2 = __CLIB2;
+
+    ObtainSemaphore(__clib2->__random_lock);
     arc4_check_stir();
     arc4_addrandom(dat, datlen);
-    ReleaseSemaphore(__global_clib2->__random_lock);
+    ReleaseSemaphore(__clib2->__random_lock);
 }
 
 uint32_t
 arc4random(void) {
     uint32_t rnd;
+    struct _clib2 *__clib2 = __CLIB2;
 
-    ObtainSemaphore(__global_clib2->__random_lock);
+    ObtainSemaphore(__clib2->__random_lock);
 
     int did_stir = arc4_check_stir();
     rnd = arc4_getword();
     arc4_count -= 4;
 
-    ReleaseSemaphore(__global_clib2->__random_lock);
+    ReleaseSemaphore(__clib2->__random_lock);
     if (did_stir) {
         /* stirring used up our data pool, we need to read in new data outside of the lock */
         arc4_fetch();
@@ -193,8 +198,9 @@ void
 arc4random_buf(void *_buf, size_t n) {
     u_char *buf = (u_char *) _buf;
     int did_stir = 0;
+    struct _clib2 *__clib2 = __CLIB2;
 
-    ObtainSemaphore(__global_clib2->__random_lock);
+    ObtainSemaphore(__clib2->__random_lock);
 
     while (n--) {
         if (arc4_check_stir()) {
@@ -204,7 +210,7 @@ arc4random_buf(void *_buf, size_t n) {
         arc4_count--;
     }
 
-    ReleaseSemaphore(__global_clib2->__random_lock);
+    ReleaseSemaphore(__clib2->__random_lock);
     if (did_stir) {
         /* stirring used up our data pool, we need to read in new data outside of the lock */
         arc4_fetch();

@@ -150,7 +150,6 @@ static void *md5_buffer __P (( const char *buffer, size_t len, void *resblock));
 
 /* Handle endian-ness */
 #if BYTE_ORDER == LITTLE_ENDIAN
-#error
 #define SWAP(n) (n)
 #else
 #define SWAP(n) ((n << 24) | ((n&65280)<<8) | ((n&16711680)>>8) | (n>>24))

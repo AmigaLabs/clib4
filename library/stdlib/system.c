@@ -18,6 +18,7 @@ int
 system(const char *command) {
     char *command_copy = NULL;
     int result;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -42,7 +43,7 @@ system(const char *command) {
 
         struct name_translation_info command_nti;
 
-        if (__unix_path_semantics) {
+        if (__clib2->__unix_path_semantics) {
             char just_the_command_name[MAXPATHLEN + 1];
             BOOL need_quotes = FALSE;
             char *command_name;

@@ -20,7 +20,8 @@
 
 int
 gettimeofday(struct timeval *tp, struct timezone *tzp) {
-    struct TimerIFace *ITimer = __ITimer;
+    struct _clib2 *__clib2 = __CLIB2;
+    struct TimerIFace *ITimer = __clib2->__ITimer;
 
     ULONG seconds, microseconds;
 
@@ -52,13 +53,13 @@ gettimeofday(struct timeval *tp, struct timezone *tzp) {
        starts (January 1st, 1970) eight years before the AmigaOS epoch. */
     seconds += UNIX_TIME_OFFSET;
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
     /* If possible, adjust for the local time zone. We do this because the
        AmigaOS system time is returned in local time and we want to return
        it in UTC. */
-    if (__default_locale != NULL)
-        seconds += 60 * __default_locale->loc_GMTOffset;
+    if (__clib2->__default_locale != NULL)
+        seconds += 60 * __clib2->__default_locale->loc_GMTOffset;
 
     if (tp != NULL) {
         tp->tv_sec = (long) seconds;
@@ -69,8 +70,8 @@ gettimeofday(struct timeval *tp, struct timezone *tzp) {
     }
 
     if (tzp != NULL) {
-        if (__default_locale != NULL)
-            tzp->tz_minuteswest = __default_locale->loc_GMTOffset;
+        if (__clib2->__default_locale != NULL)
+            tzp->tz_minuteswest = __clib2->__default_locale->loc_GMTOffset;
         else
             tzp->tz_minuteswest = 0;
 
@@ -82,7 +83,7 @@ gettimeofday(struct timeval *tp, struct timezone *tzp) {
         SHOWVALUE(tzp->tz_dsttime);
     }
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     RETURN(0);
     return (0);

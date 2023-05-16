@@ -59,7 +59,7 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-array-bounds -Wno-missing-braces -Wno-unused-value -Wno-comment \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-implicit-fallthrough -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-prio-ctor-dtor # -Wbad-function-cast -Wconversion -Wformat
+    -Wno-type-limits -Wno-prio-ctor-dtor # -Werror -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -93,14 +93,18 @@ INCLUDES   := -I$(LIB_DIR)/include \
 SHARED   := $(if $(SHARED),$(SHARED),yes)
 STATIC   := $(if $(STATIC),$(STATIC),yes)
 
-LARGEDATA := -msdata=data
-OPTIONS  := $(LARGEDATA) -DHAVE_SYSV -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU
-OPTIMIZE := -O3 -mmultiple -mupdate -mstrict-align
+LARGEDATA :=
+OPTIONS  := $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU
+OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
+
+STABS :=
+DLIBS :=
 
 ifndef DEBUG
-    OPTIMIZE += -gstabs -DNDEBUG
+    OPTIMIZE += $(STABS) -DNDEBUG
 else
     OPTIMIZE += -gstabs -DDEBUG
+    DLIBS += $(BUILD_DIR)/lib/libdebug.a
 endif
 
 CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
@@ -117,7 +121,7 @@ VERBOSE    := @
 
 # This is the first target: it depends on all the targets
 
-all: prepare all-targets all-libs
+all: prepare all-targets all-libs clib2.library.debug clib2.library
 
 ##############################################################################
 
@@ -125,15 +129,22 @@ all: prepare all-targets all-libs
 
 LIBS :=
 MAIN_LIB:=
+OBJ_C_LIB =
+OBJ_C_SRC =
+OUT_SHARED_LIB := $(BUILD_DIR)/shared
 
 include libc.gmk
 include libm.gmk
 include libamiga.gmk
+include libdebug.gmk
 include libprofile.gmk
 include libpthread.gmk
 include libcrypt.gmk
+include librt.gmk
+include shared.gmk
 
 prepare:
+	-$(MAKEDIR) $(BUILD_DIR)/shared
 	-$(MAKEDIR) $(INSTALL_PREFIX)/lib
 	-$(MAKEDIR) $(INSTALL_PREFIX)/include
 
@@ -143,8 +154,10 @@ all-targets: \
 	$(OUTPUT_LIB)/crtend.o \
 	$(OUTPUT_LIB)/shcrtbegin.o \
 	$(OUTPUT_LIB)/shcrtend.o \
+    $(OUT_SHARED_LIB)/shared_library/clib2.o \
+    $(OUT_SHARED_LIB)/shared_library/math.o \
 	$(MAIN_LIB)
-$(info $(MAIN_LIB))
+#$(info $(OBJ_C_SRC))
 
 all-libs: $(LIBS)
 
@@ -153,9 +166,11 @@ all-libs: $(LIBS)
 # Delete all object files and libraries
 clean:
 	-$(DELETE) $(BUILD_DIR)/obj
-	-$(DELETE) $(BUILD_DIR)/obj.shared	
+	-$(DELETE) $(BUILD_DIR)/obj.shared
+	-$(DELETE) $(BUILD_DIR)/shared
 	-$(DELETE) $(OUTPUT_LIB)
 	-$(DELETE) $(BUILD_DIR)/compiler.log
+	-$(DELETE) $(BUILD_DIR)/clib2.library*
 	-$(DELETE) clib2.lha
 	-$(DELETE) clib2.bak
 	-cd test_programs; make clean
@@ -164,13 +179,26 @@ clean:
 
 # Update the version numbers bound to the individual libraries
 version:
-	$(COPY) c.lib_rev.rev amiga.lib_rev.rev
-	$(COPY) c.lib_rev.rev profile.lib_rev.rev
-	$(COPY) c.lib_rev.rev m.lib_rev.rev
+	$(COPY) c.lib_rev.rev amiga/amiga.lib_rev.rev
+	$(COPY) c.lib_rev.rev profile/profile.lib_rev.rev
+	$(COPY) c.lib_rev.rev math/m.lib_rev.rev
+	$(COPY) c.lib_rev.rev math/crypt.lib_rev.rev
+	$(COPY) c.lib_rev.rev math/pthread.lib_rev.rev
 	bumprev amiga.lib
 	bumprev c.lib
 	bumprev profile.lib
 	bumprev m.lib
+	bumprev crypt.lib
+	bumprev pthread.lib
+
+# Shared clib2.library rules
+
+clib2.library.debug: $(OBJ_C_LIB)
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
+
+clib2.library: clib2.library.debug
+	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
+	ppc-amigaos-strip -R.comment -R.sdata2 --strip-unneeded-rel-relocs $(BUILD_DIR)/$@
 
 ##############################################################################
 
@@ -188,12 +216,12 @@ $(OUTPUT_LIB)/crt0.o : $(LIB_DIR)/crt0.S
 	$(VERBOSE)$(ASSEMBLE)
 	-$(COPY) $(OUTPUT_LIB)/crt0.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtbegin.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtbegin.o : CFLAGS = -mcrt=clib2 $(OPTIONS) $(INCLUDES) -O0 -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtend.o : CFLAGS += -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtend.o : CFLAGS = -mcrt=clib2 -O0 $(OPTIONS) $(INCLUDES) -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtend.o $(INSTALL_PREFIX)/lib/
@@ -225,7 +253,7 @@ endef
 define COMPILE_ASM
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rCompiling Static ASM \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)$(CC)  -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED
@@ -247,6 +275,12 @@ $(VERBOSE)$(CC) $(AFLAGS) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_REG
+$(VERBOSE)@$(MAKEDIR) $(@D)
+$(VERBOSE)echo -e "\rAssembling with regnames \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)$(CC) -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_ALTIVEC_REG
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rAssembling altivec \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) -maltivec -mabi=altivec -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
@@ -280,7 +314,7 @@ $(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $
 endef
 
 compile-tests:
-	cd $(LIB_ROOT)/test_programs; CC="$(CC)" CXX="$(CXX)" COPY="$(COPY)" DELETE="$(DELETE)" MAKEDIR="$(MAKEDIR)" && make
+	+make -C $(LIB_ROOT)/test_programs; CC="$(CC)" CXX="$(CXX)" COPY="$(COPY)" DELETE="$(DELETE)" MAKEDIR="$(MAKEDIR)"
 
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*

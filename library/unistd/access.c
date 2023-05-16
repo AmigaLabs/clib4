@@ -12,6 +12,7 @@ access(const char *path_name, int mode) {
     int result = ERROR;
     BPTR lock = ZERO;
     struct ExamineData *status = NULL;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -38,7 +39,7 @@ access(const char *path_name, int mode) {
 
     STRPTR actual_path_name = NULL;
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         {
             if (path_name[0] == '\0') {
                 SHOWMSG("no name given");
@@ -74,7 +75,7 @@ access(const char *path_name, int mode) {
     }
 
     if ((mode != F_OK) && (mode & (R_OK | W_OK | X_OK)) != 0) {
-        if (__unix_path_semantics) {
+        if (__clib2->__unix_path_semantics) {
             if (lock == ZERO) {
                 memset(status, 0, sizeof(*status));
 
@@ -137,7 +138,7 @@ access(const char *path_name, int mode) {
 
     result = OK;
 
-    out:
+out:
 
     if (NULL != status) {
         FreeDosObject(DOS_EXAMINEDATA, status);
