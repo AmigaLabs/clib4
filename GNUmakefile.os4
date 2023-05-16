@@ -325,12 +325,19 @@ install:
 
 release:
 	-$(DELETE) clib2.lha
+	-$(DELETE) clib2.info
 	-$(MAKEDIR) clib2/include
 	-$(MAKEDIR) clib2/lib
+	-$(COPY) *.md clib2/
 	-$(COPY) LICENSE* clib2/
+	-$(COPY) installer/Install* clib2/
+	-$(COPY) installer/clib2.info .
+	-$(COPY) installer/README.md.info clib2/
+	-$(COPY) $(BUILD_DIR)/clib2.library clib2/
 	-$(COPY) misc clib2/
 	-$(COPY) libs/libauto.a clib2/lib/
 	-$(COPY) $(OUTPUT_LIB)/* clib2/lib/
 	-$(COPY) $(LIB_ROOT)/library/include/* clib2/include/
-	jlha -aqo7i clib2.lha clib2
+	jlha -aqo7i clib2.lha clib2 clib2.info
 	-$(DELETE) clib2
+	-$(DELETE) clib2.info

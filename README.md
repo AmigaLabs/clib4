@@ -1,6 +1,3 @@
-
-
-
 # clib2 – A C runtime library for AmigaOS4
 
 [![Build Status](https://travis-ci.com/afxgroup/clib2.svg?branch=master)](https://travis-ci.org/afxgroup/clib2)
@@ -69,8 +66,6 @@ However to compile these functions you need a compiler that supports SPE ABI. Th
 ### Shared objects
 
 Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).
-using dlopen/dlsym will not crash anymore however there is a bug in `libstdc++.so` that is causing a crash on program start.  
-So if you want to use libstdc++ it is better to remove it and link against the static version.  
 However shared objects needs the beta elf.library not yet released to public
 
 ### Large file support
@@ -119,12 +114,12 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 
 ### libpthread
 
-Clib2 now contain a native pthread implementation with some functions are not present in the pthread.libraries.  
-However mutex* function should be changed to use OS4 Mutexex instead of Semaphores
+Clib2 now contain a native pthread implementation with some functions are not present in the pthread.library.  
+However in the future mutex* function should be changed to use OS4 Mutexes instead of Semaphores
 
 ### librt
 
-aio* functions are present and they are in librt (like in linux). Pthreads are needed to use all aio* functions
+aio* functions are present and they are in librt (like on linux). Pthreads are needed to use all aio* functions
 
 ### libresolv
 
@@ -170,6 +165,7 @@ Use `-lcrypt` option when linking.
 
 To use `debug` functions you have to explicitly pass `DEBUG=true` to GNUMakefile.os4 and 
 debug functions will be enabled 
+If you want to use `gstabs` to non debug version of library you can use the flag `STABS=-gstabs` to GNUMakefile
 
 ### Misc
 
@@ -184,14 +180,44 @@ All *crt* files needs to be compiled with -fno-aggressive-loop-optimizations! Ot
 ### TODO
 
 - There is a memory leak at clib2 end needs to be tracked down  
-- Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster and more better when there are multiple cores.
-- Create a shared library
+- Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster when there are multiple cores.
 - Add a test suite
 - Try to use some functions/headers from https://github.com/attractivechaos/klib to improve speed
 
 ## Legal status
 
 Because this library is in part based upon free software it would be uncourteous not to make it free software itself. The BSD license would probably be appropriate here.
+
+BSD 3-Clause License
+
+Copyright (c) 2016, Olaf Barthel
+Copyright (c) 2021, Clib2Developers
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 >The PowerPC math library is based in part on work by Sun Microsystems:
 >

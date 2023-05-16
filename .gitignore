@@ -5,6 +5,7 @@
 *.lha
 *.bak
 /library/compiler.log
+clib2.info
 compiler.log
 *.map
 .vscode
