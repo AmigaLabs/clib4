@@ -70,8 +70,6 @@
     void _DPRINTF(const char *format,...);
     void _DLOG(const char *format,...);
     int  _SETDEBUGLEVEL(int level);
-    void _PUSHDEBUGLEVEL(int level);
-    void _POPDEBUGLEVEL(void);
     int  _GETDEBUGLEVEL(void);
     void _SETPROGRAMNAME(char *name);
 
@@ -85,12 +83,8 @@
     #define SHOWMSG(s)		    _SHOWMSG(s,__FILE__,__LINE__)
     #define D(s)			    do { _DPRINTF_HEADER(__FILE__,__LINE__); _DPRINTF s; } while(0)
     #define PRINTHEADER()		_DPRINTF_HEADER(__FILE__,__LINE__)
-    #define PRINTF(s)		    _DLOG s
     #define LOG(s)		        do { _DPRINTF_HEADER(__FILE__,__LINE__); _DLOG("<%s()>:",__FUNCTION__); _DLOG s; } while(0)
     #define SETDEBUGLEVEL(l)	_SETDEBUGLEVEL(l)
-    #define PUSHDEBUGLEVEL(l)	_PUSHDEBUGLEVEL(l)
-    #define POPDEBUGLEVEL()	    _POPDEBUGLEVEL()
-    #define SETPROGRAMNAME(n)	_SETPROGRAMNAME(n)
     #define GETDEBUGLEVEL()	    _GETDEBUGLEVEL()
 
     #undef DEBUG
@@ -133,12 +127,10 @@
     #define SHOWMSG(s)		    ((void)0)
     #define D(s)			    ((void)0)
     #define PRINTHEADER()		((void)0)
-    #define PRINTF(s)		    ((void)0)
     #define LOG(s)			    ((void)0)
     #define SETDEBUGLEVEL(l)	((void)0)
     #define PUSHDEBUGLEVEL(l)	((void)0)
     #define POPDEBUGLEVEL()	    ((void)0)
-    #define SETPROGRAMNAME(n)	((void)0)
     #define GETDEBUGLEVEL()	    (0)
 
     #define DEBUG 0

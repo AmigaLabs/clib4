@@ -52,25 +52,12 @@ extern void KPutFmt(const char *format, va_list arg);
 #define DEBUGLEVEL_Reports      1
 #define DEBUGLEVEL_CallTracing  2
 
-void
-_SETPROGRAMNAME(char *name) {
-    struct _clib2 *__clib2 = __CLIB2;
-    if (name != NULL && name[0] != '\0') {
-        int i;
-
-        for (i = 0; name[i] != '\0' && i < (int) sizeof(__clib2->program_name) - 1; i++)
-            __clib2->program_name[i] = name[i];
-
-        __clib2->program_name[i] = '\0';
-        __clib2->program_name_len = i;
-    } else {
-        __clib2->program_name_len = 0;
-    }
-}
-
 int
 _SETDEBUGLEVEL(int level) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return DEBUGLEVEL_CallTracing;
+
     int old_level = __clib2->__debug_level;
 
     __clib2->__debug_level = level;
@@ -81,30 +68,19 @@ _SETDEBUGLEVEL(int level) {
 int
 _GETDEBUGLEVEL(void) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return DEBUGLEVEL_CallTracing;
+
     return (__clib2->__debug_level);
 }
 
-void
-_PUSHDEBUGLEVEL(int level) {
-    struct _clib2 *__clib2 = __CLIB2;
-    __clib2->previous_debug_level = _SETDEBUGLEVEL(level);
-}
-
-void
-_POPDEBUGLEVEL(void) {
-    struct _clib2 *__clib2 = __CLIB2;
-    if (__clib2->previous_debug_level != -1) {
-        _SETDEBUGLEVEL(__clib2->previous_debug_level);
-
-        __clib2->previous_debug_level = -1;
-    }
-}
-
-STATIC VOID
+static void
 _INDENT(void) {
     struct _clib2 *__clib2 = __CLIB2;
-    if (__clib2->program_name_len > 0)
-        KPrintF("(%s) ", __clib2->program_name);
+    if (__clib2 == NULL)
+        return;
+
+    KPrintF("(%s) ", __clib2->__progname);
 
     if (__clib2->__debug_level >= DEBUGLEVEL_CallTracing) {
         int i;
@@ -117,6 +93,9 @@ _INDENT(void) {
 void
 _SHOWVALUE(unsigned long value, int size, const char *name, const char *file, int line) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     if (__clib2->__debug_level >= DEBUGLEVEL_Reports) {
         const char *fmt;
 
@@ -155,6 +134,9 @@ _SHOWVALUE(unsigned long value, int size, const char *name, const char *file, in
 void
 _SHOWPOINTER(const void *pointer, const char *name, const char *file, int line) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     if (__clib2->__debug_level >= DEBUGLEVEL_Reports) {
         const char *fmt;
 
@@ -172,6 +154,9 @@ _SHOWPOINTER(const void *pointer, const char *name, const char *file, int line) 
 void
 _SHOWSTRING(const char *string, const char *name, const char *file, int line) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     if (__clib2->__debug_level >= DEBUGLEVEL_Reports) {
         _INDENT();
         KPrintF("%s:%ld:%s = 0x%08lx \"%s\"\n", file, line, name, string, string);
@@ -181,6 +166,9 @@ _SHOWSTRING(const char *string, const char *name, const char *file, int line) {
 void
 _SHOWWSTRING(const wchar_t *string, const char *name, const char *file, int line) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     if (__clib2->__debug_level >= DEBUGLEVEL_Reports) {
         _INDENT();
         char buf[BUFSIZ] = {0};
@@ -196,6 +184,9 @@ _SHOWWSTRING(const wchar_t *string, const char *name, const char *file, int line
 void
 _SHOWMSG(const char *string, const char *file, int line) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     if (__clib2->__debug_level >= DEBUGLEVEL_Reports) {
         _INDENT();
         KPrintF("%s:%ld:%s\n", file, line, string);
@@ -205,6 +196,9 @@ _SHOWMSG(const char *string, const char *file, int line) {
 void
 _DPRINTF_HEADER(const char *file, int line) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     if (__clib2->__debug_level >= DEBUGLEVEL_Reports) {
         _INDENT();
         KPrintF("%s:%ld:", file, line);
@@ -214,6 +208,9 @@ _DPRINTF_HEADER(const char *file, int line) {
 void
 _DPRINTF(const char *fmt, ...) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     if (__clib2->__debug_level >= DEBUGLEVEL_Reports) {
         va_list args;
 
@@ -228,6 +225,9 @@ _DPRINTF(const char *fmt, ...) {
 void
 _DLOG(const char *fmt, ...) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     if (__clib2->__debug_level >= DEBUGLEVEL_Reports) {
         va_list args;
 
@@ -240,6 +240,9 @@ _DLOG(const char *fmt, ...) {
 void
 _ENTER(const char *file, int line, const char *function) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     if (__clib2->__debug_level >= DEBUGLEVEL_CallTracing) {
         _INDENT();
         KPrintF("%s:%ld:Entering %s\n", file, line, function);
@@ -251,6 +254,9 @@ _ENTER(const char *file, int line, const char *function) {
 void
 _LEAVE(const char *file, int line, const char *function) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     __clib2->indent_level--;
 
     if (__clib2->__debug_level >= DEBUGLEVEL_CallTracing) {
@@ -262,6 +268,9 @@ _LEAVE(const char *file, int line, const char *function) {
 void
 _RETURN(const char *file, int line, const char *function, unsigned long result) {
     struct _clib2 *__clib2 = __CLIB2;
+    if (__clib2 == NULL)
+        return;
+
     __clib2->indent_level--;
 
     if (__clib2->__debug_level >= DEBUGLEVEL_CallTracing) {

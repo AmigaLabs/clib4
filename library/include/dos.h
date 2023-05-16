@@ -491,8 +491,6 @@ struct _clib2 {
 #ifdef DEBUG
     int indent_level;
     int __debug_level;
-    char program_name[40];
-    int program_name_len;
     int previous_debug_level;
 #endif
 
