@@ -653,6 +653,7 @@ C_UNISTD := \
 	fcntl/read.o \
 	fcntl/write.o \
 	unistd/alarm.o \
+	unistd/environ.o \
 	unistd/get_default_file.o \
 	unistd/lock.o \
 	unistd/lseek.o \

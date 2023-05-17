@@ -40,7 +40,10 @@ __BEGIN_DECLS
 extern int opterr;
 extern int optind;
 extern int optopt;
-extern char * optarg;
+extern char *optarg;
+
+#define environ (*__environ())
+extern char ***__environ (void);
 
 extern int isatty(int file_descriptor);
 extern int dup(int file_descriptor);

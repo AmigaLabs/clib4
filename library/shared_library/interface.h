@@ -899,342 +899,343 @@ struct Clib2IFace {
     long (* ulimit) (int cmd,long newlimit);                                                                                                         /* 2960 */
 
     /* unistd.h */
-    int (* isatty) (int file_descriptor);                                                                                                            /* 2964 */
-    int (* dup) (int file_descriptor);                                                                                                               /* 2968 */
-    int (* dup2) (int file_descriptor1, int file_descriptor2);                                                                                       /* 2972 */
-    off_t (* lseek) (int file_descriptor, off_t offset, int mode);                                                                                   /* 2976 */
-    int (* access) (const char * path_name, int mode);                                                                                               /* 2980 */
-    int (* chown) (const char * path_name, uid_t owner, gid_t group);                                                                                /* 2984 */
-    int (* fchown) (int file_descriptor, uid_t owner, gid_t group);                                                                                  /* 2988 */
-    int (* lchown) (const char * path_name, uid_t owner, gid_t group);                                                                               /* 2992 */
-    int (* truncate) (const char * path_name, off_t length);                                                                                         /* 2996 */
-    int (* ftruncate) (int file_descriptor, off_t length);                                                                                           /* 3000 */
-    int (* getpagesize) (void);                                                                                                                      /* 3004 */
-    int (* ftruncate64) (int file_descriptor, _off64_t length);                                                                                      /* 3008 */
-    int (* truncate64) (const char *path_name, _off64_t length);                                                                                     /* 3012 */
-    off64_t (* lseek64) (int fd, off64_t offset, int whence);                                                                                        /* 3016 */
-    unsigned int (* alarm) (unsigned seconds);                                                                                                       /* 3020 */
-    useconds_t (* ualarm) (useconds_t usecs, useconds_t interval);                                                                                   /* 3024 */
-    int (* link) (const char * existing_path,const char * new_path);                                                                                 /* 3028 */
-    int (* unlink) (const char * path_name);                                                                                                         /* 3032 */
-    int (* symlink) (const char * actual_path, const char * symbolic_path);                                                                          /* 3036 */
-    int (* readlink) (const char * path_name, char * buffer, int buffer_size);                                                                       /* 3040 */
-    int (* chdir) (const char * path_name);                                                                                                          /* 3044 */
-    int (* fchdir) (int file_descriptor);                                                                                                            /* 3048 */
-    int (* lockf) (int file_descriptor, int function, off_t size);                                                                                   /* 3052 */
-    unsigned int (* sleep) (unsigned int seconds);                                                                                                   /* 3056 */
-    int (* usleep) (useconds_t microseconds);                                                                                                        /* 3060 */
-    int (* pause) (void);                                                                                                                            /* 3064 */
-    pid_t (* getpid) (void);                                                                                                                         /* 3068 */
-    pid_t (* getppid) (void);                                                                                                                        /* 3072 */
-    pid_t (* getpgrp) (void );                                                                                                                       /* 3076 */
-    pid_t (* tcgetpgrp) (int fildes);                                                                                                                /* 3080 */
-    int (* tcsetpgrp) (int filedes, pid_t pgrp);                                                                                                     /* 3084 */
-    char * (* realpath) (const char *file_name, char *resolved_name);                                                                                /* 3088 */
-    int (* fsync) (int file_descriptor);                                                                                                             /* 3092 */
-    int (* fdatasync) (int file_descriptor);                                                                                                         /* 3096 */
-    char * (* ttyname) (int);                                                                                                                        /* 3100 */
-    int (* ttyname_r) (int file_descriptor,char *name,size_t buflen);                                                                                /* 3104 */
-    int (* execl) (const char *path,const char *arg0,...);                                                                                           /* 3108 */
-    int (* execle) (const char *path,const char *arg0,...);                                                                                          /* 3112 */
-    int (* execlp) (const char *path,const char *arg0,...);                                                                                          /* 3116 */
-    int (* execv) (const char *path,char * const argv[]);                                                                                            /* 3120 */
-    int (* execve) (const char *path,char *const argv[],char *const envp[]);                                                                         /* 3124 */
-    int (* execvp) (const char *command,char * const argv[]);                                                                                        /* 3128 */
-    void (* encrypt) (char *block, int edflag);                                                                                                      /* 3132 */
-    int (* spawnv) (int mode, const char *file, const char **argv);                                                                                  /* 3136 */
-    int (* spawnvp) (int mode, const char *path, const char **argv);                                                                                 /* 3140 */
-    long (* sysconf) (int name);                                                                                                                     /* 3144 */
-    void (* enableUnixPaths) (void);                                                                                                                 /* 3148 */
-    void (* disableUnixPaths) (void);                                                                                                                /* 3152 */
-    void (* enableAltivec) (void);                                                                                                                   /* 3156 */
-    void (* disableAltivec) (void);                                                                                                                  /* 3160 */
-    void (* enableOptimizedFunctions) (void);                                                                                                        /* 3164 */
-    void (* disableOptimizedFunctions) (void);                                                                                                       /* 3168 */
-    char * (* getcwd) (char * buffer, size_t buffer_size);                                                                                           /* 3172 */
-    char * (* getwd) (char *buf);                                                                                                                    /* 3176 */
-    char * (* get_current_dir_name) (void);                                                                                                          /* 3180 */
-    long (* gethostid) ();                                                                                                                           /* 3184 */
-    int (* gethostname) (const char *name, size_t len);                                                                                              /* 3188 */
-    int (* getdomainname) (char *name, size_t len);                                                                                                  /* 3192 */
-    int (* setdomainname) (const char *name, size_t len);                                                                                            /* 3196 */
-    char * (* getlogin) (void);                                                                                                                      /* 3200 */
-    int (* getlogin_r) (char *buf, size_t bufsize);                                                                                                  /* 3204 */
-    char * (* crypt) (const char *key, const char *salt);                                                                                            /* 3208 */
-    gid_t (* getegid) (void);                                                                                                                        /* 3212 */
-    uid_t (* geteuid) (void);                                                                                                                        /* 3216 */
-    gid_t (* getgid) (void);                                                                                                                         /* 3220 */
-    int (* getgroups) (int gidsetsize, gid_t grouplist[]);                                                                                           /* 3224 */
-    char * (* getpass) (const char *prompt);                                                                                                         /* 3228 */
-    uid_t (* getuid) (void);                                                                                                                         /* 3232 */
-    int (* initgroups) (const char *name, gid_t basegid);                                                                                            /* 3236 */
-    int (* setegid) (gid_t gid);                                                                                                                     /* 3240 */
-    int (* seteuid) (uid_t uid);                                                                                                                     /* 3244 */
-    int (* setgid) (gid_t gid);                                                                                                                      /* 3248 */
-    int (* setgroups) (int ngroups, const gid_t *gidset);                                                                                            /* 3252 */
-    int (* setregid) (gid_t rgid, gid_t egid);                                                                                                       /* 3256 */
-    int (* setreuid) (uid_t ruid, uid_t euid);                                                                                                       /* 3260 */
-    pid_t (* setsid) (void);                                                                                                                         /* 3264 */
-    int (* setuid) (uid_t uid);                                                                                                                      /* 3268 */
-    int (* setlogin) (const char *name);                                                                                                             /* 3272 */
-    long (* pathconf) (const char *path,int name);                                                                                                   /* 3276 */
-    long (* fpathconf) (int file_descriptor,int name);                                                                                               /* 3280 */
-    int (* pipe) (int fd[2]);                                                                                                                        /* 3284 */
-    int (* pipe2) (int fd[2], int flags);                                                                                                            /* 3288 */
-    ssize_t (* pread) (int fd, void *buf, size_t nbytes, off_t offset);                                                                              /* 3292 */
-    ssize_t (* pwrite) (int fd, const void *buf, size_t nbytes, off_t offset);                                                                       /* 3296 */
-    ssize_t (* pread64) (int fd, void *buf, size_t nbytes, off64_t offset);                                                                          /* 3300 */
-    ssize_t (* pwrite64) (int fd, const void *buf, size_t nbytes, off64_t offset);                                                                   /* 3304 */
+    char *** (* __environ) (void);                                                                                                                   /* 2964 */
+    int (* isatty) (int file_descriptor);                                                                                                            /* 2968 */
+    int (* dup) (int file_descriptor);                                                                                                               /* 2972 */
+    int (* dup2) (int file_descriptor1, int file_descriptor2);                                                                                       /* 2976 */
+    off_t (* lseek) (int file_descriptor, off_t offset, int mode);                                                                                   /* 2980 */
+    int (* access) (const char * path_name, int mode);                                                                                               /* 2984 */
+    int (* chown) (const char * path_name, uid_t owner, gid_t group);                                                                                /* 2988 */
+    int (* fchown) (int file_descriptor, uid_t owner, gid_t group);                                                                                  /* 2992 */
+    int (* lchown) (const char * path_name, uid_t owner, gid_t group);                                                                               /* 2996 */
+    int (* truncate) (const char * path_name, off_t length);                                                                                         /* 3000 */
+    int (* ftruncate) (int file_descriptor, off_t length);                                                                                           /* 3004 */
+    int (* getpagesize) (void);                                                                                                                      /* 3008 */
+    int (* ftruncate64) (int file_descriptor, _off64_t length);                                                                                      /* 3012 */
+    int (* truncate64) (const char *path_name, _off64_t length);                                                                                     /* 3016 */
+    off64_t (* lseek64) (int fd, off64_t offset, int whence);                                                                                        /* 3020 */
+    unsigned int (* alarm) (unsigned seconds);                                                                                                       /* 3024 */
+    useconds_t (* ualarm) (useconds_t usecs, useconds_t interval);                                                                                   /* 3028 */
+    int (* link) (const char * existing_path,const char * new_path);                                                                                 /* 3032 */
+    int (* unlink) (const char * path_name);                                                                                                         /* 3036 */
+    int (* symlink) (const char * actual_path, const char * symbolic_path);                                                                          /* 3040 */
+    int (* readlink) (const char * path_name, char * buffer, int buffer_size);                                                                       /* 3044 */
+    int (* chdir) (const char * path_name);                                                                                                          /* 3048 */
+    int (* fchdir) (int file_descriptor);                                                                                                            /* 3052 */
+    int (* lockf) (int file_descriptor, int function, off_t size);                                                                                   /* 3056 */
+    unsigned int (* sleep) (unsigned int seconds);                                                                                                   /* 3060 */
+    int (* usleep) (useconds_t microseconds);                                                                                                        /* 3064 */
+    int (* pause) (void);                                                                                                                            /* 3068 */
+    pid_t (* getpid) (void);                                                                                                                         /* 3072 */
+    pid_t (* getppid) (void);                                                                                                                        /* 3076 */
+    pid_t (* getpgrp) (void );                                                                                                                       /* 3080 */
+    pid_t (* tcgetpgrp) (int fildes);                                                                                                                /* 3084 */
+    int (* tcsetpgrp) (int filedes, pid_t pgrp);                                                                                                     /* 3088 */
+    char * (* realpath) (const char *file_name, char *resolved_name);                                                                                /* 3092 */
+    int (* fsync) (int file_descriptor);                                                                                                             /* 3096 */
+    int (* fdatasync) (int file_descriptor);                                                                                                         /* 3100 */
+    char * (* ttyname) (int);                                                                                                                        /* 3104 */
+    int (* ttyname_r) (int file_descriptor,char *name,size_t buflen);                                                                                /* 3108 */
+    int (* execl) (const char *path,const char *arg0,...);                                                                                           /* 3112 */
+    int (* execle) (const char *path,const char *arg0,...);                                                                                          /* 3116 */
+    int (* execlp) (const char *path,const char *arg0,...);                                                                                          /* 3120 */
+    int (* execv) (const char *path,char * const argv[]);                                                                                            /* 3124 */
+    int (* execve) (const char *path,char *const argv[],char *const envp[]);                                                                         /* 3128 */
+    int (* execvp) (const char *command,char * const argv[]);                                                                                        /* 3132 */
+    void (* encrypt) (char *block, int edflag);                                                                                                      /* 3136 */
+    int (* spawnv) (int mode, const char *file, const char **argv);                                                                                  /* 3140 */
+    int (* spawnvp) (int mode, const char *path, const char **argv);                                                                                 /* 3144 */
+    long (* sysconf) (int name);                                                                                                                     /* 3148 */
+    void (* enableUnixPaths) (void);                                                                                                                 /* 3152 */
+    void (* disableUnixPaths) (void);                                                                                                                /* 3156 */
+    void (* enableAltivec) (void);                                                                                                                   /* 3160 */
+    void (* disableAltivec) (void);                                                                                                                  /* 3164 */
+    void (* enableOptimizedFunctions) (void);                                                                                                        /* 3168 */
+    void (* disableOptimizedFunctions) (void);                                                                                                       /* 3172 */
+    char * (* getcwd) (char * buffer, size_t buffer_size);                                                                                           /* 3176 */
+    char * (* getwd) (char *buf);                                                                                                                    /* 3180 */
+    char * (* get_current_dir_name) (void);                                                                                                          /* 3184 */
+    long (* gethostid) ();                                                                                                                           /* 3188 */
+    int (* gethostname) (const char *name, size_t len);                                                                                              /* 3192 */
+    int (* getdomainname) (char *name, size_t len);                                                                                                  /* 3196 */
+    int (* setdomainname) (const char *name, size_t len);                                                                                            /* 3200 */
+    char * (* getlogin) (void);                                                                                                                      /* 3204 */
+    int (* getlogin_r) (char *buf, size_t bufsize);                                                                                                  /* 3208 */
+    char * (* crypt) (const char *key, const char *salt);                                                                                            /* 3212 */
+    gid_t (* getegid) (void);                                                                                                                        /* 3216 */
+    uid_t (* geteuid) (void);                                                                                                                        /* 3220 */
+    gid_t (* getgid) (void);                                                                                                                         /* 3224 */
+    int (* getgroups) (int gidsetsize, gid_t grouplist[]);                                                                                           /* 3228 */
+    char * (* getpass) (const char *prompt);                                                                                                         /* 3232 */
+    uid_t (* getuid) (void);                                                                                                                         /* 3236 */
+    int (* initgroups) (const char *name, gid_t basegid);                                                                                            /* 3240 */
+    int (* setegid) (gid_t gid);                                                                                                                     /* 3244 */
+    int (* seteuid) (uid_t uid);                                                                                                                     /* 3248 */
+    int (* setgid) (gid_t gid);                                                                                                                      /* 3252 */
+    int (* setgroups) (int ngroups, const gid_t *gidset);                                                                                            /* 3256 */
+    int (* setregid) (gid_t rgid, gid_t egid);                                                                                                       /* 3260 */
+    int (* setreuid) (uid_t ruid, uid_t euid);                                                                                                       /* 3264 */
+    pid_t (* setsid) (void);                                                                                                                         /* 3268 */
+    int (* setuid) (uid_t uid);                                                                                                                      /* 3272 */
+    int (* setlogin) (const char *name);                                                                                                             /* 3276 */
+    long (* pathconf) (const char *path,int name);                                                                                                   /* 3280 */
+    long (* fpathconf) (int file_descriptor,int name);                                                                                               /* 3284 */
+    int (* pipe) (int fd[2]);                                                                                                                        /* 3288 */
+    int (* pipe2) (int fd[2], int flags);                                                                                                            /* 3292 */
+    ssize_t (* pread) (int fd, void *buf, size_t nbytes, off_t offset);                                                                              /* 3296 */
+    ssize_t (* pwrite) (int fd, const void *buf, size_t nbytes, off_t offset);                                                                       /* 3300 */
+    ssize_t (* pread64) (int fd, void *buf, size_t nbytes, off64_t offset);                                                                          /* 3304 */
+    ssize_t (* pwrite64) (int fd, const void *buf, size_t nbytes, off64_t offset);                                                                   /* 3308 */
 
     /* utime.h */
-    int (* utime) (const char * path_name,const struct utimbuf * times);                                                                             /* 3308 */
+    int (* utime) (const char * path_name,const struct utimbuf * times);                                                                             /* 3312 */
 
     /* wchar.h */
-    wint_t (* btowc) (int c);                                                                                                                        /* 3312 */
-    int (* wctob) (wint_t c);                                                                                                                        /* 3316 */
-    wchar_t * (* wcscat) (wchar_t *dest, const wchar_t *src);                                                                                        /* 3320 */
-    wchar_t * (* wcsncat) (wchar_t *dest, const wchar_t *src, size_t n);                                                                             /* 3324 */
-    int (* wcscmp) (const wchar_t *s1, const wchar_t *s2);                                                                                           /* 3328 */
-    int (* wcsncmp) (const wchar_t *s1, const wchar_t *s2, size_t n);                                                                                /* 3332 */
-    wchar_t * (* wcscpy) (wchar_t *dest, const wchar_t *src);                                                                                        /* 3336 */
-    wchar_t * (* wcsncpy) (wchar_t *dest, const wchar_t *src, size_t n);                                                                             /* 3340 */
-    size_t (* wcslen) (const wchar_t *s);                                                                                                            /* 3344 */
-    wchar_t * (* wcschr) (const wchar_t *s, wchar_t c);                                                                                              /* 3348 */
-    size_t (* wcsspn) (const wchar_t *s, const wchar_t *set);                                                                                        /* 3352 */
-    wchar_t * (* wcspbrk) (const wchar_t *s, const wchar_t *set);                                                                                    /* 3356 */
-    wchar_t * (* wcstok) (wchar_t *str, const wchar_t *delim, wchar_t **ptr);                                                                        /* 3360 */
-    wchar_t * (* wcsstr) (const wchar_t *big, const wchar_t *little);                                                                                /* 3364 */
-    int (* wcswidth) (const wchar_t *pwcs, size_t n);                                                                                                /* 3368 */
-    int (* wcwidth) (const wchar_t wc);                                                                                                              /* 3372 */
-    double (* wcstod) (const wchar_t *str, wchar_t **ptr);                                                                                           /* 3376 */
-    long (* wcstol) (const wchar_t *str, wchar_t **ptr, int base);                                                                                   /* 3380 */
-    unsigned long (* wcstoul) (const wchar_t *str, wchar_t **ptr, int base);                                                                         /* 3384 */
-    float (* wcstof) (const wchar_t *nptr, wchar_t **endptr);                                                                                        /* 3388 */
-    int (* wscoll) (const wchar_t *s1, const wchar_t *s2);                                                                                           /* 3392 */
-    size_t (* wcsxfrm) (wchar_t *dest, const wchar_t *src, size_t len);                                                                              /* 3396 */
-    wchar_t * (* wmemchr) (const wchar_t *ptr, wchar_t val, size_t len);                                                                             /* 3400 */
-    int (* wmemcmp) (const wchar_t *ptr1, const wchar_t *ptr2, size_t len);                                                                          /* 3404 */
-    wchar_t * (* wmemcpy) (wchar_t *dest, const wchar_t *src, size_t len);                                                                           /* 3408 */
-    wchar_t * (* wmemmove) (wchar_t *dest, const wchar_t *src, size_t len);                                                                          /* 3412 */
-    wchar_t * (* wmemset) (wchar_t *ptr, int val, size_t len);                                                                                       /* 3416 */
-    int (* fwide) (FILE *stream, int orient);                                                                                                        /* 3420 */
-    wint_t (* fgetwc) (FILE *stream);                                                                                                                /* 3424 */
-    wint_t (* getwc) (FILE *stream);                                                                                                                 /* 3428 */
-    wint_t (* getwchar) (void);                                                                                                                      /* 3432 */
-    wint_t (* ungetwc) (wint_t wc, FILE *fp);                                                                                                        /* 3436 */
-    wchar_t * (* fgetws) (wchar_t *s, int n, FILE *stream);                                                                                          /* 3440 */
-    int (* fwscanf) (FILE *stream, const wchar_t *format, ...);                                                                                      /* 3444 */
-    int (* swscanf) (const wchar_t *s, const wchar_t *format, ...);                                                                                  /* 3448 */
-    int (* vfwscanf) (FILE *f, const wchar_t *format, va_list ap);                                                                                   /* 3452 */
-    int (* vswscanf) (const wchar_t *s, const wchar_t *format, va_list ap);                                                                          /* 3456 */
-    int (* vwscanf) (const wchar_t *s, va_list ap);                                                                                                  /* 3460 */
-    int (* wscanf) (const wchar_t *format, ...);                                                                                                     /* 3464 */
-    wint_t (* fputwc) (wchar_t c, FILE *stream);                                                                                                     /* 3468 */
-    wint_t (* putwc) (wchar_t c, FILE *stream);                                                                                                      /* 3472 */
-    wint_t (* putwchar) (wchar_t c);                                                                                                                 /* 3476 */
-    wint_t (* fputws) (const wchar_t *s, FILE *stream);                                                                                              /* 3480 */
-    int (* fwprintf) (FILE *stream, const wchar_t *format, ...);                                                                                     /* 3484 */
-    int (* swprintf) (wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, ...);                                                              /* 3488 */
-    int (* vfwprintf) (FILE *stream, const wchar_t *format, va_list arg);                                                                            /* 3492 */
-    int (* vswprintf) (wchar_t *s, size_t maxlen, const wchar_t *format, va_list arg);                                                               /* 3496 */
-    int (* vwprintf) (const wchar_t *format, va_list arg);                                                                                           /* 3500 */
-    int (* wprintf) (const wchar_t *format, ...);                                                                                                    /* 3504 */
-    size_t (* wcsftime) (wchar_t *s, size_t maxsize, const wchar_t *format, const struct tm *timeptr);                                               /* 3508 */
-    size_t (* mbrlen) (const char *restrict s, size_t n, mbstate_t *restrict ps);                                                                    /* 3512 */
-    size_t (* mbrtowc) (wchar_t *pwc, const char *src, size_t n, mbstate_t *ps);                                                                     /* 3516 */
-    int (* mbsinit) (const mbstate_t *ps);                                                                                                           /* 3520 */
-    size_t (* mbsrtowcs) (wchar_t *restrict dst, const char **restrict src, size_t len, mbstate_t *restrict ps);                                     /* 3524 */
-    size_t (* wcrtomb) (char *restrict s, wchar_t wc, mbstate_t *restrict ps);                                                                       /* 3528 */
-    int (* wcscoll) (const wchar_t *ws1, const wchar_t *ws2);                                                                                        /* 3532 */
-    size_t (* wcscspn) (const wchar_t *s, const wchar_t *c);                                                                                         /* 3536 */
-    wchar_t * (* wcsrchr) (const wchar_t *ws, wchar_t wc);                                                                                           /* 3540 */
-    size_t (* wcsrtombs) (char *restrict dst, const wchar_t **restrict src, size_t len, mbstate_t *restrict ps);                                     /* 3544 */
-    long long (* wcstoll) (const wchar_t *str, wchar_t **ptr, int base);                                                                             /* 3548 */
-    unsigned long long (* wcstoull) (const wchar_t *str, wchar_t **ptr, int base);                                                                   /* 3552 */
-    long double (* wcstold) (const wchar_t *nptr, wchar_t **endptr);                                                                                 /* 3556 */
-    size_t (* mbsnrtowcs) (wchar_t *dst, const char **restrict src, size_t nmc, size_t len, mbstate_t *restrict ps);                                 /* 3560 */
-    size_t (* wcsnrtombs) (char *restrict dst, const wchar_t **restrict src, size_t nwc, size_t len, mbstate_t *restrict ps);                        /* 3564 */
-    wchar_t * (* wcsdup) (const wchar_t *src);                                                                                                       /* 3568 */
-    size_t (* wcsnlen) (const wchar_t *src, size_t n);                                                                                               /* 3572 */
-    wchar_t * (* wcpcpy) (wchar_t *dst, const wchar_t *src);                                                                                         /* 3576 */
-    wchar_t * (* wcpncpy) (wchar_t *dst, const wchar_t *src, size_t len);                                                                            /* 3580 */
-    int (* wcscasecmp) (const wchar_t *l, const wchar_t *r);                                                                                         /* 3584 */
-    int (* wcscasecmp_l) (const wchar_t *l, const wchar_t *r, locale_t loc);                                                                         /* 3588 */
-    int (* wcsncasecmp) (const wchar_t *l, const wchar_t *r, size_t n);                                                                              /* 3592 */
-    int (* wcsncasecmp_l) (const wchar_t *l, const wchar_t *r, size_t n, locale_t loc);                                                              /* 3596 */
-    int (* wcscoll_l) (const wchar_t *ws1, const wchar_t *ws2, locale_t loc);                                                                        /* 3600 */
-    size_t (* wcsxfrm_l) (wchar_t *dest, const wchar_t *src, size_t len, locale_t loc);                                                              /* 3604 */
+    wint_t (* btowc) (int c);                                                                                                                        /* 3316 */
+    int (* wctob) (wint_t c);                                                                                                                        /* 3320 */
+    wchar_t * (* wcscat) (wchar_t *dest, const wchar_t *src);                                                                                        /* 3324 */
+    wchar_t * (* wcsncat) (wchar_t *dest, const wchar_t *src, size_t n);                                                                             /* 3328 */
+    int (* wcscmp) (const wchar_t *s1, const wchar_t *s2);                                                                                           /* 3332 */
+    int (* wcsncmp) (const wchar_t *s1, const wchar_t *s2, size_t n);                                                                                /* 3336 */
+    wchar_t * (* wcscpy) (wchar_t *dest, const wchar_t *src);                                                                                        /* 3340 */
+    wchar_t * (* wcsncpy) (wchar_t *dest, const wchar_t *src, size_t n);                                                                             /* 3344 */
+    size_t (* wcslen) (const wchar_t *s);                                                                                                            /* 3348 */
+    wchar_t * (* wcschr) (const wchar_t *s, wchar_t c);                                                                                              /* 3352 */
+    size_t (* wcsspn) (const wchar_t *s, const wchar_t *set);                                                                                        /* 3356 */
+    wchar_t * (* wcspbrk) (const wchar_t *s, const wchar_t *set);                                                                                    /* 3360 */
+    wchar_t * (* wcstok) (wchar_t *str, const wchar_t *delim, wchar_t **ptr);                                                                        /* 3364 */
+    wchar_t * (* wcsstr) (const wchar_t *big, const wchar_t *little);                                                                                /* 3368 */
+    int (* wcswidth) (const wchar_t *pwcs, size_t n);                                                                                                /* 3372 */
+    int (* wcwidth) (const wchar_t wc);                                                                                                              /* 3376 */
+    double (* wcstod) (const wchar_t *str, wchar_t **ptr);                                                                                           /* 3380 */
+    long (* wcstol) (const wchar_t *str, wchar_t **ptr, int base);                                                                                   /* 3384 */
+    unsigned long (* wcstoul) (const wchar_t *str, wchar_t **ptr, int base);                                                                         /* 3388 */
+    float (* wcstof) (const wchar_t *nptr, wchar_t **endptr);                                                                                        /* 3392 */
+    int (* wscoll) (const wchar_t *s1, const wchar_t *s2);                                                                                           /* 3396 */
+    size_t (* wcsxfrm) (wchar_t *dest, const wchar_t *src, size_t len);                                                                              /* 3400 */
+    wchar_t * (* wmemchr) (const wchar_t *ptr, wchar_t val, size_t len);                                                                             /* 3404 */
+    int (* wmemcmp) (const wchar_t *ptr1, const wchar_t *ptr2, size_t len);                                                                          /* 3408 */
+    wchar_t * (* wmemcpy) (wchar_t *dest, const wchar_t *src, size_t len);                                                                           /* 3412 */
+    wchar_t * (* wmemmove) (wchar_t *dest, const wchar_t *src, size_t len);                                                                          /* 3416 */
+    wchar_t * (* wmemset) (wchar_t *ptr, int val, size_t len);                                                                                       /* 3420 */
+    int (* fwide) (FILE *stream, int orient);                                                                                                        /* 3424 */
+    wint_t (* fgetwc) (FILE *stream);                                                                                                                /* 3428 */
+    wint_t (* getwc) (FILE *stream);                                                                                                                 /* 3432 */
+    wint_t (* getwchar) (void);                                                                                                                      /* 3436 */
+    wint_t (* ungetwc) (wint_t wc, FILE *fp);                                                                                                        /* 3440 */
+    wchar_t * (* fgetws) (wchar_t *s, int n, FILE *stream);                                                                                          /* 3444 */
+    int (* fwscanf) (FILE *stream, const wchar_t *format, ...);                                                                                      /* 3448 */
+    int (* swscanf) (const wchar_t *s, const wchar_t *format, ...);                                                                                  /* 3452 */
+    int (* vfwscanf) (FILE *f, const wchar_t *format, va_list ap);                                                                                   /* 3456 */
+    int (* vswscanf) (const wchar_t *s, const wchar_t *format, va_list ap);                                                                          /* 3460 */
+    int (* vwscanf) (const wchar_t *s, va_list ap);                                                                                                  /* 3464 */
+    int (* wscanf) (const wchar_t *format, ...);                                                                                                     /* 3468 */
+    wint_t (* fputwc) (wchar_t c, FILE *stream);                                                                                                     /* 3472 */
+    wint_t (* putwc) (wchar_t c, FILE *stream);                                                                                                      /* 3476 */
+    wint_t (* putwchar) (wchar_t c);                                                                                                                 /* 3480 */
+    wint_t (* fputws) (const wchar_t *s, FILE *stream);                                                                                              /* 3484 */
+    int (* fwprintf) (FILE *stream, const wchar_t *format, ...);                                                                                     /* 3488 */
+    int (* swprintf) (wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, ...);                                                              /* 3492 */
+    int (* vfwprintf) (FILE *stream, const wchar_t *format, va_list arg);                                                                            /* 3496 */
+    int (* vswprintf) (wchar_t *s, size_t maxlen, const wchar_t *format, va_list arg);                                                               /* 3500 */
+    int (* vwprintf) (const wchar_t *format, va_list arg);                                                                                           /* 3504 */
+    int (* wprintf) (const wchar_t *format, ...);                                                                                                    /* 3508 */
+    size_t (* wcsftime) (wchar_t *s, size_t maxsize, const wchar_t *format, const struct tm *timeptr);                                               /* 3512 */
+    size_t (* mbrlen) (const char *restrict s, size_t n, mbstate_t *restrict ps);                                                                    /* 3516 */
+    size_t (* mbrtowc) (wchar_t *pwc, const char *src, size_t n, mbstate_t *ps);                                                                     /* 3520 */
+    int (* mbsinit) (const mbstate_t *ps);                                                                                                           /* 3524 */
+    size_t (* mbsrtowcs) (wchar_t *restrict dst, const char **restrict src, size_t len, mbstate_t *restrict ps);                                     /* 3528 */
+    size_t (* wcrtomb) (char *restrict s, wchar_t wc, mbstate_t *restrict ps);                                                                       /* 3532 */
+    int (* wcscoll) (const wchar_t *ws1, const wchar_t *ws2);                                                                                        /* 3536 */
+    size_t (* wcscspn) (const wchar_t *s, const wchar_t *c);                                                                                         /* 3540 */
+    wchar_t * (* wcsrchr) (const wchar_t *ws, wchar_t wc);                                                                                           /* 3544 */
+    size_t (* wcsrtombs) (char *restrict dst, const wchar_t **restrict src, size_t len, mbstate_t *restrict ps);                                     /* 3548 */
+    long long (* wcstoll) (const wchar_t *str, wchar_t **ptr, int base);                                                                             /* 3552 */
+    unsigned long long (* wcstoull) (const wchar_t *str, wchar_t **ptr, int base);                                                                   /* 3556 */
+    long double (* wcstold) (const wchar_t *nptr, wchar_t **endptr);                                                                                 /* 3560 */
+    size_t (* mbsnrtowcs) (wchar_t *dst, const char **restrict src, size_t nmc, size_t len, mbstate_t *restrict ps);                                 /* 3564 */
+    size_t (* wcsnrtombs) (char *restrict dst, const wchar_t **restrict src, size_t nwc, size_t len, mbstate_t *restrict ps);                        /* 3568 */
+    wchar_t * (* wcsdup) (const wchar_t *src);                                                                                                       /* 3572 */
+    size_t (* wcsnlen) (const wchar_t *src, size_t n);                                                                                               /* 3576 */
+    wchar_t * (* wcpcpy) (wchar_t *dst, const wchar_t *src);                                                                                         /* 3580 */
+    wchar_t * (* wcpncpy) (wchar_t *dst, const wchar_t *src, size_t len);                                                                            /* 3584 */
+    int (* wcscasecmp) (const wchar_t *l, const wchar_t *r);                                                                                         /* 3588 */
+    int (* wcscasecmp_l) (const wchar_t *l, const wchar_t *r, locale_t loc);                                                                         /* 3592 */
+    int (* wcsncasecmp) (const wchar_t *l, const wchar_t *r, size_t n);                                                                              /* 3596 */
+    int (* wcsncasecmp_l) (const wchar_t *l, const wchar_t *r, size_t n, locale_t loc);                                                              /* 3600 */
+    int (* wcscoll_l) (const wchar_t *ws1, const wchar_t *ws2, locale_t loc);                                                                        /* 3604 */
+    size_t (* wcsxfrm_l) (wchar_t *dest, const wchar_t *src, size_t len, locale_t loc);                                                              /* 3608 */
 
     /* wctype.h */
-    int (* iswalnum) (wint_t c);                                                                                                                     /* 3608 */
-    int (* iswalpha) (wint_t c);                                                                                                                     /* 3612 */
-    int (* iswcntrl) (wint_t c);                                                                                                                     /* 3616 */
-    int (* iswdigit) (wint_t c);                                                                                                                     /* 3620 */
-    int (* iswxdigit) (wint_t c);                                                                                                                    /* 3624 */
-    int (* iswgraph) (wint_t c);                                                                                                                     /* 3628 */
-    int (* iswpunct) (wint_t c);                                                                                                                     /* 3632 */
-    int (* iswprint) (wint_t c);                                                                                                                     /* 3636 */
-    int (* iswlower) (wint_t c);                                                                                                                     /* 3640 */
-    int (* iswupper) (wint_t c);                                                                                                                     /* 3644 */
-    int (* iswspace) (wint_t c);                                                                                                                     /* 3648 */
-    int (* iswblank) (wint_t c);                                                                                                                     /* 3652 */
-    wint_t (* towlower) (wint_t c);                                                                                                                  /* 3656 */
-    wint_t (* towupper) (wint_t c);                                                                                                                  /* 3660 */
-    wctype_t (* wctype) (const char *property);                                                                                                      /* 3664 */
-    int (* iswctype) (wint_t c, wctype_t desc);                                                                                                      /* 3668 */
-    wctrans_t (* wctrans) (const char *property);                                                                                                    /* 3672 */
-    wint_t (* towctrans) (wint_t c, wctrans_t desc);                                                                                                 /* 3676 */
+    int (* iswalnum) (wint_t c);                                                                                                                     /* 3612 */
+    int (* iswalpha) (wint_t c);                                                                                                                     /* 3616 */
+    int (* iswcntrl) (wint_t c);                                                                                                                     /* 3620 */
+    int (* iswdigit) (wint_t c);                                                                                                                     /* 3624 */
+    int (* iswxdigit) (wint_t c);                                                                                                                    /* 3628 */
+    int (* iswgraph) (wint_t c);                                                                                                                     /* 3632 */
+    int (* iswpunct) (wint_t c);                                                                                                                     /* 3636 */
+    int (* iswprint) (wint_t c);                                                                                                                     /* 3640 */
+    int (* iswlower) (wint_t c);                                                                                                                     /* 3644 */
+    int (* iswupper) (wint_t c);                                                                                                                     /* 3648 */
+    int (* iswspace) (wint_t c);                                                                                                                     /* 3652 */
+    int (* iswblank) (wint_t c);                                                                                                                     /* 3656 */
+    wint_t (* towlower) (wint_t c);                                                                                                                  /* 3660 */
+    wint_t (* towupper) (wint_t c);                                                                                                                  /* 3664 */
+    wctype_t (* wctype) (const char *property);                                                                                                      /* 3668 */
+    int (* iswctype) (wint_t c, wctype_t desc);                                                                                                      /* 3672 */
+    wctrans_t (* wctrans) (const char *property);                                                                                                    /* 3676 */
+    wint_t (* towctrans) (wint_t c, wctrans_t desc);                                                                                                 /* 3680 */
 
     /* arpa/inet.h */
-    in_addr_t (* inet_addr) (const char *cp);                                                                                                        /* 3680 */
-    int (* inet_aton) (const char *cp, struct in_addr *pin);                                                                                         /* 3684 */
-    in_addr_t (* inet_lnaof) (struct in_addr in);                                                                                                    /* 3688 */
-    struct in_addr (* inet_makeaddr) (in_addr_t net, in_addr_t lna);                                                                                 /* 3692 */
-    in_addr_t (* inet_netof) (struct in_addr in);                                                                                                    /* 3696 */
-    in_addr_t (* inet_network) (const char *cp);                                                                                                     /* 3700 */
-    char * (* inet_ntoa) (struct in_addr in);                                                                                                        /* 3704 */
-    const char * (* inet_ntop) (int af, const void *src, char *dst, socklen_t cnt);                                                                  /* 3708 */
-    int (* inet_pton) (int af, const char *src, void *dst);                                                                                          /* 3712 */
+    in_addr_t (* inet_addr) (const char *cp);                                                                                                        /* 3684 */
+    int (* inet_aton) (const char *cp, struct in_addr *pin);                                                                                         /* 3688 */
+    in_addr_t (* inet_lnaof) (struct in_addr in);                                                                                                    /* 3692 */
+    struct in_addr (* inet_makeaddr) (in_addr_t net, in_addr_t lna);                                                                                 /* 3696 */
+    in_addr_t (* inet_netof) (struct in_addr in);                                                                                                    /* 3700 */
+    in_addr_t (* inet_network) (const char *cp);                                                                                                     /* 3704 */
+    char * (* inet_ntoa) (struct in_addr in);                                                                                                        /* 3708 */
+    const char * (* inet_ntop) (int af, const void *src, char *dst, socklen_t cnt);                                                                  /* 3712 */
+    int (* inet_pton) (int af, const char *src, void *dst);                                                                                          /* 3716 */
 
     /* arpa/nameser.h */
-    unsigned (* ns_get16) (const unsigned char *);                                                                                                   /* 3716 */
-    unsigned long (* ns_get32) (const unsigned char *);                                                                                              /* 3720 */
-    void (* ns_put16) (unsigned, unsigned char *);                                                                                                   /* 3724 */
-    void (* ns_put32) (unsigned long, unsigned char *);                                                                                              /* 3728 */
-    int (* ns_initparse) (const unsigned char *, int, ns_msg *);                                                                                     /* 3732 */
-    int (* ns_parserr) (ns_msg *, ns_sect, int, ns_rr *);                                                                                            /* 3736 */
-    int (* ns_skiprr) (const unsigned char *, const unsigned char *, ns_sect, int);                                                                  /* 3740 */
-    int (* ns_name_uncompress) (const unsigned char *, const unsigned char *, const unsigned char *, char *, size_t);                                /* 3744 */
+    unsigned (* ns_get16) (const unsigned char *);                                                                                                   /* 3720 */
+    unsigned long (* ns_get32) (const unsigned char *);                                                                                              /* 3724 */
+    void (* ns_put16) (unsigned, unsigned char *);                                                                                                   /* 3728 */
+    void (* ns_put32) (unsigned long, unsigned char *);                                                                                              /* 3732 */
+    int (* ns_initparse) (const unsigned char *, int, ns_msg *);                                                                                     /* 3736 */
+    int (* ns_parserr) (ns_msg *, ns_sect, int, ns_rr *);                                                                                            /* 3740 */
+    int (* ns_skiprr) (const unsigned char *, const unsigned char *, ns_sect, int);                                                                  /* 3744 */
+    int (* ns_name_uncompress) (const unsigned char *, const unsigned char *, const unsigned char *, char *, size_t);                                /* 3748 */
 
     /* net/if.h */
-    unsigned int (* if_nametoindex) (const char *ifname);                                                                                            /* 3748 */
-    char * (* if_indextoname) (unsigned int ifindex, char *ifname);                                                                                  /* 3752 */
+    unsigned int (* if_nametoindex) (const char *ifname);                                                                                            /* 3752 */
+    char * (* if_indextoname) (unsigned int ifindex, char *ifname);                                                                                  /* 3756 */
 
     /* netinet/in.h */
-    int (* bindresvport) (int sd, struct sockaddr_in *sa);                                                                                           /* 3756 */
-    int (* bindresvport6) (int sd, struct sockaddr_in6 *sa);                                                                                         /* 3760 */
+    int (* bindresvport) (int sd, struct sockaddr_in *sa);                                                                                           /* 3760 */
+    int (* bindresvport6) (int sd, struct sockaddr_in6 *sa);                                                                                         /* 3764 */
 
     /* sys/byteswap.h */
-    __CONST_FUNC uint16_t (* bswap16) (uint16_t);                                                                                                    /* 3764 */
-    __CONST_FUNC uint32_t (* bswap24) (uint32_t);                                                                                                    /* 3768 */
-    __CONST_FUNC uint32_t (* bswap32) (uint32_t);                                                                                                    /* 3772 */
-    __CONST_FUNC uint64_t (* bswap64) (uint64_t);                                                                                                    /* 3776 */
-    void * (* swab) (void *from,void *to,ssize_t nbytes);                                                                                            /* 3780 */
-    void * (* swab24) (void *from,void *to,ssize_t nbytes);	/* Same as swab(), but operates on 24-bit words instead. */                              /* 3784 */
-    void * (* swab32) (void *from,void *to,ssize_t nbytes);	/* Same as swab(), but operates on 32-bit words instead. */                              /* 3788 */
-    void * (* swab64) (void *from,void *to,ssize_t nbytes);	/* Same as swab(), but operates on 64-bit words instead. */                              /* 3792 */
+    __CONST_FUNC uint16_t (* bswap16) (uint16_t);                                                                                                    /* 3768 */
+    __CONST_FUNC uint32_t (* bswap24) (uint32_t);                                                                                                    /* 3772 */
+    __CONST_FUNC uint32_t (* bswap32) (uint32_t);                                                                                                    /* 3776 */
+    __CONST_FUNC uint64_t (* bswap64) (uint64_t);                                                                                                    /* 3780 */
+    void * (* swab) (void *from,void *to,ssize_t nbytes);                                                                                            /* 3784 */
+    void * (* swab24) (void *from,void *to,ssize_t nbytes);	/* Same as swab(), but operates on 24-bit words instead. */                              /* 3788 */
+    void * (* swab32) (void *from,void *to,ssize_t nbytes);	/* Same as swab(), but operates on 32-bit words instead. */                              /* 3792 */
+    void * (* swab64) (void *from,void *to,ssize_t nbytes);	/* Same as swab(), but operates on 64-bit words instead. */                              /* 3796 */
 
     /* sys/file.h */
-    int (* flock) (int fd, int op);                                                                                                                  /* 3796 */
+    int (* flock) (int fd, int op);                                                                                                                  /* 3800 */
 
     /* sys/ioctl.h */
-    int (* ioctl) (int fildes, int request, ... /* arg */);                                                                                          /* 3800 */
+    int (* ioctl) (int fildes, int request, ... /* arg */);                                                                                          /* 3804 */
 
     /* sys/ipc.h */
-    key_t (* ftok) (const char *path, int id);                                                                                                       /* 3804 */
+    key_t (* ftok) (const char *path, int id);                                                                                                       /* 3808 */
 
     /* sys/mman.h */
-    void * (* mmap) (void *addr, size_t len, int prot, int flags, int fd, off_t offset);                                                             /* 3808 */
-    int (* munmap) (void *map, size_t length);                                                                                                       /* 3812 */
-    int (* msync) (void *addr, size_t len, int flags);                                                                                               /* 3816 */
+    void * (* mmap) (void *addr, size_t len, int prot, int flags, int fd, off_t offset);                                                             /* 3812 */
+    int (* munmap) (void *map, size_t length);                                                                                                       /* 3816 */
+    int (* msync) (void *addr, size_t len, int flags);                                                                                               /* 3820 */
 
     /* sys/mount.h */
-    int (* statfs) (const char *path, struct statfs *buf);                                                                                           /* 3820 */
-    int (* fstatfs) (int fd, struct statfs *buf);                                                                                                    /* 3824 */
+    int (* statfs) (const char *path, struct statfs *buf);                                                                                           /* 3824 */
+    int (* fstatfs) (int fd, struct statfs *buf);                                                                                                    /* 3828 */
 
     /* sys/msg.h */
-    int (* _msgctl) (int msqid, int cmd, struct msqid_ds *buf);                                                                                      /* 3828 */
-    int (* _msgget) (key_t key, int msgflg);                                                                                                         /* 3832 */
-    ssize_t (* _msgrcv) (int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg);                                                              /* 3836 */
-    int (* _msgsnd) (int msqid, const void *msgp, size_t msgsz, int msgflg);                                                                         /* 3840 */
-    int (* _msgsnap) (int msqid, void *buf, size_t bufsz, long msgtyp);                                                                              /* 3844 */
-    int (* _msgids) (int *buf, size_t nids, size_t  *pnids);                                                                                         /* 3848 */
+    int (* _msgctl) (int msqid, int cmd, struct msqid_ds *buf);                                                                                      /* 3832 */
+    int (* _msgget) (key_t key, int msgflg);                                                                                                         /* 3836 */
+    ssize_t (* _msgrcv) (int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg);                                                              /* 3840 */
+    int (* _msgsnd) (int msqid, const void *msgp, size_t msgsz, int msgflg);                                                                         /* 3844 */
+    int (* _msgsnap) (int msqid, void *buf, size_t bufsz, long msgtyp);                                                                              /* 3848 */
+    int (* _msgids) (int *buf, size_t nids, size_t  *pnids);                                                                                         /* 3852 */
 
     /* sys/resource.h */
-    int (* getrlimit) (int resource, struct rlimit *rlp);                                                                                            /* 3852 */
-    int (* setrlimit) (int resource, const struct rlimit *rlp);                                                                                      /* 3856 */
-    int (* getrusage) (int who, struct rusage *usage);                                                                                               /* 3860 */
+    int (* getrlimit) (int resource, struct rlimit *rlp);                                                                                            /* 3856 */
+    int (* setrlimit) (int resource, const struct rlimit *rlp);                                                                                      /* 3860 */
+    int (* getrusage) (int who, struct rusage *usage);                                                                                               /* 3864 */
 
     /* sys/select.h */
-    int (* select) (int nfds, fd_set *readfds,fd_set *writefds, fd_set *errorfds,struct timeval *timeout);                                           /* 3864 */
-    int (* waitselect) (int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *except_fds,struct timeval *timeout,unsigned long * signal_mask);      /* 3868 */
+    int (* select) (int nfds, fd_set *readfds,fd_set *writefds, fd_set *errorfds,struct timeval *timeout);                                           /* 3868 */
+    int (* waitselect) (int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *except_fds,struct timeval *timeout,unsigned long * signal_mask);      /* 3872 */
 
     /* sys/sem.h */
-    int (* _semctl) (int semid, int semnum, int cmd, union semun aun);                                                                               /* 3872 */
-    int (* _semget) (key_t key, int nsems, int flags);                                                                                               /* 3876 */
-    int (* _semop) (int semid, const struct sembuf *ops, int nops);                                                                                  /* 3880 */
-    long int (* _semids) (long int *buf, uint32_t nids, long unsigned int *idcnt);                                                                   /* 3884 */
-    int (* _semtimedop) (int semid, const struct sembuf *ops, int nops, struct timespec *to);                                                        /* 3888 */
+    int (* _semctl) (int semid, int semnum, int cmd, union semun aun);                                                                               /* 3876 */
+    int (* _semget) (key_t key, int nsems, int flags);                                                                                               /* 3880 */
+    int (* _semop) (int semid, const struct sembuf *ops, int nops);                                                                                  /* 3884 */
+    long int (* _semids) (long int *buf, uint32_t nids, long unsigned int *idcnt);                                                                   /* 3888 */
+    int (* _semtimedop) (int semid, const struct sembuf *ops, int nops, struct timespec *to);                                                        /* 3892 */
 
     /* sys/shm.h */
-    void * (* _shmat) (int shmid, const void *shmaddr, int shmflg);                                                                                  /* 3892 */
-    int (* _shmctl) (int shmid, int cmd, struct shmid_ds *buf);                                                                                      /* 3896 */
-    int (* _shmdt) (const void *shmaddr);                                                                                                            /* 3900 */
-    int (* _shmget) (key_t key, size_t size, int shmflg);                                                                                            /* 3904 */
-    int (* _shmids) (int *buf, size_t nids, size_t *pnids);                                                                                          /* 3908 */
+    void * (* _shmat) (int shmid, const void *shmaddr, int shmflg);                                                                                  /* 3896 */
+    int (* _shmctl) (int shmid, int cmd, struct shmid_ds *buf);                                                                                      /* 3900 */
+    int (* _shmdt) (const void *shmaddr);                                                                                                            /* 3904 */
+    int (* _shmget) (key_t key, size_t size, int shmflg);                                                                                            /* 3908 */
+    int (* _shmids) (int *buf, size_t nids, size_t *pnids);                                                                                          /* 3912 */
 
     /* sys/socket.h */
-    int (* accept) (int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen);                                                                         /* 3912 */
-    int (* bind) (int socket, const struct sockaddr *address, socklen_t address_len);                                                                /* 3916 */
-    int (* connect) (int socket, const struct sockaddr *address, socklen_t address_len);                                                             /* 3920 */
-    int (* getpeername) (int socket, struct sockaddr *address, socklen_t *address_len);                                                              /* 3924 */
-    int (* getsockname) (int socket, struct sockaddr *address, socklen_t *address_len);                                                              /* 3928 */
-    int (* getsockopt) (int socket, int level, int option_name, void *option_value, socklen_t *option_len);                                          /* 3932 */
-    int (* listen) (int socket, int backlog);                                                                                                        /* 3936 */
-    ssize_t (* recv) (int socket, void *buffer, size_t length, int flags);                                                                           /* 3940 */
-    ssize_t (* recvfrom) (int socket, void *buffer, size_t length,int flags, struct sockaddr *address,socklen_t *address_len);                       /* 3944 */
-    ssize_t (* recvmsg) (int socket, struct msghdr *message, int flags);                                                                             /* 3948 */
-    ssize_t (* send) (int socket, const void *buffer, size_t length, int flags);                                                                     /* 3952 */
-    ssize_t (* sendmsg) (int socket, const struct msghdr *message, int flags);                                                                       /* 3956 */
-    ssize_t (* sendto) (int socket, const void *message, size_t length,int flags, const struct sockaddr *dest_addr,socklen_t dest_len);              /* 3960 */
-    int (* setsockopt) (int socket, int level, int option_name, const void *option_value, socklen_t option_len);                                     /* 3964 */
-    int (* shutdown) (int socket, int how);                                                                                                          /* 3968 */
-    int (* socket) (int domain, int type, int protocol);                                                                                             /* 3972 */
-    int (* socketpair) (int domain, int type, int protocol, int fds[2]);                                                                             /* 3976 */
+    int (* accept) (int sockfd,struct sockaddr *cliaddr,socklen_t *addrlen);                                                                         /* 3916 */
+    int (* bind) (int socket, const struct sockaddr *address, socklen_t address_len);                                                                /* 3920 */
+    int (* connect) (int socket, const struct sockaddr *address, socklen_t address_len);                                                             /* 3924 */
+    int (* getpeername) (int socket, struct sockaddr *address, socklen_t *address_len);                                                              /* 3928 */
+    int (* getsockname) (int socket, struct sockaddr *address, socklen_t *address_len);                                                              /* 3932 */
+    int (* getsockopt) (int socket, int level, int option_name, void *option_value, socklen_t *option_len);                                          /* 3936 */
+    int (* listen) (int socket, int backlog);                                                                                                        /* 3940 */
+    ssize_t (* recv) (int socket, void *buffer, size_t length, int flags);                                                                           /* 3944 */
+    ssize_t (* recvfrom) (int socket, void *buffer, size_t length,int flags, struct sockaddr *address,socklen_t *address_len);                       /* 3948 */
+    ssize_t (* recvmsg) (int socket, struct msghdr *message, int flags);                                                                             /* 3952 */
+    ssize_t (* send) (int socket, const void *buffer, size_t length, int flags);                                                                     /* 3956 */
+    ssize_t (* sendmsg) (int socket, const struct msghdr *message, int flags);                                                                       /* 3960 */
+    ssize_t (* sendto) (int socket, const void *message, size_t length,int flags, const struct sockaddr *dest_addr,socklen_t dest_len);              /* 3964 */
+    int (* setsockopt) (int socket, int level, int option_name, const void *option_value, socklen_t option_len);                                     /* 3968 */
+    int (* shutdown) (int socket, int how);                                                                                                          /* 3972 */
+    int (* socket) (int domain, int type, int protocol);                                                                                             /* 3976 */
+    int (* socketpair) (int domain, int type, int protocol, int fds[2]);                                                                             /* 3980 */
 
     /* sys/stat.h */
-    int (* stat) (const char * path_name, struct stat * buffer);                                                                                     /* 3980 */
-    int (* fstat) (int file_descriptor, struct stat * buffer);                                                                                       /* 3984 */
-    int (* lstat) (const char * path_name, struct stat * buffer);                                                                                    /* 3988 */
-    int (* chmod) (const char * path_name, mode_t mode);                                                                                             /* 3992 */
-    int (* fchmod) (int file_descriptor, mode_t mode);                                                                                               /* 3996 */
-    int (* mkdir) (const char * path_name, mode_t mode);                                                                                             /* 4000 */
-    int (* rmdir) (const char * path_name);                                                                                                          /* 4004 */
-    mode_t (* umask) (mode_t new_mask);                                                                                                              /* 4008 */
+    int (* stat) (const char * path_name, struct stat * buffer);                                                                                     /* 3984 */
+    int (* fstat) (int file_descriptor, struct stat * buffer);                                                                                       /* 3988 */
+    int (* lstat) (const char * path_name, struct stat * buffer);                                                                                    /* 3992 */
+    int (* chmod) (const char * path_name, mode_t mode);                                                                                             /* 3996 */
+    int (* fchmod) (int file_descriptor, mode_t mode);                                                                                               /* 4000 */
+    int (* mkdir) (const char * path_name, mode_t mode);                                                                                             /* 4004 */
+    int (* rmdir) (const char * path_name);                                                                                                          /* 4008 */
+    mode_t (* umask) (mode_t new_mask);                                                                                                              /* 4012 */
 
     /* sys/statvfs.h */
-    int (* statvfs) (const char *, struct statvfs *);                                                                                                /* 4012 */
-    int (* fstatvfs) (int, struct statvfs *);                                                                                                        /* 4016 */
+    int (* statvfs) (const char *, struct statvfs *);                                                                                                /* 4016 */
+    int (* fstatvfs) (int, struct statvfs *);                                                                                                        /* 4020 */
 
     /* sys/syslog.h */
-    void (* closelog) (void);                                                                                                                        /* 4020 */
-    void (* openlog) (const char *ident, int opt, int facility);                                                                                     /* 4024 */
-    int (* setlogmask) (int maskpri);                                                                                                                /* 4028 */
-    void (* syslog) (int priority, const char *message, ...);                                                                                        /* 4032 */
-    void (* vsyslog) (int priority, const char *message, va_list args);                                                                              /* 4036 */
+    void (* closelog) (void);                                                                                                                        /* 4024 */
+    void (* openlog) (const char *ident, int opt, int facility);                                                                                     /* 4028 */
+    int (* setlogmask) (int maskpri);                                                                                                                /* 4032 */
+    void (* syslog) (int priority, const char *message, ...);                                                                                        /* 4036 */
+    void (* vsyslog) (int priority, const char *message, va_list args);                                                                              /* 4040 */
 
     /* sys/systeminfo.h */
-    long (* sysinfo) (int cmd,char *buf,long buflen);                                                                                                /* 4040 */
+    long (* sysinfo) (int cmd,char *buf,long buflen);                                                                                                /* 4044 */
 
     /* sys/time.h */
-    int (* gettimeofday) (struct timeval *tp, struct timezone *tzp);                                                                                 /* 4044 */
-    int (* settimeofday) (const struct timeval *, const struct timezone *);                                                                          /* 4048 */
-    int (* utimes) (const char *path, const struct timeval *tvp);                                                                                    /* 4052 */
-    int (* getitimer) (int which, struct itimerval *curr_value);                                                                                     /* 4056 */
-    int (* setitimer) (int which, const struct itimerval *new_value, struct itimerval *old_value);                                                   /* 4060 */
+    int (* gettimeofday) (struct timeval *tp, struct timezone *tzp);                                                                                 /* 4048 */
+    int (* settimeofday) (const struct timeval *, const struct timezone *);                                                                          /* 4052 */
+    int (* utimes) (const char *path, const struct timeval *tvp);                                                                                    /* 4056 */
+    int (* getitimer) (int which, struct itimerval *curr_value);                                                                                     /* 4060 */
+    int (* setitimer) (int which, const struct itimerval *new_value, struct itimerval *old_value);                                                   /* 4064 */
 
     /* sys/timeb.h */
-    int (* ftime) (struct timeb *);                                                                                                                  /* 4064 */
+    int (* ftime) (struct timeb *);                                                                                                                  /* 4068 */
 
     /* sys/times.h */
-    clock_t (* times) (struct tms *tp);                                                                                                              /* 4068 */
+    clock_t (* times) (struct tms *tp);                                                                                                              /* 4072 */
 
     /* sys/uio.h */
-    ssize_t (* readv) (int file_descriptor,const struct iovec *iov,int vec_count);                                                                   /* 4072 */
-    ssize_t (* writev) (int file_descriptor,const struct iovec *iov,int vec_count);                                                                  /* 4076 */
+    ssize_t (* readv) (int file_descriptor,const struct iovec *iov,int vec_count);                                                                   /* 4076 */
+    ssize_t (* writev) (int file_descriptor,const struct iovec *iov,int vec_count);                                                                  /* 4080 */
 
     /* sys/utsname.h */
-    int (* uname) (struct utsname *);                                                                                                                /* 4080 */
+    int (* uname) (struct utsname *);                                                                                                                /* 4084 */
 };
 
 #ifdef __PIC__

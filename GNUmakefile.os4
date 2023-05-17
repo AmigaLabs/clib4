@@ -216,7 +216,7 @@ $(OUTPUT_LIB)/crt0.o : $(LIB_DIR)/crt0.S
 	$(VERBOSE)$(ASSEMBLE)
 	-$(COPY) $(OUTPUT_LIB)/crt0.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtbegin.o : CFLAGS = -mcrt=clib2 $(OPTIONS) $(INCLUDES) -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtbegin.o : CFLAGS = -mcrt=clib2 $(STABS) $(OPTIONS) $(INCLUDES) -O0 -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtbegin.o $(INSTALL_PREFIX)/lib/
@@ -226,7 +226,7 @@ $(OUTPUT_LIB)/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtend.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/shcrtbegin.o : CFLAGS += $(PIC) -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/shcrtbegin.o : CFLAGS += $(PIC) $(STABS) -O0 -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/shcrtbegin.o : $(LIB_DIR)/shcrtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/shcrtbegin.o $(INSTALL_PREFIX)/lib/

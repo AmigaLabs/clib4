@@ -1,5 +1,5 @@
 /*
- * $Id: dos.h,v 1.28 2006-09-27 09:40:06 clib2devs Exp $
+ * $Id: dos.h,v 2.0 2023-05-17 09:40:06 clib2devs Exp $
 */
 
 #ifndef _DOS_H
@@ -20,17 +20,28 @@
 #include <proto/elf.h>
 
 /* Category name handling variables.  */
-#define NUM_LOCALES			    (LC_MAX + 1)
-#define MAX_LOCALE_NAME_LEN	    256
+#define NUM_LOCALES                (LC_MAX + 1)
+#define MAX_LOCALE_NAME_LEN        256
+/* arc4Random stuff */
+#define RANDOMDEV               "RANDOM:"
+#define KEYSIZE                    128
 
 __BEGIN_DECLS
 
 typedef struct _wof_allocator_t wof_allocator_t;
+
 typedef void (*signal_handler_t)(int sig);
 
 struct ExitTrapNode {
     struct MinNode etn_MinNode;
+
     void (*etn_Function)(void);
+};
+
+struct arc4_stream {
+    uint8_t i;
+    uint8_t j;
+    uint8_t s[256];
 };
 
 /*
@@ -96,20 +107,24 @@ extern unsigned int (*__get_default_stack_size)(void);
 /****************************************************************************/
 
 /* A data structures used by the path translation routines below. */
-struct name_translation_info
-{
-	char substitute[PATH_MAX];
-	char *original_name;
-	int is_root;
+struct name_translation_info {
+    char substitute[PATH_MAX];
+    char *original_name;
+    int is_root;
 };
 
 /****************************************************************************/
 
 extern int __translate_relative_path_name(char const **name_ptr, char *replace, size_t max_replace_len);
+
 extern void __restore_path_name(char const **name_ptr, struct name_translation_info *nti);
+
 extern int __translate_amiga_to_unix_path_name(char const **name_ptr, struct name_translation_info *nti);
+
 extern int __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translation_info *nti);
+
 extern int __translate_io_error_to_errno(LONG io_error);
+
 extern void __print_termination_message(const char *termination_message);
 
 /****************************************************************************/
@@ -147,18 +162,18 @@ extern void __execve_exit(int return_code);
  * wide char status structure
  */
 struct _wchar {
-	/* miscellaneous reentrant data */
-	char *_strtok_last;
-	_mbstate_t _mblen_state;
-	_mbstate_t _wctomb_state;
-	_mbstate_t _mbtowc_state;
-	char _l64a_buf[8];
-	int _getdate_err;
-	_mbstate_t _mbrlen_state;
-	_mbstate_t _mbrtowc_state;
-	_mbstate_t _mbsrtowcs_state;
-	_mbstate_t _wcrtomb_state;
-	_mbstate_t _wcsrtombs_state;
+    /* miscellaneous reentrant data */
+    char *_strtok_last;
+    _mbstate_t _mblen_state;
+    _mbstate_t _wctomb_state;
+    _mbstate_t _mbtowc_state;
+    char _l64a_buf[8];
+    int _getdate_err;
+    _mbstate_t _mbrlen_state;
+    _mbstate_t _mbrtowc_state;
+    _mbstate_t _mbsrtowcs_state;
+    _mbstate_t _wcrtomb_state;
+    _mbstate_t _wcsrtombs_state;
 };
 
 /*
@@ -166,7 +181,7 @@ struct _wchar {
  */
 
 struct _clib2 {
-	struct ExecIFace *IExec; 	/* Main IExec interface */
+    struct ExecIFace *IExec;    /* Main IExec interface */
 
     struct ElfIFace *IElf;
 
@@ -191,7 +206,7 @@ struct _clib2 {
 
     /* Used by setjmp/longjmp in main */
     jmp_buf __exit_jmp_buf;
-    int 	__exit_value;
+    int __exit_value;
 
     /*
      * If set to TRUE, your program's process->pr_WindowPtr will be set to -1
@@ -200,9 +215,9 @@ struct _clib2 {
      */
     BOOL __disable_dos_requesters;
 
-    struct TimeVal clock; 		/* Populated when clib starts with current time */
-	struct rusage ru;			/* rusage struct used in rlimit function */
-	struct _wchar *wide_status;	/* wide char functions status */
+    struct TimeVal clock;        /* Populated when clib starts with current time */
+    struct rusage ru;            /* rusage struct used in rlimit function */
+    struct _wchar *wide_status;    /* wide char functions status */
 
     /*
      * This variable controls the task priority of the program, when running.
@@ -242,20 +257,20 @@ struct _clib2 {
     /* Set this flag to true to enable optimized CPU functions */
     BOOL __optimizedCPUFunctions;
 
-	/* 
-	 * Check if SYSV library is available in the system. Otherwise the functions
-	 * will return ENOSYS
-	 */
-    struct Library   *__SysVBase;
+    /*
+     * Check if SYSV library is available in the system. Otherwise the functions
+     * will return ENOSYS
+     */
+    struct Library *__SysVBase;
     struct SYSVIFace *__ISysVIPC;
-	BOOL haveShm;
+    BOOL haveShm;
 
-	/* This is used with the dlopen(), dlclose() and dlsym() functions. */
-	Elf32_Handle __dl_elf_handle;
-	Elf32_Error __elf_error_code;
+    /* This is used with the dlopen(), dlclose() and dlsym() functions. */
+    Elf32_Handle __dl_elf_handle;
+    Elf32_Error __elf_error_code;
 
-	/* This is the pointer to itself */
-	struct Process *self;
+    /* This is the pointer to itself */
+    struct Process *self;
 
     struct Locale *__default_locale;
     struct Locale *__locale_table[NUM_LOCALES];
@@ -268,8 +283,8 @@ struct _clib2 {
     const char *_current_locale;
     int __mb_cur_max;
 
-	/* used by tmpnam */
-	int inc;
+    /* used by tmpnam */
+    int inc;
 
     /* Directories being scanned whose locks need to be freed when shutting down. */
     struct MinList __directory_list;
@@ -340,12 +355,12 @@ struct _clib2 {
     struct SignalSemaphore __unlink_semaphore;
 
     /* Local timer I/O. */
-    struct MsgPort         *__timer_port;
-    BOOL			        __timer_busy;
+    struct MsgPort *__timer_port;
+    BOOL __timer_busy;
     struct SignalSemaphore *__timer_semaphore;
-    struct TimeRequest     *__timer_request;
-    struct Library         *__TimerBase;
-    struct TimerIFace      *__ITimer;
+    struct TimeRequest *__timer_request;
+    struct Library *__TimerBase;
+    struct TimerIFace *__ITimer;
 
     /* If the program's current directory was changed, here is where we find out about it. */
     BPTR __original_current_directory;
@@ -353,7 +368,7 @@ struct _clib2 {
     BOOL __unlock_current_directory;
 
     /* Memalign memory list */
-    void           *__memalign_pool;
+    void *__memalign_pool;
     struct AVLNode *__memalign_tree;
 
     /*
@@ -460,7 +475,7 @@ struct _clib2 {
      * which essentially do nothing at all. You will have to implement these
      * yourself if you want to use them.
      */
-    char **environ;
+    char **__environment;
 
     /*
      * If you link against libunix.a then the default command line processing
@@ -501,6 +516,17 @@ struct _clib2 {
     size_t num_exit_nodes_used;
     BOOL atexit_blocked;
 
+    struct arc4_stream rs;
+    int rs_initialized;
+    int rs_stired;
+    int arc4_count;
+    int rs_data_available;
+    struct {
+        struct timeval tv;
+        pid_t pid;
+        uint8_t rnd[KEYSIZE];
+    } rdat;
+
     struct LocalVariable *__lv_root;
 
     int indent_level;
@@ -513,7 +539,9 @@ struct _clib2 {
 };
 
 #ifndef __getClib2
+
 extern struct _clib2 *__getClib2(void);
+
 #endif
 #define __CLIB2 __getClib2()
 
@@ -527,6 +555,7 @@ extern struct _clib2 *__getClib2(void);
  * __locale_exit() releases the default locale and closes locale.library.
  */
 extern int __locale_init(struct _clib2 *__clib2);
+
 extern void __locale_exit(struct _clib2 *__clib2);
 
 

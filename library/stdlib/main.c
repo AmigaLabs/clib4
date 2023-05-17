@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_main.c,v 1.36 2022-08-18 14:09:00 clib2devs Exp $
+ * $Id: stdlib_main.c,v 2.00 2023-05-17 14:09:00 clib2devs Exp $
 */
 
 #ifndef EXEC_EXECBASE_H
@@ -46,6 +46,66 @@ static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
 extern int main(int arg_c, char **arg_v);
 static void shared_obj_init(struct _clib2 *__clib2, BOOL init);
+
+struct envHookData {
+    uint32 env_size;
+    uint32 allocated_size;
+    struct _clib2 *r;
+};
+
+static char *empty_env[1] = {NULL};
+
+static uint32
+copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *message) {
+    DECLARE_UTILITYBASE();
+
+    if (strlen(message->sv_GDir) <= 4) {
+        if (ehd->env_size == ehd->allocated_size) {
+            if (!(ehd->r->__environment = realloc(ehd->r->__environment, ehd->allocated_size + 1024 * sizeof(char *)))) {
+                return 1;
+            }
+            ClearMem((char *) ehd->r->__environment + ehd->allocated_size, 1024 * sizeof(char *));
+            ehd->allocated_size += 1024 * sizeof(char *);
+        }
+
+        char **env = (char **) hook->h_Data;
+        uint32 size = strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
+        char *buffer = (char *) malloc(size);
+        if (buffer == NULL) {
+            return 1;
+        }
+
+        ++ehd->env_size;
+        snprintf(buffer, size - 1, "%s=%s", message->sv_Name, message->sv_Var);
+        *env = buffer;
+        env++;
+        hook->h_Data = env;
+    }
+    return 0;
+}
+
+static void
+__makeEnvironment(struct _clib2 *__clib2) {
+    char varbuf[8];
+    uint32 flags = 0;
+    size_t environ_size = 1024 * sizeof(char *);
+
+    if (GetVar("EXEC_IMPORT_LOCAL", varbuf, sizeof(varbuf), GVF_LOCAL_ONLY) > 0) {
+        flags = GVF_LOCAL_ONLY;
+    }
+
+    __clib2->__environment = (char **) calloc(environ_size, 1);
+    if (!__clib2->__environment)
+        return;
+
+    flags |= GVF_SCAN_TOPLEVEL;
+    struct Hook hook;
+    hook.h_Entry = (void *) copyEnvironment;
+    hook.h_Data = __clib2->__environment;
+    struct envHookData ehd = {1, environ_size, __clib2};
+    ScanVars(&hook, flags, &ehd);
+}
+
 
 static void
 shared_obj_init(struct _clib2 *__clib2, BOOL init) {
@@ -314,6 +374,12 @@ _main(
         GetSysTime(&__clib2->clock);
         /* Generate random seed */
         __clib2->__random_seed = time(NULL);
+    }
+
+    /* Copy environment variables into clib2 reent structure */
+    __makeEnvironment(__clib2);
+    if (!__clib2->__environment) {
+        __clib2->__environment = empty_env;
     }
 
     /* If a callback was provided which can fill us in on which

@@ -1,5 +1,5 @@
 /*
- * $Id: libc_init_global.c,v 1.0 2021-02-04 17:01:06 clib2devs Exp $
+ * $Id: libc_init_global.c,v 2.0 2023-05-17 17:01:06 clib2devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -216,6 +216,18 @@ reent_init(struct _clib2 *__clib2) {
     __clib2->__default_path_delimiter = ":";
     __clib2->__default_path = "/C:.:/APPDIR:/PROGDIR:/ram:/SDK/C:/SDK/Local/C:";
 
+    /* Set ar4random stuff */
+    __clib2->rs.i = 0;
+    __clib2->rs.j = 0;
+    for (int i = 0; i <= 255; i++) {
+        __clib2->rs.s[i] = i;
+    }
+
+    __clib2->rs_initialized = 0;
+    __clib2->rs_stired = 0;
+    __clib2->arc4_count = 0;
+    __clib2->rs_data_available = 0;
+
     /* Check if .unix file exists in the current dir. If the file exists enable unix path semantics */
     SHOWMSG("Check for .unix file");
     __clib2->__unix_path_semantics = FALSE;
@@ -252,7 +264,7 @@ reent_init(struct _clib2 *__clib2) {
 out:
 
     if (!success) {
-       reent_exit(__clib2);
+        reent_exit(__clib2);
     }
 }
 
@@ -317,8 +329,7 @@ reent_exit(struct _clib2 *__clib2) {
             SHOWMSG("Closing elf handle");
             CloseElfTags(__clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
             __clib2->__dl_elf_handle = NULL;
-        }
-        else {
+        } else {
             D(("Cannot close elf handle: __clib2->__dl_elf_handle == %p - IElf == %p", __clib2->__dl_elf_handle, IElf));
         }
 

@@ -85,7 +85,7 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
-extern unsigned int NOCOMMON (* __get_default_stack_size)(void);
+extern unsigned int (* __get_default_stack_size)(void);
 
 extern void _init(void);
 extern void _fini(void);

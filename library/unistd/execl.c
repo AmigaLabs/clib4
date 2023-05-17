@@ -50,7 +50,7 @@ execl(const char *path, const char *arg0, ...) {
 
     argv[argc] = NULL;
 
-    result = execve(path, (char *const *) argv, __clib2->environ);
+    result = execve(path, (char *const *) argv, __clib2->__environment);
 
 out:
 

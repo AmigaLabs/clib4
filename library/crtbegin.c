@@ -15,6 +15,8 @@
 
 #include "shared_library/interface.h"
 
+#include "c.lib_rev.h"
+
 #ifndef _DEBUG_H
 #include "debug/debug.h"
 #endif /* _DEBUG_H */
@@ -51,11 +53,11 @@ const struct ExecIFace *IExec = NULL;
 const struct Library *DOSBase = NULL;
 const struct DOSIFace *IDOS = NULL;
 
-const struct Library *UtilityBase;
-const struct UtilityIFace *IUtility;
+const struct Library *UtilityBase = NULL;
+const struct UtilityIFace *IUtility = NULL;
 
-struct Library *ElfBase;
-struct ElfIFace *IElf;
+struct Library *ElfBase = NULL;
+struct ElfIFace *IElf = NULL;
 
 const struct Clib2IFace *IClib2 = NULL;
 
@@ -88,7 +90,8 @@ static void CloseLibraryInterface(struct ExecIFace *iexec, struct Interface *int
         struct Library *library = interface->Data.LibBase;
 
         iexec->DropInterface(interface);
-        iexec->CloseLibrary(library);
+        if (library != NULL)
+            iexec->CloseLibrary(library);
     }
 }
 
@@ -96,6 +99,8 @@ int
 clib2_start(char *args, int32 arglen, struct Library *sysbase) {
     struct ExecIFace *iexec;
     struct Clib2IFace *iclib2;
+    struct DOSIFace *idos;
+
     int rc = -1;
     void *old_r13 = r13;
 
@@ -106,8 +111,9 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
     iexec->Obtain();
 
     IExec = iexec;
-    IDOS = (struct DOSIFace *) OpenLibraryInterface(iexec, "dos.library", MIN_OS_VERSION);
-    if (IDOS) {
+    idos = (struct DOSIFace *) OpenLibraryInterface(iexec, "dos.library", MIN_OS_VERSION);
+    if (idos) {
+        IDOS = idos;
         IUtility = (struct UtilityIFace *) OpenLibraryInterface(iexec, "utility.library", MIN_OS_VERSION);
         if (IUtility != NULL) {
             UtilityBase = IUtility->Data.LibBase;
@@ -118,18 +124,21 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
 
                 rc = iclib2->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__);
 
-                CloseLibraryInterface(iexec, (struct Interface *) iclib2);
-                CloseLibraryInterface(iexec, (struct Interface *) IUtility);
-                CloseLibraryInterface(iexec, (struct Interface *) IDOS);
             } else {
-                iexec->Alert(AT_Recovery | AG_OpenLib);
+                idos->Printf("Cannot open %s\n", VERS);
             }
-            CloseLibraryInterface(iexec, (struct Interface *) IUtility);
+        }
+        else {
+            idos->Printf("Cannot open utility.library version %ld!\n", MIN_OS_VERSION);
         }
     }
     else {
         iexec->Alert(AT_Recovery | AG_OpenLib | AO_DOSLib);
     }
+    CloseLibraryInterface(iexec, (struct Interface *) iclib2);
+    CloseLibraryInterface(iexec, (struct Interface *) IUtility);
+    CloseLibraryInterface(iexec, (struct Interface *) idos);
+
     iexec->Release();
 
     r13 = old_r13;

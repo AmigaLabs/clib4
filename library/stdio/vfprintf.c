@@ -484,8 +484,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
             if (__OOP(*s))
                 return EOF;
             ps = st;
-            st = states[st]
-            S(*s++);
+            st = states[st]S(*s++);
         } while ((st - 1) < _STOP);
         if (!st)
             return EOF;

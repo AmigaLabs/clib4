@@ -36,7 +36,7 @@ execvp(const char *command, char *const argv[]) {
 
     /* If it's an absolute or relative path name, it's easy. */
     if (found_path_separators) {
-        result = execve(command, argv, __clib2->environ);
+        result = execve(command, argv, __clib2->__environment);
     } else {
         size_t command_buffer_size = 0;
         const char *path_delimiter;
@@ -97,7 +97,7 @@ execvp(const char *command, char *const argv[]) {
             command_buffer[complete_path_len] = '\0';
 
             /* Now try to run that command. */
-            result = execve(command_buffer, argv, __clib2->environ);
+            result = execve(command_buffer, argv, __clib2->__environment);
 
             /* Did it work? And if it didn't work, did it fail because
                the command to be run could not be executed? */
