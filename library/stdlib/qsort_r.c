@@ -8,7 +8,6 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-
 #define ntz(x) a_ctz_l((x))
 
 typedef int (*cmpfun)(const void *, const void *, void *);

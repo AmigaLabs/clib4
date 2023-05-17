@@ -28,6 +28,11 @@ __BEGIN_DECLS
 typedef struct _wof_allocator_t wof_allocator_t;
 typedef void (*signal_handler_t)(int sig);
 
+struct ExitTrapNode {
+    struct MinNode etn_MinNode;
+    void (*etn_Function)(void);
+};
+
 /*
  * The Workbench startup message passed to this program; this may be NULL
  * if the program was started from shell instead.
@@ -489,6 +494,14 @@ struct _clib2 {
     int __root_gid;
     int __root_euid;
     int __root_egid;
+
+    /* atexit() - 32 functions are the minimum required by ISO 'C'. */
+    struct ExitTrapNode exit_node_table[32];
+    struct MinList exit_trap_list;
+    size_t num_exit_nodes_used;
+    BOOL atexit_blocked;
+
+    struct LocalVariable *__lv_root;
 
     int indent_level;
     int __debug_level;

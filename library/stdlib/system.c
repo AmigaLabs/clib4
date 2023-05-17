@@ -37,9 +37,10 @@ system(const char *command) {
         result = 1;
     } else {
         static const struct TagItem system_tags[2] =
-                {
-                        {SYS_UserShell, TRUE},
-                        {TAG_END,       0}};
+        {
+            {SYS_UserShell, TRUE},
+            {TAG_END,       0}
+        };
 
         struct name_translation_info command_nti;
 

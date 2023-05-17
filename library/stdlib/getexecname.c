@@ -7,19 +7,15 @@
 #endif /* _STDLIB_HEADERS_H */
 
 const char *
-getexecname(void)
-{
+getexecname(void) {
     ENTER();
 
     char pathBuffer[PATH_MAX] = {0};
-    if (GetCliProgramName(pathBuffer, PATH_MAX - 1))
-    {
+    if (GetCliProgramName(pathBuffer, PATH_MAX - 1)) {
         char *ret = calloc(1, strlen(pathBuffer) + 1);
         RETURN(ret);
         return ret;
-    }
-    else
-    {
+    } else {
         RETURN("?");
         return "?";
     }
