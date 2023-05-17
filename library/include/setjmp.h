@@ -10,51 +10,60 @@
 
 __BEGIN_DECLS
 
-#if defined(__ALTIVEC__)
-    #define _JBLEN 64
-#else
-    #define _JBLEN 32
-#endif
-#define _JBTYPE double
+typedef unsigned long long __jmp_buf[58];
 
-#ifdef _JBLEN
-    #ifdef _JBTYPE
-        typedef	_JBTYPE jmp_buf[_JBLEN];
-    #else
-        typedef	int jmp_buf[_JBLEN];
-    #endif
-#endif
+/* Calling environment, plus possibly a saved signal mask.  */
+struct __jmp_buf_tag {
+    /* NOTE: The machine-dependent definitions of `__sigsetjmp'
+       assume that a `jmp_buf' begins with a `__jmp_buf' and that
+       `__mask_was_saved' follows it.  Do not move these members
+       or add others before it.  */
+    __jmp_buf __jmpbuf;		/* Calling environment.  */
+    int __mask_was_saved;	/* Saved the signal mask?  */
+    sigset_t __saved_mask;	/* Saved signal mask.  */
+};
 
-/* POSIX sigsetjmp/siglongjmp macros */
-typedef int sigjmp_buf[_JBLEN+2];
-
-#define _SAVEMASK	_JBLEN
-#define _SIGMASK	(_JBLEN+1)
+typedef struct __jmp_buf_tag jmp_buf[1];
 
 /* Store the calling environment in ENV, also saving the signal mask. Return 0.  */
 extern int setjmp(jmp_buf __env);
 
+/* Store the calling environment in ENV, also saving the
+   signal mask if SAVEMASK is nonzero.  Return 0.
+   This is the internal name for `sigsetjmp'.  */
+extern int __sigsetjmp(struct __jmp_buf_tag __env[1], int __savemask);
+
+/* Store the calling environment in ENV, not saving the signal mask. Return 0.  */
+extern int _setjmp(struct __jmp_buf_tag __env[1]);
+
 /* Jump to the environment saved in ENV, making the `setjmp' call there return VAL, or 1 if VAL is 0.  */
-extern void longjmp(jmp_buf __env, int __val);
+extern void longjmp(jmp_buf __env, int __val) __attribute__ ((__noreturn__));
 
-#define sigsetjmp(env, savemask) \
-            __extension__ \
-            ({ \
-              sigjmp_buf *_sjbuf = &(env); \
-              ((*_sjbuf)[_SAVEMASK] = savemask,\
-              sigprocmask (SIG_SETMASK, 0, (sigset_t *)((*_sjbuf) + _SIGMASK)),\
-              setjmp (*_sjbuf)); \
-            })
+#if defined __USE_MISC || defined __USE_XOPEN
+/* Same.  Usually `_longjmp' is used with `_setjmp', which does not save
+   the signal mask.  But it is how ENV was saved that determines whether
+   `longjmp' restores the mask; `_longjmp' is just an alias.  */
+extern void _longjmp(struct __jmp_buf_tag __env[1], int __val) __attribute__ ((__noreturn__));
+#endif
 
-#define siglongjmp(env, val) \
-            __extension__ \
-            ({ \
-              sigjmp_buf *_sjbuf = &(env); \
-              ((((*_sjbuf)[_SAVEMASK]) ? \
-               sigprocmask (SIG_SETMASK, (sigset_t *)((*_sjbuf) + _SIGMASK), 0)\
-               : 0), \
-               longjmp (*_sjbuf, val)); \
-            })
+#ifdef	__USE_POSIX
+/* Use the same type for `jmp_buf' and `sigjmp_buf'.
+   The `__mask_was_saved' flag determines whether
+   or not `longjmp' will restore the signal mask.  */
+typedef struct __jmp_buf_tag sigjmp_buf[1];
+
+/* Store the calling environment in ENV, also saving the
+   signal mask if SAVEMASK is nonzero.  Return 0.  */
+# define sigsetjmp(env, savemask)	__sigsetjmp (env, savemask)
+
+/* Jump to the environment saved in ENV, making the
+   sigsetjmp call there return VAL, or 1 if VAL is 0.
+   Restore the signal mask if that sigsetjmp call saved it.
+   This is just an alias `longjmp'.  */
+extern void siglongjmp (sigjmp_buf __env, int __val) __attribute__ ((__noreturn__));
+#endif /* Use POSIX.  */
+
+extern int __sigjmp_save (jmp_buf __env, int __savemask);
 
 __END_DECLS
 
