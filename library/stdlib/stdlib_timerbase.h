@@ -1,9 +1,9 @@
 /*
- * $Id: stdlib_timezonebase.h,v 1.0 2021-01-15 10:06:25 clib2devs Exp $
+ * $Id: stdlib_timerbase.h,v 1.0 2023-05-17 10:06:25 clib2devs Exp $
 */
 
-#ifndef _STDLIB_TIMEZONEBASE_H
-#define _STDLIB_TIMEZONEBASE_H
+#ifndef _STDLIB_TIMERBASE_H
+#define _STDLIB_TIMERBASE_H
 
 /****************************************************************************/
 
@@ -15,7 +15,7 @@
 #define __NOGLOBALIFACE__
 #endif /* __NOGLOBALIFACE__ */
 
-#include <proto/timezone.h>
+#include <proto/timer.h>
 
 /****************************************************************************/
 
@@ -23,8 +23,8 @@
 #include "macros.h"
 #endif /* _MACROS_H */
 
-#define DECLARE_TIMEZONEBASE() \
-	struct Library *		UNUSED	TimezoneBase	= __CLIB2->__TimezoneBase; \
-	struct TimezoneIFace *			ITimezone		= __CLIB2->__ITimezone
+#define DECLARE_TIMERBASE() \
+	struct Library *		UNUSED	TimerBase	= __CLIB2->__TimerBase; \
+	struct TimerIFace *			    ITimer		= __CLIB2->__ITimer
 
-#endif /* _STDLIB_TIMEZONEBASE_H */
+#endif /* _STDLIB_TIMERBASE_H */

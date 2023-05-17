@@ -23,7 +23,6 @@
 #endif /* _TIME_HEADERS_H */
 
 int itimer_real_task() {
-    static int USED timertype; // Can we manage various timers?
     struct MsgPort *tmr_real_mp = NULL;
     struct TimeRequest *tmr_real_tr = NULL;
     ULONG wait_mask;
@@ -33,13 +32,9 @@ int itimer_real_task() {
     struct itimer *_itimer = (struct itimer *) thisTask->pr_Task.tc_UserData;
 
     struct _clib2 *__clib2 = _itimer->__clib2;
-    timertype = _itimer->which;
 
     SHOWPOINTER(__clib2);
-    SHOWVALUE(timertype);
-
-    //Printf("__clib2=%p\n", __clib2);
-    //Printf("timertype=%d\n", timertype);
+    SHOWVALUE(_itimer->which);
 
     /* Create itimer timers and message ports */
     tmr_real_mp = AllocSysObjectTags(ASOT_PORT,

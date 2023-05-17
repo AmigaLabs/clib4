@@ -28,7 +28,6 @@ int
 raise(int sig) {
     ENTER();
 
-    static int local_signals_blocked;
     struct _clib2 *__clib2 = __CLIB2;
     int result = ERROR;
     SHOWVALUE(sig);
@@ -48,7 +47,7 @@ raise(int sig) {
     }
 
     /* Can we deliver the signal? */
-    if ((FLAG_IS_CLEAR(__clib2->__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
+    if ((FLAG_IS_CLEAR(__clib2->__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(__clib2->local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
         signal_handler_t handler;
 
         /* Which handler is installed for this signal? */
@@ -59,7 +58,7 @@ raise(int sig) {
             /* Block delivery of this signal to prevent recursion. */
             SHOWMSG("Blocking signal if it isn't a kill signal");
             if (sig != SIGINT && sig != SIGTERM && sig != SIGKILL)
-                SET_FLAG(local_signals_blocked, (1 << sig));
+                SET_FLAG(__clib2->local_signals_blocked, (1 << sig));
 
             /* The default behaviour is to drop into abort(), or do
                something very much like it. */
@@ -138,7 +137,7 @@ raise(int sig) {
 
             /* Unblock signal delivery again. */
             SHOWMSG("Unblocking signal");
-            CLEAR_FLAG(local_signals_blocked, (1 << sig));
+            CLEAR_FLAG(__clib2->local_signals_blocked, (1 << sig));
         }
         else {
             if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {

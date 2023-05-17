@@ -321,6 +321,7 @@ struct _clib2 {
        The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
        modify or query it. */
     int __signals_blocked;
+    int local_signals_blocked;
 
     struct SignalSemaphore *stdio_lock;
 
@@ -334,11 +335,12 @@ struct _clib2 {
     struct SignalSemaphore __unlink_semaphore;
 
     /* Local timer I/O. */
-    struct MsgPort     *__timer_port;
-    BOOL			    __timer_busy;
-    struct TimeRequest *__timer_request;
-    struct Library     *__TimerBase;
-    struct TimerIFace  *__ITimer;
+    struct MsgPort         *__timer_port;
+    BOOL			        __timer_busy;
+    struct SignalSemaphore *__timer_semaphore;
+    struct TimeRequest     *__timer_request;
+    struct Library         *__TimerBase;
+    struct TimerIFace      *__ITimer;
 
     /* If the program's current directory was changed, here is where we find out about it. */
     BPTR __original_current_directory;

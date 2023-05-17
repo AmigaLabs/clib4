@@ -67,6 +67,10 @@
 #include "stdlib_timezonebase.h"
 #endif /* _STDLIB_TIMEZONEBASE_H */
 
+#ifndef _STDLIB_TIMERBASE_H
+#include "stdlib_timerbase.h"
+#endif /* _STDLIB_TIMERBASE_H */
+
 #ifndef _MATH_FP_SUPPORT_H
 #include "math_fp_support.h"
 #endif /* _MATH_FP_SUPPORT_H */

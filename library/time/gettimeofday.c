@@ -21,14 +21,25 @@
 int
 gettimeofday(struct timeval *tp, struct timezone *tzp) {
     struct _clib2 *__clib2 = __CLIB2;
-    struct TimerIFace *ITimer = __clib2->__ITimer;
-
+    int32 gmtoffset = 0;
+    int8 dstime = -1;
     ULONG seconds, microseconds;
+
+    DECLARE_TIMERBASE();
+    DECLARE_TIMEZONEBASE();
 
     ENTER();
 
-    /* Obtain the current system time. */
+    if (!__clib2->__ITimer) {
+        tp->tv_sec = tp->tv_usec = tzp->tz_minuteswest = tzp->tz_dsttime = 0;
+        RETURN(0);
+    }
 
+    ObtainSemaphore(__clib2->__timer_semaphore);
+
+    GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
+
+    /* Obtain the current system time. */
 #if defined(__NEW_TIMEVAL_DEFINITION_USED__)
     {
         struct TimeVal tv;
@@ -49,17 +60,16 @@ gettimeofday(struct timeval *tp, struct timezone *tzp) {
     }
 #endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
 
+    ReleaseSemaphore(__clib2->__timer_semaphore);
+
     /* Convert the number of seconds so that they match the Unix epoch, which
        starts (January 1st, 1970) eight years before the AmigaOS epoch. */
     seconds += UNIX_TIME_OFFSET;
 
-    __locale_lock(__clib2);
-
     /* If possible, adjust for the local time zone. We do this because the
        AmigaOS system time is returned in local time and we want to return
        it in UTC. */
-    if (__clib2->__default_locale != NULL)
-        seconds += 60 * __clib2->__default_locale->loc_GMTOffset;
+    seconds += 60 * gmtoffset;
 
     if (tp != NULL) {
         tp->tv_sec = (long) seconds;
@@ -70,20 +80,12 @@ gettimeofday(struct timeval *tp, struct timezone *tzp) {
     }
 
     if (tzp != NULL) {
-        if (__clib2->__default_locale != NULL)
-            tzp->tz_minuteswest = __clib2->__default_locale->loc_GMTOffset;
-        else
-            tzp->tz_minuteswest = 0;
-
-        /* The -1 means "we do not know if the time given is in
-           daylight savings time". */
-        tzp->tz_dsttime = -1;
+        tzp->tz_minuteswest = gmtoffset;
+        tzp->tz_dsttime = dstime;
 
         SHOWVALUE(tzp->tz_minuteswest);
         SHOWVALUE(tzp->tz_dsttime);
     }
-
-    __locale_unlock(__clib2);
 
     RETURN(0);
     return (0);
