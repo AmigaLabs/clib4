@@ -76,14 +76,6 @@ struct arc4_stream {
 #define WBenchMsg __WBenchMsg
 
 /*
- * You can replace this function with your own and perform your own
- * Ctrl+C checking.
- */
-extern void __check_abort(void);
-
-/****************************************************************************/
-
-/*
  * Obtain the low level 'file' handle or socket ID bound to a file
  * descriptor. This function returns 0 for success and non-zero
  * otherwise (if, for example, the file descriptor value you

@@ -7,7 +7,7 @@
 
 ##############################################################################
 
-.PHONY : all all-targets clean version cvs-tag
+.PHONY : all all-targets clean version release dpkg
 
 # You may have to change the following sets of macro definitions which will
 # be used throughout the build makefile. These definitions cover the paths
@@ -51,6 +51,7 @@ LIB_ROOT ?= $(shell pwd)
 LIB_DIR = $(LIB_ROOT)/library
 BUILD_DIR = $(LIB_ROOT)/build
 OUTPUT_LIB = $(BUILD_DIR)/lib
+DPKG_LIB = clib2_1.0_amd64
 
 ##############################################################################
 
@@ -173,6 +174,7 @@ clean:
 	-$(DELETE) $(BUILD_DIR)/clib2.library*
 	-$(DELETE) clib2.lha
 	-$(DELETE) clib2.bak
+    -$(DELETE) $(DPKG_LIB).deb
 	-cd test_programs; make clean
 
 ##############################################################################
@@ -341,3 +343,17 @@ release:
 	jlha -aqo7i clib2.lha clib2 clib2.info
 	-$(DELETE) clib2
 	-$(DELETE) clib2.info
+
+dpkg:
+	-$(DELETE) $(DPKG_LIB)
+	-$(DELETE) $(DPKG_LIB).deb
+	-$(MAKEDIR) $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/lib
+	-$(MAKEDIR) $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/include
+	-$(MAKEDIR) $(DPKG_LIB)/DEBIAN
+	-$(COPY) libs/libauto.a $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/lib/
+	-$(COPY) $(OUTPUT_LIB)/* $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/lib/
+	-$(COPY) $(LIB_ROOT)/library/include/* $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/include/
+	-$(COPY) misc/control $(DPKG_LIB)/DEBIAN/
+	-$(COPY) misc/postrm $(DPKG_LIB)/DEBIAN/
+	chmod 0755 $(DPKG_LIB)/DEBIAN/postrm
+	dpkg --build $(DPKG_LIB)
