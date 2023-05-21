@@ -371,7 +371,7 @@ _main(
     struct TimerIFace *ITimer = __clib2->__ITimer;
     if (__clib2->__ITimer != NULL) {
         SHOWMSG("Calling GetSysTime");
-        GetSysTime(&__clib2->clock);
+        GetSysTime((struct TimeVal *) &__clib2->clock);
         /* Generate random seed */
         __clib2->__random_seed = time(NULL);
     }

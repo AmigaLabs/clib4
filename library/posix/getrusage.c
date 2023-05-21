@@ -43,8 +43,8 @@ getrusage(int who, struct rusage *rusage) {
     switch (who) {
         case RUSAGE_SELF: {
                 GetSysTime((struct TimeVal *) clock);
-                clock[0] -= __clib2->clock.Seconds;
-                clock[1] -= __clib2->clock.Microseconds;
+                clock[0] -= __clib2->clock.tv_sec;
+                clock[1] -= __clib2->clock.tv_usec;
                 if (clock[1] < 0) {
                     clock[1] += 1000000;
                     clock[0]--;

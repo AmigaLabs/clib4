@@ -13,9 +13,6 @@
 #include <wchar.h>
 #include <setjmp.h>
 
-#include <exec/libraries.h>
-#include <workbench/startup.h>
-#include <devices/timer.h>
 #include <libraries/elf.h>
 #include <proto/elf.h>
 
@@ -30,6 +27,7 @@ __BEGIN_DECLS
 
 typedef struct _wof_allocator_t wof_allocator_t;
 typedef void (*signal_handler_t)(int sig);
+typedef int32 BPTR;
 
 struct ExitTrapNode {
     struct MinNode etn_MinNode;
@@ -42,37 +40,6 @@ struct arc4_stream {
     uint8_t j;
     uint8_t s[256];
 };
-
-/*
- * The Workbench startup message passed to this program; this may be NULL
- * if the program was started from shell instead.
- *
- * The variable name is set up to be __WBenchMsg to make it fit into the
- * ISO 'C' standard context. It is redefined to WBenchMsg to make it
- * compatible with the original Amiga program startup code which would
- * refer to the variable under that name.
- *
- * It is recommended to access the Workbench startup message as part of your
- * program's main() function, like this:
- *
- *    int
- *    main(int argc,char ** argv)
- *    {
- *       struct WBStartup * wb_startup_message;
- *
- *       if(argc == 0)
- *          wb_startup_message = (struct WBStartup *)argv;
- *       else
- *          wb_startup_message = NULL;
- *
- *       ...
- *    }
- *
- * This approach has the advantage that your program does not rely upon a
- * global variable initialized by the startup code, whose name you might
- * not even know exactly.
- */
-#define WBenchMsg __WBenchMsg
 
 /*
  * Obtain the low level 'file' handle or socket ID bound to a file
@@ -199,7 +166,7 @@ struct _clib2 {
      */
     BOOL __disable_dos_requesters;
 
-    struct TimeVal clock;        /* Populated when clib starts with current time */
+    struct timeval clock;        /* Populated when clib starts with current time */
     struct rusage ru;            /* rusage struct used in rlimit function */
     struct _wchar *wide_status;    /* wide char functions status */
 
