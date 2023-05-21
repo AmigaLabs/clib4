@@ -554,6 +554,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 p = MAX(p, (int) (2 * sizeof(void *)));
                 t = 'x';
                 fl |= __U_ALT_FORM;
+                /* fallthrough */
             case 'x':
             case 'X':
                 a = fmt_x(arg.i, z, t & 32);
@@ -595,6 +596,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
             case 'm':
                 if (1)
                     a = strerror(errno); else
+                /* fallthrough */
             case 's':
                 a = arg.p ? arg.p : (char *) "(null)";
                 z = a + strnlen(a, p<0 ? INT_MAX : p);
@@ -610,6 +612,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 wc[1] = L'\0';
                 arg.p = wc;
                 p = -1;
+                /* fallthrough */
             case 'S':
                 ws = arg.p;
                 for (i = l = 0;
