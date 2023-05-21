@@ -35,7 +35,7 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
         BPTR file;
 
         file = __resolve_fd_file(fd);
-        if (file == ZERO || NOT IsInteractive(file))
+        if (file == BZERO || NOT IsInteractive(file))
         {
             result = ENOTTY;
             goto out;

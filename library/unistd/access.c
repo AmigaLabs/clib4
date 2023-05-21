@@ -10,7 +10,7 @@ int
 access(const char *path_name, int mode) {
     struct name_translation_info path_name_nti;
     int result = ERROR;
-    BPTR lock = ZERO;
+    BPTR lock = BZERO;
     struct ExamineData *status = NULL;
     struct _clib2 *__clib2 = __CLIB2;
 
@@ -59,7 +59,7 @@ access(const char *path_name, int mode) {
             D(("trying to get a lock on '%s'", actual_path_name));
 
             lock = Lock(actual_path_name, SHARED_LOCK);
-            if (lock == ZERO) {
+            if (lock == BZERO) {
                 __set_errno(__translate_access_io_error_to_errno(IoErr()));
                 goto out;
             }
@@ -68,7 +68,7 @@ access(const char *path_name, int mode) {
         D(("trying to get a lock on '%s'", path_name));
 
         lock = Lock((STRPTR) path_name, SHARED_LOCK);
-        if (lock == ZERO) {
+        if (lock == BZERO) {
             __set_errno(__translate_access_io_error_to_errno(IoErr()));
             goto out;
         }
@@ -76,7 +76,7 @@ access(const char *path_name, int mode) {
 
     if ((mode != F_OK) && (mode & (R_OK | W_OK | X_OK)) != 0) {
         if (__clib2->__unix_path_semantics) {
-            if (lock == ZERO) {
+            if (lock == BZERO) {
                 memset(status, 0, sizeof(*status));
 
                 /* This is a simulated directory which cannot be

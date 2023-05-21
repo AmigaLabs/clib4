@@ -20,7 +20,7 @@ lstat(const char *path_name, struct stat *st) {
     struct Lock *fl;
     int result = ERROR;
     struct ExamineData *fib = NULL;
-    BPTR file_lock = ZERO;
+    BPTR file_lock = BZERO;
     int link_length = -1;
     struct _clib2 *__clib2 = __CLIB2;
 
@@ -78,7 +78,7 @@ lstat(const char *path_name, struct stat *st) {
     D(("trying to get a lock on '%s'", path_name));
 
     file_lock = __lock(path_name, SHARED_LOCK, &link_length, NULL, 0);
-    if (file_lock == ZERO && link_length < 0) {
+    if (file_lock == BZERO && link_length < 0) {
         SHOWMSG("that didn't work");
 
         __set_errno(__translate_access_io_error_to_errno(IoErr()));

@@ -151,7 +151,7 @@ reent_init(struct _clib2 *__clib2) {
     if (__clib2->IElf != NULL) {
         SHOWMSG("Calling GetProcSegList");
         BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
-        if (segment_list != ZERO) {
+        if (segment_list != BZERO) {
             Elf32_Handle handle = NULL;
 
             SHOWMSG("Calling GetSegListInfoTags");

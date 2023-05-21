@@ -10,8 +10,8 @@ int
 fchmod(int file_descriptor, mode_t mode) {
     struct ExamineData *fib = NULL;
     ULONG protection;
-    BPTR parent_dir = ZERO;
-    BPTR old_current_dir = ZERO;
+    BPTR parent_dir = BZERO;
+    BPTR old_current_dir = BZERO;
     BOOL current_dir_changed = FALSE;
     int result = ERROR;
     struct fd *fd = NULL;
@@ -85,7 +85,7 @@ fchmod(int file_descriptor, mode_t mode) {
         SET_FLAG(protection, EXDF_OTR_EXECUTE);
 
     parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-    if (parent_dir == ZERO) {
+    if (parent_dir == BZERO) {
         SHOWMSG("couldn't find parent directory");
 
         __set_errno(__translate_io_error_to_errno(IoErr()));

@@ -42,7 +42,7 @@ tcdrain(int file_descriptor) {
             case TIOST_CONSOLE:
 
                 file = __resolve_fd_file(fd);
-                if (file == ZERO) {
+                if (file == BZERO) {
                     __fd_unlock(fd);
                     __set_errno(EBADF);
                     goto out;

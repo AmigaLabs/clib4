@@ -60,7 +60,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
                 goto out;
             }
 
-            if (fd->fd_File == ZERO) {
+            if (fd->fd_File == BZERO) {
                 __set_errno(EBADF);
                 goto out;
             }
@@ -134,13 +134,13 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             SHOWMSG("cmd=F_SETFL");
 
             /* If someone ask us o set STDIN_FILENO as O_NONBLOCK don't set it but don't return an error */
-            if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_File == ZERO && file_descriptor == STDIN_FILENO) {
+            if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_File == BZERO && file_descriptor == STDIN_FILENO) {
                 result = OK;
                 goto out;
             }
 
             /* If this is a file, make sure that we don't hit a zero file handle. */
-            if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_File == ZERO) {
+            if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_File == BZERO) {
                 __set_errno(EBADF);
                 goto out;
             }

@@ -306,7 +306,7 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
     }
 
     fln->fln_FileParentDir = __safe_parent_of_file_handle(fd->fd_File);
-    if (fln->fln_FileParentDir == ZERO) {
+    if (fln->fln_FileParentDir == BZERO) {
         SHOWMSG("couldn't get parent directory");
 
         error = IoErr();
@@ -342,7 +342,7 @@ find_file_lock_node_by_drawer_and_name(struct FileLockSemaphore *fls, BPTR dir_l
 
     ENTER();
 
-    assert(fls != NULL && dir_lock != ZERO && file_name != NULL && result_ptr != NULL);
+    assert(fls != NULL && dir_lock != BZERO && file_name != NULL && result_ptr != NULL);
     assert(UtilityBase != NULL);
 
 #if DEBUG
@@ -388,12 +388,12 @@ find_file_lock_node_by_drawer_and_name(struct FileLockSemaphore *fls, BPTR dir_l
 static long
 find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_handle, struct FileLockNode **result_ptr) {
     struct ExamineData *this_fib;
-    BPTR parent_dir = ZERO;
+    BPTR parent_dir = BZERO;
     LONG error;
 
     ENTER();
 
-    assert(fls != NULL && file_handle != ZERO && result_ptr != NULL);
+    assert(fls != NULL && file_handle != BZERO && result_ptr != NULL);
 
     (*result_ptr) = NULL;
 
@@ -410,7 +410,7 @@ find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_hand
      * global file lock data.
      */
     parent_dir = __safe_parent_of_file_handle(file_handle);
-    if (parent_dir == ZERO) {
+    if (parent_dir == BZERO) {
         SHOWMSG("couldn't get parent directory");
 
         error = IoErr();
@@ -559,7 +559,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
     struct FileLockNode *fln = NULL;
     struct ExamineData *fib = NULL;
     BOOL fib_is_valid = FALSE;
-    BPTR parent_dir = ZERO;
+    BPTR parent_dir = BZERO;
     _off64_t seek_position;
     _off64_t current_position;
     int result = ERROR;
@@ -744,7 +744,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
         }
 
         parent_dir = __safe_parent_of_file_handle(file_handle);
-        if (parent_dir == ZERO) {
+        if (parent_dir == BZERO) {
             SHOWMSG("couldn't get a lock on the file's parent directory");
 
             error = IoErr();
@@ -828,7 +828,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
 
                     UnLock(parent_dir);
 
-                    parent_dir = ZERO;
+                    parent_dir = BZERO;
 
                     (*error_ptr) = EINTR;
 

@@ -127,7 +127,7 @@ opendir(const char *path_name) {
         SHOWSTRING(path_name);
 
         dh->dh_DirLock = Lock((STRPTR) path_name, SHARED_LOCK);
-        if (dh->dh_DirLock == ZERO) {
+        if (dh->dh_DirLock == BZERO) {
             SHOWMSG("couldn't get a lock on it");
 
             __set_errno(__translate_access_io_error_to_errno(IoErr()));

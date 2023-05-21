@@ -18,8 +18,8 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     struct SignalSemaphore *fd_lock;
     LONG is_file_system = FALSE;
     LONG open_mode;
-    BPTR lock = ZERO, dir_lock = ZERO;
-    BPTR handle = ZERO;
+    BPTR lock = BZERO, dir_lock = BZERO;
+    BPTR handle = BZERO;
     BOOL create_new_file = FALSE;
     LONG is_interactive;
     int fd_slot_number;
@@ -59,7 +59,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
 
     if (FLAG_IS_SET(open_flag, O_DIRECTORY)) {
         lock = Lock((STRPTR) path_name, SHARED_LOCK);
-        if (lock != ZERO) {
+        if (lock != BZERO) {
             fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
             if (fib == NULL) {
                 SHOWMSG("could not examine the object");
@@ -121,7 +121,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
             SHOWMSG("checking if the file to create already exists");
 
             lock = Lock((STRPTR) path_name, SHARED_LOCK);
-            if (lock != ZERO) {
+            if (lock != BZERO) {
                 SHOWMSG("the file already exists");
 
                 __set_errno(EEXIST);
@@ -151,7 +151,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
             SHOWMSG("checking if the file to create already exists");
 
             lock = Lock((STRPTR) path_name, SHARED_LOCK);
-            if (lock != ZERO) {
+            if (lock != BZERO) {
                 fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
                 if (fib == NULL) {
                     SHOWMSG("could not examine the object");
@@ -179,7 +179,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
                 open_mode = MODE_NEWFILE;
 
                 UnLock(lock);
-                lock = ZERO;
+                lock = BZERO;
             } else {
                 LONG error;
 
@@ -203,7 +203,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     }
     else {
         dir_lock = Lock((STRPTR) path_name, SHARED_LOCK);
-        if (dir_lock != ZERO) {
+        if (dir_lock != BZERO) {
             fib = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
             if (fib == NULL) {
                 SHOWMSG("could not examine the object");
@@ -219,7 +219,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
             }
 
             UnLock(dir_lock);
-            dir_lock = ZERO;
+            dir_lock = BZERO;
         }
         open_mode = MODE_OLDFILE;
     }
@@ -228,7 +228,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
 
     if (!FLAG_IS_SET(open_flag, O_PATH)) {
         handle = Open((STRPTR) path_name, open_mode);
-        if (handle == ZERO) {
+        if (handle == BZERO) {
             LONG io_err = IoErr();
 
             D(("the file '%s' didn't open in mode %ld", path_name, open_mode));
@@ -237,7 +237,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
             /* Check if ended up trying to open a directory as if it were a plain file. */
             if (io_err == ERROR_OBJECT_WRONG_TYPE) {
                 lock = Lock((STRPTR) path_name, SHARED_LOCK);
-                if (lock != ZERO) {
+                if (lock != BZERO) {
                     fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
                     if (fib != NULL && !EXD_IS_DIRECTORY(fib)) {
                         __set_errno(EISDIR);
@@ -359,12 +359,12 @@ directory:
     SET_FLAG(fd->fd_Flags, FDF_IN_USE);
 
     result = fd_slot_number;
-    handle = ZERO;
+    handle = BZERO;
 
     assert(result != ERROR);
 
 out:
-    if (handle != ZERO)
+    if (handle != BZERO)
         Close(handle);
 
     if (fib != NULL) {

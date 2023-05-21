@@ -54,7 +54,7 @@ tcflush(int file_descriptor, int queue) {
         tios = fd->fd_Aux;
 
         file = __resolve_fd_file(fd);
-        if (file == ZERO) {
+        if (file == BZERO) {
             __fd_unlock(fd);
             __set_errno(EBADF);
             goto out;

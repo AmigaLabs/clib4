@@ -15,7 +15,7 @@ __resolve_fd_file(struct fd *fd) {
     BPTR file;
 
     if (fd == NULL)
-        return ZERO;
+        return BZERO;
 
     /* Is this one the standard I/O streams for which the associated file
        handle should be determined dynamically? */
@@ -42,7 +42,7 @@ __resolve_fd_file(struct fd *fd) {
 
             default:
 
-                file = ZERO;
+                file = BZERO;
                 break;
         }
     } else {

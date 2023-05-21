@@ -48,7 +48,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
     __fd_lock(fd);
 
     file = __resolve_fd_file(fd);
-    if (file == ZERO) {
+    if (file == BZERO) {
         SHOWMSG("file is closed");
 
         fam->fam_Error = EBADF;
@@ -177,7 +177,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                             (*fd->fd_Cleanup)(fd);
 
                         parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-                        if (parent_dir == ZERO) {
+                        if (parent_dir == BZERO) {
                             SHOWMSG("couldn't find parent directory");
 
                             __set_errno(__translate_io_error_to_errno(IoErr()));
@@ -197,7 +197,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                         }
 
                         if (fd->fd_File)
-                            fd->fd_File = ZERO;
+                            fd->fd_File = BZERO;
 
                         if (__clib2->__unix_path_semantics) {
                             DECLARE_UTILITYBASE();
@@ -226,7 +226,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                                     if (Stricmp(FilePart(uln->uln_Name), fib->Name) == SAME) {
                                         BPTR old_dir;
                                         BPTR node_lock;
-                                        BPTR path_lock = ZERO;
+                                        BPTR path_lock = BZERO;
 
                                         /* Try to get a lock on the file first, then move on to
                                              * the directory it is stored in.
@@ -234,7 +234,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                                         old_dir = CurrentDir(uln->uln_Lock);
 
                                         node_lock = Lock(uln->uln_Name, SHARED_LOCK);
-                                        if (node_lock != ZERO) {
+                                        if (node_lock != BZERO) {
                                             path_lock = ParentDir(node_lock);
 
                                             UnLock(node_lock);
@@ -245,7 +245,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                                         /* If we found the file's parent directory, check if it matches
                                              * the parent directory of the file we just closed.
                                              */
-                                        if (path_lock != ZERO) {
+                                        if (path_lock != BZERO) {
                                             if (SameLock(path_lock, parent_dir) == LOCK_SAME)
                                                 node = uln;
 
@@ -299,9 +299,9 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
             } else {
                 is_aliased = FALSE;
 
-                if (fd->fd_DefaultFile != ZERO) {
+                if (fd->fd_DefaultFile != BZERO) {
                     UnLock(fd->fd_DefaultFile);
-                    fd->fd_DefaultFile = ZERO;
+                    fd->fd_DefaultFile = BZERO;
                 }
             }
 

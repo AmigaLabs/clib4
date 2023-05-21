@@ -11,7 +11,7 @@ realpath(const char *path_name, char *buffer) {
     struct name_translation_info path_name_nti;
     struct name_translation_info buffer_nti;
     struct DevProc *dvp = NULL;
-    BPTR lock = ZERO;
+    BPTR lock = BZERO;
     char *result = NULL;
     struct _clib2 *__clib2 = __CLIB2;
 
@@ -44,7 +44,7 @@ realpath(const char *path_name, char *buffer) {
     D(("trying to get a lock on '%s'", path_name));
 
     lock = Lock((STRPTR) path_name, SHARED_LOCK);
-    if (lock != ZERO) {
+    if (lock != BZERO) {
         LONG status;
 
         SHOWMSG("trying to obtain the absolute path");

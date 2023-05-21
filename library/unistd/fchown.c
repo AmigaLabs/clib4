@@ -9,8 +9,8 @@
 int
 fchown(int file_descriptor, uid_t owner, gid_t group) {
     struct ExamineData *fib;
-    BPTR parent_dir = ZERO;
-    BPTR old_current_dir = ZERO;
+    BPTR parent_dir = BZERO;
+    BPTR old_current_dir = BZERO;
     BOOL current_dir_changed = FALSE;
     int result = ERROR;
     struct fd *fd = NULL;
@@ -50,7 +50,7 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
     }
 
     fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
-    success = (fib != NULL && (parent_dir = __safe_parent_of_file_handle(fd->fd_File)) != ZERO);
+    success = (fib != NULL && (parent_dir = __safe_parent_of_file_handle(fd->fd_File)) != BZERO);
     if (NO success) {
         SHOWMSG("couldn't find parent directory");
 

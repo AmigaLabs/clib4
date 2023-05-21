@@ -94,10 +94,10 @@ void __show_error(const char *message) {
         /* Try to print the error message on the default error output stream. */
         output = ErrorOutput();
 
-        if (output == ZERO)
+        if (output == BZERO)
             output = Output();
 
-        if (output != ZERO) {
+        if (output != BZERO) {
             Write(output, (STRPTR) message, (LONG) strlen(message));
             Write(output, "\n", 1);
         }

@@ -10,7 +10,7 @@
 int
 chdir(const char *path_name) {
     struct name_translation_info path_name_nti;
-    BPTR dir_lock = ZERO;
+    BPTR dir_lock = BZERO;
     struct ExamineData *status = NULL;
     int result = ERROR;
     struct _clib2 *__clib2 = __CLIB2;
@@ -62,7 +62,7 @@ chdir(const char *path_name) {
     D(("trying to get a lock on '%s'", path_name));
 
     dir_lock = Lock((STRPTR) path_name, SHARED_LOCK);
-    if (dir_lock == ZERO) {
+    if (dir_lock == BZERO) {
         __set_errno(__translate_access_io_error_to_errno(IoErr()));
         goto out;
     }
@@ -95,7 +95,7 @@ chdir(const char *path_name) {
 
     __clib2->__unlock_current_directory = TRUE;
 
-    dir_lock = ZERO;
+    dir_lock = BZERO;
 
     if (__clib2->__unix_path_semantics)
         __restore_path_name(&path_name, &path_name_nti);

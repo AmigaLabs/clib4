@@ -118,7 +118,7 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
     }
 
     file = __resolve_fd_file(fd);
-    if (file == ZERO)
+    if (file == BZERO)
         goto out;
 
     __fd_lock(fd);

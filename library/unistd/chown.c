@@ -9,7 +9,7 @@
 int chown(const char *path_name, uid_t owner, gid_t group) {
     struct name_translation_info path_name_nti;
     struct DevProc *dvp = NULL;
-    BPTR file_lock = ZERO;
+    BPTR file_lock = BZERO;
     BOOL owner_changed = TRUE;
     struct ExamineData *status = NULL;
     int result = ERROR;
@@ -57,13 +57,13 @@ int chown(const char *path_name, uid_t owner, gid_t group) {
         /* Try to find out which owner/group information
            is currently in use. */
         file_lock = Lock((STRPTR) path_name, SHARED_LOCK);
-        if (file_lock == ZERO || ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE) == NULL) {
+        if (file_lock == BZERO || ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE) == NULL) {
             __set_errno(__translate_access_io_error_to_errno(IoErr()));
             goto out;
         }
 
         UnLock(file_lock);
-        file_lock = ZERO;
+        file_lock = BZERO;
 
         /* Replace the information that should not be changed. */
         if (owner == (uid_t) - 1)
@@ -104,7 +104,7 @@ out:
 
     FreeDeviceProc(dvp);
 
-    if (file_lock != ZERO)
+    if (file_lock != BZERO)
         UnLock(file_lock);
 
     RETURN(result);

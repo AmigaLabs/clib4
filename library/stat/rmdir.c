@@ -9,7 +9,7 @@
 int
 rmdir(const char *path_name) {
     struct name_translation_info path_name_nti;
-    BPTR dir_lock = ZERO;
+    BPTR dir_lock = BZERO;
     int result = ERROR;
     struct ExamineData *fib = NULL;
     LONG status;
@@ -50,7 +50,7 @@ rmdir(const char *path_name) {
     D(("trying to get a lock on '%s'", path_name));
 
     dir_lock = Lock((STRPTR) path_name, SHARED_LOCK);
-    if (dir_lock == ZERO) {
+    if (dir_lock == BZERO) {
         SHOWMSG("that didn't work");
 
         __set_errno(__translate_access_io_error_to_errno(IoErr()));
@@ -74,7 +74,7 @@ rmdir(const char *path_name) {
 
     UnLock(dir_lock);
 
-    dir_lock = ZERO;
+    dir_lock = BZERO;
 
     SHOWMSG("trying to delete it");
 

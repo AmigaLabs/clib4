@@ -174,7 +174,7 @@ clean:
 	-$(DELETE) $(BUILD_DIR)/clib2.library*
 	-$(DELETE) clib2.lha
 	-$(DELETE) clib2.bak
-    -$(DELETE) $(DPKG_LIB).deb
+	-$(DELETE) $(DPKG_LIB).deb
 	-cd test_programs; make clean
 
 ##############################################################################

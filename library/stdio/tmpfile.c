@@ -12,7 +12,7 @@
 
 FILE *
 tmpfile(void) {
-    BPTR temp_file_lock = ZERO;
+    BPTR temp_file_lock = BZERO;
     char *temp_file_name;
     FILE *result = NULL;
     struct iob *file;
@@ -32,7 +32,7 @@ tmpfile(void) {
      */
 
     temp_file_lock = Lock("", SHARED_LOCK);
-    if (temp_file_lock == ZERO) {
+    if (temp_file_lock == BZERO) {
         SHOWMSG("couldn't get a temp_file_lock on the current directory");
 
         __set_errno(__translate_io_error_to_errno(IoErr()));
@@ -60,7 +60,7 @@ tmpfile(void) {
     temp_file_name = NULL;
 
     file->iob_TempFileLock = temp_file_lock;
-    temp_file_lock = ZERO;
+    temp_file_lock = BZERO;
 
     result = (FILE *) file;
 

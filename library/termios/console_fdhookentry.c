@@ -169,7 +169,7 @@ __termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action
     __fd_lock(fd);
 
     file = __resolve_fd_file(fd);
-    if (file == ZERO) {
+    if (file == BZERO) {
         SHOWMSG("file is closed");
 
         fam->fam_Error = EBADF;
@@ -439,7 +439,7 @@ __termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action
                         result = EOF;
                     }
 
-                    fd->fd_File = ZERO;
+                    fd->fd_File = BZERO;
                 }
             }
 

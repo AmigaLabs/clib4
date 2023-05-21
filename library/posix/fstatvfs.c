@@ -28,7 +28,7 @@ fstatvfs(int fd, struct statvfs *buf)
     }
 
     file = __safe_parent_of_file_handle(fildes->fd_File);
-    if (file == ZERO) {
+    if (file == BZERO) {
         __set_errno(EINVAL);
         goto out;
     }
@@ -47,7 +47,7 @@ fstatvfs(int fd, struct statvfs *buf)
                 FSA_FileHandleInput,    file,
                 TAG_END);
 
-        if (info->id_VolumeNode == ZERO) {
+        if (info->id_VolumeNode == BZERO) {
             FreeDosObject(DOS_INFODATA, info);
             /* Device not present or not responding */
             __set_errno(ENXIO);

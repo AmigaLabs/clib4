@@ -10,7 +10,7 @@ int
 link(const char *existing_path, const char *new_path) {
     struct name_translation_info existing_path_name_nti;
     struct name_translation_info new_path_name_nti;
-    BPTR existing_path_lock = ZERO;
+    BPTR existing_path_lock = BZERO;
     int result = ERROR;
     LONG status;
     struct _clib2 *__clib2 = __CLIB2;
@@ -54,7 +54,7 @@ link(const char *existing_path, const char *new_path) {
     D(("trying to get a lock on '%s'", existing_path));
 
     existing_path_lock = Lock((STRPTR) existing_path, SHARED_LOCK);
-    if (existing_path_lock == ZERO) {
+    if (existing_path_lock == BZERO) {
         SHOWMSG("that didn't work");
 
         __set_errno(__translate_access_io_error_to_errno(IoErr()));

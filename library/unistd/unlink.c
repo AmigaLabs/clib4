@@ -14,7 +14,7 @@ int
 unlink(const char *path_name) {
     DECLARE_UTILITYBASE();
     struct name_translation_info path_name_nti;
-    BPTR current_dir = ZERO;
+    BPTR current_dir = BZERO;
     int result = ERROR;
     LONG status;
     struct _clib2 *__clib2 = __CLIB2;
@@ -73,7 +73,7 @@ unlink(const char *path_name) {
                and then just remember what the last part of the path
                pointed to. */
             current_dir = Lock("", SHARED_LOCK);
-            if (current_dir == ZERO) {
+            if (current_dir == BZERO) {
                 __set_errno(__translate_io_error_to_errno(IoErr()));
                 goto out;
             }
@@ -100,7 +100,7 @@ unlink(const char *path_name) {
                     strcpy(uln->uln_Name, path_name);
                     AddTail((struct List *) &__clib2->__unlink_list, (struct Node *) uln);
 
-                    current_dir = ZERO;
+                    current_dir = BZERO;
                 }
             }
 

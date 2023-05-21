@@ -43,7 +43,7 @@ isatty(int file_descriptor) {
         BPTR file;
 
         file = __resolve_fd_file(fd);
-        if (file == ZERO || NOT IsInteractive(file))
+        if (file == BZERO || NOT IsInteractive(file))
         result = 0;
     }
 

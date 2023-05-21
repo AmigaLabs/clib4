@@ -42,7 +42,7 @@ int mkdir(const char *path_name, mode_t mode) {
     D(("trying to create '%s'", path_name));
 
     dir_lock = CreateDir((STRPTR) path_name);
-    if (dir_lock == ZERO) {
+    if (dir_lock == BZERO) {
         SHOWMSG("that didn't work");
 
         __set_errno(__translate_access_io_error_to_errno(IoErr()));

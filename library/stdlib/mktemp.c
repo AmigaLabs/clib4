@@ -135,7 +135,7 @@ mktemp(char *name_template) {
         /* Restore DOS requesters. */
         __set_process_window(old_window_pointer);
 
-        if (lock == ZERO) {
+        if (lock == BZERO) {
             /* If the object does not exist yet then we
              * are finished.
              */

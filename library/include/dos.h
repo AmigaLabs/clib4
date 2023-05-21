@@ -29,7 +29,6 @@
 __BEGIN_DECLS
 
 typedef struct _wof_allocator_t wof_allocator_t;
-
 typedef void (*signal_handler_t)(int sig);
 
 struct ExitTrapNode {
@@ -108,18 +107,11 @@ struct name_translation_info {
 /****************************************************************************/
 
 extern int __translate_relative_path_name(char const **name_ptr, char *replace, size_t max_replace_len);
-
 extern void __restore_path_name(char const **name_ptr, struct name_translation_info *nti);
-
 extern int __translate_amiga_to_unix_path_name(char const **name_ptr, struct name_translation_info *nti);
-
 extern int __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translation_info *nti);
-
 extern int __translate_io_error_to_errno(LONG io_error);
-
 extern void __print_termination_message(const char *termination_message);
-
-/****************************************************************************/
 
 /*
  * Similar to the boolean flag value __expand_wildcard_args described above,

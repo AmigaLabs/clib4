@@ -33,26 +33,26 @@ FILE_DESTRUCTOR(workbench_exit) {
 
     if (__clib2->restore_streams) {
         SelectInput(__clib2->old_input);
-        __clib2->old_input = ZERO;
+        __clib2->old_input = BZERO;
 
         SelectOutput(__clib2->old_output);
-        __clib2->old_output = ZERO;
+        __clib2->old_output = BZERO;
 
         __clib2->restore_streams = FALSE;
     }
 
-    if (__clib2->input != ZERO) {
+    if (__clib2->input != BZERO) {
         SetMode(__clib2->input, DOSFALSE);
 
         Close(__clib2->input);
-        __clib2->input = ZERO;
+        __clib2->input = BZERO;
     }
 
-    if (__clib2->output != ZERO) {
+    if (__clib2->output != BZERO) {
         SetMode(__clib2->output, DOSFALSE);
 
         Close(__clib2->output);
-        __clib2->output = ZERO;
+        __clib2->output = BZERO;
     }
 
     LEAVE();
@@ -93,25 +93,25 @@ wb_file_init(struct _clib2 *__clib2) {
         free(window_specifier);
     }
 
-    if (__clib2->input == ZERO)
+    if (__clib2->input == BZERO)
         __clib2->input = Open("NIL:", MODE_NEWFILE);
 
-    if (__clib2->input != ZERO) {
+    if (__clib2->input != BZERO) {
         struct FileHandle *fh = BADDR(__clib2->input);
 
         __clib2->old_console_task = SetConsoleTask(fh->fh_Type);
 
         __clib2->output = Open("CONSOLE:", MODE_NEWFILE);
-        if (__clib2->output != ZERO)
+        if (__clib2->output != BZERO)
             __clib2->restore_console_task = TRUE;
         else
             SetConsoleTask((struct MsgPort *) __clib2->old_console_task);
     }
 
-    if (__clib2->output == ZERO)
+    if (__clib2->output == BZERO)
         __clib2->output = Open("NIL:", MODE_NEWFILE);
 
-    if (__clib2->input == ZERO || __clib2->output == ZERO)
+    if (__clib2->input == BZERO || __clib2->output == BZERO)
         goto out;
 
     __clib2->old_input = SelectInput(__clib2->input);
@@ -178,7 +178,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
                 iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_NONE;
                 fd_flags = FDF_IN_USE | FDF_WRITE;
-                default_file = ZERO;
+                default_file = BZERO;
                 break;
         }
 

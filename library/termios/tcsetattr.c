@@ -28,7 +28,7 @@ set_console_termios(struct fd *fd, struct termios *new_tios) {
         goto out;
 
     file = __resolve_fd_file(fd);
-    if (file == ZERO)
+    if (file == BZERO)
         goto out;
 
     if (FLAG_IS_CLEAR(new_tios->c_lflag, ICANON)) {

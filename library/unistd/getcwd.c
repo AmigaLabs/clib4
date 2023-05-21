@@ -18,7 +18,7 @@ char *
 getcwd(char *buffer, size_t buffer_size) {
     struct name_translation_info buffer_nti;
     char *result = NULL;
-    BPTR dir_lock = ZERO;
+    BPTR dir_lock = BZERO;
     struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
@@ -49,7 +49,7 @@ getcwd(char *buffer, size_t buffer_size) {
     }
 
     dir_lock = Lock("", SHARED_LOCK);
-    if (dir_lock == ZERO) {
+    if (dir_lock == BZERO) {
         SHOWMSG("could not get a lock on the current directory");
 
         __set_errno(__translate_io_error_to_errno(IoErr()));

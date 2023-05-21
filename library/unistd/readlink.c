@@ -14,7 +14,7 @@ int
 readlink(const char *path_name, char *buffer, int buffer_size) {
     struct name_translation_info path_name_nti;
     struct name_translation_info buffer_nti;
-    BPTR lock = ZERO;
+    BPTR lock = BZERO;
     int result = ERROR;
     int target_length = -1;
     struct _clib2 *__clib2 = __CLIB2;
@@ -51,7 +51,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
     D(("trying to get a lock on '%s'", path_name));
 
     lock = __lock((STRPTR) path_name, SHARED_LOCK, &target_length, buffer, (size_t) buffer_size);
-    if (lock != ZERO) {
+    if (lock != BZERO) {
         __set_errno(EINVAL);
         goto out;
     }

@@ -45,7 +45,7 @@ statvfs(const char *path, struct statvfs *buf) {
                     FSA_StringNameInput, path,
                     TAG_END);
 
-            if (info->id_VolumeNode == ZERO) {
+            if (info->id_VolumeNode == BZERO) {
                 FreeDosObject(DOS_INFODATA, info);
                 /* Device not present or not responding */
                 __set_errno(ENXIO);

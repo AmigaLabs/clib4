@@ -9,7 +9,7 @@
 int
 fstatfs(int file_descriptor, struct statfs *buf) {
     D_S(struct InfoData, id);
-    BPTR parent_dir = ZERO;
+    BPTR parent_dir = BZERO;
     int result = ERROR;
     struct fd *fd = NULL;
     LONG success;
@@ -56,7 +56,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
     }
 
     parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-    if (parent_dir == ZERO) {
+    if (parent_dir == BZERO) {
         SHOWMSG("couldn't find parent directory");
 
         __set_errno(__translate_io_error_to_errno(IoErr()));

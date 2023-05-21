@@ -94,10 +94,10 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
                     /* Try to print the error message on the default error output stream. */
                     output = ErrorOutput();
 
-                    if (output == ZERO)
+                    if (output == BZERO)
                         output = Output();
 
-                    if (output != ZERO) {
+                    if (output != BZERO) {
                         if (__clib2->__progname != NULL)
                             FPrintf(output, "[%s] ", __clib2->__progname);
 

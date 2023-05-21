@@ -115,7 +115,7 @@ shared_obj_init(struct _clib2 *__clib2, BOOL init) {
 
     BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
     Elf32_Handle hSelf = (Elf32_Handle) NULL;
-    if (segment_list != ZERO) {
+    if (segment_list != BZERO) {
         int ret = GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
         if (ret == 1) {
             if (hSelf != NULL) {
@@ -316,7 +316,7 @@ _main(
     this_process = (struct Process *) FindTask(NULL);
     SHOWPOINTER(this_process);
 
-    if (this_process->pr_CLI == ZERO) {
+    if (this_process->pr_CLI == BZERO) {
         struct MsgPort *mp = &this_process->pr_MsgPort;
         WaitPort(mp);
         startup_message = (struct WBStartup *) GetMsg(mp);
