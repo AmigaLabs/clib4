@@ -68,9 +68,9 @@ put_32(unsigned char *s, unsigned c, int e) {
 }
 
 static unsigned
-legacy_map(const unsigned char *map, unsigned c) {
-    if (c < 4 * map[-1]) return c;
-    unsigned x = c - 4 * map[-1];
+legacy_map(const unsigned char *map, unsigned char type, unsigned c) {
+    if (c < 4 * type) return c;
+    unsigned x = c - 4 * type;
     x = map[x * 5 / 4] >> 2 * x % 8 | map[x * 5 / 4 + 1] << 8 - 2 * x % 8 & 1023;
     return x < 256 ? x : legacy_chars[x - 256];
 }
@@ -111,8 +111,8 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
     unsigned c, d;
     size_t k, l;
     int err;
-    unsigned char type = map[-1];
-    unsigned char totype = tomap[-1];
+    unsigned char type = charmaps[from];
+    unsigned char totype = charmaps[to];
 
     if (!in || !*in || !*inb) return 0;
 
@@ -397,7 +397,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 break;
             default:
                 if (!c) break;
-                c = legacy_map(map, c);
+                c = legacy_map(map, type, c);
                 if (!c) goto ilseq;
         }
 
@@ -424,7 +424,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                     x++, c = '*';
             default:
                 if (*outb < 1) goto toobig;
-                if (c < 256 && c == legacy_map(tomap, c)) {
+                if (c < 256 && c == legacy_map(tomap, type, c)) {
                     revout:
                     if (*outb < 1) goto toobig;
                     *(*out)++ = c;
@@ -433,7 +433,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 }
                 d = c;
                 for (c = 4 * totype; c < 256; c++) {
-                    if (d == legacy_map(tomap, c)) {
+                    if (d == legacy_map(tomap, type, c)) {
                         goto revout;
                     }
                 }
