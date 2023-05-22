@@ -14,8 +14,8 @@ __initialize_fd(
 	ULONG						flags,
 	struct SignalSemaphore *	lock)
 {
+    ENTER();
 	assert( fd != NULL && action_function != NULL );
-
 	memset(fd,0,sizeof(*fd));
 
 	fd->fd_Version		= 1;
@@ -24,4 +24,6 @@ __initialize_fd(
 	fd->fd_Action		= action_function;
 	fd->fd_Lock			= lock;
 	fd->fd_Aux			= NULL;
+
+    LEAVE();
 }

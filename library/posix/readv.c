@@ -15,6 +15,7 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
     ssize_t num_bytes_read;
     struct fd *fd = NULL;
     int i;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -22,7 +23,7 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
     SHOWPOINTER(iov);
     SHOWVALUE(vec_count);
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     if (iov == NULL) {
         __set_errno(EFAULT);
@@ -66,7 +67,7 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
             msg.fam_Data = (char *) iov[i].iov_base + part_num_bytes_read;
             msg.fam_Size = iov[i].iov_len - part_num_bytes_read;
 
-            num_bytes_read = (*fd->fd_Action)(fd, &msg);
+            num_bytes_read = (*fd->fd_Action)(__clib2, fd, &msg);
             if (num_bytes_read == EOF) {
                 __set_errno(msg.fam_Error);
                 goto out;
@@ -95,7 +96,7 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
 out:
 
     __fd_unlock(fd);
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

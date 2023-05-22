@@ -10,20 +10,21 @@ int
 __fgetc(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
     SHOWPOINTER(stream);
 
     assert(stream != NULL);
 
-    assert(__is_valid_iob(file));
+    assert(__is_valid_iob(__clib2, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
     if (__iob_read_buffer_is_empty(file)) {
         __check_abort();
 
-        if (__fill_iob_read_buffer(file) < 0)
+        if (__fill_iob_read_buffer(__clib2, file) < 0)
             goto out;
 
         if (__iob_read_buffer_is_empty(file)) {
@@ -45,6 +46,7 @@ int
 __fgetc_check(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert(stream != NULL);
 
@@ -72,7 +74,7 @@ __fgetc_check(FILE *stream) {
         goto out;
     }
 
-    if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(file) < 0)
+    if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib2, file) < 0)
         goto out;
 
     result = OK;

@@ -10,18 +10,19 @@ int
 isatty(int file_descriptor) {
     int result = ERROR;
     struct fd *fd;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     SHOWVALUE(file_descriptor);
 
-    assert(file_descriptor >= 0 && file_descriptor < __num_fd);
-    assert(__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
+    assert(__clib2->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -42,14 +43,14 @@ isatty(int file_descriptor) {
         BPTR file;
 
         file = __resolve_fd_file(fd);
-        if (file == ZERO || NOT IsInteractive(file))
+        if (file == BZERO || NOT IsInteractive(file))
         result = 0;
     }
 
 out:
 
     __fd_unlock(fd);
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

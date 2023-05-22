@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_timebasebase.h,v 1.0 2021-01-15 10:06:25 clib2devs Exp $
+ * $Id: stdlib_timezonebase.h,v 1.0 2021-01-15 10:06:25 clib2devs Exp $
 */
 
 #ifndef _STDLIB_TIMEZONEBASE_H
@@ -23,11 +23,8 @@
 #include "macros.h"
 #endif /* _MACROS_H */
 
-extern struct Library * NOCOMMON __TimezoneBase;
-extern struct TimezoneIFace NOCOMMON * __ITimezone;
-
 #define DECLARE_TIMEZONEBASE() \
-	struct Library *		UNUSED	TimezoneBase	= __TimezoneBase; \
-	struct TimezoneIFace *			ITimezone		= __ITimezone
+	struct Library *		UNUSED	TimezoneBase	= __CLIB2->__TimezoneBase; \
+	struct TimezoneIFace *			ITimezone		= __CLIB2->__ITimezone
 
 #endif /* _STDLIB_TIMEZONEBASE_H */

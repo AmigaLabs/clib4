@@ -108,7 +108,7 @@ enum {
 
 /* Allow user to specify optimization.  */
 #ifdef __USE_GNU
-extern void aio_init (const struct aioinit *init);
+extern void aio_init(const struct aioinit *init);
 #endif
 
 /* Enqueue read request for given number of bytes and the given priority.  */

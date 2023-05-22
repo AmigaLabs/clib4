@@ -18,6 +18,7 @@ mktime(struct tm *tm) {
     time_t result = (time_t) - 1;
     LONG combined_seconds;
     int month, year;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -85,14 +86,14 @@ mktime(struct tm *tm) {
 
     seconds += combined_seconds;
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
     /* The data in 'struct tm *tm' was given in local time. We need
        to convert the result into UTC. */
-    if (__default_locale != NULL)
-        seconds += 60 * __default_locale->loc_GMTOffset;
+    if (__clib2->__default_locale != NULL)
+        seconds += 60 * __clib2->__default_locale->loc_GMTOffset;
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     /* Adjust for the difference between the Unix and the
        AmigaOS epochs, which differ by 8 years. */

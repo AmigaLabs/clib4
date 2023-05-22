@@ -28,7 +28,7 @@ set_console_termios(struct fd *fd, struct termios *new_tios) {
         goto out;
 
     file = __resolve_fd_file(fd);
-    if (file == ZERO)
+    if (file == BZERO)
         goto out;
 
     if (FLAG_IS_CLEAR(new_tios->c_lflag, ICANON)) {
@@ -55,8 +55,9 @@ tcsetattr(int file_descriptor, int how, struct termios *tios) {
     struct fd *fd = NULL;
     struct termios new_tios;
     int type;
+    struct _clib2 *__clib2 = __CLIB2;
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     if (tios == NULL) {
         __set_errno(EFAULT);
@@ -124,7 +125,7 @@ tcsetattr(int file_descriptor, int how, struct termios *tios) {
 
 out:
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     return (result);
 }

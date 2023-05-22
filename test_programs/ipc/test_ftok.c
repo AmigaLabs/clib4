@@ -12,7 +12,7 @@ int main(int cnt, char *arg[])
 	{
 		i = atoi(arg[2]);
 		key = ftok(arg[1], i);
-		n = __get_errno();
+		n = errno;
 		printf("ftok(\"%s\",%d) = %08x\n", arg[1], i, key);
 		printf("errno=%d\n", n);
 	}

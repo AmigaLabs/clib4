@@ -10,25 +10,26 @@ int
 fchmod(int file_descriptor, mode_t mode) {
     struct ExamineData *fib = NULL;
     ULONG protection;
-    BPTR parent_dir = ZERO;
-    BPTR old_current_dir = ZERO;
+    BPTR parent_dir = BZERO;
+    BPTR old_current_dir = BZERO;
     BOOL current_dir_changed = FALSE;
     int result = ERROR;
     struct fd *fd = NULL;
     LONG success;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     SHOWVALUE(file_descriptor);
     SHOWVALUE(mode);
 
-    assert(file_descriptor >= 0 && file_descriptor < __num_fd);
-    assert(__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
+    assert(__clib2->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -84,7 +85,7 @@ fchmod(int file_descriptor, mode_t mode) {
         SET_FLAG(protection, EXDF_OTR_EXECUTE);
 
     parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-    if (parent_dir == ZERO) {
+    if (parent_dir == BZERO) {
         SHOWMSG("couldn't find parent directory");
 
         __set_errno(__translate_io_error_to_errno(IoErr()));
@@ -114,7 +115,7 @@ fchmod(int file_descriptor, mode_t mode) {
 out:
 
     __fd_unlock(fd);
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     if (current_dir_changed)
         CurrentDir(old_current_dir);

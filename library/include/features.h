@@ -143,7 +143,6 @@
 #undef	__USE_GNU
 #undef	__USE_FORTIFY_LEVEL
 #undef	__KERNEL_STRICT_NAMES
-#undef	__GLIBC_USE_DEPRECATED_GETS
 
 /* Suppress kernel-name space pollution unless user expressedly asks
    for it.  */
@@ -390,33 +389,6 @@
 #else
 # define __USE_FORTIFY_LEVEL 0
 #endif
-
-/* The function 'gets' existed in C89, but is impossible to use
-   safely.  It has been removed from ISO C11 and ISO C++14.  Note: for
-   compatibility with various implementations of <cstdio>, this test
-   must consider only the value of __cplusplus when compiling C++.  */
-#if defined __cplusplus ? __cplusplus >= 201402L : defined __USE_ISOC11
-# define __GLIBC_USE_DEPRECATED_GETS 0
-#else
-# define __GLIBC_USE_DEPRECATED_GETS 1
-#endif
-
-/* This macro indicates that the installed library is the GNU C Library.
-   For historic reasons the value now is 6 and this will stay from now
-   on.  The use of this variable is deprecated.  Use __GLIBC__ and
-   __GLIBC_MINOR__ now (see below) when you want to test for a specific
-   GNU C library version and use the values in <gnu/lib-names.h> to get
-   the sonames of the shared libraries.  */
-#undef  __GNU_LIBRARY__
-#define __GNU_LIBRARY__ 6
-
-/* Major and minor version number of the GNU C library package.  Use
-   these macros to test for features in specific releases.  */
-#define	__GLIBC__	2
-#define	__GLIBC_MINOR__	27
-
-#define __GLIBC_PREREQ(maj, min) \
-	((__GLIBC__ << 16) + __GLIBC_MINOR__ >= ((maj) << 16) + (min))
 
 /* This is here only because every header file already includes this one.  */
 #ifndef __ASSEMBLER__

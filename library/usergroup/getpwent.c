@@ -6,21 +6,16 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
 struct passwd *
-getpwent(void)
-{
-	struct passwd *result;
+getpwent(void) {
+    struct passwd *result;
 
-	ENTER();
+    ENTER();
 
-	assert(__UserGroupBase != NULL);
-
-	result = __getpwent();
+    result = __getpwent();
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

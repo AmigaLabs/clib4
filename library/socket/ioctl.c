@@ -79,6 +79,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
     char *param;
     struct fd *fd = NULL;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -86,15 +87,13 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
     SHOWVALUE(request);
 
     __set_errno(0);
+    DECLARE_SOCKETBASE();
 
     if (request != TIOCGWINSZ && request != TIOCSWINSZ) {
-        if (FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET)) {
-            assert(__SocketBase != NULL);
-
-            assert(sockfd >= 0 && sockfd < __num_fd);
-            assert(__fd[sockfd] != NULL);
-            assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
-            //assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+        if (FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET)) {
+            assert(sockfd >= 0 && sockfd < __clib2->__num_fd);
+            assert(__clib2->__fd[sockfd] != NULL);
+            assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
 
             fd = __get_file_descriptor_socket(sockfd);
             if (fd == NULL)

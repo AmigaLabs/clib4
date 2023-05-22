@@ -11,6 +11,7 @@
 void
 clearerr(FILE *stream) {
     struct iob *file = (struct iob *) stream;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -23,12 +24,13 @@ clearerr(FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(file));
+    assert(__is_valid_iob(__clib2, file));
 
     flockfile(stream);
 
     CLEAR_FLAG(file->iob_Flags, IOBF_ERROR);
     CLEAR_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
+    CLEAR_FLAG(file->iob_Flags2, __SERR);
 
     funlockfile(stream);
 

@@ -27,6 +27,8 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#include <errno.h>
+
 #include "common.h"
 #include "semaphore.h"
 

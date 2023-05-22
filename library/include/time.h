@@ -12,7 +12,6 @@
 #endif /* _STDDEF_H */
 
 #include <inttypes.h>
-#include <stdbool.h>
 #include <sys/time.h>
 #include <endian.h>
 
@@ -47,6 +46,12 @@ typedef _CLOCKID_T_ clockid_t;
 typedef unsigned long clock_t;
 typedef long long time_t;
 
+#if defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
+#define __tm_gmtoff tm_gmtoff
+#define __tm_zone tm_zone
+#endif
+
+
 struct tm {
     int tm_sec;   /* Number of seconds past the minute (0..59) */
     int tm_min;   /* Number of minutes past the hour (0..59) */
@@ -57,6 +62,8 @@ struct tm {
     int tm_wday;  /* Day of the week (0..6; 0 is Sunday) */
     int tm_yday;  /* Day of the year (0..365) */
     int tm_isdst; /* Is this date using daylight savings time? */
+    long __tm_gmtoff;
+    const char *__tm_zone;
 };
 
 extern clock_t clock(void);
@@ -157,13 +164,8 @@ extern unsigned long long rdtsc(void);
 
 extern int clock_gettime64 (clockid_t clock_id, struct timespec64 *tp);
 
-/* Defined in localtime.c.  */
-extern char *tzname[2];   /* Current timezone names.  */
-extern int daylight;      /* If daylight-saving time is ever in use.  */
-extern long int timezone; /* Seconds west of UTC.  */
-
 /* Check whether T fits in time_t.  */
-static inline bool
+static inline int
 in_time_t_range (time64_t t) {
     time_t s = t;
     return s == t;

@@ -1,11 +1,9 @@
 /*
- * $Id: stdio_headers.h,v 1.33 2010-10-20 13:12:59 clib2devs Exp $
+ * $Id: stdio_headers.h,v 2.0 2023-05-03 13:12:59 clib2devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
 #define _STDIO_HEADERS_H
-
-/****************************************************************************/
 
 #ifndef EXEC_LIBRARIES_H
 #include <exec/libraries.h>
@@ -120,10 +118,14 @@ struct iob;
 /* And something for NIL: */
 #define ST_NIL (20060920)
 
+/* File is an unix socket. */
+#define ST_USOCKET (140420236)
+
+
 /****************************************************************************/
 
 /* The file action function for buffered files. */
-typedef int64_t (*file_action_iob_t)(struct iob * iob, struct file_action_message * fam);
+typedef int64_t (*file_action_iob_t)(struct _clib2 *__clib2, struct iob * iob, struct file_action_message * fam);
 
 #define UNGET 8
 
@@ -168,8 +170,7 @@ typedef int64_t (*file_action_iob_t)(struct iob * iob, struct file_action_messag
 /* Each file handle is represented by the following structure. Note that this
    must match the layout of the public 'FILE' structure in <stdio.h> or
    things will take a turn for the worse! */
-typedef struct iob
-{
+typedef struct iob {
     unsigned long		iob_Flags;				/* Properties and options associated with this file */
     unsigned char *		iob_Buffer;				/* Points to the file buffer */
     off_t				iob_BufferSize;			/* Size of the buffer in bytes */
@@ -181,7 +182,7 @@ typedef struct iob
 	int   				iob_Flags2;				/* for future use */
 	long				pad[5];					/* Padding for function pointers */
 
-	/************************************************************************/
+    /************************************************************************/
 	/* Public portion ends here                                             */
 	/************************************************************************/
 
@@ -240,7 +241,7 @@ typedef struct iob
 /****************************************************************************/
 
 /* The file action function for unbuffered files. */
-typedef int64_t (*file_action_fd_t)(struct fd * fd,struct file_action_message * fam);
+typedef int64_t (*file_action_fd_t)(struct _clib2 *__clib2, struct fd * fd,struct file_action_message * fam);
 
 /****************************************************************************/
 
@@ -249,8 +250,7 @@ typedef void (*fd_cleanup_t)(struct fd * fd);
 
 /****************************************************************************/
 
-struct fd
-{
+struct fd {
 	int							fd_Version;			/* Version number of this definition
 													   of the 'fd' data structure. */
 	file_action_fd_t			fd_Action;			/* Function to invoke to perform actions */
@@ -284,8 +284,7 @@ struct fd
 /****************************************************************************/
 
 /* Files and directories to be unlinked when the program exits. */
-struct UnlinkNode
-{
+struct UnlinkNode {
 	struct MinNode	uln_MinNode;
 
 	BPTR			uln_Lock;		/* Lock on the directory to which the
@@ -293,41 +292,9 @@ struct UnlinkNode
 	STRPTR			uln_Name;		/* The name of the file to remove */
 };
 
-/****************************************************************************/
-
-struct bcpl_name
-{
+struct bcpl_name {
 	unsigned char name[256];
 };
-
-/****************************************************************************/
-
-extern struct WBStartup * NOCOMMON __WBenchMsg;
-
-/****************************************************************************/
-
-/* The file handle table. */
-extern struct iob ** NOCOMMON	__iob;
-extern int NOCOMMON				__num_iob;
-
-/****************************************************************************/
-
-/* The file descriptor table. */
-extern struct fd ** NOCOMMON	__fd;
-extern int NOCOMMON				__num_fd;
-
-/****************************************************************************/
-
-extern const char * NOCOMMON __file_lock_semaphore_name;
-
-/****************************************************************************/
-
-extern BOOL NOCOMMON __no_standard_io;
-
-/****************************************************************************/
-
-/* CPU cache line size; used to align I/O buffers for best performance. */
-extern ULONG __cache_line_size;
 
 /****************************************************************************/
 
@@ -375,10 +342,10 @@ extern ULONG __cache_line_size;
 
 /****************************************************************************/
 
-extern void	__stdio_lock(void);
-extern void	__stdio_unlock(void);
-extern void	__stdio_lock_exit(void);
-extern int	__stdio_lock_init(void);
+extern void	__stdio_lock(struct _clib2 *__clib2);
+extern void	__stdio_unlock(struct _clib2 *__clib2);
+extern void	__stdio_lock_exit(struct _clib2 *__clib2);
+extern int	__stdio_lock_init(struct _clib2 *__clib2);
 
 extern void __fd_lock(struct fd *fd);
 extern void __fd_unlock(struct fd *fd);

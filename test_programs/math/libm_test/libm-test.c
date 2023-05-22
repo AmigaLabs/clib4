@@ -8,7 +8,7 @@
    version 2.1 of the License, or (at your option) any later version.
 
    The GNU C Library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   but WITHOUT ANY WARRANTY; without even the imsincosplied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    Lesser General Public License for more details.
 
@@ -127,11 +127,6 @@
 #include <stdio.h>
 #include <string.h>
 
-extern int signgam;
-
-// Some native libm implementations don't have sincos defined, so we have to do it ourselves
-void FUNC(sincos)(FLOAT x, FLOAT *s, FLOAT *c);
-
 /* Possible exceptions */
 #define NO_EXCEPTION            0x0
 #define INVALID_EXCEPTION        0x1
@@ -191,7 +186,6 @@ static FLOAT minus_zero, plus_zero;
 static FLOAT plus_infty, minus_infty, nan_value;
 
 static FLOAT max_error, real_max_error, imag_max_error;
-
 
 #if 0 /* XXX scp XXX */
                                                                                                                         #define BUILD_COMPLEX(real, imag) \

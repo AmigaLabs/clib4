@@ -7,31 +7,28 @@
 #endif /* _USERGROUP_HEADERS_H */
 
 struct group *
-getgrnam(const char *name)
-{
-	struct group *result = NULL;
+getgrnam(const char *name) {
+    struct group *result = NULL;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(name);
+    SHOWSTRING(name);
 
-	assert(name != NULL);
-	assert(__UserGroupBase != NULL);
+    assert(name != NULL);
 
-    if (name == NULL)
-    {
+    if (name == NULL) {
         SHOWMSG("invalid name parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	result = __getgrnam((STRPTR)name);
+    result = __getgrnam((STRPTR) name);
 
 out:
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

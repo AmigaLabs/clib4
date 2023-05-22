@@ -13,7 +13,7 @@ getprotobyname(const char *name) {
     ENTER();
 
     assert(name != NULL);
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (name == NULL) {
         SHOWMSG("invalid parameters");

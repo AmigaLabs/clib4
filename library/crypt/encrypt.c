@@ -3,8 +3,12 @@
 */
 
 #ifndef _STDLIB_HEADERS_H
-#include "../stdlib/stdlib_headers.h"
+#include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
+
+#ifndef _UNISTD_HEADERS_H
+#include "unistd_headers.h"
+#endif /* _UNISTD_HEADERS_H */
 
 #include "crypt_des.h"
 

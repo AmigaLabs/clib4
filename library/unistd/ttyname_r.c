@@ -15,12 +15,13 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
     const char *tty_file_name;
     struct fd *fd;
     int result;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     SHOWVALUE(file_descriptor);
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -34,14 +35,14 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
         BPTR file;
 
         file = __resolve_fd_file(fd);
-        if (file == ZERO || NOT IsInteractive(file))
+        if (file == BZERO || NOT IsInteractive(file))
         {
             result = ENOTTY;
             goto out;
         }
     }
 
-    if (__unix_path_semantics)
+    if (__clib2->__unix_path_semantics)
         tty_file_name = "/CONSOLE";
     else
         tty_file_name = "CONSOLE:";
@@ -60,7 +61,7 @@ out:
 
     __fd_unlock(fd);
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

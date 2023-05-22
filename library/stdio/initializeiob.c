@@ -18,6 +18,7 @@ __initialize_iob(
 	ULONG flags,
 	struct SignalSemaphore *lock)
 {
+    ENTER();
 	assert(iob != NULL && action_function != NULL);
 
 	memset(iob, 0, sizeof(*iob));
@@ -32,4 +33,6 @@ __initialize_iob(
 	iob->iob_Lock = lock;
 	iob->iob_Flags2 = 0;
 	memset(&iob->iob_mbState, 0, sizeof (_mbstate_t));
+
+    LEAVE();
 }

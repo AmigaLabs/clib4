@@ -18,24 +18,10 @@ getopt(int argc, char *const argv[], const char *opts) {
     char *cp;
     int c;
 
-    ENTER();
-
-    SHOWVALUE(argc);
-    SHOWPOINTER(argv);
-    SHOWSTRING(opts);
-
-    assert(argc > 0 && argv != NULL && opts != NULL);
-
-    __check_abort();
-
     if (argv == NULL || opts == NULL) {
-        SHOWMSG("invalid parameters");
-
-        __set_errno(EFAULT);
+        errno = EFAULT;
         goto out;
     }
-
-    SHOWVALUE(optind);
 
     if (sp == 1) {
         if (optind >= argc || argv[optind][0] != '-' || argv[optind][1] == '\0') {
@@ -93,6 +79,5 @@ getopt(int argc, char *const argv[], const char *opts) {
 
 out:
 
-    RETURN(result);
     return (result);
 }

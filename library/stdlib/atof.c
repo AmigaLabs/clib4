@@ -7,24 +7,23 @@
 #endif /* _STDLIB_HEADERS_H */
 
 double
-atof(const char *str)
-{
-	double result = 0.0;
+atof(const char *str) {
+    double result = 0.0;
 
     ENTER();
     SHOWSTRING(str);
 
-	assert(str != NULL);
+    assert(str != NULL);
 
-	if (str == NULL)
-	{
-		__set_errno(EFAULT);
-		goto out;
-	}
+    if (str == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	result = strtod(str, NULL);
+    result = strtod(str, NULL);
 
 out:
+
     RETURN(result);
-	return (result);
+    return (result);
 }

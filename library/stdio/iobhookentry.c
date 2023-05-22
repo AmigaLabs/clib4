@@ -7,7 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int64_t
-__iob_hook_entry(struct iob *file_iob, struct file_action_message *fam) {
+__iob_hook_entry(struct _clib2 *__clib2, struct iob *file_iob, struct file_action_message *fam) {
 	struct fd *fd;
 	int64_t result;
 
@@ -20,11 +20,11 @@ __iob_hook_entry(struct iob *file_iob, struct file_action_message *fam) {
         case file_action_close:
             SHOWVALUE(file_iob->iob_Descriptor);
 
-            assert(file_iob->iob_Descriptor >= 0 && file_iob->iob_Descriptor < __num_fd);
-            assert(__fd[file_iob->iob_Descriptor] != NULL);
-            assert(FLAG_IS_SET(__fd[file_iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
+            assert(file_iob->iob_Descriptor >= 0 && file_iob->iob_Descriptor < __clib2->__num_fd);
+            assert(__clib2->__fd[file_iob->iob_Descriptor] != NULL);
+            assert(FLAG_IS_SET(__clib2->__fd[file_iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
 
-            if (__fd[file_iob->iob_Descriptor] == NULL) {
+            if (__clib2->__fd[file_iob->iob_Descriptor] == NULL) {
                 fam->fam_Error = EBADF;
                 result = EOF;
                 break;
@@ -44,7 +44,7 @@ __iob_hook_entry(struct iob *file_iob, struct file_action_message *fam) {
 
             assert(fd->fd_Action != NULL);
 
-            result = (*fd->fd_Action)(fd, fam);
+            result = (*fd->fd_Action)(__clib2, fd, fam);
 
             break;
 

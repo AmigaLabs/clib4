@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #include <wchar.h>
 
+#include <dos.h>
+
 __BEGIN_DECLS
 
 /* 'End of file' indicator returned by, for example, fgetc() */
@@ -113,29 +115,24 @@ typedef struct __sFILE FILE;
 
 /****************************************************************************/
 
-/* Anchor for the buffered standard I/O streams */
-extern struct iob **__iob;
-
-/****************************************************************************/
-
 /* The three standard I/O streams */
-#define stdin ((FILE *)__iob[0])
-#define stdout ((FILE *)__iob[1])
-#define stderr ((FILE *)__iob[2])
+#define stdin ((FILE *) __CLIB2->__iob[0])
+#define stdout ((FILE *) __CLIB2->__iob[1])
+#define stderr ((FILE *) __CLIB2->__iob[2])
 
 /****************************************************************************/
 
 extern void perror(const char *s);
 
 #ifdef __USE_LARGEFILE64
-FILE *fdopen64(int, const char *);
-FILE *fopen64(const char *filename, const char *mode);
-FILE *freopen64(const char *filename, const char *type, FILE *stream);
-_off64_t ftello64(FILE *stream);
-_off64_t fseeko64(FILE *stream, _off64_t, int);
-int fgetpos64(FILE *stream, _fpos64_t *pos);
-int fsetpos64(FILE *stream, _fpos64_t *pos);
-FILE *tmpfile64(void);
+extern FILE *fdopen64(int, const char *);
+extern FILE *fopen64(const char *filename, const char *mode);
+extern FILE *freopen64(const char *filename, const char *type, FILE *stream);
+extern _off64_t ftello64(FILE *stream);
+extern _off64_t fseeko64(FILE *stream, _off64_t, int);
+extern int fgetpos64(FILE *stream, _fpos64_t *pos);
+extern int fsetpos64(FILE *stream, _fpos64_t *pos);
+extern FILE *tmpfile64(void);
 #endif
 
 /****************************************************************************/

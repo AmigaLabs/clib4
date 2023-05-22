@@ -787,7 +787,7 @@ void __do_des(uint32_t l_in, uint32_t r_in,
 		unsigned int round = 16;
 		const uint32_t *kl = ekey->l;
 		const uint32_t *kr = ekey->r;
-		uint32_t f;
+		uint32_t f = 0;
 		while (round--) {
 			uint32_t r48l, r48r;
 			/*

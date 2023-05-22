@@ -25,28 +25,29 @@ C_CRYPT := \
     crypt/crypt_sha512.o
 
 CRYPT_LIB := \
-	$(C_CRYPT) \
-	crypt.lib_rev.o
+	crypt/crypt.lib_rev.o
 
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(CRYPT_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(CRYPT_LIB))
 
+OBJ_C_LIB += $(addprefix $(OUT_SHARED_LIB)/, $(C_CRYPT))
+
 # Dependencies to rebuild if the library version changes
 
-$(OUT_STATIC)/crypt.lib_rev.o : $(LIB_DIR)/crypt.lib_rev.c $(LIB_DIR)/crypt.lib_rev.h
-$(OUT_SHARED)/crypt.lib_rev.o : $(LIB_DIR)/crypt.lib_rev.c $(LIB_DIR)/crypt.lib_rev.h
+$(OUT_STATIC)/crypt/crypt.lib_rev.o : $(LIB_DIR)/crypt/crypt.lib_rev.c $(LIB_DIR)/crypt/crypt.lib_rev.h
+$(OUT_SHARED)/crypt/crypt.lib_rev.o : $(LIB_DIR)/crypt/crypt.lib_rev.c $(LIB_DIR)/crypt/crypt.lib_rev.h
 
 $(OUT_STATIC)/%.o : CFLAGS += -Wno-missing-braces $(LARGEDATA)
 $(OUT_SHARED)/%.o : CFLAGS += -Wno-missing-braces $(PIC) $(LARGEDATA)
 
-$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+$(OUT_STATIC)/crypt/crypt.lib_rev.o : $(LIB_DIR)/crypt/crypt.lib_rev.c
 	$(VERBOSE)$(COMPILE)
 
-$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/crypt/crypt.lib_rev.o : $(LIB_DIR)/crypt/crypt.lib_rev.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
 $(OUTPUT_LIB)/libcrypt.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(OUTPUT_LIB)/libcrypt.so : $(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
+$(OUTPUT_LIB)/libcrypt.so :$(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

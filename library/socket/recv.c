@@ -20,7 +20,7 @@ recv(int sockfd, void *buff, size_t nbytes, int flags) {
 
     assert((int) nbytes >= 0);
     assert(buff != NULL);
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (buff == NULL) {
         SHOWMSG("invalid buffer parameter");

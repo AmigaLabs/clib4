@@ -32,8 +32,11 @@ sysconf(int name) {
         case _SC_TZNAME_MAX:
             return MAX_TZSIZE;
         case _SC_NPROCESSORS_CONF:
+        case _SC_NPROCESSORS_ONLN:
             GetCPUInfoTags(GCIT_NumberOfCPUs, (ULONG)&query, TAG_DONE);
             break;
+        case _SC_GETPW_R_SIZE_MAX:
+            return -1;
         default:
             __set_errno(EINVAL);
             break;

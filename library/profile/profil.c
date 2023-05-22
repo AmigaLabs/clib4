@@ -21,7 +21,6 @@ static struct IntData {
 } ProfileData;
 
 uint32 GetCounterStart(void);
-
 uint32 CounterIntFn(struct ExceptionContext *, struct ExecBase *, struct IntData *);
 
 uint32

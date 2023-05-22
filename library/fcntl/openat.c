@@ -20,6 +20,7 @@ openat(int fd, const char *filename, int flags, ...) {
     struct name_translation_info path_name_nti;
     BOOL absolute = FALSE;
     int result = -1;
+    struct _clib2 *__clib2 = __CLIB2;
 
     if (filename == NULL)
     {
@@ -28,7 +29,7 @@ openat(int fd, const char *filename, int flags, ...) {
     }
 
     /* Check for relative path */
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (filename[0] == '/')
             absolute = TRUE;
 

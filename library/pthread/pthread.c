@@ -35,8 +35,13 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#ifndef _STDLIB_CONSTRUCTOR_H
+#include "stdlib_constructor.h"
+#endif /* _STDLIB_CONSTRUCTOR_H */
+
 #include "common.h"
 #include "pthread.h"
+#include "../shared_library/interface.h"
 
 int __pthread_init_func(void);
 void __pthread_exit_func(void);
@@ -47,6 +52,9 @@ ThreadInfo threads[PTHREAD_THREADS_MAX];
 struct SignalSemaphore thread_sem;
 TLSKey tlskeys[PTHREAD_KEYS_MAX];
 struct SignalSemaphore tls_sem;
+
+struct Library *_DOSBase = NULL;
+struct DOSIFace *_IDOS = NULL;
 
 //
 // Private common functions
@@ -281,20 +289,37 @@ void __pthread_exit_func(void) {
     }
 }
 
-void __attribute__((constructor, used)) __pthread_init() {
-    ENTER();
+CLIB_CONSTRUCTOR(__pthread_init) {
+    int result = OK;
+    _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
+    if (_DOSBase) {
+        _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);
+        if (!_IDOS) {
+            CloseLibrary(_DOSBase);
+            _DOSBase = NULL;
+            result = ERROR;
+        }
+    }
+    else {
+        result = ERROR;
+    }
 
-    __pthread_init_func();
-
-    LEAVE();
-
-    //return !__pthread_init_func();
+    if (result == OK) {
+        __pthread_init_func();
+    }
 }
 
-void __attribute__((destructor, used)) __pthread_exit() {
-    ENTER();
+CLIB_DESTRUCTOR(__pthread_exit) {
+
+    if (_DOSBase != NULL) {
+        CloseLibrary(_DOSBase);
+        _DOSBase = NULL;
+    }
+
+    if (_IDOS != NULL) {
+        DropInterface((struct Interface *) _IDOS);
+        _IDOS = NULL;
+    }
 
     __pthread_exit_func();
-
-    LEAVE();
 }

@@ -1,9 +1,6 @@
 /*
  * $Id: math_asinhf.c,v 1.4 2022-03-13 12:04:23 clib2devs Exp $
  *
-
- *
- *
  * PowerPC math library based in part on work by Sun Microsystems
  * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
  *

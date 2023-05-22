@@ -24,19 +24,13 @@
 #endif /* _MACROS_H */
 
 
-extern struct Library * NOCOMMON __LocaleBase;
-extern struct LocaleIFace NOCOMMON * __ILocale;
-
-extern struct Library *NOCOMMON __DiskfontBase;
-extern struct DiskfontIFace *NOCOMMON __IDiskfont;
-
 #define DECLARE_LOCALEBASE() \
-	struct Library *		UNUSED	LocaleBase	= __LocaleBase; \
-	struct LocaleIFace *			ILocale		= __ILocale
+	struct Library *		UNUSED	LocaleBase	= __CLIB2->__LocaleBase; \
+	struct LocaleIFace *			ILocale		= __CLIB2->__ILocale
 
 #define DECLARE_FONTBASE() \
-	struct Library *		UNUSED	DiskfontBase = __DiskfontBase; \
-	struct DiskfontIFace *			IDiskfont    = __IDiskfont
+	struct Library *		UNUSED	DiskfontBase = __CLIB2->__DiskfontBase; \
+	struct DiskfontIFace *			IDiskfont    = __CLIB2->__IDiskfont
 
 
 #endif /* _STDLIB_LOCALEBASE_H */

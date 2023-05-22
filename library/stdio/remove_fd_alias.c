@@ -9,8 +9,9 @@
 void
 __remove_fd_alias(struct fd *fd) {
     assert(fd != NULL);
+    struct _clib2 *__clib2 = __CLIB2;
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     if (fd->fd_Original != NULL) /* this is an alias */
     {
@@ -53,5 +54,5 @@ __remove_fd_alias(struct fd *fd) {
         }
     }
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 }

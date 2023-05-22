@@ -10,70 +10,64 @@
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-STATIC INLINE char *
-__strrchr(const char *s, int c) 
-{
-	const unsigned char *us = (const unsigned char *)s;
-	char *result = NULL;
-	unsigned char us_c;
-	unsigned char find_this = (c & 0xff);
+STATIC INLINE
+char *
+__strrchr(const char *s, int c) {
+    const unsigned char *us = (const unsigned char *) s;
+    char *result = NULL;
+    unsigned char us_c;
+    unsigned char find_this = (c & 0xff);
 
-	/* This is technically the opposite of strchr(), but the
-	 * implementation is very similar. However, instead of
-	 * stopping on the first location that holds the desired
-	 * value we just remember where we found it. When the
-	 * end of the string finally arrives we will thus be
-	 * able to return a pointer to the last occurrence of
-	 * the character.
-	 */
-	while (TRUE)
-	{
-		us_c = (*us);
-		if (us_c == find_this)
-			result = (char *)us;
+    /* This is technically the opposite of strchr(), but the
+     * implementation is very similar. However, instead of
+     * stopping on the first location that holds the desired
+     * value we just remember where we found it. When the
+     * end of the string finally arrives we will thus be
+     * able to return a pointer to the last occurrence of
+     * the character.
+     */
+    while (TRUE) {
+        us_c = (*us);
+        if (us_c == find_this)
+            result = (char *) us;
 
-		if (us_c == '\0')
-			break;
+        if (us_c == '\0')
+            break;
 
-		us++;
-	}
-	
-	return result;
+        us++;
+    }
+
+    return result;
 }
 
 char *
-strrchr(const char *s, int c)
-{
-	const unsigned char *us = (const unsigned char *)s;
-	char *result = NULL;
+strrchr(const char *s, int c) {
+    const unsigned char *us = (const unsigned char *) s;
+    char *result = NULL;
+    struct _clib2 *__clib2 = __CLIB2;
 
-	assert(s != NULL);
+    assert(s != NULL);
 
-	if (us == NULL)
-	{
-		__set_errno(EFAULT);
-		goto out;
-	}
+    if (us == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	/* Make sure __global_clib2 has been created */
-	if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions)
-	{
-		switch (__global_clib2->cpufamily)
-		{
-			case CPUFAMILY_4XX:
-				result = __strrchr440(s, c);
-				break;
-			default:
-				result = __strrchr(s, c);
-		}
-	}
-	else {
-		/* Fallback to standard function */
-		result = __strrchr(s, c);
-	}
+    if (__clib2->__optimizedCPUFunctions) {
+        switch (__clib2->cpufamily) {
+            case CPUFAMILY_4XX:
+                result = __strrchr440(s, c);
+                break;
+            default:
+                result = __strrchr(s, c);
+        }
+    } else {
+        /* Fallback to standard function */
+        result = __strrchr(s, c);
+    }
 
 
 out:
 
-	return (result);
+    return (result);
 }

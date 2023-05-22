@@ -8,5 +8,6 @@
 
 void
 __set_h_errno(int new_h_errno) {
-    h_errno = new_h_errno;
+    if (&h_errno != NULL)
+        h_errno = new_h_errno;
 }

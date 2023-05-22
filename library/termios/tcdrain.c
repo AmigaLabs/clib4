@@ -14,6 +14,7 @@ int
 tcdrain(int file_descriptor) {
     int result = ERROR;
     struct fd *fd;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -21,7 +22,7 @@ tcdrain(int file_descriptor) {
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -41,7 +42,7 @@ tcdrain(int file_descriptor) {
             case TIOST_CONSOLE:
 
                 file = __resolve_fd_file(fd);
-                if (file == ZERO) {
+                if (file == BZERO) {
                     __fd_unlock(fd);
                     __set_errno(EBADF);
                     goto out;
@@ -69,7 +70,7 @@ tcdrain(int file_descriptor) {
 
 out:
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

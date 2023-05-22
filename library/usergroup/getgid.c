@@ -6,33 +6,24 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
 #ifdef getgid
 #undef getgid
 #endif /* getgid */
 
-/****************************************************************************/
+gid_t getgid(void) {
+    gid_t result;
+    struct _clib2 *__clib2 = __CLIB2;
 
-gid_t getgid(void)
-{
-	gid_t result;
+    ENTER();
 
-	ENTER();
-
-	assert(__UserGroupBase != NULL);
-
-	if (__root_mode)
-	{
-		result = __root_gid;
-	}
-	else
-	{
-		result = __getgid();
-	}
+    if (__clib2->__root_mode) {
+        result = __clib2->__root_gid;
+    } else {
+        result = __getgid();
+    }
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

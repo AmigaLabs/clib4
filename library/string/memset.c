@@ -17,10 +17,14 @@ memset(void *ptr, int val, size_t len) {
 
     DECLARE_UTILITYBASE();
 
-	assert((len == 0) || (ptr != NULL && (int)len > 0));
+    assert((len == 0) || (ptr != NULL && (int)len > 0));
 
-	if (ptr == NULL)
-	{
+    if (__IUtility == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
+
+	if (ptr == NULL) {
 		__set_errno(EFAULT);
 		goto out;
 	}
@@ -29,5 +33,5 @@ memset(void *ptr, int val, size_t len) {
 
 out:
 
-	return (result);
+	return result;
 }

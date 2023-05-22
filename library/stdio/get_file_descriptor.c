@@ -11,19 +11,20 @@ enum resolution_mode_t {
     resolution_mode_alias    /* Resolve the descriptor's alias, if necessary. */
 };
 
-STATIC struct fd *
+static struct fd *
 get_file_descriptor(int file_descriptor, enum resolution_mode_t resolution_mode) {
     struct fd *result = NULL;
     struct fd *fd;
+    struct _clib2 *__clib2 = __CLIB2;
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
-    if (file_descriptor < 0 || file_descriptor >= __num_fd) {
+    if (file_descriptor < 0 || file_descriptor >= __clib2->__num_fd) {
         SHOWMSG("invalid file descriptor");
         goto out;
     }
 
-    fd = __fd[file_descriptor];
+    fd = __clib2->__fd[file_descriptor];
     if (fd == NULL) {
         SHOWMSG("invalid file descriptor");
         goto out;
@@ -42,7 +43,7 @@ get_file_descriptor(int file_descriptor, enum resolution_mode_t resolution_mode)
 
 out:
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     return (result);
 }

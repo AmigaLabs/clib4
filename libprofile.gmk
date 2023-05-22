@@ -1,9 +1,6 @@
 #
 # $Id: libprofile.gmk,v 1.1 2006-09-17 17:37:27 clib2devs Exp $
 #
-# :ts=8
-#
-# -*- mode: makefile; -*-
 
 OUT_STATIC := $(BUILD_DIR)/obj/libprofile
 OUT_SHARED := $(BUILD_DIR)/obj.shared/libprofile
@@ -47,8 +44,8 @@ $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(BUILD_DIR)/lib/libprofile.a : $(SOURCES_STATIC)
+$(OUTPUT_LIB)/libprofile.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libprofile.so : $(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
+$(OUTPUT_LIB)/libprofile.so : $(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

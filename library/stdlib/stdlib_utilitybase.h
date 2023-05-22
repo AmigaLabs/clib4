@@ -19,8 +19,8 @@
 #include "macros.h"
 #endif /* _MACROS_H */
 
-extern struct Library * NOCOMMON __UtilityBase;
-extern struct UtilityIFace NOCOMMON * __IUtility;
+extern struct Library* __UtilityBase;
+extern struct UtilityIFace* __IUtility;
 
 #define DECLARE_UTILITYBASE() \
 	struct Library *		UNUSED	UtilityBase	= __UtilityBase; \
