@@ -15,7 +15,6 @@ getpass(const char *prompt) {
     SHOWSTRING(prompt);
 
     assert(prompt != NULL);
-    assert(__UserGroupBase != NULL);
 
     if (prompt == NULL) {
         SHOWMSG("invalid prompt");

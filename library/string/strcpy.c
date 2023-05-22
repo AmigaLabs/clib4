@@ -11,48 +11,45 @@
 #endif /* _STRING_HEADERS_H */
 
 char *
-strcpy(char *dest, const char *src)
-{
-	char *result = dest;
+strcpy(char *dest, const char *src) {
+    char *result = dest;
+    struct _clib2 *__clib2 = __CLIB2;
 
-	assert(dest != NULL && src != NULL);
+    assert(dest != NULL && src != NULL);
 
-	if (dest == NULL || src == NULL)
-	{
-		__set_errno(EFAULT);
-		goto out;
-	}
+    if (dest == NULL || src == NULL) {
+        __set_errno(EFAULT);
+        goto out;
+    }
 
-	if (dest != src)
-	{
-		/* Make sure __global_clib2 has been created */
-		if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions)
-		{
-			switch (__global_clib2->cpufamily)
-			{
-				case CPUFAMILY_4XX:
-					result = __strcpy440(dest, src);
-					break;
-				default:
-				{
-                    if (__global_clib2->hasAltivec) {
+    if (dest != src) {
+        if (__clib2->__optimizedCPUFunctions) {
+            switch (__clib2->cpufamily) {
+                case CPUFAMILY_4XX:
+                    result = __strcpy440(dest, src);
+                    break;
+#ifdef SPE
+                case CPUFAMILY_E500:
+                    result = __strcpy_e500(dest, src);
+                    break;
+#endif
+                default: {
+                    if (__clib2->hasAltivec) {
                         vec_strcpy(dest, src);
-                    }
-                    else {
+                    } else {
                         /* Fallback to standard function */
                         while (((*dest++) = (*src++)) != '\0')
                             DO_NOTHING;
                     }
-				}
-			}
-		}
-		else {
-			/* Fallback to standard function */
-			while (((*dest++) = (*src++)) != '\0')
-				DO_NOTHING;
-		}
-	}
-out:
+                }
+            }
+        } else {
+            /* Fallback to standard function */
+            while (((*dest++) = (*src++)) != '\0')
+                DO_NOTHING;
+        }
+    }
+    out:
 
-	return (result);
+    return (result);
 }

@@ -13,11 +13,12 @@ __change_fd_user_data(
         void **old_user_data_ptr) {
     int result = -1;
     struct fd *fd;
+    struct _clib2 *__clib2 = __CLIB2;
 
     if (old_user_data_ptr != NULL)
         (*old_user_data_ptr) = NULL;
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd != NULL) {
@@ -33,7 +34,7 @@ __change_fd_user_data(
         result = 0;
     }
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     return (result);
 }

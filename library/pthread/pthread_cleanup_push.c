@@ -47,8 +47,6 @@ pthread_cleanup_push(void (*routine)(void *), void *arg) {
         return;
 
     handler = AllocVecTags(sizeof(CleanupHandler), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
-    SHOWPOINTER(handler);
-
     if (handler == NULL)
         return;
 

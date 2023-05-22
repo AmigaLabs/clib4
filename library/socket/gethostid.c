@@ -16,7 +16,7 @@ gethostid() {
 
     ENTER();
 
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     result = __gethostid();
 

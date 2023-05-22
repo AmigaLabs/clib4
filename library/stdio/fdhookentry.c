@@ -21,7 +21,7 @@
 #include <strings.h>
 #include <limits.h>
 
-int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
+int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_action_message *fam) {
     struct ExamineData *exd = NULL;
     BOOL fib_is_valid = FALSE;
     struct FileHandle *fh;
@@ -37,18 +37,18 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
     ENTER();
 
     assert(fam != NULL && fd != NULL);
-    assert(__is_valid_fd(fd));
+    assert(__is_valid_fd(__clib2, fd));
 
     /* Careful: file_action_close has to monkey with the file descriptor
                 table and therefore needs to obtain the stdio lock before
                 it locks this particular descriptor entry. */
     if (fam->fam_Action == file_action_close)
-        __stdio_lock();
+        __stdio_lock(__clib2);
 
     __fd_lock(fd);
 
     file = __resolve_fd_file(fd);
-    if (file == ZERO) {
+    if (file == BZERO) {
         SHOWMSG("file is closed");
 
         fam->fam_Error = EBADF;
@@ -106,18 +106,22 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
 
             if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
                 if (FLAG_IS_SET(fd->fd_Flags, FDF_APPEND)) {
-                    int64_t position;
-
                     SHOWMSG("appending data");
 
-                    /* Make sure that if we get a value of -1 out of Seek()
-                           to check whether this was an error or a numeric
-                           overflow. */
-                    position = ChangeFilePosition(file, 0, OFFSET_END);
-                    if (position != CHANGE_FILE_ERROR)
-                        fd->fd_Position = GetFilePosition(file);
+                    /* Make sure that if we get a value of -1 out of Seek() to check whether this was an error or a numeric overflow. */
+                    int64_t position = ChangeFilePosition(file, 0, OFFSET_END);
+                    if (position != CHANGE_FILE_ERROR) {
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION)) {
+                            fd->fd_Position = GetFilePosition(file);
+                            if (fd->fd_Position == GETPOSITION_ERROR) {
+                                D(("seek to end of file failed; ioerr=%ld", IoErr()));
 
-                    if (fd->fd_Position == GETPOSITION_ERROR) {
+                                fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                                goto out;
+                            }
+                        }
+                    }
+                    else {
                         D(("seek to end of file failed; ioerr=%ld", IoErr()));
 
                         fam->fam_Error = __translate_io_error_to_errno(IoErr());
@@ -173,7 +177,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                             (*fd->fd_Cleanup)(fd);
 
                         parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-                        if (parent_dir == ZERO) {
+                        if (parent_dir == BZERO) {
                             SHOWMSG("couldn't find parent directory");
 
                             __set_errno(__translate_io_error_to_errno(IoErr()));
@@ -193,9 +197,9 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                         }
 
                         if (fd->fd_File)
-                            fd->fd_File = ZERO;
+                            fd->fd_File = BZERO;
 
-                        if (__unix_path_semantics) {
+                        if (__clib2->__unix_path_semantics) {
                             DECLARE_UTILITYBASE();
 
                             assert(UtilityBase != NULL);
@@ -210,10 +214,10 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                                 struct UnlinkNode *uln;
                                 BOOL file_deleted = FALSE;
 
-                                assert(__unlink_list.mlh_Head != NULL);
+                                assert(__clib2->__unlink_list.mlh_Head != NULL);
 
                                 /* Check all files to be unlinked when this program exits. */
-                                for (uln = (struct UnlinkNode *) __unlink_list.mlh_Head;
+                                for (uln = (struct UnlinkNode *) __clib2->__unlink_list.mlh_Head;
                                      (uln_next = (struct UnlinkNode *) uln->uln_MinNode.mln_Succ) != NULL;
                                      uln = uln_next) {
                                     node = NULL;
@@ -222,7 +226,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                                     if (Stricmp(FilePart(uln->uln_Name), fib->Name) == SAME) {
                                         BPTR old_dir;
                                         BPTR node_lock;
-                                        BPTR path_lock = ZERO;
+                                        BPTR path_lock = BZERO;
 
                                         /* Try to get a lock on the file first, then move on to
                                              * the directory it is stored in.
@@ -230,7 +234,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                                         old_dir = CurrentDir(uln->uln_Lock);
 
                                         node_lock = Lock(uln->uln_Name, SHARED_LOCK);
-                                        if (node_lock != ZERO) {
+                                        if (node_lock != BZERO) {
                                             path_lock = ParentDir(node_lock);
 
                                             UnLock(node_lock);
@@ -241,7 +245,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                                         /* If we found the file's parent directory, check if it matches
                                              * the parent directory of the file we just closed.
                                              */
-                                        if (path_lock != ZERO) {
+                                        if (path_lock != BZERO) {
                                             if (SameLock(path_lock, parent_dir) == LOCK_SAME)
                                                 node = uln;
 
@@ -295,9 +299,9 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
             } else {
                 is_aliased = FALSE;
 
-                if (fd->fd_DefaultFile != ZERO) {
+                if (fd->fd_DefaultFile != BZERO) {
                     UnLock(fd->fd_DefaultFile);
-                    fd->fd_DefaultFile = ZERO;
+                    fd->fd_DefaultFile = BZERO;
                 }
             }
 
@@ -370,7 +374,7 @@ int64_t __fd_hook_entry(struct fd *fd, struct file_action_message *fam) {
                     if (position == CHANGE_FILE_ERROR) {
                         fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
-                        if (__unix_path_semantics) {
+                        if (__clib2->__unix_path_semantics) {
                             /* Check if this operation failed because the file is shorter than
                                    the new file position. First, we need to find out if the file
                                    is really shorter than required. If not, then it must have
@@ -514,7 +518,7 @@ out:
     __fd_unlock(fd);
 
     if (fam->fam_Action == file_action_close)
-        __stdio_unlock();
+        __stdio_unlock(__clib2);
 
     if (buffer != NULL)
         free(buffer);

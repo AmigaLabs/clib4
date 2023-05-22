@@ -12,6 +12,7 @@ pathconf(const char *path, int name) {
     struct DevProc *dvp = NULL;
     BOOL ignore_port = FALSE;
     long ret = -1;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -25,7 +26,7 @@ pathconf(const char *path, int name) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path[0] == '\0') {
             SHOWMSG("Empty name");
 

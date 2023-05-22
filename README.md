@@ -17,7 +17,14 @@ For the original README follow this <a href="https://github.com/adtools/clib2">l
 
 ## Limitations and caveats
 
-The new functions and code most of the time is tested. Also some tests has been added to be sure that added features and functions are working correctly. Usually all new functions has been tested against linux. If you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
+The new functions and code, most of the time are tested and some tests has been added to be sure that added features and functions are working correctly.
+Usually all new functions has been tested against linux.  
+If you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
+
+## Shared library
+
+`clib2` now is an AmigaOS4 shared library. This means that you have to install `clib2.library` in LIBS: folder.  
+Thanks to shared library now the exe files will be smaller since libc.a/so are just stubs to main library files.
 
 ### Libraries
 
@@ -34,12 +41,12 @@ Soft float version is no longer available.
 
 Clib2 define `__THREAD_SAFE` used to check if the library is thread safe
 
-If you want to use the shared version of library remember to pack your OS4 software with all clib2 shared objects othwerwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
-**DON'T overwrite SOBJS: files with your Clib2 files** othwerise OS4 most probably will not load them and you could have problems running existent software!
+If you want to use the shared version of library remember to pack your OS4 software with all clib2 shared objects otherwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
+**DON'T overwrite SOBJS: files with your Clib2 files** otherwise OS4 most probably will not load them, and you could have problems running existent software!
 
 ### New memory allocator
 
-Clib2 now use `Wheel Of Fortune` allocator that is faster than previous one an it seems more robust and with a cleaner and portable code
+Clib2 now use `Wheel Of Fortune` allocator that is faster than previous one, and it seems more robust and with a cleaner and portable code
 
 ### Optimized AMCC functions
 
@@ -52,12 +59,14 @@ Feel free to add other CPU versions.
 However two new methods (**enableAltivec** and **disableAltivec**) are present and you can use them to enable or disable optimizations at runtime.  
 Keep in mind that clib2 is not compiled with altivec optimizations for all files.
 
+### SPE
+`libcfsl_e500` (thanks to wayback machine..) has been added to clib2 providing some optimized functions. To compile *e500* functions pass SPE=true at makefile.  
+However to compile these functions you need a compiler that supports SPE ABI. The latest gcc version that supports SPE is gcc8.
+
 ### Shared objects
 
 Shared objects **are working** also with clib2 (there is an example under test_programs/dlopen folder).
-using dlopen/dlsym will not crash anymore however there is a bug in `libstdc++.so` that is causing a crash on program start.  
-So if you want to use libstdc++ it is better to remove it and link against the static version.  
-However they needs the beta elf.library not yet released to public
+However shared objects needs the beta elf.library not yet released to public
 
 ### Large file support
 
@@ -69,18 +78,18 @@ Clib2 now contains **shm*** and **msg*** functions. It needs <a href="http://www
 
 ### Unix path support
 
-`libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default unix support it is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.  
-You can also disable it at runtime using **disableUnixPaths()**. However is not reccomanded to enable and disable it at runtime because you could have problems with internal structures.
+`libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default, unix support is disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.  
+You can also disable it at runtime using **disableUnixPaths()**. However is not recommended to enable and disable it at runtime because you could have problems with internal structures.
 
 ### wchar / wctype
 
 All **wctype** functions should be working correctly now. We need a valid test suite.  
-All **wchar** functions are now implemented and tested but maybe something is not working correctly. 
+All **wchar** functions aree now implemented and tested but maybe something is not working correctly. 
 There are no valid tests except a little few so if you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
 
 ### Locale
 
-Locales relies always to OS4 locales but now you can set the encoding so wide functons will work correctly.
+Locales relies always to OS4 locales but now you can set the encoding so wide functions will work correctly.
 Accepted encodings are:
 
 `C-UTF-8`
@@ -105,10 +114,12 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 
 ### libpthread
 
-Clib2 now contain a native pthread implementation. However pthread functions are in libc and libpthread is just a stub.
-That's because pthread functions are used (and will be used more in the future) internally and they are needed by libc.  
-libpthread.a is however present as stub to avoid old program stop compiling claiming this library
+Clib2 now contain a native pthread implementation with some functions are not present in the pthread.library.  
+However in the future mutex* function should be changed to use OS4 Mutexes instead of Semaphores
 
+### librt
+
+aio* functions are present and they are in librt (like on linux). Pthreads are needed to use all aio* functions
 
 ### libresolv
 
@@ -129,18 +140,18 @@ By adjusting the format of the salt passed to the crypt function, you can ** spe
 Correspondence table between id and hash algorithm
 
 
-| ID  | Hash algorithm |  
-|-----|----------------|
-| 1   |      MD5
-| 2a  | Blowfish |
-| 5   | SHA-256  |
-| 6   | SHA-512  |
+| ID | Hash algorithm |  
+|----|----------------|
+| 1  | MD5            |
+| 2a | Blowfish       |
+| 5  | SHA-256        |
+| 6  | SHA-512        |
 
 If not specified, it will be DES. DES is very vulnerable and is not recommended because it uses only 2 characters for Salt and only recognizes passwords for up to 8 characters.
 
 | Hash algorithm | Number of characters in the hashed string |  
 |----------------|-------------------------------------------|
-| MD5            | 22 Characters                             
+| MD5            | 22 Characters                             |
 | SHA-256        | 43 Characters                             |
 | SHA-512        | 86 Characters                             |
 
@@ -154,6 +165,7 @@ Use `-lcrypt` option when linking.
 
 To use `debug` functions you have to explicitly pass `DEBUG=true` to GNUMakefile.os4 and 
 debug functions will be enabled 
+If you want to use `gstabs` to non debug version of library you can use the flag `STABS=-gstabs` to GNUMakefile
 
 ### Misc
 
@@ -168,14 +180,44 @@ All *crt* files needs to be compiled with -fno-aggressive-loop-optimizations! Ot
 ### TODO
 
 - There is a memory leak at clib2 end needs to be tracked down  
-- Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster and more better when there are multiple cores.
-- Create a shared library
+- Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be faster when there are multiple cores.
 - Add a test suite
 - Try to use some functions/headers from https://github.com/attractivechaos/klib to improve speed
 
 ## Legal status
 
 Because this library is in part based upon free software it would be uncourteous not to make it free software itself. The BSD license would probably be appropriate here.
+
+BSD 3-Clause License
+
+Copyright (c) 2016, Olaf Barthel
+Copyright (c) 2021, Clib2Developers
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 >The PowerPC math library is based in part on work by Sun Microsystems:
 >

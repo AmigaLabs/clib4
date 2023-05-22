@@ -47,16 +47,6 @@
 
 typedef void (*signal_handler_t)(int sig);
 
-/****************************************************************************/
-
-extern signal_handler_t	NOCOMMON __signal_handler_table[NSIG];
-
-/****************************************************************************/
-
-extern int NOCOMMON __signals_blocked;
-
-/****************************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */

@@ -10,8 +10,9 @@ int statfs(const char *path, struct statfs *buf) {
     struct name_translation_info path_nti;
     D_S(struct InfoData, id);
     LONG status;
-    BPTR lock = ZERO;
+    BPTR lock = BZERO;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -29,7 +30,7 @@ int statfs(const char *path, struct statfs *buf) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -66,7 +67,7 @@ int statfs(const char *path, struct statfs *buf) {
     D(("trying to get a lock on '%s'", path));
 
     lock = Lock((STRPTR) path, SHARED_LOCK);
-    if (lock == ZERO) {
+    if (lock == BZERO) {
         SHOWMSG("that didn't work");
 
         __set_errno(__translate_access_io_error_to_errno(IoErr()));

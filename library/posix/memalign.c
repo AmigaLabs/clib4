@@ -31,15 +31,14 @@ MemalignAVLKeyComp(struct AVLNode *avlnode1, AVLKey key2) {
 }
 
 static inline BOOL
-isPowerOfTwo(size_t
-alignment)
-{
-return (alignment != 0) && ((alignment & (alignment - 1)) == 0);
+isPowerOfTwo(size_t alignment) {
+    return (alignment != 0) && ((alignment & (alignment - 1)) == 0);
 }
 
 void *
 memalign(size_t alignment, size_t size) {
     void *result = NULL;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -51,7 +50,7 @@ memalign(size_t alignment, size_t size) {
         goto out;
     }
 
-    if (__global_clib2->__memalign_pool == NULL) {
+    if (__clib2->__memalign_pool == NULL) {
         __set_errno(ENOSYS);
         goto out;
     }
@@ -63,7 +62,7 @@ memalign(size_t alignment, size_t size) {
         goto out;
     }
 
-    struct MemalignEntry *l = ItemPoolAlloc(__global_clib2->__memalign_pool);
+    struct MemalignEntry *l = ItemPoolAlloc(__clib2->__memalign_pool);
     if (l == NULL) {
         FreeVec(result);
         __set_errno(ENOMEM);
@@ -73,9 +72,9 @@ memalign(size_t alignment, size_t size) {
     /* Set MemalignEntry node stuff */
     l->me_Exact = result;
 
-    if (NULL != AVL_AddNode(&__global_clib2->__memalign_tree, &l->me_AvlNode, MemalignAVLNodeComp)) {
+    if (NULL != AVL_AddNode(&__clib2->__memalign_tree, &l->me_AvlNode, MemalignAVLNodeComp)) {
         FreeVec(result);
-        ItemPoolFree(__global_clib2->__memalign_pool, l);
+        ItemPoolFree(__clib2->__memalign_pool, l);
         __set_errno(ENOMEM);
         result = NULL;
         goto out;

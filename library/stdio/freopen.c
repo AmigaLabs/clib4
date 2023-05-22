@@ -11,6 +11,7 @@ freopen(const char *filename, const char *mode, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     FILE *result = NULL;
     int slot_number;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -29,7 +30,7 @@ freopen(const char *filename, const char *mode, FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(file));
+    assert(__is_valid_iob(__clib2, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -39,7 +40,7 @@ freopen(const char *filename, const char *mode, FILE *stream) {
 
     fclose(stream);
 
-    if (__open_iob(filename, mode, -1, slot_number) < 0) {
+    if (__open_iob(__clib2, filename, mode, -1, slot_number) < 0) {
         SHOWMSG("couldn't reopen the file");
         goto out;
     }

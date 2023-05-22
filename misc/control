@@ -1,0 +1,6 @@
+Package: amigaos4-clib2
+Version: 1.0
+Maintainer: Andrea Palmatè <os4test@amigasoft.net>
+Architecture: amd64
+Section: libdevel
+Description: clib2 for AmigaOS4

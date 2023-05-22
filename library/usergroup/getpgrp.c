@@ -7,18 +7,15 @@
 #endif /* _USERGROUP_HEADERS_H */
 
 pid_t
-getpgrp(void)
-{
-	pid_t result;
+getpgrp(void) {
+    pid_t result;
 
-	ENTER();
+    ENTER();
 
-	assert(__UserGroupBase != NULL);
-
-	result = __getpgrp();
+    result = __getpgrp();
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

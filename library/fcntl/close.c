@@ -11,6 +11,7 @@ close(int file_descriptor) {
     struct file_action_message fam;
     struct fd *fd;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -30,7 +31,7 @@ close(int file_descriptor) {
 
     assert(fd->fd_Action != NULL);
 
-    if ((*fd->fd_Action)(fd, &fam) < 0) {
+    if ((*fd->fd_Action)(__clib2, fd, &fam) < 0) {
         __set_errno(fam.fam_Error);
         goto out;
     }

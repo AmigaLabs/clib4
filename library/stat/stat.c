@@ -20,7 +20,8 @@ stat(const char *path_name, struct stat *st) {
     struct ExamineData *fib = NULL;
     struct Lock *fl;
     int result = ERROR;
-    BPTR file_lock = ZERO;
+    BPTR file_lock = BZERO;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -38,7 +39,7 @@ stat(const char *path_name, struct stat *st) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -80,7 +81,7 @@ stat(const char *path_name, struct stat *st) {
     D(("trying to get a lock on '%s'", path_name));
 
     file_lock = Lock((STRPTR) path_name, SHARED_LOCK);
-    if (file_lock == ZERO) {
+    if (file_lock == BZERO) {
         SHOWMSG("that didn't work");
 
         __set_errno(__translate_access_io_error_to_errno(IoErr()));

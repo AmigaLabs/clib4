@@ -12,6 +12,7 @@ ftell(FILE *stream) {
     struct file_action_message fam;
     _off64_t result = ERROR;
     _off64_t position;
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert(stream != NULL);
 
@@ -22,7 +23,7 @@ ftell(FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(file));
+    assert(__is_valid_iob(__clib2, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -49,7 +50,7 @@ ftell(FILE *stream) {
 
     assert(file->iob_Action != NULL);
 
-    position = (_off64_t)(*file->iob_Action)(file, &fam);
+    position = (_off64_t)(*file->iob_Action)(__clib2, file, &fam);
     if (position == GETPOSITION_ERROR && fam.fam_Error != OK) {
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 

@@ -15,6 +15,8 @@
  * However SIGBREAKF_CTRL_C handling should be implemented in the same way
  */
 
+extern struct TimeRequest *TimeReq;
+
 int
 __time_delay(ULONG timercmd, struct timeval *tv) {
     ENTER();
@@ -25,9 +27,6 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     int result = 0;
 
     __check_abort();
-
-    if (__timer_request == NULL)
-        return EINVAL;
 
     SHOWMSG("Clearing Signals");
     SetSignal(0, SIGB_SINGLE | SIGBREAKF_CTRL_C | SIGBREAKF_CTRL_E);
@@ -43,13 +42,14 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     }
 
     tr = AllocSysObjectTags(ASOT_IOREQUEST,
-                            ASOIOR_Duplicate, __timer_request,
-                            ASOIOR_ReplyPort, mp,
+                            ASOIOR_Duplicate, TimeReq,
                             ASOIOR_Size, sizeof(struct TimeRequest),
+                            ASOIOR_ReplyPort, mp,
                             TAG_END);
+
     if (!tr) {
         SHOWMSG("Cannot allocate Timer Request");
-        FreeSysObject(ASOT_IOREQUEST, mp);
+        FreeSysObject(ASOT_PORT, mp);
         return ENOMEM;
     }
 
@@ -71,8 +71,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
             SHOWMSG("Received SIGBREAKF_CTRL_E");
             /* Return EINTR since the request has been interrupted by alarm */
             result = EINTR;
-        }
-        else {
+        } else {
             SHOWMSG("Received SIGBREAKF_CTRL_C. Reset it to set state");
             /* Reset SIGBREAKF_CTRL_C to set state since __check_abort can
              * break the execution

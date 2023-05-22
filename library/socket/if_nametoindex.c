@@ -11,6 +11,7 @@
 #endif /* _SOCKET_HEADERS_H */
 
 #include <net/if.h>
+#include <proto/bsdsocket.h>
 
 unsigned int
 if_nametoindex(const char *ifname) {
@@ -18,11 +19,12 @@ if_nametoindex(const char *ifname) {
 
     struct List *netiflist = NULL;
     struct Node *node = NULL;
+    DECLARE_SOCKETBASE();
 
     ENTER();
     SHOWSTRING(ifname);
 
-    netiflist = __ISocket->ObtainInterfaceList();
+    netiflist = ObtainInterfaceList();
     if (netiflist != NULL) {
         node = GetHead(netiflist);
         while (node != NULL) {
@@ -35,7 +37,7 @@ if_nametoindex(const char *ifname) {
             index++;
             node = GetSucc(node);
         }
-        __ISocket->ReleaseInterfaceList(netiflist);
+        ReleaseInterfaceList(netiflist);
     }
     /* We did not found the interface. Set index to ZERO */
     index = 0;

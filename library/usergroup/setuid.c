@@ -9,15 +9,14 @@
 
 int setuid(uid_t id) {
     int result;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     SHOWVALUE(id);
 
-    assert(__UserGroupBase != NULL);
-
-    if (__root_mode) {
-        __root_uid = id;
+    if (__clib2->__root_mode) {
+        __clib2->__root_uid = id;
 
         result = OK;
     } else {

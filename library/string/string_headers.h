@@ -35,8 +35,6 @@
 #include "debug.h"
 #endif /* _DEBUG_H */
 
-/****************************************************************************/
-
 /* Address is neither aligned to a word or long word boundary. */
 #define IS_UNALIGNED(a) ((((unsigned long)(a)) & 1) != 0)
 
@@ -61,6 +59,12 @@ extern size_t  __strlen440(const char *s);
 extern int     __strncmp440(const char *s1, const char *s2, size_t n);
 extern char   *__strrchr440(const char *s, int c);
 
+/* SPE e500 specific functions */
+extern int     __memcmp_e500(const char *m1, const char *m2, size_t len);
+extern int     __strcmp_e500(const char *s1, const char *s2);
+extern char   *__strcpy_e500(char *dest, const char *src);
+extern size_t  __strlen_e500(const char *s);
+
 /* Altivec specific asm functions */
 extern int     vec_memcmp(const char *m1, const char *m2, size_t len);
 extern void   *_vec_memcpy(void *dst, const void *src, size_t len);
@@ -69,5 +73,8 @@ extern void    vec_bcopy(const void *src, void *dest, size_t len);
 extern void   *_vec_memset(void *ptr, int val, size_t len);
 extern void    vec_bzero(void *m, size_t len);
 extern char   *vec_strcpy(char *dest, const char *src);
+
+/* Generic PPC functions */
+extern void    bcopy_g3(const void *src, void *dest, size_t len);
 
 #endif /* _STRING_HEADERS_H */

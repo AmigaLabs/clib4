@@ -6,12 +6,9 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/****************************************************************************/
-
 long long
-llabs(long long x)
-{
-	long long result;
+llabs(long long x) {
+    long long result;
 
     ENTER();
     SHOWVALUE(x);
@@ -19,5 +16,5 @@ llabs(long long x)
     result = (x < 0) ? (-x) : x;
 
     RETURN(result);
-	return(result);
+    return (result);
 }

@@ -10,6 +10,7 @@ int
 fileno(FILE *file) {
     struct iob *iob = (struct iob *) file;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -26,7 +27,7 @@ fileno(FILE *file) {
         goto out;
     }
 
-    assert(__is_valid_iob(iob));
+    assert(__is_valid_iob(__clib2, iob));
     assert(FLAG_IS_SET(iob->iob_Flags, IOBF_IN_USE));
 
     if (FLAG_IS_CLEAR(iob->iob_Flags, IOBF_IN_USE)) {
@@ -34,9 +35,9 @@ fileno(FILE *file) {
         goto out;
     }
 
-    assert(iob->iob_Descriptor >= 0 && iob->iob_Descriptor < __num_fd);
-    assert(__fd[iob->iob_Descriptor] != NULL);
-    assert(FLAG_IS_SET(__fd[iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
+    assert(iob->iob_Descriptor >= 0 && iob->iob_Descriptor < __clib2->__num_fd);
+    assert(__clib2->__fd[iob->iob_Descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
 
     result = iob->iob_Descriptor;
 

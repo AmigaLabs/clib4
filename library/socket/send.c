@@ -10,6 +10,7 @@ int
 send(int sockfd, const void *buff, size_t nbytes, int flags) {
     struct fd *fd;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -20,7 +21,7 @@ send(int sockfd, const void *buff, size_t nbytes, int flags) {
 
     assert((int) nbytes >= 0);
     assert(buff != NULL);
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (buff == NULL) {
         SHOWMSG("invalid buffer parameter");
@@ -29,10 +30,10 @@ send(int sockfd, const void *buff, size_t nbytes, int flags) {
         goto out;
     }
 
-    assert(sockfd >= 0 && sockfd < __num_fd);
-    assert(__fd[sockfd] != NULL);
-    assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
-    assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __clib2->__num_fd);
+    assert(__clib2->__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
     fd = __get_file_descriptor_socket(sockfd);
     if (fd == NULL)

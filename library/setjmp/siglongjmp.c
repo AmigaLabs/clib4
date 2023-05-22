@@ -7,15 +7,12 @@
 #endif /* _SIGNAL_HEADERS_H */
 
 void siglongjmp(sigjmp_buf env, int val) {
-    ENTER();
     SHOWVALUE(val);
 
     if (env[0].__mask_was_saved)
         /* Restore the saved signal mask.  */
         (void) sigprocmask(SIG_SETMASK, &env[0].__saved_mask, (sigset_t *) NULL);
 
-    SHOWVALUE(env[0].__mask_was_saved);
     /* Call the machine-dependent function to restore machine state.  */
     _longjmp(env, val ?: 1);
-    LEAVE();
 }

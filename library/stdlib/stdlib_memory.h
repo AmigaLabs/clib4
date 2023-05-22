@@ -47,15 +47,8 @@ struct MemalignEntry
     void            *me_Exact;            /* The address returned by AllocVecTags  */
 };
 
-extern wof_allocator_t NOCOMMON *__wof_allocator;
-
-extern unsigned long NOCOMMON __maximum_memory_allocated;
-extern unsigned long NOCOMMON __current_memory_allocated;
-extern unsigned long NOCOMMON __maximum_num_memory_chunks_allocated;
-extern unsigned long NOCOMMON __current_num_memory_chunks_allocated;
-
-extern void __memory_lock(void);
-extern void __memory_unlock(void);
+extern void __memory_lock(struct _clib2 *__clib2);
+extern void __memory_unlock(struct _clib2 *__clib2);
 
 extern int32 MemalignAVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2);
 extern int32 MemalignAVLKeyComp(struct AVLNode *avlnode1, AVLKey key2);

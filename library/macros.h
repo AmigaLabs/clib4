@@ -57,9 +57,9 @@
 /****************************************************************************/
 
 /* BCPL style "NULL"; this should be in <dos/dos.h>. */
-#ifndef ZERO
-#define ZERO ((BPTR)NULL)
-#endif /* ZERO */
+#ifndef BZERO
+#define BZERO ((BPTR)NULL)
+#endif /* BZERO */
 
 /****************************************************************************/
 

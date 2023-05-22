@@ -12,6 +12,7 @@ execl(const char *path, const char *arg0, ...) {
     int result = -1;
     size_t argc = 0;
     va_list args;
+    struct _clib2 *__clib2 = __CLIB2;
 
     /* If there are any, count the number of arguments supplied */
     if (arg0 != NULL) {
@@ -49,7 +50,7 @@ execl(const char *path, const char *arg0, ...) {
 
     argv[argc] = NULL;
 
-    result = execve(path, (char *const *) argv, environ);
+    result = execve(path, (char *const *) argv, __clib2->__environment);
 
 out:
 

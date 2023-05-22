@@ -12,21 +12,10 @@
 
 #include <proto/diskfont.h>
 
-struct Library *NOCOMMON __LocaleBase;
-struct LocaleIFace *NOCOMMON __ILocale;
+void __close_all_locales(struct _clib2 *__clib2) {
+	__locale_lock(__clib2);
 
-struct Library *NOCOMMON __DiskfontBase;
-struct DiskfontIFace *NOCOMMON __IDiskfont;
-
-struct Locale *NOCOMMON __default_locale;
-struct Locale *NOCOMMON __locale_table[NUM_LOCALES];
-
-char NOCOMMON __locale_name_table[NUM_LOCALES][MAX_LOCALE_NAME_LEN];
-
-void __close_all_locales(void) {
-	__locale_lock();
-
-	if (__LocaleBase != NULL) {
+	if (__clib2->__LocaleBase != NULL) {
 		DECLARE_LOCALEBASE();
 
 		int i;
@@ -35,155 +24,144 @@ void __close_all_locales(void) {
 			if (i == LC_ALL)
 				continue;
 
-			if (__locale_table[i] != NULL) {
-				if (__locale_table[i] != __locale_table[LC_ALL])
-					CloseLocale(__locale_table[i]);
+			if (__clib2->__locale_table[i] != NULL) {
+				if (__clib2->__locale_table[i] != __clib2->__locale_table[LC_ALL])
+					CloseLocale(__clib2->__locale_table[i]);
 
-				__locale_table[i] = NULL;
+                __clib2->__locale_table[i] = NULL;
 			}
 		}
 
-		CloseLocale(__locale_table[LC_ALL]);
-		__locale_table[LC_ALL] = NULL;
+		CloseLocale(__clib2->__locale_table[LC_ALL]);
+        __clib2->__locale_table[LC_ALL] = NULL;
 	}
 
-	__locale_unlock();
+	__locale_unlock(__clib2);
 }
 
-void __locale_exit(void) {
+void __locale_exit(struct _clib2 *__clib2) {
 	ENTER();
 
-	__locale_lock();
+	__locale_lock(__clib2);
 
-	if (__LocaleBase != NULL) {
+	if (__clib2->__LocaleBase != NULL) {
 		DECLARE_LOCALEBASE();
 
-		__close_all_locales();
+		__close_all_locales(__clib2);
 
-		if (__default_locale != NULL) {
-			CloseLocale(__default_locale);
-			__default_locale = NULL;
+		if (__clib2->__default_locale != NULL) {
+			CloseLocale(__clib2->__default_locale);
+            __clib2->__default_locale = NULL;
 		}
-		if (__ILocale != NULL) {
-			DropInterface((struct Interface *)__ILocale);
-			__ILocale = NULL;
+		if (__clib2->__ILocale != NULL) {
+			DropInterface((struct Interface *) __clib2->__ILocale);
+            __clib2->__ILocale = NULL;
 		}
 
-		CloseLibrary(__LocaleBase);
-		__LocaleBase = NULL;
+		CloseLibrary(__clib2->__LocaleBase);
+        __clib2->__LocaleBase = NULL;
 	}
 
-    if (__IDiskfont != NULL) {
-        DropInterface((struct Interface *)__IDiskfont);
-        __IDiskfont = NULL;
+    if (__clib2->__IDiskfont != NULL) {
+        DropInterface((struct Interface *) __clib2->__IDiskfont);
+        __clib2->__IDiskfont = NULL;
     }
 
-    if (__DiskfontBase != NULL) {
-        CloseLibrary(__DiskfontBase);
-        __DiskfontBase = NULL;
+    if (__clib2->__DiskfontBase != NULL) {
+        CloseLibrary(__clib2->__DiskfontBase);
+        __clib2->__DiskfontBase = NULL;
     }
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
 	LEAVE();
 }
 
-int __locale_init(void)
-{
+int __locale_init(struct _clib2 *__clib2) {
 	int result = ERROR;
 
 	ENTER();
 
-	__locale_lock();
+	__locale_lock(__clib2);
 
-	if (__LocaleBase == NULL)
-	{
-		__LocaleBase = OpenLibrary("locale.library", 38);
-		if (__LocaleBase != NULL)
-		{
-			__ILocale = (struct LocaleIFace *)GetInterface(__LocaleBase, "main", 1, 0);
-			if (__ILocale == NULL)
-			{
-				CloseLibrary(__LocaleBase);
-				__LocaleBase = NULL;
+	if (__clib2->__LocaleBase == NULL) {
+        __clib2->__LocaleBase = OpenLibrary("locale.library", 52);
+		if (__clib2->__LocaleBase != NULL) {
+            __clib2->__ILocale = (struct LocaleIFace *)GetInterface(__clib2->__LocaleBase, "main", 1, 0);
+			if (__clib2->__ILocale == NULL) {
+				CloseLibrary(__clib2->__LocaleBase);
+                __clib2->__LocaleBase = NULL;
 			}
-            __DiskfontBase = OpenLibrary("diskfont.library", 50);
-            if (__DiskfontBase) {
-                __IDiskfont = (struct DiskfontIFace *) GetInterface(__DiskfontBase, "main", 1, NULL);
-                if (!__IDiskfont) {
-                    DropInterface((struct Interface *)__ILocale);
+            __clib2->__DiskfontBase = OpenLibrary("diskfont.library", 52);
+            if (__clib2->__DiskfontBase) {
+                __clib2->__IDiskfont = (struct DiskfontIFace *) GetInterface(__clib2->__DiskfontBase, "main", 1, NULL);
+                if (!__clib2->__IDiskfont) {
+                    DropInterface((struct Interface *) __clib2->__ILocale);
 
-                    CloseLibrary(__LocaleBase);
-                    __LocaleBase = NULL;
+                    CloseLibrary(__clib2->__LocaleBase);
+                    __clib2->__LocaleBase = NULL;
 
-                    CloseLibrary(__DiskfontBase);
-                    __DiskfontBase = NULL;
+                    CloseLibrary(__clib2->__DiskfontBase);
+                    __clib2->__DiskfontBase = NULL;
                 }
             }
 		}
 	}
 
-	if (__LocaleBase != NULL && __default_locale == NULL)
-	{
+	if (__clib2->__LocaleBase != NULL && __clib2->__default_locale == NULL) {
 		DECLARE_LOCALEBASE();
 
-		__default_locale = OpenLocale(NULL);
+        __clib2->__default_locale = OpenLocale(NULL);
 	}
 
-	if (__default_locale != NULL)
-	{
+	if (__clib2->__default_locale != NULL) {
 		result = OK;
 	}
 
-	__locale_unlock();
+	__locale_unlock(__clib2);
 
 	RETURN(result);
 	return (result);
 }
 
-static struct SignalSemaphore * locale_lock;
-
-void __locale_lock(void)
-{
-	if (locale_lock != NULL)
-		ObtainSemaphore(locale_lock);
+void __locale_lock(struct _clib2 *__clib2) {
+	if (__clib2->locale_lock != NULL)
+		ObtainSemaphore(__clib2->locale_lock);
 }
 
-void __locale_unlock(void)
-{
-	if (locale_lock != NULL)
-		ReleaseSemaphore(locale_lock);
+void __locale_unlock(struct _clib2 *__clib2) {
+	if (__clib2->locale_lock != NULL)
+		ReleaseSemaphore(__clib2->locale_lock);
 }
 
-CLIB_DESTRUCTOR(locale_exit)
-{
+CLIB_DESTRUCTOR(locale_exit) {
 	ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
-	__locale_exit();
+	__locale_exit(__clib2);
 
-	__delete_semaphore(locale_lock);
-	locale_lock = NULL;
+	__delete_semaphore(__clib2->locale_lock);
+    __clib2->locale_lock = NULL;
 
 	LEAVE();
 }
 
-CLIB_CONSTRUCTOR(locale_init)
-{
+CLIB_CONSTRUCTOR(locale_init) {
 	BOOL success = FALSE;
 	int i;
+    struct _clib2 *__clib2 = __CLIB2;
 
 	ENTER();
 
-	locale_lock = __create_semaphore();
-	if (locale_lock == NULL)
+    __clib2->locale_lock = __create_semaphore();
+	if (__clib2->locale_lock == NULL)
 		goto out;
 
 	for (i = 0; i < NUM_LOCALES; i++) {
-        strcpy(__locale_name_table[i], "C-UTF-8");
+        strcpy(__clib2->__locale_name_table[i], "C-UTF-8");
     }
 
-	if (__open_locale)
-		__locale_init();
+    __locale_init(__clib2);
 
 	success = TRUE;
 

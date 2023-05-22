@@ -22,6 +22,9 @@ __BEGIN_DECLS
 extern  int *__mb_cur_max(void);
 #define MB_CUR_MAX (*__mb_cur_max())
 
+#define __program_name (*__getprogname())
+extern const char *__getprogname(void);
+
 /****************************************************************************/
 
 /* The maximum value that can be returned by the rand() function */
@@ -84,15 +87,15 @@ extern char *l64a (long x0);
 extern long a64l (const char *s);
 extern void setkey(const char *key);
 
-double drand48 (void);
-double erand48 (unsigned short subi[3]);
-long int lrand48 (void);
-long int nrand48 (unsigned short subi[3]);
-long mrand48 (void);
-long jrand48 (unsigned short subi[3]);
-void srand48 (long);
-unsigned short *seed48 (unsigned short subi[3]);
-void lcong48 (unsigned short subi[7]);
+extern double drand48 (void);
+extern double erand48 (unsigned short subi[3]);
+extern long int lrand48 (void);
+extern long int nrand48 (unsigned short subi[3]);
+extern long mrand48 (void);
+extern long jrand48 (unsigned short subi[3]);
+extern void srand48 (long);
+extern unsigned short *seed48 (unsigned short subi[3]);
+extern void lcong48 (unsigned short subi[7]);
 
 #endif
 

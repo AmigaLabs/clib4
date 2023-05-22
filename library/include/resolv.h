@@ -129,7 +129,7 @@ struct res_sym {
 #define RES_PRF_REPLY   0x00002000
 #define RES_PRF_INIT    0x00004000
 
-struct __res_state *__res_state(void);
+extern struct __res_state *__res_state(void);
 
 #define _res (*__res_state())
 

@@ -17,7 +17,7 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-extern mode_t NOCOMMON __current_umask;
+extern mode_t __current_umask;
 
 /****************************************************************************/
 

@@ -18,6 +18,7 @@ int
 system(const char *command) {
     char *command_copy = NULL;
     int result;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -36,13 +37,14 @@ system(const char *command) {
         result = 1;
     } else {
         static const struct TagItem system_tags[2] =
-                {
-                        {SYS_UserShell, TRUE},
-                        {TAG_END,       0}};
+        {
+            {SYS_UserShell, TRUE},
+            {TAG_END,       0}
+        };
 
         struct name_translation_info command_nti;
 
-        if (__unix_path_semantics) {
+        if (__clib2->__unix_path_semantics) {
             char just_the_command_name[MAXPATHLEN + 1];
             BOOL need_quotes = FALSE;
             char *command_name;

@@ -9,7 +9,7 @@
 // TODO - Check for memmove 64bits
 
 int64_t
-__vsnprintf_hook_entry(struct iob *string_iob, struct file_action_message *fam) {
+__vsnprintf_hook_entry(struct _clib2 *__clib2, struct iob *string_iob, struct file_action_message *fam) {
     int64_t result = EOF;
 
     assert(fam != NULL && string_iob != NULL);

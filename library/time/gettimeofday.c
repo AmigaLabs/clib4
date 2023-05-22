@@ -19,75 +19,74 @@
 #endif /* _UNISTD_HEADERS_H */
 
 int
-gettimeofday(struct timeval *tp, struct timezone *tzp)
-{
-	struct TimerIFace *ITimer = __ITimer;
-	struct Library *TimerBase = __TimerBase;
+gettimeofday(struct timeval *tp, struct timezone *tzp) {
+    struct _clib2 *__clib2 = __CLIB2;
+    int32 gmtoffset = 0;
+    int8 dstime = -1;
+    ULONG seconds, microseconds;
 
-	ULONG seconds, microseconds;
+    DECLARE_TIMERBASE();
+    DECLARE_TIMEZONEBASE();
 
-	ENTER();
+    ENTER();
 
-	/* Obtain the current system time. */
+    if (!__clib2->__ITimer) {
+        tp->tv_sec = tp->tv_usec = tzp->tz_minuteswest = tzp->tz_dsttime = 0;
+        RETURN(0);
+    }
 
+    ObtainSemaphore(__clib2->__timer_semaphore);
+
+    GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
+
+    /* Obtain the current system time. */
 #if defined(__NEW_TIMEVAL_DEFINITION_USED__)
-	{
-		struct TimeVal tv;
+    {
+        struct TimeVal tv;
 
-		GetSysTime(&tv);
+        GetSysTime(&tv);
 
-		seconds = tv.Seconds;
-		microseconds = tv.Microseconds;
-	}
+        seconds = tv.Seconds;
+        microseconds = tv.Microseconds;
+    }
 #else
-	{
-		struct timeval tv;
+    {
+        struct timeval tv;
 
-		GetSysTime(&tv);
+        GetSysTime(&tv);
 
-		seconds = tv.tv_sec;
-		microseconds = tv.tv_usec;
-	}
+        seconds = tv.tv_sec;
+        microseconds = tv.tv_usec;
+    }
 #endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
 
-	/* Convert the number of seconds so that they match the Unix epoch, which
-	   starts (January 1st, 1970) eight years before the AmigaOS epoch. */
-	seconds += UNIX_TIME_OFFSET;
+    ReleaseSemaphore(__clib2->__timer_semaphore);
 
-	__locale_lock();
+    /* Convert the number of seconds so that they match the Unix epoch, which
+       starts (January 1st, 1970) eight years before the AmigaOS epoch. */
+    seconds += UNIX_TIME_OFFSET;
 
-	/* If possible, adjust for the local time zone. We do this because the
-	   AmigaOS system time is returned in local time and we want to return
-	   it in UTC. */
-	if (__default_locale != NULL)
-		seconds += 60 * __default_locale->loc_GMTOffset;
+    /* If possible, adjust for the local time zone. We do this because the
+       AmigaOS system time is returned in local time and we want to return
+       it in UTC. */
+    seconds += 60 * gmtoffset;
 
-	if (tp != NULL)
-	{
-		tp->tv_sec = (long)seconds;
-		tp->tv_usec = (long)microseconds;
+    if (tp != NULL) {
+        tp->tv_sec = (long) seconds;
+        tp->tv_usec = (long) microseconds;
 
-		SHOWVALUE(tp->tv_sec);
-		SHOWVALUE(tp->tv_usec);
-	}
+        SHOWVALUE(tp->tv_sec);
+        SHOWVALUE(tp->tv_usec);
+    }
 
-	if (tzp != NULL)
-	{
-		if (__default_locale != NULL)
-			tzp->tz_minuteswest = __default_locale->loc_GMTOffset;
-		else
-			tzp->tz_minuteswest = 0;
+    if (tzp != NULL) {
+        tzp->tz_minuteswest = gmtoffset;
+        tzp->tz_dsttime = dstime;
 
-		/* The -1 means "we do not know if the time given is in
-		   daylight savings time". */
-		tzp->tz_dsttime = -1;
+        SHOWVALUE(tzp->tz_minuteswest);
+        SHOWVALUE(tzp->tz_dsttime);
+    }
 
-		SHOWVALUE(tzp->tz_minuteswest);
-		SHOWVALUE(tzp->tz_dsttime);
-	}
-
-	__locale_unlock();
-
-	RETURN(0);
-	return (0);
+    RETURN(0);
+    return (0);
 }

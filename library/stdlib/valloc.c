@@ -14,8 +14,7 @@
 
 #include <malloc.h>
 
-void *valloc(size_t size)
-{
+void *valloc(size_t size) {
     ENTER();
     SHOWVALUE(size);
 
@@ -26,5 +25,5 @@ void *valloc(size_t size)
 
     LEAVE();
 
-    return (void *)memalign(pagesize, size);
+    return (void *) memalign(pagesize, size);
 }

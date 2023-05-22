@@ -19,7 +19,7 @@ void read16(uint8_t *ptr2)
 	uint16_t w = 0;
 	int i;
 
-	for (i = 0; i < MAX; i++)
+	for (i = 0; i < MAX_CHUNK; i++)
 		for (int z = 0; z < buf; z++)
 		{
 			w = ptr[z];

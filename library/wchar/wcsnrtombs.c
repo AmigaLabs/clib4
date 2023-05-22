@@ -13,9 +13,10 @@ wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps
     wchar_t *pwcs;
     size_t n;
     int i;
+    struct _clib2 *__clib2 = __CLIB2;
 
     if (ps == NULL) {
-        ps = &__global_clib2->wide_status->_wcsrtombs_state;
+        ps = &__clib2->wide_status->_wcsrtombs_state;
     }
 
     /* If no dst pointer, treat len as maximum possible value. */

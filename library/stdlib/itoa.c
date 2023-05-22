@@ -40,13 +40,13 @@ itoa(int num, char *buffer, int base) {
             return NULL;
     }
 
-    num_digits += (int) __stdlib_floor(__stdlib_log(num) / __stdlib_log(base)) + 1;
+    num_digits += (int) floor(log(num) / log(base)) + 1;
 
     // Go through the digits one by one
     // from left to right
     while (curr < num_digits) {
         // Get the base value. For example, 10^2 = 1000, for the third digit
-        int base_val = (int) __stdlib_pow(base, num_digits - 1 - curr);
+        int base_val = (int) pow(base, num_digits - 1 - curr);
 
         // Get the numerical value
         int num_val = num / base_val;

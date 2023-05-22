@@ -7,9 +7,8 @@
 #endif /* _STDLIB_HEADERS_H */
 
 long
-labs(long x)
-{
-	long result;
+labs(long x) {
+    long result;
 
     ENTER();
     SHOWVALUE(x);
@@ -17,5 +16,5 @@ labs(long x)
     result = (x < 0) ? (-x) : x;
 
     RETURN(result);
-	return(result);
+    return (result);
 }

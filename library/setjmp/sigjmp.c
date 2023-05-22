@@ -29,7 +29,7 @@ __sigjmp_save(sigjmp_buf env, int savemask) {
     SHOWVALUE(savemask);
     env[0].__mask_was_saved = (savemask
                                && sigprocmask(SIG_BLOCK, (sigset_t *) NULL,
-                                                (sigset_t * ) & env[0].__saved_mask) == 0);
+                                              (sigset_t * ) & env[0].__saved_mask) == 0);
 
     SHOWVALUE(env[0].__mask_was_saved);
     RETURN(0);

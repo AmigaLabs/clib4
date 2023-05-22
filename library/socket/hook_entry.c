@@ -9,7 +9,7 @@
 #include <sys/ioctl.h>
 
 int64_t
-__socket_hook_entry(struct fd *fd, struct file_action_message *fam) {
+__socket_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_action_message *fam) {
     struct ExamineData *fib;
     BOOL is_aliased;
     int result;
@@ -21,7 +21,7 @@ __socket_hook_entry(struct fd *fd, struct file_action_message *fam) {
                 table and therefore needs to obtain the stdio lock before
                 it locks this particular descriptor entry. */
     if (fam->fam_Action == file_action_close)
-        __stdio_lock();
+        __stdio_lock(__clib2);
 
     __fd_lock(fd);
 
@@ -118,7 +118,7 @@ __socket_hook_entry(struct fd *fd, struct file_action_message *fam) {
     __fd_unlock(fd);
 
     if (fam->fam_Action == file_action_close)
-        __stdio_unlock();
+        __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

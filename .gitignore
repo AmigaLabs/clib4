@@ -5,9 +5,12 @@
 *.lha
 *.bak
 /library/compiler.log
+clib2.info
 compiler.log
 *.map
 .vscode
 build/
 clib2.lha
 .idea/
+clib2_1.0_amd64
+*.deb

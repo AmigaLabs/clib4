@@ -13,19 +13,20 @@
 time_t
 __convert_datestamp_to_time(const struct DateStamp *ds) {
     time_t result;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
     /* If possible, adjust for the local time zone. We do this because the
        AmigaOS system time is returned in local time and we want to return
        it in UTC. */
     result = UNIX_TIME_OFFSET + ds->ds_Days * (24 * 60 * 60) + ds->ds_Minute * 60 + (ds->ds_Tick / TICKS_PER_SECOND);
-    if (__default_locale != NULL)
-        result += 60 * __default_locale->loc_GMTOffset;
+    if (__clib2->__default_locale != NULL)
+        result += 60 * __clib2->__default_locale->loc_GMTOffset;
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     RETURN(result);
     return (result);

@@ -49,15 +49,8 @@ msec(struct timeval start, struct timeval end) {
 
 static void
 usage(void) {
-#ifdef __amigaos4__
-    extern const char *__program_name;
-
     fprintf(stderr, "usage: %s [-deq] [-t type] [host...]\n", __program_name);
-#else
-    extern const char *__progname;
 
-    fprintf(stderr, "usage: %s [-deq] [-t type] [host...]\n", __progname);
-#endif
     exit(1);
 }
 

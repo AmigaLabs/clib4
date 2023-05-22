@@ -699,7 +699,6 @@ wof_free(wof_allocator_t *allocator, void *ptr) {
     }
 
     chunk = WOF_DATA_TO_CHUNK(ptr);
-
     if (chunk->jumbo) {
         wof_free_jumbo(allocator, chunk);
         return;
@@ -711,7 +710,6 @@ wof_free(wof_allocator_t *allocator, void *ptr) {
     /* merge it with any other free chunks adjacent to it, so that contiguous
      * free space doesn't get fragmented */
     wof_merge_free(allocator, chunk);
-
     /* Now cycle the recycler */
     wof_cycle_recycler(allocator);
 }
@@ -827,7 +825,10 @@ wof_free_all(wof_allocator_t *allocator) {
         if (chunk->jumbo) {
             wof_remove_from_block_list(allocator, cur);
             cur = cur->next;
-            FreeVec(WOF_CHUNK_TO_BLOCK(chunk));
+
+            wof_block_hdr_t *block = WOF_CHUNK_TO_BLOCK(chunk);
+            FreeVec(block);
+            block = NULL;
         } else {
             wof_init_block(allocator, cur);
             cur = cur->next;
@@ -871,6 +872,7 @@ wof_gc(wof_allocator_t *allocator) {
                 allocator->master_head = free_chunk->next;
             }
             FreeVec(cur);
+            cur = NULL;
         } else {
             /* part of this block is used, so add it to the new block list */
             wof_add_to_block_list(allocator, cur);
@@ -894,11 +896,9 @@ wof_allocator_destroy(wof_allocator_t *allocator) {
 
 wof_allocator_t *
 wof_allocator_new(void) {
-    wof_allocator_t *allocator;
     ENTER();
 
-    //allocator = (wof_allocator_t *) malloc(sizeof(wof_allocator_t));
-    allocator = (wof_allocator_t *) AllocVecTags(sizeof(wof_allocator_t), MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    wof_allocator_t *allocator = (wof_allocator_t *) AllocVecTags(sizeof(wof_allocator_t), MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (allocator == NULL) {
         SHOWMSG("Unable to create wof_allocator");
         RETURN(NULL);
@@ -909,8 +909,7 @@ wof_allocator_new(void) {
     allocator->master_head = NULL;
     allocator->recycler_head = NULL;
 
-    SHOWPOINTER(allocator);
-    LEAVE();
+    RETURN(allocator);
     return allocator;
 }
 

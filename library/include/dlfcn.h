@@ -10,16 +10,16 @@
 __BEGIN_DECLS
 
 /* We only support a subset of the flags available on Unix systems. */
-#define RTLD_LAZY		1
-#define RTLD_NOW		2
-#define RTLD_LOCAL		4
-#define RTLD_GLOBAL		8
-#define RTLD_DEFAULT	((void *)0)
+#define RTLD_LAZY       1
+#define RTLD_NOW        2
+#define RTLD_LOCAL      4
+#define RTLD_GLOBAL     8
+#define RTLD_DEFAULT    ((void *)0)
 
-extern int dlclose(void * __handle);
-extern const char * dlerror(void);
-extern void * dlopen(const char * __path_name,int __mode);
-extern void * dlsym(void * __handle,const char * __symbol_name);
+extern int dlclose(void *__handle);
+extern const char *dlerror(void);
+extern void *dlopen(const char *__path_name, int __mode);
+extern void *dlsym(void *__handle, const char *__symbol_name);
 
 __END_DECLS
 

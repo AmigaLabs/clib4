@@ -141,7 +141,7 @@ LineEditor(BPTR file, char *buf, const int buflen, struct termios *tios) {
 }
 
 int64_t
-__termios_console_hook(struct fd *fd, struct file_action_message *fam) {
+__termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action_message *fam) {
     const unsigned char CR = '\r', NL = '\n';
     struct FileHandle *fh;
     char *buffer = NULL;
@@ -154,7 +154,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
     ENTER();
 
     assert(fam != NULL && fd != NULL);
-    assert(__is_valid_fd(fd));
+    assert(__is_valid_fd(__clib2, fd));
     assert(FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS));
     assert(fd->fd_Aux != NULL);
 
@@ -164,12 +164,12 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
      * table and therefore needs to obtain the stdio lock before
      * it locks this particular descriptor entry. */
     if (fam->fam_Action == file_action_close)
-        __stdio_lock();
+        __stdio_lock(__clib2);
 
     __fd_lock(fd);
 
     file = __resolve_fd_file(fd);
-    if (file == ZERO) {
+    if (file == BZERO) {
         SHOWMSG("file is closed");
 
         fam->fam_Error = EBADF;
@@ -439,7 +439,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
                         result = EOF;
                     }
 
-                    fd->fd_File = ZERO;
+                    fd->fd_File = BZERO;
                 }
             }
 
@@ -562,7 +562,7 @@ out:
     __fd_unlock(fd);
 
     if (fam->fam_Action == file_action_close)
-        __stdio_unlock();
+        __stdio_unlock(__clib2);
 
     if (buffer != NULL)
         free(buffer);

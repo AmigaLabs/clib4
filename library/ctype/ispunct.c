@@ -12,20 +12,21 @@ int
 ispunct(int c) {
     DECLARE_LOCALEBASE();
     int result;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
     SHOWVALUE(c);
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
-    if (__locale_table[LC_CTYPE] != NULL) {
+    if (__clib2->__locale_table[LC_CTYPE] != NULL) {
         assert(LocaleBase != NULL);
 
         /* The parameter must be either EOF or in the range of an
            'unsigned char'. If it's not, then the behaviour is
            undefined. */
         if (c != EOF && ((0 <= c && c <= UCHAR_MAX) || ((c + 256) <= UCHAR_MAX)))
-            result = IsPunct(__locale_table[LC_CTYPE], (ULONG)(c & 255));
+            result = IsPunct(__clib2->__locale_table[LC_CTYPE], (ULONG)(c & 255));
         else
             result = FALSE;
     } else {
@@ -35,7 +36,7 @@ ispunct(int c) {
                   ('{' <= c && c <= '~'));
     }
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     RETURN(result);
     return (result);

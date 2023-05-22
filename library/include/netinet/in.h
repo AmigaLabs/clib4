@@ -263,14 +263,18 @@ struct ip_opts
 /*
  * Argument structure for IP_ADD_MEMBERSHIP and IP_DROP_MEMBERSHIP.
  */
-struct ip_mreq
-{
+struct ip_mreq {
 	struct in_addr imr_multiaddr;	/* IP multicast address of group */
 	struct in_addr imr_interface;	/* local IP address of interface */
 };
 
-struct ip_mreq_source
-{
+struct ip_mreqn {
+	struct in_addr imr_multiaddr;
+	struct in_addr imr_address;
+	int imr_ifindex;
+};
+
+struct ip_mreq_source {
     /* IP multicast address of group.  */
     struct in_addr imr_multiaddr;
 

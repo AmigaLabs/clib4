@@ -2,8 +2,6 @@
  * $Id: sys_semctl.c,v 1.00 2021-02-02 17:07:00 clib2devs Exp $
 */
 
-#ifdef HAVE_SYSV
-
 #ifndef _SHM_HEADERS_H
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
@@ -20,21 +18,17 @@ _semctl(int semid, int semnum, int cmd, union semun aun)
     SHOWVALUE(cmd);
 
     int ret = -1;
-    if (__global_clib2->haveShm)
-    {
+    if (__CLIB2->haveShm) {
         ret = semctl(semid, semnum, cmd, aun);
         if (ret < 0)
         {
             __set_errno(GetIPCErr());
         }
     }
-    else
-    {
+    else {
         __set_errno(ENOSYS);
     }
 
     RETURN(ret);
     return ret;
 }
-
-#endif

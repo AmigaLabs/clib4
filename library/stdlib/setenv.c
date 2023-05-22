@@ -19,18 +19,16 @@ struct LocalVariable {
     char *lv_Name;
 };
 
-static struct LocalVariable *__lv_root;
-
 CLIB_DESTRUCTOR(__setenv_exit) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
     /* Now for the local variables that may still be set. */
-    if (__lv_root != NULL)
-    {
+    if (__clib2->__lv_root != NULL) {
         do {
-            D(("deleting variable '%s'", __lv_root->lv_Name));
-            DeleteVar(__lv_root->lv_Name, 0);
-        } while ((__lv_root = __lv_root->lv_Next) != NULL);
+            D(("deleting variable '%s'", __clib2->__lv_root->lv_Name));
+            DeleteVar(__clib2->__lv_root->lv_Name, 0);
+        } while ((__clib2->__lv_root = __clib2->__lv_root->lv_Next) != NULL);
     }
 
     LEAVE();
@@ -46,6 +44,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
     int status;
     int result = ERROR;
     size_t i;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -81,8 +80,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
                 break;
             }
         }
-    }
-    else if (value != NULL) /* && name == NULL */
+    } else if (value != NULL) /* && name == NULL */
     {
         for (i = 0; i < strlen(value); i++) {
             if (value[i] == '=') {
@@ -131,8 +129,8 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
             goto out;
         }
 
-        lv->lv_Next = __lv_root;
-        __lv_root = lv;
+        lv->lv_Next = __clib2->__lv_root;
+        __clib2->__lv_root = lv;
 
         lv->lv_Name = (char *) (lv + 1);
         strcpy(lv->lv_Name, name);
@@ -149,7 +147,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
         SHOWMSG("could not set variable");
 
         if (lv != NULL) {
-            __lv_root = lv->lv_Next;
+            __clib2->__lv_root = lv->lv_Next;
             free(lv);
         }
 

@@ -14,23 +14,9 @@ ifeq ($(STATIC),yes)
 endif
 
 C_BASE := \
-	c.lib_rev.o \
 	libc_init_global.o \
+	getclib2.o \
 	errno_data.o
-
-C_AIO := \
-	aio/aio_cancel.o \
-    aio/aio_error.o \
-    aio/aio_fsync.o \
-    aio/aio_misc.o \
-    aio/aio_notify.o \
-    aio/aio_read.o \
-    aio/aio_read64.o \
-    aio/aio_return.o \
-    aio/aio_sigqueue.o \
-    aio/aio_suspend.o \
-    aio/aio_write.o \
-    aio/aio_write64.o \
 
 C_ARGZ := \
 	argz/add.o \
@@ -75,39 +61,6 @@ C_CTYPE := \
 	ctype/tolower.o \
 	ctype/toupper.o
 
-ifdef DEBUG
-    $(info Adding debug objects)
-    C_DEBUG := \
-        debug/debug.o \
-        debug/cmpstrexec.o \
-        debug/kcmpstr.o \
-        debug/kdofmt.o \
-        debug/kgetc.o \
-        debug/kgetch1.o \
-        debug/kgetch2.o \
-        debug/kgetchar1.o \
-        debug/kgetchar2.o \
-        debug/kgetnum1.o \
-        debug/kgetnum2.o \
-        debug/kmaygetch.o \
-        debug/kmaygetchar.o \
-        debug/kprintf1.o \
-        debug/kprintf2.o \
-        debug/kputc.o \
-        debug/kputch1.o \
-        debug/kputch2.o \
-        debug/kputchar1.o \
-        debug/kputchar2.o \
-        debug/kputfmt.o \
-        debug/kputs1.o \
-        debug/kputs2.o \
-        debug/kputstr1.o \
-        debug/kputstr2.o \
-        debug/kvprintf1.o \
-        debug/kvprintf2.o \
-        debug/level.o
-endif
-
 C_DIRENT := \
 	dirent/alphasort.o \
 	dirent/closedir.o \
@@ -120,6 +73,15 @@ C_DIRENT := \
 	dirent/readdir_r.o \
 	dirent/readdir64_r.o \
 	dirent/rewinddir.o
+
+C_ENVZ := \
+	envz/buf_findstr.o \
+	envz/envz_add.o \
+	envz/envz_entry.o \
+	envz/envz_get.o \
+	envz/envz_merge.o \
+	envz/envz_remove.o \
+	envz/envz_strip.o
 
 C_ICONV := \
 	iconv/iconv.o \
@@ -139,16 +101,20 @@ C_LOCALE := \
 	locale/langinfo.o \
 	locale/init_exit.o \
 	locale/localeconv.o \
-	locale/open_locale.o \
 	locale/setlocale.o
 
 C_MISC := \
-	misc/clist.o \
+	misc/map.o
 
 C_MOUNT := \
 	mount/convertinfo.o \
 	mount/fstatfs.o \
 	mount/statfs.o
+
+C_NL_TYPES := \
+	nltypes/catclose.o \
+	nltypes/catgets.o \
+	nltypes/catopen.o
 
 C_POSIX := \
 	posix/fnmatch.o \
@@ -178,9 +144,7 @@ C_POSIX := \
 	posix/shmget.o \
 	posix/shmids.o \
 	posix/checkabort.o \
-	posix/data.o \
 	posix/kill.o \
-	posix/mask.o \
 	posix/raise.o \
 	posix/sigaction.o \
 	posix/sigaddset.o \
@@ -204,88 +168,6 @@ C_POSIX := \
 	posix/readv.o \
 	posix/writev.o \
 	posix/uname.o
-
-C_PTHREAD := \
-    pthread/common.o \
-    pthread/pthread.o \
-    pthread/pthread_attr_destroy.o \
-    pthread/pthread_attr_getdetachstate.o \
-    pthread/pthread_attr_getguardsize.o \
-    pthread/pthread_attr_getschedparam.o \
-    pthread/pthread_attr_getstack.o \
-    pthread/pthread_attr_getstacksize.o \
-    pthread/pthread_attr_init.o \
-    pthread/pthread_attr_setdetachstate.o \
-    pthread/pthread_attr_setguardsize.o \
-    pthread/pthread_attr_setschedparam.o \
-    pthread/pthread_attr_setstack.o \
-    pthread/pthread_attr_setstacksize.o \
-    pthread/pthread_barrier_destroy.o \
-    pthread/pthread_barrier_init.o \
-    pthread/pthread_barrier_wait.o \
-    pthread/pthread_cancel.o \
-    pthread/pthread_cleanup_pop.o \
-    pthread/pthread_cleanup_push.o \
-    pthread/pthread_cond_broadcast.o \
-    pthread/pthread_cond_destroy.o \
-    pthread/pthread_cond_init.o \
-    pthread/pthread_cond_signal.o \
-    pthread/pthread_cond_timedwait.o \
-    pthread/pthread_cond_timedwait_relative_np.o \
-    pthread/pthread_cond_wait.o \
-    pthread/pthread_condattr_destroy.o \
-    pthread/pthread_condattr_init.o \
-    pthread/pthread_create.o \
-    pthread/pthread_detach.o \
-    pthread/pthread_equal.o \
-    pthread/pthread_exit.o \
-    pthread/pthread_getattr_np.o \
-    pthread/pthread_getname_np.o \
-    pthread/pthread_getschedparam.o \
-    pthread/pthread_getspecific.o \
-    pthread/pthread_join.o \
-    pthread/pthread_key_create.o \
-    pthread/pthread_key_delete.o \
-    pthread/pthread_kill.o \
-    pthread/pthread_mutex_destroy.o \
-    pthread/pthread_mutex_init.o \
-    pthread/pthread_mutex_lock.o \
-    pthread/pthread_mutex_timedlock.o \
-    pthread/pthread_mutex_trylock.o \
-    pthread/pthread_mutex_unlock.o \
-    pthread/pthread_mutexattr_destroy.o \
-    pthread/pthread_mutexattr_gettype.o \
-    pthread/pthread_mutexattr_init.o \
-    pthread/pthread_mutexattr_settype.o \
-    pthread/pthread_once.o \
-    pthread/pthread_rwlock_destroy.o \
-    pthread/pthread_rwlock_init.o \
-    pthread/pthread_rwlock_rdlock.o \
-    pthread/pthread_rwlock_timedrdlock.o \
-    pthread/pthread_rwlock_timedwrlock.o \
-    pthread/pthread_rwlock_tryrdlock.o \
-    pthread/pthread_rwlock_trywrlock.o \
-    pthread/pthread_rwlock_unlock.o \
-    pthread/pthread_rwlock_wrlock.o \
-    pthread/pthread_rwlockattr_destroy.o \
-    pthread/pthread_rwlockattr_init.o \
-    pthread/pthread_self.o \
-    pthread/pthread_setcancelstate.o \
-    pthread/pthread_setcanceltype.o \
-    pthread/pthread_setname_np.o \
-    pthread/pthread_setschedparam.o \
-    pthread/pthread_setschedprio.o \
-    pthread/pthread_setspecific.o \
-    pthread/pthread_spin_destroy.o \
-    pthread/pthread_spin_init.o \
-    pthread/pthread_spin_lock.o \
-    pthread/pthread_spin_trylock.o \
-    pthread/pthread_spin_unlock.o \
-    pthread/pthread_testcancel.o \
-    pthread/sched_get_priority_max.o \
-    pthread/sched_get_priority_min.o \
-    pthread/sched_yield.o \
-    pthread/semaphore.o
 
 C_REGEX := \
 	regex/regcomp.o \
@@ -333,7 +215,6 @@ C_SOCKET := \
 	socket/bind.o \
 	socket/bindresvport.o \
 	socket/bindresvport6.o \
-	socket/check_daemon.o \
 	socket/closelog.o \
 	socket/connect.o \
     socket/dn_comp.o \
@@ -371,6 +252,7 @@ C_SOCKET := \
 	socket/if_indextoname.o \
 	socket/if_nametoindex.o \
 	socket/in6addr_any.o \
+	socket/in6addr_loopback.o \
 	socket/inet_addr.o \
 	socket/inet_aton.o \
 	socket/inet_lnaof.o \
@@ -382,10 +264,8 @@ C_SOCKET := \
 	socket/inet_pton.o \
 	socket/init_exit.o \
 	socket/ioctl.o \
-	socket/isdaemon.o \
 	socket/listen.o \
 	socket/ns_parse.o \
-	socket/obtain_daemon.o \
 	socket/openlog.o \
 	socket/recv.o \
 	socket/recvfrom.o \
@@ -500,8 +380,6 @@ C_STDIO := \
 	stdio/file_init.o \
 	stdio/iobhookentry.o \
 	stdio/lock.o \
-	stdio/locksemaphorename.o \
-	stdio/nostdio.o \
 	stdio/openiob.o \
 	stdio/parent_of_fh.o \
 	stdio/perror.o \
@@ -561,16 +439,12 @@ C_STDLIB := \
 	stdlib/atoll.o \
 	stdlib/bsearch.o \
 	stdlib/calloc.o \
-	stdlib/checkdetach.o \
-	stdlib/detach.o \
-	stdlib/disablerequesters.o \
 	stdlib/div.o \
 	stdlib/divsi3.o \
 	stdlib/dlclose.o \
 	stdlib/dlerror.o \
 	stdlib/dlopen.o \
 	stdlib/dlsym.o \
-	stdlib/dosbase.o \
 	stdlib/ecvt.o \
 	stdlib/exit.o \
 	stdlib/fcvt.o \
@@ -581,20 +455,15 @@ C_STDLIB := \
 	stdlib/getenv.o \
 	stdlib/getsp.o \
 	stdlib/get_errno.o \
-	stdlib/isresident.o \
 	stdlib/itoa.o \
 	stdlib/l64a.o \
 	stdlib/labs.o \
 	stdlib/ldiv.o \
-	stdlib/lib_startup.o \
 	stdlib/llabs.o \
 	stdlib/lldiv.o \
 	stdlib/lltoa.o \
 	stdlib/main.o \
-	stdlib/main_stub.o \
 	stdlib/malloc.o \
-	stdlib/math_double.o \
-	stdlib/math_float.o \
 	stdlib/mblen.o \
 	stdlib/mbstowcs.o \
 	stdlib/mbtowc.o \
@@ -603,30 +472,22 @@ C_STDLIB := \
 	stdlib/mktemp.o \
 	stdlib/modsi3.o \
 	stdlib/mulsi3.o \
-	stdlib/never_free.o \
-	stdlib/osliberror.o \
 	stdlib/posix_memalign.o \
-	stdlib/priority.o \
-	stdlib/process_name.o \
 	stdlib/program_name.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
 	stdlib/qsort_r.o \
 	stdlib/realloc.o \
-	stdlib/resetmemstats.o \
 	stdlib/secure_getenv.o \
 	stdlib/semaphore.o \
 	stdlib/setenv.o \
 	stdlib/set_errno.o \
 	stdlib/set_process_window.o \
 	stdlib/shared_objs.o \
-	stdlib/shell_escape.o \
 	stdlib/showerror.o \
-	stdlib/stacksize.o \
 	stdlib/stack_usage.o \
 	stdlib/swapstack.o \
 	stdlib/arg.o \
-	stdlib/stdio_window_spec.o \
 	stdlib/strtod.o \
 	stdlib/strtof.o \
 	stdlib/strtol.o \
@@ -635,17 +496,13 @@ C_STDLIB := \
 	stdlib/strtoq.o \
 	stdlib/strtoul.o \
 	stdlib/strtoull.o \
-	stdlib/sysbase.o \
 	stdlib/system.o \
-	stdlib/sysvbase.o \
 	stdlib/termination_message.o \
-	stdlib/utilitybase.o \
 	stdlib/udivsi3.o \
 	stdlib/udivsi4.o \
 	stdlib/umodsi3.o \
 	stdlib/unsetenv.o \
 	stdlib/valloc.o \
-	stdlib/expand_wildcard.o \
 	stdlib/expand_wildcard_check.o \
 	stdlib/wof_allocator.o
 
@@ -668,10 +525,6 @@ C_STRING := \
 	string/memmove.o \
 	string/memrchr.o \
 	string/memset.o \
-	cpu/altivec/vec_memcmp.o \
-	cpu/altivec/vec_memcpy.o \
-	cpu/altivec/vec_memset.o \
-	cpu/altivec/vec_strcpy.o \
 	cpu/4xx/memchr440.o \
 	cpu/4xx/memcmp440.o \
 	cpu/4xx/memcpy440.o \
@@ -682,6 +535,11 @@ C_STRING := \
 	cpu/4xx/strlen440.o \
 	cpu/4xx/strncmp440.o \
 	cpu/4xx/strrchr440.o \
+	cpu/altivec/vec_memcmp.o \
+	cpu/altivec/vec_memcpy.o \
+	cpu/altivec/vec_memset.o \
+	cpu/altivec/vec_strcpy.o \
+	cpu/generic/bcopy.o \
 	string/rindex.o \
 	string/stccpy.o \
 	string/stpcpy.o \
@@ -716,6 +574,15 @@ C_STRING := \
 	string/strtok_r.o \
 	string/strverscmp.o \
 	string/strxfrm.o
+
+ifdef SPE
+    $(info Adding SPE objects)
+    C_STRING := $(C_STRING) \
+		cpu/spe/memcmpE500.o \
+		cpu/spe/strcmpE500.o \
+		cpu/spe/strcpyE500.o \
+		cpu/spe/strlenE500.o
+endif
 
 C_TERMCAP := \
     termcap/termcap.o \
@@ -786,6 +653,7 @@ C_UNISTD := \
 	fcntl/read.o \
 	fcntl/write.o \
 	unistd/alarm.o \
+	unistd/environ.o \
 	unistd/get_default_file.o \
 	unistd/lock.o \
 	unistd/lseek.o \
@@ -794,12 +662,9 @@ C_UNISTD := \
 	unistd/chdir.o \
 	unistd/chdir_exit.o \
 	unistd/chown.o \
-	unistd/currentpathname.o \
-	unistd/def_path.o \
-	unistd/def_path_delimiter.o \
 	unistd/dup.o \
 	unistd/dup2.o \
-	unistd/environ.o \
+	crypt/encrypt.o \
 	unistd/execl.o \
 	unistd/execle.o \
 	unistd/execlp.o \
@@ -824,8 +689,6 @@ C_UNISTD := \
 	unistd/getdomainname.o \
 	unistd/getlogin.o \
 	unistd/getlogin_r.o \
-	unistd/getopt.o \
-	unistd/getopt_long.o \
 	unistd/getpagesize.o \
 	unistd/getpid.o \
 	unistd/getppid.o \
@@ -850,6 +713,7 @@ C_UNISTD := \
 	unistd/restorepathname.o \
 	unistd/setcurrentpath.o \
 	unistd/setdomainname.o \
+	unistd/setlogin.o \
 	unistd/sleep.o \
 	unistd/spawnv.o \
 	unistd/spawnvp.o \
@@ -867,15 +731,11 @@ C_UNISTD := \
 	unistd/ttyname.o \
 	unistd/ttyname_r.o \
     unistd/ualarm.o \
-    unistd/path_semantics.o \
 	unistd/unlink.o \
-	unistd/unlink_retries.o \
 	unistd/usleep.o \
 	unistd/wildcard_expand.o
 
 C_USERGROUP := \
-	usergroup/crypt.o \
-	usergroup/data.o \
 	usergroup/endgrent.o \
 	usergroup/endpwent.o \
 	usergroup/getegid.o \
@@ -889,12 +749,13 @@ C_USERGROUP := \
 	usergroup/getpgrp.o \
 	usergroup/getpwent.o \
 	usergroup/getpwnam.o \
+	usergroup/getpwnam_r.o \
 	usergroup/getpwuid.o \
+	usergroup/getpwuid_r.o \
 	usergroup/getuid.o \
 	usergroup/tcgetpgrp.o \
 	usergroup/initgroups.o \
 	usergroup/init_exit.o \
-	usergroup/rootmode.o \
 	usergroup/setegid.o \
 	usergroup/seteuid.o \
 	usergroup/setgid.o \
@@ -928,6 +789,7 @@ C_WCHAR := \
 	wchar/_mbstowcs_r.o \
 	wchar/_mbtowc_r.o \
 	wchar/mbsinit.o \
+	wchar/mbsnrtowcs.o \
 	wchar/mbsrtowcs.o \
 	wchar/putwc.o \
 	wchar/putwchar.o \
@@ -949,6 +811,7 @@ C_WCHAR := \
 	wchar/wcschr.o \
 	wchar/wcscmp.o \
 	wchar/wcscoll.o \
+	wchar/wcscoll_l.o \
 	wchar/wcscpy.o \
 	wchar/wcscspn.o \
 	wchar/wcsdup.o \
@@ -1010,21 +873,21 @@ C_WCHAR := \
 	wchar/wctrans.o \
 	wchar/wctype.o
 
-C_LIB := \
+C_LIBRARY := \
 	$(C_BASE) \
-    $(C_AIO) \
 	$(C_ARGZ) \
     $(C_BYTESWAP) \
 	$(C_CTYPE) \
 	$(C_DIRENT) \
 	$(C_DEBUG) \
+	$(C_ENVZ) \
 	$(C_ICONV) \
 	$(C_INTTYPES) \
 	$(C_LOCALE) \
 	$(C_MISC) \
 	$(C_MOUNT) \
+	$(C_NL_TYPES) \
 	$(C_POSIX) \
-	$(C_PTHREAD) \
     $(C_REGEX) \
 	$(C_SEARCH) \
     $(C_SETJMP) \
@@ -1040,23 +903,31 @@ C_LIB := \
 	$(C_USERGROUP) \
 	$(C_WCHAR)
 
+C_LIB := \
+	c.lib_rev.o \
+	shared_library/stubs.o \
+	ctype/table.o \
+	unistd/getopt.o \
+	unistd/getopt_long.o
+
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(C_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
+
+OBJ_C_LIB += $(addprefix $(OUT_SHARED_LIB)/, $(C_LIBRARY))
+OBJ_C_SRC += $(patsubst %.o, $(LIB_DIR)/%.c, $(C_LIBRARY))
 
 # Dependencies to rebuild if the library version changes
 
 $(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
-$(BUILD_DIR)/obj.shared/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
+$(OUT_SHARED)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
+
+$(OUT_STATIC)/cpu/spe/%.o : $(LIB_DIR)/cpu/spe/%.S
+	$(VERBOSE)$(COMPILE_SPE)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.sx
-	$(VERBOSE)$(COMPILE_REG)
+	$(VERBOSE)$(COMPILE_ALTIVEC_REG)
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
-
-$(OUT_SHARED)/%.o : $(LIB_DIR)/%.sx
-	$(VERBOSE)$(COMPILE_REG)
-$(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
-	$(VERBOSE)$(COMPILE_SHARED_ASM)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
@@ -1067,8 +938,4 @@ $(OUTPUT_LIB)/libc.a : $(SOURCES_STATIC)
 	$(VERBOSE)@$(MAKELIB)
 
 $(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
-	@$(MAKEDIR) $(@D)
-	@$(DELETE) $@
-	$(VERBOSE)echo "Making Shared \033[0;31m$@\033[0m"
-	$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -Wl,-soname,$(@F)
-	$(COPY) $(OUTPUT_LIB)/libc.so $(INSTALL_PREFIX)/lib/
+	$(VERBOSE)$(MAKESHARED)

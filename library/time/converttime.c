@@ -11,6 +11,7 @@ __convert_time(ULONG seconds, LONG gmt_offset, struct tm *tm) {
     DECLARE_UTILITYBASE();
     struct ClockData clock_data;
     struct tm *result;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -43,7 +44,9 @@ __convert_time(ULONG seconds, LONG gmt_offset, struct tm *tm) {
     tm->tm_mon = clock_data.month - 1;
     tm->tm_year = clock_data.year - 1900;
     tm->tm_wday = clock_data.wday;
-    tm->tm_isdst = -1;
+    tm->tm_isdst = __clib2->daylight;
+    tm->tm_zone = __clib2->tzname[0];
+    tm->tm_gmtoff = __clib2->timezone / 60;
 
     /* Now figure out how many days have passed since January 1st. */
     tm->tm_yday = __calculate_days_per_date(clock_data.year, clock_data.month, clock_data.mday) -

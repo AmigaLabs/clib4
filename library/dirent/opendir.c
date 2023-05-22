@@ -6,7 +6,7 @@
 #include "dirent_headers.h"
 #endif /* _DIRENT_HEADERS_H */
 
-STATIC struct Node *
+static struct Node *
 find_by_name(struct List *list, const char *name) {
     struct Node *result = NULL;
     struct Node *node;
@@ -26,6 +26,7 @@ opendir(const char *path_name) {
     struct name_translation_info path_name_nti;
     struct DirectoryHandle *dh = NULL;
     DIR *result = NULL;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -50,7 +51,7 @@ opendir(const char *path_name) {
 
     memset(dh, 0, sizeof(*dh));
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         struct Node *node;
 
         NewList((struct List *) &dh->dh_VolumeList);
@@ -121,13 +122,12 @@ opendir(const char *path_name) {
         }
     }
 
-    if (NOT dh->dh_ScanVolumeList)
-    {
+    if (NOT dh->dh_ScanVolumeList) {
         SHOWMSG("we are supposed to scan a directory");
         SHOWSTRING(path_name);
 
         dh->dh_DirLock = Lock((STRPTR) path_name, SHARED_LOCK);
-        if (dh->dh_DirLock == ZERO) {
+        if (dh->dh_DirLock == BZERO) {
             SHOWMSG("couldn't get a lock on it");
 
             __set_errno(__translate_access_io_error_to_errno(IoErr()));
@@ -164,13 +164,13 @@ opendir(const char *path_name) {
 
     SHOWMSG("OK, done");
 
-    assert(__directory_list.mlh_Head != NULL);
+    assert(__clib2->__directory_list.mlh_Head != NULL);
 
-    __dirent_lock();
+    __dirent_lock(__clib2);
 
-    AddTail((struct List *) &__directory_list, (struct Node *) dh);
+    AddTail((struct List *) &__clib2->__directory_list, (struct Node *) dh);
 
-    __dirent_unlock();
+    __dirent_unlock(__clib2);
 
     result = (DIR *) dh;
     dh = NULL;
@@ -182,7 +182,7 @@ out:
         if (dh->dh_FileInfo != NULL)
             FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 
-        if (__unix_path_semantics) {
+        if (__clib2->__unix_path_semantics) {
             struct Node *node;
 
             while ((node = RemHead((struct List *) &dh->dh_VolumeList)) != NULL)

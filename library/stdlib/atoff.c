@@ -6,10 +6,7 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-float 
-atoff(const char *nptr)
-{
-    ENTER();
-    LEAVE();
+float
+atoff(const char *nptr) {
     return strtof(nptr, NULL);
 }

@@ -5,7 +5,7 @@ void write32(uint8_t *ptr2)
 	uint32_t *ptr = (uint32_t *)ptr2;
 	int buf = BUFFER_SIZE / 4;
 
-	for (int i = 0; i < MAX; i++)
+	for (int i = 0; i < MAX_CHUNK; i++)
 		for (int z = 0; z < buf; z++)
 		{
 			ptr[z] = i % 0xffff;
@@ -19,7 +19,7 @@ void read32(uint8_t *ptr2)
 	uint32_t w = 0;
 	int i;
 
-	for (i = 0; i < MAX; i++)
+	for (i = 0; i < MAX_CHUNK; i++)
 		for (int z = 0; z < buf; z++)
 		{
 			w = ptr[z];

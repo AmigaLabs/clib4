@@ -6,22 +6,17 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
+int seteuid(uid_t u) {
+    int result;
 
-int seteuid(uid_t u)
-{
-	int result;
+    ENTER();
 
-	ENTER();
+    SHOWVALUE(u);
 
-	SHOWVALUE(u);
-
-	assert(__UserGroupBase != NULL);
-
-	result = setreuid((ULONG)-1, (ULONG)u);
+    result = setreuid((ULONG) - 1, (ULONG) u);
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

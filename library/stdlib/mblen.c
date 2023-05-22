@@ -7,8 +7,7 @@
 #endif /* _STDLIB_HEADERS_H */
 
 int
-mblen(const char *s, size_t n)
-{
+mblen(const char *s, size_t n) {
     ENTER();
 
     int result = mbtowc(0, s, n);

@@ -9,8 +9,9 @@
 int
 execv(const char *path, char *const argv[]) {
     int result;
+    struct _clib2 *__clib2 = __CLIB2;
 
-    result = execve(path, argv, environ);
+    result = execve(path, argv, __clib2->__environment);
 
     return (result);
 }

@@ -67,11 +67,12 @@ get_first_script_line(const char *path, char **line_ptr) {
     size_t script_line_size = 0;
     size_t script_line_length = 0;
     LONG c;
+    struct _clib2 *__clib2 = __CLIB2;
 
     (*line_ptr) = NULL;
 
     script_file = Open((STRPTR) path, MODE_OLDFILE);
-    if (script_file == ZERO) {
+    if (script_file == BZERO) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
         goto out;
     }
@@ -87,7 +88,7 @@ get_first_script_line(const char *path, char **line_ptr) {
             char *new_script_line;
 
             /* Give the user a chance to bail out. */
-            if (__check_abort_enabled && (SetSignal(0, 0) & __break_signal_mask) != 0) {
+            if (__clib2->__check_abort_enabled && (SetSignal(0, 0) & __clib2->__break_signal_mask) != 0) {
                 __set_errno(EAGAIN);
                 goto out;
             }
@@ -135,7 +136,7 @@ get_first_script_line(const char *path, char **line_ptr) {
 
 out:
 
-    if (script_file != ZERO)
+    if (script_file != BZERO)
         Close(script_file);
 
     if (script_line != NULL)
@@ -167,10 +168,10 @@ free_program_info(struct program_info *pi) {
         if (pi->program_name != NULL)
             free(pi->program_name);
 
-        if (pi->home_dir != ZERO)
+        if (pi->home_dir != BZERO)
             UnLock(pi->home_dir);
 
-        if (pi->segment_list != ZERO)
+        if (pi->segment_list != BZERO)
             UnLoadSeg(pi->segment_list);
 
         free(pi);
@@ -186,12 +187,13 @@ find_command(const char *path, struct program_info **result_ptr) {
     struct program_info *pi;
     APTR old_window_ptr;
     int result = -1;
-    BPTR old_dir = ZERO;
+    BPTR old_dir = BZERO;
     BOOL found_path_separator;
     BOOL found_volume_separator;
     const char *p;
     int error;
     char c;
+    struct _clib2 *__clib2 = __CLIB2;
 
     (*result_ptr) = NULL;
 
@@ -255,7 +257,7 @@ find_command(const char *path, struct program_info **result_ptr) {
 
         do {
             /* Give the user a chance to bail out. */
-            if (__check_abort_enabled && (SetSignal(0, 0) & __break_signal_mask) != 0) {
+            if (__clib2->__check_abort_enabled && (SetSignal(0, 0) & __clib2->__break_signal_mask) != 0) {
                 error = EAGAIN;
                 break;
             }
@@ -272,7 +274,7 @@ find_command(const char *path, struct program_info **result_ptr) {
             /* First try: let's assume that that the file is
                executable */
             pi->segment_list = LoadSeg((STRPTR) path);
-            if (pi->segment_list != ZERO) {
+            if (pi->segment_list != BZERO) {
                 /* Also remember the name of the command */
                 pi->program_name = strdup(path);
                 if (pi->program_name != NULL)
@@ -348,7 +350,7 @@ find_command(const char *path, struct program_info **result_ptr) {
                 BPTR file_lock;
 
                 file_lock = Lock((STRPTR) path, SHARED_LOCK);
-                if (file_lock != ZERO) {
+                if (file_lock != BZERO) {
                     struct ExamineData *status = ExamineObjectTags(EX_LockInput, file_lock, TAG_DONE);
                     if (status) {
                         if (status->Protection & EXDB_SCRIPT) {
@@ -377,9 +379,9 @@ find_command(const char *path, struct program_info **result_ptr) {
                 /* Remember where that file came from so that
                    "PROGDIR:" will work. */
                 file_lock = Lock((STRPTR) path, SHARED_LOCK);
-                if (file_lock != ZERO) {
+                if (file_lock != BZERO) {
                     pi->home_dir = ParentDir(file_lock);
-                    if (pi->home_dir == ZERO)
+                    if (pi->home_dir == BZERO)
                         error = __translate_io_error_to_errno(IoErr());
 
                     UnLock(file_lock);
