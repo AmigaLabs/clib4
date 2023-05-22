@@ -279,6 +279,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
             case GB2312:
                 if (c < 128) break;
                 if (c < 0xa1) goto ilseq;
+                /* fallthrough */
             case GBK:
             case GB18030:
                 if (c < 128) break;
@@ -422,6 +423,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 if (c > 0x7f)
                     subst:
                     x++, c = '*';
+                /* fallthrough */
             default:
                 if (*outb < 1) goto toobig;
                 if (c < 256 && c == legacy_map(tomap, type, c)) {
@@ -513,6 +515,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 break;
             case UCS2:
                 totype = UCS2BE;
+                /* fallthrough */
             case UCS2BE:
             case UCS2LE:
             case UTF_16:
@@ -535,6 +538,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 break;
             case UTF_32:
                 totype = UTF_32BE;
+                /* fallthrough */
             case UTF_32BE:
             case UTF_32LE:
                 if (*outb < 4) goto toobig;

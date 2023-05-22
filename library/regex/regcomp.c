@@ -786,6 +786,7 @@ static reg_errcode_t parse_atom(tre_parse_ctx_t *ctx, const char *s) {
                     /* reject repetitions after empty expression in BRE */
                     if (!ere)
                         return REG_BADRPT;
+                    /* fallthrough */
                 case '|':
                     /* extension: treat \| as alternation in BRE */
                     if (!ere) {
@@ -843,9 +844,11 @@ static reg_errcode_t parse_atom(tre_parse_ctx_t *ctx, const char *s) {
             /* reject repetitions after empty expression in ERE */
             if (ere)
                 return REG_BADRPT;
+            /* fallthrough */
         case '|':
             if (!ere)
                 goto parse_literal;
+            /* fallthrough */
         case 0:
             node = tre_ast_new_literal(ctx->mem, EMPTY, -1, -1);
             break;
