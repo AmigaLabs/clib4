@@ -77,8 +77,7 @@ out:
         FreeSysObject(ASOT_IOREQUEST, tr);
     }
 
-    if (mp != NULL)
-        FreeSysObject(ASOT_PORT, mp);
+    FreeSysObject(ASOT_PORT, mp);
 
     return (error);
 }
