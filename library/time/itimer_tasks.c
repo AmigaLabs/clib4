@@ -115,15 +115,12 @@ int itimer_real_task() {
 
 out:
     /* Free itimer objects */
-    if (tmr_real_mp) {
-        FreeSysObject(ASOT_PORT, tmr_real_mp);
-        tmr_real_mp = NULL;
-    }
+    FreeSysObject(ASOT_PORT, tmr_real_mp);
+
     if (tmr_real_tr) {
         if (tmr_real_tr->Request.io_Device != NULL)
             CloseDevice((struct IORequest *) tmr_real_tr);
         FreeSysObject(ASOT_IOREQUEST, tmr_real_tr);
-        tmr_real_tr = NULL;
     }
 
     if (Success)
