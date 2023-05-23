@@ -22,8 +22,6 @@ __scan_nan(uint32_t *words, int num_words, const char *s) {
     int si;        /* index into s */
     int bitpos;    /* index into words (in bits) */
 
-    memset(words, 0, num_words * sizeof(uint32_t));
-
     /* Allow a leading '0x'. (It's expected, but redundant.) */
     if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
         s += 2;
@@ -40,13 +38,12 @@ __scan_nan(uint32_t *words, int num_words, const char *s) {
 }
 
 double
-nan(const char *UNUSED s) {
+nan(const char *s) {
     union {
         double d;
         uint32_t bits[2];
-    } u;
+    } u = { .bits = { 0x7ff80000, 0 } };
 
     __scan_nan(u.bits, 2, s);
-    u.bits[0] |= 0x7ff80000;
     return (u.d);
 }
