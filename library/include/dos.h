@@ -494,6 +494,7 @@ struct _clib2 {
 extern struct _clib2 *__getClib2(void);
 
 #endif
+#undef __CLIB2
 #define __CLIB2 __getClib2()
 
 /*
