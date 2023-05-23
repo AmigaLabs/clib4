@@ -25,10 +25,7 @@ __delete_semaphore(struct SignalSemaphore *semaphore) {
     ENTER();
     SHOWPOINTER(semaphore);
 
-    if (semaphore != NULL) {
-        FreeSysObject(ASOT_SEMAPHORE, semaphore);
-        semaphore = NULL;
-    }
+    FreeSysObject(ASOT_SEMAPHORE, semaphore);
 
     LEAVE();
 }
