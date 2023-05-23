@@ -16,8 +16,5 @@
 VOID DeleteExtIO(struct IORequest *io);
 
 VOID DeleteExtIO(struct IORequest *io) {
-    assert(io != NULL);
-
-    if (io != NULL)
-        FreeSysObject(ASOT_IOREQUEST, io);
+    FreeSysObject(ASOT_IOREQUEST, io);
 }
