@@ -299,8 +299,6 @@ struct _clib2 {
     /* Wof Allocator main pointer */
     wof_allocator_t *__wof_allocator;
     struct SignalSemaphore *__wof_allocator_semaphore;
-    /* Wof Allocator memory semaphore */
-    struct SignalSemaphore *memory_semaphore;
 
     /* Names of files and directories to delete when shutting down. */
     struct MinList __unlink_list;
@@ -488,6 +486,9 @@ struct _clib2 {
 #ifndef NDEBUG
     struct StackSwapStruct stack_swap_struct;
 #endif
+
+    /* Wof Allocator memory semaphore */
+    struct SignalSemaphore *memory_semaphore;
 };
 
 #ifndef __getClib2
