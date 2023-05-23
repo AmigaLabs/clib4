@@ -298,6 +298,7 @@ struct _clib2 {
 
     /* Wof Allocator main pointer */
     wof_allocator_t *__wof_allocator;
+    struct SignalSemaphore *__wof_allocator_semaphore;
     /* Wof Allocator memory semaphore */
     struct SignalSemaphore *memory_semaphore;
 

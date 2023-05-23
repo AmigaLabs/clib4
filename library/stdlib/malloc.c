@@ -53,6 +53,11 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
 
     __memory_unlock(__clib2);
 
+    if (__clib2->__wof_allocator_semaphore != NULL) {
+        __delete_semaphore(__clib2->__wof_allocator_semaphore);
+        __clib2->__wof_allocator_semaphore = NULL;
+    }
+
     if (__clib2->memory_semaphore != NULL) {
         __delete_semaphore(__clib2->memory_semaphore);
         __clib2->memory_semaphore = NULL;
@@ -70,6 +75,10 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
 
     __clib2->memory_semaphore = __create_semaphore();
     if (__clib2->memory_semaphore == NULL)
+        goto out;
+
+    __clib2->__wof_allocator_semaphore = __create_semaphore();
+    if (__clib2->__wof_allocator_semaphore == NULL)
         goto out;
 
     __clib2->__wof_allocator = wof_allocator_new();
