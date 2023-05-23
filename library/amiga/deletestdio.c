@@ -16,6 +16,5 @@
 VOID DeleteStdIO(struct IOStdReq *io);
 
 VOID DeleteStdIO(struct IOStdReq *io) {
-    if (io != NULL)
-        FreeSysObject(ASOT_IOREQUEST, io);
+    FreeSysObject(ASOT_IOREQUEST, io);
 }
