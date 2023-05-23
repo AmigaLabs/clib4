@@ -26,7 +26,7 @@ int itimer_real_task() {
     struct MsgPort *tmr_real_mp = NULL;
     struct TimeRequest *tmr_real_tr = NULL;
     ULONG wait_mask;
-    BOOL Success = FALSE;
+    int status = RETURN_FAIL;
 
     struct Process *thisTask = (struct Process *) FindTask(NULL);
     struct itimer *_itimer = (struct itimer *) thisTask->pr_Task.tc_UserData;
@@ -111,7 +111,7 @@ int itimer_real_task() {
         }
     }
 
-    Success = TRUE;
+    status = RETURN_OK;
 
 out:
     /* Free itimer objects */
@@ -126,8 +126,5 @@ out:
         tmr_real_tr = NULL;
     }
 
-    if (Success)
-        return RETURN_OK;
-    else
-        return RETURN_FAIL;
+    return status;
 }
