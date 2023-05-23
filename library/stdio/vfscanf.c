@@ -589,7 +589,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 } else if (nan_match >= 3) {
                     SHOWMSG("not a number");
 
-                    sum = nan(NULL);
+                    sum = NAN;
 
                     total_num_chars_read = num_chars_processed = nan_match;
                 }

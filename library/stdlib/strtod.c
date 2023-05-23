@@ -91,7 +91,7 @@ strtod(const char *str, char **ptr) {
                 str++;
         }
 
-        sum = nan(NULL);
+        sum = NAN;
 
         stop = str;
     } else {
