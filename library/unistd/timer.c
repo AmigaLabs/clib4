@@ -104,12 +104,11 @@ CLIB_DESTRUCTOR(timer_exit) {
         __clib2->__timer_request = NULL;
     }
 
-    if (__clib2->__timer_port != NULL) {
-        FreeSysObject(ASOT_PORT, __clib2->__timer_port);
-        __clib2->__timer_port = NULL;
-    }
+    FreeSysObject(ASOT_PORT, __clib2->__timer_port);
+    __clib2->__timer_port = NULL;
 
     __delete_semaphore(__clib2->__timer_semaphore);
+    __clib2->__timer_semaphore = NULL;
 
     LEAVE();
 }
