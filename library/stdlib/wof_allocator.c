@@ -891,7 +891,6 @@ wof_allocator_destroy(wof_allocator_t *allocator) {
 
     /* then just free the struct */
     FreeVec(allocator);
-    allocator = NULL;
 }
 
 wof_allocator_t *
