@@ -179,8 +179,7 @@ out:
 
     if (dh != NULL) {
         SHOWMSG("ouch. cleaning up");
-        if (dh->dh_FileInfo != NULL)
-            FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
+        FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 
         if (__clib2->__unix_path_semantics) {
             struct Node *node;
