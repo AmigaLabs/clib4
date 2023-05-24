@@ -14,11 +14,8 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-
 struct Library *__SocketBase;
 struct SocketIFace *__ISocket;
-
-int h_errno;
 
 /* Call-back hook for use with SBTC_ERROR_HOOK */
 struct _ErrorHookMsg {

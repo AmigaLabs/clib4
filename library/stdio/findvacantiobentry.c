@@ -10,11 +10,8 @@
 
 BOOL __is_valid_iob(struct _clib2 *__clib2, struct iob *iob) {
     BOOL result = FALSE;
-    ENTER();
-    SHOWPOINTER(iob);
 
     if (iob == NULL) {
-        SHOWMSG("iob is NULL");
         RETURN(result);
         return result;
     }
@@ -23,20 +20,15 @@ BOOL __is_valid_iob(struct _clib2 *__clib2, struct iob *iob) {
         /* This is used by vsprintf(), etc. */
         result = TRUE;
     } else {
-        SHOWMSG("Locking stdio");
         __stdio_lock(__clib2);
-        D(("__num_iob = %ld", __clib2->__num_iob));
-        D(("iob->iob_SlotNumber = %ld", iob->iob_SlotNumber));
         SHOWPOINTER(__clib2->__iob[iob->iob_SlotNumber]);
 
         if (__clib2->__num_iob > 0 && 0 <= iob->iob_SlotNumber && iob->iob_SlotNumber < __clib2->__num_iob && __clib2->__iob[iob->iob_SlotNumber] == iob)
             result = TRUE;
 
-        SHOWMSG("Unlock stdio");
         __stdio_unlock(__clib2);
     }
 
-    RETURN(result);
     return result;
 }
 

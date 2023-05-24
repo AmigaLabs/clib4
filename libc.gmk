@@ -283,7 +283,6 @@ C_SOCKET := \
 	socket/socket.o \
 	socket/syslog.o \
 	socket/vsyslog.o \
-	socket/get_h_errno.o \
 	socket/set_h_errno.o
 
 C_STAT := \

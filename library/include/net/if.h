@@ -135,6 +135,9 @@ struct ifconf
     } ifc_ifcu;
 };
 
+#define ifc_buf		ifc_ifcu.ifcu_buf
+#define ifc_req		ifc_ifcu.ifcu_req
+
 struct if_nameindex {
     unsigned int if_index; /* 1, 2, ... */
     char *if_name;         /* null terminated name: "eth0", ... */

@@ -492,10 +492,9 @@ struct _clib2 {
 };
 
 #ifndef __getClib2
-
 extern struct _clib2 *__getClib2(void);
-
 #endif
+
 #undef __CLIB2
 #define __CLIB2 __getClib2()
 
@@ -509,9 +508,7 @@ extern struct _clib2 *__getClib2(void);
  * __locale_exit() releases the default locale and closes locale.library.
  */
 extern int __locale_init(struct _clib2 *__clib2);
-
 extern void __locale_exit(struct _clib2 *__clib2);
-
 
 __END_DECLS
 
