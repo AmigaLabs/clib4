@@ -578,12 +578,8 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
             /* Copy old block to new one */
             memcpy(newptr, block, size);
 
-
             /* Free old block */
-            if (block != NULL) {
-                FreeVec(block);
-                block = NULL;
-            }
+            FreeVec(block);
 
             if (newptr->next) {
                 newptr->next->prev = newptr;
@@ -616,10 +612,7 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
         memcpy(newptr, block, old_size);
 
         /* Free old block */
-        if (block != NULL) {
-            FreeVec(block);
-            block = NULL;
-        }
+        FreeVec(block);
 
         if (newptr->next) {
             newptr->next->prev = newptr;
