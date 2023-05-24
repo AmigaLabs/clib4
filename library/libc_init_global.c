@@ -238,7 +238,6 @@ reent_init(struct _clib2 *__clib2) {
             __clib2->__unix_path_semantics = TRUE;
         }
         FreeDosObject(DOS_EXAMINEDATA, exd);
-        exd = NULL;
     }
 
     /* This table holds pointers to all signal handlers configured at a time. */
