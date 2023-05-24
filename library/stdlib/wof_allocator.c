@@ -552,7 +552,7 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
     block = WOF_CHUNK_TO_BLOCK(chunk);
 
     /* If we have an invalid block return NULL */
-    if (block == NULL || old_size <= 0 || size <= 0) {
+    if (block == NULL || !old_size || !size) {
         return NULL;
     }
 
