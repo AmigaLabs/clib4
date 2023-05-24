@@ -90,7 +90,7 @@ strtof(const char *str, char **ptr) {
                 str++;
         }
 
-        sum = nanf(NULL);
+        sum = NAN;
 
         stop = str;
     } else {

@@ -14,7 +14,7 @@ fmin(double x, double y)
 	if (isnan(x))
 	{
 		if (isnan(y))
-			result = nan(NULL);
+			result = NAN;
 		else
 			result = y;
 	}
