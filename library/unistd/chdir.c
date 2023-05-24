@@ -107,10 +107,7 @@ chdir(const char *path_name) {
 
 out:
 
-    if (status != NULL) {
-        FreeDosObject(DOS_EXAMINEDATA, status);
-    }
-
+    FreeDosObject(DOS_EXAMINEDATA, status);
     UnLock(dir_lock);
 
     RETURN(result);
