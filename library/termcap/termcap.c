@@ -229,13 +229,14 @@ void
 tputs(const char *str, int nlines, register int (*outfun)()) {
     register int padcount = 0;
     register int speed;
+    size_t n_speeds = sizeof(speeds) / sizeof(speeds[0]);
 
     __check_abort();
 
     if (ospeed == 0)
         speed = tputs_baud_rate;
-    else if (ospeed >= sizeof(speeds))
-        speed = speeds[sizeof(speeds) - 1];
+    else if (ospeed >= n_speeds)
+        speed = speeds[n_speeds - 1];
     else
         speed = speeds[ospeed];
 
