@@ -19,11 +19,11 @@ wcrtomb(char *s, wchar_t wchar, mbstate_t *state) {
         if (wchar <= 0x7f) {
             *s = wchar;
             return 1;
-        } else if (wchar >= 0x80 && wchar <= 0x7ff) {
+        } else if (wchar <= 0x7ff) {
             *s++ = 0xc0 | ((wchar & 0x7c0) >> 6);
             *s = 0x80 | (wchar & 0x3f);
             return 2;
-        } else if (wchar >= 0x800 && wchar <= 0xffff) {
+        } else if (wchar <= 0xffff) {
             /* UTF-16 surrogates -- must not occur in normal UCS-4 data */
             if (wchar >= 0xd800 && wchar <= 0xdfff) {
                 return -1;
