@@ -331,7 +331,7 @@ _main(
     __clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2),
             AVT_Type, MEMF_SHARED,
             AVT_ClearWithValue, 0,
-            TAG_END);
+            TAG_DONE);
     if (__clib2 == NULL)
         goto out;
 

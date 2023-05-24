@@ -183,7 +183,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         }
 
         /* Allocate a little more memory than necessary. */
-        buffer = AllocVecTags(BUFSIZ + (__clib2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        buffer = AllocVecTags(BUFSIZ + (__clib2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
         if (buffer == NULL)
             goto out;
 

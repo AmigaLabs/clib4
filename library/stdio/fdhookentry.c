@@ -161,7 +161,8 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                     if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
                         /* Set canonical mode. */
                         if (fam->fam_DOSMode == DOSTRUE) {
-                            SetMode(fd->fd_File, DOSFALSE);
+                            if (fd->fd_File != BZERO)
+                                SetMode(fd->fd_File, DOSFALSE);
                             fam->fam_DOSMode = DOSFALSE;
                         }
                     }

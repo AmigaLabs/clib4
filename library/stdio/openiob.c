@@ -94,7 +94,7 @@ __open_iob(struct _clib2 *__clib2, const char *filename, const char *mode, int f
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = AllocVecTags(BUFSIZ + (__clib2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue);
+    buffer = AllocVecTags(BUFSIZ + (__clib2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
