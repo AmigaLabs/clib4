@@ -285,9 +285,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                             CurrentDir(old_dir);
                         }
 
-                        if (fib != NULL)
-                            FreeDosObject(DOS_EXAMINEDATA, fib);
-
+                        FreeDosObject(DOS_EXAMINEDATA, fib);
                         UnLock(parent_dir);
                     }
                 } else {
