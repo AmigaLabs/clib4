@@ -89,10 +89,7 @@ rmdir(const char *path_name) {
     result = OK;
 
 out:
-    if (fib != NULL) {
-        FreeDosObject(DOS_EXAMINEDATA, fib);
-    }
-
+    FreeDosObject(DOS_EXAMINEDATA, fib);
     UnLock(dir_lock);
 
     RETURN(result);
