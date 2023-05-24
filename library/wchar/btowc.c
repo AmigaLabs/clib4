@@ -20,7 +20,7 @@ btowc(int c) {
     b = (char) c;
 
     /* Put mbs in initial state. */
-    memset(mbs, '\0', sizeof(mbs));
+    memset(mbs, '\0', sizeof(mbstate_t));
 
     retval = _mbtowc_r(&pwc, &b, 1, mbs);
 
