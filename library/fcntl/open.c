@@ -367,9 +367,7 @@ out:
     if (handle != BZERO)
         Close(handle);
 
-    if (fib != NULL) {
-        FreeDosObject(DOS_EXAMINEDATA, fib);
-    }
+    FreeDosObject(DOS_EXAMINEDATA, fib);
     UnLock(lock);
 
     __stdio_unlock(__clib2);
