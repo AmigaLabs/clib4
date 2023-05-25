@@ -86,8 +86,7 @@ out:
        not change the current file position. */
     ChangeFilePosition(fd->fd_File, initial_position, OFFSET_BEGINNING);
 
-    if (fib != NULL)
-        FreeDosObject(DOS_EXAMINEDATA, fib);
+    FreeDosObject(DOS_EXAMINEDATA, fib);
 
     __fd_unlock(fd);
 
