@@ -98,10 +98,7 @@ int chown(const char *path_name, uid_t owner, gid_t group) {
     result = OK;
 
 out:
-    if (status != NULL) {
-        FreeDosObject(DOS_EXAMINEDATA, status);
-    }
-
+    FreeDosObject(DOS_EXAMINEDATA, status);
     FreeDeviceProc(dvp);
 
     if (file_lock != BZERO)
