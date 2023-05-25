@@ -340,6 +340,8 @@ CList *CList_init(size_t objSize) {
     CList *lst = malloc(sizeof(CList));
     cListPriv *p = malloc(sizeof(cListPriv));
     if (!lst || !p) {
+        free(p);
+        free(lst);
         D(("CList: ERROR! Can not allocate CList!\n"));
         return NULL;
     }
