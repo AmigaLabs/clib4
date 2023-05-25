@@ -129,9 +129,7 @@ lstat(const char *path_name, struct stat *st) {
 
 out:
 
-    if (fib != NULL) {
-        FreeDosObject(DOS_EXAMINEDATA, fib);
-    }
+    FreeDosObject(DOS_EXAMINEDATA, fib);
     UnLock(file_lock);
 
     RETURN(result);
