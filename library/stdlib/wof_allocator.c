@@ -537,12 +537,13 @@ wof_free_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk) {
 
     block = WOF_CHUNK_TO_BLOCK(chunk);
 
+    if(!block) {
+        return;
+    }
+
     wof_remove_from_block_list(allocator, block);
 
-    if (block) {
-        FreeVec(block);
-        block = NULL;
-    }
+    FreeVec(block);
 }
 
 /* Reallocs special 'jumbo' blocks of sizes that won't fit normally. */
