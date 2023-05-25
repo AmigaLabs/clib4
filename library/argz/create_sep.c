@@ -24,6 +24,12 @@ argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len)
     delim[1] = '\0';
 
     running = strdup(string);
+
+    if(!running)
+    {
+        return ENOMEM;
+    }
+
     old_running = running;
 
     while ((token = strsep(&running, delim)))
@@ -34,11 +40,21 @@ argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len)
     }
 
     if (!(*argz = (char *)malloc(*argz_len)))
+    {
+        free(old_running);
         return ENOMEM;
+    }
 
     free(old_running);
 
     running = strdup(string);
+
+    if(!running)
+    {
+        free(*argz);
+        return ENOMEM;
+    }
+
     old_running = running;
 
     iter = *argz;
