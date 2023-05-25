@@ -321,9 +321,7 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
     fln = NULL;
 
 out:
-    if (fib != NULL)
-        FreeDosObject(DOS_EXAMINEDATA, fib);
-
+    FreeDosObject(DOS_EXAMINEDATA, fib);
     delete_file_lock_node(fln);
 
     (*result_ptr) = result;
@@ -425,8 +423,7 @@ find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_hand
 
 out:
 
-    if (this_fib)
-        FreeDosObject(DOS_EXAMINEDATA, this_fib);
+    FreeDosObject(DOS_EXAMINEDATA, this_fib);
     UnLock(parent_dir);
 
     RETURN(error);
@@ -994,8 +991,7 @@ out:
 
     release_file_lock_semaphore(fls);
 
-    if (fib != NULL)
-        FreeDosObject(DOS_EXAMINEDATA, fib);
+    FreeDosObject(DOS_EXAMINEDATA, fib);
     UnLock(parent_dir);
 
     if (result != 0 && error != OK) {
