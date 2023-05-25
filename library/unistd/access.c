@@ -140,11 +140,7 @@ access(const char *path_name, int mode) {
 
 out:
 
-    if (NULL != status) {
-        FreeDosObject(DOS_EXAMINEDATA, status);
-        status = NULL;
-    }
-
+    FreeDosObject(DOS_EXAMINEDATA, status);
     UnLock(lock);
 
     RETURN(result);
