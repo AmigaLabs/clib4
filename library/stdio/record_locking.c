@@ -606,6 +606,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
         }
     } else {
         SHOWMSG("this is not a lock request");
+        goto out;
     }
 
     original_len = l->l_len;
