@@ -14,6 +14,10 @@
 #include "termios_headers.h"
 #endif /* _TERMIOS_HEADERS_H */
 
+#ifndef _TIME_HEADERS_H
+#include "time_headers.h"
+#endif /* _TIME_HEADERS_H */
+
 STATIC void
 copy_fd_set(fd_set *to, fd_set *from, int num_fds) {
     ENTER();
@@ -123,52 +127,6 @@ out:
     __stdio_unlock(__clib2);
 
     return (result);
-}
-
-static void
-fix_datestamp(struct DateStamp *ds) {
-    const LONG ticks_per_minute = 60 * TICKS_PER_SECOND;
-    const LONG minutes_per_day = 24 * 60;
-
-    assert(ds != NULL);
-
-    while (ds->ds_Minute >= minutes_per_day || ds->ds_Tick >= ticks_per_minute) {
-        if (ds->ds_Minute >= minutes_per_day) {
-            ds->ds_Days++;
-
-            ds->ds_Minute -= minutes_per_day;
-        }
-
-        if (ds->ds_Tick >= ticks_per_minute) {
-            ds->ds_Minute++;
-
-            ds->ds_Tick -= ticks_per_minute;
-        }
-    }
-}
-
-static struct DateStamp *
-timeval_to_datestamp(struct DateStamp *ds, const struct timeval *tv) {
-    assert(ds != NULL && tv != NULL);
-
-    ds->ds_Days = (tv->tv_sec / (24 * 60 * 60));
-    ds->ds_Minute = (tv->tv_sec % (24 * 60 * 60)) / 60;
-    ds->ds_Tick = (tv->tv_sec % 60) * TICKS_PER_SECOND + (TICKS_PER_SECOND * tv->tv_usec) / 1000000;
-
-    fix_datestamp(ds);
-
-    return (ds);
-}
-
-static void
-add_dates(struct DateStamp *to, const struct DateStamp *from) {
-    assert(to != NULL && from != NULL);
-
-    to->ds_Tick += from->ds_Tick;
-    to->ds_Minute += from->ds_Minute;
-    to->ds_Days += from->ds_Days;
-
-    fix_datestamp(to);
 }
 
 static void

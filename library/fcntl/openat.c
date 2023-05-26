@@ -22,8 +22,7 @@ openat(int fd, const char *filename, int flags, ...) {
     int result = -1;
     struct _clib2 *__clib2 = __CLIB2;
 
-    if (filename == NULL)
-    {
+    if (filename == NULL) {
         __set_errno (EINVAL);
         goto out;
     }

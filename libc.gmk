@@ -290,12 +290,14 @@ C_STAT := \
 	stat/convertfileinfo.o \
 	stat/fchmod.o \
 	stat/fstat.o \
+	stat/futimens.o \
 	stat/lstat.o \
 	stat/lock.o \
 	stat/mkdir.o \
 	stat/rmdir.o \
 	stat/stat.o \
-	stat/umask.o
+	stat/umask.o \
+    stat/utimensat.o
 
 C_STDIO := \
     prng/__rand48_step.o \

@@ -1018,3 +1018,7 @@ Clib2Call(times, 4072);
 Clib2Call(readv, 4076);
 Clib2Call(writev, 4080);
 Clib2Call(uname, 4084);
+/* END OF CLIB2 VERSION 1.0   */
+/* New function will go below */
+Clib2Call(futimens, 4088);
+Clib2Call(utimensat, 4092);

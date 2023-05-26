@@ -1236,6 +1236,12 @@ struct Clib2IFace {
 
     /* sys/utsname.h */
     int (* uname) (struct utsname *);                                                                                                                /* 4084 */
+
+    /* END OF CLIB2 VERSION 1.0   */
+    /* New function will go below */
+
+    int (* futimens) (int fd, const struct timespec times[2]);
+    int (* utimensat) (int fd, const char *path, const struct timespec times[2], int flags);
 };
 
 #ifdef __PIC__

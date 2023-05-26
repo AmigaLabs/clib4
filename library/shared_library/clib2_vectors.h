@@ -1082,4 +1082,7 @@ static void *clib2Vectors[] = {
 
         /* END OF CLIB2 VERSION 1.0   */
         /* New function will go below */
+
+        (void *) (futimens),                              /* 4088 */
+        (void *) (utimensat),                             /* 4092 */
 };

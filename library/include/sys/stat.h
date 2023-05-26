@@ -122,6 +122,9 @@ struct stat
     long	st_spare4[2];
 };
 
+#define UTIME_NOW  0x3fffffff
+#define UTIME_OMIT 0x3ffffffe
+
 /****************************************************************************/
 
 extern int stat(const char * path_name, struct stat * buffer);
@@ -131,6 +134,9 @@ extern int chmod(const char * path_name, mode_t mode);
 extern int fchmod(int file_descriptor, mode_t mode);
 extern int mkdir(const char * path_name, mode_t mode);
 extern int rmdir(const char * path_name);
+
+extern int futimens(int fd, const struct timespec times[2]);
+extern int utimensat(int fd, const char *path, const struct timespec times[2], int flags);
 
 extern mode_t umask(mode_t new_mask);
 
