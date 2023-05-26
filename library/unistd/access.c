@@ -77,7 +77,11 @@ access(const char *path_name, int mode) {
     if ((mode != F_OK) && (mode & (R_OK | W_OK | X_OK)) != 0) {
         if (__clib2->__unix_path_semantics) {
             if (lock == BZERO) {
-                memset(status, 0, sizeof(*status));
+                status = AllocDosObjectTags(DOS_EXAMINEDATA, TAG_END);
+                if(!status) {
+                    __set_errno(ENOMEM);
+                    goto out;
+                }
 
                 /* This is a simulated directory which cannot be
                  * modified under program control.
