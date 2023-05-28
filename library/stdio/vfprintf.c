@@ -708,7 +708,12 @@ vfprintf(FILE *f, const char *format, va_list ap) {
 
     SHOWMSG("Write result to the file");
     ret = printf_core(_out, format, &ap2, nl_arg, nl_type);
-
+    if (ret != EOF) {
+        struct iob *iob = (struct iob *) f;
+        if (FLAG_IS_CLEAR(iob->iob_Flags, IOBF_NO_NUL)) {
+            __putc('\0', f, (iob->iob_Flags & IOBF_BUFFER_MODE));
+        }
+    }
     va_end(ap2);
 
     SHOWMSG("Flush the file");

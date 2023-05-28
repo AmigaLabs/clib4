@@ -133,8 +133,17 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
             SHOWMSG("cmd=F_SETFL");
 
+            va_start(arg, cmd);
+            flags = va_arg(arg, int);
+            va_end(arg);
+
             /* If someone ask us o set STDIN_FILENO as O_NONBLOCK don't set it but don't return an error */
-            if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_File == BZERO && file_descriptor == STDIN_FILENO) {
+            if (file_descriptor == STDIN_FILENO) {
+                if (FLAG_IS_SET(flags, O_NONBLOCK))
+                    SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+                else
+                    CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+
                 result = OK;
                 goto out;
             }
@@ -144,10 +153,6 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
                 __set_errno(EBADF);
                 goto out;
             }
-
-            va_start(arg, cmd);
-            flags = va_arg(arg, int);
-            va_end(arg);
 
             if ((FLAG_IS_SET(flags, O_NONBLOCK) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING)) ||
                 (FLAG_IS_CLEAR(flags, O_NONBLOCK) && FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING))) {

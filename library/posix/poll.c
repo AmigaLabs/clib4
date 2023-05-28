@@ -63,10 +63,10 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
                 if (file != BZERO)
                     SetMode(file, DOSTRUE);
 
-                SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ | FDF_NON_BLOCKING);
+                SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ | FDF_NON_BLOCKING | FDF_IS_INTERACTIVE);
             }
             else {
-                SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_WRITE);
+                SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_WRITE | FDF_IS_INTERACTIVE);
             }
         }
 
