@@ -1018,3 +1018,19 @@ Clib2Call(times, 4072);
 Clib2Call(readv, 4076);
 Clib2Call(writev, 4080);
 Clib2Call(uname, 4084);
+/* END OF CLIB2 VERSION 1.0   */
+/* New function will go below */
+Clib2Call(futimens, 4088);
+Clib2Call(utimensat, 4092);
+Clib2Call(__isnan, 4096);
+Clib2Call(__isnanf, 4100);
+Clib2Call(__isnanl, 4104);
+Clib2Call(__isinf, 4108);
+Clib2Call(__isinff, 4112);
+Clib2Call(__isinfl, 4116);
+Clib2Call(__isnormal, 4120);
+Clib2Call(__isnormalf, 4124);
+Clib2Call(__isnormall, 4128);
+Clib2Call(__isfinite_double, 4132);
+Clib2Call(__isfinite_float, 4136);
+Clib2Call(__isfinite_long_double, 4140);

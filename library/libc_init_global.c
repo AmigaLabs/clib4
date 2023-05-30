@@ -72,8 +72,8 @@ reent_init(struct _clib2 *__clib2) {
     __clib2->IExec = IExec;
     __clib2->IElf = __IElf;
 
-    /* Enable check abort */
-    __clib2->__check_abort_enabled = TRUE;
+    /* Disable check abort at start */
+    __clib2->__check_abort_enabled = FALSE;
 
     /* Get cpu family used to choose functions at runtime */
     D(("Setting cpu family"));
@@ -104,6 +104,8 @@ reent_init(struct _clib2 *__clib2) {
     if (!__clib2->wide_status) {
         goto out;
     }
+
+    __clib2->pipenum = 0;
 
 #ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
     __clib2->__optimizedCPUFunctions = FALSE;

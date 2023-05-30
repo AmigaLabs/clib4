@@ -1082,4 +1082,20 @@ static void *clib2Vectors[] = {
 
         /* END OF CLIB2 VERSION 1.0   */
         /* New function will go below */
+
+        (void *) (futimens),                              /* 4088 */
+        (void *) (utimensat),                             /* 4092 */
+        (void *) (__isnan),                               /* 4096 */
+        (void *) (__isnanf),                              /* 4100 */
+        (void *) (__isnanl),                              /* 4104 */
+        (void *) (__isinf),                               /* 4108 */
+        (void *) (__isinff),                              /* 4112 */
+        (void *) (__isinfl),                              /* 4116 */
+        (void *) (__isnormal),                            /* 4120 */
+        (void *) (__isnormalf),                           /* 4124 */
+        (void *) (__isnormall),                           /* 4128 */
+        (void *) (__isfinite_double),                     /* 4132 */
+        (void *) (__isfinite_float),                      /* 4136 */
+        (void *) (__isfinite_long_double),                /* 4140 */
+
 };

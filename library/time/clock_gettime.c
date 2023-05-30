@@ -1,5 +1,5 @@
 /*
- * $Id: time_clock_gettime.c,v 1.1 2020-01-31 16:55:42 clib2devs Exp $
+ * $Id: time_clock_gettime.c,v 2.0 2023-05-26 16:55:42 clib2devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -53,12 +53,7 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
         GetUpTime((struct TimeVal *) &tv);
     } else {
         /*
-        A settable system-wide clock that measures real (i.e.,
-            wall-clock) time.  Setting this clock requires appropriate
-            privileges.  This clock is affected by discontinuous jumps
-            in the system time (e.g., if the system administrator
-            manually changes the clock), and by the incremental
-            adjustments performed by adjtime(3) and NTP.
+        A settable system-wide clock that measures real (i.e., wall-clock) time.
         */
         GetSysTime((struct TimeVal *) &tv);
     }
@@ -72,6 +67,10 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
         t->tv_sec = tv.tv_sec;
         t->tv_nsec = tv.tv_usec * 1000;
     }
+
+    /* Check if we are in DST */
+    if (dstime == TFLG_ISDST)
+        t->tv_sec += (60 * 60);
 
     __clib2->__timer_busy = FALSE;
 

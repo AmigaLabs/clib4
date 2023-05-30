@@ -489,6 +489,7 @@ struct _clib2 {
 
     /* Wof Allocator memory semaphore */
     struct SignalSemaphore *memory_semaphore;
+    int pipenum;
 };
 
 #ifndef __getClib2

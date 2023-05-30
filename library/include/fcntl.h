@@ -62,7 +62,12 @@ struct flock {
 #define F_WRLCK		3	/* exclusive or write lock */
 
 #define FD_CLOEXEC  1   /* posix */
-#define AT_FDCWD    (-100) /* openat */
+
+#define AT_FDCWD            (-100) /* openat */
+#define AT_SYMLINK_NOFOLLOW 0x100
+#define AT_REMOVEDIR        0x200
+#define AT_SYMLINK_FOLLOW   0x400
+#define AT_EACCESS          0x200
 
 extern int open(const char *path_name, int open_flag, ... /* mode_t mode */ );
 extern int openat(int fd, const char *filename, int flags, ...);

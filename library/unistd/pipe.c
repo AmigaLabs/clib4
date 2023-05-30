@@ -6,17 +6,16 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-static int pipenum = 0;
-
 int pipe(int fd[2]) {
     ENTER();
     DECLARE_UTILITYBASE();
     char pipe_name[1024] = {0};
+    struct _clib2 *__clib2 = __CLIB2;
 
 #ifdef USE_TEMPFILES
-    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", pipenum++, ((struct Process *)FindTask(NULL))->pr_ProcessID);
+    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", __clib2->pipenum++, ((struct Process *)FindTask(NULL))->pr_ProcessID);
 #else
-    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", pipenum++, ((struct Process *) FindTask(NULL))->pr_ProcessID);
+    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", __clib2->pipenum++, ((struct Process *) FindTask(NULL))->pr_ProcessID);
 #endif // USE_TEMPFILES
 
     fd[1] = open(pipe_name, O_WRONLY | O_CREAT);

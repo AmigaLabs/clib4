@@ -411,6 +411,9 @@ _main(
     if (-128 <= __clib2->__priority && __clib2->__priority <= 127)
         SetTaskPri((struct Task *) this_process, __clib2->__priority);
 
+    /* Can we enable check abort now */
+    __clib2->__check_abort_enabled = TRUE;
+
     /* Was a minimum stack size requested and do we need more stack space than was provided for? */
     if (__clib2->__stack_size > 0 && current_stack_size < (ULONG) __clib2->__stack_size) {
         struct StackSwapStruct *stk;

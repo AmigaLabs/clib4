@@ -100,60 +100,60 @@ extern float ynf(int n, float x);
 extern int __fpclassify_float(float x);
 extern int __fpclassify_double(double x);
 extern int __fpclassify_long_double(long double x);
+
+extern int __isfinite_float(float x);
+extern int __isfinite_double(double x);
+extern int __isfinite_long_double(long double x);
+
 extern int __signbit_float(float x);
 extern int __signbit_double(double x);
 extern int __signbit_long_double(long double x);
 
-static __inline unsigned __FLOAT_BITS(float __f) {
-    union {
-        float __f;
-        unsigned __i;
-    } __u;
-    __u.__f = __f;
-    return __u.__i;
-}
-static __inline unsigned long long __DOUBLE_BITS(double __f) {
-    union {
-        double __f;
-        unsigned long long __i;
-    } __u;
-    __u.__f = __f;
-    return __u.__i;
-}
+extern int __isnan(double x);
+extern int __isnanf(float x);
+extern int __isnanl(long double x);
+
+extern int __isinf(double x);
+extern int __isinff(float x);
+extern int __isinfl(long double x);
+
+extern int __isnormalf(float x);
+extern int __isnormal(double x);
+extern int __isnormall(long double x);
 
 /* The gamma functions use a global variable, signgam.  */
 #define signgam (*__signgam())
 extern int *__signgam(void);
 
-#define fpclassify(x) \
+#define	fpclassify(x) \
     ((sizeof (x) == sizeof (float)) ? __fpclassify_float(x) \
     : (sizeof (x) == sizeof (double)) ? __fpclassify_double(x) \
     : __fpclassify_long_double(x))
 
-#define signbit(x) \
-    ((sizeof (x) == sizeof (float)) ? __signbit_float(x)    \
-    : (sizeof (x) == sizeof (double)) ? __signbit_double(x)    \
+#define isfinite(x) \
+	(sizeof(x) == sizeof(float) ? __isfinite_float(x) \
+    : (sizeof (x) == sizeof (double)) ? __isfinite_double(x) \
+    : __isfinite_long_double(x))
+
+#define	isnormal(x)					\
+    ((sizeof (x) == sizeof (float)) ? __isnormalf(x)	\
+    : (sizeof (x) == sizeof (double)) ? __isnormal(x)	\
+    : __isnormall(x))
+
+#define	signbit(x)					\
+    ((sizeof (x) == sizeof (float)) ? __signbit_float(x)	\
+    : (sizeof (x) == sizeof (double)) ? __signbit_double(x)	\
     : __signbit_long_double(x))
 
-#define isinf(x) ( \
-	sizeof(x) == sizeof(float) ? (__FLOAT_BITS(x) & 0x7fffffff) == 0x7f800000 : \
-	sizeof(x) == sizeof(double) ? (__DOUBLE_BITS(x) & -1ULL>>1) == 0x7ffULL<<52 : \
-	__fpclassify_long_double(x) == FP_INFINITE)
+#define	isinf(x)					\
+    ((sizeof (x) == sizeof (float)) ? __isinff(x)	\
+    : (sizeof (x) == sizeof (double)) ? __isinf(x)	\
+    : __isinfl(x))
 
-#define isnan(x) ( \
-	sizeof(x) == sizeof(float) ? (__FLOAT_BITS(x) & 0x7fffffff) > 0x7f800000 : \
-	sizeof(x) == sizeof(double) ? (__DOUBLE_BITS(x) & -1ULL>>1) > 0x7ffULL<<52 : \
-	__fpclassify_long_double(x) == FP_NAN)
-
-#define isnormal(x) ( \
-	sizeof(x) == sizeof(float) ? ((__FLOAT_BITS(x)+0x00800000) & 0x7fffffff) >= 0x01000000 : \
-	sizeof(x) == sizeof(double) ? ((__DOUBLE_BITS(x)+(1ULL<<52)) & -1ULL>>1) >= 1ULL<<53 : \
-	__fpclassify_long_double(x) == FP_NORMAL)
-
-#define isfinite(x) ( \
-	sizeof(x) == sizeof(float) ? (__FLOAT_BITS(x) & 0x7fffffff) < 0x7f800000 : \
-	sizeof(x) == sizeof(double) ? (__DOUBLE_BITS(x) & -1ULL>>1) < 0x7ffULL<<52 : \
-	__fpclassify_long_double(x) > FP_INFINITE)
+#define isnan(x) \
+	((sizeof(x) == sizeof(float)) ? __isnanf(x) \
+    : (sizeof (x) == sizeof (double)) ? __isnan(x) \
+    :  __isnanl(x))
 
 #define    isgreater(x, y)         (!isunordered((x), (y)) && (x) > (y))
 #define    isgreaterequal(x, y)    (!isunordered((x), (y)) && (x) >= (y))
@@ -161,6 +161,15 @@ extern int *__signgam(void);
 #define    islessequal(x, y)       (!isunordered((x), (y)) && (x) <= (y))
 #define    islessgreater(x, y)     (!isunordered((x), (y)) && ((x) > (y) || (y) > (x)))
 #define    isunordered(x, y)       (isnan(x) || isnan(y))
+#if defined(__cplusplus)
+#define    isinf(x) __isinf(x)
+#define    isnan(x) __isnan(x)
+#endif
+
+extern int finitef (float);
+extern int finitel (long double);
+extern int isinff (float);
+extern int isnanf (float);
 
 extern float acosf(float x);
 extern float asinf(float x);
@@ -221,11 +230,6 @@ extern float tgammaf(float x);
 extern float truncf(float x);
 extern int ilogbf(float x);
 extern int finite(double x);
-
-#if defined(__cplusplus)
-#define isinf(x) __isinf(x)
-#define isnan(x) __isnan(x)
-#endif
 
 extern double acosh(double x);
 extern double asinh(double x);

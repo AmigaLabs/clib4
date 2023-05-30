@@ -52,12 +52,7 @@ clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
         GetUpTime((struct TimeVal *) &tv);
     } else {
         /*
-        A settable system-wide clock that measures real (i.e.,
-            wall-clock) time.  Setting this clock requires appropriate
-            privileges.  This clock is affected by discontinuous jumps
-            in the system time (e.g., if the system administrator
-            manually changes the clock), and by the incremental
-            adjustments performed by adjtime(3) and NTP.
+        A settable system-wide clock that measures real (i.e., wall-clock) time.
         */
         GetSysTime((struct TimeVal *) &tv);
     }

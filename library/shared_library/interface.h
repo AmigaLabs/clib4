@@ -1236,6 +1236,24 @@ struct Clib2IFace {
 
     /* sys/utsname.h */
     int (* uname) (struct utsname *);                                                                                                                /* 4084 */
+
+    /* END OF CLIB2 VERSION 1.0   */
+    /* New function will go below */
+
+    int (* futimens) (int fd, const struct timespec times[2]);                                                                                       /* 4098 */
+    int (* utimensat) (int fd, const char *path, const struct timespec times[2], int flags);                                                         /* 4092 */
+    int (* __isnan) (double d);                                                                                                                      /* 4096 */
+    int (* __isnanf) (float f);                                                                                                                      /* 4100 */
+    int (* __isnanl) (long double d);                                                                                                                /* 4104 */
+    int (* __isinf) (double d);                                                                                                                      /* 4108 */
+    int (* __isinff) (float f);                                                                                                                      /* 4112 */
+    int (* __isinfl) (long double d);                                                                                                                /* 4116 */
+    int (* __isnormal) (double d);                                                                                                                   /* 4120 */
+    int (* __isnormalf) (float f);                                                                                                                   /* 4124 */
+    int (* __isnormall) (long double d);                                                                                                             /* 4128 */
+    int (* __isfinite_double) (double f);                                                                                                            /* 4132 */
+    int (* __isfinite_float) (float d);                                                                                                              /* 4136 */
+    int (* __isfinite_long_double) (long double d);                                                                                                  /* 4140 */
 };
 
 #ifdef __PIC__

@@ -171,6 +171,17 @@ in_time_t_range (time64_t t) {
     return s == t;
 }
 
+/* Convert a known valid struct timeval into a struct timespec.  */
+static inline struct timespec
+valid_timeval_to_timespec(const struct timeval tv) {
+    struct timespec ts;
+
+    ts.tv_sec = tv.tv_sec;
+    ts.tv_nsec = tv.tv_usec * 1000;
+
+    return ts;
+}
+
 /* Convert a known valid struct timeval into a struct timespec64.  */
 static inline struct timespec64
 valid_timeval_to_timespec64 (const struct timeval tv) {
@@ -245,6 +256,17 @@ valid_timespec64_to_timeval (const struct timespec64 ts64) {
 
     tv.tv_sec = (time_t) ts64.tv_sec;
     tv.tv_usec = ts64.tv_nsec / 1000;
+
+    return tv;
+}
+
+/* Convert a valid and within range of struct timeval struct timespec into a struct timeval.  */
+static inline struct timeval
+valid_timespec_to_timeval (const struct timespec ts) {
+    struct timeval tv;
+
+    tv.tv_sec = (time_t) ts.tv_sec;
+    tv.tv_usec = ts.tv_nsec / 1000;
 
     return tv;
 }

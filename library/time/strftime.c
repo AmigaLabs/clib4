@@ -545,8 +545,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
 
             /* Convert the number of seconds into a DateStamp, as to be
                submitted to the FormatDate() function below. */
-            if (CANNOT __convert_time_to_datestamp(time_value, &ds))
-            {
+            if (CANNOT __convert_time_to_datestamp(time_value, &ds)) {
                 SHOWMSG("time conversion to datestamp failed");
                 goto out;
             }

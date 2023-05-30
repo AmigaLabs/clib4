@@ -20,7 +20,7 @@ __static int
 __vasprintf(const char *file, int line, char **ret, const char *format, va_list arg) {
     struct iob string_iob;
     int result = EOF;
-    char local_buffer[32];
+    char local_buffer[32] = {0};
 
     ENTER();
 
