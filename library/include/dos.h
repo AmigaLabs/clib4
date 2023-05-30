@@ -483,7 +483,7 @@ struct _clib2 {
     int __debug_level;
     int previous_debug_level;
 
-#ifndef NDEBUG
+#ifndef NDEBUGBYTE
     struct StackSwapStruct stack_swap_struct;
 #endif
 

@@ -5,7 +5,7 @@ set -e
 case "$1" in
   purge|remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
     # remove only installed files
-    rm -f /usr/ppc-amigaos/SDK/clib2
+    rm -fr /usr/ppc-amigaos/SDK/clib2
 
 ;;
 
@@ -13,3 +13,8 @@ case "$1" in
     echo "postrm called with unknown argument \`$1'" >&2
     exit 1
 ;;
+esac
+
+#DEBHELPER#
+
+exit 0
