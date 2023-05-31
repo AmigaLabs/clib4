@@ -575,7 +575,6 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
                                                       + WOF_BLOCK_HEADER_SIZE
                                                       + WOF_CHUNK_HEADER_SIZE,
                                                       AVT_Type, MEMF_SHARED,
-                                                      AVT_ClearWithValue, 0,
                                                       TAG_DONE);
 
             if (newptr == NULL) {
@@ -608,7 +607,6 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
                                                   + WOF_BLOCK_HEADER_SIZE
                                                   + WOF_CHUNK_HEADER_SIZE,
                                                   AVT_Type, MEMF_SHARED,
-                                                  AVT_ClearWithValue, 0,
                                                   TAG_DONE);
 
         if (newptr == NULL) {
