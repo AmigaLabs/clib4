@@ -112,6 +112,7 @@ extern double strtod(const char *str, char **ptr);
 extern long strtol(const char *str, char **ptr, int base);
 extern unsigned long strtoul(const char *str, char **ptr, int base);
 extern quad_t strtoq(const char *nptr, char **endptr, register int base);
+extern u_quad_t strtouq(const char *nptr, char **endptr, int base);
 
 extern double atof(const char *str);
 extern int atoi(const char *str);

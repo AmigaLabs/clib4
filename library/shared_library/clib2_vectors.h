@@ -1097,5 +1097,6 @@ static void *clib2Vectors[] = {
         (void *) (__isfinite_double),                     /* 4132 */
         (void *) (__isfinite_float),                      /* 4136 */
         (void *) (__isfinite_long_double),                /* 4140 */
+        (void *) (strtouq),                               /* 4144 */
 
 };

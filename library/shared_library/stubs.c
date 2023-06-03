@@ -1034,3 +1034,4 @@ Clib2Call(__isnormall, 4128);
 Clib2Call(__isfinite_double, 4132);
 Clib2Call(__isfinite_float, 4136);
 Clib2Call(__isfinite_long_double, 4140);
+Clib2Call(strtouq, 4144);

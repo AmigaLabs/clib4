@@ -1254,6 +1254,7 @@ struct Clib2IFace {
     int (* __isfinite_double) (double f);                                                                                                            /* 4132 */
     int (* __isfinite_float) (float d);                                                                                                              /* 4136 */
     int (* __isfinite_long_double) (long double d);                                                                                                  /* 4140 */
+    u_quad_t (* strtouq) (const char *nptr, char **endptr, int base);                                                                                /* 4144 */
 };
 
 #ifdef __PIC__

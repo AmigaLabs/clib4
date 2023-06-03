@@ -496,6 +496,7 @@ C_STDLIB := \
 	stdlib/strtoll.o \
 	stdlib/strtoq.o \
 	stdlib/strtoul.o \
+	stdlib/strtouq.o \
 	stdlib/strtoull.o \
 	stdlib/system.o \
 	stdlib/termination_message.o \
