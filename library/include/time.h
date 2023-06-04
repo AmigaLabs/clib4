@@ -1,19 +1,16 @@
 /*
- * $Id: time.h,v 1.7 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: time.h,v 1.8 2023-06-03 12:06:14 clib2devs Exp $
 */
 
 #ifndef _TIME_H
 #define _TIME_H
 
 #include <features.h>
-
-#ifndef _STDDEF_H
 #include <stddef.h>
-#endif /* _STDDEF_H */
-
 #include <inttypes.h>
 #include <sys/time.h>
 #include <endian.h>
+#include <sys/types.h>
 
 __BEGIN_DECLS
 
@@ -34,17 +31,8 @@ __BEGIN_DECLS
 #define CLOCK_PROCESS_CPUTIME_ID (clockid_t)2 /* Not used in clock_ functions yet */
 #define CLOCK_THREAD_CPUTIME_ID (clockid_t)3  /* Not used in clock_ functions yet */
 
-#define _CLOCK_T_ unsigned long long /* clock() */
-#define _TIME_T_ long                /* time() */
-#define _CLOCKID_T_ unsigned long
-#define _TIMER_T_ unsigned long
 #define NSEC_PER_SEC 1000000000ull
 #define TIMER_ABSTIME 0x01
-
-typedef _CLOCKID_T_ clockid_t;
-
-typedef unsigned long clock_t;
-typedef long long time_t;
 
 #if defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
 #define __tm_gmtoff tm_gmtoff
