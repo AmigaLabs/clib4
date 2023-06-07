@@ -64,8 +64,8 @@ int __fpurge(FILE *f) {
     return 0;
 }
 
-void fpurge(FILE *f) {
-    __fpurge(f);
+int fpurge(FILE *f) {
+    return __fpurge(f);
 }
 
 void __fseterr(FILE *f) {

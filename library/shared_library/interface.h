@@ -694,7 +694,7 @@ struct Clib2IFace {
     size_t (* __fbufsize) (FILE *);                                                                                                                  /* 2204 */
     size_t (* __fpending) (FILE *);                                                                                                                  /* 2208 */
     int (* __fpurge) (FILE *);                                                                                                                       /* 2212 */
-    void (* fpurge) (FILE *);                                                                                                                        /* 2216 */
+    int (* fpurge) (FILE *);                                                                                                                        /* 2216 */
     void (* __fseterr) (FILE *);                                                                                                                     /* 2220 */
     size_t (* __freadahead) (FILE *);                                                                                                                /* 2224 */
     void (* __freadptrinc) (FILE *f, size_t inc);                                                                                                    /* 2228 */
