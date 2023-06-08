@@ -2,6 +2,10 @@
  * $Id: locale_dcngettext.c,v 1.0 2023-06-08 14:51:15 clib2devs Exp $
 */
 
+#ifndef _STDLIB_CONSTRUCTOR_H
+#include "stdlib_constructor.h"
+#endif /* _STDLIB_CONSTRUCTOR_H */
+
 #ifndef _LOCALE_HEADERS_H
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
@@ -490,7 +494,7 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
     if (mofile == NULL) {
         const char *r;
 
-        mofile = malloc(sizeof(*mofile));
+        mofile = AllocVecTags(sizeof(*mofile), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
         if (mofile == NULL) {
             ReleaseSemaphore(__clib2->gettext_lock);
             return notrans;
@@ -500,7 +504,7 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
         mofile->map = momap(path, &mofile->size);
         if (mofile->map == MAP_FAILED) {
             ReleaseSemaphore(__clib2->gettext_lock);
-            free(mofile);
+            FreeVec(mofile);
             return notrans;
         }
 
@@ -684,7 +688,7 @@ char *bindtextdomain(const char *domainname, const char *dirname) {
     }
 
     if (!p) {
-        p = calloc(sizeof *p + domlen + dirlen + 2, 1);
+        p = AllocVecTags(sizeof *p + domlen + dirlen + 2, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
         if (!p) {
             ReleaseSemaphore(__clib2->gettext_lock);
             return NULL;
@@ -751,4 +755,24 @@ char *bind_textdomain_codeset(const char *domainname, const char *codeset) {
     }
 
     return NULL;
+}
+
+CLIB_DESTRUCTOR(dcngettext_exit) {
+    struct _clib2 *__clib2 = __CLIB2;
+    /* Free binddtextdomain bindings */
+    if (__clib2->g_mofile) {
+        struct mofile_s *mofile = __clib2->g_mofile;
+        while (mofile) {
+            struct mofile_s *next = mofile->next;
+            if (mofile)
+                FreeVec(mofile);
+            mofile = next;
+        }
+    }
+    struct binding *p = __clib2->bindings;
+    while (p) {
+        struct binding *q = p->next;
+        FreeVec(p);
+        p = q;
+    }
 }

@@ -41,8 +41,7 @@ struct AVLMemoryNode {
  * ways to free memory. In our case if free is called via memalign
  * we have to use FreeVec otherwise we have to use wof_free
  */
-struct MemalignEntry
-{
+struct MemalignEntry {
     struct AVLNode   me_AvlNode;
     void            *me_Exact;            /* The address returned by AllocVecTags  */
 };

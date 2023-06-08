@@ -262,6 +262,8 @@ reent_init(struct _clib2 *__clib2) {
     __clib2->previous_debug_level = -1;
     __clib2->__debug_level = 2;
 
+    __clib2->g_mofile = NULL;
+
     success = TRUE;
 
 out:
@@ -278,16 +280,7 @@ reent_exit(struct _clib2 *__clib2) {
     /* Free global clib structure */
     if (__clib2) {
         struct ElfIFace *IElf = __IElf;
-        struct binding *q;
-        /* Free binddtextdomain bindings */
-        /*
-        for (q = __clib2->bindings; q; q = q->next) {
-            if (q) {
-                free(q);
-                q = NULL;
-            }
-        }
-         */
+
         /* Free wchar stuff */
         if (__clib2->wide_status != NULL) {
             SHOWMSG("Free wide_status");
