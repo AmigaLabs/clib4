@@ -3,7 +3,7 @@
 set -e
 
 case "$1" in
-  purge|remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+  purge|remove|failed-upgrade|abort-install|abort-upgrade|disappear)
     # remove only installed files
     rm -fr /usr/ppc-amigaos/SDK/clib2
 
