@@ -30,6 +30,8 @@
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
+#include "locale/dcngettext.h"
+
 #include <proto/elf.h>
 #include <fenv.h>
 
@@ -276,7 +278,16 @@ reent_exit(struct _clib2 *__clib2) {
     /* Free global clib structure */
     if (__clib2) {
         struct ElfIFace *IElf = __IElf;
-
+        struct binding *q;
+        /* Free binddtextdomain bindings */
+        /*
+        for (q = __clib2->bindings; q; q = q->next) {
+            if (q) {
+                free(q);
+                q = NULL;
+            }
+        }
+         */
         /* Free wchar stuff */
         if (__clib2->wide_status != NULL) {
             SHOWMSG("Free wide_status");

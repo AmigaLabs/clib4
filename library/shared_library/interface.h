@@ -24,6 +24,7 @@
 #include <ifaddrs.h>
 #include <langinfo.h>
 #include <libgen.h>
+#include <libintl.h>
 #include <locale.h>
 #include <malloc.h>
 #include <math.h>
@@ -1255,6 +1256,16 @@ struct Clib2IFace {
     int (* __isfinite_float) (float d);                                                                                                              /* 4136 */
     int (* __isfinite_long_double) (long double d);                                                                                                  /* 4140 */
     u_quad_t (* strtouq) (const char *nptr, char **endptr, int base);                                                                                /* 4144 */
+
+    char * (* gettext) (const char *);                                                                                                               /* 4148 */
+    char * (* dgettext) (const char *, const char *);                                                                                                /* 4152 */
+    char * (* dcgettext) (const char *, const char *, int);                                                                                          /* 4156 */
+    char * (* ngettext) (const char *, const char *, unsigned long);                                                                                 /* 4162 */
+    char * (* dngettext) (const char *, const char *, const char *, unsigned long);                                                                  /* 4164 */
+    char * (* dcngettext) (const char *, const char *, const char *, unsigned long, int);                                                            /* 4168 */
+    char * (* textdomain) (const char *);                                                                                                            /* 4172 */
+    char * (* bindtextdomain) (const char *, const char *);                                                                                          /* 4176 */
+    char * (* bind_textdomain_codeset) (const char *, const char *);                                                                                 /* 4180 */
 };
 
 #ifdef __PIC__

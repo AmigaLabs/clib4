@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <sys/resource.h>
+#include <sys/syslimits.h>
 #include <wchar.h>
 #include <setjmp.h>
 
@@ -33,6 +34,15 @@ struct ExitTrapNode {
     struct MinNode etn_MinNode;
 
     void (*etn_Function)(void);
+};
+
+struct mofile_s {
+    struct mofile_s *next;
+    char path[PATH_MAX];
+    const char *plural_rule;
+    unsigned long nplurals;
+    void *map;
+    size_t size;
 };
 
 struct arc4_stream {
@@ -490,6 +500,12 @@ struct _clib2 {
     /* Wof Allocator memory semaphore */
     struct SignalSemaphore *memory_semaphore;
     int pipenum;
+
+    /* gettext */
+    struct SignalSemaphore *gettext_lock;
+    struct mofile_s *g_mofile;
+    char gettext_domain[NAME_MAX];
+    void *bindings;
 };
 
 #ifndef __getClib2

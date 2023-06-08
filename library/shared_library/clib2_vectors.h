@@ -1099,4 +1099,13 @@ static void *clib2Vectors[] = {
         (void *) (__isfinite_long_double),                /* 4140 */
         (void *) (strtouq),                               /* 4144 */
 
+        (void *) (gettext),                               /* 4148 */
+        (void *) (dgettext),                              /* 4152 */
+        (void *) (dcgettext),                             /* 4156 */
+        (void *) (ngettext),                              /* 4160 */
+        (void *) (dngettext),                             /* 4164 */
+        (void *) (dcngettext),                            /* 4168 */
+        (void *) (textdomain),                            /* 4172 */
+        (void *) (bindtextdomain),                        /* 4176 */
+        (void *) (bind_textdomain_codeset),               /* 4180 */
 };

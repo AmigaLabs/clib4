@@ -98,6 +98,7 @@ C_INTTYPES := \
 	inttypes/wcstoumax.o
 
 C_LOCALE := \
+	locale/dcngettext.o \
 	locale/langinfo.o \
 	locale/init_exit.o \
 	locale/localeconv.o \

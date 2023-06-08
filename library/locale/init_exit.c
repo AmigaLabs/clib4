@@ -143,7 +143,10 @@ CLIB_DESTRUCTOR(locale_exit) {
 	__delete_semaphore(__clib2->locale_lock);
     __clib2->locale_lock = NULL;
 
-	LEAVE();
+    __delete_semaphore(__clib2->gettext_lock);
+    __clib2->gettext_lock = NULL;
+
+    LEAVE();
 }
 
 CLIB_CONSTRUCTOR(locale_init) {
@@ -154,12 +157,20 @@ CLIB_CONSTRUCTOR(locale_init) {
 	ENTER();
 
     __clib2->locale_lock = __create_semaphore();
-	if (__clib2->locale_lock == NULL)
-		goto out;
+	if (__clib2->locale_lock == NULL) {
+        goto out;
+    }
+
+    __clib2->gettext_lock = __create_semaphore();
+    if (__clib2->gettext_lock == NULL) {
+        goto out;
+    }
 
 	for (i = 0; i < NUM_LOCALES; i++) {
         strcpy(__clib2->__locale_name_table[i], "C-UTF-8");
     }
+
+    strncpy(__clib2->gettext_domain, "messages", NAME_MAX);
 
     __locale_init(__clib2);
 
@@ -173,5 +184,5 @@ out:
 	if (success)
 		CONSTRUCTOR_SUCCEED();
 	else
-		CONSTRUCTOR_FAIL();
+        CONSTRUCTOR_FAIL();
 }

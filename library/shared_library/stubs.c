@@ -1035,3 +1035,13 @@ Clib2Call(__isfinite_double, 4132);
 Clib2Call(__isfinite_float, 4136);
 Clib2Call(__isfinite_long_double, 4140);
 Clib2Call(strtouq, 4144);
+
+Clib2Call(gettext, 4148);
+Clib2Call(dgettext, 4152);
+Clib2Call(dcgettext, 4156);
+Clib2Call(ngettext, 4160);
+Clib2Call(dngettext, 4164);
+Clib2Call(dcngettext, 4168);
+Clib2Call(textdomain, 4172);
+Clib2Call(bindtextdomain, 4176);
+Clib2Call(bind_textdomain_codeset, 4180);
