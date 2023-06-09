@@ -354,6 +354,4 @@ dpkg:
 	-$(COPY) $(OUTPUT_LIB)/* $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/lib/
 	-$(COPY) $(LIB_ROOT)/library/include/* $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/include/
 	-$(COPY) misc/control $(DPKG_LIB)/DEBIAN/
-	-$(COPY) misc/postrm $(DPKG_LIB)/DEBIAN/
-	chmod 0755 $(DPKG_LIB)/DEBIAN/postrm
 	dpkg --build $(DPKG_LIB)
