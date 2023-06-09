@@ -457,6 +457,8 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
     char path[PATH_MAX];
     char *notrans;
     char *trans;
+    const char *dirname;
+    struct binding *q;
     struct _clib2 *__clib2 = __CLIB2;
 
     notrans = (char *) (n == 1 ? msgid1 : msgid2);
@@ -481,7 +483,29 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
         }
     }
 
-    snprintf(path, PATH_MAX, "%s/%s/%s.mo", lang, g_catname[category], domainname);
+    for (q = __clib2->bindings; q; q = q->next)
+        if (!strcmp(q->domainname, domainname) && q->active)
+            break;
+    if (q) {
+        dirname = q->dirname;
+        if (__clib2->__unix_path_semantics) {
+            snprintf(path, PATH_MAX, "%s/%s/%s/%s.mo", dirname, lang, g_catname[category], domainname);
+        }
+        else {
+            const int len = strlen(dirname);
+            if (len > 0 && dirname[len-1] == ':' ) {
+                snprintf(path, PATH_MAX, "%s%s/%s/%s.mo", dirname, lang, g_catname[category], domainname);
+            }
+            else
+                snprintf(path, PATH_MAX, "%s/%s/%s/%s.mo", dirname, lang, g_catname[category], domainname);
+        }
+    }
+    else {
+        if (__clib2->__unix_path_semantics)
+            snprintf(path, PATH_MAX, "./%s/%s/%s.mo", lang, g_catname[category], domainname);
+        else
+            snprintf(path, PATH_MAX, "CURRDIR:%s/%s/%s.mo", lang, g_catname[category], domainname);
+    }
 
     ObtainSemaphore(__clib2->gettext_lock);
 
@@ -710,14 +734,6 @@ char *bindtextdomain(const char *domainname, const char *dirname) {
     }
 
     ReleaseSemaphore(__clib2->gettext_lock);
-
-    if (__clib2->__unix_path_semantics) {
-        int error = __translate_unix_to_amiga_path_name((const char **) &p->dirname, &path_name_nti);
-        if (error != 0) {
-            __set_errno(ENOMEM);
-            return NULL;
-        }
-    }
 
     return (char *) p->dirname;
 }
