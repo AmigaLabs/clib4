@@ -28,6 +28,7 @@
 #include <locale.h>
 #include <malloc.h>
 #include <math.h>
+#include <net/ethernet.h>
 #include <netdb.h>
 #include <nl_types.h>
 #include <poll.h>
@@ -53,6 +54,7 @@
 #include <wchar.h>
 #include <wctype.h>
 #include <wctype.h>
+#include <netinet/ether.h>
 #include <sys/byteswap.h>
 #include <sys/file.h>
 #include <sys/iconvnls.h>
@@ -1266,6 +1268,14 @@ struct Clib2IFace {
     char * (* textdomain) (const char *);                                                                                                            /* 4172 */
     char * (* bindtextdomain) (const char *, const char *);                                                                                          /* 4176 */
     char * (* bind_textdomain_codeset) (const char *, const char *);                                                                                 /* 4180 */
+
+    char * (* ether_ntoa) (const struct ether_addr *);                                                                                               /* 4184 */
+    struct ether_addr * (* ether_aton) (const char *);                                                                                               /* 4188 */
+    char * (* ether_ntoa_r) (const struct ether_addr *, char *);                                                                                     /* 4192 */
+    struct ether_addr * (* ether_aton_r) (const char *, struct ether_addr *);                                                                        /* 4196 */
+    int  (* ether_line) (const char *, struct ether_addr *, char *);                                                                                 /* 4200 */
+    int  (* ether_ntohost) (char *, const struct ether_addr *);                                                                                      /* 4204 */
+    int  (* ether_hostton) (const char *, struct ether_addr *);                                                                                      /* 4208 */
 };
 
 #ifdef __PIC__

@@ -127,11 +127,7 @@ SOCKET_CONSTRUCTOR(socket_init) {
 
     /* Also enable ^C checking if desired. */
     tags[1].ti_Tag = SBTM_SETVAL(SBTC_BREAKMASK);
-
-    if (__clib2->__check_abort_enabled)
-        tags[1].ti_Data = __clib2->__break_signal_mask;
-    else
-        tags[1].ti_Data = 0;
+    tags[1].ti_Data = __clib2->__break_signal_mask;
 
     tags[2].ti_Tag = SBTM_SETVAL(SBTC_LOGTAGPTR);
     tags[2].ti_Data = (ULONG)__clib2->__progname;

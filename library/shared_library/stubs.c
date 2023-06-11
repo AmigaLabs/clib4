@@ -1045,3 +1045,12 @@ Clib2Call(dcngettext, 4168);
 Clib2Call(textdomain, 4172);
 Clib2Call(bindtextdomain, 4176);
 Clib2Call(bind_textdomain_codeset, 4180);
+
+Clib2Call(ether_ntoa, 4184);
+Clib2Call(ether_aton, 4188);
+Clib2Call(ether_ntoa_r, 4192);
+Clib2Call(ether_aton_r, 4196);
+Clib2Call(ether_line, 4200);
+Clib2Call(ether_ntohost, 4204);
+Clib2Call(ether_hostton, 4208);
+

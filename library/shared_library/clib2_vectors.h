@@ -1108,4 +1108,12 @@ static void *clib2Vectors[] = {
         (void *) (textdomain),                            /* 4172 */
         (void *) (bindtextdomain),                        /* 4176 */
         (void *) (bind_textdomain_codeset),               /* 4180 */
+
+        (void *) (ether_ntoa),                            /* 4184 */
+        (void *) (ether_aton),                            /* 4188 */
+        (void *) (ether_ntoa_r),                          /* 4192 */
+        (void *) (ether_aton_r),                          /* 4196 */
+        (void *) (ether_line),                            /* 4200 */
+        (void *) (ether_ntohost),                         /* 4204 */
+        (void *) (ether_hostton),                         /* 4208 */
 };

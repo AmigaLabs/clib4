@@ -40,7 +40,6 @@ tcdrain(int file_descriptor) {
 
         switch (tios->type) {
             case TIOST_CONSOLE:
-
                 file = __resolve_fd_file(fd);
                 if (file == BZERO) {
                     __fd_unlock(fd);
@@ -56,6 +55,7 @@ tcdrain(int file_descriptor) {
 
                 break;
             default: /* TODO: Serial port support. */
+                printf("cicero1b\n");
                 __fd_unlock(fd);
                 __set_errno(ENXIO);
                 goto out;

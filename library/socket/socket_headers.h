@@ -9,6 +9,10 @@
 #include <netinet/in.h>
 #endif /* _NETINET_IN_H */
 
+#ifndef _NETINET_ETHER_H
+#include <netinet/ether.h>
+#endif /* _NETINET_ETHER_H */
+
 #ifndef _SYS_SOCKET_H
 #include <sys/socket.h>
 #endif /* _SYS_SOCKET_H */
@@ -47,6 +51,10 @@
 
 #ifndef _UN_H
 #include <sys/un.h>
+#endif
+
+#ifndef _PATH_ETHERS
+#define _PATH_ETHERS  "Devs:Internet/ethers"
 #endif
 
 /* Code value. */

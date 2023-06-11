@@ -2,10 +2,9 @@
 #define _SYS_WAIT_H
 
 #include <features.h>
+#include <sys/types.h>
 
 __BEGIN_DECLS
-
-#include <sys/types.h>
 
 #define WNOHANG 1
 #define WUNTRACED 2

@@ -70,6 +70,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
             assert(fd->fd_Action != NULL);
 
             num_bytes_read = (*fd->fd_Action)(__clib2, fd, &fam);
+
             if (num_bytes_read == EOF) {
                 __set_errno(fam.fam_Error);
                 goto out;

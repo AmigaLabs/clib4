@@ -221,6 +221,13 @@ C_SOCKET := \
     socket/dn_comp.o \
     socket/dn_expand.o \
     socket/dn_skipname.o \
+	socket/ether_aton.o \
+	socket/ether_aton_r.o \
+	socket/ether_hostton.o \
+	socket/ether_line.o \
+	socket/ether_ntoa.o \
+	socket/ether_ntoa_r.o \
+	socket/ether_ntohost.o \
 	socket/freeaddrinfo.o \
     socket/freeifaddrs.o \
 	socket/gai_strerror.o \
