@@ -15,7 +15,6 @@
 #include <setjmp.h>
 
 #include <libraries/elf.h>
-#include <proto/elf.h>
 
 /* Category name handling variables.  */
 #define NUM_LOCALES                (LC_MAX + 1)
