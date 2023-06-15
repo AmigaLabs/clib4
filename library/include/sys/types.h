@@ -33,8 +33,14 @@ typedef uint64_t fsfilcnt_t;
 #endif
 typedef int pid_t;
 typedef unsigned int rlim_t;
-typedef signed int ssize_t;
 typedef unsigned int uid_t;
+
+#if defined(INT_MAX) && INT_MAX == 2147483647
+typedef int _ssize_t;
+#else
+typedef long _ssize_t;
+#endif
+typedef _ssize_t ssize_t;
 
 #ifndef _BSDTYPES_DEFINED
 typedef unsigned char   u_char;

@@ -91,6 +91,7 @@ extern int execlp(const char *path,const char *arg0,...);
 extern int execv(const char *path,char * const argv[]);
 extern int execve(const char *path,char *const argv[],char *const envp[]);
 extern int execvp(const char *command,char * const argv[]);
+extern int getentropy(void *, size_t);
 
 extern void encrypt(char *block, int edflag);
 

@@ -1054,3 +1054,5 @@ Clib2Call(ether_line, 4200);
 Clib2Call(ether_ntohost, 4204);
 Clib2Call(ether_hostton, 4208);
 
+Clib2Call(getrandom, 4212);
+Clib2Call(getentropy, 4216);

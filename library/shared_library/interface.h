@@ -62,6 +62,7 @@
 #include <sys/mman.h>
 #include <sys/mount.h>
 #include <sys/msg.h>
+#include <sys/random.h>
 #include <sys/resource.h>
 #include <sys/sem.h>
 #include <sys/socket.h>
@@ -1276,6 +1277,9 @@ struct Clib2IFace {
     int  (* ether_line) (const char *, struct ether_addr *, char *);                                                                                 /* 4200 */
     int  (* ether_ntohost) (char *, const struct ether_addr *);                                                                                      /* 4204 */
     int  (* ether_hostton) (const char *, struct ether_addr *);                                                                                      /* 4208 */
+
+    int  (* getrandom) (void *buffer, size_t length, unsigned int flags);                                                                            /* 4212 */
+    int  (* getentropy) (void *, size_t);                                                                                                            /* 4216 */
 };
 
 #ifdef __PIC__

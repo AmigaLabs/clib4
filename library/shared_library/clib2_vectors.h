@@ -1116,4 +1116,7 @@ static void *clib2Vectors[] = {
         (void *) (ether_line),                            /* 4200 */
         (void *) (ether_ntohost),                         /* 4204 */
         (void *) (ether_hostton),                         /* 4208 */
+
+        (void *) (getrandom),                             /* 4212 */
+        (void *) (getentropy),                            /* 4216 */
 };

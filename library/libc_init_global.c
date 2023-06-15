@@ -142,6 +142,10 @@ reent_init(struct _clib2 *__clib2) {
     __clib2->j = 0;
     __clib2->x = _random_init + 1;
 
+    /* Initialize getrandom fd */
+    __clib2->randfd[0] = -1;
+    __clib2->randfd[1] = -1;
+
     __clib2->_gamma_signgam = 0;
     __clib2->__infinity = 0;
     __clib2->__nan = 0;
@@ -280,6 +284,15 @@ reent_exit(struct _clib2 *__clib2) {
     /* Free global clib structure */
     if (__clib2) {
         struct ElfIFace *IElf = __IElf;
+
+        /* Check for getrandom fd */
+        if (__clib2->randfd[0] >= 0) {
+            close(__clib2->randfd[0]);
+        }
+
+        if (__clib2->randfd[1] >= 0) {
+            close(__clib2->randfd[1]);
+        }
 
         /* Free wchar stuff */
         if (__clib2->wide_status != NULL) {

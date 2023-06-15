@@ -312,6 +312,7 @@ C_STDIO := \
     prng/__seed48.o \
     prng/drand48.o \
     prng/erand48.o \
+    prng/getrandom.o \
     prng/inistate.o \
     prng/jrand48.o \
     prng/lcong48.o \
@@ -694,9 +695,10 @@ C_UNISTD := \
 	unistd/fsync.o \
 	unistd/ftruncate.o \
 	unistd/ftruncate64.o \
-	unistd/getcwd.o \
 	unistd/get_current_dir_name.o \
+	unistd/getcwd.o \
 	unistd/getdomainname.o \
+	unistd/getentropy.o \
 	unistd/getlogin.o \
 	unistd/getlogin_r.o \
 	unistd/getpagesize.o \

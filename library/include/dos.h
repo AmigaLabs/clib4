@@ -505,6 +505,9 @@ struct _clib2 {
     struct mofile_s *g_mofile;
     char gettext_domain[NAME_MAX];
     void *bindings;
+
+    /* getrandom */
+    int randfd[2];
 };
 
 #ifndef __getClib2
