@@ -39,6 +39,9 @@ __BEGIN_DECLS
 #define __tm_zone tm_zone
 #endif
 
+#define timezone (__CLIB2->__timezone)
+#define daylight (__CLIB2->__daylight)
+#define tzname   (__CLIB2->__tzname)
 
 struct tm {
     int tm_sec;   /* Number of seconds past the minute (0..59) */
@@ -191,7 +194,6 @@ valid_timeval_to_timeval64(const struct timeval tv) {
 
     return tv64;
 }
-
 
 /* Convert a valid and within range of struct timeval, struct timeval64 into a struct timeval.  */
 static inline struct timeval

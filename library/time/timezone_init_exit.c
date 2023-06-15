@@ -20,11 +20,11 @@ __timezone_exit(void) {
     if (__clib2->__TimezoneBase != NULL) {
         DECLARE_TIMEZONEBASE();
 
-        if (__clib2->dyntz == TRUE) {
-            if (__clib2->tzname[0]) FreeVec(__clib2->tzname[0]);
-            if (__clib2->tzname[1]) FreeVec(__clib2->tzname[1]);
-            __clib2->tzname[0] = NULL;
-            __clib2->tzname[1] = NULL;
+        if (__clib2->__dyntz == TRUE) {
+            if (__clib2->__tzname[0]) FreeVec(__clib2->__tzname[0]);
+            if (__clib2->__tzname[1]) FreeVec(__clib2->__tzname[1]);
+            __clib2->__tzname[0] = NULL;
+            __clib2->__tzname[1] = NULL;
         }
 
         if (__clib2->__ITimezone != NULL) {
@@ -68,28 +68,28 @@ __timezone_init(void) {
         // Set global timezone variable
         uint32 gmtoffset = 0;
         int8 dstime = -1;
-        __clib2->tzname[0] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-        __clib2->tzname[1] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-        __clib2->dyntz = TRUE;
+        __clib2->__tzname[0] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        __clib2->__tzname[1] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        __clib2->__dyntz = TRUE;
 
         GetTimezoneAttrs(NULL,
-                         TZA_Timezone, __clib2->tzname[0],
-                         TZA_TimezoneSTD, __clib2->tzname[1],
+                         TZA_Timezone, __clib2->__tzname[0],
+                         TZA_TimezoneSTD, __clib2->__tzname[1],
                          TZA_UTCOffset, &gmtoffset,
                          TZA_TimeFlag, &dstime,
                          TAG_DONE);
 
-        __clib2->timezone = 60 * gmtoffset;
-        __clib2->daylight = dstime & TFLG_ISDST;
+        __clib2->__timezone = 60 * gmtoffset;
+        __clib2->__daylight = dstime & TFLG_ISDST;
 
         result = OK;
     } else {
         /* default values */
-        __clib2->timezone = 0;
-        __clib2->daylight = 0;
-        __clib2->tzname[0] = (char *) "GMT";
-        __clib2->tzname[1] = (char *) "AMT";
-        __clib2->dyntz = FALSE;
+        __clib2->__timezone = 0;
+        __clib2->__daylight = 0;
+        __clib2->__tzname[0] = (char *) "GMT";
+        __clib2->__tzname[1] = (char *) "AMT";
+        __clib2->__dyntz = FALSE;
     }
 
     __timezone_unlock();

@@ -186,10 +186,10 @@ struct _clib2 {
      */
     int __priority;
 
-    char *tzname[2];     /* Current timezone names.  */
-    int daylight;        /* If daylight-saving time is ever in use.  */
-    long int timezone;   /* Seconds west of UTC.  */
-    int dyntz;           /* Set to TRUE if created with malloc */
+    char *__tzname[2];     /* Current timezone names.  */
+    int __daylight;        /* If daylight-saving time is ever in use.  */
+    long int __timezone;   /* Seconds west of UTC.  */
+    int __dyntz;           /* Set to TRUE if created with malloc */
     struct SignalSemaphore *timezone_lock;
 
     /*

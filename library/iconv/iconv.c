@@ -2,6 +2,7 @@
  * $Id: iconv.c,v 1.0 2021-03-09 12:04:25 clib2devs Exp $
 */
 
+
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
@@ -12,31 +13,31 @@
  * limited to 1024 slots (10 bit indices). The first 256 entries
  * are elided since those characters are obviously all included. */
 static const unsigned short legacy_chars[] = {
-#include "legacychars.h"
+    #include "legacychars.h"
 };
 
 static const unsigned short jis0208[84][94] = {
-#include "jis0208.h"
+    #include "jis0208.h"
 };
 
 static const unsigned short gb18030[126][190] = {
-#include "gb18030.h"
+    #include "gb18030.h"
 };
 
 static const unsigned short big5[89][157] = {
-#include "big5.h"
+    #include "big5.h"
 };
 
 static const unsigned short hkscs[] = {
-#include "hkscs.h"
+    #include "hkscs.h"
 };
 
 static const unsigned short ksc[93][94] = {
-#include "ksc.h"
+    #include "ksc.h"
 };
 
 static const unsigned short rev_jis[] = {
-#include "revjis.h"
+    #include "revjis.h"
 };
 
 static unsigned
