@@ -34,14 +34,19 @@ __BEGIN_DECLS
 #define NSEC_PER_SEC 1000000000ull
 #define TIMER_ABSTIME 0x01
 
-#if defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
+#if defined(_XOPEN_SOURCE) || defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
 #define __tm_gmtoff tm_gmtoff
 #define __tm_zone tm_zone
 #endif
 
-#define timezone (__CLIB2->__timezone)
-#define daylight (__CLIB2->__daylight)
-#define tzname   (__CLIB2->__tzname)
+#define _timezone (__CLIB2->__timezone)
+#define _daylight (__CLIB2->__daylight)
+#define _tzname   (__CLIB2->__tzname)
+
+/* POSIX defines the external tzname being defined in time.h */
+#ifndef tzname
+#define tzname _tzname
+#endif
 
 struct tm {
     int tm_sec;   /* Number of seconds past the minute (0..59) */
