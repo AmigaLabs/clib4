@@ -116,6 +116,12 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
             break;
 
+        case F_GETFD:
+            /* Don't fail on this. If we reach this point file descriptor is ok */
+            result = OK;
+
+            break;
+
         case F_SETFD:
 
             /* We don't have any logic implemented here yet but don't fail if someone is asking to set a flag like FD_CLOEXEC */
@@ -123,7 +129,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             flags = va_arg(arg, int);
             va_end(arg);
 
-            /* If flag is not FD_CLOEXEC fail otherwise return OK */
+            /* Fail if flag is not FD_CLOEXEC, otherwise return OK */
             if (flags == FD_CLOEXEC)
                 result = OK;
 
