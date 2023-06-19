@@ -94,13 +94,6 @@ extern int64_t __socket_hook_entry(struct _clib2 *__clib2, struct fd * fd,struct
 extern void __set_h_errno(int new_h_errno);
 extern int __select(int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *except_fds,struct timeval *timeout,ULONG * signal_mask_ptr);
 
-/* Syslog stuff */
-extern int syslog_openlog_flags;
-extern int syslog_mask;
-extern int syslog_facility;
-extern char syslog_ident[35];
-extern FILE *syslog_fd;
-
 #include <interfaces/bsdsocket.h>
 
 #define __socket(domain, type, protocol) __CLIB2->__ISocket->socket(domain , type , protocol)

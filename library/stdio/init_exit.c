@@ -39,8 +39,8 @@ __close_all_files(struct _clib2 *__clib2) {
         for (i = 0; i < __clib2->__num_fd; i++) {
             if (FLAG_IS_SET(__clib2->__fd[i]->fd_Flags, FDF_IN_USE))
                 close(i);
+            UnlockMem(__clib2->__fd[i], sizeof(*__clib2->__fd[i]));
         }
-
         __clib2->__num_fd = 0;
     }
 

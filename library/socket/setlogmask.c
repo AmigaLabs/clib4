@@ -8,17 +8,16 @@
 
 #include <syslog.h>
 
-int syslog_mask = 0xff;
-
 int
 setlogmask(int maskpri) {
     ENTER();
 
     SHOWVALUE(maskpri);
+    struct _clib2 *__clib2 = __CLIB2;
 
-    int ret = syslog_mask;
+    int ret = __clib2->syslog_mask;
     if (maskpri)
-        syslog_mask = maskpri;
+        __clib2->syslog_mask = maskpri;
 
     RETURN(ret);
     return ret;

@@ -56,7 +56,6 @@ C_CTYPE := \
 	ctype/isspace.o \
 	ctype/isupper.o \
 	ctype/isxdigit.o \
-	ctype/table.o \
 	ctype/toascii.o \
 	ctype/tolower.o \
 	ctype/toupper.o
@@ -918,7 +917,6 @@ C_LIBRARY := \
 C_LIB := \
 	c.lib_rev.o \
 	shared_library/stubs.o \
-	ctype/table.o \
 	unistd/getopt.o \
 	unistd/getopt_long.o
 

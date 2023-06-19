@@ -31,6 +31,7 @@
 #endif /* _STRING_HEADERS_H */
 
 #include "locale/dcngettext.h"
+#include <syslog.h>
 
 #include <proto/elf.h>
 #include <fenv.h>
@@ -70,13 +71,251 @@ reent_init(struct _clib2 *__clib2) {
     DECLARE_UTILITYBASE();
 
     struct ElfIFace *IElf = __IElf;
-    /* Set main Exec and IElf interface pointers */
-    __clib2->IExec = IExec;
-    __clib2->IElf = __IElf;
 
-    /* Disable check abort at start */
-    __clib2->__check_abort_enabled = FALSE;
+    *__clib2 = (struct _clib2) {
+        .__ctype_table = {
+                /*   0      */ __CTYPE_CONTROL,
+                /*   1      */ __CTYPE_CONTROL,
+                /*   2      */ __CTYPE_CONTROL,
+                /*   3      */ __CTYPE_CONTROL,
+                /*   4      */ __CTYPE_CONTROL,
+                /*   5      */ __CTYPE_CONTROL,
+                /*   6      */ __CTYPE_CONTROL,
+                /*   7      */ __CTYPE_CONTROL,
+                /*   8      */ __CTYPE_CONTROL,
+                /*   9      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
+                /*  10      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
+                /*  11      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
+                /*  12      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
+                /*  13      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
+                /*  14      */ __CTYPE_CONTROL,
+                /*  15      */ __CTYPE_CONTROL,
+                /*  16      */ __CTYPE_CONTROL,
+                /*  17      */ __CTYPE_CONTROL,
+                /*  18      */ __CTYPE_CONTROL,
+                /*  19      */ __CTYPE_CONTROL,
+                /*  20      */ __CTYPE_CONTROL,
+                /*  21      */ __CTYPE_CONTROL,
+                /*  22      */ __CTYPE_CONTROL,
+                /*  23      */ __CTYPE_CONTROL,
+                /*  24      */ __CTYPE_CONTROL,
+                /*  25      */ __CTYPE_CONTROL,
+                /*  26      */ __CTYPE_CONTROL,
+                /*  27      */ __CTYPE_CONTROL,
+                /*  28      */ __CTYPE_CONTROL,
+                /*  29      */ __CTYPE_CONTROL,
+                /*  30      */ __CTYPE_CONTROL,
+                /*  31      */ __CTYPE_CONTROL,
+                /*  32, ' ' */ __CTYPE_PRINTABLE|__CTYPE_WHITE_SPACE,
+                /*  33, '!' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  34, '"' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  35, '#' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  36, '$' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  37, '%' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  38, '&' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  39, ''' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  40, '(' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  41, ')' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  42, '*' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  43, '+' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  44, ',' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  45, '-' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  46, '.' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  47, '/' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  48, '0' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  49, '1' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  50, '2' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  51, '3' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  52, '4' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  53, '5' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  54, '6' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  55, '7' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  56, '8' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  57, '9' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  58, ':' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  59, ';' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  60, '<' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  61, '=' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  62, '>' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  63, '?' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  64, '@' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  65, 'A' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  66, 'B' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  67, 'C' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  68, 'D' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  69, 'E' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  70, 'F' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  71, 'G' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  72, 'H' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  73, 'I' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  74, 'J' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  75, 'K' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  76, 'L' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  77, 'M' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  78, 'N' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  79, 'O' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  80, 'P' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  81, 'Q' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  82, 'R' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  83, 'S' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  84, 'T' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  85, 'U' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  86, 'V' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  87, 'W' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  88, 'X' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  89, 'Y' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  90, 'Z' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  91, '[' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  92, '\' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  93, ']' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  94, '^' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  95, '_' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  96, '`' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  97, 'a' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /*  98, 'b' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /*  99, 'c' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 100, 'd' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 101, 'e' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 102, 'f' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 103, 'g' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 104, 'h' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 105, 'i' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 106, 'j' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 107, 'k' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 108, 'l' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 109, 'm' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 110, 'n' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 111, 'o' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 112, 'p' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 113, 'q' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 114, 'r' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 115, 's' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 116, 't' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 117, 'u' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 118, 'v' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 119, 'w' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 120, 'x' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 121, 'y' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 122, 'z' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 123, '{' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /* 124, '|' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /* 125, '}' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /* 126, '~' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /* 127      */ __CTYPE_CONTROL,
 
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        },
+        /* Set main Exec and IElf interface pointers */
+        .IExec = IExec,
+        .IElf = __IElf,
+        /* Disable check abort at start */
+        .__check_abort_enabled = FALSE,
+        .__break_signal_mask = SIGBREAKF_CTRL_C,
+        ._errno = 0,
+        .__shell_escape_character = '*',
+        .__cache_line_size = 32,
+        /* We use an invalid priority value to indicate "do not change the program's task priority". */
+        .__priority = 256,
+        .pipenum = 0,
+#ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
+        .__optimizedCPUFunctions = FALSE,
+#else
+        .__optimizedCPUFunctions = TRUE,
+#endif
+        /* Set memalign tree to NULL */
+        .__memalign_tree = NULL,
+        /* Initialize random signal and state */
+        .__random_lock = __create_semaphore(),
+        .n = 31,
+        .i = 3,
+        .j = 0,
+        .x = _random_init + 1,
+        /* Initialize getrandom fd */
+        .randfd[0] = -1,
+        .randfd[1] = -1,
+        ._gamma_signgam = 0,
+        .__infinity = 0,
+        .__nan = 0,
+        /* Set locale stuff */
+        ._current_category = LC_ALL,
+        ._current_locale = "C-UTF-8",
+        .__mb_cur_max = 1,
+        /* Check is SYSV library is available in the system */
+        .haveShm = FALSE,
+        .__disable_dos_requesters = FALSE,
+        .__expand_wildcard_args = TRUE,
+        .__unlink_retries = TRUE,
+        /* Clear itimer start time */
+        .tmr_start_time.tv_sec = 0,
+        .tmr_start_time.tv_usec = 0,
+        .tmr_real_task = NULL,
+        /* Set ar4random stuff */
+        .rs.i = 0,
+        .rs.j = 0,
+        .rs_initialized = 0,
+        .rs_stired = 0,
+        .arc4_count = 0,
+        .rs_data_available = 0,
+        .__default_path_delimiter = ":",
+        .__default_path = "/C:.:/APPDIR:/PROGDIR:/ram:/SDK/C:/SDK/Local/C:",
+        /* Default root groups and id */
+        .__root_mode = FALSE,
+        .__root_uid = 0,
+        .__root_gid = 0,
+        .__root_euid = 0,
+        .__root_egid = 0,
+
+        /* Default debug levels */
+        .indent_level = 0,
+        .previous_debug_level = -1,
+        .__debug_level = 2,
+        .g_mofile = NULL,
+        .__ospeed = 0,
+        .__tputs_baud_rate = 0,
+        .__PC = '\0',
+        /* Syslog stuff */
+        .syslog_fd = NULL,
+        .syslog_openlog_flags = 0,
+        .syslog_facility = LOG_USER,
+        .syslog_mask = 0xff,
+    };
+
+    if (!__clib2->__random_lock) {
+        goto out;
+    }
+
+    SHOWMSG("Allocating wide_status");
+    /* Initialize wchar stuff */
+    __clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
+    if (!__clib2->wide_status) {
+        goto out;
+    }
+    __clib2->wide_status->_strtok_last = NULL;
+    __clib2->wide_status->_mblen_state.__count = 0;
+    __clib2->wide_status->_mblen_state.__value.__wch = 0;
+    __clib2->wide_status->_wctomb_state.__count = 0;
+    __clib2->wide_status->_wctomb_state.__value.__wch = 0;
+    __clib2->wide_status->_mbtowc_state.__count = 0;
+    __clib2->wide_status->_mbtowc_state.__value.__wch = 0;
+    __clib2->wide_status->_mbrlen_state.__count = 0;
+    __clib2->wide_status->_mbrlen_state.__value.__wch = 0;
+    __clib2->wide_status->_mbrtowc_state.__count = 0;
+    __clib2->wide_status->_mbrtowc_state.__value.__wch = 0;
+    __clib2->wide_status->_mbsrtowcs_state.__count = 0;
+    __clib2->wide_status->_mbsrtowcs_state.__value.__wch = 0;
+    __clib2->wide_status->_wcrtomb_state.__count = 0;
+    __clib2->wide_status->_wcrtomb_state.__value.__wch = 0;
+    __clib2->wide_status->_wcsrtombs_state.__count = 0;
+    __clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
+    __clib2->wide_status->_l64a_buf[0] = '\0';
+    __clib2->wide_status->_getdate_err = 0;
     /* Get cpu family used to choose functions at runtime */
     D(("Setting cpu family"));
     GetCPUInfoTags(GCIT_Family, &__clib2->cpufamily, TAG_DONE);
@@ -88,31 +327,6 @@ reent_init(struct _clib2 *__clib2) {
 #else
     D(("Set altivec to zero"));
     __clib2->hasAltivec = 0;
-#endif
-
-    __clib2->__break_signal_mask = SIGBREAKF_CTRL_C;
-
-    D(("Setting global errno"));
-    __clib2->_errno = 0;
-
-    __clib2->__shell_escape_character = '*';
-    __clib2->__cache_line_size = 32;
-    /* We use an invalid priority value to indicate "do not change the program's task priority". */
-    __clib2->__priority = 256;
-
-    SHOWMSG("Allocating wide_status");
-    /* Initialize wchar stuff */
-    __clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
-    if (!__clib2->wide_status) {
-        goto out;
-    }
-
-    __clib2->pipenum = 0;
-
-#ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
-    __clib2->__optimizedCPUFunctions = FALSE;
-#else
-    __clib2->__optimizedCPUFunctions = TRUE;
 #endif
 
     /* Init memalign list */
@@ -129,26 +343,7 @@ reent_init(struct _clib2 *__clib2) {
     if (!__clib2->__memalign_pool) {
         goto out;
     }
-    /* Set memalign tree to NULL */
-    __clib2->__memalign_tree = NULL;
 
-    /* Initialize random signal and state */
-    __clib2->__random_lock = __create_semaphore();
-    if (!__clib2->__random_lock) {
-        goto out;
-    }
-    __clib2->n = 31;
-    __clib2->i = 3;
-    __clib2->j = 0;
-    __clib2->x = _random_init + 1;
-
-    /* Initialize getrandom fd */
-    __clib2->randfd[0] = -1;
-    __clib2->randfd[1] = -1;
-
-    __clib2->_gamma_signgam = 0;
-    __clib2->__infinity = 0;
-    __clib2->__nan = 0;
     /*
      * Next: Get Elf handle associated with the currently running process.
      * ElfBase is opened in crtbegin.c that is called before the
@@ -173,33 +368,6 @@ reent_init(struct _clib2 *__clib2) {
         }
     }
 
-    __clib2->wide_status->_strtok_last = NULL;
-    __clib2->wide_status->_mblen_state.__count = 0;
-    __clib2->wide_status->_mblen_state.__value.__wch = 0;
-    __clib2->wide_status->_wctomb_state.__count = 0;
-    __clib2->wide_status->_wctomb_state.__value.__wch = 0;
-    __clib2->wide_status->_mbtowc_state.__count = 0;
-    __clib2->wide_status->_mbtowc_state.__value.__wch = 0;
-    __clib2->wide_status->_mbrlen_state.__count = 0;
-    __clib2->wide_status->_mbrlen_state.__value.__wch = 0;
-    __clib2->wide_status->_mbrtowc_state.__count = 0;
-    __clib2->wide_status->_mbrtowc_state.__value.__wch = 0;
-    __clib2->wide_status->_mbsrtowcs_state.__count = 0;
-    __clib2->wide_status->_mbsrtowcs_state.__value.__wch = 0;
-    __clib2->wide_status->_wcrtomb_state.__count = 0;
-    __clib2->wide_status->_wcrtomb_state.__value.__wch = 0;
-    __clib2->wide_status->_wcsrtombs_state.__count = 0;
-    __clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
-    __clib2->wide_status->_l64a_buf[0] = '\0';
-    __clib2->wide_status->_getdate_err = 0;
-    /* Set locale stuff */
-    __clib2->_current_category = LC_ALL;
-    __clib2->_current_locale = "C-UTF-8";
-    __clib2->__mb_cur_max = 1;
-
-    //__clib2->__ctype_table[2 * 128];
-    /* Check is SYSV library is available in the system */
-    __clib2->haveShm = FALSE;
     SHOWMSG("try to open SYSVIPC Library");
     __clib2->__SysVBase = OpenLibrary("sysvipc.library", 53);
     if (__clib2->__SysVBase != NULL) {
@@ -212,30 +380,12 @@ reent_init(struct _clib2 *__clib2) {
         }
     }
 
-    __clib2->__disable_dos_requesters = FALSE;
-    __clib2->__expand_wildcard_args = TRUE;
-    __clib2->__unlink_retries = TRUE;
-
-    /* Clear itimer start time */
-    __clib2->tmr_start_time.tv_sec = 0;
-    __clib2->tmr_start_time.tv_usec = 0;
-    __clib2->tmr_real_task = NULL;
     ClearMem(&__clib2->tmr_time, sizeof(struct itimerval));
 
-    __clib2->__default_path_delimiter = ":";
-    __clib2->__default_path = "/C:.:/APPDIR:/PROGDIR:/ram:/SDK/C:/SDK/Local/C:";
-
     /* Set ar4random stuff */
-    __clib2->rs.i = 0;
-    __clib2->rs.j = 0;
     for (int i = 0; i <= 255; i++) {
         __clib2->rs.s[i] = i;
     }
-
-    __clib2->rs_initialized = 0;
-    __clib2->rs_stired = 0;
-    __clib2->arc4_count = 0;
-    __clib2->rs_data_available = 0;
 
     /* Check if .unix file exists in the current dir. If the file exists enable unix path semantics */
     SHOWMSG("Check for .unix file");
@@ -254,20 +404,6 @@ reent_init(struct _clib2 *__clib2) {
     for (int i = 0; i < NSIG; i++) {
         __clib2->__signal_handler_table[i] = SIG_DFL;
     }
-
-    /* Default root groups and id */
-    __clib2->__root_mode = FALSE;
-    __clib2->__root_uid = 0;
-    __clib2->__root_gid = 0;
-    __clib2->__root_euid = 0;
-    __clib2->__root_egid = 0;
-
-    /* Default debug levels */
-    __clib2->indent_level = 0;
-    __clib2->previous_debug_level = -1;
-    __clib2->__debug_level = 2;
-
-    __clib2->g_mofile = NULL;
 
     success = TRUE;
 

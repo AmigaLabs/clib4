@@ -19,23 +19,21 @@
 #define _TERMCAP_H 1
 
 #include <features.h>
+#include <dos.h>
 
 __BEGIN_DECLS
+
+#define PC __CLIB2->__PC
+#define ospeed __CLIB2__ospeed
+#define UP __CLIB2->__UP
+#define BC __CLIB2->__BC
 
 extern int tgetent (char *buffer, const char *termtype);
 extern int tgetnum (const char *name);
 extern int tgetflag (const char *name);
 extern char *tgetstr (const char *name, char **area);
-
-extern char PC;
-extern short ospeed;
-
 extern void tputs (const char *str, int nlines, int (*outfun) (int));
 extern char *tparam (const char *string, char *outstring, int leb, int arg0, int arg1, int arg2, int arg3);
-
-extern char *UP;
-extern char *BC;
-
 extern char *tgoto (const char *cstring, int hpos, int vpos);
 
 __END_DECLS

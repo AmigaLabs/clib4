@@ -510,6 +510,21 @@ struct _clib2 {
     int randfd[2];
 
     unsigned char __ctype_table[2 * 128];
+
+    /* termcap  */
+    short __ospeed;
+    /* If OSPEED is 0, we use this as the actual baud rate.  */
+    int __tputs_baud_rate;
+    char __PC;
+    char *__UP;
+    char *__BC;
+
+    /* Syslog stuff */
+    int syslog_openlog_flags;
+    int syslog_mask;
+    int syslog_facility;
+    char syslog_ident[35];
+    FILE *syslog_fd;
 };
 
 #ifndef __getClib2

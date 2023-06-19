@@ -40,8 +40,10 @@ __grow_fd_table(struct _clib2 *__clib2, int max_fd) {
 
                 SHOWMSG("not enough memory for new file descriptor table entry");
 
-                for (j = __clib2->__num_fd; j < i; j++)
+                for (j = __clib2->__num_fd; j < i; j++) {
+                    UnlockMem(new_fd[j], sizeof(*new_fd[j]));
                     free(new_fd[j]);
+                }
 
                 free(new_fd);
 
@@ -50,6 +52,7 @@ __grow_fd_table(struct _clib2 *__clib2, int max_fd) {
             }
 
             memset(new_fd[i], 0, sizeof(*new_fd[i]));
+            LockMem(new_fd[i], sizeof(*new_fd[i]));
         }
 
         if (__clib2->__fd != NULL) {
