@@ -106,7 +106,7 @@ struct UtilityIFace *__IUtility = 0;
 
 const struct Resident RomTag;
 
-#define LIBPRI 100
+#define LIBPRI 0
 #define LIBNAME "clib2.library"
 
 static struct TimeRequest *openTimer(uint32 unit);
@@ -118,7 +118,7 @@ _start(char *args, int arglen, struct ExecBase *sysbase) {
     (void) (arglen);
     (void) (sysbase);
 
-    return -1;
+    return RETURN_FAIL;
 }
 
 static void closeLibraries() {
