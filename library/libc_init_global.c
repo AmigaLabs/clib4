@@ -197,6 +197,7 @@ reent_init(struct _clib2 *__clib2) {
     __clib2->_current_locale = "C-UTF-8";
     __clib2->__mb_cur_max = 1;
 
+    //__clib2->__ctype_table[2 * 128];
     /* Check is SYSV library is available in the system */
     __clib2->haveShm = FALSE;
     SHOWMSG("try to open SYSVIPC Library");

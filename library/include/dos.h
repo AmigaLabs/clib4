@@ -508,6 +508,8 @@ struct _clib2 {
 
     /* getrandom */
     int randfd[2];
+
+    unsigned char __ctype_table[2 * 128];
 };
 
 #ifndef __getClib2
