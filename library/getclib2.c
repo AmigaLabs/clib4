@@ -10,7 +10,7 @@ __getClib2(void) {
     struct Task *t = FindTask(NULL);
 
     if (NT_PROCESS == t->tc_Node.ln_Type) {
-        r = (struct _clib2 *) ((struct Process *) t)->pr_CLibData;
+        r = (struct _clib2 *) GetEntryData();
     }
 
     return r;

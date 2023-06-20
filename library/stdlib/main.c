@@ -338,8 +338,8 @@ _main(
     /* Get the current task pointer */
     __clib2->self = (struct Process *) FindTask(NULL);
 
-    oldClibData = this_process->pr_CLibData;
-    this_process->pr_CLibData = __clib2;
+    oldClibData = this_process->pr_EntryData;
+    this_process->pr_EntryData = __clib2;
     SHOWPOINTER(__clib2);
 
     reent_init(__clib2);
@@ -469,7 +469,7 @@ out:
     SHOWMSG("Calling reent_exit on _clib2");
     reent_exit(__clib2);
 
-    this_process->pr_CLibData = oldClibData;
+    this_process->pr_EntryData = oldClibData;
 
     if (old_window_pointer_valid)
         __set_process_window(old_window_pointer);
