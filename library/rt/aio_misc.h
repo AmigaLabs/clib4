@@ -30,7 +30,7 @@ extern CList *aio_threads;
 
 typedef struct AioThread {
     struct MinNode node;
-    struct Task *thread;
+    struct Process *thread;
     struct aiocb *aiocbp;
     int fileDes;
 } AioThread;

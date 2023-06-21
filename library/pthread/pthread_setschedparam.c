@@ -50,7 +50,7 @@ pthread_setschedparam(pthread_t thread, int policy, const struct sched_param *pa
     if (inf == NULL)
         return ESRCH;
 
-    SetTaskPri(inf->task, param->sched_priority);
+    SetTaskPri((struct Task *) inf->task, param->sched_priority);
 
     return 0;
 }

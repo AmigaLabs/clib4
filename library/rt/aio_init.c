@@ -55,7 +55,7 @@ CLIB_DESTRUCTOR(aio_exit) {
             aioThread = aio_threads->at(aio_threads, i);
             D(("Cancel AIO stream with filedes %ld", aioThread->fileDes));
             aio_cancel(aioThread->fileDes, aioThread->aiocbp);
-            Signal(aioThread->thread, SIGBREAKF_CTRL_C);
+            Signal((struct Task *) aioThread->thread, SIGBREAKF_CTRL_C);
         }
     }
     ReleaseSemaphore(__aio_lock);

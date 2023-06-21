@@ -310,7 +310,6 @@ _main(
     int return_code = RETURN_FAIL;
     ULONG current_stack_size;
     struct _clib2 *__clib2;
-    APTR oldClibData = NULL;
 
     /* Pick up the Workbench startup message, if available. */
     this_process = (struct Process *) FindTask(NULL);
@@ -338,7 +337,6 @@ _main(
     /* Get the current task pointer */
     __clib2->self = (struct Process *) FindTask(NULL);
 
-    oldClibData = this_process->pr_EntryData;
     this_process->pr_EntryData = __clib2;
     SHOWPOINTER(__clib2);
 
@@ -468,8 +466,6 @@ out:
 
     SHOWMSG("Calling reent_exit on _clib2");
     reent_exit(__clib2);
-
-    this_process->pr_EntryData = oldClibData;
 
     if (old_window_pointer_valid)
         __set_process_window(old_window_pointer);

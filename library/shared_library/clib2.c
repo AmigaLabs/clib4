@@ -258,7 +258,6 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
     SysBase = (struct ExecBase *) iexec->Data.LibBase;
     IExec = iexec;
 
-    D(("Open DOS Library"));
     DOSBase = IExec->OpenLibrary("dos.library", MIN_OS_VERSION);
     if (DOSBase) {
         IDOS = (struct DOSIFace *) IExec->GetInterface((struct Library *) DOSBase, "main", 1, NULL);

@@ -44,8 +44,8 @@ StarterFunc() {
     volatile BOOL stackSwapped = FALSE;
 
     struct Process *startedTask = (struct Process *) FindTask(NULL);
-    ThreadInfo *inf = (ThreadInfo *)startedTask->pr_EntryData;
-    struct _clib2 *__clib2 = inf->__clib2;
+    ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
+    struct _clib2 *__clib2 = (struct _clib2 *) GetEntryData();
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
@@ -92,7 +92,7 @@ StarterFunc() {
         // tell the parent thread that we are done
         Forbid();
         inf->status = THREAD_STATE_DESTRUCT;
-        Signal(inf->parent, SIGF_PARENT);
+        Signal((struct Task *) inf->parent, SIGF_PARENT);
     } else {
         // no one is waiting for us, do the clean up
         ObtainSemaphore(&thread_sem);
@@ -110,7 +110,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     size_t oldlen;
     pthread_t threadnew;
     struct Task *thisTask = FindTask(NULL);
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib2 *__clib2 = (struct _clib2 *) GetEntryData();
 
     if (thread == NULL || start == NULL)
         return EINVAL;
@@ -127,12 +127,11 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
 
     // prepare the ThreadInfo structure
     inf = GetThreadInfo(threadnew);
-    inf->__clib2 = __clib2;
     _pthread_clear_threadinfo(inf);
 
     inf->start = start;
     inf->arg = arg;
-    inf->parent = thisTask;
+    inf->parent = (struct Process *) thisTask;
     if (attr)
         inf->attr = *attr;
     else
@@ -167,9 +166,10 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     BPTR fileOut = Open("CONSOLE:", MODE_OLDFILE);
 
     // start the child thread
-    inf->task = (struct Task *) CreateNewProcTags(
+    inf->task = CreateNewProcTags(
             NP_Entry,                StarterFunc,
-            NP_EntryData,            inf,
+            NP_UserData,             inf,
+            NP_EntryData,            GetEntryData(),
             inf->attr.stacksize ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
             NP_Input,			     fileIn,
             NP_CloseInput,		     TRUE,

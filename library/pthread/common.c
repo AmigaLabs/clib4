@@ -62,7 +62,7 @@ pthread_t GetThreadId(struct Task *task) {
 
     // 0 is main task, First thread id will be 1 so that it is different than default value of pthread_t
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
-        if (threads[i].task == task)
+        if (threads[i].task == (struct Process *) task)
             break;
     }
 

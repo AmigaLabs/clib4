@@ -48,7 +48,7 @@ pthread_join(pthread_t thread, void **value_ptr) {
     if (inf->detached)
         return EINVAL;
 
-    if (inf->task == task) {
+    if ((struct Task *) inf->task == task) {
         return EDEADLK;
     }
 

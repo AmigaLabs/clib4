@@ -64,6 +64,8 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
                         __set_errno(EFAULT);
                         return -1;
                     }
+                    /* Get main task _clib2 struct */
+                    __clib2->tmr_real_task->pr_EntryData = GetEntryData();
                 }
             }
             else {

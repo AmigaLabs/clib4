@@ -79,9 +79,9 @@ typedef struct {
 typedef struct {
     void *(*start)(void *);
     void *arg;
-    struct Task *parent;
+    struct Process *parent;
     int status;
-    struct Task *task;
+    struct Process *task;
     void *ret;
     jmp_buf jmp;
     pthread_attr_t attr;
@@ -92,7 +92,6 @@ typedef struct {
     int canceled;
     int detached;
     char name[NAMELEN];
-    struct _clib2 *__clib2;
 } ThreadInfo;
 
 extern struct Library *_DOSBase;

@@ -258,7 +258,7 @@ int __pthread_init_func(void) {
 
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
-    inf->task = FindTask(NULL);
+    inf->task = (struct Process *) FindTask(NULL);
     inf->status = THREAD_STATE_RUNNING;
     NewMinList(&inf->cleanup);
 
