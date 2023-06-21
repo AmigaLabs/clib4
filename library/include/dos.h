@@ -525,6 +525,9 @@ struct _clib2 {
     int syslog_facility;
     char syslog_ident[35];
     FILE *syslog_fd;
+
+    /* Current process id */
+    int processId;
 };
 
 #ifndef __getClib2

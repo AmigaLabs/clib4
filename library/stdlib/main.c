@@ -341,7 +341,7 @@ _main(
     SHOWPOINTER(__clib2);
 
     reent_init(__clib2);
-
+    __clib2->processId = GetPID(NULL, GPID_PROCESS);
     __clib2->__WBenchMsg = (struct WBStartup *) startup_message;
 
     if (__clib2->__disable_dos_requesters) {

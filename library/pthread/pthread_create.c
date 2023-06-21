@@ -110,7 +110,6 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     size_t oldlen;
     pthread_t threadnew;
     struct Task *thisTask = FindTask(NULL);
-    struct _clib2 *__clib2 = (struct _clib2 *) GetEntryData();
 
     if (thread == NULL || start == NULL)
         return EINVAL;

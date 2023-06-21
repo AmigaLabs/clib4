@@ -7,12 +7,11 @@
 #endif /* _UNISTD_HEADERS_H */
 
 pid_t
-getpid(void)
-{
-	ENTER();
+getpid(void) {
+    ENTER();
 
-	pid_t result = (pid_t) GetPID(NULL, GPID_PROCESS);
+    pid_t result = (pid_t) GetPID(NULL, GPID_PROCESS);
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

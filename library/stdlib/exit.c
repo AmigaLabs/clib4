@@ -32,15 +32,15 @@ _exit(int return_code) {
     ENTER();
     SHOWVALUE(__clib2->__exit_value);
 
-    struct Task *task = FindTask(NULL);
-    if (&__clib2->self->pr_Task != task) {
+    D(("%d %d\n", __clib2->processId, GetPID(NULL, GPID_PROCESS)));
+    if (__clib2->processId != GetPID(NULL, GPID_PROCESS)) {
         SHOWMSG("NOT IN MAIN TASK");
         /* We are NOT in main task. Don't call exit here because
-         * we'll have pending processes. Try to send a CTRL_C
+         * we'll have pending processes. Try to remove the Task
          */
-        struct Task *task = FindTask(NULL);
-        Signal(task, SIGBREAKF_CTRL_C);
+        RemTask(NULL);
         LEAVE();
+        __builtin_unreachable();
     }
     else {
         SHOWMSG("IN MAIN TASK");

@@ -97,8 +97,7 @@ raise(int sig) {
                     /* Turn off ^C checking for good. */
                     __clib2->__check_abort_enabled = FALSE;
 
-                    Fault(ERROR_BREAK, NULL, break_string, (LONG)
-                    sizeof(break_string));
+                    Fault(ERROR_BREAK, NULL, break_string, (LONG) sizeof(break_string));
 
                     __print_termination_message(break_string);
 
