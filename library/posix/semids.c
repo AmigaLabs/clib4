@@ -9,6 +9,7 @@
 long int
 _semids(long int *buf, uint32_t nids, long unsigned int *idcnt) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -17,7 +18,7 @@ _semids(long int *buf, uint32_t nids, long unsigned int *idcnt) {
     SHOWPOINTER(idcnt);
 
     int32 ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = semids(buf, nids, idcnt);
         if (ret < 0) {
             __set_errno(GetIPCErr());

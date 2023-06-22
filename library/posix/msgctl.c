@@ -6,10 +6,10 @@
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
 
-int 
-_msgctl(int qid, int cmd, struct msqid_ds *buf)
-{
+int
+_msgctl(int qid, int cmd, struct msqid_ds *buf) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -18,14 +18,12 @@ _msgctl(int qid, int cmd, struct msqid_ds *buf)
     SHOWPOINTER(buf);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = msgctl(qid, cmd, buf);
-        if (ret < 0)
-        {
+        if (ret < 0) {
             __set_errno(GetIPCErr());
         }
-    }
-    else {
+    } else {
         __set_errno(ENOSYS);
     }
 

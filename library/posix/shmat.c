@@ -9,6 +9,7 @@
 void *
 _shmat(int shmid, const void *prefadds, int flags) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -16,7 +17,7 @@ _shmat(int shmid, const void *prefadds, int flags) {
     SHOWPOINTER(prefadds);
     SHOWVALUE(flags);
 
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         void *ret;
         ret = shmat(shmid, prefadds, flags);
         if (ret == ((void *)-1)) {

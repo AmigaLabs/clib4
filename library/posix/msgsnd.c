@@ -6,10 +6,10 @@
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
 
-int 
-_msgsnd(int msgid, const void *msg_ptr, size_t msg_sz, int msgflg)
-{
+int
+_msgsnd(int msgid, const void *msg_ptr, size_t msg_sz, int msgflg) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -19,14 +19,12 @@ _msgsnd(int msgid, const void *msg_ptr, size_t msg_sz, int msgflg)
     SHOWVALUE(msgflg);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = msgsnd(msgid, msg_ptr, msg_sz, msgflg);
-        if (ret < 0)
-        {
+        if (ret < 0) {
             __set_errno(GetIPCErr());
         }
-    }
-    else {
+    } else {
         __set_errno(ENOSYS);
     }
 

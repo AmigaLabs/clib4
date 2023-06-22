@@ -9,13 +9,14 @@
 int 
 _shmdt(const void *shmaddr) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     SHOWPOINTER(shmaddr);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = shmdt(shmaddr);
         if (ret < 0) {
             __set_errno(GetIPCErr());

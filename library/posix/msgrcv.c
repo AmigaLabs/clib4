@@ -7,9 +7,9 @@
 #endif /* _SHM_HEADERS_H */
 
 ssize_t
-_msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg)
-{
+_msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -20,14 +20,12 @@ _msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg)
     SHOWVALUE(msgflg);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = msgrcv(msqid, msgp, msgsz, msgtyp, msgflg);
-        if (ret < 0)
-        {
+        if (ret < 0) {
             __set_errno(GetIPCErr());
         }
-    }
-    else {
+    } else {
         __set_errno(ENOSYS);
     }
 

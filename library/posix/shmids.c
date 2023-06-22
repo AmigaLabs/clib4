@@ -9,6 +9,7 @@
 int 
 _shmids(int *buf, size_t nids, size_t *idcnt) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -17,7 +18,7 @@ _shmids(int *buf, size_t nids, size_t *idcnt) {
     SHOWPOINTER(idcnt);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = shmids((APTR)buf, nids, (uint32 *)idcnt);
         if (ret < 0) {
             __set_errno(GetIPCErr());

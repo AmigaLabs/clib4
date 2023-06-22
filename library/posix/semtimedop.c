@@ -9,6 +9,7 @@
 int
 _semtimedop(int semid, const struct sembuf *ops, int nops, struct timespec *to) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -18,7 +19,7 @@ _semtimedop(int semid, const struct sembuf *ops, int nops, struct timespec *to) 
     SHOWPOINTER(to);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = semtimedop(semid, ops, nops, to);
         if (ret < 0) {
             __set_errno(GetIPCErr());

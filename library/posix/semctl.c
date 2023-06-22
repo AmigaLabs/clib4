@@ -6,10 +6,10 @@
 #include "shm_headers.h"
 #endif /* _SHM_HEADERS_H */
 
-int 
-_semctl(int semid, int semnum, int cmd, union semun aun)
-{
+int
+_semctl(int semid, int semnum, int cmd, union semun aun) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -18,14 +18,12 @@ _semctl(int semid, int semnum, int cmd, union semun aun)
     SHOWVALUE(cmd);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = semctl(semid, semnum, cmd, aun);
-        if (ret < 0)
-        {
+        if (ret < 0) {
             __set_errno(GetIPCErr());
         }
-    }
-    else {
+    } else {
         __set_errno(ENOSYS);
     }
 

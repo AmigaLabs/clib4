@@ -9,6 +9,7 @@
 int 
 _semget(key_t key, int nsems, int flags) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -17,7 +18,7 @@ _semget(key_t key, int nsems, int flags) {
     SHOWVALUE(flags);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = semget(key, nsems, flags);
         if (ret < 0) {
             __set_errno(GetIPCErr());

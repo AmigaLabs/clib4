@@ -9,6 +9,7 @@
 int 
 _shmget(key_t key, size_t size, int flags) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -17,7 +18,7 @@ _shmget(key_t key, size_t size, int flags) {
     SHOWVALUE(flags);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = shmget(key, size, flags);
         if (ret < 0) {
             __set_errno(GetIPCErr());

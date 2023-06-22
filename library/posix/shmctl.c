@@ -9,6 +9,7 @@
 int 
 _shmctl(int shmid, int cmd, struct shmid_ds *cbuf) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -17,7 +18,7 @@ _shmctl(int shmid, int cmd, struct shmid_ds *cbuf) {
     SHOWPOINTER(cbuf);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = shmctl(shmid, cmd, cbuf);
         if (ret < 0) {
             __set_errno(GetIPCErr());

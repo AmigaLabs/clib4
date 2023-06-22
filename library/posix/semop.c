@@ -9,6 +9,7 @@
 int 
 _semop(int semid, const struct sembuf *ops, int nops) {
     DECLARE_SYSVYBASE();
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -17,7 +18,7 @@ _semop(int semid, const struct sembuf *ops, int nops) {
     SHOWVALUE(nops);
 
     int ret = -1;
-    if (__CLIB2->haveShm) {
+    if (__clib2->haveShm) {
         ret = semop(semid, ops, nops);
         if (ret < 0) {
             __set_errno(GetIPCErr());
