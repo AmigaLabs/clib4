@@ -114,8 +114,8 @@
    guard.  Feature test macros that can be handled from the first
    system header included are handled here.  */
 
-/* define _CLIB2 symbol so we can use it in our native code */
-#define _CLIB2
+/* define CLIB2_SHAREDLIB symbol so we can use it in our native code */
+#define CLIB2_SHAREDLIB
 #define __THREAD_SAFE
 #define __BSD_VISIBLE 0
 
