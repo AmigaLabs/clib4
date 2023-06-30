@@ -5,6 +5,23 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
+#define RESOURCE_NAME "clib2.resource"
+
+struct Clib2Resource {
+    struct Library          resource;   /* must be first */
+    uint32                  size;       /* for struct validation only */
+    struct SignalSemaphore  semaphore;  /* for list arbitration */
+    struct List             nodes;      /* list of parent nodes */
+};
+
+struct Clib2Node {
+    struct Node    node; /* must be first */
+    uint16         size; /* for struct validation (and align32) */
+    uint32         pid;  /* the process PID */
+    uint32         pPid; /* the process Parent PID */
+    struct _clib2 *ctx;  /* the shared clib2 context data */
+};
+
 struct Clib2Base {
     struct Library libNode;
     uint16 pad;
@@ -28,8 +45,8 @@ int library_start(char *argstr,
                   void (*__EXT_CTOR_LIST__[])(void),
                   void (*__EXT_DTOR_LIST__[])(void));
 
-int32 _start(char *args,
-             int arglen,
+int32 _start(STRPTR args,
+             int32 arglen,
              struct ExecBase *sysbase);
 
 extern int _main(char *argstr,

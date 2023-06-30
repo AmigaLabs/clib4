@@ -102,7 +102,7 @@ extern void __check_memory_allocations();
 
 /* signal_checkabort.c */
 extern void __check_abort(void);
-extern int _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
+extern int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
 
 /****************************************************************************/
 

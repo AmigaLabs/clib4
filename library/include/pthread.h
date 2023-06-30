@@ -150,8 +150,8 @@ struct pthread_mutexattr {
 typedef struct pthread_mutexattr pthread_mutexattr_t;
 
 struct pthread_mutex {
+    APTR mutex;
     int kind;
-    struct SignalSemaphore semaphore;
     int incond;
 };
 

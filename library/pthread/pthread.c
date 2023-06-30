@@ -64,12 +64,17 @@ int
 _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOOL staticinit) {
     if (mutex == NULL)
         return EINVAL;
+    BOOL recursive = FALSE;
 
     if (attr)
         mutex->kind = attr->kind;
     else if (!staticinit)
         mutex->kind = PTHREAD_MUTEX_DEFAULT;
-    InitSemaphore(&mutex->semaphore);
+
+    if (mutex->kind == PTHREAD_MUTEX_RECURSIVE)
+        recursive = TRUE;
+
+    mutex->mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, recursive, TAG_DONE);
     mutex->incond = 0;
 
     return 0;

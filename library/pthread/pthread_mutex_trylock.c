@@ -39,19 +39,17 @@
 
 int
 pthread_mutex_trylock(pthread_mutex_t *mutex) {
-    ULONG ret;
-
     if (mutex == NULL)
         return EINVAL;
 
-    // initialize static mutexes
-    if (SemaphoreIsInvalid(&mutex->semaphore))
-        _pthread_mutex_init(mutex, NULL, TRUE);
+    if (mutex->mutex == NULL) {
+        int ret = _pthread_mutex_init(mutex, NULL, TRUE);
+        if (ret != 0)
+            return EINVAL;
+    }
 
-    if (mutex->kind != PTHREAD_MUTEX_RECURSIVE && SemaphoreIsMine(&mutex->semaphore))
+    if (MutexAttempt(mutex->mutex))
+        return 0;
+    else
         return EBUSY;
-
-    ret = AttemptSemaphore(&mutex->semaphore);
-
-    return (ret == TRUE) ? 0 : EBUSY;
 }

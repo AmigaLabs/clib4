@@ -39,30 +39,23 @@
 
 int
 pthread_mutex_lock(pthread_mutex_t *mutex) {
-    struct SignalSemaphore *sem;
-
     if (mutex == NULL)
         return EINVAL;
 
-    sem = &mutex->semaphore;
-
-    // initialize static mutexes
-    if (SemaphoreIsInvalid(sem))
-        _pthread_mutex_init(mutex, NULL, TRUE);
+    if (mutex->mutex == NULL) {
+        int ret = _pthread_mutex_init(mutex, NULL, TRUE);
+        if (ret != 0)
+            return EINVAL;
+    }
 
     // normal mutexes would simply deadlock here
-    if (mutex->kind == PTHREAD_MUTEX_ERRORCHECK && SemaphoreIsMine(sem))
-        return EDEADLK;
-
-    ObtainSemaphore(sem);
-
-#if 0 // let's just deadlock here, to be compatible with normal mutexes on other platforms
-    if (mutex->kind == PTHREAD_MUTEX_NORMAL && sem->ss_NestCount > 1) {
-        // should have blocked - fix this
-        ReleaseSemaphore(sem);
-        return EDEADLK;
+    if (mutex->kind == PTHREAD_MUTEX_ERRORCHECK) {
+        BOOL isLocked = MutexAttempt(mutex->mutex);
+        if (!isLocked)
+            return EDEADLK;
     }
-#endif
+
+    MutexObtain(mutex->mutex);
 
     return 0;
 }

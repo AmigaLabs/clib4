@@ -55,6 +55,7 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
                     __clib2->tmr_real_task = CreateNewProcTags(
                             NP_Name, "CLIB2_ITIMER_REAL_TASK",
                             NP_Entry, itimer_real_task,
+                            NP_EntryData, GetEntryData(),
                             NP_Child, TRUE,
                             NP_UserData, (struct _clib2 *) &_itimer,
                             NP_Output, DupFileHandle(Output()),
@@ -64,8 +65,6 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
                         __set_errno(EFAULT);
                         return -1;
                     }
-                    /* Get main task _clib2 struct */
-                    __clib2->tmr_real_task->pr_EntryData = GetEntryData();
                 }
             }
             else {

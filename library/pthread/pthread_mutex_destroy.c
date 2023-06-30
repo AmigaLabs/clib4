@@ -42,19 +42,17 @@ pthread_mutex_destroy(pthread_mutex_t *mutex) {
     if (mutex == NULL)
         return EINVAL;
 
-    // probably a statically allocated mutex
-    if (SemaphoreIsInvalid(&mutex->semaphore))
-        return 0;
-
-    if (/*mutex->incond ||*/ AttemptSemaphore(&mutex->semaphore) == FALSE)
+    if (!MutexAttempt(mutex->mutex))
         return EBUSY;
 
     if (mutex->incond) {
-        ReleaseSemaphore(&mutex->semaphore);
+        MutexRelease(mutex->mutex);
         return EBUSY;
     }
 
-    ReleaseSemaphore(&mutex->semaphore);
+    MutexRelease(mutex->mutex);
+    FreeSysObject(ASOT_MUTEX, mutex->mutex);
+
     memset(mutex, 0, sizeof(pthread_mutex_t));
 
     return 0;
