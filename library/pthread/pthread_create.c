@@ -168,7 +168,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->task = CreateNewProcTags(
             NP_Entry,                StarterFunc,
             NP_UserData,             inf,
-            NP_EntryData,            GetEntryData(),
+            //NP_EntryData,            GetEntryData(),
             inf->attr.stacksize ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
             NP_Input,			     fileIn,
             NP_CloseInput,		     TRUE,

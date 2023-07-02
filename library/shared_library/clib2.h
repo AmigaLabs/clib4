@@ -5,13 +5,16 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
+#include "map.h"
+
 #define RESOURCE_NAME "clib2.resource"
 
 struct Clib2Resource {
-    struct Library          resource;   /* must be first */
-    uint32                  size;       /* for struct validation only */
-    struct SignalSemaphore  semaphore;  /* for list arbitration */
-    struct List             nodes;      /* list of parent nodes */
+    struct Library          resource;       /* must be first */
+    uint32                  size;           /* for struct validation only */
+    struct SignalSemaphore  semaphore;      /* for list arbitration */
+    struct List             nodes;          /* list of parent nodes */
+    struct hashmap         *uxSocketsMap;
 };
 
 struct Clib2Node {
@@ -20,6 +23,7 @@ struct Clib2Node {
     uint32         pid;  /* the process PID */
     uint32         pPid; /* the process Parent PID */
     struct _clib2 *ctx;  /* the shared clib2 context data */
+    char          *uuid;
 };
 
 struct Clib2Base {

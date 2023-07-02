@@ -53,9 +53,23 @@
 #include <sys/un.h>
 #endif
 
+#ifndef _CLIB2_H
+#include <shared_library/clib2.h>
+#endif
+
 #ifndef _PATH_ETHERS
 #define _PATH_ETHERS  "Devs:Internet/ethers"
 #endif
+
+/* This is variable defines where to start to bind unix local ports using inet addresses */
+struct UnixSocket {
+    int            port;
+    struct fd     *fd;
+    unsigned char *name;
+};
+
+#define START_UX_LOCAL_PORTS 30000
+#define UX_QUEUE 0xEA123
 
 /* Code value. */
 #define SBTB_CODE 1

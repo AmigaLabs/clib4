@@ -86,8 +86,13 @@
 
 #include "clib2.h"
 #include "debug.h"
+#include "uuid.h"
 
 #include "interface.h"
+
+#ifndef _SOCKET_HEADERS_H
+#include "socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
 
 struct ExecBase *SysBase = 0;
 struct ExecIFace *IExec = 0;
@@ -110,7 +115,6 @@ const struct Resident RomTag;
 #define LIBNAME "clib2.library"
 
 static struct TimeRequest *openTimer(uint32 unit);
-
 static void closeTimer(struct TimeRequest *tr);
 
 int32
@@ -183,6 +187,8 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
     D(("Remove Resource"));
     struct Clib2Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
+        hashmap_free(res->uxSocketsMap);
+
         IExec->RemResource(res);
         IExec->FreeVec(res);
     }
@@ -251,6 +257,20 @@ int libReserved(void) {
     return -1;
 }
 
+uint64_t
+unixSocketHash(const void *item, uint64_t seed0, uint64_t seed1) {
+    const struct UnixSocket *unixSocket = item;
+    return hashmap_xxhash3(unixSocket->name, strlen(unixSocket->name), seed0, seed1);
+}
+
+int
+unixSocketCompare(const void *a, const void *b, void *udata) {
+    const struct UnixSocket *ua = a;
+    const struct UnixSocket *ub = b;
+    return strcmp(ua->name, ub->name);
+}
+
+
 struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
     libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
     libBase->libNode.lib_Node.ln_Pri = LIBPRI;
@@ -263,33 +283,6 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
 
     SysBase = (struct ExecBase *) iexec->Data.LibBase;
     IExec = iexec;
-
-    /* Open resource */
-    struct Clib2Resource *res = (APTR) iexec->OpenResource(RESOURCE_NAME);
-    if (!res) {
-        res = iexec->AllocVecTags(
-                sizeof(struct Clib2Resource),
-                AVT_Type, MEMF_SHARED,
-                AVT_ClearWithValue, 0,
-                AVT_Lock, TRUE,
-                TAG_END);
-
-        if (res) {
-            res->resource.lib_Version = VERSION;
-            res->resource.lib_Revision = REVISION;
-            res->resource.lib_IdString = (STRPTR) RESOURCE_NAME;
-            res->resource.lib_Node.ln_Name = (STRPTR) RESOURCE_NAME;
-            res->resource.lib_Node.ln_Type = NT_RESOURCE;
-            res->size = sizeof(*res);
-
-            iexec->InitSemaphore(&res->semaphore);
-            iexec->NewList(&res->nodes);
-
-            iexec->AddResource(res);
-        } else {
-            goto out;
-        }
-    }
 
     /* Open libraries */
     DOSBase = IExec->OpenLibrary("dos.library", MIN_OS_VERSION);
@@ -343,9 +336,36 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
         goto out;
     }
 
+    /* Open resource */
+    struct Clib2Resource *res = (APTR) iexec->OpenResource(RESOURCE_NAME);
+    if (!res) {
+        res = iexec->AllocVecTags(
+                sizeof(struct Clib2Resource),
+                AVT_Type, MEMF_SHARED,
+                AVT_ClearWithValue, 0,
+                AVT_Lock, TRUE,
+                TAG_END);
+
+        if (res) {
+            res->resource.lib_Version = VERSION;
+            res->resource.lib_Revision = REVISION;
+            res->resource.lib_IdString = (STRPTR) RESOURCE_NAME;
+            res->resource.lib_Node.ln_Name = (STRPTR) RESOURCE_NAME;
+            res->resource.lib_Node.ln_Type = NT_RESOURCE;
+            res->size = sizeof(*res);
+
+            iexec->InitSemaphore(&res->semaphore);
+            iexec->NewList(&res->nodes);
+            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
+            iexec->AddResource(res);
+        } else {
+            goto out;
+        }
+    }
+
     return libBase;
 
-    out:
+out:
     D(("Jumped into error"));
     /* if we jump in out we need to close all libraries and return NULL */
     closeLibraries();

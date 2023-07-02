@@ -39,16 +39,14 @@
 #include <proto/elf.h>
 
 #include "../shared_library/clib2.h"
+#include "uuid.h"
 
 /* These CTORS/DTORS are clib2's one and they are different than that one received
  * from crtbegin. They are needed because we need to call clib2 constructors as well
  */
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
-
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
-
 extern int main(int arg_c, char **arg_v);
-
 static void shared_obj_init(struct _clib2 *__clib2, BOOL init);
 
 struct envHookData {
@@ -312,6 +310,7 @@ _main(
     int return_code = RETURN_FAIL;
     ULONG current_stack_size;
     struct _clib2 *__clib2 = NULL;
+    char uuid[UUID4_LEN + 1] = {0};
 
     /* Pick up the Workbench startup message, if available. */
     this_process = (struct Process *) FindTask(NULL);
@@ -325,62 +324,31 @@ _main(
     } else {
         startup_message = NULL;
     }
+    uint32 pid = GetPID(0, GPID_PROCESS);
 
-    /* Check if we have to use a new _clib2 struct, or we are a child of someone */
-    struct Clib2Resource *res = OpenResource(RESOURCE_NAME);
-    struct Clib2Node *c2n;
-    if (res) {
-        struct Node *n;
-        uint32 parentPid = GetPID(0, GPID_PARENT);
+    /* If all libraries are opened correctly we can initialize clib2 reent structure */
+    D(("Initialize clib2 reent structure"));
+    /* Initialize global structure */
+    __clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2),
+                                             AVT_Type, MEMF_SHARED,
+                                             AVT_ClearWithValue, 0,
+                                             TAG_DONE);
+    if (__clib2 == NULL)
+        goto out;
 
-        ObtainSemaphore(&res->semaphore);
-        for (n = GetHead(&res->nodes); n; n = GetSucc(n)) {
-            c2n = (APTR) n;
-            // Am I a child of this parent?
-            if (c2n->pid == parentPid) {
-                __clib2 = c2n->ctx;  // grab their context for my use.
-                break;
-            }
-        }
-        ReleaseSemaphore(&res->semaphore);
-    }
-    /* If we don't find any previous __clib2 context create a new one */
-    if (__clib2 == NULL) {
-        uint32 pid = GetPID(0, GPID_PROCESS);
-        uint32 pPid = GetPID(0, GPID_PARENT);
-        /* If all libraries are opened correctly we can initialize clib2 reent structure */
-        D(("Initialize clib2 reent structure"));
-        /* Initialize global structure */
-        __clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2),
-                                                 AVT_Type, MEMF_SHARED,
-                                                 AVT_ClearWithValue, 0,
-                                                 TAG_DONE);
-        if (__clib2 == NULL)
-            goto out;
+    /* Get the current task pointer */
+    __clib2->self = (struct Process *) FindTask(NULL);
 
-        /* Get the current task pointer */
-        __clib2->self = (struct Process *) FindTask(NULL);
+    SHOWPOINTER(__clib2);
 
-        SHOWPOINTER(__clib2);
+    reent_init(__clib2);
+    __clib2->processId = pid;
 
-        reent_init(__clib2);
-        __clib2->processId = pid;
+    uuid4_generate(uuid);
+    __clib2->uuid = uuid;
 
-        c2n = AllocVecTags(sizeof(struct Clib2Node),
-                                  AVT_Type, MEMF_SHARED,
-                                  AVT_ClearWithValue, 0,
-                                  AVT_Lock, FALSE,
-                                  TAG_END);
-        c2n->size = (uint16) sizeof(*c2n);
-        c2n->pid = pid;      /* my process ID */
-        c2n->pPid = pPid;    /* my parent ID process */
-        c2n->ctx = __clib2;  /* init my shared clib2 context data pointer here */
+    this_process->pr_UID = (uint32) __clib2;
 
-        ObtainSemaphore(&res->semaphore);
-        AddHead(&res->nodes, &c2n->node);
-        ReleaseSemaphore(&res->semaphore);
-    }
-    this_process->pr_EntryData = __clib2;
     __clib2->__WBenchMsg = (struct WBStartup *) startup_message;
 
     if (__clib2->__disable_dos_requesters) {
@@ -497,30 +465,11 @@ _main(
     /* Restore the task priority. */
     SetTaskPri((struct Task *) this_process, old_priority);
 
-    out:
+out:
 
     SHOWMSG("Calling clib2 dtors");
     _end_ctors(__DTOR_LIST__);
     SHOWMSG("Done. All destructors called");
-
-    SHOWMSG(("Remove resource node"));
-    if (res) {
-        struct Clib2Node *c2n;
-        struct Node *n;
-        uint32 mypid = GetPID(0, GPID_PROCESS);
-
-        ObtainSemaphore(&res->semaphore);
-        for (n = GetHead(&res->nodes); n; n = GetSucc(n)) {
-            c2n = (APTR) n;
-
-            if (c2n->pid == mypid) {   // it's my PID
-                Remove(n);
-                FreeVec(n);
-                break;
-            }
-        }
-        ReleaseSemaphore(&res->semaphore);
-    }
 
     SHOWMSG("Calling reent_exit on _clib2");
     reent_exit(__clib2);

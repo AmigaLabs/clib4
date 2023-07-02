@@ -526,6 +526,7 @@ struct _clib2 {
 
     /* Current process id */
     int processId;
+    char *uuid;
 };
 
 #ifndef __getClib2

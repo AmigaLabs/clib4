@@ -7,6 +7,8 @@
 #endif /* _SOCKET_HEADERS_H */
 
 #include <sys/ioctl.h>
+#include "../shared_library/clib2.h"
+#include "../misc/map.h"
 
 int64_t
 __socket_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_action_message *fam) {
@@ -67,6 +69,20 @@ __socket_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_action_me
             } else {
                 /* Are we permitted to close this file? */
                 if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
+                    /* Check for unix socket */
+                    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+                    if (res) {
+                        size_t iter = 0;
+                        void *item;
+                        while (hashmap_iter(res->uxSocketsMap, &iter, &item)) {
+                            const struct UnixSocket *socket = item;
+                            if (socket->fd == fd) {
+                                hashmap_delete(res->uxSocketsMap, socket);
+                                iter = 0;
+                                break;
+                            }
+                        }
+                    }
                     result = __CloseSocket(fd->fd_Socket);
                 }
             }
