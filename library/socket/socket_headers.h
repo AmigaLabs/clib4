@@ -65,7 +65,7 @@
 struct UnixSocket {
     int            port;
     struct fd     *fd;
-    unsigned char *name;
+    char           name[PATH_MAX];
 };
 
 #define START_UX_LOCAL_PORTS 30000

@@ -46,7 +46,10 @@ connect(int sockfd, const struct sockaddr *name, socklen_t namelen) {
         if (res) {
             const char *socketName = ((struct sockaddr_un *) name)->sun_path;
             /* Check if we have an unix socket with this name otherwise raise an error */
-            struct UnixSocket *unixSocket = hashmap_get(res->uxSocketsMap, &(struct UnixSocket) {.name = socketName});
+            struct UnixSocket key;
+            memset(&key, 0, sizeof(struct UnixSocket));
+            strncpy(key.name, socketName, PATH_MAX);
+            struct UnixSocket *unixSocket = hashmap_get(res->uxSocketsMap, &key);
             if (unixSocket == NULL) {
                 __set_errno(ENOTCONN);
                 goto out;

@@ -53,7 +53,6 @@ socket(int domain, int type, int protocol) {
     }
 
     socket_fd = __socket(domain, type, protocol);
-    Printf("socket_fd = %d\n", socket_fd);
     if (socket_fd < 0) {
         SHOWMSG("could not create socket");
         goto out;

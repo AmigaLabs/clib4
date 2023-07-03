@@ -53,7 +53,10 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
             int reuse = 1;
 
             /* Check if an unix socket is already bound with same name */
-            if (hashmap_get(res->uxSocketsMap, &(struct UnixSocket) {.name = socketName}) != NULL) {
+            struct UnixSocket newSock;
+            memset(&newSock, 0, sizeof(struct UnixSocket));
+            strncpy(newSock.name, socketName, PATH_MAX);
+            if (hashmap_get(res->uxSocketsMap, &newSock) != NULL) {
                 if (setsockopt(fd->fd_Socket, SOL_SOCKET, SO_REUSEADDR, (char *) &reuse, (int) sizeof(reuse)) == -1) {
                     __set_errno(EADDRINUSE);
                     goto out;
@@ -67,16 +70,12 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
             /* Find an empty port */
             int port;
             for (port = START_UX_LOCAL_PORTS; port < 65535 - START_UX_LOCAL_PORTS; port++) {
-                printf("scan for port: %d\n", port);
                 if (hashmap_scan(res->uxSocketsMap, uxPortScan, &port)) {
                     break;
                 }
             }
             serv_addr.sin_port = htons(port);
-            printf("serv_addr.sin_port = %d %s\n", port, socketName);
             /* Insert unix socket filename and port into unix sockets map */
-            struct UnixSocket newSock;
-            newSock.name = socketName;
             newSock.port = port;
             newSock.fd = fd;
             hashmap_set(res->uxSocketsMap, &newSock);
