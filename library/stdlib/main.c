@@ -38,12 +38,14 @@
 
 #include <proto/elf.h>
 
+#include "../shared_library/clib2.h"
+#include "uuid.h"
+
 /* These CTORS/DTORS are clib2's one and they are different than that one received
  * from crtbegin. They are needed because we need to call clib2 constructors as well
  */
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
-
 extern int main(int arg_c, char **arg_v);
 static void shared_obj_init(struct _clib2 *__clib2, BOOL init);
 
@@ -61,7 +63,8 @@ copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *
 
     if (strlen(message->sv_GDir) <= 4) {
         if (ehd->env_size == ehd->allocated_size) {
-            if (!(ehd->r->__environment = realloc(ehd->r->__environment, ehd->allocated_size + 1024 * sizeof(char *)))) {
+            if (!(ehd->r->__environment = realloc(ehd->r->__environment,
+                                                  ehd->allocated_size + 1024 * sizeof(char *)))) {
                 return 1;
             }
             ClearMem((char *) ehd->r->__environment + ehd->allocated_size, 1024 * sizeof(char *));
@@ -121,16 +124,13 @@ shared_obj_init(struct _clib2 *__clib2, BOOL init) {
             if (hSelf != NULL) {
                 /* Trigger the constructors, etc. in the shared objects linked to this binary. */
                 InitSHLibs(hSelf, init);
-            }
-            else {
+            } else {
                 SHOWMSG("hSelf == NULL!");
             }
-        }
-        else {
+        } else {
             SHOWMSG("GetSegListInfoTags fail!");
         }
-    }
-    else {
+    } else {
         SHOWMSG("GetProcSegList return ZERO!");
     }
 
@@ -226,7 +226,7 @@ call_main(
     exit(start_main(__clib2->__argc, __clib2->__argv));
     SHOWMSG("Done. Exit from start_main()");
 
-out:
+    out:
     /* Save the current IoErr() value in case it is needed later. */
     saved_io_err = IoErr();
 
@@ -309,7 +309,8 @@ _main(
     struct Process *this_process;
     int return_code = RETURN_FAIL;
     ULONG current_stack_size;
-    struct _clib2 *__clib2;
+    struct _clib2 *__clib2 = NULL;
+    char uuid[UUID4_LEN + 1] = {0};
 
     /* Pick up the Workbench startup message, if available. */
     this_process = (struct Process *) FindTask(NULL);
@@ -323,25 +324,31 @@ _main(
     } else {
         startup_message = NULL;
     }
+    uint32 pid = GetPID(0, GPID_PROCESS);
 
     /* If all libraries are opened correctly we can initialize clib2 reent structure */
     D(("Initialize clib2 reent structure"));
     /* Initialize global structure */
     __clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2),
-            AVT_Type, MEMF_SHARED,
-            AVT_ClearWithValue, 0,
-            TAG_DONE);
+                                             AVT_Type, MEMF_SHARED,
+                                             AVT_ClearWithValue, 0,
+                                             TAG_DONE);
     if (__clib2 == NULL)
         goto out;
 
     /* Get the current task pointer */
     __clib2->self = (struct Process *) FindTask(NULL);
 
-    this_process->pr_EntryData = __clib2;
     SHOWPOINTER(__clib2);
 
     reent_init(__clib2);
-    __clib2->processId = GetPID(NULL, GPID_PROCESS);
+    __clib2->processId = pid;
+
+    uuid4_generate(uuid);
+    __clib2->uuid = uuid;
+
+    this_process->pr_UID = (uint32) __clib2;
+
     __clib2->__WBenchMsg = (struct WBStartup *) startup_message;
 
     if (__clib2->__disable_dos_requesters) {
@@ -350,7 +357,6 @@ _main(
     } else {
         /* Just remember the original pointer. */
         old_window_pointer = __set_process_window(NULL);
-
         __set_process_window(old_window_pointer);
     }
 
@@ -445,7 +451,8 @@ _main(
 #endif /* NDEBUG */
 
         SHOWMSG("Swap Stack and Call Main");
-        return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib2));
+        return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__,
+                                                                  __EXT_DTOR_LIST__, __clib2));
 
         FreeVec(new_stack);
         FreeVec(stk);

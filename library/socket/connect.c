@@ -6,10 +6,13 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
+#include "map.h"
+
 int
 connect(int sockfd, const struct sockaddr *name, socklen_t namelen) {
     struct fd *fd;
     int result = ERROR;
+    struct sockaddr *sa = name;
     struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
@@ -38,7 +41,33 @@ connect(int sockfd, const struct sockaddr *name, socklen_t namelen) {
     if (fd == NULL)
         goto out;
 
-    result = __connect(fd->fd_Socket, (struct sockaddr *) name, namelen);
+    if (((struct sockaddr_un *) sa)->sun_family == AF_LOCAL) {
+        struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+        if (res) {
+            const char *socketName = ((struct sockaddr_un *) name)->sun_path;
+            /* Check if we have an unix socket with this name otherwise raise an error */
+            struct UnixSocket key;
+            memset(&key, 0, sizeof(struct UnixSocket));
+            strncpy(key.name, socketName, PATH_MAX);
+            struct UnixSocket *unixSocket = hashmap_get(res->uxSocketsMap, &key);
+            if (unixSocket == NULL) {
+                __set_errno(ENOTCONN);
+                goto out;
+            }
+            struct sockaddr_in serv_addr;
+            /* Create AF_INET structure */
+            memset(&serv_addr, 0, sizeof(serv_addr));
+            serv_addr.sin_family = AF_INET;
+            serv_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+            serv_addr.sin_port = htons(unixSocket->port);
+
+            result = __connect(fd->fd_Socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+        }
+        else
+            __set_errno(EFAULT);
+    }
+    else
+        result = __connect(fd->fd_Socket, (struct sockaddr *) name, namelen);
 
 out:
 

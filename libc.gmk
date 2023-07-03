@@ -104,7 +104,8 @@ C_LOCALE := \
 	locale/setlocale.o
 
 C_MISC := \
-	misc/map.o
+	misc/map.o \
+	misc/uuid.o
 
 C_MOUNT := \
 	mount/convertinfo.o \

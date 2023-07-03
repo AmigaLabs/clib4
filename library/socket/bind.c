@@ -6,6 +6,14 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
+static bool uxPortScan(const void *socket, void *port) {
+    const struct UnixSocket *unixSocket = socket;
+    const int socketPort = *((int *)port);
+    if (unixSocket->port == socketPort)
+        return false;
+    return true;
+}
+
 int
 bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
     struct fd *fd;
@@ -37,7 +45,47 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
     if (fd == NULL)
         goto out;
 
-    result = __bind(fd->fd_Socket, (struct sockaddr *) name, namelen);
+    if (((struct sockaddr_un *) name)->sun_family == AF_LOCAL) {
+        struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+        if (res) {
+            const char *socketName = ((struct sockaddr_un *) name)->sun_path;
+            struct sockaddr_in serv_addr;
+            int reuse = 1;
+
+            /* Check if an unix socket is already bound with same name */
+            struct UnixSocket newSock;
+            memset(&newSock, 0, sizeof(struct UnixSocket));
+            strncpy(newSock.name, socketName, PATH_MAX);
+            if (hashmap_get(res->uxSocketsMap, &newSock) != NULL) {
+                if (setsockopt(fd->fd_Socket, SOL_SOCKET, SO_REUSEADDR, (char *) &reuse, (int) sizeof(reuse)) == -1) {
+                    __set_errno(EADDRINUSE);
+                    goto out;
+                }
+            }
+
+            /* Create AF_INET structure */
+            memset(&serv_addr, 0, sizeof(serv_addr));
+            serv_addr.sin_family = AF_INET;
+            serv_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+            /* Find an empty port */
+            int port;
+            for (port = START_UX_LOCAL_PORTS; port < 65535 - START_UX_LOCAL_PORTS; port++) {
+                if (hashmap_scan(res->uxSocketsMap, uxPortScan, &port)) {
+                    break;
+                }
+            }
+            serv_addr.sin_port = htons(port);
+            /* Insert unix socket filename and port into unix sockets map */
+            newSock.port = port;
+            newSock.fd = fd;
+            hashmap_set(res->uxSocketsMap, &newSock);
+            result = __bind(fd->fd_Socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+        }
+        else
+            __set_errno(EFAULT);
+    }
+    else
+        result = __bind(fd->fd_Socket, (struct sockaddr *) name, namelen);
 
 
 out:

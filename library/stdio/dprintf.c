@@ -1,5 +1,5 @@
 /*
- * $Id: 
+ * $Id: uuid.c,v 1.00 2023-07-01 12:09:49 clib2devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H

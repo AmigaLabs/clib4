@@ -492,9 +492,7 @@ struct _clib2 {
     int __debug_level;
     int previous_debug_level;
 
-#ifndef NDEBUGBYTE
     struct StackSwapStruct stack_swap_struct;
-#endif
 
     /* Wof Allocator memory semaphore */
     struct SignalSemaphore *memory_semaphore;
@@ -528,6 +526,7 @@ struct _clib2 {
 
     /* Current process id */
     int processId;
+    char *uuid;
 };
 
 #ifndef __getClib2

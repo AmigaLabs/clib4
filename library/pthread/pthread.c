@@ -64,12 +64,17 @@ int
 _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOOL staticinit) {
     if (mutex == NULL)
         return EINVAL;
+    BOOL recursive = FALSE;
 
     if (attr)
         mutex->kind = attr->kind;
     else if (!staticinit)
         mutex->kind = PTHREAD_MUTEX_DEFAULT;
-    InitSemaphore(&mutex->semaphore);
+
+    if (mutex->kind == PTHREAD_MUTEX_RECURSIVE)
+        recursive = TRUE;
+
+    mutex->mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, recursive, TAG_DONE);
     mutex->incond = 0;
 
     return 0;
@@ -290,27 +295,19 @@ void __pthread_exit_func(void) {
 }
 
 CLIB_CONSTRUCTOR(__pthread_init) {
-    int result = OK;
     _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
     if (_DOSBase) {
         _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);
         if (!_IDOS) {
             CloseLibrary(_DOSBase);
             _DOSBase = NULL;
-            result = ERROR;
         }
-    }
-    else {
-        result = ERROR;
-    }
-
-    if (result == OK) {
-        __pthread_init_func();
+        else
+            __pthread_init_func();
     }
 }
 
 CLIB_DESTRUCTOR(__pthread_exit) {
-
     if (_DOSBase != NULL) {
         CloseLibrary(_DOSBase);
         _DOSBase = NULL;

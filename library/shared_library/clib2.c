@@ -86,8 +86,13 @@
 
 #include "clib2.h"
 #include "debug.h"
+#include "uuid.h"
 
 #include "interface.h"
+
+#ifndef _SOCKET_HEADERS_H
+#include "socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
 
 struct ExecBase *SysBase = 0;
 struct ExecIFace *IExec = 0;
@@ -113,7 +118,7 @@ static struct TimeRequest *openTimer(uint32 unit);
 static void closeTimer(struct TimeRequest *tr);
 
 int32
-_start(char *args, int arglen, struct ExecBase *sysbase) {
+_start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
     (void) (args);
     (void) (arglen);
     (void) (sysbase);
@@ -179,8 +184,16 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
     D(("LIBExpunge"));
     BPTR result = 0;
 
-    struct Clib2Base *libBase = (struct Clib2Base *) Self->Data.LibBase;
+    D(("Remove Resource"));
+    struct Clib2Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
+    if (res) {
+        hashmap_free(res->uxSocketsMap);
 
+        IExec->RemResource(res);
+        IExec->FreeVec(res);
+    }
+
+    struct Clib2Base *libBase = (struct Clib2Base *) Self->Data.LibBase;
     if (libBase->libNode.lib_OpenCnt) {
         libBase->libNode.lib_Flags |= LIBF_DELEXP;
         return result;
@@ -227,23 +240,36 @@ uint32 clib2Obtain(struct Clib2IFace *Self) {
     return ++Self->Data.RefCount;
 }
 
-
 uint32 clib2Release(struct Clib2IFace *Self) {
     return --Self->Data.RefCount;
 }
 
-uint32 libObtain(struct LibraryManagerInterface* Self) {
-	//return ++Self->Data.RefCount;
+uint32 libObtain(struct LibraryManagerInterface *Self) {
+    //return ++Self->Data.RefCount;
 }
 
-uint32 libRelease(struct LibraryManagerInterface* Self) {
-	//return --Self->Data.RefCount;
+uint32 libRelease(struct LibraryManagerInterface *Self) {
+    //return --Self->Data.RefCount;
 }
 
 int libReserved(void) {
     __CLIB2->_errno = ENOSYS;
     return -1;
 }
+
+uint64_t
+unixSocketHash(const void *item, uint64_t seed0, uint64_t seed1) {
+    const struct UnixSocket *unixSocket = item;
+    return hashmap_xxhash3(unixSocket->name, strlen(unixSocket->name), seed0, seed1);
+}
+
+int
+unixSocketCompare(const void *a, const void *b, void *udata) {
+    const struct UnixSocket *ua = a;
+    const struct UnixSocket *ub = b;
+    return strcmp(ua->name, ub->name);
+}
+
 
 struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
     libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
@@ -258,6 +284,7 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
     SysBase = (struct ExecBase *) iexec->Data.LibBase;
     IExec = iexec;
 
+    /* Open libraries */
     DOSBase = IExec->OpenLibrary("dos.library", MIN_OS_VERSION);
     if (DOSBase) {
         IDOS = (struct DOSIFace *) IExec->GetInterface((struct Library *) DOSBase, "main", 1, NULL);
@@ -273,7 +300,7 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
     }
 
     struct Device *TimerBase = TimeReq->Request.io_Device;
-    ITimer = (struct TimerIFace *)IExec->GetInterface((struct Library *)TimerBase, "main", 1, NULL);
+    ITimer = (struct TimerIFace *) IExec->GetInterface((struct Library *) TimerBase, "main", 1, NULL);
     if (!ITimer) {
         goto out;
     }
@@ -309,6 +336,33 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
         goto out;
     }
 
+    /* Open resource */
+    struct Clib2Resource *res = (APTR) iexec->OpenResource(RESOURCE_NAME);
+    if (!res) {
+        res = iexec->AllocVecTags(
+                sizeof(struct Clib2Resource),
+                AVT_Type, MEMF_SHARED,
+                AVT_ClearWithValue, 0,
+                AVT_Lock, TRUE,
+                TAG_END);
+
+        if (res) {
+            res->resource.lib_Version = VERSION;
+            res->resource.lib_Revision = REVISION;
+            res->resource.lib_IdString = (STRPTR) RESOURCE_NAME;
+            res->resource.lib_Node.ln_Name = (STRPTR) RESOURCE_NAME;
+            res->resource.lib_Node.ln_Type = NT_RESOURCE;
+            res->size = sizeof(*res);
+
+            iexec->InitSemaphore(&res->semaphore);
+            iexec->NewList(&res->nodes);
+            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
+            iexec->AddResource(res);
+        } else {
+            goto out;
+        }
+    }
+
     return libBase;
 
 out:
@@ -328,7 +382,7 @@ static void *libMmanagerVectors[] = {
         (void *) libClose,
         (void *) libExpunge,
         (void *) 0,
-        (void *) (APTR) -1,
+        (void *) (APTR) - 1,
 };
 
 static struct TagItem libManagerTags[] = {
@@ -340,6 +394,7 @@ static struct TagItem libManagerTags[] = {
 };
 
 extern struct _clib2 *__getClib2(void);
+
 #include "clib2_vectors.h"
 
 static struct TagItem mainTags[] = {
@@ -359,7 +414,7 @@ static uint32 libInterfaces[] = {
 
 /* CreateLibrary tag list */
 static struct TagItem libCreateTags[] = {
-        {CLT_DataSize,   (uint32) (sizeof(struct Clib2Base))},
+        {CLT_DataSize,   (uint32)(sizeof(struct Clib2Base))},
         {CLT_Interfaces, (uint32) libInterfaces},
         {CLT_InitFunc,   (uint32) libInit},
         {TAG_DONE,       0}
