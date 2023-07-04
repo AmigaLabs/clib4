@@ -153,6 +153,7 @@ struct pthread_mutex {
     APTR mutex;
     int kind;
     int incond;
+    struct Task *owner;
 };
 
 typedef struct pthread_mutex pthread_mutex_t;

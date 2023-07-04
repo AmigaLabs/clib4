@@ -10,10 +10,7 @@
 
 int
 sched_yield(void) {
-    // TODO - User IExec->Reschedule()
-    /* SetTaskPri() on the currently running task triggers a reschedule */
-    struct Task *me = FindTask(NULL);
-    SetTaskPri(me, me->tc_Node.ln_Pri);
+    Reschedule();
 
     return 0;
 }

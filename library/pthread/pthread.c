@@ -52,6 +52,9 @@ ThreadInfo threads[PTHREAD_THREADS_MAX];
 struct SignalSemaphore thread_sem;
 TLSKey tlskeys[PTHREAD_KEYS_MAX];
 struct SignalSemaphore tls_sem;
+APTR timerMutex = NULL;
+struct TimeRequest *timedTimerIO = NULL;
+struct MsgPort *timedTimerPort = NULL;
 
 struct Library *_DOSBase = NULL;
 struct DOSIFace *_IDOS = NULL;
@@ -59,7 +62,6 @@ struct DOSIFace *_IDOS = NULL;
 //
 // Private common functions
 //
-
 int
 _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOOL staticinit) {
     if (mutex == NULL)
@@ -267,6 +269,16 @@ int __pthread_init_func(void) {
     inf->status = THREAD_STATE_RUNNING;
     NewMinList(&inf->cleanup);
 
+    timerMutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+
+    timedTimerPort = AllocSysObject(ASOT_PORT, NULL);
+    timedTimerIO = AllocSysObjectTags(ASOT_IOREQUEST,
+                                      ASOIOR_ReplyPort, timedTimerPort,
+                                      ASOIOR_Size, sizeof(struct TimeRequest),
+                                      TAG_DONE);
+
+    OpenDevice(TIMERNAME, UNIT_WAITUNTIL, (struct IORequest *) timedTimerIO, 0);
+
     /* Mark all threads as IDLE */
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
         inf = &threads[i];
@@ -279,6 +291,16 @@ int __pthread_init_func(void) {
 void __pthread_exit_func(void) {
     pthread_t i;
     ThreadInfo *inf;
+
+    if (timerMutex)
+        FreeSysObject(ASOT_MUTEX, timerMutex);
+
+    if (timedTimerIO)
+        CloseDevice((struct IORequest *) timedTimerIO);
+    if (timedTimerIO)
+        FreeSysObject(ASOT_IOREQUEST, timedTimerIO);
+    if (timedTimerPort)
+        FreeSysObject(ASOT_PORT, timedTimerPort);
 
     // if we don't do this we can easily end up with unloaded code being executed
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {

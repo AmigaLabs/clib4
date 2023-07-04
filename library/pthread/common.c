@@ -49,6 +49,11 @@ int SemaphoreIsMine(struct SignalSemaphore *sem) {
     return (sem && sem->ss_NestCount > 0 && sem->ss_Owner == me);
 }
 
+int MutexIsMine(pthread_mutex_t *mutex) {
+    struct Task *me = FindTask(NULL);
+    return (mutex && mutex->owner == me);
+}
+
 ThreadInfo *GetThreadInfo(pthread_t thread) {
     // TODO: more robust error handling?
     if (thread < PTHREAD_THREADS_MAX)

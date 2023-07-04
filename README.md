@@ -151,6 +151,11 @@ And thanks to this library more functions have been added to socket library
 
 Added crypt library that implements crypt and crypt_r
 
+### UNIX sockets (AF_UNIX)
+
+clib2 now supports emulated UNIX sockets. Since roadshow and OS4 doesn't support them natively, UNIX sockets are emulated via
+native sockets. The user doesn't need to change anything in the linux code. Everything will be transparent for him  
+
 * ##### About salt
 
 The characters that can be specified are [a-zA-Z0-9. /]. Lowercase alphabets, uppercase alphabets, numbers,'.' And'/'.

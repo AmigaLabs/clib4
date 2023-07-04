@@ -50,6 +50,6 @@ pthread_mutex_trylock(pthread_mutex_t *mutex) {
 
     if (MutexAttempt(mutex->mutex))
         return 0;
-    else
-        return EBUSY;
+
+    return EBUSY;
 }
