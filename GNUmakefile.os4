@@ -342,7 +342,7 @@ release:
 	-$(COPY) libs/libauto.a clib2/lib/
 	-$(COPY) $(OUTPUT_LIB)/* clib2/lib/
 	-$(COPY) $(LIB_ROOT)/library/include/* clib2/include/
-	jlha -aqo7i clib2.lha clib2 clib2.info
+	lha -ao5i clib2.lha clib2 clib2.info
 	-$(DELETE) clib2
 	-$(DELETE) clib2.info
 
