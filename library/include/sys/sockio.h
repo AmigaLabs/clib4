@@ -52,6 +52,9 @@ __BEGIN_DECLS
 #define    SIOCADDMULTI     _IOW('i', 49, struct ifreq)    /* add m'cast addr */
 #define    SIOCDELMULTI     _IOW('i', 50, struct ifreq)    /* del m'cast addr */
 
+#define    SIOCGIFMTU       _IOWR('i', 51, struct ifreq)/* get IF mtu */
+#define    SIOCSIFMTU       _IOW('i', 52, struct ifreq)	/* set IF mtu */
+
 #ifdef __GNUC__
 #ifdef __PPC__
 #pragma pack()

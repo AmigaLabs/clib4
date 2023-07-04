@@ -402,6 +402,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 continue;
             case 'm':
                 arg.p = strerror(errno);
+                /* fallthrough */
             case 's':
                 if (!arg.p)
                     arg.p = (char *) "(null)";

@@ -8,6 +8,7 @@
 #include <features.h>
 /* Get common definition of System V style IPC.  */
 #include <sys/ipc.h>
+#include <time.h>
 
 /* The following System V style IPC functions implement a semaphore
    handling.  The definition is found in XPG2.  */

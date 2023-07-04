@@ -6,40 +6,38 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-static struct SignalSemaphore *stdio_lock;
-
 void
-__stdio_lock(void) {
-    assert(stdio_lock != NULL);
+__stdio_lock(struct _clib2 *__clib2) {
+    assert(__clib2->stdio_lock != NULL);
 
-    if (stdio_lock != NULL)
-        ObtainSemaphore(stdio_lock);
+    if (__clib2->stdio_lock != NULL)
+        ObtainSemaphore(__clib2->stdio_lock);
 }
 
 void
-__stdio_unlock(void) {
-    assert(stdio_lock != NULL);
+__stdio_unlock(struct _clib2 *__clib2) {
+    assert(__clib2->stdio_lock != NULL);
 
-    if (stdio_lock != NULL)
-        ReleaseSemaphore(stdio_lock);
+    if (__clib2->stdio_lock != NULL)
+        ReleaseSemaphore(__clib2->stdio_lock);
 }
 
 void
-__stdio_lock_exit(void) {
-    __delete_semaphore(stdio_lock);
-    stdio_lock = NULL;
+__stdio_lock_exit(struct _clib2 *__clib2) {
+    __delete_semaphore(__clib2->stdio_lock);
+    __clib2->stdio_lock = NULL;
 }
 
 int
-__stdio_lock_init(void) {
+__stdio_lock_init(struct _clib2 *__clib2) {
     int result = ERROR;
 
-    stdio_lock = __create_semaphore();
-    if (stdio_lock == NULL)
+    __clib2->stdio_lock = __create_semaphore();
+    if (__clib2->stdio_lock == NULL)
         goto out;
 
     result = OK;
 out:
 
-    return (result);
+    return result;
 }

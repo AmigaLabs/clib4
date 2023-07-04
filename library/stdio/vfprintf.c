@@ -21,6 +21,7 @@ static void pad(Out *f, char c, int w, int l, int fl);
 
 static void out_init_file(Out *out, FILE *f) {
     memset(out, 0, sizeof(*out));
+    D(("f->size = %ld - f->position = %ld", f->size, f->position));
     out->buffer_size = f->size;
     out->buffer_pos = f->position;
     out->file = f;
@@ -106,7 +107,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
 
     pl = 1;
 
-    if (__s_signbit(y)) {
+    if (signbit(y)) {
         y = -y;
     } else if (fl & __S_MARK_POS) {
         prefix += 3;
@@ -117,7 +118,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         pl = 0;
     }
 
-    if (!__s_isfinite(y)) {
+    if (!isfinite(y)) {
         s = ((t & 32) ? (char *)"inf" : (char *)"INF");
         if (y != y) {
             s = ((t & 32) ? (char *)"nan" : (char *)"NAN");
@@ -130,7 +131,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         return MAX(w, 3 + pl);
     }
 
-    y = (__stdlib_frexp(y, &e2) * 2);
+    y = (frexp(y, &e2) * 2);
     if (y > 0)
         e2--;
 
@@ -483,8 +484,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
             if (__OOP(*s))
                 return EOF;
             ps = st;
-            st = states[st]
-            S(*s++);
+            st = states[st]S(*s++);
         } while ((st - 1) < _STOP);
         if (!st)
             return EOF;
@@ -554,6 +554,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 p = MAX(p, (int) (2 * sizeof(void *)));
                 t = 'x';
                 fl |= __U_ALT_FORM;
+                /* fallthrough */
             case 'x':
             case 'X':
                 a = fmt_x(arg.i, z, t & 32);
@@ -595,6 +596,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
             case 'm':
                 if (1)
                     a = strerror(errno); else
+                /* fallthrough */
             case 's':
                 a = arg.p ? arg.p : (char *) "(null)";
                 z = a + strnlen(a, p<0 ? INT_MAX : p);
@@ -610,6 +612,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 wc[1] = L'\0';
                 arg.p = wc;
                 p = -1;
+                /* fallthrough */
             case 'S':
                 ws = arg.p;
                 for (i = l = 0;
@@ -691,19 +694,29 @@ vfprintf(FILE *f, const char *format, va_list ap) {
 
     __check_abort();
 
+    SHOWMSG("Formatting File pointer");
     Out _out[1];
     out_init_file(_out, f);
     va_copy(ap2, ap);
 
     // Check for error in format string before writing anything to file.
+    SHOWMSG("Check for string format errors");
     if (printf_core(0, format, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
         return EOF;
     }
-    ret = printf_core(_out, format, &ap2, nl_arg, nl_type);
 
+    SHOWMSG("Write result to the file");
+    ret = printf_core(_out, format, &ap2, nl_arg, nl_type);
+    if (ret != EOF) {
+        struct iob *iob = (struct iob *) f;
+        if (FLAG_IS_CLEAR(iob->iob_Flags, IOBF_NO_NUL)) {
+            __putc('\0', f, (iob->iob_Flags & IOBF_BUFFER_MODE));
+        }
+    }
     va_end(ap2);
 
+    SHOWMSG("Flush the file");
     fflush(f);
 
     RETURN(ret);

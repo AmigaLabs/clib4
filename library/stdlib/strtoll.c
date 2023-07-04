@@ -7,155 +7,143 @@
 #endif /* _STDLIB_HEADERS_H */
 
 long long
-strtoll(const char *str, char **ptr, int base)
-{
-	const char *stop = str;
-	size_t num_digits_converted = 0;
-	BOOL is_negative;
-	long long result = 0;
-	long long new_sum;
-	long long sum;
-	char c;
+strtoll(const char *str, char **ptr, int base) {
+    const char *stop = str;
+    size_t num_digits_converted = 0;
+    BOOL is_negative;
+    long long result = 0;
+    long long new_sum;
+    long long sum;
+    char c;
 
-	ENTER();
+    ENTER();
 
-	SHOWSTRING(str);
-	SHOWPOINTER(ptr);
-	SHOWVALUE(base);
+    SHOWSTRING(str);
+    SHOWPOINTER(ptr);
+    SHOWVALUE(base);
 
-	assert(str != NULL && base >= 0);
+    assert(str != NULL && base >= 0);
 
-    if (str == NULL)
-    {
+    if (str == NULL) {
         SHOWMSG("invalid str parameter");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-	if (base < 0)
-	{
-		SHOWMSG("invalid base parameter");
+    if (base < 0) {
+        SHOWMSG("invalid base parameter");
 
-		__set_errno(ERANGE);
-		goto out;
-	}
+        __set_errno(ERANGE);
+        goto out;
+    }
 
-	/* Skip all leading blanks. */
-	while ((c = (*str)) != '\0')
-	{
-		if (NOT isspace(c))
-			break;
+    /* Skip all leading blanks. */
+    while ((c = (*str)) != '\0') {
+        if (NOT isspace(c))
+            break;
 
-		str++;
-	}
+        str++;
+    }
 
-	/* The first character may be a sign. */
-	if (c == '-')
-	{
-		/* It's a negative number. */
-		is_negative = TRUE;
+    /* The first character may be a sign. */
+    if (c == '-') {
+        /* It's a negative number. */
+        is_negative = TRUE;
 
-		str++;
-	}
-	else
-	{
-		/* It's not going to be negative. */
-		is_negative = FALSE;
+        str++;
+    } else {
+        /* It's not going to be negative. */
+        is_negative = FALSE;
 
-		/* But there may be a sign we will choose to
-		   ignore. */
-		if (c == '+')
-			str++;
-	}
+        /* But there may be a sign we will choose to
+           ignore. */
+        if (c == '+')
+            str++;
+    }
 
-	c = (*str);
+    c = (*str);
 
-	/* There may be a leading '0x' to indicate that what
-	   follows is a hexadecimal number. */
-	if (base == 0 || base == 16)
-	{
-		if ((c == '0') && (str[1] == 'x' || str[1] == 'X'))
-		{
-			base = 16;
+    /* There may be a leading '0x' to indicate that what
+       follows is a hexadecimal number. */
+    if (base == 0 || base == 16) {
+        if ((c == '0') && (str[1] == 'x' || str[1] == 'X')) {
+            base = 16;
 
-			str += 2;
+            str += 2;
 
-			c = (*str);
-		}
-	}
+            c = (*str);
+        }
+    }
 
-	/* If we still don't know what base to use and the
-	   next letter to follow is a zero then this is
-	   probably a number in octal notation. */
-	if (base == 0)
-	{
-		if (c == '0')
-			base = 8;
-		else
-			base = 10;
-	}
+    /* If we still don't know what base to use and the
+       next letter to follow is a zero then this is
+       probably a number in octal notation. */
+    if (base == 0) {
+        if (c == '0')
+            base = 8;
+        else
+            base = 10;
+    }
 
-	sum = 0;
+    sum = 0;
 
-	if (1 <= base && base <= 36)
-	{
-		while (c != '\0')
-		{
-			if ('0' <= c && c <= '9')
-				c -= '0';
-			else if ('a' <= c)
-				c -= 'a' - 10;
-			else if ('A' <= c)
-				c -= 'A' - 10;
-			else
-				break;
+    if (1 <= base && base <= 36) {
+        while (c != '\0') {
+            if ('0' <= c && c <= '9')
+                c -= '0';
+            else if ('a' <= c)
+                c -= 'a' - 10;
+            else if ('A' <= c)
+                c -= 'A' - 10;
+            else
+                break;
 
-			/* Ignore invalid numbers. */
-			if (c >= base)
-				break;
+            /* Ignore invalid numbers. */
+            if (c >= base)
+                break;
 
-			new_sum = base * sum + c;
-			if (new_sum < sum) /* overflow? */
-			{
-				__set_errno(ERANGE);
+            new_sum = base * sum + c;
+            if (new_sum < sum) /* overflow? */
+            {
+                __set_errno(ERANGE);
 
-				if (is_negative)
-					result = LONG_MIN;
-				else
-					result = LONG_MAX;
+                if (is_negative)
+                    result = LONG_MIN;
+                else
+                    result = LONG_MAX;
 
-				goto out;
-			}
+                goto out;
+            }
 
-			sum = new_sum;
+            sum = new_sum;
 
-			str++;
+            str++;
 
-			c = (*str);
+            c = (*str);
 
-			num_digits_converted++;
-		}
-	}
+            num_digits_converted++;
+        }
+    }
 
-	/* Did we convert anything? */
-	if (num_digits_converted == 0)
-		goto out;
+    /* Did we convert anything? */
+    if (num_digits_converted == 0)
+        goto out;
 
-	if (is_negative)
-		result = (-sum);
-	else
-		result = sum;
+    if (is_negative)
+        result = (-sum);
+    else
+        result = sum;
 
-	stop = str;
+    stop = str;
 
 out:
 
-	/* If desired, remember where we stopped reading the
-	   number from the buffer. */
-	if (ptr != NULL)
-		(*ptr) = (char *)stop;
+    /* If desired, remember where we stopped reading the
+       number from the buffer. */
+    if (ptr != NULL)
+        (*ptr) = (char *) stop;
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

@@ -18,66 +18,62 @@
 
 int64_t
 __vasprintf_hook_entry(
-	struct iob *string_iob,
-	struct file_action_message *fam)
-{
-	int64_t result = EOF;
-	int64_t num_bytes_left;
-	int64_t num_bytes;
+        struct _clib2 *__clib2,
+        struct iob *string_iob,
+        struct file_action_message *fam) {
+    int64_t result = EOF;
+    int64_t num_bytes_left;
+    int64_t num_bytes;
 
-	assert(fam != NULL && string_iob != NULL);
-	assert(fam->fam_Action == file_action_write);
+    assert(fam != NULL && string_iob != NULL);
+    assert(fam->fam_Action == file_action_write);
 
-	if (fam->fam_Action != file_action_write)
-	{
-		fam->fam_Error = EBADF;
-		goto out;
-	}
+    if (fam->fam_Action != file_action_write) {
+        fam->fam_Error = EBADF;
+        goto out;
+    }
 
-	if (string_iob->iob_StringPosition + fam->fam_Size > string_iob->iob_StringSize)
-	{
-		const int granularity = 64;
+    if (string_iob->iob_StringPosition + fam->fam_Size > string_iob->iob_StringSize) {
+        const int granularity = 64;
 
-		size_t new_size;
-		char *buffer;
+        size_t new_size;
+        char *buffer;
 
-		new_size = string_iob->iob_StringPosition + fam->fam_Size + granularity;
+        new_size = string_iob->iob_StringPosition + fam->fam_Size + granularity;
 
-		buffer = malloc(new_size);
-		if (buffer == NULL)
-		{
-			fam->fam_Error = ENOBUFS;
-			goto out;
-		}
+        buffer = malloc(new_size);
+        if (buffer == NULL) {
+            fam->fam_Error = ENOBUFS;
+            goto out;
+        }
 
-		if (string_iob->iob_String != NULL)
-		{
-			memmove(buffer, string_iob->iob_String, (size_t)string_iob->iob_StringSize);
+        if (string_iob->iob_String != NULL) {
+            memmove(buffer, string_iob->iob_String, (size_t) string_iob->iob_StringSize);
 
-			free(string_iob->iob_String);
-		}
+            free(string_iob->iob_String);
+        }
 
-		string_iob->iob_String = buffer;
-		string_iob->iob_StringSize = new_size;
-	}
+        string_iob->iob_String = buffer;
+        string_iob->iob_StringSize = new_size;
+    }
 
-	assert(string_iob->iob_StringPosition <= string_iob->iob_StringSize);
+    assert(string_iob->iob_StringPosition <= string_iob->iob_StringSize);
 
-	num_bytes_left = string_iob->iob_StringSize - string_iob->iob_StringPosition;
+    num_bytes_left = string_iob->iob_StringSize - string_iob->iob_StringPosition;
 
-	num_bytes = fam->fam_Size;
-	if (num_bytes > num_bytes_left)
-		num_bytes = num_bytes_left;
+    num_bytes = fam->fam_Size;
+    if (num_bytes > num_bytes_left)
+        num_bytes = num_bytes_left;
 
-	assert(num_bytes >= 0);
-	assert(fam->fam_Data != NULL);
+    assert(num_bytes >= 0);
+    assert(fam->fam_Data != NULL);
 
-	memmove(&string_iob->iob_String[string_iob->iob_StringPosition], fam->fam_Data, (size_t)num_bytes);
-	string_iob->iob_StringPosition += num_bytes;
+    memmove(&string_iob->iob_String[string_iob->iob_StringPosition], fam->fam_Data, (size_t) num_bytes);
+    string_iob->iob_StringPosition += num_bytes;
 
-	result = num_bytes;
+    result = num_bytes;
 
 out:
 
-	return (result);
+    return (result);
 }

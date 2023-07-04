@@ -6,9 +6,8 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-int 
-__isnan(double d)
-{
+int
+__isnan(double d) {
     union IEEEd2bits u;
 
     u.d = d;
@@ -16,8 +15,7 @@ __isnan(double d)
 }
 
 int
-__isnanf(float f)
-{
+__isnanf(float f) {
     union IEEEf2bits u;
 
     u.f = f;
@@ -25,8 +23,7 @@ __isnanf(float f)
 }
 
 int
-__isnanl(long double e)
-{
+__isnanl(long double e) {
     union IEEEl2bits u;
 
     u.e = e;

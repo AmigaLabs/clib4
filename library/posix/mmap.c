@@ -9,8 +9,7 @@
 #include <sys/mman.h>
 
 void *
-mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
-{
+mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset) {
     (void) (prot);
     (void) (flags);
 
@@ -23,18 +22,14 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
     SHOWVALUE(fd);
     SHOWVALUE(offset);
 
-    if (fd > 0)
-    {
-        if (addr != NULL)
-        {
-            if ((addr = calloc(1, len)))
-            {
+    if (fd > 0) {
+        if (addr != NULL) {
+            if ((addr = calloc(1, len))) {
                 lseek(fd, offset, SEEK_SET);
                 read(fd, addr, len);
             }
 
-            if (!addr)
-            {
+            if (!addr) {
                 __set_errno(ENOMEM);
                 RETURN(NULL);
                 return NULL;
@@ -42,18 +37,14 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
 
             RETURN(addr);
             return addr;
-        }
-        else
-        {
+        } else {
             void *data = calloc(1, len);
-            if (data != NULL)
-            {
+            if (data != NULL) {
                 lseek(fd, offset, SEEK_SET);
                 read(fd, data, len);
             }
 
-            if (!data)
-            {
+            if (!data) {
                 __set_errno(ENOMEM);
                 RETURN(NULL);
                 return NULL;
@@ -61,15 +52,11 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
             RETURN(data);
             return data;
         }
-    }
-    else
-    {
+    } else {
         if ((addr = calloc(1, len))) {
             RETURN(addr);
             return addr;
-        }
-        else
-        {
+        } else {
             __set_errno(ENOMEM);
             RETURN(NULL);
             return NULL;

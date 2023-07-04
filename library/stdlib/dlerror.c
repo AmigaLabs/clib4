@@ -12,11 +12,11 @@
 const char *
 dlerror(void) {
 	const char *result;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
-    switch(__global_clib2->__elf_error_code)
-	{
+    switch(__clib2->__elf_error_code) {
 		case ELF32_NO_ERROR:
 
 			result = NULL;
@@ -79,8 +79,8 @@ dlerror(void) {
 	}
 
 	/* Calling dlerror() will clear the error code. */
-	if (__global_clib2 != NULL)
-		__global_clib2->__elf_error_code = ELF32_NO_ERROR;
+	if (__clib2 != NULL)
+        __clib2->__elf_error_code = ELF32_NO_ERROR;
 
     RETURN(result);
 	return(result);

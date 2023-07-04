@@ -6,16 +6,14 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-void 
-__fd_lock(struct fd *fd)
-{
-	if (NULL != fd && NULL != fd->fd_Lock)
-		ObtainSemaphore(fd->fd_Lock);
+void
+__fd_lock(struct fd *fd) {
+    if (NULL != fd && NULL != fd->fd_Lock)
+        ObtainSemaphore(fd->fd_Lock);
 }
 
-void 
-__fd_unlock(struct fd *fd)
-{
+void
+__fd_unlock(struct fd *fd) {
     if (NULL != fd && NULL != fd->fd_Lock)
-		ReleaseSemaphore(fd->fd_Lock);
+        ReleaseSemaphore(fd->fd_Lock);
 }

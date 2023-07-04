@@ -1,9 +1,6 @@
 #
 # $Id: libamiga.gmk,v 1.1 2006-09-17 17:37:27 clib2devs Exp $
 #
-# :ts=8
-#
-# -*- mode: makefile; -*-
 
 OUT_STATIC := $(BUILD_DIR)/obj/libamiga
 OUT_SHARED := $(BUILD_DIR)/obj.shared/libamiga
@@ -53,7 +50,6 @@ $(OUT_STATIC)/amiga.lib_rev.o : $(LIB_DIR)/amiga/amiga.lib_rev.c $(LIB_DIR)/amig
 $(OUT_SHARED)/amiga.lib_rev.o : $(LIB_DIR)/amiga/amiga.lib_rev.c $(LIB_DIR)/amiga/amiga.lib_rev.h
 
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c

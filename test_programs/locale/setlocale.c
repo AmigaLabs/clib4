@@ -1,11 +1,6 @@
 #include <stdio.h>
 #include <locale.h>
 
-/* uncomment to fix corruption
-#include <dos.h>
-BOOL __open_locale = FALSE;
-*/
-
 int
 main(void)
 {

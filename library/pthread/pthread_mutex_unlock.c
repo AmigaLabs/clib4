@@ -42,14 +42,13 @@ pthread_mutex_unlock(pthread_mutex_t *mutex) {
     if (mutex == NULL)
         return EINVAL;
 
-    // initialize static mutexes
-    if (SemaphoreIsInvalid(&mutex->semaphore))
-        _pthread_mutex_init(mutex, NULL, TRUE);
+    if (mutex->mutex == NULL) {
+        int ret = _pthread_mutex_init(mutex, NULL, TRUE);
+        if (ret != 0)
+            return EINVAL;
+    }
 
-    if (mutex->kind != PTHREAD_MUTEX_NORMAL && !SemaphoreIsMine(&mutex->semaphore))
-        return EPERM;
-
-    ReleaseSemaphore(&mutex->semaphore);
+    MutexRelease(mutex->mutex);
 
     return 0;
 }

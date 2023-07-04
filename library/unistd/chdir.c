@@ -10,9 +10,10 @@
 int
 chdir(const char *path_name) {
     struct name_translation_info path_name_nti;
-    BPTR dir_lock = ZERO;
+    BPTR dir_lock = BZERO;
     struct ExamineData *status = NULL;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -29,7 +30,7 @@ chdir(const char *path_name) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -61,7 +62,7 @@ chdir(const char *path_name) {
     D(("trying to get a lock on '%s'", path_name));
 
     dir_lock = Lock((STRPTR) path_name, SHARED_LOCK);
-    if (dir_lock == ZERO) {
+    if (dir_lock == BZERO) {
         __set_errno(__translate_access_io_error_to_errno(IoErr()));
         goto out;
     }
@@ -79,24 +80,24 @@ chdir(const char *path_name) {
         goto out;
     }
 
-    if (__current_directory_changed) {
+    if (__clib2->__current_directory_changed) {
         BPTR old_dir;
 
         old_dir = CurrentDir(dir_lock);
 
-        if (__unlock_current_directory)
+        if (__clib2->__unlock_current_directory)
             UnLock(old_dir);
     } else {
-        __original_current_directory = CurrentDir(dir_lock);
+        __clib2->__original_current_directory = CurrentDir(dir_lock);
 
-        __current_directory_changed = TRUE;
+        __clib2->__current_directory_changed = TRUE;
     }
 
-    __unlock_current_directory = TRUE;
+    __clib2->__unlock_current_directory = TRUE;
 
-    dir_lock = ZERO;
+    dir_lock = BZERO;
 
-    if (__unix_path_semantics)
+    if (__clib2->__unix_path_semantics)
         __restore_path_name(&path_name, &path_name_nti);
 
     /* ZZZ this must not fail */
@@ -104,12 +105,9 @@ chdir(const char *path_name) {
 
     result = OK;
 
-    out:
+out:
 
-    if (status != NULL) {
-        FreeDosObject(DOS_EXAMINEDATA, status);
-    }
-
+    FreeDosObject(DOS_EXAMINEDATA, status);
     UnLock(dir_lock);
 
     RETURN(result);

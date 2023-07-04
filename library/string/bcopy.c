@@ -12,17 +12,21 @@ bcopy(const void *src, void *dest, size_t len) {
     SHOWPOINTER(src);
     SHOWPOINTER(dest);
     SHOWVALUE(len);
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert((len == 0) || (src != NULL && dest != NULL && (int) len > 0));
 
-    if (__global_clib2 != NULL && __global_clib2->optimizedCPUFunctions) {
+    if (__clib2->__optimizedCPUFunctions) {
         /* Check if we have altivec enabled */
-        if (__global_clib2->hasAltivec) {
+        if (__clib2->hasAltivec) {
             vec_bcopy(src, dest, len);
         }
         else {
-            /* Fallback to standard function */
-            memmove(dest, src, len);
+            switch (__clib2->cpufamily) {
+                default:
+                    /* Fallback to standard function */
+                    memmove(dest, src, len);
+            }
         }
     }
     else {

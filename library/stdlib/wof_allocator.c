@@ -108,10 +108,14 @@ static void
 wof_cycle_recycler(wof_allocator_t *allocator) {
     wof_chunk_hdr_t *chunk;
     wof_free_hdr_t *free_chunk;
+    struct _clib2 *__clib2 = __CLIB2;
+
+    ObtainSemaphore(__clib2->__wof_allocator_semaphore);
 
     chunk = allocator->recycler_head;
 
     if (chunk == NULL) {
+        ReleaseSemaphore(__clib2->__wof_allocator_semaphore);
         return;
     }
 
@@ -131,6 +135,7 @@ wof_cycle_recycler(wof_allocator_t *allocator) {
         /* Just rotate everything. */
         allocator->recycler_head = free_chunk->next;
     }
+    ReleaseSemaphore(__clib2->__wof_allocator_semaphore);
 }
 
 /* Adds a chunk from the recycler. */
@@ -532,12 +537,13 @@ wof_free_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk) {
 
     block = WOF_CHUNK_TO_BLOCK(chunk);
 
+    if(!block) {
+        return;
+    }
+
     wof_remove_from_block_list(allocator, block);
 
-    if (block) {
-        FreeVec(block);
-        block = NULL;
-    }
+    FreeVec(block);
 }
 
 /* Reallocs special 'jumbo' blocks of sizes that won't fit normally. */
@@ -552,7 +558,7 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
     block = WOF_CHUNK_TO_BLOCK(chunk);
 
     /* If we have an invalid block return NULL */
-    if (block == NULL || old_size <= 0 || size <= 0) {
+    if (block == NULL || !old_size || !size) {
         return NULL;
     }
 
@@ -569,7 +575,6 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
                                                       + WOF_BLOCK_HEADER_SIZE
                                                       + WOF_CHUNK_HEADER_SIZE,
                                                       AVT_Type, MEMF_SHARED,
-                                                      AVT_ClearWithValue, 0,
                                                       TAG_DONE);
 
             if (newptr == NULL) {
@@ -578,12 +583,8 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
             /* Copy old block to new one */
             memcpy(newptr, block, size);
 
-
             /* Free old block */
-            if (block != NULL) {
-                FreeVec(block);
-                block = NULL;
-            }
+            FreeVec(block);
 
             if (newptr->next) {
                 newptr->next->prev = newptr;
@@ -606,7 +607,6 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
                                                   + WOF_BLOCK_HEADER_SIZE
                                                   + WOF_CHUNK_HEADER_SIZE,
                                                   AVT_Type, MEMF_SHARED,
-                                                  AVT_ClearWithValue, 0,
                                                   TAG_DONE);
 
         if (newptr == NULL) {
@@ -616,10 +616,7 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
         memcpy(newptr, block, old_size);
 
         /* Free old block */
-        if (block != NULL) {
-            FreeVec(block);
-            block = NULL;
-        }
+        FreeVec(block);
 
         if (newptr->next) {
             newptr->next->prev = newptr;
@@ -699,7 +696,6 @@ wof_free(wof_allocator_t *allocator, void *ptr) {
     }
 
     chunk = WOF_DATA_TO_CHUNK(ptr);
-
     if (chunk->jumbo) {
         wof_free_jumbo(allocator, chunk);
         return;
@@ -711,7 +707,6 @@ wof_free(wof_allocator_t *allocator, void *ptr) {
     /* merge it with any other free chunks adjacent to it, so that contiguous
      * free space doesn't get fragmented */
     wof_merge_free(allocator, chunk);
-
     /* Now cycle the recycler */
     wof_cycle_recycler(allocator);
 }
@@ -827,7 +822,10 @@ wof_free_all(wof_allocator_t *allocator) {
         if (chunk->jumbo) {
             wof_remove_from_block_list(allocator, cur);
             cur = cur->next;
-            FreeVec(WOF_CHUNK_TO_BLOCK(chunk));
+
+            wof_block_hdr_t *block = WOF_CHUNK_TO_BLOCK(chunk);
+            FreeVec(block);
+            block = NULL;
         } else {
             wof_init_block(allocator, cur);
             cur = cur->next;
@@ -871,6 +869,7 @@ wof_gc(wof_allocator_t *allocator) {
                 allocator->master_head = free_chunk->next;
             }
             FreeVec(cur);
+            cur = NULL;
         } else {
             /* part of this block is used, so add it to the new block list */
             wof_add_to_block_list(allocator, cur);
@@ -889,16 +888,13 @@ wof_allocator_destroy(wof_allocator_t *allocator) {
 
     /* then just free the struct */
     FreeVec(allocator);
-    allocator = NULL;
 }
 
 wof_allocator_t *
 wof_allocator_new(void) {
-    wof_allocator_t *allocator;
     ENTER();
 
-    //allocator = (wof_allocator_t *) malloc(sizeof(wof_allocator_t));
-    allocator = (wof_allocator_t *) AllocVecTags(sizeof(wof_allocator_t), MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    wof_allocator_t *allocator = (wof_allocator_t *) AllocVecTags(sizeof(wof_allocator_t), MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (allocator == NULL) {
         SHOWMSG("Unable to create wof_allocator");
         RETURN(NULL);
@@ -909,8 +905,7 @@ wof_allocator_new(void) {
     allocator->master_head = NULL;
     allocator->recycler_head = NULL;
 
-    SHOWPOINTER(allocator);
-    LEAVE();
+    RETURN(allocator);
     return allocator;
 }
 

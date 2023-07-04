@@ -1,5 +1,5 @@
 /*
- * $Id: libc_init_global.c,v 1.0 2021-02-04 17:01:06 clib2devs Exp $
+ * $Id: libc_init_global.c,v 2.0 2023-05-17 17:01:06 clib2devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -26,10 +26,18 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
+#ifndef _STRING_HEADERS_H
+#include "string_headers.h"
+#endif /* _STRING_HEADERS_H */
+
+#include "locale/dcngettext.h"
+#include <syslog.h>
+
 #include <proto/elf.h>
 #include <fenv.h>
 
-#include "aio/aio_misc.h"
+extern struct ElfIFace *__IElf;
+extern struct Library *__ElfBase;
 
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
@@ -55,213 +63,405 @@ static uint32_t _random_init[] = {
         0x0cab8628, 0xf043bfa4, 0x398150e9, 0x37521657
 };
 
-/* These are used to initialize the shared objects linked to this binary,
-   and for the dlopen(), dlclose() and dlsym() functions. */
-extern struct Library *__ElfBase;
-extern struct ElfIFace *__IElf;
-
-struct _clib2 NOCOMMON* __global_clib2;
-
 void
-reent_init() {
+reent_init(struct _clib2 *__clib2) {
     BOOL success = FALSE;
 
     ENTER();
+    DECLARE_UTILITYBASE();
 
-    /* Initialize global structure */
-    __global_clib2 = (struct _clib2 *) AllocVecTags(sizeof(struct _clib2), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-    if (__global_clib2 == NULL) {
-        goto out;
-    } else {
-        struct ElfIFace *IElf = __IElf;
+    struct ElfIFace *IElf = __IElf;
 
-        /* Get the current task pointer */
-        __global_clib2->self = (struct Process *) FindTask(NULL);
+    *__clib2 = (struct _clib2) {
+        .__ctype_table = {
+                /*   0      */ __CTYPE_CONTROL,
+                /*   1      */ __CTYPE_CONTROL,
+                /*   2      */ __CTYPE_CONTROL,
+                /*   3      */ __CTYPE_CONTROL,
+                /*   4      */ __CTYPE_CONTROL,
+                /*   5      */ __CTYPE_CONTROL,
+                /*   6      */ __CTYPE_CONTROL,
+                /*   7      */ __CTYPE_CONTROL,
+                /*   8      */ __CTYPE_CONTROL,
+                /*   9      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
+                /*  10      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
+                /*  11      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
+                /*  12      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
+                /*  13      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
+                /*  14      */ __CTYPE_CONTROL,
+                /*  15      */ __CTYPE_CONTROL,
+                /*  16      */ __CTYPE_CONTROL,
+                /*  17      */ __CTYPE_CONTROL,
+                /*  18      */ __CTYPE_CONTROL,
+                /*  19      */ __CTYPE_CONTROL,
+                /*  20      */ __CTYPE_CONTROL,
+                /*  21      */ __CTYPE_CONTROL,
+                /*  22      */ __CTYPE_CONTROL,
+                /*  23      */ __CTYPE_CONTROL,
+                /*  24      */ __CTYPE_CONTROL,
+                /*  25      */ __CTYPE_CONTROL,
+                /*  26      */ __CTYPE_CONTROL,
+                /*  27      */ __CTYPE_CONTROL,
+                /*  28      */ __CTYPE_CONTROL,
+                /*  29      */ __CTYPE_CONTROL,
+                /*  30      */ __CTYPE_CONTROL,
+                /*  31      */ __CTYPE_CONTROL,
+                /*  32, ' ' */ __CTYPE_PRINTABLE|__CTYPE_WHITE_SPACE,
+                /*  33, '!' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  34, '"' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  35, '#' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  36, '$' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  37, '%' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  38, '&' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  39, ''' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  40, '(' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  41, ')' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  42, '*' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  43, '+' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  44, ',' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  45, '-' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  46, '.' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  47, '/' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  48, '0' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  49, '1' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  50, '2' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  51, '3' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  52, '4' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  53, '5' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  54, '6' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  55, '7' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  56, '8' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  57, '9' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
+                /*  58, ':' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  59, ';' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  60, '<' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  61, '=' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  62, '>' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  63, '?' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  64, '@' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  65, 'A' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  66, 'B' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  67, 'C' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  68, 'D' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  69, 'E' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  70, 'F' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  71, 'G' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  72, 'H' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  73, 'I' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  74, 'J' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  75, 'K' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  76, 'L' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  77, 'M' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  78, 'N' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  79, 'O' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  80, 'P' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  81, 'Q' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  82, 'R' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  83, 'S' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  84, 'T' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  85, 'U' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  86, 'V' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  87, 'W' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  88, 'X' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  89, 'Y' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  90, 'Z' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
+                /*  91, '[' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  92, '\' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  93, ']' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  94, '^' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  95, '_' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  96, '`' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /*  97, 'a' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /*  98, 'b' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /*  99, 'c' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 100, 'd' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 101, 'e' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 102, 'f' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 103, 'g' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 104, 'h' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 105, 'i' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 106, 'j' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 107, 'k' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 108, 'l' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 109, 'm' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 110, 'n' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 111, 'o' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 112, 'p' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 113, 'q' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 114, 'r' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 115, 's' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 116, 't' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 117, 'u' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 118, 'v' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 119, 'w' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 120, 'x' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 121, 'y' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 122, 'z' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
+                /* 123, '{' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /* 124, '|' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /* 125, '}' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /* 126, '~' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
+                /* 127      */ __CTYPE_CONTROL,
 
-        /* Initialize wchar stuff */
-        __global_clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
-        if (!__global_clib2->wide_status) {
-            FreeVec(__global_clib2);
-            __global_clib2 = NULL;
-            goto out;
-        }
-
-#ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
-        __global_clib2->optimizedCPUFunctions = FALSE;
-#else
-        __global_clib2->optimizedCPUFunctions = TRUE;
-#endif
-
-        /* Initialize random signal and state */
-        __global_clib2->__random_lock = __create_semaphore();
-        if (!__global_clib2->__random_lock) {
-            FreeVec(__global_clib2->wide_status);
-            FreeVec(__global_clib2);
-            __global_clib2 = NULL;
-            goto out;
-        }
-        __global_clib2->n = 31;
-        __global_clib2->i = 3;
-        __global_clib2->j = 0;
-        __global_clib2->x = _random_init + 1;
-
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        },
         /* Set main Exec and IElf interface pointers */
-        __global_clib2->IExec = IExec;
-        __global_clib2->IElf = __IElf;
-
-        __global_clib2->wide_status->_strtok_last = NULL;
-        __global_clib2->wide_status->_mblen_state.__count = 0;
-        __global_clib2->wide_status->_mblen_state.__value.__wch = 0;
-        __global_clib2->wide_status->_wctomb_state.__count = 0;
-        __global_clib2->wide_status->_wctomb_state.__value.__wch = 0;
-        __global_clib2->wide_status->_mbtowc_state.__count = 0;
-        __global_clib2->wide_status->_mbtowc_state.__value.__wch = 0;
-        __global_clib2->wide_status->_mbrlen_state.__count = 0;
-        __global_clib2->wide_status->_mbrlen_state.__value.__wch = 0;
-        __global_clib2->wide_status->_mbrtowc_state.__count = 0;
-        __global_clib2->wide_status->_mbrtowc_state.__value.__wch = 0;
-        __global_clib2->wide_status->_mbsrtowcs_state.__count = 0;
-        __global_clib2->wide_status->_mbsrtowcs_state.__value.__wch = 0;
-        __global_clib2->wide_status->_wcrtomb_state.__count = 0;
-        __global_clib2->wide_status->_wcrtomb_state.__value.__wch = 0;
-        __global_clib2->wide_status->_wcsrtombs_state.__count = 0;
-        __global_clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
-        __global_clib2->wide_status->_l64a_buf[0] = '\0';
-        __global_clib2->wide_status->_getdate_err = 0;
-        /* Set locale stuff */
-        __global_clib2->_current_category = LC_ALL;
-        __global_clib2->_current_locale = "C-UTF-8";
-        __global_clib2->__mb_cur_max = 1;
-
-        /* Init memalign list */
-        __global_clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
-                                                             ASO_NoTrack, FALSE,
-                                                             ASO_MemoryOvr, MEMF_PRIVATE,
-                                                             ASOITEM_MFlags, MEMF_PRIVATE,
-                                                             ASOITEM_ItemSize, sizeof(struct MemalignEntry),
-                                                             ASOITEM_BatchSize, 408,
-                                                             ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
-                                                             ASOITEM_GCParameter, 1000,
-                                                             TAG_DONE);
-        if (!__global_clib2->__memalign_pool) {
-            goto out;
-        }
-        /* Set memalign tree to NULL */
-        __global_clib2->__memalign_tree = NULL;
-
-        /* Check is SYSV library is available in the system */
-        __global_clib2->haveShm = FALSE;
-        __SysVBase = OpenLibrary("sysvipc.library", 53);
-        if (__SysVBase != NULL) {
-            __ISysVIPC = (struct SYSVIFace *) GetInterface(__SysVBase, "main", 1, NULL);
-            if (__ISysVIPC != NULL) {
-                __global_clib2->haveShm = TRUE;
-            } else {
-                CloseLibrary(__SysVBase);
-                __SysVBase = NULL;
-            }
-        }
-
-        /* Clear itimer start time */
-        __global_clib2->tmr_start_time.tv_sec = 0;
-        __global_clib2->tmr_start_time.tv_usec = 0;
-        __global_clib2->tmr_real_task = NULL;
-
-        /* Initialize aio pthread list */
-        __global_clib2->__aio_lock = __create_semaphore();
-
-        /* Check if .unix file exists in the current dir. If the file exists enable
-         * unix path semantics
-         */
-        __unix_path_semantics = FALSE;
-        struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
-        if (exd != NULL) {
-            if (EXD_IS_FILE(exd))
-                __unix_path_semantics = TRUE;
-            FreeDosObject(DOS_EXAMINEDATA, exd);
-        }
-
-        /* Get cpu family used to choose functions at runtime */
-        GetCPUInfoTags(GCIT_Family, &__global_clib2->cpufamily);
-
-        /* Check if altivec is present */
-#ifdef ENABLE_ALTIVEC_AT_START
-        GetCPUInfoTags(GCIT_VectorUnit, &__global_clib2->hasAltivec);
+        .IExec = IExec,
+        .IElf = __IElf,
+        /* Disable check abort at start */
+        .__check_abort_enabled = FALSE,
+        .__break_signal_mask = SIGBREAKF_CTRL_C,
+        ._errno = 0,
+        .__shell_escape_character = '*',
+        .__cache_line_size = 32,
+        /* We use an invalid priority value to indicate "do not change the program's task priority". */
+        .__priority = 256,
+        .pipenum = 0,
+#ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
+        .__optimizedCPUFunctions = FALSE,
 #else
-        __global_clib2->hasAltivec = 0;
+        .__optimizedCPUFunctions = TRUE,
+#endif
+        /* Set memalign tree to NULL */
+        .__memalign_tree = NULL,
+        /* Initialize random signal and state */
+        .__random_lock = __create_semaphore(),
+        .n = 31,
+        .i = 3,
+        .j = 0,
+        .x = _random_init + 1,
+        /* Initialize getrandom fd */
+        .randfd[0] = -1,
+        .randfd[1] = -1,
+        ._gamma_signgam = 0,
+        .__infinity = 0,
+        .__nan = 0,
+        /* Set locale stuff */
+        ._current_category = LC_ALL,
+        ._current_locale = "C-UTF-8",
+        .__mb_cur_max = 1,
+        /* Check is SYSV library is available in the system */
+        .haveShm = FALSE,
+        .__disable_dos_requesters = FALSE,
+        .__expand_wildcard_args = TRUE,
+        .__unlink_retries = TRUE,
+        /* Clear itimer start time */
+        .tmr_start_time.tv_sec = 0,
+        .tmr_start_time.tv_usec = 0,
+        .tmr_real_task = NULL,
+        /* Set ar4random stuff */
+        .rs.i = 0,
+        .rs.j = 0,
+        .rs_initialized = 0,
+        .rs_stired = 0,
+        .arc4_count = 0,
+        .rs_data_available = 0,
+        .__default_path_delimiter = ":",
+        .__default_path = "/C:.:/APPDIR:/PROGDIR:/ram:/SDK/C:/SDK/Local/C:",
+        /* Default root groups and id */
+        .__root_mode = FALSE,
+        .__root_uid = 0,
+        .__root_gid = 0,
+        .__root_euid = 0,
+        .__root_egid = 0,
+
+        /* Default debug levels */
+        .indent_level = 0,
+        .previous_debug_level = -1,
+        .__debug_level = 2,
+        .g_mofile = NULL,
+        .__ospeed = 0,
+        .__tputs_baud_rate = 0,
+        .__PC = '\0',
+        /* Syslog stuff */
+        .syslog_fd = NULL,
+        .syslog_openlog_flags = 0,
+        .syslog_facility = LOG_USER,
+        .syslog_mask = 0xff,
+    };
+
+    if (!__clib2->__random_lock) {
+        goto out;
+    }
+
+    SHOWMSG("Allocating wide_status");
+    /* Initialize wchar stuff */
+    __clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
+    if (!__clib2->wide_status) {
+        goto out;
+    }
+    __clib2->wide_status->_strtok_last = NULL;
+    __clib2->wide_status->_mblen_state.__count = 0;
+    __clib2->wide_status->_mblen_state.__value.__wch = 0;
+    __clib2->wide_status->_wctomb_state.__count = 0;
+    __clib2->wide_status->_wctomb_state.__value.__wch = 0;
+    __clib2->wide_status->_mbtowc_state.__count = 0;
+    __clib2->wide_status->_mbtowc_state.__value.__wch = 0;
+    __clib2->wide_status->_mbrlen_state.__count = 0;
+    __clib2->wide_status->_mbrlen_state.__value.__wch = 0;
+    __clib2->wide_status->_mbrtowc_state.__count = 0;
+    __clib2->wide_status->_mbrtowc_state.__value.__wch = 0;
+    __clib2->wide_status->_mbsrtowcs_state.__count = 0;
+    __clib2->wide_status->_mbsrtowcs_state.__value.__wch = 0;
+    __clib2->wide_status->_wcrtomb_state.__count = 0;
+    __clib2->wide_status->_wcrtomb_state.__value.__wch = 0;
+    __clib2->wide_status->_wcsrtombs_state.__count = 0;
+    __clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
+    __clib2->wide_status->_l64a_buf[0] = '\0';
+    __clib2->wide_status->_getdate_err = 0;
+    /* Get cpu family used to choose functions at runtime */
+    D(("Setting cpu family"));
+    GetCPUInfoTags(GCIT_Family, &__clib2->cpufamily, TAG_DONE);
+
+    /* Check if altivec is present */
+#ifdef ENABLE_ALTIVEC_AT_START
+    D(("Check if altivec is present"));
+    GetCPUInfoTags(GCIT_VectorUnit, &__clib2->hasAltivec, TAG_DONE);
+#else
+    D(("Set altivec to zero"));
+    __clib2->hasAltivec = 0;
 #endif
 
-        /*
-         * Next: Get Elf handle associated with the currently running process.
-         * ElfBase is opened in crtbegin.c that is called before the
-         * call_main()
-         */
+    /* Init memalign list */
+    SHOWMSG("Allocating __memalign_pool");
+    __clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                                  ASO_NoTrack, FALSE,
+                                                  ASO_MemoryOvr, MEMF_PRIVATE,
+                                                  ASOITEM_MFlags, MEMF_PRIVATE,
+                                                  ASOITEM_ItemSize, sizeof(struct MemalignEntry),
+                                                  ASOITEM_BatchSize, 408,
+                                                  ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
+                                                  ASOITEM_GCParameter, 1000,
+                                                  TAG_DONE);
+    if (!__clib2->__memalign_pool) {
+        goto out;
+    }
 
-        SHOWMSG("Try to get elf handle for dl* operations");
-        if (__ElfBase != NULL) {
-            SHOWMSG("Calling GetProcSegList");
-            BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
-            if (segment_list != ZERO) {
-                Elf32_Handle handle = NULL;
+    /*
+     * Next: Get Elf handle associated with the currently running process.
+     * ElfBase is opened in crtbegin.c that is called before the
+     * call_main()
+     */
 
-                SHOWMSG("Calling GetSegListInfoTags");
-                if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
-                    if (handle != NULL) {
-                        SHOWMSG("Calling OpenElfTags");
-                        __global_clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
-                    }
+    SHOWMSG("Try to get elf handle for dl* operations");
+    if (__clib2->IElf != NULL) {
+        SHOWMSG("Calling GetProcSegList");
+        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+        if (segment_list != BZERO) {
+            Elf32_Handle handle = NULL;
+
+            SHOWMSG("Calling GetSegListInfoTags");
+            if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
+                if (handle != NULL) {
+                    SHOWMSG("Calling OpenElfTags");
+                    __clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
+                    SHOWPOINTER(__clib2->__dl_elf_handle);
                 }
             }
         }
-        SHOWPOINTER(__global_clib2->__dl_elf_handle);
     }
+
+    SHOWMSG("try to open SYSVIPC Library");
+    __clib2->__SysVBase = OpenLibrary("sysvipc.library", 53);
+    if (__clib2->__SysVBase != NULL) {
+        __clib2->__ISysVIPC = (struct SYSVIFace *) GetInterface(__clib2->__SysVBase, "main", 1, NULL);
+        if (__clib2->__ISysVIPC != NULL) {
+            __clib2->haveShm = TRUE;
+        } else {
+            CloseLibrary(__clib2->__SysVBase);
+            __clib2->__SysVBase = NULL;
+        }
+    }
+
+    ClearMem(&__clib2->tmr_time, sizeof(struct itimerval));
+
+    /* Set ar4random stuff */
+    for (int i = 0; i <= 255; i++) {
+        __clib2->rs.s[i] = i;
+    }
+
+    /* Check if .unix file exists in the current dir. If the file exists enable unix path semantics */
+    SHOWMSG("Check for .unix file");
+    __clib2->__unix_path_semantics = FALSE;
+    struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
+    if (exd != NULL) {
+        if (EXD_IS_FILE(exd)) {
+            SHOWMSG("Enable unix paths");
+            __clib2->__unix_path_semantics = TRUE;
+        }
+        FreeDosObject(DOS_EXAMINEDATA, exd);
+    }
+
+    /* This table holds pointers to all signal handlers configured at a time. */
+    SHOWMSG("Set signal table to SIG_DFL");
+    for (int i = 0; i < NSIG; i++) {
+        __clib2->__signal_handler_table[i] = SIG_DFL;
+    }
+
     success = TRUE;
 
 out:
 
     if (!success) {
-        /* Clean wide status memory */
-        if (__global_clib2->wide_status) {
-            FreeVec(__global_clib2->wide_status);
-            __global_clib2->wide_status = NULL;
-        }
-        /* Free memalign pool object */
-        if (__global_clib2->__memalign_pool) {
-            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
-            __global_clib2->__memalign_pool = NULL;
-        }
-
-        /* Free library */
-        if (__global_clib2) {
-            FreeVec(__global_clib2);
-            __global_clib2 = NULL;
-        }
+        reent_exit(__clib2);
     }
-    SHOWVALUE(success);
-    LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
 }
 
 void
-reent_exit() {
+reent_exit(struct _clib2 *__clib2) {
     ENTER();
 
-    struct ElfIFace *IElf = __IElf;
-
     /* Free global clib structure */
-    if (__global_clib2) {
+    if (__clib2) {
+        struct ElfIFace *IElf = __IElf;
+
+        /* Check for getrandom fd */
+        if (__clib2->randfd[0] >= 0) {
+            close(__clib2->randfd[0]);
+        }
+
+        if (__clib2->randfd[1] >= 0) {
+            close(__clib2->randfd[1]);
+        }
+
+        /* Free wchar stuff */
+        if (__clib2->wide_status != NULL) {
+            SHOWMSG("Free wide_status");
+            FreeVec(__clib2->wide_status);
+            __clib2->wide_status = NULL;
+        }
+        /* Remove random semaphore */
+        SHOWMSG("Delete random lock semaphore");
+        __delete_semaphore(__clib2->__random_lock);
+
+        if (__clib2->__ISysVIPC != NULL) {
+            SHOWMSG("Drop SYSV interface");
+            DropInterface((struct Interface *) __clib2->__ISysVIPC);
+            __clib2->__ISysVIPC = NULL;
+        }
+
+        if (__clib2->__SysVBase != NULL) {
+            SHOWMSG("Close SYSV Library");
+            CloseLibrary(__clib2->__SysVBase);
+            __clib2->__SysVBase = NULL;
+        }
+
         /* Free memalign stuff */
-        if (&__global_clib2->__memalign_pool) {
+        if (__clib2->__memalign_pool) {
+            SHOWMSG("Clean memalign memory");
             /* Check if we have something created with posix_memalign and not freed yet.
              * But this is a good point also to free something allocated with memalign or
              * aligned_alloc and all other functions are using memalign_tree to allocate memory
              * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
              */
-            struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__global_clib2->__memalign_tree);
+            struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__clib2->__memalign_tree);
             while (e) {
                 struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
 
@@ -270,83 +470,62 @@ reent_exit() {
                     FreeVec(e->me_Exact);
                 }
                 /* Remove the node */
-                AVL_RemNodeByAddress(&__global_clib2->__memalign_tree, &e->me_AvlNode);
-                ItemPoolFree(__global_clib2->__memalign_pool, e);
+                AVL_RemNodeByAddress(&__clib2->__memalign_tree, &e->me_AvlNode);
+                ItemPoolFree(__clib2->__memalign_pool, e);
 
                 e = next;
             }
 
-            FreeSysObject(ASOT_ITEMPOOL, __global_clib2->__memalign_pool);
-        }
-
-        /* Free wchar stuff */
-        if (__global_clib2->wide_status != NULL) {
-            FreeVec(__global_clib2->wide_status);
-            __global_clib2->wide_status = NULL;
-        }
-        /* Remove random semaphore */
-        __delete_semaphore(__global_clib2->__random_lock);
-
-        /* Remove aio semaphore. */
-        __delete_semaphore(__global_clib2->__aio_lock);
-
-        if (__ISysVIPC != NULL) {
-            DropInterface((struct Interface *) __ISysVIPC);
-            __ISysVIPC = NULL;
-        }
-
-        if (__SysVBase != NULL) {
-            CloseLibrary(__SysVBase);
-            __SysVBase = NULL;
+            FreeSysObject(ASOT_ITEMPOOL, __clib2->__memalign_pool);
         }
 
         /* Free dl stuff */
-        if (__IElf != NULL && __global_clib2->__dl_elf_handle != NULL) {
+        if (__clib2->__dl_elf_handle != NULL) {
             SHOWMSG("Closing elf handle");
-            CloseElfTags(__global_clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
-            __global_clib2->__dl_elf_handle = NULL;
+            CloseElfTags(__clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
+            __clib2->__dl_elf_handle = NULL;
+        } else {
+            D(("Cannot close elf handle: __clib2->__dl_elf_handle == %p - IElf == %p", __clib2->__dl_elf_handle, IElf));
         }
-        else {
-            SHOWMSG("Cannot close elf handle: __IElf == NULL || __global_clib2->__dl_elf_handle == NULL");
-        }
-        FreeVec(__global_clib2);
-        __global_clib2 = NULL;
+
+        FreeVec(__clib2);
+        __clib2 = NULL;
     }
 
     LEAVE();
 }
 
 void enableUnixPaths(void) {
-    __unix_path_semantics = TRUE;
+    __CLIB2->__unix_path_semantics = TRUE;
 }
 
 void disableUnixPaths(void) {
-    __unix_path_semantics = FALSE;
+    __CLIB2->__unix_path_semantics = FALSE;
 }
 
 void enableAltivec(void) {
     int32 hasAltivec;
     /* Check if altivec is present otherwise we can't enable it */
-    GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec);
+    GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec, TAG_DONE);
     if (hasAltivec)
-        __global_clib2->hasAltivec = 1;
+        __CLIB2->hasAltivec = 1;
     else
-        __global_clib2->hasAltivec = 0;
+        __CLIB2->hasAltivec = 0;
 }
 
 void disableAltivec(void) {
-    __global_clib2->hasAltivec = 0;
+    __CLIB2->hasAltivec = 0;
 }
 
 void enableOptimizedFunctions(void) {
-    __global_clib2->optimizedCPUFunctions = 1;
+    __CLIB2->__optimizedCPUFunctions = TRUE;
 };
 
 void disableOptimizedFunctions(void) {
-    __global_clib2->optimizedCPUFunctions = 0;
+    __CLIB2->__optimizedCPUFunctions = FALSE;
 };
 
 int *__mb_cur_max(void) {
-    return &__global_clib2->__mb_cur_max;
+    return &__CLIB2->__mb_cur_max;
 }
 

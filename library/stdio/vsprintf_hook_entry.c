@@ -7,7 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int64_t
-__vsprintf_hook_entry(struct iob *string_iob, struct file_action_message *fam) {
+__vsprintf_hook_entry(struct _clib2 *__clib2, struct iob *string_iob, struct file_action_message *fam) {
     int64_t result = ERROR;
 
     assert(fam != NULL && string_iob != NULL);

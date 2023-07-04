@@ -7,9 +7,8 @@
 #endif /* _STDLIB_HEADERS_H */
 
 int
-abs(int x)
-{
-	int result;
+abs(int x) {
+    int result;
 
     ENTER();
     SHOWVALUE(x);
@@ -17,5 +16,5 @@ abs(int x)
     result = (x < 0) ? (-x) : x;
 
     RETURN(result);
-	return(result);
+    return (result);
 }

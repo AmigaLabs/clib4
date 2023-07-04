@@ -50,17 +50,15 @@ pthread_cancel(pthread_t thread) {
 
     // we might have to cancel the thread immediately
     if (inf->canceltype == PTHREAD_CANCEL_ASYNCHRONOUS && inf->cancelstate == PTHREAD_CANCEL_ENABLE) {
-        struct Task *task;
+        struct Task *task = FindTask(NULL);
 
-        task = FindTask(NULL);
-
-        if (inf->task == task)
+        if ((struct Task *) inf->task == task)
             pthread_testcancel(); // cancel ourselves
         else
-            Signal(inf->task, SIGBREAKF_CTRL_C); // trigger the exception handler
+            Signal((struct Task *) inf->task, SIGBREAKF_CTRL_C); // trigger the exception handler
     } else {
         // for the timed waits
-        Signal(inf->task, SIGBREAKF_CTRL_C);
+        Signal((struct Task *) inf->task, SIGBREAKF_CTRL_C);
     }
 
     return 0;

@@ -24,6 +24,7 @@ tcsendbreak(int file_descriptor, int duration) {
     int result = ERROR;
     struct fd *fd;
     struct termios *tios;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -32,7 +33,7 @@ tcsendbreak(int file_descriptor, int duration) {
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_TERMIOS)) {
@@ -66,7 +67,7 @@ tcsendbreak(int file_descriptor, int duration) {
 
 out:
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     __check_abort();
 

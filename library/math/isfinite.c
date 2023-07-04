@@ -2,7 +2,6 @@
  * $Id: math_isfinite.c,v 1.3 2022-03-10 12:04:23 clib2devs Exp $
 */
 
-
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */

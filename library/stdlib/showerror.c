@@ -49,11 +49,7 @@ void __show_error(const char *message) {
 
     struct Library *IntuitionBase = NULL;
     struct Library *DOSBase = NULL;
-
-    /* Don't show anything if this is the thread-safe library and
-       we were invoked indirectly by shared library startup code. */
-    if (__lib_startup)
-        goto out;
+    struct _clib2 *__clib2 = __CLIB2;
 
     DOSBase = OpenLibrary("dos.library", 0);
     IntuitionBase = OpenLibrary("intuition.library", 0);
@@ -70,13 +66,13 @@ void __show_error(const char *message) {
         goto out;
 
     /* If we can't hope to print the error message, show a requester instead. */
-    if (__no_standard_io || __WBenchMsg != NULL) {
+    if (__clib2->__no_standard_io || __clib2->__WBenchMsg != NULL) {
         UBYTE program_name[256] = {0};
         struct EasyStruct es;
         STRPTR title_string;
 
-        if (__WBenchMsg != NULL) {
-            title_string = (STRPTR) FilePart(__WBenchMsg->sm_ArgList[0].wa_Name);
+        if (__clib2->__WBenchMsg != NULL) {
+            title_string = (STRPTR) FilePart(__clib2->__WBenchMsg->sm_ArgList[0].wa_Name);
         } else {
             if (GetCliProgramName((STRPTR) program_name, sizeof(program_name)))
                 title_string = (STRPTR) FilePart((STRPTR) program_name);
@@ -98,10 +94,10 @@ void __show_error(const char *message) {
         /* Try to print the error message on the default error output stream. */
         output = ErrorOutput();
 
-        if (output == ZERO)
+        if (output == BZERO)
             output = Output();
 
-        if (output != ZERO) {
+        if (output != BZERO) {
             Write(output, (STRPTR) message, (LONG) strlen(message));
             Write(output, "\n", 1);
         }

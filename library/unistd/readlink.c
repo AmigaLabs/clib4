@@ -14,9 +14,10 @@ int
 readlink(const char *path_name, char *buffer, int buffer_size) {
     struct name_translation_info path_name_nti;
     struct name_translation_info buffer_nti;
-    BPTR lock = ZERO;
+    BPTR lock = BZERO;
     int result = ERROR;
     int target_length = -1;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -35,7 +36,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -50,7 +51,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
     D(("trying to get a lock on '%s'", path_name));
 
     lock = __lock((STRPTR) path_name, SHARED_LOCK, &target_length, buffer, (size_t) buffer_size);
-    if (lock != ZERO) {
+    if (lock != BZERO) {
         __set_errno(EINVAL);
         goto out;
     }
@@ -60,7 +61,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (__translate_amiga_to_unix_path_name((char const **) &buffer, &buffer_nti) != 0)
             goto out;
 

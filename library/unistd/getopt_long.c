@@ -157,8 +157,6 @@ static int getopt_long_internal(int argc, char* const* argv, const char *optstri
     SHOWPOINTER(longindex);
     SHOWVALUE(flags);
 
-    __check_abort();
-
     if (NULL == optstring)
         goto out;
 

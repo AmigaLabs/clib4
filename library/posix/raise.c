@@ -10,7 +10,6 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-#include "aio/aio_misc.h"
 #include "pthread/common.h"
 
 static APTR
@@ -25,53 +24,12 @@ hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
     return 0;
 }
 
-/* This table holds pointers to all signal handlers configured at a time. */
-signal_handler_t NOCOMMON __signal_handler_table[NSIG] = {
-    SIG_DFL, /* SIGHUP */
-    SIG_DFL, /* SIGINT */
-    SIG_DFL, /* SIGQUIT */
-    SIG_DFL, /* SIGILL */
-    SIG_DFL, /* SIGTRAP */
-    SIG_DFL, /* SIGABRT */
-    SIG_DFL, /* SIGEMT */
-    SIG_DFL, /* SIGFPE */
-    SIG_DFL, /* SIGKILL */
-    SIG_DFL, /* SIGBUS */
-    SIG_DFL, /* SIGSEGV */
-    SIG_DFL, /* SIGSYS */
-    SIG_DFL, /* SIGPIPE */
-    SIG_DFL, /* SIGQUIT */
-    SIG_DFL, /* SIGALRM */
-    SIG_DFL, /* SIGTERM */
-    SIG_DFL, /* SIGURG */
-    SIG_DFL, /* SIGSTOP */
-    SIG_DFL, /* SIGTSTP */
-    SIG_DFL, /* SIGCONT */
-    SIG_DFL, /* SIGCHLD */
-    SIG_DFL, /* SIGTTIN */
-    SIG_DFL, /* SIGTTOU */
-    SIG_DFL, /* SIGIO */
-    SIG_DFL, /* SIGXCPU */
-    SIG_DFL, /* SIGXFSZ */
-    SIG_DFL, /* SIGVTALRM */
-    SIG_DFL, /* SIGPROF */
-    SIG_DFL, /* SIGWINCH */
-    SIG_DFL, /* SIGLOST */
-    SIG_DFL, /* SIGUSR1 */
-    SIG_DFL /* SIGUSR2 */
-};
-
-/* This holds a mask of all signals whose delivery is currently blocked.
-   The sigaddset(), sigblock(), sigprocmask() and sigsetmask() functions
-   modify or query it. */
-int NOCOMMON __signals_blocked;
-
 int
 raise(int sig) {
-    static int local_signals_blocked;
-
-    int result = ERROR;
     ENTER();
+
+    struct _clib2 *__clib2 = __CLIB2;
+    int result = ERROR;
     SHOWVALUE(sig);
 
     /* This has to be a well-known and supported signal. 0 is a valid signal*/
@@ -89,18 +47,18 @@ raise(int sig) {
     }
 
     /* Can we deliver the signal? */
-    if ((FLAG_IS_CLEAR(__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
+    if ((FLAG_IS_CLEAR(__clib2->__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(__clib2->local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
         signal_handler_t handler;
 
         /* Which handler is installed for this signal? */
-        handler = __signal_handler_table[sig - SIGHUP];
+        handler = __clib2->__signal_handler_table[sig - SIGHUP];
 
         /* Should we ignore this signal? */
         if (handler != SIG_IGN) {
             /* Block delivery of this signal to prevent recursion. */
             SHOWMSG("Blocking signal if it isn't a kill signal");
             if (sig != SIGINT && sig != SIGTERM && sig != SIGKILL)
-                SET_FLAG(local_signals_blocked, (1 << sig));
+                SET_FLAG(__clib2->local_signals_blocked, (1 << sig));
 
             /* The default behaviour is to drop into abort(), or do
                something very much like it. */
@@ -109,14 +67,14 @@ raise(int sig) {
 
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                     /* Check ig we have timer terminal running. If so let's kill it */
-                    if (__global_clib2->tmr_real_task != NULL) {
+                    if (__clib2->tmr_real_task != NULL) {
                         struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
                         int32 pid, process;
 
                         /* Block SIGALRM signal from raise */
                         sigblock(SIGALRM);
                         /* Get itimer process ID */
-                        pid = __global_clib2->tmr_real_task->pr_ProcessID;
+                        pid = __clib2->tmr_real_task->pr_ProcessID;
 
                         Forbid();
                         /* Scan for process */
@@ -125,39 +83,21 @@ raise(int sig) {
                         while (process > 0) {
                             /* Send a SIGBREAKF_CTRL_F signal until the timer task return to Wait state
                              * and can get the signal */
-                            Signal((struct Task *) __global_clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+                            Signal((struct Task *) __clib2->tmr_real_task, SIGBREAKF_CTRL_F);
                             process = ProcessScan(&h, (CONST_APTR) pid, 0);
                             usleep(100);
                         }
                         Permit();
                         WaitForChildExit(pid);
-                        __global_clib2->tmr_real_task = NULL;
+                        __clib2->tmr_real_task = NULL;
                     }
-
-                    /* Check if we have some aio threads */
-                    SHOWMSG("Check if we have some aio pthreads created");
-                    AioThread *aioThread;
-                    SHOWMSG("Obtain aio semaphore");
-                    ObtainSemaphore(__global_clib2->__aio_lock);
-                    int streams = __global_clib2->aio_threads->count(__global_clib2->aio_threads);
-                    D(("AIO list has %ld items", streams));
-                    if (streams > 0) {
-                        for (int i = 0; i < streams; i++) {
-                            aioThread = __global_clib2->aio_threads->at(__global_clib2->aio_threads, i);
-                            D(("Cancel AIO stream with filedes %ld", aioThread->fileDes));
-                            aio_cancel(aioThread->fileDes, aioThread->aiocbp);
-                            Signal(aioThread->thread, SIGBREAKF_CTRL_C);
-                        }
-                    }
-                    ReleaseSemaphore(__global_clib2->__aio_lock);
 
                     char break_string[80];
 
                     /* Turn off ^C checking for good. */
-                    __check_abort_enabled = FALSE;
+                    __clib2->__check_abort_enabled = FALSE;
 
-                    Fault(ERROR_BREAK, NULL, break_string, (LONG)
-                    sizeof(break_string));
+                    Fault(ERROR_BREAK, NULL, break_string, (LONG) sizeof(break_string));
 
                     __print_termination_message(break_string);
 
@@ -176,7 +116,7 @@ raise(int sig) {
                     sigblock(SIGALRM);
 
                     /* Since we got a signal we interrrupt every sleep function like nanosleep */
-                    Signal((struct Task *) __global_clib2->self, SIGBREAKF_CTRL_E);
+                    Signal((struct Task *) __clib2->self, SIGBREAKF_CTRL_E);
                 }
             }
             else if (handler == SIG_ERR) {
@@ -196,7 +136,7 @@ raise(int sig) {
 
             /* Unblock signal delivery again. */
             SHOWMSG("Unblocking signal");
-            CLEAR_FLAG(local_signals_blocked, (1 << sig));
+            CLEAR_FLAG(__clib2->local_signals_blocked, (1 << sig));
         }
         else {
             if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {

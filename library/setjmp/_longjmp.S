@@ -7,4 +7,3 @@
 #undef __longjmp_symbol
 #define __longjmp_symbol  _longjmp
 #include "__longjmp-common.S"
-

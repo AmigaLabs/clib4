@@ -11,8 +11,9 @@ realpath(const char *path_name, char *buffer) {
     struct name_translation_info path_name_nti;
     struct name_translation_info buffer_nti;
     struct DevProc *dvp = NULL;
-    BPTR lock = ZERO;
+    BPTR lock = BZERO;
     char *result = NULL;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -28,7 +29,7 @@ realpath(const char *path_name, char *buffer) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -43,7 +44,7 @@ realpath(const char *path_name, char *buffer) {
     D(("trying to get a lock on '%s'", path_name));
 
     lock = Lock((STRPTR) path_name, SHARED_LOCK);
-    if (lock != ZERO) {
+    if (lock != BZERO) {
         LONG status;
 
         SHOWMSG("trying to obtain the absolute path");
@@ -62,7 +63,7 @@ realpath(const char *path_name, char *buffer) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (__translate_amiga_to_unix_path_name((char const **) &buffer, &buffer_nti) != 0)
             goto out;
 

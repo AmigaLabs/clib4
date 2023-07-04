@@ -9,6 +9,7 @@
 void
 funlockfile(FILE *stream) {
     struct iob *file = (struct iob *) stream;
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert(stream != NULL);
 
@@ -19,7 +20,7 @@ funlockfile(FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(file));
+    assert(__is_valid_iob(__clib2, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {

@@ -13,7 +13,7 @@ float fmaxf(float x, float y)
 	if (isnan(x))
 	{
 		if (isnan(y))
-			result = nanf(NULL);
+			result = NAN;
 		else
 			result = y;
 	}

@@ -40,7 +40,10 @@ __BEGIN_DECLS
 extern int opterr;
 extern int optind;
 extern int optopt;
-extern char * optarg;
+extern char *optarg;
+
+#define environ (*__environ())
+extern char ***__environ (void);
 
 extern int isatty(int file_descriptor);
 extern int dup(int file_descriptor);
@@ -82,13 +85,15 @@ extern int fsync(int file_descriptor);
 extern int fdatasync(int file_descriptor);
 extern char *ttyname(int);
 extern int ttyname_r(int file_descriptor,char *name,size_t buflen);
-extern int ttyname_t(int,char *,size_t);
 extern int execl(const char *path,const char *arg0,...);
 extern int execle(const char *path,const char *arg0,...);
 extern int execlp(const char *path,const char *arg0,...);
 extern int execv(const char *path,char * const argv[]);
 extern int execve(const char *path,char *const argv[],char *const envp[]);
 extern int execvp(const char *command,char * const argv[]);
+extern int getentropy(void *, size_t);
+
+extern void encrypt(char *block, int edflag);
 
 extern int spawnv(int mode, const char *file, const char **argv);
 extern int spawnvp(int mode, const char *path, const char **argv);
@@ -134,6 +139,7 @@ extern int setregid(gid_t rgid, gid_t egid);
 extern int setreuid(uid_t ruid, uid_t euid);
 extern pid_t setsid(void);
 extern int setuid(uid_t uid);
+extern int setlogin(const char *name);
 
 /* The following is for use with pathconf()/fpathconf() */
 #define	_PC_LINK_MAX				0
@@ -173,14 +179,14 @@ extern int setuid(uid_t uid);
 #define _SC_OPEN_MAX                4
 #define _SC_PAGESIZE                8
 #define _SC_NPROCESSORS_CONF        9
+#define _SC_NPROCESSORS_ONLN       10
 #define _SC_TZNAME_MAX             20
 #define _SC_THREAD_KEYS_MAX        21
 #define _SC_HOST_NAME_MAX          65
+#define _SC_GETPW_R_SIZE_MAX	   70
 
 extern long pathconf(const char *path,int name);
 extern long fpathconf(int file_descriptor,int name);
-
-extern ssize_t write(int fildes, const void *buf, size_t nbyte);
 
 extern int pipe (int fd[2]);
 extern int pipe2 (int fd[2], int flags);

@@ -11,8 +11,6 @@ pid_t setsid(void) {
 
     ENTER();
 
-    assert(__UserGroupBase != NULL);
-
     result = (long) __setsid();
 
     __check_abort();

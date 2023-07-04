@@ -26,6 +26,7 @@ strtod(const char *str, char **ptr) {
     double result;
     int is_negative;
     char c;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -73,7 +74,7 @@ strtod(const char *str, char **ptr) {
 
         str += strlen(str);
 
-        sum = __stdlib_inf();
+        sum = INFINITY;
 
         stop = str;
     } else if (strncasecmp(str, "nan", 3) == SAME && (str[3] == '(' || str[3] == '\0')) {
@@ -90,7 +91,7 @@ strtod(const char *str, char **ptr) {
                 str++;
         }
 
-        sum = __stdlib_nan(NULL);
+        sum = NAN;
 
         stop = str;
     } else {
@@ -141,12 +142,12 @@ strtod(const char *str, char **ptr) {
            dot. */
         decimal_point_matches = 0;
 
-        __locale_lock();
+        __locale_lock(__clib2);
 
-        if (__locale_table[LC_NUMERIC] != NULL) {
+        if (__clib2->__locale_table[LC_NUMERIC] != NULL) {
             const char *point;
 
-            point = (const char *) __locale_table[LC_NUMERIC]->loc_DecimalPoint;
+            point = (const char *) __clib2->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
             if ((*point) == (*str)) {
                 decimal_point_matches = 1;
 
@@ -155,7 +156,7 @@ strtod(const char *str, char **ptr) {
             }
         }
 
-        __locale_unlock();
+        __locale_unlock(__clib2);
 
         if (NOT decimal_point_matches) {
             if ((*str) == '.') {
@@ -256,7 +257,7 @@ strtod(const char *str, char **ptr) {
                     double divisor;
 
                     /* A negative exponent means division. */
-                    divisor = __stdlib_pow((double) radix, (double) exponent);
+                    divisor = pow((double) radix, (double) exponent);
                     if (divisor != 0.0) {
                         new_sum = sum / divisor;
                         if (new_sum == 0.0 && sum != 0.0)
@@ -268,7 +269,7 @@ strtod(const char *str, char **ptr) {
                     }
                 } else {
                     /* A positive exponent means multiplication. */
-                    new_sum = sum * __stdlib_pow((double) radix, (double) exponent);
+                    new_sum = sum * pow((double) radix, (double) exponent);
                     if (new_sum < sum)
                         error = ERANGE;
                     else

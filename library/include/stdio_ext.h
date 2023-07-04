@@ -21,7 +21,7 @@ extern int __flbf(FILE *);
 extern size_t __fbufsize(FILE *);
 extern size_t __fpending(FILE *);
 extern int __fpurge(FILE *);
-extern void fpurge(FILE *);
+extern int fpurge(FILE *);
 extern void __fseterr(FILE *);
 
 extern size_t __freadahead(FILE *);

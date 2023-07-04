@@ -1,5 +1,5 @@
 /*
- * $Id: types.h,v 1.9 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: types.h,v 1.10 2023-06-03 12:06:14 clib2devs Exp $
 */
 
 #ifndef _SYS_TYPES_H
@@ -7,7 +7,6 @@
 
 #include <features.h>
 
-#include <time.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -34,8 +33,14 @@ typedef uint64_t fsfilcnt_t;
 #endif
 typedef int pid_t;
 typedef unsigned int rlim_t;
-typedef signed int ssize_t;
 typedef unsigned int uid_t;
+
+#if defined(INT_MAX) && INT_MAX == 2147483647
+typedef int _ssize_t;
+#else
+typedef long _ssize_t;
+#endif
+typedef _ssize_t ssize_t;
 
 #ifndef _BSDTYPES_DEFINED
 typedef unsigned char   u_char;
@@ -60,6 +65,15 @@ typedef	quad_t *	qaddr_t;
 
 /* Iconv descriptor type */
 typedef void *_iconv_t;
+
+#define _CLOCK_T_ unsigned long long /* clock() */
+#define _TIME_T_ long long           /* time() */
+#define _CLOCKID_T_ unsigned long
+#define _TIMER_T_ unsigned long
+
+typedef _CLOCK_T_   clock_t;
+typedef _TIME_T_    time_t;
+typedef _CLOCKID_T_ clockid_t;
 
 __END_DECLS
 

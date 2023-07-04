@@ -37,7 +37,9 @@ struct passwd
 extern void endpwent(void);
 extern struct passwd *getpwent(void);
 extern struct passwd *getpwnam(const char *name);
+extern int getpwnam_r(const char *name, struct passwd *pw, char *buffer, size_t bufsize, struct passwd **result);
 extern struct passwd *getpwuid(uid_t uid);
+extern int getpwuid_r(uid_t uid, struct passwd *pwd, char *buffer, size_t bufsize, struct passwd **result);
 extern void setpwent(void);
 
 #ifdef __GNUC__

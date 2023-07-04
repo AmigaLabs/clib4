@@ -9,6 +9,7 @@
 int
 remove(const char *filename) {
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -25,7 +26,7 @@ remove(const char *filename) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         result = unlink(filename);
     } else {
         LONG status;

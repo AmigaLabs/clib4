@@ -14,11 +14,8 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-
-struct Library *NOCOMMON __SocketBase;
-struct SocketIFace *NOCOMMON __ISocket;
-
-int NOCOMMON h_errno;
+struct Library *__SocketBase;
+struct SocketIFace *__ISocket;
 
 /* Call-back hook for use with SBTC_ERROR_HOOK */
 struct _ErrorHookMsg {
@@ -30,11 +27,6 @@ struct _ErrorHookMsg {
 /* Which action the hook is to perform */
 #define EHMA_Set_errno   1 /* Set the local 'errno' to what is found in ehm_Code */
 #define EHMA_Set_h_errno 2 /* Set the local 'h_errno' to what is found in ehm_Code */
-
-/****************************************************************************/
-
-BOOL NOCOMMON __can_share_socket_library_base;
-BOOL NOCOMMON __thread_safe_errno_h_errno;
 
 /****************************************************************************/
 
@@ -72,9 +64,10 @@ STATIC struct Hook error_hook = {
 
 SOCKET_DESTRUCTOR(socket_exit) {
     ENTER();
+    struct _clib2 *__clib2 = __CLIB2;
 
     /* Disable ^C checking. */
-    if (__SocketBase != NULL) {
+    if (__clib2->__SocketBase != NULL) {
         struct TagItem tags[2];
 
         tags[0].ti_Tag = SBTM_SETVAL(SBTC_BREAKMASK);
@@ -90,14 +83,14 @@ SOCKET_DESTRUCTOR(socket_exit) {
      *          does not happen, the stdio cleanup function will
      *          crash (with bells on).
      */
-    __close_all_files();
-    if (__ISocket != NULL) {
-        DropInterface((struct Interface *) __ISocket);
-        __ISocket = NULL;
+    __close_all_files(__clib2);
+    if (__clib2->__ISocket != NULL) {
+        DropInterface((struct Interface *) __clib2->__ISocket);
+        __clib2->__ISocket = NULL;
     }
-    if (__SocketBase != NULL) {
-        CloseLibrary(__SocketBase);
-        __SocketBase = NULL;
+    if (__clib2->__SocketBase != NULL) {
+        CloseLibrary(__clib2->__SocketBase);
+        __clib2->__SocketBase = NULL;
     }
 
     LEAVE();
@@ -107,24 +100,26 @@ SOCKET_CONSTRUCTOR(socket_init) {
     struct TagItem tags[5];
     BOOL success = FALSE;
     LONG status;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     /* bsdsocket.library V3 is sufficient for all the tasks we may have to perform. */
-    __SocketBase = OpenLibrary("bsdsocket.library", 3);
-    if (__SocketBase != NULL) {
-        __ISocket = (struct SocketIFace *) GetInterface(__SocketBase, "main", 1, 0);
-        if (__ISocket == NULL) {
-            CloseLibrary(__SocketBase);
-            __SocketBase = NULL;
+    __clib2->__SocketBase = OpenLibrary("bsdsocket.library", 3);
+    if (__clib2->__SocketBase != NULL) {
+        __clib2->__ISocket = (struct SocketIFace *) GetInterface(__clib2->__SocketBase, "main", 1, 0);
+        if (__clib2->__ISocket == NULL) {
+            CloseLibrary(__clib2->__SocketBase);
+            __clib2->__SocketBase = NULL;
         }
     }
 
-    if (__SocketBase == NULL) {
+    if (__clib2->__SocketBase == NULL) {
         SHOWMSG("bsdsocket.library V3 didn't open");
         __show_error("\"bsdsocket.library\" V3 could not be opened.");
         goto out;
     }
+    DECLARE_SOCKETBASE();
 
     /* Wire the library's errno variable to our local errno. */
     tags[0].ti_Tag = SBTM_SETVAL(SBTC_ERRNOLONGPTR);
@@ -132,14 +127,10 @@ SOCKET_CONSTRUCTOR(socket_init) {
 
     /* Also enable ^C checking if desired. */
     tags[1].ti_Tag = SBTM_SETVAL(SBTC_BREAKMASK);
-
-    if (__check_abort_enabled)
-        tags[1].ti_Data = __break_signal_mask;
-    else
-        tags[1].ti_Data = 0;
+    tags[1].ti_Data = __clib2->__break_signal_mask;
 
     tags[2].ti_Tag = SBTM_SETVAL(SBTC_LOGTAGPTR);
-    tags[2].ti_Data = (ULONG)__program_name;
+    tags[2].ti_Data = (ULONG)__clib2->__progname;
 
     /* Wire the library's h_errno variable to our local h_errno. */
     tags[3].ti_Tag = SBTM_SETVAL(SBTC_HERRNOLONGPTR);
@@ -162,29 +153,25 @@ SOCKET_CONSTRUCTOR(socket_init) {
    hook. If either of these features are supported can be checked
    by looking at the global __can_share_socket_library_base and
    __thread_safe_errno_h_errno variables. */
-    if (__SocketBase->lib_Version >= 4) {
+    if (__clib2->__SocketBase->lib_Version >= 4) {
         tags[0].ti_Tag = SBTM_SETVAL(SBTC_CAN_SHARE_LIBRARY_BASES);
         tags[0].ti_Data = TRUE;
 
         tags[1].ti_Tag = TAG_END;
 
         if (__SocketBaseTagList(tags) == 0)
-            __can_share_socket_library_base = TRUE;
+            __clib2->__can_share_socket_library_base = TRUE;
 
-        if (__can_share_socket_library_base) {
+        if (__clib2->__can_share_socket_library_base) {
             tags[0].ti_Tag = SBTM_SETVAL(SBTC_ERROR_HOOK);
             tags[0].ti_Data = (ULONG) &error_hook;
 
             tags[1].ti_Tag = TAG_END;
 
             if (__SocketBaseTagList(tags) == 0)
-                __thread_safe_errno_h_errno = TRUE;
+                __clib2->__thread_safe_errno_h_errno = TRUE;
         }
     }
-
-    /* Check if this program was launched as a server by the Internet superserver. */
-    if (CANNOT __obtain_daemon_message())
-        goto out;
 
     success = TRUE;
 

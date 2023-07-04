@@ -8,45 +8,44 @@
 
 #ifndef NDEBUG
 
-BOOL __is_valid_iob(struct iob *iob)
-{
-	BOOL result = FALSE;
+BOOL __is_valid_iob(struct _clib2 *__clib2, struct iob *iob) {
+    BOOL result = FALSE;
 
-	if (iob != NULL && FLAG_IS_SET(iob->iob_Flags, IOBF_INTERNAL))
-	{
-		/* This is used by vsprintf(), etc. */
-		result = TRUE;
-	}
-	else
-	{
-		__stdio_lock();
+    if (iob == NULL) {
+        RETURN(result);
+        return result;
+    }
 
-		if (__iob != NULL && __num_iob > 0 && 0 <= iob->iob_SlotNumber && iob->iob_SlotNumber < __num_iob && __iob[iob->iob_SlotNumber] == iob)
-			result = TRUE;
+    if (FLAG_IS_SET(iob->iob_Flags, IOBF_INTERNAL)) {
+        /* This is used by vsprintf(), etc. */
+        result = TRUE;
+    } else {
+        __stdio_lock(__clib2);
+        SHOWPOINTER(__clib2->__iob[iob->iob_SlotNumber]);
 
-		__stdio_unlock();
-	}
+        if (__clib2->__num_iob > 0 && 0 <= iob->iob_SlotNumber && iob->iob_SlotNumber < __clib2->__num_iob && __clib2->__iob[iob->iob_SlotNumber] == iob)
+            result = TRUE;
 
-	return (result);
+        __stdio_unlock(__clib2);
+    }
+
+    return result;
 }
 
 #endif /* NDEBUG */
 
-int __find_vacant_iob_entry(void)
-{
-	int result = ERROR;
-	int i;
+int __find_vacant_iob_entry(struct _clib2 *__clib2) {
+    int result = ERROR;
+    int i;
 
-	assert(__iob != NULL || __num_iob == 0);
+    assert(__clib2->__iob != NULL || __clib2->__num_iob == 0);
 
-	for (i = 0; i < __num_iob; i++)
-	{
-		if (FLAG_IS_CLEAR(__iob[i]->iob_Flags, IOBF_IN_USE))
-		{
-			result = i;
-			break;
-		}
-	}
+    for (i = 0; i < __clib2->__num_iob; i++) {
+        if (FLAG_IS_CLEAR(__clib2->__iob[i]->iob_Flags, IOBF_IN_USE)) {
+            result = i;
+            break;
+        }
+    }
 
-	return (result);
+    return (result);
 }

@@ -14,7 +14,7 @@ strtol(const char *str, char **ptr, int base) {
     long result = 0;
     long new_sum;
     long sum;
-    char c;
+    register int c;
 
     ENTER();
 
@@ -24,7 +24,7 @@ strtol(const char *str, char **ptr, int base) {
 
     assert(str != NULL && base >= 0);
 
-    if (str == NULL) {
+    if (NULL == str) {
         SHOWMSG("invalid str parameter");
 
         __set_errno(EFAULT);
@@ -104,8 +104,7 @@ strtol(const char *str, char **ptr, int base) {
                 break;
 
             new_sum = base * sum + c;
-            if (new_sum < sum) /* overflow? */
-            {
+            if (new_sum < sum) { /* overflow? */
                 __set_errno(ERANGE);
 
                 if (is_negative)

@@ -8,6 +8,12 @@
 #include <features.h>
 #include <pthread.h>
 
+#ifdef __cplusplus
+#ifdef __USE_AMIGAOS_NAMESPACE__
+#define pthread_attr_t AmigaOS::pthread_attr_t
+#endif
+#endif
+
 __BEGIN_DECLS
 
 typedef void (*_sig_func_ptr)(int);
@@ -61,7 +67,7 @@ typedef _sig_func_ptr sighandler_t; /* glibc naming */
 
 /****************************************************************************/
 
-extern void (*signal(int sig, void (*)(int)))(int);
+extern _sig_func_ptr signal (int, _sig_func_ptr);;
 extern int raise(int sig);
 
 typedef int sig_atomic_t;

@@ -1,16 +1,23 @@
 /*
- * $Id: time_converttime.c,v 1.4 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: time_converttime.c,v 2.0 2023-05-26 12:04:27 clib2devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
+#ifndef _LOCALE_HEADERS_H
+#include "locale_headers.h"
+#endif /* _LOCALE_HEADERS_H */
+
 struct tm *
 __convert_time(ULONG seconds, LONG gmt_offset, struct tm *tm) {
-    DECLARE_UTILITYBASE();
     struct ClockData clock_data;
     struct tm *result;
+    struct _clib2 *__clib2 = __CLIB2;
+    DECLARE_UTILITYBASE();
+    DECLARE_TIMEZONEBASE();
+    int8 dstime = -1;
 
     ENTER();
 
@@ -29,6 +36,11 @@ __convert_time(ULONG seconds, LONG gmt_offset, struct tm *tm) {
     /* Now the local time offset will have to go. */
     seconds -= gmt_offset;
 
+    /* Check if we are in DST */
+    GetTimezoneAttrs(NULL, TZA_TimeFlag, &dstime, TAG_DONE);
+    if (dstime == TFLG_ISDST)
+        seconds += (60 * 60);
+
     /* Convert the number of seconds into a more useful format. */
     Amiga2Date(seconds, &clock_data);
 
@@ -43,7 +55,9 @@ __convert_time(ULONG seconds, LONG gmt_offset, struct tm *tm) {
     tm->tm_mon = clock_data.month - 1;
     tm->tm_year = clock_data.year - 1900;
     tm->tm_wday = clock_data.wday;
-    tm->tm_isdst = -1;
+    tm->tm_isdst = __clib2->__daylight;
+    tm->tm_zone = __clib2->__tzname[0];
+    tm->tm_gmtoff = __clib2->__timezone / 60;
 
     /* Now figure out how many days have passed since January 1st. */
     tm->tm_yday = __calculate_days_per_date(clock_data.year, clock_data.month, clock_data.mday) -

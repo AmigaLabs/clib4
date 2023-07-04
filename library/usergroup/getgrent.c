@@ -6,27 +6,20 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-/****************************************************************************/
-
 #ifdef getgrent
 #undef getgrent
 #endif /* getgrent */
 
-/****************************************************************************/
-
 struct group *
-getgrent(void)
-{
-	struct group *result;
+getgrent(void) {
+    struct group *result;
 
-	ENTER();
+    ENTER();
 
-	assert(__UserGroupBase != NULL);
-
-	result = __getgrent();
+    result = __getgrent();
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

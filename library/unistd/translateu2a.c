@@ -295,6 +295,17 @@ __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translati
 
                 name[len] = '\0';
                 D(("name = '%s' (line %ld)", name, __LINE__));
+            } else if (
+                (strncmp(name, "/dev/random", 11)) == SAME && (len == 11 || name[11] == '/') ||
+                (strncmp(name, "/dev/urandom", 12)) == SAME && (len == 12 || name[12] == '/')
+            ) {
+                strcpy(replace, "RANDOM:");
+                name = replace;
+
+                len = 7;
+
+                name[len] = '\0';
+                D(("name = '%s' (line %ld)", name, __LINE__));
             } else {
                 size_t path_name_start = 0;
 

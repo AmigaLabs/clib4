@@ -39,10 +39,8 @@
 
 pthread_t
 pthread_self(void) {
-    struct Task *task;
     pthread_t thread;
-
-    task = FindTask(NULL);
+    struct Task *task = FindTask(NULL);
 
     thread = GetThreadId(task);
 

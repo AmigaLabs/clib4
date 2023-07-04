@@ -6,25 +6,20 @@
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-uid_t getuid(void)
-{
-	uid_t result;
+uid_t getuid(void) {
+    uid_t result;
+    struct _clib2 *__clib2 = __CLIB2;
 
-	ENTER();
+    ENTER();
 
-	assert(__UserGroupBase != NULL);
-
-	if (__root_mode)
-	{
-		result = __root_uid;
-	}
-	else
-	{
-		result = __getuid();
-	}
+    if (__clib2->__root_mode) {
+        result = __clib2->__root_uid;
+    } else {
+        result = __getuid();
+    }
 
     __check_abort();
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

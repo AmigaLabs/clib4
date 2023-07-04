@@ -2,6 +2,7 @@
  * $Id: iconv.c,v 1.0 2021-03-09 12:04:25 clib2devs Exp $
 */
 
+
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
@@ -12,31 +13,31 @@
  * limited to 1024 slots (10 bit indices). The first 256 entries
  * are elided since those characters are obviously all included. */
 static const unsigned short legacy_chars[] = {
-#include "legacychars.h"
+    #include "legacychars.h"
 };
 
 static const unsigned short jis0208[84][94] = {
-#include "jis0208.h"
+    #include "jis0208.h"
 };
 
 static const unsigned short gb18030[126][190] = {
-#include "gb18030.h"
+    #include "gb18030.h"
 };
 
 static const unsigned short big5[89][157] = {
-#include "big5.h"
+    #include "big5.h"
 };
 
 static const unsigned short hkscs[] = {
-#include "hkscs.h"
+    #include "hkscs.h"
 };
 
 static const unsigned short ksc[93][94] = {
-#include "ksc.h"
+    #include "ksc.h"
 };
 
 static const unsigned short rev_jis[] = {
-#include "revjis.h"
+    #include "revjis.h"
 };
 
 static unsigned
@@ -68,9 +69,9 @@ put_32(unsigned char *s, unsigned c, int e) {
 }
 
 static unsigned
-legacy_map(const unsigned char *map, unsigned c) {
-    if (c < 4 * map[-1]) return c;
-    unsigned x = c - 4 * map[-1];
+legacy_map(const unsigned char *map, unsigned char type, unsigned c) {
+    if (c < 4 * type) return c;
+    unsigned x = c - 4 * type;
     x = map[x * 5 / 4] >> 2 * x % 8 | map[x * 5 / 4 + 1] << 8 - 2 * x % 8 & 1023;
     return x < 256 ? x : legacy_chars[x - 256];
 }
@@ -111,8 +112,8 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
     unsigned c, d;
     size_t k, l;
     int err;
-    unsigned char type = map[-1];
-    unsigned char totype = tomap[-1];
+    unsigned char type = charmaps[from];
+    unsigned char totype = charmaps[to];
 
     if (!in || !*in || !*inb) return 0;
 
@@ -279,6 +280,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
             case GB2312:
                 if (c < 128) break;
                 if (c < 0xa1) goto ilseq;
+                /* fallthrough */
             case GBK:
             case GB18030:
                 if (c < 128) break;
@@ -397,7 +399,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 break;
             default:
                 if (!c) break;
-                c = legacy_map(map, c);
+                c = legacy_map(map, type, c);
                 if (!c) goto ilseq;
         }
 
@@ -422,9 +424,10 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 if (c > 0x7f)
                     subst:
                     x++, c = '*';
+                /* fallthrough */
             default:
                 if (*outb < 1) goto toobig;
-                if (c < 256 && c == legacy_map(tomap, c)) {
+                if (c < 256 && c == legacy_map(tomap, type, c)) {
                     revout:
                     if (*outb < 1) goto toobig;
                     *(*out)++ = c;
@@ -433,7 +436,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 }
                 d = c;
                 for (c = 4 * totype; c < 256; c++) {
-                    if (d == legacy_map(tomap, c)) {
+                    if (d == legacy_map(tomap, type, c)) {
                         goto revout;
                     }
                 }
@@ -513,6 +516,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 break;
             case UCS2:
                 totype = UCS2BE;
+                /* fallthrough */
             case UCS2BE:
             case UCS2LE:
             case UTF_16:
@@ -535,6 +539,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 break;
             case UTF_32:
                 totype = UTF_32BE;
+                /* fallthrough */
             case UTF_32BE:
             case UTF_32LE:
                 if (*outb < 4) goto toobig;
@@ -545,18 +550,18 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
         }
     }
     return x;
-ilseq:
+    ilseq:
     err = EILSEQ;
     x = -1;
     goto end;
-toobig:
+    toobig:
     err = E2BIG;
     x = -1;
     goto end;
-starved:
+    starved:
     err = EINVAL;
     x = -1;
-end:
+    end:
     __set_errno(err);
     return x;
 }

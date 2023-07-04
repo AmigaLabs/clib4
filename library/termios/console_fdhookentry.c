@@ -39,8 +39,7 @@ LineEditor(BPTR file, char *buf, const int buflen, struct termios *tios) {
 
     while (do_edit && len < buflen) {
         /* 5 seconds. */
-        if (WaitForChar(file, 5000000) != DOSFALSE)
-        {
+        if (WaitForChar(file, 5000000) != DOSFALSE) {
             if (Read(file, &z, 1) == ERROR) {
                 len = -1;
                 break;
@@ -141,7 +140,7 @@ LineEditor(BPTR file, char *buf, const int buflen, struct termios *tios) {
 }
 
 int64_t
-__termios_console_hook(struct fd *fd, struct file_action_message *fam) {
+__termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action_message *fam) {
     const unsigned char CR = '\r', NL = '\n';
     struct FileHandle *fh;
     char *buffer = NULL;
@@ -154,7 +153,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
     ENTER();
 
     assert(fam != NULL && fd != NULL);
-    assert(__is_valid_fd(fd));
+    assert(__is_valid_fd(__clib2, fd));
     assert(FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS));
     assert(fd->fd_Aux != NULL);
 
@@ -164,12 +163,12 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
      * table and therefore needs to obtain the stdio lock before
      * it locks this particular descriptor entry. */
     if (fam->fam_Action == file_action_close)
-        __stdio_lock();
+        __stdio_lock(__clib2);
 
     __fd_lock(fd);
 
     file = __resolve_fd_file(fd);
-    if (file == ZERO) {
+    if (file == BZERO) {
         SHOWMSG("file is closed");
 
         fam->fam_Error = EBADF;
@@ -188,7 +187,8 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
             assert(fam->fam_Data != NULL);
             assert(fam->fam_Size > 0);
 
-            D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, Seek(file, 0, OFFSET_CURRENT), fam->fam_Data));
+            D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, Seek(file, 0,
+                                                                                  OFFSET_CURRENT), fam->fam_Data));
 
             if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                 /* Attempt to fake everything needed in non-canonical mode. */
@@ -237,8 +237,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
                 } else {
                     result = 0; /* Reading zero characters will always succeed. */
                 }
-            }
-            else {
+            } else {
                 result = 0;
                 /* Well.. this seems an hack to make ncurses works correctly
                  * I don't know if there are other problems setting STDIO always
@@ -261,9 +260,13 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
                         if (WaitForChar(file, 1))
                             result = Read(file, fam->fam_Data, fam->fam_Size);
                     }
-                }
-                else {
-                    result = Read(file, fam->fam_Data, fam->fam_Size);
+                } else {
+                    if (FLAG_IS_CLEAR(tios->c_lflag, ECHO)) {
+                        /* No-echo mode needs to be emulated. */
+                        result = LineEditor(file, fam->fam_Data, fam->fam_Size, tios);
+                    } else {
+                        result = Read(file, fam->fam_Data, fam->fam_Size);
+                    }
                 }
             }
 
@@ -439,7 +442,7 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
                         result = EOF;
                     }
 
-                    fd->fd_File = ZERO;
+                    fd->fd_File = BZERO;
                 }
             }
 
@@ -557,12 +560,12 @@ __termios_console_hook(struct fd *fd, struct file_action_message *fam) {
             break;
     }
 
-out:
+    out:
 
     __fd_unlock(fd);
 
     if (fam->fam_Action == file_action_close)
-        __stdio_unlock();
+        __stdio_unlock(__clib2);
 
     if (buffer != NULL)
         free(buffer);

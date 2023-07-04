@@ -28,20 +28,14 @@
  ******************************************************************/
 
 #define SWAP(a, b, size)    (swap((char *)(a), (char *)(b), size))
-#define COMPARE(a, b)        ((*comp)((const void *)(a), (const void *)(b)))
+#define COMPARE(a, b)       ((*comp)((const void *)(a), (const void *)(b)))
 
 /* subfiles of THRESHOLD or fewer elements will
    be sorted by a simple insertion sort
    Note! THRESHOLD must be at least 3 */
 #define THRESHOLD 7
 
-/* For an 68030 and beyond the alignment does not matter and you can skip the
-   second half of the test (everything beyond the 'nbytes >= sizeof(long)'). */
-#if defined(M68020)
-#define IS_WORD_ALIGNED(a,b) (1)
-#else
 #define IS_WORD_ALIGNED(a, b) (((((unsigned long)(a)) | ((unsigned long)(b))) & 1) == 0)
-#endif /* M68020 */
 
 /* swap nbytes between a and b */
 inline static void

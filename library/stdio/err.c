@@ -13,7 +13,7 @@
 #include <err.h>
 
 void vwarn(const char *fmt, va_list ap) {
-    fprintf(stderr, "%s: ", __program_name);
+    fprintf(stderr, "%s: ", __CLIB2->__progname);
     if (fmt) {
         vfprintf(stderr, fmt, ap);
         fputs(": ", stderr);
@@ -22,7 +22,7 @@ void vwarn(const char *fmt, va_list ap) {
 }
 
 void vwarnx(const char *fmt, va_list ap) {
-    fprintf(stderr, "%s: ", __program_name);
+    fprintf(stderr, "%s: ", __CLIB2->__progname);
     if (fmt) vfprintf(stderr, fmt, ap);
     putc('\n', stderr);
 }

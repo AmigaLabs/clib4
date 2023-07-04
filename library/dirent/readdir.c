@@ -6,12 +6,16 @@
 #include "dirent_headers.h"
 #endif /* _DIRENT_HEADERS_H */
 
+#ifndef _STRING_HEADERS_H
+#include "string_headers.h"
+#endif /* _STRING_HEADERS_H */
+
 struct dirent *
 readdir(DIR *directory_pointer) {
-
     struct dirent *result = NULL;
     struct DirectoryHandle *dh;
-    BPTR parent_directory = ZERO;
+    BPTR parent_directory = BZERO;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -28,7 +32,7 @@ readdir(DIR *directory_pointer) {
 
     dh = (struct DirectoryHandle *) directory_pointer;
 
-    if (__unix_path_semantics && dh->dh_ScanVolumeList) {
+    if (__clib2->__unix_path_semantics && dh->dh_ScanVolumeList) {
         SHOWMSG("we are scanning the volume list");
 
         if (dh->dh_Position == 0) {
@@ -61,8 +65,8 @@ readdir(DIR *directory_pointer) {
 
                     dvp = GetDeviceProc(dh->dh_VolumeNode->ln_Name, NULL);
                     if (dvp != NULL) {
-                        dir_lock = DoPkt(dvp->dvp_Port, ACTION_LOCATE_OBJECT, ZERO, MKBADDR(name), SHARED_LOCK, 0, 0);
-                        if (dir_lock != ZERO) {
+                        dir_lock = DoPkt(dvp->dvp_Port, ACTION_LOCATE_OBJECT, BZERO, MKBADDR(name), SHARED_LOCK, 0, 0);
+                        if (dir_lock != BZERO) {
                             fib = ExamineObjectTags(EX_LockInput, dir_lock, TAG_DONE);
                             if (fib) {
                                 assert(sizeof(dh->dh_DirectoryEntry.d_name) >= sizeof(fib->Name));
@@ -88,9 +92,8 @@ readdir(DIR *directory_pointer) {
         }
     }
 
-    if (NOT dh->dh_ScanVolumeList)
-    {
-        if (__unix_path_semantics) {
+    if (NOT dh->dh_ScanVolumeList) {
+        if (__clib2->__unix_path_semantics) {
             if (dh->dh_Position == 0) {
                 SHOWMSG("returning .");
 
@@ -109,7 +112,7 @@ readdir(DIR *directory_pointer) {
                 dh->dh_Position++;
 
                 parent_directory = ParentDir(dh->dh_DirLock);
-                if (parent_directory != ZERO) {
+                if (parent_directory != BZERO) {
                     struct ExamineData *fib = ExamineObjectTags(EX_LockInput, parent_directory, TAG_DONE);
                     if (fib == NULL) {
                         __set_errno(__translate_io_error_to_errno(IoErr()));

@@ -5,23 +5,21 @@
 #ifndef _STDLIB_PROTOS_H
 #define _STDLIB_PROTOS_H
 
-/****************************************************************************/
-
 #ifndef EXEC_TASKS_H
 #include <exec/tasks.h>
 #endif /* EXEC_TASKS_H */
-
-/****************************************************************************/
 
 #ifndef _STDDEF_H
 #include <stddef.h>
 #endif /* _STDDEF_H */
 
-/****************************************************************************/
-
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
+
+#ifndef PROTO_DOS_H
+#include <proto/dos.h>
+#endif /* PROTO_DOS_H */
 
 /* stdio_init_exit.c */
 extern int __stdio_init(void);
@@ -84,12 +82,8 @@ extern void __stack_usage_exit(void);
 /* stdlib_exit.c */
 extern void _exit(int return_code);
 
-void reent_init(void);
-void reent_exit(void);
-
-/* stdlib_constructor_begin.c */
-void shared_obj_init(void);
-void shared_obj_exit(void);
+extern void reent_init(struct _clib2 *__clib2);
+extern void reent_exit(struct _clib2 *__clib2);
 
 /****************************************************************************/
 
@@ -108,20 +102,12 @@ extern void __check_memory_allocations();
 
 /* signal_checkabort.c */
 extern void __check_abort(void);
-
-/* stdlib_main.c */
-extern int _main();
-extern int _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
+extern int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
 
 /****************************************************************************/
 
 /* stdlib_assertion_failure.c */
 extern void __assertion_failure(const char *file_name, int line_number, const char *expression);
-
-/****************************************************************************/
-
-/* stdlib_termination_message.c */
-extern void __print_termination_message(const char *termination_message);
 
 /****************************************************************************/
 

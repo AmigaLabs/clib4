@@ -102,8 +102,9 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
     struct fd *fd = NULL;
     struct termios *tios;
     BPTR file;
+    struct _clib2 *__clib2 = __CLIB2;
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
     if (user_tios == NULL) {
         __set_errno(EFAULT);
@@ -117,7 +118,7 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
     }
 
     file = __resolve_fd_file(fd);
-    if (file == ZERO)
+    if (file == BZERO)
         goto out;
 
     __fd_lock(fd);
@@ -154,7 +155,7 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
 
 out:
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
     __check_abort();
 
     return (result);

@@ -46,14 +46,15 @@ FILE *
 popen(const char *command, const char *type) {
     struct name_translation_info command_nti;
     char *command_copy = NULL;
-    BPTR input = ZERO;
-    BPTR output = ZERO;
+    BPTR input = BZERO;
+    BPTR output = BZERO;
     char pipe_file_name[40];
     FILE *result = NULL;
     LONG status;
     unsigned long task_address;
     time_t now;
     int i;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -96,7 +97,7 @@ popen(const char *command, const char *type) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         char just_the_command_name[MAXPATHLEN + 1];
         BOOL quotes_needed = FALSE;
         char *command_name;
@@ -203,18 +204,18 @@ popen(const char *command, const char *type) {
         /* Read mode: we want to read the output of the program; the program
            should read from "NIL:". */
         input = Open("NIL:", MODE_NEWFILE);
-        if (input != ZERO)
+        if (input != BZERO)
             output = Open(pipe_file_name, MODE_NEWFILE);
     } else {
         /* Write mode: we want to send data to the program; the program
            should write to "NIL:". */
         input = Open(pipe_file_name, MODE_NEWFILE);
-        if (input != ZERO)
+        if (input != BZERO)
             output = Open("NIL:", MODE_NEWFILE);
     }
 
     /* Check if both I/O streams could be opened. */
-    if (input == ZERO || output == ZERO) {
+    if (input == BZERO || output == BZERO) {
         SHOWMSG("couldn't open the streams");
 
         __set_errno(__translate_io_error_to_errno(IoErr()));
@@ -240,7 +241,7 @@ popen(const char *command, const char *type) {
 
     /* OK, the program is running. Once it terminates, it will automatically
        shut down the streams we opened for it. */
-    input = output = ZERO;
+    input = output = BZERO;
 
     /* Now try to open the pipe we will use to exchange data with the program. */
     result = fopen(pipe_file_name, type);
@@ -250,10 +251,10 @@ out:
     if (command_copy != NULL)
         free(command_copy);
 
-    if (input != ZERO)
+    if (input != BZERO)
         Close(input);
 
-    if (output != ZERO)
+    if (output != BZERO)
         Close(output);
 
     RETURN(result);

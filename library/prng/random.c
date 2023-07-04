@@ -17,39 +17,44 @@ lcg64(uint64_t x) {
 
 void *
 savestate() {
-    __global_clib2->x[-1] = (__global_clib2->n << 16) | (__global_clib2->i << 8) | __global_clib2->j;
-    return __global_clib2->x - 1;
+    struct _clib2 *__clib2 = __CLIB2;
+
+    __clib2->x[-1] = (__clib2->n << 16) | (__clib2->i << 8) | __clib2->j;
+    return __clib2->x - 1;
 }
 
 void
 loadstate(uint32_t *state) {
-    __global_clib2->x = state + 1;
-    __global_clib2->n = __global_clib2->x[-1] >> 16;
-    __global_clib2->i = (__global_clib2->x[-1] >> 8) & 0xff;
-    __global_clib2->j = __global_clib2->x[-1] & 0xff;
+    struct _clib2 *__clib2 = __CLIB2;
+
+    __clib2->x = state + 1;
+    __clib2->n = __clib2->x[-1] >> 16;
+    __clib2->i = (__clib2->x[-1] >> 8) & 0xff;
+    __clib2->j = __clib2->x[-1] & 0xff;
 }
 
 long
 random(void) {
     long k;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
-    ObtainSemaphore(__global_clib2->__random_lock);
+    ObtainSemaphore(__clib2->__random_lock);
 
-    if (__global_clib2->n == 0) {
-        k = __global_clib2->x[0] = lcg31(__global_clib2->x[0]);
+    if (__clib2->n == 0) {
+        k = __clib2->x[0] = lcg31(__clib2->x[0]);
         goto end;
     }
-    __global_clib2->x[__global_clib2->i] += __global_clib2->x[__global_clib2->j];
-    k = __global_clib2->x[__global_clib2->i]>>1;
-    if (++__global_clib2->i == __global_clib2->n)
-        __global_clib2->i = 0;
-    if (++__global_clib2->j == __global_clib2->n)
-        __global_clib2->j = 0;
+    __clib2->x[__clib2->i] += __clib2->x[__clib2->j];
+    k = __clib2->x[__clib2->i]>>1;
+    if (++__clib2->i == __clib2->n)
+        __clib2->i = 0;
+    if (++__clib2->j == __clib2->n)
+        __clib2->j = 0;
 
 end:
-    ReleaseSemaphore(__global_clib2->__random_lock);
+    ReleaseSemaphore(__clib2->__random_lock);
 
     RETURN(k);
     return k;

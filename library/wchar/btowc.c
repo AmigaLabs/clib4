@@ -10,8 +10,9 @@
 
 wint_t
 btowc(int c) {
+    struct _clib2 *__clib2 = __CLIB2;
 
-    mbstate_t *mbs = &__global_clib2->wide_status->_mbtowc_state;
+    mbstate_t *mbs = &__clib2->wide_status->_mbtowc_state;
     int retval = 0;
     wchar_t pwc;
     char b;
@@ -19,7 +20,7 @@ btowc(int c) {
     b = (char) c;
 
     /* Put mbs in initial state. */
-    memset(mbs, '\0', sizeof(mbs));
+    memset(mbs, '\0', sizeof(mbstate_t));
 
     retval = _mbtowc_r(&pwc, &b, 1, mbs);
 

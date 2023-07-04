@@ -49,7 +49,7 @@ pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *param) 
     if (inf == NULL)
         return ESRCH;
 
-    param->sched_priority = inf->task->tc_Node.ln_Pri;
+    param->sched_priority = ((struct Task *) inf->task)->tc_Node.ln_Pri;
     *policy = SCHED_NORMAL;
 
     return 0;

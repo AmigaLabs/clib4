@@ -9,19 +9,18 @@
 #endif /* _STDLIB_HEADERS_H */
 
 lldiv_t
-lldiv(long long n,long long d)
-{
-	lldiv_t result;
+lldiv(long long n, long long d) {
+    lldiv_t result;
 
     ENTER();
     SHOWVALUE(n);
     SHOWVALUE(d);
 
-    assert( d != 0 );
+    assert(d != 0);
 
-	result.quot	= n / d;
-	result.rem	= n % d;
+    result.quot = n / d;
+    result.rem = n % d;
 
     LEAVE();
-	return(result);
+    return (result);
 }

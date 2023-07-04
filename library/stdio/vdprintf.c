@@ -1,5 +1,5 @@
 /*
- * $Id: 
+ * $Id:  stdio_vdprintf.c,v 1.1 2023-06-15 12:04:24 clib2devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -17,21 +17,25 @@ vdprintf(int fd, const char *format, va_list ap) {
     SHOWSTRING(format);
 
     ret = vsnprintf(ptr, 512, format, ap);
-    if(ret >= 512)
-    {
-	int ret2;
-	ptr = (char*)malloc(ret+1);
-	assert(ptr);
-	ret2 = vsnprintf(ptr, ret, format, ap);
-	assert(ret2 < ret);
-	ret=ret2;
+    if (ret >= 512) {
+        int ret2;
+        ptr = (char *) malloc(ret + 1);
+        if (!ptr) {
+            __set_errno(ENOMEM);
+            return EOF;
+        }
+        ret2 = vsnprintf(ptr, ret, format, ap);
+        if (ret2 < 0) {
+            return EOF;
+        }
+        ret = ret2;
     }
-    
-    ret = write(fd,ptr,ret);
 
-    if(ptr != &buf[0])
-      free(ptr);
-    
+    ret = write(fd, ptr, ret);
+
+    if (ptr != &buf[0])
+        free(ptr);
+
     RETURN(ret);
     return ret;
 }

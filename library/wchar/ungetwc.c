@@ -15,16 +15,17 @@ ungetwc(wint_t wc, FILE *fp) {
 
     flockfile(fp);
     ORIENT (fp, 1);
-    if (wc == WEOF)
-        wc = WEOF;
-    else if ((len = wcrtomb(buf, wc, &fp->_mbstate)) == (size_t) - 1) {
-        fp->_flags |= __SERR;
-        wc = WEOF;
-    } else {
-        while (len-- != 0) {
-            if (ungetc((unsigned char) buf[len], fp) == EOF) {
-                wc = WEOF;
-                break;
+    if (wc != WEOF)
+    {
+        if ((len = wcrtomb(buf, wc, &fp->_mbstate)) == (size_t) - 1) {
+            fp->_flags |= __SERR;
+            wc = WEOF;
+        } else {
+            while (len-- != 0) {
+                if (ungetc((unsigned char) buf[len], fp) == EOF) {
+                    wc = WEOF;
+                    break;
+                }
             }
         }
     }

@@ -15,8 +15,7 @@
  * alphabets and digits are each contiguous.
  */
 quad_t
-strtoq(const char *nptr, char **endptr, register int base)
-{
+strtoq(const char *nptr, char **endptr, register int base) {
     register const char *s;
     register u_quad_t acc;
     register int c;

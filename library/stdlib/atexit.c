@@ -10,25 +10,11 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-struct ExitTrapNode {
-    struct MinNode etn_MinNode;
-    void (*etn_Function)(void);
-};
-
-/****************************************************************************/
-
-/* 32 functions are the minimum required by ISO 'C'. */
-static struct ExitTrapNode exit_node_table[32];
-static struct MinList exit_trap_list;
-static size_t num_exit_nodes_used;
-static BOOL atexit_blocked;
-
-/****************************************************************************/
-
 int
 atexit(void (*function)(void)) {
     struct ExitTrapNode *etn;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     assert(function != NULL);
 
@@ -37,14 +23,14 @@ atexit(void (*function)(void)) {
         goto out;
     }
 
-    if (atexit_blocked) {
+    if (__clib2->atexit_blocked) {
         __set_errno(EACCES);
         goto out;
     }
 
     /* We always have room for 32 exit trap functions. */
-    if (num_exit_nodes_used < NUM_ENTRIES(exit_node_table)) {
-        etn = &exit_node_table[num_exit_nodes_used++];
+    if (__clib2->num_exit_nodes_used < NUM_ENTRIES(__clib2->exit_node_table)) {
+        etn = &__clib2->exit_node_table[__clib2->num_exit_nodes_used++];
     } else {
         /* More than 32 exit trap functions are called
          * for. Let's make room for another one.
@@ -58,10 +44,10 @@ atexit(void (*function)(void)) {
 
     etn->etn_Function = function;
 
-    if (exit_trap_list.mlh_Head == NULL)
-        NewList((struct List *) &exit_trap_list);
+    if (__clib2->exit_trap_list.mlh_Head == NULL)
+        NewList((struct List *) &__clib2->exit_trap_list);
 
-    AddHead((struct List *) &exit_trap_list, (struct Node *) etn);
+    AddHead((struct List *) &__clib2->exit_trap_list, (struct Node *) etn);
 
     result = OK;
 
@@ -73,17 +59,18 @@ out:
 void
 __exit_trap_trigger(void) {
     struct ExitTrapNode *etn;
+    struct _clib2 *__clib2 = __CLIB2;
 
     /* Disallow further additions to the atexit() list. */
-    atexit_blocked = TRUE;
+    __clib2->atexit_blocked = TRUE;
 
     /* Remove the trap entries one at a time and process them.
      * Should one of the routines drop into exit(), processing
      * will continue with the next entry until eventually all
      * list items have been taken care of.
      */
-    if (exit_trap_list.mlh_Head != NULL) {
-        while ((etn = (struct ExitTrapNode *) RemHead((struct List *) &exit_trap_list)) != NULL)
+    if (__clib2->exit_trap_list.mlh_Head != NULL) {
+        while ((etn = (struct ExitTrapNode *) RemHead((struct List *) &__clib2->exit_trap_list)) != NULL)
             (*etn->etn_Function)();
     }
 }

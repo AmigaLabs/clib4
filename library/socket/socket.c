@@ -13,6 +13,7 @@ socket(int domain, int type, int protocol) {
     struct fd *fd;
     int fd_slot_number;
     LONG socket_fd;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -20,16 +21,16 @@ socket(int domain, int type, int protocol) {
     SHOWVALUE(type);
     SHOWVALUE(protocol);
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
-    fd_slot_number = __find_vacant_fd_entry();
+    fd_slot_number = __find_vacant_fd_entry(__clib2);
     if (fd_slot_number < 0) {
-        if (__grow_fd_table(0) < 0) {
+        if (__grow_fd_table(__clib2, 0) < 0) {
             SHOWMSG("couldn't find a vacant fd slot and no memory to create one");
             goto out;
         }
 
-        fd_slot_number = __find_vacant_fd_entry();
+        fd_slot_number = __find_vacant_fd_entry(__clib2);
         assert(fd_slot_number >= 0);
     }
 
@@ -45,13 +46,19 @@ socket(int domain, int type, int protocol) {
     if (type == SOCK_DGRAM && protocol == IPPROTO_ICMP)
         type = SOCK_RAW;
 
+    /* Force AF_LOCAL to be AF_INET otherwise Roadshow calls will fail */
+    if (domain == AF_LOCAL) {
+        domain = AF_INET;
+        type == SOCK_DGRAM;
+    }
+
     socket_fd = __socket(domain, type, protocol);
     if (socket_fd < 0) {
         SHOWMSG("could not create socket");
         goto out;
     }
 
-    fd = __fd[fd_slot_number];
+    fd = __clib2->__fd[fd_slot_number];
 
     __initialize_fd(fd, __socket_hook_entry, (BPTR) socket_fd, FDF_IN_USE | FDF_IS_SOCKET | FDF_READ | FDF_WRITE, lock);
 
@@ -61,7 +68,7 @@ socket(int domain, int type, int protocol) {
 
 out:
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
     __delete_semaphore(lock);
 
     __check_abort();

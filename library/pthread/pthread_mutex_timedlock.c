@@ -40,6 +40,9 @@
 int
 pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) {
     int result;
+    struct TimeRequest timerio;
+    struct Task *task = FindTask(NULL);
+    struct MsgPort msgport;
 
     if (mutex == NULL)
         return EINVAL;
@@ -49,14 +52,21 @@ pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) 
     else if (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000)
         return EINVAL;
 
-    result = pthread_mutex_trylock(mutex);
-    if (result != 0) {
-        // pthread_mutex_trylock returns EBUSY when a deadlock would occur
-        if (result != EBUSY)
-            return result;
-        else if (mutex->kind != PTHREAD_MUTEX_RECURSIVE && SemaphoreIsMine(&mutex->semaphore))
-            return EDEADLK;
-    }
+    uint32 sigMask = 1L << timedTimerPort->mp_SigBit;
 
-    return _pthread_obtain_sema_timed(&mutex->semaphore, abstime, SM_EXCLUSIVE);
+    timedTimerIO->Request.io_Command = TR_ADDREQUEST;
+    timedTimerIO->Time.Seconds = abstime->tv_sec;
+    timedTimerIO->Time.Microseconds = abstime->tv_nsec / 1000;
+
+    SetSignal(0, sigMask);
+    SendIO((struct IORequest *) timedTimerIO);
+
+    result = MutexAttemptWithSignal(mutex->mutex, sigMask);
+
+    if (result & sigMask)
+        result = ETIMEDOUT;
+    else
+        result = 0;
+
+    return result;
 }

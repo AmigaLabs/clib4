@@ -14,6 +14,7 @@ struct tm *
 localtime_r(const time_t *t, struct tm *tm_ptr) {
     struct tm *result = NULL;
     LONG gmt_offset;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -24,17 +25,17 @@ localtime_r(const time_t *t, struct tm *tm_ptr) {
         goto out;
     }
 
-    __locale_lock();
+    __locale_lock(__clib2);
 
     /* The time parameter given represents UTC and
      * must be converted to local time before we proceed.
      */
-    if (__default_locale != NULL)
-        gmt_offset = 60 * __default_locale->loc_GMTOffset;
+    if (__clib2->__default_locale != NULL)
+        gmt_offset = 60 * __clib2->__default_locale->loc_GMTOffset;
     else
         gmt_offset = 0;
 
-    __locale_unlock();
+    __locale_unlock(__clib2);
 
     SHOWVALUE(gmt_offset);
 

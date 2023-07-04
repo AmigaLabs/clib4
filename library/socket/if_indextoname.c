@@ -12,11 +12,13 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
+#include <proto/bsdsocket.h>
 
 char *
 if_indextoname(unsigned int ifindex, char *ifname) {
     unsigned int index = 1;
     char *result = NULL;
+    DECLARE_SOCKETBASE();
 
     ENTER();
     SHOWVALUE(ifindex);
@@ -29,7 +31,7 @@ if_indextoname(unsigned int ifindex, char *ifname) {
     struct List *netiflist = NULL;
     struct Node *node = NULL;
 
-    netiflist = __ISocket->ObtainInterfaceList();
+    netiflist = ObtainInterfaceList();
     if (netiflist != NULL) {
         node = GetHead(netiflist);
         while (node != NULL) {
@@ -44,7 +46,7 @@ if_indextoname(unsigned int ifindex, char *ifname) {
             index++;
             node = GetSucc(node);
         }
-        __ISocket->ReleaseInterfaceList(netiflist);
+        ReleaseInterfaceList(netiflist);
     }
 
     __set_errno(ENXIO);

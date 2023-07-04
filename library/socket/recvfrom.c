@@ -10,6 +10,7 @@ ssize_t
 recvfrom(int sockfd, void *buff, size_t len, int flags, struct sockaddr *from, socklen_t *fromlen) {
     struct fd *fd;
     int result = ERROR;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -21,7 +22,7 @@ recvfrom(int sockfd, void *buff, size_t len, int flags, struct sockaddr *from, s
     SHOWPOINTER(fromlen);
 
     assert(buff != NULL && from != NULL && fromlen != NULL);
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     if (buff == NULL || from == NULL || fromlen == NULL) {
         SHOWMSG("invalid parameters");
@@ -30,10 +31,10 @@ recvfrom(int sockfd, void *buff, size_t len, int flags, struct sockaddr *from, s
         goto out;
     }
 
-    assert(sockfd >= 0 && sockfd < __num_fd);
-    assert(__fd[sockfd] != NULL);
-    assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IN_USE));
-    assert(FLAG_IS_SET(__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __clib2->__num_fd);
+    assert(__clib2->__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
     fd = __get_file_descriptor_socket(sockfd);
     if (fd == NULL)

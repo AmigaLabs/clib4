@@ -9,7 +9,10 @@
 
 __BEGIN_DECLS
 
-extern int errno;
+#define errno (*__errno())
+extern int *__errno(void);
+#define h_errno (*__h_errno())
+extern int *__h_errno (void);
 
 #define EPERM			1	/* Operation not permitted */
 #define ENOENT			2	/* No such file or directory */
@@ -119,6 +122,11 @@ extern int errno;
 #define ECANCELED       87  /* Operation canceled */
 #define EBADMSG         88  /* Bad message */
 #define ENOTSUP         89  /* Not supported */
+
+#ifndef __error_t_defined
+#define __error_t_defined 1
+typedef int error_t;
+#endif
 
 __END_DECLS
 

@@ -9,11 +9,12 @@
 size_t
 mbrtowc(wchar_t *pwc, const char *src, size_t n, mbstate_t *ps) {
     int retval = 0;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
     if (ps == NULL) {
-        ps = &__global_clib2->wide_status->_mbrtowc_state;
+        ps = &__clib2->wide_status->_mbrtowc_state;
     }
 
     if (src == NULL) {

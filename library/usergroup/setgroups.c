@@ -15,7 +15,6 @@ int setgroups(int ngroups, const gid_t *groups) {
     SHOWPOINTER(groups);
 
     assert(ngroups == 0 || groups != NULL);
-    assert(__UserGroupBase != NULL);
 
     if (ngroups != 0 && groups == NULL) {
         SHOWMSG("invalid groups parameter");

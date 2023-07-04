@@ -32,8 +32,10 @@ ArgArrayInit(LONG argc, CONST_STRPTR *argv) {
         if (argc == 1)
             goto out; /* skip command name */
 
-        CXLIB_argarray = (const unsigned char **) AllocVecTags(sizeof(char *) * argc, AVT_Type, MEMF_SHARED,
-                                                               AVT_ClearWithValue, 0, TAG_DONE);
+        CXLIB_argarray = (const unsigned char **) AllocVecTags(sizeof(char *) * argc,
+                                                               AVT_Type, MEMF_SHARED,
+                                                               AVT_ClearWithValue, 0,
+                                                               TAG_DONE);
         if (CXLIB_argarray == NULL)
             goto out;
 

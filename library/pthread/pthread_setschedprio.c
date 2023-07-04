@@ -49,7 +49,7 @@ pthread_setschedprio(pthread_t thread, int prio) {
     if (inf == NULL)
         return ESRCH;
 
-    SetTaskPri(inf->task, prio);
+    SetTaskPri((struct Task *) inf->task, prio);
 
     return 0;
 }

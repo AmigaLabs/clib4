@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_getlogin.c,v 1.0 2022-03-22 09:51:53 clib2devs Exp $
+ * $Id: unistd_getlogin.c,v 1.1 2023-04-13 09:51:53 clib2devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -7,5 +7,6 @@
 #endif /* _UNISTD_HEADERS_H */
 
 char *getlogin(void) {
-    return getenv("LOGNAME");
+    static char username[LOGIN_NAME_MAX];
+    return getlogin_r(username, sizeof(username)) == 0 ? username : NULL;
 }

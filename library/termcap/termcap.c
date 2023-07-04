@@ -29,17 +29,10 @@ Boston, MA 02111-1307, USA.  */
    for reading the termcap file.
    It is not a limit.
    Make it large normally for speed.
-   Make it variable when debugging, so can exercise
-   increasing the space dynamically.  */
+*/
 
 #ifndef BUFSIZE
-#ifdef DEBUG
-#define BUFSIZE bufsize
-
-int bufsize = 128;
-#else
 #define BUFSIZE 2048
-#endif
 #endif
 
 #ifndef TERMCAP_FILE
@@ -210,34 +203,28 @@ tgetst1(char *ptr, char **area) {
     return ret;
 }
 
-/* Outputting a string with padding.  */
-
-short ospeed = 0;
-/* If OSPEED is 0, we use this as the actual baud rate.  */
-int tputs_baud_rate;
-char PC;
-
 /* Actual baud rate if positive;
    - baud rate / 100 if negative.  */
 
-static int speeds[] =
-        {
-                0, 50, 75, 110, 135, 150, -2, -3, -6, -12, -18, -24, -48, -96, -192, -288, -384, -576, -1152
-        };
+static int speeds[] = {
+    0, 50, 75, 110, 135, 150, -2, -3, -6, -12, -18, -24, -48, -96, -192, -288, -384, -576, -1152
+};
 
 void
 tputs(const char *str, int nlines, register int (*outfun)()) {
     register int padcount = 0;
     register int speed;
+    size_t n_speeds = sizeof(speeds) / sizeof(speeds[0]);
+    struct _clib2 *__clib2 = __CLIB2;
 
     __check_abort();
 
-    if (ospeed == 0)
-        speed = tputs_baud_rate;
-    else if (ospeed >= sizeof(speeds))
-        speed = speeds[sizeof(speeds) - 1];
+    if (__clib2->__ospeed == 0)
+        speed = __clib2->__tputs_baud_rate;
+    else if (__clib2->__ospeed >= n_speeds)
+        speed = speeds[n_speeds - 1];
     else
-        speed = speeds[ospeed];
+        speed = speeds[__clib2->__ospeed];
 
     if (!str)
         return;
@@ -272,7 +259,7 @@ tputs(const char *str, int nlines, register int (*outfun)()) {
     }
 
     while (padcount-- > 0)
-        (*outfun)(PC);
+        (*outfun)(__clib2->__PC);
 }
 
 /* Find the termcap entry data for terminal type NAME

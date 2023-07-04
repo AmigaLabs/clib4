@@ -35,8 +35,13 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#ifndef _STDLIB_CONSTRUCTOR_H
+#include "stdlib_constructor.h"
+#endif /* _STDLIB_CONSTRUCTOR_H */
+
 #include "common.h"
 #include "pthread.h"
+#include "../shared_library/interface.h"
 
 int __pthread_init_func(void);
 void __pthread_exit_func(void);
@@ -47,21 +52,31 @@ ThreadInfo threads[PTHREAD_THREADS_MAX];
 struct SignalSemaphore thread_sem;
 TLSKey tlskeys[PTHREAD_KEYS_MAX];
 struct SignalSemaphore tls_sem;
+APTR timerMutex = NULL;
+struct TimeRequest *timedTimerIO = NULL;
+struct MsgPort *timedTimerPort = NULL;
+
+struct Library *_DOSBase = NULL;
+struct DOSIFace *_IDOS = NULL;
 
 //
 // Private common functions
 //
-
 int
 _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOOL staticinit) {
     if (mutex == NULL)
         return EINVAL;
+    BOOL recursive = FALSE;
 
     if (attr)
         mutex->kind = attr->kind;
     else if (!staticinit)
         mutex->kind = PTHREAD_MUTEX_DEFAULT;
-    InitSemaphore(&mutex->semaphore);
+
+    if (mutex->kind == PTHREAD_MUTEX_RECURSIVE)
+        recursive = TRUE;
+
+    mutex->mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, recursive, TAG_DONE);
     mutex->incond = 0;
 
     return 0;
@@ -250,9 +265,19 @@ int __pthread_init_func(void) {
 
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
-    inf->task = FindTask(NULL);
+    inf->task = (struct Process *) FindTask(NULL);
     inf->status = THREAD_STATE_RUNNING;
     NewMinList(&inf->cleanup);
+
+    timerMutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+
+    timedTimerPort = AllocSysObject(ASOT_PORT, NULL);
+    timedTimerIO = AllocSysObjectTags(ASOT_IOREQUEST,
+                                      ASOIOR_ReplyPort, timedTimerPort,
+                                      ASOIOR_Size, sizeof(struct TimeRequest),
+                                      TAG_DONE);
+
+    OpenDevice(TIMERNAME, UNIT_WAITUNTIL, (struct IORequest *) timedTimerIO, 0);
 
     /* Mark all threads as IDLE */
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
@@ -266,6 +291,16 @@ int __pthread_init_func(void) {
 void __pthread_exit_func(void) {
     pthread_t i;
     ThreadInfo *inf;
+
+    if (timerMutex)
+        FreeSysObject(ASOT_MUTEX, timerMutex);
+
+    if (timedTimerIO)
+        CloseDevice((struct IORequest *) timedTimerIO);
+    if (timedTimerIO)
+        FreeSysObject(ASOT_IOREQUEST, timedTimerIO);
+    if (timedTimerPort)
+        FreeSysObject(ASOT_PORT, timedTimerPort);
 
     // if we don't do this we can easily end up with unloaded code being executed
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
@@ -281,20 +316,29 @@ void __pthread_exit_func(void) {
     }
 }
 
-void __attribute__((constructor, used)) __pthread_init() {
-    ENTER();
-
-    __pthread_init_func();
-
-    LEAVE();
-
-    //return !__pthread_init_func();
+CLIB_CONSTRUCTOR(__pthread_init) {
+    _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
+    if (_DOSBase) {
+        _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);
+        if (!_IDOS) {
+            CloseLibrary(_DOSBase);
+            _DOSBase = NULL;
+        }
+        else
+            __pthread_init_func();
+    }
 }
 
-void __attribute__((destructor, used)) __pthread_exit() {
-    ENTER();
+CLIB_DESTRUCTOR(__pthread_exit) {
+    if (_DOSBase != NULL) {
+        CloseLibrary(_DOSBase);
+        _DOSBase = NULL;
+    }
+
+    if (_IDOS != NULL) {
+        DropInterface((struct Interface *) _IDOS);
+        _IDOS = NULL;
+    }
 
     __pthread_exit_func();
-
-    LEAVE();
 }

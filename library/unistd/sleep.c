@@ -8,20 +8,22 @@
 
 unsigned int
 sleep(unsigned int seconds) {
-    unsigned int result;
-
     ENTER();
 
-    SHOWVALUE(seconds);
-
+    struct _clib2 *__clib2 = __CLIB2;
     int microseconds = seconds * 1000000;
+    unsigned int result;
+
+    SHOWVALUE(seconds);
     SHOWVALUE(microseconds);
 
     struct timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = microseconds;
 
+    __clib2->__timer_busy = TRUE;
     result = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
+    __clib2->__timer_busy = FALSE;
     if (result == EINTR) {
         /* If a timer has been interrupted by a SIGALRM do we have to exit like on Linux?
          * At moment EINTR is returned only if we got an alarm() signal

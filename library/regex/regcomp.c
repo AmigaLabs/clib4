@@ -478,7 +478,7 @@ static reg_errcode_t parse_bracket_terms(tre_parse_ctx_t *ctx, const char *s, st
 
     for (;;) {
         class = 0;
-        len = mbtowc(&wc, s, -1);
+        len = mbtowc(&wc, s, SIZE_MAX);
         if (len <= 0)
             return *s ? REG_BADPAT : REG_EBRACK;
         if (*s == ']' && s != start) {
@@ -513,7 +513,7 @@ static reg_errcode_t parse_bracket_terms(tre_parse_ctx_t *ctx, const char *s, st
             s += len;
             if (*s == '-' && s[1] != ']') {
                 s++;
-                len = mbtowc(&wc, s, -1);
+                len = mbtowc(&wc, s, SIZE_MAX);
                 max = wc;
                 /* XXX - Should use collation order instead of
                    encoding values in character ranges. */
@@ -786,6 +786,7 @@ static reg_errcode_t parse_atom(tre_parse_ctx_t *ctx, const char *s) {
                     /* reject repetitions after empty expression in BRE */
                     if (!ere)
                         return REG_BADRPT;
+                    /* fallthrough */
                 case '|':
                     /* extension: treat \| as alternation in BRE */
                     if (!ere) {
@@ -843,15 +844,17 @@ static reg_errcode_t parse_atom(tre_parse_ctx_t *ctx, const char *s) {
             /* reject repetitions after empty expression in ERE */
             if (ere)
                 return REG_BADRPT;
+            /* fallthrough */
         case '|':
             if (!ere)
                 goto parse_literal;
+            /* fallthrough */
         case 0:
             node = tre_ast_new_literal(ctx->mem, EMPTY, -1, -1);
             break;
         default:
         parse_literal:
-            len = mbtowc(&wc, s, -1);
+            len = mbtowc(&wc, s, SIZE_MAX);
             if (len < 0)
                 return REG_BADPAT;
             if (ctx->cflags & REG_ICASE && (tre_isupper(wc) || tre_islower(wc))) {

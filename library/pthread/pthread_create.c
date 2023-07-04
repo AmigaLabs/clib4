@@ -39,12 +39,13 @@
 
 static uint32
 StarterFunc() {
-    int foundkey = TRUE;
+    volatile int keyFound = TRUE;
     struct StackSwapStruct stack;
     volatile BOOL stackSwapped = FALSE;
 
     struct Process *startedTask = (struct Process *) FindTask(NULL);
-    ThreadInfo *inf = (ThreadInfo *)startedTask->pr_EntryData;
+    ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
+    struct _clib2 *__clib2 = (struct _clib2 *) GetEntryData();
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
@@ -71,14 +72,14 @@ StarterFunc() {
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
     ObtainSemaphoreShared(&tls_sem);
-    for (int j = 0; foundkey && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
-        foundkey = FALSE;
+    for (int j = 0; keyFound && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
+        keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
             if (tlskeys[i].used && tlskeys[i].destructor && inf->tlsvalues[i]) {
                 void *oldvalue = inf->tlsvalues[i];
                 inf->tlsvalues[i] = NULL;
                 tlskeys[i].destructor(oldvalue);
-                foundkey = TRUE;
+                keyFound = TRUE;
             }
         }
     }
@@ -91,7 +92,7 @@ StarterFunc() {
         // tell the parent thread that we are done
         Forbid();
         inf->status = THREAD_STATE_DESTRUCT;
-        Signal(inf->parent, SIGF_PARENT);
+        Signal((struct Task *) inf->parent, SIGF_PARENT);
     } else {
         // no one is waiting for us, do the clean up
         ObtainSemaphore(&thread_sem);
@@ -129,7 +130,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
 
     inf->start = start;
     inf->arg = arg;
-    inf->parent = thisTask;
+    inf->parent = (struct Process *) thisTask;
     if (attr)
         inf->attr = *attr;
     else
@@ -159,13 +160,15 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     name[sizeof(name) - 1] = '\0';
     strncpy(inf->name, name, NAMELEN);
 
+    struct DOSIFace *IDOS = _IDOS;
     BPTR fileIn  = Open("CONSOLE:", MODE_OLDFILE);
     BPTR fileOut = Open("CONSOLE:", MODE_OLDFILE);
 
     // start the child thread
-    inf->task = (struct Task *) CreateNewProcTags(
+    inf->task = CreateNewProcTags(
             NP_Entry,                StarterFunc,
-            NP_EntryData,            inf,
+            NP_UserData,             inf,
+            //NP_EntryData,            GetEntryData(),
             inf->attr.stacksize ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
             NP_Input,			     fileIn,
             NP_CloseInput,		     TRUE,

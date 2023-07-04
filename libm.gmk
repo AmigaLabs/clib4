@@ -16,9 +16,27 @@ ifeq ($(STATIC),yes)
 endif
 
 C_MATH := \
-	math/carg.o \
-	math/cargf.o \
-	math/cargl.o \
+	math/acos.o \
+	math/acosf.o \
+	math/acosh.o \
+	math/acoshf.o \
+	math/acoshl.o \
+	math/acosl.o \
+	math/asin.o \
+	math/asinf.o \
+	math/asinh.o \
+	math/asinhf.o \
+	math/asinhl.o \
+	math/asinl.o \
+	math/atan.o \
+	math/atan2.o \
+	math/atan2f.o \
+	math/atan2l.o \
+	math/atanf.o \
+	math/atanh.o \
+	math/atanhf.o \
+	math/atanhl.o \
+	math/atanl.o \
 	math/cabs.o \
 	math/cabsf.o \
 	math/cabsl.o \
@@ -28,25 +46,33 @@ C_MATH := \
 	math/cacosh.o \
 	math/cacoshf.o \
 	math/cacoshl.o \
+	math/carg.o \
+	math/cargf.o \
+	math/cargl.o \
 	math/casin.o \
 	math/casinf.o \
+	math/casinh.o \
+	math/casinhf.o \
+	math/casinhl.o \
 	math/casinl.o \
 	math/catan.o \
+	math/catanf.o \
+	math/catanhf.o \
 	math/catanl.o \
 	math/catanh.o \
 	math/catanhl.o \
-	math/ctan.o \
-	math/ctanf.o \
-	math/ctanl.o \
-	math/ctanh.o \
-	math/ctanhf.o \
-	math/ctanhl.o \
+	math/cbrt.o \
+	math/cbrtf.o \
+	math/cbrtl.o \
 	math/ccos.o \
 	math/ccosf.o \
 	math/ccosl.o \
 	math/ccosh.o \
 	math/ccoshf.o \
 	math/ccoshl.o \
+	math/ceil.o \
+	math/ceilf.o \
+	math/ceill.o \
 	math/cexp.o \
 	math/cexpf.o \
 	math/cexpl.o \
@@ -59,54 +85,6 @@ C_MATH := \
 	math/conj.o \
 	math/conjf.o \
 	math/conjl.o \
-	math/cpow.o \
-	math/cpowf.o \
-	math/cpowl.o \
-	math/csin.o \
-	math/csinf.o \
-	math/csinl.o \
-	math/csinh.o \
-	math/csinhf.o \
-	math/csinhl.o \
-	math/cproj.o \
-	math/cprojf.o \
-	math/cprojl.o \
-	math/creal.o \
-	math/crealf.o \
-	math/creall.o \
-	math/csqrt.o \
-	math/csqrtf.o \
-	math/csqrtl.o \
-	math/casinh.o \
-	math/casinhf.o \
-	math/casinhl.o \
-    math/fenv.o \
-	math/acos.o \
-	math/acosf.o \
-	math/acosh.o \
-	math/acoshf.o \
-	math/acoshl.o \
-	math/acosl.o \
-	math/asin.o \
-	math/asinf.o \
-	math/asinh.o \
-	math/asinhf.o \
-	math/asinl.o \
-	math/atan.o \
-	math/atan2.o \
-	math/atan2f.o \
-	math/atan2l.o \
-	math/atanf.o \
-	math/atanh.o \
-	math/atanhf.o \
-	math/atanhl.o \
-	math/atanl.o \
-	math/cbrt.o \
-	math/cbrtf.o \
-	math/cbrtl.o \
-	math/ceil.o \
-	math/ceilf.o \
-	math/ceill.o \
 	math/copysign.o \
 	math/copysignf.o \
 	math/copysignl.o \
@@ -116,6 +94,30 @@ C_MATH := \
 	math/coshf.o \
 	math/coshl.o \
 	math/cosl.o \
+	math/cpow.o \
+	math/cpowf.o \
+	math/cpowl.o \
+	math/cproj.o \
+	math/cprojf.o \
+	math/cprojl.o \
+	math/creal.o \
+	math/crealf.o \
+	math/creall.o \
+	math/csin.o \
+	math/csinf.o \
+	math/csinl.o \
+	math/csinh.o \
+	math/csinhf.o \
+	math/csinhl.o \
+	math/csqrt.o \
+	math/csqrtf.o \
+	math/csqrtl.o \
+	math/ctan.o \
+	math/ctanf.o \
+	math/ctanl.o \
+	math/ctanh.o \
+	math/ctanhf.o \
+	math/ctanhl.o \
 	math/erf.o \
 	math/erfc.o \
 	math/erfcf.o \
@@ -140,6 +142,7 @@ C_MATH := \
 	math/fdim.o \
 	math/fdimf.o \
 	math/fdiml.o \
+    math/fenv.o \
     math/finite.o \
 	math/floor.o \
 	math/floorf.o \
@@ -170,8 +173,8 @@ C_MATH := \
 	math/inff.o \
 	math/init_exit.o \
 	math/invtrig.o \
-	math/isinf.o \
 	math/isfinite.o \
+	math/isinf.o \
 	math/isnan.o \
 	math/isnormal.o \
     math/j0.o \
@@ -290,30 +293,30 @@ C_MATH := \
 	math/truncf.o \
 	math/truncl.o
 
-
 MATH_LIB := \
-	$(C_MATH) \
-	m.lib_rev.o
+	math/m.lib_rev.o
 
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(MATH_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(MATH_LIB))
 
+OBJ_C_LIB  += $(addprefix $(OUT_SHARED_LIB)/, $(C_MATH))
+
 # Dependencies to rebuild if the library version changes
 
-$(OUT_STATIC)/m.lib_rev.o : $(LIB_DIR)/m.lib_rev.c $(LIB_DIR)/m.lib_rev.h
-$(OUT_SHARED)/m.lib_rev.o : $(LIB_DIR)/m.lib_rev.c $(LIB_DIR)/m.lib_rev.h
+$(OUT_STATIC)/math/m.lib_rev.o : $(LIB_DIR)/math/m.lib_rev.c $(LIB_DIR)/math/m.lib_rev.h
+$(OUT_SHARED)/math/m.lib_rev.o : $(LIB_DIR)/math/m.lib_rev.c $(LIB_DIR)/math/m.lib_rev.h
 
-$(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
-$(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
+$(OUT_STATIC)/math/m.lib_rev.o : CFLAGS += $(LARGEDATA)
+$(OUT_SHARED)/math/m.lib_rev.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+$(OUT_STATIC)/math/m.lib_rev.o : $(LIB_DIR)/math/m.lib_rev.c
 	$(VERBOSE)$(COMPILE)
 
-$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+$(OUT_SHARED)/math/m.lib_rev.o : $(LIB_DIR)/math/m.lib_rev.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
 $(BUILD_DIR)/lib/libm.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libm.so : $(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
+$(BUILD_DIR)/lib/libm.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

@@ -77,18 +77,19 @@ static void release_file_lock_semaphore(struct FileLockSemaphore *fls) {
 static struct FileLockSemaphore *
 obtain_file_lock_semaphore(BOOL shared) {
     struct FileLockSemaphore *result = NULL;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
-    if (FileLockSemaphore == NULL && __file_lock_semaphore_name != NULL && __file_lock_semaphore_name[0] != '\0') {
+    if (FileLockSemaphore == NULL && __clib2->__file_lock_semaphore_name != NULL && __clib2->__file_lock_semaphore_name[0] != '\0') {
         struct FileLockSemaphore *fls = NULL;
         char *semaphore_name_copy = NULL;
 
         /* We allocate the new semaphore first, so that we don't spend
            any time in Forbid() allocating memory. */
-        semaphore_name_copy = AllocVecTags(strlen(__file_lock_semaphore_name) + 1, AVT_Type, MEMF_SHARED, TAG_DONE);
+        semaphore_name_copy = AllocVecTags(strlen(__clib2->__file_lock_semaphore_name) + 1, AVT_Type, MEMF_SHARED, TAG_DONE);
         if (semaphore_name_copy != NULL) {
-            strcpy(semaphore_name_copy, __file_lock_semaphore_name);
+            strcpy(semaphore_name_copy, __clib2->__file_lock_semaphore_name);
 
             fls = AllocSysObjectTags(ASOT_SEMAPHORE,
                                      ASOSEM_Size, sizeof(*fls),
@@ -102,7 +103,7 @@ obtain_file_lock_semaphore(BOOL shared) {
 
         Forbid();
 
-        FileLockSemaphore = (struct FileLockSemaphore *) FindSemaphore((STRPTR) __file_lock_semaphore_name);
+        FileLockSemaphore = (struct FileLockSemaphore *) FindSemaphore((STRPTR) __clib2->__file_lock_semaphore_name);
         if (FileLockSemaphore == NULL) {
             SHOWMSG("didn't find it; we're going to add our own");
 
@@ -305,7 +306,7 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
     }
 
     fln->fln_FileParentDir = __safe_parent_of_file_handle(fd->fd_File);
-    if (fln->fln_FileParentDir == ZERO) {
+    if (fln->fln_FileParentDir == BZERO) {
         SHOWMSG("couldn't get parent directory");
 
         error = IoErr();
@@ -320,9 +321,7 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
     fln = NULL;
 
 out:
-    if (fib != NULL)
-        FreeDosObject(DOS_EXAMINEDATA, fib);
-
+    FreeDosObject(DOS_EXAMINEDATA, fib);
     delete_file_lock_node(fln);
 
     (*result_ptr) = result;
@@ -341,7 +340,7 @@ find_file_lock_node_by_drawer_and_name(struct FileLockSemaphore *fls, BPTR dir_l
 
     ENTER();
 
-    assert(fls != NULL && dir_lock != ZERO && file_name != NULL && result_ptr != NULL);
+    assert(fls != NULL && dir_lock != BZERO && file_name != NULL && result_ptr != NULL);
     assert(UtilityBase != NULL);
 
 #if DEBUG
@@ -387,12 +386,12 @@ find_file_lock_node_by_drawer_and_name(struct FileLockSemaphore *fls, BPTR dir_l
 static long
 find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_handle, struct FileLockNode **result_ptr) {
     struct ExamineData *this_fib;
-    BPTR parent_dir = ZERO;
+    BPTR parent_dir = BZERO;
     LONG error;
 
     ENTER();
 
-    assert(fls != NULL && file_handle != ZERO && result_ptr != NULL);
+    assert(fls != NULL && file_handle != BZERO && result_ptr != NULL);
 
     (*result_ptr) = NULL;
 
@@ -409,7 +408,7 @@ find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_hand
      * global file lock data.
      */
     parent_dir = __safe_parent_of_file_handle(file_handle);
-    if (parent_dir == ZERO) {
+    if (parent_dir == BZERO) {
         SHOWMSG("couldn't get parent directory");
 
         error = IoErr();
@@ -424,8 +423,7 @@ find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_hand
 
 out:
 
-    if (this_fib)
-        FreeDosObject(DOS_EXAMINEDATA, this_fib);
+    FreeDosObject(DOS_EXAMINEDATA, this_fib);
     UnLock(parent_dir);
 
     RETURN(error);
@@ -558,7 +556,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
     struct FileLockNode *fln = NULL;
     struct ExamineData *fib = NULL;
     BOOL fib_is_valid = FALSE;
-    BPTR parent_dir = ZERO;
+    BPTR parent_dir = BZERO;
     _off64_t seek_position;
     _off64_t current_position;
     int result = ERROR;
@@ -567,6 +565,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
     _off64_t start = 0;
     _off64_t len = 0;
     _off64_t stop;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -607,6 +606,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
         }
     } else {
         SHOWMSG("this is not a lock request");
+        goto out;
     }
 
     original_len = l->l_len;
@@ -742,7 +742,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
         }
 
         parent_dir = __safe_parent_of_file_handle(file_handle);
-        if (parent_dir == ZERO) {
+        if (parent_dir == BZERO) {
             SHOWMSG("couldn't get a lock on the file's parent directory");
 
             error = IoErr();
@@ -815,7 +815,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
                 const int rand_max = RAND_MAX / 65536;
                 int num_random_ticks;
 
-                if (__check_abort_enabled && (SetSignal(0, 0) & __break_signal_mask) != 0) {
+                if (__clib2->__check_abort_enabled && (SetSignal(0, 0) & __clib2->__break_signal_mask) != 0) {
                     SHOWMSG("lock polling loop stopped");
 
                     delete_file_lock_node(fln);
@@ -826,7 +826,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
 
                     UnLock(parent_dir);
 
-                    parent_dir = ZERO;
+                    parent_dir = BZERO;
 
                     (*error_ptr) = EINTR;
 
@@ -992,8 +992,7 @@ out:
 
     release_file_lock_semaphore(fls);
 
-    if (fib != NULL)
-        FreeDosObject(DOS_EXAMINEDATA, fib);
+    FreeDosObject(DOS_EXAMINEDATA, fib);
     UnLock(parent_dir);
 
     if (result != 0 && error != OK) {

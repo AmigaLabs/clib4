@@ -32,7 +32,7 @@ __lock(
     const size_t name_size = sizeof(bname->name);
     char *new_name = NULL;
     struct DevProc *dvp = NULL;
-    BPTR lock = ZERO;
+    BPTR lock = BZERO;
     size_t name_len;
     LONG error;
 
@@ -59,7 +59,7 @@ __lock(
 
         /* Try to obtain a lock on the object. */
         lock = DoPkt(dvp->dvp_Port, ACTION_LOCATE_OBJECT, dvp->dvp_Lock, MKBADDR(bname), mode, 0, 0);
-        if (lock != ZERO)
+        if (lock != BZERO)
             break;
 
         error = IoErr();

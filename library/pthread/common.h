@@ -1,6 +1,8 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#include <proto/dos.h>
+
 #include "pthread.h"
 #include <sys/time.h>
 
@@ -77,9 +79,9 @@ typedef struct {
 typedef struct {
     void *(*start)(void *);
     void *arg;
-    struct Task *parent;
+    struct Process *parent;
     int status;
-    struct Task *task;
+    struct Process *task;
     void *ret;
     jmp_buf jmp;
     pthread_attr_t attr;
@@ -92,13 +94,20 @@ typedef struct {
     char name[NAMELEN];
 } ThreadInfo;
 
+extern struct Library *_DOSBase;
+extern struct DOSIFace *_IDOS;
+
 extern struct SignalSemaphore thread_sem;
 extern ThreadInfo threads[PTHREAD_THREADS_MAX];
 extern struct SignalSemaphore tls_sem;
 extern TLSKey tlskeys[PTHREAD_KEYS_MAX];
+extern APTR timerMutex;
+extern struct TimeRequest *timedTimerIO;
+extern struct MsgPort *timedTimerPort;
 
 int SemaphoreIsInvalid(struct SignalSemaphore *sem);
 int SemaphoreIsMine(struct SignalSemaphore *sem);
+int MutexIsMine(pthread_mutex_t *mutex);
 ThreadInfo *GetThreadInfo(pthread_t thread);
 pthread_t GetThreadId(struct Task *task);
 BOOL OpenTimerDevice(struct IORequest *io, struct MsgPort *mp, struct Task *task);
@@ -110,5 +119,7 @@ int _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr,
 int _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *abstime, int shared);
 int _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime, BOOL relative);
 int _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst);
+
+extern int _pthread_concur;
 
 #endif

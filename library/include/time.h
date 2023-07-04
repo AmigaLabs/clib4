@@ -1,20 +1,16 @@
 /*
- * $Id: time.h,v 1.7 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: time.h,v 1.8 2023-06-03 12:06:14 clib2devs Exp $
 */
 
 #ifndef _TIME_H
 #define _TIME_H
 
 #include <features.h>
-
-#ifndef _STDDEF_H
 #include <stddef.h>
-#endif /* _STDDEF_H */
-
 #include <inttypes.h>
-#include <stdbool.h>
 #include <sys/time.h>
 #include <endian.h>
+#include <sys/types.h>
 
 __BEGIN_DECLS
 
@@ -35,17 +31,22 @@ __BEGIN_DECLS
 #define CLOCK_PROCESS_CPUTIME_ID (clockid_t)2 /* Not used in clock_ functions yet */
 #define CLOCK_THREAD_CPUTIME_ID (clockid_t)3  /* Not used in clock_ functions yet */
 
-#define _CLOCK_T_ unsigned long long /* clock() */
-#define _TIME_T_ long                /* time() */
-#define _CLOCKID_T_ unsigned long
-#define _TIMER_T_ unsigned long
 #define NSEC_PER_SEC 1000000000ull
 #define TIMER_ABSTIME 0x01
 
-typedef _CLOCKID_T_ clockid_t;
+#if defined(_XOPEN_SOURCE) || defined(_BSD_SOURCE) || defined(_GNU_SOURCE)
+#define __tm_gmtoff tm_gmtoff
+#define __tm_zone tm_zone
+#endif
 
-typedef unsigned long clock_t;
-typedef long long time_t;
+#define _timezone (__CLIB2->__timezone)
+#define _daylight (__CLIB2->__daylight)
+#define _tzname   (__CLIB2->__tzname)
+
+/* POSIX defines the external tzname being defined in time.h */
+#ifndef tzname
+#define tzname _tzname
+#endif
 
 struct tm {
     int tm_sec;   /* Number of seconds past the minute (0..59) */
@@ -57,6 +58,8 @@ struct tm {
     int tm_wday;  /* Day of the week (0..6; 0 is Sunday) */
     int tm_yday;  /* Day of the year (0..365) */
     int tm_isdst; /* Is this date using daylight savings time? */
+    long __tm_gmtoff;
+    const char *__tm_zone;
 };
 
 extern clock_t clock(void);
@@ -157,16 +160,22 @@ extern unsigned long long rdtsc(void);
 
 extern int clock_gettime64 (clockid_t clock_id, struct timespec64 *tp);
 
-/* Defined in localtime.c.  */
-extern char *tzname[2];   /* Current timezone names.  */
-extern int daylight;      /* If daylight-saving time is ever in use.  */
-extern long int timezone; /* Seconds west of UTC.  */
-
 /* Check whether T fits in time_t.  */
-static inline bool
+static inline int
 in_time_t_range (time64_t t) {
     time_t s = t;
     return s == t;
+}
+
+/* Convert a known valid struct timeval into a struct timespec.  */
+static inline struct timespec
+valid_timeval_to_timespec(const struct timeval tv) {
+    struct timespec ts;
+
+    ts.tv_sec = tv.tv_sec;
+    ts.tv_nsec = tv.tv_usec * 1000;
+
+    return ts;
 }
 
 /* Convert a known valid struct timeval into a struct timespec64.  */
@@ -190,7 +199,6 @@ valid_timeval_to_timeval64(const struct timeval tv) {
 
     return tv64;
 }
-
 
 /* Convert a valid and within range of struct timeval, struct timeval64 into a struct timeval.  */
 static inline struct timeval
@@ -243,6 +251,17 @@ valid_timespec64_to_timeval (const struct timespec64 ts64) {
 
     tv.tv_sec = (time_t) ts64.tv_sec;
     tv.tv_usec = ts64.tv_nsec / 1000;
+
+    return tv;
+}
+
+/* Convert a valid and within range of struct timeval struct timespec into a struct timeval.  */
+static inline struct timeval
+valid_timespec_to_timeval (const struct timespec ts) {
+    struct timeval tv;
+
+    tv.tv_sec = (time_t) ts.tv_sec;
+    tv.tv_usec = ts.tv_nsec / 1000;
 
     return tv;
 }

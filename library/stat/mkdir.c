@@ -11,6 +11,7 @@ int mkdir(const char *path_name, mode_t mode) {
     ULONG protection;
     int result = ERROR;
     BPTR dir_lock;
+    struct _clib2 *__clib2 = __CLIB2;
 
     ENTER();
 
@@ -28,7 +29,7 @@ int mkdir(const char *path_name, mode_t mode) {
         goto out;
     }
 
-    if (__unix_path_semantics) {
+    if (__clib2->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
             goto out;
 
@@ -41,7 +42,7 @@ int mkdir(const char *path_name, mode_t mode) {
     D(("trying to create '%s'", path_name));
 
     dir_lock = CreateDir((STRPTR) path_name);
-    if (dir_lock == ZERO) {
+    if (dir_lock == BZERO) {
         SHOWMSG("that didn't work");
 
         __set_errno(__translate_access_io_error_to_errno(IoErr()));

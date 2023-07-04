@@ -8,13 +8,14 @@
 
 struct hostent *
 gethostbyname2(const char *name, int af) {
-    static struct hostent *h;
+    struct hostent *h = NULL;
     size_t size = 63;
     struct hostent *res;
     int err;
 
     do {
-        free(h);
+        if (h)
+            free(h);
         h = malloc(size += size + 1);
         if (!h) {
             h_errno = NO_RECOVERY;

@@ -287,7 +287,12 @@ md5crypt(const char *key, const char *setting, char *output) {
     p = output + 3 + slen;
     *p++ = '$';
     static const unsigned char perm[][3] = {
-            0, 6, 12, 1, 7, 13, 2, 8, 14, 3, 9, 15, 4, 10, 5};
+        { 0, 6, 12 },
+        { 1, 7, 13 },
+        { 2, 8, 14 },
+        { 3, 9, 15 },
+        { 4, 10, 5 }
+    };
     for (i = 0; i < 5; i++)
         p = to64(p,
                  (md[perm[i][0]] << 16) | (md[perm[i][1]] << 8) | md[perm[i][2]], 4);

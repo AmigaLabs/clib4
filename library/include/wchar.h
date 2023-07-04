@@ -46,9 +46,6 @@ typedef struct __sFILE FILE;
 
 extern wint_t btowc(int c);
 extern int wctob(wint_t c);
-extern int mbsinit(const mbstate_t *ps);
-extern size_t wcrtomb(char *s, wchar_t wc, mbstate_t *ps);
-extern size_t mbsrtowcs(wchar_t *ws, const char **src, size_t wn, mbstate_t *st);
 
 /****************************************************************************/
 

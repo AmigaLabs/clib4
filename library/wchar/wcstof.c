@@ -17,13 +17,13 @@
 float
 wcstof(const wchar_t *nptr, wchar_t **endptr) {
     double val = wcstod(nptr, endptr);
-    if (__stdlib__isnan(val))
-        return __stdlib_nanf("");
+    if (isnan(val))
+        return nanf("");
 
     ENTER();
 
     float retval = (float) val;
-    if (__stdlib__isinf(retval) && !__stdlib__isinf(val))
+    if (isinf(retval) && !isinf(val))
         __set_errno(ERANGE);
 
     RETURN(retval);

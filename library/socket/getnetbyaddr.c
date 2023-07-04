@@ -12,7 +12,7 @@ getnetbyaddr(in_addr_t net, int type) {
 
     ENTER();
 
-    assert(__SocketBase != NULL);
+    DECLARE_SOCKETBASE();
 
     result = __getnetbyaddr((ULONG) net, type);
 

@@ -11,7 +11,7 @@
 #endif /* _STDLIB_MEMORY_H */
 
 int
-__open_iob(const char *filename, const char *mode, int file_descriptor, int slot_number) {
+__open_iob(struct _clib2 *__clib2, const char *filename, const char *mode, int file_descriptor, int slot_number) {
     struct SignalSemaphore *lock;
     ULONG file_flags;
     int result = ERROR;
@@ -29,19 +29,19 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
 
     __check_abort();
 
-    __stdio_lock();
+    __stdio_lock(__clib2);
 
-    assert(mode != NULL && 0 <= slot_number && slot_number < __num_iob);
+    assert(mode != NULL && 0 <= slot_number && slot_number < __clib2->__num_iob);
 
-    file = __iob[slot_number];
+    file = __clib2->__iob[slot_number];
 
     assert(FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE));
 
     /* Figure out if the file descriptor provided is any use. */
     if (file_descriptor >= 0) {
-        assert(file_descriptor < __num_fd);
-        assert(__fd[file_descriptor] != NULL);
-        assert(FLAG_IS_SET(__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+        assert(file_descriptor < __clib2->__num_fd);
+        assert(__clib2->__fd[file_descriptor] != NULL);
+        assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
         fd = __get_file_descriptor(file_descriptor);
         if (fd == NULL) {
@@ -94,7 +94,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = AllocVecTags(BUFSIZ + (__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue);
+    buffer = AllocVecTags(BUFSIZ + (__clib2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
@@ -103,7 +103,7 @@ __open_iob(const char *filename, const char *mode, int file_descriptor, int slot
     }
 
     /* Align the buffer start address to a cache line boundary. */
-    aligned_buffer = (char *) ((ULONG)(buffer + (__cache_line_size - 1)) & ~(__cache_line_size - 1));
+    aligned_buffer = (char *) ((ULONG)(buffer + (__clib2->__cache_line_size - 1)) & ~(__clib2->__cache_line_size - 1));
 
     if (file_descriptor < 0) {
         assert(filename != NULL);
@@ -155,7 +155,7 @@ out:
     if (buffer != NULL)
         FreeVec(buffer);
 
-    __stdio_unlock();
+    __stdio_unlock(__clib2);
 
     RETURN(result);
     return (result);

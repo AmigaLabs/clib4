@@ -10,15 +10,7 @@ __create_semaphore(void) {
 
     ENTER();
 
-#if 1
-    semaphore = AllocVecTags(sizeof(*semaphore), AVT_Type, MEMF_SHARED, TAG_DONE);
-    if (semaphore != NULL)
-        InitSemaphore(semaphore);
-#else
-    semaphore = AllocSysObjectTags(ASOT_SEMAPHORE,
-                                   ASOSEM_Size, sizeof(*semaphore),
-                                   TAG_END);
-#endif
+    semaphore = AllocSysObjectTags(ASOT_SEMAPHORE, ASOSEM_Pri, 0, TAG_END);
 
     SHOWPOINTER(semaphore);
     LEAVE();
@@ -33,14 +25,7 @@ __delete_semaphore(struct SignalSemaphore *semaphore) {
     ENTER();
     SHOWPOINTER(semaphore);
 
-    if (semaphore != NULL) {
-#if 1
-        FreeVec(semaphore);
-#else
-        FreeSysObject(ASOT_SEMAPHORE, semaphore);
-#endif
-        semaphore = NULL;
-    }
+    FreeSysObject(ASOT_SEMAPHORE, semaphore);
 
     LEAVE();
 }

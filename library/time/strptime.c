@@ -69,7 +69,7 @@ static const char *ampm[] = {
 /*
  * tm_year is relative this year 
  */
-const int tm_year_base = 1900;
+#define TM_YEAR_BASE (1900u)
 
 /*
  * Return TRUE iff `year' was a leap year.
@@ -119,7 +119,7 @@ first_day(int year)
 static void
 set_week_number_sun(struct tm *timeptr, int wnum)
 {
-    int fday = first_day(timeptr->tm_year + tm_year_base);
+    int fday = first_day(timeptr->tm_year + TM_YEAR_BASE);
 
     timeptr->tm_yday = wnum * 7 + timeptr->tm_wday - fday;
     if (timeptr->tm_yday < 0)
@@ -137,7 +137,7 @@ set_week_number_sun(struct tm *timeptr, int wnum)
 static void
 set_week_number_mon(struct tm *timeptr, int wnum)
 {
-    int fday = (first_day(timeptr->tm_year + tm_year_base) + 6) % 7;
+    int fday = (first_day(timeptr->tm_year + TM_YEAR_BASE) + 6) % 7;
 
     timeptr->tm_yday = wnum * 7 + (timeptr->tm_wday + 6) % 7 - fday;
     if (timeptr->tm_yday < 0)
@@ -154,7 +154,7 @@ set_week_number_mon(struct tm *timeptr, int wnum)
 static void
 set_week_number_mon4(struct tm *timeptr, int wnum)
 {
-    int fday = (first_day(timeptr->tm_year + tm_year_base) + 6) % 7;
+    int fday = (first_day(timeptr->tm_year + TM_YEAR_BASE) + 6) % 7;
     int offset = 0;
 
     if (fday < 4)
@@ -219,7 +219,7 @@ strptime(const char *buf, const char *fmt, struct tm *timeptr)
                 ret = strtol(buf, &s, 10);
                 if (s == buf)
                     return NULL;
-                timeptr->tm_year = (ret * 100) - tm_year_base;
+                timeptr->tm_year = (ret * 100) - TM_YEAR_BASE;
                 buf = s;
                 break;
             case 'c': /* %a %b %e %H:%M:%S %Y */
@@ -387,7 +387,7 @@ strptime(const char *buf, const char *fmt, struct tm *timeptr)
                 ret = strtol(buf, &s, 10);
                 if (s == buf)
                     return NULL;
-                timeptr->tm_year = ret - tm_year_base;
+                timeptr->tm_year = ret - TM_YEAR_BASE;
                 buf = s;
                 break;
             case 'Z':
