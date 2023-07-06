@@ -188,6 +188,10 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
     struct Clib2Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
         hashmap_free(res->uxSocketsMap);
+        if (res->fallbackClib) {
+            reent_exit(res->fallbackClib, TRUE);
+            IExec->FreeVec(res->fallbackClib);
+        }
 
         IExec->RemResource(res);
         IExec->FreeVec(res);
@@ -356,7 +360,16 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
 
             iexec->InitSemaphore(&res->semaphore);
             iexec->NewList(&res->nodes);
+            /* Initialize unix sockets hashmap */
             res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
+            /* Initialize fallback clib2 reent structure */
+            res->fallbackClib = (struct _clib2 *) iexec->AllocVecTags(sizeof(struct _clib2),
+                                                                 AVT_Type, MEMF_SHARED,
+                                                                 AVT_ClearWithValue, 0,
+                                                                 TAG_DONE);
+            reent_init(res->fallbackClib);
+            res->fallbackClib->__check_abort_enabled = TRUE;
+
             iexec->AddResource(res);
         } else {
             goto out;

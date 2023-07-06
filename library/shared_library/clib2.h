@@ -15,6 +15,7 @@ struct Clib2Resource {
     struct SignalSemaphore  semaphore;      /* for list arbitration */
     struct List             nodes;          /* list of parent nodes */
     struct hashmap         *uxSocketsMap;
+    struct _clib2          *fallbackClib;
 };
 
 struct Clib2Node {

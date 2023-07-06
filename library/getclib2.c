@@ -13,8 +13,18 @@ __getClib2(void) {
 
     struct Task *t = FindTask(NULL);
     if (NT_PROCESS == t->tc_Node.ln_Type) {
-        r = (struct _clib2 *) ((struct Process *) t)->pr_UID;
+        uint32 value;
+        /* Get _clib2 address stored into process pr_UID field */
+        GetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, &value, TAG_END);
+        r = (struct _clib2 *) value;
     }
 
+    if (!r) {
+        SHOWMSG("_clib2 not found in current process/task. Using fallback clib2");
+        struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+        if (res) {
+            return res->fallbackClib;
+        }
+    }
     return r;
 }

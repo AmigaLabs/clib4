@@ -410,12 +410,12 @@ reent_init(struct _clib2 *__clib2) {
 out:
 
     if (!success) {
-        reent_exit(__clib2);
+        reent_exit(__clib2, FALSE);
     }
 }
 
 void
-reent_exit(struct _clib2 *__clib2) {
+reent_exit(struct _clib2 *__clib2, BOOL fallback) {
     ENTER();
 
     /* Free global clib structure */
@@ -423,12 +423,14 @@ reent_exit(struct _clib2 *__clib2) {
         struct ElfIFace *IElf = __IElf;
 
         /* Check for getrandom fd */
-        if (__clib2->randfd[0] >= 0) {
-            close(__clib2->randfd[0]);
-        }
+        if (!fallback) {
+            if (__clib2->randfd[0] >= 0) {
+                close(__clib2->randfd[0]);
+            }
 
-        if (__clib2->randfd[1] >= 0) {
-            close(__clib2->randfd[1]);
+            if (__clib2->randfd[1] >= 0) {
+                close(__clib2->randfd[1]);
+            }
         }
 
         /* Free wchar stuff */
@@ -480,7 +482,7 @@ reent_exit(struct _clib2 *__clib2) {
         }
 
         /* Free dl stuff */
-        if (__clib2->__dl_elf_handle != NULL) {
+        if (IElf && __clib2->__dl_elf_handle != NULL) {
             SHOWMSG("Closing elf handle");
             CloseElfTags(__clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
             __clib2->__dl_elf_handle = NULL;

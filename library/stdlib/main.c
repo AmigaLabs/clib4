@@ -303,14 +303,13 @@ _main(
         int (*start_main)(int, char **),
         void (*__EXT_CTOR_LIST__[])(void),
         void (*__EXT_DTOR_LIST__[])(void)) {
-    struct WBStartup *volatile startup_message;
-    volatile APTR old_window_pointer = NULL;
-    volatile BOOL old_window_pointer_valid = FALSE;
+    struct WBStartup *volatile startup_message = NULL;
     struct Process *this_process;
     int return_code = RETURN_FAIL;
     ULONG current_stack_size;
     struct _clib2 *__clib2 = NULL;
     char uuid[UUID4_LEN + 1] = {0};
+    DECLARE_UTILITYBASE();
 
     /* Pick up the Workbench startup message, if available. */
     this_process = (struct Process *) FindTask(NULL);
@@ -320,10 +319,8 @@ _main(
         struct MsgPort *mp = &this_process->pr_MsgPort;
         WaitPort(mp);
         startup_message = (struct WBStartup *) GetMsg(mp);
-
-    } else {
-        startup_message = NULL;
     }
+
     uint32 pid = GetPID(0, GPID_PROCESS);
 
     /* If all libraries are opened correctly we can initialize clib2 reent structure */
@@ -337,7 +334,7 @@ _main(
         goto out;
 
     /* Get the current task pointer */
-    __clib2->self = (struct Process *) FindTask(NULL);
+    __clib2->self = this_process;
 
     SHOWPOINTER(__clib2);
 
@@ -347,20 +344,13 @@ _main(
     uuid4_generate(uuid);
     __clib2->uuid = uuid;
 
+    /* Set _clib2 pointer into process pr_UID
+     * This field is copied to any spawned process created by this exe and/or its children
+     */
     this_process->pr_UID = (uint32) __clib2;
+    //SetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, __clib2, TAG_END);
 
     __clib2->__WBenchMsg = (struct WBStartup *) startup_message;
-
-    if (__clib2->__disable_dos_requesters) {
-        /* Don't display any requesters. */
-        old_window_pointer = __set_process_window((APTR) - 1);
-    } else {
-        /* Just remember the original pointer. */
-        old_window_pointer = __set_process_window(NULL);
-        __set_process_window(old_window_pointer);
-    }
-
-    old_window_pointer_valid = TRUE;
 
     /* After reent structure we can call clib2 constructors */
     D(("Calling clib2 ctors"));
@@ -391,14 +381,14 @@ _main(
        store its result in the global __stack_size variable. */
     if (__get_default_stack_size != NULL) {
         unsigned int size = (*__get_default_stack_size)();
-        if (size > 0)
+        if (size > 0) {
             __clib2->__stack_size = size;
+        }
     }
 
     /* How much stack space was provided? */
     current_stack_size = get_stack_size();
 
-    DECLARE_UTILITYBASE();
     /* Set default terminal mode to "amiga-clib2" if not set */
     char term_buffer[32] = {0};
     LONG term_len = GetVar("TERM", (STRPTR) term_buffer, 32, 0);
@@ -451,8 +441,7 @@ _main(
 #endif /* NDEBUG */
 
         SHOWMSG("Swap Stack and Call Main");
-        return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__,
-                                                                  __EXT_DTOR_LIST__, __clib2));
+        return_code = __swap_stack_and_call(stk, (APTR) call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib2));
 
         FreeVec(new_stack);
         FreeVec(stk);
@@ -466,22 +455,18 @@ _main(
     SetTaskPri((struct Task *) this_process, old_priority);
 
 out:
-
     SHOWMSG("Calling clib2 dtors");
     _end_ctors(__DTOR_LIST__);
     SHOWMSG("Done. All destructors called");
 
     SHOWMSG("Calling reent_exit on _clib2");
-    reent_exit(__clib2);
+    reent_exit(__clib2, FALSE);
 
-    if (old_window_pointer_valid)
-        __set_process_window(old_window_pointer);
-
-    if (startup_message != NULL) {
+    if (!this_process->pr_CLI) {
         Forbid();
-
         ReplyMsg((struct Message *) startup_message);
     }
 
+    SHOWMSG("Return from main");
     return return_code;
 }

@@ -83,7 +83,7 @@ extern void __stack_usage_exit(void);
 extern void _exit(int return_code);
 
 extern void reent_init(struct _clib2 *__clib2);
-extern void reent_exit(struct _clib2 *__clib2);
+extern void reent_exit(struct _clib2 *__clib2, BOOL fallback);
 
 /****************************************************************************/
 

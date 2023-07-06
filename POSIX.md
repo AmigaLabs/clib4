@@ -6,7 +6,7 @@
 | <arpa/inet.h>            | Functions for manipulating numeric IP addresses (part of Berkley sockets)             | Complete                          |                                                    
 | <assert.h>               | Verify assumptions                                                                    | Complete                          |                                                   
 | <complex.h>              | Complex Arithmetic                                                                    | Complete                          |
-| <cpio.h>                 | Magic numbers for the cpio archive format                                             | Not present                       |
+| <cpio.h>                 | Magic numbers for the cpio archive format                                             | Complete                          |
 | <ctype.h>                | Character types                                                                       | Complete                          |                                                    |
 | <dirent.h>               | Allows the opening and listing of directories                                         | Complete                          |                                                   
 | <dlfcn.h>                | Dynamic linking                                                                       | Complete                          |                                                  
