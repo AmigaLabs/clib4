@@ -232,7 +232,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                                         /* Try to get a lock on the file first, then move on to
                                              * the directory it is stored in.
                                              */
-                                        old_dir = CurrentDir(uln->uln_Lock);
+                                        old_dir = SetCurrentDir(uln->uln_Lock);
 
                                         node_lock = Lock(uln->uln_Name, SHARED_LOCK);
                                         if (node_lock != BZERO) {
@@ -241,7 +241,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                                             UnLock(node_lock);
                                         }
 
-                                        CurrentDir(old_dir);
+                                        SetCurrentDir(old_dir);
 
                                         /* If we found the file's parent directory, check if it matches
                                              * the parent directory of the file we just closed.
@@ -260,14 +260,14 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                                     if (node != NULL) {
                                         if (NOT file_deleted) {
                                             BPTR old_dir;
-                                            old_dir = CurrentDir(parent_dir);
+                                            old_dir = SetCurrentDir(parent_dir);
 
-                                            if (DeleteFile(fib->Name)) {
+                                            if (Delete(fib->Name)) {
                                                 file_deleted = TRUE;
                                                 name_and_path_valid = FALSE;
                                             }
 
-                                            CurrentDir(old_dir);
+                                            SetCurrentDir(old_dir);
                                         }
 
                                         if (file_deleted) {
@@ -281,9 +281,9 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
 
                         if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid) {
                             BPTR old_dir;
-                            old_dir = CurrentDir(parent_dir);
+                            old_dir = SetCurrentDir(parent_dir);
                             SetProtection(fib->Name, 0);
-                            CurrentDir(old_dir);
+                            SetCurrentDir(old_dir);
                         }
 
                         FreeDosObject(DOS_EXAMINEDATA, fib);
@@ -454,7 +454,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
             fh = BADDR(file);
 
             /* Special treatment for "NIL:", for which we make some stuff up. */
-            if (fh->fh_Type == NULL) {
+            if (fh->fh_MsgPort == NULL) {
                 /* Make up some stuff for this stream. */
                 memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
 
@@ -502,7 +502,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                     fam->fam_FileInfo->Type = ST_CONSOLE;
                 }
             }
-            fam->fam_FileSystem = fh->fh_Type;
+            fam->fam_FileSystem = fh->fh_MsgPort;
             result = OK;
             break;
 

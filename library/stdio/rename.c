@@ -71,7 +71,7 @@ int rename(const char *oldname, const char *newname) {
 
             /* ZZZ there should be a safer solution for this */
 
-            if (CANNOT DeleteFile((STRPTR)newname))
+            if (CANNOT Delete((STRPTR)newname))
             {
                 SHOWMSG("couldn't delete the file");
 

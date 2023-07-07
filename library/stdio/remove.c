@@ -33,7 +33,7 @@ remove(const char *filename) {
 
         D(("trying to delete '%s'", filename));
 
-        status = DeleteFile((STRPTR) filename);
+        status = Delete((STRPTR) filename);
         if (status == DOSFALSE) {
             __set_errno(__translate_access_io_error_to_errno(IoErr()));
             goto out;

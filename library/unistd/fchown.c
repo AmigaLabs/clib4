@@ -58,7 +58,7 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
         goto out;
     }
 
-    old_current_dir = CurrentDir(parent_dir);
+    old_current_dir = SetCurrentDir(parent_dir);
     current_dir_changed = TRUE;
 
     /* A value of -1 for either the owner or the group ID means
@@ -104,7 +104,7 @@ out:
     UnLock(parent_dir);
 
     if (current_dir_changed)
-        CurrentDir(old_current_dir);
+        SetCurrentDir(old_current_dir);
 
     __stdio_unlock(__clib2);
 

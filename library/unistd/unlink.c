@@ -53,7 +53,7 @@ unlink(const char *path_name) {
 
     D(("trying to delete '%s'", path_name));
 
-    status = DeleteFile((STRPTR) path_name);
+    status = Delete((STRPTR) path_name);
     if (status == DOSFALSE) {
         if (__clib2->__unix_path_semantics) {
             struct UnlinkNode *uln = NULL;

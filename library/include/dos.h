@@ -369,17 +369,14 @@ struct _clib2 {
     /* File init fields */
     struct MsgPort *old_console_task;
     BOOL restore_console_task;
-
     BOOL restore_streams;
-
     BPTR old_output;
     BPTR old_input;
-
     BPTR output;
     BPTR input;
 
     /* This will be set to TRUE in case a stack overflow was detected. */
-    BOOL __stack_overflow;
+    BOOL unused0;
 
     /*
      * The following variables are part of libnet.a, which provides for
@@ -527,6 +524,10 @@ struct _clib2 {
     /* Current process id */
     int processId;
     char *uuid;
+
+    BPTR old_error;
+    BPTR error;
+    BPTR new_directory;
 };
 
 #ifndef __getClib2
