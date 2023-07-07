@@ -16,7 +16,6 @@ closelog(void) {
         __clib2->syslog_fd = NULL;
     }
 
-out:
     __check_abort();
 
     LEAVE();

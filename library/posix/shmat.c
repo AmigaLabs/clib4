@@ -8,16 +8,20 @@
 
 void *
 _shmat(int shmid, const void *prefadds, int flags) {
-    DECLARE_SYSVYBASE();
-    struct _clib2 *__clib2 = __CLIB2;
-
     ENTER();
 
     SHOWVALUE(shmid);
     SHOWPOINTER(prefadds);
     SHOWVALUE(flags);
 
-    if (__clib2->haveShm) {
+    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (!res) {
+        __set_errno(ENOSYS);
+        return NULL;
+    }
+
+    DECLARE_SYSVYBASE();
+    if (res->haveShm) {
         void *ret;
         ret = shmat(shmid, prefadds, flags);
         if (ret == ((void *)-1)) {

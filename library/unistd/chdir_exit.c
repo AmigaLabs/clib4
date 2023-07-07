@@ -17,7 +17,7 @@ CLIB_DESTRUCTOR(__chdir_exit) {
     if (__clib2->__current_directory_changed) {
         BPTR old_dir;
 
-        old_dir = CurrentDir(__clib2->__original_current_directory);
+        old_dir = SetCurrentDir(__clib2->__original_current_directory);
         __clib2->__original_current_directory = BZERO;
 
         if (__clib2->__unlock_current_directory) {

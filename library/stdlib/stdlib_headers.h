@@ -25,8 +25,6 @@
 #include <dos/dosasl.h>
 #endif /* DOS_DOSASL_H */
 
-#include <dos/obsolete.h>
-
 #ifndef WORKBENCH_STARTUP_H
 #include <workbench/startup.h>
 #endif /* WORKBENCH_STARTUP_H */

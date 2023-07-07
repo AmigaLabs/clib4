@@ -20,8 +20,10 @@
 #include "macros.h"
 #endif /* _MACROS_H */
 
+#include "shared_library/clib2.h"
+
 #define DECLARE_SYSVYBASE() \
-	struct Library   UNUSED	*SysVBase    = __CLIB2->__SysVBase; \
-	struct SYSVIFace 		*ISysVIPC	 = __CLIB2->__ISysVIPC
+	struct Library   UNUSED	*SysVBase    = res->SysVBase; \
+	struct SYSVIFace 		*ISysVIPC	 = res->ISysVIPC
 
 #endif /* _STDLIB_SYSVBASE_H */

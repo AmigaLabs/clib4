@@ -101,7 +101,7 @@ fchmod(int file_descriptor, mode_t mode) {
         goto out;
     }
 
-    old_current_dir = CurrentDir(parent_dir);
+    old_current_dir = SetCurrentDir(parent_dir);
     current_dir_changed = TRUE;
 
     if (CANNOT SetProtection((STRPTR)fib->Name, protection))
@@ -118,7 +118,7 @@ out:
     __stdio_unlock(__clib2);
 
     if (current_dir_changed)
-        CurrentDir(old_current_dir);
+        SetCurrentDir(old_current_dir);
 
     FreeDosObject(DOS_EXAMINEDATA, fib);
 

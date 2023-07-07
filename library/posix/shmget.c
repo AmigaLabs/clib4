@@ -8,17 +8,21 @@
 
 int 
 _shmget(key_t key, size_t size, int flags) {
-    DECLARE_SYSVYBASE();
-    struct _clib2 *__clib2 = __CLIB2;
-
     ENTER();
 
     SHOWVALUE(key);
     SHOWVALUE(size);
     SHOWVALUE(flags);
 
+    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (!res) {
+        __set_errno(ENOSYS);
+        return -1;
+    }
+
+    DECLARE_SYSVYBASE();
     int ret = -1;
-    if (__clib2->haveShm) {
+    if (res->haveShm) {
         ret = shmget(key, size, flags);
         if (ret < 0) {
             __set_errno(GetIPCErr());

@@ -8,17 +8,21 @@
 
 int
 _msgctl(int qid, int cmd, struct msqid_ds *buf) {
-    DECLARE_SYSVYBASE();
-    struct _clib2 *__clib2 = __CLIB2;
-
     ENTER();
 
     SHOWVALUE(qid);
     SHOWVALUE(cmd);
     SHOWPOINTER(buf);
 
+    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (!res) {
+        __set_errno(ENOSYS);
+        return -1;
+    }
+
+    DECLARE_SYSVYBASE();
     int ret = -1;
-    if (__clib2->haveShm) {
+    if (res->haveShm) {
         ret = msgctl(qid, cmd, buf);
         if (ret < 0) {
             __set_errno(GetIPCErr());

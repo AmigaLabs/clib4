@@ -505,7 +505,7 @@ __termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action
             fh = BADDR(file);
 
             /* Special treatment for "NIL:", for which we make some stuff up. */
-            if (fh->fh_Type == NULL) {
+            if (fh->fh_MsgPort == NULL) {
                 /* Make up some stuff for this stream. */
                 memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
 
@@ -546,7 +546,7 @@ __termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action
                 }
             }
 
-            fam->fam_FileSystem = fh->fh_Type;
+            fam->fam_FileSystem = fh->fh_MsgPort;
 
             result = OK;
 

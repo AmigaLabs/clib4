@@ -36,9 +36,9 @@ CLIB_DESTRUCTOR(unistd_exit) {
         while ((uln = (struct UnlinkNode *) RemHead((struct List *) &__clib2->__unlink_list))) {
             D(("deleting '%s'", uln->uln_Name));
 
-            old_dir = CurrentDir(uln->uln_Lock);
-            DeleteFile(uln->uln_Name);
-            CurrentDir(old_dir);
+            old_dir = SetCurrentDir(uln->uln_Lock);
+            Delete(uln->uln_Name);
+            SetCurrentDir(old_dir);
 
             UnLock(uln->uln_Lock);
         }

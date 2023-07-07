@@ -83,12 +83,12 @@ chdir(const char *path_name) {
     if (__clib2->__current_directory_changed) {
         BPTR old_dir;
 
-        old_dir = CurrentDir(dir_lock);
+        old_dir = SetCurrentDir(dir_lock);
 
         if (__clib2->__unlock_current_directory)
             UnLock(old_dir);
     } else {
-        __clib2->__original_current_directory = CurrentDir(dir_lock);
+        __clib2->__original_current_directory = SetCurrentDir(dir_lock);
 
         __clib2->__current_directory_changed = TRUE;
     }

@@ -78,7 +78,7 @@ rmdir(const char *path_name) {
 
     SHOWMSG("trying to delete it");
 
-    status = DeleteFile((STRPTR) path_name);
+    status = Delete((STRPTR) path_name);
     if (status == DOSFALSE) {
         SHOWMSG("that didn't work");
 

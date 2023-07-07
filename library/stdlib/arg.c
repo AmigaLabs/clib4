@@ -82,9 +82,6 @@ ARG_CONSTRUCTOR(arg_init) {
 
             if (FindVar("DISABLE_COMMANDLINE_WILDCARD_EXPANSION", LV_VAR) != NULL)
                 expand_wildcard_args = FALSE;
-
-            if (__expand_wildcard_args_check != NULL)
-                expand_wildcard_args = (*__expand_wildcard_args_check)();
         }
 
         /* Get the shell parameter string and find out
@@ -261,15 +258,14 @@ ARG_CONSTRUCTOR(arg_init) {
         __clib2->__argv[__clib2->__argc] = NULL;
 
         if (__clib2->__unix_path_semantics) {
-            /* If necessary, expand wildcard patterns found in the command
-               line string into file and directory names. */
+            /* If necessary, expand wildcard patterns found in the command line string into file and directory names. */
             if (expand_wildcard_args && __wildcard_expand_init() < 0)
                 goto out;
         }
     } else {
-        /* Return a pointer to the startup message in place of the
-           the argument vector. The argument counter (what will come
-           out as 'argc' for the main() function) will remain 0. */
+        /* Return a pointer to the startup message in place of the the argument vector.
+         * The argument counter (what will come out as 'argc' for the main() function) will remain 0.
+        */
         __clib2->__argv = (char **) __clib2->__WBenchMsg;
     }
 
@@ -290,9 +286,11 @@ ARG_DESTRUCTOR(arg_exit) {
     ENTER();
     struct _clib2 *__clib2 = __CLIB2;
 
-    if (__clib2->__argv) {
-        FreeVec(__clib2->__argv);
-        __clib2->__argv = NULL;
+    if (__clib2->__WBenchMsg == NULL) {
+        if (__clib2->__argv) {
+            FreeVec(__clib2->__argv);
+            __clib2->__argv = NULL;
+        }
     }
 
     LEAVE();

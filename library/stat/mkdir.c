@@ -6,6 +6,8 @@
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
 
+#include <dos/obsolete.h>
+
 int mkdir(const char *path_name, mode_t mode) {
     struct name_translation_info path_name_nti;
     ULONG protection;

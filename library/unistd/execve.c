@@ -11,28 +11,21 @@
 /* This gets handed around when trying to locate a program or a script
    interpreter which knows how to do the job. */
 struct program_info {
-    struct Segment *resident_command; /* If not NULL, points to a valid
-											   resident command */
-    BPTR home_dir;                      /* If not ZERO refers to the directory
-											   in which the command to be executed
-											   can be found */
-    BPTR segment_list;                  /* If not ZERO refers to a command
-											   loaded into memory */
-    char *program_name;                  /* Points to the name of the command */
-    char *interpreter_name;              /* If not NULL the name of the command
-											   interpreter to use */
-    char *interpreter_args;              /* If not NULL these are additional
-											   arguments to be passedto the command
-											   interpreter */
+    struct DosResidentSeg *resident_command;    /* If not NULL, points to a valid resident command */
+    BPTR home_dir;                              /* If not ZERO refers to the directory in which the command to be executed can be found */
+    BPTR segment_list;                          /* If not ZERO refers to a command loaded into memory */
+    char *program_name;                         /* Points to the name of the command */
+    char *interpreter_name;                     /* If not NULL the name of the command interpreter to use */
+    char *interpreter_args;                     /* If not NULL these are additional arguments to be passedto the command interpreter */
 };
 
 /****************************************************************************/
 
 /* Try to find a resident command by name; returns a pointer to the Segment
    data structure ready to use, or NULL if none could be found */
-static struct Segment *
+static struct DosResidentSeg *
 find_resident_command(const char *command_name) {
-    struct Segment *seg;
+    struct DosResidentSeg *seg;
 
     /* This must be done under Forbid() since dos.library does not have
        a more sophisticated arbitration method for this yet... */
@@ -253,7 +246,7 @@ find_command(const char *path, struct program_info **result_ptr) {
         /* Now for the simple stuff. Find a command or command script file
            under the path name given. Handle multi-volume assignments, such as
            referring to "C:", gracefully */
-        file_system = GetFileSysTask();
+        file_system = GetFileSysPort();
 
         do {
             /* Give the user a chance to bail out. */
@@ -265,9 +258,9 @@ find_command(const char *path, struct program_info **result_ptr) {
             if (found_volume_separator) {
                 dvp = GetDeviceProc((STRPTR) path, dvp);
                 if (dvp != NULL) {
-                    SetFileSysTask(dvp->dvp_Port);
+                    SetFileSysPort(dvp->dvp_Port);
 
-                    old_dir = CurrentDir(dvp->dvp_Lock);
+                    old_dir = SetCurrentDir(dvp->dvp_Lock);
                 }
             }
 
@@ -391,10 +384,10 @@ find_command(const char *path, struct program_info **result_ptr) {
             }
 
             if (dvp != NULL)
-                CurrentDir(old_dir);
+                SetCurrentDir(old_dir);
         } while (!done && error == 0 && dvp != NULL && (dvp->dvp_Flags & DVPF_MULTIASSIGN));
 
-        SetFileSysTask(file_system);
+        SetFileSysPort(file_system);
 
         if (dvp != NULL)
             FreeDeviceProc(dvp);
