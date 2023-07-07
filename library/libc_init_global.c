@@ -363,8 +363,8 @@ reent_init(struct _clib2 *__clib2) {
             if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
                 if (handle != NULL) {
                     SHOWMSG("Calling OpenElfTags");
-                    __clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
-                    SHOWPOINTER(__clib2->__dl_elf_handle);
+                    __clib2->__dl_root_handle = OpenElfTags(OET_ElfHandle, handle, TAG_DONE);
+                    SHOWPOINTER(__clib2->__dl_root_handle);
                 }
             }
         }
@@ -460,12 +460,12 @@ reent_exit(struct _clib2 *__clib2, BOOL fallback) {
         }
 
         /* Free dl stuff */
-        if (IElf && __clib2->__dl_elf_handle != NULL) {
+        if (IElf && __clib2->__dl_root_handle != NULL) {
             SHOWMSG("Closing elf handle");
-            CloseElfTags(__clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
-            __clib2->__dl_elf_handle = NULL;
+            CloseElfTags(__clib2->__dl_root_handle, CET_ReClose, TRUE, TAG_DONE);
+            __clib2->__dl_root_handle = NULL;
         } else {
-            D(("Cannot close elf handle: __clib2->__dl_elf_handle == %p - IElf == %p", __clib2->__dl_elf_handle, IElf));
+            D(("Cannot close elf handle: __clib2->__dl_root_handle == %p - IElf == %p", __clib2->__dl_root_handle, IElf));
         }
 
         FreeVec(__clib2);

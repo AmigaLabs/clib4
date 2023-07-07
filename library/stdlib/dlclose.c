@@ -18,11 +18,11 @@ dlclose(void *handle) {
     ENTER();
     SHOWPOINTER(handle);
 
-    if (__clib2->__dl_elf_handle != NULL) {
+    if (__clib2->__dl_root_handle != NULL) {
         struct ElfIFace *IElf = __clib2->IElf;
         Elf32_Error error;
 
-        error = DLClose(__clib2->__dl_elf_handle, handle);
+        error = DLClose(__clib2->__dl_root_handle, handle);
         if (error != ELF32_NO_ERROR) {
             __clib2->__elf_error_code = error;
             goto out;

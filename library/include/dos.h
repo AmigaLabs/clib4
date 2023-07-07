@@ -211,7 +211,7 @@ struct _clib2 {
     BOOL  unused3;
 
     /* This is used with the dlopen(), dlclose() and dlsym() functions. */
-    Elf32_Handle __dl_elf_handle;
+    Elf32_Handle __dl_root_handle;
     Elf32_Error __elf_error_code;
 
     /* This is the pointer to itself */

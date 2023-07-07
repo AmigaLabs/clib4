@@ -170,7 +170,6 @@ call_main(
     volatile LONG saved_io_err;
 
     ENTER();
-    Printf("1) %p\n", __clib2->__WBenchMsg);
     /* This plants the return buffer for _exit(). */
     if (setjmp(__clib2->__exit_jmp_buf) != 0) {
         D(("Back from longjmp"));
@@ -213,7 +212,6 @@ out:
        the next following destructor. */
     (void) setjmp(__clib2->__exit_jmp_buf);
     SHOWMSG("Called setjmp(__clib2->__exit_jmp_buf)");
-    Printf("2) %p\n", __clib2->__WBenchMsg);
 
     /* Go through the destructor list */
     SHOWMSG("invoking external destructors in reverse order");

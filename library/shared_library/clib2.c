@@ -193,14 +193,14 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
             IExec->FreeVec(res->fallbackClib);
         }
 
-        if (res->ISysVIPC != NULL) {
-            D(("Drop SYSV interface"));
-            IExec->DropInterface((struct Interface *) res->ISysVIPC);
-        }
-
         if (res->SysVBase != NULL) {
             D(("Close SYSV Library"));
             IExec->CloseLibrary(res->SysVBase);
+        }
+
+        if (res->ISysVIPC != NULL) {
+            D(("Drop SYSV interface"));
+            IExec->DropInterface((struct Interface *) res->ISysVIPC);
         }
 
         IExec->RemResource(res);
