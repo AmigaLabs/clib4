@@ -1,9 +1,8 @@
 #ifndef _CLIB2_H
 #define _CLIB2_H
 
-#ifndef PROTO_DOS_H
 #include <proto/dos.h>
-#endif /* PROTO_DOS_H */
+#include <proto/exec.h>
 
 #include "map.h"
 
@@ -16,6 +15,9 @@ struct Clib2Resource {
     struct List             nodes;          /* list of parent nodes */
     struct hashmap         *uxSocketsMap;
     struct _clib2          *fallbackClib;
+    struct Library         *SysVBase;
+    struct SYSVIFace       *ISysVIPC;
+    BOOL haveShm;
 };
 
 struct Clib2Node {

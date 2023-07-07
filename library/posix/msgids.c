@@ -8,17 +8,21 @@
 
 int
 _msgids(int *buf, size_t nids, size_t *pnids) {
-    DECLARE_SYSVYBASE();
-    struct _clib2 *__clib2 = __CLIB2;
-
     ENTER();
 
     SHOWPOINTER(buf);
     SHOWVALUE(nids);
     SHOWPOINTER(pnids);
 
+    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (!res) {
+        __set_errno(ENOSYS);
+        return -1;
+    }
+
+    DECLARE_SYSVYBASE();
     int ret = -1;
-    if (__clib2->haveShm) {
+    if (res->haveShm) {
         ret = msgids((int32 *) buf, nids, (uint32 *) pnids);
         if (ret < 0) {
             __set_errno(GetIPCErr());

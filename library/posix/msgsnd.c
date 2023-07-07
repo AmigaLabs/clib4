@@ -8,9 +8,6 @@
 
 int
 _msgsnd(int msgid, const void *msg_ptr, size_t msg_sz, int msgflg) {
-    DECLARE_SYSVYBASE();
-    struct _clib2 *__clib2 = __CLIB2;
-
     ENTER();
 
     SHOWVALUE(msgid);
@@ -18,8 +15,15 @@ _msgsnd(int msgid, const void *msg_ptr, size_t msg_sz, int msgflg) {
     SHOWVALUE(msg_sz);
     SHOWVALUE(msgflg);
 
+    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (!res) {
+        __set_errno(ENOSYS);
+        return -1;
+    }
+
+    DECLARE_SYSVYBASE();
     int ret = -1;
-    if (__clib2->haveShm) {
+    if (res->haveShm) {
         ret = msgsnd(msgid, msg_ptr, msg_sz, msgflg);
         if (ret < 0) {
             __set_errno(GetIPCErr());

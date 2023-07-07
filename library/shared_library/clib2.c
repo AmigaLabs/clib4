@@ -193,6 +193,16 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
             IExec->FreeVec(res->fallbackClib);
         }
 
+        if (res->ISysVIPC != NULL) {
+            D(("Drop SYSV interface"));
+            IExec->DropInterface((struct Interface *) res->ISysVIPC);
+        }
+
+        if (res->SysVBase != NULL) {
+            D(("Close SYSV Library"));
+            IExec->CloseLibrary(res->SysVBase);
+        }
+
         IExec->RemResource(res);
         IExec->FreeVec(res);
     }
@@ -369,6 +379,19 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
                                                                  TAG_DONE);
             reent_init(res->fallbackClib);
             res->fallbackClib->__check_abort_enabled = TRUE;
+
+            /* Check if SYSV library is available in the system. Otherwise the functions will return ENOSYS */
+            res->haveShm = FALSE;
+            res->SysVBase = iexec->OpenLibrary("sysvipc.library", 53);
+            if (res->SysVBase != NULL) {
+                res->ISysVIPC = (struct SYSVIFace *) iexec->GetInterface(res->SysVBase, "main", 1, NULL);
+                if (res->ISysVIPC != NULL) {
+                    res->haveShm = TRUE;
+                } else {
+                    iexec->CloseLibrary(res->SysVBase);
+                    res->SysVBase = NULL;
+                }
+            }
 
             iexec->AddResource(res);
         } else {

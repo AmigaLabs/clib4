@@ -8,9 +8,6 @@
 
 int
 _msgsnap(int msqid, void *buf, size_t bufsz, long msgtyp) {
-    DECLARE_SYSVYBASE();
-    struct _clib2 *__clib2 = __CLIB2;
-
     ENTER();
 
     SHOWVALUE(msqid);
@@ -18,8 +15,15 @@ _msgsnap(int msqid, void *buf, size_t bufsz, long msgtyp) {
     SHOWVALUE(bufsz);
     SHOWVALUE(msgtyp);
 
+    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (!res) {
+        __set_errno(ENOSYS);
+        return -1;
+    }
+
+    DECLARE_SYSVYBASE();
     int ret = -1;
-    if (__clib2->haveShm) {
+    if (res->haveShm) {
         ret = msgsnap(msqid, buf, bufsz, msgtyp);
         if (ret < 0) {
             __set_errno(GetIPCErr());

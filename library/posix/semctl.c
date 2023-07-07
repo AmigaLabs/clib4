@@ -8,17 +8,21 @@
 
 int
 _semctl(int semid, int semnum, int cmd, union semun aun) {
-    DECLARE_SYSVYBASE();
-    struct _clib2 *__clib2 = __CLIB2;
-
     ENTER();
 
     SHOWVALUE(semid);
     SHOWVALUE(semnum);
     SHOWVALUE(cmd);
 
+    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (!res) {
+        __set_errno(ENOSYS);
+        return -1;
+    }
+
+    DECLARE_SYSVYBASE();
     int ret = -1;
-    if (__clib2->haveShm) {
+    if (res->haveShm) {
         ret = semctl(semid, semnum, cmd, aun);
         if (ret < 0) {
             __set_errno(GetIPCErr());

@@ -215,6 +215,10 @@ reent_init(struct _clib2 *__clib2) {
         /* Set main Exec and IElf interface pointers */
         .IExec = IExec,
         .IElf = __IElf,
+        .__WBenchMsg = NULL,
+        .input = BZERO,
+        .output = BZERO,
+        .error = BZERO,
         /* Disable check abort at start */
         .__check_abort_enabled = FALSE,
         .__break_signal_mask = SIGBREAKF_CTRL_C,
@@ -247,8 +251,6 @@ reent_init(struct _clib2 *__clib2) {
         ._current_category = LC_ALL,
         ._current_locale = "C-UTF-8",
         .__mb_cur_max = 1,
-        /* Check is SYSV library is available in the system */
-        .haveShm = FALSE,
         .__disable_dos_requesters = FALSE,
         .__expand_wildcard_args = TRUE,
         .__unlink_retries = TRUE,
@@ -368,18 +370,6 @@ reent_init(struct _clib2 *__clib2) {
         }
     }
 
-    SHOWMSG("try to open SYSVIPC Library");
-    __clib2->__SysVBase = OpenLibrary("sysvipc.library", 53);
-    if (__clib2->__SysVBase != NULL) {
-        __clib2->__ISysVIPC = (struct SYSVIFace *) GetInterface(__clib2->__SysVBase, "main", 1, NULL);
-        if (__clib2->__ISysVIPC != NULL) {
-            __clib2->haveShm = TRUE;
-        } else {
-            CloseLibrary(__clib2->__SysVBase);
-            __clib2->__SysVBase = NULL;
-        }
-    }
-
     ClearMem(&__clib2->tmr_time, sizeof(struct itimerval));
 
     /* Set ar4random stuff */
@@ -442,18 +432,6 @@ reent_exit(struct _clib2 *__clib2, BOOL fallback) {
         /* Remove random semaphore */
         SHOWMSG("Delete random lock semaphore");
         __delete_semaphore(__clib2->__random_lock);
-
-        if (__clib2->__ISysVIPC != NULL) {
-            SHOWMSG("Drop SYSV interface");
-            DropInterface((struct Interface *) __clib2->__ISysVIPC);
-            __clib2->__ISysVIPC = NULL;
-        }
-
-        if (__clib2->__SysVBase != NULL) {
-            SHOWMSG("Close SYSV Library");
-            CloseLibrary(__clib2->__SysVBase);
-            __clib2->__SysVBase = NULL;
-        }
 
         /* Free memalign stuff */
         if (__clib2->__memalign_pool) {

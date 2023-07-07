@@ -8,9 +8,6 @@
 
 ssize_t
 _msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg) {
-    DECLARE_SYSVYBASE();
-    struct _clib2 *__clib2 = __CLIB2;
-
     ENTER();
 
     SHOWVALUE(msqid);
@@ -19,8 +16,15 @@ _msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg) {
     SHOWVALUE(msgtyp);
     SHOWVALUE(msgflg);
 
+    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (!res) {
+        __set_errno(ENOSYS);
+        return -1;
+    }
+
+    DECLARE_SYSVYBASE();
     int ret = -1;
-    if (__clib2->haveShm) {
+    if (res->haveShm) {
         ret = msgrcv(msqid, msgp, msgsz, msgtyp, msgflg);
         if (ret < 0) {
             __set_errno(GetIPCErr());

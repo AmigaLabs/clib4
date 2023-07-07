@@ -8,17 +8,21 @@
 
 int 
 _shmctl(int shmid, int cmd, struct shmid_ds *cbuf) {
-    DECLARE_SYSVYBASE();
-    struct _clib2 *__clib2 = __CLIB2;
-
     ENTER();
 
     SHOWVALUE(shmid);
     SHOWVALUE(cmd);
     SHOWPOINTER(cbuf);
 
+    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (!res) {
+        __set_errno(ENOSYS);
+        return -1;
+    }
+
+    DECLARE_SYSVYBASE();
     int ret = -1;
-    if (__clib2->haveShm) {
+    if (res->haveShm) {
         ret = shmctl(shmid, cmd, cbuf);
         if (ret < 0) {
             __set_errno(GetIPCErr());

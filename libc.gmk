@@ -461,7 +461,6 @@ C_STDLIB := \
 	stdlib/free.o \
 	stdlib/gcvt.o \
 	stdlib/getexecname.o \
-	stdlib/getdefstacksize.o \
 	stdlib/getenv.o \
 	stdlib/getsp.o \
 	stdlib/get_errno.o \
@@ -495,8 +494,6 @@ C_STDLIB := \
 	stdlib/set_process_window.o \
 	stdlib/shared_objs.o \
 	stdlib/showerror.o \
-	stdlib/stack_usage.o \
-	stdlib/swapstack.o \
 	stdlib/arg.o \
 	stdlib/strtod.o \
 	stdlib/strtof.o \
@@ -514,7 +511,6 @@ C_STDLIB := \
 	stdlib/umodsi3.o \
 	stdlib/unsetenv.o \
 	stdlib/valloc.o \
-	stdlib/expand_wildcard_check.o \
 	stdlib/wof_allocator.o
 
 C_STRING := \

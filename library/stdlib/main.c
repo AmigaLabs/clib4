@@ -7,9 +7,7 @@
 #endif /* EXEC_EXECBASE_H */
 
 #include <setjmp.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <ctype.h>
 
 #ifndef _STDLIB_HEADERS_H
@@ -88,7 +86,7 @@ copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *
 }
 
 static void
-__makeEnvironment(struct _clib2 *__clib2) {
+makeEnvironment(struct _clib2 *__clib2) {
     char varbuf[8];
     uint32 flags = 0;
     size_t environ_size = 1024 * sizeof(char *);
@@ -306,7 +304,7 @@ _main(
     }
 
     /* Copy environment variables into clib2 reent structure */
-    __makeEnvironment(__clib2);
+    makeEnvironment(__clib2);
     if (!__clib2->__environment) {
         __clib2->__environment = empty_env;
     }
@@ -327,7 +325,7 @@ _main(
     if (-128 <= __clib2->__priority && __clib2->__priority <= 127)
         SetTaskPri((struct Task *) me, __clib2->__priority);
 
-    /* Can we enable check abort now */
+    /* We can enable check abort now */
     __clib2->__check_abort_enabled = TRUE;
 
     SHOWMSG("Call Main");
@@ -336,7 +334,6 @@ _main(
 
     /* Restore the task priority. */
     SetTaskPri((struct Task *) me, oldPriority);
-    Printf("3) %p\n", __clib2->__WBenchMsg);
 
     SHOWMSG("Calling clib2 dtors");
     _end_ctors(__DTOR_LIST__);

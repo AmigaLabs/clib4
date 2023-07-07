@@ -38,35 +38,26 @@ FILE_DESTRUCTOR(workbench_exit) {
         SelectOutput(__clib2->old_output);
         __clib2->old_output = BZERO;
 
-        SelectOutput(__clib2->old_error);
+        SelectErrorOutput(__clib2->old_error);
         __clib2->old_error = BZERO;
 
         __clib2->restore_streams = FALSE;
     }
 
     if (__clib2->input != BZERO) {
-        SetMode(__clib2->input, DOSFALSE);
-
         Close(__clib2->input);
         __clib2->input = BZERO;
     }
 
     if (__clib2->output != BZERO) {
-        SetMode(__clib2->output, DOSFALSE);
-
         Close(__clib2->output);
         __clib2->output = BZERO;
     }
 
     if (__clib2->error != BZERO) {
-        SetMode(__clib2->error, DOSFALSE);
-
         Close(__clib2->error);
         __clib2->error = BZERO;
     }
-
-    SetCurrentDir(__clib2->__original_current_directory);
-    UnLock(__clib2->new_directory);
 
     LEAVE();
 }
@@ -75,8 +66,7 @@ static int
 wb_file_init(struct _clib2 *__clib2) {
     int result = ERROR;
 
-    __clib2->new_directory = DupLock(__clib2->__WBenchMsg->sm_ArgList[0].wa_Lock);
-    __clib2->__original_current_directory = SetCurrentDir(__clib2->new_directory);
+    __clib2->__original_current_directory = SetCurrentDir(__clib2->__WBenchMsg->sm_ArgList[0].wa_Lock);
     __clib2->__current_directory_changed = TRUE;
 
     if (__clib2->__WBenchMsg->sm_ToolWindow != NULL) {
@@ -129,16 +119,12 @@ wb_file_init(struct _clib2 *__clib2) {
     if (__clib2->output == BZERO)
         __clib2->output = Open("NIL:", MODE_NEWFILE);
 
-    if (__clib2->error == BZERO)
-        __clib2->error = Open("NIL:", MODE_NEWFILE);
-
-    if (__clib2->input == BZERO || __clib2->output == BZERO || __clib2->error == BZERO)
+    if (__clib2->input == BZERO || __clib2->output == BZERO || __clib2->error)
         goto out;
 
     __clib2->old_input = SelectInput(__clib2->input);
     __clib2->old_output = SelectOutput(__clib2->output);
     __clib2->old_error = SelectErrorOutput(__clib2->error);
-
     __clib2->restore_streams = TRUE;
 
     result = OK;
