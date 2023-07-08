@@ -113,8 +113,6 @@ raw_put_char(REG(d0, UBYTE c))
 
 VOID
 KPutFmt(const char *format_string, va_list argument_list) {
-    assert(format_string != NULL);
-
     if (format_string != NULL) {
         size_t num_args;
 

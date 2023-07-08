@@ -88,9 +88,9 @@ problem).
 
 ### SYSV functions
 
-Clib2 now contains **shm*** and **msg*** functions. It
-needs <a href="http://www.os4depot.net/share/development/library/misc/sysvipc.lha">SYSV IPC</a> library. If you don't
-install it those functions will not work and will return to you an **ENOSYS** error.
+Clib2 now contains **shm***, **msg*** and **sem*** functions. 
+<a href="http://www.os4depot.net/share/development/library/misc/sysvipc.lha">SYSV IPC</a> library is now fully integrated into clib2 library and
+doesn't need any external resource
 
 ### Unix path support
 

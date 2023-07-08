@@ -13,9 +13,6 @@
 #define __NOGLOBALIFACE__
 #endif /* __NOGLOBALIFACE__ */
 
-#include "proto/sysvipc.h"
-#include "libraries/sysvipc.h"
-
 #ifndef _MACROS_H
 #include "macros.h"
 #endif /* _MACROS_H */
@@ -23,7 +20,7 @@
 #include "shared_library/clib2.h"
 
 #define DECLARE_SYSVYBASE() \
-	struct Library   UNUSED	*SysVBase    = res->SysVBase; \
+	struct Library   UNUSED	*SysSV_EIDRMVBase    = res->SysVBase; \
 	struct SYSVIFace 		*ISysVIPC	 = res->ISysVIPC
 
 #endif /* _STDLIB_SYSVBASE_H */

@@ -122,28 +122,16 @@ C_POSIX := \
 	posix/fstatvfs.o \
 	posix/glob.o \
 	posix/globfree.o \
-	posix/ipc_ftok.o \
 	posix/basename.o \
 	posix/dirname.o \
 	posix/memalign.o \
 	posix/mmap.o \
 	posix/munmap.o \
-	posix/msgctl.o \
-	posix/msgget.o \
-	posix/msgids.o \
-	posix/msgrcv.o \
-	posix/msgsnd.o \
-	posix/msgsnap.o \
 	posix/msync.o \
 	posix/poll.o \
 	posix/getrlimit.o \
 	posix/setrlimit.o \
 	posix/getrusage.o \
-	posix/shmat.o \
-	posix/shmctl.o \
-	posix/shmdt.o \
-	posix/shmget.o \
-	posix/shmids.o \
 	posix/checkabort.o \
 	posix/kill.o \
 	posix/raise.o \
@@ -158,13 +146,26 @@ C_POSIX := \
 	posix/signal.o \
 	posix/sigprocmask.o \
 	posix/sigsetmask.o \
-	posix/semctl.o \
-	posix/semget.o \
-    posix/semids.o \
-	posix/semop.o \
-	posix/semtimedop.o \
 	posix/statvfs.o \
 	posix/sysinfo.o \
+	posix/sysv_ftok.o \
+	posix/sysv_idkey.o \
+	posix/sysv_msgctl.o \
+	posix/sysv_msgget.o \
+	posix/sysv_msgids.o \
+	posix/sysv_msgrcv.o \
+	posix/sysv_msgsnap.o \
+	posix/sysv_msgsnd.o \
+	posix/sysv_semctl.o \
+	posix/sysv_semget.o \
+    posix/sysv_semids.o \
+	posix/sysv_semop.o \
+	posix/sysv_semtimedop.o \
+	posix/sysv_shmat.o \
+	posix/sysv_shmctl.o \
+	posix/sysv_shmdt.o \
+	posix/sysv_shmget.o \
+	posix/sysv_shmids.o \
 	posix/ulimit.o \
 	posix/readv.o \
 	posix/writev.o \

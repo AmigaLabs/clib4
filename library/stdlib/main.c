@@ -240,8 +240,8 @@ _main(
     struct Process *me;
     int rc = RETURN_FAIL;
     struct _clib2 *__clib2 = NULL;
-    char uuid[UUID4_LEN + 1] = {0};
     uint32 pid = GetPID(0, GPID_PROCESS);
+    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
 
     DECLARE_UTILITYBASE();
 
@@ -272,8 +272,18 @@ _main(
     reent_init(__clib2);
     __clib2->processId = pid;
 
-    uuid4_generate(uuid);
-    __clib2->uuid = uuid;
+    if (res) {
+        size_t iter = 0;
+        void *item;
+        while (hashmap_iter(res->children, &iter, &item)) {
+            const struct Clib2Node *node = item;
+            if (node->pid == pid) {
+                __clib2->uuid = node->uuid;
+                D(("__clib2->uuid ) %s\n", __clib2->uuid));
+                break;
+            }
+        }
+    }
 
     /* Set _clib2 pointer into process pr_UID
      * This field is copied to any spawned process created by this exe and/or its children

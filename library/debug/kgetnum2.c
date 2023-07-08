@@ -5,11 +5,6 @@
 #include "debug_headers.h"
 
 LONG
-KGetNum(void)
-{
-	LONG result;
-
-	result = kgetnum();
-
-	return(result);
+KGetNum(void) {
+    return kgetnum();
 }

@@ -82,6 +82,7 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/profile \
 				-I$(LIB_DIR)/usergroup \
 				-I$(LIB_DIR)/search \
+				-I$(LIB_DIR)/shared_library \
 				-I$(LIB_DIR)/socket \
 				-I$(LIB_DIR)/stat \
 				-I$(LIB_DIR)/stdio \

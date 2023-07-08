@@ -5,11 +5,6 @@
 #include "debug_headers.h"
 
 LONG
-KCmpStr(const char * source1,const char * source2)
-{
-	LONG result;
-
-	result = cmpstrexec(source1,source2);
-
-	return(result);
+KCmpStr(const char *source1, const char *source2) {
+    return cmpstrexec(source1, source2);
 }

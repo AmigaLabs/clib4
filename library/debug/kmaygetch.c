@@ -5,11 +5,6 @@
 #include "debug_headers.h"
 
 LONG
-KMayGetCh(VOID)
-{
-	LONG result;
-
-	result = KMayGetChar();
-
-	return(result);
+KMayGetCh(VOID) {
+    return KMayGetChar();
 }

@@ -23,4 +23,6 @@
 
 extern struct ExecIFace *IExec;
 
+#define SHMFLG_DeleteMe (1L << 0)
+
 #endif
