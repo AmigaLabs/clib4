@@ -119,7 +119,7 @@ wb_file_init(struct _clib2 *__clib2) {
     if (__clib2->output == BZERO)
         __clib2->output = Open("NIL:", MODE_NEWFILE);
 
-    if (__clib2->input == BZERO || __clib2->output == BZERO || __clib2->error)
+    if (__clib2->input == BZERO || __clib2->output == BZERO || __clib2->error == BZERO)
         goto out;
 
     __clib2->old_input = SelectInput(__clib2->input);

@@ -335,8 +335,8 @@ reent_init(struct _clib2 *__clib2) {
     SHOWMSG("Allocating __memalign_pool");
     __clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
                                                   ASO_NoTrack, FALSE,
-                                                  ASO_MemoryOvr, MEMF_PRIVATE,
-                                                  ASOITEM_MFlags, MEMF_PRIVATE,
+                                                  ASO_MemoryOvr, MEMF_SHARED,
+                                                  ASOITEM_MFlags, MEMF_SHARED,
                                                   ASOITEM_ItemSize, sizeof(struct MemalignEntry),
                                                   ASOITEM_BatchSize, 408,
                                                   ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
@@ -352,17 +352,17 @@ reent_init(struct _clib2 *__clib2) {
      * call_main()
      */
 
-    SHOWMSG("Try to get elf handle for dl* operations");
+    D(("Try to get elf handle for dl* operations"));
     if (__clib2->IElf != NULL) {
-        SHOWMSG("Calling GetProcSegList");
+        D(("Calling GetProcSegList"));
         BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
         if (segment_list != BZERO) {
             Elf32_Handle handle = NULL;
 
-            SHOWMSG("Calling GetSegListInfoTags");
+            D(("Calling GetSegListInfoTags"));
             if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
                 if (handle != NULL) {
-                    SHOWMSG("Calling OpenElfTags");
+                    D(("Calling OpenElfTags"));
                     __clib2->__dl_root_handle = OpenElfTags(OET_ElfHandle, handle, TAG_DONE);
                     SHOWPOINTER(__clib2->__dl_root_handle);
                 }
@@ -378,7 +378,7 @@ reent_init(struct _clib2 *__clib2) {
     }
 
     /* Check if .unix file exists in the current dir. If the file exists enable unix path semantics */
-    SHOWMSG("Check for .unix file");
+    D(("Check for .unix file"));
     __clib2->__unix_path_semantics = FALSE;
     struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
     if (exd != NULL) {
@@ -406,14 +406,12 @@ out:
 
 void
 reent_exit(struct _clib2 *__clib2, BOOL fallback) {
-    ENTER();
-
     /* Free global clib structure */
     if (__clib2) {
-        struct ElfIFace *IElf = __IElf;
-
         /* Check for getrandom fd */
         if (!fallback) {
+            /* We can't call close() in fallback reent, since destructors
+             * are already called and function is no more available */
             if (__clib2->randfd[0] >= 0) {
                 close(__clib2->randfd[0]);
             }
@@ -425,54 +423,49 @@ reent_exit(struct _clib2 *__clib2, BOOL fallback) {
 
         /* Free wchar stuff */
         if (__clib2->wide_status != NULL) {
-            SHOWMSG("Free wide_status");
             FreeVec(__clib2->wide_status);
             __clib2->wide_status = NULL;
         }
         /* Remove random semaphore */
-        SHOWMSG("Delete random lock semaphore");
         __delete_semaphore(__clib2->__random_lock);
 
-        /* Free memalign stuff */
-        if (__clib2->__memalign_pool) {
-            SHOWMSG("Clean memalign memory");
-            /* Check if we have something created with posix_memalign and not freed yet.
-             * But this is a good point also to free something allocated with memalign or
-             * aligned_alloc and all other functions are using memalign_tree to allocate memory
-             * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
-             */
-            struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__clib2->__memalign_tree);
-            while (e) {
-                struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
+        if (!fallback) { //TODO : Freeing memalign crash libExpunge and I don't know why
+            /* Free memalign stuff */
+            if (__clib2->__memalign_pool) {
+                /* Check if we have something created with posix_memalign and not freed yet.
+                 * But this is a good point also to free something allocated with memalign or
+                 * aligned_alloc and all other functions are using memalign_tree to allocate memory
+                 * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
+                 */
+                struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__clib2->__memalign_tree);
+                while (e) {
+                    struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
 
-                /* Free memory */
-                if (e->me_Exact) {
-                    FreeVec(e->me_Exact);
+                    /* Free memory */
+                    if (e->me_Exact) {
+                        FreeVec(e->me_Exact);
+                    }
+                    /* Remove the node */
+                    AVL_RemNodeByAddress(&__clib2->__memalign_tree, &e->me_AvlNode);
+                    ItemPoolFree(__clib2->__memalign_pool, e);
+
+                    e = next;
                 }
-                /* Remove the node */
-                AVL_RemNodeByAddress(&__clib2->__memalign_tree, &e->me_AvlNode);
-                ItemPoolFree(__clib2->__memalign_pool, e);
 
-                e = next;
+                FreeSysObject(ASOT_ITEMPOOL, __clib2->__memalign_pool);
             }
-
-            FreeSysObject(ASOT_ITEMPOOL, __clib2->__memalign_pool);
         }
-
         /* Free dl stuff */
+        struct ElfIFace *IElf = __IElf;
+
         if (IElf && __clib2->__dl_root_handle != NULL) {
-            SHOWMSG("Closing elf handle");
             CloseElfTags(__clib2->__dl_root_handle, CET_ReClose, TRUE, TAG_DONE);
             __clib2->__dl_root_handle = NULL;
-        } else {
-            D(("Cannot close elf handle: __clib2->__dl_root_handle == %p - IElf == %p", __clib2->__dl_root_handle, IElf));
         }
 
         FreeVec(__clib2);
         __clib2 = NULL;
     }
-
-    LEAVE();
 }
 
 void enableUnixPaths(void) {

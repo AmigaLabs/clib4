@@ -20,7 +20,6 @@ __getClib2(void) {
     }
 
     if (!r) {
-        SHOWMSG("_clib2 not found in current process/task. Using fallback clib2");
         struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
         if (res) {
             return res->fallbackClib;

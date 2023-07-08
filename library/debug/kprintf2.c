@@ -6,8 +6,6 @@
 
 VOID
 KPrintF(const char *format, ...) {
-    assert(format != NULL);
-
     if (format != NULL) {
         va_list arg;
 

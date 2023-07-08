@@ -5,7 +5,6 @@
 #include "debug_headers.h"
 
 VOID
-KPutCh(UBYTE c)
-{
-	kputc(c);
+KPutCh(UBYTE c) {
+    kputc(c);
 }

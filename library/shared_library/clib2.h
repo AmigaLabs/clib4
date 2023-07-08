@@ -5,6 +5,8 @@
 #include <proto/exec.h>
 
 #include "map.h"
+#include "uuid.h"
+#include "ipc_headers.h"
 
 #define RESOURCE_NAME "clib2.resource"
 
@@ -12,21 +14,34 @@ struct Clib2Resource {
     struct Library          resource;       /* must be first */
     uint32                  size;           /* for struct validation only */
     struct SignalSemaphore  semaphore;      /* for list arbitration */
-    struct List             nodes;          /* list of parent nodes */
+    struct hashmap         *children;       /* list of parent nodes */
     struct hashmap         *uxSocketsMap;
     struct _clib2          *fallbackClib;
-    struct Library         *SysVBase;
-    struct SYSVIFace       *ISysVIPC;
-    BOOL haveShm;
+    /* SysVIPC fields */
+    int locked;
+    struct
+    {
+        struct IPCIdKeyMap keymap;
+        uint32 totshm, shmmax;
+    } shmcx;
+    struct
+    {
+        struct IPCIdKeyMap keymap;
+        uint32 qsizemax;
+    } msgcx;
+    struct
+    {
+        struct IPCIdKeyMap keymap;
+    } semcx;
 };
 
 struct Clib2Node {
-    struct Node    node; /* must be first */
-    uint16         size; /* for struct validation (and align32) */
-    uint32         pid;  /* the process PID */
-    uint32         pPid; /* the process Parent PID */
-    struct _clib2 *ctx;  /* the shared clib2 context data */
-    char          *uuid;
+    uint32           pid;  /* the process PID */
+    uint32           pPid; /* the process Parent PID */
+    char             uuid[UUID4_LEN + 1];
+    /* SysVIPC fields */
+    struct UndoInfo *undo;
+    int32            errNo;
 };
 
 struct Clib2Base {

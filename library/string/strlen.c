@@ -47,8 +47,6 @@ strlen(const char *s) {
     size_t result = 0;
     struct _clib2 *__clib2 = __CLIB2;
 
-    assert(s != NULL);
-
     if (NULL == s) {
         __set_errno(EFAULT);
         goto out;

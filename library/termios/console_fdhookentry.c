@@ -187,9 +187,6 @@ __termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action
             assert(fam->fam_Data != NULL);
             assert(fam->fam_Size > 0);
 
-            D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, Seek(file, 0,
-                                                                                  OFFSET_CURRENT), fam->fam_Data));
-
             if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                 /* Attempt to fake everything needed in non-canonical mode. */
                 if (FLAG_IS_SET(tios->c_lflag, ICANON)) {
@@ -383,8 +380,6 @@ __termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action
             }
 
             /* Note. When output processing is enabled, write() can return _more_ than the data length. */
-            D(("write %ld bytes to position %ld from 0x%08lx", actual_out, Seek(file, 0, OFFSET_CURRENT), buffer));
-
             if (actual_out > 0) {
                 result = Write(file, buffer, actual_out);
             } else {

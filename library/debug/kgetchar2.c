@@ -5,11 +5,6 @@
 #include "debug_headers.h"
 
 LONG
-KGetChar(VOID)
-{
-	LONG result;
-
-	result = kgetc();
-
-	return(result);
+KGetChar(VOID) {
+    return kgetc();
 }
