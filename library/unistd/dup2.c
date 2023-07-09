@@ -31,19 +31,9 @@ dup2(int file_descriptor1, int file_descriptor2) {
         goto out;
     }
 
-    if (file_descriptor2 < 0) {
-        /* Try to find a place to put the duplicate into. */
-        file_descriptor2 = __find_vacant_fd_entry(__clib2);
-        if (file_descriptor2 < 0) {
-            /* No free space, so let's grow the table. */
-            if (__grow_fd_table(__clib2, 0) < 0) {
-                SHOWMSG("not enough memory for new file descriptor");
-                goto out;
-            }
-
-            file_descriptor2 = __find_vacant_fd_entry(__clib2);
-            assert(file_descriptor2 >= 0);
-        }
+    if (file_descriptor2 < 0 || file_descriptor2 > OPEN_MAX) {
+        __set_errno(EBADF);
+        goto out;
     } else if (file_descriptor1 != file_descriptor2) {
         /* Make sure the requested duplicate exists. */
         if (__grow_fd_table(__clib2, file_descriptor2 + 1) < 0)
