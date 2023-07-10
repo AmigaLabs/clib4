@@ -23,6 +23,7 @@
 #include <limits.h>
 #include <string.h>
 #include <errno.h>
+#include <langinfo.h>
 
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"

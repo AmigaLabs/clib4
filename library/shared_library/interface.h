@@ -1280,6 +1280,9 @@ struct Clib2IFace {
 
     int  (* getrandom) (void *buffer, size_t length, unsigned int flags);                                                                            /* 4212 */
     int  (* getentropy) (void *, size_t);                                                                                                            /* 4216 */
+
+    time_t (* timegm) (struct tm *tm);                                                                                                               /* 4220 */
+    int    (* stime) (const time_t *t);                                                                                                              /* 4224 */
 };
 
 #ifdef __PIC__

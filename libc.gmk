@@ -641,9 +641,11 @@ C_TIME := \
 	time/rdtsc.o \
 	time/setitimer.o \
     time/settimeofday.o \
+	time/stime.o \
 	time/strftime.o \
 	time/strptime.o \
 	time/time.o \
+	time/timegm.o \
 	time/tzset.o \
 	time/weekday.o \
 	time/times.o \

@@ -157,8 +157,12 @@ extern int clock_settime(clockid_t clk_id, const struct timespec *t);
 extern int clock_getres(clockid_t clock_id, struct timespec *res);
 extern int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *request, struct timespec *remain);
 extern unsigned long long rdtsc(void);
-
 extern int clock_gettime64 (clockid_t clock_id, struct timespec64 *tp);
+
+#if defined(_GNU_SOURCE) || defined(_DEFAULT_SOURCE)
+extern int stime(const time_t *t);
+extern time_t timegm(struct tm *tm);
+#endif
 
 /* Check whether T fits in time_t.  */
 static inline int

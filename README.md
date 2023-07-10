@@ -135,7 +135,7 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 ### libpthread
 
 Clib2 now contain a native pthread implementation with some functions are not present in the pthread.library.  
-However in the future mutex* function should be changed to use OS4 Mutexes instead of Semaphores
+All mutex* function now use OS4 Mutexes instead of Semaphores
 
 ### librt
 

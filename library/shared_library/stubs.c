@@ -1056,3 +1056,6 @@ Clib2Call(ether_hostton, 4208);
 
 Clib2Call(getrandom, 4212);
 Clib2Call(getentropy, 4216);
+
+Clib2Call(timegm, 4220);
+Clib2Call(stime, 4224);

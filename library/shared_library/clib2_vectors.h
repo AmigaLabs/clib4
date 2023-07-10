@@ -1119,4 +1119,7 @@ static void *clib2Vectors[] = {
 
         (void *) (getrandom),                             /* 4212 */
         (void *) (getentropy),                            /* 4216 */
+
+        (void *) (timegm),                                /* 4220 */
+        (void *) (stime),                                 /* 4224 */
 };
