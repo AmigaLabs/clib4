@@ -190,8 +190,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                             name_and_path_valid = TRUE;
                         }
 
-                        if (CANNOT Close(fd->fd_File))
-                        {
+                        if (CANNOT Close(fd->fd_File)) {
                             fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
                             result = EOF;
@@ -279,6 +278,14 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                             }
                         }
 
+#ifdef USE_TEMPFILES
+                        /* If it is a PIPE file used with USE_TEMPFILES defined we need to remove it on close */
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                            char pipe_name[1024] = {0};
+                            snprintf(pipe_name, sizeof(pipe_name), "T:%s", fib->Name);
+                            Delete(pipe_name);
+                        }
+#endif
                         if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid) {
                             BPTR old_dir;
                             old_dir = SetCurrentDir(parent_dir);

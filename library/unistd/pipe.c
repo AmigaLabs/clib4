@@ -14,6 +14,8 @@ int pipe(int fd[2]) {
 
 #ifdef USE_TEMPFILES
     snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", __clib2->pipenum++, ((struct Process *)FindTask(NULL))->pr_ProcessID);
+    // Delete the file if exists (we don't need to check if file exists)
+    Delete(pipe_name);
 #else
     snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", __clib2->pipenum++, ((struct Process *) FindTask(NULL))->pr_ProcessID);
 #endif // USE_TEMPFILES
@@ -31,6 +33,20 @@ int pipe(int fd[2]) {
         RETURN(-1);
         return -1;
     }
+
+
+#ifdef USE_TEMPFILES
+    /* Mark FD as PIPE in case USE_TEMPFILES is used */
+    struct fd *fd1 = __get_file_descriptor(fd[0]);
+    if (fd1 != NULL) {
+        SET_FLAG(fd1->fd_Flags, FDF_PIPE);
+    }
+
+    struct fd *fd2 = __get_file_descriptor(fd[1]);
+    if (fd2 != NULL) {
+        SET_FLAG(fd2->fd_Flags, FDF_PIPE);
+    }
+#endif
 
     RETURN(0);
     return 0;
