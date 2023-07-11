@@ -35,7 +35,6 @@ int pipe(int fd[2]) {
     }
 
 
-#ifdef USE_TEMPFILES
     /* Mark FD as PIPE in case USE_TEMPFILES is used */
     struct fd *fd1 = __get_file_descriptor(fd[0]);
     if (fd1 != NULL) {
@@ -46,7 +45,6 @@ int pipe(int fd[2]) {
     if (fd2 != NULL) {
         SET_FLAG(fd2->fd_Flags, FDF_PIPE);
     }
-#endif
 
     RETURN(0);
     return 0;

@@ -168,21 +168,23 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                     }
 
                     /* Are we allowed to close this file? */
-                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
+                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE) || FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
                         BOOL name_and_path_valid = FALSE;
                         struct ExamineData *fib = NULL;
-                        BPTR parent_dir;
+                        BPTR parent_dir = BZERO;
 
                         /* Call a cleanup function, such as the one which releases locked records. */
                         if (fd->fd_Cleanup != NULL)
                             (*fd->fd_Cleanup)(fd);
 
-                        parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-                        if (parent_dir == BZERO) {
-                            SHOWMSG("couldn't find parent directory");
+                        if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
+                            parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+                            if (parent_dir == BZERO) {
+                                SHOWMSG("couldn't find parent directory");
 
-                            __set_errno(__translate_io_error_to_errno(IoErr()));
-                            goto out;
+                                __set_errno(__translate_io_error_to_errno(IoErr()));
+                                goto out;
+                            }
                         }
 
                         fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
@@ -278,6 +280,10 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                             }
                         }
 
+                        /* If we have closed the file, clear FDF_IN_USE flag */
+                        if (result == OK)
+                            CLEAR_FLAG(fd->fd_Flags, FDF_IN_USE);
+
 #ifdef USE_TEMPFILES
                         /* If it is a PIPE file used with USE_TEMPFILES defined we need to remove it on close */
                         if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
@@ -286,7 +292,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                             Delete(pipe_name);
                         }
 #endif
-                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid) {
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid && FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
                             BPTR old_dir;
                             old_dir = SetCurrentDir(parent_dir);
                             SetProtection(fib->Name, 0);
@@ -294,7 +300,8 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                         }
 
                         FreeDosObject(DOS_EXAMINEDATA, fib);
-                        UnLock(parent_dir);
+                        if (parent_dir != BZERO)
+                            UnLock(parent_dir);
                     }
                 } else {
                     // Clear FDF_STDIN_AS_SOCKET just in case it was used as socket */
