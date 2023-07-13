@@ -55,7 +55,7 @@
 	.file	"memcmp.S"
 	.section	".text"
 	.align 4
-	#define FUNCTION e500_memcmp
+	#define FUNCTION __memcmp_e500
 	.globl FUNCTION
 	.type FUNCTION,@function
 FUNCTION:

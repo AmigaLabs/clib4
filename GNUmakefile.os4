@@ -117,8 +117,8 @@ AFLAGS     := -Wa,-mregnames
 
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
-    CFLAGS := $(CFLAGS) -DSPE -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe -fno-inline-functions -fno-partial-inlining \
-                -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining
+    CFLAGS := $(CFLAGS) -DSPE -D_SOFT_FLOAT -D__SPE__ -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe -fno-inline-functions -fno-partial-inlining \
+                -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining -Wno-unused-but-set-variable -Wno-uninitialized
     AFLAGS := $(AFLAGS) -mspe -mcpu=8540 -mfloat-gprs=double
 endif
 
@@ -293,6 +293,12 @@ define COMPILE_ALTIVEC_REG
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rAssembling altivec \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) -maltivec -mabi=altivec -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_SPE_REG
+$(VERBOSE)@$(MAKEDIR) $(@D)
+$(VERBOSE)echo -e "\rAssembling with regnames \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)$(CC) -mvrsave -mregnames -DVRSAVE -mspe -mcpu=8540 -mfloat-gprs=double -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SPE

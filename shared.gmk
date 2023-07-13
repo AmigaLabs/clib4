@@ -33,6 +33,9 @@ $(OUT_SHARED_LIB)/%.o : $(LIB_DIR)/%.sx
 $(OUT_SHARED_LIB)/cpu/generic/%.o : $(LIB_DIR)/cpu/generic/%.S
 	$(VERBOSE)$(COMPILE_REG)
 
+$(OUT_SHARED_LIB)/cpu/spe/%.o : $(LIB_DIR)/cpu/spe/%.S
+	$(VERBOSE)$(COMPILE_SPE_REG)
+
 $(OUT_SHARED_LIB)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
 

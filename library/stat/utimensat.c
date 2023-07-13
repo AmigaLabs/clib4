@@ -146,7 +146,8 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
          * Changing symlink time or regular file will always change both files
          */
         if (isLink && FLAG_IS_SET(flags, AT_SYMLINK_FOLLOW)) {
-            struct DevProc *dvp = GetDeviceProc(buffer, dvp);
+            struct DevProc *dvp = NULL;
+            dvp = GetDeviceProc(buffer, dvp);
             if (dvp == NULL) {
                 free(buffer);
                 goto out;

@@ -228,6 +228,7 @@ reent_init(struct _clib2 *__clib2) {
         /* We use an invalid priority value to indicate "do not change the program's task priority". */
         .__priority = 256,
         .pipenum = 0,
+        .tgoto_buf = {0},
 #ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
         .__optimizedCPUFunctions = FALSE,
 #else

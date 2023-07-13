@@ -63,7 +63,7 @@ __get_buf(HTAB *hashp, uint32_t addr,
     BUFHEAD *bp;
     uint32_t is_disk_mask;
     int is_disk, segment_ndx;
-    SEGMENT segp;
+    SEGMENT segp = NULL;
 
     is_disk = 0;
     is_disk_mask = 0;
@@ -92,7 +92,7 @@ __get_buf(HTAB *hashp, uint32_t addr,
         if (!bp ||
             __get_page(hashp, bp->page, addr, !prev_bp, is_disk, 0))
             return (NULL);
-        if (!prev_bp)
+        if (!prev_bp && segp != NULL)
             segp[segment_ndx] =
                     (BUFHEAD *) ((ptrdiff_t) bp | is_disk_mask);
     } else {

@@ -954,9 +954,6 @@ OBJ_C_SRC += $(patsubst %.o, $(LIB_DIR)/%.c, $(C_LIBRARY))
 $(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 $(OUT_SHARED)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 
-$(OUT_STATIC)/cpu/spe/%.o : $(LIB_DIR)/cpu/spe/%.S
-	$(VERBOSE)$(COMPILE_SPE)
-
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.sx
 	$(VERBOSE)$(COMPILE_ALTIVEC_REG)
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S

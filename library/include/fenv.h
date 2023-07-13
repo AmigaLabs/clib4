@@ -142,7 +142,7 @@ fetestexcept(int __excepts) {
 
 __fenv_static inline int
 fegetround(void) {
-    union __fpscr __r;
+    union __fpscr __r = {0};
 
     __mffs(&__r.__d);
     return (__r.__bits.__reg & _ROUND_MASK);

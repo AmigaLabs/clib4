@@ -501,6 +501,9 @@ struct _clib2 {
 
     BPTR error;
     BPTR old_error;
+
+    /* termcap */
+    char tgoto_buf[50];
 };
 
 #ifndef __getClib2
