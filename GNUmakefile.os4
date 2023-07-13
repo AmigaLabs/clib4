@@ -116,7 +116,10 @@ CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
 AFLAGS     := -Wa,-mregnames
 
 ifdef SPE
-    CFLAGS := $(CFLAGS) -DSPE
+    CC := ppc-amigaos-gcc-6.4.0
+    CFLAGS := $(CFLAGS) -DSPE -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe -fno-inline-functions -fno-partial-inlining \
+                -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining
+    AFLAGS := $(AFLAGS) -mspe -mcpu=8540 -mfloat-gprs=double
 endif
 
 VERBOSE    ?= @
