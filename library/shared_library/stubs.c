@@ -1059,3 +1059,17 @@ Clib2Call(getentropy, 4216);
 
 Clib2Call(timegm, 4220);
 Clib2Call(stime, 4224);
+
+Clib2Call(dbm_clearerr, 4228);
+Clib2Call(dbm_close, 4232);
+Clib2Call(dbm_delete, 4236);
+Clib2Call(dbm_error, 4240);
+Clib2Call(dbm_fetch, 4244);
+Clib2Call(dbm_firstkey, 4248);
+Clib2Call(dbm_nextkey, 4252);
+Clib2Call(dbm_open, 4256);
+Clib2Call(dbm_store, 4260);
+Clib2Call(dbm_dirfno, 4264);
+Clib2Call(dbopen, 4268);
+Clib2Call(mkostemp, 4272);
+Clib2Call(mkostemps, 4276);

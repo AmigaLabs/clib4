@@ -78,6 +78,7 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/math \
 				-I$(LIB_DIR)/misc \
 				-I$(LIB_DIR)/mount \
+				-I$(LIB_DIR)/ndbm \
 				-I$(LIB_DIR)/posix \
 				-I$(LIB_DIR)/profile \
 				-I$(LIB_DIR)/usergroup \

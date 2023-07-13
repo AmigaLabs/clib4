@@ -112,6 +112,25 @@ C_MOUNT := \
 	mount/fstatfs.o \
 	mount/statfs.o
 
+C_NDBM := \
+	ndbm/db.o \
+	ndbm/dbm_clearerr.o \
+	ndbm/dbm_close.o \
+	ndbm/dbm_delete.o \
+	ndbm/dbm_dirfno.o \
+	ndbm/dbm_error.o \
+	ndbm/dbm_fetch.o \
+	ndbm/dbm_firstkey.o \
+	ndbm/dbm_nextkey.o \
+	ndbm/dbm_open.o \
+	ndbm/dbm_store.o \
+	ndbm/hash.o \
+	ndbm/hash_bigkey.o \
+	ndbm/hash_buf.o \
+	ndbm/hash_func.o \
+	ndbm/hash_log2.o \
+	ndbm/hash_page.o
+
 C_NL_TYPES := \
 	nltypes/catclose.o \
 	nltypes/catgets.o \
@@ -478,6 +497,8 @@ C_STDLIB := \
 	stdlib/mbstowcs.o \
 	stdlib/mbtowc.o \
 	stdlib/mkdtemp.o \
+	stdlib/mkostemp.o \
+	stdlib/mkostemps.o \
 	stdlib/mkstemp.o \
 	stdlib/mktemp.o \
 	stdlib/modsi3.o \
@@ -487,6 +508,7 @@ C_STDLIB := \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
 	stdlib/qsort_r.o \
+	stdlib/randname.o \
 	stdlib/realloc.o \
 	stdlib/secure_getenv.o \
 	stdlib/semaphore.o \
@@ -897,6 +919,7 @@ C_LIBRARY := \
 	$(C_LOCALE) \
 	$(C_MISC) \
 	$(C_MOUNT) \
+	$(C_NDBM) \
 	$(C_NL_TYPES) \
 	$(C_POSIX) \
     $(C_REGEX) \

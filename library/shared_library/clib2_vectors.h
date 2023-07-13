@@ -1122,4 +1122,19 @@ static void *clib2Vectors[] = {
 
         (void *) (timegm),                                /* 4220 */
         (void *) (stime),                                 /* 4224 */
+
+        (void *) (dbm_clearerr),                          /* 4228 */
+        (void *) (dbm_close),                             /* 4232 */
+        (void *) (dbm_delete),                            /* 4236 */
+        (void *) (dbm_error),                             /* 4240 */
+        (void *) (dbm_fetch),                             /* 4244 */
+        (void *) (dbm_firstkey),                          /* 4248 */
+        (void *) (dbm_nextkey),                           /* 4252 */
+        (void *) (dbm_open),                              /* 4256 */
+        (void *) (dbm_store),                             /* 4260 */
+        (void *) (dbm_dirfno),                            /* 4264 */
+        (void *) (dbopen),                                /* 4268 */
+
+        (void *) (mkostemp),                              /* 4272 */
+        (void *) (mkostemps),                             /* 4276 */
 };

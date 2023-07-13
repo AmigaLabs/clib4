@@ -126,6 +126,8 @@ extern int rand_r(unsigned int *seed);
 
 extern char *mktemp(char *name_template);
 extern int mkstemp(char *name_template);
+extern int mkostemp(char *name, int flags);
+extern int mkostemps(char *name, int len, int flags);
 extern int unsetenv(const char *name);
 extern int setenv(const char *name, const char *value, int overwrite);
 extern int putenv(const char *string);

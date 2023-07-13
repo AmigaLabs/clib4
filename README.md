@@ -1,4 +1,4 @@
-# clib2 – A C runtime library for AmigaOS4
+#  A C runtime library for AmigaOS4
 
 [![Build Status](https://travis-ci.com/afxgroup/clib2.svg?branch=master)](https://travis-ci.org/afxgroup/clib2)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
@@ -253,6 +253,11 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### SYSV
+Thanks to Peter Bengtsson for SYSV implementation
+
+### Math library
 
 > The PowerPC math library is based in part on work by Sun Microsystems:
 >
