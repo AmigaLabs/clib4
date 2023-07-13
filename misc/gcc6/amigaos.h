@@ -19,6 +19,9 @@
    MA 02111-1307, USA.  */
 
 
+/* Don't assume anything about the header files. */
+#define NO_IMPLICIT_EXTERN_C
+
 #undef MD_EXEC_PREFIX
 #undef MD_STARTFILE_PREFIX
 
@@ -81,19 +84,6 @@
 %{mcpu=G5: -mpower4 -maltivec} \
 %{mcpu=8540: -me500} \
 %{maltivec: -maltivec}"
-
-#undef CC1_SPEC
-#define        CC1_SPEC "%{G*} %(cc1_cpu)" \
-"%{g: %{!fno-eliminate-unused-debug-symbols: -feliminate-unused-debug-symbols}} \
-%{g1: %{!fno-eliminate-unused-debug-symbols: -feliminate-unused-debug-symbols}} \
-%{msdata: -msdata=default} \
-%{mno-sdata: -msdata=none} \
-%{!mbss-plt: %{!msecure-plt: %(cc1_secure_plt_default)}} \
-%{profile: -p} \
-%{faltivec:-maltivec -include altivec.h} %{fno-altivec:-mno-altivec} \
-%<faltivec %<fno-altivec \
-%{vec:-maltivec -include altivec.h} %{fno-vec:-mno-altivec} \
-%<fvec %<fno-vec "
 
 #define IS_MCRT(MCRTNAME) \
   (strcmp(amigaos_crt, MCRTNAME) == 0)
@@ -279,7 +269,7 @@ mcrt=default|!mcrt=*: %{mcrt=default|!nostdinc: %(cpp_amiga_default)}; \
 -q -d %{h*} %{v:-V} %{G*} \
 %{Wl,*:%*} %{YP,*} %{R*} \
 %{Qy:} %{!Qn:-Qy} \
-%(link_thread) %(link_shlib) %(link_text) \
+%(link_shlib) %(link_text) \
 %{mbaserel: %{msdata|msdata=default|msdata=sysv: %e-mbaserel and -msdata options are incompatible}} \
 %{mcrt=clib2: %(link_clib2); \
 mcrt=ixemul: %(link_ixemul); \
@@ -300,9 +290,6 @@ mcrt=default|!mcrt=*: %(link_amiga_default); \
 
 #define LINK_SHLIB "\
 %{shared:-shared -dy --defsym __dynld_version__=1} %{!shared: %{static:-static}} %{use-dynld: -dy}"
-
-#define LINK_THREAD "\
-%s%{athread=native:gthr-amigaos-native.o;athread=single:gthr-amigaos-single.o;athread=pthread:gthr-amigaos-pthread.o}"
 
 #undef STARTFILE_SPEC
 #define STARTFILE_SPEC "\
@@ -366,8 +353,7 @@ mcrt=default|!mcrt=*: %(endfile_amiga_default); \
   {"endfile_newlib", ENDFILE_NEWLIB_SPEC}, \
   /* used in link spec  */ \
   {"link_text", LINK_TEXT}, \
-  {"link_shlib", LINK_SHLIB}, \
-  {"link_thread", LINK_THREAD},
+  {"link_shlib", LINK_SHLIB},
 
 #undef DEFAULT_VTABLE_THUNKS
 #ifndef USE_GNULIBC_1
@@ -399,14 +385,12 @@ do                                   \
   amigaos_init_builtins ()
 
 /* AmigaOS specific attribute */
-/* { name, min_len, max_len, decl_req, type_req, fn_type_req,
-       affects_type_identity, handler, exclude } */
 #define SUBTARGET_ATTRIBUTE_TABLE \
-  { "linearvarargs", 0, 0, false, true,  true, false, amigaos_handle_linearvarargs_attribute, NULL}, \
-  { "checktags", 0, 0, false, true, true, false, amigaos_handle_lineartags_attribute, NULL}, \
-  { "baserel_restore", 0, 0, false, true, true, false, amigaos_handle_baserel_restore_attribute, NULL }, \
-  { "force_no_baserel", 0, 0, true, false, false, false, amigaos_handle_force_no_baserel_attribute, NULL }, \
-  { "check68kfuncptr", 0, 0, false, true, true, false, amigaos_handle_check68kfuncptr_attribute, NULL }
+  { "linearvarargs", 0, 0, false, true,  true, amigaos_handle_linearvarargs_attribute, false}, \
+  { "lineartags", 0, 0, false, true, true, amigaos_handle_lineartags_attribute, false}, \
+  { "baserel_restore", 0, 0, false, true, true, amigaos_handle_baserel_restore_attribute, false }, \
+  { "force_no_baserel", 0, 0, true, false, false, amigaos_handle_force_no_baserel_attribute, false }, \
+  { "check68kfuncptr", 0, 0, false, true, true, amigaos_handle_check68kfuncptr_attribute, false }
 
 /* Overrides */
 
@@ -437,14 +421,12 @@ do                                   \
 #define EXPAND_BUILTIN_VA_START(VALIST, NEXTARG) \
   amigaos_expand_builtin_va_start (VALIST, NEXTARG)
 
-/*
-//#undef SLOW_UNALIGNED_ACCESS
-//#define SLOW_UNALIGNED_ACCESS(MODE, ALIGN)				\
-//  (STRICT_ALIGNMENT							\
-//   || (((MODE) == SFmode) && (ALIGN) < 32)				\
-//   || (((MODE) == DFmode || (MODE) == TFmode || (MODE) == DImode)	\
-//       && (ALIGN) < 64))
-*/
+#undef SLOW_UNALIGNED_ACCESS
+#define SLOW_UNALIGNED_ACCESS(MODE, ALIGN)				\
+  (STRICT_ALIGNMENT							\
+   || (((MODE) == SFmode) && (ALIGN) < 32)				\
+   || (((MODE) == DFmode || (MODE) == TFmode || (MODE) == DImode)	\
+       && (ALIGN) < 64))
 
 /* This target uses the amigaos.opt file.  */
 #define TARGET_USES_AMIGAOS_OPT 1
