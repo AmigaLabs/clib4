@@ -70,11 +70,11 @@ aligned_copy:
         mtcrf 0x2,r5
         bge cr1,big_aligned
 
-/* We check the last 0-31 bytes in powers of 2, starting
- * with 16 bytes (two doubles), and moving on down until
- * all the bytes have been compared, or a difference has
- * been found.
- */
+        /* We check the last 0-31 bytes in powers of 2, starting
+         * with 16 bytes (two doubles), and moving on down until
+         * all the bytes have been compared, or a difference has
+         * been found.
+         */
 try_two_doubles:
         bf 27,try_one_double
         evldd r6,0(r3)
@@ -108,9 +108,9 @@ try_word:
         bne found_word_diff
 
         /*  Here we mask off any bytes in the last word that we
-	 *  don't want to look at (they are outside the buffer),
-	 *  and then we compare the two words.
-	 */
+         *  don't want to look at (they are outside the buffer),
+         *  and then we compare the two words.
+         */
 do_last:
         bf 31,finish
         li r8,-1
@@ -123,15 +123,15 @@ do_last:
         subfc. r0,r6,r10
         bne found_word_diff
 
-/* We only come here if no differences were found. */
+        /* We only come here if no differences were found. */
 finish:
         li r3,0
         blr
 
-/* If we found a difference while comparing words, take
- * the overflow from the subfc., then OR 1 with it, to make
- * sure we return 1 or -1 (and not zero)
- */
+        /* If we found a difference while comparing words, take
+         * the overflow from the subfc., then OR 1 with it, to make
+         * sure we return 1 or -1 (and not zero)
+         */
 found_word_diff:
         subfe r3,r3,r3 /* will be zero or -1 */
         nand r3,r3,r3
@@ -140,31 +140,27 @@ found_word_diff:
 
 big_aligned:
         /* At this point, we know there are at LEAST 32 bytes of
-	 * data to compare, so have fun!
-	 */
+         * data to compare, so have fun!
+         */
         evldd r6,0(r3)
 
         /* The first loop processes 48 bytes */
         addic. r5,r5,-48
-
         evldd r10,0(r4)
-
         evcmpeq 1,r6,r10
-
         evldd r7,8(r3)
-
         evldd r11,8(r4)
 
         /* Skip the loop, since there aren't enough left for the
-	 * loop to run once.  The epilog will take care of 16
-	 * bytes worth.
-	 */
+         * loop to run once.  The epilog will take care of 16
+         * bytes worth.
+         */
         blt aligned_double_end
 
-/* This code is optimized to double issue every cycle, assuming
- * good branch prediction.  It does 4 compares per iteration, so
- * it processes 32 bytes in 10 cycles ==> 3.2 bytes/cycle.
- */
+        /* This code is optimized to double issue every cycle, assuming
+         * good branch prediction.  It does 4 compares per iteration, so
+         * it processes 32 bytes in 10 cycles ==> 3.2 bytes/cycle.
+         */
 big_loop:
         evldd r8, 16(r3)
         bf 7,found_diff1
@@ -187,7 +183,7 @@ big_loop:
         evcmpeq 1,r6,r10
         bge big_loop
 
-/* Finish off the epilog of the loop */
+        /* Finish off the epilog of the loop */
 aligned_double_end:
         bf 7,found_diff1
         evcmpeq 5,r7,r11
@@ -201,15 +197,15 @@ aligned_double_end:
         b try_two_doubles
 
         /* Since we're here, we know that wordA and wordB are
-	 * different, but we need to return the result of
-	 * comparing the FIRST different word. We only return a
-	 * positive number if the first word is greater, or if
-	 * the first word is equal and the second word is
-	 * greater.  Otherwise we return a negative number.  The
-	 * boolean equation for greater would be gh + eh*gl.
-	 * After we compare for greaterness, we have gh, eh, and gl
-	 * (as well as some others).
-	 */
+         * different, but we need to return the result of
+         * comparing the FIRST different word. We only return a
+         * positive number if the first word is greater, or if
+         * the first word is equal and the second word is
+         * greater.  Otherwise we return a negative number.  The
+         * boolean equation for greater would be gh + eh*gl.
+         * After we compare for greaterness, we have gh, eh, and gl
+         * (as well as some others).
+         */
 found_diff1:
         evcmpgtu 5,r6,r10
         li r9,1
@@ -218,16 +214,16 @@ found_diff1:
         cror 6,6,20
         isel r3,r9,r12,6
 
-/* A new idea.  We only need to return a positive result if A is
- * greater than B and a negative if A < B.  A subtraction would
- * yield such a result.  The only thing we need to do is make
- * sure that we return the result word of the first DIFFERENT
- * words.  So we do an isel based on the equalNhi to select the
- * result
- *	evsubfw		r3, r10, r6
- *	evmergehi	r4, r3, r3
- *	isel		r3, r3, r4, 1
- */
+        /* A new idea.  We only need to return a positive result if A is
+         * greater than B and a negative if A < B.  A subtraction would
+         * yield such a result.  The only thing we need to do is make
+         * sure that we return the result word of the first DIFFERENT
+         * words.  So we do an isel based on the equalNhi to select the
+         * result
+         *	evsubfw		r3, r10, r6
+         *	evmergehi	r4, r3, r3
+         *	isel		r3, r3, r4, 1
+         */
         blr
 
 found_diff2:
@@ -278,8 +274,8 @@ found_unaligned2:
 align_dest_word:
 align_dest_double:
         /* First make sure there are at least 8 bytes left to
-	 * compare.  Otherwise, realignment could go out of bounds
-	 */
+         * compare.  Otherwise, realignment could go out of bounds
+         */
         cmpli cr0,r5,8
         neg r0,r3
         blt small_compare
@@ -289,11 +285,11 @@ align_dest_double:
 
         bne more_alignment
 
-/* Don't need to check if buffer A needs another word to be aligned.
- * We're here, therefore we must have only been off by a word.
- * So we shorten the path a bit by taking 2 branches out from the
- * more common path (ie things tend to be at least word-aligned)
- */
+        /* Don't need to check if buffer A needs another word to be aligned.
+         * We're here, therefore we must have only been off by a word.
+         * So we shorten the path a bit by taking 2 branches out from the
+         * more common path (ie things tend to be at least word-aligned)
+         */
 align_one_word:
         lwz r10,0(r4)
         addi r4,r4,4
@@ -333,14 +329,14 @@ try_align_double:
         mtcrf 0x1,r5
         beq cr6,aligned_copy
 
-/* For each double word copied, we load the double words with
- * each half from buffer B (r4), which starts at 0x*4 or 0x*c.  Then we
- * use evmergelohi to take the halves and rejoin them.  Notice
- * that any double load will necessarily be 4 bytes ahead.
- * Invariant: at the start of any block (except this first one)
- * which loads a doubleword, r10 will hold the first half of the
- * first doubleword
- */
+        /* For each double word copied, we load the double words with
+         * each half from buffer B (r4), which starts at 0x*4 or 0x*c.  Then we
+         * use evmergelohi to take the halves and rejoin them.  Notice
+         * that any double load will necessarily be 4 bytes ahead.
+         * Invariant: at the start of any block (except this first one)
+         * which loads a doubleword, r10 will hold the first half of the
+         * first doubleword
+         */
 unaligned_double_compare:
         /* align buffer B to a doubleword boundary */
         rlwinm r4,r4,0,0,28
@@ -349,20 +345,20 @@ unaligned_double_compare:
         /* grab the first doubleword */
         evldd r11,0(r4)
 
-	/* Set bits in the CR to indicate how many bytes will
-	 * remain after the big loop is done */
+        /* Set bits in the CR to indicate how many bytes will
+         * remain after the big loop is done */
         mtcrf 0x2,r5
         mtcrf 0x1,r5
         bge unaligned_big_loop
 
         /* we need the old double to be in r10
          * for try_unaligned_double
-	 */
+         */
         evmr r10,r11
 
-/* There are less than 2 double words left, so we take care of
- * them.
- */
+        /* There are less than 2 double words left, so we take care of
+         * them.
+         */
 try_unaligned_double:
         bf 28, try_unaligned_word
         evldd r11,8(r4)
@@ -377,7 +373,7 @@ try_unaligned_double:
 try_unaligned_word:
         /* realign r4 to its original alignment, so
          * do_unaligned_last has the pointer in the right place
-	 */
+         */
         addi r4,r4,4
         cror 31,30,31
         bf 29, do_unaligned_last
@@ -405,10 +401,10 @@ unaligned_end:
 
 unaligned_big_loop:
         /* At this point, we know there are at least 16 bytes of
-	 * data to compare, so start loading them.
-	 * Also, the loop updates at the end, so we need to
-	 * update here to keep up.
-	 */
+         * data to compare, so start loading them.
+         * Also, the loop updates at the end, so we need to
+         * update here to keep up.
+         */
         evldd r10,8(r4)
         addic. r5,r5,-24
         evldd r6,0(r3)
@@ -488,32 +484,32 @@ small_finish:
 
 memcmp_unaligned:
         /* If both pointers can be double-aligned, align r3,
-	 * setting eq6 to indicate "aligned double"
-	 */
+         * setting eq6 to indicate "aligned double"
+         */
         rlwinm. r0,r0,0,29,31 /* clrlwi 29 */
 
         /* Do this instead of crset because unlike crset, it
-	 * isn't serialized.  Using a nonvolatile register for
-	 * comparison because we know it hasn't been used.
-	 */
+         * isn't serialized.  Using a nonvolatile register for
+         * comparison because we know it hasn't been used.
+         */
         cmpw cr6,r31,r31 /* set eq6 */
 
         /* Look at r3 to see if we're aligned already (but not
-	 * both aligned, which is why we're here)
-	 */
+         * both aligned, which is why we're here)
+         */
         rlwinm r7,r3,0,29,31
         beq align_dest_double
 
         /* If both pointers can be word-aligned, align dest,
-	 * clearing eq6 to indicate unaligned.
-	 * Compare to find out if dest is already doublealigned
-	 */
+         * clearing eq6 to indicate unaligned.
+         * Compare to find out if dest is already doublealigned
+         */
         rlwinm. r0,r0,0,30,31
         cmpwi cr1,r7,0
 
         /* Only skip to unaligned_double_compare if r3 is aligned,
-	 * and r0 indicates word-alignment
-	 */
+         * and r0 indicates word-alignment
+         */
         crand 6,6,2
 
         crxor 26,26,26 /* clear eq6 */
@@ -521,9 +517,9 @@ memcmp_unaligned:
         beq align_dest_word
 
         /* Before we hop into bytewise comparing, make sure that
-	 * there are bytes to compare (don't want to loop 4 billion+
-	 * times!
-	 */
+         * there are bytes to compare (don't want to loop 4 billion+
+         * times!
+         */
         cmpwi r5,0
         beq byte_done
 
