@@ -136,7 +136,6 @@ C_MATH := \
 	math/expm1.o \
 	math/expm1f.o \
 	math/expm1l.o \
-	math/fabs.o \
 	math/fabsf.o \
 	math/fabsl.o \
 	math/fdim.o \
@@ -292,6 +291,14 @@ C_MATH := \
 	math/trunc.o \
 	math/truncf.o \
 	math/truncl.o
+
+ifdef SPE
+	C_MATH := $(C_MATH)\
+		math/fabs_spe.o
+else
+	C_MATH := $(C_MATH)\
+		math/fabs.o
+endif
 
 MATH_LIB := \
 	math/m.lib_rev.o

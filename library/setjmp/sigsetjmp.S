@@ -16,6 +16,7 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#ifndef __SPE__
 #define __NO_VMX__
 #undef __sigsetjmp_symbol
 #undef __sigjmp_save_symbol
@@ -23,3 +24,4 @@
 #define __sigsetjmp_symbol __sigsetjmp
 #define __sigjmp_save_symbol __sigjmp_save
 #include "sigsetjmp-common.S"
+#endif

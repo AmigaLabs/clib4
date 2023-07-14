@@ -255,14 +255,14 @@ endef
 
 define COMPILE_INLINE
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo -e "\rCompiling Static \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)echo -e "\rCompiling Inline Static \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(CFLAGS_N) -Wno-missing-prototypes -Wno-missing-declarations -D__timespec_defined -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_ASM
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rCompiling Static ASM \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC)  -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED
@@ -297,8 +297,8 @@ endef
 
 define COMPILE_SPE_REG
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo -e "\rAssembling with regnames \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) -mvrsave -mregnames -DVRSAVE -mspe -mcpu=8540 -mfloat-gprs=double -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)echo -e "\rAssembling SPE with regnames \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)$(CC) $(AFLAGS) -mvrsave -mregnames -DVRSAVE -mspe -mcpu=8540 -mfloat-gprs=double -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SPE

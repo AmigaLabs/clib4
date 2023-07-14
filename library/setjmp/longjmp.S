@@ -96,7 +96,7 @@ FUNC_START(longjmp_altivec)
     bclr+	4,2
     li		3,1
     blr
-        FUNC_END(longjmp_altivec)
+FUNC_END(longjmp_altivec)
 #endif /* __SPE__ */
 
 FUNC_START(longjmp)

@@ -66,11 +66,16 @@ __fe_dfl_env;
              FE_OVERFLOW | FE_UNDERFLOW) >> _FPUSW_SHIFT)
 
 #ifndef _SOFT_FLOAT
-#define    __mffs(__env)  __asm __volatile("mffs %0" : "=f" (*(__env)))
-#define    __mtfsf(__env) __asm __volatile("mtfsf 255,%0" : : "f" (__env))
+    #ifdef __SPE__
+        #define	__mffs(__env) __asm __volatile("mfspr %0, 512" : "=r" ((__env)->__bits.__reg))
+        #define	__mtfsf(__env) __asm __volatile("mtspr 512,%0;isync" :: "r" ((__env).__bits.__reg))
+    #else
+        #define	__mffs(__env) __asm __volatile("mffs %0" : "=f" ((__env)->__d))
+        #define	__mtfsf(__env) __asm __volatile("mtfsf 255,%0" :: "f" ((__env).__d))
+    #endif
 #else
-#define	__mffs(__env)
-#define	__mtfsf(__env)
+    #define	__mffs(__env)
+    #define	__mtfsf(__env)
 #endif
 
 union __fpscr {
@@ -142,7 +147,7 @@ fetestexcept(int __excepts) {
 
 __fenv_static inline int
 fegetround(void) {
-    union __fpscr __r = {0};
+    union __fpscr __r;
 
     __mffs(&__r.__d);
     return (__r.__bits.__reg & _ROUND_MASK);

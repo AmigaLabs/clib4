@@ -6,23 +6,14 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
+#ifndef __SPE__
 inline static double
 __fabs(double x) {
-#ifndef _SOFT_FLOAT
     double res;
 
     __asm volatile("fabs %0, %1"
-                   : "=f"(res)
-                   : "f"(x));
-
-    return res;
-#else
-    uint32_t high;
-    GET_HIGH_WORD(high, x);
-    SET_HIGH_WORD(x, high & 0x7fffffff);
-
-    return x;
-#endif
+            : "=f"(res)
+            : "f"(x));
 }
 
 double
@@ -33,3 +24,4 @@ fabs(double x) {
 
     return (result);
 }
+#endif

@@ -215,8 +215,17 @@ C_SETJMP := \
     setjmp/longjmp.o \
     setjmp/setjmp.o \
     setjmp/sigjmp.o \
-    setjmp/siglongjmp.o \
-    setjmp/sigsetjmp.o
+    setjmp/siglongjmp.o
+
+ifdef SPE
+    $(info Using SPE sigssetjmp)
+    C_SETJMP := $(C_SETJMP)  \
+        setjmp/sigsetjmp_spe.o
+else
+    $(info Using NON-SPE sigsetjmp)
+    C_SETJMP := $(C_SETJMP)  \
+        setjmp/sigsetjmp.o
+endif
 
 C_SOCKET := \
     resolv/dns_parse.o \
