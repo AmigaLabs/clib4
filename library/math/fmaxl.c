@@ -1,5 +1,5 @@
 /*
- * $Id: math_fmaxl.c,v 1.0 2022-03-11 11:48:23 clib2devs Exp $
+ * $Id: math_fmaxl.c,v 1.1 2023-07-14 11:48:23 clib2devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H
@@ -7,7 +7,6 @@
 #endif /* _MATH_HEADERS_H */
 
 long double
-fmaxl(long double x, long double y)
-{
-    return fmax(x, y);
+fmaxl(long double x, long double y) {
+    return (isgreaterequal(x, y) || isnan(y)) ? x : y;
 }

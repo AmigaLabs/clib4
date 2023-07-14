@@ -1,5 +1,5 @@
 /*
- * $Id: math_trunc.c,v 1.3 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: math_trunc.c,v 1.4 2023-07-14 12:04:24 clib2devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H
@@ -7,50 +7,27 @@
 #endif /* _MATH_HEADERS_H */
 
 double
-trunc(double x)
-{
-  int signbit;
-  /* Most significant word, least significant word. */
-  int msw;
-  unsigned int lsw;
-  int exponent_less_1023;
+trunc(double x) {
+    int32_t i0, j0;
+    uint32_t i1;
+    int sx;
 
-  EXTRACT_WORDS(msw, lsw, x);
-
-  /* Extract sign bit. */
-  signbit = msw & 0x80000000;
-
-  /* Extract exponent field. */
-  exponent_less_1023 = ((msw & 0x7ff00000) >> 20) - 1023;
-
-  if (exponent_less_1023 < 20)
-  {
-    /* All significant digits are in msw. */
-    if (exponent_less_1023 < 0)
-    {
-      /* -1 < x < 1, so result is +0 or -0. */
-      INSERT_WORDS(x, signbit, 0);
+    EXTRACT_WORDS (i0, i1, x);
+    sx = i0 & 0x80000000;
+    j0 = ((i0 >> 20) & 0x7ff) - 0x3ff;
+    if (j0 < 20) {
+        if (j0 < 0)
+            /* The magnitude of the number is < 1 so the result is +-0.  */
+            INSERT_WORDS (x, sx, 0);
+        else
+            INSERT_WORDS (x, sx | (i0 & ~(0x000fffff >> j0)), 0);
+    } else if (j0 > 51) {
+        if (j0 == 0x400)
+            /* x is inf or NaN.  */
+            return x + x;
+    } else {
+        INSERT_WORDS (x, i0, i1 & ~(0xffffffffu >> (j0 - 20)));
     }
-    else
-    {
-      /* All relevant fraction bits are in msw, so lsw of the result is 0. */
-      INSERT_WORDS(x, signbit | (msw & ~(0x000fffff >> exponent_less_1023)), 0);
-    }
-  }
-  else if (exponent_less_1023 > 51)
-  {
-    if (exponent_less_1023 == 1024)
-    {
-      /* x is infinite, or not a number, so trigger an exception. */
-      return x + x;
-    }
-    /* All bits in the fraction fields of the msw and lsw are needed in the result. */
-  }
-  else
-  {
-    /* All fraction bits in msw are relevant.  Truncate irrelevant
-         bits from lsw. */
-    INSERT_WORDS(x, msw, lsw & ~(0xffffffffu >> (exponent_less_1023 - 20)));
-  }
-  return x;
+
+    return x;
 }

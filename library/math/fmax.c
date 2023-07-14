@@ -1,5 +1,5 @@
 /*
- * $Id: math_fmax.c,v 1.3 2006-01-08 12:04:23 clib2devs Exp $
+ * $Id: math_fmax.c,v 1.4 2023-07-14 12:04:23 clib2devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H
@@ -7,28 +7,6 @@
 #endif /* _MATH_HEADERS_H */
 
 double
-fmax(double x, double y)
-{
-	double result;
-
-	if (isnan(x))
-	{
-		if (isnan(y))
-			result = NAN;
-		else
-			result = y;
-	}
-	else if (isnan(y))
-	{
-		result = x;
-	}
-	else
-	{
-		if (x > y)
-			result = x;
-		else
-			result = y;
-	}
-
-	return (result);
+fmax(double x, double y) {
+    return (isgreaterequal(x, y) || isnan(y)) ? x : y;
 }

@@ -220,7 +220,6 @@ C_MATH := \
 	math/logf.o \
 	math/logl.o \
 	math/lrint.o \
-	math/lrintf.o \
 	math/lrintl.o \
 	math/lround.o \
 	math/lroundf.o \
@@ -293,11 +292,16 @@ C_MATH := \
 	math/truncl.o
 
 ifdef SPE
-	C_MATH := $(C_MATH)\
-		math/fabs_spe.o
+    $(info Using SPE math objects)
+	C_MATH := $(C_MATH) \
+		math/fabs_spe.o \
+		math/fabsf_spe.o \
+		math/lrintf_spe.o
 else
 	C_MATH := $(C_MATH)\
-		math/fabs.o
+		math/fabs.o \
+		math/fabsf.o \
+		math/lrintf.o
 endif
 
 MATH_LIB := \

@@ -1,31 +1,40 @@
 /*
- * $Id: math_llroundf.c,v 1.0 2022-03-13 12:04:23 clib2devs Exp $
+ * $Id: math_llroundf.c,v 1.1 2023-07-14 12:04:23 clib2devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/*
- * If type has more precision than dtype, the endpoints dtype_(min|max) are
- * of the form xxx.5; they are "out of range" because lround() rounds away
- * from 0.  On the other hand, if type has less precision than dtype, then
- * all values that are out of range are integral, so we might as well assume
- * that everything is in range.  At compile time, INRANGE(x) should reduce to
- * two floating-point comparisons in the former case, or TRUE otherwise.
- */
-static const float dtype_min = LLONG_MIN - 0.5;
-static const float dtype_max = LLONG_MAX + 0.5;
-#define INRANGE(x) (dtype_max - LLONG_MAX != 0.5 || ((x) > dtype_min && (x) < dtype_max))
-
 long long
-llroundf(float x)
-{
-    if (INRANGE(x)) {
-        x = roundf(x);
-        return ((long long) x);
+llroundf(float x) {
+
+    int32_t j0;
+    uint32_t i;
+    long long int result;
+    int sign;
+
+    GET_FLOAT_WORD (i, x);
+    j0 = ((i >> 23) & 0xff) - 0x7f;
+    sign = (i & 0x80000000) != 0 ? -1 : 1;
+    i &= 0x7fffff;
+    i |= 0x800000;
+
+    if (j0 < (int32_t)(8 * sizeof(long long int)) - 1) {
+        if (j0 < 0)
+            return j0 < -1 ? 0 : sign;
+        else if (j0 >= 23)
+            result = (long long int) i << (j0 - 23);
+        else {
+            i += 0x400000 >> j0;
+
+            result = i >> (23 - j0);
+        }
     } else {
+        /* The number is too large.  It is left implementation defined what happens.  */
         feraiseexcept(FE_INVALID);
-        return (LLONG_MAX);
+        return (long long int) x;
     }
+
+    return sign * result;
 }

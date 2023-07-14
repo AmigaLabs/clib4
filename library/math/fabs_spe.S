@@ -2,7 +2,6 @@
  * $Id: math_fabs_spe.S,v 1.00 2023-07-13 12:04:23 clib2devs Exp $
 */
 
-
 #include "ppc-asm.h"
 
 #ifdef __SPE__

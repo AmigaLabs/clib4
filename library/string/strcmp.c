@@ -54,7 +54,7 @@ strcmp(const char *s1, const char *s2) {
             case CPUFAMILY_4XX:
                 result = __strcmp440(s1, s2);
                 break;
-#ifdef SPE
+#ifdef __SPE__
             case CPUFAMILY_E500:
                 result = __strcmp_e500(s1, s2);
                 break;

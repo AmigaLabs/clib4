@@ -4,11 +4,21 @@
 #include <proto/dos.h>
 #include <proto/exec.h>
 
+#include <setjmp.h>
 #include "map.h"
 #include "uuid.h"
 #include "ipc_headers.h"
 
 #define RESOURCE_NAME "clib2.resource"
+
+extern int setjmp_spe(jmp_buf);
+extern void longjmp_spe(jmp_buf, int);
+extern void longjmp_altivec(jmp_buf, int);
+extern int  setjmp_altivec(jmp_buf);
+extern void siglongjmp_spe(sigjmp_buf, int);
+extern int __sigsetjmp_spe(struct __jmp_buf_tag, int);
+extern void _longjmp_spe(struct __jmp_buf_tag, int);
+extern int _setjmp_spe(struct __jmp_buf_tag);                                                                                                 /* 1796 */
 
 struct Clib2Resource {
     struct Library          resource;       /* must be first */
@@ -33,6 +43,8 @@ struct Clib2Resource {
     {
         struct IPCIdKeyMap keymap;
     } semcx;
+    uint32 altivec;
+    uint32 cpufamily;
 };
 
 struct Clib2Node {

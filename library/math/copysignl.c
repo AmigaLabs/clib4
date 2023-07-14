@@ -1,18 +1,5 @@
 /*
- * $Id: math_copysignl.c,v 1.0 2022-03-10 12:04:23 clib2devs Exp $
- *
-
- *
- *
- * PowerPC math library based in part on work by Sun Microsystems
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- *
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
+ * $Id: math_copysignl.c,v 1.1 2023-07-14 12:04:23 clib2devs Exp $
  */
 
 #ifndef _MATH_HEADERS_H
@@ -20,7 +7,8 @@
 #endif /* _MATH_HEADERS_H */
 
 long double
-copysignl(long double x, long double y)
-{
-    return copysign(x, y);
+copysignl(long double x, long double y) {
+    if (signbit (x) != signbit (y))
+        x = -x;
+    return x;
 }

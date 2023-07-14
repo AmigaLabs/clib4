@@ -9,7 +9,9 @@
 #include <errno.h>
 #include <float.h>
 #include <math.h>
+#include <sys/param.h>
 #include <fenv.h>
+#include <endian.h>
 
 #ifndef _MACROS_H
 #include "macros.h"
@@ -30,6 +32,8 @@
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
+
+#include "dla.h"
 
 #define SAFE_LEFT_SHIFT(op,amt)					\
   (((amt) < 8 * sizeof(op)) ? ((op) << (amt)) : 0)
@@ -75,8 +79,17 @@ STATIC udouble z_notanum  = {{ 0xfff80000, 0 }};
 #define FLT_UWORD_LOG_MIN 0x42cff1b5
 #define FLT_SMALLEST_EXP -22
 
-typedef union
-{
+#if __FLOAT_WORD_ORDER__ == __BIG_ENDIAN
+#  define HIGH_HALF 0
+#  define LOW_HALF  1
+#else
+#  if __FLOAT_WORD_ORDER__ == __LITTLE_ENDIAN
+#   define HIGH_HALF 1
+#   define LOW_HALF  0
+#  endif
+#endif
+
+typedef union {
 	double value;
 	struct 
 	{
@@ -85,8 +98,7 @@ typedef union
 	} parts;
 } ieee_double_shape_type;
 
-typedef union
-{
+typedef union {
     long double value;
     struct {
         uint32_t mswhi;
@@ -103,14 +115,12 @@ typedef union
 /* A union which permits us to convert between a float and a 32 bit
    int. */
 
-typedef union
-{
+typedef union {
     float value;
     unsigned int word;
 } ieee_float_shape_type;
 
-typedef union
-{
+typedef union {
     long double value;
     struct {
 #ifdef __LP64__
@@ -123,6 +133,8 @@ typedef union
     } parts;
 } ieee_extended_shape_type;
 
+typedef int int4;
+typedef union {int4 i[2]; double x;} mynumber;
 
 #define EXTRACT_WORDS(ix0,ix1,d)					\
 do {												\
@@ -304,15 +316,15 @@ do {							\
   (d) = sf_u.value;				\
 } while (0)
 
-#define	STRICT_ASSIGN(type, lval, rval)	((lval) = (rval))
-
-#define	TRUNC(d)	(_b_trunc(&(d)))
-
+#define	STRICT_ASSIGN   (type, lval, rval)	((lval) = (rval))
+#define	TRUNC(d)	    (_b_trunc(&(d)))
 #define	nan_mix(x, y)	(((x) + 0.0L) + ((y) + 0))
 
+#define math_force_eval(x) \
+({ __typeof (x) __x = (x); __asm __volatile ("" : : "m" (__x)); })
+
 static __inline void
-_b_trunc(volatile double *_dp)
-{
+_b_trunc(volatile double *_dp) {
     //VBS
     //u_int32_t _lw;
     uint32_t _lw;

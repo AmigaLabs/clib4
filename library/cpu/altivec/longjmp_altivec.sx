@@ -8,9 +8,9 @@
 
 #include "ppc-asm.h"
 
-FUNC_START(longjmp)
-    addi	3,3,7		# align to 8 byte boundary
-    rlwinm	3,3,0,0,28
+FUNC_START(longjmp_altivec)
+    addi	3,3,15		# align Altivec to 16 byte boundary
+    rlwinm	3,3,0,0,27
 
     lwz		1,0(3)		# offset 0
     lwzu	2,4(3)		# offset 4
@@ -33,12 +33,11 @@ FUNC_START(longjmp)
     lwzu	29,4(3)		# offset 72
     lwzu	30,4(3)		# offset 76
     lwzu	31,4(3)		# offset 80
-
     lwzu	5,4(3)		# offset 84
     mtlr	5
     lwzu	5,4(3)		# offset 88
     mtcrf	255,5
-
+//						# one word pad to get floating point aligned on 8 byte boundary
 #ifndef _SOFT_FLOAT
     lfdu	14,8(3)         # offset 96
     lfdu	15,8(3)         # offset 104
@@ -60,8 +59,36 @@ FUNC_START(longjmp)
     lfdu	31,8(3)         # offset 232
 #endif
 
+/* restore Altivec vrsave and v20-v31 registers */
+    lwzu	5,16(3)		# offset 248
+    mtspr	256,5		# vrsave
+    addi	3,3,8
+    lvx		20,0,3		# offset 256
+    addi	3,3,16
+    lvx		21,0,3		# offset 272
+    addi	3,3,16
+    lvx		22,0,3		# offset 288
+    addi	3,3,16
+    lvx		23,0,3		# offset 304
+    addi	3,3,16
+    lvx		24,0,3		# offset 320
+    addi	3,3,16
+    lvx		25,0,3		# offset 336
+    addi	3,3,16
+    lvx		26,0,3		# offset 352
+    addi	3,3,16
+    lvx		27,0,3		# offset 368
+    addi	3,3,16
+    lvx		28,0,3		# offset 384
+    addi	3,3,16
+    lvx		29,0,3		# offset 400
+    addi	3,3,16
+    lvx		30,0,3		# offset 416
+    addi	3,3,16
+    lvx		31,0,3		# offset 432
+
     mr.		3,4
     bclr+	4,2
     li		3,1
     blr
-FUNC_END(longjmp)
+FUNC_END(longjmp_altivec)

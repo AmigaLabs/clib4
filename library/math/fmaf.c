@@ -6,10 +6,9 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-float 
-fmaf(float x, float y, float z)
-{
-	/* ZZZ this should be a *fused* multiply & add, and
-	   not a sequential operation as declared below! */
-	return ((x * y) + z);
+float
+fmaf(float x, float y, float z) {
+    /* ZZZ this should be a *fused* multiply & add, and
+       not a sequential operation as declared below! */
+    return ((x * y) + z);
 }

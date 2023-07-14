@@ -1,32 +1,53 @@
 /*
- * Experimental: Not a part of clib2 from Olaf Barthel
- */
+ * $Id: math_lroundf.c,v 1.1 2023-07-14 12:04:23 clib2devs Exp $
+*/
 
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-
-/*
- * If type has more precision than dtype, the endpoints dtype_(min|max) are
- * of the form xxx.5; they are "out of range" because lround() rounds away
- * from 0.  On the other hand, if type has less precision than dtype, then
- * all values that are out of range are integral, so we might as well assume
- * that everything is in range.  At compile time, INRANGE(x) should reduce to
- * two floating-point comparisons in the former case, or TRUE otherwise.
- */
-static const long double dtype_min = LONG_MIN - 0.5;
-static const long double dtype_max = LONG_MAX + 0.5;
-#define	INRANGE(x) (dtype_max - LONG_MAX != 0.5 || ((x) > dtype_min && (x) < dtype_max))
-
 long
-lroundl(long double x)
-{
-    if (INRANGE(x)) {
-        x = roundl(x);
-        return ((long)x);
+lroundl(long double x) {
+    int32_t j0;
+    uint32_t se, i1, i0;
+    long int result;
+    int sign;
+
+    GET_LDOUBLE_WORDS (se, i0, i1, x);
+    j0 = (se & 0x7fff) - 0x3fff;
+    sign = (se & 0x8000) != 0 ? -1 : 1;
+
+    if (j0 < 31) {
+        if (j0 < 0)
+            return j0 < -1 ? 0 : sign;
+        else {
+            uint32_t j = i0 + (0x40000000 >> j0);
+            if (j < i0) {
+                j >>= 1;
+                j |= 0x80000000;
+                ++j0;
+            }
+
+            result = j >> (31 - j0);
+        }
+    } else if (j0 < (int32_t)(8 * sizeof(long int)) - 1) {
+        if (j0 >= 63)
+            result = ((long int) i0 << (j0 - 31)) | (i1 << (j0 - 63));
+        else {
+            uint32_t j = i1 + (0x80000000 >> (j0 - 31));
+            if (j < i1)
+                ++i0;
+
+            if (j0 == 31)
+                result = (long int) i0;
+            else
+                result = ((long int) i0 << (j0 - 31)) | (j >> (63 - j0));
+        }
     } else {
+        /* The number is too large.  It is left implementation defined what happens.  */
         feraiseexcept(FE_INVALID);
-        return (LONG_MAX);
+        return (long int) x;
     }
+
+    return sign * result;
 }

@@ -6,24 +6,24 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-INLINE STATIC float
-__fabsf(float number)
-{
-	union ieee_single x;
+#ifndef __SPE__
+inline static float
+__fabsf(float number) {
+    union ieee_single x;
 
-	x.value = number;
+    x.value = number;
 
-	/* Knock off the sign bit. */
-	x.raw[0] &= 0x7fffffff;
+    /* Knock off the sign bit. */
+    x.raw[0] &= 0x7fffffff;
 
-	return (x.value);
+    return (x.value);
 }
 
-float fabsf(float x)
-{
-	float result;
+float fabsf(float x) {
+    float result;
 
-	result = __fabsf(x);
+    result = __fabsf(x);
 
-	return (result);
+    return (result);
 }
+#endif

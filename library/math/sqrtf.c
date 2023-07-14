@@ -1,20 +1,6 @@
 /*
- * $Id: math_uint32_tf.c,v 1.4 2022-03-12 12:04:24 clib2devs Exp $
- *
-
- *
- *
- * PowerPC math library based in part on work by Sun Microsystems
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- *
- *
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
- */
+ * $Id: math_sqtf.c,v 1.4 2023-07-14 12:04:24 clib2devs Exp $
+*/
 
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
@@ -22,7 +8,8 @@
 
 static const float one = 1.0, tiny = 1.0e-30;
 
-float sqrtf(float x) {
+float
+sqrtf(float x) {
     float z;
     int32_t sign = (int) 0x80000000;
     int32_t ix, s, q, m, t, i;

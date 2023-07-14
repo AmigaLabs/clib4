@@ -7,7 +7,6 @@
 #endif /* _MATH_HEADERS_H */
 
 long double
-floorl(long double x)
-{
+floorl(long double x) {
     return floor(x);
 }

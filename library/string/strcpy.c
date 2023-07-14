@@ -28,7 +28,7 @@ strcpy(char *dest, const char *src) {
                 case CPUFAMILY_4XX:
                     result = __strcpy440(dest, src);
                     break;
-#ifdef SPE
+#ifdef __SPE__
                 case CPUFAMILY_E500:
                     result = __strcpy_e500(dest, src);
                     break;

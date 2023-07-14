@@ -109,6 +109,8 @@ struct TimerIFace *ITimer = 0;
 struct Library *__UtilityBase = 0;
 struct UtilityIFace *__IUtility = 0;
 
+struct Clib2IFace *IClib2 = 0;
+
 const struct Resident RomTag;
 
 #define LIBPRI 0
@@ -164,10 +166,14 @@ static void closeLibraries() {
 }
 
 struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
-    struct Clib2Base *libBase = (struct Clib2Base *) Self->Data.LibBase;
-
     if (version > VERSION) {
         return NULL;
+    }
+
+    struct Clib2Base *libBase = (struct Clib2Base *) Self->Data.LibBase;
+    if (!IClib2) {
+        IClib2 = (struct Clib2Base *) IExec->GetInterface(libBase, "main", 1, NULL);
+        IExec->DropInterface((struct Interface *)IClib2);
     }
 
     ++libBase->libNode.lib_OpenCnt;
@@ -189,6 +195,28 @@ struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
         D(("c2n.pPid = %ld", c2n.pPid));
         D(("c2n.uuid = %s", c2n.uuid));
         hashmap_set(res->children, &c2n);
+
+        switch (res->cpufamily) {
+#ifdef __SPE__
+            case CPUFAMILY_E500:
+                D(("Using SPE setjmp family functions"));
+                IClib2->setjmp = setjmp_spe;
+                IClib2->longjmp = longjmp_spe;
+                IClib2->_longjmp = _longjmp_spe;
+                IClib2->_setjmp = _setjmp_spe;
+                IClib2->__sigsetjmp = __sigsetjmp_spe;
+                IClib2->siglongjmp = siglongjmp_spe;
+                break;
+#endif
+            default:
+                if (res->altivec) {
+                    D(("Using Altivec setjmp family functions"));
+                    IClib2->setjmp = setjmp_altivec;
+                    IClib2->longjmp = longjmp_altivec;
+                }
+                else
+                    D(("Using default setjmp family functions"));
+        }
     }
     return libBase;
 }
@@ -412,6 +440,11 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
             res->msgcx.qsizemax = DEF_QSIZEMAX;
             IPCMapInit(&res->msgcx.keymap);
             IPCMapInit(&res->semcx.keymap);
+
+            IExec->GetCPUInfoTags(
+                    GCIT_VectorUnit, &res->altivec,
+                    GCIT_Family, &res->cpufamily,
+                    TAG_DONE);
 
             iexec->AddResource(res);
         } else {

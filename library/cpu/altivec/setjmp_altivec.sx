@@ -7,9 +7,9 @@
 
 #include "ppc-asm.h"
 
-FUNC_START(setjmp)
-    addi	3,3,7		# align to 8 byte boundary
-    rlwinm	3,3,0,0,28
+FUNC_START(setjmp_altivec)
+    addi	3,3,15		# align Altivec to 16 byte boundary
+    rlwinm	3,3,0,0,27
 
     stw		1,0(3)		# offset 0
     stwu	2,4(3)		# offset 4
@@ -32,16 +32,11 @@ FUNC_START(setjmp)
     stwu	29,4(3)		# offset 72
     stwu	30,4(3)		# offset 76
     stwu	31,4(3)		# offset 80
-
-/* From this point on until the end of this function, add 84
-   to the offset shown if __SPE__.  This difference comes from
-   the fact that we save 21 64-bit registers instead of 21
-   32-bit registers above.  */
-    mflr	5
-    stwu	5,4(3)		# offset 84
+    mflr	4
+    stwu	4,4(3)		# offset 84
     mfcr	4
     stwu	4,4(3)		# offset 88
-
+//						# one word pad to get floating point aligned on 8 byte boundary
 #ifndef _SOFT_FLOAT
     stfdu	14,8(3)		# offset 96
     stfdu	15,8(3)		# offset 104
@@ -66,9 +61,38 @@ FUNC_START(setjmp)
 /* This requires a total of 21 * 4 + 18 * 8 + 4 + 4 + 4
    bytes == 60 * 4 bytes == 240 bytes.  */
 
+/* save Altivec vrsave and vr20-vr31 registers */
+    mfspr	4,256		# vrsave register
+    stwu	4,16(3)		# offset 248
+    addi	3,3,8
+    stvx	20,0,3		# offset 256
+    addi	3,3,16
+    stvx	21,0,3		# offset 272
+    addi	3,3,16
+    stvx	22,0,3		# offset 288
+    addi	3,3,16
+    stvx	23,0,3		# offset 304
+    addi	3,3,16
+    stvx	24,0,3		# offset 320
+    addi	3,3,16
+    stvx	25,0,3		# offset 336
+    addi	3,3,16
+    stvx	26,0,3		# offset 352
+    addi	3,3,16
+    stvx	27,0,3		# offset 368
+    addi	3,3,16
+    stvx	28,0,3		# offset 384
+    addi	3,3,16
+    stvx	29,0,3		# offset 400
+    addi	3,3,16
+    stvx	30,0,3		# offset 416
+    addi	3,3,16
+    stvx	31,0,3		# offset 432
+
+/* This requires a total of 240 + 8 + 8 + 12 * 16 == 448 bytes. */
+
     li		3,0
     blr
-FUNC_END(setjmp)
-
+FUNC_END(setjmp_altivec)
 
 

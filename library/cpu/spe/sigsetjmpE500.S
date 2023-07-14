@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_sigsetjmp_spe.S,v 1.0 2023-07-13 13:50:17 clib2devs Exp $
+ * $Id: sigsetjmpE500.S,v 1.0 2023-07-13 13:50:17 clib2devs Exp $
  */
 
 /*
@@ -26,13 +26,7 @@
 
 #include "ppc-asm.h"
 
-#ifdef __SPE__
-FUNC_START(_setjmp)
-    li r4,0			/* Set second argument to 0.  */
-    b __sigsetjmp@local
-FUNC_END(_setjmp)
-
-FUNC_START(__sigsetjmp)
+FUNC_START(__sigsetjmp_spe)
 	mr	r6,r3
 	stw	r4,0(r3)
 	or.	r7,r4,r4
@@ -42,8 +36,8 @@ FUNC_START(__sigsetjmp)
 	li	r4,0			/* set = NULL */
 	mr	r5,r6			/* &oset */
 	addi	r5,r5,4
-	bl sigprocmask    /* sigprocmask(SIG_BLOCK, NULL, &oset)*/
-	sc				        /* assume no error       XXX */
+	bl sigprocmask      /* sigprocmask(SIG_BLOCK, NULL, &oset)*/
+	sc				    /* assume no error       XXX */
 1:
 	mflr	r11
 	mfcr	r12
@@ -77,9 +71,9 @@ FUNC_START(__sigsetjmp)
 
 	li	r3,0
 	blr
-FUNC_END(__sigsetjmp)
+FUNC_END(__sigsetjmp_spe)
 
-FUNC_START(siglongjmp)
+FUNC_START(siglongjmp_spe)
 
 	/* FPRs */
 	evldd	r9,24+0*8(r6)
@@ -115,16 +109,15 @@ FUNC_START(siglongjmp)
 	beq	1f
 	mr	r4,r3
 	li	r3,3			/* SIG_SETMASK */
-	addi	r4,r4,4	/* &set */
+	addi	r4,r4,4	    /* &set */
 	li	r5,0			/* oset = NULL */
-	bl sigprocmask	/* sigprocmask(SIG_SET, &set, NULL) */
+	bl sigprocmask	    /* sigprocmask(SIG_SET, &set, NULL) */
 	sc				    /* assume no error       XXX */
 1:
 	or.	r3,r6,r6
 	bnelr
 	li	r3,1
 	blr
-FUNC_END(siglongjmp)
+FUNC_END(siglongjmp_spe)
 
-	.section .note.GNU-stack,"",%progbits
-#endif
+.section .note.GNU-stack,"",%progbits

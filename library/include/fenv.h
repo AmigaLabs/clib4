@@ -67,11 +67,11 @@ __fe_dfl_env;
 
 #ifndef _SOFT_FLOAT
     #ifdef __SPE__
-        #define	__mffs(__env) __asm __volatile("mfspr %0, 512" : "=r" ((__env)->__bits.__reg))
-        #define	__mtfsf(__env) __asm __volatile("mtspr 512,%0;isync" :: "r" ((__env).__bits.__reg))
+        #define	__mffs(__env) __asm __volatile("mfspr %0, 512" : "=r" (*(__env)))
+        #define	__mtfsf(__env) __asm __volatile("mtspr 512, %0; isync" :: "r" ((__env)))
     #else
-        #define	__mffs(__env) __asm __volatile("mffs %0" : "=f" ((__env)->__d))
-        #define	__mtfsf(__env) __asm __volatile("mtfsf 255,%0" :: "f" ((__env).__d))
+        #define	__mffs(__env) __asm __volatile("mffs %0" : "=f" (*(__env)))
+        #define	__mtfsf(__env) __asm __volatile("mtfsf 255, %0" :: "f" ((__env)))
     #endif
 #else
     #define	__mffs(__env)

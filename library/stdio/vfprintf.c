@@ -21,7 +21,6 @@ static void pad(Out *f, char c, int w, int l, int fl);
 
 static void out_init_file(Out *out, FILE *f) {
     memset(out, 0, sizeof(*out));
-    D(("f->size = %ld - f->position = %ld", f->size, f->position));
     out->buffer_size = f->size;
     out->buffer_pos = f->position;
     out->file = f;
@@ -467,8 +466,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 p = (int) nl_arg[s[2] - '0'].i;
                 s += 4;
             } else if (!l10n) {
-                p = ((f) ? va_arg(*ap,
-                int) : 0);
+                p = ((f) ? va_arg(*ap, int) : 0);
                 s += 2;
             } else
                 return EOF;

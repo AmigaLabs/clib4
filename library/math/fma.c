@@ -7,9 +7,8 @@
 #endif /* _MATH_HEADERS_H */
 
 double
-fma(double x, double y, double z)
-{
-	/* ZZZ this should be a *fused* multiply & add, and
-	   not a sequential operation as declared below! */
-	return ((x * y) + z);
+fma(double x, double y, double z) {
+    /* ZZZ this should be a *fused* multiply & add, and
+       not a sequential operation as declared below! */
+    return ((x * y) + z);
 }

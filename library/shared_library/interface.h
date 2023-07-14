@@ -592,9 +592,9 @@ struct Clib2IFace {
     int (* setjmp) (jmp_buf __env);                                                                                                                  /* 1788 */
     int (* __sigsetjmp) (struct __jmp_buf_tag __env[1], int __savemask);                                                                             /* 1792 */
     int (* _setjmp) (struct __jmp_buf_tag __env[1]);                                                                                                 /* 1796 */
-    void (* longjmp) (jmp_buf __env, int __val) __attribute__ ((__noreturn__));                                                                      /* 1800 */
-    void (* _longjmp) (struct __jmp_buf_tag __env[1], int __val) __attribute__ ((__noreturn__));                                                     /* 1804 */
-    void (* siglongjmp) (sigjmp_buf __env, int __val) __attribute__ ((__noreturn__));                                                                /* 1808 */
+    void (* longjmp) (jmp_buf __env, int __val);                                                                                                     /* 1800 */
+    void (* _longjmp) (struct __jmp_buf_tag __env[1], int __val);                                                                                    /* 1804 */
+    void (* siglongjmp) (sigjmp_buf __env, int __val);                                                                                               /* 1808 */
     int (* __sigjmp_save) (jmp_buf __env, int __savemask);                                                                                           /* 1812 */
 
     /* signal.h */

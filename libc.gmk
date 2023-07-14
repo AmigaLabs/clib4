@@ -211,21 +211,14 @@ C_SEARCH := \
 	search/twalk.o
 
 C_SETJMP := \
+    cpu/altivec/longjmp_altivec.o \
+    cpu/altivec/setjmp_altivec.o \
     setjmp/_longjmp.o \
     setjmp/longjmp.o \
     setjmp/setjmp.o \
     setjmp/sigjmp.o \
-    setjmp/siglongjmp.o
-
-ifdef SPE
-    $(info Using SPE sigssetjmp)
-    C_SETJMP := $(C_SETJMP)  \
-        setjmp/sigsetjmp_spe.o
-else
-    $(info Using NON-SPE sigsetjmp)
-    C_SETJMP := $(C_SETJMP)  \
-        setjmp/sigsetjmp.o
-endif
+    setjmp/siglongjmp.o \
+    setjmp/sigsetjmp.o
 
 C_SOCKET := \
     resolv/dns_parse.o \
@@ -614,15 +607,6 @@ C_STRING := \
 	string/strverscmp.o \
 	string/strxfrm.o
 
-ifdef SPE
-    $(info Adding SPE objects)
-    C_STRING := $(C_STRING) \
-		cpu/spe/memcmpE500.o \
-		cpu/spe/strcmpE500.o \
-		cpu/spe/strcpyE500.o \
-		cpu/spe/strlenE500.o
-endif
-
 C_TERMCAP := \
     termcap/termcap.o \
     termcap/tparam.o
@@ -914,6 +898,22 @@ C_WCHAR := \
 	wchar/towupper.o \
 	wchar/wctrans.o \
 	wchar/wctype.o
+
+ifdef SPE
+    $(info Adding SPE objects)
+    C_STRING := $(C_STRING) \
+    	cpu/spe/memcmpE500.o \
+    	cpu/spe/strcmpE500.o \
+    	cpu/spe/strcpyE500.o \
+    	cpu/spe/strlenE500.o
+
+    C_SETJMP := $(C_SETJMP) \
+        cpu/spe/_longjmpE500.o \
+        cpu/spe/_setjmpE500.o \
+        cpu/spe/longjmpE500.o \
+        cpu/spe/setjmpE500.o \
+        cpu/spe/sigsetjmpE500.o
+endif
 
 C_LIBRARY := \
 	$(C_BASE) \

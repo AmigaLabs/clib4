@@ -6,6 +6,7 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
+#ifndef __SPE__
 long int
 lrintf(float x) {
     fenv_t env;
@@ -18,3 +19,4 @@ lrintf(float x) {
     feupdateenv(&env);
     return (d);
 }
+#endif

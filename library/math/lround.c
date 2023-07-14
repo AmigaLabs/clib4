@@ -1,30 +1,50 @@
 /*
- * $Id: math_lround.c,v 1.5 2022-03-13 12:04:23 clib2devs Exp $
+ * $Id: math_lround.c,v 1.6 2023-07-14 12:04:23 clib2devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-/*
- * If type has more precision than dtype, the endpoints dtype_(min|max) are
- * of the form xxx.5; they are "out of range" because lround() rounds away
- * from 0.  On the other hand, if type has less precision than dtype, then
- * all values that are out of range are integral, so we might as well assume
- * that everything is in range.  At compile time, INRANGE(x) should reduce to
- * two floating-point comparisons in the former case, or TRUE otherwise.
- */
-static const double dtype_min = LONG_MIN - 0.5;
-static const double dtype_max = LONG_MAX + 0.5;
-#define INRANGE(x) (dtype_max - LONG_MAX != 0.5 || ((x) > dtype_min && (x) < dtype_max))
-
 long
 lround(double x) {
-    if (INRANGE(x)) {
-        x = round(x);
-        return ((long) x);
+    int32_t j0;
+    uint32_t i1, i0;
+    long int result;
+    int sign;
+
+    EXTRACT_WORDS (i0, i1, x);
+    j0 = ((i0 >> 20) & 0x7ff) - 0x3ff;
+    sign = (i0 & 0x80000000) != 0 ? -1 : 1;
+    i0 &= 0xfffff;
+    i0 |= 0x100000;
+
+    if (j0 < 20) {
+        if (j0 < 0)
+            return j0 < -1 ? 0 : sign;
+        else {
+            i0 += 0x80000 >> j0;
+
+            result = i0 >> (20 - j0);
+        }
+    } else if (j0 < (int32_t)(8 * sizeof(long int)) - 1) {
+        if (j0 >= 52)
+            result = ((long int) i0 << (j0 - 20)) | ((long int) i1 << (j0 - 52));
+        else {
+            uint32_t j = i1 + (0x80000000 >> (j0 - 20));
+            if (j < i1)
+                ++i0;
+
+            if (j0 == 20)
+                result = (long int) i0;
+            else
+                result = ((long int) i0 << (j0 - 20)) | (j >> (52 - j0));
+        }
     } else {
+        /* The number is too large.  It is left implementation defined what happens.  */
         feraiseexcept(FE_INVALID);
-        return (LONG_MAX);
+        return (long int) x;
     }
+
+    return sign * result;
 }

@@ -14,14 +14,12 @@ __fabs(double x) {
     __asm volatile("fabs %0, %1"
             : "=f"(res)
             : "f"(x));
+
+    return res;
 }
 
 double
 fabs(double x) {
-    double result;
-
-    result = __fabs(x);
-
-    return (result);
+    return __fabs(x);
 }
 #endif

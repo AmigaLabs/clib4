@@ -6,7 +6,6 @@
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
 
-#ifndef __SPE__
 void siglongjmp(sigjmp_buf env, int val) {
     SHOWVALUE(val);
 
@@ -17,4 +16,3 @@ void siglongjmp(sigjmp_buf env, int val) {
     /* Call the machine-dependent function to restore machine state.  */
     _longjmp(env, val ?: 1);
 }
-#endif
