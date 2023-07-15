@@ -136,7 +136,6 @@ C_MATH := \
 	math/expm1.o \
 	math/expm1f.o \
 	math/expm1l.o \
-	math/fabsf.o \
 	math/fabsl.o \
 	math/fdim.o \
 	math/fdimf.o \

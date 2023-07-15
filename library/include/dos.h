@@ -14,8 +14,6 @@
 #include <wchar.h>
 #include <setjmp.h>
 
-#include <libraries/elf.h>
-
 /* Category name handling variables.  */
 #define NUM_LOCALES                (LC_MAX + 1)
 #define MAX_LOCALE_NAME_LEN        256
@@ -211,8 +209,8 @@ struct _clib2 {
     BOOL  unused3;
 
     /* This is used with the dlopen(), dlclose() and dlsym() functions. */
-    Elf32_Handle __dl_root_handle;
-    Elf32_Error __elf_error_code;
+    void  *__dl_root_handle; //Elf32_Handle
+    int __elf_error_code;    // Elf32_Error
 
     /* This is the pointer to itself */
     struct Process *self;

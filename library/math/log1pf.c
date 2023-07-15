@@ -1,17 +1,5 @@
 /*
- * $Id: math_log1pf.c,v 1.4 2022-03-13 12:04:23 clib2devs Exp $
- *
-
- *
- *
- * PowerPC math library based in part on work by Sun Microsystems
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- *
+ * $Id: math_log1pf.c,v 1.5 2023-07-15 12:04:23 clib2devs Exp $
  */
 
 #ifndef _MATH_HEADERS_H
@@ -19,9 +7,9 @@
 #endif /* _MATH_HEADERS_H */
 
 static const float
-        ln2_hi = 6.9313812256e-01, /* 0x3f317180 */
-        ln2_lo = 9.0580006145e-06, /* 0x3717f7d1 */
-        two25 = 3.355443200e+07,   /* 0x4c000000 */
+        ln2_hi = 6.9313812256e-01,    /* 0x3f317180 */
+        ln2_lo = 9.0580006145e-06,    /* 0x3717f7d1 */
+        two25 = 3.355443200e+07,      /* 0x4c000000 */
         Lp1 = 6.6666668653e-01,       /* 3F2AAAAB */
         Lp2 = 4.0000000596e-01,       /* 3ECCCCCD */
         Lp3 = 2.8571429849e-01,       /* 3E924925 */
@@ -34,35 +22,36 @@ static const float zero = 0.0;
 
 float
 log1pf(float x) {
-    float hfsq, f, c = 0, s, z, R, u;
+    float hfsq, f, c, s, z, R, u;
     int32_t k, hx, hu, ax;
 
     GET_FLOAT_WORD(hx, x);
     ax = hx & 0x7fffffff;
 
     k = 1;
-    if (hx < 0x3ed413d0) {            /* 1+x < sqrt(2)+  */
-        if (ax >= 0x3f800000) {        /* x <= -1.0 */
-            if (x == (float) -1.0) return -two25 / zero; /* log1p(-1)=+inf */
-            else return (x - x) / (x - x);    /* log1p(x<-1)=NaN */
+    if (hx < 0x3ed413d7) {                      /* x < 0.41422  */
+        if (ax >= 0x3f800000) {                 /* x <= -1.0 */
+            if (x == (float) -1.0)
+                return -two25 / (x - x);        /* log1p(-1)=+inf */
+            else return (x - x) / (x - x);      /* log1p(x<-1)=NaN */
         }
-        if (ax < 0x38000000) {            /* |x| < 2**-15 */
-            if (two25 + x > zero            /* raise inexact */
-                && ax < 0x33800000)        /* |x| < 2**-24 */
+        if (ax < 0x31000000) {                  /* |x| < 2**-29 */
+            math_force_eval(two25 + x);         /* raise inexact */
+            if (ax < 0x24800000)                /* |x| < 2**-54 */
                 return x;
             else
                 return x - x * x * (float) 0.5;
         }
-        if (hx > 0 || hx <= ((int32_t) 0xbe95f619)) {
+        if (hx > 0 || hx <= ((int32_t) 0xbe95f61f)) {
             k = 0;
             f = x;
             hu = 1;
-        }        /* sqrt(2)/2- <= 1+x < sqrt(2)+ */
+        }    /* -0.2929<x<0.41422 */
     }
     if (hx >= 0x7f800000) return x + x;
     if (k != 0) {
         if (hx < 0x5a000000) {
-            STRICT_ASSIGN(float, u, (float) 1.0 + x);
+            u = (float) 1.0 + x;
             GET_FLOAT_WORD(hu, u);
             k = (hu >> 23) - 127;
             /* correction term */
@@ -75,18 +64,11 @@ log1pf(float x) {
             c = 0;
         }
         hu &= 0x007fffff;
-        /*
-         * The approximation to sqrt(2) used in thresholds is not
-         * critical.  However, the ones used above must give less
-         * strict bounds than the one here so that the k==0 case is
-         * never reached from here, since here we have committed to
-         * using the correction term but don't use it if k==0.
-         */
-        if (hu < 0x3504f4) {            /* u < sqrt(2) */
-            SET_FLOAT_WORD(u, hu | 0x3f800000);/* normalize u */
+        if (hu < 0x3504f7) {
+            SET_FLOAT_WORD(u, hu | 0x3f800000);     /* normalize u */
         } else {
             k += 1;
-            SET_FLOAT_WORD(u, hu | 0x3f000000);    /* normalize u/2 */
+            SET_FLOAT_WORD(u, hu | 0x3f000000);     /* normalize u/2 */
             hu = (0x00800000 - hu) >> 2;
         }
         f = u - (float) 1.0;
@@ -94,9 +76,8 @@ log1pf(float x) {
     hfsq = (float) 0.5 * f * f;
     if (hu == 0) {    /* |f| < 2**-20 */
         if (f == zero) {
-            if (k == 0) {
-                return zero;
-            } else {
+            if (k == 0) return zero;
+            else {
                 c += k * ln2_lo;
                 return k * ln2_hi + c;
             }

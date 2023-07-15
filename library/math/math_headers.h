@@ -196,7 +196,7 @@ do {												\
 
 #define GET_LDOUBLE_WORDS(se,ix0,ix1,d)				\
 do {								\
-  ieee_extended_shape_type ew_u;				\
+  ieee_extended_shape_type ew_u = {0};				\
   ew_u.value = (d);						\
   (se) = ew_u.parts.exp;					\
   (ix0) = ew_u.parts.msw;					\
@@ -316,7 +316,6 @@ do {							\
   (d) = sf_u.value;				\
 } while (0)
 
-#define	STRICT_ASSIGN   (type, lval, rval)	((lval) = (rval))
 #define	TRUNC(d)	    (_b_trunc(&(d)))
 #define	nan_mix(x, y)	(((x) + 0.0L) + ((y) + 0))
 
@@ -325,8 +324,6 @@ do {							\
 
 static __inline void
 _b_trunc(volatile double *_dp) {
-    //VBS
-    //u_int32_t _lw;
     uint32_t _lw;
 
     GET_LOW_WORD(_lw, *_dp);
@@ -342,14 +339,13 @@ extern float __kernel_cosf(float x, float y);
 extern float __kernel_cosdf(double x);
 extern float __kernel_sinf(float x, float y, int iy);
 extern float __kernel_sindf(double x);
-extern int __rem_pio2f(float x, double *y);
+extern int __rem_pio2f(float x, float *y);
 extern float __kernel_tanf(float x, float y, int iy);
-extern float __kernel_tandf(double x, int iy);
 extern double __lgamma(double x,int * gamma_sign_ptr);
 extern float __lgammaf(float x,int * gamma_sign_ptr);
-extern int __kernel_rem_pio2(double *x, double *y, int e0, int nx, int prec);
 extern double __ldexp_exp(double x, int expt);
 extern float __ldexp_expf(float,int);
+extern int __kernel_rem_pio2f(float *x, float *y, int e0, int nx, int prec, const int32_t *ipio2);
 extern double complex __ldexp_cexp(double complex z, int expt);
 extern float complex __ldexp_cexpf(float complex,int);
 
