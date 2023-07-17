@@ -482,6 +482,8 @@ C_STDLIB := \
 	stdlib/fcvt.o \
 	stdlib/free.o \
 	stdlib/gcvt.o \
+	stdlib/gdtoa-gethex.o \
+	stdlib/gdtoa-hexnan.o \
 	stdlib/getexecname.o \
 	stdlib/getenv.o \
 	stdlib/getsp.o \
@@ -504,6 +506,7 @@ C_STDLIB := \
 	stdlib/mkstemp.o \
 	stdlib/mktemp.o \
 	stdlib/modsi3.o \
+	stdlib/mprec.o \
 	stdlib/mulsi3.o \
 	stdlib/posix_memalign.o \
 	stdlib/program_name.o \
@@ -521,7 +524,6 @@ C_STDLIB := \
 	stdlib/showerror.o \
 	stdlib/arg.o \
 	stdlib/strtod.o \
-	stdlib/strtof.o \
 	stdlib/strtol.o \
 	stdlib/strtold.o \
 	stdlib/strtoll.o \

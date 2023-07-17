@@ -1073,3 +1073,6 @@ Clib2Call(dbm_dirfno, 4264);
 Clib2Call(dbopen, 4268);
 Clib2Call(mkostemp, 4272);
 Clib2Call(mkostemps, 4276);
+
+Clib2Call(strtof_l, 4282);
+Clib2Call(strtod_l, 4286);

@@ -1303,6 +1303,8 @@ struct Clib2IFace {
     int   (* mkostemp) (char *name, int flags);                                                                                                      /* 4272 */
     int   (* mkostemps) (char *name, int len, int flags);                                                                                            /* 4276 */
 
+    float (* strtof_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                             /* 4282 */
+    double (* strtod_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                            /* 4286 */
 };
 
 #ifdef __PIC__

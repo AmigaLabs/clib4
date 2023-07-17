@@ -115,6 +115,14 @@ extern unsigned long strtoul(const char *str, char **ptr, int base);
 extern quad_t strtoq(const char *nptr, char **endptr, register int base);
 extern u_quad_t strtouq(const char *nptr, char **endptr, int base);
 
+extern double strtod_l (const char *__restrict, char **__restrict, locale_t);
+extern float strtof_l (const char *__restrict, char **__restrict, locale_t);
+extern long double strtold_l (const char *__restrict, char **__restrict, locale_t);
+extern long strtol_l (const char *__restrict, char **__restrict, int, locale_t);
+extern unsigned long strtoul_l (const char *__restrict, char **__restrict, int, locale_t __loc);
+extern long long strtoll_l (const char *__restrict, char **__restrict, int, locale_t);
+extern unsigned long long strtoull_l (const char *__restrict, char **__restrict, int, locale_t __loc);
+
 extern double atof(const char *str);
 extern int atoi(const char *str);
 extern long atol(const char *str);

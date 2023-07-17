@@ -29,16 +29,20 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
+typedef long double __float64;
+
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
 #include "dla.h"
+#include "gdtoa.h"
+#include "mprec.h"
 
 #define _FLOAT64_MIN  LDBL_MIN
 #define __F_64(x)     x ## L
 #define _F_64(x)      __F_64(x)
-typedef long double __float64;
+
 
 #define SAFE_LEFT_SHIFT(op,amt)					\
   (((amt) < 8 * sizeof(op)) ? ((op) << (amt)) : 0)
@@ -117,9 +121,7 @@ typedef union {
     } parts64;
 } ieee_quad_shape_type;
 
-/* A union which permits us to convert between a float and a 32 bit
-   int. */
-
+/* A union which permits us to convert between a float and a 32 bit int. */
 typedef union {
     float value;
     unsigned int word;
@@ -154,6 +156,7 @@ typedef struct {    /* This structure holds the details of a multi-precision    
 typedef int int4;
 typedef union {int4 i[2]; double x;} mynumber;
 typedef union { int i[2]; double d; } number;
+typedef union { double d; uint32_t i[2]; } U;
 
 #define ABS(x)   (((x)>0)?(x):-(x))
 #define max(x,y)  (((y)>(x))?(y):(x))
@@ -161,32 +164,31 @@ typedef union { int i[2]; double d; } number;
 
 #define EXTRACT_WORDS(ix0,ix1,d)					\
 do {												\
-ieee_double_shape_type ew_u;						\
-ew_u.value = (d);									\
-(ix0) = ew_u.parts.msw;							\
-(ix1) = ew_u.parts.lsw;							\
+    ieee_double_shape_type ew_u;					\
+    ew_u.value = (d);								\
+    (ix0) = ew_u.parts.msw;							\
+    (ix1) = ew_u.parts.lsw;							\
 } while (0)
 
 /* Get the more significant 32 bit int from a double.  */
 
 #define GET_HIGH_WORD(i,d)							\
 do {												\
-  ieee_double_shape_type gh_u;						\
-  gh_u.value = (d);									\
-  (i) = gh_u.parts.msw;								\
+    ieee_double_shape_type gh_u;					\
+    gh_u.value = (d);								\
+    (i) = gh_u.parts.msw;							\
 } while (0)
 
 /* Get the less significant 32 bit int from a double.  */
 
 #define GET_LOW_WORD(i,d)							\
 do {												\
-  ieee_double_shape_type gl_u;						\
-  gl_u.value = (d);									\
-  (i) = gl_u.parts.lsw;								\
+    ieee_double_shape_type gl_u;					\
+    gl_u.value = (d);								\
+    (i) = gl_u.parts.lsw;							\
 } while (0)
 
 /* Set a double from two 32 bit ints.  */
-
 #define INSERT_WORDS(d,ix0,ix1)						\
 do {												\
   ieee_double_shape_type iw_u;						\
@@ -382,6 +384,15 @@ _b_trunc(volatile double *_dp) {
 #define __is_towardzero(r)      0
 #endif
 
+#define FLT_UWORD_IS_FINITE(x) ((x)<0x7f800000L)
+#define FLT_UWORD_IS_NAN(x) ((x)>0x7f800000L)
+#define FLT_UWORD_IS_INFINITE(x) ((x)==0x7f800000L)
+#define FLT_UWORD_MAX 0x7f7fffffL
+#define FLT_UWORD_EXP_MAX 0x43000000
+#define FLT_UWORD_LOG_MAX 0x42b17217
+#define FLT_UWORD_LOG_2MAX 0x42b2d4fc
+#define HUGE ((float)3.40282346638528860e+38)
+
 extern double __kernel_cos(double x, double y);
 extern double __kernel_sin(double x, double y, int iy);
 extern int __rem_pio2(double x, double *y);
@@ -401,6 +412,7 @@ extern int __kernel_rem_pio2f(float *x, float *y, int e0, int nx, int prec, cons
 extern double complex __ldexp_cexp(double complex z, int expt);
 extern float complex __ldexp_cexpf(float complex,int);
 extern __float64 __math_invalid(__float64 x);
+extern float __math_invalidf (float x);
 
 extern void __doasin(double x, double dx, double w[]);
 extern void __dubsin(double x, double dx, double v[]);

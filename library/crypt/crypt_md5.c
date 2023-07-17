@@ -31,6 +31,7 @@ struct md5 {
 
 static uint32_t rol(uint32_t n, int k) { return (n << k) | (n >> (32 - k)); }
 
+#undef I
 #define F(x, y, z) (z ^ (x & (y ^ z)))
 #define G(x, y, z) (y ^ (z & (y ^ x)))
 #define H(x, y, z) (x ^ y ^ z)

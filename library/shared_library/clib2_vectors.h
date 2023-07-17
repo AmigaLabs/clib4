@@ -1137,4 +1137,7 @@ static void *clib2Vectors[] = {
 
         (void *) (mkostemp),                              /* 4272 */
         (void *) (mkostemps),                             /* 4276 */
+
+        (void *) (strtof_l),                              /* 4282 */
+        (void *) (strtod_l),                              /* 4286 */
 };

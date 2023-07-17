@@ -197,7 +197,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         a = r = z = big;
     else
         a = r = z = big + sizeof(big) / sizeof(*big) - LDBL_MANT_DIG - 1;
-    //Printf("Z=%ld\n", z);
+
     do {
         *z = y;
         y = 1000000000 * (y - *z++);
@@ -312,7 +312,6 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
             return -1;
         l += ebuf - estr;
     }
-    //Printf("**** w = %ld pl = %ld - l = %ld - fl = %ld\n", w, pl, fl);
 
     if (l > INT_MAX - pl)
         return -1;
@@ -342,7 +341,6 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         }
         pad(f, '0', p + 9, 9, 0);
     } else {
-        //Printf("qui2 z = %ld - a = %ld\n", z, a);
         if (z <= a)
             z = a + 1;
         for (d = a; d < z && p >= 0; d++) {
