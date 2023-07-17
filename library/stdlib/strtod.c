@@ -186,7 +186,7 @@ strtod(const char *str, char **ptr) {
 
                 str++;
 
-                if (error == 0 && divisor != 0.0) {
+                if (error == 0 && divisor != (double) 0.0) {
                     new_sum = sum + c * divisor;
                     if (new_sum < sum) /* overflow? */
                         error = ERANGE;
@@ -258,9 +258,9 @@ strtod(const char *str, char **ptr) {
 
                     /* A negative exponent means division. */
                     divisor = pow((double) radix, (double) exponent);
-                    if (divisor != 0.0) {
+                    if (divisor != (double) 0.0) {
                         new_sum = sum / divisor;
-                        if (new_sum == 0.0 && sum != 0.0)
+                        if (new_sum == (double) 0.0 && sum != (double) 0.0)
                             error = ERANGE;
                         else
                             sum = new_sum;

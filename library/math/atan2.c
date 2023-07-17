@@ -6,8 +6,8 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-static volatile double
-        tiny = 1.0e-300;
+static volatile __float64
+        tiny = _F_64(1.0e-300);
 
 static const double
         zero = 0.0,
@@ -58,9 +58,9 @@ atan2(double y, double x) {
                 case 1:
                     return -pi_o_4 - tiny;/* atan(-INF,+INF) */
                 case 2:
-                    return 3.0 * pi_o_4 + tiny;/*atan(+INF,-INF)*/
+                    return (double) 3.0 * pi_o_4 + tiny;/*atan(+INF,-INF)*/
                 case 3:
-                    return -3.0 * pi_o_4 - tiny;/*atan(-INF,-INF)*/
+                    return (double) -3.0 * pi_o_4 - tiny;/*atan(-INF,-INF)*/
             }
         } else {
             switch (m) {
@@ -81,7 +81,7 @@ atan2(double y, double x) {
     /* compute y/x */
     k = (iy - ix) >> 20;
     if (k > 60) {            /* |y/x| >  2**60 */
-        z = pi_o_2 + 0.5 * pi_lo;
+        z = pi_o_2 + (double) 0.5 * pi_lo;
         m &= 1;
     } else if (hx < 0 && k < -60) z = 0.0;    /* 0 > |y|/x > -2**-60 */
     else z = atan(fabs(y / x));        /* safe to do y/x */

@@ -7,6 +7,24 @@
 #endif /* _COMPLEX_HEADERS_H */
 
 double complex
-cpow(double complex z, double complex c) {
-    return cexp(c * clog(z));
+
+cpow(double complex a, double complex z) {
+    double complex w;
+    double x, y, r, theta, absa, arga;
+
+    x = creal(z);
+    y = cimag(z);
+    absa = cabs(a);
+    if (absa == (double) 0.0) {
+        return ((double) 0.0 + (double) 0.0 * (double complex) I);
+    }
+    arga = carg(a);
+    r = pow(absa, x);
+    theta = x * arga;
+    if (y != (double) 0.0) {
+        r = r * exp(-y * arga);
+        theta = theta + y * log(absa);
+    }
+    w = r * cos(theta) + (r * sin(theta)) * (double complex) I;
+    return w;
 }

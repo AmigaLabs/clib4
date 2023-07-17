@@ -13,5 +13,5 @@ erand48(unsigned short s[3]) {
         uint64_t u;
         double f;
     } x = {0x3ff0000000000000ULL | __rand48_step(s, __seed48 + 3) << 4};
-    return x.f - 1.0;
+    return x.f - (double) 1.0;
 }

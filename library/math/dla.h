@@ -36,7 +36,7 @@
 /***********************************************************************/
 
 /* CN = 1+2**27 = '41a0000002000000' IEEE double format */
-#define  CN   134217729.0
+#define  CN   (double) 134217729.0
 
 
 /* Exact addition of two single-length floating point numbers, Dekker. */

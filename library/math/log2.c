@@ -38,13 +38,13 @@ static inline double
 k_log1p(double f) {
     double hfsq, s, z, R, w, t1, t2;
 
-    s = f / (2.0 + f);
+    s = f / ((double) 2.0 + f);
     z = s * s;
     w = z * z;
     t1 = w * (Lg2 + w * (Lg4 + w * Lg6));
     t2 = z * (Lg1 + w * (Lg3 + w * (Lg5 + w * Lg7)));
     R = t2 + t1;
-    hfsq = 0.5 * f * f;
+    hfsq = (double) 0.5 * f * f;
     return s * (hfsq + R);
 }
 
@@ -75,8 +75,8 @@ log2(double x) {
     SET_HIGH_WORD(x, hx | (i ^ 0x3ff00000));    /* normalize x or x/2 */
     k += (i >> 20);
     y = (double) k;
-    f = x - 1.0;
-    hfsq = 0.5 * f * f;
+    f = x - (double) 1.0;
+    hfsq = (double) 0.5 * f * f;
     r = k_log1p(f);
 
     /*

@@ -12,41 +12,43 @@ static double smaller_gam(double);
 static struct Double large_gam(double);
 static struct Double ratfun_gam(double, double);
 
-#define LEFT -.3955078125    /* left boundary for rat. approx */
-#define x0 .461632144968362356785    /* xmin - 1 */
+#define LEFT   (double) -.3955078125    /* left boundary for rat. approx */
+#define x0     (double) .461632144968362356785    /* xmin - 1 */
 
-#define a0_hi 0.88560319441088874992
-#define a0_lo -.00000000000000004996427036469019695
-#define P0     6.21389571821820863029017800727e-01
-#define P1     2.65757198651533466104979197553e-01
-#define P2     5.53859446429917461063308081748e-03
-#define P3     1.38456698304096573887145282811e-03
-#define P4     2.40659950032711365819348969808e-03
-#define Q0     1.45019531250000000000000000000e+00
-#define Q1     1.06258521948016171343454061571e+00
-#define Q2    -2.07474561943859936441469926649e-01
-#define Q3    -1.46734131782005422506287573015e-01
-#define Q4     3.07878176156175520361557573779e-02
-#define Q5     5.12449347980666221336054633184e-03
-#define Q6    -1.76012741431666995019222898833e-03
-#define Q7     9.35021023573788935372153030556e-05
-#define Q8     6.13275507472443958924745652239e-06
+#define a0_hi  (double) 0.88560319441088874992
+#define a0_lo  (double) -.00000000000000004996427036469019695
+#define P0     (double) 6.21389571821820863029017800727e-01
+#define P1     (double) 2.65757198651533466104979197553e-01
+#define P2     (double) 5.53859446429917461063308081748e-03
+#define P3     (double) 1.38456698304096573887145282811e-03
+#define P4     (double) 2.40659950032711365819348969808e-03
+#define Q0     (double) 1.45019531250000000000000000000e+00
+#define Q1     (double) 1.06258521948016171343454061571e+00
+#define Q2     (double) -2.07474561943859936441469926649e-01
+#define Q3     (double) -1.46734131782005422506287573015e-01
+#define Q4     (double) 3.07878176156175520361557573779e-02
+#define Q5     (double) 5.12449347980666221336054633184e-03
+#define Q6     (double) -1.76012741431666995019222898833e-03
+#define Q7     (double) 9.35021023573788935372153030556e-05
+#define Q8     (double) 6.13275507472443958924745652239e-06
 /*
  * Constants for large x approximation (x in [6, Inf])
  * (Accurate to 2.8*10^-19 absolute)
  */
-#define lns2pi_hi 0.418945312500000
-#define lns2pi_lo -.000006779295327258219670263595
-#define Pa0     8.33333333333333148296162562474e-02
-#define Pa1    -2.77777777774548123579378966497e-03
-#define Pa2     7.93650778754435631476282786423e-04
-#define Pa3    -5.95235082566672847950717262222e-04
-#define Pa4     8.41428560346653702135821806252e-04
-#define Pa5    -1.89773526463879200348872089421e-03
-#define Pa6     5.69394463439411649408050664078e-03
-#define Pa7    -1.44705562421428915453880392761e-02
+#define lns2pi_hi   (double) 0.418945312500000
+#define lns2pi_lo   (double) -.000006779295327258219670263595
+#define Pa0         (double) 8.33333333333333148296162562474e-02
+#define Pa1         (double) -2.77777777774548123579378966497e-03
+#define Pa2         (double)  7.93650778754435631476282786423e-04
+#define Pa3         (double) -5.95235082566672847950717262222e-04
+#define Pa4         (double)  8.41428560346653702135821806252e-04
+#define Pa5         (double) -1.89773526463879200348872089421e-03
+#define Pa6         (double)  5.69394463439411649408050664078e-03
+#define Pa7         (double) -1.44705562421428915453880392761e-02
 
-static const double zero = 0., one = 1.0, tiny = 1e-300;
+static const __float64 zero = _F_64(0.),
+                        one = _F_64(1.0),
+                        tiny = _F_64(1e-300);
 
 static const double p1 = 0x1.555555555553ep-3;
 static const double p2 = -0x1.6c16c16bebd93p-9;
@@ -61,12 +63,12 @@ static const double invln2 = 0x1.71547652b82fep0;
 
 #define N 128
 
-static double	A1 = 	  .08333333333333178827;
-static double	A2 = 	  .01250000000377174923;
-static double	A3 =	 .002232139987919447809;
-static double	A4 =	.0004348877777076145742;
+static double A1 = .08333333333333178827;
+static double A2 = .01250000000377174923;
+static double A3 = .002232139987919447809;
+static double A4 = .0004348877777076145742;
 
-static double logF_head[N+1] = {
+static double logF_head[N + 1] = {
         0.,
         .007782140442060381246,
         .015504186535963526694,
@@ -198,7 +200,7 @@ static double logF_head[N+1] = {
         .693147180560117703862
 };
 
-static double logF_tail[N+1] = {
+static double logF_tail[N + 1] = {
         0.,
         -.00000000000000543229938420049,
         .00000000000000172745674997061,
@@ -342,7 +344,7 @@ __exp__D(double x, double c) {
 
             /* argument reduction : x --> x - k*ln2 */
             z = invln2 * x;
-            k = z + copysign(.5, x);
+            k = z + copysign((double) .5, x);
 
             /* express (x+c)-k*ln2 as hi-lo and let x=hi-lo rounded */
 
@@ -351,9 +353,9 @@ __exp__D(double x, double c) {
             /* return 2^k*[1+x+x*c/(2+c)]  */
             z = x * x;
             c = x - z * (p1 + z * (p2 + z * (p3 + z * (p4 + z * p5))));
-            c = (x * c) / (2.0 - c);
+            c = (x * c) / ((double) 2.0 - c);
 
-            return scalbn(1. + (hi - (lo - c)), k);
+            return scalbn((double) 1. + (hi - (lo - c)), k);
         }
             /* end of x > lntiny */
 
@@ -362,13 +364,13 @@ __exp__D(double x, double c) {
         if (isfinite(x)) return (scalbn(1.0, -5000));
 
             /* exp(-INF) is zero */
-        else return (0.0);
+        else return ((double) 0.0);
     }
         /* end of x < lnhuge */
 
     else
         /* exp(INF) is INF, exp(+big#) overflows to INF */
-        return (isfinite(x) ? scalbn(1.0, 5000) : x);
+        return (isfinite(x) ? scalbn((double) 1.0, 5000) : x);
 }
 
 static struct Double
@@ -387,8 +389,8 @@ __log__D(double x) {
         j = logb(g), m += j;
         g = ldexp(g, -j);
     }
-    j = N * (g - 1) + .5;
-    F = (1.0 / N) * j + 1;
+    j = N * (g - 1) + (double) .5;
+    F = ((double) 1.0 / N) * j + 1;
     f = g - F;
 
     g = 1 / (2 * F + f);
@@ -399,7 +401,7 @@ __log__D(double x) {
         u1 = u + 513, u1 -= 513;
     else
         u1 = u, TRUNC(u1);
-    u2 = (2.0 * (f - F * u1) - u1 * f) * g;
+    u2 = ((double) 2.0 * (f - F * u1) - u1 * f) * g;
 
     u1 += m * logF_head[N] + logF_head[j];
 
@@ -414,8 +416,7 @@ __log__D(double x) {
 
 
 static struct Double
-large_gam(double x)
-{
+large_gam(double x) {
     double z, p;
     struct Double t, u, v;
 
@@ -425,7 +426,7 @@ large_gam(double x)
 
     u = __log__D(x);
     u.a -= one;
-    v.a = (x -= .5);
+    v.a = (x -= (double) .5);
     TRUNC(v.a);
     v.b = x - v.a;
     t.a = v.a * u.a;            /* t = (x-.5)*(log(x)-1) */
@@ -440,18 +441,18 @@ large_gam(double x)
     u.b += t.b;
     return (u);
 }
+
 /*
  * Good to < 1 ulp.  (provably .90 ulp; .87 ulp on 1,000,000 runs.)
  * It also has correct monotonicity.
  */
 static double
-small_gam(double x)
-{
+small_gam(double x) {
     double y, ym1, t;
     struct Double yy, r;
     y = x - one;
     ym1 = y - one;
-    if (y <= 1.0 + (LEFT + x0)) {
+    if (y <= (double) 1.0 + (LEFT + x0)) {
         yy = ratfun_gam(y - x0, 0);
         return (yy.a + yy.b);
     }
@@ -474,12 +475,12 @@ small_gam(double x)
     y += yy.a * r.a;
     return (y);
 }
+
 /*
  * Good on (0, 1+x0+LEFT].  Accurate to 1ulp.
  */
 static double
-smaller_gam(double x)
-{
+smaller_gam(double x) {
     double t, d;
     struct Double r, xx;
     if (x < x0 + LEFT) {
@@ -510,12 +511,12 @@ smaller_gam(double x)
     r.a += r.b;
     return (d + r.a / x);
 }
+
 /*
  * returns (z+c)^2 * P(z)/Q(z) + a0
  */
 static struct Double
-ratfun_gam(double z, double c)
-{
+ratfun_gam(double z, double c) {
     double p, q;
     struct Double r, t;
 
@@ -540,8 +541,7 @@ ratfun_gam(double z, double c)
 }
 
 static double
-neg_gam(double x)
-{
+neg_gam(double x) {
     int sgn = 1;
     struct Double lg, lsine;
     double y, z;
@@ -550,15 +550,15 @@ neg_gam(double x)
     if (y == x)        /* Negative integer. */
         return ((x - x) / zero);
     z = y - x;
-    if (z > 0.5)
+    if (z > (double) 0.5)
         z = one - z;
-    y = 0.5 * y;
+    y = (double) 0.5 * y;
     if (y == ceil(y))
         sgn = -1;
-    if (z < .25)
+    if (z < (double) .25)
         z = sin(M_PI * z);
     else
-        z = cos(M_PI * (0.5 - z));
+        z = cos(M_PI * ((double) 0.5 - z));
     /* Special case: G(1-x) = Inf; G(x) may be nonzero. */
     if (x < -170) {
         if (x < -190)
@@ -588,16 +588,16 @@ tgamma(double x) {
     struct Double u;
 
     if (isgreaterequal(x, 6)) {
-        if (x > 171.63)
+        if (x > (double) 171.63)
             return (x / zero);
         u = large_gam(x);
         return (__exp__D(u.a, u.b));
-    } else if (isgreaterequal(x, 1.0 + LEFT + x0))
+    } else if (isgreaterequal(x, (double) 1.0 + LEFT + x0))
         return (small_gam(x));
-    else if (isgreater(x, 1.e-17))
+    else if (isgreater(x, (double) 1.e-17))
         return (smaller_gam(x));
-    else if (isgreater(x, -1.e-17)) {
-        if (x != 0.0)
+    else if (isgreater(x, (double) -1.e-17)) {
+        if (x != (double) 0.0)
             u.a = one - tiny;    /* raise inexact */
         return (one / x);
     } else if (!isfinite(x))

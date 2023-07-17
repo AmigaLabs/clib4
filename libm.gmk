@@ -223,6 +223,7 @@ C_MATH := \
 	math/lround.o \
 	math/lroundf.o \
 	math/lroundl.o \
+	math/math_invalid.o \
 	math/modf.o \
 	math/modff.o \
 	math/modfl.o \

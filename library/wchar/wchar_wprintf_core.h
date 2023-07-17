@@ -1,6 +1,10 @@
 #ifndef _WPRINTF_CORE_H
 #define _WPRINTF_CORE_H
 
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
+
 #include <stdio.h>
 
 enum {

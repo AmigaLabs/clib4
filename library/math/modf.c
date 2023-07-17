@@ -35,7 +35,7 @@ modf(double x, double *iptr) {
         uint32_t high;
         if (j0 == 0x400) {        /* inf/NaN */
             *iptr = x;
-            return 0.0 / x;
+            return (double) 0.0 / x;
         }
         *iptr = x * one;
         GET_HIGH_WORD(high, x);

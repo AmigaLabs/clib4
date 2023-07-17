@@ -1,84 +1,73 @@
 /*
- * $Id: complex_csqrt.c,v 1.0 2021-01-30 11:33:52 clib2devs Exp $
- *
-
- *
- *****************************************************************************
- *
- * Documentation and source code for this library, and the most recent library
- * build are available from <https://github.com/afxgroup/clib2>.
- *
- *****************************************************************************
- * Imported and modified for inclusion in clib2 2021/01/25
- * Ola Soder <rolfkopman@gmail.com>
+ * $Id: complex_csqrt.c,v 1.1 2023-07-18 11:33:52 clib2devs Exp $
  */
 
 #ifndef _COMPLEX_HEADERS_H
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-/* We risk spurious overflow for components >= DBL_MAX / (1 + sqrt(2)). */
-#define    THRESH    0x1.a827999fcef32p+1022
-
 double complex
-
 csqrt(double complex z) {
     double complex
-    result;
-    double a, b;
-    double t;
-    int scale;
+    w;
+    double x, y, r, t, scale;
 
-    a = creal(z);
-    b = cimag(z);
+    x = creal(z);
+    y = cimag(z);
 
-    /* Handle special cases. */
-    if (z == 0)
-        return (CMPLX(0, b));
-    if (isinf(b))
-        return (CMPLX(INFINITY, b));
-    if (isnan(a)) {
-        t = (b - b) / (b - b);    /* raise invalid if b is not a NaN */
-        return (CMPLX(a, t));    /* return NaN + NaN i */
+    if (y == (double) 0.0) {
+        if (x == (double) 0.0) {
+            w = (double) 0.0 + y * (double complex) I;
+        } else {
+            r = fabs(x);
+            r = sqrt(r);
+            if (x < (double) 0.0) {
+                w = (double) 0.0 + r * (double complex) I;
+            } else {
+                w = r + y * (double complex) I;
+            }
+        }
+        return w;
     }
-    if (isinf(a)) {
-        /*
-         * csqrt(inf + NaN i)  = inf +  NaN i
-         * csqrt(inf + y i)    = inf +  0 i
-         * csqrt(-inf + NaN i) = NaN +- inf i
-         * csqrt(-inf + y i)   = 0   +  inf i
-         */
-        if (signbit(a))
-            return (CMPLX(fabs(b - b), copysign(a, b)));
+    if (x == (double) 0.0) {
+        r = fabs(y);
+        r = sqrt((double) 0.5 * r);
+        if (y > 0)
+            w = r + r * (double complex) I;
         else
-            return (CMPLX(a, copysign(b - b, b)));
+        w = r - r * (double complex) I;
+        return w;
     }
-    /*
-     * The remaining special case (b is NaN) is handled just fine by
-     * the normal code path below.
-     */
-
-    /* Scale to avoid overflow. */
-    if (fabs(a) >= THRESH || fabs(b) >= THRESH) {
-        a *= 0.25;
-        b *= 0.25;
-        scale = 1;
+    /* Rescale to avoid internal overflow or underflow.  */
+    if ((fabs(x) > (double) 4.0) || (fabs(y) > (double) 4.0)) {
+        x *= (double) 0.25;
+        y *= (double) 0.25;
+        scale = (double) 2.0;
     } else {
-        scale = 0;
+#if 1
+        x *= (double) 1.8014398509481984e16;  /* 2^54 */
+        y *= (double) 1.8014398509481984e16;
+        scale = (double) 7.450580596923828125e-9; /* 2^-27 */
+#else
+        x *= (double) 4.0;
+        y *= (double) 4.0;
+        scale = (double) 0.5;
+#endif
     }
-
-    /* Algorithm 312, CACM vol 10, Oct 1967. */
-    if (a >= 0) {
-        t = sqrt((a + hypot(a, b)) * 0.5);
-        result = CMPLX(t, b / (2 * t));
+    w = x + y * (double complex) I;
+    r = cabs(w);
+    if (x > 0) {
+        t = sqrt((double) 0.5 * r + (double) 0.5 * x);
+        r = scale * fabs(((double) 0.5 * y) / t);
+        t *= scale;
     } else {
-        t = sqrt((-a + hypot(a, b)) * 0.5);
-        result = CMPLX(fabs(b) / (2 * t), copysign(t, b));
+        r = sqrt((double) 0.5 * r - (double) 0.5 * x);
+        t = scale * fabs(((double) 0.5 * y) / r);
+        r *= scale;
     }
-
-    /* Rescale. */
-    if (scale)
-        return (result * 2);
+    if (y < 0)
+        w = t - r * (double complex) I;
     else
-        return (result);
+    w = t + r * (double complex) I;
+    return w;
 }

@@ -35,6 +35,11 @@
 
 #include "dla.h"
 
+#define _FLOAT64_MIN  LDBL_MIN
+#define __F_64(x)     x ## L
+#define _F_64(x)      __F_64(x)
+typedef long double __float64;
+
 #define SAFE_LEFT_SHIFT(op,amt)					\
   (((amt) < 8 * sizeof(op)) ? ((op) << (amt)) : 0)
 
@@ -133,15 +138,33 @@ typedef union {
     } parts;
 } ieee_extended_shape_type;
 
+typedef struct {    /* This structure holds the details of a multi-precision     */
+    int e;          /* floating point number, x: d[0] holds its sign (-1,0 or 1) */
+    double d[40];   /* e holds its exponent (...,-2,-1,0,1,2,...) and            */
+} mp_no;            /* d[1]...d[p] hold its mantissa digits. The value of x is,  */
+/* x = d[1]*r**(e-1) + d[2]*r**(e-2) + ... + d[p]*r**(e-p).  */
+/* Here   r = 2**24,   0 <= d[i] < r  and  1 <= p <= 32.     */
+/* p is a global variable. A multi-precision number is       */
+/* always normalized. Namely, d[1] > 0. An exception is      */
+/* a zero which is characterized by d[0] = 0. The terms      */
+/* d[p+1], d[p+2], ... of a none zero number have no         */
+/* significance and so are the terms e, d[1],d[2],...        */
+/* of a zero.                                                */
+
 typedef int int4;
 typedef union {int4 i[2]; double x;} mynumber;
+typedef union { int i[2]; double d; } number;
+
+#define ABS(x)   (((x)>0)?(x):-(x))
+#define max(x,y)  (((y)>(x))?(y):(x))
+#define min(x,y)  (((y)<(x))?(y):(x))
 
 #define EXTRACT_WORDS(ix0,ix1,d)					\
 do {												\
-  ieee_double_shape_type ew_u;						\
-  ew_u.value = (d);									\
-  (ix0) = ew_u.parts.msw;							\
-  (ix1) = ew_u.parts.lsw;							\
+ieee_double_shape_type ew_u;						\
+ew_u.value = (d);									\
+(ix0) = ew_u.parts.msw;							\
+(ix1) = ew_u.parts.lsw;							\
 } while (0)
 
 /* Get the more significant 32 bit int from a double.  */
@@ -330,6 +353,35 @@ _b_trunc(volatile double *_dp) {
     SET_LOW_WORD(*_dp, _lw & 0xf8000000);
 }
 
+/* If there are rounding modes other than FE_TONEAREST defined, then
+ * add code to check which is active
+ */
+#if (defined(FE_UPWARD) + defined(FE_DOWNWARD) + defined(FE_TOWARDZERO)) >= 1
+#define FE_DECL_ROUND(v)        int v = fegetround()
+#define __is_nearest(r)         ((r) == FE_TONEAREST)
+#else
+#define FE_DECL_ROUND(v)
+#define __is_nearest(r)         1
+#endif
+
+#ifdef FE_UPWARD
+#define __is_upward(r)          ((r) == FE_UPWARD)
+#else
+#define __is_upward(r)          0
+#endif
+
+#ifdef FE_DOWNWARD
+#define __is_downward(r)        ((r) == FE_DOWNWARD)
+#else
+#define __is_downward(r)        0
+#endif
+
+#ifdef FE_TOWARDZERO
+#define __is_towardzero(r)      ((r) == FE_TOWARDZERO)
+#else
+#define __is_towardzero(r)      0
+#endif
+
 extern double __kernel_cos(double x, double y);
 extern double __kernel_sin(double x, double y, int iy);
 extern int __rem_pio2(double x, double *y);
@@ -348,5 +400,13 @@ extern float __ldexp_expf(float,int);
 extern int __kernel_rem_pio2f(float *x, float *y, int e0, int nx, int prec, const int32_t *ipio2);
 extern double complex __ldexp_cexp(double complex z, int expt);
 extern float complex __ldexp_cexpf(float complex,int);
+extern __float64 __math_invalid(__float64 x);
+
+extern void __doasin(double x, double dx, double w[]);
+extern void __dubsin(double x, double dx, double v[]);
+extern void __dubcos(double x, double dx, double v[]);
+extern void __docos(double x, double dx, double v[]);
+extern double __sin32(double x, double res, double res1);
+extern double __cos32(double x, double res, double res1);
 
 #endif /* _MATH_HEADERS_H */

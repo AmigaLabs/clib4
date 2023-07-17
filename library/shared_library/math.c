@@ -324,6 +324,7 @@ __mulsc3(float __a, float __b, float __c, float __d) {
     return z;
 }
 
+#ifndef __SPE__
 double _Complex
 __muldc3(double __a, double __b, double __c, double __d) {
     double __ac = __a * __c;
@@ -373,6 +374,7 @@ __muldc3(double __a, double __b, double __c, double __d) {
     }
     return z;
 }
+#endif
 
 du_int
 __udivdi3(du_int a, du_int b) {

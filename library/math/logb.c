@@ -14,7 +14,7 @@ logb(double x) {
     int32_t lx, ix;
     EXTRACT_WORDS(ix, lx, x);
     ix &= 0x7fffffff;            /* high |x| */
-    if ((ix | lx) == 0) return -1.0 / fabs(x);
+    if ((ix | lx) == 0) return (double) -1.0 / fabs(x);
     if (ix >= 0x7ff00000) return x * x;
     if (ix < 0x00100000) {
         x *= two54;         /* convert subnormal x to normal */

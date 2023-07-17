@@ -1,13 +1,5 @@
 /*
  * $Id: math_remquo.c,v 1.4 2022-03-12 12:04:24 clib2devs Exp $
- *
-
- *
- *
- * Copyright (C) 2002 by  Red Hat, Incorporated. All rights reserved.
- *
- * Permission to use, copy, modify, and distribute this software
- * is freely granted, provided that this notice is preserved.
  */
 
 #ifndef _MATH_HEADERS_H
@@ -97,8 +89,7 @@ remquo(double x, double y, int *quo) {
         if (hz < 0) {
             hx = hx + hx + (lx >> 31);
             lx = lx + lx;
-        }
-        else {
+        } else {
             hx = hz + hz + (lz >> 31);
             lx = lz + lz;
             q++;
@@ -142,12 +133,12 @@ remquo(double x, double y, int *quo) {
     fixup:
     INSERT_WORDS(x, hx, lx);
     y = fabs(y);
-    if (y < 0x1p-1021) {
+    if (y < _F_64(0x1p-1021)) {
         if (x + x > y || (x + x == y && (q & 1))) {
             q++;
             x -= y;
         }
-    } else if (x > 0.5 * y || (x == 0.5 * y && (q & 1))) {
+    } else if (x > (double) 0.5 * y || (x == (double) 0.5 * y && (q & 1))) {
         q++;
         x -= y;
     }

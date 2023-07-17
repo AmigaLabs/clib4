@@ -8,23 +8,22 @@
 
 static double pone(double), qone(double);
 
-static const double
-        huge = 1e300,
-        one = 1.0,
-        invsqrtpi = 5.64189583547756279280e-01, /* 0x3FE20DD7, 0x50429B6D */
-        tpi = 6.36619772367581382433e-01, /* 0x3FE45F30, 0x6DC9C883 */
+static const __float64
+        huge = _F_64(1e300),
+        one = _F_64(1.0),
+        invsqrtpi = _F_64(5.64189583547756279280e-01), /* 0x3FE20DD7, 0x50429B6D */
+        tpi = _F_64(6.36619772367581382433e-01), /* 0x3FE45F30, 0x6DC9C883 */
         /* R0/S0 on [0,2] */
-        r00 = -6.25000000000000000000e-02, /* 0xBFB00000, 0x00000000 */
-        r01 = 1.40705666955189706048e-03, /* 0x3F570D9F, 0x98472C61 */
-        r02 = -1.59955631084035597520e-05, /* 0xBEF0C5C6, 0xBA169668 */
-        r03 = 4.96727999609584448412e-08, /* 0x3E6AAAFA, 0x46CA0BD9 */
-        s01 = 1.91537599538363460805e-02, /* 0x3F939D0B, 0x12637E53 */
-        s02 = 1.85946785588630915560e-04, /* 0x3F285F56, 0xB9CDF664 */
-        s03 = 1.17718464042623683263e-06, /* 0x3EB3BFF8, 0x333F8498 */
-        s04 = 5.04636257076217042715e-09, /* 0x3E35AC88, 0xC97DFF2C */
-        s05 = 1.23542274426137913908e-11; /* 0x3DAB2ACF, 0xCFB97ED8 */
-
-static const double zero = 0.0;
+        r00 = _F_64(-6.25000000000000000000e-02), /* 0xBFB00000, 0x00000000 */
+        r01 = _F_64(1.40705666955189706048e-03), /* 0x3F570D9F, 0x98472C61 */
+        r02 = _F_64(-1.59955631084035597520e-05), /* 0xBEF0C5C6, 0xBA169668 */
+        r03 = _F_64(4.96727999609584448412e-08), /* 0x3E6AAAFA, 0x46CA0BD9 */
+        s01 = _F_64(1.91537599538363460805e-02), /* 0x3F939D0B, 0x12637E53 */
+        s02 = _F_64(1.85946785588630915560e-04), /* 0x3F285F56, 0xB9CDF664 */
+        s03 = _F_64(1.17718464042623683263e-06), /* 0x3EB3BFF8, 0x333F8498 */
+        s04 = _F_64(5.04636257076217042715e-09), /* 0x3E35AC88, 0xC97DFF2C */
+        s05 = _F_64(1.23542274426137913908e-11), /* 0x3DAB2ACF, 0xCFB97ED8 */
+        zero = _F_64(0.0);
 
 double
 j1(double x) {
@@ -59,13 +58,13 @@ j1(double x) {
         else return z;
     }
     if (ix < 0x3e400000) {    /* |x|<2**-27 */
-        if (huge + x > one) return 0.5 * x;/* inexact if x!=0 necessary */
+        if (huge + x > one) return (double) 0.5 * x;/* inexact if x!=0 necessary */
     }
     z = x * x;
     r = z * (r00 + z * (r01 + z * (r02 + z * r03)));
     s = one + z * (s01 + z * (s02 + z * (s03 + z * (s04 + z * s05))));
     r *= x;
-    return (x * 0.5 + r / s);
+    return (x * (double) 0.5 + r / s);
 }
 
 static const double U0[5] = {
@@ -342,5 +341,5 @@ static double qone(double x) {
     z = one / (x * x);
     r = p[0] + z * (p[1] + z * (p[2] + z * (p[3] + z * (p[4] + z * p[5]))));
     s = one + z * (q[0] + z * (q[1] + z * (q[2] + z * (q[3] + z * (q[4] + z * q[5])))));
-    return (.375 + r / s) / x;
+    return ((double) .375 + r / s) / x;
 }

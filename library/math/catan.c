@@ -18,9 +18,9 @@
 
 static double
 _redupi(double x) {
-    double t = x / M_PI, dp1 = 3.14159265160560607910E0,
+    double t = x / (double) M_PI, dp1 = 3.14159265160560607910E0,
             dp2 = 1.98418714791870343106E-9, dp3 = 1.14423774522196636802E-17;
-    long int i = t >= 0.0f ? t + 0.5f : t - 0.5f;
+    long int i = t >= (double) 0.0 ? t + (double) 0.5 : t - (double) 0.5;
 
     t = i;
     return ((x - t * dp1) - t * dp2) - t * dp3;
@@ -28,12 +28,12 @@ _redupi(double x) {
 
 double complex
 catan(double complex z) {
-    double x = creal(z), y = cimag(z), x2 = x * x, a = 1.0 - x2 - (y * y),
-            t = 0.5 * atan2(2.0 * x, a), w = _redupi(t);
+    double x = creal(z), y = cimag(z), x2 = x * x, a = (double) 1.0 - x2 - (y * y),
+            t = (double) 0.5 * atan2((double) 2.0 * x, a), w = _redupi(t);
 
-    t = y - 1.0;
+    t = y - (double) 1.0;
     a = x2 + (t * t);
-    t = y + 1.0;
+    t = y + (double) 1.0;
     a = (x2 + t * t) / a;
-    return CMPLX(w, 0.25 * log(a));
+    return CMPLX(w, (double) 0.25 * log(a));
 }

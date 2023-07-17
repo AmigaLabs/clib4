@@ -20,8 +20,8 @@ double exp10(double x) {
     /* fabs(n) < 16 without raising invalid on nan */
     if ((u.i >> 52 & 0x7ff) < 0x3ff + 4) {
         if (!y) return p10[(int) n + 15];
-        y = exp2(3.32192809488736234787031942948939 * y);
+        y = exp2((double) 3.32192809488736234787031942948939 * y);
         return y * p10[(int) n + 15];
     }
-    return pow(10.0, x);
+    return pow((double) 10.0, x);
 }

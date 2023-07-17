@@ -6,12 +6,11 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-static const double
-        invsqrtpi = 5.64189583547756279280e-01, /* 0x3FE20DD7, 0x50429B6D */
-        two = 2.00000000000000000000e+00, /* 0x40000000, 0x00000000 */
-        one = 1.00000000000000000000e+00; /* 0x3FF00000, 0x00000000 */
-
-static const double zero = 0.00000000000000000000e+00;
+static const __float64
+        invsqrtpi = _F_64(5.64189583547756279280e-01), /* 0x3FE20DD7, 0x50429B6D */
+        two = _F_64(2.00000000000000000000e+00), /* 0x40000000, 0x00000000 */
+        one = _F_64(1.00000000000000000000e+00), /* 0x3FF00000, 0x00000000 */
+        zero = _F_64(0.00000000000000000000e+00);
 
 double
 jn(int n, double x) {
@@ -85,7 +84,7 @@ jn(int n, double x) {
             if (n > 33)    /* underflow */
                 b = zero;
             else {
-                temp = x * 0.5;
+                temp = x * (double) 0.5;
                 b = temp;
                 for (a = one, i = 2; i <= n; i++) {
                     a *= (double) i;        /* a = n! */
@@ -127,12 +126,12 @@ jn(int n, double x) {
             double q0, q1, h, tmp;
             int32_t k, m;
             w = (n + n) / (double) x;
-            h = 2.0 / (double) x;
+            h = (double) 2.0 / (double) x;
             q0 = w;
             z = w + h;
-            q1 = w * z - 1.0;
+            q1 = w * z - (double) 1.0;
             k = 1;
-            while (q1 < 1.0e9) {
+            while (q1 < (double) 1.0e9) {
                 k += 1;
                 z += h;
                 tmp = z * q1 - q0;
@@ -154,7 +153,7 @@ jn(int n, double x) {
             tmp = n;
             v = two / x;
             tmp = tmp * log(fabs(v * tmp));
-            if (tmp < 7.09782712893383973096e+02) {
+            if (tmp < (double) 7.09782712893383973096e+02) {
                 for (i = n - 1, di = (double) (i + i); i > 0; i--) {
                     temp = b;
                     b *= di;
@@ -170,7 +169,7 @@ jn(int n, double x) {
                     a = temp;
                     di -= two;
                     /* scale b to avoid spurious overflow */
-                    if (b > 1e100) {
+                    if (b > _F_64(1e100)) {
                         a /= b;
                         t /= b;
                         b = one;

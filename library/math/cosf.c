@@ -34,7 +34,7 @@ cosf(float x) {
     ix = fabsf(x);
 
     /* |x| ~< pi/4 */
-    if (ix <= pio4) {
+    if ((double) ix <= pio4) {
         return __kernel_cosf(x, z);
         /* cos(Inf or NaN) is NaN */
     } else if (__isnanf(ix)) {

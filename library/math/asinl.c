@@ -1,19 +1,5 @@
 /*
  * $Id: math_asinl.c,v 1.0 2022-03-10 12:04:23 clib2devs Exp $
- *
-
- *
- *
- * PowerPC math library based in part on work by Sun Microsystems
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- *
- *
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
  */
 
 #ifndef _MATH_HEADERS_H
@@ -26,14 +12,13 @@
 
 #include "invtrig.h"
 
-static const long double
-        one =  1.00000000000000000000e+00,
-        huge = 1.000e+300;
+static const __float64
+        one =  _F_64(1.00000000000000000000e+00),
+        huge = _F_64(1.000e+300);
 
 inline static long double
 __asinl(long double x) {
-    union IEEEl2bits u;
-    memset(&u, 0, sizeof(u));
+    union IEEEl2bits u = {0};
     long double t = 0.0, w, p, q, c, r, s;
     int16_t expsign, expt;
     u.e = x;

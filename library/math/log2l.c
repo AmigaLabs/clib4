@@ -7,7 +7,6 @@
 #endif /* _MATH_HEADERS_H */
 
 long double
-log2l(long double x)
-{
+log2l(long double x) {
     return log2(x);
 }

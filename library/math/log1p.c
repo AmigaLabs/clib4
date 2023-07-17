@@ -35,7 +35,7 @@ log1p(double x) {
     k = 1;
     if (hx < 0x3FDA827A) {                          /* x < 0.41422  */
     if (ax >= 0x3ff00000) {                         /* x <= -1.0 */
-            if (x == -1.0) return -two54 / (x - x); /* log1p(-1)=+inf */
+            if (x == (double) -1.0) return -two54 / (x - x); /* log1p(-1)=+inf */
             else return (x - x) / (x - x);          /* log1p(x<-1)=NaN */
         }
         if (ax < 0x3e200000) {                      /* |x| < 2**-29 */
@@ -43,7 +43,7 @@ log1p(double x) {
             if (ax < 0x3c900000)                    /* |x| < 2**-54 */
                 return x;
             else
-                return x - x * x * 0.5;
+                return x - x * x * (double) 0.5;
         }
         if (hx > 0 || hx <= ((int32_t) 0xbfd2bec3)) {
             k = 0;
@@ -54,10 +54,10 @@ log1p(double x) {
     if (hx >= 0x7ff00000) return x + x;
     if (k != 0) {
         if (hx < 0x43400000) {
-            u = 1.0 + x;
+            u = (double) 1.0 + x;
             GET_HIGH_WORD(hu, u);
             k = (hu >> 20) - 1023;
-            c = (k > 0) ? 1.0 - (u - x) : x - (u - 1.0);    /* correction term */
+            c = (k > 0) ? (double) 1.0 - (u - x) : x - (u - (double) 1.0);    /* correction term */
             c /= u;
         } else {
             u = x;
@@ -73,9 +73,9 @@ log1p(double x) {
             SET_HIGH_WORD(u, hu | 0x3fe00000);              /* normalize u/2 */
             hu = (0x00100000 - hu) >> 2;
         }
-        f = u - 1.0;
+        f = u - (double) 1.0;
     }
-    hfsq = 0.5 * f * f;
+    hfsq = (double) 0.5 * f * f;
     if (hu == 0) {                                          /* |f| < 2**-20 */
         if (f == zero) {
             if (k == 0) return zero;
@@ -84,12 +84,12 @@ log1p(double x) {
                 return k * ln2_hi + c;
             }
         }
-        R = hfsq * (1.0 - 0.66666666666666666 * f);
+        R = hfsq * ((double) 1.0 - (double) 0.66666666666666666 * f);
         if (k == 0) return f - R;
         else
             return k * ln2_hi - ((R - (k * ln2_lo + c)) - f);
     }
-    s = f / (2.0 + f);
+    s = f / ((double) 2.0 + f);
     z = s * s;
     R1 = z * Lp[1];
     z2 = z * z;

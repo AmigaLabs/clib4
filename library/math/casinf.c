@@ -12,6 +12,6 @@ casinf(float complex z) {
     float x = crealf(z), y = cimagf(z);
     float complex
             w = CMPLXF(1.0f - (x - y) * (x + y), -2.0f * x * y),
-            r = clogf(CMPLX(-y, x) + csqrtf(w));
+            r = clogf(CMPLXF(-y, x) + csqrtf(w));
     return CMPLXF(cimagf(r), -crealf(r));
 }

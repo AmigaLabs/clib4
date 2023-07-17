@@ -1,17 +1,5 @@
 /*
  * $Id: math_cbrtf.c,v 1.4 2022-03-13 12:04:23 clib2devs Exp $
- *
-
- *
- *
- * PowerPC math library based in part on work by Sun Microsystems
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
- *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- *
  */
 
 #ifndef _MATH_HEADERS_H
@@ -22,7 +10,8 @@ static const unsigned
         B1 = 709958130, /* B1 = (127-127.0/3-0.03306235651)*2**23 */
         B2 = 642849266; /* B2 = (127-127.0/3-24/3-0.03306235651)*2**23 */
 
-float cbrtf(float x) {
+float
+cbrtf(float x) {
     double r, T;
     float t;
     int32_t hx;
@@ -52,14 +41,14 @@ float cbrtf(float x) {
      */
     T = t;
     r = T * T * T;
-    T = T * ((double) x + x + r) / (x + r + r);
+    T = T * ((double) x + (double) x + r) / ((double) x + r + r);
 
     /*
      * Second step Newton iteration to 47 bits.  In double precision for
      * efficiency and accuracy.
      */
     r = T * T * T;
-    T = T * ((double) x + x + r) / (x + r + r);
+    T = T * ((double) x + (double) x + r) / ((double) x + r + r);
 
     /* rounding to 24 bits is perfect in round-to-nearest mode */
     return (T);

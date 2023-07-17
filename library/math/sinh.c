@@ -10,7 +10,7 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-static const double one = 1.0, shuge = 1.0e307;
+static const __float64 one = _F_64(1.0), shuge = _F_64(1.0e307);
 
 double
 sinh(double x) {
@@ -24,14 +24,14 @@ sinh(double x) {
     /* x is INF or NaN */
     if (ix >= 0x7ff00000) return x + x;
 
-    h = 0.5;
+    h = (double) 0.5;
     if (jx < 0) h = -h;
     /* |x| in [0,22], return sign(x)*0.5*(E+E/(E+1))) */
-    if (ix < 0x40360000) {        /* |x|<22 */
-        if (ix < 0x3e300000)        /* |x|<2**-28 */
-            if (shuge + x > one) return x;/* sinh(tiny) = tiny with inexact */
+    if (ix < 0x40360000) {                  /* |x|<22 */
+        if (ix < 0x3e300000)                /* |x|<2**-28 */
+            if (shuge + x > one) return x;  /* sinh(tiny) = tiny with inexact */
         t = expm1(fabs(x));
-        if (ix < 0x3ff00000) return h * (2.0 * t - t * t / (t + one));
+        if (ix < 0x3ff00000) return h * ((double) 2.0 * t - t * t / (t + one));
         return h * (t + t / (t + one));
     }
 
@@ -40,7 +40,7 @@ sinh(double x) {
 
     /* |x| in [log(maxdouble), overflowthresold] */
     if (ix <= 0x408633CE)
-        return h * 2.0 * __ldexp_exp(fabs(x), -1);
+        return h * (double) 2.0 * __ldexp_exp(fabs(x), -1);
 
     /* |x| > overflowthresold, sinh(x) overflow */
     return x * shuge;

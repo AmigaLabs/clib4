@@ -23,7 +23,7 @@ nextafter(double x, double y) {
     if (ix == 0) {                /* x == 0 */
         SET_FLOAT_WORD(x, (hy & 0x80000000) | 1);/* return +-minsubnormal */
         t = x * x;
-        if (t == x) return t; else return x;    /* raise underflow flag */
+        if (t == (float) x) return t; else return x;    /* raise underflow flag */
     }
     if (hx >= 0) {                /* x > 0 */
         if (hx > hy) {                /* x > y, x -= ulp */
@@ -42,7 +42,7 @@ nextafter(double x, double y) {
     if (hy >= 0x7f800000) return x + x;    /* overflow  */
     if (hy < 0x00800000) {        /* underflow */
         t = x * x;
-        if (t != x) {        /* raise underflow flag */
+        if (t != (float) x) {        /* raise underflow flag */
             SET_FLOAT_WORD(y, hx);
             return y;
         }

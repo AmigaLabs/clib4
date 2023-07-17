@@ -38,7 +38,7 @@ sinf(float x) {
     ix = fabsf(x);
 
     /* |x| ~< pi/4 */
-    if (ix <= pio4) {
+    if ((double) ix <= pio4) {
         return __kernel_sinf(x, z, 0);
         /* sin(Inf or NaN) is NaN */
     } else if (__isnanf(ix)) {

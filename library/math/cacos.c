@@ -10,5 +10,5 @@ double complex
 cacos(double complex z) {
     double complex
     zp = casin(z);
-    return CMPLX(M_PI_2 - creal(zp), -cimag(zp));
+    return CMPLX((double) M_PI_2 - creal(zp), -cimag(zp));
 }

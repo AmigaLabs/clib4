@@ -1,12 +1,12 @@
 /*
- * $Id: math_cosh.c,v 1.8 2022-03-13 12:04:23 clib2devs Exp $
+ * $Id: math_cosh.c,v 1.8 2023-07-16 12:04:23 clib2devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-static const double one = 1.0, half = 0.5, huge = 1.0e300;
+static const __float64 one = _F_64(1.0), half = _F_64(0.5), huge = _F_64(1.0e300);
 
 double
 cosh(double x) {

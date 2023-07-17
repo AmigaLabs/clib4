@@ -35,7 +35,7 @@ __kernel_sincos(double x, double y, int iy, double *k_s, double *k_c) {
     /* cos-specific computation; equivalent to calling
      __kernel_cos(x,y) and storing in k_c*/
     r = z * (C1 + z * (C2 + z * C3)) + w * w * (C4 + z * (C5 + z * C6));
-    hz = 0.5 * z;
+    hz = (double) 0.5 * z;
     v = one - hz;
 
     *k_c = v + (((one - v) - hz) + (z * r - x * y));

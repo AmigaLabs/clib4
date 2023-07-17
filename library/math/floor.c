@@ -6,7 +6,7 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-static const double huge = 1.0e300;
+static const __float64 huge = _F_64(1.0e300);
 
 double
 floor(double x) {
