@@ -148,7 +148,7 @@ gethex(const char **sp, const FPI *fpi, int32_t *exp, _Bigint **bp, int sign, lo
             switch (*++s) {
                 case '-':
                     esign = 1;
-                    /* Fallthrough */;
+                    /* fallthrough */
                 case '+':
                     s++;
             }
