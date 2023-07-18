@@ -128,13 +128,15 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
 
     y = frexpl(y, &e2) * 2;
 
-    if (y) e2--;
+    if (y)
+        e2--;
 
     if ((t | 32) == 'a') {
         long double round = 8.0;
         int re;
 
-        if (t & 32) prefix += 9;
+        if (t & 32)
+            prefix += 9;
         pl += 2;
 
         if (p < 0 || p >= LDBL_MANT_DIG / 4 - 1)
@@ -231,8 +233,10 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         e2 += sh;
     }
 
-    if (a < z) for (i = 10, e = 9 * (r - a); *a >= i; i *= 10, e++);
-    else e = 0;
+    if (a < z)
+        for (i = 10, e = 9 * (r - a); *a >= i; i *= 10, e++);
+    else
+        e = 0;
 
     /* Perform rounding: j is precision after the radix (possibly neg) */
     j = p - ((t | 32) != 'f') * e - ((t | 32) == 'g' && p);
@@ -250,9 +254,12 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
             long double small;
             if ((*d / i & 1) || (i == 1000000000 && d > a && (d[-1] & 1)))
                 round += 2;
-            if (x < i / 2) small = 0x0.8p0;
-            else if (x == i / 2 && d + 1 == z) small = 0x1.0p0;
-            else small = 0x1.8p0;
+            if (x < i / 2)
+                small = 0x0.8p0;
+            else if (x == i / 2 && d + 1 == z)
+                small = 0x1.0p0;
+            else
+                small = 0x1.8p0;
             if (pl && *prefix == '-')
                 round *= -1, small *= -1;
             *d -= x;

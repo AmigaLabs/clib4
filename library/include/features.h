@@ -117,6 +117,7 @@
 /* define CLIB2_SHAREDLIB symbol so we can use it in our native code */
 #define CLIB2_SHAREDLIB
 #define __THREAD_SAFE
+#undef __BSD_VISIBLE
 #define __BSD_VISIBLE 0
 
 /* Undefine everything, so we get a clean slate.  */

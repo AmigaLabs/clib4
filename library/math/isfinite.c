@@ -7,11 +7,11 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-__isfinite_float(float f) {
-    union IEEEf2bits u;
-
-    u.f = f;
-    return (u.bits.exp != 255);
+__isfinite_float(float x) {
+    int32_t ix;
+    GET_FLOAT_WORD(ix, x);
+    ix &= 0x7fffffff;
+    return (FLT_UWORD_IS_FINITE(ix));
 }
 
 int
@@ -19,7 +19,7 @@ __isfinite_double(double d) {
     union IEEEd2bits u;
 
     u.d = d;
-    return (u.bits.exp != 2047);
+    return (u.bits.exp != LDBL_INF_NAN_EXP);
 }
 
 int
@@ -27,5 +27,5 @@ __isfinite_long_double(long double d) {
     union IEEEd2bits u;
 
     u.d = d;
-    return (u.bits.exp != 2047);
+    return (u.bits.exp != LDBL_INF_NAN_EXP);
 }

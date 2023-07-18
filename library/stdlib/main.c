@@ -298,19 +298,6 @@ _main(
     _start_ctors(__CTOR_LIST__);
     SHOWMSG("Done. All constructors called");
 
-    /* Set system time for rusage.
-     * This can be executed only here.
-     * Not in reent_init not in TIMER constructor because
-     * __ITimer or __clib2 cannot be yet available
-     */
-    struct TimerIFace *ITimer = __clib2->__ITimer;
-    if (__clib2->__ITimer != NULL) {
-        SHOWMSG("Calling GetSysTime");
-        GetSysTime((struct TimeVal *) &__clib2->clock);
-        /* Generate random seed */
-        __clib2->__random_seed = time(NULL);
-    }
-
     /* Copy environment variables into clib2 reent structure */
     makeEnvironment(__clib2);
     if (!__clib2->__environment) {

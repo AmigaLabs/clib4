@@ -7,7 +7,6 @@
 #endif /* _MATH_HEADERS_H */
 
 long double
-frexpl(long double x, int *nptr)
-{
+frexpl(long double x, int *nptr) {
     return frexp(x, nptr);
 }
