@@ -16,165 +16,165 @@ ifeq ($(STATIC),yes)
 endif
 
 C_MATH := \
-	math/acos.o \
-	math/acosf.o \
-	math/acosh.o \
-	math/acoshf.o \
-	math/acoshl.o \
-	math/acosl.o \
-	math/asin.o \
-	math/asinf.o \
-	math/asinh.o \
-	math/asinhf.o \
-	math/asinhl.o \
-	math/asinl.o \
-	math/atan.o \
-	math/atan2.o \
-	math/atan2f.o \
-	math/atan2l.o \
-	math/atanf.o \
-	math/atanh.o \
-	math/atanhf.o \
-	math/atanhl.o \
-	math/atanl.o \
-	math/cabs.o \
-	math/cabsf.o \
-	math/cabsl.o \
-	math/cacos.o \
-	math/cacosf.o \
-	math/cacosl.o \
-	math/cacosh.o \
-	math/cacoshf.o \
-	math/cacoshl.o \
-	math/carg.o \
-	math/cargf.o \
-	math/cargl.o \
-	math/casin.o \
-	math/casinf.o \
-	math/casinh.o \
-	math/casinhf.o \
-	math/casinhl.o \
-	math/casinl.o \
-	math/catan.o \
-	math/catanf.o \
-	math/catanhf.o \
-	math/catanl.o \
-	math/catanh.o \
-	math/catanhl.o \
-	math/cbrt.o \
-	math/cbrtf.o \
-	math/cbrtl.o \
-	math/ccos.o \
-	math/ccosf.o \
-	math/ccosl.o \
-	math/ccosh.o \
-	math/ccoshf.o \
-	math/ccoshl.o \
-	math/ceil.o \
-	math/ceilf.o \
-	math/ceill.o \
-	math/cexp.o \
-	math/cexpf.o \
-	math/cexpl.o \
-	math/cimag.o \
-	math/cimagf.o \
-	math/cimagl.o \
-	math/clog.o \
-	math/clogf.o \
-	math/clogl.o \
-	math/conj.o \
-	math/conjf.o \
-	math/conjl.o \
-	math/copysign.o \
-	math/copysignf.o \
-	math/copysignl.o \
-	math/cos.o \
-	math/cosf.o \
-	math/cosh.o \
-	math/coshf.o \
-	math/coshl.o \
-	math/cosl.o \
-	math/cpow.o \
-	math/cpowf.o \
-	math/cpowl.o \
-	math/cproj.o \
-	math/cprojf.o \
-	math/cprojl.o \
-	math/creal.o \
-	math/crealf.o \
-	math/creall.o \
-	math/csin.o \
-	math/csinf.o \
-	math/csinl.o \
-	math/csinh.o \
-	math/csinhf.o \
-	math/csinhl.o \
-	math/csqrt.o \
-	math/csqrtf.o \
-	math/csqrtl.o \
-	math/ctan.o \
-	math/ctanf.o \
-	math/ctanl.o \
-	math/ctanh.o \
-	math/ctanhf.o \
-	math/ctanhl.o \
-	math/erf.o \
-	math/erfc.o \
-	math/erfcf.o \
-	math/erfcl.o \
-	math/erff.o \
-	math/erfl.o \
-	math/exp.o \
-	math/exp10.o \
-	math/exp10f.o \
-	math/exp10l.o \
-	math/exp2.o \
-	math/exp2f.o \
-	math/exp2l.o \
-	math/expf.o \
-	math/expl.o \
-	math/expm1.o \
-	math/expm1f.o \
-	math/expm1l.o \
-	math/fabsl.o \
-	math/fdim.o \
-	math/fdimf.o \
-	math/fdiml.o \
+	math/e_acos.o \
+	math/e_acosf.o \
+	math/e_acosh.o \
+	math/e_acoshf.o \
+	math/e_acoshl.o \
+	math/e_acosl.o \
+	math/e_asin.o \
+	math/e_asinf.o \
+	math/s_asinh.o \
+	math/s_asinhf.o \
+	math/s_asinhl.o \
+	math/e_asinl.o \
+	math/s_atan.o \
+	math/e_atan2.o \
+	math/s_atan2f.o \
+	math/e_atan2l.o \
+	math/s_atanf.o \
+	math/e_atanh.o \
+	math/e_atanhf.o \
+	math/e_atanhl.o \
+	math/s_atanl.o \
+	math/s_cabs.o \
+	math/s_cabsf.o \
+	math/s_cabsl.o \
+	math/s_cacos.o \
+	math/s_cacosf.o \
+	math/s_cacosh.o \
+	math/s_cacosl.o \
+	math/s_cacoshf.o \
+	math/s_cacoshl.o \
+	math/s_carg.o \
+	math/s_cargf.o \
+	math/s_cargl.o \
+	math/s_casin.o \
+	math/s_casinf.o \
+	math/s_casinh.o \
+	math/s_casinhf.o \
+	math/s_casinhl.o \
+	math/s_casinl.o \
+	math/s_catan.o \
+	math/s_catanf.o \
+	math/s_catanh.o \
+	math/s_catanhf.o \
+	math/s_catanhl.o \
+	math/s_catanl.o \
+	math/s_cbrt.o \
+	math/s_cbrtf.o \
+	math/s_cbrtl.o \
+	math/s_ccos.o \
+	math/s_ccosf.o \
+	math/s_ccosh.o \
+	math/s_ccoshf.o \
+	math/s_ccoshl.o \
+	math/s_ccosl.o \
+	math/s_ceil.o \
+	math/s_ceilf.o \
+	math/s_ceill.o \
+	math/s_cexp.o \
+	math/s_cexpf.o \
+	math/s_cexpl.o \
+	math/s_cimag.o \
+	math/s_cimagf.o \
+	math/s_cimagl.o \
+	math/s_clog.o \
+	math/s_clogf.o \
+	math/s_clogl.o \
+	math/s_conj.o \
+	math/s_conjf.o \
+	math/s_conjl.o \
+	math/s_copysign.o \
+	math/s_copysignf.o \
+	math/s_copysignl.o \
+	math/s_cos.o \
+	math/s_cosf.o \
+	math/e_cosh.o \
+	math/e_coshf.o \
+	math/e_coshl.o \
+	math/s_cosl.o \
+	math/s_cpow.o \
+	math/s_cpowf.o \
+	math/s_cpowl.o \
+	math/s_cproj.o \
+	math/s_cprojf.o \
+	math/s_cprojl.o \
+	math/s_creal.o \
+	math/s_crealf.o \
+	math/s_creall.o \
+	math/s_csin.o \
+	math/s_csinf.o \
+	math/s_csinh.o \
+	math/s_csinhf.o \
+	math/s_csinhl.o \
+	math/s_csinl.o \
+	math/s_csqrt.o \
+	math/s_csqrtf.o \
+	math/s_csqrtl.o \
+	math/s_ctan.o \
+	math/s_ctanf.o \
+	math/s_ctanh.o \
+	math/s_ctanhf.o \
+	math/s_ctanhl.o \
+	math/s_ctanl.o \
+	math/s_erf.o \
+	math/s_erfc.o \
+	math/s_erfcf.o \
+	math/s_erfcl.o \
+	math/s_erff.o \
+	math/s_erfl.o \
+	math/e_exp.o \
+	math/s_exp10.o \
+	math/s_exp10f.o \
+	math/s_exp10l.o \
+	math/s_exp2.o \
+	math/s_exp2f.o \
+	math/s_exp2l.o \
+	math/e_expf.o \
+	math/s_expl.o \
+	math/s_expm1.o \
+	math/s_expm1f.o \
+	math/s_expm1l.o \
+	math/s_fabsl.o \
+	math/s_fdim.o \
+	math/s_fdimf.o \
+	math/s_fdiml.o \
     math/fenv.o \
     math/finite.o \
-	math/floor.o \
-	math/floorf.o \
-	math/floorl.o \
-	math/fma.o \
-	math/fmaf.o \
-	math/fmal.o \
-	math/fmax.o \
-	math/fmaxf.o \
-	math/fmaxl.o \
-	math/fmin.o \
-	math/fminf.o \
-	math/fminl.o \
-	math/fmod.o \
-	math/fmodf.o \
-	math/fmodl.o \
-	math/fpclassify.o \
-	math/frexp.o \
-	math/frexpf.o \
-	math/frexpl.o \
-	math/hypot.o \
-	math/hypotf.o \
-	math/hypotl.o \
-	math/ilogb.o \
-	math/ilogbf.o \
-	math/ilogbl.o \
+	math/s_floor.o \
+	math/s_floorf.o \
+	math/s_floorl.o \
+	math/s_fma.o \
+	math/s_fmaf.o \
+	math/s_fmal.o \
+	math/s_fmax.o \
+	math/s_fmaxf.o \
+	math/s_fmaxl.o \
+	math/s_fmin.o \
+	math/s_fminf.o \
+	math/s_fminl.o \
+	math/s_fpclassify.o \
+	math/e_fmod.o \
+	math/e_fmodf.o \
+	math/e_fmodl.o \
+	math/s_frexp.o \
+	math/s_frexpf.o \
+	math/s_frexpl.o \
+	math/e_hypot.o \
+	math/e_hypotf.o \
+	math/e_hypotl.o \
+	math/s_ilogb.o \
+	math/s_ilogbf.o \
+	math/s_ilogbl.o \
 	math/inf.o \
 	math/inff.o \
 	math/init_exit.o \
 	math/invtrig.o \
-	math/isfinite.o \
-	math/isinf.o \
-	math/isnan.o \
-	math/isnormal.o \
+	math/s_isfinite.o \
+	math/s_isinf.o \
+	math/s_isnan.o \
+	math/s_isnormal.o \
     math/j0.o \
     math/j0f.o \
     math/j1.o \
@@ -186,7 +186,11 @@ C_MATH := \
 	math/kernel_exp.o \
 	math/kernel_expf.o \
 	math/kernel_expm1.o \
-	math/kernel_rem_pio2.o \
+	math/e_rem_pio2.o \
+	math/k_cosf.o \
+	math/k_rem_pio2.o \
+	math/k_sinf.o \
+	math/k_tanf.o \
 	math/kernel_sin.o \
 	math/kernel_sinf.o \
 	math/kernel_tan.o \
@@ -252,7 +256,7 @@ C_MATH := \
 	math/remquo.o \
 	math/remquof.o \
 	math/remquol.o \
-	math/rem_pio2f.o \
+	math/e_rem_pio2f.o \
 	math/rint.o \
 	math/rintf.o \
 	math/rintl.o \
@@ -267,11 +271,11 @@ C_MATH := \
 	math/scalbnl.o \
 	math/signbit.o \
     math/signgam.o \
-	math/sin.o \
-    math/sincos.o \
-    math/sincosf.o \
-    math/sincosl.o \
-	math/sinf.o \
+	math/s_sin.o \
+    math/s_sincos.o \
+    math/s_sincosf.o \
+    math/s_sincosl.o \
+	math/s_sinf.o \
 	math/sinh.o \
 	math/sinhf.o \
 	math/sinhl.o \
@@ -279,8 +283,8 @@ C_MATH := \
 	math/sqrt.o \
 	math/sqrtf.o \
 	math/sqrtl.o \
-	math/tan.o \
-	math/tanf.o \
+	math/s_tan.o \
+	math/s_tanf.o \
 	math/tanh.o \
 	math/tanhf.o \
 	math/tanhl.o \
@@ -295,13 +299,13 @@ C_MATH := \
 ifdef SPE
     $(info Using SPE math objects)
 	C_MATH := $(C_MATH) \
-		math/fabs_spe.o \
-		math/fabsf_spe.o \
+		math/s_fabs_spe.o \
+		math/s_fabsf_spe.o \
 		math/lrintf_spe.o
 else
 	C_MATH := $(C_MATH)\
-		math/fabs.o \
-		math/fabsf.o \
+		math/s_fabs.o \
+		math/s_fabsf.o \
 		math/lrintf.o
 endif
 

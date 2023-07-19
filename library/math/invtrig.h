@@ -15,21 +15,21 @@
 #define	THRESH	((0xe666666666666666ULL>>(64-(MANH_SIZE-1)))|LDBL_NBIT)
 
 /* Constants shared by the long double inverse trig functions. */
-#define	pS0	_ItL_pS0
-#define	pS1	_ItL_pS1
-#define	pS2	_ItL_pS2
-#define	pS3	_ItL_pS3
-#define	pS4	_ItL_pS4
-#define	pS5	_ItL_pS5
-#define	pS6	_ItL_pS6
-#define	qS1	_ItL_qS1
-#define	qS2	_ItL_qS2
-#define	qS3	_ItL_qS3
-#define	qS4	_ItL_qS4
-#define	qS5	_ItL_qS5
+#define	pS0	    _ItL_pS0
+#define	pS1	    _ItL_pS1
+#define	pS2	    _ItL_pS2
+#define	pS3	    _ItL_pS3
+#define	pS4	    _ItL_pS4
+#define	pS5	    _ItL_pS5
+#define	pS6	    _ItL_pS6
+#define	qS1	    _ItL_qS1
+#define	qS2	    _ItL_qS2
+#define	qS3	    _ItL_qS3
+#define	qS4	    _ItL_qS4
+#define	qS5     _ItL_qS5
 #define	atanhi	_ItL_atanhi
 #define	atanlo	_ItL_atanlo
-#define	aT	_ItL_aT
+#define	aT	    _ItL_aT
 #define	pi_lo	_ItL_pi_lo
 
 #define	pio2_hi	atanhi[3]

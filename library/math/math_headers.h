@@ -98,16 +98,42 @@ STATIC udouble z_notanum  = {{ 0xfff80000, 0 }};
 #  endif
 #endif
 
-typedef union {
-	double value;
-	struct 
-	{
-		unsigned int msw;
-		unsigned int lsw;
-	} parts;
+#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+typedef union
+{
+    double value;
+    struct
+    {
+        uint32_t msw;
+        uint32_t lsw;
+    } parts;
+    struct
+    {
+        uint64_t w;
+    } xparts;
 } ieee_double_shape_type;
+#endif
 
-typedef union {
+#if __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#error Cannot use LIITLE ENDIAN on AmigaOS4
+typedef union
+{
+    double value;
+    struct
+    {
+        uint32_t lsw;
+        uint32_t msw;
+    } parts;
+    struct
+    {
+        uint64_t w;
+    } xparts;
+} ieee_double_shape_type;
+#endif
+
+#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+typedef union
+{
     long double value;
     struct {
         uint32_t mswhi;
@@ -120,6 +146,25 @@ typedef union {
         uint64_t lsw;
     } parts64;
 } ieee_quad_shape_type;
+#endif
+
+#if __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#error Cannot use LIITLE ENDIAN on AmigaOS4
+typedef union
+{
+    long double value;
+    struct {
+        u_int32_t lswlo;
+        u_int32_t lswhi;
+        u_int32_t mswlo;
+        u_int32_t mswhi;
+    } parts32;
+    struct {
+        u_int64_t lsw;
+        u_int64_t msw;
+    } parts64;
+} ieee_quad_shape_type;
+#endif
 
 /* A union which permits us to convert between a float and a 32 bit int. */
 typedef union {
@@ -170,6 +215,14 @@ do {												\
     (ix1) = ew_u.parts.lsw;							\
 } while (0)
 
+/* Get a 64-bit int from a double. */
+#define EXTRACT_WORD64(ix,d)					\
+do {								            \
+  ieee_double_shape_type ew_u;					\
+  ew_u.value = (d);						        \
+  (ix) = ew_u.xparts.w;						    \
+} while (0)
+
 /* Get the more significant 32 bit int from a double.  */
 
 #define GET_HIGH_WORD(i,d)							\
@@ -197,8 +250,15 @@ do {												\
   (d) = iw_u.value;									\
 } while (0)
 
-/* Set the more significant 32 bits of a double from an int.  */
+/* Set a double from a 64-bit int. */
+#define INSERT_WORD64(d,ix)					        \
+do {								                \
+  ieee_double_shape_type iw_u;					    \
+  iw_u.xparts.w = (ix);						        \
+  (d) = iw_u.value;						            \
+} while (0)
 
+/* Set the more significant 32 bits of a double from an int.  */
 #define SET_HIGH_WORD(d,v)							\
 do {												\
   ieee_double_shape_type sh_u;						\
@@ -279,10 +339,10 @@ do {								\
 
 /* Get two 64 bit ints from a long double.  */
 
-#define GET_LDOUBLE_WORDS64(ix0,ix1,d)				\
-do {								\
-  ieee_quad_shape_type qw_u;					\
-  qw_u.value = (d);						\
+#define GET_LDOUBLE_WORDS64(ix0, ix1, d)	\
+do {								        \
+  ieee_quad_shape_type qw_u = { 0 };		\
+  qw_u.value = (d);						    \
   (ix0) = qw_u.parts64.msw;					\
   (ix1) = qw_u.parts64.lsw;					\
 } while (0)
@@ -341,6 +401,17 @@ do {							\
   (d) = sf_u.value;				\
 } while (0)
 
+#define	STRICT_ASSIGN(type, lval, rval) do {	\
+	volatile type __lval;			            \
+						                        \
+	if (sizeof(type) >= sizeof(long double))	\
+		(lval) = (rval);		                \
+	else {					                    \
+		__lval = (rval);		                \
+		(lval) = __lval;		                \
+	}					                        \
+} while (0)
+
 #define	TRUNC(d)	    (_b_trunc(&(d)))
 #define	nan_mix(x, y)	(((x) + 0.0L) + ((y) + 0))
 
@@ -395,7 +466,9 @@ _b_trunc(volatile double *_dp) {
 
 extern double __kernel_cos(double x, double y);
 extern double __kernel_sin(double x, double y, int iy);
-extern int __rem_pio2(double x, double *y);
+extern int __ieee754_rem_pio2(double x, double *y);
+extern int __ieee754_rem_pio2f(float x, double *y);
+extern int __kernel_rem_pio2(double *x, double *y, int e0, int nx, int prec);
 extern double __kernel_tan(double x, double y, int iy);
 extern double __expm1(double x);
 extern float __kernel_cosf(float x, float y);
@@ -413,6 +486,7 @@ extern double complex __ldexp_cexp(double complex z, int expt);
 extern float complex __ldexp_cexpf(float complex,int);
 extern __float64 __math_invalid(__float64 x);
 extern float __math_invalidf (float x);
+extern float __kernel_tandf(double x, int y);
 
 extern void __doasin(double x, double dx, double w[]);
 extern void __dubsin(double x, double dx, double v[]);
@@ -420,5 +494,54 @@ extern void __dubcos(double x, double dx, double v[]);
 extern void __docos(double x, double dx, double v[]);
 extern double __sin32(double x, double res, double res1);
 extern double __cos32(double x, double res, double res1);
+
+#define	__ieee754_sqrt	        sqrt
+#define	__ieee754_acos	        acos
+#define	__ieee754_acosh	        acosh
+#define	__ieee754_log	        log
+#define	__ieee754_log2	        log2
+#define	__ieee754_atanh	        atanh
+#define	__ieee754_asin	        asin
+#define	__ieee754_atan2	        atan2
+#define	__ieee754_exp	        exp
+#define	__ieee754_cosh	        cosh
+#define	__ieee754_fmod	        fmod
+#define	__ieee754_pow	        pow
+#define	__ieee754_lgamma        lgamma
+#define	__ieee754_lgamma_r      lgamma_r
+#define	__ieee754_log10	        log10
+#define	__ieee754_sinh	        sinh
+#define	__ieee754_hypot	        hypot
+#define	__ieee754_j0	        j0
+#define	__ieee754_j1	        j1
+#define	__ieee754_y0	        y0
+#define	__ieee754_y1	        y1
+#define	__ieee754_jn	        jn
+#define	__ieee754_yn	        yn
+#define	__ieee754_remainder     remainder
+#define	__ieee754_sqrtf	        sqrtf
+#define	__ieee754_acosf	        acosf
+#define	__ieee754_acoshf        acoshf
+#define	__ieee754_logf	        logf
+#define	__ieee754_atanhf        atanhf
+#define	__ieee754_asinf	        asinf
+#define	__ieee754_atan2f        atan2f
+#define	__ieee754_expf	        expf
+#define	__ieee754_coshf	        coshf
+#define	__ieee754_fmodf	        fmodf
+#define	__ieee754_powf	        powf
+#define	__ieee754_lgammaf       lgammaf
+#define	__ieee754_lgammaf_r     lgammaf_r
+#define	__ieee754_log10f        log10f
+#define	__ieee754_log2f         log2f
+#define	__ieee754_sinhf	        sinhf
+#define	__ieee754_hypotf        hypotf
+#define	__ieee754_j0f	        j0f
+#define	__ieee754_j1f	        j1f
+#define	__ieee754_y0f	        y0f
+#define	__ieee754_y1f	        y1f
+#define	__ieee754_jnf	        jnf
+#define	__ieee754_ynf	        ynf
+#define	__ieee754_remainderf    remainderf
 
 #endif /* _MATH_HEADERS_H */
