@@ -8,10 +8,12 @@
 
 double complex
 cacos(double complex z) {
-    double complex
-    w;
+    double complex w;
 
-    w = casin(z);
-    w = (M_PI_2 - creal(w)) - cimag(w) * I;
-    return (w);
+    double complex tmp0, tmp1;
+
+    tmp0 = casin(z);
+    tmp1 = M_PI_2 - creal(tmp0);
+    w = tmp1 - (cimag(tmp0) * (double complex) (double complex) I);
+    return w;
 }

@@ -10,6 +10,7 @@
 
 static volatile long double
         tiny = 1.0e-300;
+
 static const long double
         zero = 0.0,
         pi = 3.14159265358979323846264338327950280e+00L;

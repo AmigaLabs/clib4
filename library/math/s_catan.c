@@ -6,8 +6,6 @@
 #include "complex_headers.h"
 #endif /* _COMPLEX_HEADERS_H */
 
-#define MAXNUM 1.0e308
-
 static const double DP1 = 3.14159265160560607910E0;
 static const double DP2 = 1.98418714791870343106E-9;
 static const double DP3 = 1.14423774522196636802E-17;
@@ -60,6 +58,6 @@ catan(double complex z) {
 
 ovrf:
     /*mtherr ("catan", OVERFLOW);*/
-    w = MAXNUM + MAXNUM * I;
+    w = HUGE_VAL + HUGE_VAL * I;
     return (w);
 }

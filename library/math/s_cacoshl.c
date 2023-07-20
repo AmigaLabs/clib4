@@ -10,6 +10,6 @@ long double complex
 cacoshl(long double complex z) {
     long double complex w;
 
-    w = I * cacosl(z);
+    w = clogl(z + csqrtl(z + 1) * csqrtl(z - 1));
     return (w);
 }

@@ -7,7 +7,6 @@
 #endif /* _COMPLEX_HEADERS_H */
 
 #define MACHEP 1.1e-16
-#define MAXNUM 1.0e308
 
 static const double DP1 = 3.14159265160560607910E0;
 static const double DP2 = 1.98418714791870343106E-9;
@@ -84,7 +83,7 @@ ctan(double complex z) {
 
     if (d == 0.0) {
         /*mtherr ("ctan", OVERFLOW);*/
-        w = MAXNUM + MAXNUM * I;
+        w = HUGE_VAL + HUGE_VAL * I;
         return (w);
     }
 

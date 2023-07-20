@@ -1,5 +1,5 @@
 /*
- * $Id: math_j0.c,v 1.0 2022-03-11 11:18:23 clib2devs Exp $
+ * $Id: math_j0.c,v 1.0 2023-07-19 11:18:23 clib2devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H
@@ -8,32 +8,35 @@
 
 static double pzero(double), qzero(double);
 
-static const __float64
-        huge = _F_64(1e300),
-        one = _F_64(1.0),
-        invsqrtpi = _F_64(5.64189583547756279280e-01), /* 0x3FE20DD7, 0x50429B6D */
-        tpi = _F_64(6.36619772367581382433e-01), /* 0x3FE45F30, 0x6DC9C883 */
+static const double
+        huge = 1e300,
+        one = 1.0,
+        invsqrtpi = 5.64189583547756279280e-01, /* 0x3FE20DD7, 0x50429B6D */
+        tpi = 6.36619772367581382433e-01, /* 0x3FE45F30, 0x6DC9C883 */
         /* R0/S0 on [0, 2.00] */
-        R02 = _F_64(1.56249999999999947958e-02), /* 0x3F8FFFFF, 0xFFFFFFFD */
-        R03 = _F_64(-1.89979294238854721751e-04), /* 0xBF28E6A5, 0xB61AC6E9 */
-        R04 = _F_64(1.82954049532700665670e-06), /* 0x3EBEB1D1, 0x0C503919 */
-        R05 = _F_64(-4.61832688532103189199e-09), /* 0xBE33D5E7, 0x73D63FCE */
-        S01 = _F_64(1.56191029464890010492e-02), /* 0x3F8FFCE8, 0x82C8C2A4 */
-        S02 = _F_64(1.16926784663337450260e-04), /* 0x3F1EA6D2, 0xDD57DBF4 */
-        S03 = _F_64(5.13546550207318111446e-07), /* 0x3EA13B54, 0xCE84D5A9 */
-        S04 = _F_64(1.16614003333790000205e-09), /* 0x3E1408BC, 0xF4745D8F */
-        zero = _F_64(0.0),
-        u00 = _F_64(-7.38042951086872317523e-02), /* 0xBFB2E4D6, 0x99CBD01F */
-        u01 = _F_64(1.76666452509181115538e-01), /* 0x3FC69D01, 0x9DE9E3FC */
-        u02 = _F_64(-1.38185671945596898896e-02), /* 0xBF8C4CE8, 0xB16CFA97 */
-        u03 = _F_64(3.47453432093683650238e-04), /* 0x3F36C54D, 0x20B29B6B */
-        u04 = _F_64(-3.81407053724364161125e-06), /* 0xBECFFEA7, 0x73D25CAD */
-        u05 = _F_64(1.95590137035022920206e-08), /* 0x3E550057, 0x3B4EABD4 */
-        u06 = _F_64(-3.98205194132103398453e-11), /* 0xBDC5E43D, 0x693FB3C8 */
-        v01 = _F_64(1.27304834834123699328e-02), /* 0x3F8A1270, 0x91C9C71A */
-        v02 = _F_64(7.60068627350353253702e-05), /* 0x3F13ECBB, 0xF578C6C1 */
-        v03 = _F_64(2.59150851840457805467e-07), /* 0x3E91642D, 0x7FF202FD */
-        v04 = _F_64(4.41110311332675467403e-10); /* 0x3DFE5018, 0x3BD6D9EF */
+        R02 = 1.56249999999999947958e-02, /* 0x3F8FFFFF, 0xFFFFFFFD */
+        R03 = -1.89979294238854721751e-04, /* 0xBF28E6A5, 0xB61AC6E9 */
+        R04 = 1.82954049532700665670e-06, /* 0x3EBEB1D1, 0x0C503919 */
+        R05 = -4.61832688532103189199e-09, /* 0xBE33D5E7, 0x73D63FCE */
+        S01 = 1.56191029464890010492e-02, /* 0x3F8FFCE8, 0x82C8C2A4 */
+        S02 = 1.16926784663337450260e-04, /* 0x3F1EA6D2, 0xDD57DBF4 */
+        S03 = 5.13546550207318111446e-07, /* 0x3EA13B54, 0xCE84D5A9 */
+        S04 = 1.16614003333790000205e-09; /* 0x3E1408BC, 0xF4745D8F */
+
+static const double zero = 0.0;
+
+static const double
+        u00 = -7.38042951086872317523e-02, /* 0xBFB2E4D6, 0x99CBD01F */
+        u01 = 1.76666452509181115538e-01, /* 0x3FC69D01, 0x9DE9E3FC */
+        u02 = -1.38185671945596898896e-02, /* 0xBF8C4CE8, 0xB16CFA97 */
+        u03 = 3.47453432093683650238e-04, /* 0x3F36C54D, 0x20B29B6B */
+        u04 = -3.81407053724364161125e-06, /* 0xBECFFEA7, 0x73D25CAD */
+        u05 = 1.95590137035022920206e-08, /* 0x3E550057, 0x3B4EABD4 */
+        u06 = -3.98205194132103398453e-11, /* 0xBDC5E43D, 0x693FB3C8 */
+        v01 = 1.27304834834123699328e-02, /* 0x3F8A1270, 0x91C9C71A */
+        v02 = 7.60068627350353253702e-05, /* 0x3F13ECBB, 0xF578C6C1 */
+        v03 = 2.59150851840457805467e-07, /* 0x3E91642D, 0x7FF202FD */
+        v04 = 4.41110311332675467403e-10; /* 0x3DFE5018, 0x3BD6D9EF */
 
 /* The asymptotic expansions of pzero is
  *	1 - 9/128 s^2 + 11025/98304 s^4 - ...,	where s = 1/x.
@@ -107,139 +110,6 @@ static const double pS2[5] = {
         1.53875394208320329881e+02, /* 0x40633C03, 0x3AB6FAFF */
         1.46576176948256193810e+01, /* 0x402D50B3, 0x44391809 */
 };
-
-
-double
-j0(double x) {
-    double z, s, c, ss, cc, r, u, v;
-    int32_t hx, ix;
-
-    GET_HIGH_WORD(hx, x);
-    ix = hx & 0x7fffffff;
-    if (ix >= 0x7ff00000) return one / (x * x);
-    x = fabs(x);
-    if (ix >= 0x40000000) {    /* |x| >= 2.0 */
-        s = sin(x);
-        c = cos(x);
-        ss = s - c;
-        cc = s + c;
-        if (ix < 0x7fe00000) {  /* make sure x+x not overflow */
-            z = -cos(x + x);
-            if ((s * c) < zero) cc = z / ss;
-            else ss = z / cc;
-        }
-        /*
-         * j0(x) = 1/sqrt(pi) * (P(0,x)*cc - Q(0,x)*ss) / sqrt(x)
-         * y0(x) = 1/sqrt(pi) * (P(0,x)*ss + Q(0,x)*cc) / sqrt(x)
-         */
-        if (ix > 0x48000000) z = (invsqrtpi * cc) / sqrt(x);
-        else {
-            u = pzero(x);
-            v = qzero(x);
-            z = invsqrtpi * (u * cc - v * ss) / sqrt(x);
-        }
-        return z;
-    }
-    if (ix < 0x3f200000) {    /* |x| < 2**-13 */
-        if (huge + x > one) {    /* raise inexact if x != 0 */
-            if (ix < 0x3e400000) return one;    /* |x|<2**-27 */
-            else return one - (double) 0.25 * x * x;
-        }
-    }
-    z = x * x;
-    r = z * (R02 + z * (R03 + z * (R04 + z * R05)));
-    s = one + z * (S01 + z * (S02 + z * (S03 + z * S04)));
-    if (ix < 0x3FF00000) {    /* |x| < 1.00 */
-        return one + z * ((double) -0.25 + (r / s));
-    } else {
-        u = (double) 0.5 * x;
-        return ((one + u) * (one - u) + z * (r / s));
-    }
-}
-
-double
-y0(double x) {
-    double z, s, c, ss, cc, u, v;
-    int32_t hx, ix, lx;
-
-    EXTRACT_WORDS(hx, lx, x);
-    ix = 0x7fffffff & hx;
-    /* Y0(NaN) is NaN, y0(-inf) is Nan, y0(inf) is 0  */
-    if (ix >= 0x7ff00000) return one / (x + x * x);
-    if ((ix | lx) == 0) return -one / zero;
-    if (hx < 0) return zero / zero;
-    if (ix >= 0x40000000) {  /* |x| >= 2.0 */
-        /* y0(x) = sqrt(2/(pi*x))*(p0(x)*sin(x0)+q0(x)*cos(x0))
-         * where x0 = x-pi/4
-         *      Better formula:
-         *              cos(x0) = cos(x)cos(pi/4)+sin(x)sin(pi/4)
-         *                      =  1/sqrt(2) * (sin(x) + cos(x))
-         *              sin(x0) = sin(x)cos(3pi/4)-cos(x)sin(3pi/4)
-         *                      =  1/sqrt(2) * (sin(x) - cos(x))
-         * To avoid cancellation, use
-         *              sin(x) +- cos(x) = -cos(2x)/(sin(x) -+ cos(x))
-         * to compute the worse one.
-         */
-        s = sin(x);
-        c = cos(x);
-        ss = s - c;
-        cc = s + c;
-        /*
-         * j0(x) = 1/sqrt(pi) * (P(0,x)*cc - Q(0,x)*ss) / sqrt(x)
-         * y0(x) = 1/sqrt(pi) * (P(0,x)*ss + Q(0,x)*cc) / sqrt(x)
-         */
-        if (ix < 0x7fe00000) {  /* make sure x+x not overflow */
-            z = -cos(x + x);
-            if ((s * c) < zero) cc = z / ss;
-            else ss = z / cc;
-        }
-        if (ix > 0x48000000) z = (invsqrtpi * ss) / sqrt(x);
-        else {
-            u = pzero(x);
-            v = qzero(x);
-            z = invsqrtpi * (u * ss + v * cc) / sqrt(x);
-        }
-        return z;
-    }
-    if (ix <= 0x3e400000) {    /* x < 2**-27 */
-        return (u00 + tpi * log(x));
-    }
-    z = x * x;
-    u = u00 + z * (u01 + z * (u02 + z * (u03 + z * (u04 + z * (u05 + z * u06)))));
-    v = one + z * (v01 + z * (v02 + z * (v03 + z * v04)));
-    return (u / v + tpi * (j0(x) * log(x)));
-}
-
-/* Note: This function is only called for ix>=0x40000000 (see above) */
-static double pzero(double x) {
-    const double *p, *q;
-    double z, r, s;
-    int32_t ix;
-    GET_HIGH_WORD(ix, x);
-    ix &= 0x7fffffff;
-    assert(ix >= 0x40000000 && ix <= 0x48000000);
-    if (ix >= 0x40200000) {
-        p = pR8;
-        q = pS8;
-    }
-    else if (ix >= 0x40122E8B) {
-        p = pR5;
-        q = pS5;
-    }
-    else if (ix >= 0x4006DB6D) {
-        p = pR3;
-        q = pS3;
-    }
-    else {
-        p = pR2;
-        q = pS2;
-    }
-    z = one / (x * x);
-    r = p[0] + z * (p[1] + z * (p[2] + z * (p[3] + z * (p[4] + z * p[5]))));
-    s = one + z * (q[0] + z * (q[1] + z * (q[2] + z * (q[3] + z * q[4]))));
-    return one + r / s;
-}
-
 
 /* For x >= 8, the asymptotic expansions of qzero is
  *	-1/8 s + 75/1024 s^3 - ..., where s = 1/x.
@@ -318,8 +188,142 @@ static const double qS2[6] = {
         -5.31095493882666946917e+00, /* 0xC0153E6A, 0xF8B32931 */
 };
 
+
+double
+__ieee754_j0(double x) {
+    double z, s, c, ss, cc, r, u, v;
+    int32_t hx, ix;
+
+    GET_HIGH_WORD(hx, x);
+    ix = hx & 0x7fffffff;
+    if (ix >= 0x7ff00000) return one / (x * x);
+    x = fabs(x);
+    if (ix >= 0x40000000) {    /* |x| >= 2.0 */
+        s = sin(x);
+        c = cos(x);
+        ss = s - c;
+        cc = s + c;
+        if (ix < 0x7fe00000) {  /* make sure x+x not overflow */
+            z = -cos(x + x);
+            if ((s * c) < zero) cc = z / ss;
+            else ss = z / cc;
+        }
+        /*
+         * j0(x) = 1/sqrt(pi) * (P(0,x)*cc - Q(0,x)*ss) / sqrt(x)
+         * y0(x) = 1/sqrt(pi) * (P(0,x)*ss + Q(0,x)*cc) / sqrt(x)
+         */
+        if (ix > 0x48000000) z = (invsqrtpi * cc) / sqrt(x);
+        else {
+            u = pzero(x);
+            v = qzero(x);
+            z = invsqrtpi * (u * cc - v * ss) / sqrt(x);
+        }
+        return z;
+    }
+    if (ix < 0x3f200000) {    /* |x| < 2**-13 */
+        if (huge + x > one) {    /* raise inexact if x != 0 */
+            if (ix < 0x3e400000) return one;    /* |x|<2**-27 */
+            else return one - 0.25 * x * x;
+        }
+    }
+    z = x * x;
+    r = z * (R02 + z * (R03 + z * (R04 + z * R05)));
+    s = one + z * (S01 + z * (S02 + z * (S03 + z * S04)));
+    if (ix < 0x3FF00000) {    /* |x| < 1.00 */
+        return one + z * (-0.25 + (r / s));
+    } else {
+        u = 0.5 * x;
+        return ((one + u) * (one - u) + z * (r / s));
+    }
+}
+
+double
+__ieee754_y0(double x) {
+    double z, s, c, ss, cc, u, v;
+    int32_t hx, ix, lx;
+
+    EXTRACT_WORDS(hx, lx, x);
+    ix = 0x7fffffff & hx;
+    /* Y0(NaN) is NaN, y0(-inf) is Nan, y0(inf) is 0  */
+    if (ix >= 0x7ff00000) return one / (x + x * x);
+    if ((ix | lx) == 0) return -one / zero;
+    if (hx < 0) return zero / zero;
+    if (ix >= 0x40000000) {  /* |x| >= 2.0 */
+        /* y0(x) = sqrt(2/(pi*x))*(p0(x)*sin(x0)+q0(x)*cos(x0))
+         * where x0 = x-pi/4
+         *      Better formula:
+         *              cos(x0) = cos(x)cos(pi/4)+sin(x)sin(pi/4)
+         *                      =  1/sqrt(2) * (sin(x) + cos(x))
+         *              sin(x0) = sin(x)cos(3pi/4)-cos(x)sin(3pi/4)
+         *                      =  1/sqrt(2) * (sin(x) - cos(x))
+         * To avoid cancellation, use
+         *              sin(x) +- cos(x) = -cos(2x)/(sin(x) -+ cos(x))
+         * to compute the worse one.
+         */
+        s = sin(x);
+        c = cos(x);
+        ss = s - c;
+        cc = s + c;
+        /*
+         * j0(x) = 1/sqrt(pi) * (P(0,x)*cc - Q(0,x)*ss) / sqrt(x)
+         * y0(x) = 1/sqrt(pi) * (P(0,x)*ss + Q(0,x)*cc) / sqrt(x)
+         */
+        if (ix < 0x7fe00000) {  /* make sure x+x not overflow */
+            z = -cos(x + x);
+            if ((s * c) < zero) cc = z / ss;
+            else ss = z / cc;
+        }
+        if (ix > 0x48000000) z = (invsqrtpi * ss) / sqrt(x);
+        else {
+            u = pzero(x);
+            v = qzero(x);
+            z = invsqrtpi * (u * ss + v * cc) / sqrt(x);
+        }
+        return z;
+    }
+    if (ix <= 0x3e400000) {    /* x < 2**-27 */
+        return (u00 + tpi * __ieee754_log(x));
+    }
+    z = x * x;
+    u = u00 + z * (u01 + z * (u02 + z * (u03 + z * (u04 + z * (u05 + z * u06)))));
+    v = one + z * (v01 + z * (v02 + z * (v03 + z * v04)));
+    return (u / v + tpi * (__ieee754_j0(x) * __ieee754_log(x)));
+}
+
 /* Note: This function is only called for ix>=0x40000000 (see above) */
-static double qzero(double x) {
+static double
+pzero(double x) {
+    const double *p, *q;
+    double z, r, s;
+    int32_t ix;
+    GET_HIGH_WORD(ix, x);
+    ix &= 0x7fffffff;
+    assert(ix >= 0x40000000 && ix <= 0x48000000);
+    if (ix >= 0x40200000) {
+        p = pR8;
+        q = pS8;
+    }
+    else if (ix >= 0x40122E8B) {
+        p = pR5;
+        q = pS5;
+    }
+    else if (ix >= 0x4006DB6D) {
+        p = pR3;
+        q = pS3;
+    }
+    else {
+        p = pR2;
+        q = pS2;
+    }
+    z = one / (x * x);
+    r = p[0] + z * (p[1] + z * (p[2] + z * (p[3] + z * (p[4] + z * p[5]))));
+    s = one + z * (q[0] + z * (q[1] + z * (q[2] + z * (q[3] + z * q[4]))));
+    return one + r / s;
+}
+
+/* Note: This function is only called for ix>=0x40000000 (see above) */
+static double
+qzero(double x) {
     const double *p, *q;
     double s, r, z;
     int32_t ix;
@@ -345,5 +349,5 @@ static double qzero(double x) {
     z = one / (x * x);
     r = p[0] + z * (p[1] + z * (p[2] + z * (p[3] + z * (p[4] + z * p[5]))));
     s = one + z * (q[0] + z * (q[1] + z * (q[2] + z * (q[3] + z * (q[4] + z * q[5])))));
-    return ((double) -.125 + r / s) / x;
+    return (-.125 + r / s) / x;
 }

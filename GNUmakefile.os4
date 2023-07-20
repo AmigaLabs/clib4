@@ -30,6 +30,7 @@ CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
 LD := ppc-amigaos-ld
 RANLIB := ppc-amigaos-ranlib
+HOST_CXX := g++
 
 # On AmigaOS use native commands
 ifeq ($(UNAME), AmigaOS)
@@ -117,9 +118,9 @@ AFLAGS     := -Wa,-mregnames
 
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
-    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mcpu=8540 -mabi=spe -Wdouble-promotion -mlong-double-64 -mfloat-gprs=double -D_NEED_FLOAT64 -fsingle-precision-constant -fno-inline-functions -fno-partial-inlining \
-                -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining -Wno-unused-but-set-variable -Wno-uninitialized
-    AFLAGS := $(AFLAGS) -D__SPE__ -mspe -mcpu=8540 -mfloat-gprs=double -D_NEED_FLOAT64
+    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mcpu=8540 -mabi=spe -mlong-double-64 -mfloat-gprs=double -D_NEED_FLOAT64 -fsingle-precision-constant -fno-inline-functions -fno-partial-inlining \
+                -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining  -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
+    AFLAGS := $(AFLAGS) -D__SPE__ -mspe -mcpu=8540 -mfloat-gprs=double -D_NEED_FLOAT64 -Wno-overflow
 endif
 
 VERBOSE    ?= @
@@ -155,7 +156,7 @@ prepare:
 	-$(MAKEDIR) $(INSTALL_PREFIX)/lib
 	-$(MAKEDIR) $(INSTALL_PREFIX)/include
 
-all-targets: \
+ALL_TARGETS = \
 	$(OUTPUT_LIB)/crt0.o \
 	$(OUTPUT_LIB)/crtbegin.o \
 	$(OUTPUT_LIB)/crtend.o \
@@ -164,7 +165,12 @@ all-targets: \
     $(OUT_SHARED_LIB)/shared_library/clib2.o \
     $(OUT_SHARED_LIB)/shared_library/math.o \
 	$(MAIN_LIB)
-#$(info $(OBJ_C_SRC))
+
+ifdef SPE
+    ALL_TARGETS := PatchForSPE | $(ALL_TARGETS)
+endif
+
+all-targets: $(ALL_TARGETS)
 
 all-libs: $(LIBS)
 
@@ -175,6 +181,7 @@ clean:
 	-$(DELETE) $(BUILD_DIR)/obj
 	-$(DELETE) $(BUILD_DIR)/obj.shared
 	-$(DELETE) $(BUILD_DIR)/shared
+	-$(DELETE) $(BUILD_DIR)/PatchForSPE
 	-$(DELETE) $(OUTPUT_LIB)
 	-$(DELETE) $(BUILD_DIR)/compiler.log
 	-$(DELETE) $(BUILD_DIR)/clib2.library*
@@ -303,14 +310,18 @@ endef
 
 define COMPILE_SPE
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo -e "\rCompiling SPE \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)echo -e "\rPreprocessing and compiling SPE \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)$(CC) -c -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe $(CFLAGS) -S -o $@_in $< $(LOG_COMMAND)
+$(VERBOSE)$(BUILD_DIR)/PatchForSPE $@_in $@ >/dev/null
+$(VERBOSE)$(CC) -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe $(CFLAGS) -c -o $@ $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED_SPE
 $(VERBOSE)@$(MAKEDIR) $(@D)
-$(VERBOSE)echo -e "\rCompiling Shared SPE \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe $(PIC) -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)echo -e "\rPreprocessing and compiling SPE \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)$(CC) -c -mspe -mcpu=8540 -mfloat-gprs=double $(PIC) -mabi=spe $(CFLAGS) -S -o $@_in $< $(LOG_COMMAND)
+$(VERBOSE)$(BUILD_DIR)/PatchForSPE $@_in $@ >/dev/null
+$(VERBOSE)$(CC) -mspe -mcpu=8540 -mfloat-gprs=double $(PIC) -mabi=spe $(CFLAGS) -c -o $@ $< $(LOG_COMMAND)
 endef
 
 define MAKELIB
@@ -327,6 +338,11 @@ $(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo -e "\rMaking Shared \033[0;31m$@\033[0m"
 $(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -Wl,-soname,$(@F)
 endef
+
+PatchForSPE : $(LIB_ROOT)/misc/PatchForSPE.cpp
+	$(HOST_CXX) -o $(BUILD_DIR)/$@ $<
+
+.NOTPARALLEL: PatchForSPE
 
 compile-tests:
 	+make -C $(LIB_ROOT)/test_programs; CC="$(CC)" CXX="$(CXX)" COPY="$(COPY)" DELETE="$(DELETE)" MAKEDIR="$(MAKEDIR)"

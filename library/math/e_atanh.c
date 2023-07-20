@@ -6,8 +6,11 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-static const double one = 1.0, huge = 1e300;
-static const double zero = 0.0;
+static const double
+    zero = 0.0,
+    one = 1.0,
+    huge = 1e300;
+
 
 double
 __ieee754_atanh(double x) {

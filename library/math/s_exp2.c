@@ -18,7 +18,7 @@ static const double
         P4 = 0x1.3b2ab88f70400p-7,
         P5 = 0x1.5d88003875c74p-10;
 
-static volatile double twom1000 = 0x1p-1000;
+static volatile double twom1000 = _F_64(0x1p-1000);
 
 static const double tbl[TBLSIZE * 2] = {
 /*	exp2(z + eps)		eps	*/
@@ -326,7 +326,7 @@ exp2(double x) {
     /* Scale by 2**(k>>20). */
     if (k >= -(1021 << 20)) {
         if (k == 1024 << 20)
-            return (r * 2.0 * 0x1p1023);
+            return (r * 2.0 * _F_64(0x1p1023));
         return (r * twopk);
     } else {
         return (r * twopkp1000 * twom1000);

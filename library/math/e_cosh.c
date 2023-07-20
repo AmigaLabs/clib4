@@ -6,7 +6,10 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-static const double one = 1.0, half = 0.5, huge = 1.0e300;
+static const double
+    one = 1.0,
+    half = 0.5,
+    huge = 1e300;
 
 double
 cosh(double x) {
