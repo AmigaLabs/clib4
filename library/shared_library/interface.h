@@ -24,6 +24,7 @@
 #include <glob.h>
 #include <grp.h>
 #include <iconv.h>
+#include <ieeefp.h>
 #include <ifaddrs.h>
 #include <langinfo.h>
 #include <libgen.h>
@@ -1305,6 +1306,13 @@ struct Clib2IFace {
 
     float (* strtof_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                             /* 4282 */
     double (* strtod_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                            /* 4286 */
+
+    fp_rnd_t    (* fpgetround) (void);                                                                                                               /* 4290 */
+    fp_rnd_t    (* fpsetround) (fp_rnd_t);                                                                                                           /* 4294 */
+    fp_except_t (* fpgetmask) (void);                                                                                                                /* 4298 */
+    fp_except_t (* fpsetmask) (fp_except_t);                                                                                                         /* 4302 */
+    fp_except_t (* fpgetsticky) (void);                                                                                                              /* 4306 */
+
 };
 
 #ifdef __PIC__

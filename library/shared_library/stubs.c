@@ -1076,3 +1076,9 @@ Clib2Call(mkostemps, 4276);
 
 Clib2Call(strtof_l, 4282);
 Clib2Call(strtod_l, 4286);
+
+Clib2Call(fpgetround, 4290);
+Clib2Call(fpsetround, 4294);
+Clib2Call(fpgetmask, 4298);
+Clib2Call(fpsetmask, 4302);
+Clib2Call(fpgetsticky, 4306);

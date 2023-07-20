@@ -216,11 +216,11 @@ do {												\
 } while (0)
 
 /* Get a 64-bit int from a double. */
-#define EXTRACT_WORD64(ix,d)					\
-do {								            \
-  ieee_double_shape_type ew_u;					\
-  ew_u.value = (d);						        \
-  (ix) = ew_u.xparts.w;						    \
+#define EXTRACT_WORD64(ix,d)					    \
+do {								                \
+  ieee_double_shape_type ew_u;					    \
+  ew_u.value = (d);						            \
+  (ix) = ew_u.xparts.w;						        \
 } while (0)
 
 /* Get the more significant 32 bit int from a double.  */
@@ -280,136 +280,136 @@ do {												\
 /* Get three 32 bit ints from a double.  */
 
 #define GET_LDOUBLE_WORDS(se,ix0,ix1,d)				\
-do {								\
+do {								                \
   ieee_extended_shape_type ew_u = {0};				\
-  ew_u.value = (d);						\
-  (se) = ew_u.parts.exp;					\
-  (ix0) = ew_u.parts.msw;					\
-  (ix1) = ew_u.parts.lsw;					\
+  ew_u.value = (d);						            \
+  (se) = ew_u.parts.exp;					        \
+  (ix0) = ew_u.parts.msw;					        \
+  (ix1) = ew_u.parts.lsw;					        \
 } while (0)
 
 /* Set a double from two 32 bit ints.  */
 
 #define SET_LDOUBLE_WORDS(d,se,ix0,ix1)				\
-do {								\
-  ieee_extended_shape_type iw_u;				\
-  iw_u.parts.exp = (se);					\
-  iw_u.parts.msw = (ix0);					\
-  iw_u.parts.lsw = (ix1);					\
-  (d) = iw_u.value;						\
+do {								                \
+  ieee_extended_shape_type iw_u;				    \
+  iw_u.parts.exp = (se);					        \
+  iw_u.parts.msw = (ix0);					        \
+  iw_u.parts.lsw = (ix1);					        \
+  (d) = iw_u.value;						            \
 } while (0)
 
 /* Get the more significant 32 bits of a long double mantissa.  */
 
-#define GET_LDOUBLE_MSW(v,d)					\
-do {								\
-  ieee_extended_shape_type sh_u;				\
-  sh_u.value = (d);						\
-  (v) = sh_u.parts.msw;						\
+#define GET_LDOUBLE_MSW(v,d)					    \
+do {								                \
+  ieee_extended_shape_type sh_u;				    \
+  sh_u.value = (d);						            \
+  (v) = sh_u.parts.msw;						        \
 } while (0)
 
 /* Set the more significant 32 bits of a long double mantissa from an int.  */
 
-#define SET_LDOUBLE_MSW(d,v)					\
-do {								\
-  ieee_extended_shape_type sh_u;				\
-  sh_u.value = (d);						\
-  sh_u.parts.msw = (v);						\
-  (d) = sh_u.value;						\
+#define SET_LDOUBLE_MSW(d,v)					    \
+do {								                \
+  ieee_extended_shape_type sh_u;				    \
+  sh_u.value = (d);						            \
+  sh_u.parts.msw = (v);						        \
+  (d) = sh_u.value;						            \
 } while (0)
 
 /* Get int from the exponent of a long double.  */
 
-#define GET_LDOUBLE_EXP(se,d)					\
-do {								\
-  ieee_extended_shape_type ge_u;				\
-  ge_u.value = (d);						\
-  (se) = ge_u.parts.exp;					\
+#define GET_LDOUBLE_EXP(se,d)					    \
+do {								                \
+  ieee_extended_shape_type ge_u;				    \
+  ge_u.value = (d);						            \
+  (se) = ge_u.parts.exp;					        \
 } while (0)
 
 /* Set exponent of a long double from an int.  */
 
-#define SET_LDOUBLE_EXP(d,se)					\
-do {								\
-  ieee_extended_shape_type se_u;				\
-  se_u.value = (d);						\
-  se_u.parts.exp = (se);					\
-  (d) = se_u.value;						\
+#define SET_LDOUBLE_EXP(d,se)					    \
+do {								                \
+  ieee_extended_shape_type se_u;				    \
+  se_u.value = (d);						            \
+  se_u.parts.exp = (se);					        \
+  (d) = se_u.value;						            \
 } while (0)
 
 /* Get two 64 bit ints from a long double.  */
 
-#define GET_LDOUBLE_WORDS64(ix0, ix1, d)	\
-do {								        \
-  ieee_quad_shape_type qw_u = { 0 };		\
-  qw_u.value = (d);						    \
-  (ix0) = qw_u.parts64.msw;					\
-  (ix1) = qw_u.parts64.lsw;					\
+#define GET_LDOUBLE_WORDS64(ix0, ix1, d)	        \
+do {								                \
+  ieee_quad_shape_type qw_u = { 0 };		        \
+  qw_u.value = (d);						            \
+  (ix0) = qw_u.parts64.msw;					        \
+  (ix1) = qw_u.parts64.lsw;					        \
 } while (0)
 
 /* Set a long double from two 64 bit ints.  */
 
 #define SET_LDOUBLE_WORDS64(d,ix0,ix1)				\
-do {								\
-  ieee_quad_shape_type qw_u;					\
-  qw_u.parts64.msw = (ix0);					\
-  qw_u.parts64.lsw = (ix1);					\
-  (d) = qw_u.value;						\
+do {								                \
+  ieee_quad_shape_type qw_u;					    \
+  qw_u.parts64.msw = (ix0);					        \
+  qw_u.parts64.lsw = (ix1);					        \
+  (d) = qw_u.value;						            \
 } while (0)
 
-#define GET_LDOUBLE_MSW64(v,d)					\
-do {								\
-  ieee_quad_shape_type sh_u;					\
-  sh_u.value = (d);						\
-  (v) = sh_u.parts64.msw;					\
+#define GET_LDOUBLE_MSW64(v,d)					    \
+do {								                \
+  ieee_quad_shape_type sh_u;					    \
+  sh_u.value = (d);						            \
+  (v) = sh_u.parts64.msw;					        \
 } while (0)
 
 /* Set the more significant 64 bits of a long double mantissa from an int.  */
 
-#define SET_LDOUBLE_MSW64(d,v)					\
-do {								\
-  ieee_quad_shape_type sh_u;					\
-  sh_u.value = (d);						\
-  sh_u.parts64.msw = (v);					\
-  (d) = sh_u.value;						\
+#define SET_LDOUBLE_MSW64(d,v)					    \
+do {								                \
+  ieee_quad_shape_type sh_u;					    \
+  sh_u.value = (d);						            \
+  sh_u.parts64.msw = (v);					        \
+  (d) = sh_u.value;						            \
 } while (0)
 
 /* Get the least significant 64 bits of a long double mantissa.  */
 
-#define GET_LDOUBLE_LSW64(v,d)					\
-do {								\
-  ieee_quad_shape_type sh_u;					\
-  sh_u.value = (d);						\
-  (v) = sh_u.parts64.lsw;					\
+#define GET_LDOUBLE_LSW64(v,d)					    \
+do {								                \
+  ieee_quad_shape_type sh_u;					    \
+  sh_u.value = (d);						            \
+  (v) = sh_u.parts64.lsw;					        \
 } while (0)
 
 /* Get a 32 bit int from a float.  */
 
-#define GET_FLOAT_WORD(i,d)		\
-do {							\
-  ieee_float_shape_type gf_u;	\
-  gf_u.value = (d);				\
-  (i) = gf_u.word;				\
+#define GET_FLOAT_WORD(i,d)		                    \
+do {							                    \
+  ieee_float_shape_type gf_u;	                    \
+  gf_u.value = (d);				                    \
+  (i) = gf_u.word;				                    \
 } while (0)
 
 /* Set a float from a 32 bit int.  */
 
-#define SET_FLOAT_WORD(d,i)		\
-do {							\
-  ieee_float_shape_type sf_u;	\
-  sf_u.word = (i);				\
-  (d) = sf_u.value;				\
+#define SET_FLOAT_WORD(d,i)		                    \
+do {							                    \
+  ieee_float_shape_type sf_u;	                    \
+  sf_u.word = (i);				                    \
+  (d) = sf_u.value;				                    \
 } while (0)
 
-#define	STRICT_ASSIGN(type, lval, rval) do {	\
-	volatile type __lval;			            \
-						                        \
-	if (sizeof(type) >= sizeof(long double))	\
-		(lval) = (rval);		                \
-	else {					                    \
-		__lval = (rval);		                \
-		(lval) = __lval;		                \
-	}					                        \
+#define	STRICT_ASSIGN(type, lval, rval) do {	    \
+	volatile type __lval;			                \
+						                            \
+	if (sizeof(type) >= sizeof(long double))	    \
+		(lval) = (rval);		                    \
+	else {					                        \
+		__lval = (rval);		                    \
+		(lval) = __lval;		                    \
+	}					                            \
 } while (0)
 
 #define	TRUNC(d)	    (_b_trunc(&(d)))

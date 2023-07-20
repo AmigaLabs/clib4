@@ -1140,4 +1140,11 @@ static void *clib2Vectors[] = {
 
         (void *) (strtof_l),                              /* 4282 */
         (void *) (strtod_l),                              /* 4286 */
+
+        (void *) (fpgetround),                            /* 4290 */
+        (void *) (fpsetround),                            /* 4294 */
+        (void *) (fpgetmask),                             /* 4298 */
+        (void *) (fpsetmask),                             /* 4302 */
+        (void *) (fpgetsticky),                           /* 4306 */
+
 };

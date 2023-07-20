@@ -167,6 +167,11 @@ C_MATH := \
 	math/s_ilogb.o \
 	math/s_ilogbf.o \
 	math/s_ilogbl.o \
+	math/fpgetmask.o \
+	math/fpgetround.o \
+	math/fpgetsticky.o \
+	math/fpsetmask.o \
+	math/fpsetround.o \
 	math/inf.o \
 	math/inff.o \
 	math/init_exit.o \
@@ -229,9 +234,9 @@ C_MATH := \
 	math/lroundl.o \
 	math/math_invalid.o \
 	math/math_invalidf.o \
-	math/modf.o \
-	math/modff.o \
-	math/modfl.o \
+	math/s_modf.o \
+	math/s_modff.o \
+	math/s_modfl.o \
 	math/nan.o \
 	math/nanf.o \
 	math/nanl.o \
@@ -244,12 +249,12 @@ C_MATH := \
 	math/nexttoward.o \
 	math/nexttowardf.o \
 	math/nexttowardl.o \
-	math/pow.o \
+	math/e_pow.o \
 	math/pow10.o \
 	math/pow10f.o \
 	math/pow10l.o \
-	math/powf.o \
-	math/powl.o \
+	math/e_powf.o \
+	math/e_powl.o \
 	math/remainder.o \
 	math/remainderf.o \
 	math/remainderl.o \
@@ -257,44 +262,44 @@ C_MATH := \
 	math/remquof.o \
 	math/remquol.o \
 	math/e_rem_pio2f.o \
-	math/rint.o \
-	math/rintf.o \
-	math/rintl.o \
+	math/s_rint.o \
+	math/s_rintf.o \
+	math/s_rintl.o \
 	math/round.o \
 	math/roundf.o \
 	math/roundl.o \
-	math/scalbln.o \
-	math/scalblnf.o \
-	math/scalblnl.o \
-	math/scalbn.o \
-	math/scalbnf.o \
-	math/scalbnl.o \
-	math/signbit.o \
-    math/signgam.o \
+	math/s_scalbln.o \
+	math/s_scalblnf.o \
+	math/s_scalblnl.o \
+	math/s_scalbn.o \
+	math/s_scalbnf.o \
+	math/s_scalbnl.o \
+	math/s_signbit.o \
+    math/s_signgam.o \
 	math/s_sin.o \
     math/s_sincos.o \
     math/s_sincosf.o \
     math/s_sincosl.o \
 	math/s_sinf.o \
-	math/sinh.o \
-	math/sinhf.o \
-	math/sinhl.o \
-	math/sinl.o \
-	math/sqrt.o \
-	math/sqrtf.o \
-	math/sqrtl.o \
+	math/e_sinh.o \
+	math/e_sinhf.o \
+	math/e_sinhl.o \
+	math/s_sinl.o \
+	math/e_sqrt.o \
+	math/e_sqrtf.o \
+	math/e_sqrtl.o \
 	math/s_tan.o \
 	math/s_tanf.o \
-	math/tanh.o \
-	math/tanhf.o \
-	math/tanhl.o \
-	math/tanl.o \
-	math/tgamma.o \
-	math/tgammaf.o \
-	math/tgammal.o \
-	math/trunc.o \
-	math/truncf.o \
-	math/truncl.o
+	math/s_tanh.o \
+	math/s_tanhf.o \
+	math/s_tanhl.o \
+	math/s_tanl.o \
+	math/b_tgamma.o \
+	math/s_tgammaf.o \
+	math/s_tgammal.o \
+	math/s_trunc.o \
+	math/s_truncf.o \
+	math/s_truncl.o
 
 ifdef SPE
     $(info Using SPE math objects)
