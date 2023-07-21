@@ -5,10 +5,9 @@
 #include <sys/types.h>
 #include <ieeefp.h>
 
-#ifndef _SOFT_FLOAT
-
 fp_rnd_t
 fpsetround(fp_rnd_t rnd_dir) {
+#ifndef __SPE__
     uint64_t fpscr;
     fp_rnd_t old;
 
@@ -17,6 +16,8 @@ fpsetround(fp_rnd_t rnd_dir) {
     fpscr = (fpscr & 0xfffffffc) | rnd_dir;
     __asm__ __volatile("mtfsf 0xff,%0"::"f"(fpscr));
     return (old);
+#else
+    return 0;
+#endif
 }
 
-#endif

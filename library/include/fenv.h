@@ -125,6 +125,7 @@ fesetexceptflag(const fexcept_t *__flagp, int __excepts) {
     return (0);
 }
 
+#ifndef __SPE__
 __fenv_static inline int
 feraiseexcept(int __excepts) {
     union __fpscr __r;
@@ -136,6 +137,9 @@ feraiseexcept(int __excepts) {
     __mtfsf(__r.__d);
     return (0);
 }
+#else
+extern int feraiseexcept(int __excepts);
+#endif
 
 __fenv_static inline int
 fetestexcept(int __excepts) {

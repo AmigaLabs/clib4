@@ -5,9 +5,9 @@
 #include <sys/types.h>
 #include <ieeefp.h>
 
-#ifndef _SOFT_FLOAT
 fp_except_t
 fpsetmask(fp_except_t mask) {
+#ifndef __SPE__
     uint64_t fpscr;
     fp_except_t old;
 
@@ -16,5 +16,7 @@ fpsetmask(fp_except_t mask) {
     fpscr = (fpscr & 0xffffff07) | ((mask & 0x1f) << 3);
     __asm__ __volatile("mtfsf 0xff,%0"::"f"(fpscr));
     return (old);
-}
+#else
+    return 0;
 #endif
+}

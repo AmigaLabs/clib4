@@ -31,6 +31,8 @@
 #ifndef _POWERPC_SPR_H_
 #define _POWERPC_SPR_H_
 
+typedef int32_t register_t;
+
 #ifndef _LOCORE
 #define  mtspr(reg, val)                            \
     __asm __volatile("mtspr %0,%1" : : "K"(reg), "r"(val))

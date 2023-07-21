@@ -7,25 +7,6 @@
 
 #include <endian.h>
 
-/* 'Portable' raw representations of three IEEE floating point formats. */
-union ieee_long_double
-{
-	long double		value;
-	unsigned long	raw[3];
-};
-
-union ieee_double
-{
-	double			value;
-	unsigned long	raw[2];
-};
-
-union ieee_single
-{
-	float			value;
-	unsigned long	raw[1];
-};
-
 union IEEEl2bits {
     long double	e;
     struct {
@@ -44,9 +25,15 @@ union IEEEl2bits {
 union IEEEf2bits {
     float	f;
     struct {
-        unsigned int	sign	:1;
-		unsigned int	exp	    :8;
-		unsigned int	man	    :23;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        unsigned int	man	 :23;
+        unsigned int	exp	 :8;
+        unsigned int	sign :1;
+#else /* _BIG_ENDIAN */
+        unsigned int	sign :1;
+		unsigned int	exp	 :8;
+		unsigned int	man	 :23;
+#endif
     } bits;
 };
 
@@ -61,10 +48,22 @@ struct Double {
 union IEEEd2bits {
     double	d;
     struct {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#if __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        unsigned int	manl	:32;
+#endif
+        unsigned int	manh	:20;
+        unsigned int	exp	    :11;
         unsigned int	sign	:1;
-		unsigned int	exp 	:11;
+#if __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+        unsigned int	manl	:32;
+#endif
+#else /* _BIG_ENDIAN */
+        unsigned int	sign	:1;
+		unsigned int	exp	    :11;
 		unsigned int	manh	:20;
 		unsigned int	manl	:32;
+#endif
     } bits;
 };
 
@@ -74,12 +73,5 @@ union IEEEd2bits {
 
 #define	LDBL_MANH_SIZE	20
 #define	LDBL_MANL_SIZE	32
-
-#define	LDBL_TO_ARRAY32(u, a) do {			\
-	(a)[0] = (uint32_t)(u).bits.manl;		\
-	(a)[1] = (uint32_t)(u).bits.manh;		\
-} while(0)
-
-/****************************************************************************/
 
 #endif /* _MATH_FP_SUPPORT_H */

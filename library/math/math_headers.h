@@ -92,6 +92,7 @@ STATIC udouble z_notanum  = {{ 0xfff80000, 0 }};
 #  define LOW_HALF  1
 #else
 #  if __FLOAT_WORD_ORDER__ == __LITTLE_ENDIAN
+#error Cannot use LIITLE ENDIAN on AmigaOS4
 #   define HIGH_HALF 1
 #   define LOW_HALF  0
 #  endif
@@ -206,7 +207,7 @@ typedef union { double d; uint32_t i[2]; } U;
 #define max(x,y)  (((y)>(x))?(y):(x))
 #define min(x,y)  (((y)<(x))?(y):(x))
 
-#define EXTRACT_WORDS(ix0,ix1,d)					\
+#define EXTRACT_WORDS(ix0, ix1, d)					\
 do {												\
     ieee_double_shape_type ew_u;					\
     ew_u.value = (d);								\

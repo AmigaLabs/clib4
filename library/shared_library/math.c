@@ -387,6 +387,11 @@ __divdi3(di_int a, di_int b) {
     return (__udivmoddi4(a, b, (du_int *) 0) ^ s_a) - s_a;  /* negate if s_a == -1 */
 }
 
+di_int
+__unorddf2 (double a, double b) {
+    return isnan(a) || isnan(b);
+}
+
 #ifndef __SOFT_FP__
 /* Support for systems that have hardware floating-point; we'll set the inexact flag
  * as a side-effect of this computation.

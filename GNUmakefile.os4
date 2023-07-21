@@ -119,9 +119,9 @@ AFLAGS     := -Wa,-mregnames
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
     AS := ppc-amigaos-as-6.4.0
-    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mcpu=8540 -mabi=spe -mlong-double-64 -mfloat-gprs=double -D_NEED_FLOAT64 -fsingle-precision-constant -fno-inline-functions -fno-partial-inlining \
-                -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining  -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
-    AFLAGS := $(AFLAGS) -D__SPE__ -mspe -mcpu=8540 -mfloat-gprs=double -D_NEED_FLOAT64 -Wno-overflow
+    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mcpu=8540 -mabi=spe -mfloat-gprs=double -fsingle-precision-constant -fno-inline-functions -fno-partial-inlining \
+                -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
+    AFLAGS := $(AFLAGS) -D__SPE__ -mspe -mcpu=8540 -mfloat-gprs=double -Wno-overflow
 endif
 
 VERBOSE    ?= @
@@ -315,7 +315,7 @@ $(VERBOSE)echo -e "\rPreprocessing and compiling SPE \033[0;33m[$(@D)]\033[0m \r
 $(VERBOSE)$(CC) -c -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe $(CFLAGS) -mno-regnames -S -o $@_in $< $(LOG_COMMAND)
 $(VERBOSE)$(BUILD_DIR)/PatchForSPE $@_in $@.S >/dev/null
 $(VERBOSE)$(CC) -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe $(CFLAGS) -c $@.S -o $@ $(LOG_COMMAND)
-#$(VERBOSE)-$(DELETE) $@_in $@.S
+$(VERBOSE)-$(DELETE) $@_in $@.S
 endef
 
 define COMPILE_SHARED_SPE
@@ -324,7 +324,7 @@ $(VERBOSE)echo -e "\rPreprocessing and compiling SPE \033[0;33m[$(@D)]\033[0m \r
 $(VERBOSE)$(CC) -c -mspe -mcpu=8540 -mfloat-gprs=double $(PIC) -mabi=spe $(CFLAGS) -mno-regnames -S -o $@_in $< $(LOG_COMMAND)
 $(VERBOSE)$(BUILD_DIR)/PatchForSPE $@_in $@.S >/dev/null
 $(VERBOSE)$(CC) -mspe -mcpu=8540 -mfloat-gprs=double $(PIC) -mabi=spe $(CFLAGS) -c $@.S -o $@ $(LOG_COMMAND)
-#$(VERBOSE)-$(DELETE) $@_in $@.S
+$(VERBOSE)-$(DELETE) $@_in $@.S
 endef
 
 define MAKELIB
