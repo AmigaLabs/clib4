@@ -1,5 +1,5 @@
 /*
- * $Id: math_s_copysignl.c,v 1.2 2023-07-18 12:04:23 clib2devs Exp $
+ * $Id: math_s_copysignl.c,v 1.2 2023-07-19 12:04:23 clib2devs Exp $
  */
 
 #ifndef _MATH_HEADERS_H

@@ -88,8 +88,9 @@ problem).
 
 ### SYSV functions
 
-Clib2 now contains **shm***, **msg*** and **sem*** functions. 
-<a href="http://www.os4depot.net/share/development/library/misc/sysvipc.lha">SYSV IPC</a> library is now fully integrated into clib2 library and
+Clib2 now contains **shm***, **msg*** and **sem*** functions.
+<a href="http://www.os4depot.net/share/development/library/misc/sysvipc.lha">SYSV IPC</a> library is now fully
+integrated into clib2 library and
 doesn't need any external resource
 
 ### Unix path support
@@ -153,8 +154,9 @@ Added crypt library that implements crypt and crypt_r
 
 ### UNIX sockets (AF_UNIX)
 
-clib2 now supports emulated UNIX sockets. Since roadshow and OS4 doesn't support them natively, UNIX sockets are emulated via
-native sockets. The user doesn't need to change anything in the linux code. Everything will be transparent for him  
+clib2 now supports emulated UNIX sockets. Since roadshow and OS4 doesn't support them natively, UNIX sockets are
+emulated via
+native sockets. The user doesn't need to change anything in the linux code. Everything will be transparent for him
 
 * ##### About salt
 
@@ -255,6 +257,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### SYSV
+
 Thanks to Peter Bengtsson for SYSV implementation
 
 ### Math library

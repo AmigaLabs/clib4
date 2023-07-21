@@ -80,9 +80,6 @@ union IEEEd2bits {
 	(a)[1] = (uint32_t)(u).bits.manh;		\
 } while(0)
 
-extern float __inff(void);
-extern double __inf(void);
-
 /****************************************************************************/
 
 #endif /* _MATH_FP_SUPPORT_H */

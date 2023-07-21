@@ -26,13 +26,13 @@
    FUNC(function): converts general function name (like cos) to
    name with correct suffix (e.g. cosl or cosf)
    MATHCONST(x):   like FUNC but for constants (e.g convert 0.0 to 0.0L)
-   FLOAT:	   floating point type to test
+   _FLOAT:	   floating point type to test
    - TEST_MSG:	   informal message to be displayed
    CHOOSE(Clongdouble,Cdouble,Cfloat,Cinlinelongdouble,Cinlinedouble,Cinlinefloat):
    chooses one of the parameters as delta for testing
    equality
    PRINTF_EXPR	   Floating point conversion specification to print a variable
-   of type FLOAT with printf.  PRINTF_EXPR just contains
+   of type _FLOAT with printf.  PRINTF_EXPR just contains
    the specifier, not the percent and width arguments,
    e.g. "f".
    PRINTF_XEXPR	   Like PRINTF_EXPR, but print in hexadecimal format.
@@ -127,45 +127,48 @@
 #include <stdio.h>
 #include <string.h>
 
+// Some native libm implementations don't have sincos defined, so we have to do it ourselves
+void FUNC(sincos) (_FLOAT x, _FLOAT * s, _FLOAT * c);
+
 /* Possible exceptions */
-#define NO_EXCEPTION            0x0
-#define INVALID_EXCEPTION        0x1
-#define DIVIDE_BY_ZERO_EXCEPTION    0x2
+#define NO_EXCEPTION			    0x0
+#define INVALID_EXCEPTION		    0x1
+#define DIVIDE_BY_ZERO_EXCEPTION	0x2
 /* The next flags signals that those exceptions are allowed but not required.   */
-#define INVALID_EXCEPTION_OK        0x4
-#define DIVIDE_BY_ZERO_EXCEPTION_OK    0x8
+#define INVALID_EXCEPTION_OK		0x4
+#define DIVIDE_BY_ZERO_EXCEPTION_OK	0x8
 #define EXCEPTIONS_OK INVALID_EXCEPTION_OK+DIVIDE_BY_ZERO_EXCEPTION_OK
 /* Some special test flags, passed togther with exceptions.  */
-#define IGNORE_ZERO_INF_SIGN        0x10
+#define IGNORE_ZERO_INF_SIGN		0x10
 
 /* Various constants (we must supply them precalculated for accuracy).  */
-#define M_PI_6l            .52359877559829887307710723054658383L
-#define M_E2l            7.389056098930650227230427460575008L
-#define M_E3l            20.085536923187667740928529654581719L
-#define M_2_SQRT_PIl        3.5449077018110320545963349666822903L    /* 2 sqrt (M_PIl)  */
-#define M_SQRT_PIl        1.7724538509055160272981674833411451L    /* sqrt (M_PIl)  */
-#define M_LOG_SQRT_PIl        0.57236494292470008707171367567652933L    /* log(sqrt(M_PIl))  */
-#define M_LOG_2_SQRT_PIl    1.265512123484645396488945797134706L    /* log(2*sqrt(M_PIl))  */
-#define M_PI_34l        (M_PIl - M_PI_4l)        /* 3*pi/4 */
-#define M_PI_34_LOG10El        (M_PIl - M_PI_4l) * M_LOG10El
-#define M_PI2_LOG10El        M_PI_2l * M_LOG10El
-#define M_PI4_LOG10El        M_PI_4l * M_LOG10El
-#define M_PI_LOG10El        M_PIl * M_LOG10El
+#define M_PI_6l			    .52359877559829887307710723054658383L
+#define M_E2l			    7.389056098930650227230427460575008L
+#define M_E3l			    20.085536923187667740928529654581719L
+#define M_2_SQRT_PIl	    3.5449077018110320545963349666822903L	/* 2 sqrt (M_PIl)  */
+#define M_SQRT_PIl		    1.7724538509055160272981674833411451L	/* sqrt (M_PIl)  */
+#define M_LOG_SQRT_PIl		0.57236494292470008707171367567652933L	/* log(sqrt(M_PIl))  */
+#define M_LOG_2_SQRT_PIl	1.265512123484645396488945797134706L	/* log(2*sqrt(M_PIl))  */
+#define M_PI_34l		    (M_PIl - M_PI_4l)		/* 3*pi/4 */
+#define M_PI_34_LOG10El		(M_PIl - M_PI_4l) * M_LOG10El
+#define M_PI2_LOG10El		M_PI_2l * M_LOG10El
+#define M_PI4_LOG10El		M_PI_4l * M_LOG10El
+#define M_PI_LOG10El		M_PIl * M_LOG10El
 
 #if 1 /* XXX scp XXX */
-# define M_El        2.7182818284590452353602874713526625L  /* e */
-# define M_LOG2El    1.4426950408889634073599246810018922L  /* log_2 e */
-# define M_LOG10El    0.4342944819032518276511289189166051L  /* log_10 e */
-# define M_LN2l        0.6931471805599453094172321214581766L  /* log_e 2 */
-# define M_LN10l    2.3025850929940456840179914546843642L  /* log_e 10 */
-# define M_PIl        3.1415926535897932384626433832795029L  /* pi */
-# define M_PI_2l    1.5707963267948966192313216916397514L  /* pi/2 */
-# define M_PI_4l    0.7853981633974483096156608458198757L  /* pi/4 */
-# define M_1_PIl    0.3183098861837906715377675267450287L  /* 1/pi */
-# define M_2_PIl    0.6366197723675813430755350534900574L  /* 2/pi */
-# define M_2_SQRTPIl    1.1283791670955125738961589031215452L  /* 2/sqrt(pi) */
-# define M_SQRT2l    1.4142135623730950488016887242096981L  /* sqrt(2) */
-# define M_SQRT1_2l    0.7071067811865475244008443621048490L  /* 1/sqrt(2) */
+# define M_El		    2.7182818284590452353602874713526625L  /* e */
+# define M_LOG2El	    1.4426950408889634073599246810018922L  /* log_2 e */
+# define M_LOG10El	    0.4342944819032518276511289189166051L  /* log_10 e */
+# define M_LN2l		    0.6931471805599453094172321214581766L  /* log_e 2 */
+# define M_LN10l	    2.3025850929940456840179914546843642L  /* log_e 10 */
+# define M_PIl		    3.1415926535897932384626433832795029L  /* pi */
+# define M_PI_2l	    1.5707963267948966192313216916397514L  /* pi/2 */
+# define M_PI_4l	    0.7853981633974483096156608458198757L  /* pi/4 */
+# define M_1_PIl	    0.3183098861837906715377675267450287L  /* 1/pi */
+# define M_2_PIl	    0.6366197723675813430755350534900574L  /* 2/pi */
+# define M_2_SQRTPIl	1.1283791670955125738961589031215452L  /* 2/sqrt(pi) */
+# define M_SQRT2l	    1.4142135623730950488016887242096981L  /* sqrt(2) */
+# define M_SQRT1_2l	    0.7071067811865475244008443621048490L  /* 1/sqrt(2) */
 #endif
 
 static FILE *ulps_file;    /* File to document difference.  */
@@ -182,25 +185,10 @@ static int output_max_error;    /* Should the maximal errors printed?  */
 static int output_points;    /* Should the single function results printed?  */
 static int ignore_max_ulp;    /* Should we ignore max_ulp?  */
 
-static FLOAT minus_zero, plus_zero;
-static FLOAT plus_infty, minus_infty, nan_value;
+static _FLOAT minus_zero, plus_zero;
+static _FLOAT plus_infty, minus_infty, nan_value;
 
-static FLOAT max_error, real_max_error, imag_max_error;
-
-#if 0 /* XXX scp XXX */
-                                                                                                                        #define BUILD_COMPLEX(real, imag) \
-  ({ __complex__ FLOAT __retval;					      \
-     __real__ __retval = (real);					      \
-     __imag__ __retval = (imag);					      \
-     __retval; })
-
-#define BUILD_COMPLEX_INT(real, imag) \
-  ({ __complex__ int __retval;						      \
-     __real__ __retval = (real);					      \
-     __imag__ __retval = (imag);					      \
-     __retval; })
-#endif
-
+static _FLOAT max_error, real_max_error, imag_max_error;
 
 #define MANT_DIG CHOOSE ((LDBL_MANT_DIG-1), (DBL_MANT_DIG-1), (FLT_MANT_DIG-1),  \
                          (LDBL_MANT_DIG-1), (DBL_MANT_DIG-1), (FLT_MANT_DIG-1))
@@ -215,7 +203,7 @@ init_max_error(void) {
 }
 
 static void
-set_max_error(FLOAT current, FLOAT *curr_max_error) {
+set_max_error(_FLOAT current, _FLOAT *curr_max_error) {
     if (current > *curr_max_error)
         *curr_max_error = current;
 }
@@ -257,7 +245,7 @@ update_stats(int ok, int xfail) {
 }
 
 static void
-print_ulps(const char *test_name, FLOAT ulp) {
+print_ulps(const char *test_name, _FLOAT ulp) {
     if (output_ulps) {
         fprintf(ulps_file, "Test \"%s\":\n", test_name);
         fprintf(ulps_file, "%s: % .4"
@@ -269,7 +257,7 @@ print_ulps(const char *test_name, FLOAT ulp) {
 }
 
 static void
-print_function_ulps(const char *function_name, FLOAT ulp) {
+print_function_ulps(const char *function_name, _FLOAT ulp) {
     if (output_ulps) {
         fprintf(ulps_file, "Function: \"%s\":\n", function_name);
         fprintf(ulps_file, "%s: % .4"
@@ -280,37 +268,8 @@ print_function_ulps(const char *function_name, FLOAT ulp) {
     }
 }
 
-
-#if 0 /* XXX scp XXX */
-                                                                                                                        static void
-print_complex_function_ulps (const char *function_name, FLOAT real_ulp,
-			     FLOAT imag_ulp)
-{
-  if (output_ulps)
-    {
-      if (real_ulp != 0.0)
-	{
-	  fprintf (ulps_file, "Function: Real part of \"%s\":\n", function_name);
-	  fprintf (ulps_file, "%s: % .4" PRINTF_NEXPR "\n",
-		   CHOOSE("ldouble", "double", "float",
-			  "ildouble", "idouble", "ifloat"), real_ulp);
-	}
-      if (imag_ulp != 0.0)
-	{
-	  fprintf (ulps_file, "Function: Imaginary part of \"%s\":\n", function_name);
-	  fprintf (ulps_file, "%s: % .4" PRINTF_NEXPR "\n",
-		   CHOOSE("ldouble", "double", "float",
-			  "ildouble", "idouble", "ifloat"), imag_ulp);
-	}
-
-
-    }
-}
-#endif
-
-
 static void
-print_max_error(const char *func_name, FLOAT allowed, int xfail) {
+print_max_error(const char *func_name, _FLOAT allowed, int xfail) {
     int ok = 0;
 
     if (max_error == 0.0 || (max_error <= allowed && !ignore_max_ulp)) {
@@ -384,28 +343,25 @@ static void
 test_exceptions(const char *test_name, int exception) {
     ++noExcTests;
 #ifdef FE_DIVBYZERO
-                                                                                                                            if ((exception & DIVIDE_BY_ZERO_EXCEPTION_OK) == 0)
-    test_single_exception (test_name, exception,
-			   DIVIDE_BY_ZERO_EXCEPTION, FE_DIVBYZERO,
-			   "Divide by zero");
+    if ((exception & INVALID_EXCEPTION_OK) == 0)
+        test_single_exception (test_name, exception, INVALID_EXCEPTION, FE_INVALID, "Invalid operation");
 #endif
 #ifdef FE_INVALID
-                                                                                                                            if ((exception & INVALID_EXCEPTION_OK) == 0)
-    test_single_exception (test_name, exception, INVALID_EXCEPTION, FE_INVALID,
-			 "Invalid operation");
+    if ((exception & INVALID_EXCEPTION_OK) == 0)
+        test_single_exception (test_name, exception, INVALID_EXCEPTION, FE_INVALID, "Invalid operation");
 #endif
     feclearexcept(FE_ALL_EXCEPT);
 }
 
 
 static void
-check_float_internal(const char *test_name, FLOAT computed, FLOAT expected,
-                     FLOAT max_ulp, int xfail, int exceptions,
-                     FLOAT *curr_max_error) {
+check_float_internal(const char *test_name, _FLOAT computed, _FLOAT expected,
+                     _FLOAT max_ulp, int xfail, int exceptions,
+                     _FLOAT *curr_max_error) {
     int ok = 0;
     int print_diff = 0;
-    FLOAT diff = 0;
-    FLOAT ulp = 0;
+    _FLOAT diff = 0;
+    _FLOAT ulp = 0;
 
     test_exceptions(test_name, exceptions);
     if (isnan(computed) && isnan(expected))
@@ -479,8 +435,8 @@ check_float_internal(const char *test_name, FLOAT computed, FLOAT expected,
 
 
 static void
-check_float(const char *test_name, FLOAT computed, FLOAT expected,
-            FLOAT max_ulp, int xfail, int exceptions) {
+check_float(const char *test_name, _FLOAT computed, _FLOAT expected,
+            _FLOAT max_ulp, int xfail, int exceptions) {
     check_float_internal(test_name, computed, expected, max_ulp, xfail,
                          exceptions, &max_error);
 }
@@ -2382,15 +2338,15 @@ static void
 fabs_test(void) {
     init_max_error();
 
-    check_float("fabs (0) == 0", FUNC(fabs)((FLOAT) 0.0), 0, 0, 0, 0);
+    check_float("fabs (0) == 0", FUNC(fabs)((_FLOAT) 0.0), 0, 0, 0, 0);
     check_float("fabs (-0) == 0", FUNC(fabs)(minus_zero), 0, 0, 0, 0);
 
     check_float("fabs (inf) == inf", FUNC(fabs)(plus_infty), plus_infty, 0, 0, 0);
     check_float("fabs (-inf) == inf", FUNC(fabs)(minus_infty), plus_infty, 0, 0, 0);
     check_float("fabs (NaN) == NaN", FUNC(fabs)(nan_value), nan_value, 0, 0, 0);
 
-    check_float("fabs (38.0) == 38.0", FUNC(fabs)((FLOAT) 38.0), 38.0, 0, 0, 0);
-    check_float("fabs (-e) == e", FUNC(fabs)((FLOAT) - M_El), M_El, 0, 0, 0);
+    check_float("fabs (38.0) == 38.0", FUNC(fabs)((_FLOAT) 38.0), 38.0, 0, 0, 0);
+    check_float("fabs (-e) == e", FUNC(fabs)((_FLOAT) - M_El), M_El, 0, 0, 0);
 
     print_max_error("fabs", 0, 0);
 }
@@ -2559,44 +2515,41 @@ fmin_test(void) {
 static void
 fmod_test(void) {
     errno = 0;
-    FUNC(fmod)(6.5, 2.3L);
+    FUNC(fmod) (6.5, 2.3L);
     if (errno == ENOSYS)
         /* Function not implemented.  */
         return;
 
-    init_max_error();
+    init_max_error ();
 
     /* fmod (+0, y) == +0 for y != 0.  */
-    check_float("fmod (0, 3) == 0", FUNC(fmod)(0, 3), 0, 0, 0, 0);
+    check_float ("fmod (0, 3) == 0",  FUNC(fmod) (0, 3), 0, 0, 0, 0);
 
     /* fmod (-0, y) == -0 for y != 0.  */
-    check_float("fmod (-0, 3) == -0", FUNC(fmod)(minus_zero, 3), minus_zero, 0, 0, 0);
+    check_float ("fmod (-0, 3) == -0",  FUNC(fmod) (minus_zero, 3), minus_zero, 0, 0, 0);
 
     /* fmod (+inf, y) == NaN plus invalid exception.  */
-    check_float("fmod (inf, 3) == NaN plus invalid exception", FUNC(fmod)(plus_infty, 3), nan_value, 0, 0,
-                INVALID_EXCEPTION);
+    check_float ("fmod (inf, 3) == NaN plus invalid exception",  FUNC(fmod) (plus_infty, 3), nan_value, 0, 0, INVALID_EXCEPTION);
     /* fmod (-inf, y) == NaN plus invalid exception.  */
-    check_float("fmod (-inf, 3) == NaN plus invalid exception", FUNC(fmod)(minus_infty, 3), nan_value, 0, 0,
-                INVALID_EXCEPTION);
+    check_float ("fmod (-inf, 3) == NaN plus invalid exception",  FUNC(fmod) (minus_infty, 3), nan_value, 0, 0, INVALID_EXCEPTION);
     /* fmod (x, +0) == NaN plus invalid exception.  */
-    check_float("fmod (3, 0) == NaN plus invalid exception", FUNC(fmod)(3, 0), nan_value, 0, 0, INVALID_EXCEPTION);
+    check_float ("fmod (3, 0) == NaN plus invalid exception",  FUNC(fmod) (3, 0), nan_value, 0, 0, INVALID_EXCEPTION);
     /* fmod (x, -0) == NaN plus invalid exception.  */
-    check_float("fmod (3, -0) == NaN plus invalid exception", FUNC(fmod)(3, minus_zero), nan_value, 0, 0,
-                INVALID_EXCEPTION);
+    check_float ("fmod (3, -0) == NaN plus invalid exception",  FUNC(fmod) (3, minus_zero), nan_value, 0, 0, INVALID_EXCEPTION);
 
     /* fmod (x, +inf) == x for x not infinite.  */
-    check_float("fmod (3.0, inf) == 3.0", FUNC(fmod)(3.0, plus_infty), 3.0, 0, 0, 0);
+    check_float ("fmod (3.0, inf) == 3.0",  FUNC(fmod) (3.0, plus_infty), 3.0, 0, 0, 0);
     /* fmod (x, -inf) == x for x not infinite.  */
-    check_float("fmod (3.0, -inf) == 3.0", FUNC(fmod)(3.0, minus_infty), 3.0, 0, 0, 0);
+    check_float ("fmod (3.0, -inf) == 3.0",  FUNC(fmod) (3.0, minus_infty), 3.0, 0, 0, 0);
 
-    check_float("fmod (NaN, NaN) == NaN", FUNC(fmod)(nan_value, nan_value), nan_value, 0, 0, 0);
+    check_float ("fmod (NaN, NaN) == NaN",  FUNC(fmod) (nan_value, nan_value), nan_value, 0, 0, 0);
 
-    check_float("fmod (6.5, 2.3) == 1.9", FUNC(fmod)(6.5, 2.3L), 1.9L, DELTA972, 0, 0);
-    check_float("fmod (-6.5, 2.3) == -1.9", FUNC(fmod)(-6.5, 2.3L), -1.9L, DELTA973, 0, 0);
-    check_float("fmod (6.5, -2.3) == 1.9", FUNC(fmod)(6.5, -2.3L), 1.9L, DELTA974, 0, 0);
-    check_float("fmod (-6.5, -2.3) == -1.9", FUNC(fmod)(-6.5, -2.3L), -1.9L, DELTA975, 0, 0);
+    check_float ("fmod (6.5, 2.3) == 1.9",  FUNC(fmod) (6.5, 2.3L), 1.9L, DELTA972, 0, 0);
+    check_float ("fmod (-6.5, 2.3) == -1.9",  FUNC(fmod) (-6.5, 2.3L), -1.9L, DELTA973, 0, 0);
+    check_float ("fmod (6.5, -2.3) == 1.9",  FUNC(fmod) (6.5, -2.3L), 1.9L, DELTA974, 0, 0);
+    check_float ("fmod (-6.5, -2.3) == -1.9",  FUNC(fmod) (-6.5, -2.3L), -1.9L, DELTA975, 0, 0);
 
-    print_max_error("fmod", DELTAfmod, 0);
+    print_max_error ("fmod", DELTAfmod, 0);
 }
 
 static void
@@ -2791,7 +2744,7 @@ isnormal_test(void) {
 
 static void
 j0_test(void) {
-    FLOAT s, c;
+    _FLOAT s, c;
     errno = 0;
     FUNC(sincos)(0, &s, &c);
     if (errno == ENOSYS)
@@ -2823,7 +2776,7 @@ j0_test(void) {
 
 static void
 j1_test(void) {
-    FLOAT s, c;
+    _FLOAT s, c;
     errno = 0;
     FUNC(sincos)(0, &s, &c);
     if (errno == ENOSYS)
@@ -2856,7 +2809,7 @@ j1_test(void) {
 
 static void
 jn_test(void) {
-    FLOAT s, c;
+    _FLOAT s, c;
     errno = 0;
     FUNC(sincos)(0, &s, &c);
     if (errno == ENOSYS)
@@ -3313,7 +3266,7 @@ llround_test(void) {
 
 static void
 modf_test(void) {
-    FLOAT x;
+    _FLOAT x;
 
     init_max_error();
 
@@ -3805,7 +3758,7 @@ sin_test(void) {
 
 static void
 sincos_test(void) {
-    FLOAT sin_res, cos_res;
+    _FLOAT sin_res, cos_res;
 
     errno = 0;
     FUNC(sincos)(0, &sin_res, &cos_res);
@@ -4038,7 +3991,7 @@ trunc_test(void) {
 
 static void
 y0_test(void) {
-    FLOAT s, c;
+    _FLOAT s, c;
     errno = 0;
     FUNC(sincos)(0, &s, &c);
     if (errno == ENOSYS)
@@ -4071,7 +4024,7 @@ y0_test(void) {
 
 static void
 y1_test(void) {
-    FLOAT s, c;
+    _FLOAT s, c;
     errno = 0;
     FUNC(sincos)(0, &s, &c);
     if (errno == ENOSYS)
@@ -4103,7 +4056,7 @@ y1_test(void) {
 
 static void
 yn_test(void) {
-    FLOAT s, c;
+    _FLOAT s, c;
     errno = 0;
     FUNC(sincos)(0, &s, &c);
     if (errno == ENOSYS)
@@ -4266,7 +4219,7 @@ check_ulp (void)
 {
   int i;
 
-  FLOAT u, diff, ulp;
+  _FLOAT u, diff, ulp;
   /* This gives one ulp.  */
   u = FUNC(nextafter) (10, 20);
   check_equal (10.0, u, 1, &diff, &ulp);

@@ -172,8 +172,6 @@ C_MATH := \
 	math/fpgetsticky.o \
 	math/fpsetmask.o \
 	math/fpsetround.o \
-	math/inf.o \
-	math/inff.o \
 	math/init_exit.o \
 	math/invtrig.o \
 	math/s_isfinite.o \
@@ -181,93 +179,87 @@ C_MATH := \
 	math/s_isnan.o \
 	math/s_isnormal.o \
     math/e_j0.o \
-    math/j0f.o \
-    math/j1.o \
-    math/j1f.o \
-    math/jn.o \
-    math/jnf.o \
-	math/kernel_cos.o \
-	math/kernel_cosf.o \
-	math/kernel_exp.o \
-	math/kernel_expf.o \
-	math/kernel_expm1.o \
+    math/e_j0f.o \
+    math/e_j1.o \
+    math/e_j1f.o \
+    math/e_jn.o \
+    math/e_jnf.o \
+	math/k_cos.o \
+	math/k_exp.o \
+	math/k_expf.o \
 	math/e_rem_pio2.o \
 	math/k_cosf.o \
 	math/k_rem_pio2.o \
 	math/k_sinf.o \
 	math/k_tanf.o \
-	math/kernel_sin.o \
-	math/kernel_sinf.o \
-	math/kernel_tan.o \
-	math/kernel_tanf.o \
-	math/ldexp.o \
-	math/ldexpf.o \
-	math/ldexpl.o \
-	math/lgamma.o \
-	math/lgammaf.o \
-	math/lgammal.o \
-	math/llrint.o \
-	math/llrintf.o \
-	math/llrintl.o \
-	math/llround.o \
-	math/llroundf.o \
-	math/llroundl.o \
-	math/log.o \
-	math/log10.o \
-	math/log10f.o \
-	math/log10l.o \
-	math/log1p.o \
-	math/log1pf.o \
-	math/log1pl.o \
-	math/log2.o \
-	math/log2f.o \
-	math/log2l.o \
-	math/logb.o \
-	math/logbf.o \
-	math/logbl.o \
-	math/logf.o \
-	math/logl.o \
-	math/lrint.o \
-	math/lrintl.o \
-	math/lround.o \
-	math/lroundf.o \
-	math/lroundl.o \
-	math/math_invalid.o \
-	math/math_invalidf.o \
+	math/k_sin.o \
+	math/k_tan.o \
+	math/s_ldexp.o \
+	math/s_ldexpf.o \
+	math/s_ldexpl.o \
+	math/e_lgamma.o \
+	math/e_lgammaf.o \
+	math/e_lgammal.o \
+	math/s_llrint.o \
+	math/s_llrintf.o \
+	math/s_llrintl.o \
+	math/s_llround.o \
+	math/s_llroundf.o \
+	math/s_llroundl.o \
+	math/e_log.o \
+	math/e_log10.o \
+	math/e_log10f.o \
+	math/e_log10l.o \
+	math/s_log1p.o \
+	math/s_log1pf.o \
+	math/s_log1pl.o \
+	math/e_log2.o \
+	math/e_log2f.o \
+	math/e_log2l.o \
+	math/s_logb.o \
+	math/s_logbf.o \
+	math/s_logbl.o \
+	math/e_logf.o \
+	math/e_logl.o \
+	math/s_lrint.o \
+	math/s_lrintl.o \
+	math/s_lround.o \
+	math/s_lroundf.o \
+	math/s_lroundl.o \
 	math/s_modf.o \
 	math/s_modff.o \
 	math/s_modfl.o \
-	math/nan.o \
-	math/nanf.o \
-	math/nanl.o \
-	math/nearbyint.o \
-	math/nearbyintf.o \
-	math/nearbyintl.o \
-	math/nextafter.o \
-	math/nextafterf.o \
-	math/nextafterl.o \
-	math/nexttoward.o \
-	math/nexttowardf.o \
-	math/nexttowardl.o \
+	math/s_nan.o \
+	math/s_nanf.o \
+	math/s_nanl.o \
+	math/s_nearbyint.o \
+	math/s_nearbyintf.o \
+	math/s_nearbyintl.o \
+	math/s_nextafter.o \
+	math/s_nextafterf.o \
+	math/s_nextafterl.o \
+	math/s_nexttoward.o \
+	math/s_nexttowardf.o \
+	math/s_nexttowardl.o \
 	math/e_pow.o \
-	math/pow10.o \
-	math/pow10f.o \
-	math/pow10l.o \
+	math/s_pow10.o \
+	math/s_pow10f.o \
+	math/s_pow10l.o \
 	math/e_powf.o \
 	math/e_powl.o \
-	math/remainder.o \
-	math/remainderf.o \
-	math/remainderl.o \
-	math/remquo.o \
-	math/remquof.o \
-	math/remquol.o \
+	math/e_remainder.o \
+	math/e_remainderf.o \
+	math/e_remainderl.o \
+	math/s_remquo.o \
+	math/s_remquof.o \
+	math/s_remquol.o \
 	math/e_rem_pio2f.o \
 	math/s_rint.o \
 	math/s_rintf.o \
 	math/s_rintl.o \
-	math/round.o \
-	math/roundf.o \
-	math/roundl.o \
+	math/s_round.o \
+	math/s_roundf.o \
+	math/s_roundl.o \
 	math/s_scalbln.o \
 	math/s_scalblnf.o \
 	math/s_scalblnl.o \
@@ -306,12 +298,12 @@ ifdef SPE
 	C_MATH := $(C_MATH) \
 		math/s_fabs_spe.o \
 		math/s_fabsf_spe.o \
-		math/lrintf_spe.o
+		math/s_lrintf_spe.o
 else
 	C_MATH := $(C_MATH)\
 		math/s_fabs.o \
 		math/s_fabsf.o \
-		math/lrintf.o
+		math/s_lrintf.o
 endif
 
 MATH_LIB := \

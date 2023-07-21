@@ -35,7 +35,6 @@ typedef long double __float64;
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-#include "dla.h"
 #include "gdtoa.h"
 #include "mprec.h"
 
@@ -464,36 +463,21 @@ _b_trunc(volatile double *_dp) {
 #define FLT_UWORD_LOG_2MAX 0x42b2d4fc
 #define HUGE ((float)3.40282346638528860e+38)
 
-extern double __kernel_cos(double x, double y);
-extern double __kernel_sin(double x, double y, int iy);
-extern int __ieee754_rem_pio2(double x, double *y);
-extern int __ieee754_rem_pio2f(float x, double *y);
-extern int __kernel_rem_pio2(double *x, double *y, int e0, int nx, int prec);
-extern double __kernel_tan(double x, double y, int iy);
-extern double __expm1(double x);
-extern float __kernel_cosf(float x, float y);
-extern float __kernel_cosdf(double x);
-extern float __kernel_sinf(float x, float y, int iy);
-extern float __kernel_sindf(double x);
-extern int __rem_pio2f(float x, float *y);
-extern float __kernel_tanf(float x, float y, int iy);
-extern double __lgamma(double x,int * gamma_sign_ptr);
-extern float __lgammaf(float x,int * gamma_sign_ptr);
-extern double __ldexp_exp(double x, int expt);
-extern float __ldexp_expf(float,int);
-extern int __kernel_rem_pio2f(float *x, float *y, int e0, int nx, int prec, const int32_t *ipio2);
+extern double   __kernel_cos(double x, double y);
+extern double   __kernel_sin(double x, double y, int iy);
+extern int      __ieee754_rem_pio2(double x, double *y);
+extern int      __ieee754_rem_pio2f(float x, double *y);
+extern int      __kernel_rem_pio2(double *x, double *y, int e0, int nx, int prec);
+extern double   __kernel_tan(double x, double y, int iy);
+extern float    __kernel_cosdf(double x);
+extern float    __kernel_sindf(double x);
+extern double   __ldexp_exp(double x, int expt);
+extern float    __ldexp_expf(float,int);
+extern float    __kernel_tandf(double x, int y);
+extern float    lgammaf_r(float, int *);
+extern double   lgamma_r(double, int *);
 extern double complex __ldexp_cexp(double complex z, int expt);
-extern float complex __ldexp_cexpf(float complex,int);
-extern __float64 __math_invalid(__float64 x);
-extern float __math_invalidf (float x);
-extern float __kernel_tandf(double x, int y);
-
-extern void __doasin(double x, double dx, double w[]);
-extern void __dubsin(double x, double dx, double v[]);
-extern void __dubcos(double x, double dx, double v[]);
-extern void __docos(double x, double dx, double v[]);
-extern double __sin32(double x, double res, double res1);
-extern double __cos32(double x, double res, double res1);
+extern float  complex __ldexp_cexpf(float complex,int);
 
 #define	__ieee754_sqrt	        sqrt
 #define	__ieee754_acos	        acos

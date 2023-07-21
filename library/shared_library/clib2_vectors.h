@@ -304,7 +304,7 @@ static void *clib2Vectors[] = {
         (void *) (tgammaf),                               /* 1168 */
         (void *) (truncf),                                /* 1172 */
         (void *) (ilogbf),                                /* 1176 */
-        (void *) (finite),                                /* 1180 */
+        (void *) (finite),                                /* 1180 */ /* TODO - REMOVE */
         (void *) (acosh),                                 /* 1184 */
         (void *) (asinh),                                 /* 1188 */
         (void *) (atanh),                                 /* 1192 */
