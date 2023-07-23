@@ -455,6 +455,32 @@ _b_trunc(volatile double *_dp) {
 #define __is_towardzero(r)      0
 #endif
 
+#ifdef _FLT_NO_DENORMALS
+#define FLT_UWORD_IS_ZERO(x) ((x)<0x00800000L)
+#define FLT_UWORD_IS_SUBNORMAL(x) 0
+#define FLT_UWORD_MIN 0x00800000
+#define FLT_UWORD_EXP_MIN 0x42fc0000
+#define FLT_UWORD_LOG_MIN 0x42aeac50
+#define FLT_SMALLEST_EXP 1
+#else
+#define FLT_UWORD_IS_ZERO(x) ((x)==0)
+#define FLT_UWORD_IS_SUBNORMAL(x) ((x)<0x00800000L)
+#define FLT_UWORD_MIN 0x00000001
+#define FLT_UWORD_EXP_MIN 0x43160000
+#define FLT_UWORD_LOG_MIN 0x42cff1b5
+#define FLT_SMALLEST_EXP -22
+#endif
+
+#ifdef __SPE__
+#define FLT_UWORD_IS_FINITE(x) 1
+#define FLT_UWORD_IS_NAN(x) 0
+#define FLT_UWORD_IS_INFINITE(x) 0
+#define FLT_UWORD_MAX 0x7fffffff
+#define FLT_UWORD_EXP_MAX 0x43010000
+#define FLT_UWORD_LOG_MAX 0x42b2d4fc
+#define FLT_UWORD_LOG_2MAX 0x42b437e0
+#define HUGE ((float)0X1.FFFFFEP128)
+#else
 #define FLT_UWORD_IS_FINITE(x) ((x)<0x7f800000L)
 #define FLT_UWORD_IS_NAN(x) ((x)>0x7f800000L)
 #define FLT_UWORD_IS_INFINITE(x) ((x)==0x7f800000L)
@@ -463,6 +489,7 @@ _b_trunc(volatile double *_dp) {
 #define FLT_UWORD_LOG_MAX 0x42b17217
 #define FLT_UWORD_LOG_2MAX 0x42b2d4fc
 #define HUGE ((float)3.40282346638528860e+38)
+#endif
 
 extern double   __kernel_cos(double x, double y);
 extern double   __kernel_sin(double x, double y, int iy);
@@ -528,5 +555,44 @@ extern float  complex __ldexp_cexpf(float complex,int);
 #define	__ieee754_jnf	        jnf
 #define	__ieee754_ynf	        ynf
 #define	__ieee754_remainderf    remainderf
+
+#ifdef __SPE__
+#include "soft-float/soft-fp.h"
+#include "soft-float/double.h"
+#include "soft-float/quad.h"
+#include "soft-float/single.h"
+
+extern SFtype __addsf3(SFtype a, SFtype b);
+extern DFtype __adddf3(DFtype a, DFtype b);
+extern DFtype __divdf3(DFtype a, DFtype b);
+extern SFtype __divsf3(SFtype a, SFtype b);
+extern TFtype __divtf3(TFtype a, TFtype b);
+extern CMPtype __eqdf2(DFtype a, DFtype b);
+extern CMPtype __eqsf2(SFtype a, SFtype b);
+extern DFtype __extendsfdf2(SFtype a);
+extern SItype __fixdfsi(DFtype a);
+extern SItype __fixsfsi(SFtype a);
+extern USItype __fixunsdfsi(DFtype a);
+extern USItype __fixunssfsi(SFtype a);
+extern DFtype __floatsidf(SItype i);
+extern SFtype __floatsisf(SItype i);
+extern DFtype __floatunsidf(USItype i);
+extern SFtype __floatunsisf(USItype i);
+extern CMPtype __gesf2(SFtype a, SFtype b);
+extern CMPtype __gedf2(DFtype a, DFtype b);
+extern CMPtype __gtdf2(DFtype a, DFtype b);
+extern CMPtype __gtsf2(SFtype a, SFtype b);
+extern CMPtype __ledf2(DFtype a, DFtype b);
+extern CMPtype __lesf2(SFtype a, SFtype b);
+extern CMPtype __ltdf2(DFtype a, DFtype b);
+extern CMPtype __ltsf2(SFtype a, SFtype b);
+extern DFtype __muldf3(DFtype a, DFtype b);
+extern SFtype __mulsf3(SFtype a, SFtype b);
+extern CMPtype __nedf2(DFtype a, DFtype b);
+extern CMPtype __nesf2(SFtype a, SFtype b);
+extern DFtype __subdf3(DFtype a, DFtype b);
+extern SFtype __subsf3(SFtype a, SFtype b);
+extern SFtype __truncdfsf2(DFtype a);
+#endif
 
 #endif /* _MATH_HEADERS_H */

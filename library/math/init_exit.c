@@ -10,6 +10,23 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
+#include <fpu_control.h>
+
+static void
+__setfpucw(fpu_control_t set) {
+    fpu_control_t cw;
+
+    /* Fetch the current control word.  */
+    _FPU_GETCW (cw);
+
+    /* Preserve the reserved bits, and set the rest as the user
+       specified (or the default, if the user gave zero).  */
+    cw &= _FPU_RESERVED;
+    cw |= set & ~_FPU_RESERVED;
+
+    _FPU_SETCW (cw);
+}
+
 MATH_CONSTRUCTOR(math_init) {
 	BOOL success = FALSE;
 
@@ -17,6 +34,7 @@ MATH_CONSTRUCTOR(math_init) {
 
     /* Clear fenv flags */
     feclearexcept(FE_ALL_EXCEPT);
+    __setfpucw(_FPU_DEFAULT);
 
     success = TRUE;
 

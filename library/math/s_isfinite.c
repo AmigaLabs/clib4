@@ -8,24 +8,29 @@
 
 int
 __isfinite_float(float f) {
+#ifdef __SPE__
+    return __fpclassify_float(f);
+#else
     union IEEEf2bits u;
 
     u.f = f;
     return (u.bits.exp != 255);
+#endif
 }
 
 int
-__isfinite_double(double d) {
+__isfinite_double(double x) {
+#ifdef __SPE__
+    return __fpclassify_double(x);
+#else
     union IEEEd2bits u;
 
     u.d = d;
     return (u.bits.exp != 2047);
+#endif
 }
 
 int
 __isfinite_long_double(long double d) {
-    union IEEEd2bits u;
-
-    u.d = d;
-    return (u.bits.exp != 2047);
+    return __isfinite_double(d);
 }
