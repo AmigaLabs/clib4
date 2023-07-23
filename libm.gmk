@@ -299,35 +299,6 @@ ifdef SPE
 		math/s_fabs_spe.o \
 		math/s_fabsf_spe.o \
 		math/s_lrintf_spe.o
-	ifdef SOFT_FLOAT
-		$(info Adding soft float objects)
-        C_MATH := $(C_MATH) \
-            math/soft-float/adddf3.o \
-            math/soft-float/addsf3.o \
-            math/soft-float/divdf3.o \
-            math/soft-float/divsf3.o \
-            math/soft-float/divtf3.o \
-            math/soft-float/eqsf2.o \
-            math/soft-float/extendsfdf2.o \
-            math/soft-float/fixdfsi.o \
-            math/soft-float/fixsfsi.o \
-            math/soft-float/fixunsdfsi.o \
-            math/soft-float/floatunsisf.o \
-            math/soft-float/fixunssfsi.o \
-            math/soft-float/floatsidf.o \
-            math/soft-float/floatsisf.o \
-            math/soft-float/floatunsidf.o \
-            math/soft-float/gedf2.o \
-            math/soft-float/gesf2.o \
-            math/soft-float/ledf2.o \
-            math/soft-float/lesf2.o \
-            math/soft-float/muldf3.o \
-            math/soft-float/mulsf3.o \
-            math/soft-float/subdf3.o \
-            math/soft-float/subsf3.o \
-            math/soft-float/truncdfsf2.o \
-            math/soft-float/eqdf2.o
-	endif
 else
 	C_MATH := $(C_MATH)\
 		math/s_fabs.o \
