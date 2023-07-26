@@ -81,13 +81,6 @@
 #include <sys/utsname.h>
 #include <sys/uio.h>
 
-#ifdef __SPE__
-#include "soft-float/soft-fp.h"
-#include "soft-float/double.h"
-#include "soft-float/quad.h"
-#include "soft-float/single.h"
-#endif
-
 struct NameTranslationInfo;
 
 #ifdef __GNUC__

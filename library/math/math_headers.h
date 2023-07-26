@@ -556,43 +556,4 @@ extern float  complex __ldexp_cexpf(float complex,int);
 #define	__ieee754_ynf	        ynf
 #define	__ieee754_remainderf    remainderf
 
-#ifdef __SPE__
-#include "soft-float/soft-fp.h"
-#include "soft-float/double.h"
-#include "soft-float/quad.h"
-#include "soft-float/single.h"
-
-extern SFtype __addsf3(SFtype a, SFtype b);
-extern DFtype __adddf3(DFtype a, DFtype b);
-extern DFtype __divdf3(DFtype a, DFtype b);
-extern SFtype __divsf3(SFtype a, SFtype b);
-extern TFtype __divtf3(TFtype a, TFtype b);
-extern CMPtype __eqdf2(DFtype a, DFtype b);
-extern CMPtype __eqsf2(SFtype a, SFtype b);
-extern DFtype __extendsfdf2(SFtype a);
-extern SItype __fixdfsi(DFtype a);
-extern SItype __fixsfsi(SFtype a);
-extern USItype __fixunsdfsi(DFtype a);
-extern USItype __fixunssfsi(SFtype a);
-extern DFtype __floatsidf(SItype i);
-extern SFtype __floatsisf(SItype i);
-extern DFtype __floatunsidf(USItype i);
-extern SFtype __floatunsisf(USItype i);
-extern CMPtype __gesf2(SFtype a, SFtype b);
-extern CMPtype __gedf2(DFtype a, DFtype b);
-extern CMPtype __gtdf2(DFtype a, DFtype b);
-extern CMPtype __gtsf2(SFtype a, SFtype b);
-extern CMPtype __ledf2(DFtype a, DFtype b);
-extern CMPtype __lesf2(SFtype a, SFtype b);
-extern CMPtype __ltdf2(DFtype a, DFtype b);
-extern CMPtype __ltsf2(SFtype a, SFtype b);
-extern DFtype __muldf3(DFtype a, DFtype b);
-extern SFtype __mulsf3(SFtype a, SFtype b);
-extern CMPtype __nedf2(DFtype a, DFtype b);
-extern CMPtype __nesf2(SFtype a, SFtype b);
-extern DFtype __subdf3(DFtype a, DFtype b);
-extern SFtype __subsf3(SFtype a, SFtype b);
-extern SFtype __truncdfsf2(DFtype a);
-#endif
-
 #endif /* _MATH_HEADERS_H */
