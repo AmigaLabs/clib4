@@ -119,9 +119,9 @@ AFLAGS     := -Wa,-mregnames -mstrict-align
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
     AS := ppc-amigaos-as-6.4.0
-    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mcpu=8540 -msoft-float -mabi=spe -mno-string -mfloat-gprs=single -fno-inline-functions -fno-partial-inlining \
+    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mcpu=8540 -mabi=spe -mno-string -mfloat-gprs=double -fno-inline-functions -fno-partial-inlining \
                 -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
-    AFLAGS := $(AFLAGS) -D__SPE__ -mspe -mcpu=8540 -msoft-float -mfloat-gprs=single -mno-string -Wno-overflow
+    AFLAGS := $(AFLAGS) -D__SPE__ -mspe -mcpu=8540 -mfloat-gprs=double -mno-string -Wno-overflow
 endif
 
 VERBOSE    ?= @
