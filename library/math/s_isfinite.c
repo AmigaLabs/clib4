@@ -9,7 +9,19 @@
 int
 __isfinite_float(float f) {
 #ifdef __SPE__
-    return __fpclassify_float(f);
+    union ieee_single x;
+	int result;
+
+	x.value = f;
+
+	if((x.raw[0] & 0x7f800000) == 0x7f800000 && (x.raw[0] & 0x007fffff) != 0)
+		result = 0; /* Exponent = 255 and fraction != 0.0 -> not a number */
+	else if ((x.raw[0] & 0x7fffffff) == 0x7f800000)
+		result = 0; /* Exponent = 255 and fraction = 0.0 -> infinity */
+	else
+		result = 1;
+
+	return(result);
 #else
     union IEEEf2bits u;
 
@@ -19,9 +31,21 @@ __isfinite_float(float f) {
 }
 
 int
-__isfinite_double(double x) {
+__isfinite_double(double d) {
 #ifdef __SPE__
-    return __fpclassify_double(x);
+    union ieee_double x;
+	int result;
+
+	x.value = d;
+
+	if(((x.raw[0] & 0x7ff00000) == 0x7ff00000) && ((x.raw[0] & 0x000fffff) != 0 || (x.raw[1] != 0)))
+		result = 0; /* Exponent = 2047 and fraction != 0.0 -> not a number */
+	else if (((x.raw[0] & 0x7fffffff) == 0x7ff00000) && (x.raw[1] == 0))
+		result = 0; /* Exponent = 2047 and fraction = 0.0 -> infinity */
+	else
+		result = 1;
+
+	return(result);
 #else
     union IEEEd2bits u;
 

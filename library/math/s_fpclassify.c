@@ -46,21 +46,45 @@ __fpclassify_float(float f) {
 int
 __fpclassify_double(double d) {
 #ifdef __SPE__
-    uint32_t msw, lsw;
+    union ieee_double x;
+    int result;
 
-    EXTRACT_WORDS(msw, lsw, d);
+    x.value = d;
 
-    if ((msw == 0x00000000 && lsw == 0x00000000) || (msw == 0x80000000 && lsw == 0x00000000))
-        return FP_ZERO;
-    else if ((msw >= 0x00100000 && msw <= 0x7fefffff) || (msw >= 0x80100000 && msw <= 0xffefffff))
-        return FP_NORMAL;
-    else if ((msw >= 0x00000000 && msw <= 0x000fffff) || (msw >= 0x80000000 && msw <= 0x800fffff))
-        /* zero is already handled above */
-        return FP_SUBNORMAL;
-    else if ((msw == 0x7ff00000 && lsw == 0x00000000) || (msw == 0xfff00000 && lsw == 0x00000000))
-        return FP_INFINITE;
-    else
-        return FP_NAN;
+    D(("number = 0x%08lx%08lx",x.raw[0],x.raw[1]));
+
+    if(((x.raw[0] & 0x7ff00000) == 0x7ff00000) && ((x.raw[0] & 0x000fffff) != 0 || (x.raw[1] != 0))) {
+        SHOWMSG("not a number");
+
+        /* Exponent = 2047 and fraction != 0.0 -> not a number */
+        result = FP_NAN;
+    }
+    else if (((x.raw[0] & 0x7fffffff) == 0x7ff00000) && (x.raw[1] == 0)) {
+        SHOWMSG("infinity");
+
+        /* Exponent = 2047 and fraction = 0.0 -> infinity */
+        result = FP_INFINITE;
+    }
+    else if ((((x.raw[0] & 0x7fffffff) == 0) && (x.raw[1] == 0))) {
+        SHOWMSG("zero");
+
+        /* Both exponent and fraction are zero -> zero */
+        result = FP_ZERO;
+    }
+    else if ((x.raw[0] & 0x7fff0000) == 0) {
+        SHOWMSG("subnormal");
+
+        /* Exponent = 0 -> subnormal (IEEE 754) */
+        result = FP_SUBNORMAL;
+    }
+    else {
+        SHOWMSG("normal");
+
+        result = FP_NORMAL;
+    }
+    SHOWVALUE(result);
+
+	return result;
 #else
     union IEEEd2bits u;
 

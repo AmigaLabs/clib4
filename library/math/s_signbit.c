@@ -9,18 +9,40 @@
 #ifndef __SPE__
 int
 __signbit_double(double d) {
+#ifndef __SPE__
     union IEEEd2bits u;
 
     u.d = d;
     return (u.bits.sign);
+#else
+    union ieee_double x;
+	int result;
+
+	x.value = d;
+
+	result = ((x.raw[0] = 0x80000000) != 0);
+
+	return(result);
+#endif
 }
 
 int
 __signbit_float(float f) {
+#ifndef __SPE__
     union IEEEf2bits u;
 
     u.f = f;
     return (u.bits.sign);
+#else
+    union ieee_single x;
+	int result;
+
+	x.value = f;
+
+	result = ((x.raw[0] = 0x80000000) != 0);
+
+	return(result);
+#endif
 }
 
 int

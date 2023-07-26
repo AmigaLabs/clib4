@@ -59,7 +59,7 @@ DPKG_LIB = clib2_1.0_amd64
 WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
-	-Wno-deprecated-declarations -Wno-sign-compare -Wno-cast-function-type -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
+	-Wno-deprecated-declarations -Wno-sign-compare -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
     -Wno-type-limits -Werror # -Wbad-function-cast -Wconversion -Wformat
 
@@ -100,7 +100,7 @@ STATIC   := $(if $(STATIC),$(STATIC),yes)
 
 LARGEDATA :=
 OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe
-OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
+OPTIMIZE := -O3 -mregnames -mmultiple -mupdate
 
 STABS :=
 DLIBS :=
@@ -114,14 +114,14 @@ endif
 
 CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
 CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
-AFLAGS     := -Wa,-mregnames
+AFLAGS     := -Wa,-mregnames -mstrict-align
 
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
     AS := ppc-amigaos-as-6.4.0
-    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mcpu=8540 -mabi=spe -mfloat-gprs=double -fsingle-precision-constant -fno-inline-functions -fno-partial-inlining \
+    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mcpu=8540 -msoft-float -mabi=spe -mno-string -mfloat-gprs=single -fno-inline-functions -fno-partial-inlining \
                 -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
-    AFLAGS := $(AFLAGS) -D__SPE__ -mspe -mcpu=8540 -mfloat-gprs=double -Wno-overflow
+    AFLAGS := $(AFLAGS) -D__SPE__ -mspe -mcpu=8540 -msoft-float -mfloat-gprs=single -mno-string -Wno-overflow
 endif
 
 VERBOSE    ?= @

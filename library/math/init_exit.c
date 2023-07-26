@@ -29,12 +29,21 @@ __setfpucw(fpu_control_t set) {
 
 MATH_CONSTRUCTOR(math_init) {
 	BOOL success = FALSE;
+    union ieee_single *single_x;
+    struct _clib2 *__clib2 = __CLIB2;
 
 	ENTER();
 
     /* Clear fenv flags */
     feclearexcept(FE_ALL_EXCEPT);
-    __setfpucw(_FPU_DEFAULT);
+    //__setfpucw(_FPU_DEFAULT);
+
+    /* Finally, fill in the constants behind INFINITY and NAN. */
+    single_x = (union ieee_single *) &__clib2->__infinity;
+    single_x->raw[0] = 0x7f800000;
+
+    single_x = (union ieee_single *) &__clib2->__nan;
+    single_x->raw[0] = 0x7fc00001;
 
     success = TRUE;
 

@@ -18,12 +18,13 @@ __isinf(double d) {
     u.d = d;
     return (u.bits.exp == 2047 && u.bits.manl == 0 && u.bits.manh == 0);
 #else
-    int32_t hx , lx;
-    EXTRACT_WORDS(hx, lx, d);
-    hx &= 0x7fffffff;
-    hx |= (uint32_t) (lx | (-lx)) >> 31;
-    hx = 0x7ff00000 - hx;
-    return 1 - (int) ((uint32_t) (hx | (-hx)) >> 31);
+    union ieee_double x;
+
+	/* Exponent = 2047 and fraction = 0.0 -> infinity */
+	x.raw[0] = 0x7ff00000;
+	x.raw[1] = 0x00000000;
+
+	return(x.value);
 #endif
 }
 

@@ -74,4 +74,20 @@ union IEEEd2bits {
 #define	LDBL_MANH_SIZE	20
 #define	LDBL_MANL_SIZE	32
 
+/* 'Portable' raw representations of three IEEE floating point formats. */
+union ieee_long_double {
+    long double		value;
+    unsigned long	raw[3];
+};
+
+union ieee_double {
+    double			value;
+    unsigned long	raw[2];
+};
+
+union ieee_single {
+    float			value;
+    unsigned long	raw[1];
+};
+
 #endif /* _MATH_FP_SUPPORT_H */

@@ -1147,4 +1147,70 @@ static void *clib2Vectors[] = {
         (void *) (fpsetmask),                             /* 4302 */
         (void *) (fpgetsticky),                           /* 4306 */
 
+#ifdef __SPE__
+        (void *) (* __addsf3),                           /* 4310 */
+        (void *) (* __adddf3),                           /* 4314 */
+        (void *) (* __divdf3),                           /* 4318 */
+        (void *) (* __divsf3),                           /* 4322 */
+        (void *) (* __divtf3),                           /* 4326 */
+        (void *) (* __eqdf2),                            /* 4330 */
+        (void *) (* __eqsf2),                            /* 4334 */
+        (void *) (* __extendsfdf2),                      /* 4338 */
+        (void *) (* __fixdfsi),                          /* 4342 */
+        (void *) (* __fixsfsi),                          /* 4346 */
+        (void *) (* __fixunsdfsi),                       /* 4350 */
+        (void *) (* __fixunssfsi),                       /* 4354 */
+        (void *) (* __floatsidf),                        /* 4358 */
+        (void *) (* __floatsisf),                        /* 4362 */
+        (void *) (* __floatunsidf),                      /* 4366 */
+        (void *) (* __floatunsisf),                      /* 4370 */
+        (void *) (* __gesf2),                            /* 4374 */
+        (void *) (* __gedf2),                            /* 4378 */
+        (void *) (* __gtdf2),                            /* 4382 */
+        (void *) (* __gtsf2),                            /* 4386 */
+        (void *) (* __ledf2),                            /* 4390 */
+        (void *) (* __lesf2),                            /* 4394 */
+        (void *) (* __ltdf2),                            /* 4398 */
+        (void *) (* __ltsf2),                            /* 4402 */
+        (void *) (* __muldf3),                           /* 4406 */
+        (void *) (* __mulsf3),                           /* 4410 */
+        (void *) (* __nedf2),                            /* 4414 */
+        (void *) (* __nesf2),                            /* 4418 */
+        (void *) (* __subdf3),                           /* 4422 */
+        (void *) (* __subsf3),                           /* 4426 */
+        (void *) (* __truncdfsf2),                       /* 4430 */
+#else
+        (void *) (* libReserved),                        /* 4310 */
+        (void *) (* libReserved),                        /* 4314 */
+        (void *) (* libReserved),                        /* 4318 */
+        (void *) (* libReserved),                        /* 4322 */
+        (void *) (* libReserved),                        /* 4326 */
+        (void *) (* libReserved),                        /* 4330 */
+        (void *) (* libReserved),                        /* 4334 */
+        (void *) (* libReserved),                        /* 4338 */
+        (void *) (* libReserved),                        /* 4342 */
+        (void *) (* libReserved),                        /* 4346 */
+        (void *) (* libReserved),                        /* 4350 */
+        (void *) (* libReserved),                        /* 4354 */
+        (void *) (* libReserved),                        /* 4358 */
+        (void *) (* libReserved),                        /* 4362 */
+        (void *) (* libReserved),                        /* 4366 */
+        (void *) (* libReserved),                        /* 4370 */
+        (void *) (* libReserved),                        /* 4374 */
+        (void *) (* libReserved),                        /* 4378 */
+        (void *) (* libReserved),                        /* 4382 */
+        (void *) (* libReserved),                        /* 4386 */
+        (void *) (* libReserved),                        /* 4390 */
+        (void *) (* libReserved),                        /* 4394 */
+        (void *) (* libReserved),                        /* 4398 */
+        (void *) (* libReserved),                        /* 4402 */
+        (void *) (* libReserved),                        /* 4406 */
+        (void *) (* libReserved),                        /* 4410 */
+        (void *) (* libReserved),                        /* 4414 */
+        (void *) (* libReserved),                        /* 4418 */
+        (void *) (* libReserved),                        /* 4422 */
+        (void *) (* libReserved),                        /* 4426 */
+        (void *) (* libReserved),                        /* 4430 */
+#endif
+
 };

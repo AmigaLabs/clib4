@@ -8,34 +8,28 @@
 
 int
 __isnan(double d) {
-#ifdef __SPE__
-    int32_t hx, lx;
-    EXTRACT_WORDS(hx, lx, d);
-    hx &= 0x7fffffff;
-    hx |= (uint32_t) (lx | (-lx)) >> 31;
-    hx = 0x7ff00000 - hx;
-    return (int) (((uint32_t) (hx)) >> 31);
-#else
+#ifndef __SPE__
     union IEEEd2bits u;
 
     u.d = d;
     return (u.bits.exp == 2047 && (u.bits.manl != 0 || u.bits.manh != 0));
+#else
+    union ieee_double x;
+
+	/* Exponent = 2047 and fraction != 0.0; this must be a quiet nan. */
+	x.raw[0] = 0x7ff80000;
+	x.raw[1] = 0x00000001;
+
+	return x.value;
 #endif
 }
 
 int
 __isnanf(float f) {
-#ifdef __SPE__
-    int32_t ix;
-	GET_FLOAT_WORD(ix, f);
-	ix &= 0x7fffffff;
-	return FLT_UWORD_IS_NAN(ix);
-#else
     union IEEEf2bits u;
 
     u.f = f;
     return (u.bits.exp == 255 && u.bits.man != 0);
-#endif
 }
 
 int
