@@ -36,7 +36,9 @@ MATH_CONSTRUCTOR(math_init) {
 
     /* Clear fenv flags */
     feclearexcept(FE_ALL_EXCEPT);
-    //__setfpucw(_FPU_DEFAULT);
+#ifdef __SPE__
+    __setfpucw(_FPU_RC_NEAREST);
+#endif
 
     /* Finally, fill in the constants behind INFINITY and NAN. */
     single_x = (union ieee_single *) &__clib2->__infinity;

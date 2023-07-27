@@ -119,9 +119,9 @@ AFLAGS     := -Wa,-mregnames -mstrict-align
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
     AS := ppc-amigaos-as-6.4.0
-    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mcpu=8540 -mabi=spe -mno-string -ffloat-store -mfloat-gprs=double -fno-inline-functions -fno-partial-inlining \
+    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mcpu=8540 -mabi=spe -mfloat-gprs=double -ffloat-store -fno-fast-math -fno-inline-functions -fno-partial-inlining \
                 -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
-    AFLAGS := $(AFLAGS) -D__SPE__ -mspe -mcpu=8540 -mfloat-gprs=double -ffloat-store -mno-string -Wno-overflow
+    AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mcpu=8540 -ffloat-store -mfloat-gprs=double -fno-fast-math -Wno-overflow
 endif
 
 VERBOSE    ?= @
@@ -306,24 +306,24 @@ endef
 define COMPILE_SPE_REG
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rAssembling SPE with regnames \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) $(AFLAGS) -mvrsave -mregnames -DVRSAVE -mspe -mcpu=8540 -mfloat-gprs=double -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) $(AFLAGS) -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SPE
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rPreprocessing and compiling SPE \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) -c -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe $(CFLAGS) -mno-regnames -S -o $@_in $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) -c $(CFLAGS) -mno-regnames -S -o $@_in $< $(LOG_COMMAND)
 $(VERBOSE)$(BUILD_DIR)/PatchForSPE $@_in $@.S >/dev/null
-$(VERBOSE)$(CC) -mspe -mcpu=8540 -mfloat-gprs=double -mabi=spe $(CFLAGS) -c $@.S -o $@ $(LOG_COMMAND)
+$(VERBOSE)$(CC) $(CFLAGS) -c $@.S -o $@ $(LOG_COMMAND)
 $(VERBOSE)-$(DELETE) $@_in $@.S
 endef
 
 define COMPILE_SHARED_SPE
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rPreprocessing and compiling SPE \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) -c -mspe -mcpu=8540 -mfloat-gprs=double $(PIC) -mabi=spe $(CFLAGS) -mno-regnames -S -o $@_in $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) -c $(PIC) -mabi=spe $(CFLAGS) -mno-regnames -S -o $@_in $< $(LOG_COMMAND)
 $(VERBOSE)$(BUILD_DIR)/PatchForSPE $@_in $@.S >/dev/null
-$(VERBOSE)$(CC) -mspe -mcpu=8540 -mfloat-gprs=double $(PIC) -mabi=spe $(CFLAGS) -c $@.S -o $@ $(LOG_COMMAND)
+$(VERBOSE)$(CC) $(PIC) -mabi=spe $(CFLAGS) -c $@.S -o $@ $(LOG_COMMAND)
 $(VERBOSE)-$(DELETE) $@_in $@.S
 endef
 
