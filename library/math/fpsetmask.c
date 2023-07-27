@@ -4,6 +4,7 @@
 
 #include <sys/types.h>
 #include <ieeefp.h>
+#include <sys/spr.h>
 
 fp_except_t
 fpsetmask(fp_except_t mask) {
@@ -17,6 +18,13 @@ fpsetmask(fp_except_t mask) {
     __asm__ __volatile("mtfsf 0xff,%0"::"f"(fpscr));
     return (old);
 #else
-    return 0;
+    uint32_t fpscr;
+	fp_rnd_t old;
+
+	__asm__ __volatile("mfspr %0, %1" : "=r"(fpscr) : "K"(SPR_SPEFSCR));
+	old = (fp_rnd_t)((fpscr >> 3) & 0x1f);
+	fpscr = (fpscr & 0xffffff07) | (mask << 3);
+	__asm__ __volatile("mtspr %1,%0" :: "r"(fpscr), "K"(SPR_SPEFSCR));
+	return (old);
 #endif
 }

@@ -4,6 +4,7 @@
 
 #include <sys/types.h>
 #include <ieeefp.h>
+#include <sys/spr.h>
 
 fp_rnd_t
 fpgetround() {
@@ -13,6 +14,9 @@ fpgetround() {
     __asm__("mffs %0" : "=f"(fpscr));
     return ((fp_rnd_t)(fpscr & 0x3));
 #else
-    return 0;
+    uint32_t fpscr;
+
+	__asm__ __volatile("mfspr %0, %1" : "=r"(fpscr) : "K"(SPR_SPEFSCR));
+	return ((fp_rnd_t)(fpscr & 0x3));
 #endif
 }
