@@ -166,10 +166,10 @@ extern int *__signgam(void);
 #define    isnan(x) __isnan(x)
 #endif
 
-extern int finitef (float);
-extern int finitel (long double);
-extern int isinff (float);
-extern int isnanf (float);
+#define finitef(x) __isfinite_float(x)
+#define finitel(x) __isfinite_long_double(x)
+#define isinff(x)  __isinff(x)
+#define isnanf(x)  __isnanf(x)
 
 extern float acosf(float x);
 extern float asinf(float x);

@@ -52,7 +52,7 @@ nanf(const char *s) {
     union ieee_single x;
 
 	/* Exponent = 255 and fraction != 0.0; this must be a quiet nan. */
-	x.raw[0] = 0x7fc00001;
+	x.raw[0] = 0x7fc00000;
 
 	return x.value;
 #endif

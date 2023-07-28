@@ -109,6 +109,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
 
     pl = 1;
     if (signbit(y)) {
+        //Printf("negative\n");
         y = -y;
     } else if (fl & __U_MARK_POS) {
         prefix += 3;
@@ -117,15 +118,19 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     } else prefix++, pl = 0;
 
     if (!isfinite(y)) {
+        //Printf("!isfinite\n");
         char *s = (t & 32) ? "inf" : "INF";
-        if (y != y) s = (t & 32) ? "nan" : "NAN";
+        if (y != y)
+            s = (t & 32) ? "nan" : "NAN";
         pad(f, ' ', w, 3 + pl, fl & ~__U_ZERO_PAD);
         out(f, prefix, pl);
         out(f, s, 3);
         pad(f, ' ', w, 3 + pl, fl ^ __S_LEFT_ADJ);
         return MAX(w, 3 + pl);
     }
-
+    else {
+        //Printf("isfinite\n");
+    }
     y = frexpl(y, &e2) * 2;
 
     if (y)

@@ -37,6 +37,7 @@ __isfinite_double(double d) {
 	int result;
 
 	x.value = d;
+    //Printf("isfinite %ld %ld %ld\n", d, x.raw[0], x.raw[1]);
 
 	if(((x.raw[0] & 0x7ff00000) == 0x7ff00000) && ((x.raw[0] & 0x000fffff) != 0 || (x.raw[1] != 0)))
 		result = 0; /* Exponent = 2047 and fraction != 0.0 -> not a number */

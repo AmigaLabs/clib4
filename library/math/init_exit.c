@@ -45,7 +45,7 @@ MATH_CONSTRUCTOR(math_init) {
     single_x->raw[0] = 0x7f800000;
 
     single_x = (union ieee_single *) &__clib2->__nan;
-    single_x->raw[0] = 0x7fc00001;
+    single_x->raw[0] = 0x7fc00000;
 
     success = TRUE;
 

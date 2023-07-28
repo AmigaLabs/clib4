@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <features.h>
 #include <endian.h>
+#include <stdbool.h>
 
 #ifndef	__fenv_static
 #define	__fenv_static	static
@@ -63,20 +64,16 @@ extern const fenv_t __fe_dfl_env;
 #define _ENABLE_MASK    ((FE_DIVBYZERO | FE_INEXACT | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW) >> _FPUSW_SHIFT)
 
 #ifndef _SOFT_FLOAT
-#ifdef __SPE__
-#define	__mffs(__env) \
-	__asm __volatile("mfspr %0, 512" : "=r" ((__env)->__bits.__reg))
-#define	__mtfsf(__env) \
-	__asm __volatile("mtspr 512,%0;isync" :: "r" ((__env).__bits.__reg))
+    #ifdef __SPE__
+        #define	__mffs(__env) __asm __volatile("mfspr %0, 512" : "=r" ((__env)->__bits.__reg))
+        #define	__mtfsf(__env) __asm __volatile("mtspr 512,%0;isync" :: "r" ((__env).__bits.__reg))
+    #else
+        #define	__mffs(__env) __asm __volatile("mffs %0" : "=f" ((__env)->__d))
+        #define	__mtfsf(__env) __asm __volatile("mtfsf 255,%0" :: "f" ((__env).__d))
+    #endif
 #else
-#define	__mffs(__env) \
-	__asm __volatile("mffs %0" : "=f" ((__env)->__d))
-#define	__mtfsf(__env) \
-	__asm __volatile("mtfsf 255,%0" :: "f" ((__env).__d))
-#endif
-#else
-#define	__mffs(__env)
-#define	__mtfsf(__env)
+    #define	__mffs(__env)
+    #define	__mtfsf(__env)
 #endif
 
 union __fpscr {
@@ -90,6 +87,11 @@ union __fpscr {
 		fenv_t __reg;
 #endif
     } __bits;
+};
+
+struct rm_ctx {
+    fenv_t env;
+    bool updated_status;
 };
 
 __fenv_static inline int
