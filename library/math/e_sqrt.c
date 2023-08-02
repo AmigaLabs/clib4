@@ -20,6 +20,9 @@ __ieee754_sqrt(double x) {
     uint32_t r, t1, s1, ix1, q1;
 
     EXTRACT_WORDS(ix0, ix1, x);
+Printf("x = %ld\n", x);
+Printf("ix0 = %ld\n", ix0);
+Printf("ix1 = %ld\n", ix1);
 
     /* take care of Inf and NaN */
     if ((ix0 & 0x7ff00000) == 0x7ff00000) {

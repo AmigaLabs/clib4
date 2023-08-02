@@ -179,6 +179,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     const char *prefix = "-0X+0X 0X-0x+0x 0x";
     int pl;
     char ebuf0[3 * sizeof(int)], *ebuf = &ebuf0[3 * sizeof(int)], *estr = 0;
+    Printf("Y = %ld\n", y);
 
     pl = 1;
     if (signbit(y)) {
@@ -571,6 +572,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 p = MAX(p, 2 * sizeof(void *));
                 t = 'x';
                 fl |= ALT_FORM;
+                /* fallthrough */
             case 'x':
             case 'X':
                 a = fmt_x(arg.i, z, t & 32);
@@ -609,6 +611,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
             case 'm':
                 if (1) a = strerror(errno);
                 else
+                    /* fallthrough */
                     case 's':
                         a = arg.p ? arg.p : "(null)";
                 z = a + strnlen(a, p < 0 ? INT_MAX : p);
@@ -621,6 +624,7 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 wc[1] = 0;
                 arg.p = wc;
                 p = -1;
+                /* fallthrough */
             case 'S':
                 ws = arg.p;
                 for (i = l = 0; i < p && *ws && (l = wctomb(mb, *ws++)) >= 0 && l <= p - i; i += l);
@@ -700,10 +704,12 @@ vfprintf(FILE *f, const char *format, va_list ap) {
 
     // Check for error in format string before writing anything to file.
     SHOWMSG("Check for string format errors");
+    /*
     if (printf_core(0, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double) < 0) {
         va_end(ap2);
         return EOF;
     }
+*/
 
     SHOWMSG("Write result to the file");
     ret = printf_core(_out, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double);
