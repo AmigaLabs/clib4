@@ -11,6 +11,7 @@ static	const float	one	= 1.0, tiny = 1.0e-30;
 double
 __ieee754_sqrt(double x) {
     double z;
+
 #ifndef __SPE__
     asm ("fsqrt %0,%1\n" :"=f" (z):"f" (x));
 #else

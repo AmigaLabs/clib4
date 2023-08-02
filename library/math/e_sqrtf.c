@@ -26,6 +26,7 @@ static const float one = 1.0, tiny = 1.0e-30;
 float
 __ieee754_sqrtf(float x) {
     float z;
+
 #ifndef __SPE__
     asm ("fsqrts %0,%1\n" :"=f" (z):"f" (x));
 #else

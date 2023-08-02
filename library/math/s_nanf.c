@@ -38,7 +38,6 @@ __scan_nan(uint32_t *words, int num_words, const char *s) {
 
 float
 nanf(const char *s) {
-#ifndef __SPE__
     union {
         float f;
         uint32_t bits[1];
@@ -47,13 +46,4 @@ nanf(const char *s) {
     __scan_nan(u.bits, 1, s);
     u.bits[0] |= 0x7fc00000;
     return (u.f);
-#else
-    (void) s;
-    union ieee_single x;
-
-	/* Exponent = 255 and fraction != 0.0; this must be a quiet nan. */
-	x.raw[0] = 0x7fc00000;
-
-	return x.value;
-#endif
 }
