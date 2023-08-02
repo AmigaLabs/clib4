@@ -178,7 +178,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     char buf[9 + LDBL_MANT_DIG / 4], *s;
     const char *prefix = "-0X+0X 0X-0x+0x 0x";
     int pl;
-    char ebuf0[3 * sizeof(int)], *ebuf = &ebuf0[3 * sizeof(int)], *estr;
+    char ebuf0[3 * sizeof(int)], *ebuf = &ebuf0[3 * sizeof(int)], *estr = 0;
 
     pl = 1;
     if (signbit(y)) {

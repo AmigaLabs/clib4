@@ -6,6 +6,7 @@
 #define _MATH_FP_SUPPORT_H
 
 #include <endian.h>
+#include <stdint.h>
 
 union IEEEl2bits {
     long double	e;
