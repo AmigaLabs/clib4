@@ -36,55 +36,55 @@ static inline void pop_arg(union arg *arg, int type, va_list *ap) {
             arg->p = va_arg(*ap, void * );
             break;
         case _INT:
-            arg->i = (uintmax_t)((int) va_arg(*ap, int));
+            arg->i = va_arg(*ap, int);
             break;
         case _UINT:
-            arg->i = (uintmax_t)((unsigned int) va_arg(*ap, unsigned int));
+            arg->i = va_arg(*ap, unsigned int);
             break;
         case _LONG:
-            arg->i = (uintmax_t)((long long) va_arg(*ap, long));
+            arg->i = va_arg(*ap, long);
             break;
         case _ULONG:
-            arg->i = (uintmax_t)((unsigned long) va_arg(*ap, unsigned long));
+            arg->i = va_arg(*ap, unsigned long);
             break;
         case _ULLONG:
-            arg->i = (uintmax_t)((unsigned long long) va_arg(*ap, unsigned long long));
+            arg->i = va_arg(*ap, unsigned long long);
             break;
         case _SHORT:
-            arg->i = (uintmax_t)((short) va_arg(*ap, int));
+            arg->i = (short) va_arg(*ap, int);
             break;
         case _USHORT:
-            arg->i = (uintmax_t)((unsigned short) va_arg(*ap, int));
+            arg->i = (unsigned short) va_arg(*ap, int);
             break;
         case _CHAR:
-            arg->i = (uintmax_t)((signed char) va_arg(*ap, int));
+            arg->i = (signed char) va_arg(*ap, int);
             break;
         case _UCHAR:
-            arg->i = (uintmax_t)((unsigned char) va_arg(*ap, int));
+            arg->i = (unsigned char) va_arg(*ap, int);
             break;
         case _LLONG:
-            arg->i = (uintmax_t)((long long) va_arg(*ap, long long));
+            arg->i = va_arg(*ap, long long);
             break;
         case _SIZET:
-            arg->i = (uintmax_t)((size_t) va_arg(*ap, size_t));
+            arg->i = va_arg(*ap, size_t);
             break;
         case _IMAX:
-            arg->i = (uintmax_t)((intmax_t) va_arg(*ap, intmax_t));
+            arg->i = va_arg(*ap, intmax_t);
             break;
         case _UMAX:
-            arg->i = (uintmax_t)((uintmax_t) va_arg(*ap, uintmax_t));
+            arg->i = va_arg(*ap, uintmax_t);
             break;
         case _PDIFF:
-            arg->i = (uintmax_t)((ptrdiff_t) va_arg(*ap, ptrdiff_t));
+            arg->i = va_arg(*ap, ptrdiff_t);
             break;
         case _UIPTR:
-            arg->i = (uintptr_t)((void *) va_arg(*ap, void * ));
+            arg->i = (uintptr_t) va_arg(*ap, void * );
             break;
         case _DBL:
-            arg->f = (long double) ((double) va_arg(*ap, double));
+            arg->f = va_arg(*ap, double);
             break;
         case _LDBL:
-            arg->f = (long double) va_arg(*ap, long double);
+            arg->f = va_arg(*ap, long double);
             break;
         default:
             break;
