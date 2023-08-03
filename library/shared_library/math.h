@@ -50,5 +50,6 @@ du_int __udivdi3(du_int a, du_int b);
 di_int __moddi3(di_int a, di_int b);
 di_int __divdi3(di_int a, di_int b);
 double __floatdidf(di_int a);
+di_int __unorddf2 (double a, double b);
 
 #endif /* _MATH_H__ */

@@ -8,9 +8,10 @@
 #include <stdint.h>
 #include <features.h>
 #include <endian.h>
+#include <stdbool.h>
 
-#ifndef    __fenv_static
-#define    __fenv_static    static
+#ifndef	__fenv_static
+#define	__fenv_static	static
 #endif
 
 typedef uint32_t fenv_t;
@@ -50,198 +51,214 @@ typedef uint32_t fexcept_t;
 #define    FE_TOWARDZERO   0x0001
 #define    FE_UPWARD       0x0002
 #define    FE_DOWNWARD     0x0003
-#define    _ROUND_MASK    (FE_TONEAREST | FE_DOWNWARD | \
-             FE_UPWARD | FE_TOWARDZERO)
+#define    _ROUND_MASK    (FE_TONEAREST | FE_DOWNWARD | FE_UPWARD | FE_TOWARDZERO)
 
 __BEGIN_DECLS
 
 /* Default floating-point environment */
-extern const fenv_t
-__fe_dfl_env;
-#define    FE_DFL_ENV    (&__fe_dfl_env)
+extern const fenv_t __fe_dfl_env;
+#define FE_DFL_ENV (&__fe_dfl_env)
 
 /* We need to be able to map status flag positions to mask flag positions */
-#define    _FPUSW_SHIFT    22
-#define    _ENABLE_MASK    ((FE_DIVBYZERO | FE_INEXACT | FE_INVALID | \
-             FE_OVERFLOW | FE_UNDERFLOW) >> _FPUSW_SHIFT)
+#define _FPUSW_SHIFT    22
+#define _ENABLE_MASK    ((FE_DIVBYZERO | FE_INEXACT | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW) >> _FPUSW_SHIFT)
 
 #ifndef _SOFT_FLOAT
-#define    __mffs(__env)  __asm __volatile("mffs %0" : "=f" (*(__env)))
-#define    __mtfsf(__env) __asm __volatile("mtfsf 255,%0" : : "f" (__env))
+    #ifdef __SPE__
+        #define	__mffs(__env) __asm __volatile("mfspr %0, 512" : "=r" ((__env)->__bits.__reg))
+        #define	__mtfsf(__env) __asm __volatile("mtspr 512,%0;isync" :: "r" ((__env).__bits.__reg))
+    #else
+        #define	__mffs(__env) __asm __volatile("mffs %0" : "=f" ((__env)->__d))
+        #define	__mtfsf(__env) __asm __volatile("mtfsf 255,%0" :: "f" ((__env).__d))
+    #endif
 #else
-#define	__mffs(__env)
-#define	__mtfsf(__env)
+    #define	__mffs(__env)
+    #define	__mtfsf(__env)
 #endif
 
 union __fpscr {
     double __d;
     struct {
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#if __BYTE_ORDER__ == LITTLE_ENDIAN
         fenv_t __reg;
         uint32_t __junk;
 #else
         uint32_t __junk;
-        fenv_t __reg;
+		fenv_t __reg;
 #endif
     } __bits;
 };
 
+struct rm_ctx {
+    fenv_t env;
+    bool updated_status;
+};
+
 __fenv_static inline int
-feclearexcept(int __excepts) {
+feclearexcept(int __excepts)
+{
     union __fpscr __r;
 
     if (__excepts & FE_INVALID)
         __excepts |= FE_ALL_INVALID;
-    __mffs(&__r.__d);
+    __mffs(&__r);
     __r.__bits.__reg &= ~__excepts;
-    __mtfsf(__r.__d);
+    __mtfsf(__r);
     return (0);
 }
 
 __fenv_static inline int
-fegetexceptflag(fexcept_t *__flagp, int __excepts) {
+fegetexceptflag(fexcept_t *__flagp, int __excepts)
+{
     union __fpscr __r;
 
-    __mffs(&__r.__d);
+    __mffs(&__r);
     *__flagp = __r.__bits.__reg & __excepts;
     return (0);
 }
 
 __fenv_static inline int
-fesetexceptflag(const fexcept_t *__flagp, int __excepts) {
+fesetexceptflag(const fexcept_t *__flagp, int __excepts)
+{
     union __fpscr __r;
 
     if (__excepts & FE_INVALID)
-        __excepts |= FE_ALL_EXCEPT;
-    __mffs(&__r.__d);
+        __excepts |= FE_ALL_INVALID;
+    __mffs(&__r);
     __r.__bits.__reg &= ~__excepts;
     __r.__bits.__reg |= *__flagp & __excepts;
-    __mtfsf(__r.__d);
+    __mtfsf(__r);
     return (0);
 }
 
+#ifdef __SPE__
+extern int	feraiseexcept(int __excepts);
+#else
 __fenv_static inline int
-feraiseexcept(int __excepts) {
+feraiseexcept(int __excepts)
+{
     union __fpscr __r;
 
     if (__excepts & FE_INVALID)
         __excepts |= FE_VXSOFT;
-    __mffs(&__r.__d);
+    __mffs(&__r);
     __r.__bits.__reg |= __excepts;
-    __mtfsf(__r.__d);
+    __mtfsf(__r);
     return (0);
 }
+#endif
 
 __fenv_static inline int
-fetestexcept(int __excepts) {
+fetestexcept(int __excepts)
+{
     union __fpscr __r;
 
-    __mffs(&__r.__d);
+    __mffs(&__r);
     return (__r.__bits.__reg & __excepts);
 }
 
 __fenv_static inline int
-fegetround(void) {
-    union __fpscr __r = {0};
+fegetround(void)
+{
+    union __fpscr __r;
 
-    __mffs(&__r.__d);
+    __mffs(&__r);
     return (__r.__bits.__reg & _ROUND_MASK);
 }
 
 __fenv_static inline int
-fesetround(int __round) {
+fesetround(int __round)
+{
     union __fpscr __r;
 
     if (__round & ~_ROUND_MASK)
         return (-1);
-    __mffs(&__r.__d);
+    __mffs(&__r);
     __r.__bits.__reg &= ~_ROUND_MASK;
     __r.__bits.__reg |= __round;
-    __mtfsf(__r.__d);
+    __mtfsf(__r);
     return (0);
 }
 
 __fenv_static inline int
-fegetenv(fenv_t * __envp) {
+fegetenv(fenv_t *__envp)
+{
     union __fpscr __r;
 
-    __mffs(&__r.__d);
+    __mffs(&__r);
     *__envp = __r.__bits.__reg;
     return (0);
 }
 
 __fenv_static inline int
-feholdexcept(fenv_t * __envp) {
+feholdexcept(fenv_t *__envp)
+{
     union __fpscr __r;
 
-    __mffs(&__r.__d);
-    *__envp = __r.__d;
+    __mffs(&__r);
+    *__envp = __r.__bits.__reg;
     __r.__bits.__reg &= ~(FE_ALL_EXCEPT | _ENABLE_MASK);
-    __mtfsf(__r.__d);
+    __mtfsf(__r);
     return (0);
 }
 
 __fenv_static inline int
-fesetenv(const fenv_t *__envp) {
+fesetenv(const fenv_t *__envp)
+{
     union __fpscr __r;
 
     __r.__bits.__reg = *__envp;
-    __mtfsf(__r.__d);
+    __mtfsf(__r);
     return (0);
 }
 
 __fenv_static inline int
-feupdateenv(const fenv_t *__envp) {
+feupdateenv(const fenv_t *__envp)
+{
     union __fpscr __r;
 
-    __mffs(&__r.__d);
+    __mffs(&__r);
     __r.__bits.__reg &= FE_ALL_EXCEPT;
     __r.__bits.__reg |= *__envp;
-    __mtfsf(__r.__d);
+    __mtfsf(__r);
     return (0);
 }
 
-#if __BSD_VISIBLE
-
-/* We currently provide no external definitions of the functions below. */
-
-static inline int
+__fenv_static inline int
 feenableexcept(int __mask)
 {
-    union __fpscr __r;
-    fenv_t __oldmask;
+	union __fpscr __r;
+	fenv_t __oldmask;
 
-    __mffs(&__r.__d);
-    __oldmask = __r.__bits.__reg;
-    __r.__bits.__reg |= (__mask & FE_ALL_EXCEPT) >> _FPUSW_SHIFT;
-    __mtfsf(__r.__d);
-    return ((__oldmask & _ENABLE_MASK) << _FPUSW_SHIFT);
+	__mffs(&__r);
+	__oldmask = __r.__bits.__reg;
+	__r.__bits.__reg |= (__mask & FE_ALL_EXCEPT) >> _FPUSW_SHIFT;
+	__mtfsf(__r);
+	return ((__oldmask & _ENABLE_MASK) << _FPUSW_SHIFT);
 }
 
-static inline int
+__fenv_static inline int
 fedisableexcept(int __mask)
 {
-    union __fpscr __r;
-    fenv_t __oldmask;
+	union __fpscr __r;
+	fenv_t __oldmask;
 
-    __mffs(&__r.__d);
-    __oldmask = __r.__bits.__reg;
-    __r.__bits.__reg &= ~((__mask & FE_ALL_EXCEPT) >> _FPUSW_SHIFT);
-    __mtfsf(__r.__d);
-    return ((__oldmask & _ENABLE_MASK) << _FPUSW_SHIFT);
+	__mffs(&__r);
+	__oldmask = __r.__bits.__reg;
+	__r.__bits.__reg &= ~((__mask & FE_ALL_EXCEPT) >> _FPUSW_SHIFT);
+	__mtfsf(__r);
+	return ((__oldmask & _ENABLE_MASK) << _FPUSW_SHIFT);
 }
 
+/* We currently provide no external definition of fegetexcept(). */
 static inline int
 fegetexcept(void)
 {
-    union __fpscr __r;
+	union __fpscr __r;
 
-    __mffs(&__r.__d);
-    return ((__r.__bits.__reg & _ENABLE_MASK) << _FPUSW_SHIFT);
+	__mffs(&__r);
+	return ((__r.__bits.__reg & _ENABLE_MASK) << _FPUSW_SHIFT);
 }
-
-#endif /* __BSD_VISIBLE */
-
 
 __END_DECLS
 

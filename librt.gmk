@@ -50,11 +50,19 @@ $(OUT_SHARED)/rt/rt.lib_rev.o : $(LIB_DIR)/rt/rt.lib_rev.c
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
+ifdef SPE
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SHARED_SPE)
+else
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
+endif
 
 $(BUILD_DIR)/lib/librt.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)

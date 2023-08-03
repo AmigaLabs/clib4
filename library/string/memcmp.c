@@ -133,7 +133,7 @@ memcmp(const void *ptr1, const void *ptr2, size_t len) {
                 case CPUFAMILY_4XX:
                     result = __memcmp440(m1, m2, len);
                     break;
-#ifdef SPE
+#ifdef __SPE__
                 case CPUFAMILY_E500:
                     result = __memcmp_e500(m1, m2, len);
                     break;

@@ -776,7 +776,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                             if (digit < radix) {
                                 D(("got another digit '%lc'", c));
 
-                                if (multiplier != 0.0) {
+                                if (multiplier != (double) 0.0) {
                                     new_sum = sum + digit * multiplier;
                                     if (new_sum < sum) /* overflow? */
                                     {
@@ -918,7 +918,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
                                         /* A negative exponent means division. */
                                         divisor = pow((double) radix, (double) exponent);
-                                        if (divisor != 0.0)
+                                        if (divisor != (double) 0.0)
                                             sum = sum / divisor;
                                     } else {
                                         /* A positive exponent means multiplication. */

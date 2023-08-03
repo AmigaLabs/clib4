@@ -57,7 +57,7 @@ strlen(const char *s) {
             case CPUFAMILY_4XX:
                 result = __strlen440(s);
                 break;
-#ifdef SPE
+#ifdef __SPE__
             case CPUFAMILY_E500:
                 result = __strlen_e500(s);
                 break;

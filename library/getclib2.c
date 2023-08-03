@@ -10,13 +10,17 @@
 struct _clib2 *
 __getClib2(void) {
     struct _clib2 *r = NULL;
-
     struct Task *t = FindTask(NULL);
+
     if (NT_PROCESS == t->tc_Node.ln_Type) {
+#if 0 //This is too slow at moment..
         uint32 value;
         /* Get _clib2 address stored into process pr_UID field */
         GetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, &value, TAG_END);
         r = (struct _clib2 *) value;
+#else
+        r = (struct _clib2 *) ((struct Process *)t)->pr_UID;
+#endif
     }
 
     if (!r) {

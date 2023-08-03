@@ -24,6 +24,7 @@
 #include <glob.h>
 #include <grp.h>
 #include <iconv.h>
+#include <ieeefp.h>
 #include <ifaddrs.h>
 #include <langinfo.h>
 #include <libgen.h>
@@ -592,9 +593,9 @@ struct Clib2IFace {
     int (* setjmp) (jmp_buf __env);                                                                                                                  /* 1788 */
     int (* __sigsetjmp) (struct __jmp_buf_tag __env[1], int __savemask);                                                                             /* 1792 */
     int (* _setjmp) (struct __jmp_buf_tag __env[1]);                                                                                                 /* 1796 */
-    void (* longjmp) (jmp_buf __env, int __val) __attribute__ ((__noreturn__));                                                                      /* 1800 */
-    void (* _longjmp) (struct __jmp_buf_tag __env[1], int __val) __attribute__ ((__noreturn__));                                                     /* 1804 */
-    void (* siglongjmp) (sigjmp_buf __env, int __val) __attribute__ ((__noreturn__));                                                                /* 1808 */
+    void (* longjmp) (jmp_buf __env, int __val);                                                                                                     /* 1800 */
+    void (* _longjmp) (struct __jmp_buf_tag __env[1], int __val);                                                                                    /* 1804 */
+    void (* siglongjmp) (sigjmp_buf __env, int __val);                                                                                               /* 1808 */
     int (* __sigjmp_save) (jmp_buf __env, int __savemask);                                                                                           /* 1812 */
 
     /* signal.h */
@@ -1303,6 +1304,14 @@ struct Clib2IFace {
     int   (* mkostemp) (char *name, int flags);                                                                                                      /* 4272 */
     int   (* mkostemps) (char *name, int len, int flags);                                                                                            /* 4276 */
 
+    float (* strtof_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                             /* 4282 */
+    double (* strtod_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                            /* 4286 */
+
+    fp_rnd_t    (* fpgetround) (void);                                                                                                               /* 4290 */
+    fp_rnd_t    (* fpsetround) (fp_rnd_t);                                                                                                           /* 4294 */
+    fp_except_t (* fpgetmask) (void);                                                                                                                /* 4298 */
+    fp_except_t (* fpsetmask) (fp_except_t);                                                                                                         /* 4302 */
+    fp_except_t (* fpgetsticky) (void);                                                                                                              /* 4306 */
 };
 
 #ifdef __PIC__

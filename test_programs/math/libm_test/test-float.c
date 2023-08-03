@@ -18,10 +18,10 @@
    02111-1307 USA.  */
 
 #define FUNC(function) function ## f
-#define FLOAT float
+#define _FLOAT float
 #define TEST_MSG "testing float (without inline functions)\n"
 #define MATHCONST(x) x
-#define CHOOSE(Clongdouble,Cdouble,Cfloat,Cinlinelongdouble,Cinlinedouble,Cinlinefloat) Cfloat
+#define CHOOSE(Clongdouble, Cdouble, Cfloat, Cinlinelongdouble, Cinlinedouble, Cinlinefloat) Cfloat
 #define PRINTF_EXPR "e"
 #define PRINTF_XEXPR "a"
 #define PRINTF_NEXPR "f"

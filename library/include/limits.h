@@ -6,61 +6,35 @@
 #define _LIMITS_H
 
 #include <features.h>
+#define CHAR_BIT      8
+#define SCHAR_MIN   (-128)
+#define SCHAR_MAX     127
+#define UCHAR_MAX     0xff
 
-#define CHAR_BIT 8
-
-/****************************************************************************/
-
-#define SCHAR_MIN -128
-#define SCHAR_MAX 127
-#define UCHAR_MAX 255
-
-/****************************************************************************/
-
-/*
- * The following defines the range a 'char' can cover by checking a
- * preprocessor symbol; we support both SAS/C and GCC here.
- */
-
-#if (defined(__GNUC__) && defined(__CHAR_UNSIGNED__))
-
-#define CHAR_MIN 0
-#define CHAR_MAX 255
-
+#ifndef _CHAR_UNSIGNED
+    #define CHAR_MIN    SCHAR_MIN
+    #define CHAR_MAX    SCHAR_MAX
 #else
-
-#define CHAR_MIN -128
-#define CHAR_MAX 127
-
-#endif /* (__GNUC__ && __CHAR_UNSIGNED) */
-
-/****************************************************************************/
+#define CHAR_MIN    0
+    #define CHAR_MAX    UCHAR_MAX
+#endif
 
 #define SHRT_MIN	-32768
 #define SHRT_MAX	32767
 #define USHRT_MAX	65535
-
-/****************************************************************************/
-
 #define INT_MIN		(-2147483647 - 1)
 #define INT_MAX		2147483647
 #define UINT_MAX	4294967295U
-
-/****************************************************************************/
-
 #define LONG_MIN	(-2147483647L - 1)
 #define LONG_MAX	2147483647L
 #define ULONG_MAX	4294967295UL
-
 #define LLONG_MIN	(-0x7fffffffffffffffLL-1)
 #define LLONG_MAX	0x7fffffffffffffffLL
 #define ULLONG_MAX	0xffffffffffffffffULL
 
 
 #define MB_LEN_MAX 1
-
 #define NL_ARGMAX 127
-
 #define SSIZE_MAX LONG_MAX
 
 /****************************************************************************/

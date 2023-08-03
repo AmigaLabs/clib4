@@ -211,6 +211,8 @@ C_SEARCH := \
 	search/twalk.o
 
 C_SETJMP := \
+    cpu/altivec/longjmp_altivec.o \
+    cpu/altivec/setjmp_altivec.o \
     setjmp/_longjmp.o \
     setjmp/longjmp.o \
     setjmp/setjmp.o \
@@ -480,6 +482,8 @@ C_STDLIB := \
 	stdlib/fcvt.o \
 	stdlib/free.o \
 	stdlib/gcvt.o \
+	stdlib/gdtoa-gethex.o \
+	stdlib/gdtoa-hexnan.o \
 	stdlib/getexecname.o \
 	stdlib/getenv.o \
 	stdlib/getsp.o \
@@ -502,6 +506,7 @@ C_STDLIB := \
 	stdlib/mkstemp.o \
 	stdlib/mktemp.o \
 	stdlib/modsi3.o \
+	stdlib/mprec.o \
 	stdlib/mulsi3.o \
 	stdlib/posix_memalign.o \
 	stdlib/program_name.o \
@@ -519,7 +524,6 @@ C_STDLIB := \
 	stdlib/showerror.o \
 	stdlib/arg.o \
 	stdlib/strtod.o \
-	stdlib/strtof.o \
 	stdlib/strtol.o \
 	stdlib/strtold.o \
 	stdlib/strtoll.o \
@@ -604,15 +608,6 @@ C_STRING := \
 	string/strtok_r.o \
 	string/strverscmp.o \
 	string/strxfrm.o
-
-ifdef SPE
-    $(info Adding SPE objects)
-    C_STRING := $(C_STRING) \
-		cpu/spe/memcmpE500.o \
-		cpu/spe/strcmpE500.o \
-		cpu/spe/strcpyE500.o \
-		cpu/spe/strlenE500.o
-endif
 
 C_TERMCAP := \
     termcap/termcap.o \
@@ -906,6 +901,22 @@ C_WCHAR := \
 	wchar/wctrans.o \
 	wchar/wctype.o
 
+ifdef SPE
+    $(info Adding SPE objects)
+    C_STRING := $(C_STRING) \
+    	cpu/spe/memcmpE500.o \
+    	cpu/spe/strcmpE500.o \
+    	cpu/spe/strcpyE500.o \
+    	cpu/spe/strlenE500.o
+
+    C_SETJMP := $(C_SETJMP) \
+        cpu/spe/_longjmpE500.o \
+        cpu/spe/_setjmpE500.o \
+        cpu/spe/longjmpE500.o \
+        cpu/spe/setjmpE500.o \
+        cpu/spe/sigsetjmpE500.o
+endif
+
 C_LIBRARY := \
 	$(C_BASE) \
 	$(C_ARGZ) \
@@ -959,13 +970,19 @@ $(OUT_STATIC)/%.o : $(LIB_DIR)/%.sx
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
 
+ifdef SPE
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SHARED_SPE)
+else
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
+endif
 
 $(OUTPUT_LIB)/libc.a : $(SOURCES_STATIC)
 	$(VERBOSE)@$(MAKELIB)
-
 $(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)
