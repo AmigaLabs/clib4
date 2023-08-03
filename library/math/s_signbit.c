@@ -10,7 +10,7 @@ int
 __signbit_double(double d) {
     union IEEEd2bits u;
     u.d = d;
-    Printf("__signbit_double %ld %ld %ld %ld\n", u.bits.sign, u.bits.exp, u.bits.manh, u.bits.manl);
+
     return (u.bits.sign);
 }
 

@@ -179,7 +179,7 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     const char *prefix = "-0X+0X 0X-0x+0x 0x";
     int pl;
     char ebuf0[3 * sizeof(int)], *ebuf = &ebuf0[3 * sizeof(int)], *estr = 0;
-    Printf("Y = %ld\n", y);
+    //Printf("Y = %ld\n", y);
 
     pl = 1;
     if (signbit(y)) {
@@ -689,7 +689,7 @@ int
 vfprintf(FILE *f, const char *format, va_list ap) {
     va_list ap2;
     int ret, nl_type[NL_ARGMAX] = {0};
-    union arg nl_arg[NL_ARGMAX];
+    union arg nl_arg[NL_ARGMAX] = {0};
 
     ENTER();
     SHOWPOINTER(f);
