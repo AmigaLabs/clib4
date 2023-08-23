@@ -90,8 +90,11 @@ static void CloseLibraryInterface(struct ExecIFace *iexec, struct Interface *int
         struct Library *library = interface->Data.LibBase;
 
         iexec->DropInterface(interface);
-        if (library != NULL)
+        interface = NULL;
+        if (library != NULL) {
             iexec->CloseLibrary(library);
+            library = NULL;
+        }
     }
 }
 
@@ -152,10 +155,5 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
 
 int
 _start(STRPTR argstring, int32 arglen, struct Library *sysbase) {
-    SysBase = *(struct Library **) 4;
-    IExec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
-
-    int rc = clib2_start(argstring, arglen, sysbase);
-
-    return rc;
+    return clib2_start(argstring, arglen, sysbase);
 }

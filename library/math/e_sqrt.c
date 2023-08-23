@@ -13,15 +13,11 @@ __ieee754_sqrt(double x) {
     double z;
 
 #ifndef __SPE__
-    asm ("fsqrt %0,%1\n" :"=f" (z):"f" (x));
-#else
     int32_t sign = (int) 0x80000000;
     int32_t ix0, s0, q, m, t, i;
     uint32_t r, t1, s1, ix1, q1;
 
     EXTRACT_WORDS(ix0, ix1, x);
-    printf("ix0 = %ld\n");
-    printf("ix1 = %ld\n");
 
     /* take care of Inf and NaN */
     if ((ix0 & 0x7ff00000) == 0x7ff00000) {

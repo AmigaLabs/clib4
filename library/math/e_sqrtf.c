@@ -28,9 +28,6 @@ __ieee754_sqrtf(float x) {
     float z;
 
 #ifndef __SPE__
-    asm ("fsqrts %0,%1\n" :"=f" (z):"f" (x));
-#else
-#if 0
     int32_t sign = (int) 0x80000000;
     int32_t ix, s, q, m, t, i;
     uint32_t r;
@@ -165,7 +162,6 @@ __ieee754_sqrtf(float x) {
             return (x - x) / (x - x); /* sqrt(-ve)=sNaN */
         return 0x1p-256 * __ieee754_sqrt(x * 0x1p512);
     }
-#endif
 #endif
     return z;
 }
