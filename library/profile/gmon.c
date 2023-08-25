@@ -175,7 +175,7 @@ void moncleanup(void) {
         if (p->froms[fromindex] == 0)
             continue;
 
-        frompc = 0; /* FIXME: was p->lowpc; needs to be 0 and assumes -Ttext=0 on compile. Better idea? */
+        frompc = p->lowpc; //0x01000000; /* FIXME: was p->lowpc; needs to be 0 and assumes -Ttext=0 on compile. Better idea? */
         frompc += fromindex * p->hashfraction * sizeof(*p->froms);
         for (toindex = p->froms[fromindex]; toindex != 0;
              toindex = p->tos[toindex].link) {
@@ -213,41 +213,41 @@ void mongetpcs(uint32 *lowpc, uint32 *highpc) {
     *highpc = 0;
 
     ElfBase = OpenLibrary("elf.library", 0L);
-    if (!ElfBase)
-        goto out;
+    if (ElfBase) {
+        IElf = (struct ElfIFace *) GetInterface(ElfBase, "main", 1, NULL);
+        if (IElf) {
+            self = (struct Process *) FindTask(0);
+            seglist = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
 
-    IElf = (struct ElfIFace *) GetInterface(ElfBase, "main", 1, NULL);
-    if (!IElf)
-        goto out;
+            if (GetSegListInfoTags(seglist, GSLI_ElfHandle, &elfHandle, TAG_DONE) == 1) {
+                elfHandle = OpenElfTags(OET_ElfHandle, elfHandle, TAG_DONE);
 
-    self = (struct Process *) FindTask(0);
-    seglist = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
+                if (elfHandle) {
+                    GetElfAttrsTags(elfHandle, EAT_NumSections, &numSections, TAG_DONE);
+                    for (i = 0; i < numSections; i++) {
+                        shdr = GetSectionHeaderTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
+                        if (shdr && (shdr->sh_flags & SWF_EXECINSTR)) {
+                            uint32 base = (uint32) GetSectionTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
+                            *lowpc = base;
+                            *highpc = base + shdr->sh_size;
+                            break;
+                        }
+                    }
 
-    GetSegListInfoTags(seglist, GSLI_ElfHandle, &elfHandle, TAG_DONE);
-    elfHandle = OpenElfTags(OET_ElfHandle, elfHandle, TAG_DONE);
-
-    if (!elfHandle)
-        goto out;
-
-    GetElfAttrsTags(elfHandle, EAT_NumSections, &numSections, TAG_DONE);
-
-    for (i = 0; i < numSections; i++) {
-        shdr = GetSectionHeaderTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
-        if (shdr && (shdr->sh_flags & SWF_EXECINSTR)) {
-            uint32 base = (uint32) GetSectionTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
-            *lowpc = base;
-            *highpc = base + shdr->sh_size;
-            break;
+                    CloseElfTags(elfHandle, CET_ReClose, TRUE, TAG_DONE);
+                }
+            }
         }
     }
 
-    CloseElfTags(elfHandle, CET_ReClose, TRUE, TAG_DONE);
-
-out:
-    if (IElf)
+    if (IElf) {
         DropInterface((struct Interface *) IElf);
-    if (ElfBase)
+        IElf = NULL;
+    }
+    if (ElfBase) {
         CloseLibrary(ElfBase);
+        ElfBase = NULL;
+    }
 }
 
 #include "macros.h"
