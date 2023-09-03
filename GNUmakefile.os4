@@ -26,10 +26,11 @@ UNAME := $(shell uname)
 INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib2
 SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
 
-CC := ppc-amigaos-gcc
-AR := ppc-amigaos-ar -q
-LD := ppc-amigaos-ld
-RANLIB := ppc-amigaos-ranlib
+CC ?= ppc-amigaos-gcc
+AR ?= ppc-amigaos-ar -q
+LD ?= ppc-amigaos-ld
+RANLIB ?= ppc-amigaos-ranlib
+STRIP ?= ppc-amigaos-strip
 
 # On AmigaOS use native commands
 ifeq ($(UNAME), AmigaOS)
@@ -202,7 +203,7 @@ clib2.library.debug: $(OBJ_C_LIB)
 
 clib2.library: clib2.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
-	ppc-amigaos-strip -R.comment -R.sdata2 --strip-unneeded-rel-relocs $(BUILD_DIR)/$@
+	$(STRIP) -R.comment -R.sdata2 --strip-unneeded-rel-relocs $(BUILD_DIR)/$@
 
 ##############################################################################
 
