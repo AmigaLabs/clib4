@@ -34,9 +34,9 @@ dlopen(const char *path_name, int mode) {
             goto out;
         }
     }
-    SHOWPOINTER(__clib2->__dl_elf_handle);
+    SHOWPOINTER(__clib2->__dl_root_handle);
 
-    if (__clib2->__dl_elf_handle != NULL) {
+    if (__clib2->__dl_root_handle != NULL) {
         struct ElfIFace *IElf = __clib2->IElf;
         SHOWPOINTER(IElf);
         uint32 flags = 0;
@@ -47,7 +47,7 @@ dlopen(const char *path_name, int mode) {
         if (mode & RTLD_GLOBAL)
             flags = ELF32_RTLD_GLOBAL;
 
-        result = DLOpen(__clib2->__dl_elf_handle, path_name, flags);
+        result = DLOpen(__clib2->__dl_root_handle, path_name, flags);
     } else {
         __set_errno(ENOSYS);
     }

@@ -63,9 +63,7 @@ mktemp(char *name_template) {
 
     for (i = 0; i < name_len; i++) {
         assert(name_len >= (i + 1));
-
         offset = name_len - (i + 1);
-
         if (name_template[offset] != 'X')
             break;
 

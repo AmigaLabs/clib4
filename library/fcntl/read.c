@@ -39,7 +39,6 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
 
     assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
     assert(__clib2->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -52,7 +51,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_READ)) {
         SHOWMSG("this descriptor is not read-enabled");
 
-        __set_errno(EINVAL);
+        __set_errno(EBADF);
         goto out;
     }
 

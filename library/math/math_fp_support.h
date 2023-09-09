@@ -6,25 +6,7 @@
 #define _MATH_FP_SUPPORT_H
 
 #include <endian.h>
-
-/* 'Portable' raw representations of three IEEE floating point formats. */
-union ieee_long_double
-{
-	long double		value;
-	unsigned long	raw[3];
-};
-
-union ieee_double
-{
-	double			value;
-	unsigned long	raw[2];
-};
-
-union ieee_single
-{
-	float			value;
-	unsigned long	raw[1];
-};
+#include <stdint.h>
 
 union IEEEl2bits {
     long double	e;
@@ -44,9 +26,15 @@ union IEEEl2bits {
 union IEEEf2bits {
     float	f;
     struct {
-        unsigned int	sign	:1;
-		unsigned int	exp	    :8;
-		unsigned int	man	    :23;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        unsigned int	man	 :23;
+        unsigned int	exp	 :8;
+        unsigned int	sign :1;
+#else /* _BIG_ENDIAN */
+        unsigned int	sign :1;
+		unsigned int	exp	 :8;
+		unsigned int	man	 :23;
+#endif
     } bits;
 };
 
@@ -55,34 +43,39 @@ struct Double {
     double	b;
 };
 
-#define	DBL_MANH_SIZE	20
-#define	DBL_MANL_SIZE	32
-
 union IEEEd2bits {
     double	d;
     struct {
-        unsigned int	sign	:1;
-		unsigned int	exp 	:11;
-		unsigned int	manh	:20;
-		unsigned int	manl	:32;
+#if __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        uint32_t manl : 32;
+        uint32_t manh : 20;
+        uint32_t exp : 11;
+        uint32_t sign : 1;
+#else // Big endian
+        uint32_t sign : 1;
+        uint32_t exp : 11;
+        uint32_t manh : 20;
+        uint32_t manl : 32;
+#endif
     } bits;
 };
 
 #define	mask_nbit_l(u)	((void)0)
 #define	LDBL_IMPLICIT_NBIT
-#define	LDBL_NBIT	0
+#define	LDBL_NBIT	    0
 
 #define	LDBL_MANH_SIZE	20
 #define	LDBL_MANL_SIZE	32
 
-#define	LDBL_TO_ARRAY32(u, a) do {			\
-	(a)[0] = (uint32_t)(u).bits.manl;		\
-	(a)[1] = (uint32_t)(u).bits.manh;		\
-} while(0)
+/* 'Portable' raw representations of three IEEE floating point formats. */
+union ieee_double {
+    double			value;
+    unsigned long	raw[2];
+};
 
-extern float __inff(void);
-extern double __inf(void);
-
-/****************************************************************************/
+union ieee_single {
+    float			value;
+    unsigned long	raw[1];
+};
 
 #endif /* _MATH_FP_SUPPORT_H */

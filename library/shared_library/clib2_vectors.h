@@ -304,7 +304,7 @@ static void *clib2Vectors[] = {
         (void *) (tgammaf),                               /* 1168 */
         (void *) (truncf),                                /* 1172 */
         (void *) (ilogbf),                                /* 1176 */
-        (void *) (finite),                                /* 1180 */
+        (void *) (finite),                                /* 1180 */ /* TODO - REMOVE */
         (void *) (acosh),                                 /* 1184 */
         (void *) (asinh),                                 /* 1188 */
         (void *) (atanh),                                 /* 1192 */
@@ -1119,4 +1119,31 @@ static void *clib2Vectors[] = {
 
         (void *) (getrandom),                             /* 4212 */
         (void *) (getentropy),                            /* 4216 */
+
+        (void *) (timegm),                                /* 4220 */
+        (void *) (stime),                                 /* 4224 */
+
+        (void *) (dbm_clearerr),                          /* 4228 */
+        (void *) (dbm_close),                             /* 4232 */
+        (void *) (dbm_delete),                            /* 4236 */
+        (void *) (dbm_error),                             /* 4240 */
+        (void *) (dbm_fetch),                             /* 4244 */
+        (void *) (dbm_firstkey),                          /* 4248 */
+        (void *) (dbm_nextkey),                           /* 4252 */
+        (void *) (dbm_open),                              /* 4256 */
+        (void *) (dbm_store),                             /* 4260 */
+        (void *) (dbm_dirfno),                            /* 4264 */
+        (void *) (dbopen),                                /* 4268 */
+
+        (void *) (mkostemp),                              /* 4272 */
+        (void *) (mkostemps),                             /* 4276 */
+
+        (void *) (strtof_l),                              /* 4282 */
+        (void *) (strtod_l),                              /* 4286 */
+
+        (void *) (fpgetround),                            /* 4290 */
+        (void *) (fpsetround),                            /* 4294 */
+        (void *) (fpgetmask),                             /* 4298 */
+        (void *) (fpsetmask),                             /* 4302 */
+        (void *) (fpgetsticky),                           /* 4306 */
 };

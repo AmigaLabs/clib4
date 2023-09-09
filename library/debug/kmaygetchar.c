@@ -13,12 +13,7 @@
 #include "debug_headers.h"
 
 LONG
-KMayGetChar(VOID)
-{
-	LONG result;
-
+KMayGetChar(VOID) {
     /* Call RawMayGetChar() through the 68k LVO. */
-    result = EmulateTags(SysBase, ET_Offset, -510, TAG_DONE);
-
-	return(result);
+    return EmulateTags(SysBase, ET_Offset, -510, TAG_DONE);
 }

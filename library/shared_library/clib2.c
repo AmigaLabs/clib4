@@ -109,6 +109,8 @@ struct TimerIFace *ITimer = 0;
 struct Library *__UtilityBase = 0;
 struct UtilityIFace *__IUtility = 0;
 
+struct Clib2IFace *IClib2 = 0;
+
 const struct Resident RomTag;
 
 #define LIBPRI 0
@@ -164,30 +166,83 @@ static void closeLibraries() {
 }
 
 struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
-    D(("LIBOpen"));
+    if (version > VERSION) {
+        return NULL;
+    }
 
     struct Clib2Base *libBase = (struct Clib2Base *) Self->Data.LibBase;
-
-    if (version > VERSION) {
-        D(("Wrong version library required"));
-        return NULL;
+    if (!IClib2) {
+        IClib2 = (struct Clib2Base *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
+        IExec->DropInterface((struct Interface *)IClib2);
     }
 
     ++libBase->libNode.lib_OpenCnt;
     libBase->libNode.lib_Flags &= ~LIBF_DELEXP;
 
-    D(("Exit LIBOpen: Open Count: %ld", libBase->libNode.lib_OpenCnt));
+    struct Clib2Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
+    if (res) {
+        struct Clib2Node c2n;
+        char uuid[UUID4_LEN + 1] = {0};
+        uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
+        uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
+
+        uuid4_generate(c2n.uuid);
+        c2n.pid = pid;
+        c2n.pPid = ppid;
+        c2n.errNo = 0;
+        c2n.undo = 0;
+        D(("c2n.pid = %ld", c2n.pid));
+        D(("c2n.pPid = %ld", c2n.pPid));
+        D(("c2n.uuid = %s", c2n.uuid));
+        hashmap_set(res->children, &c2n);
+
+        switch (res->cpufamily) {
+#ifdef __SPE__
+            case CPUFAMILY_E500:
+                D(("Using SPE setjmp family functions"));
+                IClib2->setjmp = setjmp_spe;
+                IClib2->longjmp = longjmp_spe;
+                IClib2->_longjmp = _longjmp_spe;
+                IClib2->_setjmp = _setjmp_spe;
+                IClib2->__sigsetjmp = __sigsetjmp_spe;
+                IClib2->siglongjmp = siglongjmp_spe;
+                break;
+#endif
+            default:
+                if (res->altivec) {
+                    D(("Using Altivec setjmp family functions"));
+                    IClib2->setjmp = setjmp_altivec;
+                    IClib2->longjmp = longjmp_altivec;
+                }
+                else
+                    D(("Using default setjmp family functions"));
+        }
+    }
     return libBase;
 }
 
 BPTR libExpunge(struct LibraryManagerInterface *Self) {
-    D(("LIBExpunge"));
     BPTR result = 0;
 
-    D(("Remove Resource"));
     struct Clib2Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
+        IPCMapUninit(&res->shmcx.keymap);
+        IPCMapUninit(&res->msgcx.keymap);
+        IPCMapUninit(&res->semcx.keymap);
         hashmap_free(res->uxSocketsMap);
+
+        size_t iter = 0;
+        void *item;
+        while (hashmap_iter(res->children, &iter, &item)) {
+            const struct Clib2Node *node = item;
+            if (node->undo)
+                IExec->FreeVec(node->undo);
+        }
+
+        hashmap_free(res->children);
+        if (res->fallbackClib) {
+            reent_exit(res->fallbackClib, TRUE);
+        }
 
         IExec->RemResource(res);
         IExec->FreeVec(res);
@@ -199,15 +254,12 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
         return result;
     }
 
-    D(("Close all libraries "));
     closeLibraries();
 
-    D(("Remove Clib2Base"));
     IExec->Remove(&libBase->libNode.lib_Node);
 
     result = libBase->SegList;
 
-    D(("Delete library"));
     IExec->DeleteLibrary(&libBase->libNode);
 
     return result;
@@ -215,23 +267,32 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 
 BPTR libClose(struct LibraryManagerInterface *Self) {
     struct Clib2Base *libBase = (struct Clib2Base *) Self->Data.LibBase;
-    ENTER();
+
+    struct Clib2Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
+    if (res) {
+        uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
+        size_t iter = 0;
+        void *item;
+        while (hashmap_iter(res->children, &iter, &item)) {
+            const struct Clib2Node *node = item;
+            if (node->pid == pid) {
+                if (node->undo)
+                    IExec->FreeVec(node->undo);
+                hashmap_delete(res->children, node);
+                break;
+            }
+        }
+    }
 
     --libBase->libNode.lib_OpenCnt;
-    D(("LIBClose: Count=%ld", libBase->libNode.lib_OpenCnt));
 
-    D(("Done %ld", libBase->libNode.lib_OpenCnt));
     if (libBase->libNode.lib_OpenCnt) {
-        RETURN(0);
         return 0;
     }
 
     if (libBase->libNode.lib_Flags & LIBF_DELEXP) {
-        SHOWMSG("Call Expunge");
-        LEAVE();
         return (BPTR) Self->LibExpunge();
     } else {
-        RETURN(0);
         return 0;
     }
 }
@@ -270,6 +331,18 @@ unixSocketCompare(const void *a, const void *b, void *udata) {
     return strcmp(ua->name, ub->name);
 }
 
+uint64_t
+clib2NodeHash(const void *item, uint64_t seed0, uint64_t seed1) {
+    const struct Clib2Node *node = item;
+    return hashmap_xxhash3(node->uuid, strlen(node->uuid), seed0, seed1);
+}
+
+int
+clib2NodeCompare(const void *a, const void *b, void *udata) {
+    const struct Clib2Node *ua = a;
+    const struct Clib2Node *ub = b;
+    return ua->uuid == ub->uuid;
+}
 
 struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
     libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
@@ -305,34 +378,27 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
         goto out;
     }
 
-    D(("Open Elf Library"));
     struct Library *__ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
     if (__ElfBase) {
         if (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision == 1) { // .so stuff doesn't work with pre-52.2
-            D(("Elf.library is 52.1. We can't use this version."));
             goto out;
         }
 
         __IElf = (struct ElfIFace *) IExec->GetInterface(__ElfBase, "main", 1, NULL);
         if (!__IElf) {
-            D(("Cannot get __IElf interface"));
             goto out;
         }
     } else {
-        D(("Cannot open Elf library"));
         goto out;
     }
 
-    D(("Open Utility Library"));
     __UtilityBase = IExec->OpenLibrary("utility.library", MIN_OS_VERSION);
     if (__UtilityBase) {
         __IUtility = (struct UtilityIFace *) IExec->GetInterface(__UtilityBase, "main", 1, NULL);
         if (__IUtility == NULL) {
-            D(("Cannot get IUtility interface"));
             goto out;
         }
     } else {
-        D(("Cannot open utility.library"));
         goto out;
     }
 
@@ -355,8 +421,31 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
             res->size = sizeof(*res);
 
             iexec->InitSemaphore(&res->semaphore);
-            iexec->NewList(&res->nodes);
-            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
+            res->children = hashmap_new(sizeof(struct Clib2Node), 0, 0, 0, clib2NodeHash, clib2NodeCompare, NULL, NULL);
+            /* Initialize unix sockets hashmap */
+            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL,
+                                            NULL);
+            /* Initialize fallback clib2 reent structure */
+            res->fallbackClib = (struct _clib2 *) iexec->AllocVecTags(sizeof(struct _clib2),
+                                                                      AVT_Type, MEMF_SHARED,
+                                                                      AVT_ClearWithValue, 0,
+                                                                      TAG_DONE);
+            reent_init(res->fallbackClib);
+            res->fallbackClib->__check_abort_enabled = TRUE;
+
+            /* Init SYSV structures */
+            IPCMapInit(&res->shmcx.keymap);
+            res->shmcx.totshm = 0;
+            res->shmcx.shmmax = DEF_SHMMAX;
+            res->msgcx.qsizemax = DEF_QSIZEMAX;
+            IPCMapInit(&res->msgcx.keymap);
+            IPCMapInit(&res->semcx.keymap);
+
+            IExec->GetCPUInfoTags(
+                    GCIT_VectorUnit, &res->altivec,
+                    GCIT_Family, &res->cpufamily,
+                    TAG_DONE);
+
             iexec->AddResource(res);
         } else {
             goto out;
@@ -365,8 +454,7 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
 
     return libBase;
 
-out:
-    D(("Jumped into error"));
+    out:
     /* if we jump in out we need to close all libraries and return NULL */
     closeLibraries();
 

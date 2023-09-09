@@ -14,8 +14,6 @@
 
 VOID
 KDoFmt(const char *format_string, APTR data_stream, APTR put_char_routine, APTR put_char_data) {
-    assert(format_string != NULL);
-
     if (format_string != NULL)
         RawDoFmt((STRPTR) format_string, data_stream, (VOID (*)()) put_char_routine, put_char_data);
 }

@@ -23,6 +23,8 @@ int pipe2(int fd[2], int flags) {
 
 #ifdef USE_TEMPFILES
     snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", pipenum++, ((struct Process *)FindTask(NULL))->pr_ProcessID);
+    // Delete the file if exists (we don't need to check if file exists)
+    Delete(pipe_name);
 #else
     if (flags & O_NONBLOCK)
         snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0/NOBLOCK", pipenum++,
@@ -44,6 +46,17 @@ int pipe2(int fd[2], int flags) {
         __set_errno(EINVAL);
         RETURN(-1);
         return -1;
+    }
+
+    /* Mark FD as PIPE in case USE_TEMPFILES is used */
+    struct fd *fd1 = __get_file_descriptor(fd[0]);
+    if (fd1 != NULL) {
+        SET_FLAG(fd1->fd_Flags, FDF_PIPE);
+    }
+
+    struct fd *fd2 = __get_file_descriptor(fd[1]);
+    if (fd2 != NULL) {
+        SET_FLAG(fd2->fd_Flags, FDF_PIPE);
     }
 
     RETURN(0);

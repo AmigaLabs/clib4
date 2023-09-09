@@ -166,6 +166,7 @@ out_printf(FOut *_out, const char *format, ...) {
     va_end(args);
 }
 
+
 int
 out_overflow(FOut *_out) {
     if (_out) {
@@ -199,6 +200,29 @@ static const char sizeprefix['y' - 'a'] =
                 ['x' - 'a'] = 'j',
                 ['p' - 'a'] = 'j'
         };
+
+static void pop_arg(union arg *arg, int type, va_list *ap) {
+    switch (type) {
+               case _PTR:	    arg->p = va_arg(*ap, void *);
+        break; case _INT:	    arg->i = va_arg(*ap, int);
+        break; case _UINT:	    arg->i = va_arg(*ap, unsigned int);
+        break; case _LONG:	    arg->i = va_arg(*ap, long);
+        break; case _ULONG:	    arg->i = va_arg(*ap, unsigned long);
+        break; case _ULLONG:	arg->i = va_arg(*ap, unsigned long long);
+        break; case _SHORT:	    arg->i = (short) va_arg(*ap, int);
+        break; case _USHORT:	arg->i = (unsigned short) va_arg(*ap, int);
+        break; case _CHAR:	    arg->i = (signed char) va_arg(*ap, int);
+        break; case _UCHAR:	    arg->i = (unsigned char) va_arg(*ap, int);
+        break; case _LLONG:	    arg->i = va_arg(*ap, long long);
+        break; case _SIZET:	    arg->i = va_arg(*ap, size_t);
+        break; case _IMAX:	    arg->i = va_arg(*ap, intmax_t);
+        break; case _UMAX:	    arg->i = va_arg(*ap, uintmax_t);
+        break; case _PDIFF:	    arg->i = va_arg(*ap, ptrdiff_t);
+        break; case _UIPTR:	    arg->i = (uintptr_t) va_arg(*ap, void *);
+        break; case _DBL:	    arg->f = va_arg(*ap, double);
+        break; case _LDBL:	    arg->f = va_arg(*ap, long double);
+    }
+}
 
 int
 wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type) {
@@ -253,7 +277,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
         }
 
         /* Read modifier flags */
-        for (fl = 0; ((((unsigned) *s - ' ') < 32) && (__U_FLAGMASK & (1U << (*s - ' ')))); s++)
+        for (fl = 0; ((((unsigned) *s - ' ') < 32) && (FLAGMASK & (1U << (*s - ' ')))); s++)
             fl |= (1U << (*s - ' '));
 
         /* Read field width */
@@ -271,7 +295,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 return -1;
             }
             if (w < 0)
-                fl |= __U_LEFT_ADJ, w = -w;
+                fl |= LEFT_ADJ, w = -w;
         } else if ((w = getint(&s)) < 0) {
             __set_errno(EOVERFLOW);
             return -1;
@@ -368,11 +392,11 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 continue;
             case 'c':
                 if (w < 1) w=1;
-                if (w > 1 && !(fl & __U_LEFT_ADJ)) {
+                if (w > 1 && !(fl & LEFT_ADJ)) {
                     out_printf(f, "%*s", (w - 1), "");
                 }
                 out_putwc(btowc((int) arg.i), f);
-                if (w > 1 && !(fl & __U_LEFT_ADJ)) {
+                if (w > 1 && !(fl & LEFT_ADJ)) {
                     out_printf(f, "%*s", (w - 1), "");
                 }
                 l = w;
@@ -391,11 +415,11 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 p = (int) (z - a);
                 if (w < p)
                     w = p;
-                if (!(fl & __U_LEFT_ADJ)) {
+                if (!(fl & LEFT_ADJ)) {
                     out_printf(f, "%*s", (w - p), "");
                 }
                 out(f, a, (size_t) p);
-                if ((fl & __U_LEFT_ADJ)) {
+                if ((fl & LEFT_ADJ)) {
                     out_printf(f, "%*s", (w - p), "");
                 }
                 l = w;
@@ -419,7 +443,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 p = l;
                 if (w < p)
                     w = p;
-                if (!(fl & __U_LEFT_ADJ)) {
+                if (!(fl & LEFT_ADJ)) {
                     out_printf(f, "%*s", w - p, "");
                 }
                 bs = arg.p;
@@ -428,7 +452,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                     bs += i;
                     out_putwc(wc, f);
                 }
-                if ((fl & __U_LEFT_ADJ)) {
+                if ((fl & LEFT_ADJ)) {
                     out_printf(f, "%*s", w - p, "");
                 }
                 l = w;
@@ -448,11 +472,11 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
             case 'f':
             case 'g':
                 snprintf(charfmt, sizeof charfmt, "%%%s%s%s%s%s*.*%c",
-                         "#"+!(fl & __U_ALT_FORM),
-                         "+"+!(fl & __U_MARK_POS),
-                         "-"+!(fl & __U_LEFT_ADJ),
-                         " "+!(fl & __U_PAD_POS),
-                         "0"+!(fl & __U_ZERO_PAD),
+                         "#"+!(fl & ALT_FORM),
+                         "+"+!(fl & MARK_POS),
+                         "-"+!(fl & LEFT_ADJ),
+                         " "+!(fl & PAD_POS),
+                         "0"+!(fl & ZERO_PAD),
                          t);
                 l = out_printf(f, charfmt, w, p, arg.f);
                 break;
@@ -463,11 +487,11 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
             case 'x':
             case 'p':
                 snprintf(charfmt, sizeof charfmt, "%%%s%s%s%s%s*.*%c%c",
-                         "#"+!(fl & __U_ALT_FORM),
-                         "+"+!(fl & __U_MARK_POS),
-                         "-"+!(fl & __U_LEFT_ADJ),
-                         " "+!(fl & __U_PAD_POS),
-                         "0"+!(fl & __U_ZERO_PAD),
+                         "#"+!(fl & ALT_FORM),
+                         "+"+!(fl & MARK_POS),
+                         "-"+!(fl & LEFT_ADJ),
+                         " "+!(fl & PAD_POS),
+                         "0"+!(fl & ZERO_PAD),
                          sizeprefix[(t|32)-'a'], t);
                 l = out_printf(f, charfmt, w, p, arg.i);
                 break;

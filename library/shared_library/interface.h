@@ -3,6 +3,8 @@
 
 #include <proto/dos.h>
 
+#undef __BSD_VISIBLE
+#define __BSD_VISIBLE 1
 #include <arpa/inet.h>
 #include <aio.h>
 #include <argz.h>
@@ -10,6 +12,7 @@
 #include <complex.h>
 #include <crypt.h>
 #include <ctype.h>
+#include <db.h>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <envz.h>
@@ -21,6 +24,7 @@
 #include <glob.h>
 #include <grp.h>
 #include <iconv.h>
+#include <ieeefp.h>
 #include <ifaddrs.h>
 #include <langinfo.h>
 #include <libgen.h>
@@ -28,6 +32,7 @@
 #include <locale.h>
 #include <malloc.h>
 #include <math.h>
+#include <ndbm.h>
 #include <net/ethernet.h>
 #include <netdb.h>
 #include <nl_types.h>
@@ -588,9 +593,9 @@ struct Clib2IFace {
     int (* setjmp) (jmp_buf __env);                                                                                                                  /* 1788 */
     int (* __sigsetjmp) (struct __jmp_buf_tag __env[1], int __savemask);                                                                             /* 1792 */
     int (* _setjmp) (struct __jmp_buf_tag __env[1]);                                                                                                 /* 1796 */
-    void (* longjmp) (jmp_buf __env, int __val) __attribute__ ((__noreturn__));                                                                      /* 1800 */
-    void (* _longjmp) (struct __jmp_buf_tag __env[1], int __val) __attribute__ ((__noreturn__));                                                     /* 1804 */
-    void (* siglongjmp) (sigjmp_buf __env, int __val) __attribute__ ((__noreturn__));                                                                /* 1808 */
+    void (* longjmp) (jmp_buf __env, int __val);                                                                                                     /* 1800 */
+    void (* _longjmp) (struct __jmp_buf_tag __env[1], int __val);                                                                                    /* 1804 */
+    void (* siglongjmp) (sigjmp_buf __env, int __val);                                                                                               /* 1808 */
     int (* __sigjmp_save) (jmp_buf __env, int __savemask);                                                                                           /* 1812 */
 
     /* signal.h */
@@ -1280,6 +1285,33 @@ struct Clib2IFace {
 
     int  (* getrandom) (void *buffer, size_t length, unsigned int flags);                                                                            /* 4212 */
     int  (* getentropy) (void *, size_t);                                                                                                            /* 4216 */
+
+    time_t (* timegm) (struct tm *tm);                                                                                                               /* 4220 */
+    int    (* stime) (const time_t *t);                                                                                                              /* 4224 */
+
+    int	  (* dbm_clearerr) (DBM *);                                                                                                                  /* 4228 */
+    void  (* dbm_close) (DBM *);                                                                                                                     /* 4232 */
+    int	  (* dbm_delete) (DBM *, datum);                                                                                                             /* 4236 */
+    int	  (* dbm_error) (DBM *);                                                                                                                     /* 4240 */
+    datum (* dbm_fetch) (DBM *, datum);                                                                                                              /* 4244 */
+    datum (* dbm_firstkey) (DBM *);                                                                                                                  /* 4248 */
+    datum (* dbm_nextkey) (DBM *);                                                                                                                   /* 4252 */
+    DBM	* (* dbm_open) (const char *, int, int);                                                                                                     /* 4256 */
+    int	  (* dbm_store) (DBM *, datum, datum, int);                                                                                                  /* 4260 */
+    int   (* dbm_dirfno) (DBM *);                                                                                                                    /* 4264 */
+    DB *  (* dbopen) (const char *, int, int, DBTYPE, const void *);                                                                                 /* 4268 */
+
+    int   (* mkostemp) (char *name, int flags);                                                                                                      /* 4272 */
+    int   (* mkostemps) (char *name, int len, int flags);                                                                                            /* 4276 */
+
+    float (* strtof_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                             /* 4282 */
+    double (* strtod_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                            /* 4286 */
+
+    fp_rnd_t    (* fpgetround) (void);                                                                                                               /* 4290 */
+    fp_rnd_t    (* fpsetround) (fp_rnd_t);                                                                                                           /* 4294 */
+    fp_except_t (* fpgetmask) (void);                                                                                                                /* 4298 */
+    fp_except_t (* fpsetmask) (fp_except_t);                                                                                                         /* 4302 */
+    fp_except_t (* fpgetsticky) (void);                                                                                                              /* 4306 */
 };
 
 #ifdef __PIC__

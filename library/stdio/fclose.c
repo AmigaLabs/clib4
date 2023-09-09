@@ -76,9 +76,9 @@ fclose(FILE *stream) {
 
         assert(file->iob_TempFileName != NULL);
 
-        old_current_dir = CurrentDir(file->iob_TempFileLock);
-        DeleteFile(file->iob_TempFileName);
-        CurrentDir(old_current_dir);
+        old_current_dir = SetCurrentDir(file->iob_TempFileLock);
+        Delete(file->iob_TempFileName);
+        SetCurrentDir(old_current_dir);
 
         UnLock(file->iob_TempFileLock);
 

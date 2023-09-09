@@ -16,7 +16,7 @@ struct format_hook_data {
     int len;
 };
 
-STATIC VOID
+static void
 format_hook_function(
         struct Hook *hook,
         struct Locale *unused_locale,
@@ -55,7 +55,7 @@ store_string_via_hook(const char *string, int len, struct Hook *hook) {
 
 /* The algorithm for calculating the ISO 8601 week number value comes from
    the "Calendar FAQ" at <http://www.tondering.dk/claus/calendar.html>. */
-INLINE STATIC int
+inline static int
 julian_day(int day, int month, int year) {
     int a, y, m, result;
 
@@ -68,7 +68,7 @@ julian_day(int day, int month, int year) {
     return (result);
 }
 
-STATIC void
+static void
 iso8601_calendar_week_and_year(int day, int month, int year, int *week_ptr, int *year_ptr) {
     int J = julian_day(day, month, year);
     int d1, d4, L;
@@ -92,7 +92,7 @@ iso8601_calendar_week_and_year(int day, int month, int year, int *week_ptr, int 
         (*year_ptr) = year;
 }
 
-STATIC VOID
+static void
 format_date(const char *format, const struct tm *tm, struct Hook *hook) {
     int gmt_offset;
     int week_number;

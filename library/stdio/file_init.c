@@ -26,7 +26,7 @@ FILE_DESTRUCTOR(workbench_exit) {
 
     /* Now clean up after the streams set up for Workbench startup... */
     if (__clib2->restore_console_task) {
-        SetConsoleTask((struct MsgPort *) __clib2->old_console_task);
+        SetConsolePort(__clib2->old_console_task);
         __clib2->old_console_task = NULL;
         __clib2->restore_console_task = FALSE;
     }
@@ -38,21 +38,25 @@ FILE_DESTRUCTOR(workbench_exit) {
         SelectOutput(__clib2->old_output);
         __clib2->old_output = BZERO;
 
+        SelectErrorOutput(__clib2->old_error);
+        __clib2->old_error = BZERO;
+
         __clib2->restore_streams = FALSE;
     }
 
     if (__clib2->input != BZERO) {
-        SetMode(__clib2->input, DOSFALSE);
-
         Close(__clib2->input);
         __clib2->input = BZERO;
     }
 
     if (__clib2->output != BZERO) {
-        SetMode(__clib2->output, DOSFALSE);
-
         Close(__clib2->output);
         __clib2->output = BZERO;
+    }
+
+    if (__clib2->error != BZERO) {
+        Close(__clib2->error);
+        __clib2->error = BZERO;
     }
 
     LEAVE();
@@ -62,12 +66,10 @@ static int
 wb_file_init(struct _clib2 *__clib2) {
     int result = ERROR;
 
-    __clib2->__original_current_directory = CurrentDir(__clib2->__WBenchMsg->sm_ArgList[0].wa_Lock);
+    __clib2->__original_current_directory = SetCurrentDir(__clib2->__WBenchMsg->sm_ArgList[0].wa_Lock);
     __clib2->__current_directory_changed = TRUE;
 
-    if (__clib2->__stdio_window_specification != NULL) {
-        __clib2->input = Open(__clib2->__stdio_window_specification, MODE_NEWFILE);
-    } else if (__clib2->__WBenchMsg->sm_ToolWindow != NULL) {
+    if (__clib2->__WBenchMsg->sm_ToolWindow != NULL) {
         __clib2->input = Open(__clib2->__WBenchMsg->sm_ToolWindow, MODE_NEWFILE);
     } else {
         static const char console_prefix[] = "CON:20/20/600/150/";
@@ -80,7 +82,7 @@ wb_file_init(struct _clib2 *__clib2) {
 
         len = strlen(console_prefix) + strlen(tool_name) + strlen(console_suffix);
 
-        window_specifier = malloc(len + 1);
+        window_specifier = AllocVecTags(len + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
         if (window_specifier == NULL)
             goto out;
 
@@ -90,7 +92,7 @@ wb_file_init(struct _clib2 *__clib2) {
 
         __clib2->input = Open(window_specifier, MODE_NEWFILE);
 
-        free(window_specifier);
+        FreeVec(window_specifier);
     }
 
     if (__clib2->input == BZERO)
@@ -99,24 +101,30 @@ wb_file_init(struct _clib2 *__clib2) {
     if (__clib2->input != BZERO) {
         struct FileHandle *fh = BADDR(__clib2->input);
 
-        __clib2->old_console_task = SetConsoleTask(fh->fh_Type);
+        __clib2->old_console_task = SetConsolePort(fh->fh_MsgPort);
 
         __clib2->output = Open("CONSOLE:", MODE_NEWFILE);
         if (__clib2->output != BZERO)
             __clib2->restore_console_task = TRUE;
         else
-            SetConsoleTask((struct MsgPort *) __clib2->old_console_task);
+            SetConsolePort(__clib2->old_console_task);
+
+        __clib2->error = Open("CONSOLE:", MODE_NEWFILE);
+        if (__clib2->error != BZERO)
+            __clib2->restore_console_task = TRUE;
+        else
+            SetConsolePort(__clib2->old_console_task);
     }
 
     if (__clib2->output == BZERO)
         __clib2->output = Open("NIL:", MODE_NEWFILE);
 
-    if (__clib2->input == BZERO || __clib2->output == BZERO)
+    if (__clib2->input == BZERO || __clib2->output == BZERO || __clib2->error == BZERO)
         goto out;
 
     __clib2->old_input = SelectInput(__clib2->input);
     __clib2->old_output = SelectOutput(__clib2->output);
-
+    __clib2->old_error = SelectErrorOutput(__clib2->error);
     __clib2->restore_streams = TRUE;
 
     result = OK;

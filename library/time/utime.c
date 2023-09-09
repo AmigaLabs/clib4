@@ -24,7 +24,7 @@ utime(const char *path_name, const struct utimbuf *times) {
     }
 
     /* If a modification time is provided, convert it into the local
-       DateStamp format, as used by the SetFileDate() function. */
+       DateStamp format, as used by the SetDate() function. */
     if (times != NULL) {
         if (CANNOT __convert_time_to_datestamp(times->modtime, &ds))
         {
@@ -54,7 +54,7 @@ utime(const char *path_name, const struct utimbuf *times) {
         }
     }
 
-    status = SetFileDate((STRPTR) path_name, &ds);
+    status = SetDate((STRPTR) path_name, &ds);
     if (status == DOSFALSE) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
         goto out;

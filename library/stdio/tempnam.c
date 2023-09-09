@@ -68,6 +68,11 @@ tempnam(const char *dir, const char *pfx) {
     /* two 8 digit numbers + . / */
     length = strlen(dir) + strlen(prefix) + (4 * sizeof(int)) + 2 + 1;
 
+    if (length >= PATH_MAX) {
+        __set_errno(ENAMETOOLONG);
+        return 0;
+    }
+
     filename = malloc(length);
     if (filename) {
         int r = rand();

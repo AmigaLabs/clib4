@@ -112,6 +112,25 @@ C_MOUNT := \
 	mount/fstatfs.o \
 	mount/statfs.o
 
+C_NDBM := \
+	ndbm/db.o \
+	ndbm/dbm_clearerr.o \
+	ndbm/dbm_close.o \
+	ndbm/dbm_delete.o \
+	ndbm/dbm_dirfno.o \
+	ndbm/dbm_error.o \
+	ndbm/dbm_fetch.o \
+	ndbm/dbm_firstkey.o \
+	ndbm/dbm_nextkey.o \
+	ndbm/dbm_open.o \
+	ndbm/dbm_store.o \
+	ndbm/hash.o \
+	ndbm/hash_bigkey.o \
+	ndbm/hash_buf.o \
+	ndbm/hash_func.o \
+	ndbm/hash_log2.o \
+	ndbm/hash_page.o
+
 C_NL_TYPES := \
 	nltypes/catclose.o \
 	nltypes/catgets.o \
@@ -122,28 +141,16 @@ C_POSIX := \
 	posix/fstatvfs.o \
 	posix/glob.o \
 	posix/globfree.o \
-	posix/ipc_ftok.o \
 	posix/basename.o \
 	posix/dirname.o \
 	posix/memalign.o \
 	posix/mmap.o \
 	posix/munmap.o \
-	posix/msgctl.o \
-	posix/msgget.o \
-	posix/msgids.o \
-	posix/msgrcv.o \
-	posix/msgsnd.o \
-	posix/msgsnap.o \
 	posix/msync.o \
 	posix/poll.o \
 	posix/getrlimit.o \
 	posix/setrlimit.o \
 	posix/getrusage.o \
-	posix/shmat.o \
-	posix/shmctl.o \
-	posix/shmdt.o \
-	posix/shmget.o \
-	posix/shmids.o \
 	posix/checkabort.o \
 	posix/kill.o \
 	posix/raise.o \
@@ -158,13 +165,26 @@ C_POSIX := \
 	posix/signal.o \
 	posix/sigprocmask.o \
 	posix/sigsetmask.o \
-	posix/semctl.o \
-	posix/semget.o \
-    posix/semids.o \
-	posix/semop.o \
-	posix/semtimedop.o \
 	posix/statvfs.o \
 	posix/sysinfo.o \
+	posix/sysv_ftok.o \
+	posix/sysv_idkey.o \
+	posix/sysv_msgctl.o \
+	posix/sysv_msgget.o \
+	posix/sysv_msgids.o \
+	posix/sysv_msgrcv.o \
+	posix/sysv_msgsnap.o \
+	posix/sysv_msgsnd.o \
+	posix/sysv_semctl.o \
+	posix/sysv_semget.o \
+    posix/sysv_semids.o \
+	posix/sysv_semop.o \
+	posix/sysv_semtimedop.o \
+	posix/sysv_shmat.o \
+	posix/sysv_shmctl.o \
+	posix/sysv_shmdt.o \
+	posix/sysv_shmget.o \
+	posix/sysv_shmids.o \
 	posix/ulimit.o \
 	posix/readv.o \
 	posix/writev.o \
@@ -191,6 +211,8 @@ C_SEARCH := \
 	search/twalk.o
 
 C_SETJMP := \
+    cpu/altivec/longjmp_altivec.o \
+    cpu/altivec/setjmp_altivec.o \
     setjmp/_longjmp.o \
     setjmp/longjmp.o \
     setjmp/setjmp.o \
@@ -460,8 +482,9 @@ C_STDLIB := \
 	stdlib/fcvt.o \
 	stdlib/free.o \
 	stdlib/gcvt.o \
+	stdlib/gdtoa-gethex.o \
+	stdlib/gdtoa-hexnan.o \
 	stdlib/getexecname.o \
-	stdlib/getdefstacksize.o \
 	stdlib/getenv.o \
 	stdlib/getsp.o \
 	stdlib/get_errno.o \
@@ -478,15 +501,19 @@ C_STDLIB := \
 	stdlib/mbstowcs.o \
 	stdlib/mbtowc.o \
 	stdlib/mkdtemp.o \
+	stdlib/mkostemp.o \
+	stdlib/mkostemps.o \
 	stdlib/mkstemp.o \
 	stdlib/mktemp.o \
 	stdlib/modsi3.o \
+	stdlib/mprec.o \
 	stdlib/mulsi3.o \
 	stdlib/posix_memalign.o \
 	stdlib/program_name.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
 	stdlib/qsort_r.o \
+	stdlib/randname.o \
 	stdlib/realloc.o \
 	stdlib/secure_getenv.o \
 	stdlib/semaphore.o \
@@ -495,11 +522,8 @@ C_STDLIB := \
 	stdlib/set_process_window.o \
 	stdlib/shared_objs.o \
 	stdlib/showerror.o \
-	stdlib/stack_usage.o \
-	stdlib/swapstack.o \
 	stdlib/arg.o \
 	stdlib/strtod.o \
-	stdlib/strtof.o \
 	stdlib/strtol.o \
 	stdlib/strtold.o \
 	stdlib/strtoll.o \
@@ -514,7 +538,6 @@ C_STDLIB := \
 	stdlib/umodsi3.o \
 	stdlib/unsetenv.o \
 	stdlib/valloc.o \
-	stdlib/expand_wildcard_check.o \
 	stdlib/wof_allocator.o
 
 C_STRING := \
@@ -586,15 +609,6 @@ C_STRING := \
 	string/strverscmp.o \
 	string/strxfrm.o
 
-ifdef SPE
-    $(info Adding SPE objects)
-    C_STRING := $(C_STRING) \
-		cpu/spe/memcmpE500.o \
-		cpu/spe/strcmpE500.o \
-		cpu/spe/strcpyE500.o \
-		cpu/spe/strlenE500.o
-endif
-
 C_TERMCAP := \
     termcap/termcap.o \
     termcap/tparam.o
@@ -644,9 +658,11 @@ C_TIME := \
 	time/rdtsc.o \
 	time/setitimer.o \
     time/settimeofday.o \
+	time/stime.o \
 	time/strftime.o \
 	time/strptime.o \
 	time/time.o \
+	time/timegm.o \
 	time/tzset.o \
 	time/weekday.o \
 	time/times.o \
@@ -885,6 +901,22 @@ C_WCHAR := \
 	wchar/wctrans.o \
 	wchar/wctype.o
 
+ifdef SPE
+    $(info Adding SPE objects)
+    C_STRING := $(C_STRING) \
+    	cpu/spe/memcmpE500.o \
+    	cpu/spe/strcmpE500.o \
+    	cpu/spe/strcpyE500.o \
+    	cpu/spe/strlenE500.o
+
+    C_SETJMP := $(C_SETJMP) \
+        cpu/spe/_longjmpE500.o \
+        cpu/spe/_setjmpE500.o \
+        cpu/spe/longjmpE500.o \
+        cpu/spe/setjmpE500.o \
+        cpu/spe/sigsetjmpE500.o
+endif
+
 C_LIBRARY := \
 	$(C_BASE) \
 	$(C_ARGZ) \
@@ -898,6 +930,7 @@ C_LIBRARY := \
 	$(C_LOCALE) \
 	$(C_MISC) \
 	$(C_MOUNT) \
+	$(C_NDBM) \
 	$(C_NL_TYPES) \
 	$(C_POSIX) \
     $(C_REGEX) \
@@ -932,21 +965,24 @@ OBJ_C_SRC += $(patsubst %.o, $(LIB_DIR)/%.c, $(C_LIBRARY))
 $(OUT_STATIC)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 $(OUT_SHARED)/c.lib_rev.o : $(LIB_DIR)/c.lib_rev.c $(LIB_DIR)/c.lib_rev.h
 
-$(OUT_STATIC)/cpu/spe/%.o : $(LIB_DIR)/cpu/spe/%.S
-	$(VERBOSE)$(COMPILE_SPE)
-
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.sx
 	$(VERBOSE)$(COMPILE_ALTIVEC_REG)
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
 
+ifdef SPE
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SHARED_SPE)
+else
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
+endif
 
 $(OUTPUT_LIB)/libc.a : $(SOURCES_STATIC)
 	$(VERBOSE)@$(MAKELIB)
-
 $(OUTPUT_LIB)/libc.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

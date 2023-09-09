@@ -1,7 +1,13 @@
 #ifndef _WPRINTF_CORE_H
 #define _WPRINTF_CORE_H
 
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
+
 #include <stdio.h>
+
+typedef long double long_double;
 
 enum {
     _BARE, _LPRE, _LLPRE, _HPRE, _HHPRE, _BIGLPRE,
@@ -21,71 +27,6 @@ union arg {
     long double f;
     void *p;
 };
-
-static inline void pop_arg(union arg *arg, int type, va_list *ap) {
-    /* Give the compiler a hint for optimizing the switch. */
-    if ((unsigned) type > _MAXSTATE) {
-        return;
-    }
-    switch (type) {
-        case _PTR:
-            arg->p = va_arg(*ap, void * );
-            break;
-        case _INT:
-            arg->i = (uintmax_t)((int) va_arg(*ap, int));
-            break;
-        case _UINT:
-            arg->i = (uintmax_t)((unsigned int) va_arg(*ap, unsigned int));
-            break;
-        case _LONG:
-            arg->i = (uintmax_t)((long long) va_arg(*ap, long));
-            break;
-        case _ULONG:
-            arg->i = (uintmax_t)((unsigned long) va_arg(*ap, unsigned long));
-            break;
-        case _ULLONG:
-            arg->i = (uintmax_t)((unsigned long long) va_arg(*ap, unsigned long long));
-            break;
-        case _SHORT:
-            arg->i = (uintmax_t)((short) va_arg(*ap, int));
-            break;
-        case _USHORT:
-            arg->i = (uintmax_t)((unsigned short) va_arg(*ap, int));
-            break;
-        case _CHAR:
-            arg->i = (uintmax_t)((signed char) va_arg(*ap, int));
-            break;
-        case _UCHAR:
-            arg->i = (uintmax_t)((unsigned char) va_arg(*ap, int));
-            break;
-        case _LLONG:
-            arg->i = (uintmax_t)((long long) va_arg(*ap, long long));
-            break;
-        case _SIZET:
-            arg->i = (uintmax_t)((size_t) va_arg(*ap, size_t));
-            break;
-        case _IMAX:
-            arg->i = (uintmax_t)((intmax_t) va_arg(*ap, intmax_t));
-            break;
-        case _UMAX:
-            arg->i = (uintmax_t)((uintmax_t) va_arg(*ap, uintmax_t));
-            break;
-        case _PDIFF:
-            arg->i = (uintmax_t)((ptrdiff_t) va_arg(*ap, ptrdiff_t));
-            break;
-        case _UIPTR:
-            arg->i = (uintptr_t)((void *) va_arg(*ap, void * ));
-            break;
-        case _DBL:
-            arg->f = (long double) ((double) va_arg(*ap, double));
-            break;
-        case _LDBL:
-            arg->f = (long double) va_arg(*ap, long double);
-            break;
-        default:
-            break;
-    }
-}
 
 typedef struct {
     FILE *file;
@@ -168,29 +109,14 @@ static const unsigned char states[]['z' - 'A' + 1] = {
  * vfprintf vfwprintf
  */
 
-#define __M_ALT_FORM(_T) (_T << ('#' - ' '))
-#define __M_ZERO_PAD(_T) (_T << ('0' - ' '))
-#define __M_LEFT_ADJ(_T) (_T << ('-' - ' '))
-#define __M_PAD_POS(_T) (_T << (' ' - ' '))
-#define __M_MARK_POS(_T) (_T << ('+' - ' '))
-#define __M_GROUPED(_T) (_T << ('\'' - ' '))
+#define ALT_FORM   (1U<<'#'-' ')
+#define ZERO_PAD   (1U<<'0'-' ')
+#define LEFT_ADJ   (1U<<'-'-' ')
+#define PAD_POS    (1U<<' '-' ')
+#define MARK_POS   (1U<<'+'-' ')
+#define GROUPED    (1U<<'\''-' ')
 
-#define __U_ALT_FORM __M_ALT_FORM(1U)
-#define __U_ZERO_PAD __M_ZERO_PAD(1U)
-#define __U_LEFT_ADJ __M_LEFT_ADJ(1U)
-#define __U_PAD_POS __M_PAD_POS(1U)
-#define __U_MARK_POS __M_MARK_POS(1U)
-#define __U_GROUPED __M_GROUPED(1U)
-
-#define __S_ALT_FORM __M_ALT_FORM(1)
-#define __S_ZERO_PAD __M_ZERO_PAD(1)
-#define __S_LEFT_ADJ __M_LEFT_ADJ(1)
-#define __S_PAD_POS __M_PAD_POS(1)
-#define __S_MARK_POS __M_MARK_POS(1)
-#define __S_GROUPED __M_GROUPED(1)
-
-#define __U_FLAGMASK (__U_ALT_FORM | __U_ZERO_PAD | __U_LEFT_ADJ | __U_PAD_POS | __U_MARK_POS | __U_GROUPED)
-#define __S_FLAGMASK (__S_ALT_FORM | __S_ZERO_PAD | __S_LEFT_ADJ | __S_PAD_POS | __S_MARK_POS | __S_GROUPED)
+#define FLAGMASK (ALT_FORM | ZERO_PAD | LEFT_ADJ | PAD_POS | MARK_POS | GROUPED)
 
 int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type);
 void out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size);

@@ -6,8 +6,6 @@
 
 void
 kputstr(const UBYTE *s) {
-    assert(s != NULL);
-
     if (s != NULL) {
         UBYTE c;
 

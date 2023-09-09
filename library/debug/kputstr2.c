@@ -5,9 +5,7 @@
 #include "debug_headers.h"
 
 void
-KPutStr(const UBYTE * s)
-{
-	assert( s != NULL );
-
-	kputstr(s);
+KPutStr(const UBYTE *s) {
+    if (s != NULL)
+        kputstr(s);
 }

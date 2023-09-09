@@ -25,8 +25,6 @@
 #include <dos/dosasl.h>
 #endif /* DOS_DOSASL_H */
 
-#include <dos/obsolete.h>
-
 #ifndef WORKBENCH_STARTUP_H
 #include <workbench/startup.h>
 #endif /* WORKBENCH_STARTUP_H */
@@ -71,9 +69,16 @@
 #include "stdlib_timerbase.h"
 #endif /* _STDLIB_TIMERBASE_H */
 
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
+
 #ifndef _MATH_FP_SUPPORT_H
 #include "math_fp_support.h"
 #endif /* _MATH_FP_SUPPORT_H */
+
+#include "gdtoa.h"
+#include "mprec.h"
 
 #include <math.h>
 

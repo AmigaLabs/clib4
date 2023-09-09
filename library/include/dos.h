@@ -14,8 +14,6 @@
 #include <wchar.h>
 #include <setjmp.h>
 
-#include <libraries/elf.h>
-
 /* Category name handling variables.  */
 #define NUM_LOCALES                (LC_MAX + 1)
 #define MAX_LOCALE_NAME_LEN        256
@@ -88,17 +86,6 @@ extern int __translate_amiga_to_unix_path_name(char const **name_ptr, struct nam
 extern int __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translation_info *nti);
 extern int __translate_io_error_to_errno(LONG io_error);
 extern void __print_termination_message(const char *termination_message);
-
-/*
- * Similar to the boolean flag value __expand_wildcard_args described above,
- * a function can be called which may be used to enable/disable wildcard
- * expansion at runtime. The function is undefined by default, which means
- * that the __expand_wildcard_args value will take precedence. If you want
- * to override the effects of the __expand_wildcard_args variable, declare
- * your own check function and then assign it to the
- * __expand_wildcard_args_check pointer.
- */
-extern BOOL (*__expand_wildcard_args_check)(void);
 
 /****************************************************************************/
 
@@ -217,17 +204,13 @@ struct _clib2 {
     /* Set this flag to true to enable optimized CPU functions */
     BOOL __optimizedCPUFunctions;
 
-    /*
-     * Check if SYSV library is available in the system. Otherwise the functions
-     * will return ENOSYS
-     */
-    struct Library *__SysVBase;
-    struct SYSVIFace *__ISysVIPC;
-    BOOL haveShm;
+    void *unused1;
+    void *unused2;
+    BOOL  unused3;
 
     /* This is used with the dlopen(), dlclose() and dlsym() functions. */
-    Elf32_Handle __dl_elf_handle;
-    Elf32_Error __elf_error_code;
+    void  *__dl_root_handle; //Elf32_Handle
+    int __elf_error_code;    // Elf32_Error
 
     /* This is the pointer to itself */
     struct Process *self;
@@ -351,17 +334,7 @@ struct _clib2 {
     struct WBStartup *__WBenchMsg;
     BOOL __no_standard_io;
 
-    /*
-     * If your program is launched from Workbench it will not necessarily
-     * have a window to send console output to and from which console
-     * input can be read. The startup code attempts to set up such a console
-     * window for you, but it uses defaults for the window specification.
-     * These defaults can be overridden by your program if you define a
-     * variable to point to the specification string. Note that if you
-     * request a specific window specification, this will also override
-     * any tool window definition stored in the program's icon.
-     */
-    char *__stdio_window_specification;
+    void *unused5;
 
     /* CPU cache line size; used to align I/O buffers for best performance. */
     ULONG __cache_line_size;
@@ -369,17 +342,13 @@ struct _clib2 {
     /* File init fields */
     struct MsgPort *old_console_task;
     BOOL restore_console_task;
-
     BOOL restore_streams;
-
     BPTR old_output;
     BPTR old_input;
-
     BPTR output;
     BPTR input;
 
-    /* This will be set to TRUE in case a stack overflow was detected. */
-    BOOL __stack_overflow;
+    BOOL unused4;
 
     /*
      * The following variables are part of libnet.a, which provides for
@@ -527,6 +496,12 @@ struct _clib2 {
     /* Current process id */
     int processId;
     char *uuid;
+
+    BPTR error;
+    BPTR old_error;
+
+    /* termcap */
+    char tgoto_buf[50];
 };
 
 #ifndef __getClib2

@@ -168,21 +168,23 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                     }
 
                     /* Are we allowed to close this file? */
-                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
+                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE) || FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
                         BOOL name_and_path_valid = FALSE;
                         struct ExamineData *fib = NULL;
-                        BPTR parent_dir;
+                        BPTR parent_dir = BZERO;
 
                         /* Call a cleanup function, such as the one which releases locked records. */
                         if (fd->fd_Cleanup != NULL)
                             (*fd->fd_Cleanup)(fd);
 
-                        parent_dir = __safe_parent_of_file_handle(fd->fd_File);
-                        if (parent_dir == BZERO) {
-                            SHOWMSG("couldn't find parent directory");
+                        if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
+                            parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+                            if (parent_dir == BZERO) {
+                                SHOWMSG("couldn't find parent directory");
 
-                            __set_errno(__translate_io_error_to_errno(IoErr()));
-                            goto out;
+                                __set_errno(__translate_io_error_to_errno(IoErr()));
+                                goto out;
+                            }
                         }
 
                         fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
@@ -190,8 +192,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                             name_and_path_valid = TRUE;
                         }
 
-                        if (CANNOT Close(fd->fd_File))
-                        {
+                        if (CANNOT Close(fd->fd_File)) {
                             fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
                             result = EOF;
@@ -232,7 +233,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                                         /* Try to get a lock on the file first, then move on to
                                              * the directory it is stored in.
                                              */
-                                        old_dir = CurrentDir(uln->uln_Lock);
+                                        old_dir = SetCurrentDir(uln->uln_Lock);
 
                                         node_lock = Lock(uln->uln_Name, SHARED_LOCK);
                                         if (node_lock != BZERO) {
@@ -241,7 +242,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                                             UnLock(node_lock);
                                         }
 
-                                        CurrentDir(old_dir);
+                                        SetCurrentDir(old_dir);
 
                                         /* If we found the file's parent directory, check if it matches
                                              * the parent directory of the file we just closed.
@@ -260,14 +261,14 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                                     if (node != NULL) {
                                         if (NOT file_deleted) {
                                             BPTR old_dir;
-                                            old_dir = CurrentDir(parent_dir);
+                                            old_dir = SetCurrentDir(parent_dir);
 
-                                            if (DeleteFile(fib->Name)) {
+                                            if (Delete(fib->Name)) {
                                                 file_deleted = TRUE;
                                                 name_and_path_valid = FALSE;
                                             }
 
-                                            CurrentDir(old_dir);
+                                            SetCurrentDir(old_dir);
                                         }
 
                                         if (file_deleted) {
@@ -279,15 +280,28 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                             }
                         }
 
-                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid) {
+                        /* If we have closed the file, clear FDF_IN_USE flag */
+                        if (result == OK)
+                            CLEAR_FLAG(fd->fd_Flags, FDF_IN_USE);
+
+#ifdef USE_TEMPFILES
+                        /* If it is a PIPE file used with USE_TEMPFILES defined we need to remove it on close */
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                            char pipe_name[1024] = {0};
+                            snprintf(pipe_name, sizeof(pipe_name), "T:%s", fib->Name);
+                            Delete(pipe_name);
+                        }
+#endif
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid && FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
                             BPTR old_dir;
-                            old_dir = CurrentDir(parent_dir);
+                            old_dir = SetCurrentDir(parent_dir);
                             SetProtection(fib->Name, 0);
-                            CurrentDir(old_dir);
+                            SetCurrentDir(old_dir);
                         }
 
                         FreeDosObject(DOS_EXAMINEDATA, fib);
-                        UnLock(parent_dir);
+                        if (parent_dir != BZERO)
+                            UnLock(parent_dir);
                     }
                 } else {
                     // Clear FDF_STDIN_AS_SOCKET just in case it was used as socket */
@@ -454,7 +468,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
             fh = BADDR(file);
 
             /* Special treatment for "NIL:", for which we make some stuff up. */
-            if (fh->fh_Type == NULL) {
+            if (fh->fh_MsgPort == NULL) {
                 /* Make up some stuff for this stream. */
                 memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
 
@@ -502,7 +516,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                     fam->fam_FileInfo->Type = ST_CONSOLE;
                 }
             }
-            fam->fam_FileSystem = fh->fh_Type;
+            fam->fam_FileSystem = fh->fh_MsgPort;
             result = OK;
             break;
 

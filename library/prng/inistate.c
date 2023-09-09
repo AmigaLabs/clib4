@@ -5,7 +5,6 @@
 #include "../stdlib/stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-
 char *
 initstate(unsigned seed, char *state, size_t size) {
     struct _clib2 *__clib2 = __CLIB2;

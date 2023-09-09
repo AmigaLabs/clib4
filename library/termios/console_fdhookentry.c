@@ -187,9 +187,6 @@ __termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action
             assert(fam->fam_Data != NULL);
             assert(fam->fam_Size > 0);
 
-            D(("read %ld bytes from position %ld to 0x%08lx", fam->fam_Size, Seek(file, 0,
-                                                                                  OFFSET_CURRENT), fam->fam_Data));
-
             if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                 /* Attempt to fake everything needed in non-canonical mode. */
                 if (FLAG_IS_SET(tios->c_lflag, ICANON)) {
@@ -383,8 +380,6 @@ __termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action
             }
 
             /* Note. When output processing is enabled, write() can return _more_ than the data length. */
-            D(("write %ld bytes to position %ld from 0x%08lx", actual_out, Seek(file, 0, OFFSET_CURRENT), buffer));
-
             if (actual_out > 0) {
                 result = Write(file, buffer, actual_out);
             } else {
@@ -505,7 +500,7 @@ __termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action
             fh = BADDR(file);
 
             /* Special treatment for "NIL:", for which we make some stuff up. */
-            if (fh->fh_Type == NULL) {
+            if (fh->fh_MsgPort == NULL) {
                 /* Make up some stuff for this stream. */
                 memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
 
@@ -546,7 +541,7 @@ __termios_console_hook(struct _clib2 *__clib2, struct fd *fd, struct file_action
                 }
             }
 
-            fam->fam_FileSystem = fh->fh_Type;
+            fam->fam_FileSystem = fh->fh_MsgPort;
 
             result = OK;
 

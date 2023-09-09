@@ -1,4 +1,4 @@
-# clib2 – A C runtime library for AmigaOS4
+ C runtime library for AmigaOS4
 
 [![Build Status](https://travis-ci.com/afxgroup/clib2.svg?branch=master)](https://travis-ci.org/afxgroup/clib2)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
@@ -88,9 +88,10 @@ problem).
 
 ### SYSV functions
 
-Clib2 now contains **shm*** and **msg*** functions. It
-needs <a href="http://www.os4depot.net/share/development/library/misc/sysvipc.lha">SYSV IPC</a> library. If you don't
-install it those functions will not work and will return to you an **ENOSYS** error.
+Clib2 now contains **shm***, **msg*** and **sem*** functions.
+<a href="http://www.os4depot.net/share/development/library/misc/sysvipc.lha">SYSV IPC</a> library is now fully
+integrated into clib2 library and
+doesn't need any external resource
 
 ### Unix path support
 
@@ -135,7 +136,7 @@ Clib2 now contain also libauto with almost all OS4 components. We'll try to keep
 ### libpthread
 
 Clib2 now contain a native pthread implementation with some functions are not present in the pthread.library.  
-However in the future mutex* function should be changed to use OS4 Mutexes instead of Semaphores
+All mutex* function now use OS4 Mutexes instead of Semaphores
 
 ### librt
 
@@ -153,8 +154,9 @@ Added crypt library that implements crypt and crypt_r
 
 ### UNIX sockets (AF_UNIX)
 
-clib2 now supports emulated UNIX sockets. Since roadshow and OS4 doesn't support them natively, UNIX sockets are emulated via
-native sockets. The user doesn't need to change anything in the linux code. Everything will be transparent for him  
+clib2 now supports emulated UNIX sockets. Since roadshow and OS4 doesn't support them natively, UNIX sockets are
+emulated via
+native sockets. The user doesn't need to change anything in the linux code. Everything will be transparent for him
 
 * ##### About salt
 
@@ -253,6 +255,12 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### SYSV
+
+Thanks to Peter Bengtsson for SYSV implementation
+
+### Math library
 
 > The PowerPC math library is based in part on work by Sun Microsystems:
 >

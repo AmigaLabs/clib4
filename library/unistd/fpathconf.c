@@ -33,7 +33,7 @@ fpathconf(int file_descriptor, int name) {
 
     fh = BADDR(default_file);
 
-    ret = __pathconf(fh->fh_Type, name);
+    ret = __pathconf(fh->fh_MsgPort, name);
 
 out:
 

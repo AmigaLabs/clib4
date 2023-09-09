@@ -21,116 +21,47 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
-/* stdio_init_exit.c */
-extern int __stdio_init(void);
-
-/****************************************************************************/
-
-/* stdlib_init_exit.c */
-extern int __stdlib_init(void);
-extern void __stdlib_exit(void);
-
-/****************************************************************************/
-
 extern int __timezone_init(void);
 extern void __timezone_exit(void);
-
-/****************************************************************************/
 
 /* stdlib_atexit.c */
 extern void __exit_trap_trigger(void);
 
-/****************************************************************************/
-
-/* socket_init_exit.c */
-extern int __socket_init(void);
-
-/****************************************************************************/
-
 /* stdlib_showerror.c */
 extern void __show_error(const char *message);
 
-/****************************************************************************/
-
-/* stdlib_swap_stack.c/stdlib_swap_stack.s/stdlib_swap_stack.asm */
-extern int __swap_stack_and_call(struct StackSwapStruct *stk, APTR function);
-
-/****************************************************************************/
-
 /* stdlib_get_sp.c/stdlib_get_sp.s/stdlib_get_sp.asm */
 extern void *__get_sp(void);
-
-/****************************************************************************/
 
 /* stdlib_wildcard_expand.c */
 extern int __wildcard_quote_parameter(unsigned int parameter);
 extern int __wildcard_expand_init(void);
 
-/****************************************************************************/
-
-/* stdlib_stackextension.c */
-extern int __stk_init(void);
-
-/****************************************************************************/
-
-/* stdlib_stack_usage.c */
-extern void __stack_usage_init(struct StackSwapStruct *stk);
-extern void __stack_usage_exit(void);
-
-/****************************************************************************/
-
 /* stdlib_exit.c */
 extern void _exit(int return_code);
 
 extern void reent_init(struct _clib2 *__clib2);
-extern void reent_exit(struct _clib2 *__clib2);
-
-/****************************************************************************/
-
-/* stdlib_arg.c */
-extern int __arg_init(void);
-
-/****************************************************************************/
-
-/* stdlib_malloc.c */
-extern size_t __get_allocation_size(size_t size);
-
-/* stdlib_free.c */
-extern void __check_memory_allocations();
-
-/****************************************************************************/
+extern void reent_exit(struct _clib2 *__clib2, BOOL fallback);
 
 /* signal_checkabort.c */
 extern void __check_abort(void);
 extern int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
 
-/****************************************************************************/
-
 /* stdlib_assertion_failure.c */
 extern void __assertion_failure(const char *file_name, int line_number, const char *expression);
-
-/****************************************************************************/
 
 /* stdlib_set_process_window.c */
 extern APTR __set_process_window(APTR new_window_pointer);
 
-/****************************************************************************/
-
 /* stdlib_set_errno.c */
 extern void __set_errno(int new_errno);
-
-/****************************************************************************/
 
 /* stdlib_get_errno.c */
 extern int __get_errno(void);
 
-/****************************************************************************/
-
 /* stdlib_semaphore.c */
 extern struct SignalSemaphore *__create_semaphore(void);
 extern void __delete_semaphore(struct SignalSemaphore *semaphore);
-
-/****************************************************************************/
 
 /* random functions */
 extern void *savestate(void);
@@ -140,5 +71,7 @@ extern void __srandom(unsigned seed);
 
 extern uint32_t lcg31(uint32_t x);
 extern uint64_t lcg64(uint64_t x);
+
+extern char *__randname(char *template);
 
 #endif /* _STDLIB_PROTOS_H */

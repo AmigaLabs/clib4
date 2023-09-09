@@ -21,4 +21,8 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
+extern struct ExecIFace *IExec;
+
+#define SHMFLG_DeleteMe (1L << 0)
+
 #endif

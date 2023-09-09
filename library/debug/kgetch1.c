@@ -5,11 +5,6 @@
 #include "debug_headers.h"
 
 LONG
-kgetch(VOID)
-{
-	LONG result;
-
-	result = kgetc();
-
-	return(result);
+kgetch(VOID) {
+    return kgetc();
 }

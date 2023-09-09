@@ -38,8 +38,7 @@ __fixdfdi(double a) {
 }
 
 du_int
-__udivmoddi4(du_int a, du_int b, du_int* rem)
-{
+__udivmoddi4(du_int a, du_int b, du_int *rem) {
     const unsigned n_uword_bits = sizeof(su_int) * CHAR_BIT;
     const unsigned n_udword_bits = sizeof(du_int) * CHAR_BIT;
     udwords n;
@@ -50,10 +49,8 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
     udwords r;
     unsigned sr;
     /* special cases, X is unknown, K != 0 */
-    if (n.s.high == 0)
-    {
-        if (d.s.high == 0)
-        {
+    if (n.s.high == 0) {
+        if (d.s.high == 0) {
             /* 0 X
              * ---
              * 0 X
@@ -71,10 +68,8 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
         return 0;
     }
     /* n.s.high != 0 */
-    if (d.s.low == 0)
-    {
-        if (d.s.high == 0)
-        {
+    if (d.s.low == 0) {
+        if (d.s.high == 0) {
             /* K X
              * ---
              * 0 0
@@ -84,14 +79,12 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
             return n.s.high / d.s.low;
         }
         /* d.s.high != 0 */
-        if (n.s.low == 0)
-        {
+        if (n.s.low == 0) {
             /* K 0
              * ---
              * K 0
              */
-            if (rem)
-            {
+            if (rem) {
                 r.s.high = n.s.high % d.s.high;
                 r.s.low = 0;
                 *rem = r.all;
@@ -104,8 +97,7 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
          */
         if ((d.s.high & (d.s.high - 1)) == 0)     /* if d is a power of 2 */
         {
-            if (rem)
-            {
+            if (rem) {
                 r.s.low = n.s.low;
                 r.s.high = n.s.high & (d.s.high - 1);
                 *rem = r.all;
@@ -118,8 +110,7 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
          */
         sr = __builtin_clz(d.s.high) - __builtin_clz(n.s.high);
         /* 0 <= sr <= n_uword_bits - 2 or sr large */
-        if (sr > n_uword_bits - 2)
-        {
+        if (sr > n_uword_bits - 2) {
             if (rem)
                 *rem = n.all;
             return 0;
@@ -132,11 +123,9 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
         /* r.all = n.all >> sr; */
         r.s.high = n.s.high >> sr;
         r.s.low = (n.s.high << (n_uword_bits - sr)) | (n.s.low >> sr);
-    }
-    else  /* d.s.low != 0 */
+    } else  /* d.s.low != 0 */
     {
-        if (d.s.high == 0)
-        {
+        if (d.s.high == 0) {
             /* K X
              * ---
              * 0 K
@@ -183,31 +172,28 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
              *     r.s.low = n.s.high >> (sr - n_uword_bits);
              * }
              */
-            q.s.low =  (n.s.low << (n_udword_bits - sr)) &
-                       ((si_int)(n_uword_bits - sr) >> (n_uword_bits-1));
-            q.s.high = ((n.s.low << ( n_uword_bits - sr))                       &
-                        ((si_int)(sr - n_uword_bits - 1) >> (n_uword_bits-1))) |
-                       (((n.s.high << (n_udword_bits - sr))                     |
-                         (n.s.low >> (sr - n_uword_bits)))                        &
-                        ((si_int)(n_uword_bits - sr) >> (n_uword_bits-1)));
+            q.s.low = (n.s.low << (n_udword_bits - sr)) &
+                      ((si_int) (n_uword_bits - sr) >> (n_uword_bits - 1));
+            q.s.high = ((n.s.low << (n_uword_bits - sr)) &
+                        ((si_int) (sr - n_uword_bits - 1) >> (n_uword_bits - 1))) |
+                       (((n.s.high << (n_udword_bits - sr)) |
+                         (n.s.low >> (sr - n_uword_bits))) &
+                        ((si_int) (n_uword_bits - sr) >> (n_uword_bits - 1)));
             r.s.high = (n.s.high >> sr) &
-                       ((si_int)(sr - n_uword_bits) >> (n_uword_bits-1));
-            r.s.low =  ((n.s.high >> (sr - n_uword_bits))                       &
-                        ((si_int)(n_uword_bits - sr - 1) >> (n_uword_bits-1))) |
-                       (((n.s.high << (n_uword_bits - sr))                      |
-                         (n.s.low >> sr))                                         &
-                        ((si_int)(sr - n_uword_bits) >> (n_uword_bits-1)));
-        }
-        else
-        {
+                       ((si_int) (sr - n_uword_bits) >> (n_uword_bits - 1));
+            r.s.low = ((n.s.high >> (sr - n_uword_bits)) &
+                       ((si_int) (n_uword_bits - sr - 1) >> (n_uword_bits - 1))) |
+                      (((n.s.high << (n_uword_bits - sr)) |
+                        (n.s.low >> sr)) &
+                       ((si_int) (sr - n_uword_bits) >> (n_uword_bits - 1)));
+        } else {
             /* K X
              * ---
              * K K
              */
             sr = __builtin_clz(d.s.high) - __builtin_clz(n.s.high);
             /* 0 <= sr <= n_uword_bits - 1 or sr large */
-            if (sr > n_uword_bits - 1)
-            {
+            if (sr > n_uword_bits - 1) {
                 if (rem)
                     *rem = n.all;
                 return 0;
@@ -230,10 +216,10 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
              * }
              */
             r.s.high = (n.s.high >> sr) &
-                       ((si_int)(sr - n_uword_bits) >> (n_uword_bits-1));
+                       ((si_int) (sr - n_uword_bits) >> (n_uword_bits - 1));
             r.s.low = (n.s.high << (n_uword_bits - sr)) |
-                      ((n.s.low >> sr)                  &
-                       ((si_int)(sr - n_uword_bits) >> (n_uword_bits-1)));
+                      ((n.s.low >> sr) &
+                       ((si_int) (sr - n_uword_bits) >> (n_uword_bits - 1)));
         }
     }
     /* Not a special case
@@ -243,13 +229,12 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
      * 1 <= sr <= n_udword_bits - 1
      */
     su_int carry = 0;
-    for (; sr > 0; --sr)
-    {
+    for (; sr > 0; --sr) {
         /* r:q = ((r:q)  << 1) | carry */
-        r.s.high = (r.s.high << 1) | (r.s.low  >> (n_uword_bits - 1));
-        r.s.low  = (r.s.low  << 1) | (q.s.high >> (n_uword_bits - 1));
-        q.s.high = (q.s.high << 1) | (q.s.low  >> (n_uword_bits - 1));
-        q.s.low  = (q.s.low  << 1) | carry;
+        r.s.high = (r.s.high << 1) | (r.s.low >> (n_uword_bits - 1));
+        r.s.low = (r.s.low << 1) | (q.s.high >> (n_uword_bits - 1));
+        q.s.high = (q.s.high << 1) | (q.s.low >> (n_uword_bits - 1));
+        q.s.low = (q.s.low << 1) | carry;
         /* carry = 0;
          * if (r.all >= d.all)
          * {
@@ -257,7 +242,7 @@ __udivmoddi4(du_int a, du_int b, du_int* rem)
          *      carry = 1;
          * }
          */
-        const di_int s = (di_int)(d.all - r.all - 1) >> (n_udword_bits - 1);
+        const di_int s = (di_int) (d.all - r.all - 1) >> (n_udword_bits - 1);
         carry = s & 1;
         r.all -= d.all & s;
     }
@@ -402,8 +387,12 @@ __divdi3(di_int a, di_int b) {
     return (__udivmoddi4(a, b, (du_int *) 0) ^ s_a) - s_a;  /* negate if s_a == -1 */
 }
 
-#ifndef __SOFT_FP__
+di_int
+__unorddf2 (double a, double b) {
+    return isnan(a) || isnan(b);
+}
 
+#ifndef __SOFT_FP__
 /* Support for systems that have hardware floating-point; we'll set the inexact flag
  * as a side-effect of this computation.
  */
@@ -429,8 +418,7 @@ __floatdidf(di_int a) {
  * set, and we don't want to code-gen to an unknown soft-float implementation.
  */
 double
-__floatdidf(di_int a)
-{
+__floatdidf(di_int a) {
     if (a == 0)
         return 0.0;
     const unsigned N = sizeof(di_int) * CHAR_BIT;
@@ -438,8 +426,7 @@ __floatdidf(di_int a)
     a = (a ^ s) - s;
     int sd = N - clzll(a);  /* number of significant digits */
     int e = sd - 1;             /* exponent */
-    if (sd > DBL_MANT_DIG)
-    {
+    if (sd > DBL_MANT_DIG) {
         /*  start:  0000000000000000000001xxxxxxxxxxxxxxxxxxxxxxPQxxxxxxxxxxxxxxxxxx
          *  finish: 000000000000000000000000000000000000001xxxxxxxxxxxxxxxxxxxxxxPQR
          *                                                12345678901234567890123456
@@ -464,21 +451,19 @@ __floatdidf(di_int a)
         ++a;  /* round - this step may add a significant bit */
         a >>= 2;  /* dump Q and R */
         /* a is now rounded to DBL_MANT_DIG or DBL_MANT_DIG+1 bits */
-        if (a & ((du_int)1 << DBL_MANT_DIG))
-        {
+        if (a & ((du_int)1 << DBL_MANT_DIG)) {
             a >>= 1;
             ++e;
         }
         /* a is now rounded to DBL_MANT_DIG bits */
     }
-    else
-    {
+    else {
         a <<= (DBL_MANT_DIG - sd);
         /* a is now rounded to DBL_MANT_DIG bits */
     }
     double_bits fb;
     fb.u.high = ((su_int)s & 0x80000000) |        /* sign */
-                ((e + 1023) << 20)      |        /* exponent */
+                ((e + 1023) << 20)      |         /* exponent */
                 ((su_int)(a >> 32) & 0x000FFFFF); /* mantissa-high */
     fb.u.low = (su_int)a;                         /* mantissa-low */
     return fb.f;
