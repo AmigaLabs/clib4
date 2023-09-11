@@ -1074,11 +1074,17 @@ Clib2Call(dbopen, 4268);
 Clib2Call(mkostemp, 4272);
 Clib2Call(mkostemps, 4276);
 
-Clib2Call(strtof_l, 4282);
-Clib2Call(strtod_l, 4286);
+Clib2Call(strtof_l, 4280);
+Clib2Call(strtod_l, 4284);
 
-Clib2Call(fpgetround, 4290);
-Clib2Call(fpsetround, 4294);
-Clib2Call(fpgetmask, 4298);
-Clib2Call(fpsetmask, 4302);
-Clib2Call(fpgetsticky, 4306);
+Clib2Call(fpgetround, 4288);
+Clib2Call(fpsetround, 4292);
+Clib2Call(fpgetmask, 4296);
+Clib2Call(fpsetmask, 4300);
+Clib2Call(fpgetsticky, 4304);
+
+Clib2Call(fts_children, 4308);
+Clib2Call(fts_close, 4312);
+Clib2Call(fts_open, 4316);
+Clib2Call(fts_read, 4320);
+Clib2Call(fts_set, 4324);

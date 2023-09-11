@@ -26,12 +26,12 @@ UNAME := $(shell uname)
 INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib2
 SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
 
-CC ?= ppc-amigaos-gcc
-AR ?= ppc-amigaos-ar -q
-LD ?= ppc-amigaos-ld
-RANLIB ?= ppc-amigaos-ranlib
-STRIP ?= ppc-amigaos-strip
-RANLIB ?= ppc-amigaos-ranlib
+CC := ppc-amigaos-gcc
+AR := ppc-amigaos-ar -q
+LD := ppc-amigaos-ld
+RANLIB := ppc-amigaos-ranlib
+STRIP := ppc-amigaos-strip
+RANLIB := ppc-amigaos-ranlib
 HOST_CXX := g++
 
 # On AmigaOS use native commands
@@ -384,11 +384,11 @@ release:
 dpkg:
 	-$(DELETE) $(DPKG_LIB)
 	-$(DELETE) $(DPKG_LIB).deb
-	-$(MAKEDIR) $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/lib
-	-$(MAKEDIR) $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/include
+	-$(MAKEDIR) $(DPKG_LIB)$(INSTALL_PREFIX)/lib
+	-$(MAKEDIR) $(DPKG_LIB)$(INSTALL_PREFIX)/include
 	-$(MAKEDIR) $(DPKG_LIB)/DEBIAN
-	-$(COPY) libs/libauto.a $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/lib/
-	-$(COPY) $(OUTPUT_LIB)/* $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/lib/
-	-$(COPY) $(LIB_ROOT)/library/include/* $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/include/
+	-$(COPY) libs/libauto.a $(DPKG_LIB)$(INSTALL_PREFIX)/lib/
+	-$(COPY) $(OUTPUT_LIB)/* $(DPKG_LIB)$(INSTALL_PREFIX)/lib/
+	-$(COPY) $(LIB_ROOT)/library/include/* $(DPKG_LIB)$(INSTALL_PREFIX)/include/
 	-$(COPY) misc/control $(DPKG_LIB)/DEBIAN/
 	dpkg --build $(DPKG_LIB)
