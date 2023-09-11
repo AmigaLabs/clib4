@@ -82,6 +82,9 @@ C_ENVZ := \
 	envz/envz_remove.o \
 	envz/envz_strip.o
 
+C_FTS := \
+	fts/fts.o
+
 C_ICONV := \
 	iconv/iconv.o \
 	iconv/iconv_close.o \
@@ -925,6 +928,7 @@ C_LIBRARY := \
 	$(C_DIRENT) \
 	$(C_DEBUG) \
 	$(C_ENVZ) \
+	$(C_FTS) \
 	$(C_ICONV) \
 	$(C_INTTYPES) \
 	$(C_LOCALE) \
