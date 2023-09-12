@@ -77,7 +77,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
 		   allocate some memory for it. */
         if (size > 0 && buf == NULL) {
             /* Allocate a little more memory than necessary. */
-            new_buffer = malloc(size + (__clib2->__cache_line_size - 1));
+            new_buffer = AllocVecTags(size + (__clib2->__cache_line_size - 1), AVT_Type, MEMF_SHARED, TAG_DONE);
             if (new_buffer == NULL) {
                 __set_errno(ENOBUFS);
                 goto out;

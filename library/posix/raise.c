@@ -1,5 +1,5 @@
 /*
- * $Id: signal_raise.c,v 1.10 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: signal_raise.c,v 1.11 2023-09-12 12:04:24 clib2devs Exp $
 */
 
 #ifndef _SIGNAL_HEADERS_H
@@ -106,7 +106,7 @@ raise(int sig) {
                     /* Drop straight into abort(), which might call signal()
                        again but is otherwise guaranteed to eventually
                        land us in _exit(). */
-                    abort();
+                    __abort();
                 }
                 /* If we have a SIGALRM without associated handler don't call abort but exit directly */
                 if (sig == SIGALRM) {

@@ -61,6 +61,7 @@ gets(char *s) {
                    string buffer, including the terminating line
                    feed character. */
                 memmove(s, buffer, num_characters_in_line);
+                s += num_characters_in_line;
 
                 file->iob_BufferPosition += num_characters_in_line;
                 s[num_characters_in_line] = 0;

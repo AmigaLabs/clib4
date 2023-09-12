@@ -67,7 +67,10 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         if (__fgetc_check((FILE *) file) < 0)
             goto out;
 
+        /* Check for overflow. */
         total_size = element_size * count;
+        if (element_size != (total_size / count))
+            goto out;
 
         SHOWVALUE(total_size);
 
@@ -128,11 +131,6 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
                     total_size -= num_bytes_in_buffer;
                     if (total_size == 0)
                         break;
-
-                    /* If the read buffer is now empty and there is still enough data
-                       to be read, try to optimize the read operation. */
-                    if (file->iob_BufferReadBytes == 0 && total_size >= (size_t) file->iob_BufferSize)
-                        continue;
                 }
 
                 c = __getc(file);
