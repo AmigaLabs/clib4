@@ -30,6 +30,7 @@ CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
 LD := ppc-amigaos-ld
 RANLIB := ppc-amigaos-ranlib
+STRIP := ppc-amigaos-strip
 HOST_CXX := g++
 
 # On AmigaOS use native commands
@@ -101,9 +102,11 @@ STATIC   := $(if $(STATIC),$(STATIC),yes)
 LARGEDATA :=
 OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe
 OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
+PROFILE_P :=
 
 STABS :=
 DLIBS :=
+PLIBS :=
 
 ifndef DEBUG
     OPTIMIZE += $(STABS) -DNDEBUG
@@ -112,9 +115,14 @@ else
     DLIBS += $(BUILD_DIR)/lib/libdebug.a
 endif
 
-CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
-CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
-AFLAGS     := -Wa,-mregnames -mstrict-align
+ifdef PROFILE
+    PROFILE_P := -pg -Ttext=0x00000000
+    PLIBS += $(BUILD_DIR)/lib/libprofile.a $(BUILD_DIR)/lib/libm.a
+endif
+
+CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) $(PROFILE_P) -D__USE_INLINE__
+CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) $(PROFILE_P)
+AFLAGS     := -Wa,-mregnames -mstrict-align $(PROFILE_P)
 
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
@@ -212,11 +220,11 @@ version:
 # Shared clib2.library rules
 
 clib2.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) $(PLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
 
 clib2.library: clib2.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
-	ppc-amigaos-strip -R.comment -R.sdata2 --strip-unneeded-rel-relocs $(BUILD_DIR)/$@
+	$(STRIP) -R.comment -R.sdata2 --strip-unneeded-rel-relocs $(BUILD_DIR)/$@
 
 ##############################################################################
 

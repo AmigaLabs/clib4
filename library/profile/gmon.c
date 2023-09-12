@@ -175,7 +175,7 @@ void moncleanup(void) {
         if (p->froms[fromindex] == 0)
             continue;
 
-        frompc = p->lowpc; //0x01000000; /* FIXME: was p->lowpc; needs to be 0 and assumes -Ttext=0 on compile. Better idea? */
+        frompc = 0; /* FIXME: was p->lowpc; needs to be 0 and assumes -Ttext=0 on compile. Better idea? */
         frompc += fromindex * p->hashfraction * sizeof(*p->froms);
         for (toindex = p->froms[fromindex]; toindex != 0;
              toindex = p->tos[toindex].link) {

@@ -8,6 +8,8 @@
 #include <resources/performancemonitor.h>
 #include <unistd.h>
 
+#include "profile_gmon.h"
+
 static struct Interrupt CounterInt;
 static struct PerformanceMonitorIFace *IPM;
 
@@ -91,6 +93,7 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
 
     IPM = (struct PerformanceMonitorIFace *) OpenResource("performancemonitor.resource");
     if (!IPM || IPM->Obtain() != 1) {
+        dprintf("Cannot open performancemonitor.resource\n");
         return 0;
     }
 

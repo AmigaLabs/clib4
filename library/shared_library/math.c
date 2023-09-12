@@ -392,7 +392,55 @@ __unorddf2 (double a, double b) {
     return isnan(a) || isnan(b);
 }
 
-#ifndef __SOFT_FP__
+#ifndef __SOFTFP__
+long double
+__floatunditf(uint64_t a) {
+    /* Begins with an exact copy of the code from __floatundidf */
+
+    static const double twop52 = 0x1.0p52;
+    static const double twop84 = 0x1.0p84;
+    static const double twop84_plus_twop52 = 0x1.00000001p84;
+
+    doublebits high = { .d = twop84 };
+    doublebits low  = { .d = twop52 };
+
+    high.x |= a >> 32;							/* 0x1.0p84 + high 32 bits of a */
+    low.x |= a & UINT64_C(0x00000000ffffffff);	/* 0x1.0p52 + low 32 bits of a */
+
+    const double high_addend = high.d - twop84_plus_twop52;
+
+    /* At this point, we have two double precision numbers
+     * high_addend and low.d, and we wish to return their sum
+     * as a canonicalized long double:
+     */
+    /* This implementation sets the inexact flag spuriously. */
+    /* This could be avoided, but at some substantial cost. */
+
+    DD result;
+
+    result.s.hi = high_addend + low.d;
+    result.s.lo = (high_addend - result.s.hi) + low.d;
+
+    return result.ld;
+}
+
+double
+__floatundidf(du_int a) {
+    static const double twop52 = 4503599627370496.0;           // 0x1.0p52
+    static const double twop84 = 19342813113834066795298816.0; // 0x1.0p84
+    static const double twop84_plus_twop52 =
+            19342813118337666422669312.0; // 0x1.00000001p84
+
+    doublebits high = {.d = twop84};
+    doublebits low = {.d = twop52};
+
+    high.x |= a >> 32;
+    low.x |= a & UINT64_C(0x00000000ffffffff);
+
+    const double result = (high.d - twop84_plus_twop52) + low.d;
+    return result;
+}
+
 /* Support for systems that have hardware floating-point; we'll set the inexact flag
  * as a side-effect of this computation.
  */
@@ -401,10 +449,7 @@ __floatdidf(di_int a) {
     static const double twop52 = 0x1.0p52;
     static const double twop32 = 0x1.0p32;
 
-    union {
-        int64_t x;
-        double d;
-    } low = {.d = twop52};
+    doublebits low = {.d = twop52};
 
     const double high = (int32_t)(a >> 32) * twop32;
     low.x |= a & INT64_C(0x00000000ffffffff);
@@ -467,5 +512,51 @@ __floatdidf(di_int a) {
                 ((su_int)(a >> 32) & 0x000FFFFF); /* mantissa-high */
     fb.u.low = (su_int)a;                         /* mantissa-low */
     return fb.f;
+}
+
+double
+__floatundidf(du_int a) {
+  if (a == 0)
+    return 0.0;
+  const unsigned N = sizeof(du_int) * CHAR_BIT;
+  int sd = N - __builtin_clzll(a); // number of significant digits
+  int e = sd - 1;                  // exponent
+  if (sd > DBL_MANT_DIG) {
+    //  start:  0000000000000000000001xxxxxxxxxxxxxxxxxxxxxxPQxxxxxxxxxxxxxxxxxx
+    //  finish: 000000000000000000000000000000000000001xxxxxxxxxxxxxxxxxxxxxxPQR
+    //                                                12345678901234567890123456
+    //  1 = msb 1 bit
+    //  P = bit DBL_MANT_DIG-1 bits to the right of 1
+    //  Q = bit DBL_MANT_DIG bits to the right of 1
+    //  R = "or" of all bits to the right of Q
+    switch (sd) {
+    case DBL_MANT_DIG + 1:
+      a <<= 1;
+      break;
+    case DBL_MANT_DIG + 2:
+      break;
+    default:
+      a = (a >> (sd - (DBL_MANT_DIG + 2))) |
+          ((a & ((du_int)(-1) >> ((N + DBL_MANT_DIG + 2) - sd))) != 0);
+    };
+    // finish:
+    a |= (a & 4) != 0; // Or P into R
+    ++a;               // round - this step may add a significant bit
+    a >>= 2;           // dump Q and R
+    // a is now rounded to DBL_MANT_DIG or DBL_MANT_DIG+1 bits
+    if (a & ((du_int)1 << DBL_MANT_DIG)) {
+      a >>= 1;
+      ++e;
+    }
+    // a is now rounded to DBL_MANT_DIG bits
+  } else {
+    a <<= (DBL_MANT_DIG - sd);
+    // a is now rounded to DBL_MANT_DIG bits
+  }
+  double_bits fb;
+  fb.u.s.high = ((su_int)(e + 1023) << 20) |      // exponent
+                ((su_int)(a >> 32) & 0x000FFFFF); // mantissa-high
+  fb.u.s.low = (su_int)a;                         // mantissa-low
+  return fb.f;
 }
 #endif

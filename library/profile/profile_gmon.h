@@ -6,6 +6,10 @@
 #define _GMON_H
 
 #include <exec/types.h>
+#include "../shared_library/math.h"
+
+#undef DebugPrintF
+#define dprintf(format, args...) ((struct ExecIFace *)((*(struct ExecBase **)4)->MainInterface))->DebugPrintF("[%s] " format, __PRETTY_FUNCTION__, ##args)
 
 struct gmonhdr {
     uint32 lpc;
