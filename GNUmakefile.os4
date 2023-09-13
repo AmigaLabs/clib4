@@ -102,7 +102,7 @@ STATIC   := $(if $(STATIC),$(STATIC),yes)
 
 LARGEDATA :=
 OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe
-OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
+OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mfused-madd -mstrict-align
 
 STABS :=
 DLIBS :=
