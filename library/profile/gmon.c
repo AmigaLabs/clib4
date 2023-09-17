@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #define SCALE_1_TO_1 0x10000L
+#define MIN_OS_VERSION 52
 
 #include "profile_gmon.h"
 
@@ -196,8 +197,8 @@ void moncleanup(void) {
 }
 
 void mongetpcs(uint32 *lowpc, uint32 *highpc) {
-    struct Library *ElfBase = NULL;
-    struct ElfIFace *IElf = NULL;
+    struct Library *__ElfBase = NULL;
+    struct ElfIFace *__IElf = NULL;
     struct Process *self;
     BPTR seglist;
     Elf32_Handle elfHandle;
@@ -208,10 +209,10 @@ void mongetpcs(uint32 *lowpc, uint32 *highpc) {
     *lowpc = 0;
     *highpc = 0;
 
-    ElfBase = OpenLibrary("elf.library", 0L);
-    if (ElfBase) {
-        IElf = (struct ElfIFace *) GetInterface(ElfBase, "main", 1, NULL);
-        if (IElf) {
+    __ElfBase = OpenLibrary("elf.library", MIN_OS_VERSION);
+    if (__ElfBase) {
+        __IElf = (struct ElfIFace *) GetInterface(__ElfBase, "main", 1, NULL);
+        if (__IElf) {
             self = (struct Process *) FindTask(0);
             seglist = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
 
@@ -236,13 +237,13 @@ void mongetpcs(uint32 *lowpc, uint32 *highpc) {
         }
     }
 
-    if (IElf) {
-        DropInterface((struct Interface *) IElf);
-        IElf = NULL;
+    if (__IElf) {
+        DropInterface((struct Interface *) __IElf);
+        __IElf = NULL;
     }
-    if (ElfBase) {
-        CloseLibrary(ElfBase);
-        ElfBase = NULL;
+    if (__ElfBase) {
+        CloseLibrary(__ElfBase);
+        __ElfBase = NULL;
     }
 }
 
