@@ -15,13 +15,9 @@
 #endif /* _STDIO_HEADERS_H */
 
 void
-abort(void) {
+__abort(void) {
     ENTER();
     struct _clib2 *__clib2 = __CLIB2;
-
-    /* Try to call the signal handler that might be in charge of
-       handling cleanup operations, etc. */
-    raise(SIGABRT);
 
     /* If the signal handler returns it means that we still have
        to terminate the program. */
@@ -35,4 +31,15 @@ abort(void) {
     /* Note that we drop into the exit() function which
        does not trigger the exit trap. */
     _exit(EXIT_FAILURE);
+}
+
+void
+abort(void) {
+    /* Try to call the signal handler that might be in charge of
+       handling cleanup operations, etc. */
+    raise(SIGABRT);
+
+    /* If the signal handler returns it means that we still have
+       to terminate the program. */
+    __abort();
 }

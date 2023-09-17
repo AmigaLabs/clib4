@@ -448,3 +448,4 @@ do                                   \
 
 /* This target uses the amigaos.opt file.  */
 #define TARGET_USES_AMIGAOS_OPT 1
+#define NO_PROFILE_COUNTERS 1

@@ -51,9 +51,6 @@ $(OUT_SHARED_LIB)/crypt/%.o : $(LIB_DIR)/crypt/%.c
 	$(VERBOSE)$(COMPILE)
 endif
 
-$(OUT_SHARED_LIB)/profile/%.o : $(LIB_DIR)/profile/%.S
-	$(VERBOSE)$(ASSEMBLE)
-
 $(OUT_SHARED_LIB)/%.o : $(LIB_DIR)/%.sx
 	$(VERBOSE)$(COMPILE_ALTIVEC_REG)
 

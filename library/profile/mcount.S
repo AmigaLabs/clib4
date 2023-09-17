@@ -43,7 +43,6 @@
 #endif
 
     .text
-    .align 2
     .global _mcount
     .type   _mcount, @function
 _mcount:

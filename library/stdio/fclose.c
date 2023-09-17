@@ -89,6 +89,7 @@ fclose(FILE *stream) {
     if (file->iob_CustomBuffer != NULL) {
         SHOWMSG("Delete allocated buffer");
         FreeVec(file->iob_CustomBuffer);
+        file->iob_CustomBuffer = NULL;
     }
 
     /* Free the lock semaphore now. */

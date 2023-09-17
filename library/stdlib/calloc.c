@@ -35,7 +35,7 @@ __calloc(size_t num_elements, size_t element_size) {
         D(("calloc(num_elements=%ld, element_size=%ld) overflow"));
     }
 
-    return (result);
+    return result;
 }
 
 void *
@@ -44,5 +44,5 @@ calloc(size_t num_elements, size_t element_size) {
 
     result = __calloc(num_elements, element_size);
 
-    return (result);
+    return result;
 }

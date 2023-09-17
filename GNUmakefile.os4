@@ -31,6 +31,7 @@ AR := ppc-amigaos-ar -q
 LD := ppc-amigaos-ld
 RANLIB := ppc-amigaos-ranlib
 STRIP := ppc-amigaos-strip
+RANLIB := ppc-amigaos-ranlib
 HOST_CXX := g++
 
 # On AmigaOS use native commands
@@ -100,13 +101,11 @@ SHARED   := $(if $(SHARED),$(SHARED),yes)
 STATIC   := $(if $(STATIC),$(STATIC),yes)
 
 LARGEDATA :=
-OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe
+OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe -Ttext=0x00000000
 OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
-PROFILE_P :=
 
 STABS :=
 DLIBS :=
-PLIBS :=
 
 ifndef DEBUG
     OPTIMIZE += $(STABS) -DNDEBUG
@@ -115,14 +114,9 @@ else
     DLIBS += $(BUILD_DIR)/lib/libdebug.a
 endif
 
-ifdef PROFILE
-    PROFILE_P := -pg -Ttext=0x00000000
-    PLIBS += $(BUILD_DIR)/lib/libprofile.a $(BUILD_DIR)/lib/libm.a
-endif
-
-CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) $(PROFILE_P) -D__USE_INLINE__
-CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) $(PROFILE_P)
-AFLAGS     := -Wa,-mregnames -mstrict-align $(PROFILE_P)
+CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
+CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
+AFLAGS     := -Wa,-mregnames -mstrict-align -Ttext=0x00000000
 
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
@@ -155,7 +149,6 @@ include libc.gmk
 include libm.gmk
 include libamiga.gmk
 include libdebug.gmk
-include libprofile.gmk
 include libpthread.gmk
 include libcrypt.gmk
 include librt.gmk
@@ -206,13 +199,11 @@ clean:
 # Update the version numbers bound to the individual libraries
 version:
 	$(COPY) c.lib_rev.rev amiga/amiga.lib_rev.rev
-	$(COPY) c.lib_rev.rev profile/profile.lib_rev.rev
 	$(COPY) c.lib_rev.rev math/m.lib_rev.rev
 	$(COPY) c.lib_rev.rev math/crypt.lib_rev.rev
 	$(COPY) c.lib_rev.rev math/pthread.lib_rev.rev
 	bumprev amiga.lib
 	bumprev c.lib
-	bumprev profile.lib
 	bumprev m.lib
 	bumprev crypt.lib
 	bumprev pthread.lib
@@ -220,7 +211,7 @@ version:
 # Shared clib2.library rules
 
 clib2.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) $(PLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(BUILD_DIR)/lib/libc.a $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
 
 clib2.library: clib2.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
@@ -364,8 +355,10 @@ compile-tests:
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
+	$(DELETE) $(INSTALL_PREFIX)/clib2.library*
 	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
 	$(COPY) libs/libauto.a $(INSTALL_PREFIX)/lib/
+	$(COPY) $(BUILD_DIR)/clib2.library* $(INSTALL_PREFIX)
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:
@@ -390,11 +383,11 @@ release:
 dpkg:
 	-$(DELETE) $(DPKG_LIB)
 	-$(DELETE) $(DPKG_LIB).deb
-	-$(MAKEDIR) $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/lib
-	-$(MAKEDIR) $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/include
+	-$(MAKEDIR) $(DPKG_LIB)$(INSTALL_PREFIX)/lib
+	-$(MAKEDIR) $(DPKG_LIB)$(INSTALL_PREFIX)/include
 	-$(MAKEDIR) $(DPKG_LIB)/DEBIAN
-	-$(COPY) libs/libauto.a $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/lib/
-	-$(COPY) $(OUTPUT_LIB)/* $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/lib/
-	-$(COPY) $(LIB_ROOT)/library/include/* $(DPKG_LIB)/usr/ppc-amigaos/SDK/clib2/include/
+	-$(COPY) libs/libauto.a $(DPKG_LIB)$(INSTALL_PREFIX)/lib/
+	-$(COPY) $(OUTPUT_LIB)/* $(DPKG_LIB)$(INSTALL_PREFIX)/lib/
+	-$(COPY) $(LIB_ROOT)/library/include/* $(DPKG_LIB)$(INSTALL_PREFIX)/include/
 	-$(COPY) misc/control $(DPKG_LIB)/DEBIAN/
 	dpkg --build $(DPKG_LIB)

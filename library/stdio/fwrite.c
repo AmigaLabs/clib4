@@ -55,7 +55,10 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
         size_t total_bytes_written = 0;
         size_t total_size;
 
+        /* Check for overflow. */
         total_size = element_size * count;
+        if (element_size != (total_size / count))
+            goto out;
 
         /* If this is an unbuffered interactive stream, we will switch
            to line buffered mode in order to improve readability of

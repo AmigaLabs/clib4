@@ -47,6 +47,8 @@ extern void reent_exit(struct _clib2 *__clib2, BOOL fallback);
 extern void __check_abort(void);
 extern int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
 
+extern void __abort(void);
+
 /* stdlib_assertion_failure.c */
 extern void __assertion_failure(const char *file_name, int line_number, const char *expression);
 

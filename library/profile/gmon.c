@@ -9,6 +9,7 @@
 #include <proto/dos.h>
 #include <proto/elf.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #define SCALE_1_TO_1 0x10000L
 
@@ -21,17 +22,12 @@ struct gmonparam _gmonparam = {
         state : kGmonProfOn
 };
 
-/* Use __executable_start as the lowest address to keep profiling records
-   if it provided by the linker.  */
-extern const char __executable_start[] __attribute__ ((visibility ("hidden")));
-
 static unsigned int s_scale;
 
 void moncontrol(int);
 void monstartup(uint32, uint32);
 void moncleanup(void);
 void mongetpcs(uint32 *lowpc, uint32 *highpc);
-extern int profil(uint16 *buffer, uint32 bufSize, uint32 offset, uint32 scale);
 
 void monstartup(uint32 low_pc, uint32 high_pc) {
     uint8 *cp;

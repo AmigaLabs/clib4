@@ -20,8 +20,7 @@ __mcount(uint32 frompc, uint32 selfpc) {
 
     p = &_gmonparam;
 
-    if (p->state != kGmonProfOn)
-        return;
+    if (p->state != kGmonProfOn) return;
 
     p->state = kGmonProfBusy;
 
@@ -31,8 +30,7 @@ __mcount(uint32 frompc, uint32 selfpc) {
      */
     frompc -= p->lowpc;
     selfpc -= p->lowpc;
-    if (frompc > p->textsize)
-        goto done;
+    if (frompc > p->textsize) goto done;
 
 #if (HASHFRACTION & (HASHFRACTION - 1)) == 0
     if (p->hashfraction == HASHFRACTION) {

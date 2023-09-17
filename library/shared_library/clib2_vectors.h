@@ -1138,12 +1138,18 @@ static void *clib2Vectors[] = {
         (void *) (mkostemp),                              /* 4272 */
         (void *) (mkostemps),                             /* 4276 */
 
-        (void *) (strtof_l),                              /* 4282 */
-        (void *) (strtod_l),                              /* 4286 */
+        (void *) (strtof_l),                              /* 4280 */
+        (void *) (strtod_l),                              /* 4284 */
 
-        (void *) (fpgetround),                            /* 4290 */
-        (void *) (fpsetround),                            /* 4294 */
-        (void *) (fpgetmask),                             /* 4298 */
-        (void *) (fpsetmask),                             /* 4302 */
-        (void *) (fpgetsticky),                           /* 4306 */
+        (void *) (fpgetround),                            /* 4288 */
+        (void *) (fpsetround),                            /* 4292 */
+        (void *) (fpgetmask),                             /* 4296 */
+        (void *) (fpsetmask),                             /* 4300 */
+        (void *) (fpgetsticky),                           /* 4304 */
+
+        (void *) (fts_children),                          /* 4308 */
+        (void *) (fts_close),                             /* 4312 */
+        (void *) (fts_open),                              /* 4316 */
+        (void *) (fts_read),                              /* 4320 */
+        (void *) (fts_set),                               /* 4324 */
 };

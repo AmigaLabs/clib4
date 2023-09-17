@@ -19,6 +19,7 @@
 #include <err.h>
 #include <fcntl.h>
 #include <fnmatch.h>
+#include <fts.h>
 #include <ftw.h>
 #include <getopt.h>
 #include <glob.h>
@@ -1304,14 +1305,20 @@ struct Clib2IFace {
     int   (* mkostemp) (char *name, int flags);                                                                                                      /* 4272 */
     int   (* mkostemps) (char *name, int len, int flags);                                                                                            /* 4276 */
 
-    float (* strtof_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                             /* 4282 */
-    double (* strtod_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                            /* 4286 */
+    float (* strtof_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                             /* 4280 */
+    double (* strtod_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                            /* 4284 */
 
-    fp_rnd_t    (* fpgetround) (void);                                                                                                               /* 4290 */
-    fp_rnd_t    (* fpsetround) (fp_rnd_t);                                                                                                           /* 4294 */
-    fp_except_t (* fpgetmask) (void);                                                                                                                /* 4298 */
-    fp_except_t (* fpsetmask) (fp_except_t);                                                                                                         /* 4302 */
-    fp_except_t (* fpgetsticky) (void);                                                                                                              /* 4306 */
+    fp_rnd_t    (* fpgetround) (void);                                                                                                               /* 4288 */
+    fp_rnd_t    (* fpsetround) (fp_rnd_t);                                                                                                           /* 4292 */
+    fp_except_t (* fpgetmask) (void);                                                                                                                /* 4296 */
+    fp_except_t (* fpsetmask) (fp_except_t);                                                                                                         /* 4300 */
+    fp_except_t (* fpgetsticky) (void);                                                                                                              /* 4304 */
+
+    FTSENT * (* fts_children) (FTS *, int);                                                                                                          /* 4308 */
+    int	     (* fts_close) (FTS *);                                                                                                                  /* 4312 */
+    FTS	   * (* fts_open) (char * const *, int, int (*)(const FTSENT **, const FTSENT **));                                                          /* 4316 */
+    FTSENT * (* fts_read) (FTS *);                                                                                                                   /* 4320 */
+    int	     (* fts_set) (FTS *, FTSENT *, int);                                                                                                     /* 4324 */
 };
 
 #ifdef __PIC__

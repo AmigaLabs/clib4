@@ -172,7 +172,7 @@ struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
 
     struct Clib2Base *libBase = (struct Clib2Base *) Self->Data.LibBase;
     if (!IClib2) {
-        IClib2 = (struct Clib2Base *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
+        IClib2 = (struct Clib2IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
         IExec->DropInterface((struct Interface *)IClib2);
     }
 

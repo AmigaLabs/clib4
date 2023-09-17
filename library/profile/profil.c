@@ -38,7 +38,7 @@ GetCounterStart(void) {
     /* Timebase ticks at 1/4 of FSB */
     bit0time = (double) 8.0 / (double) fsb;
     count = (uint32)((double) 0.01 / bit0time);
-
+    dprintf("count = %d - result = %d", count, 0x80000000 - count);
     return 0x80000000 - count;
 }
 
