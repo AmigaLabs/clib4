@@ -11,6 +11,11 @@
 #undef DebugPrintF
 #define dprintf(format, args...) ((struct ExecIFace *)((*(struct ExecBase **)4)->MainInterface))->DebugPrintF("[%s] " format, __PRETTY_FUNCTION__, ##args)
 
+void moncontrol(int);
+void monstartup(uint32, uint32);
+void moncleanup(void);
+void mongetpcs(uint32 *lowpc, uint32 *highpc);
+
 struct gmonhdr {
     uint32 lpc;
     uint32 hpc;
@@ -20,16 +25,53 @@ struct gmonhdr {
     int reserved[3];
 };
 
-#define GMONVERSION 0x00051879
-
 #define HISTCOUNTER uint16
+
 // I am sure we can make these bigger
 #define HISTFRACTION 2
 #define HASHFRACTION 4
 
-#define ARCDENSITY   2
+/*
+ * Percent of text space to allocate for tostructs.
+ * This is a heuristic; we will fail with a warning when profiling programs
+ * with a very large number of very small functions, but that's
+ * normally OK.
+ * 2 is probably still a good value for normal programs.
+ * Profiling a test case with 64000 small functions will work if
+ * you raise this value to 3 and link statically (which bloats the
+ * text size, thus raising the number of arcs expected by the heuristic).
+ */
+#define ARCDENSITY	3
+
+/*
+ * Always allocate at least this many tostructs.  This
+ * hides the inadequacy of the ARCDENSITY heuristic, at least
+ * for small programs.
+ */
 #define MINARCS      50
-#define MAXARCS      ((1 << (8 * sizeof(HISTCOUNTER)))-2)
+
+
+#define MAXARCS ((1 << (8 * sizeof(HISTCOUNTER)))-2)
+
+/*
+ * The type used to represent indices into gmonparam.tos[].
+ */
+#define	ARCINDEX	u_long
+
+
+/* structure emitted by "gcc -a".  This must match struct bb in
+   gcc/libgcc2.c.  It is OK for gcc to declare a longer structure as
+   long as the members below are present.  */
+struct __bb {
+    long			     zero_word;
+    const char		    *filename;
+    long			    *counts;
+    long			     ncounts;
+    struct __bb		    *next;
+    const unsigned long	*addresses;
+};
+
+extern struct __bb *__bb_head;
 
 struct tostruct {
     uint32 selfpc;

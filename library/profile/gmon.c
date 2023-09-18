@@ -10,14 +10,17 @@
 #include <proto/elf.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <macros.h>
+#include <sys/uio.h>
 
 #define SCALE_1_TO_1 0x10000L
 #define MIN_OS_VERSION 52
 
-#include "profile_gmon.h"
+#include "gmon.h"
+#include "gmon_out.h"
 
-#undef DebugPrintF
-#define dprintf(format, args...) ((struct ExecIFace *)((*(struct ExecBase **)4)->MainInterface))->DebugPrintF("[%s] " format, __PRETTY_FUNCTION__, ##args)
+/*  Head of basic-block list or NULL. */
+struct __bb *__bb_head __attribute__ ((visibility ("hidden")));
 
 struct gmonparam _gmonparam = {
         state : kGmonProfOn
@@ -25,16 +28,126 @@ struct gmonparam _gmonparam = {
 
 static unsigned int s_scale;
 
-void moncontrol(int);
-void monstartup(uint32, uint32);
-void moncleanup(void);
-void mongetpcs(uint32 *lowpc, uint32 *highpc);
+void
+write_hist(int fd) {
+    u_char tag = GMON_TAG_TIME_HIST;
+
+    if (_gmonparam.kcountsize > 0) {
+        struct iovec iov[3] = {
+            { &tag, sizeof(tag) },
+            { &thdr, sizeof(struct gmon_hist_hdr) },
+            { _gmonparam.kcount, _gmonparam.kcountsize }
+        };
+
+        if (sizeof(thdr) != sizeof(struct gmon_hist_hdr) || (offsetof(struct real_gmon_hist_hdr, low_pc) != offsetof(struct gmon_hist_hdr, low_pc)) || (offsetof(struct real_gmon_hist_hdr, high_pc) != offsetof(struct gmon_hist_hdr, high_pc)) || (offsetof(struct real_gmon_hist_hdr, hist_size) != offsetof(struct gmon_hist_hdr, hist_size)) || (offsetof(struct real_gmon_hist_hdr, prof_rate) != offsetof(struct gmon_hist_hdr, prof_rate)) || (offsetof(struct real_gmon_hist_hdr, dimen) != offsetof(struct gmon_hist_hdr, dimen)) || (offsetof(struct real_gmon_hist_hdr, dimen_abbrev) != offsetof(struct gmon_hist_hdr, dimen_abbrev)))
+            return;
+
+        thdr.low_pc = (char *)_gmonparam.lowpc;
+        thdr.high_pc = (char *)_gmonparam.highpc;
+        thdr.hist_size = _gmonparam.kcountsize / sizeof(HISTCOUNTER);
+        thdr.prof_rate = TICKS_PER_SECOND;
+        strncpy(thdr.dimen, "seconds", sizeof(thdr.dimen));
+        thdr.dimen_abbrev = 's';
+
+        writev(fd, iov, 3);
+    }
+}
+
+void
+write_call_graph(int fd) {
+    u_char tag = GMON_TAG_CG_ARC;
+    struct gmon_cg_arc_record raw_arc[NARCS_PER_WRITEV] __attribute__((aligned(__alignof__(char *))));
+    ARCINDEX from_index, to_index;
+    u_long from_len;
+    u_long frompc;
+    struct iovec iov[2 * NARCS_PER_WRITEV];
+    int nfilled;
+
+    for (nfilled = 0; nfilled < NARCS_PER_WRITEV; ++nfilled) {
+        iov[2 * nfilled].iov_base = &tag;
+        iov[2 * nfilled].iov_len = sizeof(tag);
+
+        iov[2 * nfilled + 1].iov_base = &raw_arc[nfilled];
+        iov[2 * nfilled + 1].iov_len = sizeof(struct gmon_cg_arc_record);
+    }
+
+    nfilled = 0;
+    from_len = _gmonparam.fromssize / sizeof(*_gmonparam.froms);
+    for (from_index = 0; from_index < from_len; ++from_index) {
+        if (_gmonparam.froms[from_index] == 0)
+            continue;
+
+        frompc = _gmonparam.lowpc;
+        frompc += (from_index * _gmonparam.hashfraction * sizeof(*_gmonparam.froms));
+        for (to_index = _gmonparam.froms[from_index];
+             to_index != 0;
+             to_index = _gmonparam.tos[to_index].link) {
+            struct arc {
+                char *frompc;
+                char *selfpc;
+                int32_t count;
+            } arc;
+
+            arc.frompc = (char *)frompc;
+            arc.selfpc = (char *)_gmonparam.tos[to_index].selfpc;
+            arc.count = _gmonparam.tos[to_index].count;
+            memcpy(raw_arc + nfilled, &arc, sizeof(raw_arc[0]));
+
+            if (++nfilled == NARCS_PER_WRITEV) {
+                writev(fd, iov, 2 * nfilled);
+                nfilled = 0;
+            }
+        }
+    }
+    if (nfilled > 0)
+        writev(fd, iov, 2 * nfilled);
+}
+
+void
+write_bb_counts(int fd) {
+    struct __bb *grp;
+    u_char tag = GMON_TAG_BB_COUNT;
+    size_t ncounts;
+    size_t i;
+
+    struct iovec bbhead[2] = {
+    {&tag, sizeof(tag)},
+    {&ncounts, sizeof(ncounts)}
+    };
+    struct iovec bbbody[8];
+    size_t nfilled;
+
+    for (i = 0; i < (sizeof(bbbody) / sizeof(bbbody[0])); i += 2) {
+        bbbody[i].iov_len = sizeof(grp->addresses[0]);
+        bbbody[i + 1].iov_len = sizeof(grp->counts[0]);
+    }
+
+    /* Write each group of basic-block info (all basic-blocks in a
+       compilation unit form a single group). */
+
+    for (grp = __bb_head; grp; grp = grp->next) {
+        ncounts = grp->ncounts;
+        writev(fd, bbhead, 2);
+        for (nfilled = i = 0; i < ncounts; ++i) {
+            if (nfilled > (sizeof(bbbody) / sizeof(bbbody[0])) - 2) {
+                writev(fd, bbbody, nfilled);
+                nfilled = 0;
+            }
+
+            bbbody[nfilled++].iov_base = (char *)&grp->addresses[i];
+            bbbody[nfilled++].iov_base = &grp->counts[i];
+        }
+        if (nfilled > 0)
+            writev(fd, bbbody, nfilled);
+    }
+}
 
 void monstartup(uint32 low_pc, uint32 high_pc) {
     uint8 *cp;
     uint32 lowpc, highpc;
     struct gmonparam *p = &_gmonparam;
     dprintf("in monstartup)\n");
+
     /*
      * If we don't get proper lowpc and highpc, then
      * we'll try to get them from the elf handle.
@@ -101,19 +214,32 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
     p->tos[0].link = 0;
 
     /* Verify granularity for sampling */
-    if (p->kcountsize < p->textsize)
-        /* FIXME Avoid floating point */
-        s_scale = ((float) p->kcountsize / p->textsize) * SCALE_1_TO_1;
+    if (p->kcountsize < p->textsize) {
+        /* avoid floating point operations */
+        int quot = p->textsize / p->kcountsize;
+
+        if (quot >= 0x10000)
+            s_scale = 1;
+        else if (quot >= 0x100)
+            s_scale = 0x10000 / quot;
+        else if (p->textsize >= 0x800000)
+            s_scale = 0x1000000 / (p->textsize / (p->kcountsize >> 8));
+        else
+            s_scale = 0x1000000 / ((p->textsize << 8) / p->kcountsize);
+    }
     else
         s_scale = SCALE_1_TO_1;
 
-    s_scale >>= 1;
     dprintf("Enabling monitor\n");
     moncontrol(1);
 }
 
 void moncontrol(int mode) {
     struct gmonparam *p = &_gmonparam;
+
+    /* Don't change the state if we ran into an error.  */
+    if (p->state == kGmonProfError)
+        return;
 
     if (mode) {
         /* Start profiling. */
@@ -128,16 +254,7 @@ void moncontrol(int mode) {
 
 void moncleanup(void) {
     BPTR fd;
-    int fromindex;
-    int endfrom;
-    uint32 frompc;
-    int toindex;
-    struct rawarc rawarc;
     struct gmonparam *p = &_gmonparam;
-    struct gmonhdr gmonhdr, *hdr;
-#ifdef DEBUG
-    FILE *log;
-#endif
 
     moncontrol(0);
 
@@ -145,63 +262,47 @@ void moncleanup(void) {
         fprintf(stderr, "WARNING: Overflow during profiling\n");
     }
 
-    fd = Open("gmon.out", MODE_NEWFILE);
-    if (!fd) {
-        fprintf(stderr, "ERROR: could not open gmon.out\n");
-        return;
-    }
-
-    hdr = (struct gmonhdr *) &gmonhdr;
-
-    hdr->lpc = 0; //p->lowpc;
-    hdr->hpc = p->highpc - p->lowpc;
-    hdr->ncnt = (int) p->kcountsize + sizeof(gmonhdr);
-    hdr->version = GMONVERSION;
-    hdr->profrate = 100; //FIXME:!!
-
-    Write(fd, hdr, sizeof(*hdr));
-    Write(fd, p->kcount, p->kcountsize);
-
-    endfrom = p->fromssize / sizeof(*p->froms);
-
-#ifdef DEBUG
-    log = fopen("gmon.log", "w");
-#endif
-
-    for (fromindex = 0; fromindex < endfrom; fromindex++) {
-        if (p->froms[fromindex] == 0)
-            continue;
-
-        frompc = 0; /* FIXME: was p->lowpc; needs to be 0 and assumes -Ttext=0 on compile. Better idea? */
-        frompc += fromindex * p->hashfraction * sizeof(*p->froms);
-        for (toindex = p->froms[fromindex]; toindex != 0;
-             toindex = p->tos[toindex].link) {
-#ifdef DEBUG
-            if (log)
-                fprintf(log, "%p called from %p: %d times\n", frompc,
-                        p->tos[toindex].selfpc,
-                        p->tos[toindex].count);
-#endif
-            rawarc.raw_frompc = frompc;
-            rawarc.raw_selfpc = p->tos[toindex].selfpc;
-            rawarc.raw_count = p->tos[toindex].count;
-            Write(fd, &rawarc, sizeof(rawarc));
+    if (_gmonparam.kcountsize > 0) {
+        fd = open("gmon.out", O_CREAT | O_TRUNC | O_WRONLY);
+        if (!fd) {
+            fprintf(stderr, "ERROR: could not open gmon.out\n");
+            return;
         }
-    }
 
-#ifdef DEBUG
-    if (log)
-        fclose(log);
-#endif
-    Close(fd);
+        /* write gmon.out header: */
+        struct real_gmon_hdr
+        {
+            char cookie[4];
+            int32_t version;
+            char spare[3 * 4];
+        } ghdr;
+
+        if (sizeof(ghdr) != sizeof(struct gmon_hdr) || (offsetof(struct real_gmon_hdr, cookie) != offsetof(struct gmon_hdr, cookie)) || (offsetof(struct real_gmon_hdr, version) != offsetof(struct gmon_hdr, version)))
+            return;
+
+        memcpy(&ghdr.cookie[0], GMON_MAGIC, sizeof(ghdr.cookie));
+        ghdr.version = GMON_VERSION;
+        memset(ghdr.spare, '\0', sizeof(ghdr.spare));
+        write(fd, &ghdr, sizeof(struct gmon_hdr));
+
+        /* write PC histogram: */
+        write_hist(fd);
+
+        /* write call-graph: */
+        write_call_graph(fd);
+
+        /* write basic-block execution counts: */
+        write_bb_counts(fd);
+
+        close(fd);
+    }
 }
 
 void mongetpcs(uint32 *lowpc, uint32 *highpc) {
-    struct Library *__ElfBase = NULL;
-    struct ElfIFace *__IElf = NULL;
+    struct Library *ElfBase = NULL;
+    struct ElfIFace *IElf = NULL;
     struct Process *self;
     BPTR seglist;
-    Elf32_Handle elfHandle;
     uint32 i;
     Elf32_Shdr *shdr;
     uint32 numSections;
@@ -209,41 +310,42 @@ void mongetpcs(uint32 *lowpc, uint32 *highpc) {
     *lowpc = 0;
     *highpc = 0;
 
-    __ElfBase = OpenLibrary("elf.library", MIN_OS_VERSION);
-    if (__ElfBase) {
-        __IElf = (struct ElfIFace *) GetInterface(__ElfBase, "main", 1, NULL);
-        if (__IElf) {
+    ElfBase = OpenLibrary("elf.library", MIN_OS_VERSION);
+    if (ElfBase) {
+        IElf = (struct ElfIFace *) GetInterface(ElfBase, "main", 1, NULL);
+        if (IElf) {
             self = (struct Process *) FindTask(0);
             seglist = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
+            if (seglist != BZERO) {
+                Elf32_Handle elfHandle = NULL;
 
-            if (GetSegListInfoTags(seglist, GSLI_ElfHandle, &elfHandle, TAG_DONE) == 1) {
-                elfHandle = OpenElfTags(OET_ElfHandle, elfHandle, TAG_DONE);
-
-                if (elfHandle) {
-                    GetElfAttrsTags(elfHandle, EAT_NumSections, &numSections, TAG_DONE);
-                    for (i = 0; i < numSections; i++) {
-                        shdr = GetSectionHeaderTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
-                        if (shdr && (shdr->sh_flags & SWF_EXECINSTR)) {
-                            uint32 base = (uint32) GetSectionTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
-                            *lowpc = base;
-                            *highpc = base + shdr->sh_size;
-                            break;
+                if (GetSegListInfoTags(seglist, GSLI_ElfHandle, &elfHandle, TAG_DONE) == 1) {
+                    elfHandle = OpenElfTags(OET_ElfHandle, elfHandle, TAG_DONE);
+                    if (elfHandle) {
+                        GetElfAttrsTags(elfHandle, EAT_NumSections, &numSections, TAG_DONE);
+                        for (i = 0; i < numSections; i++) {
+                            shdr = GetSectionHeaderTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
+                            if (shdr && (shdr->sh_flags & SWF_EXECINSTR)) {
+                                uint32 base = (uint32) GetSectionTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
+                                *lowpc = base;
+                                *highpc = base + shdr->sh_size;
+                                break;
+                            }
                         }
+                        CloseElfTags(elfHandle, CET_ReClose, TRUE, TAG_DONE);
                     }
-
-                    CloseElfTags(elfHandle, CET_ReClose, TRUE, TAG_DONE);
                 }
             }
         }
     }
 
-    if (__IElf) {
-        DropInterface((struct Interface *) __IElf);
-        __IElf = NULL;
+    if (IElf) {
+        DropInterface((struct Interface *) IElf);
+        IElf = NULL;
     }
-    if (__ElfBase) {
-        CloseLibrary(__ElfBase);
-        __ElfBase = NULL;
+    if (ElfBase) {
+        CloseLibrary(ElfBase);
+        ElfBase = NULL;
     }
 }
 

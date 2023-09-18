@@ -8,7 +8,7 @@
 #include <resources/performancemonitor.h>
 #include <unistd.h>
 
-#include "profile_gmon.h"
+#include "gmon.h"
 
 static struct Interrupt CounterInt;
 static struct PerformanceMonitorIFace *IPM;

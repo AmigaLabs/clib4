@@ -2,11 +2,10 @@
  * $Id: profile__mcount.c,v 1.0 2022-08-06 10:36:26 clib2devs Exp $
 */
 
-#include "profile_gmon.h"
+#include "gmon.h"
 #include <exec/exec.h>
 #include <proto/exec.h>
 #include <stddef.h>
-
 
 void __mcount(uint32 frompc, uint32 selfpc);
 
