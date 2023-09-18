@@ -45,7 +45,9 @@ write_hist(int fd) {
         thdr.low_pc = (char *)_gmonparam.lowpc;
         thdr.high_pc = (char *)_gmonparam.highpc;
         thdr.hist_size = _gmonparam.kcountsize / sizeof(HISTCOUNTER);
-        thdr.prof_rate = TICKS_PER_SECOND;
+        printf("hist_size = %d - _gmonparam.kcountsize = %d - sizeof(HISTCOUNTER) = %d\n",
+               thdr.hist_size, _gmonparam.kcountsize, sizeof(HISTCOUNTER));
+        thdr.prof_rate = 100;
         strncpy(thdr.dimen, "seconds", sizeof(thdr.dimen));
         thdr.dimen_abbrev = 's';
 
@@ -77,7 +79,8 @@ write_call_graph(int fd) {
         if (_gmonparam.froms[from_index] == 0)
             continue;
 
-        frompc = _gmonparam.lowpc;
+        /* FIXME: was p->lowpc; needs to be 0 and assumes -Ttext=0 on compile. Better idea? */
+        frompc = 0; //_gmonparam.lowpc;
         frompc += (from_index * _gmonparam.hashfraction * sizeof(*_gmonparam.froms));
         for (to_index = _gmonparam.froms[from_index];
              to_index != 0;
@@ -91,6 +94,7 @@ write_call_graph(int fd) {
             arc.frompc = (char *)frompc;
             arc.selfpc = (char *)_gmonparam.tos[to_index].selfpc;
             arc.count = _gmonparam.tos[to_index].count;
+            printf("arc.count = %d\n", arc.count);
             memcpy(raw_arc + nfilled, &arc, sizeof(raw_arc[0]));
 
             if (++nfilled == NARCS_PER_WRITEV) {
@@ -146,6 +150,8 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
     uint8 *cp;
     uint32 lowpc, highpc;
     struct gmonparam *p = &_gmonparam;
+    register int o;
+
     dprintf("in monstartup)\n");
 
     /*
@@ -175,12 +181,20 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
      * every instruction is exactly one word wide and always aligned.
      */
     p->kcountsize = p->textsize / HISTFRACTION;
+    p->log_hashfraction = -1;
 
     /*
      * The hash table size
      */
     p->hashfraction = HASHFRACTION;
-    p->fromssize = p->textsize / p->hashfraction;
+
+    /* The following test must be kept in sync with the corresponding test in _mcount.c.  */
+    if ((HASHFRACTION & (HASHFRACTION - 1)) == 0) {
+        /* if HASHFRACTION is a power of two, mcount can use shifting
+       instead of integer division.  Precompute shift amount. */
+        p->log_hashfraction = ffs(p->hashfraction * sizeof(*p->froms)) - 1;
+    }
+    p->fromssize = p->textsize / HASHFRACTION;
 
     p->tolimit = p->textsize * ARCDENSITY / 100;
     if (p->tolimit < MINARCS)
@@ -202,34 +216,35 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
         return;
     }
 
-    p->memory = cp;
     p->tos = (struct tostruct *) cp;
     cp += p->tossize;
 
-    p->kcount = (uint16 *) cp;
+    p->kcount = (HISTCOUNTER *) cp;
     cp += p->kcountsize;
 
-    p->froms = (uint16 *) cp;
+    p->froms = (ARCINDEX *) cp;
 
     p->tos[0].link = 0;
 
+    o = p->highpc - p->lowpc;
     /* Verify granularity for sampling */
-    if (p->kcountsize < p->textsize) {
+    if (p->kcountsize < (uint32) o) {
         /* avoid floating point operations */
-        int quot = p->textsize / p->kcountsize;
+        int quot = o / p->kcountsize;
 
         if (quot >= 0x10000)
             s_scale = 1;
         else if (quot >= 0x100)
             s_scale = 0x10000 / quot;
-        else if (p->textsize >= 0x800000)
-            s_scale = 0x1000000 / (p->textsize / (p->kcountsize >> 8));
+        else if (o >= 0x800000)
+            s_scale = 0x1000000 / (o / (p->kcountsize >> 8));
         else
-            s_scale = 0x1000000 / ((p->textsize << 8) / p->kcountsize);
+            s_scale = 0x1000000 / ((o << 8) / p->kcountsize);
     }
     else
         s_scale = SCALE_1_TO_1;
 
+    dprintf("Scale: %d\n", s_scale);
     dprintf("Enabling monitor\n");
     moncontrol(1);
 }

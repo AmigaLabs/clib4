@@ -29,7 +29,7 @@ struct gmonhdr {
 
 // I am sure we can make these bigger
 #define HISTFRACTION 2
-#define HASHFRACTION 4
+#define HASHFRACTION 2
 
 /*
  * Percent of text space to allocate for tostructs.
@@ -50,14 +50,20 @@ struct gmonhdr {
  */
 #define MINARCS      50
 
-
-#define MAXARCS ((1 << (8 * sizeof(HISTCOUNTER)))-2)
+/*
+ * Maximum number of arcs we want to allow.
+ * Used to be max representable value of ARCINDEX minus 2, but now
+ * that ARCINDEX is a long, that's too large; we don't really want
+ * to allow a 48 gigabyte table.
+ * The old value of 1<<16 wasn't high enough in practice for large C++
+ * programs; will 1<<20 be adequate for long?  FIXME
+ */
+#define MAXARCS (1 << 20)
 
 /*
  * The type used to represent indices into gmonparam.tos[].
  */
-#define	ARCINDEX	u_long
-
+#define	ARCINDEX uint32
 
 /* structure emitted by "gcc -a".  This must match struct bb in
    gcc/libgcc2.c.  It is OK for gcc to declare a longer structure as
@@ -74,16 +80,15 @@ struct __bb {
 extern struct __bb *__bb_head;
 
 struct tostruct {
-    uint32 selfpc;
-    int32 count;
-    uint16 link;
-    uint16 pad;
+    uint32   selfpc;
+    int32    count;
+    ARCINDEX link;
 };
 
 struct rawarc {
-    uint32 raw_frompc;
-    uint32 raw_selfpc;
-    int32 raw_count;
+    uint32  raw_frompc;
+    uint32  raw_selfpc;
+    int32   raw_count;
 };
 
 #define ROUNDDOWN(x, y) (((x)/(y))*(y))
@@ -91,18 +96,18 @@ struct rawarc {
 
 struct gmonparam {
     int state;
-    uint16 *kcount;
-    uint32 kcountsize;
-    uint16 *froms;
-    uint32 fromssize;
+    uint16          *kcount;
+    uint32           kcountsize;
+    ARCINDEX        *froms;
+    uint32           fromssize;
     struct tostruct *tos;
-    uint32 tossize;
-    int32 tolimit;
-    uint32 lowpc;
-    uint32 highpc;
-    uint32 textsize;
-    uint32 hashfraction;
-    uint8 *memory;
+    uint32           tossize;
+    int32            tolimit;
+    uint32           lowpc;
+    uint32           highpc;
+    uint32           textsize;
+    uint32           hashfraction;
+    long             log_hashfraction;
 };
 
 extern struct gmonparam _gmonparam;

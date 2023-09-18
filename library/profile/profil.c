@@ -38,7 +38,7 @@ GetCounterStart(void) {
     /* Timebase ticks at 1/4 of FSB */
     bit0time = (double) 8.0 / (double) fsb;
     count = (uint32)((double) 0.01 / bit0time);
-    dprintf("count = %d - result = %d", count, 0x80000000 - count);
+    printf("fsb = %lld - bit0time = %d - count = %d - result = %x\n", fsb, bit0time, count, 0x80000000 - count);
     return 0x80000000 - count;
 }
 
@@ -125,6 +125,7 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
             TAG_DONE);
 
     IPM->Mark(0);
+    IPM->Release();
 
     if (Stack)
         UserState(Stack);

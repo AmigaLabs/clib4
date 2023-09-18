@@ -2,24 +2,27 @@
  * $Id: profile__mcount.c,v 1.0 2022-08-06 10:36:26 clib2devs Exp $
 */
 
-#include "gmon.h"
 #include <exec/exec.h>
 #include <proto/exec.h>
 #include <stddef.h>
+#include <stdio.h>
+
+#include "gmon.h"
 
 void __mcount(uint32 frompc, uint32 selfpc);
 
 void
 __mcount(uint32 frompc, uint32 selfpc) {
-    uint16 *frompcindex;
-    struct tostruct *top, *prevtop;
-    struct gmonparam *p;
-
-    int32 toindex;
+    register ARCINDEX *frompcindex;
+    register struct tostruct *top, *prevtop;
+    register struct gmonparam *p;
+    register ARCINDEX toindex;
+    int i;
 
     p = &_gmonparam;
 
-    if (p->state != kGmonProfOn) return;
+    if (p->state != kGmonProfOn)
+        return;
 
     p->state = kGmonProfBusy;
 
@@ -29,45 +32,67 @@ __mcount(uint32 frompc, uint32 selfpc) {
      */
     frompc -= p->lowpc;
     selfpc -= p->lowpc;
-    if (frompc > p->textsize) goto done;
+    dprintf("frompc %d\n", frompc);
+    dprintf("p->textsize %d\n", p->textsize);
+    dprintf("selfpc %d\n", selfpc);
+    if (frompc > p->textsize)
+        goto done;
 
-#if (HASHFRACTION & (HASHFRACTION - 1)) == 0
-    if (p->hashfraction == HASHFRACTION) {
-        frompcindex = &p->froms[(size_t)(frompc / (HASHFRACTION *
-                                                   sizeof(*p->froms)))];
-    } else
-#endif
-    {
-        frompcindex = &p->froms[(size_t)(frompc / (p->hashfraction *
-                                                   sizeof(*p->froms)))];
+    /* The following test used to be
+		if (p->log_hashfraction >= 0)
+	   But we can simplify this if we assume the profiling data
+	   is always initialized by the functions in gmon.c.  But
+	   then it is possible to avoid a runtime check and use the
+	   same `if' as in gmon.c.  So keep these tests in sync.
+    */
+    if ((HASHFRACTION & (HASHFRACTION - 1)) == 0) {
+        /* avoid integer divide if possible: */
+        i = frompc >> p->log_hashfraction;
+    } else {
+        i = frompc / (p->hashfraction * sizeof(*p->froms));
     }
 
+    frompcindex = &p->froms[i];
     toindex = *frompcindex;
-
     if (toindex == 0) {
-        /* first time down this arc */
+        /*
+         *	first time traversing this arc
+         */
         toindex = ++p->tos[0].link;
         if (toindex >= p->tolimit)
-            /* Ouch! Overflow */
+            /* halt further profiling */
             goto overflow;
 
-        *frompcindex = (uint16) toindex;
+        *frompcindex = toindex;
         top = &p->tos[toindex];
         top->selfpc = selfpc;
         top->count = 1;
         top->link = 0;
         goto done;
     }
-
     top = &p->tos[toindex];
+    printf("top->selfpc = %d - selfpc = %d\n", top->selfpc, selfpc);
     if (top->selfpc == selfpc) {
-        /* arc at front of chain */
+        /*
+         * arc at front of chain; usual case.
+         */
         top->count++;
         goto done;
     }
-
-    for (;;) {
+    /*
+     * have to go looking down chain for it.
+     * top points to what we are looking at,
+     * prevtop points to previous top.
+     * we know it is not at the head of the chain.
+     */
+    for (; /* goto done */; ) {
         if (top->link == 0) {
+            /*
+             * top is end of the chain and none of the chain
+             * had top->selfpc == selfpc.
+             * so we allocate a new tostruct
+             * and link it to the head of the chain.
+             */
             toindex = ++p->tos[0].link;
             if (toindex >= p->tolimit)
                 goto overflow;
@@ -76,17 +101,25 @@ __mcount(uint32 frompc, uint32 selfpc) {
             top->selfpc = selfpc;
             top->count = 1;
             top->link = *frompcindex;
-            *frompcindex = (uint16) toindex;
+            *frompcindex = toindex;
             goto done;
         }
+        /*
+         * otherwise, check the next arc on the chain.
+         */
         prevtop = top;
         top = &p->tos[top->link];
         if (top->selfpc == selfpc) {
+            /*
+             * there it is.
+             * increment its count
+             * move it to the head of the chain.
+             */
             top->count++;
             toindex = prevtop->link;
             prevtop->link = top->link;
             top->link = *frompcindex;
-            *frompcindex = (uint16) toindex;
+            *frompcindex = toindex;
             goto done;
         }
     }
