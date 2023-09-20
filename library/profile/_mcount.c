@@ -30,11 +30,14 @@ __mcount(uint32 frompc, uint32 selfpc) {
      * Check if the PC is inside our text segment.
      * Really should be...
      */
+    dprintf("p->textsize %x\n", p->textsize);
+    dprintf("p->lowpc %x\n", p->lowpc);
+    dprintf("frompc1 %x\n", frompc);
+    dprintf("selfpc1 %x\n", selfpc);
     frompc -= p->lowpc;
     selfpc -= p->lowpc;
-    dprintf("frompc %d\n", frompc);
-    dprintf("p->textsize %d\n", p->textsize);
-    dprintf("selfpc %d\n", selfpc);
+    dprintf("frompc2 %x\n", frompc);
+    dprintf("selfpc2 %x\n", selfpc);
     if (frompc > p->textsize)
         goto done;
 
@@ -71,11 +74,9 @@ __mcount(uint32 frompc, uint32 selfpc) {
         goto done;
     }
     top = &p->tos[toindex];
-    printf("top->selfpc = %d - selfpc = %d\n", top->selfpc, selfpc);
+    printf("p->lowpc = %p - top->selfpc = %x - selfpc = %x\n", p->lowpc, top->selfpc, selfpc);
     if (top->selfpc == selfpc) {
-        /*
-         * arc at front of chain; usual case.
-         */
+        /* arc at front of chain; usual case. */
         top->count++;
         goto done;
     }
@@ -85,7 +86,7 @@ __mcount(uint32 frompc, uint32 selfpc) {
      * prevtop points to previous top.
      * we know it is not at the head of the chain.
      */
-    for (; /* goto done */; ) {
+    for (;; ) {
         if (top->link == 0) {
             /*
              * top is end of the chain and none of the chain

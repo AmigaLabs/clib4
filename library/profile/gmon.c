@@ -32,6 +32,7 @@ void
 write_hist(int fd) {
     u_char tag = GMON_TAG_TIME_HIST;
 
+    printf("_gmonparam.kcountsize = %d\n", _gmonparam.kcountsize);
     if (_gmonparam.kcountsize > 0) {
         struct iovec iov[3] = {
             { &tag, sizeof(tag) },
@@ -39,11 +40,19 @@ write_hist(int fd) {
             { _gmonparam.kcount, _gmonparam.kcountsize }
         };
 
-        if (sizeof(thdr) != sizeof(struct gmon_hist_hdr) || (offsetof(struct real_gmon_hist_hdr, low_pc) != offsetof(struct gmon_hist_hdr, low_pc)) || (offsetof(struct real_gmon_hist_hdr, high_pc) != offsetof(struct gmon_hist_hdr, high_pc)) || (offsetof(struct real_gmon_hist_hdr, hist_size) != offsetof(struct gmon_hist_hdr, hist_size)) || (offsetof(struct real_gmon_hist_hdr, prof_rate) != offsetof(struct gmon_hist_hdr, prof_rate)) || (offsetof(struct real_gmon_hist_hdr, dimen) != offsetof(struct gmon_hist_hdr, dimen)) || (offsetof(struct real_gmon_hist_hdr, dimen_abbrev) != offsetof(struct gmon_hist_hdr, dimen_abbrev)))
+        if (
+                sizeof(thdr) != sizeof(struct gmon_hist_hdr) ||
+                (offsetof(struct real_gmon_hist_hdr, low_pc) != offsetof(struct gmon_hist_hdr, low_pc)) ||
+                (offsetof(struct real_gmon_hist_hdr, high_pc) != offsetof(struct gmon_hist_hdr, high_pc)) ||
+                (offsetof(struct real_gmon_hist_hdr, hist_size) != offsetof(struct gmon_hist_hdr, hist_size)) ||
+                (offsetof(struct real_gmon_hist_hdr, prof_rate) != offsetof(struct gmon_hist_hdr, prof_rate)) ||
+                (offsetof(struct real_gmon_hist_hdr, dimen) != offsetof(struct gmon_hist_hdr, dimen)) ||
+                (offsetof(struct real_gmon_hist_hdr, dimen_abbrev) != offsetof(struct gmon_hist_hdr, dimen_abbrev))
+        )
             return;
 
-        thdr.low_pc = (char *)_gmonparam.lowpc;
-        thdr.high_pc = (char *)_gmonparam.highpc;
+        thdr.low_pc =  (char *) _gmonparam.lowpc;
+        thdr.high_pc = (char *) _gmonparam.highpc;
         thdr.hist_size = _gmonparam.kcountsize / sizeof(HISTCOUNTER);
         printf("hist_size = %d - _gmonparam.kcountsize = %d - sizeof(HISTCOUNTER) = %d\n",
                thdr.hist_size, _gmonparam.kcountsize, sizeof(HISTCOUNTER));
@@ -80,7 +89,8 @@ write_call_graph(int fd) {
             continue;
 
         /* FIXME: was p->lowpc; needs to be 0 and assumes -Ttext=0 on compile. Better idea? */
-        frompc = 0; //_gmonparam.lowpc;
+        printf("_gmonparam.lowpc = %x\n", _gmonparam.lowpc);
+        frompc = _gmonparam.lowpc;
         frompc += (from_index * _gmonparam.hashfraction * sizeof(*_gmonparam.froms));
         for (to_index = _gmonparam.froms[from_index];
              to_index != 0;
@@ -94,7 +104,7 @@ write_call_graph(int fd) {
             arc.frompc = (char *)frompc;
             arc.selfpc = (char *)_gmonparam.tos[to_index].selfpc;
             arc.count = _gmonparam.tos[to_index].count;
-            printf("arc.count = %d\n", arc.count);
+            printf("arc.frompc = %x - _gmonparam.tos[to_index].selfpc = %x\n", arc.frompc, _gmonparam.tos[to_index].selfpc);
             memcpy(raw_arc + nfilled, &arc, sizeof(raw_arc[0]));
 
             if (++nfilled == NARCS_PER_WRITEV) {
@@ -152,7 +162,7 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
     struct gmonparam *p = &_gmonparam;
     register int o;
 
-    dprintf("in monstartup)\n");
+    dprintf("in monstartup low_pc = %d - high_pc = %d\n", low_pc, high_pc);
 
     /*
      * If we don't get proper lowpc and highpc, then
@@ -268,32 +278,36 @@ void moncontrol(int mode) {
 }
 
 void moncleanup(void) {
-    BPTR fd;
+    int fd;
     struct gmonparam *p = &_gmonparam;
 
     moncontrol(0);
 
     if (p->state == kGmonProfError) {
         fprintf(stderr, "WARNING: Overflow during profiling\n");
+        goto out;
     }
 
     if (_gmonparam.kcountsize > 0) {
         fd = open("gmon.out", O_CREAT | O_TRUNC | O_WRONLY);
         if (!fd) {
             fprintf(stderr, "ERROR: could not open gmon.out\n");
-            return;
+            goto out;
         }
 
         /* write gmon.out header: */
-        struct real_gmon_hdr
-        {
+        struct real_gmon_hdr {
             char cookie[4];
             int32_t version;
             char spare[3 * 4];
         } ghdr;
 
-        if (sizeof(ghdr) != sizeof(struct gmon_hdr) || (offsetof(struct real_gmon_hdr, cookie) != offsetof(struct gmon_hdr, cookie)) || (offsetof(struct real_gmon_hdr, version) != offsetof(struct gmon_hdr, version)))
-            return;
+        if (
+            sizeof(ghdr) != sizeof(struct gmon_hdr) ||
+            (offsetof(struct real_gmon_hdr, cookie) != offsetof(struct gmon_hdr, cookie)) ||
+            (offsetof(struct real_gmon_hdr, version) != offsetof(struct gmon_hdr, version))) {
+                goto out;
+        }
 
         memcpy(&ghdr.cookie[0], GMON_MAGIC, sizeof(ghdr.cookie));
         ghdr.version = GMON_VERSION;
@@ -311,6 +325,12 @@ void moncleanup(void) {
 
         close(fd);
     }
+out:
+    if (p->tos) {
+        FreeVec(p->tos);
+        p->tos = NULL;
+    }
+
 }
 
 void mongetpcs(uint32 *lowpc, uint32 *highpc) {
@@ -344,6 +364,8 @@ void mongetpcs(uint32 *lowpc, uint32 *highpc) {
                                 uint32 base = (uint32) GetSectionTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
                                 *lowpc = base;
                                 *highpc = base + shdr->sh_size;
+                                printf("LOWPC = %x\n", lowpc);
+                                printf("HIGHPC = %x\n", highpc);
                                 break;
                             }
                         }
