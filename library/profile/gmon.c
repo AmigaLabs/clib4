@@ -32,7 +32,6 @@ void
 write_hist(int fd) {
     u_char tag = GMON_TAG_TIME_HIST;
 
-    printf("_gmonparam.kcountsize = %d\n", _gmonparam.kcountsize);
     if (_gmonparam.kcountsize > 0) {
         struct iovec iov[3] = {
             { &tag, sizeof(tag) },
@@ -51,11 +50,10 @@ write_hist(int fd) {
         )
             return;
 
-        thdr.low_pc =  (char *) _gmonparam.lowpc;
-        thdr.high_pc = (char *) _gmonparam.highpc;
+        thdr.low_pc =  (char *) _gmonparam.text_start;
+        thdr.high_pc = (char *) _gmonparam.text_end;
         thdr.hist_size = _gmonparam.kcountsize / sizeof(HISTCOUNTER);
-        printf("hist_size = %d - _gmonparam.kcountsize = %d - sizeof(HISTCOUNTER) = %d\n",
-               thdr.hist_size, _gmonparam.kcountsize, sizeof(HISTCOUNTER));
+        dprintf("thdr.low_pc = %x - thdr.high_pc = %x\n", thdr.low_pc, thdr.high_pc);
         thdr.prof_rate = 100;
         strncpy(thdr.dimen, "seconds", sizeof(thdr.dimen));
         thdr.dimen_abbrev = 's';
@@ -88,9 +86,7 @@ write_call_graph(int fd) {
         if (_gmonparam.froms[from_index] == 0)
             continue;
 
-        /* FIXME: was p->lowpc; needs to be 0 and assumes -Ttext=0 on compile. Better idea? */
-        printf("_gmonparam.lowpc = %x\n", _gmonparam.lowpc);
-        frompc = _gmonparam.lowpc;
+        frompc = 0;
         frompc += (from_index * _gmonparam.hashfraction * sizeof(*_gmonparam.froms));
         for (to_index = _gmonparam.froms[from_index];
              to_index != 0;
@@ -101,10 +97,10 @@ write_call_graph(int fd) {
                 int32_t count;
             } arc;
 
-            arc.frompc = (char *)frompc;
-            arc.selfpc = (char *)_gmonparam.tos[to_index].selfpc;
+            arc.frompc = (char *) _gmonparam.text_start + frompc;
+            arc.selfpc = (char *) _gmonparam.text_start + _gmonparam.tos[to_index].selfpc;
             arc.count = _gmonparam.tos[to_index].count;
-            printf("arc.frompc = %x - _gmonparam.tos[to_index].selfpc = %x\n", arc.frompc, _gmonparam.tos[to_index].selfpc);
+            dprintf("arc.frompc = %x - arc.selfpc = %x\n", arc.frompc, arc.selfpc);
             memcpy(raw_arc + nfilled, &arc, sizeof(raw_arc[0]));
 
             if (++nfilled == NARCS_PER_WRITEV) {
@@ -282,6 +278,7 @@ void moncleanup(void) {
     struct gmonparam *p = &_gmonparam;
 
     moncontrol(0);
+    mongettext(&p->text_start, &p->text_end);
 
     if (p->state == kGmonProfError) {
         fprintf(stderr, "WARNING: Overflow during profiling\n");
@@ -364,10 +361,56 @@ void mongetpcs(uint32 *lowpc, uint32 *highpc) {
                                 uint32 base = (uint32) GetSectionTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
                                 *lowpc = base;
                                 *highpc = base + shdr->sh_size;
-                                printf("LOWPC = %x\n", lowpc);
-                                printf("HIGHPC = %x\n", highpc);
+                                dprintf("LOWPC = %x\n", lowpc);
+                                dprintf("HIGHPC = %x\n", highpc);
                                 break;
                             }
+                        }
+                        CloseElfTags(elfHandle, CET_ReClose, TRUE, TAG_DONE);
+                    }
+                }
+            }
+        }
+    }
+
+    if (IElf) {
+        DropInterface((struct Interface *) IElf);
+        IElf = NULL;
+    }
+    if (ElfBase) {
+        CloseLibrary(ElfBase);
+        ElfBase = NULL;
+    }
+}
+
+void mongettext(uint32_t *text_start, uint32_t *text_end) {
+    struct Library *ElfBase = NULL;
+    struct ElfIFace *IElf = NULL;
+    struct Process *self;
+    BPTR seglist;
+    Elf32_Shdr *shdr;
+
+    *text_start = 0;
+    *text_end = 0;
+
+    ElfBase = OpenLibrary("elf.library", MIN_OS_VERSION);
+    if (ElfBase) {
+        IElf = (struct ElfIFace *) GetInterface(ElfBase, "main", 1, NULL);
+        if (IElf) {
+            self = (struct Process *) FindTask(0);
+            seglist = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
+            if (seglist != BZERO) {
+                Elf32_Handle elfHandle = NULL;
+
+                if (GetSegListInfoTags(seglist, GSLI_ElfHandle, &elfHandle, TAG_DONE) == 1) {
+                    elfHandle = OpenElfTags(OET_ElfHandle, elfHandle, TAG_DONE);
+                    if (elfHandle) {
+                        shdr = GetSectionHeaderTags(elfHandle, GST_SectionName, ".text", TAG_DONE);
+                        if (shdr && (shdr->sh_flags & SWF_EXECINSTR)) {
+                            *text_start = shdr->sh_addr;
+                            *text_end = shdr->sh_addr + shdr->sh_size;
+                            dprintf("TEXT_START = %x\n", *text_start);
+                            dprintf("TEXT_END   = %x\n", *text_end);
                         }
                         CloseElfTags(elfHandle, CET_ReClose, TRUE, TAG_DONE);
                     }

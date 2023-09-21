@@ -15,6 +15,7 @@ void moncontrol(int);
 void monstartup(uint32, uint32);
 void moncleanup(void);
 void mongetpcs(uint32 *lowpc, uint32 *highpc);
+void mongettext(uint32_t *text_start, uint32_t *text_end);
 
 struct gmonhdr {
     uint32 lpc;
@@ -108,6 +109,8 @@ struct gmonparam {
     uint32           textsize;
     uint32           hashfraction;
     long             log_hashfraction;
+    uint32_t         text_start;
+    uint32_t         text_end;
 };
 
 extern struct gmonparam _gmonparam;
