@@ -10,6 +10,8 @@
 
 #include "gmon.h"
 
+#define COUNTER 1
+
 static struct Interrupt CounterInt;
 static struct PerformanceMonitorIFace *IPM;
 
@@ -36,19 +38,22 @@ GetCounterStart(void) {
             TAG_DONE);
 
     /* Timebase ticks at 1/4 of FSB */
-    bit0time = (double) 8.0 / (double) fsb;
-    count = (uint32)((double) 0.01 / bit0time);
+    bit0time = 8.0 / (double) fsb;
+    count = (uint32) (0.01 / bit0time);
+    dprintf("bit0time = %f - fsb = %lld - count = %ld - %x\n", bit0time, fsb, count, 0x80000000 - count);
+
     return 0x80000000 - count;
 }
 
 uint32
 CounterIntFn(struct ExceptionContext *ctx, struct ExecBase *ExecBase, struct IntData *profileData) {
-    APTR sampledAddress = profileData->IPM->GetSampledAddress();
-    uint32 sia = (uint32) sampledAddress;
-
     /* Silence compiler */
     (void) ExecBase;
     (void) ctx;
+
+    APTR sampledAddress = profileData->IPM->GetSampledAddress();
+    uint32 sia = (uint32) sampledAddress;
+    dprintf("CounterIntFn\n");
 
     sia = ((sia - profileData->Offset) * profileData->Scale) >> 16;
 
@@ -57,7 +62,7 @@ CounterIntFn(struct ExceptionContext *ctx, struct ExecBase *ExecBase, struct Int
         profileData->Buffer[sia]++;
     }
 
-    IPM->CounterControl(1, profileData->CounterStart, PMCI_Transition);
+    IPM->CounterControl(COUNTER, profileData->CounterStart, PMCI_Transition);
 
     return 1;
 }
@@ -80,7 +85,7 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
                 PMECT_Disable, PMEC_MasterInterrupt,
                 TAG_DONE);
 
-        IPM->SetInterruptVector(1, 0);
+        IPM->SetInterruptVector(COUNTER, 0);
 
         IPM->Unmark(0);
         IPM->Release();
@@ -97,7 +102,7 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
     }
 
     Stack = SuperState();
-
+printf("offset = %x\n", offset);
     /* Init IntData */
     ProfileData.IPM = IPM;
     ProfileData.Buffer = buffer;
@@ -113,10 +118,13 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
 
     /* Prepare Performance Monitor */
     IPM->MonitorControlTags(
-            PMMCT_FreezeCounters, PMMC_Unmarked,
-            PMMCT_RTCBitSelect, PMMC_BIT0,
+            PMMCT_FreezeCounters,   PMMC_Unmarked,
+            PMMCT_RTCBitSelect,     PMMC_BIT0,
             TAG_DONE);
-    IPM->CounterControl(1, ProfileData.CounterStart, PMCI_Transition);
+
+    if (!IPM->CounterControl(COUNTER, ProfileData.CounterStart, PMCI_Transition)) {
+        printf("Cannot set CounterControl\n");
+    }
 
     IPM->EventControlTags(
             PMECT_Enable, 1,

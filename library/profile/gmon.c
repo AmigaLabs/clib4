@@ -361,8 +361,8 @@ void mongetpcs(uint32 *lowpc, uint32 *highpc) {
                                 uint32 base = (uint32) GetSectionTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
                                 *lowpc = base;
                                 *highpc = base + shdr->sh_size;
-                                dprintf("LOWPC = %x\n", lowpc);
-                                dprintf("HIGHPC = %x\n", highpc);
+                                dprintf("LOWPC = %x\n", *lowpc);
+                                dprintf("HIGHPC = %x\n", *highpc);
                                 break;
                             }
                         }
