@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_msgsnd.c,v 1.2 2023-07-08 18:25:10 clib2devs Exp $
+ * $Id: sysv_msgsnd.c,v 1.2 2023-07-08 18:25:10 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -29,7 +29,7 @@ _msgsnd(int qid, const void *msg, size_t mlen, int flags) {
         RETURN(ret);
         return ret;
     }
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
 
 redo: /* Retry after waiting for queue to not be full. */
 

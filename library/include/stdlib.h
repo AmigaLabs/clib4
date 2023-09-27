@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib.h,v 1.19 2008-04-30 14:34:03 clib2devs Exp $
+ * $Id: stdlib.h,v 1.19 2008-04-30 14:34:03 clib4devs Exp $
 */
 
 #ifndef _STDLIB_H
@@ -13,9 +13,9 @@
 #include <sys/types.h>
 #include <dos.h>
 
-#ifndef _SYS_CLIB2_STDC_H
-#include <sys/clib2_stdc.h>
-#endif /* _SYS_CLIB2_STDC_H */
+#ifndef _SYS_CLIB4_STDC_H
+#include <sys/clib4_stdc.h>
+#endif /* _SYS_CLIB4_STDC_H */
 
 __BEGIN_DECLS
 
@@ -187,32 +187,32 @@ extern void arc4random_addrandom(unsigned char *dat, int datlen);
 
 #ifdef __SPE__
 extern int16_t atosfix16(const char *__str);
-extern int16_t _atosfix16_r(struct _clib2 *, const char *__str);
+extern int16_t _atosfix16_r(struct _clib4 *, const char *__str);
 extern int32_t atosfix32(const char *__str);
-extern int32_t _atosfix32_r(struct _clib2 *, const char *__str);
+extern int32_t _atosfix32_r(struct _clib4 *, const char *__str);
 extern int64_t atosfix64(const char *__str);
-extern int64_t _atosfix64_r(struct _clib2 *, const char *__str);
+extern int64_t _atosfix64_r(struct _clib4 *, const char *__str);
 
 extern uint16_t atoufix16(const char *__str);
-extern uint16_t _atoufix16_r(struct _clib2 *, const char *__str);
+extern uint16_t _atoufix16_r(struct _clib4 *, const char *__str);
 extern uint32_t atoufix32(const char *__str);
-extern uint32_t _atoufix32_r(struct _clib2 *, const char *__str);
+extern uint32_t _atoufix32_r(struct _clib4 *, const char *__str);
 extern uint64_t atoufix64(const char *__str);
-extern uint64_t _atoufix64_r(struct _clib2 *, const char *__str);
+extern uint64_t _atoufix64_r(struct _clib4 *, const char *__str);
 
 extern int16_t strtosfix16(const char *__str, char **__endptr);
-extern int16_t _strtosfix16_r(struct _clib2 *, const char *__str, char **__endptr);
+extern int16_t _strtosfix16_r(struct _clib4 *, const char *__str, char **__endptr);
 extern int32_t strtosfix32(const char *__str, char **__endptr);
-extern int32_t _strtosfix32_r(struct _clib2 *, const char *__str, char **__endptr);
+extern int32_t _strtosfix32_r(struct _clib4 *, const char *__str, char **__endptr);
 extern int64_t strtosfix64(const char *__str, char **__endptr);
-extern int64_t _strtosfix64_r(struct _clib2 *, const char *__str, char **__endptr);
+extern int64_t _strtosfix64_r(struct _clib4 *, const char *__str, char **__endptr);
 
 extern uint16_t strtoufix16(const char *__str, char **__endptr);
-extern uint16_t _strtoufix16_r(struct _clib2 *, const char *__str, char **__endptr);
+extern uint16_t _strtoufix16_r(struct _clib4 *, const char *__str, char **__endptr);
 extern uint32_t strtoufix32(const char *__str, char **__endptr);
-extern uint32_t _strtoufix32_r(struct _clib2 *, const char *__str, char **__endptr);
+extern uint32_t _strtoufix32_r(struct _clib4 *, const char *__str, char **__endptr);
 extern uint64_t strtoufix64(const char *__str, char **__endptr);
-extern uint64_t _strtoufix64_r(struct _clib2 *, const char *__str, char **__endptr);
+extern uint64_t _strtoufix64_r(struct _clib4 *, const char *__str, char **__endptr);
 #endif
 
 __END_DECLS

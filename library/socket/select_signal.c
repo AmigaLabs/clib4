@@ -1,5 +1,5 @@
 /*
- * $Id: socket_select_signal.c,v 1.7 2022-08-20 14:39:23 clib2devs Exp $
+ * $Id: socket_select_signal.c,v 1.7 2022-08-20 14:39:23 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -104,16 +104,16 @@ static struct fd *
 get_file_descriptor(int file_descriptor) {
     struct fd *result = NULL;
     struct fd *fd;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
-    if (file_descriptor < 0 || file_descriptor >= __clib2->__num_fd)
+    if (file_descriptor < 0 || file_descriptor >= __clib4->__num_fd)
         goto out;
 
-    assert(__clib2->__fd != NULL);
+    assert(__clib4->__fd != NULL);
 
-    fd = __clib2->__fd[file_descriptor];
+    fd = __clib4->__fd[file_descriptor];
 
     assert(fd != NULL);
 
@@ -124,7 +124,7 @@ get_file_descriptor(int file_descriptor) {
 
 out:
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     return (result);
 }
@@ -268,7 +268,7 @@ remap_descriptor_sets(
         fd_set *output_fds,
         int num_output_fds) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     SHOWPOINTER(socket_fds);
     SHOWVALUE(num_socket_fds);
@@ -302,7 +302,7 @@ remap_descriptor_sets(
                     fd = get_file_descriptor(output_fd);
                     if (fd != NULL && FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_Socket == socket_fd) {
                         assert(output_fd < num_output_fds);
-                        assert(FLAG_IS_SET(__clib2->__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
+                        assert(FLAG_IS_SET(__clib4->__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
 
                         D(("setting file %ld for socket #%ld", output_fd, socket_fd));
 
@@ -322,7 +322,7 @@ remap_descriptor_sets(
                     int output_fd = file_fd;
 
                     assert(output_fd < num_output_fds);
-                    assert(FLAG_IS_CLEAR(__clib2->__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
+                    assert(FLAG_IS_CLEAR(__clib4->__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
 
                     D(("setting file %ld", file_fd));
 
@@ -395,7 +395,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
     int num_file_used;
     int i;
 
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -484,13 +484,13 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
     /* Translate from the tables the caller provided to us to the local copies,
      * which take the files and sockets into account.
      */
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     map_descriptor_sets(read_fds,   num_fds, socket_read_fds,   num_socket_used, &total_socket_fd, file_read_fds,  num_file_used, &total_file_fd);
     map_descriptor_sets(write_fds,  num_fds, socket_write_fds,  num_socket_used, &total_socket_fd, file_write_fds, num_file_used, &total_file_fd);
     map_descriptor_sets(except_fds, num_fds, socket_except_fds, num_socket_used, &total_socket_fd, NULL,           0,             &total_file_fd);
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     /* Wait for socket input? */
     if (total_socket_fd > 0) {
@@ -607,20 +607,20 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 /* Signals to stop on; we want to stop when a break signal arrives. */
                 break_mask = signal_mask;
 
-                if (__clib2->__check_abort_enabled)
-                    break_mask |= __clib2->__break_signal_mask;
+                if (__clib4->__check_abort_enabled)
+                    break_mask |= __clib4->__break_signal_mask;
 
                 /* Check for socket input. */
                 result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct timeval *) &zero, &break_mask);
 
                 /* Stop if a break signal arrives. */
-                if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __clib2->__break_signal_mask)) {
-                    SetSignal(__clib2->__break_signal_mask, __clib2->__break_signal_mask);
+                if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __clib4->__break_signal_mask)) {
+                    SetSignal(__clib4->__break_signal_mask, __clib4->__break_signal_mask);
                     __check_abort();
                 }
 
                 if (0 == result && signal_mask_ptr) {
-                    *signal_mask_ptr = break_mask & ~__clib2->__break_signal_mask;
+                    *signal_mask_ptr = break_mask & ~__clib4->__break_signal_mask;
                     break;
                 }
 
@@ -755,12 +755,12 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
             break_mask = signal_mask;
 
-            if (__clib2->__check_abort_enabled)
-                break_mask |= __clib2->__break_signal_mask;
+            if (__clib4->__check_abort_enabled)
+                break_mask |= __clib4->__break_signal_mask;
 
             result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct timeval *) timeout, &break_mask);
-            if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __clib2->__break_signal_mask)) {
-                SetSignal(__clib2->__break_signal_mask, __clib2->__break_signal_mask);
+            if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __clib4->__break_signal_mask)) {
+                SetSignal(__clib4->__break_signal_mask, __clib4->__break_signal_mask);
                 __check_abort();
             }
 
@@ -913,7 +913,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                    standard break signal bit, then we must not clear the
                    break signal. The ^C checking depends upon it to
                    remain set. */
-                (*signal_mask_ptr) = signal_mask & SetSignal(0, signal_mask & ~__clib2->__break_signal_mask);
+                (*signal_mask_ptr) = signal_mask & SetSignal(0, signal_mask & ~__clib4->__break_signal_mask);
                 break;
             }
 
@@ -939,13 +939,13 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
     if (result >= 0) {
         SHOWMSG("remapping fd_sets");
 
-        __stdio_lock(__clib2);
+        __stdio_lock(__clib4);
 
         remap_descriptor_sets(socket_read_fds, total_socket_fd, file_read_fds, total_file_fd, read_fds, num_fds);
         remap_descriptor_sets(socket_write_fds, total_socket_fd, file_write_fds, total_file_fd, write_fds, num_fds);
         remap_descriptor_sets(socket_except_fds, total_socket_fd, NULL, 0, except_fds, num_fds);
 
-        __stdio_unlock(__clib2);
+        __stdio_unlock(__clib4);
     }
 
     __check_abort();

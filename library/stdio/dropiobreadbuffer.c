@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_dropiobreadbuffer.c,v 1.9 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stdio_dropiobreadbuffer.c,v 1.9 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 /* This would otherwise generate far too much (useless) debug output. */
@@ -12,7 +12,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-__drop_iob_read_buffer(struct _clib2 *__clib2, struct iob *file) {
+__drop_iob_read_buffer(struct _clib4 *__clib4, struct iob *file) {
     int result = OK;
 
     ENTER();
@@ -48,7 +48,7 @@ __drop_iob_read_buffer(struct _clib2 *__clib2, struct iob *file) {
 
                 assert(file->iob_Action != NULL);
 
-                position = (*file->iob_Action)(__clib2, file, &fam);
+                position = (*file->iob_Action)(__clib4, file, &fam);
                 if (fam.fam_Error != OK) {
                     SHOWMSG("that didn't work");
 

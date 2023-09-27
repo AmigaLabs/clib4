@@ -1,5 +1,5 @@
 /*
- * $Id: dirent_opendir.c,v 1.11 2021-01-31 12:04:22 clib2devs Exp $
+ * $Id: dirent_opendir.c,v 1.11 2021-01-31 12:04:22 clib4devs Exp $
 */
 
 #ifndef _DIRENT_HEADERS_H
@@ -26,7 +26,7 @@ opendir(const char *path_name) {
     struct name_translation_info path_name_nti;
     struct DirectoryHandle *dh = NULL;
     DIR *result = NULL;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -51,7 +51,7 @@ opendir(const char *path_name) {
 
     memset(dh, 0, sizeof(*dh));
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         struct Node *node;
 
         NewList((struct List *) &dh->dh_VolumeList);
@@ -164,13 +164,13 @@ opendir(const char *path_name) {
 
     SHOWMSG("OK, done");
 
-    assert(__clib2->__directory_list.mlh_Head != NULL);
+    assert(__clib4->__directory_list.mlh_Head != NULL);
 
-    __dirent_lock(__clib2);
+    __dirent_lock(__clib4);
 
-    AddTail((struct List *) &__clib2->__directory_list, (struct Node *) dh);
+    AddTail((struct List *) &__clib4->__directory_list, (struct Node *) dh);
 
-    __dirent_unlock(__clib2);
+    __dirent_unlock(__clib4);
 
     result = (DIR *) dh;
     dh = NULL;
@@ -181,7 +181,7 @@ out:
         SHOWMSG("ouch. cleaning up");
         FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             struct Node *node;
 
             while ((node = RemHead((struct List *) &dh->dh_VolumeList)) != NULL)

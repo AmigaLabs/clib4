@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_lldiv.c,v 1.2 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdlib_lldiv.c,v 1.2 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #undef __STRICT_ANSI__

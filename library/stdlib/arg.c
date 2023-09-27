@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_arg.c,v 1.15 2006-09-25 14:51:15 clib2devs Exp $
+ * $Id: stdlib_arg.c,v 1.15 2006-09-25 14:51:15 clib4devs Exp $
 */
 
 /*#define DEBUG*/
@@ -42,10 +42,10 @@ is_space(unsigned char c) {
 }
 
 static BOOL
-is_escape_character(struct _clib2 *__clib2, unsigned char c) {
+is_escape_character(struct _clib4 *__clib4, unsigned char c) {
     BOOL result;
 
-    result = (BOOL)(c == '*' || c == __clib2->__shell_escape_character);
+    result = (BOOL)(c == '*' || c == __clib4->__shell_escape_character);
 
     return (result);
 }
@@ -63,10 +63,10 @@ ARG_CONSTRUCTOR(arg_init) {
     ENTER();
 
     BOOL success = FALSE;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* Shell startup? */
-    if (__clib2->__WBenchMsg == NULL) {
+    if (__clib4->__WBenchMsg == NULL) {
         BOOL expand_wildcard_args = FALSE;
         size_t number_of_arguments;
         const unsigned char *arg_str;
@@ -77,8 +77,8 @@ ARG_CONSTRUCTOR(arg_init) {
         /* Check if wildcard expansion of command line parameters
 		   should be enabled. Note that the callback function, if
 		   declared, takes precedence over the global variable. */
-        if (__clib2->__unix_path_semantics) {
-            expand_wildcard_args = __clib2->__expand_wildcard_args;
+        if (__clib4->__unix_path_semantics) {
+            expand_wildcard_args = __clib4->__expand_wildcard_args;
 
             if (FindVar("DISABLE_COMMANDLINE_WILDCARD_EXPANSION", LV_VAR) != NULL)
                 expand_wildcard_args = FALSE;
@@ -132,7 +132,7 @@ ARG_CONSTRUCTOR(arg_init) {
                 while ((*str) != '\0' && NOT is_final_quote_character(str))
                 {
                     /* Escape character? */
-                    if (is_escape_character(__clib2, *str)) {
+                    if (is_escape_character(__clib4, *str)) {
                         str++;
 
                         if ((*str) != '\0')
@@ -158,16 +158,16 @@ ARG_CONSTRUCTOR(arg_init) {
         /* Put all this together into an argument vector.
            We allocate one extra slot to put a NULL pointer
            into. */
-        __clib2->__argv = (char **) AllocVecTags((number_of_arguments + 1) * sizeof(*__clib2->__argv), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
-        if (__clib2->__argv == NULL)
+        __clib4->__argv = (char **) AllocVecTags((number_of_arguments + 1) * sizeof(*__clib4->__argv), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+        if (__clib4->__argv == NULL)
             goto out;
 
         /* The first parameter is the program name. */
-        __clib2->__argv[0] = __clib2->__progname;
+        __clib4->__argv[0] = __clib4->__progname;
 
         str = command_line;
 
-        __clib2->__argc = 1;
+        __clib4->__argc = 1;
 
         while (TRUE) {
             /* Skip leading blank space. */
@@ -181,22 +181,22 @@ ARG_CONSTRUCTOR(arg_init) {
             if ((*str) == '\"') {
                 char *arg;
 
-                if (__clib2->__unix_path_semantics) {
+                if (__clib4->__unix_path_semantics) {
                     /* If necessary, indicate that this parameter was quoted. */
-                    if (expand_wildcard_args && __wildcard_quote_parameter(__clib2->__argc) < 0)
+                    if (expand_wildcard_args && __wildcard_quote_parameter(__clib4->__argc) < 0)
                         goto out;
                 }
 
                 str++;
 
-                __clib2->__argv[__clib2->__argc++] = (char *) str;
+                __clib4->__argv[__clib4->__argc++] = (char *) str;
 
                 arg = (char *) str;
 
                 /* Process the quoted string. */
                 while ((*str) != '\0' && NOT is_final_quote_character(str))
                 {
-                    if (is_escape_character(__clib2, *str)) {
+                    if (is_escape_character(__clib4, *str)) {
                         str++;
 
                         switch (*str) {
@@ -240,7 +240,7 @@ ARG_CONSTRUCTOR(arg_init) {
                    actually overwrites the final quote character. */
                 (*arg) = '\0';
             } else {
-                __clib2->__argv[__clib2->__argc++] = (char *) str;
+                __clib4->__argv[__clib4->__argc++] = (char *) str;
 
                 while ((*str) != '\0' && NOT is_space(*str))
                 str++;
@@ -252,12 +252,12 @@ ARG_CONSTRUCTOR(arg_init) {
             }
         }
 
-        assert(__clib2->__argc == (int) number_of_arguments);
+        assert(__clib4->__argc == (int) number_of_arguments);
         assert(str <= &command_line[arg_len]);
 
-        __clib2->__argv[__clib2->__argc] = NULL;
+        __clib4->__argv[__clib4->__argc] = NULL;
 
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             /* If necessary, expand wildcard patterns found in the command line string into file and directory names. */
             if (expand_wildcard_args && __wildcard_expand_init() < 0)
                 goto out;
@@ -266,7 +266,7 @@ ARG_CONSTRUCTOR(arg_init) {
         /* Return a pointer to the startup message in place of the the argument vector.
          * The argument counter (what will come out as 'argc' for the main() function) will remain 0.
         */
-        __clib2->__argv = (char **) __clib2->__WBenchMsg;
+        __clib4->__argv = (char **) __clib4->__WBenchMsg;
     }
 
     success = TRUE;
@@ -284,12 +284,12 @@ out:
 
 ARG_DESTRUCTOR(arg_exit) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    if (__clib2->__WBenchMsg == NULL) {
-        if (__clib2->__argv) {
-            FreeVec(__clib2->__argv);
-            __clib2->__argv = NULL;
+    if (__clib4->__WBenchMsg == NULL) {
+        if (__clib4->__argv) {
+            FreeVec(__clib4->__argv);
+            __clib4->__argv = NULL;
         }
     }
 

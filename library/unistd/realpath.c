@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_realpath.c,v 1.7 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: unistd_realpath.c,v 1.7 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -13,7 +13,7 @@ realpath(const char *path_name, char *buffer) {
     struct DevProc *dvp = NULL;
     BPTR lock = BZERO;
     char *result = NULL;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -29,7 +29,7 @@ realpath(const char *path_name, char *buffer) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -63,7 +63,7 @@ realpath(const char *path_name, char *buffer) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (__translate_amiga_to_unix_path_name((char const **) &buffer, &buffer_nti) != 0)
             goto out;
 

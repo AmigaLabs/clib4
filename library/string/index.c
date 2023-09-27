@@ -1,5 +1,5 @@
 /*
- * $Id: string_index.c,v 1.4 2006-01-08 12:04:26 clib2devs Exp $
+ * $Id: string_index.c,v 1.4 2006-01-08 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STRING_HEADERS_H

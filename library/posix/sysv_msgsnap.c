@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_msgsnap.c,v 1.2 2023-07-08 19:42:41 clib2devs Exp $
+ * $Id: sysv_msgsnap.c,v 1.2 2023-07-08 19:42:41 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -28,7 +28,7 @@ _msgsnap(int qid, void *qbuf, size_t blen, long mtype) {
     SHOWVALUE(blen);
     SHOWVALUE(mtype);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     IPCLock(&res->msgcx.keymap);
     qi = GetIPCById(&res->msgcx.keymap, qid);
     if (qi) {

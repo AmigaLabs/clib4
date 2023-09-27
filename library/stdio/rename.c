@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_rename.c,v 1.10 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdio_rename.c,v 1.10 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -11,7 +11,7 @@ int rename(const char *oldname, const char *newname) {
     struct name_translation_info new_nti;
     int result = ERROR;
     LONG status;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -29,7 +29,7 @@ int rename(const char *oldname, const char *newname) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (oldname[0] == '\0' || newname[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -56,7 +56,7 @@ int rename(const char *oldname, const char *newname) {
     if (status == DOSFALSE) {
         SHOWMSG("that didn't work");
 
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             LONG error;
 
             error = IoErr();

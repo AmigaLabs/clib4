@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_shmdt.c,v 1.2 2023-07-08 13:30:03 clib2devs Exp $
+ * $Id: sysv_shmdt.c,v 1.2 2023-07-08 13:30:03 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -30,7 +30,7 @@ _shmdt(const void *shmaddr) {
 
     SHOWPOINTER(shmaddr);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     IPCLock(&res->shmcx.keymap);
     si = GetIPCByP(&res->shmcx.keymap, (int (*)(void *, void *)) addrcmp, shmaddr, &id);
     if (si) {

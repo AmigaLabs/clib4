@@ -1,5 +1,5 @@
 /*
- * $Id: termios_openserial.c,v 1.2 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: termios_openserial.c,v 1.2 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef	_TERMIOS_HEADERS_H
@@ -9,7 +9,7 @@
 /****************************************************************************/
 
 /*
- * This is a clib2/Amiga specific function to obtain a file descriptor
+ * This is a clib4/Amiga specific function to obtain a file descriptor
  * for a serial port. This is intended as an easy porting path for Unix
  * code (which might e.g. open "/dev/ttyS0") and the same concept might
  * be applied to other device types as well.

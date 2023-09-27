@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_argarraydone.c,v 1.4 2006-09-25 14:05:31 clib2devs Exp $
+ * $Id: amiga_argarraydone.c,v 1.4 2006-09-25 14:05:31 clib4devs Exp $
 */
 
 #include <workbench/workbench.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_semtimedop.c,v 1.1 2023-07-08 17:26:15 clib2devs Exp $
+ * $Id: sysv_semtimedop.c,v 1.1 2023-07-08 17:26:15 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -16,7 +16,7 @@ _semtimedop(int semid, const struct sembuf *ops, int nops, struct timespec *to) 
     SHOWVALUE(nops);
     SHOWPOINTER(to);
 
-    //struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    //struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     __set_errno(EINVAL);
 
     RETURN(ret);

@@ -1,5 +1,5 @@
 /*
- * $Id: math_s_isfinite.c,v 1.3 2023-07-19 12:04:23 clib2devs Exp $
+ * $Id: math_s_isfinite.c,v 1.3 2023-07-19 12:04:23 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H

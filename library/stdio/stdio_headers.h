@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_headers.h,v 2.0 2023-05-03 13:12:59 clib2devs Exp $
+ * $Id: stdio_headers.h,v 2.0 2023-05-03 13:12:59 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -97,9 +97,9 @@
 
 /****************************************************************************/
 
-#ifndef _SYS_CLIB2_IO_H
-#include <sys/clib2_io.h>
-#endif /* _SYS_CLIB2_IO_H */
+#ifndef _SYS_CLIB4_IO_H
+#include <sys/clib4_io.h>
+#endif /* _SYS_CLIB4_IO_H */
 
 /****************************************************************************/
 
@@ -125,7 +125,7 @@ struct iob;
 /****************************************************************************/
 
 /* The file action function for buffered files. */
-typedef int64_t (*file_action_iob_t)(struct _clib2 *__clib2, struct iob * iob, struct file_action_message * fam);
+typedef int64_t (*file_action_iob_t)(struct _clib4 *__clib4, struct iob * iob, struct file_action_message * fam);
 
 #define UNGET 8
 
@@ -241,7 +241,7 @@ typedef struct iob {
 /****************************************************************************/
 
 /* The file action function for unbuffered files. */
-typedef int64_t (*file_action_fd_t)(struct _clib2 *__clib2, struct fd * fd,struct file_action_message * fam);
+typedef int64_t (*file_action_fd_t)(struct _clib4 *__clib4, struct fd * fd,struct file_action_message * fam);
 
 /****************************************************************************/
 
@@ -342,10 +342,10 @@ struct bcpl_name {
 
 /****************************************************************************/
 
-extern void	__stdio_lock(struct _clib2 *__clib2);
-extern void	__stdio_unlock(struct _clib2 *__clib2);
-extern void	__stdio_lock_exit(struct _clib2 *__clib2);
-extern int	__stdio_lock_init(struct _clib2 *__clib2);
+extern void	__stdio_lock(struct _clib4 *__clib4);
+extern void	__stdio_unlock(struct _clib4 *__clib4);
+extern void	__stdio_lock_exit(struct _clib4 *__clib4);
+extern int	__stdio_lock_init(struct _clib4 *__clib4);
 
 extern void __fd_lock(struct fd *fd);
 extern void __fd_unlock(struct fd *fd);

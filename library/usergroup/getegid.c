@@ -1,5 +1,5 @@
 /*
- * $Id: usergroup_getegid.c,v 1.3 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: usergroup_getegid.c,v 1.3 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _USERGROUP_HEADERS_H
@@ -14,12 +14,12 @@
 
 gid_t getegid(void) {
     gid_t result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    if (__clib2->__root_mode) {
-        result = __clib2->__root_egid;
+    if (__clib4->__root_mode) {
+        result = __clib4->__root_egid;
     } else {
         result = __getegid();
     }

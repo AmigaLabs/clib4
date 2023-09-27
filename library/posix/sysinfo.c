@@ -1,5 +1,5 @@
 /*
- * $Id: systeminfo_sysinfo.c,v 1.6 2010-08-20 15:33:36 clib2devs Exp $
+ * $Id: systeminfo_sysinfo.c,v 1.6 2010-08-20 15:33:36 clib4devs Exp $
 */
 
 #include <sys/systeminfo.h>

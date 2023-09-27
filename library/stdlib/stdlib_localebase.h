@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_localebase.h,v 1.2 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdlib_localebase.h,v 1.2 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDLIB_LOCALEBASE_H
@@ -25,12 +25,12 @@
 
 
 #define DECLARE_LOCALEBASE() \
-	struct Library *		UNUSED	LocaleBase	= __CLIB2->__LocaleBase; \
-	struct LocaleIFace *			ILocale		= __CLIB2->__ILocale
+	struct Library *		UNUSED	LocaleBase	= __CLIB4->__LocaleBase; \
+	struct LocaleIFace *			ILocale		= __CLIB4->__ILocale
 
 #define DECLARE_FONTBASE() \
-	struct Library *		UNUSED	DiskfontBase = __CLIB2->__DiskfontBase; \
-	struct DiskfontIFace *			IDiskfont    = __CLIB2->__IDiskfont
+	struct Library *		UNUSED	DiskfontBase = __CLIB4->__DiskfontBase; \
+	struct DiskfontIFace *			IDiskfont    = __CLIB4->__IDiskfont
 
 
 #endif /* _STDLIB_LOCALEBASE_H */

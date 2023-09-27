@@ -1,5 +1,5 @@
 /*
- * $Id: stat_fstat.c,v 1.11 2021-01-31 12:04:24 clib2devs Exp $
+ * $Id: stat_fstat.c,v 1.11 2021-01-31 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STAT_HEADERS_H
@@ -12,7 +12,7 @@ fstat(int file_descriptor, struct stat *buffer) {
     struct ExamineData fib;
     struct fd *fd = NULL;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -23,7 +23,7 @@ fstat(int file_descriptor, struct stat *buffer) {
 
     __check_abort();
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     if (buffer == NULL) {
         SHOWMSG("invalid buffer parameter");
@@ -32,9 +32,9 @@ fstat(int file_descriptor, struct stat *buffer) {
         goto out;
     }
 
-    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
-    assert(__clib2->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
+    assert(__clib4->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -52,7 +52,7 @@ fstat(int file_descriptor, struct stat *buffer) {
 
     assert(fd->fd_Action != NULL);
 
-    if ((*fd->fd_Action)(__clib2, fd, &fam) < 0) {
+    if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
         __set_errno(fam.fam_Error);
         goto out;
     }
@@ -73,7 +73,7 @@ fstat(int file_descriptor, struct stat *buffer) {
 out:
 
     __fd_unlock(fd);
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

@@ -1,5 +1,5 @@
 /*
- * $Id: inet.h,v 1.5 2022-09-15 12:06:14 clib2devs Exp $
+ * $Id: inet.h,v 1.5 2022-09-15 12:06:14 clib4devs Exp $
 */
 
 #ifndef	_ARPA_INET_H

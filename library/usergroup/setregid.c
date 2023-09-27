@@ -1,5 +1,5 @@
 /*
- * $Id: usergroup_setregid.c,v 1.4 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: usergroup_setregid.c,v 1.4 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _USERGROUP_HEADERS_H
@@ -8,19 +8,19 @@
 
 int setregid(gid_t real, gid_t eff) {
     int result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     SHOWVALUE(real);
     SHOWVALUE(eff);
 
-    if (__clib2->__root_mode) {
+    if (__clib4->__root_mode) {
         if (real != (gid_t) - 1)
-            __clib2->__root_gid = real;
+            __clib4->__root_gid = real;
 
         if (eff != (gid_t) - 1)
-            __clib2->__root_egid = eff;
+            __clib4->__root_egid = eff;
 
         result = OK;
     } else {

@@ -1,13 +1,13 @@
 /*
- * $Id: wchar.h,v 1.8 2008-04-30 14:34:03 clib2devs Exp $
+ * $Id: wchar.h,v 1.8 2008-04-30 14:34:03 clib4devs Exp $
 */
 
 #ifndef _WCHAR_H
 #define _WCHAR_H
 
-#ifndef _SYS_CLIB2_STDC_H
-#include <sys/clib2_stdc.h>
-#endif /* _SYS_CLIB2_STDC_H */
+#ifndef _SYS_CLIB4_STDC_H
+#include <sys/clib4_stdc.h>
+#endif /* _SYS_CLIB4_STDC_H */
 
 #include <features.h>
 

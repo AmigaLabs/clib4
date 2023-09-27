@@ -1,5 +1,5 @@
 /*
- * $Id: math_b_tgamma.c,v 1.4 2023-07-19 20:04:24 clib2devs Exp $
+ * $Id: math_b_tgamma.c,v 1.4 2023-07-19 20:04:24 clib4devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H

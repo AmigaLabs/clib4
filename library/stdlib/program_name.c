@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_program_name.c,v 1.3 2008-09-30 14:09:00 clib2devs Exp $
+ * $Id: stdlib_program_name.c,v 1.3 2008-09-30 14:09:00 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -16,11 +16,11 @@
 
 STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 	ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    if (__clib2->free_program_name && __clib2->__progname != NULL) {
-		FreeVec(__clib2->__progname);
-        __clib2->__progname = NULL;
+    if (__clib4->free_program_name && __clib4->__progname != NULL) {
+		FreeVec(__clib4->__progname);
+        __clib4->__progname = NULL;
 	}
 
 	LEAVE();
@@ -28,25 +28,25 @@ STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 /* First constructor called by _init */
 STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
 	BOOL success = FALSE;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-	if (__clib2->__WBenchMsg == NULL) {
+	if (__clib4->__WBenchMsg == NULL) {
 		const size_t program_name_size = 256;
 
 		/* Make a copy of the current command name string. */
-        __clib2->__progname = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_SHARED, TAG_DONE);
-		if (__clib2->__progname == NULL)
+        __clib4->__progname = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_SHARED, TAG_DONE);
+		if (__clib4->__progname == NULL)
 			goto out;
 
-        __clib2->free_program_name = TRUE;
+        __clib4->free_program_name = TRUE;
 
-		if (CANNOT GetCliProgramName(__clib2->__progname, program_name_size))
+		if (CANNOT GetCliProgramName(__clib4->__progname, program_name_size))
 			goto out;
 	}
 	else {
-        __clib2->__progname = (char *) __clib2->__WBenchMsg->sm_ArgList[0].wa_Name;
+        __clib4->__progname = (char *) __clib4->__WBenchMsg->sm_ArgList[0].wa_Name;
 	}
 
 	success = TRUE;
@@ -64,5 +64,5 @@ out:
 
 
 const char *__getprogname(void) {
-    return __CLIB2->__progname;
+    return __CLIB4->__progname;
 }

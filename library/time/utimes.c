@@ -1,5 +1,5 @@
 /*
- * $Id: time_utimes.c,v 1.0 2022-02-24 18:08:57 clib2devs Exp $
+ * $Id: time_utimes.c,v 1.0 2022-02-24 18:08:57 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -16,7 +16,7 @@ int
 utimes(const char *name, const struct timeval *tvp) {
     struct name_translation_info path_name_nti;
     struct DateStamp ds;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -55,7 +55,7 @@ utimes(const char *name, const struct timeval *tvp) {
         }
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&name, &path_name_nti) != 0) {
             return -1;
         }

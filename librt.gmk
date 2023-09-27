@@ -1,5 +1,5 @@
 #
-# $Id: librt.gmk,v 1.0 2023-04-27 10:09:48 clib2devs Exp $
+# $Id: librt.gmk,v 1.0 2023-04-27 10:09:48 clib4devs Exp $
 #
 
 OUT_STATIC := $(BUILD_DIR)/obj/librt

@@ -1,5 +1,5 @@
 /*
- * $Id: mount_statfs.c,v 1.7 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: mount_statfs.c,v 1.7 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _MOUNT_HEADERS_H
@@ -12,7 +12,7 @@ int statfs(const char *path, struct statfs *buf) {
     LONG status;
     BPTR lock = BZERO;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -30,7 +30,7 @@ int statfs(const char *path, struct statfs *buf) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path[0] == '\0') {
             SHOWMSG("no name given");
 

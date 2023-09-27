@@ -1,5 +1,5 @@
 /*
- * $Id: math_fabsf_spe.S,v 1.00 2023-07-13 12:04:23 clib2devs Exp $
+ * $Id: math_fabsf_spe.S,v 1.00 2023-07-13 12:04:23 clib4devs Exp $
 */
 
 #include "ppc-asm.h"

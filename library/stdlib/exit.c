@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_exit.c,v 1.6 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdlib_exit.c,v 1.6 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -26,14 +26,14 @@ hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
 
 void
 _exit(int return_code) {
-    struct _clib2 *__clib2 = __CLIB2;
-    __clib2->__exit_value = return_code;
+    struct _clib4 *__clib4 = __CLIB4;
+    __clib4->__exit_value = return_code;
 
     ENTER();
-    SHOWVALUE(__clib2->__exit_value);
+    SHOWVALUE(__clib4->__exit_value);
 
-    D(("%d %d\n", __clib2->processId, GetPID(NULL, GPID_PROCESS)));
-    if (__clib2->processId != GetPID(NULL, GPID_PROCESS)) {
+    D(("%d %d\n", __clib4->processId, GetPID(NULL, GPID_PROCESS)));
+    if (__clib4->processId != GetPID(NULL, GPID_PROCESS)) {
         SHOWMSG("NOT IN MAIN TASK");
         /* We are NOT in main task. Don't call exit here because
          * we'll have pending processes. Try to remove the Task
@@ -45,27 +45,27 @@ _exit(int return_code) {
     else {
         SHOWMSG("IN MAIN TASK");
         /*  If we have a previous timer running task stop it before raise SIGINT  */
-        if (__clib2->tmr_real_task) {
+        if (__clib4->tmr_real_task) {
             struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
             int32 pid, process;
 
             /* Block SIGALRM signal from raise */
             sigblock(SIGALRM);
             /* Get itimer process ID */
-            pid = __clib2->tmr_real_task->pr_ProcessID;
+            pid = __clib4->tmr_real_task->pr_ProcessID;
 
             Forbid();
             /* Scan for process */
             process = ProcessScan(&h, (CONST_APTR) pid, 0);
             while (process > 0) {
                 /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
-                Signal((struct Task *) __clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+                Signal((struct Task *) __clib4->tmr_real_task, SIGBREAKF_CTRL_F);
                 process = ProcessScan(&h, (CONST_APTR) pid, 0);
                 usleep(100);
             }
             Permit();
             WaitForChildExit(pid);
-            __clib2->tmr_real_task = NULL;
+            __clib4->tmr_real_task = NULL;
         }
 
         /* Dump all currently unwritten data, especially to the console. */
@@ -73,7 +73,7 @@ _exit(int return_code) {
 
         LEAVE();
 
-        longjmp(__clib2->__exit_jmp_buf, 1);
+        longjmp(__clib4->__exit_jmp_buf, 1);
         __builtin_unreachable();
     }
 }

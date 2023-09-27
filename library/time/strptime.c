@@ -1,5 +1,5 @@
 /*
- * $Id: time_strptime.c,v 1.0 2021-02-03 17:48:06 clib2devs Exp $
+ * $Id: time_strptime.c,v 1.0 2021-02-03 17:48:06 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H

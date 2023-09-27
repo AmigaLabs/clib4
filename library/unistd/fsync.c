@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_fsync.c,v 1.8 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: unistd_fsync.c,v 1.8 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -13,7 +13,7 @@ int
 fsync(int file_descriptor) {
     struct fd *fd;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -21,11 +21,11 @@ fsync(int file_descriptor) {
 
     __check_abort();
 
-    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
-    assert(__clib2->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
+    assert(__clib4->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -43,7 +43,7 @@ fsync(int file_descriptor) {
 out:
 
     __fd_unlock(fd);
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

@@ -1,5 +1,5 @@
 /*
- * $Id: dirent_rewinddir.c,v 1.5 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: dirent_rewinddir.c,v 1.5 2006-01-08 12:04:22 clib4devs Exp $
 */
 
 #ifndef _DIRENT_HEADERS_H

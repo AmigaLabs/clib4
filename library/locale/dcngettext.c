@@ -1,5 +1,5 @@
 /*
- * $Id: locale_dcngettext.c,v 1.0 2023-06-08 14:51:15 clib2devs Exp $
+ * $Id: locale_dcngettext.c,v 1.0 2023-06-08 14:51:15 clib4devs Exp $
 */
 
 #ifndef _STDLIB_CONSTRUCTOR_H
@@ -53,15 +53,15 @@ static const char *evalexpr(struct eval_s *ev, const char *s, int d);
  ****************************************************************************/
 
 static char *gettextdomain(void) {
-    return __CLIB2->gettext_domain;
+    return __CLIB4->gettext_domain;
 }
 
 static char *
 gettextdir(const char *domainname, size_t *dirlen) {
     struct binding *p;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    for (p = __clib2->bindings; p; p = p->next) {
+    for (p = __clib4->bindings; p; p = p->next) {
         if (!strcmp(p->domainname, domainname) && p->active) {
             *dirlen = p->dirlen;
             return (char *)p->dirname;
@@ -459,7 +459,7 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
     char *trans;
     const char *dirname;
     struct binding *q;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     notrans = (char *) (n == 1 ? msgid1 : msgid2);
 
@@ -483,12 +483,12 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
         }
     }
 
-    for (q = __clib2->bindings; q; q = q->next)
+    for (q = __clib4->bindings; q; q = q->next)
         if (!strcmp(q->domainname, domainname) && q->active)
             break;
     if (q) {
         dirname = q->dirname;
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             snprintf(path, PATH_MAX, "%s/%s/%s/%s.mo", dirname, lang, g_catname[category], domainname);
         }
         else {
@@ -501,15 +501,15 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
         }
     }
     else {
-        if (__clib2->__unix_path_semantics)
+        if (__clib4->__unix_path_semantics)
             snprintf(path, PATH_MAX, "./%s/%s/%s.mo", lang, g_catname[category], domainname);
         else
             snprintf(path, PATH_MAX, "CURRDIR:%s/%s/%s.mo", lang, g_catname[category], domainname);
     }
 
-    ObtainSemaphore(__clib2->gettext_lock);
+    ObtainSemaphore(__clib4->gettext_lock);
 
-    for (mofile = __clib2->g_mofile; mofile; mofile = mofile->next) {
+    for (mofile = __clib4->g_mofile; mofile; mofile = mofile->next) {
         if (strcmp(mofile->path, path) == 0) {
             break;
         }
@@ -520,14 +520,14 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
 
         mofile = AllocVecTags(sizeof(*mofile), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
         if (mofile == NULL) {
-            ReleaseSemaphore(__clib2->gettext_lock);
+            ReleaseSemaphore(__clib4->gettext_lock);
             return notrans;
         }
 
         strlcpy(mofile->path, path, PATH_MAX);
         mofile->map = momap(path, &mofile->size);
         if (mofile->map == MAP_FAILED) {
-            ReleaseSemaphore(__clib2->gettext_lock);
+            ReleaseSemaphore(__clib4->gettext_lock);
             FreeVec(mofile);
             return notrans;
         }
@@ -562,11 +562,11 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
             }
         }
 
-        mofile->next = __clib2->g_mofile;
-        __clib2->g_mofile = mofile;
+        mofile->next = __clib4->g_mofile;
+        __clib4->g_mofile = mofile;
     }
 
-    ReleaseSemaphore(__clib2->gettext_lock); /* Leave look before search */
+    ReleaseSemaphore(__clib4->gettext_lock); /* Leave look before search */
 
     trans = molookup(mofile->map, mofile->size, msgid1);
     if (trans == NULL) {
@@ -685,7 +685,7 @@ char *textdomain(const char *domainname) {
  ****************************************************************************/
 
 char *bindtextdomain(const char *domainname, const char *dirname) {
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
     struct name_translation_info path_name_nti;
     struct binding *p, *q;
 
@@ -704,8 +704,8 @@ char *bindtextdomain(const char *domainname, const char *dirname) {
         return NULL;
     }
 
-    ObtainSemaphore(__clib2->gettext_lock);
-    for (p = __clib2->bindings; p; p = p->next) {
+    ObtainSemaphore(__clib4->gettext_lock);
+    for (p = __clib4->bindings; p; p = p->next) {
         if (!strcmp(p->domainname, domainname) && !strcmp(p->dirname, dirname)) {
             break;
         }
@@ -714,26 +714,26 @@ char *bindtextdomain(const char *domainname, const char *dirname) {
     if (!p) {
         p = AllocVecTags(sizeof *p + domlen + dirlen + 2, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
         if (!p) {
-            ReleaseSemaphore(__clib2->gettext_lock);
+            ReleaseSemaphore(__clib4->gettext_lock);
             return NULL;
         }
-        p->next = __clib2->bindings;
+        p->next = __clib4->bindings;
         p->dirlen = dirlen;
         p->domainname = p->buf;
         p->dirname = p->buf + domlen + 1;
         memcpy(p->domainname, domainname, domlen+1);
         memcpy(p->dirname, dirname, dirlen+1);
-        a_cas_p(&__clib2->bindings, __clib2->bindings, p);
+        a_cas_p(&__clib4->bindings, __clib4->bindings, p);
     }
 
     a_store(&p->active, 1);
 
-    for (q = __clib2->bindings; q; q = q->next) {
+    for (q = __clib4->bindings; q; q = q->next) {
         if (!strcmp(q->domainname, domainname) && q != p)
             a_store(&q->active, 0);
     }
 
-    ReleaseSemaphore(__clib2->gettext_lock);
+    ReleaseSemaphore(__clib4->gettext_lock);
 
     return (char *) p->dirname;
 }
@@ -774,10 +774,10 @@ char *bind_textdomain_codeset(const char *domainname, const char *codeset) {
 }
 
 CLIB_DESTRUCTOR(dcngettext_exit) {
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
     /* Free binddtextdomain bindings */
-    if (__clib2->g_mofile) {
-        struct mofile_s *mofile = __clib2->g_mofile;
+    if (__clib4->g_mofile) {
+        struct mofile_s *mofile = __clib4->g_mofile;
         while (mofile) {
             struct mofile_s *next = mofile->next;
             if (mofile)
@@ -785,7 +785,7 @@ CLIB_DESTRUCTOR(dcngettext_exit) {
             mofile = next;
         }
     }
-    struct binding *p = __clib2->bindings;
+    struct binding *p = __clib4->bindings;
     while (p) {
         struct binding *q = p->next;
         FreeVec(p);

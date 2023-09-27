@@ -1,5 +1,5 @@
 /*
- * $Id: ctype_iscntrl.c,v 1.5 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: ctype_iscntrl.c,v 1.5 2006-01-08 12:04:22 clib4devs Exp $
 */
 
 #ifndef _CTYPE_HEADERS_H
@@ -12,28 +12,28 @@ int
 iscntrl(int c) {
     DECLARE_LOCALEBASE();
     int result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWVALUE(c);
 
-    __locale_lock(__clib2);
+    __locale_lock(__clib4);
 
-    if (__clib2->__locale_table[LC_CTYPE] != NULL) {
+    if (__clib4->__locale_table[LC_CTYPE] != NULL) {
         assert(LocaleBase != NULL);
 
         /* The parameter must be either EOF or in the range of an
            'unsigned char'. If it's not, then the behaviour is
            undefined. */
         if (c != EOF && ((0 <= c && c <= UCHAR_MAX) || ((c + 256) <= UCHAR_MAX)))
-            result = IsCntrl(__clib2->__locale_table[LC_CTYPE], (ULONG)(c & 255));
+            result = IsCntrl(__clib4->__locale_table[LC_CTYPE], (ULONG)(c & 255));
         else
             result = FALSE;
     } else {
         result = (('\0' <= c && c < ' ') || (c == 127));
     }
 
-    __locale_unlock(__clib2);
+    __locale_unlock(__clib4);
 
     RETURN(result);
     return (result);

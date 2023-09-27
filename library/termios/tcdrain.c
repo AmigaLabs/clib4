@@ -1,5 +1,5 @@
 /*
- * $Id: termios_tcdrain.c,v 1.4 2006-11-16 14:39:23 clib2devs Exp $
+ * $Id: termios_tcdrain.c,v 1.4 2006-11-16 14:39:23 clib4devs Exp $
 */
 
 #ifndef    _TERMIOS_HEADERS_H
@@ -14,7 +14,7 @@ int
 tcdrain(int file_descriptor) {
     int result = ERROR;
     struct fd *fd;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -22,7 +22,7 @@ tcdrain(int file_descriptor) {
 
     __check_abort();
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -70,7 +70,7 @@ tcdrain(int file_descriptor) {
 
 out:
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

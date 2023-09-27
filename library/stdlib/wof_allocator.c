@@ -108,14 +108,14 @@ static void
 wof_cycle_recycler(wof_allocator_t *allocator) {
     wof_chunk_hdr_t *chunk;
     wof_free_hdr_t *free_chunk;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    ObtainSemaphore(__clib2->__wof_allocator_semaphore);
+    ObtainSemaphore(__clib4->__wof_allocator_semaphore);
 
     chunk = allocator->recycler_head;
 
     if (chunk == NULL) {
-        ReleaseSemaphore(__clib2->__wof_allocator_semaphore);
+        ReleaseSemaphore(__clib4->__wof_allocator_semaphore);
         return;
     }
 
@@ -135,7 +135,7 @@ wof_cycle_recycler(wof_allocator_t *allocator) {
         /* Just rotate everything. */
         allocator->recycler_head = free_chunk->next;
     }
-    ReleaseSemaphore(__clib2->__wof_allocator_semaphore);
+    ReleaseSemaphore(__clib4->__wof_allocator_semaphore);
 }
 
 /* Adds a chunk from the recycler. */

@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_vwscanf.c,v 1.0 2022-08-04 19:47:27 clib2devs Exp $
+ * $Id: wchar_vwscanf.c,v 1.0 2022-08-04 19:47:27 clib4devs Exp $
 */
 
 #ifndef _WCHAR_HEADERS_H

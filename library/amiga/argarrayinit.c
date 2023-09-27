@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_argarrayinit.c,v 1.7 2021-01-31 14:09:00 clib2devs Exp $
+ * $Id: amiga_argarrayinit.c,v 1.7 2021-01-31 14:09:00 clib4devs Exp $
 */
 
 #include <libraries/commodities.h>

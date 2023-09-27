@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fputs.c,v 1.8 2022-03-27 12:04:24 clib2devs Exp $
+ * $Id: stdio_fputs.c,v 1.8 2022-03-27 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -12,7 +12,7 @@ fputs(const char *s, FILE *stream) {
     size_t total_size;
     int result = EOF;
     int c;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -28,7 +28,7 @@ fputs(const char *s, FILE *stream) {
 
     flockfile(stream);
 
-    assert(__is_valid_iob(__clib2, file));
+    assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -44,7 +44,7 @@ fputs(const char *s, FILE *stream) {
            goes to an interactive stream. */
         buffer_mode = (file->iob_Flags & IOBF_BUFFER_MODE);
         if (buffer_mode == IOBF_BUFFER_MODE_NONE) {
-            struct fd *fd = __clib2->__fd[file->iob_Descriptor];
+            struct fd *fd = __clib4->__fd[file->iob_Descriptor];
 
             __fd_lock(fd);
 
@@ -81,7 +81,7 @@ fputs(const char *s, FILE *stream) {
                     file->iob_BufferWriteBytes += num_buffer_bytes;
 
                     /* Write the buffer to disk if it's full or contains a line feed. */
-                    if ((lf != NULL || __iob_write_buffer_is_full(file)) && __flush_iob_write_buffer(__clib2, file) < 0) {
+                    if ((lf != NULL || __iob_write_buffer_is_full(file)) && __flush_iob_write_buffer(__clib4, file) < 0) {
                         /* Abort with error. */
                         goto out;
                     }
@@ -148,7 +148,7 @@ fputs(const char *s, FILE *stream) {
                     file->iob_BufferWriteBytes += num_buffer_bytes;
 
                     /* Write a full buffer to disk. */
-                    if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(__clib2, file) < 0) {
+                    if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(__clib4, file) < 0) {
                         /* Abort with error. */
                         goto out;
                     }
@@ -183,7 +183,7 @@ out:
        This is intended to improve performance as it takes more effort
        to write a single character to a file than to write a bunch. */
     if (result == 0 && (file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
-        if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib2, file) < 0) {
+        if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0) {
             SHOWMSG("couldn't flush the write buffer");
             result = EOF;
         }

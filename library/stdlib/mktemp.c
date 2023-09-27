@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mktemp.c,v 1.8 2006-01-08 12:04:26 clib2devs Exp $
+ * $Id: stdlib_mktemp.c,v 1.8 2006-01-08 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -24,7 +24,7 @@ mktemp(char *name_template) {
     ULONG pseudo_random_number;
     BPTR lock;
     size_t i;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -114,7 +114,7 @@ mktemp(char *name_template) {
 
         /* If necessary, quickly translate the semantics of the file name
 		   we cooked up above. */
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             if (__translate_unix_to_amiga_path_name((char const **) &test_name, &name_template_nti) != 0)
                 goto out;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: iso646.h,v 1.5 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: iso646.h,v 1.5 2006-01-08 12:06:14 clib4devs Exp $
 */
 
 #ifndef _ISO646_H

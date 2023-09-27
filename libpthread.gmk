@@ -1,5 +1,5 @@
 #
-# $Id: libpthread.gmk,v 1.1 2023-04-23 10:09:48 clib2devs Exp $
+# $Id: libpthread.gmk,v 1.1 2023-04-23 10:09:48 clib4devs Exp $
 #
 
 OUT_STATIC := $(BUILD_DIR)/obj/libpthread

@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_execvp.c,v 1.7 2006-09-25 14:51:15 clib2devs Exp $
+ * $Id: unistd_execvp.c,v 1.7 2006-09-25 14:51:15 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -13,7 +13,7 @@ execvp(const char *command, char *const argv[]) {
     char *path_copy = NULL;
     int result = -1;
     BOOL found_path_separators;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* Do not allow null command */
     if (command == NULL || (*command) == '\0') {
@@ -36,7 +36,7 @@ execvp(const char *command, char *const argv[]) {
 
     /* If it's an absolute or relative path name, it's easy. */
     if (found_path_separators) {
-        result = execve(command, argv, __clib2->__environment);
+        result = execve(command, argv, __clib4->__environment);
     } else {
         size_t command_buffer_size = 0;
         const char *path_delimiter;
@@ -51,7 +51,7 @@ execvp(const char *command, char *const argv[]) {
            lateron when we will be calling getenv() again. */
         path = getenv("PATH");
         if (path == NULL)
-            path = (char *) __clib2->__default_path;
+            path = (char *) __clib4->__default_path;
 
         path_copy = strdup(path);
         if (path_copy == NULL) {
@@ -63,7 +63,7 @@ execvp(const char *command, char *const argv[]) {
 
         path_delimiter = getenv("PATH_SEPARATOR");
         if (path_delimiter == NULL)
-            path_delimiter = __clib2->__default_path_delimiter;
+            path_delimiter = __clib4->__default_path_delimiter;
 
         while ((search_prefix = strsep(&path, path_delimiter)) != NULL) {
             if ((*search_prefix) == '\0')
@@ -97,7 +97,7 @@ execvp(const char *command, char *const argv[]) {
             command_buffer[complete_path_len] = '\0';
 
             /* Now try to run that command. */
-            result = execve(command_buffer, argv, __clib2->__environment);
+            result = execve(command_buffer, argv, __clib4->__environment);
 
             /* Did it work? And if it didn't work, did it fail because
                the command to be run could not be executed? */

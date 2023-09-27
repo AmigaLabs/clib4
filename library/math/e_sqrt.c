@@ -1,5 +1,5 @@
 /*
- * $Id: math_e_sqrt.c,v 1.12 2023-07-18 07:54:24 clib2devs Exp $
+ * $Id: math_e_sqrt.c,v 1.12 2023-07-18 07:54:24 clib4devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H

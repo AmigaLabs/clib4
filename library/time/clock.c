@@ -1,5 +1,5 @@
 /*
- * $Id: time_clock.c,v 1.8 2022-07-18 12:04:27 clib2devs Exp $
+ * $Id: time_clock.c,v 1.8 2022-07-18 12:04:27 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -16,13 +16,13 @@
 
 CLIB_CONSTRUCTOR(clock_init) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* Remember when this program was started. */
     SHOWMSG("Calling gettimeofday");
-    gettimeofday(&__clib2->clock, NULL);
+    gettimeofday(&__clib4->clock, NULL);
     /* Generate random seed */
-    __clib2->__random_seed = time(NULL);
+    __clib4->__random_seed = time(NULL);
 
     LEAVE();
 
@@ -34,7 +34,7 @@ clock(void) {
     struct timeval now;
     uint64 usec_now, usec_start;
     clock_t result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -44,7 +44,7 @@ clock(void) {
     gettimeofday(&now, NULL);
 
     usec_now = now.tv_sec * 1000000ULL + now.tv_usec;
-    usec_start = __clib2->clock.tv_sec * 1000000ULL + __clib2->clock.tv_usec;
+    usec_start = __clib4->clock.tv_sec * 1000000ULL + __clib4->clock.tv_usec;
     /* Subtract the start time from the current time. */
     usec_now -= usec_start;
 

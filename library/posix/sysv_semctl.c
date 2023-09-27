@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_semctl.c,v 1.1 2023-07-08 17:07:00 clib2devs Exp $
+ * $Id: sysv_semctl.c,v 1.1 2023-07-08 17:07:00 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -38,7 +38,7 @@ _semctl(int semid, int semnum, int cmd, union semun aun) {
     SHOWVALUE(semnum);
     SHOWVALUE(cmd);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     IPCLock(&res->semcx.keymap);
 
     si = GetIPCById(&res->semcx.keymap, semid);

@@ -1,5 +1,5 @@
 /*
- * $Id: string_strsignal.c,v 1.0 2022-08-04 12:04:27 clib2devs Exp $
+ * $Id: string_strsignal.c,v 1.0 2022-08-04 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STRING_HEADERS_H

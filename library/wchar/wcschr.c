@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wcschr.c,v 1.3 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: wchar_wcschr.c,v 1.3 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _WCHAR_HEADERS_H

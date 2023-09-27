@@ -1,5 +1,5 @@
 /*
- * $Id: langinfo_langinfo.c,v 1.0 2021-01-15 22:47:14 clib2devs Exp $
+ * $Id: langinfo_langinfo.c,v 1.0 2021-01-15 22:47:14 clib4devs Exp $
 */
 
 /****************************************************************************/
@@ -26,7 +26,7 @@ nl_langinfo(nl_item item) {
     ENTER();
     DECLARE_LOCALEBASE();
     DECLARE_FONTBASE();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     const char *ret = NULL;
     char *cs;
@@ -35,7 +35,7 @@ nl_langinfo(nl_item item) {
     switch (item) {
         case CODESET:
             ret = "";
-            const char *s = __clib2->_current_locale;
+            const char *s = __clib4->_current_locale;
             if (strstr(s, "C-")) {
                 if ((cs = strchr(s, '-')) != NULL) {
                     ret = cs + 1;
@@ -68,22 +68,22 @@ nl_langinfo(nl_item item) {
                     ret = "US-ASCII";
 
                 if (ret == NULL) {
-                    uint32 default_charset = __clib2->__default_locale->loc_CodeSet;
+                    uint32 default_charset = __clib4->__default_locale->loc_CodeSet;
                     ret = (char *) ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
                 }
             } else {
-                uint32 default_charset = __clib2->__default_locale->loc_CodeSet;
+                uint32 default_charset = __clib4->__default_locale->loc_CodeSet;
                 ret = (char *) ObtainCharsetInfo(DFCS_NUMBER, default_charset, DFCS_MIMENAME);
             }
             break;
         case D_T_FMT:
-            ret = (char *) __clib2->__default_locale->loc_DateTimeFormat;
+            ret = (char *) __clib4->__default_locale->loc_DateTimeFormat;
             break;
         case D_FMT:
-            ret = (char *) __clib2->__default_locale->loc_DateFormat;
+            ret = (char *) __clib4->__default_locale->loc_DateFormat;
             break;
         case T_FMT:
-            ret = (char *) __clib2->__default_locale->loc_TimeFormat;
+            ret = (char *) __clib4->__default_locale->loc_TimeFormat;
             break;
         case AM_STR:
             ret = (char *) "AM"; // hardcoded
@@ -92,10 +92,10 @@ nl_langinfo(nl_item item) {
             ret = (char *) "PM"; // hardcoded;
             break;
         case RADIXCHAR:
-            ret = (char *) __clib2->__default_locale->loc_DecimalPoint;
+            ret = (char *) __clib4->__default_locale->loc_DecimalPoint;
             break;
         case THOUSEP:
-            ret = (char *) __clib2->__default_locale->loc_GroupSeparator;
+            ret = (char *) __clib4->__default_locale->loc_GroupSeparator;
             break;
         default:
             ret = "";

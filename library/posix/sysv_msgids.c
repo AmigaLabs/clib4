@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_msgids.c,v 1.2 2023-07-08 19:56:21 clib2devs Exp $
+ * $Id: sysv_msgids.c,v 1.2 2023-07-08 19:56:21 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -19,7 +19,7 @@ _msgids(int *buf, size_t nids, size_t *qcnt) {
     SHOWVALUE(nids);
     SHOWPOINTER(qcnt);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     IPCLock(&res->msgcx.keymap);
     ret = IPCids(&res->msgcx.keymap, (int32 *) buf, nids, (uint32 *) qcnt);
     if (ret) {

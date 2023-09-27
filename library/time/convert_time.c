@@ -1,5 +1,5 @@
 /*
- * $Id: time_convert_time.c,v 2.0 2023-05-26 12:04:27 clib2devs Exp $
+ * $Id: time_convert_time.c,v 2.0 2023-05-26 12:04:27 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -171,18 +171,18 @@ int __secs_to_tm(long long t, struct tm *tm) {
 BOOL
 __convert_time_to_datestamp(time_t time_value, struct DateStamp *ds) {
     BOOL success;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* Adjust the time to the AmigaOS epoch. */
     time_value -= UNIX_TIME_OFFSET;
 
-    __locale_lock(__clib2);
+    __locale_lock(__clib4);
 
     /* If possible, adjust the time to match the local time zone settings. */
-    if (__clib2->__default_locale != NULL)
-        time_value -= 60 * __clib2->__default_locale->loc_GMTOffset;
+    if (__clib4->__default_locale != NULL)
+        time_value -= 60 * __clib4->__default_locale->loc_GMTOffset;
 
-    __locale_unlock(__clib2);
+    __locale_unlock(__clib4);
 
     ds->ds_Days = (time_value / (24 * 60 * 60));
     ds->ds_Minute = (time_value % (24 * 60 * 60)) / 60;

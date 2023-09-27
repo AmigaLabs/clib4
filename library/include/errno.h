@@ -1,5 +1,5 @@
 /*
- * $Id: errno.h,v 1.6 2022-01-15 12:06:14 clib2devs Exp $
+ * $Id: errno.h,v 1.6 2022-01-15 12:06:14 clib4devs Exp $
 */
 
 #ifndef _ERRNO_H

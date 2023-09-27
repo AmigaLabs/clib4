@@ -1,5 +1,5 @@
 /*
- * $Id: math_invtrig.c,v 1.0 2022-03-10 12:04:23 clib2devs Exp $
+ * $Id: math_invtrig.c,v 1.0 2022-03-10 12:04:23 clib4devs Exp $
 */
 
 #include <stdint.h>

@@ -1,4 +1,4 @@
-/* THIS EXAMPLE NOW WORK WITH CLIB2 BUT NOT WITH NEWLIB */
+/* THIS EXAMPLE NOW WORK WITH CLIB4 BUT NOT WITH NEWLIB */
 #include <stdio.h>     /* I/O lib         C89   */
 #include <stdlib.h>    /* Standard Lib    C89   */
 #include <sys/types.h> /* UNIX types      POSIX */

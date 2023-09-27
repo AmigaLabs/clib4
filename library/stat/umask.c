@@ -1,5 +1,5 @@
 /*
- * $Id: stat_umask.c,v 1.7 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stat_umask.c,v 1.7 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STAT_HEADERS_H

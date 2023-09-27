@@ -1,5 +1,5 @@
 /*
- * $Id: string_strcoll.c,v 1.5 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: string_strcoll.c,v 1.5 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STRING_HEADERS_H
@@ -14,7 +14,7 @@ int
 strcoll(const char *s1, const char *s2) {
     DECLARE_LOCALEBASE();
     int result = 0;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(s1 != NULL && s2 != NULL);
 
@@ -23,17 +23,17 @@ strcoll(const char *s1, const char *s2) {
         goto out;
     }
 
-    __locale_lock(__clib2);
+    __locale_lock(__clib4);
 
-    if (__clib2->__locale_table[LC_COLLATE] != NULL) {
+    if (__clib4->__locale_table[LC_COLLATE] != NULL) {
         assert(LocaleBase != NULL);
 
-        result = StrnCmp(__clib2->__locale_table[LC_COLLATE], (STRPTR) s1, (STRPTR) s2, -1, SC_COLLATE1);
+        result = StrnCmp(__clib4->__locale_table[LC_COLLATE], (STRPTR) s1, (STRPTR) s2, -1, SC_COLLATE1);
     } else {
         result = strcmp(s1, s2);
     }
 
-    __locale_unlock(__clib2);
+    __locale_unlock(__clib4);
 
 out:
 

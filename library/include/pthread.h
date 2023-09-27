@@ -1,7 +1,7 @@
 /*
   Copyright (C) 2014 Szilard Biro
   Copyright (C) 2018 Harry Sintonen
-  Copyright (C) 2023 clib2Devs
+  Copyright (C) 2023 clib4Devs
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages

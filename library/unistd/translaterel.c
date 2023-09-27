@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_translaterel.c,v 1.5 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: unistd_translaterel.c,v 1.5 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -10,7 +10,7 @@ int
 __translate_relative_path_name(char const **name_ptr, char *replacement_buffer, size_t replacement_buffer_size) {
     int result = ERROR;
     char *name;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(name_ptr != NULL && (*name_ptr) != NULL && replacement_buffer != NULL);
 
@@ -19,17 +19,17 @@ __translate_relative_path_name(char const **name_ptr, char *replacement_buffer, 
      * are not modified, though.
      */
     name = (char *) (*name_ptr);
-    if (__clib2->__current_path_name[0] != '\0' && name[0] != '/') {
+    if (__clib4->__current_path_name[0] != '\0' && name[0] != '/') {
         size_t total_len;
         BOOL add_slash;
 
         /* Get the current directory name and get
          * ready to attach the file name at the end.
          */
-        total_len = strlen(__clib2->__current_path_name);
+        total_len = strlen(__clib4->__current_path_name);
 
-        if (__clib2->__current_path_name[total_len - 1] != '/' &&
-            __clib2->__current_path_name[total_len - 1] != ':' &&
+        if (__clib4->__current_path_name[total_len - 1] != '/' &&
+            __clib4->__current_path_name[total_len - 1] != ':' &&
             name[0] != '\0') {
             add_slash = TRUE;
 
@@ -47,7 +47,7 @@ __translate_relative_path_name(char const **name_ptr, char *replacement_buffer, 
         }
 
         /* Put the file name together. */
-        strcpy(replacement_buffer, __clib2->__current_path_name);
+        strcpy(replacement_buffer, __clib4->__current_path_name);
 
         if (add_slash)
             strcat(replacement_buffer, "/");

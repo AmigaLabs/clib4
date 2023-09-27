@@ -1,5 +1,5 @@
 /*
- * $Id: math_k_exp.c,v 1.0 2023-07-19 12:04:23 clib2devs Exp $
+ * $Id: math_k_exp.c,v 1.0 2023-07-19 12:04:23 clib4devs Exp $
  */
 
 #ifndef _COMPLEX_HEADERS_H

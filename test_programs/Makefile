@@ -1,5 +1,5 @@
 #
-# $Id: makefile,v 1.14 2021-01-25 11:29:46 clib2devs Exp $
+# $Id: makefile,v 1.14 2021-01-25 11:29:46 clib4devs Exp $
 #
 # :ts=8
 #
@@ -36,13 +36,13 @@ INCLUDE = -I../library/include
 
 # Note: Because the matching startup code needs to be used for
 #       correctly linking the test programs, you need to make sure
-#       that the current development version of clib2 is visible
+#       that the current development version of clib4 is visible
 #       where the linker expects it (soft link). Some more tuning would be
 #       required here because you really should not need to tinker
 #       with the location of library and the options "-L. -L../library/lib"
 #       should be sufficient.
 
-CFLAGS = -mcrt=clib2 -fno-builtin $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(OPTIONS) $(INCLUDE)
+CFLAGS = -mcrt=clib4 -fno-builtin $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(OPTIONS) $(INCLUDE)
 LFLAGS =
 
 C_SOURCES = $(shell find $(SOURCEDIR) -maxdepth 2 -name '*.c' -type f -printf '%P\n')

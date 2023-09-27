@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_createstdio.c,v 1.6 2021-09-31 15:12:47 clib2devs Exp $
+ * $Id: amiga_createstdio.c,v 1.6 2021-09-31 15:12:47 clib4devs Exp $
 */
 
 #include <string.h>

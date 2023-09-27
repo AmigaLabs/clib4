@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_vsnprintf_hook_entry.c,v 1.8 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdio_vsnprintf_hook_entry.c,v 1.8 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -9,7 +9,7 @@
 // TODO - Check for memmove 64bits
 
 int64_t
-__vsnprintf_hook_entry(struct _clib2 *__clib2, struct iob *string_iob, struct file_action_message *fam) {
+__vsnprintf_hook_entry(struct _clib4 *__clib4, struct iob *string_iob, struct file_action_message *fam) {
     int64_t result = EOF;
 
     assert(fam != NULL && string_iob != NULL);

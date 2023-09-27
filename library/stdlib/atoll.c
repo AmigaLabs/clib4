@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_atoll.c,v 1.3 2006-08-02 08:00:27 clib2devs Exp $
+ * $Id: stdlib_atoll.c,v 1.3 2006-08-02 08:00:27 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H

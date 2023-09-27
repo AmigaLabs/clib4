@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_ftruncate.c,v 1.15 2006-11-16 14:39:23 clib2devs Exp $
+ * $Id: unistd_ftruncate.c,v 1.15 2006-11-16 14:39:23 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -11,20 +11,20 @@ int ftruncate(int file_descriptor, off_t length) {
     int result = ERROR;
     struct fd *fd = NULL;
     off_t initial_position = 0;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     SHOWVALUE(file_descriptor);
     SHOWVALUE(length);
 
-    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
-    assert(__clib2->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
+    assert(__clib4->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __check_abort();
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -90,7 +90,7 @@ out:
 
     __fd_unlock(fd);
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

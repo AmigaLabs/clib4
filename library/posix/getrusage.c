@@ -1,5 +1,5 @@
 /*
- * $Id: resource_getrusage.c,v 1.0 2021-01-19 16:35:27 clib2devs Exp $
+ * $Id: resource_getrusage.c,v 1.0 2021-01-19 16:35:27 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -19,7 +19,7 @@
 int
 getrusage(int who, struct rusage *rusage) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (rusage == NULL) {
         __set_errno(EINVAL);
@@ -32,9 +32,9 @@ getrusage(int who, struct rusage *rusage) {
 
     long clock[2];
     int status = 0;
-    struct TimerIFace *ITimer = __clib2->__ITimer;
+    struct TimerIFace *ITimer = __clib4->__ITimer;
 
-    if (__clib2 == NULL) {
+    if (__clib4 == NULL) {
         __set_errno(EINVAL);
         RETURN(-1);
         return -1;
@@ -43,21 +43,21 @@ getrusage(int who, struct rusage *rusage) {
     switch (who) {
         case RUSAGE_SELF: {
                 GetSysTime((struct TimeVal *) clock);
-                clock[0] -= __clib2->clock.tv_sec;
-                clock[1] -= __clib2->clock.tv_usec;
+                clock[0] -= __clib4->clock.tv_sec;
+                clock[1] -= __clib4->clock.tv_usec;
                 if (clock[1] < 0) {
                     clock[1] += 1000000;
                     clock[0]--;
                 }
 
-                memcpy(rusage, &__clib2->ru, sizeof(struct rusage));
+                memcpy(rusage, &__clib4->ru, sizeof(struct rusage));
                 rusage->ru_utime.tv_sec = clock[0];
                 rusage->ru_utime.tv_usec = clock[1];
             }
             break;
 
         case RUSAGE_CHILDREN:
-            memcpy(rusage, &__clib2->ru, sizeof(struct rusage));
+            memcpy(rusage, &__clib4->ru, sizeof(struct rusage));
             break;
 
         default:

@@ -1,5 +1,5 @@
 /*
- * $Id: math_isfinite.c,v 1.0 2021-01-16 18:15:23 clib2devs Exp $
+ * $Id: math_isfinite.c,v 1.0 2021-01-16 18:15:23 clib4devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H

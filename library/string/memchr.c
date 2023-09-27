@@ -1,5 +1,5 @@
 /*
- * $Id: string_memchr.c,v 1.8 2023-02-22 12:04:26 clib2devs Exp $
+ * $Id: string_memchr.c,v 1.8 2023-02-22 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -121,7 +121,7 @@ void *
 memchr(const void *ptr, int val, size_t len) {
     const unsigned char *m = ptr;
     void *result = NULL;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(ptr != NULL);
     assert((int) len >= 0);
@@ -132,8 +132,8 @@ memchr(const void *ptr, int val, size_t len) {
     }
 
     if (len > 0) {
-        if (__clib2->__optimizedCPUFunctions) {
-            switch (__clib2->cpufamily) {
+        if (__clib4->__optimizedCPUFunctions) {
+            switch (__clib4->cpufamily) {
                 case CPUFAMILY_4XX:
                     result = __memchr440(m, (unsigned char) (val & 255), len);
                     break;

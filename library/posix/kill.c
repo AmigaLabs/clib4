@@ -1,5 +1,5 @@
 /*
- * $Id: signal_kill.c,v 1.8 2006-04-05 08:39:45 clib2devs Exp $
+ * $Id: signal_kill.c,v 1.8 2006-04-05 08:39:45 clib4devs Exp $
 */
 
 #ifndef _SIGNAL_HEADERS_H

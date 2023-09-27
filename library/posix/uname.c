@@ -1,5 +1,5 @@
 /*
- * $Id: utsname_uname.c,v 1.6 2022-04-20 15:33:36 clib2devs Exp $
+ * $Id: utsname_uname.c,v 1.6 2022-04-20 15:33:36 clib4devs Exp $
 */
 
 #include <sys/utsname.h>

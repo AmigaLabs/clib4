@@ -1,5 +1,5 @@
 /*
- * $Id: socket_inet_aton.c,v 1.4 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: socket_inet_aton.c,v 1.4 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H

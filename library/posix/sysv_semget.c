@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_semget.c,v 1.1 2023-07-08 17:39:33 clib2devs Exp $
+ * $Id: sysv_semget.c,v 1.1 2023-07-08 17:39:33 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -60,7 +60,7 @@ _semget(key_t key, int nsems, int flags) {
     SHOWVALUE(nsems);
     SHOWVALUE(flags);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
 
     IPCLock(&res->semcx.keymap);
     if (1) {

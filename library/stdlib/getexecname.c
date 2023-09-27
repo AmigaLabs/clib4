@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_getexecname.c,v 1.0 2020-01-13 13:28:26 clib2devs Exp $
+ * $Id: stdlib_getexecname.c,v 1.0 2020-01-13 13:28:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H

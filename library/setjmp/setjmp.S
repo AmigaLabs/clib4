@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_setjmp.c,v 2.0 2010-10-20 13:50:17 clib2devs Exp $
+ * $Id: stdlib_setjmp.c,v 2.0 2010-10-20 13:50:17 clib4devs Exp $
  */
 /* This is a simple version of setjmp and longjmp for the PowerPC.
    Ian Lance Taylor, Cygnus Support, 9 Feb 1994.

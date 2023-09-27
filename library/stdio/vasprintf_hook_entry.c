@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_vasprintf_hook_entry.c,v 1.8 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdio_vasprintf_hook_entry.c,v 1.8 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -18,7 +18,7 @@
 
 int64_t
 __vasprintf_hook_entry(
-        struct _clib2 *__clib2,
+        struct _clib4 *__clib4,
         struct iob *string_iob,
         struct file_action_message *fam) {
     int64_t result = EOF;
