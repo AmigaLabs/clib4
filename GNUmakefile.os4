@@ -101,7 +101,7 @@ SHARED   := $(if $(SHARED),$(SHARED),yes)
 STATIC   := $(if $(STATIC),$(STATIC),yes)
 
 LARGEDATA :=
-OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe -specs=misc/specs
+OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe
 OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -ffp-contract=fast -mstrict-align
 
 STABS :=
@@ -342,7 +342,7 @@ define MAKESHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo -e "\rMaking Shared \033[0;31m$@\033[0m"
-$(VERBOSE)$(CC) -nostdlib -mcrt=clib4 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -Wl,-soname,$(@F) -specs=misc/specs
+$(VERBOSE)$(CC) -nostdlib -mcrt=clib4 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -Wl,-soname,$(@F)
 endef
 
 PatchForSPE : $(LIB_ROOT)/misc/PatchForSPE.cpp
