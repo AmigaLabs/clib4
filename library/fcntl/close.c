@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_close.c,v 1.13 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: fcntl_close.c,v 1.13 2006-01-08 12:04:22 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -11,7 +11,7 @@ close(int file_descriptor) {
     struct file_action_message fam;
     struct fd *fd;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -31,7 +31,7 @@ close(int file_descriptor) {
 
     assert(fd->fd_Action != NULL);
 
-    if ((*fd->fd_Action)(__clib2, fd, &fam) < 0) {
+    if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
         __set_errno(fam.fam_Error);
         goto out;
     }

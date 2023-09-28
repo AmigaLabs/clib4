@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_ungetc.c,v 1.7 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdio_ungetc.c,v 1.7 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -10,7 +10,7 @@ int
 ungetc(int c, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWVALUE(c);
@@ -27,7 +27,7 @@ ungetc(int c, FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(__clib2, file));
+    assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -64,7 +64,7 @@ ungetc(int c, FILE *stream) {
     }
 
     /* Get rid of the write buffer, if it's still around. */
-    if (__iob_write_buffer_is_valid(file) > 0 && __flush_iob_write_buffer(__clib2, file) < 0) {
+    if (__iob_write_buffer_is_valid(file) > 0 && __flush_iob_write_buffer(__clib4, file) < 0) {
         SHOWMSG("could not flush write buffer");
         goto out;
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: socket_hook_entry.c,v 1.19 2021-01-231 13:12:58 clib2devs Exp $
+ * $Id: socket_hook_entry.c,v 1.19 2021-01-231 13:12:58 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -7,11 +7,11 @@
 #endif /* _SOCKET_HEADERS_H */
 
 #include <sys/ioctl.h>
-#include "../shared_library/clib2.h"
+#include "../shared_library/clib4.h"
 #include "../misc/map.h"
 
 int64_t
-__socket_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_action_message *fam) {
+__socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_message *fam) {
     struct ExamineData *fib;
     BOOL is_aliased;
     int result;
@@ -23,7 +23,7 @@ __socket_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_action_me
                 table and therefore needs to obtain the stdio lock before
                 it locks this particular descriptor entry. */
     if (fam->fam_Action == file_action_close)
-        __stdio_lock(__clib2);
+        __stdio_lock(__clib4);
 
     __fd_lock(fd);
 
@@ -70,7 +70,7 @@ __socket_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_action_me
                 /* Are we permitted to close this file? */
                 if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
                     /* Check for unix socket */
-                    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+                    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
                     if (res) {
                         size_t iter = 0;
                         void *item;
@@ -134,7 +134,7 @@ __socket_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_action_me
     __fd_unlock(fd);
 
     if (fam->fam_Action == file_action_close)
-        __stdio_unlock(__clib2);
+        __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

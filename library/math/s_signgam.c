@@ -1,5 +1,5 @@
 /*
- * $Id: math_s_signgam.c,v 2.0 2023-07-19 12:04:23 clib2devs Exp $
+ * $Id: math_s_signgam.c,v 2.0 2023-07-19 12:04:23 clib4devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H
@@ -10,7 +10,7 @@
 
 int *
 __signgam(void) {
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    return &__clib2->_gamma_signgam;
+    return &__clib4->_gamma_signgam;
 }

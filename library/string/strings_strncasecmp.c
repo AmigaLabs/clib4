@@ -1,5 +1,5 @@
 /*
- * $Id: strings_strncasecmp.c,v 1.5 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: strings_strncasecmp.c,v 1.5 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H

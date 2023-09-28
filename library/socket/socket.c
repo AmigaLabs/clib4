@@ -1,5 +1,5 @@
 /*
- * $Id: socket_socket.c,v 1.10 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: socket_socket.c,v 1.10 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -13,7 +13,7 @@ socket(int domain, int type, int protocol) {
     struct fd *fd;
     int fd_slot_number;
     LONG socket_fd;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -21,16 +21,16 @@ socket(int domain, int type, int protocol) {
     SHOWVALUE(type);
     SHOWVALUE(protocol);
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
-    fd_slot_number = __find_vacant_fd_entry(__clib2);
+    fd_slot_number = __find_vacant_fd_entry(__clib4);
     if (fd_slot_number < 0) {
-        if (__grow_fd_table(__clib2, 0) < 0) {
+        if (__grow_fd_table(__clib4, 0) < 0) {
             SHOWMSG("couldn't find a vacant fd slot and no memory to create one");
             goto out;
         }
 
-        fd_slot_number = __find_vacant_fd_entry(__clib2);
+        fd_slot_number = __find_vacant_fd_entry(__clib4);
         assert(fd_slot_number >= 0);
     }
 
@@ -58,7 +58,7 @@ socket(int domain, int type, int protocol) {
         goto out;
     }
 
-    fd = __clib2->__fd[fd_slot_number];
+    fd = __clib4->__fd[fd_slot_number];
 
     __initialize_fd(fd, __socket_hook_entry, (BPTR) socket_fd, FDF_IN_USE | FDF_IS_SOCKET | FDF_READ | FDF_WRITE, lock);
 
@@ -68,7 +68,7 @@ socket(int domain, int type, int protocol) {
 
 out:
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
     __delete_semaphore(lock);
 
     __check_abort();

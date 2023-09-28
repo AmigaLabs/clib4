@@ -1,5 +1,5 @@
 /*
- * $Id: signal_checkabort.c,v 1.4 2006-04-05 08:39:45 clib2devs Exp $
+ * $Id: signal_checkabort.c,v 1.4 2006-04-05 08:39:45 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -12,9 +12,9 @@
 
 void
 __check_abort(void) {
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    if (__clib2->__check_abort_enabled && CheckSignal(__clib2->__break_signal_mask)) {
+    if (__clib4->__check_abort_enabled && CheckSignal(__clib4->__break_signal_mask)) {
         raise(SIGINT);
     }
 }

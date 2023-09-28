@@ -1,5 +1,5 @@
 /*
-* $Id: crtbegin.c,v 1.3 2022-03-09 21:07:25 clib2devs Exp $
+* $Id: crtbegin.c,v 1.3 2022-03-09 21:07:25 clib4devs Exp $
   */
 #undef __USE_INLINE__
 #define __NOLIBBASE__
@@ -59,13 +59,13 @@ const struct UtilityIFace *IUtility = NULL;
 struct Library *ElfBase = NULL;
 struct ElfIFace *IElf = NULL;
 
-const struct Clib2IFace *IClib2 = NULL;
+const struct Clib4IFace *IClib4 = NULL;
 
 register void *r13 __asm("r13");
 extern void *_SDA_BASE_ __attribute__((force_no_baserel));
 
 extern int main(int, char **);
-int clib2_start(char *args, int32 arglen, struct Library *sysbase);
+int clib4_start(char *args, int32 arglen, struct Library *sysbase);
 int _start(char *args, int32 arglen, struct Library *sysbase);
 
 static struct Interface *OpenLibraryInterface(struct ExecIFace *iexec, const char *name, int version) {
@@ -99,9 +99,9 @@ static void CloseLibraryInterface(struct ExecIFace *iexec, struct Interface *int
 }
 
 int
-clib2_start(char *args, int32 arglen, struct Library *sysbase) {
+clib4_start(char *args, int32 arglen, struct Library *sysbase) {
     struct ExecIFace *iexec;
-    struct Clib2IFace *iclib2;
+    struct Clib4IFace *iclib4;
     struct DOSIFace *idos;
 
     int rc = -1;
@@ -120,16 +120,16 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
         IUtility = (struct UtilityIFace *) OpenLibraryInterface(iexec, "utility.library", MIN_OS_VERSION);
         if (IUtility != NULL) {
             UtilityBase = IUtility->Data.LibBase;
-            iclib2 = (struct Clib2IFace *) OpenLibraryInterface(iexec, "clib2.library", 1);
-            if (iclib2 != NULL) {
-                struct Library *clib2base = ((struct Interface *) iclib2)->Data.LibBase;
-                if (clib2base->lib_Version == VERSION && clib2base->lib_Revision == REVISION) {
-                    IClib2 = iclib2;
+            iclib4 = (struct Clib4IFace *) OpenLibraryInterface(iexec, "clib4.library", 1);
+            if (iclib4 != NULL) {
+                struct Library *clib4base = ((struct Interface *) iclib4)->Data.LibBase;
+                if (clib4base->lib_Version == VERSION && clib4base->lib_Revision == REVISION) {
+                    IClib4 = iclib4;
 
-                    rc = iclib2->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__);
+                    rc = iclib4->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__);
                 }
                 else {
-                    idos->Printf("This program requires clib2.library %d\n", VERS);
+                    idos->Printf("This program requires clib4.library %d\n", VERS);
                 }
             } else {
                 idos->Printf("Cannot open %s\n", VERS);
@@ -142,7 +142,7 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
     else {
         iexec->Alert(AT_Recovery | AG_OpenLib | AO_DOSLib);
     }
-    CloseLibraryInterface(iexec, (struct Interface *) iclib2);
+    CloseLibraryInterface(iexec, (struct Interface *) iclib4);
     CloseLibraryInterface(iexec, (struct Interface *) IUtility);
     CloseLibraryInterface(iexec, (struct Interface *) idos);
 
@@ -155,5 +155,5 @@ clib2_start(char *args, int32 arglen, struct Library *sysbase) {
 
 int
 _start(STRPTR argstring, int32 arglen, struct Library *sysbase) {
-    return clib2_start(argstring, arglen, sysbase);
+    return clib4_start(argstring, arglen, sysbase);
 }

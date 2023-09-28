@@ -1,5 +1,5 @@
 /*
- * $Id: socket_gethostbyname2.c,v 1.0 2022-08-09 12:04:24 clib2devs Exp $
+ * $Id: socket_gethostbyname2.c,v 1.0 2022-08-09 12:04:24 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H

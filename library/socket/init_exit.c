@@ -1,5 +1,5 @@
 /*
- * $Id: socket_init_exit.c,v 1.26 2006-04-05 08:39:45 clib2devs Exp $
+ * $Id: socket_init_exit.c,v 1.26 2006-04-05 08:39:45 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -64,10 +64,10 @@ STATIC struct Hook error_hook = {
 
 SOCKET_DESTRUCTOR(socket_exit) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* Disable ^C checking. */
-    if (__clib2->__SocketBase != NULL) {
+    if (__clib4->__SocketBase != NULL) {
         struct TagItem tags[2];
 
         tags[0].ti_Tag = SBTM_SETVAL(SBTC_BREAKMASK);
@@ -83,14 +83,14 @@ SOCKET_DESTRUCTOR(socket_exit) {
      *          does not happen, the stdio cleanup function will
      *          crash (with bells on).
      */
-    __close_all_files(__clib2);
-    if (__clib2->__ISocket != NULL) {
-        DropInterface((struct Interface *) __clib2->__ISocket);
-        __clib2->__ISocket = NULL;
+    __close_all_files(__clib4);
+    if (__clib4->__ISocket != NULL) {
+        DropInterface((struct Interface *) __clib4->__ISocket);
+        __clib4->__ISocket = NULL;
     }
-    if (__clib2->__SocketBase != NULL) {
-        CloseLibrary(__clib2->__SocketBase);
-        __clib2->__SocketBase = NULL;
+    if (__clib4->__SocketBase != NULL) {
+        CloseLibrary(__clib4->__SocketBase);
+        __clib4->__SocketBase = NULL;
     }
 
     LEAVE();
@@ -100,21 +100,21 @@ SOCKET_CONSTRUCTOR(socket_init) {
     struct TagItem tags[5];
     BOOL success = FALSE;
     LONG status;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     /* bsdsocket.library V3 is sufficient for all the tasks we may have to perform. */
-    __clib2->__SocketBase = OpenLibrary("bsdsocket.library", 3);
-    if (__clib2->__SocketBase != NULL) {
-        __clib2->__ISocket = (struct SocketIFace *) GetInterface(__clib2->__SocketBase, "main", 1, 0);
-        if (__clib2->__ISocket == NULL) {
-            CloseLibrary(__clib2->__SocketBase);
-            __clib2->__SocketBase = NULL;
+    __clib4->__SocketBase = OpenLibrary("bsdsocket.library", 3);
+    if (__clib4->__SocketBase != NULL) {
+        __clib4->__ISocket = (struct SocketIFace *) GetInterface(__clib4->__SocketBase, "main", 1, 0);
+        if (__clib4->__ISocket == NULL) {
+            CloseLibrary(__clib4->__SocketBase);
+            __clib4->__SocketBase = NULL;
         }
     }
 
-    if (__clib2->__SocketBase == NULL) {
+    if (__clib4->__SocketBase == NULL) {
         SHOWMSG("bsdsocket.library V3 didn't open");
         __show_error("\"bsdsocket.library\" V3 could not be opened.");
         goto out;
@@ -127,10 +127,10 @@ SOCKET_CONSTRUCTOR(socket_init) {
 
     /* Also enable ^C checking if desired. */
     tags[1].ti_Tag = SBTM_SETVAL(SBTC_BREAKMASK);
-    tags[1].ti_Data = __clib2->__break_signal_mask;
+    tags[1].ti_Data = __clib4->__break_signal_mask;
 
     tags[2].ti_Tag = SBTM_SETVAL(SBTC_LOGTAGPTR);
-    tags[2].ti_Data = (ULONG)__clib2->__progname;
+    tags[2].ti_Data = (ULONG)__clib4->__progname;
 
     /* Wire the library's h_errno variable to our local h_errno. */
     tags[3].ti_Tag = SBTM_SETVAL(SBTC_HERRNOLONGPTR);
@@ -153,23 +153,23 @@ SOCKET_CONSTRUCTOR(socket_init) {
    hook. If either of these features are supported can be checked
    by looking at the global __can_share_socket_library_base and
    __thread_safe_errno_h_errno variables. */
-    if (__clib2->__SocketBase->lib_Version >= 4) {
+    if (__clib4->__SocketBase->lib_Version >= 4) {
         tags[0].ti_Tag = SBTM_SETVAL(SBTC_CAN_SHARE_LIBRARY_BASES);
         tags[0].ti_Data = TRUE;
 
         tags[1].ti_Tag = TAG_END;
 
         if (__SocketBaseTagList(tags) == 0)
-            __clib2->__can_share_socket_library_base = TRUE;
+            __clib4->__can_share_socket_library_base = TRUE;
 
-        if (__clib2->__can_share_socket_library_base) {
+        if (__clib4->__can_share_socket_library_base) {
             tags[0].ti_Tag = SBTM_SETVAL(SBTC_ERROR_HOOK);
             tags[0].ti_Data = (ULONG) &error_hook;
 
             tags[1].ti_Tag = TAG_END;
 
             if (__SocketBaseTagList(tags) == 0)
-                __clib2->__thread_safe_errno_h_errno = TRUE;
+                __clib4->__thread_safe_errno_h_errno = TRUE;
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: socket_getsockopt.c,v 1.8 2006-11-16 10:41:15 clib2devs Exp $
+ * $Id: socket_getsockopt.c,v 1.8 2006-11-16 10:41:15 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -9,7 +9,7 @@
 int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optlen) {
     struct fd *fd;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -29,10 +29,10 @@ int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optl
         goto out;
     }
 
-    assert(sockfd >= 0 && sockfd < __clib2->__num_fd);
-    assert(__clib2->__fd[sockfd] != NULL);
-    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
-    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __clib4->__num_fd);
+    assert(__clib4->__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
     fd = __get_file_descriptor_socket(sockfd);
     if (fd == NULL)

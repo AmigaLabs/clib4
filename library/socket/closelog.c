@@ -1,5 +1,5 @@
 /*
- * $Id: socket_closelog.c,v 1.0 2022-01-22 18:27:15 clib2devs Exp $
+ * $Id: socket_closelog.c,v 1.0 2022-01-22 18:27:15 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -9,11 +9,11 @@
 void
 closelog(void) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    if (__clib2->syslog_fd != NULL) {
-        fclose(__clib2->syslog_fd);
-        __clib2->syslog_fd = NULL;
+    if (__clib4->syslog_fd != NULL) {
+        fclose(__clib4->syslog_fd);
+        __clib4->syslog_fd = NULL;
     }
 
     __check_abort();

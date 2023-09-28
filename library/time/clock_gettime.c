@@ -1,5 +1,5 @@
 /*
- * $Id: time_clock_gettime.c,v 2.0 2023-05-26 16:55:42 clib2devs Exp $
+ * $Id: time_clock_gettime.c,v 2.0 2023-05-26 16:55:42 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -13,7 +13,7 @@
 int
 clock_gettime(clockid_t clk_id, struct timespec *t) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* Check the supported flags.  */
     if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME)) != 0) {
@@ -22,14 +22,14 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
         return -1;
     }
 
-    if (__clib2->__timer_busy) {
+    if (__clib4->__timer_busy) {
         __set_errno(EAGAIN);
         RETURN(-1);
         return -1;
     }
 
     DECLARE_TIMEZONEBASE();
-    struct TimerIFace *ITimer = __clib2->__ITimer;
+    struct TimerIFace *ITimer = __clib4->__ITimer;
 
     struct timeval tv;
     uint32 gmtoffset = 0;
@@ -40,13 +40,13 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
 
     GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
 
-    __clib2->__timer_busy = TRUE;
+    __clib4->__timer_busy = TRUE;
     if (clk_id == CLOCK_MONOTONIC) {
         /*
         CLOCK_MONOTONIC
             A nonsettable system-wide clock that represents monotonic
             time since—as described by POSIX—"some unspecified point
-            in the past". On clib2, that point corresponds to the
+            in the past". On clib4, that point corresponds to the
             number of seconds that the system has been running since
             it was booted.
         */
@@ -72,7 +72,7 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
     if (dstime == TFLG_ISDST)
         t->tv_sec += (60 * 60);
 
-    __clib2->__timer_busy = FALSE;
+    __clib4->__timer_busy = FALSE;
 
     RETURN(0);
     return 0;

@@ -1,5 +1,5 @@
 /*
- * $Id: termios_tcgetattr.c,v 1.4 2022-08-15 12:04:27 clib2devs Exp $
+ * $Id: termios_tcgetattr.c,v 1.4 2022-08-15 12:04:27 clib4devs Exp $
 */
 
 #ifndef _TERMIOS_HEADERS_H
@@ -102,9 +102,9 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
     struct fd *fd = NULL;
     struct termios *tios;
     BPTR file;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     if (user_tios == NULL) {
         __set_errno(EFAULT);
@@ -155,7 +155,7 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
 
 out:
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
     __check_abort();
 
     return (result);

@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_msgrcv.c,v 1.2 2023-07-08 19:35:07 clib2devs Exp $
+ * $Id: sysv_msgrcv.c,v 1.2 2023-07-08 19:35:07 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -21,7 +21,7 @@ _msgrcv(int qid, void *msg, size_t mlen, long mtype, int flags) {
     SHOWVALUE(mtype);
     SHOWVALUE(flags);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     struct Msg *m, *prev;
     int nbytes;
     struct msqid_ds *qi;

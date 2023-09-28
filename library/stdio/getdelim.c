@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_getdelim.c,v 1.0 2021-02-23 10:42:24 clib2devs Exp $
+ * $Id: stdio_getdelim.c,v 1.0 2021-02-23 10:42:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H

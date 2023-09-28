@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_arc4random.c,v 1.0 2022-08-22 12:04:25 clib2devs Exp $
+ * $Id: stdlib_arc4random.c,v 1.0 2022-08-22 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -10,57 +10,57 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-static inline uint8_t arc4_getbyte(struct _clib2 *__clib2);
-static void arc4_stir(struct _clib2 *__clib2);
+static inline uint8_t arc4_getbyte(struct _clib4 *__clib4);
+static void arc4_stir(struct _clib4 *__clib4);
 
 static inline void
-arc4_addrandom(struct _clib2 *__clib2, u_char *dat, int datlen) {
+arc4_addrandom(struct _clib4 *__clib4, u_char *dat, int datlen) {
     int n;
     uint8_t si;
 
-    __clib2->rs.i--;
+    __clib4->rs.i--;
     for (n = 0; n < 256; n++) {
-        __clib2->rs.i = (__clib2->rs.i + 1);
-        si = __clib2->rs.s[__clib2->rs.i];
-        __clib2->rs.j = (__clib2->rs.j + si + dat[n % datlen]);
-        __clib2->rs.s[__clib2->rs.i] = __clib2->rs.s[__clib2->rs.j];
-        __clib2->rs.s[__clib2->rs.j] = si;
+        __clib4->rs.i = (__clib4->rs.i + 1);
+        si = __clib4->rs.s[__clib4->rs.i];
+        __clib4->rs.j = (__clib4->rs.j + si + dat[n % datlen]);
+        __clib4->rs.s[__clib4->rs.i] = __clib4->rs.s[__clib4->rs.j];
+        __clib4->rs.s[__clib4->rs.j] = si;
     }
-    __clib2->rs.j = __clib2->rs.i;
+    __clib4->rs.j = __clib4->rs.i;
 }
 
 static void
-arc4_fetch(struct _clib2 *__clib2) {
+arc4_fetch(struct _clib4 *__clib4) {
     int done, fd;
     fd = open(RANDOMDEV, O_RDONLY, 0);
     done = 0;
     if (fd >= 0) {
-        if (read(fd, &__clib2->rdat, KEYSIZE) == KEYSIZE)
+        if (read(fd, &__clib4->rdat, KEYSIZE) == KEYSIZE)
             done = 1;
         (void) close(fd);
     }
     if (!done) {
-        (void) gettimeofday(&__clib2->rdat.tv, NULL);
-        __clib2->rdat.pid = getpid();
+        (void) gettimeofday(&__clib4->rdat.tv, NULL);
+        __clib4->rdat.pid = getpid();
         /* We'll just take whatever was on the stack too... */
     }
 }
 
 static void
-arc4_stir(struct _clib2 *__clib2) {
+arc4_stir(struct _clib4 *__clib4) {
     int n;
 
     /*
      * If we don't have data, we need some now before we can integrate
      * it into the static buffers
      */
-    if (!__clib2->rs_data_available) {
-        arc4_fetch(__clib2);
+    if (!__clib4->rs_data_available) {
+        arc4_fetch(__clib4);
     }
-    __clib2->rs_data_available = 0;
+    __clib4->rs_data_available = 0;
     //__sync_synchronize();
 
-    arc4_addrandom(__clib2, (u_char * ) & __clib2->rdat, KEYSIZE);
+    arc4_addrandom(__clib4, (u_char * ) & __clib4->rdat, KEYSIZE);
 
     /*
      * Throw away the first N bytes of output, as suggested in the
@@ -70,41 +70,41 @@ arc4_stir(struct _clib2 *__clib2) {
      * by Ilya Mironov.
      */
     for (n = 0; n < 1024; n++)
-        (void) arc4_getbyte(__clib2);
-    __clib2->arc4_count = 1600000;
-    __clib2->rs_stired = 1;
+        (void) arc4_getbyte(__clib4);
+    __clib4->arc4_count = 1600000;
+    __clib4->rs_stired = 1;
 }
 
 static inline uint8_t
-arc4_getbyte(struct _clib2 *__clib2) {
+arc4_getbyte(struct _clib4 *__clib4) {
     uint8_t si, sj;
 
-    __clib2->rs.i = (__clib2->rs.i + 1);
-    si = __clib2->rs.s[__clib2->rs.i];
-    __clib2->rs.j = (__clib2->rs.j + si);
-    sj = __clib2->rs.s[__clib2->rs.j];
-    __clib2->rs.s[__clib2->rs.i] = sj;
-    __clib2->rs.s[__clib2->rs.j] = si;
+    __clib4->rs.i = (__clib4->rs.i + 1);
+    si = __clib4->rs.s[__clib4->rs.i];
+    __clib4->rs.j = (__clib4->rs.j + si);
+    sj = __clib4->rs.s[__clib4->rs.j];
+    __clib4->rs.s[__clib4->rs.i] = sj;
+    __clib4->rs.s[__clib4->rs.j] = si;
 
-    return (__clib2->rs.s[(si + sj) & 0xff]);
+    return (__clib4->rs.s[(si + sj) & 0xff]);
 }
 
 static inline uint32_t
-arc4_getword(struct _clib2 *__clib2) {
+arc4_getword(struct _clib4 *__clib4) {
     uint32_t val;
 
-    val = arc4_getbyte(__clib2) << 24;
-    val |= arc4_getbyte(__clib2) << 16;
-    val |= arc4_getbyte(__clib2) << 8;
-    val |= arc4_getbyte(__clib2);
+    val = arc4_getbyte(__clib4) << 24;
+    val |= arc4_getbyte(__clib4) << 16;
+    val |= arc4_getbyte(__clib4) << 8;
+    val |= arc4_getbyte(__clib4);
 
     return (val);
 }
 
 static inline int
-arc4_check_stir(struct _clib2 *__clib2) {
-    if (!__clib2->rs_stired || __clib2->arc4_count <= 0) {
-        arc4_stir(__clib2);
+arc4_check_stir(struct _clib4 *__clib4) {
+    if (!__clib4->rs_stired || __clib4->arc4_count <= 0) {
+        arc4_stir(__clib4);
         return 1;
     }
     return 0;
@@ -112,39 +112,39 @@ arc4_check_stir(struct _clib2 *__clib2) {
 
 void
 arc4random_stir(void) {
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    ObtainSemaphore(__clib2->__random_lock);
-    arc4_stir(__clib2);
-    ReleaseSemaphore(__clib2->__random_lock);
+    ObtainSemaphore(__clib4->__random_lock);
+    arc4_stir(__clib4);
+    ReleaseSemaphore(__clib4->__random_lock);
 }
 
 void
 arc4random_addrandom(u_char *dat, int datlen) {
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    ObtainSemaphore(__clib2->__random_lock);
-    arc4_check_stir(__clib2);
-    arc4_addrandom(__clib2, dat, datlen);
-    ReleaseSemaphore(__clib2->__random_lock);
+    ObtainSemaphore(__clib4->__random_lock);
+    arc4_check_stir(__clib4);
+    arc4_addrandom(__clib4, dat, datlen);
+    ReleaseSemaphore(__clib4->__random_lock);
 }
 
 uint32_t
 arc4random(void) {
     uint32_t rnd;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    ObtainSemaphore(__clib2->__random_lock);
+    ObtainSemaphore(__clib4->__random_lock);
 
-    int did_stir = arc4_check_stir(__clib2);
-    rnd = arc4_getword(__clib2);
-    __clib2->arc4_count -= 4;
+    int did_stir = arc4_check_stir(__clib4);
+    rnd = arc4_getword(__clib4);
+    __clib4->arc4_count -= 4;
 
-    ReleaseSemaphore(__clib2->__random_lock);
+    ReleaseSemaphore(__clib4->__random_lock);
     if (did_stir) {
         /* stirring used up our data pool, we need to read in new data outside of the lock */
-        arc4_fetch(__clib2);
-        __clib2->rs_data_available = 1;
+        arc4_fetch(__clib4);
+        __clib4->rs_data_available = 1;
         __sync_synchronize();
     }
 
@@ -155,23 +155,23 @@ void
 arc4random_buf(void *_buf, size_t n) {
     u_char *buf = (u_char *) _buf;
     int did_stir = 0;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    ObtainSemaphore(__clib2->__random_lock);
+    ObtainSemaphore(__clib4->__random_lock);
 
     while (n--) {
-        if (arc4_check_stir(__clib2)) {
+        if (arc4_check_stir(__clib4)) {
             did_stir = 1;
         }
-        buf[n] = arc4_getbyte(__clib2);
-        __clib2->arc4_count--;
+        buf[n] = arc4_getbyte(__clib4);
+        __clib4->arc4_count--;
     }
 
-    ReleaseSemaphore(__clib2->__random_lock);
+    ReleaseSemaphore(__clib4->__random_lock);
     if (did_stir) {
         /* stirring used up our data pool, we need to read in new data outside of the lock */
-        arc4_fetch(__clib2);
-        __clib2->rs_data_available = 1;
+        arc4_fetch(__clib4);
+        __clib4->rs_data_available = 1;
         __sync_synchronize();
     }
 }

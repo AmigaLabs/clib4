@@ -1,4 +1,4 @@
-/* $Id: socket_res_query.c,v 1.0 2022-03-14 10:44:15 clib2devs Exp $
+/* $Id: socket_res_query.c,v 1.0 2022-03-14 10:44:15 clib4devs Exp $
 
    Copyright (C) 2005-2006, 2008-2020 Free Software Foundation, Inc.
 

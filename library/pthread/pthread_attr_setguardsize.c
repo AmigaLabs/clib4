@@ -1,5 +1,5 @@
 /*
-  $Id: pthread_attr_setguardsize.c,v 1.00 2023-03-03 12:09:49 clib2devs Exp $
+  $Id: pthread_attr_setguardsize.c,v 1.00 2023-03-03 12:09:49 clib4devs Exp $
 */
 
 #include "pthread.h"

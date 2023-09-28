@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_read.c,v 1.11 2023-04-06 12:04:22 clib2devs Exp $
+ * $Id: fcntl_read.c,v 1.11 2023-04-06 12:04:22 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -16,7 +16,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
     struct fd *fd = NULL;
     ssize_t result = EOF;
     __set_errno(0);
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -29,7 +29,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
 
     __check_abort();
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     if (buffer == NULL) {
         SHOWMSG("invalid buffer");
@@ -37,8 +37,8 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
         goto out;
     }
 
-    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
-    assert(__clib2->__fd[file_descriptor] != NULL);
+    assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
+    assert(__clib4->__fd[file_descriptor] != NULL);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -68,7 +68,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
 
             assert(fd->fd_Action != NULL);
 
-            num_bytes_read = (*fd->fd_Action)(__clib2, fd, &fam);
+            num_bytes_read = (*fd->fd_Action)(__clib4, fd, &fam);
 
             if (num_bytes_read == EOF) {
                 __set_errno(fam.fam_Error);
@@ -86,7 +86,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
 
 out:
     __fd_unlock(fd);
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

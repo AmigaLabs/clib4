@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_execl.c,v 1.3 2006-08-02 08:00:27 clib2devs Exp $
+ * $Id: unistd_execl.c,v 1.3 2006-08-02 08:00:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -12,7 +12,7 @@ execl(const char *path, const char *arg0, ...) {
     int result = -1;
     size_t argc = 0;
     va_list args;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* If there are any, count the number of arguments supplied */
     if (arg0 != NULL) {
@@ -50,7 +50,7 @@ execl(const char *path, const char *arg0, ...) {
 
     argv[argc] = NULL;
 
-    result = execve(path, (char *const *) argv, __clib2->__environment);
+    result = execve(path, (char *const *) argv, __clib4->__environment);
 
 out:
 

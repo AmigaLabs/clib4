@@ -1,5 +1,5 @@
 /*
- * $Id: inttypes_wcstoimax.c,v 1.3 2022-03-03 12:04:22 clib2devs Exp $
+ * $Id: inttypes_wcstoimax.c,v 1.3 2022-03-03 12:04:22 clib4devs Exp $
 */
 
 #ifndef _INTTYPES_HEADERS_H

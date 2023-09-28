@@ -1,9 +1,9 @@
 /*
- * $Id: clib2_io.h,v 1.4 2006-11-16 14:39:23 clib2devs Exp $
+ * $Id: clib4_io.h,v 1.4 2006-11-16 14:39:23 clib4devs Exp $
 */
 
-#ifndef	_SYS_CLIB2_IO_H
-#define	_SYS_CLIB2_IO_H
+#ifndef	_SYS_CLIB4_IO_H
+#define	_SYS_CLIB4_IO_H
 
 #include <features.h>
 
@@ -146,4 +146,4 @@ extern int __change_fd_user_data(int file_descriptor,void * new_user_data,void *
 
 __END_DECLS
 
-#endif /* _SYS_CLIB2_IO_H */
+#endif /* _SYS_CLIB4_IO_H */

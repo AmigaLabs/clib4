@@ -1,5 +1,5 @@
 /*
- * $Id: string_strnstr.c,v 1.0 2021-03-09 12:04:27 clib2devs Exp $
+ * $Id: string_strnstr.c,v 1.0 2021-03-09 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STRING_HEADERS_H

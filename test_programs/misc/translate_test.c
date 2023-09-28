@@ -1,5 +1,5 @@
 /*
- * $Id: translate_test.c,v 1.1.1.1 2004-07-26 16:36:08 clib2devs Exp $
+ * $Id: translate_test.c,v 1.1.1.1 2004-07-26 16:36:08 clib4devs Exp $
  */
 
 #include <stdlib.h>

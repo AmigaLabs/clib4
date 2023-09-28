@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_wcsnrtombs.c,v 1.0 2021-02-04 11:26:27 clib2devs Exp $
+ * $Id: wchar_wcsnrtombs.c,v 1.0 2021-02-04 11:26:27 clib4devs Exp $
 */
 
 #ifndef _WCHAR_HEADERS_H
@@ -13,10 +13,10 @@ wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps
     wchar_t *pwcs;
     size_t n;
     int i;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (ps == NULL) {
-        ps = &__clib2->wide_status->_wcsrtombs_state;
+        ps = &__clib4->wide_status->_wcsrtombs_state;
     }
 
     /* If no dst pointer, treat len as maximum possible value. */

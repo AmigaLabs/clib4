@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_dlerror.c,v 1.2 2010-08-21 11:37:03 clib2devs Exp $
+ * $Id: stdlib_dlerror.c,v 1.2 2010-08-21 11:37:03 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -12,11 +12,11 @@
 const char *
 dlerror(void) {
 	const char *result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    switch(__clib2->__elf_error_code) {
+    switch(__clib4->__elf_error_code) {
 		case ELF32_NO_ERROR:
 
 			result = NULL;
@@ -79,8 +79,8 @@ dlerror(void) {
 	}
 
 	/* Calling dlerror() will clear the error code. */
-	if (__clib2 != NULL)
-        __clib2->__elf_error_code = ELF32_NO_ERROR;
+	if (__clib4 != NULL)
+        __clib4->__elf_error_code = ELF32_NO_ERROR;
 
     RETURN(result);
 	return(result);

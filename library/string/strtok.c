@@ -1,5 +1,5 @@
 /*
- * $Id: string_strtok.c,v 1.6 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: string_strtok.c,v 1.6 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STRING_HEADERS_H

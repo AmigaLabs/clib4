@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_assertion_failure.c,v 1.12 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdlib_assertion_failure.c,v 1.12 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef PROTO_EXEC_H
@@ -28,11 +28,11 @@
 void
 __assertion_failure(const char *file_name, int line_number, const char *expression) {
     static int been_here_before;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* Don't drop into a recursion. */
     if (been_here_before++ == 0) {
-        if (__clib2->__no_standard_io || __clib2->__WBenchMsg != NULL) {
+        if (__clib4->__no_standard_io || __clib4->__WBenchMsg != NULL) {
             struct IntuitionIFace *IIntuition = NULL;
             struct Library *IntuitionBase;
 
@@ -51,7 +51,7 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
                 memset(&es, 0, sizeof(es));
 
                 es.es_StructSize = sizeof(es);
-                es.es_Title = (STRPTR) __clib2->__progname;
+                es.es_Title = (STRPTR) __clib4->__progname;
                 es.es_TextFormat = (STRPTR) "Assertion of condition\n\"%s\"\nfailed in file \"%s\", line %ld.";
                 es.es_GadgetFormat = (STRPTR) "Sorry";
 
@@ -61,9 +61,9 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
                 CloseLibrary(IntuitionBase);
             }
         } else {
-            if (__clib2->__num_iob > STDERR_FILENO) {
-                if (__clib2->__progname != NULL)
-                    fprintf(stderr, "[%s] ", __clib2->__progname);
+            if (__clib4->__num_iob > STDERR_FILENO) {
+                if (__clib4->__progname != NULL)
+                    fprintf(stderr, "[%s] ", __clib4->__progname);
 
                 fprintf(stderr,
                         "%s:%d: failed assertion \"%s\".\n",
@@ -98,8 +98,8 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
                         output = Output();
 
                     if (output != BZERO) {
-                        if (__clib2->__progname != NULL)
-                            FPrintf(output, "[%s] ", __clib2->__progname);
+                        if (__clib4->__progname != NULL)
+                            FPrintf(output, "[%s] ", __clib4->__progname);
 
                         FPrintf(output,
                                 "%s:%ld: failed assertion \"%s\".\n",

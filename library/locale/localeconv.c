@@ -1,5 +1,5 @@
 /*
- * $Id: locale_localeconv.c,v 1.7 2006-09-25 14:51:15 clib2devs Exp $
+ * $Id: locale_localeconv.c,v 1.7 2006-09-25 14:51:15 clib4devs Exp $
 */
 
 #ifndef _LOCALE_HEADERS_H
@@ -13,14 +13,14 @@ localeconv(void) {
     struct Locale *numeric_locale;
     struct Locale *monetary_locale;
     struct lconv *result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    __locale_lock(__clib2);
+    __locale_lock(__clib4);
 
-    numeric_locale = __clib2->__locale_table[LC_NUMERIC];
-    monetary_locale = __clib2->__locale_table[LC_MONETARY];
+    numeric_locale = __clib4->__locale_table[LC_NUMERIC];
+    monetary_locale = __clib4->__locale_table[LC_MONETARY];
 
     /* This makes up the current locale settings from the various
        components in use. */
@@ -47,7 +47,7 @@ localeconv(void) {
 
     result = &loc;
 
-    __locale_unlock(__clib2);
+    __locale_unlock(__clib4);
 
     RETURN(result);
     return (result);

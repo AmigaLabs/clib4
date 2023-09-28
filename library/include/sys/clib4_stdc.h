@@ -1,9 +1,9 @@
 /*
- * $Id: clib2_stdc.h,v 1.4 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: clib4_stdc.h,v 1.4 2006-01-08 12:06:14 clib4devs Exp $
 */
 
-#ifndef	_SYS_CLIB2_STDC_H
-#define	_SYS_CLIB2_STDC_H
+#ifndef	_SYS_CLIB4_STDC_H
+#define	_SYS_CLIB4_STDC_H
 
 #include <features.h>
 
@@ -17,4 +17,4 @@ __BEGIN_DECLS
 
 __END_DECLS
 
-#endif /* _SYS_CLIB2_STDC_H */
+#endif /* _SYS_CLIB4_STDC_H */

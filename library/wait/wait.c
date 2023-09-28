@@ -1,5 +1,5 @@
 /*
- * $Id: wait_wait.c,v 1.0 2023-06-09 12:04:27 clib2devs Exp $
+ * $Id: wait_wait.c,v 1.0 2023-06-09 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H

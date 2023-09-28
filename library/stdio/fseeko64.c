@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fseeko64.c,v 1.0 2021-02-05 13:57:14 clib2devs Exp $
+ * $Id: stdio_fseeko64.c,v 1.0 2021-02-05 13:57:14 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -10,7 +10,7 @@ _off64_t
 fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
     struct iob *file = (struct iob *) stream;
     _off64_t result = CHANGE_FILE_ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -29,7 +29,7 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
         goto out;
     }
 
-    assert(__is_valid_iob(__clib2, file));
+    assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -96,13 +96,13 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
 			 * current buffer contents and start with a clean
 			 * slate.
 			 */
-            if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib2, file) < 0) {
+            if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0) {
                 SHOWMSG("couldn't flush write buffer");
 
                 goto out;
             }
 
-            if (__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(__clib2, file) < 0) {
+            if (__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(__clib4, file) < 0) {
                 SHOWMSG("couldn't drop read buffer");
 
                 goto out;
@@ -121,7 +121,7 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
 
             assert(file->iob_Action != NULL);
 
-            position = (*file->iob_Action)(__clib2, file, &fam);
+            position = (*file->iob_Action)(__clib4, file, &fam);
             if (fam.fam_Error != OK) {
                 SET_FLAG(file->iob_Flags, IOBF_ERROR);
 

@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_newlist.c,v 1.4 2006-09-25 15:12:47 clib2devs Exp $
+ * $Id: amiga_newlist.c,v 1.4 2006-09-25 15:12:47 clib4devs Exp $
 */
 
 #include <exec/lists.h>

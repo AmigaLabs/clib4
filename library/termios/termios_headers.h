@@ -1,5 +1,5 @@
 /*
- * $Id: termios_headers.h,v 1.3 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: termios_headers.h,v 1.3 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef	_TERMIOS_HEADERS_H
@@ -19,8 +19,8 @@
 
 /****************************************************************************/
 
-extern int64_t __termios_console_hook(struct _clib2 *__clib2, struct fd *,struct file_action_message *);
-extern int64_t __termios_serial_hook(struct _clib2 *__clib2, struct fd *,struct file_action_message *);
+extern int64_t __termios_console_hook(struct _clib4 *__clib4, struct fd *,struct file_action_message *);
+extern int64_t __termios_serial_hook(struct _clib4 *__clib4, struct fd *,struct file_action_message *);
 extern struct termios *__get_termios(struct fd *, BOOL);
 extern int openserial(const char *device_name,int unit,int mode);
 

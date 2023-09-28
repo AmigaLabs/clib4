@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_chown.c,v 1.12 2006-09-25 15:41:50 clib2devs Exp $
+ * $Id: unistd_chown.c,v 1.12 2006-09-25 15:41:50 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -13,7 +13,7 @@ int chown(const char *path_name, uid_t owner, gid_t group) {
     BOOL owner_changed = TRUE;
     struct ExamineData *status = NULL;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -32,7 +32,7 @@ int chown(const char *path_name, uid_t owner, gid_t group) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 

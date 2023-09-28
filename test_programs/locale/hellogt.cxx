@@ -1,7 +1,7 @@
 /*
  On Linux:
 
- ppc-amigaos-g++ -mcrt=clib2 -o hellogt hellogt.cxx -athread=native
+ ppc-amigaos-g++ -mcrt=clib4 -o hellogt hellogt.cxx -athread=native
  xgettext --package-name hellogt --package-version 1.2 --default-domain hellogt --output hellogt.pot hellogt.cxx
  msginit --no-translator --locale es_MX --output-file hellogt_spanish.po --input hellogt.pot
  sed --in-place hellogt_spanish.po --expression='/"hello, world!"/,/#: / s/""/"hola mundo"/'

@@ -1,5 +1,5 @@
 /*
- * $Id: fts.c,v 1.0 2023-09-10 12:04:22 clib2devs Exp $
+ * $Id: fts.c,v 1.0 2023-09-10 12:04:22 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -76,8 +76,8 @@ static const char *parentdir();
 
 static const char *
 currdir() {
-    struct _clib2 *__clib2 = __CLIB2;
-    if (__clib2->__unix_path_semantics)
+    struct _clib4 *__clib4 = __CLIB4;
+    if (__clib4->__unix_path_semantics)
         return ".";
     else
         return "CURRDIR:";
@@ -85,8 +85,8 @@ currdir() {
 
 static const char *
 parentdir() {
-    struct _clib2 *__clib2 = __CLIB2;
-    if (__clib2->__unix_path_semantics)
+    struct _clib4 *__clib4 = __CLIB4;
+    if (__clib4->__unix_path_semantics)
         return "..";
     else
         return "/";
@@ -99,7 +99,7 @@ fts_open(char *const *argv, int options, int (*compar)(const FTSENT **, const FT
     size_t nitems;
     FTSENT *parent, *tmp = NULL;    /* pacify gcc */
     size_t len;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(argv != NULL);
 
@@ -149,7 +149,7 @@ fts_open(char *const *argv, int options, int (*compar)(const FTSENT **, const FT
         p->fts_info = fts_stat(sp, p, ISSET(FTS_COMFOLLOW));
 
         /* Command-line "." and ".." are real directories. */
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             if (p->fts_info == FTS_DOT)
                 p->fts_info = FTS_D;
         }
@@ -216,7 +216,7 @@ static void
 fts_load(FTS *sp, FTSENT *p) {
     size_t len;
     char *cp;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(sp != NULL);
     assert(p != NULL);
@@ -230,7 +230,7 @@ fts_load(FTS *sp, FTSENT *p) {
      */
     len = p->fts_pathlen = p->fts_namelen;
     memmove(sp->fts_path, p->fts_name, len + 1);
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if ((cp = strrchr(p->fts_name, '/')) && (cp != p->fts_name || cp[1])) {
             len = strlen(++cp);
             memmove(p->fts_name, cp, len + 1);

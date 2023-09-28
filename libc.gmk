@@ -1,5 +1,5 @@
 #
-# $Id: libc.gmk,v 1.9 2010-10-20 13:50:17 clib2devs Exp $
+# $Id: libc.gmk,v 1.9 2010-10-20 13:50:17 clib4devs Exp $
 # :ts=8
 # -*- mode: makefile; -*-
 
@@ -15,7 +15,7 @@ endif
 
 C_BASE := \
 	libc_init_global.o \
-	getclib2.o \
+	getclib4.o \
 	errno_data.o
 
 C_ARGZ := \

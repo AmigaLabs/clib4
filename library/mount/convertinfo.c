@@ -1,5 +1,5 @@
 /*
- * $Id: mount_convertinfo.c,v 1.7 2008-04-16 07:38:10 clib2devs Exp $
+ * $Id: mount_convertinfo.c,v 1.7 2008-04-16 07:38:10 clib4devs Exp $
 */
 
 #ifndef _MOUNT_HEADERS_H

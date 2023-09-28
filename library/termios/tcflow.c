@@ -1,5 +1,5 @@
 /*
- * $Id: termios_tcflow.c,v 1.3 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: termios_tcflow.c,v 1.3 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef    _TERMIOS_HEADERS_H
@@ -10,14 +10,14 @@ int
 tcflow(int file_descriptor, int UNUSED action) {
     int result = ERROR;
     struct fd *fd;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     SHOWVALUE(file_descriptor);
     SHOWVALUE(action);
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -34,7 +34,7 @@ tcflow(int file_descriptor, int UNUSED action) {
 
 out:
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     __check_abort();
 

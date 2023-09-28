@@ -12,7 +12,7 @@ struct test_fct {
     unsigned int (*f)(unsigned int, unsigned int);
 };
 
-#ifndef CLIB2
+#ifndef CLIB4
 static inline unsigned long long rdtsc() {
     struct timeval tv;
     gettimeofday(&tv, NULL);

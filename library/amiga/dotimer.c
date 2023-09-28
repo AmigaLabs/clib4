@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_dotimer.c,v 1.9 2021-01-31 06:43:56 clib2devs Exp $
+ * $Id: amiga_dotimer.c,v 1.9 2021-01-31 06:43:56 clib4devs Exp $
 */
 
 #include <exec/errors.h>

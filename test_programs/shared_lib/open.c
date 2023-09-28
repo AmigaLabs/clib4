@@ -3,24 +3,24 @@
 #include <proto/dos.h>
 
 int main() {
-    struct Clib2IFace *IClib2 = NULL;
-    struct Library *Clib2Base = OpenLibrary("clib2.library", 0);
-    if (Clib2Base) {
-        IClib2 = (struct Clib2IFace *) GetInterface(Clib2Base, "main", 1, NULL);
-        if (!IClib2) {
-            Printf("Cannot get clib2 interface\n");
+    struct Clib4IFace *IClib4 = NULL;
+    struct Library *Clib4Base = OpenLibrary("clib4.library", 0);
+    if (Clib4Base) {
+        IClib4 = (struct Clib4IFace *) GetInterface(Clib4Base, "main", 1, NULL);
+        if (!IClib4) {
+            Printf("Cannot get clib4 interface\n");
         }
     }
     else {
-        Printf("Cannot open clib2.library\n");
+        Printf("Cannot open clib4.library\n");
     }
 
-    if (IClib2) {
-        DropInterface((struct Interface *) IClib2);
-        IClib2 = NULL;
+    if (IClib4) {
+        DropInterface((struct Interface *) IClib4);
+        IClib4 = NULL;
     }
-    if (Clib2Base) {
-        CloseLibrary(Clib2Base);
-        Clib2Base = NULL;
+    if (Clib4Base) {
+        CloseLibrary(Clib4Base);
+        Clib4Base = NULL;
     }
 }

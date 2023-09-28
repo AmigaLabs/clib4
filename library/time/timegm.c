@@ -1,5 +1,5 @@
 /*
- * $Id: time_timegm.c,v 1.0 2023-07-10 12:04:27 clib2devs Exp $
+ * $Id: time_timegm.c,v 1.0 2023-07-10 12:04:27 clib4devs Exp $
 */
 #define _DEFAULT_SOURCE
 

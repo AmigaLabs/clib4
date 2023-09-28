@@ -1,5 +1,5 @@
 /*
- * $Id: stdnoreturn.h,v 1.0 2022-03-22 13:12:59 clib2devs Exp $
+ * $Id: stdnoreturn.h,v 1.0 2022-03-22 13:12:59 clib4devs Exp $
 */
 
 #ifndef _STDNORETURN_H

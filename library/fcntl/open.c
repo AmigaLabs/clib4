@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_open.c,v 1.19 2021-01-31 12:04:22 clib2devs Exp $
+ * $Id: fcntl_open.c,v 1.19 2021-01-31 12:04:22 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -28,7 +28,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     int result = ERROR;
     int i;
     BOOL is_directory = FALSE;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -40,7 +40,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
 
     __check_abort();
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     if (path_name == NULL) {
         SHOWMSG("path name is invalid");
@@ -80,18 +80,18 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
         }
     }
 
-    fd_slot_number = __find_vacant_fd_entry(__clib2);
+    fd_slot_number = __find_vacant_fd_entry(__clib4);
     if (fd_slot_number < 0) {
-        if (__grow_fd_table(__clib2, 0) < 0) {
+        if (__grow_fd_table(__clib4, 0) < 0) {
             SHOWMSG("couldn't find a vacant file descriptor, and couldn't allocate one either");
             goto out;
         }
 
-        fd_slot_number = __find_vacant_fd_entry(__clib2);
+        fd_slot_number = __find_vacant_fd_entry(__clib4);
         assert(fd_slot_number >= 0);
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -257,7 +257,7 @@ directory:
         goto out;
     }
 
-    fd = __clib2->__fd[fd_slot_number];
+    fd = __clib4->__fd[fd_slot_number];
 
     if (is_directory || FLAG_IS_SET(open_flag, O_PATH))
         __initialize_fd(fd, __fd_hook_entry, dir_lock, 0, fd_lock); // TODO - Create a new dir hook
@@ -370,7 +370,7 @@ out:
     FreeDosObject(DOS_EXAMINEDATA, fib);
     UnLock(lock);
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

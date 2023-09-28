@@ -1,5 +1,5 @@
 /*
- * $Id: utsname.h,v 1.5 2022-02-04 12:06:14 clib2devs Exp $
+ * $Id: utsname.h,v 1.5 2022-02-04 12:06:14 clib4devs Exp $
 */
 
 #ifndef	_SYS_UTSNAME_H

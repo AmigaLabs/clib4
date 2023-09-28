@@ -1,5 +1,5 @@
 /*
- * $Id: resolv_lookupname.c,v 1.0 2022-08-09 10:44:15 clib2devs Exp $
+ * $Id: resolv_lookupname.c,v 1.0 2022-08-09 10:44:15 clib4devs Exp $
  */
 
 #ifndef _SOCKET_HEADERS_H

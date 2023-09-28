@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_gdtoa-gethex.c,v 1.0 2023-07-17 14:51:15 clib2devs Exp $
+ * $Id: stdlib_gdtoa-gethex.c,v 1.0 2023-07-17 14:51:15 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -99,9 +99,9 @@ gethex(const char **sp, const FPI *fpi, int32_t *exp, _Bigint **bp, int sign, lo
     int esign, havedig, irv, k, n, nbits, up, zret;
     uint32_t L, lostbits, *x;
     int32_t e, e1;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    const unsigned char *decimalpoint = (const unsigned char *) __clib2->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
+    const unsigned char *decimalpoint = (const unsigned char *) __clib4->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
     const size_t decp_len = strlen((const char *) decimalpoint);
     const unsigned char decp_end = decimalpoint[decp_len - 1];
 

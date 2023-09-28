@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_shmctl.c,v 1.2 2023-07-08 13:36:17 clib2devs Exp $
+ * $Id: sysv_shmctl.c,v 1.2 2023-07-08 13:36:17 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -26,7 +26,7 @@ _shmctl(int shmid, int cmd, struct shmid_ds *cbuf) {
     SHOWVALUE(cmd);
     SHOWPOINTER(cbuf);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     IPCLock(&res->shmcx.keymap);
     si = GetIPCById(&res->shmcx.keymap, shmid);
     if (si) {

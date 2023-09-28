@@ -1,5 +1,5 @@
 /*
- * $Id: math_fabs.c,v 1.10 2023-07-13 12:04:23 clib2devs Exp $
+ * $Id: math_fabs.c,v 1.10 2023-07-13 12:04:23 clib4devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H

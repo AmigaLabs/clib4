@@ -1,5 +1,5 @@
 /*
- * $Id: stdarg.h,v 1.7 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: stdarg.h,v 1.7 2006-01-08 12:06:14 clib4devs Exp $
 */
 
 #ifndef _STDARG_H

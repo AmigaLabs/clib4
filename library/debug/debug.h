@@ -1,5 +1,5 @@
 /*
- * $Id: debug.h,v 1.4 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: debug.h,v 1.4 2006-01-08 12:04:22 clib4devs Exp $
  *
  * :ts=8
  *
@@ -98,7 +98,7 @@
        _SETDEBUGLEVEL(2),                  \
        kprintf("[%s] "                     \
         "%s:%ld: failed assertion '%s'\n", \
-        __CLIB2->__progname,               \
+        __CLIB4->__progname,               \
         __FILE__,                          \
         __LINE__,                          \
         #expression),                      \

@@ -1,5 +1,5 @@
 /*
- * $Id: termios_tcsetattr.c,v 1.5 2006-11-16 14:39:23 clib2devs Exp $
+ * $Id: termios_tcsetattr.c,v 1.5 2006-11-16 14:39:23 clib4devs Exp $
 */
 
 #ifndef _TERMIOS_HEADERS_H
@@ -55,9 +55,9 @@ tcsetattr(int file_descriptor, int how, struct termios *tios) {
     struct fd *fd = NULL;
     struct termios new_tios;
     int type;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     if (tios == NULL) {
         __set_errno(EFAULT);
@@ -125,7 +125,7 @@ tcsetattr(int file_descriptor, int how, struct termios *tios) {
 
 out:
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     return (result);
 }

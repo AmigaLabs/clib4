@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_setenv.c,v 1.12 2006-09-25 14:12:15 clib2devs Exp $
+ * $Id: stdlib_setenv.c,v 1.12 2006-09-25 14:12:15 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -21,14 +21,14 @@ struct LocalVariable {
 
 CLIB_DESTRUCTOR(__setenv_exit) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* Now for the local variables that may still be set. */
-    if (__clib2->__lv_root != NULL) {
+    if (__clib4->__lv_root != NULL) {
         do {
-            D(("deleting variable '%s'", __clib2->__lv_root->lv_Name));
-            DeleteVar(__clib2->__lv_root->lv_Name, 0);
-        } while ((__clib2->__lv_root = __clib2->__lv_root->lv_Next) != NULL);
+            D(("deleting variable '%s'", __clib4->__lv_root->lv_Name));
+            DeleteVar(__clib4->__lv_root->lv_Name, 0);
+        } while ((__clib4->__lv_root = __clib4->__lv_root->lv_Next) != NULL);
     }
 
     LEAVE();
@@ -44,7 +44,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
     int status;
     int result = ERROR;
     size_t i;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -129,8 +129,8 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
             goto out;
         }
 
-        lv->lv_Next = __clib2->__lv_root;
-        __clib2->__lv_root = lv;
+        lv->lv_Next = __clib4->__lv_root;
+        __clib4->__lv_root = lv;
 
         lv->lv_Name = (char *) (lv + 1);
         strcpy(lv->lv_Name, name);
@@ -147,7 +147,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
         SHOWMSG("could not set variable");
 
         if (lv != NULL) {
-            __clib2->__lv_root = lv->lv_Next;
+            __clib4->__lv_root = lv->lv_Next;
             free(lv);
         }
 

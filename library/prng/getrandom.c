@@ -1,5 +1,5 @@
 /*
- * $Id: prng_getrandom.c,v 1.0 2023-06-15 12:04:22 clib2devs Exp $
+ * $Id: prng_getrandom.c,v 1.0 2023-06-15 12:04:22 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -17,9 +17,9 @@
    Upon error, return -1 and set errno.  */
 ssize_t
 getrandom(void *buffer, size_t length, unsigned int flags) {
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
     BOOL devrandom = (flags & GRND_RANDOM) != 0;
-    int fd = __clib2->randfd[devrandom];
+    int fd = __clib4->randfd[devrandom];
 
     if (fd < 0) {
         int oflags = (O_RDONLY + (flags & GRND_NONBLOCK ? O_NONBLOCK : 0));
@@ -29,7 +29,7 @@ getrandom(void *buffer, size_t length, unsigned int flags) {
                 __set_errno(ENOSYS);
             return -1;
         }
-        __clib2->randfd[devrandom] = fd;
+        __clib4->randfd[devrandom] = fd;
     }
 
     return read(fd, buffer, length);

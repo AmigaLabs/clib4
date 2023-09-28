@@ -1,4 +1,4 @@
-/* $Id: socket_res_state.c,v 1.0 2022-03-14 10:44:15 clib2devs Exp $
+/* $Id: socket_res_state.c,v 1.0 2022-03-14 10:44:15 clib4devs Exp $
  */
 
 #include <resolv.h>

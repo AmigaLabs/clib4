@@ -1,5 +1,5 @@
 /*
- * $Id: locale_headers.h,v 2.0 2023-05-03 12:04:23 clib2devs Exp $
+ * $Id: locale_headers.h,v 2.0 2023-05-03 12:04:23 clib4devs Exp $
 */
 
 #ifndef _LOCALE_HEADERS_H
@@ -39,8 +39,8 @@
 
 #include <time.h>
 
-extern void __locale_lock(struct _clib2 *__clib2);
-extern void __locale_unlock(struct _clib2 *__clib2);
-extern void __close_all_locales(struct _clib2 *__clib2);
+extern void __locale_lock(struct _clib4 *__clib4);
+extern void __locale_unlock(struct _clib4 *__clib4);
+extern void __close_all_locales(struct _clib4 *__clib4);
 
 #endif /* _LOCALE_HEADERS_H */

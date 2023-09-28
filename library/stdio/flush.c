@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_flush.c,v 1.5 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stdio_flush.c,v 1.5 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -17,7 +17,7 @@ __flush(FILE *stream) {
     struct iob *iob = (struct iob *) stream;
     int result = EOF;
     int last_c;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -34,13 +34,13 @@ __flush(FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(__clib2, iob));
+    assert(__is_valid_iob(__clib4, iob));
     assert(iob->iob_BufferWriteBytes > 0);
     assert(iob->iob_BufferSize > 0);
 
     last_c = iob->iob_Buffer[iob->iob_BufferWriteBytes - 1];
 
-    if (__flush_iob_write_buffer(__clib2, iob) < 0) {
+    if (__flush_iob_write_buffer(__clib4, iob) < 0) {
         /* Remove the last character stored in the buffer, which is
            typically a '\n'. */
         iob->iob_BufferWriteBytes--;

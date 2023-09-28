@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_tempnam.c,v 1.0 2021-02-22 17:46:25 clib2devs Exp $
+ * $Id: stdio_tempnam.c,v 1.0 2021-02-22 17:46:25 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -16,14 +16,14 @@
 static int
 worker(char *result, const char *part1, const char *part2, char *part3, int *part4) {
     /*  Generate the filename and make sure that there isn't one called it already.  */
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     while (1) {
         __check_abort();
 
         int t;
 
-        if (!__clib2->__unix_path_semantics) {
+        if (!__clib4->__unix_path_semantics) {
             if (!strcmp(part1, P_tmpdir)) {
                 sprintf(result, "T:%s%s.%x", part2, part3, *part4);
             } else {
@@ -54,7 +54,7 @@ worker(char *result, const char *part1, const char *part2, char *part3, int *par
 char *
 tempnam(const char *dir, const char *pfx) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     __check_abort();
 
@@ -79,7 +79,7 @@ tempnam(const char *dir, const char *pfx) {
         char string[7] = {0};
 
         snprintf(string, 7, "%lX", r);
-        if (!worker(filename, dir, prefix, string, &__clib2->inc))
+        if (!worker(filename, dir, prefix, string, &__clib4->inc))
             return NULL;
     }
 

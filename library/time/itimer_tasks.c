@@ -1,5 +1,5 @@
 /*
- * $Id: time_itimer_tasks.c,v 1.0 2022-03-15 08:39:45 clib2devs Exp $
+ * $Id: time_itimer_tasks.c,v 1.0 2022-03-15 08:39:45 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -31,9 +31,9 @@ int itimer_real_task() {
     struct Process *thisTask = (struct Process *) FindTask(NULL);
     struct itimer *_itimer = (struct itimer *) thisTask->pr_Task.tc_UserData;
 
-    struct _clib2 *__clib2 = _itimer->__clib2;
+    struct _clib4 *__clib4 = _itimer->__clib4;
 
-    SHOWPOINTER(__clib2);
+    SHOWPOINTER(__clib4);
     SHOWVALUE(_itimer->which);
 
     /* Create itimer timers and message ports */
@@ -58,13 +58,13 @@ int itimer_real_task() {
     }
 
     tmr_real_tr->Request.io_Command = TR_ADDREQUEST;
-    tmr_real_tr->Time.Seconds = __clib2->tmr_time.it_value.tv_sec;
-    tmr_real_tr->Time.Microseconds = __clib2->tmr_time.it_value.tv_usec;
+    tmr_real_tr->Time.Seconds = __clib4->tmr_time.it_value.tv_sec;
+    tmr_real_tr->Time.Microseconds = __clib4->tmr_time.it_value.tv_usec;
 
     /* Loop until timer expires and restart or we interrupt it */
     while (TRUE) {
         /* Get current time of day */
-        gettimeofday(&__clib2->tmr_start_time, NULL);
+        gettimeofday(&__clib4->tmr_start_time, NULL);
         /* Set wait mask */
         wait_mask = SIGBREAKF_CTRL_F | SIGBREAKF_CTRL_D | (1L << tmr_real_mp->mp_SigBit);
         /* Reset signals */
@@ -88,24 +88,24 @@ int itimer_real_task() {
                 WaitIO((struct IORequest *) tmr_real_tr);   /* clean up and remove reply */
             AbortIO((struct IORequest *) tmr_real_tr);
 
-            tmr_real_tr->Time.Seconds = __clib2->tmr_time.it_value.tv_sec;
-            tmr_real_tr->Time.Microseconds = __clib2->tmr_time.it_value.tv_usec;
+            tmr_real_tr->Time.Seconds = __clib4->tmr_time.it_value.tv_sec;
+            tmr_real_tr->Time.Microseconds = __clib4->tmr_time.it_value.tv_usec;
         } else {
             if (CheckIO((struct IORequest *) tmr_real_tr))
                 WaitIO((struct IORequest *) tmr_real_tr);
 
-            tmr_real_tr->Time.Seconds += __clib2->tmr_time.it_interval.tv_sec;
-            tmr_real_tr->Time.Microseconds += __clib2->tmr_time.it_interval.tv_usec;
+            tmr_real_tr->Time.Seconds += __clib4->tmr_time.it_interval.tv_sec;
+            tmr_real_tr->Time.Microseconds += __clib4->tmr_time.it_interval.tv_usec;
 
             /* If SIGALRM is blocked kill the timer */
-            if (FLAG_IS_SET(__clib2->__signals_blocked, (1 << SIGALRM))) {
+            if (FLAG_IS_SET(__clib4->__signals_blocked, (1 << SIGALRM))) {
                 break;
             }
 
             raise(SIGALRM);
 
             /* Check again if SIGALRM is blocked and then kill the timer */
-            if (FLAG_IS_SET(__clib2->__signals_blocked, (1 << SIGALRM))) {
+            if (FLAG_IS_SET(__clib4->__signals_blocked, (1 << SIGALRM))) {
                 break;
             }
         }

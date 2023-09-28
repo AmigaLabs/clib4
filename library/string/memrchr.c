@@ -1,5 +1,5 @@
 /*
- * $Id: string_memrchr.c,v 1.0 2021-02-23 10:32:26 clib2devs Exp $
+ * $Id: string_memrchr.c,v 1.0 2021-02-23 10:32:26 clib4devs Exp $
 */
 
 #ifndef _STRING_HEADERS_H

@@ -84,7 +84,7 @@
 #include "dos.h"
 #include "c.lib_rev.h"
 
-#include "clib2.h"
+#include "clib4.h"
 #include "debug.h"
 #include "uuid.h"
 
@@ -109,12 +109,12 @@ struct TimerIFace *ITimer = 0;
 struct Library *__UtilityBase = 0;
 struct UtilityIFace *__IUtility = 0;
 
-struct Clib2IFace *IClib2 = 0;
+struct Clib4IFace *IClib4 = 0;
 
 const struct Resident RomTag;
 
 #define LIBPRI 0
-#define LIBNAME "clib2.library"
+#define LIBNAME "clib4.library"
 
 static struct TimeRequest *openTimer(uint32 unit);
 static void closeTimer(struct TimeRequest *tr);
@@ -165,23 +165,23 @@ static void closeLibraries() {
     }
 }
 
-struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
+struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
     if (version > VERSION) {
         return NULL;
     }
 
-    struct Clib2Base *libBase = (struct Clib2Base *) Self->Data.LibBase;
-    if (!IClib2) {
-        IClib2 = (struct Clib2IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
-        IExec->DropInterface((struct Interface *)IClib2);
+    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
+    if (!IClib4) {
+        IClib4 = (struct Clib4IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
+        IExec->DropInterface((struct Interface *)IClib4);
     }
 
     ++libBase->libNode.lib_OpenCnt;
     libBase->libNode.lib_Flags &= ~LIBF_DELEXP;
 
-    struct Clib2Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
-        struct Clib2Node c2n;
+        struct Clib4Node c2n;
         char uuid[UUID4_LEN + 1] = {0};
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
         uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
@@ -200,19 +200,19 @@ struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
 #ifdef __SPE__
             case CPUFAMILY_E500:
                 D(("Using SPE setjmp family functions"));
-                IClib2->setjmp = setjmp_spe;
-                IClib2->longjmp = longjmp_spe;
-                IClib2->_longjmp = _longjmp_spe;
-                IClib2->_setjmp = _setjmp_spe;
-                IClib2->__sigsetjmp = __sigsetjmp_spe;
-                IClib2->siglongjmp = siglongjmp_spe;
+                IClib4->setjmp = setjmp_spe;
+                IClib4->longjmp = longjmp_spe;
+                IClib4->_longjmp = _longjmp_spe;
+                IClib4->_setjmp = _setjmp_spe;
+                IClib4->__sigsetjmp = __sigsetjmp_spe;
+                IClib4->siglongjmp = siglongjmp_spe;
                 break;
 #endif
             default:
                 if (res->altivec) {
                     D(("Using Altivec setjmp family functions"));
-                    IClib2->setjmp = setjmp_altivec;
-                    IClib2->longjmp = longjmp_altivec;
+                    IClib4->setjmp = setjmp_altivec;
+                    IClib4->longjmp = longjmp_altivec;
                 }
                 else
                     D(("Using default setjmp family functions"));
@@ -224,7 +224,7 @@ struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
 BPTR libExpunge(struct LibraryManagerInterface *Self) {
     BPTR result = 0;
 
-    struct Clib2Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
         IPCMapUninit(&res->shmcx.keymap);
         IPCMapUninit(&res->msgcx.keymap);
@@ -234,7 +234,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
         size_t iter = 0;
         void *item;
         while (hashmap_iter(res->children, &iter, &item)) {
-            const struct Clib2Node *node = item;
+            const struct Clib4Node *node = item;
             if (node->undo)
                 IExec->FreeVec(node->undo);
         }
@@ -248,7 +248,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
         IExec->FreeVec(res);
     }
 
-    struct Clib2Base *libBase = (struct Clib2Base *) Self->Data.LibBase;
+    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
     if (libBase->libNode.lib_OpenCnt) {
         libBase->libNode.lib_Flags |= LIBF_DELEXP;
         return result;
@@ -266,15 +266,15 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 }
 
 BPTR libClose(struct LibraryManagerInterface *Self) {
-    struct Clib2Base *libBase = (struct Clib2Base *) Self->Data.LibBase;
+    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
 
-    struct Clib2Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
         size_t iter = 0;
         void *item;
         while (hashmap_iter(res->children, &iter, &item)) {
-            const struct Clib2Node *node = item;
+            const struct Clib4Node *node = item;
             if (node->pid == pid) {
                 if (node->undo)
                     IExec->FreeVec(node->undo);
@@ -297,11 +297,11 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
     }
 }
 
-uint32 clib2Obtain(struct Clib2IFace *Self) {
+uint32 clib4Obtain(struct Clib4IFace *Self) {
     return ++Self->Data.RefCount;
 }
 
-uint32 clib2Release(struct Clib2IFace *Self) {
+uint32 clib4Release(struct Clib4IFace *Self) {
     return --Self->Data.RefCount;
 }
 
@@ -314,7 +314,7 @@ uint32 libRelease(struct LibraryManagerInterface *Self) {
 }
 
 int libReserved(void) {
-    __CLIB2->_errno = ENOSYS;
+    __CLIB4->_errno = ENOSYS;
     return -1;
 }
 
@@ -332,19 +332,19 @@ unixSocketCompare(const void *a, const void *b, void *udata) {
 }
 
 uint64_t
-clib2NodeHash(const void *item, uint64_t seed0, uint64_t seed1) {
-    const struct Clib2Node *node = item;
+clib4NodeHash(const void *item, uint64_t seed0, uint64_t seed1) {
+    const struct Clib4Node *node = item;
     return hashmap_xxhash3(node->uuid, strlen(node->uuid), seed0, seed1);
 }
 
 int
-clib2NodeCompare(const void *a, const void *b, void *udata) {
-    const struct Clib2Node *ua = a;
-    const struct Clib2Node *ub = b;
+clib4NodeCompare(const void *a, const void *b, void *udata) {
+    const struct Clib4Node *ua = a;
+    const struct Clib4Node *ub = b;
     return ua->uuid == ub->uuid;
 }
 
-struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
+struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
     libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
     libBase->libNode.lib_Node.ln_Pri = LIBPRI;
     libBase->libNode.lib_Node.ln_Name = LIBNAME;
@@ -403,10 +403,10 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
     }
 
     /* Open resource */
-    struct Clib2Resource *res = (APTR) iexec->OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) iexec->OpenResource(RESOURCE_NAME);
     if (!res) {
         res = iexec->AllocVecTags(
-                sizeof(struct Clib2Resource),
+                sizeof(struct Clib4Resource),
                 AVT_Type, MEMF_SHARED,
                 AVT_ClearWithValue, 0,
                 AVT_Lock, TRUE,
@@ -421,12 +421,12 @@ struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIF
             res->size = sizeof(*res);
 
             iexec->InitSemaphore(&res->semaphore);
-            res->children = hashmap_new(sizeof(struct Clib2Node), 0, 0, 0, clib2NodeHash, clib2NodeCompare, NULL, NULL);
+            res->children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
             /* Initialize unix sockets hashmap */
             res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL,
                                             NULL);
-            /* Initialize fallback clib2 reent structure */
-            res->fallbackClib = (struct _clib2 *) iexec->AllocVecTags(sizeof(struct _clib2),
+            /* Initialize fallback clib4 reent structure */
+            res->fallbackClib = (struct _clib4 *) iexec->AllocVecTags(sizeof(struct _clib4),
                                                                       AVT_Type, MEMF_SHARED,
                                                                       AVT_ClearWithValue, 0,
                                                                       TAG_DONE);
@@ -481,13 +481,13 @@ static struct TagItem libManagerTags[] = {
         {TAG_DONE,        0}
 };
 
-extern struct _clib2 *__getClib2(void);
+extern struct _clib4 *__getClib4(void);
 
-#include "clib2_vectors.h"
+#include "clib4_vectors.h"
 
 static struct TagItem mainTags[] = {
         {MIT_Name,        (uint32) "main"},
-        {MIT_VectorTable, (uint32) clib2Vectors},
+        {MIT_VectorTable, (uint32) clib4Vectors},
         {MIT_Version,     1},
         {MIT_DataSize,    0},
         {TAG_DONE,        0}
@@ -502,7 +502,7 @@ static uint32 libInterfaces[] = {
 
 /* CreateLibrary tag list */
 static struct TagItem libCreateTags[] = {
-        {CLT_DataSize,   (uint32)(sizeof(struct Clib2Base))},
+        {CLT_DataSize,   (uint32)(sizeof(struct Clib4Base))},
         {CLT_Interfaces, (uint32) libInterfaces},
         {CLT_InitFunc,   (uint32) libInit},
         {TAG_DONE,       0}

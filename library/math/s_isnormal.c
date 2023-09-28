@@ -1,5 +1,5 @@
 /*
- * $Id: math_s_isormal.c,v 1.1 2023-07-19 16:47:23 clib2devs Exp $
+ * $Id: math_s_isormal.c,v 1.1 2023-07-19 16:47:23 clib4devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H

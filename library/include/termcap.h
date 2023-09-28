@@ -23,10 +23,10 @@
 
 __BEGIN_DECLS
 
-#define PC __CLIB2->__PC
-#define ospeed __CLIB2__ospeed
-#define UP __CLIB2->__UP
-#define BC __CLIB2->__BC
+#define PC __CLIB4->__PC
+#define ospeed __CLIB4__ospeed
+#define UP __CLIB4->__UP
+#define BC __CLIB4->__BC
 
 extern int tgetent (char *buffer, const char *termtype);
 extern int tgetnum (const char *name);

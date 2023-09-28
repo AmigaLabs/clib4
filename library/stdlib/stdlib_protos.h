@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_protos.h,v 1.18 2010-10-20 13:50:17 clib2devs Exp $
+ * $Id: stdlib_protos.h,v 1.18 2010-10-20 13:50:17 clib4devs Exp $
 */
 
 #ifndef _STDLIB_PROTOS_H
@@ -40,8 +40,8 @@ extern int __wildcard_expand_init(void);
 /* stdlib_exit.c */
 extern void _exit(int return_code);
 
-extern void reent_init(struct _clib2 *__clib2);
-extern void reent_exit(struct _clib2 *__clib2, BOOL fallback);
+extern void reent_init(struct _clib4 *__clib4);
+extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
 
 /* signal_checkabort.c */
 extern void __check_abort(void);

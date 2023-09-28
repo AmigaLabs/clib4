@@ -1,5 +1,5 @@
 /*
- * $Id: signal_signal.c,v 1.4 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: signal_signal.c,v 1.4 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _SIGNAL_HEADERS_H
@@ -9,7 +9,7 @@
 void (*signal(int sig, void (*handler)(int)))(int) {
     int table_entry = sig - SIGHUP;
     void (*result)(int) = SIG_ERR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -26,9 +26,9 @@ void (*signal(int sig, void (*handler)(int)))(int) {
     if (table_entry < 0)
         table_entry = 0;
 
-    result = (void (*)(int)) __clib2->__signal_handler_table[table_entry];
+    result = (void (*)(int)) __clib4->__signal_handler_table[table_entry];
 
-    __clib2->__signal_handler_table[table_entry] = (signal_handler_t) handler;
+    __clib4->__signal_handler_table[table_entry] = (signal_handler_t) handler;
 
 out:
 

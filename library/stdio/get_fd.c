@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_get_fd.c,v 1.1 2006-11-15 09:17:04 clib2devs Exp $
+ * $Id: stdio_get_fd.c,v 1.1 2006-11-15 09:17:04 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H

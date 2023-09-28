@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_vsprintf_hook_entry.c,v 1.5 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdio_vsprintf_hook_entry.c,v 1.5 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -7,7 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int64_t
-__vsprintf_hook_entry(struct _clib2 *__clib2, struct iob *string_iob, struct file_action_message *fam) {
+__vsprintf_hook_entry(struct _clib4 *__clib4, struct iob *string_iob, struct file_action_message *fam) {
     int64_t result = ERROR;
 
     assert(fam != NULL && string_iob != NULL);

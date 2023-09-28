@@ -1,5 +1,5 @@
 /*
- * $Id: stat_utimensat.c,v 2.0 2023-05-26 12:04:24 clib2devs Exp $
+ * $Id: stat_utimensat.c,v 2.0 2023-05-26 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STAT_HEADERS_H
@@ -18,7 +18,7 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
     ENTER();
 
     SHOWVALUE(fd);
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
     int result = -1;
     struct DateStamp ds0;
     BOOL setToCurrentTime = FALSE;
@@ -83,7 +83,7 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
 
     if (path != NULL) {
         /* Check for relative path */
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             if (path[0] == '/')
                 absolute = TRUE;
 

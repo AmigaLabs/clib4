@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_change_fd_user_data.c,v 1.1 2006-11-15 09:17:04 clib2devs Exp $
+ * $Id: stdio_change_fd_user_data.c,v 1.1 2006-11-15 09:17:04 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -13,12 +13,12 @@ __change_fd_user_data(
         void **old_user_data_ptr) {
     int result = -1;
     struct fd *fd;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (old_user_data_ptr != NULL)
         (*old_user_data_ptr) = NULL;
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd != NULL) {
@@ -34,7 +34,7 @@ __change_fd_user_data(
         result = 0;
     }
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     return (result);
 }

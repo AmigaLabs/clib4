@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_ttyname_r.c,v 1.6 2006-11-16 14:39:23 clib2devs Exp $
+ * $Id: unistd_ttyname_r.c,v 1.6 2006-11-16 14:39:23 clib4devs Exp $
 */
 
 #ifndef    _UNISTD_HEADERS_H
@@ -15,13 +15,13 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
     const char *tty_file_name;
     struct fd *fd;
     int result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     SHOWVALUE(file_descriptor);
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -42,7 +42,7 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
         }
     }
 
-    if (__clib2->__unix_path_semantics)
+    if (__clib4->__unix_path_semantics)
         tty_file_name = "/CONSOLE";
     else
         tty_file_name = "CONSOLE:";
@@ -61,7 +61,7 @@ out:
 
     __fd_unlock(fd);
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

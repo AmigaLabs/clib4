@@ -1,5 +1,5 @@
 /*
- * $Id: math.h,v 1.22 2007-01-06 10:09:49 clib2devs Exp $
+ * $Id: math.h,v 1.22 2007-01-06 10:09:49 clib4devs Exp $
 */
 
 #ifndef _MATH_H
@@ -88,8 +88,8 @@ extern float ynf(int n, float x);
 /* HUGE_VALL is a 'long double' Infinity.  */
 #define HUGE_VALL (1.0L / 0.0L)
 
-#define INFINITY ((const float) __CLIB2->__infinity)
-#define NAN ((const float) __CLIB2->__nan)
+#define INFINITY ((const float) __CLIB4->__infinity)
+#define NAN ((const float) __CLIB4->__nan)
 
 #define FP_INFINITE     0x01   /* -/+ infinity */
 #define FP_NAN          0x02   /* not a number */

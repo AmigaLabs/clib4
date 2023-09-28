@@ -1,5 +1,5 @@
 /*
- * $Id: time_asctime_r.c,v 1.10 2006-09-25 13:43:06 clib2devs Exp $
+ * $Id: time_asctime_r.c,v 1.10 2006-09-25 13:43:06 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H

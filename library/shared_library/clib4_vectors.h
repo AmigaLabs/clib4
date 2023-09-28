@@ -1,11 +1,11 @@
-static void *clib2Vectors[] = {
-        (void *) (clib2Obtain),
-        (void *) (clib2Release),
+static void *clib4Vectors[] = {
+        (void *) (clib4Obtain),
+        (void *) (clib4Release),
         (void *) (NULL),
         (void *) (NULL),
         /* internal */
         (void *) (library_start),
-        (void *) (__getClib2),
+        (void *) (__getClib4),
         (void *) (libReserved),
         (void *) (__translate_amiga_to_unix_path_name),
         (void *) (__translate_unix_to_amiga_path_name),
@@ -1079,9 +1079,6 @@ static void *clib2Vectors[] = {
         (void *) (writev),                                /* 4080 */
         /* sys/utsname.h */
         (void *) (uname),                                 /* 4084 */
-
-        /* END OF CLIB2 VERSION 1.0   */
-        /* New function will go below */
 
         (void *) (futimens),                              /* 4088 */
         (void *) (utimensat),                             /* 4092 */

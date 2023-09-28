@@ -1,5 +1,5 @@
 #
-# $Id: libprofile.gmk,v 1.1 2006-09-17 17:37:27 clib2devs Exp $
+# $Id: libprofile.gmk,v 1.1 2006-09-17 17:37:27 clib4devs Exp $
 #
 
 OUT_STATIC := $(BUILD_DIR)/obj/libprofile

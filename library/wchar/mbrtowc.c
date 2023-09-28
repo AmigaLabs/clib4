@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_mbrlen.c,v 1.4 2021-02-03 19:11:16 clib2devs Exp $
+ * $Id: wchar_mbrlen.c,v 1.4 2021-02-03 19:11:16 clib4devs Exp $
 */
 
 #ifndef _WCHAR_HEADERS_H
@@ -9,12 +9,12 @@
 size_t
 mbrtowc(wchar_t *pwc, const char *src, size_t n, mbstate_t *ps) {
     int retval = 0;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     if (ps == NULL) {
-        ps = &__clib2->wide_status->_mbrtowc_state;
+        ps = &__clib4->wide_status->_mbrtowc_state;
     }
 
     if (src == NULL) {

@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_addtof.c,v 1.4 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: amiga_addtof.c,v 1.4 2006-01-08 12:04:22 clib4devs Exp $
  */
 
 #include <exec/interrupts.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: malloc_memalign.c,v 1.0 2021-01-10 10:52:18 clib2devs Exp $
+ * $Id: malloc_memalign.c,v 1.0 2021-01-10 10:52:18 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -38,7 +38,7 @@ isPowerOfTwo(size_t alignment) {
 void *
 memalign(size_t alignment, size_t size) {
     void *result = NULL;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -50,7 +50,7 @@ memalign(size_t alignment, size_t size) {
         goto out;
     }
 
-    if (__clib2->__memalign_pool == NULL) {
+    if (__clib4->__memalign_pool == NULL) {
         __set_errno(ENOSYS);
         goto out;
     }
@@ -62,7 +62,7 @@ memalign(size_t alignment, size_t size) {
         goto out;
     }
 
-    struct MemalignEntry *l = ItemPoolAlloc(__clib2->__memalign_pool);
+    struct MemalignEntry *l = ItemPoolAlloc(__clib4->__memalign_pool);
     if (l == NULL) {
         FreeVec(result);
         __set_errno(ENOMEM);
@@ -72,9 +72,9 @@ memalign(size_t alignment, size_t size) {
     /* Set MemalignEntry node stuff */
     l->me_Exact = result;
 
-    if (NULL != AVL_AddNode(&__clib2->__memalign_tree, &l->me_AvlNode, MemalignAVLNodeComp)) {
+    if (NULL != AVL_AddNode(&__clib4->__memalign_tree, &l->me_AvlNode, MemalignAVLNodeComp)) {
         FreeVec(result);
-        ItemPoolFree(__clib2->__memalign_pool, l);
+        ItemPoolFree(__clib4->__memalign_pool, l);
         __set_errno(ENOMEM);
         result = NULL;
         goto out;
