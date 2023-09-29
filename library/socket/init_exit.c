@@ -123,7 +123,7 @@ SOCKET_CONSTRUCTOR(socket_init) {
 
     /* Wire the library's errno variable to our local errno. */
     tags[0].ti_Tag = SBTM_SETVAL(SBTC_ERRNOLONGPTR);
-    tags[0].ti_Data = (ULONG)&errno;
+    tags[0].ti_Data = (ULONG)&__clib4->_errno;
 
     /* Also enable ^C checking if desired. */
     tags[1].ti_Tag = SBTM_SETVAL(SBTC_BREAKMASK);
