@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_shmids.c,v 1.2 2023-07-08 13:40:49 clib2devs Exp $
+ * $Id: sysv_shmids.c,v 1.2 2023-07-08 13:40:49 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -15,7 +15,7 @@ _shmids(int *buf, size_t nids, size_t *idcnt) {
     SHOWVALUE(nids);
     SHOWPOINTER(idcnt);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     IPCLock(&res->shmcx.keymap);
     ret = IPCids(&res->shmcx.keymap, (int32 *) buf, nids, (uint32 *) idcnt);
     if (ret) {

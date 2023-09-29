@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_remove_fd_alias.c,v 1.5 2006-10-10 13:39:26 clib2devs Exp $
+ * $Id: stdio_remove_fd_alias.c,v 1.5 2006-10-10 13:39:26 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -9,9 +9,9 @@
 void
 __remove_fd_alias(struct fd *fd) {
     assert(fd != NULL);
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     if (fd->fd_Original != NULL) /* this is an alias */
     {
@@ -54,5 +54,5 @@ __remove_fd_alias(struct fd *fd) {
         }
     }
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 }

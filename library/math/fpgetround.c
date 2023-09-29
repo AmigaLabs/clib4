@@ -1,5 +1,5 @@
 /*
- * $Id: fpgetround.c,v 1.0 2023-07-20 19:09:00 clib2devs Exp $
+ * $Id: fpgetround.c,v 1.0 2023-07-20 19:09:00 clib4devs Exp $
 */
 
 #include <sys/types.h>

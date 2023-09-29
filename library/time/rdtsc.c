@@ -1,5 +1,5 @@
 /*
- * $Id: time_srdtsc.c,v 1.1 2023-02-22 18:06:24 clib2devs Exp $
+ * $Id: time_srdtsc.c,v 1.1 2023-02-22 18:06:24 clib4devs Exp $
  */
 
 #include <time.h>

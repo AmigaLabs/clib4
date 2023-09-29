@@ -1,5 +1,5 @@
 /*
- * $Id: socket_ioctl.c,v 1.14 2006-11-16 10:41:15 clib2devs Exp $
+ * $Id: socket_ioctl.c,v 1.14 2006-11-16 10:41:15 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -79,7 +79,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
     char *param;
     struct fd *fd = NULL;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -90,10 +90,10 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
     DECLARE_SOCKETBASE();
 
     if (request != TIOCGWINSZ && request != TIOCSWINSZ) {
-        if (FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET)) {
-            assert(sockfd >= 0 && sockfd < __clib2->__num_fd);
-            assert(__clib2->__fd[sockfd] != NULL);
-            assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
+        if (FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET)) {
+            assert(sockfd >= 0 && sockfd < __clib4->__num_fd);
+            assert(__clib4->__fd[sockfd] != NULL);
+            assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IN_USE));
 
             fd = __get_file_descriptor_socket(sockfd);
             if (fd == NULL)

@@ -1,5 +1,5 @@
 /*
- * $Id: stat_rmdir.c,v 1.9 2021-01-31 12:04:24 clib2devs Exp $
+ * $Id: stat_rmdir.c,v 1.9 2021-01-31 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STAT_HEADERS_H
@@ -13,7 +13,7 @@ rmdir(const char *path_name) {
     int result = ERROR;
     struct ExamineData *fib = NULL;
     LONG status;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -30,7 +30,7 @@ rmdir(const char *path_name) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 

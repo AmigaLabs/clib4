@@ -1,5 +1,5 @@
 /*
- * $Id: string_strchrnul.c,v 1.5 2021-03-22 12:04:26 clib2devs Exp $
+ * $Id: string_strchrnul.c,v 1.5 2021-03-22 12:04:26 clib4devs Exp $
 */
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"

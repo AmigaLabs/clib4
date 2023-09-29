@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_pathconf.c,v 1.1 2006-07-28 14:37:28 clib2devs Exp $
+ * $Id: unistd_pathconf.c,v 1.1 2006-07-28 14:37:28 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -12,7 +12,7 @@ pathconf(const char *path, int name) {
     struct DevProc *dvp = NULL;
     BOOL ignore_port = FALSE;
     long ret = -1;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -26,7 +26,7 @@ pathconf(const char *path, int name) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path[0] == '\0') {
             SHOWMSG("Empty name");
 

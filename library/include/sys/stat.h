@@ -1,5 +1,5 @@
 /*
- * $Id: stat.h,v 1.10 2006-07-28 13:19:12 clib2devs Exp $
+ * $Id: stat.h,v 1.10 2006-07-28 13:19:12 clib4devs Exp $
 */
 
 #ifndef _SYS_STAT_H

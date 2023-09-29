@@ -94,15 +94,15 @@ struct NameTranslationInfo;
 
 #include <stdarg.h>
 
-struct Clib2IFace {
+struct Clib4IFace {
     struct InterfaceData Data;                                              //-4/56
-    unsigned long APICALL (*Obtain)(struct Clib2IFace *Self);               //60
-    unsigned long APICALL (*Release)(struct Clib2IFace *Self);              //64
-    void APICALL (*Expunge)(struct Clib2IFace *Self);                       //68
-    struct Clib2IFace *APICALL (*Clone)(struct Clib2IFace *Self);           //72
+    unsigned long APICALL (*Obtain)(struct Clib4IFace *Self);               //60
+    unsigned long APICALL (*Release)(struct Clib4IFace *Self);              //64
+    void APICALL (*Expunge)(struct Clib4IFace *Self);                       //68
+    struct Clib4IFace *APICALL (*Clone)(struct Clib4IFace *Self);           //72
     /* internal */
     int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //76
-    struct _clib2 * (* __getClib2)(void);                                   //80
+    struct _clib4 * (* __getClib4)(void);                                   //80
     void (* internal1)(void);                                               //84
     void (* __translate_amiga_to_unix_path_name)(void);                     //88
     void (* __translate_unix_to_amiga_path_name)(void);                     //92
@@ -1322,27 +1322,27 @@ struct Clib2IFace {
 };
 
 #ifdef __PIC__
-#define Clib2Call2(function, offset)     \
+#define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
 	    .align 2                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\
 	    li  %r12," #offset "         \n\
-	    b __Clib2Call@plt            \n\
+	    b __Clib4Call@plt            \n\
 	    .size	" #function ", .-" #function)
 #elif !defined(__PIC__)
-#define Clib2Call2(function, offset)     \
+#define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
 	    .align 2                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\
 	    li  %r12," #offset "         \n\
-	    b __Clib2Call                \n\
+	    b __Clib4Call                \n\
 	    .size	" #function ", .-" #function)
 #endif
 
-#define Clib2Call(x...) Clib2Call2(x)
+#define Clib4Call(x...) Clib4Call2(x)
 
 #endif

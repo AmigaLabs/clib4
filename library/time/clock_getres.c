@@ -1,5 +1,5 @@
 /*
- * $Id: time_getres.c,v 1.0 2020-01-13 17:27:27 clib2devs Exp $
+ * $Id: time_getres.c,v 1.0 2020-01-13 17:27:27 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H

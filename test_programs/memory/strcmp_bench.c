@@ -51,7 +51,7 @@
 #else
 #include <unistd.h>
 
-#ifndef CLIB2
+#ifndef CLIB4
 static uint64_t rdtsc()
 {
     uint32_t high1, high2, low;
@@ -313,14 +313,14 @@ bench_hash_at() {
 /* Benchmark */
 int
 main() {
-#ifdef CLIB2
+#ifdef CLIB4
     disableOptimizedFunctions();
 #endif
     printf("strcmp: %llu\n--\n", bench_strcmp());
     printf("strcmp with prefix: %llu\n--\n", bench_strcmp_prefix());
     printf("hash rt: %llu\n--\n", bench_hash_rt());
     printf("hash at: %llu\n--\n", bench_hash_at());
-#ifdef CLIB2
+#ifdef CLIB4
     enableOptimizedFunctions();
 
     printf("optimized strcmp: %llu\n--\n", bench_strcmp());

@@ -1,5 +1,5 @@
 /*
- * $Id: socket_connect.c,v 1.9 2006-11-16 10:41:15 clib2devs Exp $
+ * $Id: socket_connect.c,v 1.9 2006-11-16 10:41:15 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -13,7 +13,7 @@ connect(int sockfd, const struct sockaddr *name, socklen_t namelen) {
     struct fd *fd;
     int result = ERROR;
     struct sockaddr *sa = name;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -32,17 +32,17 @@ connect(int sockfd, const struct sockaddr *name, socklen_t namelen) {
         goto out;
     }
 
-    assert(sockfd >= 0 && sockfd < __clib2->__num_fd);
-    assert(__clib2->__fd[sockfd] != NULL);
-    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IN_USE));
-    assert(FLAG_IS_SET(__clib2->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
+    assert(sockfd >= 0 && sockfd < __clib4->__num_fd);
+    assert(__clib4->__fd[sockfd] != NULL);
+    assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IN_USE));
+    assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
     fd = __get_file_descriptor_socket(sockfd);
     if (fd == NULL)
         goto out;
 
     if (((struct sockaddr_un *) sa)->sun_family == AF_LOCAL) {
-        struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+        struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
         if (res) {
             const char *socketName = ((struct sockaddr_un *) name)->sun_path;
             /* Check if we have an unix socket with this name otherwise raise an error */

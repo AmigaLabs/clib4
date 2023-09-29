@@ -1,5 +1,5 @@
 /*
- * $Id: string_strcpy.c,v 1.5 2022-03-29 12:04:27 clib2devs Exp $
+ * $Id: string_strcpy.c,v 1.5 2022-03-29 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -13,7 +13,7 @@
 char *
 strcpy(char *dest, const char *src) {
     char *result = dest;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(dest != NULL && src != NULL);
 
@@ -23,8 +23,8 @@ strcpy(char *dest, const char *src) {
     }
 
     if (dest != src) {
-        if (__clib2->__optimizedCPUFunctions) {
-            switch (__clib2->cpufamily) {
+        if (__clib4->__optimizedCPUFunctions) {
+            switch (__clib4->cpufamily) {
                 case CPUFAMILY_4XX:
                     result = __strcpy440(dest, src);
                     break;
@@ -34,7 +34,7 @@ strcpy(char *dest, const char *src) {
                     break;
 #endif
                 default: {
-                    if (__clib2->hasAltivec) {
+                    if (__clib4->hasAltivec) {
                         vec_strcpy(dest, src);
                     } else {
                         /* Fallback to standard function */

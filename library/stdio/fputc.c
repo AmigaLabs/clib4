@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fputc.c,v 1.8 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stdio_fputc.c,v 1.8 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -10,7 +10,7 @@ int
 __fputc_check(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(stream != NULL);
 
@@ -19,7 +19,7 @@ __fputc_check(FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(__clib2, file));
+    assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -43,7 +43,7 @@ __fputc_check(FILE *stream) {
         goto out;
     }
 
-    if (__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(__clib2, file) < 0) {
+    if (__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(__clib4, file) < 0) {
         SHOWMSG("couldn't get rid of the read buffer.");
         goto out;
     }
@@ -59,19 +59,19 @@ int
 __fputc(int c, FILE *stream, int buffer_mode) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(stream != NULL);
 
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
-    if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(__clib2, file) < 0)
+    if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(__clib4, file) < 0)
         goto out;
 
     file->iob_Buffer[file->iob_BufferWriteBytes++] = c;
 
-    if ((buffer_mode == IOBF_BUFFER_MODE_NONE || (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) && __flush_iob_write_buffer(__clib2, file) < 0) {
+    if ((buffer_mode == IOBF_BUFFER_MODE_NONE || (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) && __flush_iob_write_buffer(__clib4, file) < 0) {
         /* Pretend that the last character was not written. */
         file->iob_BufferWriteBytes--;
         goto out;

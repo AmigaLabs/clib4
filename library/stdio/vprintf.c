@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_vprintf.c,v 1.6 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdio_vprintf.c,v 1.6 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H

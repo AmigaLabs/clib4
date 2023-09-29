@@ -1,5 +1,5 @@
 /*
- * $Id: termios_tcflush.c,v 1.5 2006-11-16 14:39:23 clib2devs Exp $
+ * $Id: termios_tcflush.c,v 1.5 2006-11-16 14:39:23 clib4devs Exp $
 */
 
 #ifndef    _TERMIOS_HEADERS_H
@@ -20,7 +20,7 @@ int
 tcflush(int file_descriptor, int queue) {
     int result = ERROR;
     struct fd *fd;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -28,7 +28,7 @@ tcflush(int file_descriptor, int queue) {
 
     __check_abort();
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_TERMIOS)) {
@@ -68,7 +68,7 @@ tcflush(int file_descriptor, int queue) {
         }
 
         while (WaitForChar(file, 1) != DOSFALSE) {
-            if (__clib2->__check_abort_enabled && FLAG_IS_SET(SetSignal(0, 0), __clib2->__break_signal_mask))
+            if (__clib4->__check_abort_enabled && FLAG_IS_SET(SetSignal(0, 0), __clib4->__break_signal_mask))
                 break;
 
             /* Read away available data. (upto 8k) */
@@ -98,7 +98,7 @@ tcflush(int file_descriptor, int queue) {
 
 out:
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     __check_abort();
 

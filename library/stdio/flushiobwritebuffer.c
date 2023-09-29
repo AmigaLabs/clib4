@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_flushiobwritebuffer.c,v 1.9 2006-09-22 09:02:51 clib2devs Exp $
+ * $Id: stdio_flushiobwritebuffer.c,v 1.9 2006-09-22 09:02:51 clib4devs Exp $
 */
 
 /* This would otherwise generate far too much (useless) debug output. */
@@ -12,7 +12,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-__flush_iob_write_buffer(struct _clib2 *__clib2, struct iob *file) {
+__flush_iob_write_buffer(struct _clib4 *__clib4, struct iob *file) {
     int result = OK;
 
     ENTER();
@@ -39,7 +39,7 @@ __flush_iob_write_buffer(struct _clib2 *__clib2, struct iob *file) {
 
         assert(file->iob_Action != NULL);
 
-        if ((*file->iob_Action)(__clib2, file, &fam) == EOF) {
+        if ((*file->iob_Action)(__clib4, file, &fam) == EOF) {
             SHOWMSG("that didn't work");
             result = ERROR;
             SET_FLAG(file->iob_Flags, IOBF_ERROR);

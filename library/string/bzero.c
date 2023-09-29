@@ -1,5 +1,5 @@
 /*
- * $Id: string_bzero.c,v 1.5 2022-03-29 12:04:26 clib2devs Exp $
+ * $Id: string_bzero.c,v 1.5 2022-03-29 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STRING_HEADERS_H
@@ -20,13 +20,13 @@ bzero(void *m, size_t len) {
     ENTER();
     SHOWPOINTER(m);
     SHOWVALUE(len);
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     DECLARE_UTILITYBASE();
 
-    if (__clib2->__optimizedCPUFunctions) {
+    if (__clib4->__optimizedCPUFunctions) {
         /* Check if we have altivec enabled */
-        if (__clib2->hasAltivec) {
+        if (__clib4->hasAltivec) {
             vec_bzero(m, len);
         }
         else {

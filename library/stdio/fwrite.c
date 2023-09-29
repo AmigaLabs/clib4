@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fwrite.c,v 1.13 2022-03-27 13:12:58 clib2devs Exp $
+ * $Id: stdio_fwrite.c,v 1.13 2022-03-27 13:12:58 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -10,7 +10,7 @@ size_t
 fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     size_t result = 0;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -65,7 +65,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
            the output. */
         buffer_mode = (file->iob_Flags & IOBF_BUFFER_MODE);
         if (buffer_mode == IOBF_BUFFER_MODE_NONE) {
-            struct fd *fd = __clib2->__fd[file->iob_Descriptor];
+            struct fd *fd = __clib4->__fd[file->iob_Descriptor];
 
             __fd_lock(fd);
 
@@ -102,7 +102,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                         file->iob_BufferWriteBytes += num_buffer_bytes;
 
                         /* Write the buffer to disk if it's full or contains a line feed. */
-                        if ((lf != NULL || __iob_write_buffer_is_full(file)) && __flush_iob_write_buffer(__clib2, file) < 0) {
+                        if ((lf != NULL || __iob_write_buffer_is_full(file)) && __flush_iob_write_buffer(__clib4, file) < 0) {
                             /* Abort with error. */
                             break;
                         }
@@ -181,7 +181,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                         file->iob_BufferWriteBytes += num_buffer_bytes;
 
                         /* Write a full buffer to disk. */
-                        if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(__clib2, file) < 0) {
+                        if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(__clib4, file) < 0) {
                             /* Abort with error. */
                             break;
                         }
@@ -211,7 +211,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
         if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
             if (__iob_write_buffer_is_valid(file)) {
-                __flush_iob_write_buffer(__clib2, file);
+                __flush_iob_write_buffer(__clib4, file);
             }
         }
 

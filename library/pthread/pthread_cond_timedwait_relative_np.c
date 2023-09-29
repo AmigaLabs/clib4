@@ -1,5 +1,5 @@
 /*
-  $Id: pthread_cond_timedwait_relative_np.c,v 1.00 2022-07-18 12:09:49 clib2devs Exp $
+  $Id: pthread_cond_timedwait_relative_np.c,v 1.00 2022-07-18 12:09:49 clib4devs Exp $
 
   Copyright (C) 2014 Szilard Biro
   Copyright (C) 2018 Harry Sintonen

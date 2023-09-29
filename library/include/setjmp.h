@@ -1,5 +1,5 @@
 /*
- * $Id: setjmp.h,v 1.5 2006-01-08 12:0__sigset_t6:14 clib2devs Exp $
+ * $Id: setjmp.h,v 1.5 2006-01-08 12:0__sigset_t6:14 clib4devs Exp $
 */
 
 #ifndef _SETJMP_H

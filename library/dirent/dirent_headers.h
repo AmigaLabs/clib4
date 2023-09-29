@@ -1,5 +1,5 @@
 /*
- * $Id: dirent_headers.h,v 1.9 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: dirent_headers.h,v 1.9 2006-01-08 12:04:22 clib4devs Exp $
 */
 
 #ifndef _DIRENT_HEADERS_H
@@ -38,7 +38,7 @@ struct DirectoryHandle
     int                     dh_Fd;              // For fdopendir()
 };
 
-extern void __dirent_lock(struct _clib2 *__clib2);
-extern void __dirent_unlock(struct _clib2 *__clib2);
+extern void __dirent_lock(struct _clib4 *__clib4);
+extern void __dirent_unlock(struct _clib4 *__clib4);
 
 #endif /* _DIRENT_HEADERS_H */

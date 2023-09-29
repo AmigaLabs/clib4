@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 2.1 2021-03-26 11:28:07 clib2devs Exp $
+# $Id: Makefile,v 2.1 2021-03-26 11:28:07 clib4devs Exp $
 #
 # :ts=8
 #
@@ -23,7 +23,7 @@
 # called "netinclude".
 UNAME := $(shell uname)
 
-INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib2
+INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib4
 SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
 
 CC := ppc-amigaos-gcc
@@ -54,7 +54,7 @@ LIB_ROOT ?= $(shell pwd)
 LIB_DIR = $(LIB_ROOT)/library
 BUILD_DIR = $(LIB_ROOT)/build
 OUTPUT_LIB = $(BUILD_DIR)/lib
-DPKG_LIB = clib2_1.0_amd64
+DPKG_LIB = clib4_1.0_amd64
 
 ##############################################################################
 
@@ -101,8 +101,8 @@ SHARED   := $(if $(SHARED),$(SHARED),yes)
 STATIC   := $(if $(STATIC),$(STATIC),yes)
 
 LARGEDATA :=
-OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe -Ttext=0x00000000
-OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
+OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D__CLIB2__ -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe
+OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -ffp-contract=fast -mstrict-align
 
 STABS :=
 DLIBS :=
@@ -116,7 +116,7 @@ endif
 
 CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
 CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
-AFLAGS     := -Wa,-mregnames -mstrict-align -Ttext=0x00000000
+AFLAGS     := -Wa,-mregnames -mstrict-align
 
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
@@ -133,7 +133,7 @@ VERBOSE    ?= @
 
 # This is the first target: it depends on all the targets
 
-all: prepare all-targets all-libs clib2.library.debug clib2.library
+all: prepare all-targets all-libs clib4.library.debug clib4.library
 
 ##############################################################################
 
@@ -165,7 +165,7 @@ ALL_TARGETS = \
 	$(OUTPUT_LIB)/crtend.o \
 	$(OUTPUT_LIB)/shcrtbegin.o \
 	$(OUTPUT_LIB)/shcrtend.o \
-    $(OUT_SHARED_LIB)/shared_library/clib2.o \
+    $(OUT_SHARED_LIB)/shared_library/clib4.o \
     $(OUT_SHARED_LIB)/shared_library/math.o \
 	$(MAIN_LIB)
 
@@ -187,9 +187,9 @@ clean:
 	-$(DELETE) $(BUILD_DIR)/PatchForSPE
 	-$(DELETE) $(OUTPUT_LIB)
 	-$(DELETE) $(BUILD_DIR)/compiler.log
-	-$(DELETE) $(BUILD_DIR)/clib2.library*
-	-$(DELETE) clib2.lha
-	-$(DELETE) clib2.bak
+	-$(DELETE) $(BUILD_DIR)/clib4.library*
+	-$(DELETE) clib4.lha
+	-$(DELETE) clib4.bak
 	-$(DELETE) $(DPKG_LIB)
 	-$(DELETE) $(DPKG_LIB).deb
 	-cd test_programs; make clean
@@ -208,12 +208,12 @@ version:
 	bumprev crypt.lib
 	bumprev pthread.lib
 
-# Shared clib2.library rules
+# Shared clib4.library rules
 
-clib2.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib2.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(BUILD_DIR)/lib/libc.a $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
+clib4.library.debug: $(OBJ_C_LIB)
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
 
-clib2.library: clib2.library.debug
+clib4.library: clib4.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
 	$(STRIP) -R.comment -R.sdata2 --strip-unneeded-rel-relocs $(BUILD_DIR)/$@
 
@@ -233,12 +233,12 @@ $(OUTPUT_LIB)/crt0.o : $(LIB_DIR)/crt0.S
 	$(VERBOSE)$(ASSEMBLE)
 	-$(COPY) $(OUTPUT_LIB)/crt0.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtbegin.o : CFLAGS = -mcrt=clib2 $(STABS) $(OPTIONS) $(INCLUDES) -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtbegin.o : CFLAGS = -mcrt=clib4 $(STABS) $(OPTIONS) $(INCLUDES) -O0 -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtbegin.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtend.o : CFLAGS = -mcrt=clib2 -O0 $(OPTIONS) $(INCLUDES) -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtend.o : CFLAGS = -mcrt=clib4 -O0 $(OPTIONS) $(INCLUDES) -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtend.o $(INSTALL_PREFIX)/lib/
@@ -339,7 +339,7 @@ define MAKESHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)@$(DELETE) $@
 $(VERBOSE)echo -e "\rMaking Shared \033[0;31m$@\033[0m"
-$(VERBOSE)$(CC) -nostdlib -mcrt=clib2 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -Wl,-soname,$(@F)
+$(VERBOSE)$(CC) -nostdlib -mcrt=clib4 -shared -o $@ $(OUTPUT_LIB)/shcrtbegin.o $^ $(OUTPUT_LIB)/shcrtend.o $(LOG_COMMAND) -Wl,-soname,$(@F)
 endef
 
 PatchForSPE : $(LIB_ROOT)/misc/PatchForSPE.cpp
@@ -355,30 +355,30 @@ compile-tests:
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
-	$(DELETE) $(INSTALL_PREFIX)/clib2.library*
+	$(DELETE) $(INSTALL_PREFIX)/clib4.library*
 	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
 	$(COPY) libs/libauto.a $(INSTALL_PREFIX)/lib/
-	$(COPY) $(BUILD_DIR)/clib2.library* $(INSTALL_PREFIX)
+	$(COPY) $(BUILD_DIR)/clib4.library* $(INSTALL_PREFIX)
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:
-	-$(DELETE) clib2.lha
-	-$(DELETE) clib2.info
-	-$(MAKEDIR) clib2/include
-	-$(MAKEDIR) clib2/lib
-	-$(COPY) *.md clib2/
-	-$(COPY) LICENSE* clib2/
-	-$(COPY) installer/Install* clib2/
-	-$(COPY) installer/clib2.info .
-	-$(COPY) installer/README.md.info clib2/
-	-$(COPY) $(BUILD_DIR)/clib2.library clib2/
-	-$(COPY) misc clib2/
-	-$(COPY) libs/libauto.a clib2/lib/
-	-$(COPY) $(OUTPUT_LIB)/* clib2/lib/
-	-$(COPY) $(LIB_ROOT)/library/include/* clib2/include/
-	lha -ao5i clib2.lha clib2 clib2.info
-	-$(DELETE) clib2
-	-$(DELETE) clib2.info
+	-$(DELETE) clib4.lha
+	-$(DELETE) clib4.info
+	-$(MAKEDIR) clib4/include
+	-$(MAKEDIR) clib4/lib
+	-$(COPY) *.md clib4/
+	-$(COPY) LICENSE* clib4/
+	-$(COPY) installer/Install* clib4/
+	-$(COPY) installer/clib4.info .
+	-$(COPY) installer/README.md.info clib4/
+	-$(COPY) $(BUILD_DIR)/clib4.library clib4/
+	-$(COPY) misc clib4/
+	-$(COPY) libs/libauto.a clib4/lib/
+	-$(COPY) $(OUTPUT_LIB)/* clib4/lib/
+	-$(COPY) $(LIB_ROOT)/library/include/* clib4/include/
+	lha -ao5i clib4.lha clib4 clib4.info
+	-$(DELETE) clib4
+	-$(DELETE) clib4.info
 
 dpkg:
 	-$(DELETE) $(DPKG_LIB)

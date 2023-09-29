@@ -1,5 +1,5 @@
 /*
- * $Id: dos.h,v 2.0 2023-05-17 09:40:06 clib2devs Exp $
+ * $Id: dos.h,v 2.0 2023-05-17 09:40:06 clib4devs Exp $
 */
 
 #ifndef _DOS_H
@@ -124,10 +124,10 @@ struct _wchar {
 };
 
 /*
- * Initial _clib2 structure. This contains all fields used by current progream
+ * Initial _clib4 structure. This contains all fields used by current progream
  */
 
-struct _clib2 {
+struct _clib4 {
     struct ExecIFace *IExec;    /* Main IExec interface */
 
     struct ElfIFace *IElf;
@@ -399,7 +399,7 @@ struct _clib2 {
      * by the command to be executed. That function is called
      * __execve_environ_init(). Should program execution fail, you need to
      * clean up after what __execve_environ_init() set up. To do this, call
-     * __execve_environ_exit(). There are stubs in clib2 for these functions
+     * __execve_environ_exit(). There are stubs in clib4 for these functions
      * which essentially do nothing at all. You will have to implement these
      * yourself if you want to use them.
      */
@@ -504,12 +504,12 @@ struct _clib2 {
     char tgoto_buf[50];
 };
 
-#ifndef __getClib2
-extern struct _clib2 *__getClib2(void);
+#ifndef __getClib4
+extern struct _clib4 *__getClib4(void);
 #endif
 
-#undef __CLIB2
-#define __CLIB2 __getClib2()
+#undef __CLIB4
+#define __CLIB4 __getClib4()
 
 /*
  * Two functions control how this library uses the locale.library API to
@@ -520,8 +520,8 @@ extern struct _clib2 *__getClib2(void);
  *
  * __locale_exit() releases the default locale and closes locale.library.
  */
-extern int __locale_init(struct _clib2 *__clib2);
-extern void __locale_exit(struct _clib2 *__clib2);
+extern int __locale_init(struct _clib4 *__clib4);
+extern void __locale_exit(struct _clib4 *__clib4);
 
 __END_DECLS
 

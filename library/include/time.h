@@ -1,5 +1,5 @@
 /*
- * $Id: time.h,v 1.8 2023-06-03 12:06:14 clib2devs Exp $
+ * $Id: time.h,v 1.8 2023-06-03 12:06:14 clib4devs Exp $
 */
 
 #ifndef _TIME_H
@@ -39,9 +39,9 @@ __BEGIN_DECLS
 #define __tm_zone tm_zone
 #endif
 
-#define _timezone (__CLIB2->__timezone)
-#define _daylight (__CLIB2->__daylight)
-#define _tzname   (__CLIB2->__tzname)
+#define _timezone (__CLIB4->__timezone)
+#define _daylight (__CLIB4->__daylight)
+#define _tzname   (__CLIB4->__tzname)
 
 /* POSIX defines the external tzname being defined in time.h */
 #ifndef tzname

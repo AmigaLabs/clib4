@@ -1,5 +1,5 @@
 /*
- * $Id: limits.h,v 1.12 2010-08-20 15:33:36 clib2devs Exp $
+ * $Id: limits.h,v 1.12 2010-08-20 15:33:36 clib4devs Exp $
 */
 
 #ifndef _LIMITS_H

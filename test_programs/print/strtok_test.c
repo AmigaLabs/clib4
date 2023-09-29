@@ -1,5 +1,5 @@
 /*
- * $Id: strtok_test.c,v 1.1 2004-10-25 19:50:33 clib2devs Exp $
+ * $Id: strtok_test.c,v 1.1 2004-10-25 19:50:33 clib4devs Exp $
  *
  */
 

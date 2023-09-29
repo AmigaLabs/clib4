@@ -1,5 +1,5 @@
 /*
- * $Id: libgen_dirname.c,v 1.8 2006-10-02 07:15:37 clib2devs Exp $
+ * $Id: libgen_dirname.c,v 1.8 2006-10-02 07:15:37 clib4devs Exp $
 */
 
 #include <string.h>

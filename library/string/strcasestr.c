@@ -1,5 +1,5 @@
 /*
- * $Id: string_strcasestr.c,v 1.0 2021-02-23 10:01:27 clib2devs Exp $
+ * $Id: string_strcasestr.c,v 1.0 2021-02-23 10:01:27 clib4devs Exp $
 */
 
 #include <string.h>

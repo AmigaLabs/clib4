@@ -1,5 +1,5 @@
 /*
- * $Id: libgen.h,v 1.7 2006-09-25 13:29:47 clib2devs Exp $
+ * $Id: libgen.h,v 1.7 2006-09-25 13:29:47 clib4devs Exp $
 */
 
 #ifndef _LIBGEN_H

@@ -1,5 +1,5 @@
 /*
- * $Id: resource.h,v 1.2 2006-07-28 14:02:32 clib2devs Exp $
+ * $Id: resource.h,v 1.2 2006-07-28 14:02:32 clib4devs Exp $
 */
 
 #ifndef _SYS_RESOURCE_H

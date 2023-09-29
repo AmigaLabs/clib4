@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_isatty.c,v 1.11 2010-10-20 13:12:59 clib2devs Exp $
+ * $Id: unistd_isatty.c,v 1.11 2010-10-20 13:12:59 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -10,19 +10,19 @@ int
 isatty(int file_descriptor) {
     int result = ERROR;
     struct fd *fd;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     SHOWVALUE(file_descriptor);
 
-    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
-    assert(__clib2->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
+    assert(__clib4->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __check_abort();
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -50,7 +50,7 @@ isatty(int file_descriptor) {
 out:
 
     __fd_unlock(fd);
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

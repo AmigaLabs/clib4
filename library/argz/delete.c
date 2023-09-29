@@ -1,5 +1,5 @@
 /*
- * $Id: argz_delete.c,v 1.0 2021-01-21 11:25:47 clib2devs Exp $
+ * $Id: argz_delete.c,v 1.0 2021-01-21 11:25:47 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H

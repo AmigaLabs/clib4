@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_shmget.c,v 1.2 2023-07-08 13:24:59 clib2devs Exp $
+ * $Id: sysv_shmget.c,v 1.2 2023-07-08 13:24:59 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -39,7 +39,7 @@ _shmget(key_t key, size_t size, int flags) {
     SHOWVALUE(size);
     SHOWVALUE(flags);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     IPCLock(&res->shmcx.keymap);
 
     if ((size + res->shmcx.totshm) < res->shmcx.shmmax) {

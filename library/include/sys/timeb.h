@@ -1,5 +1,5 @@
 /*
- * $Id: timeb.h,v 1.4 2006-07-28 14:02:32 clib2devs Exp $
+ * $Id: timeb.h,v 1.4 2006-07-28 14:02:32 clib4devs Exp $
 */
 
 #ifndef	_SYS_TIMEB_H

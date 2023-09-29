@@ -1,5 +1,5 @@
 /*
- * $Id: math_s_nextafter.c,v 1.3 2023-07-19 12:04:24 clib2devs Exp $
+ * $Id: math_s_nextafter.c,v 1.3 2023-07-19 12:04:24 clib4devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H

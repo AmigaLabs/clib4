@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fdhookentry.c,v 1.37 2022-08-11 17:12:23 clib2devs Exp $
+ * $Id: stdio_fdhookentry.c,v 1.37 2022-08-11 17:12:23 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -21,7 +21,7 @@
 #include <strings.h>
 #include <limits.h>
 
-int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_action_message *fam) {
+int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_message *fam) {
     struct ExamineData *exd = NULL;
     BOOL fib_is_valid = FALSE;
     struct FileHandle *fh;
@@ -37,13 +37,13 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
     ENTER();
 
     assert(fam != NULL && fd != NULL);
-    assert(__is_valid_fd(__clib2, fd));
+    assert(__is_valid_fd(__clib4, fd));
 
     /* Careful: file_action_close has to monkey with the file descriptor
                 table and therefore needs to obtain the stdio lock before
                 it locks this particular descriptor entry. */
     if (fam->fam_Action == file_action_close)
-        __stdio_lock(__clib2);
+        __stdio_lock(__clib4);
 
     __fd_lock(fd);
 
@@ -201,7 +201,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                         if (fd->fd_File)
                             fd->fd_File = BZERO;
 
-                        if (__clib2->__unix_path_semantics) {
+                        if (__clib4->__unix_path_semantics) {
                             DECLARE_UTILITYBASE();
 
                             assert(UtilityBase != NULL);
@@ -216,10 +216,10 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                                 struct UnlinkNode *uln;
                                 BOOL file_deleted = FALSE;
 
-                                assert(__clib2->__unlink_list.mlh_Head != NULL);
+                                assert(__clib4->__unlink_list.mlh_Head != NULL);
 
                                 /* Check all files to be unlinked when this program exits. */
-                                for (uln = (struct UnlinkNode *) __clib2->__unlink_list.mlh_Head;
+                                for (uln = (struct UnlinkNode *) __clib4->__unlink_list.mlh_Head;
                                      (uln_next = (struct UnlinkNode *) uln->uln_MinNode.mln_Succ) != NULL;
                                      uln = uln_next) {
                                     node = NULL;
@@ -387,7 +387,7 @@ int64_t __fd_hook_entry(struct _clib2 *__clib2, struct fd *fd, struct file_actio
                     if (position == CHANGE_FILE_ERROR) {
                         fam->fam_Error = __translate_io_error_to_errno(IoErr());
 
-                        if (__clib2->__unix_path_semantics) {
+                        if (__clib4->__unix_path_semantics) {
                             /* Check if this operation failed because the file is shorter than
                                    the new file position. First, we need to find out if the file
                                    is really shorter than required. If not, then it must have
@@ -531,7 +531,7 @@ out:
     __fd_unlock(fd);
 
     if (fam->fam_Action == file_action_close)
-        __stdio_unlock(__clib2);
+        __stdio_unlock(__clib4);
 
     if (buffer != NULL)
         free(buffer);

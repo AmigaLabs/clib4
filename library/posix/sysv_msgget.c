@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_msgget.c,v 1.2 2023-07-08 19:32:53 clib2devs Exp $
+ * $Id: sysv_msgget.c,v 1.2 2023-07-08 19:32:53 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -38,7 +38,7 @@ _msgget(key_t key, int flags) {
     SHOWVALUE(key);
     SHOWVALUE(flags);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     IPCLock(&res->msgcx.keymap);
     ret = GetIPCKeyId(&res->msgcx.keymap, key, flags, (void *(*)(int, int)) msg_construct);
     if (ret < 0) {

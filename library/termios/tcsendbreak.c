@@ -1,5 +1,5 @@
 /*
- * $Id: termios_tcsendbreak.c,v 1.3 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: termios_tcsendbreak.c,v 1.3 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef    _TERMIOS_HEADERS_H
@@ -24,7 +24,7 @@ tcsendbreak(int file_descriptor, int duration) {
     int result = ERROR;
     struct fd *fd;
     struct termios *tios;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -33,7 +33,7 @@ tcsendbreak(int file_descriptor, int duration) {
 
     __check_abort();
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_TERMIOS)) {
@@ -67,7 +67,7 @@ tcsendbreak(int file_descriptor, int duration) {
 
 out:
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     __check_abort();
 

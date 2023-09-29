@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_realloc.c,v 1.11 2022-04-03 10:55:03 clib2devs Exp $
+ * $Id: stdlib_realloc.c,v 1.11 2022-04-03 10:55:03 clib4devs Exp $
 */
 
 /*#define DEBUG*/
@@ -16,7 +16,7 @@ void *
 realloc(void *ptr, size_t size) {
     void *result = NULL;
     BOOL locked = FALSE;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert((int) size >= 0);
 
@@ -24,12 +24,12 @@ realloc(void *ptr, size_t size) {
         D(("calling malloc(%ld)", size));
 
         result = malloc(size);
-    } else if (__clib2->__unix_path_semantics && size == 0) {
+    } else if (__clib4->__unix_path_semantics && size == 0) {
         D(("calling free(0x%08lx)", ptr));
 
         free(ptr);
     } else {
-        result = wof_realloc(__clib2->__wof_allocator, ptr, size);
+        result = wof_realloc(__clib4->__wof_allocator, ptr, size);
         if (result == NULL) {
             SHOWMSG("could not reallocate memory");
             goto out;
@@ -39,7 +39,7 @@ realloc(void *ptr, size_t size) {
 out:
 
     if (locked)
-        __memory_unlock(__clib2);
+        __memory_unlock(__clib4);
 
     if (result == NULL)
         SHOWMSG("ouch! realloc failed");

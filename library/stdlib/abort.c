@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_abort.c,v 1.5 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdlib_abort.c,v 1.5 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -17,12 +17,12 @@
 void
 __abort(void) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* If the signal handler returns it means that we still have
        to terminate the program. */
 
-    __clib2->__check_abort_enabled = FALSE;
+    __clib4->__check_abort_enabled = FALSE;
 
     __print_termination_message(NULL);
 

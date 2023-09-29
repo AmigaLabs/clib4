@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_memory.h,v 1.4 2006-01-08 12:04:26 clib2devs Exp $
+ * $Id: stdlib_memory.h,v 1.4 2006-01-08 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_MEMORY_H
@@ -46,8 +46,8 @@ struct MemalignEntry {
     void            *me_Exact;            /* The address returned by AllocVecTags  */
 };
 
-extern void __memory_lock(struct _clib2 *__clib2);
-extern void __memory_unlock(struct _clib2 *__clib2);
+extern void __memory_lock(struct _clib4 *__clib4);
+extern void __memory_unlock(struct _clib4 *__clib4);
 
 extern int32 MemalignAVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2);
 extern int32 MemalignAVLKeyComp(struct AVLNode *avlnode1, AVLKey key2);

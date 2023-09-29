@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_growfdtable.c,v 1.9 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stdio_growfdtable.c,v 1.9 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -11,17 +11,17 @@
 #endif /* _STDLIB_MEMORY_H */
 
 int
-__grow_fd_table(struct _clib2 *__clib2, int max_fd) {
+__grow_fd_table(struct _clib4 *__clib4, int max_fd) {
     const int granularity = 10;
     int new_num_fd;
     int result = ERROR;
 
     if (max_fd == 0)
-        new_num_fd = __clib2->__num_fd + granularity;
+        new_num_fd = __clib4->__num_fd + granularity;
     else
         new_num_fd = max_fd;
 
-    if (new_num_fd > __clib2->__num_fd) {
+    if (new_num_fd > __clib4->__num_fd) {
         struct fd **new_fd;
         int i;
 
@@ -33,14 +33,14 @@ __grow_fd_table(struct _clib2 *__clib2, int max_fd) {
             goto out;
         }
 
-        for (i = __clib2->__num_fd; i < new_num_fd; i++) {
+        for (i = __clib4->__num_fd; i < new_num_fd; i++) {
             new_fd[i] = malloc(sizeof(*new_fd[i]));
             if (new_fd[i] == NULL) {
                 int j;
 
                 SHOWMSG("not enough memory for new file descriptor table entry");
 
-                for (j = __clib2->__num_fd; j < i; j++) {
+                for (j = __clib4->__num_fd; j < i; j++) {
                     UnlockMem(new_fd[j], sizeof(*new_fd[j]));
                     free(new_fd[j]);
                 }
@@ -55,15 +55,15 @@ __grow_fd_table(struct _clib2 *__clib2, int max_fd) {
             LockMem(new_fd[i], sizeof(*new_fd[i]));
         }
 
-        if (__clib2->__fd != NULL) {
-            for (i = 0; i < __clib2->__num_fd; i++)
-                new_fd[i] = __clib2->__fd[i];
+        if (__clib4->__fd != NULL) {
+            for (i = 0; i < __clib4->__num_fd; i++)
+                new_fd[i] = __clib4->__fd[i];
 
-            free(__clib2->__fd);
+            free(__clib4->__fd);
         }
 
-        __clib2->__fd = new_fd;
-        __clib2->__num_fd = new_num_fd;
+        __clib4->__fd = new_fd;
+        __clib4->__num_fd = new_num_fd;
     }
 
     result = OK;

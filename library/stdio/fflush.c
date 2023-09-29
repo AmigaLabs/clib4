@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fflush.c,v 1.11 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stdio_fflush.c,v 1.11 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -9,7 +9,7 @@
 int
 fflush(FILE *stream) {
     int result = EOF;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -19,33 +19,33 @@ fflush(FILE *stream) {
     if (stream != NULL) {
         struct iob *file = (struct iob *) stream;
 
-        assert(__is_valid_iob(__clib2, file));
+        assert(__is_valid_iob(__clib4, file));
 
         flockfile(stream);
 
-        if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib2, file) < 0)
+        if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0)
             goto out;
     } else {
         int failed_iob = -1;
         int i;
-        struct _clib2 *__clib2 = __CLIB2;
+        struct _clib4 *__clib4 = __CLIB4;
 
-        __stdio_lock(__clib2);
+        __stdio_lock(__clib4);
 
         /* Flush all streams which still have unwritten data in the buffer. */
-        for (i = 0; i < __clib2->__num_iob; i++) {
-            if (__clib2->__iob[i] != NULL &&
-                FLAG_IS_SET(__clib2->__iob[i]->iob_Flags, IOBF_IN_USE) &&
-                FLAG_IS_SET(__clib2->__iob[i]->iob_Flags, IOBF_WRITE) &&
-                __iob_write_buffer_is_valid(__clib2->__iob[i])) {
-                if (__flush_iob_write_buffer(__clib2, __clib2->__iob[i]) < 0) {
+        for (i = 0; i < __clib4->__num_iob; i++) {
+            if (__clib4->__iob[i] != NULL &&
+                FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE) &&
+                FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_WRITE) &&
+                __iob_write_buffer_is_valid(__clib4->__iob[i])) {
+                if (__flush_iob_write_buffer(__clib4, __clib4->__iob[i]) < 0) {
                     failed_iob = i;
                     break;
                 }
             }
         }
 
-        __stdio_unlock(__clib2);
+        __stdio_unlock(__clib4);
 
         if (failed_iob >= 0)
             goto out;

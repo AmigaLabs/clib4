@@ -1,5 +1,5 @@
 /*
-  $Id: pthread_create.c,v 1.00 2022-07-18 12:09:49 clib2devs Exp $
+  $Id: pthread_create.c,v 1.00 2022-07-18 12:09:49 clib4devs Exp $
 
   Copyright (C) 2014 Szilard Biro
   Copyright (C) 2018 Harry Sintonen
@@ -45,7 +45,7 @@ StarterFunc() {
 
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
-    struct _clib2 *__clib2 = (struct _clib2 *) GetEntryData();
+    struct _clib4 *__clib4 = (struct _clib4 *) GetEntryData();
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {

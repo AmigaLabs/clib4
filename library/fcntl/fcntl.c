@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_fcntl.c,v 1.20 2006-11-16 14:39:23 clib2devs Exp $
+ * $Id: fcntl_fcntl.c,v 1.20 2006-11-16 14:39:23 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -18,14 +18,14 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     int flags;
     int fdbase;
     int i;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     SHOWVALUE(file_descriptor);
     SHOWVALUE(cmd);
 
-    if (__clib2->__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE) || file_descriptor < 0 || file_descriptor > __clib2->__num_fd) {
+    if (__clib4->__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE) || file_descriptor < 0 || file_descriptor > __clib4->__num_fd) {
         __set_errno(EINVAL);
         goto out;
     }
@@ -38,7 +38,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
        the stdio lock needs to be obtained here, before the individual
        file descriptor lock is held. */
     if (cmd == F_DUPFD)
-        __stdio_lock(__clib2);
+        __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -167,7 +167,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
                 assert(fd->fd_Action != NULL);
 
-                if ((*fd->fd_Action)(__clib2, fd, &fam) < 0) {
+                if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
                     __set_errno(fam.fam_Error);
 
                     goto out;
@@ -186,7 +186,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
                 assert(fd->fd_Action != NULL);
 
-                if ((*fd->fd_Action)(__clib2, fd, &fam) < 0) {
+                if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
                     __set_errno(fam.fam_Error);
 
                     goto out;
@@ -216,33 +216,33 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             }
 
             /* Make sure that we have the required number of file descriptors available. */
-            if (__grow_fd_table(__clib2, fdbase + 1) < 0)
+            if (__grow_fd_table(__clib4, fdbase + 1) < 0)
                 goto out;
 
             vacant_slot = -1;
 
             /* Guaranteed to have enough here */
             do {
-                __stdio_unlock(__clib2);
+                __stdio_unlock(__clib4);
 
                 __check_abort();
 
-                __stdio_lock(__clib2);
+                __stdio_lock(__clib4);
 
-                for (i = fdbase; i < __clib2->__num_fd; i++) {
-                    if (FLAG_IS_CLEAR(__clib2->__fd[i]->fd_Flags, FDF_IN_USE)) {
+                for (i = fdbase; i < __clib4->__num_fd; i++) {
+                    if (FLAG_IS_CLEAR(__clib4->__fd[i]->fd_Flags, FDF_IN_USE)) {
                         vacant_slot = i;
                         break;
                     }
                 }
 
                 /* Didn't really find any, grow the table further */
-                if (vacant_slot < 0 && __grow_fd_table(__clib2, 0) < 0)
+                if (vacant_slot < 0 && __grow_fd_table(__clib4, 0) < 0)
                     goto out;
             } while (vacant_slot < 0);
 
             /* Got a file descriptor, duplicate it */
-            __duplicate_fd(__clib2->__fd[vacant_slot], fd);
+            __duplicate_fd(__clib4->__fd[vacant_slot], fd);
 
             result = vacant_slot;
 
@@ -261,7 +261,7 @@ out:
     __fd_unlock(fd);
 
     if (cmd == F_DUPFD)
-        __stdio_unlock(__clib2);
+        __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

@@ -1,5 +1,5 @@
 /*
- * $Id: search_hash_func.c,v 1.0 2021-02-21 19:38:14 clib2devs Exp $
+ * $Id: search_hash_func.c,v 1.0 2021-02-21 19:38:14 clib4devs Exp $
 */
 
 #include <sys/types.h>

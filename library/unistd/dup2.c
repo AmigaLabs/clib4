@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_dup2.c,v 1.10 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: unistd_dup2.c,v 1.10 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -10,7 +10,7 @@ int
 dup2(int file_descriptor1, int file_descriptor2) {
     struct fd *fd1;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -19,11 +19,11 @@ dup2(int file_descriptor1, int file_descriptor2) {
 
     __check_abort();
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
-    assert(file_descriptor1 >= 0 && file_descriptor1 < __clib2->__num_fd);
-    assert(__clib2->__fd[file_descriptor1] != NULL);
-    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor1]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor1 >= 0 && file_descriptor1 < __clib4->__num_fd);
+    assert(__clib4->__fd[file_descriptor1] != NULL);
+    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor1]->fd_Flags, FDF_IN_USE));
 
     fd1 = __get_file_descriptor(file_descriptor1);
     if (fd1 == NULL) {
@@ -36,20 +36,20 @@ dup2(int file_descriptor1, int file_descriptor2) {
         goto out;
     } else if (file_descriptor1 != file_descriptor2) {
         /* Make sure the requested duplicate exists. */
-        if (__grow_fd_table(__clib2, file_descriptor2 + 1) < 0)
+        if (__grow_fd_table(__clib4, file_descriptor2 + 1) < 0)
             goto out;
 
-        assert(file_descriptor2 >= 0 && file_descriptor2 < __clib2->__num_fd);
-        assert(__clib2->__fd[file_descriptor2] != NULL);
+        assert(file_descriptor2 >= 0 && file_descriptor2 < __clib4->__num_fd);
+        assert(__clib4->__fd[file_descriptor2] != NULL);
     }
 
     if (file_descriptor1 != file_descriptor2) {
         struct fd *fd2;
 
         /* Have a look at the requested file descriptor. */
-        assert(0 <= file_descriptor2 && file_descriptor2 < __clib2->__num_fd);
+        assert(0 <= file_descriptor2 && file_descriptor2 < __clib4->__num_fd);
 
-        fd2 = __clib2->__fd[file_descriptor2];
+        fd2 = __clib4->__fd[file_descriptor2];
 
         assert(fd2 != NULL);
 
@@ -68,7 +68,7 @@ dup2(int file_descriptor1, int file_descriptor2) {
 
 out:
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

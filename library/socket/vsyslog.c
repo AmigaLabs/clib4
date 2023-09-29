@@ -1,5 +1,5 @@
 /*
- * $Id: socket_vsyslog.c,v 1.0 2022-01-22 18:27:15 clib2devs Exp $
+ * $Id: socket_vsyslog.c,v 1.0 2022-01-22 18:27:15 clib4devs Exp $
 */
 #define SYSLOG_NAMES
 
@@ -21,9 +21,9 @@ vsyslog(int priority, const char *message, va_list args) {
 
     SHOWVALUE(priority);
     SHOWSTRING(message);
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    if (!(__clib2->syslog_mask & LOG_MASK(priority & 7)) || (priority & ~0x3ff))
+    if (!(__clib4->syslog_mask & LOG_MASK(priority & 7)) || (priority & ~0x3ff))
         return;
 
     int l, l2, hlen, pid;
@@ -33,13 +33,13 @@ vsyslog(int priority, const char *message, va_list args) {
     char buf[1024] = {0};
 
     if (!(priority & LOG_FACMASK))
-        priority |= __clib2->syslog_facility;
+        priority |= __clib4->syslog_facility;
 
     now = time(NULL);
     gmtime_r(&now, &tm);
     strftime(timebuf, sizeof timebuf, "%b %e %T", &tm);
-    pid = (__clib2->syslog_openlog_flags & LOG_PID) ? getpid() : 0;
-    l = snprintf(buf, sizeof buf, "<%s>\t%s %n%s%s%.0d%s: ", prioritynames[priority].c_name, timebuf, &hlen, __clib2->syslog_ident, "[" + !pid, pid, "]" + !pid);
+    pid = (__clib4->syslog_openlog_flags & LOG_PID) ? getpid() : 0;
+    l = snprintf(buf, sizeof buf, "<%s>\t%s %n%s%s%.0d%s: ", prioritynames[priority].c_name, timebuf, &hlen, __clib4->syslog_ident, "[" + !pid, pid, "]" + !pid);
 
     l2 = vsnprintf(buf + l, sizeof buf - l, message, args);
     if (l2 >= 0) {
@@ -49,8 +49,8 @@ vsyslog(int priority, const char *message, va_list args) {
             l += l2;
         if (buf[l - 1] != '\n') buf[l++] = '\n';
 
-        if (__clib2->syslog_fd != NULL) {
-            fprintf(__clib2->syslog_fd, "%s", &buf);
+        if (__clib4->syslog_fd != NULL) {
+            fprintf(__clib4->syslog_fd, "%s", &buf);
         }
         else {
             __vsyslog(priority, (char *) message, args);

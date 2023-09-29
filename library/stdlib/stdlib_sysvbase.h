@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_sysvbase.h,v 1.0 2021-01-27 23:35:26 clib2devs Exp $
+ * $Id: stdlib_sysvbase.h,v 1.0 2021-01-27 23:35:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_SYSVBASE_H
@@ -17,7 +17,7 @@
 #include "macros.h"
 #endif /* _MACROS_H */
 
-#include "shared_library/clib2.h"
+#include "shared_library/clib4.h"
 
 #define DECLARE_SYSVYBASE() \
 	struct Library   UNUSED	*SysSV_EIDRMVBase    = res->SysVBase; \

@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mkostemps.c,v 1.0 2023-07-13 12:04:26 clib2devs Exp $
+ * $Id: stdlib_mkostemps.c,v 1.0 2023-07-13 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -16,7 +16,7 @@ int
 mkostemps(char *template, int len, int flags) {
     size_t l = strlen(template);
     struct name_translation_info name_template_nti;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (l < 6 || len > l - 6 || memcmp(template + l - len - 6, "XXXXXX", 6)) {
         __set_errno(EINVAL);
@@ -27,7 +27,7 @@ mkostemps(char *template, int len, int flags) {
     int fd, retries = 100;
     do {
         __randname(template + l - len - 6);
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             if (__translate_unix_to_amiga_path_name((char const **) &template, &name_template_nti) != 0)
                 return -1;
         }

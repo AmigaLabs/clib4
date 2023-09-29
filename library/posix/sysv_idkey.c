@@ -1,5 +1,5 @@
 /*
- * $Id: ipc_ftok.c,v 1.0 2021-01-26 12:19:14 clib2devs Exp $
+ * $Id: ipc_ftok.c,v 1.0 2021-01-26 12:19:14 clib4devs Exp $
  *
  * Common support functions.
  *
@@ -10,18 +10,18 @@
 #endif /* _STDIO_HEADERS_H */
 
 #include "ipc_headers.h"
-#include "clib2.h"
+#include "clib4.h"
 #include "uuid.h"
 #include "map.h"
 
 struct UndoInfo *
-GetUndo(struct Clib2Resource *res, int id, int create) {
-    struct _clib2 *__clib2 = __CLIB2;
+GetUndo(struct Clib4Resource *res, int id, int create) {
+    struct _clib4 *__clib4 = __CLIB4;
     struct UndoInfo *ui = NULL;
-    struct Clib2Node key;
-    memset(&key, 0, sizeof(struct Clib2Node));
-    strncpy(key.uuid, __clib2->uuid, UUID4_LEN);
-    struct Clib2Node *c2n = hashmap_get(res->children, &key);
+    struct Clib4Node key;
+    memset(&key, 0, sizeof(struct Clib4Node));
+    strncpy(key.uuid, __clib4->uuid, UUID4_LEN);
+    struct Clib4Node *c2n = hashmap_get(res->children, &key);
     if (c2n->undo != NULL) {
         ui = c2n->undo;
         while (ui) {

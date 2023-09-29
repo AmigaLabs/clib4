@@ -69,9 +69,9 @@ struct WProc {
     struct Task *T;
 };
 
-struct Clib2Resource;
+struct Clib4Resource;
 
-extern struct UndoInfo *GetUndo(struct Clib2Resource *res, int id, int create);
+extern struct UndoInfo *GetUndo(struct Clib4Resource *res, int id, int create);
 extern void WakeList(struct MinList *ml);
 extern struct WProc *RequestWakeup(struct MinList *ml);
 extern void WaitList(struct WProc *wp);

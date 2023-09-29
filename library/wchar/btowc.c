@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_btowc.c,v 1.4 2021-02-03 19:11:16 clib2devs Exp $
+ * $Id: wchar_btowc.c,v 1.4 2021-02-03 19:11:16 clib4devs Exp $
 */
 
 #ifndef _WCHAR_HEADERS_H
@@ -10,9 +10,9 @@
 
 wint_t
 btowc(int c) {
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    mbstate_t *mbs = &__clib2->wide_status->_mbtowc_state;
+    mbstate_t *mbs = &__clib4->wide_status->_mbtowc_state;
     int retval = 0;
     wchar_t pwc;
     char b;

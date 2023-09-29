@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_msgctl.c,v 1.2 2023-07-08 13:59:43 clib2devs Exp $
+ * $Id: sysv_msgctl.c,v 1.2 2023-07-08 13:59:43 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -35,7 +35,7 @@ _msgctl(int qid, int cmd, struct msqid_ds *buf) {
     SHOWVALUE(cmd);
     SHOWPOINTER(buf);
 
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     int ret = -1;
     struct msqid_ds *qi;
     IPCLock(&res->msgcx.keymap);

@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_readlink.c,v 1.9 2006-11-13 09:25:28 clib2devs Exp $
+ * $Id: unistd_readlink.c,v 1.9 2006-11-13 09:25:28 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -17,7 +17,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
     BPTR lock = BZERO;
     int result = ERROR;
     int target_length = -1;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -36,7 +36,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -61,7 +61,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (__translate_amiga_to_unix_path_name((char const **) &buffer, &buffer_nti) != 0)
             goto out;
 

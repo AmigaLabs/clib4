@@ -1,5 +1,5 @@
 /*
- * $Id: shcrtend.c,v 1.1 2023-02-18 19:35:03 clib2devs Exp $
+ * $Id: shcrtend.c,v 1.1 2023-02-18 19:35:03 clib4devs Exp $
  */
 
 static void (*__CTOR_LIST__[1])(void) __attribute__((used, section(".ctors")));

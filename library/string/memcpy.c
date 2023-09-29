@@ -1,5 +1,5 @@
 /*
- * $Id: string_memcpy.c,v 1.8 2021-03-22 09:02:51 clib2devs Exp $
+ * $Id: string_memcpy.c,v 1.8 2021-03-22 09:02:51 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H

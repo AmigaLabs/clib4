@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_strip_double_slash.c,v 1.4 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: unistd_strip_double_slash.c,v 1.4 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H

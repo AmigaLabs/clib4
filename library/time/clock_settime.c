@@ -1,5 +1,5 @@
 /*
- * $Id: time_settime.c,v 1.0 2020-01-13 17:20:12 clib2devs Exp $
+ * $Id: time_settime.c,v 1.0 2020-01-13 17:20:12 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -17,7 +17,7 @@
 int
 clock_settime(clockid_t clk_id, const struct timespec *t) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     int result = -1;
 
@@ -27,7 +27,7 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
         return -1;
     }
 
-    if (__clib2->__timer_busy) {
+    if (__clib4->__timer_busy) {
         __set_errno(EAGAIN);
         RETURN(result);
         return result;
@@ -44,15 +44,15 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
             if (ITimezone) {
                 GetTimezoneAttrs(NULL, TZA_UTCOffset, &__gmtoffset, TZA_TimeFlag, &__dstime, TAG_DONE);
             }
-            __clib2->__timer_busy = TRUE;
-            __clib2->__timer_request->Request.io_Message.mn_ReplyPort = __clib2->__timer_port;
-            __clib2->__timer_request->Request.io_Command = TR_SETSYSTIME;
+            __clib4->__timer_busy = TRUE;
+            __clib4->__timer_request->Request.io_Message.mn_ReplyPort = __clib4->__timer_port;
+            __clib4->__timer_request->Request.io_Command = TR_SETSYSTIME;
             /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
-            __clib2->__timer_request->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
-            __clib2->__timer_request->Time.Microseconds = t->tv_nsec / 1000;
+            __clib4->__timer_request->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
+            __clib4->__timer_request->Time.Microseconds = t->tv_nsec / 1000;
 
-            DoIO((struct IORequest *) __clib2->__timer_request);
-            GetMsg(__clib2->__timer_port);
+            DoIO((struct IORequest *) __clib4->__timer_request);
+            GetMsg(__clib4->__timer_port);
 
             result = 0;
             __set_errno(0);
@@ -62,8 +62,8 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
         case CLOCK_MONOTONIC: {
             struct timeval tv;
             TIMESPEC_TO_TIMEVAL(&tv, t);
-            __clib2->clock.tv_sec = tv.tv_sec;
-            __clib2->clock.tv_usec = tv.tv_usec;
+            __clib4->clock.tv_sec = tv.tv_sec;
+            __clib4->clock.tv_usec = tv.tv_usec;
         }
             break;
 
@@ -72,7 +72,7 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
             break;
     }
 
-    __clib2->__timer_busy = FALSE;
+    __clib4->__timer_busy = FALSE;
 
     RETURN(result);
     return result;

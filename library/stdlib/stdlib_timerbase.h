@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_timerbase.h,v 1.0 2023-05-17 10:06:25 clib2devs Exp $
+ * $Id: stdlib_timerbase.h,v 1.0 2023-05-17 10:06:25 clib4devs Exp $
 */
 
 #ifndef _STDLIB_TIMERBASE_H
@@ -24,7 +24,7 @@
 #endif /* _MACROS_H */
 
 #define DECLARE_TIMERBASE() \
-	struct Library *		UNUSED	TimerBase	= __CLIB2->__TimerBase; \
-	struct TimerIFace *			    ITimer		= __CLIB2->__ITimer
+	struct Library *		UNUSED	TimerBase	= __CLIB4->__TimerBase; \
+	struct TimerIFace *			    ITimer		= __CLIB4->__ITimer
 
 #endif /* _STDLIB_TIMERBASE_H */

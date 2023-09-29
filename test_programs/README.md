@@ -1,4 +1,4 @@
-### Clib2 test and examples
+### Clib4 test and examples
 
 This is a collection of programs used to test the library. These
 are functional tests: the library is supposed to do something, and produce

@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_longjmp.c,v 1.6 2010-10-20 13:50:17 clib2devs Exp $
+ * $Id: stdlib_longjmp.c,v 1.6 2010-10-20 13:50:17 clib4devs Exp $
  */
 
 /* This is a simple version of setjmp and longjmp for the PowerPC.

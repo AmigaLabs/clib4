@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_semaphore.c,v 1.3 2021-01-31 12:04:26 clib2devs Exp $
+ * $Id: stdlib_semaphore.c,v 1.3 2021-01-31 12:04:26 clib4devs Exp $
 */
 
 #include "stdlib_headers.h"

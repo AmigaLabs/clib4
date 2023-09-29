@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_init_exit.c,v 1.14 2006-09-27 09:40:06 clib2devs Exp $
+ * $Id: unistd_init_exit.c,v 1.14 2006-09-27 09:40:06 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -12,10 +12,10 @@
 
 CLIB_CONSTRUCTOR(unistd_init) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    NewList((struct List *)&__clib2->__unlink_list);
-    InitSemaphore(&__clib2->__unlink_semaphore);
+    NewList((struct List *)&__clib4->__unlink_list);
+    InitSemaphore(&__clib4->__unlink_semaphore);
 
     LEAVE();
 
@@ -24,16 +24,16 @@ CLIB_CONSTRUCTOR(unistd_init) {
 
 CLIB_DESTRUCTOR(unistd_exit) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    if (__clib2->__unlink_list.mlh_Head != NULL && NOT IsMinListEmpty(&__clib2->__unlink_list)) {
+    if (__clib4->__unlink_list.mlh_Head != NULL && NOT IsMinListEmpty(&__clib4->__unlink_list)) {
         struct UnlinkNode *uln;
         BPTR old_dir;
 
         /* Close all the files that still might be open. */
-        __close_all_files(__clib2);
+        __close_all_files(__clib4);
 
-        while ((uln = (struct UnlinkNode *) RemHead((struct List *) &__clib2->__unlink_list))) {
+        while ((uln = (struct UnlinkNode *) RemHead((struct List *) &__clib4->__unlink_list))) {
             D(("deleting '%s'", uln->uln_Name));
 
             old_dir = SetCurrentDir(uln->uln_Lock);

@@ -1,5 +1,5 @@
 /*
- * $Id: signal_raise.c,v 1.11 2023-09-12 12:04:24 clib2devs Exp $
+ * $Id: signal_raise.c,v 1.11 2023-09-12 12:04:24 clib4devs Exp $
 */
 
 #ifndef _SIGNAL_HEADERS_H
@@ -28,7 +28,7 @@ int
 raise(int sig) {
     ENTER();
 
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
     int result = ERROR;
     SHOWVALUE(sig);
 
@@ -47,18 +47,18 @@ raise(int sig) {
     }
 
     /* Can we deliver the signal? */
-    if ((FLAG_IS_CLEAR(__clib2->__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(__clib2->local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
+    if ((FLAG_IS_CLEAR(__clib4->__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(__clib4->local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
         signal_handler_t handler;
 
         /* Which handler is installed for this signal? */
-        handler = __clib2->__signal_handler_table[sig - SIGHUP];
+        handler = __clib4->__signal_handler_table[sig - SIGHUP];
 
         /* Should we ignore this signal? */
         if (handler != SIG_IGN) {
             /* Block delivery of this signal to prevent recursion. */
             SHOWMSG("Blocking signal if it isn't a kill signal");
             if (sig != SIGINT && sig != SIGTERM && sig != SIGKILL)
-                SET_FLAG(__clib2->local_signals_blocked, (1 << sig));
+                SET_FLAG(__clib4->local_signals_blocked, (1 << sig));
 
             /* The default behaviour is to drop into abort(), or do
                something very much like it. */
@@ -67,14 +67,14 @@ raise(int sig) {
 
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                     /* Check ig we have timer terminal running. If so let's kill it */
-                    if (__clib2->tmr_real_task != NULL) {
+                    if (__clib4->tmr_real_task != NULL) {
                         struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
                         int32 pid, process;
 
                         /* Block SIGALRM signal from raise */
                         sigblock(SIGALRM);
                         /* Get itimer process ID */
-                        pid = __clib2->tmr_real_task->pr_ProcessID;
+                        pid = __clib4->tmr_real_task->pr_ProcessID;
 
                         Forbid();
                         /* Scan for process */
@@ -83,19 +83,19 @@ raise(int sig) {
                         while (process > 0) {
                             /* Send a SIGBREAKF_CTRL_F signal until the timer task return to Wait state
                              * and can get the signal */
-                            Signal((struct Task *) __clib2->tmr_real_task, SIGBREAKF_CTRL_F);
+                            Signal((struct Task *) __clib4->tmr_real_task, SIGBREAKF_CTRL_F);
                             process = ProcessScan(&h, (CONST_APTR) pid, 0);
                             usleep(100);
                         }
                         Permit();
                         WaitForChildExit(pid);
-                        __clib2->tmr_real_task = NULL;
+                        __clib4->tmr_real_task = NULL;
                     }
 
                     char break_string[80];
 
                     /* Turn off ^C checking for good. */
-                    __clib2->__check_abort_enabled = FALSE;
+                    __clib4->__check_abort_enabled = FALSE;
 
                     Fault(ERROR_BREAK, NULL, break_string, (LONG) sizeof(break_string));
 
@@ -116,7 +116,7 @@ raise(int sig) {
                     sigblock(SIGALRM);
 
                     /* Since we got a signal we interrrupt every sleep function like nanosleep */
-                    Signal((struct Task *) __clib2->self, SIGBREAKF_CTRL_E);
+                    Signal((struct Task *) __clib4->self, SIGBREAKF_CTRL_E);
                 }
             }
             else if (handler == SIG_ERR) {
@@ -136,7 +136,7 @@ raise(int sig) {
 
             /* Unblock signal delivery again. */
             SHOWMSG("Unblocking signal");
-            CLEAR_FLAG(__clib2->local_signals_blocked, (1 << sig));
+            CLEAR_FLAG(__clib4->local_signals_blocked, (1 << sig));
         }
         else {
             if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {

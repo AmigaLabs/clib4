@@ -1,5 +1,5 @@
 /*
- * $Id: envz__buf_findstr.c,v 1.0 2023-04-16 12:04:22 clib2devs Exp $
+ * $Id: envz__buf_findstr.c,v 1.0 2023-04-16 12:04:22 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H

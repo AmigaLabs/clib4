@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_err.c,v 1.0 2022-07-13 12:04:24 clib2devs Exp $
+ * $Id: stdio_err.c,v 1.0 2022-07-13 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -13,7 +13,7 @@
 #include <err.h>
 
 void vwarn(const char *fmt, va_list ap) {
-    fprintf(stderr, "%s: ", __CLIB2->__progname);
+    fprintf(stderr, "%s: ", __CLIB4->__progname);
     if (fmt) {
         vfprintf(stderr, fmt, ap);
         fputs(": ", stderr);
@@ -22,7 +22,7 @@ void vwarn(const char *fmt, va_list ap) {
 }
 
 void vwarnx(const char *fmt, va_list ap) {
-    fprintf(stderr, "%s: ", __CLIB2->__progname);
+    fprintf(stderr, "%s: ", __CLIB4->__progname);
     if (fmt) vfprintf(stderr, fmt, ap);
     putc('\n', stderr);
 }

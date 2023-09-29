@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_fchown.c,v 1.16 2021-01-31 14:39:23 clib2devs Exp $
+ * $Id: unistd_fchown.c,v 1.16 2021-01-31 14:39:23 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -15,7 +15,7 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
     int result = ERROR;
     struct fd *fd = NULL;
     LONG success;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -23,13 +23,13 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
     SHOWVALUE(owner);
     SHOWVALUE(group);
 
-    assert(file_descriptor >= 0 && file_descriptor < __clib2->__num_fd);
-    assert(__clib2->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__clib2->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
+    assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
+    assert(__clib4->__fd[file_descriptor] != NULL);
+    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __check_abort();
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     fd = __get_file_descriptor(file_descriptor);
     if (fd == NULL) {
@@ -106,7 +106,7 @@ out:
     if (current_dir_changed)
         SetCurrentDir(old_current_dir);
 
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

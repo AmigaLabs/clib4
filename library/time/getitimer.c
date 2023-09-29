@@ -1,5 +1,5 @@
 /*
- * $Id: time_getitimer.c,v 1.0 2022-03-14 18:06:24 clib2devs Exp $
+ * $Id: time_getitimer.c,v 1.0 2022-03-14 18:06:24 clib4devs Exp $
  */
 
 #ifndef _STDLIB_HEADERS_H
@@ -34,7 +34,7 @@ timeval_subtract(struct timeval *result, struct timeval *x, struct timeval *y) {
 
 int
 getitimer(int which, struct itimerval *curr_value) {
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (which < ITIMER_REAL || which > ITIMER_PROF) {
         __set_errno(EINVAL);
@@ -51,11 +51,11 @@ getitimer(int which, struct itimerval *curr_value) {
             struct timeval tv, result;
             /* Get current time of day */
             gettimeofday(&tv, NULL);
-            timeval_subtract(&result, &tv, &__clib2->tmr_start_time);
+            timeval_subtract(&result, &tv, &__clib4->tmr_start_time);
             curr_value->it_value.tv_sec = result.tv_sec;
             curr_value->it_value.tv_usec = result.tv_usec;
-            curr_value->it_interval.tv_sec = __clib2->tmr_time.it_interval.tv_sec;
-            curr_value->it_interval.tv_usec = __clib2->tmr_time.it_interval.tv_usec;
+            curr_value->it_interval.tv_sec = __clib4->tmr_time.it_interval.tv_sec;
+            curr_value->it_interval.tv_usec = __clib4->tmr_time.it_interval.tv_usec;
         }
             break;
         case ITIMER_VIRTUAL:

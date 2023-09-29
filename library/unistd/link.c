@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_link.c,v 1.8 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: unistd_link.c,v 1.8 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -13,7 +13,7 @@ link(const char *existing_path, const char *new_path) {
     BPTR existing_path_lock = BZERO;
     int result = ERROR;
     LONG status;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -31,7 +31,7 @@ link(const char *existing_path, const char *new_path) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (existing_path[0] == '\0' || new_path[0] == '\0') {
             SHOWMSG("no name given");
 

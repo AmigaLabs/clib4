@@ -1,7 +1,7 @@
 /*
   Copyright (C) 2014 Szilard Biro
   Copyright (C) 2018 Harry Sintonen
-  Copyright (C) 2023 clib2Devs
+  Copyright (C) 2023 clib4Devs
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -413,49 +413,6 @@ extern void pthread_cleanup_pop(int execute);
 //
 
 extern int pthread_kill(pthread_t thread, int sig);
-
-//
-// Wrap cancellation points
-//
-
-#ifdef _UNISTD_H_
-#define close(...) (pthread_testcancel(), close(__VA_ARGS__))
-#define fsync(...) (pthread_testcancel(), fsync(__VA_ARGS__))
-#define read(...) (pthread_testcancel(), read(__VA_ARGS__))
-#define sleep(...) (pthread_testcancel(), sleep(__VA_ARGS__))
-#define usleep(...) (pthread_testcancel(), usleep(__VA_ARGS__))
-#endif
-
-#ifdef _FCNTL_H_
-#define creat(...) (pthread_testcancel(), creat(__VA_ARGS__))
-#define fcntl(...) (pthread_testcancel(), fcntl(__VA_ARGS__))
-#define open(...) (pthread_testcancel(), open(__VA_ARGS__))
-#endif
-
-#ifdef _TIME_H_
-#define nanosleep(...) (pthread_testcancel(), nanosleep(__VA_ARGS__))
-#endif
-
-#ifdef _SYS_UIO_H_
-#define readv(...) (pthread_testcancel(), readv(__VA_ARGS__))
-#endif
-
-#ifdef _STDLIB_H_
-#define system(...) (pthread_testcancel(), system(__VA_ARGS__))
-#endif
-
-#if defined(CLIB_BSDSOCKET_PROTOS_H) || defined(CLIB_SOCKET_PROTOS_H)
-#define accept(...) (pthread_testcancel(), accept(__VA_ARGS__))
-#define connect(...) (pthread_testcancel(), connect(__VA_ARGS__))
-#define CloseSocket(...) (pthread_testcancel(), CloseSocket(__VA_ARGS__))
-#define recv(...) (pthread_testcancel(), recv(__VA_ARGS__))
-#define recvfrom(...) (pthread_testcancel(), recvfrom(__VA_ARGS__))
-#define recvmsg(...) (pthread_testcancel(), recvmsg(__VA_ARGS__))
-#define select(...) (pthread_testcancel(), select(__VA_ARGS__))
-#define send(...) (pthread_testcancel(), send(__VA_ARGS__))
-#define sendmsg(...) (pthread_testcancel(), sendmsg(__VA_ARGS__))
-#define sendto(...) (pthread_testcancel(), sendto(__VA_ARGS__))
-#endif
 
 #ifdef __cplusplus
 }

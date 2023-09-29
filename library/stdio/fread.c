@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fread.c,v 1.8 2022-03-27 12:04:24 clib2devs Exp $
+ * $Id: stdio_fread.c,v 1.8 2022-03-27 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -10,7 +10,7 @@ size_t
 fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     size_t result = 0;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -31,7 +31,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     flockfile(stream);
 
-    assert(__is_valid_iob(__clib2, file));
+    assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 

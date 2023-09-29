@@ -17,7 +17,7 @@
 # (amiga: added empty <acsc> to suppress a warning --esr)
 # Additions by Steven Solie <ssolie@ieee.org>, 24 July 2006
 # Added colors by Andrea Palmate' <andrea.palmate@gmail.com>, 17 August 2022
-amiga-clib2|Amiga ANSI ncurses:\
+amiga-clib4|Amiga ANSI ncurses:\
 	:am:bs:bw:ms:xn:cc:\
 	:Co#16:NC#3:co#80:li#24:pa#64:\
 	:AB=\2334%dm:AF=\2333%dm:AL=\233%dL:DC=\233%dP:\
@@ -37,7 +37,7 @@ amiga-clib2|Amiga ANSI ncurses:\
     :kI=\23340~:kP=\23341~:kN=\23342~:kh=\23344~:@7=\23345~:\
     :F1=\23320~:F2=\23321~:
 
-amiga-clib2-mono|Amiga ANSI ncurses:\
+amiga-clib4-mono|Amiga ANSI ncurses:\
 	:am:bs:bw:ms:xn:cc:\
 	:co#80:li#24:\
 	:AB=\2334%dm:AF=\2333%dm:AL=\233%dL:DC=\233%dP:\

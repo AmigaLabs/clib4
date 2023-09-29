@@ -1,10 +1,10 @@
 #
-# $Id: shared.gmk,v 1.0 2023-04-22 10:09:48 clib2devs Exp $
+# $Id: shared.gmk,v 1.0 2023-04-22 10:09:48 clib4devs Exp $
 #
 
 ifdef SPE
-$(OUT_SHARED_LIB)/shared_library/clib2.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -O0 -fno-aggressive-loop-optimizations
-$(OUT_SHARED_LIB)/shared_library/clib2.o : $(LIB_DIR)/shared_library/clib2.c $(LIB_DIR)/shared_library/clib2.h
+$(OUT_SHARED_LIB)/shared_library/clib4.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -O0 -fno-aggressive-loop-optimizations
+$(OUT_SHARED_LIB)/shared_library/clib4.o : $(LIB_DIR)/shared_library/clib4.c $(LIB_DIR)/shared_library/clib4.h
 	$(VERBOSE)$(COMPILE_SPE)
 
 $(OUT_SHARED_LIB)/shared_library/%.o : $(LIB_DIR)/shared_library/%.c
@@ -25,8 +25,8 @@ $(OUT_SHARED_LIB)/amiga/%.o : $(LIB_DIR)/amiga/%.c
 $(OUT_SHARED_LIB)/crypt/%.o : $(LIB_DIR)/crypt/%.c
 	$(VERBOSE)$(COMPILE_SPE)
 else
-$(OUT_SHARED_LIB)/shared_library/clib2.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -O0 -fno-aggressive-loop-optimizations
-$(OUT_SHARED_LIB)/shared_library/clib2.o : $(LIB_DIR)/shared_library/clib2.c $(LIB_DIR)/shared_library/clib2.h
+$(OUT_SHARED_LIB)/shared_library/clib4.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -O0 -fno-aggressive-loop-optimizations
+$(OUT_SHARED_LIB)/shared_library/clib4.o : $(LIB_DIR)/shared_library/clib4.c $(LIB_DIR)/shared_library/clib4.h
 	$(VERBOSE)$(COMPILE)
 
 $(OUT_SHARED_LIB)/shared_library/%.o : $(LIB_DIR)/shared_library/%.c

@@ -1,5 +1,5 @@
 /*
- * $Id: stat_mkdir.c,v 1.7 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stat_mkdir.c,v 1.7 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STAT_HEADERS_H
@@ -13,7 +13,7 @@ int mkdir(const char *path_name, mode_t mode) {
     ULONG protection;
     int result = ERROR;
     BPTR dir_lock;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -31,7 +31,7 @@ int mkdir(const char *path_name, mode_t mode) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
             goto out;
 

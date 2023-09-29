@@ -1,5 +1,5 @@
-#ifndef _CLIB2_H
-#define _CLIB2_H
+#ifndef _CLIB4_H
+#define _CLIB4_H
 
 #include <proto/dos.h>
 #include <proto/exec.h>
@@ -9,7 +9,7 @@
 #include "uuid.h"
 #include "ipc_headers.h"
 
-#define RESOURCE_NAME "clib2.resource"
+#define RESOURCE_NAME "clib4.resource"
 
 extern int setjmp_spe(jmp_buf);
 extern void longjmp_spe(jmp_buf, int);
@@ -20,13 +20,13 @@ extern int __sigsetjmp_spe(struct __jmp_buf_tag, int);
 extern void _longjmp_spe(struct __jmp_buf_tag, int);
 extern int _setjmp_spe(struct __jmp_buf_tag);                                                                                                 /* 1796 */
 
-struct Clib2Resource {
+struct Clib4Resource {
     struct Library          resource;       /* must be first */
     uint32                  size;           /* for struct validation only */
     struct SignalSemaphore  semaphore;      /* for list arbitration */
     struct hashmap         *children;       /* list of parent nodes */
     struct hashmap         *uxSocketsMap;
-    struct _clib2          *fallbackClib;
+    struct _clib4          *fallbackClib;
     /* SysVIPC fields */
     int locked;
     struct
@@ -47,7 +47,7 @@ struct Clib2Resource {
     uint32 cpufamily;
 };
 
-struct Clib2Node {
+struct Clib4Node {
     uint32           pid;  /* the process PID */
     uint32           pPid; /* the process Parent PID */
     char             uuid[UUID4_LEN + 1];
@@ -56,7 +56,7 @@ struct Clib2Node {
     int32            errNo;
 };
 
-struct Clib2Base {
+struct Clib4Base {
     struct Library libNode;
     uint16 pad;
     BPTR SegList;
@@ -65,8 +65,8 @@ struct Clib2Base {
 int libReserved(void);
 uint32 libRelease(struct LibraryManagerInterface *Self);
 uint32 libObtain(struct LibraryManagerInterface *Self);
-struct Clib2Base *libOpen(struct LibraryManagerInterface *Self, uint32 version);
-struct Clib2Base *libInit(struct Clib2Base *libBase, BPTR seglist, struct ExecIFace *const iexec);
+struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version);
+struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec);
 BPTR libExpunge(struct LibraryManagerInterface *Self);
 
 static void _start_ctors(void (*__CTOR_LIST__[])(void));

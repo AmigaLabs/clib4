@@ -1,4 +1,4 @@
-/* $Id: resolv_dns_parse.c,v 1.0 2022-08-09 10:44:15 clib2devs Exp $
+/* $Id: resolv_dns_parse.c,v 1.0 2022-08-09 10:44:15 clib4devs Exp $
 
    Copyright (C) 2005-2006, 2008-2020 Free Software Foundation, Inc.
 

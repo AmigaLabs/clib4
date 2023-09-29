@@ -1,5 +1,5 @@
 /*
- * $Id: ulimit_ulimit.c,v 1.2 2006-07-28 14:37:27 clib2devs Exp $
+ * $Id: ulimit_ulimit.c,v 1.2 2006-07-28 14:37:27 clib4devs Exp $
 */
 
 #include <ulimit.h>

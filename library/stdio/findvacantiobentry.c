@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_findvacantiobentry.c,v 1.5 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stdio_findvacantiobentry.c,v 1.5 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -8,7 +8,7 @@
 
 #ifndef NDEBUG
 
-BOOL __is_valid_iob(struct _clib2 *__clib2, struct iob *iob) {
+BOOL __is_valid_iob(struct _clib4 *__clib4, struct iob *iob) {
     BOOL result = FALSE;
 
     if (iob == NULL) {
@@ -20,13 +20,13 @@ BOOL __is_valid_iob(struct _clib2 *__clib2, struct iob *iob) {
         /* This is used by vsprintf(), etc. */
         result = TRUE;
     } else {
-        __stdio_lock(__clib2);
-        SHOWPOINTER(__clib2->__iob[iob->iob_SlotNumber]);
+        __stdio_lock(__clib4);
+        SHOWPOINTER(__clib4->__iob[iob->iob_SlotNumber]);
 
-        if (__clib2->__num_iob > 0 && 0 <= iob->iob_SlotNumber && iob->iob_SlotNumber < __clib2->__num_iob && __clib2->__iob[iob->iob_SlotNumber] == iob)
+        if (__clib4->__num_iob > 0 && 0 <= iob->iob_SlotNumber && iob->iob_SlotNumber < __clib4->__num_iob && __clib4->__iob[iob->iob_SlotNumber] == iob)
             result = TRUE;
 
-        __stdio_unlock(__clib2);
+        __stdio_unlock(__clib4);
     }
 
     return result;
@@ -34,14 +34,14 @@ BOOL __is_valid_iob(struct _clib2 *__clib2, struct iob *iob) {
 
 #endif /* NDEBUG */
 
-int __find_vacant_iob_entry(struct _clib2 *__clib2) {
+int __find_vacant_iob_entry(struct _clib4 *__clib4) {
     int result = ERROR;
     int i;
 
-    assert(__clib2->__iob != NULL || __clib2->__num_iob == 0);
+    assert(__clib4->__iob != NULL || __clib4->__num_iob == 0);
 
-    for (i = 0; i < __clib2->__num_iob; i++) {
-        if (FLAG_IS_CLEAR(__clib2->__iob[i]->iob_Flags, IOBF_IN_USE)) {
+    for (i = 0; i < __clib4->__num_iob; i++) {
+        if (FLAG_IS_CLEAR(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE)) {
             result = i;
             break;
         }

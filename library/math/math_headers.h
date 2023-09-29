@@ -1,5 +1,5 @@
 /*
- * $Id: math_headers.h,v 1.15 2006-11-13 09:51:53 clib2devs Exp $
+ * $Id: math_headers.h,v 1.15 2006-11-13 09:51:53 clib4devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H

@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_creat.c,v 1.6 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: fcntl_creat.c,v 1.6 2006-01-08 12:04:22 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H

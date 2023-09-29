@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_ttyname.c,v 1.5 2006-09-25 14:05:31 clib2devs Exp $
+ * $Id: unistd_ttyname.c,v 1.5 2006-09-25 14:05:31 clib4devs Exp $
 */
 
 #ifndef    _UNISTD_HEADERS_H

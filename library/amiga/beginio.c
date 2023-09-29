@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_beginio.c,v 1.5 2006-09-25 15:12:47 clib2devs Exp $
+ * $Id: amiga_beginio.c,v 1.5 2006-09-25 15:12:47 clib4devs Exp $
 */
 
 #include <exec/devices.h>

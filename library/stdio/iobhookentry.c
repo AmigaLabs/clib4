@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_iobhookentry.c,v 1.7 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stdio_iobhookentry.c,v 1.7 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -7,7 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int64_t
-__iob_hook_entry(struct _clib2 *__clib2, struct iob *file_iob, struct file_action_message *fam) {
+__iob_hook_entry(struct _clib4 *__clib4, struct iob *file_iob, struct file_action_message *fam) {
 	struct fd *fd;
 	int64_t result;
 
@@ -20,11 +20,11 @@ __iob_hook_entry(struct _clib2 *__clib2, struct iob *file_iob, struct file_actio
         case file_action_close:
             SHOWVALUE(file_iob->iob_Descriptor);
 
-            assert(file_iob->iob_Descriptor >= 0 && file_iob->iob_Descriptor < __clib2->__num_fd);
-            assert(__clib2->__fd[file_iob->iob_Descriptor] != NULL);
-            assert(FLAG_IS_SET(__clib2->__fd[file_iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
+            assert(file_iob->iob_Descriptor >= 0 && file_iob->iob_Descriptor < __clib4->__num_fd);
+            assert(__clib4->__fd[file_iob->iob_Descriptor] != NULL);
+            assert(FLAG_IS_SET(__clib4->__fd[file_iob->iob_Descriptor]->fd_Flags, FDF_IN_USE));
 
-            if (__clib2->__fd[file_iob->iob_Descriptor] == NULL) {
+            if (__clib4->__fd[file_iob->iob_Descriptor] == NULL) {
                 fam->fam_Error = EBADF;
                 result = EOF;
                 break;
@@ -44,7 +44,7 @@ __iob_hook_entry(struct _clib2 *__clib2, struct iob *file_iob, struct file_actio
 
             assert(fd->fd_Action != NULL);
 
-            result = (*fd->fd_Action)(__clib2, fd, fam);
+            result = (*fd->fd_Action)(__clib4, fd, fam);
 
             break;
 

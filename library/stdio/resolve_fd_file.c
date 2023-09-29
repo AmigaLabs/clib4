@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_resolve_fd_file.c,v 1.1 2006-11-16 14:39:23 clib2devs Exp $
+ * $Id: stdio_resolve_fd_file.c,v 1.1 2006-11-16 14:39:23 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H

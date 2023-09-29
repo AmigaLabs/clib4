@@ -1,5 +1,5 @@
 /*
- * $Id: sysv_semop.c,v 1.1 2023-07-08 17:36:42 clib2devs Exp $
+ * $Id: sysv_semop.c,v 1.1 2023-07-08 17:36:42 clib4devs Exp $
 */
 
 #ifndef _SHM_HEADERS_H
@@ -26,7 +26,7 @@ _semop(int semid, const struct sembuf *ops, int nops) {
         __set_errno(EFAULT);
         goto out;
     }
-    struct Clib2Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
 
 redo:
 

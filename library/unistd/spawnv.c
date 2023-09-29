@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_spawnv.c,v 1.0 2021-01-21 18:26:47 clib2devs Exp $
+ * $Id: unistd_spawnv.c,v 1.0 2021-01-21 18:26:47 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -123,7 +123,7 @@ spawnv(int mode, const char *file, const char **argv) {
     size_t arg_string_len = 0;
     size_t parameter_string_len = 0;
     struct name_translation_info path_nti;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (mode != P_WAIT && mode != P_NOWAIT) {
         __set_errno(ENOSYS);
@@ -132,7 +132,7 @@ spawnv(int mode, const char *file, const char **argv) {
 
     __set_errno(0);
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&file, &path_nti) != 0) {
             __set_errno(EINVAL);
             return ret;

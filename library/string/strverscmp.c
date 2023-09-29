@@ -1,5 +1,5 @@
 /*
- * $Id: string_strverscmp.c,v 1.0 2022-05-06 11:54:27 clib2devs Exp $
+ * $Id: string_strverscmp.c,v 1.0 2022-05-06 11:54:27 clib4devs Exp $
 */
 
 #include <stdint.h>

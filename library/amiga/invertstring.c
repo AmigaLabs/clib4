@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_invertstring.c,v 1.5 2021-01-31 12:04:22 clib2devs Exp $
+ * $Id: amiga_invertstring.c,v 1.5 2021-01-31 12:04:22 clib4devs Exp $
 */
 
 #include <libraries/commodities.h>

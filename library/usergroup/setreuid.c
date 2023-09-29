@@ -1,5 +1,5 @@
 /*
- * $Id: usergroup_setreuid.c,v 1.4 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: usergroup_setreuid.c,v 1.4 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _USERGROUP_HEADERS_H
@@ -9,19 +9,19 @@
 int
 setreuid(uid_t real, uid_t eff) {
     int result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     SHOWVALUE(real);
     SHOWVALUE(eff);
 
-    if (__clib2->__root_mode) {
+    if (__clib4->__root_mode) {
         if (real != (uid_t) - 1)
-            __clib2->__root_uid = real;
+            __clib4->__root_uid = real;
 
         if (eff != (uid_t) - 1)
-            __clib2->__root_euid = eff;
+            __clib4->__root_euid = eff;
 
         result = OK;
     } else {

@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_openat.c,v 1.0 2022-08-10 12:04:22 clib2devs Exp $
+ * $Id: fcntl_openat.c,v 1.0 2022-08-10 12:04:22 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -20,7 +20,7 @@ openat(int fd, const char *filename, int flags, ...) {
     struct name_translation_info path_name_nti;
     BOOL absolute = FALSE;
     int result = -1;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (filename == NULL) {
         __set_errno (EINVAL);
@@ -28,7 +28,7 @@ openat(int fd, const char *filename, int flags, ...) {
     }
 
     /* Check for relative path */
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (filename[0] == '/')
             absolute = TRUE;
 

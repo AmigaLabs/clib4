@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_strtod.c,v 1.12 2006-09-25 14:51:15 clib2devs Exp $
+ * $Id: stdlib_strtod.c,v 1.12 2006-09-25 14:51:15 clib4devs Exp $
 */
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
@@ -114,11 +114,11 @@ strtod_l(const char *__restrict s00, char **__restrict se, locale_t loc) {
 #ifdef Honor_FLT_ROUNDS
     int rounding;
 #endif
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
     char *decimal_point = ".";
     int dec_len = 1;
-    if (__clib2->__locale_table[LC_NUMERIC] != NULL) {
-        decimal_point = __clib2->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
+    if (__clib4->__locale_table[LC_NUMERIC] != NULL) {
+        decimal_point = __clib4->__locale_table[LC_NUMERIC]->loc_DecimalPoint;
         dec_len = strlen(decimal_point);
     }
 
@@ -989,8 +989,8 @@ strtod_l(const char *__restrict s00, char **__restrict se, locale_t loc) {
 
 double
 strtod(const char *__restrict s00, char **__restrict se) {
-    struct _clib2 *__clib2 = __CLIB2;
-    return strtod_l(s00, se, __clib2->_current_locale);
+    struct _clib4 *__clib4 = __CLIB4;
+    return strtod_l(s00, se, __clib4->_current_locale);
 }
 
 #if defined(_HAVE_LONG_DOUBLE) && defined(_LDBL_EQ_DBL)
@@ -1045,8 +1045,8 @@ strtof_l(const char *__restrict s00, char **__restrict se, locale_t loc) {
 
 float
 strtof(const char *__restrict s00, char **__restrict se) {
-    struct _clib2 *__clib2 = __CLIB2;
-    double val = strtod_l(s00, se, __clib2->_current_locale);
+    struct _clib4 *__clib4 = __CLIB4;
+    double val = strtod_l(s00, se, __clib4->_current_locale);
     if (isnan(val))
         return signbit(val) ? -nanf("") : nanf("");
     float retval = (float) val;

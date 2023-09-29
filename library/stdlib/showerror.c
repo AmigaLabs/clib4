@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_showerror.c,v 1.14 2006-09-25 15:12:47 clib2devs Exp $
+ * $Id: stdlib_showerror.c,v 1.14 2006-09-25 15:12:47 clib4devs Exp $
 */
 
 #ifndef EXEC_LIBRARIES_H
@@ -49,7 +49,7 @@ void __show_error(const char *message) {
 
     struct Library *IntuitionBase = NULL;
     struct Library *DOSBase = NULL;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     DOSBase = OpenLibrary("dos.library", 0);
     IntuitionBase = OpenLibrary("intuition.library", 0);
@@ -66,13 +66,13 @@ void __show_error(const char *message) {
         goto out;
 
     /* If we can't hope to print the error message, show a requester instead. */
-    if (__clib2->__no_standard_io || __clib2->__WBenchMsg != NULL) {
+    if (__clib4->__no_standard_io || __clib4->__WBenchMsg != NULL) {
         UBYTE program_name[256] = {0};
         struct EasyStruct es;
         STRPTR title_string;
 
-        if (__clib2->__WBenchMsg != NULL) {
-            title_string = (STRPTR) FilePart(__clib2->__WBenchMsg->sm_ArgList[0].wa_Name);
+        if (__clib4->__WBenchMsg != NULL) {
+            title_string = (STRPTR) FilePart(__clib4->__WBenchMsg->sm_ArgList[0].wa_Name);
         } else {
             if (GetCliProgramName((STRPTR) program_name, sizeof(program_name)))
                 title_string = (STRPTR) FilePart((STRPTR) program_name);

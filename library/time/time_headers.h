@@ -1,5 +1,5 @@
 /*
- * $Id: time_headers.h,v 1.12 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: time_headers.h,v 1.12 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -92,7 +92,7 @@
 #endif /* _DEBUG_H */
 
 struct itimer {
-    struct _clib2 *__clib2;
+    struct _clib4 *__clib4;
     int which;
 };
 
