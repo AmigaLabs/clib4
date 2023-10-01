@@ -6,7 +6,6 @@
 #define _SIGNAL_H
 
 #include <features.h>
-#include <pthread.h>
 
 #ifdef __cplusplus
 #ifdef __USE_AMIGAOS_NAMESPACE__
@@ -151,6 +150,7 @@ extern int sigaction(int sig, const struct sigaction *act, struct sigaction *oac
 
 typedef union sigval sigval_t;
 
+#include <pthread.h>
 
 struct sigevent {
     union sigval sigev_value;

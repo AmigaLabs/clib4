@@ -44,7 +44,7 @@ The plain `libc.a` now contains also `libnet.a`, `libunix.a`. Socket support and
 enabled.  
 Soft float version is no longer available.
 
-Clib4 define `__THREAD_SAFE` used to check if the library is thread safe
+Clib4 is thread safe
 
 If you want to use the shared version of library remember to pack your OS4 software with all clib4 shared objects
 otherwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
@@ -218,6 +218,7 @@ constructors/destructors executions
   faster when there are multiple cores.
 - Add a test suite
 - Try to use some functions/headers from https://github.com/attractivechaos/klib to improve speed
+- Use a good locale implementation
 
 ## Legal status
 
