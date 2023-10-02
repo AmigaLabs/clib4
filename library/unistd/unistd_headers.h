@@ -18,5 +18,6 @@ extern int __strip_double_slash(char * file_name,int len);
 extern int __time_delay(ULONG timercmd, struct timeval *tv);
 extern long __pathconf(struct MsgPort *port,int name);
 extern int itimer_real_task(void);
+extern void killitimer(void);
 
 #endif /* _UNISTD_HEADERS_H */

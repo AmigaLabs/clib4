@@ -125,8 +125,10 @@ int itimer_real_task() {
 
 out:
     /* Free itimer objects */
-    SHOWMSG("FreeSysObject ASOT_PORT");
-    FreeSysObject(ASOT_PORT, tmr_real_mp);
+    if (tmr_real_mp) {
+        SHOWMSG("FreeSysObject ASOT_PORT");
+        FreeSysObject(ASOT_PORT, tmr_real_mp);
+    }
 
     if (tmr_real_tr) {
         if (tmr_real_tr->Request.io_Device != NULL) {

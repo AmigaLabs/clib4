@@ -11,6 +11,36 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
+static APTR
+hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
+    uint32 pid = (uint32) userdata;
+    (void) (hook);
+
+    if (process->pr_ProcessID == pid) {
+        return process;
+    }
+
+    return 0;
+}
+
+void killitimer(void) {
+    struct _clib4 *__clib4 = __CLIB4;
+    struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
+    int32 pid, process;
+    pid = __clib4->tmr_real_task->pr_ProcessID;
+    /* Scan for process */
+    process = ProcessScan(&h, (CONST_APTR) pid, 0);
+    while (process > 0) {
+        /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
+        Signal((struct Task *) __clib4->tmr_real_task, SIGBREAKF_CTRL_F);
+        process = ProcessScan(&h, (CONST_APTR) pid, 0);
+        Delay(10);
+    }
+    WaitForChildExit(pid);
+    __clib4->tmr_real_task = NULL;
+
+};
+
 int
 setitimer(int which, const struct itimerval *new_value, struct itimerval *old_value) {
     ENTER();
@@ -50,7 +80,7 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
             }
             else if (__clib4->tmr_real_task == NULL) {
                 /* Create timer tasks */
-                if ((new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0)) {
+                if (new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0) {
                     __clib4->tmr_real_task = CreateNewProcTags(
                             NP_Name, "ITIMER_TASK",
                             NP_Entry, itimer_real_task,
@@ -66,9 +96,10 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
                 }
             }
             else {
-                int pid = __clib4->tmr_real_task->pr_ProcessID;
-                Signal((struct Task *)__clib4->tmr_real_task, SIGBREAKF_CTRL_F);
-                WaitForChildExit(pid);
+                /* Block SIGALRM signal from raise */
+                sigblock(SIGALRM);
+                /* Kill itimer */
+                killitimer();
             }
 
             break;

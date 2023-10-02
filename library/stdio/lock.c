@@ -8,16 +8,12 @@
 
 void
 __stdio_lock(struct _clib4 *__clib4) {
-    assert(__clib4->stdio_lock != NULL);
-
     if (__clib4->stdio_lock != NULL)
         ObtainSemaphore(__clib4->stdio_lock);
 }
 
 void
 __stdio_unlock(struct _clib4 *__clib4) {
-    assert(__clib4->stdio_lock != NULL);
-
     if (__clib4->stdio_lock != NULL)
         ReleaseSemaphore(__clib4->stdio_lock);
 }

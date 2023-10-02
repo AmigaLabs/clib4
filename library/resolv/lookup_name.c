@@ -147,7 +147,7 @@ static int name_from_dns(struct address buf[static MAXADDRS], char canon[static 
     int qlens[2], alens[2];
     int i, nq = 0;
     struct dpc_ctx ctx = {.addrs = buf, .canon = canon};
-    static const struct {
+    const struct {
         int af;
         int rr;
     } afrr[2] = {
