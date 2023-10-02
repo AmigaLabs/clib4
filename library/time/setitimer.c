@@ -28,7 +28,6 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
     }
 
     _itimer.which = which;
-    _itimer.__clib4 = __clib4;
 
     switch (which) {
         case ITIMER_REAL:
@@ -53,11 +52,10 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
                 /* Create timer tasks */
                 if ((new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0)) {
                     __clib4->tmr_real_task = CreateNewProcTags(
-                            NP_Name, "CLIB4_ITIMER_REAL_TASK",
+                            NP_Name, "ITIMER_TASK",
                             NP_Entry, itimer_real_task,
-                            NP_EntryData, GetEntryData(),
                             NP_Child, TRUE,
-                            NP_UserData, (struct _clib4 *) &_itimer,
+                            NP_UserData, (struct _itimer *) &_itimer,
                             NP_Output, DupFileHandle(Output()),
                             NP_CloseOutput, TRUE,
                             TAG_END);

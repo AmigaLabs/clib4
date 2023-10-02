@@ -31,11 +31,11 @@ int itimer_real_task() {
     struct Process *thisTask = (struct Process *) FindTask(NULL);
     struct itimer *_itimer = (struct itimer *) thisTask->pr_Task.tc_UserData;
 
-    struct _clib4 *__clib4 = _itimer->__clib4;
+    struct _clib4 *__clib4 = __CLIB4;
 
     SHOWPOINTER(__clib4);
     SHOWVALUE(_itimer->which);
-
+    SHOWMSG("AllocSysObjectTags ASOT_PORT");
     /* Create itimer timers and message ports */
     tmr_real_mp = AllocSysObjectTags(ASOT_PORT,
                                      ASOPORT_Action, PA_SIGNAL,
@@ -46,6 +46,7 @@ int itimer_real_task() {
     if (!tmr_real_mp) {
         goto out;
     }
+    SHOWMSG("AllocSysObjectTags ASOT_IOREQUEST");
     tmr_real_tr = AllocSysObjectTags(ASOT_IOREQUEST,
                                      ASOIOR_ReplyPort, tmr_real_mp,
                                      ASOIOR_Size, sizeof(struct TimeRequest),
@@ -53,10 +54,13 @@ int itimer_real_task() {
     if (!tmr_real_tr) {
         goto out;
     }
+
+    SHOWMSG("OpenDevice");
     if (OpenDevice(TIMERNAME, UNIT_VBLANK, (struct IORequest *) tmr_real_tr, 0) != OK) {
         goto out;
     }
 
+    SHOWMSG("Setting Request");
     tmr_real_tr->Request.io_Command = TR_ADDREQUEST;
     tmr_real_tr->Time.Seconds = __clib4->tmr_time.it_value.tv_sec;
     tmr_real_tr->Time.Microseconds = __clib4->tmr_time.it_value.tv_usec;
@@ -91,19 +95,25 @@ int itimer_real_task() {
             tmr_real_tr->Time.Seconds = __clib4->tmr_time.it_value.tv_sec;
             tmr_real_tr->Time.Microseconds = __clib4->tmr_time.it_value.tv_usec;
         } else {
-            if (CheckIO((struct IORequest *) tmr_real_tr))
+            SHOWMSG("CheckIO");
+            if (CheckIO((struct IORequest *) tmr_real_tr)) {
+                SHOWMSG("WaitIO");
                 WaitIO((struct IORequest *) tmr_real_tr);
+            }
 
             tmr_real_tr->Time.Seconds += __clib4->tmr_time.it_interval.tv_sec;
             tmr_real_tr->Time.Microseconds += __clib4->tmr_time.it_interval.tv_usec;
 
             /* If SIGALRM is blocked kill the timer */
+            SHOWMSG("CHECK SIGALRM");
             if (FLAG_IS_SET(__clib4->__signals_blocked, (1 << SIGALRM))) {
                 break;
             }
 
+            SHOWMSG("Raise SIGALRM");
             raise(SIGALRM);
 
+            SHOWMSG("CHECK SIGALRM AGAIN");
             /* Check again if SIGALRM is blocked and then kill the timer */
             if (FLAG_IS_SET(__clib4->__signals_blocked, (1 << SIGALRM))) {
                 break;
@@ -115,11 +125,15 @@ int itimer_real_task() {
 
 out:
     /* Free itimer objects */
+    SHOWMSG("FreeSysObject ASOT_PORT");
     FreeSysObject(ASOT_PORT, tmr_real_mp);
 
     if (tmr_real_tr) {
-        if (tmr_real_tr->Request.io_Device != NULL)
+        if (tmr_real_tr->Request.io_Device != NULL) {
+            SHOWMSG("CloseDevice");
             CloseDevice((struct IORequest *) tmr_real_tr);
+        }
+        SHOWMSG("FreeSysObject ASOT_IOREQUEST");
         FreeSysObject(ASOT_IOREQUEST, tmr_real_tr);
     }
 
