@@ -37,7 +37,7 @@
 #endif /* _SOCKET_HEADERS_H */
 
 int
-res_querydomain(const char *name, const char *domain, int class, int type, unsigned char *dest, int len) {
+res_querydomain(const char *name, const char *domain, int klass, int type, unsigned char *dest, int len) {
     char tmp[255];
     size_t nl = strnlen(name, 255);
     size_t dl = strnlen(domain, 255);
@@ -45,5 +45,5 @@ res_querydomain(const char *name, const char *domain, int class, int type, unsig
     memcpy(tmp, name, nl);
     tmp[nl] = '.';
     memcpy(tmp + nl + 1, domain, dl + 1);
-    return res_query(tmp, class, type, dest, len);
+    return res_query(tmp, klass, type, dest, len);
 }
