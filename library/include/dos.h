@@ -9,7 +9,6 @@
 
 #include <stdio.h>
 #include <stddef.h>
-#include <signal.h>
 #include <sys/resource.h>
 #include <sys/syslimits.h>
 #include <wchar.h>
