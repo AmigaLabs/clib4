@@ -1,5 +1,5 @@
 /*
- * $Id: usergroup_getuid.c,v 1.3 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: usergroup_getuid.c,v 1.3 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _USERGROUP_HEADERS_H
@@ -8,12 +8,12 @@
 
 uid_t getuid(void) {
     uid_t result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    if (__clib2->__root_mode) {
-        result = __clib2->__root_uid;
+    if (__clib4->__root_mode) {
+        result = __clib4->__root_uid;
     } else {
         result = __getuid();
     }

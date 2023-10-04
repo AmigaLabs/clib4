@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_popen.c,v 1.10 2008-05-07 09:33:55 clib2devs Exp $
+ * $Id: stdio_popen.c,v 1.10 2008-05-07 09:33:55 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -54,7 +54,7 @@ popen(const char *command, const char *type) {
     unsigned long task_address;
     time_t now;
     int i;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -97,7 +97,7 @@ popen(const char *command, const char *type) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         char just_the_command_name[MAXPATHLEN + 1];
         BOOL quotes_needed = FALSE;
         char *command_name;

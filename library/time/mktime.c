@@ -1,5 +1,5 @@
 /*
- * $Id: time_mktime.c,v 1.11 2015-06-26 11:22:00 clib2devs Exp $
+ * $Id: time_mktime.c,v 1.11 2015-06-26 11:22:00 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -18,7 +18,7 @@ mktime(struct tm *tm) {
     time_t result = (time_t) - 1;
     LONG combined_seconds;
     int month, year;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -86,14 +86,14 @@ mktime(struct tm *tm) {
 
     seconds += combined_seconds;
 
-    __locale_lock(__clib2);
+    __locale_lock(__clib4);
 
     /* The data in 'struct tm *tm' was given in local time. We need
        to convert the result into UTC. */
-    if (__clib2->__default_locale != NULL)
-        seconds += 60 * __clib2->__default_locale->loc_GMTOffset;
+    if (__clib4->__default_locale != NULL)
+        seconds += 60 * __clib4->__default_locale->loc_GMTOffset;
 
-    __locale_unlock(__clib2);
+    __locale_unlock(__clib4);
 
     /* Adjust for the difference between the Unix and the
        AmigaOS epochs, which differ by 8 years. */

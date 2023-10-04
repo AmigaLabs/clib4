@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_calloc.c,v 1.7 2006-01-08 12:04:25 clib2devs Exp $
+ * $Id: stdlib_calloc.c,v 1.7 2006-01-08 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -35,7 +35,7 @@ __calloc(size_t num_elements, size_t element_size) {
         D(("calloc(num_elements=%ld, element_size=%ld) overflow"));
     }
 
-    return (result);
+    return result;
 }
 
 void *
@@ -44,5 +44,5 @@ calloc(size_t num_elements, size_t element_size) {
 
     result = __calloc(num_elements, element_size);
 
-    return (result);
+    return result;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: string_strlen.c,v 1.4 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: string_strlen.c,v 1.4 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -45,21 +45,19 @@ __strlen(const char *str) {
 size_t
 strlen(const char *s) {
     size_t result = 0;
-    struct _clib2 *__clib2 = __CLIB2;
-
-    assert(s != NULL);
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (NULL == s) {
         __set_errno(EFAULT);
         goto out;
     }
 
-    if (__clib2->__optimizedCPUFunctions) {
-        switch (__clib2->cpufamily) {
+    if (__clib4->__optimizedCPUFunctions) {
+        switch (__clib4->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strlen440(s);
                 break;
-#ifdef SPE
+#ifdef __SPE__
             case CPUFAMILY_E500:
                 result = __strlen_e500(s);
                 break;

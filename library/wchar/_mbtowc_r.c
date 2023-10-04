@@ -1,5 +1,5 @@
 /*
- * $Id: wchar__mbtowc.c,v 1.0 2021-02-06 16:12:27 clib2devs Exp $
+ * $Id: wchar__mbtowc.c,v 1.0 2021-02-06 16:12:27 clib4devs Exp $
 */
 
 #ifndef _WCHAR_HEADERS_H
@@ -40,7 +40,7 @@ static JIS_ACTION JIS_action_table[JIS_S_NUM][JIS_C_NUM] = {
 int _mbtowc_r(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
     wchar_t dummy;
     unsigned char *t = (unsigned char *) s;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (pwc == NULL)
         pwc = &dummy;
@@ -48,10 +48,10 @@ int _mbtowc_r(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
     if (s != NULL && n == 0)
         return -2;
 
-    if (__clib2->_current_locale == NULL || (strlen(__clib2->_current_locale) <= 1)) {
+    if (__clib4->_current_locale == NULL || (strlen(__clib4->_current_locale) <= 1)) {
         /* fall-through */
     }
-    else if (!strcmp(__clib2->_current_locale, "C-UTF-8")) {
+    else if (!strcmp(__clib4->_current_locale, "C-UTF-8")) {
         int ch;
         int i = 0;
 
@@ -276,7 +276,7 @@ int _mbtowc_r(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
             return i;
         } else
             return -1;
-    } else if (!strcmp(__clib2->_current_locale, "C-SJIS")) {
+    } else if (!strcmp(__clib4->_current_locale, "C-SJIS")) {
         int ch;
         int i = 0;
         if (s == NULL)
@@ -299,7 +299,7 @@ int _mbtowc_r(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
             } else
                 return -1;
         }
-    } else if (!strcmp(__clib2->_current_locale, "C-EUCJP")) {
+    } else if (!strcmp(__clib4->_current_locale, "C-EUCJP")) {
         int ch;
         int i = 0;
         if (s == NULL)
@@ -322,7 +322,7 @@ int _mbtowc_r(wchar_t *pwc, const char *s, size_t n, mbstate_t *state) {
             } else
                 return -1;
         }
-    } else if (!strcmp(__clib2->_current_locale, "C-JIS")) {
+    } else if (!strcmp(__clib4->_current_locale, "C-JIS")) {
         JIS_STATE curr_state;
         JIS_ACTION action;
         JIS_CHAR_TYPE ch;

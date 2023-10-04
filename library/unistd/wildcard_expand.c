@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_wildcard_expand.c,v 1.17 2006-04-05 08:39:46 clib2devs Exp $
+ * $Id: unistd_wildcard_expand.c,v 1.17 2006-04-05 08:39:46 clib4devs Exp $
  */
 
 #ifndef _STDLIB_HEADERS_H
@@ -60,12 +60,12 @@ out:
 
 CLIB_DESTRUCTOR(__wildcard_expand_exit) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    if (__clib2->anchor != NULL) {
-        MatchEnd(__clib2->anchor);
-        FreeDosObject(DOS_ANCHORPATH, __clib2->anchor);
-        __clib2->anchor = NULL;
+    if (__clib4->anchor != NULL) {
+        MatchEnd(__clib4->anchor);
+        FreeDosObject(DOS_ANCHORPATH, __clib4->anchor);
+        __clib4->anchor = NULL;
     }
 
     LEAVE();
@@ -95,7 +95,7 @@ int __wildcard_expand_init(void) {
     char **argv;
     int error;
     int i;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* Disable dos.library requesters during pattern matching below. We
        do this so early in order to make it easier to reset the window
@@ -103,17 +103,17 @@ int __wildcard_expand_init(void) {
     old_window_pointer = __set_process_window((APTR) - 1);
 
     /* No work to be done? */
-    if (__clib2->__argc == 0 || __clib2->__argv == NULL) {
+    if (__clib4->__argc == 0 || __clib4->__argv == NULL) {
         error = OK;
         goto out;
     }
 
-    argc = __clib2->__argc;
-    argv = __clib2->__argv;
+    argc = __clib4->__argc;
+    argv = __clib4->__argv;
 
     ap = AllocDosObjectTags(DOS_ANCHORPATH,
                             ADO_Strlen, 2 * MAXPATHLEN,
-                            ADO_Mask, (__clib2->__check_abort_enabled) ? __clib2->__break_signal_mask : 0,
+                            ADO_Mask, (__clib4->__check_abort_enabled) ? __clib4->__break_signal_mask : 0,
                             TAG_END);
 
     if (ap == NULL) {
@@ -122,7 +122,7 @@ int __wildcard_expand_init(void) {
     }
 
     /* This may have to be cleaned up later. */
-    __clib2->anchor = ap;
+    __clib4->anchor = ap;
 
     /* The argument list will go in here. */
     NewList((struct List *) &argument_list);
@@ -199,7 +199,7 @@ int __wildcard_expand_init(void) {
                     if (rc == ERROR_BREAK) {
                         __set_process_window(old_window_pointer);
 
-                        SetSignal(__clib2->__break_signal_mask, __clib2->__break_signal_mask);
+                        SetSignal(__clib4->__break_signal_mask, __clib4->__break_signal_mask);
                         __check_abort();
 
                         old_window_pointer = __set_process_window((APTR) - 1);
@@ -281,8 +281,8 @@ int __wildcard_expand_init(void) {
             goto out;
         }
 
-        __clib2->__argc = argument_list_size;
-        __clib2->__argv = table;
+        __clib4->__argc = argument_list_size;
+        __clib4->__argv = table;
 
         /* Fill in the table, sorting the wildcard matches. */
         last_wild = 0;
@@ -352,15 +352,15 @@ out:
     if (ap != NULL) {
         MatchEnd(ap);
 
-        FreeDosObject(DOS_ANCHORPATH, __clib2->anchor);
+        FreeDosObject(DOS_ANCHORPATH, __clib4->anchor);
     }
 
-    __clib2->anchor = NULL;
+    __clib4->anchor = NULL;
 
     if (error != OK) {
         __set_errno(error);
 
-        perror(__clib2->__argv[0]);
+        perror(__clib4->__argv[0]);
         abort();
     }
 

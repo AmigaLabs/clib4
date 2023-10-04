@@ -1,5 +1,5 @@
 /*
- * $Id: stdio.h,v 1.24 2010-10-20 13:12:59 clib2devs Exp $
+ * $Id: stdio.h,v 1.24 2010-10-20 13:12:59 clib4devs Exp $
 */
 
 #ifndef _STDIO_H
@@ -116,9 +116,9 @@ typedef struct __sFILE FILE;
 /****************************************************************************/
 
 /* The three standard I/O streams */
-#define stdin ((FILE *) __CLIB2->__iob[0])
-#define stdout ((FILE *) __CLIB2->__iob[1])
-#define stderr ((FILE *) __CLIB2->__iob[2])
+#define stdin ((FILE *) __CLIB4->__iob[0])
+#define stdout ((FILE *) __CLIB4->__iob[1])
+#define stderr ((FILE *) __CLIB4->__iob[2])
 
 /****************************************************************************/
 

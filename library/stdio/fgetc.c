@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fgetc.c,v 1.8 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stdio_fgetc.c,v 1.8 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -10,21 +10,21 @@ int
 __fgetc(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWPOINTER(stream);
 
     assert(stream != NULL);
 
-    assert(__is_valid_iob(__clib2, file));
+    assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
     if (__iob_read_buffer_is_empty(file)) {
         __check_abort();
 
-        if (__fill_iob_read_buffer(__clib2, file) < 0)
+        if (__fill_iob_read_buffer(__clib4, file) < 0)
             goto out;
 
         if (__iob_read_buffer_is_empty(file)) {
@@ -46,7 +46,7 @@ int
 __fgetc_check(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(stream != NULL);
 
@@ -74,7 +74,7 @@ __fgetc_check(FILE *stream) {
         goto out;
     }
 
-    if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib2, file) < 0)
+    if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0)
         goto out;
 
     result = OK;

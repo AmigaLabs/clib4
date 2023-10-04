@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_headers.h,v 1.22 2010-10-20 13:50:17 clib2devs Exp $
+ * $Id: stdlib_headers.h,v 1.22 2010-10-20 13:50:17 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -24,8 +24,6 @@
 #ifndef DOS_DOSASL_H
 #include <dos/dosasl.h>
 #endif /* DOS_DOSASL_H */
-
-#include <dos/obsolete.h>
 
 #ifndef WORKBENCH_STARTUP_H
 #include <workbench/startup.h>
@@ -71,9 +69,16 @@
 #include "stdlib_timerbase.h"
 #endif /* _STDLIB_TIMERBASE_H */
 
+#ifndef _MATH_HEADERS_H
+#include "math_headers.h"
+#endif /* _MATH_HEADERS_H */
+
 #ifndef _MATH_FP_SUPPORT_H
 #include "math_fp_support.h"
 #endif /* _MATH_FP_SUPPORT_H */
+
+#include "gdtoa.h"
+#include "mprec.h"
 
 #include <math.h>
 

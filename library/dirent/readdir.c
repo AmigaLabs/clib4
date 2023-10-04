@@ -1,5 +1,5 @@
 /*
- * $Id: dirent_readdir.c,v 1.11 2021-01-18 10:32:15 clib2devs Exp $
+ * $Id: dirent_readdir.c,v 1.11 2021-01-18 10:32:15 clib4devs Exp $
 */
 
 #ifndef _DIRENT_HEADERS_H
@@ -15,7 +15,7 @@ readdir(DIR *directory_pointer) {
     struct dirent *result = NULL;
     struct DirectoryHandle *dh;
     BPTR parent_directory = BZERO;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -32,7 +32,7 @@ readdir(DIR *directory_pointer) {
 
     dh = (struct DirectoryHandle *) directory_pointer;
 
-    if (__clib2->__unix_path_semantics && dh->dh_ScanVolumeList) {
+    if (__clib4->__unix_path_semantics && dh->dh_ScanVolumeList) {
         SHOWMSG("we are scanning the volume list");
 
         if (dh->dh_Position == 0) {
@@ -93,7 +93,7 @@ readdir(DIR *directory_pointer) {
     }
 
     if (NOT dh->dh_ScanVolumeList) {
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             if (dh->dh_Position == 0) {
                 SHOWMSG("returning .");
 

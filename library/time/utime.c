@@ -1,5 +1,5 @@
 /*
- * $Id: utime_utime.c,v 1.12 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: utime_utime.c,v 1.12 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UTIME_HEADERS_H
@@ -12,7 +12,7 @@ utime(const char *path_name, const struct utimbuf *times) {
     struct DateStamp ds;
     int result = ERROR;
     LONG status;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(path_name != NULL);
 
@@ -24,7 +24,7 @@ utime(const char *path_name, const struct utimbuf *times) {
     }
 
     /* If a modification time is provided, convert it into the local
-       DateStamp format, as used by the SetFileDate() function. */
+       DateStamp format, as used by the SetDate() function. */
     if (times != NULL) {
         if (CANNOT __convert_time_to_datestamp(times->modtime, &ds))
         {
@@ -37,7 +37,7 @@ utime(const char *path_name, const struct utimbuf *times) {
         DateStamp(&ds);
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -54,7 +54,7 @@ utime(const char *path_name, const struct utimbuf *times) {
         }
     }
 
-    status = SetFileDate((STRPTR) path_name, &ds);
+    status = SetDate((STRPTR) path_name, &ds);
     if (status == DOSFALSE) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
         goto out;

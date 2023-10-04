@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_fputwc.c,v 1.4 2021-02-03 18:49:27 clib2devs Exp $
+ * $Id: wchar_fputwc.c,v 1.4 2021-02-03 18:49:27 clib4devs Exp $
 */
 
 #ifndef _WCHAR_HEADERS_H

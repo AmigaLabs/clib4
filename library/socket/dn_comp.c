@@ -1,4 +1,4 @@
-/* $Id: socket_dn_comp.c,v 1.0 2022-03-14 10:44:15 clib2devs Exp $
+/* $Id: socket_dn_comp.c,v 1.0 2022-03-14 10:44:15 clib4devs Exp $
 
    Copyright (C) 2005-2006, 2008-2020 Free Software Foundation, Inc.
 
@@ -91,7 +91,7 @@ match(int *offset, const unsigned char *base, const unsigned char *dn,
 
 int
 dn_comp(unsigned char *src, unsigned char *dst, int space, unsigned char **dnptrs, unsigned char **lastdnptr) {
-    int i, j, n, m = 0, offset, bestlen = 0, bestoff;
+    int i, j, n, m = 0, offset = 0, bestlen = 0, bestoff = 0;
     unsigned char lens[127];
     unsigned char **p;
     const char *end;

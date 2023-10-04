@@ -1,5 +1,5 @@
 /*
- * $Id: time_settimeofday.c,v 1.0 2022-02-24 18:31:57 clib2devs Exp $
+ * $Id: time_settimeofday.c,v 1.0 2022-02-24 18:31:57 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -17,35 +17,35 @@
 int
 settimeofday(const struct timeval *t, const struct timezone *tz) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     int result = -1;
     int32 __gmtoffset = 0;
 
-    if (__clib2->__timer_busy) {
+    if (__clib4->__timer_busy) {
         __set_errno(EPERM);
         RETURN(result);
         return result;
     }
 
-    __clib2->__timer_busy = TRUE;
+    __clib4->__timer_busy = TRUE;
 
-    __clib2->__timer_request->Request.io_Message.mn_ReplyPort = __clib2->__timer_port;
-    __clib2->__timer_request->Request.io_Command = TR_SETSYSTIME;
+    __clib4->__timer_request->Request.io_Message.mn_ReplyPort = __clib4->__timer_port;
+    __clib4->__timer_request->Request.io_Command = TR_SETSYSTIME;
     if (tz != NULL) {
         __gmtoffset = tz->tz_minuteswest;
     }
     /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
-    __clib2->__timer_request->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
-    __clib2->__timer_request->Time.Microseconds = t->tv_usec;
+    __clib4->__timer_request->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
+    __clib4->__timer_request->Time.Microseconds = t->tv_usec;
 
-    DoIO((struct IORequest *) __clib2->__timer_request);
-    GetMsg(__clib2->__timer_port);
+    DoIO((struct IORequest *) __clib4->__timer_request);
+    GetMsg(__clib4->__timer_port);
 
     result = 0;
     __set_errno(0);
 
-    __clib2->__timer_busy = FALSE;
+    __clib4->__timer_busy = FALSE;
 
     RETURN(result);
     return result;

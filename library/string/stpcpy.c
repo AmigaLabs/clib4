@@ -1,5 +1,5 @@
 /*
- * $Id: string_stpcpy.c,v 1.0 2021-01-21 17:43:27 clib2devs Exp $
+ * $Id: string_stpcpy.c,v 1.0 2021-01-21 17:43:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H

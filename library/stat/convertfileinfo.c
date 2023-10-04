@@ -1,5 +1,5 @@
 /*
- * $Id: stat_convertfileinfo.c,v 1.9 2006-09-20 19:46:57 clib2devs Exp $
+ * $Id: stat_convertfileinfo.c,v 1.9 2006-09-20 19:46:57 clib4devs Exp $
 */
 
 #ifndef _STAT_HEADERS_H

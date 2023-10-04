@@ -1,5 +1,5 @@
 /*
- * $Id: string_strchr.c,v 1.5 2021-03-22 12:04:26 clib2devs Exp $
+ * $Id: string_strchr.c,v 1.5 2021-03-22 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -18,7 +18,7 @@ strchr(const char *s, int c) {
     char *result = NULL;
     unsigned char us_c;
     unsigned char find_this = (c & 0xff);
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(s != NULL);
 
@@ -27,8 +27,8 @@ strchr(const char *s, int c) {
         goto out;
     }
 
-    if (__clib2->__optimizedCPUFunctions) {
-        switch (__clib2->cpufamily) {
+    if (__clib4->__optimizedCPUFunctions) {
+        switch (__clib4->cpufamily) {
             case CPUFAMILY_4XX:
                 result = __strchr440(s, c);
                 break;

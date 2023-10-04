@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_symlink.c,v 1.8 2006-01-29 09:17:00 clib2devs Exp $
+ * $Id: unistd_symlink.c,v 1.8 2006-01-29 09:17:00 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -12,7 +12,7 @@ symlink(const char *actual_path, const char *symbolic_path) {
     struct name_translation_info symbolic_path_name_nti;
     int result = ERROR;
     LONG status;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -30,7 +30,7 @@ symlink(const char *actual_path, const char *symbolic_path) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (actual_path[0] == '\0' || symbolic_path[0] == '\0') {
             SHOWMSG("no name given");
 

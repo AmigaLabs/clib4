@@ -1,5 +1,5 @@
 /*
- * $Id: mount_convertinfo.c,v 1.7 2008-04-16 07:38:10 clib2devs Exp $
+ * $Id: mount_convertinfo.c,v 1.7 2008-04-16 07:38:10 clib4devs Exp $
 */
 
 #ifndef _MOUNT_HEADERS_H
@@ -33,8 +33,6 @@ __convert_info_to_statfs(struct InfoData *id, struct statfs *f) {
 
     assert(id != NULL && f != NULL);
 
-    SHOWVALUE(id->id_NumSoftErrors);
-    SHOWVALUE(id->id_UnitNumber);
     SHOWVALUE(id->id_DiskState);
     SHOWVALUE(id->id_NumBlocks);
     SHOWVALUE(id->id_NumBlocksUsed);
@@ -145,8 +143,6 @@ __convert_info_to_statvfs(struct InfoData *id, struct statvfs *f) {
 
     assert(id != NULL && f != NULL);
 
-    SHOWVALUE(id->id_NumSoftErrors);
-    SHOWVALUE(id->id_UnitNumber);
     SHOWVALUE(id->id_DiskState);
     SHOWVALUE(id->id_NumBlocks);
     SHOWVALUE(id->id_NumBlocksUsed);

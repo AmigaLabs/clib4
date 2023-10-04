@@ -1,5 +1,5 @@
 /*
- * $Id: stddef.h,v 1.7 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: stddef.h,v 1.7 2006-01-08 12:06:14 clib4devs Exp $
 */
 
 #ifndef _STDDEF_H
@@ -20,6 +20,7 @@ __BEGIN_DECLS
 
 typedef int ptrdiff_t;
 typedef unsigned int size_t;
+typedef struct { long long __ll; long double __ld; } max_align_t;
 
 /* wchar_t is a built-in type in C++ */
 #ifndef __cplusplus

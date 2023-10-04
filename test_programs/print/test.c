@@ -1,5 +1,5 @@
 /*
- * $Id: test.c,v 1.6 2005-08-26 12:21:51 clib2devs Exp $
+ * $Id: test.c,v 1.6 2005-08-26 12:21:51 clib4devs Exp $
  *
  */
 

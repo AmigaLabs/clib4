@@ -215,16 +215,16 @@ tputs(const char *str, int nlines, register int (*outfun)()) {
     register int padcount = 0;
     register int speed;
     size_t n_speeds = sizeof(speeds) / sizeof(speeds[0]);
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     __check_abort();
 
-    if (__clib2->__ospeed == 0)
-        speed = __clib2->__tputs_baud_rate;
-    else if (__clib2->__ospeed >= n_speeds)
+    if (__clib4->__ospeed == 0)
+        speed = __clib4->__tputs_baud_rate;
+    else if (__clib4->__ospeed >= n_speeds)
         speed = speeds[n_speeds - 1];
     else
-        speed = speeds[__clib2->__ospeed];
+        speed = speeds[__clib4->__ospeed];
 
     if (!str)
         return;
@@ -259,7 +259,7 @@ tputs(const char *str, int nlines, register int (*outfun)()) {
     }
 
     while (padcount-- > 0)
-        (*outfun)(__clib2->__PC);
+        (*outfun)(__clib4->__PC);
 }
 
 /* Find the termcap entry data for terminal type NAME

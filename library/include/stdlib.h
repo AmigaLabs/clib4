@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib.h,v 1.19 2008-04-30 14:34:03 clib2devs Exp $
+ * $Id: stdlib.h,v 1.19 2008-04-30 14:34:03 clib4devs Exp $
 */
 
 #ifndef _STDLIB_H
@@ -12,9 +12,9 @@
 #include <alloca.h>
 #include <sys/types.h>
 
-#ifndef _SYS_CLIB2_STDC_H
-#include <sys/clib2_stdc.h>
-#endif /* _SYS_CLIB2_STDC_H */
+#ifndef _SYS_CLIB4_STDC_H
+#include <sys/clib4_stdc.h>
+#endif /* _SYS_CLIB4_STDC_H */
 
 __BEGIN_DECLS
 
@@ -83,19 +83,19 @@ extern long random(void);
 extern void srandom(unsigned int seed);
 extern char *initstate(unsigned int seed, char *state, size_t size);
 extern char *setstate(const char *state);
-extern char *l64a (long x0);
-extern long a64l (const char *s);
+extern char *l64a(long x0);
+extern long a64l(const char *s);
 extern void setkey(const char *key);
 
-extern double drand48 (void);
-extern double erand48 (unsigned short subi[3]);
-extern long int lrand48 (void);
-extern long int nrand48 (unsigned short subi[3]);
-extern long mrand48 (void);
-extern long jrand48 (unsigned short subi[3]);
-extern void srand48 (long);
-extern unsigned short *seed48 (unsigned short subi[3]);
-extern void lcong48 (unsigned short subi[7]);
+extern double drand48(void);
+extern double erand48(unsigned short subi[3]);
+extern long int lrand48(void);
+extern long int nrand48(unsigned short subi[3]);
+extern long mrand48(void);
+extern long jrand48(unsigned short subi[3]);
+extern void srand48(long);
+extern unsigned short *seed48(unsigned short subi[3]);
+extern void lcong48(unsigned short subi[7]);
 
 #endif
 
@@ -114,6 +114,14 @@ extern unsigned long strtoul(const char *str, char **ptr, int base);
 extern quad_t strtoq(const char *nptr, char **endptr, register int base);
 extern u_quad_t strtouq(const char *nptr, char **endptr, int base);
 
+extern double strtod_l (const char *__restrict, char **__restrict, locale_t);
+extern float strtof_l (const char *__restrict, char **__restrict, locale_t);
+extern long double strtold_l (const char *__restrict, char **__restrict, locale_t);
+extern long strtol_l (const char *__restrict, char **__restrict, int, locale_t);
+extern unsigned long strtoul_l (const char *__restrict, char **__restrict, int, locale_t __loc);
+extern long long strtoll_l (const char *__restrict, char **__restrict, int, locale_t);
+extern unsigned long long strtoull_l (const char *__restrict, char **__restrict, int, locale_t __loc);
+
 extern double atof(const char *str);
 extern int atoi(const char *str);
 extern long atol(const char *str);
@@ -126,6 +134,8 @@ extern int rand_r(unsigned int *seed);
 
 extern char *mktemp(char *name_template);
 extern int mkstemp(char *name_template);
+extern int mkostemp(char *name, int flags);
+extern int mkostemps(char *name, int len, int flags);
 extern int unsetenv(const char *name);
 extern int setenv(const char *name, const char *value, int overwrite);
 extern int putenv(const char *string);
@@ -155,7 +165,7 @@ extern float strtof(const char *str, char **ptr);
 #  define strtodf strtof
 # endif
 
-extern float atoff (const char *nptr);
+extern float atoff(const char *nptr);
 #endif
 extern void _Exit(int status);
 
@@ -165,7 +175,7 @@ extern char *fcvt(double x, int n, int *dp, int *sign);
 extern char *gcvt(double x, int n, char *b);
 extern char *secure_getenv(const char *name);
 extern void *reallocarray(void *ptr, size_t m, size_t n);
-extern void qsort_r (void *, size_t, size_t, int (*)(const void *, const void *, void *), void *);
+extern void qsort_r(void *, size_t, size_t, int (*)(const void *, const void *, void *), void *);
 #endif
 
 extern uint32_t arc4random(void);
@@ -173,6 +183,36 @@ extern void arc4random_buf(void *buf, size_t nbytes);
 extern uint32_t arc4random_uniform(uint32_t upper_bound);
 extern void arc4random_stir(void);
 extern void arc4random_addrandom(unsigned char *dat, int datlen);
+
+#ifdef __SPE__
+extern int16_t atosfix16(const char *__str);
+extern int16_t _atosfix16_r(struct _clib4 *, const char *__str);
+extern int32_t atosfix32(const char *__str);
+extern int32_t _atosfix32_r(struct _clib4 *, const char *__str);
+extern int64_t atosfix64(const char *__str);
+extern int64_t _atosfix64_r(struct _clib4 *, const char *__str);
+
+extern uint16_t atoufix16(const char *__str);
+extern uint16_t _atoufix16_r(struct _clib4 *, const char *__str);
+extern uint32_t atoufix32(const char *__str);
+extern uint32_t _atoufix32_r(struct _clib4 *, const char *__str);
+extern uint64_t atoufix64(const char *__str);
+extern uint64_t _atoufix64_r(struct _clib4 *, const char *__str);
+
+extern int16_t strtosfix16(const char *__str, char **__endptr);
+extern int16_t _strtosfix16_r(struct _clib4 *, const char *__str, char **__endptr);
+extern int32_t strtosfix32(const char *__str, char **__endptr);
+extern int32_t _strtosfix32_r(struct _clib4 *, const char *__str, char **__endptr);
+extern int64_t strtosfix64(const char *__str, char **__endptr);
+extern int64_t _strtosfix64_r(struct _clib4 *, const char *__str, char **__endptr);
+
+extern uint16_t strtoufix16(const char *__str, char **__endptr);
+extern uint16_t _strtoufix16_r(struct _clib4 *, const char *__str, char **__endptr);
+extern uint32_t strtoufix32(const char *__str, char **__endptr);
+extern uint32_t _strtoufix32_r(struct _clib4 *, const char *__str, char **__endptr);
+extern uint64_t strtoufix64(const char *__str, char **__endptr);
+extern uint64_t _strtoufix64_r(struct _clib4 *, const char *__str, char **__endptr);
+#endif
 
 __END_DECLS
 

@@ -1,5 +1,5 @@
 #
-# $Id: libprofile.gmk,v 1.1 2006-09-17 17:37:27 clib2devs Exp $
+# $Id: libprofile.gmk,v 1.1 2006-09-17 17:37:27 clib4devs Exp $
 #
 
 OUT_STATIC := $(BUILD_DIR)/obj/libprofile
@@ -38,11 +38,17 @@ $(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
+ifdef SPE
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SHARED_SPE)
+else
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
-
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
+endif
 
 $(OUTPUT_LIB)/libprofile.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)

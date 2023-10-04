@@ -1,5 +1,5 @@
 /*
- * $Id: signal_sigprocmask.c,v 1.6 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: signal_sigprocmask.c,v 1.6 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _SIGNAL_HEADERS_H
@@ -9,7 +9,7 @@
 int
 sigprocmask(int how, const sigset_t *set, sigset_t *oset) {
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -25,7 +25,7 @@ sigprocmask(int how, const sigset_t *set, sigset_t *oset) {
     }
 
     if (oset != NULL)
-        (*oset) = __clib2->__signals_blocked;
+        (*oset) = __clib4->__signals_blocked;
 
     if (set != NULL) {
         SHOWVALUE(*set);
@@ -35,21 +35,21 @@ sigprocmask(int how, const sigset_t *set, sigset_t *oset) {
 
                 SHOWMSG("SIG_BLOCK");
 
-                __clib2->__signals_blocked |= (*set);
+                __clib4->__signals_blocked |= (*set);
                 break;
 
             case SIG_UNBLOCK:
 
                 SHOWMSG("SIG_UNBLOCK");
 
-                __clib2->__signals_blocked &= ~(*set);
+                __clib4->__signals_blocked &= ~(*set);
                 break;
 
             case SIG_SETMASK:
 
                 SHOWMSG("SIG_SETMASK");
 
-                __clib2->__signals_blocked = (*set);
+                __clib4->__signals_blocked = (*set);
                 break;
         }
     }

@@ -1,5 +1,5 @@
 #
-# $Id: libcrypt.gmk,v 1.0 2022-07-09 10:09:48 clib2devs Exp $
+# $Id: libcrypt.gmk,v 1.0 2022-07-09 10:09:48 clib4devs Exp $
 #
 # :ts=8
 #
@@ -42,12 +42,10 @@ $(OUT_SHARED)/%.o : CFLAGS += -Wno-missing-braces $(PIC) $(LARGEDATA)
 
 $(OUT_STATIC)/crypt/crypt.lib_rev.o : $(LIB_DIR)/crypt/crypt.lib_rev.c
 	$(VERBOSE)$(COMPILE)
-
 $(OUT_SHARED)/crypt/crypt.lib_rev.o : $(LIB_DIR)/crypt/crypt.lib_rev.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
 $(OUTPUT_LIB)/libcrypt.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
-
 $(OUTPUT_LIB)/libcrypt.so :$(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

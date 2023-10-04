@@ -1,5 +1,5 @@
 /*
- * $Id: langinfo.h,v 1.0 2021-01-15 22:32:14 clib2devs Exp $
+ * $Id: langinfo.h,v 1.0 2021-01-15 22:32:14 clib4devs Exp $
 */
 
 #ifndef _LANGINFO_H

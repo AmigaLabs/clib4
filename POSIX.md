@@ -6,7 +6,7 @@
 | <arpa/inet.h>            | Functions for manipulating numeric IP addresses (part of Berkley sockets)             | Complete                          |                                                    
 | <assert.h>               | Verify assumptions                                                                    | Complete                          |                                                   
 | <complex.h>              | Complex Arithmetic                                                                    | Complete                          |
-| <cpio.h>                 | Magic numbers for the cpio archive format                                             | Not present                       |
+| <cpio.h>                 | Magic numbers for the cpio archive format                                             | Complete                          |
 | <ctype.h>                | Character types                                                                       | Complete                          |                                                    |
 | <dirent.h>               | Allows the opening and listing of directories                                         | Complete                          |                                                   
 | <dlfcn.h>                | Dynamic linking                                                                       | Complete                          |                                                  
@@ -27,7 +27,7 @@
 | <math.h>                 | Mathematical declarations                                                             | Complete                          |                                             
 | <monetary.h>             | String formatting of monetary units                                                   | Not present                       |                                            
 | <mqueue.h>               | Message queue                                                                         | Not present                       |                                           
-| <ndbm.h>                 | NDBM database operations                                                              | Not present                       |                                          
+| <ndbm.h>                 | NDBM database operations                                                              | Complete                          |                                          
 | <net/if.h>               | Listing of local network interfaces                                                   | Complete                          |                                         
 | <netdb.h>                | Translating protocol and host names into numeric addresses (part of Berkeley sockets  | Complete                          |                                        
 | <netinet/in.h>           | Defines Internet protocol and address family (part of Berkley sockets)                | Complete                          |                                       
@@ -66,11 +66,11 @@
 | <sys/times.h>            | File access and modification times                                                    | Complete                          |  
 | <sys/types.h>            | Various data types used elsewhere                                                     | Complete                          |  
 | <sys/uio.h>              | Vectored I/O operations                                                               | Complete                          |  
-| <sys/un.h>               | Unix domain sockets                                                                   | Present with missing functions    |  
+| <sys/un.h>               | Unix domain sockets                                                                   | Complete                          |  
 | <sys/utsname.h>          | Operating system information, including uname                                         | Complete                          |  
 | <sys/wait.h>             | Status of terminated child processes                                                  | Present with missing functions    |  
-| <syslog.h>               | System error logging                                                                  | Not present                       |  
-| <tar.h>                  | Magic numbers for the tar archive format                                              | Not present                       | 
+| <syslog.h>               | System error logging                                                                  | Complete                          |  
+| <tar.h>                  | Magic numbers for the tar archive format                                              | Complete                          | 
 | <termios.h>              | Allows terminal I/O interfaces                                                        | Complete                          |  
 | <tgmath.h>               | Type-Generic Macros                                                                   | Complete                          |  
 | <time.h>                 | Type-Generic Macros                                                                   | Complete                          |  

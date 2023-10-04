@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_malloc.c,v 1.22 2022-04-03 14:09:00 clib2devs Exp $
+ * $Id: stdlib_malloc.c,v 1.22 2022-04-03 14:09:00 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -19,48 +19,48 @@
 void *
 malloc(size_t size) {
     void *result = NULL;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    __memory_lock(__clib2);
+    __memory_lock(__clib4);
 
-    result = wof_alloc(__clib2->__wof_allocator, size);
+    result = wof_alloc(__clib4->__wof_allocator, size);
 
-    __memory_unlock(__clib2);
+    __memory_unlock(__clib4);
 
     return (result);
 }
 
-void __memory_lock(struct _clib2 *__clib2) {
-    if (__clib2->memory_semaphore != NULL)
-        ObtainSemaphore(__clib2->memory_semaphore);
+void __memory_lock(struct _clib4 *__clib4) {
+    if (__clib4->memory_semaphore != NULL)
+        ObtainSemaphore(__clib4->memory_semaphore);
 }
 
-void __memory_unlock(struct _clib2 *__clib2) {
-    if (__clib2->memory_semaphore != NULL)
-        ReleaseSemaphore(__clib2->memory_semaphore);
+void __memory_unlock(struct _clib4 *__clib4) {
+    if (__clib4->memory_semaphore != NULL)
+        ReleaseSemaphore(__clib4->memory_semaphore);
 }
 
 STDLIB_DESTRUCTOR(stdlib_memory_exit) {
     ENTER();
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    __memory_lock(__clib2);
+    __memory_lock(__clib4);
 
-    if (__clib2->__wof_allocator != NULL) {
-        wof_allocator_destroy(__clib2->__wof_allocator);
-        __clib2->__wof_allocator = NULL;
+    if (__clib4->__wof_allocator != NULL) {
+        wof_allocator_destroy(__clib4->__wof_allocator);
+        __clib4->__wof_allocator = NULL;
     }
 
-    __memory_unlock(__clib2);
+    __memory_unlock(__clib4);
 
-    if (__clib2->__wof_allocator_semaphore != NULL) {
-        __delete_semaphore(__clib2->__wof_allocator_semaphore);
-        __clib2->__wof_allocator_semaphore = NULL;
+    if (__clib4->__wof_allocator_semaphore != NULL) {
+        __delete_semaphore(__clib4->__wof_allocator_semaphore);
+        __clib4->__wof_allocator_semaphore = NULL;
     }
 
-    if (__clib2->memory_semaphore != NULL) {
-        __delete_semaphore(__clib2->memory_semaphore);
-        __clib2->memory_semaphore = NULL;
+    if (__clib4->memory_semaphore != NULL) {
+        __delete_semaphore(__clib4->memory_semaphore);
+        __clib4->memory_semaphore = NULL;
     }
 
     LEAVE();
@@ -69,20 +69,20 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
 /* Second constructor called by _init */
 STDLIB_CONSTRUCTOR(stdlib_memory_init) {
     BOOL success = FALSE;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    __clib2->memory_semaphore = __create_semaphore();
-    if (__clib2->memory_semaphore == NULL)
+    __clib4->memory_semaphore = __create_semaphore();
+    if (__clib4->memory_semaphore == NULL)
         goto out;
 
-    __clib2->__wof_allocator_semaphore = __create_semaphore();
-    if (__clib2->__wof_allocator_semaphore == NULL)
+    __clib4->__wof_allocator_semaphore = __create_semaphore();
+    if (__clib4->__wof_allocator_semaphore == NULL)
         goto out;
 
-    __clib2->__wof_allocator = wof_allocator_new();
-    if (__clib2->__wof_allocator == NULL) {
+    __clib4->__wof_allocator = wof_allocator_new();
+    if (__clib4->__wof_allocator == NULL) {
         goto out;
     }
 

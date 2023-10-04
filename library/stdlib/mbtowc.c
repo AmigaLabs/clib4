@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_mbtowc.c,v 1.3 2006-01-08 12:04:26 clib2devs Exp $
+ * $Id: stdlib_mbtowc.c,v 1.3 2006-01-08 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -11,9 +11,9 @@
 int
 mbtowc(wchar_t *wc, const char *src, size_t n) {
     int retval = 0;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    mbstate_t *ps = &__clib2->wide_status->_mbtowc_state;
+    mbstate_t *ps = &__clib4->wide_status->_mbtowc_state;
 
     retval = _mbtowc_r(wc, src, n, ps);
 

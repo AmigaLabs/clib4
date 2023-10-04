@@ -3,6 +3,8 @@
 
 #include <proto/dos.h>
 
+#undef __BSD_VISIBLE
+#define __BSD_VISIBLE 1
 #include <arpa/inet.h>
 #include <aio.h>
 #include <argz.h>
@@ -10,17 +12,20 @@
 #include <complex.h>
 #include <crypt.h>
 #include <ctype.h>
+#include <db.h>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <envz.h>
 #include <err.h>
 #include <fcntl.h>
 #include <fnmatch.h>
+#include <fts.h>
 #include <ftw.h>
 #include <getopt.h>
 #include <glob.h>
 #include <grp.h>
 #include <iconv.h>
+#include <ieeefp.h>
 #include <ifaddrs.h>
 #include <langinfo.h>
 #include <libgen.h>
@@ -28,6 +33,7 @@
 #include <locale.h>
 #include <malloc.h>
 #include <math.h>
+#include <ndbm.h>
 #include <net/ethernet.h>
 #include <netdb.h>
 #include <nl_types.h>
@@ -88,15 +94,15 @@ struct NameTranslationInfo;
 
 #include <stdarg.h>
 
-struct Clib2IFace {
+struct Clib4IFace {
     struct InterfaceData Data;                                              //-4/56
-    unsigned long APICALL (*Obtain)(struct Clib2IFace *Self);               //60
-    unsigned long APICALL (*Release)(struct Clib2IFace *Self);              //64
-    void APICALL (*Expunge)(struct Clib2IFace *Self);                       //68
-    struct Clib2IFace *APICALL (*Clone)(struct Clib2IFace *Self);           //72
+    unsigned long APICALL (*Obtain)(struct Clib4IFace *Self);               //60
+    unsigned long APICALL (*Release)(struct Clib4IFace *Self);              //64
+    void APICALL (*Expunge)(struct Clib4IFace *Self);                       //68
+    struct Clib4IFace *APICALL (*Clone)(struct Clib4IFace *Self);           //72
     /* internal */
     int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //76
-    struct _clib2 * (* __getClib2)(void);                                   //80
+    struct _clib4 * (* __getClib4)(void);                                   //80
     void (* internal1)(void);                                               //84
     void (* __translate_amiga_to_unix_path_name)(void);                     //88
     void (* __translate_unix_to_amiga_path_name)(void);                     //92
@@ -560,9 +566,9 @@ struct Clib2IFace {
     /* resolv.h */
     struct __res_state * (* __res_state) (void);                                                                                     /* 1696 */
     int (* res_init) (void);                                                                                                                         /* 1700 */
-    int (* res_query) (const char *dname, int class, int type, unsigned char *answer, int anslen);                                                   /* 1704 */
-    int (* res_querydomain) (const char *name, const char *domain,int class, int type, unsigned char *answer,int anslen);                            /* 1708 */
-    int (* res_search) (const char *dname, int class, int type, unsigned char *answer, int anslen);                                                  /* 1712 */
+    int (* res_query) (const char *dname, int klass, int type, unsigned char *answer, int anslen);                                                   /* 1704 */
+    int (* res_querydomain) (const char *name, const char *domain,int klass, int type, unsigned char *answer,int anslen);                            /* 1708 */
+    int (* res_search) (const char *dname, int klass, int type, unsigned char *answer, int anslen);                                                  /* 1712 */
     int (* res_mkquery) (int, const char *, int, int, const unsigned char *, int, const unsigned char *, unsigned char *, int);                      /* 1716 */
     int (* res_send) (const unsigned char *msg, int msglen, unsigned char *answer,int anslen);                                                       /* 1720 */
     int (* dn_comp) (unsigned char *exp_dn, unsigned char *comp_dn,int length, unsigned char **dnptrs, unsigned char **lastdnptr);                   /* 1724 */
@@ -588,9 +594,9 @@ struct Clib2IFace {
     int (* setjmp) (jmp_buf __env);                                                                                                                  /* 1788 */
     int (* __sigsetjmp) (struct __jmp_buf_tag __env[1], int __savemask);                                                                             /* 1792 */
     int (* _setjmp) (struct __jmp_buf_tag __env[1]);                                                                                                 /* 1796 */
-    void (* longjmp) (jmp_buf __env, int __val) __attribute__ ((__noreturn__));                                                                      /* 1800 */
-    void (* _longjmp) (struct __jmp_buf_tag __env[1], int __val) __attribute__ ((__noreturn__));                                                     /* 1804 */
-    void (* siglongjmp) (sigjmp_buf __env, int __val) __attribute__ ((__noreturn__));                                                                /* 1808 */
+    void (* longjmp) (jmp_buf __env, int __val);                                                                                                     /* 1800 */
+    void (* _longjmp) (struct __jmp_buf_tag __env[1], int __val);                                                                                    /* 1804 */
+    void (* siglongjmp) (sigjmp_buf __env, int __val);                                                                                               /* 1808 */
     int (* __sigjmp_save) (jmp_buf __env, int __savemask);                                                                                           /* 1812 */
 
     /* signal.h */
@@ -1280,30 +1286,63 @@ struct Clib2IFace {
 
     int  (* getrandom) (void *buffer, size_t length, unsigned int flags);                                                                            /* 4212 */
     int  (* getentropy) (void *, size_t);                                                                                                            /* 4216 */
+
+    time_t (* timegm) (struct tm *tm);                                                                                                               /* 4220 */
+    int    (* stime) (const time_t *t);                                                                                                              /* 4224 */
+
+    int	  (* dbm_clearerr) (DBM *);                                                                                                                  /* 4228 */
+    void  (* dbm_close) (DBM *);                                                                                                                     /* 4232 */
+    int	  (* dbm_delete) (DBM *, datum);                                                                                                             /* 4236 */
+    int	  (* dbm_error) (DBM *);                                                                                                                     /* 4240 */
+    datum (* dbm_fetch) (DBM *, datum);                                                                                                              /* 4244 */
+    datum (* dbm_firstkey) (DBM *);                                                                                                                  /* 4248 */
+    datum (* dbm_nextkey) (DBM *);                                                                                                                   /* 4252 */
+    DBM	* (* dbm_open) (const char *, int, int);                                                                                                     /* 4256 */
+    int	  (* dbm_store) (DBM *, datum, datum, int);                                                                                                  /* 4260 */
+    int   (* dbm_dirfno) (DBM *);                                                                                                                    /* 4264 */
+    DB *  (* dbopen) (const char *, int, int, DBTYPE, const void *);                                                                                 /* 4268 */
+
+    int   (* mkostemp) (char *name, int flags);                                                                                                      /* 4272 */
+    int   (* mkostemps) (char *name, int len, int flags);                                                                                            /* 4276 */
+
+    float (* strtof_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                             /* 4280 */
+    double (* strtod_l) (const char *__restrict s00, char **__restrict se, locale_t loc);                                                            /* 4284 */
+
+    fp_rnd_t    (* fpgetround) (void);                                                                                                               /* 4288 */
+    fp_rnd_t    (* fpsetround) (fp_rnd_t);                                                                                                           /* 4292 */
+    fp_except_t (* fpgetmask) (void);                                                                                                                /* 4296 */
+    fp_except_t (* fpsetmask) (fp_except_t);                                                                                                         /* 4300 */
+    fp_except_t (* fpgetsticky) (void);                                                                                                              /* 4304 */
+
+    FTSENT * (* fts_children) (FTS *, int);                                                                                                          /* 4308 */
+    int	     (* fts_close) (FTS *);                                                                                                                  /* 4312 */
+    FTS	   * (* fts_open) (char * const *, int, int (*)(const FTSENT **, const FTSENT **));                                                          /* 4316 */
+    FTSENT * (* fts_read) (FTS *);                                                                                                                   /* 4320 */
+    int	     (* fts_set) (FTS *, FTSENT *, int);                                                                                                     /* 4324 */
 };
 
 #ifdef __PIC__
-#define Clib2Call2(function, offset)     \
+#define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
 	    .align 2                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\
 	    li  %r12," #offset "         \n\
-	    b __Clib2Call@plt            \n\
+	    b __Clib4Call@plt            \n\
 	    .size	" #function ", .-" #function)
 #elif !defined(__PIC__)
-#define Clib2Call2(function, offset)     \
+#define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
 	    .align 2                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\
 	    li  %r12," #offset "         \n\
-	    b __Clib2Call                \n\
+	    b __Clib4Call                \n\
 	    .size	" #function ", .-" #function)
 #endif
 
-#define Clib2Call(x...) Clib2Call2(x)
+#define Clib4Call(x...) Clib4Call2(x)
 
 #endif

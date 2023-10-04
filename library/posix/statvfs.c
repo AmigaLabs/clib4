@@ -1,5 +1,5 @@
 /*
- * $Id: posix_statvfs.c,v 1.0 2022-03-28 12:04:24 clib2devs Exp $
+ * $Id: posix_statvfs.c,v 1.0 2022-03-28 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -14,14 +14,14 @@ int
 statvfs(const char *path, struct statvfs *buf) {
     struct name_translation_info path_name_nti;
     int result = -1;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     SHOWSTRING(path);
     SHOWPOINTER(buf);
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&path, &path_name_nti) != 0)
             goto out;
 

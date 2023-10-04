@@ -1,5 +1,5 @@
 /*
- * $Id: time_headers.h,v 1.12 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: time_headers.h,v 1.12 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -92,7 +92,6 @@
 #endif /* _DEBUG_H */
 
 struct itimer {
-    struct _clib2 *__clib2;
     int which;
 };
 
@@ -119,6 +118,10 @@ extern time_t __convert_datestamp_to_time(const struct DateStamp * ds);
 extern BOOL __convert_time_to_datestamp(time_t time_value,struct DateStamp * ds);
 extern int __calculate_weekday(int year,int month,int day);
 extern int __calculate_days_per_date(int year,int month,int day);
+extern int __secs_to_tm(long long t, struct tm *tm);
+extern long long __tm_to_secs(const struct tm *tm);
+extern long long __year_to_secs(long long year, int *is_leap);
+extern int __month_to_secs(int month, int is_leap);
 
 static inline void
 fix_datestamp(struct DateStamp *ds) {

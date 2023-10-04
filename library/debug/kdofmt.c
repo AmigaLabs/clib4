@@ -1,5 +1,5 @@
 /*
- * $Id: debug_kdofmt.c,v 1.3 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: debug_kdofmt.c,v 1.3 2006-01-08 12:04:22 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -14,8 +14,6 @@
 
 VOID
 KDoFmt(const char *format_string, APTR data_stream, APTR put_char_routine, APTR put_char_data) {
-    assert(format_string != NULL);
-
     if (format_string != NULL)
         RawDoFmt((STRPTR) format_string, data_stream, (VOID (*)()) put_char_routine, put_char_data);
 }

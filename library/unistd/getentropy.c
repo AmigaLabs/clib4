@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_getentropy.c,v 1.0 2023-06-15 12:04:27 clib2devs Exp $
+ * $Id: unistd_getentropy.c,v 1.0 2023-06-15 12:04:27 clib4devs Exp $
 */
 
 #define _DEFAULT_SOURCE

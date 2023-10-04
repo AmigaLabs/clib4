@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_fpathconf.c,v 1.3 2006-09-17 16:36:48 clib2devs Exp $
+ * $Id: unistd_fpathconf.c,v 1.3 2006-09-17 16:36:48 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -33,7 +33,7 @@ fpathconf(int file_descriptor, int name) {
 
     fh = BADDR(default_file);
 
-    ret = __pathconf(fh->fh_Type, name);
+    ret = __pathconf(fh->fh_MsgPort, name);
 
 out:
 

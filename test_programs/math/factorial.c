@@ -1,11 +1,11 @@
 #include <stdio.h>
 
 /*
-gcc -std=c99 -mcrt=clib2 -o factorial factorial.c -lm
+gcc -std=c99 -mcrt=clib4 -o factorial factorial.c -lm
 output is:
 16! = 20922789888 <- Wrong
 
-gcc -std=c99 -mcrt=clib2 -o factorial factorial.c
+gcc -std=c99 -mcrt=clib4 -o factorial factorial.c
 output is:
 16! = 20922789888000 <- Correct
 */

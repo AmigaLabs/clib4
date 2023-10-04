@@ -1,5 +1,5 @@
 /*
- * $Id: time_clock.c,v 1.7 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: time_clock.c,v 1.8 2022-07-18 12:04:27 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -14,13 +14,15 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-static struct DateStamp start_time;
-
 CLIB_CONSTRUCTOR(clock_init) {
     ENTER();
+    struct _clib4 *__clib4 = __CLIB4;
 
     /* Remember when this program was started. */
-    DateStamp(&start_time);
+    SHOWMSG("Calling gettimeofday");
+    gettimeofday(&__clib4->clock, NULL);
+    /* Generate random seed */
+    __clib4->__random_seed = time(NULL);
 
     LEAVE();
 
@@ -29,47 +31,25 @@ CLIB_CONSTRUCTOR(clock_init) {
 
 clock_t
 clock(void) {
-    struct DateStamp now;
-    LONG minutes_now, ticks_now;
-    LONG minutes_start, ticks_start;
+    struct timeval now;
+    uint64 usec_now, usec_start;
     clock_t result;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     __check_abort();
 
     /* Get the current time. */
-    DateStamp(&now);
+    gettimeofday(&now, NULL);
 
-    /* Break the current and start time down into minutes and ticks. */
-    minutes_now = now.ds_Days * 24 * 60 + now.ds_Minute;
-    ticks_now = now.ds_Tick;
+    usec_now = now.tv_sec * 1000000ULL + now.tv_usec;
+    usec_start = __clib4->clock.tv_sec * 1000000ULL + __clib4->clock.tv_usec;
+    /* Subtract the start time from the current time. */
+    usec_now -= usec_start;
 
-    minutes_start = start_time.ds_Days * 24 * 60 + start_time.ds_Minute;
-    ticks_start = start_time.ds_Tick;
-
-    /* Subtract the start time from the current time. We start
-     * with the ticks.
-     */
-    ticks_now -= ticks_start;
-
-    /* Check for underflow. */
-    while (ticks_now < 0) {
-        /* Borrow a minute from the current time. */
-        ticks_now += 60 * TICKS_PER_SECOND;
-
-        minutes_now--;
-    }
-
-    /* Now for the minutes. */
-    minutes_now -= minutes_start;
-
-    /* Check if any time has passed at all, then return the difference. */
-    if (minutes_now >= 0)
-        result = (clock_t)(minutes_now * 60 * TICKS_PER_SECOND + ticks_now);
-    else
-        result = (clock_t) 0;
+    result = (clock_t) (usec_now * CLK_TCK / 1000000);
 
     RETURN(result);
-    return (result);
+    return result;
 }

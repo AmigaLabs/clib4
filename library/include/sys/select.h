@@ -1,5 +1,5 @@
 /*
- * $Id: select.h,v 1.9 2006-04-10 15:08:11 clib2devs Exp $
+ * $Id: select.h,v 1.9 2006-04-10 15:08:11 clib4devs Exp $
 */
 
 #ifndef _SYS_SELECT_H

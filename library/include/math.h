@@ -1,5 +1,5 @@
 /*
- * $Id: math.h,v 1.22 2007-01-06 10:09:49 clib2devs Exp $
+ * $Id: math.h,v 1.22 2007-01-06 10:09:49 clib4devs Exp $
 */
 
 #ifndef _MATH_H
@@ -16,7 +16,7 @@ __BEGIN_DECLS
 #include <dos.h>
 
 /* Natural log of 2 */
-#define _M_LN2        0.693147180559945309417
+#define _M_LN2        (double) 0.693147180559945309417
 
 extern double acos(double x);
 extern double asin(double x);
@@ -62,21 +62,21 @@ extern double yn(int n, double x);
 extern float jnf(int n, float x);
 extern float ynf(int n, float x);
 
-#define    M_E            2.7182818284590452354    /* e */
-#define    M_LOG2E        1.4426950408889634074    /* log 2e */
-#define    M_LOG10E    0.43429448190325182765    /* log 10e */
-#define    M_LN2        0.69314718055994530942    /* log e2 */
-#define    M_LN10        2.30258509299404568402    /* log e10 */
-#define    M_PI        3.14159265358979323846    /* pi */
-#define    M_PI_2        1.57079632679489661923    /* pi/2 */
-#define    M_PI_4        0.78539816339744830962    /* pi/4 */
-#define    M_1_PI        0.31830988618379067154    /* 1/pi */
-#define    M_2_PI        0.63661977236758134308    /* 2/pi */
-#define    M_2_SQRTPI    1.12837916709551257390    /* 2/sqrt(pi) */
-#define    M_SQRT2        1.41421356237309504880    /* sqrt(2) */
-#define    M_SQRT1_2    0.70710678118654752440    /* 1/sqrt(2) */
+#define    M_E          (double) 2.7182818284590452354    /* e */
+#define    M_LOG2E      (double) 1.4426950408889634074    /* log 2e */
+#define    M_LOG10E     (double) 0.43429448190325182765    /* log 10e */
+#define    M_LN2        (double) 0.69314718055994530942    /* log e2 */
+#define    M_LN10       (double) 2.30258509299404568402    /* log e10 */
+#define    M_PI         (double) 3.14159265358979323846    /* pi */
+#define    M_PI_2       (double) 1.57079632679489661923    /* pi/2 */
+#define    M_PI_4       (double) 0.78539816339744830962    /* pi/4 */
+#define    M_1_PI       (double) 0.31830988618379067154    /* 1/pi */
+#define    M_2_PI       (double) 0.63661977236758134308    /* 2/pi */
+#define    M_2_SQRTPI   (double) 1.12837916709551257390    /* 2/sqrt(pi) */
+#define    M_SQRT2      (double) 1.41421356237309504880    /* sqrt(2) */
+#define    M_SQRT1_2    (double) 0.70710678118654752440    /* 1/sqrt(2) */
 
-#define    MAXFLOAT    ((float)3.40282346638528860e+38)
+#define    MAXFLOAT    ((float) 3.40282346638528860e+38)
 
 #define    FP_ILOGB0    (-INT_MAX)
 #define    FP_ILOGBNAN    INT_MAX
@@ -88,8 +88,8 @@ extern float ynf(int n, float x);
 /* HUGE_VALL is a 'long double' Infinity.  */
 #define HUGE_VALL (1.0L / 0.0L)
 
-#define INFINITY ((const float)__CLIB2->__infinity)
-#define NAN ((const float)__CLIB2->__nan)
+#define INFINITY ((const float) __CLIB4->__infinity)
+#define NAN ((const float) __CLIB4->__nan)
 
 #define FP_INFINITE     0x01   /* -/+ infinity */
 #define FP_NAN          0x02   /* not a number */
@@ -166,10 +166,10 @@ extern int *__signgam(void);
 #define    isnan(x) __isnan(x)
 #endif
 
-extern int finitef (float);
-extern int finitel (long double);
-extern int isinff (float);
-extern int isnanf (float);
+#define finitef(x) __isfinite_float(x)
+#define finitel(x) __isfinite_long_double(x)
+#define isinff(x)  __isinff(x)
+#define isnanf(x)  __isnanf(x)
 
 extern float acosf(float x);
 extern float asinf(float x);

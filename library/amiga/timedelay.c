@@ -1,5 +1,5 @@
 /*
- * $Id: amiga_timedelay.c,v 1.4 2006-04-05 06:43:56 clib2devs Exp $
+ * $Id: amiga_timedelay.c,v 1.4 2006-04-05 06:43:56 clib4devs Exp $
 */
 
 #include <devices/timer.h>

@@ -1,5 +1,5 @@
 /*
- * $Id: debug_kmaygetchar.c,v 1.3 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: debug_kmaygetchar.c,v 1.3 2006-01-08 12:04:22 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -13,12 +13,7 @@
 #include "debug_headers.h"
 
 LONG
-KMayGetChar(VOID)
-{
-	LONG result;
-
+KMayGetChar(VOID) {
     /* Call RawMayGetChar() through the 68k LVO. */
-    result = EmulateTags(SysBase, ET_Offset, -510, TAG_DONE);
-
-	return(result);
+    return EmulateTags(SysBase, ET_Offset, -510, TAG_DONE);
 }

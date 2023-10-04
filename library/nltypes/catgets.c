@@ -1,5 +1,5 @@
 /*
- * $Id: nltypes_catgets.c,v 1.0 2023-04-22 07:38:10 clib2devs Exp $
+ * $Id: nltypes_catgets.c,v 1.0 2023-04-22 07:38:10 clib4devs Exp $
 */
 
 #include <nl_types.h>

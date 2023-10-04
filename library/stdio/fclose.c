@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fclose.c,v 1.12 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stdio_fclose.c,v 1.12 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -15,7 +15,7 @@ fclose(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     struct file_action_message fam;
     int result = OK;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -36,7 +36,7 @@ fclose(FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(__clib2, file));
+    assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -50,7 +50,7 @@ fclose(FILE *stream) {
     }
 
     /* Push back any buffered data to the stream. */
-    if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib2, file) < 0)
+    if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0)
         result = EOF;
 
     /* Make sure that the stream is closed. */
@@ -60,7 +60,7 @@ fclose(FILE *stream) {
 
     assert(file->iob_Action != NULL);
 
-    if ((*file->iob_Action)(__clib2, file, &fam) < 0 && result != EOF) {
+    if ((*file->iob_Action)(__clib4, file, &fam) < 0 && result != EOF) {
         result = EOF;
 
         __set_errno(fam.fam_Error);
@@ -76,9 +76,9 @@ fclose(FILE *stream) {
 
         assert(file->iob_TempFileName != NULL);
 
-        old_current_dir = CurrentDir(file->iob_TempFileLock);
-        DeleteFile(file->iob_TempFileName);
-        CurrentDir(old_current_dir);
+        old_current_dir = SetCurrentDir(file->iob_TempFileLock);
+        Delete(file->iob_TempFileName);
+        SetCurrentDir(old_current_dir);
 
         UnLock(file->iob_TempFileLock);
 
@@ -89,6 +89,7 @@ fclose(FILE *stream) {
     if (file->iob_CustomBuffer != NULL) {
         SHOWMSG("Delete allocated buffer");
         FreeVec(file->iob_CustomBuffer);
+        file->iob_CustomBuffer = NULL;
     }
 
     /* Free the lock semaphore now. */

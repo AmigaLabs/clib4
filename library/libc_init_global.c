@@ -1,5 +1,5 @@
 /*
- * $Id: libc_init_global.c,v 2.0 2023-05-17 17:01:06 clib2devs Exp $
+ * $Id: libc_init_global.c,v 2.0 2023-05-17 17:01:06 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -64,7 +64,7 @@ static uint32_t _random_init[] = {
 };
 
 void
-reent_init(struct _clib2 *__clib2) {
+reent_init(struct _clib4 *__clib4) {
     BOOL success = FALSE;
 
     ENTER();
@@ -72,7 +72,7 @@ reent_init(struct _clib2 *__clib2) {
 
     struct ElfIFace *IElf = __IElf;
 
-    *__clib2 = (struct _clib2) {
+    *__clib4 = (struct _clib4) {
         .__ctype_table = {
                 /*   0      */ __CTYPE_CONTROL,
                 /*   1      */ __CTYPE_CONTROL,
@@ -215,6 +215,10 @@ reent_init(struct _clib2 *__clib2) {
         /* Set main Exec and IElf interface pointers */
         .IExec = IExec,
         .IElf = __IElf,
+        .__WBenchMsg = NULL,
+        .input = BZERO,
+        .output = BZERO,
+        .error = BZERO,
         /* Disable check abort at start */
         .__check_abort_enabled = FALSE,
         .__break_signal_mask = SIGBREAKF_CTRL_C,
@@ -224,6 +228,7 @@ reent_init(struct _clib2 *__clib2) {
         /* We use an invalid priority value to indicate "do not change the program's task priority". */
         .__priority = 256,
         .pipenum = 0,
+        .tgoto_buf = {0},
 #ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
         .__optimizedCPUFunctions = FALSE,
 #else
@@ -247,8 +252,6 @@ reent_init(struct _clib2 *__clib2) {
         ._current_category = LC_ALL,
         ._current_locale = "C-UTF-8",
         .__mb_cur_max = 1,
-        /* Check is SYSV library is available in the system */
-        .haveShm = FALSE,
         .__disable_dos_requesters = FALSE,
         .__expand_wildcard_args = TRUE,
         .__unlink_retries = TRUE,
@@ -287,60 +290,60 @@ reent_init(struct _clib2 *__clib2) {
         .syslog_mask = 0xff,
     };
 
-    if (!__clib2->__random_lock) {
+    if (!__clib4->__random_lock) {
         goto out;
     }
 
     SHOWMSG("Allocating wide_status");
     /* Initialize wchar stuff */
-    __clib2->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
-    if (!__clib2->wide_status) {
+    __clib4->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
+    if (!__clib4->wide_status) {
         goto out;
     }
-    __clib2->wide_status->_strtok_last = NULL;
-    __clib2->wide_status->_mblen_state.__count = 0;
-    __clib2->wide_status->_mblen_state.__value.__wch = 0;
-    __clib2->wide_status->_wctomb_state.__count = 0;
-    __clib2->wide_status->_wctomb_state.__value.__wch = 0;
-    __clib2->wide_status->_mbtowc_state.__count = 0;
-    __clib2->wide_status->_mbtowc_state.__value.__wch = 0;
-    __clib2->wide_status->_mbrlen_state.__count = 0;
-    __clib2->wide_status->_mbrlen_state.__value.__wch = 0;
-    __clib2->wide_status->_mbrtowc_state.__count = 0;
-    __clib2->wide_status->_mbrtowc_state.__value.__wch = 0;
-    __clib2->wide_status->_mbsrtowcs_state.__count = 0;
-    __clib2->wide_status->_mbsrtowcs_state.__value.__wch = 0;
-    __clib2->wide_status->_wcrtomb_state.__count = 0;
-    __clib2->wide_status->_wcrtomb_state.__value.__wch = 0;
-    __clib2->wide_status->_wcsrtombs_state.__count = 0;
-    __clib2->wide_status->_wcsrtombs_state.__value.__wch = 0;
-    __clib2->wide_status->_l64a_buf[0] = '\0';
-    __clib2->wide_status->_getdate_err = 0;
+    __clib4->wide_status->_strtok_last = NULL;
+    __clib4->wide_status->_mblen_state.__count = 0;
+    __clib4->wide_status->_mblen_state.__value.__wch = 0;
+    __clib4->wide_status->_wctomb_state.__count = 0;
+    __clib4->wide_status->_wctomb_state.__value.__wch = 0;
+    __clib4->wide_status->_mbtowc_state.__count = 0;
+    __clib4->wide_status->_mbtowc_state.__value.__wch = 0;
+    __clib4->wide_status->_mbrlen_state.__count = 0;
+    __clib4->wide_status->_mbrlen_state.__value.__wch = 0;
+    __clib4->wide_status->_mbrtowc_state.__count = 0;
+    __clib4->wide_status->_mbrtowc_state.__value.__wch = 0;
+    __clib4->wide_status->_mbsrtowcs_state.__count = 0;
+    __clib4->wide_status->_mbsrtowcs_state.__value.__wch = 0;
+    __clib4->wide_status->_wcrtomb_state.__count = 0;
+    __clib4->wide_status->_wcrtomb_state.__value.__wch = 0;
+    __clib4->wide_status->_wcsrtombs_state.__count = 0;
+    __clib4->wide_status->_wcsrtombs_state.__value.__wch = 0;
+    __clib4->wide_status->_l64a_buf[0] = '\0';
+    __clib4->wide_status->_getdate_err = 0;
     /* Get cpu family used to choose functions at runtime */
     D(("Setting cpu family"));
-    GetCPUInfoTags(GCIT_Family, &__clib2->cpufamily, TAG_DONE);
+    GetCPUInfoTags(GCIT_Family, &__clib4->cpufamily, TAG_DONE);
 
     /* Check if altivec is present */
 #ifdef ENABLE_ALTIVEC_AT_START
     D(("Check if altivec is present"));
-    GetCPUInfoTags(GCIT_VectorUnit, &__clib2->hasAltivec, TAG_DONE);
+    GetCPUInfoTags(GCIT_VectorUnit, &__clib4->hasAltivec, TAG_DONE);
 #else
     D(("Set altivec to zero"));
-    __clib2->hasAltivec = 0;
+    __clib4->hasAltivec = 0;
 #endif
 
     /* Init memalign list */
     SHOWMSG("Allocating __memalign_pool");
-    __clib2->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+    __clib4->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
                                                   ASO_NoTrack, FALSE,
-                                                  ASO_MemoryOvr, MEMF_PRIVATE,
-                                                  ASOITEM_MFlags, MEMF_PRIVATE,
+                                                  ASO_MemoryOvr, MEMF_SHARED,
+                                                  ASOITEM_MFlags, MEMF_SHARED,
                                                   ASOITEM_ItemSize, sizeof(struct MemalignEntry),
                                                   ASOITEM_BatchSize, 408,
                                                   ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
                                                   ASOITEM_GCParameter, 1000,
                                                   TAG_DONE);
-    if (!__clib2->__memalign_pool) {
+    if (!__clib4->__memalign_pool) {
         goto out;
     }
 
@@ -350,51 +353,39 @@ reent_init(struct _clib2 *__clib2) {
      * call_main()
      */
 
-    SHOWMSG("Try to get elf handle for dl* operations");
-    if (__clib2->IElf != NULL) {
-        SHOWMSG("Calling GetProcSegList");
+    D(("Try to get elf handle for dl* operations"));
+    if (__clib4->IElf != NULL) {
+        D(("Calling GetProcSegList"));
         BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
         if (segment_list != BZERO) {
             Elf32_Handle handle = NULL;
 
-            SHOWMSG("Calling GetSegListInfoTags");
+            D(("Calling GetSegListInfoTags"));
             if (GetSegListInfoTags(segment_list, GSLI_ElfHandle, &handle, TAG_DONE) == 1) {
                 if (handle != NULL) {
-                    SHOWMSG("Calling OpenElfTags");
-                    __clib2->__dl_elf_handle = OpenElfTags(OET_ElfHandle, handle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
-                    SHOWPOINTER(__clib2->__dl_elf_handle);
+                    D(("Calling OpenElfTags"));
+                    __clib4->__dl_root_handle = OpenElfTags(OET_ElfHandle, handle, TAG_DONE);
+                    SHOWPOINTER(__clib4->__dl_root_handle);
                 }
             }
         }
     }
 
-    SHOWMSG("try to open SYSVIPC Library");
-    __clib2->__SysVBase = OpenLibrary("sysvipc.library", 53);
-    if (__clib2->__SysVBase != NULL) {
-        __clib2->__ISysVIPC = (struct SYSVIFace *) GetInterface(__clib2->__SysVBase, "main", 1, NULL);
-        if (__clib2->__ISysVIPC != NULL) {
-            __clib2->haveShm = TRUE;
-        } else {
-            CloseLibrary(__clib2->__SysVBase);
-            __clib2->__SysVBase = NULL;
-        }
-    }
-
-    ClearMem(&__clib2->tmr_time, sizeof(struct itimerval));
+    ClearMem(&__clib4->tmr_time, sizeof(struct itimerval));
 
     /* Set ar4random stuff */
     for (int i = 0; i <= 255; i++) {
-        __clib2->rs.s[i] = i;
+        __clib4->rs.s[i] = i;
     }
 
     /* Check if .unix file exists in the current dir. If the file exists enable unix path semantics */
-    SHOWMSG("Check for .unix file");
-    __clib2->__unix_path_semantics = FALSE;
+    D(("Check for .unix file"));
+    __clib4->__unix_path_semantics = FALSE;
     struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
     if (exd != NULL) {
         if (EXD_IS_FILE(exd)) {
             SHOWMSG("Enable unix paths");
-            __clib2->__unix_path_semantics = TRUE;
+            __clib4->__unix_path_semantics = TRUE;
         }
         FreeDosObject(DOS_EXAMINEDATA, exd);
     }
@@ -402,7 +393,7 @@ reent_init(struct _clib2 *__clib2) {
     /* This table holds pointers to all signal handlers configured at a time. */
     SHOWMSG("Set signal table to SIG_DFL");
     for (int i = 0; i < NSIG; i++) {
-        __clib2->__signal_handler_table[i] = SIG_DFL;
+        __clib4->__signal_handler_table[i] = SIG_DFL;
     }
 
     success = TRUE;
@@ -410,97 +401,80 @@ reent_init(struct _clib2 *__clib2) {
 out:
 
     if (!success) {
-        reent_exit(__clib2);
+        reent_exit(__clib4, FALSE);
     }
 }
 
 void
-reent_exit(struct _clib2 *__clib2) {
-    ENTER();
-
+reent_exit(struct _clib4 *__clib4, BOOL fallback) {
     /* Free global clib structure */
-    if (__clib2) {
-        struct ElfIFace *IElf = __IElf;
-
+    if (__clib4) {
         /* Check for getrandom fd */
-        if (__clib2->randfd[0] >= 0) {
-            close(__clib2->randfd[0]);
-        }
+        if (!fallback) {
+            /* We can't call close() in fallback reent, since destructors
+             * are already called and function is no more available */
+            if (__clib4->randfd[0] >= 0) {
+                close(__clib4->randfd[0]);
+            }
 
-        if (__clib2->randfd[1] >= 0) {
-            close(__clib2->randfd[1]);
+            if (__clib4->randfd[1] >= 0) {
+                close(__clib4->randfd[1]);
+            }
         }
 
         /* Free wchar stuff */
-        if (__clib2->wide_status != NULL) {
-            SHOWMSG("Free wide_status");
-            FreeVec(__clib2->wide_status);
-            __clib2->wide_status = NULL;
+        if (__clib4->wide_status != NULL) {
+            FreeVec(__clib4->wide_status);
+            __clib4->wide_status = NULL;
         }
         /* Remove random semaphore */
-        SHOWMSG("Delete random lock semaphore");
-        __delete_semaphore(__clib2->__random_lock);
+        __delete_semaphore(__clib4->__random_lock);
 
-        if (__clib2->__ISysVIPC != NULL) {
-            SHOWMSG("Drop SYSV interface");
-            DropInterface((struct Interface *) __clib2->__ISysVIPC);
-            __clib2->__ISysVIPC = NULL;
-        }
+        if (!fallback) { //TODO : Freeing memalign crash libExpunge and I don't know why
+            /* Free memalign stuff */
+            if (__clib4->__memalign_pool) {
+                /* Check if we have something created with posix_memalign and not freed yet.
+                 * But this is a good point also to free something allocated with memalign or
+                 * aligned_alloc and all other functions are using memalign_tree to allocate memory
+                 * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
+                 */
+                struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__clib4->__memalign_tree);
+                while (e) {
+                    struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
 
-        if (__clib2->__SysVBase != NULL) {
-            SHOWMSG("Close SYSV Library");
-            CloseLibrary(__clib2->__SysVBase);
-            __clib2->__SysVBase = NULL;
-        }
+                    /* Free memory */
+                    if (e->me_Exact) {
+                        FreeVec(e->me_Exact);
+                    }
+                    /* Remove the node */
+                    AVL_RemNodeByAddress(&__clib4->__memalign_tree, &e->me_AvlNode);
+                    ItemPoolFree(__clib4->__memalign_pool, e);
 
-        /* Free memalign stuff */
-        if (__clib2->__memalign_pool) {
-            SHOWMSG("Clean memalign memory");
-            /* Check if we have something created with posix_memalign and not freed yet.
-             * But this is a good point also to free something allocated with memalign or
-             * aligned_alloc and all other functions are using memalign_tree to allocate memory
-             * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
-             */
-            struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__clib2->__memalign_tree);
-            while (e) {
-                struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
-
-                /* Free memory */
-                if (e->me_Exact) {
-                    FreeVec(e->me_Exact);
+                    e = next;
                 }
-                /* Remove the node */
-                AVL_RemNodeByAddress(&__clib2->__memalign_tree, &e->me_AvlNode);
-                ItemPoolFree(__clib2->__memalign_pool, e);
 
-                e = next;
+                FreeSysObject(ASOT_ITEMPOOL, __clib4->__memalign_pool);
             }
-
-            FreeSysObject(ASOT_ITEMPOOL, __clib2->__memalign_pool);
         }
-
         /* Free dl stuff */
-        if (__clib2->__dl_elf_handle != NULL) {
-            SHOWMSG("Closing elf handle");
-            CloseElfTags(__clib2->__dl_elf_handle, CET_ReClose, TRUE, TAG_DONE);
-            __clib2->__dl_elf_handle = NULL;
-        } else {
-            D(("Cannot close elf handle: __clib2->__dl_elf_handle == %p - IElf == %p", __clib2->__dl_elf_handle, IElf));
+        struct ElfIFace *IElf = __IElf;
+
+        if (IElf && __clib4->__dl_root_handle != NULL) {
+            CloseElfTags(__clib4->__dl_root_handle, CET_ReClose, TRUE, TAG_DONE);
+            __clib4->__dl_root_handle = NULL;
         }
 
-        FreeVec(__clib2);
-        __clib2 = NULL;
+        FreeVec(__clib4);
+        __clib4 = NULL;
     }
-
-    LEAVE();
 }
 
 void enableUnixPaths(void) {
-    __CLIB2->__unix_path_semantics = TRUE;
+    __CLIB4->__unix_path_semantics = TRUE;
 }
 
 void disableUnixPaths(void) {
-    __CLIB2->__unix_path_semantics = FALSE;
+    __CLIB4->__unix_path_semantics = FALSE;
 }
 
 void enableAltivec(void) {
@@ -508,24 +482,24 @@ void enableAltivec(void) {
     /* Check if altivec is present otherwise we can't enable it */
     GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec, TAG_DONE);
     if (hasAltivec)
-        __CLIB2->hasAltivec = 1;
+        __CLIB4->hasAltivec = 1;
     else
-        __CLIB2->hasAltivec = 0;
+        __CLIB4->hasAltivec = 0;
 }
 
 void disableAltivec(void) {
-    __CLIB2->hasAltivec = 0;
+    __CLIB4->hasAltivec = 0;
 }
 
 void enableOptimizedFunctions(void) {
-    __CLIB2->__optimizedCPUFunctions = TRUE;
+    __CLIB4->__optimizedCPUFunctions = TRUE;
 };
 
 void disableOptimizedFunctions(void) {
-    __CLIB2->__optimizedCPUFunctions = FALSE;
+    __CLIB4->__optimizedCPUFunctions = FALSE;
 };
 
 int *__mb_cur_max(void) {
-    return &__CLIB2->__mb_cur_max;
+    return &__CLIB4->__mb_cur_max;
 }
 

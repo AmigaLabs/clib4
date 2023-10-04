@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_chdir.c,v 1.9 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: unistd_chdir.c,v 1.9 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -13,7 +13,7 @@ chdir(const char *path_name) {
     BPTR dir_lock = BZERO;
     struct ExamineData *status = NULL;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -30,7 +30,7 @@ chdir(const char *path_name) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
@@ -80,24 +80,24 @@ chdir(const char *path_name) {
         goto out;
     }
 
-    if (__clib2->__current_directory_changed) {
+    if (__clib4->__current_directory_changed) {
         BPTR old_dir;
 
-        old_dir = CurrentDir(dir_lock);
+        old_dir = SetCurrentDir(dir_lock);
 
-        if (__clib2->__unlock_current_directory)
+        if (__clib4->__unlock_current_directory)
             UnLock(old_dir);
     } else {
-        __clib2->__original_current_directory = CurrentDir(dir_lock);
+        __clib4->__original_current_directory = SetCurrentDir(dir_lock);
 
-        __clib2->__current_directory_changed = TRUE;
+        __clib4->__current_directory_changed = TRUE;
     }
 
-    __clib2->__unlock_current_directory = TRUE;
+    __clib4->__unlock_current_directory = TRUE;
 
     dir_lock = BZERO;
 
-    if (__clib2->__unix_path_semantics)
+    if (__clib4->__unix_path_semantics)
         __restore_path_name(&path_name, &path_name_nti);
 
     /* ZZZ this must not fail */

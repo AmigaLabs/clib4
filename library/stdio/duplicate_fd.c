@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_duplicate_fd.c,v 1.6 2006-10-10 13:39:26 clib2devs Exp $
+ * $Id: stdio_duplicate_fd.c,v 1.6 2006-10-10 13:39:26 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H

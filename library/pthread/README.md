@@ -1,4 +1,4 @@
-# POSIX Threads for Clib2 based on AROS/MOS version (thanks to joakim ports)
+# POSIX Threads for Clib4 based on AROS/MOS version (thanks to joakim ports)
 
 This library implements a subset of the POSIX Threads standard on top of the native Amiga APIs (SignalSemaphores, signals, processes, etc.). 
 

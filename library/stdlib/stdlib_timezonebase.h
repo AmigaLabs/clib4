@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_timezonebase.h,v 1.0 2021-01-15 10:06:25 clib2devs Exp $
+ * $Id: stdlib_timezonebase.h,v 1.0 2021-01-15 10:06:25 clib4devs Exp $
 */
 
 #ifndef _STDLIB_TIMEZONEBASE_H
@@ -24,7 +24,7 @@
 #endif /* _MACROS_H */
 
 #define DECLARE_TIMEZONEBASE() \
-	struct Library *		UNUSED	TimezoneBase	= __CLIB2->__TimezoneBase; \
-	struct TimezoneIFace *			ITimezone		= __CLIB2->__ITimezone
+	struct Library *		UNUSED	TimezoneBase	= __CLIB4->__TimezoneBase; \
+	struct TimezoneIFace *			ITimezone		= __CLIB4->__ITimezone
 
 #endif /* _STDLIB_TIMEZONEBASE_H */

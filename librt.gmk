@@ -1,5 +1,5 @@
 #
-# $Id: librt.gmk,v 1.0 2023-04-27 10:09:48 clib2devs Exp $
+# $Id: librt.gmk,v 1.0 2023-04-27 10:09:48 clib4devs Exp $
 #
 
 OUT_STATIC := $(BUILD_DIR)/obj/librt
@@ -50,11 +50,19 @@ $(OUT_SHARED)/rt/rt.lib_rev.o : $(LIB_DIR)/rt/rt.lib_rev.c
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
+ifdef SPE
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+
+$(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SHARED_SPE)
+else
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE)
 
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
+endif
 
 $(BUILD_DIR)/lib/librt.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)

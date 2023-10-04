@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_gets.c,v 1.7 2022-03-27 12:04:24 clib2devs Exp $
+ * $Id: stdio_gets.c,v 1.7 2022-03-27 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -61,6 +61,7 @@ gets(char *s) {
                    string buffer, including the terminating line
                    feed character. */
                 memmove(s, buffer, num_characters_in_line);
+                s += num_characters_in_line;
 
                 file->iob_BufferPosition += num_characters_in_line;
                 s[num_characters_in_line] = 0;

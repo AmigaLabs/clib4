@@ -1,5 +1,5 @@
 /*
- * $Id: uio_writev.c,v 1.5 2006-01-08 12:04:27 clib2devs Exp $
+ * $Id: uio_writev.c,v 1.5 2006-01-08 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UIO_HEADERS_H
@@ -14,7 +14,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
     char *buffer = NULL;
     struct fd *fd = NULL;
     int i;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -22,7 +22,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
     SHOWPOINTER(iov);
     SHOWVALUE(vec_count);
 
-    __stdio_lock(__clib2);
+    __stdio_lock(__clib4);
 
     if (iov == NULL) {
         __set_errno(EFAULT);
@@ -66,7 +66,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
         msg.fam_Data = buffer;
         msg.fam_Size = total_num_bytes_written;
 
-        if ((*fd->fd_Action)(__clib2, fd, &msg) == EOF) {
+        if ((*fd->fd_Action)(__clib4, fd, &msg) == EOF) {
             __set_errno(msg.fam_Error);
             goto out;
         }
@@ -79,7 +79,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
                 msg.fam_Data = (char *) iov[i].iov_base;
                 msg.fam_Size = iov[i].iov_len;
 
-                if ((*fd->fd_Action)(__clib2, fd, &msg) == EOF) {
+                if ((*fd->fd_Action)(__clib4, fd, &msg) == EOF) {
                     __set_errno(msg.fam_Error);
                     goto out;
                 }
@@ -95,7 +95,7 @@ out:
         free(buffer);
 
     __fd_unlock(fd);
-    __stdio_unlock(__clib2);
+    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

@@ -1,5 +1,5 @@
 /*
- * $Id: time.h,v 1.8 2023-06-03 12:06:14 clib2devs Exp $
+ * $Id: time.h,v 1.8 2023-06-03 12:06:14 clib4devs Exp $
 */
 
 #ifndef _TIME_H
@@ -39,9 +39,9 @@ __BEGIN_DECLS
 #define __tm_zone tm_zone
 #endif
 
-#define _timezone (__CLIB2->__timezone)
-#define _daylight (__CLIB2->__daylight)
-#define _tzname   (__CLIB2->__tzname)
+#define _timezone (__CLIB4->__timezone)
+#define _daylight (__CLIB4->__daylight)
+#define _tzname   (__CLIB4->__tzname)
 
 /* POSIX defines the external tzname being defined in time.h */
 #ifndef tzname
@@ -157,8 +157,12 @@ extern int clock_settime(clockid_t clk_id, const struct timespec *t);
 extern int clock_getres(clockid_t clock_id, struct timespec *res);
 extern int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *request, struct timespec *remain);
 extern unsigned long long rdtsc(void);
-
 extern int clock_gettime64 (clockid_t clock_id, struct timespec64 *tp);
+
+#if defined(_GNU_SOURCE) || defined(_DEFAULT_SOURCE)
+extern int stime(const time_t *t);
+extern time_t timegm(struct tm *tm);
+#endif
 
 /* Check whether T fits in time_t.  */
 static inline int

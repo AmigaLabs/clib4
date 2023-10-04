@@ -1,5 +1,5 @@
 /*
- * $Id: socket_syslog.c,v 1.0 2022-01-22 18:27:15 clib2devs Exp $
+ * $Id: socket_syslog.c,v 1.0 2022-01-22 18:27:15 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H

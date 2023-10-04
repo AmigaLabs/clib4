@@ -1,5 +1,5 @@
 /*
- * $Id: string.h,v 1.12 2006-09-17 17:36:42 clib2devs Exp $
+ * $Id: string.h,v 1.12 2006-09-17 17:36:42 clib4devs Exp $
 */
 
 #ifndef _STRING_H

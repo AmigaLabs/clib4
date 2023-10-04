@@ -1,7 +1,7 @@
-CC = ppc-amigaos-gcc
-CXX = ppc-amigaos-g++
-CFLAGS = -mcrt=clib2 -O3
-LDFLAGS = -mcrt=clib2 -athread=native
+CC := ppc-amigaos-gcc
+CXX := ppc-amigaos-g++
+CFLAGS := -mcrt=clib4 -O3
+LDFLAGS := -mcrt=clib4 -athread=native
 
 all: test-double test-float # test-double-system test-float-system
 

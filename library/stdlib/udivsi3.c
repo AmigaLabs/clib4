@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_udivsi3.c,v 1.3 2006-01-08 12:04:26 clib2devs Exp $
+ * $Id: stdlib_udivsi3.c,v 1.3 2006-01-08 12:04:26 clib4devs Exp $
 */
 
 __asm("							\n\

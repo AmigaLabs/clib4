@@ -1,5 +1,5 @@
 /*
- * $Id: fstat_stdout_test.c,v 1.1 2005-05-08 16:27:25 clib2devs Exp $
+ * $Id: fstat_stdout_test.c,v 1.1 2005-05-08 16:27:25 clib4devs Exp $
  */
 
 #include <sys/stat.h>

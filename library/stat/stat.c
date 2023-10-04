@@ -1,5 +1,5 @@
 /*
- * $Id: stat_stat.c,v 1.11 2021-01-31 12:04:24 clib2devs Exp $
+ * $Id: stat_stat.c,v 1.11 2021-01-31 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STAT_HEADERS_H
@@ -21,7 +21,7 @@ stat(const char *path_name, struct stat *st) {
     struct Lock *fl;
     int result = ERROR;
     BPTR file_lock = BZERO;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -39,7 +39,7 @@ stat(const char *path_name, struct stat *st) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 

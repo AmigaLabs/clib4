@@ -1,5 +1,5 @@
 /*
- * $Id: sem.h,v 1.00 2021-02-02 17:03:49 clib2devs Exp $
+ * $Id: sem.h,v 1.00 2021-02-02 17:03:49 clib4devs Exp $
 */
 
 #ifndef _SYS_SEM_H

@@ -1,10 +1,12 @@
 /*
- * $Id: stat_chmod.c,v 1.8 2006-01-08 12:04:24 clib2devs Exp $
+ * $Id: stat_chmod.c,v 1.8 2006-01-08 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STAT_HEADERS_H
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
+
+#include <dos/obsolete.h>
 
 int
 chmod(const char *path_name, mode_t mode) {
@@ -12,7 +14,7 @@ chmod(const char *path_name, mode_t mode) {
     ULONG protection;
     LONG status;
     int result = ERROR;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -30,7 +32,7 @@ chmod(const char *path_name, mode_t mode) {
         goto out;
     }
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 

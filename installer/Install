@@ -1,10 +1,10 @@
 (welcome)
 (complete 0)
 (set @default-dest "LIBS:")
-(set @default-sdk-dest "SDK:clib2")
+(set @default-sdk-dest "SDK:clib4")
 (set @default-dest
 	(askdir
-		(prompt "Where would you like to install clib2.library?\nA new Drawer will be created if necessary")
+		(prompt "Where would you like to install clib4.library?\nA new Drawer will be created if necessary")
 		(help @askdir-help)
 		(default @default-dest)
 		(newpath)
@@ -12,10 +12,10 @@
 )
 (complete 30)
 (copyfiles
-	(prompt "clib2 installation")
+	(prompt "clib4 installation")
 	(help @copyfiles-help)
 	(source "")
-	(choices "clib2.library")
+	(choices "clib4.library")
 	(dest @default-dest)
 	(confirm)
 )

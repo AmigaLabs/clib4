@@ -1,5 +1,5 @@
 /*
- * $Id: systeminfo.h,v 1.1 2006-07-28 14:02:32 clib2devs Exp $
+ * $Id: systeminfo.h,v 1.1 2006-07-28 14:02:32 clib4devs Exp $
 */
 
 #ifndef _SYS_SYSTEMINFO_H

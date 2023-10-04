@@ -1,5 +1,5 @@
 /*
- * $Id: time_converttime.c,v 2.0 2023-05-26 12:04:27 clib2devs Exp $
+ * $Id: time_converttime.c,v 2.0 2023-05-26 12:04:27 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -14,7 +14,7 @@ struct tm *
 __convert_time(ULONG seconds, LONG gmt_offset, struct tm *tm) {
     struct ClockData clock_data;
     struct tm *result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
     DECLARE_UTILITYBASE();
     DECLARE_TIMEZONEBASE();
     int8 dstime = -1;
@@ -55,9 +55,9 @@ __convert_time(ULONG seconds, LONG gmt_offset, struct tm *tm) {
     tm->tm_mon = clock_data.month - 1;
     tm->tm_year = clock_data.year - 1900;
     tm->tm_wday = clock_data.wday;
-    tm->tm_isdst = __clib2->__daylight;
-    tm->tm_zone = __clib2->__tzname[0];
-    tm->tm_gmtoff = __clib2->__timezone / 60;
+    tm->tm_isdst = __clib4->__daylight;
+    tm->tm_zone = __clib4->__tzname[0];
+    tm->tm_gmtoff = __clib4->__timezone / 60;
 
     /* Now figure out how many days have passed since January 1st. */
     tm->tm_yday = __calculate_days_per_date(clock_data.year, clock_data.month, clock_data.mday) -

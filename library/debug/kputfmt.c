@@ -1,5 +1,5 @@
 /*
- * $Id: debug_kputfmt.c,v 1.4 2006-01-08 12:04:22 clib2devs Exp $
+ * $Id: debug_kputfmt.c,v 1.4 2006-01-08 12:04:22 clib4devs Exp $
 */
 
 #include "debug_headers.h"
@@ -113,8 +113,6 @@ raw_put_char(REG(d0, UBYTE c))
 
 VOID
 KPutFmt(const char *format_string, va_list argument_list) {
-    assert(format_string != NULL);
-
     if (format_string != NULL) {
         size_t num_args;
 

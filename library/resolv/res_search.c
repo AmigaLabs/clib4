@@ -1,4 +1,4 @@
-/* $Id: socket_res_search.c,v 1.0 2022-03-14 10:44:15 clib2devs Exp $
+/* $Id: socket_res_search.c,v 1.0 2022-03-14 10:44:15 clib4devs Exp $
 
    Copyright (C) 2005-2006, 2008-2020 Free Software Foundation, Inc.
 
@@ -37,6 +37,6 @@
 #endif /* _SOCKET_HEADERS_H */
 
 int
-res_search(const char *dname, int class, int type,unsigned char *answer, int anslen) {
-    return res_query(dname, class, type, answer, anslen);
+res_search(const char *dname, int klass, int type,unsigned char *answer, int anslen) {
+    return res_query(dname, klass, type, answer, anslen);
 }

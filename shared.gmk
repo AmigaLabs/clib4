@@ -1,9 +1,35 @@
 #
-# $Id: shared.gmk,v 1.0 2023-04-22 10:09:48 clib2devs Exp $
+# $Id: shared.gmk,v 1.0 2023-04-22 10:09:48 clib4devs Exp $
 #
 
-$(OUT_SHARED_LIB)/shared_library/clib2.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -O0 -fno-aggressive-loop-optimizations
-$(OUT_SHARED_LIB)/shared_library/clib2.o : $(LIB_DIR)/shared_library/clib2.c $(LIB_DIR)/shared_library/clib2.h
+ifdef SPE
+$(OUT_SHARED_LIB)/shared_library/clib4.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -O0 -fno-aggressive-loop-optimizations
+$(OUT_SHARED_LIB)/shared_library/clib4.o : $(LIB_DIR)/shared_library/clib4.c $(LIB_DIR)/shared_library/clib4.h
+	$(VERBOSE)$(COMPILE_SPE)
+
+$(OUT_SHARED_LIB)/shared_library/%.o : $(LIB_DIR)/shared_library/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+
+$(OUT_SHARED_LIB)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+
+$(OUT_SHARED_LIB)/math/%.o : $(LIB_DIR)/math/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+
+$(OUT_SHARED_LIB)/profile/%.o : $(LIB_DIR)/profile/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+
+$(OUT_SHARED_LIB)/amiga/%.o : $(LIB_DIR)/amiga/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+
+$(OUT_SHARED_LIB)/crypt/%.o : $(LIB_DIR)/crypt/%.c
+	$(VERBOSE)$(COMPILE_SPE)
+else
+$(OUT_SHARED_LIB)/shared_library/clib4.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -O0 -fno-aggressive-loop-optimizations
+$(OUT_SHARED_LIB)/shared_library/clib4.o : $(LIB_DIR)/shared_library/clib4.c $(LIB_DIR)/shared_library/clib4.h
+	$(VERBOSE)$(COMPILE)
+
+$(OUT_SHARED_LIB)/shared_library/%.o : $(LIB_DIR)/shared_library/%.c
 	$(VERBOSE)$(COMPILE)
 
 $(OUT_SHARED_LIB)/shared_library/%.o : $(LIB_DIR)/shared_library/%.c
@@ -18,14 +44,15 @@ $(OUT_SHARED_LIB)/math/%.o : $(LIB_DIR)/math/%.c
 $(OUT_SHARED_LIB)/profile/%.o : $(LIB_DIR)/profile/%.c
 	$(VERBOSE)$(COMPILE)
 
-$(OUT_SHARED_LIB)/profile/%.o : $(LIB_DIR)/profile/%.S
-	$(VERBOSE)$(ASSEMBLE)
-
 $(OUT_SHARED_LIB)/amiga/%.o : $(LIB_DIR)/amiga/%.c
 	$(VERBOSE)$(COMPILE)
 
 $(OUT_SHARED_LIB)/crypt/%.o : $(LIB_DIR)/crypt/%.c
 	$(VERBOSE)$(COMPILE)
+endif
+
+$(OUT_SHARED_LIB)/profile/%.o : $(LIB_DIR)/profile/%.S
+	$(VERBOSE)$(ASSEMBLE)
 
 $(OUT_SHARED_LIB)/%.o : $(LIB_DIR)/%.sx
 	$(VERBOSE)$(COMPILE_ALTIVEC_REG)
@@ -33,13 +60,10 @@ $(OUT_SHARED_LIB)/%.o : $(LIB_DIR)/%.sx
 $(OUT_SHARED_LIB)/cpu/generic/%.o : $(LIB_DIR)/cpu/generic/%.S
 	$(VERBOSE)$(COMPILE_REG)
 
+$(OUT_SHARED_LIB)/cpu/spe/%.o : $(LIB_DIR)/cpu/spe/%.S
+	$(VERBOSE)$(COMPILE_SPE_REG)
+$(OUT_SHARED_LIB)/math/%_spe.o : $(LIB_DIR)/math/%_spe.S
+	$(VERBOSE)$(COMPILE_SPE_REG)
+
 $(OUT_SHARED_LIB)/%.o : $(LIB_DIR)/%.S
 	$(VERBOSE)$(COMPILE_ASM)
-
-$(OUT_SHARED_LIB)/setjmp/setjmp.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -maltivec -mabi=altivec
-$(OUT_SHARED_LIB)/setjmp/setjmp.o : $(LIB_DIR)/setjmp/setjmp.S
-	$(VERBOSE)$(COMPILE_ALTIVEC_REG)
-
-$(OUT_SHARED_LIB)/setjmp/longjmp.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -maltivec -mabi=altivec
-$(OUT_SHARED_LIB)/setjmp/longjmp.o : $(LIB_DIR)/setjmp/longjmp.S
-	$(VERBOSE)$(COMPILE_ALTIVEC_REG)

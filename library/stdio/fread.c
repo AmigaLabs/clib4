@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fread.c,v 1.8 2022-03-27 12:04:24 clib2devs Exp $
+ * $Id: stdio_fread.c,v 1.8 2022-03-27 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -10,7 +10,7 @@ size_t
 fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     size_t result = 0;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -31,7 +31,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     flockfile(stream);
 
-    assert(__is_valid_iob(__clib2, file));
+    assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -67,7 +67,10 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         if (__fgetc_check((FILE *) file) < 0)
             goto out;
 
+        /* Check for overflow. */
         total_size = element_size * count;
+        if (element_size != (total_size / count))
+            goto out;
 
         SHOWVALUE(total_size);
 
@@ -128,11 +131,6 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
                     total_size -= num_bytes_in_buffer;
                     if (total_size == 0)
                         break;
-
-                    /* If the read buffer is now empty and there is still enough data
-                       to be read, try to optimize the read operation. */
-                    if (file->iob_BufferReadBytes == 0 && total_size >= (size_t) file->iob_BufferSize)
-                        continue;
                 }
 
                 c = __getc(file);

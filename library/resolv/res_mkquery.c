@@ -1,4 +1,4 @@
-/* $Id: socket_res_mkquery.c,v 1.0 2022-03-14 10:44:15 clib2devs Exp $
+/* $Id: socket_res_mkquery.c,v 1.0 2022-03-14 10:44:15 clib4devs Exp $
 
    Copyright (C) 2005-2006, 2008-2020 Free Software Foundation, Inc.
 
@@ -41,7 +41,7 @@
 #endif /* _TIME_HEADERS_H */
 
 int
-res_mkquery(int op, const char *dname, int class, int type,
+res_mkquery(int op, const char *dname, int klass, int type,
             const unsigned char *data, int datalen,
             const unsigned char *newrr, unsigned char *buf, int buflen) {
     (void) (data);
@@ -56,7 +56,7 @@ res_mkquery(int op, const char *dname, int class, int type,
 
     if (l && dname[l - 1] == '.') l--;
     n = 17 + l + !!l;
-    if (l > 253 || buflen < n || op > 15u || class > 255u || type > 255u)
+    if (l > 253 || buflen < n || op > 15u || klass > 255u || type > 255u)
         return -1;
 
     /* Construct query template - ID will be filled later */
@@ -71,7 +71,7 @@ res_mkquery(int op, const char *dname, int class, int type,
         q[i - 1] = j - i;
     }
     q[i + 1] = type;
-    q[i + 3] = class;
+    q[i + 3] = klass;
 
     /* Make a reasonably unpredictable id */
     clock_gettime(CLOCK_REALTIME, &ts);

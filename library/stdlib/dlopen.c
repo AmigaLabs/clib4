@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_dlopen.c,v 1.2 2010-08-21 11:37:03 clib2devs Exp $
+ * $Id: stdlib_dlopen.c,v 1.2 2010-08-21 11:37:03 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -13,7 +13,7 @@
 void *
 dlopen(const char *path_name, int mode) {
     void *result = NULL;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWSTRING(path_name);
@@ -25,7 +25,7 @@ dlopen(const char *path_name, int mode) {
     }
 
     struct name_translation_info path_name_nti;
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&path_name, &path_name_nti) != 0)
             goto out;
 
@@ -34,10 +34,10 @@ dlopen(const char *path_name, int mode) {
             goto out;
         }
     }
-    SHOWPOINTER(__clib2->__dl_elf_handle);
+    SHOWPOINTER(__clib4->__dl_root_handle);
 
-    if (__clib2->__dl_elf_handle != NULL) {
-        struct ElfIFace *IElf = __clib2->IElf;
+    if (__clib4->__dl_root_handle != NULL) {
+        struct ElfIFace *IElf = __clib4->IElf;
         SHOWPOINTER(IElf);
         uint32 flags = 0;
 
@@ -47,7 +47,7 @@ dlopen(const char *path_name, int mode) {
         if (mode & RTLD_GLOBAL)
             flags = ELF32_RTLD_GLOBAL;
 
-        result = DLOpen(__clib2->__dl_elf_handle, path_name, flags);
+        result = DLOpen(__clib4->__dl_root_handle, path_name, flags);
     } else {
         __set_errno(ENOSYS);
     }

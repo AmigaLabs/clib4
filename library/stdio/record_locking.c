@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_record_locking.c,v 1.20 2021-01-31 14:39:23 clib2devs Exp $
+ * $Id: stdio_record_locking.c,v 1.20 2021-01-31 14:39:23 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -77,19 +77,19 @@ static void release_file_lock_semaphore(struct FileLockSemaphore *fls) {
 static struct FileLockSemaphore *
 obtain_file_lock_semaphore(BOOL shared) {
     struct FileLockSemaphore *result = NULL;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    if (FileLockSemaphore == NULL && __clib2->__file_lock_semaphore_name != NULL && __clib2->__file_lock_semaphore_name[0] != '\0') {
+    if (FileLockSemaphore == NULL && __clib4->__file_lock_semaphore_name != NULL && __clib4->__file_lock_semaphore_name[0] != '\0') {
         struct FileLockSemaphore *fls = NULL;
         char *semaphore_name_copy = NULL;
 
         /* We allocate the new semaphore first, so that we don't spend
            any time in Forbid() allocating memory. */
-        semaphore_name_copy = AllocVecTags(strlen(__clib2->__file_lock_semaphore_name) + 1, AVT_Type, MEMF_SHARED, TAG_DONE);
+        semaphore_name_copy = AllocVecTags(strlen(__clib4->__file_lock_semaphore_name) + 1, AVT_Type, MEMF_SHARED, TAG_DONE);
         if (semaphore_name_copy != NULL) {
-            strcpy(semaphore_name_copy, __clib2->__file_lock_semaphore_name);
+            strcpy(semaphore_name_copy, __clib4->__file_lock_semaphore_name);
 
             fls = AllocSysObjectTags(ASOT_SEMAPHORE,
                                      ASOSEM_Size, sizeof(*fls),
@@ -103,7 +103,7 @@ obtain_file_lock_semaphore(BOOL shared) {
 
         Forbid();
 
-        FileLockSemaphore = (struct FileLockSemaphore *) FindSemaphore((STRPTR) __clib2->__file_lock_semaphore_name);
+        FileLockSemaphore = (struct FileLockSemaphore *) FindSemaphore((STRPTR) __clib4->__file_lock_semaphore_name);
         if (FileLockSemaphore == NULL) {
             SHOWMSG("didn't find it; we're going to add our own");
 
@@ -565,7 +565,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
     _off64_t start = 0;
     _off64_t len = 0;
     _off64_t stop;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -815,7 +815,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
                 const int rand_max = RAND_MAX / 65536;
                 int num_random_ticks;
 
-                if (__clib2->__check_abort_enabled && (SetSignal(0, 0) & __clib2->__break_signal_mask) != 0) {
+                if (__clib4->__check_abort_enabled && (SetSignal(0, 0) & __clib4->__break_signal_mask) != 0) {
                     SHOWMSG("lock polling loop stopped");
 
                     delete_file_lock_node(fln);

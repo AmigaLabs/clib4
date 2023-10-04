@@ -1,5 +1,5 @@
 /*
- * $Id: math_invtrig.h,v 1.0 2022-03-10 12:04:23 clib2devs Exp $
+ * $Id: math_invtrig.h,v 1.0 2022-03-10 12:04:23 clib4devs Exp $
 */
 
 #define	BIAS		(LDBL_MAX_EXP - 1)

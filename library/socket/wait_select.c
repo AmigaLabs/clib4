@@ -1,5 +1,5 @@
 /*
- * $Id: socket_wait_select.c,v 1.4 2008-04-16 07:53:40 clib2devs Exp $
+ * $Id: socket_wait_select.c,v 1.4 2008-04-16 07:53:40 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H

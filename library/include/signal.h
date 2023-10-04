@@ -1,12 +1,11 @@
 /*
- * $Id: signal.h,v 1.8 2006-01-08 12:06:14 clib2devs Exp $
+ * $Id: signal.h,v 1.8 2006-01-08 12:06:14 clib4devs Exp $
 */
 
 #ifndef _SIGNAL_H
 #define _SIGNAL_H
 
 #include <features.h>
-#include <pthread.h>
 
 #ifdef __cplusplus
 #ifdef __USE_AMIGAOS_NAMESPACE__
@@ -151,6 +150,7 @@ extern int sigaction(int sig, const struct sigaction *act, struct sigaction *oac
 
 typedef union sigval sigval_t;
 
+#include <pthread.h>
 
 struct sigevent {
     union sigval sigev_value;

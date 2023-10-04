@@ -1,5 +1,5 @@
 /*
- * $Id: socket_setlogmask.c,v 1.0 2022-01-22 18:27:15 clib2devs Exp $
+ * $Id: socket_setlogmask.c,v 1.0 2022-01-22 18:27:15 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -13,11 +13,11 @@ setlogmask(int maskpri) {
     ENTER();
 
     SHOWVALUE(maskpri);
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    int ret = __clib2->syslog_mask;
+    int ret = __clib4->syslog_mask;
     if (maskpri)
-        __clib2->syslog_mask = maskpri;
+        __clib4->syslog_mask = maskpri;
 
     RETURN(ret);
     return ret;

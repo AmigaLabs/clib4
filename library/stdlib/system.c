@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_system.c,v 1.10 2006-01-08 12:04:26 clib2devs Exp $
+ * $Id: stdlib_system.c,v 1.10 2006-01-08 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -18,7 +18,7 @@ int
 system(const char *command) {
     char *command_copy = NULL;
     int result;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -44,7 +44,7 @@ system(const char *command) {
 
         struct name_translation_info command_nti;
 
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             char just_the_command_name[MAXPATHLEN + 1];
             BOOL need_quotes = FALSE;
             char *command_name;

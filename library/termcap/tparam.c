@@ -72,19 +72,17 @@ tparam(const char *string, char *outstring, int len, int arg0, int arg1, int arg
     return tparam1(string, outstring, len, NULL, NULL, arg);
 }
 
-static char tgoto_buf[50] = {0};
-
 char *
 tgoto(const char *string, int hpos, int vpos) {
     int args[2];
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (!string)
         return NULL;
 
     args[0] = vpos;
     args[1] = hpos;
-    return tparam1(string, tgoto_buf, 50, __clib2->__UP, __clib2->__BC, args);
+    return tparam1(string, __clib4->tgoto_buf, 50, __clib4->__UP, __clib4->__BC, args);
 }
 
 static char *

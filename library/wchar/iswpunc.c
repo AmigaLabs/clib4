@@ -1,5 +1,5 @@
 /*
- * $Id: wctype_iswpunc.c,v 1.4 2021-02-03 00:14:27 clib2devs Exp $
+ * $Id: wctype_iswpunc.c,v 1.4 2021-02-03 00:14:27 clib4devs Exp $
 */
 
 
@@ -18,21 +18,21 @@
 int
 iswpunct(wint_t c) {
     int unicode = 0;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    if (__clib2->_current_locale[0] == 'C' && __clib2->_current_locale[1] == '\0') {
+    if (__clib4->_current_locale[0] == 'C' && __clib4->_current_locale[1] == '\0') {
         unicode = 0;
         /* fall-through */
-    } else if (!strcmp(__clib2->_current_locale, "C-JIS")) {
+    } else if (!strcmp(__clib4->_current_locale, "C-JIS")) {
         c = __jp2uc(c, JP_JIS);
         unicode = 1;
-    } else if (!strcmp(__clib2->_current_locale, "C-SJIS")) {
+    } else if (!strcmp(__clib4->_current_locale, "C-SJIS")) {
         c = __jp2uc(c, JP_SJIS);
         unicode = 1;
-    } else if (!strcmp(__clib2->_current_locale, "C-EUCJP")) {
+    } else if (!strcmp(__clib4->_current_locale, "C-EUCJP")) {
         c = __jp2uc(c, JP_EUCJP);
         unicode = 1;
-    } else if (!strcmp(__clib2->_current_locale, "C-UTF-8")) {
+    } else if (!strcmp(__clib4->_current_locale, "C-UTF-8")) {
         unicode = 1;
     }
 

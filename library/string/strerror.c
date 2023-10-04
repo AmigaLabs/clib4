@@ -1,5 +1,5 @@
 /*
- * $Id: string_strerror.c,v 1.4 2006-09-17 17:36:42 clib2devs Exp $
+ * $Id: string_strerror.c,v 1.4 2006-09-17 17:36:42 clib4devs Exp $
 */
 
 #ifndef _STRING_HEADERS_H

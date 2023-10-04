@@ -1,5 +1,5 @@
 /*
- * $Id: time_strftime.c,v 1.19 2006-04-05 06:43:56 clib2devs Exp $
+ * $Id: time_strftime.c,v 1.19 2006-04-05 06:43:56 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -16,7 +16,7 @@ struct format_hook_data {
     int len;
 };
 
-STATIC VOID
+static void
 format_hook_function(
         struct Hook *hook,
         struct Locale *unused_locale,
@@ -55,7 +55,7 @@ store_string_via_hook(const char *string, int len, struct Hook *hook) {
 
 /* The algorithm for calculating the ISO 8601 week number value comes from
    the "Calendar FAQ" at <http://www.tondering.dk/claus/calendar.html>. */
-INLINE STATIC int
+inline static int
 julian_day(int day, int month, int year) {
     int a, y, m, result;
 
@@ -68,7 +68,7 @@ julian_day(int day, int month, int year) {
     return (result);
 }
 
-STATIC void
+static void
 iso8601_calendar_week_and_year(int day, int month, int year, int *week_ptr, int *year_ptr) {
     int J = julian_day(day, month, year);
     int d1, d4, L;
@@ -92,7 +92,7 @@ iso8601_calendar_week_and_year(int day, int month, int year, int *week_ptr, int 
         (*year_ptr) = year;
 }
 
-STATIC VOID
+static void
 format_date(const char *format, const struct tm *tm, struct Hook *hook) {
     int gmt_offset;
     int week_number;
@@ -101,7 +101,7 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
     char buffer[40] = {0};
     const char *str;
     char c;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(format != NULL && tm != NULL && hook != NULL);
 
@@ -429,10 +429,10 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
                 /* ISO 8601 offset of time zone from UTC (C99). */
             case 'z':
 
-                __locale_lock(__clib2);
+                __locale_lock(__clib4);
 
-                if (__clib2->__default_locale != NULL) {
-                    gmt_offset = __clib2->__default_locale->loc_GMTOffset;
+                if (__clib4->__default_locale != NULL) {
+                    gmt_offset = __clib4->__default_locale->loc_GMTOffset;
                     if (gmt_offset < 0)
                         gmt_offset = (-gmt_offset);
                     else if (gmt_offset > 0)
@@ -441,7 +441,7 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
                     gmt_offset = 0;
                 }
 
-                __locale_unlock(__clib2);
+                __locale_unlock(__clib4);
 
                 /* The GMT offset is given in minutes. We need to print
                        it as a decimal number. */
@@ -457,13 +457,13 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
 
                 store_string_via_hook("GMT", 3, hook);
 
-                __locale_lock(__clib2);
+                __locale_lock(__clib4);
 
-                if (__clib2->__default_locale != NULL) {
+                if (__clib4->__default_locale != NULL) {
                     int hours_west_of_gmt;
                     char sign = '?';
 
-                    hours_west_of_gmt = __clib2->__default_locale->loc_GMTOffset / 60;
+                    hours_west_of_gmt = __clib4->__default_locale->loc_GMTOffset / 60;
                     if (hours_west_of_gmt < 0) {
                         sign = '+';
 
@@ -479,7 +479,7 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
                     }
                 }
 
-                __locale_unlock(__clib2);
+                __locale_unlock(__clib4);
 
                 break;
 
@@ -496,7 +496,7 @@ size_t
 strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
     DECLARE_LOCALEBASE();
     size_t result = 0;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -527,10 +527,10 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
         hook.h_Entry = (HOOKFUNC) format_hook_function;
         hook.h_Data = &data;
 
-        __locale_lock(__clib2);
+        __locale_lock(__clib4);
 
         /* Try to use the locale.library date/time conversion function. */
-        if (__clib2->__locale_table[LC_TIME] != NULL) {
+        if (__clib4->__locale_table[LC_TIME] != NULL) {
             struct DateStamp ds;
             struct tm tm_copy;
             time_t time_value;
@@ -552,7 +552,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
 
             assert(LocaleBase != NULL);
 
-            FormatDate(__clib2->__locale_table[LC_TIME], (STRPTR) format, &ds, &hook);
+            FormatDate(__clib4->__locale_table[LC_TIME], (STRPTR) format, &ds, &hook);
         } else {
             struct tm copy_tm;
 
@@ -570,7 +570,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
             format_date(format, tm, &hook);
         }
 
-        __locale_unlock(__clib2);
+        __locale_unlock(__clib4);
 
         (*data.buffer) = '\0';
 

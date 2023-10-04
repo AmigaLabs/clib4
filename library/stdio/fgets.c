@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fgets.c,v 1.7 2022-03-27 12:04:24 clib2devs Exp $
+ * $Id: stdio_fgets.c,v 1.7 2022-03-27 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -71,7 +71,8 @@ fgets(char *buf, int n, FILE *stream) {
                 /* Copy the remainder of the read buffer into the
                    string buffer, including the terminating line
                    feed character. */
-                memcpy(s, buffer, num_characters_in_line);
+                memmove(s, buffer, num_characters_in_line - 1);
+                s += num_characters_in_line - 1;
 
                 file->iob_BufferPosition += num_characters_in_line;
                 s[num_characters_in_line] = 0;
@@ -79,7 +80,7 @@ fgets(char *buf, int n, FILE *stream) {
                 goto out;
             }
 
-            memcpy(s, buffer, num_bytes_in_buffer);
+            memmove(s, buffer, num_bytes_in_buffer);
             s += num_bytes_in_buffer;
 
             file->iob_BufferPosition += num_bytes_in_buffer;

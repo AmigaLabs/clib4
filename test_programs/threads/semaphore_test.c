@@ -1,4 +1,4 @@
-// C program to demonstrate working of Semaphores - this fail on newlib if you press CTRL-C while should work with clib2
+// C program to demonstrate working of Semaphores - this fail on newlib if you press CTRL-C while should work with clib4
 #include <stdio.h>
 #include <pthread.h>
 #include <semaphore.h>

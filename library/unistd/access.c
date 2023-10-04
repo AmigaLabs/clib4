@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_access.c,v 1.10 2021-03-07 12:04:27 clib2devs Exp $
+ * $Id: unistd_access.c,v 1.10 2021-03-07 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -12,7 +12,7 @@ access(const char *path_name, int mode) {
     int result = ERROR;
     BPTR lock = BZERO;
     struct ExamineData *status = NULL;
-    struct _clib2 *__clib2 = __CLIB2;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -39,7 +39,7 @@ access(const char *path_name, int mode) {
 
     STRPTR actual_path_name = NULL;
 
-    if (__clib2->__unix_path_semantics) {
+    if (__clib4->__unix_path_semantics) {
         {
             if (path_name[0] == '\0') {
                 SHOWMSG("no name given");
@@ -75,7 +75,7 @@ access(const char *path_name, int mode) {
     }
 
     if ((mode != F_OK) && (mode & (R_OK | W_OK | X_OK)) != 0) {
-        if (__clib2->__unix_path_semantics) {
+        if (__clib4->__unix_path_semantics) {
             if (lock == BZERO) {
                 status = AllocDosObjectTags(DOS_EXAMINEDATA, TAG_END);
                 if(!status) {
