@@ -92,7 +92,6 @@
 #endif /* _DEBUG_H */
 
 struct itimer {
-    struct _clib4 *__clib4;
     int which;
 };
 

@@ -13,6 +13,7 @@
 #include <sys/syslimits.h>
 #include <wchar.h>
 #include <setjmp.h>
+#include <resolv.h>
 
 /* Category name handling variables.  */
 #define NUM_LOCALES                (LC_MAX + 1)
@@ -502,6 +503,8 @@ struct _clib4 {
 
     /* termcap */
     char tgoto_buf[50];
+
+    struct __res_state _res_state;
 };
 
 #ifndef __getClib4

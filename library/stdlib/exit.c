@@ -10,19 +10,11 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef _UNISTD_HEADERS_H
+#include "unistd_headers.h"
+#endif /* _UNISTD_HEADERS_H */
+
 #include "pthread/common.h"
-
-static APTR
-hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
-    uint32 pid = (uint32) userdata;
-    (void) (hook);
-
-    if (process->pr_ProcessID == pid) {
-        return process;
-    }
-
-    return 0;
-}
 
 void
 _exit(int return_code) {
@@ -46,26 +38,10 @@ _exit(int return_code) {
         SHOWMSG("IN MAIN TASK");
         /*  If we have a previous timer running task stop it before raise SIGINT  */
         if (__clib4->tmr_real_task) {
-            struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
-            int32 pid, process;
-
             /* Block SIGALRM signal from raise */
             sigblock(SIGALRM);
-            /* Get itimer process ID */
-            pid = __clib4->tmr_real_task->pr_ProcessID;
-
-            Forbid();
-            /* Scan for process */
-            process = ProcessScan(&h, (CONST_APTR) pid, 0);
-            while (process > 0) {
-                /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
-                Signal((struct Task *) __clib4->tmr_real_task, SIGBREAKF_CTRL_F);
-                process = ProcessScan(&h, (CONST_APTR) pid, 0);
-                usleep(100);
-            }
-            Permit();
-            WaitForChildExit(pid);
-            __clib4->tmr_real_task = NULL;
+            /* Kill itimer */
+            killitimer();
         }
 
         /* Dump all currently unwritten data, especially to the console. */

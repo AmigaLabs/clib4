@@ -30,7 +30,7 @@
 	struct UserGroupIFace 	*IUserGroup	    = __CLIB4->__IUserGroup
 
 
-#ifndef _PATH_SERVICES
+#ifndef _PATH_USERS
 #define _PATH_USERS  "Devs:Internet/users"
 #endif
 

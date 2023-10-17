@@ -134,9 +134,9 @@ extern struct __res_state *__res_state(void);
 #define _res (*__res_state())
 
 extern int res_init(void);
-extern int res_query(const char *dname, int class, int type, unsigned char *answer, int anslen);
-extern int res_querydomain(const char *name, const char *domain,int class, int type, unsigned char *answer,int anslen);
-extern int res_search(const char *dname, int class, int type, unsigned char *answer, int anslen);
+extern int res_query(const char *dname, int klass, int type, unsigned char *answer, int anslen);
+extern int res_querydomain(const char *name, const char *domain,int klass, int type, unsigned char *answer,int anslen);
+extern int res_search(const char *dname, int klass, int type, unsigned char *answer, int anslen);
 extern int res_mkquery(int, const char *, int, int, const unsigned char *, int, const unsigned char *, unsigned char *, int);
 extern int res_send(const unsigned char *msg, int msglen, unsigned char *answer,int anslen);
 extern int dn_comp(unsigned char *exp_dn, unsigned char *comp_dn,int length, unsigned char **dnptrs, unsigned char **lastdnptr);

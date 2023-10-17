@@ -10,19 +10,11 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef _UNISTD_HEADERS_H
+#include "unistd_headers.h"
+#endif /* _UNISTD_HEADERS_H */
+
 #include "pthread/common.h"
-
-static APTR
-hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
-    uint32 pid = (uint32) userdata;
-    (void) (hook);
-
-    if (process->pr_ProcessID == pid) {
-        return process;
-    }
-
-    return 0;
-}
 
 int
 raise(int sig) {
@@ -68,28 +60,10 @@ raise(int sig) {
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                     /* Check ig we have timer terminal running. If so let's kill it */
                     if (__clib4->tmr_real_task != NULL) {
-                        struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
-                        int32 pid, process;
-
                         /* Block SIGALRM signal from raise */
                         sigblock(SIGALRM);
-                        /* Get itimer process ID */
-                        pid = __clib4->tmr_real_task->pr_ProcessID;
-
-                        Forbid();
-                        /* Scan for process */
-                        process = ProcessScan(&h, (CONST_APTR) pid, 0);
-                        /* If we find the process send a signal to kill it */
-                        while (process > 0) {
-                            /* Send a SIGBREAKF_CTRL_F signal until the timer task return to Wait state
-                             * and can get the signal */
-                            Signal((struct Task *) __clib4->tmr_real_task, SIGBREAKF_CTRL_F);
-                            process = ProcessScan(&h, (CONST_APTR) pid, 0);
-                            usleep(100);
-                        }
-                        Permit();
-                        WaitForChildExit(pid);
-                        __clib4->tmr_real_task = NULL;
+                        /* Kill itimer */
+                        killitimer();
                     }
 
                     char break_string[80];
@@ -108,10 +82,8 @@ raise(int sig) {
                        land us in _exit(). */
                     __abort();
                 }
-                /* If we have a SIGALRM without associated handler don't call abort but exit directly */
+                /* If we have a SIGALRM without associated handler send the SIGBREAKF_CTRL_E signal */
                 if (sig == SIGALRM) {
-                    __print_termination_message("Alarm Clock");
-
                     /* Block SIGALRM signal from raise again */
                     sigblock(SIGALRM);
 

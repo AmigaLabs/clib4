@@ -11,7 +11,6 @@
 #include <wchar.h>
 #include <alloca.h>
 #include <sys/types.h>
-#include <dos.h>
 
 #ifndef _SYS_CLIB4_STDC_H
 #include <sys/clib4_stdc.h>

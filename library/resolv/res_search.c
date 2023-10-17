@@ -37,6 +37,6 @@
 #endif /* _SOCKET_HEADERS_H */
 
 int
-res_search(const char *dname, int class, int type,unsigned char *answer, int anslen) {
-    return res_query(dname, class, type, answer, anslen);
+res_search(const char *dname, int klass, int type,unsigned char *answer, int anslen) {
+    return res_query(dname, klass, type, answer, anslen);
 }
