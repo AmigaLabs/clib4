@@ -1247,7 +1247,7 @@ struct Clib4IFace {
     /* sys/utsname.h */
     int (* uname) (struct utsname *);                                                                                                                /* 4084 */
 
-    /* END OF CLIB2 VERSION 1.0   */
+    /* END OF CLIB4 VERSION 1.0   */
     /* New function will go below */
 
     int (* futimens) (int fd, const struct timespec times[2]);                                                                                       /* 4098 */
