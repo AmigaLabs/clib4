@@ -1,5 +1,5 @@
 /*
- * $Id: profile_gmon.c,v 1.0 2021-01-18 12:04:26 clib4devs Exp $
+ * $Id: profile_gmon.c,v 1.1 2023-10-20 12:04:26 clib4devs Exp $
 */
 
 #include <exec/exec.h>
@@ -51,7 +51,7 @@ write_hist(int fd) {
             return;
 
         thdr.low_pc =  (char *) _gmonparam.text_start;
-        thdr.high_pc = (char *) _gmonparam.text_end;
+        thdr.high_pc = (char *) _gmonparam.text_start + _gmonparam.highpc - _gmonparam.lowpc;
         thdr.hist_size = _gmonparam.kcountsize / sizeof(HISTCOUNTER);
         dprintf("thdr.low_pc = %x - thdr.high_pc = %x\n", thdr.low_pc, thdr.high_pc);
         thdr.prof_rate = 100;
@@ -86,8 +86,8 @@ write_call_graph(int fd) {
         if (_gmonparam.froms[from_index] == 0)
             continue;
 
-        frompc = 0;
-        frompc += (from_index * _gmonparam.hashfraction * sizeof(*_gmonparam.froms));
+        frompc = _gmonparam.text_start;
+        frompc += from_index * _gmonparam.hashfraction * sizeof(*_gmonparam.froms);
         for (to_index = _gmonparam.froms[from_index];
              to_index != 0;
              to_index = _gmonparam.tos[to_index].link) {
@@ -97,10 +97,10 @@ write_call_graph(int fd) {
                 int32_t count;
             } arc;
 
-            arc.frompc = (char *) _gmonparam.text_start + frompc;
+            arc.frompc = (char *) frompc;
             arc.selfpc = (char *) _gmonparam.text_start + _gmonparam.tos[to_index].selfpc;
             arc.count = _gmonparam.tos[to_index].count;
-            dprintf("arc.frompc = %x - arc.selfpc = %x\n", arc.frompc, arc.selfpc);
+            dprintf("arc.frompc = %p - arc.selfpc = %p\n", arc.frompc, arc.selfpc);
             memcpy(raw_arc + nfilled, &arc, sizeof(raw_arc[0]));
 
             if (++nfilled == NARCS_PER_WRITEV) {
@@ -154,22 +154,23 @@ write_bb_counts(int fd) {
 
 void monstartup(uint32 low_pc, uint32 high_pc) {
     uint8 *cp;
-    uint32 lowpc, highpc;
+    uint32 lowpc, highpc, text_start;
     struct gmonparam *p = &_gmonparam;
-    register int o;
 
-    dprintf("in monstartup low_pc = %d - high_pc = %d\n", low_pc, high_pc);
+    dprintf("in monstartup\n");
 
     /*
      * If we don't get proper lowpc and highpc, then
      * we'll try to get them from the elf handle.
      */
     if (low_pc == 0 && high_pc == 0) {
-        mongetpcs(&lowpc, &highpc);
+        mongetpcs(&lowpc, &highpc, &text_start);
     } else {
+        p->text_start = 0x01000074; // Default to our default text segment start
         lowpc = low_pc;
         highpc = high_pc;
     }
+    p->text_start = text_start;
 
     /*
      * Round lowpc and highpc to multiples of the density
@@ -210,7 +211,9 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
 
     p->tossize = p->tolimit * sizeof(struct tostruct);
 
-    dprintf("lowpc = %p, highpc = %p\n", lowpc, highpc);
+    dprintf("lowpc = %p\n", lowpc);
+    dprintf("highpc = %p\n", highpc);
+    dprintf("text_start = %p\n", p->text_start);
     dprintf("textsize = %d\n", p->textsize);
     dprintf("kcountsize = %d\n", p->kcountsize);
     dprintf("fromssize = %d\n", p->fromssize);
@@ -232,26 +235,16 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
 
     p->tos[0].link = 0;
 
-    o = p->highpc - p->lowpc;
     /* Verify granularity for sampling */
-    if (p->kcountsize < (uint32) o) {
-        /* avoid floating point operations */
-        int quot = o / p->kcountsize;
-
-        if (quot >= 0x10000)
-            s_scale = 1;
-        else if (quot >= 0x100)
-            s_scale = 0x10000 / quot;
-        else if (o >= 0x800000)
-            s_scale = 0x1000000 / (o / (p->kcountsize >> 8));
-        else
-            s_scale = 0x1000000 / ((o << 8) / p->kcountsize);
+    if (p->kcountsize < p->textsize) {
+        /* FIXME Avoid floating point */
+        s_scale = ((float) p->kcountsize / p->textsize) * SCALE_1_TO_1;
     }
     else
         s_scale = SCALE_1_TO_1;
 
-    dprintf("Scale: %d\n", s_scale);
-    dprintf("Enabling monitor\n");
+    s_scale >>= 1;
+    dprintf("Enabling monitor: Scale = %d\n", s_scale);
     moncontrol(1);
 }
 
@@ -278,7 +271,6 @@ void moncleanup(void) {
     struct gmonparam *p = &_gmonparam;
 
     moncontrol(0);
-    mongettext(&p->text_start, &p->text_end);
 
     if (p->state == kGmonProfError) {
         fprintf(stderr, "WARNING: Overflow during profiling\n");
@@ -330,11 +322,12 @@ out:
 
 }
 
-void mongetpcs(uint32 *lowpc, uint32 *highpc) {
+void mongetpcs(uint32 *lowpc, uint32 *highpc, uint32 *text_start) {
     struct Library *ElfBase = NULL;
     struct ElfIFace *IElf = NULL;
     struct Process *self;
     BPTR seglist;
+    Elf32_Handle elfHandle;
     uint32 i;
     Elf32_Shdr *shdr;
     uint32 numSections;
@@ -342,91 +335,43 @@ void mongetpcs(uint32 *lowpc, uint32 *highpc) {
     *lowpc = 0;
     *highpc = 0;
 
-    ElfBase = OpenLibrary("elf.library", MIN_OS_VERSION);
-    if (ElfBase) {
-        IElf = (struct ElfIFace *) GetInterface(ElfBase, "main", 1, NULL);
-        if (IElf) {
-            self = (struct Process *) FindTask(0);
-            seglist = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
-            if (seglist != BZERO) {
-                Elf32_Handle elfHandle = NULL;
+    ElfBase = OpenLibrary("elf.library", 0L);
+    if (!ElfBase)
+        goto out;
 
-                if (GetSegListInfoTags(seglist, GSLI_ElfHandle, &elfHandle, TAG_DONE) == 1) {
-                    elfHandle = OpenElfTags(OET_ElfHandle, elfHandle, TAG_DONE);
-                    if (elfHandle) {
-                        GetElfAttrsTags(elfHandle, EAT_NumSections, &numSections, TAG_DONE);
-                        for (i = 0; i < numSections; i++) {
-                            shdr = GetSectionHeaderTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
-                            if (shdr && (shdr->sh_flags & SWF_EXECINSTR)) {
-                                uint32 base = (uint32) GetSectionTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
-                                *lowpc = base;
-                                *highpc = base + shdr->sh_size;
-                                dprintf("LOWPC = %x\n", *lowpc);
-                                dprintf("HIGHPC = %x\n", *highpc);
-                                break;
-                            }
-                        }
-                        CloseElfTags(elfHandle, CET_ReClose, TRUE, TAG_DONE);
-                    }
-                }
-            }
+    IElf = (struct ElfIFace *) GetInterface(ElfBase, "main", 1, NULL);
+    if (!IElf)
+        goto out;
+
+    self = (struct Process *) FindTask(0);
+    seglist = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
+
+    GetSegListInfoTags(seglist, GSLI_ElfHandle, &elfHandle, TAG_DONE);
+    elfHandle = OpenElfTags(OET_ElfHandle, elfHandle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
+
+    if (!elfHandle)
+        goto out;
+
+    GetElfAttrsTags(elfHandle, EAT_NumSections, &numSections, TAG_DONE);
+
+    for (i = 0; i < numSections; i++) {
+        shdr = GetSectionHeaderTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
+        if (shdr && (shdr->sh_flags & SWF_EXECINSTR)) {
+            uint32 base = (uint32) GetSectionTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
+            *lowpc = base;
+            *highpc = base + shdr->sh_size;
+            *text_start = shdr->sh_addr;
+            break;
         }
     }
 
-    if (IElf) {
+    CloseElfTags(elfHandle, CET_ReClose, TRUE, TAG_DONE);
+
+out:
+    if (IElf)
         DropInterface((struct Interface *) IElf);
-        IElf = NULL;
-    }
-    if (ElfBase) {
+    if (ElfBase)
         CloseLibrary(ElfBase);
-        ElfBase = NULL;
-    }
-}
-
-void mongettext(uint32_t *text_start, uint32_t *text_end) {
-    struct Library *ElfBase = NULL;
-    struct ElfIFace *IElf = NULL;
-    struct Process *self;
-    BPTR seglist;
-    Elf32_Shdr *shdr;
-
-    *text_start = 0;
-    *text_end = 0;
-
-    ElfBase = OpenLibrary("elf.library", MIN_OS_VERSION);
-    if (ElfBase) {
-        IElf = (struct ElfIFace *) GetInterface(ElfBase, "main", 1, NULL);
-        if (IElf) {
-            self = (struct Process *) FindTask(0);
-            seglist = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
-            if (seglist != BZERO) {
-                Elf32_Handle elfHandle = NULL;
-
-                if (GetSegListInfoTags(seglist, GSLI_ElfHandle, &elfHandle, TAG_DONE) == 1) {
-                    elfHandle = OpenElfTags(OET_ElfHandle, elfHandle, TAG_DONE);
-                    if (elfHandle) {
-                        shdr = GetSectionHeaderTags(elfHandle, GST_SectionName, ".text", TAG_DONE);
-                        if (shdr && (shdr->sh_flags & SWF_EXECINSTR)) {
-                            *text_start = shdr->sh_addr;
-                            *text_end = shdr->sh_addr + shdr->sh_size;
-                            dprintf("TEXT_START = %x\n", *text_start);
-                            dprintf("TEXT_END   = %x\n", *text_end);
-                        }
-                        CloseElfTags(elfHandle, CET_ReClose, TRUE, TAG_DONE);
-                    }
-                }
-            }
-        }
-    }
-
-    if (IElf) {
-        DropInterface((struct Interface *) IElf);
-        IElf = NULL;
-    }
-    if (ElfBase) {
-        CloseLibrary(ElfBase);
-        ElfBase = NULL;
-    }
 }
 
 #include "macros.h"

@@ -1,5 +1,5 @@
 /*
- * $Id: profile_profil.c,v 1.0 2021-01-21 10:08:32 clib4devs Exp $
+ * $Id: profile_profil.c,v 1.1 2023-10-20 10:08:32 clib4devs Exp $
 */
 
 #include <proto/exec.h>
@@ -29,31 +29,24 @@ uint32 CounterIntFn(struct ExceptionContext *, struct ExecBase *, struct IntData
 
 uint32
 GetCounterStart(void) {
-    uint64 fsb;
+    uint64 tb;
     double bit0time;
     uint32 count;
 
-    GetCPUInfoTags(
-            GCIT_FrontsideSpeed, &fsb,
-            TAG_DONE);
+    GetCPUInfoTags(GCIT_TimeBaseSpeed,	&tb, TAG_DONE);
 
-    /* Timebase ticks at 1/4 of FSB */
-    bit0time = 8.0 / (double) fsb;
-    count = (uint32) (0.01 / bit0time);
-    dprintf("bit0time = %f - fsb = %lld - count = %ld - %x\n", bit0time, fsb, count, 0x80000000 - count);
+    count = (uint32) (tb / (2 * 100 + 1));
 
-    return 0x80000000 - count;
+    return (uint32) (-count);
 }
 
 uint32
 CounterIntFn(struct ExceptionContext *ctx, struct ExecBase *ExecBase, struct IntData *profileData) {
+    uint32 sia = (uint32) ctx->ip;
+
     /* Silence compiler */
     (void) ExecBase;
     (void) ctx;
-
-    APTR sampledAddress = profileData->IPM->GetSampledAddress();
-    uint32 sia = (uint32) sampledAddress;
-    dprintf("CounterIntFn\n");
 
     sia = ((sia - profileData->Offset) * profileData->Scale) >> 16;
 
@@ -62,7 +55,7 @@ CounterIntFn(struct ExceptionContext *ctx, struct ExecBase *ExecBase, struct Int
         profileData->Buffer[sia]++;
     }
 
-    IPM->CounterControl(COUNTER, profileData->CounterStart, PMCI_Transition);
+    IPM->CounterControl(1, profileData->CounterStart, PMCI_Transition);
 
     return 1;
 }
@@ -77,8 +70,10 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
          * A pointer to PerformanceMonitorIFace is never obtained, and the call to IPM->EventControlTags() when buffer == 0 attempts to dereference a NULL pointer
          * https://sourceforge.net/p/clib2/bugs/54/
          */
-        if (!IPM)
+        if (!IPM) {
+            dprintf("Cannot obtain Performance Monitor interface \n");
             return 0;
+        }
 
         Stack = SuperState();
         IPM->EventControlTags(
@@ -97,12 +92,11 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
 
     IPM = (struct PerformanceMonitorIFace *) OpenResource("performancemonitor.resource");
     if (!IPM || IPM->Obtain() != 1) {
-        dprintf("Cannot open performancemonitor.resource\n");
         return 0;
     }
 
     Stack = SuperState();
-printf("offset = %x\n", offset);
+
     /* Init IntData */
     ProfileData.IPM = IPM;
     ProfileData.Buffer = buffer;
@@ -123,7 +117,7 @@ printf("offset = %x\n", offset);
             TAG_DONE);
 
     if (!IPM->CounterControl(COUNTER, ProfileData.CounterStart, PMCI_Transition)) {
-        printf("Cannot set CounterControl\n");
+        dprintf("Cannot set CounterControl\n");
     }
 
     IPM->EventControlTags(

@@ -1,5 +1,5 @@
 /*
-* $Id: profile_gmon.h,v 1.0 2021-01-18 12:04:26 clib2devs Exp $
+* $Id: profile_gmon.h,v 1.1 2023-10-20 12:04:26 clib2devs Exp $
 */
 
 #ifndef _GMON_H
@@ -14,8 +14,7 @@
 void moncontrol(int);
 void monstartup(uint32, uint32);
 void moncleanup(void);
-void mongetpcs(uint32 *lowpc, uint32 *highpc);
-void mongettext(uint32_t *text_start, uint32_t *text_end);
+void mongetpcs(uint32 *lowpc, uint32 *highpc, uint32 *text_start);
 
 struct gmonhdr {
     uint32 lpc;
@@ -30,7 +29,7 @@ struct gmonhdr {
 
 // I am sure we can make these bigger
 #define HISTFRACTION 2
-#define HASHFRACTION 2
+#define HASHFRACTION 4
 
 /*
  * Percent of text space to allocate for tostructs.
@@ -42,7 +41,7 @@ struct gmonhdr {
  * you raise this value to 3 and link statically (which bloats the
  * text size, thus raising the number of arcs expected by the heuristic).
  */
-#define ARCDENSITY	3
+#define ARCDENSITY	2
 
 /*
  * Always allocate at least this many tostructs.  This
@@ -59,12 +58,12 @@ struct gmonhdr {
  * The old value of 1<<16 wasn't high enough in practice for large C++
  * programs; will 1<<20 be adequate for long?  FIXME
  */
-#define MAXARCS (1 << 20)
+#define MAXARCS ((1 << (8 * sizeof(HISTCOUNTER)))-2)
 
 /*
  * The type used to represent indices into gmonparam.tos[].
  */
-#define	ARCINDEX uint32
+#define	ARCINDEX uint16
 
 /* structure emitted by "gcc -a".  This must match struct bb in
    gcc/libgcc2.c.  It is OK for gcc to declare a longer structure as
@@ -84,6 +83,7 @@ struct tostruct {
     uint32   selfpc;
     int32    count;
     ARCINDEX link;
+    ARCINDEX pad;
 };
 
 struct rawarc {
@@ -110,7 +110,6 @@ struct gmonparam {
     uint32           hashfraction;
     long             log_hashfraction;
     uint32_t         text_start;
-    uint32_t         text_end;
 };
 
 extern struct gmonparam _gmonparam;

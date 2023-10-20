@@ -1,5 +1,5 @@
 /*
-* $Id: profile_gmon_out.h,v 1.0 2023-09-17 12:04:26 clib2devs Exp $
+* $Id: profile_gmon_out.h,v 1.1 2023-10-20 12:04:26 clib2devs Exp $
 */
 
 /* This file specifies the format of gmon.out files.  It should have
@@ -17,7 +17,6 @@
 
 #define GMON_MAGIC      "gmon"    /* magic cookie */
 #define GMON_VERSION    1         /* version number */
-//#define GMON_VERSION     0x00051879
 
 /* For profiling shared object we need a new format.  */
 #define GMON_SHOBJ_VERSION  0x1ffff
