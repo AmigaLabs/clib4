@@ -63,7 +63,7 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-cast-function-type -Werror # -Wbad-function-cast -Wconversion -Wformat
+    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Werror # -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -149,7 +149,6 @@ include libc.gmk
 include libm.gmk
 include libamiga.gmk
 include libdebug.gmk
-include libprofile.gmk
 include libpthread.gmk
 include libcrypt.gmk
 include librt.gmk
@@ -200,13 +199,11 @@ clean:
 # Update the version numbers bound to the individual libraries
 version:
 	$(COPY) c.lib_rev.rev amiga/amiga.lib_rev.rev
-	$(COPY) c.lib_rev.rev profile/profile.lib_rev.rev
 	$(COPY) c.lib_rev.rev math/m.lib_rev.rev
 	$(COPY) c.lib_rev.rev math/crypt.lib_rev.rev
 	$(COPY) c.lib_rev.rev math/pthread.lib_rev.rev
 	bumprev amiga.lib
 	bumprev c.lib
-	bumprev profile.lib
 	bumprev m.lib
 	bumprev crypt.lib
 	bumprev pthread.lib
