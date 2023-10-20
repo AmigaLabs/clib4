@@ -1018,7 +1018,7 @@ Clib4Call(times, 4072);
 Clib4Call(readv, 4076);
 Clib4Call(writev, 4080);
 Clib4Call(uname, 4084);
-/* END OF CLIB2 VERSION 1.0   */
+/* END OF CLIB4 VERSION 1.0   */
 /* New function will go below */
 Clib4Call(futimens, 4088);
 Clib4Call(utimensat, 4092);
