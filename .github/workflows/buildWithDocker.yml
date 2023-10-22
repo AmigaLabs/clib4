@@ -1,0 +1,22 @@
+name: Build with Docker
+on:
+  push:
+    branches: [actions-cicd]
+  # pull_request:
+  workflow_dispatch:
+
+jobs:
+  run:
+    name: Build latest code
+    runs-on: ubuntu-latest
+    container:
+      image: walkero/webkitondocker:latest
+      volumes:
+        - '${{ github.workspace }}:/opt/code'
+    steps:
+      - name: Pull code
+        uses: actions/checkout@v2
+      - name: Start build
+        run: make -C library -j1 -f GNUmakefile.os4 OS=os4 SHARED=no
+
+  # - make -f GNUmakefile.os4 INSTALL_PREFIX=/opt/clib2/clib2 SDK_INCLUDE=/opt/clib2/include
