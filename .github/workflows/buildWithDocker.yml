@@ -10,13 +10,13 @@ jobs:
     name: Build latest code
     runs-on: ubuntu-latest
     container:
-      image: walkero/webkitondocker:latest
+      image: walkero/amigagccondocker:os4-gcc11-exp
       volumes:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Pull code
         uses: actions/checkout@v2
       - name: Start build
-        run: cd /opt/code && make -j1 -f GNUmakefile.os4 OS=os4 SHARED=no
+        run: cd /opt/code && make -j1 -f GNUmakefile.os4 OS=os4 SHARED=no && make -f GNUmakefile.os4 release
 
   # - make -f GNUmakefile.os4 INSTALL_PREFIX=/opt/clib2/clib2 SDK_INCLUDE=/opt/clib2/include
