@@ -17,6 +17,6 @@ jobs:
       - name: Pull code
         uses: actions/checkout@v2
       - name: Start build
-        run: make -C library -j1 -f GNUmakefile.os4 OS=os4 SHARED=no
+        run: cd /opt/code && make -C library -j1 -f GNUmakefile.os4 OS=os4 SHARED=no
 
   # - make -f GNUmakefile.os4 INSTALL_PREFIX=/opt/clib2/clib2 SDK_INCLUDE=/opt/clib2/include
