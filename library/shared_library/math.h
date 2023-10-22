@@ -1,6 +1,8 @@
 #ifndef _MATH_H__
 #define _MATH_H__
 
+#include <stdint.h>
+
 typedef int si_int;
 typedef unsigned su_int;
 typedef long long di_int;
@@ -25,10 +27,24 @@ typedef union {
     su_int u;
     float f;
 } float_bits;
+
 typedef union {
     udwords u;
     double f;
 } double_bits;
+
+typedef union {
+    long double ld;
+    struct {
+        double hi;
+        double lo;
+    }s;
+} DD;
+
+typedef union {
+    int64_t x;
+    double d;
+} doublebits;
 
 typedef struct {
     udwords high;
@@ -51,5 +67,7 @@ di_int __moddi3(di_int a, di_int b);
 di_int __divdi3(di_int a, di_int b);
 double __floatdidf(di_int a);
 di_int __unorddf2 (double a, double b);
+long double __floatunditf(uint64_t a);
+double __floatundidf(du_int a);
 
 #endif /* _MATH_H__ */

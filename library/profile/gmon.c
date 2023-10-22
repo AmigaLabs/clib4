@@ -1,5 +1,5 @@
 /*
- * $Id: profile_gmon.c,v 1.0 2021-01-18 12:04:26 clib4devs Exp $
+ * $Id: profile_gmon.c,v 1.1 2023-10-20 12:04:26 clib4devs Exp $
 */
 
 #include <exec/exec.h>
@@ -9,45 +9,168 @@
 #include <proto/dos.h>
 #include <proto/elf.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <macros.h>
+#include <sys/uio.h>
 
 #define SCALE_1_TO_1 0x10000L
+#define MIN_OS_VERSION 52
 
-#include "profile_gmon.h"
+#include "gmon.h"
+#include "gmon_out.h"
 
-#undef DebugPrintF
-#define dprintf(format, args...) ((struct ExecIFace *)((*(struct ExecBase **)4)->MainInterface))->DebugPrintF("[%s] " format, __PRETTY_FUNCTION__, ##args)
+/*  Head of basic-block list or NULL. */
+struct __bb *__bb_head __attribute__ ((visibility ("hidden")));
 
 struct gmonparam _gmonparam = {
         state : kGmonProfOn
 };
 
-/* Use __executable_start as the lowest address to keep profiling records
-   if it provided by the linker.  */
-extern const char __executable_start[] __attribute__ ((visibility ("hidden")));
-
 static unsigned int s_scale;
 
-void moncontrol(int);
-void monstartup(uint32, uint32);
-void moncleanup(void);
-void mongetpcs(uint32 *lowpc, uint32 *highpc);
-extern int profil(uint16 *buffer, uint32 bufSize, uint32 offset, uint32 scale);
+void
+write_hist(int fd) {
+    u_char tag = GMON_TAG_TIME_HIST;
+
+    if (_gmonparam.kcountsize > 0) {
+        struct iovec iov[3] = {
+            { &tag, sizeof(tag) },
+            { &thdr, sizeof(struct gmon_hist_hdr) },
+            { _gmonparam.kcount, _gmonparam.kcountsize }
+        };
+
+        if (
+                sizeof(thdr) != sizeof(struct gmon_hist_hdr) ||
+                (offsetof(struct real_gmon_hist_hdr, low_pc) != offsetof(struct gmon_hist_hdr, low_pc)) ||
+                (offsetof(struct real_gmon_hist_hdr, high_pc) != offsetof(struct gmon_hist_hdr, high_pc)) ||
+                (offsetof(struct real_gmon_hist_hdr, hist_size) != offsetof(struct gmon_hist_hdr, hist_size)) ||
+                (offsetof(struct real_gmon_hist_hdr, prof_rate) != offsetof(struct gmon_hist_hdr, prof_rate)) ||
+                (offsetof(struct real_gmon_hist_hdr, dimen) != offsetof(struct gmon_hist_hdr, dimen)) ||
+                (offsetof(struct real_gmon_hist_hdr, dimen_abbrev) != offsetof(struct gmon_hist_hdr, dimen_abbrev))
+        )
+            return;
+
+        thdr.low_pc =  (char *) _gmonparam.text_start;
+        thdr.high_pc = (char *) _gmonparam.text_start + _gmonparam.highpc - _gmonparam.lowpc;
+        thdr.hist_size = _gmonparam.kcountsize / sizeof(HISTCOUNTER);
+        dprintf("thdr.low_pc = %x - thdr.high_pc = %x\n", thdr.low_pc, thdr.high_pc);
+        thdr.prof_rate = 100;
+        strncpy(thdr.dimen, "seconds", sizeof(thdr.dimen));
+        thdr.dimen_abbrev = 's';
+
+        writev(fd, iov, 3);
+    }
+}
+
+void
+write_call_graph(int fd) {
+    u_char tag = GMON_TAG_CG_ARC;
+    struct gmon_cg_arc_record raw_arc[NARCS_PER_WRITEV] __attribute__((aligned(__alignof__(char *))));
+    ARCINDEX from_index, to_index;
+    u_long from_len;
+    u_long frompc;
+    struct iovec iov[2 * NARCS_PER_WRITEV];
+    int nfilled;
+
+    for (nfilled = 0; nfilled < NARCS_PER_WRITEV; ++nfilled) {
+        iov[2 * nfilled].iov_base = &tag;
+        iov[2 * nfilled].iov_len = sizeof(tag);
+
+        iov[2 * nfilled + 1].iov_base = &raw_arc[nfilled];
+        iov[2 * nfilled + 1].iov_len = sizeof(struct gmon_cg_arc_record);
+    }
+
+    nfilled = 0;
+    from_len = _gmonparam.fromssize / sizeof(*_gmonparam.froms);
+    for (from_index = 0; from_index < from_len; ++from_index) {
+        if (_gmonparam.froms[from_index] == 0)
+            continue;
+
+        frompc = _gmonparam.text_start;
+        frompc += from_index * _gmonparam.hashfraction * sizeof(*_gmonparam.froms);
+        for (to_index = _gmonparam.froms[from_index];
+             to_index != 0;
+             to_index = _gmonparam.tos[to_index].link) {
+            struct arc {
+                char *frompc;
+                char *selfpc;
+                int32_t count;
+            } arc;
+
+            arc.frompc = (char *) frompc;
+            arc.selfpc = (char *) _gmonparam.text_start + _gmonparam.tos[to_index].selfpc;
+            arc.count = _gmonparam.tos[to_index].count;
+            dprintf("arc.frompc = %p - arc.selfpc = %p\n", arc.frompc, arc.selfpc);
+            memcpy(raw_arc + nfilled, &arc, sizeof(raw_arc[0]));
+
+            if (++nfilled == NARCS_PER_WRITEV) {
+                writev(fd, iov, 2 * nfilled);
+                nfilled = 0;
+            }
+        }
+    }
+    if (nfilled > 0)
+        writev(fd, iov, 2 * nfilled);
+}
+
+void
+write_bb_counts(int fd) {
+    struct __bb *grp;
+    u_char tag = GMON_TAG_BB_COUNT;
+    size_t ncounts;
+    size_t i;
+
+    struct iovec bbhead[2] = {
+    {&tag, sizeof(tag)},
+    {&ncounts, sizeof(ncounts)}
+    };
+    struct iovec bbbody[8];
+    size_t nfilled;
+
+    for (i = 0; i < (sizeof(bbbody) / sizeof(bbbody[0])); i += 2) {
+        bbbody[i].iov_len = sizeof(grp->addresses[0]);
+        bbbody[i + 1].iov_len = sizeof(grp->counts[0]);
+    }
+
+    /* Write each group of basic-block info (all basic-blocks in a
+       compilation unit form a single group). */
+
+    for (grp = __bb_head; grp; grp = grp->next) {
+        ncounts = grp->ncounts;
+        writev(fd, bbhead, 2);
+        for (nfilled = i = 0; i < ncounts; ++i) {
+            if (nfilled > (sizeof(bbbody) / sizeof(bbbody[0])) - 2) {
+                writev(fd, bbbody, nfilled);
+                nfilled = 0;
+            }
+
+            bbbody[nfilled++].iov_base = (char *)&grp->addresses[i];
+            bbbody[nfilled++].iov_base = &grp->counts[i];
+        }
+        if (nfilled > 0)
+            writev(fd, bbbody, nfilled);
+    }
+}
 
 void monstartup(uint32 low_pc, uint32 high_pc) {
     uint8 *cp;
-    uint32 lowpc, highpc;
+    uint32 lowpc, highpc, text_start;
     struct gmonparam *p = &_gmonparam;
-    dprintf("in monstartup)\n");
+
+    dprintf("in monstartup\n");
+
     /*
      * If we don't get proper lowpc and highpc, then
      * we'll try to get them from the elf handle.
      */
     if (low_pc == 0 && high_pc == 0) {
-        mongetpcs(&lowpc, &highpc);
+        mongetpcs(&lowpc, &highpc, &text_start);
     } else {
+        p->text_start = 0x01000074; // Default to our default text segment start
         lowpc = low_pc;
         highpc = high_pc;
     }
+    p->text_start = text_start;
 
     /*
      * Round lowpc and highpc to multiples of the density
@@ -65,12 +188,20 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
      * every instruction is exactly one word wide and always aligned.
      */
     p->kcountsize = p->textsize / HISTFRACTION;
+    p->log_hashfraction = -1;
 
     /*
      * The hash table size
      */
     p->hashfraction = HASHFRACTION;
-    p->fromssize = p->textsize / p->hashfraction;
+
+    /* The following test must be kept in sync with the corresponding test in _mcount.c.  */
+    if ((HASHFRACTION & (HASHFRACTION - 1)) == 0) {
+        /* if HASHFRACTION is a power of two, mcount can use shifting
+       instead of integer division.  Precompute shift amount. */
+        p->log_hashfraction = ffs(p->hashfraction * sizeof(*p->froms)) - 1;
+    }
+    p->fromssize = p->textsize / HASHFRACTION;
 
     p->tolimit = p->textsize * ARCDENSITY / 100;
     if (p->tolimit < MINARCS)
@@ -80,7 +211,9 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
 
     p->tossize = p->tolimit * sizeof(struct tostruct);
 
-    dprintf("lowpc = %p, highpc = %p\n", lowpc, highpc);
+    dprintf("lowpc = %p\n", lowpc);
+    dprintf("highpc = %p\n", highpc);
+    dprintf("text_start = %p\n", p->text_start);
     dprintf("textsize = %d\n", p->textsize);
     dprintf("kcountsize = %d\n", p->kcountsize);
     dprintf("fromssize = %d\n", p->fromssize);
@@ -92,31 +225,35 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
         return;
     }
 
-    p->memory = cp;
     p->tos = (struct tostruct *) cp;
     cp += p->tossize;
 
-    p->kcount = (uint16 *) cp;
+    p->kcount = (HISTCOUNTER *) cp;
     cp += p->kcountsize;
 
-    p->froms = (uint16 *) cp;
+    p->froms = (ARCINDEX *) cp;
 
     p->tos[0].link = 0;
 
     /* Verify granularity for sampling */
-    if (p->kcountsize < p->textsize)
+    if (p->kcountsize < p->textsize) {
         /* FIXME Avoid floating point */
         s_scale = ((float) p->kcountsize / p->textsize) * SCALE_1_TO_1;
+    }
     else
         s_scale = SCALE_1_TO_1;
 
     s_scale >>= 1;
-    dprintf("Enabling monitor\n");
+    dprintf("Enabling monitor: Scale = %d\n", s_scale);
     moncontrol(1);
 }
 
 void moncontrol(int mode) {
     struct gmonparam *p = &_gmonparam;
+
+    /* Don't change the state if we ran into an error.  */
+    if (p->state == kGmonProfError)
+        return;
 
     if (mode) {
         /* Start profiling. */
@@ -130,76 +267,62 @@ void moncontrol(int mode) {
 }
 
 void moncleanup(void) {
-    BPTR fd;
-    int fromindex;
-    int endfrom;
-    uint32 frompc;
-    int toindex;
-    struct rawarc rawarc;
+    int fd;
     struct gmonparam *p = &_gmonparam;
-    struct gmonhdr gmonhdr, *hdr;
-#ifdef DEBUG
-    FILE *log;
-#endif
 
     moncontrol(0);
 
     if (p->state == kGmonProfError) {
         fprintf(stderr, "WARNING: Overflow during profiling\n");
+        goto out;
     }
 
-    fd = Open("gmon.out", MODE_NEWFILE);
-    if (!fd) {
-        fprintf(stderr, "ERROR: could not open gmon.out\n");
-        return;
-    }
-
-    hdr = (struct gmonhdr *) &gmonhdr;
-
-    hdr->lpc = 0; //p->lowpc;
-    hdr->hpc = p->highpc - p->lowpc;
-    hdr->ncnt = (int) p->kcountsize + sizeof(gmonhdr);
-    hdr->version = GMONVERSION;
-    hdr->profrate = 100; //FIXME:!!
-
-    Write(fd, hdr, sizeof(*hdr));
-    Write(fd, p->kcount, p->kcountsize);
-
-    endfrom = p->fromssize / sizeof(*p->froms);
-
-#ifdef DEBUG
-    log = fopen("gmon.log", "w");
-#endif
-
-    for (fromindex = 0; fromindex < endfrom; fromindex++) {
-        if (p->froms[fromindex] == 0)
-            continue;
-
-        frompc = 0; /* FIXME: was p->lowpc; needs to be 0 and assumes -Ttext=0 on compile. Better idea? */
-        frompc += fromindex * p->hashfraction * sizeof(*p->froms);
-        for (toindex = p->froms[fromindex]; toindex != 0;
-             toindex = p->tos[toindex].link) {
-#ifdef DEBUG
-            if (log)
-                fprintf(log, "%p called from %p: %d times\n", frompc,
-                        p->tos[toindex].selfpc,
-                        p->tos[toindex].count);
-#endif
-            rawarc.raw_frompc = frompc;
-            rawarc.raw_selfpc = p->tos[toindex].selfpc;
-            rawarc.raw_count = p->tos[toindex].count;
-            Write(fd, &rawarc, sizeof(rawarc));
+    if (_gmonparam.kcountsize > 0) {
+        fd = open("gmon.out", O_CREAT | O_TRUNC | O_WRONLY);
+        if (!fd) {
+            fprintf(stderr, "ERROR: could not open gmon.out\n");
+            goto out;
         }
+
+        /* write gmon.out header: */
+        struct real_gmon_hdr {
+            char cookie[4];
+            int32_t version;
+            char spare[3 * 4];
+        } ghdr;
+
+        if (
+            sizeof(ghdr) != sizeof(struct gmon_hdr) ||
+            (offsetof(struct real_gmon_hdr, cookie) != offsetof(struct gmon_hdr, cookie)) ||
+            (offsetof(struct real_gmon_hdr, version) != offsetof(struct gmon_hdr, version))) {
+                goto out;
+        }
+
+        memcpy(&ghdr.cookie[0], GMON_MAGIC, sizeof(ghdr.cookie));
+        ghdr.version = GMON_VERSION;
+        memset(ghdr.spare, '\0', sizeof(ghdr.spare));
+        write(fd, &ghdr, sizeof(struct gmon_hdr));
+
+        /* write PC histogram: */
+        write_hist(fd);
+
+        /* write call-graph: */
+        write_call_graph(fd);
+
+        /* write basic-block execution counts: */
+        write_bb_counts(fd);
+
+        close(fd);
+    }
+out:
+    if (p->tos) {
+        FreeVec(p->tos);
+        p->tos = NULL;
     }
 
-#ifdef DEBUG
-    if (log)
-        fclose(log);
-#endif
-    Close(fd);
 }
 
-void mongetpcs(uint32 *lowpc, uint32 *highpc) {
+void mongetpcs(uint32 *lowpc, uint32 *highpc, uint32 *text_start) {
     struct Library *ElfBase = NULL;
     struct ElfIFace *IElf = NULL;
     struct Process *self;
@@ -224,7 +347,7 @@ void mongetpcs(uint32 *lowpc, uint32 *highpc) {
     seglist = GetProcSegList(self, GPSLF_CLI | GPSLF_SEG);
 
     GetSegListInfoTags(seglist, GSLI_ElfHandle, &elfHandle, TAG_DONE);
-    elfHandle = OpenElfTags(OET_ElfHandle, elfHandle, TAG_DONE);
+    elfHandle = OpenElfTags(OET_ElfHandle, elfHandle, OET_ReadOnlyCopy, TRUE, TAG_DONE);
 
     if (!elfHandle)
         goto out;
@@ -237,6 +360,7 @@ void mongetpcs(uint32 *lowpc, uint32 *highpc) {
             uint32 base = (uint32) GetSectionTags(elfHandle, GST_SectionIndex, i, TAG_DONE);
             *lowpc = base;
             *highpc = base + shdr->sh_size;
+            *text_start = shdr->sh_addr;
             break;
         }
     }
