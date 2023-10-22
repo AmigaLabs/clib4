@@ -47,7 +47,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
-#ifdef __CLIB2__
+#ifdef __CLIB4__
 #include <endian.h>
 #else
 #include <machine/endian.h>

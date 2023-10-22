@@ -66,7 +66,7 @@
 
 // Main entry points.
 
-.align 	5
+    .align 	5
     .global bcopy_g3
 
 bcopy_g3:							// void bcopy(const void *src, void *dst, size_t len)
