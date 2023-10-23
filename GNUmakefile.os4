@@ -24,7 +24,6 @@
 UNAME := $(shell uname)
 
 INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib4
-SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
 
 CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
@@ -33,6 +32,18 @@ RANLIB := ppc-amigaos-ranlib
 STRIP := ppc-amigaos-strip
 RANLIB := ppc-amigaos-ranlib
 HOST_CXX := g++
+
+# Check that there is the required cross compiler on the path
+CC_LOC=$(shell which $(CC))
+ifeq ($(CC_LOC),)
+$(error Required cross compiler not found. Expected 'ppc-amigaos-gcc' to be found on the PATH)
+else
+# The only header files we need are the SDK ones
+SDK_INCLUDE ?= $(addsuffix ../ppc-amigaos/SDK/include/include_h/,$(dir $(CC_LOC)))
+ifeq ($(realpath $(SDK_INCLUDE)),)
+$(error Required AmigaOS SDK files not found. Expected directory '$(SDK_INCLUDE)' to exist)
+endif
+endif
 
 # On AmigaOS use native commands
 ifeq ($(UNAME), AmigaOS)
@@ -101,7 +112,8 @@ SHARED   := $(if $(SHARED),$(SHARED),yes)
 STATIC   := $(if $(STATIC),$(STATIC),yes)
 
 LARGEDATA :=
-OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe
+OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe \
+		-nostdinc -nostartfiles -nostdlib
 OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -ffp-contract=fast -mstrict-align
 
 STABS :=
@@ -211,7 +223,7 @@ version:
 # Shared clib4.library rules
 
 clib4.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
 
 clib4.library: clib4.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
