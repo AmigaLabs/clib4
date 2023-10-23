@@ -1,5 +1,5 @@
 /*
- * $Id: profile_profil.c,v 1.0 2021-01-21 10:08:32 clib4devs Exp $
+ * $Id: profile_profil.c,v 1.1 2023-10-20 10:08:32 clib4devs Exp $
 */
 
 #include <proto/exec.h>
@@ -7,6 +7,10 @@
 #include <interfaces/performancemonitor.h>
 #include <resources/performancemonitor.h>
 #include <unistd.h>
+
+#include "gmon.h"
+
+#define COUNTER 1
 
 static struct Interrupt CounterInt;
 static struct PerformanceMonitorIFace *IPM;
@@ -25,25 +29,20 @@ uint32 CounterIntFn(struct ExceptionContext *, struct ExecBase *, struct IntData
 
 uint32
 GetCounterStart(void) {
-    uint64 fsb;
+    uint64 tb;
     double bit0time;
     uint32 count;
 
-    GetCPUInfoTags(
-            GCIT_FrontsideSpeed, &fsb,
-            TAG_DONE);
+    GetCPUInfoTags(GCIT_TimeBaseSpeed,	&tb, TAG_DONE);
 
-    /* Timebase ticks at 1/4 of FSB */
-    bit0time = (double) 8.0 / (double) fsb;
-    count = (uint32)((double) 0.01 / bit0time);
+    count = (uint32) (tb / (2 * 100 + 1));
 
-    return 0x80000000 - count;
+    return (uint32) (-count);
 }
 
 uint32
 CounterIntFn(struct ExceptionContext *ctx, struct ExecBase *ExecBase, struct IntData *profileData) {
-    APTR sampledAddress = profileData->IPM->GetSampledAddress();
-    uint32 sia = (uint32) sampledAddress;
+    uint32 sia = (uint32) ctx->ip;
 
     /* Silence compiler */
     (void) ExecBase;
@@ -71,15 +70,17 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
          * A pointer to PerformanceMonitorIFace is never obtained, and the call to IPM->EventControlTags() when buffer == 0 attempts to dereference a NULL pointer
          * https://sourceforge.net/p/clib2/bugs/54/
          */
-        if (!IPM)
+        if (!IPM) {
+            dprintf("Cannot obtain Performance Monitor interface \n");
             return 0;
+        }
 
         Stack = SuperState();
         IPM->EventControlTags(
                 PMECT_Disable, PMEC_MasterInterrupt,
                 TAG_DONE);
 
-        IPM->SetInterruptVector(1, 0);
+        IPM->SetInterruptVector(COUNTER, 0);
 
         IPM->Unmark(0);
         IPM->Release();
@@ -111,10 +112,13 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
 
     /* Prepare Performance Monitor */
     IPM->MonitorControlTags(
-            PMMCT_FreezeCounters, PMMC_Unmarked,
-            PMMCT_RTCBitSelect, PMMC_BIT0,
+            PMMCT_FreezeCounters,   PMMC_Unmarked,
+            PMMCT_RTCBitSelect,     PMMC_BIT0,
             TAG_DONE);
-    IPM->CounterControl(1, ProfileData.CounterStart, PMCI_Transition);
+
+    if (!IPM->CounterControl(COUNTER, ProfileData.CounterStart, PMCI_Transition)) {
+        dprintf("Cannot set CounterControl\n");
+    }
 
     IPM->EventControlTags(
             PMECT_Enable, 1,
@@ -122,6 +126,7 @@ profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale
             TAG_DONE);
 
     IPM->Mark(0);
+    IPM->Release();
 
     if (Stack)
         UserState(Stack);

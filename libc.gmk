@@ -952,6 +952,10 @@ C_LIBRARY := \
 
 C_LIB := \
 	c.lib_rev.o \
+	profile/_mcount.o \
+	profile/profil.o \
+	profile/gmon.o \
+	profile/mcount.o \
 	shared_library/stubs.o \
 	unistd/getopt.o \
 	unistd/getopt_long.o \
@@ -985,6 +989,11 @@ $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 endif
+
+$(OUT_STATIC)/profile/%.o : $(LIB_DIR)/profile/%.S
+	$(VERBOSE)$(COMPILE_REG)
+$(OUT_SHARED)/profile/%.o : $(LIB_DIR)/profile/%.S
+	$(VERBOSE)$(COMPILE_REG)
 
 $(OUTPUT_LIB)/libc.a : $(SOURCES_STATIC)
 	$(VERBOSE)@$(MAKELIB)

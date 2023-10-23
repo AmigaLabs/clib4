@@ -1,4 +1,4 @@
- C runtime library for AmigaOS4
+# Clib4 - C runtime library for AmigaOS4
 
 [![Build Status](https://travis-ci.com/afxgroup/clib2.svg?branch=master)](https://travis-ci.org/afxgroup/clib2)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
@@ -13,7 +13,7 @@ useless share code that most probably no one will use.
 Te goal is to try to make it <a href="POSIX.md">POSIX</a> compliant and fix also all C++ problems we have with newer
 compilers.
 All warnings (except really few one) produced by GCC 10 and above are now gone.  
-All **deprecated** OS4 functions are replaced by modern one (except for StackSwap i don't find the replacement)
+All **deprecated** OS4 functions are replaced by modern OS4 one
 
 For the original README follow this <a href="https://github.com/adtools/clib2">link</a>
 
@@ -42,9 +42,9 @@ If you want to use `dlopen`/`dlsym` with shared objects:
 
 The plain `libc.a` now contains also `libnet.a`, `libunix.a`. Socket support and floating point support are always
 enabled.  
-Soft float version is no longer available.
+Soft float version is not available (at moment).
 
-Clib4 is thread safe
+Clib4 is always thread safe
 
 If you want to use the shared version of library remember to pack your OS4 software with all clib4 shared objects
 otherwise the elf loader will try to load objects from SOBJS: and it will load newlib one.  
@@ -79,7 +79,7 @@ is gcc8.
 ### Shared objects
 
 Shared objects **are working** also with clib4 (there is an example under test_programs/dlopen folder).
-However shared objects needs the beta elf.library not yet released to public
+However, shared objects needs the beta elf.library not yet released to public
 
 ### Large file support
 
@@ -95,9 +95,8 @@ integrated into clib4 library and doesn't need any external resource
 ### Unix path support
 
 `libunix` doesn't exists anymore but you can enable/disable unix support at any time. By default, unix support is
-disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use *
-*enableUnixPaths()** function in your software.  
-You can also disable it at runtime using **disableUnixPaths()**. However is not recommended to enable and disable it at
+disabled. If you want to enable it at runtime you can create a `.unix` file inside the exe directory or use **enableUnixPaths()** function in your software.  
+You can also disable it at runtime using **disableUnixPaths()**. However, is not recommended to enable and disable it at
 runtime because you could have problems with internal structures.
 
 ### wchar / wctype
@@ -139,7 +138,7 @@ All mutex* function now use OS4 Mutexes instead of Semaphores
 
 ### librt
 
-aio* functions are present and they are in librt (like on linux). Pthreads are needed to use all aio* functions
+aio* functions are present, and they are in librt (like on linux). Pthreads are needed to use all aio* functions
 
 ### libresolv
 
@@ -150,12 +149,6 @@ And thanks to this library more functions have been added to socket library
 ### libcrypt
 
 Added crypt library that implements crypt and crypt_r
-
-### UNIX sockets (AF_UNIX)
-
-clib4 now supports emulated UNIX sockets. Since roadshow and OS4 doesn't support them natively, UNIX sockets are
-emulated via
-native sockets. The user doesn't need to change anything in the linux code. Everything will be transparent for him
 
 * ##### About salt
 
@@ -193,11 +186,17 @@ About the security of the hash algorithm DES<MD5<SHA-256<SHA-512 And, the larger
 
 Use `-lcrypt` option when linking.
 
+### UNIX sockets (AF_UNIX)
+
+clib4 now supports emulated UNIX sockets. Since roadshow and OS4 doesn't support them natively, UNIX sockets are
+emulated via
+native sockets. The user doesn't need to change anything in the linux code. Everything will be transparent.
+
 ### Debug
 
 To use `debug` functions you have to explicitly pass `DEBUG=true` to GNUMakefile.os4 and
 debug functions will be enabled
-If you want to use `gstabs` to non debug version of library you can use the flag `STABS=-gstabs` to GNUMakefile
+If you want to use `gstabs` to non debug version of library you can use the flag `STABS=-gstabs` to GNUMakefile.
 
 ### Misc
 

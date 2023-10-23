@@ -1149,5 +1149,4 @@ static void *clib4Vectors[] = {
         (void *) (fts_open),                              /* 4316 */
         (void *) (fts_read),                              /* 4320 */
         (void *) (fts_set),                               /* 4324 */
-
 };
