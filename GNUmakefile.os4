@@ -39,7 +39,7 @@ ifeq ($(CC_LOC),)
 $(error Required cross compiler not found. Expected 'ppc-amigaos-gcc' to be found on the PATH)
 else
 # The only header files we need are the SDK ones
-SDK_INCLUDE ?= $(addsuffix ../ppc-amigaos/SDK/include/include_h/,$(dir $(CC_LOC)))
+SDK_INCLUDE ?= $(addsuffix ../ppc-amigaos/SDK/include/,$(dir $(CC_LOC)))
 ifeq ($(realpath $(SDK_INCLUDE)),)
 $(error Required AmigaOS SDK files not found. Expected directory '$(SDK_INCLUDE)' to exist)
 endif
@@ -80,7 +80,8 @@ PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
 				-Ilibrary \
                 -I$(LIB_DIR)/external/include \
-				-I$(SDK_INCLUDE) \
+				-I$(SDK_INCLUDE)/include_h \
+				-I$(SDK_INCLUDE)/netinclude \
 				-I$(LIB_DIR)/amiga \
 				-I$(LIB_DIR)/argz \
 				-I$(LIB_DIR)/ctype \
