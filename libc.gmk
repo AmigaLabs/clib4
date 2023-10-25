@@ -284,8 +284,6 @@ C_SOCKET := \
 	socket/hstrerror.o \
 	socket/if_indextoname.o \
 	socket/if_nametoindex.o \
-	socket/in6addr_any.o \
-	socket/in6addr_loopback.o \
 	socket/inet_addr.o \
 	socket/inet_aton.o \
 	socket/inet_lnaof.o \
@@ -960,7 +958,9 @@ C_LIB := \
 	profile/mcount.o \
 	shared_library/stubs.o \
 	unistd/getopt.o \
-	unistd/getopt_long.o
+	unistd/getopt_long.o \
+	socket/in6addr_any.o \
+	socket/in6addr_loopback.o \
 
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(C_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))

@@ -7,7 +7,8 @@
 
 ##############################################################################
 
-.PHONY : all all-targets clean version release dpkg
+.PHONY : all prepare all-targets all-libs clean \
+	version compile-tests install release dpkg 
 
 # You may have to change the following sets of macro definitions which will
 # be used throughout the build makefile. These definitions cover the paths
@@ -24,7 +25,6 @@
 UNAME := $(shell uname)
 
 INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib4
-SDK_INCLUDE ?= /usr/ppc-amigaos/SDK/include
 
 CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q
@@ -33,6 +33,7 @@ RANLIB := ppc-amigaos-ranlib
 STRIP := ppc-amigaos-strip
 RANLIB := ppc-amigaos-ranlib
 HOST_CXX := g++
+SDK_INCLUDE ?= $(abspath $(addsuffix ../ppc-amigaos/SDK/include/,$(dir $(shell which $(word 1,$(CC))))))
 
 # On AmigaOS use native commands
 ifeq ($(UNAME), AmigaOS)
@@ -69,7 +70,8 @@ PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
 				-Ilibrary \
                 -I$(LIB_DIR)/external/include \
-				-I$(SDK_INCLUDE) \
+				-I$(SDK_INCLUDE)/include_h \
+				-I$(SDK_INCLUDE)/netinclude \
 				-I$(LIB_DIR)/amiga \
 				-I$(LIB_DIR)/argz \
 				-I$(LIB_DIR)/ctype \
@@ -101,7 +103,8 @@ SHARED   := $(if $(SHARED),$(SHARED),yes)
 STATIC   := $(if $(STATIC),$(STATIC),yes)
 
 LARGEDATA :=
-OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe
+OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe \
+		-nostdinc -nostartfiles -nostdlib
 OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -ffp-contract=fast -mstrict-align
 
 STABS :=
@@ -158,6 +161,20 @@ prepare:
 	-$(MAKEDIR) $(BUILD_DIR)/shared
 	-$(MAKEDIR) $(INSTALL_PREFIX)/lib
 	-$(MAKEDIR) $(INSTALL_PREFIX)/include
+# It may be the case that this makefile is invoked with an explicit CC
+# assingment such as: "gcc -B /someDir/". In fact, this pattern is used within
+# ADTOOLS - for that reason we take the first word and apply which on that,
+# otherwise the extraneous options will cause a failure
+	$(VERBOSE)which $(word 1,$(CC)); \
+		if [ $$? -ne 0 ]; \
+		then \
+			echo "Could not locate cross compiler: '$(CC)'" 1>&2; \
+			exit 1; \
+		elif [ ! -d $(SDK_INCLUDE) ]; \
+		then \
+			echo "Could not locate SDK include folder: '$(SDK_INCLUDE)'" 1>&2; \
+			exit 1 ; \
+		fi
 
 ALL_TARGETS = \
 	$(OUTPUT_LIB)/crt0.o \
@@ -211,7 +228,7 @@ version:
 # Shared clib4.library rules
 
 clib4.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map -nostartfiles -nostdlib
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
 
 clib4.library: clib4.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
