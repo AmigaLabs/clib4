@@ -161,7 +161,11 @@ prepare:
 	-$(MAKEDIR) $(BUILD_DIR)/shared
 	-$(MAKEDIR) $(INSTALL_PREFIX)/lib
 	-$(MAKEDIR) $(INSTALL_PREFIX)/include
-	$(VERBOSE)which $(CC); \
+# It may be the case that this makefile is invoked with an explicit CC
+# assingment such as: "gcc -B /someDir/". In fact, this pattern is used within
+# ADTOOLS - for that reason we take the first word and apply which on that,
+# otherwise the extraneous options will cause a failure
+	$(VERBOSE)which $(word 1,$(CC)); \
 		if [ $$? -ne 0 ]; \
 		then \
 			echo "Could not locate cross compiler: '$(CC)'" 1>&2; \
