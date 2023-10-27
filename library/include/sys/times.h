@@ -5,6 +5,8 @@
 
 __BEGIN_DECLS
 
+#include <sys/types.h>
+
 /* Structure describing CPU time used by a process and its children.  */
 struct tms
 {

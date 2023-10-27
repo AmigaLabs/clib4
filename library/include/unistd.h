@@ -11,10 +11,6 @@
 #include <fcntl.h>
 #endif /* _FCNTL_H */
 
-#ifndef _STDIO_H
-#include <stdio.h>
-#endif /* _STDIO_H */
-
 #ifndef _STDINT_H
 #include <stdint.h>
 #endif /* _STDINT_H */
