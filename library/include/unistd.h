@@ -15,8 +15,6 @@
 #include <stdint.h>
 #endif /* _STDINT_H */
 
-#include <sys/select.h>
-
 __BEGIN_DECLS
 
 #define STDIN_FILENO	0

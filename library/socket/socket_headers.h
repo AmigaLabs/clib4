@@ -53,6 +53,10 @@
 #include <sys/un.h>
 #endif
 
+#ifndef _SYS_SELECT_H
+#include <sys/select.h>
+#endif
+
 #ifndef _CLIB4_H
 #include <shared_library/clib4.h>
 #endif

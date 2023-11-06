@@ -88,8 +88,13 @@ extern float ynf(int n, float x);
 /* HUGE_VALL is a 'long double' Infinity.  */
 #define HUGE_VALL (1.0L / 0.0L)
 
-#define INFINITY ((const float) __CLIB4->__infinity)
-#define NAN ((const float) __CLIB4->__nan)
+# ifndef INFINITY
+#  define INFINITY (__builtin_inff())
+# endif
+
+# ifndef NAN
+#  define NAN (__builtin_nanf(""))
+# endif
 
 #define FP_INFINITE     0x01   /* -/+ infinity */
 #define FP_NAN          0x02   /* not a number */

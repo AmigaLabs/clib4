@@ -9,6 +9,7 @@
 #include <proto/dos.h>
 #include <proto/elf.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <macros.h>
 #include <sys/uio.h>
