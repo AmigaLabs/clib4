@@ -13,8 +13,6 @@ __BEGIN_DECLS
 #include <stdlib.h>
 #endif /* _STDLIB_H */
 
-#include <dos.h>
-
 /* Natural log of 2 */
 #define _M_LN2        (double) 0.693147180559945309417
 
