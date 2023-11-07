@@ -6,12 +6,7 @@
 #define _SIGNAL_H
 
 #include <features.h>
-
-#ifdef __cplusplus
-#ifdef __USE_AMIGAOS_NAMESPACE__
-#define pthread_attr_t AmigaOS::pthread_attr_t
-#endif
-#endif
+#include <pthread.h>
 
 __BEGIN_DECLS
 
