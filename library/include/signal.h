@@ -6,7 +6,6 @@
 #define _SIGNAL_H
 
 #include <features.h>
-#include <pthread.h>
 
 __BEGIN_DECLS
 

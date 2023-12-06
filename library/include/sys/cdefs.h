@@ -23,13 +23,21 @@
 #define __flexarr [0]
 
 #ifdef __cplusplus
-#define __BEGIN_DECLS \
-	extern "C"        \
-	{
-#define __END_DECLS }
+    #ifdef __USE_AMIGAOS_NAMESPACE__
+        #define __BEGIN_DECLS \
+        namespace AmigaOS {   \
+            extern "C"        \
+            {
+        #define __END_DECLS } }
+    #else
+        #define __BEGIN_DECLS \
+            extern "C"        \
+            {
+        #define __END_DECLS }
+    #endif
 #else
-#define __BEGIN_DECLS
-#define __END_DECLS
+    #define __BEGIN_DECLS
+    #define __END_DECLS
 #endif
 
 #ifndef __BOUNDED_POINTERS__

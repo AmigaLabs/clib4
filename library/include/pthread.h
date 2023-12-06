@@ -31,12 +31,7 @@
 #include <sched.h>
 #include <features.h>
 
-#ifdef __cplusplus
-#ifdef __USE_AMIGAOS_NAMESPACE__
-namespace AmigaOS {
-#endif
-extern "C" {
-#endif
+__BEGIN_DECLS
 
 //
 // POSIX options
@@ -414,11 +409,6 @@ extern void pthread_cleanup_pop(int execute);
 
 extern int pthread_kill(pthread_t thread, int sig);
 
-#ifdef __cplusplus
-}
-#ifdef __USE_AMIGAOS_NAMESPACE__
-}
-#endif
-#endif
+__END_DECLS
 
 #endif
