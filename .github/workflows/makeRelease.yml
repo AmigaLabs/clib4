@@ -45,7 +45,30 @@ jobs:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: /opt/code/clib4_${{ github.event.release.tag_name }}_amd64.deb
           asset_name: clib4_${{ github.event.release.tag_name }}_amd64.deb
-          asset_content_type: application/vnd.debian.binary-package
+          asset_content_type: application/vnd.debian.binary-pac
+      - name: Upload DEB file to the server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEBSERVER_HOST }}
+          username: ${{ secrets.DEBSERVER_USERNAME }}
+          port: ${{ secrets.DEBSERVER_PORT }}
+          key: ${{ secrets.DEBSERVER_PRIVATE_KEY }}
+          source: "clib4_${{ github.event.release.tag_name }}_amd64.deb"
+          target: /opt/
+      # - name: Prepare OS4Depot release
+      #   run: |
+      #     mkdir os4depot-release
+      #     cp clib4-${{ github.event.release.tag_name }}.lha ./os4depot-release/clib4.lha
+      #     cp ./os4depot.readme ./os4depot-release/clib4_lha.readme
+      #     sed -i "s/VERSION_TAG/${{ github.event.release.tag_name }}/" ./os4depot-release/os4depot.readme
+      #     sed -i "s/OS4DEPOT_PASSPHRASE/${{ secrets.OS4DEPOT_PASSPHRASE }}/" ./os4depot-release/os4depot.readme
       # - name: Release on OS4Depot
-      # - name: Release on Aminet
+      #   uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      #   with:
+      #     server: os4depot.net
+      #     port: 21
+      #     username: ftp
+      #     password: 
+      #     server-dir: ./upload
+      #     local-dir: /opt/code/os4depot-release/
       # - name: Release on Ubuntu apt server
