@@ -1,4 +1,4 @@
-Aname: PR build - checking the build
+Aname: Pull request build
 on:
   push:
   pull_request:

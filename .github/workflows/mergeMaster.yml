@@ -1,9 +1,8 @@
-name: Build with Docker
+name: Push to master build
 on:
   push:
     branches:
       - master
-      - actions-cicd
   pull_request:
   workflow_dispatch:
 
