@@ -1,4 +1,4 @@
-Aname: Build with Docker
+Aname: PR build - checking the build
 on:
   push:
   pull_request:
