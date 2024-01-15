@@ -55,7 +55,7 @@ LIB_ROOT ?= $(shell pwd)
 LIB_DIR = $(LIB_ROOT)/library
 BUILD_DIR = $(LIB_ROOT)/build
 OUTPUT_LIB = $(BUILD_DIR)/lib
-DPKG_LIB = clib4_1.0_amd64
+DPKG_LIB ?= clib4_1.0_amd64
 
 ##############################################################################
 
