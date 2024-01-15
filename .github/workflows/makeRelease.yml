@@ -1,6 +1,8 @@
 name: Make a new release
 on:
   release:
+    branches:
+      - master
     types: 
       - published
 
