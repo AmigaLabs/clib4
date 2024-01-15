@@ -21,11 +21,14 @@ jobs:
         run: |
           cd /opt/code && \
           make -j1 -f GNUmakefile.os4 OS=os4 SHARED=no
-      - name: Create the release archive
+      - name: Create the LHA release archive
         run: |
           make -f GNUmakefile.os4 release && \
           mv clib4.lha clib4-${{ github.event.release.tag_name }}.lha
-      - name: Upload Release Asset
+      - name: Create the DEB release archive
+        run: |
+          make -f GNUmakefile.os4 dpkg DPKG_LIB=clib4_${{ github.event.release.tag_name }}_amd64
+      - name: Upload LHA release file in GitHub
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,7 +37,15 @@ jobs:
           asset_path: /opt/code/clib4-${{ github.event.release.tag_name }}.lha
           asset_name: clib4-${{ github.event.release.tag_name }}.lha
           asset_content_type: application/x-lzh-compressed
+      - name: Upload DEB release file in GitHub
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: /opt/code/clib4_${{ github.event.release.tag_name }}_amd64.deb
+          asset_name: clib4_${{ github.event.release.tag_name }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
       # - name: Release on OS4Depot
       # - name: Release on Aminet
-      # - name: Prepare Ubuntu apt packages
       # - name: Release on Ubuntu apt server
