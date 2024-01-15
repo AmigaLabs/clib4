@@ -1,4 +1,4 @@
-Aname: Pull request build
+name: Pull request build
 on:
   push:
   pull_request:
