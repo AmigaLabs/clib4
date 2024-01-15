@@ -16,7 +16,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Pull code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Compile clib4
         run: |
           cd /opt/code && \

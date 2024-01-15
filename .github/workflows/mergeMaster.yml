@@ -1,13 +1,14 @@
-name: Push to master build
+name: Merge into master build
 on:
-  push:
+  pull_request:
     branches:
       - master
-  pull_request:
-  workflow_dispatch:
+    types:
+      - closed
 
 jobs:
-  run:
+  run_if_merged:
+    if: github.event.pull_request.merged == true
     name: Build latest code
     runs-on: ubuntu-latest
     container:
@@ -16,7 +17,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Pull code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Compile clib4
         run: |
           cd /opt/code && \

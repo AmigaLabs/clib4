@@ -1,4 +1,4 @@
-Aname: Pull request build
+name: Pull request build
 on:
   push:
   pull_request:
@@ -19,7 +19,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Pull code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Compile clib4
         run: |
           cd /opt/code && \
