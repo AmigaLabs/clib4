@@ -1,0 +1,28 @@
+name: clib4
+description: clib4 library
+version: VERSION_TAG
+author: Andrea Palmatè
+submitter: Andrea Palmatè
+email: andrea@amigasoft.net
+url: https://github.com/AmigaLabs/clib4
+category: development/library/misc
+replaces: development/library/misc/clib4.lha
+requirements: adtools
+license: BSD
+minosversion: 4.1
+distribute: yes
+passphrase: OS4DEPOT_PASSPHRASE
+hend:
+This is a fork of official clib2 present in adtools. The point of this
+library is to make it Amiga OS4 only to maintain it easily and add all the
+missing clib2 features that are difficult to add also on classic Amigas.
+Classic Amigas has also ixemul that is the most complete, POSIX compliant,
+library we have. It is a useless share code that most probably no one will
+use. The goal is to try to make it POSIX compliant and fix also all the C++
+problems we have with newer compilers. All warnings (except really few ones)
+produced by GCC 10 and above are now gone.
+
+All deprecated OS4 functions are replaced by modern OS4 one.
+
+If you find any issue, please let us know at:
+https://github.com/AmigaLabs/clib4/issues
