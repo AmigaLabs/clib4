@@ -9,8 +9,6 @@
 
 #include <stddef.h>
 #include <stdio.h>
-#include <exec/lists.h>
-#include <exec/nodes.h>
 
 #define SIZE_ALIGN (4 * sizeof(size_t))
 #define SIZE_MASK (-SIZE_ALIGN)
