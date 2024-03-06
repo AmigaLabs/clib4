@@ -6,6 +6,38 @@
 #include "pthread.h"
 #include <sys/time.h>
 
+struct pthread_mutex {
+    APTR mutex;
+    int kind;
+    int incond;
+    struct Task *owner;
+};
+
+struct pthread_cond {
+    int pad1;
+    struct SignalSemaphore semaphore;
+    struct MinList waiters;
+};
+
+struct pthread_barrier {
+    unsigned int curr_height;
+    unsigned int total_height;
+    pthread_cond_t breeched;
+    pthread_mutex_t lock;
+};
+
+struct pthread_rwlock {
+    struct SignalSemaphore semaphore;
+};
+
+struct sema {
+    struct Node node;
+    int value;
+    int waiters_count;
+    pthread_mutex_t lock;
+    pthread_cond_t count_nonzero;
+};
+
 #undef NEWLIST
 #define NEWLIST(_l)                                     \
 do                                                      \

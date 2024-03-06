@@ -40,14 +40,7 @@
 #undef SEM_FAILED
 #define SEM_FAILED ((sem_t *)(-1))
 
-struct sema
-{
-    struct Node node;
-    int value;
-    int waiters_count;
-    pthread_mutex_t lock;
-    pthread_cond_t count_nonzero;
-};
+struct sema;
 
 typedef struct sema sem_t;
 
