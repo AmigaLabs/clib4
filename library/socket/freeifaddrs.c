@@ -14,8 +14,7 @@
 #include <net/if.h>
 
 void
-freeifaddrs(struct ifaddrs *ifap)
-{
+freeifaddrs(struct ifaddrs *ifap) {
     struct ifaddrs *c, *n;
 
     c = ifap;

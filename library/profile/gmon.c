@@ -9,6 +9,7 @@
 #include <proto/dos.h>
 #include <proto/elf.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <macros.h>
 #include <sys/uio.h>
@@ -156,6 +157,7 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
     uint8 *cp;
     uint32 lowpc, highpc, text_start;
     struct gmonparam *p = &_gmonparam;
+    int o;
 
     dprintf("in monstartup\n");
 
@@ -236,9 +238,19 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
     p->tos[0].link = 0;
 
     /* Verify granularity for sampling */
-    if (p->kcountsize < p->textsize) {
-        /* FIXME Avoid floating point */
-        s_scale = ((float) p->kcountsize / p->textsize) * SCALE_1_TO_1;
+    o = p->highpc - p->lowpc;
+    if (p->kcountsize < (u_long) o) {
+        /* avoid floating point operations */
+        int quot = o / p->kcountsize;
+
+        if (quot >= 0x10000)
+            s_scale = 1;
+        else if (quot >= 0x100)
+            s_scale = 0x10000 / quot;
+        else if (o >= 0x800000)
+            s_scale = 0x1000000 / (o / (p->kcountsize >> 8));
+        else
+            s_scale = 0x1000000 / ((o << 8) / p->kcountsize);
     }
     else
         s_scale = SCALE_1_TO_1;

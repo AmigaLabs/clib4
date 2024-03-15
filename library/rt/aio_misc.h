@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include "../pthread/common.h"
 #include "clist.h"
 
 /* Used by aio functions */

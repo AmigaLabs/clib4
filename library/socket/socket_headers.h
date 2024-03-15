@@ -46,11 +46,15 @@
 #endif /* _STDLIB_HEADERS_H */
 
 #ifndef _SYSLOG_H
-#include <syslog.h>
+#include <sys/syslog.h>
 #endif
 
 #ifndef _UN_H
 #include <sys/un.h>
+#endif
+
+#ifndef _SYS_SELECT_H
+#include <sys/select.h>
 #endif
 
 #ifndef _CLIB4_H

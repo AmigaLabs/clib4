@@ -1088,3 +1088,7 @@ Clib4Call(fts_close, 4312);
 Clib4Call(fts_open, 4316);
 Clib4Call(fts_read, 4320);
 Clib4Call(fts_set, 4324);
+
+Clib4Call(__stdin, 4328);
+Clib4Call(__stdout, 4332);
+Clib4Call(__stderr, 4336);

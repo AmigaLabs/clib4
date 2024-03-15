@@ -65,15 +65,20 @@ ifaddrs_add(struct ifawrap *ifawrap, char *name, unsigned int flags,
 
     if ((new = malloc(nsize)) == NULL)
         return -1; /* let caller free already allocated data */
-    if (ifawrap->ifaddrs == NULL)
+
+    if (ifawrap->ifaddrs == NULL || ifawrap->prev == NULL) {
         ifawrap->ifaddrs = new;
-    else
+    }
+    else {
         ifawrap->prev->ifa_next = new;
+    }
+
     ifawrap->prev = new;
 
     new->ifa_next = NULL;
 
     p = (char *) new + nameoff;
+
     strncpy(p, name, namelen - 1);
     p[namelen - 1] = '\0';
     new->ifa_name = p;
@@ -112,13 +117,13 @@ getifaddrs(struct ifaddrs **ifap) {
 
     struct List *netiflist = NULL;
     struct Node *node = NULL;
-    struct ifawrap ifawrap;
+    struct ifawrap _ifawrap, *ifawrap = &_ifawrap;
     size_t addrlen;
+
     DECLARE_SOCKETBASE();
 
-    memset(&ifawrap, 0, sizeof(struct ifawrap));
+    memset(ifawrap, 0, sizeof(*ifawrap));
 
-    ifawrap.ifaddrs = NULL;
     netiflist = ObtainInterfaceList();
     if (netiflist != NULL) {
         node = GetHead(netiflist);
@@ -161,9 +166,9 @@ getifaddrs(struct ifaddrs **ifap) {
                         if (debug == TRUE)
                             flags |= IFF_DEBUG;
 
-                        if (ifaddrs_add(&ifawrap, node->ln_Name, flags, &localAddress, (struct sockaddr*) &netmask, &broadcastAddress, NULL, addrlen) == -1) {
-                            if (ifawrap.ifaddrs != NULL) {
-                                freeifaddrs(ifawrap.ifaddrs);
+                        if (ifaddrs_add(ifawrap, node->ln_Name, flags, &localAddress, (struct sockaddr*) &netmask, &broadcastAddress, NULL, addrlen) == -1) {
+                            if (ifawrap->ifaddrs != NULL) {
+                                freeifaddrs(ifawrap->ifaddrs);
                                 success = -1;
                                 break;
                             }
@@ -179,8 +184,8 @@ getifaddrs(struct ifaddrs **ifap) {
         ReleaseInterfaceList(netiflist);
     }
 
-    if (success == 0 && ifawrap.ifaddrs != NULL)
-        *ifap = ifawrap.ifaddrs;
+    if (success == 0 && ifawrap->ifaddrs != NULL)
+        *ifap = ifawrap->ifaddrs;
 
     __check_abort();
 
