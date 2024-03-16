@@ -47,19 +47,19 @@ jobs:
           asset_path: /opt/code/clib4-${{ github.event.release.tag_name }}_amd64.deb
           asset_name: clib4-${{ github.event.release.tag_name }}_amd64.deb
           asset_content_type: application/vnd.debian.binary-pac
-      - name: Upload DEB release file to the server
-          uses: kostya-ten/ssh-server-deploy@v4
-          with:
-            host: ${{ secrets.DEBSERVER_HOST }}
-            port: ${{ secrets.DEBSERVER_PORT }}
-            username: ${{ secrets.DEBSERVER_USERNAME }}
-            private_key: ${{ secrets.DEBSERVER_PRIVATE_KEY }}
-            scp_source: clib4-${{ github.event.release.tag_name }}_amd64.deb
-            scp_target: /opt/amigarepo/ubuntu/pool/main
-            before_script: |
-              rm /opt/amigarepo/ubuntu/pool/main/clib4*.deb
-            after_script: |
-              /root/regenerate-packages.sh
+      # - name: Upload DEB release file to the server
+      #   uses: kostya-ten/ssh-server-deploy@v4
+      #   with:
+      #     host: ${{ secrets.DEBSERVER_HOST }}
+      #     port: ${{ secrets.DEBSERVER_PORT }}
+      #     username: ${{ secrets.DEBSERVER_USERNAME }}
+      #     private_key: ${{ secrets.DEBSERVER_PRIVATE_KEY }}
+      #     scp_source: clib4-${{ github.event.release.tag_name }}_amd64.deb
+      #     scp_target: /opt/amigarepo/ubuntu/pool/main
+      #     before_script: |
+      #       rm /opt/amigarepo/ubuntu/pool/main/clib4*.deb
+      #     after_script: |
+      #       /root/regenerate-packages.sh
       # - name: Prepare OS4Depot release
       #   run: |
       #     mkdir os4depot-release
