@@ -146,16 +146,16 @@ DATESTR = $(shell date "+%d.%m.%Y")
 # in example v1.2.3
 #
 ifneq ($(origin GITTAG),undefined)
-	MAJOR = $(patsubst v%,%,$(firstword $(subst ., ,$(GITTAG))))
-	MINOR = $(word 2, $(subst ., ,$(GITTAG)))
-	PATCH = $(word 3, $(subst ., ,$(GITTAG)))
+MAJOR = $(patsubst v%,%,$(firstword $(subst ., ,$(GITTAG))))
+MINOR = $(word 2, $(subst ., ,$(GITTAG)))
+PATCH = $(word 3, $(subst ., ,$(GITTAG)))
 endif
 
 ##############################################################################
 
 # This is the first target: it depends on all the targets
 
-all: prepare gitver all-targets all-libs clib4.library.debug clib4.library
+all: gitver prepare all-targets all-libs clib4.library.debug clib4.library
 
 ##############################################################################
 
@@ -201,12 +201,12 @@ ALL_TARGETS = \
 	$(OUTPUT_LIB)/crtend.o \
 	$(OUTPUT_LIB)/shcrtbegin.o \
 	$(OUTPUT_LIB)/shcrtend.o \
-    $(OUT_SHARED_LIB)/shared_library/clib4.o \
-    $(OUT_SHARED_LIB)/shared_library/math.o \
+	$(OUT_SHARED_LIB)/shared_library/clib4.o \
+	$(OUT_SHARED_LIB)/shared_library/math.o \
 	$(MAIN_LIB)
 
 ifdef SPE
-    ALL_TARGETS := PatchForSPE | $(ALL_TARGETS)
+	ALL_TARGETS := PatchForSPE | $(ALL_TARGETS)
 endif
 
 all-targets: $(ALL_TARGETS)
@@ -236,10 +236,10 @@ gitver:
 	sed -i 's/[(]\([0-9]*\.[0-9]*\.[0-9]*\)[)]/($(DATESTR))/g' library/c.lib_rev.h
 	sed -i 's/"\([0-9]*\.[0-9]*\.[0-9]*\)"/"$(DATESTR)"/g' library/c.lib_rev.h
 ifdef GITTAG
-	sed -i 's/VERSION\t*[[:digit:]]/VERSION $(MAJOR)/g'  library/c.lib_rev.h
-	sed -i 's/REVISION\t*[[:digit:]]/REVISION $(MINOR)/g'  library/c.lib_rev.h
-	sed -i 's/SUBREVISION\t*[[:digit:]]/SUBREVISION $(PATCH)/g'  library/c.lib_rev.h
-	sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)/g'  library/c.lib_rev.h
+	sed -i 's/VERSION\t*[[:digit:]]/VERSION\t\t\t$(MAJOR)/g' library/c.lib_rev.h
+	sed -i 's/REVISION\t*[[:digit:]]/REVISION\t\t$(MINOR)/g' library/c.lib_rev.h
+	sed -i 's/SUBREVISION\t*[[:digit:]]/SUBREVISION\t\t$(PATCH)/g' library/c.lib_rev.h
+	sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)/g' library/c.lib_rev.h
 endif
 
 # Update the version numbers bound to the individual libraries
