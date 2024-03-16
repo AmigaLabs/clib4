@@ -233,13 +233,13 @@ clean:
 ##############################################################################
 
 gitver:
-	sed -i 's/[(]\([0-9]*\.[0-9]*\.[0-9]*\)[)]/($(DATESTR))/g' library/c.lib_rev.h
-	sed -i 's/"\([0-9]*\.[0-9]*\.[0-9]*\)"/"$(DATESTR)"/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/[(]\([0-9]*\.[0-9]*\.[0-9]*\)[)]/($(DATESTR))/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/"\([0-9]*\.[0-9]*\.[0-9]*\)"/"$(DATESTR)"/g' library/c.lib_rev.h
 ifdef GITTAG
-	sed -i 's/VERSION\t*[[:digit:]]/VERSION\t\t\t$(MAJOR)/g' library/c.lib_rev.h
-	sed -i 's/REVISION\t*[[:digit:]]/REVISION\t\t$(MINOR)/g' library/c.lib_rev.h
-	sed -i 's/SUBREVISION\t*[[:digit:]]/SUBREVISION\t\t$(PATCH)/g' library/c.lib_rev.h
-	sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/VERSION\t*[[:digit:]]/VERSION\t\t\t$(MAJOR)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/REVISION\t*[[:digit:]]/REVISION\t\t$(MINOR)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/SUBREVISION\t*[[:digit:]]/SUBREVISION\t\t$(PATCH)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)/g' library/c.lib_rev.h
 endif
 
 # Update the version numbers bound to the individual libraries
