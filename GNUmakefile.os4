@@ -8,7 +8,7 @@
 ##############################################################################
 
 .PHONY : all prepare all-targets all-libs clean \
-	version compile-tests install release dpkg 
+	compile-tests install release dpkg 
 
 # You may have to change the following sets of macro definitions which will
 # be used throughout the build makefile. These definitions cover the paths
@@ -132,6 +132,32 @@ endif
 
 VERBOSE    ?= @
 
+##########################################################################
+# Set up version and date properties
+##########################################################################
+
+DATEISO = $(shell date --iso=date)
+DATESTR = $(shell date "+%d.%m.%Y")
+
+# Parse the repo tag to different defines, that will be used while
+# compiling clib4 library
+#
+# The tags should be like v(MAJOR).(MINOR).(PATCH)
+# in example v1.2.3
+#
+ifneq ($(origin GITTAG),undefined)
+	MAJOR = $(patsubst v%,%,$(firstword $(subst ., ,$(GITTAG))))
+	MINOR = $(word 2, $(subst ., ,$(GITTAG)))
+	PATCH = $(word 3, $(subst ., ,$(GITTAG)))
+
+	VERS_FLAGS = -DVERSION=$(MAJOR) -DREVISION=$(MINOR) \
+		-DSUBREVISION=$(PATCH) -DDATE="$(DATESTR)"
+else
+	VERS_FLAGS = -DDATE="$(DATESTR)"
+endif
+
+CFLAGS := $(CFLAGS) $(VERS_FLAGS)
+
 ##############################################################################
 
 # This is the first target: it depends on all the targets
@@ -214,16 +240,16 @@ clean:
 ##############################################################################
 
 # Update the version numbers bound to the individual libraries
-version:
-	$(COPY) c.lib_rev.rev amiga/amiga.lib_rev.rev
-	$(COPY) c.lib_rev.rev math/m.lib_rev.rev
-	$(COPY) c.lib_rev.rev math/crypt.lib_rev.rev
-	$(COPY) c.lib_rev.rev math/pthread.lib_rev.rev
-	bumprev amiga.lib
-	bumprev c.lib
-	bumprev m.lib
-	bumprev crypt.lib
-	bumprev pthread.lib
+# version:
+# 	$(COPY) c.lib_rev.rev amiga/amiga.lib_rev.rev
+# 	$(COPY) c.lib_rev.rev math/m.lib_rev.rev
+# 	$(COPY) c.lib_rev.rev math/crypt.lib_rev.rev
+# 	$(COPY) c.lib_rev.rev math/pthread.lib_rev.rev
+# 	bumprev amiga.lib
+# 	bumprev c.lib
+# 	bumprev m.lib
+# 	bumprev crypt.lib
+# 	bumprev pthread.lib
 
 # Shared clib4.library rules
 

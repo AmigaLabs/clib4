@@ -238,6 +238,9 @@ typedef struct htab	 {		                    /* Memory resident data structure */
 #define HDRPAGES	hdr.hdrpages
 #define SPARES		hdr.spares
 #define BITMAPS		hdr.bitmaps
+#ifdef VERSION
+#undef VERSION // Set from the GNUMakefile
+#endif
 #define VERSION		hdr.version
 #define MAGIC		hdr.magic
 #define NEXT_FREE	hdr.next_free
