@@ -3,6 +3,7 @@ on:
   release:
     branches:
       - master
+      - add-version-while-compile
     types: 
       - published
 
