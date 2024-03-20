@@ -153,6 +153,7 @@ include libm.gmk
 include libamiga.gmk
 include libdebug.gmk
 include libpthread.gmk
+include libprofile.gmk
 include libcrypt.gmk
 include librt.gmk
 include shared.gmk

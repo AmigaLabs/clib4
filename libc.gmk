@@ -953,10 +953,6 @@ C_LIBRARY := \
 
 C_LIB := \
 	c.lib_rev.o \
-	profile/_mcount.o \
-	profile/profil.o \
-	profile/gmon.o \
-	profile/mcount.o \
 	shared_library/stubs.o \
 	unistd/getopt.o \
 	unistd/getopt_long.o \

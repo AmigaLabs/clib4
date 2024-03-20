@@ -55,7 +55,6 @@ tcdrain(int file_descriptor) {
 
                 break;
             default: /* TODO: Serial port support. */
-                printf("cicero1b\n");
                 __fd_unlock(fd);
                 __set_errno(ENXIO);
                 goto out;
