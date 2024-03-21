@@ -142,7 +142,12 @@ struct pthread_mutexattr {
 
 typedef struct pthread_mutexattr pthread_mutexattr_t;
 
-struct pthread_mutex;
+struct pthread_mutex {
+    void* mutex; // APTR
+    int kind;
+    int incond;
+    struct Task *owner;
+};
 
 typedef struct pthread_mutex pthread_mutex_t;
 
@@ -166,11 +171,15 @@ struct pthread_condattr {
 
 typedef struct pthread_condattr pthread_condattr_t;
 
-struct pthread_cond;
+struct pthread_cond {
+    int pad1;
+    void* semaphore; // SignalSemaphore
+    void* waiters;	// MinList
+};
 
 typedef struct pthread_cond pthread_cond_t;
 
-#define PTHREAD_COND_INITIALIZER {0, NULL_SEMAPHORE, NULL_MINLIST}
+#define PTHREAD_COND_INITIALIZER {0, 0, 0}
 
 //
 // Barriers
@@ -198,7 +207,9 @@ struct pthread_rwlockattr {
 
 typedef struct pthread_rwlockattr pthread_rwlockattr_t;
 
-struct pthread_rwlock;
+struct pthread_rwlock {
+    void* semaphore; // SignalSemaphore
+};
 
 typedef struct pthread_rwlock pthread_rwlock_t;
 

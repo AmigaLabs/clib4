@@ -43,18 +43,20 @@ pthread_cond_destroy(pthread_cond_t *cond) {
         return EINVAL;
 
     // probably a statically allocated condition
-    if (SemaphoreIsInvalid(&cond->semaphore))
+    if (SemaphoreIsInvalid(cond->semaphore))
         return 0;
 
-    if (AttemptSemaphore(&cond->semaphore) == FALSE)
+    if (AttemptSemaphore(cond->semaphore) == FALSE)
         return EBUSY;
 
-    if (!IsMinListEmpty(&cond->waiters)) {
-        ReleaseSemaphore(&cond->semaphore);
+    if (!IsMinListEmpty((struct MinList *)cond->waiters)) {
+        ReleaseSemaphore(cond->semaphore);
         return EBUSY;
     }
 
-    ReleaseSemaphore(&cond->semaphore);
+    ReleaseSemaphore(cond->semaphore);
+	FreeSysObject(ASOT_SEMAPHORE,cond->semaphore);
+	free(cond->waiters);
     memset(cond, 0, sizeof(pthread_cond_t));
 
     return 0;

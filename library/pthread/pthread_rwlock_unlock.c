@@ -43,16 +43,16 @@ pthread_rwlock_unlock(pthread_rwlock_t *lock) {
         return EINVAL;
 
     // initialize static rwlocks
-    if (SemaphoreIsInvalid(&lock->semaphore))
+    if (SemaphoreIsInvalid(lock->semaphore))
         pthread_rwlock_init(lock, NULL);
 
     //if (!SemaphoreIsMine(&lock->semaphore))
     // if no one has obtained the semaphore don't unlock the rwlock
     // this can be a leap of faith because we don't maintain a separate list of readers
-    if (lock->semaphore.ss_NestCount < 1)
+    if (((struct SignalSemaphore *)lock->semaphore)->ss_NestCount < 1)
         return EPERM;
 
-    ReleaseSemaphore(&lock->semaphore);
+    ReleaseSemaphore(lock->semaphore);
 
     return 0;
 }
