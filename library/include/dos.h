@@ -14,6 +14,9 @@
 #include <wchar.h>
 #include <setjmp.h>
 #include <resolv.h>
+#include <exec/types.h>
+#include <exec/lists.h>
+#include <exec/semaphores.h>
 
 /* Category name handling variables.  */
 #define NUM_LOCALES                (LC_MAX + 1)

@@ -40,11 +40,21 @@
 int
 pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr) {
     (void) attr;
-    if (cond == NULL)
+    if (cond == NULL) {
         return EINVAL;
+	}
 
-    InitSemaphore(&cond->semaphore);
-    NewMinList(&cond->waiters);
+	cond->semaphore = AllocSysObjectTags(ASOT_SEMAPHORE,TAG_END);
+	if (!cond->semaphore)
+		return ENOMEM;
+
+	cond->waiters = malloc(sizeof(struct MinList));
+	if(!cond->waiters) {
+		FreeSysObject(ASOT_SEMAPHORE,cond->semaphore);
+
+		return ENOMEM;
+	}
+    NewMinList(cond->waiters);
 
     return 0;
 }

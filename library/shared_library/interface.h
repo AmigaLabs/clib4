@@ -1319,6 +1319,11 @@ struct Clib4IFace {
     FTS	   * (* fts_open) (char * const *, int, int (*)(const FTSENT **, const FTSENT **));                                                          /* 4316 */
     FTSENT * (* fts_read) (FTS *);                                                                                                                   /* 4320 */
     int	     (* fts_set) (FTS *, FTSENT *, int);                                                                                                     /* 4324 */
+
+    FILE * (* __stdin) (void);                                                                                                                       /* 4328 */
+    FILE * (* __stdout) (void);                                                                                                                      /* 4332 */
+    FILE * (* __stderr) (void);                                                                                                                      /* 4336 */
+
 };
 
 #ifdef __PIC__

@@ -45,13 +45,13 @@ pthread_rwlock_wrlock(pthread_rwlock_t *lock) {
     pthread_testcancel();
 
     // initialize static rwlocks
-    if (SemaphoreIsInvalid(&lock->semaphore))
+    if (SemaphoreIsInvalid(lock->semaphore))
         pthread_rwlock_init(lock, NULL);
 
-    if (SemaphoreIsMine(&lock->semaphore))
+    if (SemaphoreIsMine(lock->semaphore))
         return EDEADLK;
 
-    ObtainSemaphore(&lock->semaphore);
+    ObtainSemaphore(lock->semaphore);
 
     return 0;
 }

@@ -41,10 +41,13 @@ int
 pthread_rwlock_init(pthread_rwlock_t *lock, const pthread_rwlockattr_t *attr) {
     (void) (attr);
 
-    if (lock == NULL)
+    if (lock == NULL) {
         return EINVAL;
+	}
 
-    InitSemaphore(&lock->semaphore);
+	lock->semaphore = AllocSysObjectTags(ASOT_SEMAPHORE,TAG_END);
+	if (!lock->semaphore)
+		return ENOMEM;
 
     return 0;
 }

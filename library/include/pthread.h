@@ -26,17 +26,10 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <errno.h>
-#include <exec/types.h>
-#include <exec/semaphores.h>
 #include <sched.h>
 #include <features.h>
 
-#ifdef __cplusplus
-#ifdef __USE_AMIGAOS_NAMESPACE__
-namespace AmigaOS {
-#endif
-extern "C" {
-#endif
+__BEGIN_DECLS
 
 //
 // POSIX options
@@ -150,7 +143,7 @@ struct pthread_mutexattr {
 typedef struct pthread_mutexattr pthread_mutexattr_t;
 
 struct pthread_mutex {
-    APTR mutex;
+    void* mutex; // APTR
     int kind;
     int incond;
     struct Task *owner;
@@ -180,13 +173,13 @@ typedef struct pthread_condattr pthread_condattr_t;
 
 struct pthread_cond {
     int pad1;
-    struct SignalSemaphore semaphore;
-    struct MinList waiters;
+    void* semaphore; // SignalSemaphore
+    void* waiters;	// MinList
 };
 
 typedef struct pthread_cond pthread_cond_t;
 
-#define PTHREAD_COND_INITIALIZER {0, NULL_SEMAPHORE, NULL_MINLIST}
+#define PTHREAD_COND_INITIALIZER {0, 0, 0}
 
 //
 // Barriers
@@ -200,12 +193,7 @@ struct pthread_barrierattr {
 
 typedef struct pthread_barrierattr pthread_barrierattr_t;
 
-struct pthread_barrier {
-    unsigned int curr_height;
-    unsigned int total_height;
-    pthread_cond_t breeched;
-    pthread_mutex_t lock;
-};
+struct pthread_barrier;
 
 typedef struct pthread_barrier pthread_barrier_t;
 
@@ -220,7 +208,7 @@ struct pthread_rwlockattr {
 typedef struct pthread_rwlockattr pthread_rwlockattr_t;
 
 struct pthread_rwlock {
-    struct SignalSemaphore semaphore;
+    void* semaphore; // SignalSemaphore
 };
 
 typedef struct pthread_rwlock pthread_rwlock_t;
@@ -414,11 +402,6 @@ extern void pthread_cleanup_pop(int execute);
 
 extern int pthread_kill(pthread_t thread, int sig);
 
-#ifdef __cplusplus
-}
-#ifdef __USE_AMIGAOS_NAMESPACE__
-}
-#endif
-#endif
+__END_DECLS
 
 #endif

@@ -6,7 +6,6 @@
 #define _CTYPE_H
 
 #include <features.h>
-#include <dos.h>
 
 __BEGIN_DECLS
 
@@ -48,18 +47,17 @@ extern int toascii(int c);
 
 /****************************************************************************/
 
-#define isalnum(c)	((__CLIB4->__ctype_table[(c) & 255] & (__CTYPE_DIGIT|__CTYPE_LOWER_CASE|__CTYPE_UPPER_CASE)) != 0)
-#define isalpha(c)	((__CLIB4->__ctype_table[(c) & 255] & (__CTYPE_LOWER_CASE|__CTYPE_UPPER_CASE)) != 0)
-#define iscntrl(c)	((__CLIB4->__ctype_table[(c) & 255] & __CTYPE_CONTROL) != 0)
-#define isdigit(c)	((__CLIB4->__ctype_table[(c) & 255] & __CTYPE_DIGIT) != 0)
-#define isxdigit(c)	((__CLIB4->__ctype_table[(c) & 255] & __CTYPE_HEX_DIGIT) != 0)
-#define isgraph(c)	((__CLIB4->__ctype_table[(c) & 255] & (__CTYPE_DIGIT|__CTYPE_PUNCTUATION|__CTYPE_LOWER_CASE|__CTYPE_UPPER_CASE)) != 0)
-#define ispunct(c)	((__CLIB4->__ctype_table[(c) & 255] & __CTYPE_PUNCTUATION) != 0)
-#define isprint(c)	((__CLIB4->__ctype_table[(c) & 255] & __CTYPE_PRINTABLE) != 0)
-#define islower(c)	((__CLIB4->__ctype_table[(c) & 255] & __CTYPE_LOWER_CASE) != 0)
-#define isupper(c)	((__CLIB4->__ctype_table[(c) & 255] & __CTYPE_UPPER_CASE) != 0)
-#define isspace(c)	((__CLIB4->__ctype_table[(c) & 255] & __CTYPE_WHITE_SPACE) != 0)
-#define isblank(c)	((c) == ' ' || (c) == '\t')
+static __inline int __isspace(int _c) {
+    return _c == ' ' || (unsigned)_c-'\t' < 5;
+}
+
+#define isalpha(a) (0 ? isalpha(a) : (((unsigned)(a)|32)-'a') < 26)
+#define isdigit(a) (0 ? isdigit(a) : ((unsigned)(a)-'0') < 10)
+#define islower(a) (0 ? islower(a) : ((unsigned)(a)-'a') < 26)
+#define isupper(a) (0 ? isupper(a) : ((unsigned)(a)-'A') < 26)
+#define isprint(a) (0 ? isprint(a) : ((unsigned)(a)-0x20) < 0x5f)
+#define isgraph(a) (0 ? isgraph(a) : ((unsigned)(a)-0x21) < 0x5e)
+#define isspace(a) __isspace(a)
 
 #endif /* __cplusplus */
 
