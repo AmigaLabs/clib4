@@ -240,6 +240,7 @@ ifdef GITTAG
 	$(VERBOSE)sed -i 's/REVISION\t*[[:digit:]]/REVISION\t\t$(MINOR)/g' library/c.lib_rev.h
 	$(VERBOSE)sed -i 's/SUBREVISION\t*[[:digit:]]/SUBREVISION\t\t$(PATCH)/g' library/c.lib_rev.h
 	$(VERBOSE)sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/Version: [0-9]*\.[0-9]*\.[0-9]*/Version: $(MAJOR).$(MINOR).$(PATCH)/g' misc/control
 endif
 
 # Update the version numbers bound to the individual libraries
