@@ -1,0 +1,26 @@
+name: Merge into master build
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
+
+jobs:
+  run_if_merged:
+    if: github.event.pull_request.merged == true
+    name: Build latest code
+    runs-on: ubuntu-latest
+    container:
+      image: walkero/amigagccondocker:os4-gcc11-exp
+      volumes:
+        - '${{ github.workspace }}:/opt/code'
+    steps:
+      - name: Pull code
+        uses: actions/checkout@v4
+      - name: Compile clib4
+        run: |
+          cd /opt/code && \
+          make -j1 -f GNUmakefile.os4 OS=os4 SHARED=no
+      - name: Create the release archive
+        run: make -f GNUmakefile.os4 release

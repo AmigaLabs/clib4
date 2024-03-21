@@ -45,7 +45,7 @@ pthread_rwlock_rdlock(pthread_rwlock_t *lock) {
     pthread_testcancel();
 
     // initialize static rwlocks
-    if (SemaphoreIsInvalid(&lock->semaphore))
+    if (SemaphoreIsInvalid(lock->semaphore))
         pthread_rwlock_init(lock, NULL);
 
     // "Results are undefined if the calling thread holds a write lock on rwlock at the time the call is made."
@@ -55,7 +55,7 @@ pthread_rwlock_rdlock(pthread_rwlock_t *lock) {
         return EDEADLK;
     */
 
-    ObtainSemaphoreShared(&lock->semaphore);
+    ObtainSemaphoreShared(lock->semaphore);
 
     return 0;
 }

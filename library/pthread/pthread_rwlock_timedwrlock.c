@@ -55,5 +55,5 @@ pthread_rwlock_timedwrlock(pthread_rwlock_t *lock, const struct timespec *abstim
     if (result != EBUSY)
         return result;
 
-    return _pthread_obtain_sema_timed(&lock->semaphore, abstime, SM_EXCLUSIVE);
+    return _pthread_obtain_sema_timed((struct SignalSemaphore *)lock->semaphore, abstime, SM_EXCLUSIVE);
 }

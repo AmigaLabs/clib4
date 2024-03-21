@@ -152,7 +152,7 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         return EINVAL;
 
     // initialize static conditions
-    if (SemaphoreIsInvalid(&cond->semaphore))
+    if (SemaphoreIsInvalid(cond->semaphore))
         pthread_cond_init(cond, NULL);
 
     task = FindTask(NULL);
@@ -194,9 +194,9 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     sigs |= 1 << waiter.sigbit;
 
     // add it to the end of the list
-    ObtainSemaphore(&cond->semaphore);
-    AddTail((struct List *) &cond->waiters, (struct Node *) &waiter);
-    ReleaseSemaphore(&cond->semaphore);
+    ObtainSemaphore(cond->semaphore);
+    AddTail((struct List *) cond->waiters, (struct Node *) &waiter);
+    ReleaseSemaphore(cond->semaphore);
 
     // wait for the condition to be signalled or the timeout
     mutex->incond++;
@@ -206,9 +206,9 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     mutex->incond--;
 
     // remove the node from the list
-    ObtainSemaphore(&cond->semaphore);
+    ObtainSemaphore(cond->semaphore);
     Remove((struct Node *) &waiter);
-    ReleaseSemaphore(&cond->semaphore);
+    ReleaseSemaphore(cond->semaphore);
 
     if (waiter.sigbit != SIGB_COND_FALLBACK)
         FreeSignal(waiter.sigbit);
@@ -238,16 +238,16 @@ _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
         return EINVAL;
 
     // initialize static conditions
-    if (SemaphoreIsInvalid(&cond->semaphore))
+    if (SemaphoreIsInvalid(cond->semaphore))
         pthread_cond_init(cond, NULL);
 
     // signal the waiting threads
-    ObtainSemaphore(&cond->semaphore);
-    ForeachNode(&cond->waiters, waiter) {
+    ObtainSemaphore(cond->semaphore);
+    ForeachNode(cond->waiters, waiter) {
         Signal(waiter->task, 1 << waiter->sigbit);
         if (onlyfirst) break;
     }
-    ReleaseSemaphore(&cond->semaphore);
+    ReleaseSemaphore(cond->semaphore);
 
     return 0;
 }

@@ -43,13 +43,14 @@ pthread_rwlock_destroy(pthread_rwlock_t *lock) {
         return EINVAL;
 
     // probably a statically allocated rwlock
-    if (SemaphoreIsInvalid(&lock->semaphore))
+    if (SemaphoreIsInvalid(lock->semaphore))
         return 0;
 
-    if (AttemptSemaphore(&lock->semaphore) == FALSE)
+    if (AttemptSemaphore(lock->semaphore) == FALSE)
         return EBUSY;
 
-    ReleaseSemaphore(&lock->semaphore);
+    ReleaseSemaphore(lock->semaphore);
+	FreeSysObject(ASOT_SEMAPHORE,lock->semaphore);
     memset(lock, 0, sizeof(pthread_rwlock_t));
 
     return 0;

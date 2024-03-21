@@ -45,10 +45,10 @@ pthread_rwlock_trywrlock(pthread_rwlock_t *lock) {
         return EINVAL;
 
     // initialize static rwlocks
-    if (SemaphoreIsInvalid(&lock->semaphore))
+    if (SemaphoreIsInvalid(lock->semaphore))
         pthread_rwlock_init(lock, NULL);
 
-    ret = AttemptSemaphore(&lock->semaphore);
+    ret = AttemptSemaphore(lock->semaphore);
 
     return (ret == TRUE) ? 0 : EBUSY;
 }
