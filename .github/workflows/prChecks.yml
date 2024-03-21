@@ -1,11 +1,11 @@
-name: Build with Docker
+name: Pull request build
 on:
-  push:
+  pull_request:
     branches:
       - master
-      - actions-cicd
-  pull_request:
-  workflow_dispatch:
+    types: 
+      - opened
+      - reopened
 
 jobs:
   run:
@@ -17,7 +17,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Pull code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Compile clib4
         run: |
           cd /opt/code && \

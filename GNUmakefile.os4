@@ -8,7 +8,7 @@
 ##############################################################################
 
 .PHONY : all prepare all-targets all-libs clean \
-	version compile-tests install release dpkg 
+	gitver version compile-tests install release dpkg 
 
 # You may have to change the following sets of macro definitions which will
 # be used throughout the build makefile. These definitions cover the paths
@@ -55,7 +55,7 @@ LIB_ROOT ?= $(shell pwd)
 LIB_DIR = $(LIB_ROOT)/library
 BUILD_DIR = $(LIB_ROOT)/build
 OUTPUT_LIB = $(BUILD_DIR)/lib
-DPKG_LIB = clib4_1.0_amd64
+DPKG_LIB ?= clib4_1.0_amd64
 
 ##############################################################################
 
@@ -132,11 +132,30 @@ endif
 
 VERBOSE    ?= @
 
+##########################################################################
+# Set up version and date properties
+##########################################################################
+
+DATEISO = $(shell date --iso=date)
+DATESTR = $(shell date "+%d.%m.%Y")
+
+# Parse the repo tag to different defines, that will be used while
+# compiling clib4 library
+#
+# The tags should be like v(MAJOR).(MINOR).(PATCH)
+# in example v1.2.3
+#
+ifneq ($(origin GITTAG),undefined)
+MAJOR = $(patsubst v%,%,$(firstword $(subst ., ,$(GITTAG))))
+MINOR = $(word 2, $(subst ., ,$(GITTAG)))
+PATCH = $(word 3, $(subst ., ,$(GITTAG)))
+endif
+
 ##############################################################################
 
 # This is the first target: it depends on all the targets
 
-all: prepare all-targets all-libs clib4.library.debug clib4.library
+all: gitver prepare all-targets all-libs clib4.library.debug clib4.library
 
 ##############################################################################
 
@@ -182,12 +201,12 @@ ALL_TARGETS = \
 	$(OUTPUT_LIB)/crtend.o \
 	$(OUTPUT_LIB)/shcrtbegin.o \
 	$(OUTPUT_LIB)/shcrtend.o \
-    $(OUT_SHARED_LIB)/shared_library/clib4.o \
-    $(OUT_SHARED_LIB)/shared_library/math.o \
+	$(OUT_SHARED_LIB)/shared_library/clib4.o \
+	$(OUT_SHARED_LIB)/shared_library/math.o \
 	$(MAIN_LIB)
 
 ifdef SPE
-    ALL_TARGETS := PatchForSPE | $(ALL_TARGETS)
+	ALL_TARGETS := PatchForSPE | $(ALL_TARGETS)
 endif
 
 all-targets: $(ALL_TARGETS)
@@ -212,6 +231,16 @@ clean:
 	-cd test_programs; make clean
 
 ##############################################################################
+
+gitver:
+	$(VERBOSE)sed -i 's/[(]\([0-9]*\.[0-9]*\.[0-9]*\)[)]/($(DATESTR))/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/"\([0-9]*\.[0-9]*\.[0-9]*\)"/"$(DATESTR)"/g' library/c.lib_rev.h
+ifdef GITTAG
+	$(VERBOSE)sed -i 's/VERSION\t*[[:digit:]]/VERSION\t\t\t$(MAJOR)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/REVISION\t*[[:digit:]]/REVISION\t\t$(MINOR)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/SUBREVISION\t*[[:digit:]]/SUBREVISION\t\t$(PATCH)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)/g' library/c.lib_rev.h
+endif
 
 # Update the version numbers bound to the individual libraries
 version:
