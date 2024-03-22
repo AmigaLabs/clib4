@@ -819,10 +819,10 @@ static void *clib4Vectors[] = {
         (void *) (sysconf),                               /* 3148 */
         (void *) (enableUnixPaths),                       /* 3152 */
         (void *) (disableUnixPaths),                      /* 3156 */
-        (void *) (enableAltivec),                         /* 3160 */
-        (void *) (disableAltivec),                        /* 3164 */
-        (void *) (enableOptimizedFunctions),              /* 3168 */
-        (void *) (disableOptimizedFunctions),             /* 3172 */
+        (void *) (libReserved),                           /* 3160 */
+        (void *) (libReserved),                           /* 3164 */
+        (void *) (libReserved),                           /* 3168 */
+        (void *) (libReserved),                           /* 3172 */
         (void *) (getcwd),                                /* 3176 */
         (void *) (getwd),                                 /* 3180 */
         (void *) (get_current_dir_name),                  /* 3184 */

@@ -151,7 +151,7 @@ struct _clib4 {
     struct Library *__UserGroupBase;
     struct UserGroupIFace *__IUserGroup;
 
-    /* CPU Family to enable optimized functions */
+    /* CPU Family */
     uint32 cpufamily;
     uint32 hasAltivec;
 
@@ -205,9 +205,7 @@ struct _clib4 {
 
     BOOL __unix_path_semantics;
 
-    /* Set this flag to true to enable optimized CPU functions */
-    BOOL __optimizedCPUFunctions;
-
+    BOOL  unused6;
     void *unused1;
     void *unused2;
     BOOL  unused3;

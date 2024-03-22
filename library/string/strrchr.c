@@ -1,5 +1,5 @@
 /*
- * $Id: string_strrchr.c,v 1.4 2006-01-08 12:04:27 clib4devs Exp $
+ * $Id: string_strrchr.c,v 1.5 2024-03-22 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -10,7 +10,7 @@
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-STATIC INLINE
+static inline
 char *
 __strrchr(const char *s, int c) {
     const unsigned char *us = (const unsigned char *) s;
@@ -44,7 +44,6 @@ char *
 strrchr(const char *s, int c) {
     const unsigned char *us = (const unsigned char *) s;
     char *result = NULL;
-    struct _clib4 *__clib4 = __CLIB4;
 
     assert(s != NULL);
 
@@ -53,19 +52,7 @@ strrchr(const char *s, int c) {
         goto out;
     }
 
-    if (__clib4->__optimizedCPUFunctions) {
-        switch (__clib4->cpufamily) {
-            case CPUFAMILY_4XX:
-                result = __strrchr440(s, c);
-                break;
-            default:
-                result = __strrchr(s, c);
-        }
-    } else {
-        /* Fallback to standard function */
-        result = __strrchr(s, c);
-    }
-
+    result = __strrchr(s, c);
 
 out:
 

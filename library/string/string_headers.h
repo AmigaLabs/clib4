@@ -50,7 +50,7 @@
 
 /* 4x0 specific asm functions */
 extern void   *__memchr440(const void *ptr, int val, size_t len);
-extern int     __memcmp440(const char *m1, const char *m2, size_t len);
+extern int     __memcmp440(const void *m1, const void *m2, size_t len);
 extern void   *__memcpy440(void *dst, const void *src, size_t len);
 extern void   *__memmove440(void *dest, const void *src, size_t len);
 extern int     __strcmp440(const char *s1, const char *s2);
@@ -58,6 +58,7 @@ extern char   *__strcpy440(char *dest, const char *src);
 extern size_t  __strlen440(const char *s);
 extern int     __strncmp440(const char *s1, const char *s2, size_t n);
 extern char   *__strrchr440(const char *s, int c);
+extern char   *__strchr440(const char *s, int c);
 
 /* SPE e500 specific functions */
 extern int     __memcmp_e500(const char *m1, const char *m2, size_t len);
@@ -66,7 +67,7 @@ extern char   *__strcpy_e500(char *dest, const char *src);
 extern size_t  __strlen_e500(const char *s);
 
 /* Altivec specific asm functions */
-extern int     vec_memcmp(const char *m1, const char *m2, size_t len);
+extern int     vec_memcmp(const void *m1, const void *m2, size_t len);
 extern void   *_vec_memcpy(void *dst, const void *src, size_t len);
 extern void   *vec_memmove(void *dst, const void *src, size_t len);
 extern void    vec_bcopy(const void *src, void *dest, size_t len);
@@ -76,5 +77,7 @@ extern char   *vec_strcpy(char *dest, const char *src);
 
 /* Generic PPC functions */
 extern void    bcopy_g3(const void *src, void *dest, size_t len);
+extern char   *__strcpy_ppc(char *dest, const char *src);
+extern size_t  __strlen_ppc(const char *s);
 
 #endif /* _STRING_HEADERS_H */

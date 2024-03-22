@@ -126,7 +126,7 @@
 
 
 #define function_prolog(func_name)	.text; \
-					.align  2; \
+					.align  8; \
 					.globl  func_name; \
 					func_name:
 #define function_epilog(func_name)	.type func_name,@function; \

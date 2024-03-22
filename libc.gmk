@@ -576,6 +576,8 @@ C_STRING := \
 	cpu/altivec/vec_memset.o \
 	cpu/altivec/vec_strcpy.o \
 	cpu/generic/bcopy.o \
+	cpu/generic/strcpy.o \
+	cpu/generic/strlen.o \
 	string/rindex.o \
 	string/stccpy.o \
 	string/stpcpy.o \

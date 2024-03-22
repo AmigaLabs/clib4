@@ -45,14 +45,14 @@ bench_string() {
     /* strcpy with a constant string.  */
     clock_t begin = clock();
     for (int i = 0; i < TIMES; i++) {
-        char buf[MAX_LENGTH];
+        char buf[MAX_LENGTH] = {0};
         strcpy(buf, "0");
         strcpy(buf, "0123456789abcdef");
         strcpy(buf, "0123456789abcdef0123456789abcdef");
         strcat(buf, "0");
         strcat(buf, "0123456789abcdef");
         strcat(buf, "0123456789abcdef");
-
+        res = strlen(buf);
         strcpy(buf, "0");
         res = strlen(buf);
         strcat(buf, "0123456789abcdef");
@@ -71,18 +71,7 @@ bench_string() {
 /* Main, run the benchmarks.  */
 int
 main() {
-#ifndef NEWLIB
-    disableOptimizedFunctions();
-#endif
-    printf("Without optimized functions: ");
     bench_string();
-
-#ifndef NEWLIB
-    enableOptimizedFunctions();
-
-    printf("With optimized functions: ");
-    bench_string();
-#endif
 
     return 0;
 }

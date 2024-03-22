@@ -6,7 +6,7 @@
 #include "interface.h"
 
 asm(".section	\".text\"             \n\
-	.align 2                          \n\
+	.align 8                          \n\
 	.globl __Clib4Call                \n\
 	.type  __Clib4Call, @function     \n\
 __Clib4Call:                          \n\

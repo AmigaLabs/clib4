@@ -1,6 +1,6 @@
 asm("\
 	.text\n\
-	.align 2\n\
+	.align 8\n\
 	.globl swab\n\
 	.type swab,@function\n\
 swab:\n\

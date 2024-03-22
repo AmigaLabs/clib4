@@ -113,48 +113,18 @@ __memcmp(const char *m1, const char *m2, size_t len) {
 int
 memcmp(const void *ptr1, const void *ptr2, size_t len) {
     int result = 0;
-    struct _clib4 *__clib4 = __CLIB4;
 
     assert(ptr1 != NULL && ptr2 != NULL);
     assert((int) len >= 0);
-
-    if (ptr1 == NULL || ptr2 == NULL) {
-        __set_errno(EFAULT);
-        goto out;
-    }
 
     if (ptr1 != ptr2 && len > 0) {
         const char *m1 = ptr1;
         const char *m2 = ptr2;
 
-        if (__clib4->__optimizedCPUFunctions) {
-            switch (__clib4->cpufamily) {
-                /* If we have a SAM4xx use specific version of function */
-                case CPUFAMILY_4XX:
-                    result = __memcmp440(m1, m2, len);
-                    break;
-#ifdef __SPE__
-                case CPUFAMILY_E500:
-                    result = __memcmp_e500(m1, m2, len);
-                    break;
-#endif
-                default:
-                    /* Check if we have altivec enabled */
-                    if (__clib4->hasAltivec) {
-                        result = vec_memcmp(m1, m2, len);
-                    } else {
-                        /* Fallback to standard function */
-                        result = __memcmp(m1, m2, len);
-                    }
-            }
-        } else {
-            /* Fallback to standard function */
-            result = __memcmp(m1, m2, len);
-        }
+        result = __memcmp(m1, m2, len);
+
     } else
         __set_errno(EFAULT);
-
-    out:
 
     return (result);
 }

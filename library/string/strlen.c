@@ -9,67 +9,49 @@
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
-
-inline static size_t
-__strlen(const char *str) {
+size_t __strlen(const char *str);
+/* maximum performance PPC strlen() */
+size_t __strlen(const char *str)
+{
     uint32 *s32, x, magic1, magic2;
-    char *s = (char *) str;
+    char *s = (char *)str;
 
     magic1 = 0xFEFEFEFF;
     magic2 = 0x7F7F7F7F;
 
-    s32 = (uint32 * )((uint32) s & ~3);
+    s32 = (uint32 *)((uint32)s & ~3);
 
-    x = (s32 == (uint32 *) s)
+    x = (s32 == (uint32 *)s)
         ? *s32
-        : *s32 | (0xFFFFFFFF << (3 - ((uint32) s & 3) + 1) * 8);
+        : *s32 | (0xFFFFFFFF << (3-((uint32)s&3)+1)*8);
 
-    while (!((x + magic1) & ~(x | magic2))) {
+    while (!((x + magic1) & ~(x | magic2)))
+    {
         x = *++s32;
     }
 
-    s = (char *) s32;
-    if (x & 0xFF000000) {
+    s = (char *)s32;
+#if  __GNUC__ >= 3
+    s += (uint32)__builtin_clz(~(((x & magic2) + magic2) | x | magic2))/8;
+#else
+    if (x & 0xFF000000)
+    {
         s++;
-        if (x & 0x00FF0000) {
+        if (x & 0x00FF0000)
+        {
             s++;
-            if (x & 0x0000FF00) {
+            if (x & 0x0000FF00)
+            {
                 s++;
             }
         }
     }
+#endif
 
-    return s - str;
+    return s-str;
 }
 
 size_t
 strlen(const char *s) {
-    size_t result = 0;
-    struct _clib4 *__clib4 = __CLIB4;
-
-    if (NULL == s) {
-        __set_errno(EFAULT);
-        goto out;
-    }
-
-    if (__clib4->__optimizedCPUFunctions) {
-        switch (__clib4->cpufamily) {
-            case CPUFAMILY_4XX:
-                result = __strlen440(s);
-                break;
-#ifdef __SPE__
-            case CPUFAMILY_E500:
-                result = __strlen_e500(s);
-                break;
-#endif
-            default:
-                result = __strlen(s);
-        }
-    } else {
-        /* Fallback to standard function */
-        result = __strlen(s);
-    }
-out:
-
-    return (result);
+    return __strlen(s);
 }
