@@ -229,11 +229,6 @@ reent_init(struct _clib4 *__clib4) {
         .__priority = 256,
         .pipenum = 0,
         .tgoto_buf = {0},
-#ifdef DISABLE_OPTIMIZED_FUNCTIONS_AT_START
-        .__optimizedCPUFunctions = FALSE,
-#else
-        .__optimizedCPUFunctions = TRUE,
-#endif
         /* Set memalign tree to NULL */
         .__memalign_tree = NULL,
         /* Initialize random signal and state */
@@ -324,13 +319,8 @@ reent_init(struct _clib4 *__clib4) {
     GetCPUInfoTags(GCIT_Family, &__clib4->cpufamily, TAG_DONE);
 
     /* Check if altivec is present */
-#ifdef ENABLE_ALTIVEC_AT_START
     D(("Check if altivec is present"));
     GetCPUInfoTags(GCIT_VectorUnit, &__clib4->hasAltivec, TAG_DONE);
-#else
-    D(("Set altivec to zero"));
-    __clib4->hasAltivec = 0;
-#endif
 
     /* Init memalign list */
     SHOWMSG("Allocating __memalign_pool");
@@ -476,28 +466,6 @@ void enableUnixPaths(void) {
 void disableUnixPaths(void) {
     __CLIB4->__unix_path_semantics = FALSE;
 }
-
-void enableAltivec(void) {
-    int32 hasAltivec;
-    /* Check if altivec is present otherwise we can't enable it */
-    GetCPUInfoTags(GCIT_VectorUnit, &hasAltivec, TAG_DONE);
-    if (hasAltivec)
-        __CLIB4->hasAltivec = 1;
-    else
-        __CLIB4->hasAltivec = 0;
-}
-
-void disableAltivec(void) {
-    __CLIB4->hasAltivec = 0;
-}
-
-void enableOptimizedFunctions(void) {
-    __CLIB4->__optimizedCPUFunctions = TRUE;
-};
-
-void disableOptimizedFunctions(void) {
-    __CLIB4->__optimizedCPUFunctions = FALSE;
-};
 
 int *__mb_cur_max(void) {
     return &__CLIB4->__mb_cur_max;

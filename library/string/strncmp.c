@@ -1,5 +1,5 @@
 /*
- * $Id: string_strncmp.c,v 1.5 2010-08-20 15:33:36 clib4devs Exp $
+ * $Id: string_strncmp.c,v 1.6 2024-03-22 15:33:36 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -41,7 +41,6 @@ __strncmp(const char *s1, const char *s2, size_t n) {
 int
 strncmp(const char *s1, const char *s2, size_t n) {
     int result = 0;
-    struct _clib4 *__clib4 = __CLIB4;
 
     assert(s1 != NULL && s2 != NULL);
     assert((int) n >= 0);
@@ -55,18 +54,7 @@ strncmp(const char *s1, const char *s2, size_t n) {
      * function is supposed to have no effect.
      */
     if (s1 != s2 && (int) n > 0) {
-        if (__clib4->__optimizedCPUFunctions) {
-            switch (__clib4->cpufamily) {
-                case CPUFAMILY_4XX:
-                    result = __strncmp440(s1, s2, n);
-                    break;
-                default:
-                    result = __strncmp(s1, s2, n);
-            }
-        } else {
-            /* Fallback to standard function */
-            result = __strncmp(s1, s2, n);
-        }
+        result = __strncmp(s1, s2, n);
     }
 
 out:

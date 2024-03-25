@@ -94,6 +94,10 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
+#ifndef _STRING_HEADERS_H
+#include "string_headers.h"
+#endif /* _STRING_HEADERS_H */
+
 struct ExecBase *SysBase = 0;
 struct ExecIFace *IExec = 0;
 
@@ -199,23 +203,43 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
         switch (res->cpufamily) {
 #ifdef __SPE__
             case CPUFAMILY_E500:
-                D(("Using SPE setjmp family functions"));
+                D(("Using SPE family functions"));
                 IClib4->setjmp = setjmp_spe;
                 IClib4->longjmp = longjmp_spe;
                 IClib4->_longjmp = _longjmp_spe;
                 IClib4->_setjmp = _setjmp_spe;
                 IClib4->__sigsetjmp = __sigsetjmp_spe;
                 IClib4->siglongjmp = siglongjmp_spe;
+                IClib4->strlen = __strlen_e500;
+                IClib4->strcpy = __strcpy_e500;
+                IClib4->strcmp = __strcmp_e500;
+                IClib4->memcmp = __memcmp_e500;
                 break;
 #endif
+            case CPUFAMILY_4XX:
+                D(("Using 4XX family functions"));
+                IClib4->strlen = __strlen440;
+                IClib4->strcpy = __strcpy440;
+                IClib4->strcmp = __strcmp440;
+                IClib4->memcmp = __memcmp440;
+                IClib4->memchr = __memchr440;
+                IClib4->strncmp = __strncmp440;
+                IClib4->strrchr = __strrchr440;
+                IClib4->strchr = __strchr440;
+                break;
             default:
                 if (res->altivec) {
                     D(("Using Altivec setjmp family functions"));
                     IClib4->setjmp = setjmp_altivec;
                     IClib4->longjmp = longjmp_altivec;
+                    IClib4->strcpy = vec_strcpy;
+                    IClib4->memcmp = vec_memcmp;
+                    IClib4->bzero = vec_bzero;
+                    IClib4->bcopy = vec_bcopy;
                 }
-                else
-                    D(("Using default setjmp family functions"));
+                else {
+                    D(("Using default family functions"));
+                }
         }
     }
     return libBase;

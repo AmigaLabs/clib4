@@ -1,5 +1,5 @@
 asm("	.text\n\
-	.align 2\n\
+	.align 8\n\
 	.globl bswap32\n\
 	.type	bswap32, @function\n\
 bswap32:\n\

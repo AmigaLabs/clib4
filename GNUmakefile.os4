@@ -105,7 +105,7 @@ STATIC   := $(if $(STATIC),$(STATIC),yes)
 LARGEDATA :=
 OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe \
 		-nostdinc -nostartfiles -nostdlib
-OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -ffp-contract=fast -mstrict-align
+OPTIMIZE := -O3 -mregnames -mstrict-align
 
 STABS :=
 DLIBS :=
@@ -117,9 +117,9 @@ else
     DLIBS += $(BUILD_DIR)/lib/libdebug.a
 endif
 
-CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
-CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
-AFLAGS     := -Wa,-mregnames -mstrict-align
+CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__ -falign-functions=8
+CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)  -falign-functions=8
+AFLAGS     := -Wa,-mregnames -falign-functions=8 -mstrict-align
 
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0

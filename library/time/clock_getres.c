@@ -16,6 +16,7 @@ int clock_getres(clockid_t clock_id, struct timespec *res) {
 
     switch (clock_id) {
         case CLOCK_MONOTONIC:
+        case CLOCK_MONOTONIC_RAW: // On OS4 return same value
         case CLOCK_REALTIME: {
             /* This implementation assumes that the realtime clock has a
                resolution higher than 1 second.  This is the case for any

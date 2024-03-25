@@ -7,7 +7,7 @@
 
 asm("\
 	.text\n\
-	.align 2\n\
+	.align 8\n\
 	.globl swab64\n\
 	.type swab64,@function\n\
 swab64:\n\

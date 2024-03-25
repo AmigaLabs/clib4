@@ -1,6 +1,6 @@
 asm("\
 	.text\n\
-	.align 2\n\
+	.align 8\n\
 	.globl bswap16\n\
 	.type	bswap16, @function\n\
 bswap16:\n\

@@ -16,7 +16,7 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
     struct _clib4 *__clib4 = __CLIB4;
 
     /* Check the supported flags.  */
-    if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME)) != 0) {
+    if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME | CLOCK_MONOTONIC_RAW)) != 0) {
         __set_errno(EINVAL);
         RETURN(-1);
         return -1;
@@ -41,7 +41,7 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
     GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
 
     __clib4->__timer_busy = TRUE;
-    if (clk_id == CLOCK_MONOTONIC) {
+    if (clk_id == CLOCK_MONOTONIC | clk_id == CLOCK_MONOTONIC_RAW) {
         /*
         CLOCK_MONOTONIC
             A nonsettable system-wide clock that represents monotonic
@@ -49,7 +49,12 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
             in the past". On clib4, that point corresponds to the
             number of seconds that the system has been running since
             it was booted.
+
+        CLOCK_MONOTONIC_RAW
+              Similar  to  CLOCK_MONOTONIC, but provides access to a raw hard‐
+              ware-based time that is not subject to NTP adjustments.
         */
+
         GetUpTime((struct TimeVal *) &tv);
     } else {
         /*
@@ -58,7 +63,7 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
         GetSysTime((struct TimeVal *) &tv);
     }
 
-    if (clk_id == CLOCK_MONOTONIC) {
+    if (clk_id == CLOCK_MONOTONIC || clk_id == CLOCK_MONOTONIC_RAW) {
         t->tv_sec = tv.tv_sec;
         t->tv_nsec = tv.tv_usec * 1000;
     } else {
