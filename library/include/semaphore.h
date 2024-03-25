@@ -40,7 +40,21 @@
 #undef SEM_FAILED
 #define SEM_FAILED ((sem_t *)(-1))
 
-struct sema;
+struct _Node {
+    struct _Node *ln_Succ; /* Pointer to next (successor) */
+    struct _Node *ln_Pred; /* Pointer to previous (predecessor) */
+    uint8_t       ln_Type;
+    int8_t        ln_Pri;  /* Priority, for sorting */
+    char         *ln_Name; /* ID string, null terminated */
+};
+
+struct sema {
+    struct _Node node;
+    int value;
+    int waiters_count;
+    pthread_mutex_t lock;
+    pthread_cond_t count_nonzero;
+};
 
 typedef struct sema sem_t;
 

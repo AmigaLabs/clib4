@@ -12,5 +12,5 @@
 
 char *
 strcat(char *dest, const char *src) {
-    return strcpy(dest + strlen (dest), src);
+    return __strcat_ppc(dest, src);
 }

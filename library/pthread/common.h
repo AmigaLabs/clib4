@@ -13,14 +13,6 @@ struct pthread_barrier {
     pthread_mutex_t lock;
 };
 
-struct sema {
-    struct Node node;
-    int value;
-    int waiters_count;
-    pthread_mutex_t lock;
-    pthread_cond_t count_nonzero;
-};
-
 #undef NEWLIST
 #define NEWLIST(_l)                                     \
 do                                                      \

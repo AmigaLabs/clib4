@@ -59,7 +59,8 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
         }
             break;
 
-        case CLOCK_MONOTONIC: {
+        case CLOCK_MONOTONIC: // TODO - Are CLOCK_MONOTONIC and CLOCK_MONOTONIC_RAW settable?
+        case CLOCK_MONOTONIC_RAW: {
             struct timeval tv;
             TIMESPEC_TO_TIMEVAL(&tv, t);
             __clib4->clock.tv_sec = tv.tv_sec;
