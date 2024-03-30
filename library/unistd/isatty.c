@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_isatty.c,v 1.11 2010-10-20 13:12:59 clib4devs Exp $
+ * $Id: unistd_isatty.c,v 1.12 2024-03-30 13:12:59 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -39,7 +39,7 @@ isatty(int file_descriptor) {
 
     result = 1;
 
-    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_INTERACTIVE) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SERIAL)) {
         BPTR file;
 
         file = __resolve_fd_file(fd);

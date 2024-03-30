@@ -6,24 +6,17 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-/*
- * Just a quick kludge.
- */
-
 char *
 ttyname(int file_descriptor) {
-    static char tty_file_name[_POSIX_TTY_NAME_MAX];
-    char *result = NULL;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    if (ttyname_r(file_descriptor, tty_file_name, sizeof(tty_file_name)) != 0)
+    if (ttyname_r(file_descriptor, __clib4->tty_file_name, sizeof(__clib4->tty_file_name)) != 0)
         goto out;
-
-    result = tty_file_name;
 
 out:
 
-    RETURN(result);
-    return (result);
+    RETURN(__clib4->tty_file_name);
+    return (__clib4->tty_file_name);
 }
