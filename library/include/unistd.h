@@ -87,6 +87,13 @@ extern int execve(const char *path,char *const argv[],char *const envp[]);
 extern int execvp(const char *command,char * const argv[]);
 extern int getentropy(void *, size_t);
 
+extern void swab(const void *bfrom, void *bto, ssize_t nbytes);
+extern void swab24(const void *bfrom, void *bto, ssize_t nbytes);	/* Same as swab(), but operates on 24-bit words instead. */
+extern void swab32(const void *bfrom, void *bto, ssize_t nbytes);	/* Same as swab(), but operates on 32-bit words instead. */
+extern void swab64(const void *bfrom, void *bto, ssize_t nbytes);	/* Same as swab(), but operates on 64-bit words instead. */
+
+#define	swab16(x)	swab(x)
+
 extern void encrypt(char *block, int edflag);
 
 extern int spawnv(int mode, const char *file, const char **argv);

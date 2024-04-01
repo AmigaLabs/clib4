@@ -64,7 +64,8 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Werror # -Wbad-function-cast -Wconversion -Wformat
+    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Werror \
+     # -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -105,7 +106,7 @@ STATIC   := $(if $(STATIC),$(STATIC),yes)
 LARGEDATA :=
 OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe \
 		-nostdinc -nostartfiles -nostdlib
-OPTIMIZE := -O3 -mregnames -mstrict-align
+OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
 
 STABS :=
 DLIBS :=
@@ -117,9 +118,9 @@ else
     DLIBS += $(BUILD_DIR)/lib/libdebug.a
 endif
 
-CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__ -falign-functions=8
-CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)  -falign-functions=8
-AFLAGS     := -Wa,-mregnames -falign-functions=8 -mstrict-align
+CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
+CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
+AFLAGS     := -Wa,-mregnames -mstrict-align
 
 ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
@@ -128,6 +129,11 @@ ifdef SPE
     CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mabi=spe -mfloat-gprs=double $(CMATH) -fno-inline-functions -fno-partial-inlining \
                 -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
     AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mfloat-gprs=double $(CMATH) -Wno-overflow
+endif
+
+ifdef PROFILE
+    CFLAGS += -pg
+    DLIBS += -Lbuild/lib -lprofile
 endif
 
 VERBOSE    ?= @
@@ -172,10 +178,10 @@ include libm.gmk
 include libamiga.gmk
 include libdebug.gmk
 include libpthread.gmk
-include libprofile.gmk
 include libcrypt.gmk
 include librt.gmk
 include shared.gmk
+include libprofile.gmk
 
 prepare:
 	-$(MAKEDIR) $(BUILD_DIR)/shared
@@ -250,11 +256,7 @@ version:
 	$(COPY) c.lib_rev.rev math/m.lib_rev.rev
 	$(COPY) c.lib_rev.rev math/crypt.lib_rev.rev
 	$(COPY) c.lib_rev.rev math/pthread.lib_rev.rev
-	bumprev amiga.lib
-	bumprev c.lib
-	bumprev m.lib
-	bumprev crypt.lib
-	bumprev pthread.lib
+	$(COPY) c.lib_rev.rev math/profile.lib_rev.rev
 
 # Shared clib4.library rules
 

@@ -104,7 +104,7 @@ static BOOL writeSize(uint32 rows, uint32 columns) {
         int oldMode = getCurrentCliActionMode();
 
         SetMode(fh, 1); // RAW mode
-        snprintf(buffer, 50, "\x9b%dt\x9b%du", columns, rows);
+        snprintf(buffer, 50, "\x9b%dt\x9b%du", columns + 1, rows + 1);
         int bufferLen = strlen(buffer);
         int bytesWritten = Write(fh, buffer, bufferLen);
         if (bytesWritten == bufferLen) {

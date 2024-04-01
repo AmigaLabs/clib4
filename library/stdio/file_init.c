@@ -190,8 +190,12 @@ FILE_CONSTRUCTOR(stdio_file_init) {
                 break;
         }
 
-        /* Allocate a little more memory than necessary. */
-        buffer = AllocVecTags(BUFSIZ + (__clib4->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+        /* Allocate a little more memory than necessary and align the buffer to a cache line boundary. */
+        buffer = AllocVecTags(BUFSIZ + (__clib4->__cache_line_size - 1),
+                              AVT_Type, MEMF_SHARED,
+                              AVT_Alignment, __clib4->__cache_line_size,
+                              AVT_ClearWithValue, 0,
+                              TAG_DONE);
         if (buffer == NULL)
             goto out;
 
@@ -211,14 +215,12 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
         fd_flags |= FDF_NO_CLOSE | FDF_STDIO;
 
-        /* Align the buffer start address to a cache line boundary. */
-        aligned_buffer = (char *) ((ULONG)(buffer + (__clib4->__cache_line_size - 1)) & ~(__clib4->__cache_line_size - 1));
         D(("File %ld", i));
         __initialize_fd(__clib4->__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
         __initialize_iob(__clib4->__iob[i],
                          __iob_hook_entry,
                          buffer,
-                         aligned_buffer,
+                         buffer,
                          (int64_t) BUFSIZ,
                          i,
                          i,

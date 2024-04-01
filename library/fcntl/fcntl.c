@@ -14,7 +14,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     int result = ERROR;
     struct fd *fd = NULL;
     va_list arg;
-    int error;
+    int error = 0;
     int flags;
     int fdbase;
     int i;

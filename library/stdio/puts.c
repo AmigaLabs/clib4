@@ -59,6 +59,7 @@ puts(const char *s) {
     if (__putc('\n', stream, buffer_mode) == EOF)
         goto out;
 
+
     result = OK;
 
 out:
@@ -67,13 +68,12 @@ out:
        may have buffered data around, queued to be printed right now.
        This is intended to improve performance as it takes more effort
        to write a single character to a file than to write a bunch. */
-    if (result == 0 && (file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
+    if (result == OK && (file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
         if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0) {
             SHOWMSG("couldn't flush the write buffer");
             result = EOF;
         }
     }
-
     funlockfile(stream);
 
     RETURN(result);
