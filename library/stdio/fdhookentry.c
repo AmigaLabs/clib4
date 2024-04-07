@@ -435,21 +435,41 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
             SHOWMSG("file_action_set_blocking");
 
             if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
-                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE) || FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
                     LONG mode;
 
                     SHOWMSG("changing the mode");
 
-                    if (fam->fam_Arg != 0)
-                        mode = DOSFALSE; /* buffered mode */
-                    else
-                        mode = DOSTRUE; /* single character mode */
+                    /* Check if file is a PIPE: or a regular file first */
+                    if (!FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                        if (fam->fam_Arg != 0)
+                            mode = DOSFALSE; /* buffered mode */
+                        else
+                            mode = DOSTRUE; /* single character mode */
 
-                    if (CANNOT SetMode(file, mode)) {
-                        fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                        goto out;
+                        if (CANNOT SetMode(file, mode)) {
+                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            goto out;
+                        }
                     }
-
+                    else {
+                        if (fam->fam_Arg != 0)
+                            mode = SBM_NON_BLOCKING; /* non blocking mode */
+                        else
+                            mode = SBM_BLOCKING; /* blocking mode */
+                        int oldMode = SetBlockingMode(file, mode);
+                        if (oldMode == SBM_NON_BLOCKING) {
+                            SHOWMSG("Stream now is in non blocking mode");
+                        }
+                        else if (oldMode == SBM_BLOCKING) {
+                            SHOWMSG("Stream now is in blocking mode");
+                        }
+                        else {
+                            Printf("Error\n");
+                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            goto out;
+                        }
+                    }
                     result = OK;
                 } else {
                     SHOWMSG("can't do anything here");
