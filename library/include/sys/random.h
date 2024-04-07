@@ -2,6 +2,7 @@
 #define _SYS_RANDOM_H
 
 #include <features.h>
+#include <sys/types.h>
 #include <stddef.h>
 
 __BEGIN_DECLS

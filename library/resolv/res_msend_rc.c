@@ -45,12 +45,6 @@
 #include <poll.h>
 #include "lookup.h"
 
-/*
-static void cleanup(void *p) {
-    close((int) p);
-}
-*/
-
 static unsigned long mtime() {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -75,8 +69,6 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
     struct pollfd pfd;
     unsigned long t0, t1, t2;
 
-    //pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-
     timeout = 1000 * conf->timeout;
     attempts = conf->attempts;
 
@@ -96,17 +88,14 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
     sa.sin_family = family;
     fd = socket(family, SOCK_DGRAM, 0);
     if (fd < 0 || bind(fd, (void *) &sa, sl) < 0) {
-        if (fd >= 0) close(fd);
-        //pthread_setcancelstate(cs, 0);
+        if (fd >= 0)
+            close(fd);
         return -1;
     }
 
     /* Past this point, there are no errors. Each individual query will
      * yield either no reply (indicated by zero length) or an answer
      * packet which is up to the caller to interpret. */
-
-    //pthread_cleanup_push(cleanup, (void *) (intptr_t) fd);
-    //pthread_setcancelstate(cs, 0);
 
     memset(alens, 0, sizeof *alens * nqueries);
 
@@ -123,7 +112,7 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
             for (i = 0; i < nqueries; i++) {
                 if (!alens[i]) {
                     for (j = 0; j < nns; j++) {
-                        sendto(fd, queries[i], qlens[i], MSG_NOSIGNAL, (void *) &ns[j], sl);
+                        sendto(fd, queries[i], qlens[i], 0, (void *) &ns[j], sl);
                     }
                 }
             }

@@ -30,6 +30,7 @@ fgets(char *buf, int n, FILE *stream) {
         SHOWMSG("no work to be done");
         return NULL;
     }
+    memset(buf, 0, n);
 
     flockfile(stream);
 
