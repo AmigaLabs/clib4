@@ -100,42 +100,42 @@ getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *h
 
     switch (he->h_addrtype) {
         case PF_INET6: {
-            struct v6_pair *p = storage;
-            struct sockaddr_in6 *sinp = &p->sockaddr_in6;
-            tmp = &p->addrinfo;
+                struct v6_pair *p = storage;
+                struct sockaddr_in6 *sinp = &p->sockaddr_in6;
+                tmp = &p->addrinfo;
 
-            if (port)
-                sinp->sin6_port = port;
+                if (port)
+                    sinp->sin6_port = port;
 
-            if (he->h_length != sizeof(sinp->sin6_addr)) {
-                free(storage);
-                return EAI_SYSTEM; /* FIXME: Better return code?  Set errno? */
+                if (he->h_length != sizeof(sinp->sin6_addr)) {
+                    free(storage);
+                    return EAI_SYSTEM; /* FIXME: Better return code?  Set errno? */
+                }
+
+                memcpy(&sinp->sin6_addr, he->h_addr_list[0], sizeof sinp->sin6_addr);
+
+                tmp->ai_addr = (struct sockaddr *) sinp;
+                tmp->ai_addrlen = sizeof *sinp;
             }
-
-            memcpy(&sinp->sin6_addr, he->h_addr_list[0], sizeof sinp->sin6_addr);
-
-            tmp->ai_addr = (struct sockaddr *) sinp;
-            tmp->ai_addrlen = sizeof *sinp;
-        }
             break;
         case PF_INET: {
-            struct v4_pair *p = (struct v4_pair *) storage;
-            struct sockaddr_in *sinp = &p->sockaddr_in;
-            tmp = &p->addrinfo;
+                struct v4_pair *p = (struct v4_pair *) storage;
+                struct sockaddr_in *sinp = &p->sockaddr_in;
+                tmp = &p->addrinfo;
 
-            if (port)
-                sinp->sin_port = port;
+                if (port)
+                    sinp->sin_port = port;
 
-            if (he->h_length != sizeof(sinp->sin_addr)) {
-                free(storage);
-                return EAI_SYSTEM; /* FIXME: Better return code?  Set errno? */
+                if (he->h_length != sizeof(sinp->sin_addr)) {
+                    free(storage);
+                    return EAI_SYSTEM; /* FIXME: Better return code?  Set errno? */
+                }
+
+                memcpy(&sinp->sin_addr, he->h_addr_list[0], sizeof sinp->sin_addr);
+
+                tmp->ai_addr = (struct sockaddr *) sinp;
+                tmp->ai_addrlen = sizeof *sinp;
             }
-
-            memcpy(&sinp->sin_addr, he->h_addr_list[0], sizeof sinp->sin_addr);
-
-            tmp->ai_addr = (struct sockaddr *) sinp;
-            tmp->ai_addrlen = sizeof *sinp;
-        }
             break;
 
         default:

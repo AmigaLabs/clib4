@@ -1,5 +1,5 @@
 /*
- * $Id: unistd.h,v 1.23 2007-01-06 10:09:49 clib4devs Exp $
+ * $Id: unistd.h,v 1.24 2023-04-04 10:09:49 clib4devs Exp $
 */
 
 #ifndef _UNISTD_H
@@ -7,13 +7,8 @@
 
 #include <features.h>
 
-#ifndef _FCNTL_H
 #include <fcntl.h>
-#endif /* _FCNTL_H */
-
-#ifndef _STDINT_H
 #include <stdint.h>
-#endif /* _STDINT_H */
 
 __BEGIN_DECLS
 
@@ -185,6 +180,7 @@ extern int setlogin(const char *name);
 #define _SC_THREAD_KEYS_MAX        21
 #define _SC_HOST_NAME_MAX          65
 #define _SC_GETPW_R_SIZE_MAX	   70
+#define _SC_TTY_NAME_MAX           72
 
 extern long pathconf(const char *path,int name);
 extern long fpathconf(int file_descriptor,int name);

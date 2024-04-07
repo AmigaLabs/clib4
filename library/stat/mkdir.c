@@ -42,7 +42,7 @@ int mkdir(const char *path_name, mode_t mode) {
     }
 
     /* This check avoid that for some mistakes a directory contain more than one : char inside the name
-     * This could help to avoid problems on SFS file system that allow (by mistake) the creation of dirs
+     * This could help to avoid problems on SFS file system that allow (by mistake) the creation of dirgetrandoms
      * like DriveName:Dir/DriveName:Dir
      */
 
