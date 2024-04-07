@@ -190,6 +190,7 @@ C_POSIX := \
 	posix/sysv_shmids.o \
 	posix/ulimit.o \
 	posix/readv.o \
+	posix/waitpid.o \
 	posix/writev.o \
 	posix/uname.o
 
@@ -315,6 +316,32 @@ C_SOCKET := \
 	socket/syslog.o \
 	socket/vsyslog.o \
 	socket/set_h_errno.o
+
+C_SPAWN := \
+    posix/posix_spawn_file_actions_addchdir_np.o \
+    posix/posix_spawn_file_actions_addclose.o \
+    posix/posix_spawn_file_actions_adddup2.o \
+    posix/posix_spawn_file_actions_addopen.o \
+    posix/posix_spawn_file_actions_destroy.o \
+    posix/posix_spawn_file_actions_addfchdir_np.o \
+    posix/posix_spawn_file_actions_init.o \
+    posix/posix_spawn_internal.o \
+    posix/posix_spawnattr_destroy.o \
+    posix/posix_spawnattr_getflags.o \
+    posix/posix_spawnattr_getpgroup.o \
+    posix/posix_spawnattr_getschedparam.o \
+    posix/posix_spawnattr_getschedpolicy.o \
+    posix/posix_spawnattr_getsigdefault.o \
+    posix/posix_spawnattr_getsigmask.o \
+    posix/posix_spawnattr_init.o \
+    posix/posix_spawnattr_setflags.o \
+    posix/posix_spawnattr_setpgroup.o \
+    posix/posix_spawnattr_setschedparam.o \
+    posix/posix_spawnattr_setschedpolicy.o \
+    posix/posix_spawnattr_setsigdefault.o \
+    posix/posix_spawnattr_setsigmask.o \
+    posix/posix_spawn.o \
+    posix/posix_spawnp.o
 
 C_STAT := \
 	stat/chmod.o \
@@ -943,6 +970,7 @@ C_LIBRARY := \
 	$(C_SEARCH) \
     $(C_SETJMP) \
 	$(C_SOCKET) \
+	$(C_SPAWN) \
 	$(C_STAT) \
 	$(C_STDIO) \
 	$(C_STDLIB) \

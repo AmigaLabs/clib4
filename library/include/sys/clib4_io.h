@@ -123,6 +123,7 @@ struct _fd
 #define FDF_STDIN_READ_MARK	(1UL<<18)	/* STDIN was marked as first read */
 #define FDF_PIPE	        (1UL<<19)	/* FD is a PIPE */
 #define FDF_IS_SERIAL       (1UL<<20)   /* FD is using serial hook */
+#define FDF_CLOEXEC         (1UL<<21)   /* Close on child */
 
 /****************************************************************************/
 

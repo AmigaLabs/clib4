@@ -42,7 +42,7 @@
 | <semaphore.h>            | POSIX semaphores                                                                      | Complete                          |
 | <setjmp.h>               | Stack environment declarations                                                        | Complete                          |                                                   
 | <signal.h>               | Signals                                                                               | Complete                          |
-| <spawn.h>                | Process spawning                                                                      | Not present                       |
+| <spawn.h>                | Process spawning                                                                      | Complete                          |
 | <stdarg.h>               | Handle Variable Argument List                                                         | Complete                          |                                                    
 | <stdbool.h>              | Boolean type and values                                                               | Complete                          |
 | <stddef.h>               | Standard type definitions                                                             | Complete                          |                                                     

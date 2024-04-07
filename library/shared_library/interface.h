@@ -45,6 +45,7 @@
 #include <semaphore.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <stdio_ext.h>
 #include <stdlib.h>
@@ -81,6 +82,7 @@
 #include <sys/times.h>
 #include <sys/utsname.h>
 #include <sys/uio.h>
+#include <sys/wait.h>
 
 struct NameTranslationInfo;
 
@@ -1323,6 +1325,37 @@ struct Clib4IFace {
     FILE * (* __stdin) (void);                                                                                                                       /* 4328 */
     FILE * (* __stdout) (void);                                                                                                                      /* 4332 */
     FILE * (* __stderr) (void);                                                                                                                      /* 4336 */
+
+    int (* posix_spawn) (pid_t *__restrict pid, const char *__restrict path,                                                                         /* 4340 */
+                    posix_spawn_file_actions_t *file_actions,
+                    const posix_spawnattr_t *attrp,
+                    char *const argv[__restrict], char *const envp[__restrict]);
+    int (* posix_spawnp) (pid_t *__restrict, const char *__restrict, const posix_spawn_file_actions_t *,                                             /* 4344 */
+            const posix_spawnattr_t *__restrict, char *const[], char *const[]);
+
+    int (* posix_spawn_file_actions_init) (posix_spawn_file_actions_t *);																			 /* 4348 */
+    int (* posix_spawn_file_actions_destroy) (posix_spawn_file_actions_t *);																		 /* 4352 */
+    int (* posix_spawn_file_actions_addopen) (posix_spawn_file_actions_t *__restrict, int, const char *__restrict, int, mode_t);					 /* 4356 */
+    int (* posix_spawn_file_actions_adddup2) (posix_spawn_file_actions_t *, int, int);																 /* 4360 */
+    int (* posix_spawn_file_actions_addclose) (posix_spawn_file_actions_t *, int);																	 /* 4364 */
+    int (* posix_spawn_file_actions_addchdir_np)  (posix_spawn_file_actions_t *__restrict, const char *__restrict);									 /* 4368 */
+    int (* posix_spawn_file_actions_addfchdir_np)  (posix_spawn_file_actions_t *__restrict, int);													 /* 4372 */
+    int (* posix_spawnattr_init) (posix_spawnattr_t *);																								 /* 4376 */
+    int (* posix_spawnattr_destroy) (posix_spawnattr_t *);																							 /* 4380 */
+    int (* posix_spawnattr_getflags) (const posix_spawnattr_t *__restrict, short *__restrict);														 /* 4384 */
+    int (* posix_spawnattr_getpgroup) (const posix_spawnattr_t *__restrict, pid_t *__restrict);														 /* 4388 */
+    int (* posix_spawnattr_getschedparam) (const posix_spawnattr_t *__restrict, struct sched_param *__restrict);									 /* 4392 */
+    int (* posix_spawnattr_getschedpolicy) (const posix_spawnattr_t *__restrict, int *__restrict);													 /* 4396 */
+    int (* posix_spawnattr_getsigdefault) (const posix_spawnattr_t *__restrict, sigset_t *__restrict);												 /* 4400 */
+    int (* posix_spawnattr_getsigmask) (const posix_spawnattr_t *__restrict, sigset_t *__restrict);													 /* 4404 */
+    int (* posix_spawnattr_setflags) (posix_spawnattr_t *, short);																					 /* 4408 */
+    int (* posix_spawnattr_setpgroup) (posix_spawnattr_t *, pid_t);																					 /* 4412 */
+    int (* posix_spawnattr_setschedparam) (posix_spawnattr_t *__restrict, const struct sched_param *__restrict);									 /* 4416 */
+    int (* posix_spawnattr_setschedpolicy) (posix_spawnattr_t *, int);																				 /* 4420 */
+    int (* posix_spawnattr_setsigdefault) (posix_spawnattr_t *__restrict, const sigset_t *__restrict);												 /* 4424 */
+    int (* posix_spawnattr_setsigmask) (posix_spawnattr_t *__restrict, const sigset_t *__restrict);													 /* 4428 */
+
+    pid_t (* waitpid) (pid_t pid, int *status, int options);                                    													 /* 4432 */
 
 };
 

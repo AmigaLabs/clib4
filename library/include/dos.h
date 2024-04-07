@@ -13,6 +13,7 @@
 #include <sys/syslimits.h>
 #include <wchar.h>
 #include <setjmp.h>
+#include <spawn.h>
 #include <resolv.h>
 #include <exec/types.h>
 #include <exec/lists.h>
@@ -206,8 +207,8 @@ struct _clib4 {
     BOOL __unix_path_semantics;
 
     BOOL  unused6;
-    void *unused1;
-    void *unused2;
+    int32_t __pipenum;
+    void *__pipe_semaphore;
     BOOL  unused3;
 
     /* This is used with the dlopen(), dlclose() and dlsym() functions. */
@@ -509,6 +510,9 @@ struct _clib4 {
 
     /* ttyname */
     char tty_file_name[_POSIX_TTY_NAME_MAX];
+
+    /* spawn */
+    int (* posix_spawn_destroyportactions_np) (posix_spawnattr_t *);
 };
 
 #ifndef __getClib4

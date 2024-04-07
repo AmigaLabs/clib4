@@ -1153,4 +1153,30 @@ static void *clib4Vectors[] = {
         (void *) (__stdin),                               /* 4328 */
         (void *) (__stdout),                              /* 4332 */
         (void *) (__stderr),                              /* 4336 */
+
+        (void *) (posix_spawn),                           /* 4340 */
+        (void *) (posix_spawnp),                          /* 4344 */
+        (void *) (posix_spawn_file_actions_init),         /* 4348 */
+        (void *) (posix_spawn_file_actions_destroy),      /* 4352 */
+        (void *) (posix_spawn_file_actions_addopen),      /* 4356 */
+        (void *) (posix_spawn_file_actions_adddup2),      /* 4360 */
+        (void *) (posix_spawn_file_actions_addclose),     /* 4364 */
+        (void *) (posix_spawn_file_actions_addchdir_np),  /* 4368 */
+        (void *) (posix_spawn_file_actions_addfchdir_np), /* 4372 */
+        (void *) (posix_spawnattr_init),                  /* 4376 */
+        (void *) (posix_spawnattr_destroy),               /* 4380 */
+        (void *) (posix_spawnattr_getflags),              /* 4384 */
+        (void *) (posix_spawnattr_getpgroup),             /* 4388 */
+        (void *) (posix_spawnattr_getschedparam),         /* 4392 */
+        (void *) (posix_spawnattr_getschedpolicy),        /* 4396 */
+        (void *) (posix_spawnattr_getsigdefault),         /* 4400 */
+        (void *) (posix_spawnattr_getsigmask),            /* 4404 */
+        (void *) (posix_spawnattr_setflags),              /* 4408 */
+        (void *) (posix_spawnattr_setpgroup),             /* 4412 */
+        (void *) (posix_spawnattr_setschedparam),         /* 4416 */
+        (void *) (posix_spawnattr_setschedpolicy),        /* 4420 */
+        (void *) (posix_spawnattr_setsigdefault),         /* 4424 */
+        (void *) (posix_spawnattr_setsigmask),            /* 4428 */
+
+        (void *) (waitpid),                               /* 4432 */
 };
