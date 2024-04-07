@@ -35,6 +35,8 @@ sysconf(int name) {
         case _SC_NPROCESSORS_ONLN:
             GetCPUInfoTags(GCIT_NumberOfCPUs, (ULONG)&query, TAG_DONE);
             break;
+        case _SC_TTY_NAME_MAX:
+            return _POSIX_TTY_NAME_MAX;
         case _SC_GETPW_R_SIZE_MAX:
             return -1;
         default:

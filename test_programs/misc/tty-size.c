@@ -2,28 +2,33 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdlib.h>
 
 int
-main(void) {
+main(int argc, char **argv) {
+    int rows = 40, cols = 40;
     struct winsize ws;
+
+    if (argc == 3) {
+        rows = atoi(argv[1]);
+        cols = atoi(argv[2]);
+    }
+
     ioctl(STDIN_FILENO, TIOCGWINSZ, &ws);
+    printf("Actual Lines %d\n", ws.ws_row);
+    printf("Actual Columns %d\n", ws.ws_col);
+    printf("Actual XPixel %d\n", ws.ws_xpixel);
+    printf("Actual YPixel %d\n", ws.ws_ypixel);
 
-    printf("lines %d\n", ws.ws_row);
-    printf("columns %d\n", ws.ws_col);
-
-#if 0
-    ws.ws_row = 150;
-    ws.ws_col = 40;
+    ws.ws_row = rows;
+    ws.ws_col = cols;
 
     ioctl(STDIN_FILENO, TIOCSWINSZ, &ws);
-    printf("errno TIOCSWINSZ = %d\n", errno);
+    printf("TIOCSWINSZ errno = %d\n", errno);
 
-    ioctl(STDIN_FILENO, TIOCGWINSZ, &ws);
-    printf("errno TIOCGWINSZ = %d\n", errno);
-
-    printf("lines %d\n", ws.ws_row);
-    printf("columns %d\n", ws.ws_col);
-#endif
-
+    printf("New Lines %d\n", ws.ws_row);
+    printf("New Columns %d\n", ws.ws_col);
+    printf("New XPixel %d\n", ws.ws_xpixel);
+    printf("New YPixel %d\n", ws.ws_ypixel);
     return (0);
 }

@@ -506,6 +506,9 @@ struct _clib4 {
     char tgoto_buf[50];
 
     struct __res_state _res_state;
+
+    /* ttyname */
+    char tty_file_name[_POSIX_TTY_NAME_MAX];
 };
 
 #ifndef __getClib4

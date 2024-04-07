@@ -1,5 +1,5 @@
 /*
- * $Id: stat_mkdir.c,v 1.7 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stat_mkdir.c,v 1.8 2024-03-25 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STAT_HEADERS_H
@@ -39,6 +39,24 @@ int mkdir(const char *path_name, mode_t mode) {
             __set_errno(EACCES);
             goto out;
         }
+    }
+
+    /* This check avoid that for some mistakes a directory contain more than one : char inside the name
+     * This could help to avoid problems on SFS file system that allow (by mistake) the creation of dirgetrandoms
+     * like DriveName:Dir/DriveName:Dir
+     */
+
+    int counter = 0;
+    for (int i = 0; path_name[i]; i++) {
+        if (path_name[i] == ':') {
+            counter++;
+        }
+    }
+    if (counter > 1) {
+        SHOWMSG("Invalid directory name parameter");
+
+        __set_errno(EFAULT);
+        goto out;
     }
 
     D(("trying to create '%s'", path_name));
@@ -95,7 +113,7 @@ int mkdir(const char *path_name, mode_t mode) {
 
     result = OK;
 
-out:
+    out:
 
     RETURN(result);
     return (result);

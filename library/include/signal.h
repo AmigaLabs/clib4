@@ -102,6 +102,9 @@ typedef struct {
 #define SA_NODEFER 2
 #define SA_RESTART 4
 #define SA_SIGINFO 8
+#if defined __USE_XOPEN_EXTENDED || defined __USE_MISC
+# define SA_ONSTACK	16	/* Take signal on signal stack.  */
+#endif
 
 #define sa_handler _sa_func._sa_handler
 #define sa_sigaction _sa_func._sa_sigaction

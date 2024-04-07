@@ -13,7 +13,6 @@
 void *
 memset(void *ptr, int val, size_t len) {
 	void *result = ptr;
-	unsigned char *m = ptr;
 
     DECLARE_UTILITYBASE();
 
