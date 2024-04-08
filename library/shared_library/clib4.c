@@ -198,7 +198,7 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
         D(("c2n.pid = %ld", c2n.pid));
         D(("c2n.pPid = %ld", c2n.pPid));
         D(("c2n.uuid = %s", c2n.uuid));
-        hashmap_set(res->children, &c2n);
+        hashmap_set(res->sysv_children, &c2n);
 
         switch (res->cpufamily) {
 #ifdef __SPE__
@@ -257,13 +257,15 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 
         size_t iter = 0;
         void *item;
-        while (hashmap_iter(res->children, &iter, &item)) {
+        while (hashmap_iter(res->sysv_children, &iter, &item)) {
             const struct Clib4Node *node = item;
             if (node->undo)
                 IExec->FreeVec(node->undo);
         }
 
+        hashmap_free(res->sysv_children);
         hashmap_free(res->children);
+
         if (res->fallbackClib) {
             reent_exit(res->fallbackClib, TRUE);
         }
@@ -297,12 +299,12 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
         size_t iter = 0;
         void *item;
-        while (hashmap_iter(res->children, &iter, &item)) {
+        while (hashmap_iter(res->sysv_children, &iter, &item)) {
             const struct Clib4Node *node = item;
             if (node->pid == pid) {
                 if (node->undo)
                     IExec->FreeVec(node->undo);
-                hashmap_delete(res->children, node);
+                hashmap_delete(res->sysv_children, node);
                 break;
             }
         }
@@ -366,6 +368,20 @@ clib4NodeCompare(const void *a, const void *b, void *udata) {
     const struct Clib4Node *ua = a;
     const struct Clib4Node *ub = b;
     return ua->uuid == ub->uuid;
+}
+
+uint64_t
+clib4ProcessHash(const void *item, uint64_t seed0, uint64_t seed1) {
+    const struct Clib4Process *node = item;
+    const char buffer[100] = {0};
+    snprintf(buffer, 99, "%d", node->pid);
+    return hashmap_xxhash3(buffer, strlen(buffer), seed0, seed1);
+}
+
+clib4ProcessCompare(const void *a, const void *b, void *udata) {
+    const struct Clib4Process *ua = a;
+    const struct Clib4Process *ub = b;
+    return ua->pid == ub->pid;
 }
 
 struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
@@ -445,10 +461,12 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
             res->size = sizeof(*res);
 
             iexec->InitSemaphore(&res->semaphore);
-            res->children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
+            res->sysv_children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
             /* Initialize unix sockets hashmap */
-            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL,
-                                            NULL);
+            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
+            /* Initialize spawned children hasmap */
+            res->children = hashmap_new(sizeof(struct Clib4Process), 0, 0, 0, clib4ProcessHash, clib4ProcessCompare, NULL, NULL);
+
             /* Initialize fallback clib4 reent structure */
             res->fallbackClib = (struct _clib4 *) iexec->AllocVecTags(sizeof(struct _clib4),
                                                                       AVT_Type, MEMF_SHARED,

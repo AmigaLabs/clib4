@@ -24,7 +24,8 @@ struct Clib4Resource {
     struct Library          resource;       /* must be first */
     uint32                  size;           /* for struct validation only */
     struct SignalSemaphore  semaphore;      /* for list arbitration */
-    struct hashmap         *children;       /* list of parent nodes */
+    struct hashmap         *sysv_children;  /* list of sysv parent nodes */
+    struct hashmap         *children;       /* list of spawned processes */
     struct hashmap         *uxSocketsMap;
     struct _clib4          *fallbackClib;
     /* SysVIPC fields */
@@ -54,6 +55,12 @@ struct Clib4Node {
     /* SysVIPC fields */
     struct UndoInfo *undo;
     int32            errNo;
+};
+
+struct Clib4Process {
+    uint32  pid;       /* the process PID */
+    uint32  pPid;      /* the process Parent PID */
+    uint32  status;    /* the status of process */
 };
 
 struct Clib4Base {

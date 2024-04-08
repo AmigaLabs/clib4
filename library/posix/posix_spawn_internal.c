@@ -93,16 +93,14 @@ static int spawned_task() {
             }
         }
     }
-    Signal(taskParams->parent, taskParams->startupSignal);
 
     Printf("2) Calling execve\n");
     ret = execve(taskParams->path, taskParams->argv, taskParams->envp);
     Printf("2) Done: ret = %ld\n", ret);
 
     Printf("2) Write on pipe[1]\n");
-    char str[10] = {0};
-    snprintf(str, 9, "%d", ret);
-    write(pipe[1], str, sizeof(str));
+    write(pipe[1], &ret, sizeof(ret));
+    Signal(taskParams->parent, taskParams->startupSignal);
     Printf("2) close pipe[1]\n");
     close(pipe[1]);
 
@@ -173,8 +171,7 @@ __posix_spawn(pid_t *__restrict pid, const char *__restrict path, struct _posix_
 
     Printf("1) pipes = %ld %ld\n", pipe[0], pipe[1]);
     Printf("1) Now read from pipe[0]\n");
-    char str[10] = {0};
-    if (read(pipe[0], str, sizeof(str)) == -1)
+    if (read(pipe[0], &ret, sizeof(ret)) != sizeof(ret))
         ret = 0;
     Printf("1) ret = %ld\n", ret);
     close(pipe[0]);

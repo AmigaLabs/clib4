@@ -275,7 +275,7 @@ _main(
     if (res) {
         size_t iter = 0;
         void *item;
-        while (hashmap_iter(res->children, &iter, &item)) {
+        while (hashmap_iter(res->sysv_children, &iter, &item)) {
             const struct Clib4Node *node = item;
             if (node->pid == pid) {
                 __clib4->uuid = node->uuid;

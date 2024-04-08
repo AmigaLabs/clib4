@@ -37,6 +37,8 @@ waitpid(pid_t pid, int *status, int options) {
     struct Process *process = NULL;
     int32 retval;
 
+    __check_abort();
+
     *status = 0;
 
     if (pid < -1) {
@@ -67,15 +69,29 @@ waitpid(pid_t pid, int *status, int options) {
     }
     else {
         /* Check for specific process id */
+        Printf("CHECKING FOR PID %ld\n", pid);
         if (options != WNOHANG) {
             /* If WNOHANG is not set wait for process closing */
-            WaitForChildExit(pid);
+            if (WaitForChildExit(pid)) {
+                Printf("FOUND PID\n");
+                processId = pid;
+            }
+            else {
+                Printf("PID NOT FOUND\n");
+                processId = -1;
+                __set_errno(ENOENT);
+            }
         }
         else {
             /* If WNOHANG is set, use process scan to find the process */
-            retval = CheckForChildExit(pid);
-            if (retval) {
+            if (CheckForChildExit(pid)) {
+                Printf("FOUND PID\n");
                 processId = pid;
+            }
+            else {
+                Printf("PID NOT FOUND\n");
+                processId = -1;
+                __set_errno(ENOENT);
             }
         }
     }
