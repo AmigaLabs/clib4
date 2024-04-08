@@ -231,6 +231,8 @@ reent_init(struct _clib4 *__clib4) {
         .tgoto_buf = {0},
         /* Set memalign tree to NULL */
         .__memalign_tree = NULL,
+        /* Initialize pipe semaphore */
+        .__pipe_semaphore = __create_semaphore(),
         /* Initialize random signal and state */
         .__random_lock = __create_semaphore(),
         .n = 31,
@@ -285,7 +287,7 @@ reent_init(struct _clib4 *__clib4) {
         .syslog_mask = 0xff,
     };
 
-    if (!__clib4->__random_lock) {
+    if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {
         goto out;
     }
 
@@ -419,7 +421,8 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
         }
         /* Remove random semaphore */
         __delete_semaphore(__clib4->__random_lock);
-
+        /* Remove pipe semaphore */
+        __delete_semaphore(__clib4->__pipe_semaphore);
         if (!fallback) { //TODO : Freeing memalign crash libExpunge and I don't know why
             /* Free memalign stuff */
             if (__clib4->__memalign_pool) {

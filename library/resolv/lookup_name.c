@@ -58,7 +58,7 @@ name_from_hosts(struct address buf[static MAXADDRS], char canon[static 256], con
     int cnt = 0, badfam = 0, have_canon = 0;
     unsigned char _buf[1032];
     FILE *f = fopen(_PATH_HOSTS,"r");
-    if (!f)
+    if (!f) {
         switch (errno) {
             case ENOENT:
             case ENOTDIR:
@@ -67,12 +67,12 @@ name_from_hosts(struct address buf[static MAXADDRS], char canon[static 256], con
             default:
                 return EAI_SYSTEM;
         }
+    }
     while (fgets(line, sizeof line, f) && cnt < MAXADDRS) {
         char *p, *z;
 
         if ((p = strchr(line, '#'))) *p++ = '\n', *p = 0;
-        for (p = line + 1; (p = strstr(p, name)) &&
-                           (!isspace(p[-1]) || !isspace(p[l])); p++);
+        for (p = line + 1; (p = strstr(p, name)) && (!isspace(p[-1]) || (!isspace(p[l]) && p[l] != '\0')); p++);
         if (!p) continue;
 
         /* Isolate IP address to parse */

@@ -67,7 +67,7 @@ __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
     while (fgets(line, sizeof line, f)) {
         char *p, *z;
 
-        if (!strncmp(line, "options", 7) && isspace(line[7])) {
+        if (!strncmp(line, "options", 7) && (isspace(line[7]) || line[7] == '=')) {
             p = strstr(line, "ndots:");
             if (p && isdigit(p[6])) {
                 p += 6;
@@ -102,7 +102,7 @@ __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
 
         if (!search) continue;
         if ((strncmp(line, "domain", 6) && strncmp(line, "search", 6))
-            || !isspace(line[6]))
+            || (!isspace(line[6]) && line[6] != '='))
             continue;
         for (p = line + 7; isspace(*p); p++);
         size_t l = strlen(p);
