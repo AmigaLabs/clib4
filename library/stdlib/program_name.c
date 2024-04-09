@@ -10,11 +10,8 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
-
-STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
+void
+_stdlib_program_name_exit() {
 	ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -26,8 +23,8 @@ STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 	LEAVE();
 }
 /* First constructor called by _init */
-STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
-	BOOL success = FALSE;
+void
+_stdlib_program_name_init(void) {
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
@@ -49,17 +46,9 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
         __clib4->__progname = (char *) __clib4->__WBenchMsg->sm_ArgList[0].wa_Name;
 	}
 
-	success = TRUE;
-
 out:
 
-	SHOWVALUE(success);
 	LEAVE();
-
-	if (success)
-		CONSTRUCTOR_SUCCEED();
-	else
-		CONSTRUCTOR_FAIL();
 }
 
 

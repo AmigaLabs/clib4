@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_setenv.c,v 1.12 2006-09-25 14:12:15 clib4devs Exp $
+ * $Id: stdlib_setenv.c,v 1.12 2024-04-09 14:12:15 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -10,16 +10,12 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
-
 struct LocalVariable {
     struct LocalVariable *lv_Next;
     char *lv_Name;
 };
 
-CLIB_DESTRUCTOR(__setenv_exit) {
+void _setenv_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

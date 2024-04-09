@@ -1,16 +1,12 @@
 /*
- * $Id: unistd_chdir_exit.c,v 1.7 2006-01-08 12:04:27 clib4devs Exp $
+ * $Id: unistd_chdir_exit.c,v 1.8 2024-04-09 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
-
-CLIB_DESTRUCTOR(__chdir_exit) {
+void _chdir_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

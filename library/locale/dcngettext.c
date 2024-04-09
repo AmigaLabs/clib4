@@ -1,10 +1,6 @@
 /*
- * $Id: locale_dcngettext.c,v 1.0 2023-06-08 14:51:15 clib4devs Exp $
+ * $Id: locale_dcngettext.c,v 1.0 2024-04-09 14:51:15 clib4devs Exp $
 */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 #ifndef _LOCALE_HEADERS_H
 #include "locale_headers.h"
@@ -773,7 +769,7 @@ char *bind_textdomain_codeset(const char *domainname, const char *codeset) {
     return NULL;
 }
 
-CLIB_DESTRUCTOR(dcngettext_exit) {
+void _dcngettext_exit(void) {
     struct _clib4 *__clib4 = __CLIB4;
     /* Free binddtextdomain bindings */
     if (__clib4->g_mofile) {

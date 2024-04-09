@@ -107,4 +107,40 @@ extern int _main(char *argstr,
 
 extern void kprintf(const char * format,...);
 
+/* Old constructors and destructors are moved here */
+void call_constructors(void);
+void call_destructors(void);
+
+void _stdlib_program_name_init(void);
+void _stdlib_memory_init(void);
+void _stdio_init(void);
+void _stdio_file_init(void);
+void _socket_init(void);
+void _math_init(void);
+void _arg_init(void);
+void _usergroup_init(void);
+void _locale_init(void);
+void _unistd_init(void);
+void _dirent_init(void);
+void _timer_init(void);
+void _timezone_init(void);
+void _clock_init(void);
+
+void _stdlib_program_name_exit(void);
+void _stdlib_memory_exit(void);
+void _stdio_exit(void);
+void _stdio_file_exit(void);
+void _socket_exit(void);
+void _arg_exit(void);
+void _locale_exit(void);
+void _unistd_exit(void);
+void _dirent_exit(void);
+void _chdir_exit(void);
+void _setenv_exit(void);
+void _timezone_exit(void);
+void _timer_exit(void);
+void _wildcard_expand_exit(void);
+void _usergroup_exit(void);
+void _dcngettext_exit(void);
+
 #endif /* _STDLIB_HEADERS_H */

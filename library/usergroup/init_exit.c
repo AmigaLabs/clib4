@@ -1,21 +1,17 @@
 /*
- * $Id: usergroup_init_exit.c,v 1.12 2006-01-08 12:04:27 clib4devs Exp $
+ * $Id: usergroup_init_exit.c,v 1.13 2024-04-09 12:04:27 clib4devs Exp $
 */
 
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
 
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
-
 /****************************************************************************/
 
 /* Pointer to errno, length == sizeof(long) */
 #define UGT_ERRNOLPTR 0x80000004
 
-CLIB_DESTRUCTOR(usergroup_exit) {
+void _usergroup_exit(void) {
 	ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -32,9 +28,8 @@ CLIB_DESTRUCTOR(usergroup_exit) {
 	LEAVE();
 }
 
-CLIB_CONSTRUCTOR(usergroup_init) {
+void _usergroup_init(void) {
 	struct TagItem tags[2];
-	BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
 
 	ENTER();
@@ -70,15 +65,7 @@ CLIB_CONSTRUCTOR(usergroup_init) {
 		goto out;
 	}
 
-	success = TRUE;
-
 out:
 
-	SHOWVALUE(success);
 	LEAVE();
-
-	if (success)
-		CONSTRUCTOR_SUCCEED();
-	else
-		CONSTRUCTOR_FAIL();
 }

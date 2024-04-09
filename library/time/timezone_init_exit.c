@@ -1,14 +1,10 @@
 /*
- * $Id: timezone_init_exit.c,v 1.0 2021-01-15 10:01:23 clib4devs Exp $
+ * $Id: timezone_init_exit.c,v 1.2 2024-04-09 10:01:23 clib4devs Exp $
 */
 
 #ifndef _TIMEZONE_HEADERS_H
 #include "timezone_headers.h"
 #endif /* _TIMEZONE_HEADERS_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 void
 __timezone_exit(void) {
@@ -114,7 +110,7 @@ __timezone_unlock(void) {
         ReleaseSemaphore(__clib4->timezone_lock);
 }
 
-CLIB_DESTRUCTOR(timezone_exit) {
+void _timezone_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -126,10 +122,9 @@ CLIB_DESTRUCTOR(timezone_exit) {
     LEAVE();
 }
 
-CLIB_CONSTRUCTOR(timezone_init) {
+void _timezone_init(void) {
     ENTER();
 
-    BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
 
     __clib4->timezone_lock = __create_semaphore();
@@ -138,15 +133,7 @@ CLIB_CONSTRUCTOR(timezone_init) {
 
     __timezone_init();
 
-    success = TRUE;
-
 out:
 
-    SHOWVALUE(success);
     LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
 }

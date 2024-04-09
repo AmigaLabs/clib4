@@ -1,5 +1,5 @@
 /*
- * $Id: dirent_closedir.c,v 2.0 2023-05-13 12:04:22 clib4devs Exp $
+ * $Id: dirent_closedir.c,v 2.1 2024-04-09 12:04:22 clib4devs Exp $
 */
 
 #ifndef _DIRENT_HEADERS_H
@@ -9,10 +9,6 @@
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 void __dirent_lock(struct _clib4 *__clib4) {
     if (__clib4->dirent_lock != NULL)
@@ -24,8 +20,7 @@ void __dirent_unlock(struct _clib4 *__clib4) {
         ReleaseSemaphore(__clib4->dirent_lock);
 }
 
-CLIB_CONSTRUCTOR(dirent_init) {
-    BOOL success = FALSE;
+void _dirent_init(void) {
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
@@ -36,20 +31,12 @@ CLIB_CONSTRUCTOR(dirent_init) {
     if (__clib4->dirent_lock == NULL)
         goto out;
 
-    success = TRUE;
-
 out:
 
-    SHOWVALUE(success);
     LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
 }
 
-CLIB_DESTRUCTOR(dirent_exit) {
+void _dirent_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

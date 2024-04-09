@@ -1,14 +1,10 @@
 /*
- * $Id: math_init_exit.c,v 1.19 2006-01-08 12:04:23 clib4devs Exp $
+ * $Id: math_init_exit.c,v 1.20 2024-04-09 12:04:23 clib4devs Exp $
 */
 
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 #include <fpu_control.h>
 
@@ -27,7 +23,7 @@ __setfpucw(fpu_control_t set) {
     _FPU_SETCW (cw);
 }
 
-MATH_CONSTRUCTOR(math_init) {
+void _math_init(void) {
     union ieee_single *single_x;
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -41,6 +37,4 @@ MATH_CONSTRUCTOR(math_init) {
     single_x->raw[0] = 0x7fc00001;
 
 	LEAVE();
-
-    CONSTRUCTOR_SUCCEED();
 }

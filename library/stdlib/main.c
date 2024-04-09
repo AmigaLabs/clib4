@@ -71,7 +71,7 @@ copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *
 
         char **env = (char **) hook->h_Data;
         uint32 size = strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
-        char *buffer = (char *) malloc(size);
+        char *buffer = (char *) AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
         if (buffer == NULL) {
             return 1;
         }
@@ -95,7 +95,7 @@ makeEnvironment(struct _clib4 *__clib4) {
         flags = GVF_LOCAL_ONLY;
     }
 
-    __clib4->__environment = (char **) calloc(environ_size, 1);
+    __clib4->__environment = (char **) AllocVecTags(environ_size, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (!__clib4->__environment)
         return;
 
@@ -168,6 +168,8 @@ call_main(
         void (*__EXT_DTOR_LIST__[])(void),
         struct _clib4 *__clib4) {
     volatile LONG saved_io_err;
+    struct Process *me = (struct Process *) FindTask(NULL);
+    D(("[call_main] Task = %x - __clib4 %x", me, __clib4));
 
     ENTER();
     /* This plants the return buffer for _exit(). */
@@ -179,14 +181,13 @@ call_main(
     SHOWMSG("Initialize shared objects");
     shared_obj_init(__clib4, TRUE);
 
-    SHOWMSG("Now invoking constructors");
+    SHOWMSG("Now invoking external constructors");
     /* Go through the constructor list */
     _start_ctors(__EXT_CTOR_LIST__);
     SHOWMSG("Constructors executed correctly. Calling start_main()");
 
     /* Set __current_path_name to a valid value */
     UBYTE current_dir_name[256] = {0};
-    struct Process *me = (struct Process *) FindTask(NULL);
     if (NameFromLock(me->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
         __set_current_path((const char *) current_dir_name);
     }
@@ -239,38 +240,21 @@ _main(
     struct WBStartup *sms = NULL;
     struct Process *me;
     int rc = RETURN_FAIL;
-    struct _clib4 *__clib4 = NULL;
     uint32 pid = GetPID(0, GPID_PROCESS);
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct _clib4 *__clib4 = __CLIB4;
 
     DECLARE_UTILITYBASE();
 
     /* Pick up the Workbench startup message, if available. */
     me = (struct Process *) FindTask(NULL);
+    D(("[_main] Task = %x - __clib4 %x", me, __clib4));
+
     if (!me->pr_CLI) {
         struct MsgPort *mp = &me->pr_MsgPort;
         WaitPort(mp);
         sms = (struct WBStartup *) GetMsg(mp);
     }
-
-    /* If all libraries are opened correctly we can initialize clib4 reent structure */
-    D(("Initialize clib4 reent structure"));
-    /* Initialize global structure */
-    __clib4 = (struct _clib4 *) AllocVecTags(sizeof(struct _clib4),
-                                             AVT_Type, MEMF_SHARED,
-                                             AVT_ClearWithValue, 0,
-                                             TAG_DONE);
-    if (__clib4 == NULL) {
-        Forbid();
-        ReplyMsg(&sms->sm_Message);
-        return -1;
-    }
-
-    /* Set the current task pointer */
-    __clib4->self = me;
-
-    reent_init(__clib4);
-    __clib4->processId = pid;
 
     if (res) {
         size_t iter = 0;
@@ -284,17 +268,14 @@ _main(
             }
         }
     }
-
-    /* Set _clib4 pointer into process pr_UID
-     * This field is copied to any spawned process created by this exe and/or its children
-     */
-    me->pr_UID = (uint32) __clib4;
-    //SetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, __clib4, TAG_END);
+    else {
+        SHOWMSG("Cannot open clib4 resource. Give up");
+        goto out;
+    }
 
     __clib4->__WBenchMsg = sms;
 
-    /* After reent structure we can call clib4 constructors */
-    SHOWMSG("Calling clib4 ctors");
+    SHOWMSG("Calling clib4 external ctors");
     _start_ctors(__CTOR_LIST__);
     SHOWMSG("Done. All constructors called");
 
@@ -327,6 +308,9 @@ _main(
     /* We have enough room to make the call or just don't care. */
     rc = call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib4);
 
+    if (__clib4->__environment)
+        FreeVec(__clib4->__environment);
+
     /* Restore the task priority. */
     SetTaskPri((struct Task *) me, oldPriority);
 
@@ -334,13 +318,10 @@ _main(
     _end_ctors(__DTOR_LIST__);
     SHOWMSG("Done. All destructors called");
 
-    SHOWMSG("Calling reent_exit on _clib4");
-    reent_exit(__clib4, FALSE);
-
     if (sms) {
         Forbid();
         ReplyMsg(&sms->sm_Message);
     }
-
+out:
     return rc;
 }

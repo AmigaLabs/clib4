@@ -1,5 +1,5 @@
 /*
- * $Id: socket_init_exit.c,v 1.26 2006-04-05 08:39:45 clib4devs Exp $
+ * $Id: socket_init_exit.c,v 1.27 2024-04-09 08:39:45 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -9,10 +9,6 @@
 #ifndef _SIGNAL_HEADERS_H
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 struct Library *__SocketBase;
 struct SocketIFace *__ISocket;
@@ -62,7 +58,7 @@ STATIC struct Hook error_hook = {
     NULL
 };
 
-SOCKET_DESTRUCTOR(socket_exit) {
+void _socket_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -96,9 +92,8 @@ SOCKET_DESTRUCTOR(socket_exit) {
     LEAVE();
 }
 
-SOCKET_CONSTRUCTOR(socket_init) {
+void _socket_init(void) {
     struct TagItem tags[5];
-    BOOL success = FALSE;
     LONG status;
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -173,15 +168,7 @@ SOCKET_CONSTRUCTOR(socket_init) {
         }
     }
 
-    success = TRUE;
-
 out:
 
-    SHOWVALUE(success);
     LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
 }

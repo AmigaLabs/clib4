@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_file_init.c,v 1.13 2008-09-04 12:07:58 clib4devs Exp $
+ * $Id: stdio_file_init.c,v 1.14 2024-04-09 12:07:58 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -14,13 +14,9 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
-
 #include <dos/stdio.h>
 
-FILE_DESTRUCTOR(workbench_exit) {
+void _stdio_file_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -134,12 +130,11 @@ out:
     return (result);
 }
 
-FILE_CONSTRUCTOR(stdio_file_init) {
+void _stdio_file_init(void) {
     struct SignalSemaphore *stdio_lock;
     struct SignalSemaphore *fd_lock;
     BPTR default_file;
     ULONG fd_flags, iob_flags;
-    BOOL success = FALSE;
     char *buffer;
     char *aligned_buffer;
     int i;
@@ -229,15 +224,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         SHOWPOINTER(__clib4->__iob[i]);
     }
 
-    success = TRUE;
-
 out:
 
-    SHOWVALUE(success);
     LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
 }

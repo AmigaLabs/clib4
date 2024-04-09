@@ -26,7 +26,7 @@ struct Clib4Resource {
     struct SignalSemaphore  semaphore;      /* for list arbitration */
     struct hashmap         *children;       /* list of parent nodes */
     struct hashmap         *uxSocketsMap;
-    struct _clib4          *fallbackClib;
+    struct _clib4          *fallbackClib;   /* Pointer to the fallback _clib4 */
     /* SysVIPC fields */
     int locked;
     struct

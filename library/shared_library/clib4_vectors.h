@@ -1153,4 +1153,8 @@ static void *clib4Vectors[] = {
         (void *) (__stdin),                               /* 4328 */
         (void *) (__stdout),                              /* 4332 */
         (void *) (__stderr),                              /* 4336 */
+
+
+        ///
+        (void *) -1
 };

@@ -1,14 +1,10 @@
 /*
- * $Id: locale_init_exit.c,v 1.15 2006-01-08 12:04:23 clib4devs Exp $
+ * $Id: locale_init_exit.c,v 1.16 2024-04-09 12:04:23 clib4devs Exp $
 */
 
 #ifndef _LOCALE_HEADERS_H
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 #include <proto/diskfont.h>
 
@@ -134,7 +130,7 @@ void __locale_unlock(struct _clib4 *__clib4) {
 		ReleaseSemaphore(__clib4->locale_lock);
 }
 
-CLIB_DESTRUCTOR(locale_exit) {
+void _locale_exit(void) {
 	ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -149,8 +145,7 @@ CLIB_DESTRUCTOR(locale_exit) {
     LEAVE();
 }
 
-CLIB_CONSTRUCTOR(locale_init) {
-	BOOL success = FALSE;
+void _locale_init(void) {
 	int i;
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -174,15 +169,6 @@ CLIB_CONSTRUCTOR(locale_init) {
 
     __locale_init(__clib4);
 
-	success = TRUE;
-
 out:
-
-	SHOWVALUE(success);
 	LEAVE();
-
-	if (success)
-		CONSTRUCTOR_SUCCEED();
-	else
-        CONSTRUCTOR_FAIL();
 }

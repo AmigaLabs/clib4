@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_malloc.c,v 1.22 2022-04-03 14:09:00 clib4devs Exp $
+ * $Id: stdlib_malloc.c,v 1.22 2024-04-09 14:09:00 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -9,10 +9,6 @@
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 #undef malloc
 
@@ -40,7 +36,8 @@ void __memory_unlock(struct _clib4 *__clib4) {
         ReleaseSemaphore(__clib4->memory_semaphore);
 }
 
-STDLIB_DESTRUCTOR(stdlib_memory_exit) {
+void
+_stdlib_memory_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -67,34 +64,31 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
 }
 
 /* Second constructor called by _init */
-STDLIB_CONSTRUCTOR(stdlib_memory_init) {
-    BOOL success = FALSE;
+void
+_stdlib_memory_init(void) {
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     __clib4->memory_semaphore = __create_semaphore();
-    if (__clib4->memory_semaphore == NULL)
-        goto out;
-
-    __clib4->__wof_allocator_semaphore = __create_semaphore();
-    if (__clib4->__wof_allocator_semaphore == NULL)
-        goto out;
-
-    __clib4->__wof_allocator = wof_allocator_new();
-    if (__clib4->__wof_allocator == NULL) {
+    if (__clib4->memory_semaphore == NULL) {
+        SHOWMSG("Cannot create memory semapore. Exit");
         goto out;
     }
 
-    success = TRUE;
+    __clib4->__wof_allocator_semaphore = __create_semaphore();
+    if (__clib4->__wof_allocator_semaphore == NULL) {
+        SHOWMSG("Cannot wof allocate semapore. Exit");
+        goto out;
+    }
+
+    __clib4->__wof_allocator = wof_allocator_new();
+    if (__clib4->__wof_allocator == NULL) {
+        SHOWMSG("FAILED TO CREATE WOF ALLOCATOR! EXIT");
+        goto out;
+    }
 
 out:
 
-    SHOWVALUE(success);
     LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
 }

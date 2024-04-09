@@ -131,7 +131,57 @@ _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
 
     return RETURN_FAIL;
 }
+static BOOL openLibraries() {
+    BOOL ret = FALSE;
+    /* Open libraries */
+    DOSBase = IExec->OpenLibrary("dos.library", MIN_OS_VERSION);
+    if (DOSBase) {
+        IDOS = (struct DOSIFace *) IExec->GetInterface((struct Library *) DOSBase, "main", 1, NULL);
+        if (!IDOS) {
+            goto out;
+        }
+    } else
+        goto out;
 
+    TimeReq = openTimer(UNIT_MICROHZ);
+    if (!TimeReq) {
+        goto out;
+    }
+
+    struct Device *TimerBase = TimeReq->Request.io_Device;
+    ITimer = (struct TimerIFace *) IExec->GetInterface((struct Library *) TimerBase, "main", 1, NULL);
+    if (!ITimer) {
+        goto out;
+    }
+
+    struct Library *__ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
+    if (__ElfBase) {
+        if (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision == 1) { // .so stuff doesn't work with pre-52.2
+            goto out;
+        }
+
+        __IElf = (struct ElfIFace *) IExec->GetInterface(__ElfBase, "main", 1, NULL);
+        if (!__IElf) {
+            goto out;
+        }
+    } else {
+        goto out;
+    }
+
+    __UtilityBase = IExec->OpenLibrary("utility.library", MIN_OS_VERSION);
+    if (__UtilityBase) {
+        __IUtility = (struct UtilityIFace *) IExec->GetInterface(__UtilityBase, "main", 1, NULL);
+        if (__IUtility == NULL) {
+            goto out;
+        }
+    } else {
+        goto out;
+    }
+    ret = TRUE;
+
+out:
+    return ret;
+}
 static void closeLibraries() {
     if (TimeReq != NULL) {
         closeTimer(TimeReq);
@@ -183,9 +233,13 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
     ++libBase->libNode.lib_OpenCnt;
     libBase->libNode.lib_Flags &= ~LIBF_DELEXP;
 
+
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
+        struct _clib4 *__clib4 = NULL;
         struct Clib4Node c2n;
+        struct Process *me = (struct Process *) IExec->FindTask(NULL);
+        D(("[libOpen] Task = %x", me));
         char uuid[UUID4_LEN + 1] = {0};
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
         uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
@@ -241,8 +295,45 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
                     D(("Using default family functions"));
                 }
         }
+
+        /* If all libraries are opened correctly we can initialize clib4 reent structure */
+        D(("Initialize clib4 reent structure"));
+        /* Initialize global structure */
+        __clib4 = (struct _clib4 *) IExec->AllocVecTags(sizeof(struct _clib4),
+                                                 AVT_Type, MEMF_SHARED,
+                                                 AVT_ClearWithValue, 0,
+                                                 TAG_DONE);
+        if (__clib4 == NULL) {
+            D(("Cannot allocate clib4 structure"));
+            goto out;
+        }
+        /* Set the current task pointer */
+        __clib4->self = me;
+
+        D(("Initialize reent structure"));
+        reent_init(__clib4);
+        __clib4->processId = pid;
+
+        /* Set _clib4 pointer into process pr_UID
+         * This field is copied to any spawned process created by this exe and/or its children
+         */
+        me->pr_UID = (uint32) __clib4;
+        //SetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, __clib4, TAG_END);
+
+        /* After reent structure we can call clib4 constructors */
+        SHOWMSG("Now invoking constructors");
+        call_constructors();
+
+        D(("Library initialization done"));
+    }
+    else {
+        D(("Cannot open clib4 resource. Give up"));
+        goto out;
     }
     return libBase;
+
+out:
+    return NULL;
 }
 
 BPTR libExpunge(struct LibraryManagerInterface *Self) {
@@ -269,6 +360,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
         }
 
         IExec->RemResource(res);
+        IExec->UnlockMem(res, sizeof(struct Clib4Resource));
         IExec->FreeVec(res);
     }
 
@@ -281,19 +373,23 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
     closeLibraries();
 
     IExec->Remove(&libBase->libNode.lib_Node);
-
     result = libBase->SegList;
-
     IExec->DeleteLibrary(&libBase->libNode);
-
     return result;
 }
 
 BPTR libClose(struct LibraryManagerInterface *Self) {
     struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
+    struct _clib4 *__clib4 = __CLIB4;
+
+    D(("Invoking destructors in reverse order"));
+    call_destructors();
 
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
+        D(("Calling reent_exit on _clib4"));
+        reent_exit(__clib4, FALSE);
+
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
         size_t iter = 0;
         void *item;
@@ -381,48 +477,17 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
     SysBase = (struct ExecBase *) iexec->Data.LibBase;
     IExec = iexec;
 
-    /* Open libraries */
-    DOSBase = IExec->OpenLibrary("dos.library", MIN_OS_VERSION);
-    if (DOSBase) {
-        IDOS = (struct DOSIFace *) IExec->GetInterface((struct Library *) DOSBase, "main", 1, NULL);
-        if (!IDOS) {
-            goto out;
-        }
-    } else
-        goto out;
+    IClib4 = 0;
+    DOSBase = 0;
+    IDOS = 0;
+    ITimer = 0;
+    TimeReq = 0;
+    __UtilityBase = 0;
+    __IUtility = 0;
+    __ElfBase = 0;
+    __IElf = 0;
 
-    TimeReq = openTimer(UNIT_MICROHZ);
-    if (!TimeReq) {
-        goto out;
-    }
-
-    struct Device *TimerBase = TimeReq->Request.io_Device;
-    ITimer = (struct TimerIFace *) IExec->GetInterface((struct Library *) TimerBase, "main", 1, NULL);
-    if (!ITimer) {
-        goto out;
-    }
-
-    struct Library *__ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
-    if (__ElfBase) {
-        if (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision == 1) { // .so stuff doesn't work with pre-52.2
-            goto out;
-        }
-
-        __IElf = (struct ElfIFace *) IExec->GetInterface(__ElfBase, "main", 1, NULL);
-        if (!__IElf) {
-            goto out;
-        }
-    } else {
-        goto out;
-    }
-
-    __UtilityBase = IExec->OpenLibrary("utility.library", MIN_OS_VERSION);
-    if (__UtilityBase) {
-        __IUtility = (struct UtilityIFace *) IExec->GetInterface(__UtilityBase, "main", 1, NULL);
-        if (__IUtility == NULL) {
-            goto out;
-        }
-    } else {
+    if (!openLibraries()) {
         goto out;
     }
 
@@ -478,14 +543,14 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
 
     return libBase;
 
-    out:
+out:
     /* if we jump in out we need to close all libraries and return NULL */
     closeLibraries();
 
     return NULL;
 }
 
-static void *libMmanagerVectors[] = {
+static void *libManagerVectors[] = {
         (void *) libObtain,
         (void *) libRelease,
         (void *) 0,
@@ -499,9 +564,8 @@ static void *libMmanagerVectors[] = {
 
 static struct TagItem libManagerTags[] = {
         {MIT_Name,        (uint32) "__library"},
-        {MIT_VectorTable, (uint32) libMmanagerVectors},
+        {MIT_VectorTable, (uint32) libManagerVectors},
         {MIT_Version,     1},
-        {MIT_DataSize,    0},
         {TAG_DONE,        0}
 };
 
@@ -551,6 +615,8 @@ library_start(char *argstr,
               int (*start_main)(int, char **),
               void (*__EXT_CTOR_LIST__[])(void),
               void (*__EXT_DTOR_LIST__[])(void)) {
+    struct Process *me = (struct Process *) IExec->FindTask(NULL);
+    D(("[library_start] Task = %x - __clib4 %x", me, me->pr_UID));
 
     int result = _main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
 

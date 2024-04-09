@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_timer.c,v 1.11 2021-02-01 16:35:56 clib4devs Exp $
+ * $Id: unistd_timer.c,v 1.12 2024-04-09 16:35:56 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -9,10 +9,6 @@
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 /* A quick workaround for the timeval/timerequest->TimeVal/TimeRequest
    change in the recent OS4 header files. */
@@ -24,10 +20,9 @@
 
 #endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
 
-CLIB_CONSTRUCTOR(timer_init) {
+void _timer_init(void) {
     ENTER();
 
-    BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
     __clib4->__timer_semaphore = __create_semaphore();
     if (!__clib4->__timer_semaphore) {
@@ -73,20 +68,12 @@ CLIB_CONSTRUCTOR(timer_init) {
         goto out;
     }
 
-    success = TRUE;
-
 out:
 
-    SHOWVALUE(success);
     LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
 }
 
-CLIB_DESTRUCTOR(timer_exit) {
+void _timer_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

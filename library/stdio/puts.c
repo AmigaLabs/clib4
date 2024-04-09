@@ -17,7 +17,7 @@ puts(const char *s) {
 
     ENTER();
 
-    SHOWSTRING(s);
+    //SHOWSTRING(s);
 
     assert(s != NULL);
 

@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_wildcard_expand.c,v 1.17 2006-04-05 08:39:46 clib4devs Exp $
+ * $Id: unistd_wildcard_expand.c,v 1.18 2024-04-09 08:39:46 clib4devs Exp $
  */
 
 #ifndef _STDLIB_HEADERS_H
@@ -9,10 +9,6 @@
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 #ifndef CLIB_ALIB_PROTOS_H
 #include <clib/alib_protos.h>
@@ -58,7 +54,7 @@ out:
     return (result);
 }
 
-CLIB_DESTRUCTOR(__wildcard_expand_exit) {
+void _wildcard_expand_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

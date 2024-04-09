@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_init_exit.c,v 1.33 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_init_exit.c,v 1.34 2024-04-09 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -13,10 +13,6 @@
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 void
 __close_all_files(struct _clib4 *__clib4) {
@@ -49,7 +45,7 @@ __close_all_files(struct _clib4 *__clib4) {
     LEAVE();
 }
 
-STDIO_DESTRUCTOR(stdio_exit) {
+void _stdio_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -60,9 +56,8 @@ STDIO_DESTRUCTOR(stdio_exit) {
     LEAVE();
 }
 
-STDIO_CONSTRUCTOR(stdio_init) {
+void _stdio_init(void) {
     const int num_standard_files = (STDERR_FILENO - STDIN_FILENO + 1);
-    BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
@@ -76,15 +71,7 @@ STDIO_CONSTRUCTOR(stdio_init) {
     if (__grow_fd_table(__clib4, num_standard_files) < 0)
         goto out;
 
-    success = TRUE;
-
 out:
 
-    SHOWVALUE(success);
     LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
 }

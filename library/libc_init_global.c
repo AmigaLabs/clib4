@@ -371,15 +371,17 @@ reent_init(struct _clib4 *__clib4) {
     }
 
     /* Check if .unix file exists in the current dir. If the file exists enable unix path semantics */
-    D(("Check for .unix file"));
     __clib4->__unix_path_semantics = FALSE;
-    struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
-    if (exd != NULL) {
-        if (EXD_IS_FILE(exd)) {
-            SHOWMSG("Enable unix paths");
-            __clib4->__unix_path_semantics = TRUE;
+    if (IDOS != NULL) {
+        D(("Check for .unix file"));
+        struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
+        if (exd != NULL) {
+            if (EXD_IS_FILE(exd)) {
+                SHOWMSG("Enable unix paths");
+                __clib4->__unix_path_semantics = TRUE;
+            }
+            FreeDosObject(DOS_EXAMINEDATA, exd);
         }
-        FreeDosObject(DOS_EXAMINEDATA, exd);
     }
 
     /* This table holds pointers to all signal handlers configured at a time. */
@@ -389,6 +391,7 @@ reent_init(struct _clib4 *__clib4) {
     }
 
     success = TRUE;
+    SHOWMSG("reent_init done");
 
 out:
 

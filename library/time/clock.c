@@ -1,5 +1,5 @@
 /*
- * $Id: time_clock.c,v 1.8 2022-07-18 12:04:27 clib4devs Exp $
+ * $Id: time_clock.c,v 1.8 2024-04-09 12:04:27 clib4devs Exp $
 */
 
 #ifndef _TIME_HEADERS_H
@@ -10,11 +10,7 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
-
-CLIB_CONSTRUCTOR(clock_init) {
+void _clock_init(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -25,8 +21,6 @@ CLIB_CONSTRUCTOR(clock_init) {
     __clib4->__random_seed = time(NULL);
 
     LEAVE();
-
-    CONSTRUCTOR_SUCCEED();
 }
 
 clock_t

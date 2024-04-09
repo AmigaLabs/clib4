@@ -1,16 +1,12 @@
 /*
- * $Id: unistd_init_exit.c,v 1.14 2006-09-27 09:40:06 clib4devs Exp $
+ * $Id: unistd_init_exit.c,v 1.15 2024-04-09 09:40:06 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
-
-CLIB_CONSTRUCTOR(unistd_init) {
+void _unistd_init(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -18,11 +14,9 @@ CLIB_CONSTRUCTOR(unistd_init) {
     InitSemaphore(&__clib4->__unlink_semaphore);
 
     LEAVE();
-
-    CONSTRUCTOR_SUCCEED();
 }
 
-CLIB_DESTRUCTOR(unistd_exit) {
+void _unistd_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

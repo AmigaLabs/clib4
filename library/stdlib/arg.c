@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_arg.c,v 1.15 2006-09-25 14:51:15 clib4devs Exp $
+ * $Id: stdlib_arg.c,v 1.16 2024-04-09 14:51:15 clib4devs Exp $
 */
 
 /*#define DEBUG*/
@@ -15,10 +15,6 @@
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-#ifndef _STDLIB_CONSTRUCTOR_H
-#include "stdlib_constructor.h"
-#endif /* _STDLIB_CONSTRUCTOR_H */
 
 #include <setjmp.h>
 #include <stdlib.h>
@@ -59,10 +55,9 @@ is_final_quote_character(const unsigned char *str) {
     return (result);
 }
 
-ARG_CONSTRUCTOR(arg_init) {
+void _arg_init(void) {
     ENTER();
 
-    BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
 
     /* Shell startup? */
@@ -269,20 +264,12 @@ ARG_CONSTRUCTOR(arg_init) {
         __clib4->__argv = (char **) __clib4->__WBenchMsg;
     }
 
-    success = TRUE;
-
 out:
 
-    SHOWVALUE(success);
     LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
 }
 
-ARG_DESTRUCTOR(arg_exit) {
+void _arg_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
