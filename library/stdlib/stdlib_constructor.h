@@ -27,7 +27,19 @@
     static void __attribute__((used, destructor(pri))) name##_dtor(VOID); \
     static void (*__##name##_dtor)(void) = name##_dtor; \
     static void name##_dtor(void)
+
+#define NSCONSTRUCTOR(name, pri) \
+    void __attribute__((used, constructor(pri))) name##_ctor(VOID); \
+    void (*__##name##_ctor)(void) = name##_ctor; \
+    void name##_ctor(void)
+
+#define NSDESTRUCTOR(name, pri) \
+    void __attribute__((used, destructor(pri))) name##_dtor(VOID); \
+    void (*__##name##_dtor)(void) = name##_dtor; \
+    void name##_dtor(void)
+
 #else
+
 #define CONSTRUCTOR(name,pri) \
 	STATIC VOID __attribute__((used)) name##_ctor(VOID); \
 	STATIC VOID (*__##name##_ctor)(VOID) __attribute__((used,section(".ctors._" #pri))) = name##_ctor; \
@@ -79,6 +91,9 @@
 
 #define CLIB_CONSTRUCTOR(name)		CONSTRUCTOR(name,	108)
 #define CLIB_DESTRUCTOR(name)		DESTRUCTOR(name,	108)
+
+#define PTHREAD_CONSTRUCTOR(name)	NSCONSTRUCTOR(name,	108)
+#define PTHREAD_DESTRUCTOR(name)	NSDESTRUCTOR(name,	108)
 
 #define PROFILE_CONSTRUCTOR(name)	CONSTRUCTOR(name,	109)
 #define PROFILE_DESTRUCTOR(name)	DESTRUCTOR(name,	109)

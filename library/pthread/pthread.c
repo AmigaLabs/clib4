@@ -316,7 +316,8 @@ void __pthread_exit_func(void) {
     }
 }
 
-CLIB_CONSTRUCTOR(__pthread_init) {
+PTHREAD_CONSTRUCTOR(__pthread_init) {
+    ENTER();
     _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
     if (_DOSBase) {
         _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);
@@ -327,9 +328,11 @@ CLIB_CONSTRUCTOR(__pthread_init) {
         else
             __pthread_init_func();
     }
+    LEAVE();
 }
 
-CLIB_DESTRUCTOR(__pthread_exit) {
+PTHREAD_DESTRUCTOR(__pthread_exit) {
+    ENTER();
     if (_DOSBase != NULL) {
         CloseLibrary(_DOSBase);
         _DOSBase = NULL;
@@ -341,4 +344,5 @@ CLIB_DESTRUCTOR(__pthread_exit) {
     }
 
     __pthread_exit_func();
+    LEAVE();
 }
