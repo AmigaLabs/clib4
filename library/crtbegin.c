@@ -44,8 +44,8 @@
  * refer to only the __CTOR_END__ symbol in sh/crtend.o and the __DTOR_LIST__
  * symbol in sh/crtbegin.o, where they are defined.  */
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
-static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
+static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors"))) = { (void *)~0 };
+static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors"))) = { (void *)~0 };
 
 const struct Library *SysBase = NULL;
 const struct ExecIFace *IExec = NULL;

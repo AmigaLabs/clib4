@@ -64,9 +64,12 @@ struct DOSIFace *_IDOS = NULL;
 //
 int
 _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOOL staticinit) {
+    ENTER();
+
     if (mutex == NULL)
         return EINVAL;
     BOOL recursive = FALSE;
+    SHOWPOINTER(mutex);
 
     if (attr)
         mutex->kind = attr->kind;
@@ -76,9 +79,13 @@ _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOO
     if (mutex->kind == PTHREAD_MUTEX_RECURSIVE)
         recursive = TRUE;
 
+    SHOWMSG("Allocating mutex");
     mutex->mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, recursive, TAG_DONE);
+    SHOWPOINTER(mutex->mutex);
+
     mutex->incond = 0;
 
+    LEAVE();
     return 0;
 }
 
@@ -291,6 +298,7 @@ int __pthread_init_func(void) {
 void __pthread_exit_func(void) {
     pthread_t i;
     ThreadInfo *inf;
+    struct DOSIFace *IDOS = _IDOS;
 
     if (timerMutex)
         FreeSysObject(ASOT_MUTEX, timerMutex);

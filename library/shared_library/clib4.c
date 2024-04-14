@@ -176,7 +176,9 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
 
     struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
     if (!IClib4) {
+        D(("IClib4 is NULL. Get interface"));
         IClib4 = (struct Clib4IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
+        D(("DropInterface"));
         IExec->DropInterface((struct Interface *)IClib4);
     }
 
@@ -281,9 +283,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
     closeLibraries();
 
     IExec->Remove(&libBase->libNode.lib_Node);
-
     result = libBase->SegList;
-
     IExec->DeleteLibrary(&libBase->libNode);
 
     return result;
@@ -329,13 +329,36 @@ uint32 clib4Release(struct Clib4IFace *Self) {
     return --Self->Data.RefCount;
 }
 
-uint32 libObtain(struct LibraryManagerInterface *Self) {
-    //return ++Self->Data.RefCount;
+/* ------------------- Manager Interface ------------------------ */
+/* These are generic. Replace if you need more fancy stuff */
+static uint32 _manager_Obtain(struct LibraryManagerInterface *Self) {
+    uint32 res;
+    __asm__ __volatile__(
+            "1:	lwarx	%0,0,%1\n"
+            "addic	%0,%0,1\n"
+            "stwcx.	%0,0,%1\n"
+            "bne-	1b"
+            : "=&r" (res)
+            : "r" (&Self->Data.RefCount)
+            : "cc", "memory");
+
+    return res;
 }
 
-uint32 libRelease(struct LibraryManagerInterface *Self) {
-    //return --Self->Data.RefCount;
+static uint32 _manager_Release(struct LibraryManagerInterface *Self) {
+    uint32 res;
+    __asm__ __volatile__(
+            "1:	lwarx	%0,0,%1\n"
+            "addic	%0,%0,-1\n"
+            "stwcx.	%0,0,%1\n"
+            "bne-	1b"
+            : "=&r" (res)
+            : "r" (&Self->Data.RefCount)
+            : "cc", "memory");
+
+    return res;
 }
+
 
 int libReserved(void) {
     __CLIB4->_errno = ENOSYS;
@@ -442,7 +465,6 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
             res->resource.lib_IdString = (STRPTR) RESOURCE_NAME;
             res->resource.lib_Node.ln_Name = (STRPTR) RESOURCE_NAME;
             res->resource.lib_Node.ln_Type = NT_RESOURCE;
-            res->size = sizeof(*res);
 
             iexec->InitSemaphore(&res->semaphore);
             res->children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
@@ -470,6 +492,7 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
                     GCIT_Family, &res->cpufamily,
                     TAG_DONE);
 
+            res->size = sizeof(*res);
             iexec->AddResource(res);
         } else {
             goto out;
@@ -485,9 +508,9 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
     return NULL;
 }
 
-static void *libMmanagerVectors[] = {
-        (void *) libObtain,
-        (void *) libRelease,
+static void *libManagerVectors[] = {
+        (void *) _manager_Obtain,
+        (void *) _manager_Release,
         (void *) 0,
         (void *) 0,
         (void *) libOpen,
@@ -499,7 +522,7 @@ static void *libMmanagerVectors[] = {
 
 static struct TagItem libManagerTags[] = {
         {MIT_Name,        (uint32) "__library"},
-        {MIT_VectorTable, (uint32) libMmanagerVectors},
+        {MIT_VectorTable, (uint32) libManagerVectors},
         {MIT_Version,     1},
         {MIT_DataSize,    0},
         {TAG_DONE,        0}
