@@ -22,8 +22,6 @@ __fgetc(FILE *stream) {
     assert(file->iob_BufferSize > 0);
 
     if (__iob_read_buffer_is_empty(file)) {
-        __check_abort();
-
         if (__fill_iob_read_buffer(__clib4, file) < 0)
             goto out;
 
@@ -43,10 +41,9 @@ out:
 }
 
 int
-__fgetc_check(FILE *stream) {
+__fgetc_check(FILE *stream, struct _clib4 *__clib4) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
-    struct _clib4 *__clib4 = __CLIB4;
 
     assert(stream != NULL);
 
@@ -87,7 +84,7 @@ out:
 int
 fgetc(FILE *stream) {
     int result = EOF;
-
+    struct _clib4 *__clib4 = __CLIB4;
     ENTER();
     SHOWPOINTER(stream);
 
@@ -100,7 +97,7 @@ fgetc(FILE *stream) {
 
     flockfile(stream);
 
-    if (__fgetc_check(stream) < 0)
+    if (__fgetc_check(stream, __clib4) < 0)
         goto out;
 
     result = __getc(stream);

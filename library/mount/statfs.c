@@ -19,7 +19,7 @@ int statfs(const char *path, struct statfs *buf) {
     SHOWSTRING(path);
     SHOWPOINTER(buf);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     assert(path != NULL && buf != NULL);
 

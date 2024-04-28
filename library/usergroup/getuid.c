@@ -18,7 +18,7 @@ uid_t getuid(void) {
         result = __getuid();
     }
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

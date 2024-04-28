@@ -32,7 +32,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
     __set_errno(0);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     /* F_DUPFD will need to modify the file descriptor table, which is why
        the stdio lock needs to be obtained here, before the individual
@@ -225,7 +225,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             do {
                 __stdio_unlock(__clib4);
 
-                __check_abort();
+                __check_abort_f(__clib4);
 
                 __stdio_lock(__clib4);
 

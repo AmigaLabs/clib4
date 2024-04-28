@@ -7,17 +7,16 @@
 #endif /* _UNISTD_HEADERS_H */
 
 int
-fchdir(int file_descriptor)
-{
-	int result = ERROR;
+fchdir(int file_descriptor) {
+    int result = ERROR;
     (void) (file_descriptor);
 
-	ENTER();
+    ENTER();
 
     __check_abort();
 
     __set_errno(ENOSYS);
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

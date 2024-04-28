@@ -34,7 +34,7 @@ opendir(const char *path_name) {
 
     assert(path_name != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (path_name == NULL) {
         SHOWMSG("invalid parameter");

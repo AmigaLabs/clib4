@@ -9,7 +9,7 @@
 int
 vsscanf(const char *s, const char *format, va_list arg) {
     struct iob string_iob;
-    char local_buffer[32];
+    char local_buffer[32] = {0};
     int result = EOF;
 
     ENTER();

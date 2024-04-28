@@ -60,7 +60,7 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
 
     while (i < vec_count) /* XXX: Should this loop be locked? */
     {
-        __check_abort();
+        __check_abort_f(__clib4);
 
         if (iov[i].iov_len > 0) {
             msg.fam_Action = file_action_read;

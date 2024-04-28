@@ -29,7 +29,7 @@ getcwd(char *buffer, size_t buffer_size) {
     assert(buffer != NULL);
     assert((int) buffer_size > 0);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (buffer_size == 0 || buffer == NULL) {
         /* As an extension to the POSIX.1-2001 standard, glibc's getcwd()

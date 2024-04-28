@@ -18,7 +18,6 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     int open_mode;
     struct fd *fd = NULL;
     STRPTR buffer = NULL;
-    STRPTR aligned_buffer;
     struct iob *file;
 
     ENTER();
@@ -27,7 +26,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     SHOWSTRING(mode);
     SHOWVALUE(slot_number);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     __stdio_lock(__clib4);
 
@@ -94,16 +93,13 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = AllocVecTags(BUFSIZ + (__clib4->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    buffer = AllocVecTags(BUFSIZ + (__clib4->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, AVT_Alignment, __clib4->__cache_line_size, 0, TAG_DONE);
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
         __set_errno(ENOBUFS);
         goto out;
     }
-
-    /* Align the buffer start address to a cache line boundary. */
-    aligned_buffer = (char *) ((ULONG)(buffer + (__clib4->__cache_line_size - 1)) & ~(__clib4->__cache_line_size - 1));
 
     if (file_descriptor < 0) {
         assert(filename != NULL);
@@ -139,7 +135,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     __initialize_iob(file,
                      __iob_hook_entry,
                      buffer,
-                     aligned_buffer,
+                     buffer,
                      (int64_t) BUFSIZ,
                      file_descriptor,
                      slot_number,

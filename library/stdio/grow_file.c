@@ -85,7 +85,7 @@ __grow_file_size(struct fd *fd, int num_bytes)
 
 	while (num_bytes > 0)
 	{
-        __check_abort();
+        __check_abort_f(__clib4);
 
 		size = buffer_size;
 		if (size > num_bytes)

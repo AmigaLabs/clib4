@@ -20,7 +20,7 @@ tcdrain(int file_descriptor) {
 
     SHOWVALUE(file_descriptor);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     __stdio_lock(__clib4);
 

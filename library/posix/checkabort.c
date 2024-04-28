@@ -18,3 +18,12 @@ __check_abort(void) {
         raise(SIGINT);
     }
 }
+
+/* Faster __check_abort version used when __clib4 is available in the caller function */
+void
+__check_abort_f(struct _clib4 *__clib4) {
+    if (__clib4->__check_abort_enabled && CheckSignal(__clib4->__break_signal_mask)) {
+        raise(SIGINT);
+    }
+}
+

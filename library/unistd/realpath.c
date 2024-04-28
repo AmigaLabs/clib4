@@ -20,7 +20,7 @@ realpath(const char *path_name, char *buffer) {
     SHOWSTRING(path_name);
     SHOWPOINTER(buffer);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (path_name == NULL || buffer == NULL) {
         SHOWSTRING("invalid parameters");

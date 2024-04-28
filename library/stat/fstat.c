@@ -21,7 +21,7 @@ fstat(int file_descriptor, struct stat *buffer) {
 
     assert(buffer != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     __stdio_lock(__clib4);
 

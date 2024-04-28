@@ -9,7 +9,6 @@
 void
 flockfile(FILE *stream) {
     struct iob *file = (struct iob *) stream;
-    struct _clib4 *__clib4 = __CLIB4;
 
     assert(stream != NULL);
 
@@ -22,7 +21,6 @@ flockfile(FILE *stream) {
         goto out;
     }
 
-    assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {

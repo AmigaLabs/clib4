@@ -419,7 +419,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         signal_mask = 0;
     }
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     /* Figure out the number of file and socket descriptors in use. */
     get_num_descriptors_used(num_fds, &num_socket_used, &num_file_used);
@@ -586,7 +586,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
             while (TRUE) {
                 /* Check for break signal. */
-                __check_abort();
+                __check_abort_f(__clib4);
 
                 if (signal_mask_ptr) {
                     ULONG signals = CheckSignal(*signal_mask_ptr);
@@ -616,7 +616,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 /* Stop if a break signal arrives. */
                 if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __clib4->__break_signal_mask)) {
                     SetSignal(__clib4->__break_signal_mask, __clib4->__break_signal_mask);
-                    __check_abort();
+                    __check_abort_f(__clib4);
                 }
 
                 if (0 == result && signal_mask_ptr) {
@@ -761,7 +761,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             result = __WaitSelect(total_socket_fd, socket_read_fds, socket_write_fds, socket_except_fds, (struct timeval *) timeout, &break_mask);
             if ((result < 0 && __get_errno() == EINTR) || FLAG_IS_SET(break_mask, __clib4->__break_signal_mask)) {
                 SetSignal(__clib4->__break_signal_mask, __clib4->__break_signal_mask);
-                __check_abort();
+                __check_abort_f(__clib4);
             }
 
             if (signal_mask_ptr != NULL && (break_mask & signal_mask) != 0)
@@ -810,7 +810,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         }
 
         while (TRUE) {
-            __check_abort();
+            __check_abort_f(__clib4);
 
             Delay(1);
             BOOL gotChar = FALSE;
@@ -948,7 +948,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         __stdio_unlock(__clib4);
     }
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
 out:
 

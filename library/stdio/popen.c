@@ -63,7 +63,7 @@ popen(const char *command, const char *type) {
 
     assert(command != NULL && type != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (command == NULL || type == NULL) {
         SHOWMSG("invalid parameters");

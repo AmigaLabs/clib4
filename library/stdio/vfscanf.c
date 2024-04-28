@@ -53,7 +53,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
         goto out;
     }
 
-    if (__fgetc_check(stream) < 0)
+    if (__fgetc_check(stream, __clib4) < 0)
         goto out;
 
     /* Just so we can detect errors and tell them apart from

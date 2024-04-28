@@ -22,7 +22,7 @@ int ftruncate(int file_descriptor, off_t length) {
     assert(__clib4->__fd[file_descriptor] != NULL);
     assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     __stdio_lock(__clib4);
 

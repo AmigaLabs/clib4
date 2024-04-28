@@ -48,7 +48,7 @@ puts(const char *s) {
         __fd_unlock(fd);
     }
 
-    if (__fputc_check(stream) < 0)
+    if (__fputc_check(stream, __clib4) < 0)
         goto out;
 
     while ((c = (*s++)) != '\0') {

@@ -1324,6 +1324,7 @@ struct Clib4IFace {
     FILE * (* __stdout) (void);                                                                                                                      /* 4332 */
     FILE * (* __stderr) (void);                                                                                                                      /* 4336 */
 
+    int (* __cxa_atexit) (void (*func) (void *), void *arg, void *d);                                                                                /* 4340 */
 };
 
 #ifdef __PIC__

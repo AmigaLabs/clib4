@@ -200,7 +200,7 @@ int __wildcard_expand_init(void) {
                         __set_process_window(old_window_pointer);
 
                         SetSignal(__clib4->__break_signal_mask, __clib4->__break_signal_mask);
-                        __check_abort();
+                        __check_abort_f(__clib4);
 
                         old_window_pointer = __set_process_window((APTR) - 1);
 

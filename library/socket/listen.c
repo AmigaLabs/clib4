@@ -31,7 +31,7 @@ int listen(int sockfd, int backlog) {
 
 out:
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

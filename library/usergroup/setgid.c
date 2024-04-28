@@ -22,7 +22,7 @@ int setgid(gid_t id) {
         result = __setgid((LONG) id);
     }
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

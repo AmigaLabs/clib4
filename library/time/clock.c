@@ -38,7 +38,7 @@ clock(void) {
 
     ENTER();
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     /* Get the current time. */
     gettimeofday(&now, NULL);

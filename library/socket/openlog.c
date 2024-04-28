@@ -37,7 +37,7 @@ openlog(const char *ident, int opt, int facility) {
 
 out:
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     LEAVE();
 }

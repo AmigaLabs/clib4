@@ -71,7 +71,7 @@ out:
     __stdio_unlock(__clib4);
     __delete_semaphore(lock);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

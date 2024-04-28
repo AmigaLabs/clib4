@@ -74,7 +74,7 @@ closedir(DIR *directory_pointer) {
 
     SHOWPOINTER(directory_pointer);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     __dirent_lock(__clib4);
 

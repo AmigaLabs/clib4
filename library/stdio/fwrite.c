@@ -175,13 +175,13 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                         if (total_size < num_buffer_bytes)
                             num_buffer_bytes = total_size;
 
-                        memmove(buffer, s, num_buffer_bytes);
+                        memcpy(buffer, s, num_buffer_bytes);
                         s += num_buffer_bytes;
 
                         file->iob_BufferWriteBytes += num_buffer_bytes;
 
                         /* Write a full buffer to disk. */
-                        if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(__clib4, file) < 0) {
+                        if (num_buffer_bytes == 0 && __flush_iob_write_buffer(__clib4, file) < 0) {
                             /* Abort with error. */
                             break;
                         }

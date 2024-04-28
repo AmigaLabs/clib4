@@ -103,13 +103,13 @@ extern int __flush_iob_write_buffer(struct _clib4 *__clib4, struct iob *file);
 /****************************************************************************/
 
 /* stdio_fgetc.c */
-extern int __fgetc_check(FILE *stream);
+extern int __fgetc_check(FILE *stream, struct _clib4 *__clib4);
 extern int __fgetc(FILE *stream);
 
 /****************************************************************************/
 
 /* stdio_fputc.c */
-extern int __fputc_check(FILE *stream);
+extern int __fputc_check(FILE *stream, struct _clib4 *__clib4);
 extern int __fputc(int c, FILE *stream, int buffer_mode);
 
 /****************************************************************************/

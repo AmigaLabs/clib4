@@ -26,7 +26,7 @@ tcflush(int file_descriptor, int queue) {
 
     SHOWVALUE(file_descriptor);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     __stdio_lock(__clib4);
 
@@ -100,7 +100,7 @@ out:
 
     __stdio_unlock(__clib4);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

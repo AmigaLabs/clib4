@@ -23,7 +23,7 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
     struct DateStamp ds0;
     BOOL setToCurrentTime = FALSE;
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (!times || (times && times[0].tv_nsec == UTIME_NOW && times[1].tv_nsec == UTIME_NOW)) {
         setToCurrentTime = TRUE;

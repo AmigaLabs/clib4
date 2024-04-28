@@ -19,7 +19,7 @@ worker(char *result, const char *part1, const char *part2, char *part3, int *par
     struct _clib4 *__clib4 = __CLIB4;
 
     while (1) {
-        __check_abort();
+        __check_abort_f(__clib4);
 
         int t;
 
@@ -56,7 +56,7 @@ tempnam(const char *dir, const char *pfx) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     char *filename;
     int length;

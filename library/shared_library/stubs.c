@@ -1092,3 +1092,5 @@ Clib4Call(fts_set, 4324);
 Clib4Call(__stdin, 4328);
 Clib4Call(__stdout, 4332);
 Clib4Call(__stderr, 4336);
+
+Clib4Call(__cxa_atexit, 4340);

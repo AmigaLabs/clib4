@@ -27,7 +27,7 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
 
     assert(path_name != NULL && buffer != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (path_name == NULL || buffer == NULL) {
         SHOWSTRING("invalid parameters");

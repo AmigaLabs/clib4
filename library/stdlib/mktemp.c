@@ -32,7 +32,7 @@ mktemp(char *name_template) {
 
     assert(name_template != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (name_template == NULL) {
         SHOWMSG("invalid name template");
@@ -106,7 +106,7 @@ mktemp(char *name_template) {
 
     /* Now check if the name we picked is unique. If not, make another name. */
     while (TRUE) {
-        __check_abort();
+        __check_abort_f(__clib4);
 
         D(("checking '%s'", name_template));
 

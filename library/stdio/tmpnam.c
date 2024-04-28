@@ -20,17 +20,18 @@ tmpnam(char *buf) {
     char *result = NULL; /* ZZZ compiler claims that this assignment is unnecessary. */
     BPTR lock;
     int i;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     /* If no user-supplied buffer is available, use the local one. */
     if (buf == NULL)
         buf = local_buffer;
 
     while (TRUE) {
-        __check_abort();
+        __check_abort_f(__clib4);
 
         c = counter;
 

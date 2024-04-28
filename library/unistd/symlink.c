@@ -21,7 +21,7 @@ symlink(const char *actual_path, const char *symbolic_path) {
 
     assert(actual_path != NULL && symbolic_path != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (actual_path == NULL || symbolic_path == NULL) {
         SHOWMSG("invalid parameters");

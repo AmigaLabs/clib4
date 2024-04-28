@@ -217,7 +217,7 @@ tputs(const char *str, int nlines, register int (*outfun)()) {
     size_t n_speeds = sizeof(speeds) / sizeof(speeds[0]);
     struct _clib4 *__clib4 = __CLIB4;
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (__clib4->__ospeed == 0)
         speed = __clib4->__tputs_baud_rate;
