@@ -2,8 +2,13 @@
 # $Id: libcrypt.gmk,v 1.0 2022-07-09 10:09:48 clib4devs Exp $
 #
 
-OUT_STATIC := $(BUILD_DIR)/obj/libcrypt
-OUT_SHARED := $(BUILD_DIR)/obj.shared/libcrypt
+ifndef SPE
+    OUT_STATIC := $(BUILD_DIR)/obj/libcrypt
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/libcrypt
+else
+    OUT_STATIC := $(BUILD_DIR)/obj/soft-float/libcrypt
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/soft-float/libcrypt
+endif
 
 ifeq ($(SHARED),yes)
     LIBS += $(OUTPUT_LIB)/libcrypt.so

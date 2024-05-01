@@ -186,6 +186,7 @@ extern void arc4random_stir(void);
 extern void arc4random_addrandom(unsigned char *dat, int datlen);
 
 #ifdef __SPE__
+struct _clib4;
 extern int16_t atosfix16(const char *__str);
 extern int16_t _atosfix16_r(struct _clib4 *, const char *__str);
 extern int32_t atosfix32(const char *__str);

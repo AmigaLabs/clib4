@@ -177,9 +177,9 @@ struct _clib4 {
      */
     int __priority;
 
-    char *__tzname[2];     /* Current timezone names.  */
-    int __daylight;        /* If daylight-saving time is ever in use.  */
-    long int __timezone;   /* Seconds west of UTC.  */
+    char *unused0[2];
+    int unused1;
+    long int unused2;
     int __dyntz;           /* Set to TRUE if created with malloc */
     struct SignalSemaphore *timezone_lock;
 

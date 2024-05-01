@@ -2,8 +2,13 @@
 # $Id: libamiga.gmk,v 1.1 2006-09-17 17:37:27 clib4devs Exp $
 #
 
-OUT_STATIC := $(BUILD_DIR)/obj/libamiga
-OUT_SHARED := $(BUILD_DIR)/obj.shared/libamiga
+ifndef SPE
+    OUT_STATIC := $(BUILD_DIR)/obj/libamiga
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/libamiga
+else
+    OUT_STATIC := $(BUILD_DIR)/obj/soft-float/libamiga
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/soft-float/libamiga
+endif
 
 ifeq ($(SHARED),yes)
     LIBS += $(OUTPUT_LIB)/libamiga.so

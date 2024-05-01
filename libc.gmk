@@ -3,8 +3,13 @@
 # :ts=8
 # -*- mode: makefile; -*-
 
-OUT_STATIC := $(BUILD_DIR)/obj/libc
-OUT_SHARED := $(BUILD_DIR)/obj.shared/libc
+ifndef SPE
+    OUT_STATIC := $(BUILD_DIR)/obj/libc
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/libc
+else
+    OUT_STATIC := $(BUILD_DIR)/obj/soft-float/libc
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/soft-float/libc
+endif
 
 ifeq ($(SHARED),yes)
     MAIN_LIB += $(OUTPUT_LIB)/libc.so
@@ -669,6 +674,7 @@ C_TIME := \
 	time/time.o \
 	time/timegm.o \
 	time/tzset.o \
+	time/tzvars.o \
 	time/weekday.o \
 	time/times.o \
 	time/ftime.o \

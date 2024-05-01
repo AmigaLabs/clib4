@@ -2,8 +2,13 @@
 # $Id: libpthread.gmk,v 1.1 2023-04-23 10:09:48 clib4devs Exp $
 #
 
-OUT_STATIC := $(BUILD_DIR)/obj/libpthread
-OUT_SHARED := $(BUILD_DIR)/obj.shared/libpthread
+ifndef SPE
+    OUT_STATIC := $(BUILD_DIR)/obj/libpthread
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/libpthread
+else
+    OUT_STATIC := $(BUILD_DIR)/obj/soft-float/libpthread
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/soft-float/libpthread
+endif
 
 ifeq ($(SHARED),yes)
     LIBS += $(OUTPUT_LIB)/libpthread.so

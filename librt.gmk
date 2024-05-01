@@ -2,8 +2,13 @@
 # $Id: librt.gmk,v 1.0 2023-04-27 10:09:48 clib4devs Exp $
 #
 
-OUT_STATIC := $(BUILD_DIR)/obj/librt
-OUT_SHARED := $(BUILD_DIR)/obj.shared/librt
+ifndef SPE
+    OUT_STATIC := $(BUILD_DIR)/obj/librt
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/librt
+else
+    OUT_STATIC := $(BUILD_DIR)/obj/soft-float/librt
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/soft-float/librt
+endif
 
 ifeq ($(SHARED),yes)
     LIBS += $(OUTPUT_LIB)/librt.so
@@ -64,8 +69,17 @@ $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 endif
 
-$(BUILD_DIR)/lib/librt.a : $(SOURCES_STATIC)
-	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/librt.so :$(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
-	$(VERBOSE)$(MAKESHARED)
+ifndef SPE
+    $(BUILD_DIR)/lib/librt.a : $(SOURCES_STATIC)
+		$(VERBOSE)$(MAKELIB)
+
+    $(BUILD_DIR)/lib/librt.so :$(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
+		$(VERBOSE)$(MAKESHARED)
+else
+    $(BUILD_DIR)/lib/soft-float/librt.a : $(SOURCES_STATIC)
+		$(VERBOSE)$(MAKELIB)
+
+    $(BUILD_DIR)/lib/soft-float/librt.so :$(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
+		$(VERBOSE)$(MAKESHARED)
+endif

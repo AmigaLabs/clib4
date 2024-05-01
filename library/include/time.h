@@ -39,9 +39,9 @@ __BEGIN_DECLS
 #define __tm_zone tm_zone
 #endif
 
-#define _timezone (__CLIB4->__timezone)
-#define _daylight (__CLIB4->__daylight)
-#define _tzname   (__CLIB4->__tzname)
+extern long _timezone;
+extern int _daylight;
+extern char *_tzname[2];
 
 /* POSIX defines the external tzname being defined in time.h */
 #ifndef tzname
