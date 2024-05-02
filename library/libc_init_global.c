@@ -272,6 +272,11 @@ reent_init(struct _clib4 *__clib4) {
         .__root_euid = 0,
         .__root_egid = 0,
 
+        .__tzname[0] = NULL,
+        .__tzname[1] = NULL,
+        .__daylight = 0,
+        .__timezone = 0,
+
         /* Default debug levels */
         .indent_level = 0,
         .previous_debug_level = -1,

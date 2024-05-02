@@ -674,7 +674,6 @@ C_TIME := \
 	time/time.o \
 	time/timegm.o \
 	time/tzset.o \
-	time/tzvars.o \
 	time/weekday.o \
 	time/times.o \
 	time/ftime.o \

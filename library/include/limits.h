@@ -104,5 +104,7 @@
 #define _POSIX_CLOCKRES_MIN		20000000 /* Nanoseconds */
 #endif
 
+#define TZNAME_MIN    3    /* POSIX min TZ abbr size local def */
+#define TZNAME_MAX    10    /* POSIX max TZ abbr size local def */
 
 #endif /* _LIMITS_H */

@@ -1155,6 +1155,11 @@ static void *clib4Vectors[] = {
         (void *) (__stderr),                              /* 4336 */
 
         (void *) (__cxa_atexit),                          /* 4340 */
+        (void *) (__cxa_finalize),                        /* 4344 */
+
+        (void *) (__get_timezone),                        /* 4348 */
+        (void *) (__get_daylight),                        /* 4352 */
+        (void *) (__get_tzname),                          /* 4356 */
 
         (void *)-1
 };

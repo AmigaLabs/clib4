@@ -104,7 +104,8 @@ extern void exit(int status);
 extern void abort(void);
 
 extern int atexit(void (*)(void));
-extern int __cxa_atexit (void (*func) (void *), void *arg, void *d);
+extern int __cxa_atexit(void (*func) (void *), void *arg, void *d);
+extern void __cxa_finalize(void *d);
 extern char *getenv(const char *name);
 extern void *bsearch(const void *key, const void *base, size_t count, size_t size, int (*compare)(const void *key, const void *value));
 extern void qsort(void *base, size_t count, size_t size, int (*compare)(const void *element1, const void *element2));

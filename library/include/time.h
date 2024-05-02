@@ -39,9 +39,13 @@ __BEGIN_DECLS
 #define __tm_zone tm_zone
 #endif
 
-extern long _timezone;
-extern int _daylight;
-extern char *_tzname[2];
+extern int __get_timezone(void);
+extern int __get_daylight(void);
+extern char **__get_tzname(void);
+
+#define _timezone (__get_timezone())
+#define _daylight (__get_daylight())
+#define _tzname   (__get_tzname())
 
 /* POSIX defines the external tzname being defined in time.h */
 #ifndef tzname

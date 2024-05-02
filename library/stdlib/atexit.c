@@ -85,3 +85,12 @@ __cxa_atexit (void (*func) (void *), void *arg, void *d) {
     (void) d;
     return 0;
 }
+
+/*
+ * Call registered exit handlers.  If D is null then all handlers are called,
+ * otherwise only the handlers from that DSO are called.
+ */
+void
+__cxa_finalize(void *d) {
+    (void) d;
+}

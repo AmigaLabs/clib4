@@ -1094,3 +1094,8 @@ Clib4Call(__stdout, 4332);
 Clib4Call(__stderr, 4336);
 
 Clib4Call(__cxa_atexit, 4340);
+Clib4Call(__cxa_finalize, 4344);
+
+Clib4Call(__get_timezone, 4348);
+Clib4Call(__get_daylight, 4352);
+Clib4Call(__get_tzname, 4356);

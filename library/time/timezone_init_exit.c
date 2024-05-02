@@ -21,10 +21,11 @@ __timezone_exit(void) {
         DECLARE_TIMEZONEBASE();
 
         if (__clib4->__dyntz == TRUE) {
-            if (_tzname[0]) FreeVec(_tzname[0]);
-            if (_tzname[1]) FreeVec(_tzname[1]);
-            _tzname[0] = NULL;
-            _tzname[1] = NULL;
+            if (__clib4->__tzname[0]) FreeVec(__clib4->__tzname[0]);
+            if (__clib4->__tzname[1]) FreeVec(__clib4->__tzname[1]);
+            __clib4->__tzname[0] = NULL;
+            __clib4->__tzname[1] = NULL;
+            __clib4->__dyntz = FALSE;
         }
 
         if (__clib4->__ITimezone != NULL) {
@@ -68,27 +69,27 @@ __timezone_init(void) {
         // Set global timezone variable
         uint32 gmtoffset = 0;
         int8 dstime = -1;
-        _tzname[0] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-        _tzname[1] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        __clib4->__tzname[0] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        __clib4->__tzname[1] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
         __clib4->__dyntz = TRUE;
 
         GetTimezoneAttrs(NULL,
-                         TZA_Timezone, _tzname[0],
-                         TZA_TimezoneSTD, _tzname[1],
+                         TZA_Timezone, __clib4->__tzname[0],
+                         TZA_TimezoneSTD, __clib4->__tzname[1],
                          TZA_UTCOffset, &gmtoffset,
                          TZA_TimeFlag, &dstime,
                          TAG_DONE);
 
-        _timezone = 60 * gmtoffset;
-        _daylight = dstime & TFLG_ISDST;
+        __clib4->__timezone = 60 * gmtoffset;
+        __clib4->__daylight = dstime & TFLG_ISDST;
 
         result = OK;
     } else {
         /* default values */
-        _timezone = 0;
-        _daylight = 0;
-        _tzname[0] = (char *) "GMT";
-        _tzname[1] = (char *) "AMT";
+        __clib4->__timezone = 0;
+        __clib4->__daylight = 0;
+        __clib4->__tzname[0] = (char *) "GMT";
+        __clib4->__tzname[1] = (char *) "AMT";
         __clib4->__dyntz = FALSE;
     }
 
