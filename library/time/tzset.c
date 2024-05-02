@@ -316,7 +316,7 @@ _tzset_unlocked(void) {
 
         tzenv += n;
     }
-    
+
     if (__clib4->__dyntz == TRUE) {
         FreeVec(__clib4->__tzname[0]);
         FreeVec(__clib4->__tzname[1]);
