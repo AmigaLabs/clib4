@@ -30,6 +30,7 @@ __BEGIN_DECLS
 typedef struct _wof_allocator_t wof_allocator_t;
 typedef void (*signal_handler_t)(int sig);
 typedef int32 BPTR;
+typedef short BOOL;
 
 struct ExitTrapNode {
     struct MinNode etn_MinNode;

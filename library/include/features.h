@@ -145,6 +145,11 @@
 #undef	__USE_FORTIFY_LEVEL
 #undef	__KERNEL_STRICT_NAMES
 
+#if !defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L)
+#define restrict
+#define inline
+#endif /* !__STDC_VERSION__ || __STDC_VERSION__ < 199901L */
+
 /* Suppress kernel-name space pollution unless user expressedly asks
    for it.  */
 #ifndef _LOOSE_KERNEL_NAMES
