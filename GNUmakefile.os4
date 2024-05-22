@@ -8,7 +8,15 @@
 ##############################################################################
 
 .PHONY : all prepare all-targets all-libs clean \
-	gitver version compile-tests install release dpkg 
+	gitver version compile-tests install release dpkg
+
+# Determines the Amiga SDK version that CLIB4 is being built with and
+# will only be relevant when building CLIB4 during the building of a
+# cross compiler.
+ifdef SDK_VERSION
+SDK_MAJOR=$(word 1,$(subst ., ,$(SDK_VERSION)))
+SDK_MINOR=$(word 2,$(subst ., ,$(SDK_VERSION)))
+endif
 
 # You may have to change the following sets of macro definitions which will
 # be used throughout the build makefile. These definitions cover the paths
