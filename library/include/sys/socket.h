@@ -48,8 +48,8 @@ typedef unsigned char sa_family_t;
 #define	SOCK_SEQPACKET	5	/* sequenced packet stream */
 
 #ifndef SOCK_CLOEXEC
-#define SOCK_CLOEXEC   02000000
-#define SOCK_NONBLOCK  04000
+#define SOCK_CLOEXEC   0    /* for now set bot to 0 */
+#define SOCK_NONBLOCK  0
 #endif
 
 /*
