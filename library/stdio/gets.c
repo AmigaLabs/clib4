@@ -43,9 +43,42 @@ gets(char *s) {
     clearerr(stream);
 
     while (TRUE) {
-        c = __getc(stdin);
+        /* If there is data in the buffer, try to copy it directly
+           into the string buffer. If there is a line feed in the
+           buffer, too, try to conclude the read operation. */
+        if (file->iob_BufferPosition < file->iob_BufferReadBytes) {
+            size_t num_bytes_in_buffer = file->iob_BufferReadBytes - file->iob_BufferPosition;
+            const unsigned char *buffer = &file->iob_Buffer[file->iob_BufferPosition];
+            const unsigned char *lf;
+
+            /* Try to find a line feed character which could conclude
+               the read operation if the remaining buffer data, including
+               the line feed character, fit into the string buffer. */
+            lf = (unsigned char *) memchr(buffer, '\n', num_bytes_in_buffer);
+            if (lf != NULL) {
+                size_t num_characters_in_line = ++lf - buffer;
+
+                /* Copy the remainder of the read buffer into the
+                   string buffer, including the terminating line
+                   feed character. */
+                memmove(s, buffer, num_characters_in_line);
+                s += num_characters_in_line;
+
+                file->iob_BufferPosition += num_characters_in_line;
+                s[num_characters_in_line] = 0;
+                /* And that concludes the line read operation. */
+                goto out;
+            }
+
+            memmove(s, buffer, num_bytes_in_buffer);
+            s += num_bytes_in_buffer;
+
+            file->iob_BufferPosition += num_bytes_in_buffer;
+        }
+
+        c = __getc(stream);
         if (c == EOF) {
-            if (ferror(stdin)) {
+            if (ferror(stream)) {
                 /* Just to be on the safe side. */
                 (*s) = '\0';
 

@@ -109,7 +109,7 @@ fputc(int c, FILE *stream) {
 
     /* Using no buffer with fputc is really slow. It no buffer is set, change filt to Line Mode buffering */
     if (FLAG_IS_SET(file->iob_Flags, IOBF_BUFFER_MODE_NONE))
-        SET_FLAG(file->iob_Flags, IOBF_BUFFER_MODE_FULL);
+        SET_FLAG(file->iob_Flags, IOBF_BUFFER_MODE_LINE);
 
     result = __fputc(c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
 
