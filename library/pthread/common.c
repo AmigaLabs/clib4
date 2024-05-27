@@ -74,33 +74,45 @@ pthread_t GetThreadId(struct Task *task) {
     return i;
 }
 
-BOOL
-OpenTimerDevice(struct IORequest *io, struct MsgPort *mp, struct Task *task) {
-    BYTE signal;
+struct timerequest *
+OpenTimerDevice() {
+    BYTE signal = AllocSignal(-1);
+    struct TimeRequest *io;
+    struct MsgPort *mp;
 
-    // prepare MsgPort
-    mp->mp_Node.ln_Type = NT_MSGPORT;
-    mp->mp_Node.ln_Pri = 0;
-    mp->mp_Node.ln_Name = NULL;
-    mp->mp_Flags = PA_SIGNAL;
-    mp->mp_SigTask = task;
-    signal = AllocSignal(-1);
     if (signal == -1) {
         signal = SIGB_TIMER_FALLBACK;
         SetSignal(SIGF_TIMER_FALLBACK, 0);
     }
-    mp->mp_SigBit = signal;
-    NewList(&mp->mp_MsgList);
+    // Allocate MsgPort
+    mp = AllocSysObjectTags(ASOT_PORT,
+                        ASOPORT_AllocSig, FALSE,
+                        ASOPORT_Signal, signal);
+    if (!mp)
+        return TRUE;
 
-    // prepare IORequest
-    io->io_Message.mn_Node.ln_Type = NT_MESSAGE;
-    io->io_Message.mn_Node.ln_Pri = 0;
-    io->io_Message.mn_Node.ln_Name = NULL;
-    io->io_Message.mn_ReplyPort = mp;
-    io->io_Message.mn_Length = sizeof(struct TimeRequest);
+    // allocate IORequest
+    io = AllocSysObjectTags(ASOT_IOREQUEST,
+                             ASOIOR_ReplyPort, mp,
+                             ASOIOR_Size, sizeof(struct TimeRequest),
+                             TAG_END);
+    if (!io) {
+        FreeSysObject(ASOT_PORT, mp);
+        mp = NULL;
+        return TRUE;
+    }
 
     // open timer.device
-    return !OpenDevice((STRPTR) TIMERNAME, UNIT_MICROHZ, io, 0);
+    if (OpenDevice((STRPTR) TIMERNAME, UNIT_MICROHZ, io, 0)) {
+        if (mp->mp_SigBit != SIGB_TIMER_FALLBACK)
+            FreeSignal(mp->mp_SigBit);
+        FreeSysObject(ASOT_PORT, mp);
+        FreeSysObject(ASOT_IOREQUEST, io);
+        io = NULL;
+        mp = NULL;
+        return NULL;
+    }
+    return (struct timerequest *) io;
 }
 
 void
@@ -116,6 +128,16 @@ CloseTimerDevice(struct IORequest *io) {
         CloseDevice(io);
 
     mp = io->io_Message.mn_ReplyPort;
+
     if (mp->mp_SigBit != SIGB_TIMER_FALLBACK)
         FreeSignal(mp->mp_SigBit);
+
+    if (mp) {
+        FreeSysObject(ASOT_PORT, mp);
+        mp = NULL;
+    }
+    if (io) {
+        FreeSysObject(ASOT_IOREQUEST, io);
+        io = NULL;
+    }
 }

@@ -12,18 +12,13 @@
 
 time_t
 time(time_t *tptr) {
-    struct DateStamp ds;
-    time_t result;
 
-    DateStamp(&ds);
+    struct timeval now;
 
-    /* This converts the DateStamp contents into the number of
-       seconds elapsed since January 1st 1970. The time is
-       given as relative to UTC, not local time. */
-    result = __convert_datestamp_to_time(&ds);
-
-    if (tptr != NULL)
-        (*tptr) = result;
-
-    return (result);
+    if (gettimeofday(&now, (struct timezone *) 0) >= 0) {
+        if (tptr)
+            *tptr = now.tv_sec;
+        return now.tv_sec;
+    }
+    return -1;
 }

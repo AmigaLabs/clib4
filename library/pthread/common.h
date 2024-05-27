@@ -117,7 +117,7 @@ int SemaphoreIsMine(struct SignalSemaphore *sem);
 int MutexIsMine(pthread_mutex_t *mutex);
 ThreadInfo *GetThreadInfo(pthread_t thread);
 pthread_t GetThreadId(struct Task *task);
-BOOL OpenTimerDevice(struct IORequest *io, struct MsgPort *mp, struct Task *task);
+struct timerequest *OpenTimerDevice();
 void CloseTimerDevice(struct IORequest *io);
 
 // Private functions
