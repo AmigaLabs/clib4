@@ -21,7 +21,7 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
-#define __USE_OLD_TIMEVAL__
+
 #ifndef _TIME_HEADERS_H
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
@@ -92,7 +92,7 @@ int
 _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *abstime, int shared) {
     struct MsgPort *msgport;
     struct SemaphoreMessage msg;
-    struct timerequest *timerio;
+    struct TimeRequest *timerio;
     struct Message *m1, *m2;
 
     timerio = OpenTimerDevice();
@@ -105,15 +105,15 @@ _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *
 
     timerio->tr_node.io_Command = TR_ADDREQUEST;
     timerio->tr_node.io_Flags = 0;
-    TIMESPEC_TO_TIMEVAL(timerio.tr_time, abstime);
+    TIMESPEC_TO_OLD_TIMEVAL(&timerio->tr_time, abstime);
     //if (!relative)
     {
-        struct timeval starttime;
+        struct TimeVal starttime;
         // absolute time has to be converted to relative
         // GetSysTime can't be used due to the timezone offset in abstime
         gettimeofday(&starttime, NULL);
-        timersub(timerio->tr_time, &starttime, timerio->tr_time);
-        if (!timerisset(timerio->tr_time)) {
+        timersub(&timerio->Time, &starttime, &timerio->Time);
+        if (!timerisset(&timerio->tr_time)) {
             CloseTimerDevice((struct IORequest *) timerio);
             return ETIMEDOUT;
         }
@@ -128,10 +128,10 @@ _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *
     WaitPort(msgport);
     m1 = GetMsg(msgport);
     m2 = GetMsg(msgport);
-    if (m1 == timerio->tr_node.io_Message || m2 == timerio->tr_node.io_Message)
+    if (m1 == &timerio->tr_node.io_Message || m2 == &timerio->tr_node.io_Message)
         Vacate(sema, &msg);
 
-    FreeSysObject(msgport);
+    FreeSysObject(ASOT_PORT, msgport);
 
     CloseTimerDevice((struct IORequest *) timerio);
 
@@ -152,18 +152,32 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     CondWaiter waiter;
     BYTE signal;
     ULONG sigs = SIGBREAKF_CTRL_C;
-    struct MsgPort timermp;
-    struct timerequest *timerio;
+    struct TimeRequest *timerio;
     struct Task *task;
 
     if (cond == NULL || mutex == NULL)
         return EINVAL;
 
-    // initialize static conditions
+    /* initialize static conditions */
     if (SemaphoreIsInvalid(cond->semaphore))
         pthread_cond_init(cond, NULL);
 
     task = FindTask(NULL);
+
+    // prepare a waiter node
+    waiter.task = task;
+    signal = AllocSignal(-1);
+    if (signal == -1) {
+        signal = SIGB_COND_FALLBACK;
+        SetSignal(SIGF_COND_FALLBACK, 0);
+    }
+    waiter.sigbit = signal;
+    sigs |= 1 << waiter.sigbit;
+
+    // add it to the end of the list
+    ObtainSemaphore(cond->semaphore);
+    AddTail((struct List *) cond->waiters, (struct Node *) &waiter);
+    ReleaseSemaphore(cond->semaphore);
 
     if (abstime) {
         // open timer.device
@@ -173,43 +187,25 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         }
 
         // prepare the device command and send it
-        timerio->tr_node.io_Command = TR_ADDREQUEST;
-        timerio->tr_node.io_Flags = 0;
-        TIMESPEC_TO_TIMEVAL(&timerio->tr_time, abstime);
+        timerio->Request.io_Command = TR_ADDREQUEST;
+        timerio->Request.io_Flags = 0;
+        TIMESPEC_TO_OLD_TIMEVAL(&timerio->Time, abstime);
         if (!relative) {
             struct timeval starttime;
             // absolute time has to be converted to relative
             // GetSysTime can't be used due to the timezone offset in abstime
 
             gettimeofday(&starttime, NULL);
-            timersub(timerio->tr_time, &starttime, timerio->tr_time);
-            printf("2) SECS: %ld - USECS: %ld\n", timerio->tr_time.tv_sec, timerio->tr_time.tv_usec);
-            if (timerio->tr_time.tv_usec < 0)
-                timerio->tr_time.tv_usec = 0;
-            if (!timerisset(timerio->tr_time)) {
+            timersub(&timerio->Time, &starttime, &timerio->Time);
+            if (!timerisset(&timerio->Time)) {
                 CloseTimerDevice((struct IORequest *) timerio);
                 return ETIMEDOUT;
             }
         }
-        sigs |= (1 << timermp.mp_SigBit);
+        sigs |= (1 << ((struct IORequest *) timerio)->io_Message.mn_ReplyPort->mp_SigBit);
+        SetSignal(0, ((struct IORequest *) timerio)->io_Message.mn_ReplyPort->mp_SigBit);
         SendIO((struct IORequest *) timerio);
     }
-
-    // prepare a waiter node
-    waiter.task = task;
-    signal = AllocSignal(-1);
-    if (signal == -1) {
-        signal = SIGB_COND_FALLBACK;
-        SetSignal(SIGF_COND_FALLBACK, 0);
-    }
-
-    waiter.sigbit = signal;
-    sigs |= 1 << waiter.sigbit;
-
-    // add it to the end of the list
-    ObtainSemaphore(cond->semaphore);
-    AddTail((struct List *) cond->waiters, (struct Node *) &waiter);
-    ReleaseSemaphore(cond->semaphore);
 
     // wait for the condition to be signalled or the timeout
     mutex->incond++;
@@ -229,14 +225,18 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         FreeSignal(waiter.sigbit);
 
     if (abstime) {
+        BOOL timeout = sigs & (1 << ((struct IORequest *) timerio)->io_Message.mn_ReplyPort->mp_SigBit);
+
         // clean up the TimeRequest
         CloseTimerDevice((struct IORequest *) timerio);
 
         // did we timeout?
-        if (sigs & (1 << timermp.mp_SigBit))
+        if (timeout) {
             return ETIMEDOUT;
-        else if (sigs & SIGBREAKF_CTRL_C)
+        }
+        else if (sigs & SIGBREAKF_CTRL_C) {
             pthread_testcancel();
+        }
     } else {
         if (sigs & SIGBREAKF_CTRL_C)
             pthread_testcancel();

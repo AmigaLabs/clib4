@@ -74,7 +74,7 @@ pthread_t GetThreadId(struct Task *task) {
     return i;
 }
 
-struct timerequest *
+struct TimeRequest *
 OpenTimerDevice() {
     BYTE signal = AllocSignal(-1);
     struct TimeRequest *io;
@@ -89,7 +89,7 @@ OpenTimerDevice() {
                         ASOPORT_AllocSig, FALSE,
                         ASOPORT_Signal, signal);
     if (!mp)
-        return TRUE;
+        return NULL;
 
     // allocate IORequest
     io = AllocSysObjectTags(ASOT_IOREQUEST,
@@ -99,11 +99,11 @@ OpenTimerDevice() {
     if (!io) {
         FreeSysObject(ASOT_PORT, mp);
         mp = NULL;
-        return TRUE;
+        return NULL;
     }
 
     // open timer.device
-    if (OpenDevice((STRPTR) TIMERNAME, UNIT_MICROHZ, io, 0)) {
+    if (OpenDevice((STRPTR) TIMERNAME, UNIT_MICROHZ, (struct IORequest *) io, 0)) {
         if (mp->mp_SigBit != SIGB_TIMER_FALLBACK)
             FreeSignal(mp->mp_SigBit);
         FreeSysObject(ASOT_PORT, mp);
@@ -112,7 +112,7 @@ OpenTimerDevice() {
         mp = NULL;
         return NULL;
     }
-    return (struct timerequest *) io;
+    return io;
 }
 
 void
