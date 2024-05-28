@@ -67,6 +67,7 @@ gets(char *s) {
                 file->iob_BufferPosition += num_characters_in_line;
                 s[num_characters_in_line] = 0;
                 /* And that concludes the line read operation. */
+                (*s) = '\0';
                 goto out;
             }
 

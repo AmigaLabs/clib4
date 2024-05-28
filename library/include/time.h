@@ -102,7 +102,7 @@ struct timespec64 {
   {                                                  \
     (result)->tv_sec = (a)->tv_sec + (b)->tv_sec;    \
     (result)->tv_usec = (a)->tv_usec + (b)->tv_usec; \
-    if ((result)->tv_usec >= 1000000)                \
+    if ((int32) ((result)->tv_usec) >= 1000000)                \
     {                                                \
       ++(result)->tv_sec;                            \
       (result)->tv_usec -= 1000000;                  \
@@ -113,7 +113,7 @@ struct timespec64 {
   {                                                  \
     (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;    \
     (result)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
-    if ((result)->tv_usec < 0)                       \
+    if ((int32) ((result)->tv_usec) < 0)                       \
     {                                                \
       --(result)->tv_sec;                            \
       (result)->tv_usec += 1000000;                  \
@@ -129,7 +129,7 @@ struct timespec64 {
   {                                                  \
     (result)->Seconds = (a)->Seconds + (b)->Seconds;    \
     (result)->Microseconds = (a)->Microseconds + (b)->Microseconds; \
-    if ((result)->Microseconds >= 1000000)                \
+    if ((int32) ((result)->Microseconds) >= 1000000)                \
     {                                                \
       ++(result)->Seconds;                            \
       (result)->Microseconds -= 1000000;                  \
@@ -140,7 +140,7 @@ struct timespec64 {
   {                                                  \
     (result)->Seconds = (a)->Seconds - (b)->Seconds;    \
     (result)->Microseconds = (a)->Microseconds - (b)->Microseconds; \
-    if ((result)->Microseconds < 0)                       \
+    if ((int32) ((result)->Microseconds) < 0)                       \
     {                                                \
       --(result)->Seconds;                            \
       (result)->Microseconds += 1000000;                  \
