@@ -92,7 +92,7 @@ struct timespec64 {
 /* BSD time macros used by RTEMS code */
 /* Convenience macros for operations on timevals.
    NOTE: `timercmp' does not work for >= or <=.  */
-#ifdef __USE_OLD_TIMEVAL__
+#ifndef __USE_OLD_TIMEVAL__
 #define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
 #define timerclear(tvp) ((tvp)->tv_sec = (tvp)->tv_usec = 0)
 #define timercmp(a, b, CMP) \
@@ -102,7 +102,7 @@ struct timespec64 {
   {                                                  \
     (result)->tv_sec = (a)->tv_sec + (b)->tv_sec;    \
     (result)->tv_usec = (a)->tv_usec + (b)->tv_usec; \
-    if ((result)->tv_usec >= 1000000)                \
+    if ((int32) ((result)->tv_usec) >= 1000000)                \
     {                                                \
       ++(result)->tv_sec;                            \
       (result)->tv_usec -= 1000000;                  \
@@ -113,9 +113,8 @@ struct timespec64 {
   {                                                  \
     (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;    \
     (result)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
-    if ((result)->tv_usec < 0)                       \
+    if ((int32) ((result)->tv_usec) < 0)                       \
     {                                                \
-      printf("gillo\n");                             \
       --(result)->tv_sec;                            \
       (result)->tv_usec += 1000000;                  \
     }                                                \
@@ -130,7 +129,7 @@ struct timespec64 {
   {                                                  \
     (result)->Seconds = (a)->Seconds + (b)->Seconds;    \
     (result)->Microseconds = (a)->Microseconds + (b)->Microseconds; \
-    if ((result)->Microseconds >= 1000000)                \
+    if ((int32) ((result)->Microseconds) >= 1000000)                \
     {                                                \
       ++(result)->Seconds;                            \
       (result)->Microseconds -= 1000000;                  \
@@ -141,7 +140,7 @@ struct timespec64 {
   {                                                  \
     (result)->Seconds = (a)->Seconds - (b)->Seconds;    \
     (result)->Microseconds = (a)->Microseconds - (b)->Microseconds; \
-    if ((result)->Microseconds < 0)                       \
+    if ((int32) ((result)->Microseconds) < 0)                       \
     {                                                \
       --(result)->Seconds;                            \
       (result)->Microseconds += 1000000;                  \
