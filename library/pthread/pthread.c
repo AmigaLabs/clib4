@@ -43,18 +43,10 @@
 #include "pthread.h"
 #include "../shared_library/interface.h"
 
-int __pthread_init_func(void);
-void __pthread_exit_func(void);
 void __attribute__((constructor, used)) __pthread_init();
 void __attribute__((destructor, used)) __pthread_exit();
 
-ThreadInfo threads[PTHREAD_THREADS_MAX];
-struct SignalSemaphore thread_sem;
-TLSKey tlskeys[PTHREAD_KEYS_MAX];
-struct SignalSemaphore tls_sem;
-APTR timerMutex = NULL;
-struct TimeRequest *timedTimerIO = NULL;
-struct MsgPort *timedTimerPort = NULL;
+struct pthread_lib pthreadLib;
 
 struct Library *_DOSBase = NULL;
 struct DOSIFace *_IDOS = NULL;
@@ -150,12 +142,15 @@ int
 _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime, BOOL relative) {
     CondWaiter waiter;
     BYTE signal;
-    ULONG sigs = SIGBREAKF_CTRL_C;
+    ULONG sigs = SIGBREAKB_CTRL_E;
     struct MsgPort timermp;
     struct TimeRequest timerio;
     struct Task *task;
 
     if (cond == NULL || mutex == NULL)
+        return EINVAL;
+
+    if (pthreadLib.shuttingDown)
         return EINVAL;
 
     // initialize static conditions
@@ -208,7 +203,11 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     // wait for the condition to be signalled or the timeout
     mutex->incond++;
     pthread_mutex_unlock(mutex);
+    Printf("_pthread_cond_timedwait - Waiting on thread %ld\n", (int32_t) GetThreadId(task));
     sigs = Wait(sigs);
+    Printf("_pthread_cond_timedwait - Done waiting on thread %ld\n", (int32_t) GetThreadId(task));
+    pthread_testcancel();
+
     pthread_mutex_lock(mutex);
     mutex->incond--;
 
@@ -227,10 +226,10 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         // did we timeout?
         if (sigs & (1 << timermp.mp_SigBit))
             return ETIMEDOUT;
-        else if (sigs & SIGBREAKF_CTRL_C)
+        else if (sigs & SIGBREAKB_CTRL_E)
             pthread_testcancel();
     } else {
-        if (sigs & SIGBREAKF_CTRL_C)
+        if (sigs & SIGBREAKB_CTRL_E)
             pthread_testcancel();
     }
 
@@ -265,34 +264,77 @@ _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
 
 int __pthread_init_func(void) {
     pthread_t i;
+    struct _clib4 *__clib4 = __CLIB4;
+    __clib4->pthread_exit_func = __pthread_gracefully_exit_func;
 
-    memset(&threads, 0, sizeof(threads));
-    InitSemaphore(&thread_sem);
-    InitSemaphore(&tls_sem);
+            /* Initialize pthread_lib struct */
+    memset(&pthreadLib, 0, sizeof(struct pthread_lib));
+
+    pthreadLib.shuttingDown = FALSE;
+
+    InitSemaphore(&pthreadLib.thread_sem);
+    InitSemaphore(&pthreadLib.tls_sem);
 
     // reserve ID 0 for the main thread
-    ThreadInfo *inf = &threads[0];
+    ThreadInfo *inf = &pthreadLib.threads[0];
     inf->task = (struct Process *) FindTask(NULL);
     inf->status = THREAD_STATE_RUNNING;
     NewMinList(&inf->cleanup);
 
-    timerMutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+    pthreadLib.timerMutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
 
-    timedTimerPort = AllocSysObject(ASOT_PORT, NULL);
-    timedTimerIO = AllocSysObjectTags(ASOT_IOREQUEST,
-                                      ASOIOR_ReplyPort, timedTimerPort,
+    pthreadLib.timedTimerPort = AllocSysObject(ASOT_PORT, NULL);
+    pthreadLib.timedTimerIO = AllocSysObjectTags(ASOT_IOREQUEST,
+                                      ASOIOR_ReplyPort, pthreadLib.timedTimerPort,
                                       ASOIOR_Size, sizeof(struct TimeRequest),
                                       TAG_DONE);
 
-    OpenDevice(TIMERNAME, UNIT_WAITUNTIL, (struct IORequest *) timedTimerIO, 0);
+    OpenDevice(TIMERNAME, UNIT_WAITUNTIL, (struct IORequest *) pthreadLib.timedTimerIO, 0);
 
     /* Mark all threads as IDLE */
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
-        inf = &threads[i];
+        inf = &pthreadLib.threads[i];
         inf->status = THREAD_STATE_IDLE;
     }
 
     return TRUE;
+}
+
+void __pthread_gracefully_exit_func(void) {
+    printf("__pthread_gracefully_exit_func\n");
+
+    pthread_t i;
+    ThreadInfo *inf;
+    struct DOSIFace *IDOS = _IDOS;
+    pthreadLib.shuttingDown = TRUE;
+
+    if (pthreadLib.timerMutex)
+        FreeSysObject(ASOT_MUTEX, pthreadLib.timerMutex);
+
+    if (pthreadLib.timedTimerIO)
+        CloseDevice((struct IORequest *) pthreadLib.timedTimerIO);
+    if (pthreadLib.timedTimerIO)
+        FreeSysObject(ASOT_IOREQUEST, pthreadLib.timedTimerIO);
+    if (pthreadLib.timedTimerPort)
+        FreeSysObject(ASOT_PORT, pthreadLib.timedTimerPort);
+
+    // if we don't do this we can easily end up with unloaded code being executed
+    for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
+        inf = &pthreadLib.threads[i];
+        if (inf->status != THREAD_STATE_IDLE) {
+            _pthread_exit(inf, PTHREAD_CANCELED);
+        }
+    }
+
+    if (_DOSBase != NULL) {
+        CloseLibrary(_DOSBase);
+        _DOSBase = NULL;
+    }
+
+    if (_IDOS != NULL) {
+        DropInterface((struct Interface *) _IDOS);
+        _IDOS = NULL;
+    }
 }
 
 void __pthread_exit_func(void) {
@@ -300,27 +342,39 @@ void __pthread_exit_func(void) {
     ThreadInfo *inf;
     struct DOSIFace *IDOS = _IDOS;
 
-    if (timerMutex)
-        FreeSysObject(ASOT_MUTEX, timerMutex);
+    if (pthreadLib.timerMutex)
+        FreeSysObject(ASOT_MUTEX, pthreadLib.timerMutex);
 
-    if (timedTimerIO)
-        CloseDevice((struct IORequest *) timedTimerIO);
-    if (timedTimerIO)
-        FreeSysObject(ASOT_IOREQUEST, timedTimerIO);
-    if (timedTimerPort)
-        FreeSysObject(ASOT_PORT, timedTimerPort);
+    if (pthreadLib.timedTimerIO)
+        CloseDevice((struct IORequest *) pthreadLib.timedTimerIO);
+    if (pthreadLib.timedTimerIO)
+        FreeSysObject(ASOT_IOREQUEST, pthreadLib.timedTimerIO);
+    if (pthreadLib.timedTimerPort)
+        FreeSysObject(ASOT_PORT, pthreadLib.timedTimerPort);
 
     // if we don't do this we can easily end up with unloaded code being executed
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
-        inf = &threads[i];
-        if (inf->detached) {
-            // TODO longer delay between retries?
-            while (inf->task)
-                Delay(1);
-        } else {
-            if (inf->status == THREAD_STATE_RUNNING)
-                pthread_join(i, NULL);
+        inf = &pthreadLib.threads[i];
+        if (inf->status != THREAD_STATE_IDLE) {
+            if (inf->detached) {
+                // TODO longer delay between retries?
+                while (inf->task)
+                    Delay(1);
+            } else {
+                if (inf->status == THREAD_STATE_RUNNING)
+                    pthread_join(i, NULL);
+            }
         }
+    }
+
+    if (_DOSBase != NULL) {
+        CloseLibrary(_DOSBase);
+        _DOSBase = NULL;
+    }
+
+    if (_IDOS != NULL) {
+        DropInterface((struct Interface *) _IDOS);
+        _IDOS = NULL;
     }
 }
 
@@ -341,16 +395,6 @@ PTHREAD_CONSTRUCTOR(__pthread_init) {
 
 PTHREAD_DESTRUCTOR(__pthread_exit) {
     ENTER();
-    if (_DOSBase != NULL) {
-        CloseLibrary(_DOSBase);
-        _DOSBase = NULL;
-    }
-
-    if (_IDOS != NULL) {
-        DropInterface((struct Interface *) _IDOS);
-        _IDOS = NULL;
-    }
-
     __pthread_exit_func();
     LEAVE();
 }

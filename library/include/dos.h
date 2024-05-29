@@ -510,6 +510,7 @@ struct _clib4 {
 
     /* ttyname */
     char tty_file_name[_POSIX_TTY_NAME_MAX];
+    void (*pthread_exit_func)(void);
 };
 
 #ifndef __getClib4

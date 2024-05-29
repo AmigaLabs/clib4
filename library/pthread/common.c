@@ -57,7 +57,7 @@ int MutexIsMine(pthread_mutex_t *mutex) {
 ThreadInfo *GetThreadInfo(pthread_t thread) {
     // TODO: more robust error handling?
     if (thread < PTHREAD_THREADS_MAX)
-        return &threads[thread];
+        return &pthreadLib.threads[thread];
 
     return NULL;
 }
@@ -67,7 +67,7 @@ pthread_t GetThreadId(struct Task *task) {
 
     // 0 is main task, First thread id will be 1 so that it is different than default value of pthread_t
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
-        if (threads[i].task == (struct Process *) task)
+        if (pthreadLib.threads[i].task == (struct Process *) task)
             break;
     }
 

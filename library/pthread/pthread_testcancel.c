@@ -45,8 +45,12 @@ pthread_testcancel(void) {
     thread = pthread_self();
     inf = GetThreadInfo(thread);
 
-    if (inf->canceled && (inf->cancelstate == PTHREAD_CANCEL_ENABLE))
+    printf("pthread_testcancel1 on thread %ld %ld %ld %d\n", (int32_t) thread, inf->canceled, inf->cancelstate, PTHREAD_CANCEL_ENABLE);
+    if (inf->canceled && (inf->cancelstate == PTHREAD_CANCEL_ENABLE)) {
+        printf("pthread_testcancel2 - exit  %ld\n", (int32_t) thread);
         pthread_exit(PTHREAD_CANCELED);
+    }
 
-    SetSignal(SIGBREAKF_CTRL_C, 0);
+    printf("pthread_testcancel3  %ld\n", (int32_t) thread);
+    SetSignal(SIGBREAKB_CTRL_E, 0);
 }

@@ -47,16 +47,16 @@ pthread_setspecific(pthread_key_t key, const void *value) {
         return EINVAL;
 
     thread = pthread_self();
-    tls = &tlskeys[key];
+    tls = &pthreadLib.tlskeys[key];
 
-    ObtainSemaphoreShared(&tls_sem);
+    ObtainSemaphoreShared(&pthreadLib.tls_sem);
 
     if (tls->used == FALSE) {
-        ReleaseSemaphore(&tls_sem);
+        ReleaseSemaphore(&pthreadLib.tls_sem);
         return EINVAL;
     }
 
-    ReleaseSemaphore(&tls_sem);
+    ReleaseSemaphore(&pthreadLib.tls_sem);
 
     inf = GetThreadInfo(thread);
     inf->tlsvalues[key] = (void *) value;

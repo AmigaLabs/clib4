@@ -44,19 +44,19 @@ pthread_key_delete(pthread_key_t key) {
     if (key >= PTHREAD_KEYS_MAX)
         return EINVAL;
 
-    tls = &tlskeys[key];
+    tls = &pthreadLib.tlskeys[key];
 
-    ObtainSemaphore(&tls_sem);
+    ObtainSemaphore(&pthreadLib.tls_sem);
 
     if (tls->used == FALSE) {
-        ReleaseSemaphore(&tls_sem);
+        ReleaseSemaphore(&pthreadLib.tls_sem);
         return EINVAL;
     }
 
     tls->used = FALSE;
     tls->destructor = NULL;
 
-    ReleaseSemaphore(&tls_sem);
+    ReleaseSemaphore(&pthreadLib.tls_sem);
 
     return 0;
 }

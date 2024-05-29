@@ -52,14 +52,14 @@ pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) 
     else if (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000)
         return EINVAL;
 
-    uint32 sigMask = 1L << timedTimerPort->mp_SigBit;
+    uint32 sigMask = 1L << pthreadLib.timedTimerPort->mp_SigBit;
 
-    timedTimerIO->Request.io_Command = TR_ADDREQUEST;
-    timedTimerIO->Time.Seconds = abstime->tv_sec;
-    timedTimerIO->Time.Microseconds = abstime->tv_nsec / 1000;
+    pthreadLib.timedTimerIO->Request.io_Command = TR_ADDREQUEST;
+    pthreadLib.timedTimerIO->Time.Seconds = abstime->tv_sec;
+    pthreadLib.timedTimerIO->Time.Microseconds = abstime->tv_nsec / 1000;
 
     SetSignal(0, sigMask);
-    SendIO((struct IORequest *) timedTimerIO);
+    SendIO((struct IORequest *) pthreadLib.timedTimerIO);
 
     result = MutexAttemptWithSignal(mutex->mutex, sigMask);
 

@@ -52,18 +52,23 @@ pthread_join(pthread_t thread, void **value_ptr) {
         return EDEADLK;
     }
 
+    Printf("p1 on %ld\n", (int32_t) thread);
     pthread_testcancel();
+    Printf("p2 on %ld\n", (int32_t) thread);
 
-    while (inf->status != THREAD_STATE_DESTRUCT) {
+    while (inf->status != THREAD_STATE_DESTRUCT && !inf->canceled && !pthreadLib.shuttingDown) {
+        Printf("p3 on thread %ld is waiting\n", (int32_t) thread);
         Wait(SIGF_PARENT);
+        Printf("p4 on thread %ld as finished to wait\n", (int32_t) thread);
     }
+    Printf("p3 on %ld\n", (int32_t) thread);
 
     if (value_ptr)
         *value_ptr = inf->ret;
 
-    ObtainSemaphore(&thread_sem);
+    ObtainSemaphore(&pthreadLib.thread_sem);
     _pthread_clear_threadinfo(inf);
-    ReleaseSemaphore(&thread_sem);
+    ReleaseSemaphore(&pthreadLib.thread_sem);
 
     return 0;
 }

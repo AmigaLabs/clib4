@@ -101,16 +101,21 @@ typedef struct {
     char name[NAMELEN];
 } ThreadInfo;
 
+struct pthread_lib {
+    ThreadInfo threads[PTHREAD_THREADS_MAX];
+    struct SignalSemaphore thread_sem;
+    TLSKey tlskeys[PTHREAD_KEYS_MAX];
+    struct SignalSemaphore tls_sem;
+    APTR timerMutex;
+    struct TimeRequest *timedTimerIO;
+    struct MsgPort *timedTimerPort;
+    BOOL shuttingDown;
+};
+
 extern struct Library *_DOSBase;
 extern struct DOSIFace *_IDOS;
 
-extern struct SignalSemaphore thread_sem;
-extern ThreadInfo threads[PTHREAD_THREADS_MAX];
-extern struct SignalSemaphore tls_sem;
-extern TLSKey tlskeys[PTHREAD_KEYS_MAX];
-extern APTR timerMutex;
-extern struct TimeRequest *timedTimerIO;
-extern struct MsgPort *timedTimerPort;
+extern struct pthread_lib pthreadLib;
 
 int SemaphoreIsInvalid(struct SignalSemaphore *sem);
 int SemaphoreIsMine(struct SignalSemaphore *sem);
@@ -126,6 +131,10 @@ int _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr,
 int _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *abstime, int shared);
 int _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime, BOOL relative);
 int _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst);
+void _pthread_exit(ThreadInfo *inf, void *value_ptr);
+int __pthread_init_func(void);
+void __pthread_exit_func(void);
+void __pthread_gracefully_exit_func(void);
 
 extern int _pthread_concur;
 

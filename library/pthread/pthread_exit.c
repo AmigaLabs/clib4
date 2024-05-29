@@ -43,7 +43,19 @@ pthread_exit(void *value_ptr) {
     ThreadInfo *inf = GetThreadInfo(thread);
     inf->ret = value_ptr;
 
-    ThreadInfo *mainThread = &threads[0];
+    ThreadInfo *mainThread = &pthreadLib.threads[0];
+    /* If the function is called from main thread don't execute call longjmp */
+    if (inf != mainThread && inf->status == THREAD_STATE_RUNNING) {
+        inf->status = THREAD_STATE_DESTRUCT;
+        longjmp(inf->jmp, 1);
+    }
+}
+
+void
+_pthread_exit(ThreadInfo *inf, void *value_ptr) {
+    inf->ret = value_ptr;
+
+    ThreadInfo *mainThread = &pthreadLib.threads[0];
     /* If the function is called from main thread don't execute call longjmp */
     if (inf != mainThread && inf->status == THREAD_STATE_RUNNING) {
         inf->status = THREAD_STATE_DESTRUCT;

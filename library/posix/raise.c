@@ -66,6 +66,10 @@ raise(int sig) {
                         killitimer();
                     }
 
+                    if (__clib4->pthread_exit_func != NULL) {
+                        SHOWMSG("Calling pthread_exit");
+                        __clib4->pthread_exit_func();
+                    }
                     char break_string[80];
 
                     /* Turn off ^C checking for good. */

@@ -71,19 +71,19 @@ StarterFunc() {
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
-    ObtainSemaphoreShared(&tls_sem);
+    ObtainSemaphoreShared(&pthreadLib.tls_sem);
     for (int j = 0; keyFound && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
         keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
-            if (tlskeys[i].used && tlskeys[i].destructor && inf->tlsvalues[i]) {
+            if (pthreadLib.tlskeys[i].used && pthreadLib.tlskeys[i].destructor && inf->tlsvalues[i]) {
                 void *oldvalue = inf->tlsvalues[i];
                 inf->tlsvalues[i] = NULL;
-                tlskeys[i].destructor(oldvalue);
+                pthreadLib.tlskeys[i].destructor(oldvalue);
                 keyFound = TRUE;
             }
         }
     }
-    ReleaseSemaphore(&tls_sem);
+    ReleaseSemaphore(&pthreadLib.tls_sem);
 
     if (stackSwapped)
         StackSwap(&stack);
@@ -95,9 +95,9 @@ StarterFunc() {
         Signal((struct Task *) inf->parent, SIGF_PARENT);
     } else {
         // no one is waiting for us, do the clean up
-        ObtainSemaphore(&thread_sem);
+        ObtainSemaphore(&pthreadLib.thread_sem);
         _pthread_clear_threadinfo(inf);
-        ReleaseSemaphore(&thread_sem);
+        ReleaseSemaphore(&pthreadLib.thread_sem);
     }
 
     return RETURN_OK;
@@ -115,12 +115,12 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
         return EINVAL;
 
     // grab an empty thread slot
-    ObtainSemaphore(&thread_sem);
+    ObtainSemaphore(&pthreadLib.thread_sem);
     threadnew = GetThreadId(NULL);
-    ReleaseSemaphore(&thread_sem);
+    ReleaseSemaphore(&pthreadLib.thread_sem);
 
     if (threadnew == PTHREAD_THREADS_MAX) {
-        ReleaseSemaphore(&thread_sem);
+        ReleaseSemaphore(&pthreadLib.thread_sem);
         return EAGAIN;
     }
 

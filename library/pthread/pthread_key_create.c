@@ -45,23 +45,23 @@ pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
     if (key == NULL)
         return EINVAL;
 
-    ObtainSemaphore(&tls_sem);
+    ObtainSemaphore(&pthreadLib.tls_sem);
 
     for (i = 0; i < PTHREAD_KEYS_MAX; i++) {
-        if (tlskeys[i].used == FALSE)
+        if (pthreadLib.tlskeys[i].used == FALSE)
             break;
     }
 
     if (i == PTHREAD_KEYS_MAX) {
-        ReleaseSemaphore(&tls_sem);
+        ReleaseSemaphore(&pthreadLib.tls_sem);
         return EAGAIN;
     }
 
-    tls = &tlskeys[i];
+    tls = &pthreadLib.tlskeys[i];
     tls->used = TRUE;
     tls->destructor = destructor;
 
-    ReleaseSemaphore(&tls_sem);
+    ReleaseSemaphore(&pthreadLib.tls_sem);
 
     *key = i;
 
