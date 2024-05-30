@@ -274,6 +274,14 @@ struct ip_mreqn {
 	int imr_ifindex;
 };
 
+
+/* Structure used for IP_PKTINFO.  */
+struct in_pktinfo {
+    int ipi_ifindex;			    /* Interface index  */
+    struct in_addr ipi_spec_dst;	/* Routing destination address  */
+    struct in_addr ipi_addr;		/* Header destination address  */
+};
+
 struct ip_mreq_source {
     /* IP multicast address of group.  */
     struct in_addr imr_multiaddr;

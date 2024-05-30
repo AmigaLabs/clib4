@@ -104,6 +104,8 @@ extern void exit(int status);
 extern void abort(void);
 
 extern int atexit(void (*)(void));
+extern int __cxa_atexit(void (*func) (void *), void *arg, void *d);
+extern void __cxa_finalize(void *d);
 extern char *getenv(const char *name);
 extern void *bsearch(const void *key, const void *base, size_t count, size_t size, int (*compare)(const void *key, const void *value));
 extern void qsort(void *base, size_t count, size_t size, int (*compare)(const void *element1, const void *element2));
@@ -185,6 +187,7 @@ extern void arc4random_stir(void);
 extern void arc4random_addrandom(unsigned char *dat, int datlen);
 
 #ifdef __SPE__
+struct _clib4;
 extern int16_t atosfix16(const char *__str);
 extern int16_t _atosfix16_r(struct _clib4 *, const char *__str);
 extern int32_t atosfix32(const char *__str);

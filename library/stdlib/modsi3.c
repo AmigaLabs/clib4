@@ -4,7 +4,7 @@
 
 __asm("							\n\
 	.text						\n\
-	.align 2					\n\
+	.align 8					\n\
 								\n\
 	.globl __modsi3				\n\
 								\n\

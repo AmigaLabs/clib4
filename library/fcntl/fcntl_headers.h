@@ -15,4 +15,7 @@
 
 #include <sys/file.h>
 
+extern int getCurrentCliActionMode(void);
+extern struct Window *getCurrentCliWindow(void);
+
 #endif /* _FCNTL_HEADERS_H */

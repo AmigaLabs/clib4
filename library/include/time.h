@@ -18,7 +18,7 @@ __BEGIN_DECLS
  * Divide the number returned by clock() by CLOCKS_PER_SEC to obtain
  * the elapsed time in seconds
  */
-#define CLOCKS_PER_SEC ((clock_t)50)
+#define CLOCKS_PER_SEC 1000000
 #define CLK_TCK CLOCKS_PER_SEC
 
 /* Identifier for system-wide realtime clock.  */
@@ -39,9 +39,13 @@ __BEGIN_DECLS
 #define __tm_zone tm_zone
 #endif
 
-#define _timezone (__CLIB4->__timezone)
-#define _daylight (__CLIB4->__daylight)
-#define _tzname   (__CLIB4->__tzname)
+extern int __get_timezone(void);
+extern int __get_daylight(void);
+extern char **__get_tzname(void);
+
+#define _timezone (__get_timezone())
+#define _daylight (__get_daylight())
+#define _tzname   (__get_tzname())
 
 /* POSIX defines the external tzname being defined in time.h */
 #ifndef tzname
@@ -98,7 +102,7 @@ struct timespec64 {
   {                                                  \
     (result)->tv_sec = (a)->tv_sec + (b)->tv_sec;    \
     (result)->tv_usec = (a)->tv_usec + (b)->tv_usec; \
-    if ((result)->tv_usec >= 1000000)                \
+    if ((int32_t) ((result)->tv_usec) >= 1000000)                \
     {                                                \
       ++(result)->tv_sec;                            \
       (result)->tv_usec -= 1000000;                  \
@@ -109,7 +113,7 @@ struct timespec64 {
   {                                                  \
     (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;    \
     (result)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
-    if ((result)->tv_usec < 0)                       \
+    if ((int32_t) ((result)->tv_usec) < 0)                       \
     {                                                \
       --(result)->tv_sec;                            \
       (result)->tv_usec += 1000000;                  \
@@ -125,7 +129,7 @@ struct timespec64 {
   {                                                  \
     (result)->Seconds = (a)->Seconds + (b)->Seconds;    \
     (result)->Microseconds = (a)->Microseconds + (b)->Microseconds; \
-    if ((result)->Microseconds >= 1000000)                \
+    if ((int32_t) ((result)->Microseconds) >= 1000000)                \
     {                                                \
       ++(result)->Seconds;                            \
       (result)->Microseconds -= 1000000;                  \
@@ -136,7 +140,7 @@ struct timespec64 {
   {                                                  \
     (result)->Seconds = (a)->Seconds - (b)->Seconds;    \
     (result)->Microseconds = (a)->Microseconds - (b)->Microseconds; \
-    if ((result)->Microseconds < 0)                       \
+    if ((int32_t) ((result)->Microseconds) < 0)                       \
     {                                                \
       --(result)->Seconds;                            \
       (result)->Microseconds += 1000000;                  \

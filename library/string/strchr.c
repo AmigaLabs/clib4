@@ -1,5 +1,5 @@
 /*
- * $Id: string_strchr.c,v 1.5 2021-03-22 12:04:26 clib4devs Exp $
+ * $Id: string_strchr.c,v 1.6 2022-03-22 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -10,15 +10,12 @@
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
-extern char *__strchr440(const char *s, int c);
-
 char *
 strchr(const char *s, int c) {
     const unsigned char *us = (const unsigned char *) s;
     char *result = NULL;
     unsigned char us_c;
     unsigned char find_this = (c & 0xff);
-    struct _clib4 *__clib4 = __CLIB4;
 
     assert(s != NULL);
 
@@ -27,38 +24,17 @@ strchr(const char *s, int c) {
         goto out;
     }
 
-    if (__clib4->__optimizedCPUFunctions) {
-        switch (__clib4->cpufamily) {
-            case CPUFAMILY_4XX:
-                result = __strchr440(s, c);
-                break;
-            default:
-                while (TRUE) {
-                    us_c = (*us);
-                    if (us_c == find_this) {
-                        result = (char *) us;
-                        break;
-                    }
-
-                    if (us_c == '\0')
-                        break;
-
-                    us++;
-                }
+    while (TRUE) {
+        us_c = (*us);
+        if (us_c == find_this) {
+            result = (char *) us;
+            break;
         }
-    } else {
-        while (TRUE) {
-            us_c = (*us);
-            if (us_c == find_this) {
-                result = (char *) us;
-                break;
-            }
 
-            if (us_c == '\0')
-                break;
+        if (us_c == '\0')
+            break;
 
-            us++;
-        }
+        us++;
     }
 
 out:

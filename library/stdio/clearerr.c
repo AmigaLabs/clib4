@@ -11,7 +11,6 @@
 void
 clearerr(FILE *stream) {
     struct iob *file = (struct iob *) stream;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -23,8 +22,6 @@ clearerr(FILE *stream) {
         __set_errno(EFAULT);
         goto out;
     }
-
-    assert(__is_valid_iob(__clib4, file));
 
     flockfile(stream);
 

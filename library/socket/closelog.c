@@ -16,7 +16,7 @@ closelog(void) {
         __clib4->syslog_fd = NULL;
     }
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     LEAVE();
 }

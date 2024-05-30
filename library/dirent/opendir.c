@@ -34,7 +34,7 @@ opendir(const char *path_name) {
 
     assert(path_name != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (path_name == NULL) {
         SHOWMSG("invalid parameter");
@@ -150,7 +150,7 @@ opendir(const char *path_name) {
         }
 
         dh->dh_Context = ObtainDirContextTags(EX_FileLockInput, dh->dh_DirLock,
-                                              EX_DoCurrentDir, TRUE,
+                                              EX_DoCurrentDir, FALSE,
                                               EX_DataFields, EXF_ALL,
                                               TAG_END);
         if (dh->dh_Context == NULL) {

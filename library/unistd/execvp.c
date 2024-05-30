@@ -113,7 +113,7 @@ execvp(const char *command, char *const argv[]) {
             }
 
             /* Just in case somebody wants to quit... */
-            __check_abort();
+            __check_abort_f(__clib4);
         }
     }
 

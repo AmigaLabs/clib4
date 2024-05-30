@@ -43,7 +43,7 @@
 
 int
 __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
-    char line[256];
+    char line[256] = {0};
     FILE *f;
     int nns = 0;
 
@@ -66,15 +66,8 @@ __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
 
     while (fgets(line, sizeof line, f)) {
         char *p, *z;
-        if (!strchr(line, '\n') && !feof(f)) {
-            /* Ignore lines that get truncated rather than
-             * potentially misinterpreting them. */
-            int c;
-            do c = getc(f);
-            while (c != '\n' && c != EOF);
-            continue;
-        }
-        if (!strncmp(line, "options", 7) && isspace(line[7])) {
+
+        if (!strncmp(line, "options", 7) && (isspace(line[7]) || line[7] == '=')) {
             p = strstr(line, "ndots:");
             if (p && isdigit(p[6])) {
                 p += 6;
@@ -96,9 +89,9 @@ __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
             continue;
         }
         // Using Devs:Internet/name_resolution we need to check also for =
-        if (!strncmp(line, "nameserver", 10) &&
-            (isspace(line[10]) || line[10] == '=')) {
-            if (nns >= MAXNS) continue;
+        if (!strncmp(line, "nameserver", 10) && (isspace(line[10]) || line[10] == '=')) {
+            if (nns >= MAXNS)
+                continue;
             for (p = line + 11; isspace(*p); p++);
             for (z = p; *z && !isspace(*z); z++);
             *z = 0;
@@ -109,7 +102,7 @@ __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
 
         if (!search) continue;
         if ((strncmp(line, "domain", 6) && strncmp(line, "search", 6))
-            || !isspace(line[6]))
+            || (!isspace(line[6]) && line[6] != '='))
             continue;
         for (p = line + 7; isspace(*p); p++);
         size_t l = strlen(p);

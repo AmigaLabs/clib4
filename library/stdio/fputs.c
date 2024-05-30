@@ -32,7 +32,7 @@ fputs(const char *s, FILE *stream) {
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
-    if (__fputc_check(stream) < 0)
+    if (__fputc_check(stream, __clib4) < 0)
         goto out;
 
     total_size = strlen(s);

@@ -1,5 +1,5 @@
 /*
- * $Id: unistd.h,v 1.23 2007-01-06 10:09:49 clib4devs Exp $
+ * $Id: unistd.h,v 1.24 2023-04-04 10:09:49 clib4devs Exp $
 */
 
 #ifndef _UNISTD_H
@@ -7,13 +7,8 @@
 
 #include <features.h>
 
-#ifndef _FCNTL_H
 #include <fcntl.h>
-#endif /* _FCNTL_H */
-
-#ifndef _STDINT_H
 #include <stdint.h>
-#endif /* _STDINT_H */
 
 __BEGIN_DECLS
 
@@ -86,6 +81,13 @@ extern int execv(const char *path,char * const argv[]);
 extern int execve(const char *path,char *const argv[],char *const envp[]);
 extern int execvp(const char *command,char * const argv[]);
 extern int getentropy(void *, size_t);
+
+extern void swab(const void *bfrom, void *bto, ssize_t nbytes);
+extern void swab24(const void *bfrom, void *bto, ssize_t nbytes);	/* Same as swab(), but operates on 24-bit words instead. */
+extern void swab32(const void *bfrom, void *bto, ssize_t nbytes);	/* Same as swab(), but operates on 32-bit words instead. */
+extern void swab64(const void *bfrom, void *bto, ssize_t nbytes);	/* Same as swab(), but operates on 64-bit words instead. */
+
+#define	swab16(x)	swab(x)
 
 extern void encrypt(char *block, int edflag);
 
@@ -178,6 +180,7 @@ extern int setlogin(const char *name);
 #define _SC_THREAD_KEYS_MAX        21
 #define _SC_HOST_NAME_MAX          65
 #define _SC_GETPW_R_SIZE_MAX	   70
+#define _SC_TTY_NAME_MAX           72
 
 extern long pathconf(const char *path,int name);
 extern long fpathconf(int file_descriptor,int name);

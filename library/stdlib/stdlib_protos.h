@@ -45,6 +45,7 @@ extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
 
 /* signal_checkabort.c */
 extern void __check_abort(void);
+extern void __check_abort_f(struct _clib4 *__clib4);
 extern int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
 
 extern void __abort(void);

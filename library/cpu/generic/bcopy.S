@@ -60,7 +60,7 @@
 #define	w6	r11
 #define	w7	r0
 #define	w8	r2
-#define	kLong	33					// too long for string ops
+#define	kLong	33				// too long for string ops
 
     .text
 
@@ -69,7 +69,7 @@
     .align 	5
     .global bcopy_g3
 
-bcopy_g3:							// void bcopy(const void *src, void *dst, size_t len)
+bcopy_g3:						// void bcopy(const void *src, void *dst, size_t len)
     cmplwi	rc,kLong			// length > 32 bytes?
     sub		w1,r4,r3			// must move in reverse if (rd-rs)<rc
     mr		rd,r4				// start to move source & dest to canonic spot
@@ -82,8 +82,8 @@ bcopy_g3:							// void bcopy(const void *src, void *dst, size_t len)
     // NB: memcpy() and memmove() must follow bcopy() by 32 bytes, for comm page.
 
     .align	5
-Lmemcpy_g3:							// void* memcpy(void *dst, void *src, size_t len)
-Lmemmove_g3:						// void* memmove(void *dst, const void *src, size_t len)
+Lmemcpy_g3:						// void* memcpy(void *dst, void *src, size_t len)
+Lmemmove_g3:					// void* memmove(void *dst, const void *src, size_t len)
     cmplwi	rc,kLong			// length > 32 bytes?
     sub		w1,r3,rs			// must move in reverse if (rd-rs)<rc
     mr		rd,r3				// must leave r3 alone, it is return value for memcpy etc
@@ -96,9 +96,9 @@ Lmemmove_g3:						// void* memmove(void *dst, const void *src, size_t len)
     // Long operands (more than 32 bytes.)
     //		w1  = (rd-rs), used to check for alignment
 
-LLong0:								// enter from bcopy()
+LLong0:							// enter from bcopy()
     mr		rs,r3				// must leave r3 alone (it is return value for memcpy)
-LLong1:								// enter from memcpy() and memmove()
+LLong1:							// enter from memcpy() and memmove()
     cmplw	cr1,w1,rc			// set cr1 blt iff we must move reverse
     rlwinm	r0,w1,0,0x3			// are operands relatively word-aligned?
     neg		w2,rd				// prepare to align destination
@@ -144,7 +144,7 @@ LLong1:								// enter from memcpy() and memmove()
     stw		w8,28(rd)
     addi	rd,rd,32
     bdnz	1b
-2:									// rc = remaining bytes (0-31)
+2:								// rc = remaining bytes (0-31)
     mtxer	rc					// set up count for string ops
     mr		r0,rd				// move dest ptr out of the way
     lswx	r5,0,rs				// load xer bytes into r5-r12 (rs==r4)
@@ -170,7 +170,7 @@ LLongFloat:
     stswx	w1,0,rd
     add		rd,rd,w4
     beq-	2f					// pathologic case, no chunks to xfer
-1:									// loop over 32-byte chunks
+1:								// loop over 32-byte chunks
     lfd		f0,0(rs)
     lfd		f1,8(rs)
     lfd		f2,16(rs)
@@ -182,7 +182,7 @@ LLongFloat:
     stfd	f3,24(rd)
     addi	rd,rd,32
     bdnz	1b
-2:									// rc = remaining bytes (0-31)
+2:								// rc = remaining bytes (0-31)
     mtxer	rc					// set up count for string ops
     mr		r0,rd				// move dest ptr out of the way
     lswx	r5,0,rs				// load xer bytes into r5-r12 (rs==r4)
@@ -256,7 +256,7 @@ LReverseFloat:
     stfd	f2,-24(rd)
     stfdu	f3,-32(rd)
     bdnz	1b
-2:									// rc = remaining bytes (0-31)
+2:								// rc = remaining bytes (0-31)
     mtxer	rc					// set up count for string ops
     sub		r4,rs,rc			// point to 1st (leftmost) leftover byte (0..31)
     sub		r0,rd,rc			// move dest ptr out of way

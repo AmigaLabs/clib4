@@ -39,23 +39,34 @@
 
 int
 pthread_mutex_lock(pthread_mutex_t *mutex) {
-    if (mutex == NULL)
+    ENTER();
+    SHOWPOINTER(mutex);
+
+    if (!mutex)
         return EINVAL;
 
     if (mutex->mutex == NULL) {
+        SHOWMSG("mutex was not initalized. Initialize it");
         int ret = _pthread_mutex_init(mutex, NULL, TRUE);
-        if (ret != 0)
+        if (ret != 0) {
+            SHOWMSG("Cannot initialize mutex");
             return EINVAL;
+        }
     }
 
     // normal mutexes would simply deadlock here
     if (mutex->kind == PTHREAD_MUTEX_ERRORCHECK) {
+        SHOWMSG("MutexAttempt");
         BOOL isLocked = MutexAttempt(mutex->mutex);
-        if (!isLocked)
+        if (!isLocked) {
+            SHOWMSG("DeadLock");
             return EDEADLK;
+        }
     }
 
+    SHOWMSG("MutexObtain");
     MutexObtain(mutex->mutex);
+    SHOWMSG("Done");
 
     return 0;
 }

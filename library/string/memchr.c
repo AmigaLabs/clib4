@@ -1,5 +1,5 @@
 /*
- * $Id: string_memchr.c,v 1.8 2023-02-22 12:04:26 clib4devs Exp $
+ * $Id: string_memchr.c,v 1.9 2024-03-22 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -121,33 +121,18 @@ void *
 memchr(const void *ptr, int val, size_t len) {
     const unsigned char *m = ptr;
     void *result = NULL;
-    struct _clib4 *__clib4 = __CLIB4;
 
     assert(ptr != NULL);
     assert((int) len >= 0);
 
-    if (ptr == NULL) {
+    if (ptr == NULL || len <= 0) {
         __set_errno(EFAULT);
         goto out;
     }
 
-    if (len > 0) {
-        if (__clib4->__optimizedCPUFunctions) {
-            switch (__clib4->cpufamily) {
-                case CPUFAMILY_4XX:
-                    result = __memchr440(m, (unsigned char) (val & 255), len);
-                    break;
-                default:
-                    result = __memchr(m, (unsigned char) (val & 255), len);
-            }
-        } else {
-            /* Fallback to standard function */
-            result = __memchr(m, (unsigned char) (val & 255), len);
-        }
-    } else
-        __set_errno(EFAULT);
+    result = __memchr(m, (unsigned char) (val & 255), len);
 
-    out:
+out:
 
     return (result);
 }

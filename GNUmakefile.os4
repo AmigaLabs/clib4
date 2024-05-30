@@ -8,7 +8,15 @@
 ##############################################################################
 
 .PHONY : all prepare all-targets all-libs clean \
-	gitver version compile-tests install release dpkg 
+	gitver version compile-tests install release dpkg
+
+# Determines the Amiga SDK version that CLIB4 is being built with and
+# will only be relevant when building CLIB4 during the building of a
+# cross compiler.
+ifdef SDK_VERSION
+SDK_MAJOR=$(word 1,$(subst ., ,$(SDK_VERSION)))
+SDK_MINOR=$(word 2,$(subst ., ,$(SDK_VERSION)))
+endif
 
 # You may have to change the following sets of macro definitions which will
 # be used throughout the build makefile. These definitions cover the paths
@@ -64,7 +72,8 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Werror # -Wbad-function-cast -Wconversion -Wformat
+    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Werror \
+     # -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -105,7 +114,7 @@ STATIC   := $(if $(STATIC),$(STATIC),yes)
 LARGEDATA :=
 OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe \
 		-nostdinc -nostartfiles -nostdlib
-OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -ffp-contract=fast -mstrict-align
+OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
 
 STABS :=
 DLIBS :=
@@ -125,9 +134,16 @@ ifdef SPE
     CC := ppc-amigaos-gcc-6.4.0
     AS := ppc-amigaos-as-6.4.0
     CMATH := -mfpu=dp_lite
-    CFLAGS := $(CFLAGS) -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mabi=spe -mfloat-gprs=double $(CMATH) -fno-inline-functions -fno-partial-inlining \
-                -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions -fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
+    OUTPUT_LIB = $(BUILD_DIR)/lib/soft-float
+    CFLAGS := $(CFLAGS) -D__SPE__ -msoft-float -mspe -mtune=8540 -mcpu=8540 -mabi=spe -mfloat-gprs=double $(CMATH) -fno-inline-functions -fno-partial-inlining \
+                -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions \
+                -fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
     AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mfloat-gprs=double $(CMATH) -Wno-overflow
+endif
+
+ifdef PROFILE
+    CFLAGS += -pg
+    DLIBS += -Lbuild/lib -lprofile
 endif
 
 VERBOSE    ?= @
@@ -172,10 +188,10 @@ include libm.gmk
 include libamiga.gmk
 include libdebug.gmk
 include libpthread.gmk
-include libprofile.gmk
 include libcrypt.gmk
 include librt.gmk
 include shared.gmk
+include libprofile.gmk
 
 prepare:
 	-$(MAKEDIR) $(BUILD_DIR)/shared
@@ -250,16 +266,12 @@ version:
 	$(COPY) c.lib_rev.rev math/m.lib_rev.rev
 	$(COPY) c.lib_rev.rev math/crypt.lib_rev.rev
 	$(COPY) c.lib_rev.rev math/pthread.lib_rev.rev
-	bumprev amiga.lib
-	bumprev c.lib
-	bumprev m.lib
-	bumprev crypt.lib
-	bumprev pthread.lib
+	$(COPY) c.lib_rev.rev math/profile.lib_rev.rev
 
 # Shared clib4.library rules
 
 clib4.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(OUTPUT_LIB)/crtend.o $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
 
 clib4.library: clib4.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@

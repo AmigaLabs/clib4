@@ -709,7 +709,7 @@ vfprintf(FILE *f, const char *format, va_list ap) {
         va_end(ap2);
         return EOF;
     }
-*/
+    */
 
     SHOWMSG("Write result to the file");
     ret = printf_core(_out, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double);

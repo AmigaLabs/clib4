@@ -1,14 +1,10 @@
 /*
- * $Id: unistd_ttyname_r.c,v 1.6 2006-11-16 14:39:23 clib4devs Exp $
+ * $Id: unistd_ttyname_r.c,v 1.7 2023-03-30 14:39:23 clib4devs Exp $
 */
 
 #ifndef    _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
-
-/*
- * Just a quick kludge, really.
- */
 
 int
 ttyname_r(int file_descriptor, char *name, size_t buflen) {
@@ -31,7 +27,7 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
 
     __fd_lock(fd);
 
-    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_INTERACTIVE) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SERIAL)) {
         BPTR file;
 
         file = __resolve_fd_file(fd);
@@ -42,13 +38,20 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
         }
     }
 
-    if (__clib4->__unix_path_semantics)
-        tty_file_name = "/CONSOLE";
-    else
-        tty_file_name = "CONSOLE:";
+    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SERIAL)) {
+        if (__clib4->__unix_path_semantics)
+            tty_file_name = "/CONSOLE";
+        else
+            tty_file_name = "CONSOLE:";
+    }
+    else {
+        if (__clib4->__unix_path_semantics)
+            tty_file_name = "/SER";
+        else
+            tty_file_name = "SER:";
+    }
 
-    if (buflen < strlen(tty_file_name) + 1) /* XXX Should this be _POSIX_PATH_MAX? */
-    {
+    if (buflen < strlen(tty_file_name) + 1) { /* XXX Should this be _POSIX_PATH_MAX? */
         result = ERANGE;
         goto out;
     }
@@ -60,7 +63,6 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
 out:
 
     __fd_unlock(fd);
-
     __stdio_unlock(__clib4);
 
     RETURN(result);

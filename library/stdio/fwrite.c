@@ -224,7 +224,6 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     }
 
 out:
-
     funlockfile(stream);
 
     RETURN(result);

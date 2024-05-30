@@ -16,7 +16,7 @@ static const double zero = 0.00000000000000000000e+00;
 double
 __ieee754_jn(int n, double x) {
     int32_t i, hx, ix, lx, sgn;
-    double a, b, temp, di;
+    double a, b, temp = 0.0, di;
     double z, w;
 
     /* J(-n,x) = (-1)^n * J(n, x), J(n, -x) = (-1)^n * J(n, x)
@@ -192,7 +192,7 @@ double
 __ieee754_yn(int n, double x) {
     int32_t i, hx, ix, lx;
     int32_t sign;
-    double a, b, temp;
+    double a, b, temp = 0.0;
 
     EXTRACT_WORDS(hx, lx, x);
     ix = 0x7fffffff & hx;

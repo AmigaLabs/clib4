@@ -830,7 +830,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
 
                     (*error_ptr) = EINTR;
 
-                    __check_abort();
+                    __check_abort_f(__clib4);
 
                     goto out;
                 }

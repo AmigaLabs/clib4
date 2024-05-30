@@ -7,8 +7,7 @@
 #endif /* _UNISTD_HEADERS_H */
 
 int
-truncate64(const char *path_name, _off64_t length)
-{
+truncate64(const char *path_name, _off64_t length) {
     int result = ERROR;
     int fd;
 
@@ -21,16 +20,14 @@ truncate64(const char *path_name, _off64_t length)
 
     __check_abort();
 
-    if (path_name == NULL)
-    {
+    if (path_name == NULL) {
         SHOWMSG("invalid path name");
 
         __set_errno(EFAULT);
         goto out;
     }
 
-    if (length < 0)
-    {
+    if (length < 0) {
         SHOWMSG("invalid length");
 
         __set_errno(EINVAL);
@@ -38,8 +35,7 @@ truncate64(const char *path_name, _off64_t length)
     }
 
     fd = open(path_name, O_WRONLY);
-    if (fd < 0)
-    {
+    if (fd < 0) {
         SHOWMSG("file didn't open");
         goto out;
     }
@@ -48,7 +44,7 @@ truncate64(const char *path_name, _off64_t length)
 
     close(fd);
 
-out:
+    out:
 
     RETURN(result);
     return (result);

@@ -2,8 +2,13 @@
 # $Id: libdebug.gmk,v 1.0 2022-07-09 10:09:48 clib4devs Exp $
 #
 
-OUT_STATIC := $(BUILD_DIR)/obj/libdebug
-OUT_SHARED := $(BUILD_DIR)/obj.shared/libdebug
+ifndef SPE
+    OUT_STATIC := $(BUILD_DIR)/obj/libdebug
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/libdebug
+else
+    OUT_STATIC := $(BUILD_DIR)/obj/soft-float/libdebug
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/soft-float/libdebug
+endif
 
 ifeq ($(SHARED),yes)
     LIBS += $(OUTPUT_LIB)/libdebug.so
@@ -75,8 +80,8 @@ $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 endif
 
-$(BUILD_DIR)/lib/libdebug.a : $(SOURCES_STATIC)
+$(OUTPUT_LIB)/libdebug.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libdebug.so :$(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
+$(OUTPUT_LIB)/libdebug.so :$(OUTPUT_LIB)/libc.so $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

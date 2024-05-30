@@ -22,19 +22,6 @@ extern __CONST_FUNC uint32_t bswap32(uint32_t);
 extern __CONST_FUNC uint64_t bswap64(uint64_t);
 #endif
 
-/* Block byteswap functions. The swab() function usually resides in unistd.h, so perhaps it should be moved there? */
-/* NOTE: Contrary to the standard swab(), this version returns the "to" pointer and the pointers are not restrict
- * qualified - so swapping buffer-contents in-place is supported.
- * Also, swab24(), swab32() and swab64() are non-standard functions.
- */
-
-extern void *swab(void *from,void *to,ssize_t nbytes);
-extern void *swab24(void *from,void *to,ssize_t nbytes);	/* Same as swab(), but operates on 24-bit words instead. */
-extern void *swab32(void *from,void *to,ssize_t nbytes);	/* Same as swab(), but operates on 32-bit words instead. */
-extern void *swab64(void *from,void *to,ssize_t nbytes);	/* Same as swab(), but operates on 64-bit words instead. */
-
-#define	swab16(x)	swab(x)
-
 /*
  * Optimized inline-versions for the single-value functions follow.
  * Only GCC+PPC and GCC+m68k support for now.

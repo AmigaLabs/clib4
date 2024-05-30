@@ -1,6 +1,10 @@
 /*
- * $Id: socket_ioctl.c,v 1.14 2006-11-16 10:41:15 clib4devs Exp $
+ * $Id: socket_ioctl.c,v 1.16 2024-03-30 10:41:15 clib4devs Exp $
 */
+
+#ifndef _FCNTL_HEADERS_H
+#include "fcntl_headers.h"
+#endif /* _FCNTL_HEADERS_H */
 
 #ifndef _SOCKET_HEADERS_H
 #include "socket_headers.h"
@@ -10,18 +14,56 @@
 #include <stdarg.h>
 #endif /* _STDARG_H */
 
+#include <proto/intuition.h>
+
 #include <sys/ioctl.h>
 #include <termios.h>
 
 #define BUFFER_SIZE 30
 
-static BOOL readSize(uint32 *rows, uint32 *columns) {
-    BPTR fh = Open("CONSOLE:", MODE_OLDFILE);
-    BOOL success = FALSE;
+int
+getCurrentCliActionMode(void) {
+    int consoleMode = ID_CON;  // Return normal mode on error
+    struct Task *task = FindTask(NULL);
+    if (task->tc_Node.ln_Type == NT_PROCESS) {
+        struct MsgPort *port = ((struct Process *) task)->pr_ConsolePort;
+        if (port != NULL) {
+            struct ConsoleWindowData *conData = ObtainConsoleDataTags(OCD_MsgPortInput, port, TAG_END);
+            if (conData != NULL) {
+                consoleMode = conData->ConsoleType;
+                ReleaseConsoleData(conData);
+            }
+        }
+    }
+
+    return consoleMode;
+}
+
+struct Window *
+getCurrentCliWindow(void) {
+    struct Window *cliWindow = NULL;
+    struct Task *task = FindTask(NULL);
+    if (task->tc_Node.ln_Type == NT_PROCESS) {
+        struct MsgPort *port = ((struct Process *) task)->pr_ConsolePort;
+        if (port != NULL) {
+            struct ConsoleWindowData *conData = ObtainConsoleDataTags(OCD_MsgPortInput, port, TAG_END);
+            if (conData != NULL) {
+                cliWindow = conData->ConsoleWindow;
+                ReleaseConsoleData(conData);
+            }
+        }
+    }
+
+    return cliWindow;
+}
+
+static void readSize(uint32 *rows, uint32 *columns, uint32 *xpixel, uint32 *ypixel) {
+    BPTR fh = Output();
     if (fh) {
-        uint32 width = 0, height = 0;
+        uint32 _cols = 80, _rows = 23, _xpixel = 0, _ypixel = 0;
         char r;
         char buffer[BUFFER_SIZE + 1] = {0};
+        int oldMode = getCurrentCliActionMode();
 
         SetMode(fh, 1); // RAW mode
         if (Write(fh, "\x9b q", 3) == 3) {
@@ -35,39 +77,70 @@ static BOOL readSize(uint32 *rows, uint32 *columns) {
             if (actual >= 0 && actual < BUFFER_SIZE) {
                 buffer[actual] = '\0';
                 if (sscanf(buffer, "\x9b"
-                                   "1;1;%ld;%ld r", &height, &width) == 2) {
-                    success = TRUE;
+                                   "1;1;%ld;%ld r", &_rows, &_cols) == 2) {
+                    struct Window *w = getCurrentCliWindow();
+                    if (w != NULL) {
+                        _xpixel = w->Width - w->BorderLeft - w->BorderRight;
+                        _ypixel = w->Height - w->BorderTop - w->BorderBottom;
+                    }
                 }
             }
         }
-        SetMode(fh, 0); // Normal mode
-        Close(fh);
+        SetMode(fh, oldMode);
 
-        if (success) {
-            *rows = height;
-            *columns = width;
-        }
+        *rows = _rows;
+        *columns = _cols;
+        *xpixel = _xpixel;
+        *ypixel = _ypixel;
     }
-
-    return success;
 }
 
 static BOOL writeSize(uint32 rows, uint32 columns) {
-    BPTR fh = Open("CONSOLE:", MODE_OLDFILE);
+    BPTR fh = Output();
     BOOL success = FALSE;
 
     if (fh) {
         char buffer[51] = {0};
+        int oldMode = getCurrentCliActionMode();
 
         SetMode(fh, 1); // RAW mode
-        snprintf(buffer, 50, "\x9b%dt\x9b%du", rows, columns);
+        snprintf(buffer, 50, "\x9b%dt\x9b%du", columns + 1, rows + 1);
         int bufferLen = strlen(buffer);
         int bytesWritten = Write(fh, buffer, bufferLen);
         if (bytesWritten == bufferLen) {
+            struct Window *cliWindow = getCurrentCliWindow();
+            if (cliWindow != NULL) {
+                struct IntuitionIFace *IIntuition = NULL;
+                struct Library *IntuitionBase;
+
+                IntuitionBase = OpenLibrary("intuition.library", 53);
+                if (IntuitionBase != NULL) {
+                    IIntuition = (struct IntuitionIFace *) GetInterface(IntuitionBase, "main", 1, 0);
+                    if (IIntuition == NULL) {
+                        CloseLibrary(IntuitionBase);
+                        IntuitionBase = NULL;
+                    } else {
+                        /* This is an hack to refresh the current window.
+                         * Notice that not the main AmigaShell window will be resized but only the active tab
+                         * This means that all other active tabs will use the same rows and cols
+                         * Check tty-size.c example
+                         */
+                        SetWindowAttrs(cliWindow, WA_Width, cliWindow->Width + 1, WA_Height, cliWindow->Height + 1, TAG_DONE);
+                        SetWindowAttrs(cliWindow, WA_Width, cliWindow->Width - 1, WA_Height, cliWindow->Height - 1, TAG_DONE);
+                    }
+                }
+                if (IIntuition != NULL) {
+                    DropInterface((struct Interface *) IIntuition);
+                    IIntuition = NULL;
+                }
+                if (IntuitionBase != NULL) {
+                    CloseLibrary(IntuitionBase);
+                    IntuitionBase = NULL;
+                }
+            }
             success = TRUE;
         }
-        SetMode(fh, 0); // Normal mode
-        Close(fh);
+        SetMode(fh, oldMode);
     }
 
     return success;
@@ -102,7 +175,8 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
             __fd_lock(fd);
 
             va_start(arg, request);
-            param = va_arg(arg, char *);
+            param = va_arg(arg,
+            char *);
             va_end(arg);
 
             SHOWPOINTER(param);
@@ -125,8 +199,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
             }
 
             __fd_unlock(fd);
-        }
-        else {
+        } else {
             if (request != FIONBIO) {
                 fd = __get_file_descriptor(sockfd);
                 if (fd == NULL)
@@ -135,7 +208,8 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
                 __fd_lock(fd);
 
                 va_start(arg, request);
-                param = va_arg(arg, char *);
+                param = va_arg(arg,
+                char *);
                 va_end(arg);
 
                 SHOWPOINTER(param);
@@ -155,7 +229,8 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
         struct winsize *size;
         // Get them from console device
         va_start(arg, request);
-        size = va_arg(arg, struct winsize *);
+        size = va_arg(arg,
+        struct winsize *);
         va_end(arg);
 
         if (size == NULL) {
@@ -163,19 +238,17 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
             goto out;
         }
 
-        uint32 cols, rows;
-        BOOL success = readSize(&rows, &cols);
-        if (!success) {
-            size->ws_row = 80;
-            size->ws_col = 23;
-        } else {
-            size->ws_row = (short) rows;
-            size->ws_col = (short) cols;
-        }
+        uint32 cols = 80, rows = 23, xpixel = 0, ypixel = 0;
+        readSize(&rows, &cols, &xpixel, &ypixel);
+        size->ws_row = (short) rows;
+        size->ws_col = (short) cols;
+        size->ws_xpixel = (short) xpixel;
+        size->ws_ypixel = (short) ypixel;
     } else if (request == TIOCSWINSZ) {
         struct winsize *size;
         va_start(arg, request);
-        size = va_arg(arg, struct winsize *);
+        size = va_arg(arg,
+        struct winsize *);
         va_end(arg);
 
         if (size == NULL) {
@@ -186,14 +259,12 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
         /* Write size will clear and refresh only the window.
          * Console device don't support resizing via CSI
          */
-#if 0
         writeSize(size->ws_row, size->ws_col);
-#endif
     }
 
-out:
+    out:
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

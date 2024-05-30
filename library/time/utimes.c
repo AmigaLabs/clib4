@@ -20,7 +20,7 @@ utimes(const char *name, const struct timeval *tvp) {
 
     ENTER();
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     DECLARE_TIMEZONEBASE();
 

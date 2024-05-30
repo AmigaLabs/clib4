@@ -22,9 +22,10 @@ strnlen(const char *s, size_t maxlen) {
         goto out;
     }
 
-    const char *p = memchr(s, 0, maxlen);
+    while (maxlen-- > 0 && *s)
+        s++;
 
-    result = p ? p-s : maxlen;
+    result = s - start;
 
 out:
 

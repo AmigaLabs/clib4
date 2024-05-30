@@ -30,6 +30,7 @@ __BEGIN_DECLS
 typedef struct _wof_allocator_t wof_allocator_t;
 typedef void (*signal_handler_t)(int sig);
 typedef int32 BPTR;
+typedef short BOOL;
 
 struct ExitTrapNode {
     struct MinNode etn_MinNode;
@@ -151,7 +152,7 @@ struct _clib4 {
     struct Library *__UserGroupBase;
     struct UserGroupIFace *__IUserGroup;
 
-    /* CPU Family to enable optimized functions */
+    /* CPU Family */
     uint32 cpufamily;
     uint32 hasAltivec;
 
@@ -205,11 +206,9 @@ struct _clib4 {
 
     BOOL __unix_path_semantics;
 
-    /* Set this flag to true to enable optimized CPU functions */
-    BOOL __optimizedCPUFunctions;
-
-    void *unused1;
-    void *unused2;
+    BOOL  unused6;
+    int32_t __pipenum;
+    void *__pipe_semaphore;
     BOOL  unused3;
 
     /* This is used with the dlopen(), dlclose() and dlsym() functions. */
@@ -508,6 +507,9 @@ struct _clib4 {
     char tgoto_buf[50];
 
     struct __res_state _res_state;
+
+    /* ttyname */
+    char tty_file_name[_POSIX_TTY_NAME_MAX];
 };
 
 #ifndef __getClib4

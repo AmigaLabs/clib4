@@ -36,6 +36,8 @@ enum
 #define FE_ALL_EXCEPT \
 	(FE_INEXACT | FE_DIVBYZERO | FE_UNDERFLOW | FE_OVERFLOW | FE_INVALID)
 
+#define	FE_ALL_INVALID	FE_INVALID
+
 /* The E500 support all of the four defined rounding modes.  We use
    the bit pattern in the SPEFSCR as the values for the appropriate
    macros.  */

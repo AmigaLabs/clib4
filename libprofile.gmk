@@ -2,8 +2,13 @@
 # $Id: libprofile.gmk,v 1.1 2006-09-17 17:37:27 clib2devs Exp $
 #
 
-OUT_STATIC := $(BUILD_DIR)/obj/libprofile
-OUT_SHARED := $(BUILD_DIR)/obj.shared/libprofile
+ifndef SPE
+    OUT_STATIC := $(BUILD_DIR)/obj/libprofile
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/libprofile
+else
+    OUT_STATIC := $(BUILD_DIR)/obj/soft-float/libprofile
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/soft-float/libprofile
+endif
 
 ifeq ($(SHARED),yes)
     LIBS += $(OUTPUT_LIB)/libprofile.so
@@ -38,6 +43,8 @@ $(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
+CFLAGS := $(filter-out -pg, $(CFLAGS))
+
 ifdef SPE
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SPE)
@@ -49,6 +56,7 @@ $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
 $(OUT_SHARED)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SHARED)
 endif
+
 
 $(OUTPUT_LIB)/libprofile.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)

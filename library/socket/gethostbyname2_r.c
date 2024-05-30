@@ -19,7 +19,7 @@ int gethostbyname2_r(const char *name, int af,
     *res = 0;
 
     cnt = __lookup_name(addrs, canon, name, af, AI_CANONNAME);
-    if (cnt < 0)
+    if (cnt < 0) {
         switch (cnt) {
             case EAI_NONAME:
                 *err = HOST_NOT_FOUND;
@@ -36,6 +36,7 @@ int gethostbyname2_r(const char *name, int af,
                 *err = NO_RECOVERY;
                 return errno;
         }
+    }
 
     h->h_addrtype = af;
     h->h_length = af == AF_INET6 ? 16 : 4;
@@ -49,7 +50,8 @@ int gethostbyname2_r(const char *name, int af,
     need += strlen(canon) + 1;
     need += align;
 
-    if (need > buflen) return ERANGE;
+    if (need > buflen)
+        return ERANGE;
 
     buf += align;
     h->h_aliases = (void *) buf;

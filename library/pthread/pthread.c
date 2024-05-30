@@ -64,9 +64,12 @@ struct DOSIFace *_IDOS = NULL;
 //
 int
 _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOOL staticinit) {
+    ENTER();
+
     if (mutex == NULL)
         return EINVAL;
     BOOL recursive = FALSE;
+    SHOWPOINTER(mutex);
 
     if (attr)
         mutex->kind = attr->kind;
@@ -76,9 +79,13 @@ _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOO
     if (mutex->kind == PTHREAD_MUTEX_RECURSIVE)
         recursive = TRUE;
 
+    SHOWMSG("Allocating mutex");
     mutex->mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, recursive, TAG_DONE);
+    SHOWPOINTER(mutex->mutex);
+
     mutex->incond = 0;
 
+    LEAVE();
     return 0;
 }
 
@@ -291,6 +298,7 @@ int __pthread_init_func(void) {
 void __pthread_exit_func(void) {
     pthread_t i;
     ThreadInfo *inf;
+    struct DOSIFace *IDOS = _IDOS;
 
     if (timerMutex)
         FreeSysObject(ASOT_MUTEX, timerMutex);
@@ -316,7 +324,8 @@ void __pthread_exit_func(void) {
     }
 }
 
-CLIB_CONSTRUCTOR(__pthread_init) {
+PTHREAD_CONSTRUCTOR(__pthread_init) {
+    ENTER();
     _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
     if (_DOSBase) {
         _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);
@@ -327,9 +336,11 @@ CLIB_CONSTRUCTOR(__pthread_init) {
         else
             __pthread_init_func();
     }
+    LEAVE();
 }
 
-CLIB_DESTRUCTOR(__pthread_exit) {
+PTHREAD_DESTRUCTOR(__pthread_exit) {
+    ENTER();
     if (_DOSBase != NULL) {
         CloseLibrary(_DOSBase);
         _DOSBase = NULL;
@@ -341,4 +352,5 @@ CLIB_DESTRUCTOR(__pthread_exit) {
     }
 
     __pthread_exit_func();
+    LEAVE();
 }

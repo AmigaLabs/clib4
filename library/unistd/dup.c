@@ -18,7 +18,7 @@ dup(int file_descriptor1) {
     SHOWVALUE(file_descriptor1);
     SHOWVALUE(file_descriptor2);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     __stdio_lock(__clib4);
 

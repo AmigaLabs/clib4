@@ -1,5 +1,5 @@
 /*
- * $Id: string_memmove.c,v 1.7 2006-09-22 09:02:51 clib4devs Exp $
+ * $Id: string_memmove.c,v 1.9 2003-09-22 09:02:51 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H

@@ -6,7 +6,7 @@
 #include "interface.h"
 
 asm(".section	\".text\"             \n\
-	.align 2                          \n\
+	.align 8                          \n\
 	.globl __Clib4Call                \n\
 	.type  __Clib4Call, @function     \n\
 __Clib4Call:                          \n\
@@ -1092,3 +1092,10 @@ Clib4Call(fts_set, 4324);
 Clib4Call(__stdin, 4328);
 Clib4Call(__stdout, 4332);
 Clib4Call(__stderr, 4336);
+
+Clib4Call(__cxa_atexit, 4340);
+Clib4Call(__cxa_finalize, 4344);
+
+Clib4Call(__get_timezone, 4348);
+Clib4Call(__get_daylight, 4352);
+Clib4Call(__get_tzname, 4356);

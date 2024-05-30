@@ -5,8 +5,13 @@
 #
 # -*- mode: makefile; -*-
 
-OUT_STATIC := $(BUILD_DIR)/obj/libm
-OUT_SHARED := $(BUILD_DIR)/obj.shared/libm
+ifndef SPE
+    OUT_STATIC := $(BUILD_DIR)/obj/libm
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/libm
+else
+    OUT_STATIC := $(BUILD_DIR)/obj/libm/soft-float
+    OUT_SHARED := $(BUILD_DIR)/obj.shared/libm/soft-float
+endif
 
 ifeq ($(SHARED),yes)
     LIBS += $(OUTPUT_LIB)/libm.so
@@ -328,8 +333,8 @@ $(OUT_STATIC)/math/m.lib_rev.o : $(LIB_DIR)/math/m.lib_rev.c
 $(OUT_SHARED)/math/m.lib_rev.o : $(LIB_DIR)/math/m.lib_rev.c
 	$(VERBOSE)$(COMPILE_SHARED)
 
-$(BUILD_DIR)/lib/libm.a : $(SOURCES_STATIC)
+$(OUTPUT_LIB)/libm.a : $(SOURCES_STATIC)
 	$(VERBOSE)$(MAKELIB)
 
-$(BUILD_DIR)/lib/libm.so : $(SOURCES_SHARED)
+$(OUTPUT_LIB)/libm.so : $(SOURCES_SHARED)
 	$(VERBOSE)$(MAKESHARED)

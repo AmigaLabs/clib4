@@ -12,6 +12,7 @@ gets(char *s) {
     struct iob *file = (struct iob *) stream;
     char *result = s;
     int c;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -33,7 +34,7 @@ gets(char *s) {
     /* Take care of the checks and data structure changes that
      * need to be handled only once for this stream.
      */
-    if (__fgetc_check(stream) < 0) {
+    if (__fgetc_check(stream, __clib4) < 0) {
         result = NULL;
         goto out;
     }
@@ -66,6 +67,7 @@ gets(char *s) {
                 file->iob_BufferPosition += num_characters_in_line;
                 s[num_characters_in_line] = 0;
                 /* And that concludes the line read operation. */
+                (*s) = '\0';
                 goto out;
             }
 

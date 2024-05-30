@@ -23,7 +23,7 @@ int chown(const char *path_name, uid_t owner, gid_t group) {
 
     assert(path_name != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (path_name == NULL) {
         SHOWMSG("invalid path name");

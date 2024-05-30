@@ -3,7 +3,7 @@
 
 #include "math.h"
 
-di_int
+di_int __attribute__ ((noinline, used))
 __fixsfdi(float a) {
     float_bits fb;
     fb.f = a;
@@ -19,7 +19,7 @@ __fixsfdi(float a) {
     return (r ^ s) - s;
 }
 
-di_int
+di_int __attribute__ ((noinline, used))
 __fixdfdi(double a) {
     double_bits fb;
     fb.f = a;
@@ -37,7 +37,7 @@ __fixdfdi(double a) {
     return (r.all ^ s) - s;
 }
 
-du_int
+du_int __attribute__ ((noinline, used))
 __udivmoddi4(du_int a, du_int b, du_int *rem) {
     const unsigned n_uword_bits = sizeof(su_int) * CHAR_BIT;
     const unsigned n_udword_bits = sizeof(du_int) * CHAR_BIT;
@@ -252,14 +252,14 @@ __udivmoddi4(du_int a, du_int b, du_int *rem) {
     return q.all;
 }
 
-du_int
+du_int __attribute__ ((noinline, used))
 __umoddi3(du_int a, du_int b) {
     du_int r;
     __udivmoddi4(a, b, &r);
     return r;
 }
 
-float _Complex
+float _Complex __attribute__ ((noinline, used))
 __mulsc3(float __a, float __b, float __c, float __d) {
     float __ac = __a * __c;
     float __bd = __b * __d;
@@ -309,7 +309,7 @@ __mulsc3(float __a, float __b, float __c, float __d) {
     return z;
 }
 
-double _Complex
+double _Complex __attribute__ ((noinline, used))
 __muldc3(double __a, double __b, double __c, double __d) {
     double __ac = __a * __c;
     double __bd = __b * __d;
@@ -359,12 +359,12 @@ __muldc3(double __a, double __b, double __c, double __d) {
     return z;
 }
 
-du_int
+du_int __attribute__ ((noinline, used))
 __udivdi3(du_int a, du_int b) {
     return __udivmoddi4(a, b, 0);
 }
 
-di_int
+di_int __attribute__ ((noinline, used))
 __moddi3(di_int a, di_int b) {
     const int bits_in_dword_m1 = (int) (sizeof(di_int) * CHAR_BIT) - 1;
     di_int s = b >> bits_in_dword_m1;  /* s = b < 0 ? -1 : 0 */
@@ -376,7 +376,7 @@ __moddi3(di_int a, di_int b) {
     return (r ^ s) - s;                /* negate if s == -1 */
 }
 
-di_int
+di_int __attribute__ ((noinline, used))
 __divdi3(di_int a, di_int b) {
     const int bits_in_dword_m1 = (int) (sizeof(di_int) * CHAR_BIT) - 1;
     di_int s_a = a >> bits_in_dword_m1;           /* s_a = a < 0 ? -1 : 0 */
@@ -387,13 +387,13 @@ __divdi3(di_int a, di_int b) {
     return (__udivmoddi4(a, b, (du_int *) 0) ^ s_a) - s_a;  /* negate if s_a == -1 */
 }
 
-di_int
+di_int __attribute__ ((noinline, used))
 __unorddf2 (double a, double b) {
     return isnan(a) || isnan(b);
 }
 
 #ifndef __SOFTFP__
-long double
+long double __attribute__ ((noinline, used))
 __floatunditf(uint64_t a) {
     /* Begins with an exact copy of the code from __floatundidf */
 
@@ -424,7 +424,7 @@ __floatunditf(uint64_t a) {
     return result.ld;
 }
 
-double
+double __attribute__ ((noinline, used))
 __floatundidf(du_int a) {
     static const double twop52 = 4503599627370496.0;           // 0x1.0p52
     static const double twop84 = 19342813113834066795298816.0; // 0x1.0p84
@@ -444,7 +444,7 @@ __floatundidf(du_int a) {
 /* Support for systems that have hardware floating-point; we'll set the inexact flag
  * as a side-effect of this computation.
  */
-double
+double __attribute__ ((noinline, used))
 __floatdidf(di_int a) {
     static const double twop52 = 0x1.0p52;
     static const double twop32 = 0x1.0p32;
@@ -462,7 +462,7 @@ __floatdidf(di_int a) {
 /* Support for systems that don't have hardware floating-point; there are no flags to
  * set, and we don't want to code-gen to an unknown soft-float implementation.
  */
-double
+double __attribute__ ((noinline, used))
 __floatdidf(di_int a) {
     if (a == 0)
         return 0.0;
@@ -514,7 +514,7 @@ __floatdidf(di_int a) {
     return fb.f;
 }
 
-double
+double __attribute__ ((noinline, used))
 __floatundidf(du_int a) {
   if (a == 0)
     return 0.0;

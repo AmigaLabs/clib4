@@ -11,13 +11,12 @@ fgets(char *buf, int n, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     char *s = buf;
     int c;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWPOINTER(buf);
     SHOWVALUE(n);
     SHOWPOINTER(stream);
-
-    assert(buf != NULL && stream != NULL);
 
     if (buf == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
@@ -36,7 +35,7 @@ fgets(char *buf, int n, FILE *stream) {
     /* Take care of the checks and data structure changes that
      * need to be handled only once for this stream.
      */
-    if (__fgetc_check(stream) < 0) {
+    if (__fgetc_check(stream, __clib4) < 0) {
         buf = NULL;
         goto out;
     }
@@ -77,6 +76,7 @@ fgets(char *buf, int n, FILE *stream) {
                 file->iob_BufferPosition += num_characters_in_line;
                 s[num_characters_in_line] = 0;
                 /* And that concludes the line read operation. */
+                (*s) = '\0';
                 goto out;
             }
 
@@ -112,6 +112,7 @@ fgets(char *buf, int n, FILE *stream) {
         }
 
         (*s++) = c;
+
         if (c == '\n')
             break;
 

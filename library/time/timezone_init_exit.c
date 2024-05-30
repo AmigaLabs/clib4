@@ -25,6 +25,7 @@ __timezone_exit(void) {
             if (__clib4->__tzname[1]) FreeVec(__clib4->__tzname[1]);
             __clib4->__tzname[0] = NULL;
             __clib4->__tzname[1] = NULL;
+            __clib4->__dyntz = FALSE;
         }
 
         if (__clib4->__ITimezone != NULL) {

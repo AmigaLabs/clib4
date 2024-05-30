@@ -17,7 +17,7 @@ close(int file_descriptor) {
 
     SHOWVALUE(file_descriptor);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     /* We want to affect this very file descriptor and not the
        original one associated with an alias of it. */

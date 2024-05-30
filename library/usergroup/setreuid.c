@@ -28,7 +28,7 @@ setreuid(uid_t real, uid_t eff) {
         result = __setreuid((LONG) real, (LONG) eff);
     }
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

@@ -18,7 +18,7 @@ ftrylockfile(FILE *stream) {
 
     assert(stream != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");

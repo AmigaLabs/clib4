@@ -58,7 +58,7 @@ name_from_hosts(struct address buf[static MAXADDRS], char canon[static 256], con
     int cnt = 0, badfam = 0, have_canon = 0;
     unsigned char _buf[1032];
     FILE *f = fopen(_PATH_HOSTS,"r");
-    if (!f)
+    if (!f) {
         switch (errno) {
             case ENOENT:
             case ENOTDIR:
@@ -67,12 +67,12 @@ name_from_hosts(struct address buf[static MAXADDRS], char canon[static 256], con
             default:
                 return EAI_SYSTEM;
         }
+    }
     while (fgets(line, sizeof line, f) && cnt < MAXADDRS) {
         char *p, *z;
 
         if ((p = strchr(line, '#'))) *p++ = '\n', *p = 0;
-        for (p = line + 1; (p = strstr(p, name)) &&
-                           (!isspace(p[-1]) || !isspace(p[l])); p++);
+        for (p = line + 1; (p = strstr(p, name)) && (!isspace(p[-1]) || (!isspace(p[l]) && p[l] != '\0')); p++);
         if (!p) continue;
 
         /* Isolate IP address to parse */
@@ -190,8 +190,8 @@ name_from_dns_search(struct address buf[static MAXADDRS], char canon[static 256]
     struct resolvconf conf;
     size_t l, dots;
     char *p, *z;
-
-    if (__get_resolv_conf(&conf, search, sizeof search) < 0) return -1;
+    if (__get_resolv_conf(&conf, search, sizeof search) < 0)
+        return -1;
 
     /* Count dots, suppress search when >=ndots or name ends in
      * a dot, which is an explicit request for global scope. */
@@ -317,16 +317,18 @@ __lookup_name(struct address buf[static MAXADDRS], char canon[static 256], const
         if (family == AF_INET6) family = AF_UNSPEC;
         else flags -= AI_V4MAPPED;
     }
-
     /* Try each backend until there's at least one result. */
     cnt = name_from_null(buf, name, family, flags);
-    if (!cnt)
+    if (!cnt) {
         cnt = name_from_numeric(buf, name, family);
+    }
     if (cnt != 1 && !(flags & AI_NUMERICHOST)) {
         cnt = name_from_hosts(buf, canon, name, family);
-        if (!cnt) cnt = name_from_dns_search(buf, canon, name, family);
+        if (!cnt)
+            cnt = name_from_dns_search(buf, canon, name, family);
     }
-    if (cnt <= 0) return cnt ? cnt : EAI_NONAME;
+    if (cnt <= 0)
+        return cnt ? cnt : EAI_NONAME;
 
     /* Filter/transform results for v4-mapped lookup, if requested. */
     if (flags & AI_V4MAPPED) {

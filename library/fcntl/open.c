@@ -38,7 +38,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     assert(path_name != NULL);
     assert(UtilityBase != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     __stdio_lock(__clib4);
 

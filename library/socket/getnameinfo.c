@@ -125,8 +125,8 @@ getnameinfo(const struct sockaddr *restrict sa, socklen_t sl,
 
     __check_abort();
 
-    char ptr[PTR_MAX];
-    char buf[256], num[3 * sizeof(int) + 1];
+    char ptr[PTR_MAX] = {0};
+    char buf[256] = {0}, num[3 * sizeof(int) + 1];
     int af = sa->sa_family;
     unsigned char *a;
     unsigned scopeid;

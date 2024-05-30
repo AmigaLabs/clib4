@@ -9,7 +9,7 @@
 __asm("							\n\
 								\n\
 	.text						\n\
-	.align 2					\n\
+	.align 8					\n\
 								\n\
 	.globl __get_sp				\n\
 								\n\

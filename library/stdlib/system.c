@@ -27,7 +27,7 @@ system(const char *command) {
     else
         SHOWSTRING(command);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     /* A NULL pointer for the name of the command to execute is
      * really a query to find out whether a shell is available.

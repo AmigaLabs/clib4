@@ -64,7 +64,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         unsigned char *data = ptr;
         int c;
 
-        if (__fgetc_check((FILE *) file) < 0)
+        if (__fgetc_check((FILE *) file, __clib4) < 0)
             goto out;
 
         /* Check for overflow. */

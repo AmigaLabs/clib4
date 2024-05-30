@@ -44,8 +44,8 @@
  * refer to only the __CTOR_END__ symbol in sh/crtend.o and the __DTOR_LIST__
  * symbol in sh/crtbegin.o, where they are defined.  */
 
-static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
-static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
+static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors"))) = { (void *)~0 };
+static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors"))) = { (void *)~0 };
 
 const struct Library *SysBase = NULL;
 const struct ExecIFace *IExec = NULL;
@@ -123,7 +123,7 @@ clib4_start(char *args, int32 arglen, struct Library *sysbase) {
             iclib4 = (struct Clib4IFace *) OpenLibraryInterface(iexec, "clib4.library", 1);
             if (iclib4 != NULL) {
                 struct Library *clib4base = ((struct Interface *) iclib4)->Data.LibBase;
-                if (clib4base->lib_Version == VERSION && clib4base->lib_Revision == REVISION) {
+                if (clib4base->lib_Version == VERSION && clib4base->lib_Revision >= REVISION) {
                     IClib4 = iclib4;
 
                     rc = iclib4->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__);

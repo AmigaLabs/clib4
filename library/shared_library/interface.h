@@ -1324,12 +1324,19 @@ struct Clib4IFace {
     FILE * (* __stdout) (void);                                                                                                                      /* 4332 */
     FILE * (* __stderr) (void);                                                                                                                      /* 4336 */
 
+    int (* __cxa_atexit) (void (*func) (void *), void *arg, void *d);                                                                                /* 4340 */
+    void (* __cxa_finalize) (void *d);                                                                                                               /* 4344 */
+
+    int (* __get_timezone) (void);                                                                                                                   /* 4348 */
+    int (*__get_daylight) (void);                                                                                                                    /* 4352 */
+    char ** (* __get_tzname) (void);                                                                                                                 /* 4356 */
+
 };
 
 #ifdef __PIC__
 #define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
-	    .align 2                     \n\
+	    .align 8                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\
@@ -1339,7 +1346,7 @@ struct Clib4IFace {
 #elif !defined(__PIC__)
 #define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
-	    .align 2                     \n\
+	    .align 8                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\

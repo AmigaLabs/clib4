@@ -22,7 +22,7 @@ link(const char *existing_path, const char *new_path) {
 
     assert(existing_path != NULL && new_path != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (existing_path == NULL || new_path == NULL) {
         SHOWMSG("invalid parameters");

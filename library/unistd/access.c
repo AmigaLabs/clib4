@@ -21,7 +21,7 @@ access(const char *path_name, int mode) {
 
     assert(path_name != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (path_name == NULL) {
         SHOWMSG("invalid path name");

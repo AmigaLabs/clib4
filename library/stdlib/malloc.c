@@ -18,15 +18,21 @@
 
 void *
 malloc(size_t size) {
+    ENTER();
     void *result = NULL;
     struct _clib4 *__clib4 = __CLIB4;
+    SHOWPOINTER(__clib4);
 
+    SHOWMSG("Locking memory pointer");
     __memory_lock(__clib4);
 
+    SHOWMSG("Calling wof_alloc");
     result = wof_alloc(__clib4->__wof_allocator, size);
 
+    SHOWMSG("Unlocking memory pointer");
     __memory_unlock(__clib4);
 
+    LEAVE();
     return (result);
 }
 

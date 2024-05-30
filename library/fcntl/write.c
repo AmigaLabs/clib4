@@ -26,7 +26,7 @@ write(int file_descriptor, const void *buffer, size_t num_bytes) {
     assert(buffer != NULL);
     assert((int) num_bytes >= 0);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     __stdio_lock(__clib4);
 
