@@ -61,7 +61,9 @@ pthread_mutex_lock(pthread_mutex_t *mutex) {
         if (!isLocked) {
             SHOWMSG("DeadLock");
             return EDEADLK;
-        }
+        } else {
+	  MutexRelease(mutex->mutex);
+	}
     }
 
     SHOWMSG("MutexObtain");
