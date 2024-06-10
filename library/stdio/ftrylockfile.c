@@ -13,12 +13,11 @@ ftrylockfile(FILE *stream) {
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
-
     SHOWPOINTER(stream);
 
-    assert(stream != NULL);
-
     __check_abort_f(__clib4);
+
+    assert(stream != NULL);
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
@@ -38,7 +37,9 @@ ftrylockfile(FILE *stream) {
     }
 
     if (file->iob_Lock != NULL && CANNOT AttemptSemaphore(file->iob_Lock))
-    goto out;
+        goto out;
+    
+    SET_FLAG(file->iob_Flags, IOBF_LOCKED);
 
     result = OK;
 

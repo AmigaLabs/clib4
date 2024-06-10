@@ -26,14 +26,15 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
 
     assert(stream != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
-
         __set_errno(EFAULT);
-        goto out;
+
+        RETURN(result);
+        return (result);
     }
+
+    flockfile(stream);
 
     if (bufmode < IOBF_BUFFER_MODE_FULL ||
         bufmode > IOBF_BUFFER_MODE_NONE) {

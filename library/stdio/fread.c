@@ -26,7 +26,8 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return (result);
     }
 
     flockfile(stream);

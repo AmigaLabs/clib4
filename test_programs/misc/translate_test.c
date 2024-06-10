@@ -8,7 +8,7 @@
 #include <dos.h>
 
 int
-main(int argc, char **argv) {
+main(int argc, char **argv) {regexec
     struct name_translation_info nti;
     char *name;
     int error;

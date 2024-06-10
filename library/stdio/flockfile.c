@@ -10,6 +10,9 @@ void
 flockfile(FILE *stream) {
     struct iob *file = (struct iob *) stream;
 
+    ENTER();
+    SHOWPOINTER(stream);
+
     assert(stream != NULL);
 
     __check_abort();
@@ -30,9 +33,12 @@ flockfile(FILE *stream) {
         goto out;
     }
 
-    if (file->iob_Lock != NULL)
+    if (file->iob_Lock != NULL) {
         ObtainSemaphore(file->iob_Lock);
+        SET_FLAG(file->iob_Flags, IOBF_LOCKED);
+    }
 
 out:
+    LEAVE();
     return;
 }
