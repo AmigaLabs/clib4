@@ -25,14 +25,15 @@ __flush(FILE *stream) {
 
     assert(stream != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
-
         __set_errno(EFAULT);
-        goto out;
+
+        RETURN(result);
+        return result;
     }
+
+    flockfile(stream);
 
     assert(__is_valid_iob(__clib4, iob));
     assert(iob->iob_BufferWriteBytes > 0);

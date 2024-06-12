@@ -22,8 +22,11 @@ fputs(const char *s, FILE *stream) {
     assert(s != NULL && stream != NULL);
 
     if (s == NULL || stream == NULL) {
+        SHOWMSG("invalid parameters");
         __set_errno(EFAULT);
-        goto out;
+
+        RETURN(result);
+        return result;
     }
 
     flockfile(stream);

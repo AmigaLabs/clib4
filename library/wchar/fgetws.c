@@ -20,6 +20,8 @@ fgetws(wchar_t *s, int n, FILE *f) {
 
     if (n <= 0) {
         __set_errno(EINVAL);
+
+        RETURN(NULL);
         return NULL;
     }
 

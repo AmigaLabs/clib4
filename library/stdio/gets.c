@@ -19,17 +19,19 @@ gets(char *s) {
     SHOWPOINTER(s);
 
     assert(s != NULL);
+    assert(stream != NULL);
 
-    flockfile(stream);
-
-    if (s == NULL) {
+    if (s == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
 
         result = NULL;
-        goto out;
+        RETURN(result);
+        return (result);
     }
+
+    flockfile(stream);
 
     /* Take care of the checks and data structure changes that
      * need to be handled only once for this stream.

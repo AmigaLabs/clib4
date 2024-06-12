@@ -164,7 +164,7 @@ typedef int64_t (*file_action_iob_t)(struct _clib4 *__clib4, struct iob * iob, s
 #define IOBF_INTERNAL		(1<<9)	/* Not a regular file, but a buffered
 									   file handle made up on the spot in
 									   vsprintf(), etc. */
-
+#define IOBF_LOCKED 		(1<<10)	/* File is locked by ObtainSemaphore */
 /****************************************************************************/
 
 /* Each file handle is represented by the following structure. Note that this

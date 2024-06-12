@@ -16,12 +16,15 @@ ftell(FILE *stream) {
 
     assert(stream != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL) {
+        SHOWMSG("invalid stream parameter");
         __set_errno(EFAULT);
-        goto out;
+
+        RETURN(result);
+        return (result);
     }
+
+    flockfile(stream);
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
