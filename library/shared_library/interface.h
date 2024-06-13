@@ -81,6 +81,7 @@
 #include <sys/times.h>
 #include <sys/utsname.h>
 #include <sys/uio.h>
+#include <sys/wait.h>
 
 struct NameTranslationInfo;
 
@@ -1330,6 +1331,9 @@ struct Clib4IFace {
     int (* __get_timezone) (void);                                                                                                                   /* 4348 */
     int (*__get_daylight) (void);                                                                                                                    /* 4352 */
     char ** (* __get_tzname) (void);                                                                                                                 /* 4356 */
+
+    pid_t (* wait) (int *status);                                                                                                                    /* 4360 */
+    pid_t (* waitpid) (pid_t pid, int *status, int options);                                                                                         /* 4364 */
 
 };
 

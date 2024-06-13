@@ -1100,3 +1100,6 @@ Clib4Call(__cxa_finalize, 4344);
 Clib4Call(__get_timezone, 4348);
 Clib4Call(__get_daylight, 4352);
 Clib4Call(__get_tzname, 4356);
+
+Clib4Call(wait, 4360);
+Clib4Call(waitpid, 4364);

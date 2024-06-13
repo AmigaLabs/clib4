@@ -174,6 +174,7 @@ spawnv(int mode, const char *file, const char **argv) {
                      SYS_UserShell, TRUE,
                      SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
                      NP_Name, file,
+                     NP_Child, TRUE,
                      TAG_DONE);
 
     if (ret != 0) {
@@ -189,7 +190,12 @@ spawnv(int mode, const char *file, const char **argv) {
          */
         if (mode == P_NOWAIT) {
             ret = IoErr(); // This is our ProcessID;
-            insertSpawnedChildren(ret, getgid());
+            if (insertSpawnedChildren(ret, getgid())) {
+                D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
+            }
+            else {
+                D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
+            }
         }
     }
     return ret;

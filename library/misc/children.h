@@ -5,6 +5,10 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#include "clib4.h"
+
 BOOL insertSpawnedChildren(uint32 pid, uint32 gid);
+struct Clib4Children *findSpawnedChildrenByPid(uint32 pid);
+struct Clib4Children *findSpawnedChildrenByGid(uint32 pid, uint32 gid);
 
 #endif

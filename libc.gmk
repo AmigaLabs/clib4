@@ -196,6 +196,8 @@ C_POSIX := \
 	posix/sysv_shmids.o \
 	posix/ulimit.o \
 	posix/readv.o \
+	wait/wait.o \
+	wait/waitpid.o \
 	posix/writev.o \
 	posix/uname.o
 

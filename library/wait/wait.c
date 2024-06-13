@@ -9,5 +9,5 @@
 #include <sys/wait.h>
 
 pid_t wait(int *status) {
-    int32_t rc = WaitForChildExit(0);
+    return waitpid(-1, status, 0);
 }

@@ -26,8 +26,7 @@ struct Clib4Resource {
     struct SignalSemaphore  semaphore;          /* for list arbitration */
     struct hashmap         *children;           /* list of parent nodes */
     struct hashmap         *uxSocketsMap;
-    struct SplayTree       *spawnedProcesses;   /* list of spawned processes */
-    struct Hook             spawnedProcessesHook;
+    struct hashmap         *spawnedProcesses;   /* list of spawned processes */
     struct _clib4          *fallbackClib;
     /* SysVIPC fields */
     int locked;
@@ -66,8 +65,8 @@ struct Clib4Base {
 
 struct Clib4Children {
     uint32  pid;        /* the process PID */
-    uint32  returnCode; /* the return code of process */
     gid_t   groupId;    /* Group ID of process */
+    uint32  returnCode; /* the return code of process */
 };
 
 int libReserved(void);
@@ -76,6 +75,9 @@ uint32 libObtain(struct LibraryManagerInterface *Self);
 struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version);
 struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec);
 BPTR libExpunge(struct LibraryManagerInterface *Self);
+
+uint64_t clib4IntHash(const void *item, uint64_t seed0, uint64_t seed1);
+int clib4ProcessCompare(const void *a, const void *b, void *udata);
 
 static void _start_ctors(void (*__CTOR_LIST__[])(void));
 static void _start_dtors(void (*__DTOR_LIST__[])(void));
