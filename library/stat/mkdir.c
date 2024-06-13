@@ -17,7 +17,7 @@ int mkdir(const char *path_name, mode_t mode) {
 
     ENTER();
 
-    SHOWSTRING(path_name);
+    SHOWSTRING(path_to_create);
     SHOWVALUE(mode);
 
     assert(path_name != NULL);
@@ -41,14 +41,16 @@ int mkdir(const char *path_name, mode_t mode) {
         }
     }
 
+    char *path_to_create = (char *) path_name;
+
     /* This check avoid that for some mistakes a directory contain more than one : char inside the name
-     * This could help to avoid problems on SFS file system that allow (by mistake) the creation of dirgetrandoms
+     * This could help to avoid problems on SFS file system that allow (by mistake) the creation of dirs
      * like DriveName:Dir/DriveName:Dir
      */
 
     int counter = 0;
-    for (int i = 0; path_name[i]; i++) {
-        if (path_name[i] == ':') {
+    for (int i = 0; path_to_create[i]; i++) {
+        if (path_to_create[i] == ':') {
             counter++;
         }
     }
@@ -59,9 +61,14 @@ int mkdir(const char *path_name, mode_t mode) {
         goto out;
     }
 
-    D(("trying to create '%s'", path_name));
+    size_t len = strlen(path_to_create);
+    if (path_to_create[len - 1] == '/') {
+        path_to_create[len - 1] = '\0'; // Remove '/' if present
+    }
 
-    dir_lock = CreateDir((STRPTR) path_name);
+    D(("trying to create '%s'", path_to_create));
+
+    dir_lock = CreateDir((STRPTR) path_to_create);
     if (dir_lock == BZERO) {
         SHOWMSG("that didn't work");
 
@@ -106,14 +113,14 @@ int mkdir(const char *path_name, mode_t mode) {
     if (FLAG_IS_SET(mode, S_IXOTH))
         SET_FLAG(protection, FIBF_OTR_EXECUTE);
 
-    SHOWSTRING(path_name);
+    SHOWSTRING(path_to_create);
     SHOWVALUE(protection);
 
-    SetProtection((STRPTR) path_name, (LONG)(protection ^ (FIBF_READ | FIBF_WRITE | FIBF_EXECUTE | FIBF_DELETE)));
+    SetProtection((STRPTR) path_to_create, (LONG)(protection ^ (FIBF_READ | FIBF_WRITE | FIBF_EXECUTE | FIBF_DELETE)));
 
     result = OK;
 
-    out:
+out:
 
     RETURN(result);
     return (result);

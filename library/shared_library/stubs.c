@@ -23,6 +23,7 @@ Clib4Call(__translate_amiga_to_unix_path_name, 88);
 Clib4Call(__translate_unix_to_amiga_path_name, 92);
 //Clib4Call(__restore_path_name, 96);
 Clib4Call(__print_termination_message, 100);
+Clib4Call(__get_default_file, 104);
 
 /* Functions defined stubs starts here */
 Clib4Call(argz_create, 116);

@@ -11,7 +11,7 @@ static void *clib4Vectors[] = {
         (void *) (__translate_unix_to_amiga_path_name),
         (void *) (libReserved),
         (void *) (__print_termination_message),
-        (void *) (libReserved),
+        (void *) (__get_default_file),
         (void *) (libReserved),
         (void *) (libReserved),
 

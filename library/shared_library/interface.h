@@ -108,7 +108,7 @@ struct Clib4IFace {
     void (* __translate_unix_to_amiga_path_name)(void);                     //92
     void (* internal2)(void);                                               //96
     void (* __print_termination_message)(const char *termination_message);  //100
-    void (* internal3)(void);                                               //104
+    void (* __get_default_file)(int file_descriptor, long *file_ptr);       //104
     void (* internal4)(void);                                               //108
     void (* internal5)(void);                                               //112
 
