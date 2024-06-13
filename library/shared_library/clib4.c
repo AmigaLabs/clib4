@@ -306,6 +306,9 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
                 break;
             }
         }
+        /* Remove spawnedProcess splay tree */
+        __IUtility->DeleteSplayTree(res->spawnedProcesses);
+        res->spawnedProcesses = NULL;
     }
 
     --libBase->libNode.lib_OpenCnt;
@@ -391,6 +394,13 @@ clib4NodeCompare(const void *a, const void *b, void *udata) {
     return ua->uuid == ub->uuid;
 }
 
+int
+clib4ProcessCompare(const void *a, const void *b, void *udata) {
+    const struct Clib4Children *ua = a;
+    const struct Clib4Children *ub = b;
+    return ua->pid == ub->pid;
+}
+
 struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
     libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
     libBase->libNode.lib_Node.ln_Pri = LIBPRI;
@@ -467,10 +477,15 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
             res->resource.lib_Node.ln_Type = NT_RESOURCE;
 
             iexec->InitSemaphore(&res->semaphore);
+
+            /* Initialize clib4 children hashmap */
             res->children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
             /* Initialize unix sockets hashmap */
-            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL,
-                                            NULL);
+            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
+            /* Initialize processes SplayTree */
+            res->spawnedProcessesHook.h_Entry = (HOOKFUNC) clib4ProcessCompare;
+            res->spawnedProcesses = __IUtility->CreateSplayTree(&res->spawnedProcessesHook);
+
             /* Initialize fallback clib4 reent structure */
             res->fallbackClib = (struct _clib4 *) iexec->AllocVecTags(sizeof(struct _clib4),
                                                                       AVT_Type, MEMF_SHARED,

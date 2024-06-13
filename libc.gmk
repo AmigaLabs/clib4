@@ -112,6 +112,7 @@ C_LOCALE := \
 	locale/setlocale.o
 
 C_MISC := \
+	misc/children.o \
 	misc/map.o \
 	misc/uuid.o
 

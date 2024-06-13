@@ -14,6 +14,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#include "children.h"
+
 STATIC BOOL
 string_needs_quoting(const char *string, size_t len) {
     BOOL result = FALSE;
@@ -171,13 +173,24 @@ spawnv(int mode, const char *file, const char **argv) {
                      SYS_Output, 0,
                      SYS_UserShell, TRUE,
                      SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
+                     NP_Name, file,
                      TAG_DONE);
 
     if (ret != 0) {
         /* SystemTags failed. Clean up file handles */
-        if (in != 0) Close(in);
+        if (in != 0)
+            Close(in);
         errno = __translate_io_error_to_errno(IoErr());
     }
-
+    else {
+        /*
+         * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
+         * just after SystemTags. In this case spawnv will return pid
+         */
+        if (mode == P_NOWAIT) {
+            ret = IoErr(); // This is our ProcessID;
+            insertSpawnedChildren(ret, getgid());
+        }
+    }
     return ret;
 }

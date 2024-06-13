@@ -21,11 +21,13 @@ extern void _longjmp_spe(struct __jmp_buf_tag, int);
 extern int _setjmp_spe(struct __jmp_buf_tag);                                                                                                 /* 1796 */
 
 struct Clib4Resource {
-    struct Library          resource;       /* must be first */
-    uint32                  size;           /* for struct validation only */
-    struct SignalSemaphore  semaphore;      /* for list arbitration */
-    struct hashmap         *children;       /* list of parent nodes */
+    struct Library          resource;           /* must be first */
+    uint32                  size;               /* for struct validation only */
+    struct SignalSemaphore  semaphore;          /* for list arbitration */
+    struct hashmap         *children;           /* list of parent nodes */
     struct hashmap         *uxSocketsMap;
+    struct SplayTree       *spawnedProcesses;   /* list of spawned processes */
+    struct Hook             spawnedProcessesHook;
     struct _clib4          *fallbackClib;
     /* SysVIPC fields */
     int locked;
@@ -60,6 +62,12 @@ struct Clib4Base {
     struct Library libNode;
     uint16 pad;
     BPTR SegList;
+};
+
+struct Clib4Children {
+    uint32  pid;        /* the process PID */
+    uint32  returnCode; /* the return code of process */
+    gid_t   groupId;    /* Group ID of process */
 };
 
 int libReserved(void);
