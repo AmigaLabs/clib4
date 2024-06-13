@@ -202,6 +202,9 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
         D(("c2n.uuid = %s", c2n.uuid));
         hashmap_set(res->children, &c2n);
 
+        /* Initialize processes hashmap */
+        res->spawnedProcesses = hashmap_new(sizeof(struct Clib4Children), 0, 0, 0, clib4IntHash, clib4ProcessCompare, NULL, NULL);
+
         switch (res->cpufamily) {
 #ifdef __SPE__
             case CPUFAMILY_E500:
@@ -306,6 +309,8 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
                 break;
             }
         }
+        /* Remove spawnedProcess hashmap */
+        hashmap_free(res->spawnedProcesses);
     }
 
     --libBase->libNode.lib_OpenCnt;
@@ -379,6 +384,12 @@ unixSocketCompare(const void *a, const void *b, void *udata) {
 }
 
 uint64_t
+clib4IntHash(const void *item, uint64_t seed0, uint64_t seed1) {
+    return hashmap_xxhash3(item, sizeof(int), seed0, seed1);
+}
+
+
+uint64_t
 clib4NodeHash(const void *item, uint64_t seed0, uint64_t seed1) {
     const struct Clib4Node *node = item;
     return hashmap_xxhash3(node->uuid, strlen(node->uuid), seed0, seed1);
@@ -388,7 +399,14 @@ int
 clib4NodeCompare(const void *a, const void *b, void *udata) {
     const struct Clib4Node *ua = a;
     const struct Clib4Node *ub = b;
-    return ua->uuid == ub->uuid;
+    return strcmp(ua->uuid, ub->uuid);
+}
+
+int
+clib4ProcessCompare(const void *a, const void *b, void *udata) {
+    const struct Clib4Children *ua = a;
+    const struct Clib4Children *ub = b;
+    return ua->pid - ub->pid;
 }
 
 struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
@@ -467,10 +485,12 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
             res->resource.lib_Node.ln_Type = NT_RESOURCE;
 
             iexec->InitSemaphore(&res->semaphore);
+
+            /* Initialize clib4 children hashmap */
             res->children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
             /* Initialize unix sockets hashmap */
-            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL,
-                                            NULL);
+            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
+
             /* Initialize fallback clib4 reent structure */
             res->fallbackClib = (struct _clib4 *) iexec->AllocVecTags(sizeof(struct _clib4),
                                                                       AVT_Type, MEMF_SHARED,

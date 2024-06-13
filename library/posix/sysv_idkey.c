@@ -21,8 +21,8 @@ GetUndo(struct Clib4Resource *res, int id, int create) {
     struct Clib4Node key;
     memset(&key, 0, sizeof(struct Clib4Node));
     strncpy(key.uuid, __clib4->uuid, UUID4_LEN);
-    struct Clib4Node *c2n = hashmap_get(res->children, &key);
-    if (c2n->undo != NULL) {
+    struct Clib4Node *c2n = (struct Clib4Node *) hashmap_get(res->children, &key);
+    if (c2n != NULL && c2n->undo != NULL) {
         ui = c2n->undo;
         while (ui) {
             if (ui->Id == id) {

@@ -1161,5 +1161,8 @@ static void *clib4Vectors[] = {
         (void *) (__get_daylight),                        /* 4352 */
         (void *) (__get_tzname),                          /* 4356 */
 
+        (void *) (wait),                                  /* 4360 */
+        (void *) (waitpid),                               /* 4364 */
+
         (void *)-1
 };

@@ -5,7 +5,6 @@
 #include <debug.h>
 
 #include "shared_library/clib4.h"
-#include "map.h"
 
 struct _clib4 *
 __getClib4(void) {
