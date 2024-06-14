@@ -17,7 +17,7 @@ int mkdir(const char *path_name, mode_t mode) {
 
     ENTER();
 
-    SHOWSTRING(path_to_create);
+    SHOWSTRING(path_name);
     SHOWVALUE(mode);
 
     assert(path_name != NULL);

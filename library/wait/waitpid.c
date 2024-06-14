@@ -37,13 +37,16 @@ pid_t waitpid(pid_t pid, int *status, int options) {
         size_t iter = 0;
         void *item;
 
-        if (pid < -1) {
-            int gid = pid * -1;
+        if (pid < -1 || pid == 0) {
+            int gid = pid == 0 ? getgid() : pid * -1;
+            D(("Searching for children with group %ld\n", gid));
             while (hashmap_iter(res->spawnedProcesses, &iter, &item)) {
                 const struct Clib4Children *children = item;
                 if (children->groupId == gid) {
+                    D(("Check for Child width pid %ld\n", children->pid));
                     process = ProcessScan(&h, (CONST_APTR) children->pid, 0);
                     if (process == 0) {
+                        D(("Process with pid %ld not found. Most probably has died\n", children->pid));
                         /* Remove process from spawnedProcess since it is not found anymore */
                         *status = 0;
                         hashmap_delete(res->spawnedProcesses, item);
@@ -55,19 +58,48 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                         hashmap_delete(res->spawnedProcesses, item);
                         return children->pid;
                     }
+                    else {
+                        int32 found = CheckForChildExit(children->pid);
+                        if (!found) {
+                            D(("Process with pid %ld not found. Most probably has died\n", children->pid));
+                            *status = 0;
+                            hashmap_delete(res->spawnedProcesses, item);
+                            return children->pid;
+                        }
+                        else {
+                            D(("Process with pid %ld still running\n", pid));
+                        }
+                    }
                 }
             }
+            *status = 0xFF;
             return 0;
-        } else if (pid == 0) {
+        } else if (pid == -1) {
+            D(("Searching for any children\n"));
             while (hashmap_iter(res->spawnedProcesses, &iter, &item)) {
+                D(("Found children with pid: %ld\n", pid));
                 const struct Clib4Children *children = item;
                 process = ProcessScan(&h, (CONST_APTR) children->pid, 0);
                 if (process > 0) {
+                    D(("Children still running\n"));
                     if (options == 0) {
                         WaitForChildExit(children->pid);
                         *status = 0;
                         hashmap_delete(res->spawnedProcesses, item);
                         return children->pid;
+                    }
+                    else {
+                        D(("Check for Child pid %ld\n", pid));
+                        int32 found = CheckForChildExit(children->pid);
+                        if (!found) {
+                            D(("Process with pid %ld not found. Most probably has died\n", children->pid));
+                            *status = 0;
+                            hashmap_delete(res->spawnedProcesses, item);
+                            return children->pid;
+                        }
+                        else {
+                            D(("Process with pid %ld still running\n", pid));
+                        }
                     }
                 }
                 else {
@@ -76,6 +108,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                     return children->pid;
                 }
             }
+            *status = 0xFF;
             return 0;
         } else {
             D(("Searching for children with pid: %ld\n", pid));

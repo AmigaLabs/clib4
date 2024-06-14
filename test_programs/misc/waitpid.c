@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     if (pid > 0) {
         printf("Child pid: %i\n", pid);
         do {
-            int ret = waitpid(pid, &status, 0);
+            int ret = waitpid(pid, &status, WNOHANG);
             printf("waitpid ret = %d\n", ret);
             if (ret != -1) {
                 printf("Child status %d\n", WEXITSTATUS(status));
@@ -28,6 +28,6 @@ int main(int argc, char *argv[]) {
             }
         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     } else {
-        printf("posix_spawn: %s\n", strerror(status));
+        printf("spawnv: %s\n", strerror(status));
     }
 }
