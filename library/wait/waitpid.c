@@ -32,6 +32,11 @@ pid_t waitpid(pid_t pid, int *status, int options) {
 
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
+        if (res->spawnedProcesses == NULL) {
+            *status = 0;
+            return 0;
+        }
+
         struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
         int32 process;
         size_t iter = 0;
@@ -152,7 +157,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
             else {
                 *status = 0;
                 D(("Childred with pid %ld not found!\n", pid));
-                return item->pid;
+                return pid;
             }
             *status = 0xFF;
             return 0;

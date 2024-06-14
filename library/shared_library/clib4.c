@@ -310,7 +310,10 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             }
         }
         /* Remove spawnedProcess hashmap */
-        hashmap_free(res->spawnedProcesses);
+        if (res->spawnedProcesses != NULL) {
+            hashmap_free(res->spawnedProcesses);
+            res->spawnedProcesses = NULL;
+        }
     }
 
     --libBase->libNode.lib_OpenCnt;

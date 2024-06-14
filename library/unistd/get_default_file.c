@@ -27,7 +27,7 @@ __get_default_file(int file_descriptor, long *file_ptr) {
 
     (*file_ptr) = (long) __resolve_fd_file(fd);
 
-    result = 0;
+    result = OK;
 
 out:
 

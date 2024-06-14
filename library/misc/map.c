@@ -154,7 +154,7 @@ static void free_elements(struct hashmap *map) {
     if (map->elfree) {
         for (size_t i = 0; i < map->nbuckets; i++) {
             struct bucket *bucket = bucket_at(map, i);
-            if (bucket->dib) map->elfree(bucket_item(bucket));
+            if (bucket != NULL && bucket->dib) map->elfree(bucket_item(bucket));
         }
     }
 }
