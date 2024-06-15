@@ -442,9 +442,9 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                     if(FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
                         if (fam->fam_Arg != 0)
-                            mode = SBM_NON_BLOCKING; /* buffered mode */
+                            mode = SBM_BLOCKING; /* buffered mode */
                         else
-                            mode = SBM_BLOCKING; /* single character mode */
+                            mode = SBM_NON_BLOCKING; /* single character mode */
 
                         int32 r = SetBlockingMode(file, mode);
 
