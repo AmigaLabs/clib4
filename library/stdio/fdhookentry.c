@@ -440,14 +440,28 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                     SHOWMSG("changing the mode");
 
-                    if (fam->fam_Arg != 0)
-                        mode = DOSFALSE; /* buffered mode */
-                    else
-                        mode = DOSTRUE; /* single character mode */
+                    if(FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                        if (fam->fam_Arg != 0)
+                            mode = SBM_BLOCKING; /* buffered mode */
+                        else
+                            mode = SBM_NON_BLOCKING; /* single character mode */
 
-                    if (CANNOT SetMode(file, mode)) {
-                        fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                        goto out;
+                        int32 r = SetBlockingMode(file, mode);
+
+                        if(r == 0 || r == -1) {
+                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            goto out;                            
+                        }
+                    } else {
+                        if (fam->fam_Arg != 0)
+                            mode = DOSFALSE; /* buffered mode */
+                        else
+                            mode = DOSTRUE; /* single character mode */
+
+                        if (CANNOT SetMode(file, mode)) {
+                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            goto out;
+                        }
                     }
 
                     result = OK;

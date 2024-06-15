@@ -17,14 +17,15 @@ fsetpos64(FILE *stream, _fpos64_t *pos) {
 
     assert(stream != NULL && pos != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL || pos == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return (result);
     }
+
+    flockfile(stream);
 
     if (fseeko64(stream, (long int) (*pos), SEEK_SET) == CHANGE_FILE_ERROR && __get_errno() != OK) {
         SHOWMSG("fseek failed");

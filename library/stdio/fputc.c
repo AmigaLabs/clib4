@@ -98,6 +98,14 @@ fputc(int c, FILE *stream) {
 
     assert(stream != NULL);
 
+    if (stream == NULL) {
+        SHOWMSG("invalid stream parameter");
+        __set_errno(EFAULT);
+
+        RETURN(result);
+        return result;
+    }
+
     flockfile(stream);
 
     if (__fputc_check(stream, __clib4) < 0)

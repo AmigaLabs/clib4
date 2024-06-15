@@ -48,7 +48,9 @@ __fgetc_check(FILE *stream, struct _clib4 *__clib4) {
     assert(stream != NULL);
 
     if (stream == NULL) {
+        SHOWMSG("invalid parameters");
         __set_errno(EFAULT);
+
         goto out;
     }
 
@@ -97,14 +99,16 @@ fgetc(FILE *stream) {
 
     flockfile(stream);
 
-    if (__fgetc_check(stream, __clib4) < 0)
+    if (__fgetc_check(stream, __clib4) < 0) {
+        funlockfile(stream);
         goto out;
+    }
 
     result = __getc(stream);
 
-out:
-
     funlockfile(stream);
+
+out:
 
     LEAVE();
     return (result);

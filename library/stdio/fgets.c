@@ -22,11 +22,13 @@ fgets(char *buf, int n, FILE *stream) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
+        RETURN(NULL);
         return NULL;
     }
 
     if (n < 2) {
         SHOWMSG("no work to be done");
+        RETURN(NULL);
         return NULL;
     }
 

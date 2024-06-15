@@ -22,13 +22,15 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     assert(ptr != NULL && stream != NULL);
     assert((int) element_size >= 0 && (int) count >= 0);
 
-    flockfile(stream);
-
     if (ptr == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
+
         __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return (result);
     }
+
+    flockfile(stream);
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
