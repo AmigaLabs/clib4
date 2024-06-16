@@ -62,13 +62,20 @@ findSpawnedChildrenByGid(uint32 pid, uint32 gid) {
 void
 spawnedProcessExit(int32 rc, int32 data UNUSED) {
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
-    if (res) {
+    if (res && res->spawnedProcesses) {
         int32 pid = GetPID(0, GPID_PROCESS);
         struct Clib4Children key;
         key.pid = pid;
-        struct Clib4Children *item = hashmap_get(res->spawnedProcesses, &key);
+        struct Clib4Children *item = (struct Clib4Children *) hashmap_get(res->spawnedProcesses, &key);
         if (item != NULL) {
             item->returnCode = rc;
         }
     }
 }
+
+void
+spawnedProcessFinal(int32 rc, int32 data UNUSED) {
+    int32 pid = GetPID(0, GPID_PROCESS);
+    D(("spawnedProcessFinal PID: %ld\n", pid));
+}
+

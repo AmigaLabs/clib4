@@ -294,7 +294,7 @@ const void *hashmap_get_with_hash(struct hashmap *map, const void *key,
     size_t i = hash & map->mask;
     while (1) {
         struct bucket *bucket = bucket_at(map, i);
-        if (!bucket->dib) return NULL;
+        if (!bucket || !bucket->dib) return NULL;
         if (bucket->hash == hash) {
             void *bitem = bucket_item(bucket);
             if (!map->compare || map->compare(key, bitem, map->udata) == 0) {

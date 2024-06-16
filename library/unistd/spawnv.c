@@ -165,7 +165,7 @@ spawnv(int mode, const char *file, const char **argv) {
     snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
 
     struct Process *me = (struct Process *) FindTask(NULL);
-    BPTR in  = mode == P_WAIT ? me->pr_COS : 0;
+    BPTR in  = mode == P_WAIT ? me->pr_CIS : 0;
     D(("Launching [%s]", finalpath));
     ret = SystemTags(finalpath,
                      SYS_Input, in,
@@ -174,11 +174,11 @@ spawnv(int mode, const char *file, const char **argv) {
                      SYS_UserShell, TRUE,
                      SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
                      NP_ExitCode, spawnedProcessExit,
+                     NP_FinalCode, spawnedProcessFinal,
                      NP_Name, file,
                      NP_Child, TRUE,
                      TAG_DONE);
     if (ret != 0) {
-
         /* SystemTags failed. Clean up file handles */
         if (in != 0)
             Close(in);

@@ -424,9 +424,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
 
                 /* Are we allowed to close this file? */
                 if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
-                    /* Call a cleanup function, such as the one which
-                         * releases locked records.
-                         */
+                    /* Call a cleanup function, such as the one which releases locked records. */
                     if (fd->fd_Cleanup != NULL)
                         (*fd->fd_Cleanup)(fd);
 
