@@ -26,7 +26,7 @@ fgets(char *buf, int n, FILE *stream) {
         return NULL;
     }
 
-    if (n < 2) {
+    if (n <= 0) {
         SHOWMSG("no work to be done");
         RETURN(NULL);
         return NULL;
@@ -76,7 +76,7 @@ fgets(char *buf, int n, FILE *stream) {
                 s += num_characters_in_line;
 
                 file->iob_BufferPosition += num_characters_in_line;
-                s[num_characters_in_line] = 0;
+
                 /* And that concludes the line read operation. */
                 (*s) = '\0';
                 goto out;

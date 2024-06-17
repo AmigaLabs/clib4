@@ -242,8 +242,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
                  * a termios hook
                  */
                 SHOWVALUE(FLAG_IS_CLEAR(tios->c_lflag, ICANON));
-                SHOWVALUE(FLAG_IS_SET(tios->c_lflag, NCURSES));
-                if (FLAG_IS_CLEAR(tios->c_lflag, ICANON) && FLAG_IS_SET(tios->c_lflag, NCURSES)) {
+                if (FLAG_IS_CLEAR(tios->c_lflag, ICANON)) {
                     /* Set raw mode. */
                     if (fam->fam_DOSMode == DOSFALSE) {
                         SetMode(file, DOSTRUE);

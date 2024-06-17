@@ -16,8 +16,8 @@ int main(void) {
 
     // open a file
     if ((infile = fopen("test_terminal", "r")) == NULL) {
-        (void) printf("Couldn't open <test_terminal> file. Create a valid <test_terminal> text file and retry\n");
-        exit(1);
+        printf("Couldn't open <test_terminal> file. Create a valid <test_terminal> text file and retry\n");
+        return 1;
     }
     // file was opened successfully
 
