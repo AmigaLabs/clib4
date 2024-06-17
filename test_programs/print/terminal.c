@@ -15,8 +15,8 @@ int main(void) {
     struct termios ttystate, ttysave;
 
     // open a file
-    if ((infile = fopen("infile", "r")) == NULL) {
-        (void) printf("Couldn't open the file\n");
+    if ((infile = fopen("test_terminal", "r")) == NULL) {
+        (void) printf("Couldn't open <test_terminal> file. Create a valid <test_terminal> text file and retry\n");
         exit(1);
     }
     // file was opened successfully

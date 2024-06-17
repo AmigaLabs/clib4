@@ -72,8 +72,8 @@ fgets(char *buf, int n, FILE *stream) {
                 /* Copy the remainder of the read buffer into the
                    string buffer, including the terminating line
                    feed character. */
-                memmove(s, buffer, num_characters_in_line - 1);
-                s += num_characters_in_line - 1;
+                memmove(s, buffer, num_characters_in_line);
+                s += num_characters_in_line;
 
                 file->iob_BufferPosition += num_characters_in_line;
                 s[num_characters_in_line] = 0;
