@@ -161,16 +161,18 @@ spawnv(int mode, const char *file, const char **argv) {
     /* Add a NUL, to be nice... */
     arg_string[arg_string_len] = '\0';
 
-    char finalpath[PATH_MAX] = {0};
+    char finalpath[PATH_MAX];
+    memset(finalpath, 0, PATH_MAX);
     snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
 
     struct Process *me = (struct Process *) FindTask(NULL);
     BPTR in  = mode == P_WAIT ? me->pr_CIS : 0;
+    BPTR out  = mode == P_WAIT ? me->pr_COS : 0;
     D(("Launching [%s]", finalpath));
     ret = SystemTags(finalpath,
                      SYS_Input, in,
-                     SYS_Output, 0,
-                     SYS_Error, 0,
+                     SYS_Output, out,
+                     SYS_Error, out,
                      SYS_UserShell, TRUE,
                      SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
                      NP_ExitCode, spawnedProcessExit,

@@ -41,6 +41,13 @@ pid_t waitpid(pid_t pid, int *status, int options) {
         int32 process;
         size_t iter = 0;
         void *item;
+        BOOL found = FALSE;
+
+        /* If we have no spawned processes return ECHILD error */
+        if (hashmap_count(res->spawnedProcesses) == 0) {
+            __set_errno(ECHILD);
+            return -1;
+        }
 
         if (pid < -1 || pid == 0) {
             int gid = pid == 0 ? getgid() : pid * -1;
@@ -48,18 +55,19 @@ pid_t waitpid(pid_t pid, int *status, int options) {
             while (hashmap_iter(res->spawnedProcesses, &iter, &item)) {
                 const struct Clib4Children *children = item;
                 if (children->groupId == gid) {
+                    found = TRUE;
                     D(("Check for Child width pid %ld\n", children->pid));
                     process = ProcessScan(&h, (CONST_APTR) children->pid, 0);
                     if (process == 0) {
                         D(("Process with pid %ld not found. Most probably has died\n", children->pid));
                         /* Remove process from spawnedProcess since it is not found anymore */
-                        *status = 0;
+                        *status = children->returnCode;
                         hashmap_delete(res->spawnedProcesses, item);
                         return children->pid;
                     }
                     if (options == 0) {
                         WaitForChildExit(children->pid);
-                        *status = 0;
+                        *status = children->returnCode;
                         hashmap_delete(res->spawnedProcesses, item);
                         return children->pid;
                     }
@@ -67,7 +75,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                         int32 found = CheckForChildExit(children->pid);
                         if (!found) {
                             D(("Process with pid %ld not found. Most probably has died\n", children->pid));
-                            *status = 0;
+                            *status = children->returnCode;
                             hashmap_delete(res->spawnedProcesses, item);
                             return children->pid;
                         }
@@ -77,11 +85,17 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                     }
                 }
             }
+            if (!found) {
+                __set_errno(ECHILD);
+                return -1;
+            }
+
             *status = 0xFF;
             return 0;
         } else if (pid == -1) {
-            D(("Searching for any children\n"));
+            D(("Wait for any child\n"));
             while (hashmap_iter(res->spawnedProcesses, &iter, &item)) {
+                found = TRUE;
                 D(("Found children with pid: %ld\n", pid));
                 const struct Clib4Children *children = item;
                 process = ProcessScan(&h, (CONST_APTR) children->pid, 0);
@@ -89,7 +103,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                     D(("Children still running\n"));
                     if (options == 0) {
                         WaitForChildExit(children->pid);
-                        *status = 0;
+                        *status = children->returnCode;
                         hashmap_delete(res->spawnedProcesses, item);
                         return children->pid;
                     }
@@ -98,7 +112,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                         int32 found = CheckForChildExit(children->pid);
                         if (!found) {
                             D(("Process with pid %ld not found. Most probably has died\n", children->pid));
-                            *status = 0;
+                            *status = children->returnCode;
                             hashmap_delete(res->spawnedProcesses, item);
                             return children->pid;
                         }
@@ -108,11 +122,16 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                     }
                 }
                 else {
-                    *status = 0;
+                    *status = children->returnCode;
                     hashmap_delete(res->spawnedProcesses, item);
                     return children->pid;
                 }
             }
+            if (!found) {
+                __set_errno(ECHILD);
+                return -1;
+            }
+
             *status = 0xFF;
             return 0;
         } else {
@@ -129,41 +148,40 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                         D(("Wait on Child pid %ld\n", pid));
                         WaitForChildExit(pid);
                         D(("Children with pid %ld has died\n", pid));
-                        *status = 0;
+                        *status = item->returnCode;
                         hashmap_delete(res->spawnedProcesses, item);
                         return pid;
                     }
-                    else {
+                    else { // WNOHANG
                         D(("Check for Child pid %ld\n", pid));
                         int32 found = CheckForChildExit(item->pid);
                         if (!found) {
                             D(("Process with pid %ld not found. Most probably has died\n", pid));
-                            *status = 0;
+                            *status = item->returnCode;
                             hashmap_delete(res->spawnedProcesses, item);
                             return item->pid;
-                        }
-                        else {
-                            D(("Process with pid %ld still running\n", pid));
                         }
                     }
                 }
                 else {
                     D(("Process with pid %ld not found. Most probably has died\n", pid));
-                    *status = 0;
+                    *status = item->returnCode;
                     hashmap_delete(res->spawnedProcesses, item);
                     return pid;
                 }
             }
             else {
+                __set_errno(ECHILD);
                 *status = 0;
                 D(("Childred with pid %ld not found!\n", pid));
-                return pid;
+                return -1;
             }
             *status = 0xFF;
             return 0;
         }
     }
     else {
+        *status = 0;
         __set_errno(EINVAL);
         return -1;
     }
