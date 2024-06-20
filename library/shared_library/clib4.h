@@ -26,7 +26,6 @@ struct Clib4Resource {
     struct SignalSemaphore  semaphore;          /* for list arbitration */
     struct hashmap         *children;           /* list of parent nodes */
     struct hashmap         *uxSocketsMap;
-    struct hashmap         *spawnedProcesses;   /* list of spawned processes */
     struct _clib4          *fallbackClib;
     /* SysVIPC fields */
     int locked;
@@ -55,6 +54,7 @@ struct Clib4Node {
     /* SysVIPC fields */
     struct UndoInfo *undo;
     int32            errNo;
+    struct hashmap  *spawnedProcesses;   /* list of spawned processes */
 };
 
 struct Clib4Base {

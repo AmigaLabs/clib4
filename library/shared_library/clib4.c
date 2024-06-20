@@ -197,13 +197,12 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
         c2n.pPid = ppid;
         c2n.errNo = 0;
         c2n.undo = 0;
+        /* Initialize processes hashmap */
+        c2n.spawnedProcesses = hashmap_new(sizeof(struct Clib4Children), 0, 0, 0, clib4IntHash, clib4ProcessCompare, NULL, NULL);
         D(("c2n.pid = %ld", c2n.pid));
         D(("c2n.pPid = %ld", c2n.pPid));
         D(("c2n.uuid = %s", c2n.uuid));
         hashmap_set(res->children, &c2n);
-
-        /* Initialize processes hashmap */
-        res->spawnedProcesses = hashmap_new(sizeof(struct Clib4Children), 0, 0, 0, clib4IntHash, clib4ProcessCompare, NULL, NULL);
 
         switch (res->cpufamily) {
 #ifdef __SPE__
@@ -303,16 +302,15 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
             if (node->pid == pid) {
+                /* Remove spawnedProcess hashmap */
+                if (node->spawnedProcesses != NULL) {
+                    hashmap_free(node->spawnedProcesses);
+                }
                 if (node->undo)
                     IExec->FreeVec(node->undo);
                 hashmap_delete(res->children, node);
                 break;
             }
-        }
-        /* Remove spawnedProcess hashmap */
-        if (res->spawnedProcesses != NULL) {
-            hashmap_free(res->spawnedProcesses);
-            res->spawnedProcesses = NULL;
         }
     }
 

@@ -11,9 +11,6 @@ funlockfile(FILE *stream) {
     struct iob *file = (struct iob *) stream;
     struct _clib4 *__clib4 = __CLIB4;
 
-    ENTER();
-    SHOWPOINTER(stream);
-
     __check_abort_f(__clib4);
 
     assert(stream != NULL);
@@ -39,14 +36,14 @@ funlockfile(FILE *stream) {
         ReleaseSemaphore(file->iob_Lock);
         CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
     }
+#if 0
     else {
         if (file->iob_Lock != NULL)
             SHOWMSG("file->iob_Lock is NULL!");
         if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_LOCKED))
             SHOWMSG("File is not locked or already unlocked!");
     }
-
+#endif
 out:
-    LEAVE();
     return;
 }

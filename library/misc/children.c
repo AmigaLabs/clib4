@@ -29,11 +29,22 @@ insertSpawnedChildren(uint32 pid, uint32 gid) {
 
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
+        uint32 me = GetPID(0, GPID_PROCESS);
+        size_t iter = 0;
+        void *item;
+
         struct Clib4Children children;
         children.pid = pid;
         children.returnCode = 0;
         children.groupId = gid;
-        hashmap_set(res->spawnedProcesses, &children);
+
+        while (hashmap_iter(res->children, &iter, &item)) {
+            const struct Clib4Node *node = item;
+            if (node->pid == me) {
+                hashmap_set(node->spawnedProcesses, &children);
+                break;
+            }
+        }
         return TRUE;
     }
     return FALSE;
@@ -43,7 +54,17 @@ struct Clib4Children *
 findSpawnedChildrenByPid(uint32 pid) {
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
-        return (struct Clib4Children *) hashmap_scan_item(res->spawnedProcesses, pidChildrenScan, &pid);
+        uint32 me = GetPID(0, GPID_PROCESS);
+        size_t iter = 0;
+        void *item;
+
+        while (hashmap_iter(res->children, &iter, &item)) {
+            const struct Clib4Node *node = item;
+            if (node->pid == me) {
+                return (struct Clib4Children *) hashmap_scan_item(node->spawnedProcesses, pidChildrenScan, &pid);
+            }
+        }
+
     }
     return NULL;
 }
@@ -52,9 +73,19 @@ struct Clib4Children *
 findSpawnedChildrenByGid(uint32 pid, uint32 gid) {
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
-        struct Clib4Children *children = hashmap_scan_item(res->spawnedProcesses, pidChildrenScan, &pid);
-        if (children->groupId == gid)
-            return children;
+        uint32 me = GetPID(0, GPID_PROCESS);
+        size_t iter = 0;
+        void *item;
+
+        while (hashmap_iter(res->children, &iter, &item)) {
+            const struct Clib4Node *node = item;
+            struct Clib4Children *children;
+            if (node->pid == me) {
+                children = hashmap_scan_item(node->spawnedProcesses, pidChildrenScan, &pid);
+                if (children->groupId == gid)
+                    return children;
+            }
+        }
     }
     return NULL;
 }
@@ -62,13 +93,21 @@ findSpawnedChildrenByGid(uint32 pid, uint32 gid) {
 void
 spawnedProcessExit(int32 rc, int32 data UNUSED) {
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
-    if (res && res->spawnedProcesses) {
-        int32 pid = GetPID(0, GPID_PROCESS);
-        struct Clib4Children key;
-        key.pid = pid;
-        struct Clib4Children *item = (struct Clib4Children *) hashmap_get(res->spawnedProcesses, &key);
-        if (item != NULL) {
-            item->returnCode = rc;
+    if (res) {
+        int32 me = GetPID(0, GPID_PROCESS);
+        size_t iter = 0;
+        void *item;
+
+        while (hashmap_iter(res->children, &iter, &item)) {
+            const struct Clib4Node *node = item;
+            if (node->pid == me) {
+                struct Clib4Children key;
+                key.pid = me;
+                struct Clib4Children *item = (struct Clib4Children *) hashmap_get(node->spawnedProcesses, &key);
+                if (item != NULL) {
+                    item->returnCode = rc;
+                }
+            }
         }
     }
 }
