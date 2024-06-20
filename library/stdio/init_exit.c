@@ -28,8 +28,9 @@ __close_all_files(struct _clib4 *__clib4) {
 
     if (__clib4->__num_iob > 0) {
         for (i = 0; i < __clib4->__num_iob; i++) {
-            if (FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE))
+            if (FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE)) {
                 fclose((FILE *) __clib4->__iob[i]);
+            }
         }
 
         __clib4->__num_iob = 0;
@@ -37,8 +38,10 @@ __close_all_files(struct _clib4 *__clib4) {
 
     if (__clib4->__num_fd > 0) {
         for (i = 0; i < __clib4->__num_fd; i++) {
-            if (FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_IN_USE))
+            /* If file is set as in use close it only if it isn't marked as FDF_NO_CLOSE */
+            if (FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_IN_USE) && FLAG_IS_CLEAR(__clib4->__fd[i]->fd_Flags, FDF_NO_CLOSE)) {
                 close(i);
+            }
             UnlockMem(__clib4->__fd[i], sizeof(*__clib4->__fd[i]));
         }
         __clib4->__num_fd = 0;

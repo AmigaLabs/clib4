@@ -49,6 +49,13 @@ write(int file_descriptor, const void *buffer, size_t num_bytes) {
 
     __fd_lock(fd);
 
+    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE) && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+        SHOWMSG("file descriptor is a closed PIPE");
+
+        __set_errno(SIGPIPE);
+        goto out;
+    }
+
     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE)) {
         SHOWMSG("file descriptor is not write-enabled");
 

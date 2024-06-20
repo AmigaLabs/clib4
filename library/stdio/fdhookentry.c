@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fdhookentry.c,v 1.37 2022-08-11 17:12:23 clib4devs Exp $
+ * $Id: stdio_fdhookentry.c,v 1.38 2024-06-11 17:12:23 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -76,8 +76,10 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 result = (int64_t) Read(file, fam->fam_Data, fam->fam_Size);
                 if (result == EOF) {
                     D(("read failed ioerr=%ld\n", IoErr()));
-
-                    fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) || (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE))))
+                        fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                    else
+                        fam->fam_Error = EAGAIN;
                     goto out;
                 }
 
@@ -120,8 +122,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                                 goto out;
                             }
                         }
-                    }
-                    else {
+                    } else {
                         D(("seek to end of file failed; ioerr=%ld", IoErr()));
 
                         fam->fam_Error = __translate_io_error_to_errno(IoErr());
@@ -129,7 +130,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                     }
                 }
 
-                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
+                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(
+                        file), fam->fam_Data));
 
                 result = Write(file, fam->fam_Data, fam->fam_Size);
                 if (result == -1) {
@@ -292,7 +294,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             Delete(pipe_name);
                         }
 #endif
-                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid && FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid &&
+                            FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
                             BPTR old_dir;
                             old_dir = SetCurrentDir(parent_dir);
                             SetProtection(fib->Name, 0);
@@ -394,8 +397,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                                    been a different error. */
                             exd = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
                             if ((NOT fib_is_valid && exd == NULL) || (exd == NULL) ||
-                                                                     (new_position <= (int64_t) exd->FileSize))
-                            goto out;
+                                (new_position <= (int64_t) exd->FileSize))
+                                goto out;
 
                             /* Don't extend if the file is opened read-only */
                             if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE)) {
@@ -440,7 +443,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                     SHOWMSG("changing the mode");
 
-                    if(FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
                         if (fam->fam_Arg != 0)
                             mode = SBM_BLOCKING;
                         else
@@ -448,9 +451,9 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                         int32 r = SetBlockingMode(file, mode);
 
-                        if(r == 0 || r == -1) {
+                        if (r == 0 || r == -1) {
                             fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                            goto out;                            
+                            goto out;
                         }
                     } else {
                         if (fam->fam_Arg != 0)

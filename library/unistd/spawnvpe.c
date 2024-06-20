@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_spawnv.c,v 1.0 2024-06-20 18:26:47 clib4devs Exp $
+ * $Id: unistd_spawnvpe.c,v 1.0 2024-06-20 18:26:47 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -124,19 +124,47 @@ spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, 
     char *arg_string = NULL;
     size_t arg_string_len = 0;
     size_t parameter_string_len = 0;
-    Printf("amiga_spawnvpe = fhin = %ld - fhout = %ld - fherr = %ld\n", fhin, fhout, fherr);
+    struct fd *fd;
+    D(("spawnvpe = fhin = %ld - fhout = %ld - fherr = %ld\n", fhin, fhout, fherr));
     errno = 0;
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
     if (parameter_string_len > _POSIX_ARG_MAX) {
-        errno = E2BIG;
+        __set_errno(E2BIG);
         return ret;
     }
 
     arg_string = malloc(parameter_string_len + 1);
     if (arg_string == NULL) {
-        errno = ENOMEM;
+        __set_errno(ENOMEM);
         return ret;
+    }
+
+    if (fhin >= 0) {
+        fd = __get_file_descriptor(fhin);
+        if (fd == NULL) {
+            __set_errno(EBADF);
+            return ret;
+        }
+        SET_FLAG(fd->fd_Flags, FDF_NO_CLOSE);
+    }
+
+    if (fhout >= 0) {
+        fd = __get_file_descriptor(fhout);
+        if (fd == NULL) {
+            __set_errno(EBADF);
+            return ret;
+        }
+        SET_FLAG(fd->fd_Flags, FDF_NO_CLOSE);
+    }
+
+    if (fherr >= 0) {
+        fd = __get_file_descriptor(fherr);
+        if (fd == NULL) {
+            __set_errno(EBADF);
+            return ret;
+        }
+        SET_FLAG(fd->fd_Flags, FDF_NO_CLOSE);
     }
 
     if (parameter_string_len > 0) {
@@ -165,15 +193,15 @@ spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, 
 
     //Printf("finalpath = %s - in_err = %ld - out_err = %ld - err_err = %ld\n", finalpath, in_err, out_err, err_err);
     ret = SystemTags(finalpath,
-                           SYS_Input, in_err == 0 ? in : 0,
-                           SYS_Output, out_err == 0 ? out : 0,
-                           SYS_Error, err_err == 0 ? err : 0,
-                           SYS_UserShell, TRUE,
-                           SYS_Asynch, TRUE,
-                           NP_Child, TRUE,
-            //NP_CurrentDir, dir != NULL ? Lock(dir, SHARED_LOCK) : 0,
-                           NP_Name, argv[0],
-                           TAG_DONE);
+                       SYS_Input, in_err == 0 ? in : 0,
+                       SYS_Output, out_err == 0 ? out : 0,
+                       SYS_Error, err_err == 0 ? err : 0,
+                       SYS_UserShell, TRUE,
+                       SYS_Asynch, TRUE,
+                       NP_Child, TRUE,
+                       //NP_CurrentDir, dir != NULL ? Lock(dir, SHARED_LOCK) : 0,
+                       NP_Name, argv[0],
+                       TAG_DONE);
 
     if (ret != 0) {
         Printf("Error executing %s\n", finalpath);
