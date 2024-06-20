@@ -1334,6 +1334,7 @@ struct Clib4IFace {
 
     pid_t (* wait) (int *status);                                                                                                                    /* 4360 */
     pid_t (* waitpid) (pid_t pid, int *status, int options);                                                                                         /* 4364 */
+    int (* spawnvpe) (const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);                        /* 4368 */
 
 };
 

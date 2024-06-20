@@ -1103,3 +1103,4 @@ Clib4Call(__get_tzname, 4356);
 
 Clib4Call(wait, 4360);
 Clib4Call(waitpid, 4364);
+Clib4Call(spawnvpe, 4368);

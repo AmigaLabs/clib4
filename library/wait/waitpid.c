@@ -24,25 +24,38 @@ hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
 
 pid_t waitpid(pid_t pid, int *status, int options) {
     Delay(1);
+    uint32 me = GetPID(0, GPID_PROCESS);
+    char buffer[100] = {0};
+    snprintf(buffer, 99, "T:waitpid_%ld.log", me);
+    FILE *fp = fopen(buffer, "a");
+
+    fprintf(fp, "Asked to wait on pid %d\n", pid);
 
     if (options != 0 && options != WNOHANG) {
+        fprintf(fp, "Invalid options %d on pid %ld\n", options, me);
+        fclose(fp);
         __set_errno(EINVAL);
         return -1;
     }
 
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
-        uint32 me = GetPID(0, GPID_PROCESS);
-        size_t iter = 0;
-        void *item;
+        size_t childrenIter = 0;
+        void *childItem;
 
-        while (hashmap_iter(res->children, &iter, &item)) {
-            const struct Clib4Node *node = item;
+        while (hashmap_iter(res->children, &childrenIter, &childItem)) {
+            const struct Clib4Node *node = childItem;
             struct Clib4Children *children;
+            fprintf(fp, "Found node with pid %ld. I am %ld\n", node->pid, me);
             if (node->pid == me) {
-                if (node->spawnedProcesses == NULL) {
+                fprintf(fp, "I am in\n");
+                /* If we have no spawned processes return ECHILD error */
+                if (node->spawnedProcesses == NULL || hashmap_count(node->spawnedProcesses) == 0) {
+                    fprintf(fp, "I have no child\n");
+                    fclose(fp);
                     *status = 0;
-                    return 0;
+                    __set_errno(ECHILD);
+                    return -1;
                 }
 
                 struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
@@ -50,14 +63,6 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                 size_t iter = 0;
                 void *item;
                 BOOL found = FALSE;
-
-                /* If we have no spawned processes return ECHILD error */
-                if (hashmap_count(node->spawnedProcesses) == 0) {
-                    Printf("hashmap_count(res->spawnedProcesses) %ld\n", hashmap_count(node->spawnedProcesses));
-                    *status = 0;
-                    __set_errno(ECHILD);
-                    return -1;
-                }
 
                 if (pid < -1 || pid == 0) {
                     int gid = pid == 0 ? getgid() : pid * -1;
@@ -141,7 +146,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                     return 0;
                 } else {
                     D(("Searching for children with pid: %ld\n", pid));
-                    Printf("[clib4] Searching for children with pid: %ld\n", pid);
+                    fprintf(fp, "[clib4] Searching for children with pid: %ld\n", pid);
                     struct Clib4Children key;
                     key.pid = pid;
                     struct Clib4Children *item = hashmap_get(node->spawnedProcesses, &key);
@@ -149,43 +154,44 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                         /* Scan for process */
                         process = ProcessScan(&h, (CONST_APTR) pid, 0);
                         D(("Children with pid %ld and process %ld found\n", pid, process));
-                        Printf("[clib4] Children with pid %ld found with process %ld\n", pid, process);
+                        fprintf(fp, "[clib4] Children with pid %ld found with process %ld\n", pid, process);
                         if (process > 0) {
                             D(("Check for Child pid and options %ld\n", pid, options));
                             if (options == 0) {
-                                Printf("[clib4] Wait on Child pid %ld\n", pid);
+                                fprintf(fp, "[clib4] Wait on Child pid %ld\n", pid);
                                 WaitForChildExit(pid);
-                                Printf("[clib4] Children with pid %ld has died\n", pid);
+                                fprintf(fp, "[clib4] Children with pid %ld has died\n", pid);
                                 D(("Children with pid %ld has died\n", pid));
                                 *status = item->returnCode;
                                 hashmap_delete(node->spawnedProcesses, item);
+                                fclose(fp);
                                 return pid;
                             } else { // WNOHANG
                                 int32 found = CheckForChildExit(item->pid);
                                 if (!found) {
-                                    Printf("[clib4] Process with pid %ld not found with CheckForChildExit. Most probably has died\n",
-                                           pid);
+                                    fprintf(fp, "[clib4] Process with pid %ld not found with CheckForChildExit. Most probably has died\n", pid);
                                     D(("Process with pid %ld not found with CheckForChildExit. Most probably has died\n", pid));
                                     *status = item->returnCode;
                                     hashmap_delete(node->spawnedProcesses, item);
+                                    fclose(fp);
                                     return item->pid;
                                 } else {
-                                    Printf("[clib4] Process with pid %ld found with CheckForChildExit and running\n",
-                                           pid);
+                                    fprintf(fp, "[clib4] Process with pid %ld found with CheckForChildExit and running\n", pid);
                                     D(("Process with pid %ld found with CheckForChildExit and running\n", pid));
                                 }
                             }
                         } else {
-                            Printf("[clib4] Process with pid %ld not found. Most probably has died\n", pid);
+                            fprintf(fp, "[clib4] Process with pid %ld not found. Most probably has died\n", pid);
                             D(("Process with pid %ld not found. Most probably has died\n", pid));
                             *status = item->returnCode;
                             hashmap_delete(node->spawnedProcesses, item);
+                            fclose(fp);
                             return pid;
                         }
                     } else {
                         __set_errno(ECHILD);
                         *status = 0;
-                        D(("Childred with pid %ld not found!\n", pid));
+                        D(("Children with pid %ld not found!\n", pid));
                         return -1;
                     }
                     *status = 0xFF;
@@ -195,6 +201,10 @@ pid_t waitpid(pid_t pid, int *status, int options) {
             }
         }
     }
+    else {
+        fprintf(fp, "Cannot open res on pid %d\n", me);
+    }
+    fclose(fp);
 
     *status = 0;
     __set_errno(EINVAL);

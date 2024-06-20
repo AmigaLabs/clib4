@@ -758,6 +758,7 @@ C_UNISTD := \
 	unistd/sleep.o \
 	unistd/spawnv.o \
 	unistd/spawnvp.o \
+	unistd/spawnvpe.o \
 	unistd/strip_double_slash.o \
 	unistd/symlink.o \
 	unistd/sync_fd.o \
