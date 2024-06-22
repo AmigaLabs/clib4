@@ -97,13 +97,15 @@ raise(int sig) {
                 goto out;
             }
             else {
-                SHOWMSG("calling the handler");
-                (*handler)(sig);
+                if (*handler != NULL) {
+                    SHOWMSG("calling the handler");
+                    (*handler)(sig);
 
-                if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL)
-                    SetSignal(0, SIGBREAKF_CTRL_C);
+                    if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL)
+                        SetSignal(0, SIGBREAKF_CTRL_C);
 
-                SHOWMSG("done.");
+                    SHOWMSG("done.");
+                }
             }
 
             /* Unblock signal delivery again. */

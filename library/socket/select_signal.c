@@ -844,7 +844,6 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS");
                                 struct termios *tios = fd->fd_Aux;
-                                SHOWVALUE(FLAG_IS_CLEAR(tios->c_lflag, ICANON));
 
                                 if (WaitForChar(readFile, 1)) {
                                     got_input = TRUE;

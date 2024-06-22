@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_flockfile.c,v 1.4 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_flockfile.c,v 1.5 2024-06-19 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -9,11 +9,6 @@
 void
 flockfile(FILE *stream) {
     struct iob *file = (struct iob *) stream;
-
-    ENTER();
-    SHOWPOINTER(stream);
-
-    assert(stream != NULL);
 
     __check_abort();
 
@@ -39,6 +34,5 @@ flockfile(FILE *stream) {
     }
 
 out:
-    LEAVE();
     return;
 }

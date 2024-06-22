@@ -411,26 +411,32 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
             /* We can't call close() in fallback reent, since destructors
              * are already called and function is no more available */
             if (__clib4->randfd[0] >= 0) {
+                SHOWMSG("Closing randfd[0]");
                 close(__clib4->randfd[0]);
             }
 
             if (__clib4->randfd[1] >= 0) {
+                SHOWMSG("Closing randfd[1]");
                 close(__clib4->randfd[1]);
             }
         }
 
         /* Free wchar stuff */
         if (__clib4->wide_status != NULL) {
+            SHOWMSG("Freeing wide_status");
             FreeVec(__clib4->wide_status);
             __clib4->wide_status = NULL;
         }
         /* Remove random semaphore */
+        SHOWMSG("Delete __random_lock semaphore");
         __delete_semaphore(__clib4->__random_lock);
         /* Remove pipe semaphore */
+        SHOWMSG("Delete __pipe_semaphore semaphore");
         __delete_semaphore(__clib4->__pipe_semaphore);
         if (!fallback) { //TODO : Freeing memalign crash libExpunge and I don't know why
             /* Free memalign stuff */
             if (__clib4->__memalign_pool) {
+                SHOWMSG("Freeing memalign pool");
                 /* Check if we have something created with posix_memalign and not freed yet.
                  * But this is a good point also to free something allocated with memalign or
                  * aligned_alloc and all other functions are using memalign_tree to allocate memory
@@ -452,18 +458,22 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
                 }
 
                 FreeSysObject(ASOT_ITEMPOOL, __clib4->__memalign_pool);
+                SHOWMSG("Done");
             }
         }
         /* Free dl stuff */
         struct ElfIFace *IElf = __IElf;
 
         if (IElf && __clib4->__dl_root_handle != NULL) {
+            SHOWMSG("Closing __dl_root_handle");
             CloseElfTags(__clib4->__dl_root_handle, CET_ReClose, TRUE, TAG_DONE);
             __clib4->__dl_root_handle = NULL;
+            SHOWMSG("Done");
         }
 
         FreeVec(__clib4);
         __clib4 = NULL;
+        SHOWMSG("__clib4 destroyed correctly");
     }
 }
 

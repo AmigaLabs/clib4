@@ -68,7 +68,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
                 goto out;
             }
 
-            /* We can open only files, but never directories. */
+            /* We can open only directories. */
             if (!EXD_IS_DIRECTORY(fib)) {
                 SHOWMSG("we need a directory");
 

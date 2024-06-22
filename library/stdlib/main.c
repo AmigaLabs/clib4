@@ -336,11 +336,14 @@ _main(
 
     SHOWMSG("Calling reent_exit on _clib4");
     reent_exit(__clib4, FALSE);
+    SHOWMSG("Done");
 
     if (sms) {
         Forbid();
         ReplyMsg(&sms->sm_Message);
     }
+
+    SHOWMSG("Exit from _main");
 
     return rc;
 }
