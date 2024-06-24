@@ -849,6 +849,11 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                                     got_input = TRUE;
                                 }
                             }
+                            else if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING)) {
+                                SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING");
+                                SHOWVALUE(i);
+                                got_input = TRUE;
+                            }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE");
                                 SHOWVALUE(i);
