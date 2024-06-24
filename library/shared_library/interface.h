@@ -1336,6 +1336,7 @@ struct Clib4IFace {
     pid_t (* waitpid) (pid_t pid, int *status, int options);                                                                                         /* 4364 */
     int (* spawnvpe) (const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);                        /* 4368 */
 
+    int (* waitpoll) (struct pollfd *fds, nfds_t nfds, int timeout, uint32 *signals);
 };
 
 #ifdef __PIC__

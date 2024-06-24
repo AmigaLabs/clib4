@@ -155,7 +155,7 @@ map_select_results(struct pollfd *pArray, unsigned long n_fds, fd_set *pReadSet,
 }
 
 int
-poll(struct pollfd *fds, nfds_t nfds, int timeout) {
+__poll(struct pollfd *fds, nfds_t nfds, int timeout, uint32 *signals) {
     fd_set read_descs;                          /* input file descs */
     fd_set write_descs;                         /* output file descs */
     fd_set except_descs;                        /* exception descs */
@@ -182,11 +182,24 @@ poll(struct pollfd *fds, nfds_t nfds, int timeout) {
     pTimeout = map_timeout(timeout, &stime);
 
     /* Make the select() call. */
-    ready_descriptors = select(max_fd + 1, &read_descs, &write_descs, &except_descs, pTimeout);
+    if(signals)
+        ready_descriptors = waitselect(max_fd + 1, &read_descs, &write_descs, &except_descs, pTimeout, signals);
+    else
+        ready_descriptors = select(max_fd + 1, &read_descs, &write_descs, &except_descs, pTimeout);
 
     if (ready_descriptors >= 0) {
         map_select_results(fds, nfds, &read_descs, &write_descs, &except_descs);
     }
 
     return ready_descriptors;
+}
+
+int
+poll(struct pollfd *fds, nfds_t nfds, int timeout) {
+    return __poll(fds, nfds, timeout, 0);
+}
+
+int
+waitpoll(struct pollfd *fds, nfds_t nfds, int timeout, uint32 *signals) {
+    return __poll(fds, nfds, timeout, signals);
 }
