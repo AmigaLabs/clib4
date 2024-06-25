@@ -837,7 +837,6 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                             }
                             else  if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL) && pollMode) {
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_POLL) && pollMode");
-                                got_input = TRUE;
                                 if (WaitForChar(readFile, 1)) {
                                     got_input = TRUE;
                                 }
