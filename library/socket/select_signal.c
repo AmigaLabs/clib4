@@ -813,7 +813,6 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             __check_abort_f(__clib4);
 
             Delay(1);
-            BOOL gotChar = FALSE;
 
             result = 0;
             for (i = 0; i < total_file_fd; i++) {
@@ -839,7 +838,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                             else  if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL) && pollMode) {
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_POLL) && pollMode");
                                 got_input = TRUE;
-                                gotChar = WaitForChar(readFile, 1);
+                                if (WaitForChar(readFile, 1)) {
+                                    got_input = TRUE;
+                                }
                             }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS");
