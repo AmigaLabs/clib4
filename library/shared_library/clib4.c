@@ -122,6 +122,7 @@ const struct Resident RomTag;
 
 static struct TimeRequest *openTimer(uint32 unit);
 static void closeTimer(struct TimeRequest *tr);
+static int32 getDebugLevel(struct ExecBase *sysbase);
 
 int32
 _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
@@ -486,7 +487,8 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
             res->resource.lib_Node.ln_Type = NT_RESOURCE;
 
             iexec->InitSemaphore(&res->semaphore);
-
+            res->debugLevel = getDebugLevel(SysBase);
+            D(("Current Exec debug level: %ld\n", res->debugLevel));
             /* Initialize clib4 children hashmap */
             res->children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
             /* Initialize unix sockets hashmap */
@@ -602,6 +604,19 @@ library_start(char *argstr,
 }
 
 /************** STATIC FUNCTIONS ***********************/
+static int32 getDebugLevel(struct ExecBase *sysbase) {
+    struct ExecIFace *iexec = (APTR) sysbase->MainInterface;
+    int32  debugLevel = 0;
+
+    struct DebugIFace *idebug = (struct DebugIFace *) iexec->GetInterface(&sysbase->LibNode, "debug", 1, NULL);
+
+    if (idebug) {
+        debugLevel = idebug->GetDebugLevel();
+        iexec->DropInterface((struct Interface *) idebug);
+    }
+    return debugLevel;
+}
+
 static struct TimeRequest *openTimer(uint32 unit) {
     struct MsgPort *mp;
     struct TimeRequest *tr;

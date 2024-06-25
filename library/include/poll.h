@@ -56,6 +56,7 @@ struct pollfd
 #define POLLNVAL        0x020           /* Invalid polling request.  */
 
 extern int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+extern int waitpoll(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *signals);
 
 __END_DECLS
 

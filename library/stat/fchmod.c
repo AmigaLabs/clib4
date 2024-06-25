@@ -84,7 +84,7 @@ fchmod(int file_descriptor, mode_t mode) {
     if (FLAG_IS_SET(mode, S_IXOTH))
         SET_FLAG(protection, EXDF_OTR_EXECUTE);
 
-    parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+    parent_dir = ParentOfFH(fd->fd_File);
     if (parent_dir == BZERO) {
         SHOWMSG("couldn't find parent directory");
 
@@ -104,8 +104,7 @@ fchmod(int file_descriptor, mode_t mode) {
     old_current_dir = SetCurrentDir(parent_dir);
     current_dir_changed = TRUE;
 
-    if (CANNOT SetProtection((STRPTR)fib->Name, protection))
-    {
+    if (CANNOT SetProtection((STRPTR)fib->Name, protection)) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
         goto out;
     }

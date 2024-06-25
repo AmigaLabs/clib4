@@ -305,7 +305,7 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
         goto out;
     }
 
-    fln->fln_FileParentDir = __safe_parent_of_file_handle(fd->fd_File);
+    fln->fln_FileParentDir = ParentOfFH(fd->fd_File);
     if (fln->fln_FileParentDir == BZERO) {
         SHOWMSG("couldn't get parent directory");
 
@@ -407,7 +407,7 @@ find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_hand
      * name. These will be compared against the
      * global file lock data.
      */
-    parent_dir = __safe_parent_of_file_handle(file_handle);
+    parent_dir = ParentOfFH(file_handle);
     if (parent_dir == BZERO) {
         SHOWMSG("couldn't get parent directory");
 
@@ -741,7 +741,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
             goto out;
         }
 
-        parent_dir = __safe_parent_of_file_handle(file_handle);
+        parent_dir = ParentOfFH(file_handle);
         if (parent_dir == BZERO) {
             SHOWMSG("couldn't get a lock on the file's parent directory");
 

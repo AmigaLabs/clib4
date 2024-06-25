@@ -13,11 +13,15 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
+#include <poll.h>
+#include <sys/param.h> // MAX
+
 extern int __set_current_path(const char * path_name);
 extern int __strip_double_slash(char * file_name,int len);
 extern int __time_delay(ULONG timercmd, struct timeval *tv);
 extern long __pathconf(struct MsgPort *port,int name);
 extern int itimer_real_task(void);
 extern void killitimer(void);
+extern int __poll(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *signals);
 
 #endif /* _UNISTD_HEADERS_H */

@@ -45,6 +45,7 @@ struct Clib4Resource {
     } semcx;
     uint32 altivec;
     uint32 cpufamily;
+    int32  debugLevel;
 };
 
 struct Clib4Node {

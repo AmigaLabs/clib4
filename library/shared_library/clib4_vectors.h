@@ -1165,5 +1165,7 @@ static void *clib4Vectors[] = {
         (void *) (waitpid),                               /* 4364 */
         (void *) (spawnvpe),                              /* 4368 */
 
+        (void *) (waitpoll),                              /* 4372 */
+
         (void *)-1
 };

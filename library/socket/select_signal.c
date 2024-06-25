@@ -886,15 +886,6 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 SHOWVALUE(got_input);
                 SHOWVALUE(got_output);
 
-                if (got_input || got_output)
-                    result++;
-
-                /* After increasing result check if we get a char and we are in POLL mode
-                 * If we didn't get any char set back got_input to FALSE
-                 */
-                if (pollMode && !gotChar)
-                    got_input = FALSE;
-
                 if (file_read_fds != NULL && NOT got_input) {
                     FD_CLR(i, file_read_fds);
                 }
@@ -902,6 +893,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (file_write_fds != NULL && NOT got_output) {
                     FD_CLR(i, file_write_fds);
                 }
+
+                if (got_input || got_output)
+                    result++;
             }
 
             /* Check for a stop signal. */

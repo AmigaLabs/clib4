@@ -180,7 +180,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             (*fd->fd_Cleanup)(fd);
 
                         if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
-                            parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+                            parent_dir = ParentOfFH(fd->fd_File);
                             if (parent_dir == BZERO) {
                                 SHOWMSG("couldn't find parent directory");
 
@@ -196,6 +196,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                         if (CANNOT Close(fd->fd_File)) {
                             fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            SHOWMSG("CANNOT Close(fd->fd_File)");
 
                             result = EOF;
                         }

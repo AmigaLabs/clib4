@@ -198,6 +198,7 @@ C_POSIX := \
 	posix/readv.o \
 	wait/wait.o \
 	wait/waitpid.o \
+	posix/waitpoll.o \
 	posix/writev.o \
 	posix/uname.o
 
@@ -423,7 +424,6 @@ C_STDIO := \
 	stdio/iobhookentry.o \
 	stdio/lock.o \
 	stdio/openiob.o \
-	stdio/parent_of_fh.o \
 	stdio/perror.o \
 	stdio/popen.o \
 	stdio/printf.o \

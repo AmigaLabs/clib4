@@ -27,7 +27,7 @@ fstatvfs(int fd, struct statvfs *buf)
         goto out;
     }
 
-    file = __safe_parent_of_file_handle(fildes->fd_File);
+    file = ParentOfFH(fildes->fd_File);
     if (file == BZERO) {
         __set_errno(EINVAL);
         goto out;

@@ -55,7 +55,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
         goto out;
     }
 
-    parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+    parent_dir = ParentOfFH(fd->fd_File);
     if (parent_dir == BZERO) {
         SHOWMSG("couldn't find parent directory");
 
