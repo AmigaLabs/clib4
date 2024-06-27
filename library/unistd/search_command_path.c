@@ -7,18 +7,18 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/utility.h>
-#include <stdio.h>
+// #include <stdio.h>
 //struct SearchCmdPathListMsg {
 //    int32  splm_Size;
 //    BPTR   splm_Lock;
 //    STRPTR splm_Name;
 //};
-void doPathExpansion(BPTR pathLock, char *fileName, int bufferSize, char *buffer) {
-    int32 success = DevNameFromLock(pathLock, buffer, bufferSize, DN_FULLPATH);
-    if(success) AddPart(buffer, fileName, bufferSize);
+void do_path_expansion(BPTR path_lock, char *file_name, int buffer_size, char *buffer) {
+    int32 success = DevNameFromLock(path_lock, buffer, buffer_size, DN_FULLPATH);
+    if(success) AddPart(buffer, file_name, buffer_size);
     // printf("After expansion : %s\n", buffer);
 }
-BOOL dirContains(BPTR dirLock, char *fileName) {
+BOOL dir_contains(BPTR dir_lock, char *file_name) {
     // struct ExamineData *ed = ExamineObjectTags(EX_FileLockInput, dirLock, TAG_DONE);
     // if(ed) { Printf("Directory <%s> ...\n", ed->Name);
     // FreeDosObject(DOS_EXAMINEDATA, ed); }
@@ -27,7 +27,7 @@ BOOL dirContains(BPTR dirLock, char *fileName) {
     // struct UtilityIFace *__iutility = (struct UtilityIFace *)GetInterface(__utilitybase, "main", 1, TAG_DONE);
     // if(!__iutility) return FALSE;
     DECLARE_UTILITYBASE();
-    APTR context = ObtainDirContextTags(EX_LockInput, dirLock,
+    APTR context = ObtainDirContextTags(EX_LockInput, dir_lock,
 //                                EX_DoCurrentDir,TRUE,
                                EX_DataFields, EXF_ALL,
                                 TAG_END);
@@ -35,7 +35,7 @@ BOOL dirContains(BPTR dirLock, char *fileName) {
     BOOL result = FALSE;
     if(context) {
         while((edata = ExamineDir(context))) {
-            if(!Stricmp(edata->Name, fileName)) { result = TRUE; break; }
+            if(!Stricmp(edata->Name, file_name)) { result = TRUE; break; }
             // if(EXD_IS_LINK(edata)) {
             // //    IDOS->Printf("%s [link]\n",edata->Name);
             // //    IDOS->Printf("   File is linked to <%s>\n", edata->Link);
@@ -65,9 +65,9 @@ BOOL dirContains(BPTR dirLock, char *fileName) {
 }
 int32 __search_command_hook_function(struct Hook *hook, APTR reserved, struct SearchCmdPathListMsg *message) {
     char *buffer = (char *)hook->h_Data;
-    if(dirContains(message->splm_Lock, message->splm_Name)) {
+    if(dir_contains(message->splm_Lock, message->splm_Name)) {
         // Printf("Found a match.\n");
-        doPathExpansion(message->splm_Lock, message->splm_Name, 4096, buffer);
+        do_path_expansion(message->splm_Lock, message->splm_Name, 4096, buffer);
         return 1;
     }
     return 0;

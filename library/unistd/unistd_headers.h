@@ -24,8 +24,8 @@ extern int itimer_real_task(void);
 extern void killitimer(void);
 extern int __poll(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *signals);
 
-extern void doPathExpansion(BPTR pathLock, char *fileName, int bufferSize, char *buffer);
-extern BOOL dirContains(BPTR dirLock, char *fileName);
+extern void do_path_expansion(BPTR pathLock, char *fileName, int bufferSize, char *buffer);
+extern BOOL dir_contains(BPTR dirLock, char *fileName);
 extern int32 __search_command_hook_function(struct Hook *hook, APTR reserved, struct SearchCmdPathListMsg *message);
 extern int __search_expand_command_path(char const **name_ptr, char *replacement_buffer, size_t replacement_buffer_size);
 
