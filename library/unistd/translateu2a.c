@@ -113,12 +113,21 @@ __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translati
                of the path name. */
             strcpy(&home_dir_name[home_dir_name_len], name);
             name = home_dir_name;
-        }
-        else
-        if(strchr(name, '/') == NULL) {
-            if(__search_expand_command_path((const char **) &name, nti->substitute, sizeof(nti->substitute)) == 0) {
-                SHOWMSG("Successfully expanded command string using system paths.\n");
-                result = OK; name = replace; goto out;
+        } else {
+            
+            /* If input string is a command, we can use the system path to expand.
+               This should not conflict with previous implements, because the only
+               diverging situation is where it would previously return a non-existing
+               path to the current directory. */
+            if(strchr(name, '/') == NULL) {
+                if(__search_expand_command_path((const char **) &name, nti->substitute, sizeof(nti->substitute)) == 0) {
+                    SHOWMSG("Successfully expanded command string using system paths.\n");
+                    result = OK;
+                    name = replace;
+                    // printf("name : %s\n", name);
+                    (*name_ptr) = name;
+                    goto out;
+                }
             }
         }
 

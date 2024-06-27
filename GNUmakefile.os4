@@ -33,7 +33,6 @@ endif
 UNAME := $(shell uname)
 
 INSTALL_PREFIX ?= /usr/ppc-amigaos/SDK/clib4
-# INSTALL_PREFIX ?= /opt/adtools/ppc-amigaos/SDK/clib4
 
 CC := ppc-amigaos-gcc
 AR := ppc-amigaos-ar -q

@@ -24,7 +24,6 @@ extern int itimer_real_task(void);
 extern void killitimer(void);
 extern int __poll(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *signals);
 
-extern struct UtilityIFace *__IUtility;
 extern void doPathExpansion(BPTR pathLock, char *fileName, int bufferSize, char *buffer);
 extern BOOL dirContains(BPTR dirLock, char *fileName);
 extern int32 __search_command_hook_function(struct Hook *hook, APTR reserved, struct SearchCmdPathListMsg *message);
