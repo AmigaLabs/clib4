@@ -176,7 +176,6 @@ spawnv(int mode, const char *file, const char **argv) {
                      SYS_UserShell, TRUE,
                      SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
                      NP_ExitCode, spawnedProcessExit,
-                     NP_FinalCode, spawnedProcessFinal,
                      NP_Name, file,
                      NP_Child, TRUE,
                      TAG_DONE);

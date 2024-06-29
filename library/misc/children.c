@@ -54,18 +54,18 @@ struct Clib4Children *
 findSpawnedChildrenByPid(uint32 pid) {
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
-        uint32 me = GetPID(0, GPID_PROCESS);
+        uint32 mainProcess = GetPID(0, GPID_PARENT) != 0 ? GetPID(0, GPID_PARENT) : GetPID(0, GPID_PROCESS);
         size_t iter = 0;
         void *item;
 
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
-            if (node->pid == me) {
+            if (node->pid == mainProcess) {
                 return (struct Clib4Children *) hashmap_scan_item(node->spawnedProcesses, pidChildrenScan, &pid);
             }
         }
-
     }
+
     return NULL;
 }
 
@@ -110,11 +110,5 @@ spawnedProcessExit(int32 rc, int32 data UNUSED) {
             }
         }
     }
-}
-
-void
-spawnedProcessFinal(int32 rc, int32 data UNUSED) {
-    int32 pid = GetPID(0, GPID_PROCESS);
-    D(("spawnedProcessFinal PID: %ld\n", pid));
 }
 

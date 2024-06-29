@@ -146,7 +146,6 @@ spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, 
             __set_errno(EBADF);
             return ret;
         }
-        SET_FLAG(fd->fd_Flags, FDF_NO_CLOSE);
     }
 
     if (fhout >= 0) {
@@ -155,7 +154,6 @@ spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, 
             __set_errno(EBADF);
             return ret;
         }
-        SET_FLAG(fd->fd_Flags, FDF_NO_CLOSE);
     }
 
     if (fherr >= 0) {
@@ -164,7 +162,6 @@ spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, 
             __set_errno(EBADF);
             return ret;
         }
-        SET_FLAG(fd->fd_Flags, FDF_NO_CLOSE);
     }
 
     if (parameter_string_len > 0) {
@@ -179,23 +176,41 @@ spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, 
     snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
 
     BPTR in = BZERO, out = BZERO, err = BZERO;
-    int in_err = -1, out_err = -1, err_err = -1;
+    int in_found = -1, out_found = -1, err_found = -1;
 
     if (fhin >= 0) {
-        in_err = __get_default_file(fhin, &in);
+        in_found = __get_default_file(fhin, &in);
+        D(("1) fhin = %ld - in_found = %ld - in = %p", fhin, in_found, in));
+        if (in_found == OK && fhin == STDIN_FILENO) {
+            ChangeMode(CHANGE_FH, in,  CHANGE_MODE_SHARED);
+            in = DupFileHandle(in);
+            D(("2) fhin = %ld - in_found = %ld - in = %p", fhin, in_found, in));
+        }
     }
     if (fhout >= 0) {
-        out_err = __get_default_file(fhout, &out);
+        out_found = __get_default_file(fhout, &out);
+        D(("1) fhout = %ld - out_found = %ld - out = %p", fhout, out_found, out));
+        if (out_found == OK && fhout == STDOUT_FILENO) {
+            ChangeMode(CHANGE_FH, out,  CHANGE_MODE_SHARED);
+            out = DupFileHandle(out);
+            D(("2) fhout = %ld - out_found = %ld - out = %p", fhout, out_found, out));
+        }
     }
     if (fherr >= 0) {
-        err_err = __get_default_file(fherr, &err);
+        err_found = __get_default_file(fherr, &err);
+        D(("1) fherr = %ld - err_found = %ld - err = %p", fherr, err_found, err));
+        if (err_found == OK && fherr == STDERR_FILENO) {
+            ChangeMode(CHANGE_FH, err,  CHANGE_MODE_SHARED);
+            err = DupFileHandle(err);
+            D(("2) fherr = %ld - err_found = %ld - err = %p", fherr, err_found, err));
+        }
     }
 
-    //Printf("finalpath = %s - in_err = %ld - out_err = %ld - err_err = %ld\n", finalpath, in_err, out_err, err_err);
+    //Printf("finalpath = %s - in_found = %ld - out_found = %ld - err_found = %ld\n", finalpath, in_found, out_found, err_found);
     ret = SystemTags(finalpath,
-                       SYS_Input, in_err == 0 ? in : 0,
-                       SYS_Output, out_err == 0 ? out : 0,
-                       SYS_Error, err_err == 0 ? err : 0,
+                       SYS_Input, in_found == OK ? in : 0,
+                       SYS_Output, out_found == OK ? out : 0,
+                       SYS_Error, err_found == OK ? err : 0,
                        SYS_UserShell, TRUE,
                        SYS_Asynch, TRUE,
                        NP_Child, TRUE,
@@ -206,9 +221,9 @@ spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, 
     if (ret != 0) {
         Printf("Error executing %s\n", finalpath);
         /* SystemTags failed. Clean up file handles */
-        if (in_err == 0) Close(in);
-        if (out_err == 0) Close(out);
-        if (err_err == 0) Close(err);
+        if (in_found == 0) Close(in);
+        if (out_found == 0) Close(out);
+        if (err_found == 0) Close(err);
         errno = __translate_io_error_to_errno(IoErr());
     }
     else {

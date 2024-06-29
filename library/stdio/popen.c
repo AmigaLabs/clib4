@@ -232,7 +232,6 @@ popen(const char *command, const char *type) {
                         SYS_UserShell, TRUE,
                         NP_Name, command,
                         NP_ExitCode, spawnedProcessExit,
-                        NP_FinalCode, spawnedProcessFinal,
                         NP_Child, TRUE,
                         TAG_END);
 

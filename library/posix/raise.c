@@ -58,6 +58,7 @@ raise(int sig) {
                 SHOWMSG("this is the default handler");
 
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
+                    __set_errno(EINTR);
                     /* Check ig we have timer terminal running. If so let's kill it */
                     if (__clib4->tmr_real_task != NULL) {
                         /* Block SIGALRM signal from raise */
@@ -101,8 +102,10 @@ raise(int sig) {
                     SHOWMSG("calling the handler");
                     (*handler)(sig);
 
-                    if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL)
+                    if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
+                        __set_errno(EINTR);
                         SetSignal(0, SIGBREAKF_CTRL_C);
+                    }
 
                     SHOWMSG("done.");
                 }
