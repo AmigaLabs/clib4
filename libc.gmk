@@ -768,6 +768,7 @@ C_UNISTD := \
 	unistd/translatea2u.o \
 	unistd/translaterel.o \
 	unistd/translateu2a.o \
+	unistd/search_command_path.o \
 	unistd/truncate.o \
 	unistd/truncate64.o \
 	unistd/ttyname.o \
