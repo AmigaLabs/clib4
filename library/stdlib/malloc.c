@@ -14,8 +14,6 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-#undef malloc
-
 void *
 malloc(size_t size) {
     ENTER();

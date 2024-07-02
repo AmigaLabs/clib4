@@ -14,11 +14,11 @@
 
 #include <malloc.h>
 
-#undef free
-
 void
 free(void *ptr) {
     struct _clib4 *__clib4 = __CLIB4;
+
+    __memory_lock(__clib4);
 
     BOOL found = FALSE;
     struct MemalignEntry *e = NULL;
@@ -29,8 +29,6 @@ free(void *ptr) {
             found = TRUE;
         }
     }
-
-    __memory_lock(__clib4);
 
     if (found) {
         /* Free memory */
