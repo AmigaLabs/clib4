@@ -95,6 +95,8 @@ fclose(FILE *stream) {
     /* Free the lock semaphore now. */
     SHOWMSG("Delete iob_Lock");
     __delete_semaphore(file->iob_Lock);
+    /* Just to be sure */
+    CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
 
     SHOWMSG("Clear file structure");
     memset(file, 0, sizeof(*file));

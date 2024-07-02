@@ -30,8 +30,6 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         return (result);
     }
 
-    flockfile(stream);
-
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
@@ -42,8 +40,8 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
         __set_errno(EBADF);
-
-        goto out;
+        RETURN(result);
+        return (result);
     }
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ)) {
@@ -52,12 +50,14 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
         __set_errno(EBADF);
-
-        goto out;
+        RETURN(result);
+        return (result);
     }
 
     /* So that we can tell error and 'end of file' conditions apart. */
     clearerr(stream);
+
+    flockfile(stream);
 
     if (element_size > 0 && count > 0) {
         size_t total_bytes_read = 0;

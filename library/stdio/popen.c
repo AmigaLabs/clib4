@@ -54,7 +54,7 @@ popen(const char *command, const char *type) {
     FILE *result = NULL;
     LONG status;
     unsigned long task_address;
-    time_t now;
+    time_t now = 0;
     int i;
     struct _clib4 *__clib4 = __CLIB4;
 

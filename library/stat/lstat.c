@@ -54,7 +54,7 @@ lstat(const char *path_name, struct stat *st) {
         /* The pseudo root directory is a very special case indeed.
             We make up some pseudo data for it. */
         if (path_name_nti.is_root) {
-            time_t mtime;
+            time_t mtime = 0;
 
             SHOWMSG("setting up the root directory info");
 
@@ -86,7 +86,7 @@ lstat(const char *path_name, struct stat *st) {
     }
 
     if (link_length > 0) {
-        time_t mtime;
+        time_t mtime = 0;
         struct DevProc *dvp = GetDeviceProcFlags((STRPTR) path_name, 0, LDF_ALL);
         struct MsgPort *port = NULL;
         if (dvp) {

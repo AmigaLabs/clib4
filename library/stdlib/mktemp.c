@@ -20,7 +20,7 @@ mktemp(char *name_template) {
     size_t template_len;
     size_t name_len;
     size_t offset;
-    time_t now;
+    time_t now = 0;
     ULONG pseudo_random_number;
     BPTR lock;
     size_t i;

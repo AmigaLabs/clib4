@@ -6,208 +6,184 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/******************************************************************
- * qsort.c  --  Non-Recursive ANSI Quicksort function             *
- *                                                                *
- * Public domain by Raymond Gardner, Englewood CO  February 1991  *
- *                                                                *
- * Usage:                                                         *
- *     qsort(base, nbr_elements, width_bytes, compare_function);  *
- *        void *base;                                             *
- *        size_t nbr_elements, width_bytes;                       *
- *        int (*compare_function)(const void *, const void *);    *
- *                                                                *
- * Sorts an array starting at base, of length nbr_elements, each  *
- * element of size width_bytes, ordered via compare_function,     *
- * which is called as  (*compare_function)(ptr_to_element1,       *
- * ptr_to_element2) and returns < 0 if element1 < element2,       *
- * 0 if element1 = element2, > 0 if element1 > element2.          *
- * Most refinements are due to R. Sedgewick. See "Implementing    *
- * Quicksort Programs", Comm. ACM, Oct. 1978, and Corrigendum,    *
- * Comm. ACM, June 1979.                                          *
- ******************************************************************/
+typedef int (*__compar_d_fn_t) (__const void *, __const void *, void *);
 
-#define SWAP(a, b, size)    (swap((char *)(a), (char *)(b), size))
-#define COMPARE(a, b)       ((*comp)((const void *)(a), (const void *)(b)))
+/* Byte-wise swap two items of size SIZE. */
+#define SWAP(a, b, size)                              \
+  do                                          \
+    {                                          \
+      register size_t __size = (size);                          \
+      register char *__a = (a), *__b = (b);                      \
+      do                                      \
+    {                                      \
+      char __tmp = *__a;                              \
+      *__a++ = *__b;                              \
+      *__b++ = __tmp;                              \
+    } while (--__size > 0);                              \
+    } while (0)
 
-/* subfiles of THRESHOLD or fewer elements will
-   be sorted by a simple insertion sort
-   Note! THRESHOLD must be at least 3 */
-#define THRESHOLD 7
+/* Discontinue quicksort algorithm when partition gets below this size.
+   This particular magic number was chosen to work best on a Sun 4/260. */
+#define MAX_THRESH 4
 
-#define IS_WORD_ALIGNED(a, b) (((((unsigned long)(a)) | ((unsigned long)(b))) & 1) == 0)
+/* Stack node declarations used to store unfulfilled partition obligations. */
+typedef struct {
+    char *lo;
+    char *hi;
+} stack_node;
 
-/* swap nbytes between a and b */
-inline static void
-swap(char *a, char *b, size_t nbytes) {
-    char temp;
 
-    assert(a != NULL && b != NULL && nbytes > 0);
-
-    /* This is an attempt to use 'long' sized swapping, if possible. */
-    if (nbytes >= sizeof(long) && IS_WORD_ALIGNED(a, b)) {
-        long *_a = (long *) a;
-        long *_b = (long *) b;
-        long _temp;
-
-        do {
-            _temp = (*_a);
-            (*_a++) = (*_b);
-            (*_b++) = _temp;
-
-            nbytes -= sizeof(long);
-        } while (nbytes >= sizeof(long));
-
-        if (nbytes > 0) {
-            a = (char *) _a;
-            b = (char *) _b;
-
-            do {
-                temp = (*a);
-                (*a++) = (*b);
-                (*b++) = temp;
-            } while (--nbytes > 0);
-        }
-    } else {
-        do {
-            temp = (*a);
-            (*a++) = (*b);
-            (*b++) = temp;
-        } while (--nbytes > 0);
-    }
-}
+/* The next 4 #defines implement a very fast in-line stack abstraction. */
+/* The stack needs log (total_elements) entries (we could even subtract
+   log(MAX_THRESH)).  Since total_elements has type size_t, we get as
+   upper bound for log (total_elements):
+   bits per byte (CHAR_BIT) * sizeof(size_t).  */
+#define Q_STACK_SIZE    (CHAR_BIT * sizeof(size_t))
+#define Q_PUSH(low, high)    ((void) ((top->lo = (low)), (top->hi = (high)), ++top))
+#define Q_POP(low, high)    ((void) (--top, (low = top->lo), (high = top->hi)))
+#define Q_STACK_NOT_EMPTY    (stack < top)
 
 void
-qsort(void *base, size_t count, size_t size, int (*comp)(const void *element1, const void *element2)) {
-    ENTER();
+qsort(void *pbase, size_t total_elems, size_t size, int (*compare)(const void *, const void *)) {
+    register char *base_ptr = (char *) pbase;
 
-    SHOWPOINTER(base);
-    SHOWVALUE(count);
-    SHOWVALUE(size);
-    SHOWPOINTER(comp);
+    const size_t max_thresh = MAX_THRESH * size;
 
-    assert((int) count >= 0 && (int) size >= 0);
+    if (total_elems == 0)
+        /* Avoid lossage with unsigned arithmetic below.  */
+        return;
 
-    if (count > 1 && size > 0) {
-        char *stack[32 * 2], **sp;    /* stack and stack pointer */
-        char *i, *j, *limit;        /* scan and limit pointers */
-        char *base_pointer;            /* base pointer as (char *) */
-        size_t threshold;            /* size of THRESHOLD elements in bytes */
+    if (total_elems > MAX_THRESH) {
+        char *lo = base_ptr;
+        char *hi = &lo[size * (total_elems - 1)];
+        stack_node stack[Q_STACK_SIZE];
+        stack_node *top = stack;
 
-        assert(base != NULL && comp != NULL);
+        Q_PUSH(NULL, NULL);
 
-        if (base == NULL || comp == NULL) {
-            SHOWMSG("invalid parameters");
+        while (Q_STACK_NOT_EMPTY) {
+            char *left_ptr;
+            char *right_ptr;
 
-            __set_errno(EFAULT);
-            goto out;
-        }
+            /* Select median value from among LO, MID, and HI. Rearrange
+               LO and HI so the three values are sorted. This lowers the
+               probability of picking a pathological pivot value and
+               skips a comparison for both the LEFT_PTR and RIGHT_PTR in
+               the while loops. */
 
-        /* set up (char *) base_pointer pointer */
-        base_pointer = (char *) base;
+            char *mid = lo + size * ((hi - lo) / size >> 1);
 
-        /* init threshold */
-        threshold = THRESHOLD * size; /* ZZZ problematic if (THRESHOLD * size) > 0xffffffff */
+            if ((*compare)((void *) mid, (void *) lo) < 0)
+                SWAP(mid, lo, size);
+            if ((*compare)((void *) hi, (void *) mid) < 0)
+                SWAP(mid, hi, size);
+            else
+                goto jump_over;
+            if ((*compare)((void *) mid, (void *) lo) < 0)
+                SWAP(mid, lo, size);
+            jump_over:;
 
-        /* init stack pointer */
-        sp = stack;
+            left_ptr = lo + size;
+            right_ptr = hi - size;
 
-        /* pointer past end of array */
-        limit = base_pointer + count *
-                               size; /* ZZZ problematic if (count * size) > 0xffffffff or (base_pointer + count * size) > 0xffffffff */
+            /* Here's the famous ``collapse the walls'' section of quicksort.
+               Gotta like those tight inner loops!  They are the main reason
+               that this algorithm runs much faster than others. */
+            do {
+                while ((*compare)((void *) left_ptr, (void *) mid) < 0)
+                    left_ptr += size;
 
-        /* repeat until break... */
-        while (TRUE) {
-            /* if more than THRESHOLD elements */
-            if ((size_t)(limit - base_pointer) > threshold) {
-                /* swap base_pointer with middle */
-                SWAP((((limit - base_pointer) / size) / 2) * size + base_pointer, base_pointer, size);
+                while ((*compare)((void *) mid, (void *) right_ptr) < 0)
+                    right_ptr -= size;
 
-                /* i scans left to right */
-                i = base_pointer + size;
-
-                /* j scans right to left */
-                j = limit - size;
-
-                /* Sedgewick's three-element sort sets things up so that
-                   (*i) <= (*base_pointer) <= (*j); (*base_pointer) is
-                   pivot element */
-                if (COMPARE(i, j) > 0)
-                    SWAP(i, j, size);
-
-                if (COMPARE(base_pointer, j) > 0)
-                    SWAP(base_pointer, j, size);
-
-                if (COMPARE(i, base_pointer) > 0)
-                    SWAP(i, base_pointer, size);
-
-                /* loop until break */
-                while (TRUE) {
-                    /* move i right until (*i) >= pivot */
-                    do
-                        i += size;
-                    while (COMPARE(i, base_pointer) < 0);
-
-                    /* move j left until (*j) <= pivot */
-                    do
-                        j -= size;
-                    while (COMPARE(j, base_pointer) > 0);
-
-                    /* break loop if pointers crossed */
-                    if (i > j)
-                        break;
-
-                    /* else swap elements, keep scanning */
-                    SWAP(i, j, size);
-                }
-
-                /* move pivot into correct place */
-                SWAP(base_pointer, j, size);
-
-                /* if left subfile larger */
-                if (j - base_pointer > limit - i) {
-                    /* stack left subfile base_pointer and limit */
-                    sp[0] = base_pointer;
-                    sp[1] = j;
-
-                    /* sort the right subfile */
-                    base_pointer = i;
-                } else /* else right subfile larger */
-                {
-                    /* stack right subfile base_pointer and limit */
-                    sp[0] = i;
-                    sp[1] = limit;
-
-                    /* sort the left subfile */
-                    limit = j;
-                }
-
-                /* increment stack pointer */
-                sp += 2;
-            } else /* else subfile is small, use insertion sort */
-            {
-                for (j = base_pointer, i = j + size; i < limit; j = i, i += size) {
-                    for (; COMPARE(j, j + size) > 0; j -= size) {
-                        SWAP(j, j + size, size);
-                        if (j == base_pointer)
-                            break;
-                    }
-                }
-
-                /* if any entries on stack pop the base_pointer and limit,
-                   else the stack is empty and we're done */
-                if (sp == stack)
+                if (left_ptr < right_ptr) {
+                    SWAP(left_ptr, right_ptr, size);
+                    if (mid == left_ptr)
+                        mid = right_ptr;
+                    else if (mid == right_ptr)
+                        mid = left_ptr;
+                    left_ptr += size;
+                    right_ptr -= size;
+                } else if (left_ptr == right_ptr) {
+                    left_ptr += size;
+                    right_ptr -= size;
                     break;
+                }
+            } while (left_ptr <= right_ptr);
 
-                sp -= 2;
+            /* Set up pointers for next iteration.  First determine whether
+               left and right partitions are below the threshold size.  If so,
+               ignore one or both.  Otherwise, push the larger partition's
+               bounds on the stack and continue sorting the smaller one. */
 
-                base_pointer = sp[0];
-                limit = sp[1];
+            if ((size_t)(right_ptr - lo) <= max_thresh) {
+                if ((size_t)(hi - left_ptr) <= max_thresh)
+                    /* Ignore both small partitions. */
+                    Q_POP (lo, hi);
+                else
+                    /* Ignore small left partition. */
+                    lo = left_ptr;
+            } else if ((size_t)(hi - left_ptr) <= max_thresh)
+                /* Ignore small right partition. */
+                hi = right_ptr;
+            else if ((right_ptr - lo) > (hi - left_ptr)) {
+                /* Push larger left partition indices. */
+                Q_PUSH(lo, right_ptr);
+                lo = left_ptr;
+            } else {
+                /* Push larger right partition indices. */
+                Q_PUSH(left_ptr, hi);
+                hi = right_ptr;
             }
         }
     }
 
-out:
+    /* Once the BASE_PTR array is partially sorted by quicksort the rest
+       is completely sorted using insertion sort, since this is efficient
+       for partitions below MAX_THRESH size. BASE_PTR points to the beginning
+       of the array to sort, and END_PTR points at the very last element in
+       the array (*not* one beyond it!). */
 
-    LEAVE();
+
+    {
+        char *const end_ptr = &base_ptr[size * (total_elems - 1)];
+        char *tmp_ptr = base_ptr;
+        char *thresh = min(end_ptr, base_ptr + max_thresh);
+        register char *run_ptr;
+
+        /* Find smallest element in first threshold and place it at the
+           array's beginning.  This is the smallest array element,
+           and the operation speeds up insertion sort's inner loop. */
+
+        for (run_ptr = tmp_ptr + size; run_ptr <= thresh; run_ptr += size)
+            if ((*compare)((void *) run_ptr, (void *) tmp_ptr) < 0)
+                tmp_ptr = run_ptr;
+
+        if (tmp_ptr != base_ptr)
+            SWAP(tmp_ptr, base_ptr, size);
+
+        /* Insertion sort, running from left-hand-side up to right-hand-side.  */
+
+        run_ptr = base_ptr + size;
+        while ((run_ptr += size) <= end_ptr) {
+            tmp_ptr = run_ptr - size;
+            while ((*compare)((void *) run_ptr, (void *) tmp_ptr) < 0)
+                tmp_ptr -= size;
+
+            tmp_ptr += size;
+            if (tmp_ptr != run_ptr) {
+                char *trav;
+
+                trav = run_ptr + size;
+                while (--trav >= run_ptr) {
+                    char c = *trav;
+                    char *hi, *lo;
+
+                    for (hi = lo = trav; (lo -= size) >= tmp_ptr; hi = lo)
+                        *hi = *lo;
+                    *hi = c;
+                }
+            }
+        }
+    }
 }
