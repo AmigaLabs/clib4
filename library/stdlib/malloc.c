@@ -29,6 +29,9 @@ malloc(size_t size) {
     SHOWMSG("Calling wof_alloc");
     result = wof_alloc(__clib4->__wof_allocator, size);
 
+    if (!result)
+        __set_errno(ENOMEM);
+
     SHOWMSG("Unlocking memory pointer");
     __memory_unlock(__clib4);
 
