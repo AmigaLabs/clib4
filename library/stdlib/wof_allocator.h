@@ -8,18 +8,6 @@
 #include <features.h>
 #include <string.h>
 
-__BEGIN_DECLS
-
-typedef struct _wof_allocator_t wof_allocator_t;
-
-extern void *wof_alloc(wof_allocator_t *allocator, const size_t size);
-extern void  wof_free(wof_allocator_t *allocator, void *ptr);
-extern void *wof_realloc(wof_allocator_t *allocator, void *ptr, const size_t size);
-extern void  wof_free_all(wof_allocator_t *allocator);
-extern void  wof_gc(wof_allocator_t *allocator);
-extern void  wof_allocator_destroy(wof_allocator_t *allocator);
-extern wof_allocator_t *wof_allocator_new(void);
-
 /* https://mail.gnome.org/archives/gtk-devel-list/2004-December/msg00091.html
  * The 2*sizeof(size_t) alignment here is borrowed from GNU libc, so it should
  * be good most everywhere. It is more conservative than is needed on some
@@ -80,7 +68,7 @@ typedef struct _wof_chunk_hdr_t {
 #define WOF_BLOCK_TO_CHUNK(BLOCK) ((wof_chunk_hdr_t*)((unsigned char*)(BLOCK) + WOF_BLOCK_HEADER_SIZE))
 #define WOF_CHUNK_TO_BLOCK(CHUNK) ((wof_block_hdr_t*)((unsigned char*)(CHUNK) - WOF_BLOCK_HEADER_SIZE))
 
-#define WOF_BLOCK_MAX_ALLOC_SIZE (WOF_BLOCK_SIZE -  (WOF_BLOCK_HEADER_SIZE + WOF_CHUNK_HEADER_SIZE))
+#define WOF_BLOCK_MAX_ALLOC_SIZE (WOF_BLOCK_SIZE - (WOF_BLOCK_HEADER_SIZE + WOF_CHUNK_HEADER_SIZE))
 
 /* This is what the 'data' section of a chunk contains if it is free. */
 typedef struct _wof_free_hdr_t {
@@ -88,7 +76,7 @@ typedef struct _wof_free_hdr_t {
 } wof_free_hdr_t;
 
 /* Handy macro for accessing the free-header of a chunk */
-#define WOF_GET_FREE(CHUNK) ((wof_free_hdr_t*)WOF_CHUNK_TO_DATA(CHUNK))
+#define WOF_GET_FREE(CHUNK) ((wof_free_hdr_t*) WOF_CHUNK_TO_DATA(CHUNK))
 
 /* The size of the free header does not need to be aligned, as it is never used
  * in any way that would affect the alignment of the memory returned from
@@ -101,6 +89,19 @@ struct _wof_allocator_t {
     wof_chunk_hdr_t *master_head;
     wof_chunk_hdr_t *recycler_head;
 };
+
+__BEGIN_DECLS
+
+typedef struct _wof_allocator_t wof_allocator_t;
+
+extern void *wof_alloc(wof_allocator_t * allocator, const size_t size);
+extern void wof_free(wof_allocator_t * allocator, void * ptr);
+extern void *wof_realloc(wof_allocator_t * allocator, void * ptr, const size_t size);
+extern void wof_free_all(wof_allocator_t * allocator);
+extern void wof_gc(wof_allocator_t * allocator);
+extern void wof_allocator_destroy(wof_allocator_t * allocator);
+
+extern wof_allocator_t *wof_allocator_new(void);
 
 __END_DECLS
 

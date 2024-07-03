@@ -21,13 +21,19 @@ struct EntryData {
     struct Task *mainTask;
 };
 
-STATIC void amiga_EntryCode(int32 entry_data) {
+STATIC void
+amiga_EntryCode(int32 entry_data) {
     // NOTES:
     // We need to make sure, that the spawned process exists, before the parent can continue.
     // See the notes for : uv__spawn_and_init_child_posix_spawn
     struct EntryData *ed = (struct EntryData *) entry_data;
-    if(ed)
+    if (ed) {
+        struct _clib4 *__clib4 = __CLIB4;
+        while (!__clib4->__fully_initialized) {
+            Delay(10);
+        }
         Signal(ed->mainTask, 1 << ed->signal);
+    }
 }
 
 STATIC BOOL
@@ -146,6 +152,9 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
     char *arg_string = NULL;
     size_t arg_string_len = 0;
     size_t parameter_string_len = 0;
+    struct _clib4 *__clib4 = __CLIB4;
+
+    __set_errno(0);
 
     arg_string = malloc(parameter_string_len + 1);
     if (arg_string == NULL) {
@@ -159,11 +168,12 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
         return ret;
     }
 
-    DebugPrintF("[uv__do_create_new_process_amiga :] New process \'%s\'\n", name);
+    D(("Starting new process [%s]\n", name));
 
     int error = __translate_unix_to_amiga_path_name(&name, &nti_name);
     if (error) {
-        printf("%s\n", strerror(error));
+        __set_errno(EINVAL);
+        D(("__translate_unix_to_amiga_path_name failed: %s\n", strerror(error)));
         return ret;
     }
 
@@ -174,8 +184,11 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
     }
 
     BPTR seglist = LoadSeg(name);
-    if (!seglist)
+    if (!seglist) {
+        __set_errno(EIO);
+        D(("Cannot load seglist from %s\n", name));
         return ret;
+    }
 
     if (parameter_string_len > 0) {
         build_arg_string((char *const *) argv, &arg_string[arg_string_len]);
@@ -188,7 +201,7 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
     char finalpath[PATH_MAX] = {0};
     snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
 
-    Printf("File to execute: [%s]\n", finalpath);
+    D(("File to execute: [%s]\n", finalpath));
 
     if (fhin >= 0) {
         err = __get_default_file(fhin, &fh);
@@ -259,6 +272,7 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
     );
 
     if (p == NULL) {
+        __set_errno(__translate_io_error_to_errno(IoErr()));
         FreeVec(ed);
         for (int i = 0; i < 3; i++) {
             if (closefh[i])
@@ -269,10 +283,17 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
     ret = p->pr_ProcessID;
 
     // wait for the entry signal from the child :
+    D(("Waiting for process with pid %ld to start\n", ret));
     Wait(1 << ed->signal | SIGBREAKF_CTRL_C);
     FreeSignal(ed->signal);
     FreeVec(ed);
 
+    if (insertSpawnedChildren(ret, getgid())) {
+        D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
+    }
+    else {
+        D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
+    }
     // success
     return ret;
 }

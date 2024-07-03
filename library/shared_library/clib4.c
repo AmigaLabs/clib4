@@ -501,6 +501,7 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
                                                                       TAG_DONE);
             reent_init(res->fallbackClib);
             res->fallbackClib->__check_abort_enabled = TRUE;
+            res->fallbackClib->__fully_initialized = TRUE;
 
             /* Init SYSV structures */
             IPCMapInit(&res->shmcx.keymap);

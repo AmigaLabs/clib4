@@ -206,7 +206,7 @@ struct _clib4 {
 
     BOOL __unix_path_semantics;
 
-    BOOL  unused6;
+    BOOL  __fully_initialized;
     int32_t __pipenum;
     void *__pipe_semaphore;
     BOOL  unused3;

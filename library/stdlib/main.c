@@ -323,6 +323,9 @@ _main(
     /* We can enable check abort now */
     __clib4->__check_abort_enabled = TRUE;
 
+    /* At this point exe is fully initialized */
+    __clib4->__fully_initialized = TRUE;
+
     SHOWMSG("Call Main");
     /* We have enough room to make the call or just don't care. */
     rc = call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib4);

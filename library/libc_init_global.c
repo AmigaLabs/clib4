@@ -290,6 +290,7 @@ reent_init(struct _clib4 *__clib4) {
         .syslog_openlog_flags = 0,
         .syslog_facility = LOG_USER,
         .syslog_mask = 0xff,
+        .__fully_initialized = FALSE,
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {
