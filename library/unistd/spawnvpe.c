@@ -17,8 +17,8 @@
 #include "children.h"
 
 struct EntryData {
-    uint8 signal;
     struct Task *mainTask;
+    uint8 signal;
 };
 
 STATIC void
