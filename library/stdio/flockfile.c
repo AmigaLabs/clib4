@@ -29,7 +29,7 @@ flockfile(FILE *stream) {
     }
 
     if (file->iob_Lock != NULL) {
-        ObtainSemaphore(file->iob_Lock);
+        MutexAttempt(file->iob_Lock);
         SET_FLAG(file->iob_Flags, IOBF_LOCKED);
     }
 

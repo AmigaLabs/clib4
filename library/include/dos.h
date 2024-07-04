@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <stddef.h>
+#include <signal.h>
 #include <sys/resource.h>
 #include <sys/syslimits.h>
 #include <wchar.h>
@@ -510,6 +511,12 @@ struct _clib4 {
 
     /* ttyname */
     char tty_file_name[_POSIX_TTY_NAME_MAX];
+
+    /* Set of current actions.  If sa_handler for an entry is NULL, then
+     * that signal is not currently handled by the sigaction handler.
+     */
+    struct sigaction action_array[NSIG];
+
 };
 
 #ifndef __getClib4

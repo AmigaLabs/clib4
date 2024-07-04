@@ -12,7 +12,7 @@
 
 int
 __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int file_descriptor, int slot_number) {
-    struct SignalSemaphore *lock;
+    APTR lock;
     ULONG file_flags;
     int result = ERROR;
     int open_mode;
@@ -119,7 +119,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
     /* Allocate memory for an arbitration mechanism, then
         initialize it. */
-    lock = __create_semaphore();
+    lock = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
     if (lock == NULL)
         goto out;
 

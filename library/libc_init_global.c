@@ -212,6 +212,12 @@ reent_init(struct _clib4 *__clib4) {
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         },
+        .action_array = {
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0,
+        },
         /* Set main Exec and IElf interface pointers */
         .IExec = IExec,
         .IElf = __IElf,

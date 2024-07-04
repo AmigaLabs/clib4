@@ -33,8 +33,16 @@ funlockfile(FILE *stream) {
     }
 
     if (file->iob_Lock != NULL && FLAG_IS_SET(file->iob_Flags, IOBF_LOCKED)) {
-        ReleaseSemaphore(file->iob_Lock);
-        CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
+        MutexRelease(file->iob_Lock);
+        /* This is an hack to check if we are in the latest lock */
+        if (MutexAttempt(file->iob_Lock)) {
+            /* If we can lock the mutex means we are the only one on this mutex
+             * Clear the IOBF_LOCKED flag
+             */
+            CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
+            /* Release the mutex */
+            MutexRelease(file->iob_Lock);
+        }
     }
 #if 0
     else {

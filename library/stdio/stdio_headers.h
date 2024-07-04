@@ -200,7 +200,7 @@ typedef struct iob {
 	char *				iob_TempFileName;		/* If this is a temporary file, this is its name */
 	BPTR				iob_TempFileLock;		/* The directory in which this temporary file is stored */
 	UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
-	struct SignalSemaphore * iob_Lock;			/* For thread locking */
+	APTR                iob_Lock;			    /* For thread locking */
 } __iob64;
 
 

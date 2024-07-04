@@ -71,7 +71,7 @@ extern int __find_vacant_fd_entry(struct _clib4 *__clib4);
 /****************************************************************************/
 
 /* stdio_initializeiob.c */
-extern void __initialize_iob(struct iob *iob, file_action_iob_t action_function, STRPTR custom_buffer, STRPTR buffer, int64_t buffer_size, int file_descriptor, int slot_number, ULONG flags, struct SignalSemaphore *lock);
+extern void __initialize_iob(struct iob *iob, file_action_iob_t action_function, STRPTR custom_buffer, STRPTR buffer, int64_t buffer_size, int file_descriptor, int slot_number, ULONG flags, APTR lock);
 
 /****************************************************************************/
 
