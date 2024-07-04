@@ -26,7 +26,7 @@ dup(int file_descriptor1) {
     assert(__clib4->__fd[file_descriptor1] != NULL);
     assert(FLAG_IS_SET(__clib4->__fd[file_descriptor1]->fd_Flags, FDF_IN_USE));
 
-    fd1 = __get_file_descriptor(file_descriptor1);
+    fd1 = __get_file_descriptor(__clib4, file_descriptor1);
     if (fd1 == NULL) {
         __set_errno(EBADF);
         goto out;

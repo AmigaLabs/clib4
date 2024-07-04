@@ -1,5 +1,5 @@
 /*
- * $Id: posix_fstatvfs.c,v 1.0 2022-03-28 12:04:24 clib4devs Exp $
+ * $Id: posix_fstatvfs.c,v 1.1 2024-07-04 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -11,17 +11,17 @@
 #endif /* _POSIX_HEADERS_H */
 
 int
-fstatvfs(int fd, struct statvfs *buf)
-{
+fstatvfs(int fd, struct statvfs *buf) {
     BPTR file;
     int result = -1;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     SHOWVALUE(fd);
     SHOWPOINTER(buf);
 
-    struct fd *fildes = __get_file_descriptor(fd);
+    struct fd *fildes = __get_file_descriptor(__clib4, fd);
     if (fildes == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -37,14 +37,14 @@ fstatvfs(int fd, struct statvfs *buf)
     // 3 is the number of tags passed to GetDiskInfoTags call
     if (GetDiskInfoTags(
             GDI_FileHandleInput, file,
-            GDI_VolumeRequired,  TRUE,
-            GDI_InfoData,        info,
-            TAG_END) == 3)
-    {
+            GDI_VolumeRequired, TRUE,
+            GDI_InfoData, info,
+            TAG_END) == 3) {
         uint32_t maxlength = STATVFS_MAX_NAME;
+
         FileSystemAttrTags(
                 FSA_MaxFileNameLengthR, &maxlength,
-                FSA_FileHandleInput,    file,
+                FSA_FileHandleInput, file,
                 TAG_END);
 
         if (info->id_VolumeNode == BZERO) {
@@ -59,13 +59,11 @@ fstatvfs(int fd, struct statvfs *buf)
         FreeDosObject(DOS_INFODATA, info);
 
         result = 0;
-    }
-    else
-    {
+    } else {
         __translate_io_error_to_errno(IoErr());
     }
 
 out:
     RETURN(result);
-    return(result);
+    return (result);
 }

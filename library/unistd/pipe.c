@@ -35,13 +35,13 @@ int pipe(int fd[2]) {
     }
 
     /* Mark FD as PIPE in case USE_TEMPFILES is used */
-    struct fd *fd1 = __get_file_descriptor(fd[0]);
+    struct fd *fd1 = __get_file_descriptor(__clib4, fd[0]);
     if (fd1 != NULL) {
         SET_FLAG(fd1->fd_Flags, FDF_PIPE);
         SET_FLAG(fd1->fd_Flags, FDF_IS_INTERACTIVE);
     }
 
-    struct fd *fd2 = __get_file_descriptor(fd[1]);
+    struct fd *fd2 = __get_file_descriptor(__clib4, fd[1]);
     if (fd2 != NULL) {
         SET_FLAG(fd2->fd_Flags, FDF_PIPE);
         SET_FLAG(fd2->fd_Flags, FDF_IS_INTERACTIVE);

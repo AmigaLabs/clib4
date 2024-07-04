@@ -114,8 +114,10 @@ int itimer_real_task() {
             raise(SIGALRM);
 
             SHOWMSG("CHECK SIGALRM AGAIN");
-            /* Check again if SIGALRM is blocked and then kill the timer */
-            if (FLAG_IS_SET(__clib4->__signals_blocked, (1 << SIGALRM))) {
+            /* Check again if SIGALRM is blocked and then kill the timer. kill the timer also
+             * if timer was created via alarm()
+             */
+            if (_itimer->which == -1 || FLAG_IS_SET(__clib4->__signals_blocked, (1 << SIGALRM))) {
                 break;
             }
         }

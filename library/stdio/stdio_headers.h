@@ -97,9 +97,9 @@
 
 /****************************************************************************/
 
-#ifndef _SYS_CLIB4_IO_H
-#include <sys/clib4_io.h>
-#endif /* _SYS_CLIB4_IO_H */
+#ifndef __CLIB4_IO_H__
+#include "clib4_io.h"
+#endif /* __CLIB4_IO_H__ */
 
 /****************************************************************************/
 
@@ -201,6 +201,7 @@ typedef struct iob {
 	BPTR				iob_TempFileLock;		/* The directory in which this temporary file is stored */
 	UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
 	APTR                iob_Lock;			    /* For thread locking */
+    struct Task *       iob_TaskLock;           /* Task who owns lock */
 } __iob64;
 
 

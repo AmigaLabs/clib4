@@ -199,7 +199,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
             goto out;
 
         /* Allocate memory for an arbitration mechanism, then initialize it. */
-        stdio_lock = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+        stdio_lock = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, FALSE, TAG_DONE);
         fd_lock = __create_semaphore();
 
         if (stdio_lock == NULL || fd_lock == NULL) {

@@ -131,6 +131,7 @@ static volatile bool timeout;
 
 static void
 alarm_handler(int signum) {
+    printf("Timeout!\n");
     timeout = true;
 }
 

@@ -10,6 +10,7 @@ DIR *
 fdopendir(int fd) {
     DIR *dir;
     struct stat st;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (fstat(fd, &st) < 0) {
         return NULL;
@@ -22,7 +23,7 @@ fdopendir(int fd) {
         __set_errno(ENOTDIR);
         return NULL;
     }
-    struct fd *fd1 = __get_file_descriptor(fd);
+    struct fd *fd1 = __get_file_descriptor(__clib4, fd);
     if (fd1 == NULL) {
         __set_errno(EBADF);
         return NULL;

@@ -1,5 +1,5 @@
 /*
- * $Id: uio_writev.c,v 1.5 2006-01-08 12:04:27 clib4devs Exp $
+ * $Id: uio_writev.c,v 1.6 2023-07-04 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UIO_HEADERS_H
@@ -45,7 +45,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
         }
     }
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;

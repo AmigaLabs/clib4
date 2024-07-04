@@ -44,8 +44,8 @@ extern int __translate_access_io_error_to_errno(LONG io_error);
 /****************************************************************************/
 
 /* stdio_get_file_descriptor.c */
-extern struct fd *__get_file_descriptor(int file_descriptor);
-extern struct fd *__get_file_descriptor_dont_resolve(int file_descriptor);
+extern struct fd *__get_file_descriptor(struct _clib4 *__clib4, int file_descriptor);
+extern struct fd *__get_file_descriptor_dont_resolve(struct _clib4 *__clib4, int file_descriptor);
 
 /****************************************************************************/
 

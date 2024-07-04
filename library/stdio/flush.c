@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_flush.c,v 1.5 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_flush.c,v 1.6 2023-07-04 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -42,8 +42,7 @@ __flush(FILE *stream) {
     last_c = iob->iob_Buffer[iob->iob_BufferWriteBytes - 1];
 
     if (__flush_iob_write_buffer(__clib4, iob) < 0) {
-        /* Remove the last character stored in the buffer, which is
-           typically a '\n'. */
+        /* Remove the last character stored in the buffer, which is typically a '\n'. */
         iob->iob_BufferWriteBytes--;
         goto out;
     }

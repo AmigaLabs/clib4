@@ -1,5 +1,5 @@
 /*
- * $Id: mount_fstatfs.c,v 1.14 2006-11-16 14:39:23 clib4devs Exp $
+ * $Id: mount_fstatfs.c,v 1.15 2023-07-04 14:39:23 clib4devs Exp $
 */
 
 #ifndef _MOUNT_HEADERS_H
@@ -37,7 +37,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
     assert(__clib4->__fd[file_descriptor] != NULL);
     assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;

@@ -30,7 +30,7 @@ tcflush(int file_descriptor, int queue) {
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_TERMIOS)) {
         __set_errno(EBADF);
         goto out;

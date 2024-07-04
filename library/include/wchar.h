@@ -5,10 +5,6 @@
 #ifndef _WCHAR_H
 #define _WCHAR_H
 
-#ifndef _SYS_CLIB4_STDC_H
-#include <sys/clib4_stdc.h>
-#endif /* _SYS_CLIB4_STDC_H */
-
 #include <features.h>
 
 #include <stddef.h>

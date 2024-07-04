@@ -58,7 +58,7 @@ tcsetattr(int file_descriptor, int how, struct termios *tios) {
         goto out;
     }
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         SHOWMSG("tcsetattr() was not called with a file descriptor.\n");
 

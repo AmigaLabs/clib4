@@ -97,6 +97,7 @@ fclose(FILE *stream) {
     FreeSysObject(ASOT_MUTEX, file->iob_Lock);
     /* Just to be sure */
     CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
+    file->iob_TaskLock = NULL;
 
     SHOWMSG("Clear file structure");
     memset(file, 0, sizeof(*file));

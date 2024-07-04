@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_get_file_descriptor.c,v 1.5 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_get_file_descriptor.c,v 1.6 2023-07-04 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -12,10 +12,9 @@ enum resolution_mode_t {
 };
 
 static struct fd *
-get_file_descriptor(int file_descriptor, enum resolution_mode_t resolution_mode) {
+get_file_descriptor(struct _clib4 *__clib4, int file_descriptor, enum resolution_mode_t resolution_mode) {
     struct fd *result = NULL;
     struct fd *fd;
-    struct _clib4 *__clib4 = __CLIB4;
 
     __stdio_lock(__clib4);
 
@@ -48,24 +47,20 @@ out:
     return (result);
 }
 
-/****************************************************************************/
-
 struct fd *
-__get_file_descriptor(int file_descriptor) {
+__get_file_descriptor(struct _clib4 *__clib4, int file_descriptor) {
     struct fd *result;
 
-    result = get_file_descriptor(file_descriptor, resolution_mode_alias);
+    result = get_file_descriptor(__clib4, file_descriptor, resolution_mode_alias);
 
     return (result);
 }
 
-/****************************************************************************/
-
 struct fd *
-__get_file_descriptor_dont_resolve(int file_descriptor) {
+__get_file_descriptor_dont_resolve(struct _clib4 *__clib4, int file_descriptor) {
     struct fd *result;
 
-    result = get_file_descriptor(file_descriptor, resolution_mode_exact);
+    result = get_file_descriptor(__clib4, file_descriptor, resolution_mode_exact);
 
     return (result);
 }

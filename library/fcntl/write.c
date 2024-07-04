@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_write.c,v 1.11 2023-04-06 12:04:22 clib4devs Exp $
+ * $Id: fcntl_write.c,v 1.12 2023-07-04 12:04:22 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -41,7 +41,7 @@ write(int file_descriptor, const void *buffer, size_t num_bytes) {
     assert(__clib4->__fd[file_descriptor] != NULL);
     assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;

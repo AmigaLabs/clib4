@@ -40,6 +40,7 @@ ftrylockfile(FILE *stream) {
         goto out;
 
     SET_FLAG(file->iob_Flags, IOBF_LOCKED);
+    file->iob_TaskLock = FindTask(NULL);
 
     result = OK;
 

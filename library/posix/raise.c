@@ -52,8 +52,7 @@ raise(int sig) {
             if (sig != SIGINT && sig != SIGTERM && sig != SIGKILL)
                 SET_FLAG(__clib4->local_signals_blocked, (1 << sig));
 
-            /* The default behaviour is to drop into abort(), or do
-               something very much like it. */
+            /* The default behaviour is to drop into abort(), or do something very much like it. */
             if (handler == SIG_DFL) {
                 SHOWMSG("this is the default handler");
 
@@ -99,7 +98,7 @@ raise(int sig) {
             }
             else {
                 if (*handler != NULL) {
-                    SHOWMSG("calling the handler");
+                    SHOWMSG("Calling the handler");
                     (*handler)(sig);
 
                     if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {

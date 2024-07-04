@@ -1,5 +1,5 @@
 /*
- * $Id: poll.c,v 1.1 2024-06-25 11:50:0 clib4devs Exp $
+ * $Id: poll.c,v 1.1 2024-07-04 11:50:0 clib4devs Exp $
 */
 
 #ifndef  _UNISTD_HEADERS_H
@@ -15,6 +15,7 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
     register nfds_t i;             /* loop control */
     register struct pollfd *pCur;  /* current array element */
     register int max_fd = -1;      /* return value */
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -34,7 +35,7 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
         if (pCur->fd < 0)
             continue;
 
-        struct fd *fd = __get_file_descriptor(pCur->fd);
+        struct fd *fd = __get_file_descriptor(__clib4, pCur->fd);
         if (fd == NULL) {
             continue;
         }

@@ -94,7 +94,7 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
             if (strchr(path, ':') != NULL)
                 absolute = TRUE;
         }
-        struct fd *fildes = __get_file_descriptor(fd);
+        struct fd *fildes = __get_file_descriptor(__clib4, fd);
         /*
          * EBADF  (utimensat()) pathname is relative but dirfd is neither AT_FDCWD nor a valid file descriptor.
          */
@@ -119,7 +119,7 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
             goto out;
         }
 
-        struct fd *fildes = __get_file_descriptor(fd);
+        struct fd *fildes = __get_file_descriptor(__clib4, fd);
         if (fildes == NULL) {
             free(buffer);
             __set_errno(EBADF);

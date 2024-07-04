@@ -42,7 +42,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
         assert(__clib4->__fd[file_descriptor] != NULL);
         assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-        fd = __get_file_descriptor(file_descriptor);
+        fd = __get_file_descriptor(__clib4, file_descriptor);
         if (fd == NULL) {
             __set_errno(EBADF);
             goto out;
@@ -117,9 +117,8 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
             CLEAR_FLAG(fd->fd_Flags, FDF_APPEND);
     }
 
-    /* Allocate memory for an arbitration mechanism, then
-        initialize it. */
-    lock = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+    /* Allocate memory for an arbitration mechanism, then initialize it. */
+    lock = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, FALSE, TAG_DONE);
     if (lock == NULL)
         goto out;
 

@@ -40,7 +40,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
     assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
     assert(__clib4->__fd[file_descriptor] != NULL);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;

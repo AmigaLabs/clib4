@@ -451,8 +451,10 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
         for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
         if (z - a > INT_MAX - cnt) goto overflow;
         l = z - a;
-        if (f) out(f, a, l);
-        if (l) continue;
+        if (f)
+            out(f, a, l);
+        if (l)
+            continue;
 
         if (isdigit(s[1]) && s[2] == '$') {
             l10n = 1;
@@ -526,10 +528,6 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
 
         if (!f)
             continue;
-
-        /* Do not process any new directives once in error state. */
-        if (ferror(f->file))
-            return -1;
 
         z = buf + sizeof(buf);
         prefix = "-+   0X0x";

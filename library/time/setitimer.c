@@ -42,15 +42,10 @@ void killitimer(void) {
 };
 
 int
-setitimer(int which, const struct itimerval *new_value, struct itimerval *old_value) {
+__setitimer(int which, const struct itimerval *new_value, struct itimerval *old_value) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
     struct itimer _itimer;
-
-    if (which < ITIMER_REAL || which > ITIMER_PROF) {
-        __set_errno(EINVAL);
-        return -1;
-    }
 
     if (new_value == NULL) {
         __set_errno(EFAULT);
@@ -60,6 +55,7 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
     _itimer.which = which;
 
     switch (which) {
+        case -1:
         case ITIMER_REAL:
             if (old_value != NULL) {
                 /* Store the current time value in old_value */
@@ -116,4 +112,15 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
     }
 
     return 0;
+}
+
+int
+setitimer(int which, const struct itimerval *new_value, struct itimerval *old_value) {
+
+    if (which < ITIMER_REAL || which > ITIMER_PROF) {
+        __set_errno(EINVAL);
+        return -1;
+    }
+
+    return __setitimer(which, new_value, old_value);
 }
