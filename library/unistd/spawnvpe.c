@@ -265,7 +265,7 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
             NP_EntryCode, amiga_EntryCode,
             NP_EntryData, ed,
             NP_FinalCode, spawnedProcessExit,
-            NP_Name, argv[0],
+            NP_Name, finalpath,
             progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
             NP_Arguments, arg_string,
             TAG_DONE
