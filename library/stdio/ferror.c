@@ -22,20 +22,19 @@ ferror(FILE *stream) {
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
-
         __set_errno(EFAULT);
-
         result = 0;
-
         goto out;
     }
 
     assert(__is_valid_iob(__clib4, file));
 
+    SHOWMSG("Locking Stream");
     flockfile(stream);
 
     result = FLAG_IS_SET(file->iob_Flags, IOBF_ERROR);
 
+    SHOWMSG("Unlocking Stream");
     funlockfile(stream);
 
 out:
