@@ -192,8 +192,7 @@ out:
         }
     }
 
-    if (stream != NULL)
-        funlockfile(stream);
+    funlockfile(stream);
 
     RETURN(result);
     return (result);

@@ -34,33 +34,24 @@ ungetc(int c, FILE *stream) {
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
         __set_errno(EBADF);
-
         goto out;
     }
 
     /* Pushing back characters only works for files that can be read from. */
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ)) {
         SHOWMSG("can't even read from this file");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
         __set_errno(EACCES);
-
         goto out;
     }
 
     /* Pushing back an EOF is forbidden. */
     if (c == EOF) {
         SHOWMSG("cannot push back an EOF");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
         __set_errno(EINVAL);
-
         goto out;
     }
 
@@ -76,11 +67,8 @@ ungetc(int c, FILE *stream) {
      */
     if (file->iob_BufferPosition == 0) {
         SHOWMSG("no room to push back");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
         __set_errno(ENOBUFS);
-
         goto out;
     }
 

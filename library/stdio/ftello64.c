@@ -32,16 +32,12 @@ ftello64(FILE *stream) {
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
         __set_errno(EBADF);
-
         goto out;
     }
 
     SHOWMSG("calling the hook");
-
     SHOWPOINTER(&fam);
 
     fam.fam_Action = file_action_seek;

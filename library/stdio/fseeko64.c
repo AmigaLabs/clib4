@@ -36,21 +36,15 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
         __set_errno(EBADF);
-
         goto out;
     }
 
     if (wherefrom < SEEK_SET || wherefrom > SEEK_END) {
         SHOWMSG("invalid wherefrom parameter");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
         __set_errno(EBADF);
-
         goto out;
     }
 

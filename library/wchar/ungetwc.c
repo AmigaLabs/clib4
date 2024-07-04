@@ -15,8 +15,7 @@ ungetwc(wint_t wc, FILE *fp) {
 
     flockfile(fp);
     ORIENT (fp, 1);
-    if (wc != WEOF)
-    {
+    if (wc != WEOF) {
         if ((len = wcrtomb(buf, wc, &fp->_mbstate)) == (size_t) - 1) {
             fp->_flags |= __SERR;
             wc = WEOF;
