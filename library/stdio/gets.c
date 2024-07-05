@@ -36,7 +36,7 @@ gets(char *s) {
     /* Take care of the checks and data structure changes that
      * need to be handled only once for this stream.
      */
-    if (__fgetc_check(stream, __clib4) < 0) {
+    if (__fgetc_check(__clib4, stream) < 0) {
         result = NULL;
         goto out;
     }
@@ -79,7 +79,7 @@ gets(char *s) {
             file->iob_BufferPosition += num_bytes_in_buffer;
         }
 
-        c = __getc(stream);
+        c = __getc(__clib4, stream);
         if (c == EOF) {
             if (ferror(stream)) {
                 /* Just to be on the safe side. */

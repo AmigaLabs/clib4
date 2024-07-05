@@ -53,19 +53,19 @@ puts(const char *s) {
 
     flockfile(stream);
 
-    if (__fputc_check(stream, __clib4) < 0) {
+    if (__fputc_check(__clib4, stream) < 0) {
         funlockfile(stream);
         goto out;
     }
 
     while ((c = (*s++)) != '\0') {
-        if (__putc(c, stream, buffer_mode) == EOF) {
+        if (__putc(__clib4, c, stream, buffer_mode) == EOF) {
             funlockfile(stream);
             goto out;
         }
     }
 
-    if (__putc('\n', stream, buffer_mode) == EOF) {
+    if (__putc(__clib4, '\n', stream, buffer_mode) == EOF) {
         funlockfile(stream);
         goto out;
     }

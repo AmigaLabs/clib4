@@ -37,7 +37,7 @@ fgets(char *buf, int n, FILE *stream) {
     /* Take care of the checks and data structure changes that
      * need to be handled only once for this stream.
      */
-    if (__fgetc_check(stream, __clib4) < 0) {
+    if (__fgetc_check(__clib4, stream) < 0) {
         buf = NULL;
         goto out;
     }
@@ -95,7 +95,7 @@ fgets(char *buf, int n, FILE *stream) {
 
         /* Read the next buffered character; this will refill the read
            buffer, if necessary. */
-        c = __getc(stream);
+        c = __getc(__clib4, stream);
         if (c == EOF) {
             if (ferror(stream)) {
                 /* Just to be on the safe side. */

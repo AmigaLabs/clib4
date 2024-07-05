@@ -254,7 +254,7 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
             NP_Seglist, seglist,
             NP_FreeSeglist, TRUE,
             NP_Cli, TRUE,
-            NP_Child, TRUE,
+            NP_Child, FALSE,
             NP_NotifyOnDeathSigTask, me,
             NP_Input, iofh[0],
             NP_CloseInput, closefh[0],

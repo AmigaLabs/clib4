@@ -7,7 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-__fputc_check(FILE *stream, struct _clib4 *__clib4) {
+__fputc_check(struct _clib4 *__clib4, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
 
@@ -55,10 +55,9 @@ out:
 }
 
 int
-__fputc(int c, FILE *stream, int buffer_mode) {
+__fputc(struct _clib4 *__clib4, int c, FILE *stream, int buffer_mode) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
-    struct _clib4 *__clib4 = __CLIB4;
 
     assert(stream != NULL);
 
@@ -108,7 +107,7 @@ fputc(int c, FILE *stream) {
 
     flockfile(stream);
 
-    if (__fputc_check(stream, __clib4) < 0)
+    if (__fputc_check(__clib4, stream) < 0)
         goto out;
 
     /* TODO - We have to investigate while stdout reach this point with IOBF_BUFFER_MODE_NONE when it is
@@ -119,7 +118,7 @@ fputc(int c, FILE *stream) {
     if (FLAG_IS_SET(file->iob_Flags, IOBF_BUFFER_MODE_NONE))
         SET_FLAG(file->iob_Flags, IOBF_BUFFER_MODE_LINE);
 
-    result = __fputc(c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
+    result = __fputc(__clib4, c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
 
 out:
 

@@ -101,6 +101,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
     char tmp[3 * sizeof(int) + 10];
     const wchar_t *set;
     size_t i = 0, k = 0;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -113,7 +114,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
         if (iswspace(*p)) {
             while (iswspace(p[1]))
                 p++;
-            while (iswspace((c = __getc(f))))
+            while (iswspace((c = __getc(__clib4, f))))
                 pos++;
             ungetc(c, f);
             continue;
@@ -121,10 +122,10 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
         if (*p != '%' || p[1] == '%') {
             if (*p == '%') {
                 p++;
-                while (iswspace((c = __getc(f))))
+                while (iswspace((c = __getc(__clib4, f))))
                     pos++;
             } else {
-                c = __getc(f);
+                c = __getc(__clib4, f);
             }
 
             if (c != *p) {
@@ -224,10 +225,10 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
 
         if (t != 'n') {
             if (t != '[' && (t | 32) != 'c')
-                while (iswspace((c = __getc(f))))
+                while (iswspace((c = __getc(__clib4, f))))
                     pos++;
             else
-                c = __getc(f);
+                c = __getc(__clib4, f);
             if (c < 0) {
                 goto input_fail;
             }
@@ -297,7 +298,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
                 }
 
                 while (width) {
-                    if ((c = __getc(f)) < 0)
+                    if ((c = __getc(__clib4, f)) < 0)
                         break;
                     if (in_set(set, c) == invert)
                         break;

@@ -12,7 +12,6 @@ BOOL __is_valid_iob(struct _clib4 *__clib4, struct iob *iob) {
     BOOL result = FALSE;
 
     if (iob == NULL) {
-        RETURN(result);
         return result;
     }
 

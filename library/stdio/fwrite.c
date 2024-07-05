@@ -9,7 +9,7 @@
 size_t
 fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
-    size_t result = 0;
+    size_t result = EOF;
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
@@ -124,7 +124,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
                     c = (*s++);
 
-                    if (__putc_line_buffered(c, (FILE *) file) == EOF)
+                    if (__putc_line_buffered(__clib4, c, (FILE *) file) == EOF)
                         break;
 
                     total_size--;
@@ -143,6 +143,10 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                 }
 
                 total_bytes_written = (size_t) num_bytes_written;
+
+                if (__iob_write_buffer_is_valid(file)) {
+                    __flush_iob_write_buffer(__clib4, file);
+                }
             }
             break;
             default: {
@@ -166,7 +170,6 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                         total_bytes_written += num_bytes_written;
                         break;
                     }
-                    SHOWMSG("New values");
                     SHOWVALUE(file->iob_BufferWriteBytes);
                     SHOWVALUE(file->iob_BufferSize - file->iob_BufferWriteBytes);
                     /* Is there still room in the write buffer to store more of the data? */
@@ -203,7 +206,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
                     c = (*s++);
                     SHOWMSG("__putc_fully_buffered");
-                    if (__putc_fully_buffered(c, (FILE *) file) == EOF)
+                    if (__putc_fully_buffered(__clib4, c, (FILE *) file) == EOF)
                         goto out;
 
                     total_bytes_written++;
@@ -211,17 +214,8 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
             }
         }
 
-        if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
-            if (__iob_write_buffer_is_valid(file)) {
-                __flush_iob_write_buffer(__clib4, file);
-            }
-        }
-
         result = total_bytes_written / element_size;
     } else {
-        SHOWVALUE(element_size);
-        SHOWVALUE(count);
-
         SHOWMSG("either element size or count is zero");
     }
 

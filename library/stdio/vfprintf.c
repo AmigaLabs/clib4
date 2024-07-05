@@ -688,6 +688,7 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     va_list ap2;
     int ret, nl_type[NL_ARGMAX] = {0};
     union arg nl_arg[NL_ARGMAX] = {0};
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWPOINTER(f);
@@ -714,7 +715,7 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     if (ret != EOF) {
         struct iob *iob = (struct iob *) f;
         if (FLAG_IS_CLEAR(iob->iob_Flags, IOBF_NO_NUL)) {
-            __putc('\0', f, (iob->iob_Flags & IOBF_BUFFER_MODE));
+            __putc(__clib4, '\0', f, (iob->iob_Flags & IOBF_BUFFER_MODE));
         }
     }
     va_end(ap2);

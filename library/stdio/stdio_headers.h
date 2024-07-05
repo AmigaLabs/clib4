@@ -207,38 +207,38 @@ typedef struct iob {
 
 /****************************************************************************/
 
-#define __getc(f) \
+#define __getc(c4,f) \
 	((((struct iob *)(f))->iob_BufferPosition < ((struct iob *)(f))->iob_BufferReadBytes) ? \
 	  ((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferPosition++] : \
-	  __fgetc((FILE *)(f)))
+	  __fgetc(c4,(FILE *)(f)))
 
-#define __ungetc(f) \
+#define __ungetc(c4,f) \
 	((((struct iob *)(f))->iob_BufferPosition >= 0 ? \
 	  ((struct iob *)(f))->iob_Buffer[(--(struct iob *)(f))->iob_BufferPosition] : \
-	  __fgetc((FILE *)(f)))
+	  __fgetc(c4,(FILE *)(f)))
 
 /* Caution: this putc() variant will evaluate the 'c' parameter more than once. */
-#define __putc(c,f,m) \
+#define __putc(c4,c,f,m) \
 	(((((struct iob *)(f))->iob_BufferWriteBytes < ((struct iob *)(f))->iob_BufferSize)) ? \
 	  (((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferWriteBytes++] = (c), \
 	  (((m) == IOBF_BUFFER_MODE_LINE && (c) == '\n') ? \
 	   __flush(f) : \
 	   ((c) & 255))) : \
-	  __fputc((c),(f),(m)))
+	  __fputc(c4,(c),(f),(m)))
 
-#define __putc_fully_buffered(c,f) \
+#define __putc_fully_buffered(c4,c,f) \
 	(((((struct iob *)(f))->iob_BufferWriteBytes < ((struct iob *)(f))->iob_BufferSize)) ? \
 	  (((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferWriteBytes++] = (c)) : \
-	  __fputc((c),(f),IOBF_BUFFER_MODE_FULL))
+	  __fputc(c4,(c),(f),IOBF_BUFFER_MODE_FULL))
 
 /* Caution: this putc() variant will evaluate the 'c' parameter more than once. */
-#define __putc_line_buffered(c,f) \
+#define __putc_line_buffered(c4,c,f) \
 	(((((struct iob *)(f))->iob_BufferWriteBytes < ((struct iob *)(f))->iob_BufferSize)) ? \
 	  (((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferWriteBytes++] = (c), \
 	  (((c) == '\n') ? \
 	   __flush(f) : \
 	   ((c) & 255))) : \
-	  __fputc((c),(f),IOBF_BUFFER_MODE_LINE))
+	  __fputc(c4,(c),(f),IOBF_BUFFER_MODE_LINE))
 
 /****************************************************************************/
 

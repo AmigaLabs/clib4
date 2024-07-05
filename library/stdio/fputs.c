@@ -35,7 +35,7 @@ fputs(const char *s, FILE *stream) {
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
-    if (__fputc_check(stream, __clib4) < 0)
+    if (__fputc_check(__clib4, stream) < 0)
         goto out;
 
     total_size = strlen(s);
@@ -102,7 +102,7 @@ fputs(const char *s, FILE *stream) {
 
                 c = (*s++);
 
-                if (__putc_line_buffered(c, (FILE *) file) == EOF)
+                if (__putc_line_buffered(__clib4, c, (FILE *) file) == EOF)
                     goto out;
 
                 total_size--;
@@ -169,7 +169,7 @@ fputs(const char *s, FILE *stream) {
 
                 c = (*s++);
 
-                if (__putc_fully_buffered(c, (FILE *) file) == EOF)
+                if (__putc_fully_buffered(__clib4, c, (FILE *) file) == EOF)
                     goto out;
 
                 total_size--;

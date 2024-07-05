@@ -53,7 +53,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
         goto out;
     }
 
-    if (__fgetc_check(stream, __clib4) < 0)
+    if (__fgetc_check(__clib4, stream) < 0)
         goto out;
 
     /* Just so we can detect errors and tell them apart from
@@ -67,7 +67,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             /* Skip all blank spaces in the stream. */
             format++;
 
-            while ((c = __getc(stream)) != EOF) {
+            while ((c = __getc(__clib4, stream)) != EOF) {
                 if (isspace(c)) {
                     total_num_chars_read++;
                 } else {
@@ -103,7 +103,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             /* Match the next character in the stream. */
             format++;
 
-            d = __getc(stream);
+            d = __getc(__clib4, stream);
             if (d == EOF) {
                 SHOWMSG("end of file");
 
@@ -308,7 +308,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
         if (conversion_type != 'c' &&
             conversion_type != 'n' &&
             conversion_type != '[') {
-            while ((c = __getc(stream)) != EOF) {
+            while ((c = __getc(__clib4, stream)) != EOF) {
                 if (isspace(c)) {
                     total_num_chars_read++;
                 } else {
@@ -361,7 +361,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             }
 
             for (i = 0; i < maximum_field_width; i++) {
-                c = __getc(stream);
+                c = __getc(__clib4, stream);
                 if (c == EOF) {
                     /* Bail out if we hit the end of the stream. */
                     if (num_conversions == 0)
@@ -437,7 +437,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             }
 
             if (maximum_field_width != 0) {
-                c = __getc(stream);
+                c = __getc(__clib4, stream);
                 if (c != EOF) {
                     /* Skip the sign. */
                     if (c == '-') {
@@ -481,7 +481,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 size_t nan_match = 0;
 
                 while (maximum_field_width != 0 && num_chars_read_so_far < sizeof(chars_read_so_far) &&
-                       (c = __getc(stream)) != EOF) {
+                       (c = __getc(__clib4, stream)) != EOF) {
                     D(("c = '%lc'", c));
 
                     if (tolower(c) == infinity_string[infinity_match]) {
@@ -528,7 +528,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
                             /* Check for the () to follow the nan. */
                             if (maximum_field_width != 0 && num_chars_read_so_far < sizeof(chars_read_so_far) &&
-                                (c = __getc(stream)) != EOF) {
+                                (c = __getc(__clib4, stream)) != EOF) {
                                 /* Is this the opening parenthesis of the "nan()" keyword? */
                                 if (c == '(') {
                                     SHOWMSG("there's something following the nan");
@@ -539,7 +539,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                         maximum_field_width--;
 
                                     /* Look for the closing parenthesis. */
-                                    while (maximum_field_width != 0 && (c = __getc(stream)) != EOF) {
+                                    while (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                                         nan_match++;
 
                                         if (maximum_field_width > 0)
@@ -600,7 +600,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 int radix = 10;
 
                 /* Check if there's a hex prefix introducing this number. */
-                if (maximum_field_width != 0 && (c = __getc(stream)) != EOF) {
+                if (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                     D(("c = '%lc'", c));
 
                     if (c == '0') {
@@ -611,7 +611,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                         if (maximum_field_width > 0)
                             maximum_field_width--;
 
-                        if (maximum_field_width != 0 && (c = __getc(stream)) != EOF) {
+                        if (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                             if (tolower(c) == 'x') {
                                 SHOWMSG("found the 0x prefix; setting radix to 16");
 
@@ -644,7 +644,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 if (maximum_field_width != 0) {
                     int digit;
 
-                    while (maximum_field_width != 0 && (c = __getc(stream)) != EOF) {
+                    while (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                         /* Is this a digit? */
                         if ('0' <= c && c <= '9')
                             digit = c - '0';
@@ -697,7 +697,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 if (maximum_field_width != 0) {
                     SHOWMSG("looking for decimal point");
 
-                    c = __getc(stream);
+                    c = __getc(__clib4, stream);
                     if (c != EOF) {
                         D(("c = '%lc'", c));
 
@@ -762,7 +762,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                         num_chars_processed++;
 
                         /* Process all digits following the decimal point. */
-                        while (maximum_field_width != 0 && (c = __getc(stream)) != EOF) {
+                        while (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                             /* Is this a digit? */
                             if ('0' <= c && c <= '9')
                                 digit = c - '0';
@@ -839,7 +839,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                             exponent_radix = 10;
 
                         if (maximum_field_width != 0) {
-                            c = __getc(stream);
+                            c = __getc(__clib4, stream);
                             if (c != EOF) {
                                 int digit;
 
@@ -868,7 +868,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                     }
                                 }
 
-                                while (maximum_field_width != 0 && (c = __getc(stream)) != EOF) {
+                                while (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                                     if ('0' <= c && c <= '9')
                                         digit = c - '0';
                                     else
@@ -1028,7 +1028,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 radix = 0;
 
             if (maximum_field_width != 0) {
-                c = __getc(stream);
+                c = __getc(__clib4, stream);
                 if (c != EOF) {
                     /* Skip the sign. */
                     if (c == '-') {
@@ -1055,7 +1055,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                             /* This could be an octal number, the
                              * '0x' prefix or just a zero.
                              */
-                            c = __getc(stream);
+                            c = __getc(__clib4, stream);
 
                             /* This takes care of the '0x' prefix for hexadecimal
                                numbers ('%x') and also picks the right type of
@@ -1111,7 +1111,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             if (maximum_field_width != 0) {
                 int digit;
 
-                while (maximum_field_width != 0 && (c = __getc(stream)) != EOF) {
+                while (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                     /* Is this a digit or hexadecimal value? */
                     if ('0' <= c && c <= '9')
                         digit = c - '0';
@@ -1219,7 +1219,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 (*s_ptr) = '\0';
 
             if (maximum_field_width != 0) {
-                while (maximum_field_width != 0 && (c = __getc(stream)) != EOF) {
+                while (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                     /* Blank spaces stop the conversion process. */
                     if (isspace(c)) {
                         if (ungetc(c, stream) == EOF)
@@ -1323,7 +1323,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
         } else if (c == '%') {
             int d;
 
-            d = __getc(stream);
+            d = __getc(__clib4, stream);
             if (d == EOF) {
                 SHOWMSG("end of file");
 
@@ -1444,7 +1444,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 (*s_ptr) = '\0';
 
             if (maximum_field_width != 0) {
-                while (maximum_field_width != 0 && (c = __getc(stream)) != EOF) {
+                while (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                     assert(0 <= c && c <= 255);
 
                     /* If the character is not part of the

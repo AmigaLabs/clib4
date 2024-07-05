@@ -7,10 +7,9 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-__fgetc(FILE *stream) {
+__fgetc(struct _clib4 *__clib4, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWPOINTER(stream);
@@ -41,7 +40,7 @@ out:
 }
 
 int
-__fgetc_check(FILE *stream, struct _clib4 *__clib4) {
+__fgetc_check(struct _clib4 *__clib4, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
 
@@ -99,12 +98,12 @@ fgetc(FILE *stream) {
 
     flockfile(stream);
 
-    if (__fgetc_check(stream, __clib4) < 0) {
+    if (__fgetc_check(__clib4, stream) < 0) {
         funlockfile(stream);
         goto out;
     }
 
-    result = __getc(stream);
+    result = __getc(__clib4, stream);
 
     funlockfile(stream);
 

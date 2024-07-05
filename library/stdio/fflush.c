@@ -28,7 +28,6 @@ fflush(FILE *stream) {
     } else {
         int failed_iob = -1;
         int i;
-        struct _clib4 *__clib4 = __CLIB4;
 
         __stdio_lock(__clib4);
 
