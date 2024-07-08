@@ -16,26 +16,6 @@
 
 #include "children.h"
 
-struct EntryData {
-    struct Task *mainTask;
-    uint8 signal;
-};
-
-STATIC void
-amiga_EntryCode(int32 entry_data) {
-    // NOTES:
-    // We need to make sure, that the spawned process exists, before the parent can continue.
-    // See the notes for : uv__spawn_and_init_child_posix_spawn
-    struct EntryData *ed = (struct EntryData *) entry_data;
-    if (ed) {
-        struct _clib4 *__clib4 = __CLIB4;
-        while (!__clib4->__fully_initialized) {
-            Delay(10);
-        }
-        Signal(ed->mainTask, 1 << ed->signal);
-    }
-}
-
 STATIC BOOL
 string_needs_quoting(const char *string, size_t len) {
     BOOL result = FALSE;
@@ -245,49 +225,38 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
         closefh[2] = TRUE;
     }
 
-    struct EntryData *ed = (struct EntryData *) AllocVecTags(sizeof(struct EntryData), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    ret = SystemTags(finalpath,
+                     SYS_Input, iofh[0],
+                     SYS_Output, iofh[1],
+                     SYS_Error, iofh[2],
+                     SYS_UserShell, TRUE,
+                     SYS_Asynch, TRUE,
+                     NP_Child, TRUE,
+                     progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
+                     NP_Name, finalpath,
+                     TAG_DONE);
 
-    ed->signal = AllocSignal(-1);
-    ed->mainTask = me;
-
-    struct Process *p = CreateNewProcTags(
-            NP_Seglist, seglist,
-            NP_FreeSeglist, TRUE,
-            NP_Cli, TRUE,
-            NP_Child, FALSE,
-            NP_NotifyOnDeathSigTask, me,
-            NP_Input, iofh[0],
-            NP_CloseInput, closefh[0],
-            NP_Output, iofh[1],
-            NP_CloseOutput, closefh[1],
-            NP_Error, iofh[2],
-            NP_CloseError, closefh[2],
-            NP_EntryCode, amiga_EntryCode,
-            NP_EntryData, ed,
-            NP_FinalCode, spawnedProcessExit,
-            NP_Name, finalpath,
-            progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
-            NP_Arguments, arg_string,
-            TAG_DONE
-    );
-
-    if (p == NULL) {
+    if (ret != 0) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
-        FreeVec(ed);
+        /* SystemTags failed. Clean up file handles */
         for (int i = 0; i < 3; i++) {
             if (closefh[i])
                 Close(iofh[i]);
         }
-        return ret;
     }
-    //p->pr_Flags |= PRF_SHELLPROCESS;
-    ret = p->pr_ProcessID;
-
-    // wait for the entry signal from the child :
-    D(("Waiting for process with pid %ld to start\n", ret));
-    Wait(1 << ed->signal | SIGBREAKF_CTRL_C);
-    FreeSignal(ed->signal);
-    FreeVec(ed);
+    else {
+        /*
+         * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
+         * just after SystemTags. In this case spawnv will return pid
+         */
+        ret = IoErr();
+        if (insertSpawnedChildren(ret, getgid())) {
+            D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
+        }
+        else {
+            D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
+        }
+    }
 
     if (insertSpawnedChildren(ret, getgid())) {
         D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
