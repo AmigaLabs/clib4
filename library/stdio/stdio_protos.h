@@ -140,7 +140,7 @@ extern void __duplicate_fd(struct fd *duplicate_fd, struct fd *original_fd);
 /****************************************************************************/
 
 /* stdio_grow_file.c */
-extern int64_t __grow_file_size(struct fd *fd, int num_bytes);
+extern int64_t __grow_file_size(struct _clib4 *__clib4, struct fd *fd, int num_bytes);
 
 /****************************************************************************/
 
@@ -150,12 +150,12 @@ extern int __sync_fd(struct fd *fd, int mode);
 /****************************************************************************/
 
 /* stdio_record_locking.c */
-extern int __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr);
+extern int __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct fd *fd, int *error_ptr);
 
 /****************************************************************************/
 
 /* stdio_remove_fd_alias.c */
-extern void __remove_fd_alias(struct fd *fd);
+extern void __remove_fd_alias(struct _clib4 *__clib4, struct fd *fd);
 
 /****************************************************************************/
 
@@ -165,7 +165,7 @@ extern int __stdio_file_init(void);
 /****************************************************************************/
 
 /* stdio_flush_all_files.c */
-extern int __flush_all_files(int buffer_mode);
+extern int __flush_all_files(struct _clib4 *__clib4, int buffer_mode);
 
 /****************************************************************************/
 #ifdef __USE_LARGEFILE64

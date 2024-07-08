@@ -30,7 +30,7 @@ stat(const char *path_name, struct stat *st) {
 
     assert(path_name != NULL && st != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (path_name == NULL || st == NULL) {
         SHOWMSG("invalid parameters");

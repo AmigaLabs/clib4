@@ -694,7 +694,7 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     SHOWPOINTER(f);
     SHOWSTRING(format);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     SHOWMSG("Formatting File pointer");
     Out _out[1];

@@ -205,7 +205,7 @@ out:
 
     SHOWMSG("Flush all files");
     /* Dump all currently unwritten data, especially to the console. */
-    __flush_all_files(-1);
+    __flush_all_files(__clib4, -1);
 
     /* If one of the destructors drops into exit(), either directly
        or through a failed assert() call, processing will resume with

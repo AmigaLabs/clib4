@@ -280,6 +280,7 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
         }
         return ret;
     }
+    //p->pr_Flags |= PRF_SHELLPROCESS;
     ret = p->pr_ProcessID;
 
     // wait for the entry signal from the child :

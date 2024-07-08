@@ -21,7 +21,7 @@ __drop_iob_read_buffer(struct _clib4 *__clib4, struct iob *file) {
 
     assert(file != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);

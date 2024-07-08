@@ -399,7 +399,7 @@ wof_new_block(wof_allocator_t *allocator) {
     wof_block_hdr_t *block;
 
     /* allocate the new block and add it to the block list */
-    block = (wof_block_hdr_t *) AllocVecTags(WOF_BLOCK_SIZE, AVT_Type, MEMF_SHARED, TAG_DONE);
+    block = (wof_block_hdr_t *) AllocVecTags(WOF_BLOCK_SIZE, AVT_Type, MEMF_PRIVATE, TAG_DONE);
     if (block == NULL) {
         return;
     }
@@ -422,7 +422,7 @@ wof_alloc_jumbo(wof_allocator_t *allocator, const size_t size) {
     block = (wof_block_hdr_t *) AllocVecTags(size
                                              + WOF_BLOCK_HEADER_SIZE
                                              + WOF_CHUNK_HEADER_SIZE,
-                                             AVT_Type, MEMF_SHARED,
+                                             AVT_Type, MEMF_PRIVATE,
                                              TAG_DONE);
     if (block == NULL) {
         return NULL;
@@ -487,7 +487,7 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
             newptr = (wof_block_hdr_t *) AllocVecTags(size
                                                       + WOF_BLOCK_HEADER_SIZE
                                                       + WOF_CHUNK_HEADER_SIZE,
-                                                      AVT_Type, MEMF_SHARED,
+                                                      AVT_Type, MEMF_PRIVATE,
                                                       TAG_DONE);
 
             if (newptr == NULL) {
@@ -519,7 +519,7 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
         newptr = (wof_block_hdr_t *) AllocVecTags(size
                                                   + WOF_BLOCK_HEADER_SIZE
                                                   + WOF_CHUNK_HEADER_SIZE,
-                                                  AVT_Type, MEMF_SHARED,
+                                                  AVT_Type, MEMF_PRIVATE,
                                                   TAG_DONE);
 
         if (newptr == NULL) {
@@ -807,7 +807,7 @@ wof_allocator_t *
 wof_allocator_new(void) {
     ENTER();
 
-    wof_allocator_t *allocator = (wof_allocator_t *) AllocVecTags(sizeof(wof_allocator_t), MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    wof_allocator_t *allocator = (wof_allocator_t *) AllocVecTags(sizeof(wof_allocator_t), MEMF_PRIVATE, AVT_ClearWithValue, 0, TAG_DONE);
     if (allocator == NULL) {
         SHOWMSG("Unable to create wof_allocator");
         RETURN(NULL);

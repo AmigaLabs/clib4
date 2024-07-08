@@ -128,7 +128,7 @@ system(const char *command) {
         /* Push all currently buffered output towards the file handles,
            in case the program to be launched writes to these files
            or the console, too. */
-        __flush_all_files(-1);
+        __flush_all_files(__clib4, -1);
 
         result = SystemTagList((STRPTR) command, (struct TagItem *) system_tags);
     }

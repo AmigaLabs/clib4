@@ -65,7 +65,7 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
             /* If this is an alias, just remove it. */
             is_aliased = __fd_is_aliased(fd);
             if (is_aliased) {
-                __remove_fd_alias(fd);
+                __remove_fd_alias(__clib4, fd);
             } else {
                 /* Are we permitted to close this file? */
                 if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {

@@ -23,7 +23,7 @@ __fill_iob_read_buffer(struct _clib4 *__clib4, struct iob *file) {
 
     /* Flush all line buffered streams before we proceed to fill this buffer. */
     if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_LINE) {
-        if (__flush_all_files(IOBF_BUFFER_MODE_LINE) < 0)
+        if (__flush_all_files(__clib4, IOBF_BUFFER_MODE_LINE) < 0)
             goto out;
     }
 

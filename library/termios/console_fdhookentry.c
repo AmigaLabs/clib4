@@ -410,7 +410,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
             /* If this is an alias, just remove it. */
             is_aliased = __fd_is_aliased(fd);
             if (is_aliased) {
-                __remove_fd_alias(fd);
+                __remove_fd_alias(__clib4, fd);
             } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                 /* Should we reset this file into line buffered mode? */
                 if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
@@ -425,7 +425,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
                 if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
                     /* Call a cleanup function, such as the one which releases locked records. */
                     if (fd->fd_Cleanup != NULL)
-                        (*fd->fd_Cleanup)(fd);
+                        (*fd->fd_Cleanup)(__clib4, fd);
 
                     if (CANNOT Close(fd->fd_File))
                     {

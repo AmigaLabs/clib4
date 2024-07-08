@@ -248,7 +248,7 @@ typedef int64_t (*file_action_fd_t)(struct _clib4 *__clib4, struct fd * fd,struc
 /****************************************************************************/
 
 /* Function to be called before a file descriptor is "closed". */
-typedef void (*fd_cleanup_t)(struct fd * fd);
+typedef void (*fd_cleanup_t)(struct _clib4 *__clib4, struct fd * fd);
 
 /****************************************************************************/
 

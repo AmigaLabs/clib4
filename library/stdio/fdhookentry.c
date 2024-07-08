@@ -157,7 +157,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 /* If this is an alias, just remove it. */
                 is_aliased = __fd_is_aliased(fd);
                 if (is_aliased) {
-                    __remove_fd_alias(fd);
+                    __remove_fd_alias(__clib4, fd);
                 } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                     /* Should we reset this file into line buffered mode? */
                     if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
@@ -177,7 +177,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                         /* Call a cleanup function, such as the one which releases locked records. */
                         if (fd->fd_Cleanup != NULL)
-                            (*fd->fd_Cleanup)(fd);
+                            (*fd->fd_Cleanup)(__clib4, fd);
 
                         if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
                             parent_dir = ParentOfFH(fd->fd_File);
@@ -408,7 +408,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             }
 
                             /* Now try to make that file larger. */
-                            if (__grow_file_size(fd, new_position - (int64_t) exd->FileSize) < 0) {
+                            if (__grow_file_size(__clib4, fd, new_position - (int64_t) exd->FileSize) < 0) {
                                 fam->fam_Error = __translate_io_error_to_errno(IoErr());
                                 FreeDosObject(DOS_EXAMINEDATA, exd);
                                 goto out;

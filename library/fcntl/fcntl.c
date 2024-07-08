@@ -90,7 +90,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
                 break;
             }
 
-            if (__handle_record_locking(cmd, l, fd, &error) < 0) {
+            if (__handle_record_locking(__clib4, cmd, l, fd, &error) < 0) {
                 __set_errno(error);
                 goto out;
             }
