@@ -623,6 +623,7 @@ C_STRING := \
 	string/strxfrm.o
 
 C_TERMCAP := \
+    termcap/tcstubs.o \
     termcap/termcap.o \
     termcap/tparam.o
 

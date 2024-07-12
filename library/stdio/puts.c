@@ -51,28 +51,28 @@ puts(const char *s) {
         __fd_unlock(fd);
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     if (__fputc_check(__clib4, stream) < 0) {
-        funlockfile(stream);
+        __funlockfile_r(__clib4, stream);
         goto out;
     }
 
     while ((c = (*s++)) != '\0') {
         if (__putc(__clib4, c, stream, buffer_mode) == EOF) {
-            funlockfile(stream);
+            __funlockfile_r(__clib4, stream);
             goto out;
         }
     }
 
     if (__putc(__clib4, '\n', stream, buffer_mode) == EOF) {
-        funlockfile(stream);
+        __funlockfile_r(__clib4, stream);
         goto out;
     }
 
     result = OK;
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
 out:
 

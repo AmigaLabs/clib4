@@ -1167,5 +1167,10 @@ static void *clib4Vectors[] = {
 
         (void *) (waitpoll),                              /* 4372 */
 
+        (void *) (__get_tc_pc),                           /* 4376 */
+        (void *) (__get_tc_ospeed),                       /* 4380 */
+        (void *) (__get_tc_up),                           /* 4384 */
+        (void *) (__get_tc_bc),                           /* 4388 */
+
         (void *)-1
 };

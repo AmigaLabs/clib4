@@ -34,7 +34,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
         return (result);
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     if (bufmode < IOBF_BUFFER_MODE_FULL ||
         bufmode > IOBF_BUFFER_MODE_NONE) {
@@ -134,7 +134,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     if (new_buffer != NULL)
         free(new_buffer);

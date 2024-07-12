@@ -12,10 +12,14 @@
 
 ssize_t
 write(int file_descriptor, const void *buffer, size_t num_bytes) {
+    return __write_r(__CLIB4, file_descriptor, buffer, num_bytes);
+}
+
+ssize_t
+__write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_t num_bytes) {
     ssize_t num_bytes_written;
     struct fd *fd = NULL;
     ssize_t result = EOF;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -93,7 +97,7 @@ write(int file_descriptor, const void *buffer, size_t num_bytes) {
 
     result = num_bytes_written;
 
-out:
+    out:
 
     __fd_unlock(fd);
     __stdio_unlock(__clib4);

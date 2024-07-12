@@ -1337,6 +1337,12 @@ struct Clib4IFace {
     int (* spawnvpe) (const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);                        /* 4368 */
 
     int (* waitpoll) (struct pollfd *fds, nfds_t nfds, int timeout, uint32 *signals);                                                                /* 4372 */
+
+    char (* __get_tc_pc) (void);                                                                                                                     /* 4376 */
+    short (* __get_tc_ospeed) (void);                                                                                                                /* 4380 */
+    char * (* __get_tc_up) (void);                                                                                                                   /* 4384 */
+    char * (* __get_tc_bc) (void);                                                                                                                   /* 4388 */
+
 };
 
 #ifdef __PIC__

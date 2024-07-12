@@ -522,7 +522,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                     }
 
                     /* Create an empty examineData struct */
-                    struct ExamineData *examineData = malloc(sizeof(struct ExamineData));
+                    struct ExamineData *examineData = __malloc_r(__clib4, sizeof(struct ExamineData));
                     fam->fam_FileInfo = examineData;
 
                     /* Make up some stuff for this stream. */

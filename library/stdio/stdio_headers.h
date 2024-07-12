@@ -354,6 +354,10 @@ extern void __fd_unlock(struct fd *fd);
 
 extern BPTR __resolve_fd_file(struct fd * fd);
 
+extern void __funlockfile_r(struct _clib4 *__clib4, FILE *stream);
+extern void __flockfile_r(struct _clib4 *__clib4, FILE *stream);
+extern int __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream);
+
 #ifndef _STDIO_PROTOS_H
 #include "stdio_protos.h"
 #endif /* _STDIO_PROTOS_H */

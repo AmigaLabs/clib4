@@ -28,7 +28,7 @@ fseek(FILE *stream, long int offset, int wherefrom) {
         return (result);
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -136,7 +136,7 @@ fseek(FILE *stream, long int offset, int wherefrom) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

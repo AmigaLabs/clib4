@@ -73,7 +73,7 @@ tempnam(const char *dir, const char *pfx) {
         return 0;
     }
 
-    filename = malloc(length);
+    filename = __malloc_r(__clib4, length);
     if (filename) {
         int r = rand();
         char string[7] = {0};

@@ -179,7 +179,9 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
     arg_string[arg_string_len] = '\0';
 
     char finalpath[PATH_MAX] = {0};
+    char processName[NAMELEN] = {0};
     snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
+    snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
     D(("File to execute: [%s]\n", finalpath));
 
@@ -233,7 +235,7 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
                      SYS_Asynch, TRUE,
                      NP_Child, TRUE,
                      progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
-                     NP_Name, finalpath,
+                     NP_Name, strdup(processName),
                      TAG_DONE);
 
     if (ret != 0) {
@@ -245,6 +247,7 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
         }
     }
     else {
+        __clib4->__children++;
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid

@@ -34,7 +34,7 @@ __fgetwc_unlocked_internal(struct _clib4 *__clib4, FILE *f) {
         if (l == -1) {
             if (!first) {
                 f->_flags2 |= __SERR;
-                ungetc(b, f);
+                __ungetc_r(__clib4, b, f);
             }
             RETURN(WEOF);
             return WEOF;
@@ -61,9 +61,9 @@ fgetwc(FILE *f) {
     wint_t c;
     struct _clib4 *__clib4 = __CLIB4;
 
-    flockfile(f);
+    __flockfile_r(__clib4, f);
     c = __fgetwc_unlocked(__clib4, f);
-    funlockfile(f);
+    __funlockfile_r(__clib4, f);
 
     return c;
 }

@@ -302,7 +302,7 @@ directory:
             if (len > 0) {
                 char *path_name_copy;
 
-                path_name_copy = malloc(len + 1);
+                path_name_copy = __malloc_r(__clib4, len + 1);
                 if (path_name_copy != NULL) {
                     memmove(path_name_copy, path_name, len);
                     path_name_copy[len] = '\0';

@@ -194,7 +194,7 @@ find_command(const char *path, struct program_info **result_ptr) {
        are looking */
     old_window_ptr = __set_process_window((APTR) - 1);
 
-    pi = malloc(sizeof(*pi));
+    pi = __malloc_r(__clib4, sizeof(*pi));
     if (pi == NULL) {
         __set_errno(ENOMEM);
         goto out;

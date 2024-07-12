@@ -23,7 +23,7 @@ realloc(void *ptr, size_t size) {
     if (ptr == NULL) {
         D(("calling malloc(%ld)", size));
 
-        result = malloc(size);
+        result = __malloc_r(__clib4, size);
     } else if (__clib4->__unix_path_semantics && size == 0) {
         D(("calling free(0x%08lx)", ptr));
 

@@ -24,7 +24,7 @@ ftell(FILE *stream) {
         return (result);
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -83,7 +83,7 @@ ftell(FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     return (result);
 }

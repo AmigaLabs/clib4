@@ -1,5 +1,5 @@
 /*
- * $Id: ctype_isdigit.c,v 1.5 2006-01-08 12:04:22 clib4devs Exp $
+ * $Id: ctype_isdigit.c,v 1.6 2024-07-12 12:04:22 clib4devs Exp $
 */
 
 #ifndef _CTYPE_HEADERS_H
@@ -10,9 +10,13 @@
 
 int
 isdigit(int c) {
+    return __isdigit_r(__CLIB4, c);
+}
+
+int
+__isdigit_r(struct _clib4 *__clib4, int c) {
     DECLARE_LOCALEBASE();
     int result;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWVALUE(c);

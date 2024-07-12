@@ -31,7 +31,7 @@ gets(char *s) {
         return (result);
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     /* Take care of the checks and data structure changes that
      * need to be handled only once for this stream.
@@ -109,7 +109,7 @@ gets(char *s) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

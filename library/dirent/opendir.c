@@ -43,7 +43,7 @@ opendir(const char *path_name) {
         goto out;
     }
 
-    dh = malloc(sizeof(*dh));
+    dh = __malloc_r(__clib4, sizeof(*dh));
     if (dh == NULL) {
         SHOWMSG("memory allocation failed");
         goto out;
@@ -84,7 +84,7 @@ opendir(const char *path_name) {
 
                     len = name[0];
 
-                    node = malloc(sizeof(*node) + len + 2);
+                    node = __malloc_r(__clib4, sizeof(*node) + len + 2);
                     if (node == NULL) {
                         UnLockDosList(LDF_VOLUMES | LDF_READ);
 

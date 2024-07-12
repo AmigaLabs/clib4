@@ -59,7 +59,7 @@ zero_fd_set(fd_set *set, int num_fds) {
 }
 
 static fd_set *
-allocate_fd_set(int num_fds, fd_set *duplicate_this_set) {
+allocate_fd_set(struct _clib4 *__clib4, int num_fds, fd_set *duplicate_this_set) {
     fd_set *result = NULL;
     size_t num_bytes;
     fd_set *set;
@@ -79,7 +79,7 @@ allocate_fd_set(int num_fds, fd_set *duplicate_this_set) {
 
     SHOWVALUE(num_bytes);
 
-    set = (fd_set *) malloc(num_bytes);
+    set = (fd_set *) __malloc_r(__clib4, num_bytes);
     if (set != NULL) {
         if (duplicate_this_set != NULL)
             copy_fd_set(set, duplicate_this_set, num_fds);
@@ -434,7 +434,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         if (num_socket_used > 0) {
             SHOWMSG("allocating read socket fd_set");
 
-            socket_read_fds = allocate_fd_set(num_socket_used, NULL);
+            socket_read_fds = allocate_fd_set(__clib4, num_socket_used, NULL);
             if (socket_read_fds == NULL)
                 goto out;
         }
@@ -442,7 +442,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         if (num_file_used > 0) {
             SHOWMSG("allocating read file fd_set");
 
-            file_read_fds = allocate_fd_set(num_file_used, NULL);
+            file_read_fds = allocate_fd_set(__clib4, num_file_used, NULL);
             if (file_read_fds == NULL)
                 goto out;
         }
@@ -452,7 +452,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         if (num_socket_used > 0) {
             SHOWMSG("allocating write socket fd_set");
 
-            socket_write_fds = allocate_fd_set(num_socket_used, NULL);
+            socket_write_fds = allocate_fd_set(__clib4, num_socket_used, NULL);
             if (socket_write_fds == NULL)
                 goto out;
         }
@@ -460,7 +460,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         if (num_file_used > 0) {
             SHOWMSG("allocating write file fd_set");
 
-            file_write_fds = allocate_fd_set(num_file_used, NULL);
+            file_write_fds = allocate_fd_set(__clib4, num_file_used, NULL);
             if (file_write_fds == NULL)
                 goto out;
         }
@@ -470,7 +470,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         if (num_socket_used > 0) {
             SHOWMSG("allocating except socket fd_set");
 
-            socket_except_fds = allocate_fd_set(num_socket_used, NULL);
+            socket_except_fds = allocate_fd_set(__clib4, num_socket_used, NULL);
             if (socket_except_fds == NULL)
                 goto out;
         }
@@ -516,7 +516,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (num_socket_used > 0) {
                     SHOWMSG("allocating backup read socket fd_set");
 
-                    backup_socket_read_fds = allocate_fd_set(num_socket_used, socket_read_fds);
+                    backup_socket_read_fds = allocate_fd_set(__clib4, num_socket_used, socket_read_fds);
                     if (backup_socket_read_fds == NULL)
                         goto out;
                 }
@@ -524,7 +524,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (num_file_used > 0) {
                     SHOWMSG("allocating backup read file fd_set");
 
-                    backup_file_read_fds = allocate_fd_set(num_file_used, file_read_fds);
+                    backup_file_read_fds = allocate_fd_set(__clib4, num_file_used, file_read_fds);
                     if (backup_file_read_fds == NULL)
                         goto out;
                 }
@@ -534,7 +534,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (num_socket_used > 0) {
                     SHOWMSG("allocating backup write socket fd_set");
 
-                    backup_socket_write_fds = allocate_fd_set(num_socket_used, socket_write_fds);
+                    backup_socket_write_fds = allocate_fd_set(__clib4, num_socket_used, socket_write_fds);
                     if (backup_socket_write_fds == NULL)
                         goto out;
                 }
@@ -542,7 +542,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (num_file_used > 0) {
                     SHOWMSG("allocating backup write file fd_set");
 
-                    backup_file_write_fds = allocate_fd_set(num_file_used, file_write_fds);
+                    backup_file_write_fds = allocate_fd_set(__clib4, num_file_used, file_write_fds);
                     if (backup_file_write_fds == NULL)
                         goto out;
                 }
@@ -552,7 +552,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (num_socket_used > 0) {
                     SHOWMSG("allocating backup except socket fd_set");
 
-                    backup_socket_except_fds = allocate_fd_set(num_socket_used, socket_except_fds);
+                    backup_socket_except_fds = allocate_fd_set(__clib4, num_socket_used, socket_except_fds);
                     if (backup_socket_except_fds == NULL)
                         goto out;
                 }
@@ -777,7 +777,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             if (read_fds != NULL) {
                 SHOWMSG("allocating backup file read fd_set");
 
-                backup_file_read_fds = allocate_fd_set(num_file_used, file_read_fds);
+                backup_file_read_fds = allocate_fd_set(__clib4, num_file_used, file_read_fds);
                 if (backup_file_read_fds == NULL)
                     goto out;
             }
@@ -785,7 +785,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             if (write_fds != NULL) {
                 SHOWMSG("allocating backup file write fd_set");
 
-                backup_file_write_fds = allocate_fd_set(num_file_used, file_write_fds);
+                backup_file_write_fds = allocate_fd_set(__clib4, num_file_used, file_write_fds);
                 if (backup_file_write_fds == NULL)
                     goto out;
             }

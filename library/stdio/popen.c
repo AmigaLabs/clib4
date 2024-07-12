@@ -153,7 +153,7 @@ popen(const char *command, const char *type) {
         }
 
         /* Now put it all together again */
-        command_copy = malloc(1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
+        command_copy = __malloc_r(__clib4, 1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
         if (command_copy == NULL) {
             __set_errno(ENOMEM);
 

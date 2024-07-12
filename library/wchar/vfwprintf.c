@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_vfwprintf.c,v 1.4 2021-02-05 00:41:13 clib4devs Exp $
+ * $Id: wchar_vfwprintf.c,v 1.5 2024-07-12 00:41:13 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -15,7 +15,7 @@
 #include <wctype.h>
 
 static void out_putwc(wchar_t wc, FOut *_out);
-static int out_printf(FOut *_out, const char *format, ...);
+static int out_printf(struct _clib4 *__clib4, FOut *_out, const char *format, ...);
 static int getint(wchar_t **s);
 
 size_t
@@ -109,7 +109,7 @@ out_putwc(wchar_t wc, FOut *_out) {
 }
 
 static int
-out_printf(FOut *_out, const char *format, ...) {
+out_printf(struct _clib4 *__clib4, FOut *_out, const char *format, ...) {
     if (_out == NULL)
         return 0;
 
@@ -132,7 +132,7 @@ out_printf(FOut *_out, const char *format, ...) {
 
         if (
                 (!(mb_len = (size_t) vsnprintf(NULL, 0, format, args))) ||
-                ((mb_buffer = malloc((mb_len + 1))) == NULL)) {
+                ((mb_buffer = __malloc_r(__clib4, (mb_len + 1))) == NULL)) {
             va_end(args);
             RETURN(0);
             return 0;
@@ -145,7 +145,7 @@ out_printf(FOut *_out, const char *format, ...) {
 
         if (
                 (wide_len == 0) || (wide_len == (size_t) - 1) ||
-                ((wide_buffer = malloc((wide_len + 1) * sizeof(wchar_t))) == NULL)) {
+                ((wide_buffer = __malloc_r(__clib4, (wide_len + 1) * sizeof(wchar_t))) == NULL)) {
             va_end(args);
             free(mb_buffer);
             RETURN(0);
@@ -159,7 +159,10 @@ out_printf(FOut *_out, const char *format, ...) {
         // finished
         free(wide_buffer);
         free(mb_buffer);
+        wide_buffer = NULL;
+        mb_buffer = NULL;
         va_end(args);
+
         RETURN((int) wide_len);
         return (int) wide_len;
     }
@@ -225,7 +228,7 @@ static void pop_arg(union arg *arg, int type, va_list *ap) {
 }
 
 int
-wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type) {
+wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type) {
     wchar_t *s = (wchar_t *) fmt;
     unsigned int l10n = 0;
     int w, p, xp;
@@ -393,11 +396,11 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
             case 'c':
                 if (w < 1) w=1;
                 if (w > 1 && !(fl & LEFT_ADJ)) {
-                    out_printf(f, "%*s", (w - 1), "");
+                    out_printf(__clib4, f, "%*s", (w - 1), "");
                 }
                 out_putwc(btowc((int) arg.i), f);
                 if (w > 1 && !(fl & LEFT_ADJ)) {
-                    out_printf(f, "%*s", (w - 1), "");
+                    out_printf(__clib4, f, "%*s", (w - 1), "");
                 }
                 l = w;
                 continue;
@@ -416,11 +419,11 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 if (w < p)
                     w = p;
                 if (!(fl & LEFT_ADJ)) {
-                    out_printf(f, "%*s", (w - p), "");
+                    out_printf(__clib4, f, "%*s", (w - p), "");
                 }
                 out(f, a, (size_t) p);
                 if ((fl & LEFT_ADJ)) {
-                    out_printf(f, "%*s", (w - p), "");
+                    out_printf(__clib4, f, "%*s", (w - p), "");
                 }
                 l = w;
                 continue;
@@ -444,7 +447,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                 if (w < p)
                     w = p;
                 if (!(fl & LEFT_ADJ)) {
-                    out_printf(f, "%*s", w - p, "");
+                    out_printf(__clib4, f, "%*s", w - p, "");
                 }
                 bs = arg.p;
                 while (l--) {
@@ -453,7 +456,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                     out_putwc(wc, f);
                 }
                 if ((fl & LEFT_ADJ)) {
-                    out_printf(f, "%*s", w - p, "");
+                    out_printf(__clib4, f, "%*s", w - p, "");
                 }
                 l = w;
                 continue;
@@ -478,7 +481,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                          " "+!(fl & PAD_POS),
                          "0"+!(fl & ZERO_PAD),
                          t);
-                l = out_printf(f, charfmt, w, p, arg.f);
+                l = out_printf(__clib4, f, charfmt, w, p, arg.f);
                 break;
             case 'd':
             case 'i':
@@ -493,7 +496,7 @@ wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *n
                          " "+!(fl & PAD_POS),
                          "0"+!(fl & ZERO_PAD),
                          sizeprefix[(t|32)-'a'], t);
-                l = out_printf(f, charfmt, w, p, arg.i);
+                l = out_printf(__clib4, f, charfmt, w, p, arg.i);
                 break;
             default:
                 break;
@@ -524,18 +527,19 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
     FOut _out[1];
     out_init_file(_out, f);
     va_copy(ap2, ap);
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     // Check for error in format string before writing anything to file.
-    if (wprintf_core(0, format, &ap2, nl_arg, nl_type) < 0) {
+    if (wprintf_core(__clib4, 0, format, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
         RETURN(EOF);
         return EOF;
     }
-    ret = wprintf_core(_out, format, &ap2, nl_arg, nl_type);
+    ret = wprintf_core(__clib4, _out, format, &ap2, nl_arg, nl_type);
 
     va_end(ap2);
 

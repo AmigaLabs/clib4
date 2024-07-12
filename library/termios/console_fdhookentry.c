@@ -346,7 +346,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
                 unsigned char byte_out;
                 int i, n;
 
-                buffer = malloc(2 * fam->fam_Size);
+                buffer = __malloc_r(__clib4, 2 * fam->fam_Size);
                 if (buffer == NULL) {
                     fam->fam_Error = ENOMEM;
                     goto out;

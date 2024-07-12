@@ -8,9 +8,14 @@
 
 void
 flockfile(FILE *stream) {
+    return __flockfile_r(__CLIB4, stream);
+}
+
+void
+__flockfile_r(struct _clib4 *__clib4, FILE *stream) {
     struct iob *file = (struct iob *) stream;
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");

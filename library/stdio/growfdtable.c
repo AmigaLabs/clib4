@@ -25,7 +25,7 @@ __grow_fd_table(struct _clib4 *__clib4, int max_fd) {
         struct fd **new_fd;
         int i;
 
-        new_fd = malloc(sizeof(*new_fd) * new_num_fd);
+        new_fd = __malloc_r(__clib4, sizeof(*new_fd) * new_num_fd);
         if (new_fd == NULL) {
             SHOWMSG("not enough memory for new file descriptor table");
 
@@ -34,7 +34,7 @@ __grow_fd_table(struct _clib4 *__clib4, int max_fd) {
         }
 
         for (i = __clib4->__num_fd; i < new_num_fd; i++) {
-            new_fd[i] = malloc(sizeof(*new_fd[i]));
+            new_fd[i] = __malloc_r(__clib4, sizeof(*new_fd[i]));
             if (new_fd[i] == NULL) {
                 int j;
 

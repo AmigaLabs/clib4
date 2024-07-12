@@ -162,7 +162,7 @@ int __wildcard_expand_init(void) {
                 if (replacement_arg != NULL)
                     free(replacement_arg);
 
-                replacement_arg = malloc(arg_len + star_count + 1);
+                replacement_arg = __malloc_r(__clib4, arg_len + star_count + 1);
                 if (replacement_arg == NULL) {
                     error = ENOMEM;
                     goto out;

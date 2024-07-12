@@ -9,8 +9,7 @@
 #include <argz.h>
 
 error_t
-argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len)
-{
+argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len) {
     size_t len = 0;
     int i = 0;
     int num_strings = 0;
@@ -25,22 +24,19 @@ argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len)
 
     running = strdup(string);
 
-    if(!running)
-    {
+    if (!running) {
         return ENOMEM;
     }
 
     old_running = running;
 
-    while ((token = strsep(&running, delim)))
-    {
+    while ((token = strsep(&running, delim))) {
         len = strlen(token);
         *argz_len += (len + 1);
         num_strings++;
     }
 
-    if (!(*argz = (char *)malloc(*argz_len)))
-    {
+    if (!(*argz = (char *) malloc(*argz_len))) {
         free(old_running);
         return ENOMEM;
     }
@@ -49,8 +45,7 @@ argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len)
 
     running = strdup(string);
 
-    if(!running)
-    {
+    if (!running) {
         free(*argz);
         return ENOMEM;
     }
@@ -58,8 +53,7 @@ argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len)
     old_running = running;
 
     iter = *argz;
-    for (i = 0; i < num_strings; i++)
-    {
+    for (i = 0; i < num_strings; i++) {
         token = strsep(&running, delim);
         len = strlen(token) + 1;
         memcpy(iter, token, len);

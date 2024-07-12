@@ -105,7 +105,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
 
     ENTER();
 
-    flockfile(f);
+    __flockfile_r(__clib4, f);
 
     fwide(f, 1);
 
@@ -116,7 +116,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
                 p++;
             while (iswspace((c = __getc(__clib4, f))))
                 pos++;
-            ungetc(c, f);
+            __ungetc_r(__clib4, c, f);
             continue;
         }
         if (*p != '%' || p[1] == '%') {
@@ -129,7 +129,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
             }
 
             if (c != *p) {
-                ungetc(c, f);
+                __ungetc_r(__clib4, c, f);
                 if (c < 0) {
                     goto input_fail;
                 }
@@ -232,7 +232,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
             if (c < 0) {
                 goto input_fail;
             }
-            ungetc(c, f);
+            __ungetc_r(__clib4, c, f);
         }
 
         switch (t) {
@@ -285,12 +285,12 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
                 if (alloc) {
                     k = t == 'c' ? width + 1U : 31;
                     if (size == SIZE_l) {
-                        wcs = malloc(k * sizeof(wchar_t));
+                        wcs = __malloc_r(__clib4, k * sizeof(wchar_t));
                         if (!wcs) {
                             goto alloc_fail;
                         }
                     } else {
-                        s = malloc(k);
+                        s = __malloc_r(__clib4, k);
                         if (!s) {
                             goto alloc_fail;
                         }
@@ -332,7 +332,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
                     gotmatch = 1;
                 }
                 if (width) {
-                    ungetc(c, f);
+                    __ungetc_r(__clib4, c, f);
                     if (t == 'c' || !gotmatch) {
                         goto match_fail;
                     }
@@ -398,7 +398,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
         }
     }
 
-    funlockfile(f);
+    __funlockfile_r(__clib4, f);
 
     RETURN(matches);
     return matches;

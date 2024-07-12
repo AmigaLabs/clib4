@@ -30,7 +30,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
         return (result);
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
@@ -220,7 +220,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     }
 
 out:
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

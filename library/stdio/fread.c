@@ -57,7 +57,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
     /* So that we can tell error and 'end of file' conditions apart. */
     clearerr(stream);
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     if (element_size > 0 && count > 0) {
         size_t total_bytes_read = 0;
@@ -159,7 +159,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

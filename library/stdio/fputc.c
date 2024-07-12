@@ -105,7 +105,7 @@ fputc(int c, FILE *stream) {
         return result;
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     if (__fputc_check(__clib4, stream) < 0)
         goto out;
@@ -122,7 +122,7 @@ fputc(int c, FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

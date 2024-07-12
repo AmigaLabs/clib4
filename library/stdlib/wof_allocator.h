@@ -88,6 +88,7 @@ struct _wof_allocator_t {
     wof_block_hdr_t *block_list;
     wof_chunk_hdr_t *master_head;
     wof_chunk_hdr_t *recycler_head;
+    struct SignalSemaphore *semaphore;
 };
 
 __BEGIN_DECLS

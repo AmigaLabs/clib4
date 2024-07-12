@@ -96,16 +96,16 @@ fgetc(FILE *stream) {
         goto out;
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     if (__fgetc_check(__clib4, stream) < 0) {
-        funlockfile(stream);
+        __funlockfile_r(__clib4, stream);
         goto out;
     }
 
     result = __getc(__clib4, stream);
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
 out:
 

@@ -18,4 +18,6 @@
 extern int getCurrentCliActionMode(void);
 extern struct Window *getCurrentCliWindow(void);
 
+extern ssize_t __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_t num_bytes);
+
 #endif /* _FCNTL_HEADERS_H */

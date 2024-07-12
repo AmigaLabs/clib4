@@ -46,7 +46,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
     assert(stream != NULL && format != NULL);
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     if (stream == NULL || format == NULL) {
         __set_errno(EFAULT);
@@ -74,7 +74,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                     /* End of the white space; we push the last
                      * character read back into the stream.
                      */
-                    if (ungetc(c, stream) == EOF)
+                    if (__ungetc_r(__clib4, c, stream) == EOF)
                         goto out;
 
                     /* Resume scanning. */
@@ -119,7 +119,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             } else {
                 SHOWMSG("it does not match");
 
-                if (ungetc(d, stream) == EOF)
+                if (__ungetc_r(__clib4, d, stream) == EOF)
                     goto out;
 
                 break;
@@ -315,7 +315,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                     /* End of the white space; we push the last
                      * character read back into the stream.
                      */
-                    if (ungetc(c, stream) == EOF)
+                    if (__ungetc_r(__clib4, c, stream) == EOF)
                         goto out;
 
                     /* Proceed with the conversion operation. */
@@ -460,7 +460,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                         D(("first character '%lc' is not a sign", c));
 
                         /* It's not a sign; reread this later. */
-                        if (ungetc(c, stream) == EOF) {
+                        if (__ungetc_r(__clib4, c, stream) == EOF) {
                             SHOWMSG("couldn't push this character back");
                             goto out;
                         }
@@ -505,7 +505,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
                         nan_match = 0;
 
-                        if (ungetc(c, stream) == EOF) {
+                        if (__ungetc_r(__clib4, c, stream) == EOF) {
                             SHOWMSG("couldn't push this character back");
                             goto out;
                         }
@@ -549,7 +549,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                             break;
                                     }
                                 } else {
-                                    if (ungetc(c, stream) == EOF) {
+                                    if (__ungetc_r(__clib4, c, stream) == EOF) {
                                         SHOWMSG("couldn't push this character back");
                                         goto out;
                                     }
@@ -563,7 +563,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
                         nan_match = infinity_match = 0;
 
-                        if (ungetc(c, stream) == EOF) {
+                        if (__ungetc_r(__clib4, c, stream) == EOF) {
                             SHOWMSG("couldn't push this character back");
                             goto out;
                         }
@@ -572,7 +572,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
                         /* Let's try our best here... */
                         while (num_chars_read_so_far > 0)
-                            ungetc(chars_read_so_far[--num_chars_read_so_far], stream);
+                            __ungetc_r(__clib4, chars_read_so_far[--num_chars_read_so_far], stream);
 
                         break;
                     }
@@ -626,7 +626,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                     maximum_field_width--;
                             } else {
                                 /* Put this back. */
-                                if (ungetc(c, stream) == EOF) {
+                                if (__ungetc_r(__clib4, c, stream) == EOF) {
                                     SHOWMSG("couldn't push this character back");
                                     goto out;
                                 }
@@ -634,7 +634,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                         }
                     } else {
                         /* Put this back. */
-                        if (ungetc(c, stream) == EOF) {
+                        if (__ungetc_r(__clib4, c, stream) == EOF) {
                             SHOWMSG("couldn't push this character back");
                             goto out;
                         }
@@ -662,7 +662,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                             if (new_sum < sum) /* overflow? */
                             {
                                 /* Put this back. */
-                                if (ungetc(c, stream) == EOF) {
+                                if (__ungetc_r(__clib4, c, stream) == EOF) {
                                     SHOWMSG("couldn't push this character back");
                                     goto out;
                                 }
@@ -675,7 +675,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                             D(("'%lc' is not a digit", c));
 
                             /* It's not a digit; reread this later. */
-                            if (ungetc(c, stream) == EOF) {
+                            if (__ungetc_r(__clib4, c, stream) == EOF) {
                                 SHOWMSG("couldn't push this character back");
                                 goto out;
                             }
@@ -747,7 +747,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                             if (maximum_field_width > 0)
                                 maximum_field_width--;
                         } else {
-                            if (ungetc(c, stream) == EOF) {
+                            if (__ungetc_r(__clib4, c, stream) == EOF) {
                                 SHOWMSG("couldn't push this character back");
                                 goto out;
                             }
@@ -783,7 +783,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                         SHOWMSG("got an overflow");
 
                                         /* Put this back. */
-                                        if (ungetc(c, stream) == EOF) {
+                                        if (__ungetc_r(__clib4, c, stream) == EOF) {
                                             SHOWMSG("couldn't push this character back");
                                             goto out;
                                         }
@@ -814,7 +814,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                 have_exponent = TRUE;
                                 break;
                             } else {
-                                if (ungetc(c, stream) == EOF) {
+                                if (__ungetc_r(__clib4, c, stream) == EOF) {
                                     SHOWMSG("couldn't push this character back");
                                     goto out;
                                 }
@@ -862,7 +862,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                         maximum_field_width--;
                                 } else {
                                     /* It's not a sign; reread this later. */
-                                    if (ungetc(c, stream) == EOF) {
+                                    if (__ungetc_r(__clib4, c, stream) == EOF) {
                                         SHOWMSG("couldn't push this character back");
                                         goto out;
                                     }
@@ -882,7 +882,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                         {
                                             SHOWMSG("overflow!");
 
-                                            if (ungetc(c, stream) == EOF) {
+                                            if (__ungetc_r(__clib4, c, stream) == EOF) {
                                                 SHOWMSG("couldn't push this character back");
                                                 goto out;
                                             }
@@ -900,7 +900,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                     } else {
                                         SHOWMSG("invalid digit");
 
-                                        if (ungetc(c, stream) == EOF) {
+                                        if (__ungetc_r(__clib4, c, stream) == EOF) {
                                             SHOWMSG("couldn't push this character back");
                                             goto out;
                                         }
@@ -1085,16 +1085,16 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                                 radix = 8;
 
                                 /* Process the rest later. */
-                                if (ungetc(c, stream) == EOF)
+                                if (__ungetc_r(__clib4, c, stream) == EOF)
                                     goto out;
                             } else if (c != EOF) {
                                 /* It's something else; put it back. */
-                                if (ungetc(c, stream) == EOF)
+                                if (__ungetc_r(__clib4, c, stream) == EOF)
                                     goto out;
                             }
                         }
                     } else {
-                        if (ungetc(c, stream) == EOF)
+                        if (__ungetc_r(__clib4, c, stream) == EOF)
                             goto out;
                     }
                 }
@@ -1126,7 +1126,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                     if (digit >= radix) {
                         SHOWMSG("digit is larger than radix");
 
-                        if (ungetc(c, stream) == EOF)
+                        if (__ungetc_r(__clib4, c, stream) == EOF)
                             goto out;
 
                         break;
@@ -1140,7 +1140,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                             SHOWMSG("overflow!");
 
                             /* Put this back. */
-                            if (ungetc(c, stream) == EOF)
+                            if (__ungetc_r(__clib4, c, stream) == EOF)
                                 goto out;
 
                             break;
@@ -1150,7 +1150,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                         SHOWMSG("overflow!");
 
                         /* Put this back. */
-                        if (ungetc(c, stream) == EOF)
+                        if (__ungetc_r(__clib4, c, stream) == EOF)
                             goto out;
 
                         break;
@@ -1222,7 +1222,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 while (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                     /* Blank spaces stop the conversion process. */
                     if (isspace(c)) {
-                        if (ungetc(c, stream) == EOF)
+                        if (__ungetc_r(__clib4, c, stream) == EOF)
                             goto out;
 
                         break;
@@ -1336,7 +1336,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 total_num_chars_read++;
             } else {
                 /* This is not what we expected. We're finished. */
-                if (ungetc(d, stream) == EOF)
+                if (__ungetc_r(__clib4, d, stream) == EOF)
                     goto out;
 
                 break;
@@ -1451,7 +1451,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                      * range we stop further processing.
                      */
                     if (set[c] == 0) {
-                        if (ungetc(c, stream) == EOF)
+                        if (__ungetc_r(__clib4, c, stream) == EOF)
                             goto out;
 
                         break;
@@ -1486,7 +1486,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

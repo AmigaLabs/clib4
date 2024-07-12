@@ -33,7 +33,7 @@ __flush(FILE *stream) {
         return result;
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, iob));
     assert(iob->iob_BufferWriteBytes > 0);
@@ -51,7 +51,7 @@ __flush(FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

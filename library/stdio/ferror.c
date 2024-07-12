@@ -30,12 +30,12 @@ ferror(FILE *stream) {
     assert(__is_valid_iob(__clib4, file));
 
     SHOWMSG("Locking Stream");
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     result = FLAG_IS_SET(file->iob_Flags, IOBF_ERROR);
 
     SHOWMSG("Unlocking Stream");
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
 out:
 

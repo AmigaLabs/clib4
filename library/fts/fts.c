@@ -110,7 +110,7 @@ fts_open(char *const *argv, int options, int (*compar)(const FTSENT **, const FT
     }
 
     /* Allocate/initialize the stream */
-    if ((sp = malloc(sizeof(FTS))) == NULL)
+    if ((sp = __malloc_r(__clib4, sizeof(FTS))) == NULL)
         return (NULL);
     memset(sp, 0, sizeof(FTS));
     sp->fts_compar = compar;
@@ -1022,7 +1022,7 @@ fts_alloc(FTS *sp, const char *name, size_t namelen) {
     len = sizeof(FTSENT) + namelen;
     if (!ISSET(FTS_NOSTAT))
         len += sizeof(*(p->fts_statp)) + ALIGNBYTES;
-    if ((p = malloc(len)) == NULL)
+    if ((p = __malloc_r(__clib4, len)) == NULL)
         return (NULL);
 
     if (!ISSET(FTS_NOSTAT))

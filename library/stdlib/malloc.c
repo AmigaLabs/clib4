@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_malloc.c,v 1.22 2022-04-03 14:09:00 clib4devs Exp $
+ * $Id: stdlib_malloc.c,v 1.23 2024-07-12 14:09:00 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -16,9 +16,13 @@
 
 void *
 malloc(size_t size) {
+    return __malloc_r(__CLIB4, size);
+}
+
+void *
+__malloc_r(struct _clib4 *__clib4, size_t size) {
     ENTER();
     void *result = NULL;
-    struct _clib4 *__clib4 = __CLIB4;
     SHOWPOINTER(__clib4);
 
     SHOWMSG("Locking memory pointer");
@@ -26,6 +30,7 @@ malloc(size_t size) {
 
     SHOWMSG("Calling wof_alloc");
     result = wof_alloc(__clib4->__wof_allocator, size);
+    D(("Process %ld allocator: %p\n", __clib4->processId, result));
 
     if (!result)
         __set_errno(ENOMEM);
@@ -60,11 +65,6 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
 
     __memory_unlock(__clib4);
 
-    if (__clib4->__wof_allocator_semaphore != NULL) {
-        __delete_semaphore(__clib4->__wof_allocator_semaphore);
-        __clib4->__wof_allocator_semaphore = NULL;
-    }
-
     if (__clib4->memory_semaphore != NULL) {
         __delete_semaphore(__clib4->memory_semaphore);
         __clib4->memory_semaphore = NULL;
@@ -84,12 +84,10 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
     if (__clib4->memory_semaphore == NULL)
         goto out;
 
-    __clib4->__wof_allocator_semaphore = __create_semaphore();
-    if (__clib4->__wof_allocator_semaphore == NULL)
-        goto out;
-
     __clib4->__wof_allocator = wof_allocator_new();
     if (__clib4->__wof_allocator == NULL) {
+        __delete_semaphore(__clib4->memory_semaphore);
+        __clib4->memory_semaphore = NULL;
         goto out;
     }
 

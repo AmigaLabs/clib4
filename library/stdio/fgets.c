@@ -32,7 +32,7 @@ fgets(char *buf, int n, FILE *stream) {
         return NULL;
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     /* Take care of the checks and data structure changes that
      * need to be handled only once for this stream.
@@ -125,7 +125,7 @@ fgets(char *buf, int n, FILE *stream) {
     SHOWSTRING(buf);
 
 out:
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(buf);
     return (buf);

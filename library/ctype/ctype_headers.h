@@ -36,4 +36,6 @@
 
 /****************************************************************************/
 
+extern int __isdigit_r(struct _clib4 *__clib4, int c);
+
 #endif /* _CTYPE_HEADERS_H */

@@ -10,7 +10,7 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-static struct hsearch_data htab;
+static struct hsearch_data htab; // TODO - Move to dos.h!
 
 /* Default hash function, from search_hash_func.c */
 extern uint32_t (*__default_hash)(const void *, size_t);
@@ -19,13 +19,13 @@ extern uint32_t (*__default_hash)(const void *, size_t);
  * DO NOT MAKE THIS STRUCTURE LARGER THAN 32 BYTES (4 ptrs on 64-bit
  * ptr machine) without adjusting MAX_BUCKETS_LG2 below.
  */
-struct internal_entry
-{
+struct internal_entry {
     SLIST_ENTRY(internal_entry)
     link;
     ENTRY ent;
 };
-SLIST_HEAD(internal_head, internal_entry);
+SLIST_HEAD(internal_head, internal_entry
+);
 
 #define MIN_BUCKETS_LG2 4
 #define MIN_BUCKETS (1 << MIN_BUCKETS_LG2)
@@ -37,15 +37,13 @@ SLIST_HEAD(internal_head, internal_entry);
 #define MAX_BUCKETS_LG2 (sizeof(size_t) * 8 - 1 - 5)
 #define MAX_BUCKETS ((size_t)1 << MAX_BUCKETS_LG2)
 
-int 
-hcreate_r(size_t nel, struct hsearch_data *_htab)
-{
+int
+hcreate_r(size_t nel, struct hsearch_data *_htab) {
     size_t idx;
     unsigned int p2;
 
     /* Make sure this this isn't called when a table already exists. */
-    if (_htab->htable != NULL)
-    {
+    if (_htab->htable != NULL) {
         __set_errno(EINVAL);
         return 0;
     }
@@ -59,8 +57,7 @@ hcreate_r(size_t nel, struct hsearch_data *_htab)
         nel = MAX_BUCKETS;
 
     /* If it's is not a power of two in size, round up. */
-    if ((nel & (nel - 1)) != 0)
-    {
+    if ((nel & (nel - 1)) != 0) {
         for (p2 = 0; nel != 0; p2++)
             nel >>= 1;
         nel = 1 << p2;
@@ -69,8 +66,7 @@ hcreate_r(size_t nel, struct hsearch_data *_htab)
     /* Allocate the table. */
     _htab->htablesize = nel;
     _htab->htable = malloc(_htab->htablesize * sizeof _htab->htable[0]);
-    if (_htab->htable == NULL)
-    {
+    if (_htab->htable == NULL) {
         __set_errno(ENOMEM);
         return 0;
     }
@@ -82,9 +78,8 @@ hcreate_r(size_t nel, struct hsearch_data *_htab)
     return 1;
 }
 
-int 
-hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *_htab)
-{
+int
+hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *_htab) {
     struct internal_head *head;
     struct internal_entry *ie;
     uint32_t hashval;
@@ -95,27 +90,22 @@ hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *_htab)
 
     head = &(_htab->htable[hashval & (_htab->htablesize - 1)]);
     ie = SLIST_FIRST(head);
-    while (ie != NULL)
-    {
+    while (ie != NULL) {
         if (strcmp(ie->ent.key, item.key) == 0)
             break;
         ie = SLIST_NEXT(ie, link);
     }
 
-    if (ie != NULL)
-    {
+    if (ie != NULL) {
         *retval = &ie->ent;
         return 1;
-    }
-    else if (action == FIND)
-    {
+    } else if (action == FIND) {
         *retval = NULL;
         return 0;
     }
 
     ie = malloc(sizeof *ie);
-    if (ie == NULL)
-    {
+    if (ie == NULL) {
         *retval = NULL;
         return 0;
     }
@@ -127,9 +117,8 @@ hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *_htab)
     return 1;
 }
 
-void 
-hdestroy_r(struct hsearch_data *_htab)
-{
+void
+hdestroy_r(struct hsearch_data *_htab) {
     if (_htab->htable == NULL)
         return;
 
@@ -140,8 +129,7 @@ hdestroy_r(struct hsearch_data *_htab)
 /************* NON REENTRANT VERSIONS ************/
 
 ENTRY *
-hsearch(ENTRY item, ACTION action)
-{
+hsearch(ENTRY item, ACTION action) {
     ENTRY *retval;
 
     hsearch_r(item, action, &retval, &htab);
@@ -149,14 +137,12 @@ hsearch(ENTRY item, ACTION action)
     return retval;
 }
 
-void 
-hdestroy()
-{
+void
+hdestroy() {
     hdestroy_r(&htab);
 }
 
-int 
-hcreate(size_t nel)
-{
+int
+hcreate(size_t nel) {
     return hcreate_r(nel, &htab);
 }

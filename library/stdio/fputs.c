@@ -6,6 +6,10 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef _FCNTL_HEADERS_H
+#include "fcntl_headers.h"
+#endif /* _FCNTL_HEADERS_H */
+
 int
 fputs(const char *s, FILE *stream) {
     struct iob *file = (struct iob *) stream;
@@ -29,7 +33,7 @@ fputs(const char *s, FILE *stream) {
         return result;
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -125,7 +129,7 @@ fputs(const char *s, FILE *stream) {
                     ssize_t num_bytes_written;
 
                     /* We bypass the buffer entirely. */
-                    num_bytes_written = write(file->iob_Descriptor, s, total_size);
+                    num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, total_size);
                     if (num_bytes_written == -1) {
                         SET_FLAG(file->iob_Flags, IOBF_ERROR);
                         goto out;
@@ -192,7 +196,7 @@ out:
         }
     }
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

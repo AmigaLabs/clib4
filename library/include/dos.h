@@ -294,7 +294,7 @@ struct _clib4 {
 
     /* Wof Allocator main pointer */
     wof_allocator_t *__wof_allocator;
-    struct SignalSemaphore *__wof_allocator_semaphore;
+    void *unused6;
 
     /* Names of files and directories to delete when shutting down. */
     struct MinList __unlink_list;
@@ -338,7 +338,8 @@ struct _clib4 {
     struct WBStartup *__WBenchMsg;
     BOOL __no_standard_io;
 
-    void *unused5;
+    /* The pointer to the data made by tgetent is left here for tgetnum, tgetflag and tgetstr to find.  */
+    char *term_entry;
 
     /* CPU cache line size; used to align I/O buffers for best performance. */
     ULONG __cache_line_size;
@@ -517,6 +518,7 @@ struct _clib4 {
      */
     struct sigaction action_array[NSIG];
 
+    int __children;
 };
 
 #ifndef __getClib4

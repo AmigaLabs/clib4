@@ -1106,3 +1106,8 @@ Clib4Call(waitpid, 4364);
 Clib4Call(spawnvpe, 4368);
 
 Clib4Call(waitpoll, 4372);
+
+Clib4Call(__get_tc_pc, 4376);
+Clib4Call(__get_tc_ospeed, 4380);
+Clib4Call(__get_tc_up, 4384);
+Clib4Call(__get_tc_bc, 4388);

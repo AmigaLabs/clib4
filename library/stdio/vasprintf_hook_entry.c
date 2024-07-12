@@ -41,7 +41,7 @@ __vasprintf_hook_entry(
 
         new_size = string_iob->iob_StringPosition + fam->fam_Size + granularity;
 
-        buffer = malloc(new_size);
+        buffer = __malloc_r(__clib4, new_size);
         if (buffer == NULL) {
             fam->fam_Error = ENOBUFS;
             goto out;

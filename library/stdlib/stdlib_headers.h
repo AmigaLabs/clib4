@@ -101,10 +101,14 @@ extern int _main(char *argstr,
                  void (*__EXT_CTOR_LIST__[])(void),
                  void (*__EXT_DTOR_LIST__[])(void));
 
+extern void *__malloc_r(struct _clib4 *__clib4, size_t size);
+
 #ifndef _STDLIB_PROTOS_H
 #include "stdlib_protos.h"
 #endif /* _STDLIB_PROTOS_H */
 
 extern void kprintf(const char * format,...);
+
+#define NAMELEN 32
 
 #endif /* _STDLIB_HEADERS_H */

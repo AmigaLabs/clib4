@@ -147,7 +147,7 @@ spawnv(int mode, const char *file, const char **argv) {
         return ret;
     }
 
-    arg_string = malloc(parameter_string_len + 1);
+    arg_string = __malloc_r(__clib4, parameter_string_len + 1);
     if (arg_string == NULL) {
         __set_errno(ENOMEM);
         return ret;
@@ -161,9 +161,10 @@ spawnv(int mode, const char *file, const char **argv) {
     /* Add a NUL, to be nice... */
     arg_string[arg_string_len] = '\0';
 
-    char finalpath[PATH_MAX];
-    memset(finalpath, 0, PATH_MAX);
+    char finalpath[PATH_MAX] = {0};
+    char processName[NAMELEN] = {0};
     snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
+    snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
     struct Process *me = (struct Process *) FindTask(NULL);
     BPTR in  = mode == P_WAIT ? me->pr_CIS : 0;
@@ -176,7 +177,7 @@ spawnv(int mode, const char *file, const char **argv) {
                      SYS_UserShell, TRUE,
                      SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
                      NP_ExitCode, spawnedProcessExit,
-                     NP_Name, file,
+                     NP_Name, strdup(processName),
                      NP_Child, TRUE,
                      TAG_DONE);
     if (ret != 0) {
@@ -186,6 +187,7 @@ spawnv(int mode, const char *file, const char **argv) {
         errno = __translate_io_error_to_errno(IoErr());
     }
     else {
+        __clib4->__children++;
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid

@@ -8,9 +8,13 @@
 
 int
 ungetc(int c, FILE *stream) {
+    return __ungetc_r(__CLIB4, c, stream);
+}
+
+int
+__ungetc_r(struct _clib4 *__clib4, int c, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWVALUE(c);
@@ -26,7 +30,7 @@ ungetc(int c, FILE *stream) {
         return (result);
     }
 
-    flockfile(stream);
+    __flockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -82,7 +86,7 @@ ungetc(int c, FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

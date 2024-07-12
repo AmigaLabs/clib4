@@ -21,7 +21,7 @@ fflush(FILE *stream) {
 
         assert(__is_valid_iob(__clib4, file));
 
-        flockfile(stream);
+        __flockfile_r(__clib4, stream);
 
         if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0)
             goto out;
@@ -55,7 +55,7 @@ fflush(FILE *stream) {
 out:
 
     if (stream != NULL)
-        funlockfile(stream);
+        __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

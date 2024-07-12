@@ -38,7 +38,7 @@ getcwd(char *buffer, size_t buffer_size) {
          * size is zero, when buf is allocated as big as necessary.  The
          * caller should free(3) the returned buffer.
         */
-        buffer = malloc(PATH_MAX);
+        buffer = __malloc_r(__clib4, PATH_MAX);
         buffer_size = PATH_MAX;
         if (buffer == NULL) {
             SHOWMSG("not enough memory for result buffer");

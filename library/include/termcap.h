@@ -19,14 +19,18 @@
 #define _TERMCAP_H 1
 
 #include <features.h>
-#include <dos.h>
 
 __BEGIN_DECLS
 
-#define PC __CLIB4->__PC
-#define ospeed __CLIB4__ospeed
-#define UP __CLIB4->__UP
-#define BC __CLIB4->__BC
+extern char __get_tc_pc(void);
+extern short __get_tc_ospeed(void);
+extern char *__get_tc_up(void);
+extern char *__get_tc_bc(void);
+
+#define PC __get_tc_pc()
+#define ospeed __get_tc_ospeed()
+#define UP __get_tc_up()
+#define BC __get_tc_bc()
 
 extern int tgetent (char *buffer, const char *termtype);
 extern int tgetnum (const char *name);
