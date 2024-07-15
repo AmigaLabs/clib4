@@ -6,6 +6,10 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef _FCNTL_HEADERS_H
+#include "fcntl_headers.h"
+#endif /* _FCNTL_HEADERS_H */
+
 size_t
 fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
@@ -32,17 +36,8 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     __flockfile_r(__clib4, stream);
 
-    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
-        SHOWMSG("this file is not even in use");
-
-        SET_FLAG(file->iob_Flags, IOBF_ERROR);
-        SET_FLAG(file->iob_Flags2, __SERR);
-        __set_errno(EBADF);
-        goto out;
-    }
-
-    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_WRITE)) {
-        SHOWMSG("this stream is not write-enabled");
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE) || FLAG_IS_CLEAR(file->iob_Flags, IOBF_WRITE)) {
+        SHOWMSG("this file is not even in use or write enabled");
 
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
         SET_FLAG(file->iob_Flags2, __SERR);
@@ -136,7 +131,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                 ssize_t num_bytes_written;
 
                 /* We bypass the buffer entirely. */
-                num_bytes_written = write(file->iob_Descriptor, s, total_size);
+                num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, total_size);
                 if (num_bytes_written == -1) {
                     SET_FLAG(file->iob_Flags, IOBF_ERROR);
                     goto out;
@@ -161,7 +156,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                     if (file->iob_BufferWriteBytes == 0 && total_size >= (size_t) file->iob_BufferSize) {
                         SHOWMSG("bypass the buffer entirely");
                         /* We bypass the buffer entirely. */
-                        ssize_t num_bytes_written = write(file->iob_Descriptor, s, total_size);
+                        ssize_t num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, total_size);
                         if (num_bytes_written == -1) {
                             SET_FLAG(file->iob_Flags, IOBF_ERROR);
                             goto out;
@@ -180,7 +175,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                         if (total_size < num_buffer_bytes)
                             num_buffer_bytes = total_size;
 
-                        memmove(buffer, s, num_buffer_bytes);
+                        memcpy(buffer, s, num_buffer_bytes);
                         s += num_buffer_bytes;
 
                         file->iob_BufferWriteBytes += num_buffer_bytes;

@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_write.c,v 1.12 2023-07-04 12:04:22 clib4devs Exp $
+ * $Id: fcntl_write.c,v 1.13 2024-07-12 12:04:22 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -89,7 +89,7 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
             }
         } else {
             /* Otherwise forward the call to send() */
-            num_bytes_written = send(file_descriptor, buffer, num_bytes, 0);
+            num_bytes_written = __send_r(__clib4, file_descriptor, buffer, num_bytes, 0);
         }
     } else {
         num_bytes_written = 0;
@@ -97,7 +97,7 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
 
     result = num_bytes_written;
 
-    out:
+out:
 
     __fd_unlock(fd);
     __stdio_unlock(__clib4);
