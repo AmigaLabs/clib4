@@ -1046,26 +1046,26 @@ struct Clib4IFace {
     wint_t (* putwchar) (wchar_t c);                                                                                                                 /* 3480 */
     wint_t (* fputws) (const wchar_t *s, FILE *stream);                                                                                              /* 3484 */
     int (* fwprintf) (FILE *stream, const wchar_t *format, ...);                                                                                     /* 3488 */
-    int (* swprintf) (wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, ...);                                                              /* 3492 */
+    int (* swprintf) (wchar_t *s, size_t l, const wchar_t *fmt, ...);                                                                                /* 3492 */
     int (* vfwprintf) (FILE *stream, const wchar_t *format, va_list arg);                                                                            /* 3496 */
     int (* vswprintf) (wchar_t *s, size_t maxlen, const wchar_t *format, va_list arg);                                                               /* 3500 */
     int (* vwprintf) (const wchar_t *format, va_list arg);                                                                                           /* 3504 */
     int (* wprintf) (const wchar_t *format, ...);                                                                                                    /* 3508 */
     size_t (* wcsftime) (wchar_t *s, size_t maxsize, const wchar_t *format, const struct tm *timeptr);                                               /* 3512 */
-    size_t (* mbrlen) (const char *restrict s, size_t n, mbstate_t *restrict ps);                                                                    /* 3516 */
+    size_t (* mbrlen) (const char *s, size_t n, mbstate_t *ps);                                                                                      /* 3516 */
     size_t (* mbrtowc) (wchar_t *pwc, const char *src, size_t n, mbstate_t *ps);                                                                     /* 3520 */
     int (* mbsinit) (const mbstate_t *ps);                                                                                                           /* 3524 */
-    size_t (* mbsrtowcs) (wchar_t *restrict dst, const char **restrict src, size_t len, mbstate_t *restrict ps);                                     /* 3528 */
-    size_t (* wcrtomb) (char *restrict s, wchar_t wc, mbstate_t *restrict ps);                                                                       /* 3532 */
+    size_t (* mbsrtowcs) (wchar_t *dst, const char **src, size_t len, mbstate_t *ps);                                                                /* 3528 */
+    size_t (* wcrtomb) (char *s, wchar_t wc, mbstate_t *ps);                                                                                         /* 3532 */
     int (* wcscoll) (const wchar_t *ws1, const wchar_t *ws2);                                                                                        /* 3536 */
     size_t (* wcscspn) (const wchar_t *s, const wchar_t *c);                                                                                         /* 3540 */
     wchar_t * (* wcsrchr) (const wchar_t *ws, wchar_t wc);                                                                                           /* 3544 */
-    size_t (* wcsrtombs) (char *restrict dst, const wchar_t **restrict src, size_t len, mbstate_t *restrict ps);                                     /* 3548 */
+    size_t (* wcsrtombs) (char *dst, const wchar_t **src, size_t len, mbstate_t *ps);                                                                /* 3548 */
     long long (* wcstoll) (const wchar_t *str, wchar_t **ptr, int base);                                                                             /* 3552 */
     unsigned long long (* wcstoull) (const wchar_t *str, wchar_t **ptr, int base);                                                                   /* 3556 */
     long double (* wcstold) (const wchar_t *nptr, wchar_t **endptr);                                                                                 /* 3560 */
-    size_t (* mbsnrtowcs) (wchar_t *dst, const char **restrict src, size_t nmc, size_t len, mbstate_t *restrict ps);                                 /* 3564 */
-    size_t (* wcsnrtombs) (char *restrict dst, const wchar_t **restrict src, size_t nwc, size_t len, mbstate_t *restrict ps);                        /* 3568 */
+    size_t (* mbsnrtowcs) (wchar_t *dst, const char **src, size_t nmc, size_t len, mbstate_t *ps);                                                   /* 3564 */
+    size_t (* wcsnrtombs) (char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps);                                                   /* 3568 */
     wchar_t * (* wcsdup) (const wchar_t *src);                                                                                                       /* 3572 */
     size_t (* wcsnlen) (const wchar_t *src, size_t n);                                                                                               /* 3576 */
     wchar_t * (* wcpcpy) (wchar_t *dst, const wchar_t *src);                                                                                         /* 3580 */

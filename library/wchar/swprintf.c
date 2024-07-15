@@ -9,7 +9,7 @@
 /****************************************************************************/
 
 int
-swprintf(wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, ...)
+swprintf(wchar_t *s, size_t l, const wchar_t *fmt, ...)
 {
     int ret;
     va_list ap;
