@@ -117,7 +117,7 @@ extern int aio_read(struct aiocb *aiocbp);
 extern int aio_write(struct aiocb *aiocbp);
 
 /* Initiate list of I/O requests.  */
-extern int lio_listio(int mode, struct aiocb *const list[restrict], int nent, struct sigevent * sig);
+extern int lio_listio(int mode, struct aiocb *const list[], int nent, struct sigevent * sig);
 
 /* Retrieve error status associated with AIOCBP.  */
 extern int aio_error(const struct aiocb *aiocbp);

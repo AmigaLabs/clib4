@@ -12,7 +12,7 @@
 #define HASZERO(x) ((x)-ONES & ~(x) & HIGHS)
 
 char *
-stpncpy(char *restrict d, const char *restrict s, size_t n) {
+stpncpy(char *d, const char *s, size_t n) {
     typedef size_t __attribute__((__may_alias__)) word;
     word *wd;
     const word *ws;

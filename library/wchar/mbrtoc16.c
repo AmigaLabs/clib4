@@ -9,7 +9,7 @@
 #include <uchar.h>
 
 size_t
-mbrtoc16(char16_t *restrict pc16, const char *restrict s, size_t n, mbstate_t *restrict ps) {
+mbrtoc16(char16_t *pc16, const char *s, size_t n, mbstate_t *ps) {
     static unsigned internal_state;
     if (!ps) ps = (void *) &internal_state;
     unsigned *pending = (unsigned *) ps;
