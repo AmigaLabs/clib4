@@ -59,7 +59,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
     if (original_name == NULL && original_value == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -103,7 +103,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
     if (name == NULL || name[0] == '\0' || value == NULL) {
         SHOWMSG("invalid name");
 
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -148,10 +148,10 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
 
         if (lv != NULL) {
             __clib4->__lv_root = lv->lv_Next;
-            free(lv);
+            __free_r(__clib4, lv);
         }
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 
@@ -160,7 +160,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
 out:
 
     if (name_copy != NULL)
-        free(name_copy);
+        __free_r(__clib4, name_copy);
 
     RETURN(result);
     return (result);

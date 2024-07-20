@@ -160,7 +160,6 @@ C_POSIX := \
 	posix/getrlimit.o \
 	posix/setrlimit.o \
 	posix/getrusage.o \
-	posix/checkabort.o \
 	posix/kill.o \
 	posix/raise.o \
 	posix/sigaction.o \

@@ -13,11 +13,11 @@ int pipe(int fd[2]) {
     struct _clib4 *__clib4 = __CLIB4;
 
 #ifdef USE_TEMPFILES
-    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", __clib4->pipenum++, ((struct Process *)FindTask(NULL))->pr_ProcessID);
+    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", __clib4->pipenum++, __clib4->self->pr_ProcessID);
     // Delete the file if exists (we don't need to check if file exists)
     Delete(pipe_name);
 #else
-    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", __clib4->pipenum++, ((struct Process *) FindTask(NULL))->pr_ProcessID);
+    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", __clib4->pipenum++, __clib4->self->pr_ProcessID);
 #endif // USE_TEMPFILES
 
     fd[1] = open(pipe_name, O_WRONLY | O_CREAT);

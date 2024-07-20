@@ -30,8 +30,6 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
     assert(buffer != NULL);
     assert((int) num_bytes >= 0);
 
-    __check_abort_f(__clib4);
-
     __stdio_lock(__clib4);
 
     if (buffer == NULL) {
@@ -47,7 +45,7 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
 
     fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -63,7 +61,7 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE)) {
         SHOWMSG("file descriptor is not write-enabled");
 
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -82,10 +80,10 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
 
             num_bytes_written = (*fd->fd_Action)(__clib4, fd, &fam);
             if (num_bytes_written == EOF) {
-                __set_errno(fam.fam_Error);
+                __set_errno_r(__clib4, fam.fam_Error);
                 goto out;
             } else if (num_bytes_written != num_bytes) {
-                __set_errno(__translate_io_error_to_errno(IoErr()));
+                __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
             }
         } else {
             /* Otherwise forward the call to send() */

@@ -22,16 +22,14 @@ int pipe2(int fd[2], int flags) {
 
     ObtainSemaphore(__clib4->__pipe_semaphore);
 #ifdef USE_TEMPFILES
-    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", __clib4->__pipenum++, ((struct Process *)FindTask(NULL))->pr_ProcessID);
+    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
     // Delete the file if exists (we don't need to check if file exists)
     Delete(pipe_name);
 #else
     if (flags & O_NONBLOCK)
-        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0/NOBLOCK", __clib4->__pipenum++,
-                 ((struct Process *) FindTask(NULL))->pr_ProcessID);
+        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0/NOBLOCK", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
     else
-        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", __clib4->__pipenum++,
-                 ((struct Process *) FindTask(NULL))->pr_ProcessID);
+        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
 #endif // USE_TEMPFILES
     ReleaseSemaphore(__clib4->__pipe_semaphore);
 

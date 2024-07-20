@@ -23,10 +23,8 @@ feof(FILE *stream) {
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 
-        __set_errno(EFAULT);
-
+        __set_errno_r(__clib4, EFAULT);
         result = 0;
-
         goto out;
     }
 

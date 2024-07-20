@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fgetpos.c,v 1.8 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_fgetpos.c,v 1.9 2024-07-20 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -10,6 +10,7 @@ int
 fgetpos(FILE *stream, fpos_t *pos) {
     int result = EOF;
     fpos_t position;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -18,14 +19,15 @@ fgetpos(FILE *stream, fpos_t *pos) {
 
     assert(stream != NULL && pos != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL || pos == NULL) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return result;
     }
+
+    __flockfile_r(__clib4, stream);
 
     position = ftell(stream);
     if (position == CHANGE_FILE_ERROR && __get_errno() != OK) {
@@ -40,7 +42,7 @@ fgetpos(FILE *stream, fpos_t *pos) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

@@ -28,28 +28,29 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
 
         RETURN(result);
         return (result);
     }
 
-    __flockfile_r(__clib4, stream);
-
     if (bufmode < IOBF_BUFFER_MODE_FULL ||
         bufmode > IOBF_BUFFER_MODE_NONE) {
         SHOWMSG("invalid buffer mode");
 
-        __set_errno(EINVAL);
-        goto out;
+        RETURN(result);
+        return (result);
     }
 
     if ((int) size < 0) {
         SHOWMSG("invalid buffer size");
 
-        __set_errno(EINVAL);
-        goto out;
+        __set_errno_r(__clib4, EINVAL);
+        RETURN(result);
+        return (result);
     }
+
+    __flockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -58,7 +59,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -77,7 +78,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
             /* Allocate a little more memory than necessary. */
             new_buffer = AllocVecTags(size + (__clib4->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_Alignment, __clib4->__cache_line_size, TAG_DONE);
             if (new_buffer == NULL) {
-                __set_errno(ENOBUFS);
+                __set_errno_r(__clib4, ENOBUFS);
                 goto out;
             }
         }
@@ -137,7 +138,7 @@ out:
     __funlockfile_r(__clib4, stream);
 
     if (new_buffer != NULL)
-        free(new_buffer);
+        __free_r(__clib4, new_buffer);
 
     RETURN(result);
     return (result);

@@ -55,7 +55,7 @@ execl(const char *path, const char *arg0, ...) {
 out:
 
     if (argv != NULL)
-        free(argv);
+        __free_r(__clib4, argv);
 
     return (result);
 }

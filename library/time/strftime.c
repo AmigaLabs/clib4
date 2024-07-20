@@ -511,7 +511,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
     if (s == NULL || format == NULL || tm == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 

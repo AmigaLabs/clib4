@@ -10,36 +10,36 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
-wint_t
+int
 fputws(const wchar_t *ws, FILE *fp) {
-    char buf[BUFSIZ] = {0};
+    char buf[BUFSIZ];
     int nwritten = 0;
-    int nchars = (int) wcslen(ws);
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    while (nchars > 0) {
-        int nbytes = 0;
-        char *ptr = (char *) &buf;
-        while ((nbytes < (BUFSIZ - (MB_LEN_MAX * 2))) && (nchars)) {
-            int n = wctomb(ptr, *ws);
-            if (n < 0) {
-                __set_errno(EILSEQ);
-                RETURN(0);
-                return 0;
-            }
-            ws++;
-            ptr += n;
-            nbytes += n;
-            nchars--;
-        }
-        *ptr = '\0';
-        if (fputs(buf, fp) < nbytes) {
-            RETURN(0);
-            return 0;
-        }
-        nwritten += nbytes;
+    if (fp == NULL || ws == NULL) {
+        __set_errno_r(__clib4, EFAULT);
+        RETURN(EOF);
+        return EOF;
     }
+
+    __check_abort_f(__clib4);
+
+    __flockfile_r(__clib4, fp);
+
+    fwide(fp, 1);
+
+    while (ws && (nwritten = wcsrtombs((void *) buf, (void *) &ws, sizeof buf, 0)) + 1 > 1) {
+        if (fwrite(buf, nwritten, 1, fp) < nwritten) {
+            nwritten = EOF;
+            goto out;
+        }
+    }
+
+out:
+
+    __funlockfile_r(__clib4, fp);
 
     RETURN(nwritten);
     return (nwritten);

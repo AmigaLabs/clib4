@@ -152,6 +152,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
 
             lock = Lock((STRPTR) path_name, SHARED_LOCK);
             if (lock != BZERO) {
+                SHOWMSG("File already exists");
                 fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
                 if (fib == NULL) {
                     SHOWMSG("could not examine the object");
@@ -308,7 +309,7 @@ directory:
                     path_name_copy[len] = '\0';
 
                     is_file_system = IsFileSystem(path_name_copy);
-                    free(path_name_copy);
+                    __free_r(__clib4, path_name_copy);
                 }
             } else {
                 is_file_system = IsFileSystem("");
@@ -368,7 +369,8 @@ out:
         Close(handle);
 
     FreeDosObject(DOS_EXAMINEDATA, fib);
-    UnLock(lock);
+    if (lock != BZERO)
+        UnLock(lock);
 
     __stdio_unlock(__clib4);
 

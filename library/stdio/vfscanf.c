@@ -46,19 +46,20 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
 
     assert(stream != NULL && format != NULL);
 
-    __flockfile_r(__clib4, stream);
-
     if (stream == NULL || format == NULL) {
         __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return result;
     }
+
+    __flockfile_r(__clib4, stream);
 
     if (__fgetc_check(__clib4, stream) < 0)
         goto out;
 
     /* Just so we can detect errors and tell them apart from
        an 'end of file' condition. */
-    clearerr(stream);
+    __clearerr_r(__clib4, stream);
 
     while ((c = (*(unsigned char *) format)) != '\0') {
         D(("next format character is '%lc'", c));

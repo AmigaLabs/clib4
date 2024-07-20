@@ -26,7 +26,7 @@ int statfs(const char *path, struct statfs *buf) {
     if (path == NULL || buf == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -34,7 +34,7 @@ int statfs(const char *path, struct statfs *buf) {
         if (path[0] == '\0') {
             SHOWMSG("no name given");
 
-            __set_errno(ENOENT);
+            __set_errno_r(__clib4, ENOENT);
             goto out;
         }
 
@@ -70,7 +70,7 @@ int statfs(const char *path, struct statfs *buf) {
     if (lock == BZERO) {
         SHOWMSG("that didn't work");
 
-        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_access_io_error_to_errno(IoErr()));
         goto out;
     }
 
@@ -78,7 +78,7 @@ int statfs(const char *path, struct statfs *buf) {
     if (status == DOSFALSE) {
         SHOWMSG("didn't get the info");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 

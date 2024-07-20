@@ -112,7 +112,7 @@ extern wint_t putwchar(wchar_t c);
 
 /****************************************************************************/
 
-extern wint_t fputws(const wchar_t *s, FILE *stream);
+extern int fputws(const wchar_t *s, FILE *stream);
 
 /****************************************************************************/
 //#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)

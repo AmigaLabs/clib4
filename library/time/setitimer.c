@@ -48,7 +48,7 @@ __setitimer(int which, const struct itimerval *new_value, struct itimerval *old_
     struct itimer _itimer;
 
     if (new_value == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         return -1;
     }
 
@@ -86,7 +86,7 @@ __setitimer(int which, const struct itimerval *new_value, struct itimerval *old_
                             NP_CloseOutput, TRUE,
                             TAG_END);
                     if (!__clib4->tmr_real_task) {
-                        __set_errno(EFAULT);
+                        __set_errno_r(__clib4, EFAULT);
                         return -1;
                     }
                 }
@@ -100,11 +100,11 @@ __setitimer(int which, const struct itimerval *new_value, struct itimerval *old_
 
             break;
         case ITIMER_VIRTUAL:
-            __set_errno(ENOSYS);
+            __set_errno_r(__clib4, ENOSYS);
             return -1;
             break;
         case ITIMER_PROF:
-            __set_errno(ENOSYS);
+            __set_errno_r(__clib4, ENOSYS);
             return -1;
             break;
         default:

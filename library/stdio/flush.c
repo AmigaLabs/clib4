@@ -13,11 +13,10 @@
    was a line feed, prompting the buffer contents to be flushed. It should
    never be used in place of fflush(). */
 int
-__flush(FILE *stream) {
+__flush_r(struct _clib4 *__clib4, FILE *stream) {
     struct iob *iob = (struct iob *) stream;
     int result = EOF;
     int last_c;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -27,7 +26,7 @@ __flush(FILE *stream) {
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
 
         RETURN(result);
         return result;
@@ -55,4 +54,11 @@ out:
 
     RETURN(result);
     return (result);
+}
+
+int
+__flush(FILE *stream) {
+    struct _clib4 *__clib4 = __CLIB4;
+
+    return __flush_r(__clib4, stream);
 }

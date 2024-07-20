@@ -26,7 +26,7 @@ freopen(const char *filename, const char *mode, FILE *stream) {
     if (filename == NULL || mode == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 

@@ -19,7 +19,7 @@ void (*signal(int sig, void (*handler)(int)))(int) {
     if (sig < 0 || sig > NSIG || handler == SIG_ERR) {
         SHOWMSG("unsupported signal");
 
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 

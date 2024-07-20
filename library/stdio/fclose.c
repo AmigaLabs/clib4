@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fclose.c,v 1.12 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_fclose.c,v 1.13 2024-07-20 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -82,7 +82,7 @@ fclose(FILE *stream) {
 
         UnLock(file->iob_TempFileLock);
 
-        free(file->iob_TempFileName);
+        __free_r(__clib4, file->iob_TempFileName);
     }
 
     /* Get rid of any custom file buffer allocated. */
@@ -94,10 +94,7 @@ fclose(FILE *stream) {
 
     /* Free the lock semaphore now. */
     SHOWMSG("Delete iob_Lock");
-    FreeSysObject(ASOT_MUTEX, file->iob_Lock);
-    /* Just to be sure */
-    CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
-    file->iob_TaskLock = NULL;
+    __delete_semaphore(file->iob_Lock);
 
     SHOWMSG("Clear file structure");
     memset(file, 0, sizeof(*file));

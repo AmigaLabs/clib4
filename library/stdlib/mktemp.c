@@ -41,7 +41,7 @@ mktemp(char *name_template) {
         goto out;
     }
 
-    this_process = (struct Process *) FindTask(NULL);
+    this_process = __clib4->self;
 
     SHOWSTRING(name_template);
 

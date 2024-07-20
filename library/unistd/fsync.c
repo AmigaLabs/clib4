@@ -19,8 +19,6 @@ fsync(int file_descriptor) {
 
     SHOWVALUE(file_descriptor);
 
-    __check_abort_f(__clib4);
-
     assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
     assert(__clib4->__fd[file_descriptor] != NULL);
     assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));

@@ -166,7 +166,7 @@ spawnv(int mode, const char *file, const char **argv) {
     snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
     snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
-    struct Process *me = (struct Process *) FindTask(NULL);
+    struct Process *me = __clib4->self;
     BPTR in  = mode == P_WAIT ? me->pr_CIS : 0;
     BPTR out  = mode == P_WAIT ? me->pr_COS : 0;
     D(("Launching [%s]", finalpath));

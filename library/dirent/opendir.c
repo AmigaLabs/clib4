@@ -102,7 +102,7 @@ opendir(const char *path_name) {
                         this is not the most sophisticated algorithm but then
                         the number of volumes should be small. */
                     if (find_by_name((struct List *) &dh->dh_VolumeList, node->ln_Name) != NULL) {
-                        free(node);
+                        __free_r(__clib4, node);
                         continue;
                     }
 
@@ -185,12 +185,12 @@ out:
             struct Node *node;
 
             while ((node = RemHead((struct List *) &dh->dh_VolumeList)) != NULL)
-                free(node);
+                __free_r(__clib4, node);
         }
 
         UnLock(dh->dh_DirLock);
 
-        free(dh);
+        __free_r(__clib4, dh);
     }
 
     RETURN(result);

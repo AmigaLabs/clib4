@@ -21,7 +21,7 @@ fgets(char *buf, int n, FILE *stream) {
     if (buf == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         RETURN(NULL);
         return NULL;
     }
@@ -31,6 +31,8 @@ fgets(char *buf, int n, FILE *stream) {
         RETURN(NULL);
         return NULL;
     }
+
+    __check_abort_f(__clib4);
 
     __flockfile_r(__clib4, stream);
 
@@ -43,7 +45,7 @@ fgets(char *buf, int n, FILE *stream) {
     }
 
     /* So that we can tell error and 'end of file' conditions apart. */
-    clearerr(stream);
+    __clearerr_r(__clib4, stream);
 
     /* One off for the terminating '\0'. */
     n--;

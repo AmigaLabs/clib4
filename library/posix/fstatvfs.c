@@ -23,13 +23,13 @@ fstatvfs(int fd, struct statvfs *buf) {
 
     struct fd *fildes = __get_file_descriptor(__clib4, fd);
     if (fildes == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     file = ParentOfFH(fildes->fd_File);
     if (file == BZERO) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -50,7 +50,7 @@ fstatvfs(int fd, struct statvfs *buf) {
         if (info->id_VolumeNode == BZERO) {
             FreeDosObject(DOS_INFODATA, info);
             /* Device not present or not responding */
-            __set_errno(ENXIO);
+            __set_errno_r(__clib4, ENXIO);
             goto out;
         }
 

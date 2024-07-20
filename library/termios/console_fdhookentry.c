@@ -560,7 +560,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
         __stdio_unlock(__clib4);
 
     if (buffer != NULL)
-        free(buffer);
+        __free_r(__clib4, buffer);
 
     SHOWVALUE(result);
 

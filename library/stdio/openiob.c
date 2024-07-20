@@ -12,7 +12,7 @@
 
 int
 __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int file_descriptor, int slot_number) {
-    APTR lock;
+    struct SignalSemaphore *lock;
     ULONG file_flags;
     int result = ERROR;
     int open_mode;
@@ -44,7 +44,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
         fd = __get_file_descriptor(__clib4, file_descriptor);
         if (fd == NULL) {
-            __set_errno(EBADF);
+            __set_errno_r(__clib4, EBADF);
             goto out;
         }
     }
@@ -76,7 +76,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
             D(("unsupported file open mode '%lc'", mode[0]));
 
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             goto out;
     }
 
@@ -97,7 +97,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
-        __set_errno(ENOBUFS);
+        __set_errno_r(__clib4, ENOBUFS);
         goto out;
     }
 
@@ -118,7 +118,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     }
 
     /* Allocate memory for an arbitration mechanism, then initialize it. */
-    lock = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, FALSE, TAG_DONE);
+    lock = __create_semaphore();
     if (lock == NULL)
         goto out;
 

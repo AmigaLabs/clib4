@@ -36,7 +36,7 @@ CLIB_CONSTRUCTOR(timer_init) {
 
     __clib4->__timer_port = AllocSysObjectTags(ASOT_PORT,
                                                ASOPORT_Action, PA_SIGNAL,
-                                               ASOPORT_Target, FindTask(NULL),
+                                               ASOPORT_Target, (struct Task *) __clib4->self,
                                                ASOPORT_AllocSig, FALSE,
                                                ASOPORT_Signal, SIGB_SINGLE,
                                                TAG_DONE);

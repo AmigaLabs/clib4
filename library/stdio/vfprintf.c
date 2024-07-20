@@ -470,7 +470,8 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
 
         /* Update output count, end loop when fmt is exhausted */
         cnt += l;
-        if (!*s) break;
+        if (!*s)
+            break;
 
         /* Handle literal text and %% format specifiers */
         for (a = s; *s && *s != '%'; s++);
@@ -500,8 +501,10 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
         if (*s == '*') {
             if (__isdigit_r(__clib4, s[1]) && s[2] == '$') {
                 l10n = 1;
-                if (!f) nl_type[s[1] - '0'] = _INT, w = 0;
-                else w = nl_arg[s[1] - '0'].i;
+                if (!f)
+                    nl_type[s[1] - '0'] = _INT, w = 0;
+                else
+                    w = nl_arg[s[1] - '0'].i;
                 s += 3;
             }
             else if (!l10n) {

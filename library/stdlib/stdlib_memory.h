@@ -49,6 +49,9 @@ struct MemalignEntry {
 extern void __memory_lock(struct _clib4 *__clib4);
 extern void __memory_unlock(struct _clib4 *__clib4);
 
+extern void __free_r(struct _clib4 *__clib4, void *ptr);
+
+
 extern int32 MemalignAVLNodeComp(struct AVLNode *avlnode1, struct AVLNode *avlnode2);
 extern int32 MemalignAVLKeyComp(struct AVLNode *avlnode1, AVLKey key2);
 

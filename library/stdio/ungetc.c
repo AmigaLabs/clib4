@@ -24,7 +24,7 @@ __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream) {
 
     if (stream == NULL) {
         SHOWMSG("null file pointer!");
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
 
         RETURN(result);
         return (result);
@@ -39,7 +39,7 @@ __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream) {
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -47,7 +47,7 @@ __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream) {
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ)) {
         SHOWMSG("can't even read from this file");
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-        __set_errno(EACCES);
+        __set_errno_r(__clib4, EACCES);
         goto out;
     }
 
@@ -55,7 +55,7 @@ __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream) {
     if (c == EOF) {
         SHOWMSG("cannot push back an EOF");
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -72,7 +72,7 @@ __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream) {
     if (file->iob_BufferPosition == 0) {
         SHOWMSG("no room to push back");
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-        __set_errno(ENOBUFS);
+        __set_errno_r(__clib4, ENOBUFS);
         goto out;
     }
 

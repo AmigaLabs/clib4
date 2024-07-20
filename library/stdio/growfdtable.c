@@ -42,10 +42,10 @@ __grow_fd_table(struct _clib4 *__clib4, int max_fd) {
 
                 for (j = __clib4->__num_fd; j < i; j++) {
                     UnlockMem(new_fd[j], sizeof(*new_fd[j]));
-                    free(new_fd[j]);
+                    __free_r(__clib4, new_fd[j]);
                 }
 
-                free(new_fd);
+                __free_r(__clib4, new_fd);
 
                 __set_errno(ENOMEM);
                 goto out;
@@ -59,7 +59,7 @@ __grow_fd_table(struct _clib4 *__clib4, int max_fd) {
             for (i = 0; i < __clib4->__num_fd; i++)
                 new_fd[i] = __clib4->__fd[i];
 
-            free(__clib4->__fd);
+            __free_r(__clib4, __clib4->__fd);
         }
 
         __clib4->__fd = new_fd;

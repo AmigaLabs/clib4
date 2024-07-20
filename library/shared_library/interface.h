@@ -1044,7 +1044,7 @@ struct Clib4IFace {
     wint_t (* fputwc) (wchar_t c, FILE *stream);                                                                                                     /* 3472 */
     wint_t (* putwc) (wchar_t c, FILE *stream);                                                                                                      /* 3476 */
     wint_t (* putwchar) (wchar_t c);                                                                                                                 /* 3480 */
-    wint_t (* fputws) (const wchar_t *s, FILE *stream);                                                                                              /* 3484 */
+    int (* fputws) (const wchar_t *s, FILE *stream);                                                                                                 /* 3484 */
     int (* fwprintf) (FILE *stream, const wchar_t *format, ...);                                                                                     /* 3488 */
     int (* swprintf) (wchar_t *s, size_t l, const wchar_t *fmt, ...);                                                                                /* 3492 */
     int (* vfwprintf) (FILE *stream, const wchar_t *format, va_list arg);                                                                            /* 3496 */

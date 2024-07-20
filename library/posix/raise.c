@@ -28,7 +28,7 @@ raise(int sig) {
     if (sig < 0 || sig > NSIG) {
         SHOWMSG("unknown signal number");
 
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -57,7 +57,7 @@ raise(int sig) {
                 SHOWMSG("this is the default handler");
 
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
-                    __set_errno(EINTR);
+                    __set_errno_r(__clib4, EINTR);
                     /* Check ig we have timer terminal running. If so let's kill it */
                     if (__clib4->tmr_real_task != NULL) {
                         /* Block SIGALRM signal from raise */
@@ -92,7 +92,7 @@ raise(int sig) {
                 }
             }
             else if (handler == SIG_ERR) {
-                __set_errno(EINVAL);
+                __set_errno_r(__clib4, EINVAL);
                 result = ERROR;
                 goto out;
             }
@@ -102,7 +102,7 @@ raise(int sig) {
                     (*handler)(sig);
 
                     if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
-                        __set_errno(EINTR);
+                        __set_errno_r(__clib4, EINTR);
                         SetSignal(0, SIGBREAKF_CTRL_C);
                     }
 

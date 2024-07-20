@@ -30,34 +30,32 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         return (result);
     }
 
+    __check_abort_f(__clib4);
+
+    __flockfile_r(__clib4, stream);
+
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
         __set_errno(EBADF);
-        RETURN(result);
-        return (result);
+        goto out;
     }
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ)) {
         SHOWMSG("this file is not read-enabled");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
         __set_errno(EBADF);
-        RETURN(result);
-        return (result);
+        goto out;
     }
 
     /* So that we can tell error and 'end of file' conditions apart. */
-    clearerr(stream);
-
-    __flockfile_r(__clib4, stream);
+    __clearerr_r(__clib4, stream);
 
     if (element_size > 0 && count > 0) {
         size_t total_bytes_read = 0;

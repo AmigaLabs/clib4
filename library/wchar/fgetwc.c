@@ -61,8 +61,12 @@ fgetwc(FILE *f) {
     wint_t c;
     struct _clib4 *__clib4 = __CLIB4;
 
+    __check_abort_f(__clib4);
+
     __flockfile_r(__clib4, f);
+
     c = __fgetwc_unlocked(__clib4, f);
+
     __funlockfile_r(__clib4, f);
 
     return c;

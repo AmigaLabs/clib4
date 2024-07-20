@@ -27,7 +27,7 @@ int mkdir(const char *path_name, mode_t mode) {
     if (path_name == NULL) {
         SHOWMSG("invalid path name parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -36,7 +36,7 @@ int mkdir(const char *path_name, mode_t mode) {
             goto out;
 
         if (path_name_nti.is_root) {
-            __set_errno(EACCES);
+            __set_errno_r(__clib4, EACCES);
             goto out;
         }
     }
@@ -57,7 +57,7 @@ int mkdir(const char *path_name, mode_t mode) {
     if (counter > 1) {
         SHOWMSG("Invalid directory name parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -72,7 +72,7 @@ int mkdir(const char *path_name, mode_t mode) {
     if (dir_lock == BZERO) {
         SHOWMSG("that didn't work");
 
-        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_access_io_error_to_errno(IoErr()));
         goto out;
     }
 

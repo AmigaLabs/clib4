@@ -147,7 +147,7 @@ out_printf(struct _clib4 *__clib4, FOut *_out, const char *format, ...) {
                 (wide_len == 0) || (wide_len == (size_t) - 1) ||
                 ((wide_buffer = __malloc_r(__clib4, (wide_len + 1) * sizeof(wchar_t))) == NULL)) {
             va_end(args);
-            free(mb_buffer);
+            __free_r(__clib4, mb_buffer);
             RETURN(0);
             return 0;
         }
@@ -157,8 +157,8 @@ out_printf(struct _clib4 *__clib4, FOut *_out, const char *format, ...) {
         // Add to buffer.
         out(_out, wide_buffer, wide_len);
         // finished
-        free(wide_buffer);
-        free(mb_buffer);
+        __free_r(__clib4, wide_buffer);
+        __free_r(__clib4, mb_buffer);
         wide_buffer = NULL;
         mb_buffer = NULL;
         va_end(args);
@@ -249,7 +249,7 @@ wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, u
          * unspecified for other forms, do the same. Stop immediately
          * on overflow; otherwise %n could produce wrong results. */
         if (l > INT_MAX - cnt) {
-            __set_errno(EOVERFLOW);
+            __set_errno_r(__clib4, EOVERFLOW);
             return -1;
         }
 
@@ -261,7 +261,7 @@ wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, u
         for (a = s; *s && *s != '%'; s++);
         for (z=s; s[0]=='%' && s[1]=='%'; z++, s+=2);
         if (z-a > INT_MAX-cnt) {
-            __set_errno(EOVERFLOW);
+            __set_errno_r(__clib4, EOVERFLOW);
             return -1;
         }
         l = (int) (z - a);
@@ -294,13 +294,13 @@ wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, u
                 w = f ? va_arg(*ap, int) : 0;
                 s++;
             } else {
-                __set_errno(EINVAL);
+                __set_errno_r(__clib4, EINVAL);
                 return -1;
             }
             if (w < 0)
                 fl |= LEFT_ADJ, w = -w;
         } else if ((w = getint(&s)) < 0) {
-            __set_errno(EOVERFLOW);
+            __set_errno_r(__clib4, EOVERFLOW);
             return -1;
         }
 
@@ -314,7 +314,7 @@ wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, u
                 p = f ? va_arg(*ap, int) : 0;
                 s += 2;
             } else {
-                __set_errno(EINVAL);
+                __set_errno_r(__clib4, EINVAL);
                 return -1;
             }
             xp = (p>=0);
@@ -331,21 +331,21 @@ wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, u
         st = 0;
         do {
             if (__OOP(*s)){
-                __set_errno(EINVAL);
+                __set_errno_r(__clib4, EINVAL);
                 return -1;
             }
             ps = st;
             st = states[st]S(*s++);
         } while ((st - 1) < _STOP);
         if (!st) {
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             return -1;
         }
 
         /* Check validity of argument type (nl/normal) */
         if (st == _NOARG) {
             if (argpos >= 0) {
-                __set_errno(EINVAL);
+                __set_errno_r(__clib4, EINVAL);
                 return -1;
             }
         } else {
@@ -412,7 +412,7 @@ wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, u
                 a = arg.p;
                 z = a + wcsnlen(a, p<0 ? INT_MAX : p);
                 if (p<0 && *z)  {
-                    __set_errno(EOVERFLOW);
+                    __set_errno_r(__clib4, EOVERFLOW);
                     return -1;
                 }
                 p = (int) (z - a);
@@ -440,7 +440,7 @@ wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, u
                 if (i < 0)
                     return -1;
                 if (p<0 && *bs)  {
-                    __set_errno(EOVERFLOW);
+                    __set_errno_r(__clib4, EOVERFLOW);
                     return -1;
                 }
                 p = l;
@@ -465,7 +465,7 @@ wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, u
         }
 
         if (xp && p<0) {
-            __set_errno(EOVERFLOW);
+            __set_errno_r(__clib4, EOVERFLOW);
             return -1;
         }
 

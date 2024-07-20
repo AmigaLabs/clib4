@@ -23,7 +23,7 @@ settimeofday(const struct timeval *t, const struct timezone *tz) {
     int32 __gmtoffset = 0;
 
     if (__clib4->__timer_busy) {
-        __set_errno(EPERM);
+        __set_errno_r(__clib4, EPERM);
         RETURN(result);
         return result;
     }
@@ -43,7 +43,7 @@ settimeofday(const struct timeval *t, const struct timezone *tz) {
     GetMsg(__clib4->__timer_port);
 
     result = 0;
-    __set_errno(0);
+    __set_errno_r(__clib4, 0);
 
     __clib4->__timer_busy = FALSE;
 

@@ -29,7 +29,6 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     int64_t new_position = 0;
     int64_t file_size = 0;
     int new_mode;
-    char *buffer = NULL;
     int64_t result = EOF;
     BOOL is_aliased;
     BPTR file;
@@ -276,7 +275,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                                         if (file_deleted) {
                                             Remove((struct Node *) node);
-                                            free(node);
+                                            __free_r(__clib4, node);
                                         }
                                     }
                                 }
@@ -550,9 +549,6 @@ out:
 
     if (fam->fam_Action == file_action_close)
         __stdio_unlock(__clib4);
-
-    if (buffer != NULL)
-        free(buffer);
 
     SHOWVALUE(result);
 

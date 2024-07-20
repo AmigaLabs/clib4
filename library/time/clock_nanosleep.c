@@ -10,7 +10,8 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *request, struct timespec *remain) {
+int
+clock_nanosleep(clockid_t clock_id, int flags, const struct timespec *request, struct timespec *remain) {
     ENTER();
     
     // Validate timespec

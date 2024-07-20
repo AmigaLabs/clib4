@@ -48,7 +48,7 @@ __fgetc_check(struct _clib4 *__clib4, FILE *stream) {
 
     if (stream == NULL) {
         SHOWMSG("invalid parameters");
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
 
         goto out;
     }
@@ -61,14 +61,14 @@ __fgetc_check(struct _clib4 *__clib4, FILE *stream) {
 
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ)) {
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -92,22 +92,24 @@ fgetc(FILE *stream) {
     assert(stream != NULL);
 
     if (stream == NULL) {
-        __set_errno(EFAULT);
-        goto out;
+        SHOWMSG("invalid stream parameter");
+        __set_errno_r(__clib4, EFAULT);
+
+        RETURN(result);
+        return result;
     }
+
+    __check_abort_f(__clib4);
 
     __flockfile_r(__clib4, stream);
 
-    if (__fgetc_check(__clib4, stream) < 0) {
-        __funlockfile_r(__clib4, stream);
+    if (__fgetc_check(__clib4, stream) < 0)
         goto out;
-    }
 
     result = __getc(__clib4, stream);
 
-    __funlockfile_r(__clib4, stream);
-
 out:
+    __funlockfile_r(__clib4, stream);
 
     LEAVE();
     return (result);

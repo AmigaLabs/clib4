@@ -24,12 +24,14 @@ gets(char *s) {
     if (s == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
 
         result = NULL;
         RETURN(result);
         return (result);
     }
+
+    __check_abort_f(__clib4);
 
     __flockfile_r(__clib4, stream);
 
@@ -42,7 +44,7 @@ gets(char *s) {
     }
 
     /* So that we can tell error and 'end of file' conditions apart. */
-    clearerr(stream);
+    __clearerr_r(__clib4, stream);
 
     while (TRUE) {
         /* If there is data in the buffer, try to copy it directly

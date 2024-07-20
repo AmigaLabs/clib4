@@ -29,7 +29,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
     if (buf == NULL) {
         SHOWMSG("invalid buffer parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -39,19 +39,19 @@ fstatfs(int file_descriptor, struct statfs *buf) {
 
     fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     __fd_lock(fd);
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO)) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -59,7 +59,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
     if (parent_dir == BZERO) {
         SHOWMSG("couldn't find parent directory");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 
@@ -67,7 +67,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
     if (NO success) {
         SHOWMSG("couldn't get info on drive");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 

@@ -136,7 +136,7 @@ system(const char *command) {
 out:
 
     if (command_copy != NULL)
-        free(command_copy);
+        __free_r(__clib4, command_copy);
 
     RETURN(result);
     return (result);

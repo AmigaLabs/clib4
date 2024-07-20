@@ -46,26 +46,26 @@ memalign(size_t alignment, size_t size) {
     SHOWVALUE(size);
 
     if (!isPowerOfTwo(alignment)) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
     if (__clib4->__memalign_pool == NULL) {
-        __set_errno(ENOSYS);
+        __set_errno_r(__clib4, ENOSYS);
         goto out;
     }
     //size = ((size + alignment - 1) / alignment) * alignment;
 
     result = AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_Alignment, alignment, TAG_END);
     if (result == NULL) {
-        __set_errno(ENOMEM);
+        __set_errno_r(__clib4, ENOMEM);
         goto out;
     }
 
     struct MemalignEntry *l = ItemPoolAlloc(__clib4->__memalign_pool);
     if (l == NULL) {
         FreeVec(result);
-        __set_errno(ENOMEM);
+        __set_errno_r(__clib4, ENOMEM);
         result = NULL;
         goto out;
     }
@@ -75,7 +75,7 @@ memalign(size_t alignment, size_t size) {
     if (NULL != AVL_AddNode(&__clib4->__memalign_tree, &l->me_AvlNode, MemalignAVLNodeComp)) {
         FreeVec(result);
         ItemPoolFree(__clib4->__memalign_pool, l);
-        __set_errno(ENOMEM);
+        __set_errno_r(__clib4, ENOMEM);
         result = NULL;
         goto out;
     }

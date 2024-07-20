@@ -105,6 +105,8 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
 
     ENTER();
 
+    __check_abort_f(__clib4);
+
     __flockfile_r(__clib4, f);
 
     fwide(f, 1);
@@ -386,12 +388,12 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
             matches++;
     }
     if (0) {
-        fmt_fail:
-        alloc_fail:
-        input_fail:
+fmt_fail:
+alloc_fail:
+input_fail:
         if (!matches)
             matches--;
-        match_fail:
+match_fail:
         if (alloc) {
             free(s);
             free(wcs);

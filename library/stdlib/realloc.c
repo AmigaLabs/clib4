@@ -27,7 +27,7 @@ realloc(void *ptr, size_t size) {
     } else if (__clib4->__unix_path_semantics && size == 0) {
         D(("calling free(0x%08lx)", ptr));
 
-        free(ptr);
+        __free_r(__clib4, ptr);
     } else {
         result = wof_realloc(__clib4->__wof_allocator, ptr, size);
         if (result == NULL) {

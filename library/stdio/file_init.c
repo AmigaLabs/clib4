@@ -135,7 +135,7 @@ out:
 }
 
 FILE_CONSTRUCTOR(stdio_file_init) {
-    APTR stdio_lock;
+    struct SignalSemaphore *stdio_lock;
     struct SignalSemaphore *fd_lock;
     BPTR default_file;
     ULONG fd_flags, iob_flags;
@@ -199,15 +199,12 @@ FILE_CONSTRUCTOR(stdio_file_init) {
             goto out;
 
         /* Allocate memory for an arbitration mechanism, then initialize it. */
-        stdio_lock = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, FALSE, TAG_DONE);
+        stdio_lock = __create_semaphore();
         fd_lock = __create_semaphore();
 
         if (stdio_lock == NULL || fd_lock == NULL) {
-            if (stdio_lock != NULL)
-                FreeSysObject(ASOT_MUTEX, stdio_lock);
-
-            if (fd_lock != NULL)
-                __delete_semaphore(fd_lock);
+            __delete_semaphore(stdio_lock);
+            __delete_semaphore(fd_lock);
             goto out;
         }
 

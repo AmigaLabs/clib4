@@ -24,7 +24,7 @@ puts(const char *s) {
 
     if (s == NULL || stream == NULL) {
         SHOWMSG("invalid stream parameter");
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
 
         RETURN(result);
         return (result);
@@ -50,6 +50,8 @@ puts(const char *s) {
 
         __fd_unlock(fd);
     }
+
+    __check_abort_f(__clib4);
 
     __flockfile_r(__clib4, stream);
 

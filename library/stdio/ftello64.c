@@ -24,8 +24,6 @@ ftello64(FILE *stream) {
         return (result);
     }
 
-    __flockfile_r(__clib4, stream);
-
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
@@ -34,8 +32,12 @@ ftello64(FILE *stream) {
         SHOWMSG("this file is not even in use");
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
         __set_errno(EBADF);
-        goto out;
+
+        RETURN(result);
+        return (result);
     }
+
+    __flockfile_r(__clib4, stream);
 
     SHOWMSG("calling the hook");
     SHOWPOINTER(&fam);

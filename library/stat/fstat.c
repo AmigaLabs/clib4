@@ -28,7 +28,7 @@ fstat(int file_descriptor, struct stat *buffer) {
     if (buffer == NULL) {
         SHOWMSG("invalid buffer parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -38,7 +38,7 @@ fstat(int file_descriptor, struct stat *buffer) {
 
     fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -53,7 +53,7 @@ fstat(int file_descriptor, struct stat *buffer) {
     assert(fd->fd_Action != NULL);
 
     if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
-        __set_errno(fam.fam_Error);
+        __set_errno_r(__clib4, fam.fam_Error);
         goto out;
     }
 
@@ -65,7 +65,7 @@ fstat(int file_descriptor, struct stat *buffer) {
     }
     else {
         /* If ExamineObjectTag was failed we have to free the dummy ExamineData structure created */
-        free(fam.fam_FileInfo);
+        __free_r(__clib4, fam.fam_FileInfo);
     }
 
     result = OK;

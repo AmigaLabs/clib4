@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fputc.c,v 1.8 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_fputc.c,v 1.9 2024-07-20 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -14,7 +14,7 @@ __fputc_check(struct _clib4 *__clib4, FILE *stream) {
     assert(stream != NULL);
 
     if (stream == NULL) {
-        __set_errno(EFAULT);
+        __set_errno(EBADF);
         goto out;
     }
 
@@ -27,7 +27,7 @@ __fputc_check(struct _clib4 *__clib4, FILE *stream) {
 
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
 
         goto out;
     }
@@ -37,7 +37,7 @@ __fputc_check(struct _clib4 *__clib4, FILE *stream) {
 
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
 
         goto out;
     }
@@ -99,29 +99,28 @@ fputc(int c, FILE *stream) {
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
 
         RETURN(result);
         return result;
     }
 
+    SHOWMSG("Check Abort");
+    __check_abort_f(__clib4);
+
+    SHOWMSG("__flockfile_r");
     __flockfile_r(__clib4, stream);
 
+    SHOWMSG("__fputc_check");
     if (__fputc_check(__clib4, stream) < 0)
         goto out;
 
-    /* TODO - We have to investigate while stdout reach this point with IOBF_BUFFER_MODE_NONE when it is
-     * initialized with IOBF_BUFFER_MODE_LINE
-     */
-
-    /* Using no buffer with fputc is really slow. It no buffer is set, change filt to Line Mode buffering */
-    if (FLAG_IS_SET(file->iob_Flags, IOBF_BUFFER_MODE_NONE))
-        SET_FLAG(file->iob_Flags, IOBF_BUFFER_MODE_LINE);
-
+    SHOWMSG("__fputc");
     result = __fputc(__clib4, c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
 
 out:
 
+    SHOWMSG("__funlockfile_r");
     __funlockfile_r(__clib4, stream);
 
     RETURN(result);

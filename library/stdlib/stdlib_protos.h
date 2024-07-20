@@ -21,6 +21,8 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
+#include <dos.h>
+
 extern int __timezone_init(void);
 extern void __timezone_exit(void);
 
@@ -44,8 +46,6 @@ extern void reent_init(struct _clib4 *__clib4);
 extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
 
 /* signal_checkabort.c */
-extern void __check_abort(void);
-extern void __check_abort_f(struct _clib4 *__clib4);
 extern int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
 
 extern void __abort(void);
@@ -58,6 +58,7 @@ extern APTR __set_process_window(APTR new_window_pointer);
 
 /* stdlib_set_errno.c */
 extern void __set_errno(int new_errno);
+extern void __set_errno_r(struct _clib4 *__clibt4, int new_errno);
 
 /* stdlib_get_errno.c */
 extern int __get_errno(void);
@@ -71,10 +72,38 @@ extern void *savestate(void);
 extern void loadstate(uint32_t *state);
 
 extern void __srandom(unsigned seed);
+extern void *__malloc_r(struct _clib4 *__clib4, size_t size);
 
 extern uint32_t lcg31(uint32_t x);
 extern uint64_t lcg64(uint64_t x);
 
 extern char *__randname(char *template);
+
+extern int *__h_errno_r(struct _clib4 *__clib4);
+extern int *__errno_r(struct _clib4 *__clib4);
+
+#define errno_r (*__errno_r(__clib4))
+extern int *__errno_r(struct _clib4 *__clib4);
+#define h_errno_r (*__h_errno_r(__clib4))
+extern int *__h_errno_r(struct _clib4 *__clib4);
+
+extern struct DOSIFace *IDOS;
+
+inline void
+__check_abort(void) {
+    struct _clib4 *__clib4 = __CLIB4;
+
+    if (__clib4->__check_abort_enabled && CheckSignal(__clib4->__break_signal_mask)) {
+        raise(SIGINT);
+    }
+}
+
+/* Faster __check_abort version used when __clib4 is available in the caller function */
+inline void
+__check_abort_f(struct _clib4 *__clib4) {
+    if (__clib4->__check_abort_enabled && CheckSignal(__clib4->__break_signal_mask)) {
+        raise(SIGINT);
+    }
+}
 
 #endif /* _STDLIB_PROTOS_H */

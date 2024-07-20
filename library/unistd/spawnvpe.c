@@ -128,11 +128,11 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
     BPTR fh;
     int err;
     BPTR progdirLock = 0;
-    struct Task *me = FindTask(NULL);
     char *arg_string = NULL;
     size_t arg_string_len = 0;
     size_t parameter_string_len = 0;
     struct _clib4 *__clib4 = __CLIB4;
+    struct Task *me = (struct Task *) __clib4->self;
 
     __set_errno(0);
 

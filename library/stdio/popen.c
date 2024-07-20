@@ -70,7 +70,7 @@ popen(const char *command, const char *type) {
     if (command == NULL || type == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -121,8 +121,7 @@ popen(const char *command, const char *type) {
                 have_quote ^= TRUE;
             }
 
-            if ((command[i] == ' ' || command[i] == '\t') && NOT have_quote)
-            {
+            if ((command[i] == ' ' || command[i] == '\t') && NOT have_quote) {
                 command_len = i;
                 break;
             }
@@ -130,7 +129,7 @@ popen(const char *command, const char *type) {
 
         /* This may be too long for proper translation... */
         if (command_len > MAXPATHLEN) {
-            __set_errno(ENAMETOOLONG);
+            __set_errno_r(__clib4, ENAMETOOLONG);
 
             result = NULL;
             goto out;
@@ -155,7 +154,7 @@ popen(const char *command, const char *type) {
         /* Now put it all together again */
         command_copy = __malloc_r(__clib4, 1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
         if (command_copy == NULL) {
-            __set_errno(ENOMEM);
+            __set_errno_r(__clib4, ENOMEM);
 
             result = NULL;
             goto out;
@@ -180,7 +179,7 @@ popen(const char *command, const char *type) {
        converted into another octal number. */
     strcpy(pipe_file_name, "PIPE:");
 
-    struct Task *task = FindTask(NULL);
+    struct Task *task = (struct Task *) __clib4->self;
     task_address = (unsigned long) task;
 
     for (i = strlen(pipe_file_name); task_address != 0 && i < (int) sizeof(pipe_file_name) - 1; i++) {
@@ -220,7 +219,7 @@ popen(const char *command, const char *type) {
     if (input == BZERO || output == BZERO) {
         SHOWMSG("couldn't open the streams");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
     D(("Launching [%s]", command));
@@ -240,10 +239,9 @@ popen(const char *command, const char *type) {
     if (status == -1) {
         SHOWMSG("SystemTagList() failed");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
-    }
-    else {
+    } else {
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid
@@ -251,8 +249,7 @@ popen(const char *command, const char *type) {
         uint32 ret = IoErr(); // This is our ProcessID;
         if (insertSpawnedChildren(ret, getgid())) {
             D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
-        }
-        else {
+        } else {
             D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
         }
     }
@@ -266,7 +263,7 @@ popen(const char *command, const char *type) {
 out:
 
     if (command_copy != NULL)
-        free(command_copy);
+        __free_r(__clib4, command_copy);
 
     if (input != BZERO)
         Close(input);

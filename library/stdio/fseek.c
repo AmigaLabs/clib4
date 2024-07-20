@@ -28,6 +28,8 @@ fseek(FILE *stream, long int offset, int wherefrom) {
         return (result);
     }
 
+    __check_abort_f(__clib4);
+
     __flockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, file));

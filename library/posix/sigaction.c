@@ -77,7 +77,7 @@ sigaction_handler(int sig) {
     handler(sig);
     saved_errno = errno;
     sigprocmask(SIG_SETMASK, &oldmask, NULL);
-    __set_errno(saved_errno);
+    __set_errno_r(__clib4, saved_errno);
 
     LEAVE();
 }
@@ -100,7 +100,7 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
     SHOWPOINTER(oact);
 
     if (sig < 0 || NSIG <= sig || sig == SIGKILL || sig == SIGSTOP || (act && act->sa_handler == SIG_ERR)) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         RETURN(-1);
         return -1;
     }
@@ -158,7 +158,7 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
 failure:
     saved_errno = errno;
     sigprocmask(SIG_SETMASK, &oldmask, NULL);
-    __set_errno(saved_errno);
+    __set_errno_r(__clib4, saved_errno);
 
     RETURN(-1);
     return -1;

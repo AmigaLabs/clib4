@@ -21,7 +21,7 @@ localtime_r(const time_t *t, struct tm *tm_ptr) {
     assert(t != NULL && tm_ptr != NULL);
 
     if (t == NULL || tm_ptr == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 

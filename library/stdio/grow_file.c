@@ -105,10 +105,10 @@ __grow_file_size(struct _clib4 *__clib4, struct fd *fd, int num_bytes) {
 
     result = OK;
 
-    out:
+out:
 
     if (buffer != NULL)
-        free(buffer);
+        __free_r(__clib4, buffer);
 
     return (result);
 }

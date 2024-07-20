@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fwrite.c,v 1.13 2022-03-27 13:12:58 clib4devs Exp $
+ * $Id: stdio_fwrite.c,v 1.14 2024-07-20 13:12:58 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -29,21 +29,25 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     if (ptr == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         RETURN(result);
         return (result);
     }
-
-    __flockfile_r(__clib4, stream);
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE) || FLAG_IS_CLEAR(file->iob_Flags, IOBF_WRITE)) {
         SHOWMSG("this file is not even in use or write enabled");
 
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
         SET_FLAG(file->iob_Flags2, __SERR);
-        __set_errno(EBADF);
-        goto out;
+
+        __set_errno_r(__clib4, EBADF);
+        RETURN(result);
+        return (result);
     }
+
+    __check_abort_f(__clib4);
+
+    __flockfile_r(__clib4, stream);
 
     if (element_size > 0 && count > 0) {
         const unsigned char *s = (unsigned char *) ptr;

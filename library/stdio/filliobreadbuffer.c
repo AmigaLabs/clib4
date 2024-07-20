@@ -44,7 +44,7 @@ __fill_iob_read_buffer(struct _clib4 *__clib4, struct iob *file) {
 
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-        __set_errno(fam.fam_Error);
+        __set_errno_r(__clib4, fam.fam_Error);
 
         goto out;
     }

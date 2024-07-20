@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_headers.h,v 2.0 2023-05-03 13:12:59 clib4devs Exp $
+ * $Id: stdio_headers.h,v 2.1 2024-07-20 13:12:59 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -187,20 +187,20 @@ typedef struct iob {
 	/* Public portion ends here                                             */
 	/************************************************************************/
 
-	file_action_iob_t	iob_Action;				/* The function to invoke for file operations, such as read, write and seek. */
-	int					iob_SlotNumber;			/* Points back to the iob table entry number. */
-	int					iob_Descriptor;			/* Associated file descriptor */
-	STRPTR				iob_String;				/* Alternative source of data; a pointer to a string */
-	int64_t				iob_StringSize;			/* Number of bytes that may be stored in the string */
-	int64_t				iob_StringPosition;		/* Current read/write position in the string */
-	int64_t				iob_StringLength;		/* Number of characters stored in the string */
-	char *				iob_File;				/* For access tracking with the memory allocator. */
-	int					iob_Line;
-	APTR				iob_CustomBuffer;		/* A custom buffer allocated by setvbuf() */
-	char *				iob_TempFileName;		/* If this is a temporary file, this is its name */
-	BPTR				iob_TempFileLock;		/* The directory in which this temporary file is stored */
-	UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
-	APTR                iob_Lock;			    /* For thread locking */
+    file_action_iob_t	iob_Action;				/* The function to invoke for file operations, such as read, write and seek. */
+    int					iob_SlotNumber;			/* Points back to the iob table entry number. */
+    int					iob_Descriptor;			/* Associated file descriptor */
+    STRPTR				iob_String;				/* Alternative source of data; a pointer to a string */
+    int64_t				iob_StringSize;			/* Number of bytes that may be stored in the string */
+    int64_t				iob_StringPosition;		/* Current read/write position in the string */
+    int64_t				iob_StringLength;		/* Number of characters stored in the string */
+    char *				iob_File;				/* For access tracking with the memory allocator. */
+    int					iob_Line;
+    APTR				iob_CustomBuffer;		/* A custom buffer allocated by setvbuf() */
+    char *				iob_TempFileName;		/* If this is a temporary file, this is its name */
+    BPTR				iob_TempFileLock;		/* The directory in which this temporary file is stored */
+    UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
+    struct SignalSemaphore *iob_Lock;		    /* For thread locking */
     struct Task *       iob_TaskLock;           /* Task who owns lock */
 } __iob64;
 
@@ -222,7 +222,7 @@ typedef struct iob {
 	(((((struct iob *)(f))->iob_BufferWriteBytes < ((struct iob *)(f))->iob_BufferSize)) ? \
 	  (((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferWriteBytes++] = (c), \
 	  (((m) == IOBF_BUFFER_MODE_LINE && (c) == '\n') ? \
-	   __flush(f) : \
+	   __flush_r(c4, f) : \
 	   ((c) & 255))) : \
 	  __fputc(c4,(c),(f),(m)))
 
@@ -236,7 +236,7 @@ typedef struct iob {
 	(((((struct iob *)(f))->iob_BufferWriteBytes < ((struct iob *)(f))->iob_BufferSize)) ? \
 	  (((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferWriteBytes++] = (c), \
 	  (((c) == '\n') ? \
-	   __flush(f) : \
+	   __flush_r(c4, f) : \
 	   ((c) & 255))) : \
 	  __fputc(c4,(c),(f),IOBF_BUFFER_MODE_LINE))
 
@@ -357,6 +357,8 @@ extern BPTR __resolve_fd_file(struct fd * fd);
 extern void __funlockfile_r(struct _clib4 *__clib4, FILE *stream);
 extern void __flockfile_r(struct _clib4 *__clib4, FILE *stream);
 extern int __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream);
+
+extern void __clearerr_r(struct _clib4 *__clib4, FILE *stream);
 
 #ifndef _STDIO_PROTOS_H
 #include "stdio_protos.h"

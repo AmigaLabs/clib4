@@ -15,9 +15,7 @@
 #include <malloc.h>
 
 void
-free(void *ptr) {
-    struct _clib4 *__clib4 = __CLIB4;
-
+__free_r(struct _clib4 *__clib4, void *ptr) {
     __memory_lock(__clib4);
 
     BOOL found = FALSE;
@@ -43,4 +41,11 @@ free(void *ptr) {
     }
 
     __memory_unlock(__clib4);
+}
+
+void
+free(void *ptr) {
+    struct _clib4 *__clib4 = __CLIB4;
+
+    return __free_r(__clib4, ptr);
 }
