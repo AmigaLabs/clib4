@@ -147,8 +147,8 @@ __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translati
                     goto out;
                 }
             }
-        }
 #endif
+        }
 
 #if 0
         /* Prepend an absolute path to the name, if such a path was previously set

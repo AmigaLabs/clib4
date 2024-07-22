@@ -22,6 +22,8 @@ pclose(FILE *stream) {
 
     assert(stream != NULL);
 
+printf("[pclose :] Calling __check_abort\n");
+
     __check_abort();
 
     if (stream == NULL) {
@@ -31,6 +33,8 @@ pclose(FILE *stream) {
         goto out;
     }
 
+printf("[pclose :] Closing stream.\n");
+
     fclose(stream);
 
     /* ZZZ we actually could catch the program's termination code
@@ -39,6 +43,8 @@ pclose(FILE *stream) {
     result = OK;
 
 out:
+
+printf("[pclose :] Returning.\n");
 
     RETURN(result);
     return (result);
@@ -242,6 +248,7 @@ popen(const char *command, const char *type) {
         __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     } else {
+        printf("[popen :] SystemTags() call completed.\n");
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid
@@ -260,6 +267,8 @@ popen(const char *command, const char *type) {
     /* Now try to open the pipe we will use to exchange data with the program. */
     result = fopen(pipe_file_name, type);
 
+printf("[popen :] pipe opened.\n");
+
 out:
 
     if (command_copy != NULL)
@@ -270,6 +279,8 @@ out:
 
     if (output != BZERO)
         Close(output);
+
+printf("[popen :] popen completed, returning.\n");
 
     RETURN(result);
     return (result);

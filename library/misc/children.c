@@ -92,6 +92,7 @@ findSpawnedChildrenByGid(uint32 pid, uint32 gid) {
 
 void
 spawnedProcessExit(int32 rc, int32 data UNUSED) {
+DebugPrintF("[spawnedProcessExit :] ENTRY.\n");
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
         int32 me = GetPID(0, GPID_PROCESS);
@@ -110,5 +111,6 @@ spawnedProcessExit(int32 rc, int32 data UNUSED) {
             }
         }
     }
+DebugPrintF("[spawnedProcessExit :] EXIT.\n");
 }
 

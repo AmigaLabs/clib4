@@ -117,8 +117,20 @@ get_arg_string_length(char *const argv[]) {
 
     return (result);
 }
+int
+spawnvpe_callback(
+    const char *file,
+    const char **argv,
+    char **deltaenv,
+    const char *dir,
+    int fhin,
+    int fhout,
+    int fherr,
 
-int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr) {
+    void (*entry_fp)(void *), void* entry_data,
+    void (*final_fp)(int, void *), void* final_data
+) {
+
     int ret = -1;
     struct name_translation_info nti_name;
     const char *name = file;
@@ -227,16 +239,27 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
         closefh[2] = TRUE;
     }
 
+    struct Task *_me = FindTask(0);
     ret = SystemTags(finalpath,
+                     NP_NotifyOnDeathSigTask, _me,
                      SYS_Input, iofh[0],
                      SYS_Output, iofh[1],
                      SYS_Error, iofh[2],
                      SYS_UserShell, TRUE,
                      SYS_Asynch, TRUE,
                      NP_Child, TRUE,
+                     NP_Cli, TRUE,
                      progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
                      NP_Name, strdup(processName),
+
+    entry_fp ? NP_EntryCode : TAG_SKIP,	entry_fp,
+    entry_data ? NP_EntryData : TAG_SKIP, entry_data,
+    final_fp ? NP_FinalCode : TAG_SKIP,	final_fp,
+    final_data ? NP_FinalData : TAG_SKIP, final_data,
+
                      TAG_DONE);
+
+// void (*callback_fp)(void*), void* callback_arg
 
     if (ret != 0) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
@@ -269,4 +292,7 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
     }
     // success
     return ret;
+}
+int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr) {
+    return spawnvpe_callback(file, argv, deltaenv, dir, fhin, fhout, fherr, 0, 0, 0, 0);
 }
