@@ -117,8 +117,19 @@ get_arg_string_length(char *const argv[]) {
 
     return (result);
 }
+int
+spawnvpe_callback(
+    const char *file,
+    const char **argv,
+    char **deltaenv,
+    const char *dir,
+    int fhin,
+    int fhout,
+    int fherr,
 
-int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr) {
+    void (*entry_fp)(void *), void* entry_data,
+    void (*final_fp)(int, void *), void* final_data
+) {
     int ret = -1;
     struct name_translation_info nti_name;
     const char *name = file;
@@ -136,18 +147,6 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
 
     __set_errno(0);
 
-    arg_string = malloc(parameter_string_len + 1);
-    if (arg_string == NULL) {
-        __set_errno(ENOMEM);
-        return ret;
-    }
-
-    parameter_string_len = get_arg_string_length((char *const *) argv);
-    if (parameter_string_len > _POSIX_ARG_MAX) {
-        __set_errno(E2BIG);
-        return ret;
-    }
-
     D(("Starting new process [%s]\n", name));
 
     int error = __translate_unix_to_amiga_path_name(&name, &nti_name);
@@ -157,16 +156,25 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
         return ret;
     }
 
+    D(("name after conversion: [%s]\n", name));
+
     BPTR fileLock = Lock(name, SHARED_LOCK);
     if (fileLock) {
         progdirLock = ParentDir(fileLock);
         UnLock(fileLock);
     }
 
-    BPTR seglist = LoadSeg(name);
-    if (!seglist) {
-        __set_errno(EIO);
-        D(("Cannot load seglist from %s\n", name));
+    parameter_string_len = get_arg_string_length((char *const *) argv);
+    if (parameter_string_len > _POSIX_ARG_MAX) {
+        __set_errno(E2BIG);
+        return ret;
+    }
+
+    D(("parameter_string_len: [%ld]\n", parameter_string_len));
+
+    arg_string = malloc(parameter_string_len + 1);
+    if (arg_string == NULL) {
+        __set_errno(ENOMEM);
         return ret;
     }
 
@@ -175,12 +183,17 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
         arg_string_len += parameter_string_len;
     }
 
+    D(("arg_string_len: [%ld]\n", arg_string_len));
+
     /* Add a NUL, to be nice... */
     arg_string[arg_string_len] = '\0';
 
-    char finalpath[PATH_MAX] = {0};
-    char processName[NAMELEN] = {0};
-    snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
+    D(("arg_string: [%s]\n", arg_string));
+
+    int finalpath_len = strlen(name) + 1 + arg_string_len + 1; // '\0'
+    char *finalpath = (char*)malloc(finalpath_len);
+    char processName[32] = {0};
+    snprintf(finalpath, finalpath_len, "%s %s", name, arg_string);
     snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
     D(("File to execute: [%s]\n", finalpath));
@@ -227,7 +240,11 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
         closefh[2] = TRUE;
     }
 
+    D(("(*)Calling SystemTags.\n"));
+
+    struct Task *_me = FindTask(0);
     ret = SystemTags(finalpath,
+                     NP_NotifyOnDeathSigTask, _me,
                      SYS_Input, iofh[0],
                      SYS_Output, iofh[1],
                      SYS_Error, iofh[2],
@@ -236,7 +253,15 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
                      NP_Child, TRUE,
                      progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
                      NP_Name, strdup(processName),
+
+    entry_fp ? NP_EntryCode : TAG_SKIP,	entry_fp,
+    entry_data ? NP_EntryData : TAG_SKIP, entry_data,
+    final_fp ? NP_FinalCode : TAG_SKIP,	final_fp,
+    final_data ? NP_FinalData : TAG_SKIP, final_data,
+
                      TAG_DONE);
+
+    D(("SystemTags completed. return value: [%ld]\n", ret));
 
     if (ret != 0) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
@@ -269,4 +294,7 @@ int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *d
     }
     // success
     return ret;
+}
+int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr) {
+    return spawnvpe_callback(file, argv, deltaenv, dir, fhin, fhout, fherr, 0, 0, 0, 0);
 }
