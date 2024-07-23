@@ -130,8 +130,6 @@ spawnvpe_callback(
     void (*entry_fp)(void *), void* entry_data,
     void (*final_fp)(int, void *), void* final_data
 ) {
-DebugPrintF("[spawnvpe :] ENTRY.\n");
-
     int ret = -1;
     struct name_translation_info nti_name;
     const char *name = file;
@@ -158,29 +156,13 @@ DebugPrintF("[spawnvpe :] ENTRY.\n");
         return ret;
     }
 
+    D(("name after conversion: [%s]\n", name));
+
     BPTR fileLock = Lock(name, SHARED_LOCK);
     if (fileLock) {
         progdirLock = ParentDir(fileLock);
         UnLock(fileLock);
     }
-
-
-
-
-
-    // DebugPrintF("[spawnvpe :] Calling LoadSeg.\n");
-
-    // BPTR seglist = LoadSeg(name);
-    // if (!seglist) {
-    //     __set_errno(EIO);
-    //     D(("Cannot load seglist from %s\n", name));
-    //     return ret;
-    // }
-
-    // DebugPrintf("[spawnvpe :] LoadSeg com")
-
-
-
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
     if (parameter_string_len > _POSIX_ARG_MAX) {
@@ -188,7 +170,7 @@ DebugPrintF("[spawnvpe :] ENTRY.\n");
         return ret;
     }
 
-    DebugPrintF("[spawnvpe :] parameter_string_len == [%ld]\n", parameter_string_len);
+    D(("parameter_string_len: [%ld]\n", parameter_string_len));
 
     arg_string = malloc(parameter_string_len + 1);
     if (arg_string == NULL) {
@@ -201,12 +183,12 @@ DebugPrintF("[spawnvpe :] ENTRY.\n");
         arg_string_len += parameter_string_len;
     }
 
-    DebugPrintF("[spawnvpe :] arg_string_len == [%ld]\n", arg_string_len);
+    D(("arg_string_len: [%ld]\n", arg_string_len));
 
     /* Add a NUL, to be nice... */
     arg_string[arg_string_len] = '\0';
 
-    DebugPrintF("[spawnvpe :] arg_string == [%s]\n", arg_string);
+    D(("arg_string: [%s]\n", arg_string));
 
     int finalpath_len = strlen(name) + 1 + arg_string_len + 1; // '\0'
     char *finalpath = (char*)malloc(finalpath_len);
@@ -215,8 +197,6 @@ DebugPrintF("[spawnvpe :] ENTRY.\n");
     snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
     D(("File to execute: [%s]\n", finalpath));
-
-    DebugPrintF("[spawnvpe :] finalpath == %s\n", finalpath);
 
     if (fhin >= 0) {
         err = __get_default_file(fhin, &fh);
@@ -260,7 +240,7 @@ DebugPrintF("[spawnvpe :] ENTRY.\n");
         closefh[2] = TRUE;
     }
 
-DebugPrintF("[spawnvpe :] (*)Calling SystemTags.\n");
+    D(("(*)Calling SystemTags.\n"));
 
     struct Task *_me = FindTask(0);
     ret = SystemTags(finalpath,
@@ -281,9 +261,7 @@ DebugPrintF("[spawnvpe :] (*)Calling SystemTags.\n");
 
                      TAG_DONE);
 
-// void (*callback_fp)(void*), void* callback_arg
-
-    DebugPrintF("[spawnvpe :] ret == %ld\n", ret);
+    D(("SystemTags completed. return value: [%ld]\n", ret));
 
     if (ret != 0) {
         __set_errno(__translate_io_error_to_errno(IoErr()));

@@ -22,8 +22,6 @@ pclose(FILE *stream) {
 
     assert(stream != NULL);
 
-printf("[pclose :] Calling __check_abort\n");
-
     __check_abort();
 
     if (stream == NULL) {
@@ -33,8 +31,6 @@ printf("[pclose :] Calling __check_abort\n");
         goto out;
     }
 
-printf("[pclose :] Closing stream.\n");
-
     fclose(stream);
 
     /* ZZZ we actually could catch the program's termination code
@@ -43,8 +39,6 @@ printf("[pclose :] Closing stream.\n");
     result = OK;
 
 out:
-
-printf("[pclose :] Returning.\n");
 
     RETURN(result);
     return (result);
@@ -267,8 +261,6 @@ popen(const char *command, const char *type) {
     /* Now try to open the pipe we will use to exchange data with the program. */
     result = fopen(pipe_file_name, type);
 
-printf("[popen :] pipe opened.\n");
-
 out:
 
     if (command_copy != NULL)
@@ -279,8 +271,6 @@ out:
 
     if (output != BZERO)
         Close(output);
-
-printf("[popen :] popen completed, returning.\n");
 
     RETURN(result);
     return (result);

@@ -10,8 +10,6 @@ int pipe2(int fd[2], int flags) {
     char pipe_name[1024] = {0};
     struct _clib4 *__clib4 = __CLIB4;
 
-if(__clib4 == 0) { DebugPrintF("[pipe2 :] ******* __clib4 pointer is 0.\n"); exit(-1); }
-if(__clib4->self == 0) { DebugPrintF("[pipe2 :] ******* __clib->self is 0.\n"); exit(-1); }
     /* Check the supported flags.  */
     if ((flags & ~(O_NONBLOCK|O_CLOEXEC)) != 0) {
         __set_errno(EINVAL);
