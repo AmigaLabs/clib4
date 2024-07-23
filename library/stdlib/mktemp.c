@@ -7,7 +7,7 @@
 #endif /* _STDLIB_HEADERS_H */
 
 #include <time.h>
-#include "../include/dos.h"
+#include "../dos.h"
 
 char *
 mktemp(char *name_template) {

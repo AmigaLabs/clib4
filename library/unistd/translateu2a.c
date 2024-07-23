@@ -113,9 +113,10 @@ __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translati
                of the path name. */
             strcpy(&home_dir_name[home_dir_name_len], name);
             name = home_dir_name;
-        } else {
-            
+        }
 #if 0
+        else {
+            
             /* If input string is a command, we can use the system path to expand.
                This should not conflict with previous implements, because the only
                diverging situation is where it would previously return a non-existing

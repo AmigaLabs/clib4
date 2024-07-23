@@ -81,7 +81,7 @@
 #include <sys/utsname.h>
 #include <sys/uio.h>
 
-#include "dos.h"
+#include "../dos.h"
 #include "c.lib_rev.h"
 
 #include "clib4.h"

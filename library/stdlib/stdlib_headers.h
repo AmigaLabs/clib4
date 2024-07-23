@@ -51,7 +51,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <endian.h>
-#include "../include/dos.h"
+#include "../dos.h"
 
 #ifndef _STDLIB_LOCALEBASE_H
 #include "stdlib_localebase.h"
