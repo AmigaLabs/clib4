@@ -208,9 +208,10 @@ DebugPrintF("[spawnvpe :] ENTRY.\n");
 
     DebugPrintF("[spawnvpe :] arg_string == [%s]\n", arg_string);
 
-    char finalpath[PATH_MAX] = {0};
-    char processName[NAMELEN] = {0};
-    snprintf(finalpath, PATH_MAX - 1, "%s %s", name, arg_string);
+    int finalpath_len = strlen(name) + 1 + arg_string_len + 1; // '\0'
+    char *finalpath = (char*)malloc(finalpath_len);
+    char processName[32] = {0};
+    snprintf(finalpath, finalpath_len, "%s %s", name, arg_string);
     snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
     D(("File to execute: [%s]\n", finalpath));
