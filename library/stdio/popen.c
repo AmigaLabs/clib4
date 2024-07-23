@@ -242,7 +242,7 @@ popen(const char *command, const char *type) {
         __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     } else {
-        printf("[popen :] SystemTags() call completed.\n");
+        SHOWMSG("[popen :] SystemTags() call completed.");
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid
