@@ -12,7 +12,7 @@ __getClib4(void) {
     struct Task *t = FindTask(NULL);
 
     if (NT_PROCESS == t->tc_Node.ln_Type) {
-#if 0 //This is too slow at moment..
+#if 0//This is too slow at moment..
         uint32 value;
         /* Get _clib4 address stored into process pr_UID field */
         GetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, &value, TAG_END);

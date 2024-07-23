@@ -130,6 +130,7 @@ spawnvpe_callback(
     void (*entry_fp)(void *), void* entry_data,
     void (*final_fp)(int, void *), void* final_data
 ) {
+DebugPrintF("[spawnvpe :] ENTRY.\n");
 
     int ret = -1;
     struct name_translation_info nti_name;
@@ -148,18 +149,6 @@ spawnvpe_callback(
 
     __set_errno(0);
 
-    arg_string = malloc(parameter_string_len + 1);
-    if (arg_string == NULL) {
-        __set_errno(ENOMEM);
-        return ret;
-    }
-
-    parameter_string_len = get_arg_string_length((char *const *) argv);
-    if (parameter_string_len > _POSIX_ARG_MAX) {
-        __set_errno(E2BIG);
-        return ret;
-    }
-
     D(("Starting new process [%s]\n", name));
 
     int error = __translate_unix_to_amiga_path_name(&name, &nti_name);
@@ -175,10 +164,35 @@ spawnvpe_callback(
         UnLock(fileLock);
     }
 
-    BPTR seglist = LoadSeg(name);
-    if (!seglist) {
-        __set_errno(EIO);
-        D(("Cannot load seglist from %s\n", name));
+
+
+
+
+    // DebugPrintF("[spawnvpe :] Calling LoadSeg.\n");
+
+    // BPTR seglist = LoadSeg(name);
+    // if (!seglist) {
+    //     __set_errno(EIO);
+    //     D(("Cannot load seglist from %s\n", name));
+    //     return ret;
+    // }
+
+    // DebugPrintf("[spawnvpe :] LoadSeg com")
+
+
+
+
+    parameter_string_len = get_arg_string_length((char *const *) argv);
+    if (parameter_string_len > _POSIX_ARG_MAX) {
+        __set_errno(E2BIG);
+        return ret;
+    }
+
+    DebugPrintF("[spawnvpe :] parameter_string_len == [%ld]\n", parameter_string_len);
+
+    arg_string = malloc(parameter_string_len + 1);
+    if (arg_string == NULL) {
+        __set_errno(ENOMEM);
         return ret;
     }
 
@@ -187,15 +201,21 @@ spawnvpe_callback(
         arg_string_len += parameter_string_len;
     }
 
+    DebugPrintF("[spawnvpe :] arg_string_len == [%ld]\n", arg_string_len);
+
     /* Add a NUL, to be nice... */
     arg_string[arg_string_len] = '\0';
 
+    DebugPrintF("[spawnvpe :] arg_string == [%s]\n", arg_string);
+
     char finalpath[PATH_MAX] = {0};
     char processName[NAMELEN] = {0};
-    snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
+    snprintf(finalpath, PATH_MAX - 1, "%s %s", name, arg_string);
     snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
     D(("File to execute: [%s]\n", finalpath));
+
+    DebugPrintF("[spawnvpe :] finalpath == %s\n", finalpath);
 
     if (fhin >= 0) {
         err = __get_default_file(fhin, &fh);
@@ -239,6 +259,8 @@ spawnvpe_callback(
         closefh[2] = TRUE;
     }
 
+DebugPrintF("[spawnvpe :] (*)Calling SystemTags.\n");
+
     struct Task *_me = FindTask(0);
     ret = SystemTags(finalpath,
                      NP_NotifyOnDeathSigTask, _me,
@@ -248,7 +270,6 @@ spawnvpe_callback(
                      SYS_UserShell, TRUE,
                      SYS_Asynch, TRUE,
                      NP_Child, TRUE,
-                     NP_Cli, TRUE,
                      progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
                      NP_Name, strdup(processName),
 
@@ -260,6 +281,8 @@ spawnvpe_callback(
                      TAG_DONE);
 
 // void (*callback_fp)(void*), void* callback_arg
+
+    DebugPrintF("[spawnvpe :] ret == %ld\n", ret);
 
     if (ret != 0) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
