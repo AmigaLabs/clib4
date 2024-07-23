@@ -5,16 +5,16 @@
 #ifndef _DOS_H
 #define _DOS_H
 
-#include <features.h>
+#include "include/features.h"
 
-#include <stdio.h>
-#include <stddef.h>
-#include <signal.h>
-#include <sys/resource.h>
-#include <sys/syslimits.h>
-#include <wchar.h>
-#include <setjmp.h>
-#include <resolv.h>
+#include "include/stdio.h"
+#include "include/stddef.h"
+#include "include/signal.h"
+#include "include/sys/resource.h"
+#include "include/sys/syslimits.h"
+#include "include/wchar.h"
+#include "include/setjmp.h"
+#include "include/resolv.h"
 #include <exec/types.h>
 #include <exec/lists.h>
 #include <exec/semaphores.h>

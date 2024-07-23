@@ -219,6 +219,13 @@ constructors/destructors executions
 - Try to use some functions/headers from https://github.com/attractivechaos/klib to improve speed
 - Use a good locale implementation
 
+### Libraries repository
+
+A repository with pre packaged libraries is present and ready to use for debian like systems.
+You can find all informations to the following <a href="https://github.com/AmigaLabs/clib4/wiki/Clib4-apt-packages-repository">wiki page</a>.
+
+A list of packages can be found into public <a href="https://clib4pkg.amigasoft.net/ubuntu/dists/focal/main/binary-amd64/Packages">Packages</a> file.
+
 ## Legal status
 
 Because this library is in part based upon free software it would be uncourteous not to make it free software itself.

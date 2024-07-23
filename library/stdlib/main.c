@@ -266,13 +266,9 @@ _main(
         return -1;
     }
 
-    /* Set the current task pointer */
-    // __clib4->self = me; //this will be overwritten by the following
-
     reent_init(__clib4);
     __clib4->processId = pid;
 
-    // here instead
     /* Set the current task pointer */
     __clib4->self = me;
 
