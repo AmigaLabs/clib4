@@ -266,11 +266,11 @@ _main(
         return -1;
     }
 
-    /* Set the current task pointer */
-    __clib4->self = me;
-
     reent_init(__clib4);
     __clib4->processId = pid;
+
+    /* Set the current task pointer */
+    __clib4->self = me;
 
     if (res) {
         size_t iter = 0;
