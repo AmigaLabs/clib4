@@ -253,12 +253,10 @@ spawnvpe_callback(
                      NP_Child, TRUE,
                      progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
                      NP_Name, strdup(processName),
-
-    entry_fp ? NP_EntryCode : TAG_SKIP,	entry_fp,
-    entry_data ? NP_EntryData : TAG_SKIP, entry_data,
-    final_fp ? NP_FinalCode : TAG_SKIP,	final_fp,
-    final_data ? NP_FinalData : TAG_SKIP, final_data,
-
+                     entry_fp ? NP_EntryCode    : TAG_SKIP,	entry_fp,
+                     entry_data ? NP_EntryData  : TAG_SKIP, entry_data,
+                     final_fp ? NP_FinalCode    : TAG_SKIP,	final_fp,
+                     final_data ? NP_FinalData  : TAG_SKIP, final_data,
                      TAG_DONE);
 
     D(("SystemTags completed. return value: [%ld]\n", ret));
@@ -286,13 +284,6 @@ spawnvpe_callback(
         }
     }
 
-    if (insertSpawnedChildren(ret, getgid())) {
-        D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
-    }
-    else {
-        D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
-    }
-    // success
     return ret;
 }
 int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr) {
