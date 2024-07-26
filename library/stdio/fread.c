@@ -32,7 +32,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     __check_abort_f(__clib4);
 
-    __flockfile_r(__clib4, stream);
+    int locked = __ftrylockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -157,7 +157,8 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
 out:
 
-    __funlockfile_r(__clib4, stream);
+    if (locked == OK)
+        __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

@@ -90,9 +90,12 @@
 
 #include "interface.h"
 
-#ifndef _SOCKET_HEADERS_H
-#include "socket_headers.h"
-#endif /* _SOCKET_HEADERS_H */
+/* This is variable defines where to start to bind unix local ports using inet addresses */
+struct UnixSocket {
+    int            port;
+    struct fd     *fd;
+    char           name[PATH_MAX];
+};
 
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
@@ -114,6 +117,7 @@ struct Library *__UtilityBase = 0;
 struct UtilityIFace *__IUtility = 0;
 
 struct Clib4IFace *IClib4 = 0;
+struct Clib4Library *Clib4Base = 0;
 
 const struct Resident RomTag;
 
@@ -123,6 +127,9 @@ const struct Resident RomTag;
 static struct TimeRequest *openTimer(uint32 unit);
 static void closeTimer(struct TimeRequest *tr);
 static int32 getDebugLevel(struct ExecBase *sysbase);
+
+extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
+extern void reent_init(struct _clib4 *__clib4);
 
 int32
 _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
@@ -170,12 +177,12 @@ static void closeLibraries() {
     }
 }
 
-struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
+struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
     if (version > VERSION) {
         return NULL;
     }
 
-    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
+    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
     if (!IClib4) {
         D(("IClib4 is NULL. Get interface"));
         IClib4 = (struct Clib4IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
@@ -277,7 +284,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
         IExec->FreeVec(res);
     }
 
-    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
+    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
     if (libBase->libNode.lib_OpenCnt) {
         libBase->libNode.lib_Flags |= LIBF_DELEXP;
         return result;
@@ -293,7 +300,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 }
 
 BPTR libClose(struct LibraryManagerInterface *Self) {
-    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
+    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
 
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
@@ -411,7 +418,7 @@ clib4ProcessCompare(const void *a, const void *b, void *udata) {
     return ua->pid - ub->pid;
 }
 
-struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
+struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct ExecIFace *const iexec) {
     libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
     libBase->libNode.lib_Node.ln_Pri = LIBPRI;
     libBase->libNode.lib_Node.ln_Name = LIBNAME;
@@ -500,6 +507,7 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
                                                                       AVT_ClearWithValue, 0,
                                                                       TAG_DONE);
             reent_init(res->fallbackClib);
+            res->fallbackClib->self = (struct Process *) IExec->FindTask(NULL);
             res->fallbackClib->__check_abort_enabled = TRUE;
             res->fallbackClib->__fully_initialized = TRUE;
 
@@ -523,9 +531,11 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
         }
     }
 
+    Clib4Base = libBase;
+
     return libBase;
 
-    out:
+out:
     /* if we jump in out we need to close all libraries and return NULL */
     closeLibraries();
 
@@ -573,7 +583,7 @@ static uint32 libInterfaces[] = {
 
 /* CreateLibrary tag list */
 static struct TagItem libCreateTags[] = {
-        {CLT_DataSize,   (uint32)(sizeof(struct Clib4Base))},
+        {CLT_DataSize,   (uint32)(sizeof(struct Clib4Library))},
         {CLT_Interfaces, (uint32) libInterfaces},
         {CLT_InitFunc,   (uint32) libInit},
         {TAG_DONE,       0}

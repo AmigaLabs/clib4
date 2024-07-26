@@ -12,6 +12,10 @@
 #include "locale_headers.h"
 #endif /* _LOCALE_HEADERS_H */
 
+#ifndef _CTYPE_HEADERS_H
+#include "ctype_headers.h"
+#endif /* _CTYPE_HEADERS_H */
+
 #if !defined(_MATH_HEADERS_H)
 #include "math_headers.h"
 #endif /* !_MATH_HEADERS_H */
@@ -64,12 +68,12 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
     while ((c = (*(unsigned char *) format)) != '\0') {
         D(("next format character is '%lc'", c));
 
-        if (isspace(c)) {
+        if (__isspace_r(__clib4, c)) {
             /* Skip all blank spaces in the stream. */
             format++;
 
             while ((c = __getc(__clib4, stream)) != EOF) {
-                if (isspace(c)) {
+                if (__isspace_r(__clib4, c)) {
                     total_num_chars_read++;
                 } else {
                     /* End of the white space; we push the last
@@ -310,7 +314,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             conversion_type != 'n' &&
             conversion_type != '[') {
             while ((c = __getc(__clib4, stream)) != EOF) {
-                if (isspace(c)) {
+                if (__isspace_r(__clib4, c)) {
                     total_num_chars_read++;
                 } else {
                     /* End of the white space; we push the last
@@ -1222,7 +1226,7 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             if (maximum_field_width != 0) {
                 while (maximum_field_width != 0 && (c = __getc(__clib4, stream)) != EOF) {
                     /* Blank spaces stop the conversion process. */
-                    if (isspace(c)) {
+                    if (__isspace_r(__clib4, c)) {
                         if (__ungetc_r(__clib4, c, stream) == EOF)
                             goto out;
 

@@ -170,21 +170,21 @@ FILE_CONSTRUCTOR(stdio_file_init) {
             case STDIN_FILENO:
 
                 iob_flags = IOBF_IN_USE | IOBF_READ | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-                fd_flags = FDF_IN_USE | FDF_READ | FDF_NO_CLOSE | FDF_IS_INTERACTIVE;
+                fd_flags = FDF_IN_USE | FDF_READ | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
                 default_file = Input();
                 break;
 
             case STDOUT_FILENO:
 
                 iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE;
+                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
                 default_file = Output();
                 break;
 
             case STDERR_FILENO:
 
                 iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE;
+                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
                 default_file = ErrorOutput();
                 break;
         }
@@ -211,8 +211,6 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         /* We ignore the file handle and let the file I/O code in the fd hook pick up the appropriate
             Input/Output/ErrorOutput handle. */
         default_file = i;
-
-        fd_flags |= FDF_NO_CLOSE | FDF_STDIO;
 
         D(("File %ld", i));
         __initialize_fd(__clib4->__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);

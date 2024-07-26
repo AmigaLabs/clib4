@@ -8,7 +8,7 @@
 
 void
 funlockfile(FILE *stream) {
-    return __funlockfile_r(__CLIB4, stream);
+    __funlockfile_r(__CLIB4, stream);
 }
 
 void

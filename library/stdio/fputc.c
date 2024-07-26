@@ -105,17 +105,13 @@ fputc(int c, FILE *stream) {
         return result;
     }
 
-    SHOWMSG("Check Abort");
     __check_abort_f(__clib4);
 
-    SHOWMSG("__flockfile_r");
     __flockfile_r(__clib4, stream);
 
-    SHOWMSG("__fputc_check");
     if (__fputc_check(__clib4, stream) < 0)
         goto out;
 
-    SHOWMSG("__fputc");
     result = __fputc(__clib4, c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
 
 out:

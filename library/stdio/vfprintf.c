@@ -770,12 +770,11 @@ vfprintf(FILE *f, const char *format, va_list ap) {
 
     // Check for error in format string before writing anything to file.
     SHOWMSG("Check for string format errors");
-    /*
-    if (printf_core(0, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double) < 0) {
+    if (printf_core(__clib4, 0, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double) < 0) {
         va_end(ap2);
+        RETURN(EOF);
         return EOF;
     }
-    */
 
     SHOWMSG("Write result to the file");
     ret = printf_core(__clib4, _out, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double);

@@ -10,14 +10,14 @@
 
 error_t
 argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len) {
-    size_t len = 0;
-    int i = 0;
+    size_t len;
+    int i;
     int num_strings = 0;
     char delim[2];
-    char *running = 0;
-    char *old_running = 0;
-    char *token = 0;
-    char *iter = 0;
+    char *running;
+    char *old_running;
+    char *token;
+    char *iter;
 
     delim[0] = (char) sep;
     delim[1] = '\0';

@@ -42,7 +42,7 @@ mkptr6(char *s, const unsigned char *ip) {
 
 static void
 reverse_hosts(char *buf, const unsigned char *a, unsigned scopeid, int family) {
-    char line[512], *p, *z;
+    char line[512] = {0}, *p, *z;
     unsigned char _buf[1032], atmp[16];
     struct address iplit;
     FILE *f = fopen(_PATH_HOSTS, "r");

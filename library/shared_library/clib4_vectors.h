@@ -1172,7 +1172,7 @@ static void *clib4Vectors[] = {
         (void *) (__get_tc_up),                           /* 4384 */
         (void *) (__get_tc_bc),                           /* 4388 */
 
-        (void *) (spawnvpe_callback),                              /* 4392 */
+        (void *) (spawnvpe_callback),                     /* 4392 */
 
         (void *)-1
 };

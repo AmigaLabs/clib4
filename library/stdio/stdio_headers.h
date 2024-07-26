@@ -356,7 +356,9 @@ extern BPTR __resolve_fd_file(struct fd * fd);
 
 extern void __funlockfile_r(struct _clib4 *__clib4, FILE *stream);
 extern void __flockfile_r(struct _clib4 *__clib4, FILE *stream);
+extern int __ftrylockfile_r(struct _clib4 *__clib4, FILE *stream);
 extern int __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream);
+int __ferror_r(struct _clib4 *__clib4, FILE *stream, BOOL lock);
 
 extern void __clearerr_r(struct _clib4 *__clib4, FILE *stream);
 

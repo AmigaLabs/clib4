@@ -25,17 +25,13 @@ __malloc_r(struct _clib4 *__clib4, size_t size) {
     void *result = NULL;
     SHOWPOINTER(__clib4);
 
-    SHOWMSG("Locking memory pointer");
     __memory_lock(__clib4);
 
-    SHOWMSG("Calling wof_alloc");
     result = wof_alloc(__clib4->__wof_allocator, size);
-    D(("Process %ld allocator: %p", __clib4->processId, result));
 
     if (!result)
         __set_errno_r(__clib4, ENOMEM);
 
-    SHOWMSG("Unlocking memory pointer");
     __memory_unlock(__clib4);
 
     LEAVE();

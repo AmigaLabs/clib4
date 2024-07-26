@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_unsetenv.c,v 1.10 2008-04-30 16:32:49 clib4devs Exp $
+ * $Id: stdlib_unsetenv.c,v 1.11 2024-07-22 16:32:49 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -20,19 +20,20 @@ unsetenv(const char *name) {
     int result = -1;
     LONG status;
     size_t i;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     assert(name != NULL);
 
     if (name == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
     for (i = 0; i < strlen(name); i++) {
         if (name[i] == '=') {
-            name_copy = malloc(i + 1);
+            name_copy = __malloc_r(__clib4, i + 1);
             if (name_copy == NULL)
                 goto out;
 
@@ -46,7 +47,7 @@ unsetenv(const char *name) {
 
     status = DeleteVar((STRPTR) name, 0);
     if (status == DOSFALSE) {
-        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_access_io_error_to_errno(IoErr()));
         goto out;
     }
 
@@ -55,7 +56,7 @@ unsetenv(const char *name) {
 out:
 
     if (name_copy != NULL)
-        free(name_copy);
+        __free_r(__clib4, name_copy);
 
-    return (result);
+    return result;
 }

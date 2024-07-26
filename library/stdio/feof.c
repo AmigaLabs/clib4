@@ -31,11 +31,12 @@ feof(FILE *stream) {
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 
-    __flockfile_r(__clib4, stream);
+    int locked = __ftrylockfile_r(__clib4, stream);
 
     result = FLAG_IS_SET(file->iob_Flags, IOBF_EOF_REACHED);
 
-    __funlockfile_r(__clib4, stream);
+    if (locked == OK)
+        __funlockfile_r(__clib4, stream);
 
 out:
 

@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_tmpfile.c,v 1.5 2006-01-08 12:04:25 clib4devs Exp $
+ * $Id: stdio_tmpfile.c,v 1.6 2024-07-22 12:04:25 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -16,12 +16,13 @@ tmpfile(void) {
     char *temp_file_name;
     FILE *result = NULL;
     struct iob *file;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
-    temp_file_name = malloc(L_tmpnam);
+    temp_file_name = __malloc_r(__clib4, L_tmpnam);
     if (temp_file_name == NULL) {
         SHOWMSG("not enough memory for temp file name");
         goto out;
@@ -69,7 +70,7 @@ out:
     UnLock(temp_file_lock);
 
     if (temp_file_name != NULL)
-        free(temp_file_name);
+        __free_r(__clib4, temp_file_name);
 
     RETURN(result);
     return (result);

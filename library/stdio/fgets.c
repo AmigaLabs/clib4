@@ -99,7 +99,7 @@ fgets(char *buf, int n, FILE *stream) {
            buffer, if necessary. */
         c = __getc(__clib4, stream);
         if (c == EOF) {
-            if (ferror(stream)) {
+            if (__ferror_r(__clib4, stream, FALSE)) {
                 /* Just to be on the safe side. */
                 (*s) = '\0';
 

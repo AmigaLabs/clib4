@@ -15,10 +15,11 @@
 void *
 realloc(void *ptr, size_t size) {
     void *result = NULL;
-    BOOL locked = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
 
     assert((int) size >= 0);
+
+    __memory_lock(__clib4);
 
     if (ptr == NULL) {
         D(("calling malloc(%ld)", size));
@@ -32,17 +33,13 @@ realloc(void *ptr, size_t size) {
         result = wof_realloc(__clib4->__wof_allocator, ptr, size);
         if (result == NULL) {
             SHOWMSG("could not reallocate memory");
-            goto out;
         }
     }
 
-out:
-
-    if (locked)
-        __memory_unlock(__clib4);
+    __memory_unlock(__clib4);
 
     if (result == NULL)
         SHOWMSG("ouch! realloc failed");
 
-    return (result);
+    return result;
 }

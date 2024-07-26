@@ -29,13 +29,9 @@ __clearerr_r(struct _clib4 *__clib4, FILE *stream) {
         goto out;
     }
 
-    __flockfile_r(__clib4, stream);
-
     CLEAR_FLAG(file->iob_Flags, IOBF_ERROR);
     CLEAR_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
     CLEAR_FLAG(file->iob_Flags2, __SERR);
-
-    __funlockfile_r(__clib4, stream);
 
 out:
 

@@ -8,9 +8,15 @@
 
 int
 ftrylockfile(FILE *stream) {
+    struct _clib4 *__clib4 = __CLIB4;
+
+    return __ftrylockfile_r(__clib4, stream);
+}
+
+int
+__ftrylockfile_r(struct _clib4 *__clib4, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = ERROR;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWPOINTER(stream);
@@ -34,8 +40,15 @@ ftrylockfile(FILE *stream) {
         goto out;
     }
 
+    if (FLAG_IS_SET(file->iob_Flags, IOBF_LOCKED)) {
+        SHOWMSG("this file is already locked");
+
+        __set_errno_r(__clib4, EBADF);
+        goto out;
+    }
+
     if (file->iob_Lock != NULL && CANNOT AttemptSemaphore(file->iob_Lock))
-    goto out;
+        goto out;
 
     SET_FLAG(file->iob_Flags, IOBF_LOCKED);
     file->iob_TaskLock = (struct Task *) __clib4->self;

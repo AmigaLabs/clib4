@@ -58,7 +58,7 @@ struct Clib4Node {
     struct hashmap  *spawnedProcesses;   /* list of spawned processes */
 };
 
-struct Clib4Base {
+struct Clib4Library {
     struct Library libNode;
     uint16 pad;
     BPTR SegList;
@@ -73,8 +73,8 @@ struct Clib4Children {
 int libReserved(void);
 uint32 libRelease(struct LibraryManagerInterface *Self);
 uint32 libObtain(struct LibraryManagerInterface *Self);
-struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version);
-struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec);
+struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 version);
+struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct ExecIFace *const iexec);
 BPTR libExpunge(struct LibraryManagerInterface *Self);
 
 uint64_t clib4IntHash(const void *item, uint64_t seed0, uint64_t seed1);
