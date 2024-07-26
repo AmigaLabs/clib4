@@ -212,12 +212,6 @@ reent_init(struct _clib4 *__clib4) {
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         },
-        .action_array = {
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0,
-        },
         /* Set main Exec and IElf interface pointers */
         .IExec = IExec,
         .IElf = __IElf,
@@ -330,6 +324,9 @@ reent_init(struct _clib4 *__clib4) {
     __clib4->wide_status->_wcsrtombs_state.__value.__wch = 0;
     __clib4->wide_status->_l64a_buf[0] = '\0';
     __clib4->wide_status->_getdate_err = 0;
+
+    ClearMem(__clib4->action_array, NSIG * sizeof(struct sigaction));
+
     /* Get cpu family used to choose functions at runtime */
     D(("Setting cpu family"));
     GetCPUInfoTags(GCIT_Family, &__clib4->cpufamily, TAG_DONE);

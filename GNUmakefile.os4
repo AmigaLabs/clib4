@@ -139,6 +139,8 @@ ifdef SPE
                 -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions \
                 -fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
     AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mfloat-gprs=double $(CMATH) -Wno-overflow
+    CFLAGS := $(filter-out -Wno-cast-function-type, $(CFLAGS))
+    CFLAGS_N := $(filter-out -Wno-cast-function-type, $(CFLAGS_N))
 endif
 
 ifdef PROFILE
