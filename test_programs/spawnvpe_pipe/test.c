@@ -34,7 +34,10 @@ int main(int argc, char *argv[]) {
       rpid = waitpid(pid, &status, options);
     while (rpid == -1 && errno == EINTR);
 
-    printf("The child returned with status : %d\n", status);
+    if(rpid != -1)
+      printf("The child returned with status : %d\n", WEXITSTATUS(status));
+    else
+      perror("waitpid");
 
     printf("The child is talking: ");
     char buffer[4096];
