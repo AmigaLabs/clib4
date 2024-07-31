@@ -8,18 +8,18 @@
 
 #include <termcap.h>
 
-char __get_tc_pc() {
-    return __CLIB4->__PC;
+char *__get_tc_pc() {
+    return &__CLIB4->__PC;
 }
 
-short __get_tc_ospeed() {
-    return __CLIB4->__ospeed;
+short *__get_tc_ospeed() {
+    return &__CLIB4->__ospeed;
 }
 
-char *__get_tc_up() {
-    return __CLIB4->__UP;
+char **__get_tc_up() {
+    return &__CLIB4->__UP;
 }
 
-char *__get_tc_bc() {
-    return __CLIB4->__BC;
+char **__get_tc_bc() {
+    return &__CLIB4->__BC;
 }

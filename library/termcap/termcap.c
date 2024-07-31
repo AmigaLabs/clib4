@@ -255,7 +255,7 @@ tgetent(char *bp, const char *name) {
     if (bp)
         __clib4->term_entry = bp;
     termcap_name = getenv("TERMCAP");
-    Printf("termcap_name=%s\n", termcap_name);
+
     if (termcap_name && *termcap_name == '\0')
         termcap_name = NULL;
 
@@ -290,7 +290,6 @@ tgetent(char *bp, const char *name) {
     }
 
     term = indirect ? indirect : (char *) name;
-    Printf("term1=%s\n", term);
 
     if (!bp) {
         malloc_size = indirect ? strlen(tcenv) + 1 : buf.size;
