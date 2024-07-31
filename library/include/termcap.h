@@ -22,15 +22,18 @@
 
 __BEGIN_DECLS
 
-extern char __get_tc_pc(void);
-extern short __get_tc_ospeed(void);
-extern char *__get_tc_up(void);
-extern char *__get_tc_bc(void);
+#define PC (*__get_tc_pc())
+extern char *__get_tc_pc(void);
 
-#define PC __get_tc_pc()
-#define ospeed __get_tc_ospeed()
-#define UP __get_tc_up()
-#define BC __get_tc_bc()
+#define ospeed (*__get_tc_ospeed())
+extern short *__get_tc_ospeed(void);
+
+#define UP (*__get_tc_up())
+extern char **__get_tc_up(void);
+
+#define BC (*__get_tc_bc())
+extern char **__get_tc_bc(void);
+
 
 extern int tgetent (char *buffer, const char *termtype);
 extern int tgetnum (const char *name);
