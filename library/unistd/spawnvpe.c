@@ -122,7 +122,7 @@ spawnvpe_callback(
     const char *file,
     const char **argv,
     char **deltaenv,
-    const char *dir,
+    const char *cwd,
     int fhin,
     int fhout,
     int fherr,
@@ -163,6 +163,8 @@ spawnvpe_callback(
         progdirLock = ParentDir(fileLock);
         UnLock(fileLock);
     }
+
+    BPTR cwdLock = cwd ? Lock(cwd, SHARED_LOCK) : 0;
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
     if (parameter_string_len > _POSIX_ARG_MAX) {
@@ -252,11 +254,13 @@ spawnvpe_callback(
                      SYS_Asynch, TRUE,
                      NP_Child, TRUE,
                      progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
+                     cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
                      NP_Name, strdup(processName),
                      entry_fp ? NP_EntryCode    : TAG_SKIP,	entry_fp,
                      entry_data ? NP_EntryData  : TAG_SKIP, entry_data,
                      final_fp ? NP_FinalCode    : TAG_SKIP,	final_fp,
                      final_data ? NP_FinalData  : TAG_SKIP, final_data,
+                     NP_ExitCode, spawnedProcessExit,
                      TAG_DONE);
 
     D(("SystemTags completed. return value: [%ld]\n", ret));
