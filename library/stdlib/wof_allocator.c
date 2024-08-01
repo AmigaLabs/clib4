@@ -456,6 +456,7 @@ wof_free_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk) {
     wof_remove_from_block_list(allocator, block);
 
     FreeVec(block);
+    block = NULL;
 }
 
 /* Reallocs special 'jumbo' blocks of sizes that won't fit normally. */
@@ -497,6 +498,7 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
 
             /* Free old block */
             FreeVec(block);
+            block = NULL;
 
             if (newptr->next) {
                 newptr->next->prev = newptr;
@@ -529,6 +531,7 @@ wof_realloc_jumbo(wof_allocator_t *allocator, wof_chunk_hdr_t *chunk, const size
 
         /* Free old block */
         FreeVec(block);
+        block = NULL;
 
         if (newptr->next) {
             newptr->next->prev = newptr;
@@ -803,6 +806,7 @@ wof_allocator_destroy(wof_allocator_t *allocator) {
 
     /* then just free the struct */
     FreeVec(allocator);
+    allocator = NULL;
 }
 
 wof_allocator_t *
