@@ -80,4 +80,5 @@ extern void    bcopy_g3(const void *src, void *dest, size_t len);
 extern char   *__strcpy_ppc(char *dest, const char *src);
 extern size_t  __strlen_ppc(const char *s);
 extern char   *__strcat_ppc(char *dest, const char *src);
+extern char   *__strchr_ppc(const char *s, int c);
 #endif /* _STRING_HEADERS_H */

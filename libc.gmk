@@ -584,6 +584,7 @@ C_STRING := \
 	cpu/altivec/vec_strcpy.o \
 	cpu/generic/bcopy.o \
 	cpu/generic/strcat.o \
+	cpu/generic/strchr.o \
 	cpu/generic/strcpy.o \
 	cpu/generic/strlen.o \
 	string/rindex.o \
