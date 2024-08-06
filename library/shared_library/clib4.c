@@ -241,13 +241,19 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
                 break;
             default:
                 if (res->altivec) {
-                    D(("Using Altivec setjmp family functions"));
+                    D(("Using Altivec family functions"));
                     IClib4->setjmp = setjmp_altivec;
                     IClib4->longjmp = longjmp_altivec;
                     IClib4->strcpy = vec_strcpy;
                     IClib4->memcmp = vec_memcmp;
                     IClib4->bzero = vec_bzero;
                     IClib4->bcopy = vec_bcopy;
+#ifdef SLOWER_ALTIVEC_FUNCTIONS
+                    IClib4->memchr = vec_memchr;
+                    IClib4->strchr = vec_strchr;
+#else
+                    IClib4->strchr = glibc_strchr; // glibc_strchr is faster than ppc one on qemu/G4
+#endif
                 }
                 else {
                     D(("Using default family functions"));

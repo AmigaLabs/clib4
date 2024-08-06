@@ -578,9 +578,11 @@ C_STRING := \
 	cpu/4xx/strlen440.o \
 	cpu/4xx/strncmp440.o \
 	cpu/4xx/strrchr440.o \
+	cpu/altivec/vec_memchr.o \
 	cpu/altivec/vec_memcmp.o \
 	cpu/altivec/vec_memcpy.o \
 	cpu/altivec/vec_memset.o \
+	cpu/altivec/vec_strchr.o \
 	cpu/altivec/vec_strcpy.o \
 	cpu/generic/bcopy.o \
 	cpu/generic/strcat.o \
