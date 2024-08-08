@@ -1,6 +1,6 @@
 CC = ppc-amigaos-gcc
 CPPFLAGS = -DNDEBUG
-CFLAGS = -mcrt=clib4 -std=c11 -Wall -Wextra -Werror -pedantic -O3
+CFLAGS = -O3 -mcrt=clib4 -std=c11 -Wno-error=array-bounds -Wall -Wextra -Werror -pedantic -O3
 LDFLAGS =
 LIBS = -lm
 
