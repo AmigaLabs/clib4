@@ -384,7 +384,7 @@ reent_init(struct _clib4 *__clib4) {
     /* Check if .unix file exists in the current dir. If the file exists enable unix path semantics */
     D(("Check for .unix file"));
     __clib4->__unix_path_semantics = FALSE;
-    struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
+    struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) "PROGDIR:.unix", TAG_DONE);
     if (exd != NULL) {
         if (EXD_IS_FILE(exd)) {
             SHOWMSG("Enable unix paths");
