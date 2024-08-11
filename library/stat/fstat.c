@@ -32,15 +32,13 @@ fstat(int file_descriptor, struct stat *buffer) {
         goto out;
     }
 
-    assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
-    assert(__clib4->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
-
     fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno_r(__clib4, EBADF);
         goto out;
     }
+
+    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __fd_lock(fd);
 
