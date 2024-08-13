@@ -201,6 +201,7 @@ extern int setlogin(const char *name);
 #define _SC_NPROCESSORS_ONLN       10
 #define _SC_TZNAME_MAX             20
 #define _SC_THREAD_KEYS_MAX        21
+#define _SC_VERSION                29
 #define _SC_HOST_NAME_MAX          65
 #define _SC_GETPW_R_SIZE_MAX	   70
 #define _SC_TTY_NAME_MAX           72
