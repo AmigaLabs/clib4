@@ -61,6 +61,7 @@ jobs:
       #       /root/regenerate-packages.sh
       - name: Commit latest changes to repository
         run: |
+          git config --global --add safe.directory /__w/clib4/clib4
           git config --global user.email "walkero@gmail.com"
           git config --global user.name "walkero-gr"
           git commit -a -m "Release clib4-${{ github.event.release.tag_name }} changes"
