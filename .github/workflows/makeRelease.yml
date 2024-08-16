@@ -63,11 +63,13 @@ jobs:
       #       /root/regenerate-packages.sh
       - name: Commit latest changes to repository
         run: |
+          git checkout -b "release-${{ github.event.release.tag_name }}"
           git config --global user.email "walkero@gmail.com"
           git config --global user.name "walkero-gr"
           git add .
           git commit -m "Release clib4-${{ github.event.release.tag_name }} changes"
-          git push origin HEAD:master --force
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
       # - name: Prepare OS4Depot release
       #   run: |
       #     mkdir os4depot-release
