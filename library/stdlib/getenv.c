@@ -8,7 +8,7 @@
 
 char *
 getenv(const char *name) {
-    static char env_var_buffer[FILENAME_MAX];
+    static char env_var_buffer[FILENAME_MAX] = {0};
     char *result = NULL;
 
     ENTER();

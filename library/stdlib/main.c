@@ -305,11 +305,11 @@ _main(
     }
 
     /* Set default terminal mode to "amiga-clib4" if not set */
-    char term_buffer[32] = {0};
-    LONG term_len = GetVar("TERM", (STRPTR) term_buffer, 32, 0);
+    char term_buffer[FILENAME_MAX] = {0};
+    LONG term_len = GetVar("TERM", (STRPTR) term_buffer, FILENAME_MAX, 0);
     if (term_len <= 0) {
-        Strlcpy(term_buffer, "amiga-clib4", 11);
-        SetVar("TERM", term_buffer, 11, 0);
+        Strlcpy(term_buffer, "amiga-clib4", FILENAME_MAX);
+        SetVar("TERM", term_buffer, -1, GVF_LOCAL_ONLY);
     }
 
     /* The following code will be executed if the program is to keep
