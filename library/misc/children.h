@@ -11,5 +11,6 @@ BOOL insertSpawnedChildren(uint32 pid, uint32 gid);
 struct Clib4Children *findSpawnedChildrenByPid(uint32 pid);
 struct Clib4Children *findSpawnedChildrenByGid(uint32 pid, uint32 gid);
 void spawnedProcessExit(int32 rc, int32 data UNUSED);
+void spawnedProcessEnter(int32 entry_data UNUSED);
 
 #endif

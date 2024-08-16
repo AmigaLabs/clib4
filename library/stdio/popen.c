@@ -225,13 +225,14 @@ popen(const char *command, const char *type) {
     D(("Launching [%s]", command));
     /* Now try to launch the program. */
     status = SystemTags((STRPTR) command,
-                        SYS_Input, input,
-                        SYS_Output, output,
-                        SYS_Asynch, TRUE,
-                        SYS_UserShell, TRUE,
-                        NP_Name, command,
-                        NP_ExitCode, spawnedProcessExit,
-                        NP_Child, TRUE,
+                        SYS_Input,      input,
+                        SYS_Output,     output,
+                        SYS_Asynch,     TRUE,
+                        SYS_UserShell,  TRUE,
+                        NP_Name,        command,
+                        NP_EntryCode,   spawnedProcessEnter,
+                        NP_ExitCode,    spawnedProcessExit,
+                        NP_Child,       TRUE,
                         TAG_END);
 
     /* If launching the program returned -1 then it could not be started.
@@ -242,17 +243,12 @@ popen(const char *command, const char *type) {
         __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     } else {
-        SHOWMSG("[popen :] SystemTags() call completed.");
+        SHOWMSG("SystemTags() call completed.");
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid
          */
         uint32 ret = IoErr(); // This is our ProcessID;
-        if (insertSpawnedChildren(ret, getgid())) {
-            D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
-        } else {
-            D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
-        }
     }
     /* OK, the program is running. Once it terminates, it will automatically
        shut down the streams we opened for it. */

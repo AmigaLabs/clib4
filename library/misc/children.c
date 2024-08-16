@@ -91,6 +91,17 @@ findSpawnedChildrenByGid(uint32 pid, uint32 gid) {
 }
 
 void
+spawnedProcessEnter(int32 entry_data UNUSED) {
+    uint32 pid = ((struct Process *) FindTask(NULL))->pr_ProcessID;
+    if (insertSpawnedChildren(pid, getgid())) {
+        D(("Children with pid %ld and gid %ld inserted into list\n", pid, getgid()));
+    }
+    else {
+        D(("Cannot insert children with pid %ld and gid %ld into list\n", pid, getgid()));
+    }
+}
+
+void
 spawnedProcessExit(int32 rc, int32 data UNUSED) {
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
