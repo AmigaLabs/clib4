@@ -67,7 +67,7 @@ jobs:
           git config --global user.name "walkero-gr"
           git add .
           git commit -m "Release clib4-${{ github.event.release.tag_name }} changes"
-          git push
+          git push origin HEAD:master
       # - name: Prepare OS4Depot release
       #   run: |
       #     mkdir os4depot-release
