@@ -344,14 +344,11 @@ tgetent(char *bp, const char *name) {
                 termcap_name++;
             }
         *bp1 = '\0';
-        Printf("bp1=%s\n", bp1);
 
         /* Does this entry refer to another terminal type's entry?
        If something is found, copy it into heap and null-terminate it.  */
         tc_search_point = find_capability(tc_search_point, "tc");
-        Printf("tc_search_point=%s\n", tc_search_point);
         term = tgetst1(tc_search_point, (char **) 0);
-        Printf("term2=%s\n", term);
     }
 
     close(fd);
@@ -367,7 +364,6 @@ tgetent(char *bp, const char *name) {
 
 ret:
     __clib4->term_entry = bp;
-    Printf("__clib4->term_entry=%s\n", __clib4->term_entry);
     return 1;
 }
 
