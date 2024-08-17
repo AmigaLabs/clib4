@@ -106,7 +106,7 @@ jobs:
         if: success()
         uses: discord-actions/message@v2
         with:
-          webhook_url: ${{ secrets.DISCORD_ANNOUNCEMENTS_WEBHOOK }}
-          content: "New release of clib4: ${{ github.event.release.tag_name }}"
+          webhookUrl: ${{ secrets.DISCORD_ANNOUNCEMENTS_WEBHOOK }}
+          message: "New release of clib4: ${{ github.event.release.tag_name }}"
           username: "Github"
           avatar: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
