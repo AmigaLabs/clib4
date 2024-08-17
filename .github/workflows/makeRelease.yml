@@ -61,15 +61,21 @@ jobs:
       #       rm /opt/amigarepo/ubuntu/pool/main/clib4*.deb
       #     after_script: |
       #       /root/regenerate-packages.sh
-      - name: Commit latest changes to repository
-        run: |
-          git checkout -b "release-${{ github.event.release.tag_name }}"
-          git config --global user.email "walkero@gmail.com"
-          git config --global user.name "walkero-gr"
-          git add .
-          git commit -m "Release clib4-${{ github.event.release.tag_name }} changes"
+      # - name: Commit latest changes to repository
+      #   run: |
+      #     git checkout -b "release-${{ github.event.release.tag_name }}"
+      #     git config --global user.email "walkero@gmail.com"
+      #     git config --global user.name "walkero-gr"
+      #     git add .
+      #     git commit -m "Release clib4-${{ github.event.release.tag_name }} changes"
       - name: Create Pull Request
+        id: cpr
         uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Release ${{ github.event.release.tag_name }} changes
+          branch: release/${{ github.event.release.tag_name }}
+          base: master
+          body: Automated changes as part of the release
       # - name: Prepare OS4Depot release
       #   run: |
       #     mkdir os4depot-release
