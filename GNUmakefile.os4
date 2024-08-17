@@ -165,7 +165,7 @@ ifneq ($(origin GITTAG),undefined)
 MAJOR = $(patsubst v%,%,$(firstword $(subst ., ,$(GITTAG))))
 MINOR = $(word 2, $(subst ., ,$(GITTAG)))
 PATCH = $(word 3, $(subst ., ,$(GITTAG)))
-GIT_HASH = $(git rev-parse --short HEAD)
+GIT_HASH = $(shell git rev-parse --short HEAD)
 endif
 
 ##############################################################################
@@ -258,7 +258,8 @@ ifdef GITTAG
 	$(VERBOSE)sed -i 's/VERSION\t*[[:digit:]]/VERSION\t\t\t$(MAJOR)/g' library/c.lib_rev.h
 	$(VERBOSE)sed -i 's/REVISION\t*[[:digit:]]/REVISION\t\t$(MINOR)/g' library/c.lib_rev.h
 	$(VERBOSE)sed -i 's/SUBREVISION\t*[[:digit:]]/SUBREVISION\t\t$(PATCH)/g' library/c.lib_rev.h
-	$(VERBOSE)sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)-$(GIT_HASH)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]-[a-z0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)-$(GIT_HASH)/g' library/c.lib_rev.h
 	$(VERBOSE)sed -i 's/Version: [0-9]*\.[0-9]*\.[0-9]*/Version: $(MAJOR).$(MINOR).$(PATCH)/g' misc/control
 endif
 
