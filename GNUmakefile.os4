@@ -172,8 +172,7 @@ endif
 
 # This is the first target: it depends on all the targets
 
-all: gitver prepare 
-# all-targets all-libs clib4.library.debug clib4.library
+all: gitver prepare all-targets all-libs clib4.library.debug clib4.library
 
 ##############################################################################
 
