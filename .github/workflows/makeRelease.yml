@@ -39,6 +39,12 @@ jobs:
           asset_path: /opt/code/clib4-${{ github.event.release.tag_name }}.lha
           asset_name: clib4-${{ github.event.release.tag_name }}.lha
           asset_content_type: application/x-lzh-compressed
+      - name: Install gh binary
+        run: |
+          apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0 && \
+          apt-add-repository https://cli.github.com/packages && \
+          apt update && \
+          apt install gh
       - name: Upload DEB release file in GitHub
         uses: actions/upload-release-asset@v1
         env:
@@ -76,6 +82,7 @@ jobs:
           branch: release/${{ github.event.release.tag_name }}
           base: master
           body: Automated changes as part of the release
+          title: Version files changes by the github bot
       - name: Enable Pull Request Automerge
         if: steps.cpr.outputs.pull-request-operation == 'created'
         uses: peter-evans/enable-pull-request-automerge@v3
