@@ -109,4 +109,4 @@ jobs:
           webhook_url: ${{ secrets.DISCORD_ANNOUNCEMENTS_WEBHOOK }}
           content: "New release of clib4: ${{ github.event.release.tag_name }}"
           username: "Github"
-          avatar: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+          avatar: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
