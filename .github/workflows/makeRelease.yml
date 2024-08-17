@@ -103,7 +103,7 @@ jobs:
       #     server-dir: ./upload
       #     local-dir: /opt/code/os4depot-release/
       - name: Notify on Discord on successful release
-        uses: Ilshidur/action-discord@v2.1.0
+        uses: Ilshidur/action-discord@0.3.2
         with:
           webhook_url: ${{ secrets.DISCORD_ANNOUNCEMENTS_WEBHOOK }}
           content: "New release of clib4: ${{ github.event.release.tag_name }} has been created."
