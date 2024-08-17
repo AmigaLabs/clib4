@@ -172,6 +172,7 @@ C_POSIX := \
 	posix/sigmask.o \
 	posix/signal.o \
 	posix/sigprocmask.o \
+	posix/sigsuspend.o \
 	posix/sigsetmask.o \
 	posix/statvfs.o \
 	posix/sysinfo.o \

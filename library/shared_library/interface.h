@@ -607,6 +607,7 @@ struct Clib4IFace {
     int (* sigblock) (int signal_mask);                                                                                                              /* 1828 */
     int (* sigsetmask) (int signal_mask);                                                                                                            /* 1832 */
     int (* sigprocmask) (int how, const sigset_t *set, sigset_t *oset);                                                                              /* 1836 */
+    int (* sigsuspend) (const sigset_t *mask);		                                                                              					 /* 1837 */
     int (* sigismember) (const sigset_t *set, int sig);                                                                                              /* 1840 */
     int (* sigemptyset) (sigset_t *set);                                                                                                             /* 1844 */
     int (* sigfillset) (sigset_t *set);                                                                                                              /* 1848 */

@@ -83,6 +83,7 @@ extern int sigmask(int signum);
 extern int sigblock(int signal_mask);
 extern int sigsetmask(int signal_mask);
 extern int sigprocmask(int how, const sigset_t *set, sigset_t *oset);
+extern int sigsuspend(const sigset_t *mask);
 extern int sigismember(const sigset_t *set, int sig);
 extern int sigemptyset(sigset_t *set);
 extern int sigfillset(sigset_t *set);
