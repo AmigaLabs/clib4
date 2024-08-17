@@ -130,7 +130,7 @@ static int32 getDebugLevel(struct ExecBase *sysbase);
 extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
 extern void reent_init(struct _clib4 *__clib4);
 
-#ifdef DEBUG
+#if DEBUG == 1
 #undef D
 #define D(x) (x)
 #undef DebugPrintF
