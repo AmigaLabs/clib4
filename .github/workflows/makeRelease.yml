@@ -71,13 +71,6 @@ jobs:
       #       rm /opt/amigarepo/ubuntu/pool/main/clib4*.deb
       #     after_script: |
       #       /root/regenerate-packages.sh
-      # - name: Commit latest changes to repository
-      #   run: |
-      #     git checkout -b "release-${{ github.event.release.tag_name }}"
-      #     git config --global user.email "walkero@gmail.com"
-      #     git config --global user.name "walkero-gr"
-      #     git add .
-      #     git commit -m "Release clib4-${{ github.event.release.tag_name }} changes"
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v6
@@ -91,7 +84,6 @@ jobs:
         if: steps.cpr.outputs.pull-request-operation == 'created'
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
-          # token: ${{ secrets.PAT }}
           pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
           merge-method: squash
       # - name: Prepare OS4Depot release
@@ -110,3 +102,11 @@ jobs:
       #     password: 
       #     server-dir: ./upload
       #     local-dir: /opt/code/os4depot-release/
+      - name: Notify on Discord on success
+        if: success()
+        uses: discord-actions/message@v2
+        with:
+          webhook_url: ${{ secrets.DISCORD_ANNOUNCEMENTS_WEBHOOK }}
+          content: "New release of clib4: ${{ github.event.release.tag_name }}"
+          username: "Github"
+          avatar: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
