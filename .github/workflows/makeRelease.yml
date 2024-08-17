@@ -18,7 +18,9 @@ jobs:
       - name: Pull code
         uses: actions/checkout@v4
       - name: Add repository to git safe directories
-        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git config --global --add safe.directory /opt/code
       - name: Compile clib4
         run: |
           cd /opt/code && \
