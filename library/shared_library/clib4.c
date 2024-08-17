@@ -85,7 +85,6 @@
 #include "c.lib_rev.h"
 
 #include "clib4.h"
-#include "debug.h"
 #include "uuid.h"
 
 #include "interface.h"
@@ -130,6 +129,15 @@ static int32 getDebugLevel(struct ExecBase *sysbase);
 
 extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
 extern void reent_init(struct _clib4 *__clib4);
+
+#ifdef DEBUG
+#undef D
+#define D(x) (x)
+#undef DebugPrintF
+#define bug IExec->DebugPrintF
+#else
+#define D(x) ;
+#endif
 
 int32
 _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
@@ -184,9 +192,9 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
     struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
     if (!IClib4) {
-        D(("IClib4 is NULL. Get interface"));
+        D(bug("(libOpen) IClib4 is NULL. Get interface\n"));
         IClib4 = (struct Clib4IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
-        D(("DropInterface"));
+        D(bug("(libOpen) DropInterface\n"));
         IExec->DropInterface((struct Interface *)IClib4);
     }
 
@@ -196,6 +204,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
         struct Clib4Node c2n;
+        char varbuf[8] = {0};
         char uuid[UUID4_LEN + 1] = {0};
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
         uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
@@ -207,57 +216,62 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
         c2n.undo = 0;
         /* Initialize processes hashmap */
         c2n.spawnedProcesses = hashmap_new(sizeof(struct Clib4Children), 0, 0, 0, clib4IntHash, clib4ProcessCompare, NULL, NULL);
-        D(("c2n.pid = %ld", c2n.pid));
-        D(("c2n.pPid = %ld", c2n.pPid));
-        D(("c2n.uuid = %s", c2n.uuid));
+        D(bug("(libOpen) c2n.pid = %ld\n", c2n.pid));
+        D(bug("(libOpen) c2n.pPid = %ld\n", c2n.pPid));
+        D(bug("(libOpen) c2n.uuid = %s\n", c2n.uuid));
         hashmap_set(res->children, &c2n);
 
-        switch (res->cpufamily) {
+        if (IDOS->GetVar("DISABLE_CLIB4_OPTIMIZATIONS", varbuf, sizeof(varbuf), 0) <= 0) {
+            D(bug("(libOpen) Enabling clib4 optimizations\n"));
+            switch (res->cpufamily) {
 #ifdef __SPE__
-            case CPUFAMILY_E500:
-                D(("Using SPE family functions"));
-                IClib4->setjmp = setjmp_spe;
-                IClib4->longjmp = longjmp_spe;
-                IClib4->_longjmp = _longjmp_spe;
-                IClib4->_setjmp = _setjmp_spe;
-                IClib4->__sigsetjmp = __sigsetjmp_spe;
-                IClib4->siglongjmp = siglongjmp_spe;
-                IClib4->strlen = __strlen_e500;
-                IClib4->strcpy = __strcpy_e500;
-                IClib4->strcmp = __strcmp_e500;
-                IClib4->memcmp = __memcmp_e500;
-                break;
+                case CPUFAMILY_E500:
+                    D(bug("(libOpen) Using SPE family functions\n"));
+                    IClib4->setjmp = setjmp_spe;
+                    IClib4->longjmp = longjmp_spe;
+                    IClib4->_longjmp = _longjmp_spe;
+                    IClib4->_setjmp = _setjmp_spe;
+                    IClib4->__sigsetjmp = __sigsetjmp_spe;
+                    IClib4->siglongjmp = siglongjmp_spe;
+                    IClib4->strlen = __strlen_e500;
+                    IClib4->strcpy = __strcpy_e500;
+                    IClib4->strcmp = __strcmp_e500;
+                    IClib4->memcmp = __memcmp_e500;
+                    break;
 #endif
-            case CPUFAMILY_4XX:
-                D(("Using 4XX family functions"));
-                IClib4->strlen = __strlen440;
-                IClib4->strcpy = __strcpy440;
-                IClib4->strcmp = __strcmp440;
-                IClib4->memcmp = __memcmp440;
-                IClib4->memchr = __memchr440;
-                IClib4->strncmp = __strncmp440;
-                IClib4->strrchr = __strrchr440;
-                IClib4->strchr = __strchr440;
-                break;
-            default:
-                if (res->altivec) {
-                    D(("Using Altivec family functions"));
-                    IClib4->setjmp = setjmp_altivec;
-                    IClib4->longjmp = longjmp_altivec;
-                    IClib4->strcpy = vec_strcpy;
-                    IClib4->memcmp = vec_memcmp;
-                    IClib4->bzero = vec_bzero;
-                    IClib4->bcopy = vec_bcopy;
+                case CPUFAMILY_4XX:
+                    D(bug("(libOpen) Using 4XX family functions\n"));
+                    IClib4->strlen = __strlen440;
+                    IClib4->strcpy = __strcpy440;
+                    IClib4->strcmp = __strcmp440;
+                    IClib4->memcmp = __memcmp440;
+                    IClib4->memchr = __memchr440;
+                    IClib4->strncmp = __strncmp440;
+                    IClib4->strrchr = __strrchr440;
+                    IClib4->strchr = __strchr440;
+                    break;
+                default:
+                    if (res->altivec) {
+                        D(bug("(libOpen) Using Altivec family functions\n"));
+                        IClib4->setjmp = setjmp_altivec;
+                        IClib4->longjmp = longjmp_altivec;
+                        IClib4->strcpy = vec_strcpy;
+                        IClib4->memcmp = vec_memcmp;
+                        IClib4->bzero = vec_bzero;
+                        IClib4->bcopy = vec_bcopy;
 #ifdef SLOWER_ALTIVEC_FUNCTIONS
-                    IClib4->memchr = vec_memchr;
-                    IClib4->strchr = vec_strchr;
+                        IClib4->memchr = vec_memchr;
+                        IClib4->strchr = vec_strchr;
 #else
-                    IClib4->strchr = glibc_strchr; // glibc_strchr is faster than ppc one on qemu/G4
+                        IClib4->strchr = glibc_strchr; // glibc_strchr is faster than ppc one on qemu/G4
 #endif
-                }
-                else {
-                    D(("Using default family functions"));
-                }
+                    } else {
+                        D(bug("(libOpen) Using default family functions\n"));
+                    }
+            }
+        }
+        else {
+            D(bug("(libOpen) Disabling all clib4 optimizations\n"));
         }
     }
     return libBase;
@@ -501,7 +515,7 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
 
             iexec->InitSemaphore(&res->semaphore);
             res->debugLevel = getDebugLevel(SysBase);
-            D(("Current Exec debug level: %ld\n", res->debugLevel));
+            D(bug("(libInit) Current Exec debug level: %ld\n", res->debugLevel));
             /* Initialize clib4 children hashmap */
             res->children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
             /* Initialize unix sockets hashmap */
