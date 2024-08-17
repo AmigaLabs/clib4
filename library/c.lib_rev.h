@@ -5,4 +5,4 @@
 #define DATE			"17.08.2024"
 #define VERS			"clib4.library 2.1.0"
 #define VSTRING			"clib4.library 2.1.0 (17.08.2024)\r\n"
-#define VERSTAG			"\0$VER: clib4.library 2.1.0-89e36b2 (17.08.2024)"
+#define VERSTAG			"\0$VER: clib4.library 2.1.0-e8b68b8 (17.08.2024)"
