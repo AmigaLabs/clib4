@@ -107,6 +107,6 @@ jobs:
         with:
           webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
           webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-          message: "New release of clib4: ${{ github.event.release.tag_name }} has been created."
+          message: "New release of clib4: **${{ github.event.release.tag_name }}** has been created. Check it out at: https://github.com/walkero-gr/clib4/releases/tag/${{ github.event.release.tag_name }}"
           username: GitHub Actions
           avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
