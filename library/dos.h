@@ -353,7 +353,7 @@ struct _clib4 {
     BPTR output;
     BPTR input;
 
-    BOOL unused4;
+    BOOL __environment_allocated;
 
     /*
      * The following variables are part of libnet.a, which provides for

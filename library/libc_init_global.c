@@ -33,6 +33,8 @@
 #include "locale/dcngettext.h"
 #include <syslog.h>
 
+#include "debug.h"
+
 #include <proto/elf.h>
 #include <fenv.h>
 
@@ -280,7 +282,7 @@ reent_init(struct _clib4 *__clib4) {
         /* Default debug levels */
         .indent_level = 0,
         .previous_debug_level = -1,
-        .__debug_level = 2,
+        .__debug_level = DEBUGLEVEL_CallTracing,
         .g_mofile = NULL,
         .__ospeed = 0,
         .__tputs_baud_rate = 0,
@@ -412,27 +414,13 @@ void
 reent_exit(struct _clib4 *__clib4, BOOL fallback) {
     /* Free global clib structure */
     if (__clib4) {
-        /* Check for getrandom fd */
-        if (!fallback) {
-            /* We can't call close() in fallback reent, since destructors
-             * are already called and function is no more available */
-            if (__clib4->randfd[0] >= 0) {
-                SHOWMSG("Closing randfd[0]");
-                close(__clib4->randfd[0]);
-            }
-
-            if (__clib4->randfd[1] >= 0) {
-                SHOWMSG("Closing randfd[1]");
-                close(__clib4->randfd[1]);
-            }
-        }
-
         /* Free wchar stuff */
         if (__clib4->wide_status != NULL) {
             SHOWMSG("Freeing wide_status");
             FreeVec(__clib4->wide_status);
             __clib4->wide_status = NULL;
         }
+
         /* Remove random semaphore */
         SHOWMSG("Delete __random_lock semaphore");
         __delete_semaphore(__clib4->__random_lock);

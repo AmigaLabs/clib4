@@ -59,7 +59,7 @@ static uint32
 copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *message) {
     DECLARE_UTILITYBASE();
 
-    if (strlen(message->sv_GDir) <= 4) {
+    if (Strlen(message->sv_GDir) <= 4) {
         if (ehd->env_size == ehd->allocated_size) {
             if (!(ehd->r->__environment = realloc(ehd->r->__environment,
                                                   ehd->allocated_size + 1024 * sizeof(char *)))) {
@@ -70,14 +70,14 @@ copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *
         }
 
         char **env = (char **) hook->h_Data;
-        uint32 size = strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
-        char *buffer = (char *) malloc(size);
+        uint32 size = Strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
+        char *buffer = (char *) AllocVecTags(size, AVT_Type, MEMF_SHARED, TAG_DONE);
         if (buffer == NULL) {
             return 1;
         }
 
         ++ehd->env_size;
-        snprintf(buffer, size - 1, "%s=%s", message->sv_Name, message->sv_Var);
+        SNPrintf(buffer, size - 1, "%s=%s", message->sv_Name, message->sv_Var);
         *env = buffer;
         env++;
         hook->h_Data = env;
@@ -95,7 +95,7 @@ makeEnvironment(struct _clib4 *__clib4) {
         flags = GVF_LOCAL_ONLY;
     }
 
-    __clib4->__environment = (char **) calloc(environ_size, 1);
+    __clib4->__environment = (char **) malloc(environ_size);
     if (!__clib4->__environment)
         return;
 
@@ -302,7 +302,10 @@ _main(
     makeEnvironment(__clib4);
     if (!__clib4->__environment) {
         __clib4->__environment = empty_env;
+        __clib4->__environment_allocated = FALSE;
     }
+    else
+        __clib4->__environment_allocated = TRUE;
 
     /* Set default terminal mode to "amiga-clib4" if not set */
     char term_buffer[FILENAME_MAX] = {0};
@@ -332,6 +335,23 @@ _main(
 
     /* Restore the task priority. */
     SetTaskPri((struct Task *) me, oldPriority);
+
+    /* Free environment memory */
+    if (__clib4->__environment_allocated) {
+        free(__clib4->__environment);
+        __clib4->__environment = NULL;
+    }
+
+    /* Check for getrandom fd */
+    if (__clib4->randfd[0] >= 0) {
+        SHOWMSG("Closing randfd[0]");
+        close(__clib4->randfd[0]);
+    }
+
+    if (__clib4->randfd[1] >= 0) {
+        SHOWMSG("Closing randfd[1]");
+        close(__clib4->randfd[1]);
+    }
 
     SHOWMSG("Calling clib4 dtors");
     _end_ctors(__DTOR_LIST__);
