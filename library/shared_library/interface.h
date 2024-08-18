@@ -607,7 +607,6 @@ struct Clib4IFace {
     int (* sigblock) (int signal_mask);                                                                                                              /* 1828 */
     int (* sigsetmask) (int signal_mask);                                                                                                            /* 1832 */
     int (* sigprocmask) (int how, const sigset_t *set, sigset_t *oset);                                                                              /* 1836 */
-    int (* sigsuspend) (const sigset_t *mask);		                                                                              					 /* 1837 */
     int (* sigismember) (const sigset_t *set, int sig);                                                                                              /* 1840 */
     int (* sigemptyset) (sigset_t *set);                                                                                                             /* 1844 */
     int (* sigfillset) (sigset_t *set);                                                                                                              /* 1848 */
@@ -1346,6 +1345,7 @@ struct Clib4IFace {
 
     int ( *spawnvpe_callback) (const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr, void (*entry_fp)(void *), void* entry_data, void (*final_fp)(int, void *), void* final_data);     /* 4392 */
 
+    int (* sigsuspend) (const sigset_t *mask);		                                                                              					 /* 4396 */
 };
 
 #ifdef __PIC__

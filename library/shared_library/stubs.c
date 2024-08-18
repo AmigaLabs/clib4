@@ -457,7 +457,6 @@ Clib4Call(sigmask, 1824);
 Clib4Call(sigblock, 1828);
 Clib4Call(sigsetmask, 1832);
 Clib4Call(sigprocmask, 1836);
-Clib4Call(sigsuspend, 1837);
 Clib4Call(sigismember, 1840);
 Clib4Call(sigemptyset, 1844);
 Clib4Call(sigfillset, 1848);
@@ -1114,3 +1113,5 @@ Clib4Call(__get_tc_up, 4384);
 Clib4Call(__get_tc_bc, 4388);
 
 Clib4Call(spawnvpe_callback, 4392);
+
+Clib4Call(sigsuspend, 4396);
