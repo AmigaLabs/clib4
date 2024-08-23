@@ -188,7 +188,6 @@ spawnv(int mode, const char *file, const char **argv) {
         errno = __translate_io_error_to_errno(IoErr());
     }
     else {
-        __clib4->__children++;
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid

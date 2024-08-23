@@ -2,6 +2,10 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#ifndef _USERGROUP_HEADERS_H
+#include "usergroup_headers.h"
+#endif /* _USERGROUP_HEADERS_H */
+
 #include "clib4.h"
 #include "children.h"
 
@@ -92,12 +96,29 @@ findSpawnedChildrenByGid(uint32 pid, uint32 gid) {
 
 void
 spawnedProcessEnter(int32 entry_data UNUSED) {
+    struct Library *UserGroupBase;
+    struct UserGroupIFace *IUserGroup;
+    gid_t groupId = 0;
+    UserGroupBase = OpenLibrary("usergroup.library", 0);
+
+    if (UserGroupBase != NULL) {
+        IUserGroup = (struct UserGroupIFace *)GetInterface(UserGroupBase, "main", 1, 0);
+        if (IUserGroup == NULL) {
+            CloseLibrary(UserGroupBase);
+            UserGroupBase = NULL;
+        }
+        else {
+            groupId = IUserGroup->getgid();
+        }
+    }
+
     uint32 pid = ((struct Process *) FindTask(NULL))->pr_ProcessID;
-    if (insertSpawnedChildren(pid, getgid())) {
-        D(("Children with pid %ld and gid %ld inserted into list\n", pid, getgid()));
+    if (insertSpawnedChildren(pid, groupId)) {
+        __CLIB4->__children++;
+        D(("Children with pid %ld and gid %ld inserted into list\n", pid, groupId));
     }
     else {
-        D(("Cannot insert children with pid %ld and gid %ld into list\n", pid, getgid()));
+        D(("Cannot insert children with pid %ld and gid %ld into list\n", pid, groupId));
     }
 }
 
