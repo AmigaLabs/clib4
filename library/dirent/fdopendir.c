@@ -33,18 +33,18 @@ fdopendir(int fd) {
 
     dir = opendir(fd1->fd_Aux);
     if (!dir) {
-        __fd_unlock(fd1);
-
         __set_errno(ENOENT);
-        return NULL;
-    }
 
-    __fd_unlock(fd1);
+        goto out;
+    }
 
     /* Set the fd field on directory handler
      * This will be used on closedir()
      */
     ((struct DirectoryHandle *) dir)->dh_Fd = fd;
+
+out:
+    __fd_unlock(fd1);
 
     return dir;
 }

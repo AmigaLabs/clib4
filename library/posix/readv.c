@@ -93,7 +93,7 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
 
     result = total_num_bytes_read;
 
-    out:
+out:
 
     __fd_unlock(fd);
     __stdio_unlock(__clib4);

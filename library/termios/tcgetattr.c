@@ -98,8 +98,10 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
     struct termios *tios;
     BPTR file;
     struct _clib4 *__clib4 = __CLIB4;
+    BOOL isStdioLocked = FALSE;
 
     __stdio_lock(__clib4);
+    isStdioLocked = TRUE;
 
     if (user_tios == NULL) {
         __set_errno(EFAULT);
@@ -139,12 +141,16 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
     /* If someone ask for tcgetattr on STDOUT or STDERR make sure that we set also
      * STDIN. This hack fix ncurses library for example */
     if (file_descriptor == STDOUT_FILENO || file_descriptor == STDERR_FILENO) {
+        __stdio_unlock(__clib4);
+        isStdioLocked = FALSE;
         tcgetattr(STDIN_FILENO, user_tios);
     }
 
 out:
 
-    __stdio_unlock(__clib4);
+    if (isStdioLocked)
+        __stdio_unlock(__clib4);
+
     __check_abort_f(__clib4);
 
     return (result);

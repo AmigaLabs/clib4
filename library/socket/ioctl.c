@@ -175,8 +175,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
             __fd_lock(fd);
 
             va_start(arg, request);
-            param = va_arg(arg,
-            char *);
+            param = va_arg(arg, char *);
             va_end(arg);
 
             SHOWPOINTER(param);
@@ -208,8 +207,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
                 __fd_lock(fd);
 
                 va_start(arg, request);
-                param = va_arg(arg,
-                char *);
+                param = va_arg(arg, char *);
                 va_end(arg);
 
                 SHOWPOINTER(param);

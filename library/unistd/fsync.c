@@ -33,14 +33,17 @@ fsync(int file_descriptor) {
 
     __fd_lock(fd);
 
-    if (__sync_fd(fd, 1) < 0) /* flush everything */
+    if (__sync_fd(fd, 1) < 0) { /* flush everything */
+        __fd_unlock(fd);
         goto out;
+    }
 
     result = OK;
 
+    __fd_unlock(fd);
+
 out:
 
-    __fd_unlock(fd);
     __stdio_unlock(__clib4);
 
     RETURN(result);

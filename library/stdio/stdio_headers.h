@@ -350,6 +350,7 @@ extern void	__stdio_lock_exit(struct _clib4 *__clib4);
 extern int	__stdio_lock_init(struct _clib4 *__clib4);
 
 extern void __fd_lock(struct fd *fd);
+extern void __fd_attemptLock(struct fd *fd);
 extern void __fd_unlock(struct fd *fd);
 
 extern BPTR __resolve_fd_file(struct fd * fd);

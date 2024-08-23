@@ -68,7 +68,7 @@ openat(int fd, const char *filename, int flags, ...) {
         }
 
         /* Create file name */
-        char filename_complete[MAXPATHLEN + 1];
+        char filename_complete[MAXPATHLEN + 1] = {0};
 
         __fd_lock(fd1);
 

@@ -16,6 +16,7 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
     struct fd *fd = NULL;
     LONG success;
     struct _clib4 *__clib4 = __CLIB4;
+    BOOL isFdLocked = FALSE;
 
     ENTER();
 
@@ -38,6 +39,7 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
     }
 
     __fd_lock(fd);
+    isFdLocked = TRUE;
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
         __set_errno(EINVAL);
@@ -99,7 +101,8 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
 
 out:
 
-    __fd_unlock(fd);
+    if (isFdLocked)
+        __fd_unlock(fd);
 
     UnLock(parent_dir);
 

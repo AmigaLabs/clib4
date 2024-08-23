@@ -56,7 +56,11 @@ tcsendbreak(int file_descriptor, int duration) {
                 /* TODO */
                 result = OK;
             } else {
-                result = tcdrain(file_descriptor);
+                __stdio_unlock(__clib4);
+                __fd_unlock(fd);
+                SHOWMSG("Calling tcdrain");
+                LEAVE();
+                return tcdrain(file_descriptor);
             }
             break;
         default:

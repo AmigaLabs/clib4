@@ -88,7 +88,11 @@ tcflush(int file_descriptor, int queue) {
         /* TODO: Can we actually discard data buffered on the file?
          * For now we do the same as tcdrain().
          */
-        result = tcdrain(file_descriptor);
+        __stdio_unlock(__clib4);
+        __fd_unlock(fd);
+        SHOWMSG("Calling tcdrain");
+        LEAVE();
+        return tcdrain(file_descriptor);
     } else {
         /* ZZZ is this the correct result? */
         result = OK;
