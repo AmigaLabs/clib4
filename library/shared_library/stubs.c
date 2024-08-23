@@ -1115,3 +1115,6 @@ Clib4Call(__get_tc_bc, 4388);
 Clib4Call(spawnvpe_callback, 4392);
 
 Clib4Call(sigsuspend, 4396);
+Clib4Call(spawnve, 4400);
+Clib4Call(sigpause, 4404);
+Clib4Call(sigwait, 4408);

@@ -1175,6 +1175,9 @@ static void *clib4Vectors[] = {
         (void *) (spawnvpe_callback),                     /* 4392 */
 
         (void *) (sigsuspend),		                      /* 4396 */
+        (void *) (spawnve),                               /* 4400 */
+        (void *) (sigpause),		                      /* 4404 */
+        (void *) (sigwait),		                          /* 4408 */
 
         (void *)-1
 };

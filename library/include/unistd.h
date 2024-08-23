@@ -112,6 +112,7 @@ extern void swab64(const void *bfrom, void *bto, ssize_t nbytes);	/* Same as swa
 extern void encrypt(char *block, int edflag);
 
 extern int spawnv(int mode, const char *file, const char **argv);
+extern int spawnve(int mode, const char *path, const char **argv, char * const envp[]);
 extern int spawnvp(int mode, const char *path, const char **argv);
 /* Non standard. Used to help linux ports */
 extern int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);

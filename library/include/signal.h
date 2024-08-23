@@ -84,11 +84,14 @@ extern int sigblock(int signal_mask);
 extern int sigsetmask(int signal_mask);
 extern int sigprocmask(int how, const sigset_t *set, sigset_t *oset);
 extern int sigsuspend(const sigset_t *mask);
+extern int sigpause(int sig_or_mask, int is_sig);
 extern int sigismember(const sigset_t *set, int sig);
 extern int sigemptyset(sigset_t *set);
 extern int sigfillset(sigset_t *set);
 extern int sigdelset(sigset_t *set, int sig);
 extern int sigaddset(sigset_t *set, int sig);
+extern int sigwait(const sigset_t *set, int *sig);
+
 extern int kill(pid_t pid, int signal_number);
 
 typedef struct {

@@ -171,9 +171,11 @@ C_POSIX := \
     posix/sigismember.o \
 	posix/sigmask.o \
 	posix/signal.o \
+    posix/sigpause.o \
 	posix/sigprocmask.o \
 	posix/sigsuspend.o \
 	posix/sigsetmask.o \
+	posix/sigwait.o \
 	posix/statvfs.o \
 	posix/sysinfo.o \
 	posix/sysv_ftok.o \
@@ -761,6 +763,7 @@ C_UNISTD := \
 	unistd/setlogin.o \
 	unistd/sleep.o \
 	unistd/spawnv.o \
+	unistd/spawnve.o \
 	unistd/spawnvp.o \
 	unistd/spawnvpe.o \
 	unistd/strip_double_slash.o \

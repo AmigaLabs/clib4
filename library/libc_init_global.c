@@ -295,6 +295,7 @@ reent_init(struct _clib4 *__clib4) {
         .__fully_initialized = FALSE,
         .__children = 1,
         .term_entry = NULL,
+        .__was_sig = -1,
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {

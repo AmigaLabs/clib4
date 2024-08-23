@@ -519,6 +519,7 @@ struct _clib4 {
     struct sigaction action_array[NSIG];
 
     int __children;
+    int __was_sig;
 };
 
 #ifndef __getClib4

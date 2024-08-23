@@ -2,7 +2,6 @@
  * $Id: posix_sigsuspend.,v 1.0 2024-08-18 12:04:24 clib4devs Exp $
 */
 
-
 #ifndef _SIGNAL_HEADERS_H
 #include "signal_headers.h"
 #endif /* _SIGNAL_HEADERS_H */
