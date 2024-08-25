@@ -61,8 +61,7 @@ copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *
 
     if (Strlen(message->sv_GDir) <= 4) {
         if (ehd->env_size == ehd->allocated_size) {
-            if (!(ehd->r->__environment = realloc(ehd->r->__environment,
-                                                  ehd->allocated_size + 1024 * sizeof(char *)))) {
+            if (!(ehd->r->__environment = realloc(ehd->r->__environment, ehd->allocated_size + 1024 * sizeof(char *)))) {
                 return 1;
             }
             ClearMem((char *) ehd->r->__environment + ehd->allocated_size, 1024 * sizeof(char *));
@@ -95,7 +94,7 @@ makeEnvironment(struct _clib4 *__clib4) {
         flags = GVF_LOCAL_ONLY;
     }
 
-    __clib4->__environment = (char **) malloc(environ_size);
+    __clib4->__environment = (char **) calloc(environ_size, 1);
     if (!__clib4->__environment)
         return;
 
