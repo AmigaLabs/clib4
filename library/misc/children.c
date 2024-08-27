@@ -33,7 +33,7 @@ insertSpawnedChildren(uint32 pid, uint32 gid) {
 
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
-        uint32 me = GetPID(0, GPID_PROCESS);
+        uint32 parent = GetPID(0, GPID_PARENT);
         size_t iter = 0;
         void *item;
 
@@ -44,7 +44,7 @@ insertSpawnedChildren(uint32 pid, uint32 gid) {
 
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
-            if (node->pid == me) {
+            if (node->pid == parent) {
                 hashmap_set(node->spawnedProcesses, &children);
                 break;
             }

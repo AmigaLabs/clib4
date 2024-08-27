@@ -117,30 +117,40 @@ get_arg_string_length(char *const argv[]) {
 
     return (result);
 }
-void spawnvpe_entryCode(int32 _ed);
-struct EntryData {
-    int8 signal;
-};
-void
-spawnvpe_entryCode(int32 _ed) {
-    struct EntryData *ed = (struct EntryData *)_ed;
-    ed->signal = AllocSignal(-1);
-    Wait(1 << ed->signal);
-    //this is to prevent, that the child is gone, when we do our registrations
-    FreeSignal(ed->signal);
-}
+// void spawnvpe_entryCode(int32 _ed);
+// struct EntryData {
+//     int8 signal;
+// };
+// void
+// spawnvpe_entryCode(int32 _ed) {
+//     struct EntryData *ed = (struct EntryData *)_ed;
+//     ed->signal = AllocSignal(-1);
+//     Wait(1 << ed->signal);
+//     //this is to prevent, that the child is gone, when we do our registrations
+//     FreeSignal(ed->signal);
+// }
+// int
+// spawnvpe_callback(
+//     const char *file,
+//     const char **argv,
+//     char **deltaenv,
+//     const char *cwd,
+//     int fhin,
+//     int fhout,
+//     int fherr,
+
+//     void (*entry_fp)(void *), void* entry_data,
+//     void (*final_fp)(int, void *), void* final_data
+// ) {
 int
-spawnvpe_callback(
+spawnvpe(
     const char *file,
     const char **argv,
     char **deltaenv,
     const char *cwd,
     int fhin,
     int fhout,
-    int fherr,
-
-    void (*entry_fp)(void *), void* entry_data,
-    void (*final_fp)(int, void *), void* final_data
+    int fherr
 ) {
     int ret = -1;
     struct name_translation_info nti_name;
@@ -172,9 +182,11 @@ spawnvpe_callback(
 
     D(("name after conversion: [%s]\n", name));
 
+#if 0
     seglist = LoadSeg(name);
 	if (!seglist)
 		return -1;
+#endif
 
     BPTR fileLock = Lock(name, SHARED_LOCK);
     if (fileLock) {
@@ -264,10 +276,10 @@ spawnvpe_callback(
 
     D(("(*)Calling SystemTags.\n"));
 
-    struct EntryData ed;
+    // struct EntryData ed;
 
     struct Task *_me = FindTask(0);
-#if 1
+#if 0
   struct Process *p = CreateNewProcTags(
     NP_Seglist,		seglist,
     NP_FreeSeglist,	TRUE,
@@ -348,35 +360,53 @@ spawnvpe_callback(
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid
          */
-        ret = GetPID(p, GPID_PROCESS);
-        printf("[spawnvpe :] adding child entry with pid == %d\n", ret);
+        ret = IoErr();
 
-        // ret = IoErr();
-        if (insertSpawnedChildren(ret, getgid())) {
-            D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
-        }
-        else {
-            D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
-        }
+        // ret = GetPID(p, GPID_PROCESS);
+        // printf("[spawnvpe :] adding child entry with pid == %d\n", ret);
+
+        // if (insertSpawnedChildren(ret, getgid())) {
+        //     D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
+        // }
+        // else {
+        //     D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
+        // }
 
         //debug
-        struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
-        if (res) {
-            printf("[spawnvpe : ] Checking result after insertion...\n");
-            size_t childrenIter = 0;
-            void *childItem;
-            while (hashmap_iter(res->children, &childrenIter, &childItem)) {
-                const struct Clib4Node *node = childItem;
+        // struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+        // if (res) {
+        //     printf("[spawnvpe : ] Checking result after insertion...\n");
+        //     size_t childrenIter = 0;
+        //     void *childItem;
+        //     while (hashmap_iter(res->children, &childrenIter, &childItem)) {
+        //         const struct Clib4Node *node = childItem;
 
-                printf("[waitpid :] iterating *** pid == %d\n", node->pid);
-            }
-        }
+        //         printf("[waitpid :] iterating *** pid == %d\n", node->pid);
+        //     }
+        // }
 
-        Signal((struct Task *)p, 1 << ed.signal); //let the child free
+        // Signal((struct Task *)p, 1 << ed.signal); //let the child free
     }
 
     return ret;
 }
-int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr) {
-    return spawnvpe_callback(file, argv, deltaenv, dir, fhin, fhout, fherr, 0, 0, 0, 0);
+// int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr) {
+//     return spawnvpe_callback(file, argv, deltaenv, dir, fhin, fhout, fherr, 0, 0, 0, 0);
+// }
+
+int
+spawnvpe_callback(
+    const char *file,
+    const char **argv,
+    char **deltaenv,
+    const char *cwd,
+    int fhin,
+    int fhout,
+    int fherr,
+
+    void (*entry_fp)(void *), void* entry_data,
+    void (*final_fp)(int, void *), void* final_data
+) {
+    __set_errno(EINVAL);
+    return -1;
 }
