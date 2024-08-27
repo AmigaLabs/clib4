@@ -117,6 +117,18 @@ get_arg_string_length(char *const argv[]) {
 
     return (result);
 }
+void spawnvpe_entryCode(int32 _ed);
+struct EntryData {
+    int8 signal;
+};
+void
+spawnvpe_entryCode(int32 _ed) {
+    struct EntryData *ed = (struct EntryData *)_ed;
+    ed->signal = AllocSignal(-1);
+    Wait(1 << ed->signal);
+    //this is to prevent, that the child is gone, when we do our registrations
+    FreeSignal(ed->signal);
+}
 int
 spawnvpe_callback(
     const char *file,
@@ -144,10 +156,12 @@ spawnvpe_callback(
     size_t parameter_string_len = 0;
     struct _clib4 *__clib4 = __CLIB4;
     struct Task *me = (struct Task *) __clib4->self;
+    BPTR seglist;
 
     __set_errno(0);
 
     D(("Starting new process [%s]\n", name));
+    printf("[spawnvpe :] Starting new process [%s]\n", name);
 
     int error = __translate_unix_to_amiga_path_name(&name, &nti_name);
     if (error) {
@@ -157,6 +171,10 @@ spawnvpe_callback(
     }
 
     D(("name after conversion: [%s]\n", name));
+
+    seglist = LoadSeg(name);
+	if (!seglist)
+		return -1;
 
     BPTR fileLock = Lock(name, SHARED_LOCK);
     if (fileLock) {
@@ -199,6 +217,8 @@ spawnvpe_callback(
     snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
     D(("File to execute: [%s]\n", finalpath));
+
+    printf("[spawnvpe :] full command == <%s>\n", finalpath);
 
     if (fhin >= 0) {
         err = __get_default_file(fhin, &fh);
@@ -244,7 +264,51 @@ spawnvpe_callback(
 
     D(("(*)Calling SystemTags.\n"));
 
+    struct EntryData ed;
+
     struct Task *_me = FindTask(0);
+#if 1
+  struct Process *p = CreateNewProcTags(
+    NP_Seglist,		seglist,
+    NP_FreeSeglist,	TRUE,
+
+    NP_Cli,			TRUE,
+    NP_Child,		TRUE,
+    NP_NotifyOnDeathSigTask, _me,
+
+#if 1
+    NP_Input,		iofh[0],
+    NP_CloseInput,	closefh[0],
+    NP_Output,		iofh[1],
+    NP_CloseOutput,	closefh[1],
+    NP_Error,		iofh[2],
+    NP_CloseError,	closefh[2],
+#else
+    NP_Input,		IDOS->Input(),
+    NP_CloseInput,	FALSE,
+    NP_Output,		IDOS->Output(),
+    NP_CloseOutput,	FALSE,
+    NP_Error,		IDOS->ErrorOutput(),
+    NP_CloseError,	FALSE,
+#endif
+
+    NP_EntryCode, spawnvpe_entryCode,
+    NP_EntryData, &ed,
+
+    // NP_FinalCode,	amiga_FinalCode,
+    // NP_FinalData,	fd,
+
+    // NP_EntryCode,  spawnedProcessEnter,
+    NP_ExitCode,   spawnedProcessExit,
+
+    NP_Name,      strdup(processName),
+    cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
+    progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
+    NP_Arguments, arg_string,
+    TAG_DONE
+  );
+  if (p) ret = 0;
+#else
     ret = SystemTags(finalpath,
                      NP_NotifyOnDeathSigTask, _me,
                      SYS_Input, iofh[0],
@@ -256,12 +320,17 @@ spawnvpe_callback(
                      progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
                      cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
                      NP_Name, strdup(processName),
-                     entry_fp ? NP_EntryCode    : TAG_SKIP,	entry_fp,
-                     entry_data ? NP_EntryData  : TAG_SKIP, entry_data,
-                     final_fp ? NP_FinalCode    : TAG_SKIP,	final_fp,
-                     final_data ? NP_FinalData  : TAG_SKIP, final_data,
-                     NP_ExitCode, spawnedProcessExit,
+
+                    //  entry_fp ? NP_EntryCode    : TAG_SKIP,	entry_fp,
+                    //  entry_data ? NP_EntryData  : TAG_SKIP, entry_data,
+                    //  final_fp ? NP_FinalCode    : TAG_SKIP,	final_fp,
+                    //  final_data ? NP_FinalData  : TAG_SKIP, final_data,
+
+                     NP_EntryCode,  spawnedProcessEnter,
+                     NP_ExitCode,   spawnedProcessExit,
+
                      TAG_DONE);
+#endif
 
     D(("SystemTags completed. return value: [%ld]\n", ret));
 
@@ -279,13 +348,31 @@ spawnvpe_callback(
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid
          */
-        ret = IoErr();
+        ret = GetPID(p, GPID_PROCESS);
+        printf("[spawnvpe :] adding child entry with pid == %d\n", ret);
+
+        // ret = IoErr();
         if (insertSpawnedChildren(ret, getgid())) {
             D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
         }
         else {
             D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
         }
+
+        //debug
+        struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+        if (res) {
+            printf("[spawnvpe : ] Checking result after insertion...\n");
+            size_t childrenIter = 0;
+            void *childItem;
+            while (hashmap_iter(res->children, &childrenIter, &childItem)) {
+                const struct Clib4Node *node = childItem;
+
+                printf("[waitpid :] iterating *** pid == %d\n", node->pid);
+            }
+        }
+
+        Signal((struct Task *)p, 1 << ed.signal); //let the child free
     }
 
     return ret;
