@@ -117,31 +117,6 @@ get_arg_string_length(char *const argv[]) {
 
     return (result);
 }
-// void spawnvpe_entryCode(int32 _ed);
-// struct EntryData {
-//     int8 signal;
-// };
-// void
-// spawnvpe_entryCode(int32 _ed) {
-//     struct EntryData *ed = (struct EntryData *)_ed;
-//     ed->signal = AllocSignal(-1);
-//     Wait(1 << ed->signal);
-//     //this is to prevent, that the child is gone, when we do our registrations
-//     FreeSignal(ed->signal);
-// }
-// int
-// spawnvpe_callback(
-//     const char *file,
-//     const char **argv,
-//     char **deltaenv,
-//     const char *cwd,
-//     int fhin,
-//     int fhout,
-//     int fherr,
-
-//     void (*entry_fp)(void *), void* entry_data,
-//     void (*final_fp)(int, void *), void* final_data
-// ) {
 int
 spawnvpe(
     const char *file,
@@ -333,11 +308,6 @@ spawnvpe(
                      cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
                      NP_Name, strdup(processName),
 
-                    //  entry_fp ? NP_EntryCode    : TAG_SKIP,	entry_fp,
-                    //  entry_data ? NP_EntryData  : TAG_SKIP, entry_data,
-                    //  final_fp ? NP_FinalCode    : TAG_SKIP,	final_fp,
-                    //  final_data ? NP_FinalData  : TAG_SKIP, final_data,
-
                      NP_EntryCode,  spawnedProcessEnter,
                      NP_ExitCode,   spawnedProcessExit,
 
@@ -361,39 +331,9 @@ spawnvpe(
          * just after SystemTags. In this case spawnv will return pid
          */
         ret = IoErr();
-
-        // ret = GetPID(p, GPID_PROCESS);
-        // printf("[spawnvpe :] adding child entry with pid == %d\n", ret);
-
-        // if (insertSpawnedChildren(ret, getgid())) {
-        //     D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
-        // }
-        // else {
-        //     D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
-        // }
-
-        //debug
-        // struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
-        // if (res) {
-        //     printf("[spawnvpe : ] Checking result after insertion...\n");
-        //     size_t childrenIter = 0;
-        //     void *childItem;
-        //     while (hashmap_iter(res->children, &childrenIter, &childItem)) {
-        //         const struct Clib4Node *node = childItem;
-
-        //         printf("[waitpid :] iterating *** pid == %d\n", node->pid);
-        //     }
-        // }
-
-        // Signal((struct Task *)p, 1 << ed.signal); //let the child free
     }
-
     return ret;
 }
-// int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr) {
-//     return spawnvpe_callback(file, argv, deltaenv, dir, fhin, fhout, fherr, 0, 0, 0, 0);
-// }
-
 int
 spawnvpe_callback(
     const char *file,
