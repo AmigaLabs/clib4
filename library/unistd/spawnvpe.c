@@ -146,7 +146,7 @@ spawnvpe(
     __set_errno(0);
 
     D(("Starting new process [%s]\n", name));
-    printf("[spawnvpe :] Starting new process [%s]\n", name);
+    // printf("[spawnvpe :] Starting new process [%s]\n", name);
 
     int error = __translate_unix_to_amiga_path_name(&name, &nti_name);
     if (error) {
@@ -205,7 +205,7 @@ spawnvpe(
 
     D(("File to execute: [%s]\n", finalpath));
 
-    printf("[spawnvpe :] full command == <%s>\n", finalpath);
+    // printf("[spawnvpe :] full command == <%s>\n", finalpath);
 
     if (fhin >= 0) {
         err = __get_default_file(fhin, &fh);
