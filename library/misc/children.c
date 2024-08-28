@@ -1,3 +1,7 @@
+/*
+  $Id: uuid.c,v 1.01 2024-08-28 12:09:49 clib4devs Exp $
+*/
+
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
@@ -104,12 +108,13 @@ spawnedProcessEnter(int32 entry_data UNUSED) {
     if (UserGroupBase != NULL) {
         IUserGroup = (struct UserGroupIFace *)GetInterface(UserGroupBase, "main", 1, 0);
         if (IUserGroup == NULL) {
-            CloseLibrary(UserGroupBase);
             UserGroupBase = NULL;
         }
         else {
             groupId = IUserGroup->getgid();
+            DropInterface((struct Interface *) IUserGroup);
         }
+        CloseLibrary(UserGroupBase);
     }
 
     uint32 pid = ((struct Process *) FindTask(NULL))->pr_ProcessID;
@@ -138,7 +143,7 @@ spawnedProcessExit(int32 rc, int32 data UNUSED) {
                 key.pid = me;
                 struct Clib4Children *item = (struct Clib4Children *) hashmap_get(node->spawnedProcesses, &key);
                 if (item != NULL) {
-                    DebugPrintF("[spawneeExit :] SUCCESS.\n");
+                    SHOWMSG("[spawneeExit :] SUCCESS");
                     item->returnCode = rc;
                 }
             }

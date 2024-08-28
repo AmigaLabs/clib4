@@ -1,5 +1,5 @@
 /*
-  $Id: uuid.c,v 1.00 2023-07-01 12:09:49 clib4devs Exp $
+  $Id: uuid.c,v 1.01 2024-08-28 12:09:49 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -28,8 +28,6 @@ void uuid4_generate(char *_dst) {
     struct RandomState state;
     DECLARE_UTILITYBASE();
     // DECLARE_TIMERBASE();
-
-
 
     GetSysTime((struct TimeVal *)&state);
 
@@ -79,5 +77,5 @@ void uuid4_generate(char *_dst) {
     }
     *dst = '\0';
 
-    DebugPrintF("[uuid4_generate :] result : <%s>\n", _dst);
+    D(("[uuid4_generate :] result : <%s>\n", _dst));
 }
