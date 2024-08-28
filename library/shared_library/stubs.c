@@ -1112,7 +1112,7 @@ Clib4Call(__get_tc_ospeed, 4380);
 Clib4Call(__get_tc_up, 4384);
 Clib4Call(__get_tc_bc, 4388);
 
-Clib4Call(spawnvpe_callback, 4392);
+// Clib4Call(spawnvpe_callback_UNUSED, 4392);
 
 Clib4Call(sigsuspend, 4396);
 Clib4Call(spawnve, 4400);

@@ -118,17 +118,14 @@ get_arg_string_length(char *const argv[]) {
     return (result);
 }
 int
-spawnvpe_callback(
+spawnvpe(
     const char *file,
     const char **argv,
     char **deltaenv,
     const char *cwd,
     int fhin,
     int fhout,
-    int fherr,
-
-    void (*entry_fp)(void *), void* entry_data,
-    void (*final_fp)(int, void *), void* final_data
+    int fherr
 ) {
     int ret = -1;
     struct name_translation_info nti_name;
@@ -144,10 +141,12 @@ spawnvpe_callback(
     size_t parameter_string_len = 0;
     struct _clib4 *__clib4 = __CLIB4;
     struct Task *me = (struct Task *) __clib4->self;
+    BPTR seglist;
 
     __set_errno(0);
 
     D(("Starting new process [%s]\n", name));
+    // printf("[spawnvpe :] Starting new process [%s]\n", name);
 
     int error = __translate_unix_to_amiga_path_name(&name, &nti_name);
     if (error) {
@@ -157,6 +156,12 @@ spawnvpe_callback(
     }
 
     D(("name after conversion: [%s]\n", name));
+
+#if 0
+    seglist = LoadSeg(name);
+	if (!seglist)
+		return -1;
+#endif
 
     BPTR fileLock = Lock(name, SHARED_LOCK);
     if (fileLock) {
@@ -199,6 +204,8 @@ spawnvpe_callback(
     snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
     D(("File to execute: [%s]\n", finalpath));
+
+    // printf("[spawnvpe :] full command == <%s>\n", finalpath);
 
     if (fhin >= 0) {
         err = __get_default_file(fhin, &fh);
@@ -244,7 +251,51 @@ spawnvpe_callback(
 
     D(("(*)Calling SystemTags.\n"));
 
+    // struct EntryData ed;
+
     struct Task *_me = FindTask(0);
+#if 0
+  struct Process *p = CreateNewProcTags(
+    NP_Seglist,		seglist,
+    NP_FreeSeglist,	TRUE,
+
+    NP_Cli,			TRUE,
+    NP_Child,		TRUE,
+    NP_NotifyOnDeathSigTask, _me,
+
+#if 1
+    NP_Input,		iofh[0],
+    NP_CloseInput,	closefh[0],
+    NP_Output,		iofh[1],
+    NP_CloseOutput,	closefh[1],
+    NP_Error,		iofh[2],
+    NP_CloseError,	closefh[2],
+#else
+    NP_Input,		IDOS->Input(),
+    NP_CloseInput,	FALSE,
+    NP_Output,		IDOS->Output(),
+    NP_CloseOutput,	FALSE,
+    NP_Error,		IDOS->ErrorOutput(),
+    NP_CloseError,	FALSE,
+#endif
+
+    NP_EntryCode, spawnvpe_entryCode,
+    NP_EntryData, &ed,
+
+    // NP_FinalCode,	amiga_FinalCode,
+    // NP_FinalData,	fd,
+
+    // NP_EntryCode,  spawnedProcessEnter,
+    NP_ExitCode,   spawnedProcessExit,
+
+    NP_Name,      strdup(processName),
+    cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
+    progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
+    NP_Arguments, arg_string,
+    TAG_DONE
+  );
+  if (p) ret = 0;
+#else
     ret = SystemTags(finalpath,
                      NP_NotifyOnDeathSigTask, _me,
                      SYS_Input, iofh[0],
@@ -256,12 +307,12 @@ spawnvpe_callback(
                      progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
                      cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
                      NP_Name, strdup(processName),
-                     entry_fp ? NP_EntryCode    : TAG_SKIP,	entry_fp,
-                     entry_data ? NP_EntryData  : TAG_SKIP, entry_data,
-                     final_fp ? NP_FinalCode    : TAG_SKIP,	final_fp,
-                     final_data ? NP_FinalData  : TAG_SKIP, final_data,
-                     NP_ExitCode, spawnedProcessExit,
+
+                     NP_EntryCode,  spawnedProcessEnter,
+                     NP_ExitCode,   spawnedProcessExit,
+
                      TAG_DONE);
+#endif
 
     D(("SystemTags completed. return value: [%ld]\n", ret));
 
@@ -280,16 +331,6 @@ spawnvpe_callback(
          * just after SystemTags. In this case spawnv will return pid
          */
         ret = IoErr();
-        if (insertSpawnedChildren(ret, getgid())) {
-            D(("Children with pid %ld and gid %ld inserted into list\n", ret, getgid()));
-        }
-        else {
-            D(("Cannot insert children with pid %ld and gid %ld into list\n", ret, getgid()));
-        }
     }
-
     return ret;
-}
-int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr) {
-    return spawnvpe_callback(file, argv, deltaenv, dir, fhin, fhout, fherr, 0, 0, 0, 0);
 }

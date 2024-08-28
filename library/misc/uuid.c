@@ -18,12 +18,20 @@ static uint64_t xorshift128plus(uint64_t *s) {
     return s[1] + s0;
 }
 
-void uuid4_generate(char *dst) {
+extern struct TimerIFace *ITimer;
+
+void uuid4_generate(char *_dst) {
+    char *dst = _dst;
     static const char *template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
     static const char *chars = "0123456789abcdef";
     uint64_t seed[2] = {0, 0};
     struct RandomState state;
     DECLARE_UTILITYBASE();
+    // DECLARE_TIMERBASE();
+
+
+
+    GetSysTime((struct TimeVal *)&state);
 
     typedef union {
         int64_t big;
@@ -70,4 +78,6 @@ void uuid4_generate(char *dst) {
         dst++, p++;
     }
     *dst = '\0';
+
+    DebugPrintF("[uuid4_generate :] result : <%s>\n", _dst);
 }
