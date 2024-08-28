@@ -1343,7 +1343,7 @@ struct Clib4IFace {
     char * (* __get_tc_up) (void);                                                                                                                   /* 4384 */
     char * (* __get_tc_bc) (void);                                                                                                                   /* 4388 */
 
-    int ( *spawnvpe_callback) (const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr, void (*entry_fp)(void *), void* entry_data, void (*final_fp)(int, void *), void* final_data);     /* 4392 */
+    int ( *spawnvpe_callback_UNUSED) (const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr, void (*entry_fp)(void *), void* entry_data, void (*final_fp)(int, void *), void* final_data);     /* 4392 */
 
     int (* sigsuspend) (const sigset_t *mask);		                                                                              					 /* 4396 */
     int (* spawnve) (const char *path, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);                         /* 4400 */

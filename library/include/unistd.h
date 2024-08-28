@@ -116,7 +116,6 @@ extern int spawnve(int mode, const char *path, const char **argv, char * const e
 extern int spawnvp(int mode, const char *path, const char **argv);
 /* Non standard. Used to help linux ports */
 extern int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);
-// extern int spawnvpe_callback(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr, void (*entry_fp)(void *), void* entry_data, void (*final_fp)(int, void *), void* final_data);
 
 extern int profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale);
 extern long sysconf(int name);

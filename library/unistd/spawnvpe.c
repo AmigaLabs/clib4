@@ -334,19 +334,3 @@ spawnvpe(
     }
     return ret;
 }
-int
-spawnvpe_callback(
-    const char *file,
-    const char **argv,
-    char **deltaenv,
-    const char *cwd,
-    int fhin,
-    int fhout,
-    int fherr,
-
-    void (*entry_fp)(void *), void* entry_data,
-    void (*final_fp)(int, void *), void* final_data
-) {
-    __set_errno(EINVAL);
-    return -1;
-}
