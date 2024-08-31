@@ -117,12 +117,35 @@ get_arg_string_length(char *const argv[]) {
 
     return (result);
 }
+/* * * * *
+    Apparently this doesn't work. You cannot delay a child by using signals in the EntryCode,
+    because - as it seems - SystemTags only returns AFTER executing EntryCode. Which, of course,
+    means, that the parent is never allowed to send the signal. 
+ * * * * */
+// struct EntryData {
+//     uint8 childSignal;
+//     uint8 parentSignal;
+//     struct Task *parent, *child;
+// };
+// void amiga_entryCode(int32 entry_data);
+// void
+// amiga_entryCode(int32 entry_data) {
+//     struct EntryData *ed = (struct EntryData *)entry_data;
+//     ed->childSignal = AllocSignal(-1);
+//     ed->child = FindTask(0);
+//     DebugPrintF("[child :] Signalling parent...\n");
+//     Signal(ed->parent, 1 << ed->parentSignal);
+//     DebugPrintF("[child :] Waiting for signal from parent...\n");
+//     Wait(1 << ed->childSignal);
+//     DebugPrintF("[child :] Done.");
+//     FreeSignal(ed->childSignal);
+// }
 int
 spawnvpe(
     const char *file,
     const char **argv,
     char **deltaenv,
-    const char *cwd,
+    const char *_cwd,
     int fhin,
     int fhout,
     int fherr
@@ -131,6 +154,7 @@ spawnvpe(
     struct name_translation_info nti_name;
     const char *name = file;
     struct name_translation_info nti_cwd;
+    const char *cwd = _cwd;
     BPTR iofh[3] = {BZERO, BZERO, BZERO};
     int closefh[3] = {FALSE, FALSE, FALSE};
     BPTR fh;
@@ -156,6 +180,7 @@ spawnvpe(
     }
 
     D(("name after conversion: [%s]\n", name));
+    // printf("[spawnvpe :] name after conversion [%s]\n", name);
 
 #if 0
     seglist = LoadSeg(name);
@@ -169,6 +194,20 @@ spawnvpe(
         UnLock(fileLock);
     }
 
+    // printf("[spawnvpe :] cwd before conversion: [%s]\n", cwd);
+
+    if(cwd) {
+        error = __translate_unix_to_amiga_path_name(&cwd, &nti_cwd);
+        if (error) {
+            __set_errno(EINVAL);
+            D(("__translate_unix_to_amiga_path_name failed: %s\n", strerror(error)));
+            return ret;
+        }
+    }
+
+    D(("cwd after conversion: [%s]\n", cwd));
+    // printf("[spawnvpe :] cwd after conversion [%s]\n", cwd);
+
     BPTR cwdLock = cwd ? Lock(cwd, SHARED_LOCK) : 0;
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
@@ -178,6 +217,7 @@ spawnvpe(
     }
 
     D(("parameter_string_len: [%ld]\n", parameter_string_len));
+    // printf("[spawnvpe :] parameter_string_len: [%ld]\n", parameter_string_len);
 
     arg_string = malloc(parameter_string_len + 1);
     if (arg_string == NULL) {
@@ -206,6 +246,7 @@ spawnvpe(
     D(("File to execute: [%s]\n", finalpath));
 
     // printf("[spawnvpe :] full command == <%s>\n", finalpath);
+    // printf("[spawnvpe :] processName == <%s>\n", processName);
 
     if (fhin >= 0) {
         err = __get_default_file(fhin, &fh);
@@ -252,6 +293,8 @@ spawnvpe(
     D(("(*)Calling SystemTags.\n"));
 
     // struct EntryData ed;
+    // ed.parent = FindTask(0);
+    // ed.parentSignal = AllocSignal(-1);
 
     struct Task *_me = FindTask(0);
 #if 0
@@ -296,6 +339,8 @@ spawnvpe(
   );
   if (p) ret = 0;
 #else
+    // printf("(*)Calling SystemTags.\n");
+
     ret = SystemTags(finalpath,
                      NP_NotifyOnDeathSigTask, _me,
                      SYS_Input, iofh[0],
@@ -309,12 +354,14 @@ spawnvpe(
                      NP_Name, strdup(processName),
 
                      NP_EntryCode,  spawnedProcessEnter,
+                     NP_EntryData, getgid(),
+                    //  NP_EntryCode,  amiga_entryCode,
+                    //  NP_EntryData,  &ed,
                      NP_ExitCode,   spawnedProcessExit,
 
                      TAG_DONE);
-#endif
 
-    D(("SystemTags completed. return value: [%ld]\n", ret));
+#endif
 
     if (ret != 0) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
@@ -329,8 +376,34 @@ spawnvpe(
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid
+         * IoErr() must be called IMMEDIATELY after SystemTags() == no other DOS calls inbetween
          */
-        ret = IoErr();
+
+        // DebugPrintF("[main :] Child created with success.\n");
+
+        pid_t pid = IoErr();
+        // gid_t groupId = getgid();
+        // uint32 ppid = ((struct Process *) FindTask(NULL))->pr_ProcessID;
+
+        // if (insertSpawnedChildren(pid, ppid, groupId)) {
+        //     __CLIB4->__children++;
+        //     D(("Children with pid %ld and gid %ld inserted into list\n", pid, groupId));
+        // }
+        // else {
+        //     D(("Cannot insert children with pid %ld and gid %ld into list\n", pid, groupId));
+        // }
+
+        // DebugPrintF("[parent :] Waiting for signal from child...\n");
+        // Wait(1 << ed.parentSignal);
+        // DebugPrintF("[parent :] Signalling child...\n");
+        // Signal(ed.child, 1 << ed.childSignal);
+        // DebugPrintF("[parent :] Done.\n");
+        // FreeSignal(ed.parentSignal);
+
+        ret = pid;
     }
+    // D(("SystemTags completed. return value: [%ld]\n", ret));
+    // printf("SystemTags completed. return value: [%ld]\n", ret);
+
     return ret;
 }
