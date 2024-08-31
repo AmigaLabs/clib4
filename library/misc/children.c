@@ -32,18 +32,18 @@ pidChildrenScan(const void *children, void *pid) {
 }
 
 BOOL
-insertSpawnedChildren(uint32 pid, uint32 gid) {
+insertSpawnedChildren(uint32 pid, uint32 ppid, uint32 gid) {
     DECLARE_UTILITYBASE();
 
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
-        uint32 parent = GetPID(0, GPID_PARENT);
+        uint32 parent = ppid; //GetPID(0, GPID_PARENT);
         size_t iter = 0;
         void *item;
 
         struct Clib4Children children;
         children.pid = pid;
-        children.returnCode = 0;
+        children.returnCode = 0x80000000; //set this flag for WIFEXITED
         children.groupId = gid;
 
         while (hashmap_iter(res->children, &iter, &item)) {
@@ -99,10 +99,12 @@ findSpawnedChildrenByGid(uint32 pid, uint32 gid) {
 }
 
 void
-spawnedProcessEnter(int32 entry_data UNUSED) {
-    struct Library *UserGroupBase;
-    struct UserGroupIFace *IUserGroup;
-    gid_t groupId = 0;
+spawnedProcessEnter(int32 entry_data) {
+    struct Library *UserGroupBase = 0;
+    struct UserGroupIFace *IUserGroup = 0;
+    gid_t groupId = (gid_t)entry_data;
+
+#if 0
     UserGroupBase = OpenLibrary("usergroup.library", 0);
 
     if (UserGroupBase != NULL) {
@@ -116,9 +118,11 @@ spawnedProcessEnter(int32 entry_data UNUSED) {
         }
         CloseLibrary(UserGroupBase);
     }
+#endif
 
-    uint32 pid = ((struct Process *) FindTask(NULL))->pr_ProcessID;
-    if (insertSpawnedChildren(pid, groupId)) {
+    uint32 pid = GetPID(0, GPID_PROCESS); //((struct Process *) FindTask(NULL))->pr_ProcessID;
+    uint32 ppid = GetPID(0, GPID_PARENT);
+    if (insertSpawnedChildren(pid, ppid, groupId)) {
         __CLIB4->__children++;
         D(("Children with pid %ld and gid %ld inserted into list\n", pid, groupId));
     }
@@ -138,13 +142,18 @@ spawnedProcessExit(int32 rc, int32 data UNUSED) {
 
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
+
+            // DebugPrintF("[spawneeExit :] *** iteration : pid=%d\n", node->pid);
+
             if (node->pid == parent) {
                 struct Clib4Children key;
                 key.pid = me;
                 struct Clib4Children *item = (struct Clib4Children *) hashmap_get(node->spawnedProcesses, &key);
                 if (item != NULL) {
-                    SHOWMSG("[spawneeExit :] SUCCESS");
-                    item->returnCode = rc;
+                    // SHOWMSG("[spawneeExit :] SUCCESS");
+                    // DebugPrintF("[spawneeExit :] SUCCESS\n");
+                    item->returnCode = ~0x80000000 & rc;
+                    break;
                 }
             }
         }
