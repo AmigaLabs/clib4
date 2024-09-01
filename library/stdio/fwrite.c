@@ -13,7 +13,7 @@
 size_t
 fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
-    size_t result = EOF;
+    size_t result = 0; //EOF??;
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
