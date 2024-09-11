@@ -473,11 +473,27 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
 }
 
 void enableUnixPaths(void) {
-    __CLIB4->__unix_path_semantics = TRUE;
+    struct _clib4 *__clib4 = __CLIB4;
+
+    __clib4->__unix_path_semantics = TRUE;
+
+    /* Set __current_path_name to a valid value */
+    UBYTE current_dir_name[256] = {0};
+    if (NameFromLock(__clib4->self->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
+        __set_current_path((const char *) current_dir_name);
+    }
 }
 
 void disableUnixPaths(void) {
-    __CLIB4->__unix_path_semantics = FALSE;
+    struct _clib4 *__clib4 = __CLIB4;
+
+    __clib4->__unix_path_semantics = FALSE;
+
+    /* Set __current_path_name to a valid value */
+    UBYTE current_dir_name[256] = {0};
+    if (NameFromLock(__clib4->self->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
+        __set_current_path((const char *) current_dir_name);
+    }
 }
 
 int *__mb_cur_max(void) {
