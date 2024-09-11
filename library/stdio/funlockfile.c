@@ -40,7 +40,7 @@ __funlockfile_r(struct _clib4 *__clib4, FILE *stream) {
         file->iob_TaskLock = NULL;
         CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
     }
-#if DEBUG
+#if 0
     else {
         if (file->iob_Lock == NULL)
             SHOWMSG("file->iob_Lock is NULL!");

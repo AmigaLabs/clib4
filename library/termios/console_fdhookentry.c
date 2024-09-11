@@ -201,7 +201,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
                 int i = 0;
                 result = 0;
 
-                if (tios->c_cc[VMIN] > 0) {
+                if (tios->c_cc[VMIN] > 0 && FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING)) {
                     /* Reading the first character is not affected by the timeout unless VMIN==0. */
                     i = Read(file, fam->fam_Data, 1);
                     if (i == ERROR) {

@@ -43,7 +43,10 @@ get_console_termios(struct fd *fd) {
     if (FLAG_IS_SET(fd->fd_Flags, FDF_READ))
         SET_FLAG(tios->c_cflag, CREAD);
 
-    tios->c_lflag = ISIG|ICANON|ECHO;
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO))
+        tios->c_lflag = ISIG;
+    else
+        tios->c_lflag = ISIG|ICANON|ECHO;
 
     memcpy(tios->c_cc, def_console_cc, NCCS);
 
@@ -122,7 +125,6 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
         assert(fd->fd_Aux != NULL);
-
         memcpy(user_tios, fd->fd_Aux, sizeof(struct termios));
     } else {
         tios = __get_termios(fd);

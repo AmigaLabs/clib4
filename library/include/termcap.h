@@ -34,7 +34,6 @@ extern char **__get_tc_up(void);
 #define BC (*__get_tc_bc())
 extern char **__get_tc_bc(void);
 
-
 extern int tgetent (char *buffer, const char *termtype);
 extern int tgetnum (const char *name);
 extern int tgetflag (const char *name);
