@@ -31,6 +31,15 @@ pidChildrenScan(const void *children, void *pid) {
     return NULL;
 }
 
+static void *
+pipeChildrenScan(const void *children, void *pipe) {
+    const struct Clib4Children *myChildren = children;
+    FILE *stream = *((FILE **)pipe);
+    if (myChildren->pipe == stream)
+        return (struct Clib4Children *) children;
+    return NULL;
+}
+
 BOOL
 insertSpawnedChildren(uint32 pid, uint32 ppid, uint32 gid) {
     DECLARE_UTILITYBASE();
@@ -87,15 +96,54 @@ findSpawnedChildrenByGid(uint32 pid, uint32 gid) {
 
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
-            struct Clib4Children *children;
+            // struct Clib4Children *children;
             if (node->pid == me) {
-                children = hashmap_scan_item(node->spawnedProcesses, pidChildrenScan, &pid);
-                if (children->groupId == gid)
-                    return children;
+                //children =
+                return hashmap_scan_item(node->spawnedProcesses, gidChildrenScan, &gid);
             }
         }
     }
     return NULL;
+}
+
+pid_t
+findSpawnedChildrenPidByPipe(FILE *pipe) {
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (res) {
+        uint32 me = GetPID(0, GPID_PROCESS);
+        size_t iter = 0;
+        void *item;
+
+        while (hashmap_iter(res->children, &iter, &item)) {
+            const struct Clib4Node *node = item;
+            struct Clib4Children *children;
+            if (node->pid == me) {
+                children = hashmap_scan_item(node->spawnedProcesses, pipeChildrenScan, &pipe);
+                if(children) return children->pid;
+            }
+        }
+    }
+    return -1;
+}
+
+void
+addSpawnedChildrenPipeHandle(uint32 pid, FILE *pipe) {
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (res) {
+        uint32 me = GetPID(0, GPID_PROCESS);
+        size_t iter = 0;
+        void *item;
+
+        while (hashmap_iter(res->children, &iter, &item)) {
+            const struct Clib4Node *node = item;
+            struct Clib4Children *children;
+            if (node->pid == me) {
+                children = hashmap_scan_item(node->spawnedProcesses, pidChildrenScan, &pid);
+                if (children) children->pipe = pipe;
+                break;
+            }
+        }
+    }
 }
 
 void
