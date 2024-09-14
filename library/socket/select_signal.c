@@ -789,20 +789,12 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                     goto out;
             }
         }
-        BOOL pollMode = FALSE;
+
         if (timeout != NULL && (timeout->tv_sec > 0 || timeout->tv_usec > 0)) {
             struct DateStamp datestamp_timeout;
             DateStamp(&stop_when);
 
             add_dates(&stop_when, timeval_to_datestamp(&datestamp_timeout, timeout));
-        }
-        /* If timeout is != NULL but seconds and useconds are == 0 we need to act like
-         * an FDF_POLL so, set gotInput = TRUE and use WaitChar to see if we get really a char.
-         * If so, exit from select but set gotInput = FALSE after increasing result value.
-         * This will clear FD and the poll will work correctly
-         */
-        else if (timeout != NULL && timeout->tv_sec == 0 && timeout->tv_usec == 0) {
-            pollMode = TRUE;
         }
         else {
             memset(&stop_when, 0, sizeof(stop_when));
@@ -823,22 +815,12 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                         if (FLAG_IS_SET(fd->fd_Flags, FDF_READ)) {
                             BPTR readFile = i == STDIN_FILENO ? Input() : fd->fd_File;
                             SHOWVALUE(FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS));
-                            if (pollMode) {
-                                /* Set FDF_POLL to file */
-                                SET_FLAG(fd->fd_Flags, FDF_POLL);
-                            }
                             /* Check first if this is a POLL/TERMIOS FD
                              * In this case don't wait for char
                             */
-                            if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL) && !pollMode) {
-                                SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_POLL)  && !pollMode");
+                            if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
+                                SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_POLL)");
                                 got_input = TRUE;
-                            }
-                            else if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL) && pollMode) {
-                                SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_POLL) && pollMode");
-                                if (WaitForChar(readFile, 1) || FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING)) {
-                                    got_input = TRUE;
-                                }
                             }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS");

@@ -43,10 +43,7 @@ get_console_termios(struct fd *fd) {
     if (FLAG_IS_SET(fd->fd_Flags, FDF_READ))
         SET_FLAG(tios->c_cflag, CREAD);
 
-    if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO))
-        tios->c_lflag = ISIG;
-    else
-        tios->c_lflag = ISIG|ICANON|ECHO;
+    tios->c_lflag = ISIG|ICANON|ECHO;
 
     memcpy(tios->c_cc, def_console_cc, NCCS);
 
