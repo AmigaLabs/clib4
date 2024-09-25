@@ -142,10 +142,10 @@ spawnv(int mode, const char *file, const char **argv) {
     }
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
-    if (parameter_string_len > _POSIX_ARG_MAX) {
-        __set_errno(E2BIG);
-        return ret;
-    }
+    // if (parameter_string_len > _POSIX_ARG_MAX) {
+    //     __set_errno(E2BIG);
+    //     return ret;
+    // }
 
     arg_string = __malloc_r(__clib4, parameter_string_len + 1);
     if (arg_string == NULL) {

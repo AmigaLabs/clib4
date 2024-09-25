@@ -10,6 +10,8 @@
 #include "uuid.h"
 #include "ipc_headers.h"
 
+#include <stdio.h>
+
 #define RESOURCE_NAME "clib4.resource"
 
 extern int setjmp_spe(jmp_buf);
