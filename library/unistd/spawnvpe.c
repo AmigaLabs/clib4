@@ -211,10 +211,12 @@ spawnvpe(
     BPTR cwdLock = cwd ? Lock(cwd, SHARED_LOCK) : 0;
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
-    if (parameter_string_len > _POSIX_ARG_MAX) {
-        __set_errno(E2BIG);
-        return ret;
-    }
+    // This is probably unnecessary :
+    //
+    // if (parameter_string_len > _POSIX_ARG_MAX) {
+    //     __set_errno(E2BIG);
+    //     return ret;
+    // }
 
     D(("parameter_string_len: [%ld]\n", parameter_string_len));
     // printf("[spawnvpe :] parameter_string_len: [%ld]\n", parameter_string_len);
