@@ -221,7 +221,12 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
         D(bug("(libOpen) c2n.uuid = %s\n", c2n.uuid));
         hashmap_set(res->children, &c2n);
 
-        if (IDOS->GetVar("DISABLE_CLIB4_OPTIMIZATIONS", varbuf, sizeof(varbuf), 0) <= 0) {
+        /* GetVar is causing an issue when exe is loaded from WB.
+         * Calling it will cause DOS to spawn this error:
+         * [DOS] ERROR: WaitPkt() got a message, NOT a DosPacket, - bouncing it.
+         * And the WaitPort() inside _main will not work. So at moment enable always the optimization
+         */
+        if (1) { //IDOS->GetVar("DISABLE_CLIB4_OPTIMIZATIONS", varbuf, sizeof(varbuf), 0) <= 0) {
             D(bug("(libOpen) Enabling clib4 optimizations\n"));
             switch (res->cpufamily) {
 #ifdef __SPE__
