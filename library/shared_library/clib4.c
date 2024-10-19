@@ -221,62 +221,52 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
         D(bug("(libOpen) c2n.uuid = %s\n", c2n.uuid));
         hashmap_set(res->children, &c2n);
 
-        /* GetVar is causing an issue when exe is loaded from WB.
-         * Calling it will cause DOS to spawn this error:
-         * [DOS] ERROR: WaitPkt() got a message, NOT a DosPacket, - bouncing it.
-         * And the WaitPort() inside _main will not work. So at moment enable always the optimization
-         */
-        if (1) { //IDOS->GetVar("DISABLE_CLIB4_OPTIMIZATIONS", varbuf, sizeof(varbuf), 0) <= 0) {
-            D(bug("(libOpen) Enabling clib4 optimizations\n"));
-            switch (res->cpufamily) {
+        D(bug("(libOpen) Enabling clib4 optimizations\n"));
+        switch (res->cpufamily) {
 #ifdef __SPE__
-                case CPUFAMILY_E500:
-                    D(bug("(libOpen) Using SPE family functions\n"));
-                    IClib4->setjmp = setjmp_spe;
-                    IClib4->longjmp = longjmp_spe;
-                    IClib4->_longjmp = _longjmp_spe;
-                    IClib4->_setjmp = _setjmp_spe;
-                    IClib4->__sigsetjmp = __sigsetjmp_spe;
-                    IClib4->siglongjmp = siglongjmp_spe;
-                    IClib4->strlen = __strlen_e500;
-                    IClib4->strcpy = __strcpy_e500;
-                    IClib4->strcmp = __strcmp_e500;
-                    IClib4->memcmp = __memcmp_e500;
-                    break;
+            case CPUFAMILY_E500:
+                D(bug("(libOpen) Using SPE family functions\n"));
+                IClib4->setjmp = setjmp_spe;
+                IClib4->longjmp = longjmp_spe;
+                IClib4->_longjmp = _longjmp_spe;
+                IClib4->_setjmp = _setjmp_spe;
+                IClib4->__sigsetjmp = __sigsetjmp_spe;
+                IClib4->siglongjmp = siglongjmp_spe;
+                IClib4->strlen = __strlen_e500;
+                IClib4->strcpy = __strcpy_e500;
+                IClib4->strcmp = __strcmp_e500;
+                IClib4->memcmp = __memcmp_e500;
+                break;
 #endif
-                case CPUFAMILY_4XX:
-                    D(bug("(libOpen) Using 4XX family functions\n"));
-                    IClib4->strlen = __strlen440;
-                    IClib4->strcpy = __strcpy440;
-                    IClib4->strcmp = __strcmp440;
-                    IClib4->memcmp = __memcmp440;
-                    IClib4->memchr = __memchr440;
-                    IClib4->strncmp = __strncmp440;
-                    IClib4->strrchr = __strrchr440;
-                    IClib4->strchr = __strchr440;
-                    break;
-                default:
-                    if (res->altivec) {
-                        D(bug("(libOpen) Using Altivec family functions\n"));
-                        IClib4->setjmp = setjmp_altivec;
-                        IClib4->longjmp = longjmp_altivec;
-                        IClib4->strcpy = vec_strcpy;
-                        IClib4->memcmp = vec_memcmp;
-                        IClib4->bzero = vec_bzero;
-                        IClib4->bcopy = vec_bcopy;
+            case CPUFAMILY_4XX:
+                D(bug("(libOpen) Using 4XX family functions\n"));
+                IClib4->strlen = __strlen440;
+                IClib4->strcpy = __strcpy440;
+                IClib4->strcmp = __strcmp440;
+                IClib4->memcmp = __memcmp440;
+                IClib4->memchr = __memchr440;
+                IClib4->strncmp = __strncmp440;
+                IClib4->strrchr = __strrchr440;
+                IClib4->strchr = __strchr440;
+                break;
+            default:
+                if (res->altivec) {
+                    D(bug("(libOpen) Using Altivec family functions\n"));
+                    IClib4->setjmp = setjmp_altivec;
+                    IClib4->longjmp = longjmp_altivec;
+                    IClib4->strcpy = vec_strcpy;
+                    IClib4->memcmp = vec_memcmp;
+                    IClib4->bzero = vec_bzero;
+                    IClib4->bcopy = vec_bcopy;
 #ifdef SLOWER_ALTIVEC_FUNCTIONS
-                        IClib4->memchr = vec_memchr;
-                        IClib4->strchr = vec_strchr;
+                    IClib4->memchr = vec_memchr;
+                    IClib4->strchr = vec_strchr;
 #else
-                        IClib4->strchr = glibc_strchr; // glibc_strchr is faster than ppc one on qemu/G4
+                    IClib4->strchr = glibc_strchr; // glibc_strchr is faster than ppc one on qemu/G4
 #endif
-                    } else {
-                        D(bug("(libOpen) Using default family functions\n"));
-                    }
-            }
-        }
-        else {
-            D(bug("(libOpen) Disabling all clib4 optimizations\n"));
+                } else {
+                    D(bug("(libOpen) Using default family functions\n"));
+                }
         }
     }
     return libBase;
