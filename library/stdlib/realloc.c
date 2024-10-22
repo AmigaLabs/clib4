@@ -19,24 +19,14 @@ realloc(void *ptr, size_t size) {
 
     assert((int) size >= 0);
 
-    if (ptr == NULL) {
-        D(("calling malloc(%ld)", size));
+    __memory_lock(__clib4);
 
-        result = __malloc_r(__clib4, size);
-    } else if (__clib4->__unix_path_semantics && size == 0) {
-        D(("calling free(0x%08lx)", ptr));
-
-        __free_r(__clib4, ptr);
-    } else {
-        __memory_lock(__clib4);
-
-        result = wof_realloc(__clib4->__wof_allocator, ptr, size);
-        if (result == NULL) {
-            SHOWMSG("could not reallocate memory");
-        }
-
-        __memory_unlock(__clib4);
+    result = wof_realloc(__clib4->__wof_allocator, ptr, size);
+    if (result == NULL) {
+        SHOWMSG("could not reallocate memory");
     }
+
+    __memory_unlock(__clib4);
 
     if (result == NULL)
         SHOWMSG("ouch! realloc failed");
