@@ -15,6 +15,9 @@
 #include "include/wchar.h"
 #include "include/setjmp.h"
 #include "include/resolv.h"
+
+#include "wmem_allocator.h"
+
 #include <exec/types.h>
 #include <exec/lists.h>
 #include <exec/semaphores.h>
@@ -210,7 +213,7 @@ struct _clib4 {
     BOOL  __fully_initialized;
     int32_t __pipenum;
     void *__pipe_semaphore;
-    BOOL  unused3;
+    short  __wof_mem_allocator_type;
 
     /* This is used with the dlopen(), dlclose() and dlsym() functions. */
     void  *__dl_root_handle; //Elf32_Handle
@@ -293,7 +296,7 @@ struct _clib4 {
     struct SignalSemaphore *stdio_lock;
 
     /* Wof Allocator main pointer */
-    wof_allocator_t *__wof_allocator;
+    wmem_allocator_t *__wmem_allocator;
     void *unused6;
 
     /* Names of files and directories to delete when shutting down. */

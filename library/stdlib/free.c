@@ -37,7 +37,7 @@ __free_r(struct _clib4 *__clib4, void *ptr) {
         ItemPoolFree(__clib4->__memalign_pool, e);
         e = NULL;
     } else {
-        wof_free(__clib4->__wof_allocator, ptr);
+        wmem_free(__clib4->__wmem_allocator, ptr);
     }
 
     __memory_unlock(__clib4);

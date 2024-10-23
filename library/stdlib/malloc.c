@@ -27,7 +27,7 @@ __malloc_r(struct _clib4 *__clib4, size_t size) {
 
     __memory_lock(__clib4);
 
-    result = wof_alloc(__clib4->__wof_allocator, size);
+    result = wmem_alloc(__clib4->__wmem_allocator, size);
 
     if (!result)
         __set_errno_r(__clib4, ENOMEM);
@@ -54,9 +54,9 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
 
     __memory_lock(__clib4);
 
-    if (__clib4->__wof_allocator != NULL) {
-        wof_allocator_destroy(__clib4->__wof_allocator);
-        __clib4->__wof_allocator = NULL;
+    if (__clib4->__wmem_allocator != NULL) {
+        wmem_destroy_allocator(__clib4->__wmem_allocator);
+        __clib4->__wmem_allocator = NULL;
     }
 
     __memory_unlock(__clib4);
@@ -80,8 +80,8 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
     if (__clib4->memory_semaphore == NULL)
         goto out;
 
-    __clib4->__wof_allocator = wof_allocator_new();
-    if (__clib4->__wof_allocator == NULL) {
+    __clib4->__wmem_allocator = wmem_allocator_new(__clib4->__wof_mem_allocator_type); // make this dynamic
+    if (__clib4->__wmem_allocator == NULL) {
         __delete_semaphore(__clib4->memory_semaphore);
         __clib4->memory_semaphore = NULL;
         goto out;

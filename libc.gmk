@@ -549,8 +549,7 @@ C_STDLIB := \
 	stdlib/udivsi4.o \
 	stdlib/umodsi3.o \
 	stdlib/unsetenv.o \
-	stdlib/valloc.o \
-	stdlib/wof_allocator.o
+	stdlib/valloc.o
 
 C_STRING := \
 	string/strings_ffs.o \
@@ -923,6 +922,23 @@ C_WCHAR := \
 	wchar/wctrans.o \
 	wchar/wctype.o
 
+C_WMEM := \
+    wmem/wmem_allocator_block.o \
+    wmem/wmem_allocator_block_fast.o \
+    wmem/wmem_allocator_simple.o \
+    wmem/wmem_allocator_strict.o \
+    wmem/wmem_array.o \
+    wmem/wmem_core.o \
+    wmem/wmem_interval_tree.o \
+    wmem/wmem_list.o \
+    wmem/wmem_map.o \
+    wmem/wmem_miscutl.o \
+    wmem/wmem_multimap.o \
+    wmem/wmem_stack.o \
+    wmem/wmem_strutl.o \
+    wmem/wmem_tree.o \
+    wmem/wmem_user_cb.o
+
 ifdef SPE
     $(info Adding SPE objects)
     C_STRING := $(C_STRING) \
@@ -969,7 +985,8 @@ C_LIBRARY := \
 	$(C_TIME) \
 	$(C_UNISTD) \
 	$(C_USERGROUP) \
-	$(C_WCHAR)
+	$(C_WCHAR) \
+	$(C_WMEM)
 
 C_LIB := \
 	c.lib_rev.o \

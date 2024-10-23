@@ -21,7 +21,7 @@ realloc(void *ptr, size_t size) {
 
     __memory_lock(__clib4);
 
-    result = wof_realloc(__clib4->__wof_allocator, ptr, size);
+    result = wmem_realloc(__clib4->__wmem_allocator, ptr, size);
     if (result == NULL) {
         SHOWMSG("could not reallocate memory");
     }

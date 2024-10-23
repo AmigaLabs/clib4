@@ -53,8 +53,19 @@ have problems running existent software!
 
 ### New memory allocator
 
-Clib4 now use `Wheel Of Fortune` allocator that is faster than previous one, and it seems more robust and with a cleaner
-and portable code
+Clib4 now use `wmem` allocator from WireShark that is faster than previous one, and it seems more robust and with a cleaner
+and portable code.  
+You can choose at runtime (for test purpose) which kind of allocators want to use setting `CLIB4_MEMORY_ALLOCATOR` env variable.  
+At moment you can use:
+
+| Value | Allocator                 |  
+|-------|---------------------------|
+| 1     | WMEM_ALLOCATOR_SIMPLE     |
+| 2     | WMEM_ALLOCATOR_BLOCK      |
+| 3     | WMEM_ALLOCATOR_STRICT     |
+| 4     | WMEM_ALLOCATOR_BLOCK_FAST |
+
+The default one is `WMEM_ALLOCATOR_BLOCK_STRICT`. `WMEM_ALLOCATOR_BLOCK_FAST` can crash on some situation. Please refer to `wmem/wmem_core.h` for all details. 
 
 ### Optimized AMCC functions
 
