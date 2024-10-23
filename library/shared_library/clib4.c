@@ -128,7 +128,7 @@ static void closeTimer(struct TimeRequest *tr);
 static int32 getDebugLevel(struct ExecBase *sysbase);
 
 extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
-extern void reent_init(struct _clib4 *__clib4);
+extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
 
 #if DEBUG == 1
 #undef D
@@ -521,7 +521,7 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
                                                                       AVT_Type, MEMF_SHARED,
                                                                       AVT_ClearWithValue, 0,
                                                                       TAG_DONE);
-            reent_init(res->fallbackClib);
+            reent_init(res->fallbackClib, TRUE);
             res->fallbackClib->self = (struct Process *) IExec->FindTask(NULL);
             res->fallbackClib->__check_abort_enabled = TRUE;
             res->fallbackClib->__fully_initialized = TRUE;

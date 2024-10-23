@@ -42,7 +42,7 @@ extern int __wildcard_expand_init(void);
 /* stdlib_exit.c */
 extern void _exit(int return_code);
 
-extern void reent_init(struct _clib4 *__clib4);
+extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
 extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
 
 /* signal_checkabort.c */

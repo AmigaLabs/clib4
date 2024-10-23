@@ -265,7 +265,7 @@ _main(
         return -1;
     }
 
-    reent_init(__clib4);
+    reent_init(__clib4, FALSE);
     __clib4->processId = pid;
 
     /* Set the current task pointer */

@@ -66,7 +66,7 @@ static uint32_t _random_init[] = {
 };
 
 void
-reent_init(struct _clib4 *__clib4) {
+reent_init(struct _clib4 *__clib4, BOOL fallback) {
     BOOL success = FALSE;
 
     ENTER();
@@ -339,18 +339,20 @@ reent_init(struct _clib4 *__clib4) {
     GetCPUInfoTags(GCIT_VectorUnit, &__clib4->hasAltivec, TAG_DONE);
 
     /* Init memalign list */
-    SHOWMSG("Allocating __memalign_pool");
-    __clib4->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
-                                                  ASO_NoTrack, FALSE,
-                                                  ASO_MemoryOvr, MEMF_SHARED,
-                                                  ASOITEM_MFlags, MEMF_SHARED,
-                                                  ASOITEM_ItemSize, sizeof(struct MemalignEntry),
-                                                  ASOITEM_BatchSize, 408,
-                                                  ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
-                                                  ASOITEM_GCParameter, 1000,
-                                                  TAG_DONE);
-    if (!__clib4->__memalign_pool) {
-        goto out;
+    if (!fallback) {
+        SHOWMSG("Allocating __memalign_pool");
+        __clib4->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                                      ASO_NoTrack, FALSE,
+                                                      ASO_MemoryOvr, MEMF_SHARED,
+                                                      ASOITEM_MFlags, MEMF_SHARED,
+                                                      ASOITEM_ItemSize, sizeof(struct MemalignEntry),
+                                                      ASOITEM_BatchSize, 408,
+                                                      ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
+                                                      ASOITEM_GCParameter, 1000,
+                                                      TAG_DONE);
+        if (!__clib4->__memalign_pool) {
+            goto out;
+        }
     }
 
     /*
@@ -407,7 +409,7 @@ reent_init(struct _clib4 *__clib4) {
 out:
 
     if (!success) {
-        reent_exit(__clib4, FALSE);
+        reent_exit(__clib4, fallback);
     }
 }
 
