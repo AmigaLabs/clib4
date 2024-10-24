@@ -201,9 +201,9 @@ typedef uint32_t (*GHashFunc) (const void *key);
 typedef bool (*GEqualFunc) (const void *a, const void *b);
 typedef void (*GHFunc) (void *key, void *value, void *user_data);
 
-#define GPOINTER_TO_INT(p) ((int32_t) (p))
-#define GPOINTER_TO_UINT(p)	((uint32_t) (p))
-#define GUINT_TO_POINTER(u)	((void *) (u))
+#define GPOINTER_TO_INT(p) ((int) (int) (p))
+#define GPOINTER_TO_UINT(p)	((unsigned int) (unsigned int) (p))
+#define GUINT_TO_POINTER(u)	((void *) (unsigned int) (u))
 
 /** @} */
 
