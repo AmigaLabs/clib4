@@ -241,8 +241,12 @@ _main(
     struct _clib4 *__clib4 = NULL;
     uint32 pid = GetPID(0, GPID_PROCESS);
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    char envbuf[256 + 1];
+    LONG len;
 
     DECLARE_UTILITYBASE();
+
+    ClearMem(envbuf, 257);
 
     /* Pick up the Workbench startup message, if available. */
     me = (struct Process *) FindTask(NULL);
@@ -291,6 +295,21 @@ _main(
     //SetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, __clib4, TAG_END);
 
     __clib4->__WBenchMsg = sms;
+
+    /* Check if user has choosen a different memory allocator and this needs to be called before constructors
+     * sice malloc constructor will use __wof_mem_allocator_type field
+     */
+    if ((len = GetVar("CLIB4_MEMORY_ALLOCATOR", envbuf, sizeof(envbuf), 0)) >= 0) {
+        if (!Stricmp(envbuf, "1"))
+            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;
+        else if (!Stricmp(envbuf, "2"))
+            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK;
+        else if (!Stricmp(envbuf, "3"))
+            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_STRICT;
+        else if (!Stricmp(envbuf, "4"))
+            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK_FAST; // WARNING - At moment this is crashing
+        // else leave the default one
+    }
 
     /* After reent structure we can call clib4 constructors */
     SHOWMSG("Calling clib4 ctors");

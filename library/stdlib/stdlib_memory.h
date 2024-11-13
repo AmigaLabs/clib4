@@ -21,7 +21,8 @@
 
 #include <stddef.h>
 
-#include "wof_allocator.h"
+#include "wmem_core.h"
+#include "wmem_allocator.h"
 
 /* We shuffle things around a bit for the debug code. This works by joining
    related code which shares the same name. The debug code symbols also have

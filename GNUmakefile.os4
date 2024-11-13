@@ -72,7 +72,7 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Werror \
+    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Werror \
      # -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
@@ -106,7 +106,8 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/termios \
 				-I$(LIB_DIR)/time \
 				-I$(LIB_DIR)/unistd \
-				-I$(LIB_DIR)/wchar
+				-I$(LIB_DIR)/wchar \
+				-I$(LIB_DIR)/wmem
 
 SHARED   := $(if $(SHARED),$(SHARED),yes)
 STATIC   := $(if $(STATIC),$(STATIC),yes)
