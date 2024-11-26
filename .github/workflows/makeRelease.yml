@@ -17,6 +17,10 @@ jobs:
     steps:
       - name: Pull code
         uses: actions/checkout@v4
+      - name: Add repository to git safe directories
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git config --global --add safe.directory /opt/code
       - name: Compile clib4
         run: |
           cd /opt/code && \
@@ -37,6 +41,14 @@ jobs:
           asset_path: /opt/code/clib4-${{ github.event.release.tag_name }}.lha
           asset_name: clib4-${{ github.event.release.tag_name }}.lha
           asset_content_type: application/x-lzh-compressed
+      - name: Install gh binary
+        run: |
+          mkdir -p -m 755 /etc/apt/keyrings \
+          && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+          && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+          && apt update \
+          && apt install gh -y
       - name: Upload DEB release file in GitHub
         uses: actions/upload-release-asset@v1
         env:
@@ -59,6 +71,21 @@ jobs:
             rm /opt/amigarepo/ubuntu/pool/main/clib4*.deb
           after_script: |
             /root/regenerate-packages.sh
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Release ${{ github.event.release.tag_name }} changes
+          branch: release/${{ github.event.release.tag_name }}
+          base: master
+          body: Automated changes as part of the release
+          title: Version files changes by the github bot
+      - name: Enable Pull Request Automerge
+        if: steps.cpr.outputs.pull-request-operation == 'created'
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
       # - name: Prepare OS4Depot release
       #   run: |
       #     mkdir os4depot-release
@@ -75,3 +102,11 @@ jobs:
       #     password: 
       #     server-dir: ./upload
       #     local-dir: /opt/code/os4depot-release/
+      - name: Notify on Discord on successful release
+        uses: appleboy/discord-action@master
+        with:
+          webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
+          webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
+          message: "New release of clib4: **${{ github.event.release.tag_name }}** has been created. Check it out at: https://github.com/AmigaLabs/clib4/releases/tag/${{ github.event.release.tag_name }}"
+          username: GitHub Actions
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
