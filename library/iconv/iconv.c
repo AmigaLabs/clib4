@@ -550,15 +550,15 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
         }
     }
     return x;
-    ilseq:
+ilseq:
     err = EILSEQ;
     x = -1;
     goto end;
-    toobig:
+toobig:
     err = E2BIG;
     x = -1;
     goto end;
-    starved:
+starved:
     err = EINVAL;
     x = -1;
     end:

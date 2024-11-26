@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_headers.h,v 2.0 2023-05-03 13:12:59 clib4devs Exp $
+ * $Id: stdio_headers.h,v 2.1 2024-07-20 13:12:59 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -97,9 +97,9 @@
 
 /****************************************************************************/
 
-#ifndef _SYS_CLIB4_IO_H
-#include <sys/clib4_io.h>
-#endif /* _SYS_CLIB4_IO_H */
+#ifndef __CLIB4_IO_H__
+#include "clib4_io.h"
+#endif /* __CLIB4_IO_H__ */
 
 /****************************************************************************/
 
@@ -164,7 +164,8 @@ typedef int64_t (*file_action_iob_t)(struct _clib4 *__clib4, struct iob * iob, s
 #define IOBF_INTERNAL		(1<<9)	/* Not a regular file, but a buffered
 									   file handle made up on the spot in
 									   vsprintf(), etc. */
-
+#define IOBF_LOCKED 		(1<<10)	/* File is locked by ObtainSemaphore */
+#define IOBF_NO_CLOSE 		(1<<11)	/* Don't close this file */
 /****************************************************************************/
 
 /* Each file handle is represented by the following structure. Note that this
@@ -186,57 +187,58 @@ typedef struct iob {
 	/* Public portion ends here                                             */
 	/************************************************************************/
 
-	file_action_iob_t	iob_Action;				/* The function to invoke for file operations, such as read, write and seek. */
-	int					iob_SlotNumber;			/* Points back to the iob table entry number. */
-	int					iob_Descriptor;			/* Associated file descriptor */
-	STRPTR				iob_String;				/* Alternative source of data; a pointer to a string */
-	int64_t				iob_StringSize;			/* Number of bytes that may be stored in the string */
-	int64_t				iob_StringPosition;		/* Current read/write position in the string */
-	int64_t				iob_StringLength;		/* Number of characters stored in the string */
-	char *				iob_File;				/* For access tracking with the memory allocator. */
-	int					iob_Line;
-	APTR				iob_CustomBuffer;		/* A custom buffer allocated by setvbuf() */
-	char *				iob_TempFileName;		/* If this is a temporary file, this is its name */
-	BPTR				iob_TempFileLock;		/* The directory in which this temporary file is stored */
-	UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
-	struct SignalSemaphore * iob_Lock;			/* For thread locking */
+    file_action_iob_t	iob_Action;				/* The function to invoke for file operations, such as read, write and seek. */
+    int					iob_SlotNumber;			/* Points back to the iob table entry number. */
+    int					iob_Descriptor;			/* Associated file descriptor */
+    STRPTR				iob_String;				/* Alternative source of data; a pointer to a string */
+    int64_t				iob_StringSize;			/* Number of bytes that may be stored in the string */
+    int64_t				iob_StringPosition;		/* Current read/write position in the string */
+    int64_t				iob_StringLength;		/* Number of characters stored in the string */
+    char *				iob_File;				/* For access tracking with the memory allocator. */
+    int					iob_Line;
+    APTR				iob_CustomBuffer;		/* A custom buffer allocated by setvbuf() */
+    char *				iob_TempFileName;		/* If this is a temporary file, this is its name */
+    BPTR				iob_TempFileLock;		/* The directory in which this temporary file is stored */
+    UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
+    struct SignalSemaphore *iob_Lock;		    /* For thread locking */
+    struct Task *       iob_TaskLock;           /* Task who owns lock */
 } __iob64;
 
 
 /****************************************************************************/
 
-#define __getc(f) \
+#define __getc(c4,f) \
 	((((struct iob *)(f))->iob_BufferPosition < ((struct iob *)(f))->iob_BufferReadBytes) ? \
 	  ((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferPosition++] : \
-	  __fgetc((FILE *)(f)))
+	  __fgetc(c4,(FILE *)(f)))
 
-#define __ungetc(f) \
+#define __ungetc(c4,f) \
 	((((struct iob *)(f))->iob_BufferPosition >= 0 ? \
 	  ((struct iob *)(f))->iob_Buffer[(--(struct iob *)(f))->iob_BufferPosition] : \
-	  __fgetc((FILE *)(f)))
+	  __fgetc(c4,(FILE *)(f)))
 
 /* Caution: this putc() variant will evaluate the 'c' parameter more than once. */
-#define __putc(c,f,m) \
+#define __putc(c4,c,f,m) \
 	(((((struct iob *)(f))->iob_BufferWriteBytes < ((struct iob *)(f))->iob_BufferSize)) ? \
 	  (((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferWriteBytes++] = (c), \
 	  (((m) == IOBF_BUFFER_MODE_LINE && (c) == '\n') ? \
-	   __flush(f) : \
+	   __flush_r(c4, f) : \
 	   ((c) & 255))) : \
-	  __fputc((c),(f),(m)))
+	  __fputc(c4,(c),(f),(m)))
 
-#define __putc_fully_buffered(c,f) \
+#define __putc_fully_buffered(c4,c,f) \
 	(((((struct iob *)(f))->iob_BufferWriteBytes < ((struct iob *)(f))->iob_BufferSize)) ? \
 	  (((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferWriteBytes++] = (c)) : \
-	  __fputc((c),(f),IOBF_BUFFER_MODE_FULL))
+	  __fputc(c4,(c),(f),IOBF_BUFFER_MODE_FULL))
 
 /* Caution: this putc() variant will evaluate the 'c' parameter more than once. */
-#define __putc_line_buffered(c,f) \
+#define __putc_line_buffered(c4,c,f) \
 	(((((struct iob *)(f))->iob_BufferWriteBytes < ((struct iob *)(f))->iob_BufferSize)) ? \
 	  (((struct iob *)(f))->iob_Buffer[((struct iob *)(f))->iob_BufferWriteBytes++] = (c), \
 	  (((c) == '\n') ? \
-	   __flush(f) : \
+	   __flush_r(c4, f) : \
 	   ((c) & 255))) : \
-	  __fputc((c),(f),IOBF_BUFFER_MODE_LINE))
+	  __fputc(c4,(c),(f),IOBF_BUFFER_MODE_LINE))
 
 /****************************************************************************/
 
@@ -246,7 +248,7 @@ typedef int64_t (*file_action_fd_t)(struct _clib4 *__clib4, struct fd * fd,struc
 /****************************************************************************/
 
 /* Function to be called before a file descriptor is "closed". */
-typedef void (*fd_cleanup_t)(struct fd * fd);
+typedef void (*fd_cleanup_t)(struct _clib4 *__clib4, struct fd * fd);
 
 /****************************************************************************/
 
@@ -348,9 +350,18 @@ extern void	__stdio_lock_exit(struct _clib4 *__clib4);
 extern int	__stdio_lock_init(struct _clib4 *__clib4);
 
 extern void __fd_lock(struct fd *fd);
+extern void __fd_attemptLock(struct fd *fd);
 extern void __fd_unlock(struct fd *fd);
 
 extern BPTR __resolve_fd_file(struct fd * fd);
+
+extern void __funlockfile_r(struct _clib4 *__clib4, FILE *stream);
+extern void __flockfile_r(struct _clib4 *__clib4, FILE *stream);
+extern int __ftrylockfile_r(struct _clib4 *__clib4, FILE *stream);
+extern int __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream);
+int __ferror_r(struct _clib4 *__clib4, FILE *stream, BOOL lock);
+
+extern void __clearerr_r(struct _clib4 *__clib4, FILE *stream);
 
 #ifndef _STDIO_PROTOS_H
 #include "stdio_protos.h"

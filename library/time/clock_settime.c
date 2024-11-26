@@ -22,13 +22,13 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
     int result = -1;
 
     if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME)) != 0) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         RETURN(-1);
         return -1;
     }
 
     if (__clib4->__timer_busy) {
-        __set_errno(EAGAIN);
+        __set_errno_r(__clib4, EAGAIN);
         RETURN(result);
         return result;
     }
@@ -55,7 +55,7 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
             GetMsg(__clib4->__timer_port);
 
             result = 0;
-            __set_errno(0);
+            __set_errno_r(__clib4, 0);
         }
             break;
 
@@ -69,7 +69,7 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
             break;
 
         default:
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             break;
     }
 

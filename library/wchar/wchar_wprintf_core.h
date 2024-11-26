@@ -118,7 +118,7 @@ static const unsigned char states[]['z' - 'A' + 1] = {
 
 #define FLAGMASK (ALT_FORM | ZERO_PAD | LEFT_ADJ | PAD_POS | MARK_POS | GROUPED)
 
-int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type);
+int wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type);
 void out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size);
 int out_overflow(FOut *_out);
 int __wc_indelim(wchar_t wc, const wchar_t *delim);

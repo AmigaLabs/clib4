@@ -1,5 +1,5 @@
 /*
- * $Id: poll.c,v 1.0 2022-08-22 11:50:0 clib4devs Exp $
+ * $Id: poll.c,v 1.1 2024-07-04 11:50:0 clib4devs Exp $
 */
 
 #ifndef  _UNISTD_HEADERS_H
@@ -10,14 +10,12 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
-#include <poll.h>
-#include <sys/param.h> // MAX
-
 static int
 map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWriteSet, fd_set *pExceptSet) {
     register nfds_t i;             /* loop control */
     register struct pollfd *pCur;  /* current array element */
     register int max_fd = -1;      /* return value */
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -37,7 +35,7 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
         if (pCur->fd < 0)
             continue;
 
-        struct fd *fd = __get_file_descriptor(pCur->fd);
+        struct fd *fd = __get_file_descriptor(__clib4, pCur->fd);
         if (fd == NULL) {
             continue;
         }
@@ -155,7 +153,7 @@ map_select_results(struct pollfd *pArray, unsigned long n_fds, fd_set *pReadSet,
 }
 
 int
-poll(struct pollfd *fds, nfds_t nfds, int timeout) {
+__poll(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *signals) {
     fd_set read_descs;                          /* input file descs */
     fd_set write_descs;                         /* output file descs */
     fd_set except_descs;                        /* exception descs */
@@ -182,11 +180,19 @@ poll(struct pollfd *fds, nfds_t nfds, int timeout) {
     pTimeout = map_timeout(timeout, &stime);
 
     /* Make the select() call. */
-    ready_descriptors = select(max_fd + 1, &read_descs, &write_descs, &except_descs, pTimeout);
+    if (signals)
+        ready_descriptors = waitselect(max_fd + 1, &read_descs, &write_descs, &except_descs, pTimeout, (long unsigned int *) signals);
+    else
+        ready_descriptors = select(max_fd + 1, &read_descs, &write_descs, &except_descs, pTimeout);
 
     if (ready_descriptors >= 0) {
         map_select_results(fds, nfds, &read_descs, &write_descs, &except_descs);
     }
 
     return ready_descriptors;
+}
+
+int
+poll(struct pollfd *fds, nfds_t nfds, int timeout) {
+    return __poll(fds, nfds, timeout, 0);
 }

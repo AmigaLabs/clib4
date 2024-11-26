@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_write.c,v 1.11 2023-04-06 12:04:22 clib4devs Exp $
+ * $Id: fcntl_write.c,v 1.13 2024-07-12 12:04:22 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -12,10 +12,14 @@
 
 ssize_t
 write(int file_descriptor, const void *buffer, size_t num_bytes) {
+    return __write_r(__CLIB4, file_descriptor, buffer, num_bytes);
+}
+
+ssize_t
+__write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_t num_bytes) {
     ssize_t num_bytes_written;
     struct fd *fd = NULL;
     ssize_t result = EOF;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -25,8 +29,6 @@ write(int file_descriptor, const void *buffer, size_t num_bytes) {
 
     assert(buffer != NULL);
     assert((int) num_bytes >= 0);
-
-    __check_abort_f(__clib4);
 
     __stdio_lock(__clib4);
 
@@ -41,18 +43,25 @@ write(int file_descriptor, const void *buffer, size_t num_bytes) {
     assert(__clib4->__fd[file_descriptor] != NULL);
     assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     __fd_lock(fd);
 
+    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE) && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+        SHOWMSG("file descriptor is a closed PIPE");
+
+        __set_errno(SIGPIPE);
+        goto out;
+    }
+
     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE)) {
         SHOWMSG("file descriptor is not write-enabled");
 
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -71,14 +80,14 @@ write(int file_descriptor, const void *buffer, size_t num_bytes) {
 
             num_bytes_written = (*fd->fd_Action)(__clib4, fd, &fam);
             if (num_bytes_written == EOF) {
-                __set_errno(fam.fam_Error);
+                __set_errno_r(__clib4, fam.fam_Error);
                 goto out;
             } else if (num_bytes_written != num_bytes) {
-                __set_errno(__translate_io_error_to_errno(IoErr()));
+                __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
             }
         } else {
             /* Otherwise forward the call to send() */
-            num_bytes_written = send(file_descriptor, buffer, num_bytes, 0);
+            num_bytes_written = __send_r(__clib4, file_descriptor, buffer, num_bytes, 0);
         }
     } else {
         num_bytes_written = 0;

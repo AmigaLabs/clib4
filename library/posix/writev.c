@@ -1,5 +1,5 @@
 /*
- * $Id: uio_writev.c,v 1.5 2006-01-08 12:04:27 clib4devs Exp $
+ * $Id: uio_writev.c,v 1.6 2023-07-04 12:04:27 clib4devs Exp $
 */
 
 #ifndef _UIO_HEADERS_H
@@ -25,12 +25,12 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
     __stdio_lock(__clib4);
 
     if (iov == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
     if (vec_count < 1 || vec_count > MAX_IOVEC) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -40,20 +40,20 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
         total_num_bytes_written += iov[i].iov_len;
         if (total_num_bytes_written < 0) /* Rollover. */
         {
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             goto out;
         }
     }
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     __fd_lock(fd);
 
-    buffer = malloc(total_num_bytes_written);
+    buffer = __malloc_r(__clib4, total_num_bytes_written);
     if (buffer != NULL) {
         char *b = buffer;
 
@@ -67,7 +67,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
         msg.fam_Size = total_num_bytes_written;
 
         if ((*fd->fd_Action)(__clib4, fd, &msg) == EOF) {
-            __set_errno(msg.fam_Error);
+            __set_errno_r(__clib4, msg.fam_Error);
             goto out;
         }
     } else {
@@ -80,7 +80,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
                 msg.fam_Size = iov[i].iov_len;
 
                 if ((*fd->fd_Action)(__clib4, fd, &msg) == EOF) {
-                    __set_errno(msg.fam_Error);
+                    __set_errno_r(__clib4, msg.fam_Error);
                     goto out;
                 }
             }
@@ -92,7 +92,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
 out:
 
     if (buffer != NULL)
-        free(buffer);
+        __free_r(__clib4, buffer);
 
     __fd_unlock(fd);
     __stdio_unlock(__clib4);

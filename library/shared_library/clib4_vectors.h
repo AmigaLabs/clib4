@@ -11,7 +11,7 @@ static void *clib4Vectors[] = {
         (void *) (__translate_unix_to_amiga_path_name),
         (void *) (libReserved),
         (void *) (__print_termination_message),
-        (void *) (libReserved),
+        (void *) (__get_default_file),
         (void *) (libReserved),
         (void *) (libReserved),
 
@@ -1160,6 +1160,24 @@ static void *clib4Vectors[] = {
         (void *) (__get_timezone),                        /* 4348 */
         (void *) (__get_daylight),                        /* 4352 */
         (void *) (__get_tzname),                          /* 4356 */
+
+        (void *) (wait),                                  /* 4360 */
+        (void *) (waitpid),                               /* 4364 */
+        (void *) (spawnvpe),                              /* 4368 */
+
+        (void *) (waitpoll),                              /* 4372 */
+
+        (void *) (__get_tc_pc),                           /* 4376 */
+        (void *) (__get_tc_ospeed),                       /* 4380 */
+        (void *) (__get_tc_up),                           /* 4384 */
+        (void *) (__get_tc_bc),                           /* 4388 */
+
+        (void *) (0),                     /* 4392 */
+
+        (void *) (sigsuspend),		                      /* 4396 */
+        (void *) (spawnve),                               /* 4400 */
+        (void *) (sigpause),		                      /* 4404 */
+        (void *) (sigwait),		                          /* 4408 */
 
         (void *)-1
 };

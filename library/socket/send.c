@@ -1,5 +1,5 @@
 /*
- * $Id: socket_send.c,v 1.9 2006-11-16 10:41:15 clib4devs Exp $
+ * $Id: socket_send.c,v 1.10 2024-07-12 10:41:15 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -8,9 +8,13 @@
 
 int
 send(int sockfd, const void *buff, size_t nbytes, int flags) {
+    return __send_r(__CLIB4, sockfd, buff, nbytes, flags);
+}
+
+int
+__send_r(struct _clib4 *__clib4, int sockfd, const void *buff, size_t nbytes, int flags) {
     struct fd *fd;
     int result = ERROR;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -35,7 +39,7 @@ send(int sockfd, const void *buff, size_t nbytes, int flags) {
     assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IN_USE));
     assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
-    fd = __get_file_descriptor_socket(sockfd);
+    fd = __get_file_descriptor_socket(__clib4, sockfd);
     if (fd == NULL)
         goto out;
 

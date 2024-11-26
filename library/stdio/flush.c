@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_flush.c,v 1.5 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_flush.c,v 1.6 2023-07-04 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -13,11 +13,10 @@
    was a line feed, prompting the buffer contents to be flushed. It should
    never be used in place of fflush(). */
 int
-__flush(FILE *stream) {
+__flush_r(struct _clib4 *__clib4, FILE *stream) {
     struct iob *iob = (struct iob *) stream;
     int result = EOF;
     int last_c;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -25,14 +24,15 @@ __flush(FILE *stream) {
 
     assert(stream != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
+        __set_errno_r(__clib4, EFAULT);
 
-        __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return result;
     }
+
+    __flockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, iob));
     assert(iob->iob_BufferWriteBytes > 0);
@@ -41,8 +41,7 @@ __flush(FILE *stream) {
     last_c = iob->iob_Buffer[iob->iob_BufferWriteBytes - 1];
 
     if (__flush_iob_write_buffer(__clib4, iob) < 0) {
-        /* Remove the last character stored in the buffer, which is
-           typically a '\n'. */
+        /* Remove the last character stored in the buffer, which is typically a '\n'. */
         iob->iob_BufferWriteBytes--;
         goto out;
     }
@@ -51,8 +50,15 @@ __flush(FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);
+}
+
+int
+__flush(FILE *stream) {
+    struct _clib4 *__clib4 = __CLIB4;
+
+    return __flush_r(__clib4, stream);
 }

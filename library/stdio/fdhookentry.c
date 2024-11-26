@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fdhookentry.c,v 1.37 2022-08-11 17:12:23 clib4devs Exp $
+ * $Id: stdio_fdhookentry.c,v 1.38 2024-06-11 17:12:23 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -29,7 +29,6 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     int64_t new_position = 0;
     int64_t file_size = 0;
     int new_mode;
-    char *buffer = NULL;
     int64_t result = EOF;
     BOOL is_aliased;
     BPTR file;
@@ -76,8 +75,10 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 result = (int64_t) Read(file, fam->fam_Data, fam->fam_Size);
                 if (result == EOF) {
                     D(("read failed ioerr=%ld\n", IoErr()));
-
-                    fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) || (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE))))
+                        fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                    else
+                        fam->fam_Error = EAGAIN;
                     goto out;
                 }
 
@@ -120,8 +121,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                                 goto out;
                             }
                         }
-                    }
-                    else {
+                    } else {
                         D(("seek to end of file failed; ioerr=%ld", IoErr()));
 
                         fam->fam_Error = __translate_io_error_to_errno(IoErr());
@@ -129,7 +129,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                     }
                 }
 
-                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
+                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(
+                        file), fam->fam_Data));
 
                 result = Write(file, fam->fam_Data, fam->fam_Size);
                 if (result == -1) {
@@ -155,7 +156,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 /* If this is an alias, just remove it. */
                 is_aliased = __fd_is_aliased(fd);
                 if (is_aliased) {
-                    __remove_fd_alias(fd);
+                    __remove_fd_alias(__clib4, fd);
                 } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                     /* Should we reset this file into line buffered mode? */
                     if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING) && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
@@ -175,10 +176,10 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                         /* Call a cleanup function, such as the one which releases locked records. */
                         if (fd->fd_Cleanup != NULL)
-                            (*fd->fd_Cleanup)(fd);
+                            (*fd->fd_Cleanup)(__clib4, fd);
 
                         if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
-                            parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+                            parent_dir = ParentOfFH(fd->fd_File);
                             if (parent_dir == BZERO) {
                                 SHOWMSG("couldn't find parent directory");
 
@@ -194,6 +195,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                         if (CANNOT Close(fd->fd_File)) {
                             fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            SHOWMSG("CANNOT Close(fd->fd_File)");
 
                             result = EOF;
                         }
@@ -273,7 +275,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                                         if (file_deleted) {
                                             Remove((struct Node *) node);
-                                            free(node);
+                                            __free_r(__clib4, node);
                                         }
                                     }
                                 }
@@ -292,7 +294,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             Delete(pipe_name);
                         }
 #endif
-                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid && FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
+                        if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid &&
+                            FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
                             BPTR old_dir;
                             old_dir = SetCurrentDir(parent_dir);
                             SetProtection(fib->Name, 0);
@@ -394,8 +397,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                                    been a different error. */
                             exd = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
                             if ((NOT fib_is_valid && exd == NULL) || (exd == NULL) ||
-                                                                     (new_position <= (int64_t) exd->FileSize))
-                            goto out;
+                                (new_position <= (int64_t) exd->FileSize))
+                                goto out;
 
                             /* Don't extend if the file is opened read-only */
                             if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE)) {
@@ -404,7 +407,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             }
 
                             /* Now try to make that file larger. */
-                            if (__grow_file_size(fd, new_position - (int64_t) exd->FileSize) < 0) {
+                            if (__grow_file_size(__clib4, fd, new_position - (int64_t) exd->FileSize) < 0) {
                                 fam->fam_Error = __translate_io_error_to_errno(IoErr());
                                 FreeDosObject(DOS_EXAMINEDATA, exd);
                                 goto out;
@@ -440,14 +443,28 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                     SHOWMSG("changing the mode");
 
-                    if (fam->fam_Arg != 0)
-                        mode = DOSFALSE; /* buffered mode */
-                    else
-                        mode = DOSTRUE; /* single character mode */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                        if (fam->fam_Arg != 0)
+                            mode = SBM_BLOCKING;
+                        else
+                            mode = SBM_NON_BLOCKING;
 
-                    if (CANNOT SetMode(file, mode)) {
-                        fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                        goto out;
+                        int32 r = SetBlockingMode(file, mode);
+
+                        if (r == 0 || r == -1) {
+                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            goto out;
+                        }
+                    } else {
+                        if (fam->fam_Arg != 0)
+                            mode = DOSFALSE; /* buffered mode */
+                        else
+                            mode = DOSTRUE; /* single character mode */
+
+                        if (CANNOT SetMode(file, mode)) {
+                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            goto out;
+                        }
                     }
 
                     result = OK;
@@ -504,7 +521,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                     }
 
                     /* Create an empty examineData struct */
-                    struct ExamineData *examineData = malloc(sizeof(struct ExamineData));
+                    struct ExamineData *examineData = __malloc_r(__clib4, sizeof(struct ExamineData));
                     fam->fam_FileInfo = examineData;
 
                     /* Make up some stuff for this stream. */
@@ -532,9 +549,6 @@ out:
 
     if (fam->fam_Action == file_action_close)
         __stdio_unlock(__clib4);
-
-    if (buffer != NULL)
-        free(buffer);
 
     SHOWVALUE(result);
 

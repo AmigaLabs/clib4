@@ -2,8 +2,6 @@
  * $Id: glob_globfree.c,v 1.0 2021-01-22 12:28:38 clib4devs Exp $
 */
 
-/**********************************************************************/
-
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
@@ -19,8 +17,7 @@
 #include <glob.h>
 
 void
-globfree(glob_t *pglob)
-{
+globfree(glob_t *pglob) {
     int i;
     char **pp;
 
@@ -28,8 +25,7 @@ globfree(glob_t *pglob)
 
     SHOWPOINTER(pglob);
 
-    if (pglob->gl_pathv != NULL)
-    {
+    if (pglob->gl_pathv != NULL) {
         pp = pglob->gl_pathv + pglob->gl_offs;
         for (i = pglob->gl_pathc; i--; ++pp)
             if (*pp)

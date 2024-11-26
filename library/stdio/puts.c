@@ -20,12 +20,14 @@ puts(const char *s) {
     SHOWSTRING(s);
 
     assert(s != NULL);
+    assert(stream != NULL);
 
-    flockfile(stream);
+    if (s == NULL || stream == NULL) {
+        SHOWMSG("invalid stream parameter");
+        __set_errno_r(__clib4, EFAULT);
 
-    if (s == NULL) {
-        __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return (result);
     }
 
     assert(__is_valid_iob(__clib4, file));
@@ -33,11 +35,12 @@ puts(const char *s) {
     assert(file->iob_BufferSize > 0);
 
     /* If buffering is disabled for an interactive stream
-   switch to line buffering to improve the readability of
-   the output: instead of pumping out the entire buffer
-   break it up into individual lines. */
+       switch to line buffering to improve the readability of
+       the output: instead of pumping out the entire buffer
+       break it up into individual lines. */
     buffer_mode = (file->iob_Flags & IOBF_BUFFER_MODE);
     if (buffer_mode == IOBF_BUFFER_MODE_NONE) {
+        SHOWMSG("Switching to IOBF_BUFFER_MODE_LINE");
         struct fd *fd = __clib4->__fd[file->iob_Descriptor];
 
         __fd_lock(fd);
@@ -48,19 +51,30 @@ puts(const char *s) {
         __fd_unlock(fd);
     }
 
-    if (__fputc_check(stream, __clib4) < 0)
-        goto out;
+    __check_abort_f(__clib4);
 
-    while ((c = (*s++)) != '\0') {
-        if (__putc(c, stream, buffer_mode) == EOF)
-            goto out;
+    __flockfile_r(__clib4, stream);
+
+    if (__fputc_check(__clib4, stream) < 0) {
+        __funlockfile_r(__clib4, stream);
+        goto out;
     }
 
-    if (__putc('\n', stream, buffer_mode) == EOF)
-        goto out;
+    while ((c = (*s++)) != '\0') {
+        if (__putc(__clib4, c, stream, buffer_mode) == EOF) {
+            __funlockfile_r(__clib4, stream);
+            goto out;
+        }
+    }
 
+    if (__putc(__clib4, '\n', stream, buffer_mode) == EOF) {
+        __funlockfile_r(__clib4, stream);
+        goto out;
+    }
 
     result = OK;
+
+    __funlockfile_r(__clib4, stream);
 
 out:
 
@@ -69,12 +83,12 @@ out:
        This is intended to improve performance as it takes more effort
        to write a single character to a file than to write a bunch. */
     if (result == OK && (file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
+        SHOWMSG("Flushing write buffer");
         if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0) {
             SHOWMSG("couldn't flush the write buffer");
             result = EOF;
         }
     }
-    funlockfile(stream);
 
     RETURN(result);
     return (result);

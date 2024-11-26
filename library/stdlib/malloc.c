@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_malloc.c,v 1.22 2022-04-03 14:09:00 clib4devs Exp $
+ * $Id: stdlib_malloc.c,v 1.23 2024-07-12 14:09:00 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -14,22 +14,24 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-#undef malloc
-
 void *
 malloc(size_t size) {
+    return __malloc_r(__CLIB4, size);
+}
+
+void *
+__malloc_r(struct _clib4 *__clib4, size_t size) {
     ENTER();
     void *result = NULL;
-    struct _clib4 *__clib4 = __CLIB4;
     SHOWPOINTER(__clib4);
 
-    SHOWMSG("Locking memory pointer");
     __memory_lock(__clib4);
 
-    SHOWMSG("Calling wof_alloc");
-    result = wof_alloc(__clib4->__wof_allocator, size);
+    result = wmem_alloc(__clib4->__wmem_allocator, size);
 
-    SHOWMSG("Unlocking memory pointer");
+    if (!result)
+        __set_errno_r(__clib4, ENOMEM);
+
     __memory_unlock(__clib4);
 
     LEAVE();
@@ -52,17 +54,12 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
 
     __memory_lock(__clib4);
 
-    if (__clib4->__wof_allocator != NULL) {
-        wof_allocator_destroy(__clib4->__wof_allocator);
-        __clib4->__wof_allocator = NULL;
+    if (__clib4->__wmem_allocator != NULL) {
+        wmem_destroy_allocator(__clib4->__wmem_allocator);
+        __clib4->__wmem_allocator = NULL;
     }
 
     __memory_unlock(__clib4);
-
-    if (__clib4->__wof_allocator_semaphore != NULL) {
-        __delete_semaphore(__clib4->__wof_allocator_semaphore);
-        __clib4->__wof_allocator_semaphore = NULL;
-    }
 
     if (__clib4->memory_semaphore != NULL) {
         __delete_semaphore(__clib4->memory_semaphore);
@@ -83,12 +80,10 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
     if (__clib4->memory_semaphore == NULL)
         goto out;
 
-    __clib4->__wof_allocator_semaphore = __create_semaphore();
-    if (__clib4->__wof_allocator_semaphore == NULL)
-        goto out;
-
-    __clib4->__wof_allocator = wof_allocator_new();
-    if (__clib4->__wof_allocator == NULL) {
+    __clib4->__wmem_allocator = wmem_allocator_new(__clib4->__wof_mem_allocator_type); // make this dynamic
+    if (__clib4->__wmem_allocator == NULL) {
+        __delete_semaphore(__clib4->memory_semaphore);
+        __clib4->memory_semaphore = NULL;
         goto out;
     }
 

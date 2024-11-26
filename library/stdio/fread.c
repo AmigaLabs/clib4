@@ -26,10 +26,13 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return (result);
     }
 
-    flockfile(stream);
+    __check_abort_f(__clib4);
+
+    int locked = __ftrylockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -37,26 +40,22 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
         __set_errno(EBADF);
-
         goto out;
     }
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ)) {
         SHOWMSG("this file is not read-enabled");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
         __set_errno(EBADF);
-
         goto out;
     }
 
     /* So that we can tell error and 'end of file' conditions apart. */
-    clearerr(stream);
+    __clearerr_r(__clib4, stream);
 
     if (element_size > 0 && count > 0) {
         size_t total_bytes_read = 0;
@@ -64,7 +63,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         unsigned char *data = ptr;
         int c;
 
-        if (__fgetc_check((FILE *) file, __clib4) < 0)
+        if (__fgetc_check(__clib4, (FILE *) file) < 0)
             goto out;
 
         /* Check for overflow. */
@@ -133,7 +132,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
                         break;
                 }
 
-                c = __getc(file);
+                c = __getc(__clib4, file);
                 if (c == EOF)
                     break;
 
@@ -158,7 +157,8 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    if (locked == OK)
+        __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

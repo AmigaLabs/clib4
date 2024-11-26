@@ -33,6 +33,8 @@
 #include "locale/dcngettext.h"
 #include <syslog.h>
 
+#include "debug.h"
+
 #include <proto/elf.h>
 #include <fenv.h>
 
@@ -64,7 +66,7 @@ static uint32_t _random_init[] = {
 };
 
 void
-reent_init(struct _clib4 *__clib4) {
+reent_init(struct _clib4 *__clib4, BOOL fallback) {
     BOOL success = FALSE;
 
     ENTER();
@@ -280,7 +282,7 @@ reent_init(struct _clib4 *__clib4) {
         /* Default debug levels */
         .indent_level = 0,
         .previous_debug_level = -1,
-        .__debug_level = 2,
+        .__debug_level = DEBUGLEVEL_CallTracing,
         .g_mofile = NULL,
         .__ospeed = 0,
         .__tputs_baud_rate = 0,
@@ -290,6 +292,11 @@ reent_init(struct _clib4 *__clib4) {
         .syslog_openlog_flags = 0,
         .syslog_facility = LOG_USER,
         .syslog_mask = 0xff,
+        .__fully_initialized = FALSE,
+        .__children = 1,
+        .term_entry = NULL,
+        .__was_sig = -1,
+        .__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK,
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {
@@ -321,6 +328,9 @@ reent_init(struct _clib4 *__clib4) {
     __clib4->wide_status->_wcsrtombs_state.__value.__wch = 0;
     __clib4->wide_status->_l64a_buf[0] = '\0';
     __clib4->wide_status->_getdate_err = 0;
+
+    ClearMem(__clib4->action_array, NSIG * sizeof(struct sigaction));
+
     /* Get cpu family used to choose functions at runtime */
     D(("Setting cpu family"));
     GetCPUInfoTags(GCIT_Family, &__clib4->cpufamily, TAG_DONE);
@@ -330,18 +340,20 @@ reent_init(struct _clib4 *__clib4) {
     GetCPUInfoTags(GCIT_VectorUnit, &__clib4->hasAltivec, TAG_DONE);
 
     /* Init memalign list */
-    SHOWMSG("Allocating __memalign_pool");
-    __clib4->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
-                                                  ASO_NoTrack, FALSE,
-                                                  ASO_MemoryOvr, MEMF_SHARED,
-                                                  ASOITEM_MFlags, MEMF_SHARED,
-                                                  ASOITEM_ItemSize, sizeof(struct MemalignEntry),
-                                                  ASOITEM_BatchSize, 408,
-                                                  ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
-                                                  ASOITEM_GCParameter, 1000,
-                                                  TAG_DONE);
-    if (!__clib4->__memalign_pool) {
-        goto out;
+    if (!fallback) {
+        SHOWMSG("Allocating __memalign_pool");
+        __clib4->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                                      ASO_NoTrack, FALSE,
+                                                      ASO_MemoryOvr, MEMF_SHARED,
+                                                      ASOITEM_MFlags, MEMF_SHARED,
+                                                      ASOITEM_ItemSize, sizeof(struct MemalignEntry),
+                                                      ASOITEM_BatchSize, 408,
+                                                      ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
+                                                      ASOITEM_GCParameter, 1000,
+                                                      TAG_DONE);
+        if (!__clib4->__memalign_pool) {
+            goto out;
+        }
     }
 
     /*
@@ -378,7 +390,7 @@ reent_init(struct _clib4 *__clib4) {
     /* Check if .unix file exists in the current dir. If the file exists enable unix path semantics */
     D(("Check for .unix file"));
     __clib4->__unix_path_semantics = FALSE;
-    struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) ".unix", TAG_DONE);
+    struct ExamineData *exd = ExamineObjectTags(EX_StringNameInput, (CONST_STRPTR) "PROGDIR:.unix", TAG_DONE);
     if (exd != NULL) {
         if (EXD_IS_FILE(exd)) {
             SHOWMSG("Enable unix paths");
@@ -398,7 +410,7 @@ reent_init(struct _clib4 *__clib4) {
 out:
 
     if (!success) {
-        reent_exit(__clib4, FALSE);
+        reent_exit(__clib4, fallback);
     }
 }
 
@@ -406,31 +418,23 @@ void
 reent_exit(struct _clib4 *__clib4, BOOL fallback) {
     /* Free global clib structure */
     if (__clib4) {
-        /* Check for getrandom fd */
-        if (!fallback) {
-            /* We can't call close() in fallback reent, since destructors
-             * are already called and function is no more available */
-            if (__clib4->randfd[0] >= 0) {
-                close(__clib4->randfd[0]);
-            }
-
-            if (__clib4->randfd[1] >= 0) {
-                close(__clib4->randfd[1]);
-            }
-        }
-
         /* Free wchar stuff */
         if (__clib4->wide_status != NULL) {
+            SHOWMSG("Freeing wide_status");
             FreeVec(__clib4->wide_status);
             __clib4->wide_status = NULL;
         }
+
         /* Remove random semaphore */
+        SHOWMSG("Delete __random_lock semaphore");
         __delete_semaphore(__clib4->__random_lock);
         /* Remove pipe semaphore */
+        SHOWMSG("Delete __pipe_semaphore semaphore");
         __delete_semaphore(__clib4->__pipe_semaphore);
         if (!fallback) { //TODO : Freeing memalign crash libExpunge and I don't know why
             /* Free memalign stuff */
             if (__clib4->__memalign_pool) {
+                SHOWMSG("Freeing memalign pool");
                 /* Check if we have something created with posix_memalign and not freed yet.
                  * But this is a good point also to free something allocated with memalign or
                  * aligned_alloc and all other functions are using memalign_tree to allocate memory
@@ -452,27 +456,47 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
                 }
 
                 FreeSysObject(ASOT_ITEMPOOL, __clib4->__memalign_pool);
+                SHOWMSG("Done");
             }
         }
         /* Free dl stuff */
         struct ElfIFace *IElf = __IElf;
 
         if (IElf && __clib4->__dl_root_handle != NULL) {
+            SHOWMSG("Closing __dl_root_handle");
             CloseElfTags(__clib4->__dl_root_handle, CET_ReClose, TRUE, TAG_DONE);
             __clib4->__dl_root_handle = NULL;
+            SHOWMSG("Done");
         }
 
         FreeVec(__clib4);
         __clib4 = NULL;
+        SHOWMSG("__clib4 destroyed correctly");
     }
 }
 
 void enableUnixPaths(void) {
-    __CLIB4->__unix_path_semantics = TRUE;
+    struct _clib4 *__clib4 = __CLIB4;
+
+    __clib4->__unix_path_semantics = TRUE;
+
+    /* Set __current_path_name to a valid value */
+    UBYTE current_dir_name[256] = {0};
+    if (NameFromLock(__clib4->self->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
+        __set_current_path((const char *) current_dir_name);
+    }
 }
 
 void disableUnixPaths(void) {
-    __CLIB4->__unix_path_semantics = FALSE;
+    struct _clib4 *__clib4 = __CLIB4;
+
+    __clib4->__unix_path_semantics = FALSE;
+
+    /* Set __current_path_name to a valid value */
+    UBYTE current_dir_name[256] = {0};
+    if (NameFromLock(__clib4->self->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
+        __set_current_path((const char *) current_dir_name);
+    }
 }
 
 int *__mb_cur_max(void) {

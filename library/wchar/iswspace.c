@@ -10,7 +10,9 @@
 #include <wctype.h>
 #endif /* _WCTYPE_HEADERS_H */
 
-#include <ctype.h>
+#ifndef _CTYPE_HEADERS_H
+#include "ctype_headers.h"
+#endif /* _CTYPE_HEADERS_H */
 
 int
 iswspace(wint_t c) {
@@ -47,7 +49,7 @@ iswspace(wint_t c) {
         return result;
     }
 
-    result = (c < 0x100 ? isspace(c) : 0);
+    result = (c < 0x100 ? __isspace_r(__clib4, c) : 0);
     RETURN(result);
     return result;
 }

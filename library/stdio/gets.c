@@ -19,28 +19,32 @@ gets(char *s) {
     SHOWPOINTER(s);
 
     assert(s != NULL);
+    assert(stream != NULL);
 
-    flockfile(stream);
-
-    if (s == NULL) {
+    if (s == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
 
         result = NULL;
-        goto out;
+        RETURN(result);
+        return (result);
     }
+
+    __check_abort_f(__clib4);
+
+    __flockfile_r(__clib4, stream);
 
     /* Take care of the checks and data structure changes that
      * need to be handled only once for this stream.
      */
-    if (__fgetc_check(stream, __clib4) < 0) {
+    if (__fgetc_check(__clib4, stream) < 0) {
         result = NULL;
         goto out;
     }
 
     /* So that we can tell error and 'end of file' conditions apart. */
-    clearerr(stream);
+    __clearerr_r(__clib4, stream);
 
     while (TRUE) {
         /* If there is data in the buffer, try to copy it directly
@@ -77,9 +81,9 @@ gets(char *s) {
             file->iob_BufferPosition += num_bytes_in_buffer;
         }
 
-        c = __getc(stream);
+        c = __getc(__clib4, stream);
         if (c == EOF) {
-            if (ferror(stream)) {
+            if (__ferror_r(__clib4, stream, FALSE)) {
                 /* Just to be on the safe side. */
                 (*s) = '\0';
 
@@ -107,7 +111,7 @@ gets(char *s) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

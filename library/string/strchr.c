@@ -1,5 +1,5 @@
 /*
- * $Id: string_strchr.c,v 1.6 2022-03-22 12:04:26 clib4devs Exp $
+ * $Id: string_strchr.c,v 1.7 2024-08-05 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -11,33 +11,69 @@
 #endif /* _STRING_HEADERS_H */
 
 char *
-strchr(const char *s, int c) {
-    const unsigned char *us = (const unsigned char *) s;
-    char *result = NULL;
-    unsigned char us_c;
-    unsigned char find_this = (c & 0xff);
-
-    assert(s != NULL);
-
-    if (us == NULL) {
-        __set_errno(EFAULT);
-        goto out;
-    }
-
-    while (TRUE) {
-        us_c = (*us);
-        if (us_c == find_this) {
-            result = (char *) us;
-            break;
+glibc_strchr(const char *s, int c_in) {
+    const unsigned char *char_ptr;
+    const unsigned long int *longword_ptr;
+    unsigned long int longword, magic_bits, charmask;
+    register unsigned char c;
+    c = (unsigned char) c_in;
+    for (char_ptr = (const unsigned char *) s;
+         ((unsigned long int) char_ptr & (sizeof(longword) - 1)) != 0;
+         ++char_ptr)
+        if (*char_ptr == c)
+            return (char *) char_ptr;
+        else if (*char_ptr == '\0')
+            return NULL;
+    longword_ptr = (unsigned long int *) char_ptr;
+    magic_bits = 0x7efefeffL;
+    charmask = c | (c << 8);
+    charmask |= charmask << 16;
+    charmask |= (charmask << 16) << 16;
+    for (;;) {
+        longword = *longword_ptr++;
+        if ((((longword + magic_bits) ^ ~longword) & ~magic_bits) != 0 ||
+            ((((longword ^ charmask) + magic_bits) ^ ~(longword ^ charmask)) & ~magic_bits) != 0) {
+            const unsigned char *cp = (const unsigned char *) (longword_ptr - 1);
+            if (*cp == c)
+                return (char *) cp;
+            else if (*cp == '\0')
+                return NULL;
+            if (*++cp == c)
+                return (char *) cp;
+            else if (*cp == '\0')
+                return NULL;
+            if (*++cp == c)
+                return (char *) cp;
+            else if (*cp == '\0')
+                return NULL;
+            if (*++cp == c)
+                return (char *) cp;
+            else if (*cp == '\0')
+                return NULL;
+            if (sizeof(longword) > 4) {
+                if (*++cp == c)
+                    return (char *) cp;
+                else if (*cp == '\0')
+                    return NULL;
+                if (*++cp == c)
+                    return (char *) cp;
+                else if (*cp == '\0')
+                    return NULL;
+                if (*++cp == c)
+                    return (char *) cp;
+                else if (*cp == '\0')
+                    return NULL;
+                if (*++cp == c)
+                    return (char *) cp;
+                else if (*cp == '\0')
+                    return NULL;
+            }
         }
-
-        if (us_c == '\0')
-            break;
-
-        us++;
     }
+    return NULL;
+}
 
-out:
-
-    return (result);
+char *
+strchr(const char *s, int c) {
+    return __strchr_ppc(s, c);
 }

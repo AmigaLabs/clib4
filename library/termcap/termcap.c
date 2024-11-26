@@ -1,23 +1,6 @@
-/* Work-alike for termcap, plus extra features.
-   Copyright (C) 1985, 86, 93, 94, 95, 2000, 2001
-   Free Software Foundation, Inc.
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
-
-/* Emacs config.h may rename various library functions such as malloc.  */
+/*
+ * $Id: termcap_tparam.c,v 1.1 2024-07-12 18:26:47 clib4devs Exp $
+*/
 
 #ifndef  _TERMIOS_HEADERS_H
 #include "termios_headers.h"
@@ -32,7 +15,7 @@ Boston, MA 02111-1307, USA.  */
 */
 
 #ifndef BUFSIZE
-#define BUFSIZE 2048
+#define BUFSIZE 8192
 #endif
 
 #ifndef TERMCAP_FILE
@@ -56,38 +39,6 @@ static int compare_contin(register char *str1, register char *str2);
 static char *tgetst1(char *ptr, char **area);
 static int name_match(char *line, char *name);
 
-static void
-memory_out() {
-    write(2, "virtual memory exhausted\n", 25);
-    exit(1);
-}
-
-static char *
-xmalloc(size_t size) {
-    register char *tem = malloc(size);
-
-    if (!tem)
-        memory_out();
-    return tem;
-}
-
-static char *
-xrealloc(char *ptr, size_t size) {
-    register char *tem = realloc(ptr, size);
-
-    if (!tem)
-        memory_out();
-    return tem;
-}
-
-/* Looking up capabilities in the entry already found.  */
-
-/* The pointer to the data made by tgetent is left here
-   for tgetnum, tgetflag and tgetstr to find.  */
-static char *term_entry;
-
-static char *tgetst1();
-
 /* Search entry BP for capability CAP.
    Return a pointer to the capability (in BP) if found,
    0 if not found.  */
@@ -104,7 +55,9 @@ find_capability(const char *bp, const char *name) {
 
 int
 tgetnum(const char *name) {
-    register char *ptr = find_capability(term_entry, name);
+    struct _clib4 *__clib4 = __CLIB4;
+
+    register char *ptr = find_capability(__clib4->term_entry, name);
     if (!ptr || ptr[-1] != '#')
         return -1;
     return atoi(ptr);
@@ -112,7 +65,9 @@ tgetnum(const char *name) {
 
 int
 tgetflag(const char *name) {
-    register char *ptr = find_capability(term_entry, name);
+    struct _clib4 *__clib4 = __CLIB4;
+
+    register char *ptr = find_capability(__clib4->term_entry, name);
     return ptr && ptr[-1] == ':';
 }
 
@@ -123,7 +78,9 @@ tgetflag(const char *name) {
 
 char *
 tgetstr(const char *name, char **area) {
-    register char *ptr = find_capability(term_entry, name);
+    struct _clib4 *__clib4 = __CLIB4;
+
+    register char *ptr = find_capability(__clib4->term_entry, name);
     if (!ptr || (ptr[-1] != '=' && ptr[-1] != '~'))
         return NULL;
     return tgetst1(ptr, area);
@@ -162,7 +119,11 @@ tgetst1(char *ptr, char **area) {
         /* Compute size of block needed (may overestimate).  */
         p = ptr;
         while ((c = *p++) && c != ':' && c != '\n');
-        ret = (char *) xmalloc(p - ptr + 1);
+        ret = (char *) malloc(p - ptr + 1);
+        if (ret == NULL) {
+            __set_errno(ENOMEM);
+            return NULL;
+        }
     } else
         ret = *area;
 
@@ -285,14 +246,16 @@ tgetent(char *bp, const char *name) {
     register int c;
     char *tcenv = NULL;        /* TERMCAP value, if it contains :tc=.  */
     char *indirect = NULL;    /* Terminal type in :tc= in TERMCAP value.  */
+    struct _clib4 *__clib4 = __CLIB4;
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     /* For compatibility with programs like `less' that want to
        put data in the termcap buffer themselves as a fallback.  */
     if (bp)
-        term_entry = bp;
+        __clib4->term_entry = bp;
     termcap_name = getenv("TERMCAP");
+
     if (termcap_name && *termcap_name == '\0')
         termcap_name = NULL;
 
@@ -320,18 +283,26 @@ tgetent(char *bp, const char *name) {
     }
     buf.size = BUFSIZE;
     /* Add 1 to size to ensure room for terminating null.  */
-    buf.beg = (char *) xmalloc(buf.size + 1);
+    buf.beg = (char *) malloc(buf.size + 1);
+    if (buf.beg == NULL) {
+        __set_errno(ENOMEM);
+        return -1;
+    }
+
     term = indirect ? indirect : (char *) name;
 
     if (!bp) {
         malloc_size = indirect ? strlen(tcenv) + 1 : buf.size;
-        bp = (char *) xmalloc(malloc_size);
+        bp = (char *) malloc(malloc_size);
+        if (bp == NULL) {
+            __set_errno(ENOMEM);
+            return -1;
+        }
     }
     tc_search_point = bp1 = bp;
 
-    if (indirect)
+    if (indirect) {
         /* Copy the data from the environment variable.  */
-    {
         strcpy(bp, tcenv);
         bp1 += strlen(tcenv);
     }
@@ -343,7 +314,7 @@ tgetent(char *bp, const char *name) {
             free(buf.beg);
             if (malloc_size)
                 free(bp);
-            return 0;
+            return -1;
         }
 
         /* Free old `term' if appropriate.  */
@@ -354,8 +325,12 @@ tgetent(char *bp, const char *name) {
         if (malloc_size) {
             int offset1 = bp1 - bp, offset2 = tc_search_point - bp;
             malloc_size = offset1 + buf.size;
-            bp = (char *) xrealloc(bp, malloc_size);
-            termcap_name = (char *) xrealloc(bp, malloc_size);
+            bp = (char *) realloc(bp, malloc_size);
+            termcap_name = (char *) realloc(bp, malloc_size);
+            if (bp == NULL || termcap_name == NULL) {
+                __set_errno(ENOMEM);
+                return -1;
+            }
             bp1 = (char *) termcap_name + offset1;
             tc_search_point = (char *) termcap_name + offset2;
         }
@@ -379,11 +354,16 @@ tgetent(char *bp, const char *name) {
     close(fd);
     free(buf.beg);
 
-    if (malloc_size)
-        bp = (char *) xrealloc(bp, bp1 - bp + 1);
+    if (malloc_size) {
+        bp = (char *) realloc(bp, bp1 - bp + 1);
+        if (bp == NULL) {
+            __set_errno(ENOMEM);
+            return -1;
+        }
+    }
 
-    ret:
-    term_entry = bp;
+ret:
+    __clib4->term_entry = bp;
     return 1;
 }
 
@@ -496,7 +476,11 @@ gobble_line(int fd, register struct termcap_buffer *bufp, char *append_end) {
             if (bufp->full == bufp->size) {
                 bufp->size *= 2;
                 /* Add 1 to size to ensure room for terminating null.  */
-                tem = (char *) xrealloc(buf, bufp->size + 1);
+                tem = (char *) realloc(buf, bufp->size + 1);
+                if (tem == NULL) {
+                    __set_errno(ENOMEM);
+                    return NULL;
+                }
                 bufp->ptr = (bufp->ptr - buf) + tem;
                 append_end = (append_end - buf) + tem;
                 bufp->beg = buf = tem;

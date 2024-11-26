@@ -52,7 +52,7 @@ name_from_numeric(struct address buf[static 1], const char *name, int family) {
 
 static int
 name_from_hosts(struct address buf[static MAXADDRS], char canon[static 256], const char *name, int family) {
-    char line[512];
+    char line[512] = {0};
 
     size_t l = strlen(name);
     int cnt = 0, badfam = 0, have_canon = 0;

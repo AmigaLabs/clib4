@@ -10,6 +10,7 @@ int
 recv(int sockfd, void *buff, size_t nbytes, int flags) {
     struct fd *fd;
     int result = ERROR;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -29,7 +30,7 @@ recv(int sockfd, void *buff, size_t nbytes, int flags) {
         goto out;
     }
 
-    fd = __get_file_descriptor_socket(sockfd);
+    fd = __get_file_descriptor_socket(__clib4, sockfd);
     if (fd == NULL)
         goto out;
 
@@ -37,7 +38,7 @@ recv(int sockfd, void *buff, size_t nbytes, int flags) {
 
 out:
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

@@ -33,10 +33,6 @@
 /* A signal handler.  */
 typedef void (*handler_t)(int signal);
 
-/* Set of current actions.  If sa_handler for an entry is NULL, then
-   that signal is not currently handled by the sigaction handler.  */
-static struct sigaction volatile action_array[NSIG] /* = 0 */;
-
 /* Signal handler that is installed for signals.  */
 static void
 sigaction_handler(int sig) {
@@ -44,12 +40,13 @@ sigaction_handler(int sig) {
     sigset_t mask;
     sigset_t oldmask;
     int saved_errno = errno;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     SHOWVALUE(sig);
 
-    if (sig < 0 || NSIG <= sig || !action_array[sig].sa_handler) {
+    if (sig < 0 || NSIG <= sig || !__clib4->action_array[sig].sa_handler) {
         /* Unexpected situation; be careful to avoid recursive abort.  */
         if (sig == SIGABRT)
             signal(SIGABRT, SIG_DFL);
@@ -64,14 +61,15 @@ sigaction_handler(int sig) {
        asynchronous instance of the same signal occurring before we
        reinstall the handler will trigger the default handler; oh
        well.  */
-    handler = action_array[sig].sa_handler;
-    if ((action_array[sig].sa_flags & SA_RESETHAND) == 0)
+    handler = __clib4->action_array[sig].sa_handler;
+
+    if ((__clib4->action_array[sig].sa_flags & SA_RESETHAND) == 0)
         signal(sig, sigaction_handler);
     else
-        action_array[sig].sa_handler = NULL;
+        __clib4->action_array[sig].sa_handler = NULL;
     /* Block appropriate signals.  */
-    mask = action_array[sig].sa_mask;
-    if ((action_array[sig].sa_flags & SA_NODEFER) == 0)
+    mask = __clib4->action_array[sig].sa_mask;
+    if ((__clib4->action_array[sig].sa_flags & SA_NODEFER) == 0)
         sigaddset(&mask, sig);
     sigprocmask(SIG_BLOCK, &mask, &oldmask);
     /* Invoke the user's handler, then restore prior mask.  */
@@ -79,7 +77,7 @@ sigaction_handler(int sig) {
     handler(sig);
     saved_errno = errno;
     sigprocmask(SIG_SETMASK, &oldmask, NULL);
-    __set_errno(saved_errno);
+    __set_errno_r(__clib4, saved_errno);
 
     LEAVE();
 }
@@ -93,6 +91,7 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
     sigset_t mask;
     sigset_t oldmask;
     int saved_errno;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -101,7 +100,7 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
     SHOWPOINTER(oact);
 
     if (sig < 0 || NSIG <= sig || sig == SIGKILL || sig == SIGSTOP || (act && act->sa_handler == SIG_ERR)) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         RETURN(-1);
         return -1;
     }
@@ -123,8 +122,8 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
     sigprocmask(SIG_BLOCK, &mask, &oldmask);
 
     if (oact) {
-        if (action_array[sig].sa_handler)
-            *oact = action_array[sig];
+        if (__clib4->action_array[sig].sa_handler)
+            *oact = __clib4->action_array[sig];
         else {
             /* Safe to change the handler at will here, since all
                signals are currently blocked.  */
@@ -143,11 +142,11 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
         if (act->sa_handler == SIG_DFL || act->sa_handler == SIG_IGN) {
             if (signal(sig, act->sa_handler) == SIG_ERR)
                 goto failure;
-            action_array[sig].sa_handler = NULL;
+            __clib4->action_array[sig].sa_handler = NULL;
         } else {
             if (signal(sig, sigaction_handler) == SIG_ERR)
                 goto failure;
-            action_array[sig] = *act;
+            __clib4->action_array[sig] = *act;
         }
     }
 
@@ -159,7 +158,7 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact) {
 failure:
     saved_errno = errno;
     sigprocmask(SIG_SETMASK, &oldmask, NULL);
-    __set_errno(saved_errno);
+    __set_errno_r(__clib4, saved_errno);
 
     RETURN(-1);
     return -1;

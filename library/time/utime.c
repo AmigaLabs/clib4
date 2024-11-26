@@ -19,16 +19,15 @@ utime(const char *path_name, const struct utimbuf *times) {
     __check_abort_f(__clib4);
 
     if (path_name == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
     /* If a modification time is provided, convert it into the local
        DateStamp format, as used by the SetDate() function. */
     if (times != NULL) {
-        if (CANNOT __convert_time_to_datestamp(times->modtime, &ds))
-        {
-            __set_errno(EINVAL);
+        if (CANNOT __convert_time_to_datestamp(times->modtime, &ds)) {
+            __set_errno_r(__clib4, EINVAL);
             goto out;
         }
     } else {
@@ -41,7 +40,7 @@ utime(const char *path_name, const struct utimbuf *times) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
-            __set_errno(ENOENT);
+            __set_errno_r(__clib4, ENOENT);
             goto out;
         }
 
@@ -49,14 +48,14 @@ utime(const char *path_name, const struct utimbuf *times) {
             goto out;
 
         if (path_name_nti.is_root) {
-            __set_errno(EACCES);
+            __set_errno_r(__clib4, EACCES);
             goto out;
         }
     }
 
     status = SetDate((STRPTR) path_name, &ds);
     if (status == DOSFALSE) {
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 

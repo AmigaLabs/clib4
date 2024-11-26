@@ -19,15 +19,13 @@ fsync(int file_descriptor) {
 
     SHOWVALUE(file_descriptor);
 
-    __check_abort_f(__clib4);
-
     assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
     assert(__clib4->__fd[file_descriptor] != NULL);
     assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -35,14 +33,17 @@ fsync(int file_descriptor) {
 
     __fd_lock(fd);
 
-    if (__sync_fd(fd, 1) < 0) /* flush everything */
+    if (__sync_fd(fd, 1) < 0) { /* flush everything */
+        __fd_unlock(fd);
         goto out;
+    }
 
     result = OK;
 
+    __fd_unlock(fd);
+
 out:
 
-    __fd_unlock(fd);
     __stdio_unlock(__clib4);
 
     RETURN(result);

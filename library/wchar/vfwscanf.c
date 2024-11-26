@@ -101,10 +101,13 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
     char tmp[3 * sizeof(int) + 10];
     const wchar_t *set;
     size_t i = 0, k = 0;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    flockfile(f);
+    __check_abort_f(__clib4);
+
+    __flockfile_r(__clib4, f);
 
     fwide(f, 1);
 
@@ -113,22 +116,22 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
         if (iswspace(*p)) {
             while (iswspace(p[1]))
                 p++;
-            while (iswspace((c = __getc(f))))
+            while (iswspace((c = __getc(__clib4, f))))
                 pos++;
-            ungetc(c, f);
+            __ungetc_r(__clib4, c, f);
             continue;
         }
         if (*p != '%' || p[1] == '%') {
             if (*p == '%') {
                 p++;
-                while (iswspace((c = __getc(f))))
+                while (iswspace((c = __getc(__clib4, f))))
                     pos++;
             } else {
-                c = __getc(f);
+                c = __getc(__clib4, f);
             }
 
             if (c != *p) {
-                ungetc(c, f);
+                __ungetc_r(__clib4, c, f);
                 if (c < 0) {
                     goto input_fail;
                 }
@@ -224,14 +227,14 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
 
         if (t != 'n') {
             if (t != '[' && (t | 32) != 'c')
-                while (iswspace((c = __getc(f))))
+                while (iswspace((c = __getc(__clib4, f))))
                     pos++;
             else
-                c = __getc(f);
+                c = __getc(__clib4, f);
             if (c < 0) {
                 goto input_fail;
             }
-            ungetc(c, f);
+            __ungetc_r(__clib4, c, f);
         }
 
         switch (t) {
@@ -284,12 +287,12 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
                 if (alloc) {
                     k = t == 'c' ? width + 1U : 31;
                     if (size == SIZE_l) {
-                        wcs = malloc(k * sizeof(wchar_t));
+                        wcs = __malloc_r(__clib4, k * sizeof(wchar_t));
                         if (!wcs) {
                             goto alloc_fail;
                         }
                     } else {
-                        s = malloc(k);
+                        s = __malloc_r(__clib4, k);
                         if (!s) {
                             goto alloc_fail;
                         }
@@ -297,7 +300,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
                 }
 
                 while (width) {
-                    if ((c = __getc(f)) < 0)
+                    if ((c = __getc(__clib4, f)) < 0)
                         break;
                     if (in_set(set, c) == invert)
                         break;
@@ -331,7 +334,7 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
                     gotmatch = 1;
                 }
                 if (width) {
-                    ungetc(c, f);
+                    __ungetc_r(__clib4, c, f);
                     if (t == 'c' || !gotmatch) {
                         goto match_fail;
                     }
@@ -385,19 +388,19 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
             matches++;
     }
     if (0) {
-        fmt_fail:
-        alloc_fail:
-        input_fail:
+fmt_fail:
+alloc_fail:
+input_fail:
         if (!matches)
             matches--;
-        match_fail:
+match_fail:
         if (alloc) {
             free(s);
             free(wcs);
         }
     }
 
-    funlockfile(f);
+    __funlockfile_r(__clib4, f);
 
     RETURN(matches);
     return matches;

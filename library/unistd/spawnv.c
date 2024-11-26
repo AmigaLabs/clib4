@@ -14,6 +14,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#include "children.h"
+
 STATIC BOOL
 string_needs_quoting(const char *string, size_t len) {
     BOOL result = FALSE;
@@ -140,12 +142,12 @@ spawnv(int mode, const char *file, const char **argv) {
     }
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
-    if (parameter_string_len > _POSIX_ARG_MAX) {
-        __set_errno(E2BIG);
-        return ret;
-    }
+    // if (parameter_string_len > _POSIX_ARG_MAX) {
+    //     __set_errno(E2BIG);
+    //     return ret;
+    // }
 
-    arg_string = malloc(parameter_string_len + 1);
+    arg_string = __malloc_r(__clib4, parameter_string_len + 1);
     if (arg_string == NULL) {
         __set_errno(ENOMEM);
         return ret;
@@ -159,25 +161,40 @@ spawnv(int mode, const char *file, const char **argv) {
     /* Add a NUL, to be nice... */
     arg_string[arg_string_len] = '\0';
 
-    int pathlen = strlen(file) + strlen(arg_string) + 1;
     char finalpath[PATH_MAX] = {0};
+    char processName[NAMELEN] = {0};
     snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
+    snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
-    struct Process *me = (struct Process *) FindTask(NULL);
-    BPTR in  = mode == P_WAIT ? me->pr_COS : 0;
-
+    struct Process *me = __clib4->self;
+    BPTR in  = mode == P_WAIT ? me->pr_CIS : 0;
+    BPTR out  = mode == P_WAIT ? me->pr_COS : 0;
+    D(("Launching [%s]", finalpath));
     ret = SystemTags(finalpath,
-                     SYS_Input, in,
-                     SYS_Output, 0,
+                     SYS_Input,     in,
+                     SYS_Output,    out,
+                     SYS_Error,     out,
                      SYS_UserShell, TRUE,
-                     SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
+                     SYS_Asynch,    mode == P_WAIT ? FALSE : TRUE,
+                     NP_EntryCode,  spawnedProcessEnter,
+                     NP_ExitCode,   spawnedProcessExit,
+                     NP_Name,       strdup(processName),
+                     NP_Child,      TRUE,
                      TAG_DONE);
-
     if (ret != 0) {
         /* SystemTags failed. Clean up file handles */
-        if (in != 0) Close(in);
+        if (in != 0)
+            Close(in);
         errno = __translate_io_error_to_errno(IoErr());
     }
-
+    else {
+        /*
+         * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
+         * just after SystemTags. In this case spawnv will return pid
+         */
+        if (mode == P_NOWAIT) {
+            ret = IoErr(); // This is our ProcessID;
+        }
+    }
     return ret;
 }

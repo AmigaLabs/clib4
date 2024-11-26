@@ -72,7 +72,7 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Werror \
+    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Werror \
      # -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
@@ -106,7 +106,8 @@ INCLUDES   := -I$(LIB_DIR)/include \
 				-I$(LIB_DIR)/termios \
 				-I$(LIB_DIR)/time \
 				-I$(LIB_DIR)/unistd \
-				-I$(LIB_DIR)/wchar
+				-I$(LIB_DIR)/wchar \
+				-I$(LIB_DIR)/wmem
 
 SHARED   := $(if $(SHARED),$(SHARED),yes)
 STATIC   := $(if $(STATIC),$(STATIC),yes)
@@ -139,6 +140,8 @@ ifdef SPE
                 -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions \
                 -fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
     AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mfloat-gprs=double $(CMATH) -Wno-overflow
+    CFLAGS := $(filter-out -Wno-cast-function-type, $(CFLAGS))
+    CFLAGS_N := $(filter-out -Wno-cast-function-type, $(CFLAGS_N))
 endif
 
 ifdef PROFILE
@@ -362,7 +365,7 @@ endef
 define COMPILE_ALTIVEC_REG
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rAssembling altivec \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) -maltivec -mabi=altivec -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) -maltivec -mabi=altivec -mcpu=7450 -mtune=7450 -falign-loops=16 -falign-functions=16 -falign-labels=16 -falign-jumps=16 -mvrsave -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SPE_REG

@@ -61,14 +61,14 @@ openat(int fd, const char *filename, int flags, ...) {
         }
 
         /* Get the file descriptor */
-        struct fd *fd1 = __get_file_descriptor(fd);
+        struct fd *fd1 = __get_file_descriptor(__clib4, fd);
         if (fd1 == NULL) {
             __set_errno(EBADF);
             goto out;
         }
 
         /* Create file name */
-        char filename_complete[MAXPATHLEN + 1];
+        char filename_complete[MAXPATHLEN + 1] = {0};
 
         __fd_lock(fd1);
 

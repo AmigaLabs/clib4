@@ -122,6 +122,7 @@ extern int __secs_to_tm(long long t, struct tm *tm);
 extern long long __tm_to_secs(const struct tm *tm);
 extern long long __year_to_secs(long long year, int *is_leap);
 extern int __month_to_secs(int month, int is_leap);
+extern int __setitimer(int which, const struct itimerval *new_value, struct itimerval *old_value);
 
 static inline void
 fix_datestamp(struct DateStamp *ds) {

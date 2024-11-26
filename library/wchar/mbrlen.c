@@ -7,7 +7,7 @@
 #endif /* _WCHAR_HEADERS_H */
 
 size_t
-mbrlen(const char *restrict s, size_t n, mbstate_t *restrict ps) {
+mbrlen(const char *s, size_t n, mbstate_t *ps) {
     struct _clib4 *__clib4 = __CLIB4;
 
     if (ps == NULL) {

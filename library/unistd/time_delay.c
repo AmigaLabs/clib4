@@ -25,8 +25,9 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     struct TimeRequest *tr;
     ULONG wait_mask;
     int result = 0;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     SHOWMSG("Clearing Signals");
     SetSignal(0, SIGB_SINGLE | SIGBREAKF_CTRL_C | SIGBREAKF_CTRL_E);
@@ -91,7 +92,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     SHOWMSG("Freeing Message Port");
     FreeSysObject(ASOT_PORT, mp);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return result;

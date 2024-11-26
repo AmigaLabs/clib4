@@ -101,7 +101,7 @@ system(const char *command) {
             }
 
             /* Now put it all together again */
-            command_copy = malloc(1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
+            command_copy = __malloc_r(__clib4, 1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
             if (command_copy == NULL) {
                 __set_errno(ENOMEM);
 
@@ -128,7 +128,7 @@ system(const char *command) {
         /* Push all currently buffered output towards the file handles,
            in case the program to be launched writes to these files
            or the console, too. */
-        __flush_all_files(-1);
+        __flush_all_files(__clib4, -1);
 
         result = SystemTagList((STRPTR) command, (struct TagItem *) system_tags);
     }
@@ -136,7 +136,7 @@ system(const char *command) {
 out:
 
     if (command_copy != NULL)
-        free(command_copy);
+        __free_r(__clib4, command_copy);
 
     RETURN(result);
     return (result);

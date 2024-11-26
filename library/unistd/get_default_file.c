@@ -17,7 +17,7 @@ __get_default_file(int file_descriptor, long *file_ptr) {
     assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
     assert(file_ptr != NULL);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -27,7 +27,7 @@ __get_default_file(int file_descriptor, long *file_ptr) {
 
     (*file_ptr) = (long) __resolve_fd_file(fd);
 
-    result = 0;
+    result = OK;
 
 out:
 

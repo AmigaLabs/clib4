@@ -1,11 +1,12 @@
 /*
- * $Id: clib4_io.h,v 1.4 2006-11-16 14:39:23 clib4devs Exp $
+ * $Id: clib4_io.h,v 1.5 2023-07-04 14:39:23 clib4devs Exp $
 */
 
-#ifndef	_SYS_CLIB4_IO_H
-#define	_SYS_CLIB4_IO_H
+#ifndef	__CLIB4_IO_H__
+#define	__CLIB4_IO_H__
 
 #include <features.h>
+#include <dos.h>
 
 #include <sys/types.h>
 
@@ -132,7 +133,7 @@ struct _fd
    means that you have to be absolutely certain that the file will not be
    closed while you are still looking at it. This function can return
    NULL if the file descriptor you provided is not valid. */
-extern struct _fd * __get_fd(int file_descriptor);
+extern struct _fd * __get_fd(struct _clib4 *__clib4, int file_descriptor);
 
 /* Replaces the action callback function and (optionally) returns the old
    function pointer; returns 0 for success and -1 for failure if you
@@ -148,4 +149,4 @@ extern int __change_fd_user_data(int file_descriptor,void * new_user_data,void *
 
 __END_DECLS
 
-#endif /* _SYS_CLIB4_IO_H */
+#endif /* __CLIB4_IO_H__ */

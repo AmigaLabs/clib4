@@ -19,7 +19,7 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         result = EBADF;
         goto out;
@@ -31,8 +31,8 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
         BPTR file;
 
         file = __resolve_fd_file(fd);
-        if (file == BZERO || NOT IsInteractive(file))
-        {
+        if (file == BZERO || NOT IsInteractive(file)) {
+            __fd_unlock(fd);
             result = ENOTTY;
             goto out;
         }
@@ -52,6 +52,7 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
     }
 
     if (buflen < strlen(tty_file_name) + 1) { /* XXX Should this be _POSIX_PATH_MAX? */
+        __fd_unlock(fd);
         result = ERANGE;
         goto out;
     }
@@ -60,9 +61,10 @@ ttyname_r(int file_descriptor, char *name, size_t buflen) {
 
     result = OK;
 
+    __fd_unlock(fd);
+
 out:
 
-    __fd_unlock(fd);
     __stdio_unlock(__clib4);
 
     RETURN(result);

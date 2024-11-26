@@ -17,13 +17,13 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
 
     /* Check the supported flags.  */
     if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME | CLOCK_MONOTONIC_RAW)) != 0) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         RETURN(-1);
         return -1;
     }
 
     if (__clib4->__timer_busy) {
-        __set_errno(EAGAIN);
+        __set_errno_r(__clib4, EAGAIN);
         RETURN(-1);
         return -1;
     }

@@ -10,9 +10,14 @@
 
 int
 isspace(int c) {
+    struct _clib4 *__clib4 = __CLIB4;
+    return __isspace_r(__clib4, c);
+}
+
+int
+__isspace_r(struct _clib4 *__clib4, int c) {
     DECLARE_LOCALEBASE();
     int result;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWVALUE(c);

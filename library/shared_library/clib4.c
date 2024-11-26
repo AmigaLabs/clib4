@@ -81,18 +81,20 @@
 #include <sys/utsname.h>
 #include <sys/uio.h>
 
-#include "dos.h"
+#include "../dos.h"
 #include "c.lib_rev.h"
 
 #include "clib4.h"
-#include "debug.h"
 #include "uuid.h"
 
 #include "interface.h"
 
-#ifndef _SOCKET_HEADERS_H
-#include "socket_headers.h"
-#endif /* _SOCKET_HEADERS_H */
+/* This is variable defines where to start to bind unix local ports using inet addresses */
+struct UnixSocket {
+    int            port;
+    struct fd     *fd;
+    char           name[PATH_MAX];
+};
 
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
@@ -114,6 +116,7 @@ struct Library *__UtilityBase = 0;
 struct UtilityIFace *__IUtility = 0;
 
 struct Clib4IFace *IClib4 = 0;
+struct Clib4Library *Clib4Base = 0;
 
 const struct Resident RomTag;
 
@@ -122,6 +125,19 @@ const struct Resident RomTag;
 
 static struct TimeRequest *openTimer(uint32 unit);
 static void closeTimer(struct TimeRequest *tr);
+static int32 getDebugLevel(struct ExecBase *sysbase);
+
+extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
+extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
+
+#if DEBUG == 1
+#undef D
+#define D(x) (x)
+#undef DebugPrintF
+#define bug IExec->DebugPrintF
+#else
+#define D(x) ;
+#endif
 
 int32
 _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
@@ -169,16 +185,16 @@ static void closeLibraries() {
     }
 }
 
-struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
+struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
     if (version > VERSION) {
         return NULL;
     }
 
-    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
+    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
     if (!IClib4) {
-        D(("IClib4 is NULL. Get interface"));
+        D(bug("(libOpen) IClib4 is NULL. Get interface\n"));
         IClib4 = (struct Clib4IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
-        D(("DropInterface"));
+        D(bug("(libOpen) DropInterface\n"));
         IExec->DropInterface((struct Interface *)IClib4);
     }
 
@@ -188,6 +204,7 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
         struct Clib4Node c2n;
+        char varbuf[8] = {0};
         char uuid[UUID4_LEN + 1] = {0};
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
         uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
@@ -197,15 +214,18 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
         c2n.pPid = ppid;
         c2n.errNo = 0;
         c2n.undo = 0;
-        D(("c2n.pid = %ld", c2n.pid));
-        D(("c2n.pPid = %ld", c2n.pPid));
-        D(("c2n.uuid = %s", c2n.uuid));
+        /* Initialize processes hashmap */
+        c2n.spawnedProcesses = hashmap_new(sizeof(struct Clib4Children), 0, 0, 0, clib4IntHash, clib4ProcessCompare, NULL, NULL);
+        D(bug("(libOpen) c2n.pid = %ld\n", c2n.pid));
+        D(bug("(libOpen) c2n.pPid = %ld\n", c2n.pPid));
+        D(bug("(libOpen) c2n.uuid = %s\n", c2n.uuid));
         hashmap_set(res->children, &c2n);
 
+        D(bug("(libOpen) Enabling clib4 optimizations\n"));
         switch (res->cpufamily) {
 #ifdef __SPE__
             case CPUFAMILY_E500:
-                D(("Using SPE family functions"));
+                D(bug("(libOpen) Using SPE family functions\n"));
                 IClib4->setjmp = setjmp_spe;
                 IClib4->longjmp = longjmp_spe;
                 IClib4->_longjmp = _longjmp_spe;
@@ -219,7 +239,7 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
                 break;
 #endif
             case CPUFAMILY_4XX:
-                D(("Using 4XX family functions"));
+                D(bug("(libOpen) Using 4XX family functions\n"));
                 IClib4->strlen = __strlen440;
                 IClib4->strcpy = __strcpy440;
                 IClib4->strcmp = __strcmp440;
@@ -231,16 +251,21 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
                 break;
             default:
                 if (res->altivec) {
-                    D(("Using Altivec setjmp family functions"));
+                    D(bug("(libOpen) Using Altivec family functions\n"));
                     IClib4->setjmp = setjmp_altivec;
                     IClib4->longjmp = longjmp_altivec;
                     IClib4->strcpy = vec_strcpy;
                     IClib4->memcmp = vec_memcmp;
                     IClib4->bzero = vec_bzero;
                     IClib4->bcopy = vec_bcopy;
-                }
-                else {
-                    D(("Using default family functions"));
+#ifdef SLOWER_ALTIVEC_FUNCTIONS
+                    IClib4->memchr = vec_memchr;
+                    IClib4->strchr = vec_strchr;
+#else
+                    IClib4->strchr = glibc_strchr; // glibc_strchr is faster than ppc one on qemu/G4
+#endif
+                } else {
+                    D(bug("(libOpen) Using default family functions\n"));
                 }
         }
     }
@@ -274,7 +299,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
         IExec->FreeVec(res);
     }
 
-    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
+    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
     if (libBase->libNode.lib_OpenCnt) {
         libBase->libNode.lib_Flags |= LIBF_DELEXP;
         return result;
@@ -290,7 +315,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 }
 
 BPTR libClose(struct LibraryManagerInterface *Self) {
-    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
+    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
 
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
@@ -300,6 +325,10 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
             if (node->pid == pid) {
+                /* Remove spawnedProcess hashmap */
+                if (node->spawnedProcesses != NULL) {
+                    hashmap_free(node->spawnedProcesses);
+                }
                 if (node->undo)
                     IExec->FreeVec(node->undo);
                 hashmap_delete(res->children, node);
@@ -379,6 +408,12 @@ unixSocketCompare(const void *a, const void *b, void *udata) {
 }
 
 uint64_t
+clib4IntHash(const void *item, uint64_t seed0, uint64_t seed1) {
+    return hashmap_xxhash3(item, sizeof(int), seed0, seed1);
+}
+
+
+uint64_t
 clib4NodeHash(const void *item, uint64_t seed0, uint64_t seed1) {
     const struct Clib4Node *node = item;
     return hashmap_xxhash3(node->uuid, strlen(node->uuid), seed0, seed1);
@@ -388,10 +423,17 @@ int
 clib4NodeCompare(const void *a, const void *b, void *udata) {
     const struct Clib4Node *ua = a;
     const struct Clib4Node *ub = b;
-    return ua->uuid == ub->uuid;
+    return strcmp(ua->uuid, ub->uuid);
 }
 
-struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
+int
+clib4ProcessCompare(const void *a, const void *b, void *udata) {
+    const struct Clib4Children *ua = a;
+    const struct Clib4Children *ub = b;
+    return ua->pid - ub->pid;
+}
+
+struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct ExecIFace *const iexec) {
     libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
     libBase->libNode.lib_Node.ln_Pri = LIBPRI;
     libBase->libNode.lib_Node.ln_Name = LIBNAME;
@@ -467,17 +509,22 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
             res->resource.lib_Node.ln_Type = NT_RESOURCE;
 
             iexec->InitSemaphore(&res->semaphore);
+            res->debugLevel = getDebugLevel(SysBase);
+            D(bug("(libInit) Current Exec debug level: %ld\n", res->debugLevel));
+            /* Initialize clib4 children hashmap */
             res->children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
             /* Initialize unix sockets hashmap */
-            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL,
-                                            NULL);
+            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
+
             /* Initialize fallback clib4 reent structure */
             res->fallbackClib = (struct _clib4 *) iexec->AllocVecTags(sizeof(struct _clib4),
                                                                       AVT_Type, MEMF_SHARED,
                                                                       AVT_ClearWithValue, 0,
                                                                       TAG_DONE);
-            reent_init(res->fallbackClib);
+            reent_init(res->fallbackClib, TRUE);
+            res->fallbackClib->self = (struct Process *) IExec->FindTask(NULL);
             res->fallbackClib->__check_abort_enabled = TRUE;
+            res->fallbackClib->__fully_initialized = TRUE;
 
             /* Init SYSV structures */
             IPCMapInit(&res->shmcx.keymap);
@@ -499,9 +546,11 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
         }
     }
 
+    Clib4Base = libBase;
+
     return libBase;
 
-    out:
+out:
     /* if we jump in out we need to close all libraries and return NULL */
     closeLibraries();
 
@@ -549,7 +598,7 @@ static uint32 libInterfaces[] = {
 
 /* CreateLibrary tag list */
 static struct TagItem libCreateTags[] = {
-        {CLT_DataSize,   (uint32)(sizeof(struct Clib4Base))},
+        {CLT_DataSize,   (uint32)(sizeof(struct Clib4Library))},
         {CLT_Interfaces, (uint32) libInterfaces},
         {CLT_InitFunc,   (uint32) libInit},
         {TAG_DONE,       0}
@@ -581,6 +630,19 @@ library_start(char *argstr,
 }
 
 /************** STATIC FUNCTIONS ***********************/
+static int32 getDebugLevel(struct ExecBase *sysbase) {
+    struct ExecIFace *iexec = (APTR) sysbase->MainInterface;
+    int32  debugLevel = 0;
+
+    struct DebugIFace *idebug = (struct DebugIFace *) iexec->GetInterface(&sysbase->LibNode, "debug", 1, NULL);
+
+    if (idebug) {
+        debugLevel = idebug->GetDebugLevel();
+        iexec->DropInterface((struct Interface *) idebug);
+    }
+    return debugLevel;
+}
+
 static struct TimeRequest *openTimer(uint32 unit) {
     struct MsgPort *mp;
     struct TimeRequest *tr;

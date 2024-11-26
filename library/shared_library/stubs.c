@@ -23,6 +23,7 @@ Clib4Call(__translate_amiga_to_unix_path_name, 88);
 Clib4Call(__translate_unix_to_amiga_path_name, 92);
 //Clib4Call(__restore_path_name, 96);
 Clib4Call(__print_termination_message, 100);
+Clib4Call(__get_default_file, 104);
 
 /* Functions defined stubs starts here */
 Clib4Call(argz_create, 116);
@@ -1099,3 +1100,21 @@ Clib4Call(__cxa_finalize, 4344);
 Clib4Call(__get_timezone, 4348);
 Clib4Call(__get_daylight, 4352);
 Clib4Call(__get_tzname, 4356);
+
+Clib4Call(wait, 4360);
+Clib4Call(waitpid, 4364);
+Clib4Call(spawnvpe, 4368);
+
+Clib4Call(waitpoll, 4372);
+
+Clib4Call(__get_tc_pc, 4376);
+Clib4Call(__get_tc_ospeed, 4380);
+Clib4Call(__get_tc_up, 4384);
+Clib4Call(__get_tc_bc, 4388);
+
+// Clib4Call(spawnvpe_callback_UNUSED, 4392);
+
+Clib4Call(sigsuspend, 4396);
+Clib4Call(spawnve, 4400);
+Clib4Call(sigpause, 4404);
+Clib4Call(sigwait, 4408);

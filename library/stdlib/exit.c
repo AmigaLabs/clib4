@@ -45,7 +45,7 @@ _exit(int return_code) {
         }
 
         /* Dump all currently unwritten data, especially to the console. */
-        __flush_all_files(-1);
+        __flush_all_files(__clib4, -1);
 
         LEAVE();
 

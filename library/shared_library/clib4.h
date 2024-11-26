@@ -4,10 +4,13 @@
 #include <proto/dos.h>
 #include <proto/exec.h>
 
+#include <stdio.h>
 #include <setjmp.h>
 #include "map.h"
 #include "uuid.h"
 #include "ipc_headers.h"
+
+#include <stdio.h>
 
 #define RESOURCE_NAME "clib4.resource"
 
@@ -21,10 +24,10 @@ extern void _longjmp_spe(struct __jmp_buf_tag, int);
 extern int _setjmp_spe(struct __jmp_buf_tag);                                                                                                 /* 1796 */
 
 struct Clib4Resource {
-    struct Library          resource;       /* must be first */
-    uint32                  size;           /* for struct validation only */
-    struct SignalSemaphore  semaphore;      /* for list arbitration */
-    struct hashmap         *children;       /* list of parent nodes */
+    struct Library          resource;           /* must be first */
+    uint32                  size;               /* for struct validation only */
+    struct SignalSemaphore  semaphore;          /* for list arbitration */
+    struct hashmap         *children;           /* list of parent nodes */
     struct hashmap         *uxSocketsMap;
     struct _clib4          *fallbackClib;
     /* SysVIPC fields */
@@ -45,6 +48,7 @@ struct Clib4Resource {
     } semcx;
     uint32 altivec;
     uint32 cpufamily;
+    int32  debugLevel;
 };
 
 struct Clib4Node {
@@ -54,20 +58,31 @@ struct Clib4Node {
     /* SysVIPC fields */
     struct UndoInfo *undo;
     int32            errNo;
+    struct hashmap  *spawnedProcesses;   /* list of spawned processes */
 };
 
-struct Clib4Base {
+struct Clib4Library {
     struct Library libNode;
     uint16 pad;
     BPTR SegList;
 };
 
+struct Clib4Children {
+    uint32  pid;        /* the process PID */
+    gid_t   groupId;    /* Group ID of process */
+    uint32  returnCode; /* the return code of process */
+    FILE    *pipe;
+};
+
 int libReserved(void);
 uint32 libRelease(struct LibraryManagerInterface *Self);
 uint32 libObtain(struct LibraryManagerInterface *Self);
-struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version);
-struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec);
+struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 version);
+struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct ExecIFace *const iexec);
 BPTR libExpunge(struct LibraryManagerInterface *Self);
+
+uint64_t clib4IntHash(const void *item, uint64_t seed0, uint64_t seed1);
+int clib4ProcessCompare(const void *a, const void *b, void *udata);
 
 static void _start_ctors(void (*__CTOR_LIST__[])(void));
 static void _start_dtors(void (*__DTOR_LIST__[])(void));

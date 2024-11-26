@@ -9,7 +9,7 @@
 #include <uchar.h>
 
 size_t
-c16rtomb(char *restrict s, char16_t c16, mbstate_t *restrict ps) {
+c16rtomb(char *s, char16_t c16, mbstate_t *ps) {
     static unsigned internal_state;
     if (!ps) ps = (void *) &internal_state;
     unsigned *x = (unsigned *) ps;

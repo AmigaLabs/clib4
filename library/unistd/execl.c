@@ -28,7 +28,7 @@ execl(const char *path, const char *arg0, ...) {
 
     /* Allocate enough memory for the entire argument list
        plus the terminating NULL */
-    argv = (char **) malloc(sizeof(*argv) * (argc + 1));
+    argv = (char **) __malloc_r(__clib4, sizeof(*argv) * (argc + 1));
     if (argv == NULL) {
         __set_errno(ENOMEM);
         goto out;
@@ -55,7 +55,7 @@ execl(const char *path, const char *arg0, ...) {
 out:
 
     if (argv != NULL)
-        free(argv);
+        __free_r(__clib4, argv);
 
     return (result);
 }

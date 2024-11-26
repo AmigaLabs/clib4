@@ -12,7 +12,6 @@ BOOL __is_valid_iob(struct _clib4 *__clib4, struct iob *iob) {
     BOOL result = FALSE;
 
     if (iob == NULL) {
-        RETURN(result);
         return result;
     }
 
@@ -21,7 +20,6 @@ BOOL __is_valid_iob(struct _clib4 *__clib4, struct iob *iob) {
         result = TRUE;
     } else {
         __stdio_lock(__clib4);
-        SHOWPOINTER(__clib4->__iob[iob->iob_SlotNumber]);
 
         if (__clib4->__num_iob > 0 && 0 <= iob->iob_SlotNumber && iob->iob_SlotNumber < __clib4->__num_iob && __clib4->__iob[iob->iob_SlotNumber] == iob)
             result = TRUE;

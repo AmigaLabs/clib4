@@ -14,7 +14,8 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-int utimensat(int fd, const char *path, const struct timespec times[2], int flags) {
+int
+utimensat(int fd, const char *path, const struct timespec times[2], int flags) {
     ENTER();
 
     SHOWVALUE(fd);
@@ -35,7 +36,7 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
      * EFAULT times pointed to an invalid address; or, dirfd was AT_FDCWD, and pathname is NULL or an invalid address.
     */
     if (fd == AT_FDCWD && path == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -43,7 +44,7 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
      * EINVAL pathname is NULL, dirfd is not AT_FDCWD, and flags contains AT_SYMLINK_NOFOLLOW.
      */
     if (path == NULL && fd != AT_FDCWD && FLAG_IS_SET(flags, AT_SYMLINK_NOFOLLOW)) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -51,7 +52,7 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
      * ENAMETOOLONG (utimensat()) pathname is too long.
      */
     if (path != NULL && strlen(path) > PATH_MAX) {
-        __set_errno(ENAMETOOLONG);
+        __set_errno_r(__clib4, ENAMETOOLONG);
         goto out;
     }
 
@@ -94,17 +95,17 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
             if (strchr(path, ':') != NULL)
                 absolute = TRUE;
         }
-        struct fd *fildes = __get_file_descriptor(fd);
+        struct fd *fildes = __get_file_descriptor(__clib4, fd);
         /*
          * EBADF  (utimensat()) pathname is relative but dirfd is neither AT_FDCWD nor a valid file descriptor.
          */
         if (!absolute && (fd != AT_FDCWD && fildes == NULL)) {
-            __set_errno(EBADF);
+            __set_errno_r(__clib4, EBADF);
             goto out;
         }
         /* If fd = AT_FDCWD but we get an absolute path return an error */
         else if (absolute && fd == AT_FDCWD) {
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             goto out;
         }
         /* Set date */
@@ -115,21 +116,21 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
         struct ExamineData *dh;
         char *buffer = calloc(PATH_MAX + 1, 1);
         if (!buffer) {
-            __set_errno(ENOMEM);
+            __set_errno_r(__clib4, ENOMEM);
             goto out;
         }
 
-        struct fd *fildes = __get_file_descriptor(fd);
+        struct fd *fildes = __get_file_descriptor(__clib4, fd);
         if (fildes == NULL) {
-            free(buffer);
-            __set_errno(EBADF);
+            __free_r(__clib4, buffer);
+            __set_errno_r(__clib4, EBADF);
             goto out;
         }
 
         dh = ExamineObjectTags(EX_FileHandleInput, fildes->fd_File, TAG_DONE);
         if (dh == NULL) {
-            free(buffer);
-            __set_errno(EBADF);
+            __free_r(__clib4, buffer);
+            __set_errno_r(__clib4, EBADF);
             goto out;
         }
 
@@ -168,7 +169,7 @@ int utimensat(int fd, const char *path, const struct timespec times[2], int flag
             if (SetDate(buffer, &ds0))
                 result = 0;
         }
-        free(buffer);
+        __free_r(__clib4, buffer);
     }
 
 out:

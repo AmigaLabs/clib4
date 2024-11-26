@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_record_locking.c,v 1.20 2021-01-31 14:39:23 clib4devs Exp $
+ * $Id: stdio_record_locking.c,v 1.21 2024-07-06 14:39:23 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -52,7 +52,7 @@ struct LockedRegionNode {
 
 static struct FileLockSemaphore *FileLockSemaphore;
 static void release_file_lock_semaphore(struct FileLockSemaphore *fls);
-static struct FileLockSemaphore *obtain_file_lock_semaphore(BOOL shared);
+static struct FileLockSemaphore *obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared);
 static void remove_locked_region_node(struct FileLockSemaphore *fls, struct fd *fd, _off64_t start, _off64_t stop, _off64_t original_length);
 static void delete_locked_region_node(struct LockedRegionNode *lrn);
 static long create_locked_region_node(struct LockedRegionNode **result_ptr);
@@ -61,7 +61,7 @@ static long create_file_lock_node(struct fd *fd, struct FileLockNode **result_pt
 static long find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_handle, struct FileLockNode **result_ptr);
 static long find_file_lock_node_by_drawer_and_name(struct FileLockSemaphore *fls, BPTR dir_lock, STRPTR file_name, struct FileLockNode **result_ptr);
 static struct LockedRegionNode *find_colliding_region(struct FileLockNode *fln, _off64_t start, _off64_t stop, BOOL shared);
-static void cleanup_locked_records(struct fd *fd);
+static void cleanup_locked_records(struct _clib4 *__clib4, struct fd *fd);
 
 static void release_file_lock_semaphore(struct FileLockSemaphore *fls) {
     ENTER();
@@ -75,9 +75,8 @@ static void release_file_lock_semaphore(struct FileLockSemaphore *fls) {
 }
 
 static struct FileLockSemaphore *
-obtain_file_lock_semaphore(BOOL shared) {
+obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared) {
     struct FileLockSemaphore *result = NULL;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -227,7 +226,10 @@ delete_locked_region_node(struct LockedRegionNode *lrn) {
 
     SHOWPOINTER(lrn);
 
-    FreeVec(lrn);
+    if (lrn) {
+        FreeVec(lrn);
+        lrn = NULL;
+    }
 
     LEAVE();
 }
@@ -267,8 +269,8 @@ delete_file_lock_node(struct FileLockNode *fln) {
 
     if (fln != NULL) {
         UnLock(fln->fln_FileParentDir);
-
         FreeVec(fln);
+        fln = NULL;
     }
 
     LEAVE();
@@ -305,7 +307,7 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
         goto out;
     }
 
-    fln->fln_FileParentDir = __safe_parent_of_file_handle(fd->fd_File);
+    fln->fln_FileParentDir = ParentOfFH(fd->fd_File);
     if (fln->fln_FileParentDir == BZERO) {
         SHOWMSG("couldn't get parent directory");
 
@@ -407,7 +409,7 @@ find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_hand
      * name. These will be compared against the
      * global file lock data.
      */
-    parent_dir = __safe_parent_of_file_handle(file_handle);
+    parent_dir = ParentOfFH(file_handle);
     if (parent_dir == BZERO) {
         SHOWMSG("couldn't get parent directory");
 
@@ -484,7 +486,7 @@ find_colliding_region(struct FileLockNode *fln, _off64_t start, _off64_t stop, B
 
 
 static void
-cleanup_locked_records(struct fd *fd) {
+cleanup_locked_records(struct _clib4 *__clib4, struct fd *fd) {
     ENTER();
 
     assert(fd != NULL);
@@ -496,7 +498,7 @@ cleanup_locked_records(struct fd *fd) {
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_LOCKED)) {
         struct FileLockSemaphore *fls;
 
-        fls = obtain_file_lock_semaphore(FALSE);
+        fls = obtain_file_lock_semaphore(__clib4, FALSE);
         if (fls != NULL) {
             BPTR file_handle = fd->fd_File;
             struct FileLockNode *which_lock = NULL;
@@ -549,7 +551,7 @@ cleanup_locked_records(struct fd *fd) {
 }
 
 int
-__handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr) {
+__handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct fd *fd, int *error_ptr) {
     struct FileLockSemaphore *fls = NULL;
     BPTR file_handle = fd->fd_File;
     struct LockedRegionNode *lrn = NULL;
@@ -565,7 +567,6 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
     _off64_t start = 0;
     _off64_t len = 0;
     _off64_t stop;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -714,7 +715,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
     if (l->l_type == F_UNLCK) {
         SHOWMSG("F_UNLCK");
 
-        fls = obtain_file_lock_semaphore(FALSE);
+        fls = obtain_file_lock_semaphore(__clib4, FALSE);
         if (fls == NULL) {
             SHOWMSG("couldn't obtain file locking semaphore");
             (*error_ptr) = EBADF;
@@ -741,7 +742,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
             goto out;
         }
 
-        parent_dir = __safe_parent_of_file_handle(file_handle);
+        parent_dir = ParentOfFH(file_handle);
         if (parent_dir == BZERO) {
             SHOWMSG("couldn't get a lock on the file's parent directory");
 
@@ -775,7 +776,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
         locked = FALSE;
 
         do {
-            fls = obtain_file_lock_semaphore(FALSE);
+            fls = obtain_file_lock_semaphore(__clib4, FALSE);
             if (fls == NULL) {
                 SHOWMSG("couldn't obtain file locking semaphore");
                 (*error_ptr) = EBADF;
@@ -888,7 +889,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
         lrn->lrn_Length = original_len;
         lrn->lrn_Shared = shared;
 
-        fls = obtain_file_lock_semaphore(FALSE);
+        fls = obtain_file_lock_semaphore(__clib4, FALSE);
         if (fls == NULL) {
             SHOWMSG("couldn't obtain file locking semaphore");
             (*error_ptr) = EBADF;
@@ -937,7 +938,7 @@ __handle_record_locking(int cmd, struct flock *l, struct fd *fd, int *error_ptr)
 
         SHOWMSG("F_GETLK");
 
-        fls = obtain_file_lock_semaphore(TRUE);
+        fls = obtain_file_lock_semaphore(__clib4, TRUE);
         if (fls == NULL) {
             SHOWMSG("couldn't obtain file locking semaphore");
             (*error_ptr) = EBADF;

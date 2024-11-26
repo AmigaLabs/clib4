@@ -69,11 +69,11 @@ tempnam(const char *dir, const char *pfx) {
     length = strlen(dir) + strlen(prefix) + (4 * sizeof(int)) + 2 + 1;
 
     if (length >= PATH_MAX) {
-        __set_errno(ENAMETOOLONG);
+        __set_errno_r(__clib4, ENAMETOOLONG);
         return 0;
     }
 
-    filename = malloc(length);
+    filename = __malloc_r(__clib4, length);
     if (filename) {
         int r = rand();
         char string[7] = {0};

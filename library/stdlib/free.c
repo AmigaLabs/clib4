@@ -14,11 +14,9 @@
 
 #include <malloc.h>
 
-#undef free
-
 void
-free(void *ptr) {
-    struct _clib4 *__clib4 = __CLIB4;
+__free_r(struct _clib4 *__clib4, void *ptr) {
+    __memory_lock(__clib4);
 
     BOOL found = FALSE;
     struct MemalignEntry *e = NULL;
@@ -30,8 +28,6 @@ free(void *ptr) {
         }
     }
 
-    __memory_lock(__clib4);
-
     if (found) {
         /* Free memory */
         FreeVec(e->me_Exact);
@@ -41,8 +37,15 @@ free(void *ptr) {
         ItemPoolFree(__clib4->__memalign_pool, e);
         e = NULL;
     } else {
-        wof_free(__clib4->__wof_allocator, ptr);
+        wmem_free(__clib4->__wmem_allocator, ptr);
     }
 
     __memory_unlock(__clib4);
+}
+
+void
+free(void *ptr) {
+    struct _clib4 *__clib4 = __CLIB4;
+
+    return __free_r(__clib4, ptr);
 }

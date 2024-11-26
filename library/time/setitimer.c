@@ -42,24 +42,20 @@ void killitimer(void) {
 };
 
 int
-setitimer(int which, const struct itimerval *new_value, struct itimerval *old_value) {
+__setitimer(int which, const struct itimerval *new_value, struct itimerval *old_value) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
     struct itimer _itimer;
 
-    if (which < ITIMER_REAL || which > ITIMER_PROF) {
-        __set_errno(EINVAL);
-        return -1;
-    }
-
     if (new_value == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         return -1;
     }
 
     _itimer.which = which;
 
     switch (which) {
+        case -1:
         case ITIMER_REAL:
             if (old_value != NULL) {
                 /* Store the current time value in old_value */
@@ -90,7 +86,7 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
                             NP_CloseOutput, TRUE,
                             TAG_END);
                     if (!__clib4->tmr_real_task) {
-                        __set_errno(EFAULT);
+                        __set_errno_r(__clib4, EFAULT);
                         return -1;
                     }
                 }
@@ -104,11 +100,11 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
 
             break;
         case ITIMER_VIRTUAL:
-            __set_errno(ENOSYS);
+            __set_errno_r(__clib4, ENOSYS);
             return -1;
             break;
         case ITIMER_PROF:
-            __set_errno(ENOSYS);
+            __set_errno_r(__clib4, ENOSYS);
             return -1;
             break;
         default:
@@ -116,4 +112,15 @@ setitimer(int which, const struct itimerval *new_value, struct itimerval *old_va
     }
 
     return 0;
+}
+
+int
+setitimer(int which, const struct itimerval *new_value, struct itimerval *old_value) {
+
+    if (which < ITIMER_REAL || which > ITIMER_PROF) {
+        __set_errno(EINVAL);
+        return -1;
+    }
+
+    return __setitimer(which, new_value, old_value);
 }

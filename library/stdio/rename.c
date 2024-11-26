@@ -49,6 +49,13 @@ int rename(const char *oldname, const char *newname) {
         }
     }
 
+    /* If newname and oldname are identical return OK */
+    if (strcmp(oldname, newname) == 0) {
+        D(("Oldname '%s' is identical to '%s'", oldname, newname));
+        result = OK;
+        goto out;
+    }
+
     D(("renaming '%s' to '%s'", oldname, newname));
 
     status = Rename((STRPTR) oldname, (STRPTR) newname);

@@ -11,6 +11,7 @@ vsprintf(char *s, const char *format, va_list arg) {
     struct iob string_iob;
     int result = EOF;
     char buffer[32] = {0};
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(s != NULL && format != NULL);
 
@@ -32,10 +33,10 @@ vsprintf(char *s, const char *format, va_list arg) {
     result = vfprintf((FILE * ) &string_iob, format, arg);
 
     /* Put a \0 at the end */
-    if (__putc('\0', (FILE * ) &string_iob, IOBF_BUFFER_MODE_NONE) == EOF) {
+    if (__putc(__clib4, '\0', (FILE * ) &string_iob, IOBF_BUFFER_MODE_NONE) == EOF) {
         result = EOF;
     }
-    __flush((FILE * ) &string_iob);
+    __flush_r(__clib4, (FILE * ) &string_iob);
 
 out:
 

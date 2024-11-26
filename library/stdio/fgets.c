@@ -21,27 +21,31 @@ fgets(char *buf, int n, FILE *stream) {
     if (buf == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
+        RETURN(NULL);
         return NULL;
     }
 
-    if (n < 2) {
+    if (n <= 0) {
         SHOWMSG("no work to be done");
+        RETURN(NULL);
         return NULL;
     }
 
-    flockfile(stream);
+    __check_abort_f(__clib4);
+
+    __flockfile_r(__clib4, stream);
 
     /* Take care of the checks and data structure changes that
      * need to be handled only once for this stream.
      */
-    if (__fgetc_check(stream, __clib4) < 0) {
+    if (__fgetc_check(__clib4, stream) < 0) {
         buf = NULL;
         goto out;
     }
 
     /* So that we can tell error and 'end of file' conditions apart. */
-    clearerr(stream);
+    __clearerr_r(__clib4, stream);
 
     /* One off for the terminating '\0'. */
     n--;
@@ -70,11 +74,11 @@ fgets(char *buf, int n, FILE *stream) {
                 /* Copy the remainder of the read buffer into the
                    string buffer, including the terminating line
                    feed character. */
-                memmove(s, buffer, num_characters_in_line - 1);
-                s += num_characters_in_line - 1;
+                memmove(s, buffer, num_characters_in_line);
+                s += num_characters_in_line;
 
                 file->iob_BufferPosition += num_characters_in_line;
-                s[num_characters_in_line] = 0;
+
                 /* And that concludes the line read operation. */
                 (*s) = '\0';
                 goto out;
@@ -93,9 +97,9 @@ fgets(char *buf, int n, FILE *stream) {
 
         /* Read the next buffered character; this will refill the read
            buffer, if necessary. */
-        c = __getc(stream);
+        c = __getc(__clib4, stream);
         if (c == EOF) {
-            if (ferror(stream)) {
+            if (__ferror_r(__clib4, stream, FALSE)) {
                 /* Just to be on the safe side. */
                 (*s) = '\0';
 
@@ -123,7 +127,7 @@ fgets(char *buf, int n, FILE *stream) {
     SHOWSTRING(buf);
 
 out:
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(buf);
     return (buf);

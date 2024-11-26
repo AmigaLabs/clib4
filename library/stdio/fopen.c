@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fopen.c,v 1.7 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_fopen.c,v 1.6 2024-07-20 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -26,7 +26,7 @@ fopen(const char *filename, const char *mode) {
     if (filename == NULL || mode == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 

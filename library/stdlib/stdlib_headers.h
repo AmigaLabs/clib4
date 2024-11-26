@@ -51,7 +51,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <endian.h>
-#include "../include/dos.h"
+#include "../dos.h"
 
 #ifndef _STDLIB_LOCALEBASE_H
 #include "stdlib_localebase.h"
@@ -106,5 +106,7 @@ extern int _main(char *argstr,
 #endif /* _STDLIB_PROTOS_H */
 
 extern void kprintf(const char * format,...);
+
+#define NAMELEN 32
 
 #endif /* _STDLIB_HEADERS_H */

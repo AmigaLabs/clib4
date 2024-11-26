@@ -112,6 +112,7 @@ C_LOCALE := \
 	locale/setlocale.o
 
 C_MISC := \
+	misc/children.o \
 	misc/map.o \
 	misc/uuid.o
 
@@ -159,7 +160,6 @@ C_POSIX := \
 	posix/getrlimit.o \
 	posix/setrlimit.o \
 	posix/getrusage.o \
-	posix/checkabort.o \
 	posix/kill.o \
 	posix/raise.o \
 	posix/sigaction.o \
@@ -171,8 +171,11 @@ C_POSIX := \
     posix/sigismember.o \
 	posix/sigmask.o \
 	posix/signal.o \
+    posix/sigpause.o \
 	posix/sigprocmask.o \
+	posix/sigsuspend.o \
 	posix/sigsetmask.o \
+	posix/sigwait.o \
 	posix/statvfs.o \
 	posix/sysinfo.o \
 	posix/sysv_ftok.o \
@@ -195,6 +198,9 @@ C_POSIX := \
 	posix/sysv_shmids.o \
 	posix/ulimit.o \
 	posix/readv.o \
+	wait/wait.o \
+	wait/waitpid.o \
+	posix/waitpoll.o \
 	posix/writev.o \
 	posix/uname.o
 
@@ -420,7 +426,6 @@ C_STDIO := \
 	stdio/iobhookentry.o \
 	stdio/lock.o \
 	stdio/openiob.o \
-	stdio/parent_of_fh.o \
 	stdio/perror.o \
 	stdio/popen.o \
 	stdio/printf.o \
@@ -544,8 +549,7 @@ C_STDLIB := \
 	stdlib/udivsi4.o \
 	stdlib/umodsi3.o \
 	stdlib/unsetenv.o \
-	stdlib/valloc.o \
-	stdlib/wof_allocator.o
+	stdlib/valloc.o
 
 C_STRING := \
 	string/strings_ffs.o \
@@ -576,12 +580,15 @@ C_STRING := \
 	cpu/4xx/strlen440.o \
 	cpu/4xx/strncmp440.o \
 	cpu/4xx/strrchr440.o \
+	cpu/altivec/vec_memchr.o \
 	cpu/altivec/vec_memcmp.o \
 	cpu/altivec/vec_memcpy.o \
 	cpu/altivec/vec_memset.o \
+	cpu/altivec/vec_strchr.o \
 	cpu/altivec/vec_strcpy.o \
 	cpu/generic/bcopy.o \
 	cpu/generic/strcat.o \
+	cpu/generic/strchr.o \
 	cpu/generic/strcpy.o \
 	cpu/generic/strlen.o \
 	string/rindex.o \
@@ -620,6 +627,7 @@ C_STRING := \
 	string/strxfrm.o
 
 C_TERMCAP := \
+    termcap/tcstubs.o \
     termcap/termcap.o \
     termcap/tparam.o
 
@@ -754,7 +762,9 @@ C_UNISTD := \
 	unistd/setlogin.o \
 	unistd/sleep.o \
 	unistd/spawnv.o \
+	unistd/spawnve.o \
 	unistd/spawnvp.o \
+	unistd/spawnvpe.o \
 	unistd/strip_double_slash.o \
 	unistd/symlink.o \
 	unistd/sync_fd.o \
@@ -764,6 +774,7 @@ C_UNISTD := \
 	unistd/translatea2u.o \
 	unistd/translaterel.o \
 	unistd/translateu2a.o \
+	unistd/search_command_path.o \
 	unistd/truncate.o \
 	unistd/truncate64.o \
 	unistd/ttyname.o \
@@ -911,6 +922,23 @@ C_WCHAR := \
 	wchar/wctrans.o \
 	wchar/wctype.o
 
+C_WMEM := \
+    wmem/wmem_allocator_block.o \
+    wmem/wmem_allocator_block_fast.o \
+    wmem/wmem_allocator_simple.o \
+    wmem/wmem_allocator_strict.o \
+    wmem/wmem_array.o \
+    wmem/wmem_core.o \
+    wmem/wmem_interval_tree.o \
+    wmem/wmem_list.o \
+    wmem/wmem_map.o \
+    wmem/wmem_miscutl.o \
+    wmem/wmem_multimap.o \
+    wmem/wmem_stack.o \
+    wmem/wmem_strutl.o \
+    wmem/wmem_tree.o \
+    wmem/wmem_user_cb.o
+
 ifdef SPE
     $(info Adding SPE objects)
     C_STRING := $(C_STRING) \
@@ -957,7 +985,8 @@ C_LIBRARY := \
 	$(C_TIME) \
 	$(C_UNISTD) \
 	$(C_USERGROUP) \
-	$(C_WCHAR)
+	$(C_WCHAR) \
+	$(C_WMEM)
 
 C_LIB := \
 	c.lib_rev.o \

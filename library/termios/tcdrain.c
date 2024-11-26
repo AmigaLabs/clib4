@@ -24,7 +24,7 @@ tcdrain(int file_descriptor) {
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -50,8 +50,10 @@ tcdrain(int file_descriptor) {
                 /* This also discards any buffered input, but it does
                    not appear possible to drain the output buffer
                    otherwise. (?) */
-                if (CANNOT Flush(file))
+                if (CANNOT Flush(file)) {
+                    __fd_unlock(fd);
                     goto out;
+                }
 
                 break;
             default: /* TODO: Serial port support. */
@@ -61,11 +63,15 @@ tcdrain(int file_descriptor) {
         }
 
         result = OK;
-    } else {
-        result = fdatasync(file_descriptor); /* If called on a "regular" file. */
-    }
 
-    __fd_unlock(fd);
+        __fd_unlock(fd);
+    } else {
+        __stdio_unlock(__clib4);
+        __fd_unlock(fd);
+        SHOWMSG("Calling fdatasync");
+        LEAVE();
+        return fdatasync(file_descriptor); /* If called on a "regular" file. */
+    }
 
 out:
 

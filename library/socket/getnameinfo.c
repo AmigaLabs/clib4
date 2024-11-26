@@ -42,7 +42,7 @@ mkptr6(char *s, const unsigned char *ip) {
 
 static void
 reverse_hosts(char *buf, const unsigned char *a, unsigned scopeid, int family) {
-    char line[512], *p, *z;
+    char line[512] = {0}, *p, *z;
     unsigned char _buf[1032], atmp[16];
     struct address iplit;
     FILE *f = fopen(_PATH_HOSTS, "r");
@@ -118,9 +118,9 @@ dns_parse_callback(void *c, int rr, const void *data, int len, const void *packe
 }
 
 int
-getnameinfo(const struct sockaddr *restrict sa, socklen_t sl,
-                char *restrict node, socklen_t nodelen,
-                char *restrict serv, socklen_t servlen,
+getnameinfo(const struct sockaddr *sa, socklen_t sl,
+                char *node, socklen_t nodelen,
+                char *serv, socklen_t servlen,
                 int flags) {
 
     __check_abort();

@@ -10,6 +10,9 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
+#include "children.h"
+#include <sys/wait.h>
+
 int
 pclose(FILE *stream) {
     int result = ERROR;
@@ -29,12 +32,17 @@ pclose(FILE *stream) {
         goto out;
     }
 
+    int status = 0;
+    pid_t pid = findSpawnedChildrenPidByPipe(stream);
+    waitpid(pid, &status, 0);
+
     fclose(stream);
 
     /* ZZZ we actually could catch the program's termination code
      * by passing an exit function address to SystemTags() below.
      */
-    result = OK;
+    if(status != -1)
+        result = WEXITSTATUS(status);
 
 out:
 
@@ -48,12 +56,13 @@ popen(const char *command, const char *type) {
     char *command_copy = NULL;
     BPTR input = BZERO;
     BPTR output = BZERO;
-    char pipe_file_name[40];
+    // char pipe_file_name[40];
     FILE *result = NULL;
     LONG status;
-    unsigned long task_address;
-    time_t now;
+    // unsigned long task_address;
+    // time_t now = 0;
     int i;
+
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
@@ -68,7 +77,7 @@ popen(const char *command, const char *type) {
     if (command == NULL || type == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -119,8 +128,7 @@ popen(const char *command, const char *type) {
                 have_quote ^= TRUE;
             }
 
-            if ((command[i] == ' ' || command[i] == '\t') && NOT have_quote)
-            {
+            if ((command[i] == ' ' || command[i] == '\t') && NOT have_quote) {
                 command_len = i;
                 break;
             }
@@ -128,7 +136,7 @@ popen(const char *command, const char *type) {
 
         /* This may be too long for proper translation... */
         if (command_len > MAXPATHLEN) {
-            __set_errno(ENAMETOOLONG);
+            __set_errno_r(__clib4, ENAMETOOLONG);
 
             result = NULL;
             goto out;
@@ -151,9 +159,9 @@ popen(const char *command, const char *type) {
         }
 
         /* Now put it all together again */
-        command_copy = malloc(1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
+        command_copy = __malloc_r(__clib4, 1 + strlen(command_name) + 1 + strlen(&command[command_len]) + 1);
         if (command_copy == NULL) {
-            __set_errno(ENOMEM);
+            __set_errno_r(__clib4, ENOMEM);
 
             result = NULL;
             goto out;
@@ -172,13 +180,18 @@ popen(const char *command, const char *type) {
         command = command_copy;
     }
 
+    // Let's use out super cool pipe implementation instead :
+    int p[2];
+    pipe(p);
+
+#if 0
     /* Build a (hopefully) unique name for the pipe stream to open. We
        construct it from the current process address, converted into
        an octal number, followed by the current time (in seconds),
        converted into another octal number. */
     strcpy(pipe_file_name, "PIPE:");
 
-    struct Task *task = FindTask(NULL);
+    struct Task *task = (struct Task *) __clib4->self;
     task_address = (unsigned long) task;
 
     for (i = strlen(pipe_file_name); task_address != 0 && i < (int) sizeof(pipe_file_name) - 1; i++) {
@@ -198,18 +211,32 @@ popen(const char *command, const char *type) {
     pipe_file_name[i] = '\0';
 
     SHOWSTRING(pipe_file_name);
+#endif
 
     /* Now open the input and output streams for the program to launch. */
     if (type[0] == 'r') {
         /* Read mode: we want to read the output of the program; the program
            should read from "NIL:". */
         input = Open("NIL:", MODE_NEWFILE);
-        if (input != BZERO)
-            output = Open(pipe_file_name, MODE_NEWFILE);
+        if (input != BZERO) {
+            // output = Open(pipe_file_name, MODE_NEWFILE);
+            int err = __get_default_file(p[1], &output);
+            if (err) {
+                __set_errno(EBADF);
+                goto out;
+            }
+            output = DupFileHandle(output);
+        }
     } else {
         /* Write mode: we want to send data to the program; the program
            should write to "NIL:". */
-        input = Open(pipe_file_name, MODE_NEWFILE);
+        // input = Open(pipe_file_name, MODE_NEWFILE);
+        int err = __get_default_file(p[0], &input);
+        if (err) {
+            __set_errno(EBADF);
+            goto out;
+        }
+        input = DupFileHandle(input);
         if (input != BZERO)
             output = Open("NIL:", MODE_NEWFILE);
     }
@@ -218,38 +245,62 @@ popen(const char *command, const char *type) {
     if (input == BZERO || output == BZERO) {
         SHOWMSG("couldn't open the streams");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 
+    D(("Launching [%s]", command));
     /* Now try to launch the program. */
     status = SystemTags((STRPTR) command,
-                        SYS_Input, input,
-                        SYS_Output, output,
-                        SYS_Asynch, TRUE,
-                        SYS_UserShell, TRUE,
+                        SYS_Input,      input,
+                        SYS_Output,     output,
+                        SYS_Asynch,     TRUE,
+                        SYS_UserShell,  TRUE,
+                        NP_Name,        command,
+                        NP_EntryCode,   spawnedProcessEnter,
+                        NP_EntryData,   getgid(),
+                        NP_ExitCode,    spawnedProcessExit,
+                        NP_Child,       TRUE,
                         TAG_END);
+
+    uint32 ret;
 
     /* If launching the program returned -1 then it could not be started.
        We'll need to close the I/O streams we opened above. */
+
     if (status == -1) {
         SHOWMSG("SystemTagList() failed");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
+    } else {
+        SHOWMSG("SystemTags() call completed.");
+        /*
+         * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
+         * just after SystemTags. In this case spawnv will return pid
+         */
+        ret = IoErr(); // This is our ProcessID;
     }
-
     /* OK, the program is running. Once it terminates, it will automatically
        shut down the streams we opened for it. */
     input = output = BZERO;
 
     /* Now try to open the pipe we will use to exchange data with the program. */
-    result = fopen(pipe_file_name, type);
+    // result = fopen(pipe_file_name, type);
+
+    if (type[0] == 'r') {
+        result = fdopen(p[0], "r");
+        close(p[1]);
+    } else {
+        result = fdopen(p[1], "w");
+        close(p[0]);
+    }
+    if(result) addSpawnedChildrenPipeHandle(ret, result); //pid, pipe
 
 out:
 
     if (command_copy != NULL)
-        free(command_copy);
+        __free_r(__clib4, command_copy);
 
     if (input != BZERO)
         Close(input);

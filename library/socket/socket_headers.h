@@ -107,10 +107,12 @@ struct UnixSocket {
 
 extern int h_errno;
 
-extern struct fd * __get_file_descriptor_socket(int socket_descriptor);
+extern struct fd * __get_file_descriptor_socket(struct _clib4 *__clib4, int socket_descriptor);
 extern int64_t __socket_hook_entry(struct _clib4 *__clib4, struct fd * fd,struct file_action_message * fam);
 extern void __set_h_errno(int new_h_errno);
+extern void __set_h_errno_r(struct _clib4 *__clib4, int new_h_errno);
 extern int __select(int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *except_fds,struct timeval *timeout,ULONG * signal_mask_ptr);
+extern int __send_r(struct _clib4 *__clib4, int sockfd, const void *buff, size_t nbytes, int flags);
 
 #include <interfaces/bsdsocket.h>
 

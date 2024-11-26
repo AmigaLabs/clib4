@@ -53,8 +53,19 @@ have problems running existent software!
 
 ### New memory allocator
 
-Clib4 now use `Wheel Of Fortune` allocator that is faster than previous one, and it seems more robust and with a cleaner
-and portable code
+Clib4 now use `wmem` allocator from WireShark that is faster than previous one, and it seems more robust and with a cleaner
+and portable code.  
+You can choose at runtime (for test purpose) which kind of allocators want to use setting `CLIB4_MEMORY_ALLOCATOR` env variable.  
+At moment you can use:
+
+| Value | Allocator                 |  
+|-------|---------------------------|
+| 1     | WMEM_ALLOCATOR_SIMPLE     |
+| 2     | WMEM_ALLOCATOR_BLOCK      |
+| 3     | WMEM_ALLOCATOR_STRICT     |
+| 4     | WMEM_ALLOCATOR_BLOCK_FAST |
+
+The default one is `WMEM_ALLOCATOR_BLOCK_STRICT`. `WMEM_ALLOCATOR_BLOCK_FAST` can crash on some situation. Please refer to `wmem/wmem_core.h` for all details. 
 
 ### Optimized AMCC functions
 
@@ -218,6 +229,13 @@ constructors/destructors executions
 - Add a test suite
 - Try to use some functions/headers from https://github.com/attractivechaos/klib to improve speed
 - Use a good locale implementation
+
+### Libraries repository
+
+A repository with pre packaged libraries is present and ready to use for debian like systems.
+You can find all informations to the following <a href="https://github.com/AmigaLabs/clib4/wiki/Clib4-apt-packages-repository">wiki page</a>.
+
+A list of packages can be found into public <a href="https://clib4pkg.amigasoft.net/ubuntu/dists/focal/main/binary-amd64/Packages">Packages</a> file.
 
 ## Legal status
 

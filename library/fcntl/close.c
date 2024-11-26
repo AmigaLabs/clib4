@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_close.c,v 1.13 2006-01-08 12:04:22 clib4devs Exp $
+ * $Id: fcntl_close.c,v 1.14 2023-07-04 12:04:22 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -21,7 +21,7 @@ close(int file_descriptor) {
 
     /* We want to affect this very file descriptor and not the
        original one associated with an alias of it. */
-    fd = __get_file_descriptor_dont_resolve(file_descriptor);
+    fd = __get_file_descriptor_dont_resolve(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;

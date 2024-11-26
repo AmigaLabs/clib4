@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_sysconf.c,v 1.1 2022-09-09 10:09:27 clib4devs Exp $
+ * $Id: unistd_sysconf.c,v 1.1 2024-08-14 10:09:27 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -12,8 +12,7 @@
 
 long 
 sysconf(int name) {
-    int retval = -1;
-    ULONG query;
+    ULONG query = -1;
 
     switch (name) {
         case _SC_ARG_MAX:
@@ -27,23 +26,23 @@ sysconf(int name) {
         case _SC_THREAD_KEYS_MAX:
             return PTHREAD_KEYS_MAX;
         case _SC_PAGESIZE:
-            GetCPUInfoTags(GCIT_ExecPageSize, (ULONG)&query, TAG_DONE);
+            GetCPUInfoTags(GCIT_ExecPageSize, (ULONG) &query, TAG_DONE);
             break;
+        case _SC_VERSION:
+            return _POSIX_VERSION;
         case _SC_TZNAME_MAX:
             return MAX_TZSIZE;
         case _SC_NPROCESSORS_CONF:
         case _SC_NPROCESSORS_ONLN:
-            GetCPUInfoTags(GCIT_NumberOfCPUs, (ULONG)&query, TAG_DONE);
+            GetCPUInfoTags(GCIT_NumberOfCPUs, (ULONG) &query, TAG_DONE);
             break;
         case _SC_TTY_NAME_MAX:
             return _POSIX_TTY_NAME_MAX;
         case _SC_GETPW_R_SIZE_MAX:
-            return -1;
+            break;
         default:
             __set_errno(EINVAL);
             break;
     }
-    retval = query;
-
-    return retval;
+    return query;
 }

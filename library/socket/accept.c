@@ -36,7 +36,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
     __stdio_lock(__clib4);
     stdio_locked = TRUE;
 
-    fd = __get_file_descriptor_socket(sockfd);
+    fd = __get_file_descriptor_socket(__clib4, sockfd);
     if (fd == NULL)
         goto out;
 

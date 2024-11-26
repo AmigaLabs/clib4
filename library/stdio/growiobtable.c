@@ -24,17 +24,17 @@ int __grow_iob_table(struct _clib4 *__clib4, int max_iob) {
         struct iob **new_iob;
         int i;
 
-        new_iob = malloc(sizeof(*new_iob) * new_num_iob);
+        new_iob = __malloc_r(__clib4, sizeof(*new_iob) * new_num_iob);
         if (new_iob == NULL) {
             SHOWMSG("not enough memory for file table");
 
-            __set_errno(ENOMEM);
+            __set_errno_r(__clib4, ENOMEM);
             goto out;
         }
         SHOWVALUE(new_num_iob);
         for (i = __clib4->__num_iob; i < new_num_iob; i++) {
             SHOWVALUE(i);
-            new_iob[i] = malloc(sizeof(*new_iob[i]));
+            new_iob[i] = __malloc_r(__clib4, sizeof(*new_iob[i]));
             SHOWMSG("malloc");
             if (new_iob[i] == NULL) {
                 int j;
@@ -42,11 +42,11 @@ int __grow_iob_table(struct _clib4 *__clib4, int max_iob) {
                 SHOWMSG("not enough memory for file table entry");
 
                 for (j = __clib4->__num_iob; j < i; j++)
-                    free(new_iob[j]);
+                    __free_r(__clib4, new_iob[j]);
 
-                free(new_iob);
+                __free_r(__clib4, new_iob);
 
-                __set_errno(ENOMEM);
+                __set_errno_r(__clib4, ENOMEM);
                 goto out;
             }
             SHOWMSG("memset");
@@ -57,7 +57,7 @@ int __grow_iob_table(struct _clib4 *__clib4, int max_iob) {
             for (i = 0; i < __clib4->__num_iob; i++)
                 new_iob[i] = __clib4->__iob[i];
 
-            free(__clib4->__iob);
+            __free_r(__clib4, __clib4->__iob);
         }
 
         __clib4->__iob = new_iob;

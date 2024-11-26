@@ -1,5 +1,5 @@
 /*
- * $Id: socket_ioctl.c,v 1.16 2024-03-30 10:41:15 clib4devs Exp $
+ * $Id: socket_ioctl.c,v 1.17 2024-07-04 10:41:15 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -168,15 +168,14 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
             assert(__clib4->__fd[sockfd] != NULL);
             assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IN_USE));
 
-            fd = __get_file_descriptor_socket(sockfd);
+            fd = __get_file_descriptor_socket(__clib4, sockfd);
             if (fd == NULL)
                 goto out;
 
             __fd_lock(fd);
 
             va_start(arg, request);
-            param = va_arg(arg,
-            char *);
+            param = va_arg(arg, char *);
             va_end(arg);
 
             SHOWPOINTER(param);
@@ -201,15 +200,14 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
             __fd_unlock(fd);
         } else {
             if (request != FIONBIO) {
-                fd = __get_file_descriptor(sockfd);
+                fd = __get_file_descriptor(__clib4, sockfd);
                 if (fd == NULL)
                     goto out;
 
                 __fd_lock(fd);
 
                 va_start(arg, request);
-                param = va_arg(arg,
-                char *);
+                param = va_arg(arg, char *);
                 va_end(arg);
 
                 SHOWPOINTER(param);
@@ -262,7 +260,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
         writeSize(size->ws_row, size->ws_col);
     }
 
-    out:
+out:
 
     __check_abort_f(__clib4);
 

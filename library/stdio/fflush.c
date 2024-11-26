@@ -21,14 +21,19 @@ fflush(FILE *stream) {
 
         assert(__is_valid_iob(__clib4, file));
 
-        flockfile(stream);
+        __flockfile_r(__clib4, stream);
 
-        if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0)
-            goto out;
+        if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0) {
+            __funlockfile_r(__clib4, stream);
+            RETURN(result);
+            return result;
+        }
+
+        __funlockfile_r(__clib4, stream);
+
     } else {
         int failed_iob = -1;
         int i;
-        struct _clib4 *__clib4 = __CLIB4;
 
         __stdio_lock(__clib4);
 
@@ -54,9 +59,6 @@ fflush(FILE *stream) {
     result = OK;
 
 out:
-
-    if (stream != NULL)
-        funlockfile(stream);
 
     RETURN(result);
     return (result);

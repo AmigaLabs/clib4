@@ -11,16 +11,10 @@ set_console_termios(struct fd *fd, struct termios *new_tios) {
     struct termios *old_tios;
     int result = ERROR;
     BPTR file;
-    BOOL use_ncurses = FALSE;
-
-    if (FLAG_IS_SET(new_tios->c_lflag, NCURSES)) {
-        CLEAR_FLAG(new_tios->c_lflag, ICANON);
-        use_ncurses = TRUE;
-    }
 
     /* TODO: Check for some "impossible" combinations here? */
 
-    old_tios = __get_termios(fd, use_ncurses);
+    old_tios = __get_termios(fd);
     if (old_tios == NULL)
         goto out;
 
@@ -56,15 +50,20 @@ tcsetattr(int file_descriptor, int how, struct termios *tios) {
     struct termios new_tios;
     int type;
     struct _clib4 *__clib4 = __CLIB4;
+    BOOL isFdLocked = FALSE;
+    BOOL isStdioLocked = FALSE;
+
+    ENTER();
 
     __stdio_lock(__clib4);
+    isStdioLocked = TRUE;
 
     if (tios == NULL) {
         __set_errno(EFAULT);
         goto out;
     }
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         SHOWMSG("tcsetattr() was not called with a file descriptor.\n");
 
@@ -73,9 +72,12 @@ tcsetattr(int file_descriptor, int how, struct termios *tios) {
     }
 
     __fd_lock(fd);
+    isFdLocked = TRUE;
 
     /* The following is in case the termios structure was manually constructed. (it should have been zero:ed in that case)  */
     if (tios->type == TIOST_INVALID) {
+        __stdio_unlock(__clib4);
+        isStdioLocked = FALSE;
         if (tcgetattr(file_descriptor, &new_tios) != OK)
             goto out; /* Pass errno from tcgetattr() */
 
@@ -93,39 +95,46 @@ tcsetattr(int file_descriptor, int how, struct termios *tios) {
 
     if (tios->type == TIOST_SERIAL) {
         __set_errno(ENXIO);    /* Unimplemented (for now). */
-        __fd_unlock(fd);
         goto out;
     } else if (tios->type == TIOST_CONSOLE) {
-        if (how == TCSADRAIN) {
-            if (tcdrain(file_descriptor) != OK) {
-                __fd_unlock(fd);
-                goto out;
-            }
-        } else if (how == TCSAFLUSH) {
-            if (tcflush(file_descriptor, TCIOFLUSH) != OK) {
-                __fd_unlock(fd);
-                goto out;
+        if (how == TCSADRAIN || how == TCSAFLUSH) {
+            __stdio_unlock(__clib4);
+            isStdioLocked = FALSE;
+            __fd_unlock(fd);
+            isFdLocked = FALSE;
+            switch (how) {
+                case TCSADRAIN:
+                    if (tcdrain(file_descriptor) != OK) {
+                        goto out;
+                    }
+                    break;
+                case TCSAFLUSH:
+                    if (tcflush(file_descriptor, TCIOFLUSH) != OK) {
+                        goto out;
+                    }
+                    break;
             }
         }
 
         if (set_console_termios(fd, tios) != OK) {
             __set_errno(EIO);
-            __fd_unlock(fd);
             goto out;
         }
     } else {
         __set_errno(ENOTTY);
-        __fd_unlock(fd);
         goto out;
     }
 
     result = OK;
 
-    __fd_unlock(fd);
-
 out:
 
-    __stdio_unlock(__clib4);
+    if (isFdLocked)
+        __fd_unlock(fd);
 
+    if (isStdioLocked)
+        __stdio_unlock(__clib4);
+
+    RETURN(result);
     return (result);
 }

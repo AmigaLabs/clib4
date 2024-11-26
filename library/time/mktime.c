@@ -28,7 +28,7 @@ mktime(struct tm *tm) {
     if (tm == NULL) {
         SHOWMSG("invalid tm parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 

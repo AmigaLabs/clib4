@@ -28,7 +28,7 @@ fdatasync(int file_descriptor) {
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -36,14 +36,17 @@ fdatasync(int file_descriptor) {
 
     __fd_lock(fd);
 
-    if (__sync_fd(fd, 0) < 0) /* flush just the data */
+    if (__sync_fd(fd, 0) < 0) { /* flush just the data */
+        __fd_unlock(fd);
         goto out;
+    }
 
     result = OK;
 
+    __fd_unlock(fd);
+
 out:
 
-    __fd_unlock(fd);
     __stdio_unlock(__clib4);
 
     RETURN(result);

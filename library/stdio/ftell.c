@@ -16,26 +16,29 @@ ftell(FILE *stream) {
 
     assert(stream != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL) {
-        __set_errno(EFAULT);
+        SHOWMSG("invalid stream parameter");
+        __set_errno_r(__clib4, EFAULT);
+
+        RETURN(result);
+        return (result);
+    }
+
+    __check_abort_f(__clib4);
+
+    __flockfile_r(__clib4, stream);
+
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
+        SHOWMSG("this file is not even in use");
+        SET_FLAG(file->iob_Flags, IOBF_ERROR);
+
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
-
-    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
-        SHOWMSG("this file is not even in use");
-
-        SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
-        __set_errno(EBADF);
-
-        goto out;
-    }
 
     SHOWMSG("calling the hook");
 
@@ -53,8 +56,7 @@ ftell(FILE *stream) {
     position = (_off64_t)(*file->iob_Action)(__clib4, file, &fam);
     if (position == GETPOSITION_ERROR && fam.fam_Error != OK) {
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
-        __set_errno(fam.fam_Error);
+        __set_errno_r(__clib4, fam.fam_Error);
 
         goto out;
     }
@@ -62,7 +64,7 @@ ftell(FILE *stream) {
     /* If this is a valid file position, clear 'errno' so that
       it cannot be mistaken for an error. */
     if (position < 0)
-        __set_errno(OK);
+        __set_errno_r(__clib4, OK);
 
     if (__iob_read_buffer_is_valid(file)) {
         /* Subtract the number of bytes still in the buffer which have
@@ -80,7 +82,7 @@ ftell(FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     return (result);
 }

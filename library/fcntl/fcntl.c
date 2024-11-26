@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_fcntl.c,v 1.20 2006-11-16 14:39:23 clib4devs Exp $
+ * $Id: fcntl_fcntl.c,v 1.21 2023-07-04 14:39:23 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -40,7 +40,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     if (cmd == F_DUPFD)
         __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -90,7 +90,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
                 break;
             }
 
-            if (__handle_record_locking(cmd, l, fd, &error) < 0) {
+            if (__handle_record_locking(__clib4, cmd, l, fd, &error) < 0) {
                 __set_errno(error);
                 goto out;
             }

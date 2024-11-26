@@ -17,7 +17,7 @@ printf(const char *format, ...) {
     assert(format != NULL);
 
     if (format == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 

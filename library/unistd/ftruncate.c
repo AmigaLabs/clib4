@@ -12,6 +12,7 @@ int ftruncate(int file_descriptor, off_t length) {
     struct fd *fd = NULL;
     off_t initial_position = 0;
     struct _clib4 *__clib4 = __CLIB4;
+    BOOL isFdLocked = FALSE;
 
     ENTER();
 
@@ -26,13 +27,14 @@ int ftruncate(int file_descriptor, off_t length) {
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
     }
 
     __fd_lock(fd);
+    isFdLocked = TRUE;
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
         __set_errno(EINVAL);
@@ -88,7 +90,8 @@ out:
 
     FreeDosObject(DOS_EXAMINEDATA, fib);
 
-    __fd_unlock(fd);
+    if (isFdLocked)
+        __fd_unlock(fd);
 
     __stdio_unlock(__clib4);
 

@@ -42,9 +42,9 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
         assert(__clib4->__fd[file_descriptor] != NULL);
         assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-        fd = __get_file_descriptor(file_descriptor);
+        fd = __get_file_descriptor(__clib4, file_descriptor);
         if (fd == NULL) {
-            __set_errno(EBADF);
+            __set_errno_r(__clib4, EBADF);
             goto out;
         }
     }
@@ -76,7 +76,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
             D(("unsupported file open mode '%lc'", mode[0]));
 
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             goto out;
     }
 
@@ -97,7 +97,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
-        __set_errno(ENOBUFS);
+        __set_errno_r(__clib4, ENOBUFS);
         goto out;
     }
 
@@ -117,8 +117,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
             CLEAR_FLAG(fd->fd_Flags, FDF_APPEND);
     }
 
-    /* Allocate memory for an arbitration mechanism, then
-        initialize it. */
+    /* Allocate memory for an arbitration mechanism, then initialize it. */
     lock = __create_semaphore();
     if (lock == NULL)
         goto out;

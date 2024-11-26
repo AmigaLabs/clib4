@@ -92,7 +92,7 @@ unlink(const char *path_name) {
             }
 
             if (NOT found) {
-                uln = malloc(sizeof(*uln) + strlen(path_name) + 1);
+                uln = __malloc_r(__clib4, sizeof(*uln) + strlen(path_name) + 1);
                 if (uln != NULL) {
                     uln->uln_Lock = current_dir;
                     uln->uln_Name = (char *) (uln + 1);

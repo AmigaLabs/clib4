@@ -1,50 +1,12 @@
-/* Merge parameters into a termcap entry string.
-   Copyright (C) 1985, 87, 93, 95, 2000 Free Software Foundation, Inc.
+/*
+ * $Id: termcap_tparam.c,v 1.1 2024-07-12 18:26:47 clib4devs Exp $
+*/
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+#ifndef  _TERMIOS_HEADERS_H
+#include "termios_headers.h"
+#endif
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
-
-#include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
 #include <term.h>
-#include <dos.h>
-
-static void
-memory_out() {
-    write(2, "virtual memory exhausted\n", 25);
-    exit(1);
-}
-
-static char *
-xmalloc(size_t size) {
-    register char *tem = malloc(size);
-
-    if (!tem)
-        memory_out();
-    return tem;
-}
-
-static char *
-xrealloc(char *ptr, size_t size) {
-    register char *tem = realloc(ptr, size);
-
-    if (!tem)
-        memory_out();
-    return tem;
-}
 
 /* Assuming STRING is the value of a termcap string entry
    containing `%' constructs to expand parameters,
@@ -108,11 +70,19 @@ tparam1(const char *string, char *outstring, int len, char *up, char *left, regi
 
             if (outlen == 0) {
                 outlen = len + 40;
-                new = (char *) xmalloc(outlen);
+                new = (char *) malloc(outlen);
+                if (new == NULL) {
+                    __set_errno(ENOMEM);
+                    return NULL;
+                }
                 bcopy(outstring, new, offset);
             } else {
                 outlen *= 2;
-                new = (char *) xrealloc(outstring, outlen);
+                new = (char *) realloc(outstring, outlen);
+                if (new == NULL) {
+                    __set_errno(ENOMEM);
+                    return NULL;
+                }
             }
 
             op = new + offset;

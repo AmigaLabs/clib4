@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_funlockfile.c,v 1.4 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_funlockfile.c,v 1.5 2024-07-20 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -8,8 +8,12 @@
 
 void
 funlockfile(FILE *stream) {
+    __funlockfile_r(__CLIB4, stream);
+}
+
+void
+__funlockfile_r(struct _clib4 *__clib4, FILE *stream) {
     struct iob *file = (struct iob *) stream;
-    struct _clib4 *__clib4 = __CLIB4;
 
     assert(stream != NULL);
 
@@ -30,9 +34,23 @@ funlockfile(FILE *stream) {
         goto out;
     }
 
-    if (file->iob_Lock != NULL)
+    if (file->iob_Lock != NULL && FLAG_IS_SET(file->iob_Flags, IOBF_LOCKED) && (file->iob_TaskLock == (struct Task *) __clib4->self)) {
+        SHOWMSG("Unlocking File");
         ReleaseSemaphore(file->iob_Lock);
-
+        file->iob_TaskLock = NULL;
+        CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
+    }
+#if 0
+    else {
+        if (file->iob_Lock == NULL)
+            SHOWMSG("file->iob_Lock is NULL!");
+        if ((file->iob_TaskLock != (struct Task *) __clib4->self))
+            SHOWMSG("Try to unlock file from a different process!");
+        if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_LOCKED))
+            SHOWMSG("File is not locked or already unlocked!");
+    }
+#endif
 out:
+
     return;
 }

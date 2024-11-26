@@ -40,6 +40,8 @@
  *		..
  */
 
+// extern int __search_expand_command_path(char const **name_ptr, char *replacement_buffer, size_t replacement_buffer_size);
+
 int
 __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translation_info *nti) {
     int result = ERROR;
@@ -112,14 +114,59 @@ __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translati
             strcpy(&home_dir_name[home_dir_name_len], name);
             name = home_dir_name;
         }
+#if 0
+        else {
+            
+            /* If input string is a command, we can use the system path to expand.
+               This should not conflict with previous implements, because the only
+               diverging situation is where it would previously return a non-existing
+               path to the current directory. */
 
+            /* Response : This is not true. In cases, where the application is trying
+                to determine if an object in the current dir exists, it can potentially
+                give the wrong answer, if an object with immediate address on the 
+                search path exists. For instance:
+                
+                Current dir : /work/foo
+                stat on : bar
+                On path: bar
+
+                This can possibly result in a stat returning the address
+
+                    /work/foo/bar
+
+                which doesn't exist (awennermark).
+            */
+
+            if(strchr(name, '/') == NULL) {
+                if(__search_expand_command_path((const char **) &name, nti->substitute, sizeof(nti->substitute)) == 0) {
+                    SHOWMSG("Successfully expanded command string using system paths.\n");
+                    result = OK;
+                    name = replace;
+                    // printf("name : %s\n", name);
+                    (*name_ptr) = name;
+                    goto out;
+                }
+            }
+        }
+#endif
+
+#if 0
         /* Prepend an absolute path to the name, if such a path was previously set
            as the current directory. */
+
+        /* Response : This is not good. We might be dealing with a command name (as in popen),
+            which means, that the tagging-on of any path (cwd or otherwise) to the command
+            name could potentially break the call. Even if this leaves the result of this call
+            with a non-absolute path, it will still work, in case the sought-after object is in fact
+            found in the current directory. So there are no benefits in tagging on the current
+            path - it will not add anything to the functionality of the enterprise. (awennermark) */
+
         if (__translate_relative_path_name((const char **) &name, nti->substitute, sizeof(nti->substitute)) < 0) {
             SHOWMSG("relative path name could not be worked into the pattern");
             goto out;
         }
-
+#endif
         /* If we wound up with the expanded home directory name,
            put it into the substitution string. */
         if (name == home_dir_name) {

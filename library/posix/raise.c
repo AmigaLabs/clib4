@@ -28,7 +28,7 @@ raise(int sig) {
     if (sig < 0 || sig > NSIG) {
         SHOWMSG("unknown signal number");
 
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -52,12 +52,12 @@ raise(int sig) {
             if (sig != SIGINT && sig != SIGTERM && sig != SIGKILL)
                 SET_FLAG(__clib4->local_signals_blocked, (1 << sig));
 
-            /* The default behaviour is to drop into abort(), or do
-               something very much like it. */
+            /* The default behaviour is to drop into abort(), or do something very much like it. */
             if (handler == SIG_DFL) {
                 SHOWMSG("this is the default handler");
 
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
+                    __set_errno_r(__clib4, EINTR);
                     /* Check ig we have timer terminal running. If so let's kill it */
                     if (__clib4->tmr_real_task != NULL) {
                         /* Block SIGALRM signal from raise */
@@ -92,18 +92,22 @@ raise(int sig) {
                 }
             }
             else if (handler == SIG_ERR) {
-                __set_errno(EINVAL);
+                __set_errno_r(__clib4, EINVAL);
                 result = ERROR;
                 goto out;
             }
             else {
-                SHOWMSG("calling the handler");
-                (*handler)(sig);
+                if (*handler != NULL) {
+                    SHOWMSG("Calling the handler");
+                    (*handler)(sig);
 
-                if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL)
-                    SetSignal(0, SIGBREAKF_CTRL_C);
+                    if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
+                        __set_errno_r(__clib4, EINTR);
+                        SetSignal(0, SIGBREAKF_CTRL_C);
+                    }
 
-                SHOWMSG("done.");
+                    SHOWMSG("done.");
+                }
             }
 
             /* Unblock signal delivery again. */

@@ -1,5 +1,5 @@
 /*
- * $Id: socket_select_signal.c,v 1.7 2022-08-20 14:39:23 clib4devs Exp $
+ * $Id: socket_select_signal.c,v 1.8 2024-07-22 14:39:23 clib4devs Exp $
 */
 
 #ifndef _SOCKET_HEADERS_H
@@ -55,11 +55,10 @@ zero_fd_set(fd_set *set, int num_fds) {
     }
 
     LEAVE();
-
 }
 
 static fd_set *
-allocate_fd_set(int num_fds, fd_set *duplicate_this_set) {
+allocate_fd_set(struct _clib4 *__clib4, int num_fds, fd_set *duplicate_this_set) {
     fd_set *result = NULL;
     size_t num_bytes;
     fd_set *set;
@@ -71,7 +70,7 @@ allocate_fd_set(int num_fds, fd_set *duplicate_this_set) {
     SHOWVALUE(num_fds);
 
     if (num_fds <= 0) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -79,7 +78,7 @@ allocate_fd_set(int num_fds, fd_set *duplicate_this_set) {
 
     SHOWVALUE(num_bytes);
 
-    set = (fd_set *) malloc(num_bytes);
+    set = (fd_set *) __malloc_r(__clib4, num_bytes);
     if (set != NULL) {
         if (duplicate_this_set != NULL)
             copy_fd_set(set, duplicate_this_set, num_fds);
@@ -95,16 +94,15 @@ out:
 }
 
 static void
-free_fd_set(fd_set *set) {
+free_fd_set(struct _clib4 *__clib4, fd_set *set) {
     if (set != NULL)
-        free(set);
+        __free_r(__clib4, set);
 }
 
 static struct fd *
-get_file_descriptor(int file_descriptor) {
+get_file_descriptor(struct _clib4 *__clib4, int file_descriptor) {
     struct fd *result = NULL;
     struct fd *fd;
-    struct _clib4 *__clib4 = __CLIB4;
 
     __stdio_lock(__clib4);
 
@@ -131,6 +129,7 @@ out:
 
 static void
 map_descriptor_sets(
+        struct _clib4 *__clib4,
         const fd_set *input_fds,
         int num_input_fds,
 
@@ -175,7 +174,7 @@ map_descriptor_sets(
 
             D(("descriptor %ld is set", file_fd));
 
-            fd = get_file_descriptor(file_fd);
+            fd = get_file_descriptor(__clib4, file_fd);
             if (fd == NULL) {
                 SHOWMSG("but no file is attached to it");
                 continue;
@@ -259,6 +258,7 @@ map_descriptor_sets(
 
 static void
 remap_descriptor_sets(
+        struct _clib4 *__clib4,
         const fd_set *socket_fds,
         int num_socket_fds,
 
@@ -268,7 +268,6 @@ remap_descriptor_sets(
         fd_set *output_fds,
         int num_output_fds) {
     ENTER();
-    struct _clib4 *__clib4 = __CLIB4;
 
     SHOWPOINTER(socket_fds);
     SHOWVALUE(num_socket_fds);
@@ -299,7 +298,7 @@ remap_descriptor_sets(
                 }
 
                 for (output_fd = 0; output_fd < num_output_fds; output_fd++) {
-                    fd = get_file_descriptor(output_fd);
+                    fd = get_file_descriptor(__clib4, output_fd);
                     if (fd != NULL && FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_Socket == socket_fd) {
                         assert(output_fd < num_output_fds);
                         assert(FLAG_IS_SET(__clib4->__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
@@ -338,7 +337,7 @@ remap_descriptor_sets(
 }
 
 static void
-get_num_descriptors_used(int num_fds, int *num_socket_used_ptr, int *num_file_used_ptr) {
+get_num_descriptors_used(struct _clib4 *__clib4, int num_fds, int *num_socket_used_ptr, int *num_file_used_ptr) {
     int num_socket_used = 0;
     int num_file_used = 0;
     int which_file_fd;
@@ -350,7 +349,7 @@ get_num_descriptors_used(int num_fds, int *num_socket_used_ptr, int *num_file_us
     SHOWMSG("figuring out which file descriptors are in use");
 
     for (which_file_fd = 0; which_file_fd < num_fds; which_file_fd++) {
-        fd = get_file_descriptor(which_file_fd);
+        fd = get_file_descriptor(__clib4, which_file_fd);
         if (fd != NULL) {
             if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
                 int which_socket_fd = fd->fd_Socket;
@@ -422,7 +421,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
     __check_abort_f(__clib4);
 
     /* Figure out the number of file and socket descriptors in use. */
-    get_num_descriptors_used(num_fds, &num_socket_used, &num_file_used);
+    get_num_descriptors_used(__clib4, num_fds, &num_socket_used, &num_file_used);
 
     SHOWVALUE(num_socket_used);
     SHOWVALUE(num_file_used);
@@ -434,7 +433,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         if (num_socket_used > 0) {
             SHOWMSG("allocating read socket fd_set");
 
-            socket_read_fds = allocate_fd_set(num_socket_used, NULL);
+            socket_read_fds = allocate_fd_set(__clib4, num_socket_used, NULL);
             if (socket_read_fds == NULL)
                 goto out;
         }
@@ -442,7 +441,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         if (num_file_used > 0) {
             SHOWMSG("allocating read file fd_set");
 
-            file_read_fds = allocate_fd_set(num_file_used, NULL);
+            file_read_fds = allocate_fd_set(__clib4, num_file_used, NULL);
             if (file_read_fds == NULL)
                 goto out;
         }
@@ -452,7 +451,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         if (num_socket_used > 0) {
             SHOWMSG("allocating write socket fd_set");
 
-            socket_write_fds = allocate_fd_set(num_socket_used, NULL);
+            socket_write_fds = allocate_fd_set(__clib4, num_socket_used, NULL);
             if (socket_write_fds == NULL)
                 goto out;
         }
@@ -460,7 +459,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         if (num_file_used > 0) {
             SHOWMSG("allocating write file fd_set");
 
-            file_write_fds = allocate_fd_set(num_file_used, NULL);
+            file_write_fds = allocate_fd_set(__clib4, num_file_used, NULL);
             if (file_write_fds == NULL)
                 goto out;
         }
@@ -470,7 +469,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         if (num_socket_used > 0) {
             SHOWMSG("allocating except socket fd_set");
 
-            socket_except_fds = allocate_fd_set(num_socket_used, NULL);
+            socket_except_fds = allocate_fd_set(__clib4, num_socket_used, NULL);
             if (socket_except_fds == NULL)
                 goto out;
         }
@@ -486,9 +485,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
      */
     __stdio_lock(__clib4);
 
-    map_descriptor_sets(read_fds,   num_fds, socket_read_fds,   num_socket_used, &total_socket_fd, file_read_fds,  num_file_used, &total_file_fd);
-    map_descriptor_sets(write_fds,  num_fds, socket_write_fds,  num_socket_used, &total_socket_fd, file_write_fds, num_file_used, &total_file_fd);
-    map_descriptor_sets(except_fds, num_fds, socket_except_fds, num_socket_used, &total_socket_fd, NULL,           0,             &total_file_fd);
+    map_descriptor_sets(__clib4, read_fds,   num_fds, socket_read_fds,   num_socket_used, &total_socket_fd, file_read_fds,  num_file_used, &total_file_fd);
+    map_descriptor_sets(__clib4, write_fds,  num_fds, socket_write_fds,  num_socket_used, &total_socket_fd, file_write_fds, num_file_used, &total_file_fd);
+    map_descriptor_sets(__clib4, except_fds, num_fds, socket_except_fds, num_socket_used, &total_socket_fd, NULL,           0,             &total_file_fd);
 
     __stdio_unlock(__clib4);
 
@@ -516,7 +515,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (num_socket_used > 0) {
                     SHOWMSG("allocating backup read socket fd_set");
 
-                    backup_socket_read_fds = allocate_fd_set(num_socket_used, socket_read_fds);
+                    backup_socket_read_fds = allocate_fd_set(__clib4, num_socket_used, socket_read_fds);
                     if (backup_socket_read_fds == NULL)
                         goto out;
                 }
@@ -524,7 +523,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (num_file_used > 0) {
                     SHOWMSG("allocating backup read file fd_set");
 
-                    backup_file_read_fds = allocate_fd_set(num_file_used, file_read_fds);
+                    backup_file_read_fds = allocate_fd_set(__clib4, num_file_used, file_read_fds);
                     if (backup_file_read_fds == NULL)
                         goto out;
                 }
@@ -534,7 +533,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (num_socket_used > 0) {
                     SHOWMSG("allocating backup write socket fd_set");
 
-                    backup_socket_write_fds = allocate_fd_set(num_socket_used, socket_write_fds);
+                    backup_socket_write_fds = allocate_fd_set(__clib4, num_socket_used, socket_write_fds);
                     if (backup_socket_write_fds == NULL)
                         goto out;
                 }
@@ -542,7 +541,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (num_file_used > 0) {
                     SHOWMSG("allocating backup write file fd_set");
 
-                    backup_file_write_fds = allocate_fd_set(num_file_used, file_write_fds);
+                    backup_file_write_fds = allocate_fd_set(__clib4, num_file_used, file_write_fds);
                     if (backup_file_write_fds == NULL)
                         goto out;
                 }
@@ -552,7 +551,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (num_socket_used > 0) {
                     SHOWMSG("allocating backup except socket fd_set");
 
-                    backup_socket_except_fds = allocate_fd_set(num_socket_used, socket_except_fds);
+                    backup_socket_except_fds = allocate_fd_set(__clib4, num_socket_used, socket_except_fds);
                     if (backup_socket_except_fds == NULL)
                         goto out;
                 }
@@ -643,7 +642,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 for (i = 0; i < total_file_fd; i++) {
                     got_input = got_output = FALSE;
 
-                    fd = get_file_descriptor(i);
+                    fd = get_file_descriptor(__clib4, i);
                     if (fd != NULL) {
                         if (file_read_fds != NULL && FD_ISSET(i, file_read_fds)) {
                             if (FLAG_IS_SET(fd->fd_Flags, FDF_READ)) {
@@ -777,7 +776,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             if (read_fds != NULL) {
                 SHOWMSG("allocating backup file read fd_set");
 
-                backup_file_read_fds = allocate_fd_set(num_file_used, file_read_fds);
+                backup_file_read_fds = allocate_fd_set(__clib4, num_file_used, file_read_fds);
                 if (backup_file_read_fds == NULL)
                     goto out;
             }
@@ -785,25 +784,17 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             if (write_fds != NULL) {
                 SHOWMSG("allocating backup file write fd_set");
 
-                backup_file_write_fds = allocate_fd_set(num_file_used, file_write_fds);
+                backup_file_write_fds = allocate_fd_set(__clib4, num_file_used, file_write_fds);
                 if (backup_file_write_fds == NULL)
                     goto out;
             }
         }
-        BOOL pollMode = FALSE;
+
         if (timeout != NULL && (timeout->tv_sec > 0 || timeout->tv_usec > 0)) {
             struct DateStamp datestamp_timeout;
             DateStamp(&stop_when);
 
             add_dates(&stop_when, timeval_to_datestamp(&datestamp_timeout, timeout));
-        }
-        /* If timeout is != NULL but seconds and useconds are == 0 we need to act like
-         * an FDF_POLL so, set gotInput = TRUE and use WaitChar to see if we get really a char.
-         * If so, exit from select but set gotInput = FALSE after increasing result value.
-         * This will clear FD and the poll will work correctly
-         */
-        else if (timeout != NULL && timeout->tv_sec == 0 && timeout->tv_usec == 0) {
-            pollMode = TRUE;
         }
         else {
             memset(&stop_when, 0, sizeof(stop_when));
@@ -813,48 +804,36 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             __check_abort_f(__clib4);
 
             Delay(1);
-            BOOL gotChar = FALSE;
 
             result = 0;
             for (i = 0; i < total_file_fd; i++) {
                 got_input = got_output = FALSE;
 
-                fd = get_file_descriptor(i);
+                fd = get_file_descriptor(__clib4, i);
                 if (fd != NULL) {
                     if (file_read_fds != NULL && FD_ISSET(i, file_read_fds)) {
                         if (FLAG_IS_SET(fd->fd_Flags, FDF_READ)) {
                             BPTR readFile = i == STDIN_FILENO ? Input() : fd->fd_File;
                             SHOWVALUE(FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS));
-                            if (pollMode) {
-                                /* Set FDF_POLL to file */
-                                SET_FLAG(fd->fd_Flags, FDF_POLL);
-                            }
                             /* Check first if this is a POLL/TERMIOS FD
                              * In this case don't wait for char
                             */
-                            if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL) && !pollMode) {
-                                SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_POLL)  && !pollMode");
+                            if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
+                                SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_POLL)");
                                 got_input = TRUE;
-                            }
-                            else  if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL) && pollMode) {
-                                SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_POLL) && pollMode");
-                                got_input = TRUE;
-                                gotChar = WaitForChar(readFile, 1);
                             }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS");
                                 struct termios *tios = fd->fd_Aux;
-                                SHOWVALUE(FLAG_IS_SET(tios->c_lflag, NCURSES));
-                                SHOWVALUE(FLAG_IS_CLEAR(tios->c_lflag, ICANON));
 
-                                if (FLAG_IS_CLEAR(tios->c_lflag, ICANON) && FLAG_IS_SET(tios->c_lflag, NCURSES)) {
+                                if (WaitForChar(readFile, 1)) {
                                     got_input = TRUE;
                                 }
-                                else {
-                                    if (WaitForChar(readFile, 1)) {
-                                        got_input = TRUE;
-                                    }
-                                }
+                            }
+                            else if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING)) {
+                                SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING");
+                                SHOWVALUE(i);
+                                got_input = TRUE;
                             }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE");
@@ -888,15 +867,6 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 SHOWVALUE(got_input);
                 SHOWVALUE(got_output);
 
-                if (got_input || got_output)
-                    result++;
-
-                /* After increasing result check if we get a char and we are in POLL mode
-                 * If we didn't get any char set back got_input to FALSE
-                 */
-                if (pollMode && !gotChar)
-                    got_input = FALSE;
-
                 if (file_read_fds != NULL && NOT got_input) {
                     FD_CLR(i, file_read_fds);
                 }
@@ -904,6 +874,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 if (file_write_fds != NULL && NOT got_output) {
                     FD_CLR(i, file_write_fds);
                 }
+
+                if (got_input || got_output)
+                    result++;
             }
 
             /* Check for a stop signal. */
@@ -941,9 +914,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
         __stdio_lock(__clib4);
 
-        remap_descriptor_sets(socket_read_fds, total_socket_fd, file_read_fds, total_file_fd, read_fds, num_fds);
-        remap_descriptor_sets(socket_write_fds, total_socket_fd, file_write_fds, total_file_fd, write_fds, num_fds);
-        remap_descriptor_sets(socket_except_fds, total_socket_fd, NULL, 0, except_fds, num_fds);
+        remap_descriptor_sets(__clib4, socket_read_fds, total_socket_fd, file_read_fds, total_file_fd, read_fds, num_fds);
+        remap_descriptor_sets(__clib4, socket_write_fds, total_socket_fd, file_write_fds, total_file_fd, write_fds, num_fds);
+        remap_descriptor_sets(__clib4, socket_except_fds, total_socket_fd, NULL, 0, except_fds, num_fds);
 
         __stdio_unlock(__clib4);
     }
@@ -952,19 +925,19 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
 out:
 
-    free_fd_set(socket_read_fds);
-    free_fd_set(socket_write_fds);
-    free_fd_set(socket_except_fds);
+    free_fd_set(__clib4, socket_read_fds);
+    free_fd_set(__clib4, socket_write_fds);
+    free_fd_set(__clib4, socket_except_fds);
 
-    free_fd_set(file_read_fds);
-    free_fd_set(file_write_fds);
+    free_fd_set(__clib4, file_read_fds);
+    free_fd_set(__clib4, file_write_fds);
 
-    free_fd_set(backup_socket_read_fds);
-    free_fd_set(backup_socket_write_fds);
-    free_fd_set(backup_socket_except_fds);
+    free_fd_set(__clib4, backup_socket_read_fds);
+    free_fd_set(__clib4, backup_socket_write_fds);
+    free_fd_set(__clib4, backup_socket_except_fds);
 
-    free_fd_set(backup_file_read_fds);
-    free_fd_set(backup_file_write_fds);
+    free_fd_set(__clib4, backup_file_read_fds);
+    free_fd_set(__clib4, backup_file_write_fds);
 
     RETURN(result);
     return (result);

@@ -12,6 +12,26 @@
 
 __BEGIN_DECLS
 
+/* These may be used to determine what facilities are present at compile time.
+   Their values can be obtained at run time from `sysconf'.  */
+
+#ifdef __USE_XOPEN2K8
+/* POSIX Standard approved as ISO/IEC 9945-1 as of September 2008.  */
+# define _POSIX_VERSION	200809L
+#elif defined __USE_XOPEN2K
+/* POSIX Standard approved as ISO/IEC 9945-1 as of December 2001.  */
+# define _POSIX_VERSION	200112L
+#elif defined __USE_POSIX199506
+/* POSIX Standard approved as ISO/IEC 9945-1 as of June 1995.  */
+# define _POSIX_VERSION	199506L
+#elif defined __USE_POSIX199309
+/* POSIX Standard approved as ISO/IEC 9945-1 as of September 1993.  */
+# define _POSIX_VERSION	199309L
+#else
+/* POSIX Standard approved as ISO/IEC 9945-1 as of September 1990.  */
+# define _POSIX_VERSION	199009L
+#endif
+
 #define STDIN_FILENO	0
 #define STDOUT_FILENO	1
 #define STDERR_FILENO	2
@@ -92,7 +112,10 @@ extern void swab64(const void *bfrom, void *bto, ssize_t nbytes);	/* Same as swa
 extern void encrypt(char *block, int edflag);
 
 extern int spawnv(int mode, const char *file, const char **argv);
+extern int spawnve(int mode, const char *path, const char **argv, char * const envp[]);
 extern int spawnvp(int mode, const char *path, const char **argv);
+/* Non standard. Used to help linux ports */
+extern int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);
 
 extern int profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale);
 extern long sysconf(int name);
@@ -178,6 +201,7 @@ extern int setlogin(const char *name);
 #define _SC_NPROCESSORS_ONLN       10
 #define _SC_TZNAME_MAX             20
 #define _SC_THREAD_KEYS_MAX        21
+#define _SC_VERSION                29
 #define _SC_HOST_NAME_MAX          65
 #define _SC_GETPW_R_SIZE_MAX	   70
 #define _SC_TTY_NAME_MAX           72

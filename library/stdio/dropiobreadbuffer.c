@@ -21,8 +21,6 @@ __drop_iob_read_buffer(struct _clib4 *__clib4, struct iob *file) {
 
     assert(file != NULL);
 
-    __check_abort();
-
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
@@ -30,9 +28,7 @@ __drop_iob_read_buffer(struct _clib4 *__clib4, struct iob *file) {
         CLEAR_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
 
         if (__iob_read_buffer_is_valid(file)) {
-            LONG num_unread_bytes;
-
-            num_unread_bytes = __iob_num_unread_bytes(file);
+            LONG num_unread_bytes = __iob_num_unread_bytes(file);
 
             D(("%ld bytes are to be dropped", num_unread_bytes));
 

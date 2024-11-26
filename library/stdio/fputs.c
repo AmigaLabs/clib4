@@ -6,6 +6,10 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef _FCNTL_HEADERS_H
+#include "fcntl_headers.h"
+#endif /* _FCNTL_HEADERS_H */
+
 int
 fputs(const char *s, FILE *stream) {
     struct iob *file = (struct iob *) stream;
@@ -22,17 +26,22 @@ fputs(const char *s, FILE *stream) {
     assert(s != NULL && stream != NULL);
 
     if (s == NULL || stream == NULL) {
+        SHOWMSG("invalid parameters");
         __set_errno(EFAULT);
-        goto out;
+
+        RETURN(result);
+        return result;
     }
 
-    flockfile(stream);
+    __check_abort_f(__clib4);
+
+    __flockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
 
-    if (__fputc_check(stream, __clib4) < 0)
+    if (__fputc_check(__clib4, stream) < 0)
         goto out;
 
     total_size = strlen(s);
@@ -99,7 +108,7 @@ fputs(const char *s, FILE *stream) {
 
                 c = (*s++);
 
-                if (__putc_line_buffered(c, (FILE *) file) == EOF)
+                if (__putc_line_buffered(__clib4, c, (FILE *) file) == EOF)
                     goto out;
 
                 total_size--;
@@ -122,7 +131,7 @@ fputs(const char *s, FILE *stream) {
                     ssize_t num_bytes_written;
 
                     /* We bypass the buffer entirely. */
-                    num_bytes_written = write(file->iob_Descriptor, s, total_size);
+                    num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, total_size);
                     if (num_bytes_written == -1) {
                         SET_FLAG(file->iob_Flags, IOBF_ERROR);
                         goto out;
@@ -166,7 +175,7 @@ fputs(const char *s, FILE *stream) {
 
                 c = (*s++);
 
-                if (__putc_fully_buffered(c, (FILE *) file) == EOF)
+                if (__putc_fully_buffered(__clib4, c, (FILE *) file) == EOF)
                     goto out;
 
                 total_size--;
@@ -189,8 +198,7 @@ out:
         }
     }
 
-    if (stream != NULL)
-        funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

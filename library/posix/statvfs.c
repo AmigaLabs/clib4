@@ -26,7 +26,7 @@ statvfs(const char *path, struct statvfs *buf) {
             goto out;
 
         if (path_name_nti.is_root) {
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             goto out;
         }
     }
@@ -48,7 +48,7 @@ statvfs(const char *path, struct statvfs *buf) {
             if (info->id_VolumeNode == BZERO) {
                 FreeDosObject(DOS_INFODATA, info);
                 /* Device not present or not responding */
-                __set_errno(ENXIO);
+                __set_errno_r(__clib4, ENXIO);
                 goto out;
             }
 
@@ -60,7 +60,7 @@ statvfs(const char *path, struct statvfs *buf) {
         }
         FreeDosObject(DOS_INFODATA, info);
     } else
-        __set_errno(ENOMEM);
+        __set_errno_r(__clib4, ENOMEM);
 
 out:
     RETURN(result);

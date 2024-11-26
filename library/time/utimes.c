@@ -31,7 +31,7 @@ utimes(const char *name, const struct timeval *tvp) {
         int32 __gmtoffset = 0;
 
         if (UNIX_TIME_OFFSET > mtime) {
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             return -1;
         }
 
@@ -57,17 +57,18 @@ utimes(const char *name, const struct timeval *tvp) {
 
     if (__clib4->__unix_path_semantics) {
         if (__translate_unix_to_amiga_path_name(&name, &path_name_nti) != 0) {
+            __set_errno_r(__clib4, EFAULT);
             return -1;
         }
 
         if (path_name_nti.is_root) {
-            __set_errno(EPERM);
+            __set_errno_r(__clib4, EPERM);
             return -1;
         }
     }
 
     if (!SetDate((STRPTR) name, &ds)) {
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         return -1;
     }
 

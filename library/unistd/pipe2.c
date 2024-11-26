@@ -22,16 +22,14 @@ int pipe2(int fd[2], int flags) {
 
     ObtainSemaphore(__clib4->__pipe_semaphore);
 #ifdef USE_TEMPFILES
-    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", __clib4->__pipenum++, ((struct Process *)FindTask(NULL))->pr_ProcessID);
+    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
     // Delete the file if exists (we don't need to check if file exists)
     Delete(pipe_name);
 #else
     if (flags & O_NONBLOCK)
-        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0/NOBLOCK", __clib4->__pipenum++,
-                 ((struct Process *) FindTask(NULL))->pr_ProcessID);
+        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0/NOBLOCK", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
     else
-        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", __clib4->__pipenum++,
-                 ((struct Process *) FindTask(NULL))->pr_ProcessID);
+        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
 #endif // USE_TEMPFILES
     ReleaseSemaphore(__clib4->__pipe_semaphore);
 
@@ -50,18 +48,23 @@ int pipe2(int fd[2], int flags) {
     }
 
     /* Mark FD as PIPE in case USE_TEMPFILES is used */
-    struct fd *fd1 = __get_file_descriptor(fd[0]);
+    struct fd *fd1 = __get_file_descriptor(__clib4, fd[0]);
     if (fd1 != NULL) {
         SET_FLAG(fd1->fd_Flags, FDF_PIPE);
+        SET_FLAG(fd1->fd_Flags, FDF_IS_INTERACTIVE);
     }
 
-    struct fd *fd2 = __get_file_descriptor(fd[1]);
+    struct fd *fd2 = __get_file_descriptor(__clib4, fd[1]);
     if (fd2 != NULL) {
         SET_FLAG(fd2->fd_Flags, FDF_PIPE);
+        SET_FLAG(fd2->fd_Flags, FDF_IS_INTERACTIVE);
     }
     if (flags & O_CLOEXEC)
         SET_FLAG(fd2->fd_Flags, FDF_CLOEXEC);
-
+    if(flags & O_NONBLOCK) {
+        SET_FLAG(fd1->fd_Flags, FDF_NON_BLOCKING);
+        SET_FLAG(fd2->fd_Flags, FDF_NON_BLOCKING);
+    }
     RETURN(0);
     return 0;
 }

@@ -1,213 +1,136 @@
 /*
- * $Id: stdlib_qsort.c,v 1.6 2006-01-08 12:04:26 clib4devs Exp $
+ * $Id: stdlib_qsort.c,v 1.7 2024-07-26 12:04:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-/******************************************************************
- * qsort.c  --  Non-Recursive ANSI Quicksort function             *
- *                                                                *
- * Public domain by Raymond Gardner, Englewood CO  February 1991  *
- *                                                                *
- * Usage:                                                         *
- *     qsort(base, nbr_elements, width_bytes, compare_function);  *
- *        void *base;                                             *
- *        size_t nbr_elements, width_bytes;                       *
- *        int (*compare_function)(const void *, const void *);    *
- *                                                                *
- * Sorts an array starting at base, of length nbr_elements, each  *
- * element of size width_bytes, ordered via compare_function,     *
- * which is called as  (*compare_function)(ptr_to_element1,       *
- * ptr_to_element2) and returns < 0 if element1 < element2,       *
- * 0 if element1 = element2, > 0 if element1 > element2.          *
- * Most refinements are due to R. Sedgewick. See "Implementing    *
- * Quicksort Programs", Comm. ACM, Oct. 1978, and Corrigendum,    *
- * Comm. ACM, June 1979.                                          *
- ******************************************************************/
+#ifndef __GNUC__
+#define inline
+#endif
 
-#define SWAP(a, b, size)    (swap((char *)(a), (char *)(b), size))
-#define COMPARE(a, b)       ((*comp)((const void *)(a), (const void *)(b)))
+static inline char *med3(char *, char *, char *, int (*)());
+static inline void swapfunc(char *, char *, int, int);
 
-/* subfiles of THRESHOLD or fewer elements will
-   be sorted by a simple insertion sort
-   Note! THRESHOLD must be at least 3 */
-#define THRESHOLD 7
+/*
+ * Qsort routine from Bentley & McIlroy's "Engineering a Sort Function".
+ */
+#define swapcode(TYPE, parmi, parmj, n) {       \
+    long i = (n) / sizeof (TYPE);               \
+    register TYPE *pi = (TYPE *) (parmi);       \
+    register TYPE *pj = (TYPE *) (parmj);       \
+    do {                                        \
+        register TYPE    t = *pi;               \
+        *pi++ = *pj;                            \
+        *pj++ = t;                              \
+        } while (--i > 0);                      \
+}
 
-#define IS_WORD_ALIGNED(a, b) (((((unsigned long)(a)) | ((unsigned long)(b))) & 1) == 0)
+#define SWAPINIT(a, es) swaptype = ((char *)a - (char *)0) % sizeof(long) || \
+    es % sizeof(long) ? 2 : es == sizeof(long)? 0 : 1;
 
-/* swap nbytes between a and b */
-inline static void
-swap(char *a, char *b, size_t nbytes) {
-    char temp;
+static inline void
+swapfunc(char *a,
+         char *b,
+         int n,
+         int swaptype) {
+    if (swaptype <= 1)
+        swapcode(long, a, b, n)
+    else
+        swapcode(char, a, b, n)
+}
 
-    assert(a != NULL && b != NULL && nbytes > 0);
+#define swap(a, b)                      \
+    if (swaptype == 0) {                \
+        long t = *(long *)(a);          \
+        *(long *)(a) = *(long *)(b);    \
+        *(long *)(b) = t;               \
+    } else                              \
+        swapfunc(a, b, es, swaptype)
 
-    /* This is an attempt to use 'long' sized swapping, if possible. */
-    if (nbytes >= sizeof(long) && IS_WORD_ALIGNED(a, b)) {
-        long *_a = (long *) a;
-        long *_b = (long *) b;
-        long _temp;
+#define vecswap(a, b, n) if ((n) > 0) swapfunc(a, b, n, swaptype)
 
-        do {
-            _temp = (*_a);
-            (*_a++) = (*_b);
-            (*_b++) = _temp;
-
-            nbytes -= sizeof(long);
-        } while (nbytes >= sizeof(long));
-
-        if (nbytes > 0) {
-            a = (char *) _a;
-            b = (char *) _b;
-
-            do {
-                temp = (*a);
-                (*a++) = (*b);
-                (*b++) = temp;
-            } while (--nbytes > 0);
-        }
-    } else {
-        do {
-            temp = (*a);
-            (*a++) = (*b);
-            (*b++) = temp;
-        } while (--nbytes > 0);
-    }
+static inline char *
+med3(char *a, char *b, char *c, int (*cmp)(const void *, const void *)) {
+    return cmp(a, b) < 0 ? (cmp(b, c) < 0 ? b : (cmp(a, c) < 0 ? c : a))
+                         : (cmp(b, c) > 0 ? b : (cmp(a, c) < 0 ? a : c));
 }
 
 void
-qsort(void *base, size_t count, size_t size, int (*comp)(const void *element1, const void *element2)) {
-    ENTER();
+qsort(void *a, size_t n, size_t es, int (*cmp)(const void *, const void *)) {
+    char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
+    int d, r, swaptype, swap_cnt;
 
-    SHOWPOINTER(base);
-    SHOWVALUE(count);
-    SHOWVALUE(size);
-    SHOWPOINTER(comp);
-
-    assert((int) count >= 0 && (int) size >= 0);
-
-    if (count > 1 && size > 0) {
-        char *stack[32 * 2], **sp;    /* stack and stack pointer */
-        char *i, *j, *limit;        /* scan and limit pointers */
-        char *base_pointer;            /* base pointer as (char *) */
-        size_t threshold;            /* size of THRESHOLD elements in bytes */
-
-        assert(base != NULL && comp != NULL);
-
-        if (base == NULL || comp == NULL) {
-            SHOWMSG("invalid parameters");
-
-            __set_errno(EFAULT);
-            goto out;
+loop:
+    SWAPINIT(a, es);
+    swap_cnt = 0;
+    if (n < 7) {
+        for (pm = (char *) a + es; pm < (char *) a + n * es; pm += es)
+            for (pl = pm; pl > (char *) a && cmp(pl - es, pl) > 0;
+                 pl -= es)
+                swap(pl, pl - es);
+        return;
+    }
+    pm = (char *) a + (n / 2) * es;
+    if (n > 7) {
+        pl = a;
+        pn = (char *) a + (n - 1) * es;
+        if (n > 40) {
+            d = (n / 8) * es;
+            pl = med3(pl, pl + d, pl + 2 * d, cmp);
+            pm = med3(pm - d, pm, pm + d, cmp);
+            pn = med3(pn - 2 * d, pn - d, pn, cmp);
         }
+        pm = med3(pl, pm, pn, cmp);
+    }
+    swap(a, pm);
+    pa = pb = (char *) a + es;
 
-        /* set up (char *) base_pointer pointer */
-        base_pointer = (char *) base;
-
-        /* init threshold */
-        threshold = THRESHOLD * size; /* ZZZ problematic if (THRESHOLD * size) > 0xffffffff */
-
-        /* init stack pointer */
-        sp = stack;
-
-        /* pointer past end of array */
-        limit = base_pointer + count *
-                               size; /* ZZZ problematic if (count * size) > 0xffffffff or (base_pointer + count * size) > 0xffffffff */
-
-        /* repeat until break... */
-        while (TRUE) {
-            /* if more than THRESHOLD elements */
-            if ((size_t)(limit - base_pointer) > threshold) {
-                /* swap base_pointer with middle */
-                SWAP((((limit - base_pointer) / size) / 2) * size + base_pointer, base_pointer, size);
-
-                /* i scans left to right */
-                i = base_pointer + size;
-
-                /* j scans right to left */
-                j = limit - size;
-
-                /* Sedgewick's three-element sort sets things up so that
-                   (*i) <= (*base_pointer) <= (*j); (*base_pointer) is
-                   pivot element */
-                if (COMPARE(i, j) > 0)
-                    SWAP(i, j, size);
-
-                if (COMPARE(base_pointer, j) > 0)
-                    SWAP(base_pointer, j, size);
-
-                if (COMPARE(i, base_pointer) > 0)
-                    SWAP(i, base_pointer, size);
-
-                /* loop until break */
-                while (TRUE) {
-                    /* move i right until (*i) >= pivot */
-                    do
-                        i += size;
-                    while (COMPARE(i, base_pointer) < 0);
-
-                    /* move j left until (*j) <= pivot */
-                    do
-                        j -= size;
-                    while (COMPARE(j, base_pointer) > 0);
-
-                    /* break loop if pointers crossed */
-                    if (i > j)
-                        break;
-
-                    /* else swap elements, keep scanning */
-                    SWAP(i, j, size);
-                }
-
-                /* move pivot into correct place */
-                SWAP(base_pointer, j, size);
-
-                /* if left subfile larger */
-                if (j - base_pointer > limit - i) {
-                    /* stack left subfile base_pointer and limit */
-                    sp[0] = base_pointer;
-                    sp[1] = j;
-
-                    /* sort the right subfile */
-                    base_pointer = i;
-                } else /* else right subfile larger */
-                {
-                    /* stack right subfile base_pointer and limit */
-                    sp[0] = i;
-                    sp[1] = limit;
-
-                    /* sort the left subfile */
-                    limit = j;
-                }
-
-                /* increment stack pointer */
-                sp += 2;
-            } else /* else subfile is small, use insertion sort */
-            {
-                for (j = base_pointer, i = j + size; i < limit; j = i, i += size) {
-                    for (; COMPARE(j, j + size) > 0; j -= size) {
-                        SWAP(j, j + size, size);
-                        if (j == base_pointer)
-                            break;
-                    }
-                }
-
-                /* if any entries on stack pop the base_pointer and limit,
-                   else the stack is empty and we're done */
-                if (sp == stack)
-                    break;
-
-                sp -= 2;
-
-                base_pointer = sp[0];
-                limit = sp[1];
+    pc = pd = (char *) a + (n - 1) * es;
+    for (;;) {
+        while (pb <= pc && (r = cmp(pb, a)) <= 0) {
+            if (r == 0) {
+                swap_cnt = 1;
+                swap(pa, pb);
+                pa += es;
             }
+            pb += es;
         }
+        while (pb <= pc && (r = cmp(pc, a)) >= 0) {
+            if (r == 0) {
+                swap_cnt = 1;
+                swap(pc, pd);
+                pd -= es;
+            }
+            pc -= es;
+        }
+        if (pb > pc)
+            break;
+        swap(pb, pc);
+        swap_cnt = 1;
+        pb += es;
+        pc -= es;
+    }
+    if (swap_cnt == 0) {  /* Switch to insertion sort */
+        for (pm = (char *) a + es; pm < (char *) a + n * es; pm += es)
+            for (pl = pm; pl > (char *) a && cmp(pl - es, pl) > 0;
+                 pl -= es)
+                swap(pl, pl - es);
+        return;
     }
 
-out:
-
-    LEAVE();
+    pn = (char *) a + n * es;
+    r = min(pa - (char *) a, pb - pa);
+    vecswap(a, pb - r, r);
+    r = min(pd - pc, pn - pd - es);
+    vecswap(pb, pn - r, r);
+    if ((r = pb - pa) > es)
+        qsort(a, r / es, es, cmp);
+    if ((r = pd - pc) > es) {
+        /* Iterate rather than recurse to save stack space */
+        a = pn - r;
+        n = r / es;
+        goto loop;
+    }
 }

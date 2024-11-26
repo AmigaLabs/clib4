@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_ftrylockfile.c,v 1.5 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_ftrylockfile.c,v 1.6 2024-07-20 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -8,22 +8,25 @@
 
 int
 ftrylockfile(FILE *stream) {
-    struct iob *file = (struct iob *) stream;
-    int result = ERROR;
     struct _clib4 *__clib4 = __CLIB4;
 
-    ENTER();
+    return __ftrylockfile_r(__clib4, stream);
+}
 
+int
+__ftrylockfile_r(struct _clib4 *__clib4, FILE *stream) {
+    struct iob *file = (struct iob *) stream;
+    int result = ERROR;
+
+    ENTER();
     SHOWPOINTER(stream);
 
     assert(stream != NULL);
 
-    __check_abort_f(__clib4);
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -33,12 +36,22 @@ ftrylockfile(FILE *stream) {
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
 
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
+        goto out;
+    }
+
+    if (FLAG_IS_SET(file->iob_Flags, IOBF_LOCKED)) {
+        SHOWMSG("this file is already locked");
+
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     if (file->iob_Lock != NULL && CANNOT AttemptSemaphore(file->iob_Lock))
-    goto out;
+        goto out;
+
+    SET_FLAG(file->iob_Flags, IOBF_LOCKED);
+    file->iob_TaskLock = (struct Task *) __clib4->self;
 
     result = OK;
 

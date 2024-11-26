@@ -20,7 +20,7 @@ __change_fd_user_data(
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd != NULL) {
         __fd_lock(fd);
 

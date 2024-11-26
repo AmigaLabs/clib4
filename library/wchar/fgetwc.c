@@ -11,7 +11,7 @@
 #endif /* _WCHAR_HEADERS_H */
 
 wint_t
-__fgetwc_unlocked_internal(FILE *f) {
+__fgetwc_unlocked_internal(struct _clib4 *__clib4, FILE *f) {
     ENTER();
 
     wchar_t wc;
@@ -21,7 +21,7 @@ __fgetwc_unlocked_internal(FILE *f) {
     int first = 1;
 
     do {
-        b = c = __getc(f);
+        b = c = __getc(__clib4, f);
         if (c < 0) {
             if (!first) {
                 f->_flags2 |= __SERR;
@@ -34,7 +34,7 @@ __fgetwc_unlocked_internal(FILE *f) {
         if (l == -1) {
             if (!first) {
                 f->_flags2 |= __SERR;
-                ungetc(b, f);
+                __ungetc_r(__clib4, b, f);
             }
             RETURN(WEOF);
             return WEOF;
@@ -47,11 +47,11 @@ __fgetwc_unlocked_internal(FILE *f) {
 }
 
 wint_t
-__fgetwc_unlocked(FILE *f) {
+__fgetwc_unlocked(struct _clib4 *__clib4, FILE *f) {
     if ((f->_flags2 & __SWID) <= 0)
         fwide(f, 1);
 
-    wchar_t wc = __fgetwc_unlocked_internal(f);
+    wchar_t wc = __fgetwc_unlocked_internal(__clib4, f);
 
     return wc;
 }
@@ -59,10 +59,15 @@ __fgetwc_unlocked(FILE *f) {
 wint_t
 fgetwc(FILE *f) {
     wint_t c;
+    struct _clib4 *__clib4 = __CLIB4;
 
-    flockfile(f);
-    c = __fgetwc_unlocked(f);
-    funlockfile(f);
+    __check_abort_f(__clib4);
+
+    __flockfile_r(__clib4, f);
+
+    c = __fgetwc_unlocked(__clib4, f);
+
+    __funlockfile_r(__clib4, f);
 
     return c;
 }
