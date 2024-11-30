@@ -437,6 +437,7 @@ release:
 	-$(COPY) installer/clib4.info .
 	-$(COPY) installer/README.md.info clib4/
 	-$(COPY) $(BUILD_DIR)/clib4.library clib4/
+	-$(COPY) $(BUILD_DIR)/clib4.library.debug clib4/
 	-$(COPY) misc clib4/
 	-$(COPY) libs/libauto.a clib4/lib/
 	-$(COPY) $(OUTPUT_LIB)/* clib4/lib/
