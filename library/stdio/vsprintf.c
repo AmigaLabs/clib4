@@ -32,10 +32,6 @@ vsprintf(char *s, const char *format, va_list arg) {
 
     result = vfprintf((FILE * ) &string_iob, format, arg);
 
-    /* Put a \0 at the end */
-    if (__putc(__clib4, '\0', (FILE * ) &string_iob, IOBF_BUFFER_MODE_NONE) == EOF) {
-        result = EOF;
-    }
     __flush_r(__clib4, (FILE * ) &string_iob);
 
 out:
