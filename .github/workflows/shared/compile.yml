@@ -1,0 +1,10 @@
+name: Compile clib4
+
+jobs:
+  install-gh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: compiling
+        run: |
+          cd /opt/code && \
+          make -j1 -f GNUmakefile.os4 OS=os4 SPE=${{ inputs.spe }} GITTAG=${{ inputs.git_tag }}
