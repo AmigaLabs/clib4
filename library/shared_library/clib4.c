@@ -136,8 +136,11 @@ extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
 #undef DebugPrintF
 #define bug IExec->DebugPrintF
 #else
+#   ifdef D
+#       undef D
+#   endif // D
 #define D(x) ;
-#endif
+#endif // DEBUG
 
 int32
 _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
@@ -204,8 +207,6 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
         struct Clib4Node c2n;
-        char varbuf[8] = {0};
-        char uuid[UUID4_LEN + 1] = {0};
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
         uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
 
@@ -436,11 +437,11 @@ clib4ProcessCompare(const void *a, const void *b, void *udata) {
 struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct ExecIFace *const iexec) {
     libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
     libBase->libNode.lib_Node.ln_Pri = LIBPRI;
-    libBase->libNode.lib_Node.ln_Name = LIBNAME;
+    libBase->libNode.lib_Node.ln_Name = (char *)LIBNAME;
     libBase->libNode.lib_Flags = LIBF_SUMUSED | LIBF_CHANGED;
     libBase->libNode.lib_Version = VERSION;
     libBase->libNode.lib_Revision = REVISION;
-    libBase->libNode.lib_IdString = VSTRING;
+    libBase->libNode.lib_IdString = (char *)VSTRING;
     libBase->SegList = seglist;
 
     SysBase = (struct ExecBase *) iexec->Data.LibBase;

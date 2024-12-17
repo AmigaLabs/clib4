@@ -155,7 +155,8 @@ write_bb_counts(int fd) {
 
 void monstartup(uint32 low_pc, uint32 high_pc) {
     uint8 *cp;
-    uint32 lowpc, highpc, text_start;
+    uint32 lowpc, highpc;
+    uint32 text_start = 0;
     struct gmonparam *p = &_gmonparam;
     int o;
 
