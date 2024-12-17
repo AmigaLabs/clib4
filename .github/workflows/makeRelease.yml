@@ -23,7 +23,7 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
           git config --global --add safe.directory /opt/code
       - name: Compile clib4
-        uses: ./.github/workflows/shared/compile.yml
+        uses: ./.github/actions/compile
         with:
           git_tag: ${{ github.event.release.tag_name }}
           spe: no
