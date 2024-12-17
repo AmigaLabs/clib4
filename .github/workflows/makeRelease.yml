@@ -11,22 +11,23 @@ on:
 jobs:
   compile-ppc:
     name: Build for PowerPC cpus
-      uses: ./.github/workflows/_compile.yml
-      with:
-        git_tag: ${{ github.event.release.tag_name }}
-        gcc: 11
-        spe: "no"
+    uses: ./.github/workflows/_compile.yml
+    with:
+      git_tag: ${{ github.event.release.tag_name }}
+      gcc: 11
+      spe: "no"
 
   compile-spe:
     name: Build for PowerPC SPE cpus
-      uses: ./.github/workflows/_compile.yml
-      with:
-        git_tag: ${{ github.event.release.tag_name }}
-        gcc: 6
-        spe: "yes"
+    uses: ./.github/workflows/_compile.yml
+    with:
+      git_tag: ${{ github.event.release.tag_name }}
+      gcc: 6
+      spe: "yes"
 
   make-realease-pr:
     needs: [compile-ppc, compile-spe]
+    runs-on: ubuntu-latest
     steps:
     - name: Create Pull Request
       id: cpr
@@ -47,11 +48,11 @@ jobs:
 
   announcements:
     needs: [make-realease-pr]
-      name: Notify on Discord on successful release
-        uses: appleboy/discord-action@master
-        with:
-          webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
-          webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-          message: "New release of clib4: **${{ github.event.release.tag_name }}** has been created. Check it out at: https://github.com/AmigaLabs/clib4/releases/tag/${{ github.event.release.tag_name }}"
-          username: GitHub Actions
-          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+    name: Notify on Discord on successful release
+    uses: appleboy/discord-action@master
+    with:
+      webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
+      webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
+      message: "New release of clib4: **${{ github.event.release.tag_name }}** has been created. Check it out at: https://github.com/AmigaLabs/clib4/releases/tag/${{ github.event.release.tag_name }}"
+      username: GitHub Actions
+      avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
