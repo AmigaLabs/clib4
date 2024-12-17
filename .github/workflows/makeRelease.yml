@@ -18,15 +18,18 @@ jobs:
     steps:
       - name: Pull code
         uses: actions/checkout@v4
+
       - name: Add repository to git safe directories
         run: |
           git config --global --add safe.directory $GITHUB_WORKSPACE
           git config --global --add safe.directory /opt/code
+
       - name: Compile clib4
         uses: ./.github/actions/compile
         with:
           git_tag: ${{ github.event.release.tag_name }}
-          spe: no
+          spe: "no"
+
       # - name: Create the LHA release archive
       #   run: |
       #     make -f GNUmakefile.os4 release && \
