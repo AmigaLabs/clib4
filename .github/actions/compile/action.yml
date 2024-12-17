@@ -14,12 +14,14 @@ runs:
   using: "composite"
   steps:
     - name: compiling
-      # if: ${{ inputs.spe != 'yes' }}
+      shell: bash
+      if: ${{ inputs.spe != 'yes' }}
       run: |
         cd /opt/code && \
         make -j1 -f GNUmakefile.os4 OS=os4 GITTAG=${{ inputs.git_tag }}
-    # - name: compiling SPE
-    #   if: ${{ inputs.spe == 'yes' }}
-    #   run: |
-    #     cd /opt/code && \
-    #     make -j1 -f GNUmakefile.os4 OS=os4 SPE=yes GITTAG=${{ inputs.git_tag }}
+    - name: compiling SPE
+      shell: bash
+      if: ${{ inputs.spe == 'yes' }}
+      run: |
+        cd /opt/code && \
+        make -j1 -f GNUmakefile.os4 OS=os4 SPE=yes GITTAG=${{ inputs.git_tag }}
