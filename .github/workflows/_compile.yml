@@ -6,14 +6,17 @@ on:
       git_tag:
         description: 'Git tag to use'
         required: true
+        type: string
       gcc:
         description: 'GCC version to use'
         required: true
         default: 11
+        type: string
       spe:
         description: 'Compile with SPE'
         required: false
         default: "no"
+        type: string
 
 jobs:
   compile:
