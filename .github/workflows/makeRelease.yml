@@ -9,11 +9,11 @@ on:
       - published
 
 jobs:
-  run:
-    name: Build latest code
+  compile-ppc:
+    name: Build latest code for PowerPC cpus
     runs-on: ubuntu-latest
     container:
-      image: walkero/amigagccondocker:os4-gcc11-exp
+      image: walkero/amigagccondocker:os4-gcc11
       volumes:
         - '${{ github.workspace }}:/opt/code'
     steps:
@@ -30,6 +30,29 @@ jobs:
         with:
           git_tag: ${{ github.event.release.tag_name }}
           spe: "no"
+
+  compile-spe:
+    name: Build latest code for PowerPC SPE cpus
+    runs-on: ubuntu-latest
+    container:
+      image: walkero/amigagccondocker:os4-gcc6
+      volumes:
+        - '${{ github.workspace }}:/opt/code'
+    steps:
+      - name: Pull code
+        uses: actions/checkout@v4
+
+      - name: Add repository to git safe directories
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git config --global --add safe.directory /opt/code
+
+      - name: Compile clib4
+        uses: ./.github/actions/compile
+        with:
+          git_tag: ${{ github.event.release.tag_name }}
+          spe: "yes"
+
 
       # - name: Create the LHA release archive
       #   run: |
