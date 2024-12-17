@@ -12,7 +12,7 @@ jobs:
     name: Build latest code
     runs-on: ubuntu-latest
     container:
-      image: walkero/amigagccondocker:os4-gcc11-exp
+      image: walkero/amigagccondocker:os4-gcc11
       volumes:
         - '${{ github.workspace }}:/opt/code'
     steps:
