@@ -8,7 +8,7 @@ inputs:
     default: "no"
   git_tag:
     description: 'Git tag to use'
-    required: true
+    required: false
 
 runs:
   using: "composite"

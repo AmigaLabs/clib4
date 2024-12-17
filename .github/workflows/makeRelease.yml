@@ -4,7 +4,6 @@ on:
   release:
     branches:
       - master
-      - create-an-SPE-version-of-clib4
     types: 
       - published
 
