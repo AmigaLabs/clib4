@@ -10,7 +10,6 @@ on:
 
 jobs:
   compile-ppc:
-    name: Build for PowerPC cpus
     uses: ./.github/workflows/_compile.yml
     with:
       git_tag: ${{ github.event.release.tag_name }}
@@ -18,7 +17,6 @@ jobs:
       spe: "no"
 
   compile-spe:
-    name: Build for PowerPC SPE cpus
     uses: ./.github/workflows/_compile.yml
     with:
       git_tag: ${{ github.event.release.tag_name }}
