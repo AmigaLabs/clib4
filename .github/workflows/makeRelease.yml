@@ -4,7 +4,6 @@ on:
   release:
     branches:
       - master
-      - fixes-for-PR-219
     types: 
       - published
 
