@@ -19,6 +19,7 @@ runs:
       run: |
         cd /opt/code && \
         make -j1 -f GNUmakefile.os4 OS=os4 GITTAG=${{ inputs.git_tag }}
+
     - name: compiling SPE
       shell: bash
       if: ${{ inputs.spe == 'yes' }}

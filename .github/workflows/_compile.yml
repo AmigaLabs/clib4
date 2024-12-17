@@ -17,6 +17,13 @@ on:
         required: false
         default: "no"
         type: string
+    secrets:
+      GITHUB_TOKEN:
+        description: 'GitHub token'
+        required: true
+
+env:
+  archive_name: clib4-${{ inputs.git_tag }}${{ inputs.spe == 'yes' && '_SPE' || '' }}
 
 jobs:
   compile:
@@ -39,3 +46,35 @@ jobs:
         with:
           git_tag: ${{ inputs.git_tag }}
           spe: ${{ inputs.spe }}
+
+      - name: Create the LHA release archive
+        run: |
+          make -f GNUmakefile.os4 release && \
+          mv clib4.lha ${{ env.archive_name }}.lha
+
+      - name: Create the DEB release archive
+        run: |
+          make -f GNUmakefile.os4 dpkg DPKG_LIB=${{ env.archive_name }}_amd64
+
+      - name: Upload LHA release file in GitHub
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: /opt/code/${{ env.archive_name }}.lha
+          asset_name: ${{ env.archive_name }}.lha
+          asset_content_type: application/x-lzh-compressed
+
+      - name: Install GitHub binary
+        uses: ./.github/actions/install-gh
+
+      - name: Upload DEB release file in GitHub
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: /opt/code/${{ env.archive_name }}_amd64.deb
+          asset_name: ${{ env.archive_name }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-pac
