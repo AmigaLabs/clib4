@@ -25,19 +25,19 @@ jobs:
       gcc: 6
       spe: "yes"
 
-  make-realease-pr:
-    needs: [compile-ppc, compile-spe]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Create Pull Request
-      id: cpr
-      uses: peter-evans/create-pull-request@v6
-      with:
-        commit-message: Release ${{ github.event.release.tag_name }} changes
-        branch: release/${{ github.event.release.tag_name }}
-        base: master
-        body: Automated changes as part of the release
-        title: Version files changes by the github bot
+  # make-realease-pr:
+  #   needs: [compile-ppc, compile-spe]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Create Pull Request
+  #     id: cpr
+  #     uses: peter-evans/create-pull-request@v6
+  #     with:
+  #       commit-message: Release ${{ github.event.release.tag_name }} changes
+  #       branch: release/${{ github.event.release.tag_name }}
+  #       base: master
+  #       body: Automated changes as part of the release
+  #       title: Version files changes by the github bot
 
   #   - name: Enable Pull Request Automerge
   #     if: steps.cpr.outputs.pull-request-operation == 'created'
