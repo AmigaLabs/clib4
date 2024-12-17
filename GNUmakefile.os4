@@ -78,7 +78,7 @@ WARNINGS := \
 PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
 				-Ilibrary \
-                -I$(LIB_DIR)/external/include \
+				-I$(LIB_DIR)/external/include \
 				-I$(SDK_INCLUDE)/include_h \
 				-I$(SDK_INCLUDE)/netinclude \
 				-I$(LIB_DIR)/amiga \
@@ -121,10 +121,10 @@ STABS :=
 DLIBS :=
 
 ifndef DEBUG
-    OPTIMIZE += $(STABS) -DNDEBUG
+	OPTIMIZE += $(STABS) -DNDEBUG
 else
-    OPTIMIZE += -gstabs -DDEBUG
-    DLIBS += $(BUILD_DIR)/lib/libdebug.a
+	OPTIMIZE += -gstabs -DDEBUG
+	DLIBS += $(BUILD_DIR)/lib/libdebug.a
 endif
 
 CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
@@ -132,21 +132,21 @@ CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
 AFLAGS     := -Wa,-mregnames -mstrict-align
 
 ifdef SPE
-    CC := ppc-amigaos-gcc-6.4.0
-    AS := ppc-amigaos-as-6.4.0
-    CMATH := -mfpu=dp_lite
-    OUTPUT_LIB = $(BUILD_DIR)/lib/soft-float
-    CFLAGS := $(CFLAGS) -D__SPE__ -msoft-float -mspe -mtune=8540 -mcpu=8540 -mabi=spe -mfloat-gprs=double $(CMATH) -fno-inline-functions -fno-partial-inlining \
-                -fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions \
-                -fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
-    AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mfloat-gprs=double $(CMATH) -Wno-overflow
-    CFLAGS := $(filter-out -Wno-cast-function-type, $(CFLAGS))
-    CFLAGS_N := $(filter-out -Wno-cast-function-type, $(CFLAGS_N))
+	CC := ppc-amigaos-gcc-6.4.0
+	AS := ppc-amigaos-as-6.4.0
+	CMATH := -mfpu=dp_lite
+	OUTPUT_LIB = $(BUILD_DIR)/lib/soft-float
+	CFLAGS := $(CFLAGS) -D__SPE__ -msoft-float -mspe -mtune=8540 -mcpu=8540 -mabi=spe -mfloat-gprs=double $(CMATH) -fno-inline-functions -fno-partial-inlining \
+				-fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions \
+				-fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
+	AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mfloat-gprs=double $(CMATH) -Wno-overflow
+	CFLAGS := $(filter-out -Wno-cast-function-type, $(CFLAGS))
+	CFLAGS_N := $(filter-out -Wno-cast-function-type, $(CFLAGS_N))
 endif
 
 ifdef PROFILE
-    CFLAGS += -pg
-    DLIBS += -Lbuild/lib -lprofile
+	CFLAGS += -pg
+	DLIBS += -Lbuild/lib -lprofile
 endif
 
 VERBOSE    ?= @
@@ -434,7 +434,7 @@ release:
 	-$(COPY) *.md clib4/
 	-$(COPY) LICENSE* clib4/
 	-$(COPY) installer/Install* clib4/
-	-$(COPY) installer/clib4.info .
+# -$(COPY) installer/clib4.info .
 	-$(COPY) installer/README.md.info clib4/
 	-$(COPY) $(BUILD_DIR)/clib4.library clib4/
 	-$(COPY) $(BUILD_DIR)/clib4.library.debug clib4/

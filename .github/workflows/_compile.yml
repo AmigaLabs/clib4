@@ -1,0 +1,101 @@
+name: Compile for PowerPC
+
+on:
+  workflow_call:
+    inputs:
+      git_tag:
+        description: 'Git tag to use'
+        required: true
+        type: string
+      gcc:
+        description: 'GCC version to use'
+        required: true
+        default: 11
+        type: string
+      spe:
+        description: 'Compile with SPE'
+        required: false
+        default: "no"
+        type: string
+
+env:
+  archive_name: clib4-${{ inputs.git_tag }}${{ inputs.spe == 'yes' && '_SPE' || '' }}
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    container:
+      image: walkero/amigagccondocker:os4-gcc${{ inputs.gcc }}
+      volumes:
+        - '${{ github.workspace }}:/opt/code'
+    steps:
+      - name: Pull code
+        uses: actions/checkout@v4
+
+      - name: Add repository to git safe directories
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git config --global --add safe.directory /opt/code
+
+      - name: Compile clib4
+        uses: ./.github/actions/compile
+        with:
+          git_tag: ${{ inputs.git_tag }}
+          spe: ${{ inputs.spe }}
+
+      - name: Create the LHA release archive
+        run: |
+          make -f GNUmakefile.os4 release && \
+          mv clib4.lha ${{ env.archive_name }}.lha
+
+      - name: Create the DEB release archive
+        run: |
+          make -f GNUmakefile.os4 dpkg DPKG_LIB=${{ env.archive_name }}_amd64
+
+      - name: Upload LHA release file in GitHub
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: /opt/code/${{ env.archive_name }}.lha
+          asset_name: ${{ env.archive_name }}.lha
+          asset_content_type: application/x-lzh-compressed
+
+      - name: Install GitHub binary
+        uses: ./.github/actions/install-gh
+
+      - name: Upload DEB release file in GitHub
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: /opt/code/${{ env.archive_name }}_amd64.deb
+          asset_name: ${{ env.archive_name }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-pac
+
+      - name: Upload DEB release file to the server
+        uses: kostya-ten/ssh-server-deploy@v4
+        with:
+          host: ${{ secrets.DEBSERVER_HOST }}
+          port: ${{ secrets.DEBSERVER_PORT }}
+          username: ${{ secrets.DEBSERVER_USERNAME }}
+          private_key: ${{ secrets.DEBSERVER_PRIVATE_KEY }}
+          scp_source: ${{ env.archive_name }}.deb
+          scp_target: /opt/amigarepo/ubuntu/pool/main
+          before_script: |
+            rm /opt/amigarepo/ubuntu/pool/main/${{ env.archive_name }}.deb
+          after_script: |
+            /root/regenerate-packages.sh
+
+      - name: Create Pull Request
+        if: ${{ inputs.spe == 'no' }}
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Release ${{ inputs.git_tag }} changes
+          branch: release/${{ inputs.git_tag }}
+          base: master
+          body: Automated changes as part of the release
+          title: Version files changes by the github bot

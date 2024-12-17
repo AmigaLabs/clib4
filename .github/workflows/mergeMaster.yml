@@ -7,20 +7,42 @@ on:
       - closed
 
 jobs:
-  run_if_merged:
-    if: github.event.pull_request.merged == true
-    name: Build latest code
+  compile-ppc:
+    name: Build for PowerPC cpus
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
     container:
-      image: walkero/amigagccondocker:os4-gcc11-exp
+      image: walkero/amigagccondocker:os4-gcc11
       volumes:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Pull code
         uses: actions/checkout@v4
+
       - name: Compile clib4
-        run: |
-          cd /opt/code && \
-          make -j1 -f GNUmakefile.os4 OS=os4 SHARED=no
+        uses: ./.github/actions/compile
+        with:
+          spe: "no"
+
+      - name: Create the release archive
+        run: make -f GNUmakefile.os4 release
+
+  compile-spe:
+    name: Build for PowerPC SPE cpus
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    container:
+      image: walkero/amigagccondocker:os4-gcc6
+      volumes:
+        - '${{ github.workspace }}:/opt/code'
+    steps:
+      - name: Pull code
+        uses: actions/checkout@v4
+
+      - name: Compile clib4
+        uses: ./.github/actions/compile
+        with:
+          spe: "yes"
+
       - name: Create the release archive
         run: make -f GNUmakefile.os4 release
