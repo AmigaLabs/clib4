@@ -4,22 +4,53 @@ on:
   release:
     branches:
       - master
+      - fixes-for-PR-219
     types: 
       - published
 
 jobs:
   compile-ppc:
-    name: Build for PowerPC cpus
-    uses: ./.github/workflows/_compile.yml
-    with:
-      git_tag: ${{ github.event.release.tag_name }}
-      gcc: 11
-      spe: "no"
+    - name: Build for PowerPC cpus
+      uses: ./.github/workflows/_compile.yml
+      with:
+        git_tag: ${{ github.event.release.tag_name }}
+        gcc: 11
+        spe: "no"
 
   compile-spe:
-    name: Build for PowerPC SPE cpus
-    uses: ./.github/workflows/_compile.yml
-    with:
-      git_tag: ${{ github.event.release.tag_name }}
-      gcc: 6
-      spe: "yes"
+    - name: Build for PowerPC SPE cpus
+      uses: ./.github/workflows/_compile.yml
+      with:
+        git_tag: ${{ github.event.release.tag_name }}
+        gcc: 6
+        spe: "yes"
+
+  make-realease-pr:
+    needs: [compile-ppc, compile-spe]
+    - name: Create Pull Request
+      id: cpr
+      uses: peter-evans/create-pull-request@v6
+      with:
+        commit-message: Release ${{ github.event.release.tag_name }} changes
+        branch: release/${{ github.event.release.tag_name }}
+        base: master
+        body: Automated changes as part of the release
+        title: Version files changes by the github bot
+
+    - name: Enable Pull Request Automerge
+      if: steps.cpr.outputs.pull-request-operation == 'created'
+      uses: peter-evans/enable-pull-request-automerge@v3
+      with:
+        pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+        merge-method: squash
+
+  announcements:
+    needs: [make-realease-pr]
+    - name: Notify on Discord on successful release
+      uses: appleboy/discord-action@master
+      with:
+        webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
+        webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
+        message: "New release of clib4: **${{ github.event.release.tag_name }}** has been created. Check it out at: https://github.com/AmigaLabs/clib4/releases/tag/${{ github.event.release.tag_name }}"
+        username: GitHub Actions
+        avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
