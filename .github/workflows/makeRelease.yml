@@ -11,7 +11,7 @@ jobs:
     name: Build latest code
     runs-on: ubuntu-latest
     container:
-      image: walkero/amigagccondocker:os4-gcc11-exp
+      image: walkero/amigagccondocker:os4-gcc11
       volumes:
         - '${{ github.workspace }}:/opt/code'
     steps:
@@ -24,7 +24,7 @@ jobs:
       - name: Compile clib4
         run: |
           cd /opt/code && \
-          make -j1 -f GNUmakefile.os4 OS=os4 SHARED=no GITTAG=${{ github.event.release.tag_name }}
+          make -j1 -f GNUmakefile.os4 OS=os4 GITTAG=${{ github.event.release.tag_name }}
       - name: Create the LHA release archive
         run: |
           make -f GNUmakefile.os4 release && \
