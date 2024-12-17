@@ -90,6 +90,7 @@ jobs:
             /root/regenerate-packages.sh
 
       - name: Create Pull Request
+        if: ${{ inputs.spe == 'no' }}
         id: cpr
         uses: peter-evans/create-pull-request@v6
         with:
@@ -99,14 +100,8 @@ jobs:
           body: Automated changes as part of the release
           title: Version files changes by the github bot
 
-      - name: Enable Pull Request Automerge
-        if: steps.cpr.outputs.pull-request-operation == 'created'
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-          merge-method: squash
-
       - name: Notify on Discord on successful release
+        if: ${{ inputs.spe == 'no' }}
         uses: appleboy/discord-action@master
         with:
           webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
