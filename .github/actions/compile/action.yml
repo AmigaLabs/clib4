@@ -3,22 +3,22 @@ name: Compile clib4
 inputs:
   spe:
     description: 'Compile with SPE'
-    required: true
+    required: false
+    default: "no"
   git_tag:
     description: 'Git tag to use'
     required: true
 
-jobs:
-  install-gh:
-    runs-on: ubuntu-latest
-    steps:
-      - name: compiling
-        if: ${{ inputs.spe != "yes" }}
-        run: |
-          cd /opt/code && \
-          make -j1 -f GNUmakefile.os4 OS=os4 GITTAG=${{ inputs.git_tag }}
-      - name: compiling SPE
-        if: ${{ inputs.spe == "yes" }}
-        run: |
-          cd /opt/code && \
-          make -j1 -f GNUmakefile.os4 OS=os4 SPE=yes GITTAG=${{ inputs.git_tag }}
+runs:
+  using: "composite"
+  steps:
+    - name: compiling
+      if: ${{ inputs.spe != 'yes' }}
+      run: |
+        cd /opt/code && \
+        make -j1 -f GNUmakefile.os4 OS=os4 GITTAG=${{ inputs.git_tag }}
+    - name: compiling SPE
+      if: ${{ inputs.spe == 'yes' }}
+      run: |
+        cd /opt/code && \
+        make -j1 -f GNUmakefile.os4 OS=os4 SPE=yes GITTAG=${{ inputs.git_tag }}
