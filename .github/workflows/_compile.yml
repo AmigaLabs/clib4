@@ -17,10 +17,6 @@ on:
         required: false
         default: "no"
         type: string
-    secrets:
-      GITHUB_TOKEN:
-        description: 'GitHub token'
-        required: true
 
 env:
   archive_name: clib4-${{ inputs.git_tag }}${{ inputs.spe == 'yes' && '_SPE' || '' }}
