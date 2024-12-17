@@ -39,20 +39,20 @@ jobs:
         body: Automated changes as part of the release
         title: Version files changes by the github bot
 
-    - name: Enable Pull Request Automerge
-      if: steps.cpr.outputs.pull-request-operation == 'created'
-      uses: peter-evans/enable-pull-request-automerge@v3
-      with:
-        pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-        merge-method: squash
+  #   - name: Enable Pull Request Automerge
+  #     if: steps.cpr.outputs.pull-request-operation == 'created'
+  #     uses: peter-evans/enable-pull-request-automerge@v3
+  #     with:
+  #       pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+  #       merge-method: squash
 
-  announcements:
-    needs: [make-realease-pr]
-    name: Notify on Discord on successful release
-    uses: appleboy/discord-action@master
-    with:
-      webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
-      webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-      message: "New release of clib4: **${{ github.event.release.tag_name }}** has been created. Check it out at: https://github.com/AmigaLabs/clib4/releases/tag/${{ github.event.release.tag_name }}"
-      username: GitHub Actions
-      avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+  # announcements:
+  #   needs: [make-realease-pr]
+  #   name: Notify on Discord on successful release
+  #   uses: appleboy/discord-action@master
+  #   with:
+  #     webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
+  #     webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
+  #     message: "New release of clib4: **${{ github.event.release.tag_name }}** has been created. Check it out at: https://github.com/AmigaLabs/clib4/releases/tag/${{ github.event.release.tag_name }}"
+  #     username: GitHub Actions
+  #     avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
