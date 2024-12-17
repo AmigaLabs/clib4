@@ -1,19 +1,19 @@
 name: Compile for PowerPC
 
-on: workflow_call
-
-inputs:
-  git_tag:
-    description: 'Git tag to use'
-    required: true
-  gcc:
-    description: 'GCC version to use'
-    required: true
-    default: 11
-  spe:
-    description: 'Compile with SPE'
-    required: false
-    default: "no"
+on:
+  workflow_call:
+    inputs:
+      git_tag:
+        description: 'Git tag to use'
+        required: true
+      gcc:
+        description: 'GCC version to use'
+        required: true
+        default: 11
+      spe:
+        description: 'Compile with SPE'
+        required: false
+        default: "no"
 
 jobs:
   compile:
