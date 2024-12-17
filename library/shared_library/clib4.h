@@ -84,8 +84,6 @@ BPTR libExpunge(struct LibraryManagerInterface *Self);
 uint64_t clib4IntHash(const void *item, uint64_t seed0, uint64_t seed1);
 int clib4ProcessCompare(const void *a, const void *b, void *udata);
 
-// static void _start_ctors(void (*__CTOR_LIST__[])(void));
-// static void _start_dtors(void (*__DTOR_LIST__[])(void));
 static void closeLibraries();
 
 int library_start(char *argstr,
