@@ -1,0 +1,38 @@
+name: Compile for PowerPC
+
+on: workflow_call
+
+inputs:
+  git_tag:
+    description: 'Git tag to use'
+    required: true
+  gcc:
+    description: 'GCC version to use'
+    required: true
+    default: 11
+  spe:
+    description: 'Compile with SPE'
+    required: false
+    default: "no"
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    container:
+      image: walkero/amigagccondocker:os4-gcc${{ inputs.gcc }}
+      volumes:
+        - '${{ github.workspace }}:/opt/code'
+    steps:
+      - name: Pull code
+        uses: actions/checkout@v4
+
+      - name: Add repository to git safe directories
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git config --global --add safe.directory /opt/code
+
+      - name: Compile clib4
+        uses: ./.github/actions/compile
+        with:
+          git_tag: ${{ inputs.git_tag }}
+          spe: ${{ inputs.spe }}
