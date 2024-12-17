@@ -101,7 +101,7 @@ jobs:
           title: Version files changes by the github bot
 
       - name: Enable Pull Request Automerge
-        if: ${{ inputs.spe == 'no' }} && steps.cpr.outputs.pull-request-operation == 'created'
+        if: ${{ inputs.spe == 'no' && steps.cpr.outputs.pull-request-operation == 'created' }}
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
           pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
