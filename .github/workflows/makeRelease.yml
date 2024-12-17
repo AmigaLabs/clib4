@@ -30,35 +30,35 @@ jobs:
         run: |
           make -f GNUmakefile.os4 release && \
           mv clib4.lha clib4-${{ github.event.release.tag_name }}.lha
-      # - name: Create the DEB release archive
-      #   run: |
-      #     make -f GNUmakefile.os4 dpkg DPKG_LIB=clib4-${{ github.event.release.tag_name }}_amd64
-      # - name: Upload LHA release file in GitHub
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ github.event.release.upload_url }}
-      #     asset_path: /opt/code/clib4-${{ github.event.release.tag_name }}.lha
-      #     asset_name: clib4-${{ github.event.release.tag_name }}.lha
-      #     asset_content_type: application/x-lzh-compressed
-      # - name: Install gh binary
-      #   run: |
-      #     mkdir -p -m 755 /etc/apt/keyrings \
-      #     && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-      #     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-      #     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-      #     && apt update \
-      #     && apt install gh -y
-      # - name: Upload DEB release file in GitHub
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ github.event.release.upload_url }}
-      #     asset_path: /opt/code/clib4-${{ github.event.release.tag_name }}_amd64.deb
-      #     asset_name: clib4-${{ github.event.release.tag_name }}_amd64.deb
-      #     asset_content_type: application/vnd.debian.binary-pac
+      - name: Create the DEB release archive
+        run: |
+          make -f GNUmakefile.os4 dpkg DPKG_LIB=clib4-${{ github.event.release.tag_name }}_amd64
+      - name: Upload LHA release file in GitHub
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: /opt/code/clib4-${{ github.event.release.tag_name }}.lha
+          asset_name: clib4-${{ github.event.release.tag_name }}.lha
+          asset_content_type: application/x-lzh-compressed
+      - name: Install gh binary
+        run: |
+          mkdir -p -m 755 /etc/apt/keyrings \
+          && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+          && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+          && apt update \
+          && apt install gh -y
+      - name: Upload DEB release file in GitHub
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: /opt/code/clib4-${{ github.event.release.tag_name }}_amd64.deb
+          asset_name: clib4-${{ github.event.release.tag_name }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-pac
       # - name: Upload DEB release file to the server
       #   uses: kostya-ten/ssh-server-deploy@v4
       #   with:
