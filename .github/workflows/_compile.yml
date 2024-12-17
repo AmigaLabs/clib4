@@ -85,7 +85,7 @@ jobs:
           scp_source: ${{ env.archive_name }}.deb
           scp_target: /opt/amigarepo/ubuntu/pool/main
           before_script: |
-            rm /opt/amigarepo/ubuntu/pool/main/clib4*.deb
+            rm /opt/amigarepo/ubuntu/pool/main/${{ env.archive_name }}.deb
           after_script: |
             /root/regenerate-packages.sh
 
@@ -99,13 +99,3 @@ jobs:
           base: master
           body: Automated changes as part of the release
           title: Version files changes by the github bot
-
-      - name: Notify on Discord on successful release
-        if: ${{ inputs.spe == 'no' }}
-        uses: appleboy/discord-action@master
-        with:
-          webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
-          webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-          message: "New release of clib4 ${{ inputs.spe == 'yes' && 'SPE' || '' }}: **${{ inputs.git_tag }}** has been created. Check it out at: https://github.com/AmigaLabs/clib4/releases/tag/${{ inputs.git_tag }}"
-          username: GitHub Actions
-          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
