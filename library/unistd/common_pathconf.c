@@ -117,7 +117,7 @@ __pathconf(struct MsgPort *port, int name) {
             ret = 510;    /* I could not find any documentation regarding this. */
             break;
         case _PC_MAX_INPUT: {
-                uint32_t Bufsize = 0L;
+                uint32_t Bufsize = 2048;
                 struct TagItem TagList[2] =
                     {
                         {DC_FHBufferR, (ULONG) & Bufsize},
