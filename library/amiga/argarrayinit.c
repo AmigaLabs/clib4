@@ -9,11 +9,14 @@
 
 #include <string.h>
 
-#include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/icon.h>
 #include <proto/commodities.h>
 #include <clib/alib_protos.h>
+
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 #include "debug.h"
 
@@ -32,10 +35,7 @@ ArgArrayInit(LONG argc, CONST_STRPTR *argv) {
         if (argc == 1)
             goto out; /* skip command name */
 
-        CXLIB_argarray = (const unsigned char **) AllocVecTags(sizeof(char *) * argc,
-                                                               AVT_Type, MEMF_SHARED,
-                                                               AVT_ClearWithValue, 0,
-                                                               TAG_DONE);
+        CXLIB_argarray = (const unsigned char **) calloc(argc, sizeof(char *));
         if (CXLIB_argarray == NULL)
             goto out;
 

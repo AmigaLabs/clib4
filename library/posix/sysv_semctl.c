@@ -20,8 +20,8 @@ sem_destroy(struct semid_ds *si) {
             FreeSysObject(ASOT_LIST, sa[i].nList);
         }
         FreeSysObject(ASOT_SEMAPHORE, si->Lock);
-        FreeVec(si->sem_base);
-        FreeVec(si);
+        free(si->sem_base);
+        free(si);
     }
 }
 

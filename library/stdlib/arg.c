@@ -99,7 +99,7 @@ ARG_CONSTRUCTOR(arg_init) {
 
         D(("ARGLEN = %ld", arg_len));
         /* Make a copy of the shell parameter string. */
-        command_line = AllocVecTags(arg_len + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+        command_line = calloc(1, arg_len + 1);
         if (command_line == NULL)
             goto out;
 
@@ -158,7 +158,7 @@ ARG_CONSTRUCTOR(arg_init) {
         /* Put all this together into an argument vector.
            We allocate one extra slot to put a NULL pointer
            into. */
-        __clib4->__argv = (char **) AllocVecTags((number_of_arguments + 1) * sizeof(*__clib4->__argv), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+        __clib4->__argv = (char **) calloc(number_of_arguments + 1, sizeof(*__clib4->__argv));
         if (__clib4->__argv == NULL)
             goto out;
 
@@ -288,7 +288,7 @@ ARG_DESTRUCTOR(arg_exit) {
 
     if (__clib4->__WBenchMsg == NULL) {
         if (__clib4->__argv) {
-            FreeVec(__clib4->__argv);
+            free(__clib4->__argv);
             __clib4->__argv = NULL;
         }
     }

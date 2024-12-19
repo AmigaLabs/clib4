@@ -45,7 +45,7 @@ redo: /* Retry after waiting for queue to not be full. */
     if (qi) {
         bleft = qi->msg_qbytes - qi->msg_cbytes;
         if (bleft >= mlen) {
-            m = AllocVecTags(mlen + sizeof(struct Msg), MEMF_SHARED, TAG_DONE);
+            m = malloc(mlen + sizeof(struct Msg));
             if (m) {
                 m->Next = 0;
                 m->Size = mlen;

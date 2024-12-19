@@ -93,7 +93,15 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = AllocVecTags(BUFSIZ + (__clib4->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, AVT_Alignment, __clib4->__cache_line_size, 0, TAG_DONE);
+    if (posix_memalign(
+            (void *)&buffer, 
+            __clib4->__cache_line_size, 
+            BUFSIZ + (__clib4->__cache_line_size - 1)
+        ) != 0) {
+        buffer = NULL;
+    } else {
+        memset(buffer, 0, BUFSIZ + (__clib4->__cache_line_size - 1));
+    }
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
@@ -148,7 +156,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 out:
 
     if (buffer != NULL)
-        FreeVec(buffer);
+        free(buffer);
 
     __stdio_unlock(__clib4);
 

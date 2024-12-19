@@ -7,9 +7,12 @@
 
 #include <string.h>
 
-#include <proto/exec.h>
 #include <proto/icon.h>
 #include <clib/alib_protos.h>
+
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 #include "debug.h"
 
@@ -19,7 +22,7 @@ extern struct DiskObject *CXLIB_disko;
 VOID
 ArgArrayDone(VOID) {
     if (CXLIB_argarray != NULL) {
-        FreeVec(CXLIB_argarray);
+        free(CXLIB_argarray);
         CXLIB_argarray = NULL;
     }
 

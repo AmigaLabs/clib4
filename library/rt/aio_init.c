@@ -26,7 +26,7 @@ CLIB_CONSTRUCTOR(aio_init) {
     ENTER();
 
     /* Initialize aio pthread list */
-    __aio_lock = AllocVecTags(sizeof(*__aio_lock), AVT_Type, MEMF_SHARED, TAG_DONE);
+    __aio_lock = malloc(sizeof(struct SignalSemaphore));
     if (__aio_lock != NULL)
         InitSemaphore(__aio_lock);
     else
@@ -69,7 +69,7 @@ CLIB_DESTRUCTOR(aio_exit) {
     }
 
     /* Remove aio semaphore. */
-    FreeVec(__aio_lock);
+    free(__aio_lock);
 
     LEAVE();
 }

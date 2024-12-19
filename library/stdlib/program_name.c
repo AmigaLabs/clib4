@@ -16,11 +16,11 @@
 
 STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 	ENTER();
-    struct _clib4 *__clib4 = __CLIB4;
+	struct _clib4 *__clib4 = __CLIB4;
 
-    if (__clib4->free_program_name && __clib4->__progname != NULL) {
-		FreeVec(__clib4->__progname);
-        __clib4->__progname = NULL;
+	if (__clib4->free_program_name && __clib4->__progname != NULL) {
+		free(__clib4->__progname);
+		__clib4->__progname = NULL;
 	}
 
 	LEAVE();
@@ -36,17 +36,17 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
 		const size_t program_name_size = 256;
 
 		/* Make a copy of the current command name string. */
-        __clib4->__progname = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_SHARED, TAG_DONE);
+		__clib4->__progname = malloc((ULONG)program_name_size);
 		if (__clib4->__progname == NULL)
 			goto out;
 
-        __clib4->free_program_name = TRUE;
+		__clib4->free_program_name = TRUE;
 
 		if (CANNOT GetCliProgramName(__clib4->__progname, program_name_size))
 			goto out;
 	}
 	else {
-        __clib4->__progname = (char *) __clib4->__WBenchMsg->sm_ArgList[0].wa_Name;
+		__clib4->__progname = (char *) __clib4->__WBenchMsg->sm_ArgList[0].wa_Name;
 	}
 
 	success = TRUE;
@@ -64,5 +64,5 @@ out:
 
 
 const char *__getprogname(void) {
-    return __CLIB4->__progname;
+	return __CLIB4->__progname;
 }

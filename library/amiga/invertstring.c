@@ -8,9 +8,12 @@
 
 #include <string.h>
 
-#include <proto/exec.h>
 #include <proto/commodities.h>
 #include <clib/alib_protos.h>
+
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 #include "debug.h"
 
@@ -114,7 +117,7 @@ InvertString(CONST_STRPTR str, CONST struct KeyMap *km) {
     do /* have checked that str is not null    */
     {
         /* allocate the next ie and link it in */
-        ie = AllocVecTags(sizeof(*ie), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+        ie = calloc(1, sizeof(*ie));
         if (ie == NULL)
             goto out;
 

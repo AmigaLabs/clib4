@@ -79,7 +79,7 @@ _msgrcv(int qid, void *msg, size_t mlen, long mtype, int flags) {
                 qi->msg_cbytes -= m->Size;
                 qi->msg_qnum--;
                 qi->msg_lrpid = SELFPID;
-                FreeVec(m);
+                free(m);
                 ret = 0;
                 /* Message read, now wake all processes waiting to write. */
                 WakeList(qi->WList);

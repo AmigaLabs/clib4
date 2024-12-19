@@ -76,7 +76,14 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
 		   allocate some memory for it. */
         if (size > 0 && buf == NULL) {
             /* Allocate a little more memory than necessary. */
-            new_buffer = AllocVecTags(size + (__clib4->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_Alignment, __clib4->__cache_line_size, TAG_DONE);
+            if (posix_memalign(
+                    (void *)&new_buffer, 
+                    __clib4->__cache_line_size, 
+                    size + (__clib4->__cache_line_size - 1)
+                ) != 0
+            ) {
+                new_buffer = NULL;
+            }
             if (new_buffer == NULL) {
                 __set_errno_r(__clib4, ENOBUFS);
                 goto out;
@@ -98,7 +105,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
     /* Get rid of any buffer specially allocated for this stream. */
     if (file->iob_CustomBuffer != NULL) {
         SHOWMSG("Delete allocated buffer");
-        FreeVec(file->iob_CustomBuffer);
+        free(file->iob_CustomBuffer);
         file->iob_CustomBuffer = NULL;
     }
 

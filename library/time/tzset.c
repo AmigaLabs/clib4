@@ -107,8 +107,8 @@ _tzset_unlocked(void) {
 
     if ((tzenv = getenv("TZ")) == NULL) {
         if (__clib4->__dyntz == TRUE) {
-            FreeVec(__clib4->__tzname[0]);
-            FreeVec(__clib4->__tzname[1]);
+            free(__clib4->__tzname[0]);
+            free(__clib4->__tzname[1]);
             __clib4->__dyntz = FALSE;
         }
         __clib4->__timezone = 0;
@@ -118,7 +118,7 @@ _tzset_unlocked(void) {
         tz->__tzrule[0] = default_tzrule;
         tz->__tzrule[1] = default_tzrule;
         if (prev_tzenv != NULL) {
-            FreeVec(prev_tzenv);
+            free(prev_tzenv);
             prev_tzenv = NULL;
         }
         return;
@@ -128,15 +128,15 @@ _tzset_unlocked(void) {
         return;
 
     if (prev_tzenv)
-        FreeVec(prev_tzenv);
-    prev_tzenv = AllocVecTags(strlen(tzenv) + 1, AVT_Type, MEMF_SHARED, TAG_DONE);
+        free(prev_tzenv);
+    prev_tzenv = malloc(strlen(tzenv) + 1);
 
     if (prev_tzenv != NULL)
         strcpy(prev_tzenv, tzenv);
 
     if (__clib4->__dyntz == TRUE) {
-        FreeVec(__clib4->__tzname[0]);
-        FreeVec(__clib4->__tzname[1]);
+        free(__clib4->__tzname[0]);
+        free(__clib4->__tzname[1]);
         __clib4->__dyntz = FALSE;
     }
 
@@ -194,8 +194,8 @@ _tzset_unlocked(void) {
         /* quit if no items, too few or too many chars, or no close quote '>' */
         if (sscanf(tzenv, "%11[-+0-9A-Za-z]%n", __tzname_dst, &n) <= 0 && tzenv[0] == '>') { /* No dst */
             if (__clib4->__dyntz == TRUE) {
-                FreeVec(__clib4->__tzname[0]);
-                FreeVec(__clib4->__tzname[1]);
+                free(__clib4->__tzname[0]);
+                free(__clib4->__tzname[1]);
                 __clib4->__dyntz = FALSE;
             }
 
@@ -213,8 +213,8 @@ _tzset_unlocked(void) {
         /* allow POSIX unquoted alphabetic tz abbr e.g. MESZ */
         if (sscanf(tzenv, "%11[A-Za-z]%n", __tzname_dst, &n) <= 0) { /* No dst */
             if (__clib4->__dyntz == TRUE) {
-                FreeVec(__clib4->__tzname[0]);
-                FreeVec(__clib4->__tzname[1]);
+                free(__clib4->__tzname[0]);
+                free(__clib4->__tzname[1]);
                 __clib4->__dyntz = FALSE;
             }
 
@@ -318,8 +318,8 @@ _tzset_unlocked(void) {
     }
 
     if (__clib4->__dyntz == TRUE) {
-        FreeVec(__clib4->__tzname[0]);
-        FreeVec(__clib4->__tzname[1]);
+        free(__clib4->__tzname[0]);
+        free(__clib4->__tzname[1]);
         __clib4->__dyntz = FALSE;
     }
 

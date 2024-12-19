@@ -305,7 +305,7 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
 
     SHOWMSG("Allocating wide_status");
     /* Initialize wchar stuff */
-    __clib4->wide_status = AllocVecTags(sizeof(struct _wchar), AVT_Type, MEMF_SHARED, TAG_DONE);
+    __clib4->wide_status = malloc(sizeof(struct _wchar));
     if (!__clib4->wide_status) {
         goto out;
     }
@@ -421,7 +421,7 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
         /* Free wchar stuff */
         if (__clib4->wide_status != NULL) {
             SHOWMSG("Freeing wide_status");
-            FreeVec(__clib4->wide_status);
+            free(__clib4->wide_status);
             __clib4->wide_status = NULL;
         }
 
@@ -446,7 +446,7 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
 
                     /* Free memory */
                     if (e->me_Exact) {
-                        FreeVec(e->me_Exact);
+                        free(e->me_Exact);
                     }
                     /* Remove the node */
                     AVL_RemNodeByAddress(&__clib4->__memalign_tree, &e->me_AvlNode);
@@ -469,7 +469,7 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
             SHOWMSG("Done");
         }
 
-        FreeVec(__clib4);
+        free(__clib4);
         __clib4 = NULL;
         SHOWMSG("__clib4 destroyed correctly");
     }

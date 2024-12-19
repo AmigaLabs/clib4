@@ -86,7 +86,7 @@ obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared) {
 
         /* We allocate the new semaphore first, so that we don't spend
            any time in Forbid() allocating memory. */
-        semaphore_name_copy = AllocVecTags(strlen(__clib4->__file_lock_semaphore_name) + 1, AVT_Type, MEMF_SHARED, TAG_DONE);
+        semaphore_name_copy = malloc(strlen(__clib4->__file_lock_semaphore_name) + 1);
         if (semaphore_name_copy != NULL) {
             strcpy(semaphore_name_copy, __clib4->__file_lock_semaphore_name);
 
@@ -137,7 +137,7 @@ obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared) {
         /* Release the memory allocated for the semaphore, in case
            we didn't need it after all. */
         if (fls != NULL) {
-            FreeVec(semaphore_name_copy);
+            free(semaphore_name_copy);
             FreeSysObject(ASOT_SEMAPHORE, fls);
         }
     }
@@ -227,7 +227,7 @@ delete_locked_region_node(struct LockedRegionNode *lrn) {
     SHOWPOINTER(lrn);
 
     if (lrn) {
-        FreeVec(lrn);
+        free(lrn);
         lrn = NULL;
     }
 
@@ -243,7 +243,7 @@ create_locked_region_node(struct LockedRegionNode **result_ptr) {
 
     assert(result_ptr != NULL);
 
-    lrn = AllocVecTags(sizeof(*lrn), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    lrn = calloc(1, sizeof(*lrn));
     if (lrn == NULL) {
         SHOWMSG("not enough memory for locked region node");
 
@@ -269,7 +269,7 @@ delete_file_lock_node(struct FileLockNode *fln) {
 
     if (fln != NULL) {
         UnLock(fln->fln_FileParentDir);
-        FreeVec(fln);
+        free(fln);
         fln = NULL;
     }
 
@@ -299,7 +299,7 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
         goto out;
     }
 
-    fln = AllocVecTags(sizeof(*fln) + strlen(fib->Name), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    fln = calloc(1, sizeof(*fln) + strlen(fib->Name));
     if (fln == NULL) {
         SHOWMSG("not enough memory for lock node");
 

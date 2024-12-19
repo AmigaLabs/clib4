@@ -5,7 +5,6 @@
 #include <exec/exec.h>
 #include <dos/dos.h>
 #include <libraries/elf.h>
-#include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/elf.h>
 #include <stdio.h>
@@ -16,6 +15,10 @@
 
 #define SCALE_1_TO_1 0x10000L
 #define MIN_OS_VERSION 52
+
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 #include "gmon.h"
 #include "gmon_out.h"
@@ -222,7 +225,7 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
     dprintf("fromssize = %d\n", p->fromssize);
     dprintf("tolimit = %d, tossize = %d\n", p->tolimit, p->tossize);
 
-    cp = (uint8 *) AllocVecTags(p->kcountsize + p->fromssize + p->tossize, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    cp = (uint8 *) calloc(1, p->kcountsize + p->fromssize + p->tossize);
     if (!cp) {
         p->state = kGmonProfError;
         return;
@@ -329,7 +332,7 @@ void moncleanup(void) {
     }
 out:
     if (p->tos) {
-        FreeVec(p->tos);
+        free(p->tos);
         p->tos = NULL;
     }
 

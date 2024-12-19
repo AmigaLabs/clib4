@@ -6,8 +6,11 @@
 
 #include <string.h>
 
-#include <proto/exec.h>
 #include <clib/alib_protos.h>
+
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
 
 #include "debug.h"
 
@@ -18,7 +21,7 @@ FreeIEvents(struct InputEvent *ie) {
     while (ie != NULL) {
         next = ie->ie_NextEvent;
 
-        FreeVec(ie);
+        free(ie);
 
         ie = next;
     }
