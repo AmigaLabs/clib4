@@ -70,7 +70,7 @@ copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *
 
         char **env = (char **) hook->h_Data;
         uint32 size = Strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
-        char *buffer = (char *) AllocVecTags(size, AVT_Type, MEMF_SHARED, TAG_DONE);
+        char *buffer = (char *) malloc(size);
         if (buffer == NULL) {
             return 1;
         }
@@ -259,10 +259,7 @@ _main(
     /* If all libraries are opened correctly we can initialize clib4 reent structure */
     D(("Initialize clib4 reent structure"));
     /* Initialize global structure */
-    __clib4 = (struct _clib4 *) AllocVecTags(sizeof(struct _clib4),
-                                             AVT_Type, MEMF_SHARED,
-                                             AVT_ClearWithValue, 0,
-                                             TAG_DONE);
+    __clib4 = (struct _clib4 *) calloc(1, sizeof(struct _clib4));
     if (__clib4 == NULL) {
         Forbid();
         ReplyMsg(&sms->sm_Message);

@@ -3,7 +3,6 @@
 #define shared_comp
 #undef __USE_INLINE__
 
-#include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/elf.h>
 #include <proto/locale.h>
@@ -288,7 +287,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
             if (node->undo)
-                IExec->FreeVec(node->undo);
+                free(node->undo);
         }
 
         hashmap_free(res->children);
@@ -296,8 +295,8 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
             reent_exit(res->fallbackClib, TRUE);
         }
 
-        IExec->RemResource(res);
-        IExec->FreeVec(res);
+        free(res);
+        res = NULL;
     }
 
     struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
@@ -331,7 +330,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
                     hashmap_free(node->spawnedProcesses);
                 }
                 if (node->undo)
-                    IExec->FreeVec(node->undo);
+                    free(node->undo);
                 hashmap_delete(res->children, node);
                 break;
             }
@@ -495,12 +494,7 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
     /* Open resource */
     struct Clib4Resource *res = (APTR) iexec->OpenResource(RESOURCE_NAME);
     if (!res) {
-        res = iexec->AllocVecTags(
-                sizeof(struct Clib4Resource),
-                AVT_Type, MEMF_SHARED,
-                AVT_ClearWithValue, 0,
-                AVT_Lock, TRUE,
-                TAG_END);
+        res = calloc(1, sizeof(struct Clib4Resource));
 
         if (res) {
             res->resource.lib_Version = VERSION;
@@ -518,10 +512,7 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
             res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
 
             /* Initialize fallback clib4 reent structure */
-            res->fallbackClib = (struct _clib4 *) iexec->AllocVecTags(sizeof(struct _clib4),
-                                                                      AVT_Type, MEMF_SHARED,
-                                                                      AVT_ClearWithValue, 0,
-                                                                      TAG_DONE);
+            res->fallbackClib = (struct _clib4 *) calloc(1, sizeof(struct _clib4));
             reent_init(res->fallbackClib, TRUE);
             res->fallbackClib->self = (struct Process *) IExec->FindTask(NULL);
             res->fallbackClib->__check_abort_enabled = TRUE;

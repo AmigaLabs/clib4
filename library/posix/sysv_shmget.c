@@ -9,7 +9,7 @@
 static struct shmid_ds *
 shm_construct(int key, int flags) {
     struct shmid_ds *si;
-    si = AllocVecTags(sizeof(struct shmid_ds), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    si = calloc(1, sizeof(struct shmid_ds));
     if (si) {
         si->shm_amp = 0;
         si->shm_perm.mode = (flags & 0777) | SHM_CLEAR;
@@ -23,9 +23,9 @@ static void
 shm_destroy(struct shmid_ds *si) {
     if (si) {
         if (si->shm_amp) {
-            FreeVec(si->shm_amp);
+            free(si->shm_amp);
         }
-        FreeVec(si);
+        free(si);
     }
 }
 
@@ -47,8 +47,7 @@ _shmget(key_t key, size_t size, int flags) {
         if (id >= 0) {
             si = GetIPCById(&res->shmcx.keymap, id);
             if (si && !si->shm_amp) {
-                si->shm_amp = AllocVecTags(size, AVT_Type, MEMF_SHARED,
-                                           TAG_DONE); /* Also MEMF_VIRTUAL and/or MEMF_HWALIGNED? */
+                si->shm_amp = malloc(size);
                 if (si->shm_amp) {
                     res->shmcx.totshm += size;
                     si->shm_segsz = size;

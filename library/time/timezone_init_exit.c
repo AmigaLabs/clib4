@@ -21,8 +21,8 @@ __timezone_exit(void) {
         DECLARE_TIMEZONEBASE();
 
         if (__clib4->__dyntz == TRUE) {
-            if (__clib4->__tzname[0]) FreeVec(__clib4->__tzname[0]);
-            if (__clib4->__tzname[1]) FreeVec(__clib4->__tzname[1]);
+            if (__clib4->__tzname[0]) free(__clib4->__tzname[0]);
+            if (__clib4->__tzname[1]) free(__clib4->__tzname[1]);
             __clib4->__tzname[0] = NULL;
             __clib4->__tzname[1] = NULL;
             __clib4->__dyntz = FALSE;
@@ -69,8 +69,8 @@ __timezone_init(void) {
         // Set global timezone variable
         uint32 gmtoffset = 0;
         int8 dstime = -1;
-        __clib4->__tzname[0] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-        __clib4->__tzname[1] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        __clib4->__tzname[0] = calloc(1, MAX_TZSIZE + 1);
+        __clib4->__tzname[1] = calloc(1, MAX_TZSIZE + 1);
         __clib4->__dyntz = TRUE;
 
         GetTimezoneAttrs(NULL,

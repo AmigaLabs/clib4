@@ -30,7 +30,7 @@ __free_r(struct _clib4 *__clib4, void *ptr) {
 
     if (found) {
         /* Free memory */
-        FreeVec(e->me_Exact);
+        free(e->me_Exact);
         e->me_Exact = NULL;
         /* Remove the node */
         AVL_RemNodeByAddress(&__clib4->__memalign_tree, &e->me_AvlNode);

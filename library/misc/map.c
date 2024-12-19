@@ -91,7 +91,7 @@ struct hashmap *hashmap_new_with_allocator(
     }
     // hashmap + spare + edata
     size_t size = sizeof(struct hashmap) + bucketsz * 2;
-    struct hashmap *map = AllocVecTags(size, AVT_Type, MEMF_SHARED, TAG_DONE);
+    struct hashmap *map = malloc(size);
     if (!map) {
         return NULL;
     }
@@ -109,9 +109,9 @@ struct hashmap *hashmap_new_with_allocator(
     map->cap = cap;
     map->nbuckets = cap;
     map->mask = map->nbuckets - 1;
-    map->buckets = AllocVecTags(map->bucketsz * map->nbuckets, AVT_Type, MEMF_SHARED, TAG_DONE);
+    map->buckets = malloc(map->bucketsz * map->nbuckets);
     if (!map->buckets) {
-        FreeVec(map);
+        free(map);
         return NULL;
     }
     ClearMem(map->buckets, map->bucketsz * map->nbuckets);
@@ -173,9 +173,9 @@ void hashmap_clear(struct hashmap *map, bool update_cap) {
     if (update_cap) {
         map->cap = map->nbuckets;
     } else if (map->nbuckets != map->cap) {
-        void *new_buckets = AllocVecTags(map->bucketsz * map->cap, AVT_Type, MEMF_SHARED, TAG_DONE);
+        void *new_buckets = malloc(map->bucketsz * map->cap);
         if (new_buckets) {
-            FreeVec(map->buckets);
+            free(map->buckets);
             map->buckets = new_buckets;
         }
         map->nbuckets = map->cap;
@@ -214,13 +214,13 @@ static bool resize0(struct hashmap *map, size_t new_cap) {
             entry->dib += 1;
         }
     }
-    FreeVec(map->buckets);
+    free(map->buckets);
     map->buckets = map2->buckets;
     map->nbuckets = map2->nbuckets;
     map->mask = map2->mask;
     map->growat = map2->growat;
     map->shrinkat = map2->shrinkat;
-    FreeVec(map2);
+    free(map2);
     return true;
 }
 
@@ -250,9 +250,9 @@ const void *hashmap_set_with_hash(struct hashmap *map, const void *item,
     void *eitem = bucket_item(entry);
     memcpy(eitem, item, map->elsize);
 
-    void *bitem;
     size_t i = entry->hash & map->mask;
     while (1) {
+        void *bitem;
         struct bucket *bucket = bucket_at(map, i);
         if (bucket->dib == 0) {
             CopyMem(entry, bucket, map->bucketsz);
@@ -383,8 +383,8 @@ void hashmap_free(struct hashmap *map) {
     if (!map)
         return;
     free_elements(map);
-    FreeVec(map->buckets);
-    FreeVec(map);
+    free(map->buckets);
+    free(map);
     map = NULL;
 }
 
@@ -552,7 +552,7 @@ static uint64_t SIP64(const uint8_t *in, const size_t inlen, uint64_t seed0,
 // Murmur3_86_128
 //-----------------------------------------------------------------------------
 static uint64_t MM86128(const void *key, const int len, uint32_t seed) {
-#define    ROTL32(x, r) ((x << r) | (x >> (32 - r)))
+#define ROTL32(x, r) ((x << r) | (x >> (32 - r)))
 #define FMIX32(h) h^=h>>16; h*=0x85ebca6b; h^=h>>13; h*=0xc2b2ae35; h^=h>>16;
     const uint8_t *data = (const uint8_t *) key;
     const int nblocks = len / 16;

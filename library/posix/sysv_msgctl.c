@@ -17,13 +17,13 @@ static void msg_destroy(struct msqid_ds *qi) {
         while(m) {
             rm=m;
             m=m->Next;
-            FreeVec(rm);
+            free(rm);
         }
         ReleaseSemaphore(qi->Lock);
         FreeSysObject(ASOT_SEMAPHORE,qi->Lock);
         FreeSysObject(ASOT_LIST,qi->WList);
         FreeSysObject(ASOT_LIST,qi->RList);
-        FreeVec(qi);
+        free(qi);
     }
 }
 

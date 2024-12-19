@@ -82,7 +82,7 @@ wb_file_init(struct _clib4 *__clib4) {
 
         len = strlen(console_prefix) + strlen(tool_name) + strlen(console_suffix);
 
-        window_specifier = AllocVecTags(len + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+        window_specifier = calloc(1, len + 1);
         if (window_specifier == NULL)
             goto out;
 
@@ -92,7 +92,7 @@ wb_file_init(struct _clib4 *__clib4) {
 
         __clib4->input = Open(window_specifier, MODE_NEWFILE);
 
-        FreeVec(window_specifier);
+        free(window_specifier);
     }
 
     if (__clib4->input == BZERO)
@@ -190,11 +190,15 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         }
 
         /* Allocate a little more memory than necessary and align the buffer to a cache line boundary. */
-        buffer = AllocVecTags(BUFSIZ + (__clib4->__cache_line_size - 1),
-                              AVT_Type, MEMF_SHARED,
-                              AVT_Alignment, __clib4->__cache_line_size,
-                              AVT_ClearWithValue, 0,
-                              TAG_DONE);
+        if (posix_memalign(
+                (void *)&buffer, 
+                __clib4->__cache_line_size, 
+                BUFSIZ + (__clib4->__cache_line_size - 1)
+            ) != 0) {
+            buffer = NULL;
+        } else {
+            memset(buffer, 0, BUFSIZ + (__clib4->__cache_line_size - 1));
+        }
         if (buffer == NULL)
             goto out;
 

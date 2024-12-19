@@ -17,9 +17,9 @@ sem_setup(struct sem *s) {
 }
 
 static void sem_destroy(struct semid_ds *si) {
-    struct sem *sa;
-    int i;
     if (si) {
+        struct sem *sa;
+        int i;
         /* Wake everyone who is waiting on this semaphore array so they can fail. */
         sa = si->sem_base;
         for (i = 0; i < si->sem_nsems; i++) {
@@ -29,14 +29,14 @@ static void sem_destroy(struct semid_ds *si) {
             FreeSysObject(ASOT_LIST, sa[i].nList);
         }
         FreeSysObject(ASOT_SEMAPHORE, si->Lock);
-        FreeVec(si->sem_base);
-        FreeVec(si);
+        free(si->sem_base);
+        free(si);
     }
 }
 
 static struct semid_ds *sem_construct(int key, int flags) {
     struct semid_ds *si;
-    si = AllocVecTags(sizeof(struct semid_ds), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    si = calloc(1, sizeof(struct semid_ds));
     if (si) {
         si->sem_base = 0;
         si->sem_perm.mode = flags & 0777;
@@ -69,9 +69,7 @@ _semget(key_t key, int nsems, int flags) {
         if (id >= 0) {
             si = GetIPCById(&res->semcx.keymap, id);
             if (si && !si->sem_base) {
-                si->sem_base = AllocVecTags(sizeof(struct sem) * nsems,
-                                            AVT_Type, MEMF_SHARED,
-                                            TAG_DONE); /* Also MEMF_VIRTUAL and/or MEMF_HWALIGNED? */
+                si->sem_base = malloc(sizeof(struct sem) * nsems);
                 if (si->sem_base) {
                     sa = si->sem_base;
                     for (i = 0; i < nsems; i++) {

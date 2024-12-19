@@ -35,7 +35,7 @@ static wmem_allocator_type_t override_type;
 void *
 wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
     if (allocator == NULL) {
-        return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        return malloc(size);
     }
 
     assert(allocator->in_scope);
@@ -63,7 +63,7 @@ wmem_alloc0(wmem_allocator_t *allocator, const size_t size) {
 void
 wmem_free(wmem_allocator_t *allocator, void *ptr) {
     if (allocator == NULL) {
-        FreeVec(ptr);
+        free(ptr);
         ptr = NULL;
         return;
     }
@@ -80,8 +80,8 @@ wmem_free(wmem_allocator_t *allocator, void *ptr) {
 void *
 wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
     if (allocator == NULL) {
-        FreeVec(ptr);
-        return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        free(ptr);
+        return malloc(size);
     }
 
     if (ptr == NULL) {

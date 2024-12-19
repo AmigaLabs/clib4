@@ -10,9 +10,9 @@ static void
 shm_destroy(struct shmid_ds *si) {
     if (si) {
         if (si->shm_amp) {
-            FreeVec(si->shm_amp);
+            free(si->shm_amp);
         }
-        FreeVec(si);
+        free(si);
     }
 }
 
