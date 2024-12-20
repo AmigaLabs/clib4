@@ -942,10 +942,10 @@ C_WMEM := \
 ifdef SPE
     $(info Adding SPE objects)
     C_STRING := $(C_STRING) \
-    	cpu/spe/memcmpE500.o \
-    	cpu/spe/strcmpE500.o \
-    	cpu/spe/strcpyE500.o \
-    	cpu/spe/strlenE500.o
+	cpu/spe/memcmpE500.o \
+	cpu/spe/strcmpE500.o \
+	cpu/spe/strcpyE500.o \
+	cpu/spe/strlenE500.o
 
     C_SETJMP := $(C_SETJMP) \
         cpu/spe/_longjmpE500.o \
@@ -988,9 +988,17 @@ C_LIBRARY := \
 	$(C_WCHAR) \
 	$(C_WMEM)
 
+SHARED_LIB_OBJS := \
+	$(patsubst \
+		%.c, \
+		%.o, \
+		$(addprefix shared_library/, \
+			$(notdir \
+				$(wildcard library/shared_library/*.c))))
+
 C_LIB := \
 	c.lib_rev.o \
-	shared_library/stubs.o \
+	$(SHARED_LIB_OBJS) \
 	unistd/getopt.o \
 	unistd/getopt_long.o \
 	socket/in6addr_any.o \
