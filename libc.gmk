@@ -988,7 +988,7 @@ C_LIBRARY := \
 	$(C_WCHAR) \
 	$(C_WMEM)
 
-SHARED_LIB_OBJS := \
+SHARED_LIB_STUBS := \
 	$(patsubst \
 		%.c, \
 		%.o, \
@@ -998,11 +998,11 @@ SHARED_LIB_OBJS := \
 
 C_LIB := \
 	c.lib_rev.o \
-	$(SHARED_LIB_OBJS) \
+	$(SHARED_LIB_STUBS) \
 	unistd/getopt.o \
 	unistd/getopt_long.o \
 	socket/in6addr_any.o \
-	socket/in6addr_loopback.o \
+	socket/in6addr_loopback.o
 
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(C_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
