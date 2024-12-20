@@ -193,7 +193,12 @@ struct pthread_barrierattr {
 
 typedef struct pthread_barrierattr pthread_barrierattr_t;
 
-struct pthread_barrier;
+struct pthread_barrier {
+    unsigned int curr_height;
+    unsigned int total_height;
+    pthread_cond_t breeched;
+    pthread_mutex_t lock;
+};
 
 typedef struct pthread_barrier pthread_barrier_t;
 

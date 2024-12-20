@@ -140,6 +140,7 @@ get_arg_string_length(char *const argv[]) {
 //     DebugPrintF("[child :] Done.");
 //     FreeSignal(ed->childSignal);
 // }
+#define USE_CNPT 0
 int
 spawnvpe(
     const char *file,
@@ -180,9 +181,9 @@ spawnvpe(
     }
 
     D(("name after conversion: [%s]\n", name));
-    // printf("[spawnvpe :] name after conversion [%s]\n", name);
+    printf("[spawnvpe :] name after conversion [%s]\n", name);
 
-#if 0
+#if USE_CNPT
     seglist = LoadSeg(name);
 	if (!seglist)
 		return -1;
@@ -206,9 +207,9 @@ spawnvpe(
     }
 
     D(("cwd after conversion: [%s]\n", cwd));
-    // printf("[spawnvpe :] cwd after conversion [%s]\n", cwd);
+    printf("[spawnvpe :] cwd after conversion [%s]\n", cwd);
 
-    BPTR cwdLock = cwd ? Lock(cwd, SHARED_LOCK) : 0;
+    BPTR cwdLock = cwd ? Lock(cwd, SHARED_LOCK) : 0; //DupLock(GetCurrentDir());
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
     // This is probably unnecessary :
@@ -238,6 +239,7 @@ spawnvpe(
     arg_string[arg_string_len] = '\0';
 
     D(("arg_string: [%s]\n", arg_string));
+    printf("arg_string: [%s]\n", arg_string);
 
     int finalpath_len = strlen(name) + 1 + arg_string_len + 1; // '\0'
     char *finalpath = (char*)malloc(finalpath_len);
@@ -251,6 +253,7 @@ spawnvpe(
     // printf("[spawnvpe :] processName == <%s>\n", processName);
 
     if (fhin >= 0) {
+        // int fhind = dup(fhin);
         err = __get_default_file(fhin, &fh);
         if (err) {
             __set_errno(EBADF);
@@ -265,6 +268,7 @@ spawnvpe(
     }
 
     if (fhout >= 0) {
+        // int fhoutd = dup(fhout);
         err = __get_default_file(fhout, &fh);
         if (err) {
             __set_errno(EBADF);
@@ -279,6 +283,7 @@ spawnvpe(
     }
 
     if (fherr >= 0) {
+        // int fherrd = dup(fherr);
         err = __get_default_file(fherr, &fh);
         if (err) {
             __set_errno(EBADF);
@@ -299,7 +304,7 @@ spawnvpe(
     // ed.parentSignal = AllocSignal(-1);
 
     struct Task *_me = FindTask(0);
-#if 0
+#if USE_CNPT
   struct Process *p = CreateNewProcTags(
     NP_Seglist,		seglist,
     NP_FreeSeglist,	TRUE,
@@ -324,49 +329,71 @@ spawnvpe(
     NP_CloseError,	FALSE,
 #endif
 
-    NP_EntryCode, spawnvpe_entryCode,
-    NP_EntryData, &ed,
+    // NP_EntryCode, spawnvpe_entryCode,
+    // NP_EntryData, &ed,
 
     // NP_FinalCode,	amiga_FinalCode,
     // NP_FinalData,	fd,
 
-    // NP_EntryCode,  spawnedProcessEnter,
+    NP_EntryCode,  spawnedProcessEnter,
+    NP_EntryData, getgid(),
+
     NP_ExitCode,   spawnedProcessExit,
 
-    NP_Name,      strdup(processName),
-    cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
     progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
+    cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
+    NP_Name,      strdup(processName),
+
     NP_Arguments, arg_string,
+
     TAG_DONE
   );
   if (p) ret = 0;
 #else
     // printf("(*)Calling SystemTags.\n");
 
+    // struct Clib4ExitData *ed = malloc(sizeof(struct Clib4ExitData));
+    // for(int i = 0; i < 3; i++) ed->iofh[i] = iofh[i];
+    // for(int i = 0; i < 3; i++) ed->closefh[i] = closefh[i];
+
     ret = SystemTags(finalpath,
                      NP_NotifyOnDeathSigTask, _me,
+
                      SYS_Input, iofh[0],
                      SYS_Output, iofh[1],
                      SYS_Error, iofh[2],
+    // NP_CloseInput,	closefh[0], // These will always be true (like you)
+    // NP_CloseOutput,	closefh[1],
+                    NP_CloseError,	closefh[2], // This is needed!
+
                      SYS_UserShell, TRUE,
                      SYS_Asynch, TRUE,
                      NP_Child, TRUE,
+
                      progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
                      cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
                      NP_Name, strdup(processName),
-
+    
                      NP_EntryCode,  spawnedProcessEnter,
                      NP_EntryData, getgid(),
                     //  NP_EntryCode,  amiga_entryCode,
                     //  NP_EntryData,  &ed,
+
                      NP_ExitCode,   spawnedProcessExit,
+                    //  NP_ExitData,   ed,
 
                      TAG_DONE);
+
+    // for (int i = 0; i < 3; i++) {
+    //     if (closefh[i])
+    //         Close(iofh[i]);
+    // }
 
 #endif
 
     if (ret != 0) {
         __set_errno(__translate_io_error_to_errno(IoErr()));
+
         /* SystemTags failed. Clean up file handles */
         for (int i = 0; i < 3; i++) {
             if (closefh[i])
@@ -383,7 +410,11 @@ spawnvpe(
 
         // DebugPrintF("[main :] Child created with success.\n");
 
+#if USE_CNPT
+        pid_t pid = p->pr_ProcessID;
+#else
         pid_t pid = IoErr();
+#endif
         // gid_t groupId = getgid();
         // uint32 ppid = ((struct Process *) FindTask(NULL))->pr_ProcessID;
 
@@ -405,7 +436,7 @@ spawnvpe(
         ret = pid;
     }
     // D(("SystemTags completed. return value: [%ld]\n", ret));
-    // printf("SystemTags completed. return value: [%ld]\n", ret);
+    printf("SystemTags completed. return value: [%ld]\n", ret);
 
     return ret;
 }
