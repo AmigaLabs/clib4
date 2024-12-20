@@ -994,7 +994,7 @@ SHARED_LIB_OBJS := \
 		%.o, \
 		$(addprefix shared_library/, \
 			$(notdir \
-				$(wildcard library/shared_library/*.c))))
+				$(wildcard library/shared_library/stubs_*.c))))
 
 C_LIB := \
 	c.lib_rev.o \
