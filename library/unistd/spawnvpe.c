@@ -140,6 +140,12 @@ get_arg_string_length(char *const argv[]) {
 //     DebugPrintF("[child :] Done.");
 //     FreeSignal(ed->childSignal);
 // }
+/* * * * *
+    Note for future generations : CreateNewProc is not suited for running shell commands.
+    The only way to have a full shell environment (appart from using internal packet structures),
+    is to use System. We keep the code here a display for the event, that someone should like
+    to investigate further into the mysteries of AmigaDOS. Until then, the following #define is set to 0.
+ * * * * */
 #define USE_CNPT 0
 int
 spawnvpe(
@@ -185,13 +191,13 @@ spawnvpe(
     seglist = LoadSeg(name);
 	if (!seglist)
 		return -1;
-#endif
 
     BPTR fileLock = Lock(name, SHARED_LOCK);
     if (fileLock) {
         progdirLock = ParentDir(fileLock);
         UnLock(fileLock);
     }
+#endif
 
     if(cwd) {
         error = __translate_unix_to_amiga_path_name(&cwd, &nti_cwd);
@@ -233,15 +239,14 @@ spawnvpe(
     arg_string[arg_string_len] = '\0';
 
     D(("arg_string: [%s]\n", arg_string));
-    printf("arg_string: [%s]\n", arg_string);
 
-    int finalpath_len = strlen(name) + 1 + arg_string_len + 1; // '\0'
-    char *finalpath = (char*)malloc(finalpath_len);
-    char processName[32] = {0};
-    snprintf(finalpath, finalpath_len, "%s %s", name, arg_string);
-    snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
+    int full_command_len = strlen(name) + 1 + arg_string_len + 1; // '\0'
+    char *full_command = (char*)malloc(full_command_len);
+    char process_name[32] = {0};
+    snprintf(full_command, full_command_len, "%s %s", name, arg_string);
+    snprintf(process_name, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
-    D(("Command to execute: [%s]\n", finalpath));
+    D(("Command to execute: [%s]\n", full_command));
 
     if (fhin >= 0) {
         err = __get_default_file(fhin, &fh);
@@ -288,6 +293,7 @@ spawnvpe(
     D(("(*)Calling SystemTags.\n"));
 
     struct Task *_me = FindTask(0);
+
 #if USE_CNPT
   struct Process *p = CreateNewProcTags(
     NP_Seglist,		seglist,
@@ -320,7 +326,7 @@ spawnvpe(
 
     progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
     cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
-    NP_Name,      strdup(processName),
+    NP_Name,      strdup(process_name),
 
     NP_Arguments, arg_string,
 
@@ -329,29 +335,34 @@ spawnvpe(
   if (p) ret = 0;
 #else
 
-    ret = SystemTags(finalpath,
-                     NP_NotifyOnDeathSigTask, _me,
+    ret = SystemTags(full_command,
+                    NP_NotifyOnDeathSigTask, _me,
 
-                     SYS_Input, iofh[0],
-                     SYS_Output, iofh[1],
-                     SYS_Error, iofh[2],
-    // NP_CloseInput,	closefh[0], // These will always be true (like you)
-    // NP_CloseOutput,	closefh[1],
-                    NP_CloseError,	closefh[2], // This is needed!
+                    SYS_Input,          iofh[0],
+                    SYS_Output,         iofh[1],
+                    SYS_Error,          iofh[2],
 
-                     SYS_UserShell, TRUE,
-                     SYS_Asynch, TRUE,
-                     NP_Child, TRUE,
+                    // These will always be true (like you) :
+                    // NP_CloseInput,   closefh[0],
+                    // NP_CloseOutput,	closefh[1],
+                    NP_CloseError,      closefh[2], // <-- This one is needed!
 
-                     progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
-                     cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
-                     NP_Name, strdup(processName),
-    
-                     NP_EntryCode,  spawnedProcessEnter,
-                     NP_EntryData, getgid(),
-                     NP_ExitCode,   spawnedProcessExit,
+                    SYS_UserShell, TRUE,
+                    SYS_Asynch, TRUE,
+                    NP_Child, TRUE,
 
-                     TAG_DONE);
+                    // This is taken care of by the command shell :
+                    // progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
+
+                    cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
+
+                    NP_Name,        strdup(process_name),
+
+                    NP_EntryCode,   spawnedProcessEnter,
+                    NP_EntryData,   getgid(),
+                    NP_ExitCode,    spawnedProcessExit,
+
+                    TAG_DONE);
 #endif
 
     if (ret != 0) {
@@ -367,6 +378,7 @@ spawnvpe(
     }
     else {
         __clib4->__children++;
+
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid
