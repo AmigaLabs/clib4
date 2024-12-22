@@ -142,7 +142,7 @@ get_arg_string_length(char *const argv[]) {
 // }
 /* * * * *
     Note for future generations : CreateNewProc is not suited for running shell commands.
-    The only way to have a full shell environment (appart from using internal packet structures),
+    The only way to have a full shell environment (apart from using internal packet structures),
     is to use System. We keep the code here a display for the event, that someone should like
     to investigate further into the mysteries of AmigaDOS. Until then, the following #define is set to 0.
  * * * * */
@@ -254,7 +254,7 @@ spawnvpe(
             __set_errno(EBADF);
             return ret;
         }
-        iofh[0] = DupFileHandle(fh); //in case this is closed by the parent
+        iofh[0] = DupFileHandle(fh); // This will be closed by ST/CNPT
         closefh[0] = TRUE;
     }
     else {
@@ -268,7 +268,7 @@ spawnvpe(
             __set_errno(EBADF);
             return ret;
         }
-        iofh[1] = DupFileHandle(fh); //in case this is closed by the parent
+        iofh[1] = DupFileHandle(fh); // This will be closed by ST/CNPT
         closefh[1] = TRUE;
     }
     else {
@@ -282,7 +282,7 @@ spawnvpe(
             __set_errno(EBADF);
             return ret;
         }
-        iofh[2] = DupFileHandle(fh); //in case this is closed by the parent
+        iofh[2] = DupFileHandle(fh); // This will be closed by ST/CNPT
         closefh[2] = TRUE;
     }
     else {
@@ -290,11 +290,11 @@ spawnvpe(
         closefh[2] = TRUE;
     }
 
-    D(("(*)Calling SystemTags.\n"));
-
     struct Task *_me = FindTask(0);
 
 #if USE_CNPT
+    D(("(*)Calling CreateNewProcTags.\n"));
+
   struct Process *p = CreateNewProcTags(
     NP_Seglist,		seglist,
     NP_FreeSeglist,	TRUE,
@@ -326,7 +326,7 @@ spawnvpe(
 
     progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
     cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
-    NP_Name,      strdup(process_name),
+    NP_Name,      process_name,
 
     NP_Arguments, arg_string,
 
@@ -334,6 +334,7 @@ spawnvpe(
   );
   if (p) ret = 0;
 #else
+    D(("(*)Calling SystemTags.\n"));
 
     ret = SystemTags(full_command,
                     NP_NotifyOnDeathSigTask, _me,
@@ -356,17 +357,19 @@ spawnvpe(
 
                     cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
 
-                    NP_Name,        strdup(process_name),
+                    NP_Name,        process_name,
 
                     NP_EntryCode,   spawnedProcessEnter,
                     NP_EntryData,   getgid(),
                     NP_ExitCode,    spawnedProcessExit,
 
                     TAG_DONE);
+
+    free(full_command);
 #endif
 
     if (ret != 0) {
-        D(("System/CreateNewProc failed. return value: [%ld]\n", ret));
+        D(("System/CreateNewProc failed. Return value: [%ld]\n", ret));
 
         __set_errno(__translate_io_error_to_errno(IoErr()));
 
@@ -377,6 +380,8 @@ spawnvpe(
         }
     }
     else {
+        D(("System/CreateNewProc succeeded. Return value: [%ld]\n", ret));
+
         __clib4->__children++;
 
         /*
@@ -390,12 +395,10 @@ spawnvpe(
 #else
         pid_t pid = IoErr();
 #endif
-        D(("System/CreateNewProc succeeded. pid: [%ld]\n", pid));
-
         ret = pid;
     }
 
-    D(("System/CreateNewProc completed. return value: [%ld]\n", ret));
+    D(("System/CreateNewProc completed. Return value: [%ld]\n", ret));
 
     return ret;
 }
