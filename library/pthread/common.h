@@ -6,13 +6,6 @@
 #include "pthread.h"
 #include <sys/time.h>
 
-struct pthread_barrier {
-    unsigned int curr_height;
-    unsigned int total_height;
-    pthread_cond_t breeched;
-    pthread_mutex_t lock;
-};
-
 #undef NEWLIST
 #define NEWLIST(_l)                                     \
 do                                                      \
