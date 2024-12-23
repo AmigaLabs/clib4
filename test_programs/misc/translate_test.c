@@ -5,7 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <dos.h>
+
+/* A data structures used by the path translation routines below. */
+struct name_translation_info {
+    char substitute[PATH_MAX];
+    char *original_name;
+    int is_root;
+};
 
 int
 main(int argc, char **argv) {
