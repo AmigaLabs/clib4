@@ -7,8 +7,7 @@ set -u
 
 offsets=()
 # 1. Initially, grab all the files and their offsets. There is no
-#    adherence to alphabetical ordering of file names and offset
-#    increment.
+#    association to alphabetical ordering of file names and offset.
 for stub in $(find -name "stubs_*.c" -and -not -name "stubs_common.c")
 do
     stub_offset=$(sed -n "s/Clib4Call(.*, \([0-9]\+\));/\1/p" "$stub")
