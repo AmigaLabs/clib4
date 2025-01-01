@@ -44,6 +44,9 @@
 
 int
 __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translation_info *nti) {
+
+    // printf("[path translate :] name_ptr [%s]\n", *name_ptr);
+
     int result = ERROR;
     char *name;
 
