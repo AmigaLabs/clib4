@@ -177,7 +177,7 @@ spawnv(int mode, const char *file, const char **argv) {
     BPTR in = DupFileHandle(Input());
     BPTR out = DupFileHandle(Output());
     BPTR err = DupFileHandle(ErrorOutput());
-    D(("Launching [%s]", finalpath));
+    D(("Launching [%s]", command));
     ret = SystemTags(command,
                      SYS_Input, in,
                      SYS_Output, out,
@@ -208,6 +208,11 @@ spawnv(int mode, const char *file, const char **argv) {
          */
         if (mode == P_NOWAIT) {
             ret = IoErr(); // This is our ProcessID;
+        } else {
+            if (in)
+                Close(in);
+            if (out)
+                Close(out);
         }
     }
     return ret;
