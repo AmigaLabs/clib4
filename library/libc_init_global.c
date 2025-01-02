@@ -296,7 +296,7 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         .__children = 1,
         .term_entry = NULL,
         .__was_sig = -1,
-        .__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK,
+        .__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK_FAST,
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {

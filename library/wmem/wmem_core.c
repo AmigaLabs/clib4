@@ -27,6 +27,8 @@
 #include "wmem_allocator_block_fast.h"
 #include "wmem_allocator_strict.h"
 
+#include <proto/exec.h>
+
 /* Set according to the WIRESHARK_DEBUG_WMEM_OVERRIDE environment variable in
  * wmem_init. Should not be set again. */
 static bool do_override;
@@ -35,7 +37,9 @@ static wmem_allocator_type_t override_type;
 void *
 wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
     if (allocator == NULL) {
-        return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        void *r = AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+// DebugPrintF("[wmem_alloc :] allocated block [0x%xl] of size [%dl]\n", r, size);
+        return r;
     }
 
     assert(allocator->in_scope);
@@ -80,8 +84,11 @@ wmem_free(wmem_allocator_t *allocator, void *ptr) {
 void *
 wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
     if (allocator == NULL) {
-        FreeVec(ptr);
-        return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+                printf("unsupported feature\n");
+
+        // FreeVec(ptr);
+        // return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        return 0;
     }
 
     if (ptr == NULL) {

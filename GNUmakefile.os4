@@ -117,7 +117,7 @@ OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wa,-mregnam
 		-nostdinc -nostartfiles -nostdlib
 OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
 
-STABS :=
+STABS := -gstabs
 DLIBS :=
 
 ifndef DEBUG

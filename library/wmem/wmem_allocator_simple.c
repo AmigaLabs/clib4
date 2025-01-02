@@ -37,8 +37,9 @@ wmem_simple_alloc(void *private_data, const size_t size) {
 
     if (__clib4_unlikely(allocator->count == allocator->size)) {
         allocator->size *= 2;
-        allocator->ptrs = (void **) wmem_realloc(NULL, allocator->ptrs,
-                                                 sizeof(void *) * allocator->size);
+        printf("unsupported feature\n");
+        // allocator->ptrs = (void **) wmem_realloc(NULL, allocator->ptrs,
+        //                                          sizeof(void *) * allocator->size);
     }
 
     return allocator->ptrs[allocator->count++] = wmem_alloc(NULL, size);
@@ -73,7 +74,8 @@ wmem_simple_realloc(void *private_data, void *ptr, const size_t size) {
 
     for (i = allocator->count - 1; i >= 0; i--) {
         if (ptr == allocator->ptrs[i]) {
-            return allocator->ptrs[i] = wmem_realloc(NULL, allocator->ptrs[i], size);
+        printf("unsupported feature\n");
+            // return allocator->ptrs[i] = wmem_realloc(NULL, allocator->ptrs[i], size);
         }
     }
 

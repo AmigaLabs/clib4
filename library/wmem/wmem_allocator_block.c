@@ -800,9 +800,10 @@ wmem_block_realloc_jumbo(wmem_block_allocator_t *allocator,
 
     block = WMEM_CHUNK_TO_BLOCK(chunk);
 
-    block = (wmem_block_hdr_t *) wmem_realloc(NULL, block, size
-                                                           + WMEM_BLOCK_HEADER_SIZE
-                                                           + WMEM_CHUNK_HEADER_SIZE);
+    printf("realloc not supported on this allocator\n");
+    // block = (wmem_block_hdr_t *) wmem_realloc(NULL, block, size
+    //                                                        + WMEM_BLOCK_HEADER_SIZE
+    //                                                        + WMEM_CHUNK_HEADER_SIZE);
 
     if (block->next) {
         block->next->prev = block;
