@@ -352,6 +352,8 @@ spawnvpe(
                     SYS_Asynch, TRUE,
                     NP_Child, TRUE,
 
+                    NP_StackSize,   2024*1024,
+                    
                     // This is taken care of by the command shell :
                     // progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
 

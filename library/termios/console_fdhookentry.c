@@ -497,6 +497,10 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
                         goto out;
                     }
 
+                    /* Create an empty examineData struct */
+                    struct ExamineData *examineData = __malloc_r(__clib4, sizeof(struct ExamineData));
+                    fam->fam_FileInfo = examineData;
+
                     /* Make up some stuff for this stream. */
                     memset(fam->fam_FileInfo, 0, sizeof(*fam->fam_FileInfo));
 
