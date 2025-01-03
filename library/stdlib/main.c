@@ -301,13 +301,13 @@ _main(
      */
     if ((len = GetVar("CLIB4_MEMORY_ALLOCATOR", envbuf, sizeof(envbuf), 0)) >= 0) {
         if (!Stricmp(envbuf, "1"))
-            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;
+            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;  // WARNING - At moment this is crashing
         else if (!Stricmp(envbuf, "2"))
             __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK;
         else if (!Stricmp(envbuf, "3"))
             __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_STRICT;
         else if (!Stricmp(envbuf, "4"))
-            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK_FAST; // WARNING - At moment this is crashing
+            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK_FAST;
         // else leave the default one
     }
 

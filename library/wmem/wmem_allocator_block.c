@@ -147,6 +147,7 @@
 /* The header for an entire OS-level 'block' of memory */
 typedef struct _wmem_block_hdr_t {
     struct _wmem_block_hdr_t *prev, *next;
+    size_t size; //we need this for realloc on amigaos
 } wmem_block_hdr_t;
 
 /* The header for a single 'chunk' of memory as returned from alloc/realloc.
@@ -744,6 +745,8 @@ wmem_block_new_block(wmem_block_allocator_t *allocator) {
 
     /* allocate the new block and add it to the block list */
     block = (wmem_block_hdr_t *) wmem_alloc(NULL, WMEM_BLOCK_SIZE);
+    block->size = WMEM_BLOCK_SIZE;
+
     wmem_block_add_to_block_list(allocator, block);
 
     /* initialize it */
@@ -762,6 +765,7 @@ wmem_block_alloc_jumbo(wmem_block_allocator_t *allocator, const size_t size) {
     block = (wmem_block_hdr_t *) wmem_alloc(NULL, size
                                                   + WMEM_BLOCK_HEADER_SIZE
                                                   + WMEM_CHUNK_HEADER_SIZE);
+    block->size = size + WMEM_BLOCK_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE;
 
     /* add it to the block list */
     wmem_block_add_to_block_list(allocator, block);
@@ -800,7 +804,14 @@ wmem_block_realloc_jumbo(wmem_block_allocator_t *allocator,
 
     block = WMEM_CHUNK_TO_BLOCK(chunk);
 
-    printf("realloc not supported on this allocator\n");
+    size_t new_size = size + WMEM_BLOCK_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE;
+
+    wmem_block_hdr_t *new_block = wmem_alloc(NULL, new_size);
+    memcpy(new_block, block, block->size);
+    wmem_free(NULL, block);
+    block = new_block;
+    block->size = new_size;
+
     // block = (wmem_block_hdr_t *) wmem_realloc(NULL, block, size
     //                                                        + WMEM_BLOCK_HEADER_SIZE
     //                                                        + WMEM_CHUNK_HEADER_SIZE);

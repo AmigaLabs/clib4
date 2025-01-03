@@ -20,8 +20,6 @@
 #include "wmem_allocator.h"
 #include "wmem_allocator_block_fast.h"
 
-#include <proto/exec.h>
-
 /* https://mail.gnome.org/archives/gtk-devel-list/2004-December/msg00091.html
  * The 2*sizeof(size_t) alignment here is borrowed from GNU libc, so it should
  * be good most everywhere. It is more conservative than is needed on some
@@ -155,11 +153,11 @@ wmem_block_fast_realloc(void *private_data, void *ptr, const size_t size) {
     if (chunk->len == JUMBO_MAGIC) {
         wmem_block_fast_jumbo_t *block;
 
- DebugPrintF("[wmem_block_fast_realloc :] Jumbo : ptr [0x%lx] size [0x%lx]\n", ptr, size);
+//  DebugPrintF("[wmem_block_fast_realloc :] Jumbo : ptr [0x%lx] size [0x%lx]\n", ptr, size);
 
         block = ((wmem_block_fast_jumbo_t *) ((uint8_t * )(chunk) - WMEM_JUMBO_HEADER_SIZE));
 
- DebugPrintF("[wmem_block_fast_realloc :] block [0x%lx] block->size [0x%lx]\n", block, block->size);
+//  DebugPrintF("[wmem_block_fast_realloc :] block [0x%lx] block->size [0x%lx]\n", block, block->size);
 
         // Since we don't have realloc on amiga, this is the solution :
 
@@ -188,7 +186,7 @@ wmem_block_fast_realloc(void *private_data, void *ptr, const size_t size) {
             block->next->prev = block;
         }
 
-DebugPrintF("[wmem_block_fast_realloc :] Return new_block [0x%lx] new_size [0x%lx]\n", block, new_size);
+// DebugPrintF("[wmem_block_fast_realloc :] Return new_block [0x%lx] new_size [0x%lx]\n", block, new_size);
 
         return ((void *) ((uint8_t * )(block) + WMEM_JUMBO_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE));
     } else if (chunk->len < size) {

@@ -82,9 +82,13 @@ wmem_array_grow(wmem_array_t *array, const unsigned to_add) {
         return;
     }
 
+    uint8_t *new_buf = wmem_alloc(NULL, new_alloc_count * array->elem_size);
+    memcpy(new_buf, array->buf, array->alloc_count * array->elem_size);
+    wmem_free(NULL, array->buf);
+    array->buf = new_buf;
+
     // array->buf = (uint8_t *) wmem_realloc(array->allocator, array->buf,
     //                                       new_alloc_count * array->elem_size);
-        printf("unsupported feature\n");
 
     array->alloc_count = new_alloc_count;
 }
@@ -159,8 +163,16 @@ wmem_array_finalize(wmem_array_t *array) {
 
     size_t used_size = array->null_terminated ? (array->elem_count + 1) * array->elem_size : array->elem_count *
                                                                                              array->elem_size;
+
+    if (array->null_terminated) {
+        uint8_t *new_buf = wmem_alloc(NULL, (array->elem_count + 1) * array->elem_size);
+        memcpy(new_buf, array->buf, array->alloc_count * array->elem_size);
+        memset(new_buf + array->elem_size * array->elem_count, 0, array->elem_size);
+        wmem_free(NULL, array->buf);
+        array->buf = new_buf;
+    }
+
     // void *ret = wmem_realloc(array->allocator, array->buf, used_size);
-        printf("unsupported feature\n");
 
     wmem_free(array->allocator, array);
 
