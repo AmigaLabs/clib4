@@ -65,16 +65,14 @@ FILE_DESTRUCTOR(workbench_exit) {
 static int
 wb_file_init(struct _clib4 *__clib4) {
     int result = ERROR;
+    STRPTR window_specifier = NULL;
 
     __clib4->__original_current_directory = SetCurrentDir(__clib4->__WBenchMsg->sm_ArgList[0].wa_Lock);
     __clib4->__current_directory_changed = TRUE;
 
     if (__clib4->__WBenchMsg->sm_ToolWindow != NULL) {
-        __clib4->input = Open(__clib4->__WBenchMsg->sm_ToolWindow, MODE_NEWFILE);
+        __clib4->input = Open(__clib4->__WBenchMsg->sm_ToolWindow, MODE_OLDFILE);
     } else {
-        static const char console_prefix[] = "CON:20/20/600/150/";
-        static const char console_suffix[] = " Output/AUTO/CLOSE/WAIT";
-        STRPTR window_specifier;
         STRPTR tool_name;
         size_t len;
 
@@ -90,26 +88,25 @@ wb_file_init(struct _clib4 *__clib4) {
         strcat(window_specifier, tool_name);
         strcat(window_specifier, console_suffix);
 
-        __clib4->input = Open(window_specifier, MODE_NEWFILE);
-
-        FreeVec(window_specifier);
+        D(("window_specifier=%s\n", window_specifier));
+        __clib4->input = Open(window_specifier, MODE_OLDFILE);
     }
 
     if (__clib4->input == BZERO)
-        __clib4->input = Open("NIL:", MODE_NEWFILE);
+        __clib4->input = Open("NIL:", MODE_OLDFILE);
 
     if (__clib4->input != BZERO) {
         struct FileHandle *fh = BADDR(__clib4->input);
 
         __clib4->old_console_task = SetConsolePort(fh->fh_MsgPort);
 
-        __clib4->output = Open("CONSOLE:", MODE_NEWFILE);
+        __clib4->output = Open("CONSOLE:", MODE_OLDFILE);
         if (__clib4->output != BZERO)
             __clib4->restore_console_task = TRUE;
         else
             SetConsolePort(__clib4->old_console_task);
 
-        __clib4->error = Open("CONSOLE:", MODE_NEWFILE);
+        __clib4->error = Open("CONSOLE:", MODE_OLDFILE);
         if (__clib4->error != BZERO)
             __clib4->restore_console_task = TRUE;
         else
@@ -117,7 +114,7 @@ wb_file_init(struct _clib4 *__clib4) {
     }
 
     if (__clib4->output == BZERO)
-        __clib4->output = Open("NIL:", MODE_NEWFILE);
+        __clib4->output = Open("NIL:", MODE_OLDFILE);
 
     if (__clib4->input == BZERO || __clib4->output == BZERO || __clib4->error == BZERO)
         goto out;
@@ -126,6 +123,9 @@ wb_file_init(struct _clib4 *__clib4) {
     __clib4->old_output = SelectOutput(__clib4->output);
     __clib4->old_error = SelectErrorOutput(__clib4->error);
     __clib4->restore_streams = TRUE;
+
+    if (window_specifier != NULL)
+        FreeVec(window_specifier);
 
     result = OK;
 
@@ -207,10 +207,6 @@ FILE_CONSTRUCTOR(stdio_file_init) {
             __delete_semaphore(fd_lock);
             goto out;
         }
-
-        /* We ignore the file handle and let the file I/O code in the fd hook pick up the appropriate
-            Input/Output/ErrorOutput handle. */
-        default_file = i;
 
         D(("File %ld", i));
         __initialize_fd(__clib4->__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);

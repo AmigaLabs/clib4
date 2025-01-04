@@ -160,20 +160,11 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     name[sizeof(name) - 1] = '\0';
     strncpy(inf->name, name, NAMELEN);
 
-    struct DOSIFace *IDOS = _IDOS;
-    BPTR fileIn  = Open("CONSOLE:", MODE_OLDFILE);
-    BPTR fileOut = Open("CONSOLE:", MODE_OLDFILE);
-
     // start the child thread
     inf->task = CreateNewProcTags(
             NP_Entry,                StarterFunc,
             NP_UserData,             inf,
-            //NP_EntryData,            GetEntryData(),
             inf->attr.stacksize ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
-            NP_Input,			     fileIn,
-            NP_CloseInput,		     TRUE,
-            NP_Output,			     fileOut,
-            NP_CloseOutput,		     TRUE,
             NP_Name,                 name,
             NP_Child,                TRUE,
             NP_Cli,				     TRUE,
@@ -181,8 +172,6 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
 
     if (0 == inf->task) {
         inf->parent = NULL;
-        Close(fileIn);
-        Close(fileOut);
         return EAGAIN;
     }
 
