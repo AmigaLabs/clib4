@@ -36,7 +36,7 @@ void *
 wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
     if (allocator == NULL) {
         void *r = AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-// DebugPrintF("[wmem_alloc :] allocated block [0x%lx] of size [0x%lx]\n", r, size);
+        // D(("[wmem_alloc :] allocated block [0x%lx] of size [0x%lx]\n", r, size));
         return r;
     }
 
