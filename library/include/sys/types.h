@@ -50,6 +50,11 @@ typedef unsigned long   u_long;
 #define _BSDTYPES_DEFINED
 #endif
 
+typedef	unsigned char u_int8_t;
+typedef	unsigned short u_int16_t;
+typedef	unsigned int u_int32_t;
+typedef	unsigned long long u_int64_t;
+
 typedef unsigned long useconds_t;
 typedef long suseconds_t;
 

@@ -154,14 +154,14 @@ typedef union
 {
     long double value;
     struct {
-        u_int32_t lswlo;
-        u_int32_t lswhi;
-        u_int32_t mswlo;
-        u_int32_t mswhi;
+        uint32_t lswlo;
+        uint32_t lswhi;
+        uint32_t mswlo;
+        uint32_t mswhi;
     } parts32;
     struct {
-        u_int64_t lsw;
-        u_int64_t msw;
+        uint64_t lsw;
+        uint64_t msw;
     } parts64;
 } ieee_quad_shape_type;
 #endif
