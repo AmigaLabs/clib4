@@ -72,7 +72,7 @@ copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *
 
         char **env = (char **) hook->h_Data;
         uint32 size = Strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
-        char *buffer = (char *) AllocVecTags(size, AVT_Type, MEMF_SHARED, TAG_DONE);
+        char *buffer = (char *) malloc(size);
         if (buffer == NULL) {
             return 1;
         }
