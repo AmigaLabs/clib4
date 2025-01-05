@@ -15,27 +15,24 @@
 #include <proto/commodities.h>
 #include <clib/alib_protos.h>
 
+#include <stdlib.h>
+
 #include "debug.h"
 
 const unsigned char **CXLIB_argarray;
 struct DiskObject *CXLIB_disko;
 
-
 STRPTR *
 ArgArrayInit(LONG argc, CONST_STRPTR *argv) {
     STRPTR *result = NULL;
 
-    if (argc != 0) /* run from CLI */
-    {
+    if (argc != 0) { /* run from CLI */
         LONG i;
 
         if (argc == 1)
             goto out; /* skip command name */
 
-        CXLIB_argarray = (const unsigned char **) AllocVecTags(sizeof(char *) * argc,
-                                                               AVT_Type, MEMF_SHARED,
-                                                               AVT_ClearWithValue, 0,
-                                                               TAG_DONE);
+        CXLIB_argarray = (const unsigned char **) calloc(1, sizeof(char *) * argc);
         if (CXLIB_argarray == NULL)
             goto out;
 
@@ -44,10 +41,8 @@ ArgArrayInit(LONG argc, CONST_STRPTR *argv) {
 
         result = (STRPTR *) CXLIB_argarray;
     } else if (IconBase != NULL) {
-        struct WBStartup *msg;
-
         /* run from WB */
-        msg = (struct WBStartup *) argv;
+        struct WBStartup *msg = (struct WBStartup *) argv;
 
         CXLIB_disko = GetDiskObject(msg->sm_ArgList[0].wa_Name);
         if (CXLIB_disko == NULL)
@@ -58,5 +53,5 @@ ArgArrayInit(LONG argc, CONST_STRPTR *argv) {
 
 out:
 
-    return (result);
+    return result;
 }

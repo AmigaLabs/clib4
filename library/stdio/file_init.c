@@ -124,12 +124,12 @@ wb_file_init(struct _clib4 *__clib4) {
     __clib4->old_error = SelectErrorOutput(__clib4->error);
     __clib4->restore_streams = TRUE;
 
-    if (window_specifier != NULL)
-        FreeVec(window_specifier);
-
     result = OK;
 
 out:
+
+    if (window_specifier != NULL)
+        FreeVec(window_specifier);
 
     return (result);
 }
