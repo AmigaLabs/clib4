@@ -35,7 +35,9 @@ static wmem_allocator_type_t override_type;
 void *
 wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
     if (allocator == NULL) {
-        return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        void *r = AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        // D(("[wmem_alloc :] allocated block [0x%lx] of size [0x%lx]\n", r, size));
+        return r;
     }
 
     assert(allocator->in_scope);
@@ -80,8 +82,14 @@ wmem_free(wmem_allocator_t *allocator, void *ptr) {
 void *
 wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
     if (allocator == NULL) {
-        FreeVec(ptr);
-        return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        // Since we have no generic way of determining the old size,
+        //  this feature cannot be supported on amigaos.
+        // It needs to be emulated in the specific allocators.
+        printf("unsupported feature (realloc). now we are going to fail\n");
+
+        // FreeVec(ptr);
+        // return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        return 0;
     }
 
     if (ptr == NULL) {
@@ -152,6 +160,9 @@ wmem_allocator_new(const wmem_allocator_type_t type) {
         case WMEM_ALLOCATOR_STRICT:
             wmem_strict_allocator_init(allocator);
             break;
+        // case WMEM_ALLOCATOR_ARRAY:
+        //     wmem_array_allocator_init(allocator);
+        //     break;
         default:
             break;
     };
