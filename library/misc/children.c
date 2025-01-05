@@ -52,7 +52,7 @@ insertSpawnedChildren(uint32 pid, uint32 ppid, uint32 gid) {
 
         struct Clib4Children children;
         children.pid = pid;
-        children.returnCode = 0x80000000; //set this flag for WIFEXITED
+        children.returnCode = 0x10000000; //set this flag for WIFEXITED
         children.groupId = gid;
 
         while (hashmap_iter(res->children, &iter, &item)) {
@@ -200,7 +200,7 @@ spawnedProcessExit(int32 rc, int32 data UNUSED) {
                 if (item != NULL) {
                     // SHOWMSG("[spawneeExit :] SUCCESS");
                     // DebugPrintF("[spawneeExit :] SUCCESS\n");
-                    item->returnCode = ~0x80000000 & rc;
+                    item->returnCode = ~0x10000000 & rc;
                     break;
                 }
             }
