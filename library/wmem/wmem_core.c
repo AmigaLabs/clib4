@@ -36,7 +36,9 @@ void *
 wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
     if (allocator == NULL) {
         void *r = AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-        // D(("[wmem_alloc :] allocated block [0x%lx] of size [0x%lx]\n", r, size));
+#if MEMORY_DEBUG
+        D(("[wmem_alloc :] allocated block [0x%lx] of size [0x%lx]\n", r, size));
+#endif
         return r;
     }
 
@@ -85,11 +87,8 @@ wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
         // Since we have no generic way of determining the old size,
         //  this feature cannot be supported on amigaos.
         // It needs to be emulated in the specific allocators.
-        printf("unsupported feature (realloc). now we are going to fail\n");
-
-        // FreeVec(ptr);
-        // return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
-        return 0;
+        SHOWMSG("unsupported feature (realloc). now we are going to fail\n");
+        return NULL;
     }
 
     if (ptr == NULL) {
@@ -193,7 +192,7 @@ wmem_init(void) {
         } else if (strncmp(override_env, "block_fast", strlen("block_fast")) == 0) {
             override_type = WMEM_ALLOCATOR_BLOCK_FAST;
         } else {
-            D(("Unrecognized wmem override"));
+            SHOWMSG("Unrecognized wmem override");
             do_override = false;
         }
     }
