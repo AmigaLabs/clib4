@@ -164,7 +164,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     BPTR fileOut = DupFileHandle(Output());
     BPTR fileErr = DupFileHandle(ErrorOutput());
     if (!fileIn || !fileOut || !fileErr)
-        got out:
+        goto out;
 
     // start the child thread
     inf->task = CreateNewProcTags(
