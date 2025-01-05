@@ -140,37 +140,40 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                     *status = 0xFF;
                     return 0;
                 } else {
-                    D(("Searching for children with pid: %ld\n", pid));
+                    D(("Searching for child with pid %ld%s\n", pid, options & WNOHANG ? " (WNOHANG)" : ""));
+
                     struct Clib4Children key;
                     key.pid = pid;
                     struct Clib4Children *item = hashmap_get(node->spawnedProcesses, &key);
+
                     if (item != NULL) {
-                        /* Set returnCode on Status */
-                        *status = item->returnCode;
+                        int32 found = FALSE;
+
                         /* Scan for process */
-                        process = ProcessScan(&h, (CONST_APTR) pid, 0);
-                        if (process > 0) {
-                            D(("Check for Child pid and options %ld\n", pid, options));
-                            if (options == 0) {
-                                hashmap_delete(node->spawnedProcesses, item);
-                                WaitForChildExit(pid);
-                                D(("Children with pid %ld has died. Return code: %ld\n", pid, item->returnCode));
-                                return pid;
-                            } else { // WNOHANG
-                                int32 found = CheckForChildExit(item->pid);
-                                if (!found) {
-                                    hashmap_delete(node->spawnedProcesses, item);
-                                    D(("Process with pid %ld not found with CheckForChildExit. Most probably has died. Return code: %ld\n", pid, item->returnCode));
-                                    return pid;
-                                } else {
-                                    D(("Process with pid %ld found with CheckForChildExit and running\n", pid));
-                                }
-                            }
+                        // process = ProcessScan(&h, (CONST_APTR) pid, 0);
+                        // if (process > 0) {
+
+                        if (options & WNOHANG) {
+                            D(("Check for Child pid %ld\n", pid));
+                            found = CheckForChildExit(item->pid);
                         } else {
-                            hashmap_delete(node->spawnedProcesses, item);
-                            D(("Process with pid %ld not found. Most probably has died. Return code: %ld\n", pid, item->returnCode));
-                            return pid;
+                            D(("Waiting for child with pid %ld to exit...", pid));
+                            found = WaitForChildExit(pid);
                         }
+
+                        if (found) {
+                            /* Set returnCode status */
+                            *status = item->returnCode; // Should this be done
+                        }
+
+                        hashmap_delete(node->spawnedProcesses, item);
+
+                        if (options & WNOHANG)
+                            D(("Child with pid %ld was found with status %ld\n", pid, *status));
+                        else
+                            D(("Child with pid %ld has exited with status %ld\n", pid, *status));
+
+                        return pid;
                     } else {
                         __set_errno(ECHILD);
                         *status = 0;

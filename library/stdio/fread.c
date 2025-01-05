@@ -32,7 +32,11 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     __check_abort_f(__clib4);
 
+    SHOWMSG("ftrylockfile_r");
+
     int locked = __ftrylockfile_r(__clib4, stream);
+
+    SHOWMSG("done.");
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -76,8 +80,13 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
             ssize_t num_bytes_read;
 
+            SHOWMSG("Calling read...");
+
             /* We bypass the buffer entirely. */
             num_bytes_read = read(file->iob_Descriptor, data, total_size);
+
+            SHOWMSG("Done.");
+
             if (num_bytes_read == -1) {
                 SET_FLAG(file->iob_Flags, IOBF_ERROR);
                 goto out;
@@ -91,11 +100,15 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
             while (total_size > 0) {
                 /* If there is more data to be read and the read buffer is empty
                    anyway, we'll bypass the buffer entirely. */
+                
+                D(("iob_BufferReadBytes [%ld] iob_BufferSize [%ld]", file->iob_BufferReadBytes, file->iob_BufferSize));
+
                 if (file->iob_BufferReadBytes == 0 && total_size >= (size_t) file->iob_BufferSize) {
                     ssize_t num_bytes_read;
-
                     /* We bypass the buffer entirely. */
+            SHOWMSG("Calling read...");
                     num_bytes_read = read(file->iob_Descriptor, data, total_size);
+            SHOWMSG("Done.");
                     if (num_bytes_read == -1) {
                         SET_FLAG(file->iob_Flags, IOBF_ERROR);
                         goto out;

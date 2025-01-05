@@ -366,8 +366,6 @@ spawnvpe(
                     NP_ExitCode,    spawnedProcessExit,
 
                     TAG_DONE);
-
-    free(full_command);
 #endif
 
     if (ret != 0) {
@@ -399,6 +397,8 @@ spawnvpe(
 #endif
         ret = pid;
     }
+
+    free(full_command);
 
     D(("System/CreateNewProc completed. Return value: [%ld]\n", ret));
 

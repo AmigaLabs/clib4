@@ -34,8 +34,10 @@ pclose(FILE *stream) {
 
     int status = 0;
     pid_t pid = findSpawnedChildrenPidByPipe(stream);
+    SHOWVALUE(pid);
     waitpid(pid, &status, 0);
 
+    SHOWMSG("Closing stream.");
     fclose(stream);
 
     /* ZZZ we actually could catch the program's termination code
@@ -57,7 +59,7 @@ popen(const char *command, const char *type) {
     BPTR input = BZERO;
     BPTR output = BZERO;
     BPTR error = BZERO;
-    char pipe_file_name[40];
+    char pipe_file_name[48];
     FILE *result = NULL;
     LONG status;
     unsigned long task_address;
@@ -204,7 +206,8 @@ popen(const char *command, const char *type) {
         now = now / 8;
     }
 
-    pipe_file_name[i] = '\0';
+    memcpy(pipe_file_name+39, "/NOBLOCK", 8);
+    pipe_file_name[47] = '\0';
 
     SHOWSTRING(pipe_file_name);
 
@@ -234,16 +237,17 @@ popen(const char *command, const char *type) {
         goto out;
     }
 
-    // printf("[popen :] Launching [%s]\n", command);
-
     D(("Launching [%s]", command));
+
+    int asynch = TRUE; //FALSE
+
     /* Now try to launch the program. */
     status = SystemTags((STRPTR) command,
                         SYS_Input,          input,
                         SYS_Output,         output,
                         SYS_Error,          error, // <-- We have to block this with NIL:
                         NP_CloseError,      TRUE,
-                        SYS_Asynch,         TRUE,
+                        SYS_Asynch,         asynch,
                         SYS_UserShell,      TRUE,
                         NP_StackSize,       2024*1024,
                         NP_Name,            command,
@@ -254,6 +258,14 @@ popen(const char *command, const char *type) {
                         TAG_END);
 
     uint32 ret;
+
+    /* If SYS_Asynch is FALSE, we need these. */
+
+    if (asynch == FALSE) {
+        Close(input);
+        Close(output);
+        // Close(error); ??
+    }
 
     /* If launching the program returned -1 then it could not be started.
        We'll need to close the I/O streams we opened above. */
@@ -278,7 +290,16 @@ popen(const char *command, const char *type) {
     /* Now try to open the pipe we will use to exchange data with the program. */
     result = fopen(pipe_file_name, type);
 
-    if(result) addSpawnedChildrenPipeHandle(ret, result); //pid, pipe
+    if(result) {
+        /* We need to mark this as a pipe */
+        struct iob *file = (struct iob *) result;
+        int f = file->iob_Descriptor;
+        struct fd *fd = __get_file_descriptor(__clib4, f);
+        fd->fd_Flags |= FDF_PIPE;
+
+        /* Add this pipe to the childrens list */
+        addSpawnedChildrenPipeHandle(ret, result); //pid, pipe
+    }
 
 out:
 

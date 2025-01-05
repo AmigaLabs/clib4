@@ -92,8 +92,6 @@ wmem_block_fast_alloc(void *private_data, const size_t size) {
     if (size > WMEM_BLOCK_MAX_ALLOC_SIZE) {
         wmem_block_fast_jumbo_t *block;
 
-// DebugPrintF("[wmem_block_fast_alloc :] Jumbo size %dl\n", size);
-
         real_size = size + WMEM_JUMBO_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE;
 
         /* allocate/initialize a new block of the necessary size */
@@ -110,14 +108,10 @@ wmem_block_fast_alloc(void *private_data, const size_t size) {
         chunk = ((wmem_block_fast_chunk_t *) ((uint8_t * )(block) + WMEM_JUMBO_HEADER_SIZE));
         chunk->len = JUMBO_MAGIC;
 
-// DebugPrintF("[wmem_block_fast_alloc :] Return chunk [0x%xl]\n", WMEM_CHUNK_TO_DATA(chunk));
-
         return WMEM_CHUNK_TO_DATA(chunk);
     }
 
     real_size = (int32_t)(WMEM_ALIGN_SIZE(size) + WMEM_CHUNK_HEADER_SIZE);
-
-// DebugPrintF("[wmem_block_fast_alloc :] Regular chunk real_size %dl\n", real_size);
 
     /* Allocate a new block if necessary. */
     if (!allocator->block_list ||
@@ -130,8 +124,6 @@ wmem_block_fast_alloc(void *private_data, const size_t size) {
     chunk->len = (uint32_t) size;
 
     allocator->block_list->pos += real_size;
-
-// DebugPrintF("[wmem_block_fast_alloc :] Return chunk [0x%xl]\n", WMEM_CHUNK_TO_DATA(chunk));
 
     /* and return the user's pointer */
     return WMEM_CHUNK_TO_DATA(chunk);
@@ -153,11 +145,7 @@ wmem_block_fast_realloc(void *private_data, void *ptr, const size_t size) {
     if (chunk->len == JUMBO_MAGIC) {
         wmem_block_fast_jumbo_t *block;
 
-//  DebugPrintF("[wmem_block_fast_realloc :] Jumbo : ptr [0x%lx] size [0x%lx]\n", ptr, size);
-
         block = ((wmem_block_fast_jumbo_t *) ((uint8_t * )(chunk) - WMEM_JUMBO_HEADER_SIZE));
-
-//  DebugPrintF("[wmem_block_fast_realloc :] block [0x%lx] block->size [0x%lx]\n", block, block->size);
 
         // Since we don't have realloc on amiga, this is the solution :
 
@@ -186,20 +174,14 @@ wmem_block_fast_realloc(void *private_data, void *ptr, const size_t size) {
             block->next->prev = block;
         }
 
-// DebugPrintF("[wmem_block_fast_realloc :] Return new_block [0x%lx] new_size [0x%lx]\n", block, new_size);
-
         return ((void *) ((uint8_t * )(block) + WMEM_JUMBO_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE));
     } else if (chunk->len < size) {
         /* grow */
         void *newptr;
 
-// DebugPrintF("[wmem_block_fast_realloc :] Regular : ptr [0x%lx] size [%ld]\n", ptr, size);
-
         /* need to alloc and copy; free is no-op, so don't call it */
         newptr = wmem_block_fast_alloc(private_data, size);
         memcpy(newptr, ptr, chunk->len);
-
-// DebugPrintF("[wmem_block_fast_realloc :] Return newptr [0x%xl]\n", newptr);
 
         return newptr;
     }

@@ -85,7 +85,7 @@ wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
         // Since we have no generic way of determining the old size,
         //  this feature cannot be supported on amigaos.
         // It needs to be emulated in the specific allocators.
-        printf("unsupported feature (realloc). now we are going to fail\n");
+        SHOWMSG("unsupported feature (realloc). now we are going to fail\n");
 
         // FreeVec(ptr);
         // return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
