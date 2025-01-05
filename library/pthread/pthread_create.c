@@ -160,17 +160,36 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     name[sizeof(name) - 1] = '\0';
     strncpy(inf->name, name, NAMELEN);
 
+    BPTR fileIn  = DupFileHandle(Input());
+    BPTR fileOut = DupFileHandle(Output());
+    BPTR fileErr = DupFileHandle(ErrorOutput());
+    if (!fileIn || !fileOut || !fileErr)
+        got out:
+
     // start the child thread
     inf->task = CreateNewProcTags(
-            NP_Entry,                StarterFunc,
+            NP_Start,                StarterFunc,
             NP_UserData,             inf,
             inf->attr.stacksize ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
             NP_Name,                 name,
             NP_Child,                TRUE,
-            NP_Cli,				     TRUE,
+            NP_Input,			     fileIn,
+            NP_CloseInput,		     TRUE,
+            NP_Output,			     fileOut,
+            NP_CloseOutput,		     TRUE,
+            NP_Error,			     fileErr,
+            NP_CloseError,		     TRUE,
+
             TAG_DONE);
 
+out:
     if (0 == inf->task) {
+        if (fileIn)
+            Close(fileIn);
+        if (fileOut)
+            Close(fileOut);
+        if (fileErr)
+            Close(fileErr);
         inf->parent = NULL;
         return EAGAIN;
     }
