@@ -47,6 +47,8 @@ wmem_simple_alloc(void *private_data, const size_t size) {
 
     allocator = (wmem_simple_allocator_t *) private_data;
 
+    if (__clib4_unlikely(allocator->count == allocator->size)) {
+
 #if MEMORY_DEBUG
     D(("[wmem_simple_alloc :] Alloc : size [0x%lx]\n", size));
 #endif
@@ -76,6 +78,9 @@ wmem_simple_alloc(void *private_data, const size_t size) {
 
     allocator->sizes[allocator->count] = size;
     allocator->ptrs[allocator->count] = wmem_alloc(NULL, size);
+    allocator->count++;
+
+    return allocator->ptrs[allocator->count-1];
 #if MEMORY_DEBUG
     D(("[wmem_simple_alloc :] count [%d] ptr [0x%lx] size [0x%lx].\n", allocator->count, allocator->ptrs[allocator->count], allocator->sizes[allocator->count]));
 #endif
@@ -97,6 +102,16 @@ wmem_simple_free(void *private_data, void *ptr) {
 
     wmem_free(NULL, ptr);
     allocator->count--;
+
+    for (i = allocator->count; i >= 0; i--) {
+        if (ptr == allocator->ptrs[i]) {
+            if (i < allocator->count) {
+                allocator->ptrs[i] = allocator->ptrs[allocator->count];
+                allocator->sizes[i] = allocator->sizes[allocator->count];
+            }
+            return;
+        }
+    }
 
 #if MEMORY_DEBUG
     D(("[wmem_simple_free :] ptr [0x%lx]\n", ptr));
@@ -132,6 +147,9 @@ wmem_simple_realloc(void *private_data, void *ptr, const size_t size) {
 
     allocator = (wmem_simple_allocator_t *) private_data;
 
+    for (i = allocator->count - 1; i >= 0; i--) {
+        if (ptr == allocator->ptrs[i]) {
+            if (size > allocator->sizes[i]) {
 #if MEMORY_DEBUG
     D(("[wmem_simple_realloc :] ptr [0x%lx] size [0x%lx]\n", ptr, size));
 #endif
@@ -149,6 +167,7 @@ wmem_simple_realloc(void *private_data, void *ptr, const size_t size) {
                 wmem_free(NULL, allocator->ptrs[i]);
                 allocator->ptrs[i] = new_ptr;
                 allocator->sizes[i] = size;
+            }
 
 #if MEMORY_DEBUG
                 D(("[wmem_simple_realloc :] Grow : new ptr [0x%lx] new size [0x%lx]\n", allocator->ptrs[i], allocator->sizes[i]));

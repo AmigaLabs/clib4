@@ -7,7 +7,8 @@
 __BEGIN_DECLS
 
 #define WNOHANG 1
-#define WUNTRACED 2
+// #define WUNTRACED 2 Not implemented
+
 
 #define WIFEXITED(w)	(((w) & 0x10000000) == 0)
 #define WIFSTOPPED(w)	(((w) & 0xff) == 0x7f)

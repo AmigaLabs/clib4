@@ -191,15 +191,12 @@ spawnedProcessExit(int32 rc, int32 data UNUSED) {
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
 
-            // DebugPrintF("[spawneeExit :] *** iteration : pid=%d\n", node->pid);
-
             if (node->pid == parent) {
                 struct Clib4Children key;
                 key.pid = me;
                 struct Clib4Children *item = (struct Clib4Children *) hashmap_get(node->spawnedProcesses, &key);
                 if (item != NULL) {
-                    // SHOWMSG("[spawneeExit :] SUCCESS");
-                    // DebugPrintF("[spawneeExit :] SUCCESS\n");
+                    D(("Found child with pid %ld of parent %ld that exits now with return code %ld\n", me, parent, rc));
                     item->returnCode = ~0x10000000 & rc;
                     break;
                 }

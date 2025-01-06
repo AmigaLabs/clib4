@@ -193,6 +193,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             name_and_path_valid = TRUE;
                         }
 
+                        SHOWMSG("Closing file...");
+                        
                         if (CANNOT Close(fd->fd_File)) {
                             fam->fam_Error = __translate_io_error_to_errno(IoErr());
                             SHOWMSG("CANNOT Close(fd->fd_File)");
