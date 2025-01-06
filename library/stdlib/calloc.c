@@ -12,6 +12,11 @@
 
 void *
 calloc(size_t num_elements, size_t element_size) {
+    return __calloc_r(__CLIB4, num_elements, element_size);
+}
+
+void *
+__calloc_r(struct _clib4 *__clib4, size_t num_elements, size_t element_size) {
     void *result = NULL;
     size_t total_size = 0;
 
@@ -23,7 +28,7 @@ calloc(size_t num_elements, size_t element_size) {
         }
     }
 
-    result = malloc(total_size);
+    result = __malloc_r(__clib4, total_size);
     if (result != NULL)
         memset(result, 0, total_size);
     else {

@@ -73,6 +73,7 @@ extern void loadstate(uint32_t *state);
 
 extern void __srandom(unsigned seed);
 extern void *__malloc_r(struct _clib4 *__clib4, size_t size);
+extern void *__calloc_r(struct _clib4 *__clib4, size_t num_elements, size_t element_size);
 
 extern uint32_t lcg31(uint32_t x);
 extern uint64_t lcg64(uint64_t x);

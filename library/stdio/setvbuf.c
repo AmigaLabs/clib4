@@ -138,8 +138,8 @@ out:
     __funlockfile_r(__clib4, stream);
 
     if (new_buffer != NULL)
-        __free_r(__clib4, new_buffer);
+        FreeVec(new_buffer);
 
     RETURN(result);
-    return (result);
+    return result;
 }

@@ -518,7 +518,7 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
     if (mofile == NULL) {
         const char *r;
 
-        mofile = AllocVecTags(sizeof(*mofile), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+        mofile = __calloc_r(__clib4, 1, sizeof(*mofile));
         if (mofile == NULL) {
             ReleaseSemaphore(__clib4->gettext_lock);
             return notrans;
@@ -528,7 +528,7 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
         mofile->map = momap(path, &mofile->size);
         if (mofile->map == MAP_FAILED) {
             ReleaseSemaphore(__clib4->gettext_lock);
-            FreeVec(mofile);
+            __free_r(__clib4, mofile);
             return notrans;
         }
 
@@ -712,7 +712,7 @@ char *bindtextdomain(const char *domainname, const char *dirname) {
     }
 
     if (!p) {
-        p = AllocVecTags(sizeof *p + domlen + dirlen + 2, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+        p = calloc(1, sizeof *p + domlen + dirlen + 2);
         if (!p) {
             ReleaseSemaphore(__clib4->gettext_lock);
             return NULL;

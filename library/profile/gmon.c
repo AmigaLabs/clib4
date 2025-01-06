@@ -9,6 +9,7 @@
 #include <proto/dos.h>
 #include <proto/elf.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <macros.h>
@@ -222,7 +223,7 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
     dprintf("fromssize = %d\n", p->fromssize);
     dprintf("tolimit = %d, tossize = %d\n", p->tolimit, p->tossize);
 
-    cp = (uint8 *) AllocVecTags(p->kcountsize + p->fromssize + p->tossize, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    cp = (uint8 *) calloc(1, p->kcountsize + p->fromssize + p->tossize);
     if (!cp) {
         p->state = kGmonProfError;
         return;
@@ -329,7 +330,7 @@ void moncleanup(void) {
     }
 out:
     if (p->tos) {
-        FreeVec(p->tos);
+        free(p->tos);
         p->tos = NULL;
     }
 

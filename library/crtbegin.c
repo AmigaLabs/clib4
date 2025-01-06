@@ -129,7 +129,7 @@ clib4_start(char *args, int32 arglen, struct Library *sysbase) {
                     rc = iclib4->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__);
                 }
                 else {
-                    idos->Printf("This program requires clib4.library %d\n", VERS);
+                    idos->Printf("This program requires clib4.library version %d.%d\n", VERSION, REVISION);
                 }
             } else {
                 idos->Printf("Cannot open %s\n", VERS);

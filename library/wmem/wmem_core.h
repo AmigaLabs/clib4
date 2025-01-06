@@ -35,6 +35,9 @@ __BEGIN_DECLS
  * @{
  */
 
+// Set to 1 if you want to track memory allocations
+#define MEMORY_DEBUG 0
+
 struct _wmem_allocator_t;
 /** A public opaque type representing one wmem allocation pool. */
 typedef struct _wmem_allocator_t wmem_allocator_t;

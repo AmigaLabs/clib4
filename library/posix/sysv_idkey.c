@@ -33,16 +33,14 @@ GetUndo(struct Clib4Resource *res, int id, int create) {
     if (create && !ui) {
         struct semid_ds *si;
         si = GetIPCById(&res->semcx.keymap, id);
-        ui = AllocVecTags(sizeof(struct UndoInfo) + sizeof(int32) * si->sem_nsems,
-                          AVT_Type, MEMF_SHARED,
-                          AVT_ClearWithValue, 0,
-                          TAG_DONE);
+        ui = __calloc_r(__clib4, 1, sizeof(struct UndoInfo) + sizeof(int32) * si->sem_nsems);
         ui->Id = id;
         ui->Next = c2n->undo;
         c2n->undo = ui;
         hashmap_set(res->children, c2n);
     }
-    return (ui);
+
+    return ui;
 }
 
 void
@@ -96,13 +94,11 @@ GetIPCKeyId(struct IPCIdKeyMap *m, key_t key, int flags, void *(*Construct)(int,
                 o->perm.seq = m->idx++;
                 if (m->nobj == m->vlen) { /* Add more free slots if needed. */
                     struct IPCGeneric **tmp;
-                    tmp = AllocVecTags(sizeof(struct IPCGeneric *) * (m->vlen + VEXTEND),
-                                            AVT_Type, MEMF_SHARED,
-                                            TAG_DONE);
+                    tmp = malloc(sizeof(struct IPCGeneric *) * (m->vlen + VEXTEND));
                     if (tmp) {
                         if (m->objv) {
-                            CopyMem(m->objv, tmp, sizeof(struct shmid_ds *) * m->vlen);
-                            FreeVec(m->objv);
+                            memcpy(tmp, m->objv, sizeof(struct shmid_ds *) * m->vlen);
+                            free(m->objv);
                         }
                         m->objv = tmp;
                         m->vlen += VEXTEND;
