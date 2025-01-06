@@ -65,7 +65,9 @@ At moment you can use:
 | 3     | WMEM_ALLOCATOR_STRICT     |
 | 4     | WMEM_ALLOCATOR_BLOCK_FAST |
 
-The default one is `WMEM_ALLOCATOR_BLOCK_STRICT`. `WMEM_ALLOCATOR_BLOCK_FAST` can crash on some situation. Please refer to `wmem/wmem_core.h` for all details. 
+The default one is `WMEM_ALLOCATOR_BLOCK`. `WMEM_ALLOCATOR_SIMPLE` can crash on some situation. Please refer to `wmem/wmem_core.h` for all details. 
+
+To enable memory debug set `MEMORY_DEBUG` to 1 in `wmem_core.h`
 
 ### Optimized AMCC functions
 

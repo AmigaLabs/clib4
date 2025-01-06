@@ -39,6 +39,8 @@
 #include "../shared_library/clib4.h"
 #include "uuid.h"
 
+#define ENVBUF 256
+
 /* These CTORS/DTORS are clib4's one and they are different than that one received
  * from crtbegin. They are needed because we need to call clib4 constructors as well
  */
@@ -70,7 +72,7 @@ copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *
 
         char **env = (char **) hook->h_Data;
         uint32 size = Strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
-        char *buffer = (char *) AllocVecTags(size, AVT_Type, MEMF_SHARED, TAG_DONE);
+        char *buffer = (char *) malloc(size);
         if (buffer == NULL) {
             return 1;
         }
@@ -237,16 +239,17 @@ _main(
         void (*__EXT_DTOR_LIST__[])(void)) {
     struct WBStartup *sms = NULL;
     struct Process *me;
+    APTR oldClib4Data;
     int rc = RETURN_FAIL;
     struct _clib4 *__clib4 = NULL;
     uint32 pid = GetPID(0, GPID_PROCESS);
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
-    char envbuf[256 + 1];
+    char envbuf[ENVBUF + 1];
     LONG len;
 
     DECLARE_UTILITYBASE();
 
-    ClearMem(envbuf, 257);
+    ClearMem(envbuf, ENVBUF + 1);
 
     /* Pick up the Workbench startup message, if available. */
     me = (struct Process *) FindTask(NULL);
@@ -255,6 +258,9 @@ _main(
         WaitPort(mp);
         sms = (struct WBStartup *) GetMsg(mp);
     }
+
+    /* Store old Clib4Data */
+    oldClib4Data = (APTR) me->pr_UID;
 
     /* If all libraries are opened correctly we can initialize clib4 reent structure */
     D(("Initialize clib4 reent structure"));
@@ -378,6 +384,9 @@ _main(
     SHOWMSG("Calling reent_exit on _clib4");
     reent_exit(__clib4, FALSE);
     SHOWMSG("Done");
+
+    /* Restore old Clib4Data */
+    me->pr_UID = (uint32) oldClib4Data;
 
     if (sms) {
         Forbid();

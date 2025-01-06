@@ -53,11 +53,11 @@ struct LockedRegionNode {
 static struct FileLockSemaphore *FileLockSemaphore;
 static void release_file_lock_semaphore(struct FileLockSemaphore *fls);
 static struct FileLockSemaphore *obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared);
-static void remove_locked_region_node(struct FileLockSemaphore *fls, struct fd *fd, _off64_t start, _off64_t stop, _off64_t original_length);
-static void delete_locked_region_node(struct LockedRegionNode *lrn);
-static long create_locked_region_node(struct LockedRegionNode **result_ptr);
-static void delete_file_lock_node(struct FileLockNode *fln);
-static long create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr);
+static void remove_locked_region_node(struct _clib4 *__clib4, struct FileLockSemaphore *fls, struct fd *fd, _off64_t start, _off64_t stop, _off64_t original_length);
+static void delete_locked_region_node(struct _clib4 *__clib4, struct LockedRegionNode *lrn);
+static long create_locked_region_node(struct _clib4 *__clib4, struct LockedRegionNode **result_ptr);
+static void delete_file_lock_node(struct _clib4 *__clib4, struct FileLockNode *fln);
+static long create_file_lock_node(struct _clib4 *__clib4, struct fd *fd, struct FileLockNode **result_ptr);
 static long find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BPTR file_handle, struct FileLockNode **result_ptr);
 static long find_file_lock_node_by_drawer_and_name(struct FileLockSemaphore *fls, BPTR dir_lock, STRPTR file_name, struct FileLockNode **result_ptr);
 static struct LockedRegionNode *find_colliding_region(struct FileLockNode *fln, _off64_t start, _off64_t stop, BOOL shared);
@@ -86,7 +86,7 @@ obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared) {
 
         /* We allocate the new semaphore first, so that we don't spend
            any time in Forbid() allocating memory. */
-        semaphore_name_copy = AllocVecTags(strlen(__clib4->__file_lock_semaphore_name) + 1, AVT_Type, MEMF_SHARED, TAG_DONE);
+        semaphore_name_copy = __malloc_r(__clib4, strlen(__clib4->__file_lock_semaphore_name) + 1);
         if (semaphore_name_copy != NULL) {
             strcpy(semaphore_name_copy, __clib4->__file_lock_semaphore_name);
 
@@ -137,7 +137,7 @@ obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared) {
         /* Release the memory allocated for the semaphore, in case
            we didn't need it after all. */
         if (fls != NULL) {
-            FreeVec(semaphore_name_copy);
+            __free_r(__clib4, semaphore_name_copy);
             FreeSysObject(ASOT_SEMAPHORE, fls);
         }
     }
@@ -161,7 +161,7 @@ obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared) {
 }
 
 static void
-remove_locked_region_node(struct FileLockSemaphore *fls, struct fd *fd, _off64_t start, _off64_t UNUSED stop, _off64_t original_length) {
+remove_locked_region_node(struct _clib4 *__clib4, struct FileLockSemaphore *fls, struct fd *fd, _off64_t start, _off64_t UNUSED stop, _off64_t original_length) {
     ENTER();
 
     assert(fls != NULL && fd != NULL);
@@ -193,7 +193,7 @@ remove_locked_region_node(struct FileLockSemaphore *fls, struct fd *fd, _off64_t
                     SHOWMSG("unlocking all regions on this file");
 
                     Remove((struct Node *) lrn);
-                    delete_locked_region_node(lrn);
+                    delete_locked_region_node(__clib4, lrn);
                 }
             }
 
@@ -204,7 +204,7 @@ remove_locked_region_node(struct FileLockSemaphore *fls, struct fd *fd, _off64_t
                 SHOWMSG("no more regions are locked; removing the file lock node");
 
                 Remove((struct Node *) which_lock);
-                delete_file_lock_node(which_lock);
+                delete_file_lock_node(__clib4, which_lock);
 
                 /* If this is an alias, move up to the real thing. */
                 if (fd->fd_Original != NULL)
@@ -221,13 +221,13 @@ remove_locked_region_node(struct FileLockSemaphore *fls, struct fd *fd, _off64_t
 }
 
 static void
-delete_locked_region_node(struct LockedRegionNode *lrn) {
+delete_locked_region_node(struct _clib4 *__clib4, struct LockedRegionNode *lrn) {
     ENTER();
 
     SHOWPOINTER(lrn);
 
     if (lrn) {
-        FreeVec(lrn);
+        __free_r(__clib4, lrn);
         lrn = NULL;
     }
 
@@ -235,7 +235,7 @@ delete_locked_region_node(struct LockedRegionNode *lrn) {
 }
 
 static long
-create_locked_region_node(struct LockedRegionNode **result_ptr) {
+create_locked_region_node(struct _clib4 *__clib4, struct LockedRegionNode **result_ptr) {
     struct LockedRegionNode *lrn;
     LONG error = OK;
 
@@ -243,7 +243,7 @@ create_locked_region_node(struct LockedRegionNode **result_ptr) {
 
     assert(result_ptr != NULL);
 
-    lrn = AllocVecTags(sizeof(*lrn), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    lrn = __calloc_r(__clib4, 1, sizeof(*lrn));
     if (lrn == NULL) {
         SHOWMSG("not enough memory for locked region node");
 
@@ -258,18 +258,18 @@ out:
     (*result_ptr) = lrn;
 
     RETURN(error);
-    return (error);
+    return error;
 }
 
 static void
-delete_file_lock_node(struct FileLockNode *fln) {
+delete_file_lock_node(struct _clib4 *__clib4, struct FileLockNode *fln) {
     ENTER();
 
     SHOWPOINTER(fln);
 
     if (fln != NULL) {
         UnLock(fln->fln_FileParentDir);
-        FreeVec(fln);
+        __free_r(__clib4, fln);
         fln = NULL;
     }
 
@@ -277,7 +277,7 @@ delete_file_lock_node(struct FileLockNode *fln) {
 }
 
 static long
-create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
+create_file_lock_node(struct _clib4 *__clib4, struct fd *fd, struct FileLockNode **result_ptr) {
     struct FileLockNode *result = NULL;
     struct FileLockNode *fln = NULL;
     struct ExamineData *fib;
@@ -299,7 +299,7 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
         goto out;
     }
 
-    fln = AllocVecTags(sizeof(*fln) + strlen(fib->Name), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    fln = __calloc_r(__clib4, 1, sizeof(*fln) + strlen(fib->Name));
     if (fln == NULL) {
         SHOWMSG("not enough memory for lock node");
 
@@ -324,7 +324,7 @@ create_file_lock_node(struct fd *fd, struct FileLockNode **result_ptr) {
 
 out:
     FreeDosObject(DOS_EXAMINEDATA, fib);
-    delete_file_lock_node(fln);
+    delete_file_lock_node(__clib4, fln);
 
     (*result_ptr) = result;
 
@@ -520,7 +520,7 @@ cleanup_locked_records(struct _clib4 *__clib4, struct fd *fd) {
                     if (lrn_this->lrn_Owner == this_task) {
                         Remove((struct Node *) lrn_this);
 
-                        delete_locked_region_node(lrn_this);
+                        delete_locked_region_node(__clib4, lrn_this);
                     }
                 }
 
@@ -529,7 +529,7 @@ cleanup_locked_records(struct _clib4 *__clib4, struct fd *fd) {
 
                     Remove((struct Node *) which_lock);
 
-                    delete_file_lock_node(which_lock);
+                    delete_file_lock_node(__clib4, which_lock);
                 }
             }
 
@@ -594,13 +594,13 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
     if ((cmd == F_SETLK || cmd == F_SETLKW) && (l->l_type != F_UNLCK)) {
         SHOWMSG("this is a lock request");
 
-        error = create_file_lock_node(fd, &fln);
+        error = create_file_lock_node(__clib4, fd, &fln);
         if (error != OK) {
             SHOWMSG("could not create lock node");
             goto out;
         }
 
-        error = create_locked_region_node(&lrn);
+        error = create_locked_region_node(__clib4, &lrn);
         if (error != OK) {
             SHOWMSG("could not create region node");
             goto out;
@@ -724,7 +724,7 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
 
         D(("unlocking %ld..%ld", start, stop));
 
-        remove_locked_region_node(fls, fd, start, stop, original_len);
+        remove_locked_region_node(__clib4, fls, fd, start, stop, original_len);
     } else if (cmd == F_SETLKW) {
         struct FileLockNode *existing_fln;
         BOOL locked;
@@ -819,10 +819,10 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
                 if (__clib4->__check_abort_enabled && (SetSignal(0, 0) & __clib4->__break_signal_mask) != 0) {
                     SHOWMSG("lock polling loop stopped");
 
-                    delete_file_lock_node(fln);
+                    delete_file_lock_node(__clib4, fln);
                     fln = NULL;
 
-                    delete_locked_region_node(lrn);
+                    delete_locked_region_node(__clib4, lrn);
                     lrn = NULL;
 
                     UnLock(parent_dir);
@@ -988,8 +988,8 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
 
 out:
 
-    delete_file_lock_node(fln);
-    delete_locked_region_node(lrn);
+    delete_file_lock_node(__clib4, fln);
+    delete_locked_region_node(__clib4, lrn);
 
     release_file_lock_semaphore(fls);
 
