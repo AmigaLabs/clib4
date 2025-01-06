@@ -55,6 +55,7 @@ utime(const char *path_name, const struct utimbuf *times) {
 
     status = SetDate((STRPTR) path_name, &ds);
     if (status == DOSFALSE) {
+        SHOWMSG("SetData failed.");
         __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }

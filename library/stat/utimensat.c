@@ -104,10 +104,10 @@ utimensat(int fd, const char *path, const struct timespec times[2], int flags) {
             goto out;
         }
         /* If fd = AT_FDCWD but we get an absolute path return an error */
-        else if (absolute && fd == AT_FDCWD) {
-            __set_errno_r(__clib4, EINVAL);
-            goto out;
-        }
+        // else if (absolute && fd == AT_FDCWD) { //Nope. Not a good idea.
+        //     __set_errno_r(__clib4, EINVAL);
+        //     goto out;
+        // }
         /* Set date */
         if (SetDate(path, &ds0))
             result = 0;
