@@ -7,13 +7,16 @@
 __BEGIN_DECLS
 
 #define WNOHANG 1
-#define WUNTRACED 2
+// #define WUNTRACED 2 Not implemented
 
+// These are ok (and amiga specific):
 #define WIFEXITED(w)	(((w) & 0x10000000) == 0)
-#define WIFSIGNALED(w)	(((w) & 0x7f) > 0 && (((w) & 0x7f) < 0x7f))
-#define WIFSTOPPED(w)	(((w) & 0xff) == 0x7f)
 #define WEXITSTATUS(w)	(((w)) & 0x000000ff)
-#define WTERMSIG(w)	((w) & 0x7f)
+
+// These are not
+#define WIFSIGNALED(w)	(0) //(((w) & 0x7f) > 0 && (((w) & 0x7f) < 0x7f))
+#define WIFSTOPPED(w)	(0) //(((w) & 0xff) == 0x7f)
+#define WTERMSIG(w)	    (0) //((w) & 0x7f)
 #define WSTOPSIG	WEXITSTATUS
 
 pid_t wait(int *status);
