@@ -14,7 +14,7 @@ gethostbyname(const char *name) {
      * by clib4 if DHCP is enabled
      */
     if (he == NULL) {
-        if(name == NULL) {
+        if (name == NULL) {
             __set_errno(EFAULT);
         }
         else
