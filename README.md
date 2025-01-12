@@ -67,7 +67,7 @@ At moment you can use:
 
 The default one is `WMEM_ALLOCATOR_BLOCK`. `WMEM_ALLOCATOR_SIMPLE` can crash on some situation. Please refer to `wmem/wmem_core.h` for all details. 
 
-To enable memory debug set `MEMORY_DEBUG` to 1 in `wmem_core.h`
+To enable memory debug set `MEMORY_DEBUG` to 1 in `wmem_core.h` or pass it in GNUMakefile when compiling
 
 ### Optimized AMCC functions
 
