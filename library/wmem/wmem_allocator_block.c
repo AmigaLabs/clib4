@@ -1019,12 +1019,14 @@ wmem_block_gc(void *private_data) {
      * completely destroying unused blocks. */
     cur = allocator->block_list;
     allocator->block_list = NULL;
-
+    ENTER();
     while (cur) {
+        SHOWMSG("found block");
         chunk = WMEM_BLOCK_TO_CHUNK(cur);
         next = cur->next;
 
         if (!chunk->jumbo && !chunk->used && chunk->last) {
+            SHOWMSG("free block");
             /* If the first chunk is also the last, and is unused, then
              * the block as a whole is entirely unused, so return it to
              * the OS and remove it from whatever lists it is in. */
@@ -1047,11 +1049,13 @@ wmem_block_gc(void *private_data) {
             wmem_free(NULL, cur);
         } else {
             /* part of this block is used, so add it to the new block list */
+            SHOWMSG("part of this block is used");
             wmem_block_add_to_block_list(allocator, cur);
         }
 
         cur = next;
     }
+    LEAVE();
 }
 
 static void

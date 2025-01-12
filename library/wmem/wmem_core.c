@@ -34,6 +34,11 @@ static wmem_allocator_type_t override_type;
 
 void *
 wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
+#if MEMORY_DEBUG
+    __CLIB4->allocated_memory_by_malloc++;
+    D(("Allocated %ld bytes chunk of memory. Allocations now are: %ld", size, __CLIB4->allocated_memory_by_malloc));
+#endif
+
     if (allocator == NULL) {
         void *r = AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
 #if MEMORY_DEBUG
@@ -66,6 +71,10 @@ wmem_alloc0(wmem_allocator_t *allocator, const size_t size) {
 
 void
 wmem_free(wmem_allocator_t *allocator, void *ptr) {
+#if MEMORY_DEBUG
+    __CLIB4->allocated_memory_by_malloc--;
+    D(("Freed chunk of memory. Allocations now are %ld", __CLIB4->allocated_memory_by_malloc));
+#endif
     if (allocator == NULL) {
         FreeVec(ptr);
         ptr = NULL;
