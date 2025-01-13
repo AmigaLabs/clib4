@@ -26,11 +26,13 @@ __close_all_files(struct _clib4 *__clib4) {
 
     __stdio_lock(__clib4);
 
+    SHOWVALUE(__clib4->__num_iob);
     if (__clib4->__num_iob > 0) {
         for (i = 0; i < __clib4->__num_iob; i++) {
             if (FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE)) {
                 D(("Close __iob %ld\n", i));
                 fclose((FILE *) __clib4->__iob[i]);
+                //__free_r(__clib4, __clib4->__iob[i]); /* Is this needed? */
                 __clib4->__num_iob--;
             }
         }
@@ -43,6 +45,7 @@ __close_all_files(struct _clib4 *__clib4) {
                 D(("Close __fd %ld\n", i));
                 close(i);
                 UnlockMem(__clib4->__fd[i], sizeof(*__clib4->__fd[i]));
+                __free_r(__clib4, __clib4->__fd[i]);
                 __clib4->__num_fd--;
             }
             else {

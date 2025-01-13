@@ -525,6 +525,7 @@ struct _clib4 {
     int __was_sig;
 
     uint32_t allocated_memory_by_malloc;
+    APTR _iob_pool;
 };
 
 #ifndef __getClib4

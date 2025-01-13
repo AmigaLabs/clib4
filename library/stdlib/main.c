@@ -77,7 +77,7 @@ copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *
         }
         char **env = (char **) hook->h_Data;
         uint32 size = Strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
-        char *buffer = (char *) AllocPooled(ehd->r->__environment_pool, size);
+        char *buffer = (char *) AllocVecPooled(ehd->r->__environment_pool, size);
         if (buffer == NULL) {
             return 1;
         }
