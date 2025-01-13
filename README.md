@@ -225,7 +225,7 @@ constructors/destructors executions
 
 ### TODO
 
-- There are some memory leaks at clib4 end needs to be tracked down
+- ~~There are some memory leaks at clib4 end needs to be tracked down~~
 - Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be
   faster when there are multiple cores.
 - Add a test suite
