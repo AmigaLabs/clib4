@@ -45,7 +45,7 @@ __close_all_files(struct _clib4 *__clib4) {
                 D(("Close __fd %ld\n", i));
                 close(i);
                 UnlockMem(__clib4->__fd[i], sizeof(*__clib4->__fd[i]));
-                __free_r(__clib4, __clib4->__fd[i]);
+                //__free_r(__clib4, __clib4->__fd[i]); /* Is this needed? */
                 __clib4->__num_fd--;
             }
             else {
