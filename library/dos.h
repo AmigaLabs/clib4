@@ -297,7 +297,7 @@ struct _clib4 {
 
     /* Wof Allocator main pointer */
     wmem_allocator_t *__wmem_allocator;
-    void *unused6;
+    APTR __environment_pool;
 
     /* Names of files and directories to delete when shutting down. */
     struct MinList __unlink_list;
@@ -523,6 +523,9 @@ struct _clib4 {
 
     int __children;
     int __was_sig;
+
+    uint32_t allocated_memory_by_malloc;
+    APTR _iob_pool;
 };
 
 #ifndef __getClib4

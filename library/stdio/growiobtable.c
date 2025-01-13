@@ -15,6 +15,8 @@ int __grow_iob_table(struct _clib4 *__clib4, int max_iob) {
     int new_num_iob;
     int result = ERROR;
 
+    ENTER();
+
     if (max_iob == 0)
         new_num_iob = __clib4->__num_iob + granularity;
     else
@@ -24,6 +26,7 @@ int __grow_iob_table(struct _clib4 *__clib4, int max_iob) {
         struct iob **new_iob;
         int i;
 
+        D(("Allocating %ld new iob", new_num_iob));
         new_iob = __malloc_r(__clib4, sizeof(*new_iob) * new_num_iob);
         if (new_iob == NULL) {
             SHOWMSG("not enough memory for file table");
@@ -31,7 +34,7 @@ int __grow_iob_table(struct _clib4 *__clib4, int max_iob) {
             __set_errno_r(__clib4, ENOMEM);
             goto out;
         }
-        SHOWVALUE(new_num_iob);
+
         for (i = __clib4->__num_iob; i < new_num_iob; i++) {
             SHOWVALUE(i);
             new_iob[i] = __malloc_r(__clib4, sizeof(*new_iob[i]));
@@ -49,6 +52,7 @@ int __grow_iob_table(struct _clib4 *__clib4, int max_iob) {
                 __set_errno_r(__clib4, ENOMEM);
                 goto out;
             }
+
             SHOWMSG("memset");
             memset(new_iob[i], 0, sizeof(*new_iob[i]));
         }
@@ -62,11 +66,13 @@ int __grow_iob_table(struct _clib4 *__clib4, int max_iob) {
 
         __clib4->__iob = new_iob;
         __clib4->__num_iob = new_num_iob;
+        D(("We have %ld iob now", new_num_iob));
     }
 
     result = OK;
 
 out:
 
-    return (result);
+    LEAVE();
+    return result;
 }
