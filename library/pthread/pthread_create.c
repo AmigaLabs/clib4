@@ -179,7 +179,6 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
             NP_CloseOutput,		     TRUE,
             NP_Error,			     fileErr,
             NP_CloseError,		     TRUE,
-
             TAG_DONE);
 
 out:
