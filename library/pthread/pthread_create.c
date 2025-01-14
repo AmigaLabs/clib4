@@ -146,7 +146,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     if (currentStack > minStack)
         currentStack = minStack;
 
-    if (inf->attr.stacksize < minStack)
+    if (inf->attr.stacksize != 0 && inf->attr.stacksize < minStack)
         inf->attr.stacksize = minStack;
 
     // Check if we have a guardsize
@@ -170,7 +170,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->task = CreateNewProcTags(
             NP_Start,                StarterFunc,
             NP_UserData,             inf,
-            inf->attr.stacksize ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
+            inf->attr.stacksize == 0 ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
             NP_Name,                 name,
             NP_Child,                TRUE,
             NP_Input,			     fileIn,
