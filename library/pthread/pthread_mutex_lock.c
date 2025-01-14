@@ -23,15 +23,21 @@
 */
 
 #ifndef _TIME_HEADERS_H
+
 #include "time_headers.h"
+
 #endif /* _TIME_HEADERS_H */
 
 #ifndef _STDIO_HEADERS_H
+
 #include "stdio_headers.h"
+
 #endif /* _STDIO_HEADERS_H */
 
 #ifndef _UNISTD_HEADERS_H
+
 #include "unistd_headers.h"
+
 #endif /* _UNISTD_HEADERS_H */
 
 #include "common.h"
@@ -42,14 +48,17 @@ pthread_mutex_lock(pthread_mutex_t *mutex) {
     ENTER();
     SHOWPOINTER(mutex);
 
-    if (!mutex)
+    if (!mutex) {
+        LEAVE();
         return EINVAL;
+    }
 
     if (mutex->mutex == NULL) {
         SHOWMSG("mutex was not initalized. Initialize it");
         int ret = _pthread_mutex_init(mutex, NULL, TRUE);
         if (ret != 0) {
             SHOWMSG("Cannot initialize mutex");
+            LEAVE();
             return EINVAL;
         }
     }
@@ -60,15 +69,17 @@ pthread_mutex_lock(pthread_mutex_t *mutex) {
         BOOL isLocked = MutexAttempt(mutex->mutex);
         if (!isLocked) {
             SHOWMSG("DeadLock");
+            LEAVE();
             return EDEADLK;
         } else {
-	  MutexRelease(mutex->mutex);
-	}
+            MutexRelease(mutex->mutex);
+        }
     }
 
     SHOWMSG("MutexObtain");
     MutexObtain(mutex->mutex);
     SHOWMSG("Done");
 
+    RETURN(0);
     return 0;
 }
