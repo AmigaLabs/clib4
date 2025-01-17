@@ -363,6 +363,9 @@ int __ferror_r(struct _clib4 *__clib4, FILE *stream, BOOL lock);
 
 extern void __clearerr_r(struct _clib4 *__clib4, FILE *stream);
 
+#define console_prefix "CON:20/20/600/150/"
+#define console_suffix " Output/AUTO/CLOSE/WAIT"
+
 #ifndef _STDIO_PROTOS_H
 #include "stdio_protos.h"
 #endif /* _STDIO_PROTOS_H */

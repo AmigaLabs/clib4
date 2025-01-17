@@ -39,6 +39,9 @@
 #include "../shared_library/clib4.h"
 #include "uuid.h"
 
+#define ENVBUF 256
+#define ENVIRON_SIZE  4096
+
 /* These CTORS/DTORS are clib4's one and they are different than that one received
  * from crtbegin. They are needed because we need to call clib4 constructors as well
  */
@@ -47,9 +50,10 @@ static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 extern int main(int arg_c, char **arg_v);
 static void shared_obj_init(struct _clib4 *__clib4, BOOL init);
 
+
 struct envHookData {
-    uint32 env_size;
-    uint32 allocated_size;
+    uint32_t env_size;
+    uint32_t allocated_size;
     struct _clib4 *r;
 };
 
@@ -59,24 +63,27 @@ static uint32
 copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *message) {
     DECLARE_UTILITYBASE();
 
+    if (message == NULL || message->sv_Name == NULL || Strlen(message->sv_Name) == 0) {
+        return 0;  // continue search
+    }
+
     if (Strlen(message->sv_GDir) <= 4) {
         if (ehd->env_size == ehd->allocated_size) {
-            if (!(ehd->r->__environment = realloc(ehd->r->__environment, ehd->allocated_size + 1024 * sizeof(char *)))) {
+            if (!(ehd->r->__environment = realloc(ehd->r->__environment, ehd->allocated_size + ENVIRON_SIZE))) {
                 return 1;
             }
-            ClearMem((char *) ehd->r->__environment + ehd->allocated_size, 1024 * sizeof(char *));
-            ehd->allocated_size += 1024 * sizeof(char *);
+            ClearMem((char *)ehd->r->__environment + ehd->allocated_size, ENVIRON_SIZE);
+            ehd->allocated_size += ENVIRON_SIZE;
         }
-
         char **env = (char **) hook->h_Data;
         uint32 size = Strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
-        char *buffer = (char *) AllocVecTags(size, AVT_Type, MEMF_SHARED, TAG_DONE);
+        char *buffer = (char *) AllocVecPooled(ehd->r->__environment_pool, size);
         if (buffer == NULL) {
             return 1;
         }
 
-        ++ehd->env_size;
         SNPrintf(buffer, size - 1, "%s=%s", message->sv_Name, message->sv_Var);
+        SHOWMSG(buffer);
         *env = buffer;
         env++;
         hook->h_Data = env;
@@ -86,26 +93,44 @@ copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *
 
 static void
 makeEnvironment(struct _clib4 *__clib4) {
-    char varbuf[8];
+    char varbuf[8] = {0};
     uint32 flags = 0;
-    size_t environ_size = 1024 * sizeof(char *);
+
+    ENTER();
 
     if (GetVar("EXEC_IMPORT_LOCAL", varbuf, sizeof(varbuf), GVF_LOCAL_ONLY) > 0) {
         flags = GVF_LOCAL_ONLY;
     }
 
-    __clib4->__environment = (char **) calloc(environ_size, 1);
+    __clib4->__environment = (char **) calloc(ENVIRON_SIZE, 1);
     if (!__clib4->__environment)
         return;
 
     flags |= GVF_SCAN_TOPLEVEL;
-    struct Hook hook;
-    hook.h_Entry = (void *) copyEnvironment;
-    hook.h_Data = __clib4->__environment;
-    struct envHookData ehd = {1, environ_size, __clib4};
-    ScanVars(&hook, flags, &ehd);
+
+    __clib4->__environment_pool = AllocSysObjectTags(ASOT_MEMPOOL,
+                                                      ASOPOOL_Puddle,		ENVIRON_SIZE,
+                                                      ASOPOOL_Threshold,	ENVIRON_SIZE,
+                                                      TAG_DONE);
+    if (__clib4->__environment_pool) {
+        struct Hook *hook = AllocSysObjectTags(ASOT_HOOK,
+                                               ASOHOOK_Entry, copyEnvironment,
+                                               ASOHOOK_Data, __clib4->__environment,
+                                               TAG_DONE);
+        if (hook != NULL) {
+            struct envHookData ehd = {1, ENVIRON_SIZE,__clib4};
+            ScanVars(hook, flags, &ehd);
+            FreeSysObject(ASOT_HOOK, hook);
+        }
+    }
+    LEAVE();
 }
 
+static void freeEnvironment(APTR pool) {
+    if (pool != NULL) {
+        FreeSysObject(ASOT_MEMPOOL, pool);
+    }
+}
 
 static void
 shared_obj_init(struct _clib4 *__clib4, BOOL init) {
@@ -237,16 +262,17 @@ _main(
         void (*__EXT_DTOR_LIST__[])(void)) {
     struct WBStartup *sms = NULL;
     struct Process *me;
+    APTR oldClib4Data;
     int rc = RETURN_FAIL;
     struct _clib4 *__clib4 = NULL;
     uint32 pid = GetPID(0, GPID_PROCESS);
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
-    char envbuf[256 + 1];
+    char envbuf[ENVBUF + 1];
     LONG len;
 
     DECLARE_UTILITYBASE();
 
-    ClearMem(envbuf, 257);
+    ClearMem(envbuf, ENVBUF + 1);
 
     /* Pick up the Workbench startup message, if available. */
     me = (struct Process *) FindTask(NULL);
@@ -255,6 +281,9 @@ _main(
         WaitPort(mp);
         sms = (struct WBStartup *) GetMsg(mp);
     }
+
+    /* Store old Clib4Data */
+    oldClib4Data = (APTR) me->pr_UID;
 
     /* If all libraries are opened correctly we can initialize clib4 reent structure */
     D(("Initialize clib4 reent structure"));
@@ -301,13 +330,13 @@ _main(
      */
     if ((len = GetVar("CLIB4_MEMORY_ALLOCATOR", envbuf, sizeof(envbuf), 0)) >= 0) {
         if (!Stricmp(envbuf, "1"))
-            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;
+            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;  // WARNING - At moment this is crashing
         else if (!Stricmp(envbuf, "2"))
             __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK;
         else if (!Stricmp(envbuf, "3"))
             __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_STRICT;
         else if (!Stricmp(envbuf, "4"))
-            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK_FAST; // WARNING - At moment this is crashing
+            __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK_FAST;
         // else leave the default one
     }
 
@@ -356,6 +385,8 @@ _main(
 
     /* Free environment memory */
     if (__clib4->__environment_allocated) {
+        SHOWMSG("Clearing Environment");
+        freeEnvironment(__clib4->__environment_pool);
         free(__clib4->__environment);
         __clib4->__environment = NULL;
     }
@@ -378,6 +409,9 @@ _main(
     SHOWMSG("Calling reent_exit on _clib4");
     reent_exit(__clib4, FALSE);
     SHOWMSG("Done");
+
+    /* Restore old Clib4Data */
+    me->pr_UID = (uint32) oldClib4Data;
 
     if (sms) {
         Forbid();

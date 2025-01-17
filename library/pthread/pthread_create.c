@@ -146,7 +146,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     if (currentStack > minStack)
         currentStack = minStack;
 
-    if (inf->attr.stacksize < minStack)
+    if (inf->attr.stacksize != 0 && inf->attr.stacksize < minStack)
         inf->attr.stacksize = minStack;
 
     // Check if we have a guardsize
@@ -160,29 +160,37 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     name[sizeof(name) - 1] = '\0';
     strncpy(inf->name, name, NAMELEN);
 
-    struct DOSIFace *IDOS = _IDOS;
-    BPTR fileIn  = Open("CONSOLE:", MODE_OLDFILE);
-    BPTR fileOut = Open("CONSOLE:", MODE_OLDFILE);
+    BPTR fileIn  = DupFileHandle(Input());
+    BPTR fileOut = DupFileHandle(Output());
+    BPTR fileErr = DupFileHandle(ErrorOutput());
+    if (!fileIn || !fileOut || !fileErr)
+        goto out;
 
     // start the child thread
     inf->task = CreateNewProcTags(
-            NP_Entry,                StarterFunc,
+            NP_Start,                StarterFunc,
             NP_UserData,             inf,
-            //NP_EntryData,            GetEntryData(),
-            inf->attr.stacksize ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
+            inf->attr.stacksize == 0 ? TAG_IGNORE : NP_StackSize, inf->attr.stacksize,
+            NP_Name,                 name,
+            NP_Child,                TRUE,
             NP_Input,			     fileIn,
             NP_CloseInput,		     TRUE,
             NP_Output,			     fileOut,
             NP_CloseOutput,		     TRUE,
-            NP_Name,                 name,
-            NP_Child,                TRUE,
-            NP_Cli,				     TRUE,
+            NP_Error,			     fileErr,
+            NP_CloseError,		     TRUE,
+
             TAG_DONE);
 
+out:
     if (0 == inf->task) {
+        if (fileIn)
+            Close(fileIn);
+        if (fileOut)
+            Close(fileOut);
+        if (fileErr)
+            Close(fileErr);
         inf->parent = NULL;
-        Close(fileIn);
-        Close(fileOut);
         return EAGAIN;
     }
 

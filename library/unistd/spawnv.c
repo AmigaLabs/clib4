@@ -17,6 +17,7 @@
 #include "children.h"
 
 STATIC BOOL
+
 string_needs_quoting(const char *string, size_t len) {
     BOOL result = FALSE;
     size_t i;
@@ -76,6 +77,7 @@ build_arg_string(char *const argv[], char *arg_string) {
 }
 
 STATIC size_t
+
 count_extra_escape_chars(const char *string, size_t len) {
     size_t count = 0;
     size_t i;
@@ -91,6 +93,7 @@ count_extra_escape_chars(const char *string, size_t len) {
 }
 
 STATIC size_t
+
 get_arg_string_length(char *const argv[]) {
     size_t result = 0;
     size_t i, len = 0;
@@ -161,39 +164,55 @@ spawnv(int mode, const char *file, const char **argv) {
     /* Add a NUL, to be nice... */
     arg_string[arg_string_len] = '\0';
 
-    char finalpath[PATH_MAX] = {0};
-    char processName[NAMELEN] = {0};
-    snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
-    snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
+    int command_len = strlen(file) + 1 + arg_string_len + 1; // '\0'
+    char *command = (char *) malloc(command_len);
+    char process_name[32] = {0};
+    snprintf(command, command_len, "%s %s", file, arg_string);
+    snprintf(process_name, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
+
+    D(("command : [%s]\n", command));
 
     struct Process *me = __clib4->self;
-    BPTR in  = mode == P_WAIT ? me->pr_CIS : 0;
-    BPTR out  = mode == P_WAIT ? me->pr_COS : 0;
-    D(("Launching [%s]", finalpath));
-    ret = SystemTags(finalpath,
-                     SYS_Input,     in,
-                     SYS_Output,    out,
-                     SYS_Error,     out,
+    // These will be closed, so we need duplicates :
+    BPTR in = DupFileHandle(Input());
+    BPTR out = DupFileHandle(Output());
+    BPTR err = DupFileHandle(ErrorOutput());
+    D(("Launching [%s]", command));
+    ret = SystemTags(command,
+                     SYS_Input, in,
+                     SYS_Output, out,
+                     SYS_Error, err,
+                     NP_CloseError, TRUE,
                      SYS_UserShell, TRUE,
-                     SYS_Asynch,    mode == P_WAIT ? FALSE : TRUE,
-                     NP_EntryCode,  spawnedProcessEnter,
-                     NP_ExitCode,   spawnedProcessExit,
-                     NP_Name,       strdup(processName),
-                     NP_Child,      TRUE,
+                     SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
+                     NP_EntryCode, spawnedProcessEnter,
+                     NP_EntryData, getgid(),
+                     NP_ExitCode, spawnedProcessExit,
+                     NP_Name, process_name,
+                     NP_Child, TRUE,
                      TAG_DONE);
-    if (ret != 0) {
-        /* SystemTags failed. Clean up file handles */
-        if (in != 0)
+    free(command);
+    if (ret) {
+        /* SystemTags failed. Clean up file handle */
+        if (in)
             Close(in);
+        if (out)
+            Close(out);
+        if (err)
+            Close(err);
         errno = __translate_io_error_to_errno(IoErr());
-    }
-    else {
+    } else {
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid
          */
         if (mode == P_NOWAIT) {
             ret = IoErr(); // This is our ProcessID;
+        } else {
+            if (in)
+                Close(in);
+            if (out)
+                Close(out);
         }
     }
     return ret;

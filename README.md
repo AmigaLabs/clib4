@@ -65,7 +65,9 @@ At moment you can use:
 | 3     | WMEM_ALLOCATOR_STRICT     |
 | 4     | WMEM_ALLOCATOR_BLOCK_FAST |
 
-The default one is `WMEM_ALLOCATOR_BLOCK_STRICT`. `WMEM_ALLOCATOR_BLOCK_FAST` can crash on some situation. Please refer to `wmem/wmem_core.h` for all details. 
+The default one is `WMEM_ALLOCATOR_BLOCK`. `WMEM_ALLOCATOR_SIMPLE` can crash on some situation. Please refer to `wmem/wmem_core.h` for all details. 
+
+To enable memory debug set `MEMORY_DEBUG` to 1 in `wmem_core.h` or pass it in GNUMakefile when compiling
 
 ### Optimized AMCC functions
 
@@ -223,7 +225,7 @@ constructors/destructors executions
 
 ### TODO
 
-- There are some memory leaks at clib4 end needs to be tracked down
+- ~~There are some memory leaks at clib4 end needs to be tracked down~~
 - Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be
   faster when there are multiple cores.
 - Add a test suite

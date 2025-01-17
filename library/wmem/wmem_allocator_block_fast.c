@@ -58,6 +58,7 @@ typedef struct {
 #define JUMBO_MAGIC 0xFFFFFFFF
 typedef struct _wmem_block_fast_jumbo {
     struct _wmem_block_fast_jumbo *prev, *next;
+    size_t size;
 } wmem_block_fast_jumbo_t;
 #define WMEM_JUMBO_HEADER_SIZE WMEM_ALIGN_SIZE(sizeof(wmem_block_fast_jumbo_t))
 
@@ -91,9 +92,11 @@ wmem_block_fast_alloc(void *private_data, const size_t size) {
     if (size > WMEM_BLOCK_MAX_ALLOC_SIZE) {
         wmem_block_fast_jumbo_t *block;
 
+        real_size = size + WMEM_JUMBO_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE;
+
         /* allocate/initialize a new block of the necessary size */
-        block = (wmem_block_fast_jumbo_t *) wmem_alloc(NULL,
-                                                       size + WMEM_JUMBO_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE);
+        block = (wmem_block_fast_jumbo_t *) wmem_alloc(NULL, real_size);
+        block->size = real_size;
 
         block->next = allocator->jumbo_list;
         if (block->next) {
@@ -143,8 +146,24 @@ wmem_block_fast_realloc(void *private_data, void *ptr, const size_t size) {
         wmem_block_fast_jumbo_t *block;
 
         block = ((wmem_block_fast_jumbo_t *) ((uint8_t * )(chunk) - WMEM_JUMBO_HEADER_SIZE));
-        block = (wmem_block_fast_jumbo_t *) wmem_realloc(NULL, block,
-                                                         size + WMEM_JUMBO_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE);
+
+        // Since we don't have realloc on amiga, this is the solution :
+
+        size_t new_size = size + WMEM_JUMBO_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE;
+        if(new_size < block->size)
+            return ptr;
+
+        wmem_block_fast_jumbo_t *new_block = wmem_alloc(NULL, new_size);
+        memcpy(new_block, block, block->size);
+        wmem_free(NULL, block);
+        block = new_block;
+        block->size = new_size;
+
+        // ...instead of this
+
+        // block = (wmem_block_fast_jumbo_t *) wmem_realloc(NULL, block,
+        //                                                  size + WMEM_JUMBO_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE);
+
         if (block->prev) {
             block->prev->next = block;
         } else {
@@ -154,6 +173,7 @@ wmem_block_fast_realloc(void *private_data, void *ptr, const size_t size) {
         if (block->next) {
             block->next->prev = block;
         }
+
         return ((void *) ((uint8_t * )(block) + WMEM_JUMBO_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE));
     } else if (chunk->len < size) {
         /* grow */

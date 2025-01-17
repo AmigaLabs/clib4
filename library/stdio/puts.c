@@ -60,21 +60,19 @@ puts(const char *s) {
         goto out;
     }
 
+    __funlockfile_r(__clib4, stream);
+
     while ((c = (*s++)) != '\0') {
         if (__putc(__clib4, c, stream, buffer_mode) == EOF) {
-            __funlockfile_r(__clib4, stream);
             goto out;
         }
     }
 
     if (__putc(__clib4, '\n', stream, buffer_mode) == EOF) {
-        __funlockfile_r(__clib4, stream);
         goto out;
     }
 
     result = OK;
-
-    __funlockfile_r(__clib4, stream);
 
 out:
 
