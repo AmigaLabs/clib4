@@ -19,12 +19,12 @@ void timer_setting(int elapstime) {
     sa.sa_handler = &timer_handler;
     sigaction(SIGALRM, &sa, NULL);
 
-    /* Configure the timer to expire after 250 msec... */
+    printf("Configure the timer to expire after 250 msec...\n" );
 
     timer.it_value.tv_sec = 1; //<-- set to start after 1 sec
     timer.it_value.tv_usec = 0;
 
-    /* ... and every 250 msec after that. */
+    printf("... and every 250 msec after that.\n"	);
 
     timer.it_interval.tv_sec = elapstime; //<--- TIME (seconds)  gets set here from prams
     timer.it_interval.tv_usec = 0;
@@ -34,9 +34,18 @@ void timer_setting(int elapstime) {
 
     setitimer(ITIMER_REAL, &timer, NULL);
 
-    /* Do busy work. */
+    printf("Do busy work,will be interruppted by itimer, waiting for CTR-C\n" );
     while (1) {
-        usleep(10);
+		int result = usleep(10);
+        switch( result ) {
+			case EINVAL:
+				printf("\nusleep failed because of specified usec invalid\n");
+				break;
+			case EINTR:
+				printf("\nusleep got interrupted by signal\n");
+				break;
+		}
+
     };
 }
 
