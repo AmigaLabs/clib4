@@ -68,6 +68,9 @@ typedef int sig_atomic_t;
 #ifndef _SYS_TYPES_H
 #include <sys/types.h>
 #endif /* _SYS_TYPES_H */
+#ifndef _TIME_H
+#include <time.h>
+#endif /* _TIME_H */
 
 typedef void (*sig_t)(int);
 
@@ -148,6 +151,8 @@ struct sigaction {
 };
 
 extern int sigaction(int sig, const struct sigaction *act, struct sigaction *oact);
+extern int sigwaitinfo(const sigset_t *set, siginfo_t *info);
+extern int sigtimedwait(const sigset_t *set, siginfo_t *info, const struct timespec *timeout);
 
 typedef union sigval sigval_t;
 

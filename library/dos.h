@@ -292,6 +292,7 @@ struct _clib4 {
        modify or query it. */
     int __signals_blocked;
     int local_signals_blocked;
+    int local_raised_signals_blocked;
 
     struct SignalSemaphore *stdio_lock;
 
@@ -305,7 +306,6 @@ struct _clib4 {
 
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
-    BOOL __timer_busy;
     struct SignalSemaphore *__timer_semaphore;
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;

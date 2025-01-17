@@ -121,7 +121,8 @@ raise(int sig) {
             }
         }
     } else {
-        SHOWMSG("that signal is blocked");
+        SHOWMSG("that signal is blocked, remeber that signal was blocked, for sigwaitinfo" );
+		SET_FLAG(__clib4->local_raised_signals_blocked, sigmask(sig));
     }
 
     result = OK;
