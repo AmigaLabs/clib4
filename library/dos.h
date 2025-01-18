@@ -292,7 +292,6 @@ struct _clib4 {
        modify or query it. */
     int __signals_blocked;
     int local_signals_blocked;
-    int local_raised_signals_blocked;
 
     struct SignalSemaphore *stdio_lock;
 
@@ -306,7 +305,8 @@ struct _clib4 {
 
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
-    struct SignalSemaphore *__timer_semaphore;
+    BOOL __timer_busy_unused;
+	struct SignalSemaphore *__timer_semaphore;
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;
     struct TimerIFace *__ITimer;
@@ -526,6 +526,8 @@ struct _clib4 {
 
     uint32_t allocated_memory_by_malloc;
     APTR _iob_pool;
+
+    int local_raised_signals_blocked;
 };
 
 #ifndef __getClib4
