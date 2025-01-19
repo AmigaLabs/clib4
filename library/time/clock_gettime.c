@@ -22,14 +22,10 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
         return -1;
     }
 
-    if (__clib4->__timer_busy) {
-        __set_errno_r(__clib4, EAGAIN);
-        RETURN(-1);
-        return -1;
-    }
+	/* Our clock is alwayy present for reading */
 
+    DECLARE_TIMERBASE();
     DECLARE_TIMEZONEBASE();
-    struct TimerIFace *ITimer = __clib4->__ITimer;
 
     struct timeval tv;
     uint32 gmtoffset = 0;
@@ -40,7 +36,6 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
 
     GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
 
-    __clib4->__timer_busy = TRUE;
     if (clk_id == CLOCK_MONOTONIC | clk_id == CLOCK_MONOTONIC_RAW) {
         /*
         CLOCK_MONOTONIC
@@ -77,7 +72,6 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
     if (dstime == TFLG_ISDST)
         t->tv_sec += (60 * 60);
 
-    __clib4->__timer_busy = FALSE;
 
     RETURN(0);
     return 0;
