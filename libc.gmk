@@ -176,6 +176,8 @@ C_POSIX := \
 	posix/sigsuspend.o \
 	posix/sigsetmask.o \
 	posix/sigwait.o \
+	posix/sigwaitinfo.o \
+	posix/sigtimedwait.o \
 	posix/statvfs.o \
 	posix/sysinfo.o \
 	posix/sysv_ftok.o \

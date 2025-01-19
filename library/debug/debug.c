@@ -45,6 +45,10 @@
 #include "debug.h"
 #include <dos.h>
 
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
+
 extern void KPrintF(const char *format, ...);
 extern void KPutFmt(const char *format, va_list arg);
 
@@ -76,7 +80,7 @@ _INDENT(void) {
     if (__clib4 == NULL)
         return;
 
-    KPrintF("(%s) ", __clib4->__progname);
+    KPrintF("(%s) [%s] ", __clib4->__progname,((struct Task *)FindTask(NULL))->tc_Node.ln_Name);
 
     if (__clib4->__debug_level >= DEBUGLEVEL_CallTracing) {
         int i;

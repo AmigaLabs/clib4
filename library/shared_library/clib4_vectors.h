@@ -1178,6 +1178,8 @@ static void *clib4Vectors[] = {
         (void *) (spawnve),                               /* 4400 */
         (void *) (sigpause),		                      /* 4404 */
         (void *) (sigwait),		                          /* 4408 */
-
+        (void *) (sigwaitinfo),		                      /* 4412 */
+        (void *) (sigtimedwait),	                      /* 4416 */
+		
         (void *)-1
 };

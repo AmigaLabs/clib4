@@ -22,14 +22,10 @@ clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
         return -1;
     }
 
-    if (__clib4->__timer_busy) {
-        __set_errno(EAGAIN);
-        RETURN(-1);
-        return -1;
-    }
-
+	/* Our clock is alwayy present for reading */
+	
+    DECLARE_TIMERBASE();
     DECLARE_TIMEZONEBASE();
-    struct TimerIFace *ITimer = __clib4->__ITimer;
 
     struct timeval tv;
     uint32 gmtoffset = 0;
@@ -39,8 +35,8 @@ clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
     tv.tv_sec = tv.tv_usec = 0;
 
     GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
-    __clib4->__timer_busy = TRUE;
-    if (clk_id == CLOCK_MONOTONIC) {
+    
+	if (clk_id == CLOCK_MONOTONIC) {
         /*
         CLOCK_MONOTONIC
             A nonsettable system-wide clock that represents monotonic
@@ -68,10 +64,10 @@ clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
         tr.tv_sec = tv.tv_sec;
         tr.tv_nsec = tv.tv_usec * 1000;
     }
+
     /* And then convert it to a 64bit timespec */
     *t = valid_timespec_to_timespec64(tr);
 
-    __clib4->__timer_busy = FALSE;
     RETURN(0);
     return 0;
 }
