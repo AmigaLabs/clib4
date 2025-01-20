@@ -3,6 +3,8 @@ on:
   pull_request:
     branches:
       - master
+      - development
+      - set-dicord-announcements-on-PRs
     types:
       - closed
 
@@ -46,3 +48,17 @@ jobs:
 
       - name: Create the release archive
         run: make -f GNUmakefile.os4 release
+
+  announcements:
+    needs: [compile-ppc, compile-spe]
+    name: Notify on Discord on successful PR merge
+    runs-on: ubuntu-latest
+    steps:
+    - name: Discord notification
+      uses: appleboy/discord-action@master
+      with:
+        webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
+        webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
+        message: "clib4: New code merged into **${{ github.event.pull_request.base.ref }}**. Check it out at: ${{ github.event.pull_request.html_url }}"
+        username: "GitHub Actions"
+        avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
