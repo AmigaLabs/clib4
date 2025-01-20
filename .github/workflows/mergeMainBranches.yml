@@ -68,6 +68,6 @@ jobs:
       with:
         webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
         webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-        message: "{{ github.event.pull_request.base.repo.compare_url }}"
+        message: "{{ github.server_url }}/{{ github.repository }}/compare/{{ github.event.pull_request.base.ref }}...{{ github.event.pull_request.head.ref }}"
         username: "GitHub Actions"
         avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
