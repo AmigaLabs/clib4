@@ -59,15 +59,6 @@ jobs:
       with:
         webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
         webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-        message: "clib4: New code merged into **${{ github.event.pull_request.base.ref }}**. Check it out at: ${{ github.event.pull_request.html_url }}"
-        username: "GitHub Actions"
-        avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-
-    - name: Compare notification
-      uses: appleboy/discord-action@master
-      with:
-        webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
-        webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-        message: "Compare it at: ${{ github.event.pull_request.base.repo.html_url }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+        message: "clib4: New code merged into **${{ github.event.pull_request.base.ref }}**. Check it out at: ${{ github.event.pull_request.html_url }}. Compare it at: ${{ github.event.pull_request.base.repo.html_url }}/compare/${{ github.event.pull_request.base.sha.slice(0, 7) }}...${{ github.event.pull_request.head.sha.slice(0, 7) }}"
         username: "GitHub Actions"
         avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
