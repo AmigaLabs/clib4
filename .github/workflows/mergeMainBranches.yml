@@ -59,6 +59,6 @@ jobs:
       with:
         webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
         webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-        message: "clib4: New code merged into **${{ github.event.pull_request.base.ref }}**. Check it out at: ${{ github.event.pull_request.html_url }} {{ github.event.pull_request.compare_url }}"
+        message: "clib4: New code merged into **${{ github.event.pull_request.base.ref }}**. Check it out at: ${{ github.event.pull_request.html_url }} {{ github.event.pull_request.base.repo.compare_url }}"
         username: "GitHub Actions"
         avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
