@@ -46,8 +46,6 @@ vsnprintf(char *buffer, size_t size, const char *format, va_list arg) {
        stored if there had been enough room. */
     result = vfprintf((FILE * ) &string_iob, format, arg);
 
-    fflush((FILE * ) &string_iob);
-
 out:
 
     RETURN(result);
