@@ -254,9 +254,9 @@ clean:
 ##############################################################################
 
 gitver:
+ifdef GITTAG
 	$(VERBOSE)sed -i 's/[(]\([0-9]*\.[0-9]*\.[0-9]*\)[)]/($(DATESTR))/g' library/c.lib_rev.h
 	$(VERBOSE)sed -i 's/"\([0-9]*\.[0-9]*\.[0-9]*\)"/"$(DATESTR)"/g' library/c.lib_rev.h
-ifdef GITTAG
 	$(VERBOSE)sed -i 's/VERSION\t*[0-9]*/VERSION\t\t\t$(MAJOR)/g' library/c.lib_rev.h
 	$(VERBOSE)sed -i 's/REVISION\t*[0-9]*/REVISION\t\t$(MINOR)/g' library/c.lib_rev.h
 	$(VERBOSE)sed -i 's/SUBREVISION\t*[0-9]*/SUBREVISION\t\t$(PATCH)/g' library/c.lib_rev.h
@@ -442,7 +442,7 @@ release:
 	-$(COPY) libs/libauto.a clib4/lib/
 	-$(COPY) $(OUTPUT_LIB)/* clib4/lib/
 	-$(COPY) $(LIB_ROOT)/library/include/* clib4/include/
-	lha -ao5i clib4.lha clib4 clib4.info
+	@lha -ao5i clib4.lha clib4 clib4.info
 	-$(DELETE) clib4
 	-$(DELETE) clib4.info
 
