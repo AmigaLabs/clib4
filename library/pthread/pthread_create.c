@@ -37,6 +37,8 @@
 #include "common.h"
 #include "pthread.h"
 
+extern struct DOSIFace *_IDOS;
+
 static uint32
 StarterFunc() {
     volatile int keyFound = TRUE;
@@ -110,6 +112,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     size_t oldlen;
     pthread_t threadnew;
     struct Task *thisTask = FindTask(NULL);
+    struct DOSIFace *IDOS = _IDOS;
 
     if (thread == NULL || start == NULL)
         return EINVAL;
