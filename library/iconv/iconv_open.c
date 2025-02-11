@@ -12,7 +12,6 @@ iconv_t
 iconv_open(const char *to, const char *from) {
     size_t f, t;
     struct stateful_cd *scd;
-
     if ((t = find_charmap(to)) == -1
         || (f = find_charmap(from)) == -1
         || (charmaps[t] >= 0330)) {

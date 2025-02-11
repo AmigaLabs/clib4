@@ -479,7 +479,7 @@ struct _clib4 {
     struct SignalSemaphore *gettext_lock;
     struct mofile_s *g_mofile;
     char gettext_domain[NAME_MAX];
-    void *bindings;
+    void *volatile bindings;
 
     /* getrandom */
     int randfd[2];
