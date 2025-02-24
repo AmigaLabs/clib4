@@ -55,10 +55,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: PR notification
-      uses: tsickert/discord-webhook@v6.0.0
+      uses: hunghg255/action-notifications@master
       with:
-        webhook-url: https://discord.com/api/webhooks/${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}/${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-        content: "clib4: New code merged into **${{ github.event.pull_request.base.ref }}**. Check it out at: ${{ github.event.pull_request.html_url }}. Compare it at: ${{ github.event.pull_request.base.repo.html_url }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
-        username: "GitHub Actions"
-        avatar-url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-        flags: SUPPRESS_EMBEDS
+        discord_webhook: https://discord.com/api/webhooks/${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}/${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
+        title: "Deploy to ${{ github.event.pull_request.base.ref }}"
+        description: "Check it out at: ${{ github.event.pull_request.html_url }}"
+      # uses: tsickert/discord-webhook@v6.0.0
+      # with:
+      #   webhook-url: 
+      #   content: "clib4: New code merged into **${{ github.event.pull_request.base.ref }}**. Check it out at: ${{ github.event.pull_request.html_url }}. Compare it at: ${{ github.event.pull_request.base.repo.html_url }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+      #   username: "GitHub Actions"
+      #   avatar-url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+      #   flags: SUPPRESS_EMBEDS
