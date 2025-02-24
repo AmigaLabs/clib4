@@ -13,6 +13,10 @@ static void wait_alarm(int isignal) {
     printf("\n\t\tGot signal %d - End program\n", isignal);
     puts("*****************************************************************");
 
+	/*
+	From the README, so this example fails
+	Don't call exit() function in an alarm() handler otherwise your program will be stuck at exit.
+	*/
     exit(0);
 }
 static void traffic(void) {

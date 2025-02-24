@@ -1346,9 +1346,11 @@ struct Clib4IFace {
     int ( *spawnvpe_callback_UNUSED) (const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr, void (*entry_fp)(void *), void* entry_data, void (*final_fp)(int, void *), void* final_data);     /* 4392 */
 
     int (* sigsuspend) (const sigset_t *mask);		                                                                              					 /* 4396 */
-    int (* spawnve) (const char *path, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);                         /* 4400 */
+    int (* spawnve) (int mode, const char *path, const char **argv, char * const envp[]);                                                            /* 4400 */
     int (* sigpause) (int sig_or_mask, int is_sig);                                                                                                  /* 4404 */
     int (* sigwait) (const sigset_t *set, int *sig);                                                                                                 /* 4408 */
+	int (* sigwaitinfo) (const sigset_t *set, siginfo_t *info);																						 /* 4412 */
+	int (* sigtimedwait) (const sigset_t *set, siginfo_t *info, const struct timespec *timeout);													 /* 4416 */
 };
 
 #ifdef __PIC__

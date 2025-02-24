@@ -22,6 +22,8 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
     ENTER();
 
+    DECLARE_UTILITYBASE();
+
     SHOWSTRING(filename);
     SHOWSTRING(mode);
     SHOWVALUE(slot_number);
@@ -93,13 +95,15 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = AllocVecTags(BUFSIZ + (__clib4->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, AVT_Alignment, __clib4->__cache_line_size, 0, TAG_DONE);
+    buffer = AllocVecPooled(__clib4->_iob_pool, BUFSIZ + (__clib4->__cache_line_size - 1));
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
         __set_errno_r(__clib4, ENOBUFS);
         goto out;
     }
+
+    ClearMem(buffer, BUFSIZ + (__clib4->__cache_line_size - 1));
 
     if (file_descriptor < 0) {
         assert(filename != NULL);
@@ -148,7 +152,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 out:
 
     if (buffer != NULL)
-        FreeVec(buffer);
+        FreeVecPooled(__clib4->_iob_pool, buffer);
 
     __stdio_unlock(__clib4);
 

@@ -34,8 +34,17 @@ static wmem_allocator_type_t override_type;
 
 void *
 wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
+#if MEMORY_DEBUG
+    __CLIB4->allocated_memory_by_malloc++;
+    D(("Allocated %ld bytes chunk of memory. Allocations now are: %ld", size, __CLIB4->allocated_memory_by_malloc));
+#endif
+
     if (allocator == NULL) {
-        return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        void *r = AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+#if MEMORY_DEBUG
+        D(("[wmem_alloc :] allocated block [0x%lx] of size [0x%lx]\n", r, size));
+#endif
+        return r;
     }
 
     assert(allocator->in_scope);
@@ -62,6 +71,10 @@ wmem_alloc0(wmem_allocator_t *allocator, const size_t size) {
 
 void
 wmem_free(wmem_allocator_t *allocator, void *ptr) {
+#if MEMORY_DEBUG
+    __CLIB4->allocated_memory_by_malloc--;
+    D(("Freed chunk of memory. Allocations now are %ld", __CLIB4->allocated_memory_by_malloc));
+#endif
     if (allocator == NULL) {
         FreeVec(ptr);
         ptr = NULL;
@@ -80,8 +93,11 @@ wmem_free(wmem_allocator_t *allocator, void *ptr) {
 void *
 wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
     if (allocator == NULL) {
-        FreeVec(ptr);
-        return AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
+        // Since we have no generic way of determining the old size,
+        //  this feature cannot be supported on amigaos.
+        // It needs to be emulated in the specific allocators.
+        SHOWMSG("unsupported feature (realloc). now we are going to fail\n");
+        return NULL;
     }
 
     if (ptr == NULL) {
@@ -152,6 +168,9 @@ wmem_allocator_new(const wmem_allocator_type_t type) {
         case WMEM_ALLOCATOR_STRICT:
             wmem_strict_allocator_init(allocator);
             break;
+        // case WMEM_ALLOCATOR_ARRAY:
+        //     wmem_array_allocator_init(allocator);
+        //     break;
         default:
             break;
     };
@@ -182,7 +201,7 @@ wmem_init(void) {
         } else if (strncmp(override_env, "block_fast", strlen("block_fast")) == 0) {
             override_type = WMEM_ALLOCATOR_BLOCK_FAST;
         } else {
-            D(("Unrecognized wmem override"));
+            SHOWMSG("Unrecognized wmem override");
             do_override = false;
         }
     }

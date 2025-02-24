@@ -140,6 +140,13 @@ get_arg_string_length(char *const argv[]) {
 //     DebugPrintF("[child :] Done.");
 //     FreeSignal(ed->childSignal);
 // }
+/* * * * *
+    Note for future generations : CreateNewProc is not suited for running shell commands.
+    The only way to have a full shell environment (apart from using internal packet structures),
+    is to use System. We keep the code here a display for the event, that someone should like
+    to investigate further into the mysteries of AmigaDOS. Until then, the following #define is set to 0.
+ * * * * */
+#define USE_CNPT 0
 int
 spawnvpe(
     const char *file,
@@ -170,7 +177,6 @@ spawnvpe(
     __set_errno(0);
 
     D(("Starting new process [%s]\n", name));
-    // printf("[spawnvpe :] Starting new process [%s]\n", name);
 
     int error = __translate_unix_to_amiga_path_name(&name, &nti_name);
     if (error) {
@@ -180,21 +186,18 @@ spawnvpe(
     }
 
     D(("name after conversion: [%s]\n", name));
-    // printf("[spawnvpe :] name after conversion [%s]\n", name);
 
-#if 0
+#if USE_CNPT
     seglist = LoadSeg(name);
 	if (!seglist)
 		return -1;
-#endif
 
     BPTR fileLock = Lock(name, SHARED_LOCK);
     if (fileLock) {
         progdirLock = ParentDir(fileLock);
         UnLock(fileLock);
     }
-
-    // printf("[spawnvpe :] cwd before conversion: [%s]\n", cwd);
+#endif
 
     if(cwd) {
         error = __translate_unix_to_amiga_path_name(&cwd, &nti_cwd);
@@ -206,12 +209,11 @@ spawnvpe(
     }
 
     D(("cwd after conversion: [%s]\n", cwd));
-    // printf("[spawnvpe :] cwd after conversion [%s]\n", cwd);
 
-    BPTR cwdLock = cwd ? Lock(cwd, SHARED_LOCK) : 0;
+    BPTR cwdLock = cwd ? Lock(cwd, SHARED_LOCK) : 0; //DupLock(GetCurrentDir());
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
-    // This is probably unnecessary :
+    // This is probably unnecessary (and harmful to long commands):
     //
     // if (parameter_string_len > _POSIX_ARG_MAX) {
     //     __set_errno(E2BIG);
@@ -219,7 +221,6 @@ spawnvpe(
     // }
 
     D(("parameter_string_len: [%ld]\n", parameter_string_len));
-    // printf("[spawnvpe :] parameter_string_len: [%ld]\n", parameter_string_len);
 
     arg_string = malloc(parameter_string_len + 1);
     if (arg_string == NULL) {
@@ -239,16 +240,13 @@ spawnvpe(
 
     D(("arg_string: [%s]\n", arg_string));
 
-    int finalpath_len = strlen(name) + 1 + arg_string_len + 1; // '\0'
-    char *finalpath = (char*)malloc(finalpath_len);
-    char processName[32] = {0};
-    snprintf(finalpath, finalpath_len, "%s %s", name, arg_string);
-    snprintf(processName, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
+    int full_command_len = strlen(name) + 1 + arg_string_len + 1; // '\0'
+    char *full_command = (char*)malloc(full_command_len);
+    char process_name[32] = {0};
+    snprintf(full_command, full_command_len, "%s %s", name, arg_string);
+    snprintf(process_name, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
-    D(("File to execute: [%s]\n", finalpath));
-
-    // printf("[spawnvpe :] full command == <%s>\n", finalpath);
-    // printf("[spawnvpe :] processName == <%s>\n", processName);
+    D(("Command to execute: [%s]\n", full_command));
 
     if (fhin >= 0) {
         err = __get_default_file(fhin, &fh);
@@ -256,7 +254,7 @@ spawnvpe(
             __set_errno(EBADF);
             return ret;
         }
-        iofh[0] = DupFileHandle(fh); //in case this is closed by the parent
+        iofh[0] = DupFileHandle(fh); // This will be closed by ST/CNPT
         closefh[0] = TRUE;
     }
     else {
@@ -270,7 +268,7 @@ spawnvpe(
             __set_errno(EBADF);
             return ret;
         }
-        iofh[1] = DupFileHandle(fh); //in case this is closed by the parent
+        iofh[1] = DupFileHandle(fh); // This will be closed by ST/CNPT
         closefh[1] = TRUE;
     }
     else {
@@ -284,7 +282,7 @@ spawnvpe(
             __set_errno(EBADF);
             return ret;
         }
-        iofh[2] = DupFileHandle(fh); //in case this is closed by the parent
+        iofh[2] = DupFileHandle(fh); // This will be closed by ST/CNPT
         closefh[2] = TRUE;
     }
     else {
@@ -292,14 +290,11 @@ spawnvpe(
         closefh[2] = TRUE;
     }
 
-    D(("(*)Calling SystemTags.\n"));
-
-    // struct EntryData ed;
-    // ed.parent = FindTask(0);
-    // ed.parentSignal = AllocSignal(-1);
-
     struct Task *_me = FindTask(0);
-#if 0
+
+#if USE_CNPT
+    D(("(*)Calling CreateNewProcTags.\n"));
+
   struct Process *p = CreateNewProcTags(
     NP_Seglist,		seglist,
     NP_FreeSeglist,	TRUE,
@@ -324,49 +319,60 @@ spawnvpe(
     NP_CloseError,	FALSE,
 #endif
 
-    NP_EntryCode, spawnvpe_entryCode,
-    NP_EntryData, &ed,
+    NP_EntryCode,  spawnedProcessEnter,
+    NP_EntryData, getgid(),
 
-    // NP_FinalCode,	amiga_FinalCode,
-    // NP_FinalData,	fd,
-
-    // NP_EntryCode,  spawnedProcessEnter,
     NP_ExitCode,   spawnedProcessExit,
 
-    NP_Name,      strdup(processName),
-    cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
     progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
+    cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
+    NP_Name,      process_name,
+
     NP_Arguments, arg_string,
+
     TAG_DONE
   );
   if (p) ret = 0;
 #else
-    // printf("(*)Calling SystemTags.\n");
+    D(("(*)Calling SystemTags.\n"));
 
-    ret = SystemTags(finalpath,
-                     NP_NotifyOnDeathSigTask, _me,
-                     SYS_Input, iofh[0],
-                     SYS_Output, iofh[1],
-                     SYS_Error, iofh[2],
-                     SYS_UserShell, TRUE,
-                     SYS_Asynch, TRUE,
-                     NP_Child, TRUE,
-                     progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
-                     cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
-                     NP_Name, strdup(processName),
+    ret = SystemTags(full_command,
+                    NP_NotifyOnDeathSigTask, _me,
 
-                     NP_EntryCode,  spawnedProcessEnter,
-                     NP_EntryData, getgid(),
-                    //  NP_EntryCode,  amiga_entryCode,
-                    //  NP_EntryData,  &ed,
-                     NP_ExitCode,   spawnedProcessExit,
+                    SYS_Input,          iofh[0],
+                    SYS_Output,         iofh[1],
+                    SYS_Error,          iofh[2],
 
-                     TAG_DONE);
+                    // These will always be true (like you) :
+                    // NP_CloseInput,   closefh[0],
+                    // NP_CloseOutput,	closefh[1],
+                    NP_CloseError,      closefh[2], // <-- This one is needed!
 
+                    SYS_UserShell, TRUE,
+                    SYS_Asynch, TRUE,
+                    NP_Child, TRUE,
+
+                    NP_StackSize,   2024*1024,
+                    
+                    // This is taken care of by the command shell :
+                    // progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
+
+                    cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
+
+                    NP_Name,        process_name,
+
+                    NP_EntryCode,   spawnedProcessEnter,
+                    NP_EntryData,   getgid(),
+                    NP_ExitCode,    spawnedProcessExit,
+
+                    TAG_DONE);
 #endif
 
     if (ret != 0) {
+        D(("System/CreateNewProc failed. Return value: [%ld]\n", ret));
+
         __set_errno(__translate_io_error_to_errno(IoErr()));
+
         /* SystemTags failed. Clean up file handles */
         for (int i = 0; i < 3; i++) {
             if (closefh[i])
@@ -374,38 +380,27 @@ spawnvpe(
         }
     }
     else {
+        D(("System/CreateNewProc succeeded. Return value: [%ld]\n", ret));
+
         __clib4->__children++;
+
         /*
          * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
          * just after SystemTags. In this case spawnv will return pid
          * IoErr() must be called IMMEDIATELY after SystemTags() == no other DOS calls inbetween
          */
 
-        // DebugPrintF("[main :] Child created with success.\n");
-
+#if USE_CNPT
+        pid_t pid = p->pr_ProcessID;
+#else
         pid_t pid = IoErr();
-        // gid_t groupId = getgid();
-        // uint32 ppid = ((struct Process *) FindTask(NULL))->pr_ProcessID;
-
-        // if (insertSpawnedChildren(pid, ppid, groupId)) {
-        //     __CLIB4->__children++;
-        //     D(("Children with pid %ld and gid %ld inserted into list\n", pid, groupId));
-        // }
-        // else {
-        //     D(("Cannot insert children with pid %ld and gid %ld into list\n", pid, groupId));
-        // }
-
-        // DebugPrintF("[parent :] Waiting for signal from child...\n");
-        // Wait(1 << ed.parentSignal);
-        // DebugPrintF("[parent :] Signalling child...\n");
-        // Signal(ed.child, 1 << ed.childSignal);
-        // DebugPrintF("[parent :] Done.\n");
-        // FreeSignal(ed.parentSignal);
-
+#endif
         ret = pid;
     }
-    // D(("SystemTags completed. return value: [%ld]\n", ret));
-    // printf("SystemTags completed. return value: [%ld]\n", ret);
+
+    free(full_command);
+
+    D(("System/CreateNewProc completed. Return value: [%ld]\n", ret));
 
     return ret;
 }

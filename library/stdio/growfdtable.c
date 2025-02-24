@@ -47,7 +47,7 @@ __grow_fd_table(struct _clib4 *__clib4, int max_fd) {
 
                 __free_r(__clib4, new_fd);
 
-                __set_errno(ENOMEM);
+                __set_errno_r(__clib4, ENOMEM);
                 goto out;
             }
 
@@ -64,6 +64,7 @@ __grow_fd_table(struct _clib4 *__clib4, int max_fd) {
 
         __clib4->__fd = new_fd;
         __clib4->__num_fd = new_num_fd;
+        D(("We have %ld fd now", new_num_fd));
     }
 
     result = OK;

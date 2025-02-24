@@ -34,8 +34,10 @@ pclose(FILE *stream) {
 
     int status = 0;
     pid_t pid = findSpawnedChildrenPidByPipe(stream);
+    SHOWVALUE(pid);
     waitpid(pid, &status, 0);
 
+    SHOWMSG("Closing stream.");
     fclose(stream);
 
     /* ZZZ we actually could catch the program's termination code
@@ -56,11 +58,12 @@ popen(const char *command, const char *type) {
     char *command_copy = NULL;
     BPTR input = BZERO;
     BPTR output = BZERO;
-    // char pipe_file_name[40];
+    BPTR error = BZERO;
+    char pipe_file_name[48];
     FILE *result = NULL;
     LONG status;
-    // unsigned long task_address;
-    // time_t now = 0;
+    unsigned long task_address;
+    time_t now = 0;
     int i;
 
     struct _clib4 *__clib4 = __CLIB4;
@@ -180,11 +183,6 @@ popen(const char *command, const char *type) {
         command = command_copy;
     }
 
-    // Let's use out super cool pipe implementation instead :
-    int p[2];
-    pipe(p);
-
-#if 0
     /* Build a (hopefully) unique name for the pipe stream to open. We
        construct it from the current process address, converted into
        an octal number, followed by the current time (in seconds),
@@ -208,41 +206,31 @@ popen(const char *command, const char *type) {
         now = now / 8;
     }
 
-    pipe_file_name[i] = '\0';
+    memcpy(pipe_file_name+39, "/NOBLOCK", 8);
+    pipe_file_name[47] = '\0';
 
     SHOWSTRING(pipe_file_name);
-#endif
 
     /* Now open the input and output streams for the program to launch. */
     if (type[0] == 'r') {
         /* Read mode: we want to read the output of the program; the program
            should read from "NIL:". */
-        input = Open("NIL:", MODE_NEWFILE);
+        input = Open("NIL:", MODE_OLDFILE);
         if (input != BZERO) {
-            // output = Open(pipe_file_name, MODE_NEWFILE);
-            int err = __get_default_file(p[1], &output);
-            if (err) {
-                __set_errno(EBADF);
-                goto out;
-            }
-            output = DupFileHandle(output);
+            output = Open(pipe_file_name, MODE_NEWFILE);
         }
     } else {
         /* Write mode: we want to send data to the program; the program
            should write to "NIL:". */
-        // input = Open(pipe_file_name, MODE_NEWFILE);
-        int err = __get_default_file(p[0], &input);
-        if (err) {
-            __set_errno(EBADF);
-            goto out;
-        }
-        input = DupFileHandle(input);
+        input = Open(pipe_file_name, MODE_NEWFILE);
         if (input != BZERO)
-            output = Open("NIL:", MODE_NEWFILE);
+            output = Open("NIL:", MODE_OLDFILE);
     }
+    // error = DupFileHandle(ErrorOutput()); //
+    error = Open("NIL:", MODE_OLDFILE);
 
     /* Check if both I/O streams could be opened. */
-    if (input == BZERO || output == BZERO) {
+    if (input == BZERO || output == BZERO || error == BZERO) {
         SHOWMSG("couldn't open the streams");
 
         __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
@@ -250,20 +238,34 @@ popen(const char *command, const char *type) {
     }
 
     D(("Launching [%s]", command));
+
+    int asynch = TRUE; //FALSE
+
     /* Now try to launch the program. */
     status = SystemTags((STRPTR) command,
-                        SYS_Input,      input,
-                        SYS_Output,     output,
-                        SYS_Asynch,     TRUE,
-                        SYS_UserShell,  TRUE,
-                        NP_Name,        command,
-                        NP_EntryCode,   spawnedProcessEnter,
-                        NP_EntryData,   getgid(),
-                        NP_ExitCode,    spawnedProcessExit,
-                        NP_Child,       TRUE,
+                        SYS_Input,          input,
+                        SYS_Output,         output,
+                        SYS_Error,          error, // <-- We have to block this with NIL:
+                        NP_CloseError,      TRUE,
+                        SYS_Asynch,         asynch,
+                        SYS_UserShell,      TRUE,
+                        NP_StackSize,       2024*1024,
+                        NP_Name,            command,
+                        NP_EntryCode,       spawnedProcessEnter,
+                        NP_EntryData,       getgid(),
+                        NP_ExitCode,        spawnedProcessExit,
+                        NP_Child,           TRUE,
                         TAG_END);
 
     uint32 ret;
+
+    /* If SYS_Asynch is FALSE, we need these. */
+
+    if (asynch == FALSE) {
+        Close(input);
+        Close(output);
+        // Close(error); ??
+    }
 
     /* If launching the program returned -1 then it could not be started.
        We'll need to close the I/O streams we opened above. */
@@ -283,19 +285,21 @@ popen(const char *command, const char *type) {
     }
     /* OK, the program is running. Once it terminates, it will automatically
        shut down the streams we opened for it. */
-    input = output = BZERO;
+    input = output = error = BZERO;
 
     /* Now try to open the pipe we will use to exchange data with the program. */
-    // result = fopen(pipe_file_name, type);
+    result = fopen(pipe_file_name, type);
 
-    if (type[0] == 'r') {
-        result = fdopen(p[0], "r");
-        close(p[1]);
-    } else {
-        result = fdopen(p[1], "w");
-        close(p[0]);
+    if(result) {
+        /* We need to mark this as a pipe */
+        struct iob *file = (struct iob *) result;
+        int f = file->iob_Descriptor;
+        struct fd *fd = __get_file_descriptor(__clib4, f);
+        fd->fd_Flags |= FDF_PIPE;
+
+        /* Add this pipe to the childrens list */
+        addSpawnedChildrenPipeHandle(ret, result); //pid, pipe
     }
-    if(result) addSpawnedChildrenPipeHandle(ret, result); //pid, pipe
 
 out:
 
@@ -307,6 +311,9 @@ out:
 
     if (output != BZERO)
         Close(output);
+
+    if (error != BZERO)
+        Close(error);
 
     RETURN(result);
     return (result);

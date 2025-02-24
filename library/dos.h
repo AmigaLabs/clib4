@@ -297,7 +297,7 @@ struct _clib4 {
 
     /* Wof Allocator main pointer */
     wmem_allocator_t *__wmem_allocator;
-    void *unused6;
+    APTR __environment_pool;
 
     /* Names of files and directories to delete when shutting down. */
     struct MinList __unlink_list;
@@ -305,8 +305,8 @@ struct _clib4 {
 
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
-    BOOL __timer_busy;
-    struct SignalSemaphore *__timer_semaphore;
+    BOOL unused1;
+	struct SignalSemaphore *__timer_semaphore;
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;
     struct TimerIFace *__ITimer;
@@ -479,7 +479,7 @@ struct _clib4 {
     struct SignalSemaphore *gettext_lock;
     struct mofile_s *g_mofile;
     char gettext_domain[NAME_MAX];
-    void *bindings;
+    void *volatile bindings;
 
     /* getrandom */
     int randfd[2];
@@ -523,6 +523,11 @@ struct _clib4 {
 
     int __children;
     int __was_sig;
+
+    uint32_t allocated_memory_by_malloc;
+    APTR _iob_pool;
+
+    int local_raised_signals_blocked;
 };
 
 #ifndef __getClib4

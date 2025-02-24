@@ -21,6 +21,10 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
+#ifndef PROTO_EXEC_H
+#include <proto/exec.h>
+#endif /* PROTO_EXEC_H */
+
 #include <dos.h>
 
 extern int __timezone_init(void);
@@ -73,6 +77,7 @@ extern void loadstate(uint32_t *state);
 
 extern void __srandom(unsigned seed);
 extern void *__malloc_r(struct _clib4 *__clib4, size_t size);
+extern void *__calloc_r(struct _clib4 *__clib4, size_t num_elements, size_t element_size);
 
 extern uint32_t lcg31(uint32_t x);
 extern uint64_t lcg64(uint64_t x);
@@ -88,22 +93,35 @@ extern int *__errno_r(struct _clib4 *__clib4);
 extern int *__h_errno_r(struct _clib4 *__clib4);
 
 extern struct DOSIFace *IDOS;
+extern struct ExecIFace *IExec;
+
+/* Faster __check_abort version used when __clib4 is available in the caller function */
+inline void
+__check_abort_f(struct _clib4 *__clib4) {
+	ENTER();
+
+	SHOWVALUE(__clib4->__check_abort_enabled);
+
+	if (__clib4->__check_abort_enabled && CheckSignal(__clib4->__break_signal_mask)) {
+		/* If we aren't on the main thread, skip it because checking it on ITIMER_TASK etc can run into a deadlock */
+		if( (struct Task *)__clib4->self == FindTask(NULL) ) {
+			SHOWMSG("Raise SIGINT");
+			raise(SIGINT);
+		}
+		else {
+			SHOWMSG("Signal CTRL-C to main Process");
+			Signal((struct Task *)__clib4->self, SIGBREAKF_CTRL_C);
+		}
+	}
+
+	LEAVE();
+}
 
 inline void
 __check_abort(void) {
     struct _clib4 *__clib4 = __CLIB4;
 
-    if (__clib4->__check_abort_enabled && CheckSignal(__clib4->__break_signal_mask)) {
-        raise(SIGINT);
-    }
-}
-
-/* Faster __check_abort version used when __clib4 is available in the caller function */
-inline void
-__check_abort_f(struct _clib4 *__clib4) {
-    if (__clib4->__check_abort_enabled && CheckSignal(__clib4->__break_signal_mask)) {
-        raise(SIGINT);
-    }
+	__check_abort_f(__clib4);	
 }
 
 #endif /* _STDLIB_PROTOS_H */

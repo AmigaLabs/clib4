@@ -165,6 +165,15 @@ ARG_CONSTRUCTOR(arg_init) {
         /* The first parameter is the program name. */
         __clib4->__argv[0] = __clib4->__progname;
 
+        /* If this is using unix path semantics, we need to prep argv[0]. */
+        if (__clib4->__unix_path_semantics) {
+            D(("Translating argv0 [%s]\n", __clib4->__argv[0]));
+            // This is unfortunately orphaned :
+            struct name_translation_info *nti_argv0 = (struct name_translation_info *) AllocVecTags(sizeof(struct name_translation_info), TAG_DONE);
+            /* int error = */ __translate_amiga_to_unix_path_name((char const **)&__clib4->__argv[0], nti_argv0);
+            D(("Translated progname : [%s]\n", __clib4->__argv[0]));
+        }
+
         str = command_line;
 
         __clib4->__argc = 1;

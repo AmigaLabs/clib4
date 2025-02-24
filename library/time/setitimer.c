@@ -79,7 +79,7 @@ __setitimer(int which, const struct itimerval *new_value, struct itimerval *old_
                 if (new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0) {
                     __clib4->tmr_real_task = CreateNewProcTags(
                             NP_Name, "ITIMER_TASK",
-                            NP_Entry, itimer_real_task,
+                            NP_Start, itimer_real_task,
                             NP_Child, TRUE,
                             NP_UserData, (struct _itimer *) &_itimer,
                             NP_Output, DupFileHandle(Output()),
@@ -92,10 +92,13 @@ __setitimer(int which, const struct itimerval *new_value, struct itimerval *old_
                 }
             }
             else {
+                SHOWMSG("Block SIGALRM signal from raise");
                 /* Block SIGALRM signal from raise */
                 sigblock(SIGALRM);
                 /* Kill itimer */
+                SHOWMSG("killitimer");
                 killitimer();
+                SHOWMSG("Done");
             }
 
             break;

@@ -51,7 +51,7 @@ pthread_cleanup_pop(int execute) {
         if (execute && handler && handler->routine) {
             handler->routine(handler->arg);
 
-            FreeVec(handler);
+            free(handler);
             handler = NULL;
         }
     }

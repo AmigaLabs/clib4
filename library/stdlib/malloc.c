@@ -55,7 +55,14 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
     __memory_lock(__clib4);
 
     if (__clib4->__wmem_allocator != NULL) {
+        SHOWMSG("Destroying Memory Allocator");
         wmem_destroy_allocator(__clib4->__wmem_allocator);
+#if MEMORY_DEBUG
+        if (__clib4->allocated_memory_by_malloc > 0) {
+            Printf("WARNING: There are %ld unfreed malloc!\n", __clib4->allocated_memory_by_malloc);
+        }
+#endif
+        SHOWMSG("Done");
         __clib4->__wmem_allocator = NULL;
     }
 

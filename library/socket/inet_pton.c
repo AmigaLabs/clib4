@@ -37,7 +37,8 @@ inet_pton(int af, const char *src, void *dst) {
 static int
 inet_pton4(const char *src, unsigned char *dst) {
     int saw_digit, octets, ch;
-    unsigned char tmp[NS_INADDRSZ], *tp;
+    unsigned char tmp[NS_INADDRSZ] = {0};
+    unsigned char *tp;
 
     saw_digit = 0;
     octets = 0;

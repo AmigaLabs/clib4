@@ -72,7 +72,7 @@ static unsigned
 legacy_map(const unsigned char *map, unsigned char type, unsigned c) {
     if (c < 4 * type) return c;
     unsigned x = c - 4 * type;
-    x = map[x * 5 / 4] >> 2 * x % 8 | map[x * 5 / 4 + 1] << 8 - 2 * x % 8 & 1023;
+    x = map[x * 5 / 4] >> 2 * x % 8 | map[x * 5 / 4 + 1] << (8 - 2 * x % 8) & 1023;
     return x < 256 ? x : legacy_chars[x - 256];
 }
 

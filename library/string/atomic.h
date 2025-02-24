@@ -16,75 +16,29 @@
 #endif
 
 #ifndef a_cas
-#define a_cas a_cas
-
-static inline int a_cas(volatile int *p, int t, int s) {
-    int old;
-    a_pre_llsc();
-    do old = a_ll(p);
-    while (old == t && !a_sc(p, s));
-    a_post_llsc();
-    return old;
-}
-
+#define a_cas(ptr, expected, desired) \
+    __atomic_compare_exchange(ptr, expected, desired, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
 #endif
 
 #ifndef a_swap
-#define a_swap a_swap
-
-static inline int a_swap(volatile int *p, int v) {
-    int old;
-    a_pre_llsc();
-    do old = a_ll(p);
-    while (!a_sc(p, v));
-    a_post_llsc();
-    return old;
-}
-
+#define a_swap(ptr, new_value) \
+    __atomic_exchange_n(ptr, new_value, __ATOMIC_SEQ_CST)
 #endif
 
 #ifndef a_fetch_add
-#define a_fetch_add a_fetch_add
-
-static inline int a_fetch_add(volatile int *p, int v) {
-    int old;
-    a_pre_llsc();
-    do old = a_ll(p);
-    while (!a_sc(p, (unsigned) old + v));
-    a_post_llsc();
-    return old;
-}
-
+#define a_fetch_add(ptr, value) \
+    __atomic_fetch_add(ptr, value, __ATOMIC_SEQ_CST)
 #endif
 
 #ifndef a_fetch_and
-#define a_fetch_and a_fetch_and
-
-static inline int a_fetch_and(volatile int *p, int v) {
-    int old;
-    a_pre_llsc();
-    do old = a_ll(p);
-    while (!a_sc(p, old & v));
-    a_post_llsc();
-    return old;
-}
-
+#define a_fetch_and(ptr, value) \
+    __atomic_fetch_and(ptr, value, __ATOMIC_SEQ_CST)
 #endif
 
 #ifndef a_fetch_or
-#define a_fetch_or a_fetch_or
-
-static inline int a_fetch_or(volatile int *p, int v) {
-    int old;
-    a_pre_llsc();
-    do old = a_ll(p);
-    while (!a_sc(p, old | v));
-    a_post_llsc();
-    return old;
-}
-
+#define a_fetch_or(ptr, value) \
+    __atomic_fetch_or(ptr, value, __ATOMIC_SEQ_CST)
 #endif
-
 #endif
 
 #ifndef a_cas
@@ -92,43 +46,23 @@ static inline int a_fetch_or(volatile int *p, int v) {
 #endif
 
 #ifndef a_swap
-#define a_swap a_swap
-static inline int a_swap(volatile int *p, int v) {
-    int old;
-    do old = *p;
-    while (a_cas(p, old, v) != old);
-    return old;
-}
+#define a_swap(ptr, new_value) \
+    __atomic_exchange_n(ptr, new_value, __ATOMIC_SEQ_CST)
 #endif
 
 #ifndef a_fetch_add
-#define a_fetch_add a_fetch_add
-static inline int a_fetch_add(volatile int *p, int v)
-{
-    int old;
-    do old = *p;
-    while (a_cas(p, old, (unsigned)old+v) != old);
-    return old;
-}
+#define a_fetch_add(ptr, value) \
+    __atomic_fetch_add(ptr, value, __ATOMIC_SEQ_CST)
 #endif
 
 #ifndef a_fetch_and
-#define a_fetch_and a_fetch_and
-static inline int a_fetch_and(volatile int *p, int v) {
-    int old;
-    do old = *p;
-    while (a_cas(p, old, old&v) != old);
-    return old;
-}
+#define a_fetch_and(ptr, value) \
+    __atomic_fetch_and(ptr, value, __ATOMIC_SEQ_CST)
 #endif
+
 #ifndef a_fetch_or
-#define a_fetch_or a_fetch_or
-static inline int a_fetch_or(volatile int *p, int v) {
-    int old;
-    do old = *p;
-    while (a_cas(p, old, old|v) != old);
-    return old;
-}
+#define a_fetch_or(ptr, value) \
+    __atomic_fetch_or(ptr, value, __ATOMIC_SEQ_CST)
 #endif
 
 #ifndef a_and
@@ -223,13 +157,8 @@ static inline void a_or_64(volatile uint64_t *p, uint64_t v) {
 #endif
 
 #ifndef a_cas_p
-typedef char a_cas_p_undefined_but_pointer_not_32bit[-sizeof(char) == 0xffffffff ? 1 : -1];
-#define a_cas_p a_cas_p
-
-static inline void *a_cas_p(volatile void *p, void *t, void *s) {
-    return (void *) a_cas((volatile int *) p, (int) t, (int) s);
-}
-
+#define a_cas_p(ptr, expected, desired) \
+    __atomic_compare_exchange_n(ptr, expected, desired, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
 #endif
 
 #ifndef a_or_l

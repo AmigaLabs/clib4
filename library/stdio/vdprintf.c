@@ -26,6 +26,7 @@ vdprintf(int fd, const char *format, va_list ap) {
         }
         ret2 = vsnprintf(ptr, ret, format, ap);
         if (ret2 < 0) {
+            free(ptr);
             return EOF;
         }
         ret = ret2;

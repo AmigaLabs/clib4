@@ -297,9 +297,22 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         .term_entry = NULL,
         .__was_sig = -1,
         .__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK,
+        .allocated_memory_by_malloc = 0,
+        .__environment_pool = NULL,
+        .__num_iob = 0,
+        ._iob_pool = NULL,
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {
+        goto out;
+    }
+
+    SHOWMSG("Allocating file IO pool");
+    __clib4->_iob_pool = AllocSysObjectTags(ASOT_MEMPOOL,
+                                               ASOPOOL_Puddle,		BUFSIZ + 32,
+                                               ASOPOOL_Threshold,	BUFSIZ + 32,
+                                               TAG_DONE);
+    if (!__clib4->_iob_pool) {
         goto out;
     }
 
@@ -418,6 +431,12 @@ void
 reent_exit(struct _clib4 *__clib4, BOOL fallback) {
     /* Free global clib structure */
     if (__clib4) {
+        /* Free IO memory pool */
+        if (__clib4->_iob_pool != NULL) {
+            SHOWMSG("Freeing _iob_pool and all unfreed memory");
+            FreeSysObject(ASOT_MEMPOOL, __clib4->_iob_pool);
+        }
+
         /* Free wchar stuff */
         if (__clib4->wide_status != NULL) {
             SHOWMSG("Freeing wide_status");

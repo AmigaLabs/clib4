@@ -68,17 +68,19 @@ pntz(size_t p[2]) {
 
 static void
 cycle(size_t width, unsigned char *ar[], int n) {
-    unsigned char tmp[256];
+    size_t tmp_size = 256;
+    unsigned char *tmp = malloc(tmp_size);
     size_t l;
     int i;
 
     if (n < 2) {
+        free(tmp);
         return;
     }
 
     ar[n] = tmp;
     while (width) {
-        l = sizeof(tmp) < width ? sizeof(tmp) : width;
+        l = tmp_size < width ? tmp_size : width;
         memcpy(ar[n], ar[0], l);
         for (i = 0; i < n; i++) {
             memcpy(ar[i], ar[i + 1], l);
@@ -86,6 +88,8 @@ cycle(size_t width, unsigned char *ar[], int n) {
         }
         width -= l;
     }
+
+    free(tmp);
 }
 
 /* shl() and shr() need n > 0 */
