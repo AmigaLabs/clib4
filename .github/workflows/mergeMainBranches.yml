@@ -4,60 +4,60 @@ on:
     branches:
       - master
       - development
+      - make-announcements-smaller
     types:
       - closed
 
 jobs:
-  compile-ppc:
-    name: Build for PowerPC cpus
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
-    container:
-      image: walkero/amigagccondocker:os4-gcc11
-      volumes:
-        - '${{ github.workspace }}:/opt/code'
-    steps:
-      - name: Pull code
-        uses: actions/checkout@v4
+  # compile-ppc:
+  #   name: Build for PowerPC cpus
+  #   runs-on: ubuntu-latest
+  #   if: github.event.pull_request.merged == true
+  #   container:
+  #     image: walkero/amigagccondocker:os4-gcc11
+  #     volumes:
+  #       - '${{ github.workspace }}:/opt/code'
+  #   steps:
+  #     - name: Pull code
+  #       uses: actions/checkout@v4
 
-      - name: Compile clib4
-        uses: ./.github/actions/compile
-        with:
-          spe: "no"
+  #     - name: Compile clib4
+  #       uses: ./.github/actions/compile
+  #       with:
+  #         spe: "no"
 
-      - name: Create the release archive
-        run: make -f GNUmakefile.os4 release
+  #     - name: Create the release archive
+  #       run: make -f GNUmakefile.os4 release
 
-  compile-spe:
-    name: Build for PowerPC SPE cpus
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
-    container:
-      image: walkero/amigagccondocker:os4-gcc6
-      volumes:
-        - '${{ github.workspace }}:/opt/code'
-    steps:
-      - name: Pull code
-        uses: actions/checkout@v4
+  # compile-spe:
+  #   name: Build for PowerPC SPE cpus
+  #   runs-on: ubuntu-latest
+  #   if: github.event.pull_request.merged == true
+  #   container:
+  #     image: walkero/amigagccondocker:os4-gcc6
+  #     volumes:
+  #       - '${{ github.workspace }}:/opt/code'
+  #   steps:
+  #     - name: Pull code
+  #       uses: actions/checkout@v4
 
-      - name: Compile clib4
-        uses: ./.github/actions/compile
-        with:
-          spe: "yes"
+  #     - name: Compile clib4
+  #       uses: ./.github/actions/compile
+  #       with:
+  #         spe: "yes"
 
-      - name: Create the release archive
-        run: make -f GNUmakefile.os4 release
+  #     - name: Create the release archive
+  #       run: make -f GNUmakefile.os4 release
 
   announcements:
-    needs: [compile-ppc, compile-spe]
+    # needs: [compile-ppc, compile-spe]
     name: Notify on Discord on successful PR merge
     runs-on: ubuntu-latest
     steps:
     - name: PR notification
-      uses: appleboy/discord-action@master
+      uses: tsickert/discord-webhook@v6.0.0
       with:
-        webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
-        webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-        message: "clib4: New code merged into **${{ github.event.pull_request.base.ref }}**. Check it out at: ${{ github.event.pull_request.html_url }}. Compare it at: ${{ github.event.pull_request.base.repo.html_url }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+        webhook-url: https://discord.com/api/webhooks/${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}/${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
+        content: "clib4: New code merged into **${{ github.event.pull_request.base.ref }}**. Check it out at: ${{ github.event.pull_request.html_url }}. Compare it at: ${{ github.event.pull_request.base.repo.html_url }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
         username: "GitHub Actions"
-        avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+        avatar-url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
