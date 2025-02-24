@@ -4,29 +4,28 @@ on:
   release:
     branches:
       - master
-      - make-announcements-smaller
     types: 
       - published
 
 jobs:
-  # compile-ppc:
-  #   name: Build for PowerPC cpus
-  #   uses: ./.github/workflows/_compile.yml
-  #   with:
-  #     git_tag: ${{ github.event.release.tag_name }}
-  #     gcc: 11
-  #     spe: "no"
+  compile-ppc:
+    name: Build for PowerPC cpus
+    uses: ./.github/workflows/_compile.yml
+    with:
+      git_tag: ${{ github.event.release.tag_name }}
+      gcc: 11
+      spe: "no"
 
-  # compile-spe:
-  #   name: Build for PowerPC SPE cpus
-  #   uses: ./.github/workflows/_compile.yml
-  #   with:
-  #     git_tag: ${{ github.event.release.tag_name }}
-  #     gcc: 6
-  #     spe: "yes"
+  compile-spe:
+    name: Build for PowerPC SPE cpus
+    uses: ./.github/workflows/_compile.yml
+    with:
+      git_tag: ${{ github.event.release.tag_name }}
+      gcc: 6
+      spe: "yes"
 
   announcements:
-    # needs: [compile-ppc, compile-spe]
+    needs: [compile-ppc, compile-spe]
     name: Notify on Discord on successful release
     runs-on: ubuntu-latest
     steps:
@@ -36,9 +35,3 @@ jobs:
         discord_webhook: https://discord.com/api/webhooks/${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}/${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
         title: "clib4 ${{ github.event.release.tag_name }} released"
         description: "Check it out at: ${{ github.event.release.html_url }}"
-      # uses: tsickert/discord-webhook@v6.0.0
-      # with:
-      #   webhook-url: https://discord.com/api/webhooks/${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}/${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-      #   content: "New release of clib4: **${{ github.event.release.tag_name }}** has been created. Check it out at: https://github.com/AmigaLabs/clib4/releases/tag/${{ github.event.release.tag_name }}"
-      #   username: "GitHub Actions"
-      #   avatar-url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
