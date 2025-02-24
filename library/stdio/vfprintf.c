@@ -72,9 +72,20 @@ static const char xdigits[16] = {
         "0123456789ABCDEF"
 };
 
+static const char bdigits[2] = {
+        "01"
+};
+
 static char *fmt_x(uintmax_t x, char *s, int lower) {
     for (; x; x >>= 4) {
         *--s = (char) (xdigits[(x & 15)] | lower);
+    }
+    return s;
+}
+
+static char *fmt_b(uintmax_t x, char *s, int lower) {
+    for (; x; x >>= 1) {
+        *--s = (char) (bdigits[(x & 1)] | lower);
     }
     return s;
 }
@@ -593,6 +604,20 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
             fl &= ~ZERO_PAD;
 
         switch (t) {
+            case 'b':
+                a = fmt_b(arg.i, z, t & 32);
+                if (arg.i && (fl & ALT_FORM))
+                    prefix += (t >> 4), pl = 2;
+                if (xp && p < 0)
+                    goto overflow;
+                if (xp)
+                    fl &= ~ZERO_PAD;
+                if (!arg.i && !p) {
+                    a = z;
+                    break;
+                }
+                p = MAX(p, z - a + !arg.i);
+                break;
             case 'n':
                 switch (ps) {
                     case _BARE:

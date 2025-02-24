@@ -19,7 +19,7 @@ sigdelset(sigset_t *set, int sig) {
         RETURN(-1);
         return -1;
     }
-    *set &= ~(1 << (sig - 1));
+    *set &= ~sigmask(sig);
 
     RETURN(0);
     return 0;

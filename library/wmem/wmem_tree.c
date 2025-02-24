@@ -11,9 +11,9 @@
  */
 
 #include <stdio.h>
+
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
-
 #endif /* _STDLIB_HEADERS_H */
 
 #ifndef _STDLIB_MEMORY_H
@@ -355,9 +355,8 @@ wmem_tree_new(wmem_allocator_t *allocator) {
 }
 
 static bool
-wmem_tree_reset_cb(wmem_allocator_t *allocator, wmem_cb_event_t event, void *user_data) {
-    (void) (allocator);
-
+wmem_tree_reset_cb(wmem_allocator_t *allocator, wmem_cb_event_t event,
+                   void *user_data) {
     wmem_tree_t *tree = (wmem_tree_t *) user_data;
 
     tree->root = NULL;
@@ -371,10 +370,8 @@ wmem_tree_reset_cb(wmem_allocator_t *allocator, wmem_cb_event_t event, void *use
 }
 
 static bool
-wmem_tree_destroy_cb(wmem_allocator_t *allocator, wmem_cb_event_t event, void *user_data) {
-    (void) (allocator);
-    (void) (event);
-
+wmem_tree_destroy_cb(wmem_allocator_t *allocator, wmem_cb_event_t event,
+                     void *user_data) {
     wmem_tree_t *tree = (wmem_tree_t *) user_data;
 
     wmem_unregister_callback(tree->data_allocator, tree->data_scope_cb_id);
@@ -446,9 +443,6 @@ wmem_tree_is_empty(wmem_tree_t *tree) {
 
 static bool
 count_nodes(const void *key, void *value, void *userdata) {
-    (void) (key);
-    (void) (value);
-
     unsigned *count = (unsigned *) userdata;
     (*count)++;
     return false;
@@ -579,7 +573,7 @@ wmem_tree_lookup(wmem_tree_t *tree, const void *key, compare_func cmp) {
 }
 
 wmem_tree_node_t *
-wmem_tree_insert(wmem_tree_t *tree, const void *key, void *data, compare_func cmp) {
+wmem_tree_insert_node(wmem_tree_t *tree, const void *key, void *data, compare_func cmp) {
     wmem_tree_node_t *node = tree->root;
     wmem_tree_node_t *new_node = NULL;
 
@@ -752,6 +746,99 @@ wmem_tree_lookup32_le(wmem_tree_t *tree, uint32_t key) {
 }
 
 void *
+wmem_tree_lookup32_le_full(wmem_tree_t *tree, uint32_t key, uint32_t *orig_key) {
+    wmem_tree_node_t *node = wmem_tree_lookup32_le_node(tree, key);
+    if (node == NULL) {
+        return NULL;
+    }
+
+    *orig_key = GPOINTER_TO_UINT(node->key);
+    return node->data;
+}
+
+static wmem_tree_node_t *
+wmem_tree_lookup32_ge_node(wmem_tree_t *tree, uint32_t key) {
+    if (!tree) {
+        return NULL;
+    }
+
+    wmem_tree_node_t *node = tree->root;
+
+    while (node) {
+        if (key == GPOINTER_TO_UINT(node->key)) {
+            return node;
+        } else if (key < GPOINTER_TO_UINT(node->key)) {
+            if (node->left == NULL) {
+                break;
+            }
+            node = node->left;
+        } else if (key > GPOINTER_TO_UINT(node->key)) {
+            if (node->right == NULL) {
+                break;
+            }
+            node = node->right;
+        }
+    }
+
+    if (!node) {
+        return NULL;
+    }
+
+    /* If we are still at the root of the tree this means that this node
+     * is either greater than the search key and then we return this
+     * node or else there is no greater key available and then
+     * we return NULL.
+     */
+    if (node->parent == NULL) {
+        if (key < GPOINTER_TO_UINT(node->key)) {
+            return node;
+        } else {
+            return NULL;
+        }
+    }
+
+    if (GPOINTER_TO_UINT(node->key) >= key) {
+        /* if our key is >= the search key, we have the right node */
+        return node;
+    } else if (node == node->parent->right) {
+        /* our key is smaller than the search key and we're a right child,
+         * we have to check if any of our ancestors are bigger. */
+        while (node) {
+            if (key < GPOINTER_TO_UINT(node->key)) {
+                return node;
+            }
+            node = node->parent;
+        }
+        return NULL;
+    } else {
+        /* our key is smaller than the search key and we're a left child,
+         * our parent is the one we want */
+        return node->parent;
+    }
+}
+
+void *
+wmem_tree_lookup32_ge(wmem_tree_t *tree, uint32_t key) {
+    wmem_tree_node_t *node = wmem_tree_lookup32_ge_node(tree, key);
+    if (node == NULL) {
+        return NULL;
+    }
+
+    return node->data;
+}
+
+void *
+wmem_tree_lookup32_ge_full(wmem_tree_t *tree, uint32_t key, uint32_t *orig_key) {
+    wmem_tree_node_t *node = wmem_tree_lookup32_ge_node(tree, key);
+    if (node == NULL) {
+        return NULL;
+    }
+
+    *orig_key = GPOINTER_TO_UINT(node->key);
+    return node->data;
+}
+
+void *
 wmem_tree_remove32(wmem_tree_t *tree, uint32_t key) {
     wmem_tree_node_t *node = wmem_tree_lookup32_node(tree, key);
     if (node == NULL) {
@@ -781,7 +868,7 @@ wmem_tree_insert_string(wmem_tree_t *tree, const char *k, void *v, uint32_t flag
         cmp = (compare_func) strcmp;
     }
 
-    wmem_tree_insert(tree, key, v, cmp);
+    wmem_tree_insert_node(tree, key, v, cmp);
 }
 
 void *
@@ -987,15 +1074,3 @@ void
 wmem_print_tree(wmem_tree_t *tree, wmem_printer_func key_printer, wmem_printer_func data_printer) {
     wmem_print_subtree(tree, 0, key_printer, data_printer);
 }
-/*
- * Editor modelines  -  https://www.wireshark.org/tools/modelines.html
- *
- * Local variables:
- * c-basic-offset: 4
- * tab-width: 8
- * indent-tabs-mode: nil
- * End:
- *
- * vi: set shiftwidth=4 tabstop=8 expandtab:
- * :indentSize=4:tabSize=8:noTabs=true:
- */

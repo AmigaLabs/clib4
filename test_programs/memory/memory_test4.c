@@ -4,7 +4,8 @@
 #include <sys/time.h>
 
 #if !defined(MEMCPY) && !defined(MEMSET) && !defined(MEMMOVE)
-#error please define at least one from MEMCPY, MEMSET or MEMMOVE
+#warning no MEMCPY, MEMSET or MEMMOVE defined. Defaulting to MEMCPY
+#define MEMCPY 1
 #endif
 
 #define ARRAY_SIZE(x) (sizeof (x) / sizeof (x[0]))

@@ -1,11 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+int i = 0;
+
 struct child_to_clean {
     pid_t pid;
     struct child_process *process;
     struct child_to_clean *next;
 };
+
 static struct child_to_clean *children_to_clean;
 
 void f1(void) {

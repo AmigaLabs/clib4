@@ -13,11 +13,11 @@
 #ifndef __WMEM_TREE_H__
 #define __WMEM_TREE_H__
 
+#include <features.h>
+
 #include "wmem_core.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+__BEGIN_DECLS
 
 /** @addtogroup wmem
  *  @{
@@ -38,10 +38,7 @@ typedef struct _wmem_tree_t wmem_tree_t;
 
 /** Creates a tree with the given allocator scope. When the scope is emptied,
  * the tree is fully destroyed. */
-extern
-wmem_tree_t *
-wmem_tree_new(wmem_allocator_t *allocator)
- __attribute__((__malloc__));
+extern wmem_tree_t *wmem_tree_new(wmem_allocator_t *allocator)  __attribute__((__malloc__));
 
 /** Creates a tree with two allocator scopes. The base structure lives in the
  * metadata scope, and the tree data lives in the data scope. Every time free_all
@@ -55,25 +52,16 @@ wmem_tree_new(wmem_allocator_t *allocator)
  * capture file that is loaded. This can be done by specifying wmem_epan_scope()
  * as the metadata scope and wmem_file_scope() as the data scope.
  */
-extern
-wmem_tree_t *
-wmem_tree_new_autoreset(wmem_allocator_t *metadata_scope, wmem_allocator_t *data_scope)
- __attribute__((__malloc__));
+extern wmem_tree_t *wmem_tree_new_autoreset(wmem_allocator_t *metadata_scope, wmem_allocator_t *data_scope)  __attribute__((__malloc__));
 
 /** Cleanup memory used by tree.  Intended for NULL scope allocated trees */
-extern
-void
-wmem_tree_destroy(wmem_tree_t *tree, bool free_keys, bool free_values);
+extern void wmem_tree_destroy(wmem_tree_t *tree, bool free_keys, bool free_values);
 
 /** Returns true if the tree is empty (has no nodes). */
-extern
-bool
-wmem_tree_is_empty(wmem_tree_t *tree);
+extern bool wmem_tree_is_empty(wmem_tree_t *tree);
 
 /** Returns number of nodes in tree */
-extern
-unsigned
-wmem_tree_count(wmem_tree_t* tree);
+extern unsigned wmem_tree_count(wmem_tree_t *tree);
 
 /** Insert a node indexed by a uint32_t key value.
  *
@@ -86,43 +74,54 @@ wmem_tree_count(wmem_tree_t* tree);
  * be freed with the pool. If you are managing them manually however, you must
  * either ensure the key is unique, or do a lookup before each insert.
  */
-extern
-void
-wmem_tree_insert32(wmem_tree_t *tree, uint32_t key, void *data);
+extern void wmem_tree_insert32(wmem_tree_t *tree, uint32_t key, void *data);
 
 /** Look up a node in the tree indexed by a uint32_t integer value. Return true
  * if present.
  */
-extern
-bool
-wmem_tree_contains32(wmem_tree_t *tree, uint32_t key);
+extern bool wmem_tree_contains32(wmem_tree_t *tree, uint32_t key);
 
 /** Look up a node in the tree indexed by a uint32_t integer value. If no node is
  * found the function will return NULL.
  */
-extern
-void *
-wmem_tree_lookup32(wmem_tree_t *tree, uint32_t key);
+extern void *wmem_tree_lookup32(wmem_tree_t *tree, uint32_t key);
 
 /** Look up a node in the tree indexed by a uint32_t integer value.
  * Returns the node that has the largest key that is less than or equal
  * to the search key, or NULL if no such key exists.
  */
-extern
-void *
-wmem_tree_lookup32_le(wmem_tree_t *tree, uint32_t key);
+extern void *wmem_tree_lookup32_le(wmem_tree_t *tree, uint32_t key);
+
+/** Look up a node in the tree indexed by a uint32_t integer value.
+ * Returns the node that has the largest key that is less than or equal
+ * to the search key, or NULL if no such key exists. Also returns the
+ * greatest lower bound key if it exists.
+ */
+extern void *wmem_tree_lookup32_le_full(wmem_tree_t *tree, uint32_t key, uint32_t *orig_key);
+
+/** Look up a node in the tree indexed by a uint32_t integer value.
+ * Returns the node that has the smallest key that is greater than or equal
+ * to the search key, or NULL if no such key exists.
+ */
+extern void *wmem_tree_lookup32_ge(wmem_tree_t *tree, uint32_t key);
+
+/** Look up a node in the tree indexed by a uint32_t integer value.
+ * Returns the node that has the smallest key that is greater than or equal
+ * to the search key, or NULL if no such key exists. Also returns the
+ * least upper bound key if it exists.
+ */
+extern void *wmem_tree_lookup32_ge_full(wmem_tree_t *tree, uint32_t key, uint32_t *orig_key);
 
 /** Remove a node in the tree indexed by a uint32_t integer value. This
  * now is a real remove. This returns the value stored at that key. If
  * the tree memory is managed manually (NULL allocator), it is the
  * responsibility of the caller to free it.
  */
-extern
-void *
-wmem_tree_remove32(wmem_tree_t *tree, uint32_t key);
+extern void *wmem_tree_remove32(wmem_tree_t *tree, uint32_t key);
 
 /** case insensitive strings as keys */
 #define WMEM_TREE_STRING_NOCASE                 0x00000001
+
 /** Insert a new value under a string key. Like wmem_tree_insert32 but where the
  * key is a null-terminated string instead of a uint32_t. You may pass
  * WMEM_TREE_STRING_NOCASE to the flags argument in order to make it store the
@@ -130,24 +129,17 @@ wmem_tree_remove32(wmem_tree_t *tree, uint32_t key);
  * only to the ASCII letters A-Z and a-z; it is locale-independent.
  * Do not expect it to honor the rules of your language; for example, "I"
  * will always be mapped to "i". */
-extern
-void
-wmem_tree_insert_string(wmem_tree_t *tree, const char* key, void *data,
-        uint32_t flags);
+extern void wmem_tree_insert_string(wmem_tree_t *tree, const char *key, void *data, uint32_t flags);
 
 /** Lookup the value under a string key, like wmem_tree_lookup32 but where the
  * keye is a null-terminated string instead of a uint32_t. See
  * wmem_tree_insert_string for an explanation of flags. */
-extern
-void *
-wmem_tree_lookup_string(wmem_tree_t* tree, const char* key, uint32_t flags);
+extern void *wmem_tree_lookup_string(wmem_tree_t *tree, const char *key, uint32_t flags);
 
 /** Remove the value under a string key.  This is not really a remove, but the
  * value is set to NULL so that wmem_tree_lookup_string not will find it.
  * See wmem_tree_insert_string for an explanation of flags. */
-extern
-void *
-wmem_tree_remove_string(wmem_tree_t* tree, const char* key, uint32_t flags);
+extern void *wmem_tree_remove_string(wmem_tree_t *tree, const char *key, uint32_t flags);
 
 typedef struct _wmem_tree_key_t {
     uint32_t length;    /**< length in uint32_t words */
@@ -189,16 +181,12 @@ typedef struct _wmem_tree_key_t {
  *                      fhkey[1].key=nns->fh;
  *                      fhkey[2].length=0;
  */
-extern
-void
-wmem_tree_insert32_array(wmem_tree_t *tree, wmem_tree_key_t *key, void *data);
+extern void wmem_tree_insert32_array(wmem_tree_t *tree, wmem_tree_key_t *key, void *data);
 
 /** Look up a node in the tree indexed by a sequence of uint32_t integer values.
  * See wmem_tree_insert32_array for details on the key.
  */
-extern
-void *
-wmem_tree_lookup32_array(wmem_tree_t *tree, wmem_tree_key_t *key);
+extern void *wmem_tree_lookup32_array(wmem_tree_t *tree, wmem_tree_key_t *key);
 
 /** Look up a node in the tree indexed by a multi-part tree value.
  * The function will return the node that has the largest key that is
@@ -210,9 +198,7 @@ wmem_tree_lookup32_array(wmem_tree_t *tree, wmem_tree_key_t *key);
  *
  * See wmem_tree_insert32_array for details on the key.
  */
-extern
-void *
-wmem_tree_lookup32_array_le(wmem_tree_t *tree, wmem_tree_key_t *key);
+extern void *wmem_tree_lookup32_array_le(wmem_tree_t *tree, wmem_tree_key_t *key);
 
 /** Function type for processing one node of a tree during a traversal. Value is
  * the value of the node, userdata is whatever was passed to the traversal
@@ -230,35 +216,11 @@ typedef void (*wmem_printer_func)(const void *data);
  *
  * Returns true if the traversal was ended prematurely by the callback.
  */
-extern
-bool
-wmem_tree_foreach(wmem_tree_t* tree, wmem_foreach_func callback,
-        void *user_data);
-
+extern bool wmem_tree_foreach(wmem_tree_t *tree, wmem_foreach_func callback, void *user_data);
 
 /* Accepts callbacks to print the key and/or data (both printers can be null) */
-extern
-void
-wmem_print_tree(wmem_tree_t *tree, wmem_printer_func key_printer, wmem_printer_func data_printer);
+extern void wmem_print_tree(wmem_tree_t *tree, wmem_printer_func key_printer, wmem_printer_func data_printer);
 
-/**   @}
- *  @} */
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+__END_DECLS
 
 #endif /* __WMEM_TREE_H__ */
-
-/*
- * Editor modelines  -  https://www.wireshark.org/tools/modelines.html
- *
- * Local variables:
- * c-basic-offset: 4
- * tab-width: 8
- * indent-tabs-mode: nil
- * End:
- *
- * vi: set shiftwidth=4 tabstop=8 expandtab:
- * :indentSize=4:tabSize=8:noTabs=true:
- */

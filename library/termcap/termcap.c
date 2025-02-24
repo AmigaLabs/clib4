@@ -296,6 +296,7 @@ tgetent(char *bp, const char *name) {
         bp = (char *) malloc(malloc_size);
         if (bp == NULL) {
             __set_errno(ENOMEM);
+            free(buf.beg);
             return -1;
         }
     }

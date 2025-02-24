@@ -34,9 +34,13 @@ __flush_r(struct _clib4 *__clib4, FILE *stream) {
 
     __flockfile_r(__clib4, stream);
 
+    if (iob->iob_BufferWriteBytes <= 0 || iob->iob_BufferSize <= 0) {
+        SHOWVALUE(iob->iob_BufferWriteBytes);
+        SHOWVALUE(iob->iob_BufferSize);
+        goto out;
+    }
+
     assert(__is_valid_iob(__clib4, iob));
-    assert(iob->iob_BufferWriteBytes > 0);
-    assert(iob->iob_BufferSize > 0);
 
     last_c = iob->iob_Buffer[iob->iob_BufferWriteBytes - 1];
 

@@ -117,12 +117,12 @@ __pathconf(struct MsgPort *port, int name) {
             ret = 510;    /* I could not find any documentation regarding this. */
             break;
         case _PC_MAX_INPUT: {
-                uint32_t Bufsize;
+                uint32_t Bufsize = 2048;
                 struct TagItem TagList[2] =
-                        {
-                                {DC_FHBufferR, (ULONG) & Bufsize},
-                                {TAG_DONE,     0}
-                        };
+                    {
+                        {DC_FHBufferR, (ULONG) & Bufsize},
+                        {TAG_DONE,     0}
+                    };
                 DosControl(TagList);
                 ret = Bufsize;    /* Default is 2048 bytes. */
             }

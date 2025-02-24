@@ -42,7 +42,7 @@ getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *h
     if (hints && !validate_family(hints->ai_family))
         return EAI_FAMILY;
 
-    if (hints &&
+    if (hints && hints->ai_socktype != 0 &&
         hints->ai_socktype != SOCK_STREAM && hints->ai_socktype != SOCK_DGRAM)
         /* FIXME: Support other socktype. */
         return EAI_SOCKTYPE; /* FIXME: Better return code? */
