@@ -82,10 +82,10 @@ jobs:
           port: ${{ secrets.DEBSERVER_PORT }}
           username: ${{ secrets.DEBSERVER_USERNAME }}
           private_key: ${{ secrets.DEBSERVER_PRIVATE_KEY }}
-          scp_source: ${{ env.archive_name }}.deb
+          scp_source: /opt/code/${{ env.archive_name }}_amd64.deb
           scp_target: /opt/amigarepo/ubuntu/pool/main
           before_script: |
-            rm /opt/amigarepo/ubuntu/pool/main/${{ env.archive_name }}.deb
+            rm /opt/amigarepo/ubuntu/pool/main/clib4-*_amd64.deb
           after_script: |
             /root/regenerate-packages.sh
 
