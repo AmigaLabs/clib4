@@ -1351,6 +1351,8 @@ struct Clib4IFace {
     int (* sigwait) (const sigset_t *set, int *sig);                                                                                                 /* 4408 */
 	int (* sigwaitinfo) (const sigset_t *set, siginfo_t *info);																						 /* 4412 */
 	int (* sigtimedwait) (const sigset_t *set, siginfo_t *info, const struct timespec *timeout);													 /* 4416 */
+
+    int (* getvfsstat) (struct statvfs *buf, size_t bufsize, int flags);                                                                             /* 4420 */
 };
 
 #ifdef __PIC__

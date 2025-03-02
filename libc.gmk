@@ -148,6 +148,7 @@ C_NL_TYPES := \
 C_POSIX := \
 	posix/fnmatch.o \
 	posix/fstatvfs.o \
+	posix/getvfsstat.o \
 	posix/glob.o \
 	posix/globfree.o \
 	posix/basename.o \

@@ -1172,7 +1172,7 @@ static void *clib4Vectors[] = {
         (void *) (__get_tc_up),                           /* 4384 */
         (void *) (__get_tc_bc),                           /* 4388 */
 
-        (void *) (0),                     /* 4392 */
+        (void *) (0),                                     /* 4392 - unused */
 
         (void *) (sigsuspend),		                      /* 4396 */
         (void *) (spawnve),                               /* 4400 */
@@ -1180,6 +1180,8 @@ static void *clib4Vectors[] = {
         (void *) (sigwait),		                          /* 4408 */
         (void *) (sigwaitinfo),		                      /* 4412 */
         (void *) (sigtimedwait),	                      /* 4416 */
-		
+
+        (void *) (getvfsstat),                            /* 4420 */
+
         (void *)-1
 };
