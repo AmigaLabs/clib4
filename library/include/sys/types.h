@@ -59,6 +59,11 @@ typedef unsigned long useconds_t;
 typedef long suseconds_t;
 
 typedef int32_t blksize_t;
+#ifndef __USE_FILE_OFFSET64
+typedef int32_t blkcnt_t;
+#else
+typedef int64_t blkcnt_t;
+#endif
 
 typedef	unsigned long long u_quad_t;	/* quads */
 typedef	long long	quad_t;
