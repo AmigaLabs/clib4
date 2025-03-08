@@ -154,6 +154,13 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
         __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
+    else {
+        SHOWMSG("Variable set correctly");
+        if (strcmp(name, "TZ") == 0) {
+            SHOWMSG("Set TZ");
+            tzset();
+        }
+    }
 
     result = OK;
 
