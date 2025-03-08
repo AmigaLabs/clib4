@@ -301,6 +301,7 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         .__environment_pool = NULL,
         .__num_iob = 0,
         ._iob_pool = NULL,
+        .isTZSet = 0,
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {

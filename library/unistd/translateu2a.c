@@ -88,8 +88,7 @@ __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translati
                something that makes life harder by being an Amiga path name.
                Absolute Amiga path names are ignore, as is the absence of
                the HOME variable. */
-            home_dir_name_len = GetVar("HOME", (STRPTR) home_dir_name, (LONG)
-            sizeof(home_dir_name), 0);
+            home_dir_name_len = GetVar("HOME", (STRPTR) home_dir_name, (LONG) sizeof(home_dir_name), 0);
             if (home_dir_name_len <= 0 || strchr(home_dir_name, ':') != NULL) {
                 /* Nothing useful here. Replace the tilde with the
                    current directory. */
