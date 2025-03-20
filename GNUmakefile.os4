@@ -73,7 +73,7 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Werror \
+    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Wno-stringop-overflow -Werror \
      # -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
