@@ -88,6 +88,10 @@ ARG_CONSTRUCTOR(arg_init) {
            how long it is, stripping a trailing line
            feed and blank spaces if necessary. */
         arg_str = (const unsigned char *) GetArgStr();
+        if (arg_str == NULL) {
+            /* maybe we are on a library so don't check for startup args */
+            CONSTRUCTOR_SUCCEED();
+        }
 
         while (is_space(*arg_str))
             arg_str++;

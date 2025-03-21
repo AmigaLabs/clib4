@@ -54,6 +54,7 @@
 #define CONSTRUCTOR_SUCCEED() \
 	return
 
+// This can cause problems on libraries because of exit. We should find a better way to do this
 #define CONSTRUCTOR_FAIL() \
 	exit(RETURN_FAIL)
 
