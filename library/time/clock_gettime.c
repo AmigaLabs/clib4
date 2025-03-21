@@ -34,12 +34,7 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
     //Set default value for tv
     tv.tv_sec = tv.tv_usec = 0;
 
-    assert(ITimer != NULL);
-
-    if (ITimezone) {
-        GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
-    }
-
+    SHOWVALUE(clk_id);
     if (clk_id == CLOCK_MONOTONIC || clk_id == CLOCK_MONOTONIC_RAW) {
         /*
         CLOCK_MONOTONIC
@@ -53,28 +48,27 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
               Similar  to  CLOCK_MONOTONIC, but provides access to a raw hard‐
               ware-based time that is not subject to NTP adjustments.
         */
-        SHOWVALUE(clk_id);
 
-        GetUpTime((struct TimeVal *) &tv);
-        SHOWVALUE(tv.tv_sec);
-        SHOWVALUE(tv.tv_usec * 1000);
-
-        t->tv_sec = tv.tv_sec;
-        t->tv_nsec = tv.tv_usec * 1000;
-
+        if (ITimer) {
+            GetUpTime((struct TimeVal *) &tv);
+        }
     } else {
         /*
         A settable system-wide clock that measures real (i.e., wall-clock) time.
         */
-        SHOWVALUE(clk_id);
+        if (ITimezone) {
+            GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
+        }
 
-        GetSysTime((struct TimeVal *) &tv);
+        if (ITimer) {
+            GetSysTime((struct TimeVal *) &tv);
+        }
 
         /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
         tv.tv_sec += (2922 * 24 * 60 + gmtoffset) * 60;
-        t->tv_sec = tv.tv_sec;
-        t->tv_nsec = tv.tv_usec * 1000;
     }
+    t->tv_sec = tv.tv_sec;
+    t->tv_nsec = tv.tv_usec * 1000;
 
     /* Check if we are in DST */
     if (dstime == TFLG_ISDST)

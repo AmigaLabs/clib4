@@ -76,8 +76,8 @@ typedef	quad_t *	qaddr_t;
 /* Iconv descriptor type */
 typedef void *_iconv_t;
 
-#define _CLOCK_T_ unsigned long long /* clock() */
-#define _TIME_T_ long long           /* time() */
+#define _CLOCK_T_ unsigned long     /* clock() */
+#define _TIME_T_ long               /* time() */
 #define _CLOCKID_T_ unsigned long
 #define _TIMER_T_ unsigned long
 
