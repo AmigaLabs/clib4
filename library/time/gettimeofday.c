@@ -29,14 +29,17 @@ gettimeofday(struct timeval *tv, struct timezone *tzp) {
     DECLARE_TIMEZONEBASE();
 
     ENTER();
-
-    if (!__clib4->__ITimer) {
-        tv->tv_sec = tv->tv_usec = tzp->tz_minuteswest = tzp->tz_dsttime = 0;
+    if (NULL == __clib4->__ITimer) {
+        tv->tv_sec = tv->tv_usec = 0;
+        if (tzp != NULL)
+            tzp->tz_minuteswest = tzp->tz_dsttime = 0;
         RETURN(0);
+        return 0;
     }
 
-    GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
-
+    if (ITimezone) {
+        GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
+    }
     /* Obtain the current system time. */
     GetSysTime((struct TimeVal *) tv);
 
