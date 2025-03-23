@@ -182,6 +182,21 @@ _main(
 
     __clib4->__WBenchMsg = sms;
 
+    SHOWMSG("stdlib_program_name_init");
+    stdlib_program_name_init();
+
+    SHOWMSG("__clib4->__WBenchMsg");
+    /* If we were invoked from Workbench, set up the standard I/O streams. */
+    if (__clib4->__WBenchMsg != NULL) {
+        SHOWMSG("set up the standard I/O streams");
+        if (wb_file_init(__clib4) < 0) {
+            goto out;
+        }
+    }
+
+    SHOWMSG("arg_init");
+    arg_init();
+
     /* We can enable check abort now */
     __clib4->__check_abort_enabled = TRUE;
 
@@ -194,6 +209,17 @@ _main(
 
     /* Restore old Clib4Data */
     me->pr_UID = (uint32) oldClib4Data;
+
+out:
+
+    SHOWMSG("arg_exit");
+    arg_exit();
+
+    SHOWMSG("stdlib_program_name_exit");
+    stdlib_program_name_exit();
+
+    SHOWMSG("workbench_exit");
+    workbench_exit();
 
     if (sms) {
         Forbid();

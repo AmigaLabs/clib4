@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_program_name.c,v 1.3 2008-09-30 14:09:00 clib4devs Exp $
+ * $Id: stdlib_program_name.c,v 1.4 2025-03-23 14:09:00 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -14,7 +14,7 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
+void stdlib_program_name_exit() {
 	ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -25,8 +25,9 @@ STDLIB_DESTRUCTOR(stdlib_program_name_exit) {
 
 	LEAVE();
 }
+
 /* First constructor called by _init */
-STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
+void stdlib_program_name_init() {
 	BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -49,7 +50,7 @@ STDLIB_CONSTRUCTOR(stdlib_program_name_init) {
             FreeVec(__clib4->__progname);
             __clib4->free_program_name = FALSE;
 
-            __clib4->__progname = "(unknown)";
+            __clib4->__progname = "unknown";
         }
 	}
 	else {
@@ -62,11 +63,6 @@ out:
 
 	SHOWVALUE(success);
 	LEAVE();
-
-	if (success)
-		CONSTRUCTOR_SUCCEED();
-	else
-		CONSTRUCTOR_FAIL();
 }
 
 

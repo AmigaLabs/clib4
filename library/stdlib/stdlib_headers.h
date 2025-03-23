@@ -107,6 +107,13 @@ extern int _main(char *argstr,
 
 extern void kprintf(const char * format,...);
 
+extern void stdlib_program_name_init();
+extern void stdlib_program_name_exit();
+extern int wb_file_init(struct _clib4 *__clib4);
+extern void workbench_exit();
+extern void arg_init();
+extern void arg_exit();
+
 #define NAMELEN 32
 
 #endif /* _STDLIB_HEADERS_H */
