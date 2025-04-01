@@ -11,17 +11,16 @@
 
 #include "../4xx/ppc4xx.inc"
 
-function_prolog(strcat)
+PPC_LONG_ALIGN
+
+function_prolog(strcmp)
 	addi	r5,r3,-1
 	addi	r4,r4,-1
-1:	lbzu	r0,1(r5)
-	cmpwi	0,r0,0
-	bne	1b
-	addi	r5,r5,-1
-1:	lbzu	r0,1(r4)
-	cmpwi	0,r0,0
-	stbu	r0,1(r5)
-	bne	1b
+1:	lbzu	r3,1(r5)
+	cmpwi	1,r3,0
+	lbzu	r0,1(r4)
+	subf.	r3,r0,r3
+	beqlr	1
+	beq	1b
 	blr
-
-function_epilog(strcat)
+function_epilog(strcmp)

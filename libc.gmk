@@ -592,17 +592,15 @@ C_STRING := \
 	cpu/generic/bcopy.o \
 	cpu/generic/strcat.o \
 	cpu/generic/strchr.o \
-	cpu/generic/strcpy.o \
+	cpu/generic/strcmp.o \
 	cpu/generic/strlen.o \
 	string/rindex.o \
 	string/stccpy.o \
 	string/stpcpy.o \
 	string/stpncpy.o \
 	string/strcasestr.o \
-	string/strcat.o \
 	string/strchr.o \
 	string/strchrnul.o \
-	string/strcmp.o \
 	string/strcoll.o \
 	string/strcpy.o \
 	string/strcspn.o \
