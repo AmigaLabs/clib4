@@ -17,6 +17,7 @@
 #include <dlfcn.h>
 #include <envz.h>
 #include <err.h>
+#include <execinfo.h>
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <fts.h>
@@ -1353,6 +1354,10 @@ struct Clib4IFace {
 	int (* sigtimedwait) (const sigset_t *set, siginfo_t *info, const struct timespec *timeout);													 /* 4416 */
 
     int (* getvfsstat) (struct statvfs *buf, size_t bufsize, int flags);                                                                             /* 4420 */
+	int (* backtrace) (void **buffer, int max_frames);																						 	 	 /* 4424 */
+	char ** (* backtrace_symbols) (void *const *buffer, int size);																					 /* 4428 */
+	void (* backtrace_symbols_fd) (void *const *buffer, int size, int fd);    																		 /* 4432 */
+
 };
 
 #ifdef __PIC__

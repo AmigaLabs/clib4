@@ -152,6 +152,9 @@ C_POSIX := \
 	posix/glob.o \
 	posix/globfree.o \
 	posix/basename.o \
+	debug/backtrace.o \
+	debug/backtrace_symbols.o \
+	debug/backtrace_symbols_fd.o \
 	posix/dirname.o \
 	posix/memalign.o \
 	posix/mmap.o \
