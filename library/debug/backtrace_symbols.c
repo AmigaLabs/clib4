@@ -11,10 +11,6 @@
 
 #include <execinfo.h>
 
-static ULONG amigaos_symbols_callback(struct Hook *hook, struct Task *task, struct SymbolMsg *symbolmsg) {
-    return 1;
-}
-
 char **
 backtrace_symbols(void *const *buffer, int size) {
     struct _clib4 *__clib4 = __CLIB4;
@@ -37,15 +33,16 @@ backtrace_symbols(void *const *buffer, int size) {
         return NULL;
 
     struct Elf32_SymbolQuery query;
+	char nameBuffer[256] = {0};
+	query.Flags = ELF32_SQ_BYVALUE | ELF32_SQ_LOAD;
+    query.NameLength = 255;
+    query.Name = nameBuffer;
+
     for (int i = 0; i < size; i++) {
     	BOOL found = FALSE;
-	    char nameBuffer[256] = {0};
 	    ULONG fileBuffer;
 
-	    query.Flags = ELF32_SQ_BYVALUE | ELF32_SQ_LOAD;
         query.Value = (uint32) buffer[i];
-        query.NameLength = 255;
-        query.Name = nameBuffer;
 
         SymbolQuery(__clib4->__dl_root_handle, 1, &query);
         if (query.Found) {

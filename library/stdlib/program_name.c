@@ -27,7 +27,8 @@ void stdlib_program_name_exit() {
 }
 
 /* First constructor called by _init */
-void stdlib_program_name_init() {
+BOOL
+stdlib_program_name_init() {
 	BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -61,8 +62,8 @@ void stdlib_program_name_init() {
 
 out:
 
-	SHOWVALUE(success);
-	LEAVE();
+	RETURN(success);
+	return success;
 }
 
 

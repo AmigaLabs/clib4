@@ -183,7 +183,10 @@ _main(
     __clib4->__WBenchMsg = sms;
 
     SHOWMSG("stdlib_program_name_init");
-    stdlib_program_name_init();
+    if (!stdlib_program_name_init()) {
+        SHOWMSG("cannot initialize stdlib_program_name_init");
+	    goto out;
+	}
 
     SHOWMSG("__clib4->__WBenchMsg");
     /* If we were invoked from Workbench, set up the standard I/O streams. */
@@ -195,7 +198,10 @@ _main(
     }
 
     SHOWMSG("arg_init");
-    arg_init();
+    if (!arg_init()) {
+        SHOWMSG("cannot initialize arg_init");
+	    goto out;
+	}
 
     /* We can enable check abort now */
     __clib4->__check_abort_enabled = TRUE;

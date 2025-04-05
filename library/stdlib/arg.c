@@ -57,7 +57,7 @@ is_final_quote_character(const unsigned char *str) {
     return (result);
 }
 
-void
+BOOL
 arg_init() {
     ENTER();
 
@@ -285,8 +285,8 @@ arg_init() {
 
 out:
 
-    SHOWVALUE(success);
-    LEAVE();
+    RETURN(success);
+    return success;
 }
 
 void

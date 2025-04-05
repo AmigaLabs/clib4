@@ -20,6 +20,7 @@ endif
 
 C_BASE := \
 	libc_init_global.o \
+	debug/amigaos_symbols_callback.o \
 	getclib4.o \
 	errno_data.o
 
@@ -491,6 +492,7 @@ C_STDLIB := \
 	stdlib/calloc.o \
 	stdlib/div.o \
 	stdlib/divsi3.o \
+	stdlib/dladdr.o \
 	stdlib/dlclose.o \
 	stdlib/dlerror.o \
 	stdlib/dlopen.o \

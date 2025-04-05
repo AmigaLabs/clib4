@@ -1357,6 +1357,7 @@ struct Clib4IFace {
 	int (* backtrace) (void **buffer, int max_frames);																						 	 	 /* 4424 */
 	char ** (* backtrace_symbols) (void *const *buffer, int size);																					 /* 4428 */
 	void (* backtrace_symbols_fd) (void *const *buffer, int size, int fd);    																		 /* 4432 */
+	int (* dladdr) (const void *addr, Dl_info *info);																								 /* 4436 */
 
 };
 
