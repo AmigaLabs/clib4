@@ -167,6 +167,8 @@ C_POSIX := \
 	posix/getrusage.o \
 	posix/kill.o \
 	posix/raise.o \
+	posix/shm_open.o \
+	posix/shm_unlink.o \
 	posix/sigaction.o \
 	posix/sigaddset.o \
 	posix/sigblock.o \

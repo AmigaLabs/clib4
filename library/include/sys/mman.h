@@ -38,6 +38,9 @@ extern void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off
 extern int munmap(void *map, size_t length);
 extern int msync(void *addr, size_t len, int flags);
 
+extern int shm_open(const char *name, int oflag, mode_t mode);
+extern int shm_unlink(const char *name);
+
 __END_DECLS
 
 #endif // _SYS_MMAN_H

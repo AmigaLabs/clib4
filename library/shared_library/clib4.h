@@ -28,7 +28,7 @@ struct Clib4Resource {
     uint32                  size;               /* for struct validation only */
     struct SignalSemaphore  semaphore;          /* for list arbitration */
     struct hashmap         *children;           /* list of parent nodes */
-    struct hashmap         *uxSocketsMap;
+    struct hashmap         *uxSocketsMap;       /* map of unix sockets */
     struct _clib4          *fallbackClib;
     /* SysVIPC fields */
     int locked;
@@ -50,6 +50,7 @@ struct Clib4Resource {
     uint32 cpufamily;
     int32  debugLevel;
     int32  oldPriority;
+    struct hashmap         *shmFileMap;         /* map of RAM files opened by shm_open */
 };
 
 struct Clib4Node {
@@ -73,6 +74,18 @@ struct Clib4Children {
     gid_t   groupId;    /* Group ID of process */
     uint32  returnCode; /* the return code of process */
     FILE    *pipe;
+};
+
+/* This is variable defines where to start to bind unix local ports using inet addresses */
+struct UnixSocket {
+    int            port;
+    struct fd     *fd;
+    char           name[PATH_MAX];
+};
+
+struct ShmOpenMap {
+    int     fd;
+    char    name[PATH_MAX];
 };
 
 int libReserved(void);

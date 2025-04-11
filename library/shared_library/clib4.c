@@ -95,13 +95,6 @@
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 
-/* This is variable defines where to start to bind unix local ports using inet addresses */
-struct UnixSocket {
-    int            port;
-    struct fd     *fd;
-    char           name[PATH_MAX];
-};
-
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
@@ -488,6 +481,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
         IPCMapUninit(&res->msgcx.keymap);
         IPCMapUninit(&res->semcx.keymap);
         hashmap_free(res->uxSocketsMap);
+        hashmap_free(res->shmFileMap);
 
         size_t iter = 0;
         void *item;
@@ -635,6 +629,19 @@ int libReserved(void) {
 }
 
 uint64_t
+shmOpenHash(const void *item, uint64_t seed0, uint64_t seed1) {
+    const struct ShmOpenMap *shmOpenItem = item;
+    return hashmap_xxhash3(shmOpenItem->name, strlen(shmOpenItem->name), seed0, seed1);
+}
+
+int
+shmOpenCompare(const void *a, const void *b, void *udata) {
+    const struct ShmOpenMap *ua = a;
+    const struct ShmOpenMap *ub = b;
+    return strcmp(ua->name, ub->name);
+}
+
+uint64_t
 unixSocketHash(const void *item, uint64_t seed0, uint64_t seed1) {
     const struct UnixSocket *unixSocket = item;
     return hashmap_xxhash3(unixSocket->name, strlen(unixSocket->name), seed0, seed1);
@@ -755,6 +762,8 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
             res->children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
             /* Initialize unix sockets hashmap */
             res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
+            /* Initialize shm_open hashmap */
+            res->shmFileMap =  hashmap_new(sizeof(struct ShmOpenMap), 0, 0, 0, shmOpenHash, shmOpenCompare, NULL, NULL);
 
             /* Initialize fallback clib4 reent structure */
             res->fallbackClib = (struct _clib4 *) iexec->AllocVecTags(sizeof(struct _clib4),

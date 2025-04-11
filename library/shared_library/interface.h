@@ -1358,6 +1358,8 @@ struct Clib4IFace {
 	char ** (* backtrace_symbols) (void *const *buffer, int size);																					 /* 4428 */
 	void (* backtrace_symbols_fd) (void *const *buffer, int size, int fd);    																		 /* 4432 */
 	int (* dladdr) (const void *addr, Dl_info *info);																								 /* 4436 */
+    int (* shm_open) (const char *name, int oflag, mode_t mode);                                                                                     /* 4440 */
+    int (* shm_unlink) (const char *name);                                                                                                           /* 4444 */
 
 };
 

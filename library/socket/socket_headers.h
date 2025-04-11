@@ -66,11 +66,13 @@
 #endif
 
 /* This is variable defines where to start to bind unix local ports using inet addresses */
+/*
 struct UnixSocket {
     int            port;
     struct fd     *fd;
     char           name[PATH_MAX];
 };
+*/
 
 #define START_UX_LOCAL_PORTS 30000
 #define UX_QUEUE 0xEA123

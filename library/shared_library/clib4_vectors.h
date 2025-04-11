@@ -1187,5 +1187,8 @@ static void *clib4Vectors[] = {
         (void *) (backtrace_symbols_fd),                  /* 4432 */
 		(void *) (dladdr),								  /* 4436 */
 
+        (void *) (shm_open),                              /* 4440 */
+        (void *) (shm_unlink),                            /* 4444 */
+
         (void *)-1
 };

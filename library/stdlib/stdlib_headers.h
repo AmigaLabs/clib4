@@ -81,6 +81,8 @@
 #include "math_fp_support.h"
 #endif /* _MATH_FP_SUPPORT_H */
 
+#include <shared_library/clib4.h>
+
 #include "gdtoa.h"
 #include "mprec.h"
 
