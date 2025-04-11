@@ -45,9 +45,7 @@ getcwd(char *buffer, size_t buffer_size) {
         }
     }
 
-    BPTR currdir = GetCurrentDir();
-    BPTR progdir = GetProgramDir();
-    dir_lock  = currdir ? currdir : progdir;
+    dir_lock = Lock("", SHARED_LOCK);
     if (dir_lock == BZERO) {
         SHOWMSG("could not get a lock on the current directory");
 

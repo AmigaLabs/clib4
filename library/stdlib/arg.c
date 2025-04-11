@@ -1,8 +1,6 @@
 /*
- * $Id: stdlib_arg.c,v 1.15 2006-09-25 14:51:15 clib4devs Exp $
+ * $Id: stdlib_arg.c,v 1.16 2025-03-23 14:51:15 clib4devs Exp $
 */
-
-/*#define DEBUG*/
 
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
@@ -59,7 +57,8 @@ is_final_quote_character(const unsigned char *str) {
     return (result);
 }
 
-ARG_CONSTRUCTOR(arg_init) {
+BOOL
+arg_init() {
     ENTER();
 
     BOOL success = FALSE;
@@ -88,6 +87,10 @@ ARG_CONSTRUCTOR(arg_init) {
            how long it is, stripping a trailing line
            feed and blank spaces if necessary. */
         arg_str = (const unsigned char *) GetArgStr();
+        if (arg_str == NULL) {
+            /* maybe we are on a library so don't check for startup args */
+            goto out;
+        }
 
         while (is_space(*arg_str))
             arg_str++;
@@ -282,16 +285,12 @@ ARG_CONSTRUCTOR(arg_init) {
 
 out:
 
-    SHOWVALUE(success);
-    LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
+    RETURN(success);
+    return success;
 }
 
-ARG_DESTRUCTOR(arg_exit) {
+void
+arg_exit() {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

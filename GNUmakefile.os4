@@ -73,7 +73,7 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Werror \
+    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Wno-stringop-overflow -Werror \
      # -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
@@ -279,7 +279,7 @@ version:
 # Shared clib4.library rules
 
 clib4.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(OUTPUT_LIB)/crtend.o $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(OUTPUT_LIB)/crtend.o $(DLIBS) -Wl,-export-dynamic -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
 
 clib4.library: clib4.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@

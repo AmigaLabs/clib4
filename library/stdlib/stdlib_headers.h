@@ -41,6 +41,10 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
+#ifndef PROTO_ELF_H
+#include <proto/elf.h>
+#endif /* PROTO_ELF_H */
+
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
@@ -106,6 +110,15 @@ extern int _main(char *argstr,
 #endif /* _STDLIB_PROTOS_H */
 
 extern void kprintf(const char * format,...);
+
+extern BOOL stdlib_program_name_init();
+extern void stdlib_program_name_exit();
+extern int wb_file_init(struct _clib4 *__clib4);
+extern void workbench_exit();
+extern BOOL arg_init();
+extern void arg_exit();
+
+extern ULONG amigaos_symbols_callback(struct Hook *hook, struct Task *task, struct SymbolMsg *symbolmsg);
 
 #define NAMELEN 32
 
