@@ -1359,6 +1359,9 @@ struct Clib4IFace {
 	void (* backtrace_symbols_fd) (void *const *buffer, int size, int fd);    																		 /* 4432 */
 	int (* dladdr) (const void *addr, Dl_info *info);																								 /* 4436 */
 
+    int (* getpriority) (int which, unsigned int who);																								 /* 4440 */
+    int (* setpriority) (int which, unsigned int who, int priority);																				 /* 4444 */
+
 };
 
 #ifdef __PIC__

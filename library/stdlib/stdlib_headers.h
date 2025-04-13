@@ -119,6 +119,7 @@ extern BOOL arg_init();
 extern void arg_exit();
 
 extern ULONG amigaos_symbols_callback(struct Hook *hook, struct Task *task, struct SymbolMsg *symbolmsg);
+extern APTR processscan_hook_function(struct Hook *hook, APTR userdata, struct Process *process);
 
 #define NAMELEN 32
 

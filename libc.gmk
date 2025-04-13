@@ -209,7 +209,9 @@ C_POSIX := \
 	wait/waitpid.o \
 	posix/waitpoll.o \
 	posix/writev.o \
-	posix/uname.o
+	posix/uname.o \
+	posix/getpriority.o \
+	posix/setpriority.o
 
 C_REGEX := \
 	regex/regcomp.o \
@@ -529,6 +531,7 @@ C_STDLIB := \
 	stdlib/mprec.o \
 	stdlib/mulsi3.o \
 	stdlib/posix_memalign.o \
+	stdlib/processscan_hook_function.o \
 	stdlib/program_name.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
