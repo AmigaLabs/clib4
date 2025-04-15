@@ -32,8 +32,6 @@ vsprintf(char *s, const char *format, va_list arg) {
 
     result = vfprintf((FILE * ) &string_iob, format, arg);
 
-    __flush_r(__clib4, (FILE * ) &string_iob);
-
 out:
 
     return (result);

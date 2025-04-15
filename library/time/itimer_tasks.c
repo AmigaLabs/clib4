@@ -23,10 +23,15 @@
 #endif /* _TIME_HEADERS_H */
 
 int itimer_real_task() {
+    ENTER();
+
     struct MsgPort *tmr_real_mp = NULL;
     struct TimeRequest *tmr_real_tr = NULL;
     ULONG wait_mask;
     int status = RETURN_FAIL;
+
+    DECLARE_TIMERBASE();
+    DECLARE_TIMEZONEBASE();
 
     struct Process *thisTask = (struct Process *) FindTask(NULL);
     struct itimer *_itimer = (struct itimer *) thisTask->pr_Task.tc_UserData;
@@ -35,6 +40,10 @@ int itimer_real_task() {
 
     SHOWPOINTER(__clib4);
     SHOWVALUE(_itimer->which);
+    SHOWVALUE(__clib4->tmr_time.it_value.tv_sec);
+    SHOWVALUE(__clib4->tmr_time.it_value.tv_usec);
+
+
     SHOWMSG("AllocSysObjectTags ASOT_PORT");
     /* Create itimer timers and message ports */
     tmr_real_mp = AllocSysObjectTags(ASOT_PORT,
@@ -68,8 +77,8 @@ int itimer_real_task() {
     /* Loop until timer expires and restart or we interrupt it */
     while (TRUE) {
         /* Get current time of day */
-        gettimeofday(&__clib4->tmr_start_time, NULL);
-        /* Set wait mask */
+		gettimeofday(&__clib4->tmr_start_time, NULL);
+		/* Set wait mask */
         wait_mask = SIGBREAKF_CTRL_F | SIGBREAKF_CTRL_D | (1L << tmr_real_mp->mp_SigBit);
         /* Reset signals */
         SetSignal(0, wait_mask);
@@ -110,18 +119,22 @@ int itimer_real_task() {
 
             /* If SIGALRM is blocked kill the timer */
             SHOWMSG("CHECK SIGALRM");
-            if (FLAG_IS_SET(__clib4->__signals_blocked, (1 << SIGALRM))) {
+            if (FLAG_IS_SET(__clib4->__signals_blocked, sigmask(SIGALRM))) {
                 break;
             }
 
             SHOWMSG("Raise SIGALRM");
-            raise(SIGALRM);
+			/* raise must/should be called on the main process, not really possibel on AmigOS ? */
+			raise(SIGALRM);
+
+			Signal((struct Task *) __clib4->self, (1L << tmr_real_mp->mp_SigBit));
+
 
             SHOWMSG("CHECK SIGALRM AGAIN");
             /* Check again if SIGALRM is blocked and then kill the timer. kill the timer also
              * if timer was created via alarm()
              */
-            if (_itimer->which == -1 || FLAG_IS_SET(__clib4->__signals_blocked, (1 << SIGALRM))) {
+            if (_itimer->which == -1 || FLAG_IS_SET(__clib4->__signals_blocked, sigmask(SIGALRM))) {
                 break;
             }
         }

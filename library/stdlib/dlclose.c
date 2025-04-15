@@ -28,7 +28,7 @@ dlclose(void *handle) {
             goto out;
         }
     } else {
-        __set_errno(ENOSYS);
+        __set_errno_r(__clib4, ENOSYS);
     }
 
     result = 0;

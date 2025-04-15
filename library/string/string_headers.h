@@ -38,13 +38,22 @@
 /* Address is neither aligned to a word or long word boundary. */
 #define IS_UNALIGNED(a) ((((unsigned long)(a)) & 1) != 0)
 
-/* Address is aligned to a word boundary, but not to a long
-   word boundary. */
+/* Address is aligned to a word boundary, but not to a long word boundary. */
 #define IS_SHORT_ALIGNED(a) ((((unsigned long)(a)) & 3) == 2)
 
 /* Address is aligned to a long word boundary. For an 68030 and beyond the
    alignment does not matter. */
 #define IS_LONG_ALIGNED(a) ((((unsigned long)(a)) & 3) == 0)
+
+#define TOO_SMALL(LEN) ((LEN) < sizeof (long))
+#define DETECTNULL(X) (((X) - 0x01010101) & ~(X) & 0x80808080)
+#define UNALIGNED(X, Y) (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)))
+
+/* How many bytes are copied each iteration of the 4X unrolled loop.  */
+#define BIGBLOCKSIZE    (sizeof (long) << 2)
+
+/* How many bytes are copied each iteration of the word copy loop.  */
+#define LITTLEBLOCKSIZE (sizeof (long))
 
 /****************************************************************************/
 
@@ -81,7 +90,6 @@ extern char   *vec_strcpy(char *dest, const char *src);
 extern void    bcopy_g3(const void *src, void *dest, size_t len);
 extern char   *__strcpy_ppc(char *dest, const char *src);
 extern size_t  __strlen_ppc(const char *s);
-extern char   *__strcat_ppc(char *dest, const char *src);
 extern char   *__strchr_ppc(const char *s, int c);
 
 /* Other optimized functions */

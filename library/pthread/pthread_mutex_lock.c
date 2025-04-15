@@ -42,14 +42,17 @@ pthread_mutex_lock(pthread_mutex_t *mutex) {
     ENTER();
     SHOWPOINTER(mutex);
 
-    if (!mutex)
+    if (!mutex) {
+        LEAVE();
         return EINVAL;
+    }
 
     if (mutex->mutex == NULL) {
         SHOWMSG("mutex was not initalized. Initialize it");
         int ret = _pthread_mutex_init(mutex, NULL, TRUE);
         if (ret != 0) {
             SHOWMSG("Cannot initialize mutex");
+            LEAVE();
             return EINVAL;
         }
     }
@@ -60,15 +63,17 @@ pthread_mutex_lock(pthread_mutex_t *mutex) {
         BOOL isLocked = MutexAttempt(mutex->mutex);
         if (!isLocked) {
             SHOWMSG("DeadLock");
+            LEAVE();
             return EDEADLK;
         } else {
-	  MutexRelease(mutex->mutex);
-	}
+            MutexRelease(mutex->mutex);
+        }
     }
 
     SHOWMSG("MutexObtain");
     MutexObtain(mutex->mutex);
     SHOWMSG("Done");
 
+    RETURN(0);
     return 0;
 }

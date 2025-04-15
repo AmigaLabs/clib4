@@ -31,9 +31,6 @@
 
 #include "sched.h"
 
-#define PRIO_MAX 2
-#define PRIO_MIN -2
-
 int
 sched_get_priority_max(int policy) {
     (void) (policy);

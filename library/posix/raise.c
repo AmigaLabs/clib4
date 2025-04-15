@@ -39,7 +39,7 @@ raise(int sig) {
     }
 
     /* Can we deliver the signal? */
-    if ((FLAG_IS_CLEAR(__clib4->__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(__clib4->local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
+    if ((FLAG_IS_CLEAR(__clib4->__signals_blocked, sigmask(sig)) && FLAG_IS_CLEAR(__clib4->local_signals_blocked, sigmask(sig))) || sig == SIGKILL) {
         signal_handler_t handler;
 
         /* Which handler is installed for this signal? */
@@ -50,7 +50,7 @@ raise(int sig) {
             /* Block delivery of this signal to prevent recursion. */
             SHOWMSG("Blocking signal if it isn't a kill signal");
             if (sig != SIGINT && sig != SIGTERM && sig != SIGKILL)
-                SET_FLAG(__clib4->local_signals_blocked, (1 << sig));
+                SET_FLAG(__clib4->local_signals_blocked, sigmask(sig));
 
             /* The default behaviour is to drop into abort(), or do something very much like it. */
             if (handler == SIG_DFL) {
@@ -112,7 +112,7 @@ raise(int sig) {
 
             /* Unblock signal delivery again. */
             SHOWMSG("Unblocking signal");
-            CLEAR_FLAG(__clib4->local_signals_blocked, (1 << sig));
+            CLEAR_FLAG(__clib4->local_signals_blocked, sigmask(sig));
         }
         else {
             if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
@@ -121,7 +121,8 @@ raise(int sig) {
             }
         }
     } else {
-        SHOWMSG("that signal is blocked");
+        SHOWMSG("that signal is blocked, remeber that signal was blocked, for sigwaitinfo" );
+		SET_FLAG(__clib4->local_raised_signals_blocked, sigmask(sig));
     }
 
     result = OK;

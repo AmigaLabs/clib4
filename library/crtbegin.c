@@ -64,6 +64,11 @@ const struct Clib4IFace *IClib4 = NULL;
 register void *r13 __asm("r13");
 extern void *_SDA_BASE_ __attribute__((force_no_baserel));
 
+#ifdef CLIB4_MBASEREL
+extern void *_DATA_BASE_ __attribute__((force_no_baserel));
+register void *r2 __asm("r2");
+#endif
+
 extern int main(int, char **);
 int clib4_start(char *args, int32 arglen, struct Library *sysbase);
 int _start(char *args, int32 arglen, struct Library *sysbase);
@@ -155,5 +160,17 @@ clib4_start(char *args, int32 arglen, struct Library *sysbase) {
 
 int
 _start(STRPTR argstring, int32 arglen, struct Library *sysbase) {
-    return clib4_start(argstring, arglen, sysbase);
+
+#ifdef CLIB4_MBASEREL
+    void *old_r2 = r2;
+    r2 = &_DATA_BASE_;
+#endif
+
+    int result = clib4_start(argstring, arglen, sysbase);
+
+#ifdef CLIB4_MBASEREL
+    r2 = old_r2;
+#endif
+
+    return result;
 }

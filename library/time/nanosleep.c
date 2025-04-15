@@ -20,10 +20,6 @@ nanosleep(const struct timespec *req, struct timespec *rem) {
     TIMESPEC_TO_TIMEVAL(&tv, req);
 
     int result = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
-    if (result == EINTR) {
-        /* If a timer has been interrupted by a SIGALRM do we have to exit like on Linux? */
-        _exit(RETURN_ERROR);
-    }
 
     RETURN(result);
     return result;

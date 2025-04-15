@@ -16,6 +16,14 @@ __BEGIN_DECLS
 #define RTLD_GLOBAL     8
 #define RTLD_DEFAULT    ((void *)0)
 
+typedef struct dl_info {
+    const char      *dli_fname;     /* Pathname of shared object */
+    void            *dli_fbase;     /* Base address of shared object */
+    const char      *dli_sname;     /* Name of nearest symbol */
+    void            *dli_saddr;     /* Address of nearest symbol */
+} Dl_info;
+
+extern int dladdr(const void *addr, Dl_info *info);
 extern int dlclose(void *__handle);
 extern const char *dlerror(void);
 extern void *dlopen(const char *__path_name, int __mode);

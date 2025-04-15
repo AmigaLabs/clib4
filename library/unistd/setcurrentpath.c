@@ -35,8 +35,8 @@ __set_current_path(const char *path_name) {
             strcpy(__clib4->__current_path_name, path_name);
         else
             strcpy(__clib4->__current_path_name, "");
-
     }
+    D(("Current path: %s", __clib4->__current_path_name));
 
     result = OK;
 

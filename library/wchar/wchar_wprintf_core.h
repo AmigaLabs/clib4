@@ -51,6 +51,7 @@ static const unsigned char states[]['z' - 'A' + 1] = {
                 S('e') = _DBL, S('f') = _DBL, S('g') = _DBL, S('a') = _DBL,
                 S('E') = _DBL, S('F') = _DBL, S('G') = _DBL, S('A') = _DBL,
                 S('c') = _CHAR, S('C') = _INT,
+                S('b') = _INT,
                 S('s') = _PTR, S('S') = _PTR, S('p') = _UIPTR, S('n') = _PTR,
                 S('m') = _NOARG,
                 S('l') = _LPRE, S('h') = _HPRE, S('L') = _BIGLPRE,

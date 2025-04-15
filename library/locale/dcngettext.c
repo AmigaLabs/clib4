@@ -712,18 +712,23 @@ char *bindtextdomain(const char *domainname, const char *dirname) {
     }
 
     if (!p) {
-        p = calloc(1, sizeof *p + domlen + dirlen + 2);
+        p = __calloc_r(__clib4, 1, sizeof *p + domlen + dirlen + 2);
         if (!p) {
             ReleaseSemaphore(__clib4->gettext_lock);
             return NULL;
         }
+
         p->next = __clib4->bindings;
         p->dirlen = dirlen;
         p->domainname = p->buf;
         p->dirname = p->buf + domlen + 1;
         memcpy(p->domainname, domainname, domlen+1);
         memcpy(p->dirname, dirname, dirlen+1);
-        a_cas_p(&__clib4->bindings, __clib4->bindings, p);
+        __clib4->bindings = p;
+        /* For some reason using atomic operations here is causing a DSI but
+         * sice clib4 is reentrant should not be a problem using the assignment
+         * WAS: a_cas_p(&__clib4->bindings, __clib4->bindings, p);
+         */
     }
 
     a_store(&p->active, 1);
@@ -781,14 +786,14 @@ CLIB_DESTRUCTOR(dcngettext_exit) {
         while (mofile) {
             struct mofile_s *next = mofile->next;
             if (mofile)
-                FreeVec(mofile);
+                free(mofile);
             mofile = next;
         }
     }
     struct binding *p = __clib4->bindings;
     while (p) {
         struct binding *q = p->next;
-        FreeVec(p);
+        free(p);
         p = q;
     }
 }
