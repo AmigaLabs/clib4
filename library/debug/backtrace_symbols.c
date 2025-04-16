@@ -17,54 +17,53 @@ backtrace_symbols(void *const *buffer, int size) {
 
     if (size <= 0)
         return NULL;
-    if (!__clib4->__dl_root_handle != 0)
-        return NULL;
 
-    struct ElfIFace *IElf = __clib4->IElf;
-
-    struct Hook symbol_hook;
-    symbol_hook.h_Entry = (ULONG (*)())amigaos_symbols_callback;
-    symbol_hook.h_Data =  NULL;
-    ScanSymbolTable(__clib4->__dl_root_handle, &symbol_hook, NULL);
+    DECLARE_DEBUGBASE();
 
     // Allocate array of strings
     char **symbols = __malloc_r(__clib4, size * sizeof(char *));
     if (!symbols)
         return NULL;
 
-    struct Elf32_SymbolQuery query;
-	char nameBuffer[256] = {0};
-	query.Flags = ELF32_SQ_BYVALUE | ELF32_SQ_LOAD;
-    query.NameLength = 255;
-    query.Name = nameBuffer;
-
     for (int i = 0; i < size; i++) {
-    	BOOL found = FALSE;
-	    ULONG fileBuffer;
-
-        query.Value = (uint32) buffer[i];
-
-        SymbolQuery(__clib4->__dl_root_handle, 1, &query);
-        if (query.Found) {
-            // Format: "<hex-addr> <func>+<offset> [<lib>]"
+        // Format: "<hex-addr> <func>+<offset> [<lib>]"
+        uint32 addr = (uint32) buffer[i];
+        struct DebugSymbol *symbol = ObtainDebugSymbol((APTR) addr, NULL);
+        if (symbol) {
             const int max_len = 256;
             symbols[i] = __calloc_r(__clib4, 1, max_len);
             if (symbols[i]) {
-    			found = TRUE;
-                GetElfAttrsTags(__clib4->__dl_root_handle, EAT_FileName, &fileBuffer, TAG_DONE);
-                snprintf(
-                    symbols[i],
-		            max_len,
-		            "%p %s+0x%lx [%s]",
-                    buffer[i],
-                    query.Name ? query.Name : "???",
-                    query.Sym.st_value,
-                    (STRPTR) fileBuffer
-                );
+
+                switch (symbol->Type) {
+                    case DEBUG_SYMBOL_68K_MODULE:
+                        snprintf(symbols[i], max_len, "%p %s+0x%lx [68k module]", addr, symbol->Name, symbol->Offset);
+                        break;
+                    case DEBUG_SYMBOL_NATIVE_MODULE:
+                        snprintf(symbols[i], max_len, "%p %s+0x%lx [native module]", addr, symbol->Name, symbol->Offset);
+                        break;
+                    case DEBUG_SYMBOL_KERNEL_MODULE:
+                        snprintf(symbols[i], max_len, "%p %s+0x%lx [kernel module]", addr, symbol->Name, addr);
+                        break;
+                    case DEBUG_SYMBOL_MODULE:
+                    case DEBUG_SYMBOL_MODULE_STABS:
+                        snprintf(
+                                symbols[i],
+                                max_len,
+                                "%p %s+0x%lx [%s]",
+                                buffer[i],
+                                symbol->Name ? symbol->Name : "???",
+                                symbol->Offset,
+                                symbol->SourceFileName ? symbol->SourceFileName : ""
+                        );
+                        break;
+                    default:
+                        // Fallback to address
+                        snprintf(symbols[i], 20, "%p", buffer[i]);
+                        break;
+                }
             }
 		}
-
-        if (!found) {
+        else {
             // Fallback: Just the address
             symbols[i] = __calloc_r(__clib4, 1, 20); // Enough for "0x<hex>"
             if (symbols[i]) {

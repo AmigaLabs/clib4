@@ -17,45 +17,49 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd) {
 
     if (size <= 0)
         return;
-    if (!__clib4->__dl_root_handle != 0)
-        return;
 
-    struct ElfIFace *IElf = __clib4->IElf;
-
-    struct Hook symbol_hook;
-    symbol_hook.h_Entry = (ULONG (*)())amigaos_symbols_callback;
-    symbol_hook.h_Data =  NULL;
-    ScanSymbolTable(__clib4->__dl_root_handle, &symbol_hook, NULL);
-
-    struct Elf32_SymbolQuery query;
-    char nameBuffer[256] = {0};
-
-    query.Flags = ELF32_SQ_BYVALUE | ELF32_SQ_LOAD;
-    query.NameLength = 255;
-    query.Name = nameBuffer;
+    DECLARE_DEBUGBASE();
 
     for (int i = 0; i < size; i++) {
-	    BOOL found = FALSE;
-	    ULONG fileBuffer;
-
-        query.Value = (uint32) buffer[i];
-
-        SymbolQuery(__clib4->__dl_root_handle, 1, &query);
-	    if (query.Found) {
-			found = TRUE;
+        // Format: "<hex-addr> <func>+<offset> [<lib>]"
+        uint32 addr = (uint32) buffer[i];
+        struct DebugSymbol *symbol = ObtainDebugSymbol((APTR) addr, NULL);
+        if (symbol) {
+            const int max_len = 256;
             char line[256];
-            GetElfAttrsTags(__clib4->__dl_root_handle, EAT_FileName, &fileBuffer, TAG_DONE);
-            int len = snprintf(
-                line, sizeof(line), "%p %s+0x%lx [%s]\n",
-                buffer[i],
-                query.Name ? query.Name : "???",
-                query.Sym.st_value,
-                (STRPTR) fileBuffer
-            );
-            write(fd, line, len);
-		}
+            int len = 0;
 
-        if (!found) {
+            switch (symbol->Type) {
+                case DEBUG_SYMBOL_68K_MODULE:
+                    len = snprintf(line, max_len, "%p %s+0x%lx [68k module]\n", addr, symbol->Name, symbol->Offset);
+                    break;
+                case DEBUG_SYMBOL_NATIVE_MODULE:
+                    len = snprintf(line, max_len, "%p %s+0x%lx [native module]\n", addr, symbol->Name, symbol->Offset);
+                    break;
+                case DEBUG_SYMBOL_KERNEL_MODULE:
+                    len = snprintf(line, max_len, "%p %s+0x%lx [kernel module]\n", addr, symbol->Name, addr);
+                    break;
+                case DEBUG_SYMBOL_MODULE:
+                case DEBUG_SYMBOL_MODULE_STABS:
+                    len = snprintf(
+                            line,
+                            max_len,
+                            "%p %s+0x%lx [%s]\n",
+                            buffer[i],
+                            symbol->Name ? symbol->Name : "???",
+                            symbol->Offset,
+                            symbol->SourceFileName ? symbol->SourceFileName : ""
+                    );
+                    break;
+                default:
+                    // Fallback to address
+                    len = snprintf(line, 20, "%p", buffer[i]);
+                    break;
+            }
+            write(fd, line, len);
+        }
+        else {
+            // Fallback: Just the address
             char line[20];
             int len = snprintf(line, sizeof(line), "%p\n", buffer[i]);
             write(fd, line, len);

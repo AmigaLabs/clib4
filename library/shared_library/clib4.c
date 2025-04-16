@@ -106,6 +106,8 @@ struct UnixSocket {
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
+extern int __set_current_path(const char * path_name);
+
 struct ExecBase *SysBase = 0;
 struct ExecIFace *IExec = 0;
 
@@ -397,6 +399,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
                                                  TAG_DONE);
         if (__clib4 != NULL) {
             SHOWMSG("Clib4 allocated");
+
             char envbuf[ENVBUF + 1];
             char term_buffer[FILENAME_MAX] = {0};
             LONG len;
