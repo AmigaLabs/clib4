@@ -62,6 +62,7 @@ backtrace_symbols(void *const *buffer, int size) {
                         break;
                 }
             }
+            ReleaseDebugSymbol(symbol);
 		}
         else {
             // Fallback: Just the address

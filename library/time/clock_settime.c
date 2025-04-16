@@ -29,8 +29,8 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
         return -1;
     }
 
-    DECLARE_TIMERBASE();
-    DECLARE_TIMEZONEBASE();
+    DECLARE_TIMERBASE_R(__clib4);
+    DECLARE_TIMEZONEBASE_R(__clib4);
 
   	SHOWMSG("AllocSysObjectTags ASOT_PORT");
     /* Create itimer timers and message ports */

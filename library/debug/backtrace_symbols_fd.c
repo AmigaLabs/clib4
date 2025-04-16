@@ -57,6 +57,7 @@ backtrace_symbols_fd(void *const *buffer, int size, int fd) {
                     break;
             }
             write(fd, line, len);
+            ReleaseDebugSymbol(symbol);
         }
         else {
             // Fallback: Just the address

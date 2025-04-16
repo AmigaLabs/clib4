@@ -16,7 +16,7 @@ void __close_all_locales(struct _clib4 *__clib4) {
 	__locale_lock(__clib4);
 
 	if (__clib4->__LocaleBase != NULL) {
-		DECLARE_LOCALEBASE();
+        DECLARE_LOCALEBASE_R(__clib4);
 
 		int i;
 
@@ -45,7 +45,7 @@ void __locale_exit(struct _clib4 *__clib4) {
 	__locale_lock(__clib4);
 
 	if (__clib4->__LocaleBase != NULL) {
-		DECLARE_LOCALEBASE();
+        DECLARE_LOCALEBASE_R(__clib4);
 
 		__close_all_locales(__clib4);
 
@@ -109,7 +109,7 @@ int __locale_init(struct _clib4 *__clib4) {
 	}
 
 	if (__clib4->__LocaleBase != NULL && __clib4->__default_locale == NULL) {
-		DECLARE_LOCALEBASE();
+        DECLARE_LOCALEBASE_R(__clib4);
 
         __clib4->__default_locale = OpenLocale(NULL);
 	}

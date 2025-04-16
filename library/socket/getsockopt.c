@@ -20,7 +20,7 @@ int getsockopt(int sockfd, int level, int optname, void *optval, socklen_t *optl
     SHOWPOINTER(optlen);
 
     assert(optval != NULL && optlen != NULL);
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     if (optval == NULL || optlen == NULL) {
         SHOWMSG("invalid parameters");

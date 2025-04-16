@@ -25,7 +25,7 @@ __send_r(struct _clib4 *__clib4, int sockfd, const void *buff, size_t nbytes, in
 
     assert((int) nbytes >= 0);
     assert(buff != NULL);
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     if (buff == NULL) {
         SHOWMSG("invalid buffer parameter");

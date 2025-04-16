@@ -28,7 +28,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 
     __check_abort_f(__clib4);
 
-	DECLARE_TIMEZONEBASE();
+    DECLARE_TIMEZONEBASE_R(__clib4);
 
     SHOWMSG("Obtaining __timer_semaphore");
     ObtainSemaphore(__clib4->__timer_semaphore);

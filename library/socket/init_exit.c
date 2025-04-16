@@ -119,7 +119,7 @@ SOCKET_CONSTRUCTOR(socket_init) {
         __show_error("\"bsdsocket.library\" V3 could not be opened.");
         goto out;
     }
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     /* Wire the library's errno variable to our local errno. */
     tags[0].ti_Tag = SBTM_SETVAL(SBTC_ERRNOLONGPTR);

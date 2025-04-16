@@ -27,7 +27,7 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
     SHOWVALUE(namelen);
 
     assert(name != NULL);
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     if (name == NULL) {
         SHOWMSG("invalid name parameter");

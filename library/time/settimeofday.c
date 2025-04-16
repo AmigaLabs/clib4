@@ -23,8 +23,8 @@ settimeofday(const struct timeval *t, const struct timezone *tz) {
     int result = -1;
     int32 __gmtoffset = 0;
 
-   	DECLARE_TIMERBASE();
-    DECLARE_TIMEZONEBASE();
+    DECLARE_TIMERBASE_R(__clib4);
+    DECLARE_TIMEZONEBASE_R(__clib4);
 
   	SHOWMSG("AllocSysObjectTags ASOT_PORT");
     /* Create itimer timers and message ports */

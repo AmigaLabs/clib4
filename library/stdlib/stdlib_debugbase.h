@@ -26,4 +26,7 @@
 #define DECLARE_DEBUGBASE() \
 	struct DebugIFace *IDebug = __CLIB4->__IDebug
 
+#define DECLARE_DEBUGBASE_R(clib4) \
+	struct DebugIFace *IDebug = clib4->__IDebug
+
 #endif /* _STDLIB_DEBUGBASE_H */

@@ -15,7 +15,7 @@ isdigit(int c) {
 
 int
 __isdigit_r(struct _clib4 *__clib4, int c) {
-    DECLARE_LOCALEBASE();
+    DECLARE_LOCALEBASE_R(__clib4);
     int result;
 
     ENTER();

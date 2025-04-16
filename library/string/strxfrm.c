@@ -12,9 +12,9 @@
 
 size_t
 strxfrm(char *dest, const char *src, size_t len) {
-    DECLARE_LOCALEBASE();
     size_t result = 0;
     struct _clib4 *__clib4 = __CLIB4;
+    DECLARE_LOCALEBASE_R(__clib4);
 
     ENTER();
 
