@@ -22,7 +22,7 @@ utimes(const char *name, const struct timeval *tvp) {
 
     __check_abort_f(__clib4);
 
-    DECLARE_TIMEZONEBASE();
+    DECLARE_TIMEZONEBASE_R(__clib4);
 
     if (!tvp) {
         DateStamp(&ds);

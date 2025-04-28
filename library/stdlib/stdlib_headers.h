@@ -77,6 +77,14 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
+#ifndef _STDLIB_DEBUGBASE_H
+#include "stdlib_debugbase.h"
+#endif /* _STDLIB_DEBUGBASE_H */
+
+#ifndef _STDLIB_ELFBASE_H
+#include "stdlib_elfbase.h"
+#endif /* _STDLIB_ELFBASE_H */
+
 #ifndef _MATH_FP_SUPPORT_H
 #include "math_fp_support.h"
 #endif /* _MATH_FP_SUPPORT_H */

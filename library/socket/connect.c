@@ -21,7 +21,7 @@ connect(int sockfd, const struct sockaddr *name, socklen_t namelen) {
     SHOWPOINTER(name);
     SHOWVALUE(namelen);
 
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     assert(name != NULL);
 

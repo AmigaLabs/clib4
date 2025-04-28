@@ -24,8 +24,8 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
 
 	/* Our clock is always present for reading */
 
-    DECLARE_TIMERBASE();
-    DECLARE_TIMEZONEBASE();
+    DECLARE_TIMERBASE_R(__clib4);
+    DECLARE_TIMEZONEBASE_R(__clib4);
 
     struct timeval tv;
     uint32 gmtoffset = 0;

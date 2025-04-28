@@ -98,10 +98,6 @@ extern struct ExecIFace *IExec;
 /* Faster __check_abort version used when __clib4 is available in the caller function */
 inline void
 __check_abort_f(struct _clib4 *__clib4) {
-	ENTER();
-
-	SHOWVALUE(__clib4->__check_abort_enabled);
-
 	if (__clib4->__check_abort_enabled && CheckSignal(__clib4->__break_signal_mask)) {
 		/* If we aren't on the main thread, skip it because checking it on ITIMER_TASK etc can run into a deadlock */
 		if( (struct Task *)__clib4->self == FindTask(NULL) ) {
@@ -113,8 +109,6 @@ __check_abort_f(struct _clib4 *__clib4) {
 			Signal((struct Task *)__clib4->self, SIGBREAKF_CTRL_C);
 		}
 	}
-
-	LEAVE();
 }
 
 inline void

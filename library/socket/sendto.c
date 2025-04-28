@@ -22,7 +22,7 @@ sendto(int sockfd, const void *buff, size_t len, int flags, const struct sockadd
     SHOWVALUE(tolen);
 
     assert(buff != NULL && to != NULL);
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     if (buff == NULL || to == NULL) {
         SHOWMSG("invalid parameters");

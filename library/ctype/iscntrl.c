@@ -10,9 +10,9 @@
 
 int
 iscntrl(int c) {
-    DECLARE_LOCALEBASE();
     int result;
     struct _clib4 *__clib4 = __CLIB4;
+    DECLARE_LOCALEBASE_R(__clib4);
 
     ENTER();
     SHOWVALUE(c);

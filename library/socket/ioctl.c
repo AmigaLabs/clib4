@@ -160,7 +160,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
     SHOWVALUE(request);
 
     __set_errno(0);
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     if (request != TIOCGWINSZ && request != TIOCSWINSZ) {
         if (FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET)) {

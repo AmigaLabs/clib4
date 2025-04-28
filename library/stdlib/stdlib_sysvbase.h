@@ -20,7 +20,7 @@
 #include "shared_library/clib4.h"
 
 #define DECLARE_SYSVYBASE() \
-	struct Library   UNUSED	*SysSV_EIDRMVBase    = res->SysVBase; \
-	struct SYSVIFace 		*ISysVIPC	 = res->ISysVIPC
+	struct Library   UNUSED	*SysSV_EIDRMVBase   = res->SysVBase; \
+	struct SYSVIFace 		*ISysVIPC	        = res->ISysVIPC
 
 #endif /* _STDLIB_SYSVBASE_H */

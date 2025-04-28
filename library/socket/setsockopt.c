@@ -21,7 +21,7 @@ setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t opt
     SHOWVALUE(optlen);
 
     assert(optval != NULL);
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     if (optval == NULL) {
         SHOWMSG("invalid optval parameter");

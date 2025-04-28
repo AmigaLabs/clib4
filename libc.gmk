@@ -789,6 +789,7 @@ C_UNISTD := \
 	unistd/ttyname.o \
 	unistd/ttyname_r.o \
     unistd/ualarm.o \
+    unistd/unix_paths_enabled.o \
 	unistd/unlink.o \
 	unistd/usleep.o \
 	unistd/wildcard_expand.o

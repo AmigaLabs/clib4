@@ -12,7 +12,7 @@ static void *clib4Vectors[] = {
         (void *) (libReserved),
         (void *) (__print_termination_message),
         (void *) (__get_default_file),
-        (void *) (libReserved),
+        (void *) (unixPathsEnabled),
         (void *) (libReserved),
 
         /* argz.h */

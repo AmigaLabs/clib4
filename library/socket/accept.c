@@ -24,7 +24,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
     SHOWPOINTER(cliaddr);
     SHOWPOINTER(addrlen);
 
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     assert(sockfd >= 0 && sockfd < __clib4->__num_fd);
     assert(__clib4->__fd[sockfd] != NULL);
