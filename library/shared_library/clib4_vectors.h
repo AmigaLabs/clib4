@@ -1185,7 +1185,7 @@ static void *clib4Vectors[] = {
         (void *) (backtrace),                             /* 4424 */
         (void *) (backtrace_symbols),                     /* 4428 */
         (void *) (backtrace_symbols_fd),                  /* 4432 */
-		(void *) (dladdr),								  /* 4436 */
+        (void *) (dladdr),								  /* 4436 */
 
         (void *) (getpriority),							  /* 4440 */
         (void *) (setpriority),							  /* 4444 */
