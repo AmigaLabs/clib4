@@ -126,6 +126,7 @@ extern void enableAltivec(void);
 extern void disableAltivec(void);
 extern void enableOptimizedFunctions(void);
 extern void disableOptimizedFunctions(void);
+extern int unixPathsEnabled(void);
 
 extern char *getcwd(char * buffer, size_t buffer_size);
 extern char *getwd(char *buf);

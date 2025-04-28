@@ -111,7 +111,7 @@ struct Clib4IFace {
     void (* internal2)(void);                                               //96
     void (* __print_termination_message)(const char *termination_message);  //100
     void (* __get_default_file)(int file_descriptor, long *file_ptr);       //104
-    void (* internal4)(void);                                               //108
+    void (* unixPathsEnabled)(void);                                               //108
     void (* internal5)(void);                                               //112
 
     /* argz.h */
