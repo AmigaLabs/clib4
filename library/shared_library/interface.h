@@ -1352,7 +1352,6 @@ struct Clib4IFace {
     int (* sigwait) (const sigset_t *set, int *sig);                                                                                                 /* 4408 */
 	int (* sigwaitinfo) (const sigset_t *set, siginfo_t *info);																						 /* 4412 */
 	int (* sigtimedwait) (const sigset_t *set, siginfo_t *info, const struct timespec *timeout);													 /* 4416 */
-
     int (* getvfsstat) (struct statvfs *buf, size_t bufsize, int flags);                                                                             /* 4420 */
 	int (* backtrace) (void **buffer, int max_frames);																						 	 	 /* 4424 */
 	char ** (* backtrace_symbols) (void *const *buffer, int size);																					 /* 4428 */
@@ -1361,7 +1360,6 @@ struct Clib4IFace {
 
     int (* getpriority) (int which, unsigned int who);																								 /* 4440 */
     int (* setpriority) (int which, unsigned int who, int priority);																				 /* 4444 */
-
 };
 
 #ifdef __PIC__

@@ -27,7 +27,6 @@ struct statvfs {
     unsigned long f_fsid;
     unsigned long f_flag;
     unsigned long f_namemax;
-
     char f_mntonname[256];  // Mount point
     char f_fstypename[32];  // File system type
 };

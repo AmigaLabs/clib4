@@ -41,7 +41,6 @@
 
 extern int main(int arg_c, char **arg_v);
 static void shared_obj_init(struct _clib4 *__clib4, BOOL init);
-
 static void
 shared_obj_init(struct _clib4 *__clib4, BOOL init) {
     ENTER();
@@ -226,6 +225,9 @@ out:
 
     SHOWMSG("workbench_exit");
     workbench_exit();
+
+    /* Restore old Clib4Data */
+    me->pr_UID = (uint32) oldClib4Data;
 
     if (sms) {
         Forbid();

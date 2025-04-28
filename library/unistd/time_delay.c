@@ -57,6 +57,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 	SendIO((struct IORequest *) timeRequest);
 
     wait_mask = SIGBREAKF_CTRL_E | SIGBREAKF_CTRL_C | ( 1L << messagePort->mp_SigBit );
+
     /* Wait for signals */
     SHOWMSG("Waiting for signal");
     uint32 signals = Wait(wait_mask);
@@ -64,6 +65,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
         if (CheckIO((struct IORequest *) timeRequest))  /* If request is complete... */
             WaitIO((struct IORequest *) timeRequest);   /* clean up and remove reply */
         AbortIO((struct IORequest *) timeRequest);
+
         if (signals & SIGBREAKF_CTRL_E) {
             SHOWMSG("Received SIGBREAKF_CTRL_E");
             /* Return EINTR since the request has been interrupted by alarm */
@@ -89,7 +91,10 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 
     ReleaseSemaphore(__clib4->__timer_semaphore);
 
+
     __check_abort_f(__clib4);
+
+ 	ReleaseSemaphore(__clib4->__timer_semaphore);
 
     RETURN(result);
     return result;

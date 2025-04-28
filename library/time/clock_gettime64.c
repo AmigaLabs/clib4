@@ -23,7 +23,7 @@ clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
     }
 
 	/* Our clock is alwayy present for reading */
-
+  
     DECLARE_TIMERBASE_R(__clib4);
     DECLARE_TIMEZONEBASE_R(__clib4);
 
