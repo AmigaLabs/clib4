@@ -20,6 +20,7 @@ endif
 
 C_BASE := \
 	libc_init_global.o \
+	debug/amigaos_symbols_callback.o \
 	getclib4.o \
 	errno_data.o
 
@@ -148,9 +149,13 @@ C_NL_TYPES := \
 C_POSIX := \
 	posix/fnmatch.o \
 	posix/fstatvfs.o \
+	posix/getvfsstat.o \
 	posix/glob.o \
 	posix/globfree.o \
 	posix/basename.o \
+	debug/backtrace.o \
+	debug/backtrace_symbols.o \
+	debug/backtrace_symbols_fd.o \
 	posix/dirname.o \
 	posix/memalign.o \
 	posix/mmap.o \
@@ -204,7 +209,9 @@ C_POSIX := \
 	wait/waitpid.o \
 	posix/waitpoll.o \
 	posix/writev.o \
-	posix/uname.o
+	posix/uname.o \
+	posix/getpriority.o \
+	posix/setpriority.o
 
 C_REGEX := \
 	regex/regcomp.o \
@@ -487,6 +494,7 @@ C_STDLIB := \
 	stdlib/calloc.o \
 	stdlib/div.o \
 	stdlib/divsi3.o \
+	stdlib/dladdr.o \
 	stdlib/dlclose.o \
 	stdlib/dlerror.o \
 	stdlib/dlopen.o \
@@ -523,6 +531,7 @@ C_STDLIB := \
 	stdlib/mprec.o \
 	stdlib/mulsi3.o \
 	stdlib/posix_memalign.o \
+	stdlib/processscan_hook_function.o \
 	stdlib/program_name.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
@@ -591,17 +600,15 @@ C_STRING := \
 	cpu/generic/bcopy.o \
 	cpu/generic/strcat.o \
 	cpu/generic/strchr.o \
-	cpu/generic/strcpy.o \
+	cpu/generic/strcmp.o \
 	cpu/generic/strlen.o \
 	string/rindex.o \
 	string/stccpy.o \
 	string/stpcpy.o \
 	string/stpncpy.o \
 	string/strcasestr.o \
-	string/strcat.o \
 	string/strchr.o \
 	string/strchrnul.o \
-	string/strcmp.o \
 	string/strcoll.o \
 	string/strcpy.o \
 	string/strcspn.o \
@@ -782,6 +789,7 @@ C_UNISTD := \
 	unistd/ttyname.o \
 	unistd/ttyname_r.o \
     unistd/ualarm.o \
+    unistd/unix_paths_enabled.o \
 	unistd/unlink.o \
 	unistd/usleep.o \
 	unistd/wildcard_expand.o

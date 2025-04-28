@@ -494,9 +494,9 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
 
 size_t
 strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
-    DECLARE_LOCALEBASE();
     size_t result = 0;
     struct _clib4 *__clib4 = __CLIB4;
+    DECLARE_LOCALEBASE_R(__clib4);
 
     ENTER();
 

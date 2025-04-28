@@ -19,7 +19,7 @@ recvmsg(int sockfd, struct msghdr *msg, int flags) {
     SHOWVALUE(flags);
 
     assert(msg != NULL);
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     if (msg == NULL) {
         SHOWMSG("invalid msg parameter");

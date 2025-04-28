@@ -22,14 +22,15 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
     struct TimeRequest *tmr_real_tr = NULL;
     int result = -1;
 
-    if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME)) != 0) {
+    /* Only CLOCK_REALTIME can be set */
+    if ((clk_id & ~(CLOCK_REALTIME)) != 0) {
         __set_errno_r(__clib4, EINVAL);
         RETURN(-1);
         return -1;
     }
 
-    DECLARE_TIMERBASE();
-    DECLARE_TIMEZONEBASE();
+    DECLARE_TIMERBASE_R(__clib4);
+    DECLARE_TIMEZONEBASE_R(__clib4);
 
   	SHOWMSG("AllocSysObjectTags ASOT_PORT");
     /* Create itimer timers and message ports */
@@ -77,32 +78,23 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
 
     switch (clk_id) {
         case CLOCK_REALTIME: {
-            int32 __gmtoffset = 0;
-            int8 __dstime = -1;
+                int32 __gmtoffset = 0;
+                int8 __dstime = -1;
 
-            if (ITimezone) {
-                GetTimezoneAttrs(NULL, TZA_UTCOffset, &__gmtoffset, TZA_TimeFlag, &__dstime, TAG_DONE);
+                if (ITimezone) {
+                    GetTimezoneAttrs(NULL, TZA_UTCOffset, &__gmtoffset, TZA_TimeFlag, &__dstime, TAG_DONE);
+                }
+                tmr_real_tr->Request.io_Command = TR_SETSYSTIME;
+                /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
+                tmr_real_tr->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
+                tmr_real_tr->Time.Microseconds = t->tv_nsec / 1000;
+
+                DoIO((struct IORequest *)tmr_real_tr);
+                GetMsg(tmr_real_mp);
+
+                result = 0;
+                __set_errno_r(__clib4, 0);
             }
-            tmr_real_tr->Request.io_Command = TR_SETSYSTIME;
-            /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
-            tmr_real_tr->Time.Seconds = t->tv_sec - ((2922 * 24 * 60 + __gmtoffset) * 60);
-            tmr_real_tr->Time.Microseconds = t->tv_nsec / 1000;
-
-            DoIO((struct IORequest *)tmr_real_tr);
-            GetMsg(tmr_real_mp);
-
-            result = 0;
-            __set_errno_r(__clib4, 0);
-        }
-            break;
-
-        case CLOCK_MONOTONIC: // TODO - Are CLOCK_MONOTONIC and CLOCK_MONOTONIC_RAW settable?
-        case CLOCK_MONOTONIC_RAW: {
-            struct timeval tv;
-            TIMESPEC_TO_TIMEVAL(&tv, t);
-            __clib4->clock.tv_sec = tv.tv_sec;
-            __clib4->clock.tv_usec = tv.tv_usec;
-        }
             break;
 
         default:

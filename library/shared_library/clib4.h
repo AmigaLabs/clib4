@@ -49,6 +49,7 @@ struct Clib4Resource {
     uint32 altivec;
     uint32 cpufamily;
     int32  debugLevel;
+    int32  oldPriority;
 };
 
 struct Clib4Node {

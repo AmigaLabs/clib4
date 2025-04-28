@@ -41,6 +41,10 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
+#ifndef PROTO_ELF_H
+#include <proto/elf.h>
+#endif /* PROTO_ELF_H */
+
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
@@ -72,6 +76,14 @@
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
+
+#ifndef _STDLIB_DEBUGBASE_H
+#include "stdlib_debugbase.h"
+#endif /* _STDLIB_DEBUGBASE_H */
+
+#ifndef _STDLIB_ELFBASE_H
+#include "stdlib_elfbase.h"
+#endif /* _STDLIB_ELFBASE_H */
 
 #ifndef _MATH_FP_SUPPORT_H
 #include "math_fp_support.h"
@@ -106,6 +118,16 @@ extern int _main(char *argstr,
 #endif /* _STDLIB_PROTOS_H */
 
 extern void kprintf(const char * format,...);
+
+extern BOOL stdlib_program_name_init();
+extern void stdlib_program_name_exit();
+extern int wb_file_init(struct _clib4 *__clib4);
+extern void workbench_exit();
+extern BOOL arg_init();
+extern void arg_exit();
+
+extern ULONG amigaos_symbols_callback(struct Hook *hook, struct Task *task, struct SymbolMsg *symbolmsg);
+extern APTR processscan_hook_function(struct Hook *hook, APTR userdata, struct Process *process);
 
 #define NAMELEN 32
 

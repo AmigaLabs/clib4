@@ -16,7 +16,7 @@ int listen(int sockfd, int backlog) {
     SHOWVALUE(sockfd);
     SHOWVALUE(backlog);
 
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     assert(sockfd >= 0 && sockfd < __clib4->__num_fd);
     assert(__clib4->__fd[sockfd] != NULL);

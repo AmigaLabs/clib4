@@ -10,8 +10,6 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
-#include <stdio.h>
-
 int
 flock(int fd, int op) {
     int ret = -1;

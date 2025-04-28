@@ -301,6 +301,8 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         .__environment_pool = NULL,
         .__num_iob = 0,
         ._iob_pool = NULL,
+        .isTZSet = 0,
+        .__IDebug = NULL,
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {
@@ -367,6 +369,13 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         if (!__clib4->__memalign_pool) {
             goto out;
         }
+    }
+
+    __clib4->__IDebug = (struct DebugIFace *) GetInterface((struct Library *) IExec->Data.LibBase, "debug", 1, NULL);
+    D(("__clib4->__IDebug %p", __clib4->__IDebug));
+    if (!__clib4->__IDebug) {
+        D(("Cannot get IDebug interface"));
+        goto out;
     }
 
     /*
@@ -443,6 +452,10 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
             FreeVec(__clib4->wide_status);
             __clib4->wide_status = NULL;
         }
+
+        /* Drop IDebug interface */
+        if (__clib4->__IDebug)
+            DropInterface((struct Interface *) __clib4->__IDebug);
 
         /* Remove random semaphore */
         SHOWMSG("Delete __random_lock semaphore");

@@ -42,6 +42,7 @@ STRIP := ppc-amigaos-strip
 RANLIB := ppc-amigaos-ranlib
 HOST_CXX := g++
 SDK_INCLUDE ?= $(abspath $(addsuffix ../ppc-amigaos/SDK/include/,$(dir $(shell which $(word 1,$(CC))))))
+MAKELINK := ln -s
 
 # On AmigaOS use native commands
 ifeq ($(UNAME), AmigaOS)
@@ -72,7 +73,7 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-sign-compare -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Werror \
+    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Wno-stringop-overflow -Werror \
      # -Wbad-function-cast -Wconversion -Wformat
 
 PIC		   := -fPIC -DPIC
@@ -200,6 +201,7 @@ include libprofile.gmk
 prepare:
 	-$(MAKEDIR) $(BUILD_DIR)/shared
 	-$(MAKEDIR) $(INSTALL_PREFIX)/lib
+	-$(MAKEDIR) $(INSTALL_PREFIX)/lib/baserel
 	-$(MAKEDIR) $(INSTALL_PREFIX)/include
 # It may be the case that this makefile is invoked with an explicit CC
 # assingment such as: "gcc -B /someDir/". In fact, this pattern is used within
@@ -219,6 +221,7 @@ prepare:
 ALL_TARGETS = \
 	$(OUTPUT_LIB)/crt0.o \
 	$(OUTPUT_LIB)/crtbegin.o \
+	$(OUTPUT_LIB)/baserel/crtbegin.o \
 	$(OUTPUT_LIB)/crtend.o \
 	$(OUTPUT_LIB)/shcrtbegin.o \
 	$(OUTPUT_LIB)/shcrtend.o \
@@ -276,7 +279,7 @@ version:
 # Shared clib4.library rules
 
 clib4.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(OUTPUT_LIB)/crtend.o $(DLIBS) -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(OUTPUT_LIB)/crtend.o $(DLIBS) -Wl,-export-dynamic -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
 
 clib4.library: clib4.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
@@ -303,6 +306,11 @@ $(OUTPUT_LIB)/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtbegin.o $(INSTALL_PREFIX)/lib/
 
+$(OUTPUT_LIB)/baserel/crtbegin.o: CFLAGS = $(STABS) $(OPTIONS) $(INCLUDES) -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/baserel/crtbegin.o : $(LIB_DIR)/crtbegin.c
+	$(VERBOSE)$(COMPILE_BASEREL)
+	-$(COPY) $(OUTPUT_LIB)/baserel/crtbegin.o $(INSTALL_PREFIX)/lib/baserel/crtbegin.o
+
 $(OUTPUT_LIB)/crtend.o : CFLAGS = -O0 $(OPTIONS) $(INCLUDES) -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
@@ -324,6 +332,12 @@ define COMPILE
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rCompiling Static \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
 $(VERBOSE)$(CC) $(CFLAGS) -o $@ -c $< $(LOG_COMMAND)
+endef
+
+define COMPILE_BASEREL
+$(VERBOSE)@$(MAKEDIR) $(@D)
+$(VERBOSE)echo -e "\rCompiling Static Baserel \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
+$(VERBOSE)$(CC) $(CFLAGS) -DCLIB4_MBASEREL -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_INLINE
@@ -422,6 +436,16 @@ install:
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
 	$(DELETE) $(INSTALL_PREFIX)/clib4.library*
 	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/libamiga.a $(INSTALL_PREFIX)/lib/baserel/libamiga.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/libauto.a $(INSTALL_PREFIX)/lib/baserel/libauto.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/libc.a $(INSTALL_PREFIX)/lib/baserel/libc.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/libcrypt.a $(INSTALL_PREFIX)/lib/baserel/libcrypt.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/libdebug.a $(INSTALL_PREFIX)/lib/baserel/libdebug.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/libm.a $(INSTALL_PREFIX)/lib/baserel/libm.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/libprofile.a $(INSTALL_PREFIX)/lib/baserel/libprofile.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/librt.a $(INSTALL_PREFIX)/lib/baserel/librt.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/crt0.o $(INSTALL_PREFIX)/lib/baserel/crt0.o
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/crtend.o $(INSTALL_PREFIX)/lib/baserel/crtend.o
 	$(COPY) libs/libauto.a $(INSTALL_PREFIX)/lib/
 	$(COPY) $(BUILD_DIR)/clib4.library* $(INSTALL_PREFIX)
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
@@ -431,6 +455,7 @@ release:
 	-$(DELETE) clib4.info
 	-$(MAKEDIR) clib4/include
 	-$(MAKEDIR) clib4/lib
+	-$(MAKEDIR) clib4/lib/baserel
 	-$(COPY) *.md clib4/
 	-$(COPY) LICENSE* clib4/
 	-$(COPY) installer/Install* clib4/
@@ -441,6 +466,7 @@ release:
 	-$(COPY) misc clib4/
 	-$(COPY) libs/libauto.a clib4/lib/
 	-$(COPY) $(OUTPUT_LIB)/* clib4/lib/
+	-$(COPY) $(OUTPUT_LIB)/baserel/* clib4/lib/baserel/
 	-$(COPY) $(LIB_ROOT)/library/include/* clib4/include/
 	@lha -ao5i clib4.lha clib4 clib4.info
 	-$(DELETE) clib4

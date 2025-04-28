@@ -23,29 +23,47 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 	ULONG wait_mask;
     int result = 0;
     struct _clib4 *__clib4 = __CLIB4;
+    struct MsgPort *messagePort;
+    struct TimeRequest *timeRequest;
 
     __check_abort_f(__clib4);
 
-	DECLARE_TIMEZONEBASE();
+    DECLARE_TIMEZONEBASE_R(__clib4);
 
+    SHOWMSG("Obtaining __timer_semaphore");
     ObtainSemaphore(__clib4->__timer_semaphore);
+    messagePort = AllocSysObjectTags(ASOT_PORT,
+                                     ASOPORT_AllocSig, FALSE,
+                                     ASOPORT_Signal,   SIGB_SINGLE,
+                                     TAG_DONE);
+    if (!messagePort)
+        return ENOMEM;
 
-	__clib4->__timer_request->Request.io_Message.mn_ReplyPort = __clib4->__timer_port;
-    __clib4->__timer_request->Request.io_Command = timercmd;
-    __clib4->__timer_request->Time.Seconds = tv->tv_sec;
-    __clib4->__timer_request->Time.Microseconds = tv->tv_usec;
+    timeRequest = AllocSysObjectTags(ASOT_IOREQUEST,
+                                     ASOIOR_Duplicate, __clib4->__timer_request,
+                                     ASOIOR_Size, sizeof(struct TimeRequest),
+                                     ASOIOR_ReplyPort, messagePort,
+                                     TAG_END);
+    if (!timeRequest) {
+        FreeSysObject(ASOT_IOREQUEST, messagePort);
+        return ENOMEM;
+    }
+
+    timeRequest->Request.io_Command = timercmd;
+    timeRequest->Time.Seconds = tv->tv_sec;
+    timeRequest->Time.Microseconds = tv->tv_usec;
 
     SHOWMSG("Send IO Request");
-	SendIO((struct IORequest *) __clib4->__timer_request);
-	
-    wait_mask = SIGBREAKF_CTRL_E | SIGBREAKF_CTRL_C | ( 1L << __clib4->__timer_port->mp_SigBit );
+	SendIO((struct IORequest *) timeRequest);
+
+    wait_mask = SIGBREAKF_CTRL_E | SIGBREAKF_CTRL_C | ( 1L << messagePort->mp_SigBit );
     /* Wait for signals */
     SHOWMSG("Waiting for signal");
     uint32 signals = Wait(wait_mask);
     if (signals & SIGBREAKF_CTRL_C || signals & SIGBREAKF_CTRL_E) {
-        if (CheckIO((struct IORequest *) __clib4->__timer_request))  /* If request is complete... */
-            WaitIO((struct IORequest *) __clib4->__timer_request);   /* clean up and remove reply */
-        AbortIO((struct IORequest *) __clib4->__timer_request);
+        if (CheckIO((struct IORequest *) timeRequest))  /* If request is complete... */
+            WaitIO((struct IORequest *) timeRequest);   /* clean up and remove reply */
+        AbortIO((struct IORequest *) timeRequest);
         if (signals & SIGBREAKF_CTRL_E) {
             SHOWMSG("Received SIGBREAKF_CTRL_E");
             /* Return EINTR since the request has been interrupted by alarm */
@@ -58,16 +76,20 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
             SetSignal(SIGBREAKF_CTRL_C, SIGBREAKF_CTRL_C);
         }
     }
-    WaitIO((struct IORequest *) __clib4->__timer_request);
+    SHOWMSG("Wait IO");
+    WaitIO((struct IORequest *) timeRequest);
 
-    SHOWVALUE(__clib4->__timer_request->Time.Seconds);
-    SHOWVALUE(__clib4->__timer_request->Time.Microseconds);
-    tv->tv_sec = __clib4->__timer_request->Time.Seconds;
-    tv->tv_usec = __clib4->__timer_request->Time.Microseconds;
+    SHOWVALUE(timeRequest->Time.Seconds);
+    SHOWVALUE(timeRequest->Time.Microseconds);
+    tv->tv_sec = timeRequest->Time.Seconds;
+    tv->tv_usec = timeRequest->Time.Microseconds;
+
+    FreeSysObject(ASOT_IOREQUEST, timeRequest);
+    FreeSysObject(ASOT_PORT, messagePort);
+
+    ReleaseSemaphore(__clib4->__timer_semaphore);
 
     __check_abort_f(__clib4);
-
- 	ReleaseSemaphore(__clib4->__timer_semaphore);
 
     RETURN(result);
     return result;

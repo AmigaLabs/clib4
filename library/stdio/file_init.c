@@ -20,7 +20,8 @@
 
 #include <dos/stdio.h>
 
-FILE_DESTRUCTOR(workbench_exit) {
+void
+workbench_exit() {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -62,7 +63,7 @@ FILE_DESTRUCTOR(workbench_exit) {
     LEAVE();
 }
 
-static int
+int
 wb_file_init(struct _clib4 *__clib4) {
     int result = ERROR;
     STRPTR window_specifier = NULL;
@@ -92,8 +93,9 @@ wb_file_init(struct _clib4 *__clib4) {
         __clib4->input = Open(window_specifier, MODE_OLDFILE);
     }
 
-    if (__clib4->input == BZERO)
+    if (__clib4->input == BZERO) {
         __clib4->input = Open("NIL:", MODE_OLDFILE);
+    }
 
     if (__clib4->input != BZERO) {
         struct FileHandle *fh = BADDR(__clib4->input);
@@ -155,14 +157,6 @@ FILE_CONSTRUCTOR(stdio_file_init) {
     SHOWVALUE(physical_alignment);
     if (__clib4->__cache_line_size < physical_alignment) {
         __clib4->__cache_line_size = physical_alignment;
-    }
-
-    /* If we were invoked from Workbench, set up the standard I/O streams. */
-    if (__clib4->__WBenchMsg != NULL) {
-        SHOWMSG("set up the standard I/O streams");
-        if (wb_file_init(__clib4) < 0) {
-            goto out;
-        }
     }
 
     SHOWMSG("Now initialize the standard I/O streams (input, output, error)");

@@ -22,10 +22,10 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
         return -1;
     }
 
-	/* Our clock is alwayy present for reading */
+	/* Our clock is always present for reading */
 
-    DECLARE_TIMERBASE();
-    DECLARE_TIMEZONEBASE();
+    DECLARE_TIMERBASE_R(__clib4);
+    DECLARE_TIMEZONEBASE_R(__clib4);
 
     struct timeval tv;
     uint32 gmtoffset = 0;
@@ -34,9 +34,8 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
     //Set default value for tv
     tv.tv_sec = tv.tv_usec = 0;
 
-    GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
-
-    if (clk_id == CLOCK_MONOTONIC | clk_id == CLOCK_MONOTONIC_RAW) {
+    SHOWVALUE(clk_id);
+    if (clk_id == CLOCK_MONOTONIC || clk_id == CLOCK_MONOTONIC_RAW) {
         /*
         CLOCK_MONOTONIC
             A nonsettable system-wide clock that represents monotonic
@@ -50,28 +49,30 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
               ware-based time that is not subject to NTP adjustments.
         */
 
-        GetUpTime((struct TimeVal *) &tv);
+        if (ITimer) {
+            GetUpTime((struct TimeVal *) &tv);
+        }
     } else {
         /*
         A settable system-wide clock that measures real (i.e., wall-clock) time.
         */
-        GetSysTime((struct TimeVal *) &tv);
-    }
+        if (ITimezone) {
+            GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
+        }
 
-    if (clk_id == CLOCK_MONOTONIC || clk_id == CLOCK_MONOTONIC_RAW) {
-        t->tv_sec = tv.tv_sec;
-        t->tv_nsec = tv.tv_usec * 1000;
-    } else {
+        if (ITimer) {
+            GetSysTime((struct TimeVal *) &tv);
+        }
+
         /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
         tv.tv_sec += (2922 * 24 * 60 + gmtoffset) * 60;
-        t->tv_sec = tv.tv_sec;
-        t->tv_nsec = tv.tv_usec * 1000;
     }
+    t->tv_sec = tv.tv_sec;
+    t->tv_nsec = tv.tv_usec * 1000;
 
     /* Check if we are in DST */
     if (dstime == TFLG_ISDST)
         t->tv_sec += (60 * 60);
-
 
     RETURN(0);
     return 0;

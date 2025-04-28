@@ -59,6 +59,11 @@ typedef unsigned long useconds_t;
 typedef long suseconds_t;
 
 typedef int32_t blksize_t;
+#ifndef __USE_FILE_OFFSET64
+typedef int32_t blkcnt_t;
+#else
+typedef int64_t blkcnt_t;
+#endif
 
 typedef	unsigned long long u_quad_t;	/* quads */
 typedef	long long	quad_t;
@@ -71,8 +76,8 @@ typedef	quad_t *	qaddr_t;
 /* Iconv descriptor type */
 typedef void *_iconv_t;
 
-#define _CLOCK_T_ unsigned long long /* clock() */
-#define _TIME_T_ long long           /* time() */
+#define _CLOCK_T_ unsigned long     /* clock() */
+#define _TIME_T_ long               /* time() */
 #define _CLOCKID_T_ unsigned long
 #define _TIMER_T_ unsigned long
 

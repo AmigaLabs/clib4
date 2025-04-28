@@ -528,6 +528,9 @@ struct _clib4 {
     APTR _iob_pool;
 
     int local_raised_signals_blocked;
+    int isTZSet;
+
+    struct DebugIFace *__IDebug;
 };
 
 #ifndef __getClib4

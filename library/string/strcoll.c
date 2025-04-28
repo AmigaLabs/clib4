@@ -12,9 +12,9 @@
 
 int
 strcoll(const char *s1, const char *s2) {
-    DECLARE_LOCALEBASE();
     int result = 0;
     struct _clib4 *__clib4 = __CLIB4;
+    DECLARE_LOCALEBASE_R(__clib4);
 
     assert(s1 != NULL && s2 != NULL);
 

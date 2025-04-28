@@ -17,6 +17,7 @@
 #include <dlfcn.h>
 #include <envz.h>
 #include <err.h>
+#include <execinfo.h>
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <fts.h>
@@ -110,7 +111,7 @@ struct Clib4IFace {
     void (* internal2)(void);                                               //96
     void (* __print_termination_message)(const char *termination_message);  //100
     void (* __get_default_file)(int file_descriptor, long *file_ptr);       //104
-    void (* internal4)(void);                                               //108
+    void (* unixPathsEnabled)(void);                                               //108
     void (* internal5)(void);                                               //112
 
     /* argz.h */
@@ -1351,6 +1352,16 @@ struct Clib4IFace {
     int (* sigwait) (const sigset_t *set, int *sig);                                                                                                 /* 4408 */
 	int (* sigwaitinfo) (const sigset_t *set, siginfo_t *info);																						 /* 4412 */
 	int (* sigtimedwait) (const sigset_t *set, siginfo_t *info, const struct timespec *timeout);													 /* 4416 */
+
+    int (* getvfsstat) (struct statvfs *buf, size_t bufsize, int flags);                                                                             /* 4420 */
+	int (* backtrace) (void **buffer, int max_frames);																						 	 	 /* 4424 */
+	char ** (* backtrace_symbols) (void *const *buffer, int size);																					 /* 4428 */
+	void (* backtrace_symbols_fd) (void *const *buffer, int size, int fd);    																		 /* 4432 */
+	int (* dladdr) (const void *addr, Dl_info *info);																								 /* 4436 */
+
+    int (* getpriority) (int which, unsigned int who);																								 /* 4440 */
+    int (* setpriority) (int which, unsigned int who, int priority);																				 /* 4444 */
+
 };
 
 #ifdef __PIC__

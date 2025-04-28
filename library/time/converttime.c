@@ -16,7 +16,7 @@ __convert_time(ULONG seconds, LONG gmt_offset, struct tm *tm) {
     struct tm *result;
     struct _clib4 *__clib4 = __CLIB4;
     DECLARE_UTILITYBASE();
-    DECLARE_TIMEZONEBASE();
+    DECLARE_TIMEZONEBASE_R(__clib4);
     int8 dstime = -1;
 
     ENTER();
@@ -34,7 +34,10 @@ __convert_time(ULONG seconds, LONG gmt_offset, struct tm *tm) {
         seconds -= UNIX_TIME_OFFSET;
 
     /* Now the local time offset will have to go. */
-    seconds -= gmt_offset;
+    if (gmt_offset > 0)
+        seconds -= gmt_offset;
+    else
+        seconds += gmt_offset;
 
     /* Check if we are in DST */
     GetTimezoneAttrs(NULL, TZA_TimeFlag, &dstime, TAG_DONE);

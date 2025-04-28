@@ -12,7 +12,7 @@ static void *clib4Vectors[] = {
         (void *) (libReserved),
         (void *) (__print_termination_message),
         (void *) (__get_default_file),
-        (void *) (libReserved),
+        (void *) (unixPathsEnabled),
         (void *) (libReserved),
 
         /* argz.h */
@@ -1172,14 +1172,23 @@ static void *clib4Vectors[] = {
         (void *) (__get_tc_up),                           /* 4384 */
         (void *) (__get_tc_bc),                           /* 4388 */
 
-        (void *) (0),                     /* 4392 */
+        (void *) (0),                                     /* 4392 - unused */
 
-        (void *) (sigsuspend),		                      /* 4396 */
+        (void *) (sigsuspend),		                  	  /* 4396 */
         (void *) (spawnve),                               /* 4400 */
-        (void *) (sigpause),		                      /* 4404 */
-        (void *) (sigwait),		                          /* 4408 */
-        (void *) (sigwaitinfo),		                      /* 4412 */
-        (void *) (sigtimedwait),	                      /* 4416 */
-		
+        (void *) (sigpause),		                  	  /* 4404 */
+        (void *) (sigwait),		                  		  /* 4408 */
+        (void *) (sigwaitinfo),		                  	  /* 4412 */
+        (void *) (sigtimedwait),	                  	  /* 4416 */
+
+        (void *) (getvfsstat),                            /* 4420 */
+        (void *) (backtrace),                             /* 4424 */
+        (void *) (backtrace_symbols),                     /* 4428 */
+        (void *) (backtrace_symbols_fd),                  /* 4432 */
+        (void *) (dladdr),								  /* 4436 */
+
+        (void *) (getpriority),							  /* 4440 */
+        (void *) (setpriority),							  /* 4444 */
+
         (void *)-1
 };

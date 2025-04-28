@@ -115,8 +115,6 @@ getcwd(char *buffer, size_t buffer_size) {
 
 out:
 
-    UnLock(dir_lock);
-
     RETURN(result);
     return (result);
 }

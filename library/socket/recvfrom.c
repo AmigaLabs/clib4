@@ -21,7 +21,7 @@ recvfrom(int sockfd, void *buff, size_t len, int flags, struct sockaddr *from, s
     SHOWPOINTER(from);
     SHOWPOINTER(fromlen);
 
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     if (buff == NULL) {
         SHOWMSG("invalid parameters");

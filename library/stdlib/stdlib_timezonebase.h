@@ -27,4 +27,8 @@
 	struct Library *		UNUSED	TimezoneBase	= __CLIB4->__TimezoneBase; \
 	struct TimezoneIFace *			ITimezone		= __CLIB4->__ITimezone
 
+#define DECLARE_TIMEZONEBASE_R(clib4) \
+	struct Library *		UNUSED	TimezoneBase	= clib4->__TimezoneBase; \
+	struct TimezoneIFace *			ITimezone		= clib4->__ITimezone
+
 #endif /* _STDLIB_TIMEZONEBASE_H */
