@@ -24,3 +24,4 @@ Clib4Call(__translate_unix_to_amiga_path_name, 92);
 //Clib4Call(__restore_path_name, 96);
 Clib4Call(__print_termination_message, 100);
 Clib4Call(__get_default_file, 104);
+Clib4Call(unixPathsEnabled, 108);
