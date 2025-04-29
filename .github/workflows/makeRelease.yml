@@ -30,10 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Notify on Discord on successful release
-      uses: appleboy/discord-action@master
+      uses: hunghg255/action-notifications@master
       with:
-        webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
-        webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-        message: "New release of clib4: **${{ github.event.release.tag_name }}** has been created. Check it out at: https://github.com/AmigaLabs/clib4/releases/tag/${{ github.event.release.tag_name }}"
-        username: "GitHub Actions"
-        avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+        discord_webhook: https://discord.com/api/webhooks/${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}/${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
+        title: "clib4 ${{ github.event.release.tag_name }} released"
+        description: "Check it out at: ${{ github.event.release.html_url }}"
