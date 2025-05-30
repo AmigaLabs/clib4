@@ -39,6 +39,10 @@
 
 extern struct DOSIFace *_IDOS;
 
+static inline void set_tls_register(ThreadInfo *ti) {
+  __asm__ volatile("mr r2, %0" :: "r"(ti));
+}
+
 static uint32
 StarterFunc() {
     volatile int keyFound = TRUE;
@@ -47,6 +51,9 @@ StarterFunc() {
 
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
+
+    set_tls_register(inf);
+
     struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_EntryData; // GetEntryData();
 
     // custom stack requires special handling

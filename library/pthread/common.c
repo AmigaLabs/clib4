@@ -62,6 +62,13 @@ ThreadInfo *GetThreadInfo(pthread_t thread) {
     return NULL;
 }
 
+ThreadInfo *GetCurrentThreadInfo() {
+  ThreadInfo *ti;
+  // Adjust "r2" as needed for your ABI
+  __asm__("mr %0, r2" : "=r"(ti));
+  return ti;
+}
+
 pthread_t GetThreadId(struct Task *task) {
     pthread_t i;
 

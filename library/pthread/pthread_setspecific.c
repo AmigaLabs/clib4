@@ -39,27 +39,14 @@
 
 int
 pthread_setspecific(pthread_key_t key, const void *value) {
-    pthread_t thread;
     ThreadInfo *inf;
-    TLSKey *tls;
 
     if (key >= PTHREAD_KEYS_MAX)
         return EINVAL;
 
-    thread = pthread_self();
-    tls = &tlskeys[key];
-
-    ObtainSemaphoreShared(&tls_sem);
-
-    if (tls->used == FALSE) {
-        ReleaseSemaphore(&tls_sem);
-        return EINVAL;
-    }
-
-    ReleaseSemaphore(&tls_sem);
-
-    inf = GetThreadInfo(thread);
-    inf->tlsvalues[key] = (void *) value;
+    inf = GetCurrentThreadInfo();
+    if (inf != NULL)
+      inf->tlsvalues[key] = (void *) value;
 
     return 0;
 }
