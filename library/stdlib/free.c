@@ -18,26 +18,13 @@ void
 __free_r(struct _clib4 *__clib4, void *ptr) {
     __memory_lock(__clib4);
 
-    BOOL found = FALSE;
-    struct MemalignEntry *e = NULL;
-    /* Check if we have something created by memalign */
-    if (__clib4 != NULL) {
-        e = (struct MemalignEntry *) AVL_FindNode(__clib4->__memalign_tree, ptr, MemalignAVLKeyComp);
-        if (e) {
-            found = TRUE;
-        }
-    }
+    AlignedHeader* header = (AlignedHeader*) ((uintptr_t)ptr - sizeof(AlignedHeader));
 
-    if (found) {
-        /* Free memory */
-        FreeVec(e->me_Exact);
-        e->me_Exact = NULL;
-        /* Remove the node */
-        AVL_RemNodeByAddress(&__clib4->__memalign_tree, &e->me_AvlNode);
-        ItemPoolFree(__clib4->__memalign_pool, e);
-        e = NULL;
+    // Validate with endian-independent integer comparison
+    if (header->magic == ALIGNED_BLOCK_MAGIC) {
+        wmem_free(__clib4->__wmem_allocator, header->original_ptr);
     } else {
-        wmem_free(__clib4->__wmem_allocator, ptr);
+        wmem_free(__clib4->__wmem_allocator,ptr);
     }
 
     __memory_unlock(__clib4);

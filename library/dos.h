@@ -317,8 +317,8 @@ struct _clib4 {
     BOOL __unlock_current_directory;
 
     /* Memalign memory list */
-    void *__memalign_pool;
-    struct AVLNode *__memalign_tree;
+    void *unused2;
+    void *unused3;
 
     /*
      * This variable can be set up to contain the minimum stack size the program
