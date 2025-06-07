@@ -74,8 +74,6 @@ struct hashmap *hashmap_new_with_allocator(
         void (*elfree)(void *item),
         void *udata) {
 
-    DECLARE_UTILITYBASE();
-
     size_t ncap = 16;
     if (cap < ncap) {
         cap = ncap;
@@ -91,11 +89,10 @@ struct hashmap *hashmap_new_with_allocator(
     }
     // hashmap + spare + edata
     size_t size = sizeof(struct hashmap) + bucketsz * 2;
-    struct hashmap *map = AllocVecTags(size, AVT_Type, MEMF_SHARED, TAG_DONE);
+    struct hashmap *map = AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (!map) {
         return NULL;
     }
-    ClearMem(map, sizeof(struct hashmap));
     map->elsize = elsize;
     map->bucketsz = bucketsz;
     map->seed0 = seed0;
@@ -109,12 +106,11 @@ struct hashmap *hashmap_new_with_allocator(
     map->cap = cap;
     map->nbuckets = cap;
     map->mask = map->nbuckets - 1;
-    map->buckets = AllocVecTags(map->bucketsz * map->nbuckets, AVT_Type, MEMF_SHARED, TAG_DONE);
+    map->buckets = AllocVecTags(map->bucketsz * map->nbuckets, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (!map->buckets) {
         FreeVec(map);
         return NULL;
     }
-    ClearMem(map->buckets, map->bucketsz * map->nbuckets);
     map->growpower = 1;
     map->growat = map->nbuckets * GROW_AT;
     map->shrinkat = map->nbuckets * SHRINK_AT;

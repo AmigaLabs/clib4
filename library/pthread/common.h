@@ -109,6 +109,7 @@ int SemaphoreIsInvalid(struct SignalSemaphore *sem);
 int SemaphoreIsMine(struct SignalSemaphore *sem);
 int MutexIsMine(pthread_mutex_t *mutex);
 ThreadInfo *GetThreadInfo(pthread_t thread);
+ThreadInfo *GetCurrentThreadInfo();
 pthread_t GetThreadId(struct Task *task);
 BOOL OpenTimerDevice(struct IORequest *io, struct MsgPort *mp, struct Task *task);
 void CloseTimerDevice(struct IORequest *io);

@@ -39,6 +39,10 @@
 
 extern struct DOSIFace *_IDOS;
 
+static inline void set_tls_register(ThreadInfo *ti) {
+  __asm__ volatile("mr r2, %0" :: "r"(ti));
+}
+
 static uint32
 StarterFunc() {
     volatile int keyFound = TRUE;
@@ -47,6 +51,9 @@ StarterFunc() {
 
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
+
+    set_tls_register(inf);
+
     struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_EntryData; // GetEntryData();
 
     // custom stack requires special handling
@@ -143,14 +150,9 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->canceltype = PTHREAD_CANCEL_DEFERRED;
     inf->detached = inf->attr.detachstate == PTHREAD_CREATE_DETACHED;
 
-    /* Ceck minimum stack size */
-    int minStack = PTHREAD_STACK_MIN;
-    int currentStack = (uint32) thisTask->tc_SPUpper - (uint32) thisTask->tc_SPLower;
-    if (currentStack > minStack)
-        currentStack = minStack;
-
-    if (inf->attr.stacksize != 0 && inf->attr.stacksize < minStack)
-        inf->attr.stacksize = minStack;
+    /* Check minimum stack size */
+    if (inf->attr.stacksize != 0 && inf->attr.stacksize < PTHREAD_STACK_MIN)
+        inf->attr.stacksize = PTHREAD_STACK_MIN;
 
     // Check if we have a guardsize
     if (inf->attr.guardsize > 0)

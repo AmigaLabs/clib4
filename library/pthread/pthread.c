@@ -263,6 +263,10 @@ _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
 // Constructors, destructors
 //
 
+static inline void set_tls_register(ThreadInfo *ti) {
+  __asm__ volatile("mr r2, %0" :: "r"(ti));
+}
+
 int __pthread_init_func(void) {
     pthread_t i;
 
@@ -272,6 +276,9 @@ int __pthread_init_func(void) {
 
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
+
+    set_tls_register(inf);
+
     inf->task = (struct Process *) FindTask(NULL);
     inf->status = THREAD_STATE_RUNNING;
     NewMinList(&inf->cleanup);

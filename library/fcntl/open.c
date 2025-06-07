@@ -368,9 +368,14 @@ out:
     if (handle != BZERO)
         Close(handle);
 
-    FreeDosObject(DOS_EXAMINEDATA, fib);
+    if (fib != NULL)
+        FreeDosObject(DOS_EXAMINEDATA, fib);
+
     if (lock != BZERO)
         UnLock(lock);
+
+    if (dir_lock != BZERO)
+      	UnLock(dir_lock);
 
     __stdio_unlock(__clib4);
 
