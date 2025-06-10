@@ -41,7 +41,7 @@ int
 pthread_key_delete(pthread_key_t key) {
     TLSKey *tls;
 
-    if (key >= PTHREAD_KEYS_MAX)
+    if (key >= PTHREAD_KEYS_MAX || key < 0)
         return EINVAL;
 
     tls = &tlskeys[key];

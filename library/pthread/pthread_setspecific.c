@@ -41,7 +41,7 @@ int
 pthread_setspecific(pthread_key_t key, const void *value) {
     ThreadInfo *inf;
 
-    if (key >= PTHREAD_KEYS_MAX)
+    if (key >= PTHREAD_KEYS_MAX || key < 0)
         return EINVAL;
 
     inf = GetCurrentThreadInfo();

@@ -277,15 +277,13 @@ int __pthread_init_func(void) {
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
 
-    set_tls_register(inf);
-
     inf->task = (struct Process *) FindTask(NULL);
     inf->status = THREAD_STATE_RUNNING;
     NewMinList(&inf->cleanup);
 
     timerMutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
 
-    timedTimerPort = AllocSysObject(ASOT_PORT, NULL);
+    timedTimerPort = AllocSysObjectTags(ASOT_PORT, TAG_DONE);
     timedTimerIO = AllocSysObjectTags(ASOT_IOREQUEST,
                                       ASOIOR_ReplyPort, timedTimerPort,
                                       ASOIOR_Size, sizeof(struct TimeRequest),
@@ -299,6 +297,8 @@ int __pthread_init_func(void) {
         inf->status = THREAD_STATE_IDLE;
     }
 
+    set_tls_register(inf);
+
     return TRUE;
 }
 
@@ -307,15 +307,21 @@ void __pthread_exit_func(void) {
     ThreadInfo *inf;
     struct DOSIFace *IDOS = _IDOS;
 
-    if (timerMutex)
+    if (timerMutex) {
         FreeSysObject(ASOT_MUTEX, timerMutex);
+        timerMutex = NULL;
+    }
 
     if (timedTimerIO)
         CloseDevice((struct IORequest *) timedTimerIO);
-    if (timedTimerIO)
+    if (timedTimerIO) {
         FreeSysObject(ASOT_IOREQUEST, timedTimerIO);
-    if (timedTimerPort)
+        timedTimerIO = NULL;
+    }
+    if (timedTimerPort) {
         FreeSysObject(ASOT_PORT, timedTimerPort);
+        timedTimerPort = NULL;
+    }
 
     // if we don't do this we can easily end up with unloaded code being executed
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
