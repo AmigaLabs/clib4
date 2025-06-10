@@ -42,7 +42,7 @@ pthread_getspecific(pthread_key_t key) {
     ThreadInfo *inf;
     void *value = NULL;
 
-    if (key >= PTHREAD_KEYS_MAX)
+    if (key >= PTHREAD_KEYS_MAX || key < 0)
         return NULL;
 
     inf = GetCurrentThreadInfo();
