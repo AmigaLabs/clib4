@@ -8,9 +8,9 @@
 
 char *
 setlocale(int category, const char *locale) {
-    DECLARE_LOCALEBASE();
     char *result = NULL;
     struct _clib4 *__clib4 = __CLIB4;
+    DECLARE_LOCALEBASE_R(__clib4);
 
     ENTER();
 

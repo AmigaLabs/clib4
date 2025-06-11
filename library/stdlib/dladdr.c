@@ -19,41 +19,33 @@ dladdr(const void *addr, Dl_info *info) {
     SHOWPOINTER(info);
 
     if (info == NULL) {
-	    SHOWMSG("info is NULL");
-	    __set_errno_r(__clib4, EINVAL);
-	    return result;
-	}
+        SHOWMSG("info is NULL");
+        __set_errno_r(__clib4, EINVAL);
+        return result;
+    }
 
-    if (__clib4->__dl_root_handle != NULL) {
-        struct ElfIFace *IElf = __clib4->IElf;
-        struct Elf32_SymbolQuery query;
+    DECLARE_DEBUGBASE();
+    struct ElfIFace *IElf = __clib4->IElf;
 
-        struct Hook symbol_hook;
-        symbol_hook.h_Entry = (ULONG (*)())amigaos_symbols_callback;
-        symbol_hook.h_Data =  NULL;
-        ScanSymbolTable(__clib4->__dl_root_handle, &symbol_hook, NULL);
-
-        char nameBuffer[256] = {0};
-
-        query.Flags = ELF32_SQ_BYVALUE | ELF32_SQ_LOAD;
-        query.Value = (uint32) addr;
-        query.NameLength = 255;
-        query.Name = nameBuffer;
-        SymbolQuery(__clib4->__dl_root_handle, 1, &query);
-        if (query.Found) {
-            ULONG fileBuffer;
-
-            GetElfAttrsTags(__clib4->__dl_root_handle, EAT_FileName, &fileBuffer, TAG_DONE);
-            info->dli_fname = (STRPTR) fileBuffer;
-	        info->dli_fbase = NULL;
-			//Printf("info->dli_fbase = %p\n", query.Sym.st_shndx);
-		    info->dli_sname = nameBuffer;
-		    info->dli_saddr = (void *) query.Sym.st_value;
-	        result = 0;
-	    }
+    struct DebugSymbol *symbol = ObtainDebugSymbol((APTR) addr, NULL);
+    if (symbol) {
+        info->dli_fbase = NULL; // Should be got dynamically
+        info->dli_fname = symbol->Name ? symbol->Name : "";
+        info->dli_saddr = (void *) symbol->Offset;
     } else {
         __set_errno_r(__clib4, ENOSYS);
+        RETURN(result);
+        return (result);
     }
+
+    if (__clib4->__dl_root_handle != NULL) {
+        ULONG fileBuffer;
+
+        GetElfAttrsTags(__clib4->__dl_root_handle, EAT_FileName, &fileBuffer, TAG_DONE);
+        info->dli_sname = (STRPTR) fileBuffer;
+    }
+    else
+        info->dli_fname = "";
 
     RETURN(result);
     return (result);

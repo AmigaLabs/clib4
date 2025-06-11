@@ -231,8 +231,6 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         .__priority = 256,
         .pipenum = 0,
         .tgoto_buf = {0},
-        /* Set memalign tree to NULL */
-        .__memalign_tree = NULL,
         /* Initialize pipe semaphore */
         .__pipe_semaphore = __create_semaphore(),
         /* Initialize random signal and state */
@@ -302,6 +300,7 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         .__num_iob = 0,
         ._iob_pool = NULL,
         .isTZSet = 0,
+        .__IDebug = NULL,
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {
@@ -353,21 +352,11 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     D(("Check if altivec is present"));
     GetCPUInfoTags(GCIT_VectorUnit, &__clib4->hasAltivec, TAG_DONE);
 
-    /* Init memalign list */
-    if (!fallback) {
-        SHOWMSG("Allocating __memalign_pool");
-        __clib4->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
-                                                      ASO_NoTrack, FALSE,
-                                                      ASO_MemoryOvr, MEMF_SHARED,
-                                                      ASOITEM_MFlags, MEMF_SHARED,
-                                                      ASOITEM_ItemSize, sizeof(struct MemalignEntry),
-                                                      ASOITEM_BatchSize, 408,
-                                                      ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
-                                                      ASOITEM_GCParameter, 1000,
-                                                      TAG_DONE);
-        if (!__clib4->__memalign_pool) {
-            goto out;
-        }
+    __clib4->__IDebug = (struct DebugIFace *) GetInterface((struct Library *) IExec->Data.LibBase, "debug", 1, NULL);
+    D(("__clib4->__IDebug %p", __clib4->__IDebug));
+    if (!__clib4->__IDebug) {
+        D(("Cannot get IDebug interface"));
+        goto out;
     }
 
     /*
@@ -445,40 +434,16 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
             __clib4->wide_status = NULL;
         }
 
+        /* Drop IDebug interface */
+        if (__clib4->__IDebug)
+            DropInterface((struct Interface *) __clib4->__IDebug);
+
         /* Remove random semaphore */
         SHOWMSG("Delete __random_lock semaphore");
         __delete_semaphore(__clib4->__random_lock);
         /* Remove pipe semaphore */
         SHOWMSG("Delete __pipe_semaphore semaphore");
         __delete_semaphore(__clib4->__pipe_semaphore);
-        if (!fallback) { //TODO : Freeing memalign crash libExpunge and I don't know why
-            /* Free memalign stuff */
-            if (__clib4->__memalign_pool) {
-                SHOWMSG("Freeing memalign pool");
-                /* Check if we have something created with posix_memalign and not freed yet.
-                 * But this is a good point also to free something allocated with memalign or
-                 * aligned_alloc and all other functions are using memalign_tree to allocate memory
-                 * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
-                 */
-                struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__clib4->__memalign_tree);
-                while (e) {
-                    struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
-
-                    /* Free memory */
-                    if (e->me_Exact) {
-                        FreeVec(e->me_Exact);
-                    }
-                    /* Remove the node */
-                    AVL_RemNodeByAddress(&__clib4->__memalign_tree, &e->me_AvlNode);
-                    ItemPoolFree(__clib4->__memalign_pool, e);
-
-                    e = next;
-                }
-
-                FreeSysObject(ASOT_ITEMPOOL, __clib4->__memalign_pool);
-                SHOWMSG("Done");
-            }
-        }
         /* Free dl stuff */
         struct ElfIFace *IElf = __IElf;
 

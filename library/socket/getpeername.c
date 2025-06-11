@@ -19,7 +19,7 @@ getpeername(int sockfd, struct sockaddr *name, socklen_t *namelen) {
     SHOWPOINTER(namelen);
 
     assert(name != NULL && namelen != NULL);
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     if (name == NULL || namelen == NULL) {
         SHOWMSG("invalid parameters");

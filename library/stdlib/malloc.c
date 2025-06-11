@@ -23,7 +23,6 @@ void *
 __malloc_r(struct _clib4 *__clib4, size_t size) {
     ENTER();
     void *result = NULL;
-    SHOWPOINTER(__clib4);
 
     __memory_lock(__clib4);
 

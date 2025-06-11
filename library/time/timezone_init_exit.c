@@ -18,7 +18,7 @@ __timezone_exit(void) {
     __timezone_lock();
 
     if (__clib4->__TimezoneBase != NULL) {
-        DECLARE_TIMEZONEBASE();
+        DECLARE_TIMEZONEBASE_R(__clib4);
 
         if (__clib4->__dyntz == TRUE) {
             if (__clib4->__tzname[0]) free(__clib4->__tzname[0]);
@@ -71,7 +71,7 @@ __timezone_init(void) {
     }
 
     if (__clib4->__TimezoneBase != NULL) {
-        DECLARE_TIMEZONEBASE();
+        DECLARE_TIMEZONEBASE_R(__clib4);
 
         // Set global timezone variable
         uint32 gmtoffset = 0;

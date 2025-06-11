@@ -13,10 +13,11 @@ getexecname(void) {
     char pathBuffer[PATH_MAX] = {0};
     if (GetCliProgramName(pathBuffer, PATH_MAX - 1)) {
         char *ret = calloc(1, strlen(pathBuffer) + 1);
+        strncpy(ret, pathBuffer, PATH_MAX - 1);
         RETURN(ret);
         return ret;
     } else {
-        RETURN("?");
-        return "?";
+        RETURN(NULL);
+        return NULL;
     }
 }

@@ -54,10 +54,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: PR notification
-      uses: appleboy/discord-action@master
+      uses: hunghg255/action-notifications@master
       with:
-        webhook_id: ${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}
-        webhook_token: ${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-        message: "clib4: New code merged into **${{ github.event.pull_request.base.ref }}**. Check it out at: ${{ github.event.pull_request.html_url }}. Compare it at: ${{ github.event.pull_request.base.repo.html_url }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
-        username: "GitHub Actions"
-        avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+        discord_webhook: https://discord.com/api/webhooks/${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}/${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
+        title: "Deploy to ${{ github.event.pull_request.base.ref }}"
+        description: "Check it out at: ${{ github.event.pull_request.html_url }}"

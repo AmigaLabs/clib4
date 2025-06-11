@@ -105,6 +105,10 @@ struct UnixSocket {
 	struct Library   UNUSED	*SocketBase  = __CLIB4->__SocketBase; \
 	struct SocketIFace 		*ISocket	 = __CLIB4->__ISocket
 
+#define DECLARE_SOCKETBASE_R(clib4) \
+	struct Library   UNUSED	*SocketBase  = clib4->__SocketBase; \
+	struct SocketIFace 		*ISocket	 = clib4->__ISocket
+
 extern int h_errno;
 
 extern struct fd * __get_file_descriptor_socket(struct _clib4 *__clib4, int socket_descriptor);
