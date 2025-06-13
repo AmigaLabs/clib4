@@ -474,6 +474,9 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             if (IDOS->NameFromLock(me->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
                 __set_current_path((const char *) current_dir_name);
             }
+
+            ITimer->GetSysTime((struct TimeVal *) &__clib4->clock);
+
             /* At this point exe is fully initialized */
             __clib4->__fully_initialized = TRUE;
             SHOWMSG("Library initialized");
@@ -768,6 +771,7 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
             res->fallbackClib->self = (struct Process *) IExec->FindTask(NULL);
             res->fallbackClib->__check_abort_enabled = TRUE;
             res->fallbackClib->__fully_initialized = TRUE;
+            ITimer->GetSysTime((struct TimeVal *) &res->fallbackClib->clock);
 
             /* Init SYSV structures */
             IPCMapInit(&res->shmcx.keymap);
