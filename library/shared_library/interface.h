@@ -1362,6 +1362,9 @@ struct Clib4IFace {
     int (* getpriority) (int which, unsigned int who);																								 /* 4440 */
     int (* setpriority) (int which, unsigned int who, int priority);																				 /* 4444 */
 
+	double (* roundeven) (double x);																				 								 /* 4448 */
+	float (* roundevenf) (float x);																				 									 /* 4452 */
+	long double (* roundevenl) (long double x);																	 									 /* 4456 */
 };
 
 #ifdef __PIC__

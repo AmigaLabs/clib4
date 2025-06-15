@@ -16,6 +16,9 @@
 
 void
 __free_r(struct _clib4 *__clib4, void *ptr) {
+    if (ptr == NULL)
+        return;
+
     __memory_lock(__clib4);
 
     AlignedHeader* header = (AlignedHeader*) ((uintptr_t)ptr - sizeof(AlignedHeader));

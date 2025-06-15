@@ -24,6 +24,12 @@ __malloc_r(struct _clib4 *__clib4, size_t size) {
     ENTER();
     void *result = NULL;
 
+    // Prevent overflow
+    if (size > SIZE_MAX) {
+        __set_errno_r(__clib4, EOVERFLOW);
+        goto out;
+    }
+
     __memory_lock(__clib4);
 
     result = wmem_alloc(__clib4->__wmem_allocator, size);
@@ -33,6 +39,7 @@ __malloc_r(struct _clib4 *__clib4, size_t size) {
 
     __memory_unlock(__clib4);
 
+out:
     LEAVE();
     return (result);
 }
