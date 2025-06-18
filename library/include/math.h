@@ -270,6 +270,10 @@ extern float exp2f(float x);
 extern double exp2(double x);
 extern long double exp2l(long double x);
 
+extern double roundeven (double x);
+extern float roundevenf(float x);
+extern long double roundevenl(long double x);
+
 #if !defined(__cplusplus) && !defined(shared_comp)
 #define log2(x) (log (x) / _M_LN2)
 #else

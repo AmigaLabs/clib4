@@ -296,7 +296,10 @@ C_MATH := \
 	math/s_tgammal.o \
 	math/s_trunc.o \
 	math/s_truncf.o \
-	math/s_truncl.o
+	math/s_truncl.o \
+	math/s_roundeven.o \
+	math/s_roundevenf.o \
+	math/s_roundevenl.o
 
 ifdef SPE
     $(info Using SPE math objects)
