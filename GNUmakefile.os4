@@ -130,7 +130,7 @@ endif
 
 CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
 CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
-AFLAGS     := -Wa,-mregnames -mstrict-align
+AFLAGS     := -Wa,-mregnames
 
 ifdef SPE
 	CC := ppc-amigaos-gcc-6.4.0
@@ -146,7 +146,8 @@ ifdef SPE
 endif
 
 ifdef PROFILE
-	CFLAGS += -pg
+	CFLAGS += -pg -falign-functions=32  -fno-omit-frame-pointer
+	AFLAGS += -fno-omit-frame-pointer
 	DLIBS += -Lbuild/lib -lprofile
 endif
 
@@ -196,6 +197,7 @@ include libpthread.gmk
 include libcrypt.gmk
 include librt.gmk
 include shared.gmk
+# Leave profile as latest one
 include libprofile.gmk
 
 prepare:

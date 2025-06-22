@@ -85,8 +85,9 @@ write_call_graph(int fd) {
     nfilled = 0;
     from_len = _gmonparam.fromssize / sizeof(*_gmonparam.froms);
     for (from_index = 0; from_index < from_len; ++from_index) {
-        if (_gmonparam.froms[from_index] == 0)
+        if (_gmonparam.froms[from_index] == 0) {
             continue;
+        }
 
         frompc = _gmonparam.text_start;
         frompc += from_index * _gmonparam.hashfraction * sizeof(*_gmonparam.froms);
@@ -309,6 +310,7 @@ void moncleanup(void) {
             sizeof(ghdr) != sizeof(struct gmon_hdr) ||
             (offsetof(struct real_gmon_hdr, cookie) != offsetof(struct gmon_hdr, cookie)) ||
             (offsetof(struct real_gmon_hdr, version) != offsetof(struct gmon_hdr, version))) {
+                close(fd);
                 goto out;
         }
 
