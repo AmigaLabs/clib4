@@ -32,7 +32,7 @@ __mcount(uint32 frompc, uint32 selfpc) {
      */
     frompc -= p->lowpc;
     selfpc -= p->lowpc;
-    if (frompc > p->text_start + p->textsize)
+    if (frompc > p->textsize)
         goto done;
 
     /* The following test used to be
