@@ -2,6 +2,7 @@
 (complete 0)
 (set @default-dest "LIBS:")
 (set @default-sdk-dest "SDK:clib4")
+(set @default-env-dest "ENVARC:")
 (set @default-dest
 	(askdir
 		(prompt "Where would you like to install clib4.library?\nA new Drawer will be created if necessary")
@@ -19,6 +20,16 @@
 	(dest @default-dest)
 	(confirm)
 )
+(complete 45)
+(copyfiles
+	(prompt "Do you want to install Terminfo files?")
+	(help @copyfiles-help)
+	(source "misc")
+	(choices "terminfo")
+	(dest @default-env-dest)
+	(confirm)
+)
+
 (complete 60)
 (copyfiles
 	(prompt "Do you want to install development files?")
