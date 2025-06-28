@@ -1194,5 +1194,7 @@ static void *clib4Vectors[] = {
         (void *) (roundevenf),				  /* 4452 */
         (void *) (roundevenl),				  /* 4456 */
 
+        (void *) (canonicalize_file_name),                /* 4460 */
+
         (void *)-1
 };
