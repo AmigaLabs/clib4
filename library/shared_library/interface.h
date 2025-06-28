@@ -1365,6 +1365,8 @@ struct Clib4IFace {
 	double (* roundeven) (double x);																				 								 /* 4448 */
 	float (* roundevenf) (float x);																				 									 /* 4452 */
 	long double (* roundevenl) (long double x);																	 									 /* 4456 */
+
+	char * (* canonicalize_file_name) (const char *name);																	 						 /* 4460 */
 };
 
 #ifdef __PIC__
