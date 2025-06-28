@@ -43,7 +43,7 @@ $(OUT_SHARED)/%.o : $(LIB_DIR)/%.S
 $(OUT_STATIC)/%.o : CFLAGS += $(LARGEDATA)
 $(OUT_SHARED)/%.o : CFLAGS += $(PIC) $(LARGEDATA)
 
-CFLAGS := $(filter-out -pg, $(CFLAGS))
+OPTIONS := $(filter-out -pg, $(OPTIONS))
 
 ifdef SPE
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c

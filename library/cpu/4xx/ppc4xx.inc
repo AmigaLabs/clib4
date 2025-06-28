@@ -203,4 +203,30 @@
 #define PPC_LR_STKOFF   4
 #define PPC_MIN_STKFRM  16
 
+#define ASM_SIZE_DIRECTIVE(name) .size name,.-name
+#define C_SYMBOL_NAME(name)	name
+#define C_LABEL(name)	name##:
+
+#ifdef	PROF
+#define CALL_MCOUNT							      \
+	mflr  r0;								      \
+	stw   r0,4(r1);							      \
+	.cfi_offset lr, 4;						      \
+	bl    JUMPTARGET(_mcount);
+#else
+#define CALL_MCOUNT
+#endif
+
+#define	ENTRY(name)					      \
+	.globl C_SYMBOL_NAME(name);		      \
+	.type C_SYMBOL_NAME(name),@function;  \
+	.align 2;							  \
+	C_LABEL(name)						  \
+	.cfi_startproc;						  \
+	CALL_MCOUNT
+
+#define END(name)					      \
+	.cfi_endproc;					      \
+	ASM_SIZE_DIRECTIVE(name)
+
 #endif

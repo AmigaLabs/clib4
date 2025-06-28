@@ -146,8 +146,8 @@ ifdef SPE
 endif
 
 ifdef PROFILE
-	CFLAGS += -pg -falign-functions=32  -fno-omit-frame-pointer
-	AFLAGS += -fno-omit-frame-pointer
+	OPTIONS += -pg -falign-functions=32  -fno-omit-frame-pointer -DPROF
+	AFLAGS += -fno-omit-frame-pointer -DPROF
 	DLIBS += -Lbuild/lib -lprofile
 endif
 

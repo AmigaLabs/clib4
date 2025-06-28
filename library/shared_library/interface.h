@@ -1369,10 +1369,15 @@ struct Clib4IFace {
 	char * (* canonicalize_file_name) (const char *name);																	 						 /* 4460 */
 };
 
+#ifdef PROF
 #ifdef __PIC__
 #define Clib4Call2(function, offset)     \
-   asm(".section	\".text\"        \n\
-	    .align 8                     \n\
+	asm("							 \n\
+		mflr	r0					 \n\
+		stw	r0,4(r1) 				 \n\
+		bl	_mcount 				 \n\
+		.section	\".text\"        \n\
+		.align 2                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\
@@ -1381,16 +1386,47 @@ struct Clib4IFace {
 	    .size	" #function ", .-" #function)
 #elif !defined(__PIC__)
 #define Clib4Call2(function, offset)     \
-   asm(".section	\".text\"        \n\
-	    .align 8                     \n\
+   asm("							 \n\
+		mflr	r0					 \n\
+		stw	r0,4(r1) 				 \n\
+		bl	_mcount 				 \n\
+		.section	\".text\"        \n\
+	    .align 2                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\
-	    li  %r12," #offset "         \n\
+		li  %r12," #offset "         \n\
 	    b __Clib4Call                \n\
 	    .size	" #function ", .-" #function)
 #endif
 
+#else
+
+#ifdef __PIC__
+#define Clib4Call2(function, offset)     \
+	asm("							 \n\
+		.section	\".text\"        \n\
+		.align 2                     \n\
+	    .globl " #function "         \n\
+	    .type	" #function ", @function \n\
+" #function ":                       \n\
+	    li  %r12," #offset "         \n\
+	    b __Clib4Call@plt            \n\
+	    .size	" #function ", .-" #function)
+#elif !defined(__PIC__)
+#define Clib4Call2(function, offset)     \
+   asm("							 \n\
+		.section	\".text\"        \n\
+	    .align 2                     \n\
+	    .globl " #function "         \n\
+	    .type	" #function ", @function \n\
+" #function ":                       \n\
+		li  %r12," #offset "         \n\
+	    b __Clib4Call                \n\
+	    .size	" #function ", .-" #function)
+#endif
+
+#endif
 #define Clib4Call(x...) Clib4Call2(x)
 
 #endif

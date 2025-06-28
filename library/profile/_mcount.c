@@ -8,11 +8,12 @@
 #include <stdio.h>
 
 #include "gmon.h"
+#include <proto/dos.h>
 
-void __mcount(uint32 frompc, uint32 selfpc);
+void __mcount_internal(uint32 frompc, uint32 selfpc);
 
 void
-__mcount(uint32 frompc, uint32 selfpc) {
+__mcount_internal(uint32 frompc, uint32 selfpc) {
     register ARCINDEX *frompcindex;
     register struct tostruct *top, *prevtop;
     register struct gmonparam *p;
@@ -32,7 +33,7 @@ __mcount(uint32 frompc, uint32 selfpc) {
      */
     frompc -= p->lowpc;
     selfpc -= p->lowpc;
-    if (frompc > p->text_start + p->textsize)
+    if (frompc > p->textsize)
         goto done;
 
     /* The following test used to be

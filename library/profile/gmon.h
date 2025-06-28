@@ -13,7 +13,7 @@
 
 void moncontrol(int);
 void monstartup(uint32, uint32);
-void moncleanup(void);
+void moncleanup(const char *filename);
 void mongetpcs(uint32 *lowpc, uint32 *highpc, uint32 *text_start);
 
 struct gmonhdr {

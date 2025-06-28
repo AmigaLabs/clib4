@@ -124,8 +124,8 @@ write_bb_counts(int fd) {
     size_t i;
 
     struct iovec bbhead[2] = {
-    {&tag, sizeof(tag)},
-    {&ncounts, sizeof(ncounts)}
+    	{&tag, sizeof(tag)},
+    	{&ncounts, sizeof(ncounts)}
     };
     struct iovec bbbody[8];
     size_t nfilled;
@@ -223,6 +223,7 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
     dprintf("kcountsize = %d\n", p->kcountsize);
     dprintf("fromssize = %d\n", p->fromssize);
     dprintf("tolimit = %d, tossize = %d\n", p->tolimit, p->tossize);
+    dprintf("alloc size: %ld\n", p->kcountsize + p->fromssize + p->tossize);
 
     cp = (uint8 *) calloc(1, p->kcountsize + p->fromssize + p->tossize);
     if (!cp) {
@@ -258,7 +259,7 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
     else
         s_scale = SCALE_1_TO_1;
 
-    s_scale >>= 1;
+    //s_scale >>= 1;
     dprintf("Enabling monitor: Scale = %d\n", s_scale);
     moncontrol(1);
 }
@@ -281,7 +282,7 @@ void moncontrol(int mode) {
     }
 }
 
-void moncleanup(void) {
+void moncleanup(const char *filename) {
     int fd;
     struct gmonparam *p = &_gmonparam;
 
@@ -293,7 +294,7 @@ void moncleanup(void) {
     }
 
     if (_gmonparam.kcountsize > 0) {
-        fd = open("gmon.out", O_CREAT | O_TRUNC | O_WRONLY);
+        fd = open(filename, O_CREAT | O_TRUNC | O_WRONLY);
         if (!fd) {
             fprintf(stderr, "ERROR: could not open gmon.out\n");
             goto out;
@@ -401,5 +402,5 @@ int __profiler_init(void) {
 }
 
 void __profiler_exit(void) {
-    moncleanup();
+    moncleanup("gmon.out");
 }
