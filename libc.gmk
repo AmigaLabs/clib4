@@ -492,6 +492,7 @@ C_STDLIB := \
 	stdlib/atoll.o \
 	stdlib/bsearch.o \
 	stdlib/calloc.o \
+	stdlib/canonicalize_file_name.o \
 	stdlib/div.o \
 	stdlib/divsi3.o \
 	stdlib/dladdr.o \
