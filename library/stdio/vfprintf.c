@@ -21,7 +21,39 @@
 #include <sys/param.h> // max
 #include "wchar_wprintf_core.h"
 
-static void pad(Out *f, char c, int w, int l, int fl);
+static inline int __putc_unlocked_clib4(struct _clib4 *__clib4, int c, FILE *fp) {
+    // Check primary conditions for buffered writing:
+    // 1. Is the file stream valid, in use, and writable?
+    // 2. Is it not unbuffered? (i.e., it's either line-buffered or fully buffered)
+    // 3. Is there space in the buffer?
+    if (fp != NULL && // Basic sanity check, though the macro implies f is valid
+        ((fp->_flags & (__FILE_IN_USE | __FILE_WRITABLE)) == (__FILE_IN_USE | __FILE_WRITABLE)) &&
+        ((fp->_flags & __FILE_BUFFER_MASK) != _IONBF) &&
+        (fp->num_write_bytes < fp->size)) {
+
+        // Store the character in the buffer
+        fp->buffer[fp->num_write_bytes] = (char)c;
+
+        // Check if line-buffered AND the character is a newline
+        if (((fp->_flags & __FILE_BUFFER_MASK) == _IOLBF) &&
+            (c == '\n')) { // Using 'c' directly for newline check for clarity and consistency
+            fp->num_write_bytes++;
+            return __flush_r(__clib4, fp); // Flush and return result of flush operation
+        } else {
+            // Not line-buffered or not a newline, just advance buffer pointer
+            return (unsigned char)fp->buffer[fp->num_write_bytes++]; // Increment and return the character written
+        }
+    } else {
+        // Fallback to fputc. This handles all edge cases:
+        // - File not in use or not writable
+        // - Unbuffered stream
+        // - Buffer is full
+        // - Any other error condition fputc might manage
+        return __fputc_r(__clib4, c, fp);
+    }
+}
+
+static void pad(struct _clib4 *__clib4, Out *f, char c, int w, int l, int fl);
 
 static void out_init_file(Out *out, FILE *f) {
     memset(out, 0, sizeof(*out));
@@ -30,7 +62,7 @@ static void out_init_file(Out *out, FILE *f) {
     out->file = f;
 }
 
-static void out(Out *_out, const char *text, size_t l) {
+static void out(struct _clib4 *__clib4, Out *_out, const char *text, size_t l) {
     size_t length = ((l > 0) ? (size_t) l : 0U);
     if (!length) {
         return;
@@ -40,7 +72,7 @@ static void out(Out *_out, const char *text, size_t l) {
         const char *w = text;
         _out->buffer_pos += length;
         while (length--) {
-            __putc_unlocked(*w++, _out->file);
+            __putc_unlocked_clib4(__clib4, *w++, _out->file);
         }
     } else {
         // Write into a bounded buffer.
@@ -53,7 +85,7 @@ static void out(Out *_out, const char *text, size_t l) {
     }
 }
 
-static void pad(Out *f, char c, int w, int l, int fl) {
+static void pad(struct _clib4 *__clib4, Out *f, char c, int w, int l, int fl) {
     char _pad[256];
     const int _psz = (int) (sizeof(_pad));
 
@@ -62,9 +94,9 @@ static void pad(Out *f, char c, int w, int l, int fl) {
     l = (w - l);
     memset(_pad, c, (size_t)((l > _psz) ? _psz : l));
     for (; (l >= _psz); l -= _psz) {
-        out(f, _pad, _psz);
+        out(__clib4, f, _pad, _psz);
     }
-    out(f, _pad, l);
+    out(__clib4, f, _pad, l);
 }
 
 
@@ -183,9 +215,9 @@ static inline void pop_arg(union arg *arg, int type, va_list *ap, pop_arg_long_d
 typedef char compiler_defines_long_double_incorrectly[9 - (int) sizeof(long double)];
 #endif
 
-typedef int (*fmt_fp_t)(Out *f, long_double y, int w, int p, int fl, int t);
+typedef int (*fmt_fp_t)(struct _clib4 *__clib4, Out *f, long_double y, int w, int p, int fl, int t);
 
-static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
+static int fmt_fp(struct _clib4 *__clib4, Out *f, long double y, int w, int p, int fl, int t) {
     uint32_t big[(LDBL_MANT_DIG + 28) / 29 + 1          // mantissa expansion
                  + (LDBL_MAX_EXP + LDBL_MANT_DIG + 28 + 8) / 9]; // exponent expansion
     uint32_t *a, *d, *r, *z;
@@ -208,10 +240,10 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     if (!isfinite(y)) {
         char *s = (t & 32) ? "inf" : "INF";
         if (y != y) s = (t & 32) ? "nan" : "NAN";
-        pad(f, ' ', w, 3 + pl, fl & ~ZERO_PAD);
-        out(f, prefix, pl);
-        out(f, s, 3);
-        pad(f, ' ', w, 3 + pl, fl ^ LEFT_ADJ);
+        pad(__clib4, f, ' ', w, 3 + pl, fl & ~ZERO_PAD);
+        out(__clib4, f, prefix, pl);
+        out(__clib4, f, s, 3);
+        pad(__clib4, f, ' ', w, 3 + pl, fl ^ LEFT_ADJ);
         return MAX(w, 3 + pl);
     }
 
@@ -262,13 +294,13 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         else
             l = (s - buf) + (ebuf - estr);
 
-        pad(f, ' ', w, pl + l, fl);
-        out(f, prefix, pl);
-        pad(f, '0', w, pl + l, fl ^ ZERO_PAD);
-        out(f, buf, s - buf);
-        pad(f, '0', l - (ebuf - estr) - (s - buf), 0, 0);
-        out(f, estr, ebuf - estr);
-        pad(f, ' ', w, pl + l, fl ^ LEFT_ADJ);
+        pad(__clib4, f, ' ', w, pl + l, fl);
+        out(__clib4, f, prefix, pl);
+        pad(__clib4, f, '0', w, pl + l, fl ^ ZERO_PAD);
+        out(__clib4, f, buf, s - buf);
+        pad(__clib4, f, '0', l - (ebuf - estr) - (s - buf), 0, 0);
+        out(__clib4, f, estr, ebuf - estr);
+        pad(__clib4, f, ' ', w, pl + l, fl ^ LEFT_ADJ);
         return MAX(w, pl + l);
     }
     if (p < 0)
@@ -396,9 +428,9 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
 
     if (l > INT_MAX - pl)
         return -1;
-    pad(f, ' ', w, pl + l, fl);
-    out(f, prefix, pl);
-    pad(f, '0', w, pl + l, fl ^ ZERO_PAD);
+    pad(__clib4, f, ' ', w, pl + l, fl);
+    out(__clib4, f, prefix, pl);
+    pad(__clib4, f, '0', w, pl + l, fl ^ ZERO_PAD);
 
     if ((t | 32) == 'f') {
         if (a > r) a = r;
@@ -409,17 +441,17 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
                     *--s = '0';
             else if (s == buf + 9)
                 *--s = '0';
-            out(f, s, buf + 9 - s);
+            out(__clib4, f, s, buf + 9 - s);
         }
         if (p || (fl & ALT_FORM))
-            out(f, ".", 1);
+            out(__clib4, f, ".", 1);
         for (; d < z && p > 0; d++, p -= 9) {
             char *s = fmt_u(*d, buf + 9);
             while (s > buf)
                 *--s = '0';
-            out(f, s, MIN(9, p));
+            out(__clib4, f, s, MIN(9, p));
         }
-        pad(f, '0', p + 9, 9, 0);
+        pad(__clib4, f, '0', p + 9, 9, 0);
     } else {
         if (z <= a)
             z = a + 1;
@@ -431,18 +463,18 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
                 while (s > buf)
                     *--s = '0';
             else {
-                out(f, s++, 1);
+                out(__clib4, f, s++, 1);
                 if (p > 0 || (fl & ALT_FORM))
-                    out(f, ".", 1);
+                    out(__clib4, f, ".", 1);
             }
-            out(f, s, MIN(buf + 9 - s, p));
+            out(__clib4, f, s, MIN(buf + 9 - s, p));
             p -= buf + 9 - s;
         }
-        pad(f, '0', p + 18, 18, 0);
-        out(f, estr, ebuf - estr);
+        pad(__clib4, f, '0', p + 18, 18, 0);
+        out(__clib4, f, estr, ebuf - estr);
     }
 
-    pad(f, ' ', w, pl + l, fl ^ LEFT_ADJ);
+    pad(__clib4, f, ' ', w, pl + l, fl ^ LEFT_ADJ);
 
     return MAX(w, pl + l);
 }
@@ -491,7 +523,7 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
             goto overflow;
         l = z - a;
         if (f)
-            out(f, a, l);
+            out(__clib4, f, a, l);
         if (l)
             continue;
 
@@ -713,11 +745,11 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
                 if (i > INT_MAX)
                     goto overflow;
                 p = i;
-                pad(f, ' ', w, p, fl);
+                pad(__clib4, f, ' ', w, p, fl);
                 ws = arg.p;
                 for (i = 0; i < 0U + p && *ws && i + (l = wctomb(mb, *ws++)) <= p; i += l)
-                    out(f, mb, l);
-                pad(f, ' ', w, p, fl ^ LEFT_ADJ);
+                    out(__clib4, f, mb, l);
+                pad(__clib4, f, ' ', w, p, fl ^ LEFT_ADJ);
                 l = w > p ? w : p;
                 continue;
             case 'e':
@@ -730,7 +762,7 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
             case 'A':
                 if (xp && p < 0)
                     goto overflow;
-                l = fmt_fp(f, arg.f, w, p, fl, t);
+                l = fmt_fp(__clib4, f, arg.f, w, p, fl, t);
                 if (l < 0)
                     goto overflow;
                 continue;
@@ -745,12 +777,12 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
         if (w > INT_MAX - cnt)
             goto overflow;
 
-        pad(f, ' ', w, pl + p, fl);
-        out(f, prefix, pl);
-        pad(f, '0', w, pl + p, fl ^ ZERO_PAD);
-        pad(f, '0', p, z - a, 0);
-        out(f, a, z - a);
-        pad(f, ' ', w, pl + p, fl ^ LEFT_ADJ);
+        pad(__clib4, f, ' ', w, pl + p, fl);
+        out(__clib4, f, prefix, pl);
+        pad(__clib4, f, '0', w, pl + p, fl ^ ZERO_PAD);
+        pad(__clib4, f, '0', p, z - a, 0);
+        out(__clib4, f, a, z - a);
+        pad(__clib4, f, ' ', w, pl + p, fl ^ LEFT_ADJ);
 
         l = w;
     }

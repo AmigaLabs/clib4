@@ -293,7 +293,7 @@ struct _clib4 {
     int __signals_blocked;
     int local_signals_blocked;
 
-    struct SignalSemaphore *stdio_lock;
+    APTR stdio_lock;
 
     /* Wof Allocator main pointer */
     wmem_allocator_t *__wmem_allocator;

@@ -9,17 +9,17 @@
 void
 __fd_lock(struct fd *fd) {
     if (NULL != fd && NULL != fd->fd_Lock)
-        ObtainSemaphore(fd->fd_Lock);
+        MutexObtain(fd->fd_Lock);
 }
 
 void
 __fd_attemptLock(struct fd *fd) {
     if (NULL != fd && NULL != fd->fd_Lock)
-        AttemptSemaphore(fd->fd_Lock);
+        MutexAttempt(fd->fd_Lock);
 }
 
 void
 __fd_unlock(struct fd *fd) {
     if (NULL != fd && NULL != fd->fd_Lock)
-        ReleaseSemaphore(fd->fd_Lock);
+        MutexRelease(fd->fd_Lock);
 }

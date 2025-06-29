@@ -122,3 +122,40 @@ out:
     RETURN(result);
     return (result);
 }
+
+int
+__fputc_r(struct _clib4 *__clib4, int c, FILE *stream) {
+    struct iob *file = (struct iob *) stream;
+    int result = EOF;
+
+    ENTER();
+    SHOWVALUE(c);
+    SHOWPOINTER(stream);
+
+    assert(stream != NULL);
+
+    if (stream == NULL) {
+        SHOWMSG("invalid stream parameter");
+        __set_errno_r(__clib4, EFAULT);
+
+        RETURN(result);
+        return result;
+    }
+
+    __check_abort_f(__clib4);
+
+    __flockfile_r(__clib4, stream);
+
+    if (__fputc_check(__clib4, stream) < 0)
+        goto out;
+
+    result = __fputc(__clib4, c, stream, (file->iob_Flags & IOBF_BUFFER_MODE));
+
+out:
+
+    SHOWMSG("__funlockfile_r");
+    __funlockfile_r(__clib4, stream);
+
+    RETURN(result);
+    return (result);
+}

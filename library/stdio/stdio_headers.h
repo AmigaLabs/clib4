@@ -200,7 +200,7 @@ typedef struct iob {
     char *				iob_TempFileName;		/* If this is a temporary file, this is its name */
     BPTR				iob_TempFileLock;		/* The directory in which this temporary file is stored */
     UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
-    struct SignalSemaphore *iob_Lock;		    /* For thread locking */
+    APTR				iob_Lock;		    	/* For thread locking */
     struct Task *       iob_TaskLock;           /* Task who owns lock */
 } __iob64;
 
@@ -270,7 +270,7 @@ struct fd {
 	/* Public portion ends here                                             */
 	/************************************************************************/
 
-	struct SignalSemaphore *	fd_Lock;			/* For thread locking */
+	APTR						fd_Lock;			/* For thread locking */
     signed long long		    fd_Position;		/* Cached file position (seek offset). */
 	fd_cleanup_t				fd_Cleanup;			/* Cleanup function, if any. */
 
@@ -362,6 +362,8 @@ extern int __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream);
 int __ferror_r(struct _clib4 *__clib4, FILE *stream, BOOL lock);
 
 extern void __clearerr_r(struct _clib4 *__clib4, FILE *stream);
+
+extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
 
 #define console_prefix "CON:20/20/600/150/"
 #define console_suffix " Output/AUTO/CLOSE/WAIT"
