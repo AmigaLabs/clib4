@@ -353,7 +353,6 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     GetCPUInfoTags(GCIT_VectorUnit, &__clib4->hasAltivec, TAG_DONE);
 
     __clib4->__IDebug = (struct DebugIFace *) GetInterface((struct Library *) IExec->Data.LibBase, "debug", 1, NULL);
-    D(("__clib4->__IDebug %p", __clib4->__IDebug));
     if (!__clib4->__IDebug) {
         D(("Cannot get IDebug interface"));
         goto out;
