@@ -348,7 +348,7 @@ static int fmt_fp(struct _clib4 *__clib4, Out *f, long double y, int w, int p, i
     }
 
     if (a < z)
-        for (i = 10, e = 9 * (r - a); *a >= i; i *= 10, e++);
+        for (i = 10, e = 9 * (r - a); *a >= (uint32) i; i *= 10, e++);
     else
         e = 0;
 
@@ -368,9 +368,9 @@ static int fmt_fp(struct _clib4 *__clib4, Out *f, long double y, int w, int p, i
             long_double small;
             if ((*d / i & 1) || (i == 1000000000 && d > a && (d[-1] & 1)))
                 round += 2;
-            if (x < i / 2)
+            if (x < (uint32) i / 2)
                 small = 0x0.8p0;
-            else if (x == i / 2 && d + 1 == z)
+            else if (x == (uint32) i / 2 && d + 1 == z)
                 small = 0x1.0p0;
             else
                 small = 0x1.8p0;
@@ -384,7 +384,7 @@ static int fmt_fp(struct _clib4 *__clib4, Out *f, long double y, int w, int p, i
                     if (d < a) *--a = 0;
                     (*d)++;
                 }
-                for (i = 10, e = 9 * (r - a); *a >= i; i *= 10, e++);
+                for (i = 10, e = 9 * (r - a); *a >= (uint32) i; i *= 10, e++);
             }
         }
         if (z > d + 1)
@@ -479,12 +479,16 @@ static int fmt_fp(struct _clib4 *__clib4, Out *f, long double y, int w, int p, i
     return MAX(w, pl + l);
 }
 
-static int getint(struct _clib4 *__clib4, char **s) {
+static int getint(char **s) {
     int i;
-    for (i = 0; __isdigit_r(__clib4, **s); (*s)++) {
-        if (i > INT_MAX / 10U || **s - '0' > INT_MAX - 10 * i) i = -1;
+//Printf("[%s]\n[%c", *s, **s);
+    for (i = 0; isdigit(**s); (*s)++) {
+//Printf("%c", **s);
+        if ((uint32) i > INT_MAX / 10U || **s - '0' > INT_MAX - 10 * i) i = -1;
         else i = 10 * i + (**s - '0');
     }
+//Printf("]");
+//Printf("i = %d\n", i);
     return i;
 }
 
@@ -527,7 +531,9 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
         if (l)
             continue;
 
-        if (__isdigit_r(__clib4, s[1]) && s[2] == '$') {
+//Printf("[%c %d]\n", s[1], isdigit(s[1]));
+
+        if (isdigit(s[1]) && s[2] == '$') {
             l10n = 1;
             argpos = s[1] - '0';
             s += 3;
@@ -542,7 +548,7 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
 
         /* Read field width */
         if (*s == '*') {
-            if (__isdigit_r(__clib4, s[1]) && s[2] == '$') {
+            if (isdigit(s[1]) && s[2] == '$') {
                 l10n = 1;
                 if (!f)
                     nl_type[s[1] - '0'] = _INT, w = 0;
@@ -559,12 +565,12 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
             if (w < 0)
                 fl |= LEFT_ADJ, w = -w;
         }
-        else if ((w = getint(__clib4, &s)) < 0)
+        else if ((w = getint(&s)) < 0)
             goto overflow;
 
         /* Read precision */
         if (*s == '.' && s[1] == '*') {
-            if (__isdigit_r(__clib4, s[2]) && s[3] == '$') {
+            if (isdigit(s[2]) && s[3] == '$') {
                 if (!f)
                     nl_type[s[2] - '0'] = _INT, p = 0;
                 else
@@ -581,7 +587,7 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
         }
         else if (*s == '.') {
             s++;
-            p = getint(__clib4, &s);
+            p = getint(&s);
             xp = 1;
         }
         else {
@@ -676,7 +682,7 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
                 }
                 continue;
             case 'p':
-                p = MAX(p, 2 * sizeof(void *));
+                p = MAX((uint32) p, 2 * sizeof(void *));
                 t = 'x';
                 fl |= ALT_FORM;
                 /* fallthrough */
@@ -739,7 +745,7 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
                 /* fallthrough */
             case 'S':
                 ws = arg.p;
-                for (i = l = 0; i < p && *ws && (l = wctomb(mb, *ws++)) >= 0 && l <= p - i; i += l);
+                for (i = l = 0; (int) i < p && *ws && (l = wctomb(mb, *ws++)) >= 0 && (uint32) l <= p - i; i += l);
                 if (l < 0)
                     return -1;
                 if (i > INT_MAX)
@@ -747,7 +753,7 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
                 p = i;
                 pad(__clib4, f, ' ', w, p, fl);
                 ws = arg.p;
-                for (i = 0; i < 0U + p && *ws && i + (l = wctomb(mb, *ws++)) <= p; i += l)
+                for (i = 0; i < 0U + p && *ws && i + (l = wctomb(mb, *ws++)) <= (uint32) p; i += l)
                     out(__clib4, f, mb, l);
                 pad(__clib4, f, ' ', w, p, fl ^ LEFT_ADJ);
                 l = w > p ? w : p;

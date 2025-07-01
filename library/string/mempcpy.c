@@ -16,7 +16,7 @@ mempcpy(void *dst0, const void *src0, size_t len0) {
     const char *src = src0;
     long *aligned_dst;
     const long *aligned_src;
-    int len = len0;
+    size_t len = len0;
 
     ENTER();
     SHOWPOINTER(dst0);

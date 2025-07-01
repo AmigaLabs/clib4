@@ -25,7 +25,7 @@ _exit(int return_code) {
     SHOWVALUE(__clib4->__exit_value);
 
     D(("%d %d\n", __clib4->processId, GetPID(NULL, GPID_PROCESS)));
-    if (__clib4->processId != GetPID(NULL, GPID_PROCESS)) {
+    if (__clib4->processId != (pid_t) GetPID(NULL, GPID_PROCESS)) {
         SHOWMSG("NOT IN MAIN TASK");
         /* We are NOT in main task. Don't call exit here because
          * we'll have pending processes. Try to remove the Task

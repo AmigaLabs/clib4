@@ -34,9 +34,22 @@
 #include <limits.h>
 #include <ctype.h>
 
-/****************************************************************************/
+struct __locale_t {
+	char categories[__LC_LAST][ENCODING_LEN + 1];
+	char locale_string[__LC_LAST * (ENCODING_LEN + 1/*"/"*/ + 1)];
+	int  (*wctomb) (struct _clib4 *, char *, wchar_t, mbstate_t *);
+	int  (*mbtowc) (struct _clib4 *, wchar_t *, const char *, size_t, mbstate_t *);
+	int	 cjk_lang;
+	char *ctype_ptr;
+	struct lconv lconv;
+	char mb_cur_max[2];
+	char ctype_codeset[ENCODING_LEN + 1];
+	char message_codeset[ENCODING_LEN + 1];
+};
 
-extern int __isdigit_r(struct _clib4 *__clib4, int c);
-extern int __isspace_r(struct _clib4 *__clib4, int c);
+int __iso_8859_val_index(int val);
+int __iso_8859_index(const char *charset_ext);
+int __cp_val_index(int val);
+int __cp_index(const char *charset_ext);
 
 #endif /* _CTYPE_HEADERS_H */
