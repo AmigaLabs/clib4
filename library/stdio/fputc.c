@@ -105,8 +105,6 @@ fputc(int c, FILE *stream) {
         return result;
     }
 
-    __check_abort_f(__clib4);
-
     __flockfile_r(__clib4, stream);
 
     if (__fputc_check(__clib4, stream) < 0)

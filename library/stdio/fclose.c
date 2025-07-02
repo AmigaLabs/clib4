@@ -25,8 +25,6 @@ fclose(FILE *stream) {
 
     DECLARE_UTILITYBASE();
 
-    __check_abort_f(__clib4);
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 

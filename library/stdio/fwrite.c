@@ -45,8 +45,6 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
         return (result);
     }
 
-    __check_abort_f(__clib4);
-
     __flockfile_r(__clib4, stream);
 
     if (element_size > 0 && count > 0) {
