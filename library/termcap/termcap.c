@@ -182,7 +182,7 @@ tputs(const char *str, int nlines, register int (*outfun)()) {
 
     if (__clib4->__ospeed == 0)
         speed = __clib4->__tputs_baud_rate;
-    else if (__clib4->__ospeed >= n_speeds)
+    else if ((size_t) __clib4->__ospeed >= n_speeds)
         speed = speeds[n_speeds - 1];
     else
         speed = speeds[__clib4->__ospeed];
@@ -242,7 +242,7 @@ tgetent(char *bp, const char *name) {
     register char *bp1;
     char *tc_search_point;
     char *term;
-    int malloc_size = 0;
+    size_t malloc_size = 0;
     register int c;
     char *tcenv = NULL;        /* TERMCAP value, if it contains :tc=.  */
     char *indirect = NULL;    /* Terminal type in :tc= in TERMCAP value.  */
@@ -292,7 +292,7 @@ tgetent(char *bp, const char *name) {
     term = indirect ? indirect : (char *) name;
 
     if (!bp) {
-        malloc_size = indirect ? strlen(tcenv) + 1 : buf.size;
+        malloc_size = indirect ? strlen(tcenv) + 1 : (size_t) buf.size;
         bp = (char *) malloc(malloc_size);
         if (bp == NULL) {
             __set_errno(ENOMEM);

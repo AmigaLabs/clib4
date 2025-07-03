@@ -9,18 +9,18 @@
 void
 __stdio_lock(struct _clib4 *__clib4) {
     if (__clib4->stdio_lock != NULL)
-        ObtainSemaphore(__clib4->stdio_lock);
+        MutexObtain(__clib4->stdio_lock);
 }
 
 void
 __stdio_unlock(struct _clib4 *__clib4) {
     if (__clib4->stdio_lock != NULL)
-        ReleaseSemaphore(__clib4->stdio_lock);
+        MutexRelease(__clib4->stdio_lock);
 }
 
 void
 __stdio_lock_exit(struct _clib4 *__clib4) {
-    __delete_semaphore(__clib4->stdio_lock);
+    __delete_mutex(__clib4->stdio_lock);
     __clib4->stdio_lock = NULL;
 }
 
@@ -28,7 +28,7 @@ int
 __stdio_lock_init(struct _clib4 *__clib4) {
     int result = ERROR;
 
-    __clib4->stdio_lock = __create_semaphore();
+    __clib4->stdio_lock = __create_mutex();
     if (__clib4->stdio_lock == NULL)
         goto out;
 

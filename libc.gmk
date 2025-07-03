@@ -49,6 +49,7 @@ C_BYTESWAP := \
     byteswap/swab64.o
 
 C_CTYPE := \
+	ctype/ctype_.o \
 	ctype/isalnum.o \
 	ctype/isalpha.o \
 	ctype/isascii.o \
@@ -1010,10 +1011,12 @@ SHARED_LIB_STUBS := \
 C_LIB := \
 	c.lib_rev.o \
 	$(SHARED_LIB_STUBS) \
+	ctype/ctype_.o \
 	unistd/getopt.o \
 	unistd/getopt_long.o \
 	socket/in6addr_any.o \
 	socket/in6addr_loopback.o
+
 
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(C_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))

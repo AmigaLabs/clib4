@@ -8,7 +8,7 @@
 
 int
 pthread_attr_setinheritsched(pthread_attr_t *attr, int inherit) {
-    if (inherit > 1U)
+    if (inherit > 1)
         return EINVAL;
     attr->inheritsched = inherit;
     return 0;
