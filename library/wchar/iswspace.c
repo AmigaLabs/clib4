@@ -49,7 +49,7 @@ iswspace(wint_t c) {
         return result;
     }
 
-    result = (c < 0x100 ? __isspace_r(__clib4, c) : 0);
+    result = (c < 0x100 ? isspace(c) : 0);
     RETURN(result);
     return result;
 }

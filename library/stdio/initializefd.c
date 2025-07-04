@@ -12,7 +12,7 @@ __initialize_fd(
         file_action_fd_t action_function,
         BPTR default_file,
         ULONG flags,
-        struct SignalSemaphore *lock) {
+        APTR lock) {
     ENTER();
     assert(fd != NULL && action_function != NULL);
     memset(fd, 0, sizeof(*fd));

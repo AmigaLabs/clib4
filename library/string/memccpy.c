@@ -18,7 +18,7 @@ memccpy(void *dst0, const void *src0, int endchar0, size_t len0)
     const char *src = src0;
     long *aligned_dst;
     const long *aligned_src;
-    int len = len0;
+    size_t len = len0;
     char endchar = endchar0 & 0xff;
 
     ENTER();
@@ -28,9 +28,8 @@ memccpy(void *dst0, const void *src0, int endchar0, size_t len0)
 
     /* If the size is small, or either SRC or DST is unaligned,
      then punt into the byte copy loop.  This should be rare.  */
-    if (!TOO_SMALL(len) && !UNALIGNED(src, dst))
-    {
-        int i;
+    if (!TOO_SMALL(len) && !UNALIGNED(src, dst)) {
+        size_t i;
         unsigned long mask = 0;
 
         aligned_dst = (long *)dst;

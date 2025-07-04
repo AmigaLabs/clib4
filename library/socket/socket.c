@@ -8,7 +8,7 @@
 
 int
 socket(int domain, int type, int protocol) {
-    struct SignalSemaphore *lock = NULL;
+    APTR lock = NULL;
     int result = ERROR;
     struct fd *fd;
     int fd_slot_number;
@@ -34,7 +34,7 @@ socket(int domain, int type, int protocol) {
         assert(fd_slot_number >= 0);
     }
 
-    lock = __create_semaphore();
+    lock = __create_mutex();
     if (lock == NULL) {
         __set_errno(ENOMEM);
         goto out;
@@ -69,7 +69,7 @@ socket(int domain, int type, int protocol) {
 out:
 
     __stdio_unlock(__clib4);
-    __delete_semaphore(lock);
+    __delete_mutex(lock);
 
     __check_abort_f(__clib4);
 

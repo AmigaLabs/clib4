@@ -82,7 +82,7 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
             if (num_bytes_written == EOF) {
                 __set_errno_r(__clib4, fam.fam_Error);
                 goto out;
-            } else if (num_bytes_written != num_bytes) {
+            } else if (num_bytes_written != (ssize_t) num_bytes) {
                 __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
             }
         } else {

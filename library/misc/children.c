@@ -16,7 +16,7 @@
 static void *
 gidChildrenScan(const void *children, void *gid) {
     const struct Clib4Children *myChildren = children;
-    const int groupId = *((int *)gid);
+    const gid_t groupId = *((gid_t *)gid);
     if (myChildren->groupId == groupId)
         return (struct Clib4Children *) children;
     return NULL;
@@ -25,8 +25,8 @@ gidChildrenScan(const void *children, void *gid) {
 static void *
 pidChildrenScan(const void *children, void *pid) {
     const struct Clib4Children *myChildren = children;
-    const int processId = *((int *)pid);
-    if (myChildren->pid == processId)
+    const uint32 processId = *((uint32 *)pid);
+    if (myChildren->pid == (uint32) processId)
         return (struct Clib4Children *) children;
     return NULL;
 }
@@ -191,7 +191,7 @@ spawnedProcessExit(int32 rc, int32 data UNUSED) {
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
 
-            if (node->pid == parent) {
+            if (node->pid == (uint32) parent) {
                 struct Clib4Children key;
                 key.pid = me;
                 struct Clib4Children *item = (struct Clib4Children *) hashmap_get(node->spawnedProcesses, &key);

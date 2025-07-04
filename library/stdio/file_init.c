@@ -137,8 +137,8 @@ out:
 }
 
 FILE_CONSTRUCTOR(stdio_file_init) {
-    struct SignalSemaphore *stdio_lock;
-    struct SignalSemaphore *fd_lock;
+    APTR stdio_lock;
+    APTR fd_lock;
     BPTR default_file;
     ULONG fd_flags, iob_flags;
     BOOL success = FALSE;
@@ -193,12 +193,12 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         ClearMem(buffer, BUFSIZ + (__clib4->__cache_line_size - 1));
 
         /* Allocate memory for an arbitration mechanism, then initialize it. */
-        stdio_lock = __create_semaphore();
-        fd_lock = __create_semaphore();
+        stdio_lock = __create_mutex();
+        fd_lock = __create_mutex();
 
         if (stdio_lock == NULL || fd_lock == NULL) {
-            __delete_semaphore(stdio_lock);
-            __delete_semaphore(fd_lock);
+            __delete_mutex(stdio_lock);
+            __delete_mutex(fd_lock);
             goto out;
         }
 
@@ -208,7 +208,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
                          __iob_hook_entry,
                          buffer,
                          buffer,
-                         (int64_t) BUFSIZ,
+                         (int64_t) BUFSIZ + (__clib4->__cache_line_size - 1),
                          i,
                          i,
                          iob_flags,

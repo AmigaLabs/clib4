@@ -181,7 +181,7 @@ __ieee754_ynf(int n, float x) {
     b = __ieee754_y1f(x);
     /* quit if b is -inf */
     GET_FLOAT_WORD(ib, b);
-    for (i = 1; i < n && ib != 0xff800000; i++) {
+    for (i = 1; i < n && ib != (int32_t) 0xff800000; i++) {
         temp = b;
         b = ((float) (i + i) / x) * b - a;
         GET_FLOAT_WORD(ib, b);

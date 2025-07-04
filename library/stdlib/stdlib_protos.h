@@ -70,6 +70,8 @@ extern int __get_errno(void);
 /* stdlib_semaphore.c */
 extern struct SignalSemaphore *__create_semaphore(void);
 extern void __delete_semaphore(struct SignalSemaphore *semaphore);
+extern APTR __create_mutex(void);
+extern void __delete_mutex(APTR mutex);
 
 /* random functions */
 extern void *savestate(void);

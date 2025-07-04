@@ -28,8 +28,6 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
         return (result);
     }
 
-    __check_abort_f(__clib4);
-
     __flockfile_r(__clib4, stream);
 
     if (wherefrom < SEEK_SET || wherefrom > SEEK_END) {

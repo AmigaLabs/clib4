@@ -47,7 +47,7 @@ __ftrylockfile_r(struct _clib4 *__clib4, FILE *stream) {
         goto out;
     }
 
-    if (file->iob_Lock != NULL && CANNOT AttemptSemaphore(file->iob_Lock))
+    if (file->iob_Lock != NULL && CANNOT MutexAttempt(file->iob_Lock))
         goto out;
 
     SET_FLAG(file->iob_Flags, IOBF_LOCKED);

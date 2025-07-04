@@ -22,6 +22,7 @@ printf(const char *format, ...) {
     }
 
     __stdio_lock(__clib4);
+
     va_start(arg, format);
     result = vfprintf(stdout, format, arg);
     va_end(arg);

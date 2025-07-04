@@ -18,3 +18,5 @@ clib4/
 
 .idea
 .vscode
+
+Makefile

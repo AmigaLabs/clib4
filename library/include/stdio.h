@@ -82,12 +82,12 @@ typedef struct __sFILE FILE;
 /****************************************************************************/
 
 /* Field and flag definitions for the getc/putc macros below. */
-#define __FILE_BUFFER_MASK 3	 /* Masks off the buffering mode */
-#define __FILE_EOF (1 << 2)		 /* EOF reached */
-#define __FILE_READABLE (1 << 3) /* File is readable */
-#define __FILE_WRITABLE (1 << 4) /* File is writable */
-#define __FILE_IN_USE (1 << 5)	 /* File is in use */
-#define __FILE_ERROR (1 << 6)	 /* Error detected */
+#define __FILE_BUFFER_MASK 	3	 		/* Masks off the buffering mode */
+#define __FILE_EOF 			(1 << 2)	/* EOF reached */
+#define __FILE_READABLE 	(1 << 3) 	/* File is readable */
+#define __FILE_WRITABLE 	(1 << 4) 	/* File is writable */
+#define __FILE_IN_USE 		(1 << 5)	/* File is in use */
+#define __FILE_ERROR 		(1 << 6)	/* Error detected */
 
 /****************************************************************************/
 

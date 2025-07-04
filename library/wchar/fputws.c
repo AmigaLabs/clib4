@@ -13,7 +13,7 @@
 int
 fputws(const wchar_t *ws, FILE *fp) {
     char buf[BUFSIZ];
-    int nwritten = 0;
+    size_t nwritten = 0;
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();

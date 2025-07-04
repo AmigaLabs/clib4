@@ -15,7 +15,7 @@ _msgsnap(int qid, void *qbuf, size_t blen, long mtype) {
     ENTER();
     struct Msg *m;
     uint8 *bpos;
-    int tlen;
+    size_t tlen;
     int ret = -1;
     int i, n;
     int act_cnt, act_size;

@@ -25,8 +25,6 @@ fclose(FILE *stream) {
 
     DECLARE_UTILITYBASE();
 
-    __check_abort_f(__clib4);
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 
@@ -94,7 +92,7 @@ fclose(FILE *stream) {
 
     /* Free the lock semaphore now. */
     SHOWMSG("Delete iob_Lock");
-    __delete_semaphore(file->iob_Lock);
+    __delete_mutex(file->iob_Lock);
 
     SHOWMSG("Clear file structure");
     memset(file, 0, sizeof(*file));

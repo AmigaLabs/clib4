@@ -8,7 +8,7 @@
 
 int
 pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared) {
-    if (pshared > 1U)
+    if (pshared > 1)
         return EINVAL;
     attr->pshared &= 0x7fffffff;
     attr->pshared |= (unsigned) pshared << 31;

@@ -16,10 +16,10 @@
    or set it to NULL if end of buffer is reached.  Return 1 if found, 0 if not. */
 int
 _buf_findstr(const char *str, char **buf, size_t *buf_len) {
-    int i = 0;
-    int j = 0;
+    size_t i = 0;
+    size_t j = 0;
 
-    for (i = 0; i < *buf_len; i++) {
+    for (i = 0; i < (size_t) *buf_len; i++) {
         if (str[0] == (*buf)[i]) {
             j = i;
             while (str[j - i] && (str[j - i] == (*buf)[j])) j++;

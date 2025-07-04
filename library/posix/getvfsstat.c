@@ -13,7 +13,7 @@
 int
 getvfsstat(struct statvfs *buf, size_t bufsize, int flags) {
     struct _clib4 *__clib4 = __CLIB4;
-    int count = 0;
+    size_t count = 0;
     uint32_t lFlags = LDF_DEVICES | LDF_READ;
 
     /* On OS4 we don't have any difference between ST_WAIT and ST_NOWAIT */

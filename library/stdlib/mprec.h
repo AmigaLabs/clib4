@@ -14,6 +14,8 @@ union double_union {
     uint32_t i[2];
 };
 
+#undef _P
+
 #define ULbits 32
 #define kshift 5
 #define kmask 31

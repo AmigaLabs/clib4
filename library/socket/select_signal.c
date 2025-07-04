@@ -224,7 +224,7 @@ map_descriptor_sets(
 
                     /* If we can't make assumptions about the file position, then
                        this better be a pipe. */
-                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_CACHE_POSITION) && fib->Type != ST_PIPEFILE) {
+                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_CACHE_POSITION) && fib->Type != (uint32) ST_PIPEFILE) {
                         FreeDosObject(DOS_EXAMINEDATA, fib);
 
                         SHOWMSG("file is unusable; it is not a file system and not a pipe.");

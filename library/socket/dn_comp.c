@@ -91,11 +91,11 @@ match(int *offset, const unsigned char *base, const unsigned char *dn,
 
 int
 dn_comp(unsigned char *src, unsigned char *dst, int space, unsigned char **dnptrs, unsigned char **lastdnptr) {
-    int i, j, n, m = 0, offset = 0, bestlen = 0, bestoff = 0;
+    int i, j, n, offset = 0, bestoff = 0;
     unsigned char lens[127];
     unsigned char **p;
     const char *end;
-    size_t l = strnlen((char *)src, 255);
+    size_t l = strnlen((char *)src, 255), m = 0, bestlen = 0;
     if (l && src[l - 1] == '.') l--;
     if (l > 253 || space <= 0) return -1;
     if (!l) {
@@ -119,9 +119,9 @@ dn_comp(unsigned char *src, unsigned char *dst, int space, unsigned char **dnptr
         }
 
     /* encode unmatched part */
-    if (space < l - bestlen + 2 + (bestlen - 1 < l - 1)) return -1;
+    if ((size_t) space < l - bestlen + 2 + (bestlen - 1 < l - 1)) return -1;
     memcpy(dst + 1, src, l - bestlen);
-    for (i = j = 0; i < l - bestlen; i += lens[j++] + 1)
+    for (i = j = 0; (size_t) i < l - bestlen; i += lens[j++] + 1)
         dst[i] = lens[j];
 
     /* add tail */

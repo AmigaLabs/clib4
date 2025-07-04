@@ -31,7 +31,7 @@ __fgetwc_unlocked_internal(struct _clib4 *__clib4, FILE *f) {
             return WEOF;
         }
         l = mbrtowc(&wc, (void *) &b, 1, &f->_mbstate);
-        if (l == -1) {
+        if (l == -1U) {
             if (!first) {
                 f->_flags2 |= __SERR;
                 __ungetc_r(__clib4, b, f);
@@ -40,7 +40,7 @@ __fgetwc_unlocked_internal(struct _clib4 *__clib4, FILE *f) {
             return WEOF;
         }
         first = 0;
-    } while (l == -2);
+    } while (l == -2U);
 
     RETURN(wc);
     return wc;

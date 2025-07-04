@@ -16,7 +16,7 @@ __initialize_iob(
 	int file_descriptor,
 	int slot_number,
 	ULONG flags,
-	struct SignalSemaphore *lock)
+	APTR lock)
 {
     ENTER();
 	assert(iob != NULL && action_function != NULL);

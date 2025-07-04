@@ -154,7 +154,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 c = get_16((void *) *in, type);
                 if ((unsigned) (c - 0xdc00) < 0x400) goto ilseq;
                 if ((unsigned) (c - 0xd800) < 0x400) {
-                    if (type - UCS2BE < 2U) goto ilseq;
+                    if (type - UCS2BE < 2) goto ilseq;
                     l = 4;
                     if (*inb < 4) goto starved;
                     d = get_16((void *) (*in + 2), type);
@@ -522,7 +522,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
             case UTF_16:
             case UTF_16BE:
             case UTF_16LE:
-                if (c < 0x10000 || totype - UCS2BE < 2U) {
+                if (c < 0x10000 || totype - UCS2BE < 2) {
                     if (c >= 0x10000) c = 0xFFFD;
                     if (*outb < 2) goto toobig;
                     put_16((void *) *out, c, totype);

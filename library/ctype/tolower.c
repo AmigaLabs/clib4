@@ -1,34 +1,30 @@
 /*
- * $Id: ctype_tolower.c,v 1.5 2006-01-08 12:04:22 clib4devs Exp $
+* $Id: ctype_tolower.c,v 1.6 2025-06-30 12:04:22 clib4devs Exp $
 */
 
 #ifndef _CTYPE_HEADERS_H
 #include "ctype_headers.h"
 #endif /* _CTYPE_HEADERS_H */
 
+#ifndef _WCTYPE_HEADERS_H
+#include <wctype.h>
+#endif /* _WCTYPE_HEADERS_H */
+
+// TODO - We have to change this also on limits.h but at moment will break the compatibility
+#undef MB_LEN_MAX
+#define MB_LEN_MAX 8
+
+#undef tolower
+
 int
 tolower(int c) {
-    int result;
-    struct _clib4 *__clib4 = __CLIB4;
-    DECLARE_LOCALEBASE_R(__clib4);
-
-    __locale_lock(__clib4);
-
-    if (__clib4->__locale_table[LC_CTYPE] != NULL) {
-        assert(LocaleBase != NULL);
-
-        /* The parameter must be either EOF or in the range of an
-           'unsigned char'. If it's not, then the behaviour is
-           undefined. */
-        if (c != EOF && ((0 <= c && c <= UCHAR_MAX) || ((c + 256) <= UCHAR_MAX)))
-            result = ConvToLower(__clib4->__locale_table[LC_CTYPE], (ULONG)(c & 255));
-        else
-            result = c;
-    } else {
-        result = ('A' <= c && c <= 'Z') ? (c + ('a' - 'A')) : c;
-    }
-
-    __locale_unlock(__clib4);
-
-    return (result);
+	if ((unsigned char) c <= 0x7f)
+		return isupper(c) ? c - 'A' + 'a' : c;
+	if (c != EOF && MB_CUR_MAX == 1 && isupper(c)) {
+		char s[MB_LEN_MAX] = {c, '\0'};
+		wchar_t wc;
+		if (mbtowc(&wc, s, 1) >= 0 && wctomb(s, (wchar_t) towlower(wc)) == 1)
+			c = (unsigned char) s[0];
+	}
+	return c;
 }

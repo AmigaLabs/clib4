@@ -8,7 +8,7 @@
 
 int
 pthread_rwlockattr_setpshared(pthread_rwlockattr_t *attr, int pshared) {
-    if (pshared > 1U)
+    if (pshared > 1)
         return EINVAL;
     attr->pshared = pshared;
     return 0;

@@ -106,9 +106,9 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
                 if (file->iob_BufferReadBytes == 0 && total_size >= (size_t) file->iob_BufferSize) {
                     ssize_t num_bytes_read;
                     /* We bypass the buffer entirely. */
-            SHOWMSG("Calling read...");
+                    SHOWMSG("Calling read...");
                     num_bytes_read = read(file->iob_Descriptor, data, total_size);
-            SHOWMSG("Done.");
+                    SHOWMSG("Done.");
                     if (num_bytes_read == -1) {
                         SET_FLAG(file->iob_Flags, IOBF_ERROR);
                         goto out;

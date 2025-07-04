@@ -17,7 +17,7 @@ int
 backtrace(void **buffer, int max_frames) {
     StackFrame *frame;
     void **bp;
-    unsigned int count = 0;
+    int count = 0;
 
     // Get the frame pointer, which is usually stored in r1 on PowerPC
     __asm__ volatile("mr %0, r1" : "=r"(bp));

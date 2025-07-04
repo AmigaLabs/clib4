@@ -163,15 +163,15 @@ tre_tnfa_run_parallel(const tre_tnfa_t *tnfa, const void *string,
 
         /* Ensure that tbytes and xbytes*num_states cannot overflow, and that
          * they don't contribute more than 1/8 of SIZE_MAX to total_bytes. */
-        if (num_tags > SIZE_MAX / (8 * sizeof(regoff_t) * tnfa->num_states))
+        if ((uint32_t) num_tags > SIZE_MAX / (8 * sizeof(regoff_t) * tnfa->num_states))
             return REG_ESPACE;
 
         /* Likewise check rbytes. */
-        if (tnfa->num_states + 1 > SIZE_MAX / (8 * sizeof(*reach_next)))
+        if ((uint32_t) tnfa->num_states + 1 > SIZE_MAX / (8 * sizeof(*reach_next)))
             return REG_ESPACE;
 
         /* Likewise check pbytes. */
-        if (tnfa->num_states > SIZE_MAX / (8 * sizeof(*reach_pos)))
+        if ((uint32_t) tnfa->num_states > SIZE_MAX / (8 * sizeof(*reach_pos)))
             return REG_ESPACE;
 
         /* Compute the length of the block we need. */

@@ -60,11 +60,12 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
     int timeout, attempts, retry_interval, servfail_retry = 0;
     struct sockaddr_in sa = {0}, ns[MAXNS] = {{0}};
     socklen_t sl = sizeof sa;
-    int nns = 0;
+    size_t nns = 0;
     int family = AF_INET;
     int rlen;
     int next;
-    int i, j = 0;
+    int i = 0;
+    size_t j = 0;
     int cs;
     struct pollfd pfd;
     unsigned long t0, t1, t2;
@@ -106,8 +107,8 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
     t0 = t2 = mtime();
     t1 = t2 - retry_interval;
 
-    for (; t2 - t0 < timeout; t2 = mtime()) {
-        if (t2 - t1 >= retry_interval) {
+    for (; t2 - t0 < (unsigned long) timeout; t2 = mtime()) {
+        if (t2 - t1 >= (unsigned long) retry_interval) {
             /* Query all configured namservers in parallel */
             for (i = 0; i < nqueries; i++) {
                 if (!alens[i]) {
