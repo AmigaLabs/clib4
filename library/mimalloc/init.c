@@ -222,14 +222,17 @@ void _mi_heap_guarded_init(mi_heap_t* heap) {
 
 
 static void mi_heap_main_init(void) {
+    Printf("_mi_heap_main: %p\n", _mi_heap_main);
   if (_mi_heap_main.cookie == 0) {
     _mi_heap_main.thread_id = _mi_thread_id();
     _mi_heap_main.cookie = 1;
+    Printf("mi_heap_main_init1");
     #if defined(_WIN32) && !defined(MI_SHARED_LIB)
       _mi_random_init_weak(&_mi_heap_main.random);    // prevent allocation failure during bcrypt dll initialization with static linking
     #else
       _mi_random_init(&_mi_heap_main.random);
     #endif
+      Printf("mi_heap_main_init2");
     _mi_heap_main.cookie  = _mi_heap_random_next(&_mi_heap_main);
     _mi_heap_main.keys[0] = _mi_heap_random_next(&_mi_heap_main);
     _mi_heap_main.keys[1] = _mi_heap_random_next(&_mi_heap_main);
@@ -240,6 +243,7 @@ static void mi_heap_main_init(void) {
 }
 
 mi_heap_t* _mi_heap_main_get(void) {
+    Printf("_mi_heap_main_get\n");
   mi_heap_main_init();
   return &_mi_heap_main;
 }
@@ -579,7 +583,7 @@ mi_decl_nodiscard bool mi_is_redirected(void) mi_attr_noexcept {
 // Called once by the process loader from `src/prim/prim.c`
 void _mi_auto_process_init(void) {
   mi_heap_main_init();
-  #if defined(__APPLE__) || defined(MI_TLS_RECURSE_GUARD) //&& !defined(__amigaos4__)
+  #if defined(__APPLE__) || defined(MI_TLS_RECURSE_GUARD) && !defined(__amigaos4__)
   volatile mi_heap_t* dummy = _mi_heap_default; // access TLS to allocate it before setting tls_initialized to true;
   if (dummy == NULL) {
     DebugPrintF("mimalloc: auto process init early return\n");

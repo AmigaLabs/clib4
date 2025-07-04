@@ -53,7 +53,9 @@ terms of the MIT license. A copy of the license can be found in the file
 #define MIN_OS4MALLOC_ALIGN           16
 
 void _mi_prim_mem_init(mi_os_mem_config_t *config) {
-	config->page_size = sysconf(_SC_PAGESIZE);
+    ULONG pageSize = -1;
+    GetCPUInfoTags(GCIT_ExecPageSize, (ULONG) &pageSize, TAG_DONE);
+	config->page_size = pageSize;
 	config->alloc_granularity = 16;
 	config->has_overcommit = false;
 	config->has_partial_free = false;

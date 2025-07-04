@@ -520,6 +520,7 @@ C_STDLIB := \
 	stdlib/dlopen.o \
 	stdlib/dlsym.o \
 	stdlib/ecvt.o \
+	stdlib/emutls.o \
 	stdlib/exit.o \
 	stdlib/fcvt.o \
 	stdlib/free.o \

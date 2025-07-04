@@ -17,6 +17,7 @@ extern void mi_cdecl _mi_auto_process_done(void) mi_attr_noexcept;
 
 void *
 malloc(size_t size) {
+    Printf("malloc %ld\n", size);
     return mi_malloc(size);
 }
 

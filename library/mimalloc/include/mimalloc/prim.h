@@ -9,8 +9,9 @@ terms of the MIT license. A copy of the license can be found in the file
 #define MIMALLOC_PRIM_H
 
 #ifdef __amigaos4__
-//#define MI_TLS_RECURSE_GUARD 1
+#define MI_TLS_RECURSE_GUARD 1
 #define MI_HAS_TLS_SLOT 0
+#include <proto/dos.h>
 #endif
 // --------------------------------------------------------------------------
 // This file specifies the primitive portability API.
@@ -315,6 +316,10 @@ static inline mi_threadid_t _mi_prim_thread_id(void) mi_attr_noexcept {
   #endif
 }
 
+#elif defined(__amigaos4__)
+static inline mi_threadid_t _mi_prim_thread_id(void) mi_attr_noexcept {
+    return (uint32_t) FindTask(NULL);
+}
 #else
 
 // otherwise use portable C, taking the address of a thread local variable (this is still very fast on most platforms).
@@ -402,7 +407,7 @@ static inline mi_heap_t* mi_prim_get_default_heap(void) {
 }
 
 #elif defined(MI_TLS_PTHREAD)
-
+#error 1
 extern mi_decl_hidden pthread_key_t _mi_heap_default_key;
 static inline mi_heap_t* mi_prim_get_default_heap(void) {
   mi_heap_t* heap = (mi_unlikely(_mi_heap_default_key == (pthread_key_t)(-1)) ? _mi_heap_main_get() : (mi_heap_t*)pthread_getspecific(_mi_heap_default_key));
@@ -410,12 +415,12 @@ static inline mi_heap_t* mi_prim_get_default_heap(void) {
 }
 
 #else // default using a thread local variable; used on most platforms.
-
 static inline mi_heap_t* mi_prim_get_default_heap(void) {
-  #if defined(MI_TLS_RECURSE_GUARD)
-  if (mi_unlikely(!_mi_process_is_initialized)) return _mi_heap_main_get();
-  #endif
-  return _mi_heap_default;
+    Printf("mi_prim_get_default_heap\n");
+    #if defined(MI_TLS_RECURSE_GUARD)
+    if (mi_unlikely(!_mi_process_is_initialized)) return _mi_heap_main_get();
+    #endif
+    return _mi_heap_default;
 }
 
 #endif  // mi_prim_get_default_heap()

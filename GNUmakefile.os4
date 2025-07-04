@@ -71,7 +71,7 @@ DPKG_LIB ?= clib4_1.0_amd64
 WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
-	-Wno-deprecated-declarations -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
+	-Wno-deprecated-declarations -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes -Wno-missing-declarations \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
     -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Wno-stringop-overflow -Werror \
      # -Wbad-function-cast -Wconversion -Wformat
@@ -140,7 +140,7 @@ ifdef SPE
 	OUTPUT_LIB = $(BUILD_DIR)/lib/soft-float
 	CFLAGS := $(CFLAGS) -D__SPE__ -msoft-float -mspe -mtune=8540 -mcpu=8540 -mabi=spe -mfloat-gprs=double $(CMATH) -fno-inline-functions -fno-partial-inlining \
 				-fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions \
-				-fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
+				-fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized -Wno-missing-declarations #-Wdouble-promotion
 	AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mfloat-gprs=double $(CMATH) -Wno-overflow
 	CFLAGS := $(filter-out -Wno-cast-function-type, $(CFLAGS))
 	CFLAGS_N := $(filter-out -Wno-cast-function-type, $(CFLAGS_N))
@@ -282,7 +282,7 @@ version:
 # Shared clib4.library rules
 
 clib4.library.debug: $(OBJ_C_LIB)
-	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(OUTPUT_LIB)/crtend.o $(DLIBS) -lgcc -latomic -Wl,-export-dynamic -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
+	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(OUTPUT_LIB)/crtend.o $(DLIBS) -latomic -Wl,-export-dynamic -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
 
 clib4.library: clib4.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
