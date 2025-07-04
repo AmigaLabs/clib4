@@ -83,7 +83,7 @@ char *
 strsignal(int signum) {
     const char *s = strings;
 
-    signum = sigmap(signum);
+    signum = sigmap((size_t) signum);
     if (signum - 1U >= NSIG-1) signum = 0;
 
     for (; signum--; s++) for (; *s; s++);

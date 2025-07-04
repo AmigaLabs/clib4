@@ -60,7 +60,7 @@ med3(char *a, char *b, char *c, int (*cmp)(const void *, const void *)) {
 void
 qsort(void *a, size_t n, size_t es, int (*cmp)(const void *, const void *)) {
     char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
-    int d, r, swaptype, swap_cnt;
+    size_t d, r, swaptype, swap_cnt;
 
 loop:
     SWAPINIT(a, es);
@@ -123,7 +123,7 @@ loop:
     pn = (char *) a + n * es;
     r = min(pa - (char *) a, pb - pa);
     vecswap(a, pb - r, r);
-    r = min(pd - pc, pn - pd - es);
+    r = min((size_t) (pd - pc), pn - pd - es);
     vecswap(pb, pn - r, r);
     if ((r = pb - pa) > es)
         qsort(a, r / es, es, cmp);

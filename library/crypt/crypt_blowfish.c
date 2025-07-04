@@ -626,11 +626,11 @@ static char *BF_crypt(const char *key, const char *setting,
 
     if (setting[0] != '$' ||
         setting[1] != '2' ||
-        setting[2] - 'a' > 25U ||
+        setting[2] - 'a' > 25 ||
         !flags_by_subtype[setting[2] - 'a'] ||
         setting[3] != '$' ||
-        setting[4] - '0' > 1U ||
-        setting[5] - '0' > 9U ||
+        setting[4] - '0' > 1 ||
+        setting[5] - '0' > 9 ||
         setting[6] != '$') {
         return NULL;
     }
