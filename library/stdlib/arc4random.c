@@ -10,10 +10,10 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-static inline uint8_t arc4_getbyte(struct _clib4 *__clib4);
+static uint8_t arc4_getbyte(struct _clib4 *__clib4);
 static void arc4_stir(struct _clib4 *__clib4);
 
-static inline void
+static void
 arc4_addrandom(struct _clib4 *__clib4, u_char *dat, int datlen) {
     int n;
     uint8_t si;
@@ -31,13 +31,12 @@ arc4_addrandom(struct _clib4 *__clib4, u_char *dat, int datlen) {
 
 static void
 arc4_fetch(struct _clib4 *__clib4) {
-    int done, fd;
-    fd = open(RANDOMDEV, O_RDONLY, 0);
-    done = 0;
-    if (fd >= 0) {
-        if (read(fd, &__clib4->rdat, KEYSIZE) == KEYSIZE)
+    int done = 0;
+    BPTR file = Open(RANDOMDEV, MODE_OLDFILE);
+    if (file != BZERO) {
+        if (Read(file, &__clib4->rdat, KEYSIZE) == KEYSIZE)
             done = 1;
-        (void) close(fd);
+        Close(file);
     }
     if (!done) {
         (void) gettimeofday(&__clib4->rdat.tv, NULL);

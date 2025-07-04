@@ -22,18 +22,17 @@ terms of the MIT license.
 #include <string.h>
 
 // argument defaults
-static int THREADS = 32;      // more repeatable if THREADS <= #processors
-static int SCALE = 25;      // scaling factor
-static int ITER = 50;      // N full iterations destructing and re-creating all threads
+static int THREADS = 32; // more repeatable if THREADS <= #processors
+static int SCALE = 25;   // scaling factor
+static int ITER = 50;    // N full iterations destructing and re-creating all threads
 
 // static int THREADS = 8;    // more repeatable if THREADS <= #processors
 // static int SCALE   = 100;  // scaling factor
 
 #define STRESS   // undefine for leak test
 
-static bool allow_large_objects = true;    // allow very large objects?
-static size_t use_one_size = 0;              // use single object size of `N * sizeof(uintptr_t)`?
-
+static bool allow_large_objects = true; // allow very large objects?
+static size_t use_one_size = 0;         // use single object size of `N * sizeof(uintptr_t)`?
 
 #define custom_calloc(n,s)    calloc(n,s)
 #define custom_realloc(p,s)   realloc(p,s)
@@ -42,7 +41,6 @@ static size_t use_one_size = 0;              // use single object size of `N * s
 // transfer pointer between threads
 #define TRANSFERS     (1000)
 static volatile void *transfer[TRANSFERS];
-
 
 #if (UINTPTR_MAX != UINT32_MAX) && !defined(NEWLIB)
 const uintptr_t cookie = 0xbf58476d1ce4e5b9UL;
@@ -81,14 +79,20 @@ static bool chance(size_t perc, random_t r) {
 
 static void *alloc_items(size_t items, random_t r) {
     if (chance(1, r)) {
-        if (chance(1, r) && allow_large_objects) items *= 10000;       // 0.01% giant
-        else if (chance(10, r) && allow_large_objects) items *= 1000;  // 0.1% huge
-        else items *= 100;                                             // 1% large objects;
+        if (chance(1, r) && allow_large_objects)
+            items *= 10000; // 0.01% giant
+        else if (chance(10, r) && allow_large_objects)
+            items *= 1000; // 0.1% huge
+        else
+            items *= 100; // 1% large objects;
     }
-    if (items == 40) items++;              // pthread uses that size for stack increases
-    if (use_one_size > 0) items = (use_one_size / sizeof(uintptr_t));
-    if (items == 0) items = 1;
-    uintptr_t *p = (uintptr_t *) custom_calloc(items, sizeof(uintptr_t));
+    if (items == 40)
+        items++; // pthread uses that size for stack increases
+    if (use_one_size > 0)
+        items = (use_one_size / sizeof(uintptr_t));
+    if (items == 0)
+        items = 1;
+    uintptr_t *p = (uintptr_t*) custom_calloc(items, sizeof(uintptr_t));
     if (p != NULL) {
         for (uintptr_t i = 0; i < items; i++) {
             p[i] = (items - i) ^ cookie;
@@ -99,7 +103,7 @@ static void *alloc_items(size_t items, random_t r) {
 
 static void free_items(void *p) {
     if (p != NULL) {
-        uintptr_t *q = (uintptr_t *) p;
+        uintptr_t *q = (uintptr_t*) p;
         uintptr_t items = (q[0] ^ cookie);
         for (uintptr_t i = 0; i < items; i++) {
             if ((q[i] ^ cookie) != items - i) {
@@ -111,10 +115,9 @@ static void free_items(void *p) {
     custom_free(p);
 }
 
-
 static void stress(intptr_t tid) {
     //bench_start_thread();
-    uintptr_t r = ((tid + 1) * 43); // rand();
+    uintptr_t r = ((tid + 1) * 43);  // rand();
     const size_t max_item_shift = 5; // 128
     const size_t max_item_retained_shift = max_item_shift + 2;
     size_t allocs = 100 * ((size_t) SCALE) * (tid % 8 + 1); // some threads do more
@@ -122,19 +125,19 @@ static void stress(intptr_t tid) {
     void **data = NULL;
     size_t data_size = 0;
     size_t data_top = 0;
-    void **retained = (void **) custom_calloc(retain, sizeof(void *));
+    void **retained = (void**) custom_calloc(retain, sizeof(void *));
     size_t retain_top = 0;
-
     while (allocs > 0 || retain > 0) {
         if (retain == 0 || (chance(50, &r) && allocs > 0)) {
             // 50%+ alloc
             allocs--;
             if (data_top >= data_size) {
                 data_size += 100000;
-                data = (void **) custom_realloc(data, data_size * sizeof(void *));
+                data = (void**) custom_realloc(data, data_size * sizeof(void *));
             }
             data[data_top++] = alloc_items(1ULL << (pick(&r) % max_item_shift), &r);
-        } else {
+        }
+        else {
             // 25% retain
             retained[retain_top++] = alloc_items(1ULL << (pick(&r) % max_item_retained_shift), &r);
             retain--;
@@ -166,21 +169,24 @@ static void stress(intptr_t tid) {
     //bench_end_thread();
 }
 
-static void run_os_threads(size_t nthreads, void (*entry)(intptr_t tid));
+static void run_os_threads(size_t nthreads, void (* entry)(intptr_t tid));
 
 static void test_stress(void) {
     uintptr_t r = rand();
     for (int n = 0; n < ITER; n++) {
         run_os_threads(THREADS, &stress);
         for (int i = 0; i < TRANSFERS; i++) {
-            if (chance(50, &r) || n + 1 == ITER) { // free all on last run, otherwise free half of the transfers
+            if (chance(50, &r) || n + 1 == ITER) {
+                // free all on last run, otherwise free half of the transfers
                 void *p = atomic_exchange_ptr(&transfer[i], NULL);
                 free_items(p);
             }
         }
         // mi_collect(false);
-#if !defined(NDEBUG) || defined(MI_TSAN)
-        if ((n + 1) % 10 == 0) { printf("- iterations left: %3d\n", ITER - (n + 1)); }
+#if !defined(NDEBUG)
+        if ((n + 1) % 10 == 0) {
+            printf("- iterations left: %3d\n", ITER - (n + 1));
+        }
 #endif
     }
 }
@@ -212,25 +218,26 @@ int main(int argc, char **argv) {
     if (argc >= 2) {
         char *end;
         long n = strtol(argv[1], &end, 10);
-        if (n > 0) THREADS = n;
+        if (n > 0)
+            THREADS = n;
     }
     if (argc >= 3) {
         char *end;
         long n = (strtol(argv[2], &end, 10));
-        if (n > 0) SCALE = n;
+        if (n > 0)
+            SCALE = n;
     }
     if (argc >= 4) {
         char *end;
         long n = (strtol(argv[3], &end, 10));
-        if (n > 0) ITER = n;
+        if (n > 0)
+            ITER = n;
     }
     printf("Using %d threads with a %d%% load-per-thread and %d iterations\n", THREADS, SCALE, ITER);
     //mi_reserve_os_memory(1024*1024*1024ULL, false, true);
     //int res = mi_reserve_huge_os_pages(4,1);
     //printf("(reserve huge: %i\n)", res);
-
     //bench_start_program();
-
     // Run ITER full iterations where half the objects in the transfer buffer survive to the next round.
     srand(0x7feb352d);
     // mi_stats_reset();
@@ -239,13 +246,11 @@ int main(int argc, char **argv) {
 #else
     test_leak();
 #endif
-
     //bench_end_program();
     return 0;
 }
 
-
-static void (*thread_entry_fun)(intptr_t) = &stress;
+static void (* thread_entry_fun)(intptr_t) = &stress;
 
 #include <pthread.h>
 
@@ -254,13 +259,13 @@ static void *thread_entry(void *param) {
     return NULL;
 }
 
-static void run_os_threads(size_t nthreads, void (*fun)(intptr_t)) {
+static void run_os_threads(size_t nthreads, void (* fun)(intptr_t)) {
     thread_entry_fun = fun;
-    pthread_t *threads = (pthread_t *) custom_calloc(nthreads, sizeof(pthread_t));
+    pthread_t *threads = (pthread_t*) custom_calloc(nthreads, sizeof(pthread_t));
     memset(threads, 0, sizeof(pthread_t) * nthreads);
     //pthread_setconcurrency(nthreads);
     for (size_t i = 0; i < nthreads; i++) {
-        pthread_create(&threads[i], NULL, &thread_entry, (void *) i);
+        pthread_create(&threads[i], NULL, &thread_entry, (void*) i);
     }
     for (size_t i = 0; i < nthreads; i++) {
         pthread_join(threads[i], NULL);
@@ -279,8 +284,8 @@ static void* atomic_exchange_ptr(volatile void** p, void* newval) {
 
 static void *atomic_exchange_ptr(volatile void **p, void *newval) {
     return atomic_exchange((
-    volatile _Atomic(void *)
-    *)p, newval);
+                               volatile _Atomic(void *)
+                               *)p, newval);
 }
 
 #endif

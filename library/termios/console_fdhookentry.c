@@ -314,7 +314,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
                 unsigned char byte_out;
                 int i, n;
 
-                buffer = __malloc_r(__clib4, 2 * fam->fam_Size);
+                buffer = malloc(2 * fam->fam_Size);
                 if (buffer == NULL) {
                     fam->fam_Error = ENOMEM;
                     goto out;
@@ -498,7 +498,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
                     }
 
                     /* Create an empty examineData struct */
-                    struct ExamineData *examineData = __malloc_r(__clib4, sizeof(struct ExamineData));
+                    struct ExamineData *examineData = malloc(sizeof(struct ExamineData));
                     fam->fam_FileInfo = examineData;
 
                     /* Make up some stuff for this stream. */
@@ -532,7 +532,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
         __stdio_unlock(__clib4);
 
     if (buffer != NULL)
-        __free_r(__clib4, buffer);
+        free(buffer);
 
     SHOWVALUE(result);
 

@@ -22,7 +22,7 @@ tmpfile(void) {
 
     __check_abort_f(__clib4);
 
-    temp_file_name = __malloc_r(__clib4, L_tmpnam);
+    temp_file_name = malloc(L_tmpnam);
     if (temp_file_name == NULL) {
         SHOWMSG("not enough memory for temp file name");
         goto out;
@@ -70,7 +70,7 @@ out:
     UnLock(temp_file_lock);
 
     if (temp_file_name != NULL)
-        __free_r(__clib4, temp_file_name);
+        free(temp_file_name);
 
     RETURN(result);
     return (result);

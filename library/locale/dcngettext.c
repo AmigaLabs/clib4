@@ -528,7 +528,7 @@ char *dcngettext(const char *domainname, const char *msgid1, const char *msgid2,
         mofile->map = momap(path, &mofile->size);
         if (mofile->map == MAP_FAILED) {
             ReleaseSemaphore(__clib4->gettext_lock);
-            __free_r(__clib4, mofile);
+            free(mofile);
             return notrans;
         }
 

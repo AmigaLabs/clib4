@@ -80,7 +80,7 @@ fclose(FILE *stream) {
 
         UnLock(file->iob_TempFileLock);
 
-        __free_r(__clib4, file->iob_TempFileName);
+        free(file->iob_TempFileName);
     }
 
     /* Get rid of any custom file buffer allocated. */

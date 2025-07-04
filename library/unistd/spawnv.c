@@ -150,7 +150,7 @@ spawnv(int mode, const char *file, const char **argv) {
     //     return ret;
     // }
 
-    arg_string = __malloc_r(__clib4, parameter_string_len + 1);
+    arg_string = malloc(parameter_string_len + 1);
     if (arg_string == NULL) {
         __set_errno(ENOMEM);
         return ret;

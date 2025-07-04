@@ -119,7 +119,7 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
             SHOWMSG("file_action_examine");
 
             /* Create an empty examineData struct */
-            struct ExamineData *examineData = __malloc_r(__clib4, sizeof(struct ExamineData));
+            struct ExamineData *examineData = malloc(sizeof(struct ExamineData));
             fam->fam_FileInfo = examineData;
 
             fib = fam->fam_FileInfo;

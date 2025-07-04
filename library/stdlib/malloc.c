@@ -6,42 +6,18 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-#ifndef _STDLIB_MEMORY_H
-#include "stdlib_memory.h"
-#endif /* _STDLIB_MEMORY_H */
-
 #ifndef _STDLIB_CONSTRUCTOR_H
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
+#include "mimalloc.h"
+
+extern void _mi_auto_process_init(void);
+extern void mi_cdecl _mi_auto_process_done(void) mi_attr_noexcept;
+
 void *
 malloc(size_t size) {
-    return __malloc_r(__CLIB4, size);
-}
-
-void *
-__malloc_r(struct _clib4 *__clib4, size_t size) {
-    ENTER();
-    void *result = NULL;
-
-    // Prevent overflow
-    if (size > SIZE_MAX) {
-        __set_errno_r(__clib4, EOVERFLOW);
-        goto out;
-    }
-
-    __memory_lock(__clib4);
-
-    result = wmem_alloc(__clib4->__wmem_allocator, size);
-
-    if (!result)
-        __set_errno_r(__clib4, ENOMEM);
-
-    __memory_unlock(__clib4);
-
-out:
-    LEAVE();
-    return (result);
+    return mi_malloc(size);
 }
 
 void __memory_lock(struct _clib4 *__clib4) {
@@ -58,21 +34,11 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
-    __memory_lock(__clib4);
-
-    if (__clib4->__wmem_allocator != NULL) {
-        SHOWMSG("Destroying Memory Allocator");
-        wmem_destroy_allocator(__clib4->__wmem_allocator);
-#if MEMORY_DEBUG
-        if (__clib4->allocated_memory_by_malloc > 0) {
-            Printf("WARNING: There are %ld unfreed malloc!\n", __clib4->allocated_memory_by_malloc);
-        }
+#if 0
+    Printf("_mi_auto_process_exit\n");
+    _mi_auto_process_done();
+    Printf("_mi_auto_process_exit ok\n");
 #endif
-        SHOWMSG("Done");
-        __clib4->__wmem_allocator = NULL;
-    }
-
-    __memory_unlock(__clib4);
 
     if (__clib4->memory_semaphore != NULL) {
         __delete_semaphore(__clib4->memory_semaphore);
@@ -93,12 +59,11 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
     if (__clib4->memory_semaphore == NULL)
         goto out;
 
-    __clib4->__wmem_allocator = wmem_allocator_new(__clib4->__wof_mem_allocator_type); // make this dynamic
-    if (__clib4->__wmem_allocator == NULL) {
-        __delete_semaphore(__clib4->memory_semaphore);
-        __clib4->memory_semaphore = NULL;
-        goto out;
-    }
+#if 0
+    Printf("_mi_auto_process_init\n");
+    _mi_auto_process_init();
+    Printf("_mi_auto_process_init ok\n");
+#endif
 
     success = TRUE;
 

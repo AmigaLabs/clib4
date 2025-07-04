@@ -111,7 +111,7 @@ closedir(DIR *directory_pointer) {
         struct Node *node;
 
         while ((node = RemHead((struct List *) &dh->dh_VolumeList)) != NULL)
-            __free_r(__clib4, node);
+            free(node);
     }
 
     if (dh->dh_Context != NULL) {
@@ -126,7 +126,7 @@ closedir(DIR *directory_pointer) {
         close(dh->dh_Fd);
     }
 
-    __free_r(__clib4, dh);
+    free(dh);
 
     result = OK;
 

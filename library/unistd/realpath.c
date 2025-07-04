@@ -29,7 +29,7 @@ realpath(const char *path_name, char *buffer) {
     caller should deallocate this buffer using free.
     */
     if (buffer == NULL) {
-        buffer = __malloc_r(__clib4, PATH_MAX);
+        buffer = malloc(PATH_MAX);
     }
 
     if (path_name == NULL) {

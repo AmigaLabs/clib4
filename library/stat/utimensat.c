@@ -118,14 +118,14 @@ utimensat(int fd, const char *path, const struct timespec times[2], int flags) {
 
         struct fd *fildes = __get_file_descriptor(__clib4, fd);
         if (fildes == NULL) {
-            __free_r(__clib4, buffer);
+            free(buffer);
             __set_errno_r(__clib4, EBADF);
             goto out;
         }
 
         dh = ExamineObjectTags(EX_FileHandleInput, fildes->fd_File, TAG_DONE);
         if (dh == NULL) {
-            __free_r(__clib4, buffer);
+            free(buffer);
             __set_errno_r(__clib4, EBADF);
             goto out;
         }
@@ -165,7 +165,7 @@ utimensat(int fd, const char *path, const struct timespec times[2], int flags) {
             if (SetDate(buffer, &ds0))
                 result = 0;
         }
-        __free_r(__clib4, buffer);
+        free(buffer);
     }
 
 out:

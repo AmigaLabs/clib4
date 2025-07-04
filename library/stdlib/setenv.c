@@ -66,7 +66,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
     if (name != NULL) {
         for (i = 0; i < strlen(name); i++) {
             if (name[i] == '=') {
-                name_copy = __malloc_r(__clib4, i + 1);
+                name_copy = malloc(i + 1);
                 if (name_copy == NULL) {
                     SHOWMSG("could not create copy of name");
                     goto out;
@@ -84,7 +84,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
     {
         for (i = 0; i < strlen(value); i++) {
             if (value[i] == '=') {
-                name_copy = __malloc_r(__clib4, i + 1);
+                name_copy = malloc(i + 1);
                 if (name_copy == NULL) {
                     SHOWMSG("could not create copy of name");
                     goto out;
@@ -123,7 +123,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
     if (found == NULL) {
         SHOWMSG("the local variable is not yet set; remembering that");
 
-        lv = __malloc_r(__clib4, sizeof(*lv) + strlen(name) + 1);
+        lv = malloc(sizeof(*lv) + strlen(name) + 1);
         if (lv == NULL) {
             SHOWMSG("not enough memory to remember local variable to be deleted");
             goto out;
@@ -148,7 +148,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
 
         if (lv != NULL) {
             __clib4->__lv_root = lv->lv_Next;
-            __free_r(__clib4, lv);
+            free(lv);
         }
 
         __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
@@ -167,7 +167,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
 out:
 
     if (name_copy != NULL)
-        __free_r(__clib4, name_copy);
+        free(name_copy);
 
     RETURN(result);
     return (result);

@@ -33,7 +33,7 @@ unsetenv(const char *name) {
 
     for (i = 0; i < strlen(name); i++) {
         if (name[i] == '=') {
-            name_copy = __malloc_r(__clib4, i + 1);
+            name_copy = malloc(i + 1);
             if (name_copy == NULL)
                 goto out;
 
@@ -56,7 +56,7 @@ unsetenv(const char *name) {
 out:
 
     if (name_copy != NULL)
-        __free_r(__clib4, name_copy);
+        free(name_copy);
 
     return result;
 }

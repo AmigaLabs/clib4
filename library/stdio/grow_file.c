@@ -49,7 +49,7 @@ __grow_file_size(struct _clib4 *__clib4, struct fd *fd, int num_bytes) {
     /* Allocate a little more memory than required to allow for
      * the buffer to be aligned to a cache line boundary.
      */
-    buffer = __malloc_r(__clib4, (size_t) buffer_size + (__clib4->__cache_line_size - 1));
+    buffer = malloc((size_t) buffer_size + (__clib4->__cache_line_size - 1));
     if (buffer == NULL) {
         SHOWMSG("not enough memory for write buffer");
 
@@ -108,7 +108,7 @@ __grow_file_size(struct _clib4 *__clib4, struct fd *fd, int num_bytes) {
 out:
 
     if (buffer != NULL)
-        __free_r(__clib4, buffer);
+        free(buffer);
 
     return (result);
 }

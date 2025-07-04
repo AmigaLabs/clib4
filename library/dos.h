@@ -16,7 +16,7 @@
 #include "include/setjmp.h"
 #include "include/resolv.h"
 
-#include "wmem_allocator.h"
+#include "mimalloc.h"
 
 #include <exec/types.h>
 #include <exec/lists.h>
@@ -32,14 +32,16 @@
 __BEGIN_DECLS
 
 typedef struct _wof_allocator_t wof_allocator_t;
-typedef void (*signal_handler_t)(int sig);
+
+typedef void (* signal_handler_t)(int sig);
+
 typedef int32 BPTR;
 typedef short BOOL;
 
 struct ExitTrapNode {
     struct MinNode etn_MinNode;
 
-    void (*etn_Function)(void);
+    void (* etn_Function)(void);
 };
 
 struct mofile_s {
@@ -76,7 +78,7 @@ extern int __get_default_file(int file_descriptor, long *file_ptr);
  * At the time this function is invoked, dos.library and utility.library
  * have already been opened for you.
  */
-extern unsigned int (*__get_default_stack_size)(void);
+extern unsigned int (* __get_default_stack_size)(void);
 
 /****************************************************************************/
 
@@ -90,15 +92,21 @@ struct name_translation_info {
 /****************************************************************************/
 
 extern int __translate_relative_path_name(char const **name_ptr, char *replace, size_t max_replace_len);
+
 extern void __restore_path_name(char const **name_ptr, struct name_translation_info *nti);
+
 extern int __translate_amiga_to_unix_path_name(char const **name_ptr, struct name_translation_info *nti);
+
 extern int __translate_unix_to_amiga_path_name(char const **name_ptr, struct name_translation_info *nti);
+
 extern int __translate_io_error_to_errno(LONG io_error);
+
 extern void __print_termination_message(const char *termination_message);
 
 /****************************************************************************/
 
 extern int __execve_environ_init(char *const envp[]);
+
 extern void __execve_environ_exit(char *const envp[]);
 
 /****************************************************************************/
@@ -137,7 +145,7 @@ struct _wchar {
  */
 
 struct _clib4 {
-    struct ExecIFace *IExec;    /* Main IExec interface */
+    struct ExecIFace *IExec; /* Main IExec interface */
 
     struct ElfIFace *IElf;
 
@@ -171,9 +179,9 @@ struct _clib4 {
      */
     BOOL __disable_dos_requesters;
 
-    struct timeval clock;        /* Populated when clib starts with current time */
-    struct rusage ru;            /* rusage struct used in rlimit function */
-    struct _wchar *wide_status;    /* wide char functions status */
+    struct timeval clock;       /* Populated when clib starts with current time */
+    struct rusage ru;           /* rusage struct used in rlimit function */
+    struct _wchar *wide_status; /* wide char functions status */
 
     /*
      * This variable controls the task priority of the program, when running.
@@ -182,10 +190,10 @@ struct _clib4 {
      */
     int __priority;
 
-    char *__tzname[2];     /* Current timezone names.  */
-    int __daylight;        /* If daylight-saving time is ever in use.  */
-    long int __timezone;   /* Seconds west of UTC.  */
-    int __dyntz;           /* Set to TRUE if created with malloc */
+    char *__tzname[2];   /* Current timezone names.  */
+    int __daylight;      /* If daylight-saving time is ever in use.  */
+    long int __timezone; /* Seconds west of UTC.  */
+    int __dyntz;         /* Set to TRUE if created with malloc */
     struct SignalSemaphore *timezone_lock;
 
     /*
@@ -210,14 +218,14 @@ struct _clib4 {
 
     BOOL __unix_path_semantics;
 
-    BOOL  __fully_initialized;
+    BOOL __fully_initialized;
     int32_t __pipenum;
     void *__pipe_semaphore;
-    short  __wof_mem_allocator_type;
+    short __wof_mem_allocator_type;
 
     /* This is used with the dlopen(), dlclose() and dlsym() functions. */
-    void  *__dl_root_handle; //Elf32_Handle
-    int __elf_error_code;    // Elf32_Error
+    void *__dl_root_handle; //Elf32_Handle
+    int __elf_error_code;   // Elf32_Error
 
     /* This is the pointer to itself */
     struct Process *self;
@@ -295,8 +303,8 @@ struct _clib4 {
 
     APTR stdio_lock;
 
-    /* Wof Allocator main pointer */
-    wmem_allocator_t *__wmem_allocator;
+    /* ex wmem Allocator main pointer */
+    void *unused0;
     APTR __environment_pool;
 
     /* Names of files and directories to delete when shutting down. */
@@ -306,7 +314,7 @@ struct _clib4 {
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
     BOOL unused1;
-	struct SignalSemaphore *__timer_semaphore;
+    struct SignalSemaphore *__timer_semaphore;
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;
     struct TimerIFace *__ITimer;
@@ -457,6 +465,7 @@ struct _clib4 {
     int rs_stired;
     int arc4_count;
     int rs_data_available;
+
     struct {
         struct timeval tv;
         pid_t pid;
@@ -550,6 +559,7 @@ extern struct _clib4 *__getClib4(void);
  * __locale_exit() releases the default locale and closes locale.library.
  */
 extern int __locale_init(struct _clib4 *__clib4);
+
 extern void __locale_exit(struct _clib4 *__clib4);
 
 __END_DECLS

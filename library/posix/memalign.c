@@ -48,7 +48,7 @@ memalign(size_t alignment, size_t size) {
         goto out;
     }
 
-    void* original_ptr = __malloc_r(__clib4, size + header_size + padding);
+    void* original_ptr = malloc(size + header_size + padding);
     if (!original_ptr) {
         __set_errno_r(__clib4, ENOMEM);
         goto out;

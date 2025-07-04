@@ -53,7 +53,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
 
     __fd_lock(fd);
 
-    buffer = __malloc_r(__clib4, total_num_bytes_written);
+    buffer = malloc(total_num_bytes_written);
     if (buffer != NULL) {
         char *b = buffer;
 
@@ -92,7 +92,7 @@ writev(int file_descriptor, const struct iovec *iov, int vec_count) {
 out:
 
     if (buffer != NULL)
-        __free_r(__clib4, buffer);
+        free(buffer);
 
     __fd_unlock(fd);
     __stdio_unlock(__clib4);

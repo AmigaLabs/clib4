@@ -21,7 +21,7 @@ backtrace_symbols(void *const *buffer, int size) {
     DECLARE_DEBUGBASE();
 
     // Allocate array of strings
-    char **symbols = __malloc_r(__clib4, size * sizeof(char *));
+    char **symbols = malloc(size * sizeof(char *));
     if (!symbols)
         return NULL;
 

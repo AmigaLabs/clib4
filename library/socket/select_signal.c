@@ -78,7 +78,7 @@ allocate_fd_set(struct _clib4 *__clib4, int num_fds, fd_set *duplicate_this_set)
 
     SHOWVALUE(num_bytes);
 
-    set = (fd_set *) __malloc_r(__clib4, num_bytes);
+    set = (fd_set *) malloc(num_bytes);
     if (set != NULL) {
         if (duplicate_this_set != NULL)
             copy_fd_set(set, duplicate_this_set, num_fds);
@@ -96,7 +96,7 @@ out:
 static void
 free_fd_set(struct _clib4 *__clib4, fd_set *set) {
     if (set != NULL)
-        __free_r(__clib4, set);
+        free(set);
 }
 
 static struct fd *

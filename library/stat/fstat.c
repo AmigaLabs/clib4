@@ -64,7 +64,7 @@ fstat(int file_descriptor, struct stat *buffer) {
         }
         else {
             /* If ExamineObjectTag was failed we have to free the dummy ExamineData structure created */
-            __free_r(__clib4, fam.fam_FileInfo);
+            free(fam.fam_FileInfo);
         }
     }
 

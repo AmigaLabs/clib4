@@ -113,6 +113,24 @@ C_LOCALE := \
 	locale/localeconv.o \
 	locale/setlocale.o
 
+C_MIMALLOC := \
+	mimalloc/alloc.o \
+	mimalloc/alloc-aligned.o \
+	mimalloc/alloc-posix.o \
+	mimalloc/arena.o \
+	mimalloc/bitmap.o \
+	mimalloc/heap.o \
+	mimalloc/init.o \
+	mimalloc/libc.o \
+	mimalloc/options.o \
+	mimalloc/os.o \
+	mimalloc/page.o \
+	mimalloc/prim.o \
+	mimalloc/random.o \
+    mimalloc/segment.o \
+    mimalloc/segment-map.o \
+    mimalloc/stats.o
+
 C_MISC := \
 	misc/children.o \
 	misc/map.o \
@@ -934,23 +952,6 @@ C_WCHAR := \
 	wchar/wctrans.o \
 	wchar/wctype.o
 
-C_WMEM := \
-    wmem/wmem_allocator_block.o \
-    wmem/wmem_allocator_block_fast.o \
-    wmem/wmem_allocator_simple.o \
-    wmem/wmem_allocator_strict.o \
-    wmem/wmem_array.o \
-    wmem/wmem_core.o \
-    wmem/wmem_interval_tree.o \
-    wmem/wmem_list.o \
-    wmem/wmem_map.o \
-    wmem/wmem_miscutl.o \
-    wmem/wmem_multimap.o \
-    wmem/wmem_stack.o \
-    wmem/wmem_strutl.o \
-    wmem/wmem_tree.o \
-    wmem/wmem_user_cb.o
-
 ifdef SPE
     $(info Adding SPE objects)
     C_STRING := $(C_STRING) \
@@ -979,6 +980,7 @@ C_LIBRARY := \
 	$(C_ICONV) \
 	$(C_INTTYPES) \
 	$(C_LOCALE) \
+	$(C_MIMALLOC) \
 	$(C_MISC) \
 	$(C_MOUNT) \
 	$(C_NDBM) \
@@ -997,8 +999,7 @@ C_LIBRARY := \
 	$(C_TIME) \
 	$(C_UNISTD) \
 	$(C_USERGROUP) \
-	$(C_WCHAR) \
-	$(C_WMEM)
+	$(C_WCHAR)
 
 SHARED_LIB_STUBS := \
 	$(patsubst \

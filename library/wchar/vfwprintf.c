@@ -132,7 +132,7 @@ out_printf(struct _clib4 *__clib4, FOut *_out, const char *format, ...) {
 
         if (
                 (!(mb_len = (size_t) vsnprintf(NULL, 0, format, args))) ||
-                ((mb_buffer = __malloc_r(__clib4, (mb_len + 1))) == NULL)) {
+                ((mb_buffer = malloc((mb_len + 1))) == NULL)) {
             va_end(args);
             RETURN(0);
             return 0;
@@ -145,9 +145,9 @@ out_printf(struct _clib4 *__clib4, FOut *_out, const char *format, ...) {
 
         if (
                 (wide_len == 0) || (wide_len == (size_t) - 1) ||
-                ((wide_buffer = __malloc_r(__clib4, (wide_len + 1) * sizeof(wchar_t))) == NULL)) {
+                ((wide_buffer = malloc((wide_len + 1) * sizeof(wchar_t))) == NULL)) {
             va_end(args);
-            __free_r(__clib4, mb_buffer);
+            free(mb_buffer);
             RETURN(0);
             return 0;
         }
@@ -157,8 +157,8 @@ out_printf(struct _clib4 *__clib4, FOut *_out, const char *format, ...) {
         // Add to buffer.
         out(_out, wide_buffer, wide_len);
         // finished
-        __free_r(__clib4, wide_buffer);
-        __free_r(__clib4, mb_buffer);
+        free(wide_buffer);
+        free(mb_buffer);
         wide_buffer = NULL;
         mb_buffer = NULL;
         va_end(args);

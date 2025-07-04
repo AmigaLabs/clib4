@@ -287,12 +287,12 @@ vfwscanf(FILE *f, const wchar_t *format, va_list ap) {
                 if (alloc) {
                     k = t == 'c' ? width + 1U : 31;
                     if (size == SIZE_l) {
-                        wcs = __malloc_r(__clib4, k * sizeof(wchar_t));
+                        wcs = malloc(k * sizeof(wchar_t));
                         if (!wcs) {
                             goto alloc_fail;
                         }
                     } else {
-                        s = __malloc_r(__clib4, k);
+                        s = malloc(k);
                         if (!s) {
                             goto alloc_fail;
                         }

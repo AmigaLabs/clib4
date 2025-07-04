@@ -86,7 +86,7 @@ obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared) {
 
         /* We allocate the new semaphore first, so that we don't spend
            any time in Forbid() allocating memory. */
-        semaphore_name_copy = __malloc_r(__clib4, strlen(__clib4->__file_lock_semaphore_name) + 1);
+        semaphore_name_copy = malloc(strlen(__clib4->__file_lock_semaphore_name) + 1);
         if (semaphore_name_copy != NULL) {
             strcpy(semaphore_name_copy, __clib4->__file_lock_semaphore_name);
 
@@ -137,7 +137,7 @@ obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared) {
         /* Release the memory allocated for the semaphore, in case
            we didn't need it after all. */
         if (fls != NULL) {
-            __free_r(__clib4, semaphore_name_copy);
+            free(semaphore_name_copy);
             FreeSysObject(ASOT_SEMAPHORE, fls);
         }
     }
@@ -227,7 +227,7 @@ delete_locked_region_node(struct _clib4 *__clib4, struct LockedRegionNode *lrn) 
     SHOWPOINTER(lrn);
 
     if (lrn) {
-        __free_r(__clib4, lrn);
+        free(lrn);
         lrn = NULL;
     }
 
@@ -269,7 +269,7 @@ delete_file_lock_node(struct _clib4 *__clib4, struct FileLockNode *fln) {
 
     if (fln != NULL) {
         UnLock(fln->fln_FileParentDir);
-        __free_r(__clib4, fln);
+        free(fln);
         fln = NULL;
     }
 

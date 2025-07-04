@@ -23,7 +23,6 @@ gettimeofday(struct timeval *tv, struct timezone *tzp) {
     struct _clib4 *__clib4 = __CLIB4;
     int32 gmtoffset = 0;
     int8 dstime = -1;
-    ULONG seconds, microseconds;
 
     DECLARE_TIMERBASE_R(__clib4);
     DECLARE_TIMEZONEBASE_R(__clib4);

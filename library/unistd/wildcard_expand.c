@@ -160,9 +160,9 @@ int __wildcard_expand_init(void) {
                 size_t k;
 
                 if (replacement_arg != NULL)
-                    __free_r(__clib4, replacement_arg);
+                    free(replacement_arg);
 
-                replacement_arg = __malloc_r(__clib4, arg_len + star_count + 1);
+                replacement_arg = malloc(arg_len + star_count + 1);
                 if (replacement_arg == NULL) {
                     error = ENOMEM;
                     goto out;
@@ -340,7 +340,7 @@ int __wildcard_expand_init(void) {
     } else {
         /* Throw the contents of the list away. There is nothing worth keeping. */
         while ((node = (struct name_node *) RemHead((struct List *) &argument_list)) != NULL)
-            __free_r(__clib4, node);
+            free(node);
     }
 
     error = OK;
@@ -365,10 +365,10 @@ out:
     }
 
     if (replacement_arg != NULL)
-        __free_r(__clib4, replacement_arg);
+        free(replacement_arg);
 
     if (quote_vector != NULL) {
-        __free_r(__clib4, quote_vector);
+        free(quote_vector);
         quote_vector = NULL;
     }
 

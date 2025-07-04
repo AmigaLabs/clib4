@@ -28,7 +28,7 @@ __calloc_r(struct _clib4 *__clib4, size_t num_elements, size_t element_size) {
         }
     }
 
-    result = __malloc_r(__clib4, total_size);
+    result = malloc(total_size);
     if (result != NULL)
         memset(result, 0, total_size);
     else {
