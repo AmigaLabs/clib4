@@ -362,8 +362,13 @@ extern int __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream);
 int __ferror_r(struct _clib4 *__clib4, FILE *stream, BOOL lock);
 extern int __fflush_r(struct _clib4 *__clib4, FILE *stream);
 extern void __clearerr_r(struct _clib4 *__clib4, FILE *stream);
-
+extern int __vfprintf_r(struct _clib4 *__clib4, FILE *f, const char *format, va_list ap);
+extern int __fputs_r(struct _clib4 *__clib4, const char *s, FILE *stream);
 extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
+
+#define __stdin_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[0])
+#define __stdout_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[1])
+#define __stderr_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[2])
 
 #define console_prefix "CON:20/20/600/150/"
 #define console_suffix " Output/AUTO/CLOSE/WAIT"

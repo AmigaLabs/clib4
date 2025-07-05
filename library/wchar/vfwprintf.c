@@ -70,7 +70,7 @@ out_init_file(FOut *out, FILE *f) {
 
 void
 out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size) {
-    memset(out, 0, sizeof(*out));
+    out->file = NULL;
     out->buffer = buffer;
     out->buffer_pos = 0;
     out->buffer_size = buffer_size;

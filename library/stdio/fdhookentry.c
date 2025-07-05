@@ -33,6 +33,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     BOOL is_aliased;
     BPTR file;
 
+    __check_abort_f(__clib4);
+
     ENTER();
 
     assert(fam != NULL && fd != NULL);
@@ -554,8 +556,6 @@ out:
         __stdio_unlock(__clib4);
 
     SHOWVALUE(result);
-
-    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);
