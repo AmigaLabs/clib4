@@ -360,7 +360,7 @@ extern void __flockfile_r(struct _clib4 *__clib4, FILE *stream);
 extern int __ftrylockfile_r(struct _clib4 *__clib4, FILE *stream);
 extern int __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream);
 int __ferror_r(struct _clib4 *__clib4, FILE *stream, BOOL lock);
-
+extern int __fflush_r(struct _clib4 *__clib4, FILE *stream);
 extern void __clearerr_r(struct _clib4 *__clib4, FILE *stream);
 
 extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);

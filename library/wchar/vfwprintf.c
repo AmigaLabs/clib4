@@ -531,11 +531,12 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
 
     ENTER();
 
-    __check_abort_f(__clib4);
-
     // Check for error in format string before writing anything to file.
     if (wprintf_core(__clib4, 0, format, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
+
+        __check_abort_f(__clib4);
+
         RETURN(EOF);
         return EOF;
     }
@@ -543,7 +544,8 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
 
     va_end(ap2);
 
-    fflush(f);
+    /* Check abort is inside flush. Just in case... */
+    __fflush_r(__clib4, f);
 
     RETURN(ret);
     return ret;

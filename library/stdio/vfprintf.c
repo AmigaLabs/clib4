@@ -824,8 +824,6 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     SHOWPOINTER(f);
     SHOWSTRING(format);
 
-    __check_abort_f(__clib4);
-
     SHOWMSG("Formatting File pointer");
     Out _out[1];
     out_init_file(_out, f);
@@ -835,6 +833,9 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     SHOWMSG("Check for string format errors");
     if (printf_core(__clib4, 0, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double) < 0) {
         va_end(ap2);
+
+        __check_abort_f(__clib4);
+
         RETURN(EOF);
         return EOF;
     }
@@ -850,7 +851,8 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     va_end(ap2);
 
     SHOWMSG("Flush the file");
-    fflush(f);
+    /* Check abort is inside flush. Just in case... */
+    __fflush_r(__clib4, f);
 
     RETURN(ret);
     return ret;
