@@ -21,8 +21,15 @@ malloc(size_t size) {
 
 void *
 __malloc_r(struct _clib4 *__clib4, size_t size) {
+    return __malloc_aligned_r(__clib4, size, 16);
+}
+
+void *
+__malloc_aligned_r(struct _clib4 *__clib4, size_t size, int32_t alignment) {
     ENTER();
     void *result = NULL;
+
+    if(size == 0) size = 4;
 
     // Prevent overflow
     if (size > SIZE_MAX) {
@@ -32,7 +39,7 @@ __malloc_r(struct _clib4 *__clib4, size_t size) {
 
     __memory_lock(__clib4);
 
-    result = wmem_alloc(__clib4->__wmem_allocator, size);
+    result = wmem_alloc_aligned(__clib4->__wmem_allocator, size, alignment);
 
     if (!result)
         __set_errno_r(__clib4, ENOMEM);
@@ -63,11 +70,7 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
     if (__clib4->__wmem_allocator != NULL) {
         SHOWMSG("Destroying Memory Allocator");
         wmem_destroy_allocator(__clib4->__wmem_allocator);
-#if MEMORY_DEBUG
-        if (__clib4->allocated_memory_by_malloc > 0) {
-            Printf("WARNING: There are %ld unfreed malloc!\n", __clib4->allocated_memory_by_malloc);
-        }
-#endif
+
         SHOWMSG("Done");
         __clib4->__wmem_allocator = NULL;
     }

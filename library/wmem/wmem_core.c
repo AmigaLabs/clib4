@@ -32,17 +32,39 @@
 static bool do_override;
 static wmem_allocator_type_t override_type;
 
+static inline bool
+power_of_two(size_t alignment) {
+    return (alignment != 0) && ((alignment & (alignment - 1)) == 0);
+}
+
+uintptr_t align_address(uintptr_t address, size_t alignment) {
+    return (address + alignment - 1) & ~(alignment - 1);
+}
+
+// static size_t allocated = 0;
+// static size_t freed = 0;
+static int allocs = 0;
+
 void *
-wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
+wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t alignment) {
 #if MEMORY_DEBUG
-    __CLIB4->allocated_memory_by_malloc++;
-    D(("Allocated %ld bytes chunk of memory. Allocations now are: %ld", size, __CLIB4->allocated_memory_by_malloc));
+    // D(("Allocating %ld bytes chunk of memory (alignment: %ld).\n", size, alignment));
 #endif
 
     if (allocator == NULL) {
-        void *r = AllocVecTags(size, AVT_Type, MEMF_PRIVATE, TAG_DONE);
 #if MEMORY_DEBUG
-        D(("[wmem_alloc :] allocated block [0x%lx] of size [0x%lx]\n", r, size));
+        if(!power_of_two(alignment)) {
+            D(("[wmem_alloc :] FAULT AllocVecTags can only align to powers of two!\n"));
+        }
+
+        // size_t before = AvailMem(MEMF_ANY);
+#endif
+        void *r = AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_Alignment, alignment, TAG_DONE);
+#if MEMORY_DEBUG
+        allocs++;
+        // allocated += before - AvailMem(MEMF_ANY);
+
+        // D(("[wmem_alloc :] allocated block [0x%lx] of size [0x%lx]\n", r, size));
 #endif
         return r;
     }
@@ -53,7 +75,11 @@ wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
         return NULL;
     }
 
-    return allocator->walloc(allocator->private_data, size);
+    return allocator->walloc(allocator->private_data, size, alignment);
+}
+void *
+wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
+    return wmem_alloc_aligned(allocator, size, 16);
 }
 
 void *
@@ -72,11 +98,18 @@ wmem_alloc0(wmem_allocator_t *allocator, const size_t size) {
 void
 wmem_free(wmem_allocator_t *allocator, void *ptr) {
 #if MEMORY_DEBUG
-    __CLIB4->allocated_memory_by_malloc--;
-    D(("Freed chunk of memory. Allocations now are %ld", __CLIB4->allocated_memory_by_malloc));
+        // D(("Freeing chunk of memory. allocator == 0x%lx\n\n", allocator));
 #endif
     if (allocator == NULL) {
+#if MEMORY_DEBUG
+        // size_t before = AvailMem(MEMF_ANY);
+#endif
+
         FreeVec(ptr);
+#if MEMORY_DEBUG
+        allocs--;
+        // freed += AvailMem(MEMF_ANY) - before;
+#endif
         ptr = NULL;
         return;
     }
@@ -91,7 +124,7 @@ wmem_free(wmem_allocator_t *allocator, void *ptr) {
 }
 
 void *
-wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
+wmem_realloc_aligned(wmem_allocator_t *allocator, void *ptr, const size_t size, int32_t alignment) {
     if (allocator == NULL) {
         // Since we have no generic way of determining the old size,
         //  this feature cannot be supported on amigaos.
@@ -101,7 +134,7 @@ wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
     }
 
     if (ptr == NULL) {
-        return wmem_alloc(allocator, size);
+        return wmem_alloc_aligned(allocator, size, alignment);
     }
 
     if (size == 0) {
@@ -111,7 +144,11 @@ wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
 
     assert(allocator->in_scope);
 
-    return allocator->wrealloc(allocator->private_data, ptr, size);
+    return allocator->wrealloc(allocator->private_data, ptr, size, alignment);
+}
+void *
+wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
+    return wmem_realloc_aligned(allocator, ptr, size, 16);
 }
 
 static void
@@ -137,6 +174,14 @@ wmem_destroy_allocator(wmem_allocator_t *allocator) {
     wmem_free_all_real(allocator, true);
     allocator->cleanup(allocator->private_data);
     wmem_free(NULL, allocator);
+
+#ifdef MEMORY_DEBUG
+    // D(("[END OF SESSION] +++++ Memory allocated: %ld ++++++\n", allocated));
+    // D(("[END OF SESSION] +++++ Memory freed: %ld ++++++\n", freed));
+    // allocated = 0; freed = 0;
+    D(("[END OF SESSION] +++++ Allocs: %ld ++++++\n", allocs));
+
+#endif
 }
 
 wmem_allocator_t *
@@ -168,9 +213,6 @@ wmem_allocator_new(const wmem_allocator_type_t type) {
         case WMEM_ALLOCATOR_STRICT:
             wmem_strict_allocator_init(allocator);
             break;
-        // case WMEM_ALLOCATOR_ARRAY:
-        //     wmem_array_allocator_init(allocator);
-        //     break;
         default:
             break;
     };

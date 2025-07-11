@@ -73,7 +73,7 @@ wmem_strict_block_check_canaries(wmem_strict_allocator_block_t *block) {
  * public API functions
  */
 static void *
-wmem_strict_alloc(void *private_data, const size_t size) {
+wmem_strict_alloc(void *private_data, const size_t size, int32_t alignment) {
     wmem_strict_allocator_t *allocator;
     wmem_strict_allocator_block_t *block;
     unsigned i;
@@ -129,14 +129,14 @@ wmem_strict_free(void *private_data, void *ptr) {
 }
 
 static void *
-wmem_strict_realloc(void *private_data, void *ptr, const size_t size) {
+wmem_strict_realloc(void *private_data, void *ptr, const size_t size, int32_t alignment) {
     wmem_strict_allocator_block_t *block;
     void *new_ptr;
 
     block = WMEM_DATA_TO_BLOCK(ptr);
 
     /* create a new block */
-    new_ptr = wmem_strict_alloc(private_data, size);
+    new_ptr = wmem_strict_alloc(private_data, size, 2);
 
     /* copy from the old block to the new */
     if (block->data_len > size) {

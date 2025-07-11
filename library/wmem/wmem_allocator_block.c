@@ -832,7 +832,7 @@ wmem_block_realloc_jumbo(wmem_block_allocator_t *allocator,
 /* API */
 
 static void *
-wmem_block_alloc(void *private_data, const size_t size) {
+wmem_block_alloc(void *private_data, const size_t size, int32_t alignment) {
     wmem_block_allocator_t *allocator = (wmem_block_allocator_t *) private_data;
     wmem_block_chunk_t *chunk;
 
@@ -900,7 +900,7 @@ wmem_block_free(void *private_data, void *ptr) {
 }
 
 static void *
-wmem_block_realloc(void *private_data, void *ptr, const size_t size) {
+wmem_block_realloc(void *private_data, void *ptr, const size_t size, int32_t alignment) {
     wmem_block_allocator_t *allocator = (wmem_block_allocator_t *) private_data;
     wmem_block_chunk_t *chunk;
 
@@ -959,7 +959,7 @@ wmem_block_realloc(void *private_data, void *ptr, const size_t size) {
             /* no room to grow, need to alloc, copy, free */
             void *newptr;
 
-            newptr = wmem_block_alloc(private_data, size);
+            newptr = wmem_block_alloc(private_data, size, 2);
             memcpy(newptr, ptr, WMEM_CHUNK_DATA_LEN(chunk));
             wmem_block_free(private_data, ptr);
 
