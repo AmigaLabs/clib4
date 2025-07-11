@@ -37,7 +37,7 @@ getlogin_r(char *name, size_t size) {
         }
 
         len = IoErr();  /* Get the real length of the variable */
-        if (len >= size) {
+        if ((size_t) len >= size) {
             __set_errno(ERANGE);
             result = -1;
             goto out;

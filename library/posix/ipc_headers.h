@@ -50,7 +50,9 @@ struct IPCGeneric {
 };
 
 struct IPCIdKeyMap {
-    int nobj, vlen, idx, nused;    /* Highest valid index + 1, vector length, total created objects, total used slots */
+    /* Highest valid index + 1, vector length, total created objects, total used slots */
+    int nobj, vlen, idx;
+    unsigned int nused;
     struct IPCGeneric **objv;
     struct SignalSemaphore *Lock;
 };

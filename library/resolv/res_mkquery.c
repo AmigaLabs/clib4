@@ -56,7 +56,7 @@ res_mkquery(int op, const char *dname, int klass, int type,
 
     if (l && dname[l - 1] == '.') l--;
     n = 17 + l + !!l;
-    if (l > 253 || buflen < n || op > 15u || klass > 255u || type > 255u)
+    if (l > 253 || buflen < n || op > 15 || klass > 255 || type > 255)
         return -1;
 
     /* Construct query template - ID will be filled later */

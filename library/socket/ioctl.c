@@ -199,7 +199,7 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
 
             __fd_unlock(fd);
         } else {
-            if (request != FIONBIO) {
+            if (request != (int) FIONBIO) {
                 fd = __get_file_descriptor(__clib4, sockfd);
                 if (fd == NULL)
                     goto out;

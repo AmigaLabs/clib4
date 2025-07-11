@@ -15,7 +15,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     DECLARE_UTILITYBASE();
     struct name_translation_info path_name_nti;
     struct ExamineData *fib = NULL;
-    struct SignalSemaphore *fd_lock;
+    APTR fd_lock;
     LONG is_file_system = FALSE;
     LONG open_mode;
     BPTR lock = BZERO, dir_lock = BZERO;
@@ -252,7 +252,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
 
 directory:
 
-    fd_lock = __create_semaphore();
+    fd_lock = __create_mutex();
     if (fd_lock == NULL) {
         __set_errno(ENOMEM);
         goto out;

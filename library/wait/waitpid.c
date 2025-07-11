@@ -125,7 +125,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                 if (options & WNOHANG) { pidFound = pid; done = TRUE; break; }
             }
         } else { //if (pid < -1 || pid == 0) {
-            int gid = (pid == 0 ? getgid() : pid * -1);
+            gid_t gid = (pid == 0 ? getgid() : pid * -1U);
 
             D(("Searching for children with group id %ld\n", gid));
 

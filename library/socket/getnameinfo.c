@@ -82,7 +82,7 @@ reverse_hosts(char *buf, const unsigned char *a, unsigned scopeid, int family) {
 
 static void
 reverse_services(char *buf, int port, int dgram) {
-    unsigned long svport;
+    int svport;
     char line[128], *p, *z;
     unsigned char _buf[1032];
     FILE *f = fopen(_PATH_SERVICES, "r");

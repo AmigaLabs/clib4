@@ -43,7 +43,7 @@ vsyslog(int priority, const char *message, va_list args) {
 
     l2 = vsnprintf(buf + l, sizeof buf - l, message, args);
     if (l2 >= 0) {
-        if (l2 >= sizeof buf - l)
+        if ((size_t) l2 >= sizeof buf - l)
             l = sizeof buf - 1;
         else
             l += l2;

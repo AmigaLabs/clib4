@@ -408,9 +408,9 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
 
             __fd_unlock(fd);
 
-            /* Free the lock semaphore now. */
+            /* Free the locked mutex now. */
             if (NOT is_aliased)
-                __delete_semaphore(fd->fd_Lock);
+                __delete_mutex(fd->fd_Lock);
 
             /* And that's the last for this file descriptor. */
             memset(fd, 0, sizeof(*fd));
