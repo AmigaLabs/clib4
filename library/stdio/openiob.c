@@ -6,9 +6,9 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-#ifndef _STDLIB_MEMORY_H
-#include "stdlib_memory.h"
-#endif /* _STDLIB_MEMORY_H */
+#ifndef _FCNTL_HEADERS_H
+#include "fcntl_headers.h"
+#endif /* _FCNTL_HEADERS_H */
 
 int
 __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int file_descriptor, int slot_number) {
@@ -27,10 +27,6 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     SHOWSTRING(filename);
     SHOWSTRING(mode);
     SHOWVALUE(slot_number);
-
-    __check_abort_f(__clib4);
-
-    __stdio_lock(__clib4);
 
     assert(mode != NULL && 0 <= slot_number && slot_number < __clib4->__num_iob);
 
@@ -108,7 +104,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     if (file_descriptor < 0) {
         assert(filename != NULL);
 
-        file_descriptor = open(filename, open_mode);
+        file_descriptor = __open_r(__clib4, filename, open_mode);
         if (file_descriptor < 0) {
             SHOWMSG("couldn't open the file");
             goto out;
@@ -153,8 +149,6 @@ out:
 
     if (buffer != NULL)
         FreeVecPooled(__clib4->_iob_pool, buffer);
-
-    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

@@ -12,6 +12,12 @@
 
 int
 open(const char *path_name, int open_flag, ... /* mode_t mode */) {
+    struct _clib4 *__clib4 = __CLIB4;
+    return __open_r(__clib4, path_name, open_flag);
+}
+
+int
+__open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mode_t mode */) {
     DECLARE_UTILITYBASE();
     struct name_translation_info path_name_nti;
     struct ExamineData *fib = NULL;
@@ -28,7 +34,6 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     int result = ERROR;
     int i;
     BOOL is_directory = FALSE;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 

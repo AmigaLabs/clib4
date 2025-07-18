@@ -41,18 +41,6 @@
 extern struct ElfIFace *__IElf;
 extern struct Library *__ElfBase;
 
-static APTR
-hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
-    uint32 pid = (uint32) userdata;
-    (void) (hook);
-
-    if (process->pr_ProcessID == pid) {
-        return process;
-    }
-
-    return 0;
-}
-
 /* random table */
 static uint32_t _random_init[] = {
         0x00000000, 0x5851f42d, 0xc0b18ccf, 0xcbb5f646,
@@ -66,7 +54,7 @@ static uint32_t _random_init[] = {
 };
 
 void
-reent_init(struct _clib4 *__clib4, BOOL fallback) {
+reent_init(struct _clib4 *__clib4, const BOOL fallback) {
     BOOL success = FALSE;
 
     ENTER();
@@ -228,7 +216,7 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     D(("Try to get elf handle for dl* operations"));
     if (__clib4->IElf != NULL) {
         D(("Calling GetProcSegList"));
-        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+        const BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
         if (segment_list != BZERO) {
             Elf32_Handle handle = NULL;
 
@@ -273,12 +261,12 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
 out:
 
     if (!success) {
-        reent_exit(__clib4, fallback);
+        reent_exit(__clib4);
     }
 }
 
 void
-reent_exit(struct _clib4 *__clib4, BOOL fallback) {
+reent_exit(struct _clib4 *__clib4) {
     /* Free global clib structure */
     if (__clib4) {
         /* Free IO memory pool */
@@ -305,7 +293,7 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
         SHOWMSG("Delete __pipe_semaphore semaphore");
         __delete_semaphore(__clib4->__pipe_semaphore);
         /* Free dl stuff */
-        struct ElfIFace *IElf = __IElf;
+        const struct ElfIFace *IElf = __IElf;
 
         if (IElf && __clib4->__dl_root_handle != NULL) {
             SHOWMSG("Closing __dl_root_handle");
@@ -326,7 +314,7 @@ void enableUnixPaths(void) {
     __clib4->__unix_path_semantics = TRUE;
 
     /* Set __current_path_name to a valid value */
-    UBYTE current_dir_name[256] = {0};
+    const UBYTE current_dir_name[256] = {0};
     if (NameFromLock(__clib4->self->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
         __set_current_path((const char *) current_dir_name);
     }
@@ -338,7 +326,7 @@ void disableUnixPaths(void) {
     __clib4->__unix_path_semantics = FALSE;
 
     /* Set __current_path_name to a valid value */
-    UBYTE current_dir_name[256] = {0};
+    const UBYTE current_dir_name[256] = {0};
     if (NameFromLock(__clib4->self->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
         __set_current_path((const char *) current_dir_name);
     }
