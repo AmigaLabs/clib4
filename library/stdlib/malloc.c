@@ -52,13 +52,21 @@ out:
 }
 
 void __memory_lock(struct _clib4 *__clib4) {
-    if (__clib4->memory_semaphore != NULL)
-        ObtainSemaphore(__clib4->memory_semaphore);
+    // if (__clib4->memory_semaphore != NULL)
+        // ObtainSemaphore(__clib4->memory_semaphore);
+    // DebugPrintF("[__memory_lock :] <LOCKING...>\n");
+    if(__clib4->memory_mutex)
+        MutexObtain(__clib4->memory_mutex);
+    // DebugPrintF("[__memory_lock :] <LOCKED.>\n");
 }
 
 void __memory_unlock(struct _clib4 *__clib4) {
-    if (__clib4->memory_semaphore != NULL)
-        ReleaseSemaphore(__clib4->memory_semaphore);
+    // if (__clib4->memory_semaphore != NULL)
+    //     ReleaseSemaphore(__clib4->memory_semaphore);
+    // DebugPrintF("[__memory_lock :] <UNLOCKING...>\n");
+    if(__clib4->memory_mutex)
+        MutexRelease(__clib4->memory_mutex);
+    // DebugPrintF("[__memory_lock :] <UNLOCKED.>\n");
 }
 
 STDLIB_DESTRUCTOR(stdlib_memory_exit) {
@@ -77,9 +85,12 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
 
     __memory_unlock(__clib4);
 
-    if (__clib4->memory_semaphore != NULL) {
-        __delete_semaphore(__clib4->memory_semaphore);
-        __clib4->memory_semaphore = NULL;
+    // if (__clib4->memory_semaphore != NULL) {
+    if (__clib4->memory_mutex) {
+        // __delete_semaphore(__clib4->memory_semaphore);
+        // __clib4->memory_semaphore = NULL;
+        __delete_mutex(__clib4->memory_mutex);
+        __clib4->memory_mutex = NULL;
     }
 
     LEAVE();
@@ -92,14 +103,19 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
 
     ENTER();
 
-    __clib4->memory_semaphore = __create_semaphore();
-    if (__clib4->memory_semaphore == NULL)
+    // __clib4->memory_semaphore = __create_semaphore();
+    // if (__clib4->memory_semaphore == NULL)
+    //     goto out;
+    __clib4->memory_mutex = __create_mutex();
+    if (__clib4->memory_mutex == NULL)
         goto out;
 
     __clib4->__wmem_allocator = wmem_allocator_new(__clib4->__wof_mem_allocator_type); // make this dynamic
     if (__clib4->__wmem_allocator == NULL) {
-        __delete_semaphore(__clib4->memory_semaphore);
-        __clib4->memory_semaphore = NULL;
+        // __delete_semaphore(__clib4->memory_semaphore);
+        // __clib4->memory_semaphore = NULL;
+        __delete_mutex(__clib4->memory_mutex);
+        __clib4->memory_mutex = NULL;
         goto out;
     }
 

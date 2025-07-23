@@ -27,6 +27,53 @@
 #include "wmem_allocator_block_fast.h"
 #include "wmem_allocator_strict.h"
 
+// #define ULTRA_MEMORY_DEBUG
+#ifdef ULTRA_MEMORY_DEBUG
+typedef struct mem_entry {
+    void *addr;
+    size_t size;
+    bool freed;
+    struct mem_entry *next;
+} mem_entry;
+static mem_entry *m_list = 0;
+void insert_mem_entry(void *addr, size_t size);
+void insert_mem_entry(void *addr, size_t size) {
+    mem_entry *new = AllocVecTags(sizeof(mem_entry), TAG_DONE);
+    new->addr = addr;
+    new->size = size;
+    new->freed = false;
+    new->next = m_list;
+    m_list = new;
+}
+void free_mem_entry(void *addr, size_t size);
+void free_mem_entry(void *addr, size_t size) {
+    for(mem_entry *e = m_list; e; e = e->next) {
+        if(e->addr == addr) {
+            e->freed = true;
+        }
+    }
+}
+bool check_mem_list();
+bool check_mem_list() {
+    bool success = true;
+    for(mem_entry *e = m_list; e; e = e->next) {
+        if(e->freed == false) {
+            // DebugPrintF("[wmem :] ++++ CATASTROPHY : Unfreed block: ptr = 0x%lx, size = %ld. ++++\n", e->addr, e->size);
+            success = false;
+        }
+    }
+    return success;
+}
+void free_mem_list();
+void free_mem_list() {
+    for(mem_entry *e = m_list; e;) {
+        mem_entry *next = e->next;
+        FreeVec(e);
+        e = next;
+    }
+    m_list = 0;
+}
+#endif
 /* Set according to the WIRESHARK_DEBUG_WMEM_OVERRIDE environment variable in
  * wmem_init. Should not be set again. */
 static bool do_override;
@@ -50,7 +97,6 @@ wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t align
 #if MEMORY_DEBUG
     // D(("Allocating %ld bytes chunk of memory (alignment: %ld).\n", size, alignment));
 #endif
-
     if (allocator == NULL) {
 #if MEMORY_DEBUG
         if(!power_of_two(alignment)) {
@@ -60,12 +106,19 @@ wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t align
         // size_t before = AvailMem(MEMF_ANY);
 #endif
         void *r = AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_Alignment, alignment, TAG_DONE);
-#if MEMORY_DEBUG
+#ifdef ULTRA_MEMORY_DEBUG
+        if (r) {
+            insert_mem_entry(r, size);
+        }
+#endif
+#ifdef MEMORY_DEBUG
+
         allocs++;
         // allocated += before - AvailMem(MEMF_ANY);
 
         // D(("[wmem_alloc :] allocated block [0x%lx] of size [0x%lx]\n", r, size));
 #endif
+        if (!r) errno = ENOMEM;
         return r;
     }
 
@@ -75,7 +128,8 @@ wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t align
         return NULL;
     }
 
-    return allocator->walloc(allocator->private_data, size, alignment);
+    void *result = allocator->walloc(allocator->private_data, size, alignment);
+    return result;
 }
 void *
 wmem_alloc(wmem_allocator_t *allocator, const size_t size) {
@@ -97,18 +151,15 @@ wmem_alloc0(wmem_allocator_t *allocator, const size_t size) {
 
 void
 wmem_free(wmem_allocator_t *allocator, void *ptr) {
-#if MEMORY_DEBUG
-        // D(("Freeing chunk of memory. allocator == 0x%lx\n\n", allocator));
-#endif
     if (allocator == NULL) {
-#if MEMORY_DEBUG
-        // size_t before = AvailMem(MEMF_ANY);
-#endif
 
         FreeVec(ptr);
-#if MEMORY_DEBUG
+#ifdef ULTRA_MEMORY_DEBUG
+        free_mem_entry(ptr, -1);
+#endif
+
+#ifdef MEMORY_DEBUG
         allocs--;
-        // freed += AvailMem(MEMF_ANY) - before;
 #endif
         ptr = NULL;
         return;
@@ -119,6 +170,8 @@ wmem_free(wmem_allocator_t *allocator, void *ptr) {
     if (ptr == NULL) {
         return;
     }
+
+    // wmem_block_verify(allocator);
 
     allocator->wfree(allocator->private_data, ptr);
 }
@@ -134,7 +187,8 @@ wmem_realloc_aligned(wmem_allocator_t *allocator, void *ptr, const size_t size, 
     }
 
     if (ptr == NULL) {
-        return wmem_alloc_aligned(allocator, size, alignment);
+        void *result = wmem_alloc_aligned(allocator, size, alignment);
+        return result;
     }
 
     if (size == 0) {
@@ -144,7 +198,8 @@ wmem_realloc_aligned(wmem_allocator_t *allocator, void *ptr, const size_t size, 
 
     assert(allocator->in_scope);
 
-    return allocator->wrealloc(allocator->private_data, ptr, size, alignment);
+    void *result = allocator->wrealloc(allocator->private_data, ptr, size, alignment);
+    return result;
 }
 void *
 wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
@@ -173,14 +228,22 @@ wmem_destroy_allocator(wmem_allocator_t *allocator) {
 
     wmem_free_all_real(allocator, true);
     allocator->cleanup(allocator->private_data);
+#ifdef ULTRA_MEMORY_DEBUG
+    if(check_mem_list()) {
+        DebugPrintF("[wmem :] ++++ SUCCESS : All memory freed from allocator. ++++\n");
+    } else {
+        DebugPrintF("[wmem :] ++++ End of Allocator scope : NOT all memory freed from allocator. ++++\n");
+    }
+    FreeVec(allocator);
+#else
     wmem_free(NULL, allocator);
+#endif
 
 #ifdef MEMORY_DEBUG
     // D(("[END OF SESSION] +++++ Memory allocated: %ld ++++++\n", allocated));
     // D(("[END OF SESSION] +++++ Memory freed: %ld ++++++\n", freed));
     // allocated = 0; freed = 0;
     D(("[END OF SESSION] +++++ Allocs: %ld ++++++\n", allocs));
-
 #endif
 }
 
@@ -195,7 +258,12 @@ wmem_allocator_new(const wmem_allocator_type_t type) {
         real_type = type;
     }
 
-    allocator = wmem_new(NULL, wmem_allocator_t);
+    allocator =
+#ifdef ULTRA_MEMORY_DEBUG
+    AllocVecTags(sizeof(wmem_allocator_t), TAG_DONE);
+#else
+    wmem_new(NULL, wmem_allocator_t);
+#endif
     allocator->type = real_type;
     allocator->callbacks = NULL;
     allocator->in_scope = true;

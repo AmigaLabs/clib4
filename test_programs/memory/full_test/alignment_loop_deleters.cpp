@@ -36,6 +36,8 @@ void test_loop_deleter_behavior() {
         assert(raw != nullptr);
         assert(is_aligned(raw, 64));
 
+        // free(raw);
+
         // Simulate a loop deleter: wrap in unique_ptr with a custom deleter
         std::unique_ptr<int[], decltype(&free)> uptr(static_cast<int*>(raw), &free);
         for (int j = 0; j < 10; ++j)

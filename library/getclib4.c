@@ -25,7 +25,7 @@ __getClib4(void) {
     if (!r) {
         struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
         if (res) {
-SHOWMSG("[__getClib4 :] FALLBACK.\n");
+DebugPrintF("[__getClib4 :] FALLBACK.\n");
             return res->fallbackClib;
         }
     }
