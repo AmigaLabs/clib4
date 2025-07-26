@@ -116,6 +116,7 @@ wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t align
 #ifdef MEMORY_DEBUG
         else allocs++;
 #endif
+        if (!r) errno = ENOMEM;
         return r;
     }
 
