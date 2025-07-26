@@ -100,10 +100,11 @@ wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t align
     if (allocator == NULL) {
 #if MEMORY_DEBUG
         if(!power_of_two(alignment)) {
-            D(("[wmem_alloc :] FAULT AllocVecTags can only align to powers of two!\n"));
+            D(("[wmem_alloc :] <FAULT> AllocVecTags can only align to powers of two.\n"));
         }
-
-        // size_t before = AvailMem(MEMF_ANY);
+#endif
+#ifdef MEMORY_DEBUG
+        D(("[wmem_alloc :] Allocating system chunk, size : 0x%lx, alignment : %ld", size, alignment));
 #endif
         void *r = AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_Alignment, alignment, TAG_DONE);
 #ifdef ULTRA_MEMORY_DEBUG
@@ -111,12 +112,9 @@ wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t align
             insert_mem_entry(r, size);
         }
 #endif
+        if (!r) errno = ENOMEM;
 #ifdef MEMORY_DEBUG
-
-        allocs++;
-        // allocated += before - AvailMem(MEMF_ANY);
-
-        // D(("[wmem_alloc :] allocated block [0x%lx] of size [0x%lx]\n", r, size));
+        else allocs++;
 #endif
         if (!r) errno = ENOMEM;
         return r;
@@ -251,6 +249,10 @@ wmem_allocator_t *
 wmem_allocator_new(const wmem_allocator_type_t type) {
     wmem_allocator_t *allocator;
     wmem_allocator_type_t real_type;
+
+#ifdef MEMORY_DEBUG
+    D(("[new :] Create new allocator ++++ ***** ++++\n"));
+#endif
 
     if (do_override) {
         real_type = override_type;
