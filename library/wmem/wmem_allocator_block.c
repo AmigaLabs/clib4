@@ -897,7 +897,6 @@ wmem_block_alloc(void *private_data, const size_t size, int32_t alignment) {
     /* and return the data pointer */
     return data; //WMEM_CHUNK_TO_DATA(chunk);
 }
-#endif
 
 static void
 wmem_block_free(void *private_data, void *ptr) {
