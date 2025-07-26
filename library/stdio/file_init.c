@@ -190,6 +190,8 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         if (buffer == NULL)
             goto out;
 
+DebugPrintF("Allocating stdio buffer: %ld\n", BUFSIZ + (__clib4->__cache_line_size - 1));
+
         ClearMem(buffer, BUFSIZ + (__clib4->__cache_line_size - 1));
 
         /* Allocate memory for an arbitration mechanism, then initialize it. */

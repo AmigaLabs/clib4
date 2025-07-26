@@ -86,6 +86,7 @@ fclose(FILE *stream) {
     /* Get rid of any custom file buffer allocated. */
     if (file->iob_CustomBuffer != NULL) {
         SHOWMSG("Delete allocated buffer");
+        DebugPrintF("Freeing pooled buffer: 0x%lx\n", file->iob_CustomBuffer);
         FreeVecPooled(__clib4->_iob_pool, file->iob_CustomBuffer);
         file->iob_CustomBuffer = NULL;
     }

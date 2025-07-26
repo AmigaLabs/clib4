@@ -103,6 +103,8 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
         goto out;
     }
 
+    DebugPrintF("Allocated file io buffer: %ld\n", BUFSIZ + (__clib4->__cache_line_size - 1));
+
     ClearMem(buffer, BUFSIZ + (__clib4->__cache_line_size - 1));
 
     if (file_descriptor < 0) {
