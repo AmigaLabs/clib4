@@ -21,14 +21,14 @@ __free_r(struct _clib4 *__clib4, void *ptr) {
 
     __memory_lock(__clib4);
 
-    AlignedHeader* header = (AlignedHeader*) ((uintptr_t)ptr - sizeof(AlignedHeader));
+    // AlignedHeader* header = (AlignedHeader*) ((uintptr_t)ptr - sizeof(AlignedHeader));
 
     // Validate with endian-independent integer comparison
-    if (header->magic == ALIGNED_BLOCK_MAGIC) {
-        wmem_free(__clib4->__wmem_allocator, header->original_ptr);
-    } else {
-        wmem_free(__clib4->__wmem_allocator,ptr);
-    }
+    // if (header->magic == ALIGNED_BLOCK_MAGIC) {
+    //     wmem_free(__clib4->__wmem_allocator, header->original_ptr);
+    // } else {
+        wmem_free(__clib4->__wmem_allocator, ptr);
+    // }
 
     __memory_unlock(__clib4);
 }

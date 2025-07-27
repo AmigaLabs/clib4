@@ -124,13 +124,18 @@ DLIBS :=
 ifndef DEBUG
 	OPTIMIZE += $(STABS) -DNDEBUG
 else
-	OPTIMIZE += -gstabs -DDEBUG
+	OPTIMIZE += -gstabs -DDEBUG -DMEMORY_DEBUG
 	DLIBS += $(BUILD_DIR)/lib/libdebug.a
 endif
+
 
 CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
 CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
 AFLAGS     := -Wa,-mregnames
+
+ifdef USE_TEMPFILES
+	CFLAGS += -DUSE_TEMPFILES
+endif
 
 ifdef SPE
 	CC := ppc-amigaos-gcc-6.4.0

@@ -164,6 +164,7 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
     if (!__clib4->_iob_pool) {
         goto out;
     }
+    DebugPrintF("Allocated file IO pool. _iob_pool : 0x%lx\n", __clib4->_iob_pool);
 
     SHOWMSG("Allocating wide_status");
     /* Initialize wchar stuff */
@@ -272,6 +273,7 @@ reent_exit(struct _clib4 *__clib4) {
         /* Free IO memory pool */
         if (__clib4->_iob_pool != NULL) {
             SHOWMSG("Freeing _iob_pool and all unfreed memory");
+            DebugPrintF("Freeing _iob_pool and all unfreed memory. _iob_pool : 0x%lx\n", __clib4->_iob_pool);
             FreeSysObject(ASOT_MEMPOOL, __clib4->_iob_pool);
         }
 

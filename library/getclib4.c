@@ -24,6 +24,7 @@ __getClib4(void) {
     if (!r) {
         const struct Clib4Resource *res = OpenResource(RESOURCE_NAME);
         if (res) {
+DebugPrintF("[__getClib4 :] FALLBACK.\n");
             return res->fallbackClib;
         }
     }
