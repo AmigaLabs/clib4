@@ -13,7 +13,7 @@
 int
 __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int file_descriptor, int slot_number) {
     APTR lock;
-    ULONG file_flags;
+    ULONG file_flags = 0;
     int result = ERROR;
     int open_mode;
     struct fd *fd = NULL;
@@ -87,6 +87,11 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
         SET_FLAG(open_mode, O_RDWR);
     }
+    else if (mode[1] != '\0' && mode[1] == 'b' && mode[2] == 'l') {
+        DebugPrintF("fopen() called with Little Endian mode for binary file\n");
+        SET_FLAG(open_mode, O_LITTLE_ENDIAN);
+        SET_FLAG(file_flags, IOBF_LITTLE_ENDIAN);
+    }
 
     SHOWMSG("allocating file buffer");
 
@@ -123,7 +128,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
         goto out;
 
     /* Figure out the buffered file access mode by looking at the open mode. */
-    file_flags = IOBF_IN_USE | IOBF_NO_NUL;
+    file_flags |= IOBF_IN_USE | IOBF_NO_NUL;
 
     if (FLAG_IS_SET(open_mode, O_RDONLY) || FLAG_IS_SET(open_mode, O_RDWR))
         SET_FLAG(file_flags, IOBF_READ);

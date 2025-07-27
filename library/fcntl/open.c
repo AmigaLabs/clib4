@@ -23,7 +23,7 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
     struct ExamineData *fib = NULL;
     APTR fd_lock;
     LONG is_file_system = FALSE;
-    LONG open_mode;
+    LONG open_mode = 0;
     BPTR lock = BZERO, dir_lock = BZERO;
     BPTR handle = BZERO;
     BOOL create_new_file = FALSE;
@@ -360,6 +360,11 @@ directory:
 
         if (create_new_file && is_file_system)
             SET_FLAG(fd->fd_Flags, FDF_CREATED);
+    }
+    if (FLAG_IS_SET(open_flag, O_LITTLE_ENDIAN)) {
+        DebugPrintF("open() called with Little Endian mode\n");
+        DebugPrintF("%ld\n", fd_slot_number);
+        SET_FLAG(fd->fd_Flags, FDF_LITTLE_ENDIAN);
     }
 
     SET_FLAG(fd->fd_Flags, FDF_IN_USE);
