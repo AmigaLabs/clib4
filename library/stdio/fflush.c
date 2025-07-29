@@ -8,8 +8,13 @@
 
 int
 fflush(FILE *stream) {
-    int result = EOF;
     struct _clib4 *__clib4 = __CLIB4;
+    return __fflush_r(__clib4, stream);
+}
+
+int
+__fflush_r(struct _clib4 *__clib4, FILE *stream) {
+    int result = EOF;
 
     ENTER();
 

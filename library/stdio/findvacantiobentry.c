@@ -45,5 +45,5 @@ int __find_vacant_iob_entry(struct _clib4 *__clib4) {
         }
     }
 
-    return (result);
+    return result;
 }

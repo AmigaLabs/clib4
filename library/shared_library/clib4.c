@@ -138,7 +138,7 @@ static struct TimeRequest *openTimer(uint32 unit);
 static void closeTimer(struct TimeRequest *tr);
 static int32 getDebugLevel(struct ExecBase *sysbase);
 
-extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
+extern void reent_exit(struct _clib4 *__clib4);
 extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
 
 #if DEBUG == 1
@@ -505,7 +505,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 
         hashmap_free(res->children);
         if (res->fallbackClib) {
-            reent_exit(res->fallbackClib, TRUE);
+            reent_exit(res->fallbackClib);
         }
 
         IExec->RemResource(res);
@@ -569,7 +569,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         SHOWMSG("Done. All destructors called");
 
         SHOWMSG("Calling reent_exit on _clib4");
-        reent_exit(__clib4, FALSE);
+        reent_exit(__clib4);
         SHOWMSG("Done");
 
         while (hashmap_iter(res->children, &iter, &item)) {

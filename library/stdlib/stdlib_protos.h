@@ -47,7 +47,7 @@ extern int __wildcard_expand_init(void);
 extern void _exit(int return_code);
 
 extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
-extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
+extern void reent_exit(struct _clib4 *__clib4);
 
 /* signal_checkabort.c */
 extern int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);

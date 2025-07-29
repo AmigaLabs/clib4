@@ -7,7 +7,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 size_t
-fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
+__fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     size_t result = 0;
     struct _clib4 *__clib4 = __CLIB4;
@@ -175,4 +175,46 @@ out:
 
     RETURN(result);
     return (result);
+}
+
+static void byteswap16(void *ptr) {
+    uint8_t *b = ptr;
+    uint8_t t = b[0]; b[0] = b[1]; b[1] = t;
+}
+
+static void byteswap32(void *ptr) {
+    uint8_t *b = ptr;
+    uint8_t t;
+    t = b[0]; b[0] = b[3]; b[3] = t;
+    t = b[1]; b[1] = b[2]; b[2] = t;
+}
+
+static void byteswap64(void *ptr) {
+    uint8_t *b = ptr;
+    for (int i = 0; i < 4; ++i) {
+        uint8_t t = b[i];
+        b[i] = b[7 - i];
+        b[7 - i] = t;
+    }
+}
+
+size_t
+fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
+    size_t total = element_size * count;
+    size_t nread = __fread_internal(ptr, element_size, count, stream);
+    struct iob *file = (struct iob *) stream;
+    DebugPrintF("Total: %ld\n", total);
+
+    if (FLAG_IS_SET(file->iob_Flags, IOBF_LITTLE_ENDIAN) && (total == 2 || total == 4 || total == 8)) {
+        DebugPrintF("[fread] Reading in Little endian mode\n");
+        if (element_size == 2) {
+            byteswap16(ptr);
+        } else if (element_size == 4) {
+            byteswap32(ptr);
+        } else if (element_size == 8) {
+            byteswap64(ptr);
+        }
+    }
+
+    return nread;
 }

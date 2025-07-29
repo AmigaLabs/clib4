@@ -12,12 +12,18 @@
 
 int
 open(const char *path_name, int open_flag, ... /* mode_t mode */) {
+    struct _clib4 *__clib4 = __CLIB4;
+    return __open_r(__clib4, path_name, open_flag);
+}
+
+int
+__open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mode_t mode */) {
     DECLARE_UTILITYBASE();
     struct name_translation_info path_name_nti;
     struct ExamineData *fib = NULL;
     APTR fd_lock;
     LONG is_file_system = FALSE;
-    LONG open_mode;
+    LONG open_mode = 0;
     BPTR lock = BZERO, dir_lock = BZERO;
     BPTR handle = BZERO;
     BOOL create_new_file = FALSE;
@@ -28,7 +34,6 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     int result = ERROR;
     int i;
     BOOL is_directory = FALSE;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -355,6 +360,11 @@ directory:
 
         if (create_new_file && is_file_system)
             SET_FLAG(fd->fd_Flags, FDF_CREATED);
+    }
+    if (FLAG_IS_SET(open_flag, O_LITTLE_ENDIAN)) {
+        DebugPrintF("open() called with Little Endian mode\n");
+        DebugPrintF("%ld\n", fd_slot_number);
+        SET_FLAG(fd->fd_Flags, FDF_LITTLE_ENDIAN);
     }
 
     SET_FLAG(fd->fd_Flags, FDF_IN_USE);

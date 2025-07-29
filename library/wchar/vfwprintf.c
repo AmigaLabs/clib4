@@ -70,7 +70,7 @@ out_init_file(FOut *out, FILE *f) {
 
 void
 out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size) {
-    memset(out, 0, sizeof(*out));
+    out->file = NULL;
     out->buffer = buffer;
     out->buffer_pos = 0;
     out->buffer_size = buffer_size;
@@ -531,11 +531,12 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
 
     ENTER();
 
-    __check_abort_f(__clib4);
-
     // Check for error in format string before writing anything to file.
     if (wprintf_core(__clib4, 0, format, &ap2, nl_arg, nl_type) < 0) {
         va_end(ap2);
+
+        __check_abort_f(__clib4);
+
         RETURN(EOF);
         return EOF;
     }
@@ -543,7 +544,8 @@ vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
 
     va_end(ap2);
 
-    fflush(f);
+    /* Check abort is inside flush. Just in case... */
+    __fflush_r(__clib4, f);
 
     RETURN(ret);
     return ret;

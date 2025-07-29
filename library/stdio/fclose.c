@@ -23,8 +23,6 @@ fclose(FILE *stream) {
 
     assert(stream != NULL);
 
-    DECLARE_UTILITYBASE();
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 

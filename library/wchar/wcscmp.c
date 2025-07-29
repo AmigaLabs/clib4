@@ -27,6 +27,6 @@ wcscmp(const wchar_t *s1, const wchar_t *s2) {
 
     } while (c1 == c2);
 
-    RETURN(c1 < c2 ? -1 : 1);
+    LEAVE();
     return c1 < c2 ? -1 : 1;
 }
