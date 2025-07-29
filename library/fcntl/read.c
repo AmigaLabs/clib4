@@ -113,7 +113,6 @@ static void byteswap64(void *ptr) {
 ssize_t
 read(int file_descriptor, void *buffer, size_t num_bytes) {
     struct _clib4 *__clib4 = __CLIB4;
-    DebugPrintF("num_bytes: %ld\n", num_bytes);
     ssize_t ret = __read_internal(__clib4, file_descriptor, buffer, num_bytes);
     if (ret != (ssize_t) num_bytes)
         return ret; // return partial or failed read unchanged
