@@ -124,7 +124,7 @@ DLIBS :=
 ifndef DEBUG
 	OPTIMIZE += $(STABS) -DNDEBUG
 else
-	OPTIMIZE += -gstabs -DDEBUG -DMEMORY_DEBUG
+	OPTIMIZE += -gstabs -DDEBUG
 	DLIBS += $(BUILD_DIR)/lib/libdebug.a
 endif
 

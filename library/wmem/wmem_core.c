@@ -88,35 +88,39 @@ uintptr_t align_address(uintptr_t address, size_t alignment) {
     return (address + alignment - 1) & ~(alignment - 1);
 }
 
-// static size_t allocated = 0;
-// static size_t freed = 0;
+#ifdef MEMORY_DEBUG
 static int allocs = 0;
+#endif
 
 void *
 wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t alignment) {
+
 #if MEMORY_DEBUG
-    // D(("Allocating %ld bytes chunk of memory (alignment: %ld).\n", size, alignment));
+    D(("Allocating %ld bytes chunk of memory (alignment: %ld).\n", size, alignment));
 #endif
+
     if (allocator == NULL) {
-#if MEMORY_DEBUG
+
+#ifdef MEMORY_DEBUG
         if(!power_of_two(alignment)) {
             D(("[wmem_alloc :] <FAULT> AllocVecTags can only align to powers of two.\n"));
         }
-#endif
-#ifdef MEMORY_DEBUG
         D(("[wmem_alloc :] Allocating system chunk, size : 0x%lx, alignment : %ld", size, alignment));
 #endif
+
         void *r = AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_Alignment, alignment, TAG_DONE);
+
 #ifdef ULTRA_MEMORY_DEBUG
         if (r) {
             insert_mem_entry(r, size);
         }
 #endif
+
         if (!r) errno = ENOMEM;
 #ifdef MEMORY_DEBUG
         else allocs++;
 #endif
-        if (!r) errno = ENOMEM;
+
         return r;
     }
 
@@ -152,6 +156,7 @@ wmem_free(wmem_allocator_t *allocator, void *ptr) {
     if (allocator == NULL) {
 
         FreeVec(ptr);
+
 #ifdef ULTRA_MEMORY_DEBUG
         free_mem_entry(ptr, -1);
 #endif
@@ -159,6 +164,7 @@ wmem_free(wmem_allocator_t *allocator, void *ptr) {
 #ifdef MEMORY_DEBUG
         allocs--;
 #endif
+
         ptr = NULL;
         return;
     }
@@ -238,9 +244,6 @@ wmem_destroy_allocator(wmem_allocator_t *allocator) {
 #endif
 
 #ifdef MEMORY_DEBUG
-    // D(("[END OF SESSION] +++++ Memory allocated: %ld ++++++\n", allocated));
-    // D(("[END OF SESSION] +++++ Memory freed: %ld ++++++\n", freed));
-    // allocated = 0; freed = 0;
     D(("[END OF SESSION] +++++ Allocs: %ld ++++++\n", allocs));
 #endif
 }

@@ -81,7 +81,6 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
                 __set_errno_r(__clib4, ENOBUFS);
                 goto out;
             }
-            DebugPrintF("Allocated vbuf: %ld\n", size + (__clib4->__cache_line_size - 1));
         }
     }
 

@@ -373,6 +373,8 @@ extern size_t __fread_internal(void *ptr, size_t element_size, size_t count, FIL
 #define __stdout_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[1])
 #define __stderr_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[2])
 
+extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
+
 #define console_prefix "CON:20/20/600/150/"
 #define console_suffix " Output/AUTO/CLOSE/WAIT"
 
