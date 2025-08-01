@@ -2,7 +2,6 @@
 #include <dos/dosextens.h>
 #include <dos.h>
 #include <proto/dos.h>
-#include <debug.h>
 
 #include "shared_library/clib4.h"
 
@@ -23,8 +22,9 @@ __getClib4(void) {
     }
 
     if (!r) {
-        struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+        const struct Clib4Resource *res = OpenResource(RESOURCE_NAME);
         if (res) {
+DebugPrintF("[__getClib4 :] FALLBACK.\n");
             return res->fallbackClib;
         }
     }

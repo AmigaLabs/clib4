@@ -89,8 +89,6 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 
     ReleaseSemaphore(__clib4->__timer_semaphore);
 
-    __check_abort_f(__clib4);
-
     RETURN(result);
     return result;
 }

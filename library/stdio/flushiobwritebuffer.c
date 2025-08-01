@@ -2,14 +2,14 @@
  * $Id: stdio_flushiobwritebuffer.c,v 1.9 2006-09-22 09:02:51 clib4devs Exp $
 */
 
+#ifndef _STDIO_HEADERS_H
+#include "stdio_headers.h"
+#endif /* _STDIO_HEADERS_H */
+
 /* This would otherwise generate far too much (useless) debug output. */
 #ifdef DEBUG
 #undef DEBUG
 #endif /* DEBUG */
-
-#ifndef _STDIO_HEADERS_H
-#include "stdio_headers.h"
-#endif /* _STDIO_HEADERS_H */
 
 int
 __flush_iob_write_buffer(struct _clib4 *__clib4, struct iob *file) {

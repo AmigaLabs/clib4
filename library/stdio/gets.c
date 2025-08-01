@@ -8,11 +8,11 @@
 
 char *
 gets(char *s) {
-    FILE *stream = stdin;
-    struct iob *file = (struct iob *) stream;
     char *result = s;
     int c;
     struct _clib4 *__clib4 = __CLIB4;
+    FILE *stream = __stdin_r(__clib4);
+    struct iob *file = (struct iob *) stream;
 
     ENTER();
 

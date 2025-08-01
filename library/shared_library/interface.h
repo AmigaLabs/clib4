@@ -1372,7 +1372,7 @@ struct Clib4IFace {
 #ifdef __PIC__
 #define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
-	    .align 8                     \n\
+	    .align 2                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\
@@ -1382,7 +1382,7 @@ struct Clib4IFace {
 #elif !defined(__PIC__)
 #define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
-	    .align 8                     \n\
+	    .align 2                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\

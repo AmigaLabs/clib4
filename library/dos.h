@@ -472,7 +472,9 @@ struct _clib4 {
     struct StackSwapStruct stack_swap_struct;
 
     /* Wof Allocator memory semaphore */
-    struct SignalSemaphore *memory_semaphore;
+    // struct SignalSemaphore *memory_semaphore;
+    APTR memory_mutex;
+    
     int pipenum;
 
     /* gettext */

@@ -24,8 +24,6 @@ fputws(const wchar_t *ws, FILE *fp) {
         return EOF;
     }
 
-    __check_abort_f(__clib4);
-
     __flockfile_r(__clib4, fp);
 
     fwide(fp, 1);

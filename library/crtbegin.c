@@ -70,8 +70,8 @@ register void *r2 __asm("r2");
 #endif
 
 extern int main(int, char **);
-int clib4_start(char *args, int32 arglen, struct Library *sysbase);
-int _start(char *args, int32 arglen, struct Library *sysbase);
+int clib4_start(char *args, const int32 arglen, struct Library *sysbase);
+int _start(char *argstring, int32 arglen, struct Library *sysbase);
 
 static struct Interface *OpenLibraryInterface(struct ExecIFace *iexec, const char *name, int version) {
     struct Library *library;
@@ -104,9 +104,9 @@ static void CloseLibraryInterface(struct ExecIFace *iexec, struct Interface *int
 }
 
 int
-clib4_start(char *args, int32 arglen, struct Library *sysbase) {
+clib4_start(char *args, const int32 arglen, struct Library *sysbase) {
     struct ExecIFace *iexec;
-    struct Clib4IFace *iclib4;
+    struct Clib4IFace *iclib4 = NULL;
     struct DOSIFace *idos;
 
     int rc = -1;
@@ -127,7 +127,7 @@ clib4_start(char *args, int32 arglen, struct Library *sysbase) {
             UtilityBase = IUtility->Data.LibBase;
             iclib4 = (struct Clib4IFace *) OpenLibraryInterface(iexec, "clib4.library", 1);
             if (iclib4 != NULL) {
-                struct Library *clib4base = ((struct Interface *) iclib4)->Data.LibBase;
+                const struct Library *clib4base = ((struct Interface *) iclib4)->Data.LibBase;
                 if (clib4base->lib_Version >= VERSION && clib4base->lib_Revision >= REVISION) {
                     IClib4 = iclib4;
 
@@ -166,7 +166,7 @@ _start(STRPTR argstring, int32 arglen, struct Library *sysbase) {
     r2 = &_DATA_BASE_;
 #endif
 
-    int result = clib4_start(argstring, arglen, sysbase);
+    const int result = clib4_start(argstring, arglen, sysbase);
 
 #ifdef CLIB4_MBASEREL
     r2 = old_r2;

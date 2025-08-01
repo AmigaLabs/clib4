@@ -13,7 +13,6 @@ void *
 aligned_alloc(size_t align, size_t size) {
     ENTER();
 
-    /* align must be a power of 2 */
     /* size must be a multiple of align */
     if ((align & -align) != align) {
         __set_errno(EINVAL);

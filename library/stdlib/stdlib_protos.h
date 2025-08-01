@@ -47,7 +47,7 @@ extern int __wildcard_expand_init(void);
 extern void _exit(int return_code);
 
 extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
-extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
+extern void reent_exit(struct _clib4 *__clib4);
 
 /* signal_checkabort.c */
 extern int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
@@ -79,6 +79,7 @@ extern void loadstate(uint32_t *state);
 
 extern void __srandom(unsigned seed);
 extern void *__malloc_r(struct _clib4 *__clib4, size_t size);
+extern void *__malloc_aligned_r(struct _clib4 *__clib4, size_t size, int32_t alignment);
 extern void *__calloc_r(struct _clib4 *__clib4, size_t num_elements, size_t element_size);
 
 extern uint32_t lcg31(uint32_t x);

@@ -6,9 +6,12 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
+#include "stdio_headers.h"
+
 int
 wprintf(const wchar_t *format, ...) {
     int result = EOF;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -17,13 +20,13 @@ wprintf(const wchar_t *format, ...) {
     assert(format != NULL);
 
     if (format == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
     va_list ap;
     va_start(ap, format);
-    result = vfwprintf(stdout, format, ap);
+    result = vfwprintf(__stdout_r(__clib4), format, ap);
     va_end(ap);
 
 out:

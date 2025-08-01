@@ -32,6 +32,7 @@ typedef struct _wmem_simple_allocator_t {
 
 #if MEMORY_DEBUG
 void dump_ptrs(const char *function, void *private_data);
+#ifdef SUPER_MEMORY_DEBUG
 void dump_ptrs(const char *function, void *private_data) {
     wmem_simple_allocator_t *allocator;
     allocator = (wmem_simple_allocator_t *) private_data;
@@ -39,10 +40,13 @@ void dump_ptrs(const char *function, void *private_data) {
     for (int i = 0; i < allocator->count; i++)
         D(("[%s :] %ld : ptr [0x%lx] size [0x%lx]\n", function, i, allocator->ptrs[i], allocator->sizes[i]));
 }
+#else
+void dump_ptrs(const char *function, void *private_data) {}
+#endif
 #endif
 
 static void *
-wmem_simple_alloc(void *private_data, const size_t size) {
+wmem_simple_alloc(void *private_data, const size_t size, int32_t alignment) {
     wmem_simple_allocator_t *allocator;
 
     allocator = (wmem_simple_allocator_t *) private_data;
@@ -50,7 +54,7 @@ wmem_simple_alloc(void *private_data, const size_t size) {
     if (__clib4_unlikely(allocator->count == allocator->size)) {
 
 #if MEMORY_DEBUG
-        D(("[wmem_simple_alloc :] Growing ptrs array.\n"));
+//        D(("[wmem_simple_alloc :] Growing ptrs array.\n"));
 #endif
 
         int old_size = allocator->size;
@@ -70,20 +74,15 @@ wmem_simple_alloc(void *private_data, const size_t size) {
     }
 
     allocator->sizes[allocator->count] = size;
-    allocator->ptrs[allocator->count] = wmem_alloc(NULL, size);
+    allocator->ptrs[allocator->count] = wmem_alloc_aligned(NULL, size, alignment);
     allocator->count++;
+
+#if MEMORY_DEBUG
+    // D(("[wmem_simple_alloc :] count [%d] ptr [0x%lx] size [0x%lx].\n", allocator->count, allocator->ptrs[allocator->count-1], allocator->sizes[allocator->count-1]));
+    // dump_ptrs("simple_alloc", private_data);
+#endif
 
     return allocator->ptrs[allocator->count-1];
-#if MEMORY_DEBUG
-    D(("[wmem_simple_alloc :] count [%d] ptr [0x%lx] size [0x%lx].\n", allocator->count, allocator->ptrs[allocator->count], allocator->sizes[allocator->count]));
-#endif
-    allocator->count++;
-
-#if MEMORY_DEBUG
-    dump_ptrs("simple_alloc", private_data);
-#endif
-
-    return allocator->ptrs[allocator->count - 1];
 }
 
 static void
@@ -93,62 +92,43 @@ wmem_simple_free(void *private_data, void *ptr) {
 
     allocator = (wmem_simple_allocator_t *) private_data;
 
-    wmem_free(NULL, ptr);
-    allocator->count--;
-
-    for (i = allocator->count; i >= 0; i--) {
+    for (i = allocator->count-1; i >= 0; i--) {
         if (ptr == allocator->ptrs[i]) {
-            if (i < allocator->count) {
-                allocator->ptrs[i] = allocator->ptrs[allocator->count];
-                allocator->sizes[i] = allocator->sizes[allocator->count];
+#ifdef MEMORY_DEBUG
+            // D(("[simple_free :] ptr = 0x%lx, size = %ld\n", ptr, allocator->sizes[i]));
+#endif
+
+            if (i < allocator->count-1) {
+                allocator->ptrs[i] = allocator->ptrs[allocator->count-1];
+                allocator->sizes[i] = allocator->sizes[allocator->count-1];
+
             }
+            wmem_free(NULL, ptr);
+            allocator->count--;
             return;
         }
     }
 
-#if MEMORY_DEBUG
-    D(("[wmem_simple_free :] ptr [0x%lx]\n", ptr));
-#endif
-
-    for (i = allocator->count; i >= 0; i--) {
-        if (ptr == allocator->ptrs[i]) {
-            if (i < allocator->count) {
-
-#if MEMORY_DEBUG
-                D(("[wmem_simple_free :] Freeing element %d\n", i));
-#endif
-                allocator->ptrs[i] = allocator->ptrs[allocator->count];
-                allocator->sizes[i] = allocator->sizes[allocator->count];
-            }
-
-#if MEMORY_DEBUG
-            dump_ptrs("simple_free", private_data);
-#endif
-
-            return;
-        }
-    }
-#if MEMORY_DEBUG
-    dump_ptrs("simple_free", private_data);
-#endif
+    exit(20);
 }
 
 static void *
-wmem_simple_realloc(void *private_data, void *ptr, const size_t size) {
+wmem_simple_realloc(void *private_data, void *ptr, const size_t size, int32_t alignment) {
     int i;
     wmem_simple_allocator_t *allocator;
 
     allocator = (wmem_simple_allocator_t *) private_data;
 
-    for (i = allocator->count - 1; i >= 0; i--) {
-        if (ptr == allocator->ptrs[i]) {
-            if (size > allocator->sizes[i]) {
 #if MEMORY_DEBUG
-                D(("[wmem_simple_realloc :] old ptr [0x%lx] old size [0x%lx]\n", allocator->ptrs[i], allocator->sizes[i]));
+    // D(("[wmem_simple_realloc :] old ptr [0x%lx] old size [0x%lx]\n", ptr, size));
 #endif
 
+    for (i = allocator->count-1; i >= 0; i--) {
+        if (ptr == allocator->ptrs[i]) {
+            if (size > allocator->sizes[i]) {
+
                 // Grow
-                void *new_ptr = (void **) wmem_alloc(NULL, size);
+                void *new_ptr = (void **) wmem_alloc_aligned(NULL, size, alignment);
                 memcpy(new_ptr, allocator->ptrs[i], allocator->sizes[i]);
                 wmem_free(NULL, allocator->ptrs[i]);
                 allocator->ptrs[i] = new_ptr;
@@ -156,16 +136,17 @@ wmem_simple_realloc(void *private_data, void *ptr, const size_t size) {
             }
 
 #if MEMORY_DEBUG
-                D(("[wmem_simple_realloc :] Grow : new ptr [0x%lx] new size [0x%lx]\n", allocator->ptrs[i], allocator->sizes[i]));
+            // D(("[wmem_simple_realloc :] Grow : new ptr [0x%lx] new size [0x%lx]\n", allocator->ptrs[i], allocator->sizes[i]));
 #endif
+            return allocator->ptrs[i];
         }
+    }
 
 #if MEMORY_DEBUG
-        dump_ptrs("simple_realloc", private_data);
+    dump_ptrs("simple_realloc", private_data);
 #endif
-        return allocator->ptrs[i];
-        // return allocator->ptrs[i] = wmem_realloc(NULL, allocator->ptrs[i], size);
-    }
+
+    exit(20);
 
 #if MEMORY_DEBUG
     D(("[wmem_simple_realloc :] Failed to find pointer in array.\n"));

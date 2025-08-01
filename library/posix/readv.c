@@ -58,10 +58,7 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
 
     i = 0;
 
-    while (i < vec_count) /* XXX: Should this loop be locked? */
-    {
-        __check_abort_f(__clib4);
-
+    while (i < vec_count) { /* XXX: Should this loop be locked? */
         if (iov[i].iov_len > 0) {
             msg.fam_Action = file_action_read;
             msg.fam_Data = (char *) iov[i].iov_base + part_num_bytes_read;
