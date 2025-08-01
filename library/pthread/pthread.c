@@ -340,6 +340,7 @@ void __pthread_exit_func(void) {
 
 PTHREAD_CONSTRUCTOR(__pthread_init) {
     ENTER();
+    DebugPrintF("[__pthread_init :] Pthread constructor called.\n");
     _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
     if (_DOSBase) {
         _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);

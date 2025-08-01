@@ -28,6 +28,7 @@ typedef struct _wmem_simple_allocator_t {
     int count;
     void **ptrs;
     size_t *sizes; // we need this for realloc on amigaos
+    int32_t *alignments;
 } wmem_simple_allocator_t;
 
 #if MEMORY_DEBUG
@@ -54,7 +55,7 @@ wmem_simple_alloc(void *private_data, const size_t size, int32_t alignment) {
     if (__clib4_unlikely(allocator->count == allocator->size)) {
 
 #if MEMORY_DEBUG
-//        D(("[wmem_simple_alloc :] Growing ptrs array.\n"));
+       D(("[wmem_simple_alloc :] Growing ptrs array.\n"));
 #endif
 
         int old_size = allocator->size;
@@ -71,15 +72,24 @@ wmem_simple_alloc(void *private_data, const size_t size, int32_t alignment) {
         memcpy(new_sizes, allocator->sizes, sizeof(size_t) * old_size);
         wmem_free(NULL, allocator->sizes);
         allocator->sizes = new_sizes;
+
+        int32_t *new_alignments = (int32_t *) wmem_alloc(NULL, sizeof(int32_t) * allocator->size);
+        memcpy(new_alignments, allocator->alignments, sizeof(int32_t) * old_size);
+        wmem_free(NULL, allocator->alignments);
+        allocator->alignments = new_alignments;
     }
 
+    void *ptr = wmem_alloc_aligned(NULL, size, alignment);
+    if(!ptr) return NULL;
+
     allocator->sizes[allocator->count] = size;
-    allocator->ptrs[allocator->count] = wmem_alloc_aligned(NULL, size, alignment);
+    allocator->alignments[allocator->count] = alignment;
+    allocator->ptrs[allocator->count] = ptr;
     allocator->count++;
 
 #if MEMORY_DEBUG
-    // D(("[wmem_simple_alloc :] count [%d] ptr [0x%lx] size [0x%lx].\n", allocator->count, allocator->ptrs[allocator->count-1], allocator->sizes[allocator->count-1]));
-    // dump_ptrs("simple_alloc", private_data);
+    D(("[wmem_simple_alloc :] count [%d] ptr [0x%lx] size [0x%lx].\n", allocator->count, allocator->ptrs[allocator->count-1], allocator->sizes[allocator->count-1]));
+    dump_ptrs("simple_alloc", private_data);
 #endif
 
     return allocator->ptrs[allocator->count-1];
@@ -92,24 +102,28 @@ wmem_simple_free(void *private_data, void *ptr) {
 
     allocator = (wmem_simple_allocator_t *) private_data;
 
+    if(!ptr) return;
+
     for (i = allocator->count-1; i >= 0; i--) {
         if (ptr == allocator->ptrs[i]) {
 #ifdef MEMORY_DEBUG
-            // D(("[simple_free :] ptr = 0x%lx, size = %ld\n", ptr, allocator->sizes[i]));
+            D(("[simple_free :] ptr = 0x%lx, size = %ld\n", ptr, allocator->sizes[i]));
 #endif
 
             if (i < allocator->count-1) {
                 allocator->ptrs[i] = allocator->ptrs[allocator->count-1];
                 allocator->sizes[i] = allocator->sizes[allocator->count-1];
-
+                allocator->alignments[i] = allocator->alignments[allocator->count-1];
             }
             wmem_free(NULL, ptr);
             allocator->count--;
             return;
         }
     }
-
+#ifdef MEMORY_DEBUG
+    D(("[simple_free :] <DISASTER> : Atempted free of bad pointer. (ptr == 0x%lx\n", ptr));
     exit(20);
+#endif
 }
 
 static void *
@@ -120,7 +134,7 @@ wmem_simple_realloc(void *private_data, void *ptr, const size_t size, int32_t al
     allocator = (wmem_simple_allocator_t *) private_data;
 
 #if MEMORY_DEBUG
-    // D(("[wmem_simple_realloc :] old ptr [0x%lx] old size [0x%lx]\n", ptr, size));
+    D(("[wmem_simple_realloc :] old ptr [0x%lx] old size [0x%lx]\n", ptr, size));
 #endif
 
     for (i = allocator->count-1; i >= 0; i--) {
@@ -128,7 +142,8 @@ wmem_simple_realloc(void *private_data, void *ptr, const size_t size, int32_t al
             if (size > allocator->sizes[i]) {
 
                 // Grow
-                void *new_ptr = (void **) wmem_alloc_aligned(NULL, size, alignment);
+                allocator->alignments[i] = alignment > allocator->alignments[i] ? alignment : allocator->alignments[i];
+                void *new_ptr = (void **) wmem_alloc_aligned(NULL, size, allocator->alignments[i]);
                 memcpy(new_ptr, allocator->ptrs[i], allocator->sizes[i]);
                 wmem_free(NULL, allocator->ptrs[i]);
                 allocator->ptrs[i] = new_ptr;
@@ -136,21 +151,15 @@ wmem_simple_realloc(void *private_data, void *ptr, const size_t size, int32_t al
             }
 
 #if MEMORY_DEBUG
-            // D(("[wmem_simple_realloc :] Grow : new ptr [0x%lx] new size [0x%lx]\n", allocator->ptrs[i], allocator->sizes[i]));
+            D(("[wmem_simple_realloc :] Grow : new ptr [0x%lx] new size [0x%lx]\n", allocator->ptrs[i], allocator->sizes[i]));
 #endif
             return allocator->ptrs[i];
         }
     }
-
 #if MEMORY_DEBUG
+    D(("[simple_realloc :] <DISASTER> : Atempted realloc of bad pointer. (ptr == 0x%lx\n", ptr));
     dump_ptrs("simple_realloc", private_data);
-#endif
-
     exit(20);
-
-#if MEMORY_DEBUG
-    D(("[wmem_simple_realloc :] Failed to find pointer in array.\n"));
-    dump_ptrs("simple_realloc", private_data);
 #endif
 
     /* not reached */
@@ -189,6 +198,7 @@ wmem_simple_allocator_cleanup(void *private_data) {
 
     wmem_free(NULL, allocator->ptrs);
     wmem_free(NULL, allocator->sizes);
+    wmem_free(NULL, allocator->alignments);
     wmem_free(NULL, allocator);
 }
 
@@ -212,6 +222,7 @@ wmem_simple_allocator_init(wmem_allocator_t *allocator) {
     simple_allocator->size = DEFAULT_ALLOCS;
     simple_allocator->ptrs = wmem_alloc_array(NULL, void*, DEFAULT_ALLOCS);
     simple_allocator->sizes = wmem_alloc_array(NULL, size_t, DEFAULT_ALLOCS);
+    simple_allocator->alignments = wmem_alloc_array(NULL, int32_t, DEFAULT_ALLOCS);
 }
 
 /*
