@@ -21,49 +21,17 @@
 #include <sys/param.h> // max
 #include "wchar_wprintf_core.h"
 
-static inline int __putc_unlocked_clib4(struct _clib4 *__clib4, int c, FILE *fp) {
-    // Check primary conditions for buffered writing:
-    // 1. Is the file stream valid, in use, and writable?
-    // 2. Is it not unbuffered? (i.e., it's either line-buffered or fully buffered)
-    // 3. Is there space in the buffer?
-    if (fp != NULL && // Basic sanity check, though the macro implies f is valid
-        ((fp->_flags & (__FILE_IN_USE | __FILE_WRITABLE)) == (__FILE_IN_USE | __FILE_WRITABLE)) &&
-        ((fp->_flags & __FILE_BUFFER_MASK) != _IONBF) &&
-        (fp->num_write_bytes < fp->size)) {
-
-        // Store the character in the buffer
-        fp->buffer[fp->num_write_bytes] = (char)c;
-
-        // Check if line-buffered AND the character is a newline
-        if (((fp->_flags & __FILE_BUFFER_MASK) == _IOLBF) &&
-            (c == '\n')) { // Using 'c' directly for newline check for clarity and consistency
-            fp->num_write_bytes++;
-            return __flush_r(__clib4, fp); // Flush and return result of flush operation
-        } else {
-            // Not line-buffered or not a newline, just advance buffer pointer
-            return (unsigned char)fp->buffer[fp->num_write_bytes++]; // Increment and return the character written
-        }
-    } else {
-        // Fallback to fputc. This handles all edge cases:
-        // - File not in use or not writable
-        // - Unbuffered stream
-        // - Buffer is full
-        // - Any other error condition fputc might manage
-        return __fputc_r(__clib4, c, fp);
-    }
-}
-
 static void pad(struct _clib4 *__clib4, Out *f, char c, int w, int l, int fl);
 
 static void out_init_file(Out *out, FILE *f) {
-    memset(out, 0, sizeof(*out));
+    out->buffer = NULL;
     out->buffer_size = f->size;
     out->buffer_pos = f->position;
     out->file = f;
 }
 
 static void out(struct _clib4 *__clib4, Out *_out, const char *text, size_t l) {
-    size_t length = ((l > 0) ? (size_t) l : 0U);
+    size_t length = l > 0 ? l : 0U;
     if (!length) {
         return;
     }
@@ -72,7 +40,7 @@ static void out(struct _clib4 *__clib4, Out *_out, const char *text, size_t l) {
         const char *w = text;
         _out->buffer_pos += length;
         while (length--) {
-            __putc_unlocked_clib4(__clib4, *w++, _out->file);
+            __fputc(__clib4, *w++, _out->file, (((struct iob *) _out->file)->iob_Flags & IOBF_BUFFER_MODE));
         }
     } else {
         // Write into a bounded buffer.
@@ -80,7 +48,7 @@ static void out(struct _clib4 *__clib4, Out *_out, const char *text, size_t l) {
         if (length > avail) {
             length = avail;
         }
-        memcpy((char *) (_out->buffer + _out->buffer_pos), (const char *) text, (length * sizeof(char)));
+        memcpy(_out->buffer + _out->buffer_pos, text, (length * sizeof(char)));
         _out->buffer_pos += length;
     }
 }
@@ -226,7 +194,6 @@ static int fmt_fp(struct _clib4 *__clib4, Out *f, long double y, int w, int p, i
     const char *prefix = "-0X+0X 0X-0x+0x 0x";
     int pl;
     char ebuf0[3 * sizeof(int)], *ebuf = &ebuf0[3 * sizeof(int)], *estr = 0;
-    //Printf("Y = %ld\n", y);
 
     pl = 1;
     if (signbit(y)) {
@@ -481,14 +448,10 @@ static int fmt_fp(struct _clib4 *__clib4, Out *f, long double y, int w, int p, i
 
 static int getint(char **s) {
     int i;
-//Printf("[%s]\n[%c", *s, **s);
     for (i = 0; isdigit(**s); (*s)++) {
-//Printf("%c", **s);
         if ((uint32) i > INT_MAX / 10U || **s - '0' > INT_MAX - 10 * i) i = -1;
         else i = 10 * i + (**s - '0');
     }
-//Printf("]");
-//Printf("i = %d\n", i);
     return i;
 }
 
@@ -530,8 +493,6 @@ static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list 
             out(__clib4, f, a, l);
         if (l)
             continue;
-
-//Printf("[%c %d]\n", s[1], isdigit(s[1]));
 
         if (isdigit(s[1]) && s[2] == '$') {
             l10n = 1;
@@ -815,29 +776,24 @@ overflow:
 
 int
 vfprintf(FILE *f, const char *format, va_list ap) {
+    struct _clib4 *__clib4 = __CLIB4;
+    return __vfprintf_r(__clib4, f, format, ap);
+}
+
+int
+__vfprintf_r(struct _clib4 *__clib4, FILE *f, const char *format, va_list ap) {
     va_list ap2;
     int ret, nl_type[NL_ARGMAX] = {0};
     union arg nl_arg[NL_ARGMAX] = {0};
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWPOINTER(f);
     SHOWSTRING(format);
 
-    __check_abort_f(__clib4);
-
     SHOWMSG("Formatting File pointer");
     Out _out[1];
     out_init_file(_out, f);
     va_copy(ap2, ap);
-
-    // Check for error in format string before writing anything to file.
-    SHOWMSG("Check for string format errors");
-    if (printf_core(__clib4, 0, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double) < 0) {
-        va_end(ap2);
-        RETURN(EOF);
-        return EOF;
-    }
 
     SHOWMSG("Write result to the file");
     ret = printf_core(__clib4, _out, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double);
@@ -847,10 +803,19 @@ vfprintf(FILE *f, const char *format, va_list ap) {
             __putc(__clib4, '\0', f, (iob->iob_Flags & IOBF_BUFFER_MODE));
         }
     }
+    else {
+        va_end(ap2);
+
+        __check_abort_f(__clib4);
+
+        RETURN(EOF);
+        return EOF;
+    }
     va_end(ap2);
 
     SHOWMSG("Flush the file");
-    fflush(f);
+    /* Check abort is inside flush. Just in case... */
+    __fflush_r(__clib4, f);
 
     RETURN(ret);
     return ret;

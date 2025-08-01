@@ -39,7 +39,6 @@
 
 void
 pthread_cleanup_push(void (*routine)(void *), void *arg) {
-    pthread_t thread;
     ThreadInfo *inf;
     CleanupHandler *handler;
 

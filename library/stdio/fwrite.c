@@ -63,6 +63,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
            to line buffered mode in order to improve readability of
            the output. */
         buffer_mode = (file->iob_Flags & IOBF_BUFFER_MODE);
+
         if (buffer_mode == IOBF_BUFFER_MODE_NONE) {
             struct fd *fd = __clib4->__fd[file->iob_Descriptor];
 
@@ -73,6 +74,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
             __fd_unlock(fd);
         }
+
         switch (buffer_mode) {
             case IOBF_BUFFER_MODE_LINE:
                 SHOWMSG("IOBF_BUFFER_MODE_LINE");
@@ -133,7 +135,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                 ssize_t num_bytes_written;
 
                 /* We bypass the buffer entirely. */
-                num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, total_size);
+                num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, MIN(total_size, file->iob_BufferSize));
                 if (num_bytes_written == -1) {
                     SET_FLAG(file->iob_Flags, IOBF_ERROR);
                     goto out;

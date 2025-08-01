@@ -19,10 +19,6 @@ fopen(const char *filename, const char *mode) {
 
     assert(filename != NULL && mode != NULL);
 
-    __check_abort_f(__clib4);
-
-    __stdio_lock(__clib4);
-
     if (filename == NULL || mode == NULL) {
         SHOWMSG("invalid parameters");
 
@@ -49,8 +45,6 @@ fopen(const char *filename, const char *mode) {
     result = (FILE *) __clib4->__iob[slot_number];
 
 out:
-
-    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

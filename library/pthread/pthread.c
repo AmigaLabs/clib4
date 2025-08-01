@@ -263,7 +263,7 @@ _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
 // Constructors, destructors
 //
 
-static inline void set_tls_register(ThreadInfo *ti) {
+static void set_tls_register(ThreadInfo *ti) {
   __asm__ volatile("mr r2, %0" :: "r"(ti));
 }
 
@@ -291,13 +291,13 @@ int __pthread_init_func(void) {
 
     OpenDevice(TIMERNAME, UNIT_WAITUNTIL, (struct IORequest *) timedTimerIO, 0);
 
+    set_tls_register(inf);
+
     /* Mark all threads as IDLE */
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
         inf = &threads[i];
         inf->status = THREAD_STATE_IDLE;
     }
-
-    set_tls_register(inf);
 
     return TRUE;
 }
@@ -337,8 +337,10 @@ void __pthread_exit_func(void) {
     }
 }
 
+
 PTHREAD_CONSTRUCTOR(__pthread_init) {
     ENTER();
+    DebugPrintF("[__pthread_init :] Pthread constructor called.\n");
     _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
     if (_DOSBase) {
         _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);

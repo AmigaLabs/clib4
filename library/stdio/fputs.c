@@ -12,11 +12,16 @@
 
 int
 fputs(const char *s, FILE *stream) {
+    struct _clib4 *__clib4 = __CLIB4;
+    return __fputs_r(__clib4, s, stream);
+}
+
+int
+__fputs_r(struct _clib4 *__clib4, const char *s, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     size_t total_size;
     int result = EOF;
     int c;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
