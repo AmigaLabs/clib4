@@ -111,7 +111,8 @@ extern int _main(char *argstr,
                  int arglen,
                  int (*start_main)(int, char **),
                  void (*__EXT_CTOR_LIST__[])(void),
-                 void (*__EXT_DTOR_LIST__[])(void));
+                 void (*__EXT_DTOR_LIST__[])(void),
+                 struct WBStartup *sms);
 
 #ifndef _STDLIB_PROTOS_H
 #include "stdlib_protos.h"

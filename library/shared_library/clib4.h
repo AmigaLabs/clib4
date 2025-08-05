@@ -93,7 +93,8 @@ int library_start(char *argstr,
                   int arglen,
                   int (*start_main)(int, char **),
                   void (*__EXT_CTOR_LIST__[])(void),
-                  void (*__EXT_DTOR_LIST__[])(void));
+                  void (*__EXT_DTOR_LIST__[])(void),
+                  struct WBStartup *sms);
 
 int32 _start(STRPTR args,
              int32 arglen,
@@ -103,7 +104,8 @@ extern int _main(char *argstr,
                  int arglen,
                  int (*start_main)(int, char **),
                  void (*__EXT_CTOR_LIST__[])(void),
-                 void (*__EXT_DTOR_LIST__[])(void));
+                 void (*__EXT_DTOR_LIST__[])(void),
+                 struct WBStartup *sms);
 
 
 #endif
