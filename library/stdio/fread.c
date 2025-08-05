@@ -203,7 +203,6 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
     size_t total = element_size * count;
     size_t nread = __fread_internal(ptr, element_size, count, stream);
     struct iob *file = (struct iob *) stream;
-    DebugPrintF("Total: %ld\n", total);
 
     if (FLAG_IS_SET(file->iob_Flags, IOBF_LITTLE_ENDIAN) && (total == 2 || total == 4 || total == 8)) {
         DebugPrintF("[fread] Reading in Little endian mode\n");
