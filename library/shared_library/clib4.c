@@ -873,9 +873,10 @@ library_start(char *argstr,
               int arglen,
               int (*start_main)(int, char **),
               void (*__EXT_CTOR_LIST__[])(void),
-              void (*__EXT_DTOR_LIST__[])(void)) {
+              void (*__EXT_DTOR_LIST__[])(void),
+              struct WBStartup *sms) {
 
-    int result = _main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
+    int result = _main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, sms);
 
     return result;
 }

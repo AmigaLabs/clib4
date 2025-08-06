@@ -162,22 +162,16 @@ _main(
         int arglen,
         int (*start_main)(int, char **),
         void (*__EXT_CTOR_LIST__[])(void),
-        void (*__EXT_DTOR_LIST__[])(void)) {
-    struct WBStartup *sms = NULL;
+        void (*__EXT_DTOR_LIST__[])(void),
+        struct WBStartup *sms
+    ) {
     struct Process *me;
     APTR oldClib4Data;
     int rc = RETURN_FAIL;
     struct _clib4 *__clib4 = __CLIB4;
 
-    /* Pick up the Workbench startup message, if available. */
-    me = (struct Process *) FindTask(NULL);
-    if (!me->pr_CLI) {
-        struct MsgPort *mp = &me->pr_MsgPort;
-        WaitPort(mp);
-        sms = (struct WBStartup *) GetMsg(mp);
-    }
-
     /* Store old Clib4Data */
+    me = (struct Process *) FindTask(NULL);
     oldClib4Data = (APTR) me->pr_UID;
 
     __clib4->__WBenchMsg = sms;

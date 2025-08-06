@@ -103,7 +103,7 @@ struct Clib4IFace {
     void APICALL (*Expunge)(struct Clib4IFace *Self);                       //68
     struct Clib4IFace *APICALL (*Clone)(struct Clib4IFace *Self);           //72
     /* internal */
-    int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //76
+    int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void), struct WBStartup *sms); //76
     struct _clib4 * (* __getClib4)(void);                                   //80
     void (* internal1)(void);                                               //84
     void (* __translate_amiga_to_unix_path_name)(void);                     //88
