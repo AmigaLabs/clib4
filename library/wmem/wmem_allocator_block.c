@@ -180,8 +180,8 @@ typedef struct _wmem_block_chunk_t {
 
 #define WMEM_CHUNK_HEADER_SIZE WMEM_ALIGN_SIZE(sizeof(wmem_block_chunk_t))
 
-#define WMEM_BLOCK_MAX_ALLOC_SIZE (WMEM_BLOCK_SIZE - \
-        (WMEM_BLOCK_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE))
+// #define WMEM_BLOCK_MAX_ALLOC_SIZE (WMEM_BLOCK_SIZE - \
+//         (WMEM_BLOCK_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE))
 
 /* other handy chunk macros */
 #define WMEM_DATA_TO_PRE(DATA)    ((wmem_block_pre_t *)((uintptr_t)(DATA) - sizeof(wmem_block_pre_t)))
@@ -660,7 +660,7 @@ wmem_block_split_free_chunk(wmem_block_allocator_t *allocator,
  * recycler. */
 static void
 wmem_block_split_used_chunk(wmem_block_allocator_t *allocator,
-                            wmem_block_chunk_t *chunk,
+                            void *data,
                             const size_t size, const size_t alignment) {
     wmem_block_chunk_t *extra;
     size_t aligned_size, available;
@@ -670,9 +670,12 @@ wmem_block_split_used_chunk(wmem_block_allocator_t *allocator,
     D(("[split_used :] chunk : 0x%lx\n", chunk));
 #endif
 
-    aligned_size = WMEM_ALIGN_SIZE(size) + WMEM_CHUNK_HEADER_SIZE;
+    aligned_size = size + ((uintptr_t)data - (uintptr_t)WMEM_DATA_TO_CHUNK(data));
+    aligned_size = WMEM_ALIGN_SIZE(aligned_size);
 
-    if (aligned_size  > WMEM_CHUNK_DATA_LEN(chunk)) {
+    wmem_block_chunk_t *chunk = WMEM_DATA_TO_CHUNK(data);
+
+    if (aligned_size + sizeof(wmem_block_chunk_t) > chunk->len) {
         /* in this case we don't have enough space to really split it, so
          * it's basically a no-op */
         return;
@@ -990,7 +993,7 @@ wmem_block_realloc(void *private_data, void *ptr, const size_t size, int32_t ali
         }
     } else if (new_ptr_supremum < chunk_supremum) {
         /* shrink */
-        wmem_block_split_used_chunk(allocator, chunk, size, alignment);
+        wmem_block_split_used_chunk(allocator, ptr, size, alignment);
 
         /* Now cycle the recycler */
         wmem_block_cycle_recycler(allocator);
