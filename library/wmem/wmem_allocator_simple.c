@@ -177,7 +177,7 @@ wmem_simple_free_all(void *private_data) {
         wmem_free(NULL, allocator->ptrs[i]);
     }
     allocator->count = 0;
-    allocator->size = 0;
+    // allocator->size = 0;
 
 #if MEMORY_DEBUG
     dump_ptrs("simple_free_all", private_data);
