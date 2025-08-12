@@ -21,8 +21,6 @@ inet_ntoa(struct in_addr in) {
 
     SHOWSTRING(result);
 
-    __check_abort();
-
     RETURN(result);
     return (result);
 }
