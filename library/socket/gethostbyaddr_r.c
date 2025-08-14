@@ -11,8 +11,6 @@ gethostbyaddr_r(const void *a, socklen_t l, int af,
                     struct hostent *h, char *buf, size_t buflen,
                     struct hostent **res, int *err) {
 
-    __check_abort();
-
     union {
         struct sockaddr_in sin;
         struct sockaddr_in6 sin6;

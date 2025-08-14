@@ -76,7 +76,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
 		   allocate some memory for it. */
         if (size > 0 && buf == NULL) {
             /* Allocate a little more memory than necessary. */
-            new_buffer = AllocVecPooled(__clib4->_iob_pool, size + (__clib4->__cache_line_size - 1));
+            new_buffer = ItemPoolAlloc(__clib4->_iob_pool);
             if (new_buffer == NULL) {
                 __set_errno_r(__clib4, ENOBUFS);
                 goto out;
@@ -98,7 +98,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
     /* Get rid of any buffer specially allocated for this stream. */
     if (file->iob_CustomBuffer != NULL) {
         SHOWMSG("Delete allocated buffer");
-        FreeVecPooled(__clib4->_iob_pool, file->iob_CustomBuffer);
+        ItemPoolFree(__clib4->_iob_pool, file->iob_CustomBuffer);
         file->iob_CustomBuffer = NULL;
     }
 
@@ -138,7 +138,7 @@ out:
     __funlockfile_r(__clib4, stream);
 
     if (new_buffer != NULL)
-        FreeVec(new_buffer);
+        ItemPoolFree(__clib4->_iob_pool, new_buffer);
 
     RETURN(result);
     return result;

@@ -49,18 +49,14 @@ out:
 
 struct fd *
 __get_file_descriptor(struct _clib4 *__clib4, int file_descriptor) {
-    struct fd *result;
+    struct fd *result = get_file_descriptor(__clib4, file_descriptor, resolution_mode_alias);
 
-    result = get_file_descriptor(__clib4, file_descriptor, resolution_mode_alias);
-
-    return (result);
+    return result;
 }
 
 struct fd *
 __get_file_descriptor_dont_resolve(struct _clib4 *__clib4, int file_descriptor) {
-    struct fd *result;
+    struct fd *result = get_file_descriptor(__clib4, file_descriptor, resolution_mode_exact);
 
-    result = get_file_descriptor(__clib4, file_descriptor, resolution_mode_exact);
-
-    return (result);
+    return result;
 }

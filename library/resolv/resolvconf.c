@@ -44,15 +44,15 @@
 int
 __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
     char line[256] = {0};
-    FILE *f;
     int nns = 0;
 
     conf->ndots = 1;
     conf->timeout = 5;
     conf->attempts = 2;
-    if (search) *search = 0;
+    if (search)
+        *search = 0;
 
-    f = fopen(_PATH_RESCONF, "r");
+    FILE *f = fopen(_PATH_RESCONF, "r");
     if (!f) {
         switch (errno) {
             case ENOENT:
@@ -100,14 +100,17 @@ __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
             continue;
         }
 
-        if (!search) continue;
+        if (!search)
+            continue;
         if ((strncmp(line, "domain", 6) && strncmp(line, "search", 6))
             || (!isspace(line[6]) && line[6] != '='))
             continue;
-        for (p = line + 7; isspace(*p); p++);
+        for (p = line + 7; isspace(*p); p++)
+            ;
         size_t l = strlen(p);
         /* This can never happen anyway with chosen buffer sizes. */
-        if (l >= search_sz) continue;
+        if (l >= search_sz)
+            continue;
         memcpy(search, p, l + 1);
     }
 

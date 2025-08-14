@@ -42,8 +42,6 @@ gethostbyaddr(const void *addr, socklen_t len, int type) {
 
 out:
 
-    __check_abort();
-
     RETURN(err ? 0 : 1);
     return err ? 0 : h;
 }

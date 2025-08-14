@@ -88,6 +88,7 @@
 #include "uuid.h"
 
 #include "interface.h"
+#include "stdlib_protos.h"
 
 /* These CTORS/DTORS are clib4's one and they are different than that one received
  * from crtbegin. They are needed because we need to call clib4 constructors as well
@@ -258,13 +259,21 @@ makeEnvironment(struct _clib4 *__clib4) {
             IExec->FreeSysObject(ASOT_HOOK, hook);
         }
     }
+
+    __clib4->__environment_lock = __create_recursive_mutex();
     LEAVE();
 }
 
-static void freeEnvironment(APTR pool) {
-    if (pool != NULL) {
-        IExec->FreeSysObject(ASOT_MEMPOOL, pool);
+static void freeEnvironment(struct _clib4 *__clib4) {
+    if (__clib4->__environment_pool != NULL) {
+        IExec->FreeSysObject(ASOT_MEMPOOL, __clib4->__environment_pool);
     }
+    if (__clib4->__environment_lock != NULL) {
+        __delete_mutex(__clib4->__environment_lock);
+        __clib4->__environment_lock = NULL;
+    }
+    free(__clib4->__environment);
+    __clib4->__environment = NULL;
 }
 
 static void closeLibraries() {
@@ -544,9 +553,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         /* Free environment memory */
         if (__clib4->__environment_allocated) {
             SHOWMSG("Clearing Environment");
-            freeEnvironment(__clib4->__environment_pool);
-            free(__clib4->__environment);
-            __clib4->__environment = NULL;
+            freeEnvironment(__clib4);
         }
 
         /* Check for getrandom fd */

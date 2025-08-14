@@ -15,160 +15,127 @@
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
 struct LocalVariable {
-    struct LocalVariable *lv_Next;
-    char *lv_Name;
+	struct LocalVariable *lv_Next;
+	char *lv_Name;
 };
 
 CLIB_DESTRUCTOR(__setenv_exit) {
-    ENTER();
-    struct _clib4 *__clib4 = __CLIB4;
-
-    /* Now for the local variables that may still be set. */
-    if (__clib4->__lv_root != NULL) {
-        do {
-            D(("deleting variable '%s'", __clib4->__lv_root->lv_Name));
-            DeleteVar(__clib4->__lv_root->lv_Name, 0);
-        } while ((__clib4->__lv_root = __clib4->__lv_root->lv_Next) != NULL);
-    }
-
-    LEAVE();
+	ENTER();
+	struct _clib4 *__clib4 = __CLIB4;
+	/* Now for the local variables that may still be set. */
+	if (__clib4->__lv_root != NULL) {
+		do {
+			D(("deleting variable '%s'", __clib4->__lv_root->lv_Name));
+			DeleteVar(__clib4->__lv_root->lv_Name, 0);
+		}
+		while ((__clib4->__lv_root = __clib4->__lv_root->lv_Next) != NULL);
+	}
+	LEAVE();
 }
 
 int
 setenv(const char *original_name, const char *original_value, int overwrite) {
-    const char *name = original_name;
-    const char *value = original_value;
-    char *name_copy = NULL;
-    struct LocalVariable *lv = NULL;
-    struct LocalVar *found;
-    int status;
-    int result = ERROR;
-    size_t i;
-    struct _clib4 *__clib4 = __CLIB4;
+	const char *name = original_name;
+	const char *value = original_value;
+	int result = ERROR;
+	struct _clib4 *__clib4 = __CLIB4;
 
-    ENTER();
+	/* Only deal with a pointer to environ, to work around subtle bugs with shared
+		libraries and/or small data systems where the user declares his own 'environ'.  */
+	char ***p_environ = &environ;
+	static int alloced; /* if allocated space before */
+	register char *C;
+	int l_value, offset;
 
-    SHOWSTRING(original_name);
-    SHOWSTRING(original_value);
-    SHOWVALUE(overwrite);
+	ENTER();
 
-    assert(original_name != NULL || original_value != NULL);
+	SHOWSTRING(original_name);
+	SHOWSTRING(original_value);
+	SHOWVALUE(overwrite);
 
-    __check_abort_f(__clib4);
+	assert(original_name != NULL || original_value != NULL);
 
-    if (original_name == NULL && original_value == NULL) {
-        SHOWMSG("invalid parameters");
+	if (original_name == NULL && original_value == NULL) {
+		SHOWMSG("invalid parameters");
+		__set_errno_r(__clib4, EFAULT);
+		goto out;
+	}
 
-        __set_errno_r(__clib4, EFAULT);
-        goto out;
-    }
+	MutexObtain(__clib4->__environment_lock);
 
-    if (name != NULL) {
-        for (i = 0; i < strlen(name); i++) {
-            if (name[i] == '=') {
-                name_copy = __malloc_r(__clib4, i + 1);
-                if (name_copy == NULL) {
-                    SHOWMSG("could not create copy of name");
-                    goto out;
-                }
+	if (*value == '=') /* no `=' in value */
+		++value;
 
-                memmove(name_copy, name, i);
-                name_copy[i] = '\0';
+	l_value = strlen(value);
+	if ((C = getenv_r(__clib4, name, &offset))) {
+		/* find if already exists */
+		if (!overwrite) {
+			MutexRelease(__clib4->__environment_lock);
+			return 0;
+		}
+		if (strlen(C) >= (size_t) l_value) {
+			/* old larger; copy over */
+			while ((*C++ = *value++) != 0);
+			MutexRelease(__clib4->__environment_lock);
+			/* if we are changing the TZ environment variable, update timezone info */
+			if (strcmp(name, "TZ") == 0)
+				tzset();
+			return 0;
+		}
+	}
+	else {
+		/* create new slot */
+		register int cnt;
+		register char **P;
+		for (P = *p_environ, cnt = 0; *P; ++P, ++cnt)
+			;
+		if (alloced) {
+			/* just increase size */
+			*p_environ = (char**) realloc((char*) environ, (sizeof(char*) * (cnt + 2)));
+			if (!*p_environ) {
+				MutexRelease(__clib4->__environment_lock);
+				return -1;
+			}
+		}
+		else {
+			/* get new space */
+			alloced = 1; /* copy old entries into it */
+			P = (char**) malloc((sizeof(char*) * (cnt + 2)));
+			if (!P) {
+				MutexRelease(__clib4->__environment_lock);
+				return (-1);
+			}
+			bcopy((char*) *p_environ, (char*) P, cnt * sizeof(char*));
+			*p_environ = P;
+		}
+		(*p_environ)[cnt + 1] = NULL;
+		offset = cnt;
+	}
 
-                value = &name[i + 1];
-                name = name_copy;
-                break;
-            }
-        }
-    } else if (value != NULL) /* && name == NULL */
-    {
-        for (i = 0; i < strlen(value); i++) {
-            if (value[i] == '=') {
-                name_copy = __malloc_r(__clib4, i + 1);
-                if (name_copy == NULL) {
-                    SHOWMSG("could not create copy of name");
-                    goto out;
-                }
+	for (C = (char*) name; *C && *C != '='; ++C)
+		; /* no `=' in name */
 
-                memmove(name_copy, value, i);
-                name_copy[i] = '\0';
+	if (!((*p_environ)[offset] = malloc((size_t) ((C - name) + l_value + 2)))) { /* name + `=' + value */
+		MutexRelease(__clib4->__environment_lock);
+		return -1;
+	}
 
-                name = name_copy;
-                value = &value[i + 1];
-                break;
-            }
-        }
-    }
+	for (C = (*p_environ)[offset]; ((*C = *name++)) && *C != '='; ++C)
+		;
+	for (*C++ = '='; (*C++ = *value++) != 0;)
+		;
+	MutexRelease(__clib4->__environment_lock);
 
-    if (name == NULL || name[0] == '\0' || value == NULL) {
-        SHOWMSG("invalid name");
+	SHOWMSG("Variable set correctly");
 
-        __set_errno_r(__clib4, EINVAL);
-        goto out;
-    }
+	if (strcmp(name, "TZ") == 0) {
+		SHOWMSG("Set TZ");
+		tzset();
+	}
 
-    if (NOT overwrite) {
-        char buffer[10];
-
-        status = GetVar((STRPTR) name, buffer, sizeof(buffer), 0);
-        if (status != -1) {
-            SHOWMSG("variable already exists; leaving...");
-
-            result = OK;
-            goto out;
-        }
-    }
-
-    found = FindVar((STRPTR) name, 0);
-    if (found == NULL) {
-        SHOWMSG("the local variable is not yet set; remembering that");
-
-        lv = __malloc_r(__clib4, sizeof(*lv) + strlen(name) + 1);
-        if (lv == NULL) {
-            SHOWMSG("not enough memory to remember local variable to be deleted");
-            goto out;
-        }
-
-        lv->lv_Next = __clib4->__lv_root;
-        __clib4->__lv_root = lv;
-
-        lv->lv_Name = (char *) (lv + 1);
-        strcpy(lv->lv_Name, name);
-    }
-
-    if (value == NULL)
-        value = "";
-
-    SHOWSTRING(name);
-    SHOWSTRING(value);
-
-    status = SetVar((STRPTR) name, (STRPTR) value, (LONG) strlen(value), 0);
-    if (status == DOSFALSE) {
-        SHOWMSG("could not set variable");
-
-        if (lv != NULL) {
-            __clib4->__lv_root = lv->lv_Next;
-            __free_r(__clib4, lv);
-        }
-
-        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
-        goto out;
-    }
-    else {
-        SHOWMSG("Variable set correctly");
-        if (strcmp(name, "TZ") == 0) {
-            SHOWMSG("Set TZ");
-            tzset();
-        }
-    }
-
-    result = OK;
+	result = OK;
 
 out:
-
-    if (name_copy != NULL)
-        __free_r(__clib4, name_copy);
-
-    RETURN(result);
-    return (result);
+	RETURN(result);
+	return (result);
 }
