@@ -161,8 +161,6 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
     ENTER();
 
-    DECLARE_UTILITYBASE();
-
     uint32 physical_alignment = 0;
 
     GetCPUInfoTags(GCIT_CacheLineSize, &physical_alignment, TAG_DONE);
@@ -198,11 +196,9 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         }
 
         /* Allocate a little more memory than necessary and align the buffer to a cache line boundary. */
-        buffer = AllocVecPooled(__clib4->_iob_pool, BUFSIZ + (__clib4->__cache_line_size - 1));
+        buffer = ItemPoolAlloc(__clib4->_iob_pool);
         if (buffer == NULL)
             goto out;
-
-        ClearMem(buffer, BUFSIZ + (__clib4->__cache_line_size - 1));
 
         /* Allocate memory for an arbitration mechanism, then initialize it. */
         stdio_lock = __create_mutex();

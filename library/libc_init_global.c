@@ -38,6 +38,8 @@
 #include <proto/elf.h>
 #include <fenv.h>
 
+#include "resolv/lookup.h"
+
 extern struct ElfIFace *__IElf;
 extern struct Library *__ElfBase;
 
@@ -150,6 +152,7 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         ._iob_pool = NULL,
         .isTZSet = 0,
         .__IDebug = NULL,
+        .resolv_conf = NULL,
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {
@@ -157,14 +160,14 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
     }
 
     SHOWMSG("Allocating file IO pool");
-    __clib4->_iob_pool = AllocSysObjectTags(ASOT_MEMPOOL,
-                                               ASOPOOL_Puddle,		BUFSIZ + 32,
-                                               ASOPOOL_Threshold,	BUFSIZ + 32,
+    __clib4->_iob_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                               ASOITEM_MFlags,   MEMF_ANY | MEMF_CLEAR,
+                                               ASOITEM_ItemSize, BUFSIZ + 32,
                                                TAG_DONE);
     if (!__clib4->_iob_pool) {
         goto out;
     }
-    DebugPrintF("Allocated file IO pool. _iob_pool : 0x%lx\n", __clib4->_iob_pool);
+    D(("Allocated file IO pool. _iob_pool : 0x%lx\n", __clib4->_iob_pool));
 
     SHOWMSG("Allocating wide_status");
     /* Initialize wchar stuff */
@@ -172,6 +175,12 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
     if (!__clib4->wide_status) {
         goto out;
     }
+
+    __clib4->resolv_conf = AllocVecTags(sizeof(struct resolvconf), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    if (!__clib4->resolv_conf) {
+        goto out;
+    }
+
     __clib4->wide_status->_strtok_last = NULL;
     __clib4->wide_status->_mblen_state.__count = 0;
     __clib4->wide_status->_mblen_state.__value.__wch = 0;
@@ -270,11 +279,14 @@ void
 reent_exit(struct _clib4 *__clib4) {
     /* Free global clib structure */
     if (__clib4) {
+        if (__clib4->resolv_conf != NULL) {
+            FreeVec(__clib4->resolv_conf);
+            __clib4->resolv_conf = NULL;
+        }
         /* Free IO memory pool */
         if (__clib4->_iob_pool != NULL) {
-            SHOWMSG("Freeing _iob_pool and all unfreed memory");
-            DebugPrintF("Freeing _iob_pool and all unfreed memory. _iob_pool : 0x%lx\n", __clib4->_iob_pool);
-            FreeSysObject(ASOT_MEMPOOL, __clib4->_iob_pool);
+            D(("Freeing _iob_pool and all unfreed memory. _iob_pool : 0x%lx\n", __clib4->_iob_pool));
+            FreeSysObject(ASOT_ITEMPOOL, __clib4->_iob_pool);
         }
 
         /* Free wchar stuff */

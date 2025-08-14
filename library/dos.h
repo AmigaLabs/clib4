@@ -316,9 +316,8 @@ struct _clib4 {
     BOOL __current_directory_changed;
     BOOL __unlock_current_directory;
 
-    /* Memalign memory list */
-    void *unused2;
-    void *unused3;
+    APTR __environment_lock;
+    void *resolv_conf; //struct resolvconf
 
     /*
      * This variable can be set up to contain the minimum stack size the program

@@ -2,6 +2,7 @@
 #define _SYS_INTERFACE_H_
 
 #include <proto/dos.h>
+#include <workbench/startup.h>
 
 #undef __BSD_VISIBLE
 #define __BSD_VISIBLE 1

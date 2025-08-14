@@ -40,10 +40,15 @@
 
 static int
 __res_msend(int nqueries, const unsigned char *const *queries, const int *qlens, unsigned char *const *answers, int *alens, int asize) {
-    struct resolvconf conf;
-    if (__get_resolv_conf(&conf, 0, 0) < 0)
-        return -1;
-    return __res_msend_rc(nqueries, queries, qlens, answers, alens, asize, &conf);
+    struct _clib4 *__clib4 = __CLIB4;
+
+    if (((struct resolvconf *) __clib4->resolv_conf)->loaded == 0) {
+        if (__get_resolv_conf(__clib4->resolv_conf, 0, 0) < 0)
+            return -1;
+        ((struct resolvconf *) __clib4->resolv_conf)->loaded = 1;
+    }
+
+    return __res_msend_rc(nqueries, queries, qlens, answers, alens, asize, __clib4->resolv_conf);
 }
 
 int

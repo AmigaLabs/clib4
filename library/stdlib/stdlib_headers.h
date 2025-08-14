@@ -130,6 +130,8 @@ extern void arg_exit();
 extern ULONG amigaos_symbols_callback(struct Hook *hook, struct Task *task, struct SymbolMsg *symbolmsg);
 extern APTR processscan_hook_function(struct Hook *hook, APTR userdata, struct Process *process);
 
+extern char *getenv_r(struct _clib4 *__clib4, const char *name, int *offset);
+
 #define NAMELEN 32
 
 #endif /* _STDLIB_HEADERS_H */

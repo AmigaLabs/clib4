@@ -7,9 +7,13 @@
 #endif /* _STDLIB_HEADERS_H */
 
 char *
-getenv(const char *name) {
+getenv_r(struct _clib4 *__clib4, const char *name, int *offset) {
     static char env_var_buffer[FILENAME_MAX] = {0};
     char *result = NULL;
+    char ***p_environ = &__clib4->__environment;
+    register int len;
+    register char **p;
+    const char *c;
 
     ENTER();
 
@@ -17,28 +21,51 @@ getenv(const char *name) {
 
     assert(name != NULL);
 
-    __check_abort();
-
     if (name == NULL) {
         SHOWMSG("invalid name parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
-    if (GetVar((STRPTR) name, env_var_buffer, sizeof(env_var_buffer), 0) < 0) {
+
+    if (!*p_environ) {
+        __set_errno_r(__clib4, EFAULT);
         SHOWMSG("couldn't get the variable");
-
-        __set_errno(__translate_io_error_to_errno(IoErr()));
         goto out;
     }
 
-    result = env_var_buffer;
+    MutexObtain(__clib4->__environment_lock);
 
-    SHOWSTRING(result);
+    c = name;
+    len = 0;
+    while (*c && *c != '=') {
+        c++;
+        len++;
+    }
+
+    for (p = *p_environ; *p; ++p) {
+        if (!strncmp (*p, name, len)) {
+            if (*(c = *p + len) == '=') {
+                *offset = p - *p_environ;
+                result = (char *) (++c);
+                break;
+            }
+        }
+    }
+
+    MutexRelease(__clib4->__environment_lock);
 
 out:
 
     RETURN(result);
     return (result);
+}
+
+char *
+getenv(const char *name) {
+    struct _clib4 *__clib4 = __CLIB4;
+    int offset;
+
+    return getenv_r(__clib4, name, &offset);
 }
