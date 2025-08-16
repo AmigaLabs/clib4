@@ -3,7 +3,7 @@ name: Make a new release
 on:
   release:
     branches:
-      - master
+      - scp-actions
     types: 
       - published
 
@@ -16,22 +16,22 @@ jobs:
       gcc: 11
       spe: "no"
 
-  compile-spe:
-    name: Build for PowerPC SPE cpus
-    uses: ./.github/workflows/_compile.yml
-    with:
-      git_tag: ${{ github.event.release.tag_name }}
-      gcc: 6
-      spe: "yes"
+  # compile-spe:
+  #   name: Build for PowerPC SPE cpus
+  #   uses: ./.github/workflows/_compile.yml
+  #   with:
+  #     git_tag: ${{ github.event.release.tag_name }}
+  #     gcc: 6
+  #     spe: "yes"
 
-  announcements:
-    needs: [compile-ppc, compile-spe]
-    name: Notify on Discord on successful release
-    runs-on: ubuntu-latest
-    steps:
-    - name: Notify on Discord on successful release
-      uses: hunghg255/action-notifications@master
-      with:
-        discord_webhook: https://discord.com/api/webhooks/${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}/${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
-        title: "clib4 ${{ github.event.release.tag_name }} released"
-        description: "Check it out at: ${{ github.event.release.html_url }}"
+  # announcements:
+  #   needs: [compile-ppc, compile-spe]
+  #   name: Notify on Discord on successful release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Notify on Discord on successful release
+  #     uses: hunghg255/action-notifications@master
+  #     with:
+  #       discord_webhook: https://discord.com/api/webhooks/${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}/${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
+  #       title: "clib4 ${{ github.event.release.tag_name }} released"
+  #       description: "Check it out at: ${{ github.event.release.html_url }}"

@@ -1,0 +1,41 @@
+name: SCP DEB server
+description: "scp archives to the DEB server"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install SSH client
+      run: sudo apt-get update && sudo apt-get install -y openssh-client
+
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.DEBSERVER_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -p ${{ secrets.DEBSERVER_PORT }} -H ${{ secrets.DEBSERVER_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Before script
+      run: |
+        echo "Remove old release"
+
+    - name: Upload via SCP
+      run: |
+        scp -i ~/.ssh/id_rsa \
+            -P ${{ secrets.DEBSERVER_PORT }} \
+            -o StrictHostKeyChecking=no \
+            "/opt/code/${{ env.archive_name }}_amd64.deb" \
+            ${{ secrets.DEBSERVER_USERNAME }}@${{ secrets.DEBSERVER_HOST }}:/opt/amigarepo/ubuntu/pool/main
+
+    - name: After script
+      run: |
+        echo "Regenerate the packages"
+        ssh -i ~/.ssh/id_rsa \
+            -p ${{ secrets.DEBSERVER_PORT }} \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.DEBSERVER_USERNAME }}@${{ secrets.DEBSERVER_HOST }} \
+            "sh /root/regenerate-packages.sh"
+
+    - name: Cleanup
+      if: always()
+      run: |
+        rm -f ~/.ssh/id_rsa
