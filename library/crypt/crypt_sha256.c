@@ -56,7 +56,7 @@ static const uint32_t K[64] = {
 
 static void processblock(struct sha256 *s, const uint8_t *buf) {
     uint32_t W[64], t1, t2, a, b, c, d, e, f, g, h;
-    int i;
+    size_t i;
 
     for (i = 0; i < 16; i++) {
         W[i] = (uint32_t) buf[4 * i] << 24;
@@ -276,7 +276,7 @@ static char *sha256crypt(const char *key, const char *setting, char *output) {
 
     /* DS = sha(repeat-salt) */
     sha256_init(&ctx);
-    for (i = 0; i < 16 + md[0]; i++)
+    for (i = 0; i < 16U + md[0]; i++)
         sha256_update(&ctx, salt, slen);
     sha256_sum(&ctx, smd);
 

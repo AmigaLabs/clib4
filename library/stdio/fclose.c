@@ -23,10 +23,6 @@ fclose(FILE *stream) {
 
     assert(stream != NULL);
 
-    DECLARE_UTILITYBASE();
-
-    __check_abort_f(__clib4);
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 
@@ -88,13 +84,13 @@ fclose(FILE *stream) {
     /* Get rid of any custom file buffer allocated. */
     if (file->iob_CustomBuffer != NULL) {
         SHOWMSG("Delete allocated buffer");
-        FreeVecPooled(__clib4->_iob_pool, file->iob_CustomBuffer);
+        ItemPoolFree(__clib4->_iob_pool, file->iob_CustomBuffer);
         file->iob_CustomBuffer = NULL;
     }
 
     /* Free the lock semaphore now. */
     SHOWMSG("Delete iob_Lock");
-    __delete_semaphore(file->iob_Lock);
+    __delete_mutex(file->iob_Lock);
 
     SHOWMSG("Clear file structure");
     memset(file, 0, sizeof(*file));

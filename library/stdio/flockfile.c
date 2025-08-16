@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_flockfile.c,v 1.6 2024-07-20 12:04:24 clib4devs Exp $
+ * $Id: stdio_flockfile.c,v 1.7 2025-06-28 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -34,7 +34,7 @@ __flockfile_r(struct _clib4 *__clib4, FILE *stream) {
     }
 
     if (file->iob_Lock != NULL) {
-        ObtainSemaphore(file->iob_Lock);
+        MutexObtain(file->iob_Lock);
         SET_FLAG(file->iob_Flags, IOBF_LOCKED);
         file->iob_TaskLock = (struct Task *) __clib4->self;
     }

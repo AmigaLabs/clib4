@@ -88,6 +88,7 @@
 #include "uuid.h"
 
 #include "interface.h"
+#include "stdlib_protos.h"
 
 /* These CTORS/DTORS are clib4's one and they are different than that one received
  * from crtbegin. They are needed because we need to call clib4 constructors as well
@@ -138,7 +139,7 @@ static struct TimeRequest *openTimer(uint32 unit);
 static void closeTimer(struct TimeRequest *tr);
 static int32 getDebugLevel(struct ExecBase *sysbase);
 
-extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
+extern void reent_exit(struct _clib4 *__clib4);
 extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
 
 #if DEBUG == 1
@@ -258,13 +259,21 @@ makeEnvironment(struct _clib4 *__clib4) {
             IExec->FreeSysObject(ASOT_HOOK, hook);
         }
     }
+
+    __clib4->__environment_lock = __create_recursive_mutex();
     LEAVE();
 }
 
-static void freeEnvironment(APTR pool) {
-    if (pool != NULL) {
-        IExec->FreeSysObject(ASOT_MEMPOOL, pool);
+static void freeEnvironment(struct _clib4 *__clib4) {
+    if (__clib4->__environment_pool != NULL) {
+        IExec->FreeSysObject(ASOT_MEMPOOL, __clib4->__environment_pool);
     }
+    if (__clib4->__environment_lock != NULL) {
+        __delete_mutex(__clib4->__environment_lock);
+        __clib4->__environment_lock = NULL;
+    }
+    free(__clib4->__environment);
+    __clib4->__environment = NULL;
 }
 
 static void closeLibraries() {
@@ -474,6 +483,9 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             if (IDOS->NameFromLock(me->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
                 __set_current_path((const char *) current_dir_name);
             }
+
+            ITimer->GetSysTime((struct TimeVal *) &__clib4->clock);
+
             /* At this point exe is fully initialized */
             __clib4->__fully_initialized = TRUE;
             SHOWMSG("Library initialized");
@@ -502,7 +514,7 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 
         hashmap_free(res->children);
         if (res->fallbackClib) {
-            reent_exit(res->fallbackClib, TRUE);
+            reent_exit(res->fallbackClib);
         }
 
         IExec->RemResource(res);
@@ -541,9 +553,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         /* Free environment memory */
         if (__clib4->__environment_allocated) {
             SHOWMSG("Clearing Environment");
-            freeEnvironment(__clib4->__environment_pool);
-            free(__clib4->__environment);
-            __clib4->__environment = NULL;
+            freeEnvironment(__clib4);
         }
 
         /* Check for getrandom fd */
@@ -556,13 +566,16 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             SHOWMSG("Closing randfd[1]");
             close(__clib4->randfd[1]);
         }
+        
+        struct Task *t = IExec->FindTask(NULL);
+        D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
 
         SHOWMSG("Calling clib4 dtors");
         _end_ctors(__DTOR_LIST__);
         SHOWMSG("Done. All destructors called");
 
         SHOWMSG("Calling reent_exit on _clib4");
-        reent_exit(__clib4, FALSE);
+        reent_exit(__clib4);
         SHOWMSG("Done");
 
         while (hashmap_iter(res->children, &iter, &item)) {
@@ -768,6 +781,7 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
             res->fallbackClib->self = (struct Process *) IExec->FindTask(NULL);
             res->fallbackClib->__check_abort_enabled = TRUE;
             res->fallbackClib->__fully_initialized = TRUE;
+            ITimer->GetSysTime((struct TimeVal *) &res->fallbackClib->clock);
 
             /* Init SYSV structures */
             IPCMapInit(&res->shmcx.keymap);
@@ -865,9 +879,10 @@ library_start(char *argstr,
               int arglen,
               int (*start_main)(int, char **),
               void (*__EXT_CTOR_LIST__[])(void),
-              void (*__EXT_DTOR_LIST__[])(void)) {
+              void (*__EXT_DTOR_LIST__[])(void),
+              struct WBStartup *sms) {
 
-    int result = _main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
+    int result = _main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, sms);
 
     return result;
 }

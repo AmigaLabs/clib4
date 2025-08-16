@@ -38,20 +38,10 @@
 #include <proto/elf.h>
 #include <fenv.h>
 
+#include "resolv/lookup.h"
+
 extern struct ElfIFace *__IElf;
 extern struct Library *__ElfBase;
-
-static APTR
-hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
-    uint32 pid = (uint32) userdata;
-    (void) (hook);
-
-    if (process->pr_ProcessID == pid) {
-        return process;
-    }
-
-    return 0;
-}
 
 /* random table */
 static uint32_t _random_init[] = {
@@ -66,7 +56,7 @@ static uint32_t _random_init[] = {
 };
 
 void
-reent_init(struct _clib4 *__clib4, BOOL fallback) {
+reent_init(struct _clib4 *__clib4, const BOOL fallback) {
     BOOL success = FALSE;
 
     ENTER();
@@ -75,145 +65,6 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     struct ElfIFace *IElf = __IElf;
 
     *__clib4 = (struct _clib4) {
-        .__ctype_table = {
-                /*   0      */ __CTYPE_CONTROL,
-                /*   1      */ __CTYPE_CONTROL,
-                /*   2      */ __CTYPE_CONTROL,
-                /*   3      */ __CTYPE_CONTROL,
-                /*   4      */ __CTYPE_CONTROL,
-                /*   5      */ __CTYPE_CONTROL,
-                /*   6      */ __CTYPE_CONTROL,
-                /*   7      */ __CTYPE_CONTROL,
-                /*   8      */ __CTYPE_CONTROL,
-                /*   9      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
-                /*  10      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
-                /*  11      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
-                /*  12      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
-                /*  13      */ __CTYPE_CONTROL|__CTYPE_WHITE_SPACE,
-                /*  14      */ __CTYPE_CONTROL,
-                /*  15      */ __CTYPE_CONTROL,
-                /*  16      */ __CTYPE_CONTROL,
-                /*  17      */ __CTYPE_CONTROL,
-                /*  18      */ __CTYPE_CONTROL,
-                /*  19      */ __CTYPE_CONTROL,
-                /*  20      */ __CTYPE_CONTROL,
-                /*  21      */ __CTYPE_CONTROL,
-                /*  22      */ __CTYPE_CONTROL,
-                /*  23      */ __CTYPE_CONTROL,
-                /*  24      */ __CTYPE_CONTROL,
-                /*  25      */ __CTYPE_CONTROL,
-                /*  26      */ __CTYPE_CONTROL,
-                /*  27      */ __CTYPE_CONTROL,
-                /*  28      */ __CTYPE_CONTROL,
-                /*  29      */ __CTYPE_CONTROL,
-                /*  30      */ __CTYPE_CONTROL,
-                /*  31      */ __CTYPE_CONTROL,
-                /*  32, ' ' */ __CTYPE_PRINTABLE|__CTYPE_WHITE_SPACE,
-                /*  33, '!' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  34, '"' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  35, '#' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  36, '$' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  37, '%' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  38, '&' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  39, ''' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  40, '(' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  41, ')' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  42, '*' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  43, '+' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  44, ',' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  45, '-' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  46, '.' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  47, '/' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  48, '0' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
-                /*  49, '1' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
-                /*  50, '2' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
-                /*  51, '3' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
-                /*  52, '4' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
-                /*  53, '5' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
-                /*  54, '6' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
-                /*  55, '7' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
-                /*  56, '8' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
-                /*  57, '9' */ __CTYPE_DIGIT|__CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE,
-                /*  58, ':' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  59, ';' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  60, '<' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  61, '=' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  62, '>' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  63, '?' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  64, '@' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  65, 'A' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  66, 'B' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  67, 'C' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  68, 'D' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  69, 'E' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  70, 'F' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  71, 'G' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  72, 'H' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  73, 'I' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  74, 'J' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  75, 'K' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  76, 'L' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  77, 'M' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  78, 'N' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  79, 'O' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  80, 'P' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  81, 'Q' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  82, 'R' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  83, 'S' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  84, 'T' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  85, 'U' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  86, 'V' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  87, 'W' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  88, 'X' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  89, 'Y' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  90, 'Z' */ __CTYPE_PRINTABLE|__CTYPE_UPPER_CASE,
-                /*  91, '[' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  92, '\' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  93, ']' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  94, '^' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  95, '_' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  96, '`' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /*  97, 'a' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /*  98, 'b' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /*  99, 'c' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 100, 'd' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 101, 'e' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 102, 'f' */ __CTYPE_HEX_DIGIT|__CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 103, 'g' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 104, 'h' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 105, 'i' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 106, 'j' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 107, 'k' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 108, 'l' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 109, 'm' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 110, 'n' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 111, 'o' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 112, 'p' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 113, 'q' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 114, 'r' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 115, 's' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 116, 't' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 117, 'u' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 118, 'v' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 119, 'w' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 120, 'x' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 121, 'y' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 122, 'z' */ __CTYPE_PRINTABLE|__CTYPE_LOWER_CASE,
-                /* 123, '{' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /* 124, '|' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /* 125, '}' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /* 126, '~' */ __CTYPE_PUNCTUATION|__CTYPE_PRINTABLE,
-                /* 127      */ __CTYPE_CONTROL,
-
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        },
         /* Set main Exec and IElf interface pointers */
         .IExec = IExec,
         .IElf = __IElf,
@@ -231,8 +82,6 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         .__priority = 256,
         .pipenum = 0,
         .tgoto_buf = {0},
-        /* Set memalign tree to NULL */
-        .__memalign_tree = NULL,
         /* Initialize pipe semaphore */
         .__pipe_semaphore = __create_semaphore(),
         /* Initialize random signal and state */
@@ -296,13 +145,14 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         .__children = 1,
         .term_entry = NULL,
         .__was_sig = -1,
-        .__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK,
+        .__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE,
         .allocated_memory_by_malloc = 0,
         .__environment_pool = NULL,
         .__num_iob = 0,
         ._iob_pool = NULL,
         .isTZSet = 0,
         .__IDebug = NULL,
+        .resolv_conf = NULL,
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {
@@ -310,13 +160,14 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     }
 
     SHOWMSG("Allocating file IO pool");
-    __clib4->_iob_pool = AllocSysObjectTags(ASOT_MEMPOOL,
-                                               ASOPOOL_Puddle,		BUFSIZ + 32,
-                                               ASOPOOL_Threshold,	BUFSIZ + 32,
+    __clib4->_iob_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
+                                               ASOITEM_MFlags,   MEMF_ANY | MEMF_CLEAR,
+                                               ASOITEM_ItemSize, BUFSIZ + 32,
                                                TAG_DONE);
     if (!__clib4->_iob_pool) {
         goto out;
     }
+    D(("Allocated file IO pool. _iob_pool : 0x%lx\n", __clib4->_iob_pool));
 
     SHOWMSG("Allocating wide_status");
     /* Initialize wchar stuff */
@@ -324,6 +175,12 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     if (!__clib4->wide_status) {
         goto out;
     }
+
+    __clib4->resolv_conf = AllocVecTags(sizeof(struct resolvconf), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    if (!__clib4->resolv_conf) {
+        goto out;
+    }
+
     __clib4->wide_status->_strtok_last = NULL;
     __clib4->wide_status->_mblen_state.__count = 0;
     __clib4->wide_status->_mblen_state.__value.__wch = 0;
@@ -354,25 +211,7 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     D(("Check if altivec is present"));
     GetCPUInfoTags(GCIT_VectorUnit, &__clib4->hasAltivec, TAG_DONE);
 
-    /* Init memalign list */
-    if (!fallback) {
-        SHOWMSG("Allocating __memalign_pool");
-        __clib4->__memalign_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
-                                                      ASO_NoTrack, FALSE,
-                                                      ASO_MemoryOvr, MEMF_SHARED,
-                                                      ASOITEM_MFlags, MEMF_SHARED,
-                                                      ASOITEM_ItemSize, sizeof(struct MemalignEntry),
-                                                      ASOITEM_BatchSize, 408,
-                                                      ASOITEM_GCPolicy, ITEMGC_AFTERCOUNT,
-                                                      ASOITEM_GCParameter, 1000,
-                                                      TAG_DONE);
-        if (!__clib4->__memalign_pool) {
-            goto out;
-        }
-    }
-
     __clib4->__IDebug = (struct DebugIFace *) GetInterface((struct Library *) IExec->Data.LibBase, "debug", 1, NULL);
-    D(("__clib4->__IDebug %p", __clib4->__IDebug));
     if (!__clib4->__IDebug) {
         D(("Cannot get IDebug interface"));
         goto out;
@@ -387,7 +226,7 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     D(("Try to get elf handle for dl* operations"));
     if (__clib4->IElf != NULL) {
         D(("Calling GetProcSegList"));
-        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+        const BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
         if (segment_list != BZERO) {
             Elf32_Handle handle = NULL;
 
@@ -432,18 +271,22 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
 out:
 
     if (!success) {
-        reent_exit(__clib4, fallback);
+        reent_exit(__clib4);
     }
 }
 
 void
-reent_exit(struct _clib4 *__clib4, BOOL fallback) {
+reent_exit(struct _clib4 *__clib4) {
     /* Free global clib structure */
     if (__clib4) {
+        if (__clib4->resolv_conf != NULL) {
+            FreeVec(__clib4->resolv_conf);
+            __clib4->resolv_conf = NULL;
+        }
         /* Free IO memory pool */
         if (__clib4->_iob_pool != NULL) {
-            SHOWMSG("Freeing _iob_pool and all unfreed memory");
-            FreeSysObject(ASOT_MEMPOOL, __clib4->_iob_pool);
+            D(("Freeing _iob_pool and all unfreed memory. _iob_pool : 0x%lx\n", __clib4->_iob_pool));
+            FreeSysObject(ASOT_ITEMPOOL, __clib4->_iob_pool);
         }
 
         /* Free wchar stuff */
@@ -463,36 +306,8 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
         /* Remove pipe semaphore */
         SHOWMSG("Delete __pipe_semaphore semaphore");
         __delete_semaphore(__clib4->__pipe_semaphore);
-        if (!fallback) { //TODO : Freeing memalign crash libExpunge and I don't know why
-            /* Free memalign stuff */
-            if (__clib4->__memalign_pool) {
-                SHOWMSG("Freeing memalign pool");
-                /* Check if we have something created with posix_memalign and not freed yet.
-                 * But this is a good point also to free something allocated with memalign or
-                 * aligned_alloc and all other functions are using memalign_tree to allocate memory
-                 * This seems to cure also the memory leaks found sometimes (but not 100% sure..)
-                 */
-                struct MemalignEntry *e = (struct MemalignEntry *) AVL_FindFirstNode(__clib4->__memalign_tree);
-                while (e) {
-                    struct MemalignEntry *next = (struct MemalignEntry *) AVL_FindNextNodeByAddress(&e->me_AvlNode);
-
-                    /* Free memory */
-                    if (e->me_Exact) {
-                        FreeVec(e->me_Exact);
-                    }
-                    /* Remove the node */
-                    AVL_RemNodeByAddress(&__clib4->__memalign_tree, &e->me_AvlNode);
-                    ItemPoolFree(__clib4->__memalign_pool, e);
-
-                    e = next;
-                }
-
-                FreeSysObject(ASOT_ITEMPOOL, __clib4->__memalign_pool);
-                SHOWMSG("Done");
-            }
-        }
         /* Free dl stuff */
-        struct ElfIFace *IElf = __IElf;
+        const struct ElfIFace *IElf = __IElf;
 
         if (IElf && __clib4->__dl_root_handle != NULL) {
             SHOWMSG("Closing __dl_root_handle");
@@ -513,7 +328,7 @@ void enableUnixPaths(void) {
     __clib4->__unix_path_semantics = TRUE;
 
     /* Set __current_path_name to a valid value */
-    UBYTE current_dir_name[256] = {0};
+    const UBYTE current_dir_name[256] = {0};
     if (NameFromLock(__clib4->self->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
         __set_current_path((const char *) current_dir_name);
     }
@@ -525,7 +340,7 @@ void disableUnixPaths(void) {
     __clib4->__unix_path_semantics = FALSE;
 
     /* Set __current_path_name to a valid value */
-    UBYTE current_dir_name[256] = {0};
+    const UBYTE current_dir_name[256] = {0};
     if (NameFromLock(__clib4->self->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
         __set_current_path((const char *) current_dir_name);
     }

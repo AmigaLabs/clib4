@@ -293,7 +293,7 @@ struct _clib4 {
     int __signals_blocked;
     int local_signals_blocked;
 
-    struct SignalSemaphore *stdio_lock;
+    APTR stdio_lock;
 
     /* Wof Allocator main pointer */
     wmem_allocator_t *__wmem_allocator;
@@ -316,9 +316,8 @@ struct _clib4 {
     BOOL __current_directory_changed;
     BOOL __unlock_current_directory;
 
-    /* Memalign memory list */
-    void *__memalign_pool;
-    struct AVLNode *__memalign_tree;
+    APTR __environment_lock;
+    void *resolv_conf; //struct resolvconf
 
     /*
      * This variable can be set up to contain the minimum stack size the program
@@ -472,7 +471,9 @@ struct _clib4 {
     struct StackSwapStruct stack_swap_struct;
 
     /* Wof Allocator memory semaphore */
-    struct SignalSemaphore *memory_semaphore;
+    // struct SignalSemaphore *memory_semaphore;
+    APTR memory_mutex;
+    
     int pipenum;
 
     /* gettext */

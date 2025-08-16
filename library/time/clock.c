@@ -31,25 +31,11 @@ CLIB_CONSTRUCTOR(clock_init) {
 
 clock_t
 clock(void) {
-    struct timeval now;
-    uint64 usec_now, usec_start;
-    clock_t result;
-    struct _clib4 *__clib4 = __CLIB4;
+    struct tms tim_s;
+    clock_t res;
 
-    ENTER();
+    if ((res = times(&tim_s)) != -1U)
+        res = (tim_s.tms_utime + tim_s.tms_stime + tim_s.tms_cutime + tim_s.tms_cstime);
 
-    __check_abort_f(__clib4);
-
-    /* Get the current time. */
-    gettimeofday(&now, NULL);
-
-    usec_now = now.tv_sec * 1000000ULL + now.tv_usec;
-    usec_start = __clib4->clock.tv_sec * 1000000ULL + __clib4->clock.tv_usec;
-    /* Subtract the start time from the current time. */
-    usec_now -= usec_start;
-
-    result = (clock_t) (usec_now * CLK_TCK / 1000000);
-
-    RETURN(result);
-    return result;
+    return res;
 }

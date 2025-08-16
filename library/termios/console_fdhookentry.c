@@ -157,6 +157,8 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
     assert(FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS));
     assert(fd->fd_Aux != NULL);
 
+    __check_abort_f(__clib4);
+
     tios = (struct termios *) fd->fd_Aux;
 
     /* Careful: file_action_close has to monkey with the file descriptor
@@ -408,9 +410,9 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
 
             __fd_unlock(fd);
 
-            /* Free the lock semaphore now. */
+            /* Free the locked mutex now. */
             if (NOT is_aliased)
-                __delete_semaphore(fd->fd_Lock);
+                __delete_mutex(fd->fd_Lock);
 
             /* And that's the last for this file descriptor. */
             memset(fd, 0, sizeof(*fd));

@@ -8,7 +8,7 @@
 
 int
 pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared) {
-    if (pshared > 1U)
+    if (pshared > 1)
         return EINVAL;
     attr->pshared &= ~128U;
     attr->pshared |= pshared << 7;

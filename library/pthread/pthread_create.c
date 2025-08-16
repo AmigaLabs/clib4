@@ -39,6 +39,10 @@
 
 extern struct DOSIFace *_IDOS;
 
+static void set_tls_register(ThreadInfo *ti) {
+  __asm__ volatile("mr r2, %0" :: "r"(ti));
+}
+
 static uint32
 StarterFunc() {
     volatile int keyFound = TRUE;
@@ -47,6 +51,9 @@ StarterFunc() {
 
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
+
+    set_tls_register(inf);
+
     struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_EntryData; // GetEntryData();
 
     // custom stack requires special handling
@@ -73,7 +80,7 @@ StarterFunc() {
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
-    ObtainSemaphoreShared(&tls_sem);
+    MutexObtain(tls_sem);
     for (int j = 0; keyFound && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
         keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
@@ -85,7 +92,7 @@ StarterFunc() {
             }
         }
     }
-    ReleaseSemaphore(&tls_sem);
+    MutexRelease(tls_sem);
 
     if (stackSwapped)
         StackSwap(&stack);
@@ -97,9 +104,9 @@ StarterFunc() {
         Signal((struct Task *) inf->parent, SIGF_PARENT);
     } else {
         // no one is waiting for us, do the clean up
-        ObtainSemaphore(&thread_sem);
+        MutexObtain(thread_sem);
         _pthread_clear_threadinfo(inf);
-        ReleaseSemaphore(&thread_sem);
+        MutexRelease(thread_sem);
     }
 
     return RETURN_OK;
@@ -118,12 +125,12 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
         return EINVAL;
 
     // grab an empty thread slot
-    ObtainSemaphore(&thread_sem);
+    MutexObtain(thread_sem);
     threadnew = GetThreadId(NULL);
-    ReleaseSemaphore(&thread_sem);
+    MutexRelease(thread_sem);
 
     if (threadnew == PTHREAD_THREADS_MAX) {
-        ReleaseSemaphore(&thread_sem);
+        MutexRelease(thread_sem);
         return EAGAIN;
     }
 
@@ -143,14 +150,9 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->canceltype = PTHREAD_CANCEL_DEFERRED;
     inf->detached = inf->attr.detachstate == PTHREAD_CREATE_DETACHED;
 
-    /* Ceck minimum stack size */
-    int minStack = PTHREAD_STACK_MIN;
-    int currentStack = (uint32) thisTask->tc_SPUpper - (uint32) thisTask->tc_SPLower;
-    if (currentStack > minStack)
-        currentStack = minStack;
-
-    if (inf->attr.stacksize != 0 && inf->attr.stacksize < minStack)
-        inf->attr.stacksize = minStack;
+    /* Check minimum stack size */
+    if (inf->attr.stacksize != 0 && inf->attr.stacksize < PTHREAD_STACK_MIN)
+        inf->attr.stacksize = PTHREAD_STACK_MIN;
 
     // Check if we have a guardsize
     if (inf->attr.guardsize > 0)

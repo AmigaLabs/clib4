@@ -47,7 +47,7 @@ extern int __wildcard_expand_init(void);
 extern void _exit(int return_code);
 
 extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
-extern void reent_exit(struct _clib4 *__clib4, BOOL fallback);
+extern void reent_exit(struct _clib4 *__clib4);
 
 /* signal_checkabort.c */
 extern int32 _start(STRPTR argstring, int32 arglen, struct ExecBase *sysbase);
@@ -70,6 +70,9 @@ extern int __get_errno(void);
 /* stdlib_semaphore.c */
 extern struct SignalSemaphore *__create_semaphore(void);
 extern void __delete_semaphore(struct SignalSemaphore *semaphore);
+extern APTR __create_mutex(void);
+extern APTR __create_recursive_mutex(void);
+extern void __delete_mutex(APTR mutex);
 
 /* random functions */
 extern void *savestate(void);
@@ -77,6 +80,7 @@ extern void loadstate(uint32_t *state);
 
 extern void __srandom(unsigned seed);
 extern void *__malloc_r(struct _clib4 *__clib4, size_t size);
+extern void *__malloc_aligned_r(struct _clib4 *__clib4, size_t size, int32_t alignment);
 extern void *__calloc_r(struct _clib4 *__clib4, size_t num_elements, size_t element_size);
 
 extern uint32_t lcg31(uint32_t x);

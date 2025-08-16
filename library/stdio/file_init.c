@@ -67,12 +67,13 @@ int
 wb_file_init(struct _clib4 *__clib4) {
     int result = ERROR;
     STRPTR window_specifier = NULL;
+    ENTER();
 
     __clib4->__original_current_directory = SetCurrentDir(__clib4->__WBenchMsg->sm_ArgList[0].wa_Lock);
     __clib4->__current_directory_changed = TRUE;
 
     if (__clib4->__WBenchMsg->sm_ToolWindow != NULL) {
-        __clib4->input = Open(__clib4->__WBenchMsg->sm_ToolWindow, MODE_OLDFILE);
+        __clib4->input = Open(__clib4->__WBenchMsg->sm_ToolWindow, MODE_NEWFILE);
     } else {
         STRPTR tool_name;
         size_t len;
@@ -94,6 +95,7 @@ wb_file_init(struct _clib4 *__clib4) {
     }
 
     if (__clib4->input == BZERO) {
+        SHOWMSG((" __clib4->input is BZERO. Open NIL:\n"));
         __clib4->input = Open("NIL:", MODE_OLDFILE);
     }
 
@@ -118,8 +120,15 @@ wb_file_init(struct _clib4 *__clib4) {
     if (__clib4->output == BZERO)
         __clib4->output = Open("NIL:", MODE_OLDFILE);
 
-    if (__clib4->input == BZERO || __clib4->output == BZERO || __clib4->error == BZERO)
+    if (__clib4->input == BZERO || __clib4->output == BZERO || __clib4->error == BZERO) {
+        D(("One of stream still BZERO [%x %x %x].. Goto out\n", __clib4->input, __clib4->output, __clib4->error));
         goto out;
+    }
+
+    // Reset FDs for input/output/error
+    __clib4->__fd[0]->fd_DefaultFile = __clib4->input;
+    __clib4->__fd[1]->fd_DefaultFile = __clib4->output;
+    __clib4->__fd[2]->fd_DefaultFile = __clib4->error;
 
     __clib4->old_input = SelectInput(__clib4->input);
     __clib4->old_output = SelectOutput(__clib4->output);
@@ -130,15 +139,18 @@ wb_file_init(struct _clib4 *__clib4) {
 
 out:
 
-    if (window_specifier != NULL)
+    if (window_specifier != NULL) {
         FreeVec(window_specifier);
+        window_specifier = NULL;
+    }
 
+    RETURN(result);
     return (result);
 }
 
 FILE_CONSTRUCTOR(stdio_file_init) {
-    struct SignalSemaphore *stdio_lock;
-    struct SignalSemaphore *fd_lock;
+    APTR stdio_lock;
+    APTR fd_lock;
     BPTR default_file;
     ULONG fd_flags, iob_flags;
     BOOL success = FALSE;
@@ -148,8 +160,6 @@ FILE_CONSTRUCTOR(stdio_file_init) {
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
-
-    DECLARE_UTILITYBASE();
 
     uint32 physical_alignment = 0;
 
@@ -172,33 +182,31 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
             case STDOUT_FILENO:
 
-                iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
+                iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_FULL;
                 fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
                 default_file = Output();
                 break;
 
             case STDERR_FILENO:
 
-                iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
+                iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_FULL;
                 fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
                 default_file = ErrorOutput();
                 break;
         }
 
         /* Allocate a little more memory than necessary and align the buffer to a cache line boundary. */
-        buffer = AllocVecPooled(__clib4->_iob_pool, BUFSIZ + (__clib4->__cache_line_size - 1));
+        buffer = ItemPoolAlloc(__clib4->_iob_pool);
         if (buffer == NULL)
             goto out;
 
-        ClearMem(buffer, BUFSIZ + (__clib4->__cache_line_size - 1));
-
         /* Allocate memory for an arbitration mechanism, then initialize it. */
-        stdio_lock = __create_semaphore();
-        fd_lock = __create_semaphore();
+        stdio_lock = __create_mutex();
+        fd_lock = __create_mutex();
 
         if (stdio_lock == NULL || fd_lock == NULL) {
-            __delete_semaphore(stdio_lock);
-            __delete_semaphore(fd_lock);
+            __delete_mutex(stdio_lock);
+            __delete_mutex(fd_lock);
             goto out;
         }
 
@@ -208,7 +216,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
                          __iob_hook_entry,
                          buffer,
                          buffer,
-                         (int64_t) BUFSIZ,
+                         (int64_t) BUFSIZ + (__clib4->__cache_line_size - 1),
                          i,
                          i,
                          iob_flags,

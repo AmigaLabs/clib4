@@ -71,7 +71,7 @@ DPKG_LIB ?= clib4_1.0_amd64
 WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
-	-Wno-deprecated-declarations -Wno-sign-compare -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
+	-Wno-deprecated-declarations -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
     -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Wno-stringop-overflow -Werror \
      # -Wbad-function-cast -Wconversion -Wformat
@@ -116,7 +116,7 @@ STATIC   := $(if $(STATIC),$(STATIC),yes)
 LARGEDATA :=
 OPTIONS  += $(LARGEDATA) -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wa,-mregnames -fno-builtin -nostdlib -D_GNU_SOURCE -D_XOPEN_SOURCE -D_USE_GNU -pipe \
 		-nostdinc -nostartfiles -nostdlib
-OPTIMIZE := -O3 -mregnames -mmultiple -mupdate -mstrict-align
+OPTIMIZE := -O3 -mregnames
 
 STABS :=
 DLIBS :=
@@ -128,9 +128,14 @@ else
 	DLIBS += $(BUILD_DIR)/lib/libdebug.a
 endif
 
+
 CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
 CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
-AFLAGS     := -Wa,-mregnames -mstrict-align
+AFLAGS     := -Wa,-mregnames
+
+ifdef USE_TEMPFILES
+	CFLAGS += -DUSE_TEMPFILES
+endif
 
 ifdef SPE
 	CC := ppc-amigaos-gcc-6.4.0
@@ -146,7 +151,8 @@ ifdef SPE
 endif
 
 ifdef PROFILE
-	CFLAGS += -pg
+	CFLAGS += -pg -falign-functions=32  -fno-omit-frame-pointer
+	AFLAGS += -fno-omit-frame-pointer
 	DLIBS += -Lbuild/lib -lprofile
 endif
 
@@ -196,6 +202,7 @@ include libpthread.gmk
 include libcrypt.gmk
 include librt.gmk
 include shared.gmk
+# Leave profile as latest one
 include libprofile.gmk
 
 prepare:

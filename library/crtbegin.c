@@ -13,6 +13,8 @@
 #include <proto/dos.h>
 #include <proto/utility.h>
 
+#include <workbench/startup.h>
+
 #include "shared_library/interface.h"
 
 #include "c.lib_rev.h"
@@ -70,8 +72,8 @@ register void *r2 __asm("r2");
 #endif
 
 extern int main(int, char **);
-int clib4_start(char *args, int32 arglen, struct Library *sysbase);
-int _start(char *args, int32 arglen, struct Library *sysbase);
+int clib4_start(char *args, const int32 arglen, struct Library *sysbase);
+int _start(char *argstring, int32 arglen, struct Library *sysbase);
 
 static struct Interface *OpenLibraryInterface(struct ExecIFace *iexec, const char *name, int version) {
     struct Library *library;
@@ -104,19 +106,30 @@ static void CloseLibraryInterface(struct ExecIFace *iexec, struct Interface *int
 }
 
 int
-clib4_start(char *args, int32 arglen, struct Library *sysbase) {
+clib4_start(char *args, const int32 arglen, struct Library *sysbase) {
     struct ExecIFace *iexec;
-    struct Clib4IFace *iclib4;
+    struct Clib4IFace *iclib4 = NULL;
     struct DOSIFace *idos;
 
     int rc = -1;
     void *old_r13 = r13;
+
+    struct Process *me;
+    struct WBStartup *sms = NULL;
 
     r13 = &_SDA_BASE_;
     SysBase = sysbase;
 
     iexec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
     iexec->Obtain();
+
+    /* Pick up the Workbench startup message, if available. */
+    me = (struct Process *) iexec->FindTask(NULL);
+    if (!me->pr_CLI) {
+        struct MsgPort *mp = &me->pr_MsgPort;
+        iexec->WaitPort(mp);
+        sms = (struct WBStartup *) iexec->GetMsg(mp);
+    }
 
     IExec = iexec;
     idos = (struct DOSIFace *) OpenLibraryInterface(iexec, "dos.library", MIN_OS_VERSION);
@@ -127,11 +140,11 @@ clib4_start(char *args, int32 arglen, struct Library *sysbase) {
             UtilityBase = IUtility->Data.LibBase;
             iclib4 = (struct Clib4IFace *) OpenLibraryInterface(iexec, "clib4.library", 1);
             if (iclib4 != NULL) {
-                struct Library *clib4base = ((struct Interface *) iclib4)->Data.LibBase;
+                const struct Library *clib4base = ((struct Interface *) iclib4)->Data.LibBase;
                 if (clib4base->lib_Version >= VERSION && clib4base->lib_Revision >= REVISION) {
                     IClib4 = iclib4;
 
-                    rc = iclib4->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__);
+                    rc = iclib4->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__, sms);
                 }
                 else {
                     idos->Printf("This program requires clib4.library version %ld.%ld\n", VERSION, REVISION);
@@ -166,7 +179,7 @@ _start(STRPTR argstring, int32 arglen, struct Library *sysbase) {
     r2 = &_DATA_BASE_;
 #endif
 
-    int result = clib4_start(argstring, arglen, sysbase);
+    const int result = clib4_start(argstring, arglen, sysbase);
 
 #ifdef CLIB4_MBASEREL
     r2 = old_r2;

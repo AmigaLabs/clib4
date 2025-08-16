@@ -6,9 +6,12 @@
 #include "wchar_headers.h"
 #endif /* _WCHAR_HEADERS_H */
 
+#include "stdio_headers.h"
+
 int
 vwscanf(const wchar_t *fmt, va_list ap) {
     int result = EOF;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -17,11 +20,11 @@ vwscanf(const wchar_t *fmt, va_list ap) {
     if (fmt == NULL) {
         SHOWMSG("invalid format parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
-    result = vfwscanf(stdin, fmt, ap);
+    result = vfwscanf(__stdin_r(__clib4), fmt, ap);
 
 out:
 

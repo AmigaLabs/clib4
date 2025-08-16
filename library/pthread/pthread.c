@@ -49,9 +49,9 @@ void __attribute__((constructor, used)) __pthread_init();
 void __attribute__((destructor, used)) __pthread_exit();
 
 ThreadInfo threads[PTHREAD_THREADS_MAX];
-struct SignalSemaphore thread_sem;
+APTR thread_sem = NULL;
 TLSKey tlskeys[PTHREAD_KEYS_MAX];
-struct SignalSemaphore tls_sem;
+APTR tls_sem = NULL;
 APTR timerMutex = NULL;
 struct TimeRequest *timedTimerIO = NULL;
 struct MsgPort *timedTimerPort = NULL;
@@ -263,28 +263,36 @@ _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
 // Constructors, destructors
 //
 
+static void set_tls_register(ThreadInfo *ti) {
+  __asm__ volatile("mr r2, %0" :: "r"(ti));
+}
+
 int __pthread_init_func(void) {
     pthread_t i;
+    SHOWMSG("[__pthread_init_func :] Pthread __pthread_init_func called.\n");
 
     memset(&threads, 0, sizeof(threads));
-    InitSemaphore(&thread_sem);
-    InitSemaphore(&tls_sem);
+    thread_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+    tls_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
 
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
+
     inf->task = (struct Process *) FindTask(NULL);
     inf->status = THREAD_STATE_RUNNING;
     NewMinList(&inf->cleanup);
 
     timerMutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
 
-    timedTimerPort = AllocSysObject(ASOT_PORT, NULL);
+    timedTimerPort = AllocSysObjectTags(ASOT_PORT, TAG_DONE);
     timedTimerIO = AllocSysObjectTags(ASOT_IOREQUEST,
                                       ASOIOR_ReplyPort, timedTimerPort,
                                       ASOIOR_Size, sizeof(struct TimeRequest),
                                       TAG_DONE);
 
     OpenDevice(TIMERNAME, UNIT_WAITUNTIL, (struct IORequest *) timedTimerIO, 0);
+
+    set_tls_register(inf);
 
     /* Mark all threads as IDLE */
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
@@ -299,16 +307,31 @@ void __pthread_exit_func(void) {
     pthread_t i;
     ThreadInfo *inf;
     struct DOSIFace *IDOS = _IDOS;
+    SHOWMSG("[__pthread_exit_func :] Pthread __pthread_exit_func called.\n");
 
-    if (timerMutex)
+    if (thread_sem) {
+        FreeSysObject(ASOT_MUTEX, thread_sem);
+        thread_sem = NULL;
+    }
+    if (tls_sem) {
+        FreeSysObject(ASOT_MUTEX, tls_sem);
+        tls_sem = NULL;
+    }
+    if (timerMutex) {
         FreeSysObject(ASOT_MUTEX, timerMutex);
+        timerMutex = NULL;
+    }
 
     if (timedTimerIO)
         CloseDevice((struct IORequest *) timedTimerIO);
-    if (timedTimerIO)
+    if (timedTimerIO) {
         FreeSysObject(ASOT_IOREQUEST, timedTimerIO);
-    if (timedTimerPort)
+        timedTimerIO = NULL;
+    }
+    if (timedTimerPort) {
         FreeSysObject(ASOT_PORT, timedTimerPort);
+        timedTimerPort = NULL;
+    }
 
     // if we don't do this we can easily end up with unloaded code being executed
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
@@ -324,8 +347,10 @@ void __pthread_exit_func(void) {
     }
 }
 
+
 PTHREAD_CONSTRUCTOR(__pthread_init) {
     ENTER();
+    SHOWMSG("[__pthread_init :] Pthread constructor called.\n");
     _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
     if (_DOSBase) {
         _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);
@@ -341,6 +366,7 @@ PTHREAD_CONSTRUCTOR(__pthread_init) {
 
 PTHREAD_DESTRUCTOR(__pthread_exit) {
     ENTER();
+    SHOWMSG("[__pthread_exit :] Pthread destructor called.\n");
     if (_DOSBase != NULL) {
         CloseLibrary(_DOSBase);
         _DOSBase = NULL;

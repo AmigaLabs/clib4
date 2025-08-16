@@ -8,12 +8,12 @@
 
 int
 puts(const char *s) {
-    FILE *stream = stdout;
-    struct iob *file = (struct iob *) stream;
     int result = EOF;
     int buffer_mode;
     int c;
     struct _clib4 *__clib4 = __CLIB4;
+    FILE *stream = __stdout_r(__clib4);
+    struct iob *file = (struct iob *) stream;
 
     ENTER();
 
@@ -50,8 +50,6 @@ puts(const char *s) {
 
         __fd_unlock(fd);
     }
-
-    __check_abort_f(__clib4);
 
     __flockfile_r(__clib4, stream);
 

@@ -39,12 +39,10 @@
 
 void
 pthread_cleanup_pop(int execute) {
-    pthread_t thread;
     ThreadInfo *inf;
     CleanupHandler *handler;
 
-    thread = pthread_self();
-    inf = GetThreadInfo(thread);
+    inf = GetCurrentThreadInfo();
     if (inf != NULL) {
         handler = (CleanupHandler *) RemTail((struct List *) &inf->cleanup);
 

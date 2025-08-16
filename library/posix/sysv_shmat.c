@@ -9,7 +9,7 @@
 void *
 _shmat(int shmid, const void *prefadds, int flags) {
     ENTER();
-    int i;
+    uint32_t i;
     void *addr = (void *) -1L;
     struct shmid_ds *si;
 

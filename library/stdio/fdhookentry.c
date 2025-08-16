@@ -6,6 +6,10 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+// #ifndef _STDIO_PROTOS_H
+#include "stdio_protos.h"
+// #endif /* _STDIO_PROTOS_H */
+
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
@@ -33,10 +37,12 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     BOOL is_aliased;
     BPTR file;
 
+    __check_abort_f(__clib4);
+
     ENTER();
 
     assert(fam != NULL && fd != NULL);
-    assert(__is_valid_fd(__clib4, fd));
+    // assert(__is_valid_fd(__clib4, fd));
 
     /* Careful: file_action_close has to monkey with the file descriptor
                 table and therefore needs to obtain the stdio lock before
@@ -327,7 +333,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
             /* Free the lock semaphore now. */
             if (NOT is_aliased)
-                __delete_semaphore(fd->fd_Lock);
+                __delete_mutex(fd->fd_Lock);
 
             /* And that's the last for this file descriptor. */
             memset(fd, 0, sizeof(*fd));
@@ -554,8 +560,6 @@ out:
         __stdio_unlock(__clib4);
 
     SHOWVALUE(result);
-
-    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

@@ -19,7 +19,7 @@
 static int
 is_valid_hostname(const char *host) {
     const unsigned char *s;
-    if (strnlen(host, 255) - 1 >= 254 || mbstowcs(0, host, 0) == -1)
+    if (strnlen(host, 255) - 1 >= 254 || mbstowcs(0, host, 0) == -1U)
         return 0;
     for (s = (void *) host; *s >= 0x80 || *s == '.' || *s == '-' || isalnum(*s); s++);
     return !*s;
@@ -187,16 +187,20 @@ static int name_from_dns(struct address buf[static MAXADDRS], char canon[static 
 static int
 name_from_dns_search(struct address buf[static MAXADDRS], char canon[static 256], const char *name, int family) {
     char search[256];
-    struct resolvconf conf;
     size_t l, dots;
     char *p, *z;
-    if (__get_resolv_conf(&conf, search, sizeof search) < 0)
-        return -1;
+    struct _clib4 *__clib4 = __CLIB4;
+
+    if (((struct resolvconf *) __clib4->resolv_conf)->loaded == 0) {
+        if (__get_resolv_conf(__clib4->resolv_conf, search, sizeof search) < 0)
+            return -1;
+        ((struct resolvconf *) __clib4->resolv_conf)->loaded = 1;
+    }
 
     /* Count dots, suppress search when >=ndots or name ends in
      * a dot, which is an explicit request for global scope. */
     for (dots = l = 0; name[l]; l++) if (name[l] == '.') dots++;
-    if (dots >= conf.ndots || name[l - 1] == '.') *search = 0;
+    if (dots >= ((struct resolvconf *) __clib4->resolv_conf)->ndots || name[l - 1] == '.') *search = 0;
 
     /* Strip final dot for canon, fail if multiple trailing dots. */
     if (name[l - 1] == '.') l--;
@@ -216,16 +220,16 @@ name_from_dns_search(struct address buf[static MAXADDRS], char canon[static 256]
         for (; isspace(*p); p++);
         for (z = p; *z && !isspace(*z); z++);
         if (z == p) break;
-        if (z - p < 256 - l - 1) {
+        if ((size_t) (z - p) < 256 - l - 1) {
             memcpy(canon + l + 1, p, z - p);
             canon[z - p + 1 + l] = 0;
-            int cnt = name_from_dns(buf, canon, canon, family, &conf);
+            int cnt = name_from_dns(buf, canon, canon, family, __clib4->resolv_conf);
             if (cnt) return cnt;
         }
     }
 
     canon[l] = 0;
-    return name_from_dns(buf, canon, name, family, &conf);
+    return name_from_dns(buf, canon, name, family, __clib4->resolv_conf);
 }
 
 static const struct policy {

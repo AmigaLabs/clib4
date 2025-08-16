@@ -14,7 +14,7 @@ char *fcvt(double x, int n, int *dp, int *sign) {
     char tmp[1500] = {0};
     int i, lz;
 
-    if (n > 1400U) n = 1400;
+    if (n > 1400) n = 1400;
     sprintf(tmp, "%.*f", n, x);
     i = (tmp[0] == '-');
     if (tmp[i] == '0') lz = strspn(tmp + i + 2, "0");
@@ -23,7 +23,7 @@ char *fcvt(double x, int n, int *dp, int *sign) {
     if (n <= lz) {
         *sign = i;
         *dp = 1;
-        if (n > 14U) n = 14;
+        if (n > 14) n = 14;
         return (char *) "000000000000000" + 14 - n;
     }
 

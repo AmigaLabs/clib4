@@ -193,7 +193,7 @@ evalprim(struct eval_s *ev, const char *s, int d) {
     s = skipspace(s);
     if (isdigit(*s)) {
         ev->r = strtoul(s, &e, 10);
-        if (e == s || ev->r == -1) {
+        if (e == s || ev->r == -1U) {
             return "";
         }
 
@@ -302,7 +302,7 @@ static const char *parseop(struct eval_s *ev, const char *s) {
         '|', '&', '=', '=', '=', '='
     };
 
-    int i;
+    size_t i;
 
     for (i = 0; i < sizeof(opch); i++) {
         if (*s == opch[i]) {
@@ -402,7 +402,7 @@ eval(const char *s, unsigned long n) {
     ev.n = n;
     s = evalexpr(&ev, s, 100);
 
-    return *s == ';' ? ev.r : -1;
+    return *s == ';' ? ev.r : -1U;
 }
 
 /****************************************************************************

@@ -1,21 +1,12 @@
 /*
- * $Id: ctype_toascii.c,v 1.0 2021-02-10 23:51:22 clib4devs Exp $
+* $Id: ctype_toascii.c,v 1.6 2025-06-30 12:04:22 clib4devs Exp $
 */
 
-#undef __STRICT_ANSI__
+#include <ctype.h>
 
-#ifndef _CTYPE_HEADERS_H
-#include "ctype_headers.h"
-#endif /* _CTYPE_HEADERS_H */
+#undef toascii
 
 int
 toascii(int c) {
-
-    ENTER();
-    SHOWVALUE(c);
-
-    int result = (c) & 0177;
-
-    RETURN(result);
-    return result;
+	return (c) & 0177;
 }

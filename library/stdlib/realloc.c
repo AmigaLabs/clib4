@@ -21,6 +21,8 @@ realloc(void *ptr, size_t size) {
 
     assert((int) size >= 0);
 
+    if (size == 0) size = 4;
+    
     __memory_lock(__clib4);
 
     result = wmem_realloc(__clib4->__wmem_allocator, ptr, size);

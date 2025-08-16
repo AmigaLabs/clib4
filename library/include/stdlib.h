@@ -100,6 +100,8 @@ extern void srand48(long);
 extern unsigned short *seed48(unsigned short subi[3]);
 extern void lcong48(unsigned short subi[7]);
 
+extern char *canonicalize_file_name(const char *name);
+
 #endif
 
 extern int system(const char *command);

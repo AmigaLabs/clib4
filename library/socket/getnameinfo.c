@@ -43,19 +43,24 @@ mkptr6(char *s, const unsigned char *ip) {
 static void
 reverse_hosts(char *buf, const unsigned char *a, unsigned scopeid, int family) {
     char line[512] = {0}, *p, *z;
-    unsigned char _buf[1032], atmp[16];
+    unsigned char atmp[16];
     struct address iplit;
+
     FILE *f = fopen(_PATH_HOSTS, "r");
-    if (!f) return;
+    if (!f)
+        return;
+
     if (family == AF_INET) {
         memcpy(atmp + 12, a, 4);
         memcpy(atmp, "\0\0\0\0\0\0\0\0\0\0\xff\xff", 12);
         a = atmp;
     }
     while (fgets(line, sizeof line, f)) {
-        if ((p = strchr(line, '#'))) *p++ = '\n', *p = 0;
+        if ((p = strchr(line, '#')))
+            *p++ = '\n', *p = 0;
 
-        for (p = line; *p && !isspace(*p); p++);
+        for (p = line; *p && !isspace(*p); p++)
+            ;
         *p++ = 0;
         if (__lookup_ipliteral(&iplit, line, AF_UNSPEC) <= 0)
             continue;
@@ -69,8 +74,10 @@ reverse_hosts(char *buf, const unsigned char *a, unsigned scopeid, int family) {
         if (memcmp(a, iplit.addr, 16) || iplit.scopeid != scopeid)
             continue;
 
-        for (; *p && isspace(*p); p++);
-        for (z = p; *z && !isspace(*z); z++);
+        for (; *p && isspace(*p); p++)
+            ;
+        for (z = p; *z && !isspace(*z); z++)
+            ;
         *z = 0;
         if (z - p < 256) {
             memcpy(buf, p, z - p + 1);
@@ -82,7 +89,7 @@ reverse_hosts(char *buf, const unsigned char *a, unsigned scopeid, int family) {
 
 static void
 reverse_services(char *buf, int port, int dgram) {
-    unsigned long svport;
+    int svport;
     char line[128], *p, *z;
     unsigned char _buf[1032];
     FILE *f = fopen(_PATH_SERVICES, "r");
@@ -110,11 +117,11 @@ static int
 dns_parse_callback(void *c, int rr, const void *data, int len, const void *packet) {
     (void) len;
 
-    if (rr != RR_PTR) return 0;
+    if (rr != RR_PTR)
+        return 0;
     if (dn_expand((unsigned char *) packet, (unsigned char *) packet + 512, (unsigned char *) data, c, 256) <= 0)
         *(char *) c = 0;
     return 0;
-
 }
 
 int
@@ -122,8 +129,6 @@ getnameinfo(const struct sockaddr *sa, socklen_t sl,
                 char *node, socklen_t nodelen,
                 char *serv, socklen_t servlen,
                 int flags) {
-
-    __check_abort();
 
     char ptr[PTR_MAX] = {0};
     char buf[256] = {0}, num[3 * sizeof(int) + 1];

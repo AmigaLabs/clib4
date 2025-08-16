@@ -224,7 +224,7 @@ map_descriptor_sets(
 
                     /* If we can't make assumptions about the file position, then
                        this better be a pipe. */
-                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_CACHE_POSITION) && fib->Type != ST_PIPEFILE) {
+                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_CACHE_POSITION) && fib->Type != (uint32) ST_PIPEFILE) {
                         FreeDosObject(DOS_EXAMINEDATA, fib);
 
                         SHOWMSG("file is unusable; it is not a file system and not a pipe.");
@@ -417,8 +417,6 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
     } else {
         signal_mask = 0;
     }
-
-    __check_abort_f(__clib4);
 
     /* Figure out the number of file and socket descriptors in use. */
     get_num_descriptors_used(__clib4, num_fds, &num_socket_used, &num_file_used);
@@ -920,8 +918,6 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
         __stdio_unlock(__clib4);
     }
-
-    __check_abort_f(__clib4);
 
 out:
 

@@ -134,7 +134,10 @@
  * extensions for x86 and ppc32 would want a larger alignment than this, but
  * we don't need to do better than malloc.
  */
-#define WMEM_ALIGN_AMOUNT (2 * sizeof (size_t))
+
+// On amiga we will implement this with true flexible alignment.
+
+#define WMEM_ALIGN_AMOUNT (4 * sizeof (size_t))
 #define WMEM_ALIGN_SIZE(SIZE) ((~(WMEM_ALIGN_AMOUNT-1)) & \
         ((SIZE) + (WMEM_ALIGN_AMOUNT-1)))
 
@@ -147,7 +150,6 @@
 /* The header for an entire OS-level 'block' of memory */
 typedef struct _wmem_block_hdr_t {
     struct _wmem_block_hdr_t *prev, *next;
-    size_t size; //we need this for realloc on amigaos
 } wmem_block_hdr_t;
 
 /* The header for a single 'chunk' of memory as returned from alloc/realloc.
@@ -178,12 +180,12 @@ typedef struct _wmem_block_chunk_t {
 
 #define WMEM_CHUNK_HEADER_SIZE WMEM_ALIGN_SIZE(sizeof(wmem_block_chunk_t))
 
-#define WMEM_BLOCK_MAX_ALLOC_SIZE (WMEM_BLOCK_SIZE - \
-        (WMEM_BLOCK_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE))
+// #define WMEM_BLOCK_MAX_ALLOC_SIZE (WMEM_BLOCK_SIZE - \
+//         (WMEM_BLOCK_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE))
 
 /* other handy chunk macros */
-#define WMEM_CHUNK_TO_DATA(CHUNK) ((void*)((uint8_t*)(CHUNK) + WMEM_CHUNK_HEADER_SIZE))
-#define WMEM_DATA_TO_CHUNK(DATA) ((wmem_block_chunk_t*)((uint8_t*)(DATA) - WMEM_CHUNK_HEADER_SIZE))
+#define WMEM_DATA_TO_PRE(DATA)    ((wmem_block_pre_t *)((uintptr_t)(DATA) - sizeof(wmem_block_pre_t)))
+#define WMEM_DATA_TO_CHUNK(DATA) (WMEM_DATA_TO_PRE(DATA))->chunk
 #define WMEM_CHUNK_DATA_LEN(CHUNK) ((CHUNK)->len - WMEM_CHUNK_HEADER_SIZE)
 
 /* some handy block macros */
@@ -197,7 +199,11 @@ typedef struct _wmem_block_free_t {
 } wmem_block_free_t;
 
 /* Handy macro for accessing the free-header of a chunk */
-#define WMEM_GET_FREE(CHUNK) ((wmem_block_free_t*)WMEM_CHUNK_TO_DATA(CHUNK))
+#define WMEM_GET_FREE(CHUNK) ((wmem_block_free_t*)((uintptr_t)(CHUNK) + WMEM_CHUNK_HEADER_SIZE))
+
+typedef struct _wmem_block_pre_t {
+    wmem_block_chunk_t *chunk;
+} wmem_block_pre_t;
 
 typedef struct _wmem_block_allocator_t {
     wmem_block_hdr_t *block_list;
@@ -462,6 +468,8 @@ wmem_block_pop_master(wmem_block_allocator_t *allocator) {
 
     chunk = allocator->master_head;
 
+    assert(chunk);
+
     free_chunk = WMEM_GET_FREE(chunk);
 
     allocator->master_head = free_chunk->next;
@@ -509,6 +517,10 @@ wmem_block_merge_free(wmem_block_allocator_t *allocator,
         chunk = tmp;
     }
 
+#ifdef MEMORY_DEBUG
+    D(("[merge_free :] chunk : 0x%lx, left_free : 0x%lx, right_free : 0x%lx\n", chunk, left_free, right_free));
+#endif
+
     /* The length of our chunk may have changed. If we have a chunk following,
      * update its 'prev' count. */
     if (!chunk->last) {
@@ -554,15 +566,16 @@ wmem_block_merge_free(wmem_block_allocator_t *allocator,
 static void
 wmem_block_split_free_chunk(wmem_block_allocator_t *allocator,
                             wmem_block_chunk_t *chunk,
-                            const size_t size) {
+                            const size_t size, size_t alignment) {
     wmem_block_chunk_t *extra;
     wmem_block_free_t *old_blk, *new_blk;
     size_t aligned_size, available;
     bool last;
 
-    aligned_size = WMEM_ALIGN_SIZE(size) + WMEM_CHUNK_HEADER_SIZE;
+    aligned_size = WMEM_CHUNK_HEADER_SIZE + alignment + sizeof(wmem_block_pre_t) + size;
+    aligned_size = WMEM_ALIGN_SIZE(aligned_size);
 
-    if (WMEM_CHUNK_DATA_LEN(chunk) < aligned_size + sizeof(wmem_block_free_t)) {
+    if (chunk->len < aligned_size + WMEM_CHUNK_HEADER_SIZE + sizeof(wmem_block_free_t)) {
         /* If the available space is not enought to store all of
          * (hdr + requested size + alignment padding + hdr + free-header) then
          * just remove the current chunk from the free list and return, since we
@@ -579,6 +592,7 @@ wmem_block_split_free_chunk(wmem_block_allocator_t *allocator,
     last = chunk->last;
     available = chunk->len - aligned_size;
 
+
     /* set new values for chunk */
     chunk->len = (uint32_t) aligned_size;
     chunk->last = false;
@@ -586,6 +600,10 @@ wmem_block_split_free_chunk(wmem_block_allocator_t *allocator,
     /* with chunk's values set, we can use the standard macro to calculate
      * the location and size of the new free chunk */
     extra = WMEM_CHUNK_NEXT(chunk);
+
+#ifdef MEMORY_DEBUG
+    D(("[split_free :] chunk : 0x%lx, extra : 0x%lx, aligned_size : 0x%lx, available : 0x%lx, alignment : %ld\n", chunk, extra, aligned_size, available, alignment));
+#endif
 
     /* Now we move the free chunk's address without changing its location
      * in whichever list it is in.
@@ -642,15 +660,22 @@ wmem_block_split_free_chunk(wmem_block_allocator_t *allocator,
  * recycler. */
 static void
 wmem_block_split_used_chunk(wmem_block_allocator_t *allocator,
-                            wmem_block_chunk_t *chunk,
-                            const size_t size) {
+                            void *data,
+                            const size_t size, const size_t alignment) {
     wmem_block_chunk_t *extra;
     size_t aligned_size, available;
     bool last;
 
-    aligned_size = WMEM_ALIGN_SIZE(size) + WMEM_CHUNK_HEADER_SIZE;
+#ifdef MEMORY_DEBUG
+    D(("[split_used :] chunk : 0x%lx\n", chunk));
+#endif
 
-    if (aligned_size > WMEM_CHUNK_DATA_LEN(chunk)) {
+    aligned_size = size + ((uintptr_t)data - (uintptr_t)WMEM_DATA_TO_CHUNK(data));
+    aligned_size = WMEM_ALIGN_SIZE(aligned_size);
+
+    wmem_block_chunk_t *chunk = WMEM_DATA_TO_CHUNK(data);
+
+    if (aligned_size + sizeof(wmem_block_chunk_t) > chunk->len) {
         /* in this case we don't have enough space to really split it, so
          * it's basically a no-op */
         return;
@@ -659,8 +684,8 @@ wmem_block_split_used_chunk(wmem_block_allocator_t *allocator,
      * may still not be usefully large */
 
     /* preserve a few values from chunk that we'll need to manipulate */
-    last = chunk->last;
-    available = chunk->len - aligned_size;
+    last        = chunk->last;
+    available   = chunk->len - aligned_size;
 
     /* set new values for chunk */
     chunk->len = (uint32_t) aligned_size;
@@ -745,7 +770,6 @@ wmem_block_new_block(wmem_block_allocator_t *allocator) {
 
     /* allocate the new block and add it to the block list */
     block = (wmem_block_hdr_t *) wmem_alloc(NULL, WMEM_BLOCK_SIZE);
-    block->size = WMEM_BLOCK_SIZE;
 
     wmem_block_add_to_block_list(allocator, block);
 
@@ -757,15 +781,15 @@ wmem_block_new_block(wmem_block_allocator_t *allocator) {
 
 /* Allocates special 'jumbo' blocks for sizes that won't fit normally. */
 static void *
-wmem_block_alloc_jumbo(wmem_block_allocator_t *allocator, const size_t size) {
+wmem_block_alloc_jumbo(wmem_block_allocator_t *allocator, const size_t size, const size_t alignment) {
     wmem_block_hdr_t *block;
     wmem_block_chunk_t *chunk;
 
     /* allocate a new block of exactly the right size */
-    block = (wmem_block_hdr_t *) wmem_alloc(NULL, size
+    block = (wmem_block_hdr_t *) wmem_alloc(NULL, size + alignment + sizeof(wmem_block_pre_t)
                                                   + WMEM_BLOCK_HEADER_SIZE
                                                   + WMEM_CHUNK_HEADER_SIZE);
-    block->size = size + WMEM_BLOCK_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE;
+    if(!block) return 0;
 
     /* add it to the block list */
     wmem_block_add_to_block_list(allocator, block);
@@ -777,9 +801,13 @@ wmem_block_alloc_jumbo(wmem_block_allocator_t *allocator, const size_t size) {
     chunk->jumbo = true;
     chunk->len = 0;
     chunk->prev = 0;
+    void *data = (void*)align_address((uintptr_t)chunk + WMEM_CHUNK_HEADER_SIZE + sizeof(wmem_block_pre_t), alignment);
+
+    wmem_block_pre_t *pre = WMEM_DATA_TO_PRE(data);
+    pre->chunk = chunk;
 
     /* and return the data pointer */
-    return WMEM_CHUNK_TO_DATA(chunk);
+    return data; //WMEM_CHUNK_TO_DATA(chunk);
 }
 
 /* Frees special 'jumbo' blocks of sizes that won't fit normally. */
@@ -798,56 +826,44 @@ wmem_block_free_jumbo(wmem_block_allocator_t *allocator,
 /* Reallocs special 'jumbo' blocks of sizes that won't fit normally. */
 static void *
 wmem_block_realloc_jumbo(wmem_block_allocator_t *allocator,
-                         wmem_block_chunk_t *chunk,
-                         const size_t size) {
-    wmem_block_hdr_t *block;
+                         void *ptr,
+                         const size_t size, const size_t alignment) {
+    wmem_block_chunk_t *chunk = WMEM_DATA_TO_PRE(ptr)->chunk;
+    size_t old_size = chunk->len - ((uintptr_t)ptr - (uintptr_t)chunk);
 
-    block = WMEM_CHUNK_TO_BLOCK(chunk);
+    if(old_size < size) {
+        void *new_ptr = wmem_block_alloc_jumbo(allocator, size, alignment);
+        memcpy(new_ptr, ptr, MIN(size, old_size));
+        wmem_block_free_jumbo(allocator, chunk);
 
-    size_t new_size = size + WMEM_BLOCK_HEADER_SIZE + WMEM_CHUNK_HEADER_SIZE;
-
-    wmem_block_hdr_t *new_block = wmem_alloc(NULL, new_size);
-    memcpy(new_block, block, block->size);
-    wmem_free(NULL, block);
-    block = new_block;
-    block->size = new_size;
-
-    // block = (wmem_block_hdr_t *) wmem_realloc(NULL, block, size
-    //                                                        + WMEM_BLOCK_HEADER_SIZE
-    //                                                        + WMEM_CHUNK_HEADER_SIZE);
-
-    if (block->next) {
-        block->next->prev = block;
+        return new_ptr; //WMEM_CHUNK_TO_DATA(WMEM_BLOCK_TO_CHUNK(block));
     }
-
-    if (block->prev) {
-        block->prev->next = block;
-    } else {
-        allocator->block_list = block;
-    }
-
-    return WMEM_CHUNK_TO_DATA(WMEM_BLOCK_TO_CHUNK(block));
+    return ptr;
 }
 
 /* API */
 
 static void *
-wmem_block_alloc(void *private_data, const size_t size) {
+wmem_block_alloc(void *private_data, const size_t size, int32_t alignment) {
     wmem_block_allocator_t *allocator = (wmem_block_allocator_t *) private_data;
     wmem_block_chunk_t *chunk;
 
-    if (size > WMEM_BLOCK_MAX_ALLOC_SIZE) {
-        return wmem_block_alloc_jumbo(allocator, size);
+#ifdef MEMORY_DEBUG
+    D(("[block_alloc :] size == %ld, alignment = %ld\n", size, alignment));
+#endif
+
+    size_t needed = WMEM_CHUNK_HEADER_SIZE + alignment + sizeof(wmem_block_pre_t) + size;
+    needed = WMEM_ALIGN_SIZE(needed);
+
+    if (needed > WMEM_BLOCK_SIZE - WMEM_BLOCK_HEADER_SIZE) {
+        return wmem_block_alloc_jumbo(allocator, size, alignment);
     }
 
-    if (allocator->recycler_head &&
-        WMEM_CHUNK_DATA_LEN(allocator->recycler_head) >= size) {
-
+    if (allocator->recycler_head && allocator->recycler_head->len >= needed) {
         /* If we can serve it from the recycler, do so. */
         chunk = allocator->recycler_head;
     } else {
-        if (allocator->master_head &&
-            WMEM_CHUNK_DATA_LEN(allocator->master_head) < size) {
+        if (allocator->master_head && allocator->master_head->len < needed) {
 
             /* Recycle the head of the master list if necessary. */
             chunk = allocator->master_head;
@@ -855,25 +871,28 @@ wmem_block_alloc(void *private_data, const size_t size) {
             wmem_block_add_to_recycler(allocator, chunk);
         }
 
-        if (!allocator->master_head) {
+        if (!allocator->master_head) {        
             /* Allocate a new block if necessary. */
             wmem_block_new_block(allocator);
         }
 
         chunk = allocator->master_head;
     }
-
     /* Split our chunk into two to preserve any trailing free space */
-    wmem_block_split_free_chunk(allocator, chunk, size);
+    wmem_block_split_free_chunk(allocator, chunk, size, alignment);
 
     /* Now cycle the recycler */
     wmem_block_cycle_recycler(allocator);
 
     /* mark it as used */
     chunk->used = true;
+    void *data = (void*)align_address((uintptr_t)chunk + WMEM_CHUNK_HEADER_SIZE + sizeof(wmem_block_pre_t), alignment);
 
-    /* and return the user's pointer */
-    return WMEM_CHUNK_TO_DATA(chunk);
+    wmem_block_pre_t *pre = WMEM_DATA_TO_PRE(data);
+    pre->chunk = chunk;
+
+    /* and return the data pointer */
+    return data; //WMEM_CHUNK_TO_DATA(chunk);
 }
 
 static void
@@ -882,7 +901,7 @@ wmem_block_free(void *private_data, void *ptr) {
     wmem_block_chunk_t *chunk;
 
     chunk = WMEM_DATA_TO_CHUNK(ptr);
-
+    
     if (chunk->jumbo) {
         wmem_block_free_jumbo(allocator, chunk);
         return;
@@ -900,24 +919,28 @@ wmem_block_free(void *private_data, void *ptr) {
 }
 
 static void *
-wmem_block_realloc(void *private_data, void *ptr, const size_t size) {
+wmem_block_realloc(void *private_data, void *ptr, const size_t size, int32_t alignment) {
     wmem_block_allocator_t *allocator = (wmem_block_allocator_t *) private_data;
     wmem_block_chunk_t *chunk;
 
+    // chunk = wmem_block_get_chunk(allocator, ptr);
     chunk = WMEM_DATA_TO_CHUNK(ptr);
 
     if (chunk->jumbo) {
-        return wmem_block_realloc_jumbo(allocator, chunk, size);
+        return wmem_block_realloc_jumbo(allocator, ptr, size, alignment);
     }
 
-    if (size > WMEM_CHUNK_DATA_LEN(chunk)) {
+    uintptr_t new_ptr_supremum = WMEM_ALIGN_SIZE((uintptr_t)ptr + size);
+    uintptr_t chunk_supremum = (uintptr_t)chunk + (chunk)->len;
+
+    if (new_ptr_supremum > chunk_supremum) { // Let's assume that alignment is the same for old and new chunk
         /* grow */
         wmem_block_chunk_t *tmp;
 
         tmp = WMEM_CHUNK_NEXT(chunk);
 
         if (tmp && (!tmp->used) &&
-            (size < WMEM_CHUNK_DATA_LEN(chunk) + tmp->len)) {
+            (new_ptr_supremum < chunk_supremum + tmp->len)) {
             /* the next chunk is free and has enough extra, so just grab
              * from that */
             size_t split_size;
@@ -927,7 +950,7 @@ wmem_block_realloc(void *private_data, void *ptr, const size_t size) {
              * so we want the split to be of (size - curdatalen - header_size).
              * However, this can underflow by header_size, so we do a quick
              * check here and floor the value to 0. */
-            split_size = size - WMEM_CHUNK_DATA_LEN(chunk);
+            split_size = new_ptr_supremum - chunk_supremum;
 
             if (split_size < WMEM_CHUNK_HEADER_SIZE) {
                 split_size = 0;
@@ -935,7 +958,7 @@ wmem_block_realloc(void *private_data, void *ptr, const size_t size) {
                 split_size -= WMEM_CHUNK_HEADER_SIZE;
             }
 
-            wmem_block_split_free_chunk(allocator, tmp, split_size);
+            wmem_block_split_free_chunk(allocator, tmp, split_size, 0);
 
             /* Now do a 'quickie' merge between the current block and the left-
              * hand side of the split. Simply calling wmem_block_merge_free
@@ -959,8 +982,8 @@ wmem_block_realloc(void *private_data, void *ptr, const size_t size) {
             /* no room to grow, need to alloc, copy, free */
             void *newptr;
 
-            newptr = wmem_block_alloc(private_data, size);
-            memcpy(newptr, ptr, WMEM_CHUNK_DATA_LEN(chunk));
+            newptr = wmem_block_alloc(private_data, size, alignment);
+            memcpy(newptr, ptr, size);
             wmem_block_free(private_data, ptr);
 
             /* No need to cycle the recycler, alloc and free both did that
@@ -968,9 +991,9 @@ wmem_block_realloc(void *private_data, void *ptr, const size_t size) {
 
             return newptr;
         }
-    } else if (size < WMEM_CHUNK_DATA_LEN(chunk)) {
+    } else if (new_ptr_supremum < chunk_supremum) {
         /* shrink */
-        wmem_block_split_used_chunk(allocator, chunk, size);
+        wmem_block_split_used_chunk(allocator, ptr, size, alignment);
 
         /* Now cycle the recycler */
         wmem_block_cycle_recycler(allocator);
