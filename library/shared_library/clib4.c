@@ -567,9 +567,8 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             close(__clib4->randfd[1]);
         }
         
-        SHOWMSG("Hej");
         struct Task *t = IExec->FindTask(NULL);
-        IExec->DebugPrintF("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID);
+        D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
 
         SHOWMSG("Calling clib4 dtors");
         _end_ctors(__DTOR_LIST__);

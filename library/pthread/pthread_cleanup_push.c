@@ -50,6 +50,8 @@ pthread_cleanup_push(void (*routine)(void *), void *arg) {
         return;
 
     inf = GetCurrentThreadInfo();
+	if (!inf)
+		return;
 
     handler->routine = routine;
     handler->arg = arg;

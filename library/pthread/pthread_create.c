@@ -39,7 +39,7 @@
 
 extern struct DOSIFace *_IDOS;
 
-static inline void set_tls_register(ThreadInfo *ti) {
+static void set_tls_register(ThreadInfo *ti) {
   __asm__ volatile("mr r2, %0" :: "r"(ti));
 }
 
@@ -80,7 +80,7 @@ StarterFunc() {
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
-    ObtainSemaphoreShared(&tls_sem);
+    MutexObtain(tls_sem);
     for (int j = 0; keyFound && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
         keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
@@ -92,7 +92,7 @@ StarterFunc() {
             }
         }
     }
-    ReleaseSemaphore(&tls_sem);
+    MutexRelease(tls_sem);
 
     if (stackSwapped)
         StackSwap(&stack);
@@ -104,9 +104,9 @@ StarterFunc() {
         Signal((struct Task *) inf->parent, SIGF_PARENT);
     } else {
         // no one is waiting for us, do the clean up
-        ObtainSemaphore(&thread_sem);
+        MutexObtain(thread_sem);
         _pthread_clear_threadinfo(inf);
-        ReleaseSemaphore(&thread_sem);
+        MutexRelease(thread_sem);
     }
 
     return RETURN_OK;
@@ -125,12 +125,12 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
         return EINVAL;
 
     // grab an empty thread slot
-    ObtainSemaphore(&thread_sem);
+    MutexObtain(thread_sem);
     threadnew = GetThreadId(NULL);
-    ReleaseSemaphore(&thread_sem);
+    MutexRelease(thread_sem);
 
     if (threadnew == PTHREAD_THREADS_MAX) {
-        ReleaseSemaphore(&thread_sem);
+        MutexRelease(thread_sem);
         return EAGAIN;
     }
 

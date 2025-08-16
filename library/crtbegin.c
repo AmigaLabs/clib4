@@ -129,7 +129,6 @@ clib4_start(char *args, const int32 arglen, struct Library *sysbase) {
         struct MsgPort *mp = &me->pr_MsgPort;
         iexec->WaitPort(mp);
         sms = (struct WBStartup *) iexec->GetMsg(mp);
-        iexec->DebugPrintF("<crtbegin> : NumArgs == %ld\n", sms->sm_NumArgs);
     }
 
     IExec = iexec;

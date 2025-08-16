@@ -119,7 +119,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
 
     struct fd *fd = __get_file_descriptor(__clib4, file_descriptor);
     if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET) && FLAG_IS_SET(fd->fd_Flags, FDF_LITTLE_ENDIAN)) {
-        DebugPrintF("[read] Reading in Little endian mode\n");
+        SHOWMSG("[read] Reading in Little endian mode\n");
         if (num_bytes == 2) {
             byteswap16(buffer);
         } else if (num_bytes == 4) {
