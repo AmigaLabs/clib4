@@ -84,6 +84,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y openssh-client
 
       - name: Setup SSH key
+        if: ${{ inputs.spe == 'no' }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_rsa
@@ -91,10 +92,17 @@ jobs:
           ssh-keyscan -p $SSH_PORT -H $SSH_HOST >> ~/.ssh/known_hosts
 
       - name: Before script
+        if: ${{ inputs.spe == 'no' }}
         run: |
           echo "Remove old release"
+          ssh -i ~/.ssh/id_rsa \
+              -p $SSH_PORT \
+              -o StrictHostKeyChecking=no \
+              $SSH_USER@$SSH_HOST \
+              "rm /opt/amigarepo/ubuntu/pool/main/clib4-v*_amd64.deb"
 
       - name: Upload via SCP
+        if: ${{ inputs.spe == 'no' }}
         run: |
           scp -i ~/.ssh/id_rsa \
               -P $SSH_PORT \
@@ -103,6 +111,7 @@ jobs:
               $SSH_USER@$SSH_HOST:/opt/amigarepo/ubuntu/pool/main
 
       - name: After script
+        if: ${{ inputs.spe == 'no' }}
         run: |
           echo "Regenerate the packages"
           ssh -i ~/.ssh/id_rsa \
@@ -112,7 +121,7 @@ jobs:
               "sh /root/regenerate-packages.sh"
 
       - name: SSH Cleanup
-        if: always()
+        if: ${{ inputs.spe == 'no' }}
         run: |
           rm -f ~/.ssh/id_rsa
 
