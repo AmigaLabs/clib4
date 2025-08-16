@@ -20,10 +20,15 @@ on:
 
 env:
   archive_name: clib4-${{ inputs.git_tag }}${{ inputs.spe == 'yes' && '_SPE' || '' }}
+  SSH_KEY: ${{ secrets.DEBSERVER_SSH_KEY }}
+  SSH_USER: ${{ secrets.DEBSERVER_USERNAME }}
+  SSH_PORT: ${{ secrets.DEBSERVER_PORT }}
+  SSH_HOST: ${{ secrets.DEBSERVER_HOST }}
 
 jobs:
   compile:
     runs-on: ubuntu-latest
+    environment: deploy_environment
     container:
       image: walkero/amigagccondocker:os4-gcc${{ inputs.gcc }}
       volumes:
@@ -79,10 +84,6 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y openssh-client
 
       - name: Setup SSH key
-        env:
-          SSH_KEY: ${{ secrets.DEBSERVER_SSH_KEY }}
-          SSH_PORT: ${{ secrets.DEBSERVER_PORT }}
-          SSH_HOST: ${{ secrets.DEBSERVER_HOST }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_rsa
@@ -94,10 +95,6 @@ jobs:
           echo "Remove old release"
 
       - name: Upload via SCP
-        env:
-          SSH_USER: ${{ secrets.DEBSERVER_USERNAME }}
-          SSH_PORT: ${{ secrets.DEBSERVER_PORT }}
-          SSH_HOST: ${{ secrets.DEBSERVER_HOST }}
         run: |
           scp -i ~/.ssh/id_rsa \
               -P $SSH_PORT \
@@ -106,10 +103,6 @@ jobs:
               $SSH_USER@$SSH_HOST:/opt/amigarepo/ubuntu/pool/main
 
       - name: After script
-        env:
-          SSH_USER: ${{ secrets.DEBSERVER_USERNAME }}
-          SSH_PORT: ${{ secrets.DEBSERVER_PORT }}
-          SSH_HOST: ${{ secrets.DEBSERVER_HOST }}
         run: |
           echo "Regenerate the packages"
           ssh -i ~/.ssh/id_rsa \

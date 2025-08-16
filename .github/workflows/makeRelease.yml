@@ -15,6 +15,8 @@ jobs:
       git_tag: ${{ github.event.release.tag_name }}
       gcc: 11
       spe: "no"
+    secrets: inherit
+
 
   # compile-spe:
   #   name: Build for PowerPC SPE cpus
