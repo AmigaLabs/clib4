@@ -2,8 +2,8 @@ name: Merge into main branches
 on:
   pull_request:
     branches:
-      - master
-      - development
+      - master_disabled
+      - development_disabled
     types:
       - closed
 
