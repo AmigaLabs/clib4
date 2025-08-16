@@ -49,9 +49,9 @@ void __attribute__((constructor, used)) __pthread_init();
 void __attribute__((destructor, used)) __pthread_exit();
 
 ThreadInfo threads[PTHREAD_THREADS_MAX];
-struct SignalSemaphore thread_sem;
+APTR thread_sem = NULL;
 TLSKey tlskeys[PTHREAD_KEYS_MAX];
-struct SignalSemaphore tls_sem;
+APTR tls_sem = NULL;
 APTR timerMutex = NULL;
 struct TimeRequest *timedTimerIO = NULL;
 struct MsgPort *timedTimerPort = NULL;
@@ -269,10 +269,11 @@ static void set_tls_register(ThreadInfo *ti) {
 
 int __pthread_init_func(void) {
     pthread_t i;
+    SHOWMSG("[__pthread_init_func :] Pthread __pthread_init_func called.\n");
 
     memset(&threads, 0, sizeof(threads));
-    InitSemaphore(&thread_sem);
-    InitSemaphore(&tls_sem);
+    thread_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+    tls_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
 
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
@@ -306,7 +307,16 @@ void __pthread_exit_func(void) {
     pthread_t i;
     ThreadInfo *inf;
     struct DOSIFace *IDOS = _IDOS;
+    SHOWMSG("[__pthread_exit_func :] Pthread __pthread_exit_func called.\n");
 
+    if (thread_sem) {
+        FreeSysObject(ASOT_MUTEX, thread_sem);
+        thread_sem = NULL;
+    }
+    if (tls_sem) {
+        FreeSysObject(ASOT_MUTEX, tls_sem);
+        tls_sem = NULL;
+    }
     if (timerMutex) {
         FreeSysObject(ASOT_MUTEX, timerMutex);
         timerMutex = NULL;
@@ -340,7 +350,7 @@ void __pthread_exit_func(void) {
 
 PTHREAD_CONSTRUCTOR(__pthread_init) {
     ENTER();
-    DebugPrintF("[__pthread_init :] Pthread constructor called.\n");
+    SHOWMSG("[__pthread_init :] Pthread constructor called.\n");
     _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
     if (_DOSBase) {
         _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);
@@ -356,6 +366,7 @@ PTHREAD_CONSTRUCTOR(__pthread_init) {
 
 PTHREAD_DESTRUCTOR(__pthread_exit) {
     ENTER();
+    SHOWMSG("[__pthread_exit :] Pthread destructor called.\n");
     if (_DOSBase != NULL) {
         CloseLibrary(_DOSBase);
         _DOSBase = NULL;

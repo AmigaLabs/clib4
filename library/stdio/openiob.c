@@ -86,7 +86,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
         SET_FLAG(open_mode, O_RDWR);
     }
     else if (mode[1] != '\0' && mode[1] == 'b' && mode[2] == 'l') {
-        DebugPrintF("fopen() called with Little Endian mode for binary file\n");
+        SHOWMSG("fopen() called with Little Endian mode for binary file\n");
         SET_FLAG(open_mode, O_LITTLE_ENDIAN);
         SET_FLAG(file_flags, IOBF_LITTLE_ENDIAN);
     }

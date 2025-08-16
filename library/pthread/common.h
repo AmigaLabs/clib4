@@ -97,9 +97,9 @@ typedef struct {
 extern struct Library *_DOSBase;
 extern struct DOSIFace *_IDOS;
 
-extern struct SignalSemaphore thread_sem;
+extern APTR thread_sem;
 extern ThreadInfo threads[PTHREAD_THREADS_MAX];
-extern struct SignalSemaphore tls_sem;
+extern APTR tls_sem;
 extern TLSKey tlskeys[PTHREAD_KEYS_MAX];
 extern APTR timerMutex;
 extern struct TimeRequest *timedTimerIO;
