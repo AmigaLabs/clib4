@@ -79,31 +79,43 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y openssh-client
 
       - name: Setup SSH key
+        env:
+          SSH_KEY: ${{ secrets.DEBSERVER_SSH_KEY }}
+          SSH_PORT: ${{ secrets.DEBSERVER_PORT }}
+          SSH_HOST: ${{ secrets.DEBSERVER_HOST }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEBSERVER_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.DEBSERVER_PORT }} -H ${{ secrets.DEBSERVER_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p $SSH_PORT -H $SSH_HOST >> ~/.ssh/known_hosts
 
       - name: Before script
         run: |
           echo "Remove old release"
 
       - name: Upload via SCP
+        env:
+          SSH_USER: ${{ secrets.DEBSERVER_USERNAME }}
+          SSH_PORT: ${{ secrets.DEBSERVER_PORT }}
+          SSH_HOST: ${{ secrets.DEBSERVER_HOST }}
         run: |
           scp -i ~/.ssh/id_rsa \
-              -P ${{ secrets.DEBSERVER_PORT }} \
+              -P $SSH_PORT \
               -o StrictHostKeyChecking=no \
               "/opt/code/${{ env.archive_name }}_amd64.deb" \
-              ${{ secrets.DEBSERVER_USERNAME }}@${{ secrets.DEBSERVER_HOST }}:/opt/amigarepo/ubuntu/pool/main
+              $SSH_USER@$SSH_HOST:/opt/amigarepo/ubuntu/pool/main
 
       - name: After script
+        env:
+          SSH_USER: ${{ secrets.DEBSERVER_USERNAME }}
+          SSH_PORT: ${{ secrets.DEBSERVER_PORT }}
+          SSH_HOST: ${{ secrets.DEBSERVER_HOST }}
         run: |
           echo "Regenerate the packages"
           ssh -i ~/.ssh/id_rsa \
-              -p ${{ secrets.DEBSERVER_PORT }} \
+              -p $SSH_PORT \
               -o StrictHostKeyChecking=no \
-              ${{ secrets.DEBSERVER_USERNAME }}@${{ secrets.DEBSERVER_HOST }} \
+              $SSH_USER@$SSH_HOST \
               "sh /root/regenerate-packages.sh"
 
       - name: SSH Cleanup
