@@ -20,7 +20,7 @@ on:
 
 env:
   archive_name: clib4-${{ inputs.git_tag }}${{ inputs.spe == 'yes' && '_SPE' || '' }}
-  SSH_KEY: ${{ secrets.DEBSERVER_SSH_KEY }}
+  SSH_KEY: ${{ secrets.DEBSERVER_PRIVATE_KEY }}
   SSH_USER: ${{ secrets.DEBSERVER_USERNAME }}
   SSH_PORT: ${{ secrets.DEBSERVER_PORT }}
   SSH_HOST: ${{ secrets.DEBSERVER_HOST }}
