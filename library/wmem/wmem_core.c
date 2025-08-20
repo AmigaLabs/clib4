@@ -85,6 +85,7 @@ power_of_two(size_t alignment) {
 }
 
 uintptr_t align_address(uintptr_t address, size_t alignment) {
+    if(alignment == 0) return address;
     return (address + alignment - 1) & ~(alignment - 1);
 }
 
@@ -116,7 +117,10 @@ wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t align
         }
 #endif
 
-        if (!r) errno = ENOMEM;
+        if (!r) {
+            Alert(AT_Recovery | AG_NoMemory | AO_ExecLib);
+            errno = ENOMEM;
+        }
 #ifdef MEMORY_DEBUG
         else allocs++;
 #endif

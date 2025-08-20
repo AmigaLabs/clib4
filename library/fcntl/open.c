@@ -362,8 +362,8 @@ directory:
             SET_FLAG(fd->fd_Flags, FDF_CREATED);
     }
     if (FLAG_IS_SET(open_flag, O_LITTLE_ENDIAN)) {
-        DebugPrintF("open() called with Little Endian mode\n");
-        DebugPrintF("%ld\n", fd_slot_number);
+        SHOWMSG("open() called with Little Endian mode\n");
+        D(("%ld\n", fd_slot_number));
         SET_FLAG(fd->fd_Flags, FDF_LITTLE_ENDIAN);
     }
 

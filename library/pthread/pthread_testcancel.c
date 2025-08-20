@@ -43,7 +43,7 @@ pthread_testcancel(void) {
 
     inf = GetCurrentThreadInfo();
 
-    if (inf->canceled && (inf->cancelstate == PTHREAD_CANCEL_ENABLE))
+    if (inf && inf->canceled && (inf->cancelstate == PTHREAD_CANCEL_ENABLE))
         pthread_exit(PTHREAD_CANCELED);
 
     SetSignal(SIGBREAKF_CTRL_C, 0);

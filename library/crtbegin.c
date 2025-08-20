@@ -13,6 +13,8 @@
 #include <proto/dos.h>
 #include <proto/utility.h>
 
+#include <workbench/startup.h>
+
 #include "shared_library/interface.h"
 
 #include "c.lib_rev.h"
@@ -112,11 +114,22 @@ clib4_start(char *args, const int32 arglen, struct Library *sysbase) {
     int rc = -1;
     void *old_r13 = r13;
 
+    struct Process *me;
+    struct WBStartup *sms = NULL;
+
     r13 = &_SDA_BASE_;
     SysBase = sysbase;
 
     iexec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
     iexec->Obtain();
+
+    /* Pick up the Workbench startup message, if available. */
+    me = (struct Process *) iexec->FindTask(NULL);
+    if (!me->pr_CLI) {
+        struct MsgPort *mp = &me->pr_MsgPort;
+        iexec->WaitPort(mp);
+        sms = (struct WBStartup *) iexec->GetMsg(mp);
+    }
 
     IExec = iexec;
     idos = (struct DOSIFace *) OpenLibraryInterface(iexec, "dos.library", MIN_OS_VERSION);
@@ -131,7 +144,7 @@ clib4_start(char *args, const int32 arglen, struct Library *sysbase) {
                 if (clib4base->lib_Version >= VERSION && clib4base->lib_Revision >= REVISION) {
                     IClib4 = iclib4;
 
-                    rc = iclib4->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__);
+                    rc = iclib4->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__, sms);
                 }
                 else {
                     idos->Printf("This program requires clib4.library version %ld.%ld\n", VERSION, REVISION);

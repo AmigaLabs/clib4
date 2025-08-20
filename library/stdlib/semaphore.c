@@ -36,6 +36,16 @@ __create_mutex(void) {
     return mutex;
 }
 
+APTR
+__create_recursive_mutex(void) {
+    ENTER();
+
+    APTR mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_END);
+
+    RETURN(mutex);
+    return mutex;
+}
+
 void
 __delete_mutex(APTR mutex) {
     ENTER();

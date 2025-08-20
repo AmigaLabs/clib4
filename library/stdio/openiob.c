@@ -22,8 +22,6 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
     ENTER();
 
-    DECLARE_UTILITYBASE();
-
     SHOWSTRING(filename);
     SHOWSTRING(mode);
     SHOWVALUE(slot_number);
@@ -88,7 +86,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
         SET_FLAG(open_mode, O_RDWR);
     }
     else if (mode[1] != '\0' && mode[1] == 'b' && mode[2] == 'l') {
-        DebugPrintF("fopen() called with Little Endian mode for binary file\n");
+        SHOWMSG("fopen() called with Little Endian mode for binary file\n");
         SET_FLAG(open_mode, O_LITTLE_ENDIAN);
         SET_FLAG(file_flags, IOBF_LITTLE_ENDIAN);
     }
@@ -96,15 +94,13 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = AllocVecPooled(__clib4->_iob_pool, BUFSIZ + (__clib4->__cache_line_size - 1));
+    buffer = ItemPoolAlloc(__clib4->_iob_pool);
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
         __set_errno_r(__clib4, ENOBUFS);
         goto out;
     }
-
-    ClearMem(buffer, BUFSIZ + (__clib4->__cache_line_size - 1));
 
     if (file_descriptor < 0) {
         assert(filename != NULL);
@@ -153,8 +149,8 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 out:
 
     if (buffer != NULL)
-        FreeVecPooled(__clib4->_iob_pool, buffer);
+        ItemPoolFree(__clib4->_iob_pool, buffer);
 
     RETURN(result);
-    return (result);
+    return result;
 }

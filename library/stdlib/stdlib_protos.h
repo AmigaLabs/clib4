@@ -71,6 +71,7 @@ extern int __get_errno(void);
 extern struct SignalSemaphore *__create_semaphore(void);
 extern void __delete_semaphore(struct SignalSemaphore *semaphore);
 extern APTR __create_mutex(void);
+extern APTR __create_recursive_mutex(void);
 extern void __delete_mutex(APTR mutex);
 
 /* random functions */

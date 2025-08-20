@@ -111,7 +111,8 @@ extern int _main(char *argstr,
                  int arglen,
                  int (*start_main)(int, char **),
                  void (*__EXT_CTOR_LIST__[])(void),
-                 void (*__EXT_DTOR_LIST__[])(void));
+                 void (*__EXT_DTOR_LIST__[])(void),
+                 struct WBStartup *sms);
 
 #ifndef _STDLIB_PROTOS_H
 #include "stdlib_protos.h"
@@ -128,6 +129,8 @@ extern void arg_exit();
 
 extern ULONG amigaos_symbols_callback(struct Hook *hook, struct Task *task, struct SymbolMsg *symbolmsg);
 extern APTR processscan_hook_function(struct Hook *hook, APTR userdata, struct Process *process);
+
+extern char *getenv_r(struct _clib4 *__clib4, const char *name, int *offset);
 
 #define NAMELEN 32
 
