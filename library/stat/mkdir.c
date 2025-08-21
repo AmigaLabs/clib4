@@ -41,7 +41,8 @@ int mkdir(const char *path_name, mode_t mode) {
         }
     }
 
-    char *path_to_create = (char *) path_name;
+    char path_to_create[PATH_MAX] = {0};
+    strncpy(path_to_create, path_name, PATH_MAX - 1);
 
     /* This check avoid that for some mistakes a directory contain more than one : char inside the name
      * This could help to avoid problems on SFS file system that allow (by mistake) the creation of dirs
@@ -49,7 +50,8 @@ int mkdir(const char *path_name, mode_t mode) {
      */
 
     int counter = 0;
-    for (int i = 0; path_to_create[i]; i++) {
+    size_t len = strlen(path_to_create);
+    for (size_t i = 0; i < len; i++) {
         if (path_to_create[i] == ':') {
             counter++;
         }
@@ -61,7 +63,6 @@ int mkdir(const char *path_name, mode_t mode) {
         goto out;
     }
 
-    size_t len = strlen(path_to_create);
     if (path_to_create[len - 1] == '/') {
         path_to_create[len - 1] = '\0'; // Remove '/' if present
     }
