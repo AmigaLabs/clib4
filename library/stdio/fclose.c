@@ -84,7 +84,10 @@ fclose(FILE *stream) {
     /* Get rid of any custom file buffer allocated. */
     if (file->iob_CustomBuffer != NULL) {
         SHOWMSG("Delete allocated buffer");
-        ItemPoolFree(__clib4->_iob_pool, file->iob_CustomBuffer);
+        if (file->iob_isVBuffer)
+            FreeVec(file->iob_CustomBuffer);
+        else
+            ItemPoolFree(__clib4->_iob_pool, file->iob_CustomBuffer);
         file->iob_CustomBuffer = NULL;
     }
 

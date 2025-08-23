@@ -153,6 +153,7 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         .isTZSet = 0,
         .__IDebug = NULL,
         .resolv_conf = NULL,
+        .__file_lock_semaphore_name = "Advisory File Locking"
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {

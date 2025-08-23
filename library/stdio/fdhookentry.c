@@ -503,10 +503,10 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 // TODO - Check this on OS4 with NIL:
                 fam->fam_FileInfo->Type = ST_NIL;
             } else {
-                BPTR lock_type = FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) || FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)
-                                 ? EX_LockInput
-                                 : EX_FileHandleInput;
-                fam->fam_FileInfo = ExamineObjectTags(lock_type, file, TAG_DONE);
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) || FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY))
+                    fam->fam_FileInfo = ExamineObjectTags(EX_LockInput, file, TAG_DONE);
+                else
+                    fam->fam_FileInfo = ExamineObjectTags(EX_FileHandleInput, file, TAG_DONE);
                 if (fam->fam_FileInfo == NULL) {
                     LONG error;
 
