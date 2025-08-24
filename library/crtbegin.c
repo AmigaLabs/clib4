@@ -141,7 +141,7 @@ clib4_start(char *args, const int32 arglen, struct Library *sysbase) {
             iclib4 = (struct Clib4IFace *) OpenLibraryInterface(iexec, "clib4.library", 1);
             if (iclib4 != NULL) {
                 const struct Library *clib4base = ((struct Interface *) iclib4)->Data.LibBase;
-                if (clib4base->lib_Version >= VERSION && clib4base->lib_Revision >= REVISION) {
+                if (clib4base->lib_Version >= VERSION || (clib4base->lib_Version == VERSION && clib4base->lib_Revision >= REVISION)) {
                     IClib4 = iclib4;
 
                     rc = iclib4->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__, sms);
