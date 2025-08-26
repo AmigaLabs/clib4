@@ -69,19 +69,17 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
         buf = NULL;
     }
 
-    /* If a certain buffer size is requested but no buffer was provided,
-       allocate some memory for it. */
+    /* If a certain buffer size is requested but no buffer was provided, allocate some memory for it. */
     if (bufmode != IOBF_BUFFER_MODE_NONE) {
         /* If a certain buffer size is requested but no buffer was provided,
 		   allocate some memory for it. */
         if (size > 0 && buf == NULL) {
-            /* Allocate a little more memory than necessary. */
-            new_buffer = AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+            /* Allocate a little more memory than necessary and align it to a cache line boundary. */
+            new_buffer = AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, AVT_Alignment, __clib4->__cache_line_size, TAG_DONE);
             if (new_buffer == NULL) {
                 __set_errno_r(__clib4, ENOBUFS);
                 goto out;
             }
-            file->iob_isVBuffer = TRUE;
         }
     }
 
@@ -99,10 +97,13 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
     /* Get rid of any buffer specially allocated for this stream. */
     if (file->iob_CustomBuffer != NULL) {
         SHOWMSG("Delete allocated buffer");
-        if (file->iob_isVBuffer)
+        if (file->iob_isVBuffer) {
             FreeVec(file->iob_CustomBuffer);
-        else
+            file->iob_isVBuffer = FALSE;
+        }
+        else {
             ItemPoolFree(__clib4->_iob_pool, file->iob_CustomBuffer);
+        }
 
         file->iob_CustomBuffer = NULL;
     }
@@ -116,11 +117,9 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
         if (buf != NULL) {
             new_buffer = (char *) buf;
         } else {
+            file->iob_isVBuffer = TRUE;
             /* Remember this, so we can release it later. */
             file->iob_CustomBuffer = new_buffer;
-
-            /* Align the buffer start address to a cache line boundary. */
-            new_buffer = (char *) ((ULONG)(new_buffer + (__clib4->__cache_line_size - 1)) & ~(__clib4->__cache_line_size - 1));
         }
     }
 
