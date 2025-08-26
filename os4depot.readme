@@ -3,7 +3,7 @@ description: clib4 library
 version: VERSION_TAG
 author: Andrea Palmatè
 submitter: Andrea Palmatè
-email: os4test@amigasoft.net
+email: andrea@amigasoft.net
 url: https://github.com/AmigaLabs/clib4
 category: development/library/misc
 replaces: development/library/misc/clib4.lha

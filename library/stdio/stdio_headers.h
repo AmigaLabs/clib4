@@ -204,6 +204,7 @@ typedef struct iob {
     UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
     APTR				iob_Lock;		    	/* For thread locking */
     struct Task *       iob_TaskLock;           /* Task who owns lock */
+	BOOL				iob_isVBuffer;			/* TRUE if iob_CustomBuffer is set from setvbuf */
 } __iob64;
 
 

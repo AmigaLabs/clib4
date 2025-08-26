@@ -13,7 +13,10 @@
 int
 open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     struct _clib4 *__clib4 = __CLIB4;
-    return __open_r(__clib4, path_name, open_flag);
+    va_list ap;
+    va_start(ap, open_flag);
+    return __open_r(__clib4, path_name, open_flag, va_arg(ap, int));
+    va_end(ap);
 }
 
 int
@@ -265,10 +268,12 @@ directory:
 
     fd = __clib4->__fd[fd_slot_number];
 
-    if (is_directory || FLAG_IS_SET(open_flag, O_PATH))
+    if (is_directory || FLAG_IS_SET(open_flag, O_PATH)) {
         __initialize_fd(fd, __fd_hook_entry, dir_lock, 0, fd_lock); // TODO - Create a new dir hook
-    else
+    }
+    else {
         __initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
+    }
 
     fd->fd_Aux = (char *) path_name;
 
@@ -384,7 +389,7 @@ out:
     if (lock != BZERO)
         UnLock(lock);
 
-    if (dir_lock != BZERO)
+    if (!is_directory && dir_lock != BZERO)
       	UnLock(dir_lock);
 
     __stdio_unlock(__clib4);

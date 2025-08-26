@@ -667,7 +667,7 @@ wmem_block_split_used_chunk(wmem_block_allocator_t *allocator,
     bool last;
 
 #ifdef MEMORY_DEBUG
-    D(("[split_used :] chunk : 0x%lx\n", chunk));
+    D(("[split_used :] data : 0x%lx\n", data));
 #endif
 
     aligned_size = size + ((uintptr_t)data - (uintptr_t)WMEM_DATA_TO_CHUNK(data));
