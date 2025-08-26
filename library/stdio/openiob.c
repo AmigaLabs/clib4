@@ -94,7 +94,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = ItemPoolAlloc(__clib4->_iob_pool);
+    buffer = AllocVecPooled(__clib4->_iob_pool, BUFSIZ + (__clib4->__cache_line_size - 1));
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
@@ -148,8 +148,9 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
 out:
 
-    if (buffer != NULL)
-        ItemPoolFree(__clib4->_iob_pool, buffer);
+    if (buffer != NULL) {
+        FreeVecPooled(__clib4->_iob_pool, buffer);
+    }
 
     RETURN(result);
     return result;

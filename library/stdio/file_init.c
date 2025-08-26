@@ -196,7 +196,7 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         }
 
         /* Allocate a little more memory than necessary and align the buffer to a cache line boundary. */
-        buffer = ItemPoolAlloc(__clib4->_iob_pool);
+        buffer = AllocVecPooled(__clib4->_iob_pool, BUFSIZ + (__clib4->__cache_line_size - 1));
         if (buffer == NULL)
             goto out;
 

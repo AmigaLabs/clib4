@@ -161,9 +161,9 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
     }
 
     SHOWMSG("Allocating file IO pool");
-    __clib4->_iob_pool = AllocSysObjectTags(ASOT_ITEMPOOL,
-                                               ASOITEM_MFlags,   MEMF_ANY | MEMF_CLEAR,
-                                               ASOITEM_ItemSize, BUFSIZ + 32,
+__clib4->_iob_pool = AllocSysObjectTags(ASOT_MEMPOOL,
+                                               ASOPOOL_Puddle,		BUFSIZ + 32,
+                                               ASOPOOL_Threshold,	BUFSIZ + 32,
                                                TAG_DONE);
     if (!__clib4->_iob_pool) {
         goto out;
@@ -287,7 +287,7 @@ reent_exit(struct _clib4 *__clib4) {
         /* Free IO memory pool */
         if (__clib4->_iob_pool != NULL) {
             D(("Freeing _iob_pool and all unfreed memory. _iob_pool : 0x%lx\n", __clib4->_iob_pool));
-            FreeSysObject(ASOT_ITEMPOOL, __clib4->_iob_pool);
+            FreeSysObject(ASOT_MEMPOOL, __clib4->_iob_pool);
         }
 
         /* Free wchar stuff */
