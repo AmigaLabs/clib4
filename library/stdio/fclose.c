@@ -87,7 +87,7 @@ fclose(FILE *stream) {
         if (file->iob_isVBuffer)
             FreeVec(file->iob_CustomBuffer);
         else
-            ItemPoolFree(__clib4->_iob_pool, file->iob_CustomBuffer);
+            free(file->iob_CustomBuffer);
         file->iob_CustomBuffer = NULL;
     }
 

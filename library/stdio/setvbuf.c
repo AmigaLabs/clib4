@@ -102,7 +102,7 @@ setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
             file->iob_isVBuffer = FALSE;
         }
         else {
-            ItemPoolFree(__clib4->_iob_pool, file->iob_CustomBuffer);
+            free(file->iob_CustomBuffer);
         }
 
         file->iob_CustomBuffer = NULL;
@@ -145,7 +145,7 @@ out:
         if (file->iob_isVBuffer)
             FreeVec(file->iob_CustomBuffer);
         else
-            ItemPoolFree(__clib4->_iob_pool, file->iob_CustomBuffer);
+            free(file->iob_CustomBuffer);
     }
 
     RETURN(result);
