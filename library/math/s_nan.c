@@ -42,7 +42,7 @@ nan(const char *s) {
     union {
         double d;
         uint32_t bits[2];
-    } u;
+    } u = { 0 };
 
     __scan_nan(u.bits, 2, s);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
