@@ -463,11 +463,13 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
                 __clib4->__environment_allocated = TRUE;
 
             SHOWMSG("Check for custom TERM");
-            /* Set default terminal mode to "amiga-clib4" if not set */
-            LONG term_len = IDOS->GetVar("TERM", (STRPTR) term_buffer, FILENAME_MAX, 0);
-            if (term_len <= 0) {
+            /* Set default terminal mode to "amiga-clib4" if not set.
+               It is safe to call setenv() since constructors are called
+            */
+            char *terminal = getenv("TERM");
+            if (terminal == NULL) {
                 IUtility->Strlcpy(term_buffer, "amiga-clib4", FILENAME_MAX);
-                IDOS->SetVar("TERM", term_buffer, -1, GVF_LOCAL_ONLY);
+                setenv("TERM", term_buffer, true);
             }
 
             /* The following code will be executed if the program is to keep
