@@ -437,7 +437,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             SHOWMSG("Check for custom memory allocator");
             if ((len = IDOS->GetVar("CLIB4_MEMORY_ALLOCATOR", envbuf, sizeof(envbuf), 0)) >= 0) {
                 if (!IUtility->Stricmp(envbuf, "1"))
-                    __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;  // WARNING - At moment this is crashing
+                    __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;
                 else if (!IUtility->Stricmp(envbuf, "2"))
                     __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK;
                 else if (!IUtility->Stricmp(envbuf, "3"))
