@@ -38,26 +38,32 @@ fstatvfs(int fd, struct statvfs *buf) {
 
     info = AllocDosObject(DOS_INFODATA, TAG_END);
     if (info != NULL) {
+		memset(info, 0, sizeof(*info));
         // 3 is the number of tags passed to GetDiskInfoTags call
         if (GetDiskInfoTags(
                 GDI_StringNameInput, devicename,
                 GDI_VolumeRequired, TRUE,
                 GDI_InfoData, info,
                 TAG_END) == 3) {
-            uint32_t maxlength = STATVFS_MAX_NAME;
+            int32 maxlength = STATVFS_MAX_NAME;
 
-            FileSystemAttrTags(
-                    FSA_MaxFileNameLengthR, &maxlength,
-                    FSA_StringNameInput, file,
-                    TAG_END);
             if (info->id_VolumeNode == BZERO) {
                 /* Device not present or not responding */
                 __set_errno_r(__clib4, ENXIO);
                 goto out;
             }
-            uint32 DosType = info->id_DiskType;
 
             __convert_info_to_statvfs(info, buf);
+
+			uint32 DosType;
+            if (!FileSystemAttrTags(
+                    FSA_MaxFileNameLengthR, &maxlength,
+                    FSA_StringNameInput, devicename,
+					FSA_DOSTypeR, &DosType,
+                    TAG_END)) {
+				__set_errno_r(__clib4, ENXIO);
+				goto out;
+			}
 
             buf->f_namemax = maxlength;
             /* Populate the missing statvfs structure */
@@ -90,6 +96,7 @@ fstatvfs(int fd, struct statvfs *buf) {
         }
     }
     else {
+		__set_errno_r(__clib4, ENOMEM);
         SHOWMSG("Could not allocate DOS_INFODATA object");
     }
 
