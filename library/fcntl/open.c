@@ -26,7 +26,7 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
     struct ExamineData *fib = NULL;
     APTR fd_lock;
     LONG is_file_system = FALSE;
-    LONG open_mode = 0;
+    LONG open_mode = MODE_OLDFILE;
     BPTR lock = BZERO, dir_lock = BZERO;
     BPTR handle = BZERO;
     BOOL create_new_file = FALSE;
@@ -118,11 +118,8 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
 
     if (Strnicmp(path_name, "PIPE:", 5) == SAME && FLAG_IS_SET(open_flag, O_CREAT)) {
         open_mode = MODE_NEWFILE;
-    } else if (Strnicmp(path_name, "NIL:", 4) != SAME && (
-            FLAG_IS_SET(open_flag, O_CREAT) ||
-            FLAG_IS_SET(open_flag, O_WRONLY) ||
-            FLAG_IS_SET(open_flag, O_RDWR)
-    )) {
+    }
+	else if (Strnicmp(path_name, "NIL:", 4) != SAME && (FLAG_IS_SET(open_flag, O_CREAT))) {
         if (FLAG_IS_SET(open_flag, O_EXCL)) {
             LONG error;
 
@@ -150,10 +147,8 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
                 goto out;
             }
 
-            SHOWMSG("the object does not already exist");
+			SHOWMSG("the object does not already exist");
         }
-
-        open_mode = MODE_READWRITE;
 
         if (FLAG_IS_SET(open_flag, O_TRUNC)) {
             SHOWMSG("checking if the file to create already exists");
@@ -185,8 +180,6 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
                     goto out;
                 }
 
-                open_mode = MODE_NEWFILE;
-
                 UnLock(lock);
                 lock = BZERO;
             } else {
@@ -201,13 +194,12 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
                     goto out;
                 } else if (error != ERROR_OBJECT_NOT_FOUND && error != ERROR_ACTION_NOT_KNOWN) {
                     SHOWMSG("error accessing the object");
-
                     __set_errno(__translate_io_error_to_errno(IoErr()));
                     goto out;
                 }
             }
         }
-
+		open_mode = MODE_NEWFILE;
         create_new_file = TRUE;
     }
     else {
