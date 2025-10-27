@@ -176,24 +176,30 @@ FILE_CONSTRUCTOR(stdio_file_init) {
             case STDIN_FILENO:
 
                 iob_flags = IOBF_IN_USE | IOBF_READ | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-                fd_flags = FDF_IN_USE | FDF_READ | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
+                fd_flags = FDF_IN_USE | FDF_READ | FDF_NO_CLOSE | FDF_STDIO;
                 default_file = Input();
                 break;
 
             case STDOUT_FILENO:
 
                 iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
+                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_STDIO;
                 default_file = Output();
                 break;
 
             case STDERR_FILENO:
 
                 iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_NONE;
-                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
+                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_STDIO;
                 default_file = ErrorOutput();
                 break;
         }
+
+		if (default_file != BZERO) {
+			if (IsInteractive(default_file)) {
+				SET_FLAG(fd_flags, FDF_IS_INTERACTIVE);
+			}
+		}
 
         /* Allocate a little more memory than necessary and align the buffer to a cache line boundary. */
         buffer = malloc(BUFSIZ + (__clib4->__cache_line_size - 1));
