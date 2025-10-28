@@ -227,11 +227,17 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         // did we timeout?
         if (sigs & (1 << timermp.mp_SigBit))
             return ETIMEDOUT;
-        else if (sigs & SIGBREAKF_CTRL_C)
+        else if (sigs & SIGBREAKF_CTRL_C) {
             pthread_testcancel();
+            // Re-Enable CTRL-C in case a signal handler is installed
+            Signal(task, SIGBREAKF_CTRL_C);
+        }
     } else {
-        if (sigs & SIGBREAKF_CTRL_C)
+        if (sigs & SIGBREAKF_CTRL_C) {
             pthread_testcancel();
+            // Re-Enable CTRL-C in case a signal handler is installed
+            Signal(task, SIGBREAKF_CTRL_C);
+        }
     }
 
     return 0;
