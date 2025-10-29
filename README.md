@@ -227,9 +227,26 @@ constructors/destructors executions
 - ~~There are some memory leaks at clib4 end needs to be tracked down~~
 - Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be
   faster when there are multiple cores.
-- Add a test suite
+- ~~Add a test suite~~
 - Try to use some functions/headers from https://github.com/attractivechaos/klib to improve speed
 - Use a good locale implementation
+
+### Test Suite
+
+A comprehensive test suite for clib4 is available in the `tests/` directory with 318 tests covering:
+- String functions (78 tests)
+- Standard library functions (55 tests)
+- Standard I/O functions (54 tests)
+- Math functions (91 tests)
+- Time functions (40 tests)
+
+To build and run the tests:
+```bash
+cd tests
+make run
+```
+
+For more information, see [tests/README.md](tests/README.md).
 
 ### Libraries repository
 
