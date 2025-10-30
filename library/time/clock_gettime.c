@@ -70,10 +70,6 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
     t->tv_sec = tv.tv_sec;
     t->tv_nsec = tv.tv_usec * 1000;
 
-    /* Check if we are in DST */
-    if (dstime == TFLG_ISDST)
-        t->tv_sec += (60 * 60);
-
     RETURN(0);
     return 0;
 }

@@ -44,7 +44,7 @@ localtime_r(const time_t *t, struct tm *tm_ptr) {
 
     SHOWVALUE(gmt_offset);
 
-    result = __convert_time((*t), gmt_offset, tm_ptr);
+    result = __convert_time(__clib4, (*t), gmt_offset, tm_ptr);
 
 out:
 

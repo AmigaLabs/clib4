@@ -13,17 +13,18 @@
 struct tm *
 gmtime_r(const time_t *t, struct tm *tm_ptr) {
     struct tm *result = NULL;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     assert(t != NULL && tm_ptr != NULL);
 
     if (t == NULL || tm_ptr == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
-    result = __convert_time((*t), 0, tm_ptr);
+    result = __convert_time(__clib4, (*t), 0, tm_ptr);
 
 out:
 
