@@ -5,9 +5,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/wait.h>
-#include <unistd.h>
 
 /* ANSI color codes */
 #define COLOR_RED     "\033[0;31m"
@@ -34,54 +31,32 @@ static TestModule test_modules[] = {
 
 /* Run a single test module */
 static int run_test_module(const TestModule *module) {
-    pid_t pid;
     int status;
-    
+
     printf(COLOR_BLUE "\n========================================\n");
     printf("Running: %s\n", module->name);
     printf("========================================\n" COLOR_RESET);
     
-    pid = fork();
+    status = system(module->executable);
     
-    if (pid < 0) {
-        printf(COLOR_RED "Failed to fork for test: %s\n" COLOR_RESET, module->name);
+    if (status < 0) {
+        printf(COLOR_RED "Failed to start test: %s\n" COLOR_RESET, module->name);
         return -1;
     }
     
-    if (pid == 0) {
-        /* Child process - execute test */
-        execl(module->executable, module->executable, NULL);
-        /* If exec fails */
-        printf(COLOR_RED "Failed to execute: %s\n" COLOR_RESET, module->executable);
-        exit(127);
+    if (status == 0) {
+	printf(COLOR_GREEN "\n✓ %s: PASSED\n" COLOR_RESET, module->name);
+	return 0;
     } else {
-        /* Parent process - wait for test to complete */
-        waitpid(pid, &status, 0);
-        
-        if (WIFEXITED(status)) {
-            int exit_code = WEXITSTATUS(status);
-            if (exit_code == 0) {
-                printf(COLOR_GREEN "\n✓ %s: PASSED\n" COLOR_RESET, module->name);
-                return 0;
-            } else if (exit_code == 127) {
-                printf(COLOR_RED "\n✗ %s: NOT FOUND\n" COLOR_RESET, module->name);
-                return -1;
-            } else {
-                printf(COLOR_RED "\n✗ %s: FAILED (exit code: %d)\n" COLOR_RESET, 
-                       module->name, exit_code);
-                return exit_code;
-            }
-        } else if (WIFSIGNALED(status)) {
-            printf(COLOR_RED "\n✗ %s: CRASHED (signal: %d)\n" COLOR_RESET, 
-                   module->name, WTERMSIG(status));
-            return -1;
-        }
+	printf(COLOR_RED "\n✗ %s: FAILED (exit code: %d)\n" COLOR_RESET,
+	       module->name, status);
+	return status;
     }
     
     return -1;
 }
 
-int main(int argc, char *argv[]) {
+int main() {
     int total_modules = 0;
     int passed_modules = 0;
     int failed_modules = 0;
