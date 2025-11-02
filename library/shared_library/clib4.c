@@ -6,6 +6,7 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/elf.h>
+#include <proto/expansion.h>
 #include <proto/locale.h>
 #include <proto/timer.h>
 #include <proto/timezone.h>
@@ -331,6 +332,20 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
     DECLARE_UTILITYBASE();
 
+	struct Library *ExpansionBase = IExec->OpenLibrary("expansion.library", 53L);
+	if (ExpansionBase == NULL) {
+		SHOWMSG("Cannot open expansopn library!");
+		return NULL;
+	}
+
+	struct ExpansionIFace *IExpansion = (struct ExpansionIFace *) (IExec->GetInterface((struct Library *) ExpansionBase, "main", 1, NULL));
+	if (!IExpansion) {
+		SHOWMSG("Cannot obtain expansion interface!");
+		IExec->CloseLibrary(ExpansionBase);
+		ExpansionBase = NULL;
+		return NULL;
+	}
+
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     uint32 pid;
     if (res) {
@@ -425,6 +440,9 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             __clib4->self = me;
             __clib4->uuid = c2n.uuid;
 
+			/* Get Actual Machine Type */
+			IExpansion->GetMachineInfoTags(GMIT_Machine, &__clib4->__machine_type, TAG_DONE);
+			D(bug("Using clib4 on machine type %ld", __clib4->__machine_type));
             /* Set _clib4 pointer into process pr_UID
              * This field is copied to any spawned process created by this exe and/or its children
              */
@@ -493,6 +511,16 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             SHOWMSG("Library initialized");
         }
     }
+	if (IExpansion != NULL) {
+  		IExec->DropInterface((struct Interface *) IExpansion);
+  		IExpansion = NULL;
+  	}
+
+	if (ExpansionBase != NULL) {
+		IExec->CloseLibrary(ExpansionBase);
+		ExpansionBase = NULL;
+	}
+
     return libBase;
 }
 

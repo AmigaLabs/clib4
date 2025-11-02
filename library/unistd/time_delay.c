@@ -30,8 +30,6 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 
     DECLARE_TIMEZONEBASE_R(__clib4);
 
-    SHOWMSG("Obtaining __timer_semaphore");
-    ObtainSemaphore(__clib4->__timer_semaphore);
     messagePort = AllocSysObjectTags(ASOT_PORT,
                                      ASOPORT_AllocSig, FALSE,
                                      ASOPORT_Signal,   SIGB_SINGLE,
@@ -86,8 +84,6 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 
     FreeSysObject(ASOT_IOREQUEST, timeRequest);
     FreeSysObject(ASOT_PORT, messagePort);
-
-    ReleaseSemaphore(__clib4->__timer_semaphore);
 
     RETURN(result);
     return result;

@@ -306,7 +306,7 @@ struct _clib4 {
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
     BOOL unused1;
-	struct SignalSemaphore *__timer_semaphore;
+	void *unused2;
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;
     struct TimerIFace *__ITimer;
@@ -532,6 +532,8 @@ struct _clib4 {
     int isTZSet;
 
     struct DebugIFace *__IDebug;
+
+	unsigned int __machine_type;
 };
 
 #ifndef __getClib4
