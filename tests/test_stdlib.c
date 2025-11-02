@@ -279,8 +279,13 @@ static const char *test_system(void) {
     result = system(NULL);
     if (result != 0) {
         /* system() is available, test a simple command */
+#ifdef __AMIGA__
+        result = system("endcli");
+        TEST_ASSERT_EQUAL("system('endcli') returns 0", 0, result);
+#else
         result = system("exit 0");
         TEST_ASSERT_EQUAL("system('exit 0') returns 0", 0, result);
+#endif
     } else {
         /* system() not available, skip test */
         printf("    (system() not available, skipping)\n");
