@@ -74,8 +74,12 @@ static const char *test_sscanf(void) {
 static const char *test_file_operations(void) {
     FILE *fp;
     char buffer[100];
+#ifdef __AMIGA__
+    const char *test_file = "T:test_clib4.txt";
+#else
     const char *test_file = "/tmp/test_clib4.txt";
-    
+#endif
+
     /* Test fopen for writing */
     fp = fopen(test_file, "w");
     TEST_ASSERT_NOT_NULL("fopen for writing", fp);
@@ -122,8 +126,12 @@ static const char *test_fread_fwrite(void) {
     char write_buffer[] = "binary data test";
     char read_buffer[50];
     size_t result;
+#ifdef __AMIGA__
+    const char *test_file = "T:test_clib4_bin.txt";
+#else
     const char *test_file = "/tmp/test_clib4_bin.txt";
-    
+#endif
+
     /* Write binary data */
     fp = fopen(test_file, "wb");
     TEST_ASSERT_NOT_NULL("fopen wb", fp);
@@ -150,7 +158,11 @@ static const char *test_fread_fwrite(void) {
 /* Test fseek/ftell */
 static const char *test_fseek_ftell(void) {
     FILE *fp;
+#ifdef __AMIGA__
+    const char *test_file = "T:test_clib4_seek.txt";
+#else
     const char *test_file = "/tmp/test_clib4_seek.txt";
+#endif
     long pos;
     char c;
     
@@ -191,7 +203,11 @@ static const char *test_fseek_ftell(void) {
 /* Test putc/getc */
 static const char *test_putc_getc(void) {
     FILE *fp;
+#ifdef __AMIGA__
+    const char *test_file = "T:test_clib4_putc.txt";
+#else
     const char *test_file = "/tmp/test_clib4_putc.txt";
+#endif
     int c;
     
     /* Write using putc */
@@ -228,7 +244,11 @@ static const char *test_putc_getc(void) {
 /* Test ungetc */
 static const char *test_ungetc(void) {
     FILE *fp;
+#ifdef __AMIGA__
+    const char *test_file = "T:test_clib4_ungetc.txt";
+#else
     const char *test_file = "/tmp/test_clib4_ungetc.txt";
+#endif
     int c;
     
     /* Create test file */
@@ -264,7 +284,11 @@ static const char *test_ungetc(void) {
 /* Test fflush */
 static const char *test_fflush(void) {
     FILE *fp;
+#ifdef __AMIGA__
+    const char *test_file = "T:test_clib4_flush.txt";
+#else
     const char *test_file = "/tmp/test_clib4_flush.txt";
+#endif
     
     fp = fopen(test_file, "w");
     TEST_ASSERT_NOT_NULL("fopen for fflush", fp);
@@ -281,7 +305,11 @@ static const char *test_fflush(void) {
 /* Test remove */
 static const char *test_remove(void) {
     FILE *fp;
+#ifdef __AMIGA__
+    const char *test_file = "T:test_clib4_remove.txt";
+#else
     const char *test_file = "/tmp/test_clib4_remove.txt";
+#endif
     
     /* Create a file */
     fp = fopen(test_file, "w");
@@ -301,8 +329,13 @@ static const char *test_remove(void) {
 /* Test rename */
 static const char *test_rename(void) {
     FILE *fp;
+#ifdef __AMIGA__
+    const char *old_file = "T:test_clib4_old.txt";
+    const char *new_file = "T:test_clib4_new.txt";
+#else
     const char *old_file = "/tmp/test_clib4_old.txt";
     const char *new_file = "/tmp/test_clib4_new.txt";
+#endif
     
     /* Create a file */
     fp = fopen(old_file, "w");
