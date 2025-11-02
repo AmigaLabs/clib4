@@ -19,4 +19,13 @@ clib4/
 .idea
 .vscode
 
-Makefile
+/Makefile
+
+# Test executables
+tests/test_string
+tests/test_stdlib
+tests/test_stdio
+tests/test_math
+tests/test_time
+tests/test_runner
+tests/test_strdup_simple
