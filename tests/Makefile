@@ -6,8 +6,8 @@
 # a cross-platform test suite that can validate C library implementations
 
 # Compiler and flags
-CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -D_GNU_SOURCE
+CC = ppc-amigaos-gcc
+CFLAGS = -Wall -Wextra -std=c99 -D_GNU_SOURCE -mcrt=clib4
 LDFLAGS = -lm
 
 # Test programs
