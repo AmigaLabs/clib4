@@ -56,6 +56,9 @@ StarterFunc() {
 
     struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_EntryData; // GetEntryData();
 
+    // we have to set the priority here to avoid race conditions
+    SetTaskPri((struct Task *) inf->task, inf->attr.param.sched_priority);
+
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
         // Check if we have a guardsize
@@ -75,8 +78,6 @@ StarterFunc() {
         inf->status = THREAD_STATE_RUNNING;
         inf->ret = inf->start(inf->arg);
     }
-
-    pthread_cleanup_pop(1);
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations

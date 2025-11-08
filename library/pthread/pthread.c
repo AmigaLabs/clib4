@@ -89,6 +89,16 @@ _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOO
     return 0;
 }
 
+static void timespec_sub(struct timespec *ts1, const struct timespec *ts2, const struct timespec *ts3) {
+    ts1->tv_sec = ts2->tv_sec - ts3->tv_sec;
+    if (ts2->tv_nsec < ts3->tv_nsec) {
+        ts1->tv_sec--;
+        ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec + 1000000000; // Add 1 billion ns (1s)
+    } else {
+        ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec;
+    }
+}
+
 int
 _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *abstime, int shared) {
     struct MsgPort msgport;
@@ -154,16 +164,23 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     struct MsgPort timermp;
     struct TimeRequest timerio;
     struct Task *task;
+    clock_t clock_type = CLOCK_MONOTONIC;
+    if (cond->condattr != NULL)
+        clock_type = cond->condattr->clock_type;
 
     if (cond == NULL || mutex == NULL)
         return EINVAL;
+
+    /* Check for supported clock type */
+    if ((clock_type & ~(CLOCK_MONOTONIC | CLOCK_REALTIME | CLOCK_MONOTONIC_RAW)) != 0) {
+        return EINVAL;
+    }
 
     // initialize static conditions
     if (SemaphoreIsInvalid(cond->semaphore))
         pthread_cond_init(cond, NULL);
 
     task = FindTask(NULL);
-
     if (abstime) {
         // open timer.device
         if (!OpenTimerDevice((struct IORequest *) &timerio, &timermp, task)) {
@@ -174,19 +191,20 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         // prepare the device command and send it
         timerio.Request.io_Command = TR_ADDREQUEST;
         timerio.Request.io_Flags = 0;
-        TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, abstime);
         if (!relative) {
-            struct TimeVal starttime;
+            struct timespec starttime;
+			struct timespec endtime;
             // absolute time has to be converted to relative
-            // GetSysTime can't be used due to the timezone offset in abstime
-            gettimeofday((struct timeval *)&starttime, NULL);
-            timersub(&timerio.Time, &starttime, &timerio.Time);
+			clock_gettime(clock_type, &starttime);
+            timespec_sub(&endtime, abstime, &starttime);
+			TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, &endtime);
             if (!timerisset(&timerio.Time)) {
                 CloseTimerDevice((struct IORequest *) &timerio);
                 return ETIMEDOUT;
             }
         }
         sigs |= (1 << timermp.mp_SigBit);
+        SetSignal(0, sigs);
         SendIO((struct IORequest *) &timerio);
     }
 
