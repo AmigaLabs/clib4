@@ -37,6 +37,8 @@
 #include "common.h"
 #include "pthread.h"
 
+register ThreadInfo * __tls_reg asm(TLS_REGISTER);
+
 //
 // Helper functions
 //
@@ -62,10 +64,16 @@ ThreadInfo *GetThreadInfo(pthread_t thread) {
     return NULL;
 }
 
+void set_tls_register(ThreadInfo *ti) {
+    __tls_reg = ti;
+}
+
+ThreadInfo *get_tls_register(void) {
+    return __tls_reg;
+}
+
 ThreadInfo *GetCurrentThreadInfo() {
-  ThreadInfo *ti;
-  __asm__("mr %0, r2" : "=r"(ti));
-  return ti;
+    return __tls_reg;
 }
 
 pthread_t GetThreadId(struct Task *task) {

@@ -39,15 +39,15 @@
 
 extern struct DOSIFace *_IDOS;
 
-static void set_tls_register(ThreadInfo *ti) {
-  __asm__ volatile("mr r2, %0" :: "r"(ti));
-}
+static ThreadInfo *old_tls = NULL;
 
 static uint32
 StarterFunc() {
     volatile int keyFound = TRUE;
     struct StackSwapStruct stack;
     volatile BOOL stackSwapped = FALSE;
+
+    old_tls = get_tls_register();
 
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
@@ -109,6 +109,9 @@ StarterFunc() {
         _pthread_clear_threadinfo(inf);
         MutexRelease(thread_sem);
     }
+
+    // Restore old tls value
+    __asm__ volatile("mr "TLS_REGISTER", %0" :: "r"(old_tls));
 
     return RETURN_OK;
 }

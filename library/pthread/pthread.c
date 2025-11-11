@@ -286,10 +286,8 @@ _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
 //
 // Constructors, destructors
 //
-
-static void set_tls_register(ThreadInfo *ti) {
-  __asm__ volatile("mr r2, %0" :: "r"(ti));
-}
+// Store the previous value (before pthread runtime takes over)
+static ThreadInfo *old_tls = NULL;
 
 int __pthread_init_func(void) {
     pthread_t i;
@@ -298,6 +296,8 @@ int __pthread_init_func(void) {
     memset(&threads, 0, sizeof(threads));
     thread_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
     tls_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+
+    old_tls = get_tls_register();
 
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
@@ -369,6 +369,8 @@ void __pthread_exit_func(void) {
                 pthread_join(i, NULL);
         }
     }
+    // Restore old tls value
+    set_tls_register(old_tls);
 }
 
 
