@@ -167,19 +167,21 @@ typedef struct pthread_mutex pthread_mutex_t;
 
 struct pthread_condattr {
     int pshared;
+    clockid_t clock_type;
 };
 
 typedef struct pthread_condattr pthread_condattr_t;
 
 struct pthread_cond {
     int pad1;
-    void* semaphore; // SignalSemaphore
-    void* waiters;	// MinList
+    void* semaphore;                // SignalSemaphore
+    void* waiters;	                // MinList
+    pthread_condattr_t *condattr;   // cond_attr used to store for example clock type
 };
 
 typedef struct pthread_cond pthread_cond_t;
 
-#define PTHREAD_COND_INITIALIZER {0, 0, 0}
+#define PTHREAD_COND_INITIALIZER {0, 0, 0, 0}
 
 //
 // Barriers
@@ -323,6 +325,8 @@ extern int pthread_condattr_init(pthread_condattr_t *attr);
 extern int pthread_condattr_destroy(pthread_condattr_t *attr);
 extern int pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared);
 extern int pthread_condattr_setpshared(pthread_condattr_t *attr, int pshared);
+extern int pthread_condattr_setclock(pthread_condattr_t *attrp, clockid_t clk);
+extern int pthread_condattr_getclock(const pthread_condattr_t *attrp, clockid_t *outp);
 
 //
 // Condition variable functions
@@ -332,6 +336,7 @@ extern int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *att
 extern int pthread_cond_destroy(pthread_cond_t *cond);
 extern int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
 extern int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *abstime);
+extern int pthread_cond_clockwait(pthread_cond_t *cond, pthread_mutex_t *mutex, clockid_t clock_id, const struct timespec *abstime);
 extern int pthread_cond_signal(pthread_cond_t *cond);
 extern int pthread_cond_broadcast(pthread_cond_t *cond);
 

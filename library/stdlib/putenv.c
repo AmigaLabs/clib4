@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_putenv.c,v 1.7 2006-01-08 12:04:26 clib4devs Exp $
+ * $Id: stdlib_putenv.c,v 1.8 2025-11-02 12:04:26 clib4devs Exp $
 */
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
@@ -8,6 +8,8 @@
 int
 putenv(const char *string) {
     int result = ERROR;
+    register char *p, *equal;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -20,11 +22,25 @@ putenv(const char *string) {
     if (string == NULL) {
         SHOWMSG("invalid string");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
-    result = setenv(string, "", 1);
+    p = strdup(string);
+    if (!p) {
+        __set_errno_r(__clib4, ENOMEM);
+        goto out;
+    }
+
+    if (!(equal = index(p, '='))) {
+        __set_errno_r(__clib4, EINVAL);
+        free(p);
+        goto out;
+    }
+
+    *equal = '\0';
+    result = setenv(p, equal + 1, 1);
+    __free_r(__clib4, p);
 
 out:
 

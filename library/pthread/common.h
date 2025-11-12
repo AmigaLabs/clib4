@@ -6,6 +6,8 @@
 #include "pthread.h"
 #include <sys/time.h>
 
+#define TLS_REGISTER "r2"
+
 #undef NEWLIST
 #define NEWLIST(_l)                                     \
 do                                                      \
@@ -122,5 +124,8 @@ int _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const 
 int _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst);
 
 extern int _pthread_concur;
+
+void set_tls_register(ThreadInfo *ti);
+ThreadInfo *get_tls_register(void);
 
 #endif

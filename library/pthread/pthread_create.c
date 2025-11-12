@@ -39,9 +39,7 @@
 
 extern struct DOSIFace *_IDOS;
 
-static void set_tls_register(ThreadInfo *ti) {
-  __asm__ volatile("mr r2, %0" :: "r"(ti));
-}
+static ThreadInfo *old_tls = NULL;
 
 static uint32
 StarterFunc() {
@@ -49,12 +47,17 @@ StarterFunc() {
     struct StackSwapStruct stack;
     volatile BOOL stackSwapped = FALSE;
 
+    old_tls = get_tls_register();
+
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
 
     set_tls_register(inf);
 
     struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_EntryData; // GetEntryData();
+
+    // we have to set the priority here to avoid race conditions
+    SetTaskPri((struct Task *) inf->task, inf->attr.param.sched_priority);
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
@@ -75,8 +78,6 @@ StarterFunc() {
         inf->status = THREAD_STATE_RUNNING;
         inf->ret = inf->start(inf->arg);
     }
-
-    pthread_cleanup_pop(1);
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
@@ -108,6 +109,9 @@ StarterFunc() {
         _pthread_clear_threadinfo(inf);
         MutexRelease(thread_sem);
     }
+
+    // Restore old tls value
+    __asm__ volatile("mr "TLS_REGISTER", %0" :: "r"(old_tls));
 
     return RETURN_OK;
 }
