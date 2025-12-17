@@ -173,6 +173,9 @@ spawnvpe(
     struct _clib4 *__clib4 = __CLIB4;
     struct Task *me = (struct Task *) __clib4->self;
     BPTR seglist;
+    char **saved_env = NULL;
+    int env_count = 0;
+    BOOL env_modified = FALSE;
 
     __set_errno(0);
 
@@ -292,6 +295,51 @@ spawnvpe(
 
     struct Task *_me = FindTask(0);
 
+       /* If deltaenv is provided, temporarily set environment variables
+        * so that NP_CopyVars (default TRUE) will copy them to the child process */
+       if (deltaenv != NULL) {
+               D(("Setting environment variables from deltaenv\n"));
+
+               /* Count environment variables */
+               while (deltaenv[env_count] != NULL) {
+                       env_count++;
+                   }
+
+               if (env_count > 0) {
+                       /* Allocate space to save old environment values */
+                       saved_env = (char **)malloc(env_count * sizeof(char *));
+                       if (saved_env != NULL) {
+                               /* Set each environment variable, saving old values */
+                               for (int i = 0; i < env_count; i++) {
+                                       saved_env[i] = NULL;
+
+                                       char *env_copy = strdup(deltaenv[i]);
+                                       if (env_copy) {
+                                               char *eq = strchr(env_copy, '=');
+                                               if (eq) {
+                                                       *eq = '\0';
+                                                       char *name = env_copy;
+                                                       char *value = eq + 1;
+
+                                                       /* Save old value if it exists */
+                                                       char *old_value = getenv(name);
+                                                       if (old_value) {
+                                                               saved_env[i] = strdup(old_value);
+                                                           }
+
+                                                       D(("Setting env: %s=%s\n", name, value));
+                                                   Printf("Env: %s=%s\n", name, value);
+                                                       SetVar(name, value, -1, GVF_LOCAL_ONLY);
+                                                       env_modified = TRUE;
+                                                   }
+                                               free(env_copy);
+                                           }
+                                   }
+                           }
+                   }
+           }
+
+
 #if USE_CNPT
     D(("(*)Calling CreateNewProcTags.\n"));
 
@@ -364,7 +412,7 @@ spawnvpe(
                     NP_EntryCode,   spawnedProcessEnter,
                     NP_EntryData,   getgid(),
                     NP_ExitCode,    spawnedProcessExit,
-
+                    NP_CopyVars,    TRUE,
                     TAG_DONE);
 #endif
 
@@ -397,6 +445,34 @@ spawnvpe(
 #endif
         ret = pid;
     }
+
+       /* Restore environment variables if we modified them */
+   if (env_modified && saved_env != NULL) {
+           D(("Restoring environment variables\n"));
+
+           for (int i = 0; i < env_count; i++) {
+                   if (deltaenv[i] != NULL) {
+                           char *env_copy = strdup(deltaenv[i]);
+                           if (env_copy) {
+                                   char *eq = strchr(env_copy, '=');
+                                   if (eq) {
+                                           *eq = '\0';
+                                           char *name = env_copy;
+
+                                           if (saved_env[i] != NULL) {
+                                                   DeleteVar(name, GVF_LOCAL_ONLY);
+                                                   free(saved_env[i]);
+                                               } else {
+                                                   DeleteVar(name, GVF_LOCAL_ONLY);
+                                                   }
+                                       }
+                                   free(env_copy);
+                               }
+                       }
+               }
+           free(saved_env);
+       }
+
 
     free(full_command);
 
