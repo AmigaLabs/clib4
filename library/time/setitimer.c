@@ -31,6 +31,7 @@ void killitimer(void) {
         pid = __clib4->tmr_real_task->pr_ProcessID;
         /* Scan for process */
         process = ProcessScan(&h, (CONST_APTR) pid, 0);
+        Printf("Scan for process %ld (%ld)..\n", process, pid);
         while (process > 0) {
             Printf("Waiting for process %ld to close..\n", pid);
             /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
@@ -38,8 +39,9 @@ void killitimer(void) {
             process = ProcessScan(&h, (CONST_APTR) pid, 0);
             Delay(10);
         }
-        Printf("Process closed..\n");
+        Printf("Process closed.. Wait For Child\n");
         WaitForChildExit(pid);
+        Printf("Done\n");
         __clib4->tmr_real_task = NULL;
     }
 };
@@ -75,24 +77,18 @@ __setitimer(int which, const struct itimerval *new_value, struct itimerval *old_
                 Signal((struct Task *)__clib4->tmr_real_task, SIGBREAKF_CTRL_D);
             }
             else if (__clib4->tmr_real_task == NULL) {
-                struct itimer *_itimer = malloc(sizeof(struct itimer));
-                _itimer->which = which;
                 /* Create timer tasks */
                 if (new_value->it_value.tv_sec != 0 || new_value->it_value.tv_usec != 0) {
                     __clib4->tmr_real_task = CreateNewProcTags(
-                            NP_Name, "ITIMER_TASK",
-                            NP_Start, itimer_real_task,
-                            NP_Child, TRUE,
-                            NP_UserData, (struct _itimer *) _itimer,
-                            NP_Output, DupFileHandle(Output()),
+                            NP_Name,        "ITIMER_TASK",
+                            NP_Start,       itimer_real_task,
+                            NP_Child,       TRUE,
+                            NP_UserData,    (int) which,
+                            NP_Output,      DupFileHandle(Output()),
                             NP_CloseOutput, TRUE,
                             TAG_END);
                     if (!__clib4->tmr_real_task) {
                         __set_errno_r(__clib4, EFAULT);
-                        if (_itimer != NULL) {
-                            free(_itimer);
-                            _itimer = NULL;
-                        }
                         return -1;
                     }
                 }

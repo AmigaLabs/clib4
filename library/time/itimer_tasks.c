@@ -34,7 +34,7 @@ int itimer_real_task() {
     DECLARE_TIMEZONEBASE();
 
     struct Process *thisTask = (struct Process *) FindTask(NULL);
-    struct itimer *_itimer = (struct itimer *) thisTask->pr_Task.tc_UserData;
+    int which = (int) thisTask->pr_Task.tc_UserData;
 
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -133,7 +133,7 @@ int itimer_real_task() {
             /* Check again if SIGALRM is blocked and then kill the timer. kill the timer also
              * if timer was created via alarm()
              */
-            if (_itimer->which == -1 || FLAG_IS_SET(__clib4->__signals_blocked, sigmask(SIGALRM))) {
+            if (which == -1 || FLAG_IS_SET(__clib4->__signals_blocked, sigmask(SIGALRM))) {
                 break;
             }
         }
@@ -142,10 +142,7 @@ int itimer_real_task() {
     status = RETURN_OK;
 
 out:
-    if (_itimer != NULL) {
-        free(_itimer);
-        _itimer = NULL;
-    }
+
     /* Free itimer objects */
     if (tmr_real_mp) {
         SHOWMSG("FreeSysObject ASOT_PORT");

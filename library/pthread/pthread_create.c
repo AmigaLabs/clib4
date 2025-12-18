@@ -95,6 +95,14 @@ StarterFunc() {
     }
     MutexRelease(tls_sem);
 
+    /*  If we have a previous timer running task stop it before raise SIGINT  */
+    if (__clib4->tmr_real_task) {
+        /* Block SIGALRM signal from raise */
+        sigblock(SIGALRM);
+        /* Kill itimer */
+        killitimer();
+    }
+
     if (stackSwapped)
         StackSwap(&stack);
 
