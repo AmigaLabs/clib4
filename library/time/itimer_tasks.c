@@ -48,8 +48,7 @@ int itimer_real_task() {
     /* Create itimer timers and message ports */
     tmr_real_mp = AllocSysObjectTags(ASOT_PORT,
                                      ASOPORT_Action, PA_SIGNAL,
-                                     ASOPORT_AllocSig, FALSE,
-                                     ASOPORT_Signal, SIGB_SINGLE,
+                                     ASOPORT_AllocSig, TRUE,
                                      ASOPORT_Target, FindTask(NULL),
                                      TAG_DONE);
     if (!tmr_real_mp) {
@@ -143,6 +142,10 @@ int itimer_real_task() {
     status = RETURN_OK;
 
 out:
+    if (_itimer != NULL) {
+        free(_itimer);
+        _itimer = NULL;
+    }
     /* Free itimer objects */
     if (tmr_real_mp) {
         SHOWMSG("FreeSysObject ASOT_PORT");

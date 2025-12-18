@@ -26,9 +26,9 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     struct MsgPort *messagePort;
     struct TimeRequest *timeRequest;
 
-    __check_abort_f(__clib4);
-
     DECLARE_TIMEZONEBASE_R(__clib4);
+
+    __check_abort_f(__clib4);
 
     messagePort = AllocSysObjectTags(ASOT_PORT,
                                      ASOPORT_AllocSig, FALSE,
@@ -55,6 +55,8 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 	SendIO((struct IORequest *) timeRequest);
 
     wait_mask = SIGBREAKF_CTRL_E | SIGBREAKF_CTRL_C | ( 1L << messagePort->mp_SigBit );
+    SetSignal(0, wait_mask);
+
     /* Wait for signals */
     SHOWMSG("Waiting for signal");
     uint32 signals = Wait(wait_mask);
@@ -65,6 +67,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
         if (signals & SIGBREAKF_CTRL_E) {
             SHOWMSG("Received SIGBREAKF_CTRL_E");
             /* Return EINTR since the request has been interrupted by alarm */
+            __set_errno_r(__clib4, EINTR);
             result = EINTR;
         } else {
             SHOWMSG("Received SIGBREAKF_CTRL_C. Reset it to set state");
@@ -84,6 +87,8 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 
     FreeSysObject(ASOT_IOREQUEST, timeRequest);
     FreeSysObject(ASOT_PORT, messagePort);
+
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return result;

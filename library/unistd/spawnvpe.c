@@ -117,36 +117,7 @@ get_arg_string_length(char *const argv[]) {
 
     return (result);
 }
-/* * * * *
-    Apparently this doesn't work. You cannot delay a child by using signals in the EntryCode,
-    because - as it seems - SystemTags only returns AFTER executing EntryCode. Which, of course,
-    means, that the parent is never allowed to send the signal. 
- * * * * */
-// struct EntryData {
-//     uint8 childSignal;
-//     uint8 parentSignal;
-//     struct Task *parent, *child;
-// };
-// void amiga_entryCode(int32 entry_data);
-// void
-// amiga_entryCode(int32 entry_data) {
-//     struct EntryData *ed = (struct EntryData *)entry_data;
-//     ed->childSignal = AllocSignal(-1);
-//     ed->child = FindTask(0);
-//     DebugPrintF("[child :] Signalling parent...\n");
-//     Signal(ed->parent, 1 << ed->parentSignal);
-//     DebugPrintF("[child :] Waiting for signal from parent...\n");
-//     Wait(1 << ed->childSignal);
-//     DebugPrintF("[child :] Done.");
-//     FreeSignal(ed->childSignal);
-// }
-/* * * * *
-    Note for future generations : CreateNewProc is not suited for running shell commands.
-    The only way to have a full shell environment (apart from using internal packet structures),
-    is to use System. We keep the code here a display for the event, that someone should like
-    to investigate further into the mysteries of AmigaDOS. Until then, the following #define is set to 0.
- * * * * */
-#define USE_CNPT 0
+
 int
 spawnvpe(
     const char *file,
@@ -163,7 +134,6 @@ spawnvpe(
     struct name_translation_info nti_cwd;
     const char *cwd = _cwd;
     BPTR iofh[3] = {BZERO, BZERO, BZERO};
-    int closefh[3] = {FALSE, FALSE, FALSE};
     BPTR fh;
     int err;
     BPTR progdirLock = 0;
@@ -189,18 +159,6 @@ spawnvpe(
     }
 
     D(("name after conversion: [%s]\n", name));
-
-#if USE_CNPT
-    seglist = LoadSeg(name);
-	if (!seglist)
-		return -1;
-
-    BPTR fileLock = Lock(name, SHARED_LOCK);
-    if (fileLock) {
-        progdirLock = ParentDir(fileLock);
-        UnLock(fileLock);
-    }
-#endif
 
     if(cwd) {
         error = __translate_unix_to_amiga_path_name(&cwd, &nti_cwd);
@@ -245,49 +203,41 @@ spawnvpe(
 
     D(("Command to execute: [%s]\n", full_command));
 
-    if (fhin >= 0) {
+    if (fhin > 2) {
         err = __get_default_file(fhin, &fh);
         if (err) {
             __set_errno(EBADF);
             return ret;
         }
         iofh[0] = DupFileHandle(fh); // This will be closed by ST/CNPT
-        closefh[0] = TRUE;
     }
     else {
-        iofh[0] = Open("NIL:", MODE_OLDFILE);
-        closefh[0] = TRUE;
+        iofh[0] = DupFileHandle(Input());
     }
 
-    if (fhout >= 0) {
+    if (fhout > 2) {
         err = __get_default_file(fhout, &fh);
         if (err) {
             __set_errno(EBADF);
             return ret;
         }
         iofh[1] = DupFileHandle(fh); // This will be closed by ST/CNPT
-        closefh[1] = TRUE;
     }
     else {
-        iofh[1] = Open("NIL:", MODE_OLDFILE);
-        closefh[1] = TRUE;
+        iofh[1] = DupFileHandle(Output());
     }
 
-    if (fherr >= 0) {
+    if (fherr > 2) {
         err = __get_default_file(fherr, &fh);
         if (err) {
             __set_errno(EBADF);
             return ret;
         }
         iofh[2] = DupFileHandle(fh); // This will be closed by ST/CNPT
-        closefh[2] = TRUE;
     }
     else {
-        iofh[2] = Open("NIL:", MODE_OLDFILE);
-        closefh[2] = TRUE;
+        iofh[2] = DupFileHandle(ErrorOutput());
     }
-
-    struct Task *_me = FindTask(0);
 
 	/* If deltaenv is provided, temporarily set environment variables
 	* so that NP_CopyVars (default TRUE) will copy them to the child process */
@@ -333,78 +283,25 @@ spawnvpe(
 	}
 
 
-#if USE_CNPT
-    D(("(*)Calling CreateNewProcTags.\n"));
-
-  struct Process *p = CreateNewProcTags(
-    NP_Seglist,		seglist,
-    NP_FreeSeglist,	TRUE,
-
-    NP_Cli,			TRUE,
-    NP_Child,		TRUE,
-    NP_NotifyOnDeathSigTask, _me,
-
-#if 1
-    NP_Input,		iofh[0],
-    NP_CloseInput,	closefh[0],
-    NP_Output,		iofh[1],
-    NP_CloseOutput,	closefh[1],
-    NP_Error,		iofh[2],
-    NP_CloseError,	closefh[2],
-#else
-    NP_Input,		IDOS->Input(),
-    NP_CloseInput,	FALSE,
-    NP_Output,		IDOS->Output(),
-    NP_CloseOutput,	FALSE,
-    NP_Error,		IDOS->ErrorOutput(),
-    NP_CloseError,	FALSE,
-#endif
-
-    NP_EntryCode,  spawnedProcessEnter,
-    NP_EntryData, getgid(),
-
-    NP_ExitCode,   spawnedProcessExit,
-
-    progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
-    cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
-    NP_Name,      process_name,
-
-    NP_Arguments, arg_string,
-
-    TAG_DONE
-  );
-  if (p) ret = 0;
-#else
     D(("(*)Calling SystemTags.\n"));
 
     ret = SystemTags(full_command,
-                    NP_NotifyOnDeathSigTask, _me,
-
+                    NP_NotifyOnDeathSigTask, me,
                     SYS_Input,          iofh[0],
                     SYS_Output,         iofh[1],
                     SYS_Error,          iofh[2],
-
-                    NP_CloseError,      closefh[2],
-
-                    SYS_UserShell, TRUE,
-                    SYS_Asynch, TRUE,
-                    NP_Child, TRUE,
-
-                    NP_StackSize,   2024*1024,
-                    
-                    // This is taken care of by the command shell :
-                    // progdirLock ? NP_ProgramDir : TAG_SKIP, progdirLock,
-
+                    NP_CloseError,      TRUE,
+                    SYS_UserShell,      TRUE,
+                    SYS_Asynch,         TRUE,
+                    NP_Child,           TRUE,
+                    NP_StackSize,       2024 * 1024,
                     cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
-
-                    NP_Name,        process_name,
-
-                    NP_EntryCode,   spawnedProcessEnter,
-                    NP_EntryData,   getgid(),
-                    NP_ExitCode,    spawnedProcessExit,
-                    NP_CopyVars,    TRUE,
+                    NP_Name,            process_name,
+                    NP_EntryCode,       spawnedProcessEnter,
+                    NP_EntryData,       getgid(),
+                    NP_ExitCode,        spawnedProcessExit,
+                    NP_CopyVars,        TRUE,
                     TAG_DONE);
-#endif
 
     if (ret != 0) {
         D(("System/CreateNewProc failed. Return value: [%ld]\n", ret));
@@ -413,8 +310,7 @@ spawnvpe(
 
         /* SystemTags failed. Clean up file handles */
         for (int i = 0; i < 3; i++) {
-            if (closefh[i])
-                Close(iofh[i]);
+            Close(iofh[i]);
         }
     }
     else {
@@ -428,11 +324,7 @@ spawnvpe(
          * IoErr() must be called IMMEDIATELY after SystemTags() == no other DOS calls inbetween
          */
 
-#if USE_CNPT
-        pid_t pid = p->pr_ProcessID;
-#else
         pid_t pid = IoErr();
-#endif
         ret = pid;
     }
 

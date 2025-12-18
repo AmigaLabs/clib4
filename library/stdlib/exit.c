@@ -24,6 +24,14 @@ _exit(int return_code) {
     ENTER();
     SHOWVALUE(__clib4->__exit_value);
 
+    /*  If we have a previous timer running task stop it before raise SIGINT  */
+    if (__clib4->tmr_real_task) {
+        /* Block SIGALRM signal from raise */
+        sigblock(SIGALRM);
+        /* Kill itimer */
+        killitimer();
+    }
+
     D(("%d %d\n", __clib4->processId, GetPID(NULL, GPID_PROCESS)));
     if (__clib4->processId != (pid_t) GetPID(NULL, GPID_PROCESS)) {
         SHOWMSG("NOT IN MAIN TASK");
@@ -36,13 +44,6 @@ _exit(int return_code) {
     }
     else {
         SHOWMSG("IN MAIN TASK");
-        /*  If we have a previous timer running task stop it before raise SIGINT  */
-        if (__clib4->tmr_real_task) {
-            /* Block SIGALRM signal from raise */
-            sigblock(SIGALRM);
-            /* Kill itimer */
-            killitimer();
-        }
 
         /* Dump all currently unwritten data, especially to the console. */
         __flush_all_files(__clib4, -1);
