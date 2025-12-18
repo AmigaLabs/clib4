@@ -90,7 +90,7 @@ StarterFunc() {
 
     set_tls_register(inf);
 
-    struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_EntryData; // GetEntryData();
+    struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_UID; // GetEntryData();
 
     // we have to set the priority here to avoid race conditions
     SetTaskPri((struct Task *) inf->task, inf->attr.param.sched_priority);
