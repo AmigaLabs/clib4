@@ -41,6 +41,42 @@ extern struct DOSIFace *_IDOS;
 
 static ThreadInfo *old_tls = NULL;
 
+static APTR
+hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
+    uint32 pid = (uint32) userdata;
+    (void) (hook);
+
+    if (process->pr_ProcessID == pid) {
+        return process;
+    }
+
+    return 0;
+}
+
+// This is duplicate of killitimer() present in clib4 but is needed since it isn't exposed into interface
+void killitimer(void) {
+    struct _clib4 *__clib4 = __CLIB4;
+    if (__clib4->tmr_real_task) {
+        struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
+        int32 pid, process;
+        pid = __clib4->tmr_real_task->pr_ProcessID;
+        /* Scan for process */
+        process = ProcessScan(&h, (CONST_APTR) pid, 0);
+        Printf("Scan for process %ld (%ld)..\n", process, pid);
+        while (process > 0) {
+            Printf("Waiting for process %ld to close..\n", pid);
+            /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
+            Signal((struct Task *) __clib4->tmr_real_task, SIGBREAKF_CTRL_F);
+            process = ProcessScan(&h, (CONST_APTR) pid, 0);
+            Delay(10);
+        }
+        Printf("Process closed.. Wait For Child\n");
+        WaitForChildExit(pid);
+        Printf("Done\n");
+        __clib4->tmr_real_task = NULL;
+    }
+};
+
 static uint32
 StarterFunc() {
     volatile int keyFound = TRUE;
