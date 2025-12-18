@@ -216,12 +216,6 @@ spawnvpe(
     BPTR cwdLock = cwd ? Lock(cwd, SHARED_LOCK) : 0; //DupLock(GetCurrentDir());
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
-    // This is probably unnecessary (and harmful to long commands):
-    //
-    // if (parameter_string_len > _POSIX_ARG_MAX) {
-    //     __set_errno(E2BIG);
-    //     return ret;
-    // }
 
     D(("parameter_string_len: [%ld]\n", parameter_string_len));
 
@@ -295,49 +289,48 @@ spawnvpe(
 
     struct Task *_me = FindTask(0);
 
-       /* If deltaenv is provided, temporarily set environment variables
-        * so that NP_CopyVars (default TRUE) will copy them to the child process */
-       if (deltaenv != NULL) {
-               D(("Setting environment variables from deltaenv\n"));
+	/* If deltaenv is provided, temporarily set environment variables
+	* so that NP_CopyVars (default TRUE) will copy them to the child process */
+	if (deltaenv != NULL) {
+		D(("Setting environment variables from deltaenv\n"));
 
-               /* Count environment variables */
-               while (deltaenv[env_count] != NULL) {
-                       env_count++;
-                   }
+		/* Count environment variables */
+		while (deltaenv[env_count] != NULL) {
+			env_count++;
+		}
 
-               if (env_count > 0) {
-                       /* Allocate space to save old environment values */
-                       saved_env = (char **)malloc(env_count * sizeof(char *));
-                       if (saved_env != NULL) {
-                               /* Set each environment variable, saving old values */
-                               for (int i = 0; i < env_count; i++) {
-                                       saved_env[i] = NULL;
+		if (env_count > 0) {
+			/* Allocate space to save old environment values */
+			saved_env = (char **) malloc(env_count * sizeof(char *));
+			if (saved_env != NULL) {
+				/* Set each environment variable, saving old values */
+				for (int i = 0; i < env_count; i++) {
+					saved_env[i] = NULL;
 
-                                       char *env_copy = strdup(deltaenv[i]);
-                                       if (env_copy) {
-                                               char *eq = strchr(env_copy, '=');
-                                               if (eq) {
-                                                       *eq = '\0';
-                                                       char *name = env_copy;
-                                                       char *value = eq + 1;
+					char *env_copy = strdup(deltaenv[i]);
+					if (env_copy) {
+						char *eq = strchr(env_copy, '=');
+						if (eq) {
+							*eq = '\0';
+							char *name = env_copy;
+							char *value = eq + 1;
 
-                                                       /* Save old value if it exists */
-                                                       char *old_value = getenv(name);
-                                                       if (old_value) {
-                                                               saved_env[i] = strdup(old_value);
-                                                           }
+							/* Save old value if it exists */
+							char *old_value = getenv(name);
+							if (old_value) {
+								saved_env[i] = strdup(old_value);
+							}
 
-                                                       D(("Setting env: %s=%s\n", name, value));
-                                                   Printf("Env: %s=%s\n", name, value);
-                                                       SetVar(name, value, -1, GVF_LOCAL_ONLY);
-                                                       env_modified = TRUE;
-                                                   }
-                                               free(env_copy);
-                                           }
-                                   }
-                           }
-                   }
-           }
+                            D(("Setting env: %s=%s\n", name, value));
+							SetVar(name, value, -1, GVF_LOCAL_ONLY);
+							env_modified = TRUE;
+						}
+						free(env_copy);
+					}
+				}
+			}
+		}
+	}
 
 
 #if USE_CNPT
@@ -391,10 +384,7 @@ spawnvpe(
                     SYS_Output,         iofh[1],
                     SYS_Error,          iofh[2],
 
-                    // These will always be true (like you) :
-                    // NP_CloseInput,   closefh[0],
-                    // NP_CloseOutput,	closefh[1],
-                    NP_CloseError,      closefh[2], // <-- This one is needed!
+                    NP_CloseError,      closefh[2],
 
                     SYS_UserShell, TRUE,
                     SYS_Asynch, TRUE,
@@ -446,32 +436,30 @@ spawnvpe(
         ret = pid;
     }
 
-       /* Restore environment variables if we modified them */
-   if (env_modified && saved_env != NULL) {
-           D(("Restoring environment variables\n"));
+	/* Restore environment variables if we modified them */
+	if (env_modified && saved_env != NULL) {
+		D(("Restoring environment variables\n"));
 
-           for (int i = 0; i < env_count; i++) {
-                   if (deltaenv[i] != NULL) {
-                           char *env_copy = strdup(deltaenv[i]);
-                           if (env_copy) {
-                                   char *eq = strchr(env_copy, '=');
-                                   if (eq) {
-                                           *eq = '\0';
-                                           char *name = env_copy;
+		for (int i = 0; i < env_count; i++) {
+			if (deltaenv[i] != NULL) {
+				char *env_copy = strdup(deltaenv[i]);
+				if (env_copy) {
+					char *eq = strchr(env_copy, '=');
+					if (eq) {
+						*eq = '\0';
+						char *name = env_copy;
 
-                                           if (saved_env[i] != NULL) {
-                                                   DeleteVar(name, GVF_LOCAL_ONLY);
-                                                   free(saved_env[i]);
-                                               } else {
-                                                   DeleteVar(name, GVF_LOCAL_ONLY);
-                                                   }
-                                       }
-                                   free(env_copy);
-                               }
-                       }
-               }
-           free(saved_env);
-       }
+						DeleteVar(name, GVF_LOCAL_ONLY);
+						if (saved_env[i] != NULL) {
+							free(saved_env[i]);
+						}
+					}
+                    free(env_copy);
+                }
+            }
+        }
+		free(saved_env);
+	}
 
 
     free(full_command);
