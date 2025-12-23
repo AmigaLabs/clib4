@@ -393,6 +393,9 @@ PTHREAD_CONSTRUCTOR(__pthread_init) {
 PTHREAD_DESTRUCTOR(__pthread_exit) {
     ENTER();
     SHOWMSG("[__pthread_exit :] Pthread destructor called.\n");
+
+    __pthread_exit_func();
+
     if (_DOSBase != NULL) {
         CloseLibrary(_DOSBase);
         _DOSBase = NULL;
@@ -403,6 +406,5 @@ PTHREAD_DESTRUCTOR(__pthread_exit) {
         _IDOS = NULL;
     }
 
-    __pthread_exit_func();
     LEAVE();
 }
