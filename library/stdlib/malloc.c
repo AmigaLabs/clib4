@@ -26,7 +26,6 @@ __malloc_r(struct _clib4 *__clib4, size_t size) {
 
 void *
 __malloc_aligned_r(struct _clib4 *__clib4, size_t size, int32_t alignment) {
-    ENTER();
     void *result = NULL;
 
     if(size == 0) size = 4;
@@ -47,7 +46,6 @@ __malloc_aligned_r(struct _clib4 *__clib4, size_t size, int32_t alignment) {
     __memory_unlock(__clib4);
 
 out:
-    LEAVE();
     return (result);
 }
 
