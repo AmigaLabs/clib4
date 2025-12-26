@@ -54,28 +54,43 @@ hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
 }
 
 // This is duplicate of killitimer() present in clib4 but is needed since it isn't exposed into interface
-void killitimer(void) {
+static void killitimer_by_thread(uint32 threadID) {
     struct _clib4 *__clib4 = __CLIB4;
-    if (__clib4->tmr_real_task) {
-        struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
-        int32 pid, process;
-        pid = __clib4->tmr_real_task->pr_ProcessID;
-        /* Scan for process */
-        process = ProcessScan(&h, (CONST_APTR) pid, 0);
-        Printf("Scan for process %ld (%ld)..\n", process, pid);
-        while (process > 0) {
-            Printf("Waiting for process %ld to close..\n", pid);
-            /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
-            Signal((struct Task *) __clib4->tmr_real_task, SIGBREAKF_CTRL_F);
+    struct TimerNode *node, *next;
+    
+    /* Scan the timer list for timers belonging to the specified thread */
+    for (node = (struct TimerNode *)__clib4->tmr_real_list.mlh_Head;
+         (next = (struct TimerNode *)node->tn_Node.mln_Succ) != NULL;
+         node = next) {
+        
+        if (node->tn_ThreadID == threadID) {
+            struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
+            int32 pid, process;
+            
+            pid = node->tn_Process->pr_ProcessID;
+            /* Scan for process */
             process = ProcessScan(&h, (CONST_APTR) pid, 0);
-            Delay(10);
+            DebugPrintF("Scan for process %ld (%ld) of thread %lu..\n", process, pid, threadID);
+            
+            while (process > 0) {
+                DebugPrintF("Waiting for process %ld to close..\n", pid);
+                /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
+                Signal((struct Task *)node->tn_Process, SIGBREAKF_CTRL_F);
+                process = ProcessScan(&h, (CONST_APTR) pid, 0);
+                Delay(10);
+            }
+            
+            DebugPrintF("Process closed.. Wait For Child\n");
+            WaitForChildExit(pid);
+            DebugPrintF("Done\n");
+            
+            /* Remove from list and free */
+            Remove((struct Node *)&node->tn_Node);
+            FreeVec(node);
+			node = NULL;
         }
-        Printf("Process closed.. Wait For Child\n");
-        WaitForChildExit(pid);
-        Printf("Done\n");
-        __clib4->tmr_real_task = NULL;
     }
-};
+}
 
 static uint32
 StarterFunc() {
@@ -131,12 +146,13 @@ StarterFunc() {
     }
     MutexRelease(tls_sem);
 
-    /*  If we have a previous timer running task stop it before raise SIGINT  */
-    if (__clib4->tmr_real_task) {
+    /*  If we have timer running tasks for this thread, stop them before exit  */
+    if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
+        uint32 currentThreadID = (uint32)FindTask(NULL);
         /* Block SIGALRM signal from raise */
         sigblock(SIGALRM);
-        /* Kill itimer */
-        killitimer();
+        /* Kill itimer for current thread */
+        killitimer_by_thread(currentThreadID);
     }
 
     if (stackSwapped)

@@ -106,7 +106,7 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         /* Clear itimer start time */
         .tmr_start_time.tv_sec = 0,
         .tmr_start_time.tv_usec = 0,
-        .tmr_real_task = NULL,
+		.unused = NULL, // OLD tmr_real_task pointer
         /* Set ar4random stuff */
         .rs.i = 0,
         .rs.j = 0,
@@ -232,6 +232,9 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
     }
 
     ClearMem(&__clib4->tmr_time, sizeof(struct itimerval));
+
+    /* Initialize timer list */
+    NewList((struct List *)&__clib4->tmr_real_list);
 
     /* Set ar4random stuff */
     for (int i = 0; i <= 255; i++) {

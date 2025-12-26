@@ -24,11 +24,11 @@ _exit(int return_code) {
     ENTER();
     SHOWVALUE(__clib4->__exit_value);
 
-    /*  If we have a previous timer running task stop it before raise SIGINT  */
-    if (__clib4->tmr_real_task) {
+    /*  If we have timer running tasks for this thread, stop them before raise SIGINT  */
+    if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
         /* Block SIGALRM signal from raise */
         sigblock(SIGALRM);
-        /* Kill itimer */
+        /* Kill itimer for current thread */
         killitimer();
     }
 

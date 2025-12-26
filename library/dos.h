@@ -22,6 +22,13 @@
 #include <exec/lists.h>
 #include <exec/semaphores.h>
 
+/* Node structure for timer list */
+struct TimerNode {
+    struct MinNode tn_Node;
+    struct Process *tn_Process;    /* The timer process */
+    uint32 tn_ThreadID;            /* The thread ID that created this timer */
+};
+
 /* Category name handling variables.  */
 #define NUM_LOCALES                (LC_MAX + 1)
 #define MAX_LOCALE_NAME_LEN        256
@@ -253,7 +260,7 @@ struct _clib4 {
     /* Used by setitimer/getitimer */
     struct itimerval tmr_time;
     struct timeval tmr_start_time;
-    struct Process *tmr_real_task;
+    struct Process *unused;  /* Old tmr_real_task pointer */
 
     /* Used for shared version library */
     int _errno;
@@ -534,6 +541,9 @@ struct _clib4 {
     struct DebugIFace *__IDebug;
 
 	unsigned int __machine_type;
+
+        struct MinList tmr_real_list;  /* List of TimerNode structures */
+
 };
 
 #ifndef __getClib4

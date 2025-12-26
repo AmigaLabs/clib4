@@ -39,7 +39,7 @@ int itimer_real_task() {
     struct _clib4 *__clib4 = __CLIB4;
 
     SHOWPOINTER(__clib4);
-    SHOWVALUE(_itimer->which);
+    SHOWVALUE(which);
     SHOWVALUE(__clib4->tmr_time.it_value.tv_sec);
     SHOWVALUE(__clib4->tmr_time.it_value.tv_usec);
 
@@ -89,8 +89,8 @@ int itimer_real_task() {
         if (signals & SIGBREAKF_CTRL_F) {
             SHOWMSG("SIGBREAKF_CTRL_F");
             if (CheckIO((struct IORequest *) tmr_real_tr))  /* If request is complete... */
-                WaitIO((struct IORequest *) tmr_real_tr);   /* clean up and remove reply */
-            AbortIO((struct IORequest *) tmr_real_tr);      /* Abort request             */
+                AbortIO((struct IORequest *) tmr_real_tr);  /* clean up and remove reply */
+            WaitIO((struct IORequest *) tmr_real_tr);
             SHOWMSG("Exit from SIGBREAKF_CTRL_F");
             /* Exit from while */
             break;
@@ -100,18 +100,17 @@ int itimer_real_task() {
             SHOWMSG("SIGBREAKF_CTRL_D");
             /* This is used to reset the timer with new value without raising the signal */
             if (CheckIO((struct IORequest *) tmr_real_tr))  /* If request is complete... */
-                WaitIO((struct IORequest *) tmr_real_tr);   /* clean up and remove reply */
-            AbortIO((struct IORequest *) tmr_real_tr);
+                AbortIO((struct IORequest *) tmr_real_tr);  /* clean up and remove reply */
+            WaitIO((struct IORequest *) tmr_real_tr);
 
             tmr_real_tr->Time.Seconds = __clib4->tmr_time.it_value.tv_sec;
             tmr_real_tr->Time.Microseconds = __clib4->tmr_time.it_value.tv_usec;
             SHOWMSG("Exit from SIGBREAKF_CTRL_D");
         } else {
             SHOWMSG("CheckIO");
-            if (CheckIO((struct IORequest *) tmr_real_tr)) {
-                SHOWMSG("WaitIO");
-                WaitIO((struct IORequest *) tmr_real_tr);
-            }
+            if (CheckIO((struct IORequest *) tmr_real_tr))
+                AbortIO((struct IORequest *) tmr_real_tr);
+            WaitIO((struct IORequest *) tmr_real_tr);
 
             tmr_real_tr->Time.Seconds += __clib4->tmr_time.it_interval.tv_sec;
             tmr_real_tr->Time.Microseconds += __clib4->tmr_time.it_interval.tv_usec;
@@ -127,7 +126,6 @@ int itimer_real_task() {
 			raise(SIGALRM);
 
 			Signal((struct Task *) __clib4->self, (1L << tmr_real_mp->mp_SigBit));
-
 
             SHOWMSG("CHECK SIGALRM AGAIN");
             /* Check again if SIGALRM is blocked and then kill the timer. kill the timer also
