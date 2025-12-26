@@ -151,6 +151,20 @@ spawnvpe(
 
     D(("Starting new process [%s]\n", name));
 
+    /* Check if the file is a symbolic link and resolve it BEFORE translation */
+    char resolved_path[PATH_MAX];
+    ssize_t link_len = readlink(name, resolved_path, sizeof(resolved_path) - 1);
+    if (link_len > 0) {
+        /* It's a symbolic link, use the resolved path */
+        resolved_path[link_len] = '\0';
+        D(("Resolved symbolic link: [%s] -> [%s]\n", name, resolved_path));
+        name = resolved_path;
+    } else {
+        /* Not a symbolic link or readlink failed, use original path */
+        D(("Not a symbolic link or readlink failed (errno=%d): using original path\n", errno));
+    }
+
+    /* Now translate the path (either original or resolved) from Unix to Amiga format */
     int error = __translate_unix_to_amiga_path_name(&name, &nti_name);
     if (error) {
         __set_errno(EINVAL);
@@ -160,7 +174,7 @@ spawnvpe(
 
     D(("name after conversion: [%s]\n", name));
 
-    if(cwd) {
+    if (cwd) {
         error = __translate_unix_to_amiga_path_name(&cwd, &nti_cwd);
         if (error) {
             __set_errno(EINVAL);
@@ -276,6 +290,7 @@ spawnvpe(
 							env_modified = TRUE;
 						}
 						free(env_copy);
+                        env_copy = NULL;
 					}
 				}
 			}
@@ -344,17 +359,21 @@ spawnvpe(
 						DeleteVar(name, GVF_LOCAL_ONLY);
 						if (saved_env[i] != NULL) {
 							free(saved_env[i]);
+                            saved_env[i] = NULL;
 						}
 					}
                     free(env_copy);
+                    env_copy = NULL;
                 }
             }
         }
 		free(saved_env);
+        saved_env = NULL;
 	}
 
 
     free(full_command);
+    full_command = NULL;
 
     D(("System/CreateNewProc completed. Return value: [%ld]\n", ret));
 
