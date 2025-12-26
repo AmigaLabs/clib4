@@ -25,7 +25,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     SHOWVALUE(file_descriptor);
     SHOWVALUE(cmd);
 
-    if (__clib4->__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE) || file_descriptor < 0 || file_descriptor > __clib4->__num_fd) {
+    if (__clib4 == NULL || __clib4->__fd == NULL || __clib4->__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE) || file_descriptor < 0 || file_descriptor > __clib4->__num_fd) {
         __set_errno(EINVAL);
         goto out;
     }
@@ -101,6 +101,8 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
             SHOWMSG("cmd=F_GETFL");
 
+            result = OK;
+
             if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING))
                 SET_FLAG(result, O_NONBLOCK);
 
@@ -109,8 +111,6 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
             if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY))
                 SET_FLAG(result, O_PATH);
-
-            result = OK;
 
             break;
 
@@ -142,7 +142,8 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             va_end(arg);
 
             /* If someone ask us o set STDIN_FILENO as O_NONBLOCK don't set it but don't return an error */
-            if (file_descriptor == STDIN_FILENO) {
+            if (file_descriptor == STDIN_FILENO || file_descriptor == STDOUT_FILENO || file_descriptor == STDERR_FILENO) {
+                SHOWMSG("Setting fake O_NONBLOCK on STDIN_FILENO");
                 if (FLAG_IS_SET(flags, O_NONBLOCK))
                     SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
                 else
@@ -154,27 +155,29 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
             /* If this is a file, make sure that we don't hit a zero file handle. */
             if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_File == BZERO) {
+                SHOWMSG("file is closed. Can't set flags");
                 __set_errno(EBADF);
                 goto out;
             }
 
             if ((FLAG_IS_SET(flags, O_NONBLOCK) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING)) ||
                 (FLAG_IS_CLEAR(flags, O_NONBLOCK) && FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING))) {
-                fam.fam_Action = file_action_set_blocking;
-                fam.fam_Arg = FLAG_IS_CLEAR(flags, O_NONBLOCK);
+                    D(("changing non-blocking mode to %ld", FLAG_IS_CLEAR(flags, O_NONBLOCK) ? 0 : 1));
+                    fam.fam_Action = file_action_set_blocking;
+                    fam.fam_Arg = FLAG_IS_CLEAR(flags, O_NONBLOCK);
 
-                assert(fd->fd_Action != NULL);
+                    assert(fd->fd_Action != NULL);
 
-                if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
-                    __set_errno(fam.fam_Error);
+                    if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
+                        __set_errno(fam.fam_Error);
 
-                    goto out;
-                }
+                        goto out;
+                    }
 
-                if (FLAG_IS_SET(flags, O_NONBLOCK))
-                    SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
-                else
-                    CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+                    if (FLAG_IS_SET(flags, O_NONBLOCK))
+                        SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+                    else
+                        CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
             }
 
             if ((FLAG_IS_SET(flags, O_ASYNC) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_ASYNC_IO)) ||
