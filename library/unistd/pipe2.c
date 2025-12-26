@@ -27,9 +27,9 @@ int pipe2(int fd[2], int flags) {
     Delete(pipe_name);
 #else
     if (flags & O_NONBLOCK)
-        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0/NOBLOCK", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
+        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/131072/0/NOBLOCK", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
     else
-        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
+        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/131072/0", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
 #endif // USE_TEMPFILES
     ReleaseSemaphore(__clib4->__pipe_semaphore);
 
