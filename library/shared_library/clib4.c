@@ -907,7 +907,7 @@ const struct Resident __attribute__((used)) RomTag = {
 int
 library_start(char *argstr,
               int arglen,
-              int (*start_main)(int, char **),
+              int (*start_main)(int, char **, char **),
               void (*__EXT_CTOR_LIST__[])(void),
               void (*__EXT_DTOR_LIST__[])(void),
               struct WBStartup *sms) {
