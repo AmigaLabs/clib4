@@ -40,16 +40,18 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     __check_abort_f(__clib4);
 
     ENTER();
-
+	SHOWMSG("fd_hook_entry");
     assert(fam != NULL && fd != NULL);
     // assert(__is_valid_fd(__clib4, fd));
 
     /* Careful: file_action_close has to monkey with the file descriptor
                 table and therefore needs to obtain the stdio lock before
                 it locks this particular descriptor entry. */
-    if (fam->fam_Action == file_action_close)
+    if (fam->fam_Action == file_action_close) {
         __stdio_lock(__clib4);
+	}
 
+	SHOWMSG("locking fd");
     __fd_lock(fd);
 
     file = __resolve_fd_file(fd);
@@ -59,7 +61,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
         fam->fam_Error = EBADF;
         goto out;
     }
-
+	D(("fam->fam_Action=%ld", fam->fam_Action));
     switch (fam->fam_Action) {
         case file_action_read:
 
@@ -78,13 +80,28 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                     goto out;
                 }
 
-                result = (int64_t) Read(file, fam->fam_Data, fam->fam_Size);
+                result = (int64_t) Read(file, (APTR)fam->fam_Data, (LONG)fam->fam_Size);
+
                 if (result == EOF) {
                     D(("read failed ioerr=%ld\n", IoErr()));
                     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) || (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE))))
                         fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                    else
-                        fam->fam_Error = EAGAIN;
+                    else {
+						SHOWMSG("Checking other side of the pipe");
+						int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+						SHOWVALUE(other_side_fd);
+						if (other_side_fd > 0) {
+							SHOWMSG("Getting other side FD");
+							struct fd *other_fd = __get_file_descriptor(__clib4, other_side_fd);
+							SHOWPOINTER(other_fd);
+							if (other_fd != NULL)
+                        		fam->fam_Error = EAGAIN;
+							else {
+								fam->fam_Error = 0;
+								result = 0;
+							}
+						}
+					}
                     goto out;
                 }
 
@@ -139,11 +156,28 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         file), fam->fam_Data));
 
                 result = Write(file, fam->fam_Data, fam->fam_Size);
-                if (result == -1) {
-                    D(("write failed ioerr=%ld", IoErr()));
 
-                    fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                    goto out;
+                if (result == EOF) {
+                    D(("write failed ioerr=%ld", IoErr()));
+                	if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) || (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE))))
+                		fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                	else {
+                		SHOWMSG("Checking other side of the pipe");
+                		int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                		SHOWVALUE(other_side_fd);
+                		if (other_side_fd > 0) {
+                			SHOWMSG("Getting other side FD");
+                			struct fd *other_fd = __get_file_descriptor(__clib4, other_side_fd);
+                			SHOWPOINTER(other_fd);
+                			if (other_fd != NULL)
+                				fam->fam_Error = EAGAIN;
+                			else {
+                				fam->fam_Error = 0;
+                				result = 0;
+                			}
+                		}
+                	}
+                	goto out;
                 }
 
                 fd->fd_Position += (int64_t) result;
@@ -200,7 +234,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         }
 
                         SHOWMSG("Closing file...");
-                        
+
                         if (CANNOT Close(fd->fd_File)) {
                             fam->fam_Error = __translate_io_error_to_errno(IoErr());
                             SHOWMSG("CANNOT Close(fd->fd_File)");
@@ -452,6 +486,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                     SHOWMSG("changing the mode");
 
                     if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                        D(("Set Pipe blocking mode to %s", fam->fam_Arg ? "blocking" : "non-blocking"));
                         if (fam->fam_Arg != 0)
                             mode = SBM_BLOCKING;
                         else
@@ -464,6 +499,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             goto out;
                         }
                     } else {
+                        D(("Set Dos file blocking mode to %s", fam->fam_Arg ? "canonical" : "raw"));
                         if (fam->fam_Arg != 0)
                             mode = DOSFALSE; /* buffered mode */
                         else
