@@ -149,6 +149,7 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
 
 			SHOWMSG("the object does not already exist");
         }
+		open_mode = MODE_READWRITE;
 
         if (FLAG_IS_SET(open_flag, O_TRUNC)) {
             SHOWMSG("checking if the file to create already exists");
@@ -180,6 +181,8 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
                     goto out;
                 }
 
+            	open_mode = MODE_NEWFILE;
+
                 UnLock(lock);
                 lock = BZERO;
             } else {
@@ -199,7 +202,6 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
                 }
             }
         }
-		open_mode = MODE_NEWFILE;
         create_new_file = TRUE;
     }
     else {
