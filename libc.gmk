@@ -772,10 +772,12 @@ C_UNISTD := \
 	unistd/setdomainname.o \
 	unistd/setlogin.o \
 	unistd/sleep.o \
+	unistd/spawn_utils.o \
 	unistd/spawnv.o \
 	unistd/spawnve.o \
 	unistd/spawnvp.o \
 	unistd/spawnvpe.o \
+	unistd/spawnvpe_fork.o \
 	unistd/strip_double_slash.o \
 	unistd/symlink.o \
 	unistd/sync_fd.o \

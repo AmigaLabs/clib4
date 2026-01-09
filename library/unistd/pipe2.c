@@ -51,13 +51,11 @@ int pipe2(int fd[2], int flags) {
     struct fd *fd1 = __get_file_descriptor(__clib4, fd[0]);
     if (fd1 != NULL) {
         SET_FLAG(fd1->fd_Flags, FDF_PIPE);
-        SET_FLAG(fd1->fd_Flags, FDF_IS_INTERACTIVE);
     }
 
     struct fd *fd2 = __get_file_descriptor(__clib4, fd[1]);
     if (fd2 != NULL) {
         SET_FLAG(fd2->fd_Flags, FDF_PIPE);
-        SET_FLAG(fd2->fd_Flags, FDF_IS_INTERACTIVE);
     }
     if (flags & O_CLOEXEC)
         SET_FLAG(fd2->fd_Flags, FDF_CLOEXEC);

@@ -26,8 +26,6 @@ __read_internal(struct _clib4 *__clib4, int file_descriptor, void *buffer, size_
     assert(buffer != NULL);
     assert((int) num_bytes >= 0);
 
-    __stdio_lock(__clib4);
-
     if (buffer == NULL) {
         SHOWMSG("invalid buffer");
         __set_errno(EFAULT);
@@ -43,14 +41,25 @@ __read_internal(struct _clib4 *__clib4, int file_descriptor, void *buffer, size_
         goto out;
     }
 
+    __stdio_lock(__clib4);
     __fd_lock(fd);
+
+	if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE) && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+		SHOWMSG("file descriptor is a closed PIPE");
+
+	    __fd_unlock(fd);
+        __set_errno(EPIPE);
+		goto out;
+	}
 
     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_READ)) {
         SHOWMSG("this descriptor is not read-enabled");
 
         __set_errno(EBADF);
+	    __fd_unlock(fd);
         goto out;
     }
+	__fd_unlock(fd);
 
     if (num_bytes > 0) {
         /* Check that we are not using a socket */
@@ -82,7 +91,6 @@ __read_internal(struct _clib4 *__clib4, int file_descriptor, void *buffer, size_
     result = num_bytes_read;
 
 out:
-    __fd_unlock(fd);
     __stdio_unlock(__clib4);
 
     RETURN(result);

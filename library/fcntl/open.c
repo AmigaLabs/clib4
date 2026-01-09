@@ -275,6 +275,12 @@ directory:
     if (FLAG_IS_SET(open_flag, O_PATH))
         SET_FLAG(fd->fd_Flags, FDF_PATH_ONLY);
 
+    /* If O_CLOEXEC is set, mark the FD for close-on-exec */
+    if (FLAG_IS_SET(open_flag, O_CLOEXEC)) {
+        SET_FLAG(fd->fd_Flags, FDF_CLOEXEC);
+        D(("O_CLOEXEC set for fd=%d\n", fd_slot_number));
+    }
+
     if (is_directory) {
         /* Set FD flag as Directory */
         SET_FLAG(fd->fd_Flags, FDF_IS_DIRECTORY);

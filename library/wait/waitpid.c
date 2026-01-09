@@ -10,18 +10,6 @@
 
 #include "clib4.h"
 
-// static APTR
-// hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
-//     uint32 pid = (uint32) userdata;
-//     (void) (hook);
-
-//     if (process->pr_ProcessID == pid) {
-//         return process;
-//     }
-
-//     return 0;
-// }
-
 pid_t waitpid(pid_t pid, int *status, int options) {
     // Delay(1);
     uint32 me = GetPID(0, GPID_PROCESS);
@@ -56,9 +44,6 @@ pid_t waitpid(pid_t pid, int *status, int options) {
             return -1;
         }
 
-        // struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
-        // int32 process;
-
         size_t iter = 0;
         void *item;
         int32 found = FALSE;
@@ -77,16 +62,20 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                 return -1;
             }
 
-            /* Scan for process */
-            // process = ProcessScan(&h, (CONST_APTR) pid, 0);
-            // if (process > 0) {
-
             if (options & WNOHANG) {
                 D(("Check for child with pid %ld\n", pid));
                 found = CheckForChildExit(pid);
 
                 /* Set returnCode status */
                 *status = item->returnCode;
+                
+                /* If returnCode still has 0x10000000 bit set, the child hasn't finished 
+                 * its exit callback yet, so treat it as still running */
+                if (*status & 0x10000000) {
+                    D(("Child with pid %ld exit callback not finished yet (status=0x%lx), treating as still running\n", pid, *status));
+                    found = TRUE;  /* Treat as still running */
+                    *status = 0;
+                }
 
                 if (!found) hashmap_delete(node->spawnedProcesses, item);
 

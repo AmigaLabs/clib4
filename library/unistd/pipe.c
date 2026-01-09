@@ -17,7 +17,7 @@ int pipe(int fd[2]) {
     // Delete the file if exists (we don't need to check if file exists)
     Delete(pipe_name);
 #else
-    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/131072/5", __clib4->pipenum++, __clib4->self->pr_ProcessID);
+    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/131072/0", __clib4->pipenum++, __clib4->self->pr_ProcessID);
 #endif // USE_TEMPFILES
 
     fd[1] = open(pipe_name, O_WRONLY | O_CREAT);
@@ -41,13 +41,11 @@ int pipe(int fd[2]) {
     struct fd *fd1 = __get_file_descriptor(__clib4, fd[0]);
     if (fd1 != NULL) {
         SET_FLAG(fd1->fd_Flags, FDF_PIPE);
-        SET_FLAG(fd1->fd_Flags, FDF_IS_INTERACTIVE);
     }
 
     struct fd *fd2 = __get_file_descriptor(__clib4, fd[1]);
     if (fd2 != NULL) {
         SET_FLAG(fd2->fd_Flags, FDF_PIPE);
-        SET_FLAG(fd2->fd_Flags, FDF_IS_INTERACTIVE);
     }
 
     RETURN(0);

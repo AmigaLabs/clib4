@@ -379,6 +379,16 @@ extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
 #define console_prefix "CON:20/20/600/150/"
 #define console_suffix " Output/AUTO/CLOSE/WAIT"
 
+//#define DEBUG_LOCKS
+#ifdef DEBUG_LOCKS
+void __stdio_lock_special(char const *caller_name, struct _clib4 *__clib4);
+void __stdio_lock_real(struct _clib4 *__clib4);
+void __stdio_unlock_special(char const *caller_name, struct _clib4 *__clib4);
+void __stdio_unlock_real(struct _clib4 *__clib4);
+#define __stdio_lock(x) __stdio_lock_special(__func__, x)
+#define __stdio_unlock(x) __stdio_unlock_special(__func__, x)
+#endif
+
 #ifndef _STDIO_PROTOS_H
 #include "stdio_protos.h"
 #endif /* _STDIO_PROTOS_H */

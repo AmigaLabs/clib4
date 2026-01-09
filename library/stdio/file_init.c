@@ -207,11 +207,11 @@ FILE_CONSTRUCTOR(stdio_file_init) {
             goto out;
 
         /* Allocate memory for an arbitration mechanism, then initialize it. */
-        stdio_lock = __create_mutex();
+        stdio_lock = __create_semaphore();
         fd_lock = __create_mutex();
 
         if (stdio_lock == NULL || fd_lock == NULL) {
-            __delete_mutex(stdio_lock);
+            __delete_semaphore(stdio_lock);
             __delete_mutex(fd_lock);
             goto out;
         }

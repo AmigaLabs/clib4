@@ -15,4 +15,9 @@ pid_t findSpawnedChildrenPidByPipe(FILE *pipe);
 void spawnedProcessExit(int32 rc, int32 data UNUSED);
 void spawnedProcessEnter(int32 entry_data);
 
+struct spawnData {
+	gid_t groupId;
+	struct Task *parentTask;
+};
+
 #endif

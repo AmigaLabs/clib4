@@ -150,23 +150,9 @@ void
 spawnedProcessEnter(int32 entry_data) {
     struct Library *UserGroupBase = 0;
     struct UserGroupIFace *IUserGroup = 0;
-    gid_t groupId = (gid_t)entry_data;
-
-#if 0
-    UserGroupBase = OpenLibrary("usergroup.library", 0);
-
-    if (UserGroupBase != NULL) {
-        IUserGroup = (struct UserGroupIFace *)GetInterface(UserGroupBase, "main", 1, 0);
-        if (IUserGroup == NULL) {
-            UserGroupBase = NULL;
-        }
-        else {
-            groupId = IUserGroup->getgid();
-            DropInterface((struct Interface *) IUserGroup);
-        }
-        CloseLibrary(UserGroupBase);
-    }
-#endif
+	struct spawnData *data = (struct spawnData *) entry_data;
+    gid_t groupId = data->groupId;
+	struct Task *parentTask = data->parentTask;
 
     uint32 pid = GetPID(0, GPID_PROCESS); //((struct Process *) FindTask(NULL))->pr_ProcessID;
     uint32 ppid = GetPID(0, GPID_PARENT);
@@ -177,6 +163,7 @@ spawnedProcessEnter(int32 entry_data) {
     else {
         D(("Cannot insert children with pid %ld and gid %ld into list\n", pid, groupId));
     }
+	Signal(parentTask, SIGF_CHILD);
 }
 
 void

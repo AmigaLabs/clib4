@@ -28,8 +28,8 @@ __BEGIN_DECLS
 #define O_DSYNC			(1<<10)
 #define O_SYNC			(1<<11)
 #define O_NOFOLLOW		(1<<12)
-#define O_CLOEXEC		(0)
 #define O_LITTLE_ENDIAN (1<<13)
+#define O_CLOEXEC		(1<<14)  /* Close on exec */
 
 #define	O_ACCMODE	(O_RDONLY|O_WRONLY|O_RDWR)
 

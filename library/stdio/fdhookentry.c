@@ -42,7 +42,6 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     ENTER();
 	SHOWMSG("fd_hook_entry");
     assert(fam != NULL && fd != NULL);
-    // assert(__is_valid_fd(__clib4, fd));
 
     /* Careful: file_action_close has to monkey with the file descriptor
                 table and therefore needs to obtain the stdio lock before
@@ -83,25 +82,75 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 result = (int64_t) Read(file, (APTR)fam->fam_Data, (LONG)fam->fam_Size);
 
                 if (result == EOF) {
-                    D(("read failed ioerr=%ld\n", IoErr()));
-                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) || (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE))))
-                        fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                    else {
-						SHOWMSG("Checking other side of the pipe");
-						int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
-						SHOWVALUE(other_side_fd);
-						if (other_side_fd > 0) {
-							SHOWMSG("Getting other side FD");
-							struct fd *other_fd = __get_file_descriptor(__clib4, other_side_fd);
-							SHOWPOINTER(other_fd);
-							if (other_fd != NULL)
-                        		fam->fam_Error = EAGAIN;
-							else {
-								fam->fam_Error = 0;
-								result = 0;
-							}
-						}
+                    LONG ioerr = IoErr();
+                    D(("read failed ioerr=%ld\n", ioerr));
+					DebugPrintF("fdhook READ fail: file=%ld size=%ld flags=0x%lx ioerr=%ld\n",
+					                 (long)file, (long)fam->fam_Size, (unsigned long)fd->fd_Flags, (long)ioerr);
+
+                    /*
+                     * PIPE: The PIPE: device may report failures (sometimes mapping to
+                     * generic EIO) when no data is currently available. For POSIX-like
+                     * behavior, treat this as would-block as long as the other side of
+                     * the pipe still exists.
+                     */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                        struct fd *other_fd = NULL;
+                        if (other_side_fd > 0)
+                            other_fd = __get_file_descriptor(__clib4, other_side_fd);
+
+                        if (other_fd != NULL) {
+                            fam->fam_Error = EAGAIN;
+                            goto out;
+                        }
+                        /* Other side gone -> EOF */
+                        fam->fam_Error = 0;
+                        result = 0;
+                        goto out;
+                    }
+
+                    /*
+                     * PIPE: device can report transient failures (often with ioerr==0)
+                     * when there is no data available yet. Do not map that to EIO.
+                     */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE) && (ioerr == 0 || ioerr == ERROR_WOULD_BLOCK)) {
+                        SHOWMSG("PIPE read would-block/unknown, checking other side");
+                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                        struct fd *other_fd = NULL;
+                        if (other_side_fd > 0)
+                            other_fd = __get_file_descriptor(__clib4, other_side_fd);
+                        if (other_fd != NULL) {
+                            fam->fam_Error = EAGAIN;
+                        } else {
+                            fam->fam_Error = 0;
+                            result = 0;
+                        }
+                        goto out;
+                    }
+
+                    /*
+                     * Normal files, and pipes that report a concrete ioerr: translate.
+                     * (Fix: do not use logical operators inside FLAG macros.)
+                     */
+                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) || (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING))) {
+                        fam->fam_Error = __translate_io_error_to_errno(ioerr);
 					}
+                    else {
+                        SHOWMSG("Checking other side of the pipe (non-blocking)");
+                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                        SHOWVALUE(other_side_fd);
+                        if (other_side_fd > 0) {
+                            SHOWMSG("Getting other side FD");
+                            struct fd *other_fd = __get_file_descriptor(__clib4, other_side_fd);
+                            SHOWPOINTER(other_fd);
+                            if (other_fd != NULL)
+                                fam->fam_Error = EAGAIN;
+                            else {
+                                fam->fam_Error = 0;
+                                result = 0;
+                            }
+                        }
+                    }
                     goto out;
                 }
 
@@ -152,31 +201,46 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                     }
                 }
 
-                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(
-                        file), fam->fam_Data));
+                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
 
                 result = Write(file, fam->fam_Data, fam->fam_Size);
 
                 if (result == EOF) {
-                    D(("write failed ioerr=%ld", IoErr()));
-                	if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) || (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE))))
-                		fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                	else {
-                		SHOWMSG("Checking other side of the pipe");
-                		int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
-                		SHOWVALUE(other_side_fd);
-                		if (other_side_fd > 0) {
-                			SHOWMSG("Getting other side FD");
-                			struct fd *other_fd = __get_file_descriptor(__clib4, other_side_fd);
-                			SHOWPOINTER(other_fd);
-                			if (other_fd != NULL)
-                				fam->fam_Error = EAGAIN;
-                			else {
-                				fam->fam_Error = 0;
-                				result = 0;
-                			}
-                		}
-                	}
+                    LONG ioerr = IoErr();
+                    D(("write failed ioerr=%ld", ioerr));
+
+                    /*
+                     * PIPE: If the other side exists, treat failures as would-block
+                     * rather than mapping to generic EIO.
+                     */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                        struct fd *other_fd = NULL;
+                        if (other_side_fd > 0)
+                            other_fd = __get_file_descriptor(__clib4, other_side_fd);
+                        if (other_fd != NULL)
+                            fam->fam_Error = EAGAIN;
+                        else
+                            fam->fam_Error = EPIPE;
+                        goto out;
+                    }
+
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE) && (ioerr == 0 || ioerr == ERROR_WOULD_BLOCK)) {
+                        SHOWMSG("PIPE write would-block/unknown, checking other side");
+                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                        struct fd *other_fd = NULL;
+                        if (other_side_fd > 0)
+                            other_fd = __get_file_descriptor(__clib4, other_side_fd);
+                        if (other_fd != NULL)
+                            fam->fam_Error = EAGAIN;
+                        else
+                            fam->fam_Error = EPIPE;
+                    } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) ||
+                               (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING))) {
+                        fam->fam_Error = __translate_io_error_to_errno(ioerr);
+                    } else {
+                        fam->fam_Error = EAGAIN;
+                    }
                 	goto out;
                 }
 
@@ -480,7 +544,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
             SHOWMSG("file_action_set_blocking");
 
             if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
-                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE) || FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
                     LONG mode;
 
                     SHOWMSG("changing the mode");

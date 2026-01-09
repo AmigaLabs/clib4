@@ -115,22 +115,35 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             break;
 
         case F_GETFD:
-            /* Don't fail on this. If we reach this point file descriptor is ok */
-            result = OK;
+            SHOWMSG("cmd=F_GETFD");
 
+            /* Return FD_CLOEXEC if the FDF_CLOEXEC flag is set */
+            result = 0;
+            if (FLAG_IS_SET(fd->fd_Flags, FDF_CLOEXEC))
+                result = FD_CLOEXEC;
+
+            D(("F_GETFD: fd=%d, cloexec=%d\n", file_descriptor, result));
             break;
 
         case F_SETFD:
+            SHOWMSG("cmd=F_SETFD");
 
-            /* We don't have any logic implemented here yet but don't fail if someone is asking to set a flag like FD_CLOEXEC */
             va_start(arg, cmd);
             flags = va_arg(arg, int);
             va_end(arg);
 
-            /* Fail if flag is not FD_CLOEXEC, otherwise return OK */
-            if (flags == FD_CLOEXEC)
-                result = OK;
+            D(("F_SETFD: fd=%d, flags=0x%x\n", file_descriptor, flags));
 
+            /* Set or clear the FDF_CLOEXEC flag based on FD_CLOEXEC */
+            if (FLAG_IS_SET(flags, FD_CLOEXEC)) {
+                SET_FLAG(fd->fd_Flags, FDF_CLOEXEC);
+                D(("Setting FD_CLOEXEC on fd=%d\n", file_descriptor));
+            } else {
+                CLEAR_FLAG(fd->fd_Flags, FDF_CLOEXEC);
+                D(("Clearing FD_CLOEXEC on fd=%d\n", file_descriptor));
+            }
+
+            result = OK;
             break;
 
         case F_SETFL:

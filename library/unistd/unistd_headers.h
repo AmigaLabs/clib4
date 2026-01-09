@@ -29,5 +29,10 @@ extern BOOL dir_contains(BPTR dirLock, char *fileName);
 extern int32 __search_command_hook_function(struct Hook *hook, APTR reserved, struct SearchCmdPathListMsg *message);
 extern int __search_expand_command_path(char const **name_ptr, char *replacement_buffer, size_t replacement_buffer_size);
 
+/* Forward declarations of helper functions for spawn* functions */
+extern BOOL string_needs_quoting(const char *string, size_t len);
+extern void build_arg_string(char *const argv[], char *arg_string);
+extern size_t count_extra_escape_chars(const char *string, size_t len);
+extern size_t get_arg_string_length(char *const argv[]);
 
 #endif /* _UNISTD_HEADERS_H */
