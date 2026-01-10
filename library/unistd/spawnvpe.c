@@ -91,6 +91,8 @@ spawnvpe(
     arg_string = malloc(parameter_string_len + 1);
     if (arg_string == NULL) {
         __set_errno(ENOMEM);
+        if (cwdLock != BZERO)
+            UnLock(cwdLock);
         return ret;
     }
 
@@ -118,6 +120,10 @@ spawnvpe(
         err = __get_default_file(fhin, &fh);
         if (err) {
             __set_errno(EBADF);
+            if (cwdLock != BZERO)
+                UnLock(cwdLock);
+            free(arg_string);
+            free(full_command);
             return ret;
         }
         iofh[0] = DupFileHandle(fh); // This will be closed by ST/CNPT
@@ -130,6 +136,11 @@ spawnvpe(
         err = __get_default_file(fhout, &fh);
         if (err) {
             __set_errno(EBADF);
+            if (cwdLock != BZERO)
+                UnLock(cwdLock);
+            free(arg_string);
+            free(full_command);
+            Close(iofh[0]);
             return ret;
         }
         iofh[1] = DupFileHandle(fh); // This will be closed by ST/CNPT
@@ -142,6 +153,12 @@ spawnvpe(
         err = __get_default_file(fherr, &fh);
         if (err) {
             __set_errno(EBADF);
+            if (cwdLock != BZERO)
+                UnLock(cwdLock);
+            free(arg_string);
+            free(full_command);
+            Close(iofh[0]);
+            Close(iofh[1]);
             return ret;
         }
         iofh[2] = DupFileHandle(fh); // This will be closed by ST/CNPT
@@ -268,7 +285,6 @@ spawnvpe(
 		free(saved_env);
         saved_env = NULL;
 	}
-
 
     free(full_command);
     full_command = NULL;

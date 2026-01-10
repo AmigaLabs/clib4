@@ -129,6 +129,9 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
             if (lock != BZERO) {
                 SHOWMSG("the file already exists");
 
+                UnLock(lock);
+                lock = BZERO;
+
                 __set_errno(EEXIST);
                 goto out;
             }

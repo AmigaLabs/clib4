@@ -365,6 +365,13 @@ spawnvpe_fork(
         if (seglist != BZERO)
             UnLoadSeg(seglist);
 
+    	if (cwdLock != BZERO) {
+    		UnLock(cwdLock);
+    	}
+    	if (progdirLock != BZERO) {
+    		UnLock(progdirLock);
+    	}
+
         goto cleanup;
     }
 
@@ -405,6 +412,8 @@ spawnvpe_fork(
     /* NOTE: We also do NOT unload seglist - NP_FreeSeglist handles that */
 
 cleanup:
+    /* If child was created, NP_CurrentDir and NP_ProgramDir take ownership of the locks */
+
     /* Restore environment variables */
     if (env_modified && saved_env != NULL) {
         D(("Restoring environment variables\n"));
