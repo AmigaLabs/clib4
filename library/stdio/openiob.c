@@ -149,7 +149,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 out:
 
     if (buffer != NULL)
-        free(buffer);
+        __free_r(__clib4, buffer);
 
     RETURN(result);
     return result;
