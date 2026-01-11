@@ -40,13 +40,16 @@
 void
 pthread_exit(void *value_ptr) {
     pthread_t thread = pthread_self();
+	CleanupHandler *handler;
     ThreadInfo *inf = GetThreadInfo(thread);
-    inf->ret = value_ptr;
 
-    ThreadInfo *mainThread = &threads[0];
-    /* If the function is called from main thread don't execute call longjmp */
-    if (inf != mainThread && inf->status == THREAD_STATE_RUNNING) {
-        inf->status = THREAD_STATE_DESTRUCT;
-        longjmp(inf->jmp, 1);
-    }
+	inf->ret = value_ptr;
+
+	// execute the clean-up handlers
+	while ((handler = (CleanupHandler *)RemTail((struct List *)&inf->cleanup)))
+		if (handler->routine)
+			handler->routine(handler->arg);
+	inf->status = THREAD_STATE_DESTRUCT;
+
+    longjmp(inf->jmp, 1);
 }

@@ -11,12 +11,11 @@
 #endif /* _SOCKET_HEADERS_H */
 
 ssize_t
-read(int file_descriptor, void *buffer, size_t num_bytes) {
+__read_internal(struct _clib4 *__clib4, int file_descriptor, void *buffer, size_t num_bytes) {
     ssize_t num_bytes_read;
     struct fd *fd = NULL;
     ssize_t result = EOF;
     __set_errno(0);
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -26,10 +25,6 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
 
     assert(buffer != NULL);
     assert((int) num_bytes >= 0);
-
-    __check_abort_f(__clib4);
-
-    __stdio_lock(__clib4);
 
     if (buffer == NULL) {
         SHOWMSG("invalid buffer");
@@ -46,14 +41,25 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
         goto out;
     }
 
+    __stdio_lock(__clib4);
     __fd_lock(fd);
+
+	if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE) && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+		SHOWMSG("file descriptor is a closed PIPE");
+
+	    __fd_unlock(fd);
+        __set_errno(EPIPE);
+		goto out;
+	}
 
     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_READ)) {
         SHOWMSG("this descriptor is not read-enabled");
 
         __set_errno(EBADF);
+	    __fd_unlock(fd);
         goto out;
     }
+	__fd_unlock(fd);
 
     if (num_bytes > 0) {
         /* Check that we are not using a socket */
@@ -85,9 +91,51 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
     result = num_bytes_read;
 
 out:
-    __fd_unlock(fd);
     __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);
+}
+
+static void byteswap16(void *ptr) {
+    uint8_t *b = ptr;
+    uint8_t t = b[0]; b[0] = b[1]; b[1] = t;
+}
+
+static void byteswap32(void *ptr) {
+    uint8_t *b = ptr;
+    uint8_t t;
+    t = b[0]; b[0] = b[3]; b[3] = t;
+    t = b[1]; b[1] = b[2]; b[2] = t;
+}
+
+static void byteswap64(void *ptr) {
+    uint8_t *b = ptr;
+    for (int i = 0; i < 4; ++i) {
+        uint8_t t = b[i];
+        b[i] = b[7 - i];
+        b[7 - i] = t;
+    }
+}
+
+ssize_t
+read(int file_descriptor, void *buffer, size_t num_bytes) {
+    struct _clib4 *__clib4 = __CLIB4;
+    ssize_t ret = __read_internal(__clib4, file_descriptor, buffer, num_bytes);
+    if (ret != (ssize_t) num_bytes)
+        return ret; // return partial or failed read unchanged
+
+    struct fd *fd = __get_file_descriptor(__clib4, file_descriptor);
+    if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET) && FLAG_IS_SET(fd->fd_Flags, FDF_LITTLE_ENDIAN)) {
+        SHOWMSG("[read] Reading in Little endian mode\n");
+        if (num_bytes == 2) {
+            byteswap16(buffer);
+        } else if (num_bytes == 4) {
+            byteswap32(buffer);
+        } else if (num_bytes == 8) {
+            byteswap64(buffer);
+        }
+    }
+
+    return ret;
 }

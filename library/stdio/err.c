@@ -13,17 +13,20 @@
 #include <err.h>
 
 void vwarn(const char *fmt, va_list ap) {
-    fprintf(stderr, "%s: ", __CLIB4->__progname);
+    struct _clib4 *__clib4 = __CLIB4;
+    fprintf(__stderr_r(__clib4), "%s: ", __clib4->__progname);
     if (fmt) {
-        vfprintf(stderr, fmt, ap);
-        fputs(": ", stderr);
+        __vfprintf_r(__clib4, __stderr_r(__clib4), fmt, ap);
+        __fputs_r(__clib4, ": ", __stderr_r(__clib4));
     }
     perror(0);
 }
 
 void vwarnx(const char *fmt, va_list ap) {
-    fprintf(stderr, "%s: ", __CLIB4->__progname);
-    if (fmt) vfprintf(stderr, fmt, ap);
+    struct _clib4 *__clib4 = __CLIB4;
+    fprintf(__stderr_r(__clib4), "%s: ", __clib4->__progname);
+    if (fmt)
+        __vfprintf_r(__clib4, __stderr_r(__clib4), fmt, ap);
     putc('\n', stderr);
 }
 

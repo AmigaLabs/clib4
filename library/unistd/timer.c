@@ -29,10 +29,6 @@ CLIB_CONSTRUCTOR(timer_init) {
 
     BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
-    __clib4->__timer_semaphore = __create_semaphore();
-    if (!__clib4->__timer_semaphore) {
-        goto out;
-    }
 
     __clib4->__timer_port = AllocSysObjectTags(ASOT_PORT,
                                                ASOPORT_Action, PA_SIGNAL,
@@ -106,9 +102,6 @@ CLIB_DESTRUCTOR(timer_exit) {
 
     FreeSysObject(ASOT_PORT, __clib4->__timer_port);
     __clib4->__timer_port = NULL;
-
-    __delete_semaphore(__clib4->__timer_semaphore);
-    __clib4->__timer_semaphore = NULL;
 
     LEAVE();
 }

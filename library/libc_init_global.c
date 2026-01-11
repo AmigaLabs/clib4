@@ -38,20 +38,10 @@
 #include <proto/elf.h>
 #include <fenv.h>
 
+#include "resolv/lookup.h"
+
 extern struct ElfIFace *__IElf;
 extern struct Library *__ElfBase;
-
-static APTR
-hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
-    uint32 pid = (uint32) userdata;
-    (void) (hook);
-
-    if (process->pr_ProcessID == pid) {
-        return process;
-    }
-
-    return 0;
-}
 
 /* random table */
 static uint32_t _random_init[] = {
@@ -66,7 +56,7 @@ static uint32_t _random_init[] = {
 };
 
 void
-reent_init(struct _clib4 *__clib4, BOOL fallback) {
+reent_init(struct _clib4 *__clib4, const BOOL fallback) {
     BOOL success = FALSE;
 
     ENTER();
@@ -116,7 +106,7 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         /* Clear itimer start time */
         .tmr_start_time.tv_sec = 0,
         .tmr_start_time.tv_usec = 0,
-        .tmr_real_task = NULL,
+		.unused = NULL, // OLD tmr_real_task pointer
         /* Set ar4random stuff */
         .rs.i = 0,
         .rs.j = 0,
@@ -159,21 +149,14 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
         .allocated_memory_by_malloc = 0,
         .__environment_pool = NULL,
         .__num_iob = 0,
-        ._iob_pool = NULL,
         .isTZSet = 0,
         .__IDebug = NULL,
+        .resolv_conf = NULL,
+        .__file_lock_semaphore_name = "Advisory File Locking",
+        .__command_line_ptr = NULL
     };
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {
-        goto out;
-    }
-
-    SHOWMSG("Allocating file IO pool");
-    __clib4->_iob_pool = AllocSysObjectTags(ASOT_MEMPOOL,
-                                               ASOPOOL_Puddle,		BUFSIZ + 32,
-                                               ASOPOOL_Threshold,	BUFSIZ + 32,
-                                               TAG_DONE);
-    if (!__clib4->_iob_pool) {
         goto out;
     }
 
@@ -183,6 +166,12 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     if (!__clib4->wide_status) {
         goto out;
     }
+
+    __clib4->resolv_conf = AllocVecTags(sizeof(struct resolvconf), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    if (!__clib4->resolv_conf) {
+        goto out;
+    }
+
     __clib4->wide_status->_strtok_last = NULL;
     __clib4->wide_status->_mblen_state.__count = 0;
     __clib4->wide_status->_mblen_state.__value.__wch = 0;
@@ -228,7 +217,7 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     D(("Try to get elf handle for dl* operations"));
     if (__clib4->IElf != NULL) {
         D(("Calling GetProcSegList"));
-        BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+        const BPTR segment_list = GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
         if (segment_list != BZERO) {
             Elf32_Handle handle = NULL;
 
@@ -244,6 +233,9 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
     }
 
     ClearMem(&__clib4->tmr_time, sizeof(struct itimerval));
+
+    /* Initialize timer list */
+    NewList((struct List *)&__clib4->tmr_real_list);
 
     /* Set ar4random stuff */
     for (int i = 0; i <= 255; i++) {
@@ -273,18 +265,17 @@ reent_init(struct _clib4 *__clib4, BOOL fallback) {
 out:
 
     if (!success) {
-        reent_exit(__clib4, fallback);
+        reent_exit(__clib4);
     }
 }
 
 void
-reent_exit(struct _clib4 *__clib4, BOOL fallback) {
+reent_exit(struct _clib4 *__clib4) {
     /* Free global clib structure */
     if (__clib4) {
-        /* Free IO memory pool */
-        if (__clib4->_iob_pool != NULL) {
-            SHOWMSG("Freeing _iob_pool and all unfreed memory");
-            FreeSysObject(ASOT_MEMPOOL, __clib4->_iob_pool);
+        if (__clib4->resolv_conf != NULL) {
+            FreeVec(__clib4->resolv_conf);
+            __clib4->resolv_conf = NULL;
         }
 
         /* Free wchar stuff */
@@ -305,7 +296,7 @@ reent_exit(struct _clib4 *__clib4, BOOL fallback) {
         SHOWMSG("Delete __pipe_semaphore semaphore");
         __delete_semaphore(__clib4->__pipe_semaphore);
         /* Free dl stuff */
-        struct ElfIFace *IElf = __IElf;
+        const struct ElfIFace *IElf = __IElf;
 
         if (IElf && __clib4->__dl_root_handle != NULL) {
             SHOWMSG("Closing __dl_root_handle");
@@ -326,7 +317,7 @@ void enableUnixPaths(void) {
     __clib4->__unix_path_semantics = TRUE;
 
     /* Set __current_path_name to a valid value */
-    UBYTE current_dir_name[256] = {0};
+    const UBYTE current_dir_name[256] = {0};
     if (NameFromLock(__clib4->self->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
         __set_current_path((const char *) current_dir_name);
     }
@@ -338,7 +329,7 @@ void disableUnixPaths(void) {
     __clib4->__unix_path_semantics = FALSE;
 
     /* Set __current_path_name to a valid value */
-    UBYTE current_dir_name[256] = {0};
+    const UBYTE current_dir_name[256] = {0};
     if (NameFromLock(__clib4->self->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
         __set_current_path((const char *) current_dir_name);
     }

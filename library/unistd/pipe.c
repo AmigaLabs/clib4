@@ -17,7 +17,7 @@ int pipe(int fd[2]) {
     // Delete the file if exists (we don't need to check if file exists)
     Delete(pipe_name);
 #else
-    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/32768/0", __clib4->pipenum++, __clib4->self->pr_ProcessID);
+    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/131072/0", __clib4->pipenum++, __clib4->self->pr_ProcessID);
 #endif // USE_TEMPFILES
 
     fd[1] = open(pipe_name, O_WRONLY | O_CREAT);
@@ -33,18 +33,19 @@ int pipe(int fd[2]) {
         RETURN(-1);
         return -1;
     }
+	/* Set FD user data to mark the other side of the pipe needed in close() function */
+	__change_fd_user_data(__clib4, fd[0], (void *)(uintptr_t)fd[1], NULL);
+	__change_fd_user_data(__clib4, fd[1], (void *)(uintptr_t)fd[0], NULL);
 
     /* Mark FD as PIPE in case USE_TEMPFILES is used */
     struct fd *fd1 = __get_file_descriptor(__clib4, fd[0]);
     if (fd1 != NULL) {
         SET_FLAG(fd1->fd_Flags, FDF_PIPE);
-        SET_FLAG(fd1->fd_Flags, FDF_IS_INTERACTIVE);
     }
 
     struct fd *fd2 = __get_file_descriptor(__clib4, fd[1]);
     if (fd2 != NULL) {
         SET_FLAG(fd2->fd_Flags, FDF_PIPE);
-        SET_FLAG(fd2->fd_Flags, FDF_IS_INTERACTIVE);
     }
 
     RETURN(0);

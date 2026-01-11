@@ -56,7 +56,7 @@ typedef uint64_t timing_t;
 
    However due to the distribution of the random block sizes
    the typical amount allocated will be much smaller.  */
-#define WORKING_SET_SIZE    1024
+#define WORKING_SET_SIZE    512 //1024
 
 #define MIN_ALLOCATION_SIZE    4
 #define MAX_ALLOCATION_SIZE    32768

@@ -39,7 +39,7 @@
 
 int
 pthread_mutex_destroy(pthread_mutex_t *mutex) {
-    if (mutex == NULL)
+    if (mutex == NULL || mutex->mutex == NULL)
         return EINVAL;
 
     if (!MutexAttempt(mutex->mutex))

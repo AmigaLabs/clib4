@@ -187,16 +187,20 @@ static int name_from_dns(struct address buf[static MAXADDRS], char canon[static 
 static int
 name_from_dns_search(struct address buf[static MAXADDRS], char canon[static 256], const char *name, int family) {
     char search[256];
-    struct resolvconf conf;
     size_t l, dots;
     char *p, *z;
-    if (__get_resolv_conf(&conf, search, sizeof search) < 0)
-        return -1;
+    struct _clib4 *__clib4 = __CLIB4;
+
+    if (((struct resolvconf *) __clib4->resolv_conf)->loaded == 0) {
+        if (__get_resolv_conf(__clib4->resolv_conf, search, sizeof search) < 0)
+            return -1;
+        ((struct resolvconf *) __clib4->resolv_conf)->loaded = 1;
+    }
 
     /* Count dots, suppress search when >=ndots or name ends in
      * a dot, which is an explicit request for global scope. */
     for (dots = l = 0; name[l]; l++) if (name[l] == '.') dots++;
-    if (dots >= conf.ndots || name[l - 1] == '.') *search = 0;
+    if (dots >= ((struct resolvconf *) __clib4->resolv_conf)->ndots || name[l - 1] == '.') *search = 0;
 
     /* Strip final dot for canon, fail if multiple trailing dots. */
     if (name[l - 1] == '.') l--;
@@ -219,13 +223,13 @@ name_from_dns_search(struct address buf[static MAXADDRS], char canon[static 256]
         if ((size_t) (z - p) < 256 - l - 1) {
             memcpy(canon + l + 1, p, z - p);
             canon[z - p + 1 + l] = 0;
-            int cnt = name_from_dns(buf, canon, canon, family, &conf);
+            int cnt = name_from_dns(buf, canon, canon, family, __clib4->resolv_conf);
             if (cnt) return cnt;
         }
     }
 
     canon[l] = 0;
-    return name_from_dns(buf, canon, name, family, &conf);
+    return name_from_dns(buf, canon, name, family, __clib4->resolv_conf);
 }
 
 static const struct policy {

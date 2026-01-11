@@ -49,9 +49,9 @@ void __attribute__((constructor, used)) __pthread_init();
 void __attribute__((destructor, used)) __pthread_exit();
 
 ThreadInfo threads[PTHREAD_THREADS_MAX];
-struct SignalSemaphore thread_sem;
+APTR thread_sem = NULL;
 TLSKey tlskeys[PTHREAD_KEYS_MAX];
-struct SignalSemaphore tls_sem;
+APTR tls_sem = NULL;
 APTR timerMutex = NULL;
 struct TimeRequest *timedTimerIO = NULL;
 struct MsgPort *timedTimerPort = NULL;
@@ -87,6 +87,16 @@ _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOO
 
     LEAVE();
     return 0;
+}
+
+static void timespec_sub(struct timespec *ts1, const struct timespec *ts2, const struct timespec *ts3) {
+    ts1->tv_sec = ts2->tv_sec - ts3->tv_sec;
+    if (ts2->tv_nsec < ts3->tv_nsec) {
+        ts1->tv_sec--;
+        ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec + 1000000000; // Add 1 billion ns (1s)
+    } else {
+        ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec;
+    }
 }
 
 int
@@ -154,16 +164,23 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     struct MsgPort timermp;
     struct TimeRequest timerio;
     struct Task *task;
+    clock_t clock_type = CLOCK_MONOTONIC;
+    if (cond->condattr != NULL)
+        clock_type = cond->condattr->clock_type;
 
     if (cond == NULL || mutex == NULL)
         return EINVAL;
+
+    /* Check for supported clock type */
+    if ((clock_type & ~(CLOCK_MONOTONIC | CLOCK_REALTIME | CLOCK_MONOTONIC_RAW)) != 0) {
+        return EINVAL;
+    }
 
     // initialize static conditions
     if (SemaphoreIsInvalid(cond->semaphore))
         pthread_cond_init(cond, NULL);
 
     task = FindTask(NULL);
-
     if (abstime) {
         // open timer.device
         if (!OpenTimerDevice((struct IORequest *) &timerio, &timermp, task)) {
@@ -174,19 +191,20 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         // prepare the device command and send it
         timerio.Request.io_Command = TR_ADDREQUEST;
         timerio.Request.io_Flags = 0;
-        TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, abstime);
         if (!relative) {
-            struct TimeVal starttime;
+            struct timespec starttime;
+			struct timespec endtime;
             // absolute time has to be converted to relative
-            // GetSysTime can't be used due to the timezone offset in abstime
-            gettimeofday((struct timeval *)&starttime, NULL);
-            timersub(&timerio.Time, &starttime, &timerio.Time);
+			clock_gettime(clock_type, &starttime);
+            timespec_sub(&endtime, abstime, &starttime);
+			TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, &endtime);
             if (!timerisset(&timerio.Time)) {
                 CloseTimerDevice((struct IORequest *) &timerio);
                 return ETIMEDOUT;
             }
         }
         sigs |= (1 << timermp.mp_SigBit);
+        SetSignal(0, sigs);
         SendIO((struct IORequest *) &timerio);
     }
 
@@ -227,11 +245,17 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         // did we timeout?
         if (sigs & (1 << timermp.mp_SigBit))
             return ETIMEDOUT;
-        else if (sigs & SIGBREAKF_CTRL_C)
+        else if (sigs & SIGBREAKF_CTRL_C) {
             pthread_testcancel();
+            // Re-Enable CTRL-C in case a signal handler is installed
+            Signal(task, SIGBREAKF_CTRL_C);
+        }
     } else {
-        if (sigs & SIGBREAKF_CTRL_C)
+        if (sigs & SIGBREAKF_CTRL_C) {
             pthread_testcancel();
+            // Re-Enable CTRL-C in case a signal handler is installed
+            Signal(task, SIGBREAKF_CTRL_C);
+        }
     }
 
     return 0;
@@ -262,17 +286,18 @@ _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
 //
 // Constructors, destructors
 //
-
-static inline void set_tls_register(ThreadInfo *ti) {
-  __asm__ volatile("mr r2, %0" :: "r"(ti));
-}
+// Store the previous value (before pthread runtime takes over)
+static ThreadInfo *old_tls = NULL;
 
 int __pthread_init_func(void) {
     pthread_t i;
+    SHOWMSG("[__pthread_init_func :] Pthread __pthread_init_func called.\n");
 
     memset(&threads, 0, sizeof(threads));
-    InitSemaphore(&thread_sem);
-    InitSemaphore(&tls_sem);
+    thread_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+    tls_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+
+    old_tls = get_tls_register();
 
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
@@ -291,13 +316,13 @@ int __pthread_init_func(void) {
 
     OpenDevice(TIMERNAME, UNIT_WAITUNTIL, (struct IORequest *) timedTimerIO, 0);
 
+    set_tls_register(inf);
+
     /* Mark all threads as IDLE */
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
         inf = &threads[i];
         inf->status = THREAD_STATE_IDLE;
     }
-
-    set_tls_register(inf);
 
     return TRUE;
 }
@@ -306,7 +331,16 @@ void __pthread_exit_func(void) {
     pthread_t i;
     ThreadInfo *inf;
     struct DOSIFace *IDOS = _IDOS;
+    SHOWMSG("[__pthread_exit_func :] Pthread __pthread_exit_func called.\n");
 
+    if (thread_sem) {
+        FreeSysObject(ASOT_MUTEX, thread_sem);
+        thread_sem = NULL;
+    }
+    if (tls_sem) {
+        FreeSysObject(ASOT_MUTEX, tls_sem);
+        tls_sem = NULL;
+    }
     if (timerMutex) {
         FreeSysObject(ASOT_MUTEX, timerMutex);
         timerMutex = NULL;
@@ -335,10 +369,14 @@ void __pthread_exit_func(void) {
                 pthread_join(i, NULL);
         }
     }
+    // Restore old tls value
+    set_tls_register(old_tls);
 }
+
 
 PTHREAD_CONSTRUCTOR(__pthread_init) {
     ENTER();
+    SHOWMSG("[__pthread_init :] Pthread constructor called.\n");
     _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
     if (_DOSBase) {
         _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);
@@ -354,6 +392,10 @@ PTHREAD_CONSTRUCTOR(__pthread_init) {
 
 PTHREAD_DESTRUCTOR(__pthread_exit) {
     ENTER();
+    SHOWMSG("[__pthread_exit :] Pthread destructor called.\n");
+
+    __pthread_exit_func();
+
     if (_DOSBase != NULL) {
         CloseLibrary(_DOSBase);
         _DOSBase = NULL;
@@ -364,6 +406,5 @@ PTHREAD_DESTRUCTOR(__pthread_exit) {
         _IDOS = NULL;
     }
 
-    __pthread_exit_func();
     LEAVE();
 }

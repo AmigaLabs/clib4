@@ -6,6 +6,8 @@
 #include "pthread.h"
 #include <sys/time.h>
 
+#define TLS_REGISTER "r2"
+
 #undef NEWLIST
 #define NEWLIST(_l)                                     \
 do                                                      \
@@ -97,9 +99,9 @@ typedef struct {
 extern struct Library *_DOSBase;
 extern struct DOSIFace *_IDOS;
 
-extern struct SignalSemaphore thread_sem;
+extern APTR thread_sem;
 extern ThreadInfo threads[PTHREAD_THREADS_MAX];
-extern struct SignalSemaphore tls_sem;
+extern APTR tls_sem;
 extern TLSKey tlskeys[PTHREAD_KEYS_MAX];
 extern APTR timerMutex;
 extern struct TimeRequest *timedTimerIO;
@@ -122,5 +124,8 @@ int _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const 
 int _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst);
 
 extern int _pthread_concur;
+
+void set_tls_register(ThreadInfo *ti);
+ThreadInfo *get_tls_register(void);
 
 #endif

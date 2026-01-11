@@ -45,7 +45,7 @@ pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
     if (key == NULL)
         return EINVAL;
 
-    ObtainSemaphore(&tls_sem);
+    MutexObtain(tls_sem);
 
     for (i = 0; i < PTHREAD_KEYS_MAX; i++) {
         if (tlskeys[i].used == FALSE)
@@ -53,7 +53,7 @@ pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
     }
 
     if (i == PTHREAD_KEYS_MAX) {
-        ReleaseSemaphore(&tls_sem);
+        MutexRelease(tls_sem);
         return EAGAIN;
     }
 
@@ -61,7 +61,7 @@ pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
     tls->used = TRUE;
     tls->destructor = destructor;
 
-    ReleaseSemaphore(&tls_sem);
+    MutexRelease(tls_sem);
 
     *key = i;
 

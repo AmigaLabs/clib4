@@ -22,6 +22,13 @@
 #include <exec/lists.h>
 #include <exec/semaphores.h>
 
+/* Node structure for timer list */
+struct TimerNode {
+    struct MinNode tn_Node;
+    struct Process *tn_Process;    /* The timer process */
+    uint32 tn_ThreadID;            /* The thread ID that created this timer */
+};
+
 /* Category name handling variables.  */
 #define NUM_LOCALES                (LC_MAX + 1)
 #define MAX_LOCALE_NAME_LEN        256
@@ -253,7 +260,7 @@ struct _clib4 {
     /* Used by setitimer/getitimer */
     struct itimerval tmr_time;
     struct timeval tmr_start_time;
-    struct Process *tmr_real_task;
+    struct Process *unused;  /* Old tmr_real_task pointer */
 
     /* Used for shared version library */
     int _errno;
@@ -306,7 +313,7 @@ struct _clib4 {
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
     BOOL unused1;
-	struct SignalSemaphore *__timer_semaphore;
+	void *unused2;
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;
     struct TimerIFace *__ITimer;
@@ -316,9 +323,8 @@ struct _clib4 {
     BOOL __current_directory_changed;
     BOOL __unlock_current_directory;
 
-    /* Memalign memory list */
-    void *unused2;
-    void *unused3;
+    APTR __environment_lock;
+    void *resolv_conf; //struct resolvconf
 
     /*
      * This variable can be set up to contain the minimum stack size the program
@@ -472,7 +478,9 @@ struct _clib4 {
     struct StackSwapStruct stack_swap_struct;
 
     /* Wof Allocator memory semaphore */
-    struct SignalSemaphore *memory_semaphore;
+    // struct SignalSemaphore *memory_semaphore;
+    APTR memory_mutex;
+    
     int pipenum;
 
     /* gettext */
@@ -531,6 +539,10 @@ struct _clib4 {
     int isTZSet;
 
     struct DebugIFace *__IDebug;
+
+	unsigned int __machine_type;
+	struct MinList tmr_real_list;  /* List of TimerNode structures */
+	unsigned char *__command_line_ptr;  /* Pointer to allocated command line string (for deallocation) */
 };
 
 #ifndef __getClib4

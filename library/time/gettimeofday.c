@@ -31,6 +31,7 @@ gettimeofday(struct timeval *tv, struct timezone *tzp) {
     ENTER();
     if (NULL == __clib4->__ITimer) {
         tv->tv_sec = tv->tv_usec = 0;
+        tv->tv_sec += UNIX_TIME_OFFSET;
         if (tzp != NULL)
             tzp->tz_minuteswest = tzp->tz_dsttime = 0;
         RETURN(0);

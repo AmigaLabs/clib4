@@ -113,7 +113,7 @@ extern const char * const NOCOMMON __month_names[12];
 
 extern char * __asctime_r(const struct tm *tm,char * buffer,size_t buffer_size);
 extern char * __number_to_string(unsigned int number,char * string,size_t max_len,size_t min_len);
-extern struct tm * __convert_time(ULONG seconds, LONG gmt_offset, struct tm * tm);
+extern struct tm * __convert_time(struct _clib4 *__clib4, ULONG seconds, LONG gmt_offset, struct tm * tm);
 extern time_t __convert_datestamp_to_time(const struct DateStamp * ds);
 extern BOOL __convert_time_to_datestamp(time_t time_value,struct DateStamp * ds);
 extern int __calculate_weekday(int year,int month,int day);

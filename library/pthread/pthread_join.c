@@ -61,9 +61,9 @@ pthread_join(pthread_t thread, void **value_ptr) {
     if (value_ptr)
         *value_ptr = inf->ret;
 
-    ObtainSemaphore(&thread_sem);
+    MutexObtain(thread_sem);
     _pthread_clear_threadinfo(inf);
-    ReleaseSemaphore(&thread_sem);
+    MutexRelease(thread_sem);
 
     return 0;
 }

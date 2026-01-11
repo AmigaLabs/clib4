@@ -97,7 +97,7 @@ static int
 call_main(
         char *argstr,
         int arglen,
-        int (*start_main)(int, char **),
+        int (*start_main)(int, char **, char **),
         void (*__EXT_CTOR_LIST__[])(void),
         void (*__EXT_DTOR_LIST__[])(void),
         struct _clib4 *__clib4) {
@@ -120,7 +120,7 @@ call_main(
 
     D(("Call start_main with %ld parameters", __clib4->__argc));
     /* After all these preparations, get this show on the road... */
-    exit(start_main(__clib4->__argc, __clib4->__argv));
+    exit(start_main(__clib4->__argc, __clib4->__argv, __clib4->__environment));
     SHOWMSG("Done. Exit from start_main()");
 
 out:
@@ -160,24 +160,18 @@ int
 _main(
         char *argstr,
         int arglen,
-        int (*start_main)(int, char **),
+        int (*start_main)(int, char **, char **),
         void (*__EXT_CTOR_LIST__[])(void),
-        void (*__EXT_DTOR_LIST__[])(void)) {
-    struct WBStartup *sms = NULL;
+        void (*__EXT_DTOR_LIST__[])(void),
+        struct WBStartup *sms
+    ) {
     struct Process *me;
     APTR oldClib4Data;
     int rc = RETURN_FAIL;
     struct _clib4 *__clib4 = __CLIB4;
 
-    /* Pick up the Workbench startup message, if available. */
-    me = (struct Process *) FindTask(NULL);
-    if (!me->pr_CLI) {
-        struct MsgPort *mp = &me->pr_MsgPort;
-        WaitPort(mp);
-        sms = (struct WBStartup *) GetMsg(mp);
-    }
-
     /* Store old Clib4Data */
+    me = (struct Process *) FindTask(NULL);
     oldClib4Data = (APTR) me->pr_UID;
 
     __clib4->__WBenchMsg = sms;

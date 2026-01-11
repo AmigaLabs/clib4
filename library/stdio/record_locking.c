@@ -562,11 +562,11 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
     _off64_t seek_position;
     _off64_t current_position;
     int result = ERROR;
-    _off64_t original_len;
+    _off64_t original_len = 0;
     LONG error = OK;
     _off64_t start = 0;
     _off64_t len = 0;
-    _off64_t stop;
+    _off64_t stop = 0;
 
     ENTER();
 
@@ -591,7 +591,7 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
     /* Remember to unlock any records before closing the file. */
     fd->fd_Cleanup = cleanup_locked_records;
 
-    if ((cmd == F_SETLK || cmd == F_SETLKW) && (l->l_type != F_UNLCK)) {
+    if ((cmd == F_SETLK || cmd == F_SETLKW) && (l->l_type == F_WRLCK || l->l_type == F_RDLCK)) {
         SHOWMSG("this is a lock request");
 
         error = create_file_lock_node(__clib4, fd, &fln);
@@ -605,7 +605,11 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
             SHOWMSG("could not create region node");
             goto out;
         }
-    } else {
+    }
+    else if (l->l_type == F_UNLCK) {
+        SHOWMSG("this is an unlock request");
+    }
+    else {
         SHOWMSG("this is not a lock request");
         goto out;
     }

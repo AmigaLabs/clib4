@@ -21,6 +21,8 @@ nanosleep(const struct timespec *req, struct timespec *rem) {
 
     int result = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
 
+    __check_abort();
+
     RETURN(result);
     return result;
 }

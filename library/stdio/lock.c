@@ -6,21 +6,52 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+static int SemaphoreIsMine(struct SignalSemaphore *sem) {
+	struct Task *me = FindTask(NULL);
+	return (sem && sem->ss_NestCount > 0 && sem->ss_Owner == me);
+}
+
+#ifdef DEBUG_LOCKS
+void
+__stdio_lock_real(struct _clib4 *__clib4) {
+    if (__clib4->stdio_lock != NULL)
+        ObtainSemaphoreShared(__clib4->stdio_lock);
+}
+
+void
+__stdio_unlock_real(struct _clib4 *__clib4) {
+	if (__clib4->stdio_lock != NULL && SemaphoreIsMine(__clib4->stdio_lock))
+		ReleaseSemaphore(__clib4->stdio_lock);
+}
+
+void __stdio_lock_special(char const *caller_name, struct _clib4 *__clib4)
+{
+	DebugPrintF( "__stdio_lock was called from %s and thread %x\n", caller_name, FindTask(NULL) );
+	__stdio_lock_real(__clib4);
+}
+
+void __stdio_unlock_special(char const *caller_name, struct _clib4 *__clib4)
+{
+	DebugPrintF( "__stdio_unlock was called from %s and thread %x\n", caller_name, FindTask(NULL) );
+	__stdio_unlock_real(__clib4);
+}
+#else
 void
 __stdio_lock(struct _clib4 *__clib4) {
-    if (__clib4->stdio_lock != NULL)
-        MutexObtain(__clib4->stdio_lock);
+	if (__clib4->stdio_lock != NULL)
+		ObtainSemaphoreShared(__clib4->stdio_lock);
 }
 
 void
 __stdio_unlock(struct _clib4 *__clib4) {
-    if (__clib4->stdio_lock != NULL)
-        MutexRelease(__clib4->stdio_lock);
+	if (__clib4->stdio_lock != NULL && SemaphoreIsMine(__clib4->stdio_lock))
+		ReleaseSemaphore(__clib4->stdio_lock);
 }
+#endif
 
 void
 __stdio_lock_exit(struct _clib4 *__clib4) {
-    __delete_mutex(__clib4->stdio_lock);
+    __delete_semaphore(__clib4->stdio_lock);
     __clib4->stdio_lock = NULL;
 }
 
@@ -28,7 +59,7 @@ int
 __stdio_lock_init(struct _clib4 *__clib4) {
     int result = ERROR;
 
-    __clib4->stdio_lock = __create_mutex();
+    __clib4->stdio_lock = __create_semaphore();
     if (__clib4->stdio_lock == NULL)
         goto out;
 

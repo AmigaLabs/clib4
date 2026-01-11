@@ -19,8 +19,6 @@ fdopen(int file_descriptor, const char *type) {
 
     assert(type != NULL);
 
-    __check_abort_f(__clib4);
-
     __stdio_lock(__clib4);
 
     if (type == NULL) {

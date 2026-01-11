@@ -75,7 +75,10 @@ typedef enum _wmem_allocator_type_t {
  * @param size The amount of memory to allocate.
  * @return A void pointer to the newly allocated memory.
  */
+extern uintptr_t align_address(uintptr_t address, size_t alignment);
+
 extern void * wmem_alloc(wmem_allocator_t *allocator, const size_t size) __attribute__((__malloc__)) __attribute__((__alloc_size__(2)));
+extern void * wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, const int32_t alignment) __attribute__((__malloc__)) __attribute__((__alloc_size__(2)));
 
 /** Allocate memory sufficient to hold one object of the given type.
  *
@@ -156,6 +159,7 @@ extern void wmem_free(wmem_allocator_t *allocator, void *ptr);
  * then ptr no longer points to valid memory.
  */
 extern void * wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) __attribute__((__alloc_size__(3)));
+extern void * wmem_realloc_aligned(wmem_allocator_t *allocator, void *ptr, const size_t size, int32_t alignment) __attribute__((__alloc_size__(3)));
 
 /** Frees all the memory allocated in a pool. Depending on the allocator
  * implementation used this can be significantly cheaper than calling

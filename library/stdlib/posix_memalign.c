@@ -14,7 +14,8 @@ posix_memalign(void **res, size_t align, size_t len) {
 
     void *mem = aligned_alloc(align, len);
     if (!mem) {
-        return errno;
+        if(errno)
+            return errno;
     }
     *res = mem;
 

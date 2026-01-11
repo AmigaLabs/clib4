@@ -23,8 +23,6 @@ fclose(FILE *stream) {
 
     assert(stream != NULL);
 
-    DECLARE_UTILITYBASE();
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 
@@ -86,7 +84,10 @@ fclose(FILE *stream) {
     /* Get rid of any custom file buffer allocated. */
     if (file->iob_CustomBuffer != NULL) {
         SHOWMSG("Delete allocated buffer");
-        FreeVecPooled(__clib4->_iob_pool, file->iob_CustomBuffer);
+        if (file->iob_isVBuffer)
+            FreeVec(file->iob_CustomBuffer);
+        else
+            free(file->iob_CustomBuffer);
         file->iob_CustomBuffer = NULL;
     }
 

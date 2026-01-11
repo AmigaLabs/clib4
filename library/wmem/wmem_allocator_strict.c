@@ -41,17 +41,31 @@ typedef struct _wmem_strict_allocator_block_t {
 
     /* Just the length of real_data, not counting the canaries */
     size_t data_len;
+    void *data;
+    size_t total_size;
 } wmem_strict_allocator_block_t;
-
-#define WMEM_DATA_TO_BLOCK(DATA) ((wmem_strict_allocator_block_t*)((uint8_t*)(DATA) - WMEM_CANARY_SIZE - sizeof(wmem_strict_allocator_block_t)))
-#define WMEM_BLOCK_TO_DATA(BLOCK) ((void*)((uint8_t*)(BLOCK) + WMEM_CANARY_SIZE + sizeof(wmem_strict_allocator_block_t)))
-#define WMEM_BLOCK_TO_PRE_CANARY(BLOCK) ((uint8_t*)(BLOCK) + sizeof(wmem_strict_allocator_block_t))
-#define WMEM_BLOCK_TO_POST_CANARY(BLOCK) ((uint8_t*)(BLOCK) + WMEM_CANARY_SIZE + sizeof(wmem_strict_allocator_block_t) + (BLOCK)->data_len)
-#define WMEM_FULL_SIZE(SIZE) ((SIZE) + sizeof(wmem_strict_allocator_block_t) + (2*WMEM_CANARY_SIZE))
 
 typedef struct _wmem_strict_allocator_t {
     wmem_strict_allocator_block_t *blocks;
 } wmem_strict_allocator_t;
+
+// #define WMEM_DATA_TO_BLOCK(DATA) ((wmem_strict_allocator_block_t*)((uint8_t*)(DATA) - WMEM_CANARY_SIZE - sizeof(wmem_strict_allocator_block_t)))
+wmem_strict_allocator_block_t *WMEM_DATA_TO_BLOCK(wmem_strict_allocator_t *allocator, void *DATA);
+wmem_strict_allocator_block_t *WMEM_DATA_TO_BLOCK(wmem_strict_allocator_t *allocator, void *DATA) {
+    for(wmem_strict_allocator_block_t *b = allocator->blocks; b; b = b->next)
+        if(b->data == DATA) return b;
+    return 0;
+}
+
+// #define WMEM_BLOCK_TO_DATA(BLOCK) ((void*)((uint8_t*)(BLOCK) + WMEM_CANARY_SIZE + sizeof(wmem_strict_allocator_block_t)))
+#define WMEM_BLOCK_TO_DATA(BLOCK, alignment) ((void*)align_address((uintptr_t)(BLOCK) + WMEM_CANARY_SIZE + sizeof(wmem_strict_allocator_block_t), alignment))
+
+// #define WMEM_BLOCK_TO_PRE_CANARY(BLOCK) ((uint8_t*)(BLOCK) + sizeof(wmem_strict_allocator_block_t))
+#define WMEM_BLOCK_TO_PRE_CANARY(BLOCK) ((uint8_t*)(BLOCK->data) - WMEM_CANARY_SIZE)
+// #define WMEM_BLOCK_TO_POST_CANARY(BLOCK) ((uint8_t*)(BLOCK) + WMEM_CANARY_SIZE + sizeof(wmem_strict_allocator_block_t) + (BLOCK)->data_len)
+#define WMEM_BLOCK_TO_POST_CANARY(BLOCK) ((uint8_t*)(BLOCK->data) + (BLOCK)->data_len)
+#define WMEM_FULL_SIZE(SIZE, alignment) ((SIZE) + alignment + sizeof(wmem_strict_allocator_block_t) + (2*WMEM_CANARY_SIZE))
+
 
 /*
  * some internal helper functions
@@ -62,6 +76,9 @@ wmem_strict_block_check_canaries(wmem_strict_allocator_block_t *block) {
     uint8_t *canary;
     (void) (canary);
 
+#ifdef MEMORY_DEBUG
+    // D(("[strict :] Checking canaries...\n"));
+#endif
     canary = WMEM_BLOCK_TO_PRE_CANARY(block);
     for (i = 0; i < WMEM_CANARY_SIZE; i++) assert(canary[i] == WMEM_CANARY_VALUE);
 
@@ -73,7 +90,7 @@ wmem_strict_block_check_canaries(wmem_strict_allocator_block_t *block) {
  * public API functions
  */
 static void *
-wmem_strict_alloc(void *private_data, const size_t size) {
+wmem_strict_alloc(void *private_data, const size_t size, int32_t alignment) {
     wmem_strict_allocator_t *allocator;
     wmem_strict_allocator_block_t *block;
     unsigned i;
@@ -81,10 +98,12 @@ wmem_strict_alloc(void *private_data, const size_t size) {
 
     allocator = (wmem_strict_allocator_t *) private_data;
 
-    block = (wmem_strict_allocator_block_t *) wmem_alloc(NULL, WMEM_FULL_SIZE(size));
+    block = (wmem_strict_allocator_block_t *) wmem_alloc(NULL, WMEM_FULL_SIZE(size, alignment));
     block->data_len = size;
+    block->data = WMEM_BLOCK_TO_DATA(block, alignment);
+    block->total_size = WMEM_FULL_SIZE(size, alignment);
 
-    memset(WMEM_BLOCK_TO_DATA(block), WMEM_PREFILL, block->data_len);
+    memset(block->data, WMEM_PREFILL, block->data_len);
 
     canary = WMEM_BLOCK_TO_PRE_CANARY(block);
     for (i = 0; i < WMEM_CANARY_SIZE; i++) canary[i] = WMEM_CANARY_VALUE;
@@ -99,7 +118,7 @@ wmem_strict_alloc(void *private_data, const size_t size) {
     block->prev = NULL;
     allocator->blocks = block;
 
-    return WMEM_BLOCK_TO_DATA(block);
+    return WMEM_BLOCK_TO_DATA(block, alignment);
 }
 
 static void
@@ -109,7 +128,7 @@ wmem_strict_free(void *private_data, void *ptr) {
 
     allocator = (wmem_strict_allocator_t *) private_data;
 
-    block = WMEM_DATA_TO_BLOCK(ptr);
+    block = WMEM_DATA_TO_BLOCK(allocator, ptr);
 
     wmem_strict_block_check_canaries(block);
 
@@ -123,20 +142,20 @@ wmem_strict_free(void *private_data, void *ptr) {
         allocator->blocks = block->next;
     }
 
-    memset(block, WMEM_POSTFILL, WMEM_FULL_SIZE(block->data_len));
+    memset(block, WMEM_POSTFILL, block->total_size);
 
     wmem_free(NULL, block);
 }
 
 static void *
-wmem_strict_realloc(void *private_data, void *ptr, const size_t size) {
+wmem_strict_realloc(void *private_data, void *ptr, const size_t size, int32_t alignment) {
     wmem_strict_allocator_block_t *block;
     void *new_ptr;
 
-    block = WMEM_DATA_TO_BLOCK(ptr);
+    block = WMEM_DATA_TO_BLOCK((wmem_strict_allocator_t *) private_data, ptr);
 
     /* create a new block */
-    new_ptr = wmem_strict_alloc(private_data, size);
+    new_ptr = wmem_strict_alloc(private_data, size, 2);
 
     /* copy from the old block to the new */
     if (block->data_len > size) {
@@ -176,7 +195,7 @@ wmem_strict_free_all(void *private_data) {
     allocator = (wmem_strict_allocator_t *) private_data;
 
     while (allocator->blocks) {
-        wmem_strict_free(private_data, WMEM_BLOCK_TO_DATA(allocator->blocks));
+        wmem_strict_free(private_data, allocator->blocks->data);
     }
 }
 

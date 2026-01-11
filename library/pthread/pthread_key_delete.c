@@ -46,17 +46,17 @@ pthread_key_delete(pthread_key_t key) {
 
     tls = &tlskeys[key];
 
-    ObtainSemaphore(&tls_sem);
+    MutexObtain(tls_sem);
 
     if (tls->used == FALSE) {
-        ReleaseSemaphore(&tls_sem);
+        MutexRelease(tls_sem);
         return EINVAL;
     }
 
     tls->used = FALSE;
     tls->destructor = NULL;
 
-    ReleaseSemaphore(&tls_sem);
+    MutexRelease(tls_sem);
 
     return 0;
 }

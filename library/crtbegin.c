@@ -1,5 +1,6 @@
 /*
 * $Id: crtbegin.c,v 1.3 2022-03-09 21:07:25 clib4devs Exp $
+* Modified to add EH frame support for C++ exceptions
   */
 #undef __USE_INLINE__
 #define __NOLIBBASE__
@@ -12,6 +13,8 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/utility.h>
+
+#include <workbench/startup.h>
 
 #include "shared_library/interface.h"
 
@@ -47,6 +50,56 @@
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors"))) = { (void *)~0 };
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors"))) = { (void *)~0 };
 
+/* ===== BEGIN EH FRAME SUPPORT ===== */
+
+/* Object structure for exception handling frame registration */
+struct object {
+    void *pc_begin;
+    void *tbase;
+    void *dbase;
+    union {
+        const void *single;
+        struct dwarf_fde *array;
+    } u;
+    union {
+        struct {
+            unsigned long sorted : 1;
+            unsigned long from_array : 1;
+            unsigned long mixed_encoding : 1;
+            unsigned long encoding : 8;
+            unsigned long count : 21;
+        } b;
+        size_t i;
+    } s;
+    struct object *next;
+};
+
+/* Mark the beginning of the exception handling frames */
+static const char __EH_FRAME_BEGIN__[] __attribute__((used, section(".eh_frame"), aligned(4))) = { };
+
+/* Weak declarations for the frame registration functions from libgcc */
+extern void __register_frame_info(const void *, struct object *) __attribute__((weak));
+extern void *__deregister_frame_info(const void *) __attribute__((weak));
+
+/* Storage for the object that describes this compilation unit's frames */
+static struct object frame_object;
+
+/* Register exception handling frame information */
+static void
+__register_frame_info_clib4(void) {
+    if (__register_frame_info)
+        __register_frame_info(__EH_FRAME_BEGIN__, &frame_object);
+}
+
+/* Deregister exception handling frame information */
+static void
+__deregister_frame_info_clib4(void) {
+    if (__deregister_frame_info)
+        __deregister_frame_info(__EH_FRAME_BEGIN__);
+}
+
+/* ===== END EH FRAME SUPPORT ===== */
+
 const struct Library *SysBase = NULL;
 const struct ExecIFace *IExec = NULL;
 
@@ -69,9 +122,9 @@ extern void *_DATA_BASE_ __attribute__((force_no_baserel));
 register void *r2 __asm("r2");
 #endif
 
-extern int main(int, char **);
-int clib4_start(char *args, int32 arglen, struct Library *sysbase);
-int _start(char *args, int32 arglen, struct Library *sysbase);
+extern int main(int, char **, char **);
+int clib4_start(char *args, const int32 arglen, struct Library *sysbase);
+int _start(char *argstring, int32 arglen, struct Library *sysbase);
 
 static struct Interface *OpenLibraryInterface(struct ExecIFace *iexec, const char *name, int version) {
     struct Library *library;
@@ -104,19 +157,33 @@ static void CloseLibraryInterface(struct ExecIFace *iexec, struct Interface *int
 }
 
 int
-clib4_start(char *args, int32 arglen, struct Library *sysbase) {
+clib4_start(char *args, const int32 arglen, struct Library *sysbase) {
     struct ExecIFace *iexec;
-    struct Clib4IFace *iclib4;
+    struct Clib4IFace *iclib4 = NULL;
     struct DOSIFace *idos;
 
     int rc = -1;
     void *old_r13 = r13;
 
+    struct Process *me;
+    struct WBStartup *sms = NULL;
+
     r13 = &_SDA_BASE_;
     SysBase = sysbase;
 
+    /* Register exception handling frames EARLY, before any C++ code runs */
+    __register_frame_info_clib4();
+
     iexec = (struct ExecIFace *) ((struct ExecBase *) SysBase)->MainInterface;
     iexec->Obtain();
+
+    /* Pick up the Workbench startup message, if available. */
+    me = (struct Process *) iexec->FindTask(NULL);
+    if (!me->pr_CLI) {
+        struct MsgPort *mp = &me->pr_MsgPort;
+        iexec->WaitPort(mp);
+        sms = (struct WBStartup *) iexec->GetMsg(mp);
+    }
 
     IExec = iexec;
     idos = (struct DOSIFace *) OpenLibraryInterface(iexec, "dos.library", MIN_OS_VERSION);
@@ -127,11 +194,11 @@ clib4_start(char *args, int32 arglen, struct Library *sysbase) {
             UtilityBase = IUtility->Data.LibBase;
             iclib4 = (struct Clib4IFace *) OpenLibraryInterface(iexec, "clib4.library", 1);
             if (iclib4 != NULL) {
-                struct Library *clib4base = ((struct Interface *) iclib4)->Data.LibBase;
-                if (clib4base->lib_Version >= VERSION && clib4base->lib_Revision >= REVISION) {
+                const struct Library *clib4base = ((struct Interface *) iclib4)->Data.LibBase;
+                if (clib4base->lib_Version > VERSION || (clib4base->lib_Version == VERSION && clib4base->lib_Revision >= REVISION)) {
                     IClib4 = iclib4;
 
-                    rc = iclib4->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__);
+                    rc = iclib4->library_start(args, arglen, main, __CTOR_LIST__, __DTOR_LIST__, sms);
                 }
                 else {
                     idos->Printf("This program requires clib4.library version %ld.%ld\n", VERSION, REVISION);
@@ -147,6 +214,10 @@ clib4_start(char *args, int32 arglen, struct Library *sysbase) {
     else {
         iexec->Alert(AT_Recovery | AG_OpenLib | AO_DOSLib);
     }
+
+    /* Deregister EH frames before cleanup */
+    __deregister_frame_info_clib4();
+
     CloseLibraryInterface(iexec, (struct Interface *) iclib4);
     CloseLibraryInterface(iexec, (struct Interface *) IUtility);
     CloseLibraryInterface(iexec, (struct Interface *) idos);
@@ -166,7 +237,7 @@ _start(STRPTR argstring, int32 arglen, struct Library *sysbase) {
     r2 = &_DATA_BASE_;
 #endif
 
-    int result = clib4_start(argstring, arglen, sysbase);
+    const int result = clib4_start(argstring, arglen, sysbase);
 
 #ifdef CLIB4_MBASEREL
     r2 = old_r2;

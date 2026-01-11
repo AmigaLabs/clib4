@@ -58,12 +58,22 @@ raise(int sig) {
 
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                     __set_errno_r(__clib4, EINTR);
-                    /* Check ig we have timer terminal running. If so let's kill it */
-                    if (__clib4->tmr_real_task != NULL) {
+                    /* Check if we have timer tasks running for this thread. If so let's kill them */
+                    if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
+                        uint32 currentThreadID = (uint32)FindTask(NULL);
                         /* Block SIGALRM signal from raise */
                         sigblock(SIGALRM);
-                        /* Kill itimer */
-                        killitimer();
+                        /* Kill itimer for current thread */
+                        struct TimerNode *node, *next;
+                        for (node = (struct TimerNode *)__clib4->tmr_real_list.mlh_Head;
+                             (next = (struct TimerNode *)node->tn_Node.mln_Succ) != NULL;
+                             node = next) {
+                            if (node->tn_ThreadID == currentThreadID) {
+                                Signal((struct Task *)node->tn_Process, SIGBREAKF_CTRL_F);
+                                Remove((struct Node *)&node->tn_Node);
+                                FreeVec(node);
+                            }
+                        }
                     }
 
                     char break_string[80];

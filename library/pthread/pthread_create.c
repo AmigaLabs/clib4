@@ -39,8 +39,57 @@
 
 extern struct DOSIFace *_IDOS;
 
-static inline void set_tls_register(ThreadInfo *ti) {
-  __asm__ volatile("mr r2, %0" :: "r"(ti));
+static ThreadInfo *old_tls = NULL;
+
+static APTR
+hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
+    uint32 pid = (uint32) userdata;
+    (void) (hook);
+
+    if (process->pr_ProcessID == pid) {
+        return process;
+    }
+
+    return 0;
+}
+
+// This is duplicate of killitimer() present in clib4 but is needed since it isn't exposed into interface
+static void killitimer_by_thread(uint32 threadID) {
+    struct _clib4 *__clib4 = __CLIB4;
+    struct TimerNode *node, *next;
+    
+    /* Scan the timer list for timers belonging to the specified thread */
+    for (node = (struct TimerNode *)__clib4->tmr_real_list.mlh_Head;
+         (next = (struct TimerNode *)node->tn_Node.mln_Succ) != NULL;
+         node = next) {
+        
+        if (node->tn_ThreadID == threadID) {
+            struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
+            int32 pid, process;
+            
+            pid = node->tn_Process->pr_ProcessID;
+            /* Scan for process */
+            process = ProcessScan(&h, (CONST_APTR) pid, 0);
+            DebugPrintF("Scan for process %ld (%ld) of thread %lu..\n", process, pid, threadID);
+            
+            while (process > 0) {
+                DebugPrintF("Waiting for process %ld to close..\n", pid);
+                /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
+                Signal((struct Task *)node->tn_Process, SIGBREAKF_CTRL_F);
+                process = ProcessScan(&h, (CONST_APTR) pid, 0);
+                Delay(10);
+            }
+            
+            DebugPrintF("Process closed.. Wait For Child\n");
+            WaitForChildExit(pid);
+            DebugPrintF("Done\n");
+            
+            /* Remove from list and free */
+            Remove((struct Node *)&node->tn_Node);
+            FreeVec(node);
+			node = NULL;
+        }
+    }
 }
 
 static uint32
@@ -49,12 +98,17 @@ StarterFunc() {
     struct StackSwapStruct stack;
     volatile BOOL stackSwapped = FALSE;
 
+    old_tls = get_tls_register();
+
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
 
     set_tls_register(inf);
 
-    struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_EntryData; // GetEntryData();
+    struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_UID; // GetEntryData();
+
+    // we have to set the priority here to avoid race conditions
+    SetTaskPri((struct Task *) inf->task, inf->attr.param.sched_priority);
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
@@ -76,11 +130,9 @@ StarterFunc() {
         inf->ret = inf->start(inf->arg);
     }
 
-    pthread_cleanup_pop(1);
-
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
-    ObtainSemaphoreShared(&tls_sem);
+    MutexObtain(tls_sem);
     for (int j = 0; keyFound && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
         keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
@@ -92,7 +144,16 @@ StarterFunc() {
             }
         }
     }
-    ReleaseSemaphore(&tls_sem);
+    MutexRelease(tls_sem);
+
+    /*  If we have timer running tasks for this thread, stop them before exit  */
+    if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
+        uint32 currentThreadID = (uint32)FindTask(NULL);
+        /* Block SIGALRM signal from raise */
+        sigblock(SIGALRM);
+        /* Kill itimer for current thread */
+        killitimer_by_thread(currentThreadID);
+    }
 
     if (stackSwapped)
         StackSwap(&stack);
@@ -104,10 +165,13 @@ StarterFunc() {
         Signal((struct Task *) inf->parent, SIGF_PARENT);
     } else {
         // no one is waiting for us, do the clean up
-        ObtainSemaphore(&thread_sem);
+        MutexObtain(thread_sem);
         _pthread_clear_threadinfo(inf);
-        ReleaseSemaphore(&thread_sem);
+        MutexRelease(thread_sem);
     }
+
+    // Restore old tls value
+    __asm__ volatile("mr "TLS_REGISTER", %0" :: "r"(old_tls));
 
     return RETURN_OK;
 }
@@ -125,12 +189,12 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
         return EINVAL;
 
     // grab an empty thread slot
-    ObtainSemaphore(&thread_sem);
+    MutexObtain(thread_sem);
     threadnew = GetThreadId(NULL);
-    ReleaseSemaphore(&thread_sem);
+    MutexRelease(thread_sem);
 
     if (threadnew == PTHREAD_THREADS_MAX) {
-        ReleaseSemaphore(&thread_sem);
+        MutexRelease(thread_sem);
         return EAGAIN;
     }
 

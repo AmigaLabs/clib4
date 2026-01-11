@@ -2,6 +2,7 @@
 #define _SYS_INTERFACE_H_
 
 #include <proto/dos.h>
+#include <workbench/startup.h>
 
 #undef __BSD_VISIBLE
 #define __BSD_VISIBLE 1
@@ -103,7 +104,7 @@ struct Clib4IFace {
     void APICALL (*Expunge)(struct Clib4IFace *Self);                       //68
     struct Clib4IFace *APICALL (*Clone)(struct Clib4IFace *Self);           //72
     /* internal */
-    int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void)); //76
+    int  (* library_start)(char *argstr, int arglen, int (* start_main)(int, char **, char **), void (*__CTOR_LIST__[])(void), void (*__DTOR_LIST__[])(void), struct WBStartup *sms); //76
     struct _clib4 * (* __getClib4)(void);                                   //80
     void (* internal1)(void);                                               //84
     void (* __translate_amiga_to_unix_path_name)(void);                     //88
@@ -1367,12 +1368,13 @@ struct Clib4IFace {
 	long double (* roundevenl) (long double x);																	 									 /* 4456 */
 
 	char * (* canonicalize_file_name) (const char *name);																	 						 /* 4460 */
+	int (* spawnvpe_fork) (const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);                   /* 4464 */
 };
 
 #ifdef __PIC__
 #define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
-	    .align 8                     \n\
+	    .align 2                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\
@@ -1382,7 +1384,7 @@ struct Clib4IFace {
 #elif !defined(__PIC__)
 #define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
-	    .align 8                     \n\
+	    .align 2                     \n\
 	    .globl " #function "         \n\
 	    .type	" #function ", @function \n\
 " #function ":                       \n\

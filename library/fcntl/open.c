@@ -12,12 +12,21 @@
 
 int
 open(const char *path_name, int open_flag, ... /* mode_t mode */) {
+    struct _clib4 *__clib4 = __CLIB4;
+    va_list ap;
+    va_start(ap, open_flag);
+    return __open_r(__clib4, path_name, open_flag, va_arg(ap, int));
+    va_end(ap);
+}
+
+int
+__open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mode_t mode */) {
     DECLARE_UTILITYBASE();
     struct name_translation_info path_name_nti;
     struct ExamineData *fib = NULL;
     APTR fd_lock;
     LONG is_file_system = FALSE;
-    LONG open_mode;
+    LONG open_mode = MODE_OLDFILE;
     BPTR lock = BZERO, dir_lock = BZERO;
     BPTR handle = BZERO;
     BOOL create_new_file = FALSE;
@@ -28,7 +37,6 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
     int result = ERROR;
     int i;
     BOOL is_directory = FALSE;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -110,11 +118,8 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
 
     if (Strnicmp(path_name, "PIPE:", 5) == SAME && FLAG_IS_SET(open_flag, O_CREAT)) {
         open_mode = MODE_NEWFILE;
-    } else if (Strnicmp(path_name, "NIL:", 4) != SAME && (
-            FLAG_IS_SET(open_flag, O_CREAT) ||
-            FLAG_IS_SET(open_flag, O_WRONLY) ||
-            FLAG_IS_SET(open_flag, O_RDWR)
-    )) {
+    }
+	else if (Strnicmp(path_name, "NIL:", 4) != SAME && (FLAG_IS_SET(open_flag, O_CREAT))) {
         if (FLAG_IS_SET(open_flag, O_EXCL)) {
             LONG error;
 
@@ -123,6 +128,9 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
             lock = Lock((STRPTR) path_name, SHARED_LOCK);
             if (lock != BZERO) {
                 SHOWMSG("the file already exists");
+
+                UnLock(lock);
+                lock = BZERO;
 
                 __set_errno(EEXIST);
                 goto out;
@@ -142,10 +150,9 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
                 goto out;
             }
 
-            SHOWMSG("the object does not already exist");
+			SHOWMSG("the object does not already exist");
         }
-
-        open_mode = MODE_READWRITE;
+		open_mode = MODE_READWRITE;
 
         if (FLAG_IS_SET(open_flag, O_TRUNC)) {
             SHOWMSG("checking if the file to create already exists");
@@ -177,7 +184,7 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
                     goto out;
                 }
 
-                open_mode = MODE_NEWFILE;
+            	open_mode = MODE_NEWFILE;
 
                 UnLock(lock);
                 lock = BZERO;
@@ -193,13 +200,11 @@ open(const char *path_name, int open_flag, ... /* mode_t mode */) {
                     goto out;
                 } else if (error != ERROR_OBJECT_NOT_FOUND && error != ERROR_ACTION_NOT_KNOWN) {
                     SHOWMSG("error accessing the object");
-
                     __set_errno(__translate_io_error_to_errno(IoErr()));
                     goto out;
                 }
             }
         }
-
         create_new_file = TRUE;
     }
     else {
@@ -260,16 +265,24 @@ directory:
 
     fd = __clib4->__fd[fd_slot_number];
 
-    if (is_directory || FLAG_IS_SET(open_flag, O_PATH))
+    if (is_directory || FLAG_IS_SET(open_flag, O_PATH)) {
         __initialize_fd(fd, __fd_hook_entry, dir_lock, 0, fd_lock); // TODO - Create a new dir hook
-    else
+    }
+    else {
         __initialize_fd(fd, __fd_hook_entry, handle, 0, fd_lock);
+    }
 
     fd->fd_Aux = (char *) path_name;
 
     /* If O_PATH is set only stat* functions can be used */
     if (FLAG_IS_SET(open_flag, O_PATH))
         SET_FLAG(fd->fd_Flags, FDF_PATH_ONLY);
+
+    /* If O_CLOEXEC is set, mark the FD for close-on-exec */
+    if (FLAG_IS_SET(open_flag, O_CLOEXEC)) {
+        SET_FLAG(fd->fd_Flags, FDF_CLOEXEC);
+        D(("O_CLOEXEC set for fd=%d\n", fd_slot_number));
+    }
 
     if (is_directory) {
         /* Set FD flag as Directory */
@@ -356,6 +369,11 @@ directory:
         if (create_new_file && is_file_system)
             SET_FLAG(fd->fd_Flags, FDF_CREATED);
     }
+    if (FLAG_IS_SET(open_flag, O_LITTLE_ENDIAN)) {
+        SHOWMSG("open() called with Little Endian mode\n");
+        D(("%ld\n", fd_slot_number));
+        SET_FLAG(fd->fd_Flags, FDF_LITTLE_ENDIAN);
+    }
 
     SET_FLAG(fd->fd_Flags, FDF_IN_USE);
 
@@ -374,7 +392,7 @@ out:
     if (lock != BZERO)
         UnLock(lock);
 
-    if (dir_lock != BZERO)
+    if (!is_directory && dir_lock != BZERO)
       	UnLock(dir_lock);
 
     __stdio_unlock(__clib4);

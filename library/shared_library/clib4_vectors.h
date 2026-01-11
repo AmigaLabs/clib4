@@ -1174,27 +1174,28 @@ static void *clib4Vectors[] = {
 
         (void *) (0),                                     /* 4392 - unused */
 
-        (void *) (sigsuspend),		                  /* 4396 */
+        (void *) (sigsuspend),		                  	  /* 4396 */
         (void *) (spawnve),                               /* 4400 */
-        (void *) (sigpause),		                  /* 4404 */
-        (void *) (sigwait),		                  /* 4408 */
-        (void *) (sigwaitinfo),		                  /* 4412 */
-        (void *) (sigtimedwait),	                  /* 4416 */
+        (void *) (sigpause),		                  	  /* 4404 */
+        (void *) (sigwait),		                  		  /* 4408 */
+        (void *) (sigwaitinfo),		                  	  /* 4412 */
+        (void *) (sigtimedwait),	                  	  /* 4416 */
 
         (void *) (getvfsstat),                            /* 4420 */
         (void *) (backtrace),                             /* 4424 */
         (void *) (backtrace_symbols),                     /* 4428 */
         (void *) (backtrace_symbols_fd),                  /* 4432 */
-        (void *) (dladdr),				  /* 4436 */
+        (void *) (dladdr),				  				  /* 4436 */
 
-        (void *) (getpriority),				  /* 4440 */
-        (void *) (setpriority),				  /* 4444 */
+        (void *) (getpriority),				  			  /* 4440 */
+        (void *) (setpriority),				  			  /* 4444 */
 
-        (void *) (roundeven),				  /* 4448 */
-        (void *) (roundevenf),				  /* 4452 */
-        (void *) (roundevenl),				  /* 4456 */
+        (void *) (roundeven),				  			  /* 4448 */
+        (void *) (roundevenf),				  			  /* 4452 */
+        (void *) (roundevenl),				  			  /* 4456 */
 
         (void *) (canonicalize_file_name),                /* 4460 */
+		(void *) (spawnvpe_fork),                         /* 4464 */
 
         (void *)-1
 };

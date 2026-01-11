@@ -166,6 +166,8 @@ typedef int64_t (*file_action_iob_t)(struct _clib4 *__clib4, struct iob * iob, s
 									   vsprintf(), etc. */
 #define IOBF_LOCKED 		(1<<10)	/* File is locked by ObtainSemaphore */
 #define IOBF_NO_CLOSE 		(1<<11)	/* Don't close this file */
+
+#define IOBF_LITTLE_ENDIAN	(1<<12) /* Return values in Little Endian mode */
 /****************************************************************************/
 
 /* Each file handle is represented by the following structure. Note that this
@@ -202,6 +204,7 @@ typedef struct iob {
     UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
     APTR				iob_Lock;		    	/* For thread locking */
     struct Task *       iob_TaskLock;           /* Task who owns lock */
+	BOOL				iob_isVBuffer;			/* TRUE if iob_CustomBuffer is set from setvbuf */
 } __iob64;
 
 
@@ -360,13 +363,31 @@ extern void __flockfile_r(struct _clib4 *__clib4, FILE *stream);
 extern int __ftrylockfile_r(struct _clib4 *__clib4, FILE *stream);
 extern int __ungetc_r(struct _clib4 *__clib4, int c, FILE *stream);
 int __ferror_r(struct _clib4 *__clib4, FILE *stream, BOOL lock);
-
+extern int __fflush_r(struct _clib4 *__clib4, FILE *stream);
 extern void __clearerr_r(struct _clib4 *__clib4, FILE *stream);
+extern int __vfprintf_r(struct _clib4 *__clib4, FILE *f, const char *format, va_list ap);
+extern int __fputs_r(struct _clib4 *__clib4, const char *s, FILE *stream);
+extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
+extern size_t __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream);
+
+#define __stdin_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[0])
+#define __stdout_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[1])
+#define __stderr_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[2])
 
 extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
 
 #define console_prefix "CON:20/20/600/150/"
 #define console_suffix " Output/AUTO/CLOSE/WAIT"
+
+//#define DEBUG_LOCKS
+#ifdef DEBUG_LOCKS
+void __stdio_lock_special(char const *caller_name, struct _clib4 *__clib4);
+void __stdio_lock_real(struct _clib4 *__clib4);
+void __stdio_unlock_special(char const *caller_name, struct _clib4 *__clib4);
+void __stdio_unlock_real(struct _clib4 *__clib4);
+#define __stdio_lock(x) __stdio_lock_special(__func__, x)
+#define __stdio_unlock(x) __stdio_unlock_special(__func__, x)
+#endif
 
 #ifndef _STDIO_PROTOS_H
 #include "stdio_protos.h"
