@@ -119,8 +119,23 @@ hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *_htab)
 
 void
 hdestroy_r(struct hsearch_data *_htab) {
+    struct internal_head *head;
+    struct internal_entry *ie, *tmp;
+    size_t idx;
+
     if (_htab->htable == NULL)
         return;
+
+    /* Free all entries in the hash table */
+    for (idx = 0; idx < _htab->htablesize; idx++) {
+        head = &(_htab->htable[idx]);
+        ie = SLIST_FIRST(head);
+        while (ie != NULL) {
+            tmp = SLIST_NEXT(ie, link);
+            free(ie);
+            ie = tmp;
+        }
+    }
 
     free(_htab->htable);
     _htab->htable = NULL;

@@ -259,6 +259,12 @@ makeEnvironment(struct _clib4 *__clib4) {
             IDOS->ScanVars(hook, flags, &ehd);
             IExec->FreeSysObject(ASOT_HOOK, hook);
         }
+    } else {
+        /* Failed to allocate pool, cleanup */
+        free(__clib4->__environment);
+        __clib4->__environment = NULL;
+        LEAVE();
+        return;
     }
 
     __clib4->__environment_lock = __create_recursive_mutex();
@@ -268,6 +274,7 @@ makeEnvironment(struct _clib4 *__clib4) {
 static void freeEnvironment(struct _clib4 *__clib4) {
     if (__clib4->__environment_pool != NULL) {
         IExec->FreeSysObject(ASOT_MEMPOOL, __clib4->__environment_pool);
+        __clib4->__environment_pool = NULL;
     }
     if (__clib4->__environment_lock != NULL) {
         __delete_mutex(__clib4->__environment_lock);
@@ -472,7 +479,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
             /* Copy environment variables into clib4 reent structure */
             SHOWMSG("Make environment");
-            makeEnvironment(__clib4);
+			makeEnvironment(__clib4);
             if (!__clib4->__environment) {
                 __clib4->__environment = empty_env;
                 __clib4->__environment_allocated = FALSE;
@@ -568,7 +575,6 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 
 BPTR libClose(struct LibraryManagerInterface *Self) {
     struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
-
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);

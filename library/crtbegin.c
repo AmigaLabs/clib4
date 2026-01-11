@@ -122,7 +122,7 @@ extern void *_DATA_BASE_ __attribute__((force_no_baserel));
 register void *r2 __asm("r2");
 #endif
 
-extern int main(int, char **);
+extern int main(int, char **, char **);
 int clib4_start(char *args, const int32 arglen, struct Library *sysbase);
 int _start(char *argstring, int32 arglen, struct Library *sysbase);
 

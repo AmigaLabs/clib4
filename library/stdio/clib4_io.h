@@ -125,6 +125,7 @@ struct _fd
 #define FDF_IS_SERIAL       (1UL<<20)   /* FD is using serial hook */
 #define FDF_CLOEXEC         (1UL<<21)   /* Close on child */
 #define FDF_LITTLE_ENDIAN   (1UL<<22)   /* Read in Little endian mode */
+#define FDF_NO_CLOSE_BPTR	(1UL<<23)	/* Never close BPRT for this file */
 
 /****************************************************************************/
 

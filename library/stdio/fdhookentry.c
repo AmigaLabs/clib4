@@ -299,12 +299,14 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                         SHOWMSG("Closing file...");
 
-                        if (CANNOT Close(fd->fd_File)) {
-                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                            SHOWMSG("CANNOT Close(fd->fd_File)");
+						if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE_BPTR)) {
+                       		if (CANNOT Close(fd->fd_File)) {
+                            	fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            	SHOWMSG("CANNOT Close(fd->fd_File)");
 
-                            result = EOF;
-                        }
+                            	result = EOF;
+                        	}
+						}
 
                         if (fd->fd_File)
                             fd->fd_File = BZERO;
@@ -389,7 +391,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         }
 
                         /* If we have closed the file, clear FDF_IN_USE flag */
-                        if (result == OK)
+                        if (result == OK && FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO))
                             CLEAR_FLAG(fd->fd_Flags, FDF_IN_USE);
 
 #ifdef USE_TEMPFILES
@@ -430,12 +432,22 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
             __fd_unlock(fd);
 
             /* Free the lock semaphore now. */
-            if (NOT is_aliased)
-                __delete_mutex(fd->fd_Lock);
+            if (NOT is_aliased) {
+                /* Free fd_Aux if it was allocated (e.g., for termios or path names) */
+                if (fd->fd_Aux != NULL) {
+                    /* Only free if it's termios - for path names, fd_Aux points to static/stack memory */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
+                        free(fd->fd_Aux);
+                    }
+                    fd->fd_Aux = NULL;
+                }
 
-            /* And that's the last for this file descriptor. */
-            memset(fd, 0, sizeof(*fd));
-            fd = NULL;
+                __delete_mutex(fd->fd_Lock);
+            }
+
+	        /* And that's the last for this file descriptor. */
+    	    memset(fd, 0, sizeof(*fd));
+        	fd = NULL;
 
             break;
 

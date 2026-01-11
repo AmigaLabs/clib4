@@ -541,9 +541,8 @@ struct _clib4 {
     struct DebugIFace *__IDebug;
 
 	unsigned int __machine_type;
-
-        struct MinList tmr_real_list;  /* List of TimerNode structures */
-
+	struct MinList tmr_real_list;  /* List of TimerNode structures */
+	unsigned char *__command_line_ptr;  /* Pointer to allocated command line string (for deallocation) */
 };
 
 #ifndef __getClib4

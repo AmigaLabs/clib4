@@ -77,12 +77,6 @@ walk(const char *path, int (*func)(const char *, const struct stat *, int, struc
             result = (*func)(path, &st, type, &extra_info);
 
         if (extra_info.quit == 0) {
-            dp = opendir(path);    /* Also takes care of Unix->Amiga pathname conversion. */
-            if (dp == NULL) {
-                result = ERROR;
-                goto out;
-            }
-
             if (FLAG_IS_SET(flags, FTW_CHDIR)) /* Change to directory before traversing. */
             {
                 old_cwd = malloc(old_length + NAME_MAX);
@@ -94,6 +88,19 @@ walk(const char *path, int (*func)(const char *, const struct stat *, int, struc
                 }
 
                 getcwd(old_cwd, old_length + NAME_MAX);
+            }
+
+            dp = opendir(path);    /* Also takes care of Unix->Amiga pathname conversion. */
+            if (dp == NULL) {
+                if (old_cwd != NULL) {
+                    free(old_cwd);
+                    old_cwd = NULL;
+                }
+                result = ERROR;
+                goto out;
+            }
+
+            if (old_cwd != NULL) {
                 chdir(path);
             }
 
