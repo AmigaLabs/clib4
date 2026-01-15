@@ -83,9 +83,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                 if (result == EOF) {
                     LONG ioerr = IoErr();
-                    D(("read failed ioerr=%ld\n", ioerr));
-					DebugPrintF("fdhook READ fail: file=%ld size=%ld flags=0x%lx ioerr=%ld\n",
-					                 (long)file, (long)fam->fam_Size, (unsigned long)fd->fd_Flags, (long)ioerr);
+					D(("fdhook READ fail: file=%ld size=%ld flags=0x%lx ioerr=%ld\n",
+					                 (long)file, (long)fam->fam_Size, (unsigned long)fd->fd_Flags, (long)ioerr));
 
                     /*
                      * PIPE: The PIPE: device may report failures (sometimes mapping to

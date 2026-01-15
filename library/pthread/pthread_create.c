@@ -70,19 +70,19 @@ static void killitimer_by_thread(uint32 threadID) {
             pid = node->tn_Process->pr_ProcessID;
             /* Scan for process */
             process = ProcessScan(&h, (CONST_APTR) pid, 0);
-            DebugPrintF("Scan for process %ld (%ld) of thread %lu..\n", process, pid, threadID);
+            D(("Scan for process %ld (%ld) of thread %lu..\n", process, pid, threadID));
             
             while (process > 0) {
-                DebugPrintF("Waiting for process %ld to close..\n", pid);
+                D(("Waiting for process %ld to close..\n", pid));
                 /* Send a SIGBREAKF_CTRL_F signal until the timer task return in Wait and can get the signal */
                 Signal((struct Task *)node->tn_Process, SIGBREAKF_CTRL_F);
                 process = ProcessScan(&h, (CONST_APTR) pid, 0);
                 Delay(10);
             }
             
-            DebugPrintF("Process closed.. Wait For Child\n");
+            SHOWMSG("Process closed.. Wait For Child\n");
             WaitForChildExit(pid);
-            DebugPrintF("Done\n");
+            SHOWMSG("Done\n");
             
             /* Remove from list and free */
             Remove((struct Node *)&node->tn_Node);

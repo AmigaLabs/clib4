@@ -26,13 +26,13 @@ __stdio_unlock_real(struct _clib4 *__clib4) {
 
 void __stdio_lock_special(char const *caller_name, struct _clib4 *__clib4)
 {
-	DebugPrintF( "__stdio_lock was called from %s and thread %x\n", caller_name, FindTask(NULL) );
+	D(( "__stdio_lock was called from %s and thread %x\n", caller_name, FindTask(NULL) ));
 	__stdio_lock_real(__clib4);
 }
 
 void __stdio_unlock_special(char const *caller_name, struct _clib4 *__clib4)
 {
-	DebugPrintF( "__stdio_unlock was called from %s and thread %x\n", caller_name, FindTask(NULL) );
+	D(( "__stdio_unlock was called from %s and thread %x\n", caller_name, FindTask(NULL) ));
 	__stdio_unlock_real(__clib4);
 }
 #else

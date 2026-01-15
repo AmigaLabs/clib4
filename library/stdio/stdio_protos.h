@@ -40,7 +40,7 @@ extern int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct fil
 extern void __initialize_fd(struct fd *fd, file_action_fd_t action_function, BPTR default_file, ULONG flags, APTR lock);
 extern BOOL __is_valid_fd(struct _clib4 *__clib4, struct fd *fd);
 extern int __find_vacant_fd_entry(struct _clib4 *__clib4);
-extern void __initialize_iob(struct iob *iob, file_action_iob_t action_function, STRPTR custom_buffer, STRPTR buffer, int64_t buffer_size, int file_descriptor, int slot_number, ULONG flags, APTR lock);
+extern void __initialize_iob(struct iob *iob, file_action_iob_t action_function, STRPTR custom_buffer, STRPTR buffer, int64_t buffer_size, int file_descriptor, int slot_number, ULONG flags, struct SignalSemaphore *lock);
 extern BOOL __is_valid_iob(struct _clib4 *__clib4, struct iob *iob);
 extern int __find_vacant_iob_entry(struct _clib4 *__clib4);
 extern int __grow_fd_table(struct _clib4 *__clib4, int max_fd);

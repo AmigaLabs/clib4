@@ -119,7 +119,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     }
 
     /* Allocate memory for an arbitration mechanism, then initialize it. */
-    lock = __create_mutex();
+    lock = __create_semaphore();
     if (lock == NULL)
 		goto out;
 
