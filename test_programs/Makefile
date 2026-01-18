@@ -69,7 +69,7 @@ clean:
 %: %.c
 	@echo "Compiling $(BUILDDIR)/$@"
 	@mkdir -p $(dir $(BUILDDIR)/$@)
-	@$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS)
+	@$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS) -athread=native
 
 %: %.cpp
 	@echo "Compiling $(BUILDDIR)/$@"
