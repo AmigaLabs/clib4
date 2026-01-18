@@ -22,6 +22,7 @@ endif
 
 BUILDDIR = ./build
 SOURCEDIR = .
+DEPDIR = $(BUILDDIR)/.deps
 
 
 ##############################################################################
@@ -42,7 +43,8 @@ INCLUDE = -I../library/include
 #       with the location of library and the options "-L. -L../library/lib"
 #       should be sufficient.
 
-CFLAGS = -mcrt=clib4 -fno-builtin $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(OPTIONS) $(INCLUDE)
+DEPFLAGS = -MMD -MP -MF $(DEPDIR)/$*.d
+CFLAGS = -mcrt=clib4 -fno-builtin $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(OPTIONS) $(INCLUDE) $(DEPFLAGS)
 LFLAGS =
 
 C_SOURCES = $(shell find $(SOURCEDIR) -maxdepth 2 -name '*.c' -type f -printf '%P\n')
@@ -59,19 +61,34 @@ LIBS = -lm -lrt -lpthread -lcrypt -ldebug
 all: builddir $(C_OBJECTS) $(CXX_OBJECTS)
 
 builddir:
-	$(MAKEDIR) $(BUILDDIR)
+	@$(MAKEDIR) $(BUILDDIR)
+	@$(MAKEDIR) $(DEPDIR)
 
 clean:
 	$(DELETE) $(BUILDDIR)
 
 ##############################################################################
 
-%: %.c
-	@echo "Compiling $(BUILDDIR)/$@"
+%: %.c | builddir
 	@mkdir -p $(dir $(BUILDDIR)/$@)
-	@$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS) -athread=native
+	@mkdir -p $(dir $(DEPDIR)/$@)
+	@if [ ! -f $(BUILDDIR)/$@ ] || [ $< -nt $(BUILDDIR)/$@ ]; then \
+		echo "Compiling $(BUILDDIR)/$@"; \
+		$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS) -athread=native; \
+	else \
+		echo "$(BUILDDIR)/$@ is up to date"; \
+	fi
 
-%: %.cpp
-	@echo "Compiling $(BUILDDIR)/$@"
+%: %.cpp | builddir
 	@mkdir -p $(dir $(BUILDDIR)/$@)
-	$(CXX) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS) -athread=native
+	@mkdir -p $(dir $(DEPDIR)/$@)
+	@if [ ! -f $(BUILDDIR)/$@ ] || [ $< -nt $(BUILDDIR)/$@ ]; then \
+		echo "Compiling $(BUILDDIR)/$@"; \
+		$(CXX) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS) -athread=native; \
+	else \
+		echo "$(BUILDDIR)/$@ is up to date"; \
+	fi
+
+# Include dependency files
+-include $(patsubst %.c,$(DEPDIR)/%.d,$(C_SOURCES))
+-include $(patsubst %.cpp,$(DEPDIR)/%.d,$(CXX_SOURCES))

@@ -6,15 +6,15 @@ static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
 static void *fct(void *p) {
     int number = *(int *) p;
-    int *arr = malloc(number * sizeof(int));  // Error check missing!
+    int *arr = malloc(number * sizeof(int));
     for (int i = 0; i < number; i++)
         arr[i] = number + (7 * i + 5) % 11;
-    pthread_mutex_lock(&mtx);   // Error check missing!
+    pthread_mutex_lock(&mtx);
     printf("Integers %2d (%p):", number, (void *) arr);
     for (int i = 0; i < number; i++)
         printf(" %3d", arr[i]);
     putchar('\n');
-    pthread_mutex_unlock(&mtx); // Error check missing!
+    pthread_mutex_unlock(&mtx);
     return (void *) arr;
 }
 
@@ -33,9 +33,9 @@ int main(void) {
 
     /* Thread creation */
     for (int i = 0; i < MAX_THREADS; i++) {
-        pthread_mutex_lock(&mtx);   // Error check missing!
+        pthread_mutex_lock(&mtx);
         printf("Launch %d: %2d\n", i, input[i]);
-        pthread_mutex_unlock(&mtx); // Error check missing!
+        pthread_mutex_unlock(&mtx);
         int rc = pthread_create(&threads[i], NULL, fct, (void *) &input[i]);
         if (rc != 0) {
             fprintf(stderr, "Oops creating thread %d\n", i);
