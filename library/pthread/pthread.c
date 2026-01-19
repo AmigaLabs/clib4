@@ -93,7 +93,7 @@ static void timespec_sub(struct timespec *ts1, const struct timespec *ts2, const
     ts1->tv_sec = ts2->tv_sec - ts3->tv_sec;
     if (ts2->tv_nsec < ts3->tv_nsec) {
         ts1->tv_sec--;
-        ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec + 1000000000; // Add 1 billion ns (1s)
+        ts1->tv_nsec = 1000000000L + ts2->tv_nsec - ts3->tv_nsec;
     } else {
         ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec;
     }
@@ -164,7 +164,7 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     struct MsgPort timermp;
     struct TimeRequest timerio;
     struct Task *task;
-    clock_t clock_type = CLOCK_MONOTONIC;
+    clock_t clock_type = CLOCK_REALTIME;  // POSIX default is CLOCK_REALTIME
     if (cond->condattr != NULL)
         clock_type = cond->condattr->clock_type;
 
@@ -187,27 +187,33 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
             CloseTimerDevice((struct IORequest *) &timerio);
             return EINVAL;
         }
-
         // prepare the device command and send it
         timerio.Request.io_Command = TR_ADDREQUEST;
         timerio.Request.io_Flags = 0;
         if (!relative) {
             struct timespec starttime;
-			struct timespec endtime;
+            struct timespec endtime;
             // absolute time has to be converted to relative
-			clock_gettime(clock_type, &starttime);
+            clock_gettime(clock_type, &starttime);
             timespec_sub(&endtime, abstime, &starttime);
-			TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, &endtime);
-            if (!timerisset(&timerio.Time)) {
+            // Check if the time is already in the past
+            if (endtime.tv_sec < 0 || (endtime.tv_sec == 0 && endtime.tv_nsec <= 0)) {
                 CloseTimerDevice((struct IORequest *) &timerio);
                 return ETIMEDOUT;
             }
+            TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, &endtime);
+        } else {
+            // relative time - use abstime directly
+            // Check if the time is valid
+            if (abstime->tv_sec < 0 || (abstime->tv_sec == 0 && abstime->tv_nsec <= 0)) {
+                CloseTimerDevice((struct IORequest *) &timerio);
+                return ETIMEDOUT;
+            }
+            TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, abstime);
         }
         sigs |= (1 << timermp.mp_SigBit);
-        SetSignal(0, sigs);
         SendIO((struct IORequest *) &timerio);
     }
-
     // prepare a waiter node
     waiter.task = task;
     signal = AllocSignal(-1);
@@ -217,19 +223,16 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     }
     waiter.sigbit = signal;
     sigs |= 1 << waiter.sigbit;
-
     // add it to the end of the list
     ObtainSemaphore(cond->semaphore);
     AddTail((struct List *) cond->waiters, (struct Node *) &waiter);
     ReleaseSemaphore(cond->semaphore);
-
     // wait for the condition to be signalled or the timeout
     mutex->incond++;
     pthread_mutex_unlock(mutex);
     sigs = Wait(sigs);
     pthread_mutex_lock(mutex);
     mutex->incond--;
-
     // remove the node from the list
     ObtainSemaphore(cond->semaphore);
     Remove((struct Node *) &waiter);
@@ -333,30 +336,6 @@ void __pthread_exit_func(void) {
     struct DOSIFace *IDOS = _IDOS;
     SHOWMSG("[__pthread_exit_func :] Pthread __pthread_exit_func called.\n");
 
-    if (thread_sem) {
-        FreeSysObject(ASOT_MUTEX, thread_sem);
-        thread_sem = NULL;
-    }
-    if (tls_sem) {
-        FreeSysObject(ASOT_MUTEX, tls_sem);
-        tls_sem = NULL;
-    }
-    if (timerMutex) {
-        FreeSysObject(ASOT_MUTEX, timerMutex);
-        timerMutex = NULL;
-    }
-
-    if (timedTimerIO)
-        CloseDevice((struct IORequest *) timedTimerIO);
-    if (timedTimerIO) {
-        FreeSysObject(ASOT_IOREQUEST, timedTimerIO);
-        timedTimerIO = NULL;
-    }
-    if (timedTimerPort) {
-        FreeSysObject(ASOT_PORT, timedTimerPort);
-        timedTimerPort = NULL;
-    }
-
     // if we don't do this we can easily end up with unloaded code being executed
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
         inf = &threads[i];
@@ -369,6 +348,29 @@ void __pthread_exit_func(void) {
                 pthread_join(i, NULL);
         }
     }
+
+    if (thread_sem) {
+        FreeSysObject(ASOT_MUTEX, thread_sem);
+        thread_sem = NULL;
+    }
+    if (tls_sem) {
+        FreeSysObject(ASOT_MUTEX, tls_sem);
+        tls_sem = NULL;
+    }
+    if (timerMutex) {
+        FreeSysObject(ASOT_MUTEX, timerMutex);
+        timerMutex = NULL;
+    }
+    if (timedTimerIO) {
+        CloseDevice((struct IORequest *) timedTimerIO);
+        FreeSysObject(ASOT_IOREQUEST, timedTimerIO);
+        timedTimerIO = NULL;
+    }
+    if (timedTimerPort) {
+        FreeSysObject(ASOT_PORT, timedTimerPort);
+        timedTimerPort = NULL;
+    }
+
     // Restore old tls value
     set_tls_register(old_tls);
 }

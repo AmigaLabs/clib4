@@ -26,7 +26,7 @@ int main(void) {
     pthread_t threads[MAX_THREADS];
     int input[MAX_THREADS];
     int *result[MAX_THREADS];
-
+	printf("pthread_malloc clib4 test program\n");
     /* Initialization */
     for (int i = 0; i < MAX_THREADS; i++)
         input[i] = (3 * i + 2) % 13 + 1;

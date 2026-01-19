@@ -88,9 +88,11 @@ int itimer_real_task() {
         /* Check for received signal */
         if (signals & SIGBREAKF_CTRL_F) {
             SHOWMSG("SIGBREAKF_CTRL_F");
-            if (CheckIO((struct IORequest *) tmr_real_tr))  /* If request is complete... */
-                AbortIO((struct IORequest *) tmr_real_tr);  /* clean up and remove reply */
-            WaitIO((struct IORequest *) tmr_real_tr);
+            if (!CheckIO((struct IORequest *) tmr_real_tr)) {
+	            /* If request is complete... */
+            	AbortIO((struct IORequest *) tmr_real_tr);  /* clean up and remove reply */
+            	WaitIO((struct IORequest *) tmr_real_tr);
+            }
             SHOWMSG("Exit from SIGBREAKF_CTRL_F");
             /* Exit from while */
             break;
@@ -99,19 +101,20 @@ int itimer_real_task() {
         if (signals & SIGBREAKF_CTRL_D) {
             SHOWMSG("SIGBREAKF_CTRL_D");
             /* This is used to reset the timer with new value without raising the signal */
-            if (CheckIO((struct IORequest *) tmr_real_tr))  /* If request is complete... */
-                AbortIO((struct IORequest *) tmr_real_tr);  /* clean up and remove reply */
-            WaitIO((struct IORequest *) tmr_real_tr);
-
+            if (!CheckIO((struct IORequest *) tmr_real_tr)) {
+	            /* If request is complete... */
+            	AbortIO((struct IORequest *) tmr_real_tr);  /* clean up and remove reply */
+            	WaitIO((struct IORequest *) tmr_real_tr);
+            }
             tmr_real_tr->Time.Seconds = __clib4->tmr_time.it_value.tv_sec;
             tmr_real_tr->Time.Microseconds = __clib4->tmr_time.it_value.tv_usec;
             SHOWMSG("Exit from SIGBREAKF_CTRL_D");
         } else {
             SHOWMSG("CheckIO");
-            if (CheckIO((struct IORequest *) tmr_real_tr))
-                AbortIO((struct IORequest *) tmr_real_tr);
-            WaitIO((struct IORequest *) tmr_real_tr);
-
+            if (!CheckIO((struct IORequest *) tmr_real_tr)) {
+	            AbortIO((struct IORequest *) tmr_real_tr);
+            	WaitIO((struct IORequest *) tmr_real_tr);
+            }
             tmr_real_tr->Time.Seconds += __clib4->tmr_time.it_interval.tv_sec;
             tmr_real_tr->Time.Microseconds += __clib4->tmr_time.it_interval.tv_usec;
 
