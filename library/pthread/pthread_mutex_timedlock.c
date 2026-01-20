@@ -48,9 +48,18 @@ pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) 
         return EINVAL;
 
     if (abstime == NULL)
-        return pthread_mutex_lock(mutex);
+		return pthread_mutex_lock(mutex);
     else if (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000)
-        return EINVAL;
+		return EINVAL;
+
+	result = pthread_mutex_trylock(mutex);
+	if (result != 0) {
+		// pthread_mutex_trylock returns EBUSY when a deadlock would occur
+		if (result != EBUSY)
+			return result;
+		else if (mutex->kind != PTHREAD_MUTEX_RECURSIVE && MutexIsMine(mutex))
+			return EDEADLK;
+	}
 
     uint32 sigMask = 1L << timedTimerPort->mp_SigBit;
 

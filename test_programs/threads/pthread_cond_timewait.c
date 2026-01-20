@@ -86,7 +86,7 @@ int main() {
 
         // 3. Perform the timed wait
         // This is the point in time we expect to reach a full second mark (or Ctrl-C)
-        ret = pthread_cond_timedwait(&cond, &mutex, &timeout_abs);
+    	ret = pthread_cond_timedwait(&cond, &mutex, &timeout_abs);
 
         // 4. Check results and update
         if (ret == 0 && stop_program) {

@@ -57,6 +57,10 @@ pthread_mutex_lock(pthread_mutex_t *mutex) {
         }
     }
 
+	// normal mutexes would simply deadlock here
+	if (mutex->kind == PTHREAD_MUTEX_ERRORCHECK && MutexIsMine(mutex))
+		return EDEADLK;
+
     // normal mutexes would simply deadlock here
     if (mutex->kind == PTHREAD_MUTEX_ERRORCHECK) {
         SHOWMSG("MutexAttempt");

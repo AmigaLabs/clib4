@@ -48,6 +48,9 @@ pthread_mutex_trylock(pthread_mutex_t *mutex) {
             return EINVAL;
     }
 
+	if (mutex->kind != PTHREAD_MUTEX_RECURSIVE && MutexIsMine(mutex))
+		return EBUSY;
+
     if (MutexAttempt(mutex->mutex))
         return 0;
 

@@ -194,7 +194,6 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     MutexRelease(thread_sem);
 
     if (threadnew == PTHREAD_THREADS_MAX) {
-        MutexRelease(thread_sem);
         return EAGAIN;
     }
 

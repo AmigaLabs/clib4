@@ -118,7 +118,7 @@ extern FILE *__stdin();
 extern FILE *__stdout();
 extern FILE *__stderr();
 #define stdin  (__stdin())
-#define stdout ( __stdout())
+#define stdout (__stdout())
 #define stderr (__stderr())
 
 /****************************************************************************/

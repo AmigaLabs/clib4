@@ -59,9 +59,11 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     SHOWMSG("Waiting for signal");
     uint32 signals = Wait(wait_mask);
     if (signals & SIGBREAKF_CTRL_C || signals & SIGBREAKF_CTRL_E) {
-        if (CheckIO((struct IORequest *) timeRequest))  /* If request is incomplete... */
-            AbortIO((struct IORequest *) timeRequest);  /* break it */
-        WaitIO((struct IORequest *) timeRequest);
+        if (!CheckIO((struct IORequest *) timeRequest)) {
+	        /* If request is incomplete... */
+        	AbortIO((struct IORequest *) timeRequest);  /* break it */
+        	WaitIO((struct IORequest *) timeRequest);
+        }
         if (signals & SIGBREAKF_CTRL_E) {
             SHOWMSG("Received SIGBREAKF_CTRL_E");
             /* Return EINTR since the request has been interrupted by alarm */

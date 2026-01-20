@@ -42,7 +42,10 @@ pthread_exit(void *value_ptr) {
     pthread_t thread = pthread_self();
 	CleanupHandler *handler;
     ThreadInfo *inf = GetThreadInfo(thread);
-
+	if (thread == 0) {
+		SHOWMSG("pthread_exit: main thread cannot exit via pthread_exit, return\n");
+		return;
+	}
 	inf->ret = value_ptr;
 
 	// execute the clean-up handlers
