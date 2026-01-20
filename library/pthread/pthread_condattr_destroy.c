@@ -43,7 +43,7 @@ pthread_condattr_destroy(pthread_condattr_t *attr) {
         return EINVAL;
 
     memset(attr, 0, sizeof(pthread_condattr_t));
-	attr->clock_type = CLOCK_MONOTONIC;
+	attr->clock_type = CLOCK_REALTIME;
 
     return 0;
 }
