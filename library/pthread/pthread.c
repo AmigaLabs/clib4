@@ -164,12 +164,13 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     struct MsgPort timermp;
     struct TimeRequest timerio;
     struct Task *task;
-    clock_t clock_type = CLOCK_REALTIME;  // POSIX default is CLOCK_REALTIME
-    if (cond->condattr != NULL)
-        clock_type = cond->condattr->clock_type;
+    clock_t clock_type = CLOCK_REALTIME;
 
-    if (cond == NULL || mutex == NULL)
+    if (cond == NULL || mutex == NULL) {
         return EINVAL;
+    }
+
+    clock_type = cond->condattr.clock_type;
 
     /* Check for supported clock type */
     if ((clock_type & ~(CLOCK_MONOTONIC | CLOCK_REALTIME | CLOCK_MONOTONIC_RAW)) != 0) {

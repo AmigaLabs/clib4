@@ -48,7 +48,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 it locks this particular descriptor entry. */
     if (fam->fam_Action == file_action_close) {
         __stdio_lock(__clib4);
-	}
+    }
 
 	SHOWMSG("locking fd");
     __fd_lock(fd);
@@ -83,7 +83,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
                 if (result == EOF) {
                     LONG ioerr = IoErr();
-					D(("fdhook READ fail: file=%ld size=%ld flags=0x%lx ioerr=%ld\n",
+				D(("fdhook READ fail: file=%ld size=%ld flags=0x%lx ioerr=%ld\n",
 					                 (long)file, (long)fam->fam_Size, (unsigned long)fd->fd_Flags, (long)ioerr));
 
                     /*

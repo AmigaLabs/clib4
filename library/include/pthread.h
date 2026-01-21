@@ -176,12 +176,12 @@ struct pthread_cond {
     int pad1;
     void* semaphore;                // SignalSemaphore
     void* waiters;	                // MinList
-    pthread_condattr_t *condattr;   // cond_attr used to store for example clock type
+    pthread_condattr_t condattr;   // cond_attr used to store for example clock type
 };
 
 typedef struct pthread_cond pthread_cond_t;
 
-#define PTHREAD_COND_INITIALIZER {0, 0, 0, 0}
+#define PTHREAD_COND_INITIALIZER { 0, 0, 0, { 0, CLOCK_REALTIME } }
 
 //
 // Barriers

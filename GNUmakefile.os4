@@ -168,15 +168,14 @@ DATESTR = $(shell date "+%d.%m.%Y")
 # Parse the repo tag to different defines, that will be used while
 # compiling clib4 library
 #
-# The tags should be like v(MAJOR).(MINOR).(PATCH)
-# in example v1.2.3
+# The tags should be like v(MAJOR).(MINOR)
+# in example v1.2
 #
 ifneq ($(origin GITTAG),undefined)
 MAJOR = $(patsubst v%,%,$(firstword $(subst ., ,$(GITTAG))))
 MINOR = $(word 2, $(subst ., ,$(GITTAG)))
-PATCH = $(word 3, $(subst ., ,$(GITTAG)))
-GIT_HASH = $(shell git rev-parse --short HEAD)
 endif
+GIT_HASH = $(shell git rev-parse --short HEAD)
 
 ##############################################################################
 
@@ -264,15 +263,18 @@ clean:
 ##############################################################################
 
 gitver:
-ifdef GITTAG
 	$(VERBOSE)sed -i 's/[(]\([0-9]*\.[0-9]*\.[0-9]*\)[)]/($(DATESTR))/g' library/c.lib_rev.h
 	$(VERBOSE)sed -i 's/"\([0-9]*\.[0-9]*\.[0-9]*\)"/"$(DATESTR)"/g' library/c.lib_rev.h
+ifdef GITTAG
 	$(VERBOSE)sed -i 's/VERSION\t*[0-9]*/VERSION\t\t\t$(MAJOR)/g' library/c.lib_rev.h
 	$(VERBOSE)sed -i 's/REVISION\t*[0-9]*/REVISION\t\t$(MINOR)/g' library/c.lib_rev.h
-	$(VERBOSE)sed -i 's/SUBREVISION\t*[0-9]*/SUBREVISION\t\t$(PATCH)/g' library/c.lib_rev.h
-	$(VERBOSE)sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)/g' library/c.lib_rev.h
-	$(VERBOSE)sed -i 's/clib4.library [0-9]*\.[0-9]*\.[0-9]*-[a-z0-9]*/clib4.library $(MAJOR).$(MINOR).$(PATCH)-$(GIT_HASH)/g' library/c.lib_rev.h
-	$(VERBOSE)sed -i 's/Version: [0-9]*\.[0-9]*\.[0-9]*/Version: $(MAJOR).$(MINOR).$(PATCH)/g' misc/control
+	$(VERBOSE)sed -i 's/clib4.library [0-9]*\.[0-9]*/clib4.library $(MAJOR).$(MINOR)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/clib4.library [0-9]*\.[0-9]*-[a-z0-9]*/clib4.library $(MAJOR).$(MINOR)-$(GIT_HASH)/g' library/c.lib_rev.h
+	$(VERBOSE)sed -i 's/Version: [0-9]*\.[0-9]*/Version: $(MAJOR).$(MINOR)/g' misc/control
+endif
+
+ifdef NIGHTLY
+	$(VERBOSE)sed -i 's/clib4.library \([0-9]*\.[0-9]*\)-\([a-z0-9]*\)/clib4.library \1-nightly-$(GIT_HASH)/g' library/c.lib_rev.h
 endif
 
 # Update the version numbers bound to the individual libraries

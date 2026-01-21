@@ -47,6 +47,7 @@ jobs:
         with:
           git_tag: ${{ inputs.git_tag }}
           spe: ${{ inputs.spe }}
+          nightly: "no"
 
       - name: Create the LHA release archive
         run: |
