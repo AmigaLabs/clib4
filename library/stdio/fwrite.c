@@ -10,6 +10,10 @@
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
 
+#ifndef MAX_BYPASS
+#define MAX_BYPASS (256 * 1024) /* 256 KiB max bypass write */
+#endif
+
 size_t
 fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
@@ -135,7 +139,10 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                 ssize_t num_bytes_written;
 
                 /* We bypass the buffer entirely. */
-                num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, MIN(total_size, file->iob_BufferSize));
+                /* Cap bypass write size to avoid huge single write syscalls. */
+                size_t to_write = MIN(total_size, file->iob_BufferSize);
+                if (to_write > MAX_BYPASS) to_write = MAX_BYPASS;
+                num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, to_write);
                 if (num_bytes_written == -1) {
                     SET_FLAG(file->iob_Flags, IOBF_ERROR);
                     goto out;
@@ -160,14 +167,20 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                     if (file->iob_BufferWriteBytes == 0 && total_size >= (size_t) file->iob_BufferSize) {
                         SHOWMSG("bypass the buffer entirely");
                         /* We bypass the buffer entirely. */
-                        ssize_t num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, total_size);
+                        /* Cap bypass write size to avoid huge single write syscalls. */
+                        size_t to_write = total_size;
+                        if (to_write > MAX_BYPASS) to_write = MAX_BYPASS;
+                        ssize_t num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, to_write);
                         if (num_bytes_written == -1) {
                             SET_FLAG(file->iob_Flags, IOBF_ERROR);
                             goto out;
                         }
 
+                        s += num_bytes_written;
                         total_bytes_written += num_bytes_written;
-                        break;
+                        total_size -= num_bytes_written;
+                        /* Continue loop to write more if needed */
+                        continue;
                     }
                     SHOWVALUE(file->iob_BufferWriteBytes);
                     SHOWVALUE(file->iob_BufferSize - file->iob_BufferWriteBytes);
