@@ -11,10 +11,10 @@
 
 int
 pthread_cond_clockwait(pthread_cond_t *cond, pthread_mutex_t *mutex, clockid_t clock_id, const struct timespec *abstime) {
-	if (cond != NULL && cond->condattr == NULL) {
+	if (cond != NULL) {
 		pthread_condattr_t attr;
 		pthread_condattr_init(&attr);
-		cond->condattr = &attr;
+		cond->condattr = attr;
 	}
 
 	return pthread_cond_timedwait(cond, mutex, abstime);
