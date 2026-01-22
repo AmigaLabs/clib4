@@ -81,6 +81,7 @@ _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOO
 
     SHOWMSG("Allocating mutex");
     mutex->mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, recursive, TAG_DONE);
+	mutex->owner = FindTask(NULL);
     SHOWPOINTER(mutex->mutex);
 
     mutex->incond = 0;
