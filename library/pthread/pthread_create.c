@@ -108,7 +108,7 @@ StarterFunc() {
     struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_UID; // GetEntryData();
 
     // we have to set the priority here to avoid race conditions
-    SetTaskPri((struct Task *) inf->task, inf->attr.param.sched_priority);
+    SetTaskPri((struct Task *) startedTask, inf->attr.param.sched_priority);
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
