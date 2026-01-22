@@ -37,12 +37,21 @@
 #include "common.h"
 #include "pthread.h"
 
+// Helper function to subtract two timespecs (ts1 = ts2 - ts3)
+static void timespec_sub(struct timespec *ts1, const struct timespec *ts2, const struct timespec *ts3) {
+    ts1->tv_sec = ts2->tv_sec - ts3->tv_sec;
+    if (ts2->tv_nsec < ts3->tv_nsec) {
+        ts1->tv_sec--;
+        ts1->tv_nsec = 1000000000L + ts2->tv_nsec - ts3->tv_nsec;
+    } else {
+        ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec;
+    }
+}
+
 int
 pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) {
     int result;
-    struct TimeRequest timerio;
-    struct Task *task = FindTask(NULL);
-    struct MsgPort msgport;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (mutex == NULL)
         return EINVAL;
@@ -59,18 +68,39 @@ pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) 
 			return result;
 		else if (mutex->kind != PTHREAD_MUTEX_RECURSIVE && MutexIsMine(mutex))
 			return EDEADLK;
+	} else {
+		// Successfully acquired the lock on first try
+		return 0;
 	}
+
+    // abstime is absolute time, need to convert to relative for timer.device
+    struct timespec starttime;
+    struct timespec timeout;
+
+    clock_gettime(CLOCK_REALTIME, &starttime);
+    timespec_sub(&timeout, abstime, &starttime);
+
+    // Check if timeout is already in the past
+    if (timeout.tv_sec < 0 || (timeout.tv_sec == 0 && timeout.tv_nsec <= 0)) {
+        return ETIMEDOUT;
+    }
 
     uint32 sigMask = 1L << timedTimerPort->mp_SigBit;
 
     timedTimerIO->Request.io_Command = TR_ADDREQUEST;
-    timedTimerIO->Time.Seconds = abstime->tv_sec;
-    timedTimerIO->Time.Microseconds = abstime->tv_nsec / 1000;
+    timedTimerIO->Request.io_Flags = 0;
+    TIMESPEC_TO_OLD_TIMEVAL(&timedTimerIO->Time, &timeout);
 
     SetSignal(0, sigMask);
     SendIO((struct IORequest *) timedTimerIO);
 
     result = MutexAttemptWithSignal(mutex->mutex, sigMask);
+
+    // Abort timer if we got the lock
+    if (!(result & sigMask)) {
+        AbortIO((struct IORequest *) timedTimerIO);
+        WaitIO((struct IORequest *) timedTimerIO);
+    }
 
     if (result & sigMask)
         result = ETIMEDOUT;
