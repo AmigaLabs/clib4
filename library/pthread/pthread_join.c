@@ -52,7 +52,13 @@ pthread_join(pthread_t thread, void **value_ptr) {
         return EDEADLK;
     }
 
-    pthread_testcancel();
+	pthread_testcancel();
+
+	if (inf->status == THREAD_STATE_TERMINATING || inf->status == THREAD_STATE_DESTRUCT) {
+		/* The target thread is already terminating, cannot join it */
+		return 0;
+	}
+	inf->status = THREAD_STATE_TERMINATING;
 
     while (inf->status != THREAD_STATE_DESTRUCT) {
         Wait(SIGF_PARENT);
