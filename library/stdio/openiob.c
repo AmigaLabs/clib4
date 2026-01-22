@@ -12,7 +12,7 @@
 
 int
 __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int file_descriptor, int slot_number) {
-    APTR lock;
+    struct SignalSemaphore *lock;
     ULONG file_flags = 0;
     int result = ERROR;
     int open_mode;

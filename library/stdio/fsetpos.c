@@ -26,8 +26,6 @@ fsetpos(FILE *stream, fpos_t *pos) {
         return result;
     }
 
-    __flockfile_r(__clib4, stream);
-
     if (fseek(stream, (long int) (*pos), SEEK_SET) == CHANGE_FILE_ERROR && __get_errno() != OK) {
         SHOWMSG("fseek failed");
         goto out;
@@ -36,8 +34,6 @@ fsetpos(FILE *stream, fpos_t *pos) {
     result = OK;
 
 out:
-
-    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

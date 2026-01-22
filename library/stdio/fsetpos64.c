@@ -26,8 +26,6 @@ fsetpos64(FILE *stream, _fpos64_t *pos) {
         return (result);
     }
 
-    __flockfile_r(__clib4, stream);
-
     if (fseeko64(stream, (long int) (*pos), SEEK_SET) == CHANGE_FILE_ERROR && __get_errno() != OK) {
         SHOWMSG("fseek failed");
         goto out;
@@ -37,7 +35,6 @@ fsetpos64(FILE *stream, _fpos64_t *pos) {
 
 out:
 
-    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

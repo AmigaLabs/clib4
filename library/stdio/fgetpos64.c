@@ -27,8 +27,6 @@ fgetpos64(FILE *stream, _fpos64_t *pos) {
         return result;
     }
 
-    __flockfile_r(__clib4, stream);
-
     position = ftello64(stream);
     if (position == CHANGE_FILE_ERROR && __get_errno() != OK) {
         SHOWMSG("ftello64() didn't work.");
@@ -36,13 +34,11 @@ fgetpos64(FILE *stream, _fpos64_t *pos) {
         goto out;
     }
 
-    (*pos) = (_fpos64_t) position;
+    (*pos) = position;
 
     result = OK;
 
 out:
-
-    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);
