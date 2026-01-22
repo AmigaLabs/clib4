@@ -29,13 +29,14 @@ do                                                      \
 
 enum threadState
 {
-    THREAD_STATE_IDLE 		= 0,
-    THREAD_STATE_RUNNING 	= 1,
-    THREAD_STATE_JOINING	= 2,
-    THREAD_STATE_TERMINATED	= 3,
-    THREAD_STATE_CANCELED	= 4,
-    THREAD_STATE_WAITING	= 5,
-    THREAD_STATE_DESTRUCT   = 6,
+    THREAD_STATE_IDLE 			= 0,
+    THREAD_STATE_RUNNING 		= 1,
+    THREAD_STATE_JOINING		= 2,
+    THREAD_STATE_TERMINATED		= 3,
+    THREAD_STATE_CANCELED		= 4,
+    THREAD_STATE_WAITING		= 5,
+    THREAD_STATE_DESTRUCT		= 6,
+	THREAD_STATE_TERMINATING	= 7
 };
 
 #define GetNodeName(node) ((struct Node *)node)->ln_Name
