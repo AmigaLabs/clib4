@@ -15,10 +15,6 @@ int
 __flush_iob_write_buffer(struct _clib4 *__clib4, struct iob *file) {
     int result = OK;
 
-    ENTER();
-
-    SHOWPOINTER(file);
-
     assert(file != NULL);
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
@@ -28,10 +24,6 @@ __flush_iob_write_buffer(struct _clib4 *__clib4, struct iob *file) {
 
         assert(FLAG_IS_SET(file->iob_Flags, IOBF_WRITE));
         assert(file->iob_BufferSize > 0);
-
-        D(("%ld bytes are to be written", file->iob_BufferWriteBytes));
-
-        SHOWMSG("calling the hook");
 
         fam.fam_Action = file_action_write;
         fam.fam_Data = (char *) file->iob_Buffer;
@@ -52,6 +44,5 @@ __flush_iob_write_buffer(struct _clib4 *__clib4, struct iob *file) {
 
 out:
 
-    RETURN(result);
     return (result);
 }

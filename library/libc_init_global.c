@@ -192,6 +192,14 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
     __clib4->wide_status->_l64a_buf[0] = '\0';
     __clib4->wide_status->_getdate_err = 0;
 
+	/* Allocate alarm signal */
+	__clib4->_interrupting_alarm_signal_num = AllocSignal(-1);
+	if (__clib4->_interrupting_alarm_signal_num == -1) {
+		D(("Cannot allocate alarm signal!"));
+		goto out;
+	}
+	__clib4->_interrupting_alarm_signal = 1U << __clib4->_interrupting_alarm_signal_num;
+
     ClearMem(__clib4->action_array, NSIG * sizeof(struct sigaction));
 
     /* Get cpu family used to choose functions at runtime */
@@ -273,6 +281,12 @@ void
 reent_exit(struct _clib4 *__clib4) {
     /* Free global clib structure */
     if (__clib4) {
+    	DECLARE_UTILITYBASE();
+    	if (__clib4->_interrupting_alarm_signal_num >= 0) {
+    		FreeSignal(__clib4->_interrupting_alarm_signal_num);
+    		__clib4->_interrupting_alarm_signal_num = -1;
+    	}
+
         if (__clib4->resolv_conf != NULL) {
             FreeVec(__clib4->resolv_conf);
             __clib4->resolv_conf = NULL;
@@ -304,7 +318,7 @@ reent_exit(struct _clib4 *__clib4) {
             __clib4->__dl_root_handle = NULL;
             SHOWMSG("Done");
         }
-
+		ClearMem(__clib4, sizeof(struct _clib4));
         FreeVec(__clib4);
         __clib4 = NULL;
         SHOWMSG("__clib4 destroyed correctly");
