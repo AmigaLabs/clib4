@@ -41,9 +41,9 @@ int main(void) {
     
     /* Verify the pointer is correct */
     if (fam.fam_Data == buffer) {
-        printf("✓ Pointer assignment is CORRECT\n");
+        printf("+ Pointer assignment is CORRECT\n");
     } else {
-        printf("✗ Pointer assignment is WRONG!\n");
+        printf("x Pointer assignment is WRONG!\n");
         printf("  Expected: %p\n", buffer);
         printf("  Got:      %p\n", fam.fam_Data);
     }
@@ -56,9 +56,9 @@ int main(void) {
     printf("Expected:       'HELLO'\n");
     
     if (memcmp(buffer, "HELLO", 5) == 0) {
-        printf("✓ Write through pointer WORKS\n");
+        printf("+ Write through pointer WORKS\n");
     } else {
-        printf("✗ Write through pointer FAILED\n");
+        printf("x Write through pointer FAILED\n");
     }
     
     return 0;

@@ -39,15 +39,15 @@
 
 void *
 pthread_getspecific(pthread_key_t key) {
-    ThreadInfo *inf;
-    void *value = NULL;
+	ThreadInfo *inf;
+	void *value = NULL;
 
-    if (key >= PTHREAD_KEYS_MAX || key < 0)
-        return NULL;
+	if (key >= PTHREAD_KEYS_MAX || key < 0)
+		return NULL;
 
-    inf = GetCurrentThreadInfo();
-    if (inf != NULL)
-      value = inf->tlsvalues[key];
+	inf = GetCurrentThreadInfo();
+	if (inf != NULL)
+		value = inf->tlsvalues[key];
 
-    return value;
+	return value;
 }

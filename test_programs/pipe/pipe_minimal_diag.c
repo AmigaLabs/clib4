@@ -53,17 +53,17 @@ int main(void) {
     for (size_t i = 0; i < strlen(TEST_STRING); i++) {
         printf("  [%zu] got=0x%02X expected=0x%02X %s\n",
                i, (unsigned char)read_buf[i], (unsigned char)TEST_STRING[i],
-               (read_buf[i] == TEST_STRING[i]) ? "✓" : "✗");
+               (read_buf[i] == TEST_STRING[i]) ? "+" : "x");
     }
     
     close(pipefd[0]);
     close(pipefd[1]);
     
     if (strcmp(read_buf, TEST_STRING) == 0) {
-        printf("\n✓ SUCCESS!\n");
+        printf("\n+ SUCCESS!\n");
         return 0;
     } else {
-        printf("\n✗ FAILURE!\n");
+        printf("\nx FAILURE!\n");
         return 1;
     }
 }

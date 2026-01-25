@@ -126,7 +126,7 @@ int main(void) {
         printf("  [%zu] got=0x%02X ('%c'), expected=0x%02X ('%c') %s\n",
                i, (unsigned char)got, got, 
                (unsigned char)expected, expected,
-               (got == expected) ? "✓" : "✗ MISMATCH");
+               (got == expected) ? "+" : "x MISMATCH");
         if (got != expected) mismatches++;
     }
     
@@ -136,10 +136,10 @@ int main(void) {
     
     printf("\n");
     if (mismatches == 0) {
-        printf("✓ SUCCESS: All bytes match!\n");
+        printf("+ SUCCESS: All bytes match!\n");
         return 0;
     } else {
-        printf("✗ FAILURE: %d byte(s) mismatch!\n", mismatches);
+        printf("x FAILURE: %d byte(s) mismatch!\n", mismatches);
         return 1;
     }
 }

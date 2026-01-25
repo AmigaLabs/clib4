@@ -26,12 +26,12 @@ static int tests_failed = 0;
     tests_run++; \
     if (!(test)) { \
         tests_failed++; \
-        printf(COLOR_RED "  ✗ FAIL: %s\n" COLOR_RESET, message); \
+        printf(COLOR_RED "  x FAIL: %s\n" COLOR_RESET, message); \
         printf("    at %s:%d\n", __FILE__, __LINE__); \
         return message; \
     } else { \
         tests_passed++; \
-        printf(COLOR_GREEN "  ✓ PASS: %s\n" COLOR_RESET, message); \
+        printf(COLOR_GREEN "  + PASS: %s\n" COLOR_RESET, message); \
     } \
 } while (0)
 
@@ -39,13 +39,13 @@ static int tests_failed = 0;
     tests_run++; \
     if ((expected) != (actual)) { \
         tests_failed++; \
-        printf(COLOR_RED "  ✗ FAIL: %s\n" COLOR_RESET, message); \
+        printf(COLOR_RED "  x FAIL: %s\n" COLOR_RESET, message); \
         printf("    Expected: %ld, Got: %ld\n", (long)(expected), (long)(actual)); \
         printf("    at %s:%d\n", __FILE__, __LINE__); \
         return message; \
     } else { \
         tests_passed++; \
-        printf(COLOR_GREEN "  ✓ PASS: %s\n" COLOR_RESET, message); \
+        printf(COLOR_GREEN "  + PASS: %s\n" COLOR_RESET, message); \
     } \
 } while (0)
 
@@ -53,13 +53,13 @@ static int tests_failed = 0;
     tests_run++; \
     if (strcmp((expected), (actual)) != 0) { \
         tests_failed++; \
-        printf(COLOR_RED "  ✗ FAIL: %s\n" COLOR_RESET, message); \
+        printf(COLOR_RED "  x FAIL: %s\n" COLOR_RESET, message); \
         printf("    Expected: \"%s\", Got: \"%s\"\n", expected, actual); \
         printf("    at %s:%d\n", __FILE__, __LINE__); \
         return message; \
     } else { \
         tests_passed++; \
-        printf(COLOR_GREEN "  ✓ PASS: %s\n" COLOR_RESET, message); \
+        printf(COLOR_GREEN "  + PASS: %s\n" COLOR_RESET, message); \
     } \
 } while (0)
 
@@ -67,13 +67,13 @@ static int tests_failed = 0;
     tests_run++; \
     if (memcmp((expected), (actual), (size)) != 0) { \
         tests_failed++; \
-        printf(COLOR_RED "  ✗ FAIL: %s\n" COLOR_RESET, message); \
+        printf(COLOR_RED "  x FAIL: %s\n" COLOR_RESET, message); \
         printf("    Memory contents differ\n"); \
         printf("    at %s:%d\n", __FILE__, __LINE__); \
         return message; \
     } else { \
         tests_passed++; \
-        printf(COLOR_GREEN "  ✓ PASS: %s\n" COLOR_RESET, message); \
+        printf(COLOR_GREEN "  + PASS: %s\n" COLOR_RESET, message); \
     } \
 } while (0)
 
@@ -81,13 +81,13 @@ static int tests_failed = 0;
     tests_run++; \
     if ((ptr) != NULL) { \
         tests_failed++; \
-        printf(COLOR_RED "  ✗ FAIL: %s\n" COLOR_RESET, message); \
+        printf(COLOR_RED "  x FAIL: %s\n" COLOR_RESET, message); \
         printf("    Expected NULL, got %p\n", (void*)(ptr)); \
         printf("    at %s:%d\n", __FILE__, __LINE__); \
         return message; \
     } else { \
         tests_passed++; \
-        printf(COLOR_GREEN "  ✓ PASS: %s\n" COLOR_RESET, message); \
+        printf(COLOR_GREEN "  + PASS: %s\n" COLOR_RESET, message); \
     } \
 } while (0)
 
@@ -95,13 +95,13 @@ static int tests_failed = 0;
     tests_run++; \
     if ((ptr) == NULL) { \
         tests_failed++; \
-        printf(COLOR_RED "  ✗ FAIL: %s\n" COLOR_RESET, message); \
+        printf(COLOR_RED "  x FAIL: %s\n" COLOR_RESET, message); \
         printf("    Expected non-NULL pointer\n"); \
         printf("    at %s:%d\n", __FILE__, __LINE__); \
         return message; \
     } else { \
         tests_passed++; \
-        printf(COLOR_GREEN "  ✓ PASS: %s\n" COLOR_RESET, message); \
+        printf(COLOR_GREEN "  + PASS: %s\n" COLOR_RESET, message); \
     } \
 } while (0)
 

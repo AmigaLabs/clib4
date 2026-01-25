@@ -45,10 +45,10 @@ static int run_test_module(const TestModule *module) {
     }
     
     if (status == 0) {
-	printf(COLOR_GREEN "\n✓ %s: PASSED\n" COLOR_RESET, module->name);
+	printf(COLOR_GREEN "\n+ %s: PASSED\n" COLOR_RESET, module->name);
 	return 0;
     } else {
-	printf(COLOR_RED "\n✗ %s: FAILED (exit code: %d)\n" COLOR_RESET,
+	printf(COLOR_RED "\nx %s: FAILED (exit code: %d)\n" COLOR_RESET,
 	       module->name, status);
 	return status;
     }

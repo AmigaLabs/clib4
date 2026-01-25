@@ -220,12 +220,12 @@ int main(int argc, char *argv[]) {
         recv_buf[nread] = '\0';
         printf("Read %ld bytes: '%s'\n", (long)nread, recv_buf);
         if (strcmp(recv_buf, test_msg) == 0) {
-            printf("✓ Test 1 PASSED\n");
+            printf("+ Test 1 PASSED\n");
         } else {
-            printf("✗ Test 1 FAILED: data mismatch\n");
+            printf("x Test 1 FAILED: data mismatch\n");
         }
     } else if (nread < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-        printf("✗ Test 1: No data available (EAGAIN)\n");
+        printf("x Test 1: No data available (EAGAIN)\n");
     } else {
         perror("read");
         goto error;
@@ -299,9 +299,9 @@ int main(int argc, char *argv[]) {
     }
     
     if (errors == 0) {
-        printf("✓ Test 2 PASSED: data integrity verified\n");
+        printf("+ Test 2 PASSED: data integrity verified\n");
     } else {
-        printf("✗ Test 2 FAILED: %d byte mismatches\n", errors);
+        printf("x Test 2 FAILED: %d byte mismatches\n", errors);
     }
     
     free(large_buffer);
@@ -316,10 +316,10 @@ int main(int argc, char *argv[]) {
     waitpid(pid, &status, 0);
     
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-        printf("\n✓ All tests completed successfully\n");
+        printf("\n+ All tests completed successfully\n");
         return 0;
     } else {
-        printf("\n✗ Child exited with error\n");
+        printf("\nx Child exited with error\n");
         return 1;
     }
     

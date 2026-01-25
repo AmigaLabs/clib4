@@ -13,8 +13,8 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-#define TEST_OK(msg) printf("✓ %s\n", msg)
-#define TEST_FAIL(msg) printf("✗ FAILED: %s\n", msg)
+#define TEST_OK(msg) printf("+ %s\n", msg)
+#define TEST_FAIL(msg) printf("x FAILED: %s\n", msg)
 
 int main() {
     printf("\n=== FD_CLOEXEC Test ===\n\n");
@@ -50,7 +50,7 @@ int main() {
         goto test2;
     }
 
-    printf("  Initial flags: 0x%x (FD_CLOEXEC not set) ✓\n", flags);
+    printf("  Initial flags: 0x%x (FD_CLOEXEC not set) +\n", flags);
 
     /* Set FD_CLOEXEC */
     if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0) {
@@ -61,7 +61,7 @@ int main() {
         goto test2;
     }
 
-    printf("  Set FD_CLOEXEC ✓\n");
+    printf("  Set FD_CLOEXEC +\n");
 
     /* Verify it's set */
     flags = fcntl(fd, F_GETFD);
@@ -80,7 +80,7 @@ int main() {
         goto test2;
     }
 
-    printf("  Verified FD_CLOEXEC is set: 0x%x ✓\n", flags);
+    printf("  Verified FD_CLOEXEC is set: 0x%x +\n", flags);
 
     /* Clear FD_CLOEXEC */
     if (fcntl(fd, F_SETFD, 0) < 0) {
@@ -99,7 +99,7 @@ int main() {
         goto test2;
     }
 
-    printf("  Cleared FD_CLOEXEC ✓\n");
+    printf("  Cleared FD_CLOEXEC +\n");
 
     TEST_OK("fcntl F_SETFD/F_GETFD");
     tests_passed++;
@@ -135,7 +135,7 @@ test2:
         goto test3;
     }
 
-    printf("  FD opened with O_CLOEXEC has FD_CLOEXEC: 0x%x ✓\n", flags);
+    printf("  FD opened with O_CLOEXEC has FD_CLOEXEC: 0x%x +\n", flags);
     TEST_OK("O_CLOEXEC in open()");
     tests_passed++;
     close(fd);
@@ -161,11 +161,11 @@ test3:
     printf("Failed: %d\n", tests_failed);
 
     if (tests_failed == 0) {
-        printf("\n✓ ALL TESTS PASSED!\n");
+        printf("\n+ ALL TESTS PASSED!\n");
         printf("FD_CLOEXEC is fully implemented and working!\n\n");
         return 0;
     } else {
-        printf("\n✗ SOME TESTS FAILED\n\n");
+        printf("\nx SOME TESTS FAILED\n\n");
         return 1;
     }
 }
