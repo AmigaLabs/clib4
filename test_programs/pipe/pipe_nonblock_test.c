@@ -355,9 +355,9 @@ int main(int argc, char *argv[]) {
     }
     
     if (errors == 0) {
-        printf("✓ Data integrity check PASSED: all %d bytes matched\n", LARGE_DATA_SIZE);
+        printf("+ Data integrity check PASSED: all %d bytes matched\n", LARGE_DATA_SIZE);
     } else {
-        printf("✗ Data integrity check FAILED: %d bytes mismatched\n", errors);
+        printf("x Data integrity check FAILED: %d bytes mismatched\n", errors);
     }
     
     /* Close write pipe to signal EOF to child */

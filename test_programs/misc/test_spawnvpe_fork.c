@@ -22,8 +22,8 @@
 #define COLOR_MAGENTA "\033[35m"
 #define COLOR_CYAN    "\033[36m"
 
-#define TEST_PASSED(name) printf(COLOR_GREEN "✓ PASSED: %s" COLOR_RESET "\n", name)
-#define TEST_FAILED(name, reason) printf(COLOR_RED "✗ FAILED: %s - %s" COLOR_RESET "\n", name, reason)
+#define TEST_PASSED(name) printf(COLOR_GREEN "+ PASSED: %s" COLOR_RESET "\n", name)
+#define TEST_FAILED(name, reason) printf(COLOR_RED "x FAILED: %s - %s" COLOR_RESET "\n", name, reason)
 #define TEST_INFO(msg) printf(COLOR_CYAN "ℹ %s" COLOR_RESET "\n", msg)
 #define TEST_SECTION(name) printf("\n" COLOR_BLUE "=== %s ===" COLOR_RESET "\n", name)
 
@@ -599,10 +599,10 @@ int main(int argc, char *argv[]) {
     unlink("RAM:filter_child.c.exe");
 
     if (tests_failed == 0) {
-        printf(COLOR_GREEN "✓ ALL TESTS PASSED! spawnvpe_fork works like fork()\n" COLOR_RESET);
+        printf(COLOR_GREEN "+ ALL TESTS PASSED! spawnvpe_fork works like fork()\n" COLOR_RESET);
         return 0;
     } else {
-        printf(COLOR_RED "✗ SOME TESTS FAILED\n" COLOR_RESET);
+        printf(COLOR_RED "x SOME TESTS FAILED\n" COLOR_RESET);
         return 1;
     }
 }

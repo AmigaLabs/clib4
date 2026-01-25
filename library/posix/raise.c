@@ -92,13 +92,13 @@ raise(int sig) {
                        land us in _exit(). */
                     __abort();
                 }
-                /* If we have a SIGALRM without associated handler send the SIGBREAKF_CTRL_E signal */
+                /* If we have a SIGALRM without associated handler send the _interrupting_alarm_signal */
                 if (sig == SIGALRM) {
                     /* Block SIGALRM signal from raise again */
                     sigblock(SIGALRM);
 
                     /* Since we got a signal we interrrupt every sleep function like nanosleep */
-                    Signal((struct Task *) __clib4->self, SIGBREAKF_CTRL_E);
+                    Signal((struct Task *) __clib4->self, __clib4->_interrupting_alarm_signal);
                 }
             }
             else if (handler == SIG_ERR) {

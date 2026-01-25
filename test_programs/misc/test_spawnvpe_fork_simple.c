@@ -11,8 +11,8 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-#define TEST_OK(msg) printf("✓ %s\n", msg)
-#define TEST_FAIL(msg) printf("✗ FAILED: %s\n", msg)
+#define TEST_OK(msg) printf("+ %s\n", msg)
+#define TEST_FAIL(msg) printf("x FAILED: %s\n", msg)
 
 int main() {
     printf("\n=== Simple spawnvpe_fork Pipe Test ===\n\n");

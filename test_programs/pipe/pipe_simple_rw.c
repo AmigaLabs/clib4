@@ -54,12 +54,12 @@ int main(void) {
     
     /* Compare */
     if (strcmp(read_data, write_data) == 0) {
-        printf("✓ SUCCESS!\n");
+        printf("+ SUCCESS!\n");
         close(pipefd[0]);
         close(pipefd[1]);
         return 0;
     } else {
-        printf("✗ FAILURE: data mismatch!\n");
+        printf("x FAILURE: data mismatch!\n");
         printf("  Got:      '%s'\n", read_data);
         printf("  Expected: '%s'\n", write_data);
         close(pipefd[0]);

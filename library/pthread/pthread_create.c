@@ -97,6 +97,7 @@ StarterFunc() {
     volatile int keyFound = TRUE;
     struct StackSwapStruct stack;
     volatile BOOL stackSwapped = FALSE;
+	DECLARE_UTILITYBASE();
 
     old_tls = get_tls_register();
 
@@ -136,7 +137,7 @@ StarterFunc() {
     for (int j = 0; keyFound && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
         keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
-            if (tlskeys[i].used && tlskeys[i].destructor && inf->tlsvalues[i]) {
+            if (inf->tlsvalues[i] && tlskeys[i].used && tlskeys[i].destructor) {
                 void *oldvalue = inf->tlsvalues[i];
                 inf->tlsvalues[i] = NULL;
                 tlskeys[i].destructor(oldvalue);
@@ -171,7 +172,7 @@ StarterFunc() {
     }
 
     // Restore old tls value
-    __asm__ volatile("mr "TLS_REGISTER", %0" :: "r"(old_tls));
+	set_tls_register(old_tls);
 
     return RETURN_OK;
 }

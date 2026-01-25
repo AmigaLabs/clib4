@@ -52,24 +52,24 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
     SHOWMSG("Send IO Request");
 	SendIO((struct IORequest *) timeRequest);
 
-    wait_mask = SIGBREAKF_CTRL_E | SIGBREAKF_CTRL_C | ( 1L << messagePort->mp_SigBit );
+    wait_mask = __clib4->_interrupting_alarm_signal | SIGBREAKF_CTRL_C | ( 1L << messagePort->mp_SigBit );
     SetSignal(0, wait_mask);
 
     /* Wait for signals */
     SHOWMSG("Waiting for signal");
     uint32 signals = Wait(wait_mask);
-    if (signals & SIGBREAKF_CTRL_C || signals & SIGBREAKF_CTRL_E) {
+    if (signals & SIGBREAKF_CTRL_C || signals & __clib4->_interrupting_alarm_signal) {
         if (!CheckIO((struct IORequest *) timeRequest)) {
 	        /* If request is incomplete... */
         	AbortIO((struct IORequest *) timeRequest);  /* break it */
         	WaitIO((struct IORequest *) timeRequest);
         }
-        if (signals & SIGBREAKF_CTRL_E) {
-            SHOWMSG("Received SIGBREAKF_CTRL_E");
+        if (signals & __clib4->_interrupting_alarm_signal) {
+            SHOWMSG("Received __clib4->_interrupting_alarm_signal");
             /* Return EINTR since the request has been interrupted by alarm */
             __set_errno_r(__clib4, EINTR);
             result = EINTR;
-            SetSignal(SIGBREAKF_CTRL_E, SIGBREAKF_CTRL_E); // reset signal
+            SetSignal(__clib4->_interrupting_alarm_signal, __clib4->_interrupting_alarm_signal); // reset signal
         } else {
             SHOWMSG("Received SIGBREAKF_CTRL_C. Reset it to set state");
             /* Reset SIGBREAKF_CTRL_C to set state since __check_abort can
