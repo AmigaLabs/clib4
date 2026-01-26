@@ -56,23 +56,30 @@ pthread_join(pthread_t thread, void **value_ptr) {
 
     /* Wait for the thread to reach THREAD_STATE_DESTRUCT state
      * The thread sets this state just before it exits in StarterFunc()
-     * and signals the parent with SIGF_PARENT
+     * and signals the parent with the thread-specific signal
      */
+    D(("pthread_join: thread %ld has signal bit %d\n", thread, inf->parent_signal));
+
+    /* Calculate the signal mask for this specific thread */
+    uint32_t thread_signal = (inf->parent_signal != -1) ? (1L << inf->parent_signal) : 0;
+
+    if (thread_signal == 0) {
+        D(("pthread_join: ERROR - thread %ld has no valid signal!\n", thread));
+        return EINVAL;
+    }
+
     while (inf->status != THREAD_STATE_DESTRUCT) {
         /* Wait for the thread to signal us
          * Note: If the thread already reached THREAD_STATE_DESTRUCT before we get here,
          * we skip the wait (which is correct - thread is already done)
          */
-        uint32_t sigs = Wait(SIGF_PARENT | SIGBREAKF_CTRL_C);
-
+        D(("pthread_join: waiting for thread %ld to terminate - current status %ld - waiting on signal bit %d\n", thread, inf->status, inf->parent_signal));
+        uint32_t sigs = Wait(thread_signal | SIGBREAKF_CTRL_C);
+        D(("pthread_join: woke up from wait for thread %ld - thread_signal %ld - SIGBREAKF_CTRL_C %ld\n", thread, sigs & thread_signal, sigs & SIGBREAKF_CTRL_C));
         /* Check if we got interrupted */
         if (sigs & SIGBREAKF_CTRL_C) {
+            D(("pthread_join: woke up from wait for thread %ld - current status after pthread_testcancel %ld\n", thread, inf->status));
             pthread_testcancel();
-        }
-
-        /* Thread might have signaled us, check status again */
-        if (inf->status == THREAD_STATE_DESTRUCT) {
-            break;
         }
     }
 

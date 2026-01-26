@@ -94,6 +94,7 @@ typedef struct {
     int canceltype;
     int canceled;
     int detached;
+    BYTE parent_signal;  /* Signal bit allocated for this thread to notify parent */
     char name[NAMELEN];
 } ThreadInfo;
 

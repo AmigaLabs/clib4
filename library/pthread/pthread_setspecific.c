@@ -52,12 +52,10 @@ pthread_setspecific(pthread_key_t key, const void *value) {
 
     /* Use global lock to protect the entire operation */
     /* This prevents race with pthread_key_delete */
-    SHOWMSG("Obtaining Mutex for tlskeys access in pthread_setspecific\n");
     MutexObtain(tls_sem);
 
     /* Check if key is valid INSIDE the lock */
     if (!tlskeys[key].used) {
-        SHOWMSG("Key is not used, releasing mutex\n");
         MutexRelease(tls_sem);
         return EINVAL;
     }
@@ -65,7 +63,6 @@ pthread_setspecific(pthread_key_t key, const void *value) {
     /* Write to tlsvalues INSIDE the lock to prevent race with key_delete */
     inf->tlsvalues[key] = (void *) value;
 
-    SHOWMSG("Releasing Mutex for tlskeys access in pthread_setspecific\n");
     MutexRelease(tls_sem);
 
     return 0;

@@ -46,11 +46,9 @@ pthread_key_delete(pthread_key_t key) {
 
     tls = &tlskeys[key];
 
-	SHOWMSG("Obtaining Mutex for tlskeys access in pthread_key_delete\n");
     MutexObtain(tls_sem);
 
     if (tls->used == FALSE) {
-    	SHOWMSG("Key is not used, releasing mutex\n");
         MutexRelease(tls_sem);
         return EINVAL;
     }
@@ -58,7 +56,6 @@ pthread_key_delete(pthread_key_t key) {
     tls->used = FALSE;
     tls->destructor = NULL;
 
-	SHOWMSG("Releasing Mutex for tlskeys access in pthread_key_delete\n");
     MutexRelease(tls_sem);
 
     return 0;

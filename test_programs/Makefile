@@ -54,7 +54,7 @@ CXX_OBJECTS = $(patsubst %.cpp, %, $(CXX_SOURCES))
 
 ##############################################################################
 
-LIBS = -lm -lrt -lpthread -lcrypt -ldebug
+LIBS = -L../build/lib -lm -L../build/lib -lrt -L../build/lib -lpthread -L../build/lib -lcrypt -L../build/lib -ldebug
 
 ##############################################################################
 

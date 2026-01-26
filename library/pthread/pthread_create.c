@@ -131,6 +131,8 @@ StarterFunc() {
         inf->ret = inf->start(inf->arg);
     }
 
+    D(("StarterFunc: thread %s returned from start function\n", inf->name));
+
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
     MutexObtain(tls_sem);
@@ -138,9 +140,16 @@ StarterFunc() {
         keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
             if (inf->tlsvalues[i] && tlskeys[i].used && tlskeys[i].destructor) {
+                D(("StarterFunc: thread %s calling destructor for key %d\n", inf->name, i));
                 void *oldvalue = inf->tlsvalues[i];
+                void (*destructor_func)(void *) = tlskeys[i].destructor;
                 inf->tlsvalues[i] = NULL;
-                tlskeys[i].destructor(oldvalue);
+                /* Save destructor to local variable to prevent race with pthread_key_delete
+                 * which could set it to NULL between the check and the call */
+                if (destructor_func) {
+                    destructor_func(oldvalue);
+                }
+                D(("StarterFunc: thread %s destructor for key %d returned\n", inf->name, i));
                 keyFound = TRUE;
             }
         }
@@ -150,10 +159,12 @@ StarterFunc() {
     /*  If we have timer running tasks for this thread, stop them before exit  */
     if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
         uint32 currentThreadID = (uint32)FindTask(NULL);
+        D(("StarterFunc: thread %s has timers, killing them\n", inf->name));
         /* Block SIGALRM signal from raise */
         sigblock(SIGALRM);
         /* Kill itimer for current thread */
         killitimer_by_thread(currentThreadID);
+        D(("StarterFunc: thread %s timers killed\n", inf->name));
     }
 
     if (stackSwapped)
@@ -161,18 +172,22 @@ StarterFunc() {
 
     if (!inf->detached) {
         // tell the parent thread that we are done
+        D(("StarterFunc: thread %s not detached, signaling parent\n", inf->name));
         Forbid();
         inf->status = THREAD_STATE_DESTRUCT;
-        Signal((struct Task *) inf->parent, SIGF_PARENT);
+        D(("StarterFunc: thread %s (%lu) signaling parent %ld with signal bit %d\n", inf->name, (unsigned long)inf->task->pr_ProcessID, (unsigned long)inf->parent->pr_ProcessID, inf->parent_signal));
+        /* Signal the parent using the allocated signal for this thread */
+        if (inf->parent_signal != -1) {
+            Signal((struct Task *) inf->parent, 1L << inf->parent_signal);
+        }
+        Permit();
+        /* Note: We don't free the signal here - pthread_join will do it after cleanup */
     } else {
         // no one is waiting for us, do the clean up
         MutexObtain(thread_sem);
         _pthread_clear_threadinfo(inf);
         MutexRelease(thread_sem);
     }
-
-    // Restore old tls value
-	set_tls_register(old_tls);
 
     return RETURN_OK;
 }
@@ -213,6 +228,20 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->cancelstate = PTHREAD_CANCEL_ENABLE;
     inf->canceltype = PTHREAD_CANCEL_DEFERRED;
     inf->detached = inf->attr.detachstate == PTHREAD_CREATE_DETACHED;
+
+    /* Allocate a unique signal for this thread to notify parent when done
+     * This prevents race conditions when multiple threads finish simultaneously
+     */
+    if (!inf->detached) {
+        inf->parent_signal = AllocSignal(-1);
+        if (inf->parent_signal == -1) {
+            D(("pthread_create: Failed to allocate signal for thread %d\n", threadnew));
+            return EAGAIN;
+        }
+        D(("pthread_create: Allocated signal %d for thread %d\n", inf->parent_signal, threadnew));
+    } else {
+        inf->parent_signal = -1;  /* Detached threads don't need a signal */
+    }
 
     /* Check minimum stack size */
     if (inf->attr.stacksize != 0 && inf->attr.stacksize < PTHREAD_STACK_MIN)

@@ -153,8 +153,14 @@ _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *
 
 void
 _pthread_clear_threadinfo(ThreadInfo *inf) {
+    /* Free the allocated signal if any */
+    if (inf->parent_signal != -1) {
+        D(("_pthread_clear_threadinfo: Freeing signal %d for thread %s\n", inf->parent_signal, inf->name));
+        FreeSignal(inf->parent_signal);
+    }
     memset(inf, 0, sizeof(ThreadInfo));
     inf->status = THREAD_STATE_IDLE;
+    inf->parent_signal = -1;
 }
 
 int
@@ -327,7 +333,11 @@ int __pthread_init_func(void) {
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
         inf = &threads[i];
         inf->status = THREAD_STATE_IDLE;
+        inf->parent_signal = -1;  /* No signal allocated yet */
     }
+
+    /* Main thread doesn't need a parent signal */
+    threads[0].parent_signal = -1;
 
     return TRUE;
 }

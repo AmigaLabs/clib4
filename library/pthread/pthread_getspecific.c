@@ -53,7 +53,6 @@ pthread_getspecific(pthread_key_t key) {
 
     /* Use global lock to protect the entire operation */
     /* This prevents race with pthread_key_delete */
-    SHOWMSG("Obtaining Mutex for tlskeys access in pthread_getspecific\n");
     MutexObtain(tls_sem);
 
     /* Check if key is valid INSIDE the lock */
@@ -62,7 +61,6 @@ pthread_getspecific(pthread_key_t key) {
         value = inf->tlsvalues[key];
     }
 
-    SHOWMSG("Releasing Mutex for tlskeys access in pthread_getspecific\n");
     MutexRelease(tls_sem);
 
 
