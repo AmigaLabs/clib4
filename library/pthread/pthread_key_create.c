@@ -42,9 +42,10 @@ pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
     TLSKey *tls;
     int i;
 
-    if (key == NULL)
-        return EINVAL;
+	if (key == NULL)
+		return EINVAL;
 
+	SHOWMSG("Obtaining Mutex for tlskeys access in pthread_key_create\n");
     MutexObtain(tls_sem);
 
     for (i = 0; i < PTHREAD_KEYS_MAX; i++) {
@@ -53,6 +54,7 @@ pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
     }
 
     if (i == PTHREAD_KEYS_MAX) {
+    	SHOWMSG("No available keys, releasing mutex\n");
         MutexRelease(tls_sem);
         return EAGAIN;
     }
@@ -61,6 +63,7 @@ pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
     tls->used = TRUE;
     tls->destructor = destructor;
 
+	SHOWMSG("Releasing Mutex for tlskeys access in pthread_key_create\n");
     MutexRelease(tls_sem);
 
     *key = i;

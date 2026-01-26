@@ -54,19 +54,35 @@ pthread_join(pthread_t thread, void **value_ptr) {
 
 	pthread_testcancel();
 
-	if (inf->status == THREAD_STATE_TERMINATING || inf->status == THREAD_STATE_DESTRUCT) {
-		/* The target thread is already terminating, cannot join it */
-		return 0;
-	}
-	inf->status = THREAD_STATE_TERMINATING;
-
+    /* Wait for the thread to reach THREAD_STATE_DESTRUCT state
+     * The thread sets this state just before it exits in StarterFunc()
+     * and signals the parent with SIGF_PARENT
+     */
     while (inf->status != THREAD_STATE_DESTRUCT) {
-        Wait(SIGF_PARENT);
+        /* Wait for the thread to signal us
+         * Note: If the thread already reached THREAD_STATE_DESTRUCT before we get here,
+         * we skip the wait (which is correct - thread is already done)
+         */
+        uint32_t sigs = Wait(SIGF_PARENT | SIGBREAKF_CTRL_C);
+
+        /* Check if we got interrupted */
+        if (sigs & SIGBREAKF_CTRL_C) {
+            pthread_testcancel();
+        }
+
+        /* Thread might have signaled us, check status again */
+        if (inf->status == THREAD_STATE_DESTRUCT) {
+            break;
+        }
     }
 
+    /* Get the return value before cleanup */
     if (value_ptr)
         *value_ptr = inf->ret;
 
+    /* Always clean up the thread info, even if thread exited very quickly
+     * This fixes the race condition where thread exits before pthread_join is called
+     */
     MutexObtain(thread_sem);
     _pthread_clear_threadinfo(inf);
     MutexRelease(thread_sem);

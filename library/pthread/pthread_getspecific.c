@@ -39,15 +39,32 @@
 
 void *
 pthread_getspecific(pthread_key_t key) {
-	ThreadInfo *inf;
-	void *value = NULL;
+    ThreadInfo *inf;
+    BOOL key_is_valid;
+    void *value = NULL;
 
-	if (key >= PTHREAD_KEYS_MAX || key < 0)
-		return NULL;
+    if (key >= PTHREAD_KEYS_MAX || key < 0)
+        return NULL;
 
-	inf = GetCurrentThreadInfo();
-	if (inf != NULL)
-		value = inf->tlsvalues[key];
+    /* Get current thread info */
+    inf = GetCurrentThreadInfo();
+    if (inf == NULL)
+        return NULL;
 
-	return value;
+    /* Use global lock to protect the entire operation */
+    /* This prevents race with pthread_key_delete */
+    SHOWMSG("Obtaining Mutex for tlskeys access in pthread_getspecific\n");
+    MutexObtain(tls_sem);
+
+    /* Check if key is valid INSIDE the lock */
+    if (tlskeys[key].used) {
+        /* Read from tlsvalues INSIDE the lock to prevent race with key_delete */
+        value = inf->tlsvalues[key];
+    }
+
+    SHOWMSG("Releasing Mutex for tlskeys access in pthread_getspecific\n");
+    MutexRelease(tls_sem);
+
+
+    return value;
 }
