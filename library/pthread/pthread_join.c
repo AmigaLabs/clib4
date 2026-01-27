@@ -40,36 +40,88 @@
 int
 pthread_join(pthread_t thread, void **value_ptr) {
     ThreadInfo *inf = GetThreadInfo(thread);
-    struct Task *task = FindTask(NULL);
 
-    if (inf == NULL || inf->parent == NULL)
+    if (inf == NULL)
         return ESRCH;
+
+    if (inf->parent == NULL)
+        return ESRCH;
+
+    ThreadInfo *me = GetCurrentThreadInfo();
+    struct Task *task = FindTask(NULL);
 
     if (inf->detached)
         return EINVAL;
 
-    if ((struct Task *) inf->task == task) {
+    if ((struct Task *) inf->task == task)
         return EDEADLK;
+
+    MutexObtain(thread_sem);
+
+    /* Check if thread already terminated */
+    if (inf->status == THREAD_STATE_DESTRUCT || inf->status == THREAD_STATE_TERMINATED) {
+        if (value_ptr)
+            *value_ptr = inf->ret;
+
+        _pthread_clear_threadinfo(inf);
+        MutexRelease(thread_sem);
+        return 0;
     }
 
-	pthread_testcancel();
+    /* Thread still running - allocate signal and register as joiner */
+    /* Only if we are a pthread thread (me != NULL) */
+    if (me) {
+        me->join_signal = AllocSignal(-1);
+        if (me->join_signal == -1)
+            me->join_signal_mask = SIGF_PARENT;
+        else
+            me->join_signal_mask = 1L << me->join_signal;
 
-	if (inf->status == THREAD_STATE_TERMINATING || inf->status == THREAD_STATE_DESTRUCT) {
-		/* The target thread is already terminating, cannot join it */
-		return 0;
-	}
-	inf->status = THREAD_STATE_TERMINATING;
-
-    while (inf->status != THREAD_STATE_DESTRUCT) {
-        Wait(SIGF_PARENT);
+        me->join_thread_id = thread;
     }
 
+    MutexRelease(thread_sem);
+
+    /* Wait for thread to finish */
+    if (me) {
+        /* We are a pthread - wait for signal */
+        /* CRITICAL: Check one more time if thread already exited to prevent lost signal */
+        if (inf->status != THREAD_STATE_DESTRUCT && inf->status != THREAD_STATE_TERMINATED) {
+            uint32_t sigs = Wait(me->join_signal_mask | me->cancel_signal_mask);
+
+            if (sigs & me->cancel_signal_mask)
+                pthread_testcancel();
+        }
+        /* If thread already DESTRUCT/TERMINATED, skip Wait - it already signaled or exited */
+    } else {
+        /* We are main thread or non-pthread - busy wait with proper locking */
+        int done = 0;
+        while (!done) {
+            Delay(1); /* Wait 1 tick (~20ms) */
+            MutexObtain(thread_sem);
+            if (inf->status == THREAD_STATE_DESTRUCT || inf->status == THREAD_STATE_TERMINATED)
+                done = 1;
+            MutexRelease(thread_sem);
+        }
+    }
+
+    MutexObtain(thread_sem);
+
+    /* Get return value and clean up */
     if (value_ptr)
         *value_ptr = inf->ret;
 
-    MutexObtain(thread_sem);
-    _pthread_clear_threadinfo(inf);
-    MutexRelease(thread_sem);
+    if (me) {
+        me->join_thread_id = 0;
+        if (me->join_signal != -1) {
+            FreeSignal(me->join_signal);
+            me->join_signal = -1;
+            me->join_signal_mask = 0;
+        }
+    }
 
+    _pthread_clear_threadinfo(inf);
+
+    MutexRelease(thread_sem);
     return 0;
 }

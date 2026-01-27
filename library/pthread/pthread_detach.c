@@ -49,7 +49,25 @@ pthread_detach(pthread_t thread) {
     if (inf->detached)
         return EINVAL;
 
+    D(("pthread_detach: thread %ld detaching (parent_signal %d mask 0x%lx)\n", thread, inf->parent_signal, (unsigned long)inf->parent_signal_mask));
+
     inf->detached = TRUE;
+
+    /* Free the parent signal since we won't be joining this thread
+     * The thread will clean itself up when it terminates
+     */
+    if (inf->parent_signal != -1) {
+        D(("pthread_detach: Freeing parent signal %d for thread %ld\n", inf->parent_signal, thread));
+        FreeSignal(inf->parent_signal);
+        inf->parent_signal = -1;
+        inf->parent_signal_mask = 0;
+    }
+    if (inf->cancel_signal != -1) {
+        D(("pthread_detach: Freeing cancel signal %d for thread %ld\n", inf->cancel_signal, thread));
+        FreeSignal(inf->cancel_signal);
+        inf->cancel_signal = -1;
+        inf->cancel_signal_mask = 0;
+    }
 
     return 0;
 }

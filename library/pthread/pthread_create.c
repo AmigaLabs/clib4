@@ -103,7 +103,11 @@ StarterFunc() {
 
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
+	struct newThreadMessage *newThreadMessage = (struct newThreadMessage *) startedTask->pr_EntryData;
 
+    D(("StarterFunc: thread %s STARTING (task=%p inf=%p)\n", inf->name, startedTask, inf));
+
+    // set task TLS register
     set_tls_register(inf);
 
     struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_UID; // GetEntryData();
@@ -125,11 +129,33 @@ StarterFunc() {
         stackSwapped = TRUE;
     }
 
+	ReplyMsg(&newThreadMessage->message);
+
+    /* Allocate signals AFTER ReplyMsg (like pthreads.library ThreadCode/init does after replying to BirthMessage) */
+    if (!inf->detached) {
+	    inf->cancel_signal = AllocSignal(-1);
+    	if (inf->cancel_signal == -1) {
+    		inf->cancel_signal_mask = SIGBREAKF_CTRL_C;
+    		D(("StarterFunc: %s AllocSignal cancel failed, fallback SIGBREAKF_CTRL_C\n", inf->name));
+    	} else {
+    		inf->cancel_signal_mask = 1L << inf->cancel_signal;
+    		D(("StarterFunc: %s allocated cancel signal %d mask 0x%lx\n", inf->name, inf->cancel_signal, (unsigned long)inf->cancel_signal_mask));
+    	}
+    }
+
+    D(("StarterFunc: thread %s about to call start function\n", inf->name));
+
     // set a jump point for pthread_exit
     if (!setjmp(inf->jmp)) {
         inf->status = THREAD_STATE_RUNNING;
+        D(("StarterFunc: thread %s calling start function NOW\n", inf->name));
         inf->ret = inf->start(inf->arg);
+        D(("StarterFunc: thread %s start function RETURNED\n", inf->name));
     }
+
+    /* Don't acquire thread_sem here - let pthread_join register first if it's waiting */
+
+    D(("StarterFunc: thread %s returned from start function\n", inf->name));
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
@@ -138,9 +164,16 @@ StarterFunc() {
         keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
             if (inf->tlsvalues[i] && tlskeys[i].used && tlskeys[i].destructor) {
+                D(("StarterFunc: thread %s calling destructor for key %d\n", inf->name, i));
                 void *oldvalue = inf->tlsvalues[i];
+                void (*destructor_func)(void *) = tlskeys[i].destructor;
                 inf->tlsvalues[i] = NULL;
-                tlskeys[i].destructor(oldvalue);
+                /* Save destructor to local variable to prevent race with pthread_key_delete
+                 * which could set it to NULL between the check and the call */
+                if (destructor_func) {
+                    destructor_func(oldvalue);
+                }
+                D(("StarterFunc: thread %s destructor for key %d returned\n", inf->name, i));
                 keyFound = TRUE;
             }
         }
@@ -150,30 +183,65 @@ StarterFunc() {
     /*  If we have timer running tasks for this thread, stop them before exit  */
     if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
         uint32 currentThreadID = (uint32)FindTask(NULL);
+        D(("StarterFunc: thread %s has timers, killing them\n", inf->name));
         /* Block SIGALRM signal from raise */
         sigblock(SIGALRM);
         /* Kill itimer for current thread */
         killitimer_by_thread(currentThreadID);
+        D(("StarterFunc: thread %s timers killed\n", inf->name));
     }
 
     if (stackSwapped)
         StackSwap(&stack);
 
+    /* NOW acquire thread_sem to atomically set DESTRUCT and search for joiner */
+    MutexObtain(thread_sem);
+
     if (!inf->detached) {
-        // tell the parent thread that we are done
-        Forbid();
+        // tell the parent thread that we are done (like pthreads.library: find joiner and signal)
+        D(("StarterFunc: thread %s not detached, looking for joiner\n", inf->name));
         inf->status = THREAD_STATE_DESTRUCT;
-        Signal((struct Task *) inf->parent, SIGF_PARENT);
-    } else {
-        // no one is waiting for us, do the clean up
-        MutexObtain(thread_sem);
-        _pthread_clear_threadinfo(inf);
-        MutexRelease(thread_sem);
+
+        /* Find who is waiting to join with us */
+        pthread_t my_id = inf->thread_id;  /* Use saved thread_id, not pointer arithmetic */
+        ThreadInfo *joiner = NULL;
+
+        D(("StarterFunc: thread %s searching for joiner, my_id=%ld\n", inf->name, my_id));
+
+        for (int i = 0; i < PTHREAD_THREADS_MAX; i++) {
+            if (threads[i].join_thread_id == my_id && threads[i].join_signal_mask != 0) {
+                joiner = &threads[i];
+                D(("StarterFunc: thread %s found joiner thread %d, signaling mask 0x%lx\n", inf->name, i, (unsigned long)joiner->join_signal_mask));
+                Signal((struct Task *)joiner->task, joiner->join_signal_mask);
+                break;
+            }
+        }
+
+        if (!joiner) {
+            /* No joiner yet - just mark as DESTRUCT and exit */
+            /* pthread_join will find us later in this state and clean up */
+            D(("StarterFunc: thread %s (id=%ld) no joiner found, exiting anyway\n", inf->name, my_id));
+        } else {
+            /* Joiner found and signaled */
+            D(("StarterFunc: thread %s joiner signaled\n", inf->name));
+        }
+
+        /* Joinable thread exits here - pthread_join will clean up the ThreadInfo */
     }
 
-    // Restore old tls value
-	set_tls_register(old_tls);
+    /* Detached threads need self cleanup */
+    if (inf->detached) {
+        _pthread_clear_threadinfo(inf);
+    }
+    /* NOTE: Joinable threads do NOT cleanup themselves!
+     * pthread_join will do the cleanup after getting the return value.
+     * This prevents race where thread clears status before join checks it.
+     */
 
+    /* Release lock and exit - process terminates normally */
+    MutexRelease(thread_sem);
+
+    D(("StarterFunc: thread %s exiting\n", inf->name));
     return RETURN_OK;
 }
 
@@ -185,6 +253,11 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     pthread_t threadnew;
     struct Task *thisTask = FindTask(NULL);
     struct DOSIFace *IDOS = _IDOS;
+	BPTR fileIn  = BZERO;
+	BPTR fileOut = BZERO;
+	BPTR fileErr = BZERO;
+	struct newThreadMessage *newThreadMessage = NULL;
+	struct MsgPort *msgPort = NULL;
 
     if (thread == NULL || start == NULL)
         return EINVAL;
@@ -201,7 +274,9 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     // prepare the ThreadInfo structure
     inf = GetThreadInfo(threadnew);
     _pthread_clear_threadinfo(inf);
+    D(("pthread_create: slot %d cleared (task %p)\n", threadnew, inf->task));
 
+    inf->thread_id = threadnew;  /* Save our pthread_t ID */
     inf->start = start;
     inf->arg = arg;
     inf->parent = (struct Process *) thisTask;
@@ -213,6 +288,28 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->cancelstate = PTHREAD_CANCEL_ENABLE;
     inf->canceltype = PTHREAD_CANCEL_DEFERRED;
     inf->detached = inf->attr.detachstate == PTHREAD_CREATE_DETACHED;
+
+    /* Signals allocated lazily in StarterFunc (thread context) like pthreads.library */
+    inf->parent_signal = -1;
+    inf->parent_signal_mask = 0;
+    inf->cancel_signal = -1;
+    inf->cancel_signal_mask = 0;
+
+    msgPort = AllocSysObject(ASOT_PORT, NULL);
+    if (msgPort == 0) {
+        SHOWMSG("Cannot allocate message port\n");
+        goto out;
+    }
+
+	newThreadMessage = AllocSysObjectTags(ASOT_MESSAGE,
+		ASOMSG_Size, sizeof(struct newThreadMessage),
+		ASOMSG_ReplyPort, msgPort,
+		TAG_DONE);
+	if (newThreadMessage == NULL) {
+		SHOWMSG("Cannot allocate message\n");
+		goto out;
+	}
+
 
     /* Check minimum stack size */
     if (inf->attr.stacksize != 0 && inf->attr.stacksize < PTHREAD_STACK_MIN)
@@ -229,9 +326,9 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     name[sizeof(name) - 1] = '\0';
     strncpy(inf->name, name, NAMELEN);
 
-    BPTR fileIn  = DupFileHandle(Input());
-    BPTR fileOut = DupFileHandle(Output());
-    BPTR fileErr = DupFileHandle(ErrorOutput());
+    fileIn  = DupFileHandle(Input());
+    fileOut = DupFileHandle(Output());
+    fileErr = DupFileHandle(ErrorOutput());
     if (!fileIn || !fileOut || !fileErr)
         goto out;
 
@@ -248,7 +345,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
             NP_CloseOutput,		     TRUE,
             NP_Error,			     fileErr,
             NP_CloseError,		     TRUE,
-
+            NP_EntryData,			 newThreadMessage,
             TAG_DONE);
 
 out:
@@ -259,13 +356,36 @@ out:
             Close(fileOut);
         if (fileErr)
             Close(fileErr);
+
+    	if (inf->parent_signal != -1) {
+    		FreeSignal(inf->parent_signal);
+    		inf->parent_signal = -1;
+    	}
+    	if (inf->cancel_signal != -1) {
+			FreeSignal(inf->cancel_signal);
+			inf->cancel_signal = -1;
+		}
+    	if (newThreadMessage != NULL) {
+    		FreeSysObject(ASOT_MESSAGE, newThreadMessage);
+    		newThreadMessage = NULL;
+    	}
+    	if (msgPort != NULL) {
+    		FreeSysObject(ASOT_PORT, msgPort);
+    		msgPort = NULL;
+    	}
         inf->parent = NULL;
         return EAGAIN;
     }
 
-    if (thread != NULL) {
-        *thread = threadnew;
-    }
+	WaitPort(msgPort);
+	GetMsg(msgPort);
+
+    *thread = threadnew;
+
+	FreeSysObject(ASOT_MESSAGE, newThreadMessage);
+	FreeSysObject(ASOT_PORT, msgPort);
+	newThreadMessage = NULL;
+	msgPort = NULL;
 
     return OK;
 }

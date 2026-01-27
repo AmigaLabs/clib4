@@ -95,7 +95,23 @@ typedef struct {
     int canceled;
     int detached;
     char name[NAMELEN];
+    pthread_t thread_id;          /* My pthread_t ID assigned at creation */
+
+    int8_t parent_signal;	/* Signal bit allocated in thread for internal use */
+	uint32_t parent_signal_mask;
+	int8_t cancel_signal;
+	uint32_t cancel_signal_mask;
+
+	/* Joiner support (like pthreads.library) */
+	pthread_t join_thread_id;     /* Which thread is this one waiting to join? (0 = not waiting) */
+	int8_t join_signal;            /* Signal allocated by joiner for wakeup */
+	uint32_t join_signal_mask;     /* Mask for join_signal */
+	volatile int can_exit;         /* Flag: pthread_join has cleaned up, thread can exit */
 } ThreadInfo;
+
+struct newThreadMessage {
+	struct Message message;
+};
 
 extern struct Library *_DOSBase;
 extern struct DOSIFace *_IDOS;

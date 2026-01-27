@@ -153,8 +153,31 @@ _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *
 
 void
 _pthread_clear_threadinfo(ThreadInfo *inf) {
+    D(("_pthread_clear_threadinfo: ENTER\n"));
+
+    /* Free the allocated signal if any (but not 0 which is reserved) */
+    if (inf->parent_signal > 0 && inf->parent_signal != -1) {
+        D(("_pthread_clear_threadinfo: Freeing parent signal %d\n", inf->parent_signal));
+        FreeSignal(inf->parent_signal);
+    }
+    if (inf->cancel_signal > 0 && inf->cancel_signal != -1) {
+        D(("_pthread_clear_threadinfo: Freeing cancel signal %d\n", inf->cancel_signal));
+        FreeSignal(inf->cancel_signal);
+    }
+    if (inf->join_signal > 0 && inf->join_signal != -1) {
+        D(("_pthread_clear_threadinfo: Freeing join signal %d\n", inf->join_signal));
+        FreeSignal(inf->join_signal);
+    }
+    D(("_pthread_clear_threadinfo: clearing thread (task value suppressed)\n"));
     memset(inf, 0, sizeof(ThreadInfo));
     inf->status = THREAD_STATE_IDLE;
+    inf->parent_signal = -1;
+    inf->cancel_signal = -1;
+    inf->join_signal = -1;
+    inf->join_signal_mask = 0;
+    inf->join_thread_id = 0;
+    inf->can_exit = 0;
+    D(("_pthread_clear_threadinfo: EXIT\n"));
 }
 
 int
@@ -299,7 +322,7 @@ int __pthread_init_func(void) {
     SHOWMSG("[__pthread_init_func :] Pthread __pthread_init_func called.\n");
 
     memset(&threads, 0, sizeof(threads));
-    thread_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+    thread_sem = AllocSysObjectTags(ASOT_MUTEX, TAG_DONE);
     tls_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
 
     old_tls = get_tls_register();
@@ -307,6 +330,7 @@ int __pthread_init_func(void) {
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
 
+    inf->thread_id = 0;  /* Main thread has ID 0 */
     inf->task = (struct Process *) FindTask(NULL);
     inf->status = THREAD_STATE_RUNNING;
     NewMinList(&inf->cleanup);
@@ -327,7 +351,19 @@ int __pthread_init_func(void) {
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
         inf = &threads[i];
         inf->status = THREAD_STATE_IDLE;
+        inf->parent_signal = -1; /* No signal allocated yet */
+        inf->cancel_signal = -1; /* No signal allocated yet */
+        inf->join_signal = -1;
+        inf->join_signal_mask = 0;
+        inf->join_thread_id = 0;
     }
+
+    /* Main thread doesn't need these signals */
+    threads[0].parent_signal = -1;
+    threads[0].cancel_signal = -1;
+    threads[0].join_signal = -1;
+    threads[0].join_signal_mask = 0;
+    threads[0].join_thread_id = 0;
 
     return TRUE;
 }
