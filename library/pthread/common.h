@@ -94,9 +94,17 @@ typedef struct {
     int canceltype;
     int canceled;
     int detached;
-    BYTE parent_signal;  /* Signal bit allocated for this thread to notify parent */
     char name[NAMELEN];
+
+    int8_t parent_signal;	/* Signal bit allocated for this thread to notify parent */
+	uint32_t parent_signal_mask;
+	int8_t cancel_signal;
+	uint32_t cancel_signal_mask;
 } ThreadInfo;
+
+struct newThreadMessage {
+	struct Message message;
+};
 
 extern struct Library *_DOSBase;
 extern struct DOSIFace *_IDOS;

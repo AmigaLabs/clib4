@@ -103,6 +103,7 @@ StarterFunc() {
 
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
+	struct newThreadMessage *newThreadMessage = (struct newThreadMessage *) startedTask->pr_EntryData;
 
     set_tls_register(inf);
 
@@ -125,11 +126,14 @@ StarterFunc() {
         stackSwapped = TRUE;
     }
 
+	ReplyMsg(&newThreadMessage->message);
+
     // set a jump point for pthread_exit
     if (!setjmp(inf->jmp)) {
         inf->status = THREAD_STATE_RUNNING;
         inf->ret = inf->start(inf->arg);
     }
+	MutexObtain(thread_sem);
 
     D(("StarterFunc: thread %s returned from start function\n", inf->name));
 
@@ -173,21 +177,20 @@ StarterFunc() {
     if (!inf->detached) {
         // tell the parent thread that we are done
         D(("StarterFunc: thread %s not detached, signaling parent\n", inf->name));
-        Forbid();
-        inf->status = THREAD_STATE_DESTRUCT;
-        D(("StarterFunc: thread %s (%lu) signaling parent %ld with signal bit %d\n", inf->name, (unsigned long)inf->task->pr_ProcessID, (unsigned long)inf->parent->pr_ProcessID, inf->parent_signal));
-        /* Signal the parent using the allocated signal for this thread */
         if (inf->parent_signal != -1) {
-            Signal((struct Task *) inf->parent, 1L << inf->parent_signal);
+        	Forbid();
+        	inf->status = THREAD_STATE_DESTRUCT;
+        	D(("StarterFunc: thread %s (%lu) signaling parent %ld with signal bit %d\n", inf->name, (unsigned long)inf->task->pr_ProcessID, (unsigned long)inf->parent->pr_ProcessID, inf->parent_signal));
+        	/* Signal the parent using the allocated signal for this thread */
+        	Signal((struct Task *) inf->parent, 1L << inf->parent_signal);
         }
-        Permit();
         /* Note: We don't free the signal here - pthread_join will do it after cleanup */
     } else {
         // no one is waiting for us, do the clean up
-        MutexObtain(thread_sem);
         _pthread_clear_threadinfo(inf);
-        MutexRelease(thread_sem);
     }
+
+	MutexRelease(thread_sem);
 
     return RETURN_OK;
 }
@@ -200,6 +203,11 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     pthread_t threadnew;
     struct Task *thisTask = FindTask(NULL);
     struct DOSIFace *IDOS = _IDOS;
+	BPTR fileIn  = BZERO;
+	BPTR fileOut = BZERO;
+	BPTR fileErr = BZERO;
+	struct newThreadMessage *newThreadMessage = NULL;
+	struct MsgPort *msgPort = NULL;
 
     if (thread == NULL || start == NULL)
         return EINVAL;
@@ -229,6 +237,21 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->canceltype = PTHREAD_CANCEL_DEFERRED;
     inf->detached = inf->attr.detachstate == PTHREAD_CREATE_DETACHED;
 
+	msgPort = AllocSysObject(ASOT_PORT, NULL);
+	if (msgPort == 0) {
+		SHOWMSG("Cannot allocate message port\n");
+		goto out;
+	}
+
+	newThreadMessage = AllocSysObjectTags(ASOT_MESSAGE,
+		ASOMSG_Size, sizeof(struct newThreadMessage),
+		ASOMSG_ReplyPort, msgPort,
+		TAG_DONE);
+	if (newThreadMessage == NULL) {
+		SHOWMSG("Cannot allocate message\n");
+		goto out;
+	}
+
     /* Allocate a unique signal for this thread to notify parent when done
      * This prevents race conditions when multiple threads finish simultaneously
      */
@@ -236,11 +259,20 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
         inf->parent_signal = AllocSignal(-1);
         if (inf->parent_signal == -1) {
             D(("pthread_create: Failed to allocate signal for thread %d\n", threadnew));
-            return EAGAIN;
+            goto out;
         }
+    	inf->parent_signal_mask = 1L << inf->parent_signal;
         D(("pthread_create: Allocated signal %d for thread %d\n", inf->parent_signal, threadnew));
+
+    	inf->cancel_signal = AllocSignal(-1);
+    	if (inf->cancel_signal == -1) {
+    		D(("pthread_create: Failed to allocate cancel signal for thread %d\n", threadnew));
+			goto out;
+    	}
+    	inf->cancel_signal_mask = 1L << inf->cancel_signal;
     } else {
-        inf->parent_signal = -1;  /* Detached threads don't need a signal */
+        inf->parent_signal = -1; /* Detached threads don't need a signal */
+    	inf->cancel_signal = -1; /* Detached threads don't need a cancel signal */
     }
 
     /* Check minimum stack size */
@@ -258,9 +290,9 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     name[sizeof(name) - 1] = '\0';
     strncpy(inf->name, name, NAMELEN);
 
-    BPTR fileIn  = DupFileHandle(Input());
-    BPTR fileOut = DupFileHandle(Output());
-    BPTR fileErr = DupFileHandle(ErrorOutput());
+    fileIn  = DupFileHandle(Input());
+    fileOut = DupFileHandle(Output());
+    fileErr = DupFileHandle(ErrorOutput());
     if (!fileIn || !fileOut || !fileErr)
         goto out;
 
@@ -277,7 +309,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
             NP_CloseOutput,		     TRUE,
             NP_Error,			     fileErr,
             NP_CloseError,		     TRUE,
-
+            NP_EntryData,			 newThreadMessage,
             TAG_DONE);
 
 out:
@@ -288,13 +320,36 @@ out:
             Close(fileOut);
         if (fileErr)
             Close(fileErr);
+
+    	if (inf->parent_signal != -1) {
+    		FreeSignal(inf->parent_signal);
+    		inf->parent_signal = -1;
+    	}
+    	if (inf->cancel_signal != -1) {
+			FreeSignal(inf->cancel_signal);
+			inf->cancel_signal = -1;
+		}
+    	if (newThreadMessage != NULL) {
+    		FreeSysObject(ASOT_MESSAGE, newThreadMessage);
+    		newThreadMessage = NULL;
+    	}
+    	if (msgPort != NULL) {
+    		FreeSysObject(ASOT_PORT, msgPort);
+    		msgPort = NULL;
+    	}
         inf->parent = NULL;
         return EAGAIN;
     }
 
-    if (thread != NULL) {
-        *thread = threadnew;
-    }
+	WaitPort(msgPort);
+	GetMsg(msgPort);
+
+    *thread = threadnew;
+
+	FreeSysObject(ASOT_MESSAGE, newThreadMessage);
+	FreeSysObject(ASOT_PORT, msgPort);
+	newThreadMessage = NULL;
+	msgPort = NULL;
 
     return OK;
 }

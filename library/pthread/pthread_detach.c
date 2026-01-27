@@ -55,10 +55,14 @@ pthread_detach(pthread_t thread) {
      * The thread will clean itself up when it terminates
      */
     if (inf->parent_signal != -1) {
-        D(("pthread_detach: Freeing signal %d for thread %ld\n", inf->parent_signal, thread));
+        D(("pthread_detach: Freeing parent signal %d for thread %ld\n", inf->parent_signal, thread));
         FreeSignal(inf->parent_signal);
         inf->parent_signal = -1;
     }
-
+	if (inf->cancel_signal != -1) {
+		D(("pthread_detach: Freeing cancel signal %d for thread %ld\n", inf->parent_signal, thread));
+		FreeSignal(inf->cancel_signal);
+		inf->cancel_signal = -1;
+	}
     return 0;
 }
