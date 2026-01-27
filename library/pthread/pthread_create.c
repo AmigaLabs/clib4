@@ -133,15 +133,15 @@ StarterFunc() {
 
     /* Allocate signals AFTER ReplyMsg (like pthreads.library ThreadCode/init does after replying to BirthMessage) */
     if (!inf->detached) {
-        inf->cancel_signal = AllocSignal(-1);
-        if (inf->cancel_signal == -1) {
-            inf->cancel_signal_mask = SIGBREAKF_CTRL_C;
-            D(("StarterFunc: %s AllocSignal cancel failed, fallback SIGBREAKF_CTRL_C\n", inf->name));
-        } else {
-            inf->cancel_signal_mask = 1L << inf->cancel_signal;
-            D(("StarterFunc: %s allocated cancel signal %d mask 0x%lx\n", inf->name, inf->cancel_signal, (unsigned long)inf->cancel_signal_mask));
-        }
-	ReplyMsg(&newThreadMessage->message);
+	    inf->cancel_signal = AllocSignal(-1);
+    	if (inf->cancel_signal == -1) {
+    		inf->cancel_signal_mask = SIGBREAKF_CTRL_C;
+    		D(("StarterFunc: %s AllocSignal cancel failed, fallback SIGBREAKF_CTRL_C\n", inf->name));
+    	} else {
+    		inf->cancel_signal_mask = 1L << inf->cancel_signal;
+    		D(("StarterFunc: %s allocated cancel signal %d mask 0x%lx\n", inf->name, inf->cancel_signal, (unsigned long)inf->cancel_signal_mask));
+    	}
+    }
 
     D(("StarterFunc: thread %s about to call start function\n", inf->name));
 
@@ -203,8 +203,10 @@ StarterFunc() {
         inf->status = THREAD_STATE_DESTRUCT;
 
         /* Find who is waiting to join with us */
-        pthread_t my_id = inf - threads;
+        pthread_t my_id = inf->thread_id;  /* Use saved thread_id, not pointer arithmetic */
         ThreadInfo *joiner = NULL;
+
+        D(("StarterFunc: thread %s searching for joiner, my_id=%ld\n", inf->name, my_id));
 
         for (int i = 0; i < PTHREAD_THREADS_MAX; i++) {
             if (threads[i].join_thread_id == my_id && threads[i].join_signal_mask != 0) {
@@ -218,7 +220,7 @@ StarterFunc() {
         if (!joiner) {
             /* No joiner yet - just mark as DESTRUCT and exit */
             /* pthread_join will find us later in this state and clean up */
-            D(("StarterFunc: thread %s no joiner found, exiting anyway\n", inf->name));
+            D(("StarterFunc: thread %s (id=%ld) no joiner found, exiting anyway\n", inf->name, my_id));
         } else {
             /* Joiner found and signaled */
             D(("StarterFunc: thread %s joiner signaled\n", inf->name));
@@ -231,6 +233,10 @@ StarterFunc() {
     if (inf->detached) {
         _pthread_clear_threadinfo(inf);
     }
+    /* NOTE: Joinable threads do NOT cleanup themselves!
+     * pthread_join will do the cleanup after getting the return value.
+     * This prevents race where thread clears status before join checks it.
+     */
 
     /* Release lock and exit - process terminates normally */
     MutexRelease(thread_sem);
@@ -270,6 +276,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     _pthread_clear_threadinfo(inf);
     D(("pthread_create: slot %d cleared (task %p)\n", threadnew, inf->task));
 
+    inf->thread_id = threadnew;  /* Save our pthread_t ID */
     inf->start = start;
     inf->arg = arg;
     inf->parent = (struct Process *) thisTask;

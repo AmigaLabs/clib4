@@ -335,7 +335,7 @@ int main(void) {
     if (key_valid) {
         pthread_key_delete(test_key);
     }
-
+	printf("Creating key for stress test\n");
     result = pthread_key_create(&test_key, test_destructor);
     if (result != 0) {
         printf("Failed to create key: %d\n", result);
@@ -343,16 +343,18 @@ int main(void) {
     }
 
     /* Create many threads */
+	printf("Creating %d stress test threads\n", NUM_THREADS);
     for (int i = 0; i < NUM_THREADS; i++) {
         thread_ids[i] = i;
         pthread_create(&threads[i], NULL, stress_test_thread, &thread_ids[i]);
     }
 
+	printf("Joining stress test threads\n");
     /* Wait for completion */
     for (int i = 0; i < NUM_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
-
+	printf("Deleting key for stress test\n");
     pthread_key_delete(test_key);
 
     printf("\n[Test 3] Completed with %d errors\n", crash_count);

@@ -95,6 +95,7 @@ typedef struct {
     int canceled;
     int detached;
     char name[NAMELEN];
+    pthread_t thread_id;          /* My pthread_t ID assigned at creation */
 
     int8_t parent_signal;	/* Signal bit allocated in thread for internal use */
 	uint32_t parent_signal_mask;
