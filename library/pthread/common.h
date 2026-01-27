@@ -96,10 +96,16 @@ typedef struct {
     int detached;
     char name[NAMELEN];
 
-    int8_t parent_signal;	/* Signal bit allocated for this thread to notify parent */
+    int8_t parent_signal;	/* Signal bit allocated in thread for internal use */
 	uint32_t parent_signal_mask;
 	int8_t cancel_signal;
 	uint32_t cancel_signal_mask;
+
+	/* Joiner support (like pthreads.library) */
+	pthread_t join_thread_id;     /* Which thread is this one waiting to join? (0 = not waiting) */
+	int8_t join_signal;            /* Signal allocated by joiner for wakeup */
+	uint32_t join_signal_mask;     /* Mask for join_signal */
+	volatile int can_exit;         /* Flag: pthread_join has cleaned up, thread can exit */
 } ThreadInfo;
 
 struct newThreadMessage {

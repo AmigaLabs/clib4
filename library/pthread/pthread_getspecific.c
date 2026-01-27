@@ -43,6 +43,8 @@ pthread_getspecific(pthread_key_t key) {
     BOOL key_is_valid;
     void *value = NULL;
 
+    D(("pthread_getspecific: key=%ld ENTER\n", (long)key));
+
     if (key >= PTHREAD_KEYS_MAX || key < 0)
         return NULL;
 
@@ -51,9 +53,11 @@ pthread_getspecific(pthread_key_t key) {
     if (inf == NULL)
         return NULL;
 
+    D(("pthread_getspecific: key=%ld acquiring tls_sem\n", (long)key));
     /* Use global lock to protect the entire operation */
     /* This prevents race with pthread_key_delete */
     MutexObtain(tls_sem);
+    D(("pthread_getspecific: key=%ld acquired tls_sem\n", (long)key));
 
     /* Check if key is valid INSIDE the lock */
     if (tlskeys[key].used) {
@@ -61,8 +65,9 @@ pthread_getspecific(pthread_key_t key) {
         value = inf->tlsvalues[key];
     }
 
+    D(("pthread_getspecific: key=%ld releasing tls_sem\n", (long)key));
     MutexRelease(tls_sem);
-
+    D(("pthread_getspecific: key=%ld EXIT value=%p\n", (long)key, value));
 
     return value;
 }

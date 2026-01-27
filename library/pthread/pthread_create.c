@@ -105,6 +105,9 @@ StarterFunc() {
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
 	struct newThreadMessage *newThreadMessage = (struct newThreadMessage *) startedTask->pr_EntryData;
 
+    D(("StarterFunc: thread %s STARTING (task=%p inf=%p)\n", inf->name, startedTask, inf));
+
+    // set task TLS register
     set_tls_register(inf);
 
     struct _clib4 *__clib4 = (struct _clib4 *) startedTask->pr_UID; // GetEntryData();
@@ -128,12 +131,29 @@ StarterFunc() {
 
 	ReplyMsg(&newThreadMessage->message);
 
+    /* Allocate signals AFTER ReplyMsg (like pthreads.library ThreadCode/init does after replying to BirthMessage) */
+    if (!inf->detached) {
+        inf->cancel_signal = AllocSignal(-1);
+        if (inf->cancel_signal == -1) {
+            inf->cancel_signal_mask = SIGBREAKF_CTRL_C;
+            D(("StarterFunc: %s AllocSignal cancel failed, fallback SIGBREAKF_CTRL_C\n", inf->name));
+        } else {
+            inf->cancel_signal_mask = 1L << inf->cancel_signal;
+            D(("StarterFunc: %s allocated cancel signal %d mask 0x%lx\n", inf->name, inf->cancel_signal, (unsigned long)inf->cancel_signal_mask));
+        }
+	ReplyMsg(&newThreadMessage->message);
+
+    D(("StarterFunc: thread %s about to call start function\n", inf->name));
+
     // set a jump point for pthread_exit
     if (!setjmp(inf->jmp)) {
         inf->status = THREAD_STATE_RUNNING;
+        D(("StarterFunc: thread %s calling start function NOW\n", inf->name));
         inf->ret = inf->start(inf->arg);
+        D(("StarterFunc: thread %s start function RETURNED\n", inf->name));
     }
-	MutexObtain(thread_sem);
+
+    /* Don't acquire thread_sem here - let pthread_join register first if it's waiting */
 
     D(("StarterFunc: thread %s returned from start function\n", inf->name));
 
@@ -174,24 +194,48 @@ StarterFunc() {
     if (stackSwapped)
         StackSwap(&stack);
 
+    /* NOW acquire thread_sem to atomically set DESTRUCT and search for joiner */
+    MutexObtain(thread_sem);
+
     if (!inf->detached) {
-        // tell the parent thread that we are done
-        D(("StarterFunc: thread %s not detached, signaling parent\n", inf->name));
-        if (inf->parent_signal != -1) {
-        	Forbid();
-        	inf->status = THREAD_STATE_DESTRUCT;
-        	D(("StarterFunc: thread %s (%lu) signaling parent %ld with signal bit %d\n", inf->name, (unsigned long)inf->task->pr_ProcessID, (unsigned long)inf->parent->pr_ProcessID, inf->parent_signal));
-        	/* Signal the parent using the allocated signal for this thread */
-        	Signal((struct Task *) inf->parent, 1L << inf->parent_signal);
+        // tell the parent thread that we are done (like pthreads.library: find joiner and signal)
+        D(("StarterFunc: thread %s not detached, looking for joiner\n", inf->name));
+        inf->status = THREAD_STATE_DESTRUCT;
+
+        /* Find who is waiting to join with us */
+        pthread_t my_id = inf - threads;
+        ThreadInfo *joiner = NULL;
+
+        for (int i = 0; i < PTHREAD_THREADS_MAX; i++) {
+            if (threads[i].join_thread_id == my_id && threads[i].join_signal_mask != 0) {
+                joiner = &threads[i];
+                D(("StarterFunc: thread %s found joiner thread %d, signaling mask 0x%lx\n", inf->name, i, (unsigned long)joiner->join_signal_mask));
+                Signal((struct Task *)joiner->task, joiner->join_signal_mask);
+                break;
+            }
         }
-        /* Note: We don't free the signal here - pthread_join will do it after cleanup */
-    } else {
-        // no one is waiting for us, do the clean up
+
+        if (!joiner) {
+            /* No joiner yet - just mark as DESTRUCT and exit */
+            /* pthread_join will find us later in this state and clean up */
+            D(("StarterFunc: thread %s no joiner found, exiting anyway\n", inf->name));
+        } else {
+            /* Joiner found and signaled */
+            D(("StarterFunc: thread %s joiner signaled\n", inf->name));
+        }
+
+        /* Joinable thread exits here - pthread_join will clean up the ThreadInfo */
+    }
+
+    /* Detached threads need self cleanup */
+    if (inf->detached) {
         _pthread_clear_threadinfo(inf);
     }
 
-	MutexRelease(thread_sem);
+    /* Release lock and exit - process terminates normally */
+    MutexRelease(thread_sem);
 
+    D(("StarterFunc: thread %s exiting\n", inf->name));
     return RETURN_OK;
 }
 
@@ -224,6 +268,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     // prepare the ThreadInfo structure
     inf = GetThreadInfo(threadnew);
     _pthread_clear_threadinfo(inf);
+    D(("pthread_create: slot %d cleared (task %p)\n", threadnew, inf->task));
 
     inf->start = start;
     inf->arg = arg;
@@ -237,11 +282,17 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->canceltype = PTHREAD_CANCEL_DEFERRED;
     inf->detached = inf->attr.detachstate == PTHREAD_CREATE_DETACHED;
 
-	msgPort = AllocSysObject(ASOT_PORT, NULL);
-	if (msgPort == 0) {
-		SHOWMSG("Cannot allocate message port\n");
-		goto out;
-	}
+    /* Signals allocated lazily in StarterFunc (thread context) like pthreads.library */
+    inf->parent_signal = -1;
+    inf->parent_signal_mask = 0;
+    inf->cancel_signal = -1;
+    inf->cancel_signal_mask = 0;
+
+    msgPort = AllocSysObject(ASOT_PORT, NULL);
+    if (msgPort == 0) {
+        SHOWMSG("Cannot allocate message port\n");
+        goto out;
+    }
 
 	newThreadMessage = AllocSysObjectTags(ASOT_MESSAGE,
 		ASOMSG_Size, sizeof(struct newThreadMessage),
@@ -252,28 +303,6 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
 		goto out;
 	}
 
-    /* Allocate a unique signal for this thread to notify parent when done
-     * This prevents race conditions when multiple threads finish simultaneously
-     */
-    if (!inf->detached) {
-        inf->parent_signal = AllocSignal(-1);
-        if (inf->parent_signal == -1) {
-            D(("pthread_create: Failed to allocate signal for thread %d\n", threadnew));
-            goto out;
-        }
-    	inf->parent_signal_mask = 1L << inf->parent_signal;
-        D(("pthread_create: Allocated signal %d for thread %d\n", inf->parent_signal, threadnew));
-
-    	inf->cancel_signal = AllocSignal(-1);
-    	if (inf->cancel_signal == -1) {
-    		D(("pthread_create: Failed to allocate cancel signal for thread %d\n", threadnew));
-			goto out;
-    	}
-    	inf->cancel_signal_mask = 1L << inf->cancel_signal;
-    } else {
-        inf->parent_signal = -1; /* Detached threads don't need a signal */
-    	inf->cancel_signal = -1; /* Detached threads don't need a cancel signal */
-    }
 
     /* Check minimum stack size */
     if (inf->attr.stacksize != 0 && inf->attr.stacksize < PTHREAD_STACK_MIN)

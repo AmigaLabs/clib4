@@ -153,19 +153,31 @@ _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *
 
 void
 _pthread_clear_threadinfo(ThreadInfo *inf) {
-    /* Free the allocated signal if any */
-    if (inf->parent_signal != -1) {
-        D(("_pthread_clear_threadinfo: Freeing parent signal %d for thread %s\n", inf->parent_signal, inf->name));
+    D(("_pthread_clear_threadinfo: ENTER\n"));
+
+    /* Free the allocated signal if any (but not 0 which is reserved) */
+    if (inf->parent_signal > 0 && inf->parent_signal != -1) {
+        D(("_pthread_clear_threadinfo: Freeing parent signal %d\n", inf->parent_signal));
         FreeSignal(inf->parent_signal);
     }
-	if (inf->cancel_signal != -1) {
-        D(("_pthread_clear_threadinfo: Freeing cancel signal %d for thread %s\n", inf->parent_signal, inf->name));
-		FreeSignal(inf->cancel_signal);
-	}
+    if (inf->cancel_signal > 0 && inf->cancel_signal != -1) {
+        D(("_pthread_clear_threadinfo: Freeing cancel signal %d\n", inf->cancel_signal));
+        FreeSignal(inf->cancel_signal);
+    }
+    if (inf->join_signal > 0 && inf->join_signal != -1) {
+        D(("_pthread_clear_threadinfo: Freeing join signal %d\n", inf->join_signal));
+        FreeSignal(inf->join_signal);
+    }
+    D(("_pthread_clear_threadinfo: clearing thread (task value suppressed)\n"));
     memset(inf, 0, sizeof(ThreadInfo));
     inf->status = THREAD_STATE_IDLE;
     inf->parent_signal = -1;
-	inf->cancel_signal = -1;
+    inf->cancel_signal = -1;
+    inf->join_signal = -1;
+    inf->join_signal_mask = 0;
+    inf->join_thread_id = 0;
+    inf->can_exit = 0;
+    D(("_pthread_clear_threadinfo: EXIT\n"));
 }
 
 int
@@ -339,12 +351,18 @@ int __pthread_init_func(void) {
         inf = &threads[i];
         inf->status = THREAD_STATE_IDLE;
         inf->parent_signal = -1; /* No signal allocated yet */
-    	inf->cancel_signal = -1; /* No signal allocated yet */
+        inf->cancel_signal = -1; /* No signal allocated yet */
+        inf->join_signal = -1;
+        inf->join_signal_mask = 0;
+        inf->join_thread_id = 0;
     }
 
-    /* Main thread doesn't need a parent signal */
+    /* Main thread doesn't need these signals */
     threads[0].parent_signal = -1;
-	threads[0].cancel_signal = -1;
+    threads[0].cancel_signal = -1;
+    threads[0].join_signal = -1;
+    threads[0].join_signal_mask = 0;
+    threads[0].join_thread_id = 0;
 
     return TRUE;
 }

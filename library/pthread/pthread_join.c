@@ -39,58 +39,107 @@
 
 int
 pthread_join(pthread_t thread, void **value_ptr) {
+    D(("pthread_join: ENTER thread=%ld\n", thread));
+
     ThreadInfo *inf = GetThreadInfo(thread);
+
+    if (inf == NULL) {
+        D(("pthread_join: inf is NULL, returning ESRCH\n"));
+        return ESRCH;
+    }
+
+    if (inf->parent == NULL) {
+        D(("pthread_join: parent is NULL, returning ESRCH\n"));
+        return ESRCH;
+    }
+
+    ThreadInfo *me = GetCurrentThreadInfo();
     struct Task *task = FindTask(NULL);
 
-    if (inf == NULL || inf->parent == NULL)
-        return ESRCH;
+    D(("pthread_join: checks passed for thread %ld\n", thread));
 
-    if (inf->detached)
+    if (inf->detached) {
+        D(("pthread_join: thread %ld is detached, returning EINVAL\n", thread));
         return EINVAL;
+    }
 
     if ((struct Task *) inf->task == task) {
+        D(("pthread_join: deadlock detected, returning EDEADLK\n"));
         return EDEADLK;
     }
-	MutexObtain(thread_sem);
 
-	if (inf->status == THREAD_STATE_DESTRUCT) {
-		/* Yes. Just snatch it's return value, and remove it */
-		if (value_ptr)
-			*value_ptr = inf->ret;
-	}
-	else {
-		/* Wait for the thread to reach THREAD_STATE_DESTRUCT state
-		 * The thread sets this state just before it exits in StarterFunc()
-		 * and signals the parent with the thread-specific signal
-		 */
-		D(("pthread_join: thread %ld has signal bit %d\n", thread, inf->parent_signal));
-		/* Wait for the thread to signal us
-		 * Note: If the thread already reached THREAD_STATE_DESTRUCT before we get here,
-		 * we skip the wait (which is correct - thread is already done)
-		 */
-		MutexRelease(thread_sem);
-		D(("pthread_join: waiting for thread %ld to terminate - current status %ld - waiting on signal bit %d\n", thread, inf->status, inf->parent_signal));
-		uint32_t sigs = Wait(inf->parent_signal_mask | inf->cancel_signal_mask);
-		D(("pthread_join: woke up from wait for thread %ld - thread_signal %ld - cancel_signal %ld\n", thread, sigs & inf->parent_signal_mask, sigs & inf->cancel_signal_mask));
+    D(("pthread_join: thread %ld proceeding to join\n", thread));
 
-		MutexObtain(thread_sem);
-		/* Check if we got interrupted */
-		if (sigs & inf->cancel_signal_mask) {
-			D(("pthread_join: woke up from wait for thread %ld - current status after pthread_testcancel %ld\n", thread, inf->status));
-			pthread_testcancel();
-		}
+    MutexObtain(thread_sem);
 
-		/* Get the return value before cleanup */
-		if (value_ptr)
-			*value_ptr = inf->ret;
-	}
+    D(("pthread_join: acquired lock, status=%d\n", inf->status));
 
-    /* Always clean up the thread info, even if thread exited very quickly
-     * This fixes the race condition where thread exits before pthread_join is called
-     */
+    /* Check if thread already terminated */
+    if (inf->status == THREAD_STATE_DESTRUCT || inf->status == THREAD_STATE_TERMINATED) {
+        D(("pthread_join: thread %ld already terminated, status=%d\n", thread, inf->status));
+
+        if (value_ptr) {
+            D(("pthread_join: setting return value\n"));
+            *value_ptr = inf->ret;
+        }
+
+        /* Thread process has already exited - just clean up ThreadInfo */
+        D(("pthread_join: calling _pthread_clear_threadinfo for thread %ld\n", thread));
+        _pthread_clear_threadinfo(inf);
+        D(("pthread_join: _pthread_clear_threadinfo returned\n"));
+
+        MutexRelease(thread_sem);
+        D(("pthread_join: released lock, returning 0\n"));
+        return 0;
+    }
+
+    D(("pthread_join: thread %ld still running (status=%d), need to wait\n", thread, inf->status));
+
+    /* Thread still running - allocate signal and register as joiner BEFORE releasing lock */
+    if (me) {
+        me->join_signal = AllocSignal(-1);
+        if (me->join_signal == -1) {
+            me->join_signal_mask = SIGF_PARENT;
+            D(("pthread_join: using SIGF_PARENT fallback\n"));
+        } else {
+            me->join_signal_mask = 1L << me->join_signal;
+            D(("pthread_join: allocated join signal %d\n", me->join_signal));
+        }
+        /* Register as joiner BEFORE releasing the lock so thread can find us */
+        me->join_thread_id = thread;
+        D(("pthread_join: registered as joiner for thread %ld (join_thread_id set BEFORE releasing lock)\n", thread));
+    }
+
+    /* NOW release the lock - thread can find us in its search */
+    MutexRelease(thread_sem);
+
+    /* Wait for the thread to signal us */
+    D(("pthread_join: waiting for thread %ld\n", thread));
+    uint32_t sigs = Wait(me->join_signal_mask | me->cancel_signal_mask);
+    D(("pthread_join: woke up from wait\n"));
+
+    if (sigs & me->cancel_signal_mask) {
+        pthread_testcancel();
+    }
+
+    MutexObtain(thread_sem);
+
+    /* Thread has already exited and signaled us - just clean up */
+    D(("pthread_join: thread %ld has signaled, cleaning up\n", thread));
+
+    /* Get return value and clean up */
+    if (value_ptr)
+        *value_ptr = inf->ret;
+
+    me->join_thread_id = 0;
+    if (me->join_signal != -1) {
+        FreeSignal(me->join_signal);
+        me->join_signal = -1;
+        me->join_signal_mask = 0;
+    }
+
     _pthread_clear_threadinfo(inf);
 
-	MutexRelease(thread_sem);
-
+    MutexRelease(thread_sem);
     return 0;
 }
