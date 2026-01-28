@@ -352,6 +352,7 @@ int main(void) {
 	printf("Joining stress test threads\n");
     /* Wait for completion */
     for (int i = 0; i < NUM_THREADS; i++) {
+    	printf("Joining thread %d\n", i);
         pthread_join(threads[i], NULL);
     }
 	printf("Deleting key for stress test\n");

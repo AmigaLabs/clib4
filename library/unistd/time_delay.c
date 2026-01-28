@@ -28,6 +28,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 
     DECLARE_TIMEZONEBASE_R(__clib4);
 
+	SetSignal(0, SIGF_SINGLE);
     messagePort = AllocSysObjectTags(ASOT_PORT,
                                      ASOPORT_AllocSig, FALSE,
                                      ASOPORT_Signal,   SIGB_SINGLE,
@@ -36,7 +37,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
         return ENOMEM;
 
     timeRequest = AllocSysObjectTags(ASOT_IOREQUEST,
-                                     ASOIOR_Duplicate, __clib4->__timer_request,
+                                     ASOIOR_Duplicate, TimeReq,
                                      ASOIOR_Size, sizeof(struct TimeRequest),
                                      ASOIOR_ReplyPort, messagePort,
                                      TAG_END);
@@ -53,7 +54,6 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
 	SendIO((struct IORequest *) timeRequest);
 
     wait_mask = __clib4->_interrupting_alarm_signal | SIGBREAKF_CTRL_C | ( 1L << messagePort->mp_SigBit );
-    SetSignal(0, wait_mask);
 
     /* Wait for signals */
     SHOWMSG("Waiting for signal");
@@ -62,7 +62,7 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
         if (!CheckIO((struct IORequest *) timeRequest)) {
 	        /* If request is incomplete... */
         	AbortIO((struct IORequest *) timeRequest);  /* break it */
-        	WaitIO((struct IORequest *) timeRequest);
+	        WaitIO((struct IORequest *) timeRequest);
         }
         if (signals & __clib4->_interrupting_alarm_signal) {
             SHOWMSG("Received __clib4->_interrupting_alarm_signal");

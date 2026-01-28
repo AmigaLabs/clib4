@@ -21,7 +21,9 @@ __delete_semaphore(struct SignalSemaphore *semaphore) {
     ENTER();
     SHOWPOINTER(semaphore);
 
-    FreeSysObject(ASOT_SEMAPHORE, semaphore);
+	if (semaphore != NULL)
+		FreeSysObject(ASOT_SEMAPHORE, semaphore);
+	semaphore = NULL;
 
     LEAVE();
 }
@@ -51,7 +53,9 @@ __delete_mutex(APTR mutex) {
     ENTER();
     SHOWPOINTER(mutex);
 
-    FreeSysObject(ASOT_MUTEX, mutex);
+	if (mutex != NULL)
+		FreeSysObject(ASOT_MUTEX, mutex);
+	mutex = NULL;
 
     LEAVE();
 }

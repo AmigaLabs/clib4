@@ -58,6 +58,7 @@ pthread_exit(void *value_ptr) {
 	while ((handler = (CleanupHandler *)RemTail((struct List *)&inf->cleanup)))
 		if (handler->routine)
 			handler->routine(handler->arg);
+
 	inf->status = THREAD_STATE_DESTRUCT;
 
     longjmp(inf->jmp, 1);

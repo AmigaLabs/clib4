@@ -131,7 +131,7 @@ StarterFunc() {
 
 	ReplyMsg(&newThreadMessage->message);
 
-    /* Allocate signals AFTER ReplyMsg (like pthreads.library ThreadCode/init does after replying to BirthMessage) */
+    /* Allocate signals AFTER ReplyMsg */
     if (!inf->detached) {
 	    inf->cancel_signal = AllocSignal(-1);
     	if (inf->cancel_signal == -1) {
@@ -141,6 +141,16 @@ StarterFunc() {
     		inf->cancel_signal_mask = 1L << inf->cancel_signal;
     		D(("StarterFunc: %s allocated cancel signal %d mask 0x%lx\n", inf->name, inf->cancel_signal, (unsigned long)inf->cancel_signal_mask));
     	}
+
+        /* Allocate join signal */
+        inf->join_signal = AllocSignal(-1);
+        if (inf->join_signal == -1) {
+            inf->join_signal_mask = SIGF_PARENT;
+            D(("StarterFunc: %s AllocSignal join failed, fallback SIGF_PARENT\n", inf->name));
+        } else {
+            inf->join_signal_mask = 1L << inf->join_signal;
+            D(("StarterFunc: %s allocated join signal %d mask 0x%lx\n", inf->name, inf->join_signal, (unsigned long)inf->join_signal_mask));
+        }
     }
 
     D(("StarterFunc: thread %s about to call start function\n", inf->name));
@@ -191,42 +201,58 @@ StarterFunc() {
         D(("StarterFunc: thread %s timers killed\n", inf->name));
     }
 
+    /* If we had swapped the stack, restore it */
     if (stackSwapped)
         StackSwap(&stack);
 
     /* NOW acquire thread_sem to atomically set DESTRUCT and search for joiner */
     MutexObtain(thread_sem);
 
+    D(("StarterFunc[%s]: Acquired thread_sem for exit\n", inf->name));
+
     if (!inf->detached) {
-        // tell the parent thread that we are done (like pthreads.library: find joiner and signal)
+        // tell the parent thread that we are done
         D(("StarterFunc: thread %s not detached, looking for joiner\n", inf->name));
         inf->status = THREAD_STATE_DESTRUCT;
 
         /* Find who is waiting to join with us */
-        pthread_t my_id = inf->thread_id;  /* Use saved thread_id, not pointer arithmetic */
         ThreadInfo *joiner = NULL;
+        struct Node *node;
 
-        D(("StarterFunc: thread %s searching for joiner, my_id=%ld\n", inf->name, my_id));
+        D(("StarterFunc: thread %s scanning joiners list for join_id=%ld\n", inf->name, inf->thread_id));
 
-        for (int i = 0; i < PTHREAD_THREADS_MAX; i++) {
-            if (threads[i].join_thread_id == my_id && threads[i].join_signal_mask != 0) {
-                joiner = &threads[i];
-                D(("StarterFunc: thread %s found joiner thread %d, signaling mask 0x%lx\n", inf->name, i, (unsigned long)joiner->join_signal_mask));
-                Signal((struct Task *)joiner->task, joiner->join_signal_mask);
-                break;
+        /* Scan the joiners list */
+        for (node = (struct Node *)join_list.mlh_Head;
+             node->ln_Succ != NULL;
+             node = (struct Node *)node->ln_Succ) {
+            joiner = (ThreadInfo *)((char *)node - offsetof(ThreadInfo, join_node));
+            D(("StarterFunc: visiting joiner %s (id=%d) waiting for %d\n", joiner->name, joiner->thread_id, joiner->join_thread_id));
+
+            /* Note: Check if thread_id matches what joiner is waiting for */
+            if (joiner->join_thread_id == inf->thread_id) {
+                D(("StarterFunc: thread %s found joiner (id=%d) waiting for me\n", inf->name, joiner->thread_id));
+
+                /* Set return value in joiner's structure */
+                if (inf->status == THREAD_STATE_CANCELED)
+                    joiner->join_result = PTHREAD_CANCELED;
+                else
+                    joiner->join_result = inf->ret;
+
+                /* Signal the joiner */
+                if (joiner->join_signal > 0) {
+                    D(("StarterFunc: signaling joiner (task=%p) with sig=0x%lx\n", joiner->task, (unsigned long)joiner->join_signal_mask));
+                    Signal((struct Task *)joiner->task, joiner->join_signal_mask);
+                } else {
+                    D(("StarterFunc: WARNING - joiner has no valid join signal!\n"));
+                }
+
+                /* POSIX says multiple threads joining same thread is undefined. */
+                /* If we continue, we signal all waiters. */
             }
         }
 
-        if (!joiner) {
-            /* No joiner yet - just mark as DESTRUCT and exit */
-            /* pthread_join will find us later in this state and clean up */
-            D(("StarterFunc: thread %s (id=%ld) no joiner found, exiting anyway\n", inf->name, my_id));
-        } else {
-            /* Joiner found and signaled */
-            D(("StarterFunc: thread %s joiner signaled\n", inf->name));
-        }
-
-        /* Joinable thread exits here - pthread_join will clean up the ThreadInfo */
+        /* Note: Joinable thread exits here - pthread_join will clean up the ThreadInfo */
+        /* We DO NOT remove ourselves from threads array or free resources yet */
     }
 
     /* Detached threads need self cleanup */
@@ -236,9 +262,11 @@ StarterFunc() {
     /* NOTE: Joinable threads do NOT cleanup themselves!
      * pthread_join will do the cleanup after getting the return value.
      * This prevents race where thread clears status before join checks it.
+     * Signals are already freed above, before acquiring the lock.
      */
 
     /* Release lock and exit - process terminates normally */
+    D(("StarterFunc[%s]: Releasing thread_sem, exiting\n", inf->name));
     MutexRelease(thread_sem);
 
     D(("StarterFunc: thread %s exiting\n", inf->name));
@@ -289,9 +317,7 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->canceltype = PTHREAD_CANCEL_DEFERRED;
     inf->detached = inf->attr.detachstate == PTHREAD_CREATE_DETACHED;
 
-    /* Signals allocated lazily in StarterFunc (thread context) like pthreads.library */
-    inf->parent_signal = -1;
-    inf->parent_signal_mask = 0;
+    /* Signals allocated lazily in StarterFunc (thread context) */
     inf->cancel_signal = -1;
     inf->cancel_signal_mask = 0;
 
@@ -357,10 +383,6 @@ out:
         if (fileErr)
             Close(fileErr);
 
-    	if (inf->parent_signal != -1) {
-    		FreeSignal(inf->parent_signal);
-    		inf->parent_signal = -1;
-    	}
     	if (inf->cancel_signal != -1) {
 			FreeSignal(inf->cancel_signal);
 			inf->cancel_signal = -1;
