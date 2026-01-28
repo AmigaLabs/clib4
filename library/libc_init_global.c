@@ -287,7 +287,7 @@ reent_exit(struct _clib4 *__clib4) {
     		__clib4->_interrupting_alarm_signal_num = -1;
     	}
 
-        if (__clib4->resolv_conf != NULL) {
+    	if (__clib4->resolv_conf != NULL) {
             FreeVec(__clib4->resolv_conf);
             __clib4->resolv_conf = NULL;
         }

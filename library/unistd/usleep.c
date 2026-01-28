@@ -9,6 +9,7 @@
 int
 usleep(unsigned long microseconds) {
     int result;
+	struct _clib4 *__clib4 = __CLIB4;
     ENTER();
 
     SHOWVALUE(microseconds);
@@ -19,7 +20,12 @@ usleep(unsigned long microseconds) {
 
     result = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
 
-    __check_abort();
+	if (result != OK) {
+		__set_errno_r(__clib4, result);
+		result = -1;
+	}
+
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return result;

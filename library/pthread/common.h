@@ -97,13 +97,13 @@ typedef struct {
     char name[NAMELEN];
     pthread_t thread_id;          /* My pthread_t ID assigned at creation */
 
-    int8_t parent_signal;	/* Signal bit allocated in thread for internal use */
-	uint32_t parent_signal_mask;
 	int8_t cancel_signal;
 	uint32_t cancel_signal_mask;
 
-	/* Joiner support (like pthreads.library) */
+	/* Joiner support */
+    struct MinNode join_node;     /* Node for Joiners list */
 	pthread_t join_thread_id;     /* Which thread is this one waiting to join? (0 = not waiting) */
+    void *join_result;            /* Result passed from joined thread */
 	int8_t join_signal;            /* Signal allocated by joiner for wakeup */
 	uint32_t join_signal_mask;     /* Mask for join_signal */
 	volatile int can_exit;         /* Flag: pthread_join has cleaned up, thread can exit */
@@ -117,6 +117,7 @@ extern struct Library *_DOSBase;
 extern struct DOSIFace *_IDOS;
 
 extern APTR thread_sem;
+extern struct MinList join_list; /* Global list of threads currently waiting to join */
 extern ThreadInfo threads[PTHREAD_THREADS_MAX];
 extern APTR tls_sem;
 extern TLSKey tlskeys[PTHREAD_KEYS_MAX];

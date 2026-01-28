@@ -545,7 +545,7 @@ struct _clib4 {
 	unsigned char *__command_line_ptr;  /* Pointer to allocated command line string (for deallocation) */
 
 	/* Custom signals */
-	BYTE _interrupting_alarm_signal_num;
+	int8_t _interrupting_alarm_signal_num;
 	uint32_t _interrupting_alarm_signal;
 };
 
