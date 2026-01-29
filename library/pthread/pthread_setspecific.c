@@ -54,9 +54,21 @@ pthread_setspecific(pthread_key_t key, const void *value) {
     if (inf == NULL)
         return EINVAL;
 
+    /* Check if pthread library is still initialized (tls_sem not NULL) */
+    /* This can happen if called from destructors after __pthread_exit_func */
+    if (tls_sem == NULL)
+        return EINVAL;
+
     /* Use global lock to protect the entire operation */
     /* This prevents race with pthread_key_delete */
     MutexObtain(tls_sem);
+
+    /* Double-check tlskeys is still valid after acquiring lock */
+    /* It could have been freed by __pthread_exit_func */
+    if (tlskeys == NULL) {
+        MutexRelease(tls_sem);
+        return EINVAL;
+    }
 
     /* Check if key is valid INSIDE the lock */
     if (!tlskeys[key].used) {
