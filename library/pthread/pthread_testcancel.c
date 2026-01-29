@@ -42,6 +42,8 @@ pthread_testcancel(void) {
     ThreadInfo *inf;
 
     inf = GetCurrentThreadInfo();
+	if (inf == NULL)
+		return;
 
     if (inf && inf->canceled && (inf->cancelstate == PTHREAD_CANCEL_ENABLE))
         pthread_exit(PTHREAD_CANCELED);

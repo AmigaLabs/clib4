@@ -45,6 +45,8 @@ pthread_setcancelstate(int state, int *oldstate) {
         return EINVAL;
 
     inf = GetCurrentThreadInfo();
+	if (inf == NULL)
+		return EINVAL;
 
     if (oldstate)
         *oldstate = inf->cancelstate;
