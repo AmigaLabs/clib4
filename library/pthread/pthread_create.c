@@ -270,6 +270,9 @@ StarterFunc() {
     MutexRelease(thread_sem);
 
     D(("StarterFunc: thread %s exiting\n", inf->name));
+
+	set_tls_register(NULL);
+
     return RETURN_OK;
 }
 

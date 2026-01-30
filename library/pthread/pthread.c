@@ -420,8 +420,7 @@ void __pthread_exit_func(void) {
         timedTimerPort = NULL;
     }
 
-    // Restore old tls value
-    set_tls_register(old_tls);
+    set_tls_register(NULL);
 }
 
 
