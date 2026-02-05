@@ -790,7 +790,7 @@ __vfprintf_r(struct _clib4 *__clib4, FILE *f, const char *format, va_list ap) {
     SHOWPOINTER(f);
     SHOWSTRING(format);
 
-	if (f == NULL || !__iob_write_buffer_is_valid(f)) {
+	if (f == NULL) {
 		__set_errno(EBADF);
 		RETURN(EOF);
 		return EOF;
