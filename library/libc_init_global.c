@@ -273,15 +273,20 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
 out:
 
     if (!success) {
-        reent_exit(__clib4);
+    	if (__clib4) {
+    		reent_exit(__clib4);
+    		SHOWMSG("Freeing __clib4 instance pointer");
+    		FreeVec(__clib4);
+    		SHOWMSG("Fallback __clib4 destroyed correctly");
+    	}
     }
 }
 
 void
 reent_exit(struct _clib4 *__clib4) {
     /* Free global clib structure */
-    if (__clib4) {
-    	DECLARE_UTILITYBASE();
+
+	if (__clib4) {
     	if (__clib4->_interrupting_alarm_signal_num >= 0) {
     		FreeSignal(__clib4->_interrupting_alarm_signal_num);
     		__clib4->_interrupting_alarm_signal_num = -1;
@@ -318,10 +323,6 @@ reent_exit(struct _clib4 *__clib4) {
             __clib4->__dl_root_handle = NULL;
             SHOWMSG("Done");
         }
-		ClearMem(__clib4, sizeof(struct _clib4));
-        FreeVec(__clib4);
-        __clib4 = NULL;
-        SHOWMSG("__clib4 destroyed correctly");
     }
 }
 

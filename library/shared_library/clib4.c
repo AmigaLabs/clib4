@@ -284,6 +284,55 @@ static void freeEnvironment(struct _clib4 *__clib4) {
     __clib4->__environment = NULL;
 }
 
+/* Try to find external CTOR/DTOR lists from the executable
+ * This allows automatic handling of C++ destructors for -nostartfiles executables
+ */
+static void
+find_external_ctors_dtors(struct _clib4 *__clib4) {
+    BPTR segment_list = IDOS->GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+    if (segment_list == BZERO) {
+        D(bug("find_external_ctors_dtors: GetProcSegList returned ZERO\n"));
+        return;
+    }
+
+    Elf32_Handle hSelf = NULL;
+    int ret = IDOS->GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
+    if (ret != 1 || hSelf == NULL) {
+        D(bug("find_external_ctors_dtors: Could not get ELF handle\n"));
+        return;
+    }
+
+    /* Try to find __DTOR_LIST__ symbol in the executable using SymbolQuery */
+    struct Elf32_SymbolQuery query;
+    
+    query.Flags = ELF32_SQ_BYNAME;
+    query.Name = "__DTOR_LIST__";
+    query.NameLength = 0;
+    query.Value = 0;
+    query.Found = FALSE;
+    
+    ULONG found = __IElf->SymbolQuery(hSelf, 1, &query);
+    
+    if (found > 0 && query.Found) {
+        __clib4->__external_dtors = (void (**)(void))query.Value;
+        __clib4->__external_dtors_called = FALSE;
+        D(bug("find_external_ctors_dtors: Found __DTOR_LIST__ at 0x%08lx\n", query.Value));
+    } else {
+        D(bug("find_external_ctors_dtors: __DTOR_LIST__ symbol not found\n"));
+        __clib4->__external_dtors = NULL;
+    }
+}
+
+/* Legacy function kept for compatibility but now does nothing
+ * Destructors are automatically discovered in libOpen()
+ */
+void
+__call_external_dtors(void (**__DTOR_LIST__)(void)) {
+    (void)__DTOR_LIST__;
+    /* This function is now a no-op since we auto-discover and call dtors in libClose() */
+    D(bug("__call_external_dtors: Called but ignored (auto-discovery enabled)\n"));
+}
+
 static void closeLibraries() {
     if (TimeReq != NULL) {
         closeTimer(TimeReq);
@@ -513,6 +562,12 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
             ITimer->GetSysTime((struct TimeVal *) &__clib4->clock);
 
+            /* Try to find external CTOR/DTOR lists from the executable
+             * This is needed for -nostartfiles executables with C++ code
+             */
+            SHOWMSG("Looking for external destructors");
+            find_external_ctors_dtors(__clib4);
+
             /* At this point exe is fully initialized */
             __clib4->__fully_initialized = TRUE;
             SHOWMSG("Library initialized");
@@ -583,6 +638,30 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         void *item;
 
         struct _clib4 * __clib4 = (struct _clib4 *) me->pr_UID;
+        
+        struct Task *t = IExec->FindTask(NULL);
+        D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
+
+        /* Call external destructors only for -nostartfiles executables
+         * Detection: call_main() sets __call_main_executed to TRUE for normal executables
+         * For -nostartfiles executables, this flag remains FALSE and we need to call destructors here
+         */
+        if (!__clib4->__call_main_executed && __clib4->__external_dtors != NULL && !__clib4->__external_dtors_called) {
+            SHOWMSG("Calling external dtors (auto-discovered from -nostartfiles exe)");
+            _end_ctors(__clib4->__external_dtors);
+            __clib4->__external_dtors_called = TRUE;
+            SHOWMSG("Done. All external destructors called");
+            
+            /* Also call clib4 internal destructors for -nostartfiles exe
+             * For normal executables, these are already called in call_main()
+             */
+            SHOWMSG("Calling clib4 dtors for -nostartfiles exe");
+            _end_ctors(__DTOR_LIST__);
+            SHOWMSG("Done. All clib4 destructors called");
+        }
+        /* else: Normal executable using library_start() - destructors already called in call_main() */
+
+        /* Now safe to restore task priority and deallocate resources */
         /* Restore the task priority. */
         IExec->SetTaskPri((struct Task *) me, res->oldPriority);
 
@@ -602,13 +681,6 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             SHOWMSG("Closing randfd[1]");
             close(__clib4->randfd[1]);
         }
-        
-        struct Task *t = IExec->FindTask(NULL);
-        D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
-
-        SHOWMSG("Calling clib4 dtors");
-        _end_ctors(__DTOR_LIST__);
-        SHOWMSG("Done. All destructors called");
 
         SHOWMSG("Calling reent_exit on _clib4");
         reent_exit(__clib4);
