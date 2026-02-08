@@ -10,6 +10,7 @@
 #include <exec/types.h>
 #endif /* EXEC_TYPES_H */
 
+#include <stdint.h>
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/utility.h>
@@ -87,15 +88,19 @@ static struct object frame_object;
 /* Register exception handling frame information */
 static void
 __register_frame_info_clib4(void) {
-    if (__register_frame_info)
+    /* Verify that __register_frame_info is actually available and points to valid code */
+    if (__register_frame_info && (uintptr_t)__register_frame_info > 0x1000) {
         __register_frame_info(__EH_FRAME_BEGIN__, &frame_object);
+    }
 }
 
 /* Deregister exception handling frame information */
 static void
 __deregister_frame_info_clib4(void) {
-    if (__deregister_frame_info)
+    /* Verify that __deregister_frame_info is actually available and points to valid code */
+    if (__deregister_frame_info && (uintptr_t)__deregister_frame_info > 0x1000) {
         __deregister_frame_info(__EH_FRAME_BEGIN__);
+    }
 }
 
 /* ===== END EH FRAME SUPPORT ===== */
