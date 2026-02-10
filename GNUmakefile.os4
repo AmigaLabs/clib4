@@ -73,8 +73,12 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Wno-stringop-overflow -Wno-prio-ctor-dtor -Werror \
+    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable  -Werror
      # -Wbad-function-cast -Wconversion -Wformat
+
+ifndef SPE
+WARNINGS += -Wno-prio-ctor-dtor -Wno-stringop-overflow
+endif
 
 PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
