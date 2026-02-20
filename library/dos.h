@@ -547,6 +547,17 @@ struct _clib4 {
 	/* Custom signals */
 	int8_t _interrupting_alarm_signal_num;
 	uint32_t _interrupting_alarm_signal;
+
+	/* External destructors for -nostartfiles executables 
+	 * Automatically discovered and called in libClose()
+	 */
+	void (**__external_dtors)(void);
+	BOOL __external_dtors_called;
+	
+	/* Flag to track if call_main() was executed (normal executable)
+	 * If FALSE, we're in a -nostartfiles executable and need to call destructors in libClose()
+	 */
+	BOOL __call_main_executed;
 };
 
 #ifndef __getClib4
