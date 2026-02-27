@@ -7,9 +7,22 @@
 #endif /* _UNISTD_HEADERS_H */
 
 int pause(void) {
+	ENTER();
+    struct _clib4 *__clib4 = __CLIB4;
 
-    Wait(SIGBREAKF_CTRL_C);
-    raise(SIGINT);
+	SetSignal(0, SIGBREAKF_CTRL_C | __clib4->_interrupting_alarm_signal | ( 1L << __clib4->__timer_port->mp_SigBit ) );
+	uint32 signals = Wait(SIGBREAKF_CTRL_C | __clib4->_interrupting_alarm_signal | ( 1L << __clib4->__timer_port->mp_SigBit ));
+	if (signals & SIGBREAKF_CTRL_C) {
+		SHOWMSG("Received SIGINT");
+		raise(SIGINT);
+	}
+	if (signals & __clib4->_interrupting_alarm_signal) {
+		SetSignal(__clib4->_interrupting_alarm_signal, __clib4->_interrupting_alarm_signal); // reset signal
+	}
+	
+	__set_errno_r(__clib4, EINTR);
+	
+	RETURN(-1);
 
-    return 0;
+    return -1;
 }

@@ -14,107 +14,7 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-STATIC BOOL
-string_needs_quoting(const char *string, size_t len) {
-    BOOL result = FALSE;
-    size_t i;
-    char c;
-
-    for (i = 0; i < len; i++) {
-        c = (*string++);
-        if (c == ' ' || ((unsigned char) c) == 0xA0 || c == '\t' || c == '\n' || c == '\"') {
-            result = TRUE;
-            break;
-        }
-    }
-
-    return (result);
-}
-
-STATIC void
-build_arg_string(char *const argv[], char *arg_string) {
-    BOOL first_char = TRUE;
-    size_t i, j, len;
-    char *s;
-
-    /* The first argv[] element is skipped; it does not contain part of
-	   the command line but holds the name of the program to be run. */
-    for (i = 1; argv[i] != NULL; i++) {
-        s = (char *) argv[i];
-
-        len = strlen(s);
-        if (len > 0) {
-            if (first_char)
-                first_char = FALSE;
-            else
-                (*arg_string++) = ' ';
-
-            if ((*s) != '\"' && string_needs_quoting(s, len)) {
-                (*arg_string++) = '\"';
-
-                for (j = 0; j < len; j++) {
-                    if (s[j] == '\"' || s[j] == '*') {
-                        (*arg_string++) = '*';
-                        (*arg_string++) = s[j];
-                    } else if (s[j] == '\n') {
-                        (*arg_string++) = '*';
-                        (*arg_string++) = 'N';
-                    } else {
-                        (*arg_string++) = s[j];
-                    }
-                }
-
-                (*arg_string++) = '\"';
-            } else {
-                memcpy(arg_string, s, len);
-                arg_string += len;
-            }
-        }
-    }
-}
-
-STATIC size_t
-count_extra_escape_chars(const char *string, size_t len) {
-    size_t count = 0;
-    size_t i;
-    char c;
-
-    for (i = 0; i < len; i++) {
-        c = (*string++);
-        if (c == '\"' || c == '*' || c == '\n')
-            count++;
-    }
-
-    return (count);
-}
-
-STATIC size_t
-get_arg_string_length(char *const argv[]) {
-    size_t result = 0;
-    size_t i, len = 0;
-    char *s;
-
-    /* The first argv[] element is skipped; it does not contain part of
-	   the command line but holds the name of the program to be run. */
-    for (i = 1; argv[i] != NULL; i++) {
-        s = (char *) argv[i];
-
-        len = strlen(s);
-        if (len > 0) {
-            if ((*s) != '\"') {
-                if (string_needs_quoting(s, len))
-                    len += 1 + count_extra_escape_chars(s, len) + 1;
-            }
-
-            if (result == 0)
-                result = len;
-            else
-                result = result + 1 + len;
-        }
-    }
-
-    return (result);
-}
+#include "children.h"
 
 int
 spawnv(int mode, const char *file, const char **argv) {
@@ -140,12 +40,12 @@ spawnv(int mode, const char *file, const char **argv) {
     }
 
     parameter_string_len = get_arg_string_length((char *const *) argv);
-    if (parameter_string_len > _POSIX_ARG_MAX) {
-        __set_errno(E2BIG);
-        return ret;
-    }
+    // if (parameter_string_len > _POSIX_ARG_MAX) {
+    //     __set_errno(E2BIG);
+    //     return ret;
+    // }
 
-    arg_string = malloc(parameter_string_len + 1);
+    arg_string = __malloc_r(__clib4, parameter_string_len + 1);
     if (arg_string == NULL) {
         __set_errno(ENOMEM);
         return ret;
@@ -159,25 +59,58 @@ spawnv(int mode, const char *file, const char **argv) {
     /* Add a NUL, to be nice... */
     arg_string[arg_string_len] = '\0';
 
-    int pathlen = strlen(file) + strlen(arg_string) + 1;
-    char finalpath[PATH_MAX] = {0};
-    snprintf(finalpath, PATH_MAX - 1, "%s %s", file, arg_string);
+    int command_len = strlen(file) + 1 + arg_string_len + 1; // '\0'
+    char *command = (char *) malloc(command_len);
+    char process_name[32] = {0};
+    snprintf(command, command_len, "%s %s", file, arg_string);
+    snprintf(process_name, NAMELEN - 1, "Spawned Process #%d", __clib4->__children);
 
-    struct Process *me = (struct Process *) FindTask(NULL);
-    BPTR in  = mode == P_WAIT ? me->pr_COS : 0;
+    D(("command : [%s]\n", command));
 
-    ret = SystemTags(finalpath,
+    struct Process *me = __clib4->self;
+    // These will be closed, so we need duplicates :
+    BPTR in = DupFileHandle(Input());
+    BPTR out = DupFileHandle(Output());
+    BPTR err = DupFileHandle(ErrorOutput());
+    D(("Launching [%s]", command));
+	struct spawnData data = { getgid(), FindTask(NULL) };
+    ret = SystemTags(command,
                      SYS_Input, in,
-                     SYS_Output, 0,
+                     SYS_Output, out,
+                     SYS_Error, err,
+                     NP_CloseError, TRUE,
                      SYS_UserShell, TRUE,
                      SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
+                     NP_EntryCode, spawnedProcessEnter,
+                     NP_EntryData, &data,
+                     NP_ExitCode, spawnedProcessExit,
+                     NP_Name, process_name,
+                     NP_Child, TRUE,
                      TAG_DONE);
-
-    if (ret != 0) {
-        /* SystemTags failed. Clean up file handles */
-        if (in != 0) Close(in);
+    if (ret) {
+        /* SystemTags failed. Clean up file handle */
+        if (in)
+            Close(in);
+        if (out)
+            Close(out);
+        if (err)
+            Close(err);
         errno = __translate_io_error_to_errno(IoErr());
+    } else {
+        /*
+         * If mode is set as P_NOWAIT we can retrieve process id calling IoErr()
+         * just after SystemTags. In this case spawnv will return pid
+         */
+        if (mode == P_NOWAIT) {
+            ret = IoErr(); // This is our ProcessID;
+        } else {
+            if (in)
+                Close(in);
+            if (out)
+                Close(out);
+        }
     }
+	free(command);
 
     return ret;
 }

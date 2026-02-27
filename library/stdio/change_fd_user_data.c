@@ -8,19 +8,19 @@
 
 int
 __change_fd_user_data(
+		struct _clib4 *__clib4,
         int file_descriptor,
         void *new_user_data,
         void **old_user_data_ptr) {
     int result = -1;
     struct fd *fd;
-    struct _clib4 *__clib4 = __CLIB4;
 
     if (old_user_data_ptr != NULL)
         (*old_user_data_ptr) = NULL;
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd != NULL) {
         __fd_lock(fd);
 

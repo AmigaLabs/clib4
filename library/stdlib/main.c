@@ -39,74 +39,8 @@
 #include "../shared_library/clib4.h"
 #include "uuid.h"
 
-/* These CTORS/DTORS are clib4's one and they are different than that one received
- * from crtbegin. They are needed because we need to call clib4 constructors as well
- */
-static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
-static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 extern int main(int arg_c, char **arg_v);
 static void shared_obj_init(struct _clib4 *__clib4, BOOL init);
-
-struct envHookData {
-    uint32 env_size;
-    uint32 allocated_size;
-    struct _clib4 *r;
-};
-
-static char *empty_env[1] = {NULL};
-
-static uint32
-copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *message) {
-    DECLARE_UTILITYBASE();
-
-    if (strlen(message->sv_GDir) <= 4) {
-        if (ehd->env_size == ehd->allocated_size) {
-            if (!(ehd->r->__environment = realloc(ehd->r->__environment,
-                                                  ehd->allocated_size + 1024 * sizeof(char *)))) {
-                return 1;
-            }
-            ClearMem((char *) ehd->r->__environment + ehd->allocated_size, 1024 * sizeof(char *));
-            ehd->allocated_size += 1024 * sizeof(char *);
-        }
-
-        char **env = (char **) hook->h_Data;
-        uint32 size = strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
-        char *buffer = (char *) malloc(size);
-        if (buffer == NULL) {
-            return 1;
-        }
-
-        ++ehd->env_size;
-        snprintf(buffer, size - 1, "%s=%s", message->sv_Name, message->sv_Var);
-        *env = buffer;
-        env++;
-        hook->h_Data = env;
-    }
-    return 0;
-}
-
-static void
-makeEnvironment(struct _clib4 *__clib4) {
-    char varbuf[8];
-    uint32 flags = 0;
-    size_t environ_size = 1024 * sizeof(char *);
-
-    if (GetVar("EXEC_IMPORT_LOCAL", varbuf, sizeof(varbuf), GVF_LOCAL_ONLY) > 0) {
-        flags = GVF_LOCAL_ONLY;
-    }
-
-    __clib4->__environment = (char **) calloc(environ_size, 1);
-    if (!__clib4->__environment)
-        return;
-
-    flags |= GVF_SCAN_TOPLEVEL;
-    struct Hook hook;
-    hook.h_Entry = (void *) copyEnvironment;
-    hook.h_Data = __clib4->__environment;
-    struct envHookData ehd = {1, environ_size, __clib4};
-    ScanVars(&hook, flags, &ehd);
-}
-
 
 static void
 shared_obj_init(struct _clib4 *__clib4, BOOL init) {
@@ -163,13 +97,17 @@ static int
 call_main(
         char *argstr,
         int arglen,
-        int (*start_main)(int, char **),
+        int (*start_main)(int, char **, char **),
         void (*__EXT_CTOR_LIST__[])(void),
         void (*__EXT_DTOR_LIST__[])(void),
         struct _clib4 *__clib4) {
     volatile LONG saved_io_err;
 
     ENTER();
+    
+    /* Mark that call_main() is being executed (normal executable, not -nostartfiles) */
+    __clib4->__call_main_executed = TRUE;
+    
     /* This plants the return buffer for _exit(). */
     if (setjmp(__clib4->__exit_jmp_buf) != 0) {
         D(("Back from longjmp"));
@@ -184,16 +122,9 @@ call_main(
     _start_ctors(__EXT_CTOR_LIST__);
     SHOWMSG("Constructors executed correctly. Calling start_main()");
 
-    /* Set __current_path_name to a valid value */
-    UBYTE current_dir_name[256] = {0};
-    struct Process *me = (struct Process *) FindTask(NULL);
-    if (NameFromLock(me->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
-        __set_current_path((const char *) current_dir_name);
-    }
-
     D(("Call start_main with %ld parameters", __clib4->__argc));
     /* After all these preparations, get this show on the road... */
-    exit(start_main(__clib4->__argc, __clib4->__argv));
+    exit(start_main(__clib4->__argc, __clib4->__argv, __clib4->__environment));
     SHOWMSG("Done. Exit from start_main()");
 
 out:
@@ -205,7 +136,7 @@ out:
 
     SHOWMSG("Flush all files");
     /* Dump all currently unwritten data, especially to the console. */
-    __flush_all_files(-1);
+    __flush_all_files(__clib4, -1);
 
     /* If one of the destructors drops into exit(), either directly
        or through a failed assert() call, processing will resume with
@@ -233,114 +164,73 @@ int
 _main(
         char *argstr,
         int arglen,
-        int (*start_main)(int, char **),
+        int (*start_main)(int, char **, char **),
         void (*__EXT_CTOR_LIST__[])(void),
-        void (*__EXT_DTOR_LIST__[])(void)) {
-    struct WBStartup *sms = NULL;
+        void (*__EXT_DTOR_LIST__[])(void),
+        struct WBStartup *sms
+    ) {
     struct Process *me;
+    APTR oldClib4Data;
     int rc = RETURN_FAIL;
-    struct _clib4 *__clib4 = NULL;
-    uint32 pid = GetPID(0, GPID_PROCESS);
-    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    struct _clib4 *__clib4 = __CLIB4;
 
-    DECLARE_UTILITYBASE();
-
-    /* Pick up the Workbench startup message, if available. */
+    /* Store old Clib4Data */
     me = (struct Process *) FindTask(NULL);
-    if (!me->pr_CLI) {
-        struct MsgPort *mp = &me->pr_MsgPort;
-        WaitPort(mp);
-        sms = (struct WBStartup *) GetMsg(mp);
-    }
-
-    /* If all libraries are opened correctly we can initialize clib4 reent structure */
-    D(("Initialize clib4 reent structure"));
-    /* Initialize global structure */
-    __clib4 = (struct _clib4 *) AllocVecTags(sizeof(struct _clib4),
-                                             AVT_Type, MEMF_SHARED,
-                                             AVT_ClearWithValue, 0,
-                                             TAG_DONE);
-    if (__clib4 == NULL) {
-        Forbid();
-        ReplyMsg(&sms->sm_Message);
-        return -1;
-    }
-
-    /* Set the current task pointer */
-    __clib4->self = me;
-
-    reent_init(__clib4);
-    __clib4->processId = pid;
-
-    if (res) {
-        size_t iter = 0;
-        void *item;
-        while (hashmap_iter(res->children, &iter, &item)) {
-            const struct Clib4Node *node = item;
-            if (node->pid == pid) {
-                __clib4->uuid = node->uuid;
-                D(("__clib4->uuid ) %s\n", __clib4->uuid));
-                break;
-            }
-        }
-    }
-
-    /* Set _clib4 pointer into process pr_UID
-     * This field is copied to any spawned process created by this exe and/or its children
-     */
-    me->pr_UID = (uint32) __clib4;
-    //SetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, __clib4, TAG_END);
+    oldClib4Data = (APTR) me->pr_UID;
 
     __clib4->__WBenchMsg = sms;
 
-    /* After reent structure we can call clib4 constructors */
-    SHOWMSG("Calling clib4 ctors");
-    _start_ctors(__CTOR_LIST__);
-    SHOWMSG("Done. All constructors called");
+    SHOWMSG("stdlib_program_name_init");
+    if (!stdlib_program_name_init()) {
+        SHOWMSG("cannot initialize stdlib_program_name_init");
+	    goto out;
+	}
 
-    /* Copy environment variables into clib4 reent structure */
-    makeEnvironment(__clib4);
-    if (!__clib4->__environment) {
-        __clib4->__environment = empty_env;
+    SHOWMSG("__clib4->__WBenchMsg");
+    /* If we were invoked from Workbench, set up the standard I/O streams. */
+    if (__clib4->__WBenchMsg != NULL) {
+        SHOWMSG("set up the standard I/O streams");
+        if (wb_file_init(__clib4) < 0) {
+            goto out;
+        }
     }
 
-    /* Set default terminal mode to "amiga-clib4" if not set */
-    char term_buffer[32] = {0};
-    LONG term_len = GetVar("TERM", (STRPTR) term_buffer, 32, 0);
-    if (term_len <= 0) {
-        Strlcpy(term_buffer, "amiga-clib4", 11);
-        SetVar("TERM", term_buffer, 11, 0);
-    }
-
-    /* The following code will be executed if the program is to keep
-       running in the shell or was launched from Workbench. */
-    int oldPriority = me->pr_Task.tc_Node.ln_Pri;
-
-    /* Change the task priority, if requested. */
-    if (-128 <= __clib4->__priority && __clib4->__priority <= 127)
-        SetTaskPri((struct Task *) me, __clib4->__priority);
+    SHOWMSG("arg_init");
+    if (!arg_init()) {
+        SHOWMSG("cannot initialize arg_init");
+	    goto out;
+	}
 
     /* We can enable check abort now */
     __clib4->__check_abort_enabled = TRUE;
+
+    /* At this point exe is fully initialized */
+    __clib4->__fully_initialized = TRUE;
 
     SHOWMSG("Call Main");
     /* We have enough room to make the call or just don't care. */
     rc = call_main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, __clib4);
 
-    /* Restore the task priority. */
-    SetTaskPri((struct Task *) me, oldPriority);
+    /* Restore old Clib4Data */
+    me->pr_UID = (uint32) oldClib4Data;
 
-    SHOWMSG("Calling clib4 dtors");
-    _end_ctors(__DTOR_LIST__);
-    SHOWMSG("Done. All destructors called");
+out:
 
-    SHOWMSG("Calling reent_exit on _clib4");
-    reent_exit(__clib4, FALSE);
+    SHOWMSG("arg_exit");
+    arg_exit();
+
+    SHOWMSG("stdlib_program_name_exit");
+    stdlib_program_name_exit();
+
+    SHOWMSG("workbench_exit");
+    workbench_exit();
 
     if (sms) {
         Forbid();
         ReplyMsg(&sms->sm_Message);
     }
+
+    SHOWMSG("Exit from _main");
 
     return rc;
 }

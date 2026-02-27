@@ -18,14 +18,15 @@ fileno(FILE *file) {
 
     assert(file != NULL);
 
-    flockfile(file);
-
     if (file == NULL) {
         SHOWMSG("invalid file parameter");
-
         __set_errno(EFAULT);
-        goto out;
+
+        RETURN(result);
+        return (result);
     }
+
+    __flockfile_r(__clib4, file);
 
     assert(__is_valid_iob(__clib4, iob));
     assert(FLAG_IS_SET(iob->iob_Flags, IOBF_IN_USE));
@@ -43,7 +44,7 @@ fileno(FILE *file) {
 
 out:
 
-    funlockfile(file);
+    __funlockfile_r(__clib4, file);
 
     RETURN(result);
     return (result);

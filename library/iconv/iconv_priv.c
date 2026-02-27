@@ -6,7 +6,7 @@
 
 int fuzzycmp(const unsigned char *a, const unsigned char *b) {
     for (; *a && *b; a++, b++) {
-        while (*a && (*a | 32U) - 'a' > 26 && *a - '0' > 10U) a++;
+        while (*a && (*a | 32U) - 'a' > 26 && *a - '0' > 10) a++;
         if ((*a | 32U) != *b) return 1;
     }
     return *a != *b;

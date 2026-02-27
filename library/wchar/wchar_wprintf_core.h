@@ -51,6 +51,7 @@ static const unsigned char states[]['z' - 'A' + 1] = {
                 S('e') = _DBL, S('f') = _DBL, S('g') = _DBL, S('a') = _DBL,
                 S('E') = _DBL, S('F') = _DBL, S('G') = _DBL, S('A') = _DBL,
                 S('c') = _CHAR, S('C') = _INT,
+                S('b') = _INT,
                 S('s') = _PTR, S('S') = _PTR, S('p') = _UIPTR, S('n') = _PTR,
                 S('m') = _NOARG,
                 S('l') = _LPRE, S('h') = _HPRE, S('L') = _BIGLPRE,
@@ -118,7 +119,7 @@ static const unsigned char states[]['z' - 'A' + 1] = {
 
 #define FLAGMASK (ALT_FORM | ZERO_PAD | LEFT_ADJ | PAD_POS | MARK_POS | GROUPED)
 
-int wprintf_core(FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type);
+int wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, union arg *nl_arg, int *nl_type);
 void out_init_buffer(FOut *out, wchar_t *buffer, size_t buffer_size);
 int out_overflow(FOut *_out);
 int __wc_indelim(wchar_t wc, const wchar_t *delim);

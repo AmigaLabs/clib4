@@ -20,12 +20,19 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
 
     assert(stream != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
+        RETURN(result);
+        return (result);
+    }
+
+    if (wherefrom < SEEK_SET || wherefrom > SEEK_END) {
+        SHOWMSG("invalid wherefrom parameter");
+        SET_FLAG(file->iob_Flags, IOBF_ERROR);
+
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -35,21 +42,9 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-        __set_errno(EBADF);
-
-        goto out;
-    }
-
-    if (wherefrom < SEEK_SET || wherefrom > SEEK_END) {
-        SHOWMSG("invalid wherefrom parameter");
-
-        SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
-        __set_errno(EBADF);
-
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -67,7 +62,8 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
         }
     }
 
-    /* We have to clear the EOF condition */
+
+	/* We have to clear the EOF condition */
     CLEAR_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
 
     if (wherefrom != SEEK_CUR || offset != 0) {
@@ -125,7 +121,7 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
             if (fam.fam_Error != OK) {
                 SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
-                __set_errno(fam.fam_Error);
+                __set_errno_r(__clib4, fam.fam_Error);
 
                 goto out;
             }
@@ -133,7 +129,7 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
             /* If this is a valid file position, clear 'errno' so that
 			   it cannot be mistaken for an error. */
             if (position < 0)
-                __set_errno(OK);
+                __set_errno_r(__clib4, OK);
         }
     }
 
@@ -141,7 +137,6 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
 
 out:
 
-    funlockfile(stream);
 
     RETURN(result);
     return (result);

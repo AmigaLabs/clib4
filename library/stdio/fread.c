@@ -6,8 +6,12 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef MAX_BYPASS
+#define MAX_BYPASS (256 * 1024) /* 256 KiB max for direct read/write bypass */
+#endif
+
 size_t
-fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
+__fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     size_t result = 0;
     struct _clib4 *__clib4 = __CLIB4;
@@ -26,10 +30,17 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return (result);
     }
 
-    flockfile(stream);
+    __check_abort_f(__clib4);
+
+    SHOWMSG("ftrylockfile_r");
+
+    int locked = __ftrylockfile_r(__clib4, stream);
+
+    SHOWMSG("done.");
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -37,26 +48,22 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
         __set_errno(EBADF);
-
         goto out;
     }
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ)) {
         SHOWMSG("this file is not read-enabled");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
 
         __set_errno(EBADF);
-
         goto out;
     }
 
     /* So that we can tell error and 'end of file' conditions apart. */
-    clearerr(stream);
+    __clearerr_r(__clib4, stream);
 
     if (element_size > 0 && count > 0) {
         size_t total_bytes_read = 0;
@@ -64,7 +71,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         unsigned char *data = ptr;
         int c;
 
-        if (__fgetc_check((FILE *) file, __clib4) < 0)
+        if (__fgetc_check(__clib4, (FILE *) file) < 0)
             goto out;
 
         /* Check for overflow. */
@@ -77,8 +84,17 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
         if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
             ssize_t num_bytes_read;
 
+            SHOWMSG("Calling read...");
+
             /* We bypass the buffer entirely. */
-            num_bytes_read = read(file->iob_Descriptor, data, total_size);
+            /* Cap bypass size to avoid extremely large single read syscalls which
+               can expose driver/filesystem jitter; read in chunks up to MAX_BYPASS. */
+            size_t to_read = total_size;
+            if (to_read > MAX_BYPASS) to_read = MAX_BYPASS;
+            num_bytes_read = read(file->iob_Descriptor, data, to_read);
+
+            SHOWMSG("Done.");
+
             if (num_bytes_read == -1) {
                 SET_FLAG(file->iob_Flags, IOBF_ERROR);
                 goto out;
@@ -92,21 +108,33 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
             while (total_size > 0) {
                 /* If there is more data to be read and the read buffer is empty
                    anyway, we'll bypass the buffer entirely. */
+                
+                D(("iob_BufferReadBytes [%ld] iob_BufferSize [%ld]", file->iob_BufferReadBytes, file->iob_BufferSize));
+
                 if (file->iob_BufferReadBytes == 0 && total_size >= (size_t) file->iob_BufferSize) {
                     ssize_t num_bytes_read;
-
                     /* We bypass the buffer entirely. */
-                    num_bytes_read = read(file->iob_Descriptor, data, total_size);
+                    SHOWMSG("Calling read...");
+                    /* Cap bypass size to avoid huge single read syscalls. */
+                    size_t to_read = total_size;
+                    if (to_read > MAX_BYPASS) to_read = MAX_BYPASS;
+                    num_bytes_read = read(file->iob_Descriptor, data, to_read);
+                    SHOWMSG("Done.");
                     if (num_bytes_read == -1) {
                         SET_FLAG(file->iob_Flags, IOBF_ERROR);
                         goto out;
                     }
 
-                    if (num_bytes_read == 0)
+                    if (num_bytes_read == 0) {
                         SET_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
+                        break;
+                    }
 
+                    data += num_bytes_read;
                     total_bytes_read += num_bytes_read;
-                    break;
+                    total_size -= num_bytes_read;
+                    /* Continue loop to read more if needed */
+                    continue;
                 }
 
                 /* If there is data in the read buffer, try to copy it directly
@@ -133,7 +161,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
                         break;
                 }
 
-                c = __getc(file);
+                c = __getc(__clib4, file);
                 if (c == EOF)
                     break;
 
@@ -158,8 +186,50 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    if (locked == OK)
+        __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);
+}
+
+static void byteswap16(void *ptr) {
+    uint8_t *b = ptr;
+    uint8_t t = b[0]; b[0] = b[1]; b[1] = t;
+}
+
+static void byteswap32(void *ptr) {
+    uint8_t *b = ptr;
+    uint8_t t;
+    t = b[0]; b[0] = b[3]; b[3] = t;
+    t = b[1]; b[1] = b[2]; b[2] = t;
+}
+
+static void byteswap64(void *ptr) {
+    uint8_t *b = ptr;
+    for (int i = 0; i < 4; ++i) {
+        uint8_t t = b[i];
+        b[i] = b[7 - i];
+        b[7 - i] = t;
+    }
+}
+
+size_t
+fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
+    size_t total = element_size * count;
+    size_t nread = __fread_internal(ptr, element_size, count, stream);
+    struct iob *file = (struct iob *) stream;
+
+    if (FLAG_IS_SET(file->iob_Flags, IOBF_LITTLE_ENDIAN) && (total == 2 || total == 4 || total == 8)) {
+        DebugPrintF("[fread] Reading in Little endian mode\n");
+        if (element_size == 2) {
+            byteswap16(ptr);
+        } else if (element_size == 4) {
+            byteswap32(ptr);
+        } else if (element_size == 8) {
+            byteswap64(ptr);
+        }
+    }
+
+    return nread;
 }

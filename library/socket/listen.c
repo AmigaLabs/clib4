@@ -16,14 +16,14 @@ int listen(int sockfd, int backlog) {
     SHOWVALUE(sockfd);
     SHOWVALUE(backlog);
 
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     assert(sockfd >= 0 && sockfd < __clib4->__num_fd);
     assert(__clib4->__fd[sockfd] != NULL);
     assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IN_USE));
     assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
-    fd = __get_file_descriptor_socket(sockfd);
+    fd = __get_file_descriptor_socket(__clib4, sockfd);
     if (fd == NULL)
         goto out;
 

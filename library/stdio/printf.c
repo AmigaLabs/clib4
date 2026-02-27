@@ -17,13 +17,14 @@ printf(const char *format, ...) {
     assert(format != NULL);
 
     if (format == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
     __stdio_lock(__clib4);
+
     va_start(arg, format);
-    result = vfprintf(stdout, format, arg);
+    result = __vfprintf_r(__clib4, __stdout_r(__clib4), format, arg);
     va_end(arg);
 
     __stdio_unlock(__clib4);

@@ -19,29 +19,33 @@ int __fsetlocking(FILE *f, int type) {
 }
 
 int __fwriting(FILE *f) {
+    struct _clib4 *__clib4 = __CLIB4;
     struct iob *file = (struct iob *) f;
-    struct fd *filedes = __get_file_descriptor(file->iob_Descriptor);
+    struct fd *filedes = __get_file_descriptor(__clib4, file->iob_Descriptor);
 
     return FLAG_IS_SET(filedes->fd_Flags, FDF_WRITE) && FLAG_IS_CLEAR(filedes->fd_Flags, FDF_READ);
 }
 
 int __freading(FILE *f) {
+    struct _clib4 *__clib4 = __CLIB4;
     struct iob *file = (struct iob *) f;
-    struct fd *filedes = __get_file_descriptor(file->iob_Descriptor);
+    struct fd *filedes = __get_file_descriptor(__clib4, file->iob_Descriptor);
 
     return FLAG_IS_SET(filedes->fd_Flags, FDF_READ) && FLAG_IS_CLEAR(filedes->fd_Flags, FDF_WRITE);
 }
 
 int __freadable(FILE *f) {
+    struct _clib4 *__clib4 = __CLIB4;
     struct iob *file = (struct iob *) f;
-    struct fd *filedes = __get_file_descriptor(file->iob_Descriptor);
+    struct fd *filedes = __get_file_descriptor(__clib4, file->iob_Descriptor);
 
     return FLAG_IS_SET(filedes->fd_Flags, FDF_READ);
 }
 
 int __fwritable(FILE *f) {
+    struct _clib4 *__clib4 = __CLIB4;
     struct iob *file = (struct iob *) f;
-    struct fd *filedes = __get_file_descriptor(file->iob_Descriptor);
+    struct fd *filedes = __get_file_descriptor(__clib4, file->iob_Descriptor);
 
     return FLAG_IS_SET(filedes->fd_Flags, FDF_WRITE);
 }

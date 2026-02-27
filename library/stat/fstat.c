@@ -28,19 +28,17 @@ fstat(int file_descriptor, struct stat *buffer) {
     if (buffer == NULL) {
         SHOWMSG("invalid buffer parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
-    assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
-    assert(__clib4->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
-
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
+
+    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     __fd_lock(fd);
 
@@ -53,19 +51,21 @@ fstat(int file_descriptor, struct stat *buffer) {
     assert(fd->fd_Action != NULL);
 
     if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
-        __set_errno(fam.fam_Error);
+        __set_errno_r(__clib4, fam.fam_Error);
         goto out;
     }
 
     __convert_file_info_to_stat(fam.fam_FileSystem, fam.fam_FileInfo, buffer);
 
-    if (fam.fam_FileInfo->Type != ST_CONSOLE) {
-        /* Close ExamineObjectTag object created when fd->fd_Action is executed  */
-        FreeDosObject(DOS_EXAMINEDATA, fam.fam_FileInfo);
-    }
-    else {
-        /* If ExamineObjectTag was failed we have to free the dummy ExamineData structure created */
-        free(fam.fam_FileInfo);
+    if(fam.fam_FileInfo->Type != ST_NIL) {
+        if (fam.fam_FileInfo->Type != ST_CONSOLE) {
+            /* Close ExamineObjectTag object created when fd->fd_Action is executed  */
+            FreeDosObject(DOS_EXAMINEDATA, fam.fam_FileInfo);
+        }
+        else {
+            /* If ExamineObjectTag was failed we have to free the dummy ExamineData structure created */
+            __free_r(__clib4, fam.fam_FileInfo);
+        }
     }
 
     result = OK;

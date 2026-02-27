@@ -77,7 +77,7 @@ execvp(const char *command, char *const argv[]) {
 
                 /* Allocate a little more memory than we
                    really need. */
-                new_command_buffer = malloc(complete_path_len + 10);
+                new_command_buffer = __malloc_r(__clib4, complete_path_len + 10);
                 if (new_command_buffer == NULL) {
                     __set_errno(ENOMEM);
                     goto out;

@@ -1,19 +1,12 @@
 /*
- * $Id: ctype_isascii.c,v 1.4 2021-02-10 23:46:22 clib4devs Exp $
+* $Id: ctype_isascii.c,v 1.6 2025-06-30 12:04:22 clib4devs Exp $
 */
 
-#ifndef _CTYPE_HEADERS_H
-#include "ctype_headers.h"
-#endif /* _CTYPE_HEADERS_H */
+#include <ctype.h>
 
-int 
-isascii(int c)
-{
-    ENTER();
-    SHOWVALUE(c);
+#undef isascii
 
-    int result = c >= 0 && c < 128;
-
-    RETURN(result);
-    return result;
+int
+isascii(int c) {
+	return c >= 0 && c < 128;
 }

@@ -1,0 +1,239 @@
+/* wmem_allocator_simple.c
+ * Wireshark Memory Manager Simple Allocator
+ * Copyright 2012, Evan Huus <eapache@gmail.com>
+ *
+ * Wireshark - Network traffic analyzer
+ * By Gerald Combs <gerald@wireshark.org>
+ * Copyright 1998 Gerald Combs
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+
+#ifndef _STDLIB_HEADERS_H
+#include "stdlib_headers.h"
+#endif /* _STDLIB_HEADERS_H */
+
+#ifndef _STDLIB_MEMORY_H
+#include "stdlib_memory.h"
+#endif /* _STDLIB_MEMORY_H */
+
+#include "wmem_core.h"
+#include "wmem_allocator.h"
+#include "wmem_allocator_simple.h"
+
+#define DEFAULT_ALLOCS 8192
+
+typedef struct _wmem_simple_allocator_t {
+    int size;
+    int count;
+    void **ptrs;
+    size_t *sizes; // we need this for realloc on amigaos
+    int32_t *alignments;
+} wmem_simple_allocator_t;
+
+#if MEMORY_DEBUG
+void dump_ptrs(const char *function, void *private_data);
+#ifdef SUPER_MEMORY_DEBUG
+void dump_ptrs(const char *function, void *private_data) {
+    wmem_simple_allocator_t *allocator;
+    allocator = (wmem_simple_allocator_t *) private_data;
+
+    for (int i = 0; i < allocator->count; i++)
+        D(("[%s :] %ld : ptr [0x%lx] size [0x%lx]\n", function, i, allocator->ptrs[i], allocator->sizes[i]));
+}
+#else
+void dump_ptrs(const char *function, void *private_data) {}
+#endif
+#endif
+
+static void *
+wmem_simple_alloc(void *private_data, const size_t size, int32_t alignment) {
+    wmem_simple_allocator_t *allocator;
+
+    allocator = (wmem_simple_allocator_t *) private_data;
+
+    if (__clib4_unlikely(allocator->count == allocator->size)) {
+
+#if MEMORY_DEBUG
+       D(("[wmem_simple_alloc :] Growing ptrs array.\n"));
+#endif
+
+        int old_size = allocator->size;
+        allocator->size *= 2;
+
+        void **new_ptrs = (void **) wmem_alloc(NULL, sizeof(void *) * allocator->size);
+        memcpy(new_ptrs, allocator->ptrs, sizeof(void *) * old_size);
+        wmem_free(NULL, allocator->ptrs);
+        allocator->ptrs = new_ptrs;
+
+        // allocator->ptrs = (void **) wmem_realloc(NULL, allocator->ptrs, sizeof(void *) * allocator->size);
+
+        size_t *new_sizes = (size_t *) wmem_alloc(NULL, sizeof(size_t) * allocator->size);
+        memcpy(new_sizes, allocator->sizes, sizeof(size_t) * old_size);
+        wmem_free(NULL, allocator->sizes);
+        allocator->sizes = new_sizes;
+
+        int32_t *new_alignments = (int32_t *) wmem_alloc(NULL, sizeof(int32_t) * allocator->size);
+        memcpy(new_alignments, allocator->alignments, sizeof(int32_t) * old_size);
+        wmem_free(NULL, allocator->alignments);
+        allocator->alignments = new_alignments;
+    }
+
+    void *ptr = wmem_alloc_aligned(NULL, size, alignment);
+    if(!ptr) return NULL;
+
+    allocator->sizes[allocator->count] = size;
+    allocator->alignments[allocator->count] = alignment;
+    allocator->ptrs[allocator->count] = ptr;
+    allocator->count++;
+
+#if MEMORY_DEBUG
+    D(("[wmem_simple_alloc :] count [%d] ptr [0x%lx] size [0x%lx].\n", allocator->count, allocator->ptrs[allocator->count-1], allocator->sizes[allocator->count-1]));
+    dump_ptrs("simple_alloc", private_data);
+#endif
+
+    return allocator->ptrs[allocator->count-1];
+}
+
+static void
+wmem_simple_free(void *private_data, void *ptr) {
+    int i;
+    wmem_simple_allocator_t *allocator;
+
+    allocator = (wmem_simple_allocator_t *) private_data;
+
+    if(!ptr) return;
+
+    for (i = allocator->count-1; i >= 0; i--) {
+        if (ptr == allocator->ptrs[i]) {
+#ifdef MEMORY_DEBUG
+            D(("[simple_free :] ptr = 0x%lx, size = %ld\n", ptr, allocator->sizes[i]));
+#endif
+
+            if (i < allocator->count-1) {
+                allocator->ptrs[i] = allocator->ptrs[allocator->count-1];
+                allocator->sizes[i] = allocator->sizes[allocator->count-1];
+                allocator->alignments[i] = allocator->alignments[allocator->count-1];
+            }
+            wmem_free(NULL, ptr);
+            allocator->count--;
+            return;
+        }
+    }
+#ifdef MEMORY_DEBUG
+    D(("[simple_free :] <DISASTER> : Atempted free of bad pointer. (ptr == 0x%lx\n", ptr));
+    exit(20);
+#endif
+}
+
+static void *
+wmem_simple_realloc(void *private_data, void *ptr, const size_t size, int32_t alignment) {
+    int i;
+    wmem_simple_allocator_t *allocator;
+
+    allocator = (wmem_simple_allocator_t *) private_data;
+
+#if MEMORY_DEBUG
+    D(("[wmem_simple_realloc :] old ptr [0x%lx] old size [0x%lx]\n", ptr, size));
+#endif
+
+    for (i = allocator->count-1; i >= 0; i--) {
+        if (ptr == allocator->ptrs[i]) {
+            if (size > allocator->sizes[i]) {
+
+                // Grow
+                allocator->alignments[i] = alignment > allocator->alignments[i] ? alignment : allocator->alignments[i];
+                void *new_ptr = (void **) wmem_alloc_aligned(NULL, size, allocator->alignments[i]);
+                memcpy(new_ptr, allocator->ptrs[i], allocator->sizes[i]);
+                wmem_free(NULL, allocator->ptrs[i]);
+                allocator->ptrs[i] = new_ptr;
+                allocator->sizes[i] = size;
+            }
+
+#if MEMORY_DEBUG
+            D(("[wmem_simple_realloc :] Grow : new ptr [0x%lx] new size [0x%lx]\n", allocator->ptrs[i], allocator->sizes[i]));
+#endif
+            return allocator->ptrs[i];
+        }
+    }
+#if MEMORY_DEBUG
+    D(("[simple_realloc :] <DISASTER> : Atempted realloc of bad pointer. (ptr == 0x%lx\n", ptr));
+    dump_ptrs("simple_realloc", private_data);
+    exit(20);
+#endif
+
+    /* not reached */
+    return NULL;
+}
+
+static void
+wmem_simple_free_all(void *private_data) {
+    wmem_simple_allocator_t *allocator;
+    int i;
+
+    allocator = (wmem_simple_allocator_t *) private_data;
+
+    for (i = 0; i < allocator->count; i++) {
+        wmem_free(NULL, allocator->ptrs[i]);
+    }
+    allocator->count = 0;
+    // allocator->size = 0;
+
+#if MEMORY_DEBUG
+    dump_ptrs("simple_free_all", private_data);
+#endif
+}
+
+static void
+wmem_simple_gc(void *private_data) {
+    (void) (private_data);
+    /* In this simple allocator, there is nothing to garbage-collect */
+}
+
+static void
+wmem_simple_allocator_cleanup(void *private_data) {
+    wmem_simple_allocator_t *allocator;
+
+    allocator = (wmem_simple_allocator_t *) private_data;
+
+    wmem_free(NULL, allocator->ptrs);
+    wmem_free(NULL, allocator->sizes);
+    wmem_free(NULL, allocator->alignments);
+    wmem_free(NULL, allocator);
+}
+
+void
+wmem_simple_allocator_init(wmem_allocator_t *allocator) {
+    wmem_simple_allocator_t *simple_allocator;
+
+    simple_allocator = wmem_new(NULL, wmem_simple_allocator_t);
+
+    allocator->walloc = &wmem_simple_alloc;
+    allocator->wrealloc = &wmem_simple_realloc;
+    allocator->wfree = &wmem_simple_free;
+
+    allocator->free_all = &wmem_simple_free_all;
+    allocator->gc = &wmem_simple_gc;
+    allocator->cleanup = &wmem_simple_allocator_cleanup;
+
+    allocator->private_data = (void *) simple_allocator;
+
+    simple_allocator->count = 0;
+    simple_allocator->size = DEFAULT_ALLOCS;
+    simple_allocator->ptrs = wmem_alloc_array(NULL, void*, DEFAULT_ALLOCS);
+    simple_allocator->sizes = wmem_alloc_array(NULL, size_t, DEFAULT_ALLOCS);
+    simple_allocator->alignments = wmem_alloc_array(NULL, int32_t, DEFAULT_ALLOCS);
+}
+
+/*
+ * Editor modelines  -  https://www.wireshark.org/tools/modelines.html
+ *
+ * Local variables:
+ * c-basic-offset: 4
+ * tab-width: 8
+ * indent-tabs-mode: nil
+ * End:
+ *
+ * vi: set shiftwidth=4 tabstop=8 expandtab:
+ * :indentSize=4:tabSize=8:noTabs=true:
+ */

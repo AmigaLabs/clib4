@@ -1,6 +1,6 @@
 /*
 / $Id: profile_mcount.S,v 1.1 2023-10-20 12:04:26 clib4devs Exp $
-/*
+*/
 
 /* We do profiling as described in the SYSV ELF ABI, except that glibc
    _mcount manages its own counters.  The caller has put the address the

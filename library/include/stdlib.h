@@ -12,9 +12,12 @@
 #include <alloca.h>
 #include <sys/types.h>
 
-#ifndef _SYS_CLIB4_STDC_H
-#include <sys/clib4_stdc.h>
-#endif /* _SYS_CLIB4_STDC_H */
+/* Make the "restrict" qualifier work well with 'C' compilers that do
+   not support it. We do assume that __STDC__ is defined, though. */
+#if !defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L)
+#define restrict
+#endif /* !__STDC_VERSION__ || __STDC_VERSION__ < 199901L */
+
 
 __BEGIN_DECLS
 
@@ -96,6 +99,8 @@ extern long jrand48(unsigned short subi[3]);
 extern void srand48(long);
 extern unsigned short *seed48(unsigned short subi[3]);
 extern void lcong48(unsigned short subi[7]);
+
+extern char *canonicalize_file_name(const char *name);
 
 #endif
 

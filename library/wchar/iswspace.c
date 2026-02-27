@@ -10,7 +10,9 @@
 #include <wctype.h>
 #endif /* _WCTYPE_HEADERS_H */
 
-#include <ctype.h>
+#ifndef _CTYPE_HEADERS_H
+#include "ctype_headers.h"
+#endif /* _CTYPE_HEADERS_H */
 
 int
 iswspace(wint_t c) {

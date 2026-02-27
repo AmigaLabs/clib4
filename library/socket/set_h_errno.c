@@ -11,3 +11,9 @@ __set_h_errno(int new_h_errno) {
     if (&h_errno != NULL)
         h_errno = new_h_errno;
 }
+
+void
+__set_h_errno_r(struct _clib4 *__clib4, int new_h_errno) {
+    if (&h_errno_r != NULL)
+        h_errno_r = new_h_errno;
+}

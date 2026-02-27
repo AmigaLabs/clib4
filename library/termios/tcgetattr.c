@@ -23,7 +23,7 @@ static const cc_t def_console_cc[NCCS] =
 };
 
 static struct termios *
-get_console_termios(struct fd *fd, BOOL use_ncurses) {
+get_console_termios(struct fd *fd) {
     struct termios *tios;
 
     /* Create a new, fresh termios. TODO: Actually query some values,
@@ -44,10 +44,6 @@ get_console_termios(struct fd *fd, BOOL use_ncurses) {
         SET_FLAG(tios->c_cflag, CREAD);
 
     tios->c_lflag = ISIG|ICANON|ECHO;
-    if (use_ncurses) {
-        CLEAR_FLAG(tios->c_lflag, ICANON);
-        SET_FLAG(tios->c_lflag, NCURSES);
-    }
 
     memcpy(tios->c_cc, def_console_cc, NCCS);
 
@@ -69,7 +65,7 @@ out:
 }
 
 struct termios *
-__get_termios(struct fd *fd, BOOL use_ncurses) {
+__get_termios(struct fd *fd) {
     struct termios *tios = NULL;
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
@@ -87,7 +83,7 @@ __get_termios(struct fd *fd, BOOL use_ncurses) {
         tios = fd->fd_Aux;
     }
     else {
-        tios = get_console_termios(fd, use_ncurses);
+        tios = get_console_termios(fd);
     }
 
 out:
@@ -98,20 +94,21 @@ out:
 int
 tcgetattr(int file_descriptor, struct termios *user_tios) {
     int result = ERROR;
-    BOOL use_ncurses = FALSE;
     struct fd *fd = NULL;
     struct termios *tios;
     BPTR file;
     struct _clib4 *__clib4 = __CLIB4;
+    BOOL isStdioLocked = FALSE;
 
     __stdio_lock(__clib4);
+    isStdioLocked = TRUE;
 
     if (user_tios == NULL) {
         __set_errno(EFAULT);
         goto out;
     }
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -123,18 +120,11 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
 
     __fd_lock(fd);
 
-    if (FLAG_IS_SET(user_tios->c_lflag, NCURSES)) {
-        SetMode(file, DOSTRUE);
-        CLEAR_FLAG(user_tios->c_lflag, ICANON);
-        use_ncurses = TRUE;
-    }
-
     if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
         assert(fd->fd_Aux != NULL);
-
         memcpy(user_tios, fd->fd_Aux, sizeof(struct termios));
     } else {
-        tios = __get_termios(fd, use_ncurses);
+        tios = __get_termios(fd);
         if (tios == NULL) {
             __fd_unlock(fd);
             goto out;
@@ -150,12 +140,16 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
     /* If someone ask for tcgetattr on STDOUT or STDERR make sure that we set also
      * STDIN. This hack fix ncurses library for example */
     if (file_descriptor == STDOUT_FILENO || file_descriptor == STDERR_FILENO) {
+        __stdio_unlock(__clib4);
+        isStdioLocked = FALSE;
         tcgetattr(STDIN_FILENO, user_tios);
     }
 
 out:
 
-    __stdio_unlock(__clib4);
+    if (isStdioLocked)
+        __stdio_unlock(__clib4);
+
     __check_abort_f(__clib4);
 
     return (result);

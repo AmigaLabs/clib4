@@ -27,4 +27,8 @@
 	struct Library *		UNUSED	TimerBase	= __CLIB4->__TimerBase; \
 	struct TimerIFace *			    ITimer		= __CLIB4->__ITimer
 
+#define DECLARE_TIMERBASE_R(clib4) \
+	struct Library *		UNUSED	TimerBase	= clib4->__TimerBase; \
+	struct TimerIFace *			    ITimer		= clib4->__ITimer
+
 #endif /* _STDLIB_TIMERBASE_H */

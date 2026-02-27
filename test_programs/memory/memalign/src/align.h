@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/param.h>
+#include <stdlib.h>
+
 
 // Times that a loop repeats. Increate so your test takes longer
 #define MAX_CHUNK 128

@@ -35,7 +35,7 @@ tcsendbreak(int file_descriptor, int duration) {
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_TERMIOS)) {
         __set_errno(EBADF);
         goto out;
@@ -56,7 +56,11 @@ tcsendbreak(int file_descriptor, int duration) {
                 /* TODO */
                 result = OK;
             } else {
-                result = tcdrain(file_descriptor);
+                __stdio_unlock(__clib4);
+                __fd_unlock(fd);
+                SHOWMSG("Calling tcdrain");
+                LEAVE();
+                return tcdrain(file_descriptor);
             }
             break;
         default:

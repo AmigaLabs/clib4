@@ -1,5 +1,5 @@
 /*
- * $Id: unistd_fpathconf.c,v 1.3 2006-09-17 16:36:48 clib4devs Exp $
+ * $Id: unistd_fpathconf.c,v 1.4 2024-07-04 16:36:48 clib4devs Exp $
 */
 
 #ifndef _UNISTD_HEADERS_H
@@ -13,10 +13,11 @@ fpathconf(int file_descriptor, int name) {
     int error = 0;
     long ret = -1;
     struct fd *fd;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         error = EINVAL;
         goto out;

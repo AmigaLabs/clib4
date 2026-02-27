@@ -31,21 +31,21 @@ fchmod(int file_descriptor, mode_t mode) {
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     __fd_lock(fd);
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO)) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -84,11 +84,11 @@ fchmod(int file_descriptor, mode_t mode) {
     if (FLAG_IS_SET(mode, S_IXOTH))
         SET_FLAG(protection, EXDF_OTR_EXECUTE);
 
-    parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+    parent_dir = ParentOfFH(fd->fd_File);
     if (parent_dir == BZERO) {
         SHOWMSG("couldn't find parent directory");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 
@@ -97,16 +97,15 @@ fchmod(int file_descriptor, mode_t mode) {
     if (NO success) {
         SHOWMSG("could not obtain file name");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 
     old_current_dir = SetCurrentDir(parent_dir);
     current_dir_changed = TRUE;
 
-    if (CANNOT SetProtection((STRPTR)fib->Name, protection))
-    {
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+    if (CANNOT SetProtection((STRPTR)fib->Name, protection)) {
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 

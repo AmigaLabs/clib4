@@ -20,57 +20,56 @@ extern struct TimeRequest *TimeReq;
 int
 __time_delay(ULONG timercmd, struct timeval *tv) {
     ENTER();
-
-    struct MsgPort *mp;
-    struct TimeRequest *tr;
-    ULONG wait_mask;
+	ULONG wait_mask;
     int result = 0;
+    struct _clib4 *__clib4 = __CLIB4;
+    struct MsgPort *messagePort;
+    struct TimeRequest *timeRequest;
 
-    __check_abort();
+    DECLARE_TIMEZONEBASE_R(__clib4);
 
-    SHOWMSG("Clearing Signals");
-    SetSignal(0, SIGB_SINGLE | SIGBREAKF_CTRL_C | SIGBREAKF_CTRL_E);
+	SetSignal(0, SIGF_SINGLE);
+    messagePort = AllocSysObjectTags(ASOT_PORT,
+                                     ASOPORT_AllocSig, FALSE,
+                                     ASOPORT_Signal,   SIGB_SINGLE,
+                                     TAG_DONE);
+    if (!messagePort)
+        return ENOMEM;
 
-    SHOWMSG("Allocating System Objects");
-    mp = AllocSysObjectTags(ASOT_PORT,
-                            ASOPORT_AllocSig, FALSE,
-                            ASOPORT_Signal, SIGB_SINGLE,
-                            TAG_DONE);
-    if (!mp) {
-        SHOWMSG("Cannot allocate Message Port");
+    timeRequest = AllocSysObjectTags(ASOT_IOREQUEST,
+                                     ASOIOR_Duplicate, TimeReq,
+                                     ASOIOR_Size, sizeof(struct TimeRequest),
+                                     ASOIOR_ReplyPort, messagePort,
+                                     TAG_END);
+    if (!timeRequest) {
+        FreeSysObject(ASOT_IOREQUEST, messagePort);
         return ENOMEM;
     }
 
-    tr = AllocSysObjectTags(ASOT_IOREQUEST,
-                            ASOIOR_Duplicate, TimeReq,
-                            ASOIOR_Size, sizeof(struct TimeRequest),
-                            ASOIOR_ReplyPort, mp,
-                            TAG_END);
-
-    if (!tr) {
-        SHOWMSG("Cannot allocate Timer Request");
-        FreeSysObject(ASOT_PORT, mp);
-        return ENOMEM;
-    }
-
-    tr->Request.io_Command = timercmd;
-    tr->Time.Seconds = tv->tv_sec;
-    tr->Time.Microseconds = tv->tv_usec;
+    timeRequest->Request.io_Command = timercmd;
+    timeRequest->Time.Seconds = tv->tv_sec;
+    timeRequest->Time.Microseconds = tv->tv_usec;
 
     SHOWMSG("Send IO Request");
-    SendIO((struct IORequest *) tr);
-    wait_mask = SIGBREAKF_CTRL_E | SIGBREAKF_CTRL_C | 1L << mp->mp_SigBit;
+	SendIO((struct IORequest *) timeRequest);
+
+    wait_mask = __clib4->_interrupting_alarm_signal | SIGBREAKF_CTRL_C | ( 1L << messagePort->mp_SigBit );
+
     /* Wait for signals */
     SHOWMSG("Waiting for signal");
     uint32 signals = Wait(wait_mask);
-    if (signals & SIGBREAKF_CTRL_C || signals & SIGBREAKF_CTRL_E) {
-        if (CheckIO((struct IORequest *) tr))  /* If request is complete... */
-            WaitIO((struct IORequest *) tr);   /* clean up and remove reply */
-        AbortIO((struct IORequest *) tr);
-        if (signals & SIGBREAKF_CTRL_E) {
-            SHOWMSG("Received SIGBREAKF_CTRL_E");
+    if (signals & SIGBREAKF_CTRL_C || signals & __clib4->_interrupting_alarm_signal) {
+        if (!CheckIO((struct IORequest *) timeRequest)) {
+	        /* If request is incomplete... */
+        	AbortIO((struct IORequest *) timeRequest);  /* break it */
+	        WaitIO((struct IORequest *) timeRequest);
+        }
+        if (signals & __clib4->_interrupting_alarm_signal) {
+            SHOWMSG("Received __clib4->_interrupting_alarm_signal");
             /* Return EINTR since the request has been interrupted by alarm */
+            __set_errno_r(__clib4, EINTR);
             result = EINTR;
+            SetSignal(__clib4->_interrupting_alarm_signal, __clib4->_interrupting_alarm_signal); // reset signal
         } else {
             SHOWMSG("Received SIGBREAKF_CTRL_C. Reset it to set state");
             /* Reset SIGBREAKF_CTRL_C to set state since __check_abort can
@@ -79,19 +78,14 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
             SetSignal(SIGBREAKF_CTRL_C, SIGBREAKF_CTRL_C);
         }
     }
-    WaitIO((struct IORequest *) tr);
 
-    SHOWVALUE("tr->Time.Seconds");
-    SHOWVALUE("tr->Time.Microseconds");
-    tv->tv_sec = tr->Time.Seconds;
-    tv->tv_usec = tr->Time.Microseconds;
+    SHOWVALUE(timeRequest->Time.Seconds);
+    SHOWVALUE(timeRequest->Time.Microseconds);
+    tv->tv_sec = timeRequest->Time.Seconds;
+    tv->tv_usec = timeRequest->Time.Microseconds;
 
-    SHOWMSG("Freeing Request Object");
-    FreeSysObject(ASOT_IOREQUEST, tr);
-    SHOWMSG("Freeing Message Port");
-    FreeSysObject(ASOT_PORT, mp);
-
-    __check_abort();
+    FreeSysObject(ASOT_IOREQUEST, timeRequest);
+    FreeSysObject(ASOT_PORT, messagePort);
 
     RETURN(result);
     return result;

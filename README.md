@@ -1,6 +1,5 @@
 # Clib4 - C runtime library for AmigaOS4
 
-[![Build Status](https://travis-ci.com/afxgroup/clib2.svg?branch=master)](https://travis-ci.org/afxgroup/clib2)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 ## What is this?
@@ -53,8 +52,21 @@ have problems running existent software!
 
 ### New memory allocator
 
-Clib4 now use `Wheel Of Fortune` allocator that is faster than previous one, and it seems more robust and with a cleaner
-and portable code
+Clib4 now use `wmem` allocator from WireShark that is faster than previous one, and it seems more robust and with a cleaner
+and portable code.  
+You can choose at runtime (for test purpose) which kind of allocators want to use setting `CLIB4_MEMORY_ALLOCATOR` env variable.  
+At moment you can use:
+
+| Value | Allocator                 |  
+|-------|---------------------------|
+| 1     | WMEM_ALLOCATOR_SIMPLE     |
+| 2     | WMEM_ALLOCATOR_BLOCK      |
+| 3     | WMEM_ALLOCATOR_STRICT     |
+| 4     | WMEM_ALLOCATOR_BLOCK_FAST |
+
+The default one is `WMEM_ALLOCATOR_BLOCK`. `WMEM_ALLOCATOR_SIMPLE` can crash on some situation. Please refer to `wmem/wmem_core.h` for all details. 
+
+To enable memory debug set `MEMORY_DEBUG` to 1 in `wmem_core.h` or pass it in GNUMakefile when compiling
 
 ### Optimized AMCC functions
 
@@ -212,12 +224,36 @@ constructors/destructors executions
 
 ### TODO
 
-- There are some memory leaks at clib4 end needs to be tracked down
+- ~~There are some memory leaks at clib4 end needs to be tracked down~~
 - Try to use Microsoft <a href="https://github.com/microsoft/mimalloc">`mimalloc`</a> as memory allocator that should be
   faster when there are multiple cores.
-- Add a test suite
+- ~~Add a test suite~~
 - Try to use some functions/headers from https://github.com/attractivechaos/klib to improve speed
 - Use a good locale implementation
+
+### Test Suite
+
+A comprehensive test suite for clib4 is available in the `tests/` directory with 318 tests covering:
+- String functions (78 tests)
+- Standard library functions (55 tests)
+- Standard I/O functions (54 tests)
+- Math functions (91 tests)
+- Time functions (40 tests)
+
+To build and run the tests:
+```bash
+cd tests
+make run
+```
+
+For more information, see [tests/README.md](tests/README.md).
+
+### Libraries repository
+
+A repository with pre packaged libraries is present and ready to use for debian like systems.
+You can find all informations to the following <a href="https://github.com/AmigaLabs/clib4/wiki/Clib4-apt-packages-repository">wiki page</a>.
+
+A list of packages can be found into public <a href="https://clib4pkg.amigasoft.net/ubuntu/dists/focal/main/binary-amd64/Packages">Packages</a> file.
 
 ## Legal status
 

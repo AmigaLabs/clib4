@@ -79,7 +79,7 @@ closedir(DIR *directory_pointer) {
     __dirent_lock(__clib4);
 
     if (directory_pointer == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -97,7 +97,7 @@ closedir(DIR *directory_pointer) {
         }
 
         if (NOT directory_pointer_is_valid) {
-            __set_errno(EBADF);
+            __set_errno_r(__clib4, EBADF);
             goto out;
         }
     }
@@ -111,7 +111,7 @@ closedir(DIR *directory_pointer) {
         struct Node *node;
 
         while ((node = RemHead((struct List *) &dh->dh_VolumeList)) != NULL)
-            free(node);
+            __free_r(__clib4, node);
     }
 
     if (dh->dh_Context != NULL) {
@@ -126,7 +126,7 @@ closedir(DIR *directory_pointer) {
         close(dh->dh_Fd);
     }
 
-    free(dh);
+    __free_r(__clib4, dh);
 
     result = OK;
 

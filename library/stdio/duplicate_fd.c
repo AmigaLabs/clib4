@@ -9,8 +9,7 @@
 /****************************************************************************/
 
 void 
-__duplicate_fd(struct fd *duplicate_fd, struct fd *original_fd)
-{
+__duplicate_fd(struct fd *duplicate_fd, struct fd *original_fd) {
 	assert(duplicate_fd != NULL && original_fd != NULL);
 
 	__fd_lock(original_fd);

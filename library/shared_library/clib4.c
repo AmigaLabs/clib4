@@ -6,6 +6,7 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/elf.h>
+#include <proto/expansion.h>
 #include <proto/locale.h>
 #include <proto/timer.h>
 #include <proto/timezone.h>
@@ -81,22 +82,33 @@
 #include <sys/utsname.h>
 #include <sys/uio.h>
 
-#include "dos.h"
+#include "../dos.h"
 #include "c.lib_rev.h"
 
 #include "clib4.h"
-#include "debug.h"
 #include "uuid.h"
 
 #include "interface.h"
+#include "stdlib_protos.h"
 
-#ifndef _SOCKET_HEADERS_H
-#include "socket_headers.h"
-#endif /* _SOCKET_HEADERS_H */
+/* These CTORS/DTORS are clib4's one and they are different than that one received
+ * from crtbegin. They are needed because we need to call clib4 constructors as well
+ */
+static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
+static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
+
+/* This is variable defines where to start to bind unix local ports using inet addresses */
+struct UnixSocket {
+    int            port;
+    struct fd     *fd;
+    char           name[PATH_MAX];
+};
 
 #ifndef _STRING_HEADERS_H
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
+
+extern int __set_current_path(const char * path_name);
 
 struct ExecBase *SysBase = 0;
 struct ExecIFace *IExec = 0;
@@ -114,14 +126,34 @@ struct Library *__UtilityBase = 0;
 struct UtilityIFace *__IUtility = 0;
 
 struct Clib4IFace *IClib4 = 0;
+struct Clib4Library *Clib4Base = 0;
 
 const struct Resident RomTag;
 
 #define LIBPRI 0
 #define LIBNAME "clib4.library"
 
+#define ENVBUF 256
+#define ENVIRON_SIZE  4096
+
 static struct TimeRequest *openTimer(uint32 unit);
 static void closeTimer(struct TimeRequest *tr);
+static int32 getDebugLevel(struct ExecBase *sysbase);
+
+extern void reent_exit(struct _clib4 *__clib4);
+extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
+
+#if DEBUG == 1
+#undef D
+#define D(x) (x)
+#undef DebugPrintF
+#define bug IExec->DebugPrintF
+#else
+#   ifdef D
+#       undef D
+#   endif // D
+#define D(x) ;
+#endif // DEBUG
 
 int32
 _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
@@ -130,6 +162,175 @@ _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
     (void) (sysbase);
 
     return RETURN_FAIL;
+}
+
+struct envHookData {
+    uint32_t env_size;
+    uint32_t allocated_size;
+    struct _clib4 *r;
+};
+
+static char *empty_env[1] = {NULL};
+
+static void
+_start_ctors(void (*__CTOR_LIST__[])(void)) {
+    int i = 0;
+
+    while (__CTOR_LIST__[i + 1]) {
+        i++;
+    }
+    SHOWVALUE(i);
+    while (i > 0) {
+        D(("Calling ctor %ld", i));
+        __CTOR_LIST__[i--]();
+    }
+}
+
+static void
+_end_ctors(void (*__DTOR_LIST__[])(void)) {
+    int i = 1;
+
+    while (__DTOR_LIST__[i]) {
+        D(("Calling dtor %ld", i));
+        __DTOR_LIST__[i++]();
+    }
+}
+
+static uint32
+copyEnvironment(struct Hook *hook, struct envHookData *ehd, struct ScanVarsMsg *message) {
+    DECLARE_UTILITYBASE();
+
+    if (message == NULL || message->sv_Name == NULL || IUtility->Strlen(message->sv_Name) == 0) {
+        return 0;  // continue search
+    }
+
+    if (IUtility->Strlen(message->sv_GDir) <= 4) {
+        if (ehd->env_size == ehd->allocated_size) {
+            if (!(ehd->r->__environment = realloc(ehd->r->__environment, ehd->allocated_size + ENVIRON_SIZE))) {
+                return 1;
+            }
+            IUtility->ClearMem((char *)ehd->r->__environment + ehd->allocated_size, ENVIRON_SIZE);
+            ehd->allocated_size += ENVIRON_SIZE;
+        }
+        char **env = (char **) hook->h_Data;
+        uint32 size = IUtility->Strlen(message->sv_Name) + 1 + message->sv_VarLen + 1 + 1;
+        char *buffer = (char *) IExec->AllocVecPooled(ehd->r->__environment_pool, size);
+        if (buffer == NULL) {
+            return 1;
+        }
+
+        IUtility->SNPrintf(buffer, size - 1, "%s=%s", message->sv_Name, message->sv_Var);
+        SHOWMSG(buffer);
+        *env = buffer;
+        env++;
+        hook->h_Data = env;
+    }
+    return 0;
+}
+
+static void
+makeEnvironment(struct _clib4 *__clib4) {
+    char varbuf[8] = {0};
+    uint32 flags = 0;
+
+    ENTER();
+
+    if (IDOS->GetVar("EXEC_IMPORT_LOCAL", varbuf, sizeof(varbuf), GVF_LOCAL_ONLY) > 0) {
+        flags = GVF_LOCAL_ONLY;
+    }
+
+    __clib4->__environment = (char **) calloc(ENVIRON_SIZE, 1);
+    if (!__clib4->__environment)
+        return;
+
+    flags |= GVF_SCAN_TOPLEVEL;
+
+    __clib4->__environment_pool = IExec->AllocSysObjectTags(ASOT_MEMPOOL,
+                                                     ASOPOOL_Puddle,	ENVIRON_SIZE,
+                                                     ASOPOOL_Threshold,	ENVIRON_SIZE,
+                                                     TAG_DONE);
+    if (__clib4->__environment_pool) {
+        struct Hook *hook = IExec->AllocSysObjectTags(ASOT_HOOK,
+                                               ASOHOOK_Entry, copyEnvironment,
+                                               ASOHOOK_Data, __clib4->__environment,
+                                               TAG_DONE);
+        if (hook != NULL) {
+            struct envHookData ehd = {1, ENVIRON_SIZE,__clib4};
+            IDOS->ScanVars(hook, flags, &ehd);
+            IExec->FreeSysObject(ASOT_HOOK, hook);
+        }
+    } else {
+        /* Failed to allocate pool, cleanup */
+        free(__clib4->__environment);
+        __clib4->__environment = NULL;
+        LEAVE();
+        return;
+    }
+
+    __clib4->__environment_lock = __create_recursive_mutex();
+    LEAVE();
+}
+
+static void freeEnvironment(struct _clib4 *__clib4) {
+    if (__clib4->__environment_pool != NULL) {
+        IExec->FreeSysObject(ASOT_MEMPOOL, __clib4->__environment_pool);
+        __clib4->__environment_pool = NULL;
+    }
+    if (__clib4->__environment_lock != NULL) {
+        __delete_mutex(__clib4->__environment_lock);
+        __clib4->__environment_lock = NULL;
+    }
+    free(__clib4->__environment);
+    __clib4->__environment = NULL;
+}
+
+/* Try to find external CTOR/DTOR lists from the executable
+ * This allows automatic handling of C++ destructors for -nostartfiles executables
+ */
+static void
+find_external_ctors_dtors(struct _clib4 *__clib4) {
+    BPTR segment_list = IDOS->GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+    if (segment_list == BZERO) {
+        D(bug("find_external_ctors_dtors: GetProcSegList returned ZERO\n"));
+        return;
+    }
+
+    Elf32_Handle hSelf = NULL;
+    int ret = IDOS->GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
+    if (ret != 1 || hSelf == NULL) {
+        D(bug("find_external_ctors_dtors: Could not get ELF handle\n"));
+        return;
+    }
+
+    /* Try to find __DTOR_LIST__ symbol in the executable using SymbolQuery */
+    struct Elf32_SymbolQuery query;
+    
+    query.Flags = ELF32_SQ_BYNAME;
+    query.Name = "__DTOR_LIST__";
+    query.NameLength = 0;
+    query.Value = 0;
+    query.Found = FALSE;
+    
+    ULONG found = __IElf->SymbolQuery(hSelf, 1, &query);
+    
+    if (found > 0 && query.Found) {
+        __clib4->__external_dtors = (void (**)(void))query.Value;
+        __clib4->__external_dtors_called = FALSE;
+        D(bug("find_external_ctors_dtors: Found __DTOR_LIST__ at 0x%08lx\n", query.Value));
+    } else {
+        D(bug("find_external_ctors_dtors: __DTOR_LIST__ symbol not found\n"));
+        __clib4->__external_dtors = NULL;
+    }
+}
+
+/* Legacy function kept for compatibility but now does nothing
+ * Destructors are automatically discovered in libOpen()
+ */
+void
+__call_external_dtors(void (**__DTOR_LIST__)(void)) {
+    (void)__DTOR_LIST__;
+    /* This function is now a no-op since we auto-discover and call dtors in libClose() */
+    D(bug("__call_external_dtors: Called but ignored (auto-discovery enabled)\n"));
 }
 
 static void closeLibraries() {
@@ -169,27 +370,43 @@ static void closeLibraries() {
     }
 }
 
-struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
+struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
     if (version > VERSION) {
         return NULL;
     }
 
-    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
+    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
     if (!IClib4) {
-        D(("IClib4 is NULL. Get interface"));
+        D(bug("(libOpen) IClib4 is NULL. Get interface\n"));
         IClib4 = (struct Clib4IFace *) IExec->GetInterface((struct Library *) libBase, "main", 1, NULL);
-        D(("DropInterface"));
+        D(bug("(libOpen) DropInterface\n"));
         IExec->DropInterface((struct Interface *)IClib4);
     }
 
     ++libBase->libNode.lib_OpenCnt;
     libBase->libNode.lib_Flags &= ~LIBF_DELEXP;
 
+    DECLARE_UTILITYBASE();
+
+	struct Library *ExpansionBase = IExec->OpenLibrary("expansion.library", 53L);
+	if (ExpansionBase == NULL) {
+		SHOWMSG("Cannot open expansopn library!");
+		return NULL;
+	}
+
+	struct ExpansionIFace *IExpansion = (struct ExpansionIFace *) (IExec->GetInterface((struct Library *) ExpansionBase, "main", 1, NULL));
+	if (!IExpansion) {
+		SHOWMSG("Cannot obtain expansion interface!");
+		IExec->CloseLibrary(ExpansionBase);
+		ExpansionBase = NULL;
+		return NULL;
+	}
+
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
+    uint32 pid;
     if (res) {
         struct Clib4Node c2n;
-        char uuid[UUID4_LEN + 1] = {0};
-        uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
+        pid = IDOS->GetPID(0, GPID_PROCESS);
         uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
 
         uuid4_generate(c2n.uuid);
@@ -197,15 +414,18 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
         c2n.pPid = ppid;
         c2n.errNo = 0;
         c2n.undo = 0;
-        D(("c2n.pid = %ld", c2n.pid));
-        D(("c2n.pPid = %ld", c2n.pPid));
-        D(("c2n.uuid = %s", c2n.uuid));
+        /* Initialize processes hashmap */
+        c2n.spawnedProcesses = hashmap_new(sizeof(struct Clib4Children), 0, 0, 0, clib4IntHash, clib4ProcessCompare, NULL, NULL);
+        D(bug("(libOpen) c2n.pid = %ld\n", c2n.pid));
+        D(bug("(libOpen) c2n.pPid = %ld\n", c2n.pPid));
+        D(bug("(libOpen) c2n.uuid = %s\n", c2n.uuid));
         hashmap_set(res->children, &c2n);
 
+        D(bug("(libOpen) Enabling clib4 optimizations\n"));
         switch (res->cpufamily) {
 #ifdef __SPE__
             case CPUFAMILY_E500:
-                D(("Using SPE family functions"));
+                D(bug("(libOpen) Using SPE family functions\n"));
                 IClib4->setjmp = setjmp_spe;
                 IClib4->longjmp = longjmp_spe;
                 IClib4->_longjmp = _longjmp_spe;
@@ -219,7 +439,7 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
                 break;
 #endif
             case CPUFAMILY_4XX:
-                D(("Using 4XX family functions"));
+                D(bug("(libOpen) Using 4XX family functions\n"));
                 IClib4->strlen = __strlen440;
                 IClib4->strcpy = __strcpy440;
                 IClib4->strcmp = __strcmp440;
@@ -231,19 +451,138 @@ struct Clib4Base *libOpen(struct LibraryManagerInterface *Self, uint32 version) 
                 break;
             default:
                 if (res->altivec) {
-                    D(("Using Altivec setjmp family functions"));
+                    D(bug("(libOpen) Using Altivec family functions\n"));
                     IClib4->setjmp = setjmp_altivec;
                     IClib4->longjmp = longjmp_altivec;
                     IClib4->strcpy = vec_strcpy;
                     IClib4->memcmp = vec_memcmp;
                     IClib4->bzero = vec_bzero;
                     IClib4->bcopy = vec_bcopy;
-                }
-                else {
-                    D(("Using default family functions"));
+#ifdef SLOWER_ALTIVEC_FUNCTIONS
+                    IClib4->memchr = vec_memchr;
+                    IClib4->strchr = vec_strchr;
+#else
+                    IClib4->strchr = glibc_strchr; // glibc_strchr is faster than ppc one on qemu/G4
+#endif
+                } else {
+                    D(bug("(libOpen) Using default family functions\n"));
                 }
         }
+
+        /* Let's start.. */
+        /* If all libraries are opened correctly we can initialize clib4 reent structure */
+        D(("Initialize clib4 reent structure"));
+        /* Initialize global structure */
+        struct _clib4 * __clib4 = (struct _clib4 *) IExec->AllocVecTags(sizeof(struct _clib4),
+                                                 AVT_Type, MEMF_SHARED,
+                                                 AVT_ClearWithValue, 0,
+                                                 TAG_DONE);
+        if (__clib4 != NULL) {
+            SHOWMSG("Clib4 allocated");
+
+            char envbuf[ENVBUF + 1];
+            char term_buffer[FILENAME_MAX] = {0};
+            LONG len;
+            struct Process *me = (struct Process *) IExec->FindTask(NULL);
+
+            IUtility->ClearMem(envbuf, ENVBUF + 1);
+
+            SHOWMSG("Initialize reent");
+            reent_init(__clib4, FALSE);
+            SHOWMSG("reent initialized");
+            __clib4->processId = pid;
+
+            /* Set the current task pointer */
+            __clib4->self = me;
+            __clib4->uuid = c2n.uuid;
+
+			/* Get Actual Machine Type */
+			IExpansion->GetMachineInfoTags(GMIT_Machine, &__clib4->__machine_type, TAG_DONE);
+			D(bug("Using clib4 on machine type %ld", __clib4->__machine_type));
+            /* Set _clib4 pointer into process pr_UID
+             * This field is copied to any spawned process created by this exe and/or its children
+             */
+            me->pr_UID = (uint32) __clib4;
+            //SetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, __clib4, TAG_END);
+
+            /* Check if user has choosen a different memory allocator and this needs to be called before constructors
+             * sice malloc constructor will use __wof_mem_allocator_type field
+             */
+            SHOWMSG("Check for custom memory allocator");
+            if ((len = IDOS->GetVar("CLIB4_MEMORY_ALLOCATOR", envbuf, sizeof(envbuf), 0)) >= 0) {
+                if (!IUtility->Stricmp(envbuf, "1"))
+                    __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;
+                else if (!IUtility->Stricmp(envbuf, "2"))
+                    __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK;
+                else if (!IUtility->Stricmp(envbuf, "3"))
+                    __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_STRICT;
+                else if (!IUtility->Stricmp(envbuf, "4"))
+                    __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK_FAST;
+                // else leave the default one
+            }
+
+            /* After reent structure we can call clib4 constructors */
+            SHOWMSG("Calling clib4 ctors");
+            _start_ctors(__CTOR_LIST__);
+            SHOWMSG("Done. All constructors called");
+
+            /* Copy environment variables into clib4 reent structure */
+            SHOWMSG("Make environment");
+			makeEnvironment(__clib4);
+            if (!__clib4->__environment) {
+                __clib4->__environment = empty_env;
+                __clib4->__environment_allocated = FALSE;
+            }
+            else
+                __clib4->__environment_allocated = TRUE;
+
+            SHOWMSG("Check for custom TERM");
+            /* Set default terminal mode to "amiga-clib4" if not set.
+               It is safe to call setenv() since constructors are called
+            */
+            char *terminal = getenv("TERM");
+            if (terminal == NULL) {
+                IUtility->Strlcpy(term_buffer, "amiga-clib4", FILENAME_MAX);
+                setenv("TERM", term_buffer, true);
+            }
+
+            /* The following code will be executed if the program is to keep
+               running in the shell or was launched from Workbench. */
+            res->oldPriority = me->pr_Task.tc_Node.ln_Pri;
+
+            /* Change the task priority, if requested. */
+            if (-128 <= __clib4->__priority && __clib4->__priority <= 127)
+                IExec->SetTaskPri((struct Task *) me, __clib4->__priority);
+
+            /* Set __current_path_name to a valid value */
+            UBYTE current_dir_name[256] = {0};
+            if (IDOS->NameFromLock(me->pr_CurrentDir, (STRPTR) current_dir_name, sizeof(current_dir_name))) {
+                __set_current_path((const char *) current_dir_name);
+            }
+
+            ITimer->GetSysTime((struct TimeVal *) &__clib4->clock);
+
+            /* Try to find external CTOR/DTOR lists from the executable
+             * This is needed for -nostartfiles executables with C++ code
+             */
+            SHOWMSG("Looking for external destructors");
+            find_external_ctors_dtors(__clib4);
+
+            /* At this point exe is fully initialized */
+            __clib4->__fully_initialized = TRUE;
+            SHOWMSG("Library initialized");
+        }
     }
+	if (IExpansion != NULL) {
+  		IExec->DropInterface((struct Interface *) IExpansion);
+  		IExpansion = NULL;
+  	}
+
+	if (ExpansionBase != NULL) {
+		IExec->CloseLibrary(ExpansionBase);
+		ExpansionBase = NULL;
+	}
+
     return libBase;
 }
 
@@ -267,14 +606,14 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 
         hashmap_free(res->children);
         if (res->fallbackClib) {
-            reent_exit(res->fallbackClib, TRUE);
+            reent_exit(res->fallbackClib);
         }
 
         IExec->RemResource(res);
         IExec->FreeVec(res);
     }
 
-    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
+    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
     if (libBase->libNode.lib_OpenCnt) {
         libBase->libNode.lib_Flags |= LIBF_DELEXP;
         return result;
@@ -290,16 +629,70 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 }
 
 BPTR libClose(struct LibraryManagerInterface *Self) {
-    struct Clib4Base *libBase = (struct Clib4Base *) Self->Data.LibBase;
-
+    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
         size_t iter = 0;
+        struct Process *me = (struct Process *) IExec->FindTask(NULL);
         void *item;
+
+        struct _clib4 * __clib4 = (struct _clib4 *) me->pr_UID;
+        
+        struct Task *t = IExec->FindTask(NULL);
+        D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
+
+        /* Call external destructors only for -nostartfiles executables
+         * Detection: call_main() sets __call_main_executed to TRUE for normal executables
+         * For -nostartfiles executables, this flag remains FALSE and we need to call destructors here
+         */
+        if (!__clib4->__call_main_executed && __clib4->__external_dtors != NULL && !__clib4->__external_dtors_called) {
+            SHOWMSG("Calling external dtors (auto-discovered from -nostartfiles exe)");
+            _end_ctors(__clib4->__external_dtors);
+            __clib4->__external_dtors_called = TRUE;
+            SHOWMSG("Done. All external destructors called");
+            
+            /* Also call clib4 internal destructors for -nostartfiles exe
+             * For normal executables, these are already called in call_main()
+             */
+            SHOWMSG("Calling clib4 dtors for -nostartfiles exe");
+            _end_ctors(__DTOR_LIST__);
+            SHOWMSG("Done. All clib4 destructors called");
+        }
+        /* else: Normal executable using library_start() - destructors already called in call_main() */
+
+        /* Now safe to restore task priority and deallocate resources */
+        /* Restore the task priority. */
+        IExec->SetTaskPri((struct Task *) me, res->oldPriority);
+
+        /* Free environment memory */
+        if (__clib4->__environment_allocated) {
+            SHOWMSG("Clearing Environment");
+            freeEnvironment(__clib4);
+        }
+
+        /* Check for getrandom fd */
+        if (__clib4->randfd[0] >= 0) {
+            SHOWMSG("Closing randfd[0]");
+            close(__clib4->randfd[0]);
+        }
+
+        if (__clib4->randfd[1] >= 0) {
+            SHOWMSG("Closing randfd[1]");
+            close(__clib4->randfd[1]);
+        }
+
+        SHOWMSG("Calling reent_exit on _clib4");
+        reent_exit(__clib4);
+        SHOWMSG("Done");
+
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
             if (node->pid == pid) {
+                /* Remove spawnedProcess hashmap */
+                if (node->spawnedProcesses != NULL) {
+                    hashmap_free(node->spawnedProcesses);
+                }
                 if (node->undo)
                     IExec->FreeVec(node->undo);
                 hashmap_delete(res->children, node);
@@ -379,6 +772,12 @@ unixSocketCompare(const void *a, const void *b, void *udata) {
 }
 
 uint64_t
+clib4IntHash(const void *item, uint64_t seed0, uint64_t seed1) {
+    return hashmap_xxhash3(item, sizeof(int), seed0, seed1);
+}
+
+
+uint64_t
 clib4NodeHash(const void *item, uint64_t seed0, uint64_t seed1) {
     const struct Clib4Node *node = item;
     return hashmap_xxhash3(node->uuid, strlen(node->uuid), seed0, seed1);
@@ -388,17 +787,24 @@ int
 clib4NodeCompare(const void *a, const void *b, void *udata) {
     const struct Clib4Node *ua = a;
     const struct Clib4Node *ub = b;
-    return ua->uuid == ub->uuid;
+    return strcmp(ua->uuid, ub->uuid);
 }
 
-struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIFace *const iexec) {
+int
+clib4ProcessCompare(const void *a, const void *b, void *udata) {
+    const struct Clib4Children *ua = a;
+    const struct Clib4Children *ub = b;
+    return ua->pid - ub->pid;
+}
+
+struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct ExecIFace *const iexec) {
     libBase->libNode.lib_Node.ln_Type = NT_LIBRARY;
     libBase->libNode.lib_Node.ln_Pri = LIBPRI;
-    libBase->libNode.lib_Node.ln_Name = LIBNAME;
+    libBase->libNode.lib_Node.ln_Name = (char *)LIBNAME;
     libBase->libNode.lib_Flags = LIBF_SUMUSED | LIBF_CHANGED;
     libBase->libNode.lib_Version = VERSION;
     libBase->libNode.lib_Revision = REVISION;
-    libBase->libNode.lib_IdString = VSTRING;
+    libBase->libNode.lib_IdString = (char *)VSTRING;
     libBase->SegList = seglist;
 
     SysBase = (struct ExecBase *) iexec->Data.LibBase;
@@ -467,17 +873,23 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
             res->resource.lib_Node.ln_Type = NT_RESOURCE;
 
             iexec->InitSemaphore(&res->semaphore);
+            res->debugLevel = getDebugLevel(SysBase);
+            D(bug("(libInit) Current Exec debug level: %ld\n", res->debugLevel));
+            /* Initialize clib4 children hashmap */
             res->children = hashmap_new(sizeof(struct Clib4Node), 0, 0, 0, clib4NodeHash, clib4NodeCompare, NULL, NULL);
             /* Initialize unix sockets hashmap */
-            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL,
-                                            NULL);
+            res->uxSocketsMap = hashmap_new(sizeof(struct UnixSocket), 0, 0, 0, unixSocketHash, unixSocketCompare, NULL, NULL);
+
             /* Initialize fallback clib4 reent structure */
             res->fallbackClib = (struct _clib4 *) iexec->AllocVecTags(sizeof(struct _clib4),
                                                                       AVT_Type, MEMF_SHARED,
                                                                       AVT_ClearWithValue, 0,
                                                                       TAG_DONE);
-            reent_init(res->fallbackClib);
+            reent_init(res->fallbackClib, TRUE);
+            res->fallbackClib->self = (struct Process *) IExec->FindTask(NULL);
             res->fallbackClib->__check_abort_enabled = TRUE;
+            res->fallbackClib->__fully_initialized = TRUE;
+            ITimer->GetSysTime((struct TimeVal *) &res->fallbackClib->clock);
 
             /* Init SYSV structures */
             IPCMapInit(&res->shmcx.keymap);
@@ -499,9 +911,11 @@ struct Clib4Base *libInit(struct Clib4Base *libBase, BPTR seglist, struct ExecIF
         }
     }
 
+    Clib4Base = libBase;
+
     return libBase;
 
-    out:
+out:
     /* if we jump in out we need to close all libraries and return NULL */
     closeLibraries();
 
@@ -549,7 +963,7 @@ static uint32 libInterfaces[] = {
 
 /* CreateLibrary tag list */
 static struct TagItem libCreateTags[] = {
-        {CLT_DataSize,   (uint32)(sizeof(struct Clib4Base))},
+        {CLT_DataSize,   (uint32)(sizeof(struct Clib4Library))},
         {CLT_Interfaces, (uint32) libInterfaces},
         {CLT_InitFunc,   (uint32) libInit},
         {TAG_DONE,       0}
@@ -571,16 +985,30 @@ const struct Resident __attribute__((used)) RomTag = {
 int
 library_start(char *argstr,
               int arglen,
-              int (*start_main)(int, char **),
+              int (*start_main)(int, char **, char **),
               void (*__EXT_CTOR_LIST__[])(void),
-              void (*__EXT_DTOR_LIST__[])(void)) {
+              void (*__EXT_DTOR_LIST__[])(void),
+              struct WBStartup *sms) {
 
-    int result = _main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__);
+    int result = _main(argstr, arglen, start_main, __EXT_CTOR_LIST__, __EXT_DTOR_LIST__, sms);
 
     return result;
 }
 
 /************** STATIC FUNCTIONS ***********************/
+static int32 getDebugLevel(struct ExecBase *sysbase) {
+    struct ExecIFace *iexec = (APTR) sysbase->MainInterface;
+    int32  debugLevel = 0;
+
+    struct DebugIFace *idebug = (struct DebugIFace *) iexec->GetInterface(&sysbase->LibNode, "debug", 1, NULL);
+
+    if (idebug) {
+        debugLevel = idebug->GetDebugLevel();
+        iexec->DropInterface((struct Interface *) idebug);
+    }
+    return debugLevel;
+}
+
 static struct TimeRequest *openTimer(uint32 unit) {
     struct MsgPort *mp;
     struct TimeRequest *tr;

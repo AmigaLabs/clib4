@@ -18,11 +18,11 @@ __timezone_exit(void) {
     __timezone_lock();
 
     if (__clib4->__TimezoneBase != NULL) {
-        DECLARE_TIMEZONEBASE();
+        DECLARE_TIMEZONEBASE_R(__clib4);
 
         if (__clib4->__dyntz == TRUE) {
-            if (__clib4->__tzname[0]) FreeVec(__clib4->__tzname[0]);
-            if (__clib4->__tzname[1]) FreeVec(__clib4->__tzname[1]);
+            if (__clib4->__tzname[0]) free(__clib4->__tzname[0]);
+            if (__clib4->__tzname[1]) free(__clib4->__tzname[1]);
             __clib4->__tzname[0] = NULL;
             __clib4->__tzname[1] = NULL;
             __clib4->__dyntz = FALSE;
@@ -52,6 +52,7 @@ __timezone_init(void) {
     __timezone_lock();
 
     if (__clib4->__TimezoneBase == NULL) {
+        SHOWMSG("Opening timezone.library");
         __clib4->__TimezoneBase = OpenLibrary("timezone.library", 52);
 
         if (__clib4->__TimezoneBase != NULL) {
@@ -59,18 +60,24 @@ __timezone_init(void) {
             if (__clib4->__ITimezone == NULL) {
                 CloseLibrary(__clib4->__TimezoneBase);
                 __clib4->__TimezoneBase = NULL;
+                SHOWMSG("Cannot get timezone interface");
+                goto out;
             }
+        }
+        else {
+            SHOWMSG("Fail to open timezone.library");
+            goto out;
         }
     }
 
     if (__clib4->__TimezoneBase != NULL) {
-        DECLARE_TIMEZONEBASE();
+        DECLARE_TIMEZONEBASE_R(__clib4);
 
         // Set global timezone variable
         uint32 gmtoffset = 0;
         int8 dstime = -1;
-        __clib4->__tzname[0] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
-        __clib4->__tzname[1] = AllocVecTags(MAX_TZSIZE + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_END);
+        __clib4->__tzname[0] = malloc(MAX_TZSIZE + 1);
+        __clib4->__tzname[1] = malloc(MAX_TZSIZE + 1);
         __clib4->__dyntz = TRUE;
 
         GetTimezoneAttrs(NULL,
@@ -82,8 +89,6 @@ __timezone_init(void) {
 
         __clib4->__timezone = 60 * gmtoffset;
         __clib4->__daylight = dstime & TFLG_ISDST;
-
-        result = OK;
     } else {
         /* default values */
         __clib4->__timezone = 0;
@@ -91,8 +96,11 @@ __timezone_init(void) {
         __clib4->__tzname[0] = (char *) "GMT";
         __clib4->__tzname[1] = (char *) "AMT";
         __clib4->__dyntz = FALSE;
+
     }
 
+    result = OK;
+out:
     __timezone_unlock();
 
     RETURN(result);
@@ -137,9 +145,7 @@ CLIB_CONSTRUCTOR(timezone_init) {
     if (__clib4->timezone_lock == NULL)
         goto out;
 
-    __timezone_init();
-
-    success = TRUE;
+    success = (__timezone_init() == OK);
 
 out:
 

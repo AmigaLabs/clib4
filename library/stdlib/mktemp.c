@@ -7,7 +7,7 @@
 #endif /* _STDLIB_HEADERS_H */
 
 #include <time.h>
-#include "../include/dos.h"
+#include "../dos.h"
 
 char *
 mktemp(char *name_template) {
@@ -20,7 +20,7 @@ mktemp(char *name_template) {
     size_t template_len;
     size_t name_len;
     size_t offset;
-    time_t now;
+    time_t now = 0;
     ULONG pseudo_random_number;
     BPTR lock;
     size_t i;
@@ -41,7 +41,7 @@ mktemp(char *name_template) {
         goto out;
     }
 
-    this_process = (struct Process *) FindTask(NULL);
+    this_process = __clib4->self;
 
     SHOWSTRING(name_template);
 

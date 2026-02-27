@@ -105,12 +105,18 @@ struct UnixSocket {
 	struct Library   UNUSED	*SocketBase  = __CLIB4->__SocketBase; \
 	struct SocketIFace 		*ISocket	 = __CLIB4->__ISocket
 
+#define DECLARE_SOCKETBASE_R(clib4) \
+	struct Library   UNUSED	*SocketBase  = clib4->__SocketBase; \
+	struct SocketIFace 		*ISocket	 = clib4->__ISocket
+
 extern int h_errno;
 
-extern struct fd * __get_file_descriptor_socket(int socket_descriptor);
+extern struct fd * __get_file_descriptor_socket(struct _clib4 *__clib4, int socket_descriptor);
 extern int64_t __socket_hook_entry(struct _clib4 *__clib4, struct fd * fd,struct file_action_message * fam);
 extern void __set_h_errno(int new_h_errno);
+extern void __set_h_errno_r(struct _clib4 *__clib4, int new_h_errno);
 extern int __select(int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *except_fds,struct timeval *timeout,ULONG * signal_mask_ptr);
+extern int __send_r(struct _clib4 *__clib4, int sockfd, const void *buff, size_t nbytes, int flags);
 
 #include <interfaces/bsdsocket.h>
 
@@ -145,12 +151,12 @@ extern int __select(int num_fds,fd_set *read_fds,fd_set *write_fds,fd_set *excep
 //#define __Inet_NetOf(in) __CLIB4->__ISocket->Inet_NetOf(in)
 //#define __Inet_MakeAddr(net, host) __CLIB4->__ISocket->Inet_MakeAddr(net , host)
 //#define __inet_network(cp) __CLIB4->__ISocket->inet_network(cp)
-//#define __gethostbyname(name) __CLIB4->__ISocket->gethostbyname(name)
+#define __gethostbyname(name) __CLIB4->__ISocket->gethostbyname(name)
 //#define __gethostbyaddr(addr, len, type) __CLIB4->__ISocket->gethostbyaddr(addr , len , type)
 #define __getnetbyname(name) __CLIB4->__ISocket->getnetbyname(name)
 #define __getnetbyaddr(net, type) __CLIB4->__ISocket->getnetbyaddr(net , type)
-//#define __getservbyname(name, proto) __CLIB4->__ISocket->getservbyname(name , proto)
-//#define __getservbyport(port, proto) __CLIB4->__ISocket->getservbyport(port , proto)
+#define __getservbyname(name, proto) __CLIB4->__ISocket->getservbyname(name , proto)
+#define __getservbyport(port, proto) __CLIB4->__ISocket->getservbyport(port , proto)
 #define __getprotobyname(name) __CLIB4->__ISocket->getprotobyname(name)
 #define __getprotobynumber(proto) __CLIB4->__ISocket->getprotobynumber(proto)
 #define __vsyslog(pri, msg, args) __CLIB4->__ISocket->vsyslog(pri , msg , args)

@@ -30,12 +30,12 @@ stat(const char *path_name, struct stat *st) {
 
     assert(path_name != NULL && st != NULL);
 
-    __check_abort();
+    __check_abort_f(__clib4);
 
     if (path_name == NULL || st == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -43,7 +43,7 @@ stat(const char *path_name, struct stat *st) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
-            __set_errno(ENOENT);
+            __set_errno_r(__clib4, ENOENT);
             goto out;
         }
 
@@ -84,7 +84,7 @@ stat(const char *path_name, struct stat *st) {
     if (file_lock == BZERO) {
         SHOWMSG("that didn't work");
 
-        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_access_io_error_to_errno(IoErr()));
         goto out;
     }
 
@@ -92,7 +92,7 @@ stat(const char *path_name, struct stat *st) {
     if (fib == NULL) {
         SHOWMSG("couldn't examine it");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 

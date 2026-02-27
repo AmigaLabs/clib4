@@ -29,6 +29,9 @@
 	struct Library   UNUSED	*UserGroupBase  = __CLIB4->__UserGroupBase; \
 	struct UserGroupIFace 	*IUserGroup	    = __CLIB4->__IUserGroup
 
+#define DECLARE_USERGROUPBASE_R(clib4) \
+	struct Library   UNUSED	*UserGroupBase  = clib4->__UserGroupBase; \
+	struct UserGroupIFace 	*IUserGroup	    = clib4->__IUserGroup
 
 #ifndef _PATH_USERS
 #define _PATH_USERS  "Devs:Internet/users"

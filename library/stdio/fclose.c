@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fclose.c,v 1.12 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_fclose.c,v 1.13 2024-07-20 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -22,10 +22,6 @@ fclose(FILE *stream) {
     SHOWPOINTER(stream);
 
     assert(stream != NULL);
-
-    DECLARE_UTILITYBASE();
-
-    __check_abort_f(__clib4);
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
@@ -82,13 +78,16 @@ fclose(FILE *stream) {
 
         UnLock(file->iob_TempFileLock);
 
-        free(file->iob_TempFileName);
+        __free_r(__clib4, file->iob_TempFileName);
     }
 
     /* Get rid of any custom file buffer allocated. */
     if (file->iob_CustomBuffer != NULL) {
         SHOWMSG("Delete allocated buffer");
-        FreeVec(file->iob_CustomBuffer);
+        if (file->iob_isVBuffer)
+            FreeVec(file->iob_CustomBuffer);
+        else
+            free(file->iob_CustomBuffer);
         file->iob_CustomBuffer = NULL;
     }
 

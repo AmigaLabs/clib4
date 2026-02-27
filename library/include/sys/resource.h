@@ -68,9 +68,19 @@ struct rusage
 #define RUSAGE_BOTH     (-2) /* sys_wait4() uses this */
 #define RUSAGE_THREAD   1    /* only the calling thread */
 
+#define PRIO_MIN (-127)
+#define PRIO_MAX 127
+
+#define PRIO_PROCESS 0
+#define PRIO_PGRP    1
+#define PRIO_USER    2
+
 extern int getrlimit(int resource, struct rlimit *rlp);
 extern int setrlimit(int resource, const struct rlimit *rlp);
 extern int getrusage(int who, struct rusage *usage);
+
+extern int getpriority (int which, unsigned int who);
+extern int setpriority (int which, unsigned int who, int priority);
 
 __END_DECLS
 

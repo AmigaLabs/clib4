@@ -24,9 +24,9 @@
 char *
 nl_langinfo(nl_item item) {
     ENTER();
-    DECLARE_LOCALEBASE();
-    DECLARE_FONTBASE();
     struct _clib4 *__clib4 = __CLIB4;
+    DECLARE_LOCALEBASE_R(__clib4);
+    DECLARE_FONTBASE_R(__clib4);
 
     const char *ret = NULL;
     char *cs;

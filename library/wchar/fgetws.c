@@ -1,5 +1,5 @@
 /*
- * $Id: wchar_fgetws.c,v 1.3 2006-01-08 12:04:27 clib4devs Exp $
+ * $Id: wchar_fgetws.c,v 1.4 2024-07-20 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -15,21 +15,24 @@ fgetws(wchar_t *s, int n, FILE *f) {
     register wchar_t *p = s;
     register wchar_t *e = s + n - 1;
     register wint_t c;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
     if (n <= 0) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
+
+        RETURN(NULL);
         return NULL;
     }
 
     ORIENT(f, 0);
-    flockfile(f);
+    __flockfile_r(__clib4, f);
 
     while (p < e && (c = fgetwc(f)) != WEOF && (*p++ = c) != '\n');
     *p = 0;
 
-    funlockfile(f);
+    __funlockfile_r(__clib4, f);
 
     return s;
 }

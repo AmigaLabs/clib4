@@ -494,9 +494,9 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
 
 size_t
 strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
-    DECLARE_LOCALEBASE();
     size_t result = 0;
     struct _clib4 *__clib4 = __CLIB4;
+    DECLARE_LOCALEBASE_R(__clib4);
 
     ENTER();
 
@@ -511,7 +511,7 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *tm) {
     if (s == NULL || format == NULL || tm == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 

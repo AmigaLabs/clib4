@@ -13,7 +13,7 @@
 /* Construct/Destroy queues */
 static void *msg_construct(int key, int flags) {
     struct msqid_ds *qi;
-    qi = AllocVecTags(sizeof(struct msqid_ds), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    qi = calloc(1, sizeof(struct msqid_ds));
     if (qi) {
         qi->msg_perm.mode = flags & 0777;
         qi->msg_perm.key = key;
@@ -27,7 +27,7 @@ static void *msg_construct(int key, int flags) {
         qi->WList = AllocSysObjectTags(ASOT_LIST, ASOLIST_Min, TRUE, TAG_DONE);
         qi->RList = AllocSysObjectTags(ASOT_LIST, ASOLIST_Min, TRUE, TAG_DONE);
     }
-    return (qi);
+    return qi;
 }
 
 int

@@ -65,7 +65,7 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
             /* If this is an alias, just remove it. */
             is_aliased = __fd_is_aliased(fd);
             if (is_aliased) {
-                __remove_fd_alias(fd);
+                __remove_fd_alias(__clib4, fd);
             } else {
                 /* Are we permitted to close this file? */
                 if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
@@ -88,9 +88,9 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
             }
             __fd_unlock(fd);
 
-            /* Free the lock semaphore now. */
+            /* Free the locked mutex now. */
             if (NOT is_aliased)
-                __delete_semaphore(fd->fd_Lock);
+                __delete_mutex(fd->fd_Lock);
 
             /* And that's the last for this file descriptor. */
             memset(fd, 0, sizeof(*fd));
@@ -117,6 +117,11 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
             break;
         case file_action_examine:
             SHOWMSG("file_action_examine");
+
+            /* Create an empty examineData struct */
+            struct ExamineData *examineData = __malloc_r(__clib4, sizeof(struct ExamineData));
+            fam->fam_FileInfo = examineData;
+
             fib = fam->fam_FileInfo;
             memset(fib, 0, sizeof(*fib));
             fib->Type = ST_SOCKET;

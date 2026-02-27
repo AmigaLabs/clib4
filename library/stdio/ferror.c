@@ -10,9 +10,15 @@
 
 int
 ferror(FILE *stream) {
-    struct iob *file = (struct iob *) stream;
-    int result;
     struct _clib4 *__clib4 = __CLIB4;
+
+    return __ferror_r(__clib4, stream, TRUE);
+}
+
+int
+__ferror_r(struct _clib4 *__clib4, FILE *stream, BOOL lock) {
+    struct iob *file = (struct iob *) stream;
+    int result, locked = ERROR;
 
     ENTER();
 
@@ -22,21 +28,20 @@ ferror(FILE *stream) {
 
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
-
-        __set_errno(EFAULT);
-
+        __set_errno_r(__clib4, EFAULT);
         result = 0;
-
         goto out;
     }
 
     assert(__is_valid_iob(__clib4, file));
 
-    flockfile(stream);
+    if (lock)
+        locked = __ftrylockfile_r(__clib4, stream);
 
     result = FLAG_IS_SET(file->iob_Flags, IOBF_ERROR);
 
-    funlockfile(stream);
+    if (locked == OK)
+        __funlockfile_r(__clib4, stream);
 
 out:
 

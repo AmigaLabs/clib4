@@ -64,8 +64,7 @@ walk(const char *path, int (*func)(const char *, const struct stat *, int), int 
 
         old_length = strlen(path);
 
-        next_name = malloc(old_length + NAME_MAX +
-                           2); /* Allocate new for each recursive step to handle extremely long path names. */
+        next_name = malloc(old_length + NAME_MAX + 2); /* Allocate new for each recursive step to handle extremely long path names. */
         if (next_name == NULL) {
             __set_errno(ENOMEM);
 

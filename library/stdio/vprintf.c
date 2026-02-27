@@ -9,6 +9,7 @@
 int
 vprintf(const char *format, va_list arg) {
     int result = EOF;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -18,11 +19,11 @@ vprintf(const char *format, va_list arg) {
     assert(format != NULL && arg != NULL);
 
     if (format == NULL || arg == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
-    result = vfprintf(stdout, format, arg);
+    result = __vfprintf_r(__clib4, __stdout_r(__clib4), format, arg);
 
 out:
 

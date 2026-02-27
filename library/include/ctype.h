@@ -6,6 +6,7 @@
 #define _CTYPE_H
 
 #include <features.h>
+#include <locale.h>
 
 __BEGIN_DECLS
 
@@ -26,40 +27,43 @@ extern int toupper(int c);
 extern int isblank(int c);
 extern int isascii(int c);
 extern int toascii(int c);
-/****************************************************************************/
 
-/*
- * If requested, reimplement the character classification functions as macros;
- * note that the macro variants ignore the current locale and default to the
- * 'C' locale rules.
- */
+#undef _P
+
+#define	_U	01
+#define	_L	02
+#define	_N	04
+#define	_S	010
+#define _P	020
+#define _C	040
+#define _X	0100
+#define	_B	0200
+
+extern const char *__ctype_ptr;
+extern const char _ctype_[];  /* For backward compatibility.  */
 
 #ifndef __cplusplus
 
-#define __CTYPE_CONTROL		0x01	/* This is a control character */
-#define __CTYPE_DIGIT		0x02	/* This is a 'decimal' digit */
-#define __CTYPE_HEX_DIGIT	0x04	/* This is a hexadecimal digit */
-#define __CTYPE_PUNCTUATION	0x08	/* This is a punctuation character */
-#define __CTYPE_PRINTABLE	0x10	/* This is a printable character */
-#define __CTYPE_WHITE_SPACE	0x20	/* This is a blank space character */
-#define __CTYPE_LOWER_CASE	0x40	/* This is a lower case letter */
-#define __CTYPE_UPPER_CASE	0x80	/* This is an upper case letter */
+#define	isalpha(c)	((__ctype_ptr)[(unsigned)(c)]&(_U|_L))
+#define	isupper(c)	((__ctype_ptr)[(unsigned)(c)]&_U)
+#define	islower(c)	((__ctype_ptr)[(unsigned)(c)]&_L)
+#define	isdigit(c)	((__ctype_ptr)[(unsigned)(c)]&_N)
+#define	isxdigit(c)	((__ctype_ptr)[(unsigned)(c)]&(_X|_N))
+#define	isspace(c)	((__ctype_ptr)[(unsigned)(c)]&_S)
+#define ispunct(c)	((__ctype_ptr)[(unsigned)(c)]&_P)
+#define isalnum(c)	((__ctype_ptr)[(unsigned)(c)]&(_U|_L|_N))
+#define isprint(c)	((__ctype_ptr)[(unsigned)(c)]&(_P|_U|_L|_N|_B))
+#define	isgraph(c)	((__ctype_ptr)[(unsigned)(c)]&(_P|_U|_L|_N))
+#define iscntrl(c)	((__ctype_ptr)[(unsigned)(c)]&_C)
 
-/****************************************************************************/
+#ifdef __GNUC__
+# define toupper(c) \
+	__extension__ ({ int __x = (c); islower(__x) ? (__x - 'a' + 'A') : __x;})
+# define tolower(c) \
+	__extension__ ({ int __x = (c); isupper(__x) ? (__x - 'A' + 'a') : __x;})
+#endif /* !__GNUC__ */
 
-static __inline int __isspace(int _c) {
-    return _c == ' ' || (unsigned)_c-'\t' < 5;
-}
-
-#define isalpha(a) (0 ? isalpha(a) : (((unsigned)(a)|32)-'a') < 26)
-#define isdigit(a) (0 ? isdigit(a) : ((unsigned)(a)-'0') < 10)
-#define islower(a) (0 ? islower(a) : ((unsigned)(a)-'a') < 26)
-#define isupper(a) (0 ? isupper(a) : ((unsigned)(a)-'A') < 26)
-#define isprint(a) (0 ? isprint(a) : ((unsigned)(a)-0x20) < 0x5f)
-#define isgraph(a) (0 ? isgraph(a) : ((unsigned)(a)-0x21) < 0x5e)
-#define isspace(a) __isspace(a)
-
-#endif /* __cplusplus */
+#endif /* !__cplusplus */
 
 __END_DECLS
 

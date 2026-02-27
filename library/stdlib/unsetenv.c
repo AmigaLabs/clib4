@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_unsetenv.c,v 1.10 2008-04-30 16:32:49 clib4devs Exp $
+ * $Id: stdlib_unsetenv.c,v 1.11 2024-07-22 16:32:49 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -16,46 +16,28 @@
 
 int
 unsetenv(const char *name) {
-    char *name_copy = NULL;
     int result = -1;
-    LONG status;
-    size_t i;
-
-    __check_abort();
+    struct _clib4 *__clib4 = __CLIB4;
 
     assert(name != NULL);
 
     if (name == NULL) {
-        __set_errno(EFAULT);
-        goto out;
+        __set_errno_r(__clib4, EFAULT);
+        return result;
     }
 
-    for (i = 0; i < strlen(name); i++) {
-        if (name[i] == '=') {
-            name_copy = malloc(i + 1);
-            if (name_copy == NULL)
-                goto out;
+    register char **P;
+    int offset;
+    char ***p_environ = &environ;
 
-            memmove(name_copy, name, i);
-            name_copy[i] = '\0';
+    MutexObtain(__clib4->__environment_lock);
 
-            name = name_copy;
-            break;
-        }
-    }
+    while (getenv_r(__clib4, name, &offset)) /* if set multiple times */
+        for (P = &(*p_environ)[offset];; ++P)
+            if (!(*P = *(P + 1)))
+                break;
 
-    status = DeleteVar((STRPTR) name, 0);
-    if (status == DOSFALSE) {
-        __set_errno(__translate_access_io_error_to_errno(IoErr()));
-        goto out;
-    }
+    MutexRelease(__clib4->__environment_lock);
 
-    result = 0;
-
-out:
-
-    if (name_copy != NULL)
-        free(name_copy);
-
-    return (result);
+    return result;
 }

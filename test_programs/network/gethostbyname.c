@@ -1,33 +1,36 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <errno.h>
+#define _GNU_SOURCE
 #include <netdb.h>
 #include <stdlib.h>
 
-int main()
-{
+int main(int argc, char *argv[]) {
     int i;
     struct hostent *he;
     struct in_addr **addr_list;
     struct in_addr addr;
 
+    if (argc != 2) {
+        fprintf(stderr, "usage: %s hostname\n", argv[0]);
+        return 1;
+    }
     // get the addresses of www.yahoo.com:
 
-    he = gethostbyname("www.yahoo.com");
-    if (he == NULL)
-    {                              // do some error checking
-        printf("gethostbyname\n"); // herror(), NOT perror()
+    he = gethostbyname(argv[1]);
+    if (he == NULL) {                    // do some error checking
+        printf("gethostbyname error %s\n", hstrerror(h_errno)); // herror(), NOT perror()
         exit(1);
     }
 
     // print information about this host:
     printf("Official name is: %s\n", he->h_name);
-    const char *ipaddr = inet_ntoa(*(struct in_addr *)he->h_addr);
+    const char *ipaddr = inet_ntoa(*(struct in_addr *) he->h_addr);
     printf("IP address: %s\n", ipaddr);
     printf("All addresses: ");
-    addr_list = (struct in_addr **)he->h_addr_list;
-    for (i = 0; addr_list[i] != NULL; i++)
-    {
+    addr_list = (struct in_addr **) he->h_addr_list;
+    for (i = 0; addr_list[i] != NULL; i++) {
         printf("%s ", inet_ntoa(*addr_list[i]));
     }
     printf("\n");

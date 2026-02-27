@@ -16,6 +16,7 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
     struct fd *fd = NULL;
     LONG success;
     struct _clib4 *__clib4 = __CLIB4;
+    BOOL isFdLocked = FALSE;
 
     ENTER();
 
@@ -31,13 +32,14 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
     }
 
     __fd_lock(fd);
+    isFdLocked = TRUE;
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
         __set_errno(EINVAL);
@@ -50,7 +52,7 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
     }
 
     fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
-    success = (fib != NULL && (parent_dir = __safe_parent_of_file_handle(fd->fd_File)) != BZERO);
+    success = (fib != NULL && (parent_dir = ParentOfFH(fd->fd_File)) != BZERO);
     if (NO success) {
         SHOWMSG("couldn't find parent directory");
 
@@ -99,7 +101,8 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
 
 out:
 
-    __fd_unlock(fd);
+    if (isFdLocked)
+        __fd_unlock(fd);
 
     UnLock(parent_dir);
 

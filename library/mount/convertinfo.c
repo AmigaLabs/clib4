@@ -154,11 +154,11 @@ __convert_info_to_statvfs(struct InfoData *id, struct statvfs *f) {
     memset(f, 0, sizeof(*f));
 
     f->f_bsize = id->id_BytesPerBlock;
-    f->f_blocks = id->id_NumBlocks ;
+    f->f_blocks = id->id_NumBlocks;
     f->f_bfree = id->id_NumBlocks - id->id_NumBlocksUsed;
     f->f_bavail = f->f_bfree;
     f->f_frsize = f->f_bsize;
-    f->f_ffree = LONG_MAX;
+    f->f_ffree = 0;
     f->f_fsid = id->id_VolumeNode;
     f->f_flag = 0;
 

@@ -9,6 +9,7 @@
 int
 usleep(unsigned long microseconds) {
     int result;
+	struct _clib4 *__clib4 = __CLIB4;
     ENTER();
 
     SHOWVALUE(microseconds);
@@ -18,10 +19,13 @@ usleep(unsigned long microseconds) {
     tv.tv_usec = microseconds;
 
     result = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
-    if (result == EINTR) {
-        /* If a timer has been interrupted by a SIGALRM do we have to exit like on Linux? */
-        _exit(RETURN_ERROR);
-    }
+
+	if (result != OK) {
+		__set_errno_r(__clib4, result);
+		result = -1;
+	}
+
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return result;

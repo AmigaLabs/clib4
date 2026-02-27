@@ -28,7 +28,7 @@ lseek(int file_descriptor, off_t offset, int mode) {
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -39,6 +39,7 @@ lseek(int file_descriptor, off_t offset, int mode) {
     if (mode < SEEK_SET || mode > SEEK_END) {
         SHOWMSG("seek mode is invalid");
 
+        __fd_unlock(fd);
         __set_errno(EINVAL);
         goto out;
     }
@@ -56,6 +57,7 @@ lseek(int file_descriptor, off_t offset, int mode) {
        an error indication. */
     position = (*fd->fd_Action)(__clib4, fd, &fam);
     if (position == CHANGE_FILE_ERROR && fam.fam_Error != OK) {
+        __fd_unlock(fd);
         __set_errno(fam.fam_Error);
         goto out;
     }
@@ -67,9 +69,9 @@ lseek(int file_descriptor, off_t offset, int mode) {
 
     result = position;
 
-out:
-
     __fd_unlock(fd);
+
+out:
 
     __stdio_unlock(__clib4);
 

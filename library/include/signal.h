@@ -68,6 +68,9 @@ typedef int sig_atomic_t;
 #ifndef _SYS_TYPES_H
 #include <sys/types.h>
 #endif /* _SYS_TYPES_H */
+#ifndef _TIME_H
+#include <time.h>
+#endif /* _TIME_H */
 
 typedef void (*sig_t)(int);
 
@@ -83,11 +86,15 @@ extern int sigmask(int signum);
 extern int sigblock(int signal_mask);
 extern int sigsetmask(int signal_mask);
 extern int sigprocmask(int how, const sigset_t *set, sigset_t *oset);
+extern int sigsuspend(const sigset_t *mask);
+extern int sigpause(int sig_or_mask, int is_sig);
 extern int sigismember(const sigset_t *set, int sig);
 extern int sigemptyset(sigset_t *set);
 extern int sigfillset(sigset_t *set);
 extern int sigdelset(sigset_t *set, int sig);
 extern int sigaddset(sigset_t *set, int sig);
+extern int sigwait(const sigset_t *set, int *sig);
+
 extern int kill(pid_t pid, int signal_number);
 
 typedef struct {
@@ -144,6 +151,8 @@ struct sigaction {
 };
 
 extern int sigaction(int sig, const struct sigaction *act, struct sigaction *oact);
+extern int sigwaitinfo(const sigset_t *set, siginfo_t *info);
+extern int sigtimedwait(const sigset_t *set, siginfo_t *info, const struct timespec *timeout);
 
 typedef union sigval sigval_t;
 

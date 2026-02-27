@@ -48,10 +48,12 @@ void __pthread_exit_func(void);
 void __attribute__((constructor, used)) __pthread_init();
 void __attribute__((destructor, used)) __pthread_exit();
 
+struct MinList join_list;
 ThreadInfo threads[PTHREAD_THREADS_MAX];
-struct SignalSemaphore thread_sem;
+APTR thread_sem = NULL;
+APTR tls_sem = NULL;
 TLSKey tlskeys[PTHREAD_KEYS_MAX];
-struct SignalSemaphore tls_sem;
+
 APTR timerMutex = NULL;
 struct TimeRequest *timedTimerIO = NULL;
 struct MsgPort *timedTimerPort = NULL;
@@ -81,12 +83,23 @@ _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOO
 
     SHOWMSG("Allocating mutex");
     mutex->mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, recursive, TAG_DONE);
+	mutex->owner = FindTask(NULL);
     SHOWPOINTER(mutex->mutex);
 
     mutex->incond = 0;
 
     LEAVE();
     return 0;
+}
+
+static void timespec_sub(struct timespec *ts1, const struct timespec *ts2, const struct timespec *ts3) {
+    ts1->tv_sec = ts2->tv_sec - ts3->tv_sec;
+    if (ts2->tv_nsec < ts3->tv_nsec) {
+        ts1->tv_sec--;
+        ts1->tv_nsec = 1000000000L + ts2->tv_nsec - ts3->tv_nsec;
+    } else {
+        ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec;
+    }
 }
 
 int
@@ -142,8 +155,19 @@ _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *
 
 void
 _pthread_clear_threadinfo(ThreadInfo *inf) {
+    D(("_pthread_clear_threadinfo: ENTER\n"));
+
+    /* NEVER clear threads[0] - it's reserved for main thread! */
+    if (inf == &threads[0]) {
+        D(("_pthread_clear_threadinfo: WARNING - attempted to clear threads[0] (main thread), skipping!\n"));
+        return;
+    }
+
+    D(("_pthread_clear_threadinfo: clearing thread (task value suppressed)\n"));
     memset(inf, 0, sizeof(ThreadInfo));
     inf->status = THREAD_STATE_IDLE;
+    inf->can_exit = 0;
+    D(("_pthread_clear_threadinfo: EXIT\n"));
 }
 
 int
@@ -154,42 +178,57 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     struct MsgPort timermp;
     struct TimeRequest timerio;
     struct Task *task;
+    clock_t clock_type = CLOCK_REALTIME;
 
-    if (cond == NULL || mutex == NULL)
+    if (cond == NULL || mutex == NULL) {
         return EINVAL;
+    }
+
+    clock_type = cond->condattr.clock_type;
+
+    /* Check for supported clock type */
+    if ((clock_type & ~(CLOCK_MONOTONIC | CLOCK_REALTIME | CLOCK_MONOTONIC_RAW)) != 0) {
+        return EINVAL;
+    }
 
     // initialize static conditions
     if (SemaphoreIsInvalid(cond->semaphore))
         pthread_cond_init(cond, NULL);
 
     task = FindTask(NULL);
-
     if (abstime) {
         // open timer.device
         if (!OpenTimerDevice((struct IORequest *) &timerio, &timermp, task)) {
             CloseTimerDevice((struct IORequest *) &timerio);
             return EINVAL;
         }
-
         // prepare the device command and send it
         timerio.Request.io_Command = TR_ADDREQUEST;
         timerio.Request.io_Flags = 0;
-        TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, abstime);
         if (!relative) {
-            struct TimeVal starttime;
+            struct timespec starttime;
+            struct timespec endtime;
             // absolute time has to be converted to relative
-            // GetSysTime can't be used due to the timezone offset in abstime
-            gettimeofday((struct timeval *)&starttime, NULL);
-            timersub(&timerio.Time, &starttime, &timerio.Time);
-            if (!timerisset(&timerio.Time)) {
+            clock_gettime(clock_type, &starttime);
+            timespec_sub(&endtime, abstime, &starttime);
+            // Check if the time is already in the past
+            if (endtime.tv_sec < 0 || (endtime.tv_sec == 0 && endtime.tv_nsec <= 0)) {
                 CloseTimerDevice((struct IORequest *) &timerio);
                 return ETIMEDOUT;
             }
+            TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, &endtime);
+        } else {
+            // relative time - use abstime directly
+            // Check if the time is valid
+            if (abstime->tv_sec < 0 || (abstime->tv_sec == 0 && abstime->tv_nsec <= 0)) {
+                CloseTimerDevice((struct IORequest *) &timerio);
+                return ETIMEDOUT;
+            }
+            TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, abstime);
         }
         sigs |= (1 << timermp.mp_SigBit);
         SendIO((struct IORequest *) &timerio);
     }
-
     // prepare a waiter node
     waiter.task = task;
     signal = AllocSignal(-1);
@@ -199,19 +238,16 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     }
     waiter.sigbit = signal;
     sigs |= 1 << waiter.sigbit;
-
     // add it to the end of the list
     ObtainSemaphore(cond->semaphore);
     AddTail((struct List *) cond->waiters, (struct Node *) &waiter);
     ReleaseSemaphore(cond->semaphore);
-
     // wait for the condition to be signalled or the timeout
     mutex->incond++;
     pthread_mutex_unlock(mutex);
     sigs = Wait(sigs);
     pthread_mutex_lock(mutex);
     mutex->incond--;
-
     // remove the node from the list
     ObtainSemaphore(cond->semaphore);
     Remove((struct Node *) &waiter);
@@ -227,11 +263,17 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         // did we timeout?
         if (sigs & (1 << timermp.mp_SigBit))
             return ETIMEDOUT;
-        else if (sigs & SIGBREAKF_CTRL_C)
+        else if (sigs & SIGBREAKF_CTRL_C) {
             pthread_testcancel();
+            // Re-Enable CTRL-C in case a signal handler is installed
+            Signal(task, SIGBREAKF_CTRL_C);
+        }
     } else {
-        if (sigs & SIGBREAKF_CTRL_C)
+        if (sigs & SIGBREAKF_CTRL_C) {
             pthread_testcancel();
+            // Re-Enable CTRL-C in case a signal handler is installed
+            Signal(task, SIGBREAKF_CTRL_C);
+        }
     }
 
     return 0;
@@ -262,23 +304,46 @@ _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
 //
 // Constructors, destructors
 //
+// Store the previous value (before pthread runtime takes over)
+static ThreadInfo *old_tls = NULL;
 
 int __pthread_init_func(void) {
     pthread_t i;
+    SHOWMSG("[__pthread_init_func :] Pthread __pthread_init_func called.\n");
 
     memset(&threads, 0, sizeof(threads));
-    InitSemaphore(&thread_sem);
-    InitSemaphore(&tls_sem);
+    NewMinList(&join_list);
+    thread_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+    tls_sem = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
+
+    old_tls = get_tls_register();
 
     // reserve ID 0 for the main thread
     ThreadInfo *inf = &threads[0];
+
+    inf->thread_id = 0;  /* Main thread has ID 0 */
     inf->task = (struct Process *) FindTask(NULL);
     inf->status = THREAD_STATE_RUNNING;
     NewMinList(&inf->cleanup);
 
+    /* Allocate signals for main thread */
+    inf->cancel_signal = AllocSignal(-1);
+    if (inf->cancel_signal == -1) {
+        inf->cancel_signal_mask = SIGBREAKF_CTRL_C;
+    } else {
+        inf->cancel_signal_mask = 1L << inf->cancel_signal;
+    }
+
+    inf->join_signal = AllocSignal(-1);
+    if (inf->join_signal == -1) {
+        inf->join_signal_mask = SIGF_PARENT;
+    } else {
+        inf->join_signal_mask = 1L << inf->join_signal;
+    }
+
     timerMutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_DONE);
 
-    timedTimerPort = AllocSysObject(ASOT_PORT, NULL);
+    timedTimerPort = AllocSysObjectTags(ASOT_PORT, TAG_DONE);
     timedTimerIO = AllocSysObjectTags(ASOT_IOREQUEST,
                                       ASOIOR_ReplyPort, timedTimerPort,
                                       ASOIOR_Size, sizeof(struct TimeRequest),
@@ -286,11 +351,18 @@ int __pthread_init_func(void) {
 
     OpenDevice(TIMERNAME, UNIT_WAITUNTIL, (struct IORequest *) timedTimerIO, 0);
 
+    set_tls_register(inf);
+
     /* Mark all threads as IDLE */
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
         inf = &threads[i];
         inf->status = THREAD_STATE_IDLE;
+        inf->cancel_signal = -1; /* No signal allocated yet */
+        inf->join_signal = -1;
+        inf->join_signal_mask = 0;
+        inf->join_thread_id = 0;
     }
+
 
     return TRUE;
 }
@@ -299,16 +371,7 @@ void __pthread_exit_func(void) {
     pthread_t i;
     ThreadInfo *inf;
     struct DOSIFace *IDOS = _IDOS;
-
-    if (timerMutex)
-        FreeSysObject(ASOT_MUTEX, timerMutex);
-
-    if (timedTimerIO)
-        CloseDevice((struct IORequest *) timedTimerIO);
-    if (timedTimerIO)
-        FreeSysObject(ASOT_IOREQUEST, timedTimerIO);
-    if (timedTimerPort)
-        FreeSysObject(ASOT_PORT, timedTimerPort);
+    SHOWMSG("[__pthread_exit_func :] Pthread __pthread_exit_func called.\n");
 
     // if we don't do this we can easily end up with unloaded code being executed
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
@@ -322,10 +385,48 @@ void __pthread_exit_func(void) {
                 pthread_join(i, NULL);
         }
     }
+
+	MutexObtain(thread_sem);
+	inf = &threads[0];
+	if (inf->cancel_signal > 0 && inf->cancel_signal != -1) {
+		D(("_pthread_clear_threadinfo: Freeing cancel signal %d\n", inf->cancel_signal));
+		FreeSignal(inf->cancel_signal);
+	}
+	if (inf->join_signal > 0 && inf->join_signal != -1) {
+		D(("_pthread_clear_threadinfo: Freeing join signal %d\n", inf->join_signal));
+		FreeSignal(inf->join_signal);
+	}
+	MutexRelease(thread_sem);
+
+    if (thread_sem) {
+        FreeSysObject(ASOT_MUTEX, thread_sem);
+        thread_sem = NULL;
+    }
+    if (tls_sem) {
+        FreeSysObject(ASOT_MUTEX, tls_sem);
+        tls_sem = NULL;
+    }
+    if (timerMutex) {
+        FreeSysObject(ASOT_MUTEX, timerMutex);
+        timerMutex = NULL;
+    }
+    if (timedTimerIO) {
+        CloseDevice((struct IORequest *) timedTimerIO);
+        FreeSysObject(ASOT_IOREQUEST, timedTimerIO);
+        timedTimerIO = NULL;
+    }
+    if (timedTimerPort) {
+        FreeSysObject(ASOT_PORT, timedTimerPort);
+        timedTimerPort = NULL;
+    }
+
+    set_tls_register(NULL);
 }
+
 
 PTHREAD_CONSTRUCTOR(__pthread_init) {
     ENTER();
+    SHOWMSG("[__pthread_init :] Pthread constructor called.\n");
     _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
     if (_DOSBase) {
         _IDOS = (struct DOSIFace *) GetInterface((struct Library *) _DOSBase, "main", 1, NULL);
@@ -341,6 +442,10 @@ PTHREAD_CONSTRUCTOR(__pthread_init) {
 
 PTHREAD_DESTRUCTOR(__pthread_exit) {
     ENTER();
+    SHOWMSG("[__pthread_exit :] Pthread destructor called.\n");
+
+    __pthread_exit_func();
+
     if (_DOSBase != NULL) {
         CloseLibrary(_DOSBase);
         _DOSBase = NULL;
@@ -351,6 +456,5 @@ PTHREAD_DESTRUCTOR(__pthread_exit) {
         _IDOS = NULL;
     }
 
-    __pthread_exit_func();
     LEAVE();
 }

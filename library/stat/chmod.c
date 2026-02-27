@@ -28,7 +28,7 @@ chmod(const char *path_name, mode_t mode) {
     if (path_name == NULL) {
         SHOWMSG("invalid path parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -36,7 +36,7 @@ chmod(const char *path_name, mode_t mode) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
-            __set_errno(ENOENT);
+            __set_errno_r(__clib4, ENOENT);
             goto out;
         }
 
@@ -44,7 +44,7 @@ chmod(const char *path_name, mode_t mode) {
             goto out;
 
         if (path_name_nti.is_root) {
-            __set_errno(EACCES);
+            __set_errno_r(__clib4, EACCES);
             goto out;
         }
     }
@@ -90,7 +90,7 @@ chmod(const char *path_name, mode_t mode) {
     status = SetProtection((STRPTR) path_name, (LONG)(protection ^ (FIBF_READ | FIBF_WRITE | FIBF_EXECUTE | FIBF_DELETE)));
 
     if (status == DOSFALSE) {
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 

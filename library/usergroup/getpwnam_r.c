@@ -34,7 +34,7 @@ static const char* get_value(const char* line, const char* key, char* value, siz
             match++;
         }
         // Copy value til first space or NULL
-        int i = 0;
+        size_t i = 0;
         while (*match != '\0' && *match != ' ' && i < value_size - 1) {
             value[i++] = *match++;
         }

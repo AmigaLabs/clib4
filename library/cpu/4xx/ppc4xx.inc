@@ -74,6 +74,39 @@
 #define r30 %r30
 #define r31 %r31
 
+#define fp0 %f0
+#define fp1 %f1
+#define fp2 %f2
+#define fp3 %f3
+#define fp4 %f4
+#define fp5 %f5
+#define fp6 %f6
+#define fp7 %f7
+#define fp8 %f8
+#define fp9 %f9
+#define fp10 %f10
+#define fp11 %f11
+#define fp12 %f12
+#define fp13 %f13
+#define fp14 %f14
+#define fp15 %f15
+#define fp16 %f16
+#define fp17 %f17
+#define fp18 %f18
+#define fp19 %f19
+#define fp20 %f20
+#define fp21 %f21
+#define fp22 %f22
+#define fp23 %f23
+#define fp24 %f24
+#define fp25 %f25
+#define fp26 %f26
+#define fp27 %f27
+#define fp28 %f28
+#define fp29 %f29
+#define fp30 %f30
+#define fp31 %f31
+
 #define cr0	%cr0
 #define cr1	%cr1
 #define cr2	%cr2
@@ -125,15 +158,49 @@
 #define cr7_3   31
 
 
-#define function_prolog(func_name)	.text; \
+#define function_prolog(func_name) \
+					.text; \
 					.align  2; \
 					.globl  func_name; \
 					func_name:
-#define function_epilog(func_name)	.type func_name,@function; \
+
+#define function_prolog_alignedto(func_name, xalign, xwords) \
+  					.text; \
+					.globl  func_name; \
+					.align  xalign; \
+					EALIGN_W_##xwords; \
+					func_name:
+
+#define function_epilog(func_name)	\
+					.type func_name,@function; \
 					.size func_name,.-func_name
 
 #define function_call(func_name)	bl func_name 
 
+#define EALIGN_W_0  /* No words to insert.  */
+#define EALIGN_W_1  nop
+#define EALIGN_W_2  nop;nop
+#define EALIGN_W_3  nop;nop;nop
+#define EALIGN_W_4  EALIGN_W_3;nop
+#define EALIGN_W_5  EALIGN_W_4;nop
+#define EALIGN_W_6  EALIGN_W_5;nop
+#define EALIGN_W_7  EALIGN_W_6;nop
+
+#define stringify_in_c(...)   __VA_ARGS__
+#define ASM_CONST(x)      x
+
+#define PPC_LL      stringify_in_c(lwz)
+#define PPC_STL     stringify_in_c(stw)
+#define PPC_STLU    stringify_in_c(stwu)
+#define PPC_LCMPI   stringify_in_c(cmpwi)
+#define PPC_LONG    stringify_in_c(.long)
+#define PPC_LONG_ALIGN  stringify_in_c(.balign 4)
+#define PPC_TLNEI   stringify_in_c(twnei)
+#define PPC_LLARX(t, a, b, eh)  PPC_LWARX(t, a, b, eh)
+#define PPC_STLCX   stringify_in_c(stwcx.)
+#define PPC_CNTLZL  stringify_in_c(cntlzw)
+#define PPC_MTOCRF  stringify_in_c(mtcrf)
+#define PPC_LR_STKOFF   4
+#define PPC_MIN_STKFRM  16
+
 #endif
-
-

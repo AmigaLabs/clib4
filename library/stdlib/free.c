@@ -14,35 +14,24 @@
 
 #include <malloc.h>
 
-#undef free
+void
+__free_r(struct _clib4 *__clib4, void *ptr) {
+	if (ptr == NULL || __clib4 == NULL)
+		return;
+
+	if (__clib4->__wmem_allocator == NULL) {
+		return;
+	}
+
+	__memory_lock(__clib4);
+    wmem_free(__clib4->__wmem_allocator, ptr);
+
+	__memory_unlock(__clib4);
+}
 
 void
 free(void *ptr) {
     struct _clib4 *__clib4 = __CLIB4;
 
-    BOOL found = FALSE;
-    struct MemalignEntry *e = NULL;
-    /* Check if we have something created by memalign */
-    if (__clib4 != NULL) {
-        e = (struct MemalignEntry *) AVL_FindNode(__clib4->__memalign_tree, ptr, MemalignAVLKeyComp);
-        if (e) {
-            found = TRUE;
-        }
-    }
-
-    __memory_lock(__clib4);
-
-    if (found) {
-        /* Free memory */
-        FreeVec(e->me_Exact);
-        e->me_Exact = NULL;
-        /* Remove the node */
-        AVL_RemNodeByAddress(&__clib4->__memalign_tree, &e->me_AvlNode);
-        ItemPoolFree(__clib4->__memalign_pool, e);
-        e = NULL;
-    } else {
-        wof_free(__clib4->__wof_allocator, ptr);
-    }
-
-    __memory_unlock(__clib4);
+    return __free_r(__clib4, ptr);
 }

@@ -8,7 +8,7 @@
 
 int
 accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
-    struct SignalSemaphore *lock = NULL;
+    APTR lock = NULL;
     struct fd *fd = NULL;
     struct fd *new_fd;
     int new_fd_slot_number;
@@ -24,7 +24,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
     SHOWPOINTER(cliaddr);
     SHOWPOINTER(addrlen);
 
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     assert(sockfd >= 0 && sockfd < __clib4->__num_fd);
     assert(__clib4->__fd[sockfd] != NULL);
@@ -36,7 +36,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
     __stdio_lock(__clib4);
     stdio_locked = TRUE;
 
-    fd = __get_file_descriptor_socket(sockfd);
+    fd = __get_file_descriptor_socket(__clib4, sockfd);
     if (fd == NULL)
         goto out;
 
@@ -71,7 +71,7 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
         new_fd_slot_number = __find_vacant_fd_entry(__clib4);
         assert(new_fd_slot_number >= 0);
     }
-    lock = __create_semaphore();
+    lock = __create_mutex();
     if (lock == NULL) {
         errno = ENOMEM;
         goto out;
@@ -97,7 +97,7 @@ out:
     if (stdio_locked)
         __stdio_unlock(__clib4);
 
-    __delete_semaphore(lock);
+    __delete_mutex(lock);
 
     __check_abort_f(__clib4);
 

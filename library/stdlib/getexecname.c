@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_getexecname.c,v 1.0 2020-01-13 13:28:26 clib4devs Exp $
+* $Id: stdlib_getexecname.c,v 1.1 2025-08-16 13:28:26 clib4devs Exp $
 */
 
 #ifndef _STDLIB_HEADERS_H
@@ -9,14 +9,8 @@
 const char *
 getexecname(void) {
     ENTER();
+    struct _clib4 *__clib4 = __CLIB4;
 
-    char pathBuffer[PATH_MAX] = {0};
-    if (GetCliProgramName(pathBuffer, PATH_MAX - 1)) {
-        char *ret = calloc(1, strlen(pathBuffer) + 1);
-        RETURN(ret);
-        return ret;
-    } else {
-        RETURN("?");
-        return "?";
-    }
+    RETURN(__clib4->__progname);
+    return strdup(__clib4->__progname);
 }

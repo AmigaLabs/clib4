@@ -35,7 +35,7 @@ atexit(void (*function)(void)) {
         /* More than 32 exit trap functions are called
          * for. Let's make room for another one.
          */
-        etn = malloc(sizeof(*etn));
+        etn = __malloc_r(__clib4, sizeof(*etn));
         if (etn == NULL) {
             __set_errno(ENOMEM);
             goto out;

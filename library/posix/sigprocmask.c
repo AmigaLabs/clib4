@@ -20,7 +20,7 @@ sigprocmask(int how, const sigset_t *set, sigset_t *oset) {
     if (how < SIG_BLOCK || how > SIG_SETMASK) {
         SHOWMSG("invalid operating mode");
 
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 

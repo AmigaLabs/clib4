@@ -1,5 +1,5 @@
 /*
- * $Id: posix_fstatvfs.c,v 1.0 2022-03-28 12:04:24 clib4devs Exp $
+ * $Id: posix_fstatvfs.c,v 1.1 2024-07-04 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -11,61 +11,99 @@
 #endif /* _POSIX_HEADERS_H */
 
 int
-fstatvfs(int fd, struct statvfs *buf)
-{
+fstatvfs(int fd, struct statvfs *buf) {
     BPTR file;
     int result = -1;
+    struct _clib4 *__clib4 = __CLIB4;
+    struct InfoData *info = NULL;
+    const char devicename[MAX_DOS_PATH];
 
     ENTER();
 
     SHOWVALUE(fd);
     SHOWPOINTER(buf);
 
-    struct fd *fildes = __get_file_descriptor(fd);
+    struct fd *fildes = __get_file_descriptor(__clib4, fd);
     if (fildes == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
-    file = __safe_parent_of_file_handle(fildes->fd_File);
+    file = DevNameFromFH(fildes->fd_File, devicename, MAX_DOS_PATH, DN_DEVICEONLY);
     if (file == BZERO) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
+    D(("DeviceName: %s", devicename));
 
-    struct InfoData *info = AllocDosObject(DOS_INFODATA, 0);
-    // 3 is the number of tags passed to GetDiskInfoTags call
-    if (GetDiskInfoTags(
-            GDI_FileHandleInput, file,
-            GDI_VolumeRequired,  TRUE,
-            GDI_InfoData,        info,
-            TAG_END) == 3)
-    {
-        uint32_t maxlength = STATVFS_MAX_NAME;
-        FileSystemAttrTags(
-                FSA_MaxFileNameLengthR, &maxlength,
-                FSA_FileHandleInput,    file,
-                TAG_END);
+    info = AllocDosObject(DOS_INFODATA, TAG_END);
+    if (info != NULL) {
+		memset(info, 0, sizeof(*info));
+        // 3 is the number of tags passed to GetDiskInfoTags call
+        if (GetDiskInfoTags(
+                GDI_StringNameInput, devicename,
+                GDI_VolumeRequired, TRUE,
+                GDI_InfoData, info,
+                TAG_END) == 3) {
+            int32 maxlength = STATVFS_MAX_NAME;
 
-        if (info->id_VolumeNode == BZERO) {
-            FreeDosObject(DOS_INFODATA, info);
-            /* Device not present or not responding */
-            __set_errno(ENXIO);
-            goto out;
+            if (info->id_VolumeNode == BZERO) {
+                /* Device not present or not responding */
+                __set_errno_r(__clib4, ENXIO);
+                goto out;
+            }
+
+            __convert_info_to_statvfs(info, buf);
+
+			uint32 DosType;
+            if (!FileSystemAttrTags(
+                    FSA_MaxFileNameLengthR, &maxlength,
+                    FSA_StringNameInput, devicename,
+					FSA_DOSTypeR, &DosType,
+                    TAG_END)) {
+				__set_errno_r(__clib4, ENXIO);
+				goto out;
+			}
+
+            buf->f_namemax = maxlength;
+            /* Populate the missing statvfs structure */
+            strncpy(buf->f_mntonname, devicename, 255);
+
+            /* Skip DOSType checking if Disk is not present (for example on ICD0, IDF0 and so on..) */
+            if (info->id_DiskType != ID_NO_DISK_PRESENT) {
+                const char *dosFormat = "%c%c%c\\%02lx";
+                if ((DosType & 0xFF) > 0x20) {
+                    dosFormat = "%c%c%c%c";
+                }
+                if (!(DosType & 0xFF000000))
+                    DosType |= 0x20000000;
+                else if (!(DosType & 0x00FF0000))
+                    DosType |= 0x00200000;
+                else if (!(DosType & 0x0000FF00))
+                    DosType |= 0x00002000;
+
+                snprintf(buf->f_fstypename, 31, dosFormat, (DosType >> 24) & 0xFF, (DosType >> 16) & 0xFF, (DosType >> 8) & 0xFF, DosType & 0xFF);
+            }
+            else {
+                /* If disk is not present set file system type to UNKNOWN */
+                strcpy(buf->f_fstypename, "UNKNOWN");
+            }
+            result = 0;
+        } else {
+            LONG error = IoErr();
+            D(("GetDiskInfoTags Error: %ld\n", error));
+            __translate_io_error_to_errno(error);
         }
-
-        __convert_info_to_statvfs(info, buf);
-
-        FreeDosObject(DOS_INFODATA, info);
-
-        result = 0;
     }
-    else
-    {
-        __translate_io_error_to_errno(IoErr());
+    else {
+		__set_errno_r(__clib4, ENOMEM);
+        SHOWMSG("Could not allocate DOS_INFODATA object");
     }
 
 out:
+    if (info != NULL)
+        FreeDosObject(DOS_INFODATA, info);
+
     RETURN(result);
-    return(result);
+    return (result);
 }

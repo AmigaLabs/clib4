@@ -7,9 +7,8 @@
 #endif /* _STDIO_HEADERS_H */
 
 void
-__remove_fd_alias(struct fd *fd) {
+__remove_fd_alias(struct _clib4 *__clib4, struct fd *fd) {
     assert(fd != NULL);
-    struct _clib4 *__clib4 = __CLIB4;
 
     __stdio_lock(__clib4);
 

@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fopen.c,v 1.7 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_fopen.c,v 1.6 2024-07-20 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -19,14 +19,10 @@ fopen(const char *filename, const char *mode) {
 
     assert(filename != NULL && mode != NULL);
 
-    __check_abort_f(__clib4);
-
-    __stdio_lock(__clib4);
-
     if (filename == NULL || mode == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -49,8 +45,6 @@ fopen(const char *filename, const char *mode) {
     result = (FILE *) __clib4->__iob[slot_number];
 
 out:
-
-    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

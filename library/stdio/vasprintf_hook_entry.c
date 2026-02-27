@@ -41,7 +41,7 @@ __vasprintf_hook_entry(
 
         new_size = string_iob->iob_StringPosition + fam->fam_Size + granularity;
 
-        buffer = malloc(new_size);
+        buffer = __malloc_r(__clib4, new_size);
         if (buffer == NULL) {
             fam->fam_Error = ENOBUFS;
             goto out;
@@ -50,7 +50,7 @@ __vasprintf_hook_entry(
         if (string_iob->iob_String != NULL) {
             memmove(buffer, string_iob->iob_String, (size_t) string_iob->iob_StringSize);
 
-            free(string_iob->iob_String);
+            __free_r(__clib4, string_iob->iob_String);
         }
 
         string_iob->iob_String = buffer;

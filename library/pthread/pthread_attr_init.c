@@ -51,6 +51,8 @@ pthread_attr_init(pthread_attr_t *attr) {
 
     attr->param.sched_priority = task->tc_Node.ln_Pri;
     attr->stacksize = (UBYTE *) task->tc_SPUpper - (UBYTE *) task->tc_SPLower;
+	if (attr->stacksize < PTHREAD_STACK_MIN)
+		attr->stacksize = PTHREAD_STACK_MIN;
 
     return 0;
 }

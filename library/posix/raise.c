@@ -28,7 +28,7 @@ raise(int sig) {
     if (sig < 0 || sig > NSIG) {
         SHOWMSG("unknown signal number");
 
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -39,7 +39,7 @@ raise(int sig) {
     }
 
     /* Can we deliver the signal? */
-    if ((FLAG_IS_CLEAR(__clib4->__signals_blocked, (1 << sig)) && FLAG_IS_CLEAR(__clib4->local_signals_blocked, (1 << sig))) || sig == SIGKILL) {
+    if ((FLAG_IS_CLEAR(__clib4->__signals_blocked, sigmask(sig)) && FLAG_IS_CLEAR(__clib4->local_signals_blocked, sigmask(sig))) || sig == SIGKILL) {
         signal_handler_t handler;
 
         /* Which handler is installed for this signal? */
@@ -50,20 +50,30 @@ raise(int sig) {
             /* Block delivery of this signal to prevent recursion. */
             SHOWMSG("Blocking signal if it isn't a kill signal");
             if (sig != SIGINT && sig != SIGTERM && sig != SIGKILL)
-                SET_FLAG(__clib4->local_signals_blocked, (1 << sig));
+                SET_FLAG(__clib4->local_signals_blocked, sigmask(sig));
 
-            /* The default behaviour is to drop into abort(), or do
-               something very much like it. */
+            /* The default behaviour is to drop into abort(), or do something very much like it. */
             if (handler == SIG_DFL) {
                 SHOWMSG("this is the default handler");
 
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
-                    /* Check ig we have timer terminal running. If so let's kill it */
-                    if (__clib4->tmr_real_task != NULL) {
+                    __set_errno_r(__clib4, EINTR);
+                    /* Check if we have timer tasks running for this thread. If so let's kill them */
+                    if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
+                        uint32 currentThreadID = (uint32)FindTask(NULL);
                         /* Block SIGALRM signal from raise */
                         sigblock(SIGALRM);
-                        /* Kill itimer */
-                        killitimer();
+                        /* Kill itimer for current thread */
+                        struct TimerNode *node, *next;
+                        for (node = (struct TimerNode *)__clib4->tmr_real_list.mlh_Head;
+                             (next = (struct TimerNode *)node->tn_Node.mln_Succ) != NULL;
+                             node = next) {
+                            if (node->tn_ThreadID == currentThreadID) {
+                                Signal((struct Task *)node->tn_Process, SIGBREAKF_CTRL_F);
+                                Remove((struct Node *)&node->tn_Node);
+                                FreeVec(node);
+                            }
+                        }
                     }
 
                     char break_string[80];
@@ -82,33 +92,37 @@ raise(int sig) {
                        land us in _exit(). */
                     __abort();
                 }
-                /* If we have a SIGALRM without associated handler send the SIGBREAKF_CTRL_E signal */
+                /* If we have a SIGALRM without associated handler send the _interrupting_alarm_signal */
                 if (sig == SIGALRM) {
                     /* Block SIGALRM signal from raise again */
                     sigblock(SIGALRM);
 
                     /* Since we got a signal we interrrupt every sleep function like nanosleep */
-                    Signal((struct Task *) __clib4->self, SIGBREAKF_CTRL_E);
+                    Signal((struct Task *) __clib4->self, __clib4->_interrupting_alarm_signal);
                 }
             }
             else if (handler == SIG_ERR) {
-                __set_errno(EINVAL);
+                __set_errno_r(__clib4, EINVAL);
                 result = ERROR;
                 goto out;
             }
             else {
-                SHOWMSG("calling the handler");
-                (*handler)(sig);
+                if (*handler != NULL) {
+                    SHOWMSG("Calling the handler");
+                    (*handler)(sig);
 
-                if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL)
-                    SetSignal(0, SIGBREAKF_CTRL_C);
+                    if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
+                        __set_errno_r(__clib4, EINTR);
+                        SetSignal(0, SIGBREAKF_CTRL_C);
+                    }
 
-                SHOWMSG("done.");
+                    SHOWMSG("done.");
+                }
             }
 
             /* Unblock signal delivery again. */
             SHOWMSG("Unblocking signal");
-            CLEAR_FLAG(__clib4->local_signals_blocked, (1 << sig));
+            CLEAR_FLAG(__clib4->local_signals_blocked, sigmask(sig));
         }
         else {
             if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
@@ -117,7 +131,8 @@ raise(int sig) {
             }
         }
     } else {
-        SHOWMSG("that signal is blocked");
+        SHOWMSG("that signal is blocked, remeber that signal was blocked, for sigwaitinfo" );
+		SET_FLAG(__clib4->local_raised_signals_blocked, sigmask(sig));
     }
 
     result = OK;

@@ -8,9 +8,13 @@
 
 int
 ungetc(int c, FILE *stream) {
+    return __ungetc_r(__CLIB4, c, stream);
+}
+
+int
+__ungetc_r(struct _clib4 *__clib4, int c, FILE *stream) {
     struct iob *file = (struct iob *) stream;
     int result = EOF;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWVALUE(c);
@@ -18,14 +22,15 @@ ungetc(int c, FILE *stream) {
 
     assert(stream != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL) {
         SHOWMSG("null file pointer!");
+        __set_errno_r(__clib4, EFAULT);
 
-        __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return (result);
     }
+
+    __flockfile_r(__clib4, stream);
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
@@ -33,33 +38,24 @@ ungetc(int c, FILE *stream) {
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
-        __set_errno(EBADF);
-
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     /* Pushing back characters only works for files that can be read from. */
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ)) {
         SHOWMSG("can't even read from this file");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
-        __set_errno(EACCES);
-
+        __set_errno_r(__clib4, EACCES);
         goto out;
     }
 
     /* Pushing back an EOF is forbidden. */
     if (c == EOF) {
         SHOWMSG("cannot push back an EOF");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
-        __set_errno(EINVAL);
-
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -75,11 +71,8 @@ ungetc(int c, FILE *stream) {
      */
     if (file->iob_BufferPosition == 0) {
         SHOWMSG("no room to push back");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
-        __set_errno(ENOBUFS);
-
+        __set_errno_r(__clib4, ENOBUFS);
         goto out;
     }
 
@@ -93,7 +86,7 @@ ungetc(int c, FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

@@ -24,7 +24,7 @@ isatty(int file_descriptor) {
 
     __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -33,9 +33,16 @@ isatty(int file_descriptor) {
     __fd_lock(fd);
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
+        __fd_unlock(fd);
         __set_errno(ENOTTY);
         goto out;
     }
+
+	if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+        __fd_unlock(fd);
+		result = 0;
+		goto out;
+	}
 
     result = 1;
 
@@ -44,12 +51,13 @@ isatty(int file_descriptor) {
 
         file = __resolve_fd_file(fd);
         if (file == BZERO || NOT IsInteractive(file))
-        result = 0;
+            result = 0;
     }
+
+    __fd_unlock(fd);
 
 out:
 
-    __fd_unlock(fd);
     __stdio_unlock(__clib4);
 
     RETURN(result);

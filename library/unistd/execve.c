@@ -194,7 +194,7 @@ find_command(const char *path, struct program_info **result_ptr) {
        are looking */
     old_window_ptr = __set_process_window((APTR) - 1);
 
-    pi = malloc(sizeof(*pi));
+    pi = __malloc_r(__clib4, sizeof(*pi));
     if (pi == NULL) {
         __set_errno(ENOMEM);
         goto out;
@@ -417,121 +417,6 @@ out:
     __set_process_window(old_window_ptr);
 
     return (result);
-}
-
-/* Scan the string, looking for characters which need to be
-   escape with a '*' if that string is to be quoted and the
-   contents should remain in the same form */
-static size_t
-count_extra_escape_chars(const char *string, size_t len) {
-    size_t count = 0;
-    size_t i;
-    char c;
-
-    for (i = 0; i < len; i++) {
-        c = (*string++);
-        if (c == '\"' || c == '*' || c == '\n')
-            count++;
-    }
-
-    return (count);
-}
-
-/* Scan a string for characters which may require that the string
-   should be quoted */
-STATIC BOOL
-string_needs_quoting(const char *string, size_t len) {
-    BOOL result = FALSE;
-    size_t i;
-    char c;
-
-    for (i = 0; i < len; i++) {
-        c = (*string++);
-        if (c == ' ' || ((unsigned char) c) == 0xA0 || c == '\t' || c == '\n' || c == '\"') {
-            result = TRUE;
-            break;
-        }
-    }
-
-    return (result);
-}
-
-/* Figure out how many characters would go into a string composed of
-   individual arguments. This takes into account the lengths of
-   the individual argument strings, the separator characters, the
-   quote characters and any escape characters. */
-static size_t
-get_arg_string_length(char *const argv[]) {
-    size_t result = 0;
-    size_t i, len;
-    char *s;
-
-    /* The first argv[] element is skipped; it does not contain part of
-       the command line but holds the name of the program to be run. */
-    for (i = 1; argv[i] != NULL; i++) {
-        s = (char *) argv[i];
-
-        len = strlen(s);
-        if (len > 0) {
-            if ((*s) != '\"') {
-                if (string_needs_quoting(s, len))
-                    len += 1 + count_extra_escape_chars(s, len) + 1;
-            }
-
-            if (result == 0)
-                result = len;
-            else
-                result = result + 1 + len;
-        }
-    }
-
-    return (result);
-}
-
-/* Put together an argument string from a list of individual
-   components, quoting characters, escape characters and
-   separator characters. You're supposed to have enough memory
-   reserved for the whole string to fit */
-static void
-build_arg_string(char *const argv[], char *arg_string) {
-    BOOL first_char = TRUE;
-    size_t i, j, len;
-    char *s;
-
-    /* The first argv[] element is skipped; it does not contain part of
-       the command line but holds the name of the program to be run. */
-    for (i = 1; argv[i] != NULL; i++) {
-        s = (char *) argv[i];
-
-        len = strlen(s);
-        if (len > 0) {
-            if (first_char)
-                first_char = FALSE;
-            else
-                (*arg_string++) = ' ';
-
-            if ((*s) != '\"' && string_needs_quoting(s, len)) {
-                (*arg_string++) = '\"';
-
-                for (j = 0; j < len; j++) {
-                    if (s[j] == '\"' || s[j] == '*') {
-                        (*arg_string++) = '*';
-                        (*arg_string++) = s[j];
-                    } else if (s[j] == '\n') {
-                        (*arg_string++) = '*';
-                        (*arg_string++) = 'N';
-                    } else {
-                        (*arg_string++) = s[j];
-                    }
-                }
-
-                (*arg_string++) = '\"';
-            } else {
-                memcpy(arg_string, s, len);
-                arg_string += len;
-            }
-        }
-    }
 }
 
 /* NOTE: This is not an execve() function which works like you might expect it

@@ -23,21 +23,20 @@ feof(FILE *stream) {
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 
-        __set_errno(EFAULT);
-
+        __set_errno_r(__clib4, EFAULT);
         result = 0;
-
         goto out;
     }
 
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
 
-    flockfile(stream);
+    int locked = __ftrylockfile_r(__clib4, stream);
 
     result = FLAG_IS_SET(file->iob_Flags, IOBF_EOF_REACHED);
 
-    funlockfile(stream);
+    if (locked == OK)
+        __funlockfile_r(__clib4, stream);
 
 out:
 

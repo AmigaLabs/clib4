@@ -22,10 +22,27 @@ realpath(const char *path_name, char *buffer) {
 
     __check_abort_f(__clib4);
 
-    if (path_name == NULL || buffer == NULL) {
-        SHOWSTRING("invalid parameters");
+    /*
+    If buffer is specified as NULL, then realpath() uses
+    malloc to allocate a buffer of up to PATH_MAX bytes to hold the
+    resolved pathname, and returns a pointer to this buffer.  The
+    caller should deallocate this buffer using free.
+    */
+    if (buffer == NULL) {
+        buffer = __malloc_r(__clib4, PATH_MAX);
+    }
 
-        __set_errno(EFAULT);
+    if (path_name == NULL) {
+        SHOWSTRING("Invalid parameters");
+
+        __set_errno(EINVAL);
+        goto out;
+    }
+
+    if (buffer == NULL) {
+        SHOWSTRING("Out of memory");
+
+        __set_errno(ENOMEM);
         goto out;
     }
 
@@ -78,8 +95,11 @@ realpath(const char *path_name, char *buffer) {
 
 out:
 
-    FreeDeviceProc(dvp);
-    UnLock(lock);
+    if (dvp != NULL)
+        FreeDeviceProc(dvp);
+
+    if (lock != BZERO)
+        UnLock(lock);
 
     RETURN(result);
     return (result);

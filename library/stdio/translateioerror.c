@@ -53,7 +53,8 @@ __translate_io_error_to_errno(LONG io_err) {
             {ERROR_NOT_IMPLEMENTED,        ENOSYS},
             {ERROR_LOCK_COLLISION,         EACCES},
             {ERROR_BREAK,                  EINTR},
-            {ERROR_NOT_EXECUTABLE,         ENOEXEC}
+            {ERROR_NOT_EXECUTABLE,         ENOEXEC},
+            {ERROR_WOULD_BLOCK,            EWOULDBLOCK}
         };
 
     unsigned int i;

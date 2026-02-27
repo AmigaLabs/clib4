@@ -22,7 +22,7 @@ getrusage(int who, struct rusage *rusage) {
     struct _clib4 *__clib4 = __CLIB4;
 
     if (rusage == NULL) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         RETURN(-1);
         return -1;
     }
@@ -35,7 +35,7 @@ getrusage(int who, struct rusage *rusage) {
     struct TimerIFace *ITimer = __clib4->__ITimer;
 
     if (__clib4 == NULL) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         RETURN(-1);
         return -1;
     }
@@ -61,7 +61,7 @@ getrusage(int who, struct rusage *rusage) {
             break;
 
         default:
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             status = -1;
             break;
     }

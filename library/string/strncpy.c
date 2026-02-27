@@ -1,5 +1,5 @@
 /*
- * $Id: string_strncpy.c,v 1.4 2006-01-08 12:04:27 clib4devs Exp $
+ * $Id: string_strncpy.c,v 1.4 2025-04-01 12:04:27 clib4devs Exp $
 */
 
 #ifndef _STRING_HEADERS_H
@@ -11,33 +11,44 @@
 #endif /* _STDLIB_PROTOS_H */
 
 char *
-strncpy(char *dest, const char *src, size_t n) {
-    char *result = dest;
+strncpy(char *dst0, const char *src0, size_t count) {
+    char *dst = dst0;
+    const char *src = src0;
+    long *aligned_dst;
+    const long *aligned_src;
 
-    assert(dest != NULL && src != NULL);
-    assert((int) n >= 0);
-
-    if (dest == NULL || src == NULL) {
-        __set_errno(EFAULT);
-        goto out;
-    }
-
-    /* If the number of characters is 0 or negative, then this
-     * function is supposed to have no effect.
-     */
-    if ((int) n > 0) {
-        while (n-- > 0) {
-            if (((*dest++) = (*src++)) == '\0') {
-                /* Fill the rest with NUL bytes... */
-                while (n-- > 0)
-                    (*dest++) = '\0';
-
-                break;
-            }
+    if (count > 3 && (((unsigned long)src & 3) == ((unsigned long)dst & 3))) {
+        /* align src and dst */
+        while ((unsigned long)dst & 3) {
+            count--;
+            if (!(*dst++ = *src++)) break;
         }
     }
 
-out:
+    /* If SRC and DEST is aligned and count large enough, then copy words.  */
+    if (!UNALIGNED (src, dst) && !TOO_SMALL (count)) {
+        aligned_dst = (long*)dst;
+        aligned_src = (long*)src;
 
-    return (result);
+        /* SRC and DEST are both "long int" aligned, try to do "long int"
+       sized copies.  */
+        while (count >= sizeof (long int) && !DETECTNULL(*aligned_src)) {
+            count -= sizeof (long int);
+            *aligned_dst++ = *aligned_src++;
+        }
+
+        dst = (char*)aligned_dst;
+        src = (char*)aligned_src;
+    }
+
+    while (count > 0) {
+        --count;
+        if ((*dst++ = *src++) == '\0')
+            break;
+    }
+
+    while (count-- > 0)
+        *dst++ = '\0';
+
+    return dst0;
 }

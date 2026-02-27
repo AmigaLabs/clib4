@@ -26,12 +26,12 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
     __stdio_lock(__clib4);
 
     if (iov == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
     if (vec_count < 1 || vec_count > MAX_IOVEC) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
@@ -40,14 +40,14 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
         total_num_bytes_read += iov[i].iov_len;
         if (total_num_bytes_read < 0) /* Rollover. */
         {
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             goto out;
         }
     }
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
@@ -58,10 +58,7 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
 
     i = 0;
 
-    while (i < vec_count) /* XXX: Should this loop be locked? */
-    {
-        __check_abort_f(__clib4);
-
+    while (i < vec_count) { /* XXX: Should this loop be locked? */
         if (iov[i].iov_len > 0) {
             msg.fam_Action = file_action_read;
             msg.fam_Data = (char *) iov[i].iov_base + part_num_bytes_read;
@@ -69,7 +66,7 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
 
             num_bytes_read = (*fd->fd_Action)(__clib4, fd, &msg);
             if (num_bytes_read == EOF) {
-                __set_errno(msg.fam_Error);
+                __set_errno_r(__clib4, msg.fam_Error);
                 goto out;
             }
 

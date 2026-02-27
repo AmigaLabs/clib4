@@ -1,0 +1,32 @@
+name: Compile clib4
+description: "Compile clib4 with gcc for AmigaOS 4"
+
+inputs:
+  spe:
+    description: 'Compile with SPE'
+    required: false
+    default: "no"
+  git_tag:
+    description: 'Git tag to use'
+    required: false
+  nightly:
+    description: 'Set if this is a nightly build'
+    required: false
+    default: "no"
+
+runs:
+  using: "composite"
+  steps:
+    - name: compiling
+      shell: bash
+      if: ${{ inputs.spe != 'yes' }}
+      run: |
+        cd /opt/code && \
+        make -j -f GNUmakefile.os4 GITTAG=${{ inputs.git_tag }} NIGHTLY=${{ inputs.nightly }}
+
+    - name: compiling SPE
+      shell: bash
+      if: ${{ inputs.spe == 'yes' }}
+      run: |
+        cd /opt/code && \
+        make -j -f GNUmakefile.os4 SPE=yes GITTAG=${{ inputs.git_tag }} NIGHTLY=${{ inputs.nightly }}

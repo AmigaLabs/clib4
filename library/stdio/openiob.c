@@ -6,14 +6,14 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-#ifndef _STDLIB_MEMORY_H
-#include "stdlib_memory.h"
-#endif /* _STDLIB_MEMORY_H */
+#ifndef _FCNTL_HEADERS_H
+#include "fcntl_headers.h"
+#endif /* _FCNTL_HEADERS_H */
 
 int
 __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int file_descriptor, int slot_number) {
     struct SignalSemaphore *lock;
-    ULONG file_flags;
+    ULONG file_flags = 0;
     int result = ERROR;
     int open_mode;
     struct fd *fd = NULL;
@@ -25,10 +25,6 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     SHOWSTRING(filename);
     SHOWSTRING(mode);
     SHOWVALUE(slot_number);
-
-    __check_abort_f(__clib4);
-
-    __stdio_lock(__clib4);
 
     assert(mode != NULL && 0 <= slot_number && slot_number < __clib4->__num_iob);
 
@@ -42,9 +38,9 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
         assert(__clib4->__fd[file_descriptor] != NULL);
         assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-        fd = __get_file_descriptor(file_descriptor);
+        fd = __get_file_descriptor(__clib4, file_descriptor);
         if (fd == NULL) {
-            __set_errno(EBADF);
+            __set_errno_r(__clib4, EBADF);
             goto out;
         }
     }
@@ -76,7 +72,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
             D(("unsupported file open mode '%lc'", mode[0]));
 
-            __set_errno(EINVAL);
+            __set_errno_r(__clib4, EINVAL);
             goto out;
     }
 
@@ -89,22 +85,27 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
         SET_FLAG(open_mode, O_RDWR);
     }
+    else if (mode[1] != '\0' && mode[1] == 'b' && mode[2] == 'l') {
+        SHOWMSG("fopen() called with Little Endian mode for binary file\n");
+        SET_FLAG(open_mode, O_LITTLE_ENDIAN);
+        SET_FLAG(file_flags, IOBF_LITTLE_ENDIAN);
+    }
 
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = AllocVecTags(BUFSIZ + (__clib4->__cache_line_size - 1), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, AVT_Alignment, __clib4->__cache_line_size, 0, TAG_DONE);
+    buffer = __malloc_r(__clib4, BUFSIZ + (__clib4->__cache_line_size - 1));
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
-        __set_errno(ENOBUFS);
+        __set_errno_r(__clib4, ENOBUFS);
         goto out;
     }
 
     if (file_descriptor < 0) {
         assert(filename != NULL);
 
-        file_descriptor = open(filename, open_mode);
+        file_descriptor = __open_r(__clib4, filename, open_mode);
         if (file_descriptor < 0) {
             SHOWMSG("couldn't open the file");
             goto out;
@@ -117,14 +118,13 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
             CLEAR_FLAG(fd->fd_Flags, FDF_APPEND);
     }
 
-    /* Allocate memory for an arbitration mechanism, then
-        initialize it. */
+    /* Allocate memory for an arbitration mechanism, then initialize it. */
     lock = __create_semaphore();
     if (lock == NULL)
-        goto out;
+		goto out;
 
     /* Figure out the buffered file access mode by looking at the open mode. */
-    file_flags = IOBF_IN_USE | IOBF_NO_NUL;
+    file_flags |= IOBF_IN_USE | IOBF_NO_NUL;
 
     if (FLAG_IS_SET(open_mode, O_RDONLY) || FLAG_IS_SET(open_mode, O_RDWR))
         SET_FLAG(file_flags, IOBF_READ);
@@ -136,7 +136,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
                      __iob_hook_entry,
                      buffer,
                      buffer,
-                     (int64_t) BUFSIZ,
+                     (int64_t) BUFSIZ + (__clib4->__cache_line_size - 1),
                      file_descriptor,
                      slot_number,
                      file_flags,
@@ -149,10 +149,8 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 out:
 
     if (buffer != NULL)
-        FreeVec(buffer);
-
-    __stdio_unlock(__clib4);
+        __free_r(__clib4, buffer);
 
     RETURN(result);
-    return (result);
+    return result;
 }

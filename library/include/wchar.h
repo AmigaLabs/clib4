@@ -5,10 +5,6 @@
 #ifndef _WCHAR_H
 #define _WCHAR_H
 
-#ifndef _SYS_CLIB4_STDC_H
-#include <sys/clib4_stdc.h>
-#endif /* _SYS_CLIB4_STDC_H */
-
 #include <features.h>
 
 #include <stddef.h>
@@ -116,12 +112,12 @@ extern wint_t putwchar(wchar_t c);
 
 /****************************************************************************/
 
-extern wint_t fputws(const wchar_t *s, FILE *stream);
+extern int fputws(const wchar_t *s, FILE *stream);
 
 /****************************************************************************/
 //#if !defined(__STRICT_ANSI__) || (__STDC_VERSION__ >= 199901L)
 extern int fwprintf(FILE *stream, const wchar_t *format, ...);
-extern int swprintf(wchar_t *restrict s, size_t l, const wchar_t *restrict fmt, ...);
+extern int swprintf(wchar_t *s, size_t l, const wchar_t *fmt, ...);
 extern int vfwprintf(FILE *stream, const wchar_t *format, va_list arg);
 extern int vswprintf(wchar_t *s, size_t maxlen, const wchar_t *format, va_list arg);
 extern int vwprintf(const wchar_t *format, va_list arg);
@@ -132,16 +128,16 @@ extern size_t wcsftime(wchar_t *s, size_t maxsize, const wchar_t *format, const 
 
 
 #if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)) || defined(__cplusplus)
-extern size_t mbrlen(const char *restrict s, size_t n, mbstate_t *restrict ps);
+extern size_t mbrlen(const char *s, size_t n, mbstate_t *ps);
 extern size_t mbrtowc(wchar_t *pwc, const char *src, size_t n, mbstate_t *ps);
 extern int mbsinit(const mbstate_t *ps);
-extern size_t mbsrtowcs(wchar_t *restrict dst, const char **restrict src, size_t len, mbstate_t *restrict ps);
+extern size_t mbsrtowcs(wchar_t *dst, const char **src, size_t len, mbstate_t *ps);
 
-extern size_t wcrtomb(char *restrict s, wchar_t wc, mbstate_t *restrict ps);
+extern size_t wcrtomb(char *s, wchar_t wc, mbstate_t *ps);
 extern int wcscoll(const wchar_t *ws1, const wchar_t *ws2);
 extern size_t wcscspn(const wchar_t *s, const wchar_t *c);
 extern wchar_t *wcsrchr(const wchar_t *ws, wchar_t wc);
-extern size_t wcsrtombs(char *restrict dst, const wchar_t **restrict src, size_t len, mbstate_t *restrict ps);
+extern size_t wcsrtombs(char *dst, const wchar_t **src, size_t len, mbstate_t *ps);
 extern long long wcstoll(const wchar_t *str, wchar_t **ptr, int base);
 extern unsigned long long wcstoull(const wchar_t *str, wchar_t **ptr, int base);
 extern long double wcstold(const wchar_t *nptr, wchar_t **endptr);
@@ -149,8 +145,8 @@ extern long double wcstold(const wchar_t *nptr, wchar_t **endptr);
 
 #if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
  || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE)  || defined(_BSD_SOURCE)
-extern size_t mbsnrtowcs(wchar_t *dst, const char **restrict src, size_t nmc, size_t len, mbstate_t *restrict ps);
-extern size_t wcsnrtombs(char *restrict dst, const wchar_t **restrict src, size_t nwc, size_t len, mbstate_t *restrict ps);
+extern size_t mbsnrtowcs(wchar_t *dst, const char **src, size_t nmc, size_t len, mbstate_t *ps);
+extern size_t wcsnrtombs(char *dst, const wchar_t **src, size_t nwc, size_t len, mbstate_t *ps);
 extern wchar_t *wcsdup(const wchar_t *src);
 extern size_t wcsnlen (const wchar_t *src, size_t n);
 extern wchar_t *wcpcpy (wchar_t *dst, const wchar_t *src);

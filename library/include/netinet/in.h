@@ -199,6 +199,7 @@ struct sockaddr_in
 };
 
 struct sockaddr_in6 {
+	u_char          sin6_len;      /* length of this structure */
     sa_family_t     sin6_family;   /* AF_INET6 */
     in_port_t       sin6_port;     /* port number */
 	unsigned long   sin6_flowinfo; /* IPv6 flow information */
@@ -220,7 +221,7 @@ struct ip_opts
 };
 
 /*
- * Options for use with [gs]etsockopt at the IP level.
+ * Options for use with [gs]etsockot at the IP level.
  * First word of comment is data type; bool is stored in int.
  */
 #define	IP_OPTIONS			1    /* buf/ip_opts; set/get IP options */
@@ -258,6 +259,16 @@ struct ip_opts
 #define	IP_DEFAULT_MULTICAST_TTL	1	/* normally limit m'casts to 1 hop  */
 #define	IP_DEFAULT_MULTICAST_LOOP	1	/* normally hear sends if a member  */
 #define	IP_MAX_MEMBERSHIPS			20	/* per socket; must fit in one mbuf */
+
+/*
+ * Options for level IPPROTO_TCP
+ */
+#define TCP_NODELAY    0x01    /* don't delay send to coalesce packets */
+#define TCP_KEEPALIVE  0x02    /* send KEEPALIVE probes when idle for pcb->keep_idle milliseconds */
+#define TCP_KEEPIDLE   0x03    /* set pcb->keep_idle  - Same as TCP_KEEPALIVE, but use seconds for get/setsockopt */
+#define TCP_KEEPINTVL  0x04    /* set pcb->keep_intvl - Use seconds for get/setsockopt */
+#define TCP_KEEPCNT    0x05    /* set pcb->keep_cnt   - Use number of probes sent for get/setsockopt */
+
 
 #ifdef __USE_MISC
 /*

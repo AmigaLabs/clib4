@@ -12,13 +12,13 @@
 
 unsigned int
 alarm(unsigned seconds) {
-    /* Call setitimer */
+    /* Call __setitimer */
     struct itimerval it = {
             .it_value.tv_sec = seconds,
             .it_value.tv_usec = 0,
             .it_interval.tv_sec = 0,
             .it_interval.tv_usec = 0
     }, old = {0};
-    setitimer(ITIMER_REAL, &it, &old);
+    __setitimer(-1, &it, &old);
     return old.it_value.tv_sec + !!old.it_value.tv_usec;
 }

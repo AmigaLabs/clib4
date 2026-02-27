@@ -55,10 +55,10 @@ pthread_cancel(pthread_t thread) {
         if ((struct Task *) inf->task == task)
             pthread_testcancel(); // cancel ourselves
         else
-            Signal((struct Task *) inf->task, SIGBREAKF_CTRL_C); // trigger the exception handler
+            Signal((struct Task *) inf->task, inf->cancel_signal_mask); // trigger the exception handler
     } else {
         // for the timed waits
-        Signal((struct Task *) inf->task, SIGBREAKF_CTRL_C);
+        Signal((struct Task *) inf->task, inf->cancel_signal_mask);
     }
 
     return 0;

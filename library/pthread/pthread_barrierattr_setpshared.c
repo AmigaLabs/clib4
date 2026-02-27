@@ -8,7 +8,7 @@
 
 int
 pthread_barrierattr_setpshared(pthread_barrierattr_t *attr, int pshared) {
-    if (pshared > 1U)
+    if (pshared > 1)
         return EINVAL;
     attr->pshared = pshared ? INT_MIN : 0;
     return 0;

@@ -16,11 +16,12 @@ ftello64(FILE *stream) {
 
     assert(stream != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL) {
+        SHOWMSG("invalid stream parameter");
         __set_errno(EFAULT);
-        goto out;
+
+        RETURN(result);
+        return (result);
     }
 
     assert(__is_valid_iob(__clib4, file));
@@ -29,16 +30,16 @@ ftello64(FILE *stream) {
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
         __set_errno(EBADF);
 
-        goto out;
+        RETURN(result);
+        return (result);
     }
 
-    SHOWMSG("calling the hook");
+    __flockfile_r(__clib4, stream);
 
+    SHOWMSG("calling the hook");
     SHOWPOINTER(&fam);
 
     fam.fam_Action = file_action_seek;
@@ -75,7 +76,7 @@ ftello64(FILE *stream) {
 
 out:
 
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     return (_off64_t) result;
 }

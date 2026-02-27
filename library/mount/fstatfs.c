@@ -1,5 +1,5 @@
 /*
- * $Id: mount_fstatfs.c,v 1.14 2006-11-16 14:39:23 clib4devs Exp $
+ * $Id: mount_fstatfs.c,v 1.15 2023-07-04 14:39:23 clib4devs Exp $
 */
 
 #ifndef _MOUNT_HEADERS_H
@@ -29,7 +29,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
     if (buf == NULL) {
         SHOWMSG("invalid buffer parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -37,29 +37,29 @@ fstatfs(int file_descriptor, struct statfs *buf) {
     assert(__clib4->__fd[file_descriptor] != NULL);
     assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     __fd_lock(fd);
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         goto out;
     }
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO)) {
-        __set_errno(EBADF);
+        __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
-    parent_dir = __safe_parent_of_file_handle(fd->fd_File);
+    parent_dir = ParentOfFH(fd->fd_File);
     if (parent_dir == BZERO) {
         SHOWMSG("couldn't find parent directory");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 
@@ -67,7 +67,7 @@ fstatfs(int file_descriptor, struct statfs *buf) {
     if (NO success) {
         SHOWMSG("couldn't get info on drive");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 

@@ -22,7 +22,7 @@ remove(const char *filename) {
     if (filename == NULL) {
         SHOWMSG("invalid path name");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 

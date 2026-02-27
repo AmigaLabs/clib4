@@ -35,6 +35,11 @@ __abort(void) {
 
 void
 abort(void) {
+    /* abort will not call exit so we have to check if there are some atexit funcions
+     * ready to be executed too
+     */
+    __exit_trap_trigger();
+
     /* Try to call the signal handler that might be in charge of
        handling cleanup operations, etc. */
     raise(SIGABRT);

@@ -21,5 +21,7 @@ int main() {
         printf("Hex value of first wide character %#.4x\n\n", pwcs);
         free(pwcs);
     }
+
+    free(pmb);
     return (0);
 }

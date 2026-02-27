@@ -11,8 +11,8 @@ static void *clib4Vectors[] = {
         (void *) (__translate_unix_to_amiga_path_name),
         (void *) (libReserved),
         (void *) (__print_termination_message),
-        (void *) (libReserved),
-        (void *) (libReserved),
+        (void *) (__get_default_file),
+        (void *) (unixPathsEnabled),
         (void *) (libReserved),
 
         /* argz.h */
@@ -1160,6 +1160,42 @@ static void *clib4Vectors[] = {
         (void *) (__get_timezone),                        /* 4348 */
         (void *) (__get_daylight),                        /* 4352 */
         (void *) (__get_tzname),                          /* 4356 */
+
+        (void *) (wait),                                  /* 4360 */
+        (void *) (waitpid),                               /* 4364 */
+        (void *) (spawnvpe),                              /* 4368 */
+
+        (void *) (waitpoll),                              /* 4372 */
+
+        (void *) (__get_tc_pc),                           /* 4376 */
+        (void *) (__get_tc_ospeed),                       /* 4380 */
+        (void *) (__get_tc_up),                           /* 4384 */
+        (void *) (__get_tc_bc),                           /* 4388 */
+
+        (void *) (0),                                     /* 4392 - unused */
+
+        (void *) (sigsuspend),		                  	  /* 4396 */
+        (void *) (spawnve),                               /* 4400 */
+        (void *) (sigpause),		                  	  /* 4404 */
+        (void *) (sigwait),		                  		  /* 4408 */
+        (void *) (sigwaitinfo),		                  	  /* 4412 */
+        (void *) (sigtimedwait),	                  	  /* 4416 */
+
+        (void *) (getvfsstat),                            /* 4420 */
+        (void *) (backtrace),                             /* 4424 */
+        (void *) (backtrace_symbols),                     /* 4428 */
+        (void *) (backtrace_symbols_fd),                  /* 4432 */
+        (void *) (dladdr),				  				  /* 4436 */
+
+        (void *) (getpriority),				  			  /* 4440 */
+        (void *) (setpriority),				  			  /* 4444 */
+
+        (void *) (roundeven),				  			  /* 4448 */
+        (void *) (roundevenf),				  			  /* 4452 */
+        (void *) (roundevenl),				  			  /* 4456 */
+
+        (void *) (canonicalize_file_name),                /* 4460 */
+		(void *) (spawnvpe_fork),                         /* 4464 */
 
         (void *)-1
 };

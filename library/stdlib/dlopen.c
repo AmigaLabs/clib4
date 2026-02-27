@@ -20,7 +20,7 @@ dlopen(const char *path_name, int mode) {
     SHOWVALUE(mode);
 
     if (path_name == NULL || path_name[0] == '\0') {
-        __set_errno(ENOENT);
+        __set_errno_r(__clib4, ENOENT);
         goto out;
     }
 
@@ -30,7 +30,7 @@ dlopen(const char *path_name, int mode) {
             goto out;
 
         if (path_name_nti.is_root) {
-            __set_errno(EACCES);
+            __set_errno_r(__clib4, EACCES);
             goto out;
         }
     }
@@ -49,7 +49,7 @@ dlopen(const char *path_name, int mode) {
 
         result = DLOpen(__clib4->__dl_root_handle, path_name, flags);
     } else {
-        __set_errno(ENOSYS);
+        __set_errno_r(__clib4, ENOSYS);
     }
 
 out:

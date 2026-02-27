@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_flush_all_files.c,v 1.3 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_flush_all_files.c,v 1.4 2007-06-07 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -7,10 +7,9 @@
 #endif /* _STDIO_HEADERS_H */
 
 int
-__flush_all_files(int buffer_mode) {
+__flush_all_files(struct _clib4 *__clib4, int buffer_mode) {
     int result;
     int i;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
     SHOWVALUE(buffer_mode);

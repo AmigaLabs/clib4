@@ -9,8 +9,7 @@
 #include <argz.h>
 
 error_t
-argz_create(char *const argv[], char **argz, size_t *argz_len)
-{
+argz_create(char *const argv[], char **argz, size_t *argz_len) {
     int argc = 0;
     int i = 0;
     size_t len = 0;
@@ -18,25 +17,22 @@ argz_create(char *const argv[], char **argz, size_t *argz_len)
 
     *argz_len = 0;
 
-    if (*argv == NULL)
-    {
+    if (*argv == NULL) {
         *argz = NULL;
         return 0;
     }
 
-    while (argv[argc])
-    {
+    while (argv[argc]) {
         *argz_len += (strlen(argv[argc]) + 1);
         argc++;
     }
 
     /* There are argc strings to copy into argz. */
-    if (!(*argz = (char *)malloc(*argz_len)))
+    if (!(*argz = (char *) malloc(*argz_len)))
         return ENOMEM;
 
     iter = *argz;
-    for (i = 0; i < argc; i++)
-    {
+    for (i = 0; i < argc; i++) {
         len = strlen(argv[i]) + 1;
         memcpy(iter, argv[i], len);
         iter += len;

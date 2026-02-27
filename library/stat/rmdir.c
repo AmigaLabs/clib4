@@ -26,7 +26,7 @@ rmdir(const char *path_name) {
     if (path_name == NULL) {
         SHOWMSG("invalid path name parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -34,7 +34,7 @@ rmdir(const char *path_name) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
-            __set_errno(ENOENT);
+            __set_errno_r(__clib4, ENOENT);
             goto out;
         }
 
@@ -42,7 +42,7 @@ rmdir(const char *path_name) {
             goto out;
 
         if (path_name_nti.is_root) {
-            __set_errno(EACCES);
+            __set_errno_r(__clib4, EACCES);
             goto out;
         }
     }
@@ -53,7 +53,7 @@ rmdir(const char *path_name) {
     if (dir_lock == BZERO) {
         SHOWMSG("that didn't work");
 
-        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_access_io_error_to_errno(IoErr()));
         goto out;
     }
 
@@ -61,14 +61,14 @@ rmdir(const char *path_name) {
     if (fib == NULL) {
         SHOWMSG("couldn't examine it");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 
     if (!EXD_IS_DIRECTORY(fib)) {
         SHOWMSG("this is not a directory");
 
-        __set_errno(ENOTDIR);
+        __set_errno_r(__clib4, ENOTDIR);
         goto out;
     }
 
@@ -82,7 +82,7 @@ rmdir(const char *path_name) {
     if (status == DOSFALSE) {
         SHOWMSG("that didn't work");
 
-        __set_errno(__translate_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
 

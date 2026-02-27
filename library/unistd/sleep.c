@@ -21,15 +21,16 @@ sleep(unsigned int seconds) {
     tv.tv_sec = 0;
     tv.tv_usec = microseconds;
 
-    __clib4->__timer_busy = TRUE;
     result = __time_delay(TR_ADDREQUEST, &tv); // EINTR can be returned inside the call
-    __clib4->__timer_busy = FALSE;
+
     if (result == EINTR) {
         /* If a timer has been interrupted by a SIGALRM do we have to exit like on Linux?
          * At moment EINTR is returned only if we got an alarm() signal
          */
         _exit(RETURN_ERROR);
     }
+
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

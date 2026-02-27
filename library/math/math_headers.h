@@ -92,7 +92,7 @@ STATIC udouble z_notanum  = {{ 0xfff80000, 0 }};
 #  define LOW_HALF  1
 #else
 #  if __FLOAT_WORD_ORDER__ == __LITTLE_ENDIAN
-#error Cannot use LIITLE ENDIAN on AmigaOS4
+#error Cannot use LITTLE ENDIAN on AmigaOS4
 #   define HIGH_HALF 1
 #   define LOW_HALF  0
 #  endif
@@ -115,7 +115,7 @@ typedef union
 #endif
 
 #if __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#error Cannot use LIITLE ENDIAN on AmigaOS4
+#error Cannot use LITTLE ENDIAN on AmigaOS4
 typedef union
 {
     double value;
@@ -149,19 +149,19 @@ typedef union
 #endif
 
 #if __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#error Cannot use LIITLE ENDIAN on AmigaOS4
+#error Cannot use LITTLE ENDIAN on AmigaOS4
 typedef union
 {
     long double value;
     struct {
-        u_int32_t lswlo;
-        u_int32_t lswhi;
-        u_int32_t mswlo;
-        u_int32_t mswhi;
+        uint32_t lswlo;
+        uint32_t lswhi;
+        uint32_t mswlo;
+        uint32_t mswhi;
     } parts32;
     struct {
-        u_int64_t lsw;
-        u_int64_t msw;
+        uint64_t lsw;
+        uint64_t msw;
     } parts64;
 } ieee_quad_shape_type;
 #endif

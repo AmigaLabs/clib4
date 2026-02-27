@@ -29,5 +29,5 @@ strnlen(const char *s, size_t maxlen) {
 
 out:
 
-    return (result);
+    return result;
 }

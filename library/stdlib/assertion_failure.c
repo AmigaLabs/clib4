@@ -89,7 +89,7 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
                     BPTR output;
 
                     /* Dump all currently unwritten data, especially to the console. */
-                    __flush_all_files(-1);
+                    __flush_all_files(__clib4, -1);
 
                     /* Try to print the error message on the default error output stream. */
                     output = ErrorOutput();

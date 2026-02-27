@@ -17,10 +17,12 @@ int main () {
     len = mblen( pmb, MB_CUR_MAX );
     printf( "Length in bytes of multibyte character %x: %u\n", pmb, len );
 
+    free(pmb);
     pmb = NULL;
 
     len = mblen( pmb, MB_CUR_MAX );
     printf( "Length in bytes of multibyte character %x: %u\n", pmb, len );
-
+    
+    free(pwcs);
     return(0);
 }

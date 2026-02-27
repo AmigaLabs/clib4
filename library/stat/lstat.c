@@ -36,7 +36,7 @@ lstat(const char *path_name, struct stat *st) {
     if (path_name == NULL || st == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
@@ -44,7 +44,7 @@ lstat(const char *path_name, struct stat *st) {
         if (path_name[0] == '\0') {
             SHOWMSG("no name given");
 
-            __set_errno(ENOENT);
+            __set_errno_r(__clib4, ENOENT);
             goto out;
         }
 
@@ -54,7 +54,7 @@ lstat(const char *path_name, struct stat *st) {
         /* The pseudo root directory is a very special case indeed.
             We make up some pseudo data for it. */
         if (path_name_nti.is_root) {
-            time_t mtime;
+            time_t mtime = 0;
 
             SHOWMSG("setting up the root directory info");
 
@@ -81,12 +81,12 @@ lstat(const char *path_name, struct stat *st) {
     if (file_lock == BZERO && link_length < 0) {
         SHOWMSG("that didn't work");
 
-        __set_errno(__translate_access_io_error_to_errno(IoErr()));
+        __set_errno_r(__clib4, __translate_access_io_error_to_errno(IoErr()));
         goto out;
     }
 
     if (link_length > 0) {
-        time_t mtime;
+        time_t mtime = 0;
         struct DevProc *dvp = GetDeviceProcFlags((STRPTR) path_name, 0, LDF_ALL);
         struct MsgPort *port = NULL;
         if (dvp) {
@@ -116,7 +116,7 @@ lstat(const char *path_name, struct stat *st) {
         if (fib == NULL) {
             SHOWMSG("couldn't examine it");
 
-            __set_errno(__translate_io_error_to_errno(IoErr()));
+            __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
             goto out;
         }
 

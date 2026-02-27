@@ -11,12 +11,11 @@
 #endif /* _LOCALE_HEADERS_H */
 
 struct tm *
-__convert_time(ULONG seconds, LONG gmt_offset, struct tm *tm) {
+__convert_time(struct _clib4 *__clib4, ULONG seconds, LONG gmt_offset, struct tm *tm) {
     struct ClockData clock_data;
     struct tm *result;
-    struct _clib4 *__clib4 = __CLIB4;
     DECLARE_UTILITYBASE();
-    DECLARE_TIMEZONEBASE();
+    DECLARE_TIMEZONEBASE_R(__clib4);
     int8 dstime = -1;
 
     ENTER();

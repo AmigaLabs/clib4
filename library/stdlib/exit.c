@@ -24,8 +24,16 @@ _exit(int return_code) {
     ENTER();
     SHOWVALUE(__clib4->__exit_value);
 
+    /*  If we have timer running tasks for this thread, stop them before raise SIGINT  */
+    if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
+        /* Block SIGALRM signal from raise */
+        sigblock(SIGALRM);
+        /* Kill itimer for current thread */
+        killitimer();
+    }
+
     D(("%d %d\n", __clib4->processId, GetPID(NULL, GPID_PROCESS)));
-    if (__clib4->processId != GetPID(NULL, GPID_PROCESS)) {
+    if (__clib4->processId != (pid_t) GetPID(NULL, GPID_PROCESS)) {
         SHOWMSG("NOT IN MAIN TASK");
         /* We are NOT in main task. Don't call exit here because
          * we'll have pending processes. Try to remove the Task
@@ -36,16 +44,9 @@ _exit(int return_code) {
     }
     else {
         SHOWMSG("IN MAIN TASK");
-        /*  If we have a previous timer running task stop it before raise SIGINT  */
-        if (__clib4->tmr_real_task) {
-            /* Block SIGALRM signal from raise */
-            sigblock(SIGALRM);
-            /* Kill itimer */
-            killitimer();
-        }
 
         /* Dump all currently unwritten data, especially to the console. */
-        __flush_all_files(-1);
+        __flush_all_files(__clib4, -1);
 
         LEAVE();
 

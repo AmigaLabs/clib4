@@ -145,10 +145,10 @@
 #undef	__USE_FORTIFY_LEVEL
 #undef	__KERNEL_STRICT_NAMES
 
-#if !defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L)
-#define restrict
-#define inline
-#endif /* !__STDC_VERSION__ || __STDC_VERSION__ < 199901L */
+#if !defined __cplusplus && (!defined __STDC_VERSION__ || __STDC_VERSION__ < 199901L)
+#  define inline		/* No inline functions.  */
+#  define restrict
+#endif
 
 /* Suppress kernel-name space pollution unless user expressedly asks
    for it.  */

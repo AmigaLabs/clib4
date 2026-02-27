@@ -39,14 +39,14 @@
 
 int
 pthread_setcanceltype(int type, int *oldtype) {
-    pthread_t thread;
     ThreadInfo *inf;
 
     if (type != PTHREAD_CANCEL_DEFERRED && type != PTHREAD_CANCEL_ASYNCHRONOUS)
         return EINVAL;
 
-    thread = pthread_self();
-    inf = GetThreadInfo(thread);
+    inf = GetCurrentThreadInfo();
+	if (inf == NULL)
+		return EINVAL;
 
     if (oldtype)
         *oldtype = inf->canceltype;

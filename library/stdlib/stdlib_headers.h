@@ -41,6 +41,10 @@
 #include <proto/dos.h>
 #endif /* PROTO_DOS_H */
 
+#ifndef PROTO_ELF_H
+#include <proto/elf.h>
+#endif /* PROTO_ELF_H */
+
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,7 +55,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <endian.h>
-#include "../include/dos.h"
+#include "../dos.h"
 
 #ifndef _STDLIB_LOCALEBASE_H
 #include "stdlib_localebase.h"
@@ -72,6 +76,14 @@
 #ifndef _MATH_HEADERS_H
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
+
+#ifndef _STDLIB_DEBUGBASE_H
+#include "stdlib_debugbase.h"
+#endif /* _STDLIB_DEBUGBASE_H */
+
+#ifndef _STDLIB_ELFBASE_H
+#include "stdlib_elfbase.h"
+#endif /* _STDLIB_ELFBASE_H */
 
 #ifndef _MATH_FP_SUPPORT_H
 #include "math_fp_support.h"
@@ -97,14 +109,29 @@ extern void _fini(void);
 
 extern int _main(char *argstr,
                  int arglen,
-                 int (*start_main)(int, char **),
+                 int (*start_main)(int, char **, char **),
                  void (*__EXT_CTOR_LIST__[])(void),
-                 void (*__EXT_DTOR_LIST__[])(void));
+                 void (*__EXT_DTOR_LIST__[])(void),
+                 struct WBStartup *sms);
 
 #ifndef _STDLIB_PROTOS_H
 #include "stdlib_protos.h"
 #endif /* _STDLIB_PROTOS_H */
 
 extern void kprintf(const char * format,...);
+
+extern BOOL stdlib_program_name_init();
+extern void stdlib_program_name_exit();
+extern int wb_file_init(struct _clib4 *__clib4);
+extern void workbench_exit();
+extern BOOL arg_init();
+extern void arg_exit();
+
+extern ULONG amigaos_symbols_callback(struct Hook *hook, struct Task *task, struct SymbolMsg *symbolmsg);
+extern APTR processscan_hook_function(struct Hook *hook, APTR userdata, struct Process *process);
+
+extern char *getenv_r(struct _clib4 *__clib4, const char *name, int *offset);
+
+#define NAMELEN 32
 
 #endif /* _STDLIB_HEADERS_H */

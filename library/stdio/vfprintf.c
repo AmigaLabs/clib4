@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_vfprintf.c,v 1.27 2022-03-5 17:42:43 clib4devs Exp $
+ * $Id: stdio_vfprintf.c,v 1.28 2024-07-12 17:42:43 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -14,20 +14,24 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
+#ifndef _CTYPE_HEADERS_H
+#include "ctype_headers.h"
+#endif /* _CTYPE_HEADERS_H */
+
 #include <sys/param.h> // max
 #include "wchar_wprintf_core.h"
 
-static void pad(Out *f, char c, int w, int l, int fl);
+static void pad(struct _clib4 *__clib4, Out *f, char c, int w, int l, int fl);
 
 static void out_init_file(Out *out, FILE *f) {
-    memset(out, 0, sizeof(*out));
+    out->buffer = NULL;
     out->buffer_size = f->size;
     out->buffer_pos = f->position;
     out->file = f;
 }
 
-static void out(Out *_out, const char *text, size_t l) {
-    size_t length = ((l > 0) ? (size_t) l : 0U);
+static void out(struct _clib4 *__clib4, Out *_out, const char *text, size_t l) {
+    size_t length = l > 0 ? l : 0U;
     if (!length) {
         return;
     }
@@ -36,7 +40,7 @@ static void out(Out *_out, const char *text, size_t l) {
         const char *w = text;
         _out->buffer_pos += length;
         while (length--) {
-            __putc_unlocked(*w++, _out->file);
+            __fputc(__clib4, *w++, _out->file, (((struct iob *) _out->file)->iob_Flags & IOBF_BUFFER_MODE));
         }
     } else {
         // Write into a bounded buffer.
@@ -44,12 +48,12 @@ static void out(Out *_out, const char *text, size_t l) {
         if (length > avail) {
             length = avail;
         }
-        memcpy((char *) (_out->buffer + _out->buffer_pos), (const char *) text, (length * sizeof(char)));
+        memcpy(_out->buffer + _out->buffer_pos, text, (length * sizeof(char)));
         _out->buffer_pos += length;
     }
 }
 
-static void pad(Out *f, char c, int w, int l, int fl) {
+static void pad(struct _clib4 *__clib4, Out *f, char c, int w, int l, int fl) {
     char _pad[256];
     const int _psz = (int) (sizeof(_pad));
 
@@ -58,9 +62,9 @@ static void pad(Out *f, char c, int w, int l, int fl) {
     l = (w - l);
     memset(_pad, c, (size_t)((l > _psz) ? _psz : l));
     for (; (l >= _psz); l -= _psz) {
-        out(f, _pad, _psz);
+        out(__clib4, f, _pad, _psz);
     }
-    out(f, _pad, l);
+    out(__clib4, f, _pad, l);
 }
 
 
@@ -68,9 +72,20 @@ static const char xdigits[16] = {
         "0123456789ABCDEF"
 };
 
+static const char bdigits[2] = {
+        "01"
+};
+
 static char *fmt_x(uintmax_t x, char *s, int lower) {
     for (; x; x >>= 4) {
         *--s = (char) (xdigits[(x & 15)] | lower);
+    }
+    return s;
+}
+
+static char *fmt_b(uintmax_t x, char *s, int lower) {
+    for (; x; x >>= 1) {
+        *--s = (char) (bdigits[(x & 1)] | lower);
     }
     return s;
 }
@@ -168,9 +183,9 @@ static inline void pop_arg(union arg *arg, int type, va_list *ap, pop_arg_long_d
 typedef char compiler_defines_long_double_incorrectly[9 - (int) sizeof(long double)];
 #endif
 
-typedef int (*fmt_fp_t)(Out *f, long_double y, int w, int p, int fl, int t);
+typedef int (*fmt_fp_t)(struct _clib4 *__clib4, Out *f, long_double y, int w, int p, int fl, int t);
 
-static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
+static int fmt_fp(struct _clib4 *__clib4, Out *f, long double y, int w, int p, int fl, int t) {
     uint32_t big[(LDBL_MANT_DIG + 28) / 29 + 1          // mantissa expansion
                  + (LDBL_MAX_EXP + LDBL_MANT_DIG + 28 + 8) / 9]; // exponent expansion
     uint32_t *a, *d, *r, *z;
@@ -179,7 +194,6 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     const char *prefix = "-0X+0X 0X-0x+0x 0x";
     int pl;
     char ebuf0[3 * sizeof(int)], *ebuf = &ebuf0[3 * sizeof(int)], *estr = 0;
-    //Printf("Y = %ld\n", y);
 
     pl = 1;
     if (signbit(y)) {
@@ -193,10 +207,10 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
     if (!isfinite(y)) {
         char *s = (t & 32) ? "inf" : "INF";
         if (y != y) s = (t & 32) ? "nan" : "NAN";
-        pad(f, ' ', w, 3 + pl, fl & ~ZERO_PAD);
-        out(f, prefix, pl);
-        out(f, s, 3);
-        pad(f, ' ', w, 3 + pl, fl ^ LEFT_ADJ);
+        pad(__clib4, f, ' ', w, 3 + pl, fl & ~ZERO_PAD);
+        out(__clib4, f, prefix, pl);
+        out(__clib4, f, s, 3);
+        pad(__clib4, f, ' ', w, 3 + pl, fl ^ LEFT_ADJ);
         return MAX(w, 3 + pl);
     }
 
@@ -247,21 +261,25 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         else
             l = (s - buf) + (ebuf - estr);
 
-        pad(f, ' ', w, pl + l, fl);
-        out(f, prefix, pl);
-        pad(f, '0', w, pl + l, fl ^ ZERO_PAD);
-        out(f, buf, s - buf);
-        pad(f, '0', l - (ebuf - estr) - (s - buf), 0, 0);
-        out(f, estr, ebuf - estr);
-        pad(f, ' ', w, pl + l, fl ^ LEFT_ADJ);
+        pad(__clib4, f, ' ', w, pl + l, fl);
+        out(__clib4, f, prefix, pl);
+        pad(__clib4, f, '0', w, pl + l, fl ^ ZERO_PAD);
+        out(__clib4, f, buf, s - buf);
+        pad(__clib4, f, '0', l - (ebuf - estr) - (s - buf), 0, 0);
+        out(__clib4, f, estr, ebuf - estr);
+        pad(__clib4, f, ' ', w, pl + l, fl ^ LEFT_ADJ);
         return MAX(w, pl + l);
     }
-    if (p < 0) p = 6;
+    if (p < 0)
+        p = 6;
 
-    if (y) y *= 0x1p28, e2 -= 28;
+    if (y)
+        y *= 0x1p28, e2 -= 28;
 
-    if (e2 < 0) a = r = z = big;
-    else a = r = z = big + sizeof(big) / sizeof(*big) - LDBL_MANT_DIG - 1;
+    if (e2 < 0)
+        a = r = z = big;
+    else
+        a = r = z = big + sizeof(big) / sizeof(*big) - LDBL_MANT_DIG - 1;
 
     do {
         *z = y;
@@ -296,8 +314,10 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         e2 += sh;
     }
 
-    if (a < z) for (i = 10, e = 9 * (r - a); *a >= i; i *= 10, e++);
-    else e = 0;
+    if (a < z)
+        for (i = 10, e = 9 * (r - a); *a >= (uint32) i; i *= 10, e++);
+    else
+        e = 0;
 
     /* Perform rounding: j is precision after the radix (possibly neg) */
     j = p - ((t | 32) != 'f') * e - ((t | 32) == 'g' && p);
@@ -315,9 +335,12 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
             long_double small;
             if ((*d / i & 1) || (i == 1000000000 && d > a && (d[-1] & 1)))
                 round += 2;
-            if (x < i / 2) small = 0x0.8p0;
-            else if (x == i / 2 && d + 1 == z) small = 0x1.0p0;
-            else small = 0x1.8p0;
+            if (x < (uint32) i / 2)
+                small = 0x0.8p0;
+            else if (x == (uint32) i / 2 && d + 1 == z)
+                small = 0x1.0p0;
+            else
+                small = 0x1.8p0;
             if (pl && *prefix == '-') round *= -1, small *= -1;
             *d -= x;
             /* Decide whether to round by probing round+small */
@@ -328,10 +351,11 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
                     if (d < a) *--a = 0;
                     (*d)++;
                 }
-                for (i = 10, e = 9 * (r - a); *a >= i; i *= 10, e++);
+                for (i = 10, e = 9 * (r - a); *a >= (uint32) i; i *= 10, e++);
             }
         }
-        if (z > d + 1) z = d + 1;
+        if (z > d + 1)
+            z = d + 1;
     }
     for (; z > a && !z[-1]; z--);
 
@@ -369,44 +393,55 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
         l += ebuf - estr;
     }
 
-    if (l > INT_MAX - pl) return -1;
-    pad(f, ' ', w, pl + l, fl);
-    out(f, prefix, pl);
-    pad(f, '0', w, pl + l, fl ^ ZERO_PAD);
+    if (l > INT_MAX - pl)
+        return -1;
+    pad(__clib4, f, ' ', w, pl + l, fl);
+    out(__clib4, f, prefix, pl);
+    pad(__clib4, f, '0', w, pl + l, fl ^ ZERO_PAD);
 
     if ((t | 32) == 'f') {
         if (a > r) a = r;
         for (d = a; d <= r; d++) {
             char *s = fmt_u(*d, buf + 9);
-            if (d != a) while (s > buf) *--s = '0';
-            else if (s == buf + 9) *--s = '0';
-            out(f, s, buf + 9 - s);
+            if (d != a)
+                while (s > buf)
+                    *--s = '0';
+            else if (s == buf + 9)
+                *--s = '0';
+            out(__clib4, f, s, buf + 9 - s);
         }
-        if (p || (fl & ALT_FORM)) out(f, ".", 1);
+        if (p || (fl & ALT_FORM))
+            out(__clib4, f, ".", 1);
         for (; d < z && p > 0; d++, p -= 9) {
             char *s = fmt_u(*d, buf + 9);
-            while (s > buf) *--s = '0';
-            out(f, s, MIN(9, p));
+            while (s > buf)
+                *--s = '0';
+            out(__clib4, f, s, MIN(9, p));
         }
-        pad(f, '0', p + 9, 9, 0);
+        pad(__clib4, f, '0', p + 9, 9, 0);
     } else {
-        if (z <= a) z = a + 1;
+        if (z <= a)
+            z = a + 1;
         for (d = a; d < z && p >= 0; d++) {
             char *s = fmt_u(*d, buf + 9);
-            if (s == buf + 9) *--s = '0';
-            if (d != a) while (s > buf) *--s = '0';
+            if (s == buf + 9)
+                *--s = '0';
+            if (d != a)
+                while (s > buf)
+                    *--s = '0';
             else {
-                out(f, s++, 1);
-                if (p > 0 || (fl & ALT_FORM)) out(f, ".", 1);
+                out(__clib4, f, s++, 1);
+                if (p > 0 || (fl & ALT_FORM))
+                    out(__clib4, f, ".", 1);
             }
-            out(f, s, MIN(buf + 9 - s, p));
+            out(__clib4, f, s, MIN(buf + 9 - s, p));
             p -= buf + 9 - s;
         }
-        pad(f, '0', p + 18, 18, 0);
-        out(f, estr, ebuf - estr);
+        pad(__clib4, f, '0', p + 18, 18, 0);
+        out(__clib4, f, estr, ebuf - estr);
     }
 
-    pad(f, ' ', w, pl + l, fl ^ LEFT_ADJ);
+    pad(__clib4, f, ' ', w, pl + l, fl ^ LEFT_ADJ);
 
     return MAX(w, pl + l);
 }
@@ -414,13 +449,13 @@ static int fmt_fp(Out *f, long double y, int w, int p, int fl, int t) {
 static int getint(char **s) {
     int i;
     for (i = 0; isdigit(**s); (*s)++) {
-        if (i > INT_MAX / 10U || **s - '0' > INT_MAX - 10 * i) i = -1;
+        if ((uint32) i > INT_MAX / 10U || **s - '0' > INT_MAX - 10 * i) i = -1;
         else i = 10 * i + (**s - '0');
     }
     return i;
 }
 
-static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type, fmt_fp_t fmt_fp,
+static int printf_core(struct _clib4 *__clib4, Out *f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type, fmt_fp_t fmt_fp,
                        pop_arg_long_double_t pop_arg_long_double) {
     char *a, *z, *s = (char *) fmt;
     unsigned l10n = 0, fl;
@@ -440,19 +475,24 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
         /* This error is only specified for snprintf, but since it's
          * unspecified for other forms, do the same. Stop immediately
          * on overflow; otherwise %n could produce wrong results. */
-        if (l > INT_MAX - cnt) goto overflow;
+        if (l > INT_MAX - cnt)
+            goto overflow;
 
         /* Update output count, end loop when fmt is exhausted */
         cnt += l;
-        if (!*s) break;
+        if (!*s)
+            break;
 
         /* Handle literal text and %% format specifiers */
         for (a = s; *s && *s != '%'; s++);
         for (z = s; s[0] == '%' && s[1] == '%'; z++, s += 2);
-        if (z - a > INT_MAX - cnt) goto overflow;
+        if (z - a > INT_MAX - cnt)
+            goto overflow;
         l = z - a;
-        if (f) out(f, a, l);
-        if (l) continue;
+        if (f)
+            out(__clib4, f, a, l);
+        if (l)
+            continue;
 
         if (isdigit(s[1]) && s[2] == '$') {
             l10n = 1;
@@ -471,34 +511,47 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
         if (*s == '*') {
             if (isdigit(s[1]) && s[2] == '$') {
                 l10n = 1;
-                if (!f) nl_type[s[1] - '0'] = _INT, w = 0;
-                else w = nl_arg[s[1] - '0'].i;
+                if (!f)
+                    nl_type[s[1] - '0'] = _INT, w = 0;
+                else
+                    w = nl_arg[s[1] - '0'].i;
                 s += 3;
-            } else if (!l10n) {
-                w = f ? va_arg(*ap,
-                int) : 0;
+            }
+            else if (!l10n) {
+                w = f ? va_arg(*ap, int) : 0;
                 s++;
-            } else goto inval;
-            if (w < 0) fl |= LEFT_ADJ, w = -w;
-        } else if ((w = getint(&s)) < 0) goto overflow;
+            }
+            else
+                goto inval;
+            if (w < 0)
+                fl |= LEFT_ADJ, w = -w;
+        }
+        else if ((w = getint(&s)) < 0)
+            goto overflow;
 
         /* Read precision */
         if (*s == '.' && s[1] == '*') {
             if (isdigit(s[2]) && s[3] == '$') {
-                if (!f) nl_type[s[2] - '0'] = _INT, p = 0;
-                else p = nl_arg[s[2] - '0'].i;
+                if (!f)
+                    nl_type[s[2] - '0'] = _INT, p = 0;
+                else
+                    p = nl_arg[s[2] - '0'].i;
                 s += 4;
-            } else if (!l10n) {
-                p = f ? va_arg(*ap,
-                int) : 0;
+            }
+            else if (!l10n) {
+                p = f ? va_arg(*ap, int) : 0;
                 s += 2;
-            } else goto inval;
+            }
+            else
+                goto inval;
             xp = (p >= 0);
-        } else if (*s == '.') {
+        }
+        else if (*s == '.') {
             s++;
             p = getint(&s);
             xp = 1;
-        } else {
+        }
+        else {
             p = -1;
             xp = 0;
         }
@@ -506,30 +559,35 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
         /* Format specifier state machine */
         st = 0;
         do {
-            if (OOB(*s)) goto inval;
+            if (OOB(*s))
+                goto inval;
             ps = st;
             st = states[st]
             S(*s++);
         } while (st - 1 < _STOP);
-        if (!st) goto inval;
+        if (!st)
+            goto inval;
 
         /* Check validity of argument type (nl/normal) */
         if (st == _NOARG) {
-            if (argpos >= 0) goto inval;
+            if (argpos >= 0)
+                goto inval;
         } else {
             if (argpos >= 0) {
-                if (!f) nl_type[argpos] = st;
-                else arg = nl_arg[argpos];
-            } else if (f) pop_arg(&arg, st, ap, pop_arg_long_double);
-            else return 0;
+                if (!f)
+                    nl_type[argpos] = st;
+                else
+                    arg = nl_arg[argpos];
+            }
+            else if (f) {
+                pop_arg(&arg, st, ap, pop_arg_long_double);
+            }
+            else
+                return 0;
         }
 
         if (!f)
             continue;
-
-        /* Do not process any new directives once in error state. */
-        if (ferror(f->file))
-            return -1;
 
         z = buf + sizeof(buf);
         prefix = "-+   0X0x";
@@ -537,12 +595,28 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
         t = s[-1];
 
         /* Transform ls,lc -> S,C */
-        if (ps && (t & 15) == 3) t &= ~32;
+        if (ps && (t & 15) == 3)
+            t &= ~32;
 
         /* - and 0 flags are mutually exclusive */
-        if (fl & LEFT_ADJ) fl &= ~ZERO_PAD;
+        if (fl & LEFT_ADJ)
+            fl &= ~ZERO_PAD;
 
         switch (t) {
+            case 'b':
+                a = fmt_b(arg.i, z, t & 32);
+                if (arg.i && (fl & ALT_FORM))
+                    prefix += (t >> 4), pl = 2;
+                if (xp && p < 0)
+                    goto overflow;
+                if (xp)
+                    fl &= ~ZERO_PAD;
+                if (!arg.i && !p) {
+                    a = z;
+                    break;
+                }
+                p = MAX(p, z - a + !arg.i);
+                break;
             case 'n':
                 switch (ps) {
                     case _BARE:
@@ -569,14 +643,15 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 }
                 continue;
             case 'p':
-                p = MAX(p, 2 * sizeof(void *));
+                p = MAX((uint32) p, 2 * sizeof(void *));
                 t = 'x';
                 fl |= ALT_FORM;
                 /* fallthrough */
             case 'x':
             case 'X':
                 a = fmt_x(arg.i, z, t & 32);
-                if (arg.i && (fl & ALT_FORM)) prefix += (t >> 4), pl = 2;
+                if (arg.i && (fl & ALT_FORM))
+                    prefix += (t >> 4), pl = 2;
                 if (0) {
                     case 'o':
                         a = fmt_o(arg.i, z);
@@ -596,8 +671,10 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                     case 'u':
                         a = fmt_u(arg.i, z);
                 }
-                if (xp && p < 0) goto overflow;
-                if (xp) fl &= ~ZERO_PAD;
+                if (xp && p < 0)
+                    goto overflow;
+                if (xp)
+                    fl &= ~ZERO_PAD;
                 if (!arg.i && !p) {
                     a = z;
                     break;
@@ -609,13 +686,15 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 fl &= ~ZERO_PAD;
                 break;
             case 'm':
-                if (1) a = strerror(errno);
+                if (1)
+                    a = strerror(errno);
                 else
-                    /* fallthrough */
-                    case 's':
-                        a = arg.p ? arg.p : "(null)";
+            /* fallthrough */
+            case 's':
+                a = arg.p ? arg.p : "(null)";
                 z = a + strnlen(a, p < 0 ? INT_MAX : p);
-                if (p < 0 && *z) goto overflow;
+                if (p < 0 && *z)
+                    goto overflow;
                 p = z - a;
                 fl &= ~ZERO_PAD;
                 break;
@@ -627,15 +706,17 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
                 /* fallthrough */
             case 'S':
                 ws = arg.p;
-                for (i = l = 0; i < p && *ws && (l = wctomb(mb, *ws++)) >= 0 && l <= p - i; i += l);
-                if (l < 0) return -1;
-                if (i > INT_MAX) goto overflow;
+                for (i = l = 0; (int) i < p && *ws && (l = wctomb(mb, *ws++)) >= 0 && (uint32) l <= p - i; i += l);
+                if (l < 0)
+                    return -1;
+                if (i > INT_MAX)
+                    goto overflow;
                 p = i;
-                pad(f, ' ', w, p, fl);
+                pad(__clib4, f, ' ', w, p, fl);
                 ws = arg.p;
-                for (i = 0; i < 0U + p && *ws && i + (l = wctomb(mb, *ws++)) <= p; i += l)
-                    out(f, mb, l);
-                pad(f, ' ', w, p, fl ^ LEFT_ADJ);
+                for (i = 0; i < 0U + p && *ws && i + (l = wctomb(mb, *ws++)) <= (uint32) p; i += l)
+                    out(__clib4, f, mb, l);
+                pad(__clib4, f, ' ', w, p, fl ^ LEFT_ADJ);
                 l = w > p ? w : p;
                 continue;
             case 'e':
@@ -646,29 +727,37 @@ static int printf_core(Out *f, const char *fmt, va_list *ap, union arg *nl_arg, 
             case 'F':
             case 'G':
             case 'A':
-                if (xp && p < 0) goto overflow;
-                l = fmt_fp(f, arg.f, w, p, fl, t);
-                if (l < 0) goto overflow;
+                if (xp && p < 0)
+                    goto overflow;
+                l = fmt_fp(__clib4, f, arg.f, w, p, fl, t);
+                if (l < 0)
+                    goto overflow;
                 continue;
         }
 
-        if (p < z - a) p = z - a;
-        if (p > INT_MAX - pl) goto overflow;
-        if (w < pl + p) w = pl + p;
-        if (w > INT_MAX - cnt) goto overflow;
+        if (p < z - a)
+            p = z - a;
+        if (p > INT_MAX - pl)
+            goto overflow;
+        if (w < pl + p)
+            w = pl + p;
+        if (w > INT_MAX - cnt)
+            goto overflow;
 
-        pad(f, ' ', w, pl + p, fl);
-        out(f, prefix, pl);
-        pad(f, '0', w, pl + p, fl ^ ZERO_PAD);
-        pad(f, '0', p, z - a, 0);
-        out(f, a, z - a);
-        pad(f, ' ', w, pl + p, fl ^ LEFT_ADJ);
+        pad(__clib4, f, ' ', w, pl + p, fl);
+        out(__clib4, f, prefix, pl);
+        pad(__clib4, f, '0', w, pl + p, fl ^ ZERO_PAD);
+        pad(__clib4, f, '0', p, z - a, 0);
+        out(__clib4, f, a, z - a);
+        pad(__clib4, f, ' ', w, pl + p, fl ^ LEFT_ADJ);
 
         l = w;
     }
 
-    if (f) return cnt;
-    if (!l10n) return 0;
+    if (f)
+        return cnt;
+    if (!l10n)
+        return 0;
 
     for (i = 1; i <= NL_ARGMAX && nl_type[i]; i++)
         pop_arg(nl_arg + i, nl_type[i], ap, pop_arg_long_double);
@@ -687,6 +776,12 @@ overflow:
 
 int
 vfprintf(FILE *f, const char *format, va_list ap) {
+    struct _clib4 *__clib4 = __CLIB4;
+    return __vfprintf_r(__clib4, f, format, ap);
+}
+
+int
+__vfprintf_r(struct _clib4 *__clib4, FILE *f, const char *format, va_list ap) {
     va_list ap2;
     int ret, nl_type[NL_ARGMAX] = {0};
     union arg nl_arg[NL_ARGMAX] = {0};
@@ -695,34 +790,38 @@ vfprintf(FILE *f, const char *format, va_list ap) {
     SHOWPOINTER(f);
     SHOWSTRING(format);
 
-    __check_abort();
+	if (f == NULL) {
+		__set_errno(EBADF);
+		RETURN(EOF);
+		return EOF;
+	}
 
     SHOWMSG("Formatting File pointer");
     Out _out[1];
     out_init_file(_out, f);
     va_copy(ap2, ap);
 
-    // Check for error in format string before writing anything to file.
-    SHOWMSG("Check for string format errors");
-    /*
-    if (printf_core(0, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double) < 0) {
-        va_end(ap2);
-        return EOF;
-    }
-    */
-
     SHOWMSG("Write result to the file");
-    ret = printf_core(_out, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double);
+    ret = printf_core(__clib4, _out, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double);
     if (ret != EOF) {
         struct iob *iob = (struct iob *) f;
         if (FLAG_IS_CLEAR(iob->iob_Flags, IOBF_NO_NUL)) {
-            __putc('\0', f, (iob->iob_Flags & IOBF_BUFFER_MODE));
+            __putc(__clib4, '\0', f, (iob->iob_Flags & IOBF_BUFFER_MODE));
         }
+    }
+    else {
+        va_end(ap2);
+
+        __check_abort_f(__clib4);
+
+        RETURN(EOF);
+        return EOF;
     }
     va_end(ap2);
 
     SHOWMSG("Flush the file");
-    fflush(f);
+    /* Check abort is inside flush. Just in case... */
+    __fflush_r(__clib4, f);
 
     RETURN(ret);
     return ret;

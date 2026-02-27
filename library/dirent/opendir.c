@@ -43,7 +43,7 @@ opendir(const char *path_name) {
         goto out;
     }
 
-    dh = malloc(sizeof(*dh));
+    dh = __malloc_r(__clib4, sizeof(*dh));
     if (dh == NULL) {
         SHOWMSG("memory allocation failed");
         goto out;
@@ -84,7 +84,7 @@ opendir(const char *path_name) {
 
                     len = name[0];
 
-                    node = malloc(sizeof(*node) + len + 2);
+                    node = __malloc_r(__clib4, sizeof(*node) + len + 2);
                     if (node == NULL) {
                         UnLockDosList(LDF_VOLUMES | LDF_READ);
 
@@ -102,7 +102,7 @@ opendir(const char *path_name) {
                         this is not the most sophisticated algorithm but then
                         the number of volumes should be small. */
                     if (find_by_name((struct List *) &dh->dh_VolumeList, node->ln_Name) != NULL) {
-                        free(node);
+                        __free_r(__clib4, node);
                         continue;
                     }
 
@@ -150,7 +150,7 @@ opendir(const char *path_name) {
         }
 
         dh->dh_Context = ObtainDirContextTags(EX_FileLockInput, dh->dh_DirLock,
-                                              EX_DoCurrentDir, TRUE,
+                                              EX_DoCurrentDir, FALSE,
                                               EX_DataFields, EXF_ALL,
                                               TAG_END);
         if (dh->dh_Context == NULL) {
@@ -185,12 +185,12 @@ out:
             struct Node *node;
 
             while ((node = RemHead((struct List *) &dh->dh_VolumeList)) != NULL)
-                free(node);
+                __free_r(__clib4, node);
         }
 
         UnLock(dh->dh_DirLock);
 
-        free(dh);
+        __free_r(__clib4, dh);
     }
 
     RETURN(result);

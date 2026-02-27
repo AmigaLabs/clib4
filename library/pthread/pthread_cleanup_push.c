@@ -39,19 +39,19 @@
 
 void
 pthread_cleanup_push(void (*routine)(void *), void *arg) {
-    pthread_t thread;
     ThreadInfo *inf;
     CleanupHandler *handler;
 
     if (routine == NULL)
         return;
 
-    handler = AllocVecTags(sizeof(CleanupHandler), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    handler = calloc(1, sizeof(CleanupHandler));
     if (handler == NULL)
         return;
 
-    thread = pthread_self();
-    inf = GetThreadInfo(thread);
+    inf = GetCurrentThreadInfo();
+	if (!inf)
+		return;
 
     handler->routine = routine;
     handler->arg = arg;

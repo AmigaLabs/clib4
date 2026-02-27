@@ -1,5 +1,5 @@
 /*
- * $Id: fcntl_fcntl.c,v 1.20 2006-11-16 14:39:23 clib4devs Exp $
+ * $Id: fcntl_fcntl.c,v 1.21 2023-07-04 14:39:23 clib4devs Exp $
 */
 
 #ifndef _FCNTL_HEADERS_H
@@ -25,14 +25,12 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     SHOWVALUE(file_descriptor);
     SHOWVALUE(cmd);
 
-    if (__clib4->__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE) || file_descriptor < 0 || file_descriptor > __clib4->__num_fd) {
+    if (__clib4 == NULL || __clib4->__fd == NULL || __clib4->__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE) || file_descriptor < 0 || file_descriptor > __clib4->__num_fd) {
         __set_errno(EINVAL);
         goto out;
     }
 
     __set_errno(0);
-
-    __check_abort_f(__clib4);
 
     /* F_DUPFD will need to modify the file descriptor table, which is why
        the stdio lock needs to be obtained here, before the individual
@@ -40,7 +38,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     if (cmd == F_DUPFD)
         __stdio_lock(__clib4);
 
-    fd = __get_file_descriptor(file_descriptor);
+    fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
         __set_errno(EBADF);
         goto out;
@@ -90,7 +88,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
                 break;
             }
 
-            if (__handle_record_locking(cmd, l, fd, &error) < 0) {
+            if (__handle_record_locking(__clib4, cmd, l, fd, &error) < 0) {
                 __set_errno(error);
                 goto out;
             }
@@ -103,6 +101,8 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
             SHOWMSG("cmd=F_GETFL");
 
+            result = OK;
+
             if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING))
                 SET_FLAG(result, O_NONBLOCK);
 
@@ -112,27 +112,38 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY))
                 SET_FLAG(result, O_PATH);
 
-            result = OK;
-
             break;
 
         case F_GETFD:
-            /* Don't fail on this. If we reach this point file descriptor is ok */
-            result = OK;
+            SHOWMSG("cmd=F_GETFD");
 
+            /* Return FD_CLOEXEC if the FDF_CLOEXEC flag is set */
+            result = 0;
+            if (FLAG_IS_SET(fd->fd_Flags, FDF_CLOEXEC))
+                result = FD_CLOEXEC;
+
+            D(("F_GETFD: fd=%d, cloexec=%d\n", file_descriptor, result));
             break;
 
         case F_SETFD:
+            SHOWMSG("cmd=F_SETFD");
 
-            /* We don't have any logic implemented here yet but don't fail if someone is asking to set a flag like FD_CLOEXEC */
             va_start(arg, cmd);
             flags = va_arg(arg, int);
             va_end(arg);
 
-            /* Fail if flag is not FD_CLOEXEC, otherwise return OK */
-            if (flags == FD_CLOEXEC)
-                result = OK;
+            D(("F_SETFD: fd=%d, flags=0x%x\n", file_descriptor, flags));
 
+            /* Set or clear the FDF_CLOEXEC flag based on FD_CLOEXEC */
+            if (FLAG_IS_SET(flags, FD_CLOEXEC)) {
+                SET_FLAG(fd->fd_Flags, FDF_CLOEXEC);
+                D(("Setting FD_CLOEXEC on fd=%d\n", file_descriptor));
+            } else {
+                CLEAR_FLAG(fd->fd_Flags, FDF_CLOEXEC);
+                D(("Clearing FD_CLOEXEC on fd=%d\n", file_descriptor));
+            }
+
+            result = OK;
             break;
 
         case F_SETFL:
@@ -144,7 +155,8 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             va_end(arg);
 
             /* If someone ask us o set STDIN_FILENO as O_NONBLOCK don't set it but don't return an error */
-            if (file_descriptor == STDIN_FILENO) {
+            if (file_descriptor == STDIN_FILENO || file_descriptor == STDOUT_FILENO || file_descriptor == STDERR_FILENO) {
+                SHOWMSG("Setting fake O_NONBLOCK on STDIN_FILENO");
                 if (FLAG_IS_SET(flags, O_NONBLOCK))
                     SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
                 else
@@ -156,27 +168,29 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
             /* If this is a file, make sure that we don't hit a zero file handle. */
             if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_File == BZERO) {
+                SHOWMSG("file is closed. Can't set flags");
                 __set_errno(EBADF);
                 goto out;
             }
 
             if ((FLAG_IS_SET(flags, O_NONBLOCK) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING)) ||
                 (FLAG_IS_CLEAR(flags, O_NONBLOCK) && FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING))) {
-                fam.fam_Action = file_action_set_blocking;
-                fam.fam_Arg = FLAG_IS_CLEAR(flags, O_NONBLOCK);
+                    D(("changing non-blocking mode to %ld", FLAG_IS_CLEAR(flags, O_NONBLOCK) ? 0 : 1));
+                    fam.fam_Action = file_action_set_blocking;
+                    fam.fam_Arg = FLAG_IS_CLEAR(flags, O_NONBLOCK);
 
-                assert(fd->fd_Action != NULL);
+                    assert(fd->fd_Action != NULL);
 
-                if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
-                    __set_errno(fam.fam_Error);
+                    if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
+                        __set_errno(fam.fam_Error);
 
-                    goto out;
-                }
+                        goto out;
+                    }
 
-                if (FLAG_IS_SET(flags, O_NONBLOCK))
-                    SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
-                else
-                    CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+                    if (FLAG_IS_SET(flags, O_NONBLOCK))
+                        SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+                    else
+                        CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
             }
 
             if ((FLAG_IS_SET(flags, O_ASYNC) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_ASYNC_IO)) ||
@@ -225,8 +239,6 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             do {
                 __stdio_unlock(__clib4);
 
-                __check_abort_f(__clib4);
-
                 __stdio_lock(__clib4);
 
                 for (i = fdbase; i < __clib4->__num_fd; i++) {
@@ -262,6 +274,8 @@ out:
 
     if (cmd == F_DUPFD)
         __stdio_unlock(__clib4);
+
+    __check_abort_f(__clib4);
 
     RETURN(result);
     return (result);

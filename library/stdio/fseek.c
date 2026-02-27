@@ -20,13 +20,12 @@ fseek(FILE *stream, long int offset, int wherefrom) {
 
     assert(stream != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL) {
         SHOWMSG("invalid stream parameter");
 
         __set_errno(EFAULT);
-        goto out;
+        RETURN(result);
+        return (result);
     }
 
     assert(__is_valid_iob(__clib4, file));
@@ -35,21 +34,15 @@ fseek(FILE *stream, long int offset, int wherefrom) {
 
     if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
         SHOWMSG("this file is not even in use");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
         __set_errno(EBADF);
-
         goto out;
     }
 
     if (wherefrom < SEEK_SET || wherefrom > SEEK_END) {
         SHOWMSG("invalid wherefrom parameter");
-
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
         __set_errno(EBADF);
-
         goto out;
     }
 
@@ -66,6 +59,7 @@ fseek(FILE *stream, long int offset, int wherefrom) {
             wherefrom = SEEK_CUR;
         }
     }
+
 
     /* We have to clear the EOF condition */
     CLEAR_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
@@ -141,7 +135,6 @@ fseek(FILE *stream, long int offset, int wherefrom) {
 
 out:
 
-    funlockfile(stream);
 
     RETURN(result);
     return (result);

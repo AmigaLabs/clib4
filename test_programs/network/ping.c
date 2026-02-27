@@ -71,6 +71,7 @@ char *dns_lookup(char *addr_host, struct sockaddr_in *addr_con) {
     host_entity = gethostbyname(addr_host);
     if (host_entity == NULL) {
         // No ip found for hostname
+        free(ip);
         return NULL;
     }
 

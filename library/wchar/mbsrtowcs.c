@@ -7,7 +7,7 @@
 #endif /* _WCHAR_HEADERS_H */
 
 size_t
-mbsrtowcs(wchar_t *restrict ws, const char **restrict src, size_t wn, mbstate_t *restrict st) {
+mbsrtowcs(wchar_t *ws, const char **src, size_t wn, mbstate_t *st) {
     const unsigned char *s = (const void *) *src;
     size_t wn0 = wn;
     unsigned c = 0;

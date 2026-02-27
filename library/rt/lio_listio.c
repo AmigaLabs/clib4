@@ -116,7 +116,7 @@ lio_listio_internal(int mode, struct aiocb *const list[], int nent, struct sigev
 
         /* If any of the I/O requests failed, return -1 and set errno.  */
         if (result != 0) {
-            __set_errno(result == EINTR ? EINTR : EIO);
+            //__set_errno(result == EINTR ? EINTR : EIO);
             result = -1;
         }
     } else {
@@ -127,7 +127,7 @@ lio_listio_internal(int mode, struct aiocb *const list[], int nent, struct sigev
                        + (nent * sizeof(struct waitlist)));
 
         if (waitlist == NULL) {
-            __set_errno(EAGAIN);
+            //__set_errno(EAGAIN);
             result = -1;
         } else {
             total = 0;
@@ -164,7 +164,7 @@ int
 lio_listio(int mode, struct aiocb *const list[], int nent, struct sigevent *sig) {
     /* Check arguments.  */
     if (mode != LIO_WAIT && mode != LIO_NOWAIT) {
-        __set_errno(EINVAL);
+        //__set_errno(EINVAL);
         return -1;
     }
 

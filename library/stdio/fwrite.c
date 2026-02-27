@@ -1,15 +1,23 @@
 /*
- * $Id: stdio_fwrite.c,v 1.13 2022-03-27 13:12:58 clib4devs Exp $
+ * $Id: stdio_fwrite.c,v 1.14 2024-07-20 13:12:58 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef _FCNTL_HEADERS_H
+#include "fcntl_headers.h"
+#endif /* _FCNTL_HEADERS_H */
+
+#ifndef MAX_BYPASS
+#define MAX_BYPASS (256 * 1024) /* 256 KiB max bypass write */
+#endif
+
 size_t
 fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
-    size_t result = 0;
+    size_t result = 0; //EOF??;
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
@@ -22,31 +30,26 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     assert(ptr != NULL && stream != NULL);
     assert((int) element_size >= 0 && (int) count >= 0);
 
-    flockfile(stream);
-
     if (ptr == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
-        __set_errno(EFAULT);
-        goto out;
+
+        __set_errno_r(__clib4, EFAULT);
+        RETURN(result);
+        return (result);
     }
 
-    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
-        SHOWMSG("this file is not even in use");
+    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE) || FLAG_IS_CLEAR(file->iob_Flags, IOBF_WRITE)) {
+        SHOWMSG("this file is not even in use or write enabled");
 
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
         SET_FLAG(file->iob_Flags2, __SERR);
-        __set_errno(EBADF);
-        goto out;
+
+        __set_errno_r(__clib4, EBADF);
+        RETURN(result);
+        return (result);
     }
 
-    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_WRITE)) {
-        SHOWMSG("this stream is not write-enabled");
-
-        SET_FLAG(file->iob_Flags, IOBF_ERROR);
-        SET_FLAG(file->iob_Flags2, __SERR);
-        __set_errno(EBADF);
-        goto out;
-    }
+    __flockfile_r(__clib4, stream);
 
     if (element_size > 0 && count > 0) {
         const unsigned char *s = (unsigned char *) ptr;
@@ -64,6 +67,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
            to line buffered mode in order to improve readability of
            the output. */
         buffer_mode = (file->iob_Flags & IOBF_BUFFER_MODE);
+
         if (buffer_mode == IOBF_BUFFER_MODE_NONE) {
             struct fd *fd = __clib4->__fd[file->iob_Descriptor];
 
@@ -74,6 +78,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
             __fd_unlock(fd);
         }
+
         switch (buffer_mode) {
             case IOBF_BUFFER_MODE_LINE:
                 SHOWMSG("IOBF_BUFFER_MODE_LINE");
@@ -122,7 +127,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
                     c = (*s++);
 
-                    if (__putc_line_buffered(c, (FILE *) file) == EOF)
+                    if (__putc_line_buffered(__clib4, c, (FILE *) file) == EOF)
                         break;
 
                     total_size--;
@@ -134,13 +139,20 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                 ssize_t num_bytes_written;
 
                 /* We bypass the buffer entirely. */
-                num_bytes_written = write(file->iob_Descriptor, s, total_size);
+                /* Cap bypass write size to avoid huge single write syscalls. */
+                size_t to_write = MIN(total_size, file->iob_BufferSize);
+                if (to_write > MAX_BYPASS) to_write = MAX_BYPASS;
+                num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, to_write);
                 if (num_bytes_written == -1) {
                     SET_FLAG(file->iob_Flags, IOBF_ERROR);
                     goto out;
                 }
 
                 total_bytes_written = (size_t) num_bytes_written;
+
+                if (__iob_write_buffer_is_valid(file)) {
+                    __flush_iob_write_buffer(__clib4, file);
+                }
             }
             break;
             default: {
@@ -155,16 +167,21 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                     if (file->iob_BufferWriteBytes == 0 && total_size >= (size_t) file->iob_BufferSize) {
                         SHOWMSG("bypass the buffer entirely");
                         /* We bypass the buffer entirely. */
-                        ssize_t num_bytes_written = write(file->iob_Descriptor, s, total_size);
+                        /* Cap bypass write size to avoid huge single write syscalls. */
+                        size_t to_write = total_size;
+                        if (to_write > MAX_BYPASS) to_write = MAX_BYPASS;
+                        ssize_t num_bytes_written = __write_r(__clib4, file->iob_Descriptor, s, to_write);
                         if (num_bytes_written == -1) {
                             SET_FLAG(file->iob_Flags, IOBF_ERROR);
                             goto out;
                         }
 
+                        s += num_bytes_written;
                         total_bytes_written += num_bytes_written;
-                        break;
+                        total_size -= num_bytes_written;
+                        /* Continue loop to write more if needed */
+                        continue;
                     }
-                    SHOWMSG("New values");
                     SHOWVALUE(file->iob_BufferWriteBytes);
                     SHOWVALUE(file->iob_BufferSize - file->iob_BufferWriteBytes);
                     /* Is there still room in the write buffer to store more of the data? */
@@ -181,7 +198,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
                         file->iob_BufferWriteBytes += num_buffer_bytes;
 
                         /* Write a full buffer to disk. */
-                        if (num_buffer_bytes == 0 && __flush_iob_write_buffer(__clib4, file) < 0) {
+                        if (__iob_write_buffer_is_full(file) && __flush_iob_write_buffer(__clib4, file) < 0) {
                             /* Abort with error. */
                             break;
                         }
@@ -201,7 +218,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
                     c = (*s++);
                     SHOWMSG("__putc_fully_buffered");
-                    if (__putc_fully_buffered(c, (FILE *) file) == EOF)
+                    if (__putc_fully_buffered(__clib4, c, (FILE *) file) == EOF)
                         goto out;
 
                     total_bytes_written++;
@@ -209,23 +226,13 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
             }
         }
 
-        if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
-            if (__iob_write_buffer_is_valid(file)) {
-                __flush_iob_write_buffer(__clib4, file);
-            }
-        }
-
         result = total_bytes_written / element_size;
     } else {
-        SHOWVALUE(element_size);
-        SHOWVALUE(count);
-
         SHOWMSG("either element size or count is zero");
     }
 
 out:
-
-    funlockfile(stream);
+    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

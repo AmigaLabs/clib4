@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_iobhookentry.c,v 1.7 2006-01-08 12:04:24 clib4devs Exp $
+ * $Id: stdio_iobhookentry.c,v 1.8 2023-07-04 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -32,9 +32,9 @@ __iob_hook_entry(struct _clib4 *__clib4, struct iob *file_iob, struct file_actio
             /* When closing, we want to affect this very file descriptor
                    and not the original one associated with an alias of it. */
             if (fam->fam_Action == file_action_close)
-                fd = __get_file_descriptor_dont_resolve(file_iob->iob_Descriptor);
+                fd = __get_file_descriptor_dont_resolve(__clib4, file_iob->iob_Descriptor);
             else
-                fd = __get_file_descriptor(file_iob->iob_Descriptor);
+                fd = __get_file_descriptor(__clib4, file_iob->iob_Descriptor);
 
             if (fd == NULL) {
                 fam->fam_Error = EBADF;

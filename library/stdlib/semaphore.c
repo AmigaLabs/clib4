@@ -1,5 +1,5 @@
 /*
- * $Id: stdlib_semaphore.c,v 1.3 2021-01-31 12:04:26 clib4devs Exp $
+ * $Id: stdlib_semaphore.c,v 1.4 2025-06-28 12:04:26 clib4devs Exp $
 */
 
 #include "stdlib_headers.h"
@@ -12,20 +12,50 @@ __create_semaphore(void) {
 
     semaphore = AllocSysObjectTags(ASOT_SEMAPHORE, ASOSEM_Pri, 0, TAG_END);
 
-    SHOWPOINTER(semaphore);
-    LEAVE();
-
-    return (semaphore);
+    RETURN(semaphore);
+    return semaphore;
 }
-
-/****************************************************************************/
 
 void
 __delete_semaphore(struct SignalSemaphore *semaphore) {
     ENTER();
     SHOWPOINTER(semaphore);
 
-    FreeSysObject(ASOT_SEMAPHORE, semaphore);
+	if (semaphore != NULL)
+		FreeSysObject(ASOT_SEMAPHORE, semaphore);
+	semaphore = NULL;
+
+    LEAVE();
+}
+
+APTR
+__create_mutex(void) {
+    ENTER();
+
+    APTR mutex = AllocSysObjectTags(ASOT_MUTEX, TAG_END);
+
+    RETURN(mutex);
+    return mutex;
+}
+
+APTR
+__create_recursive_mutex(void) {
+    ENTER();
+
+    APTR mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, TRUE, TAG_END);
+
+    RETURN(mutex);
+    return mutex;
+}
+
+void
+__delete_mutex(APTR mutex) {
+    ENTER();
+    SHOWPOINTER(mutex);
+
+	if (mutex != NULL)
+		FreeSysObject(ASOT_MUTEX, mutex);
+	mutex = NULL;
 
     LEAVE();
 }

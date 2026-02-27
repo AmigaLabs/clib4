@@ -37,6 +37,7 @@ struct resolvconf {
     struct address ns[MAXNS];
     unsigned nns, attempts, ndots;
     unsigned timeout;
+    int loaded;
 };
 
 /* The limit of 48 results is a non-sharp bound on the number of addresses

@@ -27,7 +27,7 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
     SHOWVALUE(namelen);
 
     assert(name != NULL);
-    DECLARE_SOCKETBASE();
+    DECLARE_SOCKETBASE_R(__clib4);
 
     if (name == NULL) {
         SHOWMSG("invalid name parameter");
@@ -41,7 +41,7 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
     assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IN_USE));
     assert(FLAG_IS_SET(__clib4->__fd[sockfd]->fd_Flags, FDF_IS_SOCKET));
 
-    fd = __get_file_descriptor_socket(sockfd);
+    fd = __get_file_descriptor_socket(__clib4, sockfd);
     if (fd == NULL)
         goto out;
 

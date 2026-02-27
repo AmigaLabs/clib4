@@ -1,5 +1,5 @@
 /*
- * $Id: stdio_fgetpos64.c,v 1.0 2021-02-05 17:36:32 clib4devs Exp $
+ * $Id: stdio_fgetpos64.c,v 1.1 2024-07-20 17:36:32 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
@@ -10,6 +10,7 @@ int
 fgetpos64(FILE *stream, _fpos64_t *pos) {
     int result = EOF;
     _fpos64_t position;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -18,13 +19,12 @@ fgetpos64(FILE *stream, _fpos64_t *pos) {
 
     assert(stream != NULL && pos != NULL);
 
-    flockfile(stream);
-
     if (stream == NULL || pos == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
-        goto out;
+        __set_errno_r(__clib4, EFAULT);
+        RETURN(result);
+        return result;
     }
 
     position = ftello64(stream);
@@ -34,13 +34,11 @@ fgetpos64(FILE *stream, _fpos64_t *pos) {
         goto out;
     }
 
-    (*pos) = (_fpos64_t) position;
+    (*pos) = position;
 
     result = OK;
 
 out:
-
-    funlockfile(stream);
 
     RETURN(result);
     return (result);

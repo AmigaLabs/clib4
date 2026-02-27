@@ -29,6 +29,8 @@ __BEGIN_DECLS
 /* This has to be changed whenever a new locale is defined.  */
 #define __LC_LAST	13
 
+#define ENCODING_LEN 31
+
 typedef void *locale_t;
 
 struct lconv

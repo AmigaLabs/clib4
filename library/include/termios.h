@@ -104,7 +104,6 @@ struct termios
 #define FLUSHO  0x0200
 #define ECHOKE  0x0400
 #define ECHOCTL 0x0800
-#define NCURSES 0x1600
 
 /* Speeds  */
 

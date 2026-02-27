@@ -17,6 +17,6 @@ main() {
 
     // Close fd
     close(fd);
-    unlink
+    unlink(template);
     return 0;
 }

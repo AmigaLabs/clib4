@@ -15,20 +15,23 @@ flock(int fd, int op) {
     int ret = -1;
     struct flock lock;
 
-    if (op != LOCK_SH && op != LOCK_EX && op != LOCK_UN && op != LOCK_NB) {
+    if (op != LOCK_SH
+        && op != LOCK_EX
+        && op != LOCK_UN
+        && op != (LOCK_SH|LOCK_NB)
+        && op != (LOCK_EX|LOCK_NB)) {
         __set_errno(EINVAL);
         goto out;
     }
-
     /* Initialize the flock structure. */
     memset(&lock, 0, sizeof(lock));
 
-    if (op == LOCK_SH) {
+    if (op & LOCK_SH) {
         lock.l_type = F_RDLCK;
         /* Place a shared (read) lock on the file. */
         ret = fcntl(fd, F_SETLK, &lock);
     }
-    else if (op == LOCK_EX) {
+    else if (op & LOCK_EX) {
         lock.l_type = F_WRLCK;
         /* Place an exclusive (write) lock on the file. */
         ret = fcntl(fd, F_SETLK, &lock);

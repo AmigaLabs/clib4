@@ -37,6 +37,8 @@
 #include "common.h"
 #include "pthread.h"
 
+register ThreadInfo * __tls_reg asm(TLS_REGISTER);
+
 //
 // Helper functions
 //
@@ -58,6 +60,37 @@ ThreadInfo *GetThreadInfo(pthread_t thread) {
     // TODO: more robust error handling?
     if (thread < PTHREAD_THREADS_MAX)
         return &threads[thread];
+
+    return NULL;
+}
+
+void set_tls_register(ThreadInfo *ti) {
+    __tls_reg = ti;
+}
+
+ThreadInfo *get_tls_register(void) {
+    return __tls_reg;
+}
+
+ThreadInfo *GetCurrentThreadInfo() {
+    ThreadInfo *inf = __tls_reg;
+
+    /* Validate: check if the register actually points inside the threads array.
+     * On the main thread, register r2 may be clobbered by the ABI (TOC pointer)
+     * so it can contain a non-NULL but invalid pointer. */
+    if (inf >= &threads[0] && inf < &threads[PTHREAD_THREADS_MAX]) {
+        return inf;
+    }
+
+    /* Fallback: look up by task pointer.
+     * This handles the main thread case where r2 is not set or has been
+     * overwritten by the compiler/system. */
+    struct Task *task = FindTask(NULL);
+    for (int i = 0; i < PTHREAD_THREADS_MAX; i++) {
+        if (threads[i].task == (struct Process *)task && threads[i].status != THREAD_STATE_IDLE) {
+            return &threads[i];
+        }
+    }
 
     return NULL;
 }

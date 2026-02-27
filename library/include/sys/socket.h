@@ -17,6 +17,8 @@
 #include <sys/time.h>
 #endif /* _SYS_TIME_H */
 
+#include <fcntl.h>
+
 #include <features.h>
 
 __BEGIN_DECLS
@@ -49,7 +51,7 @@ typedef unsigned char sa_family_t;
 
 #ifndef SOCK_CLOEXEC
 #define SOCK_CLOEXEC   0    /* for now set bot to 0 */
-#define SOCK_NONBLOCK  0
+#define SOCK_NONBLOCK  O_NONBLOCK
 #endif
 
 /*

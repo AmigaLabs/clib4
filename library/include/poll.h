@@ -6,27 +6,14 @@
 #ifndef _POLL_H
 #define _POLL_H
 
-#ifndef _ERRNO_H
-#include <errno.h>
-#endif /* _ERRNO_H */
-
-#ifndef _SYS_TIME_H
-#include <sys/time.h>
-#endif /* _SYS_TIME_H */
-
-#ifndef _SYS_SOCKET_H
-#include <sys/socket.h>
-#endif /* _SYS_SOCKET_H */
-
-#ifndef _SYS_SELECT_H
-#include <sys/select.h>
-#endif /* _SYS_SELECT_H */
-
-#ifndef _SYS_IOTCL_H
-#include <sys/ioctl.h>
-#endif /* _SYS_IOTCL_H */
-
 #include <features.h>
+
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <sys/ioctl.h>
 
 __BEGIN_DECLS
 
@@ -56,6 +43,7 @@ struct pollfd
 #define POLLNVAL        0x020           /* Invalid polling request.  */
 
 extern int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+extern int waitpoll(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *_signals);
 
 __END_DECLS
 

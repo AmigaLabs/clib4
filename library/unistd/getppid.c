@@ -6,22 +6,20 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
-pid_t 
-getppid(void)
-{
-	pid_t result;
+pid_t
+getppid(void) {
+    pid_t result;
 
-	ENTER();
+    ENTER();
 
-	struct Task *t = FindTask(NULL);
+    struct Task *t = FindTask(NULL);
 
-	if (t->tc_Node.ln_Type != NT_PROCESS)
-	{
-		result = 0;
-	}
+    if (t->tc_Node.ln_Type != NT_PROCESS) {
+        result = 0;
+    }
 
-	result = ((struct Process *)t)->pr_ParentID;
+    result = ((struct Process *) t)->pr_ParentID;
 
-	RETURN(result);
-	return (result);
+    RETURN(result);
+    return (result);
 }

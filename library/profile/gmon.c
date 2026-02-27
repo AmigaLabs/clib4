@@ -9,6 +9,7 @@
 #include <proto/dos.h>
 #include <proto/elf.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <macros.h>
@@ -84,8 +85,9 @@ write_call_graph(int fd) {
     nfilled = 0;
     from_len = _gmonparam.fromssize / sizeof(*_gmonparam.froms);
     for (from_index = 0; from_index < from_len; ++from_index) {
-        if (_gmonparam.froms[from_index] == 0)
+        if (_gmonparam.froms[from_index] == 0) {
             continue;
+        }
 
         frompc = _gmonparam.text_start;
         frompc += from_index * _gmonparam.hashfraction * sizeof(*_gmonparam.froms);
@@ -155,7 +157,8 @@ write_bb_counts(int fd) {
 
 void monstartup(uint32 low_pc, uint32 high_pc) {
     uint8 *cp;
-    uint32 lowpc, highpc, text_start;
+    uint32 lowpc, highpc;
+    uint32 text_start = 0;
     struct gmonparam *p = &_gmonparam;
     int o;
 
@@ -221,7 +224,7 @@ void monstartup(uint32 low_pc, uint32 high_pc) {
     dprintf("fromssize = %d\n", p->fromssize);
     dprintf("tolimit = %d, tossize = %d\n", p->tolimit, p->tossize);
 
-    cp = (uint8 *) AllocVecTags(p->kcountsize + p->fromssize + p->tossize, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    cp = (uint8 *) calloc(1, p->kcountsize + p->fromssize + p->tossize);
     if (!cp) {
         p->state = kGmonProfError;
         return;
@@ -307,6 +310,7 @@ void moncleanup(void) {
             sizeof(ghdr) != sizeof(struct gmon_hdr) ||
             (offsetof(struct real_gmon_hdr, cookie) != offsetof(struct gmon_hdr, cookie)) ||
             (offsetof(struct real_gmon_hdr, version) != offsetof(struct gmon_hdr, version))) {
+                close(fd);
                 goto out;
         }
 
@@ -328,7 +332,7 @@ void moncleanup(void) {
     }
 out:
     if (p->tos) {
-        FreeVec(p->tos);
+        free(p->tos);
         p->tos = NULL;
     }
 

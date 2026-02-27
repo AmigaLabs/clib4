@@ -15,7 +15,7 @@ _msgsnd(int qid, const void *msg, size_t mlen, int flags) {
     ENTER();
     struct msqid_ds *qi;
     int ret = -1;
-    int bleft;
+    size_t bleft;
     struct Msg *m, *lm;
     struct WProc *wp;
 
@@ -45,7 +45,7 @@ redo: /* Retry after waiting for queue to not be full. */
     if (qi) {
         bleft = qi->msg_qbytes - qi->msg_cbytes;
         if (bleft >= mlen) {
-            m = AllocVecTags(mlen + sizeof(struct Msg), MEMF_SHARED, TAG_DONE);
+            m = malloc(mlen + sizeof(struct Msg));
             if (m) {
                 m->Next = 0;
                 m->Size = mlen;

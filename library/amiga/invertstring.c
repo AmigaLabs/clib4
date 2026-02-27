@@ -12,6 +12,8 @@
 #include <proto/commodities.h>
 #include <clib/alib_protos.h>
 
+#include <stdlib.h>
+
 #include "debug.h"
 
 STATIC int
@@ -54,16 +56,14 @@ do_escape(int cc) {
 
 
 STATIC ULONG
-do_angle(STRPTR *strp, struct InputEvent *ie)
-{
+do_angle(STRPTR *strp, struct InputEvent *ie) {
     ULONG result;
     char *cp;
     IX ix;
 
     /* find closing angle '>', put a null there   */
     for (cp = (*strp); (*cp); cp++) {
-        if ((*cp) == '>')
-        {
+        if ((*cp) == '>') {
             (*cp) = '\0';
             break;
         }
@@ -71,19 +71,16 @@ do_angle(STRPTR *strp, struct InputEvent *ie)
 
     result = ParseIX((*strp), &ix);
 
-    if (cp != NULL)
-    {
+    if (cp != NULL) {
         (*cp) = '>';  /* fix it */
         (*strp) =
         cp; /* point to char following '>' */
     }
-    else
-    {
+    else {
         (*strp) = cp - 1; /* ++will point to terminating null */
     }
 
-    if (result == 0)
-    {
+    if (result == 0) {
         /* use IX to describe a suitable InputEvent */
         ie->ie_Class = ix.ix_Class;
         ie->ie_Code = ix.ix_Code;
@@ -105,16 +102,15 @@ InvertString(CONST_STRPTR str, CONST struct KeyMap *km) {
 
     struct InputEvent *result = NULL;
     struct InputEvent *chain = NULL;
-    struct InputEvent *ie;
+    struct InputEvent *ie = NULL;
     int cc;
 
     if (CxBase == NULL || str == NULL || (*str) == '\0')
         goto out;
 
-    do /* have checked that str is not null    */
-    {
+    do { /* have checked that str is not null    */
         /* allocate the next ie and link it in */
-        ie = AllocVecTags(sizeof(*ie), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+        ie = calloc(1, sizeof(*ie));
         if (ie == NULL)
             goto out;
 
@@ -145,8 +141,7 @@ InvertString(CONST_STRPTR str, CONST struct KeyMap *km) {
 
             default:
 
-                InvertKeyMap((ULONG)
-                cc, ie, (struct KeyMap *) km);
+                InvertKeyMap((ULONG) cc, ie, (struct KeyMap *) km);
                 break;
         }
 
@@ -156,6 +151,8 @@ InvertString(CONST_STRPTR str, CONST struct KeyMap *km) {
     result = chain;
 
 out:
+    if (ie)
+        free(ie);
 
     if (result == NULL && chain != NULL)
         FreeIEvents(chain);

@@ -37,12 +37,12 @@ getitimer(int which, struct itimerval *curr_value) {
     struct _clib4 *__clib4 = __CLIB4;
 
     if (which < ITIMER_REAL || which > ITIMER_PROF) {
-        __set_errno(EINVAL);
+        __set_errno_r(__clib4, EINVAL);
         return -1;
     }
 
     if (curr_value == NULL) {
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         return -1;
     }
 
@@ -59,11 +59,11 @@ getitimer(int which, struct itimerval *curr_value) {
         }
             break;
         case ITIMER_VIRTUAL:
-            __set_errno(ENOSYS);
+            __set_errno_r(__clib4, ENOSYS);
             return -1;
             break;
         case ITIMER_PROF:
-            __set_errno(ENOSYS);
+            __set_errno_r(__clib4, ENOSYS);
             return -1;
             break;
         default:

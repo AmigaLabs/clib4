@@ -1,8 +1,6 @@
 /*
- * $Id: stdlib_arg.c,v 1.15 2006-09-25 14:51:15 clib4devs Exp $
+ * $Id: stdlib_arg.c,v 1.16 2025-03-23 14:51:15 clib4devs Exp $
 */
-
-/*#define DEBUG*/
 
 #ifndef _STDLIB_HEADERS_H
 #include "stdlib_headers.h"
@@ -59,7 +57,8 @@ is_final_quote_character(const unsigned char *str) {
     return (result);
 }
 
-ARG_CONSTRUCTOR(arg_init) {
+BOOL
+arg_init() {
     ENTER();
 
     BOOL success = FALSE;
@@ -88,6 +87,10 @@ ARG_CONSTRUCTOR(arg_init) {
            how long it is, stripping a trailing line
            feed and blank spaces if necessary. */
         arg_str = (const unsigned char *) GetArgStr();
+        if (arg_str == NULL) {
+            /* maybe we are on a library so don't check for startup args */
+            goto out;
+        }
 
         while (is_space(*arg_str))
             arg_str++;
@@ -164,6 +167,15 @@ ARG_CONSTRUCTOR(arg_init) {
 
         /* The first parameter is the program name. */
         __clib4->__argv[0] = __clib4->__progname;
+
+        /* If this is using unix path semantics, we need to prep argv[0]. */
+        if (__clib4->__unix_path_semantics) {
+            D(("Translating argv0 [%s]\n", __clib4->__argv[0]));
+            // This is unfortunately orphaned :
+            struct name_translation_info *nti_argv0 = (struct name_translation_info *) AllocVecTags(sizeof(struct name_translation_info), TAG_DONE);
+            /* int error = */ __translate_amiga_to_unix_path_name((char const **)&__clib4->__argv[0], nti_argv0);
+            D(("Translated progname : [%s]\n", __clib4->__argv[0]));
+        }
 
         str = command_line;
 
@@ -273,20 +285,20 @@ ARG_CONSTRUCTOR(arg_init) {
 
 out:
 
-    SHOWVALUE(success);
-    LEAVE();
-
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
+    RETURN(success);
+    return success;
 }
 
-ARG_DESTRUCTOR(arg_exit) {
+void
+arg_exit() {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
     if (__clib4->__WBenchMsg == NULL) {
+        if (__clib4->__command_line_ptr) {
+            FreeVec(__clib4->__command_line_ptr);
+            __clib4->__command_line_ptr = NULL;
+        }
         if (__clib4->__argv) {
             FreeVec(__clib4->__argv);
             __clib4->__argv = NULL;

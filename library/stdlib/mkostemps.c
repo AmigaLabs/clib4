@@ -18,7 +18,7 @@ mkostemps(char *template, int len, int flags) {
     struct name_translation_info name_template_nti;
     struct _clib4 *__clib4 = __CLIB4;
 
-    if (l < 6 || len > l - 6 || memcmp(template + l - len - 6, "XXXXXX", 6)) {
+    if (l < 6 || (size_t) len > l - 6 || memcmp(template + l - len - 6, "XXXXXX", 6)) {
         __set_errno(EINVAL);
         return -1;
     }

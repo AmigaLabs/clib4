@@ -9,6 +9,7 @@
 int
 vscanf(const char *format, va_list arg) {
     int result = EOF;
+    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
@@ -19,11 +20,11 @@ vscanf(const char *format, va_list arg) {
     if (format == NULL) {
         SHOWMSG("invalid format parameter");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         goto out;
     }
 
-    result = vfscanf(stdin, format, arg);
+    result = vfscanf(__stdin_r(__clib4), format, arg);
 
 out:
 

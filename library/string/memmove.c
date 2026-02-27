@@ -14,8 +14,6 @@ void *
 memmove(void *dest, const void *src, size_t len) {
     void *result = dest;
 
-    ENTER();
-
     assert((len == 0) || (dest != NULL && src != NULL && (int) len > 0));
 
     if (dest == NULL || src == NULL) {
@@ -27,16 +25,12 @@ memmove(void *dest, const void *src, size_t len) {
         char *to = dest;
         const char *from = src;
 
-        /* Fallback to standard function */
         DECLARE_UTILITYBASE();
-        SHOWPOINTER(__UtilityBase);
-        SHOWPOINTER(__IUtility);
         /* memmove will use Exec MoveMem that is ALWAYS optimized for any platform */
         MoveMem((APTR) src, dest, len);
     } else
         __set_errno(EFAULT);
 
 out:
-    RETURN(result);
     return (result);
 }

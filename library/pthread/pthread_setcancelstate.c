@@ -39,14 +39,14 @@
 
 int
 pthread_setcancelstate(int state, int *oldstate) {
-    pthread_t thread;
     ThreadInfo *inf;
 
     if (state != PTHREAD_CANCEL_ENABLE && state != PTHREAD_CANCEL_DISABLE)
         return EINVAL;
 
-    thread = pthread_self();
-    inf = GetThreadInfo(thread);
+    inf = GetCurrentThreadInfo();
+	if (inf == NULL)
+		return EINVAL;
 
     if (oldstate)
         *oldstate = inf->cancelstate;

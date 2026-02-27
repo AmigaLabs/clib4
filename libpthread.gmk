@@ -53,12 +53,15 @@ PTHREAD_LIB := \
     pthread/pthread_cond_destroy.o \
     pthread/pthread_cond_init.o \
     pthread/pthread_cond_signal.o \
+    pthread/pthread_cond_clockwait.o \
     pthread/pthread_cond_timedwait.o \
     pthread/pthread_cond_timedwait_relative_np.o \
     pthread/pthread_cond_wait.o \
     pthread/pthread_condattr_destroy.o \
     pthread/pthread_condattr_init.o \
+    pthread/pthread_condattr_getclock.o \
     pthread/pthread_condattr_getpshared.o \
+    pthread/pthread_condattr_setclock.o \
     pthread/pthread_condattr_setpshared.o \
     pthread/pthread_create.o \
     pthread/pthread_detach.o \

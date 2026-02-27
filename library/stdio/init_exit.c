@@ -26,22 +26,46 @@ __close_all_files(struct _clib4 *__clib4) {
 
     __stdio_lock(__clib4);
 
+    SHOWVALUE(__clib4->__num_iob);
     if (__clib4->__num_iob > 0) {
         for (i = 0; i < __clib4->__num_iob; i++) {
-            if (FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE))
+            if (FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE)) {
+                D(("Close __iob %ld\n", i));
                 fclose((FILE *) __clib4->__iob[i]);
+                __free_r(__clib4, __clib4->__iob[i]);
+            }
         }
-
         __clib4->__num_iob = 0;
+
+        /* Free the iob table itself */
+        if (__clib4->__iob != NULL) {
+            __free_r(__clib4, __clib4->__iob);
+            __clib4->__iob = NULL;
+        }
     }
 
     if (__clib4->__num_fd > 0) {
         for (i = 0; i < __clib4->__num_fd; i++) {
-            if (FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_IN_USE))
+            /* If file is set as in use close it only if it isn't marked as FDF_NO_CLOSE */
+            if ((i >= STDIN_FILENO || i < STDERR_FILENO) || (FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_IN_USE) && FLAG_IS_CLEAR(__clib4->__fd[i]->fd_Flags, FDF_NO_CLOSE))) {
+                D(("Close __fd %ld\n", i));
                 close(i);
-            UnlockMem(__clib4->__fd[i], sizeof(*__clib4->__fd[i]));
+				SHOWMSG("Freeing Unlock memory");
+                UnlockMem(__clib4->__fd[i], sizeof(*__clib4->__fd[i]));
+				SHOWMSG("Freeing fd memory");
+                __free_r(__clib4, __clib4->__fd[i]);
+            }
+            else {
+                D(("Can't close __fd %ld FDF_STDIO=%ld FDF_IN_USE=%ld FDF_NO_CLOSE=%ld \n", i, FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_STDIO), FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_IN_USE), FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_NO_CLOSE)));
+            }
         }
         __clib4->__num_fd = 0;
+
+        /* Free the fd table itself */
+        if (__clib4->__fd != NULL) {
+            __free_r(__clib4, __clib4->__fd);
+            __clib4->__fd = NULL;
+        }
     }
 
     __stdio_unlock(__clib4);

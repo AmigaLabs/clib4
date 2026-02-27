@@ -8,18 +8,6 @@
 
 #include <unistd.h>
 
-static APTR
-hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
-    uint32 pid = (uint32) userdata;
-    (void) (hook);
-
-    if (process->pr_ProcessID == pid) {
-        return process;
-    }
-
-    return 0;
-}
-
 int
 kill(pid_t pid, int signal_number) {
     struct Process *cli_process;
@@ -42,7 +30,7 @@ kill(pid_t pid, int signal_number) {
             SHOWVALUE(result);
         } else {
             SHOWMSG("This is a kill for a different process. Search it");
-            struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
+            struct Hook h = {{NULL, NULL}, (HOOKFUNC) processscan_hook_function, NULL, NULL};
 
             Forbid();
 

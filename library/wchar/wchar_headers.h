@@ -161,7 +161,7 @@ extern const uint32_t bittab[];
 
 
 /* Functions used in wgetwc and wgetws */
-wint_t __fgetwc_unlocked_internal(FILE *f);
-wint_t __fgetwc_unlocked(FILE *f);
+wint_t __fgetwc_unlocked_internal(struct _clib4 *__clib4, FILE *f);
+wint_t __fgetwc_unlocked(struct _clib4 *__clib4, FILE *f);
 
 #endif /* _WCHAR_HEADERS_H */
