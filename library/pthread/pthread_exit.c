@@ -55,11 +55,17 @@ pthread_exit(void *value_ptr) {
 	inf->ret = value_ptr;
 
 	// execute the clean-up handlers
-	while ((handler = (CleanupHandler *)RemTail((struct List *)&inf->cleanup)))
+	while ((handler = (CleanupHandler *)RemTail((struct List *)&inf->cleanup))) {
 		if (handler->routine)
 			handler->routine(handler->arg);
+		free(handler);
+	}
 
-	inf->status = THREAD_STATE_DESTRUCT;
+	/* Do NOT set THREAD_STATE_DESTRUCT here - StarterFunc will set it
+	 * atomically under thread_sem after completing all cleanup (TLS
+	 * destructors, timers, stack restore). Setting it here creates a
+	 * window where pthread_join sees DESTRUCT and cleans up the slot
+	 * while the thread is still running cleanup code in StarterFunc. */
 
     longjmp(inf->jmp, 1);
 }

@@ -8,6 +8,9 @@
 
 int
 pthread_attr_getinheritsched(const pthread_attr_t *attr, int *inherit) {
+    if (attr == NULL || inherit == NULL)
+        return EINVAL;
+
     *inherit = attr->inheritsched;
     return 0;
 }

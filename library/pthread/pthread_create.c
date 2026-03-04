@@ -39,8 +39,6 @@
 
 extern struct DOSIFace *_IDOS;
 
-static ThreadInfo *old_tls = NULL;
-
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
     uint32 pid = (uint32) userdata;
@@ -99,8 +97,6 @@ StarterFunc() {
     volatile BOOL stackSwapped = FALSE;
 	DECLARE_UTILITYBASE();
 
-    old_tls = get_tls_register();
-
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
 	struct newThreadMessage *newThreadMessage = (struct newThreadMessage *) startedTask->pr_EntryData;
@@ -117,10 +113,6 @@ StarterFunc() {
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
-        // Check if we have a guardsize
-        if (inf->attr.guardsize > 0)
-            inf->attr.stacksize += inf->attr.guardsize;
-
         stack.stk_Lower = inf->attr.stackaddr;
         stack.stk_Upper = (ULONG)((APTR) stack.stk_Lower) + inf->attr.stacksize;
         stack.stk_Pointer = (APTR) stack.stk_Upper;
@@ -293,21 +285,22 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     if (thread == NULL || start == NULL)
         return EINVAL;
 
-    // grab an empty thread slot
+    // grab an empty thread slot and reserve it atomically
     MutexObtain(thread_sem);
     threadnew = GetThreadId(NULL);
-    MutexRelease(thread_sem);
-
     if (threadnew == PTHREAD_THREADS_MAX) {
+        MutexRelease(thread_sem);
         return EAGAIN;
     }
 
-    // prepare the ThreadInfo structure
+    // Reserve the slot before releasing the lock to prevent race conditions
     inf = GetThreadInfo(threadnew);
     _pthread_clear_threadinfo(inf);
-    D(("pthread_create: slot %d cleared (task %p)\n", threadnew, inf->task));
-
+    inf->status = THREAD_STATE_RUNNING; // Prevents another GetThreadId(NULL) from returning this slot
     inf->thread_id = threadnew;  /* Save our pthread_t ID */
+    MutexRelease(thread_sem);
+
+    D(("pthread_create: slot %d reserved (task %p)\n", threadnew, inf->task));
     inf->start = start;
     inf->arg = arg;
     inf->parent = (struct Process *) thisTask;
@@ -398,7 +391,7 @@ out:
     		FreeSysObject(ASOT_PORT, msgPort);
     		msgPort = NULL;
     	}
-        inf->parent = NULL;
+        _pthread_clear_threadinfo(inf); // Release the reserved slot back to IDLE
         return EAGAIN;
     }
 

@@ -8,6 +8,9 @@
 
 int
 pthread_condattr_getpshared(const pthread_condattr_t *attr, int *pshared) {
-    *pshared = attr->pshared >> 31;
+    if (attr == NULL || pshared == NULL)
+        return EINVAL;
+
+    *pshared = (int)((unsigned)attr->pshared >> 31);
     return 0;
 }

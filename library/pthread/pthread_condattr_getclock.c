@@ -8,6 +8,8 @@ $Id: pthread_condattr_getclock.c,v 1.00 2025-10-31 12:09:49 clib4devs Exp $
 
 int
 pthread_condattr_getclock(const pthread_condattr_t *attrp, clockid_t *outp) {
+	if (attrp == NULL || outp == NULL)
+		return EINVAL;
 
 	*outp = attrp->clock_type;
 

@@ -123,31 +123,9 @@ pthread_join(pthread_t thread, void **value_ptr) {
         return 0;
 
     } else {
-        /* We are main thread or non-pthread - busy wait with proper locking */
-        /* Main thread should also use signals ideally, but let's stick to existing loop for now or fix it? */
-        /* Main thread has NO join_node? It has `me` if it calls `pthread_join`. */
-        /* Wait, main thread corresponds to `threads[0]`. GetThreadInfo(0) returns &threads[0]. */
-        /* So `me` IS valid for main thread. */
-        /* If `pthreads_init` initialized `threads[0]`, then `me` is valid. */
-        /* And main thread has `join_signal` allocated now. */
-        /* So main thread CAN use the Wait() path! */
-        /* Wait, `if (me)` check above handles it. */
-        /* This else block is for... `if (me == NULL)`? */
-        /* GetCurrentThreadInfo only returns NULL if TLS not set up or something. */
-
-        int done = 0;
-        while (!done) {
-            Delay(1); /* Wait 1 tick (~20ms) */
-            MutexObtain(thread_sem);
-            if (inf->status == THREAD_STATE_DESTRUCT || inf->status == THREAD_STATE_TERMINATED)
-                done = 1;
-            MutexRelease(thread_sem);
-        }
-        MutexObtain(thread_sem);
-        if (value_ptr)
-            *value_ptr = inf->ret;
-        _pthread_clear_threadinfo(inf);
-        MutexRelease(thread_sem);
-        return 0;
+        /* GetCurrentThreadInfo() returned NULL - caller is not a recognized
+         * pthread thread (main thread is threads[0] and always valid).
+         * Cannot join without a valid caller context. */
+        return ESRCH;
     }
 }

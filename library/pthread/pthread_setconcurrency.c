@@ -12,8 +12,6 @@ int
 pthread_setconcurrency(int val) {
     if (val < 0)
         return EINVAL;
-    if (val > 0)
-        return EAGAIN;
     _pthread_concur = val;
     return 0;
 }

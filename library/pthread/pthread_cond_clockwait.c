@@ -11,11 +11,19 @@
 
 int
 pthread_cond_clockwait(pthread_cond_t *cond, pthread_mutex_t *mutex, clockid_t clock_id, const struct timespec *abstime) {
-	if (cond != NULL) {
-		pthread_condattr_t attr;
-		pthread_condattr_init(&attr);
-		cond->condattr = attr;
-	}
+	if (cond == NULL || mutex == NULL || abstime == NULL)
+		return EINVAL;
 
-	return pthread_cond_timedwait(cond, mutex, abstime);
+	if (clock_id != CLOCK_REALTIME && clock_id != CLOCK_MONOTONIC)
+		return EINVAL;
+
+	/* Temporarily override the clock type for this wait, then restore it */
+	clockid_t old_clock = cond->condattr.clock_type;
+	cond->condattr.clock_type = clock_id;
+
+	int ret = _pthread_cond_timedwait(cond, mutex, abstime, FALSE);
+
+	cond->condattr.clock_type = old_clock;
+
+	return ret;
 }

@@ -51,6 +51,7 @@ pthread_mutex_unlock(pthread_mutex_t *mutex) {
 	if (mutex->kind != PTHREAD_MUTEX_NORMAL && !MutexIsMine(mutex))
 		return EPERM;
 
+	mutex->owner = NULL;
 	MutexRelease(mutex->mutex);
 
     return 0;

@@ -8,6 +8,9 @@
 
 int
 pthread_attr_getschedpolicy(const pthread_attr_t *attr, int *policy) {
+    if (attr == NULL || policy == NULL)
+        return EINVAL;
+
     *policy = attr->policy;
     return 0;
 }

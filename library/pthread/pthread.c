@@ -83,7 +83,7 @@ _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOO
 
     SHOWMSG("Allocating mutex");
     mutex->mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, recursive, TAG_DONE);
-	mutex->owner = FindTask(NULL);
+	mutex->owner = NULL;
     SHOWPOINTER(mutex->mutex);
 
     mutex->incond = 0;
@@ -446,14 +446,14 @@ PTHREAD_DESTRUCTOR(__pthread_exit) {
 
     __pthread_exit_func();
 
-    if (_DOSBase != NULL) {
-        CloseLibrary(_DOSBase);
-        _DOSBase = NULL;
-    }
-
     if (_IDOS != NULL) {
         DropInterface((struct Interface *) _IDOS);
         _IDOS = NULL;
+    }
+
+    if (_DOSBase != NULL) {
+        CloseLibrary(_DOSBase);
+        _DOSBase = NULL;
     }
 
     LEAVE();
