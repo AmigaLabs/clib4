@@ -139,7 +139,7 @@ extern char *get_current_dir_name(void);
 #undef gethostname
 
 extern long gethostid();
-extern int gethostname(const char *name, size_t len);
+extern int gethostname(char *name, size_t len);
 extern int getdomainname(char *name, size_t len);
 extern int setdomainname(const char *name, size_t len);
 extern char *getlogin(void);
