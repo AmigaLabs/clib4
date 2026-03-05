@@ -20,7 +20,12 @@ getdelim(char **lineptr, size_t *n, int delimiter, FILE *stream) {
 
     for (;;) {
         if ((size - len) <= 2) {
-            size = size ? (size * 2) : 256;
+            size_t new_size = size ? (size * 2) : 256;
+            if (new_size <= size) {
+                __set_errno(ENOMEM);
+                return -1;
+            }
+            size = new_size;
             ptr = realloc(*lineptr, size);
             if (ptr == NULL)
                 return -1;
