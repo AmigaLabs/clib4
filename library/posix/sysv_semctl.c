@@ -80,7 +80,11 @@ _semctl(int semid, int semnum, int cmd, union semun aun) {
                 }
                 break;
             case GETPID:
-                ret = sb[semnum].sempid;
+                if (semnum >= 0 && semnum < si->sem_nsems) {
+                    ret = sb[semnum].sempid;
+                } else {
+                    __set_errno(EINVAL);
+                }
                 break;
             case GETNCNT:
                 if (semnum >= 0 && semnum < si->sem_nsems) {
@@ -100,7 +104,7 @@ _semctl(int semid, int semnum, int cmd, union semun aun) {
                 if (aun.array) {
                     for (i = 0; i < si->sem_nsems; i++) {
                         if (ui) { /* Set adj value to 0 */
-                            ui->Adj[semnum] = 0;
+                            ui->Adj[i] = 0;
                         }
                         sb[i].semval = aun.array[i];
                     }

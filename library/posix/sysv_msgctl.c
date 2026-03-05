@@ -50,24 +50,26 @@ _msgctl(int qid, int cmd, struct msqid_ds *buf) {
                     __set_errno(EFAULT);
                 break;
             case IPC_SET:
-                if (buf->msg_qbytes > 0) {
+                if (buf != NULL && buf->msg_qbytes > 0) {
                     /* TODO: Check permissions. */
                     qi->msg_qbytes = buf->msg_qbytes;
                 } else
-                    __set_errno(EINVAL);
+                    __set_errno(buf ? EINVAL : EFAULT);
                 break;
             case IPC_RMID:
                 /* Schedule all tasks waiting on this queue so they can fail. */
                 WakeList(qi->WList);
                 WakeList(qi->RList);
+                ReleaseSemaphore(qi->Lock);
                 /* And remove the queue. */
                 IPCRmId(&res->msgcx.keymap, qid, (void (*)(struct IPCGeneric *)) msg_destroy);
-                qi = 0;
+                qi = NULL;
                 break;
             default:
                 __set_errno(EINVAL);
         }
-        ReleaseSemaphore(qi->Lock);
+        if (qi)
+            ReleaseSemaphore(qi->Lock);
     } else {
         __set_errno(EIDRM);
     }

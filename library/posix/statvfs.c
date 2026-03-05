@@ -57,7 +57,7 @@ statvfs(const char *path, struct statvfs *buf) {
 
             buf->f_namemax = maxlength;
             /* Populate the missing statvfs structure */
-            strncpy(buf->f_mntonname, path, 255);
+            strlcpy(buf->f_mntonname, path, sizeof(buf->f_mntonname));
 
             /* Skip DOSType checking if Disk is not present (for example on ICD0, IDF0 and so on..) */
             if (info->id_DiskType != ID_NO_DISK_PRESENT) {
@@ -76,7 +76,7 @@ statvfs(const char *path, struct statvfs *buf) {
             }
             else {
                 /* If disk is not present set file system type to UNKNOWN */
-                strcpy(buf->f_fstypename, "UNKNOWN");
+                strlcpy(buf->f_fstypename, "UNKNOWN", sizeof(buf->f_fstypename));
             }
 
             result = 0;
