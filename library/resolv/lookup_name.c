@@ -108,13 +108,14 @@ struct dpc_ctx {
     struct address *addrs;
     char *canon;
     int cnt;
+    uint32_t min_ttl;
 };
 
 #define RR_A 1
 #define RR_CNAME 5
 #define RR_AAAA 28
 
-static int dns_parse_callback(void *c, int rr, const void *data, int len, const void *packet) {
+static int dns_parse_callback(void *c, int rr, const void *data, int len, const void *packet, uint32_t ttl) {
     char tmp[256];
     struct dpc_ctx *ctx = c;
     if (ctx->cnt >= MAXADDRS) return -1;
@@ -124,12 +125,14 @@ static int dns_parse_callback(void *c, int rr, const void *data, int len, const 
             ctx->addrs[ctx->cnt].family = AF_INET;
             ctx->addrs[ctx->cnt].scopeid = 0;
             memcpy(ctx->addrs[ctx->cnt++].addr, data, 4);
+            if (ttl < ctx->min_ttl) ctx->min_ttl = ttl;
             break;
         case RR_AAAA:
             if (len != 16) return -1;
             ctx->addrs[ctx->cnt].family = AF_INET6;
             ctx->addrs[ctx->cnt].scopeid = 0;
             memcpy(ctx->addrs[ctx->cnt++].addr, data, 16);
+            if (ttl < ctx->min_ttl) ctx->min_ttl = ttl;
             break;
         case RR_CNAME:
             if (dn_expand((unsigned char *) packet, (unsigned char *) packet + 512, (unsigned char *) data, tmp, sizeof tmp) > 0 && is_valid_hostname(tmp))
@@ -140,13 +143,13 @@ static int dns_parse_callback(void *c, int rr, const void *data, int len, const 
 }
 
 static int name_from_dns(struct address buf[static MAXADDRS], char canon[static 256], const char *name, int family,
-                         const struct resolvconf *conf) {
+                         const struct resolvconf *conf, uint32_t *out_ttl) {
     unsigned char qbuf[2][280], abuf[2][512];
     const unsigned char *qp[2] = {qbuf[0], qbuf[1]};
     unsigned char *ap[2] = {abuf[0], abuf[1]};
     int qlens[2], alens[2];
     int i, nq = 0;
-    struct dpc_ctx ctx = {.addrs = buf, .canon = canon};
+    struct dpc_ctx ctx = {.addrs = buf, .canon = canon, .min_ttl = 3600};
     const struct {
         int af;
         int rr;
@@ -180,7 +183,10 @@ static int name_from_dns(struct address buf[static MAXADDRS], char canon[static 
     for (i = 0; i < nq; i++)
         __dns_parse(abuf[i], alens[i], dns_parse_callback, &ctx);
 
-    if (ctx.cnt) return ctx.cnt;
+    if (ctx.cnt) {
+        if (out_ttl) *out_ttl = ctx.min_ttl;
+        return ctx.cnt;
+    }
     return EAI_NONAME;
 }
 
@@ -190,11 +196,27 @@ name_from_dns_search(struct address buf[static MAXADDRS], char canon[static 256]
     size_t l, dots;
     char *p, *z;
     struct _clib4 *__clib4 = __CLIB4;
+    struct dns_cache *cache = __clib4->dns_cache;
+    uint32_t ttl;
 
+    ObtainSemaphore(__clib4->resolv_lock);
     if (((struct resolvconf *) __clib4->resolv_conf)->loaded == 0) {
-        if (__get_resolv_conf(__clib4->resolv_conf, search, sizeof search) < 0)
+        if (__get_resolv_conf(__clib4->resolv_conf, __clib4->resolv_search, sizeof __clib4->resolv_search) < 0) {
+            ReleaseSemaphore(__clib4->resolv_lock);
             return -1;
+        }
         ((struct resolvconf *) __clib4->resolv_conf)->loaded = 1;
+    }
+    memcpy(search, __clib4->resolv_search, sizeof __clib4->resolv_search);
+    ReleaseSemaphore(__clib4->resolv_lock);
+
+    /* Check DNS cache first */
+    if (cache) {
+        ObtainSemaphoreShared(__clib4->resolv_lock);
+        int cached = __dns_cache_lookup(cache, name, family, buf, canon);
+        ReleaseSemaphore(__clib4->resolv_lock);
+        if (cached > 0)
+            return cached;
     }
 
     /* Count dots, suppress search when >=ndots or name ends in
@@ -223,13 +245,28 @@ name_from_dns_search(struct address buf[static MAXADDRS], char canon[static 256]
         if ((size_t) (z - p) < 256 - l - 1) {
             memcpy(canon + l + 1, p, z - p);
             canon[z - p + 1 + l] = 0;
-            int cnt = name_from_dns(buf, canon, canon, family, __clib4->resolv_conf);
-            if (cnt) return cnt;
+            ttl = 0;
+            int cnt = name_from_dns(buf, canon, canon, family, __clib4->resolv_conf, &ttl);
+            if (cnt > 0) {
+                if (cache) {
+                    ObtainSemaphore(__clib4->resolv_lock);
+                    __dns_cache_store(cache, name, family, buf, cnt, canon, ttl);
+                    ReleaseSemaphore(__clib4->resolv_lock);
+                }
+                return cnt;
+            }
         }
     }
 
     canon[l] = 0;
-    return name_from_dns(buf, canon, name, family, __clib4->resolv_conf);
+    ttl = 0;
+    int cnt = name_from_dns(buf, canon, name, family, __clib4->resolv_conf, &ttl);
+    if (cnt > 0 && cache) {
+        ObtainSemaphore(__clib4->resolv_lock);
+        __dns_cache_store(cache, name, family, buf, cnt, canon, ttl);
+        ReleaseSemaphore(__clib4->resolv_lock);
+    }
+    return cnt;
 }
 
 static const struct policy {
@@ -395,7 +432,6 @@ __lookup_name(struct address buf[static MAXADDRS], char canon[static 256], const
             salen = sizeof sa6;
         } else {
             memcpy(sa6.sin6_addr.s6_addr, "\0\0\0\0\0\0\0\0\0\0\xff\xff", 12);
-            memcpy(da6.sin6_addr.s6_addr + 12, buf[i].addr, 4);
             memcpy(da6.sin6_addr.s6_addr, "\0\0\0\0\0\0\0\0\0\0\xff\xff", 12);
             memcpy(da6.sin6_addr.s6_addr + 12, buf[i].addr, 4);
             memcpy(&da4.sin_addr, buf[i].addr, 4);

@@ -161,26 +161,30 @@ StarterFunc() {
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
-    MutexObtain(tls_sem);
     for (int j = 0; keyFound && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
         keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
+            void *oldvalue = NULL;
+            void (*destructor_func)(void *) = NULL;
+
+            MutexObtain(tls_sem);
             if (inf->tlsvalues[i] && tlskeys[i].used && tlskeys[i].destructor) {
                 D(("StarterFunc: thread %s calling destructor for key %d\n", inf->name, i));
-                void *oldvalue = inf->tlsvalues[i];
-                void (*destructor_func)(void *) = tlskeys[i].destructor;
+                oldvalue = inf->tlsvalues[i];
+                destructor_func = tlskeys[i].destructor;
                 inf->tlsvalues[i] = NULL;
-                /* Save destructor to local variable to prevent race with pthread_key_delete
-                 * which could set it to NULL between the check and the call */
-                if (destructor_func) {
-                    destructor_func(oldvalue);
-                }
+            }
+            MutexRelease(tls_sem);
+
+            /* Call destructor outside of tls_sem to avoid blocking other
+             * threads that are exiting and need to run their own destructors */
+            if (destructor_func) {
+                destructor_func(oldvalue);
                 D(("StarterFunc: thread %s destructor for key %d returned\n", inf->name, i));
                 keyFound = TRUE;
             }
         }
     }
-    MutexRelease(tls_sem);
 
     /*  If we have timer running tasks for this thread, stop them before exit  */
     if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
@@ -231,8 +235,8 @@ StarterFunc() {
                     joiner->join_result = inf->ret;
 
                 /* Signal the joiner */
-                if (joiner->join_signal > 0) {
-                    D(("StarterFunc: signaling joiner (task=%p) with sig=0x%lx\n", joiner->task, (unsigned long)joiner->join_signal_mask));
+                if (joiner->join_signal_mask != 0) {
+                    D(("StarterFunc: signaling joiner (task=%p) with mask=0x%lx\n", joiner->task, (unsigned long)joiner->join_signal_mask));
                     Signal((struct Task *)joiner->task, joiner->join_signal_mask);
                 } else {
                     D(("StarterFunc: WARNING - joiner has no valid join signal!\n"));

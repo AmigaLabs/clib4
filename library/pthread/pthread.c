@@ -388,13 +388,15 @@ void __pthread_exit_func(void) {
 
 	MutexObtain(thread_sem);
 	inf = &threads[0];
-	if (inf->cancel_signal > 0 && inf->cancel_signal != -1) {
+	if (inf->cancel_signal != -1) {
 		D(("_pthread_clear_threadinfo: Freeing cancel signal %d\n", inf->cancel_signal));
 		FreeSignal(inf->cancel_signal);
+		inf->cancel_signal = -1;
 	}
-	if (inf->join_signal > 0 && inf->join_signal != -1) {
+	if (inf->join_signal != -1) {
 		D(("_pthread_clear_threadinfo: Freeing join signal %d\n", inf->join_signal));
 		FreeSignal(inf->join_signal);
+		inf->join_signal = -1;
 	}
 	MutexRelease(thread_sem);
 

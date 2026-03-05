@@ -558,6 +558,11 @@ struct _clib4 {
 	 * If FALSE, we're in a -nostartfiles executable and need to call destructors in libClose()
 	 */
 	BOOL __call_main_executed;
+
+    struct SignalSemaphore *resolv_lock;
+    struct SignalSemaphore *socket_lock;  /* serialize bsdsocket.library calls across threads */
+    void *dns_cache;   //struct dns_cache
+    char resolv_search[256];
 };
 
 #ifndef __getClib4
