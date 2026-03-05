@@ -8,7 +8,7 @@
 
 int
 posix_memalign(void **res, size_t align, size_t len) {
-    if (align < sizeof(void *)) {
+    if (align < sizeof(void *) || (align & (align - 1)) != 0) {
         return EINVAL;
     }
 

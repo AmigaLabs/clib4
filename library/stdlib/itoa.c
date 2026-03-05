@@ -6,58 +6,48 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
-#ifndef _MATH_HEADERS_H
-#include "math_headers.h"
-#endif /* _MATH_HEADERS_H */
-
 char *
 itoa(int num, char *buffer, int base) {
-    int curr = 0;
+    char *p = buffer;
+    char tmp[33];
+    char *tp = tmp;
+    unsigned int unum;
+    int i;
 
     ENTER();
     SHOWVALUE(num);
     SHOWPOINTER(buffer);
     SHOWVALUE(base);
 
+    if (base < 2 || base > 36)
+        return NULL;
+
     if (num == 0) {
-        // Base case
-        buffer[curr++] = '0';
-        buffer[curr] = '\0';
+        buffer[0] = '0';
+        buffer[1] = '\0';
+        RETURN(buffer);
         return buffer;
     }
 
-    int num_digits = 0;
-
-    if (num < 0) {
-        if (base == 10) {
-            num_digits++;
-            buffer[curr] = '-';
-            curr++;
-            // Make it positive and finally add the minus sign
-            num *= -1;
-        } else
-            // Unsupported base. Return NULL
-            return NULL;
+    if (num < 0 && base == 10) {
+        *p++ = '-';
+        unum = (unsigned int)(-(num + 1)) + 1u;
+    } else {
+        unum = (unsigned int)num;
     }
 
-    num_digits += (int) floor(log(num) / log(base)) + 1;
-
-    // Go through the digits one by one
-    // from left to right
-    while (curr < num_digits) {
-        // Get the base value. For example, 10^2 = 1000, for the third digit
-        int base_val = (int) pow(base, num_digits - 1 - curr);
-
-        // Get the numerical value
-        int num_val = num / base_val;
-
-        char value = num_val + '0';
-        buffer[curr] = value;
-
-        curr++;
-        num -= base_val * num_val;
+    while (unum) {
+        i = unum % base;
+        if (i < 10)
+            *tp++ = i + '0';
+        else
+            *tp++ = i - 10 + 'a';
+        unum /= base;
     }
-    buffer[curr] = '\0';
+
+    while (tp > tmp)
+        *p++ = *--tp;
+    *p = '\0';
 
     RETURN(buffer);
     return buffer;
