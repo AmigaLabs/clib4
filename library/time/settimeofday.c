@@ -70,6 +70,15 @@ settimeofday(const struct timeval *t, const struct timezone *tz) {
         return -1;
     }	
 
+    if (t == NULL) {
+        CloseDevice((struct IORequest *) tmr_real_tr);
+        FreeSysObject(ASOT_IOREQUEST, tmr_real_tr);
+        FreeSysObject(ASOT_PORT, tmr_real_mp);
+        __set_errno_r(__clib4, EFAULT);
+        RETURN(-1);
+        return -1;
+    }
+
     tmr_real_tr->Request.io_Command = TR_SETSYSTIME;
     if (tz != NULL) {
         __gmtoffset = tz->tz_minuteswest;

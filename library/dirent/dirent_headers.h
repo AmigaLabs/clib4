@@ -36,6 +36,7 @@ struct DirectoryHandle
 	struct MinList			dh_VolumeList;
 	BOOL					dh_ScanVolumeList;
     int                     dh_Fd;              // For fdopendir()
+	ino_t					dh_ObjectID;
 };
 
 extern void __dirent_lock(struct _clib4 *__clib4);

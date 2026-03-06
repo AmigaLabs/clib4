@@ -8,7 +8,7 @@
 
 wchar_t *
 wcsstr(const wchar_t *big, const wchar_t *little) {
-#if 1
+#if 0
     unsigned int i;
     wchar_t *p = (wchar_t *) big;
 

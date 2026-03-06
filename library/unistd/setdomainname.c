@@ -25,13 +25,12 @@ setdomainname(const char *name, size_t len) {
         goto out;
     }
 
-    __setdomainname((STRPTR) name);
-
     if (strlen(name) > len) {
-        name = NULL;
         __set_errno(EINVAL);
         goto out;
     }
+
+    __setdomainname((STRPTR) name);
 
     result = OK;
 

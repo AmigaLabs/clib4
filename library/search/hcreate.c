@@ -85,6 +85,11 @@ hsearch_r(ENTRY item, ACTION action, ENTRY **retval, struct hsearch_data *_htab)
     uint32_t hashval;
     size_t len;
 
+    if (_htab == NULL || _htab->htable == NULL) {
+        *retval = NULL;
+        return 0;
+    }
+
     len = strlen(item.key);
     hashval = (*__default_hash)(item.key, len);
 

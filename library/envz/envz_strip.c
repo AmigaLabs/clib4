@@ -32,6 +32,8 @@ envz_strip(char **envz, size_t *envz_len) {
         }
     }
     if (null_found) {
-        *envz = (char *) realloc(*envz, *envz_len);
+        char *temp = (char *) realloc(*envz, *envz_len);
+        if (temp != NULL || *envz_len == 0)
+            *envz = temp;
     }
 }

@@ -12,10 +12,10 @@ ttyname(int file_descriptor) {
 
     ENTER();
 
-    if (ttyname_r(file_descriptor, __clib4->tty_file_name, sizeof(__clib4->tty_file_name)) != 0)
-        goto out;
-
-out:
+    if (ttyname_r(file_descriptor, __clib4->tty_file_name, sizeof(__clib4->tty_file_name)) != 0) {
+        RETURN(NULL);
+        return NULL;
+    }
 
     RETURN(__clib4->tty_file_name);
     return (__clib4->tty_file_name);

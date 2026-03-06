@@ -26,6 +26,7 @@ wstring_wstocs(char dst[], size_t dsz, const wchar_t *src, size_t ssz) {
     }
 
     ssz = ((!ssz) ? wcslen(src) : ssz);
+    if (dsz == 0) return 0U;
     dsz = (((ssz * sizeof(wchar_t)) >= dsz) ? (dsz - 1) : dsz);
     if ((dsz = wcstombs(dst, src, dsz)) == 0) {
         return 0U;

@@ -321,8 +321,15 @@ _tzset_unlocked(void) {
         return;
     }
 
-    __clib4->__tzname[0] = strdup(info.std_abbr);
-    __clib4->__tzname[1] = strdup(info.dst_abbr);
+    char *tz0 = strdup(info.std_abbr);
+    char *tz1 = strdup(info.dst_abbr);
+    if (tz0 == NULL || tz1 == NULL) {
+        free(tz0);
+        free(tz1);
+        return;
+    }
+    __clib4->__tzname[0] = tz0;
+    __clib4->__tzname[1] = tz1;
     __clib4->__timezone = info.std_ofs;
     __clib4->__daylight = info.std_ofs != info.dst_ofs;
     __clib4->__dyntz = TRUE;

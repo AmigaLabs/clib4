@@ -153,9 +153,26 @@ __convert_info_to_statvfs(struct InfoData *id, struct statvfs *f) {
 
     memset(f, 0, sizeof(*f));
 
-    f->f_bsize = id->id_BytesPerBlock;
-    f->f_blocks = id->id_NumBlocks;
-    f->f_bfree = id->id_NumBlocks - id->id_NumBlocksUsed;
+    LONG bytes_per_block;
+    LONG num_blocks;
+    LONG num_blocks_used;
+
+    if (id->id_NumBlocks > 0) {
+        num_blocks = id->id_NumBlocks;
+        num_blocks_used = id->id_NumBlocksUsed;
+    } else {
+        num_blocks = 1;
+        num_blocks_used = 1;
+    }
+
+    if (id->id_BytesPerBlock > 0)
+        bytes_per_block = id->id_BytesPerBlock;
+    else
+        bytes_per_block = 512;
+
+    f->f_bsize = bytes_per_block;
+    f->f_blocks = num_blocks;
+    f->f_bfree = num_blocks - num_blocks_used;
     f->f_bavail = f->f_bfree;
     f->f_frsize = f->f_bsize;
     f->f_ffree = 0;

@@ -104,7 +104,8 @@ stat(const char *path_name, struct stat *st) {
 
 out:
 
-    FreeDosObject(DOS_EXAMINEDATA, fib);
+    if (fib != NULL)
+        FreeDosObject(DOS_EXAMINEDATA, fib);
     UnLock(file_lock);
 
     RETURN(result);

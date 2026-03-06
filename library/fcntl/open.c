@@ -245,7 +245,7 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
                 lock = Lock((STRPTR) path_name, SHARED_LOCK);
                 if (lock != BZERO) {
                     fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
-                    if (fib != NULL && !EXD_IS_DIRECTORY(fib)) {
+                    if (fib != NULL && EXD_IS_DIRECTORY(fib)) {
                         __set_errno(EISDIR);
                     }
                 }
