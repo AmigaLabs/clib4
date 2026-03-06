@@ -51,7 +51,6 @@ static void timespec_sub(struct timespec *ts1, const struct timespec *ts2, const
 int
 pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) {
     int result;
-    struct _clib4 *__clib4 = __CLIB4;
 
     if (mutex == NULL)
         return EINVAL;
@@ -85,26 +84,34 @@ pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) 
         return ETIMEDOUT;
     }
 
-    MutexObtain(timerMutex);
+    // Use stack-local timer resources (thread-safe, no global bottleneck)
+    struct MsgPort timerPort;
+    struct TimeRequest timerIO;
+    struct Task *task = FindTask(NULL);
 
-    uint32 sigMask = 1L << timedTimerPort->mp_SigBit;
+    if (!OpenTimerDevice((struct IORequest *) &timerIO, &timerPort, task)) {
+        CloseTimerDevice((struct IORequest *) &timerIO);
+        return EINVAL;
+    }
 
-    timedTimerIO->Request.io_Command = TR_ADDREQUEST;
-    timedTimerIO->Request.io_Flags = 0;
-    TIMESPEC_TO_OLD_TIMEVAL(&timedTimerIO->Time, &timeout);
+    uint32 sigMask = 1L << timerPort.mp_SigBit;
+
+    timerIO.Request.io_Command = TR_ADDREQUEST;
+    timerIO.Request.io_Flags = 0;
+    TIMESPEC_TO_OLD_TIMEVAL(&timerIO.Time, &timeout);
 
     SetSignal(0, sigMask);
-    SendIO((struct IORequest *) timedTimerIO);
+    SendIO((struct IORequest *) &timerIO);
 
     result = MutexAttemptWithSignal(mutex->mutex, sigMask);
 
     // Abort timer if we got the lock
     if (!(result & sigMask)) {
-        AbortIO((struct IORequest *) timedTimerIO);
-        WaitIO((struct IORequest *) timedTimerIO);
+        AbortIO((struct IORequest *) &timerIO);
+        WaitIO((struct IORequest *) &timerIO);
     }
 
-    MutexRelease(timerMutex);
+    CloseTimerDevice((struct IORequest *) &timerIO);
 
     if (result & sigMask) {
         result = ETIMEDOUT;

@@ -42,17 +42,16 @@ pthread_mutex_unlock(pthread_mutex_t *mutex) {
     if (mutex == NULL)
         return EINVAL;
 
-    if (mutex->mutex == NULL) {
-        int ret = _pthread_mutex_init(mutex, NULL, TRUE);
-        if (ret != 0)
-            return EINVAL;
-    }
+    /* An uninitialized mutex should not be lazily initialized during unlock.
+     * Unlocking a never-locked mutex is undefined behavior per POSIX. */
+    if (mutex->mutex == NULL)
+        return EINVAL;
 
-	if (mutex->kind != PTHREAD_MUTEX_NORMAL && !MutexIsMine(mutex))
-		return EPERM;
+    if (mutex->kind != PTHREAD_MUTEX_NORMAL && !MutexIsMine(mutex))
+        return EPERM;
 
-	mutex->owner = NULL;
-	MutexRelease(mutex->mutex);
+    mutex->owner = NULL;
+    MutexRelease(mutex->mutex);
 
     return 0;
 }

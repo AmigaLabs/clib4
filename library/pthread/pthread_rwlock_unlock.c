@@ -49,7 +49,9 @@ pthread_rwlock_unlock(pthread_rwlock_t *lock) {
     //if (!SemaphoreIsMine(&lock->semaphore))
     // if no one has obtained the semaphore don't unlock the rwlock
     // this can be a leap of faith because we don't maintain a separate list of readers
-    if (((struct SignalSemaphore *)lock->semaphore)->ss_NestCount < 1)
+    /* Use volatile cast to prevent compiler from caching ss_NestCount
+     * in a register — it can be modified by other threads. */
+    if (((volatile struct SignalSemaphore *)lock->semaphore)->ss_NestCount < 1)
         return EPERM;
 
     ReleaseSemaphore(lock->semaphore);

@@ -47,14 +47,22 @@ pthread_mutex_lock(pthread_mutex_t *mutex) {
         return EINVAL;
     }
 
+    /* Double-checked locking for PTHREAD_MUTEX_INITIALIZER lazy init.
+     * Without thread_sem, two threads racing here both see mutex==NULL,
+     * both call init, leaking the first allocation and breaking exclusion. */
     if (mutex->mutex == NULL) {
         SHOWMSG("mutex was not initalized. Initialize it");
-        int ret = _pthread_mutex_init(mutex, NULL, TRUE);
-        if (ret != 0) {
-            SHOWMSG("Cannot initialize mutex");
-            LEAVE();
-            return EINVAL;
+        MutexObtain(thread_sem);
+        if (mutex->mutex == NULL) {
+            int ret = _pthread_mutex_init(mutex, NULL, TRUE);
+            if (ret != 0) {
+                MutexRelease(thread_sem);
+                SHOWMSG("Cannot initialize mutex");
+                LEAVE();
+                return EINVAL;
+            }
         }
+        MutexRelease(thread_sem);
     }
 
 	// ERRORCHECK mutexes return EDEADLK instead of deadlocking

@@ -123,18 +123,20 @@ StarterFunc() {
 
 	ReplyMsg(&newThreadMessage->message);
 
-    /* Allocate signals AFTER ReplyMsg */
-    if (!inf->detached) {
-	    inf->cancel_signal = AllocSignal(-1);
-    	if (inf->cancel_signal == -1) {
-    		inf->cancel_signal_mask = SIGBREAKF_CTRL_C;
-    		D(("StarterFunc: %s AllocSignal cancel failed, fallback SIGBREAKF_CTRL_C\n", inf->name));
-    	} else {
-    		inf->cancel_signal_mask = 1L << inf->cancel_signal;
-    		D(("StarterFunc: %s allocated cancel signal %d mask 0x%lx\n", inf->name, inf->cancel_signal, (unsigned long)inf->cancel_signal_mask));
-    	}
+    /* Allocate cancel signal for ALL threads (joinable and detached).
+     * Previously this was inside the if(!detached) block, so detached
+     * threads could not be cancelled (Signal(task, 0) is a no-op). */
+    inf->cancel_signal = AllocSignal(-1);
+    if (inf->cancel_signal == -1) {
+        inf->cancel_signal_mask = SIGBREAKF_CTRL_C;
+        D(("StarterFunc: %s AllocSignal cancel failed, fallback SIGBREAKF_CTRL_C\n", inf->name));
+    } else {
+        inf->cancel_signal_mask = 1L << inf->cancel_signal;
+        D(("StarterFunc: %s allocated cancel signal %d mask 0x%lx\n", inf->name, inf->cancel_signal, (unsigned long)inf->cancel_signal_mask));
+    }
 
-        /* Allocate join signal */
+    if (!inf->detached) {
+        /* Allocate join signal (only needed for joinable threads) */
         inf->join_signal = AllocSignal(-1);
         if (inf->join_signal == -1) {
             inf->join_signal_mask = SIGF_PARENT;
@@ -200,6 +202,19 @@ StarterFunc() {
     /* If we had swapped the stack, restore it */
     if (stackSwapped)
         StackSwap(&stack);
+
+    /* Free our allocated signals in our own task context (before exit).
+     * AmigaOS FreeSignal operates on the calling task's signal set, so
+     * these must be freed here, not from pthread_join's context.
+     * Previously signals were never freed, leaking bits on every thread exit. */
+    if (inf->cancel_signal != -1 && inf->cancel_signal != SIGBREAKB_CTRL_C) {
+        FreeSignal(inf->cancel_signal);
+        inf->cancel_signal = -1;
+    }
+    if (inf->join_signal != -1 && inf->join_signal != SIGB_PARENT) {
+        FreeSignal(inf->join_signal);
+        inf->join_signal = -1;
+    }
 
     /* NOW acquire thread_sem to atomically set DESTRUCT and search for joiner */
     MutexObtain(thread_sem);

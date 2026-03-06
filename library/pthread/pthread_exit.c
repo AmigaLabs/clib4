@@ -43,8 +43,19 @@ pthread_exit(void *value_ptr) {
 	CleanupHandler *handler;
     ThreadInfo *inf = GetThreadInfo(thread);
 	if (thread == 0) {
-		SHOWMSG("pthread_exit: main thread cannot exit via pthread_exit, return\n");
-		return;
+		/* POSIX: pthread_exit from the main thread should terminate the calling
+		 * thread while allowing other threads to continue running, then perform
+		 * process cleanup equivalent to exit(). On AmigaOS we cannot detach the
+		 * main thread, so we run cleanup handlers and call exit(0), which
+		 * triggers __pthread_exit_func to join remaining threads. */
+		inf->ret = value_ptr;
+		while ((handler = (CleanupHandler *)RemTail((struct List *)&inf->cleanup))) {
+			if (handler->routine)
+				handler->routine(handler->arg);
+			free(handler);
+		}
+		exit(0);
+		return; /* unreachable, silences compiler warning */
 	}
 	if (inf->status == THREAD_STATE_TERMINATING || inf->status == THREAD_STATE_DESTRUCT) {
 		/* The target thread is already terminating, cannot exit */

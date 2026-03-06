@@ -42,10 +42,19 @@ pthread_mutex_trylock(pthread_mutex_t *mutex) {
     if (mutex == NULL)
         return EINVAL;
 
+    /* Double-checked locking for PTHREAD_MUTEX_INITIALIZER lazy init.
+     * Without thread_sem, two threads racing here both see mutex==NULL,
+     * both call init, leaking the first allocation and breaking exclusion. */
     if (mutex->mutex == NULL) {
-        int ret = _pthread_mutex_init(mutex, NULL, TRUE);
-        if (ret != 0)
-            return EINVAL;
+        MutexObtain(thread_sem);
+        if (mutex->mutex == NULL) {
+            int ret = _pthread_mutex_init(mutex, NULL, TRUE);
+            if (ret != 0) {
+                MutexRelease(thread_sem);
+                return EINVAL;
+            }
+        }
+        MutexRelease(thread_sem);
     }
 
 	if (mutex->kind != PTHREAD_MUTEX_RECURSIVE && MutexIsMine(mutex))

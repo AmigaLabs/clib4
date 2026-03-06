@@ -44,8 +44,11 @@ pthread_self(void) {
 
     thread = GetThreadId(task);
 
+    /* Return -1 (not 0) for unknown tasks. Returning 0 would alias with
+     * the main thread's ID, causing operations on "self" to corrupt the
+     * main thread's ThreadInfo. */
     if (thread == PTHREAD_THREADS_MAX)
-        return 0;
+        return (pthread_t)-1;
 
     return thread;
 }

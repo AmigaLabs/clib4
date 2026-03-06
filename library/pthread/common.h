@@ -92,7 +92,7 @@ typedef struct {
     struct MinList cleanup;
     int cancelstate;
     int canceltype;
-    int canceled;
+    volatile int canceled; /* volatile: written by pthread_cancel from another thread, polled by target */
     int detached;
     char name[NAMELEN];
     pthread_t thread_id;          /* My pthread_t ID assigned at creation */

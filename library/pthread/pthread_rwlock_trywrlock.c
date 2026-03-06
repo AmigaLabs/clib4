@@ -44,9 +44,13 @@ pthread_rwlock_trywrlock(pthread_rwlock_t *lock) {
     if (lock == NULL)
         return EINVAL;
 
-    // initialize static rwlocks
-    if (SemaphoreIsInvalid(lock->semaphore))
-        pthread_rwlock_init(lock, NULL);
+    // initialize static rwlocks (double-check under lock)
+    if (SemaphoreIsInvalid(lock->semaphore)) {
+        MutexObtain(thread_sem);
+        if (SemaphoreIsInvalid(lock->semaphore))
+            pthread_rwlock_init(lock, NULL);
+        MutexRelease(thread_sem);
+    }
 
     ret = AttemptSemaphore(lock->semaphore);
 

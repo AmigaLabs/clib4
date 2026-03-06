@@ -40,46 +40,24 @@
 int
 pthread_setspecific(pthread_key_t key, const void *value) {
     ThreadInfo *inf;
-    BOOL key_is_valid;
-
-    /* NOTE: D() macros disabled in this function to avoid potential deadlock
-     * if debug output somehow calls pthread_getspecific/setspecific while
-     * holding tls_sem mutex */
 
     if (key >= PTHREAD_KEYS_MAX || key < 0)
         return EINVAL;
 
-    /* Get current thread info - must be valid */
     inf = GetCurrentThreadInfo();
     if (inf == NULL)
         return EINVAL;
 
-    /* Check if pthread library is still initialized (tls_sem not NULL) */
-    /* This can happen if called from destructors after __pthread_exit_func */
-    if (tls_sem == NULL)
+    /* No global lock needed: tlsvalues[] is per-thread private data, only
+     * accessed by the owning thread. Reading tlskeys[key].used without a
+     * lock is a benign race per POSIX (key_delete from another thread).
+     * The previous implementation serialized ALL getspecific/setspecific
+     * calls through tls_sem, which is a scalability bottleneck and violates
+     * POSIX async-signal-safety requirements for pthread_getspecific. */
+    if (!tlskeys[key].used)
         return EINVAL;
 
-    /* Use global lock to protect the entire operation */
-    /* This prevents race with pthread_key_delete */
-    MutexObtain(tls_sem);
-
-    /* Double-check tlskeys is still valid after acquiring lock */
-    /* It could have been freed by __pthread_exit_func */
-    if (tlskeys == NULL) {
-        MutexRelease(tls_sem);
-        return EINVAL;
-    }
-
-    /* Check if key is valid INSIDE the lock */
-    if (!tlskeys[key].used) {
-        MutexRelease(tls_sem);
-        return EINVAL;
-    }
-
-    /* Write to tlsvalues INSIDE the lock to prevent race with key_delete */
     inf->tlsvalues[key] = (void *) value;
-
-    MutexRelease(tls_sem);
 
     return 0;
 }

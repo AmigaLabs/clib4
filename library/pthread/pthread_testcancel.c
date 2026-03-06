@@ -48,5 +48,8 @@ pthread_testcancel(void) {
     if (inf && inf->canceled && (inf->cancelstate == PTHREAD_CANCEL_ENABLE))
         pthread_exit(PTHREAD_CANCELED);
 
-    SetSignal(inf->cancel_signal_mask, 0);
+    /* SetSignal(newSignals=0, signalSet=mask): clears the cancel signal bit.
+     * Previously had reversed arguments SetSignal(mask, 0) which is a no-op
+     * (signalSet=0 means no bits are modified). */
+    SetSignal(0, inf->cancel_signal_mask);
 }

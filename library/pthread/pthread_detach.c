@@ -43,19 +43,28 @@ pthread_detach(pthread_t thread) {
 
     inf = GetThreadInfo(thread);
 
-    if (inf == NULL || inf->task == NULL)
+    if (inf == NULL)
         return ESRCH;
 
-    if (inf->detached)
+    /* Hold thread_sem while reading/writing ThreadInfo fields to prevent
+     * races with concurrent thread exit modifying the same slot. Without
+     * this lock, inf->task could become NULL between our check and the
+     * write to inf->detached. */
+    MutexObtain(thread_sem);
+
+    if (inf->task == NULL || inf->status == THREAD_STATE_IDLE) {
+        MutexRelease(thread_sem);
+        return ESRCH;
+    }
+
+    if (inf->detached) {
+        MutexRelease(thread_sem);
         return EINVAL;
+    }
 
     inf->detached = TRUE;
 
-    /* Note: we do NOT call FreeSignal here because the cancel_signal
-     * was allocated by the target thread (in StarterFunc), and on AmigaOS
-     * FreeSignal operates on the calling task's signal set, not the target's.
-     * The signal will be freed when the thread exits and cleans up.
-     */
+    MutexRelease(thread_sem);
 
     return 0;
 }

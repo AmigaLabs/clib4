@@ -50,8 +50,14 @@ pthread_mutex_destroy(pthread_mutex_t *mutex) {
         return EBUSY;
     }
 
-    MutexRelease(mutex->mutex);
-    FreeSysObject(ASOT_MUTEX, mutex->mutex);
+    /* Save and NULL out the mutex pointer while still holding the lock,
+     * then release and free. This prevents another thread from obtaining
+     * the mutex between release and free. */
+    APTR mtx = mutex->mutex;
+    mutex->mutex = NULL;
+    mutex->owner = NULL;
+    MutexRelease(mtx);
+    FreeSysObject(ASOT_MUTEX, mtx);
 
     memset(mutex, 0, sizeof(pthread_mutex_t));
 

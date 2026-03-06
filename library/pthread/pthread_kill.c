@@ -41,25 +41,41 @@ int
 pthread_kill(pthread_t thread, int sig) {
     ThreadInfo *inf = GetThreadInfo(thread);
 
-    /* Validate thread exists and is active */
-    if (inf == NULL || inf->task == NULL)
-        return ESRCH;
-
-    if (inf->status == THREAD_STATE_IDLE ||
-        inf->status == THREAD_STATE_DESTRUCT ||
-        inf->status == THREAD_STATE_TERMINATED)
+    if (inf == NULL)
         return ESRCH;
 
     /* Validate signal number */
     if (sig < 0 || sig >= NSIG)
         return EINVAL;
 
-    /* sig == 0: just check if thread exists (POSIX) */
-    if (sig == 0)
-        return 0;
+    /* Hold thread_sem to prevent inf->task from being cleared by concurrent exit */
+    MutexObtain(thread_sem);
 
-    /* Send the signal as an AmigaOS signal bit to the target task */
-    Signal((struct Task *)inf->task, 1 << sig);
+    /* Validate thread is active */
+    if (inf->task == NULL ||
+        inf->status == THREAD_STATE_IDLE ||
+        inf->status == THREAD_STATE_DESTRUCT ||
+        inf->status == THREAD_STATE_TERMINATED) {
+        MutexRelease(thread_sem);
+        return ESRCH;
+    }
+
+    /* sig == 0: just check if thread exists (POSIX) */
+    if (sig == 0) {
+        MutexRelease(thread_sem);
+        return 0;
+    }
+
+    /* Use the thread's cancel signal for cancellation (SIGCANCEL-like),
+     * otherwise use SIGBREAKF_CTRL_C as a generic interrupt.
+     * Direct POSIX-to-AmigaOS signal bit mapping is not meaningful
+     * since AmigaOS signal bits have per-task allocation semantics. */
+    if (inf->cancel_signal_mask != 0)
+        Signal((struct Task *)inf->task, inf->cancel_signal_mask);
+    else
+        Signal((struct Task *)inf->task, SIGBREAKF_CTRL_C);
+
+    MutexRelease(thread_sem);
 
     return 0;
 }

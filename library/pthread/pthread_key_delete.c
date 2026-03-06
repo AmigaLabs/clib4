@@ -56,6 +56,12 @@ pthread_key_delete(pthread_key_t key) {
     tls->used = FALSE;
     tls->destructor = NULL;
 
+    /* Clear stale TLS values for this key across all threads.
+     * Without this, a subsequently reused key slot exposes dangling
+     * pointers from previous use via pthread_getspecific(). */
+    for (int i = 0; i < PTHREAD_THREADS_MAX; i++)
+        threads[i].tlsvalues[key] = NULL;
+
     MutexRelease(tls_sem);
 
     return 0;
