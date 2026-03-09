@@ -11,8 +11,6 @@ static	const float	one	= 1.0, tiny = 1.0e-30;
 double
 __ieee754_sqrt(double x) {
     double z;
-
-#ifndef __SPE__
     int32_t sign = (int32_t) 0x80000000;
     int32_t ix0, s0, q, m, t, i;
     uint32_t r, t1, s1, ix1, q1;
@@ -109,6 +107,5 @@ __ieee754_sqrt(double x) {
     if ((q & 1) == 1) ix1 |= sign;
     ix0 += (m << 20);
     INSERT_WORDS(z, ix0, ix1);
-#endif
     return z;
 }

@@ -15,7 +15,7 @@ ldexp(double x, int exp) {
     } else {
         result = scalbn(x, exp);
 
-        if (isinf(result) || (result < DBL_MIN || result > -DBL_MIN))
+        if (isinf(result) || (result < DBL_MIN && result > -DBL_MIN))
             __set_errno(ERANGE);
     }
 
