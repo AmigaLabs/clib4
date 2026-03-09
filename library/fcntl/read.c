@@ -126,6 +126,10 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
         return ret; // return partial or failed read unchanged
 
     struct fd *fd = __get_file_descriptor(__clib4, file_descriptor);
+    if (fd == NULL) {
+        __set_errno(EBADF);
+        return EOF;
+    }
     if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET) && FLAG_IS_SET(fd->fd_Flags, FDF_LITTLE_ENDIAN)) {
         SHOWMSG("[read] Reading in Little endian mode\n");
         if (num_bytes == 2) {
