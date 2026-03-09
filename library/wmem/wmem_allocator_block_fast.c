@@ -91,7 +91,7 @@ static void *
 wmem_block_fast_alloc(void *private_data, const size_t size, int32_t alignment) {
     wmem_block_fast_allocator_t *allocator = (wmem_block_fast_allocator_t *) private_data;
     wmem_block_fast_chunk_t *chunk;
-    int32_t real_size;
+    size_t real_size;
     uint32_t real_pos;
 
 #ifdef MEMORY_DEBUG
@@ -172,6 +172,7 @@ wmem_block_fast_realloc(void *private_data, void *ptr, const size_t size, int32_
 #endif
 
     void *newptr = wmem_block_fast_alloc(private_data, size, alignment);
+    if (newptr == NULL) return NULL;
     memcpy(newptr, ptr, chunk->size);
 
     if (chunk->jumbo) {
@@ -211,9 +212,10 @@ wmem_block_fast_free_all(void *private_data) {
     cur = allocator->block_list;
 
     if (cur) {
-        cur->pos = WMEM_BLOCK_HEADER_SIZE;
+        cur->pos = (uint32_t)cur + WMEM_BLOCK_HEADER_SIZE;
         nxt = cur->next;
         cur->next = NULL;
+        allocator->block_list = cur;
         cur = nxt;
     }
 
@@ -225,7 +227,6 @@ wmem_block_fast_free_all(void *private_data) {
         freed_amount += WMEM_BLOCK_SIZE;
 #endif
     }
-    allocator->block_list = NULL;
 
     /* now do the jumbo blocks, freeing all of them */
     cur_jum = allocator->jumbo_list;
