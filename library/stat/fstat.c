@@ -72,7 +72,8 @@ fstat(int file_descriptor, struct stat *buffer) {
 
 out:
 
-    __fd_unlock(fd);
+    if (fd != NULL)
+        __fd_unlock(fd);
     __stdio_unlock(__clib4);
 
     RETURN(result);
