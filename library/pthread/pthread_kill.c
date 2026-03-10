@@ -39,6 +39,27 @@
 
 int
 pthread_kill(pthread_t thread, int sig) {
-    Signal((struct Task *)thread, 1 << sig);
-    return EINVAL;
+    ThreadInfo *inf = GetThreadInfo(thread);
+
+    /* Validate thread exists and is active */
+    if (inf == NULL || inf->task == NULL)
+        return ESRCH;
+
+    if (inf->status == THREAD_STATE_IDLE ||
+        inf->status == THREAD_STATE_DESTRUCT ||
+        inf->status == THREAD_STATE_TERMINATED)
+        return ESRCH;
+
+    /* Validate signal number */
+    if (sig < 0 || sig >= NSIG)
+        return EINVAL;
+
+    /* sig == 0: just check if thread exists (POSIX) */
+    if (sig == 0)
+        return 0;
+
+    /* Send the signal as an AmigaOS signal bit to the target task */
+    Signal((struct Task *)inf->task, 1 << sig);
+
+    return 0;
 }

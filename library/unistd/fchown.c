@@ -86,7 +86,7 @@ fchown(int file_descriptor, uid_t owner, gid_t group) {
     }
 
     /* Did anything change at all? */
-    if (group != fib->OwnerUID || owner != fib->OwnerUID) {
+    if (group != fib->OwnerGID || owner != fib->OwnerUID) {
         success = SetOwnerInfoTags(OI_StringNameInput, fib->Name, OI_OwnerUID,
                                    (LONG)((((ULONG) owner) << 16) | (ULONG) group), TAG_DONE);
         if (NO success) {

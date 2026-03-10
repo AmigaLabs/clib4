@@ -43,6 +43,11 @@ out:
 CLIB_DESTRUCTOR(aio_exit) {
     ENTER();
 
+    if (__aio_lock == NULL || aio_threads == NULL) {
+        LEAVE();
+        return;
+    }
+
     /* Check if we have some aio threads */
     SHOWMSG("Check if we have some aio pthreads created");
     AioThread *aioThread;

@@ -43,6 +43,7 @@ envz_merge(char **envz, size_t *envz_len, const char *envz2, size_t envz2_len, i
             }
 
             retval = envz_add(envz, envz_len, name_str, val_str);
+            free(name_str);
         }
     }
     return retval;

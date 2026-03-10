@@ -25,7 +25,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
     SHOWVALUE(file_descriptor);
     SHOWVALUE(cmd);
 
-    if (__clib4 == NULL || __clib4->__fd == NULL || __clib4->__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE) || file_descriptor < 0 || file_descriptor > __clib4->__num_fd) {
+    if (__clib4 == NULL || __clib4->__fd == NULL || file_descriptor < 0 || file_descriptor >= __clib4->__num_fd || __clib4->__fd[file_descriptor] == NULL || FLAG_IS_CLEAR(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE)) {
         __set_errno(EINVAL);
         goto out;
     }
@@ -109,7 +109,7 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
             if (FLAG_IS_SET(fd->fd_Flags, FDF_ASYNC_IO))
                 SET_FLAG(result, O_ASYNC);
 
-            if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY))
+            if (FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY))
                 SET_FLAG(result, O_PATH);
 
             break;
@@ -270,7 +270,8 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
 out:
 
-    __fd_unlock(fd);
+    if (fd != NULL)
+        __fd_unlock(fd);
 
     if (cmd == F_DUPFD)
         __stdio_unlock(__clib4);

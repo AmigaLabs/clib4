@@ -17,8 +17,9 @@ getppid(void) {
     if (t->tc_Node.ln_Type != NT_PROCESS) {
         result = 0;
     }
-
-    result = ((struct Process *) t)->pr_ParentID;
+    else {
+        result = ((struct Process *) t)->pr_ParentID;
+    }
 
     RETURN(result);
     return (result);

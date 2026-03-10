@@ -19,6 +19,7 @@ getcwd(char *buffer, size_t buffer_size) {
     struct name_translation_info buffer_nti;
     char *result = NULL;
     BPTR dir_lock = BZERO;
+    char *allocated_buffer = NULL;
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
@@ -36,6 +37,7 @@ getcwd(char *buffer, size_t buffer_size) {
          * caller should free(3) the returned buffer.
         */
         buffer = __malloc_r(__clib4, PATH_MAX);
+        allocated_buffer = buffer;
         buffer_size = PATH_MAX;
         if (buffer == NULL) {
             SHOWMSG("not enough memory for result buffer");
@@ -117,6 +119,9 @@ out:
 
     if (dir_lock != BZERO)
         UnLock(dir_lock);
+
+    if (result == NULL && allocated_buffer != NULL)
+        __free_r(__clib4, allocated_buffer);
 
     RETURN(result);
     return (result);

@@ -70,12 +70,12 @@ getvfsstat(struct statvfs *buf, size_t bufsize, int flags) {
                         else if (!(DosType & 0x0000FF00))
                             DosType |= 0x00002000;
 
-                        sprintf(buf[count].f_fstypename, dosFormat, (DosType >> 24) & 0xFF, (DosType >> 16) & 0xFF,
+                        snprintf(buf[count].f_fstypename, sizeof(buf[count].f_fstypename), dosFormat, (DosType >> 24) & 0xFF, (DosType >> 16) & 0xFF,
                                 (DosType >> 8) & 0xFF, DosType & 0xFF);
                     }
                     else {
                         /* If disk is not present set file system type to UNKNOWN */
-                        strcpy(buf[count].f_fstypename, "UNKNOWN");
+                        strlcpy(buf[count].f_fstypename, "UNKNOWN", sizeof(buf[count].f_fstypename));
                     }
 
                     count++;

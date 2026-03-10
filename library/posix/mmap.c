@@ -22,44 +22,26 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset) {
     SHOWVALUE(fd);
     SHOWVALUE(offset);
 
-    if (fd > 0) {
-        if (addr != NULL) {
-            if ((addr = calloc(1, len))) {
-                lseek(fd, offset, SEEK_SET);
-                read(fd, addr, len);
-            }
-
-            if (!addr) {
-                __set_errno(ENOMEM);
-                RETURN(NULL);
-                return NULL;
-            }
-
-            RETURN(addr);
-            return addr;
-        } else {
-            void *data = calloc(1, len);
-            if (data != NULL) {
-                lseek(fd, offset, SEEK_SET);
-                read(fd, data, len);
-            }
-
-            if (!data) {
-                __set_errno(ENOMEM);
-                RETURN(NULL);
-                return NULL;
-            }
-            RETURN(data);
-            return data;
+    if (fd >= 0) {
+        void *data = calloc(1, len);
+        if (!data) {
+            __set_errno(ENOMEM);
+            RETURN(MAP_FAILED);
+            return MAP_FAILED;
         }
+        lseek(fd, offset, SEEK_SET);
+        read(fd, data, len);
+
+        RETURN(data);
+        return data;
     } else {
         if ((addr = calloc(1, len))) {
             RETURN(addr);
             return addr;
         } else {
             __set_errno(ENOMEM);
-            RETURN(NULL);
-            return NULL;
+            RETURN(MAP_FAILED);
+            return MAP_FAILED;
         }
     }
 }

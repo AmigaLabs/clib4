@@ -12,6 +12,12 @@ sigfillset(sigset_t *set) {
 
     SHOWPOINTER(set);
 
+    if (set == NULL) {
+        __set_errno(EFAULT);
+        RETURN(-1);
+        return -1;
+    }
+
     *set = ~((sigset_t) 0);
 
     RETURN(0);

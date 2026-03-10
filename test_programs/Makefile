@@ -44,11 +44,14 @@ INCLUDE = -I../library/include
 #       should be sufficient.
 
 DEPFLAGS = -MMD -MP -MF $(DEPDIR)/$*.d
-CFLAGS = -mcrt=clib4 -fno-builtin $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(OPTIONS) $(INCLUDE) $(DEPFLAGS)
-LFLAGS =
+CFLAGS = -mcrt=clib4 -gstabs -fno-builtin $(WARNINGS) $(OPTIMIZE) $(DEBUG) $(OPTIONS) $(INCLUDE) $(DEPFLAGS)
+LFLAGS = -Wl,--export-dynamic
 
-C_SOURCES = $(shell find $(SOURCEDIR) -maxdepth 2 -name '*.c' -type f -printf '%P\n')
-CXX_SOURCES = $(shell find $(SOURCEDIR) -maxdepth 2 -name '*.cpp' -type f -printf '%P\n')
+C_SOURCES_ALL = $(shell find $(SOURCEDIR) -maxdepth 2 -name '*.c' -type f -printf '%P\n')
+CXX_SOURCES_ALL = $(shell find $(SOURCEDIR) -maxdepth 2 -name '*.cpp' -type f -printf '%P\n')
+# Exclude misc/start.cpp from normal build (needs -nostartfiles)
+CXX_SOURCES = $(filter-out misc/start.cpp, $(CXX_SOURCES_ALL))
+C_SOURCES = $(filter-out threads/curl_share.c, $(C_SOURCES_ALL))
 C_OBJECTS = $(patsubst %.c, %, $(C_SOURCES))
 CXX_OBJECTS = $(patsubst %.cpp, %, $(CXX_SOURCES))
 
@@ -58,7 +61,7 @@ LIBS = -L../build/lib -lm -L../build/lib -lrt -L../build/lib -lpthread -L../buil
 
 ##############################################################################
 
-all: builddir $(C_OBJECTS) $(CXX_OBJECTS)
+all: builddir $(C_OBJECTS) $(CXX_OBJECTS) misc/start
 
 builddir:
 	@$(MAKEDIR) $(BUILDDIR)
@@ -85,6 +88,17 @@ clean:
 	@if [ ! -f $(BUILDDIR)/$@ ] || [ $< -nt $(BUILDDIR)/$@ ]; then \
 		echo "Compiling $(BUILDDIR)/$@"; \
 		$(CXX) $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS) -athread=native; \
+	else \
+		echo "$(BUILDDIR)/$@ is up to date"; \
+	fi
+
+# Special rule for misc/start.cpp - needs -nostartfiles
+misc/start: misc/start.cpp | builddir
+	@mkdir -p $(dir $(BUILDDIR)/$@)
+	@mkdir -p $(dir $(DEPDIR)/$@)
+	@if [ ! -f $(BUILDDIR)/$@ ] || [ $< -nt $(BUILDDIR)/$@ ]; then \
+		echo "Compiling $(BUILDDIR)/$@ (with -nostartfiles)"; \
+		$(CXX) -nostartfiles $(CFLAGS) -o $(BUILDDIR)/$@ $< $(LIBS) $(LFLAGS) -athread=native; \
 	else \
 		echo "$(BUILDDIR)/$@ is up to date"; \
 	fi

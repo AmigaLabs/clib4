@@ -87,35 +87,40 @@ pthread_join(pthread_t thread, void **value_ptr) {
 
     /* Wait for thread to finish */
     if (me) {
-        /* We are a pthread - wait for signal */
-        D(("pthread_join[%ld]: Going to Wait() for signal mask=0x%lx\n", thread, (unsigned long)me->join_signal_mask));
-        uint32_t sigs = Wait(me->join_signal_mask | me->cancel_signal_mask);
-        D(("pthread_join[%ld]: Wait() returned, sigs=0x%lx\n", thread, (unsigned long)sigs));
+        /* Clear any stale signal on the join bit before entering the wait loop.
+         * This prevents false immediate returns from signals left over by
+         * previous join operations or NP_Child process death notifications. */
+        SetSignal(0, me->join_signal_mask);
 
-        if (sigs & me->cancel_signal_mask)
-            pthread_testcancel();
+        for (;;) {
+            /* Check status under lock BEFORE calling Wait().
+             * This closes the race window where the target finishes and signals
+             * us between the MutexRelease above (or a loop iteration) and Wait().
+             * Without this check, the signal could be lost (consumed by SetSignal
+             * or a prior spurious wake), leaving us stuck in Wait() forever. */
+            MutexObtain(thread_sem);
+            D(("pthread_join[%ld]: checking status=%d\n", thread, inf->status));
 
-        /* Re-acquire lock to check result/cleanup */
-        D(("pthread_join[%ld]: About to acquire thread_sem (second time)\n", thread));
-        MutexObtain(thread_sem);
-        D(("pthread_join[%ld]: Acquired thread_sem (second time)\n", thread));
+            if (inf->status == THREAD_STATE_DESTRUCT || inf->status == THREAD_STATE_TERMINATED) {
+                break; /* Target confirmed done, we hold thread_sem for cleanup */
+            }
+            MutexRelease(thread_sem);
 
-        /* We just need to ensure we are not in list anymore (if cancelled or spurious) */
-        /* But if signaled by target, we might still be in list? */
-        /* Target thread in clib4 (modified below) will set join_result and signal. */
+            /* Target still running - block until signaled */
+            D(("pthread_join[%ld]: Going to Wait() for signal mask=0x%lx\n", thread, (unsigned long)me->join_signal_mask));
+            uint32_t sigs = Wait(me->join_signal_mask | me->cancel_signal_mask);
+            D(("pthread_join[%ld]: Wait() returned, sigs=0x%lx\n", thread, (unsigned long)sigs));
 
-        /* Safe to remove if nodes are valid */
+            if (sigs & me->cancel_signal_mask)
+                pthread_testcancel();
+        }
+
+        /* We hold thread_sem and target is confirmed DESTRUCT/TERMINATED */
         Remove((struct Node *)&me->join_node);
-
-        /* Restore state */
-        me->status = THREAD_STATE_RUNNING; // or whatever
+        me->status = THREAD_STATE_RUNNING;
 
         if (value_ptr)
-            *value_ptr = me->join_result;
-
-        /* Verify target thread status? */
-        /* If we were signaled, target thread should be DESTRUCT/TERMINATED. */
-        /* Target thread cleans ITSELF up? No, joiner cleans target up usually. */
+            *value_ptr = inf->ret;
 
         _pthread_clear_threadinfo(inf);
 
@@ -123,31 +128,9 @@ pthread_join(pthread_t thread, void **value_ptr) {
         return 0;
 
     } else {
-        /* We are main thread or non-pthread - busy wait with proper locking */
-        /* Main thread should also use signals ideally, but let's stick to existing loop for now or fix it? */
-        /* Main thread has NO join_node? It has `me` if it calls `pthread_join`. */
-        /* Wait, main thread corresponds to `threads[0]`. GetThreadInfo(0) returns &threads[0]. */
-        /* So `me` IS valid for main thread. */
-        /* If `pthreads_init` initialized `threads[0]`, then `me` is valid. */
-        /* And main thread has `join_signal` allocated now. */
-        /* So main thread CAN use the Wait() path! */
-        /* Wait, `if (me)` check above handles it. */
-        /* This else block is for... `if (me == NULL)`? */
-        /* GetCurrentThreadInfo only returns NULL if TLS not set up or something. */
-
-        int done = 0;
-        while (!done) {
-            Delay(1); /* Wait 1 tick (~20ms) */
-            MutexObtain(thread_sem);
-            if (inf->status == THREAD_STATE_DESTRUCT || inf->status == THREAD_STATE_TERMINATED)
-                done = 1;
-            MutexRelease(thread_sem);
-        }
-        MutexObtain(thread_sem);
-        if (value_ptr)
-            *value_ptr = inf->ret;
-        _pthread_clear_threadinfo(inf);
-        MutexRelease(thread_sem);
-        return 0;
+        /* GetCurrentThreadInfo() returned NULL - caller is not a recognized
+         * pthread thread (main thread is threads[0] and always valid).
+         * Cannot join without a valid caller context. */
+        return ESRCH;
     }
 }

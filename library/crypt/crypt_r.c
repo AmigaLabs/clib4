@@ -24,7 +24,7 @@ crypt_r(const char *key, const char *salt, struct crypt_data *data) {
     if (salt[0] == '$' && salt[1] && salt[2]) {
         if (salt[1] == '1' && salt[2] == '$')
             return __crypt_md5(key, salt, output);
-        if (salt[1] == '2' && salt[3] == '$')
+        if (salt[1] == '2' && salt[2] && salt[3] == '$')
             return __crypt_blowfish(key, salt, output);
         if (salt[1] == '5' && salt[2] == '$')
             return __crypt_sha256(key, salt, output);

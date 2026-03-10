@@ -258,18 +258,13 @@ sem_getvalue(sem_t *sem, int *sval) {
         return -1;
     }
 
-    // if one or more threads are waiting to lock the semaphore,
-    // then return the negative of the waiters
-    if (pthread_mutex_trylock(&sem->lock) == 0) {
-        if (sem->lock.incond)
-            *sval = -sem->waiters_count;
-        else
-            *sval = sem->value;
-        pthread_mutex_unlock(&sem->lock);
-    } else {
-        // TODO: should I lock the mutex here?
+    // Acquire the lock to read semaphore state consistently
+    pthread_mutex_lock(&sem->lock);
+    if (sem->waiters_count > 0)
         *sval = -sem->waiters_count;
-    }
+    else
+        *sval = sem->value;
+    pthread_mutex_unlock(&sem->lock);
 
     return 0;
 }

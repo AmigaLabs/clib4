@@ -68,6 +68,9 @@ __aio_notify_only(struct sigevent *sigev) {
                 result = -1;
             }
         }
+
+        if (pattr == &attr)
+            pthread_attr_destroy(&attr);
     } else if (sigev->sigev_notify == SIGEV_SIGNAL) {
         /* There are no queued signals on this system at all.  */
         result = raise(sigev->sigev_signo);

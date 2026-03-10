@@ -20,11 +20,10 @@ __isinf(double d) {
 #else
     union ieee_double x;
 
-	/* Exponent = 2047 and fraction = 0.0 -> infinity */
-	x.raw[0] = 0x7ff00000;
-	x.raw[1] = 0x00000000;
+	x.value = d;
 
-	return(x.value);
+	/* Exponent = 2047 and fraction = 0.0 -> infinity */
+	return (((x.raw[0] & 0x7fffffff) == 0x7ff00000) && (x.raw[1] == 0));
 #endif
 }
 
@@ -39,7 +38,7 @@ __isinff(float f) {
     int32_t ix;
     GET_FLOAT_WORD(ix, f);
     ix &= 0x7fffffff;
-    return FLT_UWORD_IS_NAN(ix);
+    return (ix == 0x7f800000);
 #endif
 }
 

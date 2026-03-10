@@ -111,13 +111,13 @@ __hash_open(const char *file, int flags, int mode,
             hashp->hash = __default_hash;
 
         hdrsize = read(hashp->fp, &hashp->hdr, sizeof(HASHHDR));
-#if BYTE_ORDER == LITTLE_ENDIAN
-        swap_header(hashp);
-#endif
         if (hdrsize == -1)
         _RETURN_ERROR(errno, error1);
         if (hdrsize != sizeof(HASHHDR))
         _RETURN_ERROR(EFTYPE, error1);
+#if BYTE_ORDER == LITTLE_ENDIAN
+        swap_header(hashp);
+#endif
         /* Verify file type, versions and hash function */
         if (hashp->MAGIC != HASHMAGIC)
         _RETURN_ERROR(EFTYPE, error1);
@@ -777,7 +777,7 @@ __expand_table(HTAB *hashp)
             dirsize = hashp->DSIZE * sizeof(SEGMENT *);
             if (!hash_realloc(&hashp->dir, dirsize, dirsize << 1))
                 return (-1);
-            hashp->DSIZE = dirsize << 1;
+            hashp->DSIZE = hashp->DSIZE << 1;
         }
         if ((hashp->dir[new_segnum] =
                      (SEGMENT)calloc(hashp->SGSIZE, sizeof(SEGMENT))) == NULL)

@@ -21,7 +21,7 @@ strnstr(const char *src, const char *sub, size_t len)
 		{
 			if (sub[i] == '\0')
 				return (char *)src;
-			if (sub[i] != src[i])
+			if (src + i >= max || sub[i] != src[i])
 				break;
 			i += 1;
 		}

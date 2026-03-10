@@ -119,7 +119,8 @@ out:
     if (current_dir_changed)
         SetCurrentDir(old_current_dir);
 
-    FreeDosObject(DOS_EXAMINEDATA, fib);
+    if (fib != NULL)
+        FreeDosObject(DOS_EXAMINEDATA, fib);
 
     UnLock(parent_dir);
 

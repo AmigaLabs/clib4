@@ -39,7 +39,11 @@
 
 int
 pthread_spin_destroy(pthread_spinlock_t *lock) {
-    (void) (lock);
+    if (lock == NULL)
+        return EINVAL;
+
+    if (*lock != 0)
+        return EBUSY;
 
     return 0;
 }

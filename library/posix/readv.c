@@ -37,12 +37,12 @@ readv(int file_descriptor, const struct iovec *iov, int vec_count) {
 
     /* Check for overflow. An expensive test, but better to do it here than in the read loop. */
     for (i = 0, total_num_bytes_read = 0; i < vec_count; i++) {
-        total_num_bytes_read += iov[i].iov_len;
-        if (total_num_bytes_read < 0) /* Rollover. */
+        if (iov[i].iov_len > (size_t)(SSIZE_MAX - total_num_bytes_read)) /* Overflow. */
         {
             __set_errno_r(__clib4, EINVAL);
             goto out;
         }
+        total_num_bytes_read += iov[i].iov_len;
     }
 
     fd = __get_file_descriptor(__clib4, file_descriptor);

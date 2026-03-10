@@ -51,7 +51,7 @@ getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *h
         if (!(hints->ai_flags & AI_PASSIVE))
             return EAI_NONAME;
 
-        if (AI_ADDRCONFIG)
+        if (hints->ai_flags & AI_ADDRCONFIG)
             nodename = "0.0.0.0";
         else
             nodename = (hints->ai_family == AF_INET6) ? "::" : "0.0.0.0";

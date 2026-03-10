@@ -41,7 +41,7 @@ int
 pthread_setschedprio(pthread_t thread, int prio) {
     ThreadInfo *inf;
 
-    if (prio < sched_get_priority_max(SCHED_NORMAL) || prio > sched_get_priority_min(SCHED_NORMAL))
+    if (prio < sched_get_priority_min(SCHED_NORMAL) || prio > sched_get_priority_max(SCHED_NORMAL))
         return EINVAL;
 
     inf = GetThreadInfo(thread);

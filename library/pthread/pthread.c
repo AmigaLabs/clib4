@@ -83,7 +83,7 @@ _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOO
 
     SHOWMSG("Allocating mutex");
     mutex->mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, recursive, TAG_DONE);
-	mutex->owner = FindTask(NULL);
+	mutex->owner = NULL;
     SHOWPOINTER(mutex->mutex);
 
     mutex->incond = 0;
@@ -388,13 +388,15 @@ void __pthread_exit_func(void) {
 
 	MutexObtain(thread_sem);
 	inf = &threads[0];
-	if (inf->cancel_signal > 0 && inf->cancel_signal != -1) {
+	if (inf->cancel_signal != -1) {
 		D(("_pthread_clear_threadinfo: Freeing cancel signal %d\n", inf->cancel_signal));
 		FreeSignal(inf->cancel_signal);
+		inf->cancel_signal = -1;
 	}
-	if (inf->join_signal > 0 && inf->join_signal != -1) {
+	if (inf->join_signal != -1) {
 		D(("_pthread_clear_threadinfo: Freeing join signal %d\n", inf->join_signal));
 		FreeSignal(inf->join_signal);
+		inf->join_signal = -1;
 	}
 	MutexRelease(thread_sem);
 
@@ -420,8 +422,7 @@ void __pthread_exit_func(void) {
         timedTimerPort = NULL;
     }
 
-    // Restore old tls value
-    set_tls_register(old_tls);
+    set_tls_register(NULL);
 }
 
 
@@ -447,14 +448,14 @@ PTHREAD_DESTRUCTOR(__pthread_exit) {
 
     __pthread_exit_func();
 
-    if (_DOSBase != NULL) {
-        CloseLibrary(_DOSBase);
-        _DOSBase = NULL;
-    }
-
     if (_IDOS != NULL) {
         DropInterface((struct Interface *) _IDOS);
         _IDOS = NULL;
+    }
+
+    if (_DOSBase != NULL) {
+        CloseLibrary(_DOSBase);
+        _DOSBase = NULL;
     }
 
     LEAVE();

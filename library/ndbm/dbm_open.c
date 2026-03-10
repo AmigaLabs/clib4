@@ -27,7 +27,9 @@ dbm_open(const char *file, int flags, int mode) {
     info.cachesize = 0;
     info.hash = NULL;
     info.lorder = 0;
-    (void) strcpy(path, file);
-    (void) strcat(path, DBM_SUFFIX);
+    if (snprintf(path, sizeof(path), "%s%s", file, DBM_SUFFIX) >= (int)sizeof(path)) {
+        errno = ENAMETOOLONG;
+        return (NULL);
+    }
     return ((DBM *) __hash_open(path, flags, mode, &info, 0));
 }

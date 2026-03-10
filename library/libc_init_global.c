@@ -152,6 +152,9 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         .isTZSet = 0,
         .__IDebug = NULL,
         .resolv_conf = NULL,
+        .dns_cache = NULL,
+        .resolv_lock = NULL,
+        .socket_lock = NULL,
         .__file_lock_semaphore_name = "Advisory File Locking",
         .__command_line_ptr = NULL
     };
@@ -169,6 +172,21 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
 
     __clib4->resolv_conf = AllocVecTags(sizeof(struct resolvconf), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
     if (!__clib4->resolv_conf) {
+        goto out;
+    }
+
+    __clib4->dns_cache = AllocVecTags(sizeof(struct dns_cache), AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
+    if (!__clib4->dns_cache) {
+        goto out;
+    }
+
+    __clib4->resolv_lock = __create_semaphore();
+    if (!__clib4->resolv_lock) {
+        goto out;
+    }
+
+    __clib4->socket_lock = __create_semaphore();
+    if (!__clib4->socket_lock) {
         goto out;
     }
 
@@ -273,23 +291,43 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
 out:
 
     if (!success) {
-        reent_exit(__clib4);
+    	if (__clib4) {
+    		reent_exit(__clib4);
+    		SHOWMSG("Freeing __clib4 instance pointer");
+    		FreeVec(__clib4);
+    		SHOWMSG("Fallback __clib4 destroyed correctly");
+    	}
     }
 }
 
 void
 reent_exit(struct _clib4 *__clib4) {
     /* Free global clib structure */
-    if (__clib4) {
-    	DECLARE_UTILITYBASE();
+
+	if (__clib4) {
     	if (__clib4->_interrupting_alarm_signal_num >= 0) {
     		FreeSignal(__clib4->_interrupting_alarm_signal_num);
     		__clib4->_interrupting_alarm_signal_num = -1;
     	}
 
+    	if (__clib4->dns_cache != NULL) {
+            FreeVec(__clib4->dns_cache);
+            __clib4->dns_cache = NULL;
+        }
+
     	if (__clib4->resolv_conf != NULL) {
             FreeVec(__clib4->resolv_conf);
             __clib4->resolv_conf = NULL;
+        }
+
+        if (__clib4->resolv_lock != NULL) {
+            __delete_semaphore(__clib4->resolv_lock);
+            __clib4->resolv_lock = NULL;
+        }
+
+        if (__clib4->socket_lock != NULL) {
+            __delete_semaphore(__clib4->socket_lock);
+            __clib4->socket_lock = NULL;
         }
 
         /* Free wchar stuff */
@@ -318,10 +356,6 @@ reent_exit(struct _clib4 *__clib4) {
             __clib4->__dl_root_handle = NULL;
             SHOWMSG("Done");
         }
-		ClearMem(__clib4, sizeof(struct _clib4));
-        FreeVec(__clib4);
-        __clib4 = NULL;
-        SHOWMSG("__clib4 destroyed correctly");
     }
 }
 

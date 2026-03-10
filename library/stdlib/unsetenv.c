@@ -16,14 +16,14 @@
 
 int
 unsetenv(const char *name) {
-    int result = -1;
+    int result = 0;
     struct _clib4 *__clib4 = __CLIB4;
 
     assert(name != NULL);
 
     if (name == NULL) {
         __set_errno_r(__clib4, EFAULT);
-        return result;
+        return -1;
     }
 
     register char **P;

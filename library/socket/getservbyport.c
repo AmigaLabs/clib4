@@ -18,9 +18,10 @@ getservbyport(int port, const char *proto) {
          */
         if (proto == NULL) {
             __set_errno(EFAULT);
+            return NULL;
         }
         else
             return __getservbyport(port, (char *) proto);
     }
-    return &se;
+    return res;
 }

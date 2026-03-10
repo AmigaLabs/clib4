@@ -768,6 +768,8 @@ __free_ovflpage(HTAB *hashp, BUFHEAD *obufp) {
     if (!freep)
         assert(0);
 #endif
+    if (!freep)
+        return;
     CLRBIT(freep, free_bit);
 #ifdef DEBUG2
     (void)fprintf(stderr, "FREE_OVFLPAGE: ADDR: %d BIT: %d PAGE %d\n",

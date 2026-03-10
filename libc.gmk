@@ -245,6 +245,7 @@ C_SETJMP := \
     setjmp/sigsetjmp.o
 
 C_SOCKET := \
+    resolv/dns_cache.o \
     resolv/dns_parse.o \
     resolv/lookup_ipliteral.o \
     resolv/lookup_name.o \

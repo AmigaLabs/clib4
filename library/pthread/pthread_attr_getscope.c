@@ -8,6 +8,9 @@
 
 int
 pthread_attr_getscope(const pthread_attr_t *attr, int *scope) {
+    if (attr == NULL || scope == NULL)
+        return EINVAL;
+
     *scope = PTHREAD_SCOPE_SYSTEM;
     return 0;
 }

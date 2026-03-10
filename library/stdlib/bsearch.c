@@ -35,7 +35,7 @@ bsearch(const void *key, const void *base, size_t count, size_t size, int (*comp
         }
 
         while (lower < upper) {
-            position = (lower + upper) / 2;
+            position = lower + (upper - lower) / 2;
 
             current = (void *) (((ULONG) base) + (position * size));
 

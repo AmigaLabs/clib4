@@ -69,14 +69,16 @@ pntz(size_t p[2]) {
 static void
 cycle(size_t width, unsigned char *ar[], int n) {
     size_t tmp_size = 256;
-    unsigned char *tmp = malloc(tmp_size);
+    unsigned char *tmp;
     size_t l;
     int i;
 
     if (n < 2) {
-        free(tmp);
         return;
     }
+
+    tmp = malloc(tmp_size);
+    if (!tmp) return;
 
     ar[n] = tmp;
     while (width) {

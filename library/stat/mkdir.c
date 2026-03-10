@@ -63,7 +63,7 @@ int mkdir(const char *path_name, mode_t mode) {
         goto out;
     }
 
-    if (path_to_create[len - 1] == '/') {
+    if (len > 0 && path_to_create[len - 1] == '/') {
         path_to_create[len - 1] = '\0'; // Remove '/' if present
     }
 

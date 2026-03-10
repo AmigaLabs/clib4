@@ -40,9 +40,7 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
-//#include <pthread.h>
-
-#include <poll.h>
+#include <sys/socket.h>
 #include "lookup.h"
 
 static unsigned long mtime() {
@@ -67,8 +65,21 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
     int i = 0;
     size_t j = 0;
     int cs;
-    struct pollfd pfd;
     unsigned long t0, t1, t2;
+
+    /* Open a per-call bsdsocket.library to get an isolated SocketBase.
+     * AmigaOS bsdsocket.library uses per-opener signal masks for WaitSelect.
+     * When multiple threads share a single SocketBase, WaitSelect signals
+     * interfere with each other causing poll() failures and timeouts.
+     * By opening a private instance, each thread gets independent signals. */
+    struct Library *localSocketBase = OpenLibrary("bsdsocket.library", 3);
+    if (localSocketBase == NULL)
+        return -1;
+    struct SocketIFace *IS = (struct SocketIFace *)GetInterface(localSocketBase, "main", 1, 0);
+    if (IS == NULL) {
+        CloseLibrary(localSocketBase);
+        return -1;
+    }
 
     timeout = 1000 * conf->timeout;
     attempts = conf->attempts;
@@ -81,16 +92,21 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
             ns[nns].sin_family = AF_INET;
         } else {
             __set_errno(EAFNOSUPPORT);
+            DropInterface((struct Interface *)IS);
+            CloseLibrary(localSocketBase);
             return -1;
         }
     }
 
-    /* Get local address and open/bind a socket */
+    /* Get local address and open/bind a socket using our private SocketBase */
     sa.sin_family = family;
-    fd = socket(family, SOCK_DGRAM, 0);
-    if (fd < 0 || bind(fd, (void *) &sa, sl) < 0) {
+
+    fd = IS->socket(family, SOCK_DGRAM, 0);
+    if (fd < 0 || IS->bind(fd, (struct sockaddr *)&sa, sl) < 0) {
         if (fd >= 0)
-            close(fd);
+            IS->CloseSocket(fd);
+        DropInterface((struct Interface *)IS);
+        CloseLibrary(localSocketBase);
         return -1;
     }
 
@@ -100,8 +116,6 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
 
     memset(alens, 0, sizeof *alens * nqueries);
 
-    pfd.fd = fd;
-    pfd.events = POLLIN;
     retry_interval = timeout / attempts;
     next = 0;
     t0 = t2 = mtime();
@@ -113,7 +127,7 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
             for (i = 0; i < nqueries; i++) {
                 if (!alens[i]) {
                     for (j = 0; j < nns; j++) {
-                        sendto(fd, queries[i], qlens[i], 0, (void *) &ns[j], sl);
+                        IS->sendto(fd, (APTR)queries[i], qlens[i], 0, (struct sockaddr *)&ns[j], sl);
                     }
                 }
             }
@@ -121,10 +135,22 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
             servfail_retry = 2 * nqueries;
         }
 
-        /* Wait for a response, or until time to retry */
-        if (poll(&pfd, 1, t1 + retry_interval - t2) <= 0) continue;
+        /* Wait for a response using WaitSelect on our private SocketBase */
+        fd_set rset;
+        struct timeval tv;
+        int poll_timeout = (int)(t1 + retry_interval - t2);
+        if (poll_timeout < 0) poll_timeout = 0;
+        tv.tv_sec = poll_timeout / 1000;
+        tv.tv_usec = (poll_timeout % 1000) * 1000;
+        FD_ZERO(&rset);
+        FD_SET(fd, &rset);
 
-        while ((rlen = recvfrom(fd, answers[next], asize, 0, (void *) &sa, (socklen_t[1]) {sl})) >= 0) {
+        int poll_ret = IS->WaitSelect(fd + 1, &rset, NULL, NULL, &tv, NULL);
+        if (poll_ret <= 0) continue;
+
+        int recv_count = 0;
+        while ((rlen = IS->recvfrom(fd, answers[next], asize, MSG_DONTWAIT, (struct sockaddr *)&sa, &sl)) >= 0) {
+            recv_count++;
             /* Ignore non-identifiable packets */
             if (rlen < 4) continue;
 
@@ -138,13 +164,17 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
             /* Only accept positive or negative responses;
              * retry immediately on server failure, and ignore
              * all other codes such as refusal. */
-            switch (answers[next][3] & 15) {
+            int rcode = answers[next][3] & 15;
+            switch (rcode) {
                 case 0:
                 case 3:
                     break;
                 case 2:
-                    if (servfail_retry && servfail_retry--)
-                        sendto(fd, queries[i], qlens[i], MSG_NOSIGNAL, (void *) &ns[j], sl);
+                    if (servfail_retry && servfail_retry--) {
+                        for (j = 0; j < nns; j++)
+                            IS->sendto(fd, (APTR)queries[i], qlens[i], MSG_NOSIGNAL, (struct sockaddr *)&ns[j], sl);
+                    }
+                    /* fall through */
                 default:
                     continue;
             }
@@ -157,12 +187,15 @@ __res_msend_rc(int nqueries, const unsigned char *const *queries,
             else
                 memcpy(answers[i], answers[next], rlen);
 
-            if (next == nqueries) goto out;
+            if (next == nqueries)
+                goto out;
         }
     }
 
     out:
-    //pthread_cleanup_pop(1);
+    IS->CloseSocket(fd);
+    DropInterface((struct Interface *)IS);
+    CloseLibrary(localSocketBase);
 
     return 0;
 }

@@ -27,7 +27,9 @@ envz_remove(char **envz, size_t *envz_len, const char *name) {
             memmove(entry, entry + len, *envz + *envz_len - entry - len);
         }
 
-        *envz = (char *) realloc(*envz, *envz_len - len);
         *envz_len -= len;
+        char *temp = (char *) realloc(*envz, *envz_len);
+        if (temp != NULL || *envz_len == 0)
+            *envz = temp;
     }
 }

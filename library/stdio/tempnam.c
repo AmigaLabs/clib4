@@ -25,18 +25,18 @@ worker(char *result, const char *part1, const char *part2, char *part3, int *par
 
         if (!__clib4->__unix_path_semantics) {
             if (!strcmp(part1, P_tmpdir)) {
-                sprintf(result, "T:%s%s.%x", part2, part3, *part4);
+                snprintf(result, PATH_MAX, "T:%s%s.%x", part2, part3, *part4);
             } else {
                 size_t len = strlen(part1);
 
                 if (len == 0 || part1[len - 1] == ':' || part1[len - 1] == '/') {
-                    sprintf(result, "%s%s%s.%x", part1, part2, part3, *part4);
+                    snprintf(result, PATH_MAX, "%s%s%s.%x", part1, part2, part3, *part4);
                 } else {
-                    sprintf(result, "%s/%s%s.%x", part1, part2, part3, *part4);
+                    snprintf(result, PATH_MAX, "%s/%s%s.%x", part1, part2, part3, *part4);
                 }
             }
         } else
-            sprintf(result, "%s/%s%s.%x", part1, part2, part3, *part4);
+            snprintf(result, PATH_MAX, "%s/%s%s.%x", part1, part2, part3, *part4);
         (*part4)++;
         t = open(result, O_RDONLY, 0);
         if (t == -1) {

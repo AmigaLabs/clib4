@@ -39,8 +39,6 @@
 
 extern struct DOSIFace *_IDOS;
 
-static ThreadInfo *old_tls = NULL;
-
 static APTR
 hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
     uint32 pid = (uint32) userdata;
@@ -99,8 +97,6 @@ StarterFunc() {
     volatile BOOL stackSwapped = FALSE;
 	DECLARE_UTILITYBASE();
 
-    old_tls = get_tls_register();
-
     struct Process *startedTask = (struct Process *) FindTask(NULL);
     ThreadInfo *inf = (ThreadInfo *) startedTask->pr_Task.tc_UserData;
 	struct newThreadMessage *newThreadMessage = (struct newThreadMessage *) startedTask->pr_EntryData;
@@ -117,10 +113,6 @@ StarterFunc() {
 
     // custom stack requires special handling
     if (inf->attr.stackaddr != NULL && inf->attr.stacksize > 0) {
-        // Check if we have a guardsize
-        if (inf->attr.guardsize > 0)
-            inf->attr.stacksize += inf->attr.guardsize;
-
         stack.stk_Lower = inf->attr.stackaddr;
         stack.stk_Upper = (ULONG)((APTR) stack.stk_Lower) + inf->attr.stacksize;
         stack.stk_Pointer = (APTR) stack.stk_Upper;
@@ -169,26 +161,30 @@ StarterFunc() {
 
     // destroy all non-NULL TLS key values
     // since the destructors can set the keys themselves, we have to do multiple iterations
-    MutexObtain(tls_sem);
     for (int j = 0; keyFound && j < PTHREAD_DESTRUCTOR_ITERATIONS; j++) {
         keyFound = FALSE;
         for (int i = 0; i < PTHREAD_KEYS_MAX; i++) {
+            void *oldvalue = NULL;
+            void (*destructor_func)(void *) = NULL;
+
+            MutexObtain(tls_sem);
             if (inf->tlsvalues[i] && tlskeys[i].used && tlskeys[i].destructor) {
                 D(("StarterFunc: thread %s calling destructor for key %d\n", inf->name, i));
-                void *oldvalue = inf->tlsvalues[i];
-                void (*destructor_func)(void *) = tlskeys[i].destructor;
+                oldvalue = inf->tlsvalues[i];
+                destructor_func = tlskeys[i].destructor;
                 inf->tlsvalues[i] = NULL;
-                /* Save destructor to local variable to prevent race with pthread_key_delete
-                 * which could set it to NULL between the check and the call */
-                if (destructor_func) {
-                    destructor_func(oldvalue);
-                }
+            }
+            MutexRelease(tls_sem);
+
+            /* Call destructor outside of tls_sem to avoid blocking other
+             * threads that are exiting and need to run their own destructors */
+            if (destructor_func) {
+                destructor_func(oldvalue);
                 D(("StarterFunc: thread %s destructor for key %d returned\n", inf->name, i));
                 keyFound = TRUE;
             }
         }
     }
-    MutexRelease(tls_sem);
 
     /*  If we have timer running tasks for this thread, stop them before exit  */
     if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
@@ -239,8 +235,8 @@ StarterFunc() {
                     joiner->join_result = inf->ret;
 
                 /* Signal the joiner */
-                if (joiner->join_signal > 0) {
-                    D(("StarterFunc: signaling joiner (task=%p) with sig=0x%lx\n", joiner->task, (unsigned long)joiner->join_signal_mask));
+                if (joiner->join_signal_mask != 0) {
+                    D(("StarterFunc: signaling joiner (task=%p) with mask=0x%lx\n", joiner->task, (unsigned long)joiner->join_signal_mask));
                     Signal((struct Task *)joiner->task, joiner->join_signal_mask);
                 } else {
                     D(("StarterFunc: WARNING - joiner has no valid join signal!\n"));
@@ -270,6 +266,9 @@ StarterFunc() {
     MutexRelease(thread_sem);
 
     D(("StarterFunc: thread %s exiting\n", inf->name));
+
+	set_tls_register(NULL);
+
     return RETURN_OK;
 }
 
@@ -290,21 +289,22 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     if (thread == NULL || start == NULL)
         return EINVAL;
 
-    // grab an empty thread slot
+    // grab an empty thread slot and reserve it atomically
     MutexObtain(thread_sem);
     threadnew = GetThreadId(NULL);
-    MutexRelease(thread_sem);
-
     if (threadnew == PTHREAD_THREADS_MAX) {
+        MutexRelease(thread_sem);
         return EAGAIN;
     }
 
-    // prepare the ThreadInfo structure
+    // Reserve the slot before releasing the lock to prevent race conditions
     inf = GetThreadInfo(threadnew);
     _pthread_clear_threadinfo(inf);
-    D(("pthread_create: slot %d cleared (task %p)\n", threadnew, inf->task));
-
+    inf->status = THREAD_STATE_RUNNING; // Prevents another GetThreadId(NULL) from returning this slot
     inf->thread_id = threadnew;  /* Save our pthread_t ID */
+    MutexRelease(thread_sem);
+
+    D(("pthread_create: slot %d reserved (task %p)\n", threadnew, inf->task));
     inf->start = start;
     inf->arg = arg;
     inf->parent = (struct Process *) thisTask;
@@ -395,7 +395,7 @@ out:
     		FreeSysObject(ASOT_PORT, msgPort);
     		msgPort = NULL;
     	}
-        inf->parent = NULL;
+        _pthread_clear_threadinfo(inf); // Release the reserved slot back to IDLE
         return EAGAIN;
     }
 

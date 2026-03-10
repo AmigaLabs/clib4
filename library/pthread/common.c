@@ -73,7 +73,26 @@ ThreadInfo *get_tls_register(void) {
 }
 
 ThreadInfo *GetCurrentThreadInfo() {
-    return __tls_reg;
+    ThreadInfo *inf = __tls_reg;
+
+    /* Validate: check if the register actually points inside the threads array.
+     * On the main thread, register r2 may be clobbered by the ABI (TOC pointer)
+     * so it can contain a non-NULL but invalid pointer. */
+    if (inf >= &threads[0] && inf < &threads[PTHREAD_THREADS_MAX]) {
+        return inf;
+    }
+
+    /* Fallback: look up by task pointer.
+     * This handles the main thread case where r2 is not set or has been
+     * overwritten by the compiler/system. */
+    struct Task *task = FindTask(NULL);
+    for (int i = 0; i < PTHREAD_THREADS_MAX; i++) {
+        if (threads[i].task == (struct Process *)task && threads[i].status != THREAD_STATE_IDLE) {
+            return &threads[i];
+        }
+    }
+
+    return NULL;
 }
 
 pthread_t GetThreadId(struct Task *task) {
@@ -81,8 +100,13 @@ pthread_t GetThreadId(struct Task *task) {
 
     // 0 is main task, First thread id will be 1 so that it is different than default value of pthread_t
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
-        if (threads[i].task == (struct Process *) task)
+        if (threads[i].task == (struct Process *) task) {
+            /* When searching for an empty slot (task==NULL), also require IDLE status
+             * to skip slots that are being set up by another concurrent pthread_create */
+            if (task == NULL && threads[i].status != THREAD_STATE_IDLE)
+                continue;
             break;
+        }
     }
 
     return i;

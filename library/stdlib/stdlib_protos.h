@@ -25,6 +25,10 @@
 #include <proto/exec.h>
 #endif /* PROTO_EXEC_H */
 
+#ifndef _DEBUG_H
+#include "debug/debug.h"
+#endif /* _DEBUG_H */
+
 #include <dos.h>
 
 extern int __timezone_init(void);

@@ -8,6 +8,9 @@
 
 int
 pthread_mutexattr_getpshared(const pthread_mutexattr_t *attr, int *pshared) {
+    if (attr == NULL || pshared == NULL)
+        return EINVAL;
+
     *pshared = attr->pshared / 128U % 2;
     return 0;
 }

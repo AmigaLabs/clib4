@@ -85,6 +85,8 @@ pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) 
         return ETIMEDOUT;
     }
 
+    MutexObtain(timerMutex);
+
     uint32 sigMask = 1L << timedTimerPort->mp_SigBit;
 
     timedTimerIO->Request.io_Command = TR_ADDREQUEST;
@@ -102,10 +104,14 @@ pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) 
         WaitIO((struct IORequest *) timedTimerIO);
     }
 
-    if (result & sigMask)
+    MutexRelease(timerMutex);
+
+    if (result & sigMask) {
         result = ETIMEDOUT;
-    else
+    } else {
+        mutex->owner = FindTask(NULL);
         result = 0;
+    }
 
     return result;
 }
