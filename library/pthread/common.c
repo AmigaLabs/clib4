@@ -101,7 +101,7 @@ OpenTimerDevice(struct IORequest *io, struct MsgPort *mp, struct Task *task) {
     signal = AllocSignal(-1);
     if (signal == -1) {
         signal = SIGB_TIMER_FALLBACK;
-        SetSignal(SIGF_TIMER_FALLBACK, 0);
+        SetSignal(0, SIGF_TIMER_FALLBACK);
     }
     mp->mp_SigBit = signal;
     NewList(&mp->mp_MsgList);
