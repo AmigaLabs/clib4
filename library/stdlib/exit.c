@@ -50,8 +50,13 @@ _exit(int return_code) {
 
         LEAVE();
 
-        longjmp(__clib4->__exit_jmp_buf, 1);
-        __builtin_unreachable();
+        if (__clib4->__exit_jmp_buf_valid) {
+            longjmp(__clib4->__exit_jmp_buf, 1);
+            __builtin_unreachable();
+        }
+        else {
+            /* jmp_buf was never initialized; safely terminate the task */
+        }
     }
 }
 

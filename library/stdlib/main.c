@@ -113,6 +113,7 @@ call_main(
         D(("Back from longjmp"));
         goto out;
     }
+    __clib4->__exit_jmp_buf_valid = TRUE;
 
     SHOWMSG("Initialize shared objects");
     shared_obj_init(__clib4, TRUE);

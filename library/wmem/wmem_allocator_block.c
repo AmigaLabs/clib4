@@ -485,7 +485,7 @@ wmem_block_pop_master(wmem_block_allocator_t *allocator) {
  * a single free chunk. The resulting chunk ends up in either the master list or
  * the recycler, depending on where the merged chunks were originally.
  */
-static void
+static wmem_block_chunk_t *
 wmem_block_merge_free(wmem_block_allocator_t *allocator,
                       wmem_block_chunk_t *chunk) {
     wmem_block_chunk_t *tmp;
@@ -554,6 +554,8 @@ wmem_block_merge_free(wmem_block_allocator_t *allocator,
             wmem_block_add_to_recycler(allocator, chunk);
         }
     }
+
+    return chunk;
 }
 
 /* Takes an unused chunk and a size, and splits it into two chunks if possible.
@@ -913,10 +915,31 @@ wmem_block_free(void *private_data, void *ptr) {
 
     /* merge it with any other free chunks adjacent to it, so that contiguous
      * free space doesn't get fragmented */
-    wmem_block_merge_free(allocator, chunk);
+    chunk = wmem_block_merge_free(allocator, chunk);
 
     /* Now cycle the recycler */
     wmem_block_cycle_recycler(allocator);
+
+    /* If the merged chunk now covers the entire block (prev==0, last==true),
+     * the block is completely unused.  Return it to the OS -- but keep at
+     * least one block alive so that a tight alloc/free loop does not
+     * continuously request and release OS memory (thrashing). */
+    if (chunk->prev == 0 && chunk->last) {
+        wmem_block_hdr_t *block = WMEM_CHUNK_TO_BLOCK(chunk);
+
+        /* There must be at least one OTHER block in the list. */
+        if (block->prev != NULL || block->next != NULL) {
+            /* Remove the chunk from whichever free list it inhabits. */
+            if (chunk == allocator->master_head) {
+                wmem_block_pop_master(allocator);
+            } else if (WMEM_CHUNK_DATA_LEN(chunk) >= sizeof(wmem_block_free_t)) {
+                wmem_block_remove_from_recycler(allocator, chunk);
+            }
+
+            wmem_block_remove_from_block_list(allocator, block);
+            wmem_free(NULL, block);
+        }
+    }
 }
 
 static void *
