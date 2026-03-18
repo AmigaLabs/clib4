@@ -87,13 +87,13 @@ fclose(FILE *stream) {
         if (file->iob_isVBuffer)
             FreeVec(file->iob_CustomBuffer);
         else
-            ItemPoolFree(__clib4->_iob_pool, file->iob_CustomBuffer);
+            free(file->iob_CustomBuffer);
         file->iob_CustomBuffer = NULL;
     }
 
     /* Free the lock semaphore now. */
     SHOWMSG("Delete iob_Lock");
-    __delete_mutex(file->iob_Lock);
+    __delete_semaphore(file->iob_Lock);
 
     SHOWMSG("Clear file structure");
     memset(file, 0, sizeof(*file));

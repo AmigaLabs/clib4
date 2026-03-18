@@ -259,6 +259,8 @@ fts_close(FTS *sp) {
         for (p = sp->fts_cur; p->fts_level >= FTS_ROOTLEVEL;) {
             freep = p;
             p = p->fts_link ? p->fts_link : p->fts_parent;
+            if (freep->fts_flags & FTS_SYMFOLLOW)
+                (void) close(freep->fts_symfd);
             fts_free(freep);
         }
         fts_free(p);
@@ -716,10 +718,13 @@ fts_build(FTS *sp, int type) {
      * each new name into the path.
      */
     len = NAPPEND(cur);
+    int wrote_sep = 0;
     if (ISSET(FTS_NOCHDIR)) {
         cp = sp->fts_path + len;
-        if (sp->fts_path[len - 1] != ':')
+        if (sp->fts_path[len - 1] != ':') {
             *cp++ = '/';
+            wrote_sep = 1;
+        }
     }
     if (sp->fts_path[len - 1] != ':')
         len++;
@@ -852,7 +857,7 @@ mem1:
      * state.
      */
     if (ISSET(FTS_NOCHDIR)) {
-        if (len == sp->fts_pathlen || nitems == 0)
+        if (len == sp->fts_pathlen || (nitems == 0 && wrote_sep))
             --cp;
         *cp = '\0';
     }

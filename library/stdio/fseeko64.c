@@ -28,8 +28,6 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
         return (result);
     }
 
-    __flockfile_r(__clib4, stream);
-
     if (wherefrom < SEEK_SET || wherefrom > SEEK_END) {
         SHOWMSG("invalid wherefrom parameter");
         SET_FLAG(file->iob_Flags, IOBF_ERROR);
@@ -64,7 +62,8 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
         }
     }
 
-    /* We have to clear the EOF condition */
+
+	/* We have to clear the EOF condition */
     CLEAR_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
 
     if (wherefrom != SEEK_CUR || offset != 0) {
@@ -138,7 +137,6 @@ fseeko64(FILE *stream, _off64_t offset, int wherefrom) {
 
 out:
 
-    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

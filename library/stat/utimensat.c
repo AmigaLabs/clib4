@@ -152,7 +152,7 @@ utimensat(int fd, const char *path, const struct timespec times[2], int flags) {
             char new_name[PATH_MAX + 1] = {0};
             LONG slResult = ReadSoftLink(dvp->dvp_Port, dvp->dvp_Lock, buffer, (STRPTR) &new_name, (LONG) PATH_MAX);
             FreeDeviceProc(dvp);
-            if (result < 0) {
+            if (slResult < 0) {
                 free(buffer);
                 goto out;
             }

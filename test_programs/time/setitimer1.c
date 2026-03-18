@@ -19,12 +19,12 @@ void timer_setting(int elapstime) {
     sa.sa_handler = &timer_handler;
     sigaction(SIGALRM, &sa, NULL);
 
-    printf("Configure the timer to expire after 250 msec...\n" );
+    printf("Configure the timer to expire after 1 sec...\n" );
 
     timer.it_value.tv_sec = 1; //<-- set to start after 1 sec
     timer.it_value.tv_usec = 0;
 
-    printf("... and every 250 msec after that.\n"	);
+    printf("... and every %d sec after that.\n", elapstime);
 
     timer.it_interval.tv_sec = elapstime; //<--- TIME (seconds)  gets set here from prams
     timer.it_interval.tv_usec = 0;

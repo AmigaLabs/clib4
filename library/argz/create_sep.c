@@ -29,6 +29,7 @@ argz_create_sep(const char *string, int sep, char **argz, size_t *argz_len) {
     }
 
     old_running = running;
+    *argz_len = 0;
 
     while ((token = strsep(&running, delim))) {
         len = strlen(token);

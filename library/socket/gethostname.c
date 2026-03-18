@@ -7,7 +7,7 @@
 #endif /* _SOCKET_HEADERS_H */
 
 int
-gethostname(const char *hostname, size_t size) {
+gethostname(char *hostname, size_t size) {
     int result = ERROR;
 
     ENTER();

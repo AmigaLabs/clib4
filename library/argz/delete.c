@@ -21,12 +21,14 @@ argz_delete(char **argz, size_t *argz_len, char *entry) {
 
         *argz_len -= len;
 
-        if (!(*argz = (char *) realloc(*argz, *argz_len)))
-            return ENOMEM;
-
-        if (*argz_len <= 0) {
+        if (*argz_len == 0) {
             free(*argz);
             *argz = NULL;
+        } else {
+            char *tmp = (char *) realloc(*argz, *argz_len);
+            if (!tmp)
+                return ENOMEM;
+            *argz = tmp;
         }
     }
     return 0;

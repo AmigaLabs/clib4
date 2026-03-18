@@ -199,6 +199,7 @@ struct sockaddr_in
 };
 
 struct sockaddr_in6 {
+	u_char          sin6_len;      /* length of this structure */
     sa_family_t     sin6_family;   /* AF_INET6 */
     in_port_t       sin6_port;     /* port number */
 	unsigned long   sin6_flowinfo; /* IPv6 flow information */
@@ -220,7 +221,7 @@ struct ip_opts
 };
 
 /*
- * Options for use with [gs]etsockopt at the IP level.
+ * Options for use with [gs]etsockot at the IP level.
  * First word of comment is data type; bool is stored in int.
  */
 #define	IP_OPTIONS			1    /* buf/ip_opts; set/get IP options */

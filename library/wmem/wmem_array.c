@@ -166,17 +166,17 @@ wmem_array_finalize(wmem_array_t *array) {
 
     if (array->null_terminated) {
         uint8_t *new_buf = wmem_alloc(NULL, (array->elem_count + 1) * array->elem_size);
-        memcpy(new_buf, array->buf, array->alloc_count * array->elem_size);
+        memcpy(new_buf, array->buf, array->elem_count * array->elem_size);
         memset(new_buf + array->elem_size * array->elem_count, 0, array->elem_size);
         wmem_free(NULL, array->buf);
         array->buf = new_buf;
     }
 
-    // void *ret = wmem_realloc(array->allocator, array->buf, used_size);
+    void *ret = array->buf;
 
     wmem_free(array->allocator, array);
 
-    return NULL; //ret;
+    return ret;
 }
 
 void

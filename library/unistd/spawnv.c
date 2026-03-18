@@ -16,111 +16,6 @@
 
 #include "children.h"
 
-STATIC BOOL
-
-string_needs_quoting(const char *string, size_t len) {
-    BOOL result = FALSE;
-    size_t i;
-    char c;
-
-    for (i = 0; i < len; i++) {
-        c = (*string++);
-        if (c == ' ' || ((unsigned char) c) == 0xA0 || c == '\t' || c == '\n' || c == '\"') {
-            result = TRUE;
-            break;
-        }
-    }
-
-    return (result);
-}
-
-STATIC void
-build_arg_string(char *const argv[], char *arg_string) {
-    BOOL first_char = TRUE;
-    size_t i, j, len;
-    char *s;
-
-    /* The first argv[] element is skipped; it does not contain part of
-	   the command line but holds the name of the program to be run. */
-    for (i = 1; argv[i] != NULL; i++) {
-        s = (char *) argv[i];
-
-        len = strlen(s);
-        if (len > 0) {
-            if (first_char)
-                first_char = FALSE;
-            else
-                (*arg_string++) = ' ';
-
-            if ((*s) != '\"' && string_needs_quoting(s, len)) {
-                (*arg_string++) = '\"';
-
-                for (j = 0; j < len; j++) {
-                    if (s[j] == '\"' || s[j] == '*') {
-                        (*arg_string++) = '*';
-                        (*arg_string++) = s[j];
-                    } else if (s[j] == '\n') {
-                        (*arg_string++) = '*';
-                        (*arg_string++) = 'N';
-                    } else {
-                        (*arg_string++) = s[j];
-                    }
-                }
-
-                (*arg_string++) = '\"';
-            } else {
-                memcpy(arg_string, s, len);
-                arg_string += len;
-            }
-        }
-    }
-}
-
-STATIC size_t
-
-count_extra_escape_chars(const char *string, size_t len) {
-    size_t count = 0;
-    size_t i;
-    char c;
-
-    for (i = 0; i < len; i++) {
-        c = (*string++);
-        if (c == '\"' || c == '*' || c == '\n')
-            count++;
-    }
-
-    return (count);
-}
-
-STATIC size_t
-
-get_arg_string_length(char *const argv[]) {
-    size_t result = 0;
-    size_t i, len = 0;
-    char *s;
-
-    /* The first argv[] element is skipped; it does not contain part of
-	   the command line but holds the name of the program to be run. */
-    for (i = 1; argv[i] != NULL; i++) {
-        s = (char *) argv[i];
-
-        len = strlen(s);
-        if (len > 0) {
-            if ((*s) != '\"') {
-                if (string_needs_quoting(s, len))
-                    len += 1 + count_extra_escape_chars(s, len) + 1;
-            }
-
-            if (result == 0)
-                result = len;
-            else
-                result = result + 1 + len;
-        }
-    }
-
-    return (result);
-}
-
 int
 spawnv(int mode, const char *file, const char **argv) {
     int ret = -1;
@@ -178,6 +73,7 @@ spawnv(int mode, const char *file, const char **argv) {
     BPTR out = DupFileHandle(Output());
     BPTR err = DupFileHandle(ErrorOutput());
     D(("Launching [%s]", command));
+	struct spawnData data = { getgid(), FindTask(NULL) };
     ret = SystemTags(command,
                      SYS_Input, in,
                      SYS_Output, out,
@@ -186,12 +82,11 @@ spawnv(int mode, const char *file, const char **argv) {
                      SYS_UserShell, TRUE,
                      SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
                      NP_EntryCode, spawnedProcessEnter,
-                     NP_EntryData, getgid(),
+                     NP_EntryData, &data,
                      NP_ExitCode, spawnedProcessExit,
                      NP_Name, process_name,
                      NP_Child, TRUE,
                      TAG_DONE);
-    free(command);
     if (ret) {
         /* SystemTags failed. Clean up file handle */
         if (in)
@@ -215,5 +110,7 @@ spawnv(int mode, const char *file, const char **argv) {
                 Close(out);
         }
     }
+	free(command);
+
     return ret;
 }

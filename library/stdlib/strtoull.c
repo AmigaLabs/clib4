@@ -108,7 +108,7 @@ strtoull(const char *str, char **ptr, int base) {
             {
                 __set_errno(ERANGE);
 
-                result = ULONG_MAX;
+                result = ULLONG_MAX;
 
                 goto out;
             }

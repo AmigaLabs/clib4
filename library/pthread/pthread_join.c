@@ -40,30 +40,97 @@
 int
 pthread_join(pthread_t thread, void **value_ptr) {
     ThreadInfo *inf = GetThreadInfo(thread);
-    struct Task *task = FindTask(NULL);
 
-    if (inf == NULL || inf->parent == NULL)
+    if (inf == NULL)
         return ESRCH;
+
+    if (inf->parent == NULL)
+        return ESRCH;
+
+    ThreadInfo *me = GetCurrentThreadInfo();
+    struct Task *task = FindTask(NULL);
 
     if (inf->detached)
         return EINVAL;
 
-    if ((struct Task *) inf->task == task) {
+    if ((struct Task *) inf->task == task)
         return EDEADLK;
-    }
 
-    pthread_testcancel();
-
-    while (inf->status != THREAD_STATE_DESTRUCT) {
-        Wait(SIGF_PARENT);
-    }
-
-    if (value_ptr)
-        *value_ptr = inf->ret;
-
+    D(("pthread_join[%ld]: About to acquire thread_sem (first time)\n", thread));
     MutexObtain(thread_sem);
-    _pthread_clear_threadinfo(inf);
+    D(("pthread_join[%ld]: Acquired thread_sem, status=%d\n", thread, inf->status));
+
+    /* Check if thread already terminated */
+    if (inf->status == THREAD_STATE_DESTRUCT || inf->status == THREAD_STATE_TERMINATED) {
+        D(("pthread_join[%ld]: Thread already terminated, cleaning up\n", thread));
+        if (value_ptr)
+            *value_ptr = inf->ret;
+
+        _pthread_clear_threadinfo(inf);
+        MutexRelease(thread_sem);
+        return 0;
+    }
+
+    /* Thread still running - register as joiner */
+    /* Only if we are a pthread thread (me != NULL) */
+    if (me) {
+        /* Add self to joiners list */
+        me->status = THREAD_STATE_JOINING;
+        me->join_thread_id = thread; /* I am waiting for 'thread' */
+        me->join_result = NULL;
+        AddHead((struct List *)&join_list, (struct Node *)&me->join_node);
+        D(("pthread_join[%ld]: Added self (id=%d) to join_list\n", thread, me->thread_id));
+    }
+
+    D(("pthread_join[%ld]: Releasing thread_sem, waiting for signal\n", thread));
     MutexRelease(thread_sem);
 
-    return 0;
+    /* Wait for thread to finish */
+    if (me) {
+        /* Clear any stale signal on the join bit before entering the wait loop.
+         * This prevents false immediate returns from signals left over by
+         * previous join operations or NP_Child process death notifications. */
+        SetSignal(0, me->join_signal_mask);
+
+        for (;;) {
+            /* Check status under lock BEFORE calling Wait().
+             * This closes the race window where the target finishes and signals
+             * us between the MutexRelease above (or a loop iteration) and Wait().
+             * Without this check, the signal could be lost (consumed by SetSignal
+             * or a prior spurious wake), leaving us stuck in Wait() forever. */
+            MutexObtain(thread_sem);
+            D(("pthread_join[%ld]: checking status=%d\n", thread, inf->status));
+
+            if (inf->status == THREAD_STATE_DESTRUCT || inf->status == THREAD_STATE_TERMINATED) {
+                break; /* Target confirmed done, we hold thread_sem for cleanup */
+            }
+            MutexRelease(thread_sem);
+
+            /* Target still running - block until signaled */
+            D(("pthread_join[%ld]: Going to Wait() for signal mask=0x%lx\n", thread, (unsigned long)me->join_signal_mask));
+            uint32_t sigs = Wait(me->join_signal_mask | me->cancel_signal_mask);
+            D(("pthread_join[%ld]: Wait() returned, sigs=0x%lx\n", thread, (unsigned long)sigs));
+
+            if (sigs & me->cancel_signal_mask)
+                pthread_testcancel();
+        }
+
+        /* We hold thread_sem and target is confirmed DESTRUCT/TERMINATED */
+        Remove((struct Node *)&me->join_node);
+        me->status = THREAD_STATE_RUNNING;
+
+        if (value_ptr)
+            *value_ptr = inf->ret;
+
+        _pthread_clear_threadinfo(inf);
+
+        MutexRelease(thread_sem);
+        return 0;
+
+    } else {
+        /* GetCurrentThreadInfo() returned NULL - caller is not a recognized
+         * pthread thread (main thread is threads[0] and always valid).
+         * Cannot join without a valid caller context. */
+        return ESRCH;
+    }
 }

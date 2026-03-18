@@ -46,7 +46,7 @@ strxfrm(char *dest, const char *src, size_t len) {
             while ((c = (*src++)) != '\0') {
                 result++;
 
-                if (len > 0) {
+                if (len > 1) {
                     len--;
 
                     (*dest++) = c;

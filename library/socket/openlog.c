@@ -15,7 +15,7 @@ openlog(const char *ident, int opt, int facility) {
     __clib4->syslog_facility = facility;
 
     if (__clib4->syslog_fd == NULL) {
-        if (strlen(ident) + 3 > 35) {
+        if (ident != NULL && strlen(ident) + 3 > 35) {
             SHOWMSG("ident is too long");
 
             __set_errno(ENAMETOOLONG);
@@ -25,7 +25,7 @@ openlog(const char *ident, int opt, int facility) {
         if (ident)
             snprintf(__clib4->syslog_ident, sizeof(__clib4->syslog_ident), "%s%s", _PATH_LOG, ident);
         else
-            snprintf(__clib4->syslog_ident, sizeof(__clib4->syslog_ident), "%sDUMMY", _PATH_LOG, ident);
+            snprintf(__clib4->syslog_ident, sizeof(__clib4->syslog_ident), "%sDUMMY", _PATH_LOG);
 
         if ((__clib4->syslog_fd = fopen(__clib4->syslog_ident, "a+")) == NULL) {
             SHOWMSG("Error opening syslog file");

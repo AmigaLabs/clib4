@@ -26,7 +26,7 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
     struct ExamineData *fib = NULL;
     APTR fd_lock;
     LONG is_file_system = FALSE;
-    LONG open_mode = 0;
+    LONG open_mode = MODE_OLDFILE;
     BPTR lock = BZERO, dir_lock = BZERO;
     BPTR handle = BZERO;
     BOOL create_new_file = FALSE;
@@ -118,11 +118,8 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
 
     if (Strnicmp(path_name, "PIPE:", 5) == SAME && FLAG_IS_SET(open_flag, O_CREAT)) {
         open_mode = MODE_NEWFILE;
-    } else if (Strnicmp(path_name, "NIL:", 4) != SAME && (
-            FLAG_IS_SET(open_flag, O_CREAT) ||
-            FLAG_IS_SET(open_flag, O_WRONLY) ||
-            FLAG_IS_SET(open_flag, O_RDWR)
-    )) {
+    }
+	else if (Strnicmp(path_name, "NIL:", 4) != SAME && (FLAG_IS_SET(open_flag, O_CREAT))) {
         if (FLAG_IS_SET(open_flag, O_EXCL)) {
             LONG error;
 
@@ -131,6 +128,9 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
             lock = Lock((STRPTR) path_name, SHARED_LOCK);
             if (lock != BZERO) {
                 SHOWMSG("the file already exists");
+
+                UnLock(lock);
+                lock = BZERO;
 
                 __set_errno(EEXIST);
                 goto out;
@@ -150,10 +150,9 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
                 goto out;
             }
 
-            SHOWMSG("the object does not already exist");
+			SHOWMSG("the object does not already exist");
         }
-
-        open_mode = MODE_READWRITE;
+		open_mode = MODE_READWRITE;
 
         if (FLAG_IS_SET(open_flag, O_TRUNC)) {
             SHOWMSG("checking if the file to create already exists");
@@ -185,7 +184,7 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
                     goto out;
                 }
 
-                open_mode = MODE_NEWFILE;
+            	open_mode = MODE_NEWFILE;
 
                 UnLock(lock);
                 lock = BZERO;
@@ -201,13 +200,11 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
                     goto out;
                 } else if (error != ERROR_OBJECT_NOT_FOUND && error != ERROR_ACTION_NOT_KNOWN) {
                     SHOWMSG("error accessing the object");
-
                     __set_errno(__translate_io_error_to_errno(IoErr()));
                     goto out;
                 }
             }
         }
-
         create_new_file = TRUE;
     }
     else {
@@ -248,7 +245,7 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
                 lock = Lock((STRPTR) path_name, SHARED_LOCK);
                 if (lock != BZERO) {
                     fib = ExamineObjectTags(EX_LockInput, lock, TAG_DONE);
-                    if (fib != NULL && !EXD_IS_DIRECTORY(fib)) {
+                    if (fib != NULL && EXD_IS_DIRECTORY(fib)) {
                         __set_errno(EISDIR);
                     }
                 }
@@ -280,6 +277,12 @@ directory:
     /* If O_PATH is set only stat* functions can be used */
     if (FLAG_IS_SET(open_flag, O_PATH))
         SET_FLAG(fd->fd_Flags, FDF_PATH_ONLY);
+
+    /* If O_CLOEXEC is set, mark the FD for close-on-exec */
+    if (FLAG_IS_SET(open_flag, O_CLOEXEC)) {
+        SET_FLAG(fd->fd_Flags, FDF_CLOEXEC);
+        D(("O_CLOEXEC set for fd=%d\n", fd_slot_number));
+    }
 
     if (is_directory) {
         /* Set FD flag as Directory */

@@ -30,6 +30,8 @@ sleep(unsigned int seconds) {
         _exit(RETURN_ERROR);
     }
 
+    __check_abort_f(__clib4);
+
     RETURN(result);
     return (result);
 }

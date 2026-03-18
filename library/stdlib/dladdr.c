@@ -11,7 +11,7 @@
 
 int
 dladdr(const void *addr, Dl_info *info) {
-    int result = -1;
+    int result = 0;
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
@@ -32,6 +32,7 @@ dladdr(const void *addr, Dl_info *info) {
         info->dli_fbase = NULL; // Should be got dynamically
         info->dli_fname = symbol->Name ? symbol->Name : "";
         info->dli_saddr = (void *) symbol->Offset;
+        result = 1;
     } else {
         __set_errno_r(__clib4, ENOSYS);
         RETURN(result);

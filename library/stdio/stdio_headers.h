@@ -202,7 +202,7 @@ typedef struct iob {
     char *				iob_TempFileName;		/* If this is a temporary file, this is its name */
     BPTR				iob_TempFileLock;		/* The directory in which this temporary file is stored */
     UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
-    APTR				iob_Lock;		    	/* For thread locking */
+    struct SignalSemaphore *iob_Lock;		    	/* For thread locking */
     struct Task *       iob_TaskLock;           /* Task who owns lock */
 	BOOL				iob_isVBuffer;			/* TRUE if iob_CustomBuffer is set from setvbuf */
 } __iob64;
@@ -378,6 +378,16 @@ extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
 
 #define console_prefix "CON:20/20/600/150/"
 #define console_suffix " Output/AUTO/CLOSE/WAIT"
+
+//#define DEBUG_LOCKS
+#ifdef DEBUG_LOCKS
+void __stdio_lock_special(char const *caller_name, struct _clib4 *__clib4);
+void __stdio_lock_real(struct _clib4 *__clib4);
+void __stdio_unlock_special(char const *caller_name, struct _clib4 *__clib4);
+void __stdio_unlock_real(struct _clib4 *__clib4);
+#define __stdio_lock(x) __stdio_lock_special(__func__, x)
+#define __stdio_unlock(x) __stdio_unlock_special(__func__, x)
+#endif
 
 #ifndef _STDIO_PROTOS_H
 #include "stdio_protos.h"

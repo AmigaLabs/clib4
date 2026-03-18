@@ -12,7 +12,7 @@
 
 int
 __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int file_descriptor, int slot_number) {
-    APTR lock;
+    struct SignalSemaphore *lock;
     ULONG file_flags = 0;
     int result = ERROR;
     int open_mode;
@@ -94,7 +94,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     SHOWMSG("allocating file buffer");
 
     /* Allocate a little more memory than necessary. */
-    buffer = ItemPoolAlloc(__clib4->_iob_pool);
+    buffer = __malloc_r(__clib4, BUFSIZ + (__clib4->__cache_line_size - 1));
     if (buffer == NULL) {
         SHOWMSG("that didn't work");
 
@@ -119,9 +119,9 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     }
 
     /* Allocate memory for an arbitration mechanism, then initialize it. */
-    lock = __create_mutex();
+    lock = __create_semaphore();
     if (lock == NULL)
-        goto out;
+		goto out;
 
     /* Figure out the buffered file access mode by looking at the open mode. */
     file_flags |= IOBF_IN_USE | IOBF_NO_NUL;
@@ -149,7 +149,7 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 out:
 
     if (buffer != NULL)
-        ItemPoolFree(__clib4->_iob_pool, buffer);
+        __free_r(__clib4, buffer);
 
     RETURN(result);
     return result;

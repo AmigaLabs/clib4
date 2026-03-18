@@ -13,12 +13,9 @@ rewind(FILE *stream) {
     ENTER();
     assert(stream != NULL);
 
-    __flockfile_r(__clib4, stream);
-
     __clearerr_r(__clib4, stream);
 
     fseek(stream, 0, SEEK_SET);
 
-    __funlockfile_r(__clib4, stream);
     LEAVE();
 }

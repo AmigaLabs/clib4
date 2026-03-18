@@ -208,12 +208,13 @@ int cListSwap(CList *l, int a, int b) {
 
     if (a == b) return 1; /* ? Good ? :D */
 
-    char *data = (char *) p->items;
     size_t step = p->item_size;
 
     if (p->count == p->alloc_size &&
         cListRealloc(l, p->alloc_size + 1) == 0)
         return 0;
+
+    char *data = (char *) p->items;
 
     memcpy(data + p->count * step, data + a * step, step);
     memcpy(data + a * step, data + b * step, step);

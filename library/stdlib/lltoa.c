@@ -45,7 +45,7 @@ lltoa(int64_t value, char *string, int radix) {
     }
 
     if (string == NULL)
-        if (!(string = (char *) malloc(tmp - tp + sign + 1))) {
+        if (!(string = (char *) malloc(tp - tmp + sign + 1))) {
             RETURN(NULL);
             return NULL;
         }

@@ -58,7 +58,7 @@ _shmctl(int shmid, int cmd, struct shmid_ds *cbuf) {
                 }
                 break;
             case SHM_UNLOCK:
-                LockMem(si->shm_amp, si->shm_segsz);
+                UnlockMem(si->shm_amp, si->shm_segsz);
                 ret = 0;
                 break;
             default:

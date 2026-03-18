@@ -22,6 +22,13 @@
 #include <exec/lists.h>
 #include <exec/semaphores.h>
 
+/* Node structure for timer list */
+struct TimerNode {
+    struct MinNode tn_Node;
+    struct Process *tn_Process;    /* The timer process */
+    uint32 tn_ThreadID;            /* The thread ID that created this timer */
+};
+
 /* Category name handling variables.  */
 #define NUM_LOCALES                (LC_MAX + 1)
 #define MAX_LOCALE_NAME_LEN        256
@@ -253,7 +260,7 @@ struct _clib4 {
     /* Used by setitimer/getitimer */
     struct itimerval tmr_time;
     struct timeval tmr_start_time;
-    struct Process *tmr_real_task;
+    struct Process *unused;  /* Old tmr_real_task pointer */
 
     /* Used for shared version library */
     int _errno;
@@ -306,7 +313,7 @@ struct _clib4 {
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
     BOOL unused1;
-	struct SignalSemaphore *__timer_semaphore;
+	void *unused2;
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;
     struct TimerIFace *__ITimer;
@@ -532,6 +539,32 @@ struct _clib4 {
     int isTZSet;
 
     struct DebugIFace *__IDebug;
+
+	unsigned int __machine_type;
+	struct MinList tmr_real_list;  /* List of TimerNode structures */
+	unsigned char *__command_line_ptr;  /* Pointer to allocated command line string (for deallocation) */
+
+	/* Custom signals */
+	int8_t _interrupting_alarm_signal_num;
+	uint32_t _interrupting_alarm_signal;
+
+	/* External destructors for -nostartfiles executables 
+	 * Automatically discovered and called in libClose()
+	 */
+	void (**__external_dtors)(void);
+	BOOL __external_dtors_called;
+	
+	/* Flag to track if call_main() was executed (normal executable)
+	 * If FALSE, we're in a -nostartfiles executable and need to call destructors in libClose()
+	 */
+	BOOL __call_main_executed;
+
+    struct SignalSemaphore *resolv_lock;
+    struct SignalSemaphore *socket_lock;  /* serialize bsdsocket.library calls across threads */
+    void *dns_cache;   //struct dns_cache
+    char resolv_search[256];
+
+    BOOL __exit_jmp_buf_valid;
 };
 
 #ifndef __getClib4

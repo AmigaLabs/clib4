@@ -36,7 +36,7 @@ __funlockfile_r(struct _clib4 *__clib4, FILE *stream) {
 
     if (file->iob_Lock != NULL && FLAG_IS_SET(file->iob_Flags, IOBF_LOCKED) && (file->iob_TaskLock == (struct Task *) __clib4->self)) {
         SHOWMSG("Unlocking File");
-        MutexRelease(file->iob_Lock);
+        ReleaseSemaphore(file->iob_Lock);
         file->iob_TaskLock = NULL;
         CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
     }

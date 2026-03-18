@@ -45,7 +45,7 @@ pthread_self(void) {
     thread = GetThreadId(task);
 
     if (thread == PTHREAD_THREADS_MAX)
-        return 0;
+        return (pthread_t) -1;
 
     return thread;
 }

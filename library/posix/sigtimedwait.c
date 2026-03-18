@@ -29,9 +29,19 @@ do_sigtimedwait(struct _clib4 *__clib4,const sigset_t *set, siginfo_t *info, con
 	SHOWPOINTER(info);
 	SHOWPOINTER(timeout);
 
-	if( __clib4->tmr_real_task ) {
-		SHOWMSG("A timer task is already running");
-		timeout = NULL;
+	/* Check if current thread already has a timer running */
+	if(!IsMinListEmpty(&__clib4->tmr_real_list)) {
+		uint32 currentThreadID = (uint32)FindTask(NULL);
+		struct TimerNode *node;
+		for (node = (struct TimerNode *)__clib4->tmr_real_list.mlh_Head;
+			 node->tn_Node.mln_Succ != NULL;
+			 node = (struct TimerNode *)node->tn_Node.mln_Succ) {
+			if (node->tn_ThreadID == currentThreadID) {
+				SHOWMSG("A timer task is already running for this thread");
+				timeout = NULL;
+				break;
+			}
+		}
 	}
 
     /* Prepare set.  */
@@ -44,7 +54,22 @@ do_sigtimedwait(struct _clib4 *__clib4,const sigset_t *set, siginfo_t *info, con
        value which does not describe a legal signal number.  */
     __clib4->__was_sig = -1;
     for (this = 1; this < NSIG; ++this) {
-        if (sigismember(set, this) || (__clib4->tmr_real_task && this == SIGALRM)) {
+        /* Check if this thread has a timer for SIGALRM */
+        int hasTimer = 0;
+        if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
+            uint32 currentThreadID = (uint32)FindTask(NULL);
+            struct TimerNode *node;
+            for (node = (struct TimerNode *)__clib4->tmr_real_list.mlh_Head;
+                 node->tn_Node.mln_Succ != NULL;
+                 node = (struct TimerNode *)node->tn_Node.mln_Succ) {
+                if (node->tn_ThreadID == currentThreadID) {
+                    hasTimer = 1;
+                    break;
+                }
+            }
+        }
+        
+        if (sigismember(set, this) || (hasTimer && this == SIGALRM)) {
             /* Unblock this signal.  */
             sigdelset(&tmp_mask, this);
             /* Register temporary action handler.  */

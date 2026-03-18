@@ -9,6 +9,10 @@ inputs:
   git_tag:
     description: 'Git tag to use'
     required: false
+  nightly:
+    description: 'Set if this is a nightly build'
+    required: false
+    default: "no"
 
 runs:
   using: "composite"
@@ -18,11 +22,11 @@ runs:
       if: ${{ inputs.spe != 'yes' }}
       run: |
         cd /opt/code && \
-        make -j1 -f GNUmakefile.os4 OS=os4 GITTAG=${{ inputs.git_tag }}
+        make -j -f GNUmakefile.os4 GITTAG=${{ inputs.git_tag }} NIGHTLY=${{ inputs.nightly }}
 
     - name: compiling SPE
       shell: bash
       if: ${{ inputs.spe == 'yes' }}
       run: |
         cd /opt/code && \
-        make -j1 -f GNUmakefile.os4 OS=os4 SPE=yes GITTAG=${{ inputs.git_tag }}
+        make -j -f GNUmakefile.os4 SPE=yes GITTAG=${{ inputs.git_tag }} NIGHTLY=${{ inputs.nightly }}

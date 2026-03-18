@@ -109,12 +109,17 @@ strerror_r(int number, char *buffer, size_t buffer_size) {
     const char *str;
     size_t len;
 
-    if (number < EPERM || number > ENOTSUP) {
+    /* Handle errno == 0 (Success) */
+    if (number == 0) {
+        str = "Success";
+    }
+    else if (number < EPERM || number > ENOTSUP) {
         __set_errno(EINVAL);
         goto out;
     }
-
-    str = error_table[number - EPERM];
+    else {
+        str = error_table[number - EPERM];
+    }
 
     len = strlen(str);
     if (len >= buffer_size) {

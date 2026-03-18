@@ -30,14 +30,12 @@ int main(int argc, char **argv) {
     double time_spent;
     FILE *fwrite_out_all;
     FILE *fwrite_out;
-    FILE *fwrite_out_fseek;
     FILE *fputc_out;
     int i;
 
     printf("Start test\n");
     fwrite_out_all = fopen("fwrite-out-all.txt", "w+");
     fwrite_out = fopen("fwrite-out.txt", "w+");
-    fwrite_out_fseek = fopen("fwrite-out-fseek.txt", "w+");
     fputc_out = fopen("fputc-out.txt", "w+");
     printf("Randomizing %d chars\n", NUMCHARS);
     randChars();

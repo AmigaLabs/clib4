@@ -6,6 +6,7 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/elf.h>
+#include <proto/expansion.h>
 #include <proto/locale.h>
 #include <proto/timer.h>
 #include <proto/timezone.h>
@@ -258,6 +259,12 @@ makeEnvironment(struct _clib4 *__clib4) {
             IDOS->ScanVars(hook, flags, &ehd);
             IExec->FreeSysObject(ASOT_HOOK, hook);
         }
+    } else {
+        /* Failed to allocate pool, cleanup */
+        free(__clib4->__environment);
+        __clib4->__environment = NULL;
+        LEAVE();
+        return;
     }
 
     __clib4->__environment_lock = __create_recursive_mutex();
@@ -267,6 +274,7 @@ makeEnvironment(struct _clib4 *__clib4) {
 static void freeEnvironment(struct _clib4 *__clib4) {
     if (__clib4->__environment_pool != NULL) {
         IExec->FreeSysObject(ASOT_MEMPOOL, __clib4->__environment_pool);
+        __clib4->__environment_pool = NULL;
     }
     if (__clib4->__environment_lock != NULL) {
         __delete_mutex(__clib4->__environment_lock);
@@ -274,6 +282,55 @@ static void freeEnvironment(struct _clib4 *__clib4) {
     }
     free(__clib4->__environment);
     __clib4->__environment = NULL;
+}
+
+/* Try to find external CTOR/DTOR lists from the executable
+ * This allows automatic handling of C++ destructors for -nostartfiles executables
+ */
+static void
+find_external_ctors_dtors(struct _clib4 *__clib4) {
+    BPTR segment_list = IDOS->GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+    if (segment_list == BZERO) {
+        D(bug("find_external_ctors_dtors: GetProcSegList returned ZERO\n"));
+        return;
+    }
+
+    Elf32_Handle hSelf = NULL;
+    int ret = IDOS->GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
+    if (ret != 1 || hSelf == NULL) {
+        D(bug("find_external_ctors_dtors: Could not get ELF handle\n"));
+        return;
+    }
+
+    /* Try to find __DTOR_LIST__ symbol in the executable using SymbolQuery */
+    struct Elf32_SymbolQuery query;
+    
+    query.Flags = ELF32_SQ_BYNAME;
+    query.Name = "__DTOR_LIST__";
+    query.NameLength = 0;
+    query.Value = 0;
+    query.Found = FALSE;
+    
+    ULONG found = __IElf->SymbolQuery(hSelf, 1, &query);
+    
+    if (found > 0 && query.Found) {
+        __clib4->__external_dtors = (void (**)(void))query.Value;
+        __clib4->__external_dtors_called = FALSE;
+        D(bug("find_external_ctors_dtors: Found __DTOR_LIST__ at 0x%08lx\n", query.Value));
+    } else {
+        D(bug("find_external_ctors_dtors: __DTOR_LIST__ symbol not found\n"));
+        __clib4->__external_dtors = NULL;
+    }
+}
+
+/* Legacy function kept for compatibility but now does nothing
+ * Destructors are automatically discovered in libOpen()
+ */
+void
+__call_external_dtors(void (**__DTOR_LIST__)(void)) {
+    (void)__DTOR_LIST__;
+    /* This function is now a no-op since we auto-discover and call dtors in libClose() */
+    D(bug("__call_external_dtors: Called but ignored (auto-discovery enabled)\n"));
 }
 
 static void closeLibraries() {
@@ -330,6 +387,20 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
     libBase->libNode.lib_Flags &= ~LIBF_DELEXP;
 
     DECLARE_UTILITYBASE();
+
+	struct Library *ExpansionBase = IExec->OpenLibrary("expansion.library", 53L);
+	if (ExpansionBase == NULL) {
+		SHOWMSG("Cannot open expansopn library!");
+		return NULL;
+	}
+
+	struct ExpansionIFace *IExpansion = (struct ExpansionIFace *) (IExec->GetInterface((struct Library *) ExpansionBase, "main", 1, NULL));
+	if (!IExpansion) {
+		SHOWMSG("Cannot obtain expansion interface!");
+		IExec->CloseLibrary(ExpansionBase);
+		ExpansionBase = NULL;
+		return NULL;
+	}
 
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     uint32 pid;
@@ -425,6 +496,9 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             __clib4->self = me;
             __clib4->uuid = c2n.uuid;
 
+			/* Get Actual Machine Type */
+			IExpansion->GetMachineInfoTags(GMIT_Machine, &__clib4->__machine_type, TAG_DONE);
+			D(bug("Using clib4 on machine type %ld", __clib4->__machine_type));
             /* Set _clib4 pointer into process pr_UID
              * This field is copied to any spawned process created by this exe and/or its children
              */
@@ -437,7 +511,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             SHOWMSG("Check for custom memory allocator");
             if ((len = IDOS->GetVar("CLIB4_MEMORY_ALLOCATOR", envbuf, sizeof(envbuf), 0)) >= 0) {
                 if (!IUtility->Stricmp(envbuf, "1"))
-                    __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;  // WARNING - At moment this is crashing
+                    __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;
                 else if (!IUtility->Stricmp(envbuf, "2"))
                     __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK;
                 else if (!IUtility->Stricmp(envbuf, "3"))
@@ -454,7 +528,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
             /* Copy environment variables into clib4 reent structure */
             SHOWMSG("Make environment");
-            makeEnvironment(__clib4);
+			makeEnvironment(__clib4);
             if (!__clib4->__environment) {
                 __clib4->__environment = empty_env;
                 __clib4->__environment_allocated = FALSE;
@@ -463,11 +537,13 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
                 __clib4->__environment_allocated = TRUE;
 
             SHOWMSG("Check for custom TERM");
-            /* Set default terminal mode to "amiga-clib4" if not set */
-            LONG term_len = IDOS->GetVar("TERM", (STRPTR) term_buffer, FILENAME_MAX, 0);
-            if (term_len <= 0) {
+            /* Set default terminal mode to "amiga-clib4" if not set.
+               It is safe to call setenv() since constructors are called
+            */
+            char *terminal = getenv("TERM");
+            if (terminal == NULL) {
                 IUtility->Strlcpy(term_buffer, "amiga-clib4", FILENAME_MAX);
-                IDOS->SetVar("TERM", term_buffer, -1, GVF_LOCAL_ONLY);
+                setenv("TERM", term_buffer, true);
             }
 
             /* The following code will be executed if the program is to keep
@@ -486,11 +562,27 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
             ITimer->GetSysTime((struct TimeVal *) &__clib4->clock);
 
+            /* Try to find external CTOR/DTOR lists from the executable
+             * This is needed for -nostartfiles executables with C++ code
+             */
+            SHOWMSG("Looking for external destructors");
+            find_external_ctors_dtors(__clib4);
+
             /* At this point exe is fully initialized */
             __clib4->__fully_initialized = TRUE;
             SHOWMSG("Library initialized");
         }
     }
+	if (IExpansion != NULL) {
+  		IExec->DropInterface((struct Interface *) IExpansion);
+  		IExpansion = NULL;
+  	}
+
+	if (ExpansionBase != NULL) {
+		IExec->CloseLibrary(ExpansionBase);
+		ExpansionBase = NULL;
+	}
+
     return libBase;
 }
 
@@ -538,7 +630,6 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 
 BPTR libClose(struct LibraryManagerInterface *Self) {
     struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
-
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
@@ -547,6 +638,30 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         void *item;
 
         struct _clib4 * __clib4 = (struct _clib4 *) me->pr_UID;
+        
+        struct Task *t = IExec->FindTask(NULL);
+        D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
+
+        /* Call external destructors only for -nostartfiles executables
+         * Detection: call_main() sets __call_main_executed to TRUE for normal executables
+         * For -nostartfiles executables, this flag remains FALSE and we need to call destructors here
+         */
+        if (!__clib4->__call_main_executed && __clib4->__external_dtors != NULL && !__clib4->__external_dtors_called) {
+            SHOWMSG("Calling external dtors (auto-discovered from -nostartfiles exe)");
+            _end_ctors(__clib4->__external_dtors);
+            __clib4->__external_dtors_called = TRUE;
+            SHOWMSG("Done. All external destructors called");
+            
+            /* Also call clib4 internal destructors for -nostartfiles exe
+             * For normal executables, these are already called in call_main()
+             */
+            SHOWMSG("Calling clib4 dtors for -nostartfiles exe");
+            _end_ctors(__DTOR_LIST__);
+            SHOWMSG("Done. All clib4 destructors called");
+        }
+        /* else: Normal executable using library_start() - destructors already called in call_main() */
+
+        /* Now safe to restore task priority and deallocate resources */
         /* Restore the task priority. */
         IExec->SetTaskPri((struct Task *) me, res->oldPriority);
 
@@ -566,13 +681,6 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             SHOWMSG("Closing randfd[1]");
             close(__clib4->randfd[1]);
         }
-        
-        struct Task *t = IExec->FindTask(NULL);
-        D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
-
-        SHOWMSG("Calling clib4 dtors");
-        _end_ctors(__DTOR_LIST__);
-        SHOWMSG("Done. All destructors called");
 
         SHOWMSG("Calling reent_exit on _clib4");
         reent_exit(__clib4);
@@ -877,7 +985,7 @@ const struct Resident __attribute__((used)) RomTag = {
 int
 library_start(char *argstr,
               int arglen,
-              int (*start_main)(int, char **),
+              int (*start_main)(int, char **, char **),
               void (*__EXT_CTOR_LIST__[])(void),
               void (*__EXT_DTOR_LIST__[])(void),
               struct WBStartup *sms) {

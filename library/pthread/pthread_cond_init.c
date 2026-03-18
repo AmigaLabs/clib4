@@ -39,12 +39,17 @@
 
 int
 pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr) {
-    (void) attr;
     if (cond == NULL) {
         return EINVAL;
 	}
 
-	cond->semaphore = AllocSysObjectTags(ASOT_SEMAPHORE,TAG_END);
+    pthread_condattr_t c = { 0, CLOCK_REALTIME };
+    if (attr)
+        cond->condattr = *attr;
+    else
+        cond->condattr = c;
+
+    cond->semaphore = AllocSysObjectTags(ASOT_SEMAPHORE,TAG_END);
 	if (!cond->semaphore)
 		return ENOMEM;
 

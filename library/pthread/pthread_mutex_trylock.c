@@ -48,8 +48,13 @@ pthread_mutex_trylock(pthread_mutex_t *mutex) {
             return EINVAL;
     }
 
-    if (MutexAttempt(mutex->mutex))
+	if (mutex->kind != PTHREAD_MUTEX_RECURSIVE && MutexIsMine(mutex))
+		return EBUSY;
+
+    if (MutexAttempt(mutex->mutex)) {
+        mutex->owner = FindTask(NULL);
         return 0;
+    }
 
     return EBUSY;
 }

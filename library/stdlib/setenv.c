@@ -128,7 +128,7 @@ setenv(const char *original_name, const char *original_value, int overwrite) {
 
 	SHOWMSG("Variable set correctly");
 
-	if (strcmp(name, "TZ") == 0) {
+	if (strcmp(original_name, "TZ") == 0) {
 		SHOWMSG("Set TZ");
 		tzset();
 	}

@@ -21,47 +21,42 @@
 void DoStuff(void);
 
 enum {
-    SECS_TO_SLEEP = 10, NSEC_TO_SLEEP = 125
+	SECS_TO_SLEEP = 10, NSEC_TO_SLEEP = 125
 };
 
 int main(int argc, char *argv[]) {
-
-    struct itimerval it_val;  /* for setting itimer */
-    struct timespec remaining, request = {SECS_TO_SLEEP, NSEC_TO_SLEEP};
-
-    /* Upon SIGALRM, call DoStuff().
-     * Set interval timer.  We want frequency in ms,
-     * but the setitimer call needs seconds and useconds. */
-    if (signal(SIGALRM, (void (*)(int)) DoStuff) == SIG_ERR) {
-        perror("Unable to catch SIGALRM");
-        exit(1);
-    }
-    it_val.it_value.tv_sec = INTERVAL / 1000;
-    it_val.it_value.tv_usec = (INTERVAL * 1000) % 1000000;
-    it_val.it_interval = it_val.it_value;
-
-	printf("Setting itimer with %ld s and %d us, repeating\n",it_val.it_value.tv_sec, it_val.it_value.tv_usec);
-
-    if (setitimer(ITIMER_REAL, &it_val, NULL) == -1) {
-        perror("error calling setitimer()");
-        exit(1);
-    }
-
+	struct itimerval it_val; /* for setting itimer */
+	struct timespec remaining, request = {SECS_TO_SLEEP, NSEC_TO_SLEEP};
+	/* Upon SIGALRM, call DoStuff().
+	* Set interval timer.  We want frequency in ms,
+	* but the setitimer call needs seconds and useconds. */
+	if (signal(SIGALRM, (void (*)(int)) DoStuff) == SIG_ERR) {
+		perror("Unable to catch SIGALRM");
+		exit(1);
+	}
+	it_val.it_value.tv_sec = INTERVAL / 1000;
+	it_val.it_value.tv_usec = (INTERVAL * 1000) % 1000000;
+	it_val.it_interval = it_val.it_value;
+	printf("Setting itimer with %ld s and %d us, repeating\n", it_val.it_value.tv_sec, it_val.it_value.tv_usec);
+	if (setitimer(ITIMER_REAL, &it_val, NULL) == -1) {
+		perror("error calling setitimer()");
+		exit(1);
+	}
 	printf("Going to sleep for 10 s and 125 ns\n");
-    /* nanosleep will be interrupted by SIGALRM */
-    int result = nanosleep(&request, &remaining);
-	if( result == 0 ) {
+	/* nanosleep will be interrupted by SIGALRM */
+	int result = nanosleep(&request, &remaining);
+	if (result == 0) {
 		printf("Slept for the desired time!\n");
 	}
-	else if( result == -1 ) {
-		if( errno == EINVAL ) {
+	else if (result == -1) {
+		if (errno == EINVAL) {
 			printf("Passed in values no valid\n");
 		}
-		else if( errno == EINTR ) {
-			printf("Signal distrubed me, Remaining time %ld s and %ld us!\n",remaining.tv_sec, remaining.tv_nsec);
+		else if (errno == EINTR) {
+			printf("Signal distrubed me, Remaining time %ld s and %ld us!\n", remaining.tv_sec, remaining.tv_nsec);
 		}
 		else {
-			printf("Unknown err no: %d!\n",errno);
+			printf("Unknown err no: %d!\n", errno);
 		}
 	}
 	else {
@@ -71,11 +66,19 @@ int main(int argc, char *argv[]) {
 
 /*
  * DoStuff
+ *
+ * IMPORTANTE: I signal handler DEVONO salvare e ripristinare errno!
+ * Altrimenti le funzioni chiamate nel signal handler (come printf, getitimer)
+ * modificheranno l'errno che la funzione interrotta (nanosleep) ha settato.
  */
 void DoStuff(void) {
-    struct itimerval old_value;
-    getitimer(ITIMER_REAL, &old_value);
-    printf("Timer went off. getitimer now is %d sec, %d msec.\n",
-           (int) old_value.it_value.tv_sec,
-           (int) old_value.it_value.tv_usec);
+	//int saved_errno = errno;  /* Salva errno all'ingresso del signal handler */
+
+	struct itimerval old_value;
+	getitimer(ITIMER_REAL, &old_value);
+	printf("Timer went off. getitimer now is %d sec, %d msec.\n",
+			(int) old_value.it_value.tv_sec,
+			(int) old_value.it_value.tv_usec);
+
+	//errno = saved_errno;  /* Ripristina errno prima di uscire dal signal handler */
 }

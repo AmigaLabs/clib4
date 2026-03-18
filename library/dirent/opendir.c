@@ -159,7 +159,9 @@ opendir(const char *path_name) {
             __set_errno(__translate_io_error_to_errno(IoErr()));
             goto out;
         }
+        dh->dh_ObjectID = dh->dh_FileInfo->ObjectID;
         FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
+        dh->dh_FileInfo = NULL;
     }
 
     SHOWMSG("OK, done");
@@ -179,7 +181,8 @@ out:
 
     if (dh != NULL) {
         SHOWMSG("ouch. cleaning up");
-        FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
+        if (dh->dh_FileInfo != NULL)
+            FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
 
         if (__clib4->__unix_path_semantics) {
             struct Node *node;

@@ -6,6 +6,10 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef MAX_BYPASS
+#define MAX_BYPASS (256 * 1024) /* 256 KiB max for direct read/write bypass */
+#endif
+
 size_t
 __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
     struct iob *file = (struct iob *) stream;
@@ -83,7 +87,11 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
             SHOWMSG("Calling read...");
 
             /* We bypass the buffer entirely. */
-            num_bytes_read = read(file->iob_Descriptor, data, total_size);
+            /* Cap bypass size to avoid extremely large single read syscalls which
+               can expose driver/filesystem jitter; read in chunks up to MAX_BYPASS. */
+            size_t to_read = total_size;
+            if (to_read > MAX_BYPASS) to_read = MAX_BYPASS;
+            num_bytes_read = read(file->iob_Descriptor, data, to_read);
 
             SHOWMSG("Done.");
 
@@ -107,18 +115,26 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
                     ssize_t num_bytes_read;
                     /* We bypass the buffer entirely. */
                     SHOWMSG("Calling read...");
-                    num_bytes_read = read(file->iob_Descriptor, data, total_size);
+                    /* Cap bypass size to avoid huge single read syscalls. */
+                    size_t to_read = total_size;
+                    if (to_read > MAX_BYPASS) to_read = MAX_BYPASS;
+                    num_bytes_read = read(file->iob_Descriptor, data, to_read);
                     SHOWMSG("Done.");
                     if (num_bytes_read == -1) {
                         SET_FLAG(file->iob_Flags, IOBF_ERROR);
                         goto out;
                     }
 
-                    if (num_bytes_read == 0)
+                    if (num_bytes_read == 0) {
                         SET_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
+                        break;
+                    }
 
+                    data += num_bytes_read;
                     total_bytes_read += num_bytes_read;
-                    break;
+                    total_size -= num_bytes_read;
+                    /* Continue loop to read more if needed */
+                    continue;
                 }
 
                 /* If there is data in the read buffer, try to copy it directly

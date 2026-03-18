@@ -49,8 +49,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    for (i = 0; i < NUM_THREADS; i++)
+    for (i = 0; i < NUM_THREADS; i++) {
+		cout << "Joining thread " << i << std::endl;
         pthread_join(threads[i], &status);
+	}
     cout << "All threads joined!" << std::endl;
 
     end1 = clock();

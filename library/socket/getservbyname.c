@@ -18,9 +18,10 @@ getservbyname(const char *name, const char *proto) {
          */
         if (name == NULL || proto == NULL) {
             __set_errno(EFAULT);
+            return NULL;
         }
         else
             return __getservbyname((char *) name, (char *) proto);
     }
-    return &se;
+    return res;
 }

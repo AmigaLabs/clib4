@@ -34,12 +34,15 @@ workbench_exit() {
 
     if (__clib4->restore_streams) {
         SelectInput(__clib4->old_input);
+    	SetMode(__clib4->old_input, DOSFALSE);
         __clib4->old_input = BZERO;
 
         SelectOutput(__clib4->old_output);
+    	SetMode(__clib4->old_output, DOSFALSE);
         __clib4->old_output = BZERO;
 
         SelectErrorOutput(__clib4->old_error);
+    	SetMode(__clib4->old_error, DOSFALSE);
         __clib4->old_error = BZERO;
 
         __clib4->restore_streams = FALSE;
@@ -176,36 +179,42 @@ FILE_CONSTRUCTOR(stdio_file_init) {
             case STDIN_FILENO:
 
                 iob_flags = IOBF_IN_USE | IOBF_READ | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
-                fd_flags = FDF_IN_USE | FDF_READ | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
+                fd_flags = FDF_IN_USE | FDF_READ | FDF_NO_CLOSE_BPTR | FDF_STDIO;
                 default_file = Input();
                 break;
 
             case STDOUT_FILENO:
 
-                iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_FULL;
-                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
+                iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_LINE;
+                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE_BPTR | FDF_STDIO;
                 default_file = Output();
                 break;
 
             case STDERR_FILENO:
 
-                iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_FULL;
-                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE | FDF_IS_INTERACTIVE | FDF_STDIO;
+                iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_NONE;
+                fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE_BPTR | FDF_STDIO;
                 default_file = ErrorOutput();
                 break;
         }
 
+		if (default_file != BZERO) {
+			if (IsInteractive(default_file)) {
+				SET_FLAG(fd_flags, FDF_IS_INTERACTIVE);
+			}
+		}
+
         /* Allocate a little more memory than necessary and align the buffer to a cache line boundary. */
-        buffer = ItemPoolAlloc(__clib4->_iob_pool);
+        buffer = malloc(BUFSIZ + (__clib4->__cache_line_size - 1));
         if (buffer == NULL)
             goto out;
 
         /* Allocate memory for an arbitration mechanism, then initialize it. */
-        stdio_lock = __create_mutex();
+        stdio_lock = __create_semaphore();
         fd_lock = __create_mutex();
 
         if (stdio_lock == NULL || fd_lock == NULL) {
-            __delete_mutex(stdio_lock);
+            __delete_semaphore(stdio_lock);
             __delete_mutex(fd_lock);
             goto out;
         }

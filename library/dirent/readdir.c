@@ -99,7 +99,7 @@ readdir(DIR *directory_pointer) {
 
                 dh->dh_Position++;
 
-                dh->dh_DirectoryEntry.d_ino = dh->dh_FileInfo->ObjectID;
+                dh->dh_DirectoryEntry.d_ino = dh->dh_ObjectID;
                 strcpy(dh->dh_DirectoryEntry.d_name, ".");
                 dh->dh_DirectoryEntry.d_reclen = sizeof(struct dirent);
                 dh->dh_DirectoryEntry.d_namlen = 2;

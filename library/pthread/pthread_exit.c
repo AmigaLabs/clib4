@@ -40,13 +40,32 @@
 void
 pthread_exit(void *value_ptr) {
     pthread_t thread = pthread_self();
+	CleanupHandler *handler;
     ThreadInfo *inf = GetThreadInfo(thread);
-    inf->ret = value_ptr;
+	if (thread == 0) {
+		SHOWMSG("pthread_exit: main thread cannot exit via pthread_exit, return\n");
+		return;
+	}
+	if (inf->status == THREAD_STATE_TERMINATING || inf->status == THREAD_STATE_DESTRUCT) {
+		/* The target thread is already terminating, cannot exit */
+		return;
+	}
 
-    ThreadInfo *mainThread = &threads[0];
-    /* If the function is called from main thread don't execute call longjmp */
-    if (inf != mainThread && inf->status == THREAD_STATE_RUNNING) {
-        inf->status = THREAD_STATE_DESTRUCT;
-        longjmp(inf->jmp, 1);
-    }
+	inf->status = THREAD_STATE_TERMINATING;
+	inf->ret = value_ptr;
+
+	// execute the clean-up handlers
+	while ((handler = (CleanupHandler *)RemTail((struct List *)&inf->cleanup))) {
+		if (handler->routine)
+			handler->routine(handler->arg);
+		free(handler);
+	}
+
+	/* Do NOT set THREAD_STATE_DESTRUCT here - StarterFunc will set it
+	 * atomically under thread_sem after completing all cleanup (TLS
+	 * destructors, timers, stack restore). Setting it here creates a
+	 * window where pthread_join sees DESTRUCT and cleans up the slot
+	 * while the thread is still running cleanup code in StarterFunc. */
+
+    longjmp(inf->jmp, 1);
 }

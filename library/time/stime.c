@@ -5,6 +5,10 @@
 #endif /* _TIME_HEADERS_H */
 
 int stime(const time_t *t) {
+    if (t == NULL) {
+        errno = EFAULT;
+        return -1;
+    }
     struct timeval tv = {.tv_sec = *t, .tv_usec = 0};
     return settimeofday(&tv, (void *) 0);
 }

@@ -8,7 +8,9 @@
 #include <stdint.h>
 #include <features.h>
 #include <endian.h>
+#ifndef __cplusplus
 #include <stdbool.h>
+#endif
 
 #ifndef	__fenv_static
 #define	__fenv_static	static

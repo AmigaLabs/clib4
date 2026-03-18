@@ -325,15 +325,19 @@ tgetent(char *bp, const char *name) {
         /* If BP is malloc'd by us, make sure it is big enough.  */
         if (malloc_size) {
             int offset1 = bp1 - bp, offset2 = tc_search_point - bp;
+            char *new_bp;
             malloc_size = offset1 + buf.size;
-            bp = (char *) realloc(bp, malloc_size);
-            termcap_name = (char *) realloc(bp, malloc_size);
-            if (bp == NULL || termcap_name == NULL) {
+            new_bp = (char *) realloc(bp, malloc_size);
+            if (new_bp == NULL) {
                 __set_errno(ENOMEM);
+                free(bp);
+                close(fd);
+                free(buf.beg);
                 return -1;
             }
-            bp1 = (char *) termcap_name + offset1;
-            tc_search_point = (char *) termcap_name + offset2;
+            bp = new_bp;
+            bp1 = bp + offset1;
+            tc_search_point = bp + offset2;
         }
 
         /* Copy the line of the entry from buf into bp.  */
@@ -491,8 +495,11 @@ gobble_line(int fd, register struct termcap_buffer *bufp, char *append_end) {
             bcopy(bufp->ptr, buf, bufp->full -= bufp->ptr - buf);
             bufp->ptr = buf;
         }
-        if (!(nread = read(fd, buf + bufp->full, bufp->size - bufp->full)))
+        nread = read(fd, buf + bufp->full, bufp->size - bufp->full);
+        if (nread <= 0) {
             bufp->ateof = 1;
+            if (nread < 0) nread = 0;
+        }
         bufp->full += nread;
         buf[bufp->full] = '\0';
     }

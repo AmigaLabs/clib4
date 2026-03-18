@@ -15,7 +15,7 @@ ldexpf(float x, int exp) {
     } else {
         result = scalbnf(x, exp);
 
-        if (isinf(result) || (result < FLT_MIN || result > -FLT_MIN))
+        if (isinf(result) || (result < FLT_MIN && result > -FLT_MIN))
             __set_errno(ERANGE);
     }
 

@@ -76,6 +76,4 @@ void uuid4_generate(char *_dst) {
         dst++, p++;
     }
     *dst = '\0';
-
-    D(("[uuid4_generate :] result : <%s>\n", _dst));
 }

@@ -5,7 +5,7 @@
 #include "pthread.h"
 
 int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize) {
-    if (attr == NULL || guardsize < 0)
+    if (attr == NULL)
         return EINVAL;
 
     attr->guardsize = guardsize;

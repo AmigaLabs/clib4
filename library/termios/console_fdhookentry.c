@@ -411,8 +411,15 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
             __fd_unlock(fd);
 
             /* Free the locked mutex now. */
-            if (NOT is_aliased)
+            if (NOT is_aliased) {
+                /* Free the termios structure if it was allocated */
+                if (fd->fd_Aux != NULL && FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
+                    free(fd->fd_Aux);
+                    fd->fd_Aux = NULL;
+                }
+
                 __delete_mutex(fd->fd_Lock);
+            }
 
             /* And that's the last for this file descriptor. */
             memset(fd, 0, sizeof(*fd));

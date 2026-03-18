@@ -1,0 +1,115 @@
+name: Nightly Builds
+
+on:
+  push:
+    branches:
+      - 'development'
+
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:
+  release:
+    name: Create Nightly Build
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: "nightly"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Set Tag
+        id: tag
+        run: |
+          echo "version=nightly" >> "$GITHUB_OUTPUT"
+      - name: Update Tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: "nightly"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2.2.2
+        with:
+          tag_name: "nightly"
+          name: "clib4 nightly-builds"
+          draft: false
+          prerelease: true
+          generate_release_notes: true
+          target_commitish: development
+          body: >
+            Builds that include most recent changes as they happen. For non 
+            nightly builds check the whole list of [releases](https://github.com/AmigaLabs/clib4/releases).
+
+  build_non_spe:
+    name: Build non-SPE
+    needs: release
+    runs-on: ubuntu-latest
+    container:
+      image: walkero/amigagccondocker:os4-gcc11
+      volumes:
+        - '${{ github.workspace }}:/opt/code'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Compile clib4
+        uses: ./.github/actions/compile
+        with:
+          git_tag: ""
+          spe: "no"
+          nightly: "yes"
+
+      - name: Create the LHA release archive
+        run: |
+          make -f GNUmakefile.os4 release && \
+          mv clib4.lha clib4-nightly.lha
+
+      - name: Upload Files
+        uses: softprops/action-gh-release@v2.2.2
+        with:
+          tag_name: "nightly"
+          draft: false
+          prerelease: true
+          target_commitish: development
+          files: |
+            clib4-nightly.lha
+
+  build_spe:
+    name: Build SPE
+    needs: release
+    runs-on: ubuntu-latest
+    container:
+      image: walkero/amigagccondocker:os4-gcc6
+      volumes:
+        - '${{ github.workspace }}:/opt/code'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Compile clib4
+        uses: ./.github/actions/compile
+        with:
+          git_tag: ""
+          spe: "yes"
+          nightly: "yes"
+
+      - name: Create the LHA release archive
+        run: |
+          make -f GNUmakefile.os4 release && \
+          mv clib4.lha clib4-nightly_SPE.lha
+
+      - name: Upload Files
+        uses: softprops/action-gh-release@v2.2.2
+        with:
+          tag_name: "nightly"
+          draft: false
+          prerelease: true
+          target_commitish: development
+          files: |
+            clib4-nightly_SPE.lha

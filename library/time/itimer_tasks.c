@@ -34,22 +34,22 @@ int itimer_real_task() {
     DECLARE_TIMEZONEBASE();
 
     struct Process *thisTask = (struct Process *) FindTask(NULL);
-    struct itimer *_itimer = (struct itimer *) thisTask->pr_Task.tc_UserData;
+    int which = (int) thisTask->pr_Task.tc_UserData;
 
     struct _clib4 *__clib4 = __CLIB4;
 
     SHOWPOINTER(__clib4);
-    SHOWVALUE(_itimer->which);
+    SHOWVALUE(which);
     SHOWVALUE(__clib4->tmr_time.it_value.tv_sec);
     SHOWVALUE(__clib4->tmr_time.it_value.tv_usec);
 
 
     SHOWMSG("AllocSysObjectTags ASOT_PORT");
     /* Create itimer timers and message ports */
+	SetSignal(0, SIGF_SINGLE);
     tmr_real_mp = AllocSysObjectTags(ASOT_PORT,
                                      ASOPORT_Action, PA_SIGNAL,
-                                     ASOPORT_AllocSig, FALSE,
-                                     ASOPORT_Signal, SIGB_SINGLE,
+                                     ASOPORT_AllocSig, TRUE,
                                      ASOPORT_Target, FindTask(NULL),
                                      TAG_DONE);
     if (!tmr_real_mp) {
@@ -79,41 +79,44 @@ int itimer_real_task() {
         /* Get current time of day */
 		gettimeofday(&__clib4->tmr_start_time, NULL);
 		/* Set wait mask */
-        wait_mask = SIGBREAKF_CTRL_F | SIGBREAKF_CTRL_D | (1L << tmr_real_mp->mp_SigBit);
+        wait_mask = SIGBREAKF_CTRL_C | SIGBREAKF_CTRL_F | SIGBREAKF_CTRL_D | (1L << tmr_real_mp->mp_SigBit);
         /* Reset signals */
-        SetSignal(0, wait_mask);
         /* Send timer request */
         SendIO((struct IORequest *) tmr_real_tr);
         /* Wait for signals */
         uint32 signals = Wait(wait_mask);
         /* Check for received signal */
-        if (signals & SIGBREAKF_CTRL_F) {
+        if (signals & SIGBREAKF_CTRL_F || signals & SIGBREAKF_CTRL_C) {
             SHOWMSG("SIGBREAKF_CTRL_F");
-            if (CheckIO((struct IORequest *) tmr_real_tr))  /* If request is complete... */
-                WaitIO((struct IORequest *) tmr_real_tr);   /* clean up and remove reply */
-            AbortIO((struct IORequest *) tmr_real_tr);      /* Abort request             */
+            if (!CheckIO((struct IORequest *) tmr_real_tr)) {
+	            /* If request is complete... */
+            	AbortIO((struct IORequest *) tmr_real_tr);  /* clean up and remove reply */
+            }
+            WaitIO((struct IORequest *) tmr_real_tr);
             SHOWMSG("Exit from SIGBREAKF_CTRL_F");
             /* Exit from while */
+        	if (signals & SIGBREAKF_CTRL_C)
+        		SetSignal(SIGBREAKF_CTRL_C, SIGBREAKF_CTRL_C);
             break;
         }
 
         if (signals & SIGBREAKF_CTRL_D) {
             SHOWMSG("SIGBREAKF_CTRL_D");
             /* This is used to reset the timer with new value without raising the signal */
-            if (CheckIO((struct IORequest *) tmr_real_tr))  /* If request is complete... */
-                WaitIO((struct IORequest *) tmr_real_tr);   /* clean up and remove reply */
-            AbortIO((struct IORequest *) tmr_real_tr);
-
+            if (!CheckIO((struct IORequest *) tmr_real_tr)) {
+	            /* If request is complete... */
+            	AbortIO((struct IORequest *) tmr_real_tr);  /* clean up and remove reply */
+            }
+            WaitIO((struct IORequest *) tmr_real_tr);
             tmr_real_tr->Time.Seconds = __clib4->tmr_time.it_value.tv_sec;
             tmr_real_tr->Time.Microseconds = __clib4->tmr_time.it_value.tv_usec;
             SHOWMSG("Exit from SIGBREAKF_CTRL_D");
         } else {
             SHOWMSG("CheckIO");
-            if (CheckIO((struct IORequest *) tmr_real_tr)) {
-                SHOWMSG("WaitIO");
-                WaitIO((struct IORequest *) tmr_real_tr);
+            if (!CheckIO((struct IORequest *) tmr_real_tr)) {
+	            AbortIO((struct IORequest *) tmr_real_tr);
             }
-
+            WaitIO((struct IORequest *) tmr_real_tr);
             tmr_real_tr->Time.Seconds += __clib4->tmr_time.it_interval.tv_sec;
             tmr_real_tr->Time.Microseconds += __clib4->tmr_time.it_interval.tv_usec;
 
@@ -129,12 +132,11 @@ int itimer_real_task() {
 
 			Signal((struct Task *) __clib4->self, (1L << tmr_real_mp->mp_SigBit));
 
-
             SHOWMSG("CHECK SIGALRM AGAIN");
             /* Check again if SIGALRM is blocked and then kill the timer. kill the timer also
              * if timer was created via alarm()
              */
-            if (_itimer->which == -1 || FLAG_IS_SET(__clib4->__signals_blocked, sigmask(SIGALRM))) {
+            if (which == -1 || FLAG_IS_SET(__clib4->__signals_blocked, sigmask(SIGALRM))) {
                 break;
             }
         }
@@ -143,6 +145,7 @@ int itimer_real_task() {
     status = RETURN_OK;
 
 out:
+
     /* Free itimer objects */
     if (tmr_real_mp) {
         SHOWMSG("FreeSysObject ASOT_PORT");

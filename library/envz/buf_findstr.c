@@ -22,7 +22,7 @@ _buf_findstr(const char *str, char **buf, size_t *buf_len) {
     for (i = 0; i < (size_t) *buf_len; i++) {
         if (str[0] == (*buf)[i]) {
             j = i;
-            while (str[j - i] && (str[j - i] == (*buf)[j])) j++;
+            while (str[j - i] && j < *buf_len && (str[j - i] == (*buf)[j])) j++;
             if (str[j - i] == '\0') {
                 *buf += j;
                 *buf_len -= j;

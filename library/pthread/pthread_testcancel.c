@@ -42,9 +42,11 @@ pthread_testcancel(void) {
     ThreadInfo *inf;
 
     inf = GetCurrentThreadInfo();
+	if (inf == NULL)
+		return;
 
     if (inf && inf->canceled && (inf->cancelstate == PTHREAD_CANCEL_ENABLE))
         pthread_exit(PTHREAD_CANCELED);
 
-    SetSignal(SIGBREAKF_CTRL_C, 0);
+    SetSignal(0, inf->cancel_signal_mask);
 }

@@ -5,6 +5,9 @@
 
 #include "pthread.h"
 #include <sys/time.h>
+#include <utility/hooks.h>
+
+#define TLS_REGISTER "r2"
 
 #undef NEWLIST
 #define NEWLIST(_l)                                     \
@@ -27,13 +30,14 @@ do                                                      \
 
 enum threadState
 {
-    THREAD_STATE_IDLE 		= 0,
-    THREAD_STATE_RUNNING 	= 1,
-    THREAD_STATE_JOINING	= 2,
-    THREAD_STATE_TERMINATED	= 3,
-    THREAD_STATE_CANCELED	= 4,
-    THREAD_STATE_WAITING	= 5,
-    THREAD_STATE_DESTRUCT   = 6,
+    THREAD_STATE_IDLE 			= 0,
+    THREAD_STATE_RUNNING 		= 1,
+    THREAD_STATE_JOINING		= 2,
+    THREAD_STATE_TERMINATED		= 3,
+    THREAD_STATE_CANCELED		= 4,
+    THREAD_STATE_WAITING		= 5,
+    THREAD_STATE_DESTRUCT		= 6,
+	THREAD_STATE_TERMINATING	= 7
 };
 
 #define GetNodeName(node) ((struct Node *)node)->ln_Name
@@ -92,12 +96,40 @@ typedef struct {
     int canceled;
     int detached;
     char name[NAMELEN];
+    pthread_t thread_id;          /* My pthread_t ID assigned at creation */
+
+	int8_t cancel_signal;
+	uint32_t cancel_signal_mask;
+
+	/* Joiner support */
+    struct MinNode join_node;     /* Node for Joiners list */
+	pthread_t join_thread_id;     /* Which thread is this one waiting to join? (0 = not waiting) */
+    void *join_result;            /* Result passed from joined thread */
+	int8_t join_signal;            /* Signal allocated by joiner for wakeup */
+	uint32_t join_signal_mask;     /* Mask for join_signal */
+	volatile int can_exit;         /* Flag: pthread_join has cleaned up, thread can exit */
+
+    /*
+     * Exception hook for asynchronous signal delivery (AmigaOS4).
+     * When SIGBREAKF_CTRL_C is registered as an exception signal via
+     * SetExcept(), AmigaOS4 fires this hook even while the thread is
+     * executing non-blocking code (e.g. a tight while-loop). The hook
+     * dispatches pending POSIX signals or calls pthread_exit() for
+     * terminal signals, using the existing longjmp/setjmp mechanism.
+     */
+    struct Hook sig_except_hook;   /* Task exception hook structure */
+    struct Hook *sig_except_prev;  /* Previous hook to restore on thread exit */
 } ThreadInfo;
+
+struct newThreadMessage {
+	struct Message message;
+};
 
 extern struct Library *_DOSBase;
 extern struct DOSIFace *_IDOS;
 
 extern APTR thread_sem;
+extern struct MinList join_list; /* Global list of threads currently waiting to join */
 extern ThreadInfo threads[PTHREAD_THREADS_MAX];
 extern APTR tls_sem;
 extern TLSKey tlskeys[PTHREAD_KEYS_MAX];
@@ -122,5 +154,8 @@ int _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const 
 int _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst);
 
 extern int _pthread_concur;
+
+void set_tls_register(ThreadInfo *ti);
+ThreadInfo *get_tls_register(void);
 
 #endif

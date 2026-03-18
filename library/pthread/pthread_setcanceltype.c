@@ -45,6 +45,8 @@ pthread_setcanceltype(int type, int *oldtype) {
         return EINVAL;
 
     inf = GetCurrentThreadInfo();
+	if (inf == NULL)
+		return EINVAL;
 
     if (oldtype)
         *oldtype = inf->canceltype;

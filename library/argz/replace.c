@@ -18,7 +18,7 @@ _buf_findstr(const char *str, char **buf, size_t *buf_len) {
     for (i = 0; i < (size_t) *buf_len; i++) {
         if (str[0] == (*buf)[i]) {
             j = i;
-            while (str[j - i] && (str[j - i] == (*buf)[j]))
+            while (j < *buf_len && str[j - i] && (str[j - i] == (*buf)[j]))
                 j++;
             if (str[j - i] == '\0') {
                 *buf += j;
@@ -40,7 +40,7 @@ error_t
 argz_replace(char **argz, size_t *argz_len, const char *str, const char *with, unsigned *replace_count) {
     const size_t str_len = strlen(str);
     const size_t with_len = strlen(with);
-    const size_t len_diff = with_len - str_len;
+    const ssize_t len_diff = (ssize_t)with_len - (ssize_t)str_len;
 
     char *buf_iter = *argz;
     size_t buf_len = *argz_len;
@@ -61,6 +61,8 @@ argz_replace(char **argz, size_t *argz_len, const char *str, const char *with, u
 
     if (*replace_count) {
         new_argz = (char *) malloc(new_argz_len);
+        if (!new_argz)
+            return ENOMEM;
 
         buf_iter = *argz;
         buf_len = *argz_len;
@@ -83,8 +85,14 @@ argz_replace(char **argz, size_t *argz_len, const char *str, const char *with, u
         memcpy(new_argz_iter, last_iter, (size_t)(*argz + *argz_len - last_iter));
 
         /* reallocate argz, and copy over the new value. */
-        if (!(*argz = (char *) realloc(*argz, new_argz_len)))
-            return ENOMEM;
+        {
+            char *tmp = (char *) realloc(*argz, new_argz_len);
+            if (!tmp) {
+                free(new_argz);
+                return ENOMEM;
+            }
+            *argz = tmp;
+        }
 
         memcpy(*argz, new_argz, new_argz_len);
         *argz_len = new_argz_len;

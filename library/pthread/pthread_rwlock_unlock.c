@@ -42,9 +42,9 @@ pthread_rwlock_unlock(pthread_rwlock_t *lock) {
     if (lock == NULL)
         return EINVAL;
 
-    // initialize static rwlocks
+    // An uninitialized rwlock should not be silently initialized during unlock
     if (SemaphoreIsInvalid(lock->semaphore))
-        pthread_rwlock_init(lock, NULL);
+        return EINVAL;
 
     //if (!SemaphoreIsMine(&lock->semaphore))
     // if no one has obtained the semaphore don't unlock the rwlock

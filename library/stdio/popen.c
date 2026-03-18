@@ -65,6 +65,7 @@ popen(const char *command, const char *type) {
     unsigned long task_address;
     time_t now = 0;
     int i;
+	uint32 ret;
 
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -242,6 +243,7 @@ popen(const char *command, const char *type) {
     int asynch = TRUE; //FALSE
 
     /* Now try to launch the program. */
+	struct spawnData data = { getgid(), FindTask(NULL) };
     status = SystemTags((STRPTR) command,
                         SYS_Input,          input,
                         SYS_Output,         output,
@@ -252,21 +254,10 @@ popen(const char *command, const char *type) {
                         NP_StackSize,       2024*1024,
                         NP_Name,            command,
                         NP_EntryCode,       spawnedProcessEnter,
-                        NP_EntryData,       getgid(),
+                        NP_EntryData,       &data,
                         NP_ExitCode,        spawnedProcessExit,
                         NP_Child,           TRUE,
                         TAG_END);
-
-    uint32 ret;
-
-    /* If SYS_Asynch is FALSE, we need these. */
-
-    if (asynch == FALSE) {
-        Close(input);
-        Close(output);
-        // Close(error); ??
-    }
-
     /* If launching the program returned -1 then it could not be started.
        We'll need to close the I/O streams we opened above. */
 
@@ -283,6 +274,14 @@ popen(const char *command, const char *type) {
          */
         ret = IoErr(); // This is our ProcessID;
     }
+
+	/* If SYS_Asynch is FALSE, we need these. */
+	if (asynch == FALSE) {
+		Close(input);
+		Close(output);
+		// Close(error); ??
+	}
+
     /* OK, the program is running. Once it terminates, it will automatically
        shut down the streams we opened for it. */
     input = output = error = BZERO;
@@ -290,7 +289,7 @@ popen(const char *command, const char *type) {
     /* Now try to open the pipe we will use to exchange data with the program. */
     result = fopen(pipe_file_name, type);
 
-    if(result) {
+    if (result) {
         /* We need to mark this as a pipe */
         struct iob *file = (struct iob *) result;
         int f = file->iob_Descriptor;

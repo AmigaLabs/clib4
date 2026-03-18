@@ -51,7 +51,7 @@ redo:
         zW = nW = 0;
         for (i = 0; i < nops; i++) {
             n = ops[i].sem_num;
-            if (n < 0 || n > si->sem_nsems) {
+            if (n < 0 || n >= si->sem_nsems) {
                 __set_errno(EFBIG);
                 break;
             }

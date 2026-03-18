@@ -36,6 +36,11 @@ __aio_create_helper_thread(pthread_t *threadp, void *(*tf)(void *), void *arg, s
         AioThread aioThread;
         SHOWMSG("pthread created correctly");
         ThreadInfo *inf = GetThreadInfo(*threadp);
+        if (inf == NULL) {
+            ReleaseSemaphore(__aio_lock);
+            pthread_attr_destroy(&attr);
+            return EINVAL;
+        }
         aioThread.thread = inf->task;
         aioThread.aiocbp = aiocbp;
         aioThread.fileDes = aiocbp->aio_fildes;

@@ -30,8 +30,6 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
     assert(buffer != NULL);
     assert((int) num_bytes >= 0);
 
-    __stdio_lock(__clib4);
-
     if (buffer == NULL) {
         SHOWMSG("invalid buffer address");
 
@@ -41,7 +39,6 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
 
     assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
     assert(__clib4->__fd[file_descriptor] != NULL);
-    assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
 
     fd = __get_file_descriptor(__clib4, file_descriptor);
     if (fd == NULL) {
@@ -49,12 +46,14 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
         goto out;
     }
 
-    __fd_lock(fd);
+    __stdio_lock(__clib4);
+	__fd_lock(fd);
 
     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE) && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
         SHOWMSG("file descriptor is a closed PIPE");
 
-        __set_errno(SIGPIPE);
+        __set_errno(EPIPE);
+	    __fd_unlock(fd);
         goto out;
     }
 
@@ -62,8 +61,10 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
         SHOWMSG("file descriptor is not write-enabled");
 
         __set_errno_r(__clib4, EBADF);
+	    __fd_unlock(fd);
         goto out;
     }
+	__fd_unlock(fd);
 
     if (num_bytes > 0) {
         /* Check that we are not using a socket */
@@ -96,8 +97,6 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
     result = num_bytes_written;
 
 out:
-
-    __fd_unlock(fd);
     __stdio_unlock(__clib4);
 
     RETURN(result);

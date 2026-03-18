@@ -57,21 +57,15 @@ pthread_mutex_lock(pthread_mutex_t *mutex) {
         }
     }
 
-    // normal mutexes would simply deadlock here
-    if (mutex->kind == PTHREAD_MUTEX_ERRORCHECK) {
-        SHOWMSG("MutexAttempt");
-        BOOL isLocked = MutexAttempt(mutex->mutex);
-        if (!isLocked) {
-            SHOWMSG("DeadLock");
-            LEAVE();
-            return EDEADLK;
-        } else {
-            MutexRelease(mutex->mutex);
-        }
-    }
+	// ERRORCHECK mutexes return EDEADLK instead of deadlocking
+	if (mutex->kind == PTHREAD_MUTEX_ERRORCHECK && MutexIsMine(mutex)) {
+		LEAVE();
+		return EDEADLK;
+	}
 
     SHOWMSG("MutexObtain");
     MutexObtain(mutex->mutex);
+    mutex->owner = FindTask(NULL);
     SHOWMSG("Done");
 
     RETURN(0);

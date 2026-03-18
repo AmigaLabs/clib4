@@ -58,21 +58,19 @@ puts(const char *s) {
         goto out;
     }
 
-    __funlockfile_r(__clib4, stream);
-
     while ((c = (*s++)) != '\0') {
         if (__putc(__clib4, c, stream, buffer_mode) == EOF) {
+            __funlockfile_r(__clib4, stream);
             goto out;
         }
     }
 
     if (__putc(__clib4, '\n', stream, buffer_mode) == EOF) {
+        __funlockfile_r(__clib4, stream);
         goto out;
     }
 
     result = OK;
-
-out:
 
     /* Note: if buffering is disabled for this stream, then we still
        may have buffered data around, queued to be printed right now.
@@ -85,6 +83,10 @@ out:
             result = EOF;
         }
     }
+
+    __funlockfile_r(__clib4, stream);
+
+out:
 
     RETURN(result);
     return (result);

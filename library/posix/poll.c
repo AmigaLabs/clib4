@@ -37,6 +37,7 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
 
         struct fd *fd = __get_file_descriptor(__clib4, pCur->fd);
         if (fd == NULL) {
+            pCur->revents = POLLNVAL;
             continue;
         }
 
@@ -134,13 +135,12 @@ map_select_results(struct pollfd *pArray, unsigned long n_fds, fd_set *pReadSet,
         if (pCur->fd < 0)
             continue;
 
-        /* Exception events take priority over input events. */
         pCur->revents = 0;
         if (FD_ISSET(pCur->fd, pExceptSet)) {
             pCur->revents |= POLLPRI;
         }
 
-        else if (FD_ISSET(pCur->fd, pReadSet)) {
+        if (FD_ISSET(pCur->fd, pReadSet)) {
             pCur->revents |= POLLIN;
         }
 

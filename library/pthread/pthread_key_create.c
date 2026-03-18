@@ -42,8 +42,8 @@ pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
     TLSKey *tls;
     int i;
 
-    if (key == NULL)
-        return EINVAL;
+	if (key == NULL)
+		return EINVAL;
 
     MutexObtain(tls_sem);
 

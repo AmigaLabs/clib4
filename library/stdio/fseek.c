@@ -28,8 +28,6 @@ fseek(FILE *stream, long int offset, int wherefrom) {
         return (result);
     }
 
-    __flockfile_r(__clib4, stream);
-
     assert(__is_valid_iob(__clib4, file));
     assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
     assert(file->iob_BufferSize > 0);
@@ -61,6 +59,7 @@ fseek(FILE *stream, long int offset, int wherefrom) {
             wherefrom = SEEK_CUR;
         }
     }
+
 
     /* We have to clear the EOF condition */
     CLEAR_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
@@ -136,7 +135,6 @@ fseek(FILE *stream, long int offset, int wherefrom) {
 
 out:
 
-    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

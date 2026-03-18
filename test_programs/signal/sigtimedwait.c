@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
     timeout.tv_sec = 10;
     timeout.tv_nsec = 0;
 
- 	printf ("Waiting for %lld s and %ld ns or CTRL-C\n",timeout.tv_sec,timeout.tv_nsec);
+ 	printf ("Waiting for %ld s and %ld ns or CTRL-C\n",timeout.tv_sec,timeout.tv_nsec);
 
     int v =sigtimedwait(&mask, NULL, &timeout);
     if (errno == EAGAIN) {
