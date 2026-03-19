@@ -74,6 +74,7 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         .error = BZERO,
         /* Disable check abort at start */
         .__check_abort_enabled = FALSE,
+        .__exit_jmp_buf_valid = FALSE,
         .__break_signal_mask = SIGBREAKF_CTRL_C,
         ._errno = 0,
         .__shell_escape_character = '*',
