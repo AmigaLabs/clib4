@@ -147,8 +147,8 @@ CloseTimerDevice(struct IORequest *io) {
 
     if (!CheckIO(io)) {
         AbortIO(io);
-        WaitIO(io);
     }
+    WaitIO(io);
 
     if (io->io_Device != NULL)
         CloseDevice(io);

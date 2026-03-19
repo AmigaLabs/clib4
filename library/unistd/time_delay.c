@@ -62,8 +62,8 @@ __time_delay(ULONG timercmd, struct timeval *tv) {
         if (!CheckIO((struct IORequest *) timeRequest)) {
 	        /* If request is incomplete... */
         	AbortIO((struct IORequest *) timeRequest);  /* break it */
-	        WaitIO((struct IORequest *) timeRequest);
         }
+        WaitIO((struct IORequest *) timeRequest);
         if (signals & __clib4->_interrupting_alarm_signal) {
             SHOWMSG("Received __clib4->_interrupting_alarm_signal");
             /* Return EINTR since the request has been interrupted by alarm */

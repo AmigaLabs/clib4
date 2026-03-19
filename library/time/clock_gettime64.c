@@ -28,7 +28,7 @@ clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
     DECLARE_TIMEZONEBASE_R(__clib4);
 
     struct timeval tv;
-    uint32 gmtoffset = 0;
+    int32 gmtoffset = 0;
     int8 dstime = -1;
 
     //Set default value for tv
@@ -63,6 +63,16 @@ clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
         tv.tv_sec += (2922 * 24 * 60 + gmtoffset) * 60;
         tr.tv_sec = tv.tv_sec;
         tr.tv_nsec = tv.tv_usec * 1000;
+    }
+
+    /* Normalize: ensure tv_nsec is in [0, 999999999] range */
+    if (tr.tv_nsec >= 1000000000L) {
+        tr.tv_sec += tr.tv_nsec / 1000000000L;
+        tr.tv_nsec = tr.tv_nsec % 1000000000L;
+    }
+    if (tr.tv_nsec < 0) {
+        tr.tv_sec--;
+        tr.tv_nsec += 1000000000L;
     }
 
     /* And then convert it to a 64bit timespec */
