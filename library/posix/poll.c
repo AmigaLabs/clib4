@@ -56,16 +56,21 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
             FD_SET(pCur->fd, pExceptSet);
         }
 
+        /* Always set FDF_POLL so that select_signal knows this descriptor
+           is under poll control and does not call ExamineObjectTags on
+           something that is not a real file. */
+        SET_FLAG(fd->fd_Flags, FDF_POLL);
+
         if (fd->fd_File >= STDIN_FILENO && fd->fd_File <= STDERR_FILENO) {
             if (fd->fd_File == STDIN_FILENO) {
                 BPTR file = __resolve_fd_file(fd);
                 if (file != BZERO)
                     SetMode(file, DOSTRUE);
 
-                SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ | FDF_NON_BLOCKING | FDF_IS_INTERACTIVE);
+                SET_FLAG(fd->fd_Flags, FDF_READ | FDF_NON_BLOCKING | FDF_IS_INTERACTIVE);
             }
             else {
-                SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_WRITE | FDF_IS_INTERACTIVE);
+                SET_FLAG(fd->fd_Flags, FDF_WRITE | FDF_IS_INTERACTIVE);
             }
         }
 
