@@ -94,11 +94,14 @@ _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOO
 
 static void timespec_sub(struct timespec *ts1, const struct timespec *ts2, const struct timespec *ts3) {
     ts1->tv_sec = ts2->tv_sec - ts3->tv_sec;
-    if (ts2->tv_nsec < ts3->tv_nsec) {
+    ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec;
+    while (ts1->tv_nsec < 0) {
         ts1->tv_sec--;
-        ts1->tv_nsec = 1000000000L + ts2->tv_nsec - ts3->tv_nsec;
-    } else {
-        ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec;
+        ts1->tv_nsec += 1000000000L;
+    }
+    while (ts1->tv_nsec >= 1000000000L) {
+        ts1->tv_sec++;
+        ts1->tv_nsec -= 1000000000L;
     }
 }
 
@@ -205,12 +208,35 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         // prepare the device command and send it
         timerio.Request.io_Command = TR_ADDREQUEST;
         timerio.Request.io_Flags = 0;
+        timerio.Time.Seconds = 0;
+        timerio.Time.Microseconds = 0;
         if (!relative) {
             struct timespec starttime;
             struct timespec endtime;
             // absolute time has to be converted to relative
+            // First normalize abstime in case tv_nsec is out of range
+            // (e.g. 32-bit overflow from caller's arithmetic)
+            struct timespec normabs = *abstime;
+            // Use unsigned arithmetic to correctly handle 32-bit signed overflow.
+            // When a caller does tv_nsec += ms * 1000000 and the result exceeds
+            // INT32_MAX, the signed value wraps negative. Casting to unsigned long
+            // recovers the mathematically correct (pre-overflow) value.
+            {
+                unsigned long uns_nsec = (unsigned long)normabs.tv_nsec;
+                normabs.tv_sec += (long)(uns_nsec / 1000000000UL);
+                normabs.tv_nsec = (long)(uns_nsec % 1000000000UL);
+            }
             clock_gettime(clock_type, &starttime);
-            timespec_sub(&endtime, abstime, &starttime);
+            timespec_sub(&endtime, &normabs, &starttime);
+            // Normalize tv_nsec to [0, 999999999] range
+            if (endtime.tv_nsec >= 1000000000L) {
+                endtime.tv_sec += endtime.tv_nsec / 1000000000L;
+                endtime.tv_nsec = endtime.tv_nsec % 1000000000L;
+            }
+            if (endtime.tv_nsec < 0) {
+                endtime.tv_sec--;
+                endtime.tv_nsec += 1000000000L;
+            }
             // Check if the time is already in the past
             if (endtime.tv_sec < 0 || (endtime.tv_sec == 0 && endtime.tv_nsec <= 0)) {
                 CloseTimerDevice((struct IORequest *) &timerio);
@@ -234,7 +260,7 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     signal = AllocSignal(-1);
     if (signal == -1) {
         signal = SIGB_COND_FALLBACK;
-        SetSignal(SIGF_COND_FALLBACK, 0);
+        SetSignal(0, SIGF_COND_FALLBACK);
     }
     waiter.sigbit = signal;
     sigs |= 1 << waiter.sigbit;

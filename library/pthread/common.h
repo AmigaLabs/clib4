@@ -9,6 +9,8 @@
 
 #define TLS_REGISTER "r2"
 
+#define TLS_REGISTER "r2"
+
 #undef NEWLIST
 #define NEWLIST(_l)                                     \
 do                                                      \
