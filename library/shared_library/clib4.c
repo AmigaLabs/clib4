@@ -405,6 +405,31 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     uint32 pid;
     if (res) {
+        /*
+         * Check if this process already has a valid _clib4 context.
+         * This happens when a .so loaded via dlopen() calls OpenLibrary("clib4.library")
+         * a second time.  We must NOT create a new context — that would overwrite pr_UID,
+         * orphan the original _clib4 (with its initialised stdio buffers), and cause a
+         * crash the next time the main programme calls printf/puts/etc.
+         */
+        struct Process *_me = (struct Process *) IExec->FindTask(NULL);
+        if (_me->pr_Task.tc_Node.ln_Type == NT_PROCESS && _me->pr_UID != 0) {
+            struct _clib4 *existing = (struct _clib4 *) _me->pr_UID;
+            if (existing->__fully_initialized) {
+                D(bug("(libOpen) Process already has a valid _clib4 (%p) — reusing it\n", existing));
+                existing->__lib_open_count++;
+                if (IExpansion != NULL) {
+                    IExec->DropInterface((struct Interface *) IExpansion);
+                    IExpansion = NULL;
+                }
+                if (ExpansionBase != NULL) {
+                    IExec->CloseLibrary(ExpansionBase);
+                    ExpansionBase = NULL;
+                }
+                return libBase;
+            }
+        }
+
         struct Clib4Node c2n;
         pid = IDOS->GetPID(0, GPID_PROCESS);
         uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
@@ -570,6 +595,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
             /* At this point exe is fully initialized */
             __clib4->__fully_initialized = TRUE;
+            __clib4->__lib_open_count = 1;
             SHOWMSG("Library initialized");
         }
     }
@@ -642,6 +668,20 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         struct Task *t = IExec->FindTask(NULL);
         D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
 
+        /*
+         * If the per-process open count is > 1, this is a secondary close
+         * (e.g. libc.so being unloaded via dlclose while the main programme is
+         * still running).  Just decrement the count and skip the teardown.
+         */
+        if (__clib4->__lib_open_count > 1) {
+            D(bug("(libClose) Secondary close — open_count %d -> %d, skipping teardown\n",
+                  __clib4->__lib_open_count, __clib4->__lib_open_count - 1));
+            __clib4->__lib_open_count--;
+            --libBase->libNode.lib_OpenCnt;
+            return 0;
+        }
+        __clib4->__lib_open_count = 0;
+
         /* Call external destructors only for -nostartfiles executables
          * Detection: call_main() sets __call_main_executed to TRUE for normal executables
          * For -nostartfiles executables, this flag remains FALSE and we need to call destructors here
@@ -683,6 +723,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         }
 
         SHOWMSG("Calling reent_exit on _clib4");
+        __clib4->__fully_initialized = FALSE;
         reent_exit(__clib4);
         SHOWMSG("Done");
 
@@ -699,6 +740,15 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
                 break;
             }
         }
+
+        /*
+         * Clear pr_UID and free the _clib4 struct so the next process
+         * (or re-run from the same shell) does not find a stale pointer.
+         * Without this, the next libOpen() would see __fully_initialized
+         * still TRUE in freed memory and skip creating a new context.
+         */
+        me->pr_UID = 0;
+        IExec->FreeVec(__clib4);
     }
 
     --libBase->libNode.lib_OpenCnt;

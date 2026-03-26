@@ -565,6 +565,7 @@ struct _clib4 {
     char resolv_search[256];
 
     BOOL __exit_jmp_buf_valid;
+    int   __lib_open_count;      /* per-process OpenLibrary reference count */
 };
 
 #ifndef __getClib4
