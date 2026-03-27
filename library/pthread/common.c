@@ -98,8 +98,14 @@ ThreadInfo *GetCurrentThreadInfo() {
 pthread_t GetThreadId(struct Task *task) {
     pthread_t i;
 
-    // 0 is main task, First thread id will be 1 so that it is different than default value of pthread_t
-    for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
+    /* When searching for an empty slot (task==NULL), start from
+     * PTHREAD_FIRST_THREAD_ID to preserve slot 0 for the main thread.
+     * When searching for a specific task, start from 0 so that the main
+     * thread stored in threads[0] can also be found (e.g. pthread_self()
+     * called from main). */
+    pthread_t start = (task == NULL) ? PTHREAD_FIRST_THREAD_ID : 0;
+
+    for (i = start; i < PTHREAD_THREADS_MAX; i++) {
         if (threads[i].task == (struct Process *) task) {
             /* When searching for an empty slot (task==NULL), also require IDLE status
              * to skip slots that are being set up by another concurrent pthread_create */

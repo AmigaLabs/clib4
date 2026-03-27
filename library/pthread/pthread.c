@@ -83,9 +83,15 @@ _pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr, BOO
 
     SHOWMSG("Allocating mutex");
     mutex->mutex = AllocSysObjectTags(ASOT_MUTEX, ASOMUTEX_Recursive, recursive, TAG_DONE);
-	mutex->owner = NULL;
     SHOWPOINTER(mutex->mutex);
+    /* Check for allocation failure — NULL return on OOM would crash on
+     * subsequent MutexObtain(NULL). */
+    if (mutex->mutex == NULL) {
+        LEAVE();
+        return ENOMEM;
+    }
 
+	mutex->owner = NULL;
     mutex->incond = 0;
 
     LEAVE();
@@ -103,6 +109,27 @@ static void timespec_sub(struct timespec *ts1, const struct timespec *ts2, const
         ts1->tv_sec++;
         ts1->tv_nsec -= 1000000000L;
     }
+}
+
+static void CondWaitCleanupHandler(void *arg) {
+    CondWaitCleanup *ctx = (CondWaitCleanup *) arg;
+
+    /* Remove the waiter node from the condvar's list */
+    ObtainSemaphore(ctx->cond->semaphore);
+    Remove((struct Node *) ctx->waiter);
+    ReleaseSemaphore(ctx->cond->semaphore);
+
+    /* Free the signal bit */
+    if (ctx->waiter->sigbit != SIGB_COND_FALLBACK)
+        FreeSignal(ctx->waiter->sigbit);
+
+    /* Abort and clean up timer if active */
+    if (ctx->timerio != NULL)
+        CloseTimerDevice(ctx->timerio);
+
+    /* POSIX: mutex must be re-acquired when cancelled during cond_wait */
+    pthread_mutex_lock(ctx->mutex);
+    ctx->mutex->incond--;
 }
 
 int
@@ -194,9 +221,13 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         return EINVAL;
     }
 
-    // initialize static conditions
-    if (SemaphoreIsInvalid(cond->semaphore))
-        pthread_cond_init(cond, NULL);
+    // initialize static conditions (double-check under lock)
+    if (SemaphoreIsInvalid(cond->semaphore)) {
+        MutexObtain(thread_sem);
+        if (SemaphoreIsInvalid(cond->semaphore))
+            pthread_cond_init(cond, NULL);
+        MutexRelease(thread_sem);
+    }
 
     task = FindTask(NULL);
     if (abstime) {
@@ -271,7 +302,19 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     // wait for the condition to be signalled or the timeout
     mutex->incond++;
     pthread_mutex_unlock(mutex);
+
+    // Push cancellation cleanup to remove waiter node if thread is cancelled during Wait
+    CondWaitCleanup cleanup_ctx;
+    cleanup_ctx.cond = cond;
+    cleanup_ctx.mutex = mutex;
+    cleanup_ctx.waiter = &waiter;
+    cleanup_ctx.timerio = abstime ? (struct IORequest *) &timerio : NULL;
+    pthread_cleanup_push(CondWaitCleanupHandler, &cleanup_ctx);
+
     sigs = Wait(sigs);
+
+    pthread_cleanup_pop(0); // don't execute — we handle cleanup below
+
     pthread_mutex_lock(mutex);
     mutex->incond--;
     // remove the node from the list
@@ -312,9 +355,13 @@ _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
     if (cond == NULL)
         return EINVAL;
 
-    // initialize static conditions
-    if (SemaphoreIsInvalid(cond->semaphore))
-        pthread_cond_init(cond, NULL);
+    // initialize static conditions (double-check under lock)
+    if (SemaphoreIsInvalid(cond->semaphore)) {
+        MutexObtain(thread_sem);
+        if (SemaphoreIsInvalid(cond->semaphore))
+            pthread_cond_init(cond, NULL);
+        MutexRelease(thread_sem);
+    }
 
     // signal the waiting threads
     ObtainSemaphore(cond->semaphore);
@@ -407,7 +454,9 @@ void __pthread_exit_func(void) {
             while (inf->task)
                 Delay(1);
         } else {
-            if (inf->status == THREAD_STATE_RUNNING)
+            /* Join any non-idle joinable thread, not just RUNNING.
+             * Threads in JOINING/WAITING/TERMINATING states also need cleanup. */            
+            if (inf->status == THREAD_STATE_IDLE)
                 pthread_join(i, NULL);
         }
     }

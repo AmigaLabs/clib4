@@ -15,7 +15,7 @@ static int SemaphoreIsMine(struct SignalSemaphore *sem) {
 void
 __stdio_lock_real(struct _clib4 *__clib4) {
     if (__clib4->stdio_lock != NULL)
-        ObtainSemaphoreShared(__clib4->stdio_lock);
+	ObtainSemaphore(__clib4->stdio_lock);
 }
 
 void
@@ -39,7 +39,7 @@ void __stdio_unlock_special(char const *caller_name, struct _clib4 *__clib4)
 void
 __stdio_lock(struct _clib4 *__clib4) {
 	if (__clib4->stdio_lock != NULL)
-		ObtainSemaphoreShared(__clib4->stdio_lock);
+		ObtainSemaphore(__clib4->stdio_lock);
 }
 
 void

@@ -92,7 +92,7 @@ typedef struct {
     struct MinList cleanup;
     int cancelstate;
     int canceltype;
-    int canceled;
+    volatile int canceled;
     int detached;
     char name[NAMELEN];
     pthread_t thread_id;          /* My pthread_t ID assigned at creation */
@@ -112,6 +112,14 @@ typedef struct {
 struct newThreadMessage {
 	struct Message message;
 };
+
+/* Cleanup context for cond_wait cancellation */
+typedef struct {
+    pthread_cond_t *cond;
+    pthread_mutex_t *mutex;
+    CondWaiter *waiter;
+    struct IORequest *timerio;  /* NULL if no timer active */
+} CondWaitCleanup;
 
 extern struct Library *_DOSBase;
 extern struct DOSIFace *_IDOS;

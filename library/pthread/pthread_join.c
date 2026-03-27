@@ -87,17 +87,20 @@ pthread_join(pthread_t thread, void **value_ptr) {
 
     /* Wait for thread to finish */
     if (me) {
-        /* Clear any stale signal on the join bit before entering the wait loop.
-         * This prevents false immediate returns from signals left over by
-         * previous join operations or NP_Child process death notifications. */
-        SetSignal(0, me->join_signal_mask);
-
         for (;;) {
             /* Check status under lock BEFORE calling Wait().
              * This closes the race window where the target finishes and signals
              * us between the MutexRelease above (or a loop iteration) and Wait().
-             * Without this check, the signal could be lost (consumed by SetSignal
-             * or a prior spurious wake), leaving us stuck in Wait() forever. */
+             * Without this check, the signal could be lost, leaving us stuck
+             * in Wait() forever.
+             *
+             * NOTE: We do NOT call SetSignal(0, join_signal_mask) here.
+             * Doing so would destroy signals sent by other threads that already
+             * finished (e.g. threads 1..4 all signaling while we are joining
+             * thread 0), causing the subsequent joins to block forever waiting
+             * for a signal that was already consumed and then wiped out. The
+             * check-before-wait pattern below is sufficient to avoid spurious
+             * blocks without discarding valid pending signals. */
             MutexObtain(thread_sem);
             D(("pthread_join[%ld]: checking status=%d\n", thread, inf->status));
 
