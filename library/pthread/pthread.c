@@ -455,8 +455,8 @@ void __pthread_exit_func(void) {
                 Delay(1);
         } else {
             /* Join any non-idle joinable thread, not just RUNNING.
-             * Threads in JOINING/WAITING/TERMINATING states also need cleanup. */            
-            if (inf->status == THREAD_STATE_IDLE)
+             * Threads in JOINING/WAITING/TERMINATING states also need cleanup. */
+            if (inf->status != THREAD_STATE_IDLE)
                 pthread_join(i, NULL);
         }
     }

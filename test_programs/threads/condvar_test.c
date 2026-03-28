@@ -1,15 +1,15 @@
 /*
  * clib4_condvar_test.c
  *
- * Riproduce esattamente il pattern usato da PowerFox durante lo shutdown:
- *   - Main thread: pthread_cond_wait senza timeout (come nsEventQueue)
- *   - Timer thread: pthread_cond_timedwait + signal (come TimerThread)
- *   - PR_Sleep simulation: timedwait su cond dummy
+ * Reproduces exactly the pattern used by PowerFox during shutdown:
+ *   - Main thread: pthread_cond_wait without timeout (like nsEventQueue)
+ *   - Timer thread: pthread_cond_timedwait + signal (like TimerThread)
+ *   - PR_Sleep simulation: timedwait on dummy cond
  *
- * Compila: gcc -o clib4_condvar_test clib4_condvar_test.c -lpthread
- * Esegui : ./clib4_condvar_test
+ * Build: gcc -o clib4_condvar_test clib4_condvar_test.c -lpthread
+ * Run  : ./clib4_condvar_test
  *
- * Tutti i test devono completarsi. Se un test si blocca, quella e' la root cause.
+ * All tests must complete. If a test hangs, that is the root cause.
  */
 
 #include <pthread.h>
@@ -60,9 +60,9 @@ static void fail(const char *name, const char *reason)
 }
 
 /* ==================================================================
- * TEST 1: pthread_cond_timedwait deve tornare ETIMEDOUT
+ * TEST 1: pthread_cond_timedwait must return ETIMEDOUT
  *
- * Simula: PR_Sleep(25ms) / PR_Sleep(500ms) / WaitForAll timeout
+ * Simulates: PR_Sleep(25ms) / PR_Sleep(500ms) / WaitForAll timeout
  * ================================================================== */
 static void test_timedwait_timeout(const char *name, int timeout_ms)
 {
@@ -103,10 +103,10 @@ static void test_timedwait_timeout(const char *name, int timeout_ms)
 }
 
 /* ==================================================================
- * TEST 2: pthread_cond_wait svegliato da pthread_cond_signal
+ * TEST 2: pthread_cond_wait woken up by pthread_cond_signal
  *
- * Simula: nsEventQueue::GetEvent(true) svegliato da PutEvent()
- *         (equivalente a AsyncShutdown spinner svegliato dal bailout timer)
+ * Simulates: nsEventQueue::GetEvent(true) woken up by PutEvent()
+ *            (equivalent to AsyncShutdown spinner woken up by the bailout timer)
  * ================================================================== */
 typedef struct { pthread_mutex_t m; pthread_cond_t c; volatile int v; int delay_ms; } t2_state;
 
@@ -161,18 +161,18 @@ static void test_signal_wakes_wait(const char *name, int delay_ms)
 }
 
 /* ==================================================================
- * TEST 3: Simula exactamente TimerThread + main event queue
+ * TEST 3: Simulates exactly TimerThread + main event queue
  *
- * Il timer thread:
- *   - dorme indefinitamente finche' non arriva un timer (pthread_cond_wait)
- *   - quando ha un timer, dorme con timedwait per N ms
- *   - allo scadere, posta un evento nella coda del main thread
+ * The timer thread:
+ *   - sleeps indefinitely until a timer arrives (pthread_cond_wait)
+ *   - when it has a timer, sleeps with timedwait for N ms
+ *   - when it expires, posts an event to the main thread's queue
  *
- * Il main thread:
- *   - aspetta sulla coda principale senza timeout (pthread_cond_wait)
- *   - si sveglia quando il timer thread posta l'evento
+ * The main thread:
+ *   - waits on the main queue without timeout (pthread_cond_wait)
+ *   - wakes up when the timer thread posts the event
  *
- * Questo e' esattamente cio' che non funziona durante lo shutdown di PowerFox.
+ * This is exactly what fails during PowerFox shutdown.
  * ================================================================== */
 typedef struct {
     /* main event queue */
@@ -183,7 +183,7 @@ typedef struct {
     /* timer thread control */
     pthread_mutex_t timer_lock;
     pthread_cond_t  timer_cond;
-    volatile int    timer_next_ms;   /* 0 = nessun timer schedulato */
+    volatile int    timer_next_ms;   /* 0 = no timer scheduled */
     volatile int    timer_shutdown;
 } t3_state;
 
@@ -220,7 +220,7 @@ static void* t3_timer_thread(void *arg)
     while (1) {
         pthread_mutex_lock(&s->timer_lock);
 
-        /* Aspetta un timer da schedulare (come TimerThread con nessun timer) */
+        /* Wait for a timer to be scheduled (like TimerThread with no timer) */
         while (s->timer_next_ms == 0 && !s->timer_shutdown) {
             pthread_cond_wait(&s->timer_cond, &s->timer_lock);
         }
@@ -232,7 +232,7 @@ static void* t3_timer_thread(void *arg)
         s->timer_next_ms = 0;
         pthread_mutex_unlock(&s->timer_lock);
 
-        /* Dorme fino alla scadenza del timer con timedwait */
+        /* Sleep until timer expiry using timedwait */
         struct timespec deadline;
         clock_gettime(CLOCK_REALTIME, &deadline);
         ts_add_ms(&deadline, delay);
@@ -242,10 +242,10 @@ static void* t3_timer_thread(void *arg)
         pthread_mutex_unlock(&s->timer_lock);
 
         if (rv == ETIMEDOUT) {
-            /* Il timer e' scaduto: posta evento al main thread */
+            /* Timer expired: post event to the main thread */
             t3_queue_post(s);
         }
-        /* se rv == 0: il timer e' stato cancellato/sostituito */
+        /* if rv == 0: the timer was cancelled/replaced */
     }
     return NULL;
 }
@@ -271,10 +271,10 @@ static void test_timer_to_main_queue(const char *name, int timer_ms, int iterati
         t3_schedule(&s, timer_ms);
 
         /*
-         * Aspetta sulla coda SENZA timeout — esattamente come
-         * AsyncShutdown.jsm Spinner con processNextEvent(true).
-         * Se il timer thread non sveglia il main thread, questo BLOCCA.
-         * Usiamo una safety net con timedwait a 5s per non bloccare il test.
+         * Wait on the queue WITHOUT timeout — exactly like
+         * AsyncShutdown.jsm Spinner with processNextEvent(true).
+         * If the timer thread does not wake the main thread, this BLOCKS.
+         * We use a safety net with timedwait at 5s to avoid blocking the test.
          */
         pthread_mutex_lock(&s.main_lock);
         int got = 0;
@@ -319,15 +319,15 @@ static void test_timer_to_main_queue(const char *name, int timer_ms, int iterati
 }
 
 /* ==================================================================
- * TEST 4: pthread_cond_signal inviato PRIMA che il waiter entri in wait
- *         (race classica — deve funzionare grazie al mutex)
+ * TEST 4: pthread_cond_signal sent BEFORE the waiter enters wait
+ *         (classic race — must work correctly thanks to the mutex)
  * ================================================================== */
 typedef struct { pthread_mutex_t m; pthread_cond_t c; volatile int v; } t4_state;
 
 static void* t4_early_signaler(void *arg)
 {
     t4_state *s = (t4_state *)arg;
-    /* Segnala immediatamente, senza aspettare il waiter */
+    /* Signal immediately, without waiting for the waiter */
     pthread_mutex_lock(&s->m);
     s->v = 1;
     pthread_cond_signal(&s->c);
@@ -340,18 +340,18 @@ static void test_signal_before_wait(const char *name)
     t4_state s = { PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0 };
     pthread_t t;
 
-    /* Il signaler gira prima, posta il segnale prima che il main entri in wait */
+    /* The signaler runs first, posts the signal before main enters wait */
     pthread_create(&t, NULL, t4_early_signaler, &s);
-    pthread_join(t, NULL);  /* Assicurati che abbia segnalato */
+    pthread_join(t, NULL);  /* Make sure it has signaled */
 
-    /* Il main controlla lo stato prima di aspettare — questo e' il pattern
-     * corretto con mutex (il segnale non va perso se il lock e' usato bene) */
+    /* Main checks the state before waiting — this is the correct pattern
+     * with mutex (the signal is not lost if the lock is used properly) */
     pthread_mutex_lock(&s.m);
-    /* s.v deve essere gia' 1, quindi non entriamo nel wait */
+    /* s.v should already be 1, so we do not enter the wait */
     int waited = 0;
     if (!s.v) {
         waited = 1;
-        /* Questo non dovrebbe succedere se il signaler ha acquistato il mutex correttamente */
+        /* This should not happen if the signaler acquired the mutex correctly */
         struct timespec deadline;
         clock_gettime(CLOCK_REALTIME, &deadline);
         ts_add_ms(&deadline, 2000);
@@ -372,12 +372,12 @@ static void test_signal_before_wait(const char *name)
 }
 
 /* ==================================================================
- * TEST 5: PR_Sleep simulation (timedwait su dummy mutex/cond)
- *         Esattamente come NSPR implementa PR_Sleep su clib4.
+ * TEST 5: PR_Sleep simulation (timedwait on dummy mutex/cond)
+ *         Exactly how NSPR implements PR_Sleep on clib4.
  * ================================================================== */
 static void test_pr_sleep_simulation(const char *name, int sleep_ms)
 {
-    /* NSPR alloca un mutex e condvar temporanei per PR_Sleep */
+    /* NSPR allocates temporary mutex and condvar for PR_Sleep */
     pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
     pthread_cond_t  c = PTHREAD_COND_INITIALIZER;
 
@@ -411,7 +411,7 @@ static void test_pr_sleep_simulation(const char *name, int sleep_ms)
 }
 
 /* ==================================================================
- * TEST 6: pthread_join dopo exit del thread
+ * TEST 6: pthread_join after thread exit
  * ================================================================== */
 static void* t6_quick_exit(void *arg) { (void)arg; return NULL; }
 static void* t6_delayed_exit(void *arg)
@@ -456,29 +456,29 @@ int main(void)
     printf("=== PowerFox / clib4 condvar & pthread shutdown test ===\n\n");
 
     /* --- Test 1: timedwait timeout --- */
-    printf("[Test 1] pthread_cond_timedwait deve tornare ETIMEDOUT\n");
+    printf("[Test 1] pthread_cond_timedwait must return ETIMEDOUT\n");
     test_timedwait_timeout("timedwait_25ms",  25);
     test_timedwait_timeout("timedwait_500ms", 500);
     test_timedwait_timeout("timedwait_2s",    2000);
     printf("\n");
 
     /* --- Test 2: cond_signal sveglia cond_wait --- */
-    printf("[Test 2] pthread_cond_signal sveglia pthread_cond_wait (no timeout)\n");
+    printf("[Test 2] pthread_cond_signal wakes up pthread_cond_wait (no timeout)\n");
     test_signal_wakes_wait("signal_wakes_wait_100ms",  100);
     test_signal_wakes_wait("signal_wakes_wait_500ms",  500);
     test_signal_wakes_wait("signal_wakes_wait_1000ms", 1000);
     printf("\n");
 
-    /* --- Test 3: TimerThread + main event queue (scenario reale) --- */
-    printf("[Test 3] Simulazione TimerThread -> main event queue\n");
-    printf("         (esatto pattern di PowerFox shutdown)\n");
+    /* --- Test 3: TimerThread + main event queue (real scenario) --- */
+    printf("[Test 3] TimerThread -> main event queue simulation\n");
+    printf("         (exact PowerFox shutdown pattern)\n");
     test_timer_to_main_queue("timer_queue_500ms_x5",  500, 5);
     test_timer_to_main_queue("timer_queue_100ms_x20", 100, 20);
     test_timer_to_main_queue("timer_queue_50ms_x50",   50, 50);
     printf("\n");
 
-    /* --- Test 4: signal prima del wait --- */
-    printf("[Test 4] Signal inviato prima del wait (race con mutex)\n");
+    /* --- Test 4: signal before wait --- */
+    printf("[Test 4] Signal sent before wait (race with mutex)\n");
     test_signal_before_wait("signal_before_wait");
     printf("\n");
 
@@ -495,20 +495,20 @@ int main(void)
     test_pthread_join("join_after_500ms", 500);
     printf("\n");
 
-    /* --- Risultato --- */
-    printf("=== Risultato: %d failure(s) ===\n", g_failures);
+    /* --- Result --- */
+    printf("=== Result: %d failure(s) ===\n", g_failures);
     if (g_failures == 0) {
         printf("%sAll tests PASSED%s\n", COL_GREEN, COL_RESET);
     } else {
         printf("%s%d test(s) FAILED%s\n", COL_RED, g_failures, COL_RESET);
-        printf("\nSuggerimento per debug clib4:\n");
-        printf("  - Se Test 1/5 fallisce: pthread_cond_timedwait non tornano al timeout\n");
-        printf("    -> controlla _pt_TimedWait in nspr/pr/src/pthreads/ptsynch.c\n");
-        printf("    -> controlla clock_gettime(CLOCK_REALTIME) in clib4\n");
-        printf("  - Se Test 2/3 fallisce: pthread_cond_signal non sveglia il waiter\n");
-        printf("    -> controlla pthread_cond_signal in clib4\n");
-        printf("    -> potrebbe essere un problema di spurious wakeup handling\n");
-        printf("  - Se Test 3 fallisce intermittentemente: race condition nel condvar\n");
+        printf("\nDebugging hints for clib4:\n");
+        printf("  - If Test 1/5 fails: pthread_cond_timedwait does not return on timeout\n");
+        printf("    -> check _pt_TimedWait in nspr/pr/src/pthreads/ptsynch.c\n");
+        printf("    -> check clock_gettime(CLOCK_REALTIME) in clib4\n");
+        printf("  - If Test 2/3 fails: pthread_cond_signal does not wake the waiter\n");
+        printf("    -> check pthread_cond_signal in clib4\n");
+        printf("    -> could be a spurious wakeup handling issue\n");
+        printf("  - If Test 3 fails intermittently: race condition in condvar\n");
     }
     return g_failures ? 1 : 0;
 }

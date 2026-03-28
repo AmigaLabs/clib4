@@ -211,10 +211,12 @@ StarterFunc() {
     if (inf->cancel_signal != -1 && inf->cancel_signal != SIGBREAKB_CTRL_C) {
         FreeSignal(inf->cancel_signal);
         inf->cancel_signal = -1;
+        inf->cancel_signal_mask = 0;
     }
     if (inf->join_signal != -1 && inf->join_signal != SIGB_PARENT) {
         FreeSignal(inf->join_signal);
         inf->join_signal = -1;
+        inf->join_signal_mask = 0;
     }
             
     /* NOW acquire thread_sem to atomically set DESTRUCT and search for joiner */

@@ -20,7 +20,7 @@ __stdio_lock_real(struct _clib4 *__clib4) {
 
 void
 __stdio_unlock_real(struct _clib4 *__clib4) {
-	if (__clib4->stdio_lock != NULL && SemaphoreIsMine(__clib4->stdio_lock))
+	if (__clib4->stdio_lock != NULL)
 		ReleaseSemaphore(__clib4->stdio_lock);
 }
 
@@ -44,7 +44,7 @@ __stdio_lock(struct _clib4 *__clib4) {
 
 void
 __stdio_unlock(struct _clib4 *__clib4) {
-	if (__clib4->stdio_lock != NULL && SemaphoreIsMine(__clib4->stdio_lock))
+	if (__clib4->stdio_lock != NULL)
 		ReleaseSemaphore(__clib4->stdio_lock);
 }
 #endif
