@@ -23,7 +23,9 @@ vprintf(const char *format, va_list arg) {
         goto out;
     }
 
+    __flockfile_r(__clib4, __stdout_r(__clib4));
     result = __vfprintf_r(__clib4, __stdout_r(__clib4), format, arg);
+    __funlockfile_r(__clib4, __stdout_r(__clib4));
 
 out:
 

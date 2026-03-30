@@ -103,6 +103,13 @@ StarterFunc() {
 
     D(("StarterFunc: thread %s STARTING (task=%p inf=%p)\n", inf->name, startedTask, inf));
 
+    /* Set task pointer immediately so that pthread_self() and
+     * GetCurrentThreadInfo() work before the parent's pthread_create
+     * has returned and assigned inf->task.  Without this, a fast child
+     * can call pthread_self()/pthread_join() while inf->task is still
+     * NULL, causing GetThreadId to fail or match a stale slot. */
+    inf->task = startedTask;
+
     // set task TLS register
     set_tls_register(inf);
 
@@ -228,6 +235,15 @@ StarterFunc() {
         // tell the parent thread that we are done
         D(("StarterFunc: thread %s not detached, looking for joiner\n", inf->name));
         inf->status = THREAD_STATE_DESTRUCT;
+
+        /* Clear task pointer to prevent ABA false matches.
+         * After the process exits, the OS may reuse the Process struct
+         * memory for a newly created thread.  If this slot still held
+         * the old pointer, GetThreadId / GetCurrentThreadInfo could
+         * match the stale entry, returning the wrong ThreadInfo and
+         * corrupting the join_list (leading to infinite-loop deadlock).
+         * The joiner identifies us by thread_id, not task pointer. */
+        inf->task = NULL;
 
         /* Find who is waiting to join with us */
         ThreadInfo *joiner = NULL;

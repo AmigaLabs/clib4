@@ -74,20 +74,26 @@ ThreadInfo *get_tls_register(void) {
 
 ThreadInfo *GetCurrentThreadInfo() {
     ThreadInfo *inf = __tls_reg;
+    struct Task *task = FindTask(NULL);
 
-    /* Validate: check if the register actually points inside the threads array.
-     * On the main thread, register r2 may be clobbered by the ABI (TOC pointer)
-     * so it can contain a non-NULL but invalid pointer. */
-    if (inf >= &threads[0] && inf < &threads[PTHREAD_THREADS_MAX]) {
+    /* Validate: the TLS register (r2) must point inside the threads array
+     * AND the stored task pointer must match the calling task.
+     * On the main thread, register r2 may be clobbered by the ABI (TOC
+     * pointer) so it can contain a non-NULL but invalid pointer.
+     * Even when r2 looks valid, it may reference a different thread's
+     * ThreadInfo if r2 was clobbered to a value that happens to fall
+     * inside the array.  The task check catches this case. */
+    if (inf >= &threads[0] && inf < &threads[PTHREAD_THREADS_MAX]
+        && (struct Task *)inf->task == task) {
         return inf;
     }
 
     /* Fallback: look up by task pointer.
      * This handles the main thread case where r2 is not set or has been
-     * overwritten by the compiler/system. */
-    struct Task *task = FindTask(NULL);
+     * overwritten by the compiler/system, and any case where the fast
+     * path validation failed above. */
     for (int i = 0; i < PTHREAD_THREADS_MAX; i++) {
-        if (threads[i].task == (struct Process *)task && threads[i].status != THREAD_STATE_IDLE) {
+        if ((struct Task *)threads[i].task == task && threads[i].status != THREAD_STATE_IDLE) {
             return &threads[i];
         }
     }

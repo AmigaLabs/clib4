@@ -36,9 +36,14 @@ __funlockfile_r(struct _clib4 *__clib4, FILE *stream) {
 
     if (file->iob_Lock != NULL && FLAG_IS_SET(file->iob_Flags, IOBF_LOCKED) && (file->iob_TaskLock == (struct Task *) __clib4->self)) {
         SHOWMSG("Unlocking File");
-        ReleaseSemaphore(file->iob_Lock);
+        /* Clear metadata BEFORE releasing the semaphore.
+         * If we clear after ReleaseSemaphore, another thread can wake up
+         * from ObtainSemaphore and SET these flags, then we clobber them.
+         * That causes the other thread's funlockfile to skip ReleaseSemaphore,
+         * permanently leaking the lock → deadlock. */
         file->iob_TaskLock = NULL;
         CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
+        ReleaseSemaphore(file->iob_Lock);
     }
 #if 0
     else {
