@@ -682,24 +682,24 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         }
         __clib4->__lib_open_count = 0;
 
-        /* Call external destructors only for -nostartfiles executables
-         * Detection: call_main() sets __call_main_executed to TRUE for normal executables
-         * For -nostartfiles executables, this flag remains FALSE and we need to call destructors here
+        /* Call external destructors only for -nostartfiles executables.
+         * For normal executables, call_main() already calls _end_ctors(__EXT_DTOR_LIST__).
          */
         if (!__clib4->__call_main_executed && __clib4->__external_dtors != NULL && !__clib4->__external_dtors_called) {
             SHOWMSG("Calling external dtors (auto-discovered from -nostartfiles exe)");
             _end_ctors(__clib4->__external_dtors);
             __clib4->__external_dtors_called = TRUE;
             SHOWMSG("Done. All external destructors called");
-            
-            /* Also call clib4 internal destructors for -nostartfiles exe
-             * For normal executables, these are already called in call_main()
-             */
-            SHOWMSG("Calling clib4 dtors for -nostartfiles exe");
-            _end_ctors(__DTOR_LIST__);
-            SHOWMSG("Done. All clib4 destructors called");
         }
-        /* else: Normal executable using library_start() - destructors already called in call_main() */
+
+        /* Always call clib4 internal destructors (__DTOR_LIST__).
+         * These include stdlib_memory_exit (frees wmem allocator),
+         * stdio_exit, __pthread_exit, etc.
+         * call_main() only handles __EXT_DTOR_LIST__ (the exe's own dtors),
+         * not the library's internal __DTOR_LIST__. */
+        SHOWMSG("Calling clib4 internal dtors");
+        _end_ctors(__DTOR_LIST__);
+        SHOWMSG("Done. All clib4 destructors called");
 
         /* Now safe to restore task priority and deallocate resources */
         /* Restore the task priority. */
