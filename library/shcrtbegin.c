@@ -20,6 +20,8 @@ void __shlib_call_destructors(void);
  * refer to only the __CTOR_END__ symbol in sh/crtend.o and the __DTOR_LIST__
  * symbol in sh/crtbegin.o, where they are defined.
  */
+#include <proto/exec.h>
+#include <proto/dos.h>
 
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
@@ -29,6 +31,19 @@ void __shlib_call_constructors(void) {
     int i = 0;
 
     ENTER();
+
+    /* If the process already has a fully initialized clib4 context
+     * (pr_UID != 0), a .so loaded via dlopen() must NOT re-run the
+     * clib4 internal constructors.  They would reinitialize shared
+     * state (wmem allocator, stdio tables, etc.) and corrupt the
+     * context that the main executable is using. */
+    struct Process *me = (struct Process *) FindTask(NULL);
+    if (me->pr_Task.tc_Node.ln_Type == NT_PROCESS && ((struct Process *)me)->pr_UID != 0) {
+        SHOWMSG("Skipping .so constructors — clib4 context already active");
+        LEAVE();
+        return;
+    }
+
     while (__CTOR_LIST__[i + 1]) {
         i++;
     }
@@ -45,6 +60,19 @@ void __shlib_call_destructors(void) {
     int i = 1;
 
     ENTER();
+
+    /* If the process still has an active clib4 context (pr_UID != 0),
+     * a .so being unloaded via dlclose() must NOT run the clib4
+     * internal destructors.  They would destroy stdout, the memory
+     * allocator, etc., causing crashes in the main executable.
+     * The real cleanup happens later in libClose(). */
+    struct Process *me = (struct Process *) FindTask(NULL);
+    if (me->pr_Task.tc_Node.ln_Type == NT_PROCESS && ((struct Process *)me)->pr_UID != 0) {
+        SHOWMSG("Skipping .so destructors — clib4 context still active");
+        LEAVE();
+        return;
+    }
+
     while (__DTOR_LIST__[i]) {
         D(("Calling destructor %ld", i));
         __DTOR_LIST__[i++]();
