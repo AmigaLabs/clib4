@@ -27,6 +27,7 @@ _shmdt(const void *shmaddr) {
     int id;
     int ret = -1;
     struct shmid_ds *si;
+    struct _clib4 *__clib4 = __CLIB4;
 
     SHOWPOINTER(shmaddr);
 
@@ -40,6 +41,16 @@ _shmdt(const void *shmaddr) {
             IPCRmId(&res->shmcx.keymap, id, (void (*)(struct IPCGeneric *)) shm_destroy);
         }
         ret = 0;
+
+        /* Remove from per-process tracking table */
+        for (int s = 0; s < __SHM_TRACKING_MAX; s++) {
+            if (__clib4->__shm_tracking[s].addr == shmaddr) {
+                __clib4->__shm_tracking[s].id = -1;
+                __clib4->__shm_tracking[s].addr = NULL;
+                __clib4->__shm_tracking_count--;
+                break;
+            }
+        }
     } else {
         __set_errno(EIDRM);
     }

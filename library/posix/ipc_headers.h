@@ -9,6 +9,11 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
+/* Internal flag set on shmid_ds::flags when IPC_RMID is requested
+ * but the segment still has attachments.  Deferred deletion happens
+ * on the last shmdt(). */
+#define SHMFLG_DeleteMe (1L << 0)
+
 #define    DEF_SHMMAX    8388608    /* 8 MB */
 #define    DEF_QSIZEMAX    4194304    /* 4 MB */
 /* How many slots to add to the object list when full. */

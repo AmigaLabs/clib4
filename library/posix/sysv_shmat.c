@@ -12,6 +12,7 @@ _shmat(int shmid, const void *prefadds, int flags) {
     uint32_t i;
     void *addr = (void *) -1L;
     struct shmid_ds *si;
+    struct _clib4 *__clib4 = __CLIB4;
 
     SHOWVALUE(shmid);
     SHOWPOINTER(prefadds);
@@ -35,6 +36,20 @@ _shmat(int shmid, const void *prefadds, int flags) {
                     ((uint8 *) addr)[i] = 0;
                 }
                 si->shm_perm.mode &= ~SHM_CLEAR;
+            }
+
+            /* Record this attachment in the per-process tracking table
+             * so that libClose() can auto-detach if the process exits
+             * without calling shmdt(). */
+            if (__clib4->__shm_tracking_count < __SHM_TRACKING_MAX) {
+                for (int s = 0; s < __SHM_TRACKING_MAX; s++) {
+                    if (__clib4->__shm_tracking[s].id == -1) {
+                        __clib4->__shm_tracking[s].id = shmid;
+                        __clib4->__shm_tracking[s].addr = addr;
+                        __clib4->__shm_tracking_count++;
+                        break;
+                    }
+                }
             }
         } else {
             __set_errno(EINVAL);

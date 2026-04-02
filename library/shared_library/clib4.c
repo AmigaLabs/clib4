@@ -722,6 +722,37 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             close(__clib4->randfd[1]);
         }
 
+        /* Auto-detach any SHM segments this process left attached.
+         * This prevents dangling nattach counts in the global keymap
+         * when a process crashes or forgets to call shmdt(). */
+        if (__clib4->__shm_tracking_count > 0) {
+            SHOWMSG("Auto-detaching orphaned SHM segments");
+            IPCLock(&res->shmcx.keymap);
+            for (int s = 0; s < __SHM_TRACKING_MAX; s++) {
+                if (__clib4->__shm_tracking[s].id >= 0) {
+                    struct shmid_ds *si = GetIPCById(&res->shmcx.keymap,
+                                                     __clib4->__shm_tracking[s].id);
+                    if (si) {
+                        si->shm_nattach--;
+                        if (si->shm_nattach == 0 && (si->flags & SHMFLG_DeleteMe)) {
+                            res->shmcx.totshm -= si->shm_segsz;
+                            /* Destroy inline — shm_destroy is static in sysv_shmget.c */
+                            if (si->shm_amp) {
+                                IExec->FreeVec(si->shm_amp);
+                            }
+                            IExec->FreeVec(si);
+                            res->shmcx.keymap.objv[__clib4->__shm_tracking[s].id] = 0;
+                            res->shmcx.keymap.nused--;
+                        }
+                    }
+                    __clib4->__shm_tracking[s].id = -1;
+                    __clib4->__shm_tracking[s].addr = NULL;
+                }
+            }
+            __clib4->__shm_tracking_count = 0;
+            IPCUnlock(&res->shmcx.keymap);
+        }
+
         SHOWMSG("Calling reent_exit on _clib4");
         __clib4->__fully_initialized = FALSE;
         reent_exit(__clib4);

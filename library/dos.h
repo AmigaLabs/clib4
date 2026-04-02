@@ -566,6 +566,21 @@ struct _clib4 {
 
     BOOL __exit_jmp_buf_valid;
     int   __lib_open_count;      /* per-process OpenLibrary reference count */
+
+    /*
+     * Per-process SHM attachment tracking.
+     * When this process calls shmat(), the segment ID and address are recorded here.
+     * On shmdt() the entry is removed.  If the process exits without detaching,
+     * libClose() walks this table and auto-detaches all remaining segments,
+     * preventing dangling nattach counts and resource leaks in the global
+     * Clib4Resource keymap.
+     */
+#define __SHM_TRACKING_MAX 32
+    struct {
+        int  id;     /* SHM segment ID (-1 = unused) */
+        void *addr;  /* Attached address */
+    } __shm_tracking[__SHM_TRACKING_MAX];
+    int __shm_tracking_count;
 };
 
 #ifndef __getClib4

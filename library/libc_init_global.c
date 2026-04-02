@@ -157,8 +157,16 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         .resolv_lock = NULL,
         .socket_lock = NULL,
         .__file_lock_semaphore_name = "Advisory File Locking",
-        .__command_line_ptr = NULL
+        .__command_line_ptr = NULL,
+        /* SHM per-process tracking */
+        .__shm_tracking_count = 0
     };
+
+    /* Initialize SHM tracking slots to -1 (unused) */
+    for (int _i = 0; _i < __SHM_TRACKING_MAX; _i++) {
+        __clib4->__shm_tracking[_i].id = -1;
+        __clib4->__shm_tracking[_i].addr = NULL;
+    }
 
     if (!__clib4->__random_lock || !__clib4->__pipe_semaphore) {
         goto out;

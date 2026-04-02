@@ -60,6 +60,26 @@ Tests for `time.h` functions including:
 - Time arithmetic: `difftime`
 - High-resolution time: `nanosleep` (if available)
 
+### 6. Shared Memory & mmap Functions (`test_shm.c`)
+Tests for SysV shared memory (`sys/shm.h`) and memory mapping (`sys/mman.h`) functions, with SQLite WAL compatibility testing:
+- **SysV SHM lifecycle**: `shmget`, `shmat`, `shmdt`, `shmctl`
+- **IPC_PRIVATE unique segments**: verifies each call creates a distinct segment
+- **Named key sharing**: same key returns same shmid, `IPC_EXCL` correctly fails
+- **Data persistence**: data survives detach/reattach cycles
+- **IPC_STAT**: `shmctl` reports correct segment size
+- **Deferred deletion**: `IPC_RMID` while attached, freed on last `shmdt`
+- **Error handling**: `shmctl` with NULL buffer (EFAULT), `shmdt` with invalid address (EIDRM), invalid shmid
+- **Large segments**: 1 MB allocation with boundary verification
+- **Multiple segments**: 5 concurrent IPC_PRIVATE segments with unique data
+- **Anonymous mmap**: `MAP_ANONYMOUS` zero-initialized memory, read/write
+- **File-backed mmap**: `MAP_PRIVATE` read of file content
+- **mmap with offset**: mapping from a non-zero file offset
+- **MAP_SHARED write-back**: modify mapped region, `msync`, verify file updated
+- **Multiple mmap regions**: 4 concurrent mappings with independent data
+- **Edge cases**: `mmap` with zero length returns `MAP_FAILED` + EINVAL
+- **SQLite WAL pattern**: simulates WAL-index shm region (32 KB `MAP_SHARED` mmap with `msync`)
+- **SysV SHM for WAL**: simulates WAL lock page via `shmget`/`shmat` with reader/writer flags
+
 ## Building the Tests
 
 ### Prerequisites
@@ -85,6 +105,7 @@ make test_stdlib   # Build stdlib tests only
 make test_stdio    # Build stdio tests only
 make test_math     # Build math tests only
 make test_time     # Build time tests only
+make test_shm      # Build shm tests only
 ```
 
 ## Running the Tests

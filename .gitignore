@@ -29,3 +29,4 @@ tests/test_math
 tests/test_time
 tests/test_runner
 tests/test_strdup_simple
+tests/test_shm

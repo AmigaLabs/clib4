@@ -58,6 +58,10 @@ IPCMapInit(struct IPCIdKeyMap *m) {
 void
 IPCMapUninit(struct IPCIdKeyMap *m) {
     if (m->Lock) {
+        if (m->objv) {
+            FreeVec(m->objv);
+            m->objv = 0;
+        }
         FreeSysObject(ASOT_SEMAPHORE, m->Lock);
         m->Lock = 0;
     }
@@ -94,11 +98,16 @@ GetIPCKeyId(struct IPCIdKeyMap *m, key_t key, int flags, void *(*Construct)(int,
                 o->perm.seq = m->idx++;
                 if (m->nobj == m->vlen) { /* Add more free slots if needed. */
                     struct IPCGeneric **tmp;
-                    tmp = malloc(sizeof(struct IPCGeneric *) * (m->vlen + VEXTEND));
+                    /* Use system memory — the objv vector lives in the
+                     * global Clib4Resource and must survive process exit. */
+                    tmp = AllocVecTags(sizeof(struct IPCGeneric *) * (m->vlen + VEXTEND),
+                                       AVT_Type, MEMF_SHARED,
+                                       AVT_ClearWithValue, 0,
+                                       TAG_DONE);
                     if (tmp) {
                         if (m->objv) {
-                            memcpy(tmp, m->objv, sizeof(struct shmid_ds *) * m->vlen);
-                            free(m->objv);
+                            memcpy(tmp, m->objv, sizeof(struct IPCGeneric *) * m->vlen);
+                            FreeVec(m->objv);
                         }
                         m->objv = tmp;
                         m->vlen += VEXTEND;
