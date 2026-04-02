@@ -609,6 +609,9 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
     else if (l->l_type == F_UNLCK) {
         SHOWMSG("this is an unlock request");
     }
+    else if (cmd == F_GETLK) {
+        SHOWMSG("this is a lock query request");
+    }
     else {
         SHOWMSG("this is not a lock request");
         goto out;
