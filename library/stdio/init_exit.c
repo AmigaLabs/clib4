@@ -74,26 +74,15 @@ __close_all_files(struct _clib4 *__clib4) {
         }
     }
 
-    /* Legacy: free the old __iob table if it exists */
-    SHOWVALUE(__clib4->__num_iob);
-    if (__clib4->__num_iob > 0) {
-        /* Note: __iob[0..2] now point to __sf[0..2] which are already handled above.
-         * Only free entries beyond index 2 that were allocated the old way. */
-        for (i = 3; i < __clib4->__num_iob; i++) {
-            if (__clib4->__iob[i] != NULL && FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE)) {
-                D(("Close legacy __iob %ld\n", i));
-                fclose((FILE *) __clib4->__iob[i]);
-                __free_r(__clib4, __clib4->__iob[i]);
-            }
-        }
-        __clib4->__num_iob = 0;
-
-        /* Free the iob table itself */
-        if (__clib4->__iob != NULL) {
-            __free_r(__clib4, __clib4->__iob);
-            __clib4->__iob = NULL;
-        }
+    /* Free the __iob[] pointer table (entries 0..2 point to static __sf[],
+     * which were already cleaned up above — do NOT free those structs).
+     * No entries beyond index 2 exist anymore since new streams are
+     * allocated via __sfp() / glue list exclusively. */
+    if (__clib4->__iob != NULL) {
+        __free_r(__clib4, __clib4->__iob);
+        __clib4->__iob = NULL;
     }
+    __clib4->__num_iob = 0;
 
     if (__clib4->__num_fd > 0) {
         for (i = 0; i < __clib4->__num_fd; i++) {
