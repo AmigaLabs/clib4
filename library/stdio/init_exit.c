@@ -26,11 +26,62 @@ __close_all_files(struct _clib4 *__clib4) {
 
     __stdio_lock(__clib4);
 
+    /*
+     * First, walk the glue list and close any open streams.
+     * Skip the static __sf[0..2] (stdin/stdout/stderr) as they are
+     * handled by the old __iob[] path below for backward compat.
+     * Only close dynamically allocated streams from __sfp().
+     */
+    {
+        struct _glue *g;
+        for (g = __sglue.next; g != NULL; ) {
+            struct _glue *next_g = g->next;
+            for (i = 0; i < g->niobs; i++) {
+                if (g->iobs[i] != NULL && FLAG_IS_SET(g->iobs[i]->iob_Flags, IOBF_IN_USE)) {
+                    D(("Close glue iob %ld\n", i));
+                    fclose((FILE *) g->iobs[i]);
+                }
+            }
+            /* Free the iob array, pointer array, and glue block */
+            if (g->iobs != NULL) {
+                if (g->niobs > 0 && g->iobs[0] != NULL)
+                    free(g->iobs[0]);  /* Free the contiguous iob array */
+                free(g->iobs);         /* Free the pointer array */
+            }
+            free(g);
+            g = next_g;
+        }
+        __sglue.next = NULL;
+    }
+
+    /* Close the static stdin/stdout/stderr streams via fclose */
+    for (i = 0; i < 3; i++) {
+        if (FLAG_IS_SET(__sf[i].iob_Flags, IOBF_IN_USE)) {
+            /* Flush but don't free the static structs */
+            __sflush(__clib4, &__sf[i]);
+            CLEAR_FLAG(__sf[i].iob_Flags, IOBF_IN_USE);
+            if (__sf[i].iob_CustomBuffer != NULL) {
+                if (__sf[i].iob_isVBuffer)
+                    FreeVec(__sf[i].iob_CustomBuffer);
+                else
+                    free(__sf[i].iob_CustomBuffer);
+                __sf[i].iob_CustomBuffer = NULL;
+            }
+            if (__sf[i].iob_Lock != NULL) {
+                __delete_semaphore(__sf[i].iob_Lock);
+                __sf[i].iob_Lock = NULL;
+            }
+        }
+    }
+
+    /* Legacy: free the old __iob table if it exists */
     SHOWVALUE(__clib4->__num_iob);
     if (__clib4->__num_iob > 0) {
-        for (i = 0; i < __clib4->__num_iob; i++) {
-            if (FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE)) {
-                D(("Close __iob %ld\n", i));
+        /* Note: __iob[0..2] now point to __sf[0..2] which are already handled above.
+         * Only free entries beyond index 2 that were allocated the old way. */
+        for (i = 3; i < __clib4->__num_iob; i++) {
+            if (__clib4->__iob[i] != NULL && FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE)) {
+                D(("Close legacy __iob %ld\n", i));
                 fclose((FILE *) __clib4->__iob[i]);
                 __free_r(__clib4, __clib4->__iob[i]);
             }
@@ -67,6 +118,8 @@ __close_all_files(struct _clib4 *__clib4) {
             __clib4->__fd = NULL;
         }
     }
+
+    __clib4->__stdio_initialized = 0;
 
     __stdio_unlock(__clib4);
 

@@ -1,40 +1,41 @@
 /*
- * $Id: stdio_flush_all_files.c,v 1.4 2007-06-07 12:04:24 clib4devs Exp $
+ * $Id: stdio_flush_all_files.c,v 1.5 2025-01-01 12:04:24 clib4devs Exp $
 */
 
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+/*
+ * Helper callback for _fwalk — flushes a stream if it matches
+ * the target buffer mode.
+ */
+static int __flush_target_mode = -1;
+
+static int
+__flush_if_matching(struct _clib4 *__clib4, struct iob *fp) {
+    if (FLAG_IS_SET(fp->iob_Flags, IOBF_WRITE) &&
+        (__flush_target_mode < 0 || (fp->iob_Flags & IOBF_BUFFER_MODE) == (ULONG) __flush_target_mode) &&
+        fp->iob_BufferWriteBytes > 0) {
+        return __sflush(__clib4, fp);
+    }
+    return 0;
+}
+
 int
 __flush_all_files(struct _clib4 *__clib4, int buffer_mode) {
     int result;
-    int i;
 
     ENTER();
     SHOWVALUE(buffer_mode);
 
     __stdio_lock(__clib4);
 
-    for (i = 0; i < __clib4->__num_iob; i++) {
-        if (__clib4->__iob[i] != NULL &&
-            FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE) &&
-            FLAG_IS_SET(__clib4->__iob[i]->iob_Flags, IOBF_WRITE) &&
-            (buffer_mode < 0 || (__clib4->__iob[i]->iob_Flags & IOBF_BUFFER_MODE) == (ULONG) buffer_mode) &&
-            __iob_write_buffer_is_valid(__clib4->__iob[i])) {
-            if (__flush_iob_write_buffer(__clib4, __clib4->__iob[i]) < 0) {
-                result = ERROR;
-                goto out;
-            }
-        }
-    }
-
-    result = OK;
-
-out:
+    __flush_target_mode = buffer_mode;
+    result = _fwalk(__clib4, __flush_if_matching);
 
     __stdio_unlock(__clib4);
 
-    RETURN(result);
-    return (result);
+    RETURN(result == 0 ? OK : ERROR);
+    return (result == 0 ? OK : ERROR);
 }

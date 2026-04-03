@@ -581,6 +581,12 @@ struct _clib4 {
         void *addr;  /* Attached address */
     } __shm_tracking[__SHM_TRACKING_MAX];
     int __shm_tracking_count;
+
+    /*
+     * New stdio fields for the newlib-inspired I/O rewrite.
+     * These support the glue-list stream allocation model.
+     */
+    int __stdio_initialized;            /* Non-zero after __sinit() has run */
 };
 
 #ifndef __getClib4

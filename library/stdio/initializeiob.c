@@ -35,5 +35,14 @@ __initialize_iob(
 	iob->iob_Flags2 = 0;
 	memset(&iob->iob_mbState, 0, sizeof (_mbstate_t));
 
+	/* Initialize new fields for the newlib-style I/O layer */
+	iob->_cookie = iob;			/* Default: cookie is the iob itself */
+	iob->_ub._base = NULL;
+	iob->_ub._size = 0;
+	iob->_lb._base = NULL;
+	iob->_lb._size = 0;
+	iob->_offset = 0;
+	iob->_blksize = (buffer_size > 0) ? (int) buffer_size : BUFSIZ;
+
     LEAVE();
 }

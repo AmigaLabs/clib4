@@ -392,6 +392,7 @@ C_STDIO := \
 	stdio/fgetpos64.o \
 	stdio/fgets.o \
 	stdio/filliobreadbuffer.o \
+	stdio/findfp.o \
 	stdio/findvacantfdentry.o \
 	stdio/findvacantiobentry.o \
 	stdio/flockfile.o \
@@ -417,6 +418,7 @@ C_STDIO := \
 	stdio/ftello64.o \
 	stdio/ftrylockfile.o \
 	stdio/funlockfile.o \
+	stdio/fwalk.o \
 	stdio/fwrite.o \
 	stdio/getc.o \
 	stdio/getc_unlocked.o \
@@ -454,11 +456,16 @@ C_STDIO := \
 	stdio/scanf.o \
 	stdio/setbuf.o \
 	stdio/setvbuf.o \
+	stdio/smakebuf.o \
 	stdio/snprintf.o \
 	stdio/sprintf.o \
 	stdio/sscanf.o \
+	stdio/srefill.o \
 	stdio/sscanf_hook_entry.o \
 	stdio/stdio_ext.o \
+	stdio/stdio_rw.o \
+	stdio/swbuf.o \
+	stdio/swsetup.o \
 	stdio/tempnam.o \
 	stdio/tmpfile.o \
 	stdio/tmpfile64.o \

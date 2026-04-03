@@ -66,6 +66,21 @@ extern int __stdio_file_init(void);
 extern int __flush_all_files(struct _clib4 *__clib4, int buffer_mode);
 extern int __flush_r(struct _clib4 *__clib4, FILE *stream);
 
+/* New newlib-inspired internal functions */
+extern struct iob *__sfp(struct _clib4 *__clib4);
+extern void __sinit(struct _clib4 *__clib4);
+extern void __smakebuf(struct _clib4 *__clib4, struct iob *fp);
+extern int __srefill(struct _clib4 *__clib4, struct iob *fp);
+extern int __swbuf(struct _clib4 *__clib4, int c, struct iob *fp);
+extern int __swsetup(struct _clib4 *__clib4, struct iob *fp);
+extern int __sflush(struct _clib4 *__clib4, struct iob *fp);
+extern int _fwalk(struct _clib4 *__clib4, int (*func)(struct _clib4 *, struct iob *));
+extern int _fwalk_sglue(struct _clib4 *__clib4, int (*func)(struct _clib4 *, struct iob *), struct _glue *g);
+extern ssize_t __sread(void *cookie, char *buf, int n);
+extern ssize_t __swrite(void *cookie, const char *buf, int n);
+extern fpos_t __sseek(void *cookie, fpos_t offset, int whence);
+extern int __sclose(void *cookie);
+
 #ifdef __USE_LARGEFILE64
 /* stat_fchmod.c */
 void __convert_stat64_to_stat(const struct stat64 *st64, struct stat *st);

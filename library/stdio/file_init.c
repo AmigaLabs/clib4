@@ -158,7 +158,6 @@ FILE_CONSTRUCTOR(stdio_file_init) {
     ULONG fd_flags, iob_flags;
     BOOL success = FALSE;
     char *buffer;
-    char *aligned_buffer;
     int i;
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -173,7 +172,9 @@ FILE_CONSTRUCTOR(stdio_file_init) {
     }
 
     SHOWMSG("Now initialize the standard I/O streams (input, output, error)");
-    /* Now initialize the standard I/O streams (input, output, error). */
+
+    /* Initialize the standard I/O streams using the static __sf[] array.
+     * Also maintain backward compat: __iob[0..2] point to __sf[0..2]. */
     for (i = STDIN_FILENO; i <= STDERR_FILENO; i++) {
         switch (i) {
             case STDIN_FILENO:
@@ -220,8 +221,12 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         }
 
         D(("File %ld", i));
+
+        /* Initialize the fd layer (unchanged) */
         __initialize_fd(__clib4->__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
-        __initialize_iob(__clib4->__iob[i],
+
+        /* Initialize the static __sf[i] iob struct */
+        __initialize_iob(&__sf[i],
                          __iob_hook_entry,
                          buffer,
                          buffer,
@@ -230,8 +235,23 @@ FILE_CONSTRUCTOR(stdio_file_init) {
                          i,
                          iob_flags,
                          stdio_lock);
-        SHOWPOINTER(__clib4->__iob[i]);
+
+        /* Set up the new function pointers for I/O dispatch */
+        __sf[i]._read = __sread;
+        __sf[i]._write = __swrite;
+        __sf[i]._seek = __sseek;
+        __sf[i]._close = __sclose;
+        __sf[i]._seek64 = __sseek;  /* Same implementation for 64-bit */
+        __sf[i]._cookie = &__sf[i]; /* Cookie points to the iob itself */
+        __sf[i]._blksize = BUFSIZ;
+
+        /* Backward compat: make __iob[i] point to __sf[i] */
+        __clib4->__iob[i] = &__sf[i];
+        SHOWPOINTER(&__sf[i]);
     }
+
+    /* Mark stdio as initialized */
+    __clib4->__stdio_initialized = 1;
 
     success = TRUE;
 
