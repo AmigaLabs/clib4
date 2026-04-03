@@ -68,14 +68,27 @@ __srefill(struct _clib4 *__clib4, struct iob *fp) {
     fp->iob_BufferReadBytes = 0;
 
     /* Call the read function to fill the buffer */
-    if (fp->_read == NULL) {
+    if (fp->_read != NULL) {
+        n = fp->_read(fp->_cookie, (char *) fp->iob_Buffer, (int) fp->iob_BufferSize);
+    } else if (fp->iob_Action != NULL) {
+        /* Fallback: use legacy iob_Action path (for string streams like sscanf) */
+        struct file_action_message fam;
+        fam.fam_Action = file_action_read;
+        fam.fam_Data = (char *) fp->iob_Buffer;
+        fam.fam_Size = fp->iob_BufferSize;
+        n = (ssize_t)(*fp->iob_Action)(__clib4, fp, &fam);
+        if (n == EOF && fam.fam_Error != OK) {
+            SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+            __set_errno(fam.fam_Error);
+            RETURN(EOF);
+            return EOF;
+        }
+    } else {
         __set_errno(EBADF);
         SET_FLAG(fp->iob_Flags, IOBF_ERROR);
         RETURN(EOF);
         return EOF;
     }
-
-    n = fp->_read(fp->_cookie, (char *) fp->iob_Buffer, (int) fp->iob_BufferSize);
 
     if (n <= 0) {
         if (n == 0) {

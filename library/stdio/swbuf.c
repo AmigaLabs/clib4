@@ -44,14 +44,25 @@ __swbuf(struct _clib4 *__clib4, int c, struct iob *fp) {
      * For unbuffered streams, write the byte directly.
      */
     if ((fp->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
-        if (fp->_write == NULL) {
+        if (fp->_write != NULL) {
+            if (fp->_write(fp->_cookie, (const char *) &uc, 1) != 1) {
+                SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+                RETURN(EOF);
+                return EOF;
+            }
+        } else if (fp->iob_Action != NULL) {
+            /* Fallback: legacy iob_Action path (string streams) */
+            struct file_action_message fam;
+            fam.fam_Action = file_action_write;
+            fam.fam_Data = (char *) &uc;
+            fam.fam_Size = 1;
+            if ((*fp->iob_Action)(__clib4, fp, &fam) == EOF) {
+                SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+                RETURN(EOF);
+                return EOF;
+            }
+        } else {
             __set_errno(EBADF);
-            SET_FLAG(fp->iob_Flags, IOBF_ERROR);
-            RETURN(EOF);
-            return EOF;
-        }
-
-        if (fp->_write(fp->_cookie, (const char *) &uc, 1) != 1) {
             SET_FLAG(fp->iob_Flags, IOBF_ERROR);
             RETURN(EOF);
             return EOF;

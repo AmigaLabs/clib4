@@ -18,6 +18,10 @@ BOOL __is_valid_iob(struct _clib4 *__clib4, struct iob *iob) {
     if (FLAG_IS_SET(iob->iob_Flags, IOBF_INTERNAL)) {
         /* This is used by vsprintf(), etc. */
         result = TRUE;
+    } else if (FLAG_IS_SET(iob->iob_Flags, IOBF_IN_USE)) {
+        /* Accept any in-use iob — covers both old __iob[] table entries
+           and new glue-list entries allocated via __sfp(). */
+        result = TRUE;
     } else {
         __stdio_lock(__clib4);
 

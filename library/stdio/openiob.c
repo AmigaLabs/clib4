@@ -1,6 +1,10 @@
 /*
- * $Id: stdio_openiob.c,v 1.15 2008-09-04 12:07:58 clib4devs Exp $
-*/
+ * $Id: stdio_openiob.c,v 2.0 2025-01-01 00:00:00 clib4devs Exp $
+ *
+ * __open_iob() — legacy entry point, updated for the new I/O layer.
+ * Still used by code that opens files via the old __iob[] slot system
+ * (e.g. stdin/stdout/stderr init, freopen via old path).
+ */
 
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
@@ -17,7 +21,6 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
     int result = ERROR;
     int open_mode;
     struct fd *fd = NULL;
-    STRPTR buffer = NULL;
     struct iob *file;
 
     ENTER();
@@ -34,10 +37,6 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
 
     /* Figure out if the file descriptor provided is any use. */
     if (file_descriptor >= 0) {
-        assert(file_descriptor < __clib4->__num_fd);
-        assert(__clib4->__fd[file_descriptor] != NULL);
-        assert(FLAG_IS_SET(__clib4->__fd[file_descriptor]->fd_Flags, FDF_IN_USE));
-
         fd = __get_file_descriptor(__clib4, file_descriptor);
         if (fd == NULL) {
             __set_errno_r(__clib4, EBADF);
@@ -45,61 +44,30 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
         }
     }
 
-    /* The first character selects the access mode: read, write or append. */
+    /* The first character selects the access mode. */
     switch (mode[0]) {
         case 'r':
-
-            SHOWMSG("read mode");
-
             open_mode = O_RDONLY;
             break;
-
         case 'w':
-
-            SHOWMSG("write mode");
-
             open_mode = O_WRONLY | O_CREAT | O_TRUNC;
             break;
-
         case 'a':
-
-            SHOWMSG("append mode");
-
             open_mode = O_WRONLY | O_CREAT | O_APPEND;
             break;
-
         default:
-
-            D(("unsupported file open mode '%lc'", mode[0]));
-
             __set_errno_r(__clib4, EINVAL);
             goto out;
     }
 
     /* If the second or third character is a '+', switch to read/write mode. */
     if ((mode[1] == '+') || (mode[1] != '\0' && mode[2] == '+')) {
-        SHOWMSG("read/write access");
-
         CLEAR_FLAG(open_mode, O_RDONLY);
         CLEAR_FLAG(open_mode, O_WRONLY);
-
         SET_FLAG(open_mode, O_RDWR);
-    }
-    else if (mode[1] != '\0' && mode[1] == 'b' && mode[2] == 'l') {
-        SHOWMSG("fopen() called with Little Endian mode for binary file\n");
+    } else if (mode[1] != '\0' && mode[1] == 'b' && mode[2] == 'l') {
         SET_FLAG(open_mode, O_LITTLE_ENDIAN);
         SET_FLAG(file_flags, IOBF_LITTLE_ENDIAN);
-    }
-
-    SHOWMSG("allocating file buffer");
-
-    /* Allocate a little more memory than necessary. */
-    buffer = __malloc_r(__clib4, BUFSIZ + (__clib4->__cache_line_size - 1));
-    if (buffer == NULL) {
-        SHOWMSG("that didn't work");
-
-        __set_errno_r(__clib4, ENOBUFS);
-        goto out;
     }
 
     if (file_descriptor < 0) {
@@ -118,38 +86,45 @@ __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int f
             CLEAR_FLAG(fd->fd_Flags, FDF_APPEND);
     }
 
-    /* Allocate memory for an arbitration mechanism, then initialize it. */
+    /* Allocate a lock for this stream. */
     lock = __create_semaphore();
     if (lock == NULL)
-		goto out;
+        goto out;
 
-    /* Figure out the buffered file access mode by looking at the open mode. */
+    /* Set up the FILE flags. */
     file_flags |= IOBF_IN_USE | IOBF_NO_NUL;
 
     if (FLAG_IS_SET(open_mode, O_RDONLY) || FLAG_IS_SET(open_mode, O_RDWR))
         SET_FLAG(file_flags, IOBF_READ);
-
     if (FLAG_IS_SET(open_mode, O_WRONLY) || FLAG_IS_SET(open_mode, O_RDWR))
         SET_FLAG(file_flags, IOBF_WRITE);
+    if (FLAG_IS_SET(open_mode, O_APPEND))
+        SET_FLAG(file_flags, IOBF_APP);
 
+    /* Initialize via __initialize_iob (sets legacy fields). */
     __initialize_iob(file,
                      __iob_hook_entry,
-                     buffer,
-                     buffer,
-                     (int64_t) BUFSIZ + (__clib4->__cache_line_size - 1),
+                     NULL,          /* No custom buffer — lazy allocation */
+                     NULL,          /* No buffer yet */
+                     (int64_t) 0,   /* Buffer size 0 — will be set by __smakebuf */
                      file_descriptor,
                      slot_number,
                      file_flags,
                      lock);
 
-    buffer = NULL;
+    /* Set up the new function pointer I/O path. */
+    file->_read = __sread;
+    file->_write = __swrite;
+    file->_seek = __sseek;
+    file->_close = __sclose;
+    file->_seek64 = __sseek;
+    file->_cookie = file;
+
+    file->_blksize = BUFSIZ;
 
     result = OK;
 
 out:
-
-    if (buffer != NULL)
-        __free_r(__clib4, buffer);
 
     RETURN(result);
     return result;
