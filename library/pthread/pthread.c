@@ -123,9 +123,12 @@ static void CondWaitCleanupHandler(void *arg) {
     if (ctx->waiter->sigbit != SIGB_COND_FALLBACK)
         FreeSignal(ctx->waiter->sigbit);
 
-    /* Abort and clean up timer if active */
-    if (ctx->timerio != NULL)
-        CloseTimerDevice(ctx->timerio);
+    /* Abort and reset per-thread timer if active (don't close — it's reusable) */
+    if (ctx->timerio != NULL) {
+        if (!CheckIO(ctx->timerio))
+            AbortIO(ctx->timerio);
+        WaitIO(ctx->timerio);
+    }
 
     /* POSIX: mutex must be re-acquired when cancelled during cond_wait */
     pthread_mutex_lock(ctx->mutex);
@@ -134,48 +137,56 @@ static void CondWaitCleanupHandler(void *arg) {
 
 int
 _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *abstime, int shared) {
-    struct MsgPort msgport;
     struct SemaphoreMessage msg;
-    struct TimeRequest timerio;
     struct Task *task;
     struct Message *m1, *m2;
+    ThreadInfo *inf;
 
     task = FindTask(NULL);
+    inf = GetCurrentThreadInfo();
 
-    if (!OpenTimerDevice((struct IORequest *) &timerio, &msgport, task)) {
-        CloseTimerDevice((struct IORequest *) &timerio);
-        return EINVAL;
+    // Lazy-initialize per-thread timer device (opened once, reused across calls)
+    if (!inf->timerOpen) {
+        if (!OpenTimerDevice((struct IORequest *) &inf->timerIO, &inf->timerPort, task)) {
+            return EINVAL;
+        }
+        inf->timerOpen = TRUE;
     }
 
-    timerio.Request.io_Command = TR_ADDREQUEST;
-    timerio.Request.io_Flags = 0;
-    TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, abstime);
+    inf->timerIO.Request.io_Command = TR_ADDREQUEST;
+    inf->timerIO.Request.io_Flags = 0;
+    TIMESPEC_TO_OLD_TIMEVAL(&inf->timerIO.Time, abstime);
     //if (!relative)
     {
         struct TimeVal starttime;
         // absolute time has to be converted to relative
         // GetSysTime can't be used due to the timezone offset in abstime
         gettimeofday((struct timeval *)&starttime, NULL);
-        timersub(&timerio.Time, &starttime, &timerio.Time);
-        if (!timerisset(&timerio.Time)) {
-            CloseTimerDevice((struct IORequest *) &timerio);
+        timersub(&inf->timerIO.Time, &starttime, &inf->timerIO.Time);
+        if (!timerisset(&inf->timerIO.Time)) {
             return ETIMEDOUT;
         }
     }
-    SendIO((struct IORequest *) &timerio);
+    // Clear stale timer signal and drain any leftover messages from previous use
+    SetSignal(0, 1 << inf->timerPort.mp_SigBit);
+    while (GetMsg(&inf->timerPort)) { /* drain */ }
+    SendIO((struct IORequest *) &inf->timerIO);
 
     msg.ssm_Message.mn_Node.ln_Type = NT_MESSAGE;
     msg.ssm_Message.mn_Node.ln_Name = (char *) shared;
-    msg.ssm_Message.mn_ReplyPort = &msgport;
+    msg.ssm_Message.mn_ReplyPort = &inf->timerPort;
     Procure(sema, &msg);
 
-    WaitPort(&msgport);
-    m1 = GetMsg(&msgport);
-    m2 = GetMsg(&msgport);
-    if (m1 == &timerio.Request.io_Message || m2 == &timerio.Request.io_Message)
+    WaitPort(&inf->timerPort);
+    m1 = GetMsg(&inf->timerPort);
+    m2 = GetMsg(&inf->timerPort);
+    if (m1 == &inf->timerIO.Request.io_Message || m2 == &inf->timerIO.Request.io_Message)
         Vacate(sema, &msg);
 
-    CloseTimerDevice((struct IORequest *) &timerio);
+    // Reset the timer IO for reuse (abort if still pending, then wait for completion)
+    if (!CheckIO((struct IORequest *) &inf->timerIO))
+        AbortIO((struct IORequest *) &inf->timerIO);
+    WaitIO((struct IORequest *) &inf->timerIO);
 
     if (msg.ssm_Semaphore == NULL)
         return ETIMEDOUT;
@@ -205,9 +216,8 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     CondWaiter waiter;
     BYTE signal;
     ULONG sigs = SIGBREAKF_CTRL_C;
-    struct MsgPort timermp;
-    struct TimeRequest timerio;
     struct Task *task;
+    ThreadInfo *inf;
     clock_t clock_type = CLOCK_REALTIME;
 
     if (cond == NULL || mutex == NULL) {
@@ -229,11 +239,12 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     }
 
     task = FindTask(NULL);
+    inf = GetCurrentThreadInfo();
+
     if (abstime) {
-        // Compute relative time BEFORE opening the timer device.
+        // Compute relative time BEFORE sending the timer request.
         // This way, if the deadline has already passed we can return
-        // ETIMEDOUT immediately without having to close an unsent IO
-        // (WaitIO on an unsent IORequest hangs forever).
+        // ETIMEDOUT immediately without any IO overhead.
         struct timespec rel_time;
         if (!relative) {
             struct timespec starttime;
@@ -274,17 +285,22 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
             rel_time = *abstime;
         }
 
-        // open timer.device
-        if (!OpenTimerDevice((struct IORequest *) &timerio, &timermp, task)) {
-            CloseTimerDevice((struct IORequest *) &timerio);
-            return EINVAL;
+        // Lazy-initialize per-thread timer device (opened once, reused across calls)
+        if (!inf->timerOpen) {
+            if (!OpenTimerDevice((struct IORequest *) &inf->timerIO, &inf->timerPort, task)) {
+                return EINVAL;
+            }
+            inf->timerOpen = TRUE;
         }
         // prepare the device command and send it
-        timerio.Request.io_Command = TR_ADDREQUEST;
-        timerio.Request.io_Flags = 0;
-        TIMESPEC_TO_OLD_TIMEVAL(&timerio.Time, &rel_time);
-        sigs |= (1 << timermp.mp_SigBit);
-        SendIO((struct IORequest *) &timerio);
+        inf->timerIO.Request.io_Command = TR_ADDREQUEST;
+        inf->timerIO.Request.io_Flags = 0;
+        TIMESPEC_TO_OLD_TIMEVAL(&inf->timerIO.Time, &rel_time);
+        sigs |= (1 << inf->timerPort.mp_SigBit);
+        // Clear stale timer signal and drain any leftover messages from previous use
+        SetSignal(0, 1 << inf->timerPort.mp_SigBit);
+        while (GetMsg(&inf->timerPort)) { /* drain */ }
+        SendIO((struct IORequest *) &inf->timerIO);
     }
     // prepare a waiter node
     waiter.task = task;
@@ -308,7 +324,7 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     cleanup_ctx.cond = cond;
     cleanup_ctx.mutex = mutex;
     cleanup_ctx.waiter = &waiter;
-    cleanup_ctx.timerio = abstime ? (struct IORequest *) &timerio : NULL;
+    cleanup_ctx.timerio = abstime ? (struct IORequest *) &inf->timerIO : NULL;
     pthread_cleanup_push(CondWaitCleanupHandler, &cleanup_ctx);
 
     sigs = Wait(sigs);
@@ -326,11 +342,13 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         FreeSignal(waiter.sigbit);
 
     if (abstime) {
-        // clean up the TimeRequest
-        CloseTimerDevice((struct IORequest *) &timerio);
+        // Reset the timer IO for reuse (abort if still pending, then wait for completion)
+        if (!CheckIO((struct IORequest *) &inf->timerIO))
+            AbortIO((struct IORequest *) &inf->timerIO);
+        WaitIO((struct IORequest *) &inf->timerIO);
 
         // did we timeout?
-        if (sigs & (1 << timermp.mp_SigBit))
+        if (sigs & (1 << inf->timerPort.mp_SigBit))
             return ETIMEDOUT;
         else if (sigs & SIGBREAKF_CTRL_C) {
             pthread_testcancel();
@@ -462,6 +480,18 @@ void __pthread_exit_func(void) {
 
 	MutexObtain(thread_sem);
 	inf = &threads[0];
+
+	/* Close per-thread timer device for main thread if it was lazily opened */
+	if (inf->timerOpen) {
+		if (!CheckIO((struct IORequest *)&inf->timerIO))
+			AbortIO((struct IORequest *)&inf->timerIO);
+		WaitIO((struct IORequest *)&inf->timerIO);
+		CloseDevice((struct IORequest *)&inf->timerIO);
+		if (inf->timerPort.mp_SigBit != SIGB_TIMER_FALLBACK)
+			FreeSignal(inf->timerPort.mp_SigBit);
+		inf->timerOpen = FALSE;
+	}
+
 	if (inf->cancel_signal != -1) {
 		D(("_pthread_clear_threadinfo: Freeing cancel signal %d\n", inf->cancel_signal));
 		FreeSignal(inf->cancel_signal);

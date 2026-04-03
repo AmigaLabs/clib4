@@ -215,6 +215,18 @@ StarterFunc() {
      * AmigaOS FreeSignal operates on the calling task's signal set, so
      * these must be freed here, not from pthread_join's context.
      * Previously signals were never freed, leaking bits on every thread exit. */
+
+    /* Close per-thread timer device if it was lazily opened */
+    if (inf->timerOpen) {
+        if (!CheckIO((struct IORequest *)&inf->timerIO))
+            AbortIO((struct IORequest *)&inf->timerIO);
+        WaitIO((struct IORequest *)&inf->timerIO);
+        CloseDevice((struct IORequest *)&inf->timerIO);
+        if (inf->timerPort.mp_SigBit != SIGB_TIMER_FALLBACK)
+            FreeSignal(inf->timerPort.mp_SigBit);
+        inf->timerOpen = FALSE;
+    }
+
     if (inf->cancel_signal != -1 && inf->cancel_signal != SIGBREAKB_CTRL_C) {
         FreeSignal(inf->cancel_signal);
         inf->cancel_signal = -1;

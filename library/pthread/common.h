@@ -107,6 +107,11 @@ typedef struct {
 	int8_t join_signal;            /* Signal allocated by joiner for wakeup */
 	uint32_t join_signal_mask;     /* Mask for join_signal */
 	volatile int can_exit;         /* Flag: pthread_join has cleaned up, thread can exit */
+
+	/* Per-thread timer device for timed waits (lazy-initialized, reused) */
+	struct MsgPort timerPort;
+	struct TimeRequest timerIO;
+	BOOL timerOpen;
 } ThreadInfo;
 
 struct newThreadMessage {
