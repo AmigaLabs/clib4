@@ -25,9 +25,7 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
     SHOWVALUE(count);
     SHOWPOINTER(stream);
 
-    assert(ptr != NULL && stream != NULL);
-
-    if (ptr == NULL || stream == NULL) {
+    if (__builtin_expect(ptr == NULL || stream == NULL, 0)) {
         SHOWMSG("invalid parameters");
         __set_errno(EFAULT);
         RETURN(result);
@@ -38,33 +36,55 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     int locked = __ftrylockfile_r(__clib4, stream);
 
-    if (FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE)) {
+    if (__builtin_expect(FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE), 0)) {
         SHOWMSG("this file is not even in use");
         SET_FLAG(fp->iob_Flags, IOBF_ERROR);
         __set_errno(EBADF);
         goto out;
     }
 
-    if (cantread(__clib4, fp)) {
+    /* Compute total size; skip expensive division for common cases */
+    if (__builtin_expect(element_size <= 1, 1)) {
+        total_size = element_size * count;
+    } else if (__builtin_expect(count <= 1, 1)) {
+        total_size = element_size * count;
+    } else {
+        total_size = element_size * count;
+        if ((total_size / element_size) != count) {
+            goto out;
+        }
+    }
+
+    if (__builtin_expect(total_size == 0, 0)) {
+        goto out;
+    }
+
+    SHOWVALUE(total_size);
+
+    /*
+     * Fast path: data already in buffer, no ungetc pending.
+     * Covers the very common case of repeated small reads.
+     */
+    if (__builtin_expect(fp->iob_Buffer != NULL && !HASUB(fp), 1)) {
+        r = fp->iob_BufferReadBytes - fp->iob_BufferPosition;
+        if (__builtin_expect(r >= total_size, 1)) {
+            memcpy(data, fp->iob_Buffer + fp->iob_BufferPosition, total_size);
+            fp->iob_BufferPosition += total_size;
+            result = count;
+            goto out;
+        }
+    }
+
+    /* Slow path: need to check readability */
+    if (__builtin_expect(cantread(__clib4, fp), 0)) {
         SHOWMSG("this file is not read-enabled");
         SET_FLAG(fp->iob_Flags, IOBF_ERROR);
         __set_errno(EBADF);
         goto out;
     }
 
-    /* Check for overflow. */
-    total_size = element_size * count;
-    if (total_size == 0) {
-        goto out;
-    }
-    if (element_size != 0 && (total_size / element_size) != count) {
-        goto out;
-    }
-
-    SHOWVALUE(total_size);
-
     /* Ensure buffer is allocated (lazy init). */
-    if (fp->iob_Buffer == NULL)
+    if (__builtin_expect(fp->iob_Buffer == NULL, 0))
         __smakebuf(__clib4, fp);
 
     /*

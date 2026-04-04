@@ -36,20 +36,24 @@ __sread(void *cookie, char *buf, int n) {
 
     ENTER();
 
-    if (fp->iob_Descriptor < 0 || fp->iob_Descriptor >= __clib4->__num_fd) {
+    /* Inline fd lookup — avoid __get_file_descriptor which takes a global lock */
+    if (__builtin_expect(fp->iob_Descriptor < 0 || fp->iob_Descriptor >= __clib4->__num_fd, 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return -1;
     }
 
-    fd = __get_file_descriptor(__clib4, fp->iob_Descriptor);
-    if (fd == NULL) {
+    fd = __clib4->__fd[fp->iob_Descriptor];
+    if (__builtin_expect(fd == NULL, 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return -1;
     }
 
-    memset(&fam, 0, sizeof(fam));
+    /* Resolve alias */
+    if (__builtin_expect(fd->fd_Original != NULL, 0))
+        fd = fd->fd_Original;
+
     fam.fam_Action = file_action_read;
     fam.fam_Data = buf;
     fam.fam_Size = n;
@@ -57,7 +61,7 @@ __sread(void *cookie, char *buf, int n) {
     assert(fd->fd_Action != NULL);
     result = (*fd->fd_Action)(__clib4, fd, &fam);
 
-    if (result == EOF) {
+    if (__builtin_expect(result == EOF, 0)) {
         if (fam.fam_Error != 0)
             __set_errno(fam.fam_Error);
         RETURN(-1);
@@ -90,30 +94,33 @@ __swrite(void *cookie, const char *buf, int n) {
 
     ENTER();
 
-    if (fp->iob_Descriptor < 0 || fp->iob_Descriptor >= __clib4->__num_fd) {
+    /* Inline fd lookup — avoid __get_file_descriptor which takes a global lock */
+    if (__builtin_expect(fp->iob_Descriptor < 0 || fp->iob_Descriptor >= __clib4->__num_fd, 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return -1;
     }
 
-    fd = __get_file_descriptor(__clib4, fp->iob_Descriptor);
-    if (fd == NULL) {
+    fd = __clib4->__fd[fp->iob_Descriptor];
+    if (__builtin_expect(fd == NULL, 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return -1;
     }
+
+    /* Resolve alias */
+    if (__builtin_expect(fd->fd_Original != NULL, 0))
+        fd = fd->fd_Original;
 
     /* If append mode, seek to end before writing */
-    if (FLAG_IS_SET(fp->iob_Flags, IOBF_APP)) {
+    if (__builtin_expect(FLAG_IS_SET(fp->iob_Flags, IOBF_APP), 0)) {
         struct file_action_message seek_fam;
-        memset(&seek_fam, 0, sizeof(seek_fam));
         seek_fam.fam_Action = file_action_seek;
         seek_fam.fam_Offset = 0;
         seek_fam.fam_Mode = SEEK_END;
         (*fd->fd_Action)(__clib4, fd, &seek_fam);
     }
 
-    memset(&fam, 0, sizeof(fam));
     fam.fam_Action = file_action_write;
     fam.fam_Data = (char *) buf;
     fam.fam_Size = n;
@@ -121,7 +128,7 @@ __swrite(void *cookie, const char *buf, int n) {
     assert(fd->fd_Action != NULL);
     result = (*fd->fd_Action)(__clib4, fd, &fam);
 
-    if (result == EOF) {
+    if (__builtin_expect(result == EOF, 0)) {
         if (fam.fam_Error != 0)
             __set_errno(fam.fam_Error);
         RETURN(-1);
@@ -154,20 +161,23 @@ __sseek(void *cookie, fpos_t offset, int whence) {
 
     ENTER();
 
-    if (fp->iob_Descriptor < 0 || fp->iob_Descriptor >= __clib4->__num_fd) {
+    /* Inline fd lookup */
+    if (__builtin_expect(fp->iob_Descriptor < 0 || fp->iob_Descriptor >= __clib4->__num_fd, 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return (fpos_t) -1;
     }
 
-    fd = __get_file_descriptor(__clib4, fp->iob_Descriptor);
-    if (fd == NULL) {
+    fd = __clib4->__fd[fp->iob_Descriptor];
+    if (__builtin_expect(fd == NULL, 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return (fpos_t) -1;
     }
 
-    memset(&fam, 0, sizeof(fam));
+    if (__builtin_expect(fd->fd_Original != NULL, 0))
+        fd = fd->fd_Original;
+
     fam.fam_Action = file_action_seek;
     fam.fam_Offset = offset;
     fam.fam_Mode = whence;
@@ -208,20 +218,23 @@ __sclose(void *cookie) {
 
     ENTER();
 
-    if (fp->iob_Descriptor < 0 || fp->iob_Descriptor >= __clib4->__num_fd) {
+    /* Inline fd lookup */
+    if (__builtin_expect(fp->iob_Descriptor < 0 || fp->iob_Descriptor >= __clib4->__num_fd, 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return -1;
     }
 
-    fd = __get_file_descriptor(__clib4, fp->iob_Descriptor);
-    if (fd == NULL) {
+    fd = __clib4->__fd[fp->iob_Descriptor];
+    if (__builtin_expect(fd == NULL, 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return -1;
     }
 
-    memset(&fam, 0, sizeof(fam));
+    if (__builtin_expect(fd->fd_Original != NULL, 0))
+        fd = fd->fd_Original;
+
     fam.fam_Action = file_action_close;
 
     assert(fd->fd_Action != NULL);

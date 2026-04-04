@@ -30,21 +30,14 @@ __srefill(struct _clib4 *__clib4, struct iob *fp) {
     ENTER();
 
     /* If there's still unread data in the buffer, nothing to do */
-    if (fp->iob_BufferReadBytes > 0 &&
-        fp->iob_BufferPosition < fp->iob_BufferReadBytes) {
+    if (__builtin_expect(fp->iob_BufferReadBytes > 0 &&
+        fp->iob_BufferPosition < fp->iob_BufferReadBytes, 0)) {
         RETURN(0);
         return 0;
     }
 
-    /* Check that we can actually read from this stream */
-    if (cantread(__clib4, fp)) {
-        __set_errno(EBADF);
-        RETURN(EOF);
-        return EOF;
-    }
-
     /* If there is pending write data, flush it first */
-    if (fp->iob_BufferWriteBytes > 0) {
+    if (__builtin_expect(fp->iob_BufferWriteBytes > 0, 0)) {
         if (__sflush(__clib4, fp) != 0) {
             RETURN(EOF);
             return EOF;
@@ -52,14 +45,13 @@ __srefill(struct _clib4 *__clib4, struct iob *fp) {
     }
 
     /* Discard any active ungetc buffer */
-    if (HASUB(fp)) {
-        /* Restore the real buffer state from before ungetc */
+    if (__builtin_expect(HASUB(fp), 0)) {
         FREEUB(__clib4, fp);
         CLEAR_FLAG(fp->iob_Flags, IOBF_UNGETC);
     }
 
     /* Ensure we have a buffer (lazy allocation) */
-    if (fp->iob_Buffer == NULL) {
+    if (__builtin_expect(fp->iob_Buffer == NULL, 0)) {
         __smakebuf(__clib4, fp);
     }
 
@@ -68,7 +60,7 @@ __srefill(struct _clib4 *__clib4, struct iob *fp) {
     fp->iob_BufferReadBytes = 0;
 
     /* Call the read function to fill the buffer */
-    if (fp->_read != NULL) {
+    if (__builtin_expect(fp->_read != NULL, 1)) {
         n = fp->_read(fp->_cookie, (char *) fp->iob_Buffer, (int) fp->iob_BufferSize);
     } else if (fp->iob_Action != NULL) {
         /* Fallback: use legacy iob_Action path (for string streams like sscanf) */
