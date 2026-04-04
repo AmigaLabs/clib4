@@ -78,7 +78,7 @@ __fputs_r(struct _clib4 *__clib4, const char *s, FILE *stream) {
             if (buffer_mode == IOBF_BUFFER_MODE_LINE) {
                 const unsigned char *lf = memchr(s, '\n', n);
                 if (lf != NULL)
-                    n = (size_t)(lf + 1 - s);
+                    n = (size_t)(lf + 1 - (const unsigned char *)s);
                 memcpy(WRITE_PTR(fp), s, n);
                 fp->iob_BufferWriteBytes += n;
                 s += n;

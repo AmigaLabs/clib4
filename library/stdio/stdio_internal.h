@@ -181,17 +181,5 @@ extern int __sflush(struct _clib4 *__clib4, struct iob *fp);
 extern int __sflags(const char *mode, int *oflags);
 
 /****************************************************************************/
-/*
- * Access to the global glue list root and static FILE slots.
- *
- * __sf[3] holds the 3 pre-allocated iob structs for stdin/stdout/stderr.
- * __sglue is the root node pointing to __sf[].
- * Additional nodes are chained via __sglue.next.
- */
-extern struct iob __sf[3];
-extern struct iob *__sf_ptrs[3];
-extern struct _glue __sglue;
-
-/****************************************************************************/
 
 #endif /* _STDIO_INTERNAL_H */

@@ -232,6 +232,17 @@ typedef struct iob {
     fpos_t				_offset;				/* Cached seek offset (valid when IOBF_OFF set) */
 } __iob64;
 
+/****************************************************************************/
+/*
+ * Access to the global glue list root and static FILE slots.
+ *
+ * __sf[3] holds the 3 pre-allocated iob structs for stdin/stdout/stderr.
+ * __sglue is the root node pointing to __sf[].
+ * Additional nodes are chained via __sglue.next.
+ */
+extern struct iob __sf[3];
+extern struct iob *__sf_ptrs[3];
+extern struct _glue __sglue;
 
 /****************************************************************************/
 
