@@ -26,18 +26,9 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     SHOWVALUE(count);
     SHOWPOINTER(stream);
 
-    assert(ptr != NULL && stream != NULL);
-
     if (ptr == NULL || stream == NULL) {
         SHOWMSG("invalid parameters");
         __set_errno_r(__clib4, EFAULT);
-        RETURN(result);
-        return result;
-    }
-
-    if (FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE) || cantwrite(__clib4, fp)) {
-        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
-        __set_errno_r(__clib4, EBADF);
         RETURN(result);
         return result;
     }
@@ -55,12 +46,45 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
 
     __flockfile_r(__clib4, stream);
 
-    /* Prepare stream for writing (allocates buffer if needed). */
-    if (__swsetup(__clib4, fp) != 0)
+    if (FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE)) {
+        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+        __set_errno_r(__clib4, EBADF);
         goto out;
+    }
+
+    /*
+     * Fast path: if the buffer is already allocated, no pending read data,
+     * no ungetc data, and we're not switching modes, skip __swsetup().
+     * This avoids a function call + 5 redundant checks on every write.
+     */
+    if (fp->iob_Buffer != NULL && fp->iob_BufferReadBytes == 0 && !HASUB(fp)) {
+        /* Already set up for writing — skip __swsetup. */
+    } else {
+        /* Slow path: first write, or mode switch needed. */
+        if (__swsetup(__clib4, fp) != 0)
+            goto out;
+    }
 
     s = (const unsigned char *) ptr;
     buffer_mode = (fp->iob_Flags & IOBF_BUFFER_MODE);
+
+    /*
+     * Fast path: small write to fully-buffered stream with space.
+     * Avoids memcpy call overhead for the very common 1-byte case.
+     */
+    if (buffer_mode == IOBF_BUFFER_MODE_FULL) {
+        w = WRITABLE_SPACE(fp);
+        if (total_size <= w) {
+            if (total_size == 1) {
+                fp->iob_Buffer[fp->iob_BufferWriteBytes++] = *s;
+            } else {
+                memcpy(WRITE_PTR(fp), s, total_size);
+                fp->iob_BufferWriteBytes += total_size;
+            }
+            result = count;
+            goto out;
+        }
+    }
 
     /*
      * Unbuffered: write directly via fp->_write, one byte at a time

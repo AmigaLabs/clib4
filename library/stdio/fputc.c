@@ -34,7 +34,15 @@ __fputc_check(struct _clib4 *__clib4, FILE *stream) {
         return EOF;
     }
 
-    /* Prepare for writing: drops read buffer, allocates write buffer. */
+    /*
+     * Skip __swsetup if buffer is already allocated, no pending read
+     * data, and no ungetc buffer — avoids a function call per write.
+     */
+    if (fp->iob_Buffer != NULL && fp->iob_BufferReadBytes == 0 && !HASUB(fp)) {
+        return OK;
+    }
+
+    /* Slow path: first write, or mode switch needed. */
     if (__swsetup(__clib4, fp) != 0)
         return EOF;
 
