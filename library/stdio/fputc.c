@@ -82,12 +82,14 @@ fputc(int c, FILE *stream) {
     struct iob *fp = (struct iob *) stream;
     int result = EOF;
     struct _clib4 *__clib4 = __CLIB4;
+    unsigned long flags;
+    int buffer_mode;
 
     ENTER();
     SHOWVALUE(c);
     SHOWPOINTER(stream);
 
-    if (stream == NULL) {
+    if (__builtin_expect(stream == NULL, 0)) {
         __set_errno_r(__clib4, EFAULT);
         RETURN(result);
         return result;
@@ -95,6 +97,44 @@ fputc(int c, FILE *stream) {
 
     __flockfile_r(__clib4, stream);
 
+    flags = fp->iob_Flags;
+
+    /*
+     * Ultra-fast path: stream is in-use + writable, buffer allocated,
+     * no pending read data, and buffer has space. Inlined to eliminate
+     * the __fputc_check() + __fputc() function calls (saves ~30-50
+     * PPC cycles per call).
+     */
+    if (__builtin_expect(
+            (flags & (IOBF_IN_USE | IOBF_WRITE)) == (IOBF_IN_USE | IOBF_WRITE) &&
+            fp->iob_Buffer != NULL &&
+            fp->iob_BufferReadBytes == 0, 1)) {
+
+        if (__builtin_expect(fp->iob_BufferWriteBytes < fp->iob_BufferSize, 1)) {
+            fp->iob_Buffer[fp->iob_BufferWriteBytes++] = c;
+            buffer_mode = (flags & IOBF_BUFFER_MODE);
+            /* Fully-buffered: nothing to do — most common case */
+            if (__builtin_expect(buffer_mode == IOBF_BUFFER_MODE_FULL, 1)) {
+                result = (c & 255);
+                goto out;
+            }
+            /* Unbuffered or line-buffered with newline: flush */
+            if (buffer_mode == IOBF_BUFFER_MODE_NONE ||
+                (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) {
+                if (__sflush(__clib4, fp) != 0) {
+                    fp->iob_BufferWriteBytes--;
+                    goto out;  /* result is already EOF */
+                }
+            }
+            result = (c & 255);
+            goto out;
+        }
+        /* Buffer full — flush and store via __swbuf */
+        result = __swbuf(__clib4, c, fp);
+        goto out;
+    }
+
+    /* Slow path: first write, mode switch, or invalid stream */
     if (__fputc_check(__clib4, stream) < 0)
         goto out;
 
@@ -111,12 +151,14 @@ int
 __fputc_r(struct _clib4 *__clib4, int c, FILE *stream) {
     struct iob *fp = (struct iob *) stream;
     int result = EOF;
+    unsigned long flags;
+    int buffer_mode;
 
     ENTER();
     SHOWVALUE(c);
     SHOWPOINTER(stream);
 
-    if (stream == NULL) {
+    if (__builtin_expect(stream == NULL, 0)) {
         __set_errno_r(__clib4, EFAULT);
         RETURN(result);
         return result;
@@ -126,6 +168,36 @@ __fputc_r(struct _clib4 *__clib4, int c, FILE *stream) {
 
     __flockfile_r(__clib4, stream);
 
+    flags = fp->iob_Flags;
+
+    /* Ultra-fast path — same as fputc() above */
+    if (__builtin_expect(
+            (flags & (IOBF_IN_USE | IOBF_WRITE)) == (IOBF_IN_USE | IOBF_WRITE) &&
+            fp->iob_Buffer != NULL &&
+            fp->iob_BufferReadBytes == 0, 1)) {
+
+        if (__builtin_expect(fp->iob_BufferWriteBytes < fp->iob_BufferSize, 1)) {
+            fp->iob_Buffer[fp->iob_BufferWriteBytes++] = c;
+            buffer_mode = (flags & IOBF_BUFFER_MODE);
+            if (__builtin_expect(buffer_mode == IOBF_BUFFER_MODE_FULL, 1)) {
+                result = (c & 255);
+                goto out;
+            }
+            if (buffer_mode == IOBF_BUFFER_MODE_NONE ||
+                (buffer_mode == IOBF_BUFFER_MODE_LINE && c == '\n')) {
+                if (__sflush(__clib4, fp) != 0) {
+                    fp->iob_BufferWriteBytes--;
+                    goto out;
+                }
+            }
+            result = (c & 255);
+            goto out;
+        }
+        result = __swbuf(__clib4, c, fp);
+        goto out;
+    }
+
+    /* Slow path */
     if (__fputc_check(__clib4, stream) < 0)
         goto out;
 

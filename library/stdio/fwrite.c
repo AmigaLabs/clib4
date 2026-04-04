@@ -18,6 +18,7 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     size_t w;           /* writable space in buffer */
     int buffer_mode;
     size_t result = 0;
+    unsigned long flags;
 
     ENTER();
 
@@ -26,59 +27,59 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     SHOWVALUE(count);
     SHOWPOINTER(stream);
 
-    if (ptr == NULL || stream == NULL) {
+    if (__builtin_expect(ptr == NULL || stream == NULL, 0)) {
         SHOWMSG("invalid parameters");
         __set_errno_r(__clib4, EFAULT);
         RETURN(result);
         return result;
     }
 
-    /* Check for overflow. */
-    total_size = element_size * count;
-    if (total_size == 0) {
-        RETURN(result);
-        return result;
+    /* Compute total size. Avoid expensive PPC integer division for the
+     * overwhelmingly common case of element_size==1 or count==1. */
+    if (__builtin_expect(element_size <= 1, 1)) {
+        total_size = element_size * count; /* 0 or count — can't overflow */
+    } else if (__builtin_expect(count <= 1, 1)) {
+        total_size = element_size * count; /* 0 or element_size — can't overflow */
+    } else {
+        total_size = element_size * count;
+        if ((total_size / element_size) != count) {
+            RETURN(result);
+            return result;
+        }
     }
-    if (element_size != 0 && (total_size / element_size) != count) {
+
+    if (__builtin_expect(total_size == 0, 0)) {
         RETURN(result);
         return result;
     }
 
     __flockfile_r(__clib4, stream);
 
-    if (FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE)) {
+    flags = fp->iob_Flags;
+
+    if (__builtin_expect(FLAG_IS_CLEAR(flags, IOBF_IN_USE), 0)) {
         SET_FLAG(fp->iob_Flags, IOBF_ERROR);
         __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
     /*
-     * Fast path: if the buffer is already allocated, no pending read data,
-     * no ungetc data, and we're not switching modes, skip __swsetup().
-     * This avoids a function call + 5 redundant checks on every write.
+     * Ultra-fast path: fully-buffered stream with buffer ready + data fits.
+     * Combines the __swsetup skip, buffer_mode check, and write into a
+     * single branch sequence — the common case for repeated small writes.
      */
-    if (fp->iob_Buffer != NULL && fp->iob_BufferReadBytes == 0 && !HASUB(fp)) {
-        /* Already set up for writing — skip __swsetup. */
-    } else {
-        /* Slow path: first write, or mode switch needed. */
-        if (__swsetup(__clib4, fp) != 0)
-            goto out;
-    }
+    buffer_mode = (flags & IOBF_BUFFER_MODE);
 
-    s = (const unsigned char *) ptr;
-    buffer_mode = (fp->iob_Flags & IOBF_BUFFER_MODE);
-
-    /*
-     * Fast path: small write to fully-buffered stream with space.
-     * Avoids memcpy call overhead for the very common 1-byte case.
-     */
-    if (buffer_mode == IOBF_BUFFER_MODE_FULL) {
-        w = WRITABLE_SPACE(fp);
-        if (total_size <= w) {
+    if (__builtin_expect(
+            buffer_mode == IOBF_BUFFER_MODE_FULL &&
+            fp->iob_Buffer != NULL &&
+            fp->iob_BufferReadBytes == 0, 1)) {
+        w = fp->iob_BufferSize - fp->iob_BufferWriteBytes;
+        if (__builtin_expect(total_size <= w, 1)) {
             if (total_size == 1) {
-                fp->iob_Buffer[fp->iob_BufferWriteBytes++] = *s;
+                fp->iob_Buffer[fp->iob_BufferWriteBytes++] = *(const unsigned char *)ptr;
             } else {
-                memcpy(WRITE_PTR(fp), s, total_size);
+                memcpy(fp->iob_Buffer + fp->iob_BufferWriteBytes, ptr, total_size);
                 fp->iob_BufferWriteBytes += total_size;
             }
             result = count;
@@ -87,9 +88,22 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
     }
 
     /*
-     * Unbuffered: write directly via fp->_write, one byte at a time
-     * would be too slow, so we batch. For truly unbuffered, write
-     * everything straight out.
+     * Medium path: buffer is ready but needs __swsetup-style checks
+     * (e.g. line-buffered, or buffer full).
+     */
+    if (fp->iob_Buffer != NULL && fp->iob_BufferReadBytes == 0 && !HASUB(fp)) {
+        /* Already set up for writing — skip __swsetup. */
+    } else {
+        /* Slow path: first write, or mode switch needed. */
+        if (__swsetup(__clib4, fp) != 0)
+            goto out;
+        buffer_mode = (fp->iob_Flags & IOBF_BUFFER_MODE);
+    }
+
+    s = (const unsigned char *) ptr;
+
+    /*
+     * Unbuffered: write directly via fp->_write.
      */
     if (buffer_mode == IOBF_BUFFER_MODE_NONE) {
         if (fp->_write != NULL) {
