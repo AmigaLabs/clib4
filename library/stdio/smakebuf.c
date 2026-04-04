@@ -40,10 +40,16 @@ __swhatbuf(struct _clib4 *__clib4, struct iob *fp, int *couldbetty) {
             *couldbetty = 1;
         }
 
-        /* Try to stat for block size */
+        /* Try to stat for block size.
+         * AmigaOS returns st_blksize=512 (filesystem block size) which
+         * is too small for efficient stdio — most reads/writes are multi-KB.
+         * Enforce a minimum of 8192 to enable effective buffering. */
         if (fstat(fd, &st) == 0 && st.st_blksize > 0) {
-            RETURN((int) st.st_blksize);
-            return (int) st.st_blksize;
+            int blksize = (int) st.st_blksize;
+            if (blksize < 8192)
+                blksize = 8192;
+            RETURN(blksize);
+            return blksize;
         }
     }
 

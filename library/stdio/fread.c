@@ -17,6 +17,7 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
     unsigned char *data = ptr;
     size_t r;           /* readable bytes in buffer */
     size_t result = 0;
+    int locked;
 
     ENTER();
 
@@ -32,17 +33,6 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
         return result;
     }
 
-    __check_abort_f(__clib4);
-
-    int locked = __ftrylockfile_r(__clib4, stream);
-
-    if (__builtin_expect(FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE), 0)) {
-        SHOWMSG("this file is not even in use");
-        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
-        __set_errno(EBADF);
-        goto out;
-    }
-
     /* Compute total size; skip expensive division for common cases */
     if (__builtin_expect(element_size <= 1, 1)) {
         total_size = element_size * count;
@@ -51,19 +41,46 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
     } else {
         total_size = element_size * count;
         if ((total_size / element_size) != count) {
-            goto out;
+            RETURN(0);
+            return 0;
         }
     }
 
     if (__builtin_expect(total_size == 0, 0)) {
-        goto out;
+        RETURN(0);
+        return 0;
     }
 
     SHOWVALUE(total_size);
 
     /*
-     * Fast path: data already in buffer, no ungetc pending.
-     * Covers the very common case of repeated small reads.
+     * Inline lock — avoids __ftrylockfile_r function call overhead.
+     * IOBF_LOCKED means the file was explicitly locked by flockfile();
+     * in that case, skip the semaphore (caller holds it).
+     */
+    if (__builtin_expect(FLAG_IS_CLEAR(fp->iob_Flags, IOBF_LOCKED), 1)) {
+        if (__builtin_expect(fp->iob_Lock != NULL, 1)) {
+            if (__builtin_expect(!AttemptSemaphore(fp->iob_Lock), 0)) {
+                RETURN(0);
+                return 0;
+            }
+        }
+        locked = OK;
+    } else {
+        locked = ERROR;  /* Already locked by flockfile() — don't unlock */
+    }
+
+    if (__builtin_expect(FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE), 0)) {
+        SHOWMSG("this file is not even in use");
+        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+        __set_errno(EBADF);
+        goto out;
+    }
+
+    /*
+     * Fast path 1: data already in buffer, no ungetc pending.
+     * Covers the very common case of repeated small reads from
+     * a pre-filled buffer. No signal check, no cantread, no smakebuf.
      */
     if (__builtin_expect(fp->iob_Buffer != NULL && !HASUB(fp), 1)) {
         r = fp->iob_BufferReadBytes - fp->iob_BufferPosition;
@@ -73,7 +90,40 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
             result = count;
             goto out;
         }
+
+        /*
+         * Fast path 2: buffer is drained and request >= buffer size.
+         * Read directly into the user buffer, bypassing the FILE buffer.
+         * Skip cantread/smakebuf overhead — these only matter on first
+         * use, and by now the buffer is already set up.
+         */
+        if (r == 0 && total_size >= (size_t)fp->iob_BufferSize
+                    && fp->_read != NULL) {
+            size_t remaining = total_size;
+            while (remaining > 0) {
+                ssize_t nr = fp->_read(fp->_cookie, (char *)data,
+                                       (int)remaining);
+                if (__builtin_expect(nr <= 0, 0)) {
+                    if (nr == 0)
+                        SET_FLAG(fp->iob_Flags, IOBF_EOF_REACHED);
+                    else
+                        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+                    break;
+                }
+                data += nr;
+                remaining -= nr;
+            }
+            result = (total_size - remaining) / element_size;
+            goto out;
+        }
     }
+
+    /*
+     * Slow path — only reached on first read (buffer not yet allocated),
+     * ungetc pushback, or partial buffer drain.
+     * Check CTRL-C here, not on every fast-path read.
+     */
+    __check_abort_f(__clib4);
 
     /* Slow path: need to check readability */
     if (__builtin_expect(cantread(__clib4, fp), 0)) {
@@ -161,8 +211,10 @@ done:
     D(("total number of elements read = %ld", result));
 
 out:
-    if (locked == OK)
-        __funlockfile_r(__clib4, stream);
+    /* Inline unlock — avoids __funlockfile_r function call overhead */
+    if (locked == OK && __builtin_expect(fp->iob_Lock != NULL, 1)) {
+        ReleaseSemaphore(fp->iob_Lock);
+    }
 
     RETURN(result);
     return result;
