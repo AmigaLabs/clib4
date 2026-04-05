@@ -2,7 +2,7 @@
 #define REVISION		1
 #define SUBREVISION		0
 
-#define DATE			"04.04.2026"
+#define DATE			"05.04.2026"
 #define VERS			"clib4.library 2.1"
-#define VSTRING			"clib4.library 2.1 (04.04.2026)\r\n"
-#define VERSTAG			"\0$VER: clib4.library 2.1-ab40f98 (04.04.2026)"
+#define VSTRING			"clib4.library 2.1 (05.04.2026)\r\n"
+#define VERSTAG			"\0$VER: clib4.library 2.1-ab40f98 (05.04.2026)"

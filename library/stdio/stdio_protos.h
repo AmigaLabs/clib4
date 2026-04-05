@@ -44,10 +44,7 @@ extern void __initialize_iob(struct iob *iob, file_action_iob_t action_function,
 extern BOOL __is_valid_iob(struct _clib4 *__clib4, struct iob *iob);
 extern int __grow_fd_table(struct _clib4 *__clib4, int max_fd);
 extern int __grow_iob_table(struct _clib4 *__clib4, int max_fd);
-extern int __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int file_descriptor, int slot_number);
-extern int __fill_iob_read_buffer(struct _clib4 *__clib4, struct iob *file);
-extern int __drop_iob_read_buffer(struct _clib4 *__clib4, struct iob *file);
-extern int __flush_iob_write_buffer(struct _clib4 *__clib4, struct iob *file);
+
 extern int __fgetc_check(struct _clib4 *__clib4, FILE *stream);
 extern int __fgetc(struct _clib4 *__clib4, FILE *stream);
 extern int __fputc_check(struct _clib4 *__clib4, FILE *stream);

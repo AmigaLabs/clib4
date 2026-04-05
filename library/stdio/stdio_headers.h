@@ -357,24 +357,7 @@ struct bcpl_name {
 
 /****************************************************************************/
 
-/*extern int __iob_read_buffer_is_empty(struct iob * file);*/
 
-#define __iob_read_buffer_is_empty(file) \
-	(((struct iob *)file)->iob_BufferReadBytes == 0 || \
-	((struct iob *)file)->iob_BufferPosition == ((struct iob *)file)->iob_BufferReadBytes)
-
-/****************************************************************************/
-
-#define __iob_num_unread_bytes(file) \
-	((((struct iob *)file)->iob_BufferReadBytes > 0 && \
-	 ((struct iob *)file)->iob_BufferPosition < ((struct iob *)file)->iob_BufferReadBytes) \
-	  ? (((struct iob *)file)->iob_BufferReadBytes - ((struct iob *)file)->iob_BufferPosition) \
-	  : 0)
-
-/****************************************************************************/
-
-#define __iob_read_buffer_is_valid(file) \
-	(((struct iob *)file)->iob_BufferReadBytes > 0)
 
 /****************************************************************************/
 

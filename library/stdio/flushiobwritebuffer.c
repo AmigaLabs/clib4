@@ -75,19 +75,4 @@ __sflush(struct _clib4 *__clib4, struct iob *fp) {
     return EOF;
 }
 
-/*
- * __flush_iob_write_buffer — Legacy wrapper around __sflush.
- *
- * Kept for backward compatibility during transition.
- */
-int
-__flush_iob_write_buffer(struct _clib4 *__clib4, struct iob *file) {
-    int result;
 
-    assert(file != NULL);
-    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
-
-    result = __sflush(__clib4, file);
-
-    return (result == 0) ? OK : ERROR;
-}

@@ -379,7 +379,6 @@ C_STDIO := \
 	stdio/clearerr.o \
 	stdio/ctermid.o \
 	stdio/dprintf.o \
-	stdio/dropiobreadbuffer.o \
 	stdio/duplicate_fd.o \
 	stdio/err.o \
 	stdio/fclose.o \
@@ -391,7 +390,6 @@ C_STDIO := \
 	stdio/fgetpos.o \
 	stdio/fgetpos64.o \
 	stdio/fgets.o \
-	stdio/filliobreadbuffer.o \
 	stdio/findfp.o \
 	stdio/findvacantfdentry.o \
 	stdio/findvacantiobentry.o \
@@ -438,7 +436,6 @@ C_STDIO := \
 	stdio/file_init.o \
 	stdio/iobhookentry.o \
 	stdio/lock.o \
-	stdio/openiob.o \
 	stdio/perror.o \
 	stdio/popen.o \
 	stdio/printf.o \
