@@ -39,12 +39,12 @@ __sync_fd(struct fd *fd, int mode) {
     if (mode != 0) {
         /* Full sync requested (fsync): also ask the filesystem to flush
            its internal caches to disk via the proper DOS API.
-           We use FlushVolumePort() instead of raw DoPkt(ACTION_FLUSH)
-           because some filesystems (e.g. SmartFilesystem) crash with
-           the raw packet. */
-        struct FileHandle *fh = BADDR(fd->fd_File);
-        if (fh != NULL && fh->fh_MsgPort != NULL)
-            FlushVolumePort(fh->fh_MsgPort);
+           We use DevNameFromFH + FlushVolume instead of accessing the
+           FileHandle struct directly (BADDR + fh_MsgPort) because the
+           internal FileHandle layout may not be safe to access. */
+        TEXT devname[256];
+        if (DevNameFromFH(fd->fd_File, devname, sizeof(devname), DN_DEVICEONLY))
+            FlushVolume(devname);
     }
 
     result = OK;
