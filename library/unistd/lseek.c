@@ -9,7 +9,7 @@
 off_t
 lseek(int file_descriptor, off_t offset, int mode) {
     struct file_action_message fam;
-    off_t result = CHANGE_FILE_ERROR;
+    off_t result = -1;
     struct fd *fd = NULL;
     off_t position;
     struct _clib4 *__clib4 = __CLIB4;
@@ -50,22 +50,18 @@ lseek(int file_descriptor, off_t offset, int mode) {
 
     assert(fd->fd_Action != NULL);
 
-    /* Note that a return value of 0 (= CHANGE_FILE_ERROR) may be a
-       valid file position in files larger than 2 GBytes. Just
-       to be sure, we therefore also check the secondary error
-       to verify that what could be a file position is really
-       an error indication. */
+    /*
+     * fd_Action returns the new file position on success, or EOF (-1)
+     * on error with fam.fam_Error set to the errno value.
+     *
+     * POSIX: lseek returns (off_t)-1 on error with errno set.
+     */
     position = (*fd->fd_Action)(__clib4, fd, &fam);
-    if (position == CHANGE_FILE_ERROR && fam.fam_Error != OK) {
+    if (position == EOF && fam.fam_Error != OK) {
         __fd_unlock(fd);
         __set_errno(fam.fam_Error);
         goto out;
     }
-
-    /* If this is a valid file position, clear 'errno' so that
-       it cannot be mistaken for an error. */
-    if (position < 0)
-        __set_errno(OK);
 
     result = position;
 

@@ -538,6 +538,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         new_position = GetFilePosition(file);
                         if (new_position == GETPOSITION_ERROR) {
                             fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            goto out;
                         }
                     }
 

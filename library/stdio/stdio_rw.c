@@ -186,8 +186,7 @@ __sseek(void *cookie, fpos_t offset, int whence) {
     result = (*fd->fd_Action)(__clib4, fd, &fam);
 
     if (result == EOF) {
-        if (fam.fam_Error != 0)
-            __set_errno(fam.fam_Error);
+        __set_errno(fam.fam_Error != 0 ? fam.fam_Error : EIO);
         RETURN(-1);
         return (fpos_t) -1;
     }
