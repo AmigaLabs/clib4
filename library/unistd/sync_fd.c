@@ -13,6 +13,7 @@
 int
 __sync_fd(struct fd *fd, int mode) {
     int result = ERROR;
+    (void)mode;
 
     assert(fd != NULL);
 
@@ -28,17 +29,17 @@ __sync_fd(struct fd *fd, int mode) {
         goto out;
     }
 
-    /* The mode tells us what to flush. 0 means "flush just the data", and
-       everything else means "flush everything. */
-    Flush(fd->fd_File);
-
-    if (mode != 0) {
-        struct FileHandle *fh = BADDR(fd->fd_File);
-
-        /* Verify that this file is not bound to "NIL:". */
-        if (fh->fh_MsgPort != NULL)
-            DoPkt(fh->fh_MsgPort, ACTION_FLUSH, 0, 0, 0, 0, 0);
+    if (fd->fd_File == ZERO) {
+        __set_errno(EBADF);
+        goto out;
     }
+
+    /* Flush the dos.library file buffer to the filesystem handler.
+       FFlush sends buffered data to the handler, which is sufficient
+       for both data-only (mode==0) and full sync (mode!=0) on AmigaOS.
+       We do NOT send a raw ACTION_FLUSH packet via DoPkt because some
+       filesystems (e.g. SmartFilesystem) crash when receiving it. */
+    Flush(fd->fd_File);
 
     result = OK;
 
