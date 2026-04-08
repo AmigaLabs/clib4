@@ -13,7 +13,7 @@ fgets(char *buf, int n, FILE *stream) {
     struct iob *fp = (struct iob *) stream;
     struct _clib4 *__clib4 = __CLIB4;
     char *s;
-    size_t r;
+    ssize_t r;
     unsigned char *p;
 
     ENTER();
@@ -37,6 +37,13 @@ fgets(char *buf, int n, FILE *stream) {
         goto out;
     }
 
+    /* Clear residual EOF/error flags so that ferror()/feof() after this
+     * call reflect only errors from THIS read, not previous ones.
+     * This matches the old fgets() behavior and prevents stale flags
+     * from confusing callers like sqlite3's line reading loop. */
+    CLEAR_FLAG(fp->iob_Flags, IOBF_EOF_REACHED);
+    CLEAR_FLAG(fp->iob_Flags, IOBF_ERROR);
+
     s = buf;
     n--;    /* leave room for NUL terminator */
 
@@ -55,20 +62,20 @@ fgets(char *buf, int n, FILE *stream) {
         }
 
         /* Scan for newline in the buffered data. */
-        if ((size_t) n < r)
+        if (n < r)
             r = n;
-        p = memchr(READ_PTR(fp), '\n', r);
+        p = memchr(READ_PTR(fp), '\n', (size_t)r);
         if (p != NULL) {
             /* Found newline — include it and stop. */
-            r = (size_t)(p - READ_PTR(fp)) + 1;
-            memcpy(s, READ_PTR(fp), r);
+            r = (ssize_t)(p - READ_PTR(fp)) + 1;
+            memcpy(s, READ_PTR(fp), (size_t)r);
             fp->iob_BufferPosition += r;
             s += r;
             break;
         }
 
         /* No newline found — copy everything and continue. */
-        memcpy(s, READ_PTR(fp), r);
+        memcpy(s, READ_PTR(fp), (size_t)r);
         fp->iob_BufferPosition += r;
         s += r;
         n -= r;

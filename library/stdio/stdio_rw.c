@@ -44,7 +44,7 @@ __sread(void *cookie, char *buf, int n) {
     }
 
     fd = __clib4->__fd[fp->iob_Descriptor];
-    if (__builtin_expect(fd == NULL, 0)) {
+    if (__builtin_expect(fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE), 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return -1;
@@ -57,6 +57,7 @@ __sread(void *cookie, char *buf, int n) {
     fam.fam_Action = file_action_read;
     fam.fam_Data = buf;
     fam.fam_Size = n;
+    fam.fam_Error = 0;
 
     assert(fd->fd_Action != NULL);
     result = (*fd->fd_Action)(__clib4, fd, &fam);
@@ -102,7 +103,7 @@ __swrite(void *cookie, const char *buf, int n) {
     }
 
     fd = __clib4->__fd[fp->iob_Descriptor];
-    if (__builtin_expect(fd == NULL, 0)) {
+    if (__builtin_expect(fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE), 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return -1;
@@ -124,6 +125,7 @@ __swrite(void *cookie, const char *buf, int n) {
     fam.fam_Action = file_action_write;
     fam.fam_Data = (char *) buf;
     fam.fam_Size = n;
+    fam.fam_Error = 0;
 
     assert(fd->fd_Action != NULL);
     result = (*fd->fd_Action)(__clib4, fd, &fam);
@@ -169,7 +171,7 @@ __sseek(void *cookie, fpos_t offset, int whence) {
     }
 
     fd = __clib4->__fd[fp->iob_Descriptor];
-    if (__builtin_expect(fd == NULL, 0)) {
+    if (__builtin_expect(fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE), 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return (fpos_t) -1;
@@ -181,6 +183,7 @@ __sseek(void *cookie, fpos_t offset, int whence) {
     fam.fam_Action = file_action_seek;
     fam.fam_Offset = offset;
     fam.fam_Mode = whence;
+    fam.fam_Error = 0;
 
     assert(fd->fd_Action != NULL);
     result = (*fd->fd_Action)(__clib4, fd, &fam);
@@ -217,6 +220,8 @@ __sclose(void *cookie) {
 
     ENTER();
 
+    memset(&fam, 0, sizeof(fam));
+
     /* Inline fd lookup */
     if (__builtin_expect(fp->iob_Descriptor < 0 || fp->iob_Descriptor >= __clib4->__num_fd, 0)) {
         __set_errno(EBADF);
@@ -225,7 +230,7 @@ __sclose(void *cookie) {
     }
 
     fd = __clib4->__fd[fp->iob_Descriptor];
-    if (__builtin_expect(fd == NULL, 0)) {
+    if (__builtin_expect(fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE), 0)) {
         __set_errno(EBADF);
         RETURN(-1);
         return -1;

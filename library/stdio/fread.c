@@ -60,10 +60,7 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
      */
     if (__builtin_expect(FLAG_IS_CLEAR(fp->iob_Flags, IOBF_LOCKED), 1)) {
         if (__builtin_expect(fp->iob_Lock != NULL, 1)) {
-            if (__builtin_expect(!AttemptSemaphore(fp->iob_Lock), 0)) {
-                RETURN(0);
-                return 0;
-            }
+            ObtainSemaphore(fp->iob_Lock);
         }
         locked = OK;
     } else {

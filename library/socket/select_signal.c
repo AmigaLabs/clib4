@@ -202,9 +202,10 @@ map_descriptor_sets(
                 }
 
                 /* If we are dealing with STDIN, mark it as Socket. This flag is used in
-                 * read() calls to handle carriage return
+                 * read() calls to handle carriage return.
+                 * Use fd number (file_fd), not the BPTR (fd->fd_File).
                  */
-                if (fd->fd_File == STDIN_FILENO) {
+                if (file_fd == STDIN_FILENO) {
                     SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
                     SET_FLAG(fd->fd_Flags, FDF_STDIN_AS_SOCKET);
                 }
@@ -917,6 +918,17 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         remap_descriptor_sets(__clib4, socket_except_fds, total_socket_fd, NULL, 0, except_fds, num_fds);
 
         __stdio_unlock(__clib4);
+    }
+
+    /* Clean up temporary flags set on stdin by map_descriptor_sets.
+     * FDF_NON_BLOCKING and FDF_STDIN_AS_SOCKET were only needed
+     * during the select operation itself. */
+    {
+        struct fd *stdin_fd = get_file_descriptor(__clib4, STDIN_FILENO);
+        if (stdin_fd != NULL && FLAG_IS_SET(stdin_fd->fd_Flags, FDF_STDIN_AS_SOCKET)) {
+            CLEAR_FLAG(stdin_fd->fd_Flags, FDF_STDIN_AS_SOCKET);
+            CLEAR_FLAG(stdin_fd->fd_Flags, FDF_NON_BLOCKING);
+        }
     }
 
 out:

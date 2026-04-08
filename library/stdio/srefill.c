@@ -31,9 +31,22 @@ __srefill(struct _clib4 *__clib4, struct iob *fp) {
 
     /* If there's still unread data in the buffer, nothing to do */
     if (__builtin_expect(fp->iob_BufferReadBytes > 0 &&
-        fp->iob_BufferPosition < fp->iob_BufferReadBytes, 0)) {
+        fp->iob_BufferPosition < fp->iob_BufferReadBytes, 1)) {
         RETURN(0);
         return 0;
+    }
+
+    /*
+     * BSD lflush: before reading from a line-buffered stream, flush all
+     * line-buffered output streams. This ensures prompts written to stdout
+     * are visible before we block waiting for input on stdin.
+     * This matches the old __fill_iob_read_buffer() behavior.
+     */
+    if ((fp->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_LINE) {
+        if (__flush_all_files(__clib4, IOBF_BUFFER_MODE_LINE) < 0) {
+            RETURN(EOF);
+            return EOF;
+        }
     }
 
     /* If there is pending write data, flush it first */
@@ -68,6 +81,7 @@ __srefill(struct _clib4 *__clib4, struct iob *fp) {
         fam.fam_Action = file_action_read;
         fam.fam_Data = (char *) fp->iob_Buffer;
         fam.fam_Size = fp->iob_BufferSize;
+        fam.fam_Error = 0;
         n = (ssize_t)(*fp->iob_Action)(__clib4, fp, &fam);
         if (n == EOF && fam.fam_Error != OK) {
             SET_FLAG(fp->iob_Flags, IOBF_ERROR);
