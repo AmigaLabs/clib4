@@ -6,21 +6,8 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+/* off_t and off64_t are both int64_t, so delegate to pwrite */
 ssize_t
 pwrite64(int fd, const void *buf, size_t n, off64_t off) {
-    off64_t cur_pos;
-    ssize_t num_written;
-
-    if ((cur_pos = lseek64(fd, 0, SEEK_CUR)) == (off64_t) - 1)
-        return -1;
-
-    if (lseek64(fd, off, SEEK_SET) == (off64_t) - 1)
-        return -1;
-
-    num_written = write(fd, buf, n);
-
-    if (lseek64(fd, cur_pos, SEEK_SET) == (off64_t) - 1)
-        return -1;
-
-    return (ssize_t) num_written;
+    return pwrite(fd, buf, n, (off_t) off);
 }
