@@ -13,10 +13,16 @@
 int
 __sync_fd(struct fd *fd, int mode) {
     int result = ERROR;
+    BPTR file;
 
     assert(fd != NULL);
 
     __fd_lock(fd);
+
+    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE)) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
         __set_errno(EINVAL);
@@ -28,13 +34,20 @@ __sync_fd(struct fd *fd, int mode) {
         goto out;
     }
 
-    if (fd->fd_File == ZERO) {
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) ||
+        FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
+        __set_errno(EBADF);
+        goto out;
+    }
+
+    file = __resolve_fd_file(fd);
+    if (file == BZERO) {
         __set_errno(EBADF);
         goto out;
     }
 
     /* Flush the dos.library file buffer to the filesystem handler. */
-    Flush(fd->fd_File);
+    Flush(file);
 
     if (mode != 0) {
         /* Full sync requested (fsync): also ask the filesystem to flush
@@ -43,7 +56,7 @@ __sync_fd(struct fd *fd, int mode) {
            FileHandle struct directly (BADDR + fh_MsgPort) because the
            internal FileHandle layout may not be safe to access. */
         TEXT devname[256];
-        if (DevNameFromFH(fd->fd_File, devname, sizeof(devname), DN_DEVICEONLY))
+        if (DevNameFromFH(file, devname, sizeof(devname), DN_DEVICEONLY))
             FlushVolume(devname);
     }
 
