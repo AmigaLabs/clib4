@@ -164,6 +164,9 @@ C_POSIX := \
 	posix/msync.o \
 	posix/mprotect.o \
 	posix/mlock.o \
+	posix/munlock.o \
+	posix/mlockall.o \
+	posix/munlockall.o \
 	posix/poll.o \
 	posix/getrlimit.o \
 	posix/setrlimit.o \
