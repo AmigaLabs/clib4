@@ -27,6 +27,7 @@ static TestModule test_modules[] = {
     {"Math Functions", "./test_math"},
     {"Time Functions", "./test_time"},
     {"mmap / mprotect", "./test_mmap"},
+    {"mlock / munlock / mlockall", "./test_mlock"},
     {NULL, NULL}
 };
 

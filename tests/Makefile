@@ -11,7 +11,7 @@ CFLAGS = -Wall -Wextra -std=c99 -D_GNU_SOURCE -mcrt=clib4
 LDFLAGS = -lm
 
 # Test programs
-TESTS = test_string test_stdlib test_stdio test_math test_time test_shm test_mmap
+TESTS = test_string test_stdlib test_stdio test_math test_time test_shm test_mmap test_mlock
 TEST_RUNNER = test_runner
 
 # All targets
@@ -37,6 +37,9 @@ test_shm: test_shm.c test_framework.h
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 test_mmap: test_mmap.c test_framework.h
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+
+test_mlock: test_mlock.c test_framework.h
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 # Test runner
@@ -68,6 +71,9 @@ run-shm: test_shm
 
 run-mmap: test_mmap
 	./test_mmap
+
+run-mlock: test_mlock
+	./test_mlock
 
 # Clean build artifacts
 clean:

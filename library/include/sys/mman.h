@@ -33,11 +33,19 @@ __BEGIN_DECLS
 #define MS_SYNC       4                /* Synchronous memory sync.  */
 #define MS_INVALIDATE 2                /* Invalidate the caches.  */
 
+/* Flags to `mlockall'.  */
+#define MCL_CURRENT     1              /* Lock all currently mapped pages. */
+#define MCL_FUTURE      2              /* Lock all pages mapped in the future. */
+#define MCL_ONFAULT     4              /* Lock pages on fault (Linux 4.4+). */
 
 extern void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
 extern int munmap(void *map, size_t length);
 extern int msync(void *addr, size_t len, int flags);
 extern int mprotect(void *addr, size_t len, int prot);
+extern int mlock(const void *addr, size_t len);
+extern int munlock(const void *addr, size_t len);
+extern int mlockall(int flags);
+extern int munlockall(void);
 
 __END_DECLS
 
