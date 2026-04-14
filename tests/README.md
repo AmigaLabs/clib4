@@ -92,6 +92,20 @@ Tests for `mprotect()` (POSIX.1-2001) and the page-alignment guarantee of `mmap(
 - **Multiple mappings**: 4 concurrent `mmap()` calls all return page-aligned pointers
 - **MMU write-enforcement note**: writing to a `PROT_NONE` page causes a real hardware DSI exception on AmigaOS 4 (confirmed by crash log); the in-process write test is intentionally omitted because `siglongjmp` recovery from a hardware DSI is not safe
 
+### 8. Memory Locking Functions (`test_mlock.c`)
+Tests for `mlock()`, `mlock2()`, `munlock()`, `mlockall()`, `munlockall()` (POSIX.1-2001 + Linux):
+- **`mlock()` error paths**: `len=0` → success no-op; `addr+len` overflow → EINVAL
+- **`munlock()` error paths**: `len=0` → success no-op; `addr+len` overflow → EINVAL
+- **`mlock`/`munlock` success**: heap memory, page-aligned memory, stack buffer, anonymous `mmap` region, multiple concurrent regions
+- **`mlock2()` error paths**: unknown flags → EINVAL; `len=0` → no-op; `addr+len` overflow → EINVAL
+- **`mlock2()` success**: `flags=0` (identical to `mlock()`), `MLOCK_ONFAULT` (same behaviour on AmigaOS 4 — no non-resident pages exist)
+- **`mlockall()` error paths**: unknown flags → EINVAL; `MCL_ONFAULT` alone (without `MCL_CURRENT`/`MCL_FUTURE`) → EINVAL
+- **`mlockall()` success**: `MCL_CURRENT`, `MCL_FUTURE`, `MCL_CURRENT|MCL_FUTURE`, `MCL_CURRENT|MCL_ONFAULT`
+- **`munlockall()`**: always succeeds
+- **Constant values**: `MCL_CURRENT=1`, `MCL_FUTURE=2`, `MCL_ONFAULT=4`, `MLOCK_ONFAULT=1`
+
+**AmigaOS 4 notes**: AmigaOS 4 has no virtual memory or swap subsystem — all allocated memory is always physically resident in RAM. `mlock()`/`mlock2()`/`munlock()` delegate to `IExec->LockMem()`/`IExec->UnlockMem()`, which pin memory for hardware DMA stability. `mlockall()` and `munlockall()` are validated no-ops.
+
 ## Building the Tests
 
 ### Prerequisites
@@ -119,6 +133,7 @@ make test_math     # Build math tests only
 make test_time     # Build time tests only
 make test_shm      # Build shm tests only
 make test_mmap     # Build mprotect/mmap tests only
+make test_mlock    # Build mlock/mlock2/mlockall tests only
 ```
 
 ## Running the Tests
@@ -138,7 +153,10 @@ make run-string   # Run string tests only
 make run-stdlib   # Run stdlib tests only
 make run-stdio    # Run stdio tests only
 make run-math     # Run math tests only
-make run-time     # Run time tests onlymake run-mmap     - Run mprotect/mmap tests only```
+make run-time     # Run time tests only
+make run-mmap     # Run mprotect/mmap tests only
+make run-mlock    # Run mlock/mlock2/mlockall tests only
+```
 
 Or run the test executables directly:
 
@@ -149,6 +167,7 @@ Or run the test executables directly:
 ./test_math
 ./test_time
 ./test_mmap
+./test_mlock
 ```
 
 ### Run the Test Runner
