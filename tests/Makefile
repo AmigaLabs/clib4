@@ -11,7 +11,7 @@ CFLAGS = -Wall -Wextra -std=c99 -D_GNU_SOURCE -mcrt=clib4
 LDFLAGS = -lm
 
 # Test programs
-TESTS = test_string test_stdlib test_stdio test_math test_time test_shm
+TESTS = test_string test_stdlib test_stdio test_math test_time test_shm test_mmap
 TEST_RUNNER = test_runner
 
 # All targets
@@ -34,6 +34,9 @@ test_time: test_time.c test_framework.h
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 test_shm: test_shm.c test_framework.h
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+
+test_mmap: test_mmap.c test_framework.h
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 # Test runner
@@ -63,6 +66,9 @@ run-time: test_time
 run-shm: test_shm
 	./test_shm
 
+run-mmap: test_mmap
+	./test_mmap
+
 # Clean build artifacts
 clean:
 	rm -f $(TESTS) $(TEST_RUNNER)
@@ -83,4 +89,4 @@ help:
 	@echo "  run-time    - Run time tests only"	@echo "  run-shm     - Run shared memory/mmap tests"	@echo "  clean       - Remove all build artifacts"
 	@echo "  help        - Display this help message"
 
-.PHONY: all run run-string run-stdlib run-stdio run-math run-time clean help
+.PHONY: all run run-string run-stdlib run-stdio run-math run-time run-shm run-mmap clean help

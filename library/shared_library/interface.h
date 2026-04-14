@@ -1369,6 +1369,7 @@ struct Clib4IFace {
 
 	char * (* canonicalize_file_name) (const char *name);																	 						 /* 4460 */
 	int (* spawnvpe_fork) (const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);                   /* 4464 */
+	int (* mprotect) (void *addr, size_t len, int prot);                                                                                             /* 4468 */
 };
 
 #ifdef __PIC__

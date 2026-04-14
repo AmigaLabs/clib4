@@ -37,6 +37,7 @@ __BEGIN_DECLS
 extern void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
 extern int munmap(void *map, size_t length);
 extern int msync(void *addr, size_t len, int flags);
+extern int mprotect(void *addr, size_t len, int prot);
 
 __END_DECLS
 

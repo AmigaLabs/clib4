@@ -34,7 +34,7 @@ munmap(void *map, size_t length) {
         }
 
         hdr->magic = 0; /* Invalidate */
-        free(hdr);       /* Free the whole block (header + data) */
+        free(hdr->alloc_base); /* Free the whole memalign'd block */
     } else {
         /* Legacy path: no tracking header, just free as before */
         free(map);
