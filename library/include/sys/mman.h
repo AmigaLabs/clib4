@@ -38,11 +38,15 @@ __BEGIN_DECLS
 #define MCL_FUTURE      2              /* Lock all pages mapped in the future. */
 #define MCL_ONFAULT     4              /* Lock pages on fault (Linux 4.4+). */
 
+/* Flags to `mlock2'.  */
+#define MLOCK_ONFAULT   1              /* Lock only resident pages, mark rest on-fault. */
+
 extern void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
 extern int munmap(void *map, size_t length);
 extern int msync(void *addr, size_t len, int flags);
 extern int mprotect(void *addr, size_t len, int prot);
 extern int mlock(const void *addr, size_t len);
+extern int mlock2(const void *addr, size_t len, unsigned int flags);
 extern int munlock(const void *addr, size_t len);
 extern int mlockall(int flags);
 extern int munlockall(void);

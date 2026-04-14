@@ -278,6 +278,85 @@ static const char *test_mcl_constants(void) {
 }
 
 /* ===================================================================
+ * mlock2() tests
+ * =================================================================== */
+
+/* Test 18: mlock2 with flags=0 behaves like mlock() */
+static const char *test_mlock2_flags_zero(void) {
+    void *buf = malloc(PAGE_SIZE);
+    TEST_ASSERT("malloc should succeed", buf != NULL);
+
+    errno = 0;
+    int r1 = mlock2(buf, PAGE_SIZE, 0);
+    TEST_ASSERT_EQUAL("mlock2(flags=0) should return 0", 0, r1);
+    TEST_ASSERT_EQUAL("errno should be 0 after mlock2(flags=0)", 0, errno);
+
+    int r2 = munlock(buf, PAGE_SIZE);
+    TEST_ASSERT_EQUAL("munlock after mlock2 should return 0", 0, r2);
+
+    free(buf);
+    return NULL;
+}
+
+/* Test 19: mlock2 with MLOCK_ONFAULT */
+static const char *test_mlock2_onfault(void) {
+    void *buf = malloc(PAGE_SIZE);
+    TEST_ASSERT("malloc should succeed", buf != NULL);
+
+    errno = 0;
+    int r1 = mlock2(buf, PAGE_SIZE, MLOCK_ONFAULT);
+    TEST_ASSERT_EQUAL("mlock2(MLOCK_ONFAULT) should return 0", 0, r1);
+    TEST_ASSERT_EQUAL("errno should be 0 after mlock2(MLOCK_ONFAULT)", 0, errno);
+
+    int r2 = munlock(buf, PAGE_SIZE);
+    TEST_ASSERT_EQUAL("munlock after mlock2 should return 0", 0, r2);
+
+    free(buf);
+    return NULL;
+}
+
+/* Test 20: mlock2 with unknown flags → EINVAL */
+static const char *test_mlock2_invalid_flags(void) {
+    void *buf = malloc(PAGE_SIZE);
+    TEST_ASSERT("malloc should succeed", buf != NULL);
+
+    errno = 0;
+    int ret = mlock2(buf, PAGE_SIZE, 0xFF);
+    int saved_errno = errno;
+    free(buf);
+
+    TEST_ASSERT_EQUAL("mlock2 with unknown flags should return -1", -1, ret);
+    TEST_ASSERT_EQUAL("errno should be EINVAL for unknown flags", EINVAL, saved_errno);
+    return NULL;
+}
+
+/* Test 21: mlock2 with len=0 → 0 (no-op) regardless of flags */
+static const char *test_mlock2_zero_len(void) {
+    char buf[64] = {0};
+    errno = 0;
+    int ret = mlock2(buf, 0, MLOCK_ONFAULT);
+    TEST_ASSERT_EQUAL("mlock2 with len=0 should return 0", 0, ret);
+    TEST_ASSERT_EQUAL("errno should be 0 after mlock2(len=0)", 0, errno);
+    return NULL;
+}
+
+/* Test 22: mlock2 with address+length overflow → EINVAL */
+static const char *test_mlock2_overflow(void) {
+    void *addr = (void *)(uintptr_t)1;
+    errno = 0;
+    int ret = mlock2(addr, SIZE_MAX, 0);
+    TEST_ASSERT_EQUAL("mlock2 with overflow should return -1", -1, ret);
+    TEST_ASSERT_EQUAL("errno should be EINVAL for overflow", EINVAL, errno);
+    return NULL;
+}
+
+/* Test 23: MLOCK_ONFAULT constant has correct value */
+static const char *test_mlock_onfault_constant(void) {
+    TEST_ASSERT_EQUAL("MLOCK_ONFAULT should be 1", 1, (int)MLOCK_ONFAULT);
+    return NULL;
+}
+
+/* ===================================================================
  * Test runner
  * =================================================================== */
 
@@ -289,8 +368,8 @@ static const char *test_mcl_constants(void) {
 } while (0)
 
 int main(void) {
-    printf("\n=== mlock / munlock / mlockall / munlockall tests ===\n\n");
-    printf("INFO: On AmigaOS 4, mlock/munlock use IExec->LockMem/UnlockMem.\n");
+    printf("\n=== mlock / munlock / mlock2 / mlockall / munlockall tests ===\n\n");
+    printf("INFO: On AmigaOS 4, mlock/mlock2/munlock use IExec->LockMem/UnlockMem.\n");
     printf("INFO: mlockall/munlockall are no-ops (no swap exists).\n\n");
 
     /* mlock error paths */
@@ -330,6 +409,15 @@ int main(void) {
     /* Constants */
     printf("\n--- MCL_* constants ---\n");
     RUN_TEST(test_mcl_constants);
+
+    /* mlock2 */
+    printf("\n--- mlock2() ---\n");
+    RUN_TEST(test_mlock2_flags_zero);
+    RUN_TEST(test_mlock2_onfault);
+    RUN_TEST(test_mlock2_invalid_flags);
+    RUN_TEST(test_mlock2_zero_len);
+    RUN_TEST(test_mlock2_overflow);
+    RUN_TEST(test_mlock_onfault_constant);
 
     /* Summary */
     printf("\n=== Results: %d/%d tests passed ===\n\n",
