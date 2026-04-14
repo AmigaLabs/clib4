@@ -42,13 +42,9 @@ extern BOOL __is_valid_fd(struct _clib4 *__clib4, struct fd *fd);
 extern int __find_vacant_fd_entry(struct _clib4 *__clib4);
 extern void __initialize_iob(struct iob *iob, file_action_iob_t action_function, STRPTR custom_buffer, STRPTR buffer, int64_t buffer_size, int file_descriptor, int slot_number, ULONG flags, struct SignalSemaphore *lock);
 extern BOOL __is_valid_iob(struct _clib4 *__clib4, struct iob *iob);
-extern int __find_vacant_iob_entry(struct _clib4 *__clib4);
 extern int __grow_fd_table(struct _clib4 *__clib4, int max_fd);
 extern int __grow_iob_table(struct _clib4 *__clib4, int max_fd);
-extern int __open_iob(struct _clib4 *__clib4, const char *filename, const char *mode, int file_descriptor, int slot_number);
-extern int __fill_iob_read_buffer(struct _clib4 *__clib4, struct iob *file);
-extern int __drop_iob_read_buffer(struct _clib4 *__clib4, struct iob *file);
-extern int __flush_iob_write_buffer(struct _clib4 *__clib4, struct iob *file);
+
 extern int __fgetc_check(struct _clib4 *__clib4, FILE *stream);
 extern int __fgetc(struct _clib4 *__clib4, FILE *stream);
 extern int __fputc_check(struct _clib4 *__clib4, FILE *stream);
@@ -65,6 +61,21 @@ extern void __remove_fd_alias(struct _clib4 *__clib4, struct fd *fd);
 extern int __stdio_file_init(void);
 extern int __flush_all_files(struct _clib4 *__clib4, int buffer_mode);
 extern int __flush_r(struct _clib4 *__clib4, FILE *stream);
+
+/* New newlib-inspired internal functions */
+extern struct iob *__sfp(struct _clib4 *__clib4);
+extern void __sinit(struct _clib4 *__clib4);
+extern void __smakebuf(struct _clib4 *__clib4, struct iob *fp);
+extern int __srefill(struct _clib4 *__clib4, struct iob *fp);
+extern int __swbuf(struct _clib4 *__clib4, int c, struct iob *fp);
+extern int __swsetup(struct _clib4 *__clib4, struct iob *fp);
+extern int __sflush(struct _clib4 *__clib4, struct iob *fp);
+extern int _fwalk(struct _clib4 *__clib4, int (*func)(struct _clib4 *, struct iob *));
+extern int _fwalk_sglue(struct _clib4 *__clib4, int (*func)(struct _clib4 *, struct iob *), struct _glue *g);
+extern ssize_t __sread(void *cookie, char *buf, int n);
+extern ssize_t __swrite(void *cookie, const char *buf, int n);
+extern fpos_t __sseek(void *cookie, fpos_t offset, int whence);
+extern int __sclose(void *cookie);
 
 #ifdef __USE_LARGEFILE64
 /* stat_fchmod.c */

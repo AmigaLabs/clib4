@@ -830,7 +830,7 @@ __vfprintf_r(struct _clib4 *__clib4, FILE *f, const char *format, va_list ap) {
      * nest flockfile/funlockfile, and funlockfile unconditionally clears
      * the IOBF_LOCKED flag, causing the outer funlockfile to skip
      * ReleaseSemaphore — permanently leaking the lock. */
-    __flush_iob_write_buffer(__clib4, (struct iob *)f);
+    __sflush(__clib4, (struct iob *)f);
 
     RETURN(ret);
     return ret;

@@ -30,9 +30,8 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
     assert(buffer != NULL);
     assert((int) num_bytes >= 0);
 
-    if (buffer == NULL) {
+    if (__builtin_expect(buffer == NULL, 0)) {
         SHOWMSG("invalid buffer address");
-
         __set_errno(EFAULT);
         goto out;
     }
@@ -40,64 +39,69 @@ __write_r(struct _clib4 *__clib4, int file_descriptor, const void *buffer, size_
     assert(file_descriptor >= 0 && file_descriptor < __clib4->__num_fd);
     assert(__clib4->__fd[file_descriptor] != NULL);
 
-    fd = __get_file_descriptor(__clib4, file_descriptor);
-    if (fd == NULL) {
+    /* Inline fd lookup — avoid __get_file_descriptor (takes global lock) */
+    if (__builtin_expect(file_descriptor < 0 || file_descriptor >= __clib4->__num_fd, 0)) {
         __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
-    __stdio_lock(__clib4);
-	__fd_lock(fd);
-
-    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE) && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
-        SHOWMSG("file descriptor is a closed PIPE");
-
-        __set_errno(EPIPE);
-	    __fd_unlock(fd);
-        goto out;
-    }
-
-    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE)) {
-        SHOWMSG("file descriptor is not write-enabled");
-
+    fd = __clib4->__fd[file_descriptor];
+    if (__builtin_expect(fd == NULL, 0)) {
         __set_errno_r(__clib4, EBADF);
-	    __fd_unlock(fd);
         goto out;
     }
-	__fd_unlock(fd);
 
-    if (num_bytes > 0) {
-        /* Check that we are not using a socket */
-        if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
-            struct file_action_message fam;
+    /* Resolve alias */
+    if (__builtin_expect(fd->fd_Original != NULL, 0))
+        fd = fd->fd_Original;
 
-            SHOWMSG("calling the hook");
-
-            fam.fam_Action = file_action_write;
-            fam.fam_Data = (void *) buffer;
-            fam.fam_Size = num_bytes;
-
-            assert(fd->fd_Action != NULL);
-
-            num_bytes_written = (*fd->fd_Action)(__clib4, fd, &fam);
-            if (num_bytes_written == EOF) {
-                __set_errno_r(__clib4, fam.fam_Error);
-                goto out;
-            } else if (num_bytes_written != (ssize_t) num_bytes) {
-                __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
-            }
+    if (__builtin_expect(FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE), 0)) {
+        if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+            __set_errno(EPIPE);
         } else {
-            /* Otherwise forward the call to send() */
-            num_bytes_written = __send_r(__clib4, file_descriptor, buffer, num_bytes, 0);
+            __set_errno_r(__clib4, EBADF);
+        }
+        goto out;
+    }
+
+    if (__builtin_expect(FLAG_IS_CLEAR(fd->fd_Flags, FDF_WRITE), 0)) {
+        SHOWMSG("file descriptor is not write-enabled");
+        __set_errno_r(__clib4, EBADF);
+        goto out;
+    }
+
+    if (__builtin_expect(num_bytes == 0, 0)) {
+        result = 0;
+        goto out;
+    }
+
+    /* Check that we are not using a socket */
+    if (__builtin_expect(!FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET), 1)) {
+        struct file_action_message fam;
+
+        SHOWMSG("calling the hook");
+
+        fam.fam_Action = file_action_write;
+        fam.fam_Data = (void *) buffer;
+        fam.fam_Size = num_bytes;
+
+        assert(fd->fd_Action != NULL);
+
+        num_bytes_written = (*fd->fd_Action)(__clib4, fd, &fam);
+        if (__builtin_expect(num_bytes_written == EOF, 0)) {
+            __set_errno_r(__clib4, fam.fam_Error);
+            goto out;
+        } else if (__builtin_expect(num_bytes_written != (ssize_t) num_bytes, 0)) {
+            __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         }
     } else {
-        num_bytes_written = 0;
+        /* Otherwise forward the call to send() */
+        num_bytes_written = __send_r(__clib4, file_descriptor, buffer, num_bytes, 0);
     }
 
     result = num_bytes_written;
 
 out:
-    __stdio_unlock(__clib4);
 
     RETURN(result);
     return (result);

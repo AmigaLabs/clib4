@@ -1,20 +1,23 @@
 /*
- * $Id: stdio_fread.c,v 1.8 2022-03-27 12:04:24 clib4devs Exp $
-*/
+ * $Id: stdio_fread.c,v 2.0 2025-01-01 00:00:00 clib4devs Exp $
+ *
+ * fread() — newlib-inspired rewrite using __srefill() for buffer management.
+ */
 
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-#ifndef MAX_BYPASS
-#define MAX_BYPASS (256 * 1024) /* 256 KiB max for direct read/write bypass */
-#endif
-
 size_t
 __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
-    struct iob *file = (struct iob *) stream;
-    size_t result = 0;
+    struct iob *fp = (struct iob *) stream;
     struct _clib4 *__clib4 = __CLIB4;
+    size_t total_size;
+    size_t total_bytes_read = 0;
+    unsigned char *data = ptr;
+    size_t r;           /* readable bytes in buffer */
+    size_t result = 0;
+    int locked;
 
     ENTER();
 
@@ -23,174 +26,195 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
     SHOWVALUE(count);
     SHOWPOINTER(stream);
 
-    assert(ptr != NULL && stream != NULL);
-    assert((int) element_size >= 0 && (int) count >= 0);
-
-    if (ptr == NULL || stream == NULL) {
+    if (__builtin_expect(ptr == NULL || stream == NULL, 0)) {
         SHOWMSG("invalid parameters");
-
         __set_errno(EFAULT);
         RETURN(result);
-        return (result);
+        return result;
     }
 
+    /* Compute total size; skip expensive division for common cases */
+    if (__builtin_expect(element_size <= 1, 1)) {
+        total_size = element_size * count;
+    } else if (__builtin_expect(count <= 1, 1)) {
+        total_size = element_size * count;
+    } else {
+        total_size = element_size * count;
+        if ((total_size / element_size) != count) {
+            RETURN(0);
+            return 0;
+        }
+    }
+
+    if (__builtin_expect(total_size == 0, 0)) {
+        RETURN(0);
+        return 0;
+    }
+
+    SHOWVALUE(total_size);
+
+    /*
+     * Inline lock — avoids __ftrylockfile_r function call overhead.
+     * IOBF_LOCKED means the file was explicitly locked by flockfile();
+     * in that case, skip the semaphore (caller holds it).
+     */
+    if (__builtin_expect(FLAG_IS_CLEAR(fp->iob_Flags, IOBF_LOCKED), 1)) {
+        if (__builtin_expect(fp->iob_Lock != NULL, 1)) {
+            ObtainSemaphore(fp->iob_Lock);
+        }
+        locked = OK;
+    } else {
+        locked = ERROR;  /* Already locked by flockfile() — don't unlock */
+    }
+
+    if (__builtin_expect(FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE), 0)) {
+        SHOWMSG("this file is not even in use");
+        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+        __set_errno(EBADF);
+        goto out;
+    }
+
+    /*
+     * Fast path 1: data already in buffer, no ungetc pending.
+     * Covers the very common case of repeated small reads from
+     * a pre-filled buffer. No signal check, no cantread, no smakebuf.
+     */
+    if (__builtin_expect(fp->iob_Buffer != NULL && !HASUB(fp), 1)) {
+        r = fp->iob_BufferReadBytes - fp->iob_BufferPosition;
+        if (__builtin_expect(r >= total_size, 1)) {
+            memcpy(data, fp->iob_Buffer + fp->iob_BufferPosition, total_size);
+            fp->iob_BufferPosition += total_size;
+            result = count;
+            goto out;
+        }
+
+        /*
+         * Fast path 2: buffer is drained and request >= buffer size.
+         * Read directly into the user buffer, bypassing the FILE buffer.
+         * Skip cantread/smakebuf overhead — these only matter on first
+         * use, and by now the buffer is already set up.
+         */
+        if (r == 0 && total_size >= (size_t)fp->iob_BufferSize
+                    && fp->_read != NULL) {
+            size_t remaining = total_size;
+            while (remaining > 0) {
+                ssize_t nr = fp->_read(fp->_cookie, (char *)data,
+                                       (int)remaining);
+                if (__builtin_expect(nr <= 0, 0)) {
+                    if (nr == 0)
+                        SET_FLAG(fp->iob_Flags, IOBF_EOF_REACHED);
+                    else
+                        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+                    break;
+                }
+                data += nr;
+                remaining -= nr;
+            }
+            result = (total_size - remaining) / element_size;
+            goto out;
+        }
+    }
+
+    /*
+     * Slow path — only reached on first read (buffer not yet allocated),
+     * ungetc pushback, or partial buffer drain.
+     * Check CTRL-C here, not on every fast-path read.
+     */
     __check_abort_f(__clib4);
 
-    SHOWMSG("ftrylockfile_r");
-
-    int locked = __ftrylockfile_r(__clib4, stream);
-
-    SHOWMSG("done.");
-
-    assert(__is_valid_iob(__clib4, file));
-    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
-    assert(file->iob_BufferSize > 0);
-
-    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
-        SHOWMSG("this file is not even in use");
-        SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
-        __set_errno(EBADF);
-        goto out;
-    }
-
-    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_READ)) {
+    /* Slow path: need to check readability */
+    if (__builtin_expect(cantread(__clib4, fp), 0)) {
         SHOWMSG("this file is not read-enabled");
-        SET_FLAG(file->iob_Flags, IOBF_ERROR);
-
+        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
         __set_errno(EBADF);
         goto out;
     }
 
-    /* So that we can tell error and 'end of file' conditions apart. */
-    __clearerr_r(__clib4, stream);
+    /* Ensure buffer is allocated (lazy init). */
+    if (__builtin_expect(fp->iob_Buffer == NULL, 0))
+        __smakebuf(__clib4, fp);
 
-    if (element_size > 0 && count > 0) {
-        size_t total_bytes_read = 0;
-        size_t total_size;
-        unsigned char *data = ptr;
-        int c;
+    /*
+     * Main read loop — newlib-inspired:
+     * 0. Drain ungetc pushback buffer first.
+     * 1. Drain any buffered data.
+     * 2. If remaining request is large (>= buffer size), bypass buffer
+     *    and read directly into the user buffer via fp->_read().
+     * 3. Otherwise, refill the buffer via __srefill() and copy.
+     */
 
-        if (__fgetc_check(__clib4, (FILE *) file) < 0)
-            goto out;
-
-        /* Check for overflow. */
-        total_size = element_size * count;
-        if (element_size != (total_size / count))
-            goto out;
-
-        SHOWVALUE(total_size);
-
-        if ((file->iob_Flags & IOBF_BUFFER_MODE) == IOBF_BUFFER_MODE_NONE) {
-            ssize_t num_bytes_read;
-
-            SHOWMSG("Calling read...");
-
-            /* We bypass the buffer entirely. */
-            /* Cap bypass size to avoid extremely large single read syscalls which
-               can expose driver/filesystem jitter; read in chunks up to MAX_BYPASS. */
-            size_t to_read = total_size;
-            if (to_read > MAX_BYPASS) to_read = MAX_BYPASS;
-            num_bytes_read = read(file->iob_Descriptor, data, to_read);
-
-            SHOWMSG("Done.");
-
-            if (num_bytes_read == -1) {
-                SET_FLAG(file->iob_Flags, IOBF_ERROR);
-                goto out;
-            }
-
-            if (num_bytes_read == 0)
-                SET_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
-
-            total_bytes_read = num_bytes_read;
+    /* Drain ungetc buffer first. */
+    if (HASUB(fp) && fp->_ub._size > 0) {
+        size_t ub_avail = fp->_ub._size;
+        if (ub_avail > total_size)
+            ub_avail = total_size;
+        memcpy(data, fp->_ub._base, ub_avail);
+        data += ub_avail;
+        total_bytes_read += ub_avail;
+        total_size -= ub_avail;
+        fp->_ub._size -= ub_avail;
+        if (fp->_ub._size > 0) {
+            memmove(fp->_ub._base, fp->_ub._base + ub_avail, fp->_ub._size);
         } else {
-            while (total_size > 0) {
-                /* If there is more data to be read and the read buffer is empty
-                   anyway, we'll bypass the buffer entirely. */
-                
-                D(("iob_BufferReadBytes [%ld] iob_BufferSize [%ld]", file->iob_BufferReadBytes, file->iob_BufferSize));
-
-                if (file->iob_BufferReadBytes == 0 && total_size >= (size_t) file->iob_BufferSize) {
-                    ssize_t num_bytes_read;
-                    /* We bypass the buffer entirely. */
-                    SHOWMSG("Calling read...");
-                    /* Cap bypass size to avoid huge single read syscalls. */
-                    size_t to_read = total_size;
-                    if (to_read > MAX_BYPASS) to_read = MAX_BYPASS;
-                    num_bytes_read = read(file->iob_Descriptor, data, to_read);
-                    SHOWMSG("Done.");
-                    if (num_bytes_read == -1) {
-                        SET_FLAG(file->iob_Flags, IOBF_ERROR);
-                        goto out;
-                    }
-
-                    if (num_bytes_read == 0) {
-                        SET_FLAG(file->iob_Flags, IOBF_EOF_REACHED);
-                        break;
-                    }
-
-                    data += num_bytes_read;
-                    total_bytes_read += num_bytes_read;
-                    total_size -= num_bytes_read;
-                    /* Continue loop to read more if needed */
-                    continue;
-                }
-
-                /* If there is data in the read buffer, try to copy it directly
-                   into the output buffer. */
-                if (file->iob_BufferPosition < file->iob_BufferReadBytes) {
-                    const unsigned char *buffer = &file->iob_Buffer[file->iob_BufferPosition];
-                    size_t num_bytes_in_buffer;
-
-                    /* Copy as much data as will fit. */
-                    num_bytes_in_buffer = file->iob_BufferReadBytes - file->iob_BufferPosition;
-                    if (total_size < num_bytes_in_buffer)
-                        num_bytes_in_buffer = total_size;
-
-                    memmove(data, buffer, num_bytes_in_buffer);
-                    data += num_bytes_in_buffer;
-
-                    file->iob_BufferPosition += num_bytes_in_buffer;
-
-                    total_bytes_read += num_bytes_in_buffer;
-
-                    /* Stop if the string buffer has been filled. */
-                    total_size -= num_bytes_in_buffer;
-                    if (total_size == 0)
-                        break;
-                }
-
-                c = __getc(__clib4, file);
-                if (c == EOF)
-                    break;
-
-                (*data++) = c;
-
-                total_size--;
-                total_bytes_read++;
-            }
+            FREEUB(__clib4, fp);
+            CLEAR_FLAG(fp->iob_Flags, IOBF_UNGETC);
         }
-        SHOWVALUE(total_bytes_read);
-
-        result = total_bytes_read / element_size;
-    } else {
-        SHOWVALUE(element_size);
-        SHOWVALUE(count);
-
-        SHOWMSG("either element size or count is zero");
-
+        if (total_size == 0)
+            goto done;
     }
 
+    while (total_size > 0) {
+        /* Copy from buffer if data is available */
+        r = READABLE_BYTES(fp);
+        if (r > 0) {
+            if (r > total_size)
+                r = total_size;
+            memcpy(data, READ_PTR(fp), r);
+            fp->iob_BufferPosition += r;
+            data += r;
+            total_bytes_read += r;
+            total_size -= r;
+            if (total_size == 0)
+                break;
+        }
+
+        /* Buffer is empty now. For large remaining reads, bypass the buffer. */
+        if (total_size >= (size_t) fp->iob_BufferSize && fp->_read != NULL) {
+            ssize_t nr;
+            while (total_size > 0) {
+                nr = fp->_read(fp->_cookie, (char *) data, (int) total_size);
+                if (nr <= 0) {
+                    if (nr == 0)
+                        SET_FLAG(fp->iob_Flags, IOBF_EOF_REACHED);
+                    else
+                        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+                    goto done;
+                }
+                data += nr;
+                total_bytes_read += nr;
+                total_size -= nr;
+            }
+            break;
+        }
+
+        /* Refill the buffer */
+        if (__srefill(__clib4, fp) != 0)
+            break;  /* EOF or error */
+    }
+
+done:
+    SHOWVALUE(total_bytes_read);
+    result = total_bytes_read / element_size;
     D(("total number of elements read = %ld", result));
 
 out:
-
-    if (locked == OK)
-        __funlockfile_r(__clib4, stream);
+    /* Inline unlock — avoids __funlockfile_r function call overhead */
+    if (locked == OK && __builtin_expect(fp->iob_Lock != NULL, 1)) {
+        ReleaseSemaphore(fp->iob_Lock);
+    }
 
     RETURN(result);
-    return (result);
+    return result;
 }
 
 static void byteswap16(void *ptr) {

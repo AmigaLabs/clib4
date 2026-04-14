@@ -36,13 +36,19 @@ __funlockfile_r(struct _clib4 *__clib4, FILE *stream) {
 
     if (file->iob_Lock != NULL && FLAG_IS_SET(file->iob_Flags, IOBF_LOCKED) && (file->iob_TaskLock == (struct Task *) __clib4->self)) {
         SHOWMSG("Unlocking File");
-        /* Clear metadata BEFORE releasing the semaphore.
-         * If we clear after ReleaseSemaphore, another thread can wake up
-         * from ObtainSemaphore and SET these flags, then we clobber them.
-         * That causes the other thread's funlockfile to skip ReleaseSemaphore,
-         * permanently leaking the lock → deadlock. */
-        file->iob_TaskLock = NULL;
-        CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
+        /* Only clear metadata at the outermost unlock (nest count == 1).
+         * This fixes a semaphore leak when getc()/putc() macros call
+         * flockfile(), then fall through to fgetc()/fputc() which also
+         * call __flockfile_r/__funlockfile_r internally. Without this
+         * check, the inner funlockfile clears IOBF_LOCKED, causing the
+         * outer funlockfile to skip ReleaseSemaphore entirely.
+         *
+         * Clear metadata BEFORE releasing the semaphore so another thread
+         * waking from ObtainSemaphore does not see stale owner/flags. */
+        if (file->iob_Lock->ss_NestCount <= 1) {
+            file->iob_TaskLock = NULL;
+            CLEAR_FLAG(file->iob_Flags, IOBF_LOCKED);
+        }
         ReleaseSemaphore(file->iob_Lock);
     }
 #if 0

@@ -46,7 +46,7 @@ __flush_r(struct _clib4 *__clib4, FILE *stream) {
 
     last_c = iob->iob_Buffer[iob->iob_BufferWriteBytes - 1];
 
-    if (__flush_iob_write_buffer(__clib4, iob) < 0) {
+    if (__sflush(__clib4, iob) != 0) {
         /* Remove the last character stored in the buffer, which is typically a '\n'. */
         iob->iob_BufferWriteBytes--;
         goto out;

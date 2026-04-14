@@ -35,6 +35,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     int new_mode;
     int64_t result = EOF;
     BOOL is_aliased;
+    BOOL is_stdio = FALSE;
     BPTR file;
 
     __check_abort_f(__clib4);
@@ -154,6 +155,30 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 }
 
                 fd->fd_Position += result;
+
+                /*
+                 * ICRNL: Translate CR (0x0D) → LF (0x0A) for interactive consoles
+                 * that are NOT under termios control.  On Unix, the terminal driver
+                 * performs this translation by default (the ICRNL flag in c_iflag).
+                 * AmigaOS's console handler does this internally in cooked mode,
+                 * but in RAW mode Enter sends '\r' which breaks fgets() and other
+                 * line-oriented readers that look for '\n'.  Performing the
+                 * translation here makes the behaviour consistent regardless of
+                 * console mode and matches POSIX semantics.
+                 *
+                 * When termios IS active (FDF_TERMIOS), the termios console hook
+                 * has its own ICRNL handling, so we must not double-translate.
+                 */
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE) &&
+                    FLAG_IS_CLEAR(fd->fd_Flags, FDF_TERMIOS) && result > 0) {
+                    char *data = fam->fam_Data;
+                    int64_t i;
+                    for (i = 0; i < result; i++) {
+                        if (data[i] == '\r')
+                            data[i] = '\n';
+                    }
+                }
+
                 /* If we are reading char by char from STDIN used like a SOCKET and
                  * we get a CR we need to mark it as EOF for the next read call
                  */
@@ -414,7 +439,9 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             UnLock(parent_dir);
                     }
                 } else {
-                    // Clear FDF_STDIN_AS_SOCKET just in case it was used as socket */
+                    // FDF_STDIO is set — this close is for a STDIO fd (stdin/stdout/stderr).
+                    // Clear FDF_STDIN_AS_SOCKET just in case it was used as socket.
+                    is_stdio = TRUE;
                     if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIN_AS_SOCKET)) {
                         CLEAR_FLAG(fd->fd_Flags, FDF_STDIN_AS_SOCKET);
                     }
@@ -431,7 +458,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
             __fd_unlock(fd);
 
             /* Free the lock semaphore now. */
-            if (NOT is_aliased) {
+            if (NOT is_aliased && !is_stdio) {
                 /* Free fd_Aux if it was allocated (e.g., for termios or path names) */
                 if (fd->fd_Aux != NULL) {
                     /* Only free if it's termios - for path names, fd_Aux points to static/stack memory */
@@ -444,9 +471,15 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 __delete_mutex(fd->fd_Lock);
             }
 
-	        /* And that's the last for this file descriptor. */
-    	    memset(fd, 0, sizeof(*fd));
-        	fd = NULL;
+            /* Clear the fd struct only for non-STDIO file descriptors.
+             * STDIO fds (stdin/stdout/stderr) must survive close() because
+             * the IOB layer still references them. Zeroing a STDIO fd would
+             * destroy fd_Flags (including FDF_IN_USE), causing the next
+             * open() to reuse slot 0/1/2 and corrupt stdin/stdout/stderr. */
+            if (!is_stdio) {
+                memset(fd, 0, sizeof(*fd));
+                fd = NULL;
+            }
 
             break;
 
@@ -538,6 +571,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         new_position = GetFilePosition(file);
                         if (new_position == GETPOSITION_ERROR) {
                             fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            goto out;
                         }
                     }
 

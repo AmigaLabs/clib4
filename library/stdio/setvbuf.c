@@ -1,152 +1,121 @@
 /*
- * $Id: stdio_setvbuf.c,v 1.12 2022-03-27 12:07:58 clib4devs Exp $
-*/
+ * $Id: stdio_setvbuf.c,v 2.0 2025-01-01 00:00:00 clib4devs Exp $
+ *
+ * setvbuf() — newlib-inspired rewrite aware of lazy buffer allocation.
+ */
 
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
-#ifndef _STDLIB_MEMORY_H
-#include "stdlib_memory.h"
-#endif /* _STDLIB_MEMORY_H */
-
 int
 setvbuf(FILE *stream, char *buf, int bufmode, size_t size) {
-    struct iob *file = (struct iob *) stream;
+    struct iob *fp = (struct iob *) stream;
     char *new_buffer = NULL;
     int result = EOF;
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
 
-    SHOWPOINTER(stream);
-    SHOWPOINTER(buf);
-    SHOWVALUE(bufmode);
-    SHOWVALUE(size);
-
-    assert(stream != NULL);
-
     if (stream == NULL) {
-        SHOWMSG("invalid stream parameter");
         __set_errno_r(__clib4, EFAULT);
-
         RETURN(result);
-        return (result);
+        return result;
     }
 
-    if (bufmode < IOBF_BUFFER_MODE_FULL ||
-        bufmode > IOBF_BUFFER_MODE_NONE) {
-        SHOWMSG("invalid buffer mode");
-
+    if (bufmode < IOBF_BUFFER_MODE_FULL || bufmode > IOBF_BUFFER_MODE_NONE) {
+        __set_errno_r(__clib4, EINVAL);
         RETURN(result);
-        return (result);
+        return result;
     }
 
     if ((int) size < 0) {
-        SHOWMSG("invalid buffer size");
-
         __set_errno_r(__clib4, EINVAL);
         RETURN(result);
-        return (result);
+        return result;
     }
 
     __flockfile_r(__clib4, stream);
 
-    assert(__is_valid_iob(__clib4, file));
-    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
-    assert(file->iob_BufferSize > 0);
-
-    if (FLAG_IS_CLEAR(file->iob_Flags, IOBF_IN_USE)) {
-        SHOWMSG("this file is not even in use");
-        SET_FLAG(file->iob_Flags, IOBF_ERROR);
+    if (FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE)) {
+        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
         __set_errno_r(__clib4, EBADF);
         goto out;
     }
 
-    /* A buffer size of 0 bytes will cause the default buffer size to be used. */
+    /* Default buffer size if 0 is specified. */
     if (size == 0) {
         size = BUFSIZ;
         buf = NULL;
     }
 
-    /* If a certain buffer size is requested but no buffer was provided, allocate some memory for it. */
-    if (bufmode != IOBF_BUFFER_MODE_NONE) {
-        /* If a certain buffer size is requested but no buffer was provided,
-		   allocate some memory for it. */
-        if (size > 0 && buf == NULL) {
-            /* Allocate a little more memory than necessary and align it to a cache line boundary. */
-            new_buffer = AllocVecTags(size, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, AVT_Alignment, __clib4->__cache_line_size, TAG_DONE);
-            if (new_buffer == NULL) {
-                __set_errno_r(__clib4, ENOBUFS);
-                goto out;
-            }
+    /* Allocate a new buffer if needed (not unbuffered, no user buffer). */
+    if (bufmode != IOBF_BUFFER_MODE_NONE && size > 0 && buf == NULL) {
+        new_buffer = AllocVecTags(size,
+            AVT_Type, MEMF_SHARED,
+            AVT_ClearWithValue, 0,
+            AVT_Alignment, __clib4->__cache_line_size,
+            TAG_DONE);
+        if (new_buffer == NULL) {
+            __set_errno_r(__clib4, ENOBUFS);
+            goto out;
         }
     }
 
-    /* Get rid of any buffered data. We're going to replace the buffer. */
-    if (__iob_write_buffer_is_valid(file) && __flush_iob_write_buffer(__clib4, file) < 0) {
-        SHOWMSG("could not flush write buffer");
-        goto out;
+    /* Flush and discard any buffered data. */
+    if (fp->iob_BufferWriteBytes > 0)
+        __sflush(__clib4, fp);
+
+    fp->iob_BufferReadBytes = 0;
+    fp->iob_BufferPosition = 0;
+    fp->iob_BufferWriteBytes = 0;
+
+    /* Free any previously allocated buffer. */
+    if (fp->iob_CustomBuffer != NULL) {
+        if (fp->iob_isVBuffer) {
+            FreeVec(fp->iob_CustomBuffer);
+            fp->iob_isVBuffer = FALSE;
+        } else {
+            free(fp->iob_CustomBuffer);
+        }
+        fp->iob_CustomBuffer = NULL;
     }
 
-    if (__iob_read_buffer_is_valid(file) && __drop_iob_read_buffer(__clib4, file) < 0) {
-        SHOWMSG("could not drop read buffer");
-        goto out;
-    }
-
-    /* Get rid of any buffer specially allocated for this stream. */
-    if (file->iob_CustomBuffer != NULL) {
-        SHOWMSG("Delete allocated buffer");
-        if (file->iob_isVBuffer) {
-            FreeVec(file->iob_CustomBuffer);
-            file->iob_isVBuffer = FALSE;
-        }
-        else {
-            free(file->iob_CustomBuffer);
-        }
-
-        file->iob_CustomBuffer = NULL;
+    /* Also free IOBF_MALLOC_BUF buffer if applicable. */
+    if (FLAG_IS_SET(fp->iob_Flags, IOBF_MALLOC_BUF) && fp->iob_Buffer != NULL) {
+        FreeVec(fp->iob_Buffer);
+        fp->iob_Buffer = NULL;
+        CLEAR_FLAG(fp->iob_Flags, IOBF_MALLOC_BUF);
     }
 
     if (bufmode == IOBF_BUFFER_MODE_NONE) {
-        /* Use the default buffer, which is one byte in size. */
-        new_buffer = (char *) &file->iob_SingleByte;
-        size = 1;
+        /* Unbuffered: use the single-byte fallback. */
+        fp->iob_Buffer = &fp->iob_SingleByte;
+        fp->iob_BufferSize = 1;
     } else {
-        /* Replace the old buffer. */
         if (buf != NULL) {
-            new_buffer = (char *) buf;
+            /* User-supplied buffer. */
+            fp->iob_Buffer = (UBYTE *) buf;
         } else {
-            file->iob_isVBuffer = TRUE;
-            /* Remember this, so we can release it later. */
-            file->iob_CustomBuffer = new_buffer;
+            /* Our newly allocated buffer. */
+            fp->iob_Buffer = (UBYTE *) new_buffer;
+            fp->iob_isVBuffer = TRUE;
+            fp->iob_CustomBuffer = new_buffer;
+            new_buffer = NULL;  /* prevent cleanup below */
         }
+        fp->iob_BufferSize = size;
     }
 
-    assert(file->iob_BufferPosition == 0);
-    assert(file->iob_BufferReadBytes == 0);
-    assert(file->iob_BufferWriteBytes == 0);
-
-    file->iob_Buffer = (UBYTE *) new_buffer;
-    file->iob_BufferSize = size;
-
-    file->iob_Flags &= ~IOBF_BUFFER_MODE;
-    file->iob_Flags |= bufmode;
-
-    new_buffer = NULL;
+    fp->_blksize = fp->iob_BufferSize;
+    fp->iob_Flags = (fp->iob_Flags & ~IOBF_BUFFER_MODE) | bufmode;
 
     result = OK;
 
 out:
-
     __funlockfile_r(__clib4, stream);
 
-    if (new_buffer != NULL) {
-        if (file->iob_isVBuffer)
-            FreeVec(file->iob_CustomBuffer);
-        else
-            free(file->iob_CustomBuffer);
-    }
+    if (new_buffer != NULL)
+        FreeVec(new_buffer);
 
     RETURN(result);
     return result;

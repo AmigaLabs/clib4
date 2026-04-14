@@ -101,6 +101,10 @@
 #include "clib4_io.h"
 #endif /* __CLIB4_IO_H__ */
 
+#ifndef _STDIO_INTERNAL_H
+#include "stdio_internal.h"
+#endif /* _STDIO_INTERNAL_H */
+
 /****************************************************************************/
 
 /* Forward declarations for below... */
@@ -174,39 +178,71 @@ typedef int64_t (*file_action_iob_t)(struct _clib4 *__clib4, struct iob * iob, s
    must match the layout of the public 'FILE' structure in <stdio.h> or
    things will take a turn for the worse! */
 typedef struct iob {
+    /************************************************************************/
+    /* Public portion — must match struct __sFILE in <stdio.h> exactly!     */
+    /************************************************************************/
+
     unsigned long		iob_Flags;				/* Properties and options associated with this file */
     unsigned char *		iob_Buffer;				/* Points to the file buffer */
     off_t				iob_BufferSize;			/* Size of the buffer in bytes */
-    off_t				iob_BufferPosition;		/* Current read position in the buffer (grows when any data is read from the buffer) */
-    off_t				iob_BufferReadBytes;	/* Number of bytes available for reading (shrinks when any data is read from the buffer) */
-    off_t				iob_BufferWriteBytes;	/* Number of bytes written to the buffer which still need to be flushed to disk (grows when any data is written to the buffer) */
+    off_t				iob_BufferPosition;		/* Current read position in the buffer */
+    off_t				iob_BufferReadBytes;	/* Number of bytes available for reading */
+    off_t				iob_BufferWriteBytes;	/* Number of bytes written but not yet flushed */
 
     _mbstate_t 			iob_mbState;			/* for wide char stdio functions. */
 	int   				iob_Flags2;				/* for future use */
-	long				pad[5];					/* Padding for function pointers */
+
+    /* Function pointers — previously pad[5], now activated for I/O dispatch.
+     * These map to the _read/_write/_seek/_close/_seek64 fields in __sFILE. */
+    ssize_t (*_read)(void *cookie, char *buf, int n);
+    ssize_t (*_write)(void *cookie, const char *buf, int n);
+    fpos_t (*_seek)(void *cookie, fpos_t offset, int whence);
+    int (*_close)(void *cookie);
+    fpos_t (*_seek64)(void *cookie, fpos_t offset, int whence);
 
     /************************************************************************/
 	/* Public portion ends here                                             */
 	/************************************************************************/
 
-    file_action_iob_t	iob_Action;				/* The function to invoke for file operations, such as read, write and seek. */
-    int					iob_SlotNumber;			/* Points back to the iob table entry number. */
-    int					iob_Descriptor;			/* Associated file descriptor */
-    STRPTR				iob_String;				/* Alternative source of data; a pointer to a string */
-    int64_t				iob_StringSize;			/* Number of bytes that may be stored in the string */
-    int64_t				iob_StringPosition;		/* Current read/write position in the string */
-    int64_t				iob_StringLength;		/* Number of characters stored in the string */
-    char *				iob_File;				/* For access tracking with the memory allocator. */
-    int					iob_Line;
+    /* --- Existing private fields (kept for transition) --- */
+    file_action_iob_t	iob_Action;				/* TRANSITION: legacy I/O dispatch, will be removed */
+    int					iob_SlotNumber;			/* TRANSITION: iob table index, will be removed */
+    int					iob_Descriptor;			/* Associated file descriptor number */
+    STRPTR				iob_String;				/* TRANSITION: string I/O source pointer */
+    int64_t				iob_StringSize;			/* TRANSITION: string buffer capacity */
+    int64_t				iob_StringPosition;		/* TRANSITION: string read/write position */
+    int64_t				iob_StringLength;		/* TRANSITION: string data length */
+    char *				iob_File;				/* TRANSITION: debug source file tracking */
+    int					iob_Line;				/* TRANSITION: debug source line tracking */
     APTR				iob_CustomBuffer;		/* A custom buffer allocated by setvbuf() */
     char *				iob_TempFileName;		/* If this is a temporary file, this is its name */
     BPTR				iob_TempFileLock;		/* The directory in which this temporary file is stored */
     UBYTE				iob_SingleByte;			/* Fall-back buffer for 'unbuffered' files */
-    struct SignalSemaphore *iob_Lock;		    	/* For thread locking */
+    struct SignalSemaphore *iob_Lock;		    /* For thread locking */
     struct Task *       iob_TaskLock;           /* Task who owns lock */
 	BOOL				iob_isVBuffer;			/* TRUE if iob_CustomBuffer is set from setvbuf */
+
+    /* --- New fields for newlib-style buffer management --- */
+    void *				_cookie;				/* Cookie passed to function pointers (usually this iob) */
+    struct __sbuf		_ub;					/* Ungetc pushback buffer */
+    unsigned char		_ubuf[3];				/* Small inline ungetc buffer */
+    unsigned char		_nbuf[1];				/* Single-byte fallback for unbuffered streams */
+    struct __sbuf		_lb;					/* Line buffer scratch (for fgetline) */
+    int					_blksize;				/* Block size hint from stat */
+    fpos_t				_offset;				/* Cached seek offset (valid when IOBF_OFF set) */
 } __iob64;
 
+/****************************************************************************/
+/*
+ * Access to the global glue list root and static FILE slots.
+ *
+ * __sf[3] holds the 3 pre-allocated iob structs for stdin/stdout/stderr.
+ * __sglue is the root node pointing to __sf[].
+ * Additional nodes are chained via __sglue.next.
+ */
+extern struct iob __sf[3];
+extern struct iob *__sf_ptrs[3];
+extern struct _glue __sglue;
 
 /****************************************************************************/
 
@@ -321,24 +357,7 @@ struct bcpl_name {
 
 /****************************************************************************/
 
-/*extern int __iob_read_buffer_is_empty(struct iob * file);*/
 
-#define __iob_read_buffer_is_empty(file) \
-	(((struct iob *)file)->iob_BufferReadBytes == 0 || \
-	((struct iob *)file)->iob_BufferPosition == ((struct iob *)file)->iob_BufferReadBytes)
-
-/****************************************************************************/
-
-#define __iob_num_unread_bytes(file) \
-	((((struct iob *)file)->iob_BufferReadBytes > 0 && \
-	 ((struct iob *)file)->iob_BufferPosition < ((struct iob *)file)->iob_BufferReadBytes) \
-	  ? (((struct iob *)file)->iob_BufferReadBytes - ((struct iob *)file)->iob_BufferPosition) \
-	  : 0)
-
-/****************************************************************************/
-
-#define __iob_read_buffer_is_valid(file) \
-	(((struct iob *)file)->iob_BufferReadBytes > 0)
 
 /****************************************************************************/
 
@@ -370,9 +389,9 @@ extern int __fputs_r(struct _clib4 *__clib4, const char *s, FILE *stream);
 extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
 extern size_t __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream);
 
-#define __stdin_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[0])
-#define __stdout_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[1])
-#define __stderr_r(x) (FILE *) (((struct _clib4 *)(x))->__iob[2])
+#define __stdin_r(x) (FILE *) (&__sf[0])
+#define __stdout_r(x) (FILE *) (&__sf[1])
+#define __stderr_r(x) (FILE *) (&__sf[2])
 
 extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
 

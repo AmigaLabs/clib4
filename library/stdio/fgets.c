@@ -1,6 +1,8 @@
 /*
- * $Id: stdio_fgets.c,v 1.7 2022-03-27 12:04:24 clib4devs Exp $
-*/
+ * $Id: stdio_fgets.c,v 2.0 2025-01-01 00:00:00 clib4devs Exp $
+ *
+ * fgets() — newlib-inspired rewrite using __srefill() for buffer management.
+ */
 
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
@@ -8,127 +10,82 @@
 
 char *
 fgets(char *buf, int n, FILE *stream) {
-    struct iob *file = (struct iob *) stream;
-    char *s = buf;
-    int c;
+    struct iob *fp = (struct iob *) stream;
     struct _clib4 *__clib4 = __CLIB4;
+    char *s;
+    ssize_t r;
+    unsigned char *p;
 
     ENTER();
-    SHOWPOINTER(buf);
-    SHOWVALUE(n);
-    SHOWPOINTER(stream);
 
     if (buf == NULL || stream == NULL) {
-        SHOWMSG("invalid parameters");
-
         __set_errno_r(__clib4, EFAULT);
         RETURN(NULL);
         return NULL;
     }
 
     if (n <= 0) {
-        SHOWMSG("no work to be done");
         RETURN(NULL);
         return NULL;
     }
 
     __check_abort_f(__clib4);
-
     __flockfile_r(__clib4, stream);
 
-    /* Take care of the checks and data structure changes that
-     * need to be handled only once for this stream.
-     */
     if (__fgetc_check(__clib4, stream) < 0) {
         buf = NULL;
         goto out;
     }
 
-    /* So that we can tell error and 'end of file' conditions apart. */
-    __clearerr_r(__clib4, stream);
+    /* Clear residual EOF/error flags so that ferror()/feof() after this
+     * call reflect only errors from THIS read, not previous ones.
+     * This matches the old fgets() behavior and prevents stale flags
+     * from confusing callers like sqlite3's line reading loop. */
+    CLEAR_FLAG(fp->iob_Flags, IOBF_EOF_REACHED);
+    CLEAR_FLAG(fp->iob_Flags, IOBF_ERROR);
 
-    /* One off for the terminating '\0'. */
-    n--;
+    s = buf;
+    n--;    /* leave room for NUL terminator */
 
     while (n > 0) {
-        /* If there is data in the buffer, try to copy it directly
-           into the string buffer. If there is a line feed in the
-           buffer, too, try to conclude the read operation. */
-        if (file->iob_BufferPosition < file->iob_BufferReadBytes) {
-            const unsigned char *buffer = &file->iob_Buffer[file->iob_BufferPosition];
-            size_t num_bytes_in_buffer;
-            const unsigned char *lf;
-
-            /* Copy only as much data as will fit into the string buffer. */
-            num_bytes_in_buffer = (size_t) file->iob_BufferReadBytes - (size_t) file->iob_BufferPosition;
-            if (num_bytes_in_buffer > (off_t) n)
-                num_bytes_in_buffer = n;
-
-            /* Try to find a line feed character which could conclude
-               the read operation if the remaining buffer data, including
-               the line feed character, fit into the string buffer. */
-            lf = (unsigned char *) memchr(buffer, '\n', num_bytes_in_buffer);
-            if (lf != NULL) {
-                size_t num_characters_in_line = ++lf - buffer;
-
-                /* Copy the remainder of the read buffer into the
-                   string buffer, including the terminating line
-                   feed character. */
-                memmove(s, buffer, num_characters_in_line);
-                s += num_characters_in_line;
-
-                file->iob_BufferPosition += num_characters_in_line;
-
-                /* And that concludes the line read operation. */
-                (*s) = '\0';
-                goto out;
-            }
-
-            memmove(s, buffer, num_bytes_in_buffer);
-            s += num_bytes_in_buffer;
-
-            file->iob_BufferPosition += num_bytes_in_buffer;
-
-            /* Stop if the string buffer has been filled. */
-            n -= num_bytes_in_buffer;
-            if (n == 0)
+        /* Check if buffer has data. */
+        r = READABLE_BYTES(fp);
+        if (r <= 0) {
+            /* Refill the buffer. */
+            if (__srefill(__clib4, fp) != 0) {
+                /* EOF or error. */
+                if (s == buf)
+                    buf = NULL;
                 break;
-        }
-
-        /* Read the next buffered character; this will refill the read
-           buffer, if necessary. */
-        c = __getc(__clib4, stream);
-        if (c == EOF) {
-            if (__ferror_r(__clib4, stream, FALSE)) {
-                /* Just to be on the safe side. */
-                (*s) = '\0';
-
-                buf = NULL;
-                goto out;
             }
+            r = READABLE_BYTES(fp);
+        }
 
-            /* Make sure that we return NULL if we really
-               didn't read anything at all */
-            if (buf == s)
-                buf = NULL;
-
+        /* Scan for newline in the buffered data. */
+        if (n < r)
+            r = n;
+        p = memchr(READ_PTR(fp), '\n', (size_t)r);
+        if (p != NULL) {
+            /* Found newline — include it and stop. */
+            r = (ssize_t)(p - READ_PTR(fp)) + 1;
+            memcpy(s, READ_PTR(fp), (size_t)r);
+            fp->iob_BufferPosition += r;
+            s += r;
             break;
         }
 
-        (*s++) = c;
-
-        if (c == '\n')
-            break;
-
-        n--;
+        /* No newline found — copy everything and continue. */
+        memcpy(s, READ_PTR(fp), (size_t)r);
+        fp->iob_BufferPosition += r;
+        s += r;
+        n -= r;
     }
 
-    (*s) = '\0';
-    SHOWSTRING(buf);
+    *s = '\0';
 
 out:
     __funlockfile_r(__clib4, stream);
 
     RETURN(buf);
-    return (buf);
+    return buf;
 }

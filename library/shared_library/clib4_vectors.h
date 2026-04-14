@@ -1196,6 +1196,11 @@ static void *clib4Vectors[] = {
 
         (void *) (canonicalize_file_name),                /* 4460 */
 		(void *) (spawnvpe_fork),                         /* 4464 */
-
+        (void *) (mprotect),                              /* 4468 */
+        (void *) (mlock),                                 /* 4472 */
+        (void *) (munlock),                               /* 4476 */
+        (void *) (mlockall),                              /* 4480 */
+        (void *) (munlockall),                            /* 4484 */
+        (void *) (mlock2),                                /* 4488 */
         (void *)-1
 };

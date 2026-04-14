@@ -18,13 +18,10 @@ BOOL __is_valid_iob(struct _clib4 *__clib4, struct iob *iob) {
     if (FLAG_IS_SET(iob->iob_Flags, IOBF_INTERNAL)) {
         /* This is used by vsprintf(), etc. */
         result = TRUE;
-    } else {
-        __stdio_lock(__clib4);
-
-        if (__clib4->__num_iob > 0 && 0 <= iob->iob_SlotNumber && iob->iob_SlotNumber < __clib4->__num_iob && __clib4->__iob[iob->iob_SlotNumber] == iob)
-            result = TRUE;
-
-        __stdio_unlock(__clib4);
+    } else if (FLAG_IS_SET(iob->iob_Flags, IOBF_IN_USE)) {
+        /* Any in-use iob is valid — covers static __sf[] streams,
+           glue-list entries from __sfp(), and legacy __iob[] entries. */
+        result = TRUE;
     }
 
     return result;
@@ -32,18 +29,5 @@ BOOL __is_valid_iob(struct _clib4 *__clib4, struct iob *iob) {
 
 #endif /* NDEBUG */
 
-int __find_vacant_iob_entry(struct _clib4 *__clib4) {
-    int result = ERROR;
-    int i;
-
-    assert(__clib4->__iob != NULL || __clib4->__num_iob == 0);
-
-    for (i = 0; i < __clib4->__num_iob; i++) {
-        if (FLAG_IS_CLEAR(__clib4->__iob[i]->iob_Flags, IOBF_IN_USE)) {
-            result = i;
-            break;
-        }
-    }
-
-    return result;
-}
+/* __find_vacant_iob_entry() removed — all new streams are now allocated
+   via __sfp() on the glue list, so the __iob[] scan is dead code. */

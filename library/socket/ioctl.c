@@ -63,9 +63,11 @@ static void readSize(uint32 *rows, uint32 *columns, uint32 *xpixel, uint32 *ypix
         uint32 _cols = 80, _rows = 23, _xpixel = 0, _ypixel = 0;
         char r;
         char buffer[BUFFER_SIZE + 1] = {0};
-        int oldMode = getCurrentCliActionMode();
 
-        SetMode(fh, 1); // RAW mode
+        /* SetMode returns a success indicator (DOSTRUE/DOSFALSE), NOT the
+         * previous mode.  Always restore to DOSFALSE (cooked) afterward.
+         * This matches the pattern used by LineEditor, tcsetattr, tcflush. */
+        SetMode(fh, DOSTRUE); /* RAW mode for escape-sequence query */
         if (Write(fh, "\x9b q", 3) == 3) {
             LONG actual = 0;
             LONG ret = Read(fh, &r, 1);
@@ -86,7 +88,7 @@ static void readSize(uint32 *rows, uint32 *columns, uint32 *xpixel, uint32 *ypix
                 }
             }
         }
-        SetMode(fh, oldMode);
+        SetMode(fh, DOSFALSE); /* Always restore cooked mode */
 
         *rows = _rows;
         *columns = _cols;
@@ -101,9 +103,10 @@ static BOOL writeSize(uint32 rows, uint32 columns) {
 
     if (fh) {
         char buffer[51] = {0};
-        int oldMode = getCurrentCliActionMode();
 
-        SetMode(fh, 1); // RAW mode
+        /* SetMode returns success/failure, not the previous mode.
+         * Always restore to DOSFALSE (cooked) afterward. */
+        SetMode(fh, DOSTRUE); /* RAW mode for escape-sequence write */
         snprintf(buffer, 50, "\x9b%dt\x9b%du", columns + 1, rows + 1);
         int bufferLen = strlen(buffer);
         int bytesWritten = Write(fh, buffer, bufferLen);
@@ -140,7 +143,7 @@ static BOOL writeSize(uint32 rows, uint32 columns) {
             }
             success = TRUE;
         }
-        SetMode(fh, oldMode);
+        SetMode(fh, DOSFALSE); /* Always restore cooked mode */
     }
 
     return success;

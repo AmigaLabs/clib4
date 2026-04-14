@@ -802,7 +802,7 @@ int main(void) {
     }
 
     printf("\n=== Remaining Limitations ===\n");
-    printf("1. mmap is still calloc-based (no real MMU page mapping)\n");
+    printf("1. mmap uses memalign internally (no kernel-level page mapping)\n");
     printf("2. No partial munmap support (entire region is freed)\n");
     printf("3. shm_open()/shm_unlink() not implemented (POSIX shm API missing)\n");
     printf("4. MAP_SHARED write-back is explicit (msync/munmap), not automatic\n");

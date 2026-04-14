@@ -26,6 +26,8 @@ static TestModule test_modules[] = {
     {"Standard I/O", "./test_stdio"},
     {"Math Functions", "./test_math"},
     {"Time Functions", "./test_time"},
+    {"mmap / mprotect", "./test_mmap"},
+    {"mlock / munlock / mlockall", "./test_mlock"},
     {NULL, NULL}
 };
 
