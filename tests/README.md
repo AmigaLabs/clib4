@@ -80,6 +80,18 @@ Tests for SysV shared memory (`sys/shm.h`) and memory mapping (`sys/mman.h`) fun
 - **SQLite WAL pattern**: simulates WAL-index shm region (32 KB `MAP_SHARED` mmap with `msync`)
 - **SysV SHM for WAL**: simulates WAL lock page via `shmget`/`shmat` with reader/writer flags
 
+### 7. mprotect & mmap Page-Alignment (`test_mmap.c`)
+Tests for `mprotect()` (POSIX.1-2001) and the page-alignment guarantee of `mmap()`:
+- **Error paths**: `mprotect(NULL)` → EINVAL, non-page-aligned addr → EINVAL, invalid `prot` flags → EINVAL
+- **Zero length**: `mprotect(addr, 0, prot)` is a no-op returning 0
+- **All valid `PROT_*` values**: `PROT_NONE`, `PROT_READ`, `PROT_WRITE`, `PROT_EXEC` and all combinations
+- **Anonymous mmap regions**: `mprotect` updates tracking header; data survives round-trip
+- **`PROT_NONE` round-trip**: apply PROT_NONE then restore PROT_READ|PROT_WRITE with data integrity check
+- **`mprotect` → `msync` → `munmap` chain**: on a `MAP_SHARED` file-backed mapping
+- **Page-alignment guarantee**: `mmap()` always returns a pointer aligned to `PAGE_SIZE` (4096)
+- **Multiple mappings**: 4 concurrent `mmap()` calls all return page-aligned pointers
+- **MMU write-enforcement note**: writing to a `PROT_NONE` page causes a real hardware DSI exception on AmigaOS 4 (confirmed by crash log); the in-process write test is intentionally omitted because `siglongjmp` recovery from a hardware DSI is not safe
+
 ## Building the Tests
 
 ### Prerequisites
@@ -106,6 +118,7 @@ make test_stdio    # Build stdio tests only
 make test_math     # Build math tests only
 make test_time     # Build time tests only
 make test_shm      # Build shm tests only
+make test_mmap     # Build mprotect/mmap tests only
 ```
 
 ## Running the Tests
@@ -125,8 +138,7 @@ make run-string   # Run string tests only
 make run-stdlib   # Run stdlib tests only
 make run-stdio    # Run stdio tests only
 make run-math     # Run math tests only
-make run-time     # Run time tests only
-```
+make run-time     # Run time tests onlymake run-mmap     - Run mprotect/mmap tests only```
 
 Or run the test executables directly:
 
@@ -136,6 +148,7 @@ Or run the test executables directly:
 ./test_stdio
 ./test_math
 ./test_time
+./test_mmap
 ```
 
 ### Run the Test Runner
@@ -244,10 +257,29 @@ The test runner returns:
 
 ## Notes
 
-- Some tests create temporary files in `/tmp/` for I/O testing
+- Some tests create temporary files in `/tmp/` (Linux) or `T:` (AmigaOS) for I/O testing
 - Tests are designed to be independent and can run in any order
 - The test suite focuses on functional correctness, not performance
 - Some platform-specific functions may not be tested on all systems
+- `test_mmap` skips the PROT_NONE write-enforcement probe on AmigaOS 4 because a hardware DSI exception cannot be safely recovered via `siglongjmp`
+
+## Manual / Exploratory Test Programs
+
+The `test_programs/` directory contains standalone programs that demonstrate and manually verify library functionality. They are not part of the automated test suite.
+
+### `test_programs/memory/mmap2.c`
+Demonstrates file-backed `MAP_SHARED` memory mapping with `mprotect`-compatible usage:
+- Opens (or creates) a binary file and sizes it with `ftruncate`
+- Maps the file with `PROT_READ | PROT_WRITE` + `MAP_SHARED`
+- Writes a struct directly through the mapped pointer
+- Flushes to disk with `msync(MS_SYNC)`
+- Verifies the full `mmap` → write → `msync` → `munmap` lifecycle
+
+Build and run on AmigaOS 4:
+```bash
+ppc-amigaos-gcc -mcrt=clib4 test_programs/memory/mmap2.c -o mmap2
+./mmap2
+```
 
 ## Contributing
 
