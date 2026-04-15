@@ -773,6 +773,12 @@ wmem_block_new_block(wmem_block_allocator_t *allocator) {
     /* allocate the new block and add it to the block list */
     block = (wmem_block_hdr_t *) wmem_alloc(NULL, WMEM_BLOCK_SIZE);
 
+    /* wmem_alloc(NULL,...) calls AllocVecTags(MEMF_SHARED,...); if it returns
+     * NULL (OOM) we must not proceed — writing through a NULL pointer would
+     * silently corrupt low memory where address 0 may be mapped. */
+    if (!block)
+        return;
+
     wmem_block_add_to_block_list(allocator, block);
 
     /* initialize it */
@@ -877,6 +883,11 @@ wmem_block_alloc(void *private_data, const size_t size, int32_t alignment) {
         if (!allocator->master_head) {        
             /* Allocate a new block if necessary. */
             wmem_block_new_block(allocator);
+            /* wmem_block_new_block() may fail (OOM) and leave master_head
+             * still NULL.  Return NULL here so malloc() can propagate ENOMEM
+             * cleanly instead of crashing via wmem_block_split_free_chunk. */
+            if (!allocator->master_head)
+                return NULL;
         }
 
         chunk = allocator->master_head;

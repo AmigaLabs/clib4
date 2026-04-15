@@ -99,6 +99,28 @@ mprotect(void *addr, size_t len, int prot)
     /* Update mmap tracking header if this is a managed mmap region */
     struct mmap_header *hdr = __mmap_get_header(addr);
     if (hdr != NULL) {
+        /*
+         * On AmigaOS 4 / E5500/MPC74xx, execute permission in the I-TLB is
+         * determined by the physical memory type set at allocation time.
+         * Only memory allocated from the MEMF_EXECUTABLE pool can be
+         * executed; SetMemoryAttrs(MEMATTRF_EXECUTE) on memory from
+         * memalign() (non-exec pool) is silently ignored by the hardware and
+         * results in an ISI (Instruction Storage Interrupt) at execution time.
+         *
+         * If the caller requests PROT_EXEC on a mapping that was NOT
+         * allocated from MEMF_EXECUTABLE (i.e. was allocated with
+         * mmap(prot without PROT_EXEC)), we cannot grant the request.
+         * Return EACCES so the caller knows the operation is unsupported,
+         * rather than pretending to succeed and causing an ISI crash later.
+         *
+         * To get an executable mapping, the caller must allocate with
+         * PROT_EXEC set in the original mmap() call.
+         */
+        if ((prot & PROT_EXEC) && !hdr->exec_alloc) {
+            __set_errno(EACCES);
+            RETURN(-1);
+            return -1;
+        }
         hdr->prot = prot;
     }
 
