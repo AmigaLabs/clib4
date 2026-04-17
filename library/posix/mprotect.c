@@ -26,6 +26,10 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#ifndef _STDLIB_MEMORY_H
+#include "stdlib_memory.h"
+#endif
+
 #include <sys/mman.h>
 #include <exec/memory.h>
 #include <interfaces/exec.h>
@@ -96,40 +100,55 @@ mprotect(void *addr, size_t len, int prot)
         return -1;
     }
 
-    /* Update mmap tracking header if this is a managed mmap region */
-    struct mmap_header *hdr = __mmap_get_header(addr);
-    if (hdr != NULL) {
-        /*
-         * On AmigaOS 4 / E5500/MPC74xx, execute permission in the I-TLB is
-         * determined by the physical memory type set at allocation time.
-         * Only memory allocated from the MEMF_EXECUTABLE pool can be
-         * executed; SetMemoryAttrs(MEMATTRF_EXECUTE) on memory from
-         * memalign() (non-exec pool) is silently ignored by the hardware and
-         * results in an ISI (Instruction Storage Interrupt) at execution time.
-         *
-         * If the caller requests PROT_EXEC on a mapping that was NOT
-         * allocated from MEMF_EXECUTABLE (i.e. was allocated with
-         * mmap(prot without PROT_EXEC)), we cannot grant the request.
-         * Return EACCES so the caller knows the operation is unsupported,
-         * rather than pretending to succeed and causing an ISI crash later.
-         *
-         * To get an executable mapping, the caller must allocate with
-         * PROT_EXEC set in the original mmap() call.
-         */
-        if ((prot & PROT_EXEC) && !hdr->exec_alloc) {
-            __set_errno(EACCES);
-            RETURN(-1);
-            return -1;
+    /* Update mmap tracking header if this is a managed mmap region.
+     *
+     * CRITICAL: __mmap_get_header(addr) reads from (addr - sizeof(header)).
+     * If addr is an interior page of a large JIT allocation (e.g. SpiderMonkey's
+     * 128 MiB MEMF_EXECUTABLE pool), and the PRECEDING 64 KiB JIT page was
+     * decommitted (MEMATTRF_SUPER_RW), that read causes a DSI in user mode —
+     * which on AmigaOS silently suspends the task (no crashlog), manifesting as
+     * a hang at the splashscreen.
+     *
+     * Safe approach: first check the tracking list to confirm addr is a known
+     * mmap() root, without reading any bytes before addr.  Only if found do we
+     * access the in-page header (which is guaranteed to be in a valid page).
+     */
+    {
+        struct mmap_record *rec = NULL;
+        struct _clib4 *__clib4 = __CLIB4;
+        __memory_lock(__clib4);
+        for (struct mmap_record *r = __mmap_records; r != NULL; r = r->next) {
+            if (r->user_ptr == addr) { rec = r; break; }
         }
-        hdr->prot = prot;
+        __memory_unlock(__clib4);
+
+        if (rec != NULL) {
+            /*
+             * Do NOT grant PROT_EXEC on memory that was not allocated from
+             * the MEMF_EXECUTABLE pool: SetMemoryAttrs(MEMATTRF_EXECUTE) on
+             * non-executable physical memory is ignored by the E5500 I-TLB and
+             * would result in an ISI at execution time.
+             */
+            if ((prot & PROT_EXEC) && !rec->exec_alloc) {
+                __set_errno(EACCES);
+                RETURN(-1);
+                return -1;
+            }
+            /* Safe to access the header now (addr is a confirmed mmap root) */
+            struct mmap_header *hdr = __mmap_get_header(addr);
+            if (hdr != NULL)
+                hdr->prot = prot;
+        }
     }
 
     /*
      * Apply MMU protection via exec.library's MMU interface.
      *
-     * GetMemoryAttrs / SetMemoryAttrs live in the "mmu" interface of
-     * exec.library (struct MMUIFace), not in IExec.  We obtain it on
-     * demand and release it immediately after use.
+     * __IMMU is cached once at libInit time (clib4.c) to avoid the
+     * heavy GetInterface / DropInterface overhead on every call.
+     * When the JIT calls ReprotectRegion hundreds of times per second,
+     * GetInterface/DropInterface on each call serializes on a semaphore
+     * inside exec.library and causes the visible CPU-at-100% spin.
      *
      * Notes:
      *  - GetMemoryAttrs preserves cache/coherency flags when we merge bits.
@@ -137,8 +156,7 @@ mprotect(void *addr, size_t len, int prot)
      *  - Both functions must be called in supervisor mode.
      *  - UserState() must only be called when SuperState() returned non-NULL.
      */
-    struct MMUIFace *IMMU = (struct MMUIFace *)
-        GetInterface((struct Library *)IExec->Data.LibBase, "mmu", 1, NULL);
+    struct MMUIFace *IMMU = __IMMU;  /* use cached interface */
 
     if (IMMU != NULL) {
         APTR stack = SuperState();
@@ -147,7 +165,6 @@ mprotect(void *addr, size_t len, int prot)
         if (stack != NULL) {
             UserState(stack);
         }
-        DropInterface((struct Interface *)IMMU);
     }
 
     RETURN(0);
