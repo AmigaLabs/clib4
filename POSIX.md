@@ -53,7 +53,7 @@
 | <strings.h>              | Case-insensitive string comparisons                                                   | Complete                          |
 | <stropts.h>              | Stream manipulation, including ioctl                                                  | Not present                       |
 | <sys/ipc.h>              | Inter-process Communication (IPC)                                                     | Complete                          |
-| <sys/mman.h>             | Memory management, including POSIX shared memory  and memory mapped files             | Present with missing functions    |
+| <sys/mman.h>             | Memory management, including POSIX shared memory and memory mapped files               | Complete                          |
 | <sys/msg.h>              | POSIX messages queues                                                                 | Complete                          |
 | <sys/resource.h>         | Resource usage, priorities, and limiting                                              | Present with missing functions    |
 | <sys/select.h>           | Synchronous I/O multiplexing                                                          | Complete                          |
@@ -73,7 +73,7 @@
 | <tar.h>                  | Magic numbers for the tar archive format                                              | Complete                          |
 | <termios.h>              | Allows terminal I/O interfaces                                                        | Complete                          |
 | <tgmath.h>               | Type-Generic Macros                                                                   | Complete                          |
-| <time.h>                 | Type-Generic Macros                                                                   | Complete                          |
+| <time.h>                 | Time types and functions                                                               | Complete                          |
 | <trace.h>                | Tracing of runtime behavior (DEPRECATED)                                              | Not present                       |
 | <ulimit.h>               | Resource limiting (DEPRECATED in favor of <sys/resource.h>)                           | Present with missing functions    |
 | <unistd.h>               | Various essential POSIX functions and constants                                       | Complete                          |
