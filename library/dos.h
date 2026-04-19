@@ -587,6 +587,14 @@ struct _clib4 {
      * These support the glue-list stream allocation model.
      */
     int __stdio_initialized;            /* Non-zero after __sinit() has run */
+
+    /*
+     * Per-process glue-list root for stream allocation.
+     * Replaces the global __sglue which is shared across all processes
+     * in the shared library — using a global caused child processes
+     * (via spawnvpe) to corrupt the parent's stdin/stdout/stderr buffers.
+     */
+    void *__sglue_root;                 /* per-process root _glue node (struct _glue *) */
 };
 
 #ifndef __getClib4

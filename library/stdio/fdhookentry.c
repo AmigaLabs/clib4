@@ -471,11 +471,6 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 __delete_mutex(fd->fd_Lock);
             }
 
-            /* Clear the fd struct only for non-STDIO file descriptors.
-             * STDIO fds (stdin/stdout/stderr) must survive close() because
-             * the IOB layer still references them. Zeroing a STDIO fd would
-             * destroy fd_Flags (including FDF_IN_USE), causing the next
-             * open() to reuse slot 0/1/2 and corrupt stdin/stdout/stderr. */
             if (!is_stdio) {
                 memset(fd, 0, sizeof(*fd));
                 fd = NULL;

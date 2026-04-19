@@ -403,7 +403,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 	}
 
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
-    uint32 pid;
+    uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
     if (res) {
         /*
          * Check if this process already has a valid _clib4 context.
@@ -411,12 +411,17 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
          * a second time.  We must NOT create a new context — that would overwrite pr_UID,
          * orphan the original _clib4 (with its initialised stdio buffers), and cause a
          * crash the next time the main programme calls printf/puts/etc.
+         *
+         * IMPORTANT: We must also verify that the existing context belongs to THIS
+         * process (same PID), not to a parent.  AmigaOS copies pr_UID to child
+         * processes created via SystemTags/CreateNewProc.  A child must get its own
+         * _clib4 so that its fd[0..2] reflect the pipe handles from SYS_Input/SYS_Output
+         * rather than the parent's console handles.
          */
         struct Process *_me = (struct Process *) IExec->FindTask(NULL);
         if (_me->pr_Task.tc_Node.ln_Type == NT_PROCESS && _me->pr_UID != 0) {
             struct _clib4 *existing = (struct _clib4 *) _me->pr_UID;
-            if (existing->__fully_initialized) {
-                D(bug("(libOpen) Process already has a valid _clib4 (%p) — reusing it\n", existing));
+            if (existing->__fully_initialized && existing->processId == pid) {
                 existing->__lib_open_count++;
                 if (IExpansion != NULL) {
                     IExec->DropInterface((struct Interface *) IExpansion);
@@ -431,7 +436,6 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
         }
 
         struct Clib4Node c2n;
-        pid = IDOS->GetPID(0, GPID_PROCESS);
         uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
 
         uuid4_generate(c2n.uuid);
@@ -528,7 +532,6 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
              * This field is copied to any spawned process created by this exe and/or its children
              */
             me->pr_UID = (uint32) __clib4;
-            //SetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, __clib4, TAG_END);
 
             /* Check if user has choosen a different memory allocator and this needs to be called before constructors
              * sice malloc constructor will use __wof_mem_allocator_type field
@@ -664,7 +667,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         void *item;
 
         struct _clib4 * __clib4 = (struct _clib4 *) me->pr_UID;
-        
+
         struct Task *t = IExec->FindTask(NULL);
         D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
 
@@ -677,6 +680,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             D(bug("(libClose) Secondary close — open_count %d -> %d, skipping teardown\n",
                   __clib4->__lib_open_count, __clib4->__lib_open_count - 1));
             __clib4->__lib_open_count--;
+
             --libBase->libNode.lib_OpenCnt;
             return 0;
         }
