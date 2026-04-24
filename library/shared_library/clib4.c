@@ -519,7 +519,16 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
             /* Set the current task pointer */
             __clib4->self = me;
-            __clib4->uuid = c2n.uuid;
+            /* Allocate a persistent copy of the uuid.
+             * Cannot point into the hashmap because resize invalidates pointers. */
+            __clib4->uuid = (char *) IExec->AllocVecTags(UUID4_LEN + 1,
+                                                         AVT_Type, MEMF_SHARED,
+                                                         AVT_ClearWithValue, 0,
+                                                         TAG_DONE);
+            if (__clib4->uuid) {
+                strncpy(__clib4->uuid, c2n.uuid, UUID4_LEN);
+                __clib4->uuid[UUID4_LEN] = '\0';
+            }
 
 			/* Get Actual Machine Type */
 			IExpansion->GetMachineInfoTags(GMIT_Machine, &__clib4->__machine_type, TAG_DONE);
@@ -779,6 +788,10 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
          * still TRUE in freed memory and skip creating a new context.
          */
         me->pr_UID = 0;
+        if (__clib4->uuid) {
+            IExec->FreeVec(__clib4->uuid);
+            __clib4->uuid = NULL;
+        }
         IExec->FreeVec(__clib4);
     }
 
