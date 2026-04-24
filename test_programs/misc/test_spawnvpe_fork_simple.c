@@ -30,12 +30,12 @@ int main() {
     }
 
     /* Spawn echo command that writes to stdout (which is our pipe) */
-    const char *argv1[] = {"C:echo", "Hello from spawnvpe_fork!", NULL};
+    const char *argv1[] = {"echo", "Hello from spawnvpe_fork!", NULL};
 
-    printf("  Spawning: C:echo \"Hello from spawnvpe_fork!\"\n");
+    printf("  Spawning: echo \"Hello from spawnvpe_fork!\"\n");
     printf("  Redirecting stdout to pipe...\n");
 
-    pid_t pid1 = spawnvpe_fork("C:echo", argv1, NULL, NULL, -1, pipefd[1], -1);
+    pid_t pid1 = spawnvpe_fork("echo", argv1, NULL, NULL, -1, pipefd[1], -1);
 
     if (pid1 < 0) {
         TEST_FAIL("spawnvpe_fork failed");
@@ -87,8 +87,8 @@ int main() {
     }
 
     /* Spawn a quick command */
-    const char *argv2[] = {"C:echo", "quick", NULL};
-    pid_t pid2 = spawnvpe_fork("C:echo", argv2, NULL, NULL, -1, pipefd[1], -1);
+    const char *argv2[] = {"echo", "quick", NULL};
+    pid_t pid2 = spawnvpe_fork("echo", argv2, NULL, NULL, -1, pipefd[1], -1);
 
     if (pid2 < 0) {
         TEST_FAIL("spawnvpe_fork failed");
@@ -132,13 +132,13 @@ int main() {
     }
 
     /* Spawn multiple children */
-    const char *argv3a[] = {"C:echo", "Child1", NULL};
-    const char *argv3b[] = {"C:echo", "Child2", NULL};
-    const char *argv3c[] = {"C:echo", "Child3", NULL};
+    const char *argv3a[] = {"echo", "Child1", NULL};
+    const char *argv3b[] = {"echo", "Child2", NULL};
+    const char *argv3c[] = {"echo", "Child3", NULL};
 
-    pid_t pid3a = spawnvpe_fork("C:echo", argv3a, NULL, NULL, -1, pipefd[1], -1);
-    pid_t pid3b = spawnvpe_fork("C:echo", argv3b, NULL, NULL, -1, pipefd[1], -1);
-    pid_t pid3c = spawnvpe_fork("C:echo", argv3c, NULL, NULL, -1, pipefd[1], -1);
+    pid_t pid3a = spawnvpe_fork("echo", argv3a, NULL, NULL, -1, pipefd[1], -1);
+    pid_t pid3b = spawnvpe_fork("echo", argv3b, NULL, NULL, -1, pipefd[1], -1);
+    pid_t pid3c = spawnvpe_fork("echo", argv3c, NULL, NULL, -1, pipefd[1], -1);
 
     if (pid3a < 0 || pid3b < 0 || pid3c < 0) {
         TEST_FAIL("Could not spawn all children");

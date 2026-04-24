@@ -389,9 +389,9 @@ extern int __fputs_r(struct _clib4 *__clib4, const char *s, FILE *stream);
 extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
 extern size_t __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream);
 
-#define __stdin_r(x) (FILE *) (&__sf[0])
-#define __stdout_r(x) (FILE *) (&__sf[1])
-#define __stderr_r(x) (FILE *) (&__sf[2])
+#define __stdin_r(x) (FILE *) ((x)->__iob[0])
+#define __stdout_r(x) (FILE *) ((x)->__iob[1])
+#define __stderr_r(x) (FILE *) ((x)->__iob[2])
 
 extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
 

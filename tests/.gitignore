@@ -1,0 +1,8 @@
+test_string
+test_stdlib
+test_stdio
+test_math
+test_time
+test_shm
+test_mmap
+test_mlock

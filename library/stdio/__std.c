@@ -8,15 +8,18 @@
 
 FILE *
 __stdin() {
-    return (FILE *) &__sf[0];
+    struct _clib4 *__clib4 = __CLIB4;
+    return (FILE *) __clib4->__iob[0];
 }
 
 FILE *
 __stdout() {
-    return (FILE *) &__sf[1];
+    struct _clib4 *__clib4 = __CLIB4;
+    return (FILE *) __clib4->__iob[1];
 }
 
 FILE *
 __stderr() {
-    return (FILE *) &__sf[2];
+    struct _clib4 *__clib4 = __CLIB4;
+    return (FILE *) __clib4->__iob[2];
 }

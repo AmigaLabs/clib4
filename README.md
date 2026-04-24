@@ -143,6 +143,16 @@ A lot of other functions has been added trying to make OS4 ports easier.
 
 Clib4 now contain also libauto with almost all OS4 components. We'll try to keep them updated.
 
+### Per-process stdio isolation (v2.1)
+
+Starting with version 2.1, clib4 uses a **newlib-inspired glue-list model** for stdio stream allocation. Each process
+that opens clib4.library gets its own `stdin`, `stdout`, and `stderr` streams backed by a per-process glue list
+(`__sglue_root` in `struct _clib4`), instead of sharing global `__sf[]` and `__sglue` structures across all processes.
+
+The fd-level close hooks (`fdhookentry.c`, `console_fdhookentry.c`, `socket/hook_entry.c`) have also been reworked to
+use proper `FDF_STDIO` flag detection instead of the old PROTECTING macro, ensuring that `dup2()` on stdio file
+descriptors works correctly.
+
 ### libpthread
 
 Clib4 now contain a native pthread implementation with some functions are not present in the pthread.library.  

@@ -41,11 +41,15 @@ _fwalk_sglue(struct _clib4 *__clib4, int (*func)(struct _clib4 *, struct iob *),
 /****************************************************************************/
 
 /*
- * _fwalk — Walk all open streams starting from the global glue root.
+ * _fwalk — Walk all open streams starting from the per-process glue root.
  *
  * Calls `func` on every active FILE. Returns 0 on total success.
  */
 int
 _fwalk(struct _clib4 *__clib4, int (*func)(struct _clib4 *, struct iob *)) {
+    struct _glue *root = (struct _glue *) __clib4->__sglue_root;
+    if (root != NULL)
+        return _fwalk_sglue(__clib4, func, root);
+    /* Fallback to global if per-process not yet initialized */
     return _fwalk_sglue(__clib4, func, &__sglue);
 }

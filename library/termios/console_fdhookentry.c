@@ -147,6 +147,7 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
     int64_t result = EOF;
     int actual_out;
     BOOL is_aliased;
+    BOOL is_stdio = FALSE;
     BPTR file;
     struct termios *tios;
 
@@ -406,13 +407,15 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
 
                     fd->fd_File = BZERO;
                 }
+            } else {
+                /* FDF_STDIO is set — this is a STDIO fd. */
+                is_stdio = TRUE;
             }
 
             __fd_unlock(fd);
 
-            /* Free the locked mutex now. */
-            if (NOT is_aliased) {
-                /* Free the termios structure if it was allocated */
+            /* Free resources — but not for STDIO or aliased fds. */
+            if (NOT is_aliased && !is_stdio) {
                 if (fd->fd_Aux != NULL && FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
                     free(fd->fd_Aux);
                     fd->fd_Aux = NULL;
@@ -421,9 +424,10 @@ __termios_console_hook(struct _clib4 *__clib4, struct fd *fd, struct file_action
                 __delete_mutex(fd->fd_Lock);
             }
 
-            /* And that's the last for this file descriptor. */
-            memset(fd, 0, sizeof(*fd));
-            fd = NULL;
+            if (!is_stdio) {
+                memset(fd, 0, sizeof(*fd));
+                fd = NULL;
+            }
 
             break;
 
