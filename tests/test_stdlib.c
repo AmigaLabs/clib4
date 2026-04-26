@@ -237,6 +237,96 @@ static const char *test_qsort(void) {
     return NULL;
 }
 
+/* Test qsort with large array (triggers quicksort path, n >= 7) */
+static const char *test_qsort_large(void) {
+    int arr[] = {42, 17, 93, 5, 81, 33, 62, 8, 55, 21, 77, 3, 99, 14, 48, 70};
+    int n = sizeof(arr) / sizeof(arr[0]);
+    int i;
+
+    qsort(arr, n, sizeof(int), compare_ints);
+
+    for (i = 1; i < n; i++) {
+        if (arr[i - 1] > arr[i]) {
+            printf("  FAIL: qsort_large: arr[%d]=%d > arr[%d]=%d\n", i-1, arr[i-1], i, arr[i]);
+            TEST_ASSERT("qsort large array not sorted", 0);
+        }
+    }
+    TEST_ASSERT("qsort large array sorted", 1);
+    return NULL;
+}
+
+/* Test qsort with reverse-sorted array */
+static const char *test_qsort_reverse(void) {
+    int arr[] = {100, 90, 80, 70, 60, 50, 40, 30, 20, 10};
+    int n = sizeof(arr) / sizeof(arr[0]);
+    int i;
+
+    qsort(arr, n, sizeof(int), compare_ints);
+
+    for (i = 1; i < n; i++) {
+        if (arr[i - 1] > arr[i]) {
+            printf("  FAIL: qsort_reverse: arr[%d]=%d > arr[%d]=%d\n", i-1, arr[i-1], i, arr[i]);
+            TEST_ASSERT("qsort reverse array not sorted", 0);
+        }
+    }
+    TEST_ASSERT_EQUAL("qsort reverse first", 10, arr[0]);
+    TEST_ASSERT_EQUAL("qsort reverse last", 100, arr[n-1]);
+    return NULL;
+}
+
+/* Test qsort with duplicates */
+static const char *test_qsort_duplicates(void) {
+    int arr[] = {5, 3, 5, 1, 3, 5, 2, 1, 4, 3, 2, 5};
+    int n = sizeof(arr) / sizeof(arr[0]);
+    int i;
+
+    qsort(arr, n, sizeof(int), compare_ints);
+
+    for (i = 1; i < n; i++) {
+        if (arr[i - 1] > arr[i]) {
+            printf("  FAIL: qsort_duplicates: arr[%d]=%d > arr[%d]=%d\n", i-1, arr[i-1], i, arr[i]);
+            TEST_ASSERT("qsort duplicates not sorted", 0);
+        }
+    }
+    return NULL;
+}
+
+/* Test qsort simulating git's ofs_delta sorting (large offsets) */
+static int compare_offsets(const void *a, const void *b) {
+    unsigned long va = *(const unsigned long *)a;
+    unsigned long vb = *(const unsigned long *)b;
+    /* Same pattern git uses: avoid subtraction overflow */
+    if (va < vb) return -1;
+    if (va > vb) return 1;
+    return 0;
+}
+
+static const char *test_qsort_git_offsets(void) {
+    /* Values from the actual failing git clone log */
+    unsigned long offsets[] = {
+        271375727, 170065653, 212509025, 271299218,
+        209182867, 178068276, 201899763, 26487398,
+        26496863, 26501811, 26489280, 26503081,
+        26508037, 271074828, 26507275, 26489280,
+        26498766, 26489722, 26499188, 26508926,
+        26511804, 26507639, 170066584, 53036
+    };
+    int n = sizeof(offsets) / sizeof(offsets[0]);
+    int i;
+
+    qsort(offsets, n, sizeof(unsigned long), compare_offsets);
+
+    for (i = 1; i < n; i++) {
+        if (offsets[i - 1] > offsets[i]) {
+            printf("  FAIL: qsort_git_offsets: offsets[%d]=%lu > offsets[%d]=%lu\n",
+                   i-1, offsets[i-1], i, offsets[i]);
+            TEST_ASSERT("qsort git offsets not sorted", 0);
+        }
+    }
+    TEST_ASSERT("qsort git offsets sorted", 1);
+    return NULL;
+}
+
 /* Test bsearch */
 static const char *test_bsearch(void) {
     int arr[] = {1, 2, 3, 5, 8, 9};
@@ -312,6 +402,10 @@ int main(void) {
     RUN_TEST(test_realloc);
     RUN_TEST(test_rand);
     RUN_TEST(test_qsort);
+    RUN_TEST(test_qsort_large);
+    RUN_TEST(test_qsort_reverse);
+    RUN_TEST(test_qsort_duplicates);
+    RUN_TEST(test_qsort_git_offsets);
     RUN_TEST(test_bsearch);
     RUN_TEST(test_getenv);
     RUN_TEST(test_system);

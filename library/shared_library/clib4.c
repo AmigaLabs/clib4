@@ -929,7 +929,7 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
         goto out;
     }
 
-    struct Library *__ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
+    __ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
     if (__ElfBase) {
         if (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision == 1) { // .so stuff doesn't work with pre-52.2
             goto out;

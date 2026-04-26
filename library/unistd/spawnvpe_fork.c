@@ -320,7 +320,8 @@ spawnvpe_fork(
     }
 
     D(("Closed %d file descriptors with FD_CLOEXEC before exec\n", num_closed));
-	struct spawnData data = { getgid(), thisTask };
+	struct spawnData data = { getgid(), thisTask, "" };
+	if (__CLIB4->uuid) strncpy(data.parentUuid, __CLIB4->uuid, UUID4_LEN);
     struct TagItem tags[] = {
         { NP_Seglist,           (ULONG) seglist },     /* FIX: Use NP_Seglist not NP_Entry! */
         { NP_Name,              (ULONG) process_name },
@@ -379,7 +380,7 @@ spawnvpe_fork(
     ret = child_proc->pr_ProcessID;
 
     /* Register child process in our tracking system */
-    if (insertSpawnedChildren(ret, GetPID(0, GPID_PROCESS), getgid())) {
+    if (insertSpawnedChildren(ret, getgid(), __clib4->uuid ? __clib4->uuid : "")) {
         __clib4->__children++;
         D(("Child process registered: PID=%ld\n", ret));
     } else {

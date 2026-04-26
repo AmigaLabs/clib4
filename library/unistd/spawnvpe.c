@@ -214,7 +214,8 @@ spawnvpe(
 
     D(("(*)Calling SystemTags.\n"));
 
-	struct spawnData data = { getgid(), FindTask(NULL) };
+	struct spawnData data = { getgid(), FindTask(NULL), "" };
+	if (__CLIB4->uuid) strncpy(data.parentUuid, __CLIB4->uuid, UUID4_LEN);
     ret = SystemTags(full_command,
                     NP_NotifyOnDeathSigTask, me,
                     SYS_Input,          iofh[0],
