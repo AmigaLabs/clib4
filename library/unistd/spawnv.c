@@ -73,7 +73,8 @@ spawnv(int mode, const char *file, const char **argv) {
     BPTR out = DupFileHandle(Output());
     BPTR err = DupFileHandle(ErrorOutput());
     D(("Launching [%s]", command));
-	struct spawnData data = { getgid(), FindTask(NULL) };
+	struct spawnData data = { getgid(), FindTask(NULL), "" };
+	if (__CLIB4->uuid) strncpy(data.parentUuid, __CLIB4->uuid, UUID4_LEN);
     ret = SystemTags(command,
                      SYS_Input, in,
                      SYS_Output, out,
