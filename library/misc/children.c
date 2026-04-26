@@ -41,28 +41,27 @@ pipeChildrenScan(const void *children, void *pipe) {
 }
 
 BOOL
-insertSpawnedChildren(uint32 pid, uint32 ppid, uint32 gid) {
+insertSpawnedChildren(uint32 pid, uint32 gid, const char *parentUuid) {
     DECLARE_UTILITYBASE();
 
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
-        uint32 parent = ppid; //GetPID(0, GPID_PARENT);
-        size_t iter = 0;
-        void *item;
-
         struct Clib4Children children;
         children.pid = pid;
         children.returnCode = 0x10000000; //set this flag for WIFEXITED
         children.groupId = gid;
 
-        while (hashmap_iter(res->children, &iter, &item)) {
-            const struct Clib4Node *node = item;
-            if (node->pid == parent) {
-                hashmap_set(node->spawnedProcesses, &children);
-                break;
-            }
+        /* Use direct hashmap_get by uuid — avoids hashmap_iter race condition */
+        struct Clib4Node nodeKey;
+        memset(&nodeKey, 0, sizeof(nodeKey));
+        strncpy(nodeKey.uuid, parentUuid, UUID4_LEN);
+        struct Clib4Node *node = (struct Clib4Node *) hashmap_get(res->children, &nodeKey);
+        if (node) {
+            hashmap_set(node->spawnedProcesses, &children);
+            D(("Inserted child pid %ld into parent uuid %s\n", pid, parentUuid));
+            return TRUE;
         }
-        return TRUE;
+        D(("Parent uuid %s not found in res->children\n", parentUuid));
     }
     return FALSE;
 }
@@ -154,9 +153,8 @@ spawnedProcessEnter(int32 entry_data) {
     gid_t groupId = data->groupId;
 	struct Task *parentTask = data->parentTask;
 
-    uint32 pid = GetPID(0, GPID_PROCESS); //((struct Process *) FindTask(NULL))->pr_ProcessID;
-    uint32 ppid = GetPID(0, GPID_PARENT);
-    if (insertSpawnedChildren(pid, ppid, groupId)) {
+    uint32 pid = GetPID(0, GPID_PROCESS);
+    if (insertSpawnedChildren(pid, groupId, data->parentUuid)) {
         __CLIB4->__children++;
         D(("Children with pid %ld and gid %ld inserted into list\n", pid, groupId));
     }

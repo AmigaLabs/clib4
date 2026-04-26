@@ -243,7 +243,8 @@ popen(const char *command, const char *type) {
     int asynch = TRUE; //FALSE
 
     /* Now try to launch the program. */
-	struct spawnData data = { getgid(), FindTask(NULL) };
+	struct spawnData data = { getgid(), FindTask(NULL), "" };
+	if (__CLIB4->uuid) strncpy(data.parentUuid, __CLIB4->uuid, UUID4_LEN);
     status = SystemTags((STRPTR) command,
                         SYS_Input,          input,
                         SYS_Output,         output,

@@ -7,7 +7,7 @@
 
 #include "clib4.h"
 
-BOOL insertSpawnedChildren(uint32 pid, uint32 ppid, uint32 gid);
+BOOL insertSpawnedChildren(uint32 pid, uint32 gid, const char *parentUuid);
 struct Clib4Children *findSpawnedChildrenByPid(uint32 pid);
 struct Clib4Children *findSpawnedChildrenByGid(uint32 pid, uint32 gid);
 void addSpawnedChildrenPipeHandle(uint32 pid, FILE *pipe);
@@ -18,6 +18,7 @@ void spawnedProcessEnter(int32 entry_data);
 struct spawnData {
 	gid_t groupId;
 	struct Task *parentTask;
+	char parentUuid[UUID4_LEN + 1];
 };
 
 #endif
