@@ -76,7 +76,8 @@ readlink(const char *path_name, char *buffer, int buffer_size) {
 
 out:
 
-    UnLock(lock);
+    if (lock != BZERO)
+        UnLock(lock);
 
     RETURN(result);
     return (result);

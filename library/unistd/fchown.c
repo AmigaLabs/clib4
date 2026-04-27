@@ -104,7 +104,8 @@ out:
     if (isFdLocked)
         __fd_unlock(fd);
 
-    UnLock(parent_dir);
+    if (parent_dir != BZERO)
+        UnLock(parent_dir);
 
     if (current_dir_changed)
         SetCurrentDir(old_current_dir);
