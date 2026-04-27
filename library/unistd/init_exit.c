@@ -40,7 +40,8 @@ CLIB_DESTRUCTOR(unistd_exit) {
             Delete(uln->uln_Name);
             SetCurrentDir(old_dir);
 
-            UnLock(uln->uln_Lock);
+            if (uln->uln_Lock != BZERO)
+                UnLock(uln->uln_Lock);
         }
     }
 
