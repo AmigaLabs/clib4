@@ -20,7 +20,7 @@ CLIB_DESTRUCTOR(__chdir_exit) {
         old_dir = SetCurrentDir(__clib4->__original_current_directory);
         __clib4->__original_current_directory = BZERO;
 
-        if (__clib4->__unlock_current_directory) {
+        if (__clib4->__unlock_current_directory && old_dir != BZERO) {
             UnLock(old_dir);
 
             __clib4->__unlock_current_directory = FALSE;

@@ -121,7 +121,8 @@ unlink(const char *path_name) {
 
 out:
 
-    UnLock(current_dir);
+    if (current_dir != BZERO)
+        UnLock(current_dir);
 
     RETURN(result);
     return (result);
