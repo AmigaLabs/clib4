@@ -430,6 +430,13 @@ wmem_block_remove_from_recycler(wmem_block_allocator_t *allocator,
 
     free_chunk = WMEM_GET_FREE(chunk);
 
+    /* Defensive guard: recycler entries are circular and must have both links.
+     * If not, the chunk does not belong to this recycler (or metadata is
+     * corrupted), so skip unlinking to avoid NULL dereference. */
+    if (!allocator->recycler_head || free_chunk->prev == NULL || free_chunk->next == NULL) {
+        return;
+    }
+
     if (free_chunk->prev == chunk && free_chunk->next == chunk) {
         /* Only one item in recycler, just empty it. */
         allocator->recycler_head = NULL;
@@ -443,6 +450,33 @@ wmem_block_remove_from_recycler(wmem_block_allocator_t *allocator,
             allocator->recycler_head = free_chunk->next;
         }
     }
+}
+
+/* Returns true if chunk belongs to one of this allocator's OS blocks. */
+static bool
+wmem_block_owns_chunk(wmem_block_allocator_t *allocator,
+                      wmem_block_chunk_t *chunk) {
+    wmem_block_hdr_t *block;
+
+    for (block = allocator->block_list; block != NULL; block = block->next) {
+        wmem_block_chunk_t *first = WMEM_BLOCK_TO_CHUNK(block);
+
+        if (first->jumbo) {
+            if (chunk == first) {
+                return true;
+            }
+        } else {
+            uint8_t *start = (uint8_t *) first;
+            uint8_t *end = ((uint8_t *) block) + WMEM_BLOCK_SIZE;
+            uint8_t *cur = (uint8_t *) chunk;
+
+            if (cur >= start && cur < end) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 /* Pushes a chunk onto the master stack. */
@@ -915,6 +949,12 @@ wmem_block_free(void *private_data, void *ptr) {
     wmem_block_chunk_t *chunk;
 
     chunk = WMEM_DATA_TO_CHUNK(ptr);
+
+    /* Ignore frees of pointers owned by a different allocator instance.
+     * This prevents recycler/master list corruption on cross-thread free. */
+    if (!wmem_block_owns_chunk(allocator, chunk)) {
+        return;
+    }
     
     if (chunk->jumbo) {
         wmem_block_free_jumbo(allocator, chunk);
@@ -934,21 +974,30 @@ wmem_block_free(void *private_data, void *ptr) {
     /* If the merged chunk now covers the entire block (prev==0, last==true),
      * the block is completely unused.  Return it to the OS -- but keep at
      * least one block alive so that a tight alloc/free loop does not
-     * continuously request and release OS memory (thrashing). */
+     * continuously request and release OS memory (thrashing).
+     * Guard against cross-thread frees: a recycler chunk always has a
+     * non-NULL free-header prev (circular-list invariant).  If prev is NULL
+     * the chunk belongs to a different allocator's master list and must not
+     * be touched here. */
     if (chunk->prev == 0 && chunk->last) {
         wmem_block_hdr_t *block = WMEM_CHUNK_TO_BLOCK(chunk);
+        bool safe_to_release = false;
 
         /* There must be at least one OTHER block in the list. */
         if (block->prev != NULL || block->next != NULL) {
-            /* Remove the chunk from whichever free list it inhabits. */
             if (chunk == allocator->master_head) {
                 wmem_block_pop_master(allocator);
-            } else if (WMEM_CHUNK_DATA_LEN(chunk) >= sizeof(wmem_block_free_t)) {
+                safe_to_release = true;
+            } else if (WMEM_CHUNK_DATA_LEN(chunk) >= sizeof(wmem_block_free_t) &&
+                       WMEM_GET_FREE(chunk)->prev != NULL) {
                 wmem_block_remove_from_recycler(allocator, chunk);
+                safe_to_release = true;
             }
 
-            wmem_block_remove_from_block_list(allocator, block);
-            wmem_free(NULL, block);
+            if (safe_to_release) {
+                wmem_block_remove_from_block_list(allocator, block);
+                wmem_free(NULL, block);
+            }
         }
     }
 }
@@ -960,6 +1009,11 @@ wmem_block_realloc(void *private_data, void *ptr, const size_t size, int32_t ali
 
     // chunk = wmem_block_get_chunk(allocator, ptr);
     chunk = WMEM_DATA_TO_CHUNK(ptr);
+
+    /* Undefined input: pointer not owned by this allocator instance. */
+    if (!wmem_block_owns_chunk(allocator, chunk)) {
+        return NULL;
+    }
 
     if (chunk->jumbo) {
         return wmem_block_realloc_jumbo(allocator, ptr, size, alignment);
