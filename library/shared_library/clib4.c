@@ -125,6 +125,11 @@ struct TimerIFace *ITimer = 0;
 struct Library *__UtilityBase = 0;
 struct UtilityIFace *__IUtility = 0;
 
+/* Cached MMU interface — avoids the heavy GetInterface/DropInterface
+ * overhead on every mprotect() call.  Obtained once at libInit and
+ * released at closeLibraries(). */
+struct MMUIFace *__IMMU = 0;
+
 struct Clib4IFace *IClib4 = 0;
 struct Clib4Library *Clib4Base = 0;
 
@@ -367,6 +372,11 @@ static void closeLibraries() {
     if (IDOS != NULL) {
         IExec->DropInterface((struct Interface *) IDOS);
         IDOS = NULL;
+    }
+
+    if (__IMMU != NULL) {
+        IExec->DropInterface((struct Interface *) __IMMU);
+        __IMMU = NULL;
     }
 }
 
@@ -952,6 +962,12 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
     } else {
         goto out;
     }
+
+    /* Cache the MMU interface once so mprotect() never needs to call
+     * GetInterface/DropInterface at runtime.  It's OK if this returns NULL
+     * on hardware without an MMU — mprotect() handles that gracefully. */
+    __IMMU = (struct MMUIFace *)
+        IExec->GetInterface((struct Library *)IExec->Data.LibBase, "mmu", 1, NULL);
 
     /* Open resource */
     struct Clib4Resource *res = (APTR) iexec->OpenResource(RESOURCE_NAME);
