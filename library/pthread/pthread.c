@@ -269,6 +269,7 @@ _pthread_clear_threadinfo(ThreadInfo *inf) {
 
     D(("_pthread_clear_threadinfo: clearing thread (task value suppressed)\n"));
     memset(inf, 0, sizeof(ThreadInfo));
+    NewMinList(&inf->cleanup);
     inf->status = THREAD_STATE_IDLE;
     inf->can_exit = 0;
     D(("_pthread_clear_threadinfo: EXIT\n"));
