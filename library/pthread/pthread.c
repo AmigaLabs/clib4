@@ -205,8 +205,16 @@ _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *
      */
     BOOL timerMsgReceived = (m1 == &inf->timerIO.Request.io_Message ||
                              m2 == &inf->timerIO.Request.io_Message);
+    BOOL procureMsgReceived = (m1 == &msg.ssm_Message ||
+                               m2 == &msg.ssm_Message);
 
-    if (timerMsgReceived)
+    /*
+     * Only Vacate() when the timeout fired and the Procure() reply was NOT
+     * received. If both messages are present (race at timeout boundary), the
+     * semaphore was already granted and Vacate() would remove an already
+     * dequeued node, crashing in kernel list handling.
+     */
+    if (timerMsgReceived && !procureMsgReceived)
         Vacate(sema, &msg);
 
     if (!timerMsgReceived) {
