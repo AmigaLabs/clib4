@@ -362,7 +362,8 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     inf->cancelstate = PTHREAD_CANCEL_ENABLE;
     inf->canceltype = PTHREAD_CANCEL_DEFERRED;
     inf->detached = inf->attr.detachstate == PTHREAD_CREATE_DETACHED;
-
+    inf->timerOpen = FALSE;
+    
     /* Signals allocated lazily in StarterFunc (thread context) */
     inf->cancel_signal = -1;
     inf->cancel_signal_mask = 0;

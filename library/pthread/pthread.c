@@ -128,6 +128,13 @@ static void CondWaitCleanupHandler(void *arg) {
         if (!CheckIO(ctx->timerio))
             AbortIO(ctx->timerio);
         WaitIO(ctx->timerio);
+        /*
+         * Mark the IORequest as "quick-complete" so that any subsequent
+         * WaitIO (e.g. in StarterFunc's cleanup) returns immediately without
+         * calling Remove() on the already-munged mn_Node.  SendIO() clears
+         * IOF_QUICK before the next request, so this is safe to reuse.
+         */
+        ctx->timerio->io_Flags |= IOF_QUICK;
     }
 
     /* POSIX: mutex must be re-acquired when cancelled during cond_wait */
@@ -180,13 +187,45 @@ _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *
     WaitPort(&inf->timerPort);
     m1 = GetMsg(&inf->timerPort);
     m2 = GetMsg(&inf->timerPort);
-    if (m1 == &inf->timerIO.Request.io_Message || m2 == &inf->timerIO.Request.io_Message)
+
+    /*
+     * Track whether the timer message was already dequeued by GetMsg above.
+     *
+     * Under kernel.debug + munge, Remove() (called internally by GetMsg)
+     * fills the removed node's ln_Succ/ln_Pred with 0xCCCCCCCC.  If we
+     * then call WaitIO on the same IORequest, the kernel's WaitIO
+     * implementation calls Remove() a second time and crashes trying to
+     * dereference 0xCCCCCCCC as a pointer (DSI at 0xCCCCCCD0).
+     *
+     * Fix: only call AbortIO+WaitIO when the timer message has NOT yet
+     * been retrieved.  When it has already been received (timerMsgReceived
+     * is TRUE) the IORequest is logically complete and WaitIO must be
+     * skipped entirely.  The next SendIO will reinitialise mn_Node via
+     * AddTail, so the munged fields do not cause any further problem.
+     */
+    BOOL timerMsgReceived = (m1 == &inf->timerIO.Request.io_Message ||
+                             m2 == &inf->timerIO.Request.io_Message);
+
+    if (timerMsgReceived)
         Vacate(sema, &msg);
 
-    // Reset the timer IO for reuse (abort if still pending, then wait for completion)
-    if (!CheckIO((struct IORequest *) &inf->timerIO))
-        AbortIO((struct IORequest *) &inf->timerIO);
-    WaitIO((struct IORequest *) &inf->timerIO);
+    if (!timerMsgReceived) {
+        /* Timer is still pending — abort it and wait for the reply. */
+        if (!CheckIO((struct IORequest *) &inf->timerIO))
+            AbortIO((struct IORequest *) &inf->timerIO);
+        WaitIO((struct IORequest *) &inf->timerIO);
+    }
+
+    /*
+     * After the timer message has been retrieved (either by GetMsg above or
+     * by WaitIO), mark the IORequest as "quick-complete" (IOF_QUICK).
+     * This prevents any subsequent WaitIO call — such as StarterFunc's
+     * cleanup or _pthread_clear_threadinfo — from calling Remove() on the
+     * already-munged mn_Node (ln_Succ/ln_Pred = 0xCCCCCCCC under
+     * kernel.debug+munge), which would crash with a DSI at 0xCCCCCCxx.
+     * SendIO() unconditionally clears IOF_QUICK before the next request.
+     */
+    inf->timerIO.Request.io_Flags |= IOF_QUICK;
 
     if (msg.ssm_Semaphore == NULL)
         return ETIMEDOUT;
@@ -202,6 +241,30 @@ _pthread_clear_threadinfo(ThreadInfo *inf) {
     if (inf == &threads[0]) {
         D(("_pthread_clear_threadinfo: WARNING - attempted to clear threads[0] (main thread), skipping!\n"));
         return;
+    }
+
+    /*
+     * If the per-thread timer device was lazily opened and never closed
+     * (e.g. the thread exited via a non-standard path, or StarterFunc's
+     * cleanup was skipped), close it here before zeroing the structure.
+     *
+     * This is critical when kernel "munge" is active: without this step
+     * the slot is recycled with timerOpen=FALSE but the inline timerPort /
+     * timerIO structs still contain stale pointers (timerPort.mp_SigTask
+     * → dead task, io_Message.mn_ReplyPort → stale port).  The next
+     * OpenTimerDevice on the recycled slot re-initialises those fields,
+     * but the kernel can deliver a reply to the old, munged address before
+     * the initialisation completes, triggering a DSI at 0xCCCCCCxx.
+     */
+    if (inf->timerOpen) {
+        D(("_pthread_clear_threadinfo: closing stale timer device for slot (timerOpen=TRUE)\n"));
+        if (!CheckIO((struct IORequest *)&inf->timerIO))
+            AbortIO((struct IORequest *)&inf->timerIO);
+        WaitIO((struct IORequest *)&inf->timerIO);
+        CloseDevice((struct IORequest *)&inf->timerIO);
+        if (inf->timerPort.mp_SigBit != SIGB_TIMER_FALLBACK)
+            FreeSignal(inf->timerPort.mp_SigBit);
+        inf->timerOpen = FALSE;
     }
 
     D(("_pthread_clear_threadinfo: clearing thread (task value suppressed)\n"));
@@ -346,6 +409,8 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         if (!CheckIO((struct IORequest *) &inf->timerIO))
             AbortIO((struct IORequest *) &inf->timerIO);
         WaitIO((struct IORequest *) &inf->timerIO);
+        /* See comment in _pthread_obtain_sema_timed: prevent double-Remove(). */
+        inf->timerIO.Request.io_Flags |= IOF_QUICK;
 
         // did we timeout?
         if (sigs & (1 << inf->timerPort.mp_SigBit))
