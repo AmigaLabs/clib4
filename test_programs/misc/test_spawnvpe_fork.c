@@ -62,7 +62,7 @@ void create_echo_child_program(const char *filename) {
 
     /* Compile it with clib4 */
     char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "gcc -o %s %s -mcrt=clib4 ", fullpath_exe, fullpath);
+    snprintf(cmd, sizeof(cmd), "gcc -o %s %s ", fullpath_exe, fullpath);
     printf("  Compiling: %s\n", cmd);
     int result = system(cmd);
     if (result != 0) {
@@ -107,7 +107,7 @@ void create_filter_child_program(const char *filename) {
 
     /* Compile it with clib4 */
     char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "gcc -o %s %s -mcrt=clib4 ", fullpath_exe, fullpath);
+    snprintf(cmd, sizeof(cmd), "gcc -o %s %s ", fullpath_exe, fullpath);
     printf("  Compiling: %s\n", cmd);
     int result = system(cmd);
     if (result != 0) {

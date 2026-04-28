@@ -14,6 +14,7 @@ int64_t
 __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_message *fam) {
     struct ExamineData *fib;
     BOOL is_aliased;
+    BOOL is_stdio = FALSE;
     int result;
     int param;
 
@@ -66,7 +67,7 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
             is_aliased = __fd_is_aliased(fd);
             if (is_aliased) {
                 __remove_fd_alias(__clib4, fd);
-            } else {
+            } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO)) {
                 /* Are we permitted to close this file? */
                 if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE)) {
                     /* Check for unix socket */
@@ -85,16 +86,19 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
                     }
                     result = __CloseSocket(fd->fd_Socket);
                 }
+            } else {
+                /* FDF_STDIO is set — this is a STDIO fd. */
+                is_stdio = TRUE;
             }
             __fd_unlock(fd);
 
-            /* Free the locked mutex now. */
-            if (NOT is_aliased)
+            if (NOT is_aliased && !is_stdio)
                 __delete_mutex(fd->fd_Lock);
 
-            /* And that's the last for this file descriptor. */
-            memset(fd, 0, sizeof(*fd));
-            fd = NULL;
+            if (!is_stdio) {
+                memset(fd, 0, sizeof(*fd));
+                fd = NULL;
+            }
             break;
         case file_action_seek:
             SHOWMSG("file_action_seek");
