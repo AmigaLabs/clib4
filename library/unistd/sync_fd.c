@@ -48,18 +48,18 @@ __sync_fd(struct fd *fd, int mode) {
 
     /* Flush the dos.library file buffer to the filesystem handler. */
     Flush(file);
-
+#if 0
     if (mode != 0) {
         /* Full sync requested (fsync): also ask the filesystem to flush
            its internal caches to disk via the proper DOS API.
            We use DevNameFromFH + FlushVolume instead of accessing the
            FileHandle struct directly (BADDR + fh_MsgPort) because the
            internal FileHandle layout may not be safe to access. */
-        TEXT devname[256];
+        TEXT devname[256] = {0};
         if (DevNameFromFH(file, devname, sizeof(devname), DN_DEVICEONLY))
             FlushVolume(devname);
     }
-
+#endif
     result = OK;
 
 out:

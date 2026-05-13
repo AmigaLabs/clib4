@@ -36,6 +36,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     int64_t result = EOF;
     BOOL is_aliased;
     BOOL is_stdio = FALSE;
+    BOOL fd_locked = FALSE;
     BPTR file;
 
     __check_abort_f(__clib4);
@@ -53,6 +54,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
 	SHOWMSG("locking fd");
     __fd_lock(fd);
+    fd_locked = TRUE;
 
     file = __resolve_fd_file(fd);
     if (file == BZERO) {
@@ -276,12 +278,13 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
         case file_action_close:
 
-            SHOWMSG("file_action_close");
+        SHOWMSG("file_action_close");
             /* The following is almost guaranteed not to fail. */
             result = OK;
 
             if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
                 /* If this is an alias, just remove it. */
+
                 is_aliased = __fd_is_aliased(fd);
                 if (is_aliased) {
                     __remove_fd_alias(__clib4, fd);
@@ -426,6 +429,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             Delete(pipe_name);
                         }
 #endif
+
                         if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid &&
                             FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
                             BPTR old_dir;
@@ -455,7 +459,10 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 }
             }
 
-            __fd_unlock(fd);
+            if (fd_locked) {
+                __fd_unlock(fd);
+                fd_locked = FALSE;
+            }
 
             /* Free the lock semaphore now. */
             if (NOT is_aliased && !is_stdio) {
@@ -471,6 +478,11 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 __delete_mutex(fd->fd_Lock);
             }
 
+            /* Clear the fd struct only for non-STDIO file descriptors.
+             * STDIO fds (stdin/stdout/stderr) must survive close() because
+             * the IOB layer still references them. Zeroing a STDIO fd would
+             * destroy fd_Flags (including FDF_IN_USE), causing the next
+             * open() to reuse slot 0/1/2 and corrupt stdin/stdout/stderr. */
             if (!is_stdio) {
                 memset(fd, 0, sizeof(*fd));
                 fd = NULL;
@@ -694,7 +706,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     }
 
 out:
-    __fd_unlock(fd);
+    if (fd != NULL && fd_locked)
+        __fd_unlock(fd);
 
     if (fam->fam_Action == file_action_close)
         __stdio_unlock(__clib4);

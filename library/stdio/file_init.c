@@ -173,11 +173,8 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
     SHOWMSG("Now initialize the standard I/O streams (input, output, error)");
 
-    /* Initialize the standard I/O streams using per-process __iob[] structs.
-     * These were already allocated by __grow_iob_table() in the stdio_init
-     * constructor. We must NOT use the global __sf[] array because that is
-     * shared across all processes in the shared library — a child process
-     * (via spawnvpe) would corrupt the parent's stdin/stdout/stderr. */
+    /* Initialize the standard I/O streams using the static __sf[] array.
+     * Also maintain backward compat: __iob[0..2] point to __sf[0..2]. */
     for (i = STDIN_FILENO; i <= STDERR_FILENO; i++) {
         switch (i) {
             case STDIN_FILENO:
@@ -228,8 +225,8 @@ FILE_CONSTRUCTOR(stdio_file_init) {
         /* Initialize the fd layer (unchanged) */
         __initialize_fd(__clib4->__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
 
-        /* Initialize the per-process __iob[i] struct (NOT the global __sf[i]) */
-        __initialize_iob(__clib4->__iob[i],
+        /* Initialize the static __sf[i] iob struct */
+        __initialize_iob(&__sf[i],
                          __iob_hook_entry,
                          buffer,
                          buffer,
@@ -240,42 +237,17 @@ FILE_CONSTRUCTOR(stdio_file_init) {
                          stdio_lock);
 
         /* Set up the new function pointers for I/O dispatch */
-        __clib4->__iob[i]->_read = __sread;
-        __clib4->__iob[i]->_write = __swrite;
-        __clib4->__iob[i]->_seek = __sseek;
-        __clib4->__iob[i]->_close = __sclose;
-        __clib4->__iob[i]->_seek64 = __sseek;  /* Same implementation for 64-bit */
-        __clib4->__iob[i]->_cookie = __clib4->__iob[i]; /* Cookie points to the iob itself */
-        __clib4->__iob[i]->_blksize = BUFSIZ;
+        __sf[i]._read = __sread;
+        __sf[i]._write = __swrite;
+        __sf[i]._seek = __sseek;
+        __sf[i]._close = __sclose;
+        __sf[i]._seek64 = __sseek;  /* Same implementation for 64-bit */
+        __sf[i]._cookie = &__sf[i]; /* Cookie points to the iob itself */
+        __sf[i]._blksize = BUFSIZ;
 
-        SHOWPOINTER(__clib4->__iob[i]);
-    }
-
-    /* Set up the per-process glue root to point to __iob[0..2].
-     * This replaces the global __sglue which would be shared across processes. */
-    {
-        struct _glue *g;
-        struct iob **ptrs;
-
-        ptrs = malloc(3 * sizeof(struct iob *));
-        if (ptrs == NULL)
-            goto out;
-
-        ptrs[0] = __clib4->__iob[0];
-        ptrs[1] = __clib4->__iob[1];
-        ptrs[2] = __clib4->__iob[2];
-
-        g = malloc(sizeof(struct _glue));
-        if (g == NULL) {
-            free(ptrs);
-            goto out;
-        }
-
-        g->next = NULL;
-        g->niobs = 3;
-        g->iobs = ptrs;
-
-        __clib4->__sglue_root = g;
+        /* Backward compat: make __iob[i] point to __sf[i] */
+        __clib4->__iob[i] = &__sf[i];
+        SHOWPOINTER(&__sf[i]);
     }
 
     /* Mark stdio as initialized */

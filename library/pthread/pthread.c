@@ -144,93 +144,40 @@ static void CondWaitCleanupHandler(void *arg) {
 
 int
 _pthread_obtain_sema_timed(struct SignalSemaphore *sema, const struct timespec *abstime, int shared) {
-    struct SemaphoreMessage msg;
     struct Task *task;
-    struct Message *m1, *m2;
     ThreadInfo *inf;
+
+    if (sema == NULL || abstime == NULL)
+        return EINVAL;
 
     task = FindTask(NULL);
     inf = GetCurrentThreadInfo();
 
-    // Lazy-initialize per-thread timer device (opened once, reused across calls)
-    if (!inf->timerOpen) {
-        if (!OpenTimerDevice((struct IORequest *) &inf->timerIO, &inf->timerPort, task)) {
-            return EINVAL;
-        }
-        inf->timerOpen = TRUE;
-    }
+    for (;;) {
+        ULONG ret;
+        struct timespec now;
 
-    inf->timerIO.Request.io_Command = TR_ADDREQUEST;
-    inf->timerIO.Request.io_Flags = 0;
-    TIMESPEC_TO_OLD_TIMEVAL(&inf->timerIO.Time, abstime);
-    //if (!relative)
-    {
-        struct TimeVal starttime;
-        // absolute time has to be converted to relative
-        // GetSysTime can't be used due to the timezone offset in abstime
-        gettimeofday((struct timeval *)&starttime, NULL);
-        timersub(&inf->timerIO.Time, &starttime, &inf->timerIO.Time);
-        if (!timerisset(&inf->timerIO.Time)) {
+        ret = (shared == SM_SHARED) ? AttemptSemaphoreShared(sema) : AttemptSemaphore(sema);
+        if (ret == TRUE)
+            return 0;
+
+        clock_gettime(CLOCK_REALTIME, &now);
+        if ((now.tv_sec > abstime->tv_sec) ||
+            (now.tv_sec == abstime->tv_sec && now.tv_nsec >= abstime->tv_nsec)) {
             return ETIMEDOUT;
         }
+
+        if (inf)
+            pthread_testcancel();
+
+        if (SetSignal(0, 0) & SIGBREAKF_CTRL_C) {
+            pthread_testcancel();
+            Signal(task, SIGBREAKF_CTRL_C);
+        }
+
+        /* 1 tick granularity keeps implementation simple and avoids Procure/Vacate races. */
+        Delay(1);
     }
-    // Clear stale timer signal and drain any leftover messages from previous use
-    SetSignal(0, 1 << inf->timerPort.mp_SigBit);
-    while (GetMsg(&inf->timerPort)) { /* drain */ }
-    SendIO((struct IORequest *) &inf->timerIO);
-
-    msg.ssm_Message.mn_Node.ln_Type = NT_MESSAGE;
-    msg.ssm_Message.mn_Node.ln_Name = (char *) shared;
-    msg.ssm_Message.mn_ReplyPort = &inf->timerPort;
-    Procure(sema, &msg);
-
-    WaitPort(&inf->timerPort);
-    m1 = GetMsg(&inf->timerPort);
-    m2 = GetMsg(&inf->timerPort);
-
-    /*
-     * Track whether the timer message was already dequeued by GetMsg above.
-     *
-     * Under kernel.debug + munge, Remove() (called internally by GetMsg)
-     * fills the removed node's ln_Succ/ln_Pred with 0xCCCCCCCC.  If we
-     * then call WaitIO on the same IORequest, the kernel's WaitIO
-     * implementation calls Remove() a second time and crashes trying to
-     * dereference 0xCCCCCCCC as a pointer (DSI at 0xCCCCCCD0).
-     *
-     * Fix: only call AbortIO+WaitIO when the timer message has NOT yet
-     * been retrieved.  When it has already been received (timerMsgReceived
-     * is TRUE) the IORequest is logically complete and WaitIO must be
-     * skipped entirely.  The next SendIO will reinitialise mn_Node via
-     * AddTail, so the munged fields do not cause any further problem.
-     */
-    BOOL timerMsgReceived = (m1 == &inf->timerIO.Request.io_Message ||
-                             m2 == &inf->timerIO.Request.io_Message);
-
-    if (timerMsgReceived)
-        Vacate(sema, &msg);
-
-    if (!timerMsgReceived) {
-        /* Timer is still pending — abort it and wait for the reply. */
-        if (!CheckIO((struct IORequest *) &inf->timerIO))
-            AbortIO((struct IORequest *) &inf->timerIO);
-        WaitIO((struct IORequest *) &inf->timerIO);
-    }
-
-    /*
-     * After the timer message has been retrieved (either by GetMsg above or
-     * by WaitIO), mark the IORequest as "quick-complete" (IOF_QUICK).
-     * This prevents any subsequent WaitIO call — such as StarterFunc's
-     * cleanup or _pthread_clear_threadinfo — from calling Remove() on the
-     * already-munged mn_Node (ln_Succ/ln_Pred = 0xCCCCCCCC under
-     * kernel.debug+munge), which would crash with a DSI at 0xCCCCCCxx.
-     * SendIO() unconditionally clears IOF_QUICK before the next request.
-     */
-    inf->timerIO.Request.io_Flags |= IOF_QUICK;
-
-    if (msg.ssm_Semaphore == NULL)
-        return ETIMEDOUT;
-
-    return 0;
 }
 
 void
@@ -269,6 +216,7 @@ _pthread_clear_threadinfo(ThreadInfo *inf) {
 
     D(("_pthread_clear_threadinfo: clearing thread (task value suppressed)\n"));
     memset(inf, 0, sizeof(ThreadInfo));
+    NewMinList(&inf->cleanup);
     inf->status = THREAD_STATE_IDLE;
     inf->can_exit = 0;
     D(("_pthread_clear_threadinfo: EXIT\n"));

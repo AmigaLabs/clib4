@@ -93,17 +93,11 @@ struct iob *
 __sfp(struct _clib4 *__clib4) {
     struct iob *fp;
     struct _glue *g;
-    struct _glue *root;
     int n;
 
     ENTER();
 
-    /* Use per-process glue root, fall back to global if not yet initialized */
-    root = (struct _glue *) __clib4->__sglue_root;
-    if (root == NULL)
-        root = &__sglue;
-
-    for (g = root; g != NULL; g = g->next) {
+    for (g = &__sglue; g != NULL; g = g->next) {
         for (n = 0; n < g->niobs; n++) {
             fp = g->iobs[n];
             if (fp != NULL && FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE)) {
@@ -123,10 +117,10 @@ __sfp(struct _clib4 *__clib4) {
         goto out;
     }
 
-    /* Link the new block at the end of the per-process chain */
+    /* Link the new block at the end of the chain */
     {
         struct _glue *last;
-        for (last = root; last->next != NULL; last = last->next)
+        for (last = &__sglue; last->next != NULL; last = last->next)
             ;
         last->next = g;
     }

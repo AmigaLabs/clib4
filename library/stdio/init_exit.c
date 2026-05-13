@@ -27,74 +27,58 @@ __close_all_files(struct _clib4 *__clib4) {
     __stdio_lock(__clib4);
 
     /*
-     * Walk the per-process glue list and close any dynamically allocated streams.
-     * Skip the root node (which holds stdin/stdout/stderr) — those are handled below.
+     * First, walk the glue list and close any open streams.
+     * Skip the static __sf[0..2] (stdin/stdout/stderr) as they are
+     * handled by the old __iob[] path below for backward compat.
+     * Only close dynamically allocated streams from __sfp().
      */
     {
-        struct _glue *root = (struct _glue *) __clib4->__sglue_root;
-        if (root != NULL) {
-            struct _glue *g;
-            for (g = root->next; g != NULL; ) {
-                struct _glue *next_g = g->next;
-                for (i = 0; i < g->niobs; i++) {
-                    if (g->iobs[i] != NULL && FLAG_IS_SET(g->iobs[i]->iob_Flags, IOBF_IN_USE)) {
-                        D(("Close glue iob %ld\n", i));
-                        fclose((FILE *) g->iobs[i]);
-                    }
+        struct _glue *g;
+        for (g = __sglue.next; g != NULL; ) {
+            struct _glue *next_g = g->next;
+            for (i = 0; i < g->niobs; i++) {
+                if (g->iobs[i] != NULL && FLAG_IS_SET(g->iobs[i]->iob_Flags, IOBF_IN_USE)) {
+                    D(("Close glue iob %ld\n", i));
+                    fclose((FILE *) g->iobs[i]);
                 }
-                /* Free the iob array, pointer array, and glue block */
-                if (g->iobs != NULL) {
-                    if (g->niobs > 0 && g->iobs[0] != NULL)
-                        free(g->iobs[0]);  /* Free the contiguous iob array */
-                    free(g->iobs);         /* Free the pointer array */
-                }
-                free(g);
-                g = next_g;
             }
-            root->next = NULL;
-
-            /* Free the root glue node itself (per-process, allocated in file_init) */
-            if (root->iobs != NULL)
-                free(root->iobs);
-            free(root);
-            __clib4->__sglue_root = NULL;
+            /* Free the iob array, pointer array, and glue block */
+            if (g->iobs != NULL) {
+                if (g->niobs > 0 && g->iobs[0] != NULL)
+                    free(g->iobs[0]);  /* Free the contiguous iob array */
+                free(g->iobs);         /* Free the pointer array */
+            }
+            free(g);
+            g = next_g;
         }
+        __sglue.next = NULL;
     }
 
-    /* Close the per-process stdin/stdout/stderr streams (__iob[0..2]) */
-    if (__clib4->__iob != NULL) {
-        for (i = 0; i < 3 && i < __clib4->__num_iob; i++) {
-            struct iob *fp = __clib4->__iob[i];
-            if (fp != NULL && FLAG_IS_SET(fp->iob_Flags, IOBF_IN_USE)) {
-                /* Flush the per-process iob */
-                __sflush(__clib4, fp);
-                CLEAR_FLAG(fp->iob_Flags, IOBF_IN_USE);
-                if (fp->iob_CustomBuffer != NULL) {
-                    if (fp->iob_isVBuffer)
-                        FreeVec(fp->iob_CustomBuffer);
-                    else
-                        free(fp->iob_CustomBuffer);
-                    fp->iob_CustomBuffer = NULL;
-                }
-                if (fp->iob_Lock != NULL) {
-                    __delete_semaphore(fp->iob_Lock);
-                    fp->iob_Lock = NULL;
-                }
+    /* Close the static stdin/stdout/stderr streams via fclose */
+    for (i = 0; i < 3; i++) {
+        if (FLAG_IS_SET(__sf[i].iob_Flags, IOBF_IN_USE)) {
+            /* Flush but don't free the static structs */
+            __sflush(__clib4, &__sf[i]);
+            CLEAR_FLAG(__sf[i].iob_Flags, IOBF_IN_USE);
+            if (__sf[i].iob_CustomBuffer != NULL) {
+                if (__sf[i].iob_isVBuffer)
+                    FreeVec(__sf[i].iob_CustomBuffer);
+                else
+                    free(__sf[i].iob_CustomBuffer);
+                __sf[i].iob_CustomBuffer = NULL;
+            }
+            if (__sf[i].iob_Lock != NULL) {
+                __delete_semaphore(__sf[i].iob_Lock);
+                __sf[i].iob_Lock = NULL;
             }
         }
     }
 
-    /* Free the __iob[] pointer table and its per-process iob structs.
-     * Entries 0..2 are per-process (allocated by __grow_iob_table).
+    /* Free the __iob[] pointer table (entries 0..2 point to static __sf[],
+     * which were already cleaned up above — do NOT free those structs).
      * No entries beyond index 2 exist anymore since new streams are
      * allocated via __sfp() / glue list exclusively. */
     if (__clib4->__iob != NULL) {
-        for (i = 0; i < __clib4->__num_iob; i++) {
-            if (__clib4->__iob[i] != NULL) {
-                __free_r(__clib4, __clib4->__iob[i]);
-                __clib4->__iob[i] = NULL;
-            }
-        }
         __free_r(__clib4, __clib4->__iob);
         __clib4->__iob = NULL;
     }
@@ -102,17 +86,26 @@ __close_all_files(struct _clib4 *__clib4) {
 
     if (__clib4->__num_fd > 0) {
         for (i = 0; i < __clib4->__num_fd; i++) {
-            /* If file is set as in use close it only if it isn't marked as FDF_NO_CLOSE */
-            if ((i >= STDIN_FILENO || i < STDERR_FILENO) || (FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_IN_USE) && FLAG_IS_CLEAR(__clib4->__fd[i]->fd_Flags, FDF_NO_CLOSE))) {
+            struct fd *fd = __clib4->__fd[i];
+            BOOL is_stdio_fd = (i >= STDIN_FILENO && i <= STDERR_FILENO);
+
+            if (fd == NULL)
+                continue;
+
+            /* Close stdio fds 0..2 unconditionally, and any live non-NO_CLOSE descriptor. */
+            if (is_stdio_fd ||
+                (FLAG_IS_SET(fd->fd_Flags, FDF_IN_USE) &&
+                 FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE))) {
                 D(("Close __fd %ld\n", i));
                 close(i);
-				SHOWMSG("Freeing Unlock memory");
-                UnlockMem(__clib4->__fd[i], sizeof(*__clib4->__fd[i]));
-				SHOWMSG("Freeing fd memory");
-                __free_r(__clib4, __clib4->__fd[i]);
+                SHOWMSG("Freeing Unlock memory");
+                UnlockMem(fd, sizeof(*fd));
+                SHOWMSG("Freeing fd memory");
+                __free_r(__clib4, fd);
+                __clib4->__fd[i] = NULL;
             }
             else {
-                D(("Can't close __fd %ld FDF_STDIO=%ld FDF_IN_USE=%ld FDF_NO_CLOSE=%ld \n", i, FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_STDIO), FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_IN_USE), FLAG_IS_SET(__clib4->__fd[i]->fd_Flags, FDF_NO_CLOSE)));
+                D(("Can't close __fd %ld FDF_STDIO=%ld FDF_IN_USE=%ld FDF_NO_CLOSE=%ld \n", i, FLAG_IS_SET(fd->fd_Flags, FDF_STDIO), FLAG_IS_SET(fd->fd_Flags, FDF_IN_USE), FLAG_IS_SET(fd->fd_Flags, FDF_NO_CLOSE)));
             }
         }
         __clib4->__num_fd = 0;

@@ -125,11 +125,6 @@ struct TimerIFace *ITimer = 0;
 struct Library *__UtilityBase = 0;
 struct UtilityIFace *__IUtility = 0;
 
-/* Cached MMU interface — avoids the heavy GetInterface/DropInterface
- * overhead on every mprotect() call.  Obtained once at libInit and
- * released at closeLibraries(). */
-struct MMUIFace *__IMMU = 0;
-
 struct Clib4IFace *IClib4 = 0;
 struct Clib4Library *Clib4Base = 0;
 
@@ -373,11 +368,6 @@ static void closeLibraries() {
         IExec->DropInterface((struct Interface *) IDOS);
         IDOS = NULL;
     }
-
-    if (__IMMU != NULL) {
-        IExec->DropInterface((struct Interface *) __IMMU);
-        __IMMU = NULL;
-    }
 }
 
 struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
@@ -413,7 +403,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 	}
 
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
-    uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
+    uint32 pid;
     if (res) {
         /*
          * Check if this process already has a valid _clib4 context.
@@ -421,17 +411,12 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
          * a second time.  We must NOT create a new context — that would overwrite pr_UID,
          * orphan the original _clib4 (with its initialised stdio buffers), and cause a
          * crash the next time the main programme calls printf/puts/etc.
-         *
-         * IMPORTANT: We must also verify that the existing context belongs to THIS
-         * process (same PID), not to a parent.  AmigaOS copies pr_UID to child
-         * processes created via SystemTags/CreateNewProc.  A child must get its own
-         * _clib4 so that its fd[0..2] reflect the pipe handles from SYS_Input/SYS_Output
-         * rather than the parent's console handles.
          */
         struct Process *_me = (struct Process *) IExec->FindTask(NULL);
         if (_me->pr_Task.tc_Node.ln_Type == NT_PROCESS && _me->pr_UID != 0) {
             struct _clib4 *existing = (struct _clib4 *) _me->pr_UID;
-            if (existing->__fully_initialized && existing->processId == pid) {
+            if (existing->__fully_initialized) {
+                D(bug("(libOpen) Process already has a valid _clib4 (%p) — reusing it\n", existing));
                 existing->__lib_open_count++;
                 if (IExpansion != NULL) {
                     IExec->DropInterface((struct Interface *) IExpansion);
@@ -446,6 +431,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
         }
 
         struct Clib4Node c2n;
+        pid = IDOS->GetPID(0, GPID_PROCESS);
         uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
 
         uuid4_generate(c2n.uuid);
@@ -551,6 +537,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
              * This field is copied to any spawned process created by this exe and/or its children
              */
             me->pr_UID = (uint32) __clib4;
+            //SetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, __clib4, TAG_END);
 
             /* Check if user has choosen a different memory allocator and this needs to be called before constructors
              * sice malloc constructor will use __wof_mem_allocator_type field
@@ -686,7 +673,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         void *item;
 
         struct _clib4 * __clib4 = (struct _clib4 *) me->pr_UID;
-
+        
         struct Task *t = IExec->FindTask(NULL);
         D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
 
@@ -699,7 +686,6 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             D(bug("(libClose) Secondary close — open_count %d -> %d, skipping teardown\n",
                   __clib4->__lib_open_count, __clib4->__lib_open_count - 1));
             __clib4->__lib_open_count--;
-
             --libBase->libNode.lib_OpenCnt;
             return 0;
         }
@@ -939,7 +925,7 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
         goto out;
     }
 
-    __ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
+    struct Library *__ElfBase = IExec->OpenLibrary("elf.library", MIN_OS_VERSION);
     if (__ElfBase) {
         if (__ElfBase->lib_Version == 52 && __ElfBase->lib_Revision == 1) { // .so stuff doesn't work with pre-52.2
             goto out;
@@ -962,12 +948,6 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
     } else {
         goto out;
     }
-
-    /* Cache the MMU interface once so mprotect() never needs to call
-     * GetInterface/DropInterface at runtime.  It's OK if this returns NULL
-     * on hardware without an MMU — mprotect() handles that gracefully. */
-    __IMMU = (struct MMUIFace *)
-        IExec->GetInterface((struct Library *)IExec->Data.LibBase, "mmu", 1, NULL);
 
     /* Open resource */
     struct Clib4Resource *res = (APTR) iexec->OpenResource(RESOURCE_NAME);
