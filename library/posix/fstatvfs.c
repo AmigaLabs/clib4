@@ -24,7 +24,7 @@ fstatvfs(int fd, struct statvfs *buf) {
     SHOWPOINTER(buf);
 
     struct fd *fildes = __get_file_descriptor(__clib4, fd);
-    if (fildes == NULL) {
+    if (fildes == NULL || fildes->fd_File == BZERO) {
         __set_errno_r(__clib4, EBADF);
         goto out;
     }

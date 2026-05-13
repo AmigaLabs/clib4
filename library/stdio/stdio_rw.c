@@ -236,11 +236,8 @@ __sclose(void *cookie) {
         return -1;
     }
 
-    /* Do NOT resolve fd_Original here. For close, we must affect THIS
-     * specific fd slot — not the original in an alias chain. Following
-     * fd_Original would close the WRONG fd and corrupt the fd table.
-     * (Consistent with __iob_hook_entry which uses
-     *  __get_file_descriptor_dont_resolve for close operations.) */
+    if (__builtin_expect(fd->fd_Original != NULL, 0))
+        fd = fd->fd_Original;
 
     fam.fam_Action = file_action_close;
 

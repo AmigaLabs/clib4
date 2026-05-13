@@ -27,7 +27,10 @@ close(int file_descriptor) {
 
     fam.fam_Action = file_action_close;
 
-    assert(fd->fd_Action != NULL);
+    if (fd->fd_Action == NULL) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
     if ((*fd->fd_Action)(__clib4, fd, &fam) < 0) {
         __set_errno(fam.fam_Error);

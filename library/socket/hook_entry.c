@@ -15,6 +15,7 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
     struct ExamineData *fib;
     BOOL is_aliased;
     BOOL is_stdio = FALSE;
+    BOOL fd_locked = FALSE;
     int result;
     int param;
 
@@ -27,6 +28,7 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
         __stdio_lock(__clib4);
 
     __fd_lock(fd);
+    fd_locked = TRUE;
 
     switch (fam->fam_Action) {
         case file_action_read:
@@ -90,7 +92,10 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
                 /* FDF_STDIO is set — this is a STDIO fd. */
                 is_stdio = TRUE;
             }
-            __fd_unlock(fd);
+            if (fd_locked) {
+                __fd_unlock(fd);
+                fd_locked = FALSE;
+            }
 
             if (NOT is_aliased && !is_stdio)
                 __delete_mutex(fd->fd_Lock);
@@ -140,7 +145,8 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
             break;
     }
 
-    __fd_unlock(fd);
+    if (fd_locked)
+        __fd_unlock(fd);
 
     if (fam->fam_Action == file_action_close)
         __stdio_unlock(__clib4);
