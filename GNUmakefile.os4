@@ -142,30 +142,16 @@ ifdef USE_TEMPFILES
 endif
 
 ifdef SPE
-	# Default CC/AS for standalone SPE builds (assumes GCC 6 installed).
-	# When CC is passed on the command line (e.g., from adtools cross-build),
-	# these defaults are skipped so the cross-compiler's xgcc is used instead.
-	ifeq ($(origin CC),file)
 	CC := ppc-amigaos-gcc-6.4.0
 	AS := ppc-amigaos-as-6.4.0
-	endif
 	CMATH := -mfpu=dp_lite
 	OUTPUT_LIB = $(BUILD_DIR)/lib/soft-float
 	CFLAGS := $(CFLAGS) -D__SPE__ -msoft-float -mspe -mtune=8540 -mcpu=8540 -mabi=spe -mfloat-gprs=double $(CMATH) -fno-inline-functions -fno-partial-inlining \
 				-fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions \
 				-fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
 	AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mfloat-gprs=double $(CMATH) -Wno-overflow
-	# Filter out warning flags that don't exist in GCC 6/7. Combined with
-	# -Werror these cause build failures when cross-compiling SPE via
-	# adtools with older GCC versions.
 	CFLAGS := $(filter-out -Wno-cast-function-type, $(CFLAGS))
 	CFLAGS_N := $(filter-out -Wno-cast-function-type, $(CFLAGS_N))
-	CFLAGS := $(filter-out -Wno-stringop-overflow, $(CFLAGS))
-	CFLAGS_N := $(filter-out -Wno-stringop-overflow, $(CFLAGS_N))
-	# Downgrade warnings that GCC 7 is stricter about to non-fatal.
-	# These are harmless on GCC 6 (silently ignored) and GCC 8+ (less strict).
-	CFLAGS += -Wno-error=maybe-uninitialized -Wno-error=implicit-fallthrough
-	CFLAGS_N += -Wno-error=maybe-uninitialized -Wno-error=implicit-fallthrough
 endif
 
 ifdef PROFILE
