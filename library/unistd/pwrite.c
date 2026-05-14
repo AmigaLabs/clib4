@@ -78,23 +78,38 @@ pwrite(int fd_num, const void *buf, size_t n, off_t off) {
              * AmigaOS ChangeFilePosition fails when seeking past EOF.
              * POSIX: pwrite past EOF extends the file with zero-fill.
              * Use ChangeFileSize to extend, then retry the seek.
+             *
+             * IMPORTANT: after a failed ChangeFilePosition the AmigaDOS file
+             * handle may be left in an undefined state on some filesystems
+             * Restore the position to saved_pos BEFORE
+             * calling ChangeFileSize so the handle is in a known good state.
              */
             file_size = GetFileSize(file);
             if (file_size != GETPOSITION_ERROR && off >= file_size) {
-                if (ChangeFileSize(file, off, OFFSET_BEGINNING) != -1) {
-                    new_pos = ChangeFilePosition(file, off, OFFSET_BEGINNING);
-                    if (new_pos == CHANGE_FILE_ERROR) {
-                        ChangeFilePosition(file, saved_pos, OFFSET_BEGINNING);
-                        fd->fd_Position = saved_pos;
-                        __fd_unlock(fd);
-                        __set_errno(EIO);
-                        goto out;
-                    }
-                } else {
-                    ChangeFilePosition(file, saved_pos, OFFSET_BEGINNING);
+                /* Restore position first to stabilise the file handle. */
+                ChangeFilePosition(file, saved_pos, OFFSET_BEGINNING);
+
+                /*
+                 * ChangeFileSize returns the old file size on success, or
+                 * CHANGE_FILE_ERROR (0) on failure.  CHANGE_FILE_ERROR == 0,
+                 * so we must also consult IoErr() to distinguish a successful
+                 * call whose old size happened to be 0 from a real error —
+                 * exactly the same pattern used in ftruncate.c.
+                 */
+                int64_t cfs_result = ChangeFileSize(file, off, OFFSET_BEGINNING);
+                if (cfs_result == CHANGE_FILE_ERROR && IoErr() != OK) {
                     fd->fd_Position = saved_pos;
                     __fd_unlock(fd);
                     __set_errno(__translate_io_error_to_errno(IoErr()));
+                    goto out;
+                }
+
+                new_pos = ChangeFilePosition(file, off, OFFSET_BEGINNING);
+                if (new_pos == CHANGE_FILE_ERROR && IoErr() != OK) {
+                    ChangeFilePosition(file, saved_pos, OFFSET_BEGINNING);
+                    fd->fd_Position = saved_pos;
+                    __fd_unlock(fd);
+                    __set_errno(EIO);
                     goto out;
                 }
             } else {
