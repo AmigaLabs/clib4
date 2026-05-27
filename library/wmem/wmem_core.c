@@ -96,7 +96,7 @@ static int allocs = 0;
 void *
 wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t alignment) {
 
-#if MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
     D(("Allocating %ld bytes chunk of memory (alignment: %ld).\n", size, alignment));
 #endif
 

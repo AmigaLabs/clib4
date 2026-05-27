@@ -32,7 +32,7 @@ putenv(const char *string) {
         goto out;
     }
 
-    if (!(equal = index(p, '='))) {
+    if (!(equal = strchr(p, '='))) {
         __set_errno_r(__clib4, EINVAL);
         free(p);
         goto out;

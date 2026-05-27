@@ -14,6 +14,7 @@ int
 __sync_fd(struct fd *fd, int mode) {
     int result = ERROR;
     BPTR file;
+    ENTER();
 
     assert(fd != NULL);
 
@@ -66,5 +67,6 @@ out:
 
     __fd_unlock(fd);
 
+    RETURN(result);
     return (result);
 }

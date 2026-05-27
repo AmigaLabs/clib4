@@ -476,8 +476,7 @@ find_colliding_region(struct FileLockNode *fln, _off64_t start, _off64_t stop, B
             /* Two shared regions may always overlap.
              * How about the rest?
              */
-            if (NOT shared || NOT
-            lrn->lrn_Shared)
+            if (NOT shared || NOT lrn->lrn_Shared)
             {
                 /* The lock owner may add as many exclusive
                  * or shared locks to the same region as

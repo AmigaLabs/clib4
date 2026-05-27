@@ -31,7 +31,7 @@ typedef struct _wmem_simple_allocator_t {
     int32_t *alignments;
 } wmem_simple_allocator_t;
 
-#if MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
 void dump_ptrs(const char *function, void *private_data);
 #ifdef SUPER_MEMORY_DEBUG
 void dump_ptrs(const char *function, void *private_data) {
@@ -54,7 +54,7 @@ wmem_simple_alloc(void *private_data, const size_t size, int32_t alignment) {
 
     if (__clib4_unlikely(allocator->count == allocator->size)) {
 
-#if MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
        D(("[wmem_simple_alloc :] Growing ptrs array.\n"));
 #endif
 
@@ -87,7 +87,7 @@ wmem_simple_alloc(void *private_data, const size_t size, int32_t alignment) {
     allocator->ptrs[allocator->count] = ptr;
     allocator->count++;
 
-#if MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
     D(("[wmem_simple_alloc :] count [%d] ptr [0x%lx] size [0x%lx].\n", allocator->count, allocator->ptrs[allocator->count-1], allocator->sizes[allocator->count-1]));
     dump_ptrs("simple_alloc", private_data);
 #endif
@@ -133,7 +133,7 @@ wmem_simple_realloc(void *private_data, void *ptr, const size_t size, int32_t al
 
     allocator = (wmem_simple_allocator_t *) private_data;
 
-#if MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
     D(("[wmem_simple_realloc :] old ptr [0x%lx] old size [0x%lx]\n", ptr, size));
 #endif
 
@@ -150,13 +150,13 @@ wmem_simple_realloc(void *private_data, void *ptr, const size_t size, int32_t al
                 allocator->sizes[i] = size;
             }
 
-#if MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
             D(("[wmem_simple_realloc :] Grow : new ptr [0x%lx] new size [0x%lx]\n", allocator->ptrs[i], allocator->sizes[i]));
 #endif
             return allocator->ptrs[i];
         }
     }
-#if MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
     D(("[simple_realloc :] <DISASTER> : Atempted realloc of bad pointer. (ptr == 0x%lx\n", ptr));
     dump_ptrs("simple_realloc", private_data);
     exit(20);
@@ -179,7 +179,7 @@ wmem_simple_free_all(void *private_data) {
     allocator->count = 0;
     // allocator->size = 0;
 
-#if MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
     dump_ptrs("simple_free_all", private_data);
 #endif
 }

@@ -12,13 +12,12 @@
 
 int
 clock_gettime(clockid_t clk_id, struct timespec *t) {
-    ENTER();
+
     struct _clib4 *__clib4 = __CLIB4;
 
     /* Check the supported flags.  */
     if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME | CLOCK_MONOTONIC_RAW)) != 0) {
         __set_errno_r(__clib4, EINVAL);
-        RETURN(-1);
         return -1;
     }
 
@@ -34,7 +33,6 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
     //Set default value for tv
     tv.tv_sec = tv.tv_usec = 0;
 
-    SHOWVALUE(clk_id);
     if (clk_id == CLOCK_MONOTONIC || clk_id == CLOCK_MONOTONIC_RAW) {
         /*
         CLOCK_MONOTONIC
@@ -83,6 +81,5 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
         t->tv_nsec += 1000000000L;
     }
 
-    RETURN(0);
     return 0;
 }

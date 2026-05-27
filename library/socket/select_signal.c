@@ -18,43 +18,63 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
+// #define SOCKET_DEBUG if you want to track socket descriptor mapping and other select-related operations
+
+// #define SOCKET_DEBUG
+#if defined(SOCKET_DEBUG) && !defined(DEBUG)
+#error "SOCKET_DEBUG NEEDS DEBUG FLAG ON"
+#endif
+
+
 STATIC void
 copy_fd_set(fd_set *to, fd_set *from, int num_fds) {
+#ifdef SOCKET_DEBUG    
     ENTER();
 
     SHOWPOINTER(to);
     SHOWPOINTER(from);
     SHOWVALUE(num_fds);
+#endif
 
     if (to != NULL && from != NULL && num_fds > 0) {
         size_t num_bytes;
 
         num_bytes = sizeof(unsigned long) * ((num_fds + 31) / 32);
+#ifdef SOCKET_DEBUG
         SHOWVALUE(num_bytes);
+#endif
         memmove(to, from, num_bytes);
     }
 
+#ifdef SOCKET_DEBUG    
     LEAVE();
+#endif
 }
 
 STATIC void
 zero_fd_set(fd_set *set, int num_fds) {
+#ifdef SOCKET_DEBUG
     ENTER();
 
     SHOWPOINTER(set);
     SHOWVALUE(num_fds);
-
+#endif
+    
     if (set != NULL && num_fds > 0) {
         size_t num_bytes;
 
         num_bytes = sizeof(unsigned long) * ((num_fds + 31) / 32);
 
+#ifdef SOCKET_DEBUG
         SHOWVALUE(num_bytes);
+#endif
 
         memset(set, 0, num_bytes);
     }
 
+#ifdef SOCKET_DEBUG
     LEAVE();
+#endif
 }
 
 static fd_set *
@@ -63,11 +83,13 @@ allocate_fd_set(struct _clib4 *__clib4, int num_fds, fd_set *duplicate_this_set)
     size_t num_bytes;
     fd_set *set;
 
+#ifdef SOCKET_DEBUG
     ENTER();
 
     assert(num_fds > 0);
 
     SHOWVALUE(num_fds);
+#endif
 
     if (num_fds <= 0) {
         __set_errno_r(__clib4, EINVAL);
@@ -76,7 +98,9 @@ allocate_fd_set(struct _clib4 *__clib4, int num_fds, fd_set *duplicate_this_set)
 
     num_bytes = sizeof(unsigned long) * ((num_fds + 31) / 32);
 
+#ifdef SOCKET_DEBUG
     SHOWVALUE(num_bytes);
+#endif
 
     set = (fd_set *) __malloc_r(__clib4, num_bytes);
     if (set != NULL) {
@@ -89,7 +113,9 @@ allocate_fd_set(struct _clib4 *__clib4, int num_fds, fd_set *duplicate_this_set)
     }
 
 out:
+#ifdef SOCKET_DEBUG
     RETURN(result);
+#endif
     return (result);
 }
 
@@ -127,6 +153,23 @@ out:
     return (result);
 }
 
+/* Unlocked variant for use when the caller already holds __stdio_lock.
+ * ObtainSemaphore is nestable on AmigaOS but the extra acquire/release
+ * pairs add measurable overhead when called in a tight loop. */
+static INLINE struct fd *
+get_file_descriptor_nolock(struct _clib4 *__clib4, int file_descriptor) {
+    struct fd *fd;
+
+    if (file_descriptor < 0 || file_descriptor >= __clib4->__num_fd)
+        return NULL;
+
+    fd = __clib4->__fd[file_descriptor];
+    if (fd == NULL || FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE))
+        return NULL;
+
+    return fd;
+}
+
 static void
 map_descriptor_sets(
         struct _clib4 *__clib4,
@@ -140,6 +183,7 @@ map_descriptor_sets(
         fd_set *file_fds,
         int num_file_fds,
         int *total_file_fd_ptr) {
+#ifdef SOCKET_DEBUG
     ENTER();
 
     SHOWPOINTER(input_fds);
@@ -150,6 +194,7 @@ map_descriptor_sets(
 
     SHOWPOINTER(file_fds);
     SHOWVALUE(num_file_fds);
+#endif
 
     /* This routine maps file descriptor sets
      * from one format to another. We map
@@ -165,18 +210,26 @@ map_descriptor_sets(
         total_socket_fd = (*total_socket_fd_ptr);
         total_file_fd = (*total_file_fd_ptr);
 
+#ifdef SOCKET_DEBUG
         SHOWVALUE(total_socket_fd);
         SHOWVALUE(total_file_fd);
+#endif
 
         for (file_fd = 0; file_fd < num_input_fds; file_fd++) {
             if (NOT FD_ISSET(file_fd, input_fds))
                 continue;
 
-            D(("descriptor %ld is set", file_fd));
+#ifdef SOCKET_DEBUG
+        D(("descriptor %ld is set", file_fd));
+#endif
 
-            fd = get_file_descriptor(__clib4, file_fd);
+            /* map_descriptor_sets is always called under __stdio_lock; use the
+             * no-lock variant to avoid the redundant nested semaphore acquire. */
+            fd = get_file_descriptor_nolock(__clib4, file_fd);
             if (fd == NULL) {
+#ifdef SOCKET_DEBUG
                 SHOWMSG("but no file is attached to it");
+#endif
                 continue;
             }
 
@@ -184,20 +237,28 @@ map_descriptor_sets(
             if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
                 int socket_fd = fd->fd_Socket;
 
+#ifdef SOCKET_DEBUG
                 D(("corresponds to socket #%ld", socket_fd));
+#endif
                 if (socket_fds != NULL && socket_fd < num_socket_fds) {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("setting it");
+#endif
                     FD_SET(socket_fd, socket_fds);
 
                     if (total_socket_fd < socket_fd + 1)
                         total_socket_fd = socket_fd + 1;
                 } else {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("can't set it, though");
+#endif
                 }
             } else {
                 /* We watch files bound to console streams and disk files which may have data stored in them. */
                 if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIO) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("this is a file, or otherwise unsuitable");
+#endif
                     continue;
                 }
 
@@ -211,7 +272,9 @@ map_descriptor_sets(
                 }
 
                 if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE) || FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("this is an interactive / poll stream");
+#endif
                 } else {
                     struct ExamineData *fib;
 
@@ -219,7 +282,9 @@ map_descriptor_sets(
                        may not support this. */
                     fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
                     if (fib == NULL) {
+#ifdef SOCKET_DEBUG
                         SHOWMSG("file is unusable; we cannot examine the file.");
+#endif
                         continue;
                     }
 
@@ -227,22 +292,26 @@ map_descriptor_sets(
                        this better be a pipe. */
                     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_CACHE_POSITION) && fib->Type != (uint32) ST_PIPEFILE) {
                         FreeDosObject(DOS_EXAMINEDATA, fib);
-
+#ifdef SOCKET_DEBUG
                         SHOWMSG("file is unusable; it is not a file system and not a pipe.");
+#endif
                         continue;
                     }
                     FreeDosObject(DOS_EXAMINEDATA, fib);
                 }
 
                 if (file_fds != NULL && file_fd < num_file_fds) {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("setting it");
-
+#endif
                     FD_SET(file_fd, file_fds);
 
                     if (total_file_fd < file_fd + 1)
                         total_file_fd = file_fd + 1;
                 } else {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("can't set it, though");
+#endif
                 }
             }
         }
@@ -250,11 +319,15 @@ map_descriptor_sets(
         (*total_socket_fd_ptr) = total_socket_fd;
         (*total_file_fd_ptr) = total_file_fd;
 
+#ifdef SOCKET_DEBUG
         SHOWVALUE(total_socket_fd);
         SHOWVALUE(total_file_fd);
+#endif        
     }
 
+#ifdef SOCKET_DEBUG    
     LEAVE();
+#endif
 }
 
 static void
@@ -268,6 +341,7 @@ remap_descriptor_sets(
 
         fd_set *output_fds,
         int num_output_fds) {
+#ifdef SOCKET_DEBUG
     ENTER();
 
     SHOWPOINTER(socket_fds);
@@ -278,6 +352,7 @@ remap_descriptor_sets(
 
     SHOWPOINTER(output_fds);
     SHOWVALUE(num_output_fds);
+#endif
 
     /* This routine reverses the mapping established
      * above. We map the file and socket descriptor
@@ -289,23 +364,22 @@ remap_descriptor_sets(
         if (socket_fds != NULL && num_socket_fds > 0) {
             struct fd *fd;
             int output_fd;
-            int socket_fd;
 
+#ifdef SOCKET_DEBUG
             SHOWMSG("taking care of the sockets");
+#endif
 
-            for (socket_fd = 0; socket_fd < num_socket_fds; socket_fd++) {
-                if (NOT FD_ISSET(socket_fd, socket_fds)) {
-                    continue;
-                }
-
-                for (output_fd = 0; output_fd < num_output_fds; output_fd++) {
-                    fd = get_file_descriptor(__clib4, output_fd);
-                    if (fd != NULL && FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET) && fd->fd_Socket == socket_fd) {
-                        assert(output_fd < num_output_fds);
-                        assert(FLAG_IS_SET(__clib4->__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
-
+            /* Single O(N) pass: for each output descriptor that is a socket,
+             * check in O(1) whether its socket number is flagged in socket_fds.
+             * The original double loop was O(socket_fds * output_fds). */
+            for (output_fd = 0; output_fd < num_output_fds; output_fd++) {
+                fd = get_file_descriptor_nolock(__clib4, output_fd);
+                if (fd != NULL && FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
+                    int socket_fd = fd->fd_Socket;
+                    if (socket_fd < num_socket_fds && FD_ISSET(socket_fd, socket_fds)) {
+#ifdef SOCKET_DEBUG
                         D(("setting file %ld for socket #%ld", output_fd, socket_fd));
-
+#endif
                         FD_SET(output_fd, output_fds);
                     }
                 }
@@ -315,26 +389,29 @@ remap_descriptor_sets(
         if (file_fds != NULL && num_file_fds > 0) {
             int file_fd;
 
+#ifdef SOCKET_DEBUG
             SHOWMSG("taking care of the files");
+#endif
 
             for (file_fd = 0; file_fd < num_file_fds; file_fd++) {
                 if (FD_ISSET(file_fd, file_fds)) {
                     int output_fd = file_fd;
 
+#ifdef SOCKET_DEBUG
                     assert(output_fd < num_output_fds);
                     assert(FLAG_IS_CLEAR(__clib4->__fd[output_fd]->fd_Flags, FDF_IS_SOCKET));
 
                     D(("setting file %ld", file_fd));
-
+#endif
                     FD_SET(output_fd, output_fds);
                 }
             }
         }
-    } else {
-        SHOWMSG("no output necessary");
     }
 
+#ifdef SOCKET_DEBUG
     LEAVE();
+#endif
 }
 
 static void
@@ -346,8 +423,6 @@ get_num_descriptors_used(struct _clib4 *__clib4, int num_fds, int *num_socket_us
 
     assert(num_socket_used_ptr != NULL);
     assert(num_file_used_ptr != NULL);
-
-    SHOWMSG("figuring out which file descriptors are in use");
 
     for (which_file_fd = 0; which_file_fd < num_fds; which_file_fd++) {
         fd = get_file_descriptor(__clib4, which_file_fd);
@@ -397,6 +472,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
     struct _clib4 *__clib4 = __CLIB4;
 
+#ifdef SHOW_DEBUG
     ENTER();
 
     SHOWVALUE(num_fds);
@@ -409,6 +485,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         SHOWVALUE(timeout->tv_sec);
         SHOWVALUE(timeout->tv_usec);
     }
+#endif
 
     DECLARE_SOCKETBASE_R(__clib4);
 
@@ -422,24 +499,28 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
     /* Figure out the number of file and socket descriptors in use. */
     get_num_descriptors_used(__clib4, num_fds, &num_socket_used, &num_file_used);
 
+#ifdef SOCKET_DEBUG
     SHOWVALUE(num_socket_used);
     SHOWVALUE(num_file_used);
+#endif
 
     /* Dynamically allocate the tables to keep track of which descriptor
      * is ready for I/O.
      */
     if (read_fds != NULL) {
         if (num_socket_used > 0) {
+#ifdef SOCKET_DEBUG
             SHOWMSG("allocating read socket fd_set");
-
+#endif
             socket_read_fds = allocate_fd_set(__clib4, num_socket_used, NULL);
             if (socket_read_fds == NULL)
                 goto out;
         }
 
         if (num_file_used > 0) {
+#ifdef SOCKET_DEBUG
             SHOWMSG("allocating read file fd_set");
-
+#endif
             file_read_fds = allocate_fd_set(__clib4, num_file_used, NULL);
             if (file_read_fds == NULL)
                 goto out;
@@ -448,16 +529,18 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
     if (write_fds != NULL) {
         if (num_socket_used > 0) {
+#ifdef SOCKET_DEBUG
             SHOWMSG("allocating write socket fd_set");
-
+#endif
             socket_write_fds = allocate_fd_set(__clib4, num_socket_used, NULL);
             if (socket_write_fds == NULL)
                 goto out;
         }
 
         if (num_file_used > 0) {
+#ifdef SOCKET_DEBUG
             SHOWMSG("allocating write file fd_set");
-
+#endif
             file_write_fds = allocate_fd_set(__clib4, num_file_used, NULL);
             if (file_write_fds == NULL)
                 goto out;
@@ -466,8 +549,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
     if (except_fds != NULL) {
         if (num_socket_used > 0) {
+#ifdef SOCKET_DEBUG
             SHOWMSG("allocating except socket fd_set");
-
+#endif
             socket_except_fds = allocate_fd_set(__clib4, num_socket_used, NULL);
             if (socket_except_fds == NULL)
                 goto out;
@@ -477,7 +561,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
     total_socket_fd = 0;
     total_file_fd = 0;
 
+#ifdef SOCKET_DEBUG
     SHOWMSG("mapping the fd_sets");
+#endif
 
     /* Translate from the tables the caller provided to us to the local copies,
      * which take the files and sockets into account.
@@ -492,7 +578,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
     /* Wait for socket input? */
     if (total_socket_fd > 0) {
+#ifdef SOCKET_DEBUG
         SHOWMSG("we have to deal with sockets");
+#endif
 
         /* Wait for file input, too? */
         if ((total_file_fd > 0) && (timeout == NULL || timeout->tv_sec > 0 || timeout->tv_usec > 0)) {
@@ -502,7 +590,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             BOOL got_input;
             BOOL got_output;
 
+#ifdef SOCKET_DEBUG
             SHOWMSG("we also have to deal with files");
+#endif
 
             /* We may poll the sockets and files several times in a row.
              * The results stored in the tables can tell only a single
@@ -512,7 +602,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
              */
             if (read_fds != NULL) {
                 if (num_socket_used > 0) {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("allocating backup read socket fd_set");
+#endif
 
                     backup_socket_read_fds = allocate_fd_set(__clib4, num_socket_used, socket_read_fds);
                     if (backup_socket_read_fds == NULL)
@@ -520,7 +612,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 }
 
                 if (num_file_used > 0) {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("allocating backup read file fd_set");
+#endif
 
                     backup_file_read_fds = allocate_fd_set(__clib4, num_file_used, file_read_fds);
                     if (backup_file_read_fds == NULL)
@@ -530,7 +624,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
             if (write_fds != NULL) {
                 if (num_socket_used > 0) {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("allocating backup write socket fd_set");
+#endif
 
                     backup_socket_write_fds = allocate_fd_set(__clib4, num_socket_used, socket_write_fds);
                     if (backup_socket_write_fds == NULL)
@@ -538,7 +634,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                 }
 
                 if (num_file_used > 0) {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("allocating backup write file fd_set");
+#endif
 
                     backup_file_write_fds = allocate_fd_set(__clib4, num_file_used, file_write_fds);
                     if (backup_file_write_fds == NULL)
@@ -548,7 +646,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
 
             if (except_fds != NULL) {
                 if (num_socket_used > 0) {
+#ifdef SOCKET_DEBUG
                     SHOWMSG("allocating backup except socket fd_set");
+#endif
 
                     backup_socket_except_fds = allocate_fd_set(__clib4, num_socket_used, socket_except_fds);
                     if (backup_socket_except_fds == NULL)
@@ -594,9 +694,6 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                         break;
                     }
                 }
-
-                /* Delay for a tick to avoid busy-waiting. */
-                Delay(1);
 
                 /* This tells WaitSelect() to poll the sockets for input. */
                 zero.tv_sec = 0;
@@ -740,7 +837,12 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                         break;
                 }
 
-                /* No I/O ready yet. Restore the sets and retry... */
+                /* No I/O ready yet. Delay a tick to avoid busy-waiting, restore
+                 * the sets and retry. Delay is placed here rather than at the top
+                 * of the loop so that data available on the very first iteration
+                 * is returned without an unnecessary 1-tick wait. */
+                Delay(1);
+
                 copy_fd_set(socket_read_fds, backup_socket_read_fds, num_socket_used);
                 copy_fd_set(socket_write_fds, backup_socket_write_fds, num_socket_used);
                 copy_fd_set(socket_except_fds, backup_socket_except_fds, num_socket_used);
@@ -770,19 +872,23 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         BOOL got_input;
         BOOL got_output;
 
+#ifdef SOCKET_DEBUG
         SHOWMSG("we have to deal with files");
+#endif
         if (num_file_used > 0) {
             if (read_fds != NULL) {
+#ifdef SOCKET_DEBUG
                 SHOWMSG("allocating backup file read fd_set");
-
+#endif
                 backup_file_read_fds = allocate_fd_set(__clib4, num_file_used, file_read_fds);
                 if (backup_file_read_fds == NULL)
                     goto out;
             }
 
             if (write_fds != NULL) {
+#ifdef SOCKET_DEBUG
                 SHOWMSG("allocating backup file write fd_set");
-
+#endif
                 backup_file_write_fds = allocate_fd_set(__clib4, num_file_used, file_write_fds);
                 if (backup_file_write_fds == NULL)
                     goto out;
@@ -802,8 +908,6 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
         while (TRUE) {
             __check_abort_f(__clib4);
 
-            Delay(1);
-
             result = 0;
             for (i = 0; i < total_file_fd; i++) {
                 got_input = got_output = FALSE;
@@ -813,16 +917,22 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                     if (file_read_fds != NULL && FD_ISSET(i, file_read_fds)) {
                         if (FLAG_IS_SET(fd->fd_Flags, FDF_READ)) {
                             BPTR readFile = i == STDIN_FILENO ? Input() : fd->fd_File;
+#ifdef SOCKET_DEBUG
                             SHOWVALUE(FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS));
+#endif
                             /* Check first if this is a POLL/TERMIOS FD
                              * In this case don't wait for char
                             */
                             if (FLAG_IS_SET(fd->fd_Flags, FDF_POLL)) {
+#ifdef SOCKET_DEBUG
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_POLL)");
+#endif
                                 got_input = TRUE;
                             }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
+#ifdef SOCKET_DEBUG
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS");
+#endif
                                 struct termios *tios = fd->fd_Aux;
 
                                 if (WaitForChar(readFile, 1)) {
@@ -830,17 +940,25 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                                 }
                             }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING)) {
+#ifdef SOCKET_DEBUG
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING");
                                 SHOWVALUE(i);
+#endif
                                 got_input = TRUE;
                             }
                             else if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+#ifdef SOCKET_DEBUG
                                 SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE");
                                 SHOWVALUE(i);
+#endif
                                 if (WaitForChar(readFile, 1)) {
                                     got_input = TRUE;
                                 }
                             } else {
+#ifdef SOCKET_DEBUG
+                                SHOWVALUE("FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE");
+                                SHOWVALUE(i);
+#endif
                                 struct ExamineData *fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
                                 if (fib != NULL) {
                                     if (FLAG_IS_SET(fd->fd_Flags, FDF_CACHE_POSITION)) {
@@ -863,9 +981,10 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                         }
                     }
                 }
+#ifdef SOCKET_DEBUG
                 SHOWVALUE(got_input);
                 SHOWVALUE(got_output);
-
+#endif
                 if (file_read_fds != NULL && NOT got_input) {
                     FD_CLR(i, file_read_fds);
                 }
@@ -900,6 +1019,10 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
                     break;
             }
 
+            /* Delay a tick to avoid busy-waiting. Placed at the end so that
+             * data available on the first iteration is returned immediately. */
+            Delay(1);
+
             copy_fd_set(file_read_fds, backup_file_read_fds, num_file_used);
             copy_fd_set(file_write_fds, backup_file_write_fds, num_file_used);
         }
@@ -909,8 +1032,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
      * case of error.
      */
     if (result >= 0) {
+#ifdef SOCKET_DEBUG
         SHOWMSG("remapping fd_sets");
-
+#endif
         __stdio_lock(__clib4);
 
         remap_descriptor_sets(__clib4, socket_read_fds, total_socket_fd, file_read_fds, total_file_fd, read_fds, num_fds);
@@ -947,6 +1071,8 @@ out:
     free_fd_set(__clib4, backup_file_read_fds);
     free_fd_set(__clib4, backup_file_write_fds);
 
+#ifdef SOCKET_DEBUG
     RETURN(result);
+#endif
     return (result);
 }

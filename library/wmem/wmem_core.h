@@ -35,13 +35,11 @@ __BEGIN_DECLS
  * @{
  */
 
-// Set to 1 if you want to track memory allocations
-#ifndef MEMORY_DEBUG
-#define MEMORY_DEBUG 0
-#else
-#ifndef DEBUG
+// #define MEMORY_DEBUG if you want to track memory allocations
+
+//#define MEMORY_DEBUG
+#if !defined(DEBUG) && defined(MEMORY_DEBUG)
 #error "MEMORY_DEBUG NEEDS DEBUG FLAG ON"
-#endif
 #endif
 
 struct _wmem_allocator_t;

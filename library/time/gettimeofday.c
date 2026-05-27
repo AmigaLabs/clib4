@@ -28,13 +28,12 @@ gettimeofday(struct timeval *tv, struct timezone *tzp) {
     DECLARE_TIMERBASE_R(__clib4);
     DECLARE_TIMEZONEBASE_R(__clib4);
 
-    ENTER();
     if (NULL == __clib4->__ITimer) {
         tv->tv_sec = tv->tv_usec = 0;
         tv->tv_sec += UNIX_TIME_OFFSET;
         if (tzp != NULL)
             tzp->tz_minuteswest = tzp->tz_dsttime = 0;
-        RETURN(0);
+
         return 0;
     }
 
@@ -50,11 +49,7 @@ gettimeofday(struct timeval *tv, struct timezone *tzp) {
     if (tzp != NULL) {
         tzp->tz_minuteswest = gmtoffset;
         tzp->tz_dsttime = dstime;
-
-        SHOWVALUE(tzp->tz_minuteswest);
-        SHOWVALUE(tzp->tz_dsttime);
     }
 
-    RETURN(0);
     return (0);
 }
