@@ -15,6 +15,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 #include "children.h"
+#include "spawn_utils.h"
 
 int
 spawnv(int mode, const char *file, const char **argv) {
@@ -24,6 +25,8 @@ spawnv(int mode, const char *file, const char **argv) {
     size_t parameter_string_len = 0;
     struct name_translation_info path_nti;
     struct _clib4 *__clib4 = __CLIB4;
+    char *fd_inherit = NULL;
+    struct spawnData *data = NULL;
 
     if (mode != P_WAIT && mode != P_NOWAIT) {
         __set_errno(ENOSYS);
@@ -73,8 +76,30 @@ spawnv(int mode, const char *file, const char **argv) {
     BPTR out = DupFileHandle(Output());
     BPTR err = DupFileHandle(ErrorOutput());
     D(("Launching [%s]", command));
-	struct spawnData data = { getgid(), FindTask(NULL), "" };
-	if (__CLIB4->uuid) strncpy(data.parentUuid, __CLIB4->uuid, UUID4_LEN);
+
+    fd_inherit = build_fd_inherit_spec(__clib4, -1, -1, -1);
+
+    data = malloc(sizeof(*data));
+    if (data == NULL) {
+        if (fd_inherit != NULL)
+            free(fd_inherit);
+        if (in)
+            Close(in);
+        if (out)
+            Close(out);
+        if (err)
+            Close(err);
+        free(command);
+        __set_errno(ENOMEM);
+        return -1;
+    }
+    data->groupId = getgid();
+    data->parentTask = FindTask(NULL);
+    data->parentUuid[0] = '\0';
+    data->fdInherit = fd_inherit;
+    if (__CLIB4->uuid)
+        strncpy(data->parentUuid, __CLIB4->uuid, UUID4_LEN);
+
     ret = SystemTags(command,
                      SYS_Input, in,
                      SYS_Output, out,
@@ -83,12 +108,22 @@ spawnv(int mode, const char *file, const char **argv) {
                      SYS_UserShell, TRUE,
                      SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
                      NP_EntryCode, spawnedProcessEnter,
-                     NP_EntryData, &data,
+                     NP_EntryData, data,
                      NP_ExitCode, spawnedProcessExit,
+                     NP_CopyVars, TRUE,
                      NP_Name, process_name,
                      NP_Child, TRUE,
                      TAG_DONE);
+
     if (ret) {
+        if (data != NULL) {
+            if (data->fdInherit != NULL)
+                close_fd_inherit_spec_handles(data->fdInherit);
+            if (data->fdInherit != NULL)
+                free(data->fdInherit);
+            free(data);
+            data = NULL;
+        }
         /* SystemTags failed. Clean up file handle */
         if (in)
             Close(in);

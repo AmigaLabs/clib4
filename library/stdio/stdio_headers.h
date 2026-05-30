@@ -234,15 +234,12 @@ typedef struct iob {
 
 /****************************************************************************/
 /*
- * Access to the global glue list root and static FILE slots.
+ * Per-process stdin/stdout/stderr access.
  *
- * __sf[3] holds the 3 pre-allocated iob structs for stdin/stdout/stderr.
- * __sglue is the root node pointing to __sf[].
- * Additional nodes are chained via __sglue.next.
+ * __sf[3] and __sglue are now per-process fields in struct _clib4,
+ * allocated by stdio_file_init and freed by __close_all_files.
+ * There are no shared globals for these any more.
  */
-extern struct iob __sf[3];
-extern struct iob *__sf_ptrs[3];
-extern struct _glue __sglue;
 
 /****************************************************************************/
 
@@ -389,9 +386,9 @@ extern int __fputs_r(struct _clib4 *__clib4, const char *s, FILE *stream);
 extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
 extern size_t __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream);
 
-#define __stdin_r(x) (FILE *) (&__sf[0])
-#define __stdout_r(x) (FILE *) (&__sf[1])
-#define __stderr_r(x) (FILE *) (&__sf[2])
+#define __stdin_r(x)  (FILE *)((x)->__sf[0])
+#define __stdout_r(x) (FILE *)((x)->__sf[1])
+#define __stderr_r(x) (FILE *)((x)->__sf[2])
 
 extern int __fputc_r(struct _clib4 *__clib4, int c, FILE *stream);
 

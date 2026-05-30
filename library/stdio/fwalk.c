@@ -47,5 +47,5 @@ _fwalk_sglue(struct _clib4 *__clib4, int (*func)(struct _clib4 *, struct iob *),
  */
 int
 _fwalk(struct _clib4 *__clib4, int (*func)(struct _clib4 *, struct iob *)) {
-    return _fwalk_sglue(__clib4, func, &__sglue);
+    return _fwalk_sglue(__clib4, func, __clib4->__sglue);
 }

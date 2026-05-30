@@ -74,6 +74,7 @@ struct Clib4Children {
     gid_t   groupId;    /* Group ID of process */
     uint32  returnCode; /* the return code of process */
     FILE    *pipe;
+    char   *fdInherit;  /* heap-allocated fd inherit spec, consumed by child libOpen */
 };
 
 int libReserved(void);

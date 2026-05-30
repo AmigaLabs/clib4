@@ -222,11 +222,19 @@ FILE_CONSTRUCTOR(stdio_file_init) {
 
         D(("File %ld", i));
 
+        /* Allocate the per-process iob struct for this stream */
+        {
+            struct iob *fp = calloc(1, sizeof(struct iob));
+            if (fp == NULL)
+                goto out;
+            __clib4->__sf[i] = fp;
+        }
+
         /* Initialize the fd layer (unchanged) */
         __initialize_fd(__clib4->__fd[i], __fd_hook_entry, default_file, fd_flags, fd_lock);
 
-        /* Initialize the static __sf[i] iob struct */
-        __initialize_iob(&__sf[i],
+        /* Initialize the per-process __sf[i] iob struct */
+        __initialize_iob(__clib4->__sf[i],
                          __iob_hook_entry,
                          buffer,
                          buffer,
@@ -237,17 +245,29 @@ FILE_CONSTRUCTOR(stdio_file_init) {
                          stdio_lock);
 
         /* Set up the new function pointers for I/O dispatch */
-        __sf[i]._read = __sread;
-        __sf[i]._write = __swrite;
-        __sf[i]._seek = __sseek;
-        __sf[i]._close = __sclose;
-        __sf[i]._seek64 = __sseek;  /* Same implementation for 64-bit */
-        __sf[i]._cookie = &__sf[i]; /* Cookie points to the iob itself */
-        __sf[i]._blksize = BUFSIZ;
+        __clib4->__sf[i]->_read    = __sread;
+        __clib4->__sf[i]->_write   = __swrite;
+        __clib4->__sf[i]->_seek    = __sseek;
+        __clib4->__sf[i]->_close   = __sclose;
+        __clib4->__sf[i]->_seek64  = __sseek;
+        __clib4->__sf[i]->_cookie  = __clib4->__sf[i];
+        __clib4->__sf[i]->_blksize = BUFSIZ;
 
-        /* Backward compat: make __iob[i] point to __sf[i] */
-        __clib4->__iob[i] = &__sf[i];
-        SHOWPOINTER(&__sf[i]);
+        /* Make __iob[i] point to the per-process iob struct */
+        __clib4->__iob[i] = __clib4->__sf[i];
+        SHOWPOINTER(__clib4->__sf[i]);
+    }
+
+    /* Allocate and initialize the per-process root glue node.
+     * Its iobs array points directly into _clib4->__sf[]. */
+    {
+        struct _glue *g = malloc(sizeof(struct _glue));
+        if (g == NULL)
+            goto out;
+        g->next  = NULL;
+        g->niobs = 3;
+        g->iobs  = __clib4->__sf;
+        __clib4->__sglue = g;
     }
 
     /* Mark stdio as initialized */
