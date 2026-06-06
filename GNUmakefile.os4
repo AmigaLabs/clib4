@@ -73,8 +73,8 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
-    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable  -Werror
-     # -Wbad-function-cast -Wconversion -Wformat
+	-Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Wno-array-bounds -Werror
+	# -Wbad-function-cast -Wconversion -Wformat
 
 ifndef SPE
 WARNINGS += -Wno-prio-ctor-dtor -Wno-stringop-overflow
@@ -366,7 +366,7 @@ endef
 define COMPILE_SHARED
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rCompiling Shared \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) $(CFLAGS) $(PIC) -DSHARED -Wno-array-bounds -o $@ -c $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) $(CFLAGS) $(PIC) -DSHARED -o $@ -c $< $(LOG_COMMAND)
 endef
 
 define COMPILE_SHARED_ASM
