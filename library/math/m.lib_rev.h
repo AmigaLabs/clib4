@@ -1,6 +1,5 @@
 #define VERSION			1
 #define REVISION		300
-#define SUBREVISION		0
 
 #define DATE			"14.03.2022"
 #define VERS			"m.lib 1.300"
