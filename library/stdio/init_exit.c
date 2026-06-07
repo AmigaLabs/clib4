@@ -27,14 +27,12 @@ __close_all_files(struct _clib4 *__clib4) {
     __stdio_lock(__clib4);
 
     /*
-     * First, walk the glue list and close any open streams.
-     * Skip the static __sf[0..2] (stdin/stdout/stderr) as they are
-     * handled by the old __iob[] path below for backward compat.
-     * Only close dynamically allocated streams from __sfp().
+     * First, walk the dynamic part of the glue list (beyond stdin/stdout/stderr)
+     * and close any open streams allocated via __sfp().
      */
-    {
+    if (__clib4->__sglue != NULL) {
         struct _glue *g;
-        for (g = __sglue.next; g != NULL; ) {
+        for (g = __clib4->__sglue->next; g != NULL; ) {
             struct _glue *next_g = g->next;
             for (i = 0; i < g->niobs; i++) {
                 if (g->iobs[i] != NULL && FLAG_IS_SET(g->iobs[i]->iob_Flags, IOBF_IN_USE)) {
@@ -51,33 +49,38 @@ __close_all_files(struct _clib4 *__clib4) {
             free(g);
             g = next_g;
         }
-        __sglue.next = NULL;
+        __clib4->__sglue->next = NULL;
     }
 
-    /* Close the static stdin/stdout/stderr streams via fclose */
+    /* Close and free the per-process stdin/stdout/stderr iob structs. */
     for (i = 0; i < 3; i++) {
-        if (FLAG_IS_SET(__sf[i].iob_Flags, IOBF_IN_USE)) {
-            /* Flush but don't free the static structs */
-            __sflush(__clib4, &__sf[i]);
-            CLEAR_FLAG(__sf[i].iob_Flags, IOBF_IN_USE);
-            if (__sf[i].iob_CustomBuffer != NULL) {
-                if (__sf[i].iob_isVBuffer)
-                    FreeVec(__sf[i].iob_CustomBuffer);
-                else
-                    free(__sf[i].iob_CustomBuffer);
-                __sf[i].iob_CustomBuffer = NULL;
+        struct iob *iob = __clib4->__sf[i];
+        if (iob != NULL) {
+            if (FLAG_IS_SET(iob->iob_Flags, IOBF_IN_USE)) {
+                __sflush(__clib4, iob);
+                CLEAR_FLAG(iob->iob_Flags, IOBF_IN_USE);
+                if (iob->iob_CustomBuffer != NULL) {
+                    if (iob->iob_isVBuffer)
+                        FreeVec(iob->iob_CustomBuffer);
+                    else
+                        free(iob->iob_CustomBuffer);
+                    iob->iob_CustomBuffer = NULL;
+                }
+                if (iob->iob_Lock != NULL) {
+                    __delete_semaphore(iob->iob_Lock);
+                    iob->iob_Lock = NULL;
+                }
             }
-            if (__sf[i].iob_Lock != NULL) {
-                __delete_semaphore(__sf[i].iob_Lock);
-                __sf[i].iob_Lock = NULL;
-            }
+            free(iob);
+            __clib4->__sf[i] = NULL;
         }
     }
 
-    /* Free the __iob[] pointer table (entries 0..2 point to static __sf[],
-     * which were already cleaned up above — do NOT free those structs).
-     * No entries beyond index 2 exist anymore since new streams are
-     * allocated via __sfp() / glue list exclusively. */
+    /* Free the root glue node (its iobs array is __clib4->__sf, not separately allocated). */
+    if (__clib4->__sglue != NULL) {
+        free(__clib4->__sglue);
+        __clib4->__sglue = NULL;
+    }
     if (__clib4->__iob != NULL) {
         __free_r(__clib4, __clib4->__iob);
         __clib4->__iob = NULL;

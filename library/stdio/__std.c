@@ -8,15 +8,15 @@
 
 FILE *
 __stdin() {
-    return (FILE *) &__sf[0];
+    return (FILE *) __CLIB4->__sf[0];
 }
 
 FILE *
 __stdout() {
-    return (FILE *) &__sf[1];
+    return (FILE *) __CLIB4->__sf[1];
 }
 
 FILE *
 __stderr() {
-    return (FILE *) &__sf[2];
+    return (FILE *) __CLIB4->__sf[2];
 }

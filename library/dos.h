@@ -140,6 +140,13 @@ struct _wchar {
 };
 
 /*
+ * Forward declarations for stdio internals (full definitions in stdio_headers.h).
+ * Only pointer types are used in _clib4, so forward declarations are sufficient.
+ */
+struct iob;
+struct _glue;
+
+/*
  * Initial _clib4 structure. This contains all fields used by current progream
  */
 
@@ -589,12 +596,14 @@ struct _clib4 {
     int __stdio_initialized;            /* Non-zero after __sinit() has run */
 
     /*
-     * Per-process glue-list root for stream allocation.
-     * Replaces the global __sglue which is shared across all processes
-     * in the shared library — using a global caused child processes
-     * (via spawnvpe) to corrupt the parent's stdin/stdout/stderr buffers.
+     * Per-process stdio streams and glue-list root.
+     * Replaces the shared globals __sf[3] and __sglue from findfp.c.
+     * Each process that opens clib4.library gets its own iob structs and
+     * glue root, preventing child processes from corrupting the parent's
+     * stdin/stdout/stderr buffers.
      */
-    void *__sglue_root;                 /* per-process root _glue node (struct _glue *) */
+    struct iob   *__sf[3];              /* per-process stdin/stdout/stderr iob pointers */
+    struct _glue *__sglue;              /* per-process root glue node for FILE slots */
 };
 
 #ifndef __getClib4

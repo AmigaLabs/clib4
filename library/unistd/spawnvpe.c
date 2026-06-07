@@ -15,6 +15,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 #include "children.h"
+#include "spawn_utils.h"
 
 int
 spawnvpe(
@@ -43,6 +44,8 @@ spawnvpe(
     char **saved_env = NULL;
     int env_count = 0;
     BOOL env_modified = FALSE;
+    char *fd_inherit = NULL;
+    struct spawnData *data = NULL;
 
     __set_errno(0);
 
@@ -214,8 +217,30 @@ spawnvpe(
 
     D(("(*)Calling SystemTags.\n"));
 
-	struct spawnData data = { getgid(), FindTask(NULL), "" };
-	if (__CLIB4->uuid) strncpy(data.parentUuid, __CLIB4->uuid, UUID4_LEN);
+    fd_inherit = build_fd_inherit_spec(__clib4, fhin, fhout, fherr);
+
+    data = malloc(sizeof(*data));
+    if (data == NULL) {
+        if (fd_inherit != NULL)
+            free(fd_inherit);
+        for (int i = 0; i < 3; i++) {
+            if (iofh[i] != BZERO)
+                Close(iofh[i]);
+        }
+        if (cwdLock != BZERO)
+            UnLock(cwdLock);
+        free(full_command);
+        __set_errno(ENOMEM);
+        return -1;
+    }
+
+    data->groupId = getgid();
+    data->parentTask = FindTask(NULL);
+    data->parentUuid[0] = '\0';
+    data->fdInherit = fd_inherit;
+    if (__CLIB4->uuid)
+        strncpy(data->parentUuid, __CLIB4->uuid, UUID4_LEN);
+
     ret = SystemTags(full_command,
                     NP_NotifyOnDeathSigTask, me,
                     SYS_Input,          iofh[0],
@@ -229,12 +254,20 @@ spawnvpe(
                     cwdLock ? NP_CurrentDir : TAG_SKIP, cwdLock,
                     NP_Name,            process_name,
                     NP_EntryCode,       spawnedProcessEnter,
-                    NP_EntryData,       &data,
+                    NP_EntryData,       data,
                     NP_ExitCode,        spawnedProcessExit,
                     NP_CopyVars,        TRUE,
                     TAG_DONE);
 
     if (ret != 0) {
+        if (data != NULL) {
+            if (data->fdInherit != NULL)
+                close_fd_inherit_spec_handles(data->fdInherit);
+            if (data->fdInherit != NULL)
+                free(data->fdInherit);
+            free(data);
+            data = NULL;
+        }
         D(("System/CreateNewProc failed. Return value: [%ld]\n", ret));
 
         __set_errno(__translate_io_error_to_errno(IoErr()));

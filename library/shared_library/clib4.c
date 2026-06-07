@@ -415,7 +415,16 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
         struct Process *_me = (struct Process *) IExec->FindTask(NULL);
         if (_me->pr_Task.tc_Node.ln_Type == NT_PROCESS && _me->pr_UID != 0) {
             struct _clib4 *existing = (struct _clib4 *) _me->pr_UID;
-            if (existing->__fully_initialized) {
+            /*
+             * Only reuse an existing context if it actually belongs to THIS
+             * process.  With NP_Child TRUE, a spawned child inherits the
+             * parent's pr_UID (pointing to the parent's fully-initialised
+             * _clib4).  We must NOT take the early-return for a new child
+             * process — it needs its own context so that
+             * import_pending_fds_for_process() can run and wire up the
+             * inherited file descriptors.
+             */
+            if (existing->__fully_initialized && existing->self == _me) {
                 D(bug("(libOpen) Process already has a valid _clib4 (%p) — reusing it\n", existing));
                 existing->__lib_open_count++;
                 if (IExpansion != NULL) {
@@ -559,6 +568,14 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             SHOWMSG("Calling clib4 ctors");
             _start_ctors(__CTOR_LIST__);
             SHOWMSG("Done. All constructors called");
+
+            /* Import any file descriptors inherited from the parent process.
+             * Must be done AFTER _start_ctors (which runs stdio_file_init and
+             * sets up __fd[0..2]) so that __clib4 is the child's own context. */
+            {
+                extern void import_pending_fds_for_process(struct _clib4 *__clib4, uint32 pid, uint32 ppid);
+                import_pending_fds_for_process(__clib4, pid, ppid);
+            }
 
             /* Copy environment variables into clib4 reent structure */
             SHOWMSG("Make environment");

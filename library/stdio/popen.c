@@ -11,6 +11,7 @@
 #endif /* _STDLIB_MEMORY_H */
 
 #include "children.h"
+#include "spawn_utils.h"
 #include <sys/wait.h>
 
 int
@@ -66,6 +67,8 @@ popen(const char *command, const char *type) {
     time_t now = 0;
     int i;
 	uint32 ret;
+    char *fd_inherit = NULL;
+    struct spawnData *data = NULL;
 
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -242,9 +245,23 @@ popen(const char *command, const char *type) {
 
     int asynch = TRUE; //FALSE
 
+    fd_inherit = build_fd_inherit_spec(__clib4, -1, -1, -1);
+
     /* Now try to launch the program. */
-	struct spawnData data = { getgid(), FindTask(NULL), "" };
-	if (__CLIB4->uuid) strncpy(data.parentUuid, __CLIB4->uuid, UUID4_LEN);
+    data = malloc(sizeof(*data));
+    if (data == NULL) {
+        if (fd_inherit != NULL)
+            free(fd_inherit);
+        __set_errno_r(__clib4, ENOMEM);
+        goto out;
+    }
+    data->groupId = getgid();
+    data->parentTask = FindTask(NULL);
+    data->parentUuid[0] = '\0';
+    data->fdInherit = fd_inherit;
+    if (__CLIB4->uuid)
+        strncpy(data->parentUuid, __CLIB4->uuid, UUID4_LEN);
+
     status = SystemTags((STRPTR) command,
                         SYS_Input,          input,
                         SYS_Output,         output,
@@ -255,14 +272,24 @@ popen(const char *command, const char *type) {
                         NP_StackSize,       2024*1024,
                         NP_Name,            command,
                         NP_EntryCode,       spawnedProcessEnter,
-                        NP_EntryData,       &data,
+                        NP_EntryData,       data,
                         NP_ExitCode,        spawnedProcessExit,
+                        NP_CopyVars,        TRUE,
                         NP_Child,           TRUE,
                         TAG_END);
+
     /* If launching the program returned -1 then it could not be started.
        We'll need to close the I/O streams we opened above. */
 
     if (status == -1) {
+        if (data != NULL) {
+            if (data->fdInherit != NULL)
+                close_fd_inherit_spec_handles(data->fdInherit);
+            if (data->fdInherit != NULL)
+                free(data->fdInherit);
+            free(data);
+            data = NULL;
+        }
         SHOWMSG("SystemTagList() failed");
 
         __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));

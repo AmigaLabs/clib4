@@ -2,12 +2,14 @@
  * $Id: stdio_findfp.c,v 1.0 2025-01-01 00:00:00 clib4devs Exp $
  *
  * Stream allocation using a newlib-inspired glue-list model.
- * Replaces the old findvacantiobentry.c / growiobtable.c mechanism.
  *
- * __sf[3]   — statically allocated iob structs for stdin/stdout/stderr
- * __sglue   — root glue node pointing to __sf_ptrs[]
- * __sfp()   — find a free FILE slot (walk glue list, grow if needed)
+ * __sfp()   — find a free FILE slot (walk per-process glue list, grow if needed)
  * __sinit() — lazy one-time stdio initialization
+ *
+ * The root glue node and the stdin/stdout/stderr iob structs are now
+ * per-process fields in struct _clib4 (__sglue and __sf[3]), allocated by
+ * stdio_file_init and freed by __close_all_files.  The old shared globals
+ * __sf[3] / __sf_ptrs[3] / __sglue have been removed.
  */
 
 #ifndef _STDIO_HEADERS_H
@@ -17,17 +19,6 @@
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
-
-/****************************************************************************/
-
-/* Static storage for the three standard streams. */
-struct iob __sf[3];
-
-/* Pointer array for the glue node (pointers into __sf[]). */
-struct iob *__sf_ptrs[3] = { &__sf[0], &__sf[1], &__sf[2] };
-
-/* Root glue node — always covers stdin/stdout/stderr. */
-struct _glue __sglue = { NULL, 3, __sf_ptrs };
 
 /****************************************************************************/
 
@@ -97,7 +88,13 @@ __sfp(struct _clib4 *__clib4) {
 
     ENTER();
 
-    for (g = &__sglue; g != NULL; g = g->next) {
+    if (__clib4->__sglue == NULL) {
+        __set_errno(ENOMEM);
+        fp = NULL;
+        goto out;
+    }
+
+    for (g = __clib4->__sglue; g != NULL; g = g->next) {
         for (n = 0; n < g->niobs; n++) {
             fp = g->iobs[n];
             if (fp != NULL && FLAG_IS_CLEAR(fp->iob_Flags, IOBF_IN_USE)) {
@@ -120,7 +117,7 @@ __sfp(struct _clib4 *__clib4) {
     /* Link the new block at the end of the chain */
     {
         struct _glue *last;
-        for (last = &__sglue; last->next != NULL; last = last->next)
+        for (last = __clib4->__sglue; last->next != NULL; last = last->next)
             ;
         last->next = g;
     }

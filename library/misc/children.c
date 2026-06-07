@@ -13,6 +13,89 @@
 #include "clib4.h"
 #include "children.h"
 
+void
+import_inherited_fds_from_spec(struct _clib4 *__clib4, const char *spec) {
+    char *copy;
+    char *entry;
+
+    if (spec == NULL || spec[0] == '\0')
+        return;
+
+    copy = strdup(spec);
+    if (copy == NULL)
+        return;
+
+    entry = strtok(copy, ";");
+    while (entry != NULL) {
+        char *fd_str = entry;
+        char *flags_str = strchr(fd_str, ':');
+
+        if (flags_str != NULL) {
+            *flags_str++ = '\0';
+            char *handle_str = strchr(flags_str, ':');
+            if (handle_str != NULL) {
+                *handle_str++ = '\0';
+
+                int fd_num = (int) strtol(fd_str, NULL, 10);
+                ULONG flags = (ULONG) strtoul(flags_str, NULL, 10);
+                BPTR inherited_handle = BZERO;
+                BOOL no_close = FALSE;
+
+                /*
+                 * Symbolic tokens: the parent detected that this fd shares
+                 * the same underlying pipe handle as fhin/fhout/fherr.
+                 * AmigaOS4's PIPE: device does not properly share the data
+                 * stream with DupFileHandle copies, so we map these fds to
+                 * the process-level Input()/Output()/ErrorOutput() handles
+                 * which are guaranteed to be connected to the right pipe.
+                 * Mark FDF_NO_CLOSE_BPTR so clib4 doesn't close these
+                 * process-managed handles.
+                 */
+                if (strcmp(handle_str, "STDIN") == 0) {
+                    inherited_handle = Input();
+                    no_close = TRUE;
+                } else if (strcmp(handle_str, "STDOUT") == 0) {
+                    inherited_handle = Output();
+                    no_close = TRUE;
+                } else if (strcmp(handle_str, "STDERR") == 0) {
+                    inherited_handle = ErrorOutput();
+                    no_close = TRUE;
+                } else {
+                    inherited_handle = (BPTR) strtoul(handle_str, NULL, 16);
+                }
+
+                if (fd_num > STDERR_FILENO && inherited_handle != BZERO) {
+                    if (fd_num >= __clib4->__num_fd) {
+                        if (__grow_fd_table(__clib4, fd_num + 1) < 0) {
+                            entry = strtok(NULL, ";");
+                            continue;
+                        }
+                    }
+
+                    APTR lock = __create_mutex();
+                    if (lock != NULL) {
+                        ULONG inherited_flags = flags;
+                        CLEAR_FLAG(inherited_flags, FDF_CLOEXEC);
+                        SET_FLAG(inherited_flags, FDF_IN_USE);
+                        if (no_close)
+                            SET_FLAG(inherited_flags, FDF_NO_CLOSE_BPTR);
+
+                        __initialize_fd(__clib4->__fd[fd_num],
+                                        __fd_hook_entry,
+                                        inherited_handle,
+                                        inherited_flags,
+                                        lock);
+                    }
+                }
+            }
+        }
+
+        entry = strtok(NULL, ";");
+    }
+
+    free(copy);
+}
+
 static void *
 gidChildrenScan(const void *children, void *gid) {
     const struct Clib4Children *myChildren = children;
@@ -41,7 +124,7 @@ pipeChildrenScan(const void *children, void *pipe) {
 }
 
 BOOL
-insertSpawnedChildren(uint32 pid, uint32 gid, const char *parentUuid) {
+insertSpawnedChildren(uint32 pid, uint32 gid, const char *parentUuid, const char *fdInherit) {
     DECLARE_UTILITYBASE();
 
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
@@ -50,6 +133,9 @@ insertSpawnedChildren(uint32 pid, uint32 gid, const char *parentUuid) {
         children.pid = pid;
         children.returnCode = 0x10000000; //set this flag for WIFEXITED
         children.groupId = gid;
+        children.pipe = NULL;
+        /* take direct ownership of the heap-allocated spec; caller must set its ptr to NULL */
+        children.fdInherit = (fdInherit != NULL && fdInherit[0] != '\0') ? (char *)fdInherit : NULL;
 
         /* Use direct hashmap_get by uuid — avoids hashmap_iter race condition */
         struct Clib4Node nodeKey;
@@ -154,14 +240,44 @@ spawnedProcessEnter(int32 entry_data) {
 	struct Task *parentTask = data->parentTask;
 
     uint32 pid = GetPID(0, GPID_PROCESS);
-    if (insertSpawnedChildren(pid, groupId, data->parentUuid)) {
+    /* fdInherit ownership transferred into Clib4Children; consumed later in libOpen */
+    if (insertSpawnedChildren(pid, groupId, data->parentUuid, data->fdInherit)) {
+        data->fdInherit = NULL;  /* ownership transferred */
         __CLIB4->__children++;
         D(("Children with pid %ld and gid %ld inserted into list\n", pid, groupId));
     }
     else {
         D(("Cannot insert children with pid %ld and gid %ld into list\n", pid, groupId));
+        /* insertion failed: free the spec that was not transferred */
+        free(data->fdInherit);
+        data->fdInherit = NULL;
     }
+	free(data);
 	Signal(parentTask, SIGF_CHILD);
+}
+
+void
+import_pending_fds_for_process(struct _clib4 *__clib4, uint32 pid, uint32 ppid) {
+    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    if (!res) return;
+
+    size_t iter = 0;
+    void *item;
+    while (hashmap_iter(res->children, &iter, &item)) {
+        struct Clib4Node *node = item;
+        if (node->pid == ppid) {
+            struct Clib4Children key;
+            memset(&key, 0, sizeof(key));
+            key.pid = pid;
+            struct Clib4Children *ce = (struct Clib4Children *) hashmap_get(node->spawnedProcesses, &key);
+            if (ce != NULL && ce->fdInherit != NULL) {
+                import_inherited_fds_from_spec(__clib4, ce->fdInherit);
+                free(ce->fdInherit);
+                ce->fdInherit = NULL;
+            }
+            break;
+        }
+    }
 }
 
 void
