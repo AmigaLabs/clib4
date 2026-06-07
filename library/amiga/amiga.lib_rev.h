@@ -1,6 +1,5 @@
 #define VERSION			1
 #define REVISION		216
-#define SUBREVISION		0
 
 #define DATE			"08.02.2021"
 #define VERS			"amiga.lib 1.216"
