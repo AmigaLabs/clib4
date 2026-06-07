@@ -1,6 +1,5 @@
 #define VERSION			1
 #define REVISION		0
-#define SUBREVISION		0
 
 #define DATE			"29.07.2022"
 #define VERS			"debug.lib 1.0"
