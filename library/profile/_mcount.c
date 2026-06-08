@@ -9,6 +9,8 @@
 
 #include "gmon.h"
 
+volatile uintptr_t exec_addr = 4;
+
 void __mcount(uint32 frompc, uint32 selfpc);
 
 void
