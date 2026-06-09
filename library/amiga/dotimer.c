@@ -35,6 +35,7 @@ LONG DoTimer(struct timeval *tv, LONG unit, LONG command) {
 
     assert(tv != NULL);
 
+	SetSignal(0, SIGF_SINGLE);
     mp = AllocSysObjectTags(ASOT_PORT,
                             ASOPORT_Action, PA_SIGNAL,
                             ASOPORT_AllocSig, FALSE,

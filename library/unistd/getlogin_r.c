@@ -51,8 +51,9 @@ getlogin_r(char *name, size_t size) {
                 break;
         }
     }
-    else
-        strncpy(name, login, size);
+    else {
+        strlcpy(name, login, size);
+    }
 
     __check_abort();
 

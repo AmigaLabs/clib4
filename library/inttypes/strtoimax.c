@@ -108,6 +108,8 @@ strtoimax(const char *str, char **ptr, int base) {
             {
                 __set_errno(ERANGE);
 
+                stop = str;
+
                 if (is_negative)
                     result = INTMAX_MIN;
                 else

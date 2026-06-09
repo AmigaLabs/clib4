@@ -85,7 +85,7 @@ chdir(const char *path_name) {
 
         old_dir = SetCurrentDir(dir_lock);
 
-        if (__clib4->__unlock_current_directory)
+        if (__clib4->__unlock_current_directory && old_dir != BZERO)
             UnLock(old_dir);
     } else {
         __clib4->__original_current_directory = SetCurrentDir(dir_lock);
@@ -108,7 +108,8 @@ chdir(const char *path_name) {
 out:
 
     FreeDosObject(DOS_EXAMINEDATA, status);
-    UnLock(dir_lock);
+    if (dir_lock != BZERO)
+        UnLock(dir_lock);
 
     RETURN(result);
     return (result);

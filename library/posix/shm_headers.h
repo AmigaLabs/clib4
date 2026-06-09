@@ -23,6 +23,6 @@
 
 extern struct ExecIFace *IExec;
 
-#define SHMFLG_DeleteMe (1L << 0)
+/* SHMFLG_DeleteMe is now defined in ipc_headers.h */
 
 #endif

@@ -22,12 +22,10 @@ fgetpos(FILE *stream, fpos_t *pos) {
     if (stream == NULL || pos == NULL) {
         SHOWMSG("invalid parameters");
 
-        __set_errno(EFAULT);
+        __set_errno_r(__clib4, EFAULT);
         RETURN(result);
         return result;
     }
-
-    __flockfile_r(__clib4, stream);
 
     position = ftell(stream);
     if (position == CHANGE_FILE_ERROR && __get_errno() != OK) {
@@ -36,13 +34,11 @@ fgetpos(FILE *stream, fpos_t *pos) {
         goto out;
     }
 
-    (*pos) = (fpos_t) position;
+    (*pos) = position;
 
     result = OK;
 
 out:
-
-    __funlockfile_r(__clib4, stream);
 
     RETURN(result);
     return (result);

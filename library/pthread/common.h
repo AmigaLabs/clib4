@@ -6,6 +6,8 @@
 #include "pthread.h"
 #include <sys/time.h>
 
+#define TLS_REGISTER "r2"
+
 #undef NEWLIST
 #define NEWLIST(_l)                                     \
 do                                                      \
@@ -27,13 +29,14 @@ do                                                      \
 
 enum threadState
 {
-    THREAD_STATE_IDLE 		= 0,
-    THREAD_STATE_RUNNING 	= 1,
-    THREAD_STATE_JOINING	= 2,
-    THREAD_STATE_TERMINATED	= 3,
-    THREAD_STATE_CANCELED	= 4,
-    THREAD_STATE_WAITING	= 5,
-    THREAD_STATE_DESTRUCT   = 6,
+    THREAD_STATE_IDLE 			= 0,
+    THREAD_STATE_RUNNING 		= 1,
+    THREAD_STATE_JOINING		= 2,
+    THREAD_STATE_TERMINATED		= 3,
+    THREAD_STATE_CANCELED		= 4,
+    THREAD_STATE_WAITING		= 5,
+    THREAD_STATE_DESTRUCT		= 6,
+	THREAD_STATE_TERMINATING	= 7
 };
 
 #define GetNodeName(node) ((struct Node *)node)->ln_Name
@@ -89,15 +92,45 @@ typedef struct {
     struct MinList cleanup;
     int cancelstate;
     int canceltype;
-    int canceled;
+    volatile int canceled;
     int detached;
     char name[NAMELEN];
+    pthread_t thread_id;          /* My pthread_t ID assigned at creation */
+
+	int8_t cancel_signal;
+	uint32_t cancel_signal_mask;
+
+	/* Joiner support */
+    struct MinNode join_node;     /* Node for Joiners list */
+	pthread_t join_thread_id;     /* Which thread is this one waiting to join? (0 = not waiting) */
+    void *join_result;            /* Result passed from joined thread */
+	int8_t join_signal;            /* Signal allocated by joiner for wakeup */
+	uint32_t join_signal_mask;     /* Mask for join_signal */
+	volatile int can_exit;         /* Flag: pthread_join has cleaned up, thread can exit */
+
+	/* Per-thread timer device for timed waits (lazy-initialized, reused) */
+	struct MsgPort timerPort;
+	struct TimeRequest timerIO;
+	BOOL timerOpen;
 } ThreadInfo;
+
+struct newThreadMessage {
+	struct Message message;
+};
+
+/* Cleanup context for cond_wait cancellation */
+typedef struct {
+    pthread_cond_t *cond;
+    pthread_mutex_t *mutex;
+    CondWaiter *waiter;
+    struct IORequest *timerio;  /* NULL if no timer active */
+} CondWaitCleanup;
 
 extern struct Library *_DOSBase;
 extern struct DOSIFace *_IDOS;
 
 extern APTR thread_sem;
+extern struct MinList join_list; /* Global list of threads currently waiting to join */
 extern ThreadInfo threads[PTHREAD_THREADS_MAX];
 extern APTR tls_sem;
 extern TLSKey tlskeys[PTHREAD_KEYS_MAX];
@@ -122,5 +155,8 @@ int _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const 
 int _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst);
 
 extern int _pthread_concur;
+
+void set_tls_register(ThreadInfo *ti);
+ThreadInfo *get_tls_register(void);
 
 #endif

@@ -162,6 +162,12 @@ C_POSIX := \
 	posix/mmap.o \
 	posix/munmap.o \
 	posix/msync.o \
+	posix/mprotect.o \
+	posix/mlock.o \
+	posix/mlock2.o \
+	posix/munlock.o \
+	posix/mlockall.o \
+	posix/munlockall.o \
 	posix/poll.o \
 	posix/getrlimit.o \
 	posix/setrlimit.o \
@@ -245,6 +251,7 @@ C_SETJMP := \
     setjmp/sigsetjmp.o
 
 C_SOCKET := \
+    resolv/dns_cache.o \
     resolv/dns_parse.o \
     resolv/lookup_ipliteral.o \
     resolv/lookup_name.o \
@@ -378,7 +385,6 @@ C_STDIO := \
 	stdio/clearerr.o \
 	stdio/ctermid.o \
 	stdio/dprintf.o \
-	stdio/dropiobreadbuffer.o \
 	stdio/duplicate_fd.o \
 	stdio/err.o \
 	stdio/fclose.o \
@@ -390,7 +396,7 @@ C_STDIO := \
 	stdio/fgetpos.o \
 	stdio/fgetpos64.o \
 	stdio/fgets.o \
-	stdio/filliobreadbuffer.o \
+	stdio/findfp.o \
 	stdio/findvacantfdentry.o \
 	stdio/findvacantiobentry.o \
 	stdio/flockfile.o \
@@ -416,6 +422,7 @@ C_STDIO := \
 	stdio/ftello64.o \
 	stdio/ftrylockfile.o \
 	stdio/funlockfile.o \
+	stdio/fwalk.o \
 	stdio/fwrite.o \
 	stdio/getc.o \
 	stdio/getc_unlocked.o \
@@ -435,7 +442,6 @@ C_STDIO := \
 	stdio/file_init.o \
 	stdio/iobhookentry.o \
 	stdio/lock.o \
-	stdio/openiob.o \
 	stdio/perror.o \
 	stdio/popen.o \
 	stdio/printf.o \
@@ -453,11 +459,16 @@ C_STDIO := \
 	stdio/scanf.o \
 	stdio/setbuf.o \
 	stdio/setvbuf.o \
+	stdio/smakebuf.o \
 	stdio/snprintf.o \
 	stdio/sprintf.o \
 	stdio/sscanf.o \
+	stdio/srefill.o \
 	stdio/sscanf_hook_entry.o \
 	stdio/stdio_ext.o \
+	stdio/stdio_rw.o \
+	stdio/swbuf.o \
+	stdio/swsetup.o \
 	stdio/tempnam.o \
 	stdio/tmpfile.o \
 	stdio/tmpfile64.o \
@@ -772,10 +783,12 @@ C_UNISTD := \
 	unistd/setdomainname.o \
 	unistd/setlogin.o \
 	unistd/sleep.o \
+	unistd/spawn_utils.o \
 	unistd/spawnv.o \
 	unistd/spawnve.o \
 	unistd/spawnvp.o \
 	unistd/spawnvpe.o \
+	unistd/spawnvpe_fork.o \
 	unistd/strip_double_slash.o \
 	unistd/symlink.o \
 	unistd/sync_fd.o \

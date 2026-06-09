@@ -368,7 +368,7 @@ strptime(const char *buf, const char *fmt, struct tm *timeptr)
                 buf = s;
                 break;
             case 'x':
-                s = strptime(buf, "%Y:%m:%d", timeptr);
+                s = strptime(buf, "%m/%d/%y", timeptr);
                 if (s == NULL)
                     return NULL;
                 buf = s;

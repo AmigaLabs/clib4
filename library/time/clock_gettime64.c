@@ -12,13 +12,11 @@
 
 int
 clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
-    ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
     /* Check the supported flags.  */
-    if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME)) != 0) {
+    if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME | CLOCK_MONOTONIC_RAW)) != 0) {
         __set_errno(EINVAL);
-        RETURN(-1);
         return -1;
     }
 
@@ -28,15 +26,13 @@ clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
     DECLARE_TIMEZONEBASE_R(__clib4);
 
     struct timeval tv;
-    uint32 gmtoffset = 0;
+    int32 gmtoffset = 0;
     int8 dstime = -1;
 
     //Set default value for tv
     tv.tv_sec = tv.tv_usec = 0;
 
-    GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
-    
-	if (clk_id == CLOCK_MONOTONIC) {
+	if (clk_id == CLOCK_MONOTONIC || clk_id == CLOCK_MONOTONIC_RAW) {
         /*
         CLOCK_MONOTONIC
             A nonsettable system-wide clock that represents monotonic
@@ -44,26 +40,49 @@ clock_gettime64(clockid_t clk_id, struct timespec64 *t) {
             in the past". On clib4, that point corresponds to the
             number of seconds that the system has been running since
             it was booted.
+
+        CLOCK_MONOTONIC_RAW
+              Similar  to  CLOCK_MONOTONIC, but provides access to a raw hard‐
+              ware-based time that is not subject to NTP adjustments.
         */
-        GetUpTime((struct TimeVal *) &tv);
+
+        if (ITimer) {
+            GetUpTime((struct TimeVal *) &tv);
+        }
     } else {
         /*
         A settable system-wide clock that measures real (i.e., wall-clock) time.
         */
-        GetSysTime((struct TimeVal *) &tv);
+        if (ITimezone) {
+            GetTimezoneAttrs(NULL, TZA_UTCOffset, &gmtoffset, TZA_TimeFlag, &dstime, TAG_DONE);
+        }
+
+        if (ITimer) {
+            GetSysTime((struct TimeVal *) &tv);
+        }
+
+        /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
+        tv.tv_sec += (2922 * 24 * 60 + gmtoffset) * 60;
     }
 
     /* Use a 32 bit timespec to calculate the result */
     struct timespec tr;
-    if (clk_id == CLOCK_MONOTONIC) {
-        tr.tv_sec = tv.tv_sec;
-        tr.tv_nsec = tv.tv_usec * 1000;
-    } else {
-        /* 2922 is the number of days between 1.1.1970 and 1.1.1978 */
-        tv.tv_sec += (2922 * 24 * 60 + gmtoffset) * 60;
-        tr.tv_sec = tv.tv_sec;
-        tr.tv_nsec = tv.tv_usec * 1000;
+    tr.tv_sec = tv.tv_sec;
+    tr.tv_nsec = tv.tv_usec * 1000;
+
+    /* Normalize: ensure tv_nsec is in [0, 999999999] range.
+     * GetSysTime may occasionally return Microseconds >= 1000000
+     * during timer rollover, causing tv_nsec to be out of range or
+     * even negative (signed overflow from usec * 1000). */
+    if (tr.tv_nsec >= 1000000000L) {
+        tr.tv_sec += tr.tv_nsec / 1000000000L;
+        tr.tv_nsec = tr.tv_nsec % 1000000000L;
     }
+    if (tr.tv_nsec < 0) {
+        tr.tv_sec--;
+        tr.tv_nsec += 1000000000L;
+    }
+
 
     /* And then convert it to a 64bit timespec */
     *t = valid_timespec_to_timespec64(tr);

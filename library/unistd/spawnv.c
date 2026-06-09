@@ -15,111 +15,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 #include "children.h"
-
-STATIC BOOL
-
-string_needs_quoting(const char *string, size_t len) {
-    BOOL result = FALSE;
-    size_t i;
-    char c;
-
-    for (i = 0; i < len; i++) {
-        c = (*string++);
-        if (c == ' ' || ((unsigned char) c) == 0xA0 || c == '\t' || c == '\n' || c == '\"') {
-            result = TRUE;
-            break;
-        }
-    }
-
-    return (result);
-}
-
-STATIC void
-build_arg_string(char *const argv[], char *arg_string) {
-    BOOL first_char = TRUE;
-    size_t i, j, len;
-    char *s;
-
-    /* The first argv[] element is skipped; it does not contain part of
-	   the command line but holds the name of the program to be run. */
-    for (i = 1; argv[i] != NULL; i++) {
-        s = (char *) argv[i];
-
-        len = strlen(s);
-        if (len > 0) {
-            if (first_char)
-                first_char = FALSE;
-            else
-                (*arg_string++) = ' ';
-
-            if ((*s) != '\"' && string_needs_quoting(s, len)) {
-                (*arg_string++) = '\"';
-
-                for (j = 0; j < len; j++) {
-                    if (s[j] == '\"' || s[j] == '*') {
-                        (*arg_string++) = '*';
-                        (*arg_string++) = s[j];
-                    } else if (s[j] == '\n') {
-                        (*arg_string++) = '*';
-                        (*arg_string++) = 'N';
-                    } else {
-                        (*arg_string++) = s[j];
-                    }
-                }
-
-                (*arg_string++) = '\"';
-            } else {
-                memcpy(arg_string, s, len);
-                arg_string += len;
-            }
-        }
-    }
-}
-
-STATIC size_t
-
-count_extra_escape_chars(const char *string, size_t len) {
-    size_t count = 0;
-    size_t i;
-    char c;
-
-    for (i = 0; i < len; i++) {
-        c = (*string++);
-        if (c == '\"' || c == '*' || c == '\n')
-            count++;
-    }
-
-    return (count);
-}
-
-STATIC size_t
-
-get_arg_string_length(char *const argv[]) {
-    size_t result = 0;
-    size_t i, len = 0;
-    char *s;
-
-    /* The first argv[] element is skipped; it does not contain part of
-	   the command line but holds the name of the program to be run. */
-    for (i = 1; argv[i] != NULL; i++) {
-        s = (char *) argv[i];
-
-        len = strlen(s);
-        if (len > 0) {
-            if ((*s) != '\"') {
-                if (string_needs_quoting(s, len))
-                    len += 1 + count_extra_escape_chars(s, len) + 1;
-            }
-
-            if (result == 0)
-                result = len;
-            else
-                result = result + 1 + len;
-        }
-    }
-
-    return (result);
-}
+#include "spawn_utils.h"
 
 int
 spawnv(int mode, const char *file, const char **argv) {
@@ -129,6 +25,8 @@ spawnv(int mode, const char *file, const char **argv) {
     size_t parameter_string_len = 0;
     struct name_translation_info path_nti;
     struct _clib4 *__clib4 = __CLIB4;
+    char *fd_inherit = NULL;
+    struct spawnData *data = NULL;
 
     if (mode != P_WAIT && mode != P_NOWAIT) {
         __set_errno(ENOSYS);
@@ -178,6 +76,30 @@ spawnv(int mode, const char *file, const char **argv) {
     BPTR out = DupFileHandle(Output());
     BPTR err = DupFileHandle(ErrorOutput());
     D(("Launching [%s]", command));
+
+    fd_inherit = build_fd_inherit_spec(__clib4, -1, -1, -1);
+
+    data = malloc(sizeof(*data));
+    if (data == NULL) {
+        if (fd_inherit != NULL)
+            free(fd_inherit);
+        if (in)
+            Close(in);
+        if (out)
+            Close(out);
+        if (err)
+            Close(err);
+        free(command);
+        __set_errno(ENOMEM);
+        return -1;
+    }
+    data->groupId = getgid();
+    data->parentTask = FindTask(NULL);
+    data->parentUuid[0] = '\0';
+    data->fdInherit = fd_inherit;
+    if (__CLIB4->uuid)
+        strncpy(data->parentUuid, __CLIB4->uuid, UUID4_LEN);
+
     ret = SystemTags(command,
                      SYS_Input, in,
                      SYS_Output, out,
@@ -186,13 +108,22 @@ spawnv(int mode, const char *file, const char **argv) {
                      SYS_UserShell, TRUE,
                      SYS_Asynch, mode == P_WAIT ? FALSE : TRUE,
                      NP_EntryCode, spawnedProcessEnter,
-                     NP_EntryData, getgid(),
+                     NP_EntryData, data,
                      NP_ExitCode, spawnedProcessExit,
+                     NP_CopyVars, TRUE,
                      NP_Name, process_name,
                      NP_Child, TRUE,
                      TAG_DONE);
-    free(command);
+
     if (ret) {
+        if (data != NULL) {
+            if (data->fdInherit != NULL)
+                close_fd_inherit_spec_handles(data->fdInherit);
+            if (data->fdInherit != NULL)
+                free(data->fdInherit);
+            free(data);
+            data = NULL;
+        }
         /* SystemTags failed. Clean up file handle */
         if (in)
             Close(in);
@@ -215,5 +146,7 @@ spawnv(int mode, const char *file, const char **argv) {
                 Close(out);
         }
     }
+	free(command);
+
     return ret;
 }

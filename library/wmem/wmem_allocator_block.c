@@ -430,6 +430,13 @@ wmem_block_remove_from_recycler(wmem_block_allocator_t *allocator,
 
     free_chunk = WMEM_GET_FREE(chunk);
 
+    /* Defensive guard: recycler entries are circular and must have both links.
+     * If not, the chunk does not belong to this recycler (or metadata is
+     * corrupted), so skip unlinking to avoid NULL dereference. */
+    if (!allocator->recycler_head || free_chunk->prev == NULL || free_chunk->next == NULL) {
+        return;
+    }
+
     if (free_chunk->prev == chunk && free_chunk->next == chunk) {
         /* Only one item in recycler, just empty it. */
         allocator->recycler_head = NULL;
@@ -443,6 +450,33 @@ wmem_block_remove_from_recycler(wmem_block_allocator_t *allocator,
             allocator->recycler_head = free_chunk->next;
         }
     }
+}
+
+/* Returns true if chunk belongs to one of this allocator's OS blocks. */
+static bool
+wmem_block_owns_chunk(wmem_block_allocator_t *allocator,
+                      wmem_block_chunk_t *chunk) {
+    wmem_block_hdr_t *block;
+
+    for (block = allocator->block_list; block != NULL; block = block->next) {
+        wmem_block_chunk_t *first = WMEM_BLOCK_TO_CHUNK(block);
+
+        if (first->jumbo) {
+            if (chunk == first) {
+                return true;
+            }
+        } else {
+            uint8_t *start = (uint8_t *) first;
+            uint8_t *end = ((uint8_t *) block) + WMEM_BLOCK_SIZE;
+            uint8_t *cur = (uint8_t *) chunk;
+
+            if (cur >= start && cur < end) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 /* Pushes a chunk onto the master stack. */
@@ -485,7 +519,7 @@ wmem_block_pop_master(wmem_block_allocator_t *allocator) {
  * a single free chunk. The resulting chunk ends up in either the master list or
  * the recycler, depending on where the merged chunks were originally.
  */
-static void
+static wmem_block_chunk_t *
 wmem_block_merge_free(wmem_block_allocator_t *allocator,
                       wmem_block_chunk_t *chunk) {
     wmem_block_chunk_t *tmp;
@@ -554,6 +588,8 @@ wmem_block_merge_free(wmem_block_allocator_t *allocator,
             wmem_block_add_to_recycler(allocator, chunk);
         }
     }
+
+    return chunk;
 }
 
 /* Takes an unused chunk and a size, and splits it into two chunks if possible.
@@ -771,6 +807,12 @@ wmem_block_new_block(wmem_block_allocator_t *allocator) {
     /* allocate the new block and add it to the block list */
     block = (wmem_block_hdr_t *) wmem_alloc(NULL, WMEM_BLOCK_SIZE);
 
+    /* wmem_alloc(NULL,...) calls AllocVecTags(MEMF_SHARED,...); if it returns
+     * NULL (OOM) we must not proceed — writing through a NULL pointer would
+     * silently corrupt low memory where address 0 may be mapped. */
+    if (!block)
+        return;
+
     wmem_block_add_to_block_list(allocator, block);
 
     /* initialize it */
@@ -785,10 +827,11 @@ wmem_block_alloc_jumbo(wmem_block_allocator_t *allocator, const size_t size, con
     wmem_block_hdr_t *block;
     wmem_block_chunk_t *chunk;
 
+    size_t total_len = size + alignment + sizeof(wmem_block_pre_t)
+                           + WMEM_BLOCK_HEADER_SIZE
+                           + WMEM_CHUNK_HEADER_SIZE;
     /* allocate a new block of exactly the right size */
-    block = (wmem_block_hdr_t *) wmem_alloc(NULL, size + alignment + sizeof(wmem_block_pre_t)
-                                                  + WMEM_BLOCK_HEADER_SIZE
-                                                  + WMEM_CHUNK_HEADER_SIZE);
+    block = (wmem_block_hdr_t *) wmem_alloc(NULL, total_len);
     if(!block) return 0;
 
     /* add it to the block list */
@@ -799,7 +842,7 @@ wmem_block_alloc_jumbo(wmem_block_allocator_t *allocator, const size_t size, con
     chunk->last = true;
     chunk->used = true;
     chunk->jumbo = true;
-    chunk->len = 0;
+    chunk->len = total_len - WMEM_BLOCK_HEADER_SIZE;
     chunk->prev = 0;
     void *data = (void*)align_address((uintptr_t)chunk + WMEM_CHUNK_HEADER_SIZE + sizeof(wmem_block_pre_t), alignment);
 
@@ -833,7 +876,7 @@ wmem_block_realloc_jumbo(wmem_block_allocator_t *allocator,
 
     if(old_size < size) {
         void *new_ptr = wmem_block_alloc_jumbo(allocator, size, alignment);
-        memcpy(new_ptr, ptr, MIN(size, old_size));
+        memcpy(new_ptr, ptr, old_size);
         wmem_block_free_jumbo(allocator, chunk);
 
         return new_ptr; //WMEM_CHUNK_TO_DATA(WMEM_BLOCK_TO_CHUNK(block));
@@ -874,6 +917,11 @@ wmem_block_alloc(void *private_data, const size_t size, int32_t alignment) {
         if (!allocator->master_head) {        
             /* Allocate a new block if necessary. */
             wmem_block_new_block(allocator);
+            /* wmem_block_new_block() may fail (OOM) and leave master_head
+             * still NULL.  Return NULL here so malloc() can propagate ENOMEM
+             * cleanly instead of crashing via wmem_block_split_free_chunk. */
+            if (!allocator->master_head)
+                return NULL;
         }
 
         chunk = allocator->master_head;
@@ -901,6 +949,12 @@ wmem_block_free(void *private_data, void *ptr) {
     wmem_block_chunk_t *chunk;
 
     chunk = WMEM_DATA_TO_CHUNK(ptr);
+
+    /* Ignore frees of pointers owned by a different allocator instance.
+     * This prevents recycler/master list corruption on cross-thread free. */
+    if (!wmem_block_owns_chunk(allocator, chunk)) {
+        return;
+    }
     
     if (chunk->jumbo) {
         wmem_block_free_jumbo(allocator, chunk);
@@ -912,10 +966,40 @@ wmem_block_free(void *private_data, void *ptr) {
 
     /* merge it with any other free chunks adjacent to it, so that contiguous
      * free space doesn't get fragmented */
-    wmem_block_merge_free(allocator, chunk);
+    chunk = wmem_block_merge_free(allocator, chunk);
 
     /* Now cycle the recycler */
     wmem_block_cycle_recycler(allocator);
+
+    /* If the merged chunk now covers the entire block (prev==0, last==true),
+     * the block is completely unused.  Return it to the OS -- but keep at
+     * least one block alive so that a tight alloc/free loop does not
+     * continuously request and release OS memory (thrashing).
+     * Guard against cross-thread frees: a recycler chunk always has a
+     * non-NULL free-header prev (circular-list invariant).  If prev is NULL
+     * the chunk belongs to a different allocator's master list and must not
+     * be touched here. */
+    if (chunk->prev == 0 && chunk->last) {
+        wmem_block_hdr_t *block = WMEM_CHUNK_TO_BLOCK(chunk);
+        bool safe_to_release = false;
+
+        /* There must be at least one OTHER block in the list. */
+        if (block->prev != NULL || block->next != NULL) {
+            if (chunk == allocator->master_head) {
+                wmem_block_pop_master(allocator);
+                safe_to_release = true;
+            } else if (WMEM_CHUNK_DATA_LEN(chunk) >= sizeof(wmem_block_free_t) &&
+                       WMEM_GET_FREE(chunk)->prev != NULL) {
+                wmem_block_remove_from_recycler(allocator, chunk);
+                safe_to_release = true;
+            }
+
+            if (safe_to_release) {
+                wmem_block_remove_from_block_list(allocator, block);
+                wmem_free(NULL, block);
+            }
+        }
+    }
 }
 
 static void *
@@ -925,6 +1009,11 @@ wmem_block_realloc(void *private_data, void *ptr, const size_t size, int32_t ali
 
     // chunk = wmem_block_get_chunk(allocator, ptr);
     chunk = WMEM_DATA_TO_CHUNK(ptr);
+
+    /* Undefined input: pointer not owned by this allocator instance. */
+    if (!wmem_block_owns_chunk(allocator, chunk)) {
+        return NULL;
+    }
 
     if (chunk->jumbo) {
         return wmem_block_realloc_jumbo(allocator, ptr, size, alignment);
@@ -982,8 +1071,10 @@ wmem_block_realloc(void *private_data, void *ptr, const size_t size, int32_t ali
             /* no room to grow, need to alloc, copy, free */
             void *newptr;
 
+            size_t old_size = chunk->len - ((uintptr_t)ptr - (uintptr_t)chunk);
+
             newptr = wmem_block_alloc(private_data, size, alignment);
-            memcpy(newptr, ptr, size);
+            memcpy(newptr, ptr, old_size);
             wmem_block_free(private_data, ptr);
 
             /* No need to cycle the recycler, alloc and free both did that

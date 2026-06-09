@@ -10,7 +10,7 @@
 
 void *
 reallocarray(void *ptr, size_t m, size_t n) {
-    if (n && m > -1 / n) {
+    if (n && m > SIZE_MAX / n) {
         __set_errno(ENOMEM);
         return 0;
     }

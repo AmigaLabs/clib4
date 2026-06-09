@@ -61,7 +61,7 @@ __assertion_failure(const char *file_name, int line_number, const char *expressi
                 CloseLibrary(IntuitionBase);
             }
         } else {
-            if (__clib4->__num_iob > STDERR_FILENO) {
+            if (__clib4->__stdio_initialized) {
                 if (__clib4->__progname != NULL)
                     fprintf(stderr, "[%s] ", __clib4->__progname);
 

@@ -43,23 +43,47 @@ pthread_cancel(pthread_t thread) {
 
     inf = GetThreadInfo(thread);
 
-    if (inf == NULL || inf->parent == NULL || inf->canceled == TRUE)
+    if (inf == NULL)
         return ESRCH;
+
+
+    /* Hold thread_sem while reading/writing ThreadInfo fields.
+     * Without this lock, the target thread could exit between our
+     * validation checks and the Signal() call, leaving inf->task NULL
+     * which would crash Signal(NULL, mask). */
+    MutexObtain(thread_sem);
+
+    if (inf->task == NULL || inf->status == THREAD_STATE_IDLE) {
+        MutexRelease(thread_sem);
+        return ESRCH;
+    }
+
+    if (inf->canceled == TRUE) {
+        MutexRelease(thread_sem);
+        return ESRCH;
+    }
 
     inf->canceled = TRUE;
 
-    // we might have to cancel the thread immediately
-    if (inf->canceltype == PTHREAD_CANCEL_ASYNCHRONOUS && inf->cancelstate == PTHREAD_CANCEL_ENABLE) {
-        struct Task *task = FindTask(NULL);
-
-        if ((struct Task *) inf->task == task)
-            pthread_testcancel(); // cancel ourselves
-        else
-            Signal((struct Task *) inf->task, SIGBREAKF_CTRL_C); // trigger the exception handler
-    } else {
-        // for the timed waits
-        Signal((struct Task *) inf->task, SIGBREAKF_CTRL_C);
+    /* Check if we are cancelling ourselves */
+    struct Task *self = FindTask(NULL);
+    if ((struct Task *)inf->task == self) {
+        MutexRelease(thread_sem);
+        /* Cancel ourselves — must call testcancel outside the lock
+         * because it may call pthread_exit which longjmps. */
+        if (inf->canceltype == PTHREAD_CANCEL_ASYNCHRONOUS &&
+            inf->cancelstate == PTHREAD_CANCEL_ENABLE)
+            pthread_testcancel();
+        return 0;
     }
+
+    /* Signal the target thread's cancel signal to wake it from any
+     * blocking wait (timed or otherwise). */
+    if (inf->cancel_signal_mask != 0)
+        Signal((struct Task *)inf->task, inf->cancel_signal_mask);
+
+    MutexRelease(thread_sem);
+
 
     return 0;
 }

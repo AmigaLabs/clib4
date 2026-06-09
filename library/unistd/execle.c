@@ -21,7 +21,7 @@ execle(const char *path, const char *arg0, ...) {
         va_start(args, arg0);
 
         while (va_arg(args,const char *) != NULL)
-        argc++;
+        	argc++;
 
         va_end(args);
     }
@@ -42,16 +42,13 @@ execle(const char *path, const char *arg0, ...) {
         argv[0] = (char *) arg0;
 
         for (i = 1; i < argc; i++)
-            argv[i] = va_arg(args,
-        char *);
+            argv[i] = va_arg(args, char *);
 
         /* Skip the NULL terminator */
-        (void) va_arg(args,
-        char **);
+        (void) va_arg(args, char **);
     }
 
-    envp = va_arg(args,
-    char **);
+    envp = va_arg(args, char **);
 
     va_end(args);
 

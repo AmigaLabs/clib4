@@ -145,7 +145,8 @@ access(const char *path_name, int mode) {
 out:
 
     FreeDosObject(DOS_EXAMINEDATA, status);
-    UnLock(lock);
+    if (lock != BZERO)
+        UnLock(lock);
 
     RETURN(result);
     return (result);

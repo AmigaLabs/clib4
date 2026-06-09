@@ -11,13 +11,15 @@
 #endif /* _SOCKET_HEADERS_H */
 
 static int
-map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWriteSet, fd_set *pExceptSet) {
+map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWriteSet, fd_set *pExceptSet, BOOL *stdin_set_raw) {
     register nfds_t i;             /* loop control */
     register struct pollfd *pCur;  /* current array element */
     register int max_fd = -1;      /* return value */
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
+
+    *stdin_set_raw = FALSE;
 
     SHOWPOINTER(pArray);
     SHOWVALUE(n_fds);
@@ -37,6 +39,7 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
 
         struct fd *fd = __get_file_descriptor(__clib4, pCur->fd);
         if (fd == NULL) {
+            pCur->revents = POLLNVAL;
             continue;
         }
 
@@ -55,16 +58,26 @@ map_poll_spec(struct pollfd *pArray, nfds_t n_fds, fd_set *pReadSet, fd_set *pWr
             FD_SET(pCur->fd, pExceptSet);
         }
 
-        if (fd->fd_File >= STDIN_FILENO && fd->fd_File <= STDERR_FILENO) {
-            if (fd->fd_File == STDIN_FILENO) {
-                BPTR file = __resolve_fd_file(fd);
-                if (file != BZERO)
-                    SetMode(file, DOSTRUE);
+        /* Always set FDF_POLL so that select_signal knows this descriptor
+           is under poll control and does not call ExamineObjectTags on
+           something that is not a real file. */
+        SET_FLAG(fd->fd_Flags, FDF_POLL);
 
-                SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_READ | FDF_NON_BLOCKING | FDF_IS_INTERACTIVE);
+        /* Use the file descriptor number (pCur->fd), not the BPTR fd_File. */
+        if (pCur->fd >= STDIN_FILENO && pCur->fd <= STDERR_FILENO) {
+            if (pCur->fd == STDIN_FILENO && FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+                /* Set RAW mode so WaitSelect can detect individual keystrokes.
+                 * Track this so we can restore cooked mode after poll returns. */
+                BPTR file = __resolve_fd_file(fd);
+                if (file != BZERO) {
+                    SetMode(file, DOSTRUE);
+                    *stdin_set_raw = TRUE;
+                }
+
+                SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
             }
-            else {
-                SET_FLAG(fd->fd_Flags, FDF_POLL | FDF_WRITE | FDF_IS_INTERACTIVE);
+            else if (pCur->fd != STDIN_FILENO) {
+                SET_FLAG(fd->fd_Flags, FDF_WRITE | FDF_IS_INTERACTIVE);
             }
         }
 
@@ -134,13 +147,12 @@ map_select_results(struct pollfd *pArray, unsigned long n_fds, fd_set *pReadSet,
         if (pCur->fd < 0)
             continue;
 
-        /* Exception events take priority over input events. */
         pCur->revents = 0;
         if (FD_ISSET(pCur->fd, pExceptSet)) {
             pCur->revents |= POLLPRI;
         }
 
-        else if (FD_ISSET(pCur->fd, pReadSet)) {
+        if (FD_ISSET(pCur->fd, pReadSet)) {
             pCur->revents |= POLLIN;
         }
 
@@ -152,6 +164,39 @@ map_select_results(struct pollfd *pArray, unsigned long n_fds, fd_set *pReadSet,
     return;
 }
 
+/*
+ * poll_cleanup — Restore console mode and fd flags after select returns.
+ *
+ * If map_poll_spec set stdin to RAW mode, restore cooked (canonical) mode.
+ * Also clear the temporary FDF_POLL and FDF_NON_BLOCKING flags.
+ */
+static void
+poll_cleanup(struct pollfd *pArray, nfds_t n_fds, BOOL stdin_was_set_raw) {
+    struct _clib4 *__clib4 = __CLIB4;
+    nfds_t i;
+    struct pollfd *pCur;
+
+    for (i = 0, pCur = pArray; i < n_fds; i++, pCur++) {
+        if (pCur->fd < 0)
+            continue;
+
+        struct fd *fd = __get_file_descriptor(__clib4, pCur->fd);
+        if (fd == NULL)
+            continue;
+
+        CLEAR_FLAG(fd->fd_Flags, FDF_POLL);
+
+        if (pCur->fd == STDIN_FILENO && stdin_was_set_raw) {
+            /* Restore cooked (canonical) mode on stdin. */
+            BPTR file = __resolve_fd_file(fd);
+            if (file != BZERO)
+                SetMode(file, DOSFALSE);
+
+            CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+        }
+    }
+}
+
 int
 __poll(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *signals) {
     fd_set read_descs;                          /* input file descs */
@@ -161,6 +206,7 @@ __poll(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *signals) {
     int ready_descriptors;                      /* function result */
     int max_fd;                                 /* maximum fd value */
     struct timeval *pTimeout;                   /* actually passed */
+    BOOL stdin_set_raw = FALSE;
 
     if ((fds == NULL) && (nfds != 0)) {
         __set_errno(EFAULT);
@@ -174,7 +220,7 @@ __poll(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *signals) {
     memset(&stime, 0, sizeof(stime));
 
     /* Map the poll() file descriptor list in the select() data structures. */
-    max_fd = map_poll_spec(fds, nfds, &read_descs, &write_descs, &except_descs);
+    max_fd = map_poll_spec(fds, nfds, &read_descs, &write_descs, &except_descs, &stdin_set_raw);
 
     /* Map the poll() timeout value in the select() timeout structure. */
     pTimeout = map_timeout(timeout, &stime);
@@ -188,6 +234,9 @@ __poll(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *signals) {
     if (ready_descriptors >= 0) {
         map_select_results(fds, nfds, &read_descs, &write_descs, &except_descs);
     }
+
+    /* Restore stdin cooked mode and clear temporary flags. */
+    poll_cleanup(fds, nfds, stdin_set_raw);
 
     return ready_descriptors;
 }

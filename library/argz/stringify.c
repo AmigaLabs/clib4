@@ -13,6 +13,9 @@ argz_stringify(char *argz, size_t argz_len, int sep)
 {
     size_t i;
 
+    if (argz_len <= 1)
+        return;
+
     /* len includes trailing \0, which we don't want to replace. */
     for (i = 0; i < argz_len - 1; i++)
     {

@@ -61,6 +61,7 @@ void
 qsort(void *a, size_t n, size_t es, int (*cmp)(const void *, const void *)) {
     char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
     size_t d, r, swaptype, swap_cnt;
+    int cr;
 
 loop:
     SWAPINIT(a, es);
@@ -89,16 +90,16 @@ loop:
 
     pc = pd = (char *) a + (n - 1) * es;
     for (;;) {
-        while (pb <= pc && (r = cmp(pb, a)) <= 0) {
-            if (r == 0) {
+        while (pb <= pc && (cr = cmp(pb, a)) <= 0) {
+            if (cr == 0) {
                 swap_cnt = 1;
                 swap(pa, pb);
                 pa += es;
             }
             pb += es;
         }
-        while (pb <= pc && (r = cmp(pc, a)) >= 0) {
-            if (r == 0) {
+        while (pb <= pc && (cr = cmp(pc, a)) >= 0) {
+            if (cr == 0) {
                 swap_cnt = 1;
                 swap(pc, pd);
                 pd -= es;

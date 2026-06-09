@@ -16,21 +16,17 @@
 
 void
 __free_r(struct _clib4 *__clib4, void *ptr) {
-    if (ptr == NULL)
-        return;
+	if (ptr == NULL || __clib4 == NULL)
+		return;
 
-    __memory_lock(__clib4);
+	if (__clib4->__wmem_allocator == NULL) {
+		return;
+	}
 
-    // AlignedHeader* header = (AlignedHeader*) ((uintptr_t)ptr - sizeof(AlignedHeader));
+	__memory_lock(__clib4);
+    wmem_free(__clib4->__wmem_allocator, ptr);
 
-    // Validate with endian-independent integer comparison
-    // if (header->magic == ALIGNED_BLOCK_MAGIC) {
-    //     wmem_free(__clib4->__wmem_allocator, header->original_ptr);
-    // } else {
-        wmem_free(__clib4->__wmem_allocator, ptr);
-    // }
-
-    __memory_unlock(__clib4);
+	__memory_unlock(__clib4);
 }
 
 void

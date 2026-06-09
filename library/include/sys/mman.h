@@ -23,20 +23,33 @@ __BEGIN_DECLS
 #define MAP_SHARED          0x01            /* Share changes */
 #define MAP_PRIVATE         0x02            /* Changes are private */
 #define MAP_SHARED_VALIDATE 0x03            /* share + validate extension flags */
-#define MAP_ANON            0x04            /* Allocated from anonymous virtual memory.  */
 #define MAP_TYPE            0x0f            /* Mask for type of mapping */
 #define MAP_FIXED           0x10            /* Interpret addr exactly */
 #define MAP_ANONYMOUS       0x20            /* don't use a file */
+#define MAP_ANON            MAP_ANONYMOUS   /* Alias for MAP_ANONYMOUS */
 
 /* Flags to `msync'.  */
 #define MS_ASYNC      1                /* Sync memory asynchronously.  */
 #define MS_SYNC       4                /* Synchronous memory sync.  */
 #define MS_INVALIDATE 2                /* Invalidate the caches.  */
 
+/* Flags to `mlockall'.  */
+#define MCL_CURRENT     1              /* Lock all currently mapped pages. */
+#define MCL_FUTURE      2              /* Lock all pages mapped in the future. */
+#define MCL_ONFAULT     4              /* Lock pages on fault (Linux 4.4+). */
+
+/* Flags to `mlock2'.  */
+#define MLOCK_ONFAULT   1              /* Lock only resident pages, mark rest on-fault. */
 
 extern void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
 extern int munmap(void *map, size_t length);
 extern int msync(void *addr, size_t len, int flags);
+extern int mprotect(void *addr, size_t len, int prot);
+extern int mlock(const void *addr, size_t len);
+extern int mlock2(const void *addr, size_t len, unsigned int flags);
+extern int munlock(const void *addr, size_t len);
+extern int mlockall(int flags);
+extern int munlockall(void);
 
 __END_DECLS
 

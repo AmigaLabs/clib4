@@ -14,8 +14,14 @@ sigdelset(sigset_t *set, int sig) {
     SHOWPOINTER(set);
     SHOWVALUE(sig);
 
+    if (set == NULL) {
+        __set_errno(EFAULT);
+        RETURN(-1);
+        return -1;
+    }
+
     if (sig >= NSIG || sig <= 0) {
-        __set_errno(errno);
+        __set_errno(EINVAL);
         RETURN(-1);
         return -1;
     }

@@ -1,56 +1,150 @@
 /*
- * $Id: stdio_freopen.c,v 1.5 2006-01-08 12:04:24 clib4devs Exp $
-*/
+ * $Id: stdio_freopen.c,v 2.0 2025-01-01 00:00:00 clib4devs Exp $
+ *
+ * freopen() — newlib-inspired rewrite.
+ * Reuses the same FILE slot: flushes/closes the old fd, opens new fd,
+ * reinitializes the iob.
+ */
 
 #ifndef _STDIO_HEADERS_H
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#ifndef _FCNTL_HEADERS_H
+#include "fcntl_headers.h"
+#endif /* _FCNTL_HEADERS_H */
+
 FILE *
 freopen(const char *filename, const char *mode, FILE *stream) {
-    struct iob *file = (struct iob *) stream;
-    FILE *result = NULL;
-    int slot_number;
+    struct iob *fp = (struct iob *) stream;
     struct _clib4 *__clib4 = __CLIB4;
+    int open_mode;
+    int file_descriptor;
+    ULONG file_flags = 0;
+    int saved_flags;
 
-    ENTER();
-
-    SHOWSTRING(filename);
-    SHOWSTRING(mode);
-    SHOWPOINTER(stream);
-
-    assert(filename != NULL && mode != NULL && stream != NULL);
-
-    if (filename == NULL || mode == NULL || stream == NULL) {
-        SHOWMSG("invalid parameters");
-
+    if (mode == NULL || stream == NULL) {
         __set_errno_r(__clib4, EFAULT);
-        goto out;
+        return NULL;
     }
 
-    assert(__is_valid_iob(__clib4, file));
-    assert(FLAG_IS_SET(file->iob_Flags, IOBF_IN_USE));
-    assert(file->iob_BufferSize > 0);
+    __check_abort_f(__clib4);
+    __flockfile_r(__clib4, stream);
 
-    /* We need to remember this; it'll go away when we close
-       the file. */
-    slot_number = file->iob_SlotNumber;
+    /* Flush any buffered write data. */
+    if (fp->iob_BufferWriteBytes > 0)
+        (void) __sflush(__clib4, fp);
 
-    fclose(stream);
-
-    if (__open_iob(__clib4, filename, mode, -1, slot_number) < 0) {
-        SHOWMSG("couldn't reopen the file");
-        goto out;
+    /* Discard ungetc pushback buffer. */
+    if (HASUB(fp)) {
+        FREEUB(__clib4, fp);
+        CLEAR_FLAG(fp->iob_Flags, IOBF_UNGETC);
     }
 
-    result = (FILE *) file;
-    /* Reset flags */
-    result->_flags &= ~__SORD;
-    result->_flags2 &= ~__SWID;
-    memset(&result->_mbstate, 0, sizeof(_mbstate_t));
+    /* Close the old underlying file descriptor. */
+    if (fp->_close != NULL)
+        (*fp->_close)(fp->_cookie);
+    else if (fp->iob_Descriptor >= 0)
+        close(fp->iob_Descriptor);
 
-out:
+    /* Free the buffer if we allocated it. */
+    if (FLAG_IS_SET(fp->iob_Flags, IOBF_MALLOC_BUF) && fp->iob_Buffer != NULL) {
+        FreeVec(fp->iob_Buffer);
+        fp->iob_Buffer = NULL;
+        CLEAR_FLAG(fp->iob_Flags, IOBF_MALLOC_BUF);
+    }
+    if (fp->iob_CustomBuffer != NULL) {
+        if (fp->iob_isVBuffer)
+            FreeVec(fp->iob_CustomBuffer);
+        else
+            free(fp->iob_CustomBuffer);
+        fp->iob_CustomBuffer = NULL;
+    }
 
-    RETURN(result);
-    return (result);
+    /* Parse the mode string. */
+    switch (mode[0]) {
+        case 'r':
+            open_mode = O_RDONLY;
+            break;
+        case 'w':
+            open_mode = O_WRONLY | O_CREAT | O_TRUNC;
+            break;
+        case 'a':
+            open_mode = O_WRONLY | O_CREAT | O_APPEND;
+            break;
+        default:
+            __set_errno_r(__clib4, EINVAL);
+            goto fail;
+    }
+
+    if ((mode[1] == '+') || (mode[1] != '\0' && mode[2] == '+')) {
+        CLEAR_FLAG(open_mode, O_RDONLY);
+        CLEAR_FLAG(open_mode, O_WRONLY);
+        SET_FLAG(open_mode, O_RDWR);
+    } else if (mode[1] != '\0' && mode[1] == 'b' && mode[2] == 'l') {
+        SET_FLAG(open_mode, O_LITTLE_ENDIAN);
+        SET_FLAG(file_flags, IOBF_LITTLE_ENDIAN);
+    }
+
+    /* If filename is NULL, try to change mode of existing fd (C11 7.21.5.4).
+       We don't support that on AmigaOS, so just return NULL. */
+    if (filename == NULL)
+        goto fail;
+
+    /* Open the new file. */
+    file_descriptor = __open_r(__clib4, filename, open_mode);
+    if (file_descriptor < 0)
+        goto fail;
+
+    /* Reinitialize the iob for the new file. */
+    file_flags |= IOBF_IN_USE | IOBF_NO_NUL;
+    if (FLAG_IS_SET(open_mode, O_RDONLY) || FLAG_IS_SET(open_mode, O_RDWR))
+        SET_FLAG(file_flags, IOBF_READ);
+    if (FLAG_IS_SET(open_mode, O_WRONLY) || FLAG_IS_SET(open_mode, O_RDWR))
+        SET_FLAG(file_flags, IOBF_WRITE);
+    if (FLAG_IS_SET(open_mode, O_APPEND))
+        SET_FLAG(file_flags, IOBF_APP);
+
+    fp->iob_Flags = file_flags;
+    fp->iob_Flags2 = 0;
+    memset(&fp->iob_mbState, 0, sizeof(_mbstate_t));
+
+    /* Lazy buffer allocation — clear buffer state. */
+    fp->iob_Buffer = NULL;
+    fp->iob_BufferSize = 0;
+    fp->iob_BufferPosition = 0;
+    fp->iob_BufferReadBytes = 0;
+    fp->iob_BufferWriteBytes = 0;
+    fp->iob_CustomBuffer = NULL;
+    fp->iob_isVBuffer = FALSE;
+
+    /* Set up function pointers. */
+    fp->_read = __sread;
+    fp->_write = __swrite;
+    fp->_seek = __sseek;
+    fp->_close = __sclose;
+    fp->_seek64 = __sseek;
+    fp->_cookie = fp;
+
+    fp->iob_Descriptor = file_descriptor;
+    fp->iob_Action = __iob_hook_entry;
+
+    /* Reset newlib-style internal state. */
+    fp->_ub._base = NULL;
+    fp->_ub._size = 0;
+    fp->_lb._base = NULL;
+    fp->_lb._size = 0;
+    fp->_offset = 0;
+    fp->_blksize = BUFSIZ;
+    CLEAR_FLAG(fp->iob_Flags, IOBF_OFF);
+
+    __funlockfile_r(__clib4, stream);
+    return (FILE *) fp;
+
+fail:
+    /* Mark the stream as no longer in use. */
+    CLEAR_FLAG(fp->iob_Flags, IOBF_IN_USE);
+    fp->iob_Descriptor = -1;
+    __funlockfile_r(__clib4, stream);
+    return NULL;
 }

@@ -97,18 +97,23 @@ static int
 call_main(
         char *argstr,
         int arglen,
-        int (*start_main)(int, char **),
+        int (*start_main)(int, char **, char **),
         void (*__EXT_CTOR_LIST__[])(void),
         void (*__EXT_DTOR_LIST__[])(void),
         struct _clib4 *__clib4) {
     volatile LONG saved_io_err;
 
     ENTER();
+    
+    /* Mark that call_main() is being executed (normal executable, not -nostartfiles) */
+    __clib4->__call_main_executed = TRUE;
+    
     /* This plants the return buffer for _exit(). */
     if (setjmp(__clib4->__exit_jmp_buf) != 0) {
         D(("Back from longjmp"));
         goto out;
     }
+    __clib4->__exit_jmp_buf_valid = TRUE;
 
     SHOWMSG("Initialize shared objects");
     shared_obj_init(__clib4, TRUE);
@@ -120,7 +125,7 @@ call_main(
 
     D(("Call start_main with %ld parameters", __clib4->__argc));
     /* After all these preparations, get this show on the road... */
-    exit(start_main(__clib4->__argc, __clib4->__argv));
+    exit(start_main(__clib4->__argc, __clib4->__argv, __clib4->__environment));
     SHOWMSG("Done. Exit from start_main()");
 
 out:
@@ -160,7 +165,7 @@ int
 _main(
         char *argstr,
         int arglen,
-        int (*start_main)(int, char **),
+        int (*start_main)(int, char **, char **),
         void (*__EXT_CTOR_LIST__[])(void),
         void (*__EXT_DTOR_LIST__[])(void),
         struct WBStartup *sms

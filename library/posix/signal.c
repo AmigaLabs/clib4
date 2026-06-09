@@ -16,7 +16,7 @@ void (*signal(int sig, void (*handler)(int)))(int) {
     SHOWVALUE(sig);
     SHOWPOINTER(handler);
 
-    if (sig < 0 || sig > NSIG || handler == SIG_ERR) {
+    if (sig < 0 || sig >= NSIG || handler == SIG_ERR) {
         SHOWMSG("unsupported signal");
 
         __set_errno_r(__clib4, EINVAL);

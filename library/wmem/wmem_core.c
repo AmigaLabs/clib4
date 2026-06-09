@@ -96,7 +96,7 @@ static int allocs = 0;
 void *
 wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t alignment) {
 
-#if MEMORY_DEBUG
+#ifdef MEMORY_DEBUG
     D(("Allocating %ld bytes chunk of memory (alignment: %ld).\n", size, alignment));
 #endif
 
@@ -313,12 +313,12 @@ wmem_init(void) {
         do_override = true;
         if (strncmp(override_env, "simple", strlen("simple")) == 0) {
             override_type = WMEM_ALLOCATOR_SIMPLE;
+        } else if (strncmp(override_env, "block_fast", strlen("block_fast")) == 0) {
+            override_type = WMEM_ALLOCATOR_BLOCK_FAST;
         } else if (strncmp(override_env, "block", strlen("block")) == 0) {
             override_type = WMEM_ALLOCATOR_BLOCK;
         } else if (strncmp(override_env, "strict", strlen("strict")) == 0) {
             override_type = WMEM_ALLOCATOR_STRICT;
-        } else if (strncmp(override_env, "block_fast", strlen("block_fast")) == 0) {
-            override_type = WMEM_ALLOCATOR_BLOCK_FAST;
         } else {
             SHOWMSG("Unrecognized wmem override");
             do_override = false;

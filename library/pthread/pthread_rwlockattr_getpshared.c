@@ -8,6 +8,9 @@
 
 int
 pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *attr, int *pshared) {
+    if (attr == NULL || pshared == NULL)
+        return EINVAL;
+
     *pshared = attr->pshared;
     return 0;
 }

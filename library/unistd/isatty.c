@@ -38,6 +38,12 @@ isatty(int file_descriptor) {
         goto out;
     }
 
+	if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+        __fd_unlock(fd);
+		result = 0;
+		goto out;
+	}
+
     result = 1;
 
     if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_INTERACTIVE) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SERIAL)) {

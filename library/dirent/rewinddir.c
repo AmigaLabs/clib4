@@ -31,6 +31,10 @@ rewinddir(DIR *directory_pointer) {
             if (dh->dh_FileInfo == NULL) {
                 SHOWMSG("ouch. that didn't work");
                 __set_errno(__translate_io_error_to_errno(IoErr()));
+            } else {
+                dh->dh_ObjectID = dh->dh_FileInfo->ObjectID;
+                FreeDosObject(DOS_EXAMINEDATA, dh->dh_FileInfo);
+                dh->dh_FileInfo = NULL;
             }
         }
     }

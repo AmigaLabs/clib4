@@ -14,7 +14,7 @@ int
 vswscanf(const wchar_t *s, const wchar_t *format, va_list arg) {
     struct iob string_iob;
     int result = EOF;
-    int size = wcslen(s) * sizeof (wchar_t);
+    size_t size = wcslen(s) * sizeof (wchar_t);
     char buffer[size];
 
     ENTER();

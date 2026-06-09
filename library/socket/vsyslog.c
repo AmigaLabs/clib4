@@ -50,7 +50,7 @@ vsyslog(int priority, const char *message, va_list args) {
         if (buf[l - 1] != '\n') buf[l++] = '\n';
 
         if (__clib4->syslog_fd != NULL) {
-            fprintf(__clib4->syslog_fd, "%s", &buf);
+            fprintf(__clib4->syslog_fd, "%s", buf);
         }
         else {
             __vsyslog(priority, (char *) message, args);

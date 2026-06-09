@@ -12,13 +12,12 @@
 
 int
 clock_gettime(clockid_t clk_id, struct timespec *t) {
-    ENTER();
+
     struct _clib4 *__clib4 = __CLIB4;
 
     /* Check the supported flags.  */
     if ((clk_id & ~(CLOCK_MONOTONIC | CLOCK_REALTIME | CLOCK_MONOTONIC_RAW)) != 0) {
         __set_errno_r(__clib4, EINVAL);
-        RETURN(-1);
         return -1;
     }
 
@@ -28,13 +27,12 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
     DECLARE_TIMEZONEBASE_R(__clib4);
 
     struct timeval tv;
-    uint32 gmtoffset = 0;
+    int32 gmtoffset = 0;
     int8 dstime = -1;
 
     //Set default value for tv
     tv.tv_sec = tv.tv_usec = 0;
 
-    SHOWVALUE(clk_id);
     if (clk_id == CLOCK_MONOTONIC || clk_id == CLOCK_MONOTONIC_RAW) {
         /*
         CLOCK_MONOTONIC
@@ -70,10 +68,18 @@ clock_gettime(clockid_t clk_id, struct timespec *t) {
     t->tv_sec = tv.tv_sec;
     t->tv_nsec = tv.tv_usec * 1000;
 
-    /* Check if we are in DST */
-    if (dstime == TFLG_ISDST)
-        t->tv_sec += (60 * 60);
+    /* Normalize: ensure tv_nsec is in [0, 999999999] range.
+     * GetSysTime may occasionally return Microseconds >= 1000000
+     * during timer rollover, causing tv_nsec to be out of range or
+     * even negative (signed overflow from usec * 1000). */
+    if (t->tv_nsec >= 1000000000L) {
+        t->tv_sec += t->tv_nsec / 1000000000L;
+        t->tv_nsec = t->tv_nsec % 1000000000L;
+    }
+    if (t->tv_nsec < 0) {
+        t->tv_sec--;
+        t->tv_nsec += 1000000000L;
+    }
 
-    RETURN(0);
     return 0;
 }

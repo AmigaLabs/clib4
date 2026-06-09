@@ -11,6 +11,7 @@
 #endif /* _STDLIB_MEMORY_H */
 
 #include "children.h"
+#include "spawn_utils.h"
 #include <sys/wait.h>
 
 int
@@ -65,6 +66,9 @@ popen(const char *command, const char *type) {
     unsigned long task_address;
     time_t now = 0;
     int i;
+	uint32 ret;
+    char *fd_inherit = NULL;
+    struct spawnData *data = NULL;
 
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -241,7 +245,23 @@ popen(const char *command, const char *type) {
 
     int asynch = TRUE; //FALSE
 
+    fd_inherit = build_fd_inherit_spec(__clib4, -1, -1, -1);
+
     /* Now try to launch the program. */
+    data = malloc(sizeof(*data));
+    if (data == NULL) {
+        if (fd_inherit != NULL)
+            free(fd_inherit);
+        __set_errno_r(__clib4, ENOMEM);
+        goto out;
+    }
+    data->groupId = getgid();
+    data->parentTask = FindTask(NULL);
+    data->parentUuid[0] = '\0';
+    data->fdInherit = fd_inherit;
+    if (__CLIB4->uuid)
+        strncpy(data->parentUuid, __CLIB4->uuid, UUID4_LEN);
+
     status = SystemTags((STRPTR) command,
                         SYS_Input,          input,
                         SYS_Output,         output,
@@ -252,25 +272,24 @@ popen(const char *command, const char *type) {
                         NP_StackSize,       2024*1024,
                         NP_Name,            command,
                         NP_EntryCode,       spawnedProcessEnter,
-                        NP_EntryData,       getgid(),
+                        NP_EntryData,       data,
                         NP_ExitCode,        spawnedProcessExit,
+                        NP_CopyVars,        TRUE,
                         NP_Child,           TRUE,
                         TAG_END);
-
-    uint32 ret;
-
-    /* If SYS_Asynch is FALSE, we need these. */
-
-    if (asynch == FALSE) {
-        Close(input);
-        Close(output);
-        // Close(error); ??
-    }
 
     /* If launching the program returned -1 then it could not be started.
        We'll need to close the I/O streams we opened above. */
 
     if (status == -1) {
+        if (data != NULL) {
+            if (data->fdInherit != NULL)
+                close_fd_inherit_spec_handles(data->fdInherit);
+            if (data->fdInherit != NULL)
+                free(data->fdInherit);
+            free(data);
+            data = NULL;
+        }
         SHOWMSG("SystemTagList() failed");
 
         __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
@@ -283,6 +302,14 @@ popen(const char *command, const char *type) {
          */
         ret = IoErr(); // This is our ProcessID;
     }
+
+	/* If SYS_Asynch is FALSE, we need these. */
+	if (asynch == FALSE) {
+		Close(input);
+		Close(output);
+		// Close(error); ??
+	}
+
     /* OK, the program is running. Once it terminates, it will automatically
        shut down the streams we opened for it. */
     input = output = error = BZERO;
@@ -290,7 +317,7 @@ popen(const char *command, const char *type) {
     /* Now try to open the pipe we will use to exchange data with the program. */
     result = fopen(pipe_file_name, type);
 
-    if(result) {
+    if (result) {
         /* We need to mark this as a pipe */
         struct iob *file = (struct iob *) result;
         int f = file->iob_Descriptor;

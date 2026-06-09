@@ -155,7 +155,7 @@ wmem_strict_realloc(void *private_data, void *ptr, const size_t size, int32_t al
     block = WMEM_DATA_TO_BLOCK((wmem_strict_allocator_t *) private_data, ptr);
 
     /* create a new block */
-    new_ptr = wmem_strict_alloc(private_data, size, 2);
+    new_ptr = wmem_strict_alloc(private_data, size, alignment);
 
     /* copy from the old block to the new */
     if (block->data_len > size) {

@@ -46,8 +46,9 @@ pthread_cleanup_pop(int execute) {
     if (inf != NULL) {
         handler = (CleanupHandler *) RemTail((struct List *) &inf->cleanup);
 
-        if (execute && handler && handler->routine) {
-            handler->routine(handler->arg);
+        if (handler) {
+            if (execute && handler->routine)
+                handler->routine(handler->arg);
 
             free(handler);
             handler = NULL;

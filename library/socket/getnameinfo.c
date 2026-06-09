@@ -114,8 +114,9 @@ reverse_services(char *buf, int port, int dgram) {
 }
 
 static int
-dns_parse_callback(void *c, int rr, const void *data, int len, const void *packet) {
+dns_parse_callback(void *c, int rr, const void *data, int len, const void *packet, uint32_t ttl) {
     (void) len;
+    (void) ttl;
 
     if (rr != RR_PTR)
         return 0;

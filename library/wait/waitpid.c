@@ -10,20 +10,8 @@
 
 #include "clib4.h"
 
-// static APTR
-// hook_function(struct Hook *hook, APTR userdata, struct Process *process) {
-//     uint32 pid = (uint32) userdata;
-//     (void) (hook);
-
-//     if (process->pr_ProcessID == pid) {
-//         return process;
-//     }
-
-//     return 0;
-// }
-
 pid_t waitpid(pid_t pid, int *status, int options) {
-    // Delay(1);
+    struct _clib4 *__clib4 = __CLIB4;
     uint32 me = GetPID(0, GPID_PROCESS);
 
     if (options != 0 && options != WNOHANG) {
@@ -33,31 +21,30 @@ pid_t waitpid(pid_t pid, int *status, int options) {
 
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (!res) {
-        *status = 0;
+        if (status) *status = 0;
         __set_errno(EINVAL);
         return -1;
     }
 
-    size_t childrenIter = 0;
-    void *childItem;
+    /* Use direct hashmap_get with uuid key instead of iterating.
+     * hashmap_iter can miss entries when the hashmap is concurrently modified
+     * by libOpen/libClose in other processes. */
+    struct Clib4Node nodeKey;
+    memset(&nodeKey, 0, sizeof(nodeKey));
+    strncpy(nodeKey.uuid, __clib4->uuid, UUID4_LEN);
+    const struct Clib4Node *node = hashmap_get(res->children, &nodeKey);
+
     uint32 pidFound = 0;
     BOOL done = FALSE;
 
-    while (!done && hashmap_iter(res->children, &childrenIter, &childItem)) {
-        const struct Clib4Node *node = childItem;
-        struct Clib4Children *children;
-
-        if (node->pid != me) continue;
+    if (node != NULL) {
 
         /* If we have no spawned processes return ECHILD error */
         if (node->spawnedProcesses == NULL || hashmap_count(node->spawnedProcesses) == 0) {
-            *status = 0;
+            if (status) *status = 0;
             __set_errno(ECHILD);
             return -1;
         }
-
-        // struct Hook h = {{NULL, NULL}, (HOOKFUNC) hook_function, NULL, NULL};
-        // int32 process;
 
         size_t iter = 0;
         void *item;
@@ -71,36 +58,58 @@ pid_t waitpid(pid_t pid, int *status, int options) {
             struct Clib4Children *item = hashmap_get(node->spawnedProcesses, &key);
 
             if (item == NULL) {
+                /* In blocking mode, the child's NP_EntryCode may not have run yet.
+                 * Give it a moment to register, then retry once. */
+                if (!(options & WNOHANG)) {
+                    Delay(1);
+                    item = hashmap_get(node->spawnedProcesses, &key);
+                }
+            }
+
+            if (item == NULL) {
                 __set_errno(ECHILD);
-                *status = 0;
+                if (status) *status = 0;
                 D(("Child with pid %ld not found in spawned process list.\n", pid));
                 return -1;
             }
-
-            /* Scan for process */
-            // process = ProcessScan(&h, (CONST_APTR) pid, 0);
-            // if (process > 0) {
 
             if (options & WNOHANG) {
                 D(("Check for child with pid %ld\n", pid));
                 found = CheckForChildExit(pid);
 
                 /* Set returnCode status */
-                *status = item->returnCode;
+                if (status) *status = item->returnCode;
+                
+                /* If returnCode still has 0x10000000 bit set, the child hasn't finished 
+                 * its exit callback yet, so treat it as still running */
+                if (status && (*status & 0x10000000)) {
+                    D(("Child with pid %ld exit callback not finished yet (status=0x%lx), treating as still running\n", pid, *status));
+                    found = TRUE;  /* Treat as still running */
+                    if (status) *status = 0;
+                }
 
                 if (!found) hashmap_delete(node->spawnedProcesses, item);
 
-                D(("Child with pid %ld %s with status 0x%lx\n", pid, found ? "was found" : "has exited", *status));
+                D(("Child with pid %ld %s with status 0x%lx\n", pid, found ? "was found" : "has exited", status ? *status : 0));
             } else {
                 D(("Waiting for child with pid %ld to exit...", pid));
                 found = WaitForChildExit(pid);
 
+                /* WaitForChildExit may return before NP_ExitCode (spawnedProcessExit)
+                 * has cleared the 0x10000000 flag in returnCode. Wait briefly. */
+                if (item->returnCode & 0x10000000) {
+                    int retries = 50; /* up to ~1 second */
+                    while ((item->returnCode & 0x10000000) && retries-- > 0) {
+                        Delay(1);
+                    }
+                }
+
                 /* Set returnCode status */
-                *status = item->returnCode;
+                if (status) *status = item->returnCode;
 
                 hashmap_delete(node->spawnedProcesses, item);
 
-                D(("Child with pid %ld has (to the best of our knowledge) exited with status 0x%lx\n", pid, *status));
+                D(("Child with pid %ld has (to the best of our knowledge) exited with status 0x%lx\n", pid, status ? *status : 0));
             }
             pidFound = pid; done = TRUE;
         } else if (pid == -1) {
@@ -116,7 +125,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
 
                 if (!found) {
                     /* Set returnCode on Status */
-                    *status = children->returnCode;
+                    if (status) *status = children->returnCode;
 
                     hashmap_delete(node->spawnedProcesses, item);
                     pidFound = pid;
@@ -143,7 +152,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
 
                     if (!found) {
                         /* Set returnCode on status */
-                        *status = children->returnCode;
+                        if (status) *status = children->returnCode;
 
                         hashmap_delete(node->spawnedProcesses, item);
                         pidFound = pid;
@@ -154,6 +163,11 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                 }
             }
         }
+    } else {
+        /* Our own node was not found — should not happen */
+        if (status) *status = 0;
+        __set_errno(ECHILD);
+        return -1;
     }
     return pidFound;
 }

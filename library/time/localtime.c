@@ -11,15 +11,14 @@
 #endif /* _LOCALE_HEADERS_H */
 
 struct tm *
-localtime(const time_t *t)
-{
+localtime(const time_t *t) {
 	static struct tm tm;
 
 	struct tm * result;
 
 	ENTER();
 
-	result = localtime_r(t,&tm);
+	result = localtime_r(t, &tm);
 
 	RETURN(result);
 	return(result);

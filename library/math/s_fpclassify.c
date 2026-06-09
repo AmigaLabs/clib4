@@ -71,7 +71,7 @@ __fpclassify_double(double d) {
         /* Both exponent and fraction are zero -> zero */
         result = FP_ZERO;
     }
-    else if ((x.raw[0] & 0x7fff0000) == 0) {
+    else if ((x.raw[0] & 0x7ff00000) == 0) {
         SHOWMSG("subnormal");
 
         /* Exponent = 0 -> subnormal (IEEE 754) */

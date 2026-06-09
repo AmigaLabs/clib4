@@ -35,22 +35,26 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     int new_mode;
     int64_t result = EOF;
     BOOL is_aliased;
+    BOOL is_stdio = FALSE;
+    BOOL fd_locked = FALSE;
     BPTR file;
 
     __check_abort_f(__clib4);
 
     ENTER();
-
+	SHOWMSG("fd_hook_entry");
     assert(fam != NULL && fd != NULL);
-    // assert(__is_valid_fd(__clib4, fd));
 
     /* Careful: file_action_close has to monkey with the file descriptor
                 table and therefore needs to obtain the stdio lock before
                 it locks this particular descriptor entry. */
-    if (fam->fam_Action == file_action_close)
+    if (fam->fam_Action == file_action_close) {
         __stdio_lock(__clib4);
+    }
 
+	SHOWMSG("locking fd");
     __fd_lock(fd);
+    fd_locked = TRUE;
 
     file = __resolve_fd_file(fd);
     if (file == BZERO) {
@@ -59,7 +63,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
         fam->fam_Error = EBADF;
         goto out;
     }
-
+	D(("fam->fam_Action=%ld", fam->fam_Action));
     switch (fam->fam_Action) {
         case file_action_read:
 
@@ -78,17 +82,105 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                     goto out;
                 }
 
-                result = (int64_t) Read(file, fam->fam_Data, fam->fam_Size);
+                result = (int64_t) Read(file, (APTR)fam->fam_Data, (LONG)fam->fam_Size);
+
                 if (result == EOF) {
-                    D(("read failed ioerr=%ld\n", IoErr()));
-                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) || (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING && FLAG_IS_SET(fd->fd_Flags, FDF_PIPE))))
-                        fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                    else
-                        fam->fam_Error = EAGAIN;
+                    LONG ioerr = IoErr();
+				D(("fdhook READ fail: file=%ld size=%ld flags=0x%lx ioerr=%ld\n",
+					                 (long)file, (long)fam->fam_Size, (unsigned long)fd->fd_Flags, (long)ioerr));
+
+                    /*
+                     * PIPE: The PIPE: device may report failures (sometimes mapping to
+                     * generic EIO) when no data is currently available. For POSIX-like
+                     * behavior, treat this as would-block as long as the other side of
+                     * the pipe still exists.
+                     */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                        struct fd *other_fd = NULL;
+                        if (other_side_fd > 0)
+                            other_fd = __get_file_descriptor(__clib4, other_side_fd);
+
+                        if (other_fd != NULL) {
+                            fam->fam_Error = EAGAIN;
+                            goto out;
+                        }
+                        /* Other side gone -> EOF */
+                        fam->fam_Error = 0;
+                        result = 0;
+                        goto out;
+                    }
+
+                    /*
+                     * PIPE: device can report transient failures (often with ioerr==0)
+                     * when there is no data available yet. Do not map that to EIO.
+                     */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE) && (ioerr == 0 || ioerr == ERROR_WOULD_BLOCK)) {
+                        SHOWMSG("PIPE read would-block/unknown, checking other side");
+                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                        struct fd *other_fd = NULL;
+                        if (other_side_fd > 0)
+                            other_fd = __get_file_descriptor(__clib4, other_side_fd);
+                        if (other_fd != NULL) {
+                            fam->fam_Error = EAGAIN;
+                        } else {
+                            fam->fam_Error = 0;
+                            result = 0;
+                        }
+                        goto out;
+                    }
+
+                    /*
+                     * Normal files, and pipes that report a concrete ioerr: translate.
+                     * (Fix: do not use logical operators inside FLAG macros.)
+                     */
+                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) || (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING))) {
+                        fam->fam_Error = __translate_io_error_to_errno(ioerr);
+					}
+                    else {
+                        SHOWMSG("Checking other side of the pipe (non-blocking)");
+                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                        SHOWVALUE(other_side_fd);
+                        if (other_side_fd > 0) {
+                            SHOWMSG("Getting other side FD");
+                            struct fd *other_fd = __get_file_descriptor(__clib4, other_side_fd);
+                            SHOWPOINTER(other_fd);
+                            if (other_fd != NULL)
+                                fam->fam_Error = EAGAIN;
+                            else {
+                                fam->fam_Error = 0;
+                                result = 0;
+                            }
+                        }
+                    }
                     goto out;
                 }
 
                 fd->fd_Position += result;
+
+                /*
+                 * ICRNL: Translate CR (0x0D) → LF (0x0A) for interactive consoles
+                 * that are NOT under termios control.  On Unix, the terminal driver
+                 * performs this translation by default (the ICRNL flag in c_iflag).
+                 * AmigaOS's console handler does this internally in cooked mode,
+                 * but in RAW mode Enter sends '\r' which breaks fgets() and other
+                 * line-oriented readers that look for '\n'.  Performing the
+                 * translation here makes the behaviour consistent regardless of
+                 * console mode and matches POSIX semantics.
+                 *
+                 * When termios IS active (FDF_TERMIOS), the termios console hook
+                 * has its own ICRNL handling, so we must not double-translate.
+                 */
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE) &&
+                    FLAG_IS_CLEAR(fd->fd_Flags, FDF_TERMIOS) && result > 0) {
+                    char *data = fam->fam_Data;
+                    int64_t i;
+                    for (i = 0; i < result; i++) {
+                        if (data[i] == '\r')
+                            data[i] = '\n';
+                    }
+                }
+
                 /* If we are reading char by char from STDIN used like a SOCKET and
                  * we get a CR we need to mark it as EOF for the next read call
                  */
@@ -135,15 +227,47 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                     }
                 }
 
-                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(
-                        file), fam->fam_Data));
+                D(("write %ld bytes to position %ld from 0x%08lx", fam->fam_Size, GetFilePosition(file), fam->fam_Data));
 
                 result = Write(file, fam->fam_Data, fam->fam_Size);
-                if (result == -1) {
-                    D(("write failed ioerr=%ld", IoErr()));
 
-                    fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                    goto out;
+                if (result == EOF) {
+                    LONG ioerr = IoErr();
+                    D(("write failed ioerr=%ld", ioerr));
+
+                    /*
+                     * PIPE: If the other side exists, treat failures as would-block
+                     * rather than mapping to generic EIO.
+                     */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                        struct fd *other_fd = NULL;
+                        if (other_side_fd > 0)
+                            other_fd = __get_file_descriptor(__clib4, other_side_fd);
+                        if (other_fd != NULL)
+                            fam->fam_Error = EAGAIN;
+                        else
+                            fam->fam_Error = EPIPE;
+                        goto out;
+                    }
+
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE) && (ioerr == 0 || ioerr == ERROR_WOULD_BLOCK)) {
+                        SHOWMSG("PIPE write would-block/unknown, checking other side");
+                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
+                        struct fd *other_fd = NULL;
+                        if (other_side_fd > 0)
+                            other_fd = __get_file_descriptor(__clib4, other_side_fd);
+                        if (other_fd != NULL)
+                            fam->fam_Error = EAGAIN;
+                        else
+                            fam->fam_Error = EPIPE;
+                    } else if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) ||
+                               (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING))) {
+                        fam->fam_Error = __translate_io_error_to_errno(ioerr);
+                    } else {
+                        fam->fam_Error = EAGAIN;
+                    }
+                	goto out;
                 }
 
                 fd->fd_Position += (int64_t) result;
@@ -154,12 +278,13 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
 
         case file_action_close:
 
-            SHOWMSG("file_action_close");
+        SHOWMSG("file_action_close");
             /* The following is almost guaranteed not to fail. */
             result = OK;
 
             if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
                 /* If this is an alias, just remove it. */
+
                 is_aliased = __fd_is_aliased(fd);
                 if (is_aliased) {
                     __remove_fd_alias(__clib4, fd);
@@ -200,13 +325,15 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         }
 
                         SHOWMSG("Closing file...");
-                        
-                        if (CANNOT Close(fd->fd_File)) {
-                            fam->fam_Error = __translate_io_error_to_errno(IoErr());
-                            SHOWMSG("CANNOT Close(fd->fd_File)");
 
-                            result = EOF;
-                        }
+						if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE_BPTR)) {
+                       		if (CANNOT Close(fd->fd_File)) {
+                            	fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            	SHOWMSG("CANNOT Close(fd->fd_File)");
+
+                            	result = EOF;
+                        	}
+						}
 
                         if (fd->fd_File)
                             fd->fd_File = BZERO;
@@ -291,7 +418,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         }
 
                         /* If we have closed the file, clear FDF_IN_USE flag */
-                        if (result == OK)
+                        if (result == OK && FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO))
                             CLEAR_FLAG(fd->fd_Flags, FDF_IN_USE);
 
 #ifdef USE_TEMPFILES
@@ -302,6 +429,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             Delete(pipe_name);
                         }
 #endif
+
                         if (FLAG_IS_SET(fd->fd_Flags, FDF_CREATED) && name_and_path_valid &&
                             FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
                             BPTR old_dir;
@@ -315,7 +443,9 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             UnLock(parent_dir);
                     }
                 } else {
-                    // Clear FDF_STDIN_AS_SOCKET just in case it was used as socket */
+                    // FDF_STDIO is set — this close is for a STDIO fd (stdin/stdout/stderr).
+                    // Clear FDF_STDIN_AS_SOCKET just in case it was used as socket.
+                    is_stdio = TRUE;
                     if (FLAG_IS_SET(fd->fd_Flags, FDF_STDIN_AS_SOCKET)) {
                         CLEAR_FLAG(fd->fd_Flags, FDF_STDIN_AS_SOCKET);
                     }
@@ -329,15 +459,34 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 }
             }
 
-            __fd_unlock(fd);
+            if (fd_locked) {
+                __fd_unlock(fd);
+                fd_locked = FALSE;
+            }
 
             /* Free the lock semaphore now. */
-            if (NOT is_aliased)
-                __delete_mutex(fd->fd_Lock);
+            if (NOT is_aliased && !is_stdio) {
+                /* Free fd_Aux if it was allocated (e.g., for termios or path names) */
+                if (fd->fd_Aux != NULL) {
+                    /* Only free if it's termios - for path names, fd_Aux points to static/stack memory */
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_TERMIOS)) {
+                        free(fd->fd_Aux);
+                    }
+                    fd->fd_Aux = NULL;
+                }
 
-            /* And that's the last for this file descriptor. */
-            memset(fd, 0, sizeof(*fd));
-            fd = NULL;
+                __delete_mutex(fd->fd_Lock);
+            }
+
+            /* Clear the fd struct only for non-STDIO file descriptors.
+             * STDIO fds (stdin/stdout/stderr) must survive close() because
+             * the IOB layer still references them. Zeroing a STDIO fd would
+             * destroy fd_Flags (including FDF_IN_USE), causing the next
+             * open() to reuse slot 0/1/2 and corrupt stdin/stdout/stderr. */
+            if (!is_stdio) {
+                memset(fd, 0, sizeof(*fd));
+                fd = NULL;
+            }
 
             break;
 
@@ -429,6 +578,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         new_position = GetFilePosition(file);
                         if (new_position == GETPOSITION_ERROR) {
                             fam->fam_Error = __translate_io_error_to_errno(IoErr());
+                            goto out;
                         }
                     }
 
@@ -446,12 +596,13 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
             SHOWMSG("file_action_set_blocking");
 
             if (!FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) && !FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
-                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE)) {
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE) || FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
                     LONG mode;
 
                     SHOWMSG("changing the mode");
 
                     if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                        D(("Set Pipe blocking mode to %s", fam->fam_Arg ? "blocking" : "non-blocking"));
                         if (fam->fam_Arg != 0)
                             mode = SBM_BLOCKING;
                         else
@@ -464,6 +615,7 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             goto out;
                         }
                     } else {
+                        D(("Set Dos file blocking mode to %s", fam->fam_Arg ? "canonical" : "raw"));
                         if (fam->fam_Arg != 0)
                             mode = DOSFALSE; /* buffered mode */
                         else
@@ -554,7 +706,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
     }
 
 out:
-    __fd_unlock(fd);
+    if (fd != NULL && fd_locked)
+        __fd_unlock(fd);
 
     if (fam->fam_Action == file_action_close)
         __stdio_unlock(__clib4);

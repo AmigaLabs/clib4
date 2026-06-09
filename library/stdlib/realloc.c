@@ -17,8 +17,6 @@ realloc(void *ptr, size_t size) {
     void *result = NULL;
     struct _clib4 *__clib4 = __CLIB4;
 
-    ENTER();
-
     assert((int) size >= 0);
 
     if (size == 0) size = 4;
@@ -35,6 +33,5 @@ realloc(void *ptr, size_t size) {
     if (result == NULL)
         SHOWMSG("ouch! realloc failed");
 
-    LEAVE();
     return result;
 }

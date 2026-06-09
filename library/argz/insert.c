@@ -24,8 +24,14 @@ argz_insert(char **argz, size_t *argz_len, char *before, const char *entry)
 
     len = strlen(entry) + 1;
 
-    if (!(*argz = (char *)realloc(*argz, *argz_len + len)))
-        return ENOMEM;
+    {
+        size_t before_off = before - *argz;
+        char *new_argz = (char *)realloc(*argz, *argz_len + len);
+        if (!new_argz)
+            return ENOMEM;
+        *argz = new_argz;
+        before = new_argz + before_off;
+    }
 
     memmove(before + len, before, (size_t) (*argz + *argz_len - before));
     memcpy(before, entry, len);

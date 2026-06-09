@@ -21,13 +21,13 @@ printf(const char *format, ...) {
         goto out;
     }
 
-    __stdio_lock(__clib4);
+    __flockfile_r(__clib4, __stdout_r(__clib4));
 
     va_start(arg, format);
     result = __vfprintf_r(__clib4, __stdout_r(__clib4), format, arg);
     va_end(arg);
 
-    __stdio_unlock(__clib4);
+    __funlockfile_r(__clib4, __stdout_r(__clib4));
 
 out:
 

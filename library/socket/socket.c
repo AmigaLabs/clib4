@@ -49,7 +49,7 @@ socket(int domain, int type, int protocol) {
     /* Force AF_LOCAL to be AF_INET otherwise Roadshow calls will fail */
     if (domain == AF_LOCAL) {
         domain = AF_INET;
-        type == SOCK_DGRAM;
+        type = SOCK_DGRAM;
     }
 
     socket_fd = __socket(domain, type, protocol);

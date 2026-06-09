@@ -58,12 +58,22 @@ raise(int sig) {
 
                 if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
                     __set_errno_r(__clib4, EINTR);
-                    /* Check ig we have timer terminal running. If so let's kill it */
-                    if (__clib4->tmr_real_task != NULL) {
+                    /* Check if we have timer tasks running for this thread. If so let's kill them */
+                    if (!IsMinListEmpty(&__clib4->tmr_real_list)) {
+                        uint32 currentThreadID = (uint32)FindTask(NULL);
                         /* Block SIGALRM signal from raise */
                         sigblock(SIGALRM);
-                        /* Kill itimer */
-                        killitimer();
+                        /* Kill itimer for current thread */
+                        struct TimerNode *node, *next;
+                        for (node = (struct TimerNode *)__clib4->tmr_real_list.mlh_Head;
+                             (next = (struct TimerNode *)node->tn_Node.mln_Succ) != NULL;
+                             node = next) {
+                            if (node->tn_ThreadID == currentThreadID) {
+                                Signal((struct Task *)node->tn_Process, SIGBREAKF_CTRL_F);
+                                Remove((struct Node *)&node->tn_Node);
+                                FreeVec(node);
+                            }
+                        }
                     }
 
                     char break_string[80];
@@ -82,13 +92,13 @@ raise(int sig) {
                        land us in _exit(). */
                     __abort();
                 }
-                /* If we have a SIGALRM without associated handler send the SIGBREAKF_CTRL_E signal */
+                /* If we have a SIGALRM without associated handler send the _interrupting_alarm_signal */
                 if (sig == SIGALRM) {
                     /* Block SIGALRM signal from raise again */
                     sigblock(SIGALRM);
 
                     /* Since we got a signal we interrrupt every sleep function like nanosleep */
-                    Signal((struct Task *) __clib4->self, SIGBREAKF_CTRL_E);
+                    Signal((struct Task *) __clib4->self, __clib4->_interrupting_alarm_signal);
                 }
             }
             else if (handler == SIG_ERR) {

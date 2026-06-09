@@ -142,7 +142,8 @@ tcgetattr(int file_descriptor, struct termios *user_tios) {
     if (file_descriptor == STDOUT_FILENO || file_descriptor == STDERR_FILENO) {
         __stdio_unlock(__clib4);
         isStdioLocked = FALSE;
-        tcgetattr(STDIN_FILENO, user_tios);
+        struct termios stdin_tios;
+        tcgetattr(STDIN_FILENO, &stdin_tios);
     }
 
 out:

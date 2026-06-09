@@ -295,6 +295,10 @@ arg_exit() {
     struct _clib4 *__clib4 = __CLIB4;
 
     if (__clib4->__WBenchMsg == NULL) {
+        if (__clib4->__command_line_ptr) {
+            FreeVec(__clib4->__command_line_ptr);
+            __clib4->__command_line_ptr = NULL;
+        }
         if (__clib4->__argv) {
             FreeVec(__clib4->__argv);
             __clib4->__argv = NULL;

@@ -43,7 +43,7 @@
 #include "lookup.h"
 
 int
-__dns_parse(const unsigned char *r, int rlen, int (*callback)(void *, int, const void *, int, const void *), void *ctx) {
+__dns_parse(const unsigned char *r, int rlen, int (*callback)(void *, int, const void *, int, const void *, uint32_t), void *ctx) {
     int qdcount, ancount;
     const unsigned char *p;
     int len;
@@ -67,7 +67,8 @@ __dns_parse(const unsigned char *r, int rlen, int (*callback)(void *, int, const
         p += 1 + !!*p;
         len = p[8] * 256 + p[9];
         if (p + len > r + rlen) return -1;
-        if (callback(ctx, p[1], p + 10, len, r) < 0) return -1;
+        uint32_t ttl = ((uint32_t)p[4]<<24) | ((uint32_t)p[5]<<16) | ((uint32_t)p[6]<<8) | p[7];
+        if (callback(ctx, p[1], p + 10, len, r, ttl) < 0) return -1;
         p += 10 + len;
     }
     return 0;

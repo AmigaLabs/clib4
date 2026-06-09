@@ -135,9 +135,9 @@ tparam1(const char *string, char *outstring, int len, char *up, char *left, regi
                            and this is one of them, increment it.  */
                         while (tem == 0 || tem == '\n' || tem == '\t') {
                             tem++;
-                            if (argp == old_argp)
+                            if (argp == old_argp && up)
                                 doup++, outend -= strlen(up);
-                            else
+                            else if (left)
                                 doleft++, outend -= strlen(left);
                         }
                     }
@@ -223,9 +223,9 @@ tparam1(const char *string, char *outstring, int len, char *up, char *left, regi
             *op++ = c;
     }
     *op = 0;
-    while (doup-- > 0)
+    while (doup-- > 0 && up)
         strcat(op, up);
-    while (doleft-- > 0)
+    while (doleft-- > 0 && left)
         strcat(op, left);
     return outstring;
 }

@@ -100,7 +100,7 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
     size_t x = 0;
     struct stateful_cd *scd = 0;
     if (!((size_t) cd & 1)) {
-        scd = (void *) cd;
+        scd = (void *) cd;  
         cd = scd->base_cd;
     }
     unsigned to = extract_to(cd);
@@ -414,9 +414,13 @@ iconv(iconv_t cd, char **in, size_t *inb, char **out, size_t *outb) {
                 if (*outb < 4) {
                     char tmp[4];
                     k = wctomb(tmp, c);
+                    if (k == (size_t)-1) goto subst;
                     if (*outb < k) goto toobig;
                     memcpy(*out, tmp, k);
-                } else k = wctomb(*out, c);
+                } else {
+                    k = wctomb(*out, c);
+                    if (k == (size_t)-1) goto subst;
+                }
                 *out += k;
                 *outb -= k;
                 break;

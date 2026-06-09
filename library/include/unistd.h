@@ -116,6 +116,7 @@ extern int spawnve(int mode, const char *path, const char **argv, char * const e
 extern int spawnvp(int mode, const char *path, const char **argv);
 /* Non standard. Used to help linux ports */
 extern int spawnvpe(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);
+extern int spawnvpe_fork(const char *file, const char **argv, char **deltaenv, const char *dir, int fhin, int fhout, int fherr);
 
 extern int profil(unsigned short *buffer, size_t bufSize, size_t offset, unsigned int scale);
 extern long sysconf(int name);
@@ -138,7 +139,7 @@ extern char *get_current_dir_name(void);
 #undef gethostname
 
 extern long gethostid();
-extern int gethostname(const char *name, size_t len);
+extern int gethostname(char *name, size_t len);
 extern int getdomainname(char *name, size_t len);
 extern int setdomainname(const char *name, size_t len);
 extern char *getlogin(void);

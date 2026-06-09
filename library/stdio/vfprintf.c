@@ -777,7 +777,12 @@ overflow:
 int
 vfprintf(FILE *f, const char *format, va_list ap) {
     struct _clib4 *__clib4 = __CLIB4;
-    return __vfprintf_r(__clib4, f, format, ap);
+
+    __flockfile_r(__clib4, f);
+    int result = __vfprintf_r(__clib4, f, format, ap);
+    __funlockfile_r(__clib4, f);
+
+    return result;
 }
 
 int
@@ -789,6 +794,12 @@ __vfprintf_r(struct _clib4 *__clib4, FILE *f, const char *format, va_list ap) {
     ENTER();
     SHOWPOINTER(f);
     SHOWSTRING(format);
+
+	if (f == NULL) {
+		__set_errno(EBADF);
+		RETURN(EOF);
+		return EOF;
+	}
 
     SHOWMSG("Formatting File pointer");
     Out _out[1];
@@ -814,8 +825,12 @@ __vfprintf_r(struct _clib4 *__clib4, FILE *f, const char *format, va_list ap) {
     va_end(ap2);
 
     SHOWMSG("Flush the file");
-    /* Check abort is inside flush. Just in case... */
-    __fflush_r(__clib4, f);
+    /* Flush directly without re-locking — the caller (printf/vfprintf)
+     * already holds iob_Lock via flockfile.  Using __fflush_r here would
+     * nest flockfile/funlockfile, and funlockfile unconditionally clears
+     * the IOBF_LOCKED flag, causing the outer funlockfile to skip
+     * ReleaseSemaphore — permanently leaking the lock. */
+    __sflush(__clib4, (struct iob *)f);
 
     RETURN(ret);
     return ret;

@@ -108,10 +108,13 @@ __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
         for (p = line + 7; isspace(*p); p++)
             ;
         size_t l = strlen(p);
+        /* Strip trailing newline */
+        if (l && p[l - 1] == '\n') l--;
         /* This can never happen anyway with chosen buffer sizes. */
         if (l >= search_sz)
             continue;
-        memcpy(search, p, l + 1);
+        memcpy(search, p, l);
+        search[l] = 0;
     }
 
     fclose(f);

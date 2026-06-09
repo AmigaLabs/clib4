@@ -37,6 +37,8 @@
 #include "common.h"
 #include "pthread.h"
 
+register ThreadInfo * __tls_reg asm(TLS_REGISTER);
+
 //
 // Helper functions
 //
@@ -62,19 +64,61 @@ ThreadInfo *GetThreadInfo(pthread_t thread) {
     return NULL;
 }
 
+void set_tls_register(ThreadInfo *ti) {
+    __tls_reg = ti;
+}
+
+ThreadInfo *get_tls_register(void) {
+    return __tls_reg;
+}
+
 ThreadInfo *GetCurrentThreadInfo() {
-  ThreadInfo *ti;
-  __asm__("mr %0, r2" : "=r"(ti));
-  return ti;
+    ThreadInfo *inf = __tls_reg;
+    struct Task *task = FindTask(NULL);
+
+    /* Validate: the TLS register (r2) must point inside the threads array
+     * AND the stored task pointer must match the calling task.
+     * On the main thread, register r2 may be clobbered by the ABI (TOC
+     * pointer) so it can contain a non-NULL but invalid pointer.
+     * Even when r2 looks valid, it may reference a different thread's
+     * ThreadInfo if r2 was clobbered to a value that happens to fall
+     * inside the array.  The task check catches this case. */
+    if (inf >= &threads[0] && inf < &threads[PTHREAD_THREADS_MAX]
+        && (struct Task *)inf->task == task) {
+        return inf;
+    }
+
+    /* Fallback: look up by task pointer.
+     * This handles the main thread case where r2 is not set or has been
+     * overwritten by the compiler/system, and any case where the fast
+     * path validation failed above. */
+    for (int i = 0; i < PTHREAD_THREADS_MAX; i++) {
+        if ((struct Task *)threads[i].task == task && threads[i].status != THREAD_STATE_IDLE) {
+            return &threads[i];
+        }
+    }
+
+    return NULL;
 }
 
 pthread_t GetThreadId(struct Task *task) {
     pthread_t i;
 
-    // 0 is main task, First thread id will be 1 so that it is different than default value of pthread_t
-    for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
-        if (threads[i].task == (struct Process *) task)
+    /* When searching for an empty slot (task==NULL), start from
+     * PTHREAD_FIRST_THREAD_ID to preserve slot 0 for the main thread.
+     * When searching for a specific task, start from 0 so that the main
+     * thread stored in threads[0] can also be found (e.g. pthread_self()
+     * called from main). */
+    pthread_t start = (task == NULL) ? PTHREAD_FIRST_THREAD_ID : 0;
+
+    for (i = start; i < PTHREAD_THREADS_MAX; i++) {
+        if (threads[i].task == (struct Process *) task) {
+            /* When searching for an empty slot (task==NULL), also require IDLE status
+             * to skip slots that are being set up by another concurrent pthread_create */
+            if (task == NULL && threads[i].status != THREAD_STATE_IDLE)
+                continue;
             break;
+        }
     }
 
     return i;
@@ -93,7 +137,7 @@ OpenTimerDevice(struct IORequest *io, struct MsgPort *mp, struct Task *task) {
     signal = AllocSignal(-1);
     if (signal == -1) {
         signal = SIGB_TIMER_FALLBACK;
-        SetSignal(SIGF_TIMER_FALLBACK, 0);
+        SetSignal(0, SIGF_TIMER_FALLBACK);
     }
     mp->mp_SigBit = signal;
     NewList(&mp->mp_MsgList);
@@ -115,8 +159,8 @@ CloseTimerDevice(struct IORequest *io) {
 
     if (!CheckIO(io)) {
         AbortIO(io);
-        WaitIO(io);
     }
+    WaitIO(io);
 
     if (io->io_Device != NULL)
         CloseDevice(io);

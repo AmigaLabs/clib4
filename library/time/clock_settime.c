@@ -22,6 +22,12 @@ clock_settime(clockid_t clk_id, const struct timespec *t) {
     struct TimeRequest *tmr_real_tr = NULL;
     int result = -1;
 
+    if (t == NULL) {
+        __set_errno_r(__clib4, EFAULT);
+        RETURN(-1);
+        return -1;
+    }
+
     /* Only CLOCK_REALTIME can be set */
     if ((clk_id & ~(CLOCK_REALTIME)) != 0) {
         __set_errno_r(__clib4, EINVAL);

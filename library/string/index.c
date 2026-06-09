@@ -8,14 +8,5 @@
 
 char *
 index(const char *s, int c) {
-    char *result;
-
-    ENTER();
-    SHOWSTRING(s);
-    SHOWVALUE(c);
-
-    result = strchr(s, c);
-
-    RETURN(result);
-    return (result);
+    return strchr(s, c);
 }

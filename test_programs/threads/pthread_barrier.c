@@ -24,6 +24,8 @@ thread1(void *not_used) {
     // after this point, all three threads have completed.
     time(&now);
     printf("barrier in thread1() done at %s", ctime_r(&now, buf));
+
+    return NULL;
 }
 
 void *
@@ -41,6 +43,8 @@ thread2(void *not_used) {
     // after this point, all three threads have completed.
     time(&now);
     printf("barrier in thread2() done at %s", ctime_r(&now, buf));
+
+    return NULL;
 }
 
 int main() { // ignore arguments
@@ -66,4 +70,10 @@ int main() { // ignore arguments
     // after this point, all three threads have completed.
     time(&now);
     printf("barrier in main () done at %s", ctime_r(&now, buf));
+
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    pthread_barrier_destroy(&barrier);
+
+    return 0;
 }

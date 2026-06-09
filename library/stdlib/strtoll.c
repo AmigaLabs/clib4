@@ -109,9 +109,9 @@ strtoll(const char *str, char **ptr, int base) {
                 __set_errno(ERANGE);
 
                 if (is_negative)
-                    result = LONG_MIN;
+                    result = LLONG_MIN;
                 else
-                    result = LONG_MAX;
+                    result = LLONG_MAX;
 
                 goto out;
             }

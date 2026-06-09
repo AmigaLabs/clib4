@@ -35,10 +35,10 @@ stdlib_program_name_init() {
     ENTER();
 
 	if (__clib4->__WBenchMsg == NULL) {
-		const size_t program_name_size = 256;
+		const size_t program_name_size = 255;
 
 		/* Make a copy of the current command name string. */
-        __clib4->__progname = AllocVecTags((ULONG)program_name_size, AVT_Type, MEMF_SHARED, TAG_DONE);
+        __clib4->__progname = AllocVecTags((ULONG )program_name_size + 1, AVT_Type, MEMF_SHARED, AVT_ClearWithValue, 0, TAG_DONE);
 		if (__clib4->__progname == NULL) {
             SHOWMSG("Cannot allocate program_name_size memory. Give up");
             goto out;
@@ -58,7 +58,7 @@ stdlib_program_name_init() {
         __clib4->__progname = (char *) __clib4->__WBenchMsg->sm_ArgList[0].wa_Name;
 	}
 
-	success = TRUE;
+    success = TRUE;
 
 out:
 
@@ -68,5 +68,5 @@ out:
 
 
 const char *__getprogname(void) {
-    return __CLIB4->__progname;
+    return getexecname();
 }

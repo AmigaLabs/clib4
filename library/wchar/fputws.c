@@ -29,7 +29,7 @@ fputws(const wchar_t *ws, FILE *fp) {
     fwide(fp, 1);
 
     while (ws && (nwritten = wcsrtombs((void *) buf, (void *) &ws, sizeof buf, 0)) + 1 > 1) {
-        if (fwrite(buf, nwritten, 1, fp) < nwritten) {
+        if (fwrite(buf, 1, nwritten, fp) != nwritten) {
             nwritten = EOF;
             goto out;
         }

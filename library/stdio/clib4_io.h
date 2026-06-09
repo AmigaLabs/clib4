@@ -30,7 +30,7 @@ enum file_action_t
 struct file_action_message
 {
 	enum file_action_t		fam_Action;		/* What to do */
-	char *					fam_Data;		/* Where to read/write the data */
+	char * volatile			fam_Data;		/* Where to read/write the data */
 	int						fam_Size;		/* How much data to write */
 
     int64_t				    fam_Offset;		/* The seek offset */
@@ -66,8 +66,7 @@ struct _fd
 										   of the '_fd' data structure (see
 										   below). */
 	_file_action_fd_t	fd_Action;		/* Function to invoke to perform actions */
-	void *				fd_UserData;	/* To be used by custom file action
-										   functions */
+	void *				fd_UserData;	/* To be used by custom file action functions */
 	ULONG				fd_Flags;		/* File properties */
 
 	union
@@ -126,6 +125,7 @@ struct _fd
 #define FDF_IS_SERIAL       (1UL<<20)   /* FD is using serial hook */
 #define FDF_CLOEXEC         (1UL<<21)   /* Close on child */
 #define FDF_LITTLE_ENDIAN   (1UL<<22)   /* Read in Little endian mode */
+#define FDF_NO_CLOSE_BPTR	(1UL<<23)	/* Never close BPRT for this file */
 
 /****************************************************************************/
 
@@ -146,7 +146,7 @@ extern int __change_fd_action(int file_descriptor,_file_action_fd_t new_action,_
    data pointer; returns 0 for success and -1 for failure if you
    provided an invalid file descriptor. This function performs proper locking
    and is thus safe to use in a thread-safe environment. */
-extern int __change_fd_user_data(int file_descriptor,void * new_user_data,void ** old_user_data_ptr);
+extern int __change_fd_user_data(struct _clib4 *__clib4, int file_descriptor,void * new_user_data,void ** old_user_data_ptr);
 
 __END_DECLS
 

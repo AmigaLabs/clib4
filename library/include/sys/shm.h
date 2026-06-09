@@ -41,8 +41,8 @@ struct ipc_perm
 #define SHM_W 0200
 
 #define SHMLBA      0x10000 /* Replace with a call to determine pagesize? */
-#define SHM_RDONLY  (1L << 0)
-#define SHM_RND     (1L << 0)
+#define SHM_RDONLY  010000
+#define SHM_RND     020000
 
 #define SHM_LOCK    11
 #define SHM_UNLOCK  12

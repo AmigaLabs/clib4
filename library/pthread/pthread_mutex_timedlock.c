@@ -37,36 +37,91 @@
 #include "common.h"
 #include "pthread.h"
 
+// Helper function to subtract two timespecs (ts1 = ts2 - ts3)
+static void timespec_sub(struct timespec *ts1, const struct timespec *ts2, const struct timespec *ts3) {
+    ts1->tv_sec = ts2->tv_sec - ts3->tv_sec;
+    ts1->tv_nsec = ts2->tv_nsec - ts3->tv_nsec;
+    while (ts1->tv_nsec < 0) {
+        ts1->tv_sec--;
+        ts1->tv_nsec += 1000000000L;
+    }
+    while (ts1->tv_nsec >= 1000000000L) {
+        ts1->tv_sec++;
+        ts1->tv_nsec -= 1000000000L;
+    }
+}
+
 int
 pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime) {
     int result;
-    struct TimeRequest timerio;
-    struct Task *task = FindTask(NULL);
-    struct MsgPort msgport;
+    struct _clib4 *__clib4 = __CLIB4;
 
     if (mutex == NULL)
         return EINVAL;
 
     if (abstime == NULL)
-        return pthread_mutex_lock(mutex);
-    else if (abstime->tv_nsec < 0 || abstime->tv_nsec >= 1000000000)
-        return EINVAL;
+		return pthread_mutex_lock(mutex);
+
+	result = pthread_mutex_trylock(mutex);
+	if (result != 0) {
+		// pthread_mutex_trylock returns EBUSY when a deadlock would occur
+		if (result != EBUSY)
+			return result;
+		else if (mutex->kind != PTHREAD_MUTEX_RECURSIVE && MutexIsMine(mutex))
+			return EDEADLK;
+	} else {
+		// Successfully acquired the lock on first try
+		return 0;
+	}
+
+    // Normalize abstime in case tv_nsec is out of range
+    // (e.g. 32-bit signed overflow from caller's arithmetic)
+    struct timespec normabs = *abstime;
+    {
+        unsigned long uns_nsec = (unsigned long)normabs.tv_nsec;
+        normabs.tv_sec += (long)(uns_nsec / 1000000000UL);
+        normabs.tv_nsec = (long)(uns_nsec % 1000000000UL);
+    }
+
+    // abstime is absolute time, need to convert to relative for timer.device
+    struct timespec starttime;
+    struct timespec timeout;
+
+    clock_gettime(CLOCK_REALTIME, &starttime);
+    timespec_sub(&timeout, &normabs, &starttime);
+
+    // Check if timeout is already in the past
+    if (timeout.tv_sec < 0 || (timeout.tv_sec == 0 && timeout.tv_nsec <= 0)) {
+        return ETIMEDOUT;
+    }
+
+    MutexObtain(timerMutex);
 
     uint32 sigMask = 1L << timedTimerPort->mp_SigBit;
 
     timedTimerIO->Request.io_Command = TR_ADDREQUEST;
-    timedTimerIO->Time.Seconds = abstime->tv_sec;
-    timedTimerIO->Time.Microseconds = abstime->tv_nsec / 1000;
+    timedTimerIO->Request.io_Flags = 0;
+    TIMESPEC_TO_OLD_TIMEVAL(&timedTimerIO->Time, &timeout);
 
     SetSignal(0, sigMask);
     SendIO((struct IORequest *) timedTimerIO);
 
     result = MutexAttemptWithSignal(mutex->mutex, sigMask);
 
-    if (result & sigMask)
+    // Abort timer if we got the lock
+    if (!(result & sigMask)) {
+        AbortIO((struct IORequest *) timedTimerIO);
+        WaitIO((struct IORequest *) timedTimerIO);
+    }
+
+    MutexRelease(timerMutex);
+
+    if (result & sigMask) {
         result = ETIMEDOUT;
-    else
+    } else {
+        mutex->owner = FindTask(NULL);
         result = 0;
+    }
 
     return result;
 }

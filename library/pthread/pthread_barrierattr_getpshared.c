@@ -8,6 +8,9 @@
 
 int
 pthread_barrierattr_getpshared(const pthread_barrierattr_t *attr, int *pshared) {
+    if (attr == NULL || pshared == NULL)
+        return EINVAL;
+
     *pshared = !!attr->pshared;
     return 0;
 }

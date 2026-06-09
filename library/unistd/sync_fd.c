@@ -13,10 +13,17 @@
 int
 __sync_fd(struct fd *fd, int mode) {
     int result = ERROR;
+    BPTR file;
+    ENTER();
 
     assert(fd != NULL);
 
     __fd_lock(fd);
+
+    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_IN_USE)) {
+        __set_errno(EBADF);
+        goto out;
+    }
 
     if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_SOCKET)) {
         __set_errno(EINVAL);
@@ -28,23 +35,38 @@ __sync_fd(struct fd *fd, int mode) {
         goto out;
     }
 
-    /* The mode tells us what to flush. 0 means "flush just the data", and
-       everything else means "flush everything. */
-    Flush(fd->fd_File);
-
-    if (mode != 0) {
-        struct FileHandle *fh = BADDR(fd->fd_File);
-
-        /* Verify that this file is not bound to "NIL:". */
-        if (fh->fh_MsgPort != NULL)
-            DoPkt(fh->fh_MsgPort, ACTION_FLUSH, 0, 0, 0, 0, 0);
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) ||
+        FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
+        __set_errno(EBADF);
+        goto out;
     }
 
+    file = __resolve_fd_file(fd);
+    if (file == BZERO) {
+        __set_errno(EBADF);
+        goto out;
+    }
+
+    /* Flush the dos.library file buffer to the filesystem handler. */
+    Flush(file);
+#if 0
+    if (mode != 0) {
+        /* Full sync requested (fsync): also ask the filesystem to flush
+           its internal caches to disk via the proper DOS API.
+           We use DevNameFromFH + FlushVolume instead of accessing the
+           FileHandle struct directly (BADDR + fh_MsgPort) because the
+           internal FileHandle layout may not be safe to access. */
+        TEXT devname[256] = {0};
+        if (DevNameFromFH(file, devname, sizeof(devname), DN_DEVICEONLY))
+            FlushVolume(devname);
+    }
+#endif
     result = OK;
 
 out:
 
     __fd_unlock(fd);
 
+    RETURN(result);
     return (result);
 }

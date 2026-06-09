@@ -32,7 +32,9 @@ __flush_r(struct _clib4 *__clib4, FILE *stream) {
         return result;
     }
 
-    __flockfile_r(__clib4, stream);
+    /* NOTE: __flockfile_r() removed - the stream should already be locked by the caller
+     * (e.g., fputc, __putc macro). Adding a lock here causes nested locking which
+     * deadlocks because ObtainSemaphore is not recursive. */
 
     if (iob->iob_BufferWriteBytes <= 0 || iob->iob_BufferSize <= 0) {
         SHOWVALUE(iob->iob_BufferWriteBytes);
@@ -44,7 +46,7 @@ __flush_r(struct _clib4 *__clib4, FILE *stream) {
 
     last_c = iob->iob_Buffer[iob->iob_BufferWriteBytes - 1];
 
-    if (__flush_iob_write_buffer(__clib4, iob) < 0) {
+    if (__sflush(__clib4, iob) != 0) {
         /* Remove the last character stored in the buffer, which is typically a '\n'. */
         iob->iob_BufferWriteBytes--;
         goto out;
@@ -54,7 +56,8 @@ __flush_r(struct _clib4 *__clib4, FILE *stream) {
 
 out:
 
-    __funlockfile_r(__clib4, stream);
+    /* NOTE: __funlockfile_r() removed - matches removal of __flockfile_r() above.
+     * The caller is responsible for unlocking the stream. */
 
     RETURN(result);
     return (result);

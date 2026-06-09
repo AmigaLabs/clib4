@@ -63,6 +63,13 @@ socketpair(int domain, int type, int protocol, int socks[2])
         if (socks[1] == -1)
             break;
 
+        /* Disable Nagle on both ends so loopback data delivery is immediate. */
+        {
+            int nodelay = 1;
+            setsockopt(socks[0], IPPROTO_TCP, TCP_NODELAY, (char *)&nodelay, sizeof(nodelay));
+            setsockopt(socks[1], IPPROTO_TCP, TCP_NODELAY, (char *)&nodelay, sizeof(nodelay));
+        }
+
         close(listener);
         RETURN(OK);
         return OK;

@@ -14,6 +14,13 @@
 #include "time_headers.h"
 #endif /* _TIME_HEADERS_H */
 
+// #define FILE_INFO_DEBUG if you want to track file info conversion
+
+// define FILE_INFO_DEBUG
+#if defined(FILE_INFO_DEBUG) && !defined(DEBUG)
+#error "FILE_INFO_DEBUG NEEDS DEBUG FLAG ON"
+#endif
+
 void __convert_file_info_to_stat(
 	const struct MsgPort *file_system,
 	const struct ExamineData *fib,
@@ -23,6 +30,7 @@ void __convert_file_info_to_stat(
 	mode_t mode;
 	ULONG flags;
 
+#ifdef FILE_INFO_DEBUG	
 	ENTER();
 
 	assert(fib != NULL && st != NULL);
@@ -38,6 +46,7 @@ void __convert_file_info_to_stat(
 	SHOWSTRING(fib->Comment);
 	SHOWVALUE(fib->OwnerUID);
 	SHOWVALUE(fib->OwnerGID);
+#endif
 
 	memset(st, 0, sizeof(*st));
 
@@ -106,6 +115,7 @@ void __convert_file_info_to_stat(
 	st->st_blksize = 512;
 	st->st_blocks = (st->st_size + st->st_blksize - 1) / st->st_blksize;
 
+#ifdef FILE_INFO_DEBUG	
 	SHOWVALUE(st->st_nlink);
 	SHOWVALUE(st->st_size);
 	SHOWVALUE(st->st_ino);
@@ -118,6 +128,6 @@ void __convert_file_info_to_stat(
 	SHOWVALUE(st->st_gid);
 	SHOWVALUE(st->st_blksize);
 	SHOWVALUE(st->st_blocks);
-
 	LEAVE();
+#endif
 }

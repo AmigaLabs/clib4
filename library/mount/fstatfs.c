@@ -75,7 +75,8 @@ fstatfs(int file_descriptor, struct statfs *buf) {
     result = OK;
 
 out:
-    __fd_unlock(fd);
+    if (fd != NULL)
+        __fd_unlock(fd);
     __stdio_unlock(__clib4);
     UnLock(parent_dir);
 

@@ -17,6 +17,9 @@ vdprintf(int fd, const char *format, va_list ap) {
     SHOWSTRING(format);
 
     ret = vsnprintf(ptr, 512, format, ap);
+    if (ret < 0) {
+        return EOF;
+    }
     if (ret >= 512) {
         int ret2;
         ptr = (char *) malloc(ret + 1);
@@ -24,7 +27,7 @@ vdprintf(int fd, const char *format, va_list ap) {
             __set_errno(ENOMEM);
             return EOF;
         }
-        ret2 = vsnprintf(ptr, ret, format, ap);
+        ret2 = vsnprintf(ptr, ret + 1, format, ap);
         if (ret2 < 0) {
             free(ptr);
             return EOF;

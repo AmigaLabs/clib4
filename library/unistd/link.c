@@ -75,7 +75,8 @@ link(const char *existing_path, const char *new_path) {
 
 out:
 
-    UnLock(existing_path_lock);
+    if (existing_path_lock != BZERO)
+        UnLock(existing_path_lock);
 
     RETURN(result);
     return (result);

@@ -6,6 +6,7 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
 #include <proto/elf.h>
+#include <proto/expansion.h>
 #include <proto/locale.h>
 #include <proto/timer.h>
 #include <proto/timezone.h>
@@ -258,6 +259,12 @@ makeEnvironment(struct _clib4 *__clib4) {
             IDOS->ScanVars(hook, flags, &ehd);
             IExec->FreeSysObject(ASOT_HOOK, hook);
         }
+    } else {
+        /* Failed to allocate pool, cleanup */
+        free(__clib4->__environment);
+        __clib4->__environment = NULL;
+        LEAVE();
+        return;
     }
 
     __clib4->__environment_lock = __create_recursive_mutex();
@@ -267,6 +274,7 @@ makeEnvironment(struct _clib4 *__clib4) {
 static void freeEnvironment(struct _clib4 *__clib4) {
     if (__clib4->__environment_pool != NULL) {
         IExec->FreeSysObject(ASOT_MEMPOOL, __clib4->__environment_pool);
+        __clib4->__environment_pool = NULL;
     }
     if (__clib4->__environment_lock != NULL) {
         __delete_mutex(__clib4->__environment_lock);
@@ -274,6 +282,55 @@ static void freeEnvironment(struct _clib4 *__clib4) {
     }
     free(__clib4->__environment);
     __clib4->__environment = NULL;
+}
+
+/* Try to find external CTOR/DTOR lists from the executable
+ * This allows automatic handling of C++ destructors for -nostartfiles executables
+ */
+static void
+find_external_ctors_dtors(struct _clib4 *__clib4) {
+    BPTR segment_list = IDOS->GetProcSegList(NULL, GPSLF_RUN | GPSLF_SEG);
+    if (segment_list == BZERO) {
+        D(bug("find_external_ctors_dtors: GetProcSegList returned ZERO\n"));
+        return;
+    }
+
+    Elf32_Handle hSelf = NULL;
+    int ret = IDOS->GetSegListInfoTags(segment_list, GSLI_ElfHandle, &hSelf, TAG_DONE);
+    if (ret != 1 || hSelf == NULL) {
+        D(bug("find_external_ctors_dtors: Could not get ELF handle\n"));
+        return;
+    }
+
+    /* Try to find __DTOR_LIST__ symbol in the executable using SymbolQuery */
+    struct Elf32_SymbolQuery query;
+    
+    query.Flags = ELF32_SQ_BYNAME;
+    query.Name = "__DTOR_LIST__";
+    query.NameLength = 0;
+    query.Value = 0;
+    query.Found = FALSE;
+    
+    ULONG found = __IElf->SymbolQuery(hSelf, 1, &query);
+    
+    if (found > 0 && query.Found) {
+        __clib4->__external_dtors = (void (**)(void))query.Value;
+        __clib4->__external_dtors_called = FALSE;
+        D(bug("find_external_ctors_dtors: Found __DTOR_LIST__ at 0x%08lx\n", query.Value));
+    } else {
+        D(bug("find_external_ctors_dtors: __DTOR_LIST__ symbol not found\n"));
+        __clib4->__external_dtors = NULL;
+    }
+}
+
+/* Legacy function kept for compatibility but now does nothing
+ * Destructors are automatically discovered in libOpen()
+ */
+void
+__call_external_dtors(void (**__DTOR_LIST__)(void)) {
+    (void)__DTOR_LIST__;
+    /* This function is now a no-op since we auto-discover and call dtors in libClose() */
+    D(bug("__call_external_dtors: Called but ignored (auto-discovery enabled)\n"));
 }
 
 static void closeLibraries() {
@@ -331,9 +388,57 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
     DECLARE_UTILITYBASE();
 
+	struct Library *ExpansionBase = IExec->OpenLibrary("expansion.library", 53L);
+	if (ExpansionBase == NULL) {
+		SHOWMSG("Cannot open expansopn library!");
+		return NULL;
+	}
+
+	struct ExpansionIFace *IExpansion = (struct ExpansionIFace *) (IExec->GetInterface((struct Library *) ExpansionBase, "main", 1, NULL));
+	if (!IExpansion) {
+		SHOWMSG("Cannot obtain expansion interface!");
+		IExec->CloseLibrary(ExpansionBase);
+		ExpansionBase = NULL;
+		return NULL;
+	}
+
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     uint32 pid;
     if (res) {
+        /*
+         * Check if this process already has a valid _clib4 context.
+         * This happens when a .so loaded via dlopen() calls OpenLibrary("clib4.library")
+         * a second time.  We must NOT create a new context — that would overwrite pr_UID,
+         * orphan the original _clib4 (with its initialised stdio buffers), and cause a
+         * crash the next time the main programme calls printf/puts/etc.
+         */
+        struct Process *_me = (struct Process *) IExec->FindTask(NULL);
+        if (_me->pr_Task.tc_Node.ln_Type == NT_PROCESS && _me->pr_UID != 0) {
+            struct _clib4 *existing = (struct _clib4 *) _me->pr_UID;
+            /*
+             * Only reuse an existing context if it actually belongs to THIS
+             * process.  With NP_Child TRUE, a spawned child inherits the
+             * parent's pr_UID (pointing to the parent's fully-initialised
+             * _clib4).  We must NOT take the early-return for a new child
+             * process — it needs its own context so that
+             * import_pending_fds_for_process() can run and wire up the
+             * inherited file descriptors.
+             */
+            if (existing->__fully_initialized && existing->self == _me) {
+                D(bug("(libOpen) Process already has a valid _clib4 (%p) — reusing it\n", existing));
+                existing->__lib_open_count++;
+                if (IExpansion != NULL) {
+                    IExec->DropInterface((struct Interface *) IExpansion);
+                    IExpansion = NULL;
+                }
+                if (ExpansionBase != NULL) {
+                    IExec->CloseLibrary(ExpansionBase);
+                    ExpansionBase = NULL;
+                }
+                return libBase;
+            }
+        }
+
         struct Clib4Node c2n;
         pid = IDOS->GetPID(0, GPID_PROCESS);
         uint32 ppid = IDOS->GetPID(0, GPID_PARENT);
@@ -423,8 +528,20 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
             /* Set the current task pointer */
             __clib4->self = me;
-            __clib4->uuid = c2n.uuid;
+            /* Allocate a persistent copy of the uuid.
+             * Cannot point into the hashmap because resize invalidates pointers. */
+            __clib4->uuid = (char *) IExec->AllocVecTags(UUID4_LEN + 1,
+                                                         AVT_Type, MEMF_SHARED,
+                                                         AVT_ClearWithValue, 0,
+                                                         TAG_DONE);
+            if (__clib4->uuid) {
+                strncpy(__clib4->uuid, c2n.uuid, UUID4_LEN);
+                __clib4->uuid[UUID4_LEN] = '\0';
+            }
 
+			/* Get Actual Machine Type */
+			IExpansion->GetMachineInfoTags(GMIT_Machine, &__clib4->__machine_type, TAG_DONE);
+			D(bug("Using clib4 on machine type %ld", __clib4->__machine_type));
             /* Set _clib4 pointer into process pr_UID
              * This field is copied to any spawned process created by this exe and/or its children
              */
@@ -437,7 +554,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             SHOWMSG("Check for custom memory allocator");
             if ((len = IDOS->GetVar("CLIB4_MEMORY_ALLOCATOR", envbuf, sizeof(envbuf), 0)) >= 0) {
                 if (!IUtility->Stricmp(envbuf, "1"))
-                    __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;  // WARNING - At moment this is crashing
+                    __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_SIMPLE;
                 else if (!IUtility->Stricmp(envbuf, "2"))
                     __clib4->__wof_mem_allocator_type = WMEM_ALLOCATOR_BLOCK;
                 else if (!IUtility->Stricmp(envbuf, "3"))
@@ -452,9 +569,17 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             _start_ctors(__CTOR_LIST__);
             SHOWMSG("Done. All constructors called");
 
+            /* Import any file descriptors inherited from the parent process.
+             * Must be done AFTER _start_ctors (which runs stdio_file_init and
+             * sets up __fd[0..2]) so that __clib4 is the child's own context. */
+            {
+                extern void import_pending_fds_for_process(struct _clib4 *__clib4, uint32 pid, uint32 ppid);
+                import_pending_fds_for_process(__clib4, pid, ppid);
+            }
+
             /* Copy environment variables into clib4 reent structure */
             SHOWMSG("Make environment");
-            makeEnvironment(__clib4);
+			makeEnvironment(__clib4);
             if (!__clib4->__environment) {
                 __clib4->__environment = empty_env;
                 __clib4->__environment_allocated = FALSE;
@@ -463,11 +588,13 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
                 __clib4->__environment_allocated = TRUE;
 
             SHOWMSG("Check for custom TERM");
-            /* Set default terminal mode to "amiga-clib4" if not set */
-            LONG term_len = IDOS->GetVar("TERM", (STRPTR) term_buffer, FILENAME_MAX, 0);
-            if (term_len <= 0) {
+            /* Set default terminal mode to "amiga-clib4" if not set.
+               It is safe to call setenv() since constructors are called
+            */
+            char *terminal = getenv("TERM");
+            if (terminal == NULL) {
                 IUtility->Strlcpy(term_buffer, "amiga-clib4", FILENAME_MAX);
-                IDOS->SetVar("TERM", term_buffer, -1, GVF_LOCAL_ONLY);
+                setenv("TERM", term_buffer, true);
             }
 
             /* The following code will be executed if the program is to keep
@@ -486,11 +613,28 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
             ITimer->GetSysTime((struct TimeVal *) &__clib4->clock);
 
+            /* Try to find external CTOR/DTOR lists from the executable
+             * This is needed for -nostartfiles executables with C++ code
+             */
+            SHOWMSG("Looking for external destructors");
+            find_external_ctors_dtors(__clib4);
+
             /* At this point exe is fully initialized */
             __clib4->__fully_initialized = TRUE;
+            __clib4->__lib_open_count = 1;
             SHOWMSG("Library initialized");
         }
     }
+	if (IExpansion != NULL) {
+  		IExec->DropInterface((struct Interface *) IExpansion);
+  		IExpansion = NULL;
+  	}
+
+	if (ExpansionBase != NULL) {
+		IExec->CloseLibrary(ExpansionBase);
+		ExpansionBase = NULL;
+	}
+
     return libBase;
 }
 
@@ -538,7 +682,6 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 
 BPTR libClose(struct LibraryManagerInterface *Self) {
     struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
-
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
         uint32 pid = IDOS->GetPID(0, GPID_PROCESS);
@@ -547,6 +690,44 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         void *item;
 
         struct _clib4 * __clib4 = (struct _clib4 *) me->pr_UID;
+        
+        struct Task *t = IExec->FindTask(NULL);
+        D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
+
+        /*
+         * If the per-process open count is > 1, this is a secondary close
+         * (e.g. libc.so being unloaded via dlclose while the main programme is
+         * still running).  Just decrement the count and skip the teardown.
+         */
+        if (__clib4->__lib_open_count > 1) {
+            D(bug("(libClose) Secondary close — open_count %d -> %d, skipping teardown\n",
+                  __clib4->__lib_open_count, __clib4->__lib_open_count - 1));
+            __clib4->__lib_open_count--;
+            --libBase->libNode.lib_OpenCnt;
+            return 0;
+        }
+        __clib4->__lib_open_count = 0;
+
+        /* Call external destructors only for -nostartfiles executables.
+         * For normal executables, call_main() already calls _end_ctors(__EXT_DTOR_LIST__).
+         */
+        if (!__clib4->__call_main_executed && __clib4->__external_dtors != NULL && !__clib4->__external_dtors_called) {
+            SHOWMSG("Calling external dtors (auto-discovered from -nostartfiles exe)");
+            _end_ctors(__clib4->__external_dtors);
+            __clib4->__external_dtors_called = TRUE;
+            SHOWMSG("Done. All external destructors called");
+        }
+
+        /* Always call clib4 internal destructors (__DTOR_LIST__).
+         * These include stdlib_memory_exit (frees wmem allocator),
+         * stdio_exit, __pthread_exit, etc.
+         * call_main() only handles __EXT_DTOR_LIST__ (the exe's own dtors),
+         * not the library's internal __DTOR_LIST__. */
+        SHOWMSG("Calling clib4 internal dtors");
+        _end_ctors(__DTOR_LIST__);
+        SHOWMSG("Done. All clib4 destructors called");
+
+        /* Now safe to restore task priority and deallocate resources */
         /* Restore the task priority. */
         IExec->SetTaskPri((struct Task *) me, res->oldPriority);
 
@@ -566,15 +747,40 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             SHOWMSG("Closing randfd[1]");
             close(__clib4->randfd[1]);
         }
-        
-        struct Task *t = IExec->FindTask(NULL);
-        D(("[__getclib4 :] ln_Type == %ld, pr_UID == %ld\n", t->tc_Node.ln_Type, ((struct Process *)t)->pr_UID));
 
-        SHOWMSG("Calling clib4 dtors");
-        _end_ctors(__DTOR_LIST__);
-        SHOWMSG("Done. All destructors called");
+        /* Auto-detach any SHM segments this process left attached.
+         * This prevents dangling nattach counts in the global keymap
+         * when a process crashes or forgets to call shmdt(). */
+        if (__clib4->__shm_tracking_count > 0) {
+            SHOWMSG("Auto-detaching orphaned SHM segments");
+            IPCLock(&res->shmcx.keymap);
+            for (int s = 0; s < __SHM_TRACKING_MAX; s++) {
+                if (__clib4->__shm_tracking[s].id >= 0) {
+                    struct shmid_ds *si = GetIPCById(&res->shmcx.keymap,
+                                                     __clib4->__shm_tracking[s].id);
+                    if (si) {
+                        si->shm_nattach--;
+                        if (si->shm_nattach == 0 && (si->flags & SHMFLG_DeleteMe)) {
+                            res->shmcx.totshm -= si->shm_segsz;
+                            /* Destroy inline — shm_destroy is static in sysv_shmget.c */
+                            if (si->shm_amp) {
+                                IExec->FreeVec(si->shm_amp);
+                            }
+                            IExec->FreeVec(si);
+                            res->shmcx.keymap.objv[__clib4->__shm_tracking[s].id] = 0;
+                            res->shmcx.keymap.nused--;
+                        }
+                    }
+                    __clib4->__shm_tracking[s].id = -1;
+                    __clib4->__shm_tracking[s].addr = NULL;
+                }
+            }
+            __clib4->__shm_tracking_count = 0;
+            IPCUnlock(&res->shmcx.keymap);
+        }
 
         SHOWMSG("Calling reent_exit on _clib4");
+        __clib4->__fully_initialized = FALSE;
         reent_exit(__clib4);
         SHOWMSG("Done");
 
@@ -591,6 +797,19 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
                 break;
             }
         }
+
+        /*
+         * Clear pr_UID and free the _clib4 struct so the next process
+         * (or re-run from the same shell) does not find a stale pointer.
+         * Without this, the next libOpen() would see __fully_initialized
+         * still TRUE in freed memory and skip creating a new context.
+         */
+        me->pr_UID = 0;
+        if (__clib4->uuid) {
+            IExec->FreeVec(__clib4->uuid);
+            __clib4->uuid = NULL;
+        }
+        IExec->FreeVec(__clib4);
     }
 
     --libBase->libNode.lib_OpenCnt;
@@ -877,7 +1096,7 @@ const struct Resident __attribute__((used)) RomTag = {
 int
 library_start(char *argstr,
               int arglen,
-              int (*start_main)(int, char **),
+              int (*start_main)(int, char **, char **),
               void (*__EXT_CTOR_LIST__[])(void),
               void (*__EXT_DTOR_LIST__[])(void),
               struct WBStartup *sms) {
