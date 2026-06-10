@@ -643,6 +643,13 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
+        IExec->ObtainSemaphore(&res->semaphore);
+        if (res->__wmem_allocator != NULL) {
+            wmem_destroy_allocator((wmem_allocator_t *) res->__wmem_allocator);
+            res->__wmem_allocator = NULL;
+        }
+        IExec->ReleaseSemaphore(&res->semaphore);
+
         IPCMapUninit(&res->shmcx.keymap);
         IPCMapUninit(&res->msgcx.keymap);
         IPCMapUninit(&res->semcx.keymap);
@@ -719,7 +726,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         }
 
         /* Always call clib4 internal destructors (__DTOR_LIST__).
-         * These include stdlib_memory_exit (frees wmem allocator),
+         * These include stdlib_memory_exit (frees per-process memory mutex),
          * stdio_exit, __pthread_exit, etc.
          * call_main() only handles __EXT_DTOR_LIST__ (the exe's own dtors),
          * not the library's internal __DTOR_LIST__. */

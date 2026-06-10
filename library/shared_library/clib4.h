@@ -30,6 +30,7 @@ struct Clib4Resource {
     struct SignalSemaphore  semaphore;          /* for list arbitration */
     struct hashmap         *children;           /* list of parent nodes */
     struct hashmap         *uxSocketsMap;
+    void                   *__wmem_allocator;   /* shared process-wide allocator singleton */
     struct _clib4          *fallbackClib;
     /* SysVIPC fields */
     int locked;

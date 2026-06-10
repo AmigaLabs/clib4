@@ -309,8 +309,7 @@ struct _clib4 {
 
     APTR stdio_lock;
 
-    /* Wof Allocator main pointer */
-    wmem_allocator_t *__wmem_allocator;
+    void *unused1;
     APTR __environment_pool;
 
     /* Names of files and directories to delete when shutting down. */
@@ -319,7 +318,7 @@ struct _clib4 {
 
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
-    BOOL unused1;
+    BOOL unused3;
 	void *unused2;
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;
