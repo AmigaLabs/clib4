@@ -503,8 +503,8 @@ release:
 	-$(COPY) $(OUTPUT_LIB)/baserel/* clib4/lib/baserel/
 	-$(COPY) $(LIB_ROOT)/library/include/* clib4/include/
 	@lha -ao5i clib4.lha clib4 clib4.info
-# 	-$(DELETE) clib4
-# 	-$(DELETE) clib4.info
+	-$(DELETE) clib4
+	-$(DELETE) clib4.info
 
 dpkg:
 	-$(DELETE) $(DPKG_LIB)
