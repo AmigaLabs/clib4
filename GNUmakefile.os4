@@ -8,7 +8,7 @@
 ##############################################################################
 
 .PHONY : all prepare all-targets all-libs clean \
-	gitver version compile-tests install release dpkg
+	gitver version compile-tests install release dpkg soft-float-libs
 
 # Determines the Amiga SDK version that CLIB4 is being built with and
 # will only be relevant when building CLIB4 during the building of a
@@ -60,11 +60,16 @@ endif
 # will be considered
 #LOG_COMMAND := 2>&1 | tee -a compiler.log
 LOG_COMMAND :=
+MAKEFILE_NAME := $(firstword $(MAKEFILE_LIST))
 LIB_ROOT ?= $(shell pwd)
 LIB_DIR = $(LIB_ROOT)/library
 BUILD_DIR = $(LIB_ROOT)/build
 OUTPUT_LIB = $(BUILD_DIR)/lib
 DPKG_LIB ?= clib4_1.0_amd64
+INSTALL_LIB_DEST = $(INSTALL_PREFIX)/lib
+ifneq ($(findstring soft-float,$(OUTPUT_LIB)),)
+INSTALL_LIB_DEST = $(INSTALL_PREFIX)/lib/soft-float
+endif
 
 ##############################################################################
 
@@ -154,6 +159,14 @@ ifdef SPE
 	CFLAGS_N := $(filter-out -Wno-cast-function-type, $(CFLAGS_N))
 endif
 
+ifneq ($(findstring soft-float,$(OUTPUT_LIB)),)
+ifndef SPE
+	CFLAGS := $(CFLAGS) -msoft-float -fno-inline-functions -fno-partial-inlining \
+				-fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions \
+				-fno-indirect-inlining -Wno-unused-but-set-variable -Wno-uninitialized
+endif
+endif
+
 ifdef PROFILE
 	CFLAGS += -pg -falign-functions=32  -fno-omit-frame-pointer
 	AFLAGS += -fno-omit-frame-pointer
@@ -187,6 +200,13 @@ GIT_HASH = $(shell git rev-parse --short HEAD)
 
 all: gitver prepare all-targets all-libs clib4.library.debug clib4.library
 
+ifndef SPE
+all: soft-float-libs
+
+soft-float-libs: prepare
+	$(MAKE) -f $(MAKEFILE_NAME) OUTPUT_LIB=$(BUILD_DIR)/lib/soft-float all-targets all-libs
+endif
+
 ##############################################################################
 
 # The LIBS variable is updated by each of the included library makefiles.
@@ -212,6 +232,7 @@ prepare:
 	-$(MAKEDIR) $(BUILD_DIR)/shared
 	-$(MAKEDIR) $(INSTALL_PREFIX)/lib
 	-$(MAKEDIR) $(INSTALL_PREFIX)/lib/baserel
+	-$(MAKEDIR) $(INSTALL_PREFIX)/lib/soft-float
 	-$(MAKEDIR) $(INSTALL_PREFIX)/include
 # It may be the case that this makefile is invoked with an explicit CC
 # assingment such as: "gcc -B /someDir/". In fact, this pattern is used within
@@ -444,9 +465,10 @@ compile-tests:
 
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*
-	$(DELETE) $(INSTALL_PREFIX)/lib/*
+	$(DELETE) $(INSTALL_LIB_DEST)/*
 	$(DELETE) $(INSTALL_PREFIX)/clib4.library*
-	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
+	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_LIB_DEST)/
+ifeq ($(findstring soft-float,$(OUTPUT_LIB)),)
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/libamiga.a $(INSTALL_PREFIX)/lib/baserel/libamiga.a
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/libauto.a $(INSTALL_PREFIX)/lib/baserel/libauto.a
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/libc.a $(INSTALL_PREFIX)/lib/baserel/libc.a
@@ -459,6 +481,7 @@ install:
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/crtend.o $(INSTALL_PREFIX)/lib/baserel/crtend.o
 	$(COPY) libs/libauto.a $(INSTALL_PREFIX)/lib/
 	$(COPY) $(BUILD_DIR)/clib4.library* $(INSTALL_PREFIX)
+endif
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
 release:
@@ -480,8 +503,8 @@ release:
 	-$(COPY) $(OUTPUT_LIB)/baserel/* clib4/lib/baserel/
 	-$(COPY) $(LIB_ROOT)/library/include/* clib4/include/
 	@lha -ao5i clib4.lha clib4 clib4.info
-	-$(DELETE) clib4
-	-$(DELETE) clib4.info
+# 	-$(DELETE) clib4
+# 	-$(DELETE) clib4.info
 
 dpkg:
 	-$(DELETE) $(DPKG_LIB)
