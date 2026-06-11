@@ -348,6 +348,208 @@ static void test_producer_consumer(void) {
     PASS(name);
 }
 
+/* ----------------------------------------------------------------- test 13 */
+/* Inherited write-end: child inherits write-end of pipe but never writes.
+ * Parent should still see EOF after child exits (CLOSE_FDS scenario). */
+static void test_inherited_writeend_eof(void) {
+    const char *name = "EOF with inherited write-end in child (CLOSE_FDS scenario)";
+    int fd[2];
+    if (pipe(fd) != 0) { FAIL(name, "pipe() failed: %s", strerror(errno)); return; }
+
+    pid_t pid = fork();
+    if (pid < 0) { FAIL(name, "fork failed: %s", strerror(errno)); close(fd[0]); close(fd[1]); return; }
+
+    if (pid == 0) {
+        /* child: inherit write-end (fd[1]) but do NOT use it and do NOT close it */
+        close(fd[0]);
+        /* just sleep briefly then exit without closing fd[1] */
+        usleep(50000);
+        _exit(0);
+    }
+
+    /* parent: close write-end, wait for child, then expect EOF */
+    close(fd[1]);
+    int status;
+    waitpid(pid, &status, 0);
+
+    /* After child exits (even without closing inherited fd[1]),
+     * read should return EOF because the child's fd table is released on exit */
+    char buf[8];
+    ssize_t r = read(fd[0], buf, sizeof(buf));
+    close(fd[0]);
+
+    if (r != 0)
+        FAIL(name, "expected EOF (0), got %ld errno=%d (%s)", (long)r, errno, strerror(errno));
+    else
+        PASS(name);
+}
+
+/* ----------------------------------------------------------------- test 14 */
+/* poll() on blocking pipe: POLLIN arrives when data is written */
+static void test_poll_blocking(void) {
+    const char *name = "poll() detects POLLIN on pipe";
+    int fd[2];
+    if (pipe(fd) != 0) { FAIL(name, "pipe() failed: %s", strerror(errno)); return; }
+
+    /* no data yet — poll with 0 timeout should return 0 */
+    struct pollfd pfd = { .fd = fd[0], .events = POLLIN };
+    int r = poll(&pfd, 1, 0);
+    if (r != 0) { FAIL(name, "expected poll=0 on empty pipe, got %d", r); goto done; }
+
+    write(fd[1], "X", 1);
+
+    /* data available — poll should return immediately */
+    r = poll(&pfd, 1, 1000);
+    if (r != 1 || !(pfd.revents & POLLIN))
+        FAIL(name, "expected POLLIN after write, poll=%d revents=0x%x", r, pfd.revents);
+    else
+        PASS(name);
+done:
+    close(fd[0]); close(fd[1]);
+}
+
+/* ----------------------------------------------------------------- test 15 */
+/* poll() with timeout: returns 0 when no data within timeout */
+static void test_poll_timeout(void) {
+    const char *name = "poll() timeout on empty pipe";
+    int fd[2];
+    if (pipe(fd) != 0) { FAIL(name, "pipe() failed: %s", strerror(errno)); return; }
+
+    struct pollfd pfd = { .fd = fd[0], .events = POLLIN };
+    long t0 = ms_now();
+    int r = poll(&pfd, 1, 100);   /* 100 ms timeout */
+    long elapsed = ms_now() - t0;
+
+    close(fd[0]); close(fd[1]);
+
+    if (r != 0)
+        FAIL(name, "expected 0 (timeout), got %d revents=0x%x", r, pfd.revents);
+    else if (elapsed < 80)
+        FAIL(name, "poll returned too fast (%ld ms, expected ~100 ms)", elapsed);
+    else
+        PASS(name);
+}
+
+/* ----------------------------------------------------------------- test 16 */
+/* poll() detects EOF (POLLHUP) when write-end closed */
+static void test_poll_hup(void) {
+    const char *name = "poll() detects POLLHUP when write-end closed";
+    int fd[2];
+    if (pipe(fd) != 0) { FAIL(name, "pipe() failed: %s", strerror(errno)); return; }
+
+    close(fd[1]);
+
+    struct pollfd pfd = { .fd = fd[0], .events = POLLIN };
+    int r = poll(&pfd, 1, 1000);
+
+    close(fd[0]);
+
+    if (r != 1 || !(pfd.revents & (POLLHUP | POLLIN)))
+        FAIL(name, "expected POLLHUP/POLLIN after write-end closed, poll=%d revents=0x%x", r, pfd.revents);
+    else
+        PASS(name);
+}
+
+/* ----------------------------------------------------------------- test 17 */
+/* Partial read: request more bytes than available, get only what's there */
+static void test_partial_read(void) {
+    const char *name = "partial read (request more than available)";
+    int fd[2];
+    if (pipe(fd) != 0) { FAIL(name, "pipe() failed: %s", strerror(errno)); return; }
+
+    write(fd[1], "HI", 2);
+
+    char buf[64];
+    ssize_t r = read(fd[0], buf, sizeof(buf));  /* ask for 64, only 2 available */
+
+    close(fd[0]); close(fd[1]);
+
+    if (r != 2)
+        FAIL(name, "expected 2 bytes, got %ld", (long)r);
+    else if (memcmp(buf, "HI", 2) != 0)
+        FAIL(name, "data mismatch");
+    else
+        PASS(name);
+}
+
+/* ----------------------------------------------------------------- test 18 */
+/* spawnvpe fd safety: after spawning a child with non-default fhin/fhout,
+ * the PARENT's fd 0 and fd 1 must remain unchanged.
+ * This is the critical test for git push correctness. */
+#include <spawn.h>
+extern char **environ;
+
+static void test_spawnvpe_parent_fds_unchanged(void) {
+    const char *name = "spawnvpe: parent fd 0/1 unchanged after spawn with fhin/fhout != 0/1";
+
+    /* Create a pipe: child writes to it as its stdout */
+    int pipe_out[2];   /* child stdout */
+    int pipe_in[2];    /* child stdin  */
+    if (pipe(pipe_out) != 0 || pipe(pipe_in) != 0) {
+        FAIL(name, "pipe() failed: %s", strerror(errno));
+        return;
+    }
+
+    /* Save parent's current fd 0 and fd 1 by dup-ing them */
+    int saved_stdin  = dup(0);
+    int saved_stdout = dup(1);
+    if (saved_stdin < 0 || saved_stdout < 0) {
+        FAIL(name, "dup() failed: %s", strerror(errno));
+        goto done;
+    }
+
+    /* Spawn a child: use pipe_in[0] as stdin, pipe_out[1] as stdout */
+    const char *argv[] = { "/bin/echo", "SPAWNTEST", NULL };
+    int pid = spawnvpe("/bin/echo", argv, environ, NULL,
+                       pipe_in[0], pipe_out[1], 2);
+
+    if (pid < 0) {
+        FAIL(name, "spawnvpe() failed: %s", strerror(errno));
+        goto done;
+    }
+
+    /* Check parent's fd 0 and fd 1 are STILL the same as before */
+    int cur_stdin  = dup(0);
+    int cur_stdout = dup(1);
+
+    /* Compare by checking that the fds point to the same underlying file */
+    struct stat st_saved_in,  st_cur_in;
+    struct stat st_saved_out, st_cur_out;
+    fstat(saved_stdin,  &st_saved_in);
+    fstat(cur_stdin,    &st_cur_in);
+    fstat(saved_stdout, &st_saved_out);
+    fstat(cur_stdout,   &st_cur_out);
+
+    close(cur_stdin); close(cur_stdout);
+
+    int stdin_ok  = (st_saved_in.st_ino  == st_cur_in.st_ino  &&
+                     st_saved_in.st_dev  == st_cur_in.st_dev);
+    int stdout_ok = (st_saved_out.st_ino == st_cur_out.st_ino &&
+                     st_saved_out.st_dev == st_cur_out.st_dev);
+
+    /* Wait for child */
+    int status;
+    waitpid(pid, &status, 0);
+
+    close(pipe_in[0]); close(pipe_in[1]);
+    close(pipe_out[0]); close(pipe_out[1]);
+
+    if (!stdin_ok)
+        FAIL(name, "parent fd 0 (stdin) was CHANGED by spawnvpe — clib4 bug!");
+    else if (!stdout_ok)
+        FAIL(name, "parent fd 1 (stdout) was CHANGED by spawnvpe — clib4 bug!");
+    else
+        PASS(name);
+    goto done2;
+
+done:
+    close(pipe_in[0]); close(pipe_in[1]);
+    close(pipe_out[0]); close(pipe_out[1]);
+done2:
+    if (saved_stdin  >= 0) close(saved_stdin);
+    if (saved_stdout >= 0) close(saved_stdout);
+}
+
 /* ------------------------------------------------------------------ main */
 int main(void) {
     printf("=== POSIX Pipe tests ===\n\n");
@@ -364,6 +566,12 @@ int main(void) {
     test_pipe2_cloexec();
     test_nonblock_partial_drain();
     test_producer_consumer();
+    test_inherited_writeend_eof();
+    test_poll_blocking();
+    test_poll_timeout();
+    test_poll_hup();
+    test_partial_read();
+    test_spawnvpe_parent_fds_unchanged();
 
     printf("\n=== Results: %d passed, %d failed ===\n", passed, failed);
     return (failed > 0) ? 1 : 0;
