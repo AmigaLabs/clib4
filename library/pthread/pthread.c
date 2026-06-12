@@ -252,6 +252,16 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     task = FindTask(NULL);
     inf = GetCurrentThreadInfo();
 
+    /* Include the thread's dedicated cancel signal in the wait mask.
+     * pthread_cancel() signals that mask to wake the target, but without
+     * it here a thread parked in a condition wait (or in sem_wait, which
+     * is built on top of this function) never wakes and the cancellation
+     * is never acted upon.  The SIGBREAKF_CTRL_C checks below only cover
+     * the fallback case where the dedicated signal could not be
+     * allocated at thread creation time. */
+    if (inf != NULL && inf->cancel_signal_mask != 0)
+        sigs |= inf->cancel_signal_mask;
+
     if (abstime) {
         // Compute relative time BEFORE sending the timer request.
         // This way, if the deadline has already passed we can return
@@ -363,16 +373,18 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         // did we timeout?
         if (sigs & (1 << inf->timerPort.mp_SigBit))
             return ETIMEDOUT;
-        else if (sigs & SIGBREAKF_CTRL_C) {
+        else if (sigs & (SIGBREAKF_CTRL_C | (inf != NULL ? inf->cancel_signal_mask : 0))) {
             pthread_testcancel();
             // Re-Enable CTRL-C in case a signal handler is installed
-            Signal(task, SIGBREAKF_CTRL_C);
+            if (sigs & SIGBREAKF_CTRL_C)
+                Signal(task, SIGBREAKF_CTRL_C);
         }
     } else {
-        if (sigs & SIGBREAKF_CTRL_C) {
+        if (sigs & (SIGBREAKF_CTRL_C | (inf != NULL ? inf->cancel_signal_mask : 0))) {
             pthread_testcancel();
             // Re-Enable CTRL-C in case a signal handler is installed
-            Signal(task, SIGBREAKF_CTRL_C);
+            if (sigs & SIGBREAKF_CTRL_C)
+                Signal(task, SIGBREAKF_CTRL_C);
         }
     }
 
