@@ -488,6 +488,20 @@ void __pthread_exit_func(void) {
     struct DOSIFace *IDOS = _IDOS;
     SHOWMSG("[__pthread_exit_func :] Pthread __pthread_exit_func called.\n");
 
+    /* A thread that never exits by itself (a daemon-style worker parked
+     * in pthread_cond_wait / sem_wait) would wedge the join/wait loop
+     * below forever, making the process unkillable.  On POSIX systems
+     * exit() simply terminates the remaining threads.  Approximate that:
+     * request cancellation of every live thread first, so parked threads
+     * wake, run their cancellation cleanup handlers and leave through
+     * the normal pthread exit path -- which keeps dos.library's
+     * parent/child process accounting intact (no force-removal). */
+    for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
+        inf = &threads[i];
+        if (inf->status != THREAD_STATE_IDLE && inf->task != NULL)
+            pthread_cancel(i);
+    }
+
     // if we don't do this we can easily end up with unloaded code being executed
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
         inf = &threads[i];
