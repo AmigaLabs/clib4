@@ -25,7 +25,7 @@ jobs:
         run: |
           echo "version=nightly" >> "$GITHUB_OUTPUT"
       - name: Update Tag
-        uses: richardsimko/update-tag@v1
+        uses: richardsimko/update-tag@v2
         with:
           tag_name: "nightly"
         env:
