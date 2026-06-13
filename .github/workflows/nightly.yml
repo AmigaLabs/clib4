@@ -18,7 +18,7 @@ jobs:
       version: "nightly"
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with: { fetch-depth: 0 }
       - name: Set Tag
         id: tag
@@ -54,7 +54,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with: { fetch-depth: 0 }
 
       - name: Compile clib4
@@ -89,7 +89,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with: { fetch-depth: 0 }
 
       - name: Compile clib4

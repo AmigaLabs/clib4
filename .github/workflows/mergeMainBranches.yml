@@ -18,7 +18,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Pull code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Compile clib4
         uses: ./.github/actions/compile
@@ -38,7 +38,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Pull code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Compile clib4
         uses: ./.github/actions/compile
