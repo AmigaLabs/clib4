@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: PR notification
-      uses: hunghg255/action-notifications@master
+      uses: walkero-gr/action-notifications@master
       with:
         discord_webhook: https://discord.com/api/webhooks/${{ secrets.DISCORD_ANNOUNCEMENTS_ID }}/${{ secrets.DISCORD_ANNOUNCEMENTS_TOKEN }}
         title: "Deploy to ${{ github.event.pull_request.base.ref }}"
