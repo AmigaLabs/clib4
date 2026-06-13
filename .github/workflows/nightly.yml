@@ -32,7 +32,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@v3.0.0
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: "nightly"
           name: "clib4 nightly-builds"
@@ -70,7 +70,7 @@ jobs:
           mv clib4.lha clib4-nightly.lha
 
       - name: Upload Files
-        uses: softprops/action-gh-release@v3.0.0
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: "nightly"
           draft: false
@@ -105,7 +105,7 @@ jobs:
           mv clib4.lha clib4-nightly_SPE.lha
 
       - name: Upload Files
-        uses: softprops/action-gh-release@v3.0.0
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: "nightly"
           draft: false
