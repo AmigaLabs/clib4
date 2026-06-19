@@ -103,6 +103,16 @@ fcntl(int file_descriptor, int cmd, ... /* int arg */) {
 
             result = OK;
 
+            /* Access mode: mutually exclusive O_RDONLY/O_WRONLY/O_RDWR */
+            if (FLAG_IS_SET(fd->fd_Flags, FDF_READ) && FLAG_IS_SET(fd->fd_Flags, FDF_WRITE))
+                SET_FLAG(result, O_RDWR);
+            else if (FLAG_IS_SET(fd->fd_Flags, FDF_WRITE))
+                SET_FLAG(result, O_WRONLY);
+            /* else: O_RDONLY == 0, already the default */
+
+            if (FLAG_IS_SET(fd->fd_Flags, FDF_APPEND))
+                SET_FLAG(result, O_APPEND);
+
             if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING))
                 SET_FLAG(result, O_NONBLOCK);
 

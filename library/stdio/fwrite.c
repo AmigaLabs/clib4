@@ -63,6 +63,14 @@ fwrite(const void *ptr, size_t element_size, size_t count, FILE *stream) {
         goto out;
     }
 
+    /* Check writability before any fast path — stream may be read-only. */
+    if (__builtin_expect(cantwrite(__clib4, fp), 0)) {
+        SHOWMSG("this file is not write-enabled");
+        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+        __set_errno_r(__clib4, EBADF);
+        goto out;
+    }
+
     /*
      * Ultra-fast path: fully-buffered stream with buffer ready + data fits.
      * Combines the __swsetup skip, buffer_mode check, and write into a
