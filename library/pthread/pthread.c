@@ -252,6 +252,16 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     task = FindTask(NULL);
     inf = GetCurrentThreadInfo();
 
+    /* Include the thread's dedicated cancel signal in the wait mask.
+     * pthread_cancel() signals that mask to wake the target, but without
+     * it here a thread parked in a condition wait (or in sem_wait, which
+     * is built on top of this function) never wakes and the cancellation
+     * is never acted upon.  The SIGBREAKF_CTRL_C checks below only cover
+     * the fallback case where the dedicated signal could not be
+     * allocated at thread creation time. */
+    if (inf != NULL && inf->cancel_signal_mask != 0)
+        sigs |= inf->cancel_signal_mask;
+
     if (abstime) {
         // Compute relative time BEFORE sending the timer request.
         // This way, if the deadline has already passed we can return
@@ -363,16 +373,18 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         // did we timeout?
         if (sigs & (1 << inf->timerPort.mp_SigBit))
             return ETIMEDOUT;
-        else if (sigs & SIGBREAKF_CTRL_C) {
+        else if (sigs & (SIGBREAKF_CTRL_C | (inf != NULL ? inf->cancel_signal_mask : 0))) {
             pthread_testcancel();
             // Re-Enable CTRL-C in case a signal handler is installed
-            Signal(task, SIGBREAKF_CTRL_C);
+            if (sigs & SIGBREAKF_CTRL_C)
+                Signal(task, SIGBREAKF_CTRL_C);
         }
     } else {
-        if (sigs & SIGBREAKF_CTRL_C) {
+        if (sigs & (SIGBREAKF_CTRL_C | (inf != NULL ? inf->cancel_signal_mask : 0))) {
             pthread_testcancel();
             // Re-Enable CTRL-C in case a signal handler is installed
-            Signal(task, SIGBREAKF_CTRL_C);
+            if (sigs & SIGBREAKF_CTRL_C)
+                Signal(task, SIGBREAKF_CTRL_C);
         }
     }
 
@@ -475,6 +487,20 @@ void __pthread_exit_func(void) {
     ThreadInfo *inf;
     struct DOSIFace *IDOS = _IDOS;
     SHOWMSG("[__pthread_exit_func :] Pthread __pthread_exit_func called.\n");
+
+    /* A thread that never exits by itself (a daemon-style worker parked
+     * in pthread_cond_wait / sem_wait) would wedge the join/wait loop
+     * below forever, making the process unkillable.  On POSIX systems
+     * exit() simply terminates the remaining threads.  Approximate that:
+     * request cancellation of every live thread first, so parked threads
+     * wake, run their cancellation cleanup handlers and leave through
+     * the normal pthread exit path -- which keeps dos.library's
+     * parent/child process accounting intact (no force-removal). */
+    for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
+        inf = &threads[i];
+        if (inf->status != THREAD_STATE_IDLE && inf->task != NULL)
+            pthread_cancel(i);
+    }
 
     // if we don't do this we can easily end up with unloaded code being executed
     for (i = PTHREAD_FIRST_THREAD_ID; i < PTHREAD_THREADS_MAX; i++) {
