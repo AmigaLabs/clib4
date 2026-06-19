@@ -348,7 +348,6 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     _pthread_clear_threadinfo(inf);
     inf->status = THREAD_STATE_RUNNING; // Prevents another GetThreadId(NULL) from returning this slot
     inf->thread_id = threadnew;  /* Save our pthread_t ID */
-    MutexRelease(thread_sem);
 
     D(("pthread_create: slot %d reserved (task %p)\n", threadnew, inf->task));
     inf->start = start;
@@ -371,7 +370,9 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     msgPort = AllocSysObject(ASOT_PORT, NULL);
     if (msgPort == 0) {
         SHOWMSG("Cannot allocate message port\n");
-        goto out;
+        _pthread_clear_threadinfo(inf); // Release the reserved slot back to IDLE
+        MutexRelease(thread_sem);
+        return EAGAIN;
     }
 
 	newThreadMessage = AllocSysObjectTags(ASOT_MESSAGE,
@@ -380,8 +381,14 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
 		TAG_DONE);
 	if (newThreadMessage == NULL) {
 		SHOWMSG("Cannot allocate message\n");
-		goto out;
-	}
+        
+        FreeSysObject(ASOT_PORT, msgPort);
+        msgPort = NULL;
+        
+        _pthread_clear_threadinfo(inf); // Release the reserved slot back to IDLE
+        MutexRelease(thread_sem);
+        return EAGAIN;
+    }
 
 
     /* Check minimum stack size */
@@ -434,6 +441,10 @@ out:
 			FreeSignal(inf->cancel_signal);
 			inf->cancel_signal = -1;
 		}
+        if (inf->join_signal != -1) {
+            FreeSignal(inf->join_signal);
+            inf->join_signal = -1;
+        }
     	if (newThreadMessage != NULL) {
     		FreeSysObject(ASOT_MESSAGE, newThreadMessage);
     		newThreadMessage = NULL;
@@ -443,6 +454,7 @@ out:
     		msgPort = NULL;
     	}
         _pthread_clear_threadinfo(inf); // Release the reserved slot back to IDLE
+        MutexRelease(thread_sem);
         return EAGAIN;
     }
 
@@ -455,6 +467,8 @@ out:
 	FreeSysObject(ASOT_PORT, msgPort);
 	newThreadMessage = NULL;
 	msgPort = NULL;
+
+    MutexRelease(thread_sem);
 
     return OK;
 }
