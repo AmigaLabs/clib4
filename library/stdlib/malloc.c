@@ -18,9 +18,8 @@
 
 wmem_allocator_t *
 __get_wmem_allocator(struct _clib4 *__clib4) {
-    (void) __clib4;
-
-    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    /* Use cached resource pointer - initialized in stdlib_memory_init */
+    struct Clib4Resource *res = __clib4->__clib4_resource;
     if (res == NULL)
         return NULL;
 
@@ -71,7 +70,8 @@ out:
 }
 
 void __memory_lock(struct _clib4 *__clib4) {
-    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    /* Use cached resource pointer - initialized in stdlib_memory_init */
+    struct Clib4Resource *res = __clib4->__clib4_resource;
 
     if(__clib4->memory_mutex)
         MutexObtain(__clib4->memory_mutex);
@@ -81,7 +81,8 @@ void __memory_lock(struct _clib4 *__clib4) {
 }
 
 void __memory_unlock(struct _clib4 *__clib4) {
-    struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
+    /* Use cached resource pointer - initialized in stdlib_memory_init */
+    struct Clib4Resource *res = __clib4->__clib4_resource;
 
     if (res != NULL)
         ReleaseSemaphore(&res->semaphore);
@@ -98,6 +99,9 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
         __delete_mutex(__clib4->memory_mutex);
         __clib4->memory_mutex = NULL;
     }
+
+    /* Clear cached resource pointer */
+    __clib4->__clib4_resource = NULL;
 
     LEAVE();
 }
@@ -120,6 +124,9 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
         __clib4->memory_mutex = NULL;
         goto out;
     }
+
+    /* Cache the global resource pointer to avoid repeated OpenResource() calls */
+    __clib4->__clib4_resource = res;
 
     ObtainSemaphore(&res->semaphore);
     if (res->__wmem_allocator == NULL) {
