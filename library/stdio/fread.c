@@ -74,10 +74,18 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
         goto out;
     }
 
+    /* Check readability before any fast path — stream may be write-only. */
+    if (__builtin_expect(cantread(__clib4, fp), 0)) {
+        SHOWMSG("this file is not read-enabled");
+        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
+        __set_errno(EBADF);
+        goto out;
+    }
+
     /*
      * Fast path 1: data already in buffer, no ungetc pending.
      * Covers the very common case of repeated small reads from
-     * a pre-filled buffer. No signal check, no cantread, no smakebuf.
+     * a pre-filled buffer. No signal check, no smakebuf.
      */
     if (__builtin_expect(fp->iob_Buffer != NULL && !HASUB(fp), 1)) {
         r = fp->iob_BufferReadBytes - fp->iob_BufferPosition;
@@ -121,14 +129,6 @@ __fread_internal(void *ptr, size_t element_size, size_t count, FILE *stream) {
      * Check CTRL-C here, not on every fast-path read.
      */
     __check_abort_f(__clib4);
-
-    /* Slow path: need to check readability */
-    if (__builtin_expect(cantread(__clib4, fp), 0)) {
-        SHOWMSG("this file is not read-enabled");
-        SET_FLAG(fp->iob_Flags, IOBF_ERROR);
-        __set_errno(EBADF);
-        goto out;
-    }
 
     /* Ensure buffer is allocated (lazy init). */
     if (__builtin_expect(fp->iob_Buffer == NULL, 0))

@@ -9,7 +9,8 @@
 #include "../shared_library/math.h"
 
 #undef DebugPrintF
-#define dprintf(format, args...) ((struct ExecIFace *)((*(struct ExecBase **)4)->MainInterface))->DebugPrintF("[%s] " format, __PRETTY_FUNCTION__, ##args)
+extern volatile uintptr_t exec_addr;
+#define dprintf(format, args...) ((struct ExecIFace *)((*(struct ExecBase **)(exec_addr))->MainInterface))->DebugPrintF("[%s] " format, __PRETTY_FUNCTION__, ##args)
 
 void moncontrol(int);
 void monstartup(uint32, uint32);

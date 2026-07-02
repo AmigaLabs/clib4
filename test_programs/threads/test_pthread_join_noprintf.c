@@ -129,6 +129,7 @@ int main(void) {
         for (int i = 0; i < NUM_PARENTS; i++) {
             pargs[i].parent_id = i;
             pargs[i].error_count = 0;
+            printf("MAIN: creating parent %d...\n", i);
             int rc = pthread_create(&pthr[i], NULL, parent_func, &pargs[i]);
             if (rc != 0) {
                 printf("MAIN: ERROR: pthread_create parent %d failed: %s\n",
@@ -137,6 +138,7 @@ int main(void) {
                 pargs[i].parent_id = -1;
                 failures++;
             }
+            printf("MAIN: parent %d created (thread=%p)\n", i, (void *)pthr[i]);
         }
 
         for (int i = 0; i < NUM_PARENTS; i++) {

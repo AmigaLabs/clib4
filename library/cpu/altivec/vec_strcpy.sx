@@ -145,7 +145,10 @@ vec_strcpy:
 	mr	DMS,SMD		// IU1 |dst - src| = src - dst
 Pos_value:
 	subf.	QBC,DST,ADD	// IU1 Bytes to even QW start of vect (min 32)
-	addi	ADD,DD,PAGE_SIZE	// IU1 dst addr in next 4K page
+	addi	ADD,SRC,PAGE_SIZE	// IU1 SRC addr in next 4K page (loads fault on
+					//     the SOURCE, so guard the source's page,
+					//     not the dest's -- else an unmapped page
+					//     just past src faults while dst is mid-page)
 	cmpi	cr7,0,DMS,MIN_VEC	// IU1 Check for min byte count separation
 
 	mtctr	QBC		// IU2 Init counter
@@ -171,7 +174,12 @@ v_strcpy:
 #ifdef VRSAVE
 	mfspr	RSV,VRSV	// IU2 Get current VRSAVE contents
 #endif
-	subf.	PBC,DD,ADD	// IU1 Now bytes to next 4K page
+	rlwinm	Rt,DS,0,0,27	// IU1 Align src down to QW first: lvx loads are
+				//     16-aligned (use DS&~15), so an unaligned
+				//     (rg-DS)/16 rounds to 0 and New_page_0 then
+				//     loads a whole page past the src page end
+	subf.	PBC,Rt,ADD	// IU1 QW-exact bytes from aligned src to its 4K
+				//     page boundary (loads fault on SRC, not dest)
 
 #ifdef VRSAVE
 	oris	Rt,RSV,0xff00	// IU1 Or in registers used by this routine

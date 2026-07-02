@@ -309,8 +309,7 @@ struct _clib4 {
 
     APTR stdio_lock;
 
-    /* Wof Allocator main pointer */
-    wmem_allocator_t *__wmem_allocator;
+    void *unused1;
     APTR __environment_pool;
 
     /* Names of files and directories to delete when shutting down. */
@@ -319,7 +318,7 @@ struct _clib4 {
 
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
-    BOOL unused1;
+    BOOL unused3;
 	void *unused2;
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;
@@ -604,6 +603,14 @@ struct _clib4 {
      */
     struct iob   *__sf[3];              /* per-process stdin/stdout/stderr iob pointers */
     struct _glue *__sglue;              /* per-process root glue node for FILE slots */
+
+    /*
+     * Cached pointer to the global Clib4Resource.
+     * Initialized once in stdlib_memory_init to avoid repeated OpenResource() calls
+     * in malloc/free hot path. The resource itself is shared across all processes,
+     * but each process caches its own pointer for fast access.
+     */
+    struct Clib4Resource *__clib4_resource;
 };
 
 #ifndef __getClib4

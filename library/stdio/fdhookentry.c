@@ -82,77 +82,57 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                     goto out;
                 }
 
+                /*
+                 * PIPE: dedicated read path for POSIX-like blocking/non-blocking
+                 * behavior.  On AmigaOS PIPE: device:
+                 *   Read() > 0  — data received
+                 *   Read() == 0 — true EOF (all write-ends have been closed)
+                 *   Read() < 0  — no data available yet (transient)
+                 */
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_NON_BLOCKING)) {
+                        /* Non-blocking: one shot. */
+                        result = (int64_t) Read(file, (APTR)fam->fam_Data, (LONG)fam->fam_Size);
+                        D(("PIPE non-blocking read: result=%ld", (long)result));
+                        if (result < 0) {
+                            /*
+                             * -1 means no data available.  Distinguish:
+                             *   write-end still open → EAGAIN
+                             *   write-end already closed → true EOF (0)
+                             */
+                            int other_fd_num = (int)(uintptr_t)fd->fd_UserData;
+                            struct fd *other_fd = NULL;
+                            if (other_fd_num > 0)
+                                other_fd = __get_file_descriptor(__clib4, other_fd_num);
+                            if (other_fd != NULL) {
+                                fam->fam_Error = EAGAIN;
+                                result = EOF;
+                            } else {
+                                /* Write-end gone: report EOF */
+                                result = 0;
+                            }
+                        }
+                        /* result == 0: true EOF (write-end closed) — leave as-is */
+                    } else {
+                        /* Blocking: loop with 50 ms WaitForChar until data or EOF */
+                        while (1) {
+                            result = (int64_t) Read(file, (APTR)fam->fam_Data, (LONG)fam->fam_Size);
+                            D(("PIPE blocking read: result=%ld", (long)result));
+                            if (result >= 0) break;   /* data (>0) or EOF (==0) */
+                            /* result < 0: no data yet — wait 50 ms then retry */
+                            WaitForChar(file, 50000);
+                        }
+                    }
+                    goto out;
+                }
+
                 result = (int64_t) Read(file, (APTR)fam->fam_Data, (LONG)fam->fam_Size);
 
                 if (result == EOF) {
                     LONG ioerr = IoErr();
-				D(("fdhook READ fail: file=%ld size=%ld flags=0x%lx ioerr=%ld\n",
-					                 (long)file, (long)fam->fam_Size, (unsigned long)fd->fd_Flags, (long)ioerr));
-
-                    /*
-                     * PIPE: The PIPE: device may report failures (sometimes mapping to
-                     * generic EIO) when no data is currently available. For POSIX-like
-                     * behavior, treat this as would-block as long as the other side of
-                     * the pipe still exists.
-                     */
-                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
-                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
-                        struct fd *other_fd = NULL;
-                        if (other_side_fd > 0)
-                            other_fd = __get_file_descriptor(__clib4, other_side_fd);
-
-                        if (other_fd != NULL) {
-                            fam->fam_Error = EAGAIN;
-                            goto out;
-                        }
-                        /* Other side gone -> EOF */
-                        fam->fam_Error = 0;
-                        result = 0;
-                        goto out;
-                    }
-
-                    /*
-                     * PIPE: device can report transient failures (often with ioerr==0)
-                     * when there is no data available yet. Do not map that to EIO.
-                     */
-                    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE) && (ioerr == 0 || ioerr == ERROR_WOULD_BLOCK)) {
-                        SHOWMSG("PIPE read would-block/unknown, checking other side");
-                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
-                        struct fd *other_fd = NULL;
-                        if (other_side_fd > 0)
-                            other_fd = __get_file_descriptor(__clib4, other_side_fd);
-                        if (other_fd != NULL) {
-                            fam->fam_Error = EAGAIN;
-                        } else {
-                            fam->fam_Error = 0;
-                            result = 0;
-                        }
-                        goto out;
-                    }
-
-                    /*
-                     * Normal files, and pipes that report a concrete ioerr: translate.
-                     * (Fix: do not use logical operators inside FLAG macros.)
-                     */
-                    if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE) || (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING))) {
-                        fam->fam_Error = __translate_io_error_to_errno(ioerr);
-					}
-                    else {
-                        SHOWMSG("Checking other side of the pipe (non-blocking)");
-                        int other_side_fd = (int)(uintptr_t)fd->fd_UserData;
-                        SHOWVALUE(other_side_fd);
-                        if (other_side_fd > 0) {
-                            SHOWMSG("Getting other side FD");
-                            struct fd *other_fd = __get_file_descriptor(__clib4, other_side_fd);
-                            SHOWPOINTER(other_fd);
-                            if (other_fd != NULL)
-                                fam->fam_Error = EAGAIN;
-                            else {
-                                fam->fam_Error = 0;
-                                result = 0;
-                            }
-                        }
-                    }
+                    D(("fdhook READ fail: file=%ld size=%ld flags=0x%lx ioerr=%ld\n",
+                       (long)file, (long)fam->fam_Size, (unsigned long)fd->fd_Flags, (long)ioerr));
+                    fam->fam_Error = __translate_io_error_to_errno(ioerr);
                     goto out;
                 }
 

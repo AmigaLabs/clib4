@@ -93,10 +93,13 @@ fdopen(int file_descriptor, const char *type) {
 
     /* Set up FILE flags. */
     file_flags |= IOBF_IN_USE | IOBF_NO_NUL;
-    if (FLAG_IS_SET(open_mode, O_RDONLY) || FLAG_IS_SET(open_mode, O_RDWR))
-        SET_FLAG(file_flags, IOBF_READ);
-    if (FLAG_IS_SET(open_mode, O_WRONLY) || FLAG_IS_SET(open_mode, O_RDWR))
-        SET_FLAG(file_flags, IOBF_WRITE);
+    {
+        int acc = open_mode & O_ACCMODE;
+        if (acc == O_RDONLY || acc == O_RDWR)
+            SET_FLAG(file_flags, IOBF_READ);
+        if (acc == O_WRONLY || acc == O_RDWR)
+            SET_FLAG(file_flags, IOBF_WRITE);
+    }
     if (FLAG_IS_SET(open_mode, O_APPEND))
         SET_FLAG(file_flags, IOBF_APP);
 

@@ -44,6 +44,7 @@ typedef struct {
 
 extern void __memory_lock(struct _clib4 *__clib4);
 extern void __memory_unlock(struct _clib4 *__clib4);
+extern wmem_allocator_t *__get_wmem_allocator(struct _clib4 *__clib4);
 
 extern void __free_r(struct _clib4 *__clib4, void *ptr);
 
