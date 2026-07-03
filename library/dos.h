@@ -611,6 +611,16 @@ struct _clib4 {
      * but each process caches its own pointer for fast access.
      */
     struct Clib4Resource *__clib4_resource;
+
+    /*
+     * Permanent "anchor" handle for the libc DSO (PROGDIR:SObjs/libc.so /
+     * PROGDIR:libc.so).  Opened once in call_main() and closed after all
+     * process destructors have run.  This prevents user code (e.g. ctypes
+     * calling dlclose) from driving the ELF loader's reference count to zero
+     * and unloading libc.so before the process DTOR list (which contains
+     * function pointers into libc.so) has been walked.
+     */
+    void  *__dl_libc_anchor;
 };
 
 #ifndef __getClib4

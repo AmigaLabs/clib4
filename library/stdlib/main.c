@@ -115,6 +115,38 @@ call_main(
     }
     __clib4->__exit_jmp_buf_valid = TRUE;
 
+    /*
+     * Open a permanent libc.so anchor before any shared-object initialisation
+     * or user code runs.  This ensures the ELF loader reference count for
+     * libc.so never drops to zero while the process is alive.  Without this,
+     * user code (e.g. JS ctypes) can call dlclose() on its own libc handle
+     * and unload libc.so; when _end_ctors() later walks the DTOR list, any
+     * function pointer into the now-unmapped libc.so causes a DSI crash.
+     *
+     * This DLOpen is safe here: clib4 is fully initialised at this point
+     * (__fully_initialized == TRUE, pr_UID set), so a re-entrant libOpen()
+     * triggered by loading libc.so takes the early-return path and does not
+     * recurse.
+     *
+     * The anchor is released after _end_ctors() has finished, before
+     * shared_obj_init(FALSE) runs.
+     */
+    if (__clib4->__dl_root_handle != NULL && __clib4->__dl_libc_anchor == NULL) {
+        struct ElfIFace *IElf = __clib4->IElf;
+        static const char * const libc_anchor_paths[] = {
+            "PROGDIR:SObjs/libc.so",
+            "PROGDIR:libc.so",
+            NULL
+        };
+        for (int _i = 0; libc_anchor_paths[_i] != NULL; _i++) {
+            __clib4->__dl_libc_anchor = DLOpen(__clib4->__dl_root_handle,
+                                               libc_anchor_paths[_i], 0);
+            if (__clib4->__dl_libc_anchor != NULL)
+                break;
+        }
+        D(("call_main: __dl_libc_anchor = %p", __clib4->__dl_libc_anchor));
+    }
+
     SHOWMSG("Initialize shared objects");
     shared_obj_init(__clib4, TRUE);
 
@@ -148,6 +180,15 @@ out:
     /* Go through the destructor list */
     SHOWMSG("invoking external destructors in reverse order");
     _end_ctors(__EXT_DTOR_LIST__);
+
+    /* Release the libc.so anchor now that all process dtors have run.
+     * Must happen before shared_obj_init(FALSE) which calls InitSHLibs(FALSE). */
+    if (__clib4->__dl_libc_anchor != NULL) {
+        struct ElfIFace *IElf = __clib4->IElf;
+        SHOWMSG("Releasing __dl_libc_anchor");
+        DLClose(__clib4->__dl_root_handle, __clib4->__dl_libc_anchor);
+        __clib4->__dl_libc_anchor = NULL;
+    }
 
     SHOWMSG("Close shared objects");
     shared_obj_init(__clib4, FALSE);
