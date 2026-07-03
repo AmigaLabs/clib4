@@ -18,6 +18,16 @@ dlclose(void *handle) {
     ENTER();
     SHOWPOINTER(handle);
 
+    /*
+     * dlopen(NULL) returns __dl_root_handle as the "main program" sentinel.
+     * Closing the main program handle is a no-op (POSIX leaves this
+     * behaviour undefined but closing it must not crash).
+     */
+    if (handle == (void *)__clib4->__dl_root_handle) {
+        result = 0;
+        goto out;
+    }
+
     if (__clib4->__dl_root_handle != NULL) {
         struct ElfIFace *IElf = __clib4->IElf;
         Elf32_Error error;
