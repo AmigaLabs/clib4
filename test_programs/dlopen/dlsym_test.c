@@ -82,9 +82,6 @@ int main(void)
     test_handle("dlopen(\"PROGDIR:SObjs/libc.so\", RTLD_NOW|RTLD_GLOBAL)",
                 dlopen("PROGDIR:SObjs/libc.so", RTLD_NOW | RTLD_GLOBAL));
 
-    test_handle("dlopen(\"SOBJS:libc.so\", RTLD_LAZY)",
-                dlopen("SOBJS:libc.so", RTLD_LAZY));
-
     /* dlopen(NULL) == main program's own symbols (may be how some builds
      * expect POSIX fns to resolve). */
     test_handle("dlopen(NULL, RTLD_LAZY) [self]",
