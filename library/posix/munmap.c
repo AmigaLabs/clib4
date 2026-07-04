@@ -95,3 +95,50 @@ munmap(void *map, size_t length) {
     RETURN(0);
     return 0;
 }
+
+/*
+ * Walk the entire __mmap_records list and release every live mapping.
+ * Called from the process exit path (call_main's out: label) to ensure
+ * that mmap() allocations not explicitly munmap()'d do not leak
+ * AllocVecTags blocks, dup()'d file descriptors, or tracking records.
+ *
+ * This function does NOT hold the memory mutex across the whole loop:
+ * it atomically splices out the entire list in one locked operation,
+ * then releases each entry without the lock held (avoiding potential
+ * deadlocks if close() or FreeVec() internally acquire other locks).
+ */
+void
+__mmap_cleanup_all(void)
+{
+    struct _clib4 *__clib4 = __CLIB4;
+    struct mmap_record *list;
+
+    /* Atomically take ownership of the whole list */
+    __memory_lock(__clib4);
+    list = (struct mmap_record *)__mmap_records;
+    __mmap_records = NULL;
+    __memory_unlock(__clib4);
+
+    while (list) {
+        struct mmap_record *rec = list;
+        list = rec->next;
+
+        /*
+         * Do NOT touch the in-page mmap_header here.
+         *
+         * The header lives in the mapping's first page (user_ptr - hdr size).
+         * For PROT_EXEC mappings (exec_alloc), SpiderMonkey's JIT may have
+         * transitioned those pages to read-execute (no write) via mprotect /
+         * ReprotectRegion.  Writing hdr->magic = 0 into a read-only page
+         * raises a DSI, which on AmigaOS 4 crashes the exiting task.  Because
+         * the process is terminating, MAP_SHARED file write-back is pointless
+         * anyway — the record carries everything we need (alloc_base, fd) to
+         * release the resources without reading or writing the mapping itself.
+         */
+        if (rec->fd >= 0)
+            close(rec->fd);
+
+        FreeVec(rec->alloc_base);
+        FreeVec(rec);
+    }
+}

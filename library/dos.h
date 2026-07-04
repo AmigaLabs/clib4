@@ -319,7 +319,7 @@ struct _clib4 {
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
     BOOL unused3;
-	void *unused2;
+	void *nti_argv0;  /* Used by arg_init() to save nti_argv0 (freed in arg_exit) */
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;
     struct TimerIFace *__ITimer;

@@ -106,6 +106,9 @@ arg_init() {
         if (command_line == NULL)
             goto out;
 
+        /* Save pointer so arg_exit() can free it. */
+        __clib4->__command_line_ptr = command_line;
+
         if (arg_len > 0)
             memmove(command_line, arg_str, arg_len);
         command_line[arg_len] = '\0';
@@ -171,9 +174,13 @@ arg_init() {
         /* If this is using unix path semantics, we need to prep argv[0]. */
         if (__clib4->__unix_path_semantics) {
             D(("Translating argv0 [%s]\n", __clib4->__argv[0]));
-            // This is unfortunately orphaned :
+            /* argv[0] will point into nti_argv0->substitute after translation,
+             * so nti_argv0 must stay alive until arg_exit(); save it in nti_argv0. */
             struct name_translation_info *nti_argv0 = (struct name_translation_info *) AllocVecTags(sizeof(struct name_translation_info), TAG_DONE);
-            /* int error = */ __translate_amiga_to_unix_path_name((char const **)&__clib4->__argv[0], nti_argv0);
+            if (nti_argv0 != NULL) {
+                __translate_amiga_to_unix_path_name((char const **)&__clib4->__argv[0], nti_argv0);
+                __clib4->nti_argv0 = nti_argv0;
+            }
             D(("Translated progname : [%s]\n", __clib4->__argv[0]));
         }
 
@@ -298,6 +305,11 @@ arg_exit() {
         if (__clib4->__command_line_ptr) {
             FreeVec(__clib4->__command_line_ptr);
             __clib4->__command_line_ptr = NULL;
+        }
+        /* Free translated argv[0] nti buffer saved during arg_init(). */
+        if (__clib4->nti_argv0 != NULL) {
+            FreeVec(__clib4->nti_argv0);
+            __clib4->nti_argv0 = NULL;
         }
         if (__clib4->__argv) {
             FreeVec(__clib4->__argv);

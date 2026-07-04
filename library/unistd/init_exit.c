@@ -42,6 +42,8 @@ CLIB_DESTRUCTOR(unistd_exit) {
 
             if (uln->uln_Lock != BZERO)
                 UnLock(uln->uln_Lock);
+
+            __free_r(__clib4, uln);
         }
     }
 

@@ -30,13 +30,14 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset) {
     SHOWVALUE(flags);
     SHOWVALUE(fd);
     SHOWVALUE(offset);
-
+    
     if (len == 0) {
         __set_errno(EINVAL);
         errno = EINVAL;
         RETURN(MAP_FAILED);
         return MAP_FAILED;
     }
+    struct _clib4 *__clib4 = __CLIB4;
 
     /*
      * Allocate a page-aligned block with space for our tracking header.
@@ -171,10 +172,10 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset) {
         rec->exec_alloc = exec_alloc;
         rec->fd         = hdr->fd;
         rec->next       = NULL;
-        __memory_lock(__CLIB4);
+        __memory_lock(__clib4);
         rec->next       = __mmap_records;
         __mmap_records  = rec;
-        __memory_unlock(__CLIB4);
+        __memory_unlock(__clib4);
     }
     /* If AllocVecTags fails we fall back to the in-page header (best-effort). */
 
