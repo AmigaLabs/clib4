@@ -34,6 +34,10 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
+#ifndef _MMAP_INTERNAL_H
+#include "mmap_internal.h"
+#endif /* _MMAP_INTERNAL_H */
+
 #include <proto/elf.h>
 
 #include "../shared_library/clib4.h"
@@ -135,7 +139,7 @@ call_main(
         struct ElfIFace *IElf = __clib4->IElf;
         static const char * const libc_anchor_paths[] = {
             "PROGDIR:SObjs/libc.so",
-            "PROGDIR:libc.so",
+            "SOBJS:libc.so",
             NULL
         };
         for (int _i = 0; libc_anchor_paths[_i] != NULL; _i++) {
@@ -180,6 +184,12 @@ out:
     /* Go through the destructor list */
     SHOWMSG("invoking external destructors in reverse order");
     _end_ctors(__EXT_DTOR_LIST__);
+
+    /* Release any mmap() allocations that the program did not munmap()
+     * explicitly.  Must run after all destructors have finished (dtors
+     * may still hold live mappings) but before shared_obj_init(FALSE)
+     * unloads shared libraries.                                         */
+    __mmap_cleanup_all();
 
     /* Release the libc.so anchor now that all process dtors have run.
      * Must happen before shared_obj_init(FALSE) which calls InitSHLibs(FALSE). */
