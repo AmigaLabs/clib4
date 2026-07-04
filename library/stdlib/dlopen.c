@@ -36,8 +36,8 @@ dlopen(const char *path_name, int mode) {
         if (__clib4->__dl_root_handle != NULL) {
             struct ElfIFace *IElf = __clib4->IElf;
             static const char * const self_paths[] = {
+                "SOBJS:libc.so",
                 "PROGDIR:SObjs/libc.so",
-                "PROGDIR:libc.so",
                 NULL
             };
             for (int i = 0; self_paths[i] != NULL; i++) {
