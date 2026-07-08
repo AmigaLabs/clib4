@@ -29,4 +29,4 @@ runs:
       if: ${{ inputs.spe == 'yes' }}
       run: |
         cd /opt/code && \
-        make -j -f GNUmakefile.os4 SPE=yes GITTAG=${{ inputs.git_tag }} NIGHTLY=${{ inputs.nightly }}
+        make -f GNUmakefile.os4 SPE=yes GITTAG=${{ inputs.git_tag }} NIGHTLY=${{ inputs.nightly }}
