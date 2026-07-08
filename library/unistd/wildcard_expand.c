@@ -68,6 +68,13 @@ CLIB_DESTRUCTOR(__wildcard_expand_exit) {
         __clib4->anchor = NULL;
     }
 
+    /* Free the wildcard-quote bit-vector allocated by __wildcard_quote_parameter(). */
+    if (quote_vector != NULL) {
+        free(quote_vector);
+        quote_vector = NULL;
+        quote_vector_size = 0;
+    }
+
     LEAVE();
 }
 
