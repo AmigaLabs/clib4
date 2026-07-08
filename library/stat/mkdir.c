@@ -6,8 +6,6 @@
 #include "stat_headers.h"
 #endif /* _STAT_HEADERS_H */
 
-#include <dos/obsolete.h>
-
 int mkdir(const char *path_name, mode_t mode) {
     struct name_translation_info path_name_nti;
     ULONG protection;
@@ -82,42 +80,42 @@ int mkdir(const char *path_name, mode_t mode) {
     protection = 0;
 
     if (FLAG_IS_SET(mode, S_IRUSR))
-        SET_FLAG(protection, FIBF_READ);
+        SET_FLAG(protection, EXDF_NO_READ);
 
     if (FLAG_IS_SET(mode, S_IWUSR)) {
-        SET_FLAG(protection, FIBF_WRITE);
-        SET_FLAG(protection, FIBF_DELETE);
+        SET_FLAG(protection, EXDF_NO_WRITE);
+        SET_FLAG(protection, EXDF_NO_DELETE);
     }
 
     if (FLAG_IS_SET(mode, S_IXUSR))
-        SET_FLAG(protection, FIBF_EXECUTE);
+        SET_FLAG(protection, EXDF_NO_EXECUTE);
 
     if (FLAG_IS_SET(mode, S_IRGRP))
-        SET_FLAG(protection, FIBF_GRP_READ);
+        SET_FLAG(protection, EXDF_GRP_READ);
 
     if (FLAG_IS_SET(mode, S_IWGRP)) {
-        SET_FLAG(protection, FIBF_GRP_WRITE);
-        SET_FLAG(protection, FIBF_GRP_DELETE);
+        SET_FLAG(protection, EXDF_GRP_WRITE);
+        SET_FLAG(protection, EXDF_GRP_DELETE);
     }
 
     if (FLAG_IS_SET(mode, S_IXGRP))
-        SET_FLAG(protection, FIBF_GRP_EXECUTE);
+        SET_FLAG(protection, EXDF_GRP_EXECUTE);
 
     if (FLAG_IS_SET(mode, S_IROTH))
-        SET_FLAG(protection, FIBF_OTR_READ);
+        SET_FLAG(protection, EXDF_OTR_READ);
 
     if (FLAG_IS_SET(mode, S_IWOTH)) {
-        SET_FLAG(protection, FIBF_OTR_WRITE);
-        SET_FLAG(protection, FIBF_OTR_DELETE);
+        SET_FLAG(protection, EXDF_OTR_WRITE);
+        SET_FLAG(protection, EXDF_OTR_DELETE);
     }
 
     if (FLAG_IS_SET(mode, S_IXOTH))
-        SET_FLAG(protection, FIBF_OTR_EXECUTE);
+        SET_FLAG(protection, EXDF_OTR_EXECUTE);
 
     SHOWSTRING(path_to_create);
     SHOWVALUE(protection);
 
-    SetProtection((STRPTR) path_to_create, (LONG)(protection ^ (FIBF_READ | FIBF_WRITE | FIBF_EXECUTE | FIBF_DELETE)));
+    SetProtection((STRPTR) path_to_create, (LONG)(protection ^ (EXDF_NO_READ | EXDF_NO_WRITE | EXDF_NO_EXECUTE | EXDF_NO_DELETE)));
 
     result = OK;
 
