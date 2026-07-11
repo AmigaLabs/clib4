@@ -886,6 +886,13 @@ wmem_block_realloc_jumbo(wmem_block_allocator_t *allocator,
 
 /* API */
 
+static size_t
+wmem_block_size(void *private_data, const void *ptr) {
+    (void) private_data;
+    wmem_block_chunk_t *chunk = WMEM_DATA_TO_PRE(ptr)->chunk;
+    return chunk->len - ((uintptr_t)ptr - (uintptr_t)chunk);
+}
+
 static void *
 wmem_block_alloc(void *private_data, const size_t size, int32_t alignment) {
     wmem_block_allocator_t *allocator = (wmem_block_allocator_t *) private_data;
@@ -1191,6 +1198,7 @@ wmem_block_allocator_init(wmem_allocator_t *allocator) {
     allocator->walloc = &wmem_block_alloc;
     allocator->wrealloc = &wmem_block_realloc;
     allocator->wfree = &wmem_block_free;
+    allocator->wsize = &wmem_block_size;
 
     allocator->free_all = &wmem_block_free_all;
     allocator->gc = &wmem_block_gc;

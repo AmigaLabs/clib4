@@ -86,6 +86,7 @@ extern void __srandom(unsigned seed);
 extern void *__malloc_r(struct _clib4 *__clib4, size_t size);
 extern void *__malloc_aligned_r(struct _clib4 *__clib4, size_t size, int32_t alignment);
 extern void *__calloc_r(struct _clib4 *__clib4, size_t num_elements, size_t element_size);
+extern size_t __malloc_usable_size_r(struct _clib4 *__clib4, const void *ptr);
 
 extern uint32_t lcg31(uint32_t x);
 extern uint64_t lcg64(uint64_t x);
