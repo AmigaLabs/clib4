@@ -147,6 +147,14 @@ extern void * wmem_alloc0(wmem_allocator_t *allocator, const size_t size) __attr
  */
 extern void wmem_free(wmem_allocator_t *allocator, void *ptr);
 
+/** Returns the usable size of a previously allocated block.
+ *
+ * @param allocator The allocator object used to originally allocate the memory.
+ * @param ptr The pointer to the memory block.
+ * @return The usable size in bytes of the block, or 0 if unknown/invalid.
+ */
+extern size_t wmem_alloc_size(wmem_allocator_t *allocator, const void *ptr);
+
 /** Resizes a block of memory, potentially moving it if resizing it in place
  * is not possible.
  *
