@@ -70,8 +70,15 @@ __exit_trap_trigger(void) {
      * list items have been taken care of.
      */
     if (__clib4->exit_trap_list.mlh_Head != NULL) {
-        while ((etn = (struct ExitTrapNode *) RemHead((struct List *) &__clib4->exit_trap_list)) != NULL)
+        while ((etn = (struct ExitTrapNode *) RemHead((struct List *) &__clib4->exit_trap_list)) != NULL) {
             (*etn->etn_Function)();
+            /* Free the node only if it was dynamically allocated (i.e. it does
+             * not fall within the static exit_node_table array). */
+            if (etn < &__clib4->exit_node_table[0] ||
+                etn >= &__clib4->exit_node_table[NUM_ENTRIES(__clib4->exit_node_table)]) {
+                __free_r(__clib4, etn);
+            }
+        }
     }
 }
 

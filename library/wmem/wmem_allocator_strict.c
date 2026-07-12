@@ -211,6 +211,13 @@ wmem_strict_allocator_cleanup(void *private_data) {
     wmem_free(NULL, private_data);
 }
 
+static size_t
+wmem_strict_size(void *private_data, const void *ptr) {
+    wmem_strict_allocator_t *allocator = (wmem_strict_allocator_t *) private_data;
+    wmem_strict_allocator_block_t *block = WMEM_DATA_TO_BLOCK(allocator, (void*)ptr);
+    return block ? block->data_len : 0;
+}
+
 void
 wmem_strict_allocator_init(wmem_allocator_t *allocator) {
     wmem_strict_allocator_t *strict_allocator;
@@ -220,6 +227,7 @@ wmem_strict_allocator_init(wmem_allocator_t *allocator) {
     allocator->walloc = &wmem_strict_alloc;
     allocator->wrealloc = &wmem_strict_realloc;
     allocator->wfree = &wmem_strict_free;
+    allocator->wsize = &wmem_strict_size;
 
     allocator->free_all = &wmem_strict_free_all;
     allocator->gc = &wmem_strict_gc;

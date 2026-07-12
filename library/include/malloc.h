@@ -18,6 +18,9 @@ __BEGIN_DECLS
 /* Allocate SIZE bytes allocated to ALIGNMENT bytes.  */
 extern void *memalign(size_t alignment, size_t size);
 
+/* Return the usable size of a block allocated by malloc(). */
+extern size_t malloc_usable_size(void *ptr);
+
 __END_DECLS
 
 #endif //_MALLOC_H

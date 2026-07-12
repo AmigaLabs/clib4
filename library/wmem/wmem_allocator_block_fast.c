@@ -160,6 +160,13 @@ wmem_block_fast_free(void *private_data, void *ptr) {
     /* free is NOP */
 }
 
+static size_t
+wmem_block_fast_size(void *private_data, const void *ptr) {
+    (void) private_data;
+    wmem_block_fast_chunk_t *chunk = WMEM_DATA_TO_CHUNK(ptr);
+    return chunk->size;
+}
+
 static void *
 wmem_block_fast_realloc(void *private_data, void *ptr, const size_t size, int32_t alignment) {
     wmem_block_fast_chunk_t *chunk;
@@ -273,6 +280,7 @@ wmem_block_fast_allocator_init(wmem_allocator_t *allocator) {
     allocator->walloc = &wmem_block_fast_alloc;
     allocator->wrealloc = &wmem_block_fast_realloc;
     allocator->wfree = &wmem_block_fast_free;
+    allocator->wsize = &wmem_block_fast_size;
 
     allocator->free_all = &wmem_block_fast_free_all;
     allocator->gc = &wmem_block_fast_gc;

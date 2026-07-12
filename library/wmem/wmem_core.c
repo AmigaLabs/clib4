@@ -214,6 +214,16 @@ wmem_realloc(wmem_allocator_t *allocator, void *ptr, const size_t size) {
     return wmem_realloc_aligned(allocator, ptr, size, 16);
 }
 
+size_t
+wmem_alloc_size(wmem_allocator_t *allocator, const void *ptr) {
+    if (allocator == NULL || ptr == NULL || allocator->wsize == NULL)
+        return 0;
+
+    assert(allocator->in_scope);
+
+    return allocator->wsize(allocator->private_data, ptr);
+}
+
 static void
 wmem_free_all_real(wmem_allocator_t *allocator, bool final) {
     wmem_call_callbacks(allocator,

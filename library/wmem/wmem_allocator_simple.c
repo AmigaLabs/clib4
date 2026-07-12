@@ -166,6 +166,16 @@ wmem_simple_realloc(void *private_data, void *ptr, const size_t size, int32_t al
     return NULL;
 }
 
+static size_t
+wmem_simple_size(void *private_data, const void *ptr) {
+    wmem_simple_allocator_t *allocator = (wmem_simple_allocator_t *) private_data;
+    for (int i = allocator->count - 1; i >= 0; i--) {
+        if (ptr == allocator->ptrs[i])
+            return allocator->sizes[i];
+    }
+    return 0;
+}
+
 static void
 wmem_simple_free_all(void *private_data) {
     wmem_simple_allocator_t *allocator;
@@ -211,6 +221,7 @@ wmem_simple_allocator_init(wmem_allocator_t *allocator) {
     allocator->walloc = &wmem_simple_alloc;
     allocator->wrealloc = &wmem_simple_realloc;
     allocator->wfree = &wmem_simple_free;
+    allocator->wsize = &wmem_simple_size;
 
     allocator->free_all = &wmem_simple_free_all;
     allocator->gc = &wmem_simple_gc;
