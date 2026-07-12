@@ -61,9 +61,14 @@ getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *h
         struct servent *se = NULL;
         const char *proto = (hints && hints->ai_socktype == SOCK_DGRAM) ? "udp" : "tcp";
 
-        if (hints == NULL || !(hints->ai_flags & AI_NUMERICSERV))
-            /* FIXME: Use getservbyname_r if available. */
-            se = getservbyname(servname, proto);
+        if (hints == NULL || !(hints->ai_flags & AI_NUMERICSERV)) {
+            struct servent se_buf;
+            char se_strbuf[256] = {0};
+            struct servent *se_res = NULL;
+            if (getservbyname_r(servname, proto, &se_buf, se_strbuf, sizeof(se_strbuf), &se_res) != 0 || se_res == NULL)
+                se_res = __getservbyname((char *) servname, (char *) proto);
+            se = se_res;
+        }
 
         if (!se) {
             char *c;
@@ -77,10 +82,14 @@ getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *h
             port = se->s_port;
     }
 
-    /* FIXME: Use gethostbyname_r if available. */
-    he = gethostbyname(nodename);
-    if (!he || he->h_addr_list[0] == NULL)
-        return EAI_NONAME;
+    {
+        struct hostent he_buf;
+        char he_strbuf[4096] = {0};
+        int he_errno;
+        he = NULL;
+        if (gethostbyname_r(nodename, &he_buf, he_strbuf, sizeof(he_strbuf), &he, &he_errno) != 0 || he == NULL || he->h_addr_list[0] == NULL)
+            return EAI_NONAME;
+    }
 
     switch (he->h_addrtype) {
         case PF_INET6:
