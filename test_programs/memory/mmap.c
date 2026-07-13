@@ -4,7 +4,7 @@
 int main()
 {
     int N = 5; // Number of elements for the array
-    int *ptr = mmap(NULL, N * sizeof(int), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+    int *ptr = mmap(NULL, N * sizeof(int), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (ptr == MAP_FAILED)
     {
         printf("Mapping Failed\n");
@@ -18,7 +18,7 @@ int main()
     }
 
     printf("\n");
-    int err = munmap(ptr, 10 * sizeof(int));
+    int err = munmap(ptr, N * sizeof(int));
 
     if (err != 0)
     {
