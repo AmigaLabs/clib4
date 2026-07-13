@@ -74,6 +74,217 @@ void free_mem_list() {
     m_list = 0;
 }
 #endif
+
+#if DEBUG == 1
+/* System memory accounting (DEBUG builds only).
+ *
+ * Every system-level allocation performed by wmem on behalf of the
+ * allocators - that is, every wmem_alloc_aligned(NULL, ...) which maps to
+ * AllocVecTags() and every wmem_free(NULL, ...) which maps to FreeVec() -
+ * is recorded here together with its size. When the allocator singleton
+ * is destroyed (wmem_destroy_allocator), a report is printed to the
+ * serial port via DebugPrintF() showing how much memory was allocated,
+ * how much was freed, and which blocks (if any) were never returned to
+ * the OS.
+ *
+ * The tracking table lives outside of wmem itself (plain AllocVecTags)
+ * so that it does not disturb the allocation patterns being observed.
+ */
+
+typedef struct wmem_track_entry {
+    struct wmem_track_entry *next;
+    void *ptr;
+    size_t size;
+} wmem_track_entry_t;
+
+#define WMEM_TRACK_BUCKETS 256
+
+static wmem_track_entry_t *__wmem_track_table[WMEM_TRACK_BUCKETS];
+static struct SignalSemaphore __wmem_track_sem;
+static BOOL __wmem_track_sem_valid = FALSE;
+
+static uint64_t __wmem_bytes_allocated = 0;   /* cumulative bytes obtained via AllocVecTags */
+static uint64_t __wmem_bytes_freed = 0;       /* cumulative bytes returned via FreeVec */
+static uint64_t __wmem_bytes_current = 0;     /* currently outstanding bytes */
+static uint64_t __wmem_bytes_peak = 0;        /* high-water mark of outstanding bytes */
+static uint32_t __wmem_alloc_count = 0;       /* number of AllocVecTags calls */
+static uint32_t __wmem_free_count = 0;        /* number of FreeVec calls */
+static uint32_t __wmem_track_oom = 0;         /* allocations we could not track (OOM) */
+static uint32_t __wmem_untracked_free = 0;    /* frees of pointers we never saw */
+
+static inline uint32_t
+__wmem_track_hash(const void *ptr) {
+    /* AllocVecTags results are at least 8-byte aligned; drop the low bits. */
+    return (uint32_t)(((uintptr_t) ptr) >> 5) & (WMEM_TRACK_BUCKETS - 1);
+}
+
+static void
+__wmem_track_lock(void) {
+    if (!__wmem_track_sem_valid) {
+        Forbid();
+        if (!__wmem_track_sem_valid) {
+            InitSemaphore(&__wmem_track_sem);
+            __wmem_track_sem_valid = TRUE;
+        }
+        Permit();
+    }
+    ObtainSemaphore(&__wmem_track_sem);
+}
+
+static void
+__wmem_track_unlock(void) {
+    ReleaseSemaphore(&__wmem_track_sem);
+}
+
+static void
+__wmem_track_alloc(void *ptr, size_t size) {
+    wmem_track_entry_t *entry;
+
+    __wmem_track_lock();
+
+    __wmem_alloc_count++;
+    __wmem_bytes_allocated += size;
+    __wmem_bytes_current += size;
+    if (__wmem_bytes_current > __wmem_bytes_peak)
+        __wmem_bytes_peak = __wmem_bytes_current;
+
+    entry = AllocVecTags(sizeof(*entry), AVT_Type, MEMF_SHARED, TAG_DONE);
+    if (entry != NULL) {
+        uint32_t bucket = __wmem_track_hash(ptr);
+        entry->ptr = ptr;
+        entry->size = size;
+        entry->next = __wmem_track_table[bucket];
+        __wmem_track_table[bucket] = entry;
+    } else {
+        __wmem_track_oom++;
+    }
+
+    __wmem_track_unlock();
+}
+
+static void
+__wmem_track_free(void *ptr) {
+    uint32_t bucket = __wmem_track_hash(ptr);
+    wmem_track_entry_t *entry, *prev = NULL;
+
+    if (ptr == NULL)
+        return;
+
+    __wmem_track_lock();
+
+    __wmem_free_count++;
+
+    for (entry = __wmem_track_table[bucket]; entry != NULL; prev = entry, entry = entry->next) {
+        if (entry->ptr == ptr) {
+            __wmem_bytes_freed += entry->size;
+            if (__wmem_bytes_current >= entry->size)
+                __wmem_bytes_current -= entry->size;
+            else
+                __wmem_bytes_current = 0;
+
+            if (prev != NULL)
+                prev->next = entry->next;
+            else
+                __wmem_track_table[bucket] = entry->next;
+            FreeVec(entry);
+
+            __wmem_track_unlock();
+            return;
+        }
+    }
+
+    /* Pointer was never tracked: either allocated before tracking started
+     * or a tracking entry could not be allocated at alloc time. */
+    __wmem_untracked_free++;
+
+    __wmem_track_unlock();
+}
+
+/* Print the final accounting report on the serial port and reset all
+ * tracking state, so that a re-created allocator starts from scratch. */
+static void
+__wmem_track_report(void) {
+    uint32_t leaked_blocks = 0;
+    uint64_t leaked_bytes = 0;
+    uint32_t shown = 0;
+    int i;
+
+    __wmem_track_lock();
+
+    for (i = 0; i < WMEM_TRACK_BUCKETS; i++) {
+        wmem_track_entry_t *entry = __wmem_track_table[i];
+        while (entry != NULL) {
+            leaked_blocks++;
+            leaked_bytes += entry->size;
+            entry = entry->next;
+        }
+    }
+
+    DebugPrintF("[clib4] ==================================================\n");
+    DebugPrintF("[clib4] wmem allocator destroyed - system memory report\n");
+    DebugPrintF("[clib4] AllocVecTags calls : %lu (%lu bytes)\n",
+                (unsigned long) __wmem_alloc_count,
+                (unsigned long) __wmem_bytes_allocated);
+    DebugPrintF("[clib4] FreeVec calls      : %lu (%lu bytes)\n",
+                (unsigned long) __wmem_free_count,
+                (unsigned long) __wmem_bytes_freed);
+    DebugPrintF("[clib4] peak usage         : %lu bytes\n",
+                (unsigned long) __wmem_bytes_peak);
+
+    if (leaked_blocks == 0 && __wmem_track_oom == 0) {
+        DebugPrintF("[clib4] all system memory was freed - no leaks detected\n");
+    } else {
+        DebugPrintF("[clib4] NOT FREED          : %lu blocks (%lu bytes)\n",
+                    (unsigned long) leaked_blocks,
+                    (unsigned long) leaked_bytes);
+
+        for (i = 0; i < WMEM_TRACK_BUCKETS && shown < 32; i++) {
+            wmem_track_entry_t *entry = __wmem_track_table[i];
+            while (entry != NULL && shown < 32) {
+                DebugPrintF("[clib4]   leaked block %2lu : ptr = 0x%08lx, size = %lu bytes\n",
+                            (unsigned long) shown,
+                            (unsigned long) (uintptr_t) entry->ptr,
+                            (unsigned long) entry->size);
+                shown++;
+                entry = entry->next;
+            }
+        }
+        if (shown < leaked_blocks)
+            DebugPrintF("[clib4]   ... and %lu more\n", (unsigned long) (leaked_blocks - shown));
+    }
+
+    if (__wmem_track_oom != 0)
+        DebugPrintF("[clib4] untracked allocations (tracking OOM): %lu\n",
+                    (unsigned long) __wmem_track_oom);
+    if (__wmem_untracked_free != 0)
+        DebugPrintF("[clib4] frees of untracked pointers: %lu\n",
+                    (unsigned long) __wmem_untracked_free);
+    DebugPrintF("[clib4] ==================================================\n");
+
+    /* Reset state: free the leftover entries and clear the counters. */
+    for (i = 0; i < WMEM_TRACK_BUCKETS; i++) {
+        wmem_track_entry_t *entry = __wmem_track_table[i];
+        while (entry != NULL) {
+            wmem_track_entry_t *next = entry->next;
+            FreeVec(entry);
+            entry = next;
+        }
+        __wmem_track_table[i] = NULL;
+    }
+
+    __wmem_bytes_allocated = 0;
+    __wmem_bytes_freed = 0;
+    __wmem_bytes_current = 0;
+    __wmem_bytes_peak = 0;
+    __wmem_alloc_count = 0;
+    __wmem_free_count = 0;
+    __wmem_track_oom = 0;
+    __wmem_untracked_free = 0;
+
+    __wmem_track_unlock();
+}
+#endif /* DEBUG */
+
 /* Set according to the WIRESHARK_DEBUG_WMEM_OVERRIDE environment variable in
  * wmem_init. Should not be set again. */
 static bool do_override;
@@ -114,6 +325,12 @@ wmem_alloc_aligned(wmem_allocator_t *allocator, const size_t size, int32_t align
 #ifdef ULTRA_MEMORY_DEBUG
         if (r) {
             insert_mem_entry(r, size);
+        }
+#endif
+
+#if DEBUG == 1
+        if (r) {
+            __wmem_track_alloc(r, size);
         }
 #endif
 
@@ -158,6 +375,10 @@ wmem_alloc0(wmem_allocator_t *allocator, const size_t size) {
 void
 wmem_free(wmem_allocator_t *allocator, void *ptr) {
     if (allocator == NULL) {
+
+#if DEBUG == 1
+        __wmem_track_free(ptr);
+#endif
 
         FreeVec(ptr);
 
@@ -260,6 +481,13 @@ wmem_destroy_allocator(wmem_allocator_t *allocator) {
 #ifdef MEMORY_DEBUG
     D(("[END OF SESSION] +++++ Allocs: %ld ++++++\n", allocs));
 #endif
+
+#if DEBUG == 1
+    /* Print the final memory accounting report on the serial port. This
+     * runs after the allocator (and everything it owned) has been freed,
+     * so anything still outstanding at this point is a real leak. */
+    __wmem_track_report();
+#endif
 }
 
 wmem_allocator_t *
@@ -283,6 +511,9 @@ wmem_allocator_new(const wmem_allocator_type_t type) {
 #else
     wmem_new(NULL, wmem_allocator_t);
 #endif
+    if (allocator == NULL) {
+        return NULL;
+    }
     allocator->type = real_type;
     allocator->callbacks = NULL;
     allocator->in_scope = true;

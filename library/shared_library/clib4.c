@@ -661,11 +661,19 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
             const struct Clib4Node *node = item;
             if (node->undo)
                 IExec->FreeVec(node->undo);
+            /* Nodes left behind by processes that never ran libClose
+             * (e.g. crashed) still own their spawnedProcesses hashmap. */
+            if (node->spawnedProcesses)
+                hashmap_free(node->spawnedProcesses);
         }
 
         hashmap_free(res->children);
         if (res->fallbackClib) {
             reent_exit(res->fallbackClib);
+            /* reent_exit() releases the contents but not the structure
+             * itself, which was allocated with AllocVecTags in libInit. */
+            IExec->FreeVec(res->fallbackClib);
+            res->fallbackClib = NULL;
         }
 
         IExec->RemResource(res);
@@ -823,6 +831,22 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
 
     if (libBase->libNode.lib_OpenCnt) {
         return 0;
+    }
+
+    /* Last process closed the library: destroy the shared wmem allocator
+     * now instead of waiting for libExpunge, which only runs if the system
+     * flushes the library from memory. This returns all the memory still
+     * held by the allocator (unfreed malloc() blocks, cached OS blocks) to
+     * the system, and in DEBUG builds triggers the memory report on the
+     * serial port. The allocator is re-created lazily by the next process
+     * in stdlib_memory_init. */
+    if (res) {
+        IExec->ObtainSemaphore(&res->semaphore);
+        if (libBase->libNode.lib_OpenCnt == 0 && res->__wmem_allocator != NULL) {
+            wmem_destroy_allocator((wmem_allocator_t *) res->__wmem_allocator);
+            res->__wmem_allocator = NULL;
+        }
+        IExec->ReleaseSemaphore(&res->semaphore);
     }
 
     if (libBase->libNode.lib_Flags & LIBF_DELEXP) {
