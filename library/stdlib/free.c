@@ -16,15 +16,20 @@
 
 void
 __free_r(struct _clib4 *__clib4, void *ptr) {
+	wmem_allocator_t *allocator;
+
 	if (ptr == NULL || __clib4 == NULL)
 		return;
 
-	if (__clib4->__wmem_allocator == NULL) {
+	__memory_lock(__clib4);
+
+	allocator = __get_wmem_allocator(__clib4);
+	if (allocator == NULL) {
+		__memory_unlock(__clib4);
 		return;
 	}
 
-	__memory_lock(__clib4);
-    wmem_free(__clib4->__wmem_allocator, ptr);
+    wmem_free(allocator, ptr);
 
 	__memory_unlock(__clib4);
 }

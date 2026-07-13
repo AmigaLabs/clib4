@@ -785,10 +785,13 @@ CLIB_DESTRUCTOR(dcngettext_exit) {
         struct mofile_s *mofile = __clib4->g_mofile;
         while (mofile) {
             struct mofile_s *next = mofile->next;
-            if (mofile)
-                free(mofile);
+            /* Unmap the .mo file mapping before freeing the struct. */
+            if (mofile->map != NULL && mofile->map != MAP_FAILED)
+                munmap(mofile->map, mofile->size);
+            free(mofile);
             mofile = next;
         }
+        __clib4->g_mofile = NULL;
     }
     struct binding *p = __clib4->bindings;
     while (p) {

@@ -51,5 +51,18 @@ pthread_getattr_np(pthread_t thread, pthread_attr_t *attr) {
 
     *attr = inf->attr;
 
+    /* Report the thread's ACTUAL stack, matching the Linux/glibc
+     * semantics of pthread_getattr_np: callers chain this into
+     * pthread_attr_getstack() to derive the live stack bounds (stack
+     * overflow detection, GC stack scanning, ...).  The creation-time
+     * attr normally has stackaddr == NULL (and stacksize == 0 when the
+     * default was used), which sends such callers computing bounds far
+     * off the real stack.  The exec Task always knows the truth. */
+    if (inf->task != NULL) {
+        struct Task *t = (struct Task *) inf->task;
+        attr->stackaddr = t->tc_SPLower;
+        attr->stacksize = (size_t) ((char *) t->tc_SPUpper - (char *) t->tc_SPLower);
+    }
+
     return 0;
 }

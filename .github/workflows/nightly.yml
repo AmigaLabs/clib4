@@ -18,21 +18,21 @@ jobs:
       version: "nightly"
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with: { fetch-depth: 0 }
       - name: Set Tag
         id: tag
         run: |
           echo "version=nightly" >> "$GITHUB_OUTPUT"
       - name: Update Tag
-        uses: richardsimko/update-tag@v1
+        uses: richardsimko/update-tag@v2
         with:
           tag_name: "nightly"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@v2.2.2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: "nightly"
           name: "clib4 nightly-builds"
@@ -54,7 +54,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with: { fetch-depth: 0 }
 
       - name: Compile clib4
@@ -70,7 +70,7 @@ jobs:
           mv clib4.lha clib4-nightly.lha
 
       - name: Upload Files
-        uses: softprops/action-gh-release@v2.2.2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: "nightly"
           draft: false
@@ -89,7 +89,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with: { fetch-depth: 0 }
 
       - name: Compile clib4
@@ -105,7 +105,7 @@ jobs:
           mv clib4.lha clib4-nightly_SPE.lha
 
       - name: Upload Files
-        uses: softprops/action-gh-release@v2.2.2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: "nightly"
           draft: false

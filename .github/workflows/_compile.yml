@@ -35,7 +35,7 @@ jobs:
         - '${{ github.workspace }}:/opt/code'
     steps:
       - name: Pull code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Add repository to git safe directories
         run: |
@@ -129,7 +129,7 @@ jobs:
       - name: Create Pull Request
         if: ${{ inputs.spe == 'no' }}
         id: cpr
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: Release ${{ inputs.git_tag }} changes
           branch: release/${{ inputs.git_tag }}

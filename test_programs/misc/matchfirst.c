@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <proto/dos.h>
-#include <dos/obsolete.h>
 
 void loadFile(const char *file) {
     char *filename = malloc(400);

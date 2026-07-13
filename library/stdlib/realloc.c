@@ -16,14 +16,21 @@ void *
 realloc(void *ptr, size_t size) {
     void *result = NULL;
     struct _clib4 *__clib4 = __CLIB4;
+    wmem_allocator_t *allocator;
 
     assert((int) size >= 0);
 
     if (size == 0) size = 4;
-    
+
     __memory_lock(__clib4);
 
-    result = wmem_realloc(__clib4->__wmem_allocator, ptr, size);
+    allocator = __get_wmem_allocator(__clib4);
+    if (allocator == NULL) {
+        __memory_unlock(__clib4);
+        return NULL;
+    }
+
+    result = wmem_realloc(allocator, ptr, size);
     if (result == NULL) {
         SHOWMSG("could not reallocate memory");
     }

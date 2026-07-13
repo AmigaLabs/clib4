@@ -360,6 +360,13 @@ reent_exit(struct _clib4 *__clib4) {
         const struct ElfIFace *IElf = __IElf;
 
         if (IElf && __clib4->__dl_root_handle != NULL) {
+            /* Release the permanent libc anchor before closing the root handle.
+             * DLClose must be called while __dl_root_handle is still valid. */
+            if (__clib4->__dl_libc_anchor != NULL) {
+                SHOWMSG("Closing __dl_libc_anchor");
+                DLClose(__clib4->__dl_root_handle, __clib4->__dl_libc_anchor);
+                __clib4->__dl_libc_anchor = NULL;
+            }
             SHOWMSG("Closing __dl_root_handle");
             CloseElfTags(__clib4->__dl_root_handle, CET_ReClose, TRUE, TAG_DONE);
             __clib4->__dl_root_handle = NULL;

@@ -532,6 +532,7 @@ C_STDLIB := \
 	stdlib/lltoa.o \
 	stdlib/main.o \
 	stdlib/malloc.o \
+	stdlib/malloc_usable_size.o \
 	stdlib/mblen.o \
 	stdlib/mbstowcs.o \
 	stdlib/mbtowc.o \

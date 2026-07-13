@@ -309,8 +309,7 @@ struct _clib4 {
 
     APTR stdio_lock;
 
-    /* Wof Allocator main pointer */
-    wmem_allocator_t *__wmem_allocator;
+    void *unused1;
     APTR __environment_pool;
 
     /* Names of files and directories to delete when shutting down. */
@@ -319,8 +318,8 @@ struct _clib4 {
 
     /* Local timer I/O. */
     struct MsgPort *__timer_port;
-    BOOL unused1;
-	void *unused2;
+    BOOL unused3;
+	void *nti_argv0;  /* Used by arg_init() to save nti_argv0 (freed in arg_exit) */
     struct TimeRequest *__timer_request;
     struct Library *__TimerBase;
     struct TimerIFace *__ITimer;
@@ -604,6 +603,24 @@ struct _clib4 {
      */
     struct iob   *__sf[3];              /* per-process stdin/stdout/stderr iob pointers */
     struct _glue *__sglue;              /* per-process root glue node for FILE slots */
+
+    /*
+     * Cached pointer to the global Clib4Resource.
+     * Initialized once in stdlib_memory_init to avoid repeated OpenResource() calls
+     * in malloc/free hot path. The resource itself is shared across all processes,
+     * but each process caches its own pointer for fast access.
+     */
+    struct Clib4Resource *__clib4_resource;
+
+    /*
+     * Permanent "anchor" handle for the libc DSO (PROGDIR:SObjs/libc.so /
+     * PROGDIR:libc.so).  Opened once in call_main() and closed after all
+     * process destructors have run.  This prevents user code (e.g. ctypes
+     * calling dlclose) from driving the ELF loader's reference count to zero
+     * and unloading libc.so before the process DTOR list (which contains
+     * function pointers into libc.so) has been walked.
+     */
+    void  *__dl_libc_anchor;
 };
 
 #ifndef __getClib4

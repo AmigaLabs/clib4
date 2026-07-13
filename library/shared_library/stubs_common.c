@@ -23,7 +23,8 @@ static struct Library *__clib4_so_base = NULL;
 static void __init_clib4_so(void) {
     if (IClib4 != NULL)
         return;
-    struct ExecBase *sysbase = *(struct ExecBase **)4;
+    volatile uintptr_t exec_addr = 4;
+    struct ExecBase *sysbase = *(struct ExecBase **)(exec_addr);
     struct ExecIFace *iexec = (struct ExecIFace *)sysbase->MainInterface;
     __clib4_so_base = iexec->OpenLibrary("clib4.library", 1);
     if (__clib4_so_base) {
@@ -34,7 +35,8 @@ static void __init_clib4_so(void) {
 
 static void __exit_clib4_so(void) {
     if (__clib4_so_base) {
-        struct ExecBase *sysbase = *(struct ExecBase **)4;
+        volatile uintptr_t exec_addr = 4;
+        struct ExecBase *sysbase = *(struct ExecBase **)(exec_addr);
         struct ExecIFace *iexec = (struct ExecIFace *)sysbase->MainInterface;
         IClib4 = NULL;
         iexec->CloseLibrary(__clib4_so_base);

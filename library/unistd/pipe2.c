@@ -47,6 +47,10 @@ int pipe2(int fd[2], int flags) {
         return -1;
     }
 
+    /* Cross-reference each side so the write path can detect EPIPE */
+    __change_fd_user_data(__clib4, fd[0], (void *)(uintptr_t)fd[1], NULL);
+    __change_fd_user_data(__clib4, fd[1], (void *)(uintptr_t)fd[0], NULL);
+
     /* Mark FD as PIPE in case USE_TEMPFILES is used */
     struct fd *fd1 = __get_file_descriptor(__clib4, fd[0]);
     if (fd1 != NULL) {
@@ -57,9 +61,11 @@ int pipe2(int fd[2], int flags) {
     if (fd2 != NULL) {
         SET_FLAG(fd2->fd_Flags, FDF_PIPE);
     }
-    if (flags & O_CLOEXEC)
+    if (flags & O_CLOEXEC) {
+        SET_FLAG(fd1->fd_Flags, FDF_CLOEXEC);
         SET_FLAG(fd2->fd_Flags, FDF_CLOEXEC);
-    if(flags & O_NONBLOCK) {
+    }
+    if (flags & O_NONBLOCK) {
         SET_FLAG(fd1->fd_Flags, FDF_NON_BLOCKING);
         SET_FLAG(fd2->fd_Flags, FDF_NON_BLOCKING);
     }

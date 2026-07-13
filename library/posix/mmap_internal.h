@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 
 #define MMAP_MAGIC      0x4D4D4150  /* "MMAP" */
 #define MMAP_PAGE_SIZE  4096UL      /* AmigaOS 4 MMU page size */
@@ -104,5 +105,10 @@ __mmap_writeback(struct mmap_header *hdr, void *user_ptr, size_t len) {
 
     return (written == (ssize_t)len) ? 0 : -1;
 }
+
+/* Release all live mmap() allocations that were not explicitly munmap()'d.
+ * Called once from the process exit path (call_main out: label in main.c).
+ * Safe to call even if no mappings exist (__mmap_records == NULL).        */
+extern void __mmap_cleanup_all(void);
 
 #endif /* _MMAP_INTERNAL_H */

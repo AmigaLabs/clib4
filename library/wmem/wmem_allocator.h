@@ -30,6 +30,7 @@ struct _wmem_allocator_t {
     void *(*walloc)(void *private_data, const size_t size, int32_t alignment);
     void  (*wfree)(void *private_data, void *ptr);
     void *(*wrealloc)(void *private_data, void *ptr, const size_t size, int32_t alignment);
+    size_t (*wsize)(void *private_data, const void *ptr);
 
     /* Producer/Manager functions */
     void  (*free_all)(void *private_data);
