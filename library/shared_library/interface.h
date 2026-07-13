@@ -1377,6 +1377,8 @@ struct Clib4IFace {
     int (* mlock2) (const void *addr, size_t len, unsigned int flags);                                                                               /* 4488 */
 
     size_t (* malloc_usable_size) (void *ptr);                                                                                                       /* 4492 */
+
+    void (* malloc_dump) (void);                                                                                                                     /* 4496 */
 };
 
 #ifdef __PIC__

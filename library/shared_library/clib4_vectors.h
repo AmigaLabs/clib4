@@ -1204,5 +1204,7 @@ static void *clib4Vectors[] = {
         (void *) (mlock2),                                /* 4488 */
 
         (void *) (malloc_usable_size),                    /* 4492 */
+
+        (void *) (malloc_dump),                           /* 4496 */
         (void *)-1
 };

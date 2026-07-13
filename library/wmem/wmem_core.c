@@ -474,6 +474,52 @@ wmem_destroy_allocator(wmem_allocator_t *allocator) {
 #endif
 }
 
+static const char *
+wmem_allocator_type_name(const wmem_allocator_type_t type) {
+    switch (type) {
+        case WMEM_ALLOCATOR_SIMPLE:     return "simple";
+        case WMEM_ALLOCATOR_BLOCK:      return "block";
+        case WMEM_ALLOCATOR_BLOCK_FAST: return "block_fast";
+        case WMEM_ALLOCATOR_STRICT:     return "strict";
+        default:                        return "unknown";
+    }
+}
+
+void
+wmem_dump_allocator(wmem_allocator_t *allocator) {
+    if (allocator == NULL) {
+        DebugPrintF("[clib4 dump] no allocator (NULL)\n");
+        return;
+    }
+
+    DebugPrintF("[clib4 dump] ==================================================\n");
+    DebugPrintF("[clib4 dump] wmem allocator @0x%08lx, type '%s', in_scope=%ld\n",
+                (unsigned long) (uintptr_t) allocator,
+                wmem_allocator_type_name(allocator->type),
+                (long) allocator->in_scope);
+
+    if (allocator->dump != NULL)
+        allocator->dump(allocator->private_data);
+    else
+        DebugPrintF("[clib4 dump] this allocator type provides no dump routine\n");
+
+#if DEBUG == 1
+    /* Also print the global system-allocation accounting (all AllocVecTags/
+     * FreeVec issued through wmem by every process, DEBUG builds only). */
+    __wmem_track_lock();
+    DebugPrintF("[clib4 dump] system-wide (all processes): %lu AllocVecTags (%lu bytes), %lu FreeVec (%lu bytes), outstanding %lu bytes, peak %lu bytes\n",
+                (unsigned long) __wmem_alloc_count,
+                (unsigned long) __wmem_bytes_allocated,
+                (unsigned long) __wmem_free_count,
+                (unsigned long) __wmem_bytes_freed,
+                (unsigned long) __wmem_bytes_current,
+                (unsigned long) __wmem_bytes_peak);
+    __wmem_track_unlock();
+#endif
+
+    DebugPrintF("[clib4 dump] ==================================================\n");
+}
+
 wmem_allocator_t *
 wmem_allocator_new(const wmem_allocator_type_t type) {
     wmem_allocator_t *allocator;

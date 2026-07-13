@@ -37,6 +37,11 @@ struct _wmem_allocator_t {
     void  (*gc)(void *private_data);
     void  (*cleanup)(void *private_data);
 
+    /* Debug helper: walk the allocator's internal structures and print
+     * every OS block / chunk / allocation on the serial port via
+     * DebugPrintF(). May be NULL. See wmem_dump_allocator(). */
+    void  (*dump)(void *private_data);
+
     /* Callback List */
     struct _wmem_user_cb_container_t *callbacks;
 

@@ -258,6 +258,48 @@ wmem_block_fast_gc(void *private_data) {
     /* No-op */
 }
 
+/* Print the OS blocks and jumbo allocations on the serial port. The fast
+ * allocator keeps no per-chunk metadata that would allow walking individual
+ * allocations (free() is a no-op and chunks are packed with variable
+ * alignment padding), so only per-block usage can be reported. Called
+ * through wmem_dump_allocator() with the memory lock held. */
+static void
+wmem_block_fast_dump(void *private_data) {
+    wmem_block_fast_allocator_t *allocator = (wmem_block_fast_allocator_t *) private_data;
+    wmem_block_fast_hdr_t *block;
+    wmem_block_fast_jumbo_t *jumbo;
+    uint32_t n_blocks = 0, n_jumbo = 0;
+    uint64_t used_bytes = 0, jumbo_bytes = 0;
+
+    for (block = allocator->block_list; block != NULL; block = block->next) {
+        uintptr_t used = block->pos - ((uintptr_t) block + WMEM_BLOCK_HEADER_SIZE);
+
+        n_blocks++;
+        used_bytes += used;
+
+        DebugPrintF("[clib4 dump] block %3lu @0x%08lx (%lu bytes): %lu bytes handed out\n",
+                    (unsigned long) n_blocks,
+                    (unsigned long) (uintptr_t) block,
+                    (unsigned long) WMEM_BLOCK_SIZE,
+                    (unsigned long) used);
+    }
+
+    for (jumbo = allocator->jumbo_list; jumbo != NULL; jumbo = jumbo->next) {
+        n_jumbo++;
+        jumbo_bytes += jumbo->size;
+
+        DebugPrintF("[clib4 dump] jumbo %3lu @0x%08lx: %lu bytes\n",
+                    (unsigned long) n_jumbo,
+                    (unsigned long) (uintptr_t) jumbo,
+                    (unsigned long) jumbo->size);
+    }
+
+    DebugPrintF("[clib4 dump] block_fast allocator summary: %lu OS blocks (%lu bytes handed out), %lu jumbo (%lu bytes)\n",
+                (unsigned long) n_blocks, (unsigned long) used_bytes,
+                (unsigned long) n_jumbo, (unsigned long) jumbo_bytes);
+    DebugPrintF("[clib4 dump] note: free() is a no-op in block_fast, per-allocation walk not possible\n");
+}
+
 static void
 wmem_block_fast_allocator_cleanup(void *private_data) {
     wmem_block_fast_allocator_t *allocator = (wmem_block_fast_allocator_t *) private_data;
@@ -285,6 +327,7 @@ wmem_block_fast_allocator_init(wmem_allocator_t *allocator) {
     allocator->free_all = &wmem_block_fast_free_all;
     allocator->gc = &wmem_block_fast_gc;
     allocator->cleanup = &wmem_block_fast_allocator_cleanup;
+    allocator->dump = &wmem_block_fast_dump;
 
     allocator->private_data = (void *) block_allocator;
 

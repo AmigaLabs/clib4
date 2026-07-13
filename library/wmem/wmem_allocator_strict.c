@@ -220,6 +220,31 @@ wmem_strict_allocator_cleanup(void *private_data) {
     wmem_free(NULL, private_data);
 }
 
+/* Print every live allocation on the serial port. Called through
+ * wmem_dump_allocator() with the memory lock held. */
+static void
+wmem_strict_dump(void *private_data) {
+    wmem_strict_allocator_t *allocator = (wmem_strict_allocator_t *) private_data;
+    wmem_strict_allocator_block_t *block;
+    uint32_t count = 0;
+    uint64_t total = 0;
+
+    for (block = allocator->blocks; block != NULL; block = block->next) {
+        count++;
+        total += block->data_len;
+
+        DebugPrintF("[clib4 dump]   alloc %5lu: data 0x%08lx, size %8lu (block @0x%08lx, total %lu)\n",
+                    (unsigned long) count,
+                    (unsigned long) (uintptr_t) block->data,
+                    (unsigned long) block->data_len,
+                    (unsigned long) (uintptr_t) block,
+                    (unsigned long) block->total_size);
+    }
+
+    DebugPrintF("[clib4 dump] strict allocator summary: %lu live allocations, %lu bytes payload\n",
+                (unsigned long) count, (unsigned long) total);
+}
+
 static size_t
 wmem_strict_size(void *private_data, const void *ptr) {
     wmem_strict_allocator_t *allocator = (wmem_strict_allocator_t *) private_data;
@@ -241,6 +266,7 @@ wmem_strict_allocator_init(wmem_allocator_t *allocator) {
     allocator->free_all = &wmem_strict_free_all;
     allocator->gc = &wmem_strict_gc;
     allocator->cleanup = &wmem_strict_allocator_cleanup;
+    allocator->dump = &wmem_strict_dump;
 
     allocator->private_data = (void *) strict_allocator;
 
