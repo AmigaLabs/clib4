@@ -130,6 +130,11 @@ wmem_strict_free(void *private_data, void *ptr) {
 
     block = WMEM_DATA_TO_BLOCK(allocator, ptr);
 
+    /* Pointer not owned by this allocator instance (e.g. a foreign or
+     * cross-process pointer): ignore it, like the block allocator does. */
+    if (block == NULL)
+        return;
+
     wmem_strict_block_check_canaries(block);
 
     if (block->next) {
@@ -153,6 +158,10 @@ wmem_strict_realloc(void *private_data, void *ptr, const size_t size, int32_t al
     void *new_ptr;
 
     block = WMEM_DATA_TO_BLOCK((wmem_strict_allocator_t *) private_data, ptr);
+
+    /* Undefined input: pointer not owned by this allocator instance. */
+    if (block == NULL)
+        return NULL;
 
     /* create a new block */
     new_ptr = wmem_strict_alloc(private_data, size, alignment);

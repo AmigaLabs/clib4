@@ -200,8 +200,12 @@ __wmem_track_free(void *ptr) {
     __wmem_track_unlock();
 }
 
-/* Print the final accounting report on the serial port and reset all
- * tracking state, so that a re-created allocator starts from scratch. */
+/* Print the accounting report on the serial port. Called every time an
+ * allocator is destroyed (i.e. at every process exit, since allocators
+ * are per-process). Counters are cumulative since the library was loaded
+ * and are NOT reset here: outstanding entries may belong to allocators of
+ * other processes that are still running. When the last process exits,
+ * "still allocated" reflects the real system-wide leaks. */
 static void
 __wmem_track_report(void) {
     uint32_t leaked_blocks = 0;
@@ -260,26 +264,6 @@ __wmem_track_report(void) {
         DebugPrintF("[clib4] frees of untracked pointers: %lu\n",
                     (unsigned long) __wmem_untracked_free);
     DebugPrintF("[clib4] ==================================================\n");
-
-    /* Reset state: free the leftover entries and clear the counters. */
-    for (i = 0; i < WMEM_TRACK_BUCKETS; i++) {
-        wmem_track_entry_t *entry = __wmem_track_table[i];
-        while (entry != NULL) {
-            wmem_track_entry_t *next = entry->next;
-            FreeVec(entry);
-            entry = next;
-        }
-        __wmem_track_table[i] = NULL;
-    }
-
-    __wmem_bytes_allocated = 0;
-    __wmem_bytes_freed = 0;
-    __wmem_bytes_current = 0;
-    __wmem_bytes_peak = 0;
-    __wmem_alloc_count = 0;
-    __wmem_free_count = 0;
-    __wmem_track_oom = 0;
-    __wmem_untracked_free = 0;
 
     __wmem_track_unlock();
 }

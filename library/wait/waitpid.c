@@ -10,6 +10,20 @@
 
 #include "clib4.h"
 
+/* Release the fd-inherit spec of a child entry about to be removed from
+ * the spawnedProcesses hashmap. The spec is AllocVecTags'd by the parent
+ * in build_fd_inherit_spec and normally consumed (and freed) by the child
+ * in import_pending_fds_for_process, but a child that is not a clib4
+ * program never consumes it. */
+static void
+free_child_fd_inherit(void *item) {
+    struct Clib4Children *child = item;
+    if (child != NULL && child->fdInherit != NULL) {
+        FreeVec(child->fdInherit);
+        child->fdInherit = NULL;
+    }
+}
+
 pid_t waitpid(pid_t pid, int *status, int options) {
     struct _clib4 *__clib4 = __CLIB4;
     uint32 me = GetPID(0, GPID_PROCESS);
@@ -88,7 +102,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                     if (status) *status = 0;
                 }
 
-                if (!found) hashmap_delete(node->spawnedProcesses, item);
+                if (!found) { free_child_fd_inherit(item); hashmap_delete(node->spawnedProcesses, item); }
 
                 D(("Child with pid %ld %s with status 0x%lx\n", pid, found ? "was found" : "has exited", status ? *status : 0));
             } else {
@@ -107,6 +121,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                 /* Set returnCode status */
                 if (status) *status = item->returnCode;
 
+                free_child_fd_inherit(item);
                 hashmap_delete(node->spawnedProcesses, item);
 
                 D(("Child with pid %ld has (to the best of our knowledge) exited with status 0x%lx\n", pid, status ? *status : 0));
@@ -127,6 +142,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                     /* Set returnCode on Status */
                     if (status) *status = children->returnCode;
 
+                    free_child_fd_inherit(item);
                     hashmap_delete(node->spawnedProcesses, item);
                     pidFound = pid;
                     break;
@@ -154,6 +170,7 @@ pid_t waitpid(pid_t pid, int *status, int options) {
                         /* Set returnCode on status */
                         if (status) *status = children->returnCode;
 
+                        free_child_fd_inherit(item);
                         hashmap_delete(node->spawnedProcesses, item);
                         pidFound = pid;
                         done = TRUE;

@@ -158,7 +158,8 @@ __get_resolved_bptr(struct _clib4 *__clib4, int fd_num)
  * can use Input()/Output()/ErrorOutput() — required for PIPE: devices.
  * Pass -1 for fhin/fhout/fherr when the caller does not redirect stdio.
  *
- * Returns a malloc'd string, or NULL if no fds need inheritance.
+ * Returns a string allocated with AllocVecTags (release with FreeVec),
+ * or NULL if no fds need inheritance.
  */
 char *
 build_fd_inherit_spec(struct _clib4 *__clib4, int fhin, int fhout, int fherr)
@@ -196,7 +197,12 @@ build_fd_inherit_spec(struct _clib4 *__clib4, int fhin, int fhout, int fherr)
     if (count == 0)
         return NULL;
 
-    out = malloc(required);
+    /* Use system memory (AllocVecTags/FreeVec), NOT malloc(): the spec is
+     * created by the parent but consumed and freed by the child process
+     * (import_pending_fds_for_process), which has its own per-process
+     * allocator. It must also stay valid if the parent exits before the
+     * child has imported its file descriptors. */
+    out = AllocVecTags(required, AVT_Type, MEMF_SHARED, TAG_DONE);
     if (out == NULL)
         return NULL;
     out[0] = '\0';

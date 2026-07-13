@@ -18,12 +18,12 @@
 
 wmem_allocator_t *
 __get_wmem_allocator(struct _clib4 *__clib4) {
-    /* Use cached resource pointer - initialized in stdlib_memory_init */
-    struct Clib4Resource *res = __clib4->__clib4_resource;
-    if (res == NULL)
+    if (__clib4 == NULL)
         return NULL;
 
-    return (wmem_allocator_t *) res->__wmem_allocator;
+    /* Per-process allocator - created in stdlib_memory_init, destroyed in
+     * libClose when this process closes the library. */
+    return (wmem_allocator_t *) __clib4->__wmem_allocator;
 }
 
 void *
@@ -70,23 +70,16 @@ out:
 }
 
 void __memory_lock(struct _clib4 *__clib4) {
-    /* Use cached resource pointer - initialized in stdlib_memory_init */
-    struct Clib4Resource *res = __clib4->__clib4_resource;
-
+    /* The allocator is per-process, so the per-process mutex (shared by
+     * all pthread threads, which run on the parent's _clib4 context) is
+     * all the arbitration that is needed. The old global resource
+     * semaphore is no longer taken here: it serialized every malloc/free
+     * of every running clib4 program system-wide. */
     if(__clib4->memory_mutex)
         MutexObtain(__clib4->memory_mutex);
-
-    if (res != NULL)
-        ObtainSemaphore(&res->semaphore);
 }
 
 void __memory_unlock(struct _clib4 *__clib4) {
-    /* Use cached resource pointer - initialized in stdlib_memory_init */
-    struct Clib4Resource *res = __clib4->__clib4_resource;
-
-    if (res != NULL)
-        ReleaseSemaphore(&res->semaphore);
-
     if(__clib4->memory_mutex)
         MutexRelease(__clib4->memory_mutex);
 }
@@ -114,9 +107,14 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
 
     ENTER();
 
-    __clib4->memory_mutex = __create_mutex();
-    if (__clib4->memory_mutex == NULL)
-        goto out;
+    /* This constructor can run twice for statically linked programs (once
+     * from the library-internal ctor list in libOpen and once from the
+     * program's own ctor list in call_main), so it must be idempotent. */
+    if (__clib4->memory_mutex == NULL) {
+        __clib4->memory_mutex = __create_mutex();
+        if (__clib4->memory_mutex == NULL)
+            goto out;
+    }
 
     res = (APTR) OpenResource(RESOURCE_NAME);
     if (res == NULL) {
@@ -128,13 +126,15 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
     /* Cache the global resource pointer to avoid repeated OpenResource() calls */
     __clib4->__clib4_resource = res;
 
-    ObtainSemaphore(&res->semaphore);
-    if (res->__wmem_allocator == NULL) {
-        res->__wmem_allocator = wmem_allocator_new(__clib4->__wof_mem_allocator_type);
+    /* Create the per-process allocator. All memory obtained through
+     * malloc() and friends comes from here, and the whole allocator is
+     * destroyed in libClose when this process closes the library, so
+     * anything the program leaked is returned to the system at exit. */
+    if (__clib4->__wmem_allocator == NULL) {
+        __clib4->__wmem_allocator = wmem_allocator_new(__clib4->__wof_mem_allocator_type);
     }
-    ReleaseSemaphore(&res->semaphore);
 
-    if (res->__wmem_allocator == NULL) {
+    if (__clib4->__wmem_allocator == NULL) {
         __delete_mutex(__clib4->memory_mutex);
         __clib4->memory_mutex = NULL;
         goto out;

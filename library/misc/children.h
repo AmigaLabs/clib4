@@ -22,6 +22,11 @@ struct spawnData {
 	struct Task *parentTask;
 	char parentUuid[UUID4_LEN + 1];
 	char *fdInherit;
+	/* TRUE when the structure was allocated with AllocVecTags by the
+	 * spawning parent and must be released with FreeVec by the child in
+	 * spawnedProcessEnter. FALSE when it lives on the parent's stack
+	 * (spawnvpe_fork, which waits for SIGF_CHILD before returning). */
+	BOOL freeData;
 };
 
 #endif

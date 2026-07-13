@@ -219,10 +219,10 @@ spawnvpe(
 
     fd_inherit = build_fd_inherit_spec(__clib4, fhin, fhout, fherr);
 
-    data = malloc(sizeof(*data));
+    data = AllocVecTags(sizeof(*data), AVT_Type, MEMF_SHARED, TAG_DONE);
     if (data == NULL) {
         if (fd_inherit != NULL)
-            free(fd_inherit);
+            FreeVec(fd_inherit);
         for (int i = 0; i < 3; i++) {
             if (iofh[i] != BZERO)
                 Close(iofh[i]);
@@ -238,6 +238,7 @@ spawnvpe(
     data->parentTask = FindTask(NULL);
     data->parentUuid[0] = '\0';
     data->fdInherit = fd_inherit;
+    data->freeData = TRUE;
     if (__CLIB4->uuid)
         strncpy(data->parentUuid, __CLIB4->uuid, UUID4_LEN);
 
@@ -264,8 +265,8 @@ spawnvpe(
             if (data->fdInherit != NULL)
                 close_fd_inherit_spec_handles(data->fdInherit);
             if (data->fdInherit != NULL)
-                free(data->fdInherit);
-            free(data);
+                FreeVec(data->fdInherit);
+            FreeVec(data);
             data = NULL;
         }
         D(("System/CreateNewProc failed. Return value: [%ld]\n", ret));
