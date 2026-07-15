@@ -402,9 +402,6 @@ __lookup_name(struct address buf[static MAXADDRS], char canon[static 256], const
     if (i == cnt)
         return cnt;
 
-    //int cs;
-    //pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-
     /* The following implements a subset of RFC 3484/6724 destination
      * address selection by generating a single 31-bit sort key for
      * each address. Rules 3, 4, and 7 are omitted for having
@@ -470,8 +467,6 @@ __lookup_name(struct address buf[static MAXADDRS], char canon[static 256], const
         buf[i].sortkey = key;
     }
     qsort(buf, cnt, sizeof *buf, addrcmp);
-
-    //pthread_setcancelstate(cs, 0);
 
     return cnt;
 }
