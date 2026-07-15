@@ -21,6 +21,7 @@
 #define _IFADDRS_H        1
 
 #include <features.h>
+#include <stdint.h>
 #include <sys/socket.h>
 
 __BEGIN_DECLS
@@ -53,6 +54,18 @@ struct ifaddrs {
 # endif
 
     void *ifa_data;                /* Address-specific data (may be unused).  */
+};
+
+/*
+ * Network interface statistics stored in ifa_data for AF_INET/AF_INET6
+ */
+struct ifa_data {
+    uint32_t ifa_mtu;           /* IFQ_HardwareMTU  */
+    uint32_t ifa_metric;        /* IFQ_Metric       */
+    uint32_t ifa_packets_in;    /* IFQ_PacketsReceived */
+    uint32_t ifa_packets_out;   /* IFQ_PacketsSent     */
+    uint32_t ifa_errors;        /* IFQ_BadData         */
+    uint32_t ifa_overruns;      /* IFQ_Overruns        */
 };
 
 
