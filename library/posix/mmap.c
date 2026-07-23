@@ -37,6 +37,11 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset) {
         RETURN(MAP_FAILED);
         return MAP_FAILED;
     }
+    /* For anonymous mappings, fd/offset are ignored by POSIX semantics. */
+    if (flags & MAP_ANONYMOUS) {
+        fd = -1;
+        offset = 0;
+    }
     struct _clib4 *__clib4 = __CLIB4;
 
     /*
@@ -123,8 +128,20 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset) {
         hdr->fd = dfd;
 
         /* Read file content into the mapping */
-        lseek(dfd, offset, SEEK_SET);
-        read(dfd, user_ptr, len);
+        if (lseek(dfd, offset, SEEK_SET) < 0) {
+            close(dfd);
+            FreeVec(block);
+            __set_errno(EINVAL);
+            RETURN(MAP_FAILED);
+            return MAP_FAILED;
+        }
+        if (read(dfd, user_ptr, len) < 0) {
+            close(dfd);
+            FreeVec(block);
+            __set_errno(EIO);
+            RETURN(MAP_FAILED);
+            return MAP_FAILED;
+        }
     }
 
     (void)addr; /* MAP_FIXED not yet supported; addr hint is ignored */

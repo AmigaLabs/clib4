@@ -140,11 +140,14 @@ obtain_file_lock_semaphore(struct _clib4 *__clib4, BOOL shared) {
         }
 
         /* Release the memory allocated for the semaphore, in case
-           we didn't need it after all. */
+           we didn't need it after all. Note that the name copy must be
+           released even if the semaphore allocation itself failed;
+           it is set to NULL above when ownership passes to the added
+           semaphore, and FreeVec(NULL) is safe. */
         if (fls != NULL) {
-            FreeVec(semaphore_name_copy);
             FreeSysObject(ASOT_SEMAPHORE, fls);
         }
+        FreeVec(semaphore_name_copy);
     }
 
     if (FileLockSemaphore != NULL) {

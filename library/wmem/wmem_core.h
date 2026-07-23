@@ -199,6 +199,15 @@ extern void wmem_destroy_allocator(wmem_allocator_t *allocator);
  */
 extern wmem_allocator_t * wmem_allocator_new(const wmem_allocator_type_t type);
 
+/** Dump the internal structures of the given allocator (every OS block,
+ * chunk and live allocation, plus summary totals) on the serial port via
+ * DebugPrintF(). Intended for debugging memory usage and leaks; the caller
+ * must own whatever lock protects the allocator (e.g. __memory_lock).
+ *
+ * @param allocator The allocator to dump.
+ */
+extern void wmem_dump_allocator(wmem_allocator_t *allocator);
+
 /** Initialize the wmem subsystem. This must be called before any other wmem
  * function, usually at the very beginning of your program.
  */

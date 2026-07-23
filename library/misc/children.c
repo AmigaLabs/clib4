@@ -249,10 +249,13 @@ spawnedProcessEnter(int32 entry_data) {
     else {
         D(("Cannot insert children with pid %ld and gid %ld into list\n", pid, groupId));
         /* insertion failed: free the spec that was not transferred */
-        free(data->fdInherit);
+        FreeVec(data->fdInherit);
         data->fdInherit = NULL;
     }
-	free(data);
+	/* Only release heap-allocated spawnData (AllocVecTags'd by the parent);
+	 * spawnvpe_fork passes a stack structure and waits for SIGF_CHILD. */
+	if (data->freeData)
+		FreeVec(data);
 	Signal(parentTask, SIGF_CHILD);
 }
 
@@ -272,7 +275,7 @@ import_pending_fds_for_process(struct _clib4 *__clib4, uint32 pid, uint32 ppid) 
             struct Clib4Children *ce = (struct Clib4Children *) hashmap_get(node->spawnedProcesses, &key);
             if (ce != NULL && ce->fdInherit != NULL) {
                 import_inherited_fds_from_spec(__clib4, ce->fdInherit);
-                free(ce->fdInherit);
+                FreeVec(ce->fdInherit);
                 ce->fdInherit = NULL;
             }
             break;

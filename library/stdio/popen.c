@@ -248,10 +248,10 @@ popen(const char *command, const char *type) {
     fd_inherit = build_fd_inherit_spec(__clib4, -1, -1, -1);
 
     /* Now try to launch the program. */
-    data = malloc(sizeof(*data));
+    data = AllocVecTags(sizeof(*data), AVT_Type, MEMF_SHARED, TAG_DONE);
     if (data == NULL) {
         if (fd_inherit != NULL)
-            free(fd_inherit);
+            FreeVec(fd_inherit);
         __set_errno_r(__clib4, ENOMEM);
         goto out;
     }
@@ -259,6 +259,7 @@ popen(const char *command, const char *type) {
     data->parentTask = FindTask(NULL);
     data->parentUuid[0] = '\0';
     data->fdInherit = fd_inherit;
+    data->freeData = TRUE;
     if (__CLIB4->uuid)
         strncpy(data->parentUuid, __CLIB4->uuid, UUID4_LEN);
 
@@ -286,8 +287,8 @@ popen(const char *command, const char *type) {
             if (data->fdInherit != NULL)
                 close_fd_inherit_spec_handles(data->fdInherit);
             if (data->fdInherit != NULL)
-                free(data->fdInherit);
-            free(data);
+                FreeVec(data->fdInherit);
+            FreeVec(data);
             data = NULL;
         }
         SHOWMSG("SystemTagList() failed");

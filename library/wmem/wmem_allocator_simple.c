@@ -200,6 +200,27 @@ wmem_simple_gc(void *private_data) {
     /* In this simple allocator, there is nothing to garbage-collect */
 }
 
+/* Print every live allocation on the serial port. Called through
+ * wmem_dump_allocator() with the memory lock held. */
+static void
+wmem_simple_dump(void *private_data) {
+    wmem_simple_allocator_t *allocator = (wmem_simple_allocator_t *) private_data;
+    uint64_t total = 0;
+    int i;
+
+    for (i = 0; i < allocator->count; i++) {
+        DebugPrintF("[clib4 dump]   alloc %5ld: ptr 0x%08lx, size %8lu, alignment %ld\n",
+                    (long) i,
+                    (unsigned long) (uintptr_t) allocator->ptrs[i],
+                    (unsigned long) allocator->sizes[i],
+                    (long) allocator->alignments[i]);
+        total += allocator->sizes[i];
+    }
+
+    DebugPrintF("[clib4 dump] simple allocator summary: %ld live allocations, %lu bytes (table capacity %ld)\n",
+                (long) allocator->count, (unsigned long) total, (long) allocator->size);
+}
+
 static void
 wmem_simple_allocator_cleanup(void *private_data) {
     wmem_simple_allocator_t *allocator;
@@ -226,6 +247,7 @@ wmem_simple_allocator_init(wmem_allocator_t *allocator) {
     allocator->free_all = &wmem_simple_free_all;
     allocator->gc = &wmem_simple_gc;
     allocator->cleanup = &wmem_simple_allocator_cleanup;
+    allocator->dump = &wmem_simple_dump;
 
     allocator->private_data = (void *) simple_allocator;
 

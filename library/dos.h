@@ -621,6 +621,19 @@ struct _clib4 {
      * function pointers into libc.so) has been walked.
      */
     void  *__dl_libc_anchor;
+
+    /*
+     * Per-process wmem allocator. Created in stdlib_memory_init and
+     * destroyed in libClose when the process closes the library. Keeping
+     * the allocator per-process (instead of the old system-wide singleton
+     * stored in Clib4Resource) guarantees that all memory malloc'd and
+     * never freed by a program is returned to the system as soon as that
+     * program exits, instead of staying allocated until the last clib4
+     * process terminates.
+     * pthread threads share the parent's _clib4 (via pr_UID) and therefore
+     * share this allocator, protected by memory_mutex.
+     */
+    void  *__wmem_allocator;
 };
 
 #ifndef __getClib4

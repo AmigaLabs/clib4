@@ -661,11 +661,30 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
             const struct Clib4Node *node = item;
             if (node->undo)
                 IExec->FreeVec(node->undo);
+            /* Nodes left behind by processes that never ran libClose
+             * (e.g. crashed) still own their spawnedProcesses hashmap
+             * and possibly fd-inherit specs never consumed by children. */
+            if (node->spawnedProcesses) {
+                size_t child_iter = 0;
+                void *child_item;
+                while (hashmap_iter(node->spawnedProcesses, &child_iter, &child_item)) {
+                    struct Clib4Children *child = child_item;
+                    if (child->fdInherit != NULL) {
+                        IExec->FreeVec(child->fdInherit);
+                        child->fdInherit = NULL;
+                    }
+                }
+                hashmap_free(node->spawnedProcesses);
+            }
         }
 
         hashmap_free(res->children);
         if (res->fallbackClib) {
             reent_exit(res->fallbackClib);
+            /* reent_exit() releases the contents but not the structure
+             * itself, which was allocated with AllocVecTags in libInit. */
+            IExec->FreeVec(res->fallbackClib);
+            res->fallbackClib = NULL;
         }
 
         IExec->RemResource(res);
@@ -796,6 +815,17 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             if (node->pid == pid) {
                 /* Remove spawnedProcess hashmap */
                 if (node->spawnedProcesses != NULL) {
+                    /* Free any fd-inherit spec that was never consumed by
+                     * its child (AllocVecTags'd in build_fd_inherit_spec). */
+                    size_t child_iter = 0;
+                    void *child_item;
+                    while (hashmap_iter(node->spawnedProcesses, &child_iter, &child_item)) {
+                        struct Clib4Children *child = child_item;
+                        if (child->fdInherit != NULL) {
+                            IExec->FreeVec(child->fdInherit);
+                            child->fdInherit = NULL;
+                        }
+                    }
                     hashmap_free(node->spawnedProcesses);
                 }
                 if (node->undo)
@@ -803,6 +833,19 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
                 hashmap_delete(res->children, node);
                 break;
             }
+        }
+
+        /*
+         * Destroy this process' wmem allocator. Everything the program
+         * obtained through malloc() and never freed is returned to the
+         * system here, at process exit, instead of accumulating in the
+         * old system-wide allocator singleton until the last clib4
+         * process terminated. In DEBUG builds this also prints the
+         * memory accounting report on the serial port.
+         */
+        if (__clib4->__wmem_allocator != NULL) {
+            wmem_destroy_allocator((wmem_allocator_t *) __clib4->__wmem_allocator);
+            __clib4->__wmem_allocator = NULL;
         }
 
         /*
@@ -823,6 +866,21 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
 
     if (libBase->libNode.lib_OpenCnt) {
         return 0;
+    }
+
+    /* Last process closed the library. The allocator is per-process now
+     * and was already destroyed above; res->__wmem_allocator is only ever
+     * populated by old statically linked binaries whose embedded
+     * stdlib_memory_init still creates the legacy system-wide singleton.
+     * Destroy it here instead of waiting for libExpunge, which only runs
+     * if the system flushes the library from memory. */
+    if (res) {
+        IExec->ObtainSemaphore(&res->semaphore);
+        if (libBase->libNode.lib_OpenCnt == 0 && res->__wmem_allocator != NULL) {
+            wmem_destroy_allocator((wmem_allocator_t *) res->__wmem_allocator);
+            res->__wmem_allocator = NULL;
+        }
+        IExec->ReleaseSemaphore(&res->semaphore);
     }
 
     if (libBase->libNode.lib_Flags & LIBF_DELEXP) {

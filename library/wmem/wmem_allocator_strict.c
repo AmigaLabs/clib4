@@ -130,6 +130,11 @@ wmem_strict_free(void *private_data, void *ptr) {
 
     block = WMEM_DATA_TO_BLOCK(allocator, ptr);
 
+    /* Pointer not owned by this allocator instance (e.g. a foreign or
+     * cross-process pointer): ignore it, like the block allocator does. */
+    if (block == NULL)
+        return;
+
     wmem_strict_block_check_canaries(block);
 
     if (block->next) {
@@ -153,6 +158,10 @@ wmem_strict_realloc(void *private_data, void *ptr, const size_t size, int32_t al
     void *new_ptr;
 
     block = WMEM_DATA_TO_BLOCK((wmem_strict_allocator_t *) private_data, ptr);
+
+    /* Undefined input: pointer not owned by this allocator instance. */
+    if (block == NULL)
+        return NULL;
 
     /* create a new block */
     new_ptr = wmem_strict_alloc(private_data, size, alignment);
@@ -211,6 +220,31 @@ wmem_strict_allocator_cleanup(void *private_data) {
     wmem_free(NULL, private_data);
 }
 
+/* Print every live allocation on the serial port. Called through
+ * wmem_dump_allocator() with the memory lock held. */
+static void
+wmem_strict_dump(void *private_data) {
+    wmem_strict_allocator_t *allocator = (wmem_strict_allocator_t *) private_data;
+    wmem_strict_allocator_block_t *block;
+    uint32_t count = 0;
+    uint64_t total = 0;
+
+    for (block = allocator->blocks; block != NULL; block = block->next) {
+        count++;
+        total += block->data_len;
+
+        DebugPrintF("[clib4 dump]   alloc %5lu: data 0x%08lx, size %8lu (block @0x%08lx, total %lu)\n",
+                    (unsigned long) count,
+                    (unsigned long) (uintptr_t) block->data,
+                    (unsigned long) block->data_len,
+                    (unsigned long) (uintptr_t) block,
+                    (unsigned long) block->total_size);
+    }
+
+    DebugPrintF("[clib4 dump] strict allocator summary: %lu live allocations, %lu bytes payload\n",
+                (unsigned long) count, (unsigned long) total);
+}
+
 static size_t
 wmem_strict_size(void *private_data, const void *ptr) {
     wmem_strict_allocator_t *allocator = (wmem_strict_allocator_t *) private_data;
@@ -232,6 +266,7 @@ wmem_strict_allocator_init(wmem_allocator_t *allocator) {
     allocator->free_all = &wmem_strict_free_all;
     allocator->gc = &wmem_strict_gc;
     allocator->cleanup = &wmem_strict_allocator_cleanup;
+    allocator->dump = &wmem_strict_dump;
 
     allocator->private_data = (void *) strict_allocator;
 
