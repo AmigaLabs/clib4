@@ -33,18 +33,22 @@ workbench_exit() {
     }
 
     if (__clib4->restore_streams) {
-        SelectInput(__clib4->old_input);
-    	SetMode(__clib4->old_input, DOSFALSE);
-        __clib4->old_input = BZERO;
-
-        SelectOutput(__clib4->old_output);
-    	SetMode(__clib4->old_output, DOSFALSE);
-        __clib4->old_output = BZERO;
-
-        SelectErrorOutput(__clib4->old_error);
-    	SetMode(__clib4->old_error, DOSFALSE);
-        __clib4->old_error = BZERO;
-
+        if (__clib4->old_input != BZERO) {
+            SelectInput(__clib4->old_input);
+            SetMode(__clib4->old_input, DOSFALSE);
+            __clib4->old_input = BZERO;
+        }
+        if (__clib4->old_output != BZERO) {
+            SelectOutput(__clib4->old_output);
+            SetMode(__clib4->old_output, DOSFALSE);
+            __clib4->old_output = BZERO;
+        }
+        if (__clib4->old_error != BZERO) {
+            SelectErrorOutput(__clib4->old_error);
+            SetMode(__clib4->old_error, DOSFALSE);
+            __clib4->old_error = BZERO;
+        }
+        
         __clib4->restore_streams = FALSE;
     }
 
