@@ -532,6 +532,7 @@ C_STDLIB := \
 	stdlib/lltoa.o \
 	stdlib/main.o \
 	stdlib/malloc.o \
+	stdlib/mimalloc_static.o \
 	stdlib/mblen.o \
 	stdlib/mbstowcs.o \
 	stdlib/mbtowc.o \
@@ -1010,8 +1011,7 @@ C_LIBRARY := \
 	$(C_TIME) \
 	$(C_UNISTD) \
 	$(C_USERGROUP) \
-	$(C_WCHAR) \
-	$(C_WMEM)
+	$(C_WCHAR)
 
 SHARED_LIB_STUBS := \
 	$(patsubst \
@@ -1063,6 +1063,13 @@ $(OUT_STATIC)/profile/%.o : $(LIB_DIR)/profile/%.S
 	$(VERBOSE)$(COMPILE_REG)
 $(OUT_SHARED)/profile/%.o : $(LIB_DIR)/profile/%.S
 	$(VERBOSE)$(COMPILE_REG)
+
+$(OUT_STATIC)/stdlib/mimalloc_static.o : CFLAGS += -I$(CURDIR)/third_party/mimalloc/include
+$(OUT_SHARED)/stdlib/mimalloc_static.o : CFLAGS += -I$(CURDIR)/third_party/mimalloc/include
+$(OUT_SHARED_LIB)/stdlib/mimalloc_static.o : CFLAGS += -I$(CURDIR)/third_party/mimalloc/include
+$(OUT_STATIC)/stdlib/mimalloc_static.o : CFLAGS += -Wno-undef -Wno-missing-declarations
+$(OUT_SHARED)/stdlib/mimalloc_static.o : CFLAGS += -Wno-undef -Wno-missing-declarations
+$(OUT_SHARED_LIB)/stdlib/mimalloc_static.o : CFLAGS += -Wno-undef -Wno-missing-declarations
 
 $(OUTPUT_LIB)/libc.a : $(SOURCES_STATIC)
 	$(VERBOSE)@$(MAKELIB)

@@ -12,6 +12,8 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
+#include "../../third_party/mimalloc/include/mimalloc.h"
+
 void *
 realloc(void *ptr, size_t size) {
     void *result = NULL;
@@ -25,7 +27,7 @@ realloc(void *ptr, size_t size) {
     
     __memory_lock(__clib4);
 
-    result = wmem_realloc(__clib4->__wmem_allocator, ptr, size);
+    result = mi_realloc(ptr, size);
     if (result == NULL) {
         SHOWMSG("could not reallocate memory");
     }

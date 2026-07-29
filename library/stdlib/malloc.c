@@ -14,6 +14,8 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
+#include "../../third_party/mimalloc/include/mimalloc.h"
+
 void *
 malloc(size_t size) {
     return __malloc_r(__CLIB4, size);
@@ -38,7 +40,7 @@ __malloc_aligned_r(struct _clib4 *__clib4, size_t size, int32_t alignment) {
 
     __memory_lock(__clib4);
 
-    result = wmem_alloc_aligned(__clib4->__wmem_allocator, size, alignment);
+    result = mi_malloc_aligned(size, alignment);
 
     if (!result)
         __set_errno_r(__clib4, ENOMEM);
@@ -65,13 +67,9 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
 
     __memory_lock(__clib4);
 
-    if (__clib4->__wmem_allocator != NULL) {
-        SHOWMSG("Destroying Memory Allocator");
-        wmem_destroy_allocator(__clib4->__wmem_allocator);
-
-        SHOWMSG("Done");
-        __clib4->__wmem_allocator = NULL;
-    }
+    SHOWMSG("Shutting down mimalloc");
+    mi_process_done();
+    __clib4->__wmem_allocator = NULL;
 
     __memory_unlock(__clib4);
 
@@ -94,12 +92,8 @@ STDLIB_CONSTRUCTOR(stdlib_memory_init) {
     if (__clib4->memory_mutex == NULL)
         goto out;
 
-    __clib4->__wmem_allocator = wmem_allocator_new(__clib4->__wof_mem_allocator_type); // make this dynamic
-    if (__clib4->__wmem_allocator == NULL) {
-        __delete_mutex(__clib4->memory_mutex);
-        __clib4->memory_mutex = NULL;
-        goto out;
-    }
+    mi_process_init();
+    __clib4->__wmem_allocator = NULL;
 
     success = TRUE;
 

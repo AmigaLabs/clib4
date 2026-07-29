@@ -12,6 +12,8 @@
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
 
+#include "../../third_party/mimalloc/include/mimalloc.h"
+
 #include <malloc.h>
 
 void
@@ -19,12 +21,8 @@ __free_r(struct _clib4 *__clib4, void *ptr) {
 	if (ptr == NULL || __clib4 == NULL)
 		return;
 
-	if (__clib4->__wmem_allocator == NULL) {
-		return;
-	}
-
 	__memory_lock(__clib4);
-    wmem_free(__clib4->__wmem_allocator, ptr);
+    mi_free(ptr);
 
 	__memory_unlock(__clib4);
 }
