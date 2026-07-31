@@ -10,7 +10,7 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-CLIB_CONSTRUCTOR(unistd_init) {
+void unistd_init(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -22,7 +22,7 @@ CLIB_CONSTRUCTOR(unistd_init) {
     CONSTRUCTOR_SUCCEED();
 }
 
-CLIB_DESTRUCTOR(unistd_exit) {
+void unistd_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

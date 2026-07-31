@@ -27,7 +27,7 @@ __setfpucw(fpu_control_t set) {
     _FPU_SETCW (cw);
 }
 
-MATH_CONSTRUCTOR(math_init) {
+void math_init(void) {
     union ieee_single *single_x;
     struct _clib4 *__clib4 = __CLIB4;
 

@@ -127,7 +127,7 @@ __close_all_files(struct _clib4 *__clib4) {
     LEAVE();
 }
 
-STDIO_DESTRUCTOR(stdio_exit) {
+void stdio_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -138,7 +138,7 @@ STDIO_DESTRUCTOR(stdio_exit) {
     LEAVE();
 }
 
-STDIO_CONSTRUCTOR(stdio_init) {
+void stdio_init(void) {
     const int num_standard_files = (STDERR_FILENO - STDIN_FILENO + 1);
     BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;

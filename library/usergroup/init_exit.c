@@ -15,7 +15,7 @@
 /* Pointer to errno, length == sizeof(long) */
 #define UGT_ERRNOLPTR 0x80000004
 
-CLIB_DESTRUCTOR(usergroup_exit) {
+void usergroup_exit(void) {
 	ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -32,7 +32,7 @@ CLIB_DESTRUCTOR(usergroup_exit) {
 	LEAVE();
 }
 
-CLIB_CONSTRUCTOR(usergroup_init) {
+void usergroup_init(void) {
 	struct TagItem tags[2];
 	BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;

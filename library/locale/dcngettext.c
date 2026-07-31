@@ -778,7 +778,7 @@ char *bind_textdomain_codeset(const char *domainname, const char *codeset) {
     return NULL;
 }
 
-CLIB_DESTRUCTOR(dcngettext_exit) {
+void dcngettext_exit(void) {
     struct _clib4 *__clib4 = __CLIB4;
     /* Free binddtextdomain bindings */
     if (__clib4->g_mofile) {
