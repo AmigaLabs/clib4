@@ -569,7 +569,7 @@ void __pthread_exit_func(void) {
 }
 
 
-PTHREAD_CONSTRUCTOR(__pthread_init) {
+void __pthread_init(void) {
     ENTER();
     SHOWMSG("[__pthread_init :] Pthread constructor called.\n");
     _DOSBase = OpenLibrary("dos.library", MIN_OS_VERSION);
@@ -585,7 +585,7 @@ PTHREAD_CONSTRUCTOR(__pthread_init) {
     LEAVE();
 }
 
-PTHREAD_DESTRUCTOR(__pthread_exit) {
+void __pthread_exit(void) {
     ENTER();
     SHOWMSG("[__pthread_exit :] Pthread destructor called.\n");
 

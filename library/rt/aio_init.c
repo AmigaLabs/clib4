@@ -12,6 +12,9 @@
 #include <aio.h>
 #include "aio_misc.h"
 
+void __attribute__((constructor, used)) aio_init_ctor();
+void __attribute__((destructor, used)) aio_exit_dtor();
+
 /* Used by aio functions */
 struct SignalSemaphore *__aio_lock;
 CList *aio_threads;
@@ -22,7 +25,7 @@ void aio_init(const struct aioinit *init) {
 }
 #endif
 
-CLIB_CONSTRUCTOR(aio_init) {
+void aio_init_ctor(void) {
     ENTER();
 
     /* Initialize aio pthread list */
@@ -40,7 +43,7 @@ out:
     LEAVE();
 }
 
-CLIB_DESTRUCTOR(aio_exit) {
+void aio_exit_dtor(void) {
     ENTER();
 
     if (__aio_lock == NULL || aio_threads == NULL) {
