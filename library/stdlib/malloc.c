@@ -84,7 +84,7 @@ void __memory_unlock(struct _clib4 *__clib4) {
         MutexRelease(__clib4->memory_mutex);
 }
 
-STDLIB_DESTRUCTOR(stdlib_memory_exit) {
+void stdlib_memory_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -99,17 +99,18 @@ STDLIB_DESTRUCTOR(stdlib_memory_exit) {
     LEAVE();
 }
 
-/* Second constructor called by _init */
-STDLIB_CONSTRUCTOR(stdlib_memory_init) {
+/* Called by clib4_init() in libOpen, before any other initialization function */
+void stdlib_memory_init(void) {
     BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
     struct Clib4Resource *res;
 
     ENTER();
 
-    /* This constructor can run twice for statically linked programs (once
-     * from the library-internal ctor list in libOpen and once from the
-     * program's own ctor list in call_main), so it must be idempotent. */
+    /* This function can run twice for statically linked programs (once
+     * from clib4_init() in libOpen and once from the program's own ctor
+     * list in call_main for binaries built with an older clib4), so it
+     * must be idempotent. */
     if (__clib4->memory_mutex == NULL) {
         __clib4->memory_mutex = __create_mutex();
         if (__clib4->memory_mutex == NULL)

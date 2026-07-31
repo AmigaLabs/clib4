@@ -19,7 +19,7 @@ struct LocalVariable {
 	char *lv_Name;
 };
 
-CLIB_DESTRUCTOR(__setenv_exit) {
+void __setenv_exit(void) {
 	ENTER();
 	struct _clib4 *__clib4 = __CLIB4;
 	/* Now for the local variables that may still be set. */

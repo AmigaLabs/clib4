@@ -24,7 +24,7 @@ void __dirent_unlock(struct _clib4 *__clib4) {
         ReleaseSemaphore(__clib4->dirent_lock);
 }
 
-CLIB_CONSTRUCTOR(dirent_init) {
+void dirent_init(void) {
     BOOL success = FALSE;
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -49,7 +49,7 @@ out:
         CONSTRUCTOR_FAIL();
 }
 
-CLIB_DESTRUCTOR(dirent_exit) {
+void dirent_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

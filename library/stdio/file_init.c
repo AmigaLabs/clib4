@@ -155,7 +155,7 @@ out:
     return (result);
 }
 
-FILE_CONSTRUCTOR(stdio_file_init) {
+void stdio_file_init(void) {
     APTR stdio_lock;
     APTR fd_lock;
     BPTR default_file;
