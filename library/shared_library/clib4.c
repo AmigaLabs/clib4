@@ -91,11 +91,9 @@
 #include "interface.h"
 #include "stdlib_protos.h"
 
-/* These CTORS/DTORS are clib4's one and they are different than that one received
- * from crtbegin. They are needed because we need to call clib4 constructors as well
- */
-static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors")));
-static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
+#ifndef _STDLIB_CONSTRUCTOR_H
+#include "stdlib_constructor.h"
+#endif /* _STDLIB_CONSTRUCTOR_H */
 
 /* This is variable defines where to start to bind unix local ports using inet addresses */
 struct UnixSocket {
@@ -172,18 +170,91 @@ struct envHookData {
 
 static char *empty_env[1] = {NULL};
 
+/* clib4 initialization functions, called directly in a fixed order that
+ * matches the historical constructor priorities (see stdlib_constructor.h).
+ * No constructor/destructor attributes are used anymore, so no other
+ * library with a same or lower constructor priority can run in between
+ * clib4's own initialization steps. */
 static void
-_start_ctors(void (*__CTOR_LIST__[])(void)) {
-    int i = 0;
+clib4_init(void) {
+    SHOWMSG("Calling stdlib_memory_init");
+    stdlib_memory_init();          /* STDLIB - memory allocator */
 
-    while (__CTOR_LIST__[i + 1]) {
-        i++;
-    }
-    SHOWVALUE(i);
-    while (i > 0) {
-        D(("Calling ctor %ld", i));
-        __CTOR_LIST__[i--]();
-    }
+    SHOWMSG("Calling stdio_init");
+    stdio_init();                  /* STDIO */
+
+    SHOWMSG("Calling stdio_file_init");
+    stdio_file_init();             /* FILE - standard I/O streams */
+
+    SHOWMSG("Calling math_init");
+    math_init();                   /* MATH */
+
+    SHOWMSG("Calling socket_init");
+    socket_init();                 /* SOCKET */
+
+    SHOWMSG("Calling locale_init");
+    locale_init();                 /* CLIB */
+
+    SHOWMSG("Calling usergroup_init");
+    usergroup_init();              /* CLIB */
+
+    SHOWMSG("Calling timezone_init");
+    timezone_init();               /* CLIB */
+
+    SHOWMSG("Calling unistd_init");
+    unistd_init();                 /* CLIB */
+
+    SHOWMSG("Calling timer_init");
+    timer_init();                  /* CLIB - must run before clock_init (gettimeofday) */
+
+    SHOWMSG("Calling clock_init");
+    clock_init();                  /* CLIB */
+
+    SHOWMSG("Calling dirent_init");
+    dirent_init();                 /* CLIB */
+}
+
+/* clib4 cleanup functions, called in the exact reverse order of clib4_init() */
+static void
+clib4_exit(void) {
+    SHOWMSG("Calling dirent_exit");
+    dirent_exit();                 /* CLIB */
+
+    SHOWMSG("Calling timer_exit");
+    timer_exit();                  /* CLIB */
+
+    SHOWMSG("Calling unistd_exit");
+    unistd_exit();                 /* CLIB */
+
+    SHOWMSG("Calling __wildcard_expand_exit");
+    __wildcard_expand_exit();      /* CLIB */
+
+    SHOWMSG("Calling __chdir_exit");
+    __chdir_exit();                /* CLIB */
+
+    SHOWMSG("Calling __setenv_exit");
+    __setenv_exit();               /* CLIB */
+
+    SHOWMSG("Calling dcngettext_exit");
+    dcngettext_exit();             /* CLIB */
+
+    SHOWMSG("Calling timezone_exit");
+    timezone_exit();               /* CLIB */
+
+    SHOWMSG("Calling usergroup_exit");
+    usergroup_exit();              /* CLIB */
+
+    SHOWMSG("Calling locale_exit");
+    locale_exit();                 /* CLIB */
+
+    SHOWMSG("Calling socket_exit");
+    socket_exit();                 /* SOCKET */
+
+    SHOWMSG("Calling stdio_exit");
+    stdio_exit();                  /* STDIO */
+
+    SHOWMSG("Calling stdlib_memory_exit");
+    stdlib_memory_exit();          /* STDLIB - memory allocator, always last */
 }
 
 static void
@@ -548,8 +619,8 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             me->pr_UID = (uint32) __clib4;
             //SetOwnerInfoTags(OI_ProcessInput, 0, OI_OwnerUID, __clib4, TAG_END);
 
-            /* Check if user has choosen a different memory allocator and this needs to be called before constructors
-             * sice malloc constructor will use __wof_mem_allocator_type field
+            /* Check if user has choosen a different memory allocator and this needs to be called before
+             * clib4_init since stdlib_memory_init will use __wof_mem_allocator_type field
              */
             SHOWMSG("Check for custom memory allocator");
             if ((len = IDOS->GetVar("CLIB4_MEMORY_ALLOCATOR", envbuf, sizeof(envbuf), 0)) >= 0) {
@@ -564,13 +635,13 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
                 // else leave the default one
             }
 
-            /* After reent structure we can call clib4 constructors */
-            SHOWMSG("Calling clib4 ctors");
-            _start_ctors(__CTOR_LIST__);
-            SHOWMSG("Done. All constructors called");
+            /* After reent structure we can initialize clib4 subsystems */
+            SHOWMSG("Calling clib4 init functions");
+            clib4_init();
+            SHOWMSG("Done. All init functions called");
 
             /* Import any file descriptors inherited from the parent process.
-             * Must be done AFTER _start_ctors (which runs stdio_file_init and
+             * Must be done AFTER clib4_init (which runs stdio_file_init and
              * sets up __fd[0..2]) so that __clib4 is the child's own context. */
             {
                 extern void import_pending_fds_for_process(struct _clib4 *__clib4, uint32 pid, uint32 ppid);
@@ -661,11 +732,30 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
             const struct Clib4Node *node = item;
             if (node->undo)
                 IExec->FreeVec(node->undo);
+            /* Nodes left behind by processes that never ran libClose
+             * (e.g. crashed) still own their spawnedProcesses hashmap
+             * and possibly fd-inherit specs never consumed by children. */
+            if (node->spawnedProcesses) {
+                size_t child_iter = 0;
+                void *child_item;
+                while (hashmap_iter(node->spawnedProcesses, &child_iter, &child_item)) {
+                    struct Clib4Children *child = child_item;
+                    if (child->fdInherit != NULL) {
+                        IExec->FreeVec(child->fdInherit);
+                        child->fdInherit = NULL;
+                    }
+                }
+                hashmap_free(node->spawnedProcesses);
+            }
         }
 
         hashmap_free(res->children);
         if (res->fallbackClib) {
             reent_exit(res->fallbackClib);
+            /* reent_exit() releases the contents but not the structure
+             * itself, which was allocated with AllocVecTags in libInit. */
+            IExec->FreeVec(res->fallbackClib);
+            res->fallbackClib = NULL;
         }
 
         IExec->RemResource(res);
@@ -725,14 +815,14 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             SHOWMSG("Done. All external destructors called");
         }
 
-        /* Always call clib4 internal destructors (__DTOR_LIST__).
-         * These include stdlib_memory_exit (frees per-process memory mutex),
-         * stdio_exit, __pthread_exit, etc.
+        /* Always call clib4 internal cleanup functions, in the reverse
+         * order of clib4_init(). These include stdlib_memory_exit (frees
+         * per-process memory mutex), stdio_exit, __pthread_exit, etc.
          * call_main() only handles __EXT_DTOR_LIST__ (the exe's own dtors),
-         * not the library's internal __DTOR_LIST__. */
-        SHOWMSG("Calling clib4 internal dtors");
-        _end_ctors(__DTOR_LIST__);
-        SHOWMSG("Done. All clib4 destructors called");
+         * not the library's internal cleanup. */
+        SHOWMSG("Calling clib4 exit functions");
+        clib4_exit();
+        SHOWMSG("Done. All clib4 exit functions called");
 
         /* Now safe to restore task priority and deallocate resources */
         /* Restore the task priority. */
@@ -796,6 +886,17 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             if (node->pid == pid) {
                 /* Remove spawnedProcess hashmap */
                 if (node->spawnedProcesses != NULL) {
+                    /* Free any fd-inherit spec that was never consumed by
+                     * its child (AllocVecTags'd in build_fd_inherit_spec). */
+                    size_t child_iter = 0;
+                    void *child_item;
+                    while (hashmap_iter(node->spawnedProcesses, &child_iter, &child_item)) {
+                        struct Clib4Children *child = child_item;
+                        if (child->fdInherit != NULL) {
+                            IExec->FreeVec(child->fdInherit);
+                            child->fdInherit = NULL;
+                        }
+                    }
                     hashmap_free(node->spawnedProcesses);
                 }
                 if (node->undo)
@@ -803,6 +904,19 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
                 hashmap_delete(res->children, node);
                 break;
             }
+        }
+
+        /*
+         * Destroy this process' wmem allocator. Everything the program
+         * obtained through malloc() and never freed is returned to the
+         * system here, at process exit, instead of accumulating in the
+         * old system-wide allocator singleton until the last clib4
+         * process terminated. In DEBUG builds this also prints the
+         * memory accounting report on the serial port.
+         */
+        if (__clib4->__wmem_allocator != NULL) {
+            wmem_destroy_allocator((wmem_allocator_t *) __clib4->__wmem_allocator);
+            __clib4->__wmem_allocator = NULL;
         }
 
         /*
@@ -823,6 +937,21 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
 
     if (libBase->libNode.lib_OpenCnt) {
         return 0;
+    }
+
+    /* Last process closed the library. The allocator is per-process now
+     * and was already destroyed above; res->__wmem_allocator is only ever
+     * populated by old statically linked binaries whose embedded
+     * stdlib_memory_init still creates the legacy system-wide singleton.
+     * Destroy it here instead of waiting for libExpunge, which only runs
+     * if the system flushes the library from memory. */
+    if (res) {
+        IExec->ObtainSemaphore(&res->semaphore);
+        if (libBase->libNode.lib_OpenCnt == 0 && res->__wmem_allocator != NULL) {
+            wmem_destroy_allocator((wmem_allocator_t *) res->__wmem_allocator);
+            res->__wmem_allocator = NULL;
+        }
+        IExec->ReleaseSemaphore(&res->semaphore);
     }
 
     if (libBase->libNode.lib_Flags & LIBF_DELEXP) {

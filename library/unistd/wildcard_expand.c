@@ -58,7 +58,7 @@ out:
     return (result);
 }
 
-CLIB_DESTRUCTOR(__wildcard_expand_exit) {
+void __wildcard_expand_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

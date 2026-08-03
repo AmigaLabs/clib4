@@ -16,6 +16,9 @@
 #include <rexx/rxslib.h>
 #include <rexx/errors.h>
 
+void __attribute__((constructor, used)) rexxvars_init_ctor();
+void __attribute__((destructor, used)) rexxvars_exit_dtor();
+
 /* This is used by the stub function prototypes. The ARexx header files
    do not define it, though. */
 struct Environment;
@@ -32,8 +35,7 @@ LONG SetRexxVar(struct RexxMsg *message, STRPTR variable_name, STRPTR value, LON
 
 /****************************************************************************/
 
-CLIB_CONSTRUCTOR(rexxvars_init)
-{
+void rexxvars_init_ctor(void) {
 	ENTER();
 
 	RexxSysBase = OpenLibrary(RXSNAME, 0);
@@ -49,12 +51,9 @@ CLIB_CONSTRUCTOR(rexxvars_init)
 	}
 
 	LEAVE();
-
-	CONSTRUCTOR_SUCCEED();
 }
 
-CLIB_DESTRUCTOR(rexxvars_exit)
-{
+void rexxvars_exit_dtor(void) {
 	ENTER();
 
 	if (IRexxSys != NULL)

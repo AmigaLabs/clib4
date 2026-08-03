@@ -62,7 +62,7 @@ STATIC struct Hook error_hook = {
     NULL
 };
 
-SOCKET_DESTRUCTOR(socket_exit) {
+void socket_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -96,7 +96,7 @@ SOCKET_DESTRUCTOR(socket_exit) {
     LEAVE();
 }
 
-SOCKET_CONSTRUCTOR(socket_init) {
+void socket_init(void) {
     struct TagItem tags[5];
     BOOL success = FALSE;
     LONG status;

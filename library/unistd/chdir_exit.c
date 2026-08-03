@@ -10,7 +10,7 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
-CLIB_DESTRUCTOR(__chdir_exit) {
+void __chdir_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

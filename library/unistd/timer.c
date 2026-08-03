@@ -24,7 +24,7 @@
 
 #endif /* __NEW_TIMEVAL_DEFINITION_USED__ */
 
-CLIB_CONSTRUCTOR(timer_init) {
+void timer_init(void) {
     ENTER();
 
     BOOL success = FALSE;
@@ -82,7 +82,7 @@ out:
         CONSTRUCTOR_FAIL();
 }
 
-CLIB_DESTRUCTOR(timer_exit) {
+void timer_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 

@@ -134,7 +134,7 @@ void __locale_unlock(struct _clib4 *__clib4) {
 		ReleaseSemaphore(__clib4->locale_lock);
 }
 
-CLIB_DESTRUCTOR(locale_exit) {
+void locale_exit(void) {
 	ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -149,7 +149,7 @@ CLIB_DESTRUCTOR(locale_exit) {
     LEAVE();
 }
 
-CLIB_CONSTRUCTOR(locale_init) {
+void locale_init(void) {
 	BOOL success = FALSE;
 	int i;
     struct _clib4 *__clib4 = __CLIB4;

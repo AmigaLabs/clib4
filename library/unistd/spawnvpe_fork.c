@@ -320,7 +320,7 @@ spawnvpe_fork(
     }
 
     D(("Closed %d file descriptors with FD_CLOEXEC before exec\n", num_closed));
-    struct spawnData data = { getgid(), thisTask, "", NULL };
+    struct spawnData data = { getgid(), thisTask, "", NULL, FALSE };
 	if (__CLIB4->uuid) strncpy(data.parentUuid, __CLIB4->uuid, UUID4_LEN);
     struct TagItem tags[] = {
         { NP_Seglist,           (ULONG) seglist },     /* FIX: Use NP_Seglist not NP_Entry! */

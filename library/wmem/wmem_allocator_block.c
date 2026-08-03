@@ -1179,6 +1179,67 @@ wmem_block_gc(void *private_data) {
     LEAVE();
 }
 
+/* Walk every OS block and every chunk inside it, printing the full layout
+ * on the serial port. Called through wmem_dump_allocator() with the memory
+ * lock held. */
+static void
+wmem_block_dump(void *private_data) {
+    wmem_block_allocator_t *allocator = (wmem_block_allocator_t *) private_data;
+    wmem_block_hdr_t *block;
+    uint32_t n_blocks = 0, n_used = 0, n_free = 0, n_jumbo = 0;
+    uint64_t used_bytes = 0, free_bytes = 0, jumbo_bytes = 0;
+
+    for (block = allocator->block_list; block != NULL; block = block->next) {
+        wmem_block_chunk_t *chunk = WMEM_BLOCK_TO_CHUNK(block);
+
+        n_blocks++;
+
+        if (chunk->jumbo) {
+            DebugPrintF("[clib4 dump] block %3lu @0x%08lx: JUMBO, chunk len %lu bytes (used)\n",
+                        (unsigned long) n_blocks,
+                        (unsigned long) (uintptr_t) block,
+                        (unsigned long) chunk->len);
+            n_jumbo++;
+            jumbo_bytes += chunk->len;
+            continue;
+        }
+
+        DebugPrintF("[clib4 dump] block %3lu @0x%08lx (%lu bytes):\n",
+                    (unsigned long) n_blocks,
+                    (unsigned long) (uintptr_t) block,
+                    (unsigned long) WMEM_BLOCK_SIZE);
+
+        do {
+            DebugPrintF("[clib4 dump]   chunk @0x%08lx len %8lu (data %8lu) %s%s%s\n",
+                        (unsigned long) (uintptr_t) chunk,
+                        (unsigned long) chunk->len,
+                        (unsigned long) WMEM_CHUNK_DATA_LEN(chunk),
+                        chunk->used ? "USED" : "free",
+                        (chunk == allocator->master_head) ? " [master head]" : "",
+                        (chunk == allocator->recycler_head) ? " [recycler head]" : "");
+
+            if (chunk->used) {
+                n_used++;
+                used_bytes += chunk->len;
+            } else {
+                n_free++;
+                free_bytes += chunk->len;
+            }
+
+            chunk = WMEM_CHUNK_NEXT(chunk);
+        } while (chunk != NULL);
+    }
+
+    DebugPrintF("[clib4 dump] block allocator summary: %lu OS blocks (%lu jumbo)\n",
+                (unsigned long) n_blocks, (unsigned long) n_jumbo);
+    DebugPrintF("[clib4 dump]   used chunks : %lu (%lu bytes incl. headers)\n",
+                (unsigned long) n_used, (unsigned long) used_bytes);
+    DebugPrintF("[clib4 dump]   free chunks : %lu (%lu bytes)\n",
+                (unsigned long) n_free, (unsigned long) free_bytes);
+    DebugPrintF("[clib4 dump]   jumbo bytes : %lu\n",
+                (unsigned long) jumbo_bytes);
+}
+
 static void
 wmem_block_allocator_cleanup(void *private_data) {
     /* wmem guarantees that free_all() is called directly before this, so
@@ -1203,6 +1264,7 @@ wmem_block_allocator_init(wmem_allocator_t *allocator) {
     allocator->free_all = &wmem_block_free_all;
     allocator->gc = &wmem_block_gc;
     allocator->cleanup = &wmem_block_allocator_cleanup;
+    allocator->dump = &wmem_block_dump;
 
     allocator->private_data = (void *) block_allocator;
 

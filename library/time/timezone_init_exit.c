@@ -123,7 +123,7 @@ __timezone_unlock(void) {
         ReleaseSemaphore(__clib4->timezone_lock);
 }
 
-CLIB_DESTRUCTOR(timezone_exit) {
+void timezone_exit(void) {
     ENTER();
     struct _clib4 *__clib4 = __CLIB4;
 
@@ -135,7 +135,7 @@ CLIB_DESTRUCTOR(timezone_exit) {
     LEAVE();
 }
 
-CLIB_CONSTRUCTOR(timezone_init) {
+void timezone_init(void) {
     ENTER();
 
     BOOL success = FALSE;
