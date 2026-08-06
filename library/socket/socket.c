@@ -6,6 +6,8 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
+#include <sys/ioctl.h>
+
 int
 socket(int domain, int type, int protocol) {
     APTR lock = NULL;
@@ -13,6 +15,7 @@ socket(int domain, int type, int protocol) {
     struct fd *fd;
     int fd_slot_number;
     LONG socket_fd;
+    int type_flags;
     struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
@@ -20,6 +23,21 @@ socket(int domain, int type, int protocol) {
     SHOWVALUE(domain);
     SHOWVALUE(type);
     SHOWVALUE(protocol);
+
+    /* Since Linux 2.6.27 the type argument may carry SOCK_NONBLOCK, saving the
+     * separate fcntl() round trip; it is the idiom most modern code uses.  We
+     * passed the whole type straight through to the 4.4BSD stack, which knows
+     * only SOCK_STREAM(1)/SOCK_DGRAM(2)/SOCK_RAW(3) -- SOCK_NONBLOCK is
+     * O_NONBLOCK, (1<<6), so socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)
+     * arrived as type 65 and simply failed.  Strip the bit, remember it, and
+     * apply it below once the descriptor exists.
+     *
+     * SOCK_CLOEXEC is #defined to 0 in <sys/socket.h> here, so it cannot be
+     * distinguished yet; giving it a real value is a header change to make
+     * separately.
+     */
+    type_flags = type & SOCK_NONBLOCK;
+    type &= ~SOCK_NONBLOCK;
 
     __stdio_lock(__clib4);
 
@@ -63,6 +81,20 @@ socket(int domain, int type, int protocol) {
     __initialize_fd(fd, __socket_hook_entry, (BPTR) socket_fd, FDF_IN_USE | FDF_IS_SOCKET | FDF_READ | FDF_WRITE, lock);
 
     lock = NULL;
+
+    /* Apply the SOCK_NONBLOCK stripped above, recording FDF_NON_BLOCKING so
+     * the flag and the socket's real state agree -- fcntl(F_SETFL) trusts that
+     * flag to decide whether a change is needed at all.
+     */
+    if (type_flags & SOCK_NONBLOCK) {
+        int on = 1;
+
+        if (__IoctlSocket(socket_fd, FIONBIO, &on) < 0) {
+            SHOWMSG("could not set non-blocking mode on new socket");
+            goto out;
+        }
+        SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
+    }
 
     result = fd_slot_number;
 

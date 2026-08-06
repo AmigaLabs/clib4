@@ -6,6 +6,8 @@
 #include "socket_headers.h"
 #endif /* _SOCKET_HEADERS_H */
 
+#include <sys/ioctl.h>
+
 int
 accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
     APTR lock = NULL;
@@ -54,6 +56,33 @@ accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen) {
     if (new_socket_fd < 0) {
         SHOWMSG("could not accept connection");
         goto out;
+    }
+
+    /* Linux does NOT let the accepted socket inherit the listening socket's
+     * file status flags -- accept(2) says so explicitly: "the new socket
+     * returned by accept() does not inherit file status flags such as
+     * O_NONBLOCK and O_ASYNC from the listening socket".  The 4.4BSD stack
+     * underneath us does inherit them, so clear it here to match Linux.
+     *
+     * This is not merely cosmetic.  __initialize_fd() below always registers
+     * the new descriptor without FDF_NON_BLOCKING, and fcntl(F_SETFL) only
+     * issues file_action_set_blocking when the requested mode differs from
+     * that flag.  So an inherited non-blocking socket was unfixable from the
+     * outside: fcntl saw "already blocking, nothing to do" while the socket
+     * really was non-blocking, and the first read() came back EAGAIN.  That is
+     * exactly the sequence OpenJDK's java.net performs -- it deliberately puts
+     * listening sockets into non-blocking mode and relies on accept() handing
+     * back a blocking one -- and it made every accepted connection fail with
+     * "Resource temporarily unavailable".
+     *
+     * Forcing the mode keeps the descriptor's real state and the FDF_ flags
+     * consistent, which is what makes fcntl() usable on it afterwards.
+     */
+    {
+        int off = 0;
+
+        if (__IoctlSocket(new_socket_fd, FIONBIO, &off) < 0)
+            SHOWMSG("could not clear non-blocking mode on accepted socket");
     }
 
     /* OK, back to work: we'll need to manipulate the file
