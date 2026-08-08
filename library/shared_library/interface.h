@@ -56,6 +56,7 @@
 #include <tgmath.h>
 #include <time.h>
 #include <uchar.h>
+#include <ucontext.h>
 #include <ulimit.h>
 #include <unistd.h>
 #include <utime.h>
@@ -1379,6 +1380,12 @@ struct Clib4IFace {
     size_t (* malloc_usable_size) (void *ptr);                                                                                                       /* 4492 */
 
     void (* malloc_dump) (void);                                                                                                                     /* 4496 */
+
+    /* ucontext.h */
+    int  (* getcontext) (ucontext_t *__ucp);                                                                                                         /* 4500 */
+    int  (* setcontext) (const ucontext_t *__ucp);                                                                                                   /* 4504 */
+    int  (* swapcontext) (ucontext_t *__oucp, const ucontext_t *__ucp);                                                                              /* 4508 */
+    void (* makecontext) (ucontext_t *__ucp, void (*func)(void), int argc, ...);                                                                     /* 4512 */
 };
 
 #ifdef __PIC__
