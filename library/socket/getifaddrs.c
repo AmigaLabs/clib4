@@ -12,6 +12,7 @@
 
 #include <ifaddrs.h>
 #include <net/if.h>
+#include <stdint.h>
 
 #include <proto/bsdsocket.h>
 
@@ -27,8 +28,8 @@ struct ifawrap {
 static int
 ifaddrs_add(struct ifawrap *ifawrap, char *name, unsigned int flags,
             struct sockaddr *addr, struct sockaddr *netmask,
-            struct sockaddr *dstaddr, struct sockaddr *data, size_t addrlen) {
-    size_t nameoff, addroff, maskoff, dstoff;
+            struct sockaddr *dstaddr, const struct ifa_data *stats, size_t addrlen) {
+    size_t nameoff, addroff, maskoff, dstoff, dataoff;
 
     struct ifaddrs *new;
     size_t addrskip;
@@ -59,9 +60,10 @@ ifaddrs_add(struct ifawrap *ifawrap, char *name, unsigned int flags,
 
     if (dstaddr != NULL)
         nsize += addrskip;
+    dataoff = nsize;
 
-    if (data != NULL) /*XXX*/
-        nsize += addrskip; /*XXX*/
+    if (stats != NULL)
+        nsize += ROUNDUP(sizeof(struct ifa_data), sizeof(uint32_t));
 
     if ((new = malloc(nsize)) == NULL)
         return -1; /* let caller free already allocated data */
@@ -106,7 +108,12 @@ ifaddrs_add(struct ifawrap *ifawrap, char *name, unsigned int flags,
     } else
         new->ifa_dstaddr = NULL;
 
-    new->ifa_data = NULL;
+    if (stats != NULL) {
+        p = (char *) new + dataoff;
+        memcpy(p, stats, sizeof(struct ifa_data));
+        new->ifa_data = p;
+    } else
+        new->ifa_data = NULL;
 
     return 0;
 }
@@ -157,6 +164,14 @@ getifaddrs(struct ifaddrs **ifap) {
                                                          IFQ_SecondaryDNSAddress, &secondaryDns,
                                                          TAG_DONE);
                     if (querySuccess) {
+                        struct ifa_data stats;
+                        stats.ifa_mtu         = (uint32_t) mtu;
+                        stats.ifa_metric      = (uint32_t) metric;
+                        stats.ifa_packets_in  = (uint32_t) packetsReceived;
+                        stats.ifa_packets_out = (uint32_t) packetsSent;
+                        stats.ifa_errors      = (uint32_t) badData;
+                        stats.ifa_overruns    = (uint32_t) overruns;
+
                         addrlen = sizeof(struct sockaddr);
                         /* TODO - Move this to ioctl with SIOCGIFFLAGS request */
                         if (state == SM_Online)
@@ -166,7 +181,7 @@ getifaddrs(struct ifaddrs **ifap) {
                         if (debug == TRUE)
                             flags |= IFF_DEBUG;
 
-                        if (ifaddrs_add(ifawrap, node->ln_Name, flags, &localAddress, (struct sockaddr*) &netmask, &broadcastAddress, NULL, addrlen) == -1) {
+                        if (ifaddrs_add(ifawrap, node->ln_Name, flags, &localAddress, (struct sockaddr*) &netmask, &broadcastAddress, &stats, addrlen) == -1) {
                             if (ifawrap->ifaddrs != NULL) {
                                 freeifaddrs(ifawrap->ifaddrs);
                                 success = -1;

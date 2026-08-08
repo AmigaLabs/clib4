@@ -16,6 +16,7 @@
 
 #include <proto/intuition.h>
 
+#include <limits.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 
@@ -149,6 +150,62 @@ static BOOL writeSize(uint32 rows, uint32 columns) {
     return success;
 }
 
+/*
+ * Bytes that can be read from a non-socket descriptor without blocking.
+ *
+ * Linux answers this for pipes, files and ttys alike, and portable code leans
+ * on it -- InputStream.available(), "is there input waiting", drain loops.
+ * There is no single DOS call for it, so:
+ *
+ *   pipes    PIPE: reports the queued byte count as the handle's size.  There
+ *            is no position to subtract; a pipe is not seekable.
+ *   files    size minus the current position, the classic definition.
+ *   other    0.  Consoles have no count to give (WaitForChar answers whether,
+ *            not how many), and 0 is the safe answer: available() promises
+ *            only that this many bytes will not block, never that no more
+ *            exist.
+ *
+ * Never fails: it reports 0 rather than an error, because "I cannot tell" and
+ * "nothing waiting" lead a caller to the same next step -- try a read.
+ */
+static int
+__fionread_bytes(struct fd *fd) {
+    struct ExamineData *fib;
+    int64_t size, position;
+    int bytes = 0;
+
+    if (fd == NULL || fd->fd_File == BZERO)
+        return 0;
+
+    fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
+    if (fib == NULL)
+        return 0;
+
+    size = (int64_t) fib->FileSize;
+    FreeDosObject(DOS_EXAMINEDATA, fib);
+
+    if (size <= 0)
+        return 0;
+
+    if (FLAG_IS_SET(fd->fd_Flags, FDF_PIPE)) {
+        /* A pipe is not seekable and has no position to subtract: what PIPE:
+           reports as the size IS the amount queued. */
+        position = 0;
+    } else {
+        position = (int64_t) GetFilePosition(fd->fd_File);
+        if (position < 0)
+            position = 0;               /* not seekable; treat as "at the start" */
+    }
+
+    if (size > position) {
+        int64_t avail = size - position;
+
+        bytes = (int) (avail > (int64_t) INT_MAX ? (int64_t) INT_MAX : avail);
+    }
+
+    return bytes;
+}
+
 int
 ioctl(int sockfd, int request, ... /* char *arg */) {
     va_list arg;
@@ -202,29 +259,54 @@ ioctl(int sockfd, int request, ... /* char *arg */) {
 
             __fd_unlock(fd);
         } else {
-            if (request != (int) FIONBIO) {
-                fd = __get_file_descriptor(__clib4, sockfd);
-                if (fd == NULL)
-                    goto out;
+            /* Not a socket: a plain file, a pipe, a console.
+             *
+             * The test used to read "request != FIONBIO", which is inverted, so
+             * FIONBIO -- the one request this branch could actually serve --
+             * fell through and did nothing, while EVERY OTHER request was
+             * treated as if its argument were the FIONBIO flag.  ioctl(fd,
+             * FIONREAD, &n) therefore set or cleared O_NONBLOCK according to
+             * whatever happened to be in the caller's uninitialised n, left n
+             * untouched, and returned success.  Callers read that as a byte
+             * count: OpenJDK's available() does exactly this, and got stack
+             * garbage, which is a wrong answer no caller can defend against. */
+            fd = __get_file_descriptor(__clib4, sockfd);
+            if (fd == NULL)
+                goto out;
 
-                __fd_lock(fd);
+            __fd_lock(fd);
 
-                va_start(arg, request);
-                param = va_arg(arg, char *);
-                va_end(arg);
+            va_start(arg, request);
+            param = va_arg(arg, char *);
+            va_end(arg);
 
-                SHOWPOINTER(param);
+            SHOWPOINTER(param);
 
+            if (request == (int) FIONBIO) {
                 const int *option = (const int *) param;
+
                 if ((*option) != 0)
                     SET_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
                 else
                     CLEAR_FLAG(fd->fd_Flags, FDF_NON_BLOCKING);
 
-                __fd_unlock(fd);
-
                 result = OK;
+            } else if (request == (int) FIONREAD) {
+                int *bytes = (int *) param;
+
+                if (bytes == NULL) {
+                    __set_errno(EFAULT);
+                } else {
+                    *bytes = __fionread_bytes(fd);
+                    result = OK;
+                }
+            } else {
+                /* Say so rather than claim success: a caller that cannot tell
+                 * "unsupported" from "done" has no way to fall back. */
+                __set_errno(EINVAL);
             }
+
+            __fd_unlock(fd);
         }
     } else if (request == TIOCGWINSZ) {
         struct winsize *size;

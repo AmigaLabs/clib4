@@ -250,6 +250,13 @@ C_SETJMP := \
     setjmp/siglongjmp.o \
     setjmp/sigsetjmp.o
 
+C_UCONTEXT := \
+    ucontext/getcontext.o \
+    ucontext/makecontext.o \
+    ucontext/mcontext.o \
+    ucontext/setcontext.o \
+    ucontext/swapcontext.o
+
 C_SOCKET := \
     resolv/dns_cache.o \
     resolv/dns_parse.o \
@@ -1011,6 +1018,7 @@ C_LIBRARY := \
 	$(C_TERMIOS) \
 	$(C_TIME) \
 	$(C_UNISTD) \
+	$(C_UCONTEXT) \
 	$(C_USERGROUP) \
 	$(C_WCHAR) \
 	$(C_WMEM)
