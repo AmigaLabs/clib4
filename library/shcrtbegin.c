@@ -7,6 +7,7 @@
 
 void __shlib_call_constructors(void);
 void __shlib_call_destructors(void);
+struct ExecIFace *IExec;
 
 /* NOTE:  In order to be able to support SVR4 shared libraries, we arrange
  * to have one set of symbols { __CTOR_LIST__, __DTOR_LIST__, __CTOR_END__,
@@ -29,6 +30,8 @@ static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors")));
 void __shlib_call_constructors(void) {
     extern void (*__CTOR_LIST__[])(void);
     int i = 0;
+    struct Library *SysBase = *(struct Library **)4;
+    IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 
     ENTER();
 
@@ -58,6 +61,9 @@ void __shlib_call_constructors(void) {
 void __shlib_call_destructors(void) {
     extern void (*__DTOR_LIST__[])(void);
     int i = 1;
+
+    struct Library *SysBase = *(struct Library **)4;
+    IExec = (struct ExecIFace *)((struct ExecBase *)SysBase)->MainInterface;
 
     ENTER();
 
