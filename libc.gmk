@@ -152,6 +152,7 @@ C_POSIX := \
 	posix/fstatvfs.o \
 	posix/getvfsstat.o \
 	posix/glob.o \
+	posix/wordexp.o \
 	posix/globfree.o \
 	posix/basename.o \
 	debug/backtrace.o \
