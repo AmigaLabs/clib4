@@ -81,4 +81,6 @@
 | <utmpx.h>                | User accounting database functions                                                    | Not present                       |
 | <wchar.h>                | Wide-Character Handling                                                               | Complete                          |
 | <wctype.h>               | Wide-Character Classification and Mapping Utilities                                   | Complete                          |
-| <wordexp.h>              | Word-expansion like the shell would perform                                           | Not present                       |
+| <wordexp.h>              | Word-expansion like the shell would perform                                           | Complete *                        |
+
+* See README.md
