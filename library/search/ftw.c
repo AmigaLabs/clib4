@@ -51,6 +51,13 @@ walk(const char *path, int (*func)(const char *, const struct stat *, int), int 
         type = FTW_NS; /* No Stat */
     }
 
+    /* The root of the walk not being there at all is an error, rather than
+       something to report to the callback. */
+    if (type == FTW_NS && level == 0) {
+        result = ERROR;
+        goto out;
+    }
+
     result = (*func)(path, &st, type);
     if (result != 0)
         goto out;
@@ -78,6 +85,11 @@ walk(const char *path, int (*func)(const char *, const struct stat *, int), int 
             next_name[old_length++] = '/';
 
         while ((result == 0) && (de = readdir(dp)) != NULL) {
+            /* readdir() reports "." and ".." when unix path semantics are in
+               effect; walking into them would never end. */
+            if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
+                continue;
+
             strlcpy(&next_name[old_length], de->d_name, NAME_MAX + 2);
 
             result = walk(next_name, func, depth, level + 1);
