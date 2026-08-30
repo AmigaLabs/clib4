@@ -139,7 +139,7 @@ static void closeTimer(struct TimeRequest *tr);
 static int32 getDebugLevel(struct ExecBase *sysbase);
 
 extern void reent_exit(struct _clib4 *__clib4);
-extern void reent_init(struct _clib4 *__clib4, BOOL fallback);
+extern BOOL reent_init(struct _clib4 *__clib4, BOOL fallback);
 
 #if DEBUG == 1
 #undef D
@@ -582,8 +582,38 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
                                                  AVT_Type, MEMF_SHARED,
                                                  AVT_ClearWithValue, 0,
                                                  TAG_DONE);
-        if (__clib4 != NULL) {
-            SHOWMSG("Clib4 allocated");
+        /*
+         * A process without a context is not something we can paper over:
+         * _main() stores this pointer in pr_UID and every clib4 call reaches
+         * the context through it, so carrying on means dereferencing NULL --
+         * or, when reent_init() gave up halfway, memory it had already freed.
+         * Fail the OpenLibrary() instead and let the startup code report that
+         * the library could not be opened.
+         */
+        if (__clib4 == NULL || !reent_init(__clib4, FALSE)) {
+            SHOWMSG("Cannot create the clib4 context; failing the library open");
+
+            if (__clib4 != NULL) {
+                IExec->FreeVec(__clib4);
+                __clib4 = NULL;
+            }
+
+            hashmap_delete(res->children, &c2n);
+            if (c2n.spawnedProcesses != NULL)
+                hashmap_free(c2n.spawnedProcesses);
+
+            if (IExpansion != NULL)
+                IExec->DropInterface((struct Interface *) IExpansion);
+            if (ExpansionBase != NULL)
+                IExec->CloseLibrary(ExpansionBase);
+
+            --libBase->libNode.lib_OpenCnt;
+
+            return NULL;
+        }
+
+        {
+            SHOWMSG("Clib4 allocated and reent initialized");
 
             char envbuf[ENVBUF + 1];
             char term_buffer[FILENAME_MAX] = {0};
@@ -592,9 +622,6 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
             IUtility->ClearMem(envbuf, ENVBUF + 1);
 
-            SHOWMSG("Initialize reent");
-            reent_init(__clib4, FALSE);
-            SHOWMSG("reent initialized");
             __clib4->processId = pid;
 
             /* Set the current task pointer */
@@ -1135,7 +1162,23 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
                                                                       AVT_Type, MEMF_SHARED,
                                                                       AVT_ClearWithValue, 0,
                                                                       TAG_DONE);
-            reent_init(res->fallbackClib, TRUE);
+            /* The result was never looked at here: a failed allocation, or a
+             * reent_init() that gave up halfway, left every later access
+             * going through a NULL or an already freed pointer. */
+            if (res->fallbackClib == NULL || !reent_init(res->fallbackClib, TRUE)) {
+                SHOWMSG("Cannot create the fallback clib4 context");
+
+                if (res->fallbackClib != NULL) {
+                    iexec->FreeVec(res->fallbackClib);
+                    res->fallbackClib = NULL;
+                }
+                hashmap_free(res->children);
+                hashmap_free(res->uxSocketsMap);
+                iexec->FreeVec(res);
+                res = NULL;
+
+                goto out;
+            }
             res->fallbackClib->self = (struct Process *) IExec->FindTask(NULL);
             res->fallbackClib->__check_abort_enabled = TRUE;
             res->fallbackClib->__fully_initialized = TRUE;
