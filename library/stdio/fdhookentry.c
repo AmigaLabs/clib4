@@ -290,17 +290,22 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                             (*fd->fd_Cleanup)(__clib4, fd);
 
                         if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_PIPE)) {
+                            /* Not every file handle has a parent directory: console
+                             * streams, NIL: and handler based devices in general do
+                             * not. Failing to find one must never keep us from
+                             * closing the file, or the programme would leave it
+                             * locked behind when it exits. The parent directory is
+                             * only needed for the unlink-on-close and SetProtection()
+                             * bookkeeping further down, which is skipped if we could
+                             * not get hold of it. */
                             parent_dir = ParentOfFH(fd->fd_File);
                             if (parent_dir == BZERO) {
-                                SHOWMSG("couldn't find parent directory");
-
-                                __set_errno(__translate_io_error_to_errno(IoErr()));
-                                goto out;
+                                SHOWMSG("couldn't find parent directory; closing the file anyway");
                             }
                         }
 
                         fib = ExamineObjectTags(EX_FileHandleInput, fd->fd_File, TAG_DONE);
-                        if (fib != NULL) {
+                        if (fib != NULL && parent_dir != BZERO) {
                             name_and_path_valid = TRUE;
                         }
 

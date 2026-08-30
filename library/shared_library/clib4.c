@@ -815,6 +815,20 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
             SHOWMSG("Done. All external destructors called");
         }
 
+        /* Close the RANDOM: streams getrandom() keeps open. This has to happen
+         * before clib4_exit(), which tears the file descriptor table down. */
+        if (__clib4->randfd[0] >= 0) {
+            SHOWMSG("Closing randfd[0]");
+            close(__clib4->randfd[0]);
+            __clib4->randfd[0] = -1;
+        }
+
+        if (__clib4->randfd[1] >= 0) {
+            SHOWMSG("Closing randfd[1]");
+            close(__clib4->randfd[1]);
+            __clib4->randfd[1] = -1;
+        }
+
         /* Always call clib4 internal cleanup functions, in the reverse
          * order of clib4_init(). These include stdlib_memory_exit (frees
          * per-process memory mutex), stdio_exit, __pthread_exit, etc.
@@ -832,17 +846,6 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         if (__clib4->__environment_allocated) {
             SHOWMSG("Clearing Environment");
             freeEnvironment(__clib4);
-        }
-
-        /* Check for getrandom fd */
-        if (__clib4->randfd[0] >= 0) {
-            SHOWMSG("Closing randfd[0]");
-            close(__clib4->randfd[0]);
-        }
-
-        if (__clib4->randfd[1] >= 0) {
-            SHOWMSG("Closing randfd[1]");
-            close(__clib4->randfd[1]);
         }
 
         /* Auto-detach any SHM segments this process left attached.
