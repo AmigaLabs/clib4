@@ -10,6 +10,8 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#include <sys/random.h>
+
 static inline uint8_t arc4_getbyte(struct _clib4 *__clib4);
 static void arc4_stir(struct _clib4 *__clib4);
 
@@ -31,15 +33,31 @@ arc4_addrandom(struct _clib4 *__clib4, u_char *dat, int datlen) {
 
 static void
 arc4_fetch(struct _clib4 *__clib4) {
-    int done, fd;
-    fd = open(RANDOMDEV, O_RDONLY, 0);
-    done = 0;
-    if (fd >= 0) {
-        if (read(fd, &__clib4->rdat, KEYSIZE) == KEYSIZE)
-            done = 1;
-        (void) close(fd);
+    uint8_t *dat = (uint8_t *) &__clib4->rdat;
+    size_t left = KEYSIZE;
+
+    /*
+     * Go through getrandom() rather than opening RANDOM: by hand: it keeps
+     * the handler open across calls and its descriptor out of the set that
+     * is handed down to child processes. Short reads are retried, so a
+     * handler that hands out the entropy in several chunks still gives us a
+     * fully seeded key instead of dropping us to the weak fallback below.
+     */
+    while (left > 0) {
+        ssize_t n = getrandom(dat, left, 0);
+
+        if (n <= 0) {
+            if (n < 0 && __get_errno() == EINTR)
+                continue;
+
+            break;
+        }
+
+        dat += n;
+        left -= (size_t) n;
     }
-    if (!done) {
+
+    if (left > 0) {
         (void) gettimeofday(&__clib4->rdat.tv, NULL);
         __clib4->rdat.pid = getpid();
         /* We'll just take whatever was on the stack too... */
