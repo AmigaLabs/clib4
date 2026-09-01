@@ -14,6 +14,8 @@ getpwuid(uid_t uid) {
 
     SHOWVALUE(uid);
 
+    CHECK_USERGROUP_LIBRARY(NULL);
+
     result = __getpwuid((LONG) uid);
 
     __check_abort();

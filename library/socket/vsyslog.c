@@ -52,7 +52,10 @@ vsyslog(int priority, const char *message, va_list args) {
         if (__clib4->syslog_fd != NULL) {
             fprintf(__clib4->syslog_fd, "%s", buf);
         }
-        else {
+        else if (__ensure_socket_library(__clib4)) {
+            /* The system log goes through bsdsocket.library: without a
+             * TCP/IP stack there is nowhere to send it, so drop the line
+             * instead of calling through a NULL interface. */
             __vsyslog(priority, (char *) message, args);
         }
     }

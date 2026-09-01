@@ -12,6 +12,8 @@ getpwent(void) {
 
     ENTER();
 
+    CHECK_USERGROUP_LIBRARY(NULL);
+
     result = __getpwent();
 
     __check_abort();

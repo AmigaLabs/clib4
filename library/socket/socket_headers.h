@@ -101,13 +101,41 @@ struct UnixSocket {
 #define SBTC_HAVE_SERVER_API			63	/* Whether or not the server API is supported. */
 #define SBTC_ERROR_HOOK					68	/* Error hook pointer */
 
-#define DECLARE_SOCKETBASE() \
-	struct Library   UNUSED	*SocketBase  = __CLIB4->__SocketBase; \
-	struct SocketIFace 		*ISocket	 = __CLIB4->__ISocket
+/* bsdsocket.library is created in memory by the TCP/IP stack, which is started
+   from S:Network-Startup. Everything that runs before the startup-sequence has
+   to open it later, when it finally shows up: __ensure_socket_library() does
+   that, and the DECLARE_SOCKETBASE macros below give every socket entry point
+   a chance to pick the library up on first use. It is defined in
+   socket/init_exit.c. */
+extern BOOL __ensure_socket_library(struct _clib4 *__clib4);
+
+/* Plain, non-lazy variant: for code paths that can only be reached once a
+   socket already exists (or that run on every select()/poll() call and must
+   not keep retrying OpenLibrary when there is no TCP/IP stack). */
+#define DECLARE_SOCKETBASE_NOLAZY_R(clib4) \
+	struct Library   UNUSED	*SocketBase  = (clib4)->__SocketBase; \
+	struct SocketIFace UNUSED 	*ISocket	 = (clib4)->__ISocket
 
 #define DECLARE_SOCKETBASE_R(clib4) \
-	struct Library   UNUSED	*SocketBase  = clib4->__SocketBase; \
-	struct SocketIFace 		*ISocket	 = clib4->__ISocket
+	struct Library   UNUSED	*SocketBase  = (__ensure_socket_library(clib4), (clib4)->__SocketBase); \
+	struct SocketIFace UNUSED 	*ISocket	 = (clib4)->__ISocket
+
+#define DECLARE_SOCKETBASE() \
+	struct _clib4 UNUSED 	*__socket_clib4 = __CLIB4; \
+	DECLARE_SOCKETBASE_R(__socket_clib4)
+
+/* Bail out of a socket entry point when there is no TCP/IP stack (yet).
+   __ensure_socket_library() sets errno to ENETDOWN in that case. */
+#define CHECK_SOCKET_LIBRARY_R(clib4, error_result) \
+	do { \
+		if (!__ensure_socket_library(clib4)) { \
+			SHOWMSG("bsdsocket.library is not available"); \
+			RETURN(error_result); \
+			return (error_result); \
+		} \
+	} while (0)
+
+#define CHECK_SOCKET_LIBRARY(error_result) CHECK_SOCKET_LIBRARY_R(__CLIB4, error_result)
 
 extern int h_errno;
 

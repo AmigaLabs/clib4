@@ -18,7 +18,7 @@ getlogin_r(char *name, size_t size) {
 
     ENTER();
 
-    STRPTR login = __getlogin();
+    STRPTR login = __ensure_usergroup_library(__CLIB4) ? __getlogin() : NULL;
     if (login == NULL) {
         len = GetVar("USER", name, size, 0);
         if (len <= 0)

@@ -24,6 +24,8 @@ if_nametoindex(const char *ifname) {
     ENTER();
     SHOWSTRING(ifname);
 
+    CHECK_SOCKET_LIBRARY_R(__socket_clib4, 0);
+
     netiflist = ObtainInterfaceList();
     if (netiflist != NULL) {
         node = GetHead(netiflist);

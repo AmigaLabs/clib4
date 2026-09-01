@@ -634,6 +634,11 @@ struct _clib4 {
      * share this allocator, protected by memory_mutex.
      */
     void  *__wmem_allocator;
+
+    /* Serialises the lazy OpenLibrary() of usergroup.library. See
+     * __ensure_usergroup_library() in usergroup/init_exit.c. Kept last in the
+     * structure so that no existing field changes offset. */
+    struct SignalSemaphore *usergroup_lock;
 };
 
 #ifndef __getClib4

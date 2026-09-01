@@ -20,8 +20,10 @@ getservbyname(const char *name, const char *proto) {
             __set_errno(EFAULT);
             return NULL;
         }
-        else
+        else if (__ensure_socket_library(__CLIB4))
             return __getservbyname((char *) name, (char *) proto);
+        else
+            return NULL;
     }
     return res;
 }

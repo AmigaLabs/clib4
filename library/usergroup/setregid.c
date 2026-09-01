@@ -15,7 +15,7 @@ int setregid(gid_t real, gid_t eff) {
     SHOWVALUE(real);
     SHOWVALUE(eff);
 
-    if (__clib4->__root_mode) {
+    if (__clib4->__root_mode || !__ensure_usergroup_library(__clib4)) {
         if (real != (gid_t) - 1)
             __clib4->__root_gid = real;
 

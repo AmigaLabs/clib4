@@ -65,7 +65,8 @@ getaddrinfo(const char *nodename, const char *servname, const struct addrinfo *h
             struct servent se_buf;
             char se_strbuf[256] = {0};
             struct servent *se_res = NULL;
-            if (getservbyname_r(servname, proto, &se_buf, se_strbuf, sizeof(se_strbuf), &se_res) != 0 || se_res == NULL)
+            if ((getservbyname_r(servname, proto, &se_buf, se_strbuf, sizeof(se_strbuf), &se_res) != 0 || se_res == NULL)
+                && __ensure_socket_library(__CLIB4))
                 se_res = __getservbyname((char *) servname, (char *) proto);
             se = se_res;
         }

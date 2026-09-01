@@ -15,7 +15,7 @@ int setuid(uid_t id) {
 
     SHOWVALUE(id);
 
-    if (__clib4->__root_mode) {
+    if (__clib4->__root_mode || !__ensure_usergroup_library(__clib4)) {
         __clib4->__root_uid = id;
 
         result = OK;

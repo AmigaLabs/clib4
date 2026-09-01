@@ -13,6 +13,7 @@ getnetbyaddr(in_addr_t net, int type) {
     ENTER();
 
     DECLARE_SOCKETBASE();
+    CHECK_SOCKET_LIBRARY_R(__socket_clib4, NULL);
 
     result = __getnetbyaddr((ULONG) net, type);
 

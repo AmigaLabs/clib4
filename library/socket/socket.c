@@ -24,6 +24,11 @@ socket(int domain, int type, int protocol) {
     SHOWVALUE(type);
     SHOWVALUE(protocol);
 
+    /* The TCP/IP stack may not have been up when this program was started
+     * (anything running before the startup-sequence is in that position);
+     * open bsdsocket.library now if it wasn't opened at startup. */
+    CHECK_SOCKET_LIBRARY_R(__clib4, ERROR);
+
     /* Since Linux 2.6.27 the type argument may carry SOCK_NONBLOCK, saving the
      * separate fcntl() round trip; it is the idiom most modern code uses.  We
      * passed the whole type straight through to the 4.4BSD stack, which knows

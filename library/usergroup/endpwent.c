@@ -13,6 +13,8 @@
 void endpwent(void) {
     ENTER();
 
+    CHECK_USERGROUP_LIBRARY_VOID();
+
     __endpwent();
 
     __check_abort();

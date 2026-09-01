@@ -13,6 +13,8 @@
 void endgrent(void) {
     ENTER();
 
+    CHECK_USERGROUP_LIBRARY_VOID();
+
     __endgrent();
 
     __check_abort();

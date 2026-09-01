@@ -29,7 +29,11 @@ uname(struct utsname *info) {
     }
 
     strlcpy(info->sysname, OSNAME, sizeof(info->sysname));
-    __gethostname((STRPTR) info->nodename, sizeof(info->nodename));
+    /* The host name comes from the TCP/IP stack, which may not be running
+     * yet; leave the field empty instead of dying on a NULL interface. */
+    info->nodename[0] = '\0';
+    if (__ensure_socket_library(__CLIB4))
+        __gethostname((STRPTR) info->nodename, sizeof(info->nodename));
 
     VersionBase = OpenLibrary("version.library", 0L);
     if (VersionBase != NULL) {
@@ -92,7 +96,9 @@ uname(struct utsname *info) {
     strlcpy(info->version, version_string, sizeof(info->version));
     strlcpy(info->machine, ARCH, sizeof(info->machine));
 
-    /* Get Domain Name (if set) */
+    /* Get Domain Name (if set). It comes from the TCP/IP stack too, so it
+     * may well be unavailable. */
+    domainname[0] = '\0';
     getdomainname(domainname, (int) sizeof(domainname));
     strlcpy(info->domainname, domainname, sizeof(info->domainname));
 

@@ -24,7 +24,10 @@ initgroups(const char *name, gid_t basegroup) {
         goto out;
     }
 
-    result = __initgroups((STRPTR) name, (LONG) basegroup);
+    if (__ensure_usergroup_library(__CLIB4))
+        result = __initgroups((STRPTR) name, (LONG) basegroup);
+    else
+        result = OK;
 
 out:
 

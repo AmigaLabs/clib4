@@ -17,6 +17,7 @@ getdomainname(char *name, size_t len) {
 
     assert(name != NULL);
     DECLARE_SOCKETBASE();
+    CHECK_SOCKET_LIBRARY_R(__socket_clib4, ERROR);
 
     if (name == NULL) {
         SHOWMSG("invalid name");

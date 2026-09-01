@@ -13,6 +13,7 @@ getprotobynumber(int proto) {
     ENTER();
 
     DECLARE_SOCKETBASE();
+    CHECK_SOCKET_LIBRARY_R(__socket_clib4, NULL);
 
     result = __getprotobynumber(proto);
 
