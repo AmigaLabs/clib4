@@ -199,22 +199,23 @@ name_from_dns_search(struct address buf[static MAXADDRS], char canon[static 256]
     struct dns_cache *cache = __clib4->dns_cache;
     uint32_t ttl;
 
-    ObtainSemaphore(__clib4->resolv_lock);
+    MutexObtain(__clib4->resolv_lock);
     if (((struct resolvconf *) __clib4->resolv_conf)->loaded == 0) {
         if (__get_resolv_conf(__clib4->resolv_conf, __clib4->resolv_search, sizeof __clib4->resolv_search) < 0) {
-            ReleaseSemaphore(__clib4->resolv_lock);
+            MutexRelease(__clib4->resolv_lock);
             return -1;
         }
         ((struct resolvconf *) __clib4->resolv_conf)->loaded = 1;
     }
     memcpy(search, __clib4->resolv_search, sizeof __clib4->resolv_search);
-    ReleaseSemaphore(__clib4->resolv_lock);
+    MutexRelease(__clib4->resolv_lock);
 
-    /* Check DNS cache first */
+    /* Check DNS cache first. The lookup does not modify the cache, so it can
+     * be taken shared and several resolvers can read it at the same time. */
     if (cache) {
-        ObtainSemaphoreShared(__clib4->resolv_lock);
+        ObtainSemaphoreShared(__clib4->dns_cache_lock);
         int cached = __dns_cache_lookup(cache, name, family, buf, canon);
-        ReleaseSemaphore(__clib4->resolv_lock);
+        ReleaseSemaphore(__clib4->dns_cache_lock);
         if (cached > 0)
             return cached;
     }
@@ -249,9 +250,9 @@ name_from_dns_search(struct address buf[static MAXADDRS], char canon[static 256]
             int cnt = name_from_dns(buf, canon, canon, family, __clib4->resolv_conf, &ttl);
             if (cnt > 0) {
                 if (cache) {
-                    ObtainSemaphore(__clib4->resolv_lock);
+                    ObtainSemaphore(__clib4->dns_cache_lock);
                     __dns_cache_store(cache, name, family, buf, cnt, canon, ttl);
-                    ReleaseSemaphore(__clib4->resolv_lock);
+                    ReleaseSemaphore(__clib4->dns_cache_lock);
                 }
                 return cnt;
             }
@@ -262,9 +263,9 @@ name_from_dns_search(struct address buf[static MAXADDRS], char canon[static 256]
     ttl = 0;
     int cnt = name_from_dns(buf, canon, name, family, __clib4->resolv_conf, &ttl);
     if (cnt > 0 && cache) {
-        ObtainSemaphore(__clib4->resolv_lock);
+        ObtainSemaphore(__clib4->dns_cache_lock);
         __dns_cache_store(cache, name, family, buf, cnt, canon, ttl);
-        ReleaseSemaphore(__clib4->resolv_lock);
+        ReleaseSemaphore(__clib4->dns_cache_lock);
     }
     return cnt;
 }

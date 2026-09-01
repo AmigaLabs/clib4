@@ -565,7 +565,7 @@ struct _clib4 {
 	 */
 	BOOL __call_main_executed;
 
-    struct SignalSemaphore *resolv_lock;
+    APTR resolv_lock;                     /* guards resolv_conf and resolv_search */
     struct SignalSemaphore *socket_lock;  /* serialize bsdsocket.library calls across threads */
     void *dns_cache;   //struct dns_cache
     char resolv_search[256];
@@ -639,6 +639,11 @@ struct _clib4 {
      * __ensure_usergroup_library() in usergroup/init_exit.c. Kept last in the
      * structure so that no existing field changes offset. */
     struct SignalSemaphore *usergroup_lock;
+
+    /* Guards dns_cache. A semaphore rather than a mutex because cache lookups
+     * are read-only and take it shared: that is the hot path of getaddrinfo()
+     * and there is no point serialising resolvers that only read. */
+    struct SignalSemaphore *dns_cache_lock;
 };
 
 #ifndef __getClib4
