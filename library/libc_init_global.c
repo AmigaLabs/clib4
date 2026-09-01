@@ -160,6 +160,7 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         .resolv_conf = NULL,
         .dns_cache = NULL,
         .resolv_lock = NULL,
+        .dns_cache_lock = NULL,
         .socket_lock = NULL,
         .usergroup_lock = NULL,
         .__file_lock_semaphore_name = "Advisory File Locking",
@@ -195,8 +196,13 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         goto out;
     }
 
-    __clib4->resolv_lock = __create_semaphore();
+    __clib4->resolv_lock = __create_mutex();
     if (!__clib4->resolv_lock) {
+        goto out;
+    }
+
+    __clib4->dns_cache_lock = __create_semaphore();
+    if (!__clib4->dns_cache_lock) {
         goto out;
     }
 
@@ -348,8 +354,13 @@ reent_exit(struct _clib4 *__clib4) {
         }
 
         if (__clib4->resolv_lock != NULL) {
-            __delete_semaphore(__clib4->resolv_lock);
+            __delete_mutex(__clib4->resolv_lock);
             __clib4->resolv_lock = NULL;
+        }
+
+        if (__clib4->dns_cache_lock != NULL) {
+            __delete_semaphore(__clib4->dns_cache_lock);
+            __clib4->dns_cache_lock = NULL;
         }
 
         if (__clib4->socket_lock != NULL) {

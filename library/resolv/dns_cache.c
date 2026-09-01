@@ -14,11 +14,33 @@
 
 #include "lookup.h"
 
-/* Simple djb2 hash */
+/*
+ * DNS names are case insensitive, and RFC 4343 defines that insensitivity on
+ * ASCII alone. tolower() is deliberately not used here: it follows the locale,
+ * and in a Turkish one it maps 'I' to a dotless i, which would make two
+ * spellings of the same name miss each other.
+ */
+static inline unsigned char dns_fold(unsigned char c) {
+    return (c >= 'A' && c <= 'Z') ? (unsigned char) (c - 'A' + 'a') : c;
+}
+
+/* Case insensitive name comparison, ASCII folding as above. */
+static int dns_name_equal(const char *a, const char *b) {
+    while (*a != '\0' && *b != '\0') {
+        if (dns_fold((unsigned char) *a) != dns_fold((unsigned char) *b))
+            return 0;
+        a++;
+        b++;
+    }
+    return *a == *b;
+}
+
+/* Simple djb2 hash, folded so that every spelling of a name lands in the
+ * same slot. */
 static uint32_t dns_hash(const char *name, int family) {
     uint32_t h = 5381;
     while (*name)
-        h = h * 33 + (unsigned char)*name++;
+        h = h * 33 + dns_fold((unsigned char) *name++);
     h = h * 33 + (unsigned)family;
     return h;
 }
@@ -29,8 +51,16 @@ static uint32_t now_seconds(void) {
     return (uint32_t)ts.tv_sec;
 }
 
+/*
+ * Read-only by contract: callers hold nothing stronger than a shared lock,
+ * so several of them run through here at the same time. The const on the
+ * cache is what keeps that promise honest -- this used to clear in_use on
+ * expired entries, which raced with every concurrent reader. Dropping that
+ * costs nothing: an expired entry is skipped here either way, and
+ * __dns_cache_store() already recognises and reuses the slot.
+ */
 int
-__dns_cache_lookup(struct dns_cache *cache, const char *name, int family,
+__dns_cache_lookup(const struct dns_cache *cache, const char *name, int family,
                    struct address *buf, char *canon) {
     if (!cache || !name)
         return 0;
@@ -41,18 +71,16 @@ __dns_cache_lookup(struct dns_cache *cache, const char *name, int family,
     /* Linear probe from the hash slot */
     for (int i = 0; i < 4; i++) {
         uint32_t idx = (h + i) % DNS_CACHE_SIZE;
-        struct dns_cache_entry *e = &cache->entries[idx];
+        const struct dns_cache_entry *e = &cache->entries[idx];
 
         if (!e->in_use)
             continue;
 
-        /* Check expiry */
-        if (ts - e->timestamp > e->min_ttl) {
-            e->in_use = 0;
+        /* Expired: leave the slot alone and let a store recycle it. */
+        if (ts - e->timestamp > e->min_ttl)
             continue;
-        }
 
-        if (e->family == family && strcmp(e->name, name) == 0) {
+        if (e->family == family && dns_name_equal(e->name, name)) {
             int cnt = e->naddrs;
             memcpy(buf, e->addrs, cnt * sizeof(struct address));
             if (canon && e->canon[0])
@@ -92,8 +120,10 @@ __dns_cache_store(struct dns_cache *cache, const char *name, int family,
             break;
         }
 
-        /* Existing entry for the same name+family: overwrite */
-        if (e->family == family && strcmp(e->name, name) == 0) {
+        /* Existing entry for the same name+family: overwrite. The stored
+         * spelling may differ from the requested one; they are the same
+         * cache key either way. */
+        if (e->family == family && dns_name_equal(e->name, name)) {
             best = idx;
             break;
         }

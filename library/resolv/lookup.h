@@ -72,7 +72,7 @@ int __get_resolv_conf(struct resolvconf *, char *, size_t);
 int __res_msend_rc(int, const unsigned char *const *, const int *, unsigned char *const *, int *, int, const struct resolvconf *);
 int __dns_parse(const unsigned char *, int, int (*)(void *, int, const void *, int, const void *, uint32_t), void *);
 
-int __dns_cache_lookup(struct dns_cache *, const char *, int, struct address *, char *);
+int __dns_cache_lookup(const struct dns_cache *, const char *, int, struct address *, char *);
 void __dns_cache_store(struct dns_cache *, const char *, int, const struct address *, int, const char *, uint32_t);
 
 #endif
