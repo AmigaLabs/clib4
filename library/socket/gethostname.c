@@ -17,6 +17,7 @@ gethostname(char *hostname, size_t size) {
 
     assert(hostname != NULL);
     DECLARE_SOCKETBASE();
+    CHECK_SOCKET_LIBRARY_R(__socket_clib4, ERROR);
 
     if (hostname == NULL) {
         SHOWMSG("invalid host name parameter");

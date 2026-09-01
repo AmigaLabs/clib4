@@ -129,6 +129,11 @@ getifaddrs(struct ifaddrs **ifap) {
 
     DECLARE_SOCKETBASE();
 
+    /* No TCP/IP stack, no interfaces. (This function traces no debug output,
+     * so it cannot use CHECK_SOCKET_LIBRARY_R here.) */
+    if (!__ensure_socket_library(__socket_clib4))
+        return ERROR;
+
     memset(ifawrap, 0, sizeof(*ifawrap));
 
     netiflist = ObtainInterfaceList();

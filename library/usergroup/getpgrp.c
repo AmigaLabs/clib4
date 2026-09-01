@@ -12,6 +12,9 @@ getpgrp(void) {
 
     ENTER();
 
+    /* No user database: this process is on its own, so it is its own group. */
+    CHECK_USERGROUP_LIBRARY(0);
+
     result = __getpgrp();
 
     __check_abort();

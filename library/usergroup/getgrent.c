@@ -16,6 +16,8 @@ getgrent(void) {
 
     ENTER();
 
+    CHECK_USERGROUP_LIBRARY(NULL);
+
     result = __getgrent();
 
     __check_abort();

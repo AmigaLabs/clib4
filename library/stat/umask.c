@@ -20,11 +20,19 @@ umask(mode_t new_mask) {
 
     SHOWVALUE(new_mask);
 
-    result = __getumask();
+    /* usergroup.library holds the real mask, but we mirror it in
+     * __current_umask, so umask() keeps working without the library. */
+    if (__ensure_usergroup_library(__CLIB4)) {
+        result = __getumask();
 
-    __current_umask = new_mask & (S_IRWXU | S_IRWXG | S_IRWXO);
+        __current_umask = new_mask & (S_IRWXU | S_IRWXG | S_IRWXO);
 
-    __umask(__current_umask);
+        __umask(__current_umask);
+    } else {
+        result = __current_umask;
+
+        __current_umask = new_mask & (S_IRWXU | S_IRWXG | S_IRWXO);
+    }
 
     RETURN(result);
     return (result);

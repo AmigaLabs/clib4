@@ -161,6 +161,7 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         .dns_cache = NULL,
         .resolv_lock = NULL,
         .socket_lock = NULL,
+        .usergroup_lock = NULL,
         .__file_lock_semaphore_name = "Advisory File Locking",
         .__command_line_ptr = NULL,
         /* SHM per-process tracking */
@@ -201,6 +202,11 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
 
     __clib4->socket_lock = __create_semaphore();
     if (!__clib4->socket_lock) {
+        goto out;
+    }
+
+    __clib4->usergroup_lock = __create_semaphore();
+    if (!__clib4->usergroup_lock) {
         goto out;
     }
 
@@ -349,6 +355,11 @@ reent_exit(struct _clib4 *__clib4) {
         if (__clib4->socket_lock != NULL) {
             __delete_semaphore(__clib4->socket_lock);
             __clib4->socket_lock = NULL;
+        }
+
+        if (__clib4->usergroup_lock != NULL) {
+            __delete_semaphore(__clib4->usergroup_lock);
+            __clib4->usergroup_lock = NULL;
         }
 
         /* Free wchar stuff */

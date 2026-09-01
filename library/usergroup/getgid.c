@@ -16,7 +16,7 @@ gid_t getgid(void) {
 
     ENTER();
 
-    if (__clib4->__root_mode) {
+    if (__clib4->__root_mode || !__ensure_usergroup_library(__clib4)) {
         result = __clib4->__root_gid;
     } else {
         result = __getgid();

@@ -24,7 +24,11 @@ int getgroups(int ngroups, gid_t *groups) {
     }
 
     if (ngroups > 0) {
-        result = __getgroups(ngroups, (LONG *) groups);
+        /* Without usergroup.library there is no supplementary group list. */
+        if (__ensure_usergroup_library(__CLIB4))
+            result = __getgroups(ngroups, (LONG *) groups);
+        else
+            result = 0;
     } else {
         result = OK;
     }

@@ -24,7 +24,12 @@ int setgroups(int ngroups, const gid_t *groups) {
     }
 
     if (ngroups > 0) {
-        result = __setgroups(ngroups, (LONG *) groups);
+        /* Nowhere to store them without usergroup.library; do as the root
+         * emulation does elsewhere and accept the call silently. */
+        if (__ensure_usergroup_library(__CLIB4))
+            result = __setgroups(ngroups, (LONG *) groups);
+        else
+            result = OK;
     } else {
         result = OK;
     }

@@ -16,6 +16,8 @@ tcgetpgrp(int fildes) {
 
     ENTER();
 
+    CHECK_USERGROUP_LIBRARY(0);
+
     result = __getpgrp();
 
     __check_abort();
