@@ -2,7 +2,7 @@
 # $Id: libpthread.gmk,v 1.1 2023-04-23 10:09:48 clib4devs Exp $
 #
 
-ifndef SPE
+ifeq ($(findstring soft-float,$(OUTPUT_LIB)),)
     OUT_STATIC := $(BUILD_DIR)/obj/libpthread
     OUT_SHARED := $(BUILD_DIR)/obj.shared/libpthread
 else
