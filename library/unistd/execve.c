@@ -26,10 +26,12 @@ struct program_info {
 static struct DosResidentSeg *
 find_resident_command(const char *command_name) {
     struct DosResidentSeg *seg;
-
-    /* This must be done under Forbid() since dos.library does not have
-       a more sophisticated arbitration method for this yet... */
-    Forbid();
+    struct SignalSemaphore *dosSem = FindResident("DosResident");
+    
+    if (dosSem == NULL)
+        Forbid();
+    else
+        ObtainSemaphore(dosSem);
 
     seg = FindSegment((STRPTR) command_name, NULL, FALSE);
     if (seg == NULL)
@@ -45,8 +47,11 @@ find_resident_command(const char *command_name) {
                 seg->seg_UC++;
         }
     }
-
-    Permit();
+    
+    if (dosSem == NULL)
+        Permit();
+    else
+        ReleaseSemaphore(dosSem);
 
     return (seg);
 }
