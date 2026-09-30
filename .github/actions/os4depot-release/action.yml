@@ -29,7 +29,7 @@ runs:
         server: os4depot.net
         port: 21
         username: ftp
-        password: ""
+        password: ftp
         server-dir: ./upload
         local-dir: /opt/code/os4depot-release/
     
