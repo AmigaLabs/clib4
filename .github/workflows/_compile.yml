@@ -17,6 +17,9 @@ on:
         required: false
         default: "no"
         type: string
+    secrets:
+      OS4DEPOT_PASSPHRASE:
+        required: true
 
 env:
   archive_name: clib4-${{ inputs.git_tag }}${{ inputs.spe == 'yes' && '_SPE' || '' }}
