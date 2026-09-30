@@ -5,6 +5,9 @@ inputs:
   git_tag:
     description: 'Git tag to use'
     required: false
+  passphrase:
+    description: 'OS4Depot upload passphrase'
+    required: true
 
 runs:
   using: "composite"
@@ -14,8 +17,10 @@ runs:
         mkdir os4depot-release
         cp clib4-${{ inputs.git_tag }}.lha ./os4depot-release/clib4.lha
         cp ./os4depot.readme ./os4depot-release/clib4_lha.readme
-        sed -i "s/VERSION_TAG/${{ inputs.git_tag }}/" ./os4depot-release/os4depot.readme
-        sed -i "s/OS4DEPOT_PASSPHRASE/${{ secrets.OS4DEPOT_PASSPHRASE }}/" ./os4depot-release/clib4_lha.readme
+        sed -i "s/VERSION_TAG/${{ inputs.git_tag }}/" ./os4depot-release/clib4_lha.readme
+        sed -i "s/OS4DEPOT_PASSPHRASE/${OS4DEPOT_PASSPHRASE}/" ./os4depot-release/clib4_lha.readme
+      env:
+        OS4DEPOT_PASSPHRASE: ${{ inputs.passphrase }}
 
     - name: Release on OS4Depot
       uses: SamKirkland/FTP-Deploy-Action@v4.4.0

@@ -86,6 +86,7 @@ jobs:
         if: ${{ inputs.spe == 'no' }}
         with:
           git_tag: ${{ inputs.git_tag }}
+          passphrase: ${{ secrets.OS4DEPOT_PASSPHRASE }}
 
       - name: Install SSH client
         run: sudo apt-get update && sudo apt-get install -y openssh-client
