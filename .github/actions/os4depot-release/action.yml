@@ -30,7 +30,7 @@ runs:
         port: 21
         username: ftp
         password: ftp
-        server-dir: ./upload
+        server-dir: ./upload/
         local-dir: /opt/code/os4depot-release/
     
     - name: Clear the OS4Depot release folder
