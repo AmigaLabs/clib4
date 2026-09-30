@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int i = 0;
 
@@ -25,9 +26,18 @@ void f3(void) {
 
 int main(void) {
     i = 1;
-    if (!atexit(f1) && !atexit(f2) && !atexit(f3))
-        return EXIT_SUCCESS;
+    if (atexit(f1) || atexit(f2) || atexit(f3)) {
+        // atexit registration failed
+        return EXIT_FAILURE;
+    }
 
-    // atexit registration failed
-    return EXIT_FAILURE;
+    /* Loop printing until CTRL-C: the atexit handlers must run on break
+       (expected output on CTRL-C: f3, f2, f1). */
+    printf("Press CTRL-C to stop; atexit handlers should run\n");
+    for (;;) {
+        printf("[main] i=%d\n", i++);
+        sleep(1);
+    }
+
+    return EXIT_SUCCESS;
 }

@@ -87,6 +87,11 @@ raise(int sig) {
 
                     SHOWMSG("bye, bye...");
 
+                    /* Run the functions registered with atexit() before terminating.
+                       The list is emptied as it is processed, so it is safe if
+                       abort() already ran it. */
+                    __exit_trap_trigger();
+
                     /* Drop straight into abort(), which might call signal()
                        again but is otherwise guaranteed to eventually
                        land us in _exit(). */
