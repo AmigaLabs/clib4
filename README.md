@@ -23,6 +23,12 @@ functions are working correctly.
 Usually all new functions has been tested against linux.  
 If you find any issue please <a href="https://github.com/afxgroup/clib2/issues">report it</a>.
 
+### wordexp() and command substitution
+
+`wordexp()` is fully supported, but *command substitution* (the `` `...` `` and `$(...)` constructs) requires a POSIX `sh` shell to be installed on the system (for example in `C:`), because clib4 runs the command through `sh -c` using `spawnvpe()` instead of `fork()`+`execve()`. The stock AmigaOS 4 shell is **not** a POSIX shell and cannot be used for this purpose.
+All other expansions (word splitting, quoting, tilde, parameter and arithmetic expansion, globbing) work without `sh`. If `sh` is not installed, command substitution will fail and `wordexp()` will return an error.
+Note that the AmigaOS 4 `sh` port is not 100% POSIX compliant, so very complex shell constructs may behave differently than on Linux.
+
 ## Shared library
 
 `clib4` now is an AmigaOS4 shared library. This means that you have to install `clib4.library` in LIBS: folder.  

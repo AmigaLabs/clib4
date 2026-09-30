@@ -487,7 +487,7 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
     }
 #endif
 
-    DECLARE_SOCKETBASE_R(__clib4);
+    DECLARE_SOCKETBASE_NOLAZY_R(__clib4);
 
     if (signal_mask_ptr != NULL) {
         signal_mask = (*signal_mask_ptr);

@@ -171,18 +171,14 @@ int __secs_to_tm(long long t, struct tm *tm) {
 BOOL
 __convert_time_to_datestamp(time_t time_value, struct DateStamp *ds) {
     BOOL success;
-    struct _clib4 *__clib4 = __CLIB4;
 
     /* Adjust the time to the AmigaOS epoch. */
     time_value -= UNIX_TIME_OFFSET;
 
-    __locale_lock(__clib4);
-
-    /* If possible, adjust the time to match the local time zone settings. */
-    if (__clib4->__default_locale != NULL)
-        time_value -= 60 * __clib4->__default_locale->loc_GMTOffset;
-
-    __locale_unlock(__clib4);
+    /* Adjust the time to match the local time zone settings.  Same offset
+       source as __convert_datestamp_to_time(), so writing a file date and
+       reading it back round-trips. */
+    time_value -= 60 * __get_gmt_offset();
 
     ds->ds_Days = (time_value / (24 * 60 * 60));
     ds->ds_Minute = (time_value % (24 * 60 * 60)) / 60;

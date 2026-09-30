@@ -20,8 +20,10 @@ getservbyport(int port, const char *proto) {
             __set_errno(EFAULT);
             return NULL;
         }
-        else
+        else if (__ensure_socket_library(__CLIB4))
             return __getservbyport(port, (char *) proto);
+        else
+            return NULL;
     }
     return res;
 }

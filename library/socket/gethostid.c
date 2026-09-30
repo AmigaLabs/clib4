@@ -17,6 +17,7 @@ gethostid() {
     ENTER();
 
     DECLARE_SOCKETBASE();
+    CHECK_SOCKET_LIBRARY_R(__socket_clib4, -1);
 
     result = __gethostid();
 

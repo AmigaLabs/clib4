@@ -14,6 +14,8 @@ int
 setlogin(const char *name) {
     ENTER();
 
+    CHECK_USERGROUP_LIBRARY(ERROR);
+
     int result = __setlogin(name);
 
     __check_abort();

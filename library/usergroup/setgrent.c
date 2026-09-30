@@ -9,6 +9,8 @@
 void setgrent(void) {
     ENTER();
 
+    CHECK_USERGROUP_LIBRARY_VOID();
+
     __setgrent();
 
     __check_abort();

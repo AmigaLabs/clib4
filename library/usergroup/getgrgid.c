@@ -12,6 +12,8 @@ getgrgid(gid_t gid) {
 
     ENTER();
 
+    CHECK_USERGROUP_LIBRARY(NULL);
+
     result = __getgrgid((LONG) gid);
 
     __check_abort();

@@ -101,15 +101,47 @@ __close_all_files(struct _clib4 *__clib4) {
                  FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE))) {
                 D(("Close __fd %ld\n", i));
                 close(i);
-                SHOWMSG("Freeing Unlock memory");
-                UnlockMem(fd, sizeof(*fd));
-                SHOWMSG("Freeing fd memory");
-                __free_r(__clib4, fd);
-                __clib4->__fd[i] = NULL;
             }
             else {
                 D(("Can't close __fd %ld FDF_STDIO=%ld FDF_IN_USE=%ld FDF_NO_CLOSE=%ld \n", i, FLAG_IS_SET(fd->fd_Flags, FDF_STDIO), FLAG_IS_SET(fd->fd_Flags, FDF_IN_USE), FLAG_IS_SET(fd->fd_Flags, FDF_NO_CLOSE)));
             }
+
+            /*
+             * Safety net. A successful close() wipes the descriptor, so if we
+             * still find a live dos.library file handle or lock in here the
+             * regular close path could not get rid of it (or the descriptor was
+             * never marked as closeable in the first place). Release it now:
+             * dos.library does not clean up after a process, so anything left
+             * open at this point would keep the file locked once the programme
+             * has exited.
+             *
+             * Sockets are skipped (their handle shares the same union member and
+             * has already been dealt with by socket_exit()), so are descriptors
+             * whose handle is owned by somebody else (FDF_NO_CLOSE_BPTR, i.e. the
+             * inherited stdin/stdout/stderr streams) and dup()ed descriptors,
+             * where exactly one entry of the alias chain owns the handle.
+             */
+            if (fd->fd_DefaultFile != BZERO &&
+                FLAG_IS_CLEAR(fd->fd_Flags, FDF_IS_SOCKET) &&
+                FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE_BPTR) &&
+                fd->fd_Original == NULL && fd->fd_NextAlias == NULL) {
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_DIRECTORY) ||
+                    FLAG_IS_SET(fd->fd_Flags, FDF_PATH_ONLY)) {
+                    D(("Force UnLock() of leftover directory lock on __fd %ld\n", i));
+                    UnLock(fd->fd_DefaultFile);
+                }
+                else {
+                    D(("Force Close() of leftover file handle on __fd %ld\n", i));
+                    Close(fd->fd_File);
+                }
+                fd->fd_DefaultFile = BZERO;
+            }
+
+            SHOWMSG("Freeing Unlock memory");
+            UnlockMem(fd, sizeof(*fd));
+            SHOWMSG("Freeing fd memory");
+            __free_r(__clib4, fd);
+            __clib4->__fd[i] = NULL;
         }
         __clib4->__num_fd = 0;
 

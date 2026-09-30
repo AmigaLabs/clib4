@@ -36,10 +36,65 @@
 #include "string_headers.h"
 #endif /* _STRING_HEADERS_H */
 
+#ifndef _SOCKET_HEADERS_H
+#include "socket_headers.h"
+#endif /* _SOCKET_HEADERS_H */
+
 #include <resolv.h>
 #include <netinet/in.h>
+#include <proto/bsdsocket.h>
+#include <libraries/bsdsocket.h>
 
 #include "lookup.h"
+
+/*
+ * Populate conf->ns[] using Roadshow's ObtainDomainNameServerList(), which
+ * returns the DNS servers currently known to the stack (DHCP-assigned or
+ * statically configured).  Returns updated nns count.
+ * Called only when _PATH_RESCONF contains no nameserver lines.
+ */
+static int
+dns_from_interfaces(struct resolvconf *conf, int nns) {
+    struct List *dns_list = NULL;
+    struct DomainNameServerNode *dnsn;
+    int i;
+
+    DECLARE_SOCKETBASE();
+    if (!ISocket)
+        return nns;
+
+    dns_list = ObtainDomainNameServerList();
+    if (!dns_list || IsListEmpty(dns_list))
+        goto done;
+
+    for (dnsn = (struct DomainNameServerNode *) dns_list->lh_Head;
+         dnsn->dnsn_MinNode.mln_Succ != NULL && nns < MAXNS;
+         dnsn = (struct DomainNameServerNode *) dnsn->dnsn_MinNode.mln_Succ)
+    {
+        struct address tmp;
+
+        if (!dnsn->dnsn_Address || dnsn->dnsn_Address[0] == '\0')
+            continue;
+
+        if (__lookup_ipliteral(&tmp, dnsn->dnsn_Address, AF_INET) <= 0)
+            continue;
+
+        /* Skip duplicates. */
+        for (i = 0; i < nns; i++) {
+            if (memcmp(conf->ns[i].addr, tmp.addr, 4) == 0)
+                break;
+        }
+        if (i == nns) {
+            conf->ns[nns] = tmp;
+            nns++;
+        }
+    }
+
+done:
+    if (dns_list)
+        ReleaseDomainNameServerList(dns_list);
+    return nns;
+}
 
 int
 __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
@@ -121,6 +176,14 @@ __get_resolv_conf(struct resolvconf *conf, char *search, size_t search_sz) {
 
 no_resolv_conf:
     if (!nns) {
+        /* No nameservers in config file: try DHCP-assigned DNS from Roadshow
+         * interface list before falling back to loopback. */
+        nns = dns_from_interfaces(conf, nns);
+    }
+
+    if (!nns) {
+        /* Last resort: loopback.  This almost certainly won't resolve external
+         * names, but avoids leaving nns == 0 which would crash callers. */
         __lookup_ipliteral(conf->ns, "127.0.0.1", AF_UNSPEC);
         nns = 1;
     }

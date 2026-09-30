@@ -16,7 +16,7 @@ setreuid(uid_t real, uid_t eff) {
     SHOWVALUE(real);
     SHOWVALUE(eff);
 
-    if (__clib4->__root_mode) {
+    if (__clib4->__root_mode || !__ensure_usergroup_library(__clib4)) {
         if (real != (uid_t) - 1)
             __clib4->__root_uid = real;
 

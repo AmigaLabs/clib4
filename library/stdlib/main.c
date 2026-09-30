@@ -139,7 +139,6 @@ call_main(
         struct ElfIFace *IElf = __clib4->IElf;
         static const char * const libc_anchor_paths[] = {
             "PROGDIR:SObjs/libc.so",
-            "SOBJS:libc.so",
             NULL
         };
         for (int _i = 0; libc_anchor_paths[_i] != NULL; _i++) {

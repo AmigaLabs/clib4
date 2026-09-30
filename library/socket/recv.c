@@ -21,7 +21,7 @@ recv(int sockfd, void *buff, size_t nbytes, int flags) {
 
     assert((int) nbytes >= 0);
     assert(buff != NULL);
-    DECLARE_SOCKETBASE_R(__clib4);
+    DECLARE_SOCKETBASE_NOLAZY_R(__clib4);
 
     if (buff == NULL) {
         SHOWMSG("invalid buffer parameter");

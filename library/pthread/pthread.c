@@ -230,6 +230,14 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     struct Task *task;
     ThreadInfo *inf;
     clock_t clock_type = CLOCK_REALTIME;
+    /* The timer request and its reply port live in the ThreadInfo, so a thread
+     * without one (anything not started by pthread_create(), such as the
+     * threads std::thread creates) polls instead; see the deadline loop below. */
+    struct MsgPort *timerPort = NULL;
+    struct TimeRequest *timerIO = NULL;
+    BOOL useTimerDevice = FALSE;
+    struct timespec deadline = { 0, 0 };
+    BOOL timedOutByPoll = FALSE;
 
     if (cond == NULL || mutex == NULL) {
         return EINVAL;
@@ -306,22 +314,38 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
             rel_time = *abstime;
         }
 
-        // Lazy-initialize per-thread timer device (opened once, reused across calls)
-        if (!inf->timerOpen) {
-            if (!OpenTimerDevice((struct IORequest *) &inf->timerIO, &inf->timerPort, task)) {
-                return EINVAL;
-            }
-            inf->timerOpen = TRUE;
+        /* Absolute deadline for the polling path, derived from rel_time so
+         * that both the absolute and the relative input forms agree. */
+        clock_gettime(clock_type, &deadline);
+        deadline.tv_sec += rel_time.tv_sec;
+        deadline.tv_nsec += rel_time.tv_nsec;
+        if (deadline.tv_nsec >= 1000000000L) {
+            deadline.tv_sec++;
+            deadline.tv_nsec -= 1000000000L;
         }
-        // prepare the device command and send it
-        inf->timerIO.Request.io_Command = TR_ADDREQUEST;
-        inf->timerIO.Request.io_Flags = 0;
-        TIMESPEC_TO_OLD_TIMEVAL(&inf->timerIO.Time, &rel_time);
-        sigs |= (1 << inf->timerPort.mp_SigBit);
-        // Clear stale timer signal and drain any leftover messages from previous use
-        SetSignal(0, 1 << inf->timerPort.mp_SigBit);
-        while (GetMsg(&inf->timerPort)) { /* drain */ }
-        SendIO((struct IORequest *) &inf->timerIO);
+
+        if (inf != NULL) {
+            // Lazy-initialize per-thread timer device (opened once, reused across calls)
+            timerPort = &inf->timerPort;
+            timerIO = &inf->timerIO;
+            if (!inf->timerOpen) {
+                if (!OpenTimerDevice((struct IORequest *) timerIO, timerPort, task)) {
+                    return EINVAL;
+                }
+                inf->timerOpen = TRUE;
+            }
+            useTimerDevice = TRUE;
+
+            // prepare the device command and send it
+            timerIO->Request.io_Command = TR_ADDREQUEST;
+            timerIO->Request.io_Flags = 0;
+            TIMESPEC_TO_OLD_TIMEVAL(&timerIO->Time, &rel_time);
+            sigs |= (1 << timerPort->mp_SigBit);
+            // Clear stale timer signal and drain any leftover messages from previous use
+            SetSignal(0, 1 << timerPort->mp_SigBit);
+            while (GetMsg(timerPort)) { /* drain */ }
+            SendIO((struct IORequest *) timerIO);
+        }
     }
     // prepare a waiter node
     waiter.task = task;
@@ -345,10 +369,36 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
     cleanup_ctx.cond = cond;
     cleanup_ctx.mutex = mutex;
     cleanup_ctx.waiter = &waiter;
-    cleanup_ctx.timerio = abstime ? (struct IORequest *) &inf->timerIO : NULL;
+    cleanup_ctx.timerio = useTimerDevice ? (struct IORequest *) timerIO : NULL;
     pthread_cleanup_push(CondWaitCleanupHandler, &cleanup_ctx);
 
-    sigs = Wait(sigs);
+    if (abstime && !useTimerDevice) {
+        /* No timer request to signal us, so watch the deadline directly.
+         * SetSignal() reports what has arrived without blocking, which keeps
+         * the condition responsive between polls. */
+        ULONG const waitMask = sigs;
+
+        sigs = 0;
+        for (;;) {
+            struct timespec now;
+
+            sigs = SetSignal(0, waitMask) & waitMask;
+            if (sigs != 0)
+                break;
+
+            clock_gettime(clock_type, &now);
+            if ((now.tv_sec > deadline.tv_sec) ||
+                (now.tv_sec == deadline.tv_sec && now.tv_nsec >= deadline.tv_nsec)) {
+                timedOutByPoll = TRUE;
+                break;
+            }
+
+            /* 1 tick granularity, as in _pthread_obtain_sema_timed(). */
+            Delay(1);
+        }
+    } else {
+        sigs = Wait(sigs);
+    }
 
     pthread_cleanup_pop(0); // don't execute — we handle cleanup below
 
@@ -363,15 +413,20 @@ _pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const stru
         FreeSignal(waiter.sigbit);
 
     if (abstime) {
-        // Reset the timer IO for reuse (abort if still pending, then wait for completion)
-        if (!CheckIO((struct IORequest *) &inf->timerIO))
-            AbortIO((struct IORequest *) &inf->timerIO);
-        WaitIO((struct IORequest *) &inf->timerIO);
-        /* See comment in _pthread_obtain_sema_timed: prevent double-Remove(). */
-        inf->timerIO.Request.io_Flags |= IOF_QUICK;
+        BOOL timedOut = timedOutByPoll;
 
-        // did we timeout?
-        if (sigs & (1 << inf->timerPort.mp_SigBit))
+        if (useTimerDevice) {
+            timedOut = (sigs & (1 << timerPort->mp_SigBit)) != 0;
+
+            // Reset the timer IO for reuse (abort if still pending, then wait for completion)
+            if (!CheckIO((struct IORequest *) timerIO))
+                AbortIO((struct IORequest *) timerIO);
+            WaitIO((struct IORequest *) timerIO);
+            /* See comment in _pthread_obtain_sema_timed: prevent double-Remove(). */
+            timerIO->Request.io_Flags |= IOF_QUICK;
+        }
+
+        if (timedOut)
             return ETIMEDOUT;
         else if (sigs & (SIGBREAKF_CTRL_C | (inf != NULL ? inf->cancel_signal_mask : 0))) {
             pthread_testcancel();

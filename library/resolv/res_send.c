@@ -43,21 +43,21 @@ __res_msend(int nqueries, const unsigned char *const *queries, const int *qlens,
     struct _clib4 *__clib4 = __CLIB4;
 
     /* Fast path: check loaded flag under shared lock first */
-    ObtainSemaphoreShared(__clib4->resolv_lock);
+    MutexObtain(__clib4->resolv_lock);
     int loaded = ((struct resolvconf *) __clib4->resolv_conf)->loaded;
-    ReleaseSemaphore(__clib4->resolv_lock);
+    MutexRelease(__clib4->resolv_lock);
 
     if (!loaded) {
-        ObtainSemaphore(__clib4->resolv_lock);
+        MutexObtain(__clib4->resolv_lock);
         /* Re-check under exclusive lock */
         if (((struct resolvconf *) __clib4->resolv_conf)->loaded == 0) {
             if (__get_resolv_conf(__clib4->resolv_conf, __clib4->resolv_search, sizeof __clib4->resolv_search) < 0) {
-                ReleaseSemaphore(__clib4->resolv_lock);
+                MutexRelease(__clib4->resolv_lock);
                 return -1;
             }
             ((struct resolvconf *) __clib4->resolv_conf)->loaded = 1;
         }
-        ReleaseSemaphore(__clib4->resolv_lock);
+        MutexRelease(__clib4->resolv_lock);
     }
 
     return __res_msend_rc(nqueries, queries, qlens, answers, alens, asize, __clib4->resolv_conf);

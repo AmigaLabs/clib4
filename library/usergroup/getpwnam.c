@@ -16,6 +16,8 @@ getpwnam(const char *name) {
 
     assert(name != NULL);
 
+    CHECK_USERGROUP_LIBRARY(NULL);
+
     if (name == NULL) {
         SHOWMSG("invalid name");
 

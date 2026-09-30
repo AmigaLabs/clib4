@@ -56,12 +56,14 @@
 #include <tgmath.h>
 #include <time.h>
 #include <uchar.h>
+#include <ucontext.h>
 #include <ulimit.h>
 #include <unistd.h>
 #include <utime.h>
 #include <wchar.h>
 #include <wctype.h>
 #include <wctype.h>
+#include <wordexp.h>
 #include <netinet/ether.h>
 #include <sys/byteswap.h>
 #include <sys/file.h>
@@ -1379,6 +1381,16 @@ struct Clib4IFace {
     size_t (* malloc_usable_size) (void *ptr);                                                                                                       /* 4492 */
 
     void (* malloc_dump) (void);                                                                                                                     /* 4496 */
+
+    /* ucontext.h */
+    int  (* getcontext) (ucontext_t *__ucp);                                                                                                         /* 4500 */
+    int  (* setcontext) (const ucontext_t *__ucp);                                                                                                   /* 4504 */
+    int  (* swapcontext) (ucontext_t *__oucp, const ucontext_t *__ucp);                                                                              /* 4508 */
+    void (* makecontext) (ucontext_t *__ucp, void (*func)(void), int argc, ...);                                                                     /* 4512 */
+
+    /* wordexp.h */
+    int  (* wordexp) (const char *__restrict words, wordexp_t *__restrict pwordexp, int flags);                                                      /* 4516 */
+    void (* wordfree) (wordexp_t *pwordexp);                                                                                                         /* 4520 */
 };
 
 #ifdef __PIC__

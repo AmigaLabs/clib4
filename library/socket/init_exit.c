@@ -96,13 +96,27 @@ void socket_exit(void) {
     LEAVE();
 }
 
-void socket_init(void) {
+/****************************************************************************/
+
+/* Open bsdsocket.library and wire it up for this process.  Returns TRUE when
+ * __SocketBase/__ISocket are usable afterwards.
+ *
+ * Callers must serialise concurrent invocations; socket_init() runs before the
+ * process has any other thread and __ensure_socket_library() takes socket_lock.
+ */
+static BOOL
+open_socket_library(struct _clib4 *__clib4) {
     struct TagItem tags[5];
     BOOL success = FALSE;
     LONG status;
-    struct _clib4 *__clib4 = __CLIB4;
 
     ENTER();
+
+    if (__clib4->__ISocket != NULL) {
+        /* Somebody opened it already. */
+        success = TRUE;
+        goto out;
+    }
 
     /* bsdsocket.library V3 is sufficient for all the tasks we may have to perform. */
     __clib4->__SocketBase = OpenLibrary("bsdsocket.library", 3);
@@ -116,10 +130,8 @@ void socket_init(void) {
 
     if (__clib4->__SocketBase == NULL) {
         SHOWMSG("bsdsocket.library V3 didn't open");
-        __show_error("\"bsdsocket.library\" V3 could not be opened.");
         goto out;
     }
-    DECLARE_SOCKETBASE_R(__clib4);
 
     /* Wire the library's errno variable to our local errno. */
     tags[0].ti_Tag = SBTM_SETVAL(SBTC_ERRNOLONGPTR);
@@ -142,7 +154,10 @@ void socket_init(void) {
     if (status != 0) {
         SHOWMSG("couldn't initialize the library");
 
-        __show_error("\"bsdsocket.library\" could not be initialized.");
+        DropInterface((struct Interface *) __clib4->__ISocket);
+        __clib4->__ISocket = NULL;
+        CloseLibrary(__clib4->__SocketBase);
+        __clib4->__SocketBase = NULL;
         goto out;
     }
 
@@ -178,10 +193,74 @@ void socket_init(void) {
 out:
 
     SHOWVALUE(success);
+    RETURN(success);
+    return success;
+}
+
+/****************************************************************************/
+
+/* Make sure bsdsocket.library is available before a socket API is used.
+ *
+ * bsdsocket.library is not a disk library: it is created in memory by the
+ * TCP/IP stack, which on AmigaOS is started from S:Network-Startup, i.e. from
+ * the startup-sequence.  Anything that runs *before* the startup-sequence
+ * therefore cannot open it yet.  newlib copes with that because it only opens
+ * the library the first time a socket function is called; clib4 used to open
+ * it in its constructor and killed the whole process when that failed, so a
+ * clib4 program that never touches a socket could not even start that early.
+ *
+ * This function restores the newlib behaviour: the library is opened on demand
+ * and the attempt is repeated on every call, so a program which was started
+ * before the TCP/IP stack came up will still get working sockets as soon as
+ * the stack is there.
+ *
+ * Returns TRUE when sockets can be used, FALSE (with errno set to ENETDOWN)
+ * when the TCP/IP stack is still unavailable.
+ */
+BOOL
+__ensure_socket_library(struct _clib4 *__clib4) {
+    BOOL result;
+
+    if (__clib4 == NULL) {
+        return FALSE;
+    }
+
+    /* Fast path: already open. */
+    if (__clib4->__ISocket != NULL) {
+        return TRUE;
+    }
+
+    if (__clib4->socket_lock != NULL)
+        ObtainSemaphore(__clib4->socket_lock);
+
+    result = open_socket_library(__clib4);
+
+    if (__clib4->socket_lock != NULL)
+        ReleaseSemaphore(__clib4->socket_lock);
+
+    if (!result) {
+        /* No TCP/IP stack (yet). */
+        __set_errno_r(__clib4, ENETDOWN);
+        __set_h_errno_r(__clib4, TRY_AGAIN);
+    }
+
+    return result;
+}
+
+/****************************************************************************/
+
+void socket_init(void) {
+    struct _clib4 *__clib4 = __CLIB4;
+
+    ENTER();
+
+    /* Not being able to open bsdsocket.library is not a fatal condition:
+     * see __ensure_socket_library() above.  Programs which never use a socket
+     * must be able to run before the TCP/IP stack has been started, and those
+     * which do use one will open the library on first use. */
+    (void) open_socket_library(__clib4);
+
     LEAVE();
 
-    if (success)
-        CONSTRUCTOR_SUCCEED();
-    else
-        CONSTRUCTOR_FAIL();
+    CONSTRUCTOR_SUCCEED();
 }

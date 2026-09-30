@@ -152,6 +152,7 @@ C_POSIX := \
 	posix/fstatvfs.o \
 	posix/getvfsstat.o \
 	posix/glob.o \
+	posix/wordexp.o \
 	posix/globfree.o \
 	posix/basename.o \
 	debug/backtrace.o \
@@ -249,6 +250,13 @@ C_SETJMP := \
     setjmp/sigjmp.o \
     setjmp/siglongjmp.o \
     setjmp/sigsetjmp.o
+
+C_UCONTEXT := \
+    ucontext/getcontext.o \
+    ucontext/makecontext.o \
+    ucontext/mcontext.o \
+    ucontext/setcontext.o \
+    ucontext/swapcontext.o
 
 C_SOCKET := \
     resolv/dns_cache.o \
@@ -1011,6 +1019,7 @@ C_LIBRARY := \
 	$(C_TERMIOS) \
 	$(C_TIME) \
 	$(C_UNISTD) \
+	$(C_UCONTEXT) \
 	$(C_USERGROUP) \
 	$(C_WCHAR) \
 	$(C_WMEM)

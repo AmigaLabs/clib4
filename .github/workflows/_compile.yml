@@ -81,6 +81,12 @@ jobs:
           asset_name: ${{ env.archive_name }}_amd64.deb
           asset_content_type: application/vnd.debian.binary-pac
 
+      - name: Upload to OS4Depot
+        uses: ./.github/actions/os4depot-release
+        if: ${{ inputs.spe == 'no' }}
+        with:
+          git_tag: ${{ inputs.git_tag }}
+
       - name: Install SSH client
         run: sudo apt-get update && sudo apt-get install -y openssh-client
 

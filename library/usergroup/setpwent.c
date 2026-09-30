@@ -9,6 +9,8 @@
 void setpwent(void) {
     ENTER();
 
+    CHECK_USERGROUP_LIBRARY_VOID();
+
     __setpwent();
 
     __check_abort();

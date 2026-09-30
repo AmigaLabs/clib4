@@ -31,10 +31,10 @@ extern __CONST_FUNC uint64_t bswap64(uint64_t);
 
 /* Select implementation. */
 
-#define	bswap16(x)	(__builtin_constant_p(x))?__const_swap16(x):__swap16(x)
+#define	bswap16(x)	__builtin_bswap16(x)
 #define	bswap24(x)	(__builtin_constant_p(x))?__const_swap24(x):__swap24(x)
-#define	bswap32(x)	(__builtin_constant_p(x))?__const_swap32(x):__swap32(x)
-#define	bswap64(x)	(__builtin_constant_p(x))?__const_swap64(x):__swap64(x)
+#define	bswap32(x)	__builtin_bswap32(x)
+#define	bswap64(x)	__builtin_bswap64(x)
 
 /* Assembler implementations */
 

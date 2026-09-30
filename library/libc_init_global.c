@@ -55,9 +55,14 @@ static uint32_t _random_init[] = {
         0x0cab8628, 0xf043bfa4, 0x398150e9, 0x37521657
 };
 
-void
+BOOL
 reent_init(struct _clib4 *__clib4, const BOOL fallback) {
     BOOL success = FALSE;
+
+    /* The callers allocate the context themselves and not all of them check
+     * the result, so make sure we are not the ones dereferencing it. */
+    if (__clib4 == NULL)
+        return FALSE;
 
     ENTER();
     DECLARE_UTILITYBASE();
@@ -155,7 +160,9 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         .resolv_conf = NULL,
         .dns_cache = NULL,
         .resolv_lock = NULL,
+        .dns_cache_lock = NULL,
         .socket_lock = NULL,
+        .usergroup_lock = NULL,
         .__file_lock_semaphore_name = "Advisory File Locking",
         .__command_line_ptr = NULL,
         /* SHM per-process tracking */
@@ -189,13 +196,23 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
         goto out;
     }
 
-    __clib4->resolv_lock = __create_semaphore();
+    __clib4->resolv_lock = __create_mutex();
     if (!__clib4->resolv_lock) {
+        goto out;
+    }
+
+    __clib4->dns_cache_lock = __create_semaphore();
+    if (!__clib4->dns_cache_lock) {
         goto out;
     }
 
     __clib4->socket_lock = __create_semaphore();
     if (!__clib4->socket_lock) {
+        goto out;
+    }
+
+    __clib4->usergroup_lock = __create_semaphore();
+    if (!__clib4->usergroup_lock) {
         goto out;
     }
 
@@ -300,13 +317,20 @@ reent_init(struct _clib4 *__clib4, const BOOL fallback) {
 out:
 
     if (!success) {
-    	if (__clib4) {
-    		reent_exit(__clib4);
-    		SHOWMSG("Freeing __clib4 instance pointer");
-    		FreeVec(__clib4);
-    		SHOWMSG("Fallback __clib4 destroyed correctly");
-    	}
+        /*
+         * Give back whatever we managed to allocate, but leave the struct
+         * itself alone: it belongs to the caller, who now learns about the
+         * failure and frees it. Freeing it here left every caller holding a
+         * dangling pointer instead -- and one of them stores that pointer in
+         * pr_UID, where the whole process picks it up afterwards.
+         */
+        SHOWMSG("reent_init failed; releasing what had been allocated");
+        reent_exit(__clib4);
     }
+
+    LEAVE();
+
+    return success;
 }
 
 void
@@ -330,13 +354,23 @@ reent_exit(struct _clib4 *__clib4) {
         }
 
         if (__clib4->resolv_lock != NULL) {
-            __delete_semaphore(__clib4->resolv_lock);
+            __delete_mutex(__clib4->resolv_lock);
             __clib4->resolv_lock = NULL;
+        }
+
+        if (__clib4->dns_cache_lock != NULL) {
+            __delete_semaphore(__clib4->dns_cache_lock);
+            __clib4->dns_cache_lock = NULL;
         }
 
         if (__clib4->socket_lock != NULL) {
             __delete_semaphore(__clib4->socket_lock);
             __clib4->socket_lock = NULL;
+        }
+
+        if (__clib4->usergroup_lock != NULL) {
+            __delete_semaphore(__clib4->usergroup_lock);
+            __clib4->usergroup_lock = NULL;
         }
 
         /* Free wchar stuff */

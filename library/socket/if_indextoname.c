@@ -23,6 +23,8 @@ if_indextoname(unsigned int ifindex, char *ifname) {
     ENTER();
     SHOWVALUE(ifindex);
 
+    CHECK_SOCKET_LIBRARY_R(__socket_clib4, NULL);
+
     if (ifname == NULL || strlen(ifname) > IF_NAMESIZE) {
         __set_errno(ENXIO);
         goto out;

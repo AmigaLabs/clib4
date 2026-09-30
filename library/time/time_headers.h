@@ -77,6 +77,10 @@
 #include "stdlib_utilitybase.h"
 #endif /* _STDLIB_UTILITYBASE_H */
 
+#ifndef _STDLIB_TIMEZONEBASE_H
+#include "stdlib_timezonebase.h"
+#endif /* _STDLIB_TIMEZONEBASE_H */
+
 /****************************************************************************/
 
 #ifndef _MATH_FP_SUPPORT_H
@@ -114,6 +118,7 @@ extern const char * const NOCOMMON __month_names[12];
 extern char * __asctime_r(const struct tm *tm,char * buffer,size_t buffer_size);
 extern char * __number_to_string(unsigned int number,char * string,size_t max_len,size_t min_len);
 extern struct tm * __convert_time(struct _clib4 *__clib4, ULONG seconds, LONG gmt_offset, struct tm * tm);
+extern int32 __get_gmt_offset(void);
 extern time_t __convert_datestamp_to_time(const struct DateStamp * ds);
 extern BOOL __convert_time_to_datestamp(time_t time_value,struct DateStamp * ds);
 extern int __calculate_weekday(int year,int month,int day);

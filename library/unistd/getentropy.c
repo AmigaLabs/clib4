@@ -11,7 +11,6 @@
 
 int
 getentropy(void *buffer, size_t len) {
-    int ret = 0;
     char *pos = buffer;
 
     if (len > 256) {
@@ -19,18 +18,34 @@ getentropy(void *buffer, size_t len) {
         return -1;
     }
 
-    while (len) {
-        ret = getrandom(pos, len, 0);
-        if (ret < 0) {
-            if (errno == EINTR)
-                continue;
-            else
-                break;
-        }
-        pos += ret;
-        len -= ret;
-        ret = 0;
+    if (buffer == NULL && len > 0) {
+        __set_errno(EFAULT);
+        return -1;
     }
 
-    return ret;
+    while (len) {
+        ssize_t ret = getrandom(pos, len, 0);
+
+        if (ret < 0) {
+            if (__get_errno() == EINTR)
+                continue;
+
+            return -1;
+        }
+
+        /*
+         * getrandom() never reports zero bytes without an error, but do not
+         * take that for granted: making no progress here would turn this
+         * loop into an endless one.
+         */
+        if (ret == 0) {
+            __set_errno(EIO);
+            return -1;
+        }
+
+        pos += ret;
+        len -= (size_t) ret;
+    }
+
+    return 0;
 }

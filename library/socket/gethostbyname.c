@@ -17,7 +17,7 @@ gethostbyname(const char *name) {
         if (name == NULL) {
             __set_errno(EFAULT);
         }
-        else
+        else if (__ensure_socket_library(__CLIB4))
             he = __gethostbyname(name);
     }
     return he;

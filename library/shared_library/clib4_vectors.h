@@ -1206,5 +1206,15 @@ static void *clib4Vectors[] = {
         (void *) (malloc_usable_size),                    /* 4492 */
 
         (void *) (malloc_dump),                           /* 4496 */
+
+        /* ucontext.h */
+        (void *) (getcontext),                            /* 4500 */
+        (void *) (setcontext),                            /* 4504 */
+        (void *) (swapcontext),                           /* 4508 */
+        (void *) (makecontext),                           /* 4512 */
+
+        /* wordexp.h */
+        (void *) (wordexp),                               /* 4516 */
+        (void *) (wordfree),                              /* 4520 */
         (void *)-1
 };

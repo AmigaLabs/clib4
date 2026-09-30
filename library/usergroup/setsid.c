@@ -11,6 +11,8 @@ pid_t setsid(void) {
 
     ENTER();
 
+    CHECK_USERGROUP_LIBRARY(ERROR);
+
     result = (long) __setsid();
 
     __check_abort();

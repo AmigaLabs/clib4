@@ -25,6 +25,36 @@
 #include <grp.h>
 #endif /* _GRP_H */
 
+/* usergroup.library comes with the TCP/IP stack and may not be openable when a
+   program is started before the startup-sequence. __ensure_usergroup_library()
+   (usergroup/init_exit.c) opens it on demand; every entry point below has to go
+   through it before dereferencing __IUserGroup. It leaves errno alone, so the
+   caller decides what a missing library means. */
+extern BOOL __ensure_usergroup_library(struct _clib4 *__clib4);
+
+/* Bail out of an entry point when usergroup.library is not available. */
+#define CHECK_USERGROUP_LIBRARY_R(clib4, error_result) \
+	do { \
+		if (!__ensure_usergroup_library(clib4)) { \
+			SHOWMSG("usergroup.library is not available"); \
+			__set_errno_r(clib4, ENOSYS); \
+			RETURN(error_result); \
+			return (error_result); \
+		} \
+	} while (0)
+
+#define CHECK_USERGROUP_LIBRARY(error_result) CHECK_USERGROUP_LIBRARY_R(__CLIB4, error_result)
+
+/* Same, for the functions which return nothing. */
+#define CHECK_USERGROUP_LIBRARY_VOID() \
+	do { \
+		if (!__ensure_usergroup_library(__CLIB4)) { \
+			SHOWMSG("usergroup.library is not available"); \
+			LEAVE(); \
+			return; \
+		} \
+	} while (0)
+
 #define DECLARE_USERGROUPBASE() \
 	struct Library   UNUSED	*UserGroupBase  = __CLIB4->__UserGroupBase; \
 	struct UserGroupIFace 	*IUserGroup	    = __CLIB4->__IUserGroup
