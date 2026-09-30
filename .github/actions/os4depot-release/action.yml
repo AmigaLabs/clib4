@@ -21,6 +21,7 @@ runs:
         sed -i "s/OS4DEPOT_PASSPHRASE/${OS4DEPOT_PASSPHRASE}/" ./os4depot-release/clib4_lha.readme
       env:
         OS4DEPOT_PASSPHRASE: ${{ inputs.passphrase }}
+      shell: bash
 
     - name: Release on OS4Depot
       uses: SamKirkland/FTP-Deploy-Action@v4.4.0
@@ -28,10 +29,11 @@ runs:
         server: os4depot.net
         port: 21
         username: ftp
-        password: 
+        password:
         server-dir: ./upload
         local-dir: /opt/code/os4depot-release/
     
     - name: Clear the OS4Depot release folder
       run: |
         rm -rf os4depot-release
+      shell: bash
