@@ -3,7 +3,7 @@
 # :ts=8
 # -*- mode: makefile; -*-
 
-ifndef SPE
+ifeq ($(findstring soft-float,$(OUTPUT_LIB)),)
     OUT_STATIC := $(BUILD_DIR)/obj/libc
     OUT_SHARED := $(BUILD_DIR)/obj.shared/libc
 else

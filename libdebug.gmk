@@ -2,7 +2,7 @@
 # $Id: libdebug.gmk,v 1.0 2022-07-09 10:09:48 clib4devs Exp $
 #
 
-ifndef SPE
+ifeq ($(findstring soft-float,$(OUTPUT_LIB)),)
     OUT_STATIC := $(BUILD_DIR)/obj/libdebug
     OUT_SHARED := $(BUILD_DIR)/obj.shared/libdebug
 else
