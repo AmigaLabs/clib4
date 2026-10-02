@@ -83,4 +83,4 @@
 | <wctype.h>               | Wide-Character Classification and Mapping Utilities                                   | Complete                          |
 | <wordexp.h>              | Word-expansion like the shell would perform                                           | Complete *                        |
 
-* See README.md
+<nowiki>*</nowiki> See README.md
