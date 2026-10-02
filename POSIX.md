@@ -3,7 +3,7 @@
 | Header file              | Description                                                                           | Status                            |
 |--------------------------|---------------------------------------------------------------------------------------|-----------------------------------|
 | <aio.h>                  | Asynchronous input and output                                                         | Implemented with some limitations |
-| <arpa/inet.h>            | Functions for manipulating numeric IP addresses (part of Berkley sockets)             | Complete                          |
+| <arpa/inet.h>            | Functions for manipulating numeric IP addresses (part of Berkeley sockets)             | Complete                          |
 | <assert.h>               | Verify assumptions                                                                    | Complete                          |
 | <complex.h>              | Complex Arithmetic                                                                    | Complete                          |
 | <cpio.h>                 | Magic numbers for the cpio archive format                                             | Complete                          |
@@ -30,7 +30,7 @@
 | <ndbm.h>                 | NDBM database operations                                                              | Complete                          |
 | <net/if.h>               | Listing of local network interfaces                                                   | Complete                          |
 | <netdb.h>                | Translating protocol and host names into numeric addresses (part of Berkeley sockets  | Complete                          |
-| <netinet/in.h>           | Defines Internet protocol and address family (part of Berkley sockets)                | Complete                          |
+| <netinet/in.h>           | Defines Internet protocol and address family (part of Berkeley sockets)               | Complete                          |
 | <netinet/tcp.h>          | Issue                                                                                 | Complete                          |
 | <nl_types.h>             | Localization message catalog functions                                                | Complete                          |
 | <poll.h>                 | Asynchronous file descriptor multiplexing                                             | Present with missing functions    |
@@ -53,7 +53,7 @@
 | <strings.h>              | Case-insensitive string comparisons                                                   | Complete                          |
 | <stropts.h>              | Stream manipulation, including ioctl                                                  | Not present                       |
 | <sys/ipc.h>              | Inter-process Communication (IPC)                                                     | Complete                          |
-| <sys/mman.h>             | Memory management, including POSIX shared memory and memory mapped files               | Complete                          |
+| <sys/mman.h>             | Memory management, including POSIX shared memory and memory mapped files              | Complete                          |
 | <sys/msg.h>              | POSIX messages queues                                                                 | Complete                          |
 | <sys/resource.h>         | Resource usage, priorities, and limiting                                              | Present with missing functions    |
 | <sys/select.h>           | Synchronous I/O multiplexing                                                          | Complete                          |
