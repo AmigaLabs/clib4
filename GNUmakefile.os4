@@ -72,13 +72,9 @@ WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
 	-Wno-deprecated-declarations -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
-	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing \
+	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing -Wno-prio-ctor-dtor -Wno-stringop-overflow \
     -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Werror
      # -Wbad-function-cast -Wconversion -Wformat
-
-ifndef SPE
-WARNINGS += -Wno-prio-ctor-dtor -Wno-stringop-overflow
-endif
 
 PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -152,6 +148,10 @@ ifdef SPE
 	AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mfloat-gprs=double $(CMATH) -Wno-overflow
 	CFLAGS := $(filter-out -Wno-cast-function-type, $(CFLAGS))
 	CFLAGS_N := $(filter-out -Wno-cast-function-type, $(CFLAGS_N))
+	CFLAGS := $(filter-out -Wno-prio-ctor-dtor, $(CFLAGS))
+	CFLAGS_N := $(filter-out -Wno-prio-ctor-dtor, $(CFLAGS_N))
+	CFLAGS := $(filter-out -Wno-stringop-overflow, $(CFLAGS))
+	CFLAGS_N := $(filter-out -Wno-stringop-overflow, $(CFLAGS_N))
 endif
 
 ifdef PROFILE
@@ -447,8 +447,18 @@ install:
 	$(DELETE) $(INSTALL_PREFIX)/lib/*
 	$(DELETE) $(INSTALL_PREFIX)/clib4.library*
 	$(COPY) $(OUTPUT_LIB)/* $(INSTALL_PREFIX)/lib/
+ifdef SPE
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/soft-float/libamiga.a $(INSTALL_PREFIX)/lib/baserel/libamiga.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/soft-float/libc.a $(INSTALL_PREFIX)/lib/baserel/libc.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/soft-float/libcrypt.a $(INSTALL_PREFIX)/lib/baserel/libcrypt.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/soft-float/libdebug.a $(INSTALL_PREFIX)/lib/baserel/libdebug.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/soft-float/libm.a $(INSTALL_PREFIX)/lib/baserel/libm.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/soft-float/libprofile.a $(INSTALL_PREFIX)/lib/baserel/libprofile.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/soft-float/librt.a $(INSTALL_PREFIX)/lib/baserel/librt.a
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/soft-float/crt0.o $(INSTALL_PREFIX)/lib/baserel/crt0.o
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/soft-float/crtend.o $(INSTALL_PREFIX)/lib/baserel/crtend.o
+else
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/libamiga.a $(INSTALL_PREFIX)/lib/baserel/libamiga.a
-	$(MAKELINK) $(INSTALL_PREFIX)/lib/libauto.a $(INSTALL_PREFIX)/lib/baserel/libauto.a
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/libc.a $(INSTALL_PREFIX)/lib/baserel/libc.a
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/libcrypt.a $(INSTALL_PREFIX)/lib/baserel/libcrypt.a
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/libdebug.a $(INSTALL_PREFIX)/lib/baserel/libdebug.a
@@ -457,7 +467,9 @@ install:
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/librt.a $(INSTALL_PREFIX)/lib/baserel/librt.a
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/crt0.o $(INSTALL_PREFIX)/lib/baserel/crt0.o
 	$(MAKELINK) $(INSTALL_PREFIX)/lib/crtend.o $(INSTALL_PREFIX)/lib/baserel/crtend.o
+endif
 	$(COPY) libs/libauto.a $(INSTALL_PREFIX)/lib/
+	$(MAKELINK) $(INSTALL_PREFIX)/lib/libauto.a $(INSTALL_PREFIX)/lib/baserel/libauto.a
 	$(COPY) $(BUILD_DIR)/clib4.library* $(INSTALL_PREFIX)
 	$(COPY) $(LIB_ROOT)/library/include/* $(INSTALL_PREFIX)/include/
 
