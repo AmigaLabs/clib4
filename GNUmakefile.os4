@@ -80,19 +80,14 @@ WARNINGS := \
 	-Wno-comment -Wno-missing-braces -Wno-deprecated-declarations \
 	-Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
 	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function \
-	-Wno-unused-parameter -Wno-strict-aliasing -Wno-prio-ctor-dtor \
+	-Wno-unused-parameter -Wno-strict-aliasing \
 	-Wno-stringop-overflow -Wno-type-limits -Wno-cast-function-type \
 	-Wno-frame-address -Wno-error=unused-but-set-variable -Werror
 #	-Wbad-function-cast -Wconversion -Wformat
 
 ifdef SPE
 	WARNINGS := $(filter-out -Wno-cast-function-type, $(WARNINGS))
-	WARNINGS := $(filter-out -Wno-prio-ctor-dtor, $(WARNINGS))
 	WARNINGS := $(filter-out -Wno-stringop-overflow, $(WARNINGS))
-endif
-
-ifeq ($(GCC_MAJOR),8)
-	WARNINGS := $(filter-out -Wno-prio-ctor-dtor, $(WARNINGS))
 endif
 
 PIC		   := -fPIC -DPIC
