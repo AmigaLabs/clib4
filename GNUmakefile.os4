@@ -79,7 +79,7 @@ WARNINGS := \
 	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value \
 	-Wno-comment -Wno-missing-braces -Wno-deprecated-declarations \
 	-Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
-	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function 
+	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function \
 	-Wno-unused-parameter -Wno-strict-aliasing -Wno-prio-ctor-dtor \
 	-Wno-stringop-overflow -Wno-type-limits -Wno-cast-function-type \
 	-Wno-frame-address -Wno-error=unused-but-set-variable -Werror
