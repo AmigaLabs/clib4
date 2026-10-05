@@ -17,6 +17,7 @@ struct program_info {
     char *program_name;                         /* Points to the name of the command */
     char *interpreter_name;                     /* If not NULL the name of the command interpreter to use */
     char *interpreter_args;                     /* If not NULL these are additional arguments to be passedto the command interpreter */
+    APTR mutex;                                 /* If not NULL points to a mutex which is used to synchronize access to the command interpreter */
 };
 
 /****************************************************************************/
@@ -26,7 +27,7 @@ struct program_info {
 static struct DosResidentSeg *
 find_resident_command(const char *command_name) {
     struct DosResidentSeg *seg;
-    struct SignalSemaphore *dosSem = FindResident("DosResident");
+    struct SignalSemaphore *dosSem = (struct SignalSemaphore *) FindResident("DosResident");
     
     if (dosSem == NULL)
         Forbid();
@@ -47,7 +48,7 @@ find_resident_command(const char *command_name) {
                 seg->seg_UC++;
         }
     }
-    
+
     if (dosSem == NULL)
         Permit();
     else
@@ -149,13 +150,15 @@ static void
 free_program_info(struct program_info *pi) {
     if (pi != NULL) {
         if (pi->resident_command != NULL) {
-            Forbid();
+            MutexObtain(pi->mutex);
 
             if (pi->resident_command->seg_UC > 0)
                 pi->resident_command->seg_UC--;
 
-            Permit();
+            MutexRelease(pi->mutex);
         }
+        if (pi->mutex != NULL)
+            FreeSysObject(ASOT_MUTEX, pi->mutex);
 
         if (pi->interpreter_name != NULL)
             free(pi->interpreter_name);
@@ -206,6 +209,11 @@ find_command(const char *path, struct program_info **result_ptr) {
     }
 
     memset(pi, 0, sizeof(*pi));
+    pi->mutex = AllocSysObjectTags(ASOT_MUTEX, TAG_DONE);
+    if (pi->mutex == NULL) {
+        __set_errno(ENOMEM);
+        goto out;
+    }
 
     error = __translate_unix_to_amiga_path_name(&path, &nti);
     if (error != 0) {
