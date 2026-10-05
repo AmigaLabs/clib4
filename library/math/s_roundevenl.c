@@ -6,6 +6,12 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
+#if __LDBL_MANT_DIG__ == __DBL_MANT_DIG__ && __LDBL_MAX_EXP__ == __DBL_MAX_EXP__
+long double
+roundevenl(long double x) {
+	return roundeven((double) x);
+}
+#else
 #define BIAS 0x3fff
 #define MANT_DIG 64
 #define MAX_EXP (2 * BIAS + 1)
@@ -89,3 +95,4 @@ roundevenl(long double x) {
     SET_LDOUBLE_WORDS (x, se, hx, lx);
     return x;
 }
+#endif

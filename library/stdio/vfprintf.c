@@ -69,11 +69,12 @@ static void pad(struct _clib4 *__clib4, Out *f, char c, int w, int l, int fl) {
 
 
 static const char xdigits[16] = {
-        "0123456789ABCDEF"
+    '0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
 };
 
 static const char bdigits[2] = {
-        "01"
+    '0', '1'
 };
 
 static char *fmt_x(uintmax_t x, char *s, int lower) {

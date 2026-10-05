@@ -275,7 +275,7 @@ static const struct policy {
     unsigned char len, mask;
     unsigned char prec, label;
 } defpolicy[] = {
-        {"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1", 15, 0xff, 50, 0},
+        {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, 15, 0xff, 50, 0},
         {"\0\0\0\0\0\0\0\0\0\0\xff\xff", 11, 0xff, 35, 4},
         {"\x20\2", 1, 0xff, 30, 2},
         {"\x20\1", 3, 0xff, 5, 5},
