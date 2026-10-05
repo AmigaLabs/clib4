@@ -10,7 +10,7 @@
 #define inline
 #endif
 
-static inline char *med3(char *, char *, char *, int (*)());
+static inline char *med3(char *, char *, char *, int (*)(const void *, const void *));
 static inline void swapfunc(char *, char *, int, int);
 
 /*

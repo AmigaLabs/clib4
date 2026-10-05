@@ -6,6 +6,12 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
+#if __LDBL_MANT_DIG__ == __DBL_MANT_DIG__ && __LDBL_MAX_EXP__ == __DBL_MAX_EXP__
+long double
+atan2l(long double y, long double x) {
+    return atan2((double) y, (double) x);
+}
+#else
 #include "invtrig.h"
 
 static volatile long double
@@ -102,3 +108,4 @@ atan2l(long double y, long double x) {
             return (z - pi_lo) - pi;/* atan(-,-) */
     }
 }
+#endif
