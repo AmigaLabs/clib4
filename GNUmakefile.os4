@@ -55,6 +55,12 @@ else
     MAKEDIR := mkdir -p
 endif
 
+# Determine the GCC version and major version number
+GCC_VERSION := $(shell $(word 1,$(CC)) -dumpversion 2>/dev/null)
+GCC_MAJOR := $(firstword $(subst ., ,$(GCC_VERSION)))
+$(info GCC_VERSION=$(GCC_VERSION))
+$(info GCC_MAJOR=$(GCC_MAJOR))
+
 # Enabling the LOG_COMMAND has the consequence that a rule will not
 # fail on an error because only the exit status from the tee command
 # will be considered
@@ -70,11 +76,19 @@ DPKG_LIB ?= clib4_1.0_amd64
 
 WARNINGS := \
 	-Wall -W -Wextra -Wpointer-arith -Wsign-compare -Wmissing-prototypes \
-	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value -Wno-comment -Wno-missing-braces \
-	-Wno-deprecated-declarations -Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
-	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing -Wno-prio-ctor-dtor -Wno-stringop-overflow \
-    -Wno-type-limits -Wno-cast-function-type -Wno-frame-address -Wno-error=unused-but-set-variable -Werror
-     # -Wbad-function-cast -Wconversion -Wformat
+	-Wundef -Wmissing-declarations -Wunused -Wwrite-strings -Wno-unused-value \
+	-Wno-comment -Wno-missing-braces -Wno-deprecated-declarations \
+	-Wno-unused-variable -Wno-parentheses -Wno-missing-prototypes \
+	-Wstrict-aliasing -Wno-shadow -Wno-discarded-qualifiers -Wno-unused-function \
+	-Wno-unused-parameter -Wno-strict-aliasing \
+	-Wno-stringop-overflow -Wno-type-limits -Wno-cast-function-type \
+	-Wno-frame-address -Wno-error=unused-but-set-variable -Werror
+#	-Wbad-function-cast -Wconversion -Wformat
+
+ifdef SPE
+	WARNINGS := $(filter-out -Wno-cast-function-type, $(WARNINGS))
+	WARNINGS := $(filter-out -Wno-stringop-overflow, $(WARNINGS))
+endif
 
 PIC		   := -fPIC -DPIC
 INCLUDES   := -I$(LIB_DIR)/include \
@@ -146,12 +160,6 @@ ifdef SPE
 				-fno-align-functions -fno-align-jumps -fno-align-loops -fno-align-labels -fno-inline-small-functions \
 				-fno-indirect-inlining -Wno-overflow -Wno-unused-but-set-variable -Wno-uninitialized #-Wdouble-promotion
 	AFLAGS := $(AFLAGS) -mvrsave -D__SPE__ -mspe -mtune=8540 -mcpu=8540 -mfloat-gprs=double $(CMATH) -Wno-overflow
-	CFLAGS := $(filter-out -Wno-cast-function-type, $(CFLAGS))
-	CFLAGS_N := $(filter-out -Wno-cast-function-type, $(CFLAGS_N))
-	CFLAGS := $(filter-out -Wno-prio-ctor-dtor, $(CFLAGS))
-	CFLAGS_N := $(filter-out -Wno-prio-ctor-dtor, $(CFLAGS_N))
-	CFLAGS := $(filter-out -Wno-stringop-overflow, $(CFLAGS))
-	CFLAGS_N := $(filter-out -Wno-stringop-overflow, $(CFLAGS_N))
 endif
 
 ifdef PROFILE
