@@ -75,5 +75,11 @@ glibc_strchr(const char *s, int c_in) {
 
 char *
 strchr(const char *s, int c) {
+#if defined(__arm__)
+    /* ARM has no PowerPC routine behind __strchr_ppc; the word-at-a-time C
+     * version above is endian neutral and serves. */
+    return glibc_strchr(s, c);
+#else
     return __strchr_ppc(s, c);
+#endif
 }

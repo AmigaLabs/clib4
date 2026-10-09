@@ -21,6 +21,9 @@
 #include <exec/types.h>
 #include <exec/lists.h>
 #include <exec/semaphores.h>
+/* struct StackSwapStruct is a member of struct _clib4 below; its definition is
+ * in exec/tasks.h, which the PowerPC SDK's own includes happened to pull in. */
+#include <exec/tasks.h>
 
 /* Node structure for timer list */
 struct TimerNode {

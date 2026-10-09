@@ -56,7 +56,14 @@ vsyslog(int priority, const char *message, va_list args) {
             /* The system log goes through bsdsocket.library: without a
              * TCP/IP stack there is nowhere to send it, so drop the line
              * instead of calling through a NULL interface. */
+#if defined(__arm__)
+            /* The socket interface carries the va_list as the APTR a PowerPC
+             * va_list is. On AAPCS the va_list is a structure whose one member is
+             * that pointer, so the member is what crosses the interface. */
+            __vsyslog(priority, (char *) message, *(APTR *) &args);
+#else
             __vsyslog(priority, (char *) message, args);
+#endif
         }
     }
     LEAVE();

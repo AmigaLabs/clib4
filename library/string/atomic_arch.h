@@ -1,3 +1,25 @@
+/*
+ * ARM (ARMv7-A): the compiler's __sync builtins compile to ldrex/strex loops
+ * with the barriers the architecture needs, so the primitives are written
+ * against them. No load-linked/store-conditional pair is exposed; atomic.h
+ * builds everything else from a_cas, a_barrier and a_clz_32.
+ */
+#if defined(__arm__)
+#define a_cas a_cas
+static inline int a_cas(volatile int *p, int t, int s) {
+    return __sync_val_compare_and_swap(p, t, s);
+}
+
+#define a_barrier a_barrier
+static inline void a_barrier(void) {
+    __sync_synchronize();
+}
+
+#define a_clz_32 a_clz_32
+static inline int a_clz_32(uint32_t x) {
+    return x ? __builtin_clz(x) : 32;
+}
+#else /* PowerPC */
 #define a_ll a_ll
 static inline int a_ll(volatile int *p) {
     int v;
@@ -30,3 +52,4 @@ static inline int a_clz_32(uint32_t x) {
     __asm__ ("cntlzw %0, %1" : "=r"(x) : "r"(x));
     return x;
 }
+#endif /* __arm__ */

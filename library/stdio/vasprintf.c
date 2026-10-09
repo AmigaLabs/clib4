@@ -27,9 +27,13 @@ __vasprintf(const char *file, int line, char **ret, const char *format, va_list 
     SHOWPOINTER(ret);
     SHOWSTRING(format);
 
+#if defined(__arm__)
+    assert(ret != NULL && format != NULL);
+#else
     assert(ret != NULL && format != NULL && arg != NULL);
+#endif
 
-    if (ret == NULL || format == NULL || arg == NULL) {
+    if (ret == NULL || format == NULL || VA_LIST_IS_NULL(arg)) {
         SHOWMSG("invalid parameters");
 
         __set_errno(EFAULT);

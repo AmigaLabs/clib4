@@ -5,6 +5,22 @@
 #ifndef _STDIO_HEADERS_H
 #define _STDIO_HEADERS_H
 
+/*
+ * A va_list is tested against NULL only where it is a pointer (PowerPC). On
+ * AAPCS it is a structure, which cannot be compared with NULL, and a va_list
+ * handed to these routines is always present, so the test is dropped there.
+ * On PowerPC the macros expand to exactly the comparison they replace.
+ */
+#if defined(__arm__)
+#define VA_LIST_IS_NULL(ap)     (0)
+#define VA_ASSERT_NOT_NULL(ap)  ((void)0)
+#else
+#define VA_LIST_IS_NULL(ap)     ((ap) == NULL)
+/* The argument is written without parentheses so assert() stringifies exactly
+ * "ap != NULL", as it always did: the PowerPC object is unchanged. */
+#define VA_ASSERT_NOT_NULL(ap)  assert(ap != NULL)
+#endif
+
 #ifndef EXEC_LIBRARIES_H
 #include <exec/libraries.h>
 #endif /* EXEC_LIBRARIES_H */

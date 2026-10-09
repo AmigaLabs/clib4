@@ -16,9 +16,13 @@ vprintf(const char *format, va_list arg) {
     SHOWSTRING(format);
     SHOWPOINTER(arg);
 
+#if defined(__arm__)
+    assert(format != NULL);
+#else
     assert(format != NULL && arg != NULL);
+#endif
 
-    if (format == NULL || arg == NULL) {
+    if (format == NULL || VA_LIST_IS_NULL(arg)) {
         __set_errno_r(__clib4, EFAULT);
         goto out;
     }

@@ -6,7 +6,13 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
-#ifndef __SPE__
+#if defined(__arm__)
+/* ARM: the compiler's own fabs, a bit operation on the sign. No asm needed. */
+double
+fabs(double x) {
+    return __builtin_fabs(x);
+}
+#elif !defined(__SPE__)
 inline static double
 __fabs(double x) {
     double res;

@@ -345,9 +345,9 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
                 maximum_field_width = 1;
 
             if (NOT assignment_suppressed) {
-                assert(arg != NULL);
+                VA_ASSERT_NOT_NULL(arg);
 
-                if (arg == NULL) {
+                if (VA_LIST_IS_NULL(arg)) {
                     __set_errno(EFAULT);
                     goto out;
                 }
@@ -402,9 +402,9 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             /* We boldly try to initialize the parameter to a well-
                 defined value before we begin the conversion. */
             if (NOT assignment_suppressed) {
-                assert(arg != NULL);
+                VA_ASSERT_NOT_NULL(arg);
 
-                if (arg == NULL) {
+                if (VA_LIST_IS_NULL(arg)) {
                     __set_errno(EFAULT);
                     goto out;
                 }
@@ -980,9 +980,9 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             /* We boldly try to initialize the parameter to a well-
                defined value before we begin the conversion. */
             if (NOT assignment_suppressed) {
-                assert(arg != NULL);
+                VA_ASSERT_NOT_NULL(arg);
 
-                if (arg == NULL) {
+                if (VA_LIST_IS_NULL(arg)) {
                     __set_errno(EFAULT);
                     goto out;
                 }
@@ -1199,9 +1199,9 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             char *s_ptr;
 
             if (NOT assignment_suppressed) {
-                assert(arg != NULL);
+                VA_ASSERT_NOT_NULL(arg);
 
-                if (arg == NULL) {
+                if (VA_LIST_IS_NULL(arg)) {
                     __set_errno(EFAULT);
                     goto out;
                 }
@@ -1258,9 +1258,9 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             num_conversions++;
         } else if (conversion_type == 'n') {
             if (NOT assignment_suppressed) {
-                assert(arg != NULL);
+                VA_ASSERT_NOT_NULL(arg);
 
-                if (arg == NULL) {
+                if (VA_LIST_IS_NULL(arg)) {
                     __set_errno(EFAULT);
                     goto out;
                 }
@@ -1354,9 +1354,9 @@ vfscanf(FILE *stream, const char *format, va_list arg) {
             int pick;
 
             if (NOT assignment_suppressed) {
-                assert(arg != NULL);
+                VA_ASSERT_NOT_NULL(arg);
 
-                if (arg == NULL) {
+                if (VA_LIST_IS_NULL(arg)) {
                     __set_errno(EFAULT);
                     goto out;
                 }

@@ -17,6 +17,47 @@
 #endif
 
 
+#if defined(__arm__)
+/* ARM VFP (Raspberry Pi 2). The floating point environment is the FPSCR
+ * register, a 32-bit word: fenv_t is that word. The flag and enable bits are
+ * laid out as in the ARM architecture; the operations live in
+ * library/arch/arm/fenv_arm.c. The PowerPC branch below is unchanged. */
+#define FE_INVALID      0x01
+#define FE_DIVBYZERO    0x02
+#define FE_OVERFLOW     0x04
+#define FE_UNDERFLOW    0x08
+#define FE_INEXACT      0x10
+#define FE_ALL_EXCEPT   (FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW | FE_INEXACT)
+
+#define FE_TONEAREST    0x000000
+#define FE_UPWARD       0x400000
+#define FE_DOWNWARD     0x800000
+#define FE_TOWARDZERO   0xc00000
+
+typedef unsigned int fexcept_t;
+typedef uint32_t fenv_t;
+
+__BEGIN_DECLS
+
+extern const fenv_t __fe_dfl_env;
+#define FE_DFL_ENV      (&__fe_dfl_env)
+
+extern int fegetenv(fenv_t *envp);
+extern int fesetenv(const fenv_t *envp);
+extern int feholdexcept(fenv_t *envp);
+extern int feupdateenv(const fenv_t *envp);
+extern int fegetexceptflag(fexcept_t *flagp, int excepts);
+extern int fesetexceptflag(const fexcept_t *flagp, int excepts);
+extern int feclearexcept(int excepts);
+extern int fetestexcept(int excepts);
+extern int feraiseexcept(int excepts);
+extern int fegetround(void);
+extern int fesetround(int round);
+
+__END_DECLS
+
+#else /* !__arm__: the PowerPC floating point environment */
+
 #if defined __NO_FPRS__ && !defined _SOFT_FLOAT /* E500 */
 
     /* Define bits representing the exception.  We use the bit positions of
@@ -376,5 +417,7 @@ fegetexcept(void)
 }
 
 __END_DECLS
+
+#endif /* !__arm__ */
 
 #endif /* _FENV_H */
