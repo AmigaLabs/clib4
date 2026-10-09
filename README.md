@@ -16,99 +16,12 @@ All **deprecated** OS4 functions are replaced by modern OS4 one
 
 For the original README follow this <a href="https://github.com/adtools/clib2">link</a>
 
-## ARM port (Raspberry Pi 2, little endian)
+## ARM (Raspberry Pi 2, little endian)
 
 clib4 also builds for ARMv7 little endian, the target of the Raspberry Pi 2 port of the
-AROS4 kernel (`TARGETARCH=arm`). The PowerPC build is unchanged: the ARM code is gated on
-`__arm__` or on `__BYTE_ORDER__`, and the PowerPC objects are checked byte for byte against a
-baseline after every change.
-
-### What is different on ARM
-
-- **Static library only.** There is no `clib4.library` and no shared object on ARM. `libc.a`
-  and `libm.a` are the real C library, not stubs, and a program is linked as an ET_REL command
-  that the kernel loads with `elf.library`. The start code is `library/arch/arm/crtbegin.c`:
-  it opens dos and utility, creates the per-process context (`library/stdlib/static_init.c`,
-  which copies what `libOpen()`/`libClose()` do for the shared library) and calls `_main()`.
-- **Byte order.** `BYTE_ORDER` comes from `__BYTE_ORDER__`. Network order is produced with
-  `htonl()`/`ntohl()`, which swap on ARM and are the identity on PowerPC. Code that read a
-  double's words or searched strings a word at a time was fixed for little endian, and a
-  write-enabled `open()` of an existing file uses `MODE_READWRITE` (`MODE_OLDFILE` is read-only on the
-  FAT handler).
-- **Floating point.** Soft float (`-mfloat-abi=soft`). On ARM `long double` is the 64-bit
-  `double`, so the `long double` functions that read a 128-bit layout (`asinl`, `acosl`,
-  `atanl`, `atan2l`, `copysignl`, `roundevenl`, `__isnormall`) forward to the `double` ones
-  (`library/arch/arm/ldbl_double.c`). The PowerPC routines for them are left out of the ARM
-  archive.
-- **Left out on ARM for now:** `ucontext` (`makecontext`/`swapcontext`), `profile` (`gprof`),
-  the `cpu/*` assembly variants (AltiVec, SPE, 4xx) and the PowerPC `setjmp`/`bswap`/`getsp`
-  assembly, replaced by C or AAPCS code in `library/arch/arm/`. The SysV IPC family is built.
-- **OS4 libraries not yet on ARM.** `timezone.library`, `usergroup.library`, `diskfont.library`
-  and `bsdsocket.library` are closed OS4 libraries and are not in the ARM image. The static
-  start goes on without them: time functions fall back to UTC or to the locale offset, and
-  the socket paths that need `bsdsocket.library` are not usable (not tested on ARM).
-
-### Building
-
-You need the arm-amigaos cross toolchain (gcc 11, binutils 2.23 with the `arm-amigaos`
-target) and the superproject's `src/sdk` built for ARM. The ARM SDK include path must come
-first: `exec/exectags.h` packs `struct Node`, and the kernel's `ExecBase` layout depends on
-it. `GNUmakefile.os4` does this itself (`SDKROOT`).
-
-```bash
-make -k -f GNUmakefile.os4 TARGETARCH=arm arm-libc -j8
-```
-
-This leaves `build/arm/lib/libc.a`, `libm.a`, `crtbegin.o` and `crtend.o`. Do not use the
-`all` target for ARM: it runs `gitver`, which rewrites `library/c.lib_rev.h`.
-
-A program is compiled and linked like this (the paths are the ones of a superproject checkout):
-
-```bash
-arm-amigaos-gcc -O2 -march=armv7-a -marm -mfloat-abi=soft -mno-unaligned-access \
-    -nostdinc -I<clib4>/library/include -I<superproject>/src/sdk/include -c hello.c -o hello.o
-arm-amigaos-ld -r -o Hello <clib4>/build/arm/lib/crtbegin.o hello.o \
-    <clib4>/build/arm/lib/crtend.o --start-group <clib4>/build/arm/lib/libc.a \
-    <clib4>/build/arm/lib/libm.a "$(arm-amigaos-gcc -print-libgcc-file-name)" --end-group
-```
-
-### Endianness
-
-On a big-endian host (PowerPC) and on the little-endian ARM host the same program prints
-different words. `test_programs/endian/endian1.c` prints the value of a `uint32_t` whose bytes
-are `11 22 33 44` in memory: on ARM it gives `x.u32 = 0x44332211`, `htole32` leaves it
-unchanged and `htobe32` gives `0x11223344`. The PowerPC output is the reverse for the two
-conversions.
-
-The `tests/` suite covers `strlen` on ordinary strings and `fread` round trips, and `atof` on simple
-values. The cases that found the little-endian bugs were checked with separate probe programs during the
-port (`strlen` at every alignment, the bignum path of `strtod` such as `1e300`, `htonl`/`htons`, and
-`inet_aton`); those probes are not in the repository yet.
-
-### Test status on ARM
-
-The `tests/` suite runs on ARM as separate programs: `test_runner` calls `system()` and is not
-used there. Each program is linked as above and started from the serial shell of the kernel
-(raspi2b, QEMU). The scratch-file tests (`test_stdio`, `test_mmap`, `test_shm`) take their
-directory from `TEST_TMP_PREFIX`, which defaults to `/tmp/` (stdio) or `T:` (mmap, shm); the
-ARM image has no `T:`, so it is built with `-DTEST_TMP_PREFIX='"SYS:"'`.
-
-Last run (2026-10-09), all passing:
-
-| Suite | Assertions |
-|-------|------------|
-| string.h | 78 |
-| stdlib.h | 59 |
-| stdio.h | 54 |
-| math.h | 91 |
-| time.h | 40 |
-| mmap / mprotect | 53 |
-| mlock | 64 |
-| shm / SysV / mmap | 99 |
-
-Known open: `strtod("2.2250738585072011e-308")` returns the smallest normal double instead of
-the largest subnormal (the rounding at the subnormal boundary). The ARM test image is a 1 MB
-FAT volume, so the suite runs in several boots.
+AROS4 kernel (`TARGETARCH=arm`). The ARM build is described in [README-ARM.md](README-ARM.md):
+it is the same design as PowerPC, a `clib4.library` shared library plus stub `libc.a` and
+`libm.a`, with the library built as a relocatable object that `elf.library` loads from `LIBS:`.
 
 ## Limitations and caveats
 
