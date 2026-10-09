@@ -320,6 +320,23 @@ MATH_LIB := \
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(MATH_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(MATH_LIB))
 
+# ARM static libm (TARGETARCH=arm): the real math objects, non-PIC. On PowerPC
+# C_MATH only goes into the shared library, so it has no static compile rule;
+# the ARM build compiles it here.
+ifeq ($(TARGETARCH),arm)
+# The floating point environment is ARM VFP code (arch/arm/fenv_arm.c), so the
+# PowerPC fenv and ieeefp objects are left out. acoshl uses the double algorithm
+# on ARM (arch/arm/e_acoshl.c); the 128-bit algorithm stays PowerPC-only.
+ARM_MATH_PPC_ONLY := math/fenv.o math/fpgetmask.o math/fpgetround.o \
+	math/fpgetsticky.o math/fpsetmask.o math/fpsetround.o math/e_acoshl.o
+ARM_MATH_OBJS := $(filter-out $(ARM_MATH_PPC_ONLY),$(C_MATH)) \
+	arch/arm/fenv_arm.o arch/arm/e_acoshl.o
+SOURCES_STATIC := $(addprefix $(OUT_STATIC)/, $(MATH_LIB) $(ARM_MATH_OBJS))
+
+$(OUT_STATIC)/%.o : $(LIB_DIR)/%.c
+	$(VERBOSE)$(COMPILE)
+endif
+
 OBJ_C_LIB  += $(addprefix $(OUT_SHARED_LIB)/, $(C_MATH))
 
 # Dependencies to rebuild if the library version changes

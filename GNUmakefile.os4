@@ -44,6 +44,17 @@ HOST_CXX := g++
 SDK_INCLUDE ?= $(abspath $(addsuffix ../ppc-amigaos/SDK/include/,$(dir $(shell which $(word 1,$(CC))))))
 MAKELINK := ln -s
 
+# ARM little-endian (pass TARGETARCH=arm): the Raspberry Pi 2 static libc, built
+# from the same sources with the arm-amigaos cross toolchain. The SDK headers
+# are architecture neutral, so SDK_INCLUDE above serves both targets.
+ifeq ($(TARGETARCH),arm)
+CC     := arm-amigaos-gcc
+AR     := arm-amigaos-ar -q
+LD     := arm-amigaos-ld
+RANLIB := arm-amigaos-ranlib
+STRIP  := arm-amigaos-strip
+endif
+
 # On AmigaOS use native commands
 ifeq ($(UNAME), AmigaOS)
     COPY := copy
@@ -135,6 +146,28 @@ OPTIMIZE := -O3 -mregnames
 STABS :=
 DLIBS :=
 
+# ARM little-endian (TARGETARCH=arm): a static libc only. A separate build tree
+# keeps every PowerPC object in build/ untouched. No -mregnames (PowerPC
+# assembler syntax), no -Werror until the ARM tree is warning clean, and the
+# install prefix is never the PowerPC SDK (it holds the installed crt objects).
+ifeq ($(TARGETARCH),arm)
+BUILD_DIR      := $(LIB_ROOT)/build/arm
+SHARED         := no
+STATIC         := yes
+ARCH_FLAGS     := -march=armv7-a -marm -mfloat-abi=soft -mno-unaligned-access
+OPTIMIZE       := -O2 $(ARCH_FLAGS)
+OPTIONS        := $(filter-out -Wa%,$(OPTIONS))
+WARNINGS       := $(filter-out -Werror,$(WARNINGS))
+INSTALL_PREFIX := $(BUILD_DIR)/sdk
+# The ExecBase layout must be the kernel's. exec/exectags.h packs two bytes (Node
+# is 14 bytes), so SysBase->MainInterface is at 632. The system PowerPC SDK does
+# not pack and would put it at 684: a libc built against it reads the wrong field
+# on the first call. The superproject's own SDK (src/sdk) is the packed one the
+# kernel and the modules use, so on ARM it comes ahead of every other include.
+SDKROOT        ?= $(abspath ../../sdk)
+INCLUDES       := -I$(SDKROOT)/include $(INCLUDES)
+endif
+
 ifndef DEBUG
 	OPTIMIZE += $(STABS) -DNDEBUG
 else
@@ -146,6 +179,9 @@ endif
 CFLAGS     := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES) -D__USE_INLINE__
 CFLAGS_N   := $(WARNINGS) $(OPTIMIZE) $(OPTIONS) $(INCLUDES)
 AFLAGS     := -Wa,-mregnames
+ifeq ($(TARGETARCH),arm)
+AFLAGS     := $(ARCH_FLAGS)
+endif
 
 ifdef USE_TEMPFILES
 	CFLAGS += -DUSE_TEMPFILES
@@ -253,6 +289,14 @@ all-targets: $(ALL_TARGETS)
 
 all-libs: $(LIBS)
 
+# The ARM static libc (make TARGETARCH=arm arm-libc): libc.a and libm.a into
+# build/arm. Deliberately not part of `all`: `all` runs gitver, which rewrites
+# tracked version files, and it builds the PowerPC shared library.
+arm-libc: prepare $(OUTPUT_LIB)/libc.a $(OUTPUT_LIB)/libm.a \
+	$(OUTPUT_LIB)/crtbegin.o $(OUTPUT_LIB)/crtend.o
+
+.PHONY: arm-libc
+
 ##############################################################################
 
 # Delete all object files and libraries
@@ -320,8 +364,16 @@ $(OUTPUT_LIB)/crt0.o : $(LIB_DIR)/crt0.S
 	$(VERBOSE)$(ASSEMBLE)
 	-$(COPY) $(OUTPUT_LIB)/crt0.o $(INSTALL_PREFIX)/lib/
 
-$(OUTPUT_LIB)/crtbegin.o : CFLAGS = $(STABS) $(OPTIONS) $(INCLUDES) -O0 -fno-aggressive-loop-optimizations
-$(OUTPUT_LIB)/crtbegin.o : $(LIB_DIR)/crtbegin.c
+# The start code: the PowerPC crtbegin opens clib4.library; the ARM one is static
+# and does the same work itself (arch/arm/crtbegin.c).
+ifeq ($(TARGETARCH),arm)
+CRTBEGIN_SRC := $(LIB_DIR)/arch/arm/crtbegin.c
+else
+CRTBEGIN_SRC := $(LIB_DIR)/crtbegin.c
+endif
+
+$(OUTPUT_LIB)/crtbegin.o : CFLAGS = $(STABS) $(OPTIONS) $(INCLUDES) $(ARCH_FLAGS) -O0 -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtbegin.o : $(CRTBEGIN_SRC)
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtbegin.o $(INSTALL_PREFIX)/lib/
 
@@ -330,7 +382,7 @@ $(OUTPUT_LIB)/baserel/crtbegin.o : $(LIB_DIR)/crtbegin.c
 	$(VERBOSE)$(COMPILE_BASEREL)
 	-$(COPY) $(OUTPUT_LIB)/baserel/crtbegin.o $(INSTALL_PREFIX)/lib/baserel/crtbegin.o
 
-$(OUTPUT_LIB)/crtend.o : CFLAGS = -O0 $(OPTIONS) $(INCLUDES) -fno-aggressive-loop-optimizations
+$(OUTPUT_LIB)/crtend.o : CFLAGS = -O0 $(OPTIONS) $(INCLUDES) $(ARCH_FLAGS) -fno-aggressive-loop-optimizations
 $(OUTPUT_LIB)/crtend.o : $(LIB_DIR)/crtend.c
 	$(VERBOSE)$(COMPILE)
 	-$(COPY) $(OUTPUT_LIB)/crtend.o $(INSTALL_PREFIX)/lib/
