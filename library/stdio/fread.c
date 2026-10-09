@@ -244,6 +244,9 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
     size_t nread = __fread_internal(ptr, element_size, count, stream);
     struct iob *file = (struct iob *) stream;
 
+    /* A little-endian file is swapped into host order only on a big-endian host
+     * (PowerPC). On a little-endian host (ARM) its bytes already are host order. */
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     if (FLAG_IS_SET(file->iob_Flags, IOBF_LITTLE_ENDIAN) && (total == 2 || total == 4 || total == 8)) {
         DebugPrintF("[fread] Reading in Little endian mode\n");
         if (element_size == 2) {
@@ -254,6 +257,7 @@ fread(void *ptr, size_t element_size, size_t count, FILE *stream) {
             byteswap64(ptr);
         }
     }
+#endif
 
     return nread;
 }

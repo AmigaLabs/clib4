@@ -128,8 +128,11 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
     if (ret != (ssize_t) num_bytes)
         return ret; // return partial or failed read unchanged
 
-    /* Little-endian byte swap for small fixed-size reads.
-     * Inline the fd lookup to avoid a second __get_file_descriptor call. */
+    /* Little-endian byte swap for small fixed-size reads, needed only where the
+     * host is big endian (PowerPC): on a little-endian host (ARM) the bytes are
+     * already in host order. Inline the fd lookup to avoid a second
+     * __get_file_descriptor call. */
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     if (__builtin_expect(num_bytes == 2 || num_bytes == 4 || num_bytes == 8, 0)) {
         struct fd *fd = NULL;
         if (file_descriptor >= 0 && file_descriptor < __clib4->__num_fd)
@@ -147,6 +150,7 @@ read(int file_descriptor, void *buffer, size_t num_bytes) {
             }
         }
     }
+#endif
 
     return ret;
 }

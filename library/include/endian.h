@@ -60,10 +60,16 @@ __bswap_32 (unsigned int __bsx)
 	 __r.__ll; }))
 #endif
 
-/* Endianness: we assume a big endian memory layout. */
+/* Endianness: the host's own byte order, as the compiler defines it. PowerPC
+ * is big endian (__BYTE_ORDER__ = BIG_ENDIAN, the value the code always had);
+ * the Raspberry Pi 2 ARM build is little endian. A compiler that does not say
+ * is taken to be big endian, the historical default. */
 #define LITTLE_ENDIAN	1234
 #define BIG_ENDIAN		4321
-#define BYTE_ORDER		BIG_ENDIAN
+#ifndef __BYTE_ORDER__
+#define __BYTE_ORDER__	BIG_ENDIAN
+#endif
+#define BYTE_ORDER		__BYTE_ORDER__
 
 #ifndef __ORDER_LITTLE_ENDIAN__
 #define __ORDER_LITTLE_ENDIAN__  LITTLE_ENDIAN

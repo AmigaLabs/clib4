@@ -404,7 +404,20 @@ struct group_filter
 
 /*
  * Macros for network/external number representation conversion.
+ * Network order is big endian: on a big-endian host these are the identity,
+ * on a little-endian host (ARM) they swap the bytes.
  */
+#if defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define	ntohl(x) __builtin_bswap32(x)
+#define	ntohs(x) __builtin_bswap16(x)
+#define	htonl(x) __builtin_bswap32(x)
+#define	htons(x) __builtin_bswap16(x)
+
+#define	NTOHL(x) __builtin_bswap32(x)
+#define	NTOHS(x) __builtin_bswap16(x)
+#define	HTONL(x) __builtin_bswap32(x)
+#define	HTONS(x) __builtin_bswap16(x)
+#else
 #define	ntohl(x) (x)
 #define	ntohs(x) (x)
 #define	htonl(x) (x)
@@ -414,6 +427,7 @@ struct group_filter
 #define	NTOHS(x) (x)
 #define	HTONL(x) (x)
 #define	HTONS(x) (x)
+#endif
 
 /* Specific IPV6 macros */
 

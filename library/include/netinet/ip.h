@@ -2,6 +2,7 @@
 #define _NETINET_IP_H
 
 #include <features.h>
+#include <endian.h>
 #include <stdint.h>
 #include <netinet/in.h>
 
