@@ -35,7 +35,12 @@ utimes(const char *name, const struct timeval *tvp) {
             return -1;
         }
 
+#if defined(__arm__)
+        /* No timezone.library on ARM yet: __get_gmt_offset() falls back to the locale. */
+        __gmtoffset = __get_gmt_offset();
+#else
         GetTimezoneAttrs(NULL, TZA_UTCOffset, &__gmtoffset, TAG_DONE);
+#endif
 
         mtime -= UNIX_TIME_OFFSET;
         mtime -= 60 * __gmtoffset;

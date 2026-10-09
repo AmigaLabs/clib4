@@ -36,6 +36,8 @@
 
 extern struct ExecIFace *IExec;    /* crtbegin.c */
 extern struct DOSIFace *IDOS;      /* crtbegin.c */
+extern struct TimeRequest *TimeReq;  /* crtbegin.c: __time_delay() uses it */
+extern struct TimerIFace *ITimer;    /* crtbegin.c */
 
 #define ENVBUF        256
 #define ENVIRON_SIZE  4096
@@ -49,6 +51,49 @@ struct envHookData {
 };
 
 static char *empty_env[1] = {NULL};
+
+/* The timer request and interface that sleep() and nanosleep() use through
+ * TimeReq and ITimer. libInit() opens them for the shared library; these are
+ * the same steps (openTimer() and closeTimer() in shared_library/clib4.c). */
+static struct TimeRequest *
+static_open_timer(uint32 unit) {
+    struct MsgPort *mp;
+    struct TimeRequest *tr;
+
+    mp = IExec->AllocSysObjectTags(ASOT_PORT,
+                                   ASOPORT_AllocSig, FALSE,
+                                   ASOPORT_Signal, SIGB_SINGLE,
+                                   TAG_END);
+    if (mp == NULL)
+        return NULL;
+
+    tr = IExec->AllocSysObjectTags(ASOT_IOREQUEST,
+                                   ASOIOR_ReplyPort, mp,
+                                   ASOIOR_Size, sizeof(struct TimeRequest),
+                                   TAG_END);
+    if (tr == NULL) {
+        IExec->FreeSysObject(ASOT_PORT, mp);
+        return NULL;
+    }
+
+    if (IExec->OpenDevice(TIMERNAME, unit, (struct IORequest *) tr, 0) != 0) {
+        IExec->FreeSysObject(ASOT_IOREQUEST, tr);
+        IExec->FreeSysObject(ASOT_PORT, mp);
+        return NULL;
+    }
+    return tr;
+}
+
+static void
+static_close_timer(struct TimeRequest *tr) {
+    if (tr != NULL) {
+        struct MsgPort *mp = tr->Request.io_Message.mn_ReplyPort;
+
+        IExec->CloseDevice((struct IORequest *) tr);
+        IExec->FreeSysObject(ASOT_IOREQUEST, tr);
+        IExec->FreeSysObject(ASOT_PORT, mp);
+    }
+}
 
 /* Same order as clib4_init() in shared_library/clib4.c. */
 static void
@@ -346,6 +391,18 @@ static_clib4_init(struct _clib4 *__clib4) {
     if (static_clib4_resource() == NULL)
         return FALSE;
 
+    /* libInit() opens the timer before any process context exists. */
+    TimeReq = static_open_timer(UNIT_MICROHZ);
+    if (TimeReq == NULL)
+        return FALSE;
+    ITimer = (struct TimerIFace *) IExec->GetInterface((struct Library *) TimeReq->Request.io_Device,
+                                                       "main", 1, NULL);
+    if (ITimer == NULL) {
+        static_close_timer(TimeReq);
+        TimeReq = NULL;
+        return FALSE;
+    }
+
     clib4_init();
 
     import_pending_fds_for_process(__clib4, pid, ppid);
@@ -371,4 +428,12 @@ void
 static_clib4_exit(struct _clib4 *__clib4) {
     clib4_exit();
     freeEnvironment(__clib4);
+
+    /* closeLibraries() in shared_library/clib4.c: the interface, then the request. */
+    if (ITimer != NULL) {
+        IExec->DropInterface((struct Interface *) ITimer);
+        ITimer = NULL;
+    }
+    static_close_timer(TimeReq);
+    TimeReq = NULL;
 }
