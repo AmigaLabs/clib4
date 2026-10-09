@@ -15,7 +15,7 @@ inet_makeaddr(in_addr_t net, in_addr_t host) {
     if (net < 256) host |= net<<24;
     else if (net < 65536) host |= net<<16;
     else host |= net<<8;
-    result.s_addr = host;
+    result.s_addr = htonl(host);   /* s_addr is in network order */
 
     __check_abort();
 

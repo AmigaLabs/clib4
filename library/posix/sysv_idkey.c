@@ -205,7 +205,12 @@ WakeList(struct MinList *ml) {
     if (wp) {
         while (wp) {
             while (wp->T->tc_State != TS_SUSPENDED) {
+#if defined(__arm__)
+                /* The ARM SDK does not declare Reschedule(): give up the CPU for a tick. */
+                Delay(1);
+#else
                 Reschedule();
+#endif
             }
             RestartTask(wp->T, 0);
             /* Do not free nodes here. They are freed by the tasks which allocated then. */

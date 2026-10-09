@@ -327,10 +327,15 @@ ifeq ($(TARGETARCH),arm)
 # The floating point environment is ARM VFP code (arch/arm/fenv_arm.c), so the
 # PowerPC fenv and ieeefp objects are left out. acoshl uses the double algorithm
 # on ARM (arch/arm/e_acoshl.c); the 128-bit algorithm stays PowerPC-only.
+# The long double functions that read a 128-bit shape are replaced by
+# arch/arm/ldbl_double.c (double on ARM). s_isnormal.c stays; __isnormall is
+# gated inside the file.
 ARM_MATH_PPC_ONLY := math/fenv.o math/fpgetmask.o math/fpgetround.o \
-	math/fpgetsticky.o math/fpsetmask.o math/fpsetround.o math/e_acoshl.o
+	math/fpgetsticky.o math/fpsetmask.o math/fpsetround.o math/e_acoshl.o \
+	math/e_acosl.o math/e_asinl.o math/e_atan2l.o math/s_atanl.o \
+	math/s_copysignl.o math/s_roundevenl.o
 ARM_MATH_OBJS := $(filter-out $(ARM_MATH_PPC_ONLY),$(C_MATH)) \
-	arch/arm/fenv_arm.o arch/arm/e_acoshl.o
+	arch/arm/fenv_arm.o arch/arm/e_acoshl.o arch/arm/ldbl_double.o
 SOURCES_STATIC := $(addprefix $(OUT_STATIC)/, $(MATH_LIB) $(ARM_MATH_OBJS))
 
 $(OUT_STATIC)/%.o : $(LIB_DIR)/%.c

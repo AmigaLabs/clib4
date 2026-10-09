@@ -24,8 +24,13 @@ __isnormalf(float f) {
 
 int
 __isnormall(long double e) {
+#if defined(__arm__)
+    /* On ARM long double is the 64-bit double: nothing to read from 80 bits. */
+    return __isnormal((double) e);
+#else
     union IEEEl2bits u;
 
     u.e = e;
     return (u.bits.exp != 0 && u.bits.exp != 2047);
+#endif
 }

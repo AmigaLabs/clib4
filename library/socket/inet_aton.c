@@ -120,7 +120,7 @@ inet_aton(const char *cp, struct in_addr *addr) {
             goto out;
     }
     if (addr)
-        addr->s_addr = val;
+        addr->s_addr = htonl(val);   /* s_addr is in network order */
 
 out:
 

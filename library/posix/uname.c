@@ -9,7 +9,11 @@
 #endif /* _SOCKET_HEADERS_H */
 
 #define OSNAME "AmigaOS"
+#if defined(__arm__)
+#define ARCH "arm"
+#else
 #define ARCH "ppc"
+#endif
 
 int
 uname(struct utsname *info) {

@@ -12,7 +12,7 @@ inet_lnaof(struct in_addr in) {
 
     ENTER();
 
-    uint32_t h = in.s_addr;
+    uint32_t h = ntohl(in.s_addr);
     if (h>>24 < 128) return h & 0xffffff;
     if (h>>24 < 192) return h & 0xffff;
     result = h & 0xff;

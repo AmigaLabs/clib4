@@ -1060,9 +1060,9 @@ SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
 #   stdlib/static_init.o      -> added: the setup/teardown libOpen()/libClose()
 #       do for a shared-library program, for a static one (see that file)
 ifeq ($(TARGETARCH),arm)
-#   posix/sysv_*    -> left out: the SysV IPC family calls IExec->Reschedule,
-#       which the packed SDK does not declare; not on ARM yet
-ARM_PPC_ONLY := $(filter cpu/% ucontext/% profile/% posix/sysv_% \
+#   posix/sysv_*    -> on ARM too: the one Reschedule() call (WakeList) becomes
+#       Delay(1), since the packed SDK does not declare Reschedule()
+ARM_PPC_ONLY := $(filter cpu/% ucontext/% profile/% \
 	setjmp/setjmp.o setjmp/_longjmp.o setjmp/longjmp.o setjmp/sigsetjmp.o \
 	byteswap/bswap% byteswap/swab% stdlib/getsp.o debug/backtrace.o \
 	stdlib/divsi3.o stdlib/modsi3.o stdlib/mulsi3.o stdlib/udivsi3.o stdlib/udivsi4.o stdlib/umodsi3.o,$(C_LIBRARY))
