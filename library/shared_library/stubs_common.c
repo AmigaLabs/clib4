@@ -51,6 +51,8 @@ static void (*__exit_clib4_so_fini)(void) __attribute__((used, section(".fini_ar
 
 #endif /* SHARED */
 
+/* PowerPC only: the ARM stubs (interface.h) carry their own dispatch */
+#if !defined(__arm__)
 asm(".section  \".text\"             \n\
        .align 2                          \n\
        .globl __Clib4Call                \n\
@@ -62,6 +64,7 @@ __Clib4Call:                          \n\
         mtctr %r11                       \n\
         bctr                             \n\
        .size   __Clib4Call, .-__Clib4Call");
+#endif
 
 Clib4Call(__getClib4, 80);
 //Clib4Call(__getGlobalClib4, 84);

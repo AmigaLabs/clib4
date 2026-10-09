@@ -105,8 +105,16 @@ extern struct DOSIFace *IDOS;
 extern struct ExecIFace *IExec;
 extern struct MMUIFace  *__IMMU; /* cached MMU interface from libInit */
 
+/* ARM is built with -Os, where a plain C99 inline is not always inlined, and the call then
+ * needs an external definition that nothing provides. static makes each use local. */
+#if defined(__arm__)
+#define CLIB4_INLINE static inline
+#else
+#define CLIB4_INLINE inline
+#endif
+
 /* Faster __check_abort version used when __clib4 is available in the caller function */
-inline void
+CLIB4_INLINE void
 __check_abort_f(struct _clib4 *__clib4) {
 	if (__clib4->__check_abort_enabled && 
 		(IDOS->CheckSignal)(__clib4->__break_signal_mask)) {
@@ -122,7 +130,7 @@ __check_abort_f(struct _clib4 *__clib4) {
 	}
 }
 
-inline void
+CLIB4_INLINE void
 __check_abort(void) {
     struct _clib4 *__clib4 = __CLIB4;
 

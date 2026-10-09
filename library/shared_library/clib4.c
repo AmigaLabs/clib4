@@ -153,6 +153,10 @@ extern BOOL reent_init(struct _clib4 *__clib4, BOOL fallback);
 #define D(x) ;
 #endif // DEBUG
 
+#if !defined(__arm__)
+/* A library is not a command. dos.library treats an object that defines _start as a
+ * program and loads it differently, so on ARM (where the library is loaded from LIBS:
+ * as a resident) the symbol is left out. */
 int32
 _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
     (void) (args);
@@ -161,6 +165,7 @@ _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
 
     return RETURN_FAIL;
 }
+#endif
 
 struct envHookData {
     uint32_t env_size;
@@ -527,6 +532,8 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
         hashmap_set(res->children, &c2n);
 
         D(bug("(libOpen) Enabling clib4 optimizations\n"));
+#if !defined(__arm__)
+        /* PowerPC only: the CPU-family vectors (AltiVec, SPE, 4xx). ARM keeps the generic ones. */
         switch (res->cpufamily) {
 #ifdef __SPE__
             case CPUFAMILY_E500:
@@ -573,6 +580,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
                     D(bug("(libOpen) Using default family functions\n"));
                 }
         }
+#endif
 
         /* Let's start.. */
         /* If all libraries are opened correctly we can initialize clib4 reent structure */
@@ -1003,6 +1011,10 @@ uint32 clib4Release(struct Clib4IFace *Self) {
 /* These are generic. Replace if you need more fancy stuff */
 static uint32 _manager_Obtain(struct LibraryManagerInterface *Self) {
     uint32 res;
+#if defined(__arm__)
+    /* ARM: the compiler's atomic (ldrex/strex); the PowerPC lwarx loop is below */
+    res = __atomic_add_fetch(&Self->Data.RefCount, 1, __ATOMIC_SEQ_CST);
+#else
     __asm__ __volatile__(
             "1:	lwarx	%0,0,%1\n"
             "addic	%0,%0,1\n"
@@ -1011,12 +1023,16 @@ static uint32 _manager_Obtain(struct LibraryManagerInterface *Self) {
             : "=&r" (res)
             : "r" (&Self->Data.RefCount)
             : "cc", "memory");
+#endif
 
     return res;
 }
 
 static uint32 _manager_Release(struct LibraryManagerInterface *Self) {
     uint32 res;
+#if defined(__arm__)
+    res = __atomic_sub_fetch(&Self->Data.RefCount, 1, __ATOMIC_SEQ_CST);
+#else
     __asm__ __volatile__(
             "1:	lwarx	%0,0,%1\n"
             "addic	%0,%0,-1\n"
@@ -1025,6 +1041,7 @@ static uint32 _manager_Release(struct LibraryManagerInterface *Self) {
             : "=&r" (res)
             : "r" (&Self->Data.RefCount)
             : "cc", "memory");
+#endif
 
     return res;
 }

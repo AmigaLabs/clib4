@@ -1393,7 +1393,31 @@ struct Clib4IFace {
     void (* wordfree) (wordexp_t *pwordexp);                                                                                                         /* 4520 */
 };
 
-#ifdef __PIC__
+#if defined(__arm__)
+/*
+ * ARM stub: the same job as the PowerPC one (load IClib4, jump through the
+ * vector at the interface offset), without a common routine. Only ip is used,
+ * so r0-r3, the stack and lr reach the library exactly as the caller left them,
+ * and the library returns straight to the caller. ldr takes a 12-bit offset,
+ * so vectors at 4096 and above first add 4096 to ip.
+ */
+#define Clib4Call2(function, offset)     \
+   asm(".arm                            \n\
+	    .section	\".text\"        \n\
+	    .align 2                     \n\
+	    .globl " #function "         \n\
+	    .type	" #function ", %function \n\
+" #function ":                       \n\
+	    ldr  ip, 2f                  \n\
+	    ldr  ip, [ip]                \n\
+	    .if " #offset " >= 4096      \n\
+	    add  ip, ip, #4096           \n\
+	    .endif                       \n\
+	    ldr  pc, [ip, #((" #offset ") & 4095)] \n\
+	    .align 2                     \n\
+2:	    .word IClib4                 \n\
+	    .size	" #function ", .-" #function)
+#elif defined(__PIC__)
 #define Clib4Call2(function, offset)     \
    asm(".section	\".text\"        \n\
 	    .align 2                     \n\

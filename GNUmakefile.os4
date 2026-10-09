@@ -44,7 +44,8 @@ HOST_CXX := g++
 SDK_INCLUDE ?= $(abspath $(addsuffix ../ppc-amigaos/SDK/include/,$(dir $(shell which $(word 1,$(CC))))))
 MAKELINK := ln -s
 
-# ARM little-endian (pass TARGETARCH=arm): the Raspberry Pi 2 static libc, built
+# ARM little-endian (pass TARGETARCH=arm): clib4.library and the stub libc.a for the
+# Raspberry Pi 2, built
 # from the same sources with the arm-amigaos cross toolchain. The SDK headers
 # are architecture neutral, so SDK_INCLUDE above serves both targets.
 ifeq ($(TARGETARCH),arm)
@@ -146,7 +147,7 @@ OPTIMIZE := -O3 -mregnames
 STABS :=
 DLIBS :=
 
-# ARM little-endian (TARGETARCH=arm): a static libc only. A separate build tree
+# ARM little-endian (TARGETARCH=arm): clib4.library and the stub libc.a. A separate build tree
 # keeps every PowerPC object in build/ untouched. No -mregnames (PowerPC
 # assembler syntax), no -Werror until the ARM tree is warning clean, and the
 # install prefix is never the PowerPC SDK (it holds the installed crt objects).
@@ -155,10 +156,14 @@ BUILD_DIR      := $(LIB_ROOT)/build/arm
 SHARED         := no
 STATIC         := yes
 ARCH_FLAGS     := -march=armv7-a -marm -mfloat-abi=soft -mno-unaligned-access
-OPTIMIZE       := -O2 $(ARCH_FLAGS)
+# -Os: the library lives in LIBS:, and the 1 MB test volume has to hold it.
+OPTIMIZE       := -Os $(ARCH_FLAGS)
 OPTIONS        := $(filter-out -Wa%,$(OPTIONS))
 WARNINGS       := $(filter-out -Werror,$(WARNINGS))
 INSTALL_PREFIX := $(BUILD_DIR)/sdk
+# The compiler's own helpers (__aeabi_*): the ARM library is linked with ld -r, and
+# every symbol must resolve inside it, so libgcc goes in as an archive.
+ARM_LIBGCC     := $(shell $(CC) -print-libgcc-file-name)
 # The ExecBase layout must be the kernel's. exec/exectags.h packs two bytes (Node
 # is 14 bytes), so SysBase->MainInterface is at 632. The system PowerPC SDK does
 # not pack and would put it at 684: a libc built against it reads the wrong field
@@ -289,13 +294,16 @@ all-targets: $(ALL_TARGETS)
 
 all-libs: $(LIBS)
 
-# The ARM static libc (make TARGETARCH=arm arm-libc): libc.a and libm.a into
-# build/arm. Deliberately not part of `all`: `all` runs gitver, which rewrites
-# tracked version files, and it builds the PowerPC shared library.
+# The ARM build (make TARGETARCH=arm arm-clib4 arm-libc): clib4.library into
+# build/arm, and the stub libc.a and libm.a beside it. Deliberately not part of
+# `all`: `all` runs gitver, which rewrites tracked version files, and it builds
+# the PowerPC shared library.
+arm-clib4: prepare clib4.library
+
 arm-libc: prepare $(OUTPUT_LIB)/libc.a $(OUTPUT_LIB)/libm.a \
 	$(OUTPUT_LIB)/crtbegin.o $(OUTPUT_LIB)/crtend.o
 
-.PHONY: arm-libc
+.PHONY: arm-clib4 arm-libc
 
 ##############################################################################
 
@@ -341,12 +349,30 @@ version:
 
 # Shared clib4.library rules
 
+ifeq ($(TARGETARCH),arm)
+# ARM: a relocatable object, the form elf.library loads from LIBS: (the other ARM
+# libraries are built the same way). The loader takes no GOT, PLT or COPY
+# relocations, so the library is non-PIC, and it must be complete: an undefined
+# symbol fails the load. math.o is PowerPC double-double support, not needed here.
+clib4.library.debug: $(OUT_SHARED_LIB)/shared_library/clib4.o $(OBJ_C_LIB) $(OUTPUT_LIB)/crtend.o
+	$(VERBOSE)$(LD) -r -o $(BUILD_DIR)/$@ $(OUT_SHARED_LIB)/shared_library/clib4.o $(OBJ_C_LIB) $(OUTPUT_LIB)/crtend.o --start-group $(ARM_LIBGCC) --end-group
+else
 clib4.library.debug: $(OUT_SHARED_LIB)/shared_library/clib4.o $(OUT_SHARED_LIB)/shared_library/math.o $(OBJ_C_LIB)
 	$(VERBOSE)$(CC) -o $(BUILD_DIR)/$@ $(CFLAGS) $(BUILD_DIR)/shared/shared_library/clib4.o $(BUILD_DIR)/shared/shared_library/math.o $(OBJ_C_LIB) $(OUTPUT_LIB)/crtend.o $(DLIBS) -Wl,-export-dynamic -Wl,--cref,-M,-Map=$(BUILD_DIR)/$@.map
+endif
 
+ifeq ($(TARGETARCH),arm)
+# ARM: the local symbols no relocation needs go; the rest stays, since the loader resolves
+# the relocations against the symbol table. (--strip-unneeded-rel-relocs, used on PowerPC,
+# fails on this relocatable object with binutils 2.23.)
+clib4.library: clib4.library.debug
+	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
+	$(STRIP) --strip-unneeded -R .comment $(BUILD_DIR)/$@
+else
 clib4.library: clib4.library.debug
 	cp $(BUILD_DIR)/$< $(BUILD_DIR)/$@
 	$(STRIP) -R.comment -R.sdata2 --strip-unneeded-rel-relocs $(BUILD_DIR)/$@
+endif
 
 ##############################################################################
 
@@ -364,8 +390,8 @@ $(OUTPUT_LIB)/crt0.o : $(LIB_DIR)/crt0.S
 	$(VERBOSE)$(ASSEMBLE)
 	-$(COPY) $(OUTPUT_LIB)/crt0.o $(INSTALL_PREFIX)/lib/
 
-# The start code: the PowerPC crtbegin opens clib4.library; the ARM one is static
-# and does the same work itself (arch/arm/crtbegin.c).
+# The start code: the PowerPC and ARM crtbegin both open clib4.library and call its
+# library_start(); the ARM one has no global register (arch/arm/crtbegin.c).
 ifeq ($(TARGETARCH),arm)
 CRTBEGIN_SRC := $(LIB_DIR)/arch/arm/crtbegin.c
 else

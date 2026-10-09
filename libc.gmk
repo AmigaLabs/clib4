@@ -1045,10 +1045,11 @@ C_LIB := \
 SOURCES_SHARED = $(addprefix $(OUT_SHARED)/, $(C_LIB))
 SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
 
-# ARM static libc (TARGETARCH=arm): the real C library, not the trampolines. The
-# shared-library stubs call clib4.library, which a static program does not have,
-# so they are left out; the library's own objects go in, non-PIC. The PowerPC
-# assembly is left out, and its ARM replacements come from arch/arm/:
+# ARM little-endian (TARGETARCH=arm): clib4.library is the shared library, as on
+# PowerPC, and libc.a holds only the stubs (C_LIB). Each stub jumps through IClib4
+# into the library, so every program uses the one clib4 instance. The library
+# takes the PowerPC object list minus its assembly, with ARM replacements from
+# arch/arm/, and it is built non-PIC because the ARM loader takes no GOT or PLT:
 #   byteswap/bswap*   -> arch/arm/byteswap.c   (__builtin_bswap*)
 #   byteswap/swab*    -> arch/arm/swab.c       (C, the same contracts)
 #   stdlib/getsp      -> arch/arm/getsp.c      (mov r0, sp)
@@ -1056,32 +1057,23 @@ SOURCES_STATIC = $(addprefix $(OUT_STATIC)/, $(C_LIB))
 #   stdlib/*si3,*si4  -> libgcc supplies these on ARM
 #   setjmp/{setjmp,_longjmp,longjmp,sigsetjmp} -> arch/arm/setjmp.S (AAPCS)
 #   string/strcat, string/strcmp -> the C versions (cpu/generic is PowerPC asm)
-#   ucontext, profile, cpu/*  -> not yet on ARM (architecture phase)
-#   stdlib/static_init.o      -> added: the setup/teardown libOpen()/libClose()
-#       do for a shared-library program, for a static one (see that file)
-ifeq ($(TARGETARCH),arm)
+#   ucontext/*        -> arch/arm/ucontext.c (ENOSYS until the ARM switch exists)
+#   profile, cpu/*    -> not yet on ARM (architecture phase)
 #   posix/sysv_*    -> on ARM too: the one Reschedule() call (WakeList) becomes
 #       Delay(1), since the packed SDK does not declare Reschedule()
+ifeq ($(TARGETARCH),arm)
 ARM_PPC_ONLY := $(filter cpu/% ucontext/% profile/% \
 	setjmp/setjmp.o setjmp/_longjmp.o setjmp/longjmp.o setjmp/sigsetjmp.o \
 	byteswap/bswap% byteswap/swab% stdlib/getsp.o debug/backtrace.o \
 	stdlib/divsi3.o stdlib/modsi3.o stdlib/mulsi3.o stdlib/udivsi3.o stdlib/udivsi4.o stdlib/umodsi3.o,$(C_LIBRARY))
-ARM_ARCH_OBJS := arch/arm/setjmp.o arch/arm/byteswap.o arch/arm/swab.o arch/arm/getsp.o arch/arm/backtrace.o
-# The crypt objects (libcrypt's C_CRYPT) go into the static libc too: encrypt.o
-# in libc calls __des_setkey, and one archive avoids a link order that could
-# leave that reference unresolved.
-ARM_C_EXTRA := string/strcat.o string/strcmp.o stdlib/static_init.o \
-	crypt/crypt.o crypt/crypt_blowfish.o crypt/crypt_des.o crypt/crypt_md5.o \
-	crypt/crypt_r.o crypt/crypt_sha256.o crypt/crypt_sha512.o
-ARM_LIBC_OBJS := $(addprefix $(OUT_STATIC)/, \
-	$(filter-out $(ARM_PPC_ONLY),$(C_LIBRARY)) \
-	$(ARM_ARCH_OBJS) \
-	$(ARM_C_EXTRA) \
-	$(filter-out $(SHARED_LIB_STUBS),$(C_LIB)))
-SOURCES_STATIC := $(ARM_LIBC_OBJS)
-endif
-
+ARM_ARCH_OBJS := arch/arm/setjmp.o arch/arm/byteswap.o arch/arm/swab.o arch/arm/getsp.o arch/arm/backtrace.o \
+	arch/arm/ucontext.o
+ARM_C_EXTRA := string/strcat.o string/strcmp.o
+ARM_LIB_OBJS := $(sort $(filter-out $(ARM_PPC_ONLY),$(C_LIBRARY)) $(ARM_ARCH_OBJS) $(ARM_C_EXTRA))
+OBJ_C_LIB += $(addprefix $(OUT_SHARED_LIB)/, $(ARM_LIB_OBJS))
+else
 OBJ_C_LIB += $(addprefix $(OUT_SHARED_LIB)/, $(C_LIBRARY))
+endif
 OBJ_C_SRC += $(patsubst %.o, $(LIB_DIR)/%.c, $(C_LIBRARY))
 
 # Dependencies to rebuild if the library version changes
