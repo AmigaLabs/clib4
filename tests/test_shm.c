@@ -26,6 +26,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* Scratch file prefix. The AmigaOS default is T:; a system without that
+ * assign sets it on the compile line. */
+#ifndef TEST_TMP_PREFIX
+#define TEST_TMP_PREFIX "T:"
+#endif
+
 /* Safe cleanup helper: attach+detach+remove a SHM segment.
  * This ensures the global IPC resource is not leaked even if
  * a test assertion fails and causes early return. */
@@ -364,7 +370,7 @@ static const char *test_mmap_anonymous(void) {
 
 /* Test 13: File-backed mmap */
 static const char *test_mmap_file_backed(void) {
-    const char *tmpfile = "T:test_mmap_file.tmp";
+    const char *tmpfile = TEST_TMP_PREFIX "test_mmap_file.tmp";
     const char *test_data = "Hello, mmap world! This is clib4 testing.";
     size_t data_len = strlen(test_data);
 
@@ -394,7 +400,7 @@ static const char *test_mmap_file_backed(void) {
 
 /* Test 14: mmap with offset */
 static const char *test_mmap_with_offset(void) {
-    const char *tmpfile = "T:test_mmap_offset.tmp";
+    const char *tmpfile = TEST_TMP_PREFIX "test_mmap_offset.tmp";
     char buf[256];
 
     /* Create a file with known content */
@@ -427,7 +433,7 @@ static const char *test_mmap_with_offset(void) {
 
 /* Test 15: mmap/msync write-back test (MAP_SHARED semantics) */
 static const char *test_mmap_shared_write_back(void) {
-    const char *tmpfile = "T:test_mmap_writeback.tmp";
+    const char *tmpfile = TEST_TMP_PREFIX "test_mmap_writeback.tmp";
 
     /* Create file with known content */
     int fd = open(tmpfile, O_CREAT | O_RDWR | O_TRUNC, 0666);
@@ -521,7 +527,7 @@ static const char *test_mmap_zero_length(void) {
  * SQLite creates a -shm file and uses mmap with MAP_SHARED to map
  * it into memory. Multiple readers share this mapping. */
 static const char *test_sqlite_wal_shm_pattern(void) {
-    const char *shmfile = "T:test_wal.db-shm";
+    const char *shmfile = TEST_TMP_PREFIX "test_wal.db-shm";
     const size_t region_size = 32768; /* SQLite default shm region = 32KB */
 
     /* Create and size the shm file (like SQLite does with ftruncate) */
@@ -674,7 +680,7 @@ static const char *test_shm_size_tracking(void) {
 
 /* Test 22: mmap file read beyond file size */
 static const char *test_mmap_beyond_file_size(void) {
-    const char *tmpfile = "T:test_mmap_beyond.tmp";
+    const char *tmpfile = TEST_TMP_PREFIX "test_mmap_beyond.tmp";
 
     /* Create a small file */
     int fd = open(tmpfile, O_CREAT | O_WRONLY | O_TRUNC, 0666);

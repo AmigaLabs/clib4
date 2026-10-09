@@ -29,6 +29,12 @@
 #include <stdint.h>
 #include <malloc.h>
 
+/* Scratch file prefix. The AmigaOS default is T:; a system without that
+ * assign sets it on the compile line. */
+#ifndef TEST_TMP_PREFIX
+#define TEST_TMP_PREFIX "T:"
+#endif
+
 /* Page size used by AmigaOS 4 MMU */
 #define PAGE_SIZE 4096UL
 
@@ -208,7 +214,7 @@ static const char *test_mprotect_prot_none_roundtrip(void) {
 
 /* Test 10: mprotect → msync → munmap chain on MAP_SHARED file-backed mapping */
 static const char *test_mprotect_msync_munmap_chain(void) {
-    const char *tmpfile = "T:test_mprotect_chain.tmp";
+    const char *tmpfile = TEST_TMP_PREFIX "test_mprotect_chain.tmp";
 
     /* Create file with 1 page of data */
     int fd = open(tmpfile, O_CREAT | O_RDWR | O_TRUNC, 0666);

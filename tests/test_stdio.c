@@ -7,6 +7,12 @@
 #include <string.h>
 #include <unistd.h>
 
+/* Directory prefix for the scratch files. /tmp is the default; a system
+ * without it (the ARM test image) sets it on the compile line. */
+#ifndef TEST_TMP_PREFIX
+#define TEST_TMP_PREFIX "/tmp/"
+#endif
+
 /* Test sprintf */
 static const char *test_sprintf(void) {
     char buffer[100];
@@ -75,9 +81,9 @@ static const char *test_file_operations(void) {
     FILE *fp;
     char buffer[100];
 #ifdef __AMIGA__
-    const char *test_file = "T:test_clib4.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4.txt";
 #else
-    const char *test_file = "/tmp/test_clib4.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4.txt";
 #endif
 
     /* Test fopen for writing */
@@ -127,9 +133,9 @@ static const char *test_fread_fwrite(void) {
     char read_buffer[50];
     size_t result;
 #ifdef __AMIGA__
-    const char *test_file = "T:test_clib4_bin.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_bin.txt";
 #else
-    const char *test_file = "/tmp/test_clib4_bin.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_bin.txt";
 #endif
 
     /* Write binary data */
@@ -159,9 +165,9 @@ static const char *test_fread_fwrite(void) {
 static const char *test_fseek_ftell(void) {
     FILE *fp;
 #ifdef __AMIGA__
-    const char *test_file = "T:test_clib4_seek.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_seek.txt";
 #else
-    const char *test_file = "/tmp/test_clib4_seek.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_seek.txt";
 #endif
     long pos;
     char c;
@@ -204,9 +210,9 @@ static const char *test_fseek_ftell(void) {
 static const char *test_putc_getc(void) {
     FILE *fp;
 #ifdef __AMIGA__
-    const char *test_file = "T:test_clib4_putc.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_putc.txt";
 #else
-    const char *test_file = "/tmp/test_clib4_putc.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_putc.txt";
 #endif
     int c;
     
@@ -245,9 +251,9 @@ static const char *test_putc_getc(void) {
 static const char *test_ungetc(void) {
     FILE *fp;
 #ifdef __AMIGA__
-    const char *test_file = "T:test_clib4_ungetc.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_ungetc.txt";
 #else
-    const char *test_file = "/tmp/test_clib4_ungetc.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_ungetc.txt";
 #endif
     int c;
     
@@ -285,9 +291,9 @@ static const char *test_ungetc(void) {
 static const char *test_fflush(void) {
     FILE *fp;
 #ifdef __AMIGA__
-    const char *test_file = "T:test_clib4_flush.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_flush.txt";
 #else
-    const char *test_file = "/tmp/test_clib4_flush.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_flush.txt";
 #endif
     
     fp = fopen(test_file, "w");
@@ -306,9 +312,9 @@ static const char *test_fflush(void) {
 static const char *test_remove(void) {
     FILE *fp;
 #ifdef __AMIGA__
-    const char *test_file = "T:test_clib4_remove.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_remove.txt";
 #else
-    const char *test_file = "/tmp/test_clib4_remove.txt";
+    const char *test_file = TEST_TMP_PREFIX "test_clib4_remove.txt";
 #endif
     
     /* Create a file */
@@ -330,11 +336,11 @@ static const char *test_remove(void) {
 static const char *test_rename(void) {
     FILE *fp;
 #ifdef __AMIGA__
-    const char *old_file = "T:test_clib4_old.txt";
-    const char *new_file = "T:test_clib4_new.txt";
+    const char *old_file = TEST_TMP_PREFIX "test_clib4_old.txt";
+    const char *new_file = TEST_TMP_PREFIX "test_clib4_new.txt";
 #else
-    const char *old_file = "/tmp/test_clib4_old.txt";
-    const char *new_file = "/tmp/test_clib4_new.txt";
+    const char *old_file = TEST_TMP_PREFIX "test_clib4_old.txt";
+    const char *new_file = TEST_TMP_PREFIX "test_clib4_new.txt";
 #endif
     
     /* Create a file */
