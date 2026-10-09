@@ -20,16 +20,26 @@ strlen(const char *str) {
 
     s32 = (uint32 * )((uint32) s & ~3);
 
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    /* Little endian (ARM): the bytes before the start are the low ones of the
+     * first word, so they are forced non-zero to keep them out of the search. */
+    x = *s32 | (uint32) ((((uint32) 1) << (((uint32) s & 3) * 8)) - 1);
+#else
     x = (s32 == (uint32 *) s)
         ? *s32
         : *s32 | (0xFFFFFFFF << (3 - ((uint32) s & 3) + 1) * 8);
+#endif
 
     while (!((x + magic1) & ~(x | magic2))) {
         x = *++s32;
     }
 
     s = (char *) s32;
-#if  __GNUC__ >= 3
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    /* The first NUL in memory is the lowest zero byte, so the lowest set bit
+     * of the mask (bit 7 of that byte) gives its position. */
+    s += (uint32)__builtin_ctz(~(((x & magic2) + magic2) | x | magic2))/8;
+#elif  __GNUC__ >= 3
     s += (uint32)__builtin_clz(~(((x & magic2) + magic2) | x | magic2))/8;
 #else
     if (x & 0xFF000000) {

@@ -24,8 +24,14 @@
 #define IEEE_Arith
 #define Honor_FLT_ROUNDS
 
+/* Index of the high (_0) and low (_1) word of a double in its uint32_t pair. */
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define _0 1
+#define _1 0
+#else
 #define _0 0
 #define _1 1
+#endif
 
 #undef SI
 #ifdef Sudden_Underflow

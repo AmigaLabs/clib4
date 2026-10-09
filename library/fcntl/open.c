@@ -30,6 +30,9 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
     BPTR lock = BZERO, dir_lock = BZERO;
     BPTR handle = BZERO;
     BOOL create_new_file = FALSE;
+#if defined(__arm__)
+    BOOL existing_file = FALSE;
+#endif
     LONG is_interactive;
     int fd_slot_number;
     struct fd *fd;
@@ -226,8 +229,19 @@ __open_r(struct _clib4 *__clib4, const char *path_name, int open_flag, ... /* mo
 
             UnLock(dir_lock);
             dir_lock = BZERO;
+#if defined(__arm__)
+            existing_file = TRUE;
+#endif
         }
         open_mode = MODE_OLDFILE;
+#if defined(__arm__)
+        /* MODE_OLDFILE is a shared, read-only open on the FAT handler (AROS
+         * lineage), which refuses every write. Once the file is known to exist,
+         * a write-enabled open takes MODE_READWRITE (it creates only a missing
+         * file, and this one is there). PowerPC keeps MODE_OLDFILE. */
+        if (existing_file && (access_mode == O_WRONLY || access_mode == O_RDWR))
+            open_mode = MODE_READWRITE;
+#endif
     }
 
     SHOWSTRING(path_name);

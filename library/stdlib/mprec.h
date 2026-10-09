@@ -47,8 +47,16 @@ union double_union {
 #define Big0                 (Frac_mask1 | Exp_msk1 * (DBL_MAX_EXP + Bias - 1))
 #define Big1                 ((uint32_t) 0xffffffffL)
 
+/* word0 is the word that holds the sign and the exponent (the high half of the
+ * double). That is i[0] on a big-endian host and i[1] on a little-endian one
+ * (ARM); the gdtoa code relies on word0 being the high half. */
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define word0(x) (x.i[1])
+#define word1(x) (x.i[0])
+#else
 #define word0(x) (x.i[0])
 #define word1(x) (x.i[1])
+#endif
 #define dword0(x) word0(x)
 #define dword1(x) word1(x)
 #define dval(x) (x.d)
