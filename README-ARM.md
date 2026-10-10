@@ -47,8 +47,9 @@ The ARM port has the same three parts as the PowerPC one:
   relocations, and a non-weak undefined symbol fails the load. So the library is linked
   with `ld -r` against libgcc, and `arm-amigaos-nm -u build/arm/clib4.library.debug` must print
   nothing.
-- **Optimised for size (`-Os`).** The 1 MB FAT volume the ARM test image uses has to hold the
-  library next to the test programs.
+- **Optimised for size (`-Os`).** The library is loaded from `LIBS:`, which is a volume on the
+  test image. The test image is 4 MB (DH0 in the kernel's `src/arch/arm/schedule.c`); `-Os` keeps
+  the library, about 919 KB stripped, small enough to share it with the test programs.
 - **Missing OS4 libraries.** The test image has no `timezone.library`, `usergroup.library`,
   `diskfont.library` or `bsdsocket.library`. The library starts without them: time functions
   use the UTC or locale offset, and the socket paths that need `bsdsocket.library` are not
@@ -109,7 +110,7 @@ defaults to `/tmp/` (stdio) or `T:` (mmap, shm); the ARM image has no `T:`, so i
 `-DTEST_TMP_PREFIX='"SYS:"'`.
 
 Last run (2026-10-10), all passing. Each suite was started from the serial shell with
-`clib4.library` in `SYS:Libs`, one suite per boot:
+`clib4.library` in `SYS:Libs`, and the whole suite ran in one boot on the 4 MB test volume:
 
 | Suite | Result |
 |-------|--------|
@@ -127,5 +128,5 @@ Last run (2026-10-10), all passing. Each suite was started from the serial shell
 came up; the second boot ran it to completion, so the figure above is from that run.
 
 Known open: `strtod("2.2250738585072011e-308")` returns the smallest normal double instead of
-the largest subnormal (the rounding at the subnormal boundary). The ARM test image is a 1 MB
-FAT volume, so the suite runs in several boots.
+the largest subnormal (the rounding at the subnormal boundary). The ARM test image is a 4 MB
+FAT volume.
