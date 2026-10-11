@@ -298,7 +298,8 @@ all-libs: $(LIBS)
 # build/arm, and the stub libc.a and libm.a beside it. Deliberately not part of
 # `all`: `all` runs gitver, which rewrites tracked version files, and it builds
 # the PowerPC shared library.
-arm-clib4: prepare clib4.library
+# The start objects are part of the ARM build, so the clib4.library target gives them too.
+arm-clib4: prepare clib4.library $(OUTPUT_LIB)/crtbegin.o $(OUTPUT_LIB)/crtend.o
 
 arm-libc: prepare $(OUTPUT_LIB)/libc.a $(OUTPUT_LIB)/libm.a \
 	$(OUTPUT_LIB)/crtbegin.o $(OUTPUT_LIB)/crtend.o
