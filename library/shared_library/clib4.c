@@ -153,10 +153,8 @@ extern BOOL reent_init(struct _clib4 *__clib4, BOOL fallback);
 #define D(x) ;
 #endif // DEBUG
 
-#if !defined(__arm__)
-/* A library is not a command. dos.library treats an object that defines _start as a
- * program and loads it differently, so on ARM (where the library is loaded from LIBS:
- * as a resident) the symbol is left out. */
+/* Entry point of the library object. Run as a command it fails: the library is
+ * opened, never started. Same on every architecture. */
 int32
 _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
     (void) (args);
@@ -165,7 +163,6 @@ _start(STRPTR args, int32 arglen, struct ExecBase *sysbase) {
 
     return RETURN_FAIL;
 }
-#endif
 
 struct envHookData {
     uint32_t env_size;

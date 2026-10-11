@@ -40,9 +40,9 @@ The ARM port has the same three parts as the PowerPC one:
   exist and return `ENOSYS`, so a program that calls them gets an error rather than a missing
   symbol. The ARM register switch is future work.
 - **Left out on ARM for now:** `profile` (gprof) and the `cpu/*` variants (AltiVec, SPE, 4xx).
-- **No `_start` in the library.** The PowerPC library defines a `_start` that returns
-  `RETURN_FAIL`. dos.library reads an object that defines `_start` as a program, so on ARM the
-  symbol is left out and `clib4.library` loads as a resident library.
+- **`_start` in the library.** As on PowerPC, `clib4.library` defines a `_start` that
+  returns `RETURN_FAIL`: the library is opened, never run as a command. Programs get their own
+  `_start` from `crtbegin.o`, so the two never meet in one object.
 - **The library is non-PIC, and complete.** The ARM loader resolves no GOT, PLT or COPY
   relocations, and a non-weak undefined symbol fails the load. So the library is linked
   with `ld -r` against libgcc, and `arm-amigaos-nm -u build/arm/clib4.library.debug` must print
