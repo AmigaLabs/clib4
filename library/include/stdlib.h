@@ -149,6 +149,7 @@ extern int putenv(const char *string);
 
 extern char *mkdtemp(char *name_template);
 extern const char *getexecname(void);
+extern const char *getexecfullname(void); // NONSTANDARD: not in POSIX
 
 extern long long strtoll(const char *str, char **ptr, int base);
 extern long double strtold(const char *str, char **ptr);

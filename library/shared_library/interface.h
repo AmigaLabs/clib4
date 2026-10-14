@@ -1391,6 +1391,8 @@ struct Clib4IFace {
     /* wordexp.h */
     int  (* wordexp) (const char *__restrict words, wordexp_t *__restrict pwordexp, int flags);                                                      /* 4516 */
     void (* wordfree) (wordexp_t *pwordexp);                                                                                                         /* 4520 */
+
+    const char * (* getexecfullname) (void);                                                                                                         /* 4524 */
 };
 
 #ifdef __PIC__
