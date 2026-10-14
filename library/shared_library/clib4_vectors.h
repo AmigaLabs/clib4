@@ -1216,5 +1216,8 @@ static void *clib4Vectors[] = {
         /* wordexp.h */
         (void *) (wordexp),                               /* 4516 */
         (void *) (wordfree),                              /* 4520 */
+
+        (void *) (getexecfullname),                       /* 4524 */
+
         (void *)-1
 };

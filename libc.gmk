@@ -528,6 +528,7 @@ C_STDLIB := \
 	stdlib/gdtoa-gethex.o \
 	stdlib/gdtoa-hexnan.o \
 	stdlib/getexecname.o \
+	stdlib/getexecfullname.o \
 	stdlib/getenv.o \
 	stdlib/getsp.o \
 	stdlib/get_errno.o \
