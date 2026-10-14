@@ -6,6 +6,8 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#include <time.h>
+
 int pipe(int fd[2]) {
     ENTER();
     DECLARE_UTILITYBASE();
@@ -13,11 +15,14 @@ int pipe(int fd[2]) {
     struct _clib4 *__clib4 = __CLIB4;
 
 #ifdef USE_TEMPFILES
-    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", __clib4->pipenum++, __clib4->self->pr_ProcessID);
+    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08lx%08lx", __clib4->pipenum++, (unsigned long) getpid(), (unsigned long) time(NULL));
     // Delete the file if exists (we don't need to check if file exists)
     Delete(pipe_name);
 #else
-    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/131072/0", __clib4->pipenum++, __clib4->self->pr_ProcessID);
+    /* The name must be unique across processes and runs: pipenum restarts at 0 in
+     * every process and pr_ProcessID is not a unique id, so a PIPE: device left
+     * with data by an earlier run could be reopened under the same name. */
+    snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lx%lx/131072/0", __clib4->pipenum++, (unsigned long) getpid(), (unsigned long) time(NULL));
 #endif // USE_TEMPFILES
 
     fd[1] = open(pipe_name, O_WRONLY | O_CREAT);
