@@ -1393,6 +1393,10 @@ struct Clib4IFace {
     void (* wordfree) (wordexp_t *pwordexp);                                                                                                         /* 4520 */
 
     const char * (* getexecfullname) (void);                                                                                                         /* 4524 */
+
+    ssize_t (* preadv) (int file_descriptor, const struct iovec *iov, int vec_count, off_t offset);                                                  /* 4528 */
+    ssize_t (* pwritev) (int file_descriptor, const struct iovec *iov, int vec_count, off_t offset);                                                 /* 4532 */
+    int (* dup3) (int file_descriptor1, int file_descriptor2, int flags);                                                                             /* 4536 */
 };
 
 #ifdef __PIC__

@@ -34,6 +34,12 @@ enum
     VSTOP,	    /* ^S (stop) 			*/
     VSUSP,	    /* ^Z (suspend) 		*/
     VWERASE,	/* ^W (word-erase)	 	*/
+    /* Placeholders: clib4 does not implement these control characters. */
+    VREPRINT,
+    VDISCARD,
+    VLNEXT,
+    VSWTC,
+    VEOL2,      /* Index 16 is past c_cc[NCCS]; do not store into it. */
 };
 
 struct termios
@@ -76,6 +82,35 @@ struct termios
 #define ONOCR   (1 << 3L)	/* Map CR->nothing, but only in column 0. */
 #define ONLRET  (1 << 4L)   /* Map CR->nothing */
 
+/* Placeholders for Linux output flags that clib4 does not implement. The bits
+ * are ones clib4 never sets, so programs compile and set them harmlessly. */
+#define NL0     0x00000
+#define NL1     0x00020
+#define NLDLY   NL1
+#define CR0     0x00000
+#define CR1     0x00200
+#define CR2     0x00400
+#define CR3     (CR1 | CR2)
+#define CRDLY   (CR1 | CR2)
+#define TAB0    0x00000
+#define TAB1    0x00800
+#define TAB2    0x01000
+#define TAB3    (TAB1 | TAB2)
+#define TABDLY  (TAB1 | TAB2)
+#define BS0     0x00000
+#define BS1     0x00040
+#define BSDLY   BS1
+#define FF0     0x00000
+#define FF1     0x00080
+#define FFDLY   FF1
+#define VT0     0x00000
+#define VT1     0x00100
+#define VTDLY   VT1
+#define OFDEL   0x02000
+#define OFILL   0x04000
+#define OLCUC   0x08000
+#define XTABS   0x10000
+
 /* c_cflag */
 
 #define CSIZE   (0x07)	    /* Bit-width mask. */
@@ -104,6 +139,10 @@ struct termios
 #define FLUSHO  0x0200
 #define ECHOKE  0x0400
 #define ECHOCTL 0x0800
+/* Placeholders for Linux local flags that clib4 does not implement. */
+#define ECHOPRT 0x1000
+#define PENDIN  0x2000
+#define EXTPROC 0x4000
 
 /* Speeds  */
 
@@ -131,7 +170,17 @@ enum
 	B230400 = 230400,
 	B460800 = 460800,
 	B576000 = 576000,
-	B1152000 = 1152000
+	B1152000 = 1152000,
+	/* Placeholder baud rates: clib4 uses the rate itself as the constant. */
+	B500000 = 500000,
+	B921600 = 921600,
+	B1000000 = 1000000,
+	B1500000 = 1500000,
+	B2000000 = 2000000,
+	B2500000 = 2500000,
+	B3000000 = 3000000,
+	B3500000 = 3500000,
+	B4000000 = 4000000
 };
 
 #define EXTA 1 /* Tell applications we have speeds > 19200 baud. */
