@@ -217,6 +217,8 @@ C_POSIX := \
 	wait/waitpid.o \
 	posix/waitpoll.o \
 	posix/writev.o \
+	posix/preadv.o \
+	posix/pwritev.o \
 	posix/uname.o \
 	posix/getpriority.o \
 	posix/setpriority.o
@@ -742,6 +744,7 @@ C_UNISTD := \
 	unistd/chown.o \
 	unistd/dup.o \
 	unistd/dup2.o \
+	unistd/dup3.o \
 	crypt/encrypt.o \
 	unistd/execl.o \
 	unistd/execle.o \

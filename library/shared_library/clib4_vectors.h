@@ -1219,5 +1219,10 @@ static void *clib4Vectors[] = {
 
         (void *) (getexecfullname),                       /* 4524 */
 
+        /* posix/uio, unistd */
+        (void *) (preadv),                                /* 4528 */
+        (void *) (pwritev),                               /* 4532 */
+        (void *) (dup3),                                  /* 4536 */
+
         (void *)-1
 };

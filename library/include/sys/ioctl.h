@@ -27,6 +27,8 @@ struct winsize {
 #define TIOCGWINSZ  0x5413 /* Get terminal size */
 /* Not supported by Console Device yet */
 #define TIOCSWINSZ  0x5414 /* Set terminal size */
+#define TIOCEXCL    0x540C /* Placeholder: exclusive mode is not implemented */
+#define TIOCNXCL    0x540D /* Placeholder: exclusive mode is not implemented */
 
 __BEGIN_DECLS
 
