@@ -287,7 +287,9 @@ void
 spawnedProcessExit(int32 rc, int32 data UNUSED) {
     struct Clib4Resource *res = (APTR) OpenResource(RESOURCE_NAME);
     if (res) {
-        int32 parent = GetPID(0, GPID_PARENT);
+        /* The spawning task may be a pthread, which is a separate Amiga process
+         * with its own pid, so GPID_PARENT does not match the pid of the node
+         * that owns the child. The child pid is unique, so search every node. */
         int32 me = GetPID(0, GPID_PROCESS);
         size_t iter = 0;
         void *item;
@@ -295,13 +297,14 @@ spawnedProcessExit(int32 rc, int32 data UNUSED) {
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
 
-            if (node->pid == (uint32) parent) {
+            if (node->spawnedProcesses != NULL) {
                 struct Clib4Children key;
+                memset(&key, 0, sizeof(key));
                 key.pid = me;
-                struct Clib4Children *item = (struct Clib4Children *) hashmap_get(node->spawnedProcesses, &key);
-                if (item != NULL) {
-                    D(("Found child with pid %ld of parent %ld that exits now with return code %ld\n", me, parent, rc));
-                    item->returnCode = ~0x10000000 & rc;
+                struct Clib4Children *child = (struct Clib4Children *) hashmap_get(node->spawnedProcesses, &key);
+                if (child != NULL) {
+                    D(("Found child with pid %ld that exits now with return code %ld\n", me, rc));
+                    child->returnCode = ~0x10000000 & rc;
                     break;
                 }
             }
