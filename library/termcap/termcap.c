@@ -172,7 +172,7 @@ static int speeds[] = {
 };
 
 void
-tputs(const char *str, int nlines, register int (*outfun)()) {
+tputs(const char *str, int nlines, register int (*outfun)(int)) {
     register int padcount = 0;
     register int speed;
     size_t n_speeds = sizeof(speeds) / sizeof(speeds[0]);

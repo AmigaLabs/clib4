@@ -6,6 +6,12 @@
 #include "math_headers.h"
 #endif /* _MATH_HEADERS_H */
 
+#if __LDBL_MANT_DIG__ == __DBL_MANT_DIG__ && __LDBL_MAX_EXP__ == __DBL_MAX_EXP__
+long double
+atanl(long double x) {
+    return atan((double) x);
+}
+#else
 #include "invtrig.h"
 
 static const long double
@@ -70,3 +76,4 @@ atanl(long double x) {
         return (expsign < 0) ? -z : z;
     }
 }
+#endif
