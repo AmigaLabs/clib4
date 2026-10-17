@@ -52,10 +52,11 @@ struct mmap_record {
     struct mmap_record *next;
 };
 
-/* Process-global list of active mmap allocations (protected by the clib4
- * memory mutex via __memory_lock / __memory_unlock).
- * Defined in mmap.c; declared here for munmap.c / mprotect.c / msync.c.  */
-extern struct mmap_record * volatile __mmap_records;
+/* Per-process list of active mmap allocations, stored in the process'
+ * struct _clib4 (protected by the clib4 memory mutex via __memory_lock /
+ * __memory_unlock). It must not be a library global: clib4.library is
+ * shared by all processes and __mmap_cleanup_all() runs at every exit. */
+#define __mmap_records (*(struct mmap_record * volatile *) &__CLIB4->__mmap_records)
 
 /* Get the in-page header for a user pointer produced by our mmap().
  * Used only for read-only metadata access (mprotect, msync, writeback).

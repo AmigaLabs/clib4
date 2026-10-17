@@ -79,7 +79,10 @@ static void killitimer_by_thread(uint32 threadID) {
             }
             
             SHOWMSG("Process closed.. Wait For Child\n");
-            WaitForChildExit(pid);
+            /* Not implemented by dos.library 53.x (raises an AG_Obsolete alert);
+             * the loop above already waited for the process to go away. */
+            if (((struct Library *) IDOS->Data.LibBase)->lib_Version >= 54)
+                WaitForChildExit(pid);
             SHOWMSG("Done\n");
             
             /* Remove from list and free */

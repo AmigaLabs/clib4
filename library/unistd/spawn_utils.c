@@ -325,3 +325,22 @@ close_fd_inherit_spec_handles(char *spec)
 
     free(copy);
 }
+
+char *
+get_local_var_copy(const char *name)
+{
+    char *buffer;
+    LONG len;
+    char *copy = NULL;
+
+    buffer = malloc(8192);
+    if (buffer == NULL)
+        return NULL;
+
+    len = GetVar(name, buffer, 8192, GVF_LOCAL_ONLY | LV_VAR);
+    if (len >= 0)
+        copy = strdup(buffer);
+
+    free(buffer);
+    return copy;
+}

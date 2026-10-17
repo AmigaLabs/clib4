@@ -236,8 +236,10 @@ __sclose(void *cookie) {
         return -1;
     }
 
-    if (__builtin_expect(fd->fd_Original != NULL, 0))
-        fd = fd->fd_Original;
+    /* Do NOT resolve an alias here: when closing we want to affect this very
+     * file descriptor, not the original one it was dup()ed from. The close
+     * action of the hook removes the alias and leaves the original open
+     * (fclose(fdopen(dup(fd))) must not close fd). */
 
     fam.fam_Action = file_action_close;
 

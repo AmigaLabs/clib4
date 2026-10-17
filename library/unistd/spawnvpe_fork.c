@@ -18,6 +18,7 @@
 #endif /* _STDIO_HEADERS_H */
 
 #include "children.h"
+#include "spawn_utils.h"
 
 typedef struct LockList {
 	BPTR    NextPath;
@@ -54,7 +55,9 @@ spawnvpe_fork(
 ) {
     int ret = -1;
     struct name_translation_info nti_name;
+    struct name_translation_info nti_command;
     const char *name = file;
+    const char *command_name = file;
     struct name_translation_info nti_cwd;
     const char *cwd = _cwd;
     BPTR iofh[3] = {BZERO, BZERO, BZERO};
@@ -76,6 +79,14 @@ spawnvpe_fork(
     __set_errno(0);
 
     D(("spawnvpe_fork: Starting fork-like process [%s]\n", name));
+
+    /* The child's command name (its argv[0]) is the name it was called
+     * with, also when that is a link: programs like git select what to
+     * do from it. Only the program that is loaded comes from the link. */
+    if (__translate_unix_to_amiga_path_name(&command_name, &nti_command)) {
+        __set_errno(EINVAL);
+        return ret;
+    }
 
     /* Resolve symbolic links */
     char resolved_path[PATH_MAX];
@@ -119,8 +130,20 @@ spawnvpe_fork(
 			for (ll = (LockList *)BADDR(cli->cli_PathList); seglist == BZERO && ll; ll = (LockList *)BADDR(ll->NextPath)) {
 				if (ll->PathLock) {
 					BPTR oldDir = SetCurrentDir(ll->PathLock);
-					progdirLock = DupLock(ll->PathLock);
 					seglist = LoadSeg(name);
+					if (seglist != BZERO) {
+						/* PROGDIR: must be the directory the program really lives
+						 * in. The path entry itself is not always it: APPDIR:
+						 * (usually in the path) resolves any program that was
+						 * run before, so take the parent of the file instead. */
+						BPTR fileLock = Lock(name, SHARED_LOCK);
+						if (fileLock) {
+							progdirLock = ParentDir(fileLock);
+							UnLock(fileLock);
+						}
+						if (progdirLock == BZERO)
+							progdirLock = DupLock(ll->PathLock);
+					}
 					SetCurrentDir(oldDir);
 				}
 			}
@@ -268,10 +291,7 @@ spawnvpe_fork(
                         char *var_name = env_copy;
                         char *value = eq + 1;
 
-                        char *old_value = getenv(var_name);
-                        if (old_value) {
-                            saved_env[i] = strdup(old_value);
-                        }
+                        saved_env[i] = get_local_var_copy(var_name);
 
                         D(("Setting env: %s=%s\n", var_name, value));
                         SetVar(var_name, value, -1, GVF_LOCAL_ONLY);
@@ -325,7 +345,7 @@ spawnvpe_fork(
     struct TagItem tags[] = {
         { NP_Seglist,           (ULONG) seglist },     /* FIX: Use NP_Seglist not NP_Entry! */
         { NP_Name,              (ULONG) process_name },
-        { NP_CommandName,       (ULONG) name },
+        { NP_CommandName,       (ULONG) command_name },
         { NP_Arguments,         (ULONG) arg_string },
         { NP_Input,             (ULONG) iofh[0] },
         { NP_Output,            (ULONG) iofh[1] },
