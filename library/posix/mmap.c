@@ -15,11 +15,6 @@
 #include "stdlib_memory.h"
 #endif
 
-/* Process-global tracking list — one entry per live mmap() allocation.
- * Protected by the clib4 memory mutex (__memory_lock/__memory_unlock).
- * Defined here (mmap.c) and declared extern in mmap_internal.h.           */
-struct mmap_record * volatile __mmap_records = NULL;
-
 void *
 mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset) {
     ENTER();

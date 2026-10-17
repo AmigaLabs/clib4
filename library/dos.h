@@ -644,6 +644,13 @@ struct _clib4 {
      * are read-only and take it shared: that is the hot path of getaddrinfo()
      * and there is no point serialising resolvers that only read. */
     struct SignalSemaphore *dns_cache_lock;
+
+    /* This process' live mmap() allocations (struct mmap_record list, see
+     * posix/mmap_internal.h). Per process: it used to be a library global,
+     * so the exit-time cleanup of any process freed the mappings of all the
+     * others. pthread threads share it with their parent, like the
+     * allocator, protected by memory_mutex. */
+    void *__mmap_records;
 };
 
 #ifndef __getClib4

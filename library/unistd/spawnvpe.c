@@ -197,10 +197,7 @@ spawnvpe(
 							char *value = eq + 1;
 
 							/* Save old value if it exists */
-							char *old_value = getenv(name);
-							if (old_value) {
-								saved_env[i] = strdup(old_value);
-							}
+							saved_env[i] = get_local_var_copy(name);
 
                             D(("Setting env: %s=%s\n", name, value));
 							SetVar(name, value, -1, GVF_LOCAL_ONLY);
@@ -308,6 +305,7 @@ spawnvpe(
 
 						DeleteVar(name, GVF_LOCAL_ONLY);
 						if (saved_env[i] != NULL) {
+							SetVar(name, saved_env[i], -1, GVF_LOCAL_ONLY);
 							free(saved_env[i]);
                             saved_env[i] = NULL;
 						}

@@ -23,4 +23,14 @@ char *build_fd_inherit_spec(struct _clib4 *__clib4, int fhin, int fhout, int fhe
  */
 void close_fd_inherit_spec_handles(char *spec);
 
+/*
+ * Return a malloc'd copy of the calling process' DOS local variable "name",
+ * or NULL if it has none. Used to restore the caller's local variables after
+ * the spawn functions set the child's environment on them: that state must
+ * be read from dos.library, not from getenv(), whose environ also holds the
+ * values the program setenv()ed, or those would leak into the caller (the
+ * Shell, when the program runs on the Shell's process) for good.
+ */
+char *get_local_var_copy(const char *name);
+
 #endif /* _SPAWN_UTILS_H */
