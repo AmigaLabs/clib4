@@ -1,5 +1,5 @@
 #ifndef __CHILDREN_H__
-#define __CHILDREN_H_
+#define __CHILDREN_H__
 
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
