@@ -62,8 +62,15 @@ static void readSize(uint32 *rows, uint32 *columns, uint32 *xpixel, uint32 *ypix
     BPTR fh = Output();
     if (fh) {
         uint32 _cols = 80, _rows = 23, _xpixel = 0, _ypixel = 0;
-        char r;
+        char r = 0;
         char buffer[BUFFER_SIZE + 1] = {0};
+
+        /* Only a console answers the window status request. When the output
+         * is redirected to a file or a pipe the query would just end up in
+         * the program's output (e.g. "git diff --stat >file"): keep the
+         * defaults instead. */
+        if (!IsInteractive(fh))
+            goto done;
 
         /* SetMode returns a success indicator (DOSTRUE/DOSFALSE), NOT the
          * previous mode.  Always restore to DOSFALSE (cooked) afterward.
@@ -72,7 +79,7 @@ static void readSize(uint32 *rows, uint32 *columns, uint32 *xpixel, uint32 *ypix
         if (Write(fh, "\x9b q", 3) == 3) {
             LONG actual = 0;
             LONG ret = Read(fh, &r, 1);
-            while (r != 'r' && ret != 0 && actual < BUFFER_SIZE) {
+            while (ret > 0 && r != 'r' && actual < BUFFER_SIZE) {
                 buffer[actual] = r;
                 actual += ret;
                 ret = Read(fh, &r, 1);
@@ -91,6 +98,7 @@ static void readSize(uint32 *rows, uint32 *columns, uint32 *xpixel, uint32 *ypix
         }
         SetMode(fh, DOSFALSE); /* Always restore cooked mode */
 
+done:
         *rows = _rows;
         *columns = _cols;
         *xpixel = _xpixel;

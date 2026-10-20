@@ -206,6 +206,19 @@ void stdio_file_init(void) {
 		if (default_file != BZERO) {
 			if (IsInteractive(default_file)) {
 				SET_FLAG(fd_flags, FDF_IS_INTERACTIVE);
+			} else {
+				/* A spawned child gets the parent's pipe() ends as its
+				 * Input()/Output()/ErrorOutput(). Mark them FDF_PIPE so they
+				 * take the PIPE: read/write paths: on PIPE: Read() returns -1
+				 * while no data is queued yet, which the generic path would
+				 * report as an error (with a stale IoErr(), usually ENOENT). */
+				TEXT devname[32] = {0};
+				if (DevNameFromFH(default_file, devname, sizeof(devname), DN_DEVICEONLY) &&
+					(devname[0] | 0x20) == 'p' && (devname[1] | 0x20) == 'i' &&
+					(devname[2] | 0x20) == 'p' && (devname[3] | 0x20) == 'e' &&
+					(devname[4] == ':' || devname[4] == '\0')) {
+					SET_FLAG(fd_flags, FDF_PIPE);
+				}
 			}
 		}
 

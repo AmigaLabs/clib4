@@ -32,8 +32,6 @@ kill(pid_t pid, int signal_number) {
             SHOWMSG("This is a kill for a different process. Search it");
             struct Hook h = {{NULL, NULL}, (HOOKFUNC) processscan_hook_function, NULL, NULL};
 
-            Forbid();
-
             int32 process = ProcessScan(&h, (CONST_APTR) pid, 0);
             if (process > 0) {
                 cli_process = (struct Process *) process;
@@ -52,8 +50,6 @@ kill(pid_t pid, int signal_number) {
 
                 __set_errno(ESRCH);
             }
-
-            Permit();
         }
     }
 

@@ -96,21 +96,13 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         D(("PIPE non-blocking read: result=%ld", (long)result));
                         if (result < 0) {
                             /*
-                             * -1 means no data available.  Distinguish:
-                             *   write-end still open → EAGAIN
-                             *   write-end already closed → true EOF (0)
+                             * -1 means no data available yet. The writer can be a child
+                             * process, which holds a handle we cannot see, so the local
+                             * other end being closed does not mean EOF. The device
+                             * reports true EOF as Read() == 0, which is handled below.
                              */
-                            int other_fd_num = (int)(uintptr_t)fd->fd_UserData;
-                            struct fd *other_fd = NULL;
-                            if (other_fd_num > 0)
-                                other_fd = __get_file_descriptor(__clib4, other_fd_num);
-                            if (other_fd != NULL) {
-                                fam->fam_Error = EAGAIN;
-                                result = EOF;
-                            } else {
-                                /* Write-end gone: report EOF */
-                                result = 0;
-                            }
+                            fam->fam_Error = EAGAIN;
+                            result = EOF;
                         }
                         /* result == 0: true EOF (write-end closed) — leave as-is */
                     } else {

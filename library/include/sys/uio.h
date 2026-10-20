@@ -33,6 +33,8 @@ typedef struct iovec
 
 extern ssize_t readv(int file_descriptor,const struct iovec *iov,int vec_count);
 extern ssize_t writev(int file_descriptor,const struct iovec *iov,int vec_count);
+extern ssize_t preadv(int file_descriptor, const struct iovec *iov, int vec_count, off_t offset);
+extern ssize_t pwritev(int file_descriptor, const struct iovec *iov, int vec_count, off_t offset);
 
 __END_DECLS
 

@@ -128,6 +128,62 @@ extern int *__h_errno (void);
 typedef int error_t;
 #endif
 
+/* Placeholders for Linux errno values clib4 does not define. They start at 200,
+ * above clib4's own range, so they never collide with an errno clib4 returns. */
+#define EADV 200
+#define EBADE 201
+#define EBADFD 202
+#define EBADR 203
+#define EBADRQC 204
+#define EBADSLT 205
+#define EBFONT 206
+#define ECHRNG 207
+#define ECOMM 208
+#define EDEADLOCK EDEADLK
+#define EDOTDOT 209
+#define EHWPOISON 210
+#define EISNAM 211
+#define EKEYEXPIRED 212
+#define EKEYREJECTED 213
+#define EKEYREVOKED 214
+#define EL2HLT 215
+#define EL2NSYNC 216
+#define EL3HLT 217
+#define EL3RST 218
+#define ELIBACC 219
+#define ELIBBAD 220
+#define ELIBEXEC 221
+#define ELIBMAX 222
+#define ELIBSCN 223
+#define ELNRNG 224
+#define EMEDIUMTYPE 225
+#define EMULTIHOP 226
+#define ENAVAIL 227
+#define ENOANO 228
+#define ENOCSI 229
+#define ENODATA 230
+#define ENOKEY 231
+#define ENOLINK 232
+#define ENOMEDIUM 233
+#define ENONET 234
+#define ENOPKG 235
+#define ENOSR 236
+#define ENOSTR 237
+#define ENOTNAM 238
+#define ENOTRECOVERABLE 239
+#define ENOTUNIQ 240
+#define EOWNERDEAD 241
+#define EREMCHG 242
+#define EREMOTEIO 243
+#define ERESTART 244
+#define ERFKILL 245
+#define ESRMNT 246
+#define ESTRPIPE 247
+#define ETIME 248
+#define EUCLEAN 249
+#define EUNATCH 250
+#define EXFULL 251
+
 __END_DECLS
 
 #endif /* _ERRNO_H */
