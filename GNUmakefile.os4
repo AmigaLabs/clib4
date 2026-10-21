@@ -155,7 +155,7 @@ ifeq ($(TARGETARCH),arm)
 BUILD_DIR      := $(LIB_ROOT)/build/arm
 SHARED         := no
 STATIC         := yes
-ARCH_FLAGS     := -march=armv7-a -marm -mfloat-abi=soft -mno-unaligned-access
+ARCH_FLAGS     := -march=armv7-a -marm -mfloat-abi=soft -mno-unaligned-access -mtune=cortex-a7
 # -Os: the library lives in LIBS:, and the 1 MB test volume has to hold it.
 OPTIMIZE       := -Os $(ARCH_FLAGS)
 OPTIONS        := $(filter-out -Wa%,$(OPTIONS))
