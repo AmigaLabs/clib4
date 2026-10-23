@@ -1011,7 +1011,9 @@ __select(int num_fds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, s
             if (result > 0)
                 break;
 
-            if (timeout != NULL && (timeout->tv_sec > 0 || timeout->tv_usec > 0)) {
+            /* A zero timeout leaves stop_when cleared, so this also ends a
+             * poll after a single pass. */
+            if (timeout != NULL) {
                 struct DateStamp now;
                 DateStamp(&now);
 
