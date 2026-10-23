@@ -317,6 +317,9 @@ struct fd {
 													   file descriptor; NULL for none */
 	void *						fd_Aux;				/* Auxilliary data for "special" files,
 													   e.g. termios support. */
+	struct FileLockNode *		fd_LockNode;		/* Record locking: this file's node in
+													   the global lock list, as found when
+													   the lock was set; only a hint */
 };
 
 /****************************************************************************/
