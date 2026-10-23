@@ -379,12 +379,16 @@ find_file_lock_node_by_drawer_and_name(struct FileLockSemaphore *fls, BPTR dir_l
 
     error = ERROR_OBJECT_NOT_FOUND;
 
+    /* The list holds every file locked anywhere in the system. Compare the
+     * names first: that costs no dos.library call, and SameLock() is then
+     * only needed for the few nodes whose name matches.
+     */
     for (fln = (struct FileLockNode *) fls->fls_LockList.mlh_Head;
          fln->fln_MinNode.mln_Succ != NULL;
          fln = (struct FileLockNode *) fln->fln_MinNode.mln_Succ) {
-        status = SameLock(fln->fln_FileParentDir, dir_lock);
-        if (status == LOCK_SAME) {
-            if (Stricmp((STRPTR) fln->fln_FileName, file_name) == SAME) {
+        if (Stricmp((STRPTR) fln->fln_FileName, file_name) == SAME) {
+            status = SameLock(fln->fln_FileParentDir, dir_lock);
+            if (status == LOCK_SAME) {
                 error = OK;
 
                 result = fln;
@@ -576,8 +580,6 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
     struct LockedRegionNode *lrn = NULL;
     struct FileLockNode *fln = NULL;
     struct ExamineData *fib = NULL;
-    BOOL fib_is_valid = FALSE;
-    BPTR parent_dir = BZERO;
     _off64_t seek_position;
     _off64_t current_position;
     int result = ERROR;
@@ -607,8 +609,14 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
     assert(error_ptr != NULL);
     assert(FLAG_IS_CLEAR(fd->fd_Flags, FDF_STDIO));
 
-    /* Remember to unlock any records before closing the file. */
-    fd->fd_Cleanup = cleanup_locked_records;
+    /* Remember to unlock any records before closing the file. Only the
+     * original of a dup() chain runs its cleanup function when the last
+     * descriptor is closed, so that is where it goes.
+     */
+    if (fd->fd_Original != NULL)
+        fd->fd_Original->fd_Cleanup = cleanup_locked_records;
+    else
+        fd->fd_Cleanup = cleanup_locked_records;
 
     if ((cmd == F_SETLK || cmd == F_SETLKW) && (l->l_type == F_WRLCK || l->l_type == F_RDLCK)) {
         SHOWMSG("this is a lock request");
@@ -695,8 +703,6 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
                 goto out;
             }
 
-            fib_is_valid = TRUE;
-
             start = (_off64_t) fib->FileSize + l->l_start;
 
             if (l->l_len == 0)
@@ -759,22 +765,6 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
         SHOWMSG("F_SETLKW");
 
         D(("  locking %ld..%ld", start, stop));
-        fib = ExamineObjectTags(EX_FileHandleInput, file_handle, TAG_DONE);
-        if (NOT fib_is_valid && fib == NULL)
-        {
-            SHOWMSG("couldn't read this file's name");
-
-            error = IoErr();
-            goto out;
-        }
-
-        parent_dir = ParentOfFH(file_handle);
-        if (parent_dir == BZERO) {
-            SHOWMSG("couldn't get a lock on the file's parent directory");
-
-            error = IoErr();
-            goto out;
-        }
 
         shared = (BOOL)(l->l_type == F_RDLCK);
 
@@ -809,7 +799,10 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
                 goto out;
             }
 
-            if (find_file_lock_node_by_drawer_and_name(fls, parent_dir, fib->Name, &existing_fln) == OK) {
+            /* The new lock node already holds the file's parent directory
+             * and name, so there is no need to ask dos.library again.
+             */
+            if (find_file_lock_node_by_drawer_and_name(fls, fln->fln_FileParentDir, fln->fln_FileName, &existing_fln) == OK) {
                 SHOWMSG("that file is already locked by someone");
 
                 if (find_colliding_region(existing_fln, start, stop, shared) == NULL) {
@@ -850,10 +843,6 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
 
                     delete_locked_region_node(__clib4, lrn);
                     lrn = NULL;
-
-                    UnLock(parent_dir);
-
-                    parent_dir = BZERO;
 
                     (*error_ptr) = EINTR;
 
@@ -922,7 +911,7 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
             goto out;
         }
 
-        error = find_file_lock_node_by_file_handle(fls, file_handle, &existing_fln);
+        error = find_file_lock_node_by_drawer_and_name(fls, fln->fln_FileParentDir, fln->fln_FileName, &existing_fln);
         if (error == OK) {
             SHOWMSG("that file is already locked by someone else");
 
@@ -1020,7 +1009,6 @@ out:
     release_file_lock_semaphore(fls);
 
     FreeDosObject(DOS_EXAMINEDATA, fib);
-    UnLock(parent_dir);
 
     if (result != 0 && error != OK) {
         SetIoErr(error);
