@@ -48,6 +48,11 @@ struct LockedRegionNode {
     _off64_t lrn_Length;        /* Original length requested */
     pid_t lrn_Owner;            /* Which process owns the region */
     BOOL lrn_Shared;            /* Whether or not this region has been locked for shared access. */
+
+    /* Fields below were added later. Older versions of this library allocate
+     * shorter nodes, so only read them in nodes whose lrn_Owner is this process.
+     */
+    APTR lrn_Key;               /* fd_Lock of the dup() chain that set the lock */
 };
 
 static struct FileLockSemaphore *FileLockSemaphore;
@@ -62,6 +67,83 @@ static long find_file_lock_node_by_file_handle(struct FileLockSemaphore *fls, BP
 static long find_file_lock_node_by_drawer_and_name(struct FileLockSemaphore *fls, BPTR dir_lock, STRPTR file_name, struct FileLockNode **result_ptr);
 static struct LockedRegionNode *find_colliding_region(struct FileLockNode *fln, _off64_t start, _off64_t stop, BOOL shared);
 static void cleanup_locked_records(struct _clib4 *__clib4, struct fd *fd);
+
+/* The descriptor that carries the lock state of a dup() chain. */
+static struct fd *
+chain_original(struct fd *fd) {
+    return (fd->fd_Original != NULL) ? fd->fd_Original : fd;
+}
+
+/* Does the given process still hold a region on this file? A key of NULL
+ * matches any region of that process.
+ */
+static BOOL
+holds_region(struct FileLockNode *fln, pid_t owner, APTR key) {
+    struct LockedRegionNode *lrn;
+
+    for (lrn = (struct LockedRegionNode *) fln->fln_LockedRegionList.mlh_Head;
+         lrn->lrn_MinNode.mln_Succ != NULL;
+         lrn = (struct LockedRegionNode *) lrn->lrn_MinNode.mln_Succ) {
+        if (lrn->lrn_Owner == owner && (key == NULL || lrn->lrn_Key == key))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+/* Mark the whole dup() chain as locked and remember its lock node. */
+static void
+set_locked_state(struct fd *fd, struct FileLockNode *fln) {
+    fd = chain_original(fd);
+
+    fd->fd_LockNode = fln;
+
+    do {
+        SET_FLAG(fd->fd_Flags, FDF_IS_LOCKED);
+    } while ((fd = fd->fd_NextAlias) != NULL);
+}
+
+static void
+clear_locked_state(struct fd *fd) {
+    fd = chain_original(fd);
+
+    fd->fd_LockNode = NULL;
+
+    do {
+        CLEAR_FLAG(fd->fd_Flags, FDF_IS_LOCKED);
+    } while ((fd = fd->fd_NextAlias) != NULL);
+}
+
+/* Find the lock node of the file this descriptor refers to. The node
+ * remembered when the lock was set is used if it is still in the list and
+ * still holds a region this dup() chain set; that needs no dos.library call.
+ * The check also catches a node that was freed and whose memory now holds
+ * another file's node. Otherwise look the file up through its handle.
+ */
+static long
+find_file_lock_node_by_fd(struct FileLockSemaphore *fls, struct fd *fd, struct FileLockNode **result_ptr) {
+    struct fd *original = chain_original(fd);
+    struct FileLockNode *fln;
+
+    if (original->fd_LockNode != NULL && original->fd_Lock != NULL) {
+        for (fln = (struct FileLockNode *) fls->fls_LockList.mlh_Head;
+             fln->fln_MinNode.mln_Succ != NULL;
+             fln = (struct FileLockNode *) fln->fln_MinNode.mln_Succ) {
+            if (fln == original->fd_LockNode) {
+                if (holds_region(fln, getpid(), original->fd_Lock)) {
+                    (*result_ptr) = fln;
+                    return OK;
+                }
+
+                break;
+            }
+        }
+
+        original->fd_LockNode = NULL;
+    }
+
+    return find_file_lock_node_by_file_handle(fls, fd->fd_File, result_ptr);
+}
 
 static void release_file_lock_semaphore(struct FileLockSemaphore *fls) {
     ENTER();
@@ -182,7 +264,7 @@ remove_locked_region_node(struct _clib4 *__clib4, struct FileLockSemaphore *fls,
         /* Find the locked file this descriptor
          * buffer belongs to.
          */
-        if (find_file_lock_node_by_file_handle(fls, fd->fd_File, &which_lock) == OK) {
+        if (find_file_lock_node_by_fd(fls, fd, &which_lock) == OK) {
             struct LockedRegionNode *lrn;
             struct LockedRegionNode *lrn_next;
             pid_t this_task = getpid();
@@ -205,22 +287,19 @@ remove_locked_region_node(struct _clib4 *__clib4, struct FileLockSemaphore *fls,
                 }
             }
 
-            /* Check if there are any locked regions left.
-             * If not, mark the entire file as unlocked.
+            /* Once this process holds no region on the file, mark the
+             * file as unlocked, even if other processes still hold some:
+             * the node is theirs to free, and must not be used from here.
              */
+            if (NOT holds_region(which_lock, this_task, NULL))
+                clear_locked_state(fd);
+
+            /* Check if there are any locked regions left. */
             if (IsMinListEmpty(&which_lock->fln_LockedRegionList)) {
                 SHOWMSG("no more regions are locked; removing the file lock node");
 
                 Remove((struct Node *) which_lock);
                 delete_file_lock_node(__clib4, which_lock);
-
-                /* If this is an alias, move up to the real thing. */
-                if (fd->fd_Original != NULL)
-                    fd = fd->fd_Original;
-
-                do {
-                    CLEAR_FLAG(fd->fd_Flags, FDF_IS_LOCKED);
-                } while ((fd = fd->fd_NextAlias) != NULL);
             }
         }
     }
@@ -523,12 +602,11 @@ cleanup_locked_records(struct _clib4 *__clib4, struct fd *fd) {
 
         fls = obtain_file_lock_semaphore(__clib4, FALSE);
         if (fls != NULL) {
-            BPTR file_handle = fd->fd_File;
             struct FileLockNode *which_lock = NULL;
             pid_t this_task = getpid();
             LONG error;
 
-            error = find_file_lock_node_by_file_handle(fls, file_handle, &which_lock);
+            error = find_file_lock_node_by_fd(fls, fd, &which_lock);
             if (error == OK) {
                 struct LockedRegionNode *lrn_this;
                 struct LockedRegionNode *lrn_next;
@@ -556,15 +634,8 @@ cleanup_locked_records(struct _clib4 *__clib4, struct fd *fd) {
                 }
             }
 
-            if (error == OK || error == ERROR_OBJECT_NOT_FOUND) {
-                /* If this is an alias, move up to the real thing. */
-                if (fd->fd_Original != NULL)
-                    fd = fd->fd_Original;
-
-                do {
-                    CLEAR_FLAG(fd->fd_Flags, FDF_IS_LOCKED);
-                } while ((fd = fd->fd_NextAlias) != NULL);
-            }
+            if (error == OK || error == ERROR_OBJECT_NOT_FOUND)
+                clear_locked_state(fd);
 
             release_file_lock_semaphore(fls);
         }
@@ -632,6 +703,8 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
             SHOWMSG("could not create region node");
             goto out;
         }
+
+        lrn->lrn_Key = chain_original(fd)->fd_Lock;
     }
     else if (l->l_type == F_UNLCK) {
         SHOWMSG("this is an unlock request");
@@ -759,6 +832,7 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
         remove_locked_region_node(__clib4, fls, fd, start, stop, original_len);
     } else if (cmd == F_SETLKW) {
         struct FileLockNode *existing_fln;
+        struct FileLockNode *locked_fln = NULL;
         BOOL locked;
         BOOL shared;
 
@@ -811,6 +885,7 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
                     AddTail((struct List *) &existing_fln->fln_LockedRegionList, (struct Node *) lrn);
                     lrn = NULL;
 
+                    locked_fln = existing_fln;
                     locked = TRUE;
                 } else {
                     (*error_ptr) = EWOULDBLOCK;
@@ -822,6 +897,7 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
                 AddTail((struct List *) &fls->fls_LockList, (struct Node *) fln);
                 AddTail((struct List *) &fln->fln_LockedRegionList, (struct Node *) lrn);
 
+                locked_fln = fln;
                 fln = NULL;
                 lrn = NULL;
 
@@ -871,13 +947,7 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
 
         SHOWMSG("the file now has a lock set");
 
-        /* If this is an alias, move up to the real thing. */
-        if (fd->fd_Original != NULL)
-            fd = fd->fd_Original;
-
-        do {
-            SET_FLAG(fd->fd_Flags, FDF_IS_LOCKED);
-        } while ((fd = fd->fd_NextAlias) != NULL);
+        set_locked_state(fd, locked_fln);
     } else if (cmd == F_SETLK) {
         BOOL shared = (BOOL)(l->l_type == F_RDLCK);
         struct FileLockNode *existing_fln = NULL;
@@ -926,6 +996,8 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
 
             AddTail((struct List *) &existing_fln->fln_LockedRegionList, (struct Node *) lrn);
             lrn = NULL;
+
+            set_locked_state(fd, existing_fln);
         } else {
             if (error != ERROR_OBJECT_NOT_FOUND)
                 goto out;
@@ -935,19 +1007,13 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
             AddTail((struct List *) &fls->fls_LockList, (struct Node *) fln);
             AddTail((struct List *) &fln->fln_LockedRegionList, (struct Node *) lrn);
 
+            set_locked_state(fd, fln);
+
             fln = NULL;
             lrn = NULL;
         }
 
         SHOWMSG("the file now has a lock set");
-
-        /* If this is an alias, move up to the real thing. */
-        if (fd->fd_Original != NULL)
-            fd = fd->fd_Original;
-
-        do {
-            SET_FLAG(fd->fd_Flags, FDF_IS_LOCKED);
-        } while ((fd = fd->fd_NextAlias) != NULL);
     } else if (cmd == F_GETLK) {
         struct FileLockNode *fln_found = NULL;
 
@@ -962,7 +1028,7 @@ __handle_record_locking(struct _clib4 *__clib4, int cmd, struct flock *l, struct
 
         SHOWMSG("checking for possible lock collision");
 
-        error = find_file_lock_node_by_file_handle(fls, file_handle, &fln_found);
+        error = find_file_lock_node_by_fd(fls, fd, &fln_found);
         if (error == OK) {
             BOOL shared = (BOOL)(l->l_type == F_RDLCK);
             struct LockedRegionNode *lrn_found;
