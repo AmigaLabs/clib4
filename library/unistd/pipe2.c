@@ -6,6 +6,8 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#include <time.h>
+
 int pipe2(int fd[2], int flags) {
     char pipe_name[1024] = {0};
     struct _clib4 *__clib4 = __CLIB4;
@@ -22,14 +24,14 @@ int pipe2(int fd[2], int flags) {
 
     ObtainSemaphore(__clib4->__pipe_semaphore);
 #ifdef USE_TEMPFILES
-    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08x", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
+    snprintf(pipe_name, sizeof(pipe_name), "T:%x.%08lx%08lx", __clib4->__pipenum++, (unsigned long) getpid(), (unsigned long) time(NULL));
     // Delete the file if exists (we don't need to check if file exists)
     Delete(pipe_name);
 #else
     if (flags & O_NONBLOCK)
-        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/131072/0/NOBLOCK", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
+        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lx%lx/131072/0/NOBLOCK", __clib4->__pipenum++, (unsigned long) getpid(), (unsigned long) time(NULL));
     else
-        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lu/131072/0", __clib4->__pipenum++, __clib4->self->pr_ProcessID);
+        snprintf(pipe_name, sizeof(pipe_name), "PIPE:%x%lx%lx/131072/0", __clib4->__pipenum++, (unsigned long) getpid(), (unsigned long) time(NULL));
 #endif // USE_TEMPFILES
     ReleaseSemaphore(__clib4->__pipe_semaphore);
 

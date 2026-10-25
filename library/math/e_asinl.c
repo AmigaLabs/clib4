@@ -10,6 +10,12 @@
 #include "stdlib_headers.h"
 #endif /* _STDLIB_HEADERS_H */
 
+#if __LDBL_MANT_DIG__ == __DBL_MANT_DIG__ && __LDBL_MAX_EXP__ == __DBL_MAX_EXP__
+long double
+asinl(long double x) {
+    return asin((double) x);
+}
+#else
 #include "invtrig.h"
 
 static const __float64
@@ -60,3 +66,4 @@ asinl(long double x) {
     }
     if (expsign > 0) return t; else return -t;
 }
+#endif
