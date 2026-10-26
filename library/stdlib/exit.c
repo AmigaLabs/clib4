@@ -35,9 +35,26 @@ _exit(int return_code) {
     D(("%d %d\n", __clib4->processId, GetPID(NULL, GPID_PROCESS)));
     if (__clib4->processId != (pid_t) GetPID(NULL, GPID_PROCESS)) {
         SHOWMSG("NOT IN MAIN TASK");
-        /* We are NOT in main task. Don't call exit here because
-         * we'll have pending processes. Try to remove the Task
-         */
+        /* We are NOT in the main task, and the process ends as a whole
+         * (POSIX: _exit() terminates the process, whichever thread calls
+         * it). Its stack and exit point belong to the main process, so the
+         * main process is asked to leave through its own exit path at its
+         * next __check_abort_f() or pthread_join(), and woken. */
+        __clib4->__exit_requested = TRUE;
+
+        /* With libpthread, the hook wakes the main thread it recorded and
+         * ends this thread as a pthread, so a pthread_join() waiting for it
+         * returns and the exit-time join of every thread does not wait for
+         * it forever. The main process may already be in that join: the
+         * hook stays set until every thread has ended, since the join
+         * cannot finish before this one does. The hook returns for a task
+         * that is not a pthread. Without libpthread the main process is
+         * woken here. */
+        if (__clib4->__thread_exit_hook != NULL)
+            __clib4->__thread_exit_hook();
+        else
+            Signal((struct Task *) __clib4->self, SIGBREAKF_CTRL_C);
+
         RemTask(NULL);
         LEAVE();
         __builtin_unreachable();

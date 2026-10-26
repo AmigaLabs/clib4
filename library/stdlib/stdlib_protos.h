@@ -108,7 +108,16 @@ extern struct MMUIFace  *__IMMU; /* cached MMU interface from libInit */
 /* Faster __check_abort version used when __clib4 is available in the caller function */
 inline void
 __check_abort_f(struct _clib4 *__clib4) {
-	if (__clib4->__check_abort_enabled && 
+	/* Another thread ended the process (_exit() on a pthread): the main
+	 * process leaves through its own exit path with that thread's value.
+	 * Not gated by __check_abort_enabled, which abort() clears. */
+	if (__clib4->__exit_requested &&
+		(struct Task *)__clib4->self == (IExec->FindTask)(NULL)) {
+		/* Taken once: the exit path itself calls in here and joins. */
+		__clib4->__exit_requested = FALSE;
+		_exit(__clib4->__exit_value);
+	}
+	if (__clib4->__check_abort_enabled &&
 		(IDOS->CheckSignal)(__clib4->__break_signal_mask)) {
 		/* If we aren't on the main thread, skip it because checking it on ITIMER_TASK etc can run into a deadlock */
 		if( (struct Task *)__clib4->self == (IExec->FindTask)(NULL) ) {

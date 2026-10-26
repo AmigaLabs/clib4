@@ -651,6 +651,19 @@ struct _clib4 {
      * others. pthread threads share it with their parent, like the
      * allocator, protected by memory_mutex. */
     void *__mmap_records;
+
+    /* Ending the process from a thread other than the main one (exit(),
+     * _exit(), abort() on a pthread). _exit() there records the exit value,
+     * sets __exit_requested and calls __thread_exit_hook, which libpthread
+     * sets at its start (__pthread_exit_from_exit): it wakes the main thread
+     * it recorded with SIGBREAKF_CTRL_C and ends the calling thread as
+     * pthread_exit() does, so its joiner is released. The main process
+     * leaves through its own exit path at its next __check_abort_f() or
+     * pthread_join(). Without libpthread, _exit() wakes `self` and removes
+     * the task as before. Kept last so that no existing field changes
+     * offset. */
+    void (*__thread_exit_hook)(void);
+    volatile int __exit_requested;
 };
 
 #ifndef __getClib4

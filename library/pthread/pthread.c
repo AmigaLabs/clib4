@@ -477,6 +477,24 @@ _pthread_cond_broadcast(pthread_cond_t *cond, BOOL onlyfirst) {
 // Store the previous value (before pthread runtime takes over)
 static ThreadInfo *old_tls = NULL;
 
+/* _exit() on a thread other than the main one (struct _clib4's
+ * __thread_exit_hook). The main thread is woken with a break, from the
+ * task this library recorded for it at its start, so the wake does not
+ * depend on the process identity in struct _clib4. The thread then ends as
+ * pthread_exit() ends it, so a pthread_join() waiting for it returns. The
+ * main thread, a task this library did not create, and a thread already
+ * ending return, and _exit() removes the task as before. */
+static void __pthread_exit_from_exit(void) {
+    ThreadInfo *inf = GetCurrentThreadInfo();
+
+    if (threads[0].task != NULL)
+        Signal((struct Task *) threads[0].task, SIGBREAKF_CTRL_C);
+    if (inf == NULL || inf == &threads[0] ||
+        inf->status == THREAD_STATE_TERMINATING || inf->status == THREAD_STATE_DESTRUCT)
+        return;
+    pthread_exit(NULL);
+}
+
 int __pthread_init_func(void) {
     pthread_t i;
     SHOWMSG("[__pthread_init_func :] Pthread __pthread_init_func called.\n");
@@ -533,6 +551,8 @@ int __pthread_init_func(void) {
         inf->join_thread_id = 0;
     }
 
+    /* _exit() on a thread ends that thread through here (dos.h). */
+    __CLIB4->__thread_exit_hook = __pthread_exit_from_exit;
 
     return TRUE;
 }
