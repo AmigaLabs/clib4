@@ -87,6 +87,11 @@ pthread_join(pthread_t thread, void **value_ptr) {
 
     /* Wait for thread to finish */
     if (me) {
+        /* The main thread also wakes for a break, which _exit() on another
+         * thread sends (dos.h, __exit_requested). */
+        uint32_t break_mask = (me == &threads[0]) ? SIGBREAKF_CTRL_C : 0;
+        BOOL break_held = FALSE;
+
         for (;;) {
             /* Check status under lock BEFORE calling Wait().
              * This closes the race window where the target finishes and signals
@@ -111,8 +116,29 @@ pthread_join(pthread_t thread, void **value_ptr) {
 
             /* Target still running - block until signaled */
             D(("pthread_join[%ld]: Going to Wait() for signal mask=0x%lx\n", thread, (unsigned long)me->join_signal_mask));
-            uint32_t sigs = Wait(me->join_signal_mask | me->cancel_signal_mask);
+            uint32_t sigs = Wait(me->join_signal_mask | me->cancel_signal_mask | break_mask);
             D(("pthread_join[%ld]: Wait() returned, sigs=0x%lx\n", thread, (unsigned long)sigs));
+
+            if (sigs & break_mask) {
+                struct _clib4 *__clib4 = __CLIB4;
+
+                /* Another thread ended the process (_exit() on a pthread,
+                 * dos.h): the main thread stops waiting and leaves through
+                 * its own exit path. */
+                if (__clib4->__exit_requested) {
+                    /* Taken once: the exit path joins every thread. */
+                    __clib4->__exit_requested = FALSE;
+                    MutexObtain(thread_sem);
+                    Remove((struct Node *)&me->join_node);
+                    me->status = THREAD_STATE_RUNNING;
+                    MutexRelease(thread_sem);
+                    _exit(__clib4->__exit_value);
+                }
+                /* A break for the program: no longer waited for here, and
+                 * posted again once the join is done, for its own check. */
+                break_mask = 0;
+                break_held = TRUE;
+            }
 
             if (sigs & me->cancel_signal_mask)
                 pthread_testcancel();
@@ -128,6 +154,8 @@ pthread_join(pthread_t thread, void **value_ptr) {
         _pthread_clear_threadinfo(inf);
 
         MutexRelease(thread_sem);
+        if (break_held)
+            SetSignal(SIGBREAKF_CTRL_C, SIGBREAKF_CTRL_C);
         return 0;
 
     } else {
