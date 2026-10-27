@@ -562,6 +562,11 @@ void __pthread_exit_func(void) {
     ThreadInfo *inf;
     struct DOSIFace *IDOS = _IDOS;
     SHOWMSG("[__pthread_exit_func :] Pthread __pthread_exit_func called.\n");
+    
+    if (IDOS == NULL) {
+        SHOWMSG("[__pthread_exit_func :] _IDOS is NULL, skipping cleanup. Most probably called when clib4 version is lower than required.\n");
+        return;
+    }
 
     /* A thread that never exits by itself (a daemon-style worker parked
      * in pthread_cond_wait / sem_wait) would wedge the join/wait loop
