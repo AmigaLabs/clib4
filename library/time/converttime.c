@@ -36,7 +36,9 @@ __convert_time(struct _clib4 *__clib4, ULONG seconds, LONG gmt_offset, struct tm
     seconds -= gmt_offset;
 
     /* Check if we are in DST */
-    GetTimezoneAttrs(NULL, TZA_TimeFlag, &dstime, TAG_DONE);
+    /* Without timezone.library ITimezone is NULL: there is no DST rule to ask. */
+    if (ITimezone != NULL)
+        GetTimezoneAttrs(NULL, TZA_TimeFlag, &dstime, TAG_DONE);
     if (dstime == TFLG_ISDST)
         seconds += (60 * 60);
 
