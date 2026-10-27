@@ -22,7 +22,6 @@ utimes(const char *name, const struct timeval *tvp) {
 
     __check_abort_f(__clib4);
 
-    DECLARE_TIMEZONEBASE_R(__clib4);
 
     if (!tvp) {
         DateStamp(&ds);
@@ -35,12 +34,9 @@ utimes(const char *name, const struct timeval *tvp) {
             return -1;
         }
 
-#if defined(__arm__)
-        /* No timezone.library on ARM yet: __get_gmt_offset() falls back to the locale. */
+        /* timezone.library may be missing (ARM, and AROS4 on PowerPC too):
+           __get_gmt_offset() asks it when it is open and falls back to the locale. */
         __gmtoffset = __get_gmt_offset();
-#else
-        GetTimezoneAttrs(NULL, TZA_UTCOffset, &__gmtoffset, TAG_DONE);
-#endif
 
         mtime -= UNIX_TIME_OFFSET;
         mtime -= 60 * __gmtoffset;

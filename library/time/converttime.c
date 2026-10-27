@@ -36,12 +36,10 @@ __convert_time(struct _clib4 *__clib4, ULONG seconds, LONG gmt_offset, struct tm
     seconds -= gmt_offset;
 
     /* Check if we are in DST */
-#if defined(__arm__)
-    /* The static ARM start goes on without timezone.library (not on ARM yet),
-     * and ITimezone is then NULL: there is no DST rule to ask. */
+    /* Without timezone.library (ARM, and AROS4 on PowerPC too) ITimezone is
+     * NULL: there is no DST rule to ask. */
     if (ITimezone != NULL)
-#endif
-    GetTimezoneAttrs(NULL, TZA_TimeFlag, &dstime, TAG_DONE);
+        GetTimezoneAttrs(NULL, TZA_TimeFlag, &dstime, TAG_DONE);
     if (dstime == TFLG_ISDST)
         seconds += (60 * 60);
 
