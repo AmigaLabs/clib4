@@ -738,6 +738,18 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
 
 BPTR libExpunge(struct LibraryManagerInterface *Self) {
     BPTR result = 0;
+    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
+
+    /* Still open: only mark the library for expunge at its last close.
+     * This has to come before anything is torn down. ramlib asks every
+     * library to expunge when memory runs short, whoever has it open, and
+     * the resource below is what libOpen() and libClose() find each
+     * process' context through: freed under running programs, a close skips
+     * its process' teardown and the next open makes no context at all. */
+    if (libBase->libNode.lib_OpenCnt) {
+        libBase->libNode.lib_Flags |= LIBF_DELEXP;
+        return result;
+    }
 
     struct Clib4Resource *res = (APTR) IExec->OpenResource(RESOURCE_NAME);
     if (res) {
@@ -787,12 +799,6 @@ BPTR libExpunge(struct LibraryManagerInterface *Self) {
 
         IExec->RemResource(res);
         IExec->FreeVec(res);
-    }
-
-    struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
-    if (libBase->libNode.lib_OpenCnt) {
-        libBase->libNode.lib_Flags |= LIBF_DELEXP;
-        return result;
     }
 
     closeLibraries();
