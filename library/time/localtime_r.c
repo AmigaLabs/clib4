@@ -25,26 +25,24 @@ localtime_r(const time_t *t, struct tm *tm_ptr) {
         goto out;
     }
 
-    __locale_lock(__clib4);
-
     /* The time parameter given represents UTC and
-     * must be converted to local time before we proceed.
+     * must be converted to local time before we proceed:
+     * the offset at that time, summer time included.
      */
-    if (!__clib4->isTZSet) {
-        if (__clib4->__default_locale != NULL)
-            gmt_offset = 60 * __clib4->__default_locale->loc_GMTOffset;
-        else
-            gmt_offset = 0;
+    {
+        ULONG amiga_seconds = (ULONG)(*t) > UNIX_TIME_OFFSET ? (ULONG)(*t) - UNIX_TIME_OFFSET : 0;
+        int isdst = -1;
+        const char *zone = NULL;
+
+        gmt_offset = __time_offset(__clib4, amiga_seconds, TRUE, &isdst, &zone);
+        SHOWVALUE(gmt_offset);
+        result = __convert_time(__clib4, (*t), gmt_offset, tm_ptr);
+        if (result != NULL) {
+            tm_ptr->tm_isdst = isdst;
+            tm_ptr->tm_zone = zone != NULL ? zone : "GMT";
+            tm_ptr->tm_gmtoff = -gmt_offset;
+        }
     }
-    else {
-        gmt_offset = __clib4->__timezone;
-    }
-
-    __locale_unlock(__clib4);
-
-    SHOWVALUE(gmt_offset);
-
-    result = __convert_time(__clib4, (*t), gmt_offset, tm_ptr);
 
 out:
 
