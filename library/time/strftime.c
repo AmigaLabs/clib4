@@ -429,57 +429,27 @@ format_date(const char *format, const struct tm *tm, struct Hook *hook) {
                 /* ISO 8601 offset of time zone from UTC (C99). */
             case 'z':
 
-                __locale_lock(__clib4);
+                /* The offset from UTC, east positive, as +hhmm (tm_gmtoff
+                   is in seconds east of UTC). */
+                {
+                    long east = tm->tm_gmtoff / 60;
 
-                if (__clib4->__default_locale != NULL) {
-                    gmt_offset = __clib4->__default_locale->loc_GMTOffset;
-                    if (gmt_offset < 0)
-                        gmt_offset = (-gmt_offset);
-                    else if (gmt_offset > 0)
-                        store_string_via_hook("-", 1, hook);
-                } else {
-                    gmt_offset = 0;
+                    store_string_via_hook(east < 0 ? "-" : "+", 1, hook);
+                    if (east < 0)
+                        east = -east;
+                    __number_to_string((unsigned int) ((east / 60) * 100 + east % 60), buffer, sizeof(buffer), 4);
+                    store_string_via_hook(buffer, -1, hook);
                 }
-
-                __locale_unlock(__clib4);
-
-                /* The GMT offset is given in minutes. We need to print
-                       it as a decimal number. */
-                gmt_offset = (100 * (gmt_offset / 60)) + (gmt_offset % 60);
-
-                __number_to_string((unsigned int) gmt_offset, buffer, sizeof(buffer), 0);
-                store_string_via_hook(buffer, -1, hook);
 
                 break;
 
                 /* Time zone name. */
             case 'Z':
 
-                store_string_via_hook("GMT", 3, hook);
-
-                __locale_lock(__clib4);
-
-                if (__clib4->__default_locale != NULL) {
-                    int hours_west_of_gmt;
-                    char sign = '?';
-
-                    hours_west_of_gmt = __clib4->__default_locale->loc_GMTOffset / 60;
-                    if (hours_west_of_gmt < 0) {
-                        sign = '+';
-
-                        hours_west_of_gmt = (-hours_west_of_gmt);
-                    } else if (hours_west_of_gmt > 0) {
-                        sign = '-';
-                    }
-
-                    if (hours_west_of_gmt != 0) {
-                        store_string_via_hook(&sign, 1, hook);
-                        __number_to_string((unsigned int) hours_west_of_gmt, buffer, sizeof(buffer), 2);
-                        store_string_via_hook(buffer, -1, hook);
-                    }
-                }
-
-                __locale_unlock(__clib4);
+                if (tm->tm_zone != NULL && tm->tm_zone[0] != '\0')
+                    store_string_via_hook(tm->tm_zone, -1, hook);
+                else
+                    store_string_via_hook("GMT", 3, hook);
 
                 break;
 

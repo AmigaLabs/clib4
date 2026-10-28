@@ -303,6 +303,14 @@ _tzset_unlocked(void) {
     }
 
     __clib4->__dyntz = FALSE;
+
+    /* The system's zone is timezone.library's (TZ is written from it): take
+       the variables from there while it is open. */
+    if (__clib4->__ITimezone != NULL) {
+        __timezone_from_library(__clib4);
+        return;
+    }
+
     if ((tzenv = getenv("TZ")) == NULL) {
         __clib4->__timezone = 0;
         __clib4->__daylight = 0;
@@ -330,7 +338,9 @@ _tzset_unlocked(void) {
     }
     __clib4->__tzname[0] = tz0;
     __clib4->__tzname[1] = tz1;
-    __clib4->__timezone = info.std_ofs;
+    /* POSIX: timezone is the standard offset in seconds west of UTC; the
+       parser gives it east positive. */
+    __clib4->__timezone = -info.std_ofs;
     __clib4->__daylight = info.std_ofs != info.dst_ofs;
     __clib4->__dyntz = TRUE;
     __clib4->isTZSet = TRUE;
