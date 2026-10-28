@@ -86,14 +86,13 @@ mktime(struct tm *tm) {
 
     seconds += combined_seconds;
 
-    __locale_lock(__clib4);
-
     /* The data in 'struct tm *tm' was given in local time. We need
-       to convert the result into UTC. */
-    if (__clib4->__default_locale != NULL)
-        seconds += 60 * __clib4->__default_locale->loc_GMTOffset;
-
-    __locale_unlock(__clib4);
+       to convert the result into UTC, at the offset in force then
+       (tm_isdst, when it is not negative, says whether it is summer time). */
+    {
+        int isdst = tm->tm_isdst;
+        seconds += __time_offset(__clib4, seconds, FALSE, &isdst, NULL);
+    }
 
     /* Adjust for the difference between the Unix and the
        AmigaOS epochs, which differ by 8 years. */

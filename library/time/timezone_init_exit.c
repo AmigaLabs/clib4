@@ -42,6 +42,45 @@ __timezone_exit(void) {
     LEAVE();
 }
 
+/*
+ * The global time zone variables from timezone.library, as POSIX has them:
+ * tzname[0] the standard zone's name, tzname[1] the summer one's, timezone the
+ * standard offset in seconds west, daylight whether the zone has summer time
+ * at all. Used at start-up and by tzset() while the library is open.
+ */
+void
+__timezone_from_library(struct _clib4 *__clib4) {
+    DECLARE_TIMEZONEBASE_R(__clib4);
+    int32 stdoffset = 0, dstoffset = 0;
+
+    if (__clib4->__dyntz == TRUE) {
+        free(__clib4->__tzname[0]);
+        free(__clib4->__tzname[1]);
+    }
+    __clib4->__tzname[0] = malloc(MAX_TZSIZE + 1);
+    __clib4->__tzname[1] = malloc(MAX_TZSIZE + 1);
+    if (__clib4->__tzname[0] == NULL || __clib4->__tzname[1] == NULL) {
+        free(__clib4->__tzname[0]);
+        free(__clib4->__tzname[1]);
+        __clib4->__tzname[0] = (char *) "GMT";
+        __clib4->__tzname[1] = (char *) "GMT";
+        __clib4->__dyntz = FALSE;
+        return;
+    }
+    __clib4->__dyntz = TRUE;
+    __clib4->__tzname[0][0] = __clib4->__tzname[1][0] = '\0';
+
+    GetTimezoneAttrs(NULL,
+                     TZA_TimezoneSTD, __clib4->__tzname[0],
+                     TZA_TimezoneDST, __clib4->__tzname[1],
+                     TZA_UTCOffsetSTD, &stdoffset,
+                     TZA_UTCOffsetDST, &dstoffset,
+                     TAG_DONE);
+
+    __clib4->__timezone = 60 * stdoffset;
+    __clib4->__daylight = stdoffset != dstoffset;
+}
+
 int
 __timezone_init(void) {
     ENTER();
@@ -71,24 +110,7 @@ __timezone_init(void) {
     }
 
     if (__clib4->__TimezoneBase != NULL) {
-        DECLARE_TIMEZONEBASE_R(__clib4);
-
-        // Set global timezone variable
-        uint32 gmtoffset = 0;
-        int8 dstime = -1;
-        __clib4->__tzname[0] = malloc(MAX_TZSIZE + 1);
-        __clib4->__tzname[1] = malloc(MAX_TZSIZE + 1);
-        __clib4->__dyntz = TRUE;
-
-        GetTimezoneAttrs(NULL,
-                         TZA_Timezone, __clib4->__tzname[0],
-                         TZA_TimezoneSTD, __clib4->__tzname[1],
-                         TZA_UTCOffset, &gmtoffset,
-                         TZA_TimeFlag, &dstime,
-                         TAG_DONE);
-
-        __clib4->__timezone = 60 * gmtoffset;
-        __clib4->__daylight = dstime & TFLG_ISDST;
+        __timezone_from_library(__clib4);
     } else {
         /* default values */
         __clib4->__timezone = 0;
