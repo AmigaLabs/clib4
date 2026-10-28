@@ -119,6 +119,7 @@ extern char * __asctime_r(const struct tm *tm,char * buffer,size_t buffer_size);
 extern char * __number_to_string(unsigned int number,char * string,size_t max_len,size_t min_len);
 extern struct tm * __convert_time(struct _clib4 *__clib4, ULONG seconds, LONG gmt_offset, struct tm * tm);
 extern LONG __time_offset(struct _clib4 *__clib4, ULONG seconds, BOOL is_utc, int *isdst, const char **zone);
+extern void __timezone_from_library(struct _clib4 *__clib4);
 extern int32 __get_gmt_offset(void);
 extern time_t __convert_datestamp_to_time(const struct DateStamp * ds);
 extern BOOL __convert_time_to_datestamp(time_t time_value,struct DateStamp * ds);
