@@ -127,8 +127,20 @@ __pathconf(struct MsgPort *port, int name) {
                 ret = Bufsize;    /* Default is 2048 bytes. */
             }
             break;
-        case _PC_NAME_MAX:
-            ret = fs_info[fs_index].name_max;
+        case _PC_NAME_MAX: {
+                /* The file system's own limit. The table goes by the dos type, which says
+                   nothing for a handler that presents itself as DOS\0 (a limit of 30 on
+                   volumes that take much longer names): it is only for one that cannot say. */
+                uint32_t max_length = 0;
+
+                if (port != NULL &&
+                    FileSystemAttrTags(FSA_MsgPortInput, port,
+                                       FSA_MaxFileNameLengthR, &max_length,
+                                       TAG_END) && max_length > 0)
+                    ret = max_length;
+                else
+                    ret = fs_info[fs_index].name_max;
+            }
             break;
         case _PC_PATH_MAX:
             ret = fs_info[fs_index].path_max;
