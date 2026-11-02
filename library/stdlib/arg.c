@@ -33,8 +33,7 @@ is_space(unsigned char c) {
                     c == '\n' ||                  /* line feed */
                     c == '\v' ||                  /* vertical tab */
                     c == '\f' ||                  /* form feed */
-                    c == ' ' ||                   /* blank space */
-                    c == (unsigned char) '\240'); /* non-breaking space */
+                    c == ' ');                    /* blank space */
 
     return (result);
 }
