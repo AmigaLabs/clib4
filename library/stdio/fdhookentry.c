@@ -25,6 +25,30 @@
 #include <strings.h>
 #include <limits.h>
 
+/*
+ * A read of a console does not come back until a line has been finished, and the
+ * break signal does not end it. So the console is asked, in short slices, whether
+ * a read would be answered, with a break looked at between them. A handler that
+ * fails the request (a second result that is not zero) gets the plain read.
+ */
+#define CONSOLE_BREAK_POLL_US 100000
+
+static void __wait_console_input(struct _clib4 *__clib4, struct fd *fd, BPTR file) {
+    while (__clib4->__check_abort_enabled) {
+        /* A break can end the program here: it closes the descriptors on its way. */
+        __fd_unlock(fd);
+        __check_abort_f(__clib4);
+        __fd_lock(fd);
+
+        if (__resolve_fd_file(fd) != file)
+            break;
+
+        SetIoErr(0);
+        if (WaitForChar(file, CONSOLE_BREAK_POLL_US) != DOSFALSE || IoErr() != 0)
+            break;
+    }
+}
+
 int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_message *fam) {
     struct ExamineData *exd = NULL;
     BOOL fib_is_valid = FALSE;
@@ -116,6 +140,15 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         }
                     }
                     goto out;
+                }
+
+                if (FLAG_IS_SET(fd->fd_Flags, FDF_IS_INTERACTIVE) && FLAG_IS_CLEAR(fd->fd_Flags, FDF_NON_BLOCKING)) {
+                    __wait_console_input(__clib4, fd, file);
+                    file = __resolve_fd_file(fd);
+                    if (file == BZERO) {
+                        fam->fam_Error = EBADF;
+                        goto out;
+                    }
                 }
 
                 result = (int64_t) Read(file, (APTR)fam->fam_Data, (LONG)fam->fam_Size);
