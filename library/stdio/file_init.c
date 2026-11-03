@@ -199,7 +199,10 @@ void stdio_file_init(void) {
 
                 iob_flags = IOBF_IN_USE | IOBF_WRITE | IOBF_NO_NUL | IOBF_BUFFER_MODE_NONE;
                 fd_flags = FDF_IN_USE | FDF_WRITE | FDF_NO_CLOSE_BPTR | FDF_STDIO;
+                /* A process with no error stream writes its errors to its output. */
                 default_file = ErrorOutput();
+                if (default_file == BZERO)
+                    default_file = Output();
                 break;
         }
 
