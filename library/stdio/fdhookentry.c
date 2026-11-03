@@ -29,11 +29,28 @@
  * A read of a console does not come back until a line has been finished, and the
  * break signal does not end it. So the console is asked, in short slices, whether
  * a read would be answered, with a break looked at between them. A handler that
- * fails the request (a second result that is not zero) gets the plain read.
+ * fails the request (a second result that is not zero) gets the plain read, and so
+ * does one that is not a console: its WaitForChar can answer no for ever, or take
+ * the line it reports. A console says it is one when asked what it is.
  */
 #define CONSOLE_BREAK_POLL_US 100000
 
+static BOOL __stream_is_console(BPTR file) {
+    struct FileHandle *fh = (struct FileHandle *) BADDR(file);
+    struct InfoData id __attribute__((aligned(4)));
+
+    id.id_DiskType = 0;
+    if (fh->fh_MsgPort == NULL ||
+        !(IDOS->DoPkt)(fh->fh_MsgPort, ACTION_HANDLER_INFO, (int32) MKBADDR(&id), 0, 0, 0, 0))
+        return FALSE;
+
+    return id.id_DiskType == ID_CON || id.id_DiskType == ID_RAWCON;
+}
+
 static void __wait_console_input(struct _clib4 *__clib4, struct fd *fd, BPTR file) {
+    if (!__stream_is_console(file))
+        return;
+
     while (__clib4->__check_abort_enabled) {
         /* A break can end the program here: it closes the descriptors on its way. */
         __fd_unlock(fd);

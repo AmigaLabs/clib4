@@ -116,10 +116,10 @@ raise(int sig) {
                     SHOWMSG("Calling the handler");
                     (*handler)(sig);
 
-                    if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL) {
-                        __set_errno_r(__clib4, EINTR);
+                    /* The handler returned: what was going on carries on, so a read that
+                       then succeeds leaves errno alone. */
+                    if (sig == SIGINT || sig == SIGTERM || sig == SIGKILL)
                         SetSignal(0, SIGBREAKF_CTRL_C);
-                    }
 
                     SHOWMSG("done.");
                 }
