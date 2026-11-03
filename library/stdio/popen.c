@@ -210,10 +210,13 @@ popen(const char *command, const char *type) {
         now = now / 8;
     }
 
-    memcpy(pipe_file_name+39, "/NOBLOCK", 8);
-    pipe_file_name[47] = '\0';
+    pipe_file_name[i] = '\0';
 
     SHOWSTRING(pipe_file_name);
+
+    /* What the program inherits is settled before our end of the pipe exists:
+       the program holding a copy of it would keep the pipe from ever ending. */
+    fd_inherit = build_fd_inherit_spec(__clib4, -1, -1, -1);
 
     /* Now open the input and output streams for the program to launch. */
     if (type[0] == 'r') {
@@ -223,10 +226,27 @@ popen(const char *command, const char *type) {
         if (input != BZERO) {
             output = Open(pipe_file_name, MODE_NEWFILE);
         }
+        /* Our end is open before the program runs: one that ends without a word
+           leaves an empty pipe to read, not a pipe that is gone. */
+        if (output != BZERO) {
+            result = fopen(pipe_file_name, type);
+            if (result == NULL) {
+                Close(output);
+                output = BZERO;
+            }
+        }
     } else {
         /* Write mode: we want to send data to the program; the program
-           should write to "NIL:". */
-        input = Open(pipe_file_name, MODE_NEWFILE);
+           should write to "NIL:". The pipe exists once our end is open, and
+           the program gets the end to read from. */
+        result = fopen(pipe_file_name, type);
+        if (result != NULL) {
+            input = Open(pipe_file_name, MODE_OLDFILE);
+            if (input == BZERO) {
+                fclose(result);
+                result = NULL;
+            }
+        }
         if (input != BZERO)
             output = Open("NIL:", MODE_OLDFILE);
     }
@@ -237,6 +257,10 @@ popen(const char *command, const char *type) {
     if (input == BZERO || output == BZERO || error == BZERO) {
         SHOWMSG("couldn't open the streams");
 
+        if (fd_inherit != NULL) {
+            close_fd_inherit_spec_handles(fd_inherit);
+            FreeVec(fd_inherit);
+        }
         __set_errno_r(__clib4, __translate_io_error_to_errno(IoErr()));
         goto out;
     }
@@ -244,8 +268,6 @@ popen(const char *command, const char *type) {
     D(("Launching [%s]", command));
 
     int asynch = TRUE; //FALSE
-
-    fd_inherit = build_fd_inherit_spec(__clib4, -1, -1, -1);
 
     /* Now try to launch the program. */
     data = AllocVecTags(sizeof(*data), AVT_Type, MEMF_SHARED, TAG_DONE);
@@ -316,8 +338,6 @@ popen(const char *command, const char *type) {
     input = output = error = BZERO;
 
     /* Now try to open the pipe we will use to exchange data with the program. */
-    result = fopen(pipe_file_name, type);
-
     if (result) {
         /* We need to mark this as a pipe */
         struct iob *file = (struct iob *) result;
@@ -333,6 +353,12 @@ out:
 
     if (command_copy != NULL)
         __free_r(__clib4, command_copy);
+
+    /* The program did not start: our end of the pipe has no use. */
+    if ((input != BZERO || output != BZERO) && result != NULL) {
+        fclose(result);
+        result = NULL;
+    }
 
     if (input != BZERO)
         Close(input);
