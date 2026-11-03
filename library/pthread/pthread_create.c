@@ -409,10 +409,11 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(voi
     name[sizeof(name) - 1] = '\0';
     strncpy(inf->name, name, NAMELEN);
 
-    fileIn  = DupFileHandle(Input());
-    fileOut = DupFileHandle(Output());
-    fileErr = DupFileHandle(ErrorOutput());
-    if (!fileIn || !fileOut || !fileErr)
+    /* A stream the process does not have is none for the thread either. */
+    fileIn  = Input() ? DupFileHandle(Input()) : BZERO;
+    fileOut = Output() ? DupFileHandle(Output()) : BZERO;
+    fileErr = ErrorOutput() ? DupFileHandle(ErrorOutput()) : BZERO;
+    if ((Input() && !fileIn) || (Output() && !fileOut) || (ErrorOutput() && !fileErr))
         goto out;
 
     // start the child thread
