@@ -44,6 +44,31 @@
 static void (*__CTOR_LIST__[1])(void) __attribute__((section(".ctors"))) = { (void *)~0 };
 static void (*__DTOR_LIST__[1])(void) __attribute__((section(".dtors"))) = { (void *)~0 };
 
+/*
+ * The ARM compiler puts constructors in .init_array and destructors in .fini_array, not
+ * in the lists above. crtend.o ends both arrays, so one entry in each list walks them.
+ * Anything linked after crtend.o is out of reach: libraries go before it.
+ */
+static void (*__INIT_ARRAY__[1])(void) __attribute__((used, section(".init_array"))) = { (void *)0 };
+static void (*__FINI_ARRAY__[1])(void) __attribute__((used, section(".fini_array"))) = { (void *)0 };
+
+static void run_init_array(void) {
+    for (void (**f)(void) = __INIT_ARRAY__ + 1; *f != NULL; f++)
+        (*f)();
+}
+
+static void run_fini_array(void) {
+    void (**f)(void) = __FINI_ARRAY__ + 1;
+
+    while (*f != NULL)
+        f++;
+    while (--f > __FINI_ARRAY__)
+        (*f)();
+}
+
+static void (*__run_init_array)(void) __attribute__((used, section(".ctors"))) = run_init_array;
+static void (*__run_fini_array)(void) __attribute__((used, section(".dtors"))) = run_fini_array;
+
 const struct Library *SysBase = NULL;
 const struct ExecIFace *IExec = NULL;
 

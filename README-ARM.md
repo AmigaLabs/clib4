@@ -67,7 +67,7 @@ make -k -f GNUmakefile.os4 TARGETARCH=arm arm-clib4 arm-libc -j8
 ```
 
 This leaves `build/arm/clib4.library` (the library, debug sections stripped) and
-`build/arm/lib/libc.a`, `libm.a`, `crtbegin.o` and `crtend.o`. The full library with its
+`build/arm/lib/libc.a`, `libm.a`, `libpthread.a`, `crtbegin.o` and `crtend.o`. The full library with its
 symbols is `build/arm/clib4.library.debug`. Do not use the `all` target for ARM: it runs
 `gitver`, which rewrites `library/c.lib_rev.h`.
 
@@ -83,9 +83,13 @@ A program is compiled and linked as an ET_REL command, against the stubs:
 arm-amigaos-gcc -O2 -march=armv7-a -marm -mfloat-abi=soft -mno-unaligned-access \
     -nostdinc -I<clib4>/library/include -I<superproject>/src/sdk/include -c hello.c -o hello.o
 arm-amigaos-ld -r -o Hello <clib4>/build/arm/lib/crtbegin.o hello.o \
-    <clib4>/build/arm/lib/crtend.o --start-group <clib4>/build/arm/lib/libc.a \
-    <clib4>/build/arm/lib/libm.a "$(arm-amigaos-gcc -print-libgcc-file-name)" --end-group
+    --start-group <clib4>/build/arm/lib/libc.a <clib4>/build/arm/lib/libm.a \
+    "$(arm-amigaos-gcc -print-libgcc-file-name)" --end-group <clib4>/build/arm/lib/crtend.o
 ```
+
+`crtend.o` comes last, since it ends the constructor lists and what follows it would never
+run. A threaded program adds `<clib4>/build/arm/lib/libpthread.a` to the group: it lives in
+the program, as on PowerPC, not in `clib4.library`.
 
 ## Endianness
 

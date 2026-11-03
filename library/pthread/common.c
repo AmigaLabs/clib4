@@ -37,7 +37,9 @@
 #include "common.h"
 #include "pthread.h"
 
+#ifndef __arm__
 register ThreadInfo * __tls_reg asm(TLS_REGISTER);
+#endif
 
 //
 // Helper functions
@@ -64,6 +66,18 @@ ThreadInfo *GetThreadInfo(pthread_t thread) {
     return NULL;
 }
 
+#ifdef __arm__
+/* r2 carries arguments on ARM, so no register is free for this. A thread starts with its
+ * ThreadInfo as the task's user data; GetCurrentThreadInfo checks what it reads, since a
+ * program may use that field too. */
+void set_tls_register(ThreadInfo *ti) {
+    (void) ti;
+}
+
+ThreadInfo *get_tls_register(void) {
+    return (ThreadInfo *) FindTask(NULL)->tc_UserData;
+}
+#else
 void set_tls_register(ThreadInfo *ti) {
     __tls_reg = ti;
 }
@@ -71,9 +85,10 @@ void set_tls_register(ThreadInfo *ti) {
 ThreadInfo *get_tls_register(void) {
     return __tls_reg;
 }
+#endif
 
 ThreadInfo *GetCurrentThreadInfo() {
-    ThreadInfo *inf = __tls_reg;
+    ThreadInfo *inf = get_tls_register();
     struct Task *task = FindTask(NULL);
 
     /* Validate: the TLS register (r2) must point inside the threads array
