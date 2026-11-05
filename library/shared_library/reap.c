@@ -9,9 +9,10 @@
  * A program is told apart by its task and task ID, kept here from the moment it is
  * fully open: pr_UID is copied to every child, and says nothing by itself.
  *
- * The kernel's reaper tells this client; a task of its own does the work, because a lock
- * the closed program held stays held until all the rounds are over. So nothing here
- * waits long for a lock, and the context is read only once nobody of the program runs.
+ * The kernel's reaper tells this client and waits for nobody, so a task of its own does
+ * the work. A lock it needs may be held by anyone, or left in a state nobody can tell
+ * after a forced kill: nothing here waits long for one, nothing here takes one after a
+ * forced kill, and the context is read only once nobody of the program runs.
  * The heap, the context and the program's mappings stay: nothing here can know that
  * nobody reaches them. What the rounds could not do stays too, and is said.
  *
@@ -57,7 +58,7 @@ extern struct DOSIFace *IDOS;
 /* Live records for one program: above this the ledger is left for the others. */
 #define REAP_TRACK_MAX      128
 
-/* Tries of 3 ticks each, under a second: a lock the closed program held would not come back in any of it. */
+/* Tries of 3 ticks each, under a second, so that two locks stay well under what the reaper waits for a client. */
 #define REAP_LOCK_TRIES     16
 #define REAP_LOCK_TICKS     3
 
@@ -237,7 +238,7 @@ static int program_of(struct Task *victim)
 
 /*
  * Who of the program is running now, in rows, with the rows of the others emptied, and
- * ticks told to end. A task stopped for closing is on no list, so a member seen here is
+ * its timers told to end if asked. A task stopped for closing is on no list, so a member seen here is
  * one that still runs; a task may end straight after this, so a row holds only what was
  * read while nothing could. TRUE if the rows are all the tasks there are.
  */
