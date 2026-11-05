@@ -197,6 +197,13 @@ IPCids(struct IPCIdKeyMap *m, int32 *idbuf, uint32 idblen, uint32 *idcnt) {
     return (0);
 }
 
+/*
+ * How many ticks a waiter that reads as crashed gets before it counts as dead. A task
+ * being looked at by whoever may close it reads the same for a moment and then goes on,
+ * and it would stay suspended for ever if it were passed over.
+ */
+#define WAKE_CRASHED_TICKS 5
+
 /* Support for waiting on an empty/full queue. {{{*/
 void
 WakeList(struct MinList *ml) {
@@ -206,7 +213,15 @@ WakeList(struct MinList *ml) {
     wp = (struct WProc *) RemHead((struct List *) ml);
     if (wp) {
         while (wp) {
-            while (wp->T->tc_State != TS_SUSPENDED) {
+            int crashed = 0;
+
+            /* A waiter that will never suspend is not waited for, or this would spin with the lock held. */
+            while (wp->T->tc_State != TS_SUSPENDED && wp->T->tc_State != TS_REMOVED && crashed <= WAKE_CRASHED_TICKS) {
+                if (wp->T->tc_State == TS_CRASHED) {
+                    crashed++;
+                    Delay(1);
+                    continue;
+                }
 #if defined(__arm__)
                 /* The ARM SDK does not declare Reschedule(): give up the CPU for a tick. */
                 Delay(1);
@@ -214,7 +229,8 @@ WakeList(struct MinList *ml) {
                 Reschedule();
 #endif
             }
-            RestartTask(wp->T, 0);
+            if (wp->T->tc_State == TS_SUSPENDED)
+                RestartTask(wp->T, 0);
             /* Do not free nodes here. They are freed by the tasks which allocated then. */
             wp = (struct WProc *) RemHead((struct List *) ml);
         }
