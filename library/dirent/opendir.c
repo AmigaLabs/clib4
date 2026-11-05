@@ -6,6 +6,8 @@
 #include "dirent_headers.h"
 #endif /* _DIRENT_HEADERS_H */
 
+#include "../shared_library/reap.h"
+
 static struct Node *
 find_by_name(struct List *list, const char *name) {
     struct Node *result = NULL;
@@ -165,6 +167,11 @@ opendir(const char *path_name) {
     }
 
     SHOWMSG("OK, done");
+
+    if (dh->dh_DirLock != BZERO && __reap_track_lock(__clib4, dh->dh_DirLock))
+        dh->dh_InLedger++;
+    if (dh->dh_Context != NULL && __reap_track_dir(__clib4, dh->dh_Context))
+        dh->dh_InLedger++;
 
     assert(__clib4->__directory_list.mlh_Head != NULL);
 

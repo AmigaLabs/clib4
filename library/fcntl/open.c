@@ -6,6 +6,8 @@
 #include "fcntl_headers.h"
 #endif /* _FCNTL_HEADERS_H */
 
+#include "../shared_library/reap.h"
+
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
@@ -390,6 +392,9 @@ directory:
     }
 
     SET_FLAG(fd->fd_Flags, FDF_IN_USE);
+
+    if (handle != BZERO ? __reap_track_file(__clib4, handle) : (dir_lock != BZERO && __reap_track_lock(__clib4, dir_lock)))
+        SET_FLAG(fd->fd_Flags, FDF_IN_LEDGER);
 
     result = fd_slot_number;
     handle = BZERO;

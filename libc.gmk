@@ -995,6 +995,7 @@ ifdef SPE
 endif
 
 C_LIBRARY := \
+	shared_library/reap.o \
 	$(C_BASE) \
 	$(C_ARGZ) \
     $(C_BYTESWAP) \

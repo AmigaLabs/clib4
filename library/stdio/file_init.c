@@ -6,6 +6,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#include "../shared_library/reap.h"
+
 #ifndef _UNISTD_HEADERS_H
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
@@ -136,6 +138,11 @@ wb_file_init(struct _clib4 *__clib4) {
     __clib4->__fd[0]->fd_DefaultFile = __clib4->input;
     __clib4->__fd[1]->fd_DefaultFile = __clib4->output;
     __clib4->__fd[2]->fd_DefaultFile = __clib4->error;
+
+    /* Its window closes with it, also when it is closed from outside. */
+    __reap_track_file(__clib4, __clib4->input);
+    __reap_track_file(__clib4, __clib4->output);
+    __reap_track_file(__clib4, __clib4->error);
 
     __clib4->old_input = SelectInput(__clib4->input);
     __clib4->old_output = SelectOutput(__clib4->output);

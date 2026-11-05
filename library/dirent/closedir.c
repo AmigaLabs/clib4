@@ -6,6 +6,8 @@
 #include "dirent_headers.h"
 #endif /* _DIRENT_HEADERS_H */
 
+#include "../shared_library/reap.h"
+
 #ifndef _STDLIB_MEMORY_H
 #include "stdlib_memory.h"
 #endif /* _STDLIB_MEMORY_H */
@@ -113,6 +115,9 @@ closedir(DIR *directory_pointer) {
         while ((node = RemHead((struct List *) &dh->dh_VolumeList)) != NULL)
             __free_r(__clib4, node);
     }
+
+    while (dh->dh_InLedger-- > 0)
+        __reap_untracked(__clib4);
 
     if (dh->dh_Context != NULL) {
         ReleaseDirContext(dh->dh_Context);

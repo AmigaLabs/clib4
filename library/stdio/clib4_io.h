@@ -127,6 +127,7 @@ struct _fd
 #define FDF_LITTLE_ENDIAN   (1UL<<22)   /* Read in Little endian mode */
 #define FDF_NO_CLOSE_BPTR	(1UL<<23)	/* Never close BPRT for this file */
 #define FDF_IS_RANDOM       (1UL<<25)   /* FD is the internal RANDOM: stream used by getrandom() */
+#define FDF_IN_LEDGER       (1UL<<26)   /* Its file or lock is in the kernel's ledger */
 
 /****************************************************************************/
 

@@ -71,20 +71,27 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
             serv_addr.sin_family = AF_INET;
             serv_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
             /* Find an empty port */
-            int port;
-            ObtainSemaphore(&res->mapLock);
-            for (port = START_UX_LOCAL_PORTS; port < 65535 - START_UX_LOCAL_PORTS; port++) {
-                if (hashmap_scan(res->uxSocketsMap, uxPortScan, &port)) {
-                    break;
+            int port = START_UX_LOCAL_PORTS;
+            int tries;
+            /* A port this table has no name for can still be held by a socket nobody closed. */
+            for (tries = 0; tries < UX_BIND_TRIES; tries++, port++) {
+                ObtainSemaphore(&res->mapLock);
+                for (; port < 65535 - START_UX_LOCAL_PORTS; port++) {
+                    if (hashmap_scan(res->uxSocketsMap, uxPortScan, &port)) {
+                        break;
+                    }
                 }
+                serv_addr.sin_port = htons(port);
+                /* Insert unix socket filename and port into unix sockets map */
+                newSock.port = port;
+                newSock.fd = fd;
+                newSock.owner = __clib4;
+                hashmap_set(res->uxSocketsMap, &newSock);
+                ReleaseSemaphore(&res->mapLock);
+                result = __bind(fd->fd_Socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+                if (result == 0 || errno != EADDRINUSE)
+                    break;
             }
-            serv_addr.sin_port = htons(port);
-            /* Insert unix socket filename and port into unix sockets map */
-            newSock.port = port;
-            newSock.fd = fd;
-            hashmap_set(res->uxSocketsMap, &newSock);
-            ReleaseSemaphore(&res->mapLock);
-            result = __bind(fd->fd_Socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
         }
         else
             __set_errno(EFAULT);

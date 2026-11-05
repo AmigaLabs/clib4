@@ -95,10 +95,13 @@
 #include "stdlib_constructor.h"
 #endif /* _STDLIB_CONSTRUCTOR_H */
 
+#include "reap.h"
+
 /* This is variable defines where to start to bind unix local ports using inet addresses */
 struct UnixSocket {
     int            port;
     struct fd     *fd;
+    struct _clib4 *owner;
     char           name[PATH_MAX];
 };
 
@@ -729,6 +732,7 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
             /* At this point exe is fully initialized */
             __clib4->__fully_initialized = TRUE;
             __clib4->__lib_open_count = 1;
+            __reap_program_add(__clib4);
             SHOWMSG("Library initialized");
         }
     }
@@ -745,12 +749,38 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
     return libBase;
 }
 
+/* What a program still has attached goes, with the keymap locked by the caller. */
+void __shm_detach_all(struct Clib4Resource *res, struct _clib4 *__clib4) {
+    for (int s = 0; s < __SHM_TRACKING_MAX; s++) {
+        if (__clib4->__shm_tracking[s].id >= 0) {
+            struct shmid_ds *si = GetIPCById(&res->shmcx.keymap,
+                                             __clib4->__shm_tracking[s].id);
+            if (si) {
+                si->shm_nattach--;
+                if (si->shm_nattach == 0 && (si->flags & SHMFLG_DeleteMe)) {
+                    res->shmcx.totshm -= si->shm_segsz;
+                    /* Destroy inline — shm_destroy is static in sysv_shmget.c */
+                    if (si->shm_amp) {
+                        IExec->FreeVec(si->shm_amp);
+                    }
+                    IExec->FreeVec(si);
+                    res->shmcx.keymap.objv[__clib4->__shm_tracking[s].id] = 0;
+                    res->shmcx.keymap.nused--;
+                }
+            }
+            __clib4->__shm_tracking[s].id = -1;
+            __clib4->__shm_tracking[s].addr = NULL;
+        }
+    }
+    __clib4->__shm_tracking_count = 0;
+}
+
 BPTR libExpunge(struct LibraryManagerInterface *Self) {
     BPTR result = 0;
     struct Clib4Library *libBase = (struct Clib4Library *) Self->Data.LibBase;
 
     /* Programs still have it open, and they use the resource: all of it stays. */
-    if (libBase->libNode.lib_OpenCnt) {
+    if (libBase->libNode.lib_OpenCnt || !__reap_stop()) {
         libBase->libNode.lib_Flags |= LIBF_DELEXP;
         return result;
     }
@@ -842,6 +872,9 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         }
         __clib4->__lib_open_count = 0;
 
+        /* Closed from outside from here on, it is left to dos alone: this context is about to go. */
+        __reap_program_remove(__clib4);
+
         /* Call external destructors only for -nostartfiles executables.
          * For normal executables, call_main() already calls _end_ctors(__EXT_DTOR_LIST__).
          */
@@ -891,28 +924,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         if (__clib4->__shm_tracking_count > 0) {
             SHOWMSG("Auto-detaching orphaned SHM segments");
             IPCLock(&res->shmcx.keymap);
-            for (int s = 0; s < __SHM_TRACKING_MAX; s++) {
-                if (__clib4->__shm_tracking[s].id >= 0) {
-                    struct shmid_ds *si = GetIPCById(&res->shmcx.keymap,
-                                                     __clib4->__shm_tracking[s].id);
-                    if (si) {
-                        si->shm_nattach--;
-                        if (si->shm_nattach == 0 && (si->flags & SHMFLG_DeleteMe)) {
-                            res->shmcx.totshm -= si->shm_segsz;
-                            /* Destroy inline — shm_destroy is static in sysv_shmget.c */
-                            if (si->shm_amp) {
-                                IExec->FreeVec(si->shm_amp);
-                            }
-                            IExec->FreeVec(si);
-                            res->shmcx.keymap.objv[__clib4->__shm_tracking[s].id] = 0;
-                            res->shmcx.keymap.nused--;
-                        }
-                    }
-                    __clib4->__shm_tracking[s].id = -1;
-                    __clib4->__shm_tracking[s].addr = NULL;
-                }
-            }
-            __clib4->__shm_tracking_count = 0;
+            __shm_detach_all(res, __clib4);
             IPCUnlock(&res->shmcx.keymap);
         }
 
@@ -1225,6 +1237,8 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
             goto out;
         }
     }
+
+    __reap_init();
 
     Clib4Base = libBase;
 

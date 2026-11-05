@@ -6,6 +6,8 @@
 #include "unistd_headers.h"
 #endif /* _UNISTD_HEADERS_H */
 
+#include "../shared_library/reap.h"
+
 #ifndef _USERGROUP_HEADERS_H
 #include "usergroup_headers.h"
 #endif /* _USERGROUP_HEADERS_H */
@@ -76,6 +78,7 @@ import_inherited_fds_from_spec(struct _clib4 *__clib4, const char *spec) {
                     if (lock != NULL) {
                         ULONG inherited_flags = flags;
                         CLEAR_FLAG(inherited_flags, FDF_CLOEXEC);
+                        CLEAR_FLAG(inherited_flags, FDF_IN_LEDGER);
                         SET_FLAG(inherited_flags, FDF_IN_USE);
                         if (no_close)
                             SET_FLAG(inherited_flags, FDF_NO_CLOSE_BPTR);
@@ -85,6 +88,11 @@ import_inherited_fds_from_spec(struct _clib4 *__clib4, const char *spec) {
                                         inherited_handle,
                                         inherited_flags,
                                         lock);
+
+                        /* This handle is a copy of its own, so it is this program's to lose. */
+                        if (!no_close && FLAG_IS_CLEAR(inherited_flags, FDF_IS_SOCKET) && FLAG_IS_CLEAR(inherited_flags, FDF_IS_DIRECTORY) &&
+                            __reap_track_file(__clib4, inherited_handle))
+                            SET_FLAG(__clib4->__fd[fd_num]->fd_Flags, FDF_IN_LEDGER);
                     }
                 }
             }

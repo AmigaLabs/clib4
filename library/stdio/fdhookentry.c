@@ -6,6 +6,8 @@
 #include "stdio_headers.h"
 #endif /* _STDIO_HEADERS_H */
 
+#include "../shared_library/reap.h"
+
 // #ifndef _STDIO_PROTOS_H
 #include "stdio_protos.h"
 // #endif /* _STDIO_PROTOS_H */
@@ -354,6 +356,9 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                         SHOWMSG("Closing file...");
 
 						if (FLAG_IS_CLEAR(fd->fd_Flags, FDF_NO_CLOSE_BPTR)) {
+                       		if (FLAG_IS_SET(fd->fd_Flags, FDF_IN_LEDGER)) {
+                       			__reap_untracked(__clib4);
+                       		}
                        		if (CANNOT Close(fd->fd_File)) {
                             	fam->fam_Error = __translate_io_error_to_errno(IoErr());
                             	SHOWMSG("CANNOT Close(fd->fd_File)");
@@ -481,6 +486,8 @@ int64_t __fd_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_actio
                 is_aliased = FALSE;
 
                 if (fd->fd_DefaultFile != BZERO) {
+                    if (FLAG_IS_SET(fd->fd_Flags, FDF_IN_LEDGER))
+                        __reap_untracked(__clib4);
                     UnLock(fd->fd_DefaultFile);
                     fd->fd_DefaultFile = BZERO;
                 }

@@ -37,6 +37,7 @@ struct DirectoryHandle
 	BOOL					dh_ScanVolumeList;
     int                     dh_Fd;              // For fdopendir()
 	ino_t					dh_ObjectID;
+	int						dh_InLedger;		// How many of its objects the kernel's ledger holds
 };
 
 extern void __dirent_lock(struct _clib4 *__clib4);

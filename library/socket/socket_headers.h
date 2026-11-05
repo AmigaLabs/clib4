@@ -69,10 +69,12 @@
 struct UnixSocket {
     int            port;
     struct fd     *fd;
+    struct _clib4 *owner;
     char           name[PATH_MAX];
 };
 
 #define START_UX_LOCAL_PORTS 30000
+#define UX_BIND_TRIES 16
 #define UX_QUEUE 0xEA123
 
 /* Code value. */

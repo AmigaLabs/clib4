@@ -654,6 +654,9 @@ struct _clib4 {
      * others. pthread threads share it with their parent, like the
      * allocator, protected by memory_mutex. */
     void *__mmap_records;
+
+    /* How many files, locks and scans of this program are in the kernel's ledger now. */
+    volatile uint32 __reap_tracked;
 };
 
 #ifndef __getClib4
