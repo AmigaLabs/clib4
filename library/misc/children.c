@@ -141,12 +141,15 @@ insertSpawnedChildren(uint32 pid, uint32 gid, const char *parentUuid, const char
         struct Clib4Node nodeKey;
         memset(&nodeKey, 0, sizeof(nodeKey));
         strncpy(nodeKey.uuid, parentUuid, UUID4_LEN);
+        ObtainSemaphore(&res->mapLock);
         struct Clib4Node *node = (struct Clib4Node *) hashmap_get(res->children, &nodeKey);
         if (node) {
             hashmap_set(node->spawnedProcesses, &children);
+            ReleaseSemaphore(&res->mapLock);
             D(("Inserted child pid %ld into parent uuid %s\n", pid, parentUuid));
             return TRUE;
         }
+        ReleaseSemaphore(&res->mapLock);
         D(("Parent uuid %s not found in res->children\n", parentUuid));
     }
     return FALSE;
@@ -159,13 +162,18 @@ findSpawnedChildrenByPid(uint32 pid) {
         uint32 mainProcess = GetPID(0, GPID_PARENT) != 0 ? GetPID(0, GPID_PARENT) : GetPID(0, GPID_PROCESS);
         size_t iter = 0;
         void *item;
+        struct Clib4Children *found = NULL;
 
+        ObtainSemaphore(&res->mapLock);
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
             if (node->pid == mainProcess) {
-                return (struct Clib4Children *) hashmap_scan_item(node->spawnedProcesses, pidChildrenScan, &pid);
+                found = (struct Clib4Children *) hashmap_scan_item(node->spawnedProcesses, pidChildrenScan, &pid);
+                break;
             }
         }
+        ReleaseSemaphore(&res->mapLock);
+        return found;
     }
 
     return NULL;
@@ -178,15 +186,18 @@ findSpawnedChildrenByGid(uint32 pid, uint32 gid) {
         uint32 me = GetPID(0, GPID_PROCESS);
         size_t iter = 0;
         void *item;
+        struct Clib4Children *found = NULL;
 
+        ObtainSemaphore(&res->mapLock);
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
-            // struct Clib4Children *children;
             if (node->pid == me) {
-                //children =
-                return hashmap_scan_item(node->spawnedProcesses, gidChildrenScan, &gid);
+                found = hashmap_scan_item(node->spawnedProcesses, gidChildrenScan, &gid);
+                break;
             }
         }
+        ReleaseSemaphore(&res->mapLock);
+        return found;
     }
     return NULL;
 }
@@ -198,15 +209,22 @@ findSpawnedChildrenPidByPipe(FILE *pipe) {
         uint32 me = GetPID(0, GPID_PROCESS);
         size_t iter = 0;
         void *item;
+        pid_t found = -1;
 
+        ObtainSemaphore(&res->mapLock);
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
             struct Clib4Children *children;
             if (node->pid == me) {
                 children = hashmap_scan_item(node->spawnedProcesses, pipeChildrenScan, &pipe);
-                if(children) return children->pid;
+                if (children) {
+                    found = children->pid;
+                    break;
+                }
             }
         }
+        ReleaseSemaphore(&res->mapLock);
+        return found;
     }
     return -1;
 }
@@ -219,6 +237,7 @@ addSpawnedChildrenPipeHandle(uint32 pid, FILE *pipe) {
         size_t iter = 0;
         void *item;
 
+        ObtainSemaphore(&res->mapLock);
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
             struct Clib4Children *children;
@@ -228,6 +247,7 @@ addSpawnedChildrenPipeHandle(uint32 pid, FILE *pipe) {
                 break;
             }
         }
+        ReleaseSemaphore(&res->mapLock);
     }
 }
 
@@ -266,6 +286,9 @@ import_pending_fds_for_process(struct _clib4 *__clib4, uint32 pid, uint32 ppid) 
 
     size_t iter = 0;
     void *item;
+    char *spec = NULL;
+
+    ObtainSemaphore(&res->mapLock);
     while (hashmap_iter(res->children, &iter, &item)) {
         struct Clib4Node *node = item;
         if (node->pid == ppid) {
@@ -273,13 +296,18 @@ import_pending_fds_for_process(struct _clib4 *__clib4, uint32 pid, uint32 ppid) 
             memset(&key, 0, sizeof(key));
             key.pid = pid;
             struct Clib4Children *ce = (struct Clib4Children *) hashmap_get(node->spawnedProcesses, &key);
-            if (ce != NULL && ce->fdInherit != NULL) {
-                import_inherited_fds_from_spec(__clib4, ce->fdInherit);
-                FreeVec(ce->fdInherit);
+            if (ce != NULL) {
+                spec = ce->fdInherit;
                 ce->fdInherit = NULL;
             }
             break;
         }
+    }
+    ReleaseSemaphore(&res->mapLock);
+
+    if (spec != NULL) {
+        import_inherited_fds_from_spec(__clib4, spec);
+        FreeVec(spec);
     }
 }
 
@@ -294,6 +322,7 @@ spawnedProcessExit(int32 rc, int32 data UNUSED) {
         size_t iter = 0;
         void *item;
 
+        ObtainSemaphore(&res->mapLock);
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
 
@@ -309,5 +338,6 @@ spawnedProcessExit(int32 rc, int32 data UNUSED) {
                 }
             }
         }
+        ReleaseSemaphore(&res->mapLock);
     }
 }

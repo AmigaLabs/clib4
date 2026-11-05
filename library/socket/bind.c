@@ -56,7 +56,10 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
             struct UnixSocket newSock;
             memset(&newSock, 0, sizeof(struct UnixSocket));
             strncpy(newSock.name, socketName, PATH_MAX);
-            if (hashmap_get(res->uxSocketsMap, &newSock) != NULL) {
+            ObtainSemaphore(&res->mapLock);
+            BOOL nameTaken = hashmap_get(res->uxSocketsMap, &newSock) != NULL;
+            ReleaseSemaphore(&res->mapLock);
+            if (nameTaken) {
                 if (setsockopt(fd->fd_Socket, SOL_SOCKET, SO_REUSEADDR, (char *) &reuse, (int) sizeof(reuse)) == -1) {
                     __set_errno(EADDRINUSE);
                     goto out;
@@ -69,6 +72,7 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
             serv_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
             /* Find an empty port */
             int port;
+            ObtainSemaphore(&res->mapLock);
             for (port = START_UX_LOCAL_PORTS; port < 65535 - START_UX_LOCAL_PORTS; port++) {
                 if (hashmap_scan(res->uxSocketsMap, uxPortScan, &port)) {
                     break;
@@ -79,6 +83,7 @@ bind(int sockfd, const struct sockaddr *name, socklen_t namelen) {
             newSock.port = port;
             newSock.fd = fd;
             hashmap_set(res->uxSocketsMap, &newSock);
+            ReleaseSemaphore(&res->mapLock);
             result = __bind(fd->fd_Socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
         }
         else

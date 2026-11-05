@@ -21,6 +21,7 @@ GetUndo(struct Clib4Resource *res, int id, int create) {
     struct Clib4Node key;
     memset(&key, 0, sizeof(struct Clib4Node));
     strncpy(key.uuid, __clib4->uuid, UUID4_LEN);
+    ObtainSemaphore(&res->mapLock);
     struct Clib4Node *c2n = (struct Clib4Node *) hashmap_get(res->children, &key);
     if (c2n != NULL && c2n->undo != NULL) {
         ui = c2n->undo;
@@ -39,6 +40,7 @@ GetUndo(struct Clib4Resource *res, int id, int create) {
         c2n->undo = ui;
         hashmap_set(res->children, c2n);
     }
+    ReleaseSemaphore(&res->mapLock);
 
     return ui;
 }

@@ -52,6 +52,10 @@ struct Clib4Resource {
     uint32 cpufamily;
     int32  debugLevel;
     int32  oldPriority;
+    /* Guards children, each node's spawnedProcesses and uxSocketsMap. An entry can move
+     * whenever another is added, so a pointer into them is good only while this is held.
+     * Never held across a wait. */
+    struct SignalSemaphore  mapLock;
 };
 
 struct Clib4Node {

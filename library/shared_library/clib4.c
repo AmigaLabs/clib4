@@ -526,7 +526,9 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
         D(bug("(libOpen) c2n.pid = %ld\n", c2n.pid));
         D(bug("(libOpen) c2n.pPid = %ld\n", c2n.pPid));
         D(bug("(libOpen) c2n.uuid = %s\n", c2n.uuid));
+        IExec->ObtainSemaphore(&res->mapLock);
         hashmap_set(res->children, &c2n);
+        IExec->ReleaseSemaphore(&res->mapLock);
 
         D(bug("(libOpen) Enabling clib4 optimizations\n"));
 #if !defined(__arm__)
@@ -603,7 +605,9 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
                 __clib4 = NULL;
             }
 
+            IExec->ObtainSemaphore(&res->mapLock);
             hashmap_delete(res->children, &c2n);
+            IExec->ReleaseSemaphore(&res->mapLock);
             if (c2n.spawnedProcesses != NULL)
                 hashmap_free(c2n.spawnedProcesses);
 
@@ -917,6 +921,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
         reent_exit(__clib4);
         SHOWMSG("Done");
 
+        IExec->ObtainSemaphore(&res->mapLock);
         while (hashmap_iter(res->children, &iter, &item)) {
             const struct Clib4Node *node = item;
             if (node->pid == pid) {
@@ -941,6 +946,7 @@ BPTR libClose(struct LibraryManagerInterface *Self) {
                 break;
             }
         }
+        IExec->ReleaseSemaphore(&res->mapLock);
 
         /*
          * Destroy this process' wmem allocator. Everything the program
@@ -1165,6 +1171,7 @@ struct Clib4Library *libInit(struct Clib4Library *libBase, BPTR seglist, struct 
             res->resource.lib_Node.ln_Type = NT_RESOURCE;
 
             iexec->InitSemaphore(&res->semaphore);
+            iexec->InitSemaphore(&res->mapLock);
             res->debugLevel = getDebugLevel(SysBase);
             D(bug("(libInit) Current Exec debug level: %ld\n", res->debugLevel));
             /* Initialize clib4 children hashmap */

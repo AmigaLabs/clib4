@@ -77,6 +77,7 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
                     if (res) {
                         size_t iter = 0;
                         void *item;
+                        ObtainSemaphore(&res->mapLock);
                         while (hashmap_iter(res->uxSocketsMap, &iter, &item)) {
                             const struct UnixSocket *socket = item;
                             if (socket->fd == fd) {
@@ -85,6 +86,7 @@ __socket_hook_entry(struct _clib4 *__clib4, struct fd *fd, struct file_action_me
                                 break;
                             }
                         }
+                        ReleaseSemaphore(&res->mapLock);
                     }
                     result = __CloseSocket(fd->fd_Socket);
                 }

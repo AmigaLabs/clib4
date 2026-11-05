@@ -49,7 +49,10 @@ connect(int sockfd, const struct sockaddr *name, socklen_t namelen) {
             struct UnixSocket key;
             memset(&key, 0, sizeof(struct UnixSocket));
             strncpy(key.name, socketName, PATH_MAX);
+            ObtainSemaphore(&res->mapLock);
             struct UnixSocket *unixSocket = hashmap_get(res->uxSocketsMap, &key);
+            int unixPort = unixSocket != NULL ? unixSocket->port : 0;
+            ReleaseSemaphore(&res->mapLock);
             if (unixSocket == NULL) {
                 __set_errno(ENOTCONN);
                 goto out;
@@ -59,7 +62,7 @@ connect(int sockfd, const struct sockaddr *name, socklen_t namelen) {
             memset(&serv_addr, 0, sizeof(serv_addr));
             serv_addr.sin_family = AF_INET;
             serv_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-            serv_addr.sin_port = htons(unixSocket->port);
+            serv_addr.sin_port = htons(unixPort);
 
             result = __connect(fd->fd_Socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
         }
