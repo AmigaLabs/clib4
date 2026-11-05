@@ -145,7 +145,7 @@
  * 8MB is a pretty arbitrary value - it's big enough that it should last a while
  * and small enough that a mostly-unused one doesn't waste *too* much. It's
  * also a nice power of two, of course. */
-#define WMEM_BLOCK_SIZE (8 * 1024 * 1024)
+#define WMEM_BLOCK_SIZE (4 * 1024 * 1024)
 
 /* The header for an entire OS-level 'block' of memory */
 typedef struct _wmem_block_hdr_t {
