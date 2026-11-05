@@ -14,7 +14,9 @@
  * after a forced kill: nothing here waits long for one, nothing here takes one after a
  * forced kill, and the context is read only once nobody of the program runs.
  * The heap, the context and the program's mappings stay: nothing here can know that
- * nobody reaches them. What the rounds could not do stays too, and is said.
+ * nobody reaches them. The last kill of a program's tasks tells the kernel's report which
+ * blocks its heap is made of, and what speaks against judging them; the report judges,
+ * and nothing is freed. What the rounds could not do stays too, and is said.
  *
  * Sockets are bsdsocket's to close: from here they would close on the wrong context.
  *
@@ -42,6 +44,7 @@
 #include "children.h"
 #include "../posix/ipc_headers.h"
 #include "../socket/socket_headers.h"
+#include "../wmem/wmem_allocator_block.h"
 
 extern struct ExecIFace *IExec;
 extern struct DOSIFace *IDOS;
@@ -73,13 +76,21 @@ extern struct DOSIFace *IDOS;
 #define REAP_THREAD_NAME    "pthread id #"
 #define REAP_TIMER_NAME     "ITIMER_TASK"
 
+/* Members closed by a helper, by task ID, whose kill is counted before the reaper starts on it. */
+#define REAP_KILLED         16
+
+/* What a kill of one member says that holds for the whole program's heap. */
+#define REAP_GROUP_FLAGS    (RRF_STALLED | RRF_REBOOTADVISED | RRF_REQUESTSLEFT | RRF_PACKETOUT)
+
 /* What a parent reads from a child that was killed: the shell's form of a SIGKILL. */
 #define REAP_KILLED_STATUS  (128 + SIGKILL)
 
 /*
  * One program. Read with no lock, by the reaper too, which must never wait: the words
  * are claimed by rp_Ctx and published by rp_Task, written last and cleared first.
- * The task stays here after it was closed, for as long as members of it run.
+ * The task stays here after it was closed, for as long as members of it run or wait to be
+ * reaped: the kill of each member is counted from its first round to its last, and the
+ * one that brings the count to nothing speaks for the whole program's heap.
  */
 struct ReapProgram {
     struct Task *volatile   rp_Task;
@@ -87,6 +98,9 @@ struct ReapProgram {
     struct _clib4 *volatile rp_Ctx;
     volatile LONG           rp_Stopping;    /* helpers still asking members to stop */
     volatile LONG           rp_Finished;    /* one helper does the last work        */
+    volatile LONG           rp_Jobs;        /* kills of members not at their last round */
+    volatile ULONG          rp_Flags;       /* REAP_GROUP_FLAGS of all of them so far */
+    volatile ULONG          rp_Killed[REAP_KILLED];
 };
 
 static struct ReapProgram reapPrograms[REAP_PROGRAMS];
@@ -136,8 +150,14 @@ void __reap_program_add(struct _clib4 *__clib4)
         struct ReapProgram *rp = &reapPrograms[i];
 
         if (__sync_bool_compare_and_swap(&rp->rp_Ctx, NULL, __clib4)) {
+            int k;
+
             rp->rp_TaskID = id;
             rp->rp_Finished = 0;
+            rp->rp_Jobs = 0;
+            rp->rp_Flags = 0;
+            for (k = 0; k < REAP_KILLED; k++)
+                rp->rp_Killed[k] = 0;
             __sync_synchronize();
             rp->rp_Task = me;
             return;
@@ -288,6 +308,42 @@ static ULONG seconds_now(void)
 }
 
 /*
+ * A member about to be closed by a helper: its kill is counted now, as the reaper may start on
+ * it before KillTaskID has returned here. The slot, or -1 when none was free: then its first
+ * round counts it a second time, and the program's heap is never spoken for.
+ */
+static int killed_add(struct ReapProgram *rp, ULONG id)
+{
+    int k;
+
+    __sync_fetch_and_add(&rp->rp_Jobs, 1);
+    for (k = 0; id != 0 && k < REAP_KILLED; k++)
+        if (__sync_bool_compare_and_swap(&rp->rp_Killed[k], 0, id))
+            return k;
+    return -1;
+}
+
+/* The kill did not happen, so no round of it will come. */
+static void killed_undo(struct ReapProgram *rp, int slot)
+{
+    if (slot >= 0)
+        rp->rp_Killed[slot] = 0;
+    __sync_fetch_and_sub(&rp->rp_Jobs, 1);
+}
+
+/* In the reaper, at a member's first round: counted, unless a helper counted it when it closed it. */
+static void count_kill(struct ReapProgram *rp, struct Task *victim)
+{
+    ULONG id = reap_task_id(victim);
+    int k;
+
+    for (k = 0; id != 0 && k < REAP_KILLED; k++)
+        if (rp->rp_Killed[k] == id && __sync_bool_compare_and_swap(&rp->rp_Killed[k], id, 0))
+            return;
+    __sync_fetch_and_add(&rp->rp_Jobs, 1);
+}
+
+/*
  * Its timers stop raising signals in its name, and every other member is closed too: they
  * would run on what was left half done. A member that holds a lock in a library is asked
  * again for a while; the round is answered after 2 s at most and this goes on alone.
@@ -337,9 +393,13 @@ static void stop_members(struct ReapMsg *msg, struct ReapProgram *rp)
         firstLook = FALSE;
         left = 0;
         for (i = 0; i < count; i++) {
+            int slot = killed_add(rp, rows[i].eti_TaskID);
             LONG res = ExecExt(IExec)->KillTaskID(IExec, rows[i].eti_Task, rows[i].eti_TaskID, KTF_ONCE, NULL);
 
-            if (res > 0 || res == KTE_NOTASK || res == KTE_EXITING)
+            if (res > 0)
+                continue;
+            killed_undo(rp, slot);
+            if (res == KTE_NOTASK || res == KTE_EXITING)
                 continue;
             if (res == KTE_DIRTY || res == KTE_BUSY || res == KTE_CANNOTSTOP)
                 left++;
@@ -480,7 +540,6 @@ static ULONG finish_program(struct ReapMsg *msg, struct Clib4Resource *res, stru
         } else
             IExec->DebugPrintF("clib4: '%s': its entries in the tables stay\n", name);
     }
-    program_clear(rp);
     return count;
 }
 
@@ -537,6 +596,103 @@ static void libc_round(struct ReapMsg *msg, int program)
     IExec->ReplyMsg(&msg->rm_Msg);
 }
 
+/* The heap's blocks, from the allocator's own table, never from the list inside them. */
+static void note_heap(struct _clib4 *ctx, struct Task *victim, ULONG gate, const char *name)
+{
+    static const char *const words[] = { "live", "stalled", "reboot-advised", "requests-left", "packet-out" };
+    wmem_allocator_t *allocator = (wmem_allocator_t *) ctx->__wmem_allocator;
+    void *addr[WMEM_OS_BLOCKS];
+    size_t size[WMEM_OS_BLOCKS];
+    char said[80];
+    int n = WMEM_OS_NOTABLE, i;
+
+    if (allocator != NULL && IExec->TypeOfMem(allocator) != 0)
+        n = wmem_block_os_blocks(allocator, addr, size, WMEM_OS_BLOCKS);
+    if (n < 0) {
+        IExec->DebugPrintF("clib4: '%s': its heap is not noted: %s\n", name,
+                           n == WMEM_OS_LOST ? "its table does not name every block" : "its allocator keeps no table");
+        return;
+    }
+    for (i = 0; i < n; i++)
+        ExecExt(IExec)->MemReportNote(IExec, MRN_ARENA | gate, victim, addr[i], size[i]);
+
+    said[0] = '\0';
+    for (i = 0; i < (int)(sizeof(words) / sizeof(words[0])); i++)
+        if (gate & (MRNF_ARENA_LIVE << i)) {
+            if (said[0] != '\0')
+                strncat(said, ",", sizeof(said) - strlen(said) - 1);
+            strncat(said, words[i], sizeof(said) - strlen(said) - 1);
+        }
+    IExec->DebugPrintF("clib4: '%s': %ld blocks of its heap noted, gate %s\n", name, (long) n, said[0] != '\0' ? said : "ok");
+}
+
+/*
+ * The last of a program's kills to come here speaks for its heap. A program with any task of its
+ * still running, a child that has its pr_UID included, or any kill of it that did not end cleanly
+ * is noted with that said: the report then only counts the blocks.
+ */
+static void arena_round(struct ReapMsg *msg, int program)
+{
+    struct Task *victim = msg->rm_Task;
+    const char *name = victim->tc_Node.ln_Name != NULL ? (const char *)victim->tc_Node.ln_Name : "?";
+    struct ReapProgram *rp;
+    struct _clib4 *ctx;
+    struct ExecTaskInfo *rows;
+    ULONG flags, gate = 0;
+
+    if (program < 0) {
+        IExec->ReplyMsg(&msg->rm_Msg);
+        return;
+    }
+    rp = &reapPrograms[program];
+    ctx = rp->rp_Ctx;
+    flags = __sync_or_and_fetch(&rp->rp_Flags, msg->rm_Flags & REAP_GROUP_FLAGS);
+    if (__sync_sub_and_fetch(&rp->rp_Jobs, 1) > 0 || ctx == NULL) {
+        IExec->ReplyMsg(&msg->rm_Msg);
+        return;
+    }
+    rp->rp_Jobs = 0;
+
+    if (flags & RRF_STALLED)
+        gate |= MRNF_ARENA_STALLED;
+    if (flags & RRF_REBOOTADVISED)
+        gate |= MRNF_ARENA_REBOOT;
+    if (flags & RRF_REQUESTSLEFT)
+        gate |= MRNF_ARENA_REQUESTS;
+    if (flags & RRF_PACKETOUT)
+        gate |= MRNF_ARENA_PACKET;
+
+    /* Who runs with this context, member or not: what cannot be looked at counts as running. */
+    rows = IExec->AllocVecTags(REAP_LIST_ROWS * sizeof(*rows), AVT_Type, MEMF_SHARED, TAG_DONE);
+    if (rows == NULL)
+        gate |= MRNF_ARENA_LIVE;
+    else {
+        struct ExecTaskListInfo info;
+        ULONG i, n;
+
+        IExec->Forbid();
+        n = ExecExt(IExec)->GetTaskList(IExec, rows, REAP_LIST_ROWS, &info);
+        for (i = 0; i < n; i++) {
+            struct Task *task = rows[i].eti_Task;
+
+            if (task == victim)
+                continue;
+            if ((task == rp->rp_Task && (rp->rp_TaskID == 0 || rows[i].eti_TaskID == rp->rp_TaskID)) ||
+                (rows[i].eti_Type == NT_PROCESS && (struct _clib4 *)((struct Process *)task)->pr_UID == ctx))
+                gate |= MRNF_ARENA_LIVE;
+        }
+        IExec->Permit();
+        if (info.etl_Total > REAP_LIST_ROWS)
+            gate |= MRNF_ARENA_LIVE;
+        IExec->FreeVec(rows);
+    }
+
+    note_heap(ctx, victim, gate, name);
+    if (rp->rp_Finished)
+        program_clear(rp);
+    IExec->ReplyMsg(&msg->rm_Msg);
+}
+
 /* -------------------------------------------------------------------------- */
 /* The client                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -545,6 +701,8 @@ static LONG reap_entry(struct ReapMsg *msg, int program)
 {
     if (msg->rm_Round == REAP_ROUND_UNHOOK && program >= 0)
         stop_members(msg, &reapPrograms[program]);
+    else if (msg->rm_Round == REAP_ROUND_ARENA)
+        arena_round(msg, program);
     else
         libc_round(msg, program);
 
@@ -562,6 +720,8 @@ static void reap_client(struct ReapClient *client, struct ReapMsg *msg)
     BOOL work = program >= 0;
 
     (void)client;
+    if (work && msg->rm_Round == REAP_ROUND_UNHOOK)
+        count_kill(&reapPrograms[program], victim);
     if (!work && msg->rm_Round == REAP_ROUND_LIBC && victim->tc_Node.ln_Type == NT_PROCESS)
         work = ((struct Process *)victim)->pr_ExitCode == (APTR)spawnedProcessExit;
     if (work) {
@@ -595,7 +755,7 @@ void __reap_init(void)
     reapClient.rc_Name = (CONST_STRPTR)"clib4.library";
     reapClient.rc_Reap = reap_client;
     reapClient.rc_Refuse = reap_refuse;
-    reapClient.rc_Rounds = (1UL << REAP_ROUND_UNHOOK) | (1UL << REAP_ROUND_LIBC);
+    reapClient.rc_Rounds = (1UL << REAP_ROUND_UNHOOK) | (1UL << REAP_ROUND_LIBC) | (1UL << REAP_ROUND_ARENA);
     ExecExt(IExec)->AddReapClient(IExec, &reapClient);
 }
 

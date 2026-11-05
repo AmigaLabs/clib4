@@ -205,11 +205,42 @@ typedef struct _wmem_block_pre_t {
     wmem_block_chunk_t *chunk;
 } wmem_block_pre_t;
 
+/* The OS blocks, apart from the list inside them: a program closed from outside is read from here. */
+typedef struct _wmem_os_block_t {
+    void   *addr;
+    size_t  size;
+} wmem_os_block_t;
+
 typedef struct _wmem_block_allocator_t {
     wmem_block_hdr_t *block_list;
     wmem_block_chunk_t *master_head;
     wmem_block_chunk_t *recycler_head;
+    uint32_t os_count;
+    bool os_lost;                   /* one had no room, and the table no longer names them all */
+    wmem_os_block_t os_blocks[WMEM_OS_BLOCKS];
 } wmem_block_allocator_t;
+
+static void
+wmem_block_os_add(wmem_block_allocator_t *allocator, void *addr, size_t size) {
+    if (allocator->os_count >= WMEM_OS_BLOCKS) {
+        allocator->os_lost = true;
+        return;
+    }
+    allocator->os_blocks[allocator->os_count].addr = addr;
+    allocator->os_blocks[allocator->os_count].size = size;
+    allocator->os_count++;
+}
+
+static void
+wmem_block_os_remove(wmem_block_allocator_t *allocator, void *addr) {
+    uint32_t i;
+
+    for (i = 0; i < allocator->os_count; i++)
+        if (allocator->os_blocks[i].addr == addr) {
+            allocator->os_blocks[i] = allocator->os_blocks[--allocator->os_count];
+            return;
+        }
+}
 
 /* DEBUG AND TEST */
 static int
@@ -813,6 +844,7 @@ wmem_block_new_block(wmem_block_allocator_t *allocator) {
     if (!block)
         return;
 
+    wmem_block_os_add(allocator, block, WMEM_BLOCK_SIZE);
     wmem_block_add_to_block_list(allocator, block);
 
     /* initialize it */
@@ -833,6 +865,7 @@ wmem_block_alloc_jumbo(wmem_block_allocator_t *allocator, const size_t size, con
     /* allocate a new block of exactly the right size */
     block = (wmem_block_hdr_t *) wmem_alloc(NULL, total_len);
     if(!block) return 0;
+    wmem_block_os_add(allocator, block, total_len);
 
     /* add it to the block list */
     wmem_block_add_to_block_list(allocator, block);
@@ -862,6 +895,7 @@ wmem_block_free_jumbo(wmem_block_allocator_t *allocator,
     block = WMEM_CHUNK_TO_BLOCK(chunk);
 
     wmem_block_remove_from_block_list(allocator, block);
+    wmem_block_os_remove(allocator, block);
 
     wmem_free(NULL, block);
 }
@@ -1003,6 +1037,7 @@ wmem_block_free(void *private_data, void *ptr) {
 
             if (safe_to_release) {
                 wmem_block_remove_from_block_list(allocator, block);
+                wmem_block_os_remove(allocator, block);
                 wmem_free(NULL, block);
             }
         }
@@ -1120,6 +1155,7 @@ wmem_block_free_all(void *private_data) {
         chunk = WMEM_BLOCK_TO_CHUNK(cur);
         if (chunk->jumbo) {
             wmem_block_remove_from_block_list(allocator, cur);
+            wmem_block_os_remove(allocator, cur);
             cur = cur->next;
             wmem_free(NULL, WMEM_CHUNK_TO_BLOCK(chunk));
         } else {
@@ -1167,6 +1203,7 @@ wmem_block_gc(void *private_data) {
             } else if (allocator->master_head == chunk) {
                 allocator->master_head = free_chunk->next;
             }
+            wmem_block_os_remove(allocator, cur);
             wmem_free(NULL, cur);
         } else {
             /* part of this block is used, so add it to the new block list */
@@ -1271,6 +1308,29 @@ wmem_block_allocator_init(wmem_allocator_t *allocator) {
     block_allocator->block_list = NULL;
     block_allocator->master_head = NULL;
     block_allocator->recycler_head = NULL;
+    block_allocator->os_count = 0;
+    block_allocator->os_lost = false;
+}
+
+int
+wmem_block_os_blocks(const wmem_allocator_t *allocator, void **addr, size_t *size, int max) {
+    const wmem_block_allocator_t *block_allocator;
+    uint32_t i, count;
+
+    if (allocator->type != WMEM_ALLOCATOR_BLOCK || allocator->private_data == NULL)
+        return WMEM_OS_NOTABLE;
+    block_allocator = (const wmem_block_allocator_t *) allocator->private_data;
+    if (TypeOfMem((APTR) block_allocator) == 0 ||
+        TypeOfMem((APTR) ((const char *) block_allocator + sizeof(*block_allocator) - 1)) == 0)
+        return WMEM_OS_NOTABLE;
+    count = block_allocator->os_count;
+    if (block_allocator->os_lost || count > WMEM_OS_BLOCKS || count > (uint32_t) max)
+        return WMEM_OS_LOST;
+    for (i = 0; i < count; i++) {
+        addr[i] = block_allocator->os_blocks[i].addr;
+        size[i] = block_allocator->os_blocks[i].size;
+    }
+    return (int) count;
 }
 
 /*

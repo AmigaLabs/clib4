@@ -22,6 +22,15 @@ extern "C" {
 void
 wmem_block_allocator_init(wmem_allocator_t *allocator);
 
+/* How many OS blocks the table of a block allocator holds. */
+#define WMEM_OS_BLOCKS  256
+#define WMEM_OS_NOTABLE (-1)    /* no block allocator, or none to read */
+#define WMEM_OS_LOST    (-2)    /* the table does not name them all */
+
+/* The OS blocks of a block allocator, read with no lock: for a program nobody of runs. */
+int
+wmem_block_os_blocks(const wmem_allocator_t *allocator, void **addr, size_t *size, int max);
+
 /* Exposed only for testing purposes */
 void
 wmem_block_verify(wmem_allocator_t *allocator);
