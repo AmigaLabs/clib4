@@ -297,12 +297,13 @@ static BOOL look_at_members(struct ReapProgram *rp, struct _clib4 *ctx, struct T
 }
 
 /*
- * Whether anything that may use the program's context or files still runs, member or not:
- * its main task, any process with its pr_UID, renamed threads too, and a member another
- * helper is asking to stop, which may be stopped for a moment and on no list. What cannot be
- * looked at counts as running. A wrong yes only keeps things.
+ * Whether anything of the program still runs: its main task, its threads by pr_UID whatever
+ * their name, and a member another helper is asking to stop, which may be stopped for a
+ * moment and on no list. With anyone, any process with its pr_UID counts too, as a child
+ * that is no thread, a console's handler among them, has it. What cannot be looked at
+ * counts as running. A wrong yes only keeps things.
  */
-static BOOL others_run(struct ReapProgram *rp, struct _clib4 *ctx, struct Task *victim)
+static BOOL others_run(struct ReapProgram *rp, struct _clib4 *ctx, struct Task *victim, BOOL anyone)
 {
     struct ExecTaskInfo *rows;
     struct ExecTaskListInfo info;
@@ -320,7 +321,8 @@ static BOOL others_run(struct ReapProgram *rp, struct _clib4 *ctx, struct Task *
         if (task == victim)
             continue;
         if ((task == rp->rp_Task && (rp->rp_TaskID == 0 || rows[i].eti_TaskID == rp->rp_TaskID)) ||
-            (rows[i].eti_Type == NT_PROCESS && (struct _clib4 *)((struct Process *)task)->pr_UID == ctx))
+            (rows[i].eti_Type == NT_PROCESS &&
+             (anyone ? (struct _clib4 *)((struct Process *)task)->pr_UID == ctx : is_thread_of(task, ctx))))
             run = TRUE;
     }
     IExec->Permit();
@@ -569,7 +571,9 @@ static ULONG finish_program(struct ReapMsg *msg, struct Clib4Resource *res, stru
     if (!__sync_bool_compare_and_swap(&rp->rp_Finished, 0, 1))
         return 0;
 
-    if ((msg->rm_Flags | rp->rp_Flags) & RRF_REBOOTADVISED) {
+    if (msg->rm_Flags & RRF_REBOOTADVISED) {
+        IExec->DebugPrintF("clib4: '%s': it held a lock, its tables stay\n", name);
+    } else if (rp->rp_Flags & RRF_REBOOTADVISED) {
         IExec->DebugPrintF("clib4: '%s': a task of its program held a lock, its tables stay\n", name);
     } else {
         if (ctx->__shm_tracking_count > 0) {
@@ -626,7 +630,7 @@ static void libc_round(struct ReapMsg *msg, int program)
 
         if (ctx != NULL) {
             /* Members whose kill is under way are stopped for good, and close nothing. */
-            if (others_run(rp, ctx, victim)) {
+            if (others_run(rp, ctx, victim, FALSE)) {
                 ULONG kept = keep_records(victim);
 
                 if (kept != 0)
@@ -709,7 +713,7 @@ static void arena_round(struct ReapMsg *msg, int program)
 
     /* Who runs with this context, and a member's kill counted since this one's was the last:
      * that member is stopped and on no list, and what its kill says is not in the flags yet. */
-    if (others_run(rp, ctx, victim) || rp->rp_Jobs != 0)
+    if (others_run(rp, ctx, victim, TRUE) || rp->rp_Jobs != 0)
         gate |= MRNF_ARENA_LIVE;
 
     note_heap(ctx, victim, gate, name);
