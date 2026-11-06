@@ -10,9 +10,11 @@
  * fully open: pr_UID is copied to every child, and says nothing by itself.
  *
  * The kernel's reaper tells this client and waits for nobody, so a task of its own does
- * the work. A lock it needs may be held by anyone, or left in a state nobody can tell
- * after a forced kill: nothing here waits long for one, nothing here takes one after a
- * forced kill, and the context is read only once nobody of the program runs.
+ * the work. A lock it needs may be held by anyone. The kernel lets go of a closed task's
+ * locks before the first round, so one a forced kill was inside guards something left half
+ * done: nothing here waits long for a lock, and once any task of a program was closed
+ * that way nothing here takes one for that program, or walks the tables they guard. The
+ * context is read only once nobody of the program runs.
  * The heap, the context and the program's mappings stay: nothing here can know that
  * nobody reaches them. The last kill of a program's tasks tells the kernel's report which
  * blocks its heap is made of, and what speaks against judging them; the report judges,
@@ -294,6 +296,44 @@ static BOOL look_at_members(struct ReapProgram *rp, struct _clib4 *ctx, struct T
     return info.etl_Total <= REAP_LIST_ROWS;
 }
 
+/*
+ * Whether anything that may use the program's context or files still runs, member or not:
+ * its main task, any process with its pr_UID, renamed threads too, and a member another
+ * helper is asking to stop, which may be stopped for a moment and on no list. What cannot be
+ * looked at counts as running. A wrong yes only keeps things.
+ */
+static BOOL others_run(struct ReapProgram *rp, struct _clib4 *ctx, struct Task *victim)
+{
+    struct ExecTaskInfo *rows;
+    struct ExecTaskListInfo info;
+    BOOL run = FALSE;
+    ULONG i, n;
+
+    rows = IExec->AllocVecTags(REAP_LIST_ROWS * sizeof(*rows), AVT_Type, MEMF_SHARED, TAG_DONE);
+    if (rows == NULL)
+        return TRUE;
+    IExec->Forbid();
+    n = ExecExt(IExec)->GetTaskList(IExec, rows, REAP_LIST_ROWS, &info);
+    for (i = 0; i < n && !run; i++) {
+        struct Task *task = rows[i].eti_Task;
+
+        if (task == victim)
+            continue;
+        if ((task == rp->rp_Task && (rp->rp_TaskID == 0 || rows[i].eti_TaskID == rp->rp_TaskID)) ||
+            (rows[i].eti_Type == NT_PROCESS && (struct _clib4 *)((struct Process *)task)->pr_UID == ctx))
+            run = TRUE;
+    }
+    IExec->Permit();
+    IExec->FreeVec(rows);
+    if (info.etl_Total > REAP_LIST_ROWS)
+        run = TRUE;
+    /* Read after the list: a member stopped by a helper is counted, or the helper is still at it. */
+    __sync_synchronize();
+    if (rp->rp_Stopping != 0)
+        run = TRUE;
+    return run;
+}
+
 /* -------------------------------------------------------------------------- */
 /* The rounds                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -331,11 +371,18 @@ static void killed_undo(struct ReapProgram *rp, int slot)
     __sync_fetch_and_sub(&rp->rp_Jobs, 1);
 }
 
-/* In the reaper, at a member's first round: counted, unless a helper counted it when it closed it. */
-static void count_kill(struct ReapProgram *rp, struct Task *victim)
+/*
+ * In the reaper, at a member's first round: counted, unless a helper counted it when it closed it.
+ * A forced kill says so for the whole program from here, before any member's later round.
+ */
+static void count_kill(struct ReapProgram *rp, struct ReapMsg *msg)
 {
+    struct Task *victim = msg->rm_Task;
     ULONG id = reap_task_id(victim);
     int k;
+
+    if (msg->rm_Flags & RRF_REBOOTADVISED)
+        __sync_fetch_and_or(&rp->rp_Flags, RRF_REBOOTADVISED);
 
     for (k = 0; id != 0 && k < REAP_KILLED; k++)
         if (rp->rp_Killed[k] == id && __sync_bool_compare_and_swap(&rp->rp_Killed[k], id, 0))
@@ -522,8 +569,8 @@ static ULONG finish_program(struct ReapMsg *msg, struct Clib4Resource *res, stru
     if (!__sync_bool_compare_and_swap(&rp->rp_Finished, 0, 1))
         return 0;
 
-    if (msg->rm_Flags & RRF_REBOOTADVISED) {
-        IExec->DebugPrintF("clib4: '%s': it held a lock, its tables stay\n", name);
+    if ((msg->rm_Flags | rp->rp_Flags) & RRF_REBOOTADVISED) {
+        IExec->DebugPrintF("clib4: '%s': a task of its program held a lock, its tables stay\n", name);
     } else {
         if (ctx->__shm_tracking_count > 0) {
             if (try_semaphore(res->shmcx.keymap.Lock)) {
@@ -561,7 +608,8 @@ static void libc_round(struct ReapMsg *msg, int program)
     struct Task *victim = msg->rm_Task;
     const char *name = victim->tc_Node.ln_Name != NULL ? (const char *)victim->tc_Node.ln_Name : "?";
     struct Clib4Resource *res = (APTR)IExec->OpenResource(RESOURCE_NAME);
-    BOOL dirty = (msg->rm_Flags & RRF_REBOOTADVISED) != 0;
+    BOOL dirty = (msg->rm_Flags & RRF_REBOOTADVISED) != 0 ||
+                 (program >= 0 && (reapPrograms[program].rp_Flags & RRF_REBOOTADVISED) != 0);
 
     if (res != NULL && victim->tc_Node.ln_Type == NT_PROCESS &&
         ((struct Process *)victim)->pr_ExitCode == (APTR)spawnedProcessExit) {
@@ -575,16 +623,10 @@ static void libc_round(struct ReapMsg *msg, int program)
     if (res != NULL && program >= 0) {
         struct ReapProgram *rp = &reapPrograms[program];
         struct _clib4 *ctx = rp->rp_Ctx;
-        struct ExecTaskInfo *rows = IExec->AllocVecTags(REAP_LIST_ROWS * sizeof(*rows), AVT_Type, MEMF_SHARED, TAG_DONE);
-        ULONG count = 1;
-        BOOL all = FALSE;
 
-        if (ctx != NULL && rows != NULL)
-            all = look_at_members(rp, ctx, victim, rows, &count, FALSE);
-        if (rows != NULL)
-            IExec->FreeVec(rows);
         if (ctx != NULL) {
-            if (count != 0 || !all || rp->rp_Stopping != 0) {
+            /* Members whose kill is under way are stopped for good, and close nothing. */
+            if (others_run(rp, ctx, victim)) {
                 ULONG kept = keep_records(victim);
 
                 if (kept != 0)
@@ -637,8 +679,8 @@ static void arena_round(struct ReapMsg *msg, int program)
     const char *name = victim->tc_Node.ln_Name != NULL ? (const char *)victim->tc_Node.ln_Name : "?";
     struct ReapProgram *rp;
     struct _clib4 *ctx;
-    struct ExecTaskInfo *rows;
     ULONG flags, gate = 0;
+    LONG jobs;
 
     if (program < 0) {
         IExec->ReplyMsg(&msg->rm_Msg);
@@ -647,11 +689,14 @@ static void arena_round(struct ReapMsg *msg, int program)
     rp = &reapPrograms[program];
     ctx = rp->rp_Ctx;
     flags = __sync_or_and_fetch(&rp->rp_Flags, msg->rm_Flags & REAP_GROUP_FLAGS);
-    if (__sync_sub_and_fetch(&rp->rp_Jobs, 1) > 0 || ctx == NULL) {
+    jobs = __sync_sub_and_fetch(&rp->rp_Jobs, 1);
+    /* A kill that was never counted gives back what it took, and no kill counted since is lost. */
+    if (jobs < 0)
+        __sync_fetch_and_sub(&rp->rp_Jobs, jobs);
+    if (jobs > 0 || ctx == NULL) {
         IExec->ReplyMsg(&msg->rm_Msg);
         return;
     }
-    rp->rp_Jobs = 0;
 
     if (flags & RRF_STALLED)
         gate |= MRNF_ARENA_STALLED;
@@ -662,30 +707,10 @@ static void arena_round(struct ReapMsg *msg, int program)
     if (flags & RRF_PACKETOUT)
         gate |= MRNF_ARENA_PACKET;
 
-    /* Who runs with this context, member or not: what cannot be looked at counts as running. */
-    rows = IExec->AllocVecTags(REAP_LIST_ROWS * sizeof(*rows), AVT_Type, MEMF_SHARED, TAG_DONE);
-    if (rows == NULL)
+    /* Who runs with this context, and a member's kill counted since this one's was the last:
+     * that member is stopped and on no list, and what its kill says is not in the flags yet. */
+    if (others_run(rp, ctx, victim) || rp->rp_Jobs != 0)
         gate |= MRNF_ARENA_LIVE;
-    else {
-        struct ExecTaskListInfo info;
-        ULONG i, n;
-
-        IExec->Forbid();
-        n = ExecExt(IExec)->GetTaskList(IExec, rows, REAP_LIST_ROWS, &info);
-        for (i = 0; i < n; i++) {
-            struct Task *task = rows[i].eti_Task;
-
-            if (task == victim)
-                continue;
-            if ((task == rp->rp_Task && (rp->rp_TaskID == 0 || rows[i].eti_TaskID == rp->rp_TaskID)) ||
-                (rows[i].eti_Type == NT_PROCESS && (struct _clib4 *)((struct Process *)task)->pr_UID == ctx))
-                gate |= MRNF_ARENA_LIVE;
-        }
-        IExec->Permit();
-        if (info.etl_Total > REAP_LIST_ROWS)
-            gate |= MRNF_ARENA_LIVE;
-        IExec->FreeVec(rows);
-    }
 
     note_heap(ctx, victim, gate, name);
     if (rp->rp_Finished)
@@ -721,7 +746,7 @@ static void reap_client(struct ReapClient *client, struct ReapMsg *msg)
 
     (void)client;
     if (work && msg->rm_Round == REAP_ROUND_UNHOOK)
-        count_kill(&reapPrograms[program], victim);
+        count_kill(&reapPrograms[program], msg);
     if (!work && msg->rm_Round == REAP_ROUND_LIBC && victim->tc_Node.ln_Type == NT_PROCESS)
         work = ((struct Process *)victim)->pr_ExitCode == (APTR)spawnedProcessExit;
     if (work) {
