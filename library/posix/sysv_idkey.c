@@ -14,34 +14,56 @@
 #include "uuid.h"
 #include "map.h"
 
+/* The program's own undo record for set id. The map lock is held only to look and to link:
+ * never across an allocation, which may wait. */
+static struct UndoInfo *
+FindUndo(struct Clib4Node *c2n, int id) {
+    struct UndoInfo *ui;
+
+    for (ui = c2n != NULL ? c2n->undo : NULL; ui != NULL; ui = ui->Next)
+        if (ui->Id == id)
+            break;
+    return ui;
+}
+
 struct UndoInfo *
 GetUndo(struct Clib4Resource *res, int id, int create) {
     struct _clib4 *__clib4 = __CLIB4;
-    struct UndoInfo *ui = NULL;
+    struct UndoInfo *ui, *made;
+    struct semid_ds *si;
     struct Clib4Node key;
+    struct Clib4Node *c2n;
     memset(&key, 0, sizeof(struct Clib4Node));
     strncpy(key.uuid, __clib4->uuid, UUID4_LEN);
+
     ObtainSemaphore(&res->mapLock);
-    struct Clib4Node *c2n = (struct Clib4Node *) hashmap_get(res->children, &key);
-    if (c2n != NULL && c2n->undo != NULL) {
-        ui = c2n->undo;
-        while (ui) {
-            if (ui->Id == id) {
-                break;
-            }
-        }
-    }
-    if (create && !ui) {
-        struct semid_ds *si;
-        si = GetIPCById(&res->semcx.keymap, id);
-        ui = __calloc_r(__clib4, 1, sizeof(struct UndoInfo) + sizeof(int32) * si->sem_nsems);
-        ui->Id = id;
-        ui->Next = c2n->undo;
-        c2n->undo = ui;
+    ui = FindUndo((struct Clib4Node *) hashmap_get(res->children, &key), id);
+    ReleaseSemaphore(&res->mapLock);
+    if (ui != NULL || !create)
+        return ui;
+
+    si = GetIPCById(&res->semcx.keymap, id);
+    if (si == NULL)
+        return NULL;
+    made = __calloc_r(__clib4, 1, sizeof(struct UndoInfo) + sizeof(int32) * si->sem_nsems);
+    if (made == NULL)
+        return NULL;
+    made->Id = id;
+
+    ObtainSemaphore(&res->mapLock);
+    c2n = (struct Clib4Node *) hashmap_get(res->children, &key);
+    ui = FindUndo(c2n, id);
+    if (ui == NULL && c2n != NULL) {
+        made->Next = c2n->undo;
+        c2n->undo = made;
         hashmap_set(res->children, c2n);
+        ui = made;
+        made = NULL;
     }
     ReleaseSemaphore(&res->mapLock);
 
+    if (made != NULL)
+        __free_r(__clib4, made);
     return ui;
 }
 
