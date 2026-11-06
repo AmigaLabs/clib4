@@ -57,6 +57,11 @@ redo:
             }
             if ((ops[i].sem_flg & SEM_UNDO) && !ui) {
                 ui = GetUndo(res, semid, 1);
+                /* No record to undo it by: nothing is done. */
+                if (!ui) {
+                    __set_errno(ENOMEM);
+                    break;
+                }
             }
             if (ops[i].sem_op > 0) { ; /* Nothing to do here, incrementing a semaphore always succeeds. */
             } else if (ops[i].sem_op < 0) {
