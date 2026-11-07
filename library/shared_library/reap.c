@@ -696,8 +696,8 @@ static void group_member(struct group_said *g, void *addr, size_t size)
 
 /*
  * The program's heap as one group: its OS blocks, the ranges in them that may be in use, and the
- * blocks that are no heap blocks, its context and its allocator. Only a program nobody of runs is
- * walked; the report is told the gate in any case. The kernel only counts what points into it.
+ * blocks that are no heap blocks, its context and its allocator. Only a program nobody of runs,
+ * all of whose kills ended cleanly, is walked; the report is told the gate in any case. The kernel only counts what points into it.
  * When nothing speaks against it, the program leaves the table before the group is closed, so that
  * the table names none of it. TRUE if it did.
  */
@@ -708,7 +708,7 @@ static BOOL note_group(struct _clib4 *ctx, struct Task *victim, ULONG gate, cons
     BOOL cleared = FALSE;
     int n = WMEM_OS_NOTABLE;
 
-    if ((gate & MRNF_ARENA_LIVE) == 0) {
+    if (gate == 0) {
         if (allocator != NULL && IExec->TypeOfMem(allocator) != 0)
             n = wmem_block_live_ranges(allocator, group_say, &g);
         if (n >= 0) {
