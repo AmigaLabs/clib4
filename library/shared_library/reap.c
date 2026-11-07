@@ -672,6 +672,62 @@ static void note_heap(struct _clib4 *ctx, struct Task *victim, ULONG gate, const
     IExec->DebugPrintF("clib4: '%s': %ld blocks of its heap noted, gate %s\n", name, (long) n, said[0] != '\0' ? said : "ok");
 }
 
+struct group_said {
+    struct Task *victim;
+    ULONG        sent;
+};
+
+static void group_say(void *data, int kind, void *addr, size_t size)
+{
+    struct group_said *g = data;
+    ULONG what = kind == WMEM_LIVE_BLOCK ? MRN_GROUPBLOCK : kind == WMEM_LIVE_WHOLE ? MRN_GROUPLIVE | MRNF_GROUP_WHOLE : MRN_GROUPLIVE;
+
+    ExecExt(IExec)->MemReportNote(IExec, what, g->victim, addr, size);
+    g->sent++;
+}
+
+/* A block of the program's that is no heap block: all of it may be in use. */
+static void group_member(struct group_said *g, void *addr, size_t size)
+{
+    ExecExt(IExec)->MemReportNote(IExec, MRN_GROUPBLOCK | MRNF_GROUP_NOTHEAP, g->victim, addr, size);
+    ExecExt(IExec)->MemReportNote(IExec, MRN_GROUPLIVE | MRNF_GROUP_NOTHEAP, g->victim, addr, size);
+    g->sent += 2;
+}
+
+/*
+ * The program's heap as one group: its OS blocks, the ranges in them that may be in use, and the
+ * blocks that are no heap blocks, its context and its allocator. Only a program nobody of runs is
+ * walked; the report is told the gate in any case. The kernel only counts what points into it.
+ * When nothing speaks against it, the program leaves the table before the group is closed, so that
+ * the table names none of it. TRUE if it did.
+ */
+static BOOL note_group(struct _clib4 *ctx, struct Task *victim, ULONG gate, const char *name, struct ReapProgram *rp)
+{
+    wmem_allocator_t *allocator = (wmem_allocator_t *) ctx->__wmem_allocator;
+    struct group_said g = { victim, 0 };
+    BOOL cleared = FALSE;
+    int n = WMEM_OS_NOTABLE;
+
+    if ((gate & MRNF_ARENA_LIVE) == 0) {
+        if (allocator != NULL && IExec->TypeOfMem(allocator) != 0)
+            n = wmem_block_live_ranges(allocator, group_say, &g);
+        if (n >= 0) {
+            group_member(&g, ctx, sizeof(*ctx));
+            group_member(&g, allocator, sizeof(*allocator));
+            if (allocator->private_data != NULL)
+                group_member(&g, allocator->private_data, 1);
+        } else
+            gate |= MRNF_GROUP_NOWALK;
+    }
+    if (gate == 0 && rp->rp_Finished) {
+        program_clear(rp);
+        cleared = TRUE;
+    }
+    ExecExt(IExec)->MemReportNote(IExec, MRN_GROUPEND | gate, victim, NULL, g.sent);
+    IExec->DebugPrintF("clib4: '%s': its heap told as a group of %lu notes\n", name, g.sent);
+    return cleared;
+}
+
 /*
  * The last of a program's kills to come here speaks for its heap. A program with any task of its
  * still running, a child that has its pr_UID included, or any kill of it that did not end cleanly
@@ -717,7 +773,7 @@ static void arena_round(struct ReapMsg *msg, int program)
         gate |= MRNF_ARENA_LIVE;
 
     note_heap(ctx, victim, gate, name);
-    if (rp->rp_Finished)
+    if (!note_group(ctx, victim, gate, name, rp) && rp->rp_Finished)
         program_clear(rp);
     IExec->ReplyMsg(&msg->rm_Msg);
 }

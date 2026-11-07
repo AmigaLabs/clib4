@@ -1334,6 +1334,79 @@ wmem_block_os_blocks(const wmem_allocator_t *allocator, void **addr, size_t *siz
 }
 
 /*
+ * Whether the chunks of a normal block add up: each header names its neighbours, none
+ * runs past the block, the last ends it, and a free chunk long enough for its links has
+ * them. Nothing is written and nothing asserted: a block that fails is only reported whole.
+ */
+static bool
+wmem_block_walk_ok(const uint8_t *base, size_t size) {
+    size_t offset = WMEM_BLOCK_HEADER_SIZE, chunks = 0;
+    uint32_t prev = 0;
+
+    while (offset + WMEM_CHUNK_HEADER_SIZE <= size && chunks++ < size / WMEM_CHUNK_HEADER_SIZE) {
+        const wmem_block_chunk_t *chunk = (const wmem_block_chunk_t *) (base + offset);
+
+        if (chunk->prev != prev || chunk->jumbo || chunk->len < WMEM_CHUNK_HEADER_SIZE ||
+            (chunk->len & 3) != 0 || chunk->len > size - offset)
+            return false;
+        if (!chunk->used && !chunk->last && WMEM_CHUNK_DATA_LEN(chunk) >= sizeof(wmem_block_free_t) &&
+            (WMEM_GET_FREE(chunk)->next == NULL || WMEM_GET_FREE(chunk)->prev == NULL))
+            return false;
+        offset += chunk->len;
+        if (chunk->last)
+            return offset == size;
+        prev = chunk->len;
+    }
+    return false;
+}
+
+int
+wmem_block_live_ranges(const wmem_allocator_t *allocator, wmem_live_fn say, void *data) {
+    const wmem_block_allocator_t *block_allocator;
+    uint32_t i, count;
+
+    if (allocator->type != WMEM_ALLOCATOR_BLOCK || allocator->private_data == NULL)
+        return WMEM_OS_NOTABLE;
+    block_allocator = (const wmem_block_allocator_t *) allocator->private_data;
+    if (TypeOfMem((APTR) block_allocator) == 0 ||
+        TypeOfMem((APTR) ((const char *) block_allocator + sizeof(*block_allocator) - 1)) == 0)
+        return WMEM_OS_NOTABLE;
+    count = block_allocator->os_count;
+    if (block_allocator->os_lost || count > WMEM_OS_BLOCKS)
+        return WMEM_OS_LOST;
+    for (i = 0; i < count; i++) {
+        const uint8_t *base = (const uint8_t *) block_allocator->os_blocks[i].addr;
+        size_t size = block_allocator->os_blocks[i].size, offset;
+        size_t run = 0, runAt = 0;
+
+        say(data, WMEM_LIVE_BLOCK, (void *) base, size);
+        if (size != WMEM_BLOCK_SIZE || TypeOfMem((APTR) base) == 0 || TypeOfMem((APTR) (base + size - 1)) == 0 ||
+            !wmem_block_walk_ok(base, size)) {
+            /* A jumbo block is one chunk in use; anything else that does not add up may be in use anywhere. */
+            say(data, WMEM_LIVE_WHOLE, (void *) base, size);
+            continue;
+        }
+        /* Used chunks in a row are one range, headers included: a pointer to the data lies inside. */
+        for (offset = WMEM_BLOCK_HEADER_SIZE; offset < size;) {
+            const wmem_block_chunk_t *chunk = (const wmem_block_chunk_t *) (base + offset);
+
+            if (chunk->used) {
+                if (run == 0)
+                    runAt = offset;
+                run += chunk->len;
+            } else if (run != 0) {
+                say(data, WMEM_LIVE_RANGE, (void *) (base + runAt), run);
+                run = 0;
+            }
+            offset += chunk->len;
+        }
+        if (run != 0)
+            say(data, WMEM_LIVE_RANGE, (void *) (base + runAt), run);
+    }
+    return (int) count;
+}
+
+/*
  * Editor modelines  -  https://www.wireshark.org/tools/modelines.html
  *
  * Local variables:
