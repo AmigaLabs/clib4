@@ -14,6 +14,7 @@
 #include "include/sys/syslimits.h"
 #include "include/wchar.h"
 #include "include/setjmp.h"
+#include "include/time.h"
 #include "include/resolv.h"
 
 #include "wmem_allocator.h"
@@ -657,6 +658,12 @@ struct _clib4 {
 
     /* How many files, locks and scans of this program are in the kernel's ledger now. */
     volatile uint32 __reap_tracked;
+
+    /* The results of localtime() and gmtime(), one of each per program.
+     * localtime()'s tm_zone names this program's own zone string, so the
+     * structure that holds it must go away with the program. */
+    struct tm __localtime_tm;
+    struct tm __gmtime_tm;
 };
 
 #ifndef __getClib4

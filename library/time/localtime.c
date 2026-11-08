@@ -12,13 +12,13 @@
 
 struct tm *
 localtime(const time_t *t) {
-	static struct tm tm;
+	struct _clib4 *__clib4 = __CLIB4;
 
 	struct tm * result;
 
 	ENTER();
 
-	result = localtime_r(t, &tm);
+	result = localtime_r(t, &__clib4->__localtime_tm);
 
 	RETURN(result);
 	return(result);

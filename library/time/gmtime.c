@@ -8,12 +8,12 @@
 
 struct tm *
 gmtime(const time_t *t) {
-    static struct tm tm;
+    struct _clib4 *__clib4 = __CLIB4;
     struct tm *result;
 
     ENTER();
 
-    result = gmtime_r(t, &tm);
+    result = gmtime_r(t, &__clib4->__gmtime_tm);
 
     RETURN(result);
     return (result);
