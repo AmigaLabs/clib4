@@ -19,6 +19,11 @@
  * nobody reaches them. The last kill of a program's tasks tells the kernel's report which
  * blocks its heap is made of, and what speaks against judging them; the report judges,
  * and nothing is freed. What the rounds could not do stays too, and is said.
+ * The context keeps three things only its own program follows: the exit point, the registers
+ * of the main task as setjmp saved them, its stack pointer and return address among them;
+ * its signal handlers; and its exit functions. Once nobody of the program runs they are
+ * cleared, so that the context that stays does not name a stack and a program nobody will
+ * come back to.
  *
  * Sockets are bsdsocket's to close: from here they would close on the wrong context.
  *
@@ -729,6 +734,38 @@ static BOOL note_group(struct _clib4 *ctx, struct Task *victim, ULONG gate, cons
 }
 
 /*
+ * What the context of a program nobody of runs keeps for that program alone. The exit point: only
+ * exit() in the program's main task jumps to it. The signal handlers: only raise() in a task of the
+ * program calls one. The exit functions: only the program's own exit runs them. Each is reached by
+ * the context in a task's pr_UID, and no process has this context any more, so the words are what
+ * the dead program left and nothing else. The flags go first, so that nothing finds a cleared
+ * buffer valid or adds to a cleared list. The line says where, for the rig.
+ */
+static void clear_program_words(struct _clib4 *ctx, const char *name)
+{
+    ctx->__exit_jmp_buf_valid = FALSE;
+    ctx->atexit_blocked = TRUE;
+    __sync_synchronize();
+#ifndef CLIB4_TEST_KEEP_EXIT_POINT
+    memset(ctx->__exit_jmp_buf, 0, sizeof(ctx->__exit_jmp_buf));
+#endif
+#ifndef CLIB4_TEST_KEEP_SIGNAL_HANDLERS
+    memset(ctx->__signal_handler_table, 0, sizeof(ctx->__signal_handler_table));
+#endif
+#ifndef CLIB4_TEST_KEEP_EXIT_FUNCTIONS
+    memset(&ctx->exit_trap_list, 0, sizeof(ctx->exit_trap_list));
+    memset(ctx->exit_node_table, 0, sizeof(ctx->exit_node_table));
+    ctx->num_exit_nodes_used = 0;
+#endif
+    IExec->DebugPrintF("clib4: '%s': the exit point, the signal handlers and the exit functions in its context cleared, "
+                       "%08lx..%08lx, %08lx..%08lx, %08lx..%08lx\n", name,
+                       (ULONG)ctx->__exit_jmp_buf, (ULONG)ctx->__exit_jmp_buf + (ULONG)sizeof(ctx->__exit_jmp_buf),
+                       (ULONG)ctx->__signal_handler_table,
+                       (ULONG)ctx->__signal_handler_table + (ULONG)sizeof(ctx->__signal_handler_table),
+                       (ULONG)ctx->exit_node_table, (ULONG)(&ctx->exit_trap_list + 1));
+}
+
+/*
  * The last of a program's kills to come here speaks for its heap. A program with any task of its
  * still running, a child that has its pr_UID included, or any kill of it that did not end cleanly
  * is noted with that said: the report then only counts the blocks.
@@ -771,6 +808,8 @@ static void arena_round(struct ReapMsg *msg, int program)
      * that member is stopped and on no list, and what its kill says is not in the flags yet. */
     if (others_run(rp, ctx, victim, TRUE) || rp->rp_Jobs != 0)
         gate |= MRNF_ARENA_LIVE;
+    else
+        clear_program_words(ctx, name);
 
     note_heap(ctx, victim, gate, name);
     if (!note_group(ctx, victim, gate, name, rp) && rp->rp_Finished)
