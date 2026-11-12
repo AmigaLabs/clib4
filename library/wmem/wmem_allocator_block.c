@@ -142,10 +142,11 @@
         ((SIZE) + (WMEM_ALIGN_AMOUNT-1)))
 
 /* When required, allocate more memory from the OS in chunks of this size.
- * 8MB is a pretty arbitrary value - it's big enough that it should last a while
- * and small enough that a mostly-unused one doesn't waste *too* much. It's
- * also a nice power of two, of course. */
-#define WMEM_BLOCK_SIZE (4 * 1024 * 1024)
+ * A program closed from outside keeps the blocks of its heap that anything still
+ * names, each whole, so the size of a block is what such a program can cost:
+ * 256 KB lasts a small program its whole run and keeps that cost small. A request
+ * that does not fit in one block gets a jumbo block of its own size. */
+#define WMEM_BLOCK_SIZE (256 * 1024)
 
 /* The header for an entire OS-level 'block' of memory */
 typedef struct _wmem_block_hdr_t {
