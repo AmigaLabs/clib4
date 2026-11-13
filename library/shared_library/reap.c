@@ -23,7 +23,10 @@
  * of the main task as setjmp saved them, its stack pointer and return address among them;
  * its signal handlers; and its exit functions. Once nobody of the program runs they are
  * cleared, so that the context that stays does not name a stack and a program nobody will
- * come back to.
+ * come back to. Once nobody of it runs, its row in the table here goes too, and each helper
+ * clears what it wrote below where it stands on its own stack, and the lists of tasks it read,
+ * before it answers the round: the look at what the program left comes after the last answer,
+ * while the helper's stack may still be there.
  *
  * Sockets are bsdsocket's to close: from here they would close on the wrong context.
  *
@@ -64,6 +67,14 @@ extern struct DOSIFace *IDOS;
 #define REAP_PROGRAMS       256
 #define REAP_PRIORITY       10
 #define REAP_STACK          16384
+
+/* What a helper clears of its own stack: a part as deep as its rounds go, cleared from inside, then all below it
+ * but room for the call that clears. */
+#define REAP_SCRUB_PAD      (REAP_STACK / 2)
+#define REAP_SCRUB_ROOM     1024
+
+/* The lowest bytes of a stack are the kernel's guard: no frame ever stands there. */
+#define REAP_SCRUB_GUARD    64
 
 /* Live records for one program: above this the ledger is left for the others. */
 #define REAP_TRACK_MAX      128
@@ -263,6 +274,15 @@ static int program_of(struct Task *victim)
     return -1;
 }
 
+/* The rows name tasks of the program: they go cleared, so that the free memory names none of them. */
+static void free_rows(struct ExecTaskInfo *rows)
+{
+#ifndef CLIB4_TEST_KEEP_HELPER_WORDS
+    memset(rows, 0, REAP_LIST_ROWS * sizeof(*rows));
+#endif
+    IExec->FreeVec(rows);
+}
+
 /*
  * Who of the program is running now, in rows, with the rows of the others emptied, and
  * its timers told to end if asked. A task stopped for closing is on no list, so a member seen here is
@@ -331,7 +351,7 @@ static BOOL others_run(struct ReapProgram *rp, struct _clib4 *ctx, struct Task *
             run = TRUE;
     }
     IExec->Permit();
-    IExec->FreeVec(rows);
+    free_rows(rows);
     if (info.etl_Total > REAP_LIST_ROWS)
         run = TRUE;
     /* Read after the list: a member stopped by a helper is counted, or the helper is still at it. */
@@ -400,9 +420,10 @@ static void count_kill(struct ReapProgram *rp, struct ReapMsg *msg)
 /*
  * Its timers stop raising signals in its name, and every other member is closed too: they
  * would run on what was left half done. A member that holds a lock in a library is asked
- * again for a while; the round is answered after 2 s at most and this goes on alone.
+ * again for a while; the round is answered after 2 s at most and this goes on alone. TRUE if
+ * it answered; otherwise the caller does.
  */
-static void stop_members(struct ReapMsg *msg, struct ReapProgram *rp)
+static BOOL __attribute__((noinline)) stop_members(struct ReapMsg *msg, struct ReapProgram *rp)
 {
     struct Task *victim = msg->rm_Task;
     struct _clib4 *ctx = rp->rp_Ctx;
@@ -414,23 +435,19 @@ static void stop_members(struct ReapMsg *msg, struct ReapProgram *rp)
     strncpy(name, victim->tc_Node.ln_Name != NULL ? (const char *)victim->tc_Node.ln_Name : "?", sizeof(name) - 1);
     name[sizeof(name) - 1] = '\0';
 
-    if (ctx == NULL) {
-        IExec->ReplyMsg(&msg->rm_Msg);
-        return;
-    }
+    if (ctx == NULL)
+        return FALSE;
     rows = IExec->AllocVecTags(REAP_LIST_ROWS * sizeof(*rows), AVT_Type, MEMF_SHARED, TAG_DONE);
     if (rows == NULL) {
         IExec->DebugPrintF("clib4: '%s': no memory to look for its threads\n", name);
-        IExec->ReplyMsg(&msg->rm_Msg);
-        return;
+        return FALSE;
     }
 
     /* One asks for all of them: this member's helper finds the one asking already. */
     if (__sync_fetch_and_add(&rp->rp_Stopping, 1) != 0) {
         __sync_fetch_and_sub(&rp->rp_Stopping, 1);
-        IExec->FreeVec(rows);
-        IExec->ReplyMsg(&msg->rm_Msg);
-        return;
+        free_rows(rows);
+        return FALSE;
     }
 
     /* The word is the timer's own stop, and a program that started leaving is not read. */
@@ -474,9 +491,8 @@ static void stop_members(struct ReapMsg *msg, struct ReapProgram *rp)
     }
 
     __sync_fetch_and_sub(&rp->rp_Stopping, 1);
-    IExec->FreeVec(rows);
-    if (!replied)
-        IExec->ReplyMsg(&msg->rm_Msg);
+    free_rows(rows);
+    return replied;
 }
 
 /* Under a second, and it may come to nothing. */
@@ -612,7 +628,7 @@ static ULONG keep_records(struct Task *victim)
     return count;
 }
 
-static void libc_round(struct ReapMsg *msg, int program)
+static void __attribute__((noinline)) libc_round(struct ReapMsg *msg, int program)
 {
     struct Task *victim = msg->rm_Task;
     const char *name = victim->tc_Node.ln_Name != NULL ? (const char *)victim->tc_Node.ln_Name : "?";
@@ -644,7 +660,6 @@ static void libc_round(struct ReapMsg *msg, int program)
                 msg->rm_LibcObjects += finish_program(msg, res, rp, ctx);
         }
     }
-    IExec->ReplyMsg(&msg->rm_Msg);
 }
 
 /* The heap's blocks, from the allocator's own table, never from the list inside them. */
@@ -770,7 +785,7 @@ static void clear_program_words(struct _clib4 *ctx, const char *name)
  * still running, a child that has its pr_UID included, or any kill of it that did not end cleanly
  * is noted with that said: the report then only counts the blocks.
  */
-static void arena_round(struct ReapMsg *msg, int program)
+static void __attribute__((noinline)) arena_round(struct ReapMsg *msg, int program)
 {
     struct Task *victim = msg->rm_Task;
     const char *name = victim->tc_Node.ln_Name != NULL ? (const char *)victim->tc_Node.ln_Name : "?";
@@ -779,10 +794,8 @@ static void arena_round(struct ReapMsg *msg, int program)
     ULONG flags, gate = 0;
     LONG jobs;
 
-    if (program < 0) {
-        IExec->ReplyMsg(&msg->rm_Msg);
+    if (program < 0)
         return;
-    }
     rp = &reapPrograms[program];
     ctx = rp->rp_Ctx;
     flags = __sync_or_and_fetch(&rp->rp_Flags, msg->rm_Flags & REAP_GROUP_FLAGS);
@@ -790,10 +803,8 @@ static void arena_round(struct ReapMsg *msg, int program)
     /* A kill that was never counted gives back what it took, and no kill counted since is lost. */
     if (jobs < 0)
         __sync_fetch_and_sub(&rp->rp_Jobs, jobs);
-    if (jobs > 0 || ctx == NULL) {
-        IExec->ReplyMsg(&msg->rm_Msg);
+    if (jobs > 0 || ctx == NULL)
         return;
-    }
 
     if (flags & RRF_STALLED)
         gate |= MRNF_ARENA_STALLED;
@@ -808,27 +819,71 @@ static void arena_round(struct ReapMsg *msg, int program)
      * that member is stopped and on no list, and what its kill says is not in the flags yet. */
     if (others_run(rp, ctx, victim, TRUE) || rp->rp_Jobs != 0)
         gate |= MRNF_ARENA_LIVE;
-    else
+    else {
         clear_program_words(ctx, name);
+        /* Every member's library round saw another run: what it held in the tables goes now, once. */
+        if (!rp->rp_Finished) {
+            struct Clib4Resource *res = (APTR)IExec->OpenResource(RESOURCE_NAME);
+
+            if (res != NULL)
+                msg->rm_LibcObjects += finish_program(msg, res, rp, ctx);
+        }
+    }
 
     note_heap(ctx, victim, gate, name);
     if (!note_group(ctx, victim, gate, name, rp) && rp->rp_Finished)
         program_clear(rp);
-    IExec->ReplyMsg(&msg->rm_Msg);
 }
 
 /* -------------------------------------------------------------------------- */
 /* The client                                                                  */
 /* -------------------------------------------------------------------------- */
 
+/*
+ * What this helper wrote below where its caller stands: the frames of its round, the program's
+ * context, heap, task and stack among the words in them. The part of the stack a round can reach
+ * is a local here, cleared from inside; then all below it but the room the clearing call itself
+ * takes, down to the kernel's guard at the bottom. Nothing below the caller's frame is live. The line says where, for the rig.
+ */
+static void __attribute__((noinline)) scrub_stack(const char *name)
+{
+    struct Task *me = IExec->FindTask(NULL);
+    UBYTE pad[REAP_SCRUB_PAD];
+    ULONG low = (ULONG)me->tc_SPLower + REAP_SCRUB_GUARD, at = (ULONG)pad, end;
+
+    if (me->tc_SPLower == NULL || low + REAP_SCRUB_ROOM >= at || at >= (ULONG)me->tc_SPUpper)
+        return;
+    end = at - REAP_SCRUB_ROOM;
+#ifndef CLIB4_TEST_KEEP_HELPER_WORDS
+    memset(pad, 0, sizeof(pad));
+    memset((APTR)low, 0, end - low);
+#endif
+    __asm__ volatile("" : : "r"(pad) : "memory");
+    if (name != NULL)
+        IExec->DebugPrintF("clib4: '%s': its helper's stack cleared, %08lx..%08lx, %08lx..%08lx\n", name,
+                           low, end, at, at + (ULONG)sizeof(pad));
+}
+
+
 static LONG reap_entry(struct ReapMsg *msg, int program)
 {
+    char name[32];
+    BOOL replied = FALSE;
+
+    /* The victim is read while the reaper waits for the answer: its name is kept for the line. */
+    strncpy(name, msg->rm_Task->tc_Node.ln_Name != NULL ? (const char *)msg->rm_Task->tc_Node.ln_Name : "?", sizeof(name) - 1);
+    name[sizeof(name) - 1] = '\0';
+
     if (msg->rm_Round == REAP_ROUND_UNHOOK && program >= 0)
-        stop_members(msg, &reapPrograms[program]);
+        replied = stop_members(msg, &reapPrograms[program]);
     else if (msg->rm_Round == REAP_ROUND_ARENA)
         arena_round(msg, program);
     else
         libc_round(msg, program);
+
+    scrub_stack(program >= 0 ? name : NULL);
+    if (!replied)
+        IExec->ReplyMsg(&msg->rm_Msg);
 
     /* The code this returns from stays until the task has gone: that ends the Forbid too. */
     IExec->Forbid();
