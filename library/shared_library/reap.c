@@ -803,7 +803,11 @@ static void __attribute__((noinline)) arena_round(struct ReapMsg *msg, int progr
     /* A kill that was never counted gives back what it took, and no kill counted since is lost. */
     if (jobs < 0)
         __sync_fetch_and_sub(&rp->rp_Jobs, jobs);
-    if (jobs > 0 || ctx == NULL)
+    if (ctx == NULL)
+        return;
+    /* The report makes one job of the program: this kill goes to the program's last, which tells its heap. */
+    ExecExt(IExec)->MemReportNote(IExec, MRN_PROGRAM, victim, ctx, jobs > 0 ? 1 : 0);
+    if (jobs > 0)
         return;
 
     if (flags & RRF_STALLED)
