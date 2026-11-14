@@ -15,10 +15,12 @@
  * done: nothing here waits long for a lock, and once any task of a program was closed
  * that way nothing here takes one for that program, or walks the tables they guard. The
  * context is read only once nobody of the program runs.
- * The heap, the context and the program's mappings stay: nothing here can know that
- * nobody reaches them. The last kill of a program's tasks tells the kernel's report which
- * blocks its heap is made of, and what speaks against judging them; the report judges,
- * and nothing is freed. What the rounds could not do stays too, and is said.
+ * Nothing here frees the heap, the context or the program's mappings: nothing here can know
+ * that nobody reaches them. The last kill of a program's tasks tells the kernel's report which
+ * blocks its heap is made of, and what speaks against judging them. When nothing does, its row
+ * here goes and what this library made for the program is given to the program: the report
+ * judges those blocks as the program's own, by what names them, and gives back only what
+ * nothing names. What the rounds could not do stays, and is said.
  * The context keeps three things only its own program follows: the exit point, the registers
  * of the main task as setjmp saved them, its stack pointer and return address among them;
  * its signal handlers; and its exit functions. Once nobody of the program runs they are
@@ -740,12 +742,31 @@ static BOOL note_group(struct _clib4 *ctx, struct Task *victim, ULONG gate, cons
             gate |= MRNF_GROUP_NOWALK;
     }
     if (gate == 0 && rp->rp_Finished) {
+#ifndef CLIB4_TEST_GIVE_KEEP_ROW
         program_clear(rp);
+#endif
         cleared = TRUE;
     }
     ExecExt(IExec)->MemReportNote(IExec, MRN_GROUPEND | gate, victim, NULL, g.sent);
     IExec->DebugPrintF("clib4: '%s': its heap told as a group of %lu notes\n", name, g.sent);
     return cleared;
+}
+
+/*
+ * Nobody of the program runs, every kill of it ended cleanly, its heap was told as a whole and its row here is gone:
+ * what this library's code asked for the program (its context, its heap, its allocator, its records) is the
+ * program's own from here. Nothing here reads, frees or reaches it again: the row was the only way to it, and the
+ * tables others read let go of the program's entries when it finished. The kernel's report judges those blocks by
+ * what still names them, and gives back what nothing names; a block a task still running names stays. The line says
+ * where the row was, for the rig: no word there may hold a part of the program in any look after it.
+ */
+static void give_made(struct Task *victim, const char *name, struct ReapProgram *rp)
+{
+#ifndef CLIB4_TEST_KEEP_MADE
+    ExecExt(IExec)->MemReportNote(IExec, MRN_MADEGIVEN, victim, (APTR)give_made, 0);
+#endif
+    IExec->DebugPrintF("clib4: '%s': what it made for the program given, its row cleared, %08lx..%08lx\n", name,
+                       (ULONG)rp, (ULONG)(rp + 1));
 }
 
 /*
@@ -835,7 +856,9 @@ static void __attribute__((noinline)) arena_round(struct ReapMsg *msg, int progr
     }
 
     note_heap(ctx, victim, gate, name);
-    if (!note_group(ctx, victim, gate, name, rp) && rp->rp_Finished)
+    if (note_group(ctx, victim, gate, name, rp))
+        give_made(victim, name, rp);
+    else if (rp->rp_Finished)
         program_clear(rp);
 }
 
