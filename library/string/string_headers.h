@@ -70,7 +70,7 @@ extern char   *__strrchr440(const char *s, int c);
 extern char   *__strchr440(const char *s, int c);
 
 /* SPE e500 specific functions */
-extern int     __memcmp_e500(const char *m1, const char *m2, size_t len);
+extern int     __memcmp_e500(const void *m1, const void *m2, size_t len);
 extern int     __strcmp_e500(const char *s1, const char *s2);
 extern char   *__strcpy_e500(char *dest, const char *src);
 extern size_t  __strlen_e500(const char *s);

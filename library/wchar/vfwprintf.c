@@ -14,6 +14,10 @@
 
 #include <wctype.h>
 
+#ifdef __SPE__
+#include "shared_library/classic_abi.h"
+#endif
+
 static void out_putwc(wchar_t wc, FOut *_out);
 static int out_printf(struct _clib4 *__clib4, FOut *_out, const char *format, ...);
 static int getint(wchar_t **s);
@@ -206,6 +210,12 @@ static const char sizeprefix['y' - 'a'] =
         };
 
 static void pop_arg(union arg *arg, int type, va_list *ap) {
+#ifdef __SPE__
+    if ((type == _DBL || type == _LDBL) && CLASSIC_VA_LIST(*ap)) {
+        arg->f = classic_va_arg_double(*ap);
+        return;
+    }
+#endif
     switch (type) {
                case _PTR:	    arg->p = va_arg(*ap, void *);
         break; case _INT:	    arg->i = va_arg(*ap, int);
