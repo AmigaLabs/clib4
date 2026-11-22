@@ -8,22 +8,28 @@
 
 size_t
 _mbstowcs_r(wchar_t *pwcs, const char *s, size_t n, mbstate_t *state) {
-    wchar_t *ptr = pwcs;
-    size_t max = n;
+    size_t count = 0;
     char *t = (char *) s;
     int bytes;
 
+    /* Without a destination, count the whole string: n doesn't matter */
+    if (pwcs == NULL)
+        n = 1;
+
     while (n > 0) {
-        bytes = _mbtowc_r(ptr, t, MB_CUR_MAX, state);
+        bytes = _mbtowc_r(pwcs, t, MB_CUR_MAX, state);
         if (bytes < 0) {
             state->__count = 0;
             return -1;
         } else if (bytes == 0)
-            return ptr - pwcs;
+            break;
         t += bytes;
-        ++ptr;
-        --n;
+        ++count;
+        if (pwcs != NULL) {
+            ++pwcs;
+            --n;
+        }
     }
 
-    return max;
+    return count;
 }

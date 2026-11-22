@@ -13,6 +13,19 @@ _wcstombs_r(char *s, const wchar_t *pwcs, size_t n, mbstate_t *state) {
     char buff[8] = {0};
     size_t i, num_to_copy;
 
+    /* Without a destination, count the bytes of the whole string */
+    if (s == NULL) {
+        size_t num_bytes = 0;
+
+        while (*pwcs != 0) {
+            int bytes = _wctomb_r(buff, *pwcs++, state);
+            if (bytes == -1)
+                return -1;
+            num_bytes += bytes;
+        }
+        return num_bytes;
+    }
+
     while (n > 0) {
         int bytes = _wctomb_r(buff, *pwcs, state);
         if (bytes == -1)
