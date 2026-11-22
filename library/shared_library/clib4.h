@@ -20,9 +20,9 @@ extern void longjmp_spe(jmp_buf, int);
 extern void longjmp_altivec(jmp_buf, int);
 extern int  setjmp_altivec(jmp_buf);
 extern void siglongjmp_spe(sigjmp_buf, int);
-extern int __sigsetjmp_spe(struct __jmp_buf_tag, int);
-extern void _longjmp_spe(struct __jmp_buf_tag, int);
-extern int _setjmp_spe(struct __jmp_buf_tag);                                                                                                 /* 1796 */
+extern int __sigsetjmp_spe(struct __jmp_buf_tag *, int);
+extern void _longjmp_spe(struct __jmp_buf_tag *, int);
+extern int _setjmp_spe(struct __jmp_buf_tag *);                                                                                                 /* 1796 */
 
 struct Clib4Resource {
     struct Library          resource;           /* must be first */

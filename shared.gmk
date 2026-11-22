@@ -3,7 +3,7 @@
 #
 
 ifdef SPE
-$(OUT_SHARED_LIB)/shared_library/clib4.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) -O0 -fno-aggressive-loop-optimizations
+$(OUT_SHARED_LIB)/shared_library/clib4.o : CFLAGS = $(INCLUDES) $(OPTIONS) $(OPTIMIZE) $(SPEFLAGS) -O0 -fno-aggressive-loop-optimizations
 $(OUT_SHARED_LIB)/shared_library/clib4.o : $(LIB_DIR)/shared_library/clib4.c $(LIB_DIR)/shared_library/clib4.h
 	$(VERBOSE)$(COMPILE_SPE)
 
