@@ -131,7 +131,17 @@ extern int main(int, char **, char **);
 int clib4_start(char *args, const int32 arglen, struct Library *sysbase);
 int _start(char *argstring, int32 arglen, struct Library *sysbase);
 
-static struct Interface *OpenLibraryInterface(struct ExecIFace *iexec, const char *name, int version) {
+/*
+ * The SPE clib4.library has the functions for SPE programs in its "spe"
+ * interface; "main" has classic ABI entry points for classic programs.
+ */
+#ifdef __SPE__
+#define CLIB4_INTERFACE "spe"
+#else
+#define CLIB4_INTERFACE "main"
+#endif
+
+static struct Interface *OpenLibraryInterface(struct ExecIFace *iexec, const char *name, int version, const char *interface_name) {
     struct Library *library;
     struct Interface *interface;
 
@@ -139,7 +149,7 @@ static struct Interface *OpenLibraryInterface(struct ExecIFace *iexec, const cha
     if (library == NULL)
         return NULL;
 
-    interface = iexec->GetInterface(library, "main", 1, NULL);
+    interface = iexec->GetInterface(library, interface_name, 1, NULL);
     if (interface == NULL) {
         iexec->CloseLibrary(library);
         return NULL;
@@ -191,13 +201,13 @@ clib4_start(char *args, const int32 arglen, struct Library *sysbase) {
     }
 
     IExec = iexec;
-    idos = (struct DOSIFace *) OpenLibraryInterface(iexec, "dos.library", MIN_OS_VERSION);
+    idos = (struct DOSIFace *) OpenLibraryInterface(iexec, "dos.library", MIN_OS_VERSION, "main");
     if (idos) {
         IDOS = idos;
-        IUtility = (struct UtilityIFace *) OpenLibraryInterface(iexec, "utility.library", MIN_OS_VERSION);
+        IUtility = (struct UtilityIFace *) OpenLibraryInterface(iexec, "utility.library", MIN_OS_VERSION, "main");
         if (IUtility != NULL) {
             UtilityBase = IUtility->Data.LibBase;
-            iclib4 = (struct Clib4IFace *) OpenLibraryInterface(iexec, "clib4.library", 1);
+            iclib4 = (struct Clib4IFace *) OpenLibraryInterface(iexec, "clib4.library", 1, CLIB4_INTERFACE);
             if (iclib4 != NULL) {
                 const struct Library *clib4base = ((struct Interface *) iclib4)->Data.LibBase;
                 if (clib4base->lib_Version > VERSION || (clib4base->lib_Version == VERSION && clib4base->lib_Revision >= REVISION)) {

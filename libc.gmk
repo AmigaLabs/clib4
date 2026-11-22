@@ -992,6 +992,12 @@ ifdef SPE
         cpu/spe/longjmpE500.o \
         cpu/spe/setjmpE500.o \
         cpu/spe/sigsetjmpE500.o
+
+    # Classic ABI entry points, for classic programs (classic_abi.h)
+    C_CLASSIC_ABI := \
+        shared_library/classic_abi.o \
+        shared_library/classic_abi_bridges.o \
+        shared_library/classic_abi_variadic.o
 endif
 
 C_LIBRARY := \
@@ -1026,7 +1032,8 @@ C_LIBRARY := \
 	$(C_UCONTEXT) \
 	$(C_USERGROUP) \
 	$(C_WCHAR) \
-	$(C_WMEM)
+	$(C_WMEM) \
+	$(C_CLASSIC_ABI)
 
 SHARED_LIB_STUBS := \
 	$(patsubst \

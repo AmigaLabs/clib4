@@ -21,6 +21,10 @@
 #include <sys/param.h> // max
 #include "wchar_wprintf_core.h"
 
+#ifdef __SPE__
+#include "shared_library/classic_abi.h"
+#endif
+
 static void pad(struct _clib4 *__clib4, Out *f, char c, int w, int l, int fl);
 
 static void out_init_file(Out *out, FILE *f) {
@@ -111,6 +115,12 @@ static char *fmt_u(uintmax_t x, char *s) {
 
 typedef void (*pop_arg_long_double_t)(union arg *arg, va_list *ap);
 static void pop_arg_long_double(union arg *arg, va_list *ap) {
+#ifdef __SPE__
+    if (CLASSIC_VA_LIST(*ap)) {
+        arg->f = classic_va_arg_double(*ap);
+        return;
+    }
+#endif
     arg->f = va_arg(*ap, long double);
 }
 
@@ -169,6 +179,12 @@ static inline void pop_arg(union arg *arg, int type, va_list *ap, pop_arg_long_d
             arg->i = (uintptr_t) va_arg(*ap, void * );
             break;
         case _DBL:
+#ifdef __SPE__
+            if (CLASSIC_VA_LIST(*ap)) {
+                arg->f = classic_va_arg_double(*ap);
+                break;
+            }
+#endif
             arg->f = va_arg(*ap, double);
             break;
         case _LDBL:

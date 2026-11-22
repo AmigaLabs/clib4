@@ -8,7 +8,7 @@
 ##############################################################################
 
 .PHONY : all prepare all-targets all-libs clean \
-	gitver version compile-tests install release dpkg
+	gitver version compile-tests classic-abi install release dpkg
 
 # Determines the Amiga SDK version that CLIB4 is being built with and
 # will only be relevant when building CLIB4 during the building of a
@@ -452,6 +452,18 @@ endif
 
 compile-tests:
 	+make -C $(LIB_ROOT)/test_programs; CC="$(CC)" CXX="$(CXX)" COPY="$(COPY)" DELETE="$(DELETE)" MAKEDIR="$(MAKEDIR)"
+
+# Regenerate the classic ABI entry points of the SPE library from its
+# vector table (see library/shared_library/classic_abi.h).  Run it with
+# SPE=yes after adding functions to clib4_vectors.h.
+classic-abi:
+ifndef SPE
+	$(error classic-abi needs SPE=yes)
+endif
+	@$(MAKEDIR) $(BUILD_DIR)
+	$(CC) $(INCLUDES) $(OPTIONS) $(OPTIMIZE) $(SPEFLAGS) -O0 -fsyntax-only \
+		-aux-info $(BUILD_DIR)/clib4.aux $(LIB_DIR)/shared_library/clib4.c
+	python3 $(LIB_ROOT)/misc/gen_classic_abi.py $(LIB_DIR) $(BUILD_DIR)/clib4.aux
 
 install:
 	$(DELETE) $(INSTALL_PREFIX)/include/*

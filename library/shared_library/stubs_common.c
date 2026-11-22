@@ -28,7 +28,12 @@ static void __init_clib4_so(void) {
     struct ExecIFace *iexec = (struct ExecIFace *)sysbase->MainInterface;
     __clib4_so_base = iexec->OpenLibrary("clib4.library", 1);
     if (__clib4_so_base) {
+#ifdef __SPE__
+        /* "main" has classic ABI entry points, for classic programs */
+        IClib4 = (struct Clib4IFace *)iexec->GetInterface(__clib4_so_base, "spe", 1, NULL);
+#else
         IClib4 = (struct Clib4IFace *)iexec->GetInterface(__clib4_so_base, "main", 1, NULL);
+#endif
         iexec->DropInterface((struct Interface *)IClib4);
     }
 }

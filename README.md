@@ -94,6 +94,12 @@ Keep in mind that clib4 is not compiled with altivec optimizations for all files
 However to compile these functions you need a compiler that supports SPE ABI. The latest gcc version that supports SPE
 is gcc8.
 
+SPE code passes floating point values in general purpose registers, where code for the classic FPU passes them in
+floating point registers. The SPE build of clib4.library therefore has two interfaces: SPE programs use the `spe`
+interface, and classic programs keep using `main`, where the functions that take or return floating point values have
+entry points that convert them. So an A1222 with the SPE clib4.library installed runs both classic and SPE clib4
+programs. See `library/shared_library/classic_abi.h`.
+
 ### Shared objects
 
 Shared objects **are working** also with clib4 (there is an example under test_programs/dlopen folder).

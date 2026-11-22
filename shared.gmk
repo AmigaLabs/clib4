@@ -10,6 +10,9 @@ $(OUT_SHARED_LIB)/shared_library/clib4.o : $(LIB_DIR)/shared_library/clib4.c $(L
 $(OUT_SHARED_LIB)/shared_library/%.o : $(LIB_DIR)/shared_library/%.c
 	$(VERBOSE)$(COMPILE_SPE)
 
+$(OUT_SHARED_LIB)/shared_library/%.o : $(LIB_DIR)/shared_library/%.S
+	$(VERBOSE)$(COMPILE_SPE_REG)
+
 $(OUT_SHARED_LIB)/%.o : $(LIB_DIR)/%.c
 	$(VERBOSE)$(COMPILE_SPE)
 

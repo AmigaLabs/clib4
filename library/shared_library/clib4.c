@@ -89,6 +89,9 @@
 #include "uuid.h"
 
 #include "interface.h"
+#ifdef __SPE__
+#include "classic_abi.h"
+#endif
 #include "stdlib_protos.h"
 
 #ifndef _STDLIB_CONSTRUCTOR_H
@@ -124,6 +127,10 @@ struct Library *__UtilityBase = 0;
 struct UtilityIFace *__IUtility = 0;
 
 struct Clib4IFace *IClib4 = 0;
+#ifdef __SPE__
+/* The "spe" interface; IClib4 is "main", with classic ABI entry points */
+static struct Clib4IFace *ISpeClib4 = 0;
+#endif
 struct Clib4Library *Clib4Base = 0;
 
 const struct Resident RomTag;
@@ -441,6 +448,57 @@ static void closeLibraries() {
     }
 }
 
+/* Select the functions optimized for the CPU in the interface iface. */
+static void
+selectCpuFunctions(struct Clib4IFace *iface, const struct Clib4Resource *res) {
+    switch (res->cpufamily) {
+#ifdef __SPE__
+        case CPUFAMILY_E500:
+            D(bug("(libOpen) Using SPE family functions\n"));
+            iface->setjmp = setjmp_spe;
+            iface->longjmp = longjmp_spe;
+            iface->_longjmp = _longjmp_spe;
+            iface->_setjmp = _setjmp_spe;
+            iface->__sigsetjmp = __sigsetjmp_spe;
+            iface->siglongjmp = siglongjmp_spe;
+            iface->strlen = __strlen_e500;
+            iface->strcpy = __strcpy_e500;
+            iface->strcmp = __strcmp_e500;
+            iface->memcmp = __memcmp_e500;
+            break;
+#endif
+        case CPUFAMILY_4XX:
+            D(bug("(libOpen) Using 4XX family functions\n"));
+            iface->strlen = __strlen440;
+            iface->strcpy = __strcpy440;
+            iface->strcmp = __strcmp440;
+            iface->memcmp = __memcmp440;
+            iface->memchr = __memchr440;
+            iface->strncmp = __strncmp440;
+            iface->strrchr = __strrchr440;
+            iface->strchr = __strchr440;
+            break;
+        default:
+            if (res->altivec) {
+                D(bug("(libOpen) Using Altivec family functions\n"));
+                iface->setjmp = setjmp_altivec;
+                iface->longjmp = longjmp_altivec;
+                iface->strcpy = vec_strcpy;
+                iface->memcmp = vec_memcmp;
+                iface->bzero = vec_bzero;
+                iface->bcopy = vec_bcopy;
+#ifdef SLOWER_ALTIVEC_FUNCTIONS
+                iface->memchr = vec_memchr;
+                iface->strchr = vec_strchr;
+#else
+                iface->strchr = glibc_strchr; // glibc_strchr is faster than ppc one on qemu/G4
+#endif
+            } else {
+                D(bug("(libOpen) Using default family functions\n"));
+            }
+    }
+}
+
 struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 version) {
     if (version > VERSION) {
         return NULL;
@@ -453,6 +511,16 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
         D(bug("(libOpen) DropInterface\n"));
         IExec->DropInterface((struct Interface *)IClib4);
     }
+#ifdef __SPE__
+    if (!ISpeClib4) {
+        ISpeClib4 = (struct Clib4IFace *) IExec->GetInterface((struct Library *) libBase, "spe", 1, NULL);
+        IExec->DropInterface((struct Interface *)ISpeClib4);
+        /* Where the "main" interface finds the classic caller's floating point registers */
+        __classic_abi_init();
+        D(bug("(libOpen) Classic floating point registers %s\n",
+              __classic_fprs_direct ? "through SPRG7" : "through stfd and lfd"));
+    }
+#endif
 
     ++libBase->libNode.lib_OpenCnt;
     libBase->libNode.lib_Flags &= ~LIBF_DELEXP;
@@ -527,52 +595,10 @@ struct Clib4Library *libOpen(struct LibraryManagerInterface *Self, uint32 versio
         hashmap_set(res->children, &c2n);
 
         D(bug("(libOpen) Enabling clib4 optimizations\n"));
-        switch (res->cpufamily) {
+        selectCpuFunctions(IClib4, res);
 #ifdef __SPE__
-            case CPUFAMILY_E500:
-                D(bug("(libOpen) Using SPE family functions\n"));
-                IClib4->setjmp = setjmp_spe;
-                IClib4->longjmp = longjmp_spe;
-                IClib4->_longjmp = _longjmp_spe;
-                IClib4->_setjmp = _setjmp_spe;
-                IClib4->__sigsetjmp = __sigsetjmp_spe;
-                IClib4->siglongjmp = siglongjmp_spe;
-                IClib4->strlen = __strlen_e500;
-                IClib4->strcpy = __strcpy_e500;
-                IClib4->strcmp = __strcmp_e500;
-                IClib4->memcmp = __memcmp_e500;
-                break;
+        selectCpuFunctions(ISpeClib4, res);
 #endif
-            case CPUFAMILY_4XX:
-                D(bug("(libOpen) Using 4XX family functions\n"));
-                IClib4->strlen = __strlen440;
-                IClib4->strcpy = __strcpy440;
-                IClib4->strcmp = __strcmp440;
-                IClib4->memcmp = __memcmp440;
-                IClib4->memchr = __memchr440;
-                IClib4->strncmp = __strncmp440;
-                IClib4->strrchr = __strrchr440;
-                IClib4->strchr = __strchr440;
-                break;
-            default:
-                if (res->altivec) {
-                    D(bug("(libOpen) Using Altivec family functions\n"));
-                    IClib4->setjmp = setjmp_altivec;
-                    IClib4->longjmp = longjmp_altivec;
-                    IClib4->strcpy = vec_strcpy;
-                    IClib4->memcmp = vec_memcmp;
-                    IClib4->bzero = vec_bzero;
-                    IClib4->bcopy = vec_bcopy;
-#ifdef SLOWER_ALTIVEC_FUNCTIONS
-                    IClib4->memchr = vec_memchr;
-                    IClib4->strchr = vec_strchr;
-#else
-                    IClib4->strchr = glibc_strchr; // glibc_strchr is faster than ppc one on qemu/G4
-#endif
-                } else {
-                    D(bug("(libOpen) Using default family functions\n"));
-                }
-        }
 
         /* Let's start.. */
         /* If all libraries are opened correctly we can initialize clib4 reent structure */
@@ -1243,7 +1269,40 @@ static struct TagItem libManagerTags[] = {
 
 extern struct _clib4 *__getClib4(void);
 
+#ifdef __SPE__
+/*
+ * The SPE library has two interfaces: "main", for classic programs, with
+ * classic ABI entry points for the functions that need them, and "spe",
+ * for SPE programs (see classic_abi.h).
+ */
+#include "classic_abi_entries.h"
+
+#define CLIB4_VECTORS clib4Vectors
+#define CLASSIC_ABI(function) (__classic_##function)
 #include "clib4_vectors.h"
+#undef CLIB4_VECTORS
+#undef CLASSIC_ABI
+
+#define CLIB4_VECTORS clib4SpeVectors
+#define CLASSIC_ABI(function) (function)
+#include "clib4_vectors.h"
+#undef CLIB4_VECTORS
+#undef CLASSIC_ABI
+
+static struct TagItem speTags[] = {
+        {MIT_Name,        (uint32) "spe"},
+        {MIT_VectorTable, (uint32) clib4SpeVectors},
+        {MIT_Version,     1},
+        {MIT_DataSize,    0},
+        {TAG_DONE,        0}
+};
+#else
+#define CLIB4_VECTORS clib4Vectors
+#define CLASSIC_ABI(function) (function)
+#include "clib4_vectors.h"
+#undef CLIB4_VECTORS
+#undef CLASSIC_ABI
+#endif
 
 static struct TagItem mainTags[] = {
         {MIT_Name,        (uint32) "main"},
@@ -1257,6 +1316,9 @@ static struct TagItem mainTags[] = {
 static uint32 libInterfaces[] = {
         (uint32) libManagerTags,
         (uint32) mainTags,
+#ifdef __SPE__
+        (uint32) speTags,
+#endif
         0
 };
 

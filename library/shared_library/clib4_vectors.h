@@ -1,4 +1,4 @@
-static void *clib4Vectors[] = {
+static void *CLIB4_VECTORS[] = {
         (void *) (clib4Obtain),
         (void *) (clib4Release),
         (void *) (NULL),
@@ -73,9 +73,9 @@ static void *clib4Vectors[] = {
         (void *) (clog),                                  /* 324 */
         (void *) (clogf),                                 /* 328 */
         (void *) (clogl),                                 /* 332 */
-        (void *) (cabs),                                  /* 336 */
-        (void *) (cabsf),                                 /* 340 */
-        (void *) (cabsl),                                 /* 344 */
+        (void *) CLASSIC_ABI(cabs),                       /* 336 */
+        (void *) CLASSIC_ABI(cabsf),                      /* 340 */
+        (void *) CLASSIC_ABI(cabsl),                      /* 344 */
         (void *) (cpow),                                  /* 348 */
         (void *) (cpowf),                                 /* 352 */
         (void *) (cpowl),                                 /* 356 */
@@ -91,12 +91,12 @@ static void *clib4Vectors[] = {
         (void *) (cproj),                                 /* 396 */
         (void *) (cprojf),                                /* 400 */
         (void *) (cprojl),                                /* 404 */
-        (void *) (cimag),                                 /* 408 */
-        (void *) (cimagf),                                /* 412 */
-        (void *) (cimagl),                                /* 416 */
-        (void *) (creal),                                 /* 420 */
-        (void *) (crealf),                                /* 424 */
-        (void *) (creall),                                /* 428 */
+        (void *) CLASSIC_ABI(cimag),                      /* 408 */
+        (void *) CLASSIC_ABI(cimagf),                     /* 412 */
+        (void *) CLASSIC_ABI(cimagl),                     /* 416 */
+        (void *) CLASSIC_ABI(creal),                      /* 420 */
+        (void *) CLASSIC_ABI(crealf),                     /* 424 */
+        (void *) CLASSIC_ABI(creall),                     /* 428 */
         /* crypt.h */
         (void *) (crypt_r),                               /* 432 */
         /* ctype.h */
@@ -140,14 +140,14 @@ static void *clib4Vectors[] = {
         (void *) (envz_remove),                           /* 572 */
         (void *) (envz_strip),                            /* 576 */
         /* err.h */
-        (void *) (warn),                                  /* 580 */
-        (void *) (vwarn),                                 /* 584 */
-        (void *) (warnx),                                 /* 588 */
-        (void *) (vwarnx),                                /* 592 */
-        (void *) (err),                                   /* 596 */
-        (void *) (verr),                                  /* 600 */
-        (void *) (errx),                                  /* 604 */
-        (void *) (verrx),                                 /* 608 */
+        (void *) CLASSIC_ABI(warn),                       /* 580 */
+        (void *) CLASSIC_ABI(vwarn),                      /* 584 */
+        (void *) CLASSIC_ABI(warnx),                      /* 588 */
+        (void *) CLASSIC_ABI(vwarnx),                     /* 592 */
+        (void *) CLASSIC_ABI(err),                        /* 596 */
+        (void *) CLASSIC_ABI(verr),                       /* 600 */
+        (void *) CLASSIC_ABI(errx),                       /* 604 */
+        (void *) CLASSIC_ABI(verrx),                      /* 608 */
         /* errno.h */
         (void *) (__errno),                               /* 612 */
         (void *) (__h_errno),                             /* 616 */
@@ -198,206 +198,206 @@ static void *clib4Vectors[] = {
         /* malloc.h */
         (void *) (memalign),                              /* 752 */
         /* math.h */
-        (void *) (acos),                                  /* 756 */
-        (void *) (asin),                                  /* 760 */
-        (void *) (atan),                                  /* 764 */
-        (void *) (atan2),                                 /* 768 */
-        (void *) (ceil),                                  /* 772 */
-        (void *) (cos),                                   /* 776 */
-        (void *) (cosh),                                  /* 780 */
-        (void *) (sincos),                                /* 784 */
-        (void *) (sincosf),                               /* 788 */
-        (void *) (sincosl),                               /* 792 */
-        (void *) (exp10),                                 /* 796 */
-        (void *) (exp10f),                                /* 800 */
-        (void *) (exp10l),                                /* 804 */
-        (void *) (exp),                                   /* 808 */
-        (void *) (fabs),                                  /* 812 */
-        (void *) (floor),                                 /* 816 */
-        (void *) (fmod),                                  /* 820 */
-        (void *) (frexp),                                 /* 824 */
-        (void *) (ldexp),                                 /* 828 */
-        (void *) (log),                                   /* 832 */
-        (void *) (log10),                                 /* 836 */
-        (void *) (modf),                                  /* 840 */
-        (void *) (pow),                                   /* 844 */
-        (void *) (pow10),                                 /* 848 */
-        (void *) (pow10f),                                /* 852 */
-        (void *) (pow10l),                                /* 856 */
-        (void *) (sin),                                   /* 860 */
-        (void *) (sinh),                                  /* 864 */
-        (void *) (sqrt),                                  /* 868 */
-        (void *) (tan),                                   /* 872 */
-        (void *) (tanh),                                  /* 876 */
-        (void *) (j0),                                    /* 880 */
-        (void *) (y0),                                    /* 884 */
-        (void *) (j0f),                                   /* 888 */
-        (void *) (y0f),                                   /* 892 */
-        (void *) (j1),                                    /* 896 */
-        (void *) (y1),                                    /* 900 */
-        (void *) (j1f),                                   /* 904 */
-        (void *) (y1f),                                   /* 908 */
-        (void *) (jn),                                    /* 912 */
-        (void *) (yn),                                    /* 916 */
-        (void *) (jnf),                                   /* 920 */
-        (void *) (ynf),                                   /* 924 */
-        (void *) (__fpclassify_float),                    /* 928 */
-        (void *) (__fpclassify_double),                   /* 932 */
-        (void *) (__fpclassify_long_double),              /* 936 */
-        (void *) (__signbit_float),                       /* 940 */
-        (void *) (__signbit_double),                      /* 944 */
-        (void *) (__signbit_long_double),                 /* 948 */
+        (void *) CLASSIC_ABI(acos),                       /* 756 */
+        (void *) CLASSIC_ABI(asin),                       /* 760 */
+        (void *) CLASSIC_ABI(atan),                       /* 764 */
+        (void *) CLASSIC_ABI(atan2),                      /* 768 */
+        (void *) CLASSIC_ABI(ceil),                       /* 772 */
+        (void *) CLASSIC_ABI(cos),                        /* 776 */
+        (void *) CLASSIC_ABI(cosh),                       /* 780 */
+        (void *) CLASSIC_ABI(sincos),                     /* 784 */
+        (void *) CLASSIC_ABI(sincosf),                    /* 788 */
+        (void *) CLASSIC_ABI(sincosl),                    /* 792 */
+        (void *) CLASSIC_ABI(exp10),                      /* 796 */
+        (void *) CLASSIC_ABI(exp10f),                     /* 800 */
+        (void *) CLASSIC_ABI(exp10l),                     /* 804 */
+        (void *) CLASSIC_ABI(exp),                        /* 808 */
+        (void *) CLASSIC_ABI(fabs),                       /* 812 */
+        (void *) CLASSIC_ABI(floor),                      /* 816 */
+        (void *) CLASSIC_ABI(fmod),                       /* 820 */
+        (void *) CLASSIC_ABI(frexp),                      /* 824 */
+        (void *) CLASSIC_ABI(ldexp),                      /* 828 */
+        (void *) CLASSIC_ABI(log),                        /* 832 */
+        (void *) CLASSIC_ABI(log10),                      /* 836 */
+        (void *) CLASSIC_ABI(modf),                       /* 840 */
+        (void *) CLASSIC_ABI(pow),                        /* 844 */
+        (void *) CLASSIC_ABI(pow10),                      /* 848 */
+        (void *) CLASSIC_ABI(pow10f),                     /* 852 */
+        (void *) CLASSIC_ABI(pow10l),                     /* 856 */
+        (void *) CLASSIC_ABI(sin),                        /* 860 */
+        (void *) CLASSIC_ABI(sinh),                       /* 864 */
+        (void *) CLASSIC_ABI(sqrt),                       /* 868 */
+        (void *) CLASSIC_ABI(tan),                        /* 872 */
+        (void *) CLASSIC_ABI(tanh),                       /* 876 */
+        (void *) CLASSIC_ABI(j0),                         /* 880 */
+        (void *) CLASSIC_ABI(y0),                         /* 884 */
+        (void *) CLASSIC_ABI(j0f),                        /* 888 */
+        (void *) CLASSIC_ABI(y0f),                        /* 892 */
+        (void *) CLASSIC_ABI(j1),                         /* 896 */
+        (void *) CLASSIC_ABI(y1),                         /* 900 */
+        (void *) CLASSIC_ABI(j1f),                        /* 904 */
+        (void *) CLASSIC_ABI(y1f),                        /* 908 */
+        (void *) CLASSIC_ABI(jn),                         /* 912 */
+        (void *) CLASSIC_ABI(yn),                         /* 916 */
+        (void *) CLASSIC_ABI(jnf),                        /* 920 */
+        (void *) CLASSIC_ABI(ynf),                        /* 924 */
+        (void *) CLASSIC_ABI(__fpclassify_float),         /* 928 */
+        (void *) CLASSIC_ABI(__fpclassify_double),        /* 932 */
+        (void *) CLASSIC_ABI(__fpclassify_long_double),   /* 936 */
+        (void *) CLASSIC_ABI(__signbit_float),            /* 940 */
+        (void *) CLASSIC_ABI(__signbit_double),           /* 944 */
+        (void *) CLASSIC_ABI(__signbit_long_double),      /* 948 */
         (void *) (__signgam),                             /* 952 */
-        (void *) (acosf),                                 /* 956 */
-        (void *) (asinf),                                 /* 960 */
-        (void *) (atanf),                                 /* 964 */
-        (void *) (atan2f),                                /* 968 */
-        (void *) (ceilf),                                 /* 972 */
-        (void *) (cosf),                                  /* 976 */
-        (void *) (coshf),                                 /* 980 */
-        (void *) (expf),                                  /* 984 */
-        (void *) (fabsf),                                 /* 988 */
-        (void *) (floorf),                                /* 992 */
-        (void *) (fmodf),                                 /* 996 */
-        (void *) (frexpf),                                /* 1000 */
-        (void *) (ldexpf),                                /* 1004 */
-        (void *) (logf),                                  /* 1008 */
-        (void *) (log10f),                                /* 1012 */
-        (void *) (modff),                                 /* 1016 */
-        (void *) (powf),                                  /* 1020 */
-        (void *) (sinf),                                  /* 1024 */
-        (void *) (sinhf),                                 /* 1028 */
-        (void *) (sqrtf),                                 /* 1032 */
-        (void *) (tanf),                                  /* 1036 */
-        (void *) (tanhf),                                 /* 1040 */
-        (void *) (acoshf),                                /* 1044 */
-        (void *) (asinhf),                                /* 1048 */
-        (void *) (atanhf),                                /* 1052 */
-        (void *) (cbrtf),                                 /* 1056 */
-        (void *) (copysignf),                             /* 1060 */
-        (void *) (erfcf),                                 /* 1064 */
-        (void *) (erff),                                  /* 1068 */
-        (void *) (expm1f),                                /* 1072 */
-        (void *) (fdimf),                                 /* 1076 */
-        (void *) (fmaf),                                  /* 1080 */
-        (void *) (fmaxf),                                 /* 1084 */
-        (void *) (fminf),                                 /* 1088 */
-        (void *) (hypotf),                                /* 1092 */
-        (void *) (lgammaf),                               /* 1096 */
-        (void *) (log1pf),                                /* 1100 */
-        (void *) (logbf),                                 /* 1104 */
-        (void *) (llrintf),                               /* 1108 */
-        (void *) (lrintf),                                /* 1112 */
-        (void *) (lroundf),                               /* 1116 */
-        (void *) (llround),                               /* 1120 */
-        (void *) (llroundf),                              /* 1124 */
-        (void *) (nanf),                                  /* 1128 */
-        (void *) (nearbyintf),                            /* 1132 */
-        (void *) (nextafterf),                            /* 1136 */
-        (void *) (nexttowardf),                           /* 1140 */
-        (void *) (remainderf),                            /* 1144 */
-        (void *) (remquof),                               /* 1148 */
-        (void *) (rintf),                                 /* 1152 */
-        (void *) (roundf),                                /* 1156 */
-        (void *) (scalblnf),                              /* 1160 */
-        (void *) (scalbnf),                               /* 1164 */
-        (void *) (tgammaf),                               /* 1168 */
-        (void *) (truncf),                                /* 1172 */
-        (void *) (ilogbf),                                /* 1176 */
-        (void *) (finite),                                /* 1180 */ /* TODO - REMOVE */
-        (void *) (acosh),                                 /* 1184 */
-        (void *) (asinh),                                 /* 1188 */
-        (void *) (atanh),                                 /* 1192 */
-        (void *) (cbrt),                                  /* 1196 */
-        (void *) (copysign),                              /* 1200 */
-        (void *) (erf),                                   /* 1204 */
-        (void *) (erfc),                                  /* 1208 */
-        (void *) (expm1),                                 /* 1212 */
-        (void *) (fdim),                                  /* 1216 */
-        (void *) (fma),                                   /* 1220 */
-        (void *) (fmax),                                  /* 1224 */
-        (void *) (fmin),                                  /* 1228 */
-        (void *) (hypot),                                 /* 1232 */
-        (void *) (lgamma),                                /* 1236 */
-        (void *) (log1p),                                 /* 1240 */
-        (void *) (logb),                                  /* 1244 */
-        (void *) (llrint),                                /* 1248 */
-        (void *) (lrint),                                 /* 1252 */
-        (void *) (lround),                                /* 1256 */
-        (void *) (nan),                                   /* 1260 */
-        (void *) (nearbyint),                             /* 1264 */
-        (void *) (nexttoward),                            /* 1268 */
-        (void *) (nextafter),                             /* 1272 */
-        (void *) (remainder),                             /* 1276 */
-        (void *) (remquo),                                /* 1280 */
-        (void *) (rint),                                  /* 1284 */
-        (void *) (round),                                 /* 1288 */
-        (void *) (scalbln),                               /* 1292 */
-        (void *) (scalbn),                                /* 1296 */
-        (void *) (tgamma),                                /* 1300 */
-        (void *) (trunc),                                 /* 1304 */
-        (void *) (ilogb),                                 /* 1308 */
-        (void *) (exp2f),                                 /* 1312 */
-        (void *) (exp2),                                  /* 1316 */
-        (void *) (exp2l),                                 /* 1320 */
-        (void *) (log2),                                  /* 1324 */
-        (void *) (log2f),                                 /* 1328 */
-        (void *) (log2l),                                 /* 1332 */
-        (void *) (acosl),                                 /* 1336 */
-        (void *) (asinl),                                 /* 1340 */
-        (void *) (atanl),                                 /* 1344 */
-        (void *) (atan2l),                                /* 1348 */
-        (void *) (ceill),                                 /* 1352 */
-        (void *) (cosl),                                  /* 1356 */
-        (void *) (coshl),                                 /* 1360 */
-        (void *) (expl),                                  /* 1364 */
-        (void *) (fabsl),                                 /* 1368 */
-        (void *) (floorl),                                /* 1372 */
-        (void *) (fmodl),                                 /* 1376 */
-        (void *) (frexpl),                                /* 1380 */
-        (void *) (ldexpl),                                /* 1384 */
-        (void *) (logl),                                  /* 1388 */
-        (void *) (log10l),                                /* 1392 */
-        (void *) (modfl),                                 /* 1396 */
-        (void *) (powl),                                  /* 1400 */
-        (void *) (sinl),                                  /* 1404 */
-        (void *) (sinhl),                                 /* 1408 */
-        (void *) (sqrtl),                                 /* 1412 */
-        (void *) (tanl),                                  /* 1416 */
-        (void *) (tanhl),                                 /* 1420 */
-        (void *) (acoshl),                                /* 1424 */
-        (void *) (asinhl),                                /* 1428 */
-        (void *) (atanhl),                                /* 1432 */
-        (void *) (cbrtl),                                 /* 1436 */
-        (void *) (copysignl),                             /* 1440 */
-        (void *) (erfcl),                                 /* 1444 */
-        (void *) (erfl),                                  /* 1448 */
-        (void *) (expm1l),                                /* 1452 */
-        (void *) (fdiml),                                 /* 1456 */
-        (void *) (fmal),                                  /* 1460 */
-        (void *) (fmaxl),                                 /* 1464 */
-        (void *) (fminl),                                 /* 1468 */
-        (void *) (hypotl),                                /* 1472 */
-        (void *) (lgammal),                               /* 1476 */
-        (void *) (log1pl),                                /* 1480 */
-        (void *) (logbl),                                 /* 1484 */
-        (void *) (llrintl),                               /* 1488 */
-        (void *) (lrintl),                                /* 1492 */
-        (void *) (llroundl),                              /* 1496 */
-        (void *) (lroundl),                               /* 1500 */
-        (void *) (nanl),                                  /* 1504 */
-        (void *) (nearbyintl),                            /* 1508 */
-        (void *) (nextafterl),                            /* 1512 */
-        (void *) (nexttowardl),                           /* 1516 */
-        (void *) (remainderl),                            /* 1520 */
-        (void *) (remquol),                               /* 1524 */
-        (void *) (rintl),                                 /* 1528 */
-        (void *) (roundl),                                /* 1532 */
-        (void *) (scalblnl),                              /* 1536 */
-        (void *) (scalbnl),                               /* 1540 */
-        (void *) (tgammal),                               /* 1544 */
-        (void *) (truncl),                                /* 1548 */
-        (void *) (ilogbl),                                /* 1552 */
+        (void *) CLASSIC_ABI(acosf),                      /* 956 */
+        (void *) CLASSIC_ABI(asinf),                      /* 960 */
+        (void *) CLASSIC_ABI(atanf),                      /* 964 */
+        (void *) CLASSIC_ABI(atan2f),                     /* 968 */
+        (void *) CLASSIC_ABI(ceilf),                      /* 972 */
+        (void *) CLASSIC_ABI(cosf),                       /* 976 */
+        (void *) CLASSIC_ABI(coshf),                      /* 980 */
+        (void *) CLASSIC_ABI(expf),                       /* 984 */
+        (void *) CLASSIC_ABI(fabsf),                      /* 988 */
+        (void *) CLASSIC_ABI(floorf),                     /* 992 */
+        (void *) CLASSIC_ABI(fmodf),                      /* 996 */
+        (void *) CLASSIC_ABI(frexpf),                     /* 1000 */
+        (void *) CLASSIC_ABI(ldexpf),                     /* 1004 */
+        (void *) CLASSIC_ABI(logf),                       /* 1008 */
+        (void *) CLASSIC_ABI(log10f),                     /* 1012 */
+        (void *) CLASSIC_ABI(modff),                      /* 1016 */
+        (void *) CLASSIC_ABI(powf),                       /* 1020 */
+        (void *) CLASSIC_ABI(sinf),                       /* 1024 */
+        (void *) CLASSIC_ABI(sinhf),                      /* 1028 */
+        (void *) CLASSIC_ABI(sqrtf),                      /* 1032 */
+        (void *) CLASSIC_ABI(tanf),                       /* 1036 */
+        (void *) CLASSIC_ABI(tanhf),                      /* 1040 */
+        (void *) CLASSIC_ABI(acoshf),                     /* 1044 */
+        (void *) CLASSIC_ABI(asinhf),                     /* 1048 */
+        (void *) CLASSIC_ABI(atanhf),                     /* 1052 */
+        (void *) CLASSIC_ABI(cbrtf),                      /* 1056 */
+        (void *) CLASSIC_ABI(copysignf),                  /* 1060 */
+        (void *) CLASSIC_ABI(erfcf),                      /* 1064 */
+        (void *) CLASSIC_ABI(erff),                       /* 1068 */
+        (void *) CLASSIC_ABI(expm1f),                     /* 1072 */
+        (void *) CLASSIC_ABI(fdimf),                      /* 1076 */
+        (void *) CLASSIC_ABI(fmaf),                       /* 1080 */
+        (void *) CLASSIC_ABI(fmaxf),                      /* 1084 */
+        (void *) CLASSIC_ABI(fminf),                      /* 1088 */
+        (void *) CLASSIC_ABI(hypotf),                     /* 1092 */
+        (void *) CLASSIC_ABI(lgammaf),                    /* 1096 */
+        (void *) CLASSIC_ABI(log1pf),                     /* 1100 */
+        (void *) CLASSIC_ABI(logbf),                      /* 1104 */
+        (void *) CLASSIC_ABI(llrintf),                    /* 1108 */
+        (void *) CLASSIC_ABI(lrintf),                     /* 1112 */
+        (void *) CLASSIC_ABI(lroundf),                    /* 1116 */
+        (void *) CLASSIC_ABI(llround),                    /* 1120 */
+        (void *) CLASSIC_ABI(llroundf),                   /* 1124 */
+        (void *) CLASSIC_ABI(nanf),                       /* 1128 */
+        (void *) CLASSIC_ABI(nearbyintf),                 /* 1132 */
+        (void *) CLASSIC_ABI(nextafterf),                 /* 1136 */
+        (void *) CLASSIC_ABI(nexttowardf),                /* 1140 */
+        (void *) CLASSIC_ABI(remainderf),                 /* 1144 */
+        (void *) CLASSIC_ABI(remquof),                    /* 1148 */
+        (void *) CLASSIC_ABI(rintf),                      /* 1152 */
+        (void *) CLASSIC_ABI(roundf),                     /* 1156 */
+        (void *) CLASSIC_ABI(scalblnf),                   /* 1160 */
+        (void *) CLASSIC_ABI(scalbnf),                    /* 1164 */
+        (void *) CLASSIC_ABI(tgammaf),                    /* 1168 */
+        (void *) CLASSIC_ABI(truncf),                     /* 1172 */
+        (void *) CLASSIC_ABI(ilogbf),                     /* 1176 */
+        (void *) CLASSIC_ABI(finite),                     /* 1180 */ /* TODO - REMOVE */
+        (void *) CLASSIC_ABI(acosh),                      /* 1184 */
+        (void *) CLASSIC_ABI(asinh),                      /* 1188 */
+        (void *) CLASSIC_ABI(atanh),                      /* 1192 */
+        (void *) CLASSIC_ABI(cbrt),                       /* 1196 */
+        (void *) CLASSIC_ABI(copysign),                   /* 1200 */
+        (void *) CLASSIC_ABI(erf),                        /* 1204 */
+        (void *) CLASSIC_ABI(erfc),                       /* 1208 */
+        (void *) CLASSIC_ABI(expm1),                      /* 1212 */
+        (void *) CLASSIC_ABI(fdim),                       /* 1216 */
+        (void *) CLASSIC_ABI(fma),                        /* 1220 */
+        (void *) CLASSIC_ABI(fmax),                       /* 1224 */
+        (void *) CLASSIC_ABI(fmin),                       /* 1228 */
+        (void *) CLASSIC_ABI(hypot),                      /* 1232 */
+        (void *) CLASSIC_ABI(lgamma),                     /* 1236 */
+        (void *) CLASSIC_ABI(log1p),                      /* 1240 */
+        (void *) CLASSIC_ABI(logb),                       /* 1244 */
+        (void *) CLASSIC_ABI(llrint),                     /* 1248 */
+        (void *) CLASSIC_ABI(lrint),                      /* 1252 */
+        (void *) CLASSIC_ABI(lround),                     /* 1256 */
+        (void *) CLASSIC_ABI(nan),                        /* 1260 */
+        (void *) CLASSIC_ABI(nearbyint),                  /* 1264 */
+        (void *) CLASSIC_ABI(nexttoward),                 /* 1268 */
+        (void *) CLASSIC_ABI(nextafter),                  /* 1272 */
+        (void *) CLASSIC_ABI(remainder),                  /* 1276 */
+        (void *) CLASSIC_ABI(remquo),                     /* 1280 */
+        (void *) CLASSIC_ABI(rint),                       /* 1284 */
+        (void *) CLASSIC_ABI(round),                      /* 1288 */
+        (void *) CLASSIC_ABI(scalbln),                    /* 1292 */
+        (void *) CLASSIC_ABI(scalbn),                     /* 1296 */
+        (void *) CLASSIC_ABI(tgamma),                     /* 1300 */
+        (void *) CLASSIC_ABI(trunc),                      /* 1304 */
+        (void *) CLASSIC_ABI(ilogb),                      /* 1308 */
+        (void *) CLASSIC_ABI(exp2f),                      /* 1312 */
+        (void *) CLASSIC_ABI(exp2),                       /* 1316 */
+        (void *) CLASSIC_ABI(exp2l),                      /* 1320 */
+        (void *) CLASSIC_ABI(log2),                       /* 1324 */
+        (void *) CLASSIC_ABI(log2f),                      /* 1328 */
+        (void *) CLASSIC_ABI(log2l),                      /* 1332 */
+        (void *) CLASSIC_ABI(acosl),                      /* 1336 */
+        (void *) CLASSIC_ABI(asinl),                      /* 1340 */
+        (void *) CLASSIC_ABI(atanl),                      /* 1344 */
+        (void *) CLASSIC_ABI(atan2l),                     /* 1348 */
+        (void *) CLASSIC_ABI(ceill),                      /* 1352 */
+        (void *) CLASSIC_ABI(cosl),                       /* 1356 */
+        (void *) CLASSIC_ABI(coshl),                      /* 1360 */
+        (void *) CLASSIC_ABI(expl),                       /* 1364 */
+        (void *) CLASSIC_ABI(fabsl),                      /* 1368 */
+        (void *) CLASSIC_ABI(floorl),                     /* 1372 */
+        (void *) CLASSIC_ABI(fmodl),                      /* 1376 */
+        (void *) CLASSIC_ABI(frexpl),                     /* 1380 */
+        (void *) CLASSIC_ABI(ldexpl),                     /* 1384 */
+        (void *) CLASSIC_ABI(logl),                       /* 1388 */
+        (void *) CLASSIC_ABI(log10l),                     /* 1392 */
+        (void *) CLASSIC_ABI(modfl),                      /* 1396 */
+        (void *) CLASSIC_ABI(powl),                       /* 1400 */
+        (void *) CLASSIC_ABI(sinl),                       /* 1404 */
+        (void *) CLASSIC_ABI(sinhl),                      /* 1408 */
+        (void *) CLASSIC_ABI(sqrtl),                      /* 1412 */
+        (void *) CLASSIC_ABI(tanl),                       /* 1416 */
+        (void *) CLASSIC_ABI(tanhl),                      /* 1420 */
+        (void *) CLASSIC_ABI(acoshl),                     /* 1424 */
+        (void *) CLASSIC_ABI(asinhl),                     /* 1428 */
+        (void *) CLASSIC_ABI(atanhl),                     /* 1432 */
+        (void *) CLASSIC_ABI(cbrtl),                      /* 1436 */
+        (void *) CLASSIC_ABI(copysignl),                  /* 1440 */
+        (void *) CLASSIC_ABI(erfcl),                      /* 1444 */
+        (void *) CLASSIC_ABI(erfl),                       /* 1448 */
+        (void *) CLASSIC_ABI(expm1l),                     /* 1452 */
+        (void *) CLASSIC_ABI(fdiml),                      /* 1456 */
+        (void *) CLASSIC_ABI(fmal),                       /* 1460 */
+        (void *) CLASSIC_ABI(fmaxl),                      /* 1464 */
+        (void *) CLASSIC_ABI(fminl),                      /* 1468 */
+        (void *) CLASSIC_ABI(hypotl),                     /* 1472 */
+        (void *) CLASSIC_ABI(lgammal),                    /* 1476 */
+        (void *) CLASSIC_ABI(log1pl),                     /* 1480 */
+        (void *) CLASSIC_ABI(logbl),                      /* 1484 */
+        (void *) CLASSIC_ABI(llrintl),                    /* 1488 */
+        (void *) CLASSIC_ABI(lrintl),                     /* 1492 */
+        (void *) CLASSIC_ABI(llroundl),                   /* 1496 */
+        (void *) CLASSIC_ABI(lroundl),                    /* 1500 */
+        (void *) CLASSIC_ABI(nanl),                       /* 1504 */
+        (void *) CLASSIC_ABI(nearbyintl),                 /* 1508 */
+        (void *) CLASSIC_ABI(nextafterl),                 /* 1512 */
+        (void *) CLASSIC_ABI(nexttowardl),                /* 1516 */
+        (void *) CLASSIC_ABI(remainderl),                 /* 1520 */
+        (void *) CLASSIC_ABI(remquol),                    /* 1524 */
+        (void *) CLASSIC_ABI(rintl),                      /* 1528 */
+        (void *) CLASSIC_ABI(roundl),                     /* 1532 */
+        (void *) CLASSIC_ABI(scalblnl),                   /* 1536 */
+        (void *) CLASSIC_ABI(scalbnl),                    /* 1540 */
+        (void *) CLASSIC_ABI(tgammal),                    /* 1544 */
+        (void *) CLASSIC_ABI(truncl),                     /* 1548 */
+        (void *) CLASSIC_ABI(ilogbl),                     /* 1552 */
         /* netdb.h */
         (void *) (gethostbyaddr),                         /* 1556 */
         (void *) (gethostbyname),                         /* 1560 */
@@ -520,14 +520,14 @@ static void *clib4Vectors[] = {
         (void *) (sscanf),                                /* 1992 */
         (void *) (fputs),                                 /* 1996 */
         (void *) (puts),                                  /* 2000 */
-        (void *) (dprintf),                               /* 2004 */
-        (void *) (fprintf),                               /* 2008 */
-        (void *) (printf),                                /* 2012 */
-        (void *) (sprintf),                               /* 2016 */
-        (void *) (vdprintf),                              /* 2020 */
-        (void *) (vfprintf),                              /* 2024 */
-        (void *) (vprintf),                               /* 2028 */
-        (void *) (vsprintf),                              /* 2032 */
+        (void *) CLASSIC_ABI(dprintf),                    /* 2004 */
+        (void *) CLASSIC_ABI(fprintf),                    /* 2008 */
+        (void *) CLASSIC_ABI(printf),                     /* 2012 */
+        (void *) CLASSIC_ABI(sprintf),                    /* 2016 */
+        (void *) CLASSIC_ABI(vdprintf),                   /* 2020 */
+        (void *) CLASSIC_ABI(vfprintf),                   /* 2024 */
+        (void *) CLASSIC_ABI(vprintf),                    /* 2028 */
+        (void *) CLASSIC_ABI(vsprintf),                   /* 2032 */
         (void *) (fread),                                 /* 2036 */
         (void *) (fwrite),                                /* 2040 */
         (void *) (feof),                                  /* 2044 */
@@ -549,8 +549,8 @@ static void *clib4Vectors[] = {
         (void *) (getdelim),                              /* 2108 */
         (void *) (fdopen),                                /* 2112 */
         (void *) (fileno),                                /* 2116 */
-        (void *) (asprintf),                              /* 2120 */
-        (void *) (vsnprintf),                             /* 2124 */
+        (void *) CLASSIC_ABI(asprintf),                   /* 2120 */
+        (void *) CLASSIC_ABI(vsnprintf),                  /* 2124 */
         (void *) (pclose),                                /* 2128 */
         (void *) (popen),                                 /* 2132 */
         (void *) (fseeko),                                /* 2136 */
@@ -558,11 +558,11 @@ static void *clib4Vectors[] = {
         (void *) (flockfile),                             /* 2144 */
         (void *) (funlockfile),                           /* 2148 */
         (void *) (ftrylockfile),                          /* 2152 */
-        (void *) (vasprintf),                             /* 2156 */
-        (void *) (vfscanf),                               /* 2160 */
-        (void *) (vsscanf),                               /* 2164 */
-        (void *) (vscanf),                                /* 2168 */
-        (void *) (snprintf),                              /* 2172 */
+        (void *) CLASSIC_ABI(vasprintf),                  /* 2156 */
+        (void *) CLASSIC_ABI(vfscanf),                    /* 2160 */
+        (void *) CLASSIC_ABI(vsscanf),                    /* 2164 */
+        (void *) CLASSIC_ABI(vscanf),                     /* 2168 */
+        (void *) CLASSIC_ABI(snprintf),                   /* 2172 */
         /* stdio_ext.h */
         (void *) (_flushlbf),                             /* 2176 */
         (void *) (__fsetlocking),                         /* 2180 */
@@ -610,8 +610,8 @@ static void *clib4Vectors[] = {
         (void *) (l64a),                                  /* 2344 */
         (void *) (a64l),                                  /* 2348 */
         (void *) (setkey),                                /* 2352 */
-        (void *) (drand48),                               /* 2356 */
-        (void *) (erand48),                               /* 2360 */
+        (void *) CLASSIC_ABI(drand48),                    /* 2356 */
+        (void *) CLASSIC_ABI(erand48),                    /* 2360 */
         (void *) (lrand48),                               /* 2364 */
         (void *) (nrand48),                               /* 2368 */
         (void *) (mrand48),                               /* 2372 */
@@ -626,11 +626,11 @@ static void *clib4Vectors[] = {
         (void *) (getenv),                                /* 2408 */
         (void *) (bsearch),                               /* 2412 */
         (void *) (qsort),                                 /* 2416 */
-        (void *) (strtod),                                /* 2420 */
+        (void *) CLASSIC_ABI(strtod),                     /* 2420 */
         (void *) (strtol),                                /* 2424 */
         (void *) (strtoul),                               /* 2428 */
         (void *) (strtoq),                                /* 2432 */
-        (void *) (atof),                                  /* 2436 */
+        (void *) CLASSIC_ABI(atof),                       /* 2436 */
         (void *) (atoi),                                  /* 2440 */
         (void *) (atol),                                  /* 2444 */
         (void *) (itoa),                                  /* 2448 */
@@ -645,17 +645,17 @@ static void *clib4Vectors[] = {
         (void *) (mkdtemp),                               /* 2484 */
         (void *) (getexecname),                           /* 2488 */
         (void *) (strtoll),                               /* 2492 */
-        (void *) (strtold),                               /* 2496 */
+        (void *) CLASSIC_ABI(strtold),                    /* 2496 */
         (void *) (strtoull),                              /* 2500 */
         (void *) (atoll),                                 /* 2504 */
         (void *) (llabs),                                 /* 2508 */
         (void *) (lldiv),                                 /* 2512 */
-        (void *) (strtof),                                /* 2516 */
-        (void *) (atoff),                                 /* 2520 */
+        (void *) CLASSIC_ABI(strtof),                     /* 2516 */
+        (void *) CLASSIC_ABI(atoff),                      /* 2520 */
         (void *) (_Exit),                                 /* 2524 */
-        (void *) (ecvt),                                  /* 2528 */
-        (void *) (fcvt),                                  /* 2532 */
-        (void *) (gcvt),                                  /* 2536 */
+        (void *) CLASSIC_ABI(ecvt),                       /* 2528 */
+        (void *) CLASSIC_ABI(fcvt),                       /* 2532 */
+        (void *) CLASSIC_ABI(gcvt),                       /* 2536 */
         (void *) (secure_getenv),                         /* 2540 */
         (void *) (reallocarray),                          /* 2544 */
         (void *) (qsort_r),                               /* 2548 */
@@ -747,7 +747,7 @@ static void *clib4Vectors[] = {
         (void *) (gmtime),                                /* 2872 */
         (void *) (localtime),                             /* 2876 */
         (void *) (mktime),                                /* 2880 */
-        (void *) (difftime),                              /* 2884 */
+        (void *) CLASSIC_ABI(difftime),                   /* 2884 */
         (void *) (strftime),                              /* 2888 */
         (void *) (strptime),                              /* 2892 */
         (void *) (asctime_r),                             /* 2896 */
@@ -876,10 +876,10 @@ static void *clib4Vectors[] = {
         (void *) (wcsstr),                                /* 3368 */
         (void *) (wcswidth),                              /* 3372 */
         (void *) (wcwidth),                               /* 3376 */
-        (void *) (wcstod),                                /* 3380 */
+        (void *) CLASSIC_ABI(wcstod),                     /* 3380 */
         (void *) (wcstol),                                /* 3384 */
         (void *) (wcstoul),                               /* 3388 */
-        (void *) (wcstof),                                /* 3392 */
+        (void *) CLASSIC_ABI(wcstof),                     /* 3392 */
         (void *) (wscoll),                                /* 3396 */
         (void *) (wcsxfrm),                               /* 3400 */
         (void *) (wmemchr),                               /* 3404 */
@@ -895,20 +895,20 @@ static void *clib4Vectors[] = {
         (void *) (fgetws),                                /* 3444 */
         (void *) (fwscanf),                               /* 3448 */
         (void *) (swscanf),                               /* 3452 */
-        (void *) (vfwscanf),                              /* 3456 */
-        (void *) (vswscanf),                              /* 3460 */
-        (void *) (vwscanf),                               /* 3464 */
+        (void *) CLASSIC_ABI(vfwscanf),                   /* 3456 */
+        (void *) CLASSIC_ABI(vswscanf),                   /* 3460 */
+        (void *) CLASSIC_ABI(vwscanf),                    /* 3464 */
         (void *) (wscanf),                                /* 3468 */
         (void *) (fputwc),                                /* 3472 */
         (void *) (putwc),                                 /* 3476 */
         (void *) (putwchar),                              /* 3480 */
         (void *) (fputws),                                /* 3484 */
-        (void *) (fwprintf),                              /* 3488 */
-        (void *) (swprintf),                              /* 3492 */
-        (void *) (vfwprintf),                             /* 3496 */
-        (void *) (vswprintf),                             /* 3500 */
-        (void *) (vwprintf),                              /* 3504 */
-        (void *) (wprintf),                               /* 3508 */
+        (void *) CLASSIC_ABI(fwprintf),                   /* 3488 */
+        (void *) CLASSIC_ABI(swprintf),                   /* 3492 */
+        (void *) CLASSIC_ABI(vfwprintf),                  /* 3496 */
+        (void *) CLASSIC_ABI(vswprintf),                  /* 3500 */
+        (void *) CLASSIC_ABI(vwprintf),                   /* 3504 */
+        (void *) CLASSIC_ABI(wprintf),                    /* 3508 */
         (void *) (wcsftime),                              /* 3512 */
         (void *) (mbrlen),                                /* 3516 */
         (void *) (mbrtowc),                               /* 3520 */
@@ -921,7 +921,7 @@ static void *clib4Vectors[] = {
         (void *) (wcsrtombs),                             /* 3548 */
         (void *) (wcstoll),                               /* 3552 */
         (void *) (wcstoull),                              /* 3556 */
-        (void *) (wcstold),                               /* 3560 */
+        (void *) CLASSIC_ABI(wcstold),                    /* 3560 */
         (void *) (mbsnrtowcs),                            /* 3564 */
         (void *) (wcsnrtombs),                            /* 3568 */
         (void *) (wcsdup),                                /* 3572 */
@@ -1060,8 +1060,8 @@ static void *clib4Vectors[] = {
         (void *) (closelog),                              /* 4024 */
         (void *) (openlog),                               /* 4028 */
         (void *) (setlogmask),                            /* 4032 */
-        (void *) (syslog),                                /* 4036 */
-        (void *) (vsyslog),                               /* 4040 */
+        (void *) CLASSIC_ABI(syslog),                     /* 4036 */
+        (void *) CLASSIC_ABI(vsyslog),                    /* 4040 */
         /* sys/systeminfo.h */
         (void *) (sysinfo),                               /* 4044 */
         /* sys/time.h */
@@ -1082,18 +1082,18 @@ static void *clib4Vectors[] = {
 
         (void *) (futimens),                              /* 4088 */
         (void *) (utimensat),                             /* 4092 */
-        (void *) (__isnan),                               /* 4096 */
-        (void *) (__isnanf),                              /* 4100 */
-        (void *) (__isnanl),                              /* 4104 */
-        (void *) (__isinf),                               /* 4108 */
-        (void *) (__isinff),                              /* 4112 */
-        (void *) (__isinfl),                              /* 4116 */
-        (void *) (__isnormal),                            /* 4120 */
-        (void *) (__isnormalf),                           /* 4124 */
-        (void *) (__isnormall),                           /* 4128 */
-        (void *) (__isfinite_double),                     /* 4132 */
-        (void *) (__isfinite_float),                      /* 4136 */
-        (void *) (__isfinite_long_double),                /* 4140 */
+        (void *) CLASSIC_ABI(__isnan),                    /* 4096 */
+        (void *) CLASSIC_ABI(__isnanf),                   /* 4100 */
+        (void *) CLASSIC_ABI(__isnanl),                   /* 4104 */
+        (void *) CLASSIC_ABI(__isinf),                    /* 4108 */
+        (void *) CLASSIC_ABI(__isinff),                   /* 4112 */
+        (void *) CLASSIC_ABI(__isinfl),                   /* 4116 */
+        (void *) CLASSIC_ABI(__isnormal),                 /* 4120 */
+        (void *) CLASSIC_ABI(__isnormalf),                /* 4124 */
+        (void *) CLASSIC_ABI(__isnormall),                /* 4128 */
+        (void *) CLASSIC_ABI(__isfinite_double),          /* 4132 */
+        (void *) CLASSIC_ABI(__isfinite_float),           /* 4136 */
+        (void *) CLASSIC_ABI(__isfinite_long_double),     /* 4140 */
         (void *) (strtouq),                               /* 4144 */
 
         (void *) (gettext),                               /* 4148 */
@@ -1135,8 +1135,8 @@ static void *clib4Vectors[] = {
         (void *) (mkostemp),                              /* 4272 */
         (void *) (mkostemps),                             /* 4276 */
 
-        (void *) (strtof_l),                              /* 4280 */
-        (void *) (strtod_l),                              /* 4284 */
+        (void *) CLASSIC_ABI(strtof_l),                   /* 4280 */
+        (void *) CLASSIC_ABI(strtod_l),                   /* 4284 */
 
         (void *) (fpgetround),                            /* 4288 */
         (void *) (fpsetround),                            /* 4292 */
@@ -1174,25 +1174,25 @@ static void *clib4Vectors[] = {
 
         (void *) (0),                                     /* 4392 - unused */
 
-        (void *) (sigsuspend),		                  	  /* 4396 */
+        (void *) (sigsuspend),                       /* 4396 */
         (void *) (spawnve),                               /* 4400 */
-        (void *) (sigpause),		                  	  /* 4404 */
-        (void *) (sigwait),		                  		  /* 4408 */
-        (void *) (sigwaitinfo),		                  	  /* 4412 */
-        (void *) (sigtimedwait),	                  	  /* 4416 */
+        (void *) (sigpause),                       /* 4404 */
+        (void *) (sigwait),                        /* 4408 */
+        (void *) (sigwaitinfo),                       /* 4412 */
+        (void *) (sigtimedwait),                      /* 4416 */
 
         (void *) (getvfsstat),                            /* 4420 */
         (void *) (backtrace),                             /* 4424 */
         (void *) (backtrace_symbols),                     /* 4428 */
         (void *) (backtrace_symbols_fd),                  /* 4432 */
-        (void *) (dladdr),				  				  /* 4436 */
+        (void *) (dladdr),            /* 4436 */
 
-        (void *) (getpriority),				  			  /* 4440 */
-        (void *) (setpriority),				  			  /* 4444 */
+        (void *) (getpriority),           /* 4440 */
+        (void *) (setpriority),           /* 4444 */
 
-        (void *) (roundeven),				  			  /* 4448 */
-        (void *) (roundevenf),				  			  /* 4452 */
-        (void *) (roundevenl),				  			  /* 4456 */
+        (void *) CLASSIC_ABI(roundeven), /* 4448 */
+        (void *) CLASSIC_ABI(roundevenf), /* 4452 */
+        (void *) CLASSIC_ABI(roundevenl), /* 4456 */
 
         (void *) (canonicalize_file_name),                /* 4460 */
 		(void *) (spawnvpe_fork),                         /* 4464 */
