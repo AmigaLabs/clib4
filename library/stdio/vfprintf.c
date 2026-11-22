@@ -805,8 +805,8 @@ vfprintf(FILE *f, const char *format, va_list ap) {
 int
 __vfprintf_r(struct _clib4 *__clib4, FILE *f, const char *format, va_list ap) {
     va_list ap2;
-    int ret, nl_type[NL_ARGMAX] = {0};
-    union arg nl_arg[NL_ARGMAX] = {0};
+    int ret, nl_type[NL_ARGMAX + 1] = {0};
+    union arg nl_arg[NL_ARGMAX + 1] = {0};
 
     ENTER();
     SHOWPOINTER(f);
@@ -822,6 +822,14 @@ __vfprintf_r(struct _clib4 *__clib4, FILE *f, const char *format, va_list ap) {
     Out _out[1];
     out_init_file(_out, f);
     va_copy(ap2, ap);
+
+    /* Collect the positional arguments ("%1$d"), if the format uses them */
+    if (printf_core(__clib4, NULL, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double) < 0) {
+        va_end(ap2);
+
+        RETURN(EOF);
+        return EOF;
+    }
 
     SHOWMSG("Write result to the file");
     ret = printf_core(__clib4, _out, format, &ap2, nl_arg, nl_type, fmt_fp, pop_arg_long_double);

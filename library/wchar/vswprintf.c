@@ -15,15 +15,16 @@
 int
 vswprintf(wchar_t *s, size_t l, const wchar_t *fmt, va_list ap) {
     va_list ap2;
-    int ret, nl_type[NL_ARGMAX] = {0};
-    union arg nl_arg[NL_ARGMAX];
+    int ret, nl_type[NL_ARGMAX + 1] = {0};
+    union arg nl_arg[NL_ARGMAX + 1];
     FOut _out[1];
     struct _clib4 *__clib4 = __CLIB4;
 
     va_copy(ap2, ap);
 
-    if ((!s) || (!l)) {
-        ret = wprintf_core(__clib4, 0, fmt, &ap2, nl_arg, nl_type);
+    /* Collect the positional arguments ("%1$d"), if the format uses them */
+    ret = wprintf_core(__clib4, 0, fmt, &ap2, nl_arg, nl_type);
+    if (ret < 0 || (!s) || (!l)) {
         va_end(ap2);
         return ret;
     }

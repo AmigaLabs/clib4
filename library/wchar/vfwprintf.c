@@ -533,8 +533,8 @@ wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, u
 int
 vfwprintf(FILE *f, const wchar_t *format, va_list ap) {
     va_list ap2;
-    int ret, nl_type[NL_ARGMAX] = {0};
-    union arg nl_arg[NL_ARGMAX];
+    int ret, nl_type[NL_ARGMAX + 1] = {0};
+    union arg nl_arg[NL_ARGMAX + 1];
     FOut _out[1];
     out_init_file(_out, f);
     va_copy(ap2, ap);
