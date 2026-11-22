@@ -6,7 +6,8 @@
 
 #ifdef __SPE__
 FUNC_START(fabs)
-	efdabs	f1, f1
+    /* double [r3:r4] fabs (double [r3:r4] x) ;  clear the sign bit */
+	clrlwi	r3,r3,1
 	blr
 FUNC_END(fabs)
 #endif
