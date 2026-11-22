@@ -134,14 +134,19 @@ out_printf(struct _clib4 *__clib4, FOut *_out, const char *format, ...) {
         size_t mb_len, wide_len;
         char *mb_buffer;
         wchar_t *wide_buffer;
+        va_list args2;
 
+        /* The first vsnprintf() uses up args */
+        va_copy(args2, args);
         if (
-                (!(mb_len = (size_t) vsnprintf(NULL, 0, format, args))) ||
+                (!(mb_len = (size_t) vsnprintf(NULL, 0, format, args2))) ||
                 ((mb_buffer = __malloc_r(__clib4, (mb_len + 1))) == NULL)) {
+            va_end(args2);
             va_end(args);
             RETURN(0);
             return 0;
         }
+        va_end(args2);
 
         (void) vsnprintf(mb_buffer, (mb_len + 1), format, args);
 
@@ -410,7 +415,7 @@ wprintf_core(struct _clib4 *__clib4, FOut *f, const wchar_t *fmt, va_list *ap, u
                     out_printf(__clib4, f, "%*s", (w - 1), "");
                 }
                 out_putwc(btowc((int) arg.i), f);
-                if (w > 1 && !(fl & LEFT_ADJ)) {
+                if (w > 1 && (fl & LEFT_ADJ)) {
                     out_printf(__clib4, f, "%*s", (w - 1), "");
                 }
                 l = w;
