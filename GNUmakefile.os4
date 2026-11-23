@@ -410,10 +410,15 @@ $(VERBOSE)echo -e "\rAssembling SPE with regnames \033[0;33m[$(@D)]\033[0m \r\t\
 $(VERBOSE)$(CC) $(AFLAGS) -mregnames -DVRSAVE -o $@ -c $< $(LOG_COMMAND)
 endef
 
+# PatchForSPE replaces the stack frame allocation in the generated assembly
+# with code that aligns the stack, using r11, so the code it patches must not
+# keep anything there
+PATCHFORSPE_CFLAGS := -ffixed-r11
+
 define COMPILE_SPE
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rPreprocessing and compiling SPE \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) -c $(CFLAGS) -mno-regnames -MMD -MP -MF $(@:.o=.d) -MT $@ -S -o $@_in $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) -c $(CFLAGS) $(PATCHFORSPE_CFLAGS) -mno-regnames -MMD -MP -MF $(@:.o=.d) -MT $@ -S -o $@_in $< $(LOG_COMMAND)
 $(VERBOSE)$(BUILD_DIR)/PatchForSPE $@_in $@.S >/dev/null
 $(VERBOSE)$(CC) $(CFLAGS) -c $@.S -o $@ $(LOG_COMMAND)
 $(VERBOSE)-$(DELETE) $@_in $@.S
@@ -422,7 +427,7 @@ endef
 define COMPILE_SHARED_SPE
 $(VERBOSE)@$(MAKEDIR) $(@D)
 $(VERBOSE)echo -e "\rPreprocessing and compiling SPE \033[0;33m[$(@D)]\033[0m \r\t\t\t\t\t\t\t\t\t\t\t \033[0;31m$(@F)\033[0m"
-$(VERBOSE)$(CC) -c $(PIC) -mabi=spe $(CFLAGS) -mno-regnames -MMD -MP -MF $(@:.o=.d) -MT $@ -S -o $@_in $< $(LOG_COMMAND)
+$(VERBOSE)$(CC) -c $(PIC) -mabi=spe $(CFLAGS) $(PATCHFORSPE_CFLAGS) -mno-regnames -MMD -MP -MF $(@:.o=.d) -MT $@ -S -o $@_in $< $(LOG_COMMAND)
 $(VERBOSE)$(BUILD_DIR)/PatchForSPE $@_in $@.S >/dev/null
 $(VERBOSE)$(CC) $(PIC) -mabi=spe $(CFLAGS) -c $@.S -o $@ $(LOG_COMMAND)
 $(VERBOSE)-$(DELETE) $@_in $@.S
